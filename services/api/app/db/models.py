@@ -3021,7 +3021,7 @@ class PairConsentProposal(Base):
     __tablename__ = "pair_consent_proposals"
     __table_args__ = (
         CheckConstraint(
-            "purpose IN ('lap_so', 'bat_doi', 'doc_chat')", name="consent_purpose_known"
+            "purpose IN ('lap_so', 'bat_doi', 'doc_chat', 'chia_gu')", name="consent_purpose_known"
         ),
         CheckConstraint(
             "expires_at > created_at", name="consent_expires_after_created"

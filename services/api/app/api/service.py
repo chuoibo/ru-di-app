@@ -166,6 +166,7 @@ from app.api.schemas import (
     PairConstraintPutRequest,
     PairConstraintResponse,
     PairNotebookResponse,
+    PairTasteResponse,
     PairProposalCreateRequest,
     PairProposalResponse,
     PaperCommandResponse,
@@ -7076,7 +7077,31 @@ class ApiService:
                     consents, [str(p) for p in participants], now=now
                 )
             ],
+            taste=self._pair_taste(consents, participants, actor, now=now),
         )
+
+    def _pair_taste(
+        self,
+        consents: list[dict],
+        participants: list[uuid.UUID] | tuple[uuid.UUID, ...],
+        actor: Actor,
+        *,
+        now: datetime,
+    ) -> PairTasteResponse | None:
+        """ADR-0034 §2.1–2.2. Tastes are read only once the domain has said a
+        couple exists: outside «Một đôi» nobody's tags are fetched at all."""
+        people = [str(p) for p in participants]
+        if not pair_notebook.can_bat_doi(consents, people, now=now):
+            return None
+        tags = self.repository.interests_by_person(list(participants))
+        gu = pair_notebook.gu_hai_nguoi(
+            consents,
+            people,
+            str(actor.id),
+            {str(person): list(values) for person, values in tags.items()},
+            now=now,
+        )
+        return None if gu is None else PairTasteResponse(**gu)
 
     def _open_paper_id(
         self, context_id: uuid.UUID, actor: Actor, *, now: datetime
@@ -7138,6 +7163,8 @@ class ApiService:
             raise ApiProblem(
                 409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã."
             )
+        if request.purpose in pair_notebook.PER_PERSON_PURPOSES:
+            return self._propose_per_person(notebook, members, request.purpose, actor, now=now)
         # One offer per rung at a time. The other person already asking for the
         # same thing is an offer to ANSWER, by its id: a second proposal made
         # each of them agree only with themselves, and the rung read «both»
@@ -7190,6 +7217,60 @@ class ApiService:
             now=now,
         )
         self.repository.grant_consent(proposal.id, actor.id, now=now)
+        return PairProposalResponse(
+            id=proposal.id,
+            purpose=proposal.purpose,
+            expires_at=proposal.expires_at,
+            proposed_by_id=proposal.proposed_by_id,
+            my_granted=True,
+        )
+
+    def _propose_per_person(
+        self,
+        notebook: PairNotebookRecord,
+        members: list[uuid.UUID],
+        purpose: str,
+        actor: Actor,
+        *,
+        now: datetime,
+    ) -> PairProposalResponse:
+        """A switch one person decides alone (ADR-0034 §2.1: `chia_gu`).
+
+        Only inside «Một đôi». The proposal is filed, granted by its proposer
+        and completed in one go: nobody else answers it, so it is never left
+        pending for the other person to «agree» to somebody else's taste.
+        Asking again while it is on returns the proposal already in force.
+        """
+        participants = [str(p) for p in self._participants(notebook, members)]
+        consents = _consents_as_dicts(notebook)
+        if not pair_notebook.can_bat_doi(consents, participants, now=now):
+            raise ApiProblem(409, "consent_missing", "Hai bạn bật «Một đôi» trước đã.")
+        for row in notebook.consents:
+            if row.person_id != actor.id or row.granted_at is None or row.revoked_at is not None:
+                continue
+            proposal = next(
+                (p for p in notebook.proposals if p.id == row.proposal_id and p.purpose == purpose),
+                None,
+            )
+            if proposal is not None and proposal.completed_at is not None:
+                return PairProposalResponse(
+                    id=proposal.id,
+                    purpose=proposal.purpose,
+                    expires_at=proposal.expires_at,
+                    proposed_by_id=proposal.proposed_by_id,
+                    my_granted=True,
+                )
+        assert notebook.cycle_id is not None
+        proposal = self.repository.create_consent_proposal(
+            cycle_id=notebook.cycle_id,
+            purpose=purpose,
+            proposed_by_id=actor.id,
+            terms_version=DIEU_KHOAN_HIEN_TAI,
+            expires_at=pair_notebook.han_de_nghi(now),
+            now=now,
+        )
+        self.repository.grant_consent(proposal.id, actor.id, now=now)
+        self.repository.complete_consent_proposal(proposal.id, now=now)
         return PairProposalResponse(
             id=proposal.id,
             purpose=proposal.purpose,

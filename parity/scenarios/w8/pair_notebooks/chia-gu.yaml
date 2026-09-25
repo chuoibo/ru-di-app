@@ -1,0 +1,194 @@
+# W8 · chia_gu (ADR-0034 §2.1–2.2): each person's own taste switch in a couple's
+# notebook. Outside «Một đôi» asking for it is 409 consent_missing and `taste` is
+# null. Inside, asking files, grants and completes in one go (never pending for the
+# other), the other cannot grant it for them, `taste.theirs` shows only a sharer's
+# tags, `taste.common` needs both, asking again returns the same proposal, and
+# revoking hides the taste at the next read. Texts are sample data (dữ liệu mẫu).
+id: w8/pair_notebooks/chia-gu
+routes:
+  - 'GET /contexts/{context_id}/notebook'
+  - 'POST /contexts/{context_id}/notebook/proposals'
+  - 'POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant'
+  - 'DELETE /contexts/{context_id}/notebook/consents/{purpose}'
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_states_interests
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","an-uong"]}'
+  - id: mate_states_interests
+    as: mate
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["outdoor","cafe"]}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_asks_taste_before_any_notebook
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"chia_gu"}'
+  - id: owner_offers_notebook
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: mate_opens_notebook
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_asks_taste_as_friends
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"chia_gu"}'
+  - id: owner_reads_as_friends
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_offers_couple
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+    bind:
+      bat_doi: {from: body, pointer: /id, class: uuid}
+  - id: mate_makes_it_a_couple
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi}}/grant'
+  - id: owner_reads_couple_nobody_shares
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_shares_taste
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"chia_gu"}'
+    bind:
+      gu_owner: {from: body, pointer: /id, class: uuid}
+  - id: owner_shares_taste_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"chia_gu"}'
+  - id: mate_tries_to_grant_owners_taste
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{gu_owner}}/grant'
+  - id: mate_reads_owners_taste
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_reads_before_mate_shares
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: mate_shares_taste
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"chia_gu"}'
+  - id: owner_reads_common_taste
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_takes_taste_back
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/chia_gu'
+  - id: mate_reads_after_owner_took_it_back
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_shares_again_files_a_new_one
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"chia_gu"}'

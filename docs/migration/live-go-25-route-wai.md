@@ -188,3 +188,15 @@ Một đường gọi AI duy nhất là hàng đợi lời gọi (`POST /context
 
 - `POST /contexts/{context_id}/messages`: hành vi ĐỔI có chủ ý. Chữ «/plan …», «@Rủ Đi …», «/chia-bill …» là tin nhắn thường: `intent` null, `intent_error` null, không gọi mô hình, không ghi thẻ. Thân trả lời bỏ hai trường `companion` và `expense_card`; `intent` chỉ còn `"vote"`, `intent_error` chỉ còn `"vote_malformed"`. Nhánh `/vote` không đổi một byte (kịch bản `wai/messages-flow.yaml`). Hai bên đổi cùng lúc, `PostedMessageResponse` và `clonePosted` cùng thứ tự trường `intent, vote, intent_error`.
 - `POST /contexts/{context_id}/messages/{message_id}/expense-draft`: không đổi. Kịch bản `wai/ai-turn-and-expense-draft.yaml` giữ nửa này, bỏ sáu bước `ai-turn`.
+
+## Đổi 2026-09-25 — `chia_gu`: gu trong sổ đôi, mỗi người tự bật (ADR-0034 §2.1–2.2)
+
+Diff này thêm mục đích đồng ý `chia_gu` (CONSENT_PURPOSES, PER_PERSON_PURPOSES; CHECK `ck_pair_consent_proposals_consent_purpose_known` mở rộng ở migration `e3b7c1d9a4f2`), hàm thuần `pair_notebook.gu_hai_nguoi` (Go `pairnotebook.GuHaiNguoi`) và trường `taste` của `PairNotebookResponse` (`_pair_taste`, Go `pairsteps.pairTaste`). Golden: `python_pair_notebook*.json` (ca `taste: *`, fuzz có `chia_gu`), `python_pair_steps*.json` (ca `taste_*`); Go replay 0 lệch; tầng Postgres Python 720 xanh.
+
+- `GET /contexts/{context_id}/contextual-suggestion`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /contexts/{context_id}/suggestion`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places/{place_id}`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places/{place_id}/photos`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/messages`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /places/search`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.

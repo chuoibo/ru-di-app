@@ -46,6 +46,8 @@ var goNames = map[string]string{
 	"CONSTRAINT_KINDS":    "ConstraintKinds",
 	"CYCLE_STATES":        "CycleStates",
 	"NotebookError":       "NotebookError",
+	"PER_PERSON_PURPOSES": "PerPersonPurposes",
+	"gu_hai_nguoi":        "GuHaiNguoi",
 	"can_bat_doi":         "CanBatDoi",
 	"chat_consent_active": "ChatConsentActive",
 	"dang_cho":            "DangCho",
@@ -118,6 +120,7 @@ type tally struct {
 	cases, checks, mismatches int
 	kinds                     map[string]int
 	chat                      map[bool]int
+	gu                        map[string]int
 }
 
 func (tl *tally) check(t *testing.T, c map[string]any, what string, got, want any) {
@@ -167,7 +170,42 @@ func replayConsents(t *testing.T, tl *tally, c map[string]any) {
 		got := ChatConsentActive(consents, participants, *now)
 		tl.chat[got]++
 		tl.check(t, c, "chat_consent_active", got, want)
+		wantGu, ok := result["gu"].([]any)
+		if !ok {
+			t.Fatalf("%s: no gu with now set", c["name"])
+		}
+		for _, item := range wantGu {
+			pair := item.([]any)
+			person := pair[0].(string)
+			var got any
+			if taste := GuHaiNguoi(consents, participants, person, oracleGu, *now); taste != nil {
+				got = map[string]any{"mine_shared": taste.MineShared, "theirs_shared": taste.TheirsShared,
+					"theirs": anyList(taste.Theirs), "common": anyList(taste.Common)}
+				if len(taste.Theirs) > 0 {
+					tl.gu["theirs"]++
+				}
+				if len(taste.Common) > 0 {
+					tl.gu["common"]++
+				}
+			}
+			tl.check(t, c, "gu_hai_nguoi "+person, got, pair[1])
+		}
 	}
+}
+
+// oracleGu is the script's GU.
+var oracleGu = map[string][]string{
+	"a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1": {"cafe", "an-uong", "game"},
+	"a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2": {"game", "outdoor", "cafe", "tag-da-bo"},
+	"a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3": {"karaoke"},
+}
+
+func anyList(values []string) []any {
+	out := make([]any, len(values))
+	for i, value := range values {
+		out[i] = value
+	}
+	return out
 }
 
 func ladderOrdered(values []string) []string {
@@ -227,7 +265,7 @@ func replayHan(t *testing.T, tl *tally, c map[string]any) {
 }
 
 func TestPairNotebookMatchesPython(t *testing.T) {
-	tl := &tally{kinds: map[string]int{}, chat: map[bool]int{}}
+	tl := &tally{kinds: map[string]int{}, chat: map[bool]int{}, gu: map[string]int{}}
 	fuzzShards, fuzzCases, fuzzTotal := 0, 0, 0
 	sawConstants := false
 	for _, file := range loadGoldens(t) {
@@ -282,6 +320,9 @@ func TestPairNotebookMatchesPython(t *testing.T) {
 				t.Fatalf("no %s case with fuzz=%v", fn, fuzz)
 			}
 		}
+	}
+	if tl.gu["theirs"] < 10 || tl.gu["common"] < 5 {
+		t.Fatalf("gu_hai_nguoi outcomes too few to tell apart: %v", tl.gu)
 	}
 	if tl.chat[true] < 20 || tl.chat[false] < 20 {
 		t.Fatalf("chat_consent_active outcomes too lopsided to tell apart: %v", tl.chat)

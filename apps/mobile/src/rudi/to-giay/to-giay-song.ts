@@ -20,10 +20,13 @@
  * `useToGiay` is what does that, once, in one place.
  */
 import { type Attempt, translatedAsActor } from "../../api";
+import type { GuSo } from "./gu-doi";
 import type { NoiDungTo, ToGiay } from "./to-giay";
 
-/** Four rungs of the consent ladder, of which slice 1 uses three. */
-export type MucDich = "lap_so" | "bat_doi" | "doc_chat";
+/** The rungs both climb: only these are ever pending for the other person. */
+export type MucDichBac = "lap_so" | "bat_doi" | "doc_chat";
+/** The ladder, plus `chia_gu`: each person's own taste switch (ADR-0034). */
+export type MucDich = MucDichBac | "chia_gu";
 export type LoaiRangBuoc = "khong_an_duoc" | "dung";
 
 export interface DongYCuaToi {
@@ -33,7 +36,8 @@ export interface DongYCuaToi {
 
 export interface DeNghiCho {
   id: string;
-  purpose: MucDich;
+  /** A `chia_gu` proposal completes as it is filed, so it is never pending. */
+  purpose: MucDichBac;
   expires_at: string;
   proposed_by_id: string;
   my_granted: boolean;
@@ -62,6 +66,8 @@ export interface SoHaiNguoi {
    * older than 23/09, where the client falls back to the per-person maps.
    */
   granted_purposes?: readonly MucDich[];
+  /** Null outside «Một đôi»; absent on a server older than 25/09 (ADR-0034). */
+  taste?: GuSo | null;
 }
 
 /**

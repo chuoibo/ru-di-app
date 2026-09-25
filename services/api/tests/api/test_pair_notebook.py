@@ -68,13 +68,16 @@ def test_a_fresh_pair_has_a_notebook_nobody_has_opened(client):
         {"purpose": "lap_so", "granted": False},
         {"purpose": "bat_doi", "granted": False},
         {"purpose": "doc_chat", "granted": False},
+        {"purpose": "chia_gu", "granted": False},
     ]
     assert body["their_consents_granted"] == {
         "lap_so": False,
         "bat_doi": False,
         "doc_chat": False,
+        "chia_gu": False,
     }
     assert body["pending_proposals"] == []
+    assert body["taste"] is None, "ngoài «Một đôi» không đọc gu ai"
 
 
 def test_one_yes_opens_nothing_and_the_other_side_can_see_whose_turn_it_is(client):
@@ -400,3 +403,58 @@ def test_an_offer_whose_proposer_took_their_yes_back_is_dead(client, repository)
     assert again.json()["id"] != first
     theirs = de_nghi(client, "lap_so", actor=NGUOI_KIA)
     assert theirs.status_code == 409, theirs.text
+
+
+# ADR-0034 §2.1–2.2: `chia_gu`, one person's own switch inside «Một đôi».
+
+
+def _gu(repository):
+    repository.person_interests[TOI] = {"cafe", "an-uong"}
+    repository.person_interests[NGUOI_KIA] = {"cafe", "outdoor"}
+
+
+def test_chia_gu_needs_a_couple(client, repository):
+    _gu(repository)
+    lap_so(client)
+    refused = de_nghi(client, "chia_gu")
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["code"] == "consent_missing"
+    assert _so(client).json()["taste"] is None
+
+
+def test_chia_gu_is_decided_alone_and_shows_only_the_sharers_taste(client, repository):
+    _gu(repository)
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    assert _so(client).json()["taste"] == {"mine_shared": False, "theirs_shared": False, "theirs": [], "common": []}
+    mine = de_nghi(client, "chia_gu")
+    assert mine.status_code == 201, mine.text
+    body = _so(client).json()
+    assert body["pending_proposals"] == [], "không ai phải «đồng ý» gu của người khác"
+    assert body["taste"] == {"mine_shared": True, "theirs_shared": False, "theirs": [], "common": []}
+    their_view = _so(client, actor=NGUOI_KIA).json()["taste"]
+    assert their_view == {"mine_shared": False, "theirs_shared": True, "theirs": ["an-uong", "cafe"], "common": []}
+    assert de_nghi(client, "chia_gu").json()["id"] == mine.json()["id"], "bật lại khi đang bật trả về đúng cái cũ"
+    de_nghi(client, "chia_gu", actor=NGUOI_KIA)
+    assert _so(client).json()["taste"]["common"] == ["cafe"]
+
+
+def test_the_other_cannot_grant_somebody_elses_chia_gu(client, repository):
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    mine = de_nghi(client, "chia_gu")
+    answer = client.post(
+        f"/contexts/{CAP}/notebook/proposals/{mine.json()['id']}/grant", headers=head(NGUOI_KIA)
+    )
+    assert answer.status_code in (403, 409), answer.text
+
+
+def test_taking_chia_gu_back_hides_the_taste_at_the_next_read(client, repository):
+    _gu(repository)
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    de_nghi(client, "chia_gu", actor=NGUOI_KIA)
+    assert _so(client).json()["taste"]["theirs"] == ["cafe", "outdoor"]
+    gone = client.delete(f"/contexts/{CAP}/notebook/consents/chia_gu", headers=head(NGUOI_KIA))
+    assert gone.status_code == 204, gone.text
+    assert _so(client).json()["taste"]["theirs"] == []

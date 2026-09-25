@@ -53,6 +53,8 @@ _PHUONG_THUC = {
     "keep_pair_paper_line",
     "_require_pair_permission",
     "_pair_chat_consent",
+    "_propose_per_person",
+    "_pair_taste",
 }
 
 #: Cùng mang chữ `pair` trong tên nhưng thuộc tính năng khác: `_require_pair_is_alive`

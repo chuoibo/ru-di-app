@@ -12,7 +12,7 @@
  "routes": [
   {
    "id": "GET /contexts/{context_id}/notebook",
-   "order": 136,
+   "order": 138,
    "method": "GET",
    "path": "/contexts/{context_id}/notebook",
    "name": "read_pair_notebook",
@@ -179,7 +179,7 @@
   },
   {
    "id": "POST /contexts/{context_id}/notebook/proposals",
-   "order": 137,
+   "order": 139,
    "method": "POST",
    "path": "/contexts/{context_id}/notebook/proposals",
    "name": "propose_pair_consent",
@@ -370,7 +370,7 @@
   },
   {
    "id": "POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
-   "order": 138,
+   "order": 140,
    "method": "POST",
    "path": "/contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
    "name": "grant_pair_consent",
@@ -551,7 +551,7 @@
   },
   {
    "id": "DELETE /contexts/{context_id}/notebook/consents/{purpose}",
-   "order": 139,
+   "order": 141,
    "method": "DELETE",
    "path": "/contexts/{context_id}/notebook/consents/{purpose}",
    "name": "revoke_pair_consent",
@@ -732,7 +732,7 @@
   },
   {
    "id": "PUT /contexts/{context_id}/notebook/constraints/{kind}",
-   "order": 140,
+   "order": 142,
    "method": "PUT",
    "path": "/contexts/{context_id}/notebook/constraints/{kind}",
    "name": "put_pair_constraint",
@@ -937,7 +937,7 @@
   },
   {
    "id": "DELETE /contexts/{context_id}/notebook/constraints/{kind}",
-   "order": 141,
+   "order": 143,
    "method": "DELETE",
    "path": "/contexts/{context_id}/notebook/constraints/{kind}",
    "name": "delete_pair_constraint",
@@ -1118,7 +1118,7 @@
   },
   {
    "id": "POST /contexts/{context_id}/notebook/close/preview",
-   "order": 142,
+   "order": 144,
    "method": "POST",
    "path": "/contexts/{context_id}/notebook/close/preview",
    "name": "preview_close_pair_notebook",
@@ -1285,7 +1285,7 @@
   },
   {
    "id": "POST /contexts/{context_id}/notebook/close",
-   "order": 143,
+   "order": 145,
    "method": "POST",
    "path": "/contexts/{context_id}/notebook/close",
    "name": "close_pair_notebook",
@@ -1596,10 +1596,11 @@
        "expected": [
         "lap_so",
         "bat_doi",
-        "doc_chat"
+        "doc_chat",
+        "chia_gu"
        ]
       },
-      "annotation": "Literal['lap_so', 'bat_doi', 'doc_chat']",
+      "annotation": "Literal['lap_so', 'bat_doi', 'doc_chat', 'chia_gu']",
       "required": true
      }
     ]

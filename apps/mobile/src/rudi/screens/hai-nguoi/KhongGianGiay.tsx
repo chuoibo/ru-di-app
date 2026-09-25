@@ -1,9 +1,10 @@
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
 import { useSoDoi } from "../../to-giay/SoDoi";
+import { cauGu } from "../../to-giay/gu-doi";
 import { type ToGiay, goiYChoLam, nenXinTo, phienBan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
 import { Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -15,6 +16,7 @@ import { DongSo } from "./DongSo";
 import { XacNhanViec } from "./XacNhanViec";
 import { BatMotDoi, LapSo } from "./DongYBac";
 import { GiuMotDieu } from "./GiuMotDieu";
+import { GuHaiBan } from "./GuHaiBan";
 import { LoaiSo } from "./LoaiSo";
 import { RangBuoc } from "./RangBuoc";
 import { NHAN, ToLoiRu } from "./ToLoiRu";
@@ -41,7 +43,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   const router = useRouter();
   const { colors, space } = useRudiTheme();
   const so = useSoDoi();
-  const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat" | "nguoi-kia">(null);
+  const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat" | "nguoi-kia" | "gu">(null);
   const daRu = useRef(false);
 
   // `?ru=1` from «Rủ một người đi chơi»: draft straight away, once, and only
@@ -55,6 +57,9 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   }, [ruNgay, so]);
 
   const toMo = so.toMo;
+  // What the two like in common, once both have shared (ADR-0034): the one
+  // line of insight the notebook can show without anybody asking for it.
+  const cauGuSo = cauGu(so.gu, so.tenNguoiKia);
   // «Rủ … tới đây»: once this person's own draft is on the table, open it
   // with the place filled in as the main stop -- once, not on every render.
   const [goiYCho, setGoiYCho] = useState<string | undefined>(choGoiY);
@@ -208,6 +213,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           <Heading size="h2" title="Sổ hai người" />
           <ListRow icon="people-outline" onPress={() => setMo("loai-so")} subtitle={so.batDoi ? "Một đôi" : "Hai người bạn"} title="Loại sổ" />
           <ListRow icon="hand-left-outline" onPress={() => setMo("rang-buoc")} subtitle="Không ăn được · Đừng" title="Hai ô ràng buộc" />
+          {so.gu ? <ListRow icon="heart-outline" onPress={() => setMo("gu")} subtitle={cauGuSo?.chung ?? (so.gu.mine_shared ? "Bạn đang chia gu" : "Mỗi người tự bật")} title="Gu của hai bạn" /> : null}
           <ListRow icon="book-outline" onPress={() => router.push(`/groups/${contextId}/chat` as never)} subtitle="Về cuộc trò chuyện" title="Tin nhắn" />
           <ListRow icon="images-outline" onPress={() => router.push(`/groups/${contextId}/wall` as never)} subtitle="Ảnh và những buổi hai bạn đã giữ" title="Kỷ niệm của hai bạn" />
           {!so.daDong ? <ListRow icon="close-circle-outline" onPress={() => setMo("dong-so")} subtitle="Xem trước rồi mới đóng" title="Đóng sổ" /> : null}
@@ -269,6 +275,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           tieuDe={TIEU_DE[viec]}
         />
       ) : null}
+      <GuHaiBan dangLam={so.dangLam?.includes("chia_gu") ?? false} gu={so.gu} onBat={so.chiaGu} onClose={dong} onSuaGuCuaToi={() => { dong(); router.push("/personalization" as never); }} onTat={so.thoiChiaGu} open={mo === "gu"} tenNguoiKia={so.tenNguoiKia} />
       <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
       <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>
@@ -319,6 +326,11 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           </Text>
         ) : null}
         {than}
+        {cauGuSo?.chung ? (
+          <Pressable accessibilityRole="button" onPress={() => setMo("gu")} testID="giay-gu-chung">
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGuSo.chung}</Text>
+          </Pressable>
+        ) : null}
         {/* After the evening: a photo of it goes into the pair's own memories
             (ADR-0021 §2.5), beside the one line the sheet keeps. Before 24/09
             a memory could only go to a group's wall. */}

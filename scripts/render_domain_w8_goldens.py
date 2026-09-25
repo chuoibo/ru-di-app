@@ -212,6 +212,10 @@ ALIASES = {
     "PP5": _uuid_for("f", "7"),
     "PP6": _uuid_for("a", "8"),
     "PP7": _uuid_for("b", "9"),
+    # ADR-0034: the couple's proposal and each person's own taste switch.
+    "PRD": _uuid_for("a", "3"),
+    "PGK": _uuid_for("a", "5"),
+    "PGT": _uuid_for("a", "6"),
 }
 ALIAS_OF = {value: name for name, value in ALIASES.items()}
 assert len(ALIAS_OF) == len(ALIASES)
@@ -1062,6 +1066,8 @@ WORLD_DEFAULTS = {
     "constraint_version": 1,
     # [[catalogue id, name], ...]: the rows get_place finds.
     "places": [],
+    # {person name: [tag, ...]}: interests_by_person (ADR-0034 taste).
+    "interests": {},
 }
 
 
@@ -1469,6 +1475,11 @@ class Stub:
             category=row["category"],
             to_row=lambda row=row: dict(row),
         )
+
+    def interests_by_person(self, person_ids):
+        self.rec("interests_by_person", list(person_ids))
+        by_id = {U(name): list(tags) for name, tags in self.world["interests"].items()}
+        return {pid: by_id[pid] for pid in person_ids if by_id.get(pid)}
 
     def get_place(self, place_id):
         self.rec("get_place", place_id)
@@ -1953,6 +1964,28 @@ def pair_steps_edges() -> list[dict]:
             w["roster"] = roster
         out.append(S(fn, name, req(fn), w, actor=(actor, ("member",))))
 
+    # ADR-0034: taste is read only inside «Một đôi», per person.
+    doi = both("bat_doi", proposal="PRD")
+    doi_props = [prop("PRD", "bat_doi", completed=T - DAY)]
+    gu = {"TOI": ["cafe", "an-uong"], "KIA": ["outdoor", "cafe", "tag-da-bo"]}
+    for name, consents, proposals in (
+        ("taste_friends_only", both("lap_so") + [grant("KIA", "chia_gu", proposal="PGK")], [prop("PGK", "chia_gu", completed=T - DAY)]),
+        ("taste_couple_nobody_shares", doi, doi_props),
+        ("taste_couple_they_share", doi + [grant("KIA", "chia_gu", proposal="PGK")], doi_props + [prop("PGK", "chia_gu", completed=T - DAY)]),
+        ("taste_couple_i_share", doi + [grant("TOI", "chia_gu", proposal="PGT")], doi_props + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)]),
+        (
+            "taste_couple_both_share",
+            doi + [grant("KIA", "chia_gu", proposal="PGK"), grant("TOI", "chia_gu", proposal="PGT")],
+            doi_props + [prop("PGK", "chia_gu", completed=T - DAY), prop("PGT", "chia_gu", by="TOI", completed=T - DAY)],
+        ),
+        (
+            "taste_they_took_it_back",
+            doi + [grant("KIA", "chia_gu", proposal="PGK", revoked=T - MICRO), grant("TOI", "chia_gu", proposal="PGT")],
+            doi_props + [prop("PGK", "chia_gu", completed=T - DAY), prop("PGT", "chia_gu", by="TOI", completed=T - DAY)],
+        ),
+    ):
+        out.append(S(fn, name, req(fn), {"notebooks": [nb(consents=consents, proposals=proposals)], "papers": [], "interests": gu}, actor=("TOI", ("member",))))
+
     # --- propose_pair_consent ------------------------------------------------------
     fn = "propose_pair_consent"
     for name, purpose, locks, roster in (
@@ -2004,6 +2037,19 @@ def pair_steps_edges() -> list[dict]:
         if roster is not None:
             w["roster"] = roster
         out.append(S(fn, name, req(fn, purpose=purpose), w))
+    doi = both("lap_so") + both("bat_doi", proposal="PRD")
+    doi_props = [prop("PR1", "lap_so", completed=T - DAY), prop("PRD", "bat_doi", completed=T - DAY)]
+    for name, notebook in (
+        ("taste_outside_a_couple", nb(consents=both("lap_so"), proposals=[prop("PR1", "lap_so", completed=T - DAY)])),
+        ("taste_in_a_couple", nb(consents=doi, proposals=doi_props)),
+        ("taste_while_the_other_shares", nb(consents=doi + [grant("KIA", "chia_gu", proposal="PGK")], proposals=doi_props + [prop("PGK", "chia_gu", completed=T - DAY)])),
+        ("taste_again_while_on", nb(consents=doi + [grant("TOI", "chia_gu", proposal="PGT")], proposals=doi_props + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)])),
+        (
+            "taste_again_after_taking_it_back",
+            nb(consents=doi + [grant("TOI", "chia_gu", proposal="PGT", revoked=T - HOUR)], proposals=doi_props + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)]),
+        ),
+    ):
+        out.append(S(fn, name, req(fn, purpose="chia_gu"), {"locks": [notebook]}))
     out.append(
         S(
             fn,
@@ -2230,6 +2276,7 @@ def pair_steps_edges() -> list[dict]:
             [nep_draft, human_draft, nep_later, expired_nep, sent_nep],
         ),
         ("chat_without_papers", "doc_chat", [NB_ACTIVE], []),
+        ("taste_is_ones_own", "chia_gu", [NB_ACTIVE], []),
     ):
         out.append(
             S(fn, name, req(fn, purpose=purpose), {"locks": locks, "papers": papers})

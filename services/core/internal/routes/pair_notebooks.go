@@ -293,6 +293,27 @@ func wireNotebook(view pairsteps.NotebookView) *pyjson.OrderedMap {
 		granted = append(granted, pyjson.String(purpose))
 	}
 	out.Set("granted_purposes", granted)
+	out.Set("taste", wirePairTaste(view.Taste))
+	return out
+}
+
+// wirePairTaste is PairTasteResponse | None (ADR-0034).
+func wirePairTaste(taste *pairnotebook.Taste) pyjson.Value {
+	if taste == nil {
+		return pyjson.Null{}
+	}
+	list := func(values []string) pyjson.List {
+		out := pyjson.List{}
+		for _, value := range values {
+			out = append(out, pyjson.String(value))
+		}
+		return out
+	}
+	out := pyjson.NewOrderedMap()
+	out.Set("mine_shared", pyjson.Bool(taste.MineShared))
+	out.Set("theirs_shared", pyjson.Bool(taste.TheirsShared))
+	out.Set("theirs", list(taste.Theirs))
+	out.Set("common", list(taste.Common))
 	return out
 }
 

@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"mobile/services/core/internal/domain/interests"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -32,13 +33,17 @@ const OfferWindow = 7 * 24 * time.Hour
 func CycleStates() []string { return []string{"pending", "active", "closed"} }
 
 // ConsentPurposes is CONSENT_PURPOSES, the ladder from tier 2 upward, in order.
-func ConsentPurposes() []string { return []string{"lap_so", "bat_doi", "doc_chat"} }
+// `chia_gu` (ADR-0034) is each person's own switch, not a rung both climb.
+func ConsentPurposes() []string { return []string{"lap_so", "bat_doi", "doc_chat", "chia_gu"} }
+
+// PerPersonPurposes is PER_PERSON_PURPOSES: what one person decides alone.
+func PerPersonPurposes() []string { return []string{"chia_gu"} }
 
 // ConstraintKinds is CONSTRAINT_KINDS.
 func ConstraintKinds() []string { return []string{"khong_an_duoc", "dung"} }
 
 // ladder is CONSENT_PURPOSES as the functions below read it.
-var ladder = [...]string{"lap_so", "bat_doi", "doc_chat"}
+var ladder = [...]string{"lap_so", "bat_doi", "doc_chat", "chia_gu"}
 
 // NotebookError is NotebookError: a refusal carrying the wire code.
 type NotebookError struct {
@@ -177,6 +182,53 @@ func CanBatDoi(consents []Consent, participants []string, now *time.Time) bool {
 // at now. Python requires the keyword; the service always passes its clock.
 func ChatConsentActive(consents []Consent, participants []string, now time.Time) bool {
 	return contains(GrantedPurposes(consents, participants, &now), "doc_chat")
+}
+
+// Taste is gu_hai_nguoi's dict (ADR-0034 §2.1–2.2).
+type Taste struct {
+	MineShared   bool
+	TheirsShared bool
+	Theirs       []string
+	Common       []string
+}
+
+// GuHaiNguoi is gu_hai_nguoi: what of the two tastes `me` may see. Nil outside
+// «Một đôi»; the other's tags only if they turned `chia_gu` on; the common tags
+// only if both did. Tags in vocabulary order, unknown ones left out.
+func GuHaiNguoi(consents []Consent, participants []string, me string, guTheoNguoi map[string][]string, now time.Time) *Taste {
+	if !CanBatDoi(consents, participants, &now) {
+		return nil
+	}
+	var other *string
+	for _, person := range participants {
+		if person != me {
+			other = &person
+			break
+		}
+	}
+	mineShared := contains(GrantedBy(consents, me, &now), "chia_gu")
+	theirsShared := other != nil && contains(GrantedBy(consents, *other, &now), "chia_gu")
+	theirTags := map[string]bool{}
+	if theirsShared {
+		for _, tag := range guTheoNguoi[*other] {
+			theirTags[tag] = true
+		}
+	}
+	myTags := map[string]bool{}
+	for _, tag := range guTheoNguoi[me] {
+		myTags[tag] = true
+	}
+	taste := &Taste{MineShared: mineShared, TheirsShared: theirsShared, Theirs: []string{}, Common: []string{}}
+	for _, tag := range interests.InterestIDs() {
+		if !theirTags[tag] {
+			continue
+		}
+		taste.Theirs = append(taste.Theirs, tag)
+		if mineShared && myTags[tag] {
+			taste.Common = append(taste.Common, tag)
+		}
+	}
+	return taste
 }
 
 // Proposal is one row of `_proposals_as_dicts`.

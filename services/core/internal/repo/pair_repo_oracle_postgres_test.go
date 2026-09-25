@@ -743,6 +743,9 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 		{"POST proposals: bat_doi in a pending notebook", "409:consent_missing", onCtx("propose_pair_consent", w.an, w.ae, "body", body("purpose", "bat_doi"))},
 		{"POST proposals: the other person only invited", "409:cycle_not_active", onCtx("propose_pair_consent", w.an, w.ag, "body", body("purpose", "lap_so"))},
 		{"POST proposals: a stranger", "404:notebook_not_found", onCtx("propose_pair_consent", w.la, w.ab, "body", body("purpose", "lap_so"))},
+		// ADR-0034: chia_gu, one person's own switch inside «Một đôi».
+		{"POST proposals: chia_gu in a couple", "", onCtx("propose_pair_consent", w.dung, w.cd, "body", body("purpose", "chia_gu"))},
+		{"POST proposals: chia_gu outside a couple", "409:consent_missing", onCtx("propose_pair_consent", w.binh, w.ab, "body", body("purpose", "chia_gu"))},
 		{"POST grant: the second lap_so opens the notebook", "", onCtx("grant_pair_consent", w.em, w.ae, "proposal_id", w.prLapSoAE)},
 		{"POST grant: the second bat_doi makes a couple", "", onCtx("grant_pair_consent", w.binh, w.ab, "proposal_id", w.prBatDoiAB)},
 		{"POST grant: bat_doi with one of the two a couple elsewhere", "409:couple_slot_taken", onCtx("grant_pair_consent", w.chi, w.cg, "proposal_id", w.prBatDoiCG)},
@@ -756,6 +759,7 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 		{"DELETE consents: doc_chat drops a Nếp draft", "", onCtx("revoke_pair_consent", w.an, w.ae, "purpose", "doc_chat")},
 		{"DELETE consents: doc_chat with sheets but no Nếp draft", "", onCtx("revoke_pair_consent", w.an, w.ab, "purpose", "doc_chat")},
 		{"DELETE consents: no notebook yet", "", onCtx("revoke_pair_consent", w.em, w.be, "purpose", "lap_so")},
+		{"DELETE consents: chia_gu is one's own", "", onCtx("revoke_pair_consent", w.chi, w.cd, "purpose", "chia_gu")},
 		{"DELETE consents: an unknown purpose", "404:consent_purpose_unknown", onCtx("revoke_pair_consent", w.an, w.ab, "purpose", "Lap_So")},
 		{"DELETE consents: a stranger", "404:notebook_not_found", onCtx("revoke_pair_consent", w.la, w.ab, "purpose", "doc_chat")},
 		{"PUT constraints: a first line of hostile text", "", onCtx("put_pair_constraint", w.an, w.ab, "kind", "dung", "body", body("content", "  "+hostile+"\x1f "))},

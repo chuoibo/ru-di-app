@@ -535,3 +535,17 @@ chuẩn (một input thật, `sms-otp`, focus màu).
 
 Không đo: phía Minh bấm «Rủ Linh tới đây» trên tờ Linh gửi (chỉ có ca thuần `goiYChoLam`, máy thứ hai
 không bật vì RAM); trình đọc màn hình.
+
+## ADR-0034 lát 1 (25/09) — `chia_gu`: gu của hai bạn, mỗi người tự bật
+
+Lead ký ADR-0034 ngày 25/09. Lát này làm §2.1–2.2; phần Nếp dùng gu, người lo, câu hỏi tuần là lát sau.
+
+- Máy chủ (Go + Python oracle): mục đích đồng ý `chia_gu` theo người: chỉ trong «Một đôi»; tạo là
+  người đề nghị đồng ý và hoàn tất luôn, không bao giờ nằm chờ người kia; người kia không «đồng ý hộ»
+  được. `GET …/notebook` có `taste`: null ngoài «Một đôi»; gu người kia chỉ khi HỌ bật; gu chung chỉ khi
+  CẢ HAI bật; chỉ khi đó máy chủ mới đọc `person_interests`. Migration `e3b7c1d9a4f2` mở CHECK.
+- App: «Cài đặt sổ» → «Gu của hai bạn» (chỉ hiện khi là một đôi). Đo trên máy thật (Linh, stack
+  cô lập dựng lại với core mới + migration): Minh đã bật → «Minh thích Ăn uống, Cafe, Outdoor và Game.»;
+  Linh bấm «Cho Minh thấy gu của mình» → «Hai bạn cùng thích Cafe và Outdoor.» hiện trong sheet và dưới
+  tờ giấy; «Thôi cho Minh thấy…» → dòng chung biến mất, lần đọc sau. Ảnh `gu-01…03` (ngoài repo).
+- Không hứa điều chưa làm: câu «Nếp dùng gu khi phác tờ» bị bỏ khỏi màn cho tới lát (a).

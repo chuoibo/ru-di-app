@@ -75,11 +75,11 @@ def test_each_branch_merges_downgrades_and_upgrades_again(starting_head):
             pair=starting_head == PAIR_HEAD,
             journey=starting_head == JOURNEY_HEAD,
         )
-        _alembic(scoped, "head")
+        _alembic(scoped, MERGE_HEAD)
         assert_schema(engine, MERGE_HEAD, pair=True, journey=True)
         _alembic_xuong(scoped, COMMON_BASE)
         assert_schema(engine, COMMON_BASE, pair=False, journey=False)
-        _alembic(scoped, "head")
+        _alembic(scoped, MERGE_HEAD)
         assert_schema(engine, MERGE_HEAD, pair=True, journey=True)
     finally:
         engine.dispose()

@@ -294,6 +294,8 @@ type Store interface {
 	ListPlaces(destinationID, category string) ([]PlaceRef, error)
 	// ReplaceOutingStops is replace_outing_stops with expected_revision=None.
 	ReplaceOutingStops(outingID string, stops []OutingStopDraft) error
+	// InterestsByPerson is interests_by_person: people with no tags are absent.
+	InterestsByPerson(personIDs []string) (map[string][]string, error)
 }
 
 // PlaceRef is the part of a catalogue row _chot and draft_pair_paper read

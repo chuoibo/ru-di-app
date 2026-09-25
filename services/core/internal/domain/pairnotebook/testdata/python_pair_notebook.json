@@ -9,7 +9,8 @@
   "consent_purposes": [
    "lap_so",
    "bat_doi",
-   "doc_chat"
+   "doc_chat",
+   "chia_gu"
   ],
   "constraint_kinds": [
    "khong_an_duoc",
@@ -22,16 +23,709 @@
    "CONSTRAINT_KINDS",
    "CYCLE_STATES",
    "NotebookError",
+   "PER_PERSON_PURPOSES",
    "can_bat_doi",
    "chat_consent_active",
    "dang_cho",
    "granted_by",
    "granted_purposes",
+   "gu_hai_nguoi",
    "han_de_nghi",
    "xem_truoc_dong_so"
   ]
  },
  "cases": [
+  {
+   "fn": "consents",
+   "name": "taste: friends only",
+   "consents": [
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "chia_gu",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PG-B"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "chia_gu"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "taste: couple, nobody shares",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "bat_doi"
+    ],
+    "can_bat_doi": true,
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "taste: couple, one shares",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "chia_gu",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PG-B"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "bat_doi",
+       "chia_gu"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "bat_doi"
+    ],
+    "can_bat_doi": true,
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      {
+       "mine_shared": false,
+       "theirs_shared": true,
+       "theirs": [
+        "cafe",
+        "outdoor",
+        "game"
+       ],
+       "common": []
+      }
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      {
+       "mine_shared": true,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "taste: couple, both share",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "chia_gu",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PG-A"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "chia_gu",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PG-B"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "bat_doi",
+       "chia_gu"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "bat_doi",
+       "chia_gu"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "bat_doi"
+    ],
+    "can_bat_doi": true,
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      {
+       "mine_shared": true,
+       "theirs_shared": true,
+       "theirs": [
+        "cafe",
+        "outdoor",
+        "game"
+       ],
+       "common": [
+        "cafe",
+        "game"
+       ]
+      }
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      {
+       "mine_shared": true,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": [
+        "cafe",
+        "game"
+       ]
+      }
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      {
+       "mine_shared": false,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": []
+      }
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      {
+       "mine_shared": false,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": []
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "taste: taken back",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "chia_gu",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PG-A"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "chia_gu",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": "$dt:2026-09-13T11:59:59.999999|+00:00",
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PG-B"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "bat_doi",
+       "chia_gu"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "bat_doi"
+    ],
+    "can_bat_doi": true,
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      {
+       "mine_shared": true,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      {
+       "mine_shared": false,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": []
+      }
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      {
+       "mine_shared": false,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": []
+      }
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      {
+       "mine_shared": false,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": []
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "taste: both share on one proposal is still two people",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-D"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "chia_gu",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PG"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "chia_gu",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PG"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "bat_doi",
+       "chia_gu"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "bat_doi",
+       "chia_gu"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "bat_doi",
+     "chia_gu"
+    ],
+    "can_bat_doi": true,
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      {
+       "mine_shared": true,
+       "theirs_shared": true,
+       "theirs": [
+        "cafe",
+        "outdoor",
+        "game"
+       ],
+       "common": [
+        "cafe",
+        "game"
+       ]
+      }
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      {
+       "mine_shared": true,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": [
+        "cafe",
+        "game"
+       ]
+      }
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      {
+       "mine_shared": false,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": []
+      }
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      {
+       "mine_shared": false,
+       "theirs_shared": true,
+       "theirs": [
+        "an-uong",
+        "cafe",
+        "game"
+       ],
+       "common": []
+      }
+     ]
+    ]
+   }
+  },
   {
    "fn": "consents",
    "name": "two proposals, each granted only by its proposer",
@@ -89,7 +783,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -159,7 +871,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -223,7 +953,45 @@
      "bat_doi"
     ],
     "can_bat_doi": true,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ]
+    ]
    }
   },
   {
@@ -279,7 +1047,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -318,7 +1104,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -354,7 +1158,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -403,7 +1225,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -452,7 +1292,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -512,7 +1370,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -572,7 +1448,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -628,7 +1522,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -684,7 +1596,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -740,7 +1670,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -800,7 +1748,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -860,7 +1826,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -914,7 +1898,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -968,7 +1970,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1022,7 +2042,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1076,7 +2114,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1130,7 +2186,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1184,7 +2258,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1244,7 +2336,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1304,7 +2414,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1364,7 +2492,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1418,7 +2564,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1472,7 +2636,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1526,7 +2708,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1703,7 +2903,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1773,7 +2991,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1830,7 +3066,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1888,7 +3142,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -1949,7 +3221,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2007,7 +3297,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2103,7 +3411,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2163,7 +3489,25 @@
      "lap_so"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2248,7 +3592,45 @@
      "lap_so"
     ],
     "can_bat_doi": true,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ]
+    ]
    }
   },
   {
@@ -2315,7 +3697,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2382,7 +3782,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2442,7 +3860,25 @@
      "doc_chat"
     ],
     "can_bat_doi": false,
-    "chat_consent_active": true
+    "chat_consent_active": true,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2501,7 +3937,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2559,7 +4013,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2617,7 +4089,25 @@
     ],
     "granted_purposes": [],
     "can_bat_doi": false,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      null
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      null
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      null
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      null
+     ]
+    ]
    }
   },
   {
@@ -2687,7 +4177,63 @@
      "bat_doi"
     ],
     "can_bat_doi": true,
-    "chat_consent_active": false
+    "chat_consent_active": false,
+    "gu": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ],
+     [
+      "nguệ",
+      {
+       "mine_shared": false,
+       "theirs_shared": false,
+       "theirs": [],
+       "common": []
+      }
+     ]
+    ]
    }
   },
   {

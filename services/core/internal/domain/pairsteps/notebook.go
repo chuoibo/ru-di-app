@@ -39,6 +39,8 @@ type NotebookView struct {
 	// GrantedPurposes is what BOTH agreed to on one proposal, in ladder order:
 	// the only reading a screen may light a rung on (QA 23/09).
 	GrantedPurposes []string
+	// Taste is _pair_taste: nil outside «Một đôi» (ADR-0034).
+	Taste *pairnotebook.Taste
 }
 
 // ReadNotebook is pair_notebook (GET /contexts/{context_id}/notebook).
@@ -98,7 +100,23 @@ func ReadNotebook(s Store, actor Actor, contextID string, now time.Time) (Notebo
 		return NotebookView{}, err
 	}
 	view.GrantedPurposes = pairnotebook.GrantedPurposes(consents, participants, &now)
+	if view.Taste, err = pairTaste(s, consents, participants, actor, now); err != nil {
+		return NotebookView{}, err
+	}
 	return view, nil
+}
+
+// pairTaste is _pair_taste: tastes are read only once the domain has said a
+// couple exists; outside «Một đôi» nobody's tags are fetched at all.
+func pairTaste(s Store, consents []pairnotebook.Consent, participants []string, actor Actor, now time.Time) (*pairnotebook.Taste, error) {
+	if !pairnotebook.CanBatDoi(consents, participants, &now) {
+		return nil, nil
+	}
+	tags, err := s.InterestsByPerson(append([]string{}, participants...))
+	if err != nil {
+		return nil, err
+	}
+	return pairnotebook.GuHaiNguoi(consents, participants, actor.ID, tags, now), nil
 }
 
 // openPaperID is _open_paper_id: the first sheet in play, skipping a draft
@@ -141,6 +159,9 @@ func ProposeConsent(s Store, actor Actor, contextID, purpose string, now time.Ti
 	if purpose != "lap_so" && !isActive(notebook) {
 		return ProposalView{}, refusal(409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã.")
 	}
+	if slices.Contains(pairnotebook.PerPersonPurposes(), purpose) {
+		return proposePerPerson(s, notebook, members, purpose, actor, now)
+	}
 	// One offer per rung at a time. The other person already asking for the
 	// same thing is an offer to ANSWER, by id: a second proposal made each of
 	// them agree only with themselves, and the rung read «both» with nothing
@@ -179,6 +200,45 @@ func ProposeConsent(s Store, actor Actor, contextID, purpose string, now time.Ti
 		return ProposalView{}, err
 	}
 	if err := s.GrantConsent(proposal.ID, actor.ID, now); err != nil {
+		return ProposalView{}, err
+	}
+	return proposalView(proposal), nil
+}
+
+// proposePerPerson is _propose_per_person (ADR-0034 §2.1): only inside «Một
+// đôi»; filed, granted by its proposer and completed in one go, so nobody is
+// ever left to «agree» to somebody else's taste. Asking again while it is on
+// returns the proposal in force.
+func proposePerPerson(s Store, notebook *Notebook, members []string, purpose string, actor Actor, now time.Time) (ProposalView, error) {
+	participants := Participants(notebook, members)
+	if !pairnotebook.CanBatDoi(ConsentsOf(notebook), participants, &now) {
+		return ProposalView{}, refusal(409, "consent_missing", "Hai bạn bật «Một đôi» trước đã.")
+	}
+	for _, row := range notebook.Consents {
+		if row.PersonID != actor.ID || row.GrantedAt == nil || row.RevokedAt != nil {
+			continue
+		}
+		for _, proposal := range notebook.Proposals {
+			if proposal.ID == row.ProposalID && proposal.Purpose == purpose && proposal.CompletedAt != nil {
+				return proposalView(proposal), nil
+			}
+		}
+	}
+	proposal, err := s.CreateConsentProposal(ProposalDraft{
+		CycleID:      *notebook.CycleID,
+		Purpose:      purpose,
+		ProposedByID: actor.ID,
+		TermsVersion: DieuKhoanHienTai,
+		ExpiresAt:    pairnotebook.HanDeNghi(now),
+		Now:          now,
+	})
+	if err != nil {
+		return ProposalView{}, err
+	}
+	if err := s.GrantConsent(proposal.ID, actor.ID, now); err != nil {
+		return ProposalView{}, err
+	}
+	if err := s.CompleteConsentProposal(proposal.ID, now); err != nil {
 		return ProposalView{}, err
 	}
 	return proposalView(proposal), nil

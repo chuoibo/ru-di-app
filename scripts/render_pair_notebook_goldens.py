@@ -85,6 +85,8 @@ GUARD_RULES = (
 A = "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
 B = "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
 C = "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+#: Tastes gu_hai_nguoi reads: out of vocabulary order, one retired tag.
+GU = {A: ["cafe", "an-uong", "game"], B: ["game", "outdoor", "cafe", "tag-da-bo"], C: ["karaoke"]}
 NOW = datetime(2026, 9, 13, 12, 0, tzinfo=UTC)
 MICRO = timedelta(microseconds=1)
 VIETNAM = timezone(timedelta(hours=7))
@@ -171,6 +173,11 @@ def consents_case(
         result["chat_consent_active"] = pair_notebook.chat_consent_active(
             consents, participants, now=now
         )
+        # ADR-0034: what each person asked about may see of the two tastes.
+        result["gu"] = [
+            [person, pair_notebook.gu_hai_nguoi(consents, participants, person, GU, now=now)]
+            for person in ask
+        ]
     return {
         "fn": "consents",
         "name": name,
@@ -226,7 +233,30 @@ def han_case(name: str, now: datetime) -> dict:
 def edge_cases() -> list[dict]:
     two = [A, B]
     both_chat = [consent(A, "doc_chat"), consent(B, "doc_chat")]
+    doi = [consent(A, "bat_doi", proposal_id="PR-D"), consent(B, "bat_doi", proposal_id="PR-D")]
     cases = [
+        # ADR-0034: taste, per person, inside «Một đôi» only.
+        consents_case("taste: friends only", [consent(B, "chia_gu", proposal_id="PG-B")], two, NOW),
+        consents_case("taste: couple, nobody shares", doi, two, NOW),
+        consents_case("taste: couple, one shares", doi + [consent(B, "chia_gu", proposal_id="PG-B")], two, NOW),
+        consents_case(
+            "taste: couple, both share",
+            doi + [consent(A, "chia_gu", proposal_id="PG-A"), consent(B, "chia_gu", proposal_id="PG-B")],
+            two,
+            NOW,
+        ),
+        consents_case(
+            "taste: taken back",
+            doi + [consent(A, "chia_gu", proposal_id="PG-A"), consent(B, "chia_gu", proposal_id="PG-B", revoked_at=NOW - MICRO)],
+            two,
+            NOW,
+        ),
+        consents_case(
+            "taste: both share on one proposal is still two people",
+            doi + [consent(A, "chia_gu", proposal_id="PG"), consent(B, "chia_gu", proposal_id="PG")],
+            two,
+            NOW,
+        ),
         # QA 23/09: each person filed their own proposal for the same rung.
         # Per purpose that read as «both agreed»; per proposal it is nothing.
         consents_case(
@@ -549,7 +579,7 @@ def edge_cases() -> list[dict]:
 # ---------------------------------------------------------------------------
 
 PEOPLE = (A, B, C, A.upper(), "", "ngu" + E_DOT_CIRCUMFLEX)
-PURPOSES = ("lap_so", "bat_doi", "doc_chat", "doc_chat", "doc_het", "", "DOC_CHAT")
+PURPOSES = ("lap_so", "bat_doi", "doc_chat", "doc_chat", "doc_het", "", "DOC_CHAT", "chia_gu", "bat_doi")
 DELTAS = (
     -timedelta(days=3),
     -timedelta(seconds=1),
@@ -600,7 +630,7 @@ def fuzz_cases() -> list[dict]:
                     rows.append(
                         {
                             "person_id": person,
-                            "purpose": "doc_chat" if rng.random() < 0.9 else "bat_doi",
+                            "purpose": rng.choice(("doc_chat", "doc_chat", "bat_doi", "bat_doi", "chia_gu")),
                             "granted_at": instant(0.05),
                             "revoked_at": instant(0.9),
                             "proposal_expires_at": rng.choice(
@@ -608,6 +638,18 @@ def fuzz_cases() -> list[dict]:
                             ),
                         }
                     )
+                    if rng.random() < 0.5:
+                        # ADR-0034: each person's own taste switch, own proposal.
+                        rows.append(
+                            {
+                                "person_id": person,
+                                "purpose": "chia_gu",
+                                "granted_at": instant(0.05),
+                                "revoked_at": instant(0.9),
+                                "proposal_expires_at": NOW + timedelta(days=3),
+                                "proposal_id": "PG-" + person[:4],
+                            }
+                        )
                 rng.shuffle(rows)
             cases.append(
                 consents_case(

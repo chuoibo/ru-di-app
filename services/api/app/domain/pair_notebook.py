@@ -26,18 +26,20 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime, timedelta
 
-from app.domain import pair_paper
+from app.domain import interests, pair_paper
 
 __all__ = [
     "CONSENT_PURPOSES",
     "CONSTRAINT_KINDS",
     "CYCLE_STATES",
     "NotebookError",
+    "PER_PERSON_PURPOSES",
     "can_bat_doi",
     "chat_consent_active",
     "dang_cho",
     "granted_by",
     "granted_purposes",
+    "gu_hai_nguoi",
     "han_de_nghi",
     "xem_truoc_dong_so",
 ]
@@ -55,7 +57,14 @@ CYCLE_STATES = ("pending", "active", "closed")
 #: The consent ladder of section 6.1, tier 2 upward. Tier 1 («nhận lời đi
 #: chơi») is the invitation itself and has no row. `doc_chat` is tier 4 and is
 #: off until somebody turns it on: there is no default that reads a chat.
-CONSENT_PURPOSES = ("lap_so", "bat_doi", "doc_chat")
+#: `chia_gu` (ADR-0034) is not a rung both climb: each person turns it on for
+#: THEMSELVES -- «let the other see my taste, and let Nếp use it here» -- and a
+#: proposal for it has one answer, its proposer's. It sits in this tuple so the
+#: per-person switches (`my_consents`, `their_consents_granted`) carry it.
+CONSENT_PURPOSES = ("lap_so", "bat_doi", "doc_chat", "chia_gu")
+
+#: Purposes one person decides alone (ADR-0034 §2.1).
+PER_PERSON_PURPOSES = ("chia_gu",)
 
 #: The two shared constraints of section 6.4. Two, not a free list: a list
 #: grows into a profile, and this is meant to stay the smallest thing that
@@ -184,6 +193,45 @@ def chat_consent_active(
     the conversation, not after.
     """
     return "doc_chat" in granted_purposes(consents, participants, now=now)
+
+
+def gu_hai_nguoi(
+    consents: tuple[dict, ...] | list[dict],
+    participants: tuple[str, ...] | list[str],
+    toi: str,
+    gu_theo_nguoi: dict[str, list[str]],
+    *,
+    now: datetime,
+) -> dict | None:
+    """What of the two tastes one person may see (ADR-0034 §2.1–2.2).
+
+    Only in a notebook both have made «Một đôi»; `None` otherwise, because a
+    taste is not something two friends' notebook shares. Within it: the other
+    person's tags only if THEY turned `chia_gu` on, and the tags the two have
+    in common only if BOTH did -- «common» names the other person's taste too,
+    so it needs their yes as much as «theirs» does. My own switch is reported
+    so the screen can offer it; my own tags are on my profile already.
+
+    Tags come back in vocabulary order, and a stored tag the vocabulary no
+    longer has is left out rather than shown as a raw id.
+    """
+    people = [str(p) for p in participants]
+    me = str(toi)
+    if not can_bat_doi(consents, people, now=now):
+        return None
+    other = next((p for p in people if p != me), None)
+    mine_shared = "chia_gu" in granted_by(consents, me, now=now)
+    theirs_shared = other is not None and "chia_gu" in granted_by(consents, other, now=now)
+    their_tags = set(gu_theo_nguoi.get(other, [])) if theirs_shared and other is not None else set()
+    my_tags = set(gu_theo_nguoi.get(me, []))
+    theirs = [tag for tag in interests.INTEREST_IDS if tag in their_tags]
+    common = [tag for tag in theirs if tag in my_tags] if mine_shared else []
+    return {
+        "mine_shared": mine_shared,
+        "theirs_shared": theirs_shared,
+        "theirs": theirs,
+        "common": common,
+    }
 
 
 def _revision(rows: list[str]) -> str:

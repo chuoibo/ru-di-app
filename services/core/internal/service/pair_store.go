@@ -723,3 +723,20 @@ func pairNguonJSON(nguon pairpaper.Nguon) ([]byte, error) {
 func civilDay(d pairpaper.Date) time.Time {
 	return time.Date(d.Year, time.Month(d.Month), d.Day, 0, 0, 0, 0, time.UTC)
 }
+
+// InterestsByPerson is interests_by_person, as a map for the taste reading.
+func (s PairStore) InterestsByPerson(personIDs []string) (map[string][]string, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.InterestsByPerson(s.Ctx, personIDs)
+	if err != nil {
+		return nil, storeError(err)
+	}
+	out := map[string][]string{}
+	for _, row := range rows {
+		out[row.PersonID] = row.Tags
+	}
+	return out, nil
+}

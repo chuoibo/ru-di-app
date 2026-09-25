@@ -56,6 +56,7 @@ export function SoDoiSongProvider({
         cuaToi: d.proposed_by_id === toiId,
       })),
       daDong: false,
+      gu: so?.taste ?? null,
       daNap: song.pha !== "dang-nap",
       dangLam: song.dangLam,
       loiLenh: song.loiLenh,
@@ -71,6 +72,8 @@ export function SoDoiSongProvider({
       deNghiLapSo: () => void song.xinLapSo(),
       deNghiBatDoi: () => void song.xinBac("bat_doi"),
       thuHoiBatDoi: () => void song.thuHoi("bat_doi"),
+      chiaGu: () => void song.xinBac("chia_gu"),
+      thoiChiaGu: () => void song.thuHoi("chia_gu"),
       datRangBuoc: async (rb) => {
         // Two fields, two writes, and an empty one is a delete: the route takes
         // one kind at a time and refuses a blank line, because emptying a

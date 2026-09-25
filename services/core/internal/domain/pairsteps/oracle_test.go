@@ -508,6 +508,7 @@ type fakeStore struct {
 	conflicts         map[string][]any
 	constraintVersion int
 	places            []PlaceRef
+	interests         map[string][]string
 }
 
 func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
@@ -522,6 +523,23 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 	}
 	// "places": [id, name] or [id, name, destination, category, kinds,
 	// traits, rating*10, count], the catalogue get_place and list_places read.
+	// "interests": {person name: [tag, ...]}, interests_by_person (ADR-0034).
+	s.interests = map[string][]string{}
+	if raw, ok := world["interests"].(map[string]any); ok {
+		for name, tags := range raw {
+			items, err := oracletest.List(tags)
+			if err != nil {
+				return nil, err
+			}
+			for _, item := range items {
+				text, err := oracletest.Str(item)
+				if err != nil {
+					return nil, err
+				}
+				s.interests[h.ids[name]] = append(s.interests[h.ids[name]], text)
+			}
+		}
+	}
 	placeRows, err := oracletest.List(orEmpty(world["places"]))
 	if err != nil {
 		return nil, err
@@ -932,6 +950,17 @@ func (s *fakeStore) CreateOuting(d OutingDraft) (string, error) {
 	return s.h.ids["OUN"], nil
 }
 
+func (s *fakeStore) InterestsByPerson(personIDs []string) (map[string][]string, error) {
+	s.rec("interests_by_person", s.h.nameList(personIDs))
+	out := map[string][]string{}
+	for _, id := range personIDs {
+		if tags := s.interests[id]; len(tags) > 0 {
+			out[id] = tags
+		}
+	}
+	return out, nil
+}
+
 func (s *fakeStore) GetPlace(placeID string) (*PlaceRef, error) {
 	s.rec("get_place", placeID)
 	for _, p := range s.places {
@@ -999,7 +1028,17 @@ func (h *harness) notebookView(v NotebookView) any {
 		"my_consents": mine, "their_consents_granted": theirs, "pending_proposals": pending, "constraints": constraints,
 		"nep_gui_ho": v.NepGuiHo, "open_paper_id": h.optionalName(v.OpenPaperID),
 		"granted_purposes": stringsAny(v.GrantedPurposes),
+		"taste":            tasteView(v.Taste),
 	}
+}
+
+// tasteView is PairTasteResponse, or nil.
+func tasteView(t *pairnotebook.Taste) any {
+	if t == nil {
+		return nil
+	}
+	return map[string]any{"mine_shared": t.MineShared, "theirs_shared": t.TheirsShared,
+		"theirs": stringsAny(t.Theirs), "common": stringsAny(t.Common)}
 }
 
 // stringsAny is a []string as the decoded JSON list it is compared against.

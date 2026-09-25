@@ -23,6 +23,7 @@ import (
 	"time"
 	"unicode"
 
+	"mobile/services/core/internal/domain/pairnotebook"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -39,7 +40,7 @@ func refuse(status int, code string) error { return &routeRefusal{status, code} 
 var (
 	pairOpen        = map[string]bool{"nhap": true, "da_gui": true, "da_xem": true, "de_nghi_sua": true, "dong_y": true}
 	pairPlan        = map[string]bool{"chot": true, "da_di": true}
-	pairPurposes    = []string{"lap_so", "bat_doi", "doc_chat"}
+	pairPurposes    = []string{"lap_so", "bat_doi", "doc_chat", "chia_gu"}
 	pairKinds       = map[string]bool{"khong_an_duoc": true, "dung": true}
 	pairEventStates = map[string][]string{
 		"gui": {"nhap"}, "xem": {"da_gui", "da_xem"}, "dong_y": {"da_gui", "da_xem", "dong_y"},
@@ -164,6 +165,25 @@ func (p *pairRoute) grantedPurposes(consents []PairConsent, participants []strin
 	return out
 }
 
+// couple is can_bat_doi over the locked rows, by the domain function itself:
+// the taste reading (ADR-0034) and chia_gu both turn on it, and it counts a
+// completed proposal as standing past its offer window, which grantedPurposes
+// above (the older per-purpose reading) does not.
+func (p *pairRoute) couple(notebook *PairNotebook, people []string) bool {
+	completed := map[string]*time.Time{}
+	for _, row := range notebook.Proposals {
+		completed[row.ID] = row.CompletedAt
+	}
+	consents := []pairnotebook.Consent{}
+	for _, c := range notebook.Consents {
+		expires := c.ProposalExpiresAt
+		consents = append(consents, pairnotebook.Consent{PersonID: c.PersonID, Purpose: c.Purpose, GrantedAt: c.GrantedAt,
+			RevokedAt: c.RevokedAt, ProposalExpiresAt: &expires, ProposalID: c.ProposalID, ProposalCompletedAt: completed[c.ProposalID]})
+	}
+	now := p.now
+	return pairnotebook.CanBatDoi(consents, people, &now)
+}
+
 func (p *pairRoute) dangCho(completed *time.Time, expires time.Time) bool {
 	return completed == nil && p.now.Before(expires)
 }
@@ -184,6 +204,32 @@ func (p *pairRoute) proposeConsent() error {
 	}
 	if purpose != "lap_so" && (notebook.CycleState == nil || *notebook.CycleState != "active") {
 		return refuse(409, "consent_missing")
+	}
+	// ADR-0034: chia_gu is one person's own switch, only inside «Một đôi»,
+	// completed as it is filed; asking again while it is on changes nothing.
+	if purpose == "chia_gu" {
+		if !p.couple(notebook, participantsOf(notebook, members)) {
+			return refuse(409, "consent_missing")
+		}
+		for _, c := range notebook.Consents {
+			if c.PersonID != p.actor || c.GrantedAt == nil || c.RevokedAt != nil {
+				continue
+			}
+			for _, row := range notebook.Proposals {
+				if row.ID == c.ProposalID && row.Purpose == purpose && row.CompletedAt != nil {
+					return nil
+				}
+			}
+		}
+		proposal, err := p.repo.CreateConsentProposal(bg, ConsentProposalInput{CycleID: *notebook.CycleID, Purpose: purpose,
+			ProposedByID: p.actor, TermsVersion: 1, ExpiresAt: pythonInstant(p.now).Add(7 * 24 * time.Hour), Now: p.now})
+		if err != nil {
+			return err
+		}
+		if err := p.repo.GrantConsent(bg, proposal.ID, p.actor, p.now); err != nil {
+			return err
+		}
+		return p.repo.CompleteConsentProposal(bg, proposal.ID, p.now)
 	}
 	// One offer per rung (2026-09-23): the other person's standing offer is
 	// answered, not duplicated; one's own is returned untouched. Read from the
@@ -1078,9 +1124,17 @@ func pairRouteGo(repo Repository, name string, a map[string]any) (any, error) {
 	var err error
 	switch name {
 	case "route.pair_notebook":
-		if _, err = p.contextOr404(p.text("context_id")); err == nil {
-			if _, err = repo.GetPairNotebook(bg, p.text("context_id")); err == nil {
-				_, err = repo.ListPairPapers(bg, p.text("context_id"))
+		var members []string
+		if members, err = p.contextOr404(p.text("context_id")); err == nil {
+			var notebook *PairNotebook
+			if notebook, err = repo.GetPairNotebook(bg, p.text("context_id")); err == nil {
+				if _, err = repo.ListPairPapers(bg, p.text("context_id")); err == nil && notebook != nil {
+					// ADR-0034: tastes are read only inside «Một đôi».
+					people := participantsOf(notebook, members)
+					if p.couple(notebook, people) {
+						_, err = repo.InterestsByPerson(bg, people)
+					}
+				}
 			}
 		}
 	case "route.propose_pair_consent":

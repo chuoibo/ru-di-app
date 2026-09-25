@@ -29,7 +29,8 @@ def cho_phep(person: str, purpose: str, **over) -> dict:
 
 def test_tu_vung_dong():
     assert pair_notebook.CYCLE_STATES == ("pending", "active", "closed")
-    assert pair_notebook.CONSENT_PURPOSES == ("lap_so", "bat_doi", "doc_chat")
+    assert pair_notebook.CONSENT_PURPOSES == ("lap_so", "bat_doi", "doc_chat", "chia_gu")
+    assert pair_notebook.PER_PERSON_PURPOSES == ("chia_gu",)
     assert pair_notebook.CONSTRAINT_KINDS == ("khong_an_duoc", "dung")
 
 
@@ -201,3 +202,49 @@ def test_de_nghi_da_hoan_tat_khong_het_han():
     chua_xong = [cho_phep(p, "bat_doi", proposal_id="PR-1", proposal_expires_at=qua_han) for p in HAI_NGUOI]
     assert pair_notebook.granted_purposes(xong, HAI_NGUOI, now=NOW) == {"bat_doi"}
     assert pair_notebook.granted_purposes(chua_xong, HAI_NGUOI, now=NOW) == frozenset()
+
+
+# ADR-0034 §2.1–2.2: taste in a couple's notebook, per person.
+
+DOI = [cho_phep(A, "bat_doi", proposal_id="p-doi"), cho_phep(B, "bat_doi", proposal_id="p-doi")]
+GU = {A: ["cafe", "an-uong"], B: ["cafe", "outdoor", "khong-co-trong-tu-vung"]}
+
+
+def gu(consents, toi=A, gu_theo_nguoi=GU):
+    return pair_notebook.gu_hai_nguoi(consents, HAI_NGUOI, toi, gu_theo_nguoi, now=NOW)
+
+
+def test_gu_ngoai_mot_doi_la_none():
+    ban_be = [cho_phep(A, "chia_gu", proposal_id="pa"), cho_phep(B, "chia_gu", proposal_id="pb")]
+    assert gu(ban_be) is None
+
+
+def test_chua_ai_bat_thi_khong_thay_gu_ai():
+    assert gu(DOI) == {"mine_shared": False, "theirs_shared": False, "theirs": [], "common": []}
+
+
+def test_chi_minh_bat_thi_van_khong_thay_gu_nguoi_kia():
+    r = gu(DOI + [cho_phep(A, "chia_gu", proposal_id="pa")])
+    assert r == {"mine_shared": True, "theirs_shared": False, "theirs": [], "common": []}
+
+
+def test_nguoi_kia_bat_thi_thay_gu_ho_nhung_chua_co_gu_chung():
+    r = gu(DOI + [cho_phep(B, "chia_gu", proposal_id="pb")])
+    assert r["theirs_shared"] is True
+    assert r["theirs"] == ["cafe", "outdoor"], "thứ tự từ vựng, bỏ tag không còn trong từ vựng"
+    assert r["common"] == [], "gu chung cần cả hai bật"
+
+
+def test_ca_hai_bat_thi_co_gu_chung():
+    r = gu(DOI + [cho_phep(A, "chia_gu", proposal_id="pa"), cho_phep(B, "chia_gu", proposal_id="pb")])
+    assert r["common"] == ["cafe"]
+
+
+def test_thu_hoi_chia_gu_la_thoi_ngay():
+    thu_hoi = cho_phep(B, "chia_gu", proposal_id="pb", revoked_at=NOW - timedelta(minutes=1))
+    assert gu(DOI + [cho_phep(A, "chia_gu", proposal_id="pa"), thu_hoi])["theirs"] == []
+
+
+def test_chia_gu_khong_bao_gio_la_dong_y_cua_ca_hai():
+    ca_hai = [cho_phep(A, "chia_gu", proposal_id="pa"), cho_phep(B, "chia_gu", proposal_id="pb")]
+    assert "chia_gu" not in pair_notebook.granted_purposes(ca_hai, HAI_NGUOI, now=NOW)

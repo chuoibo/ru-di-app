@@ -2498,7 +2498,7 @@ class ReelResponse(ApiModel):
 # bản mới, mốc gửi, người gửi, id outing. Một trường như thế trong body là một
 # đường cho client nói dối về điều nó không được quyết.
 
-PairConsentPurpose = Literal["lap_so", "bat_doi", "doc_chat"]
+PairConsentPurpose = Literal["lap_so", "bat_doi", "doc_chat", "chia_gu"]
 PairConstraintKind = Literal["khong_an_duoc", "dung"]
 PairResponseKind = Literal["dong_y", "de_nghi_sua"]
 PairAuthorType = Literal["human", "nep"]
@@ -2710,6 +2710,16 @@ class PairProposalResponse(ApiModel):
     my_granted: StrictBool
 
 
+class PairTasteResponse(ApiModel):
+    """Gu trong sổ đôi (ADR-0034 §2.1–2.2): gu người kia chỉ khi HỌ đã bật
+    `chia_gu`; gu chung chỉ khi CẢ HAI đã bật."""
+
+    mine_shared: StrictBool
+    theirs_shared: StrictBool
+    theirs: list[str]
+    common: list[str]
+
+
 class PairNotebookResponse(ApiModel):
     """Sổ, nhìn từ một trong hai người.
 
@@ -2733,6 +2743,8 @@ class PairNotebookResponse(ApiModel):
     #: Hai «có» của hai lời đề nghị khác nhau không phải một thoả thuận; màn
     #: hình chỉ được sáng một bậc theo trường này (QA 23/09).
     granted_purposes: list[PairConsentPurpose]
+    #: Null ngoài sổ «Một đôi» (ADR-0034).
+    taste: PairTasteResponse | None
 
 
 class PairProposalCreateRequest(ApiModel):
