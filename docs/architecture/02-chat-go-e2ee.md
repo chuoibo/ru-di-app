@@ -78,8 +78,14 @@ nên ai đọc thân câu trả lời của socket sẽ tưởng là rỗng.
 
 ### Điều chưa đạt, không được đọc thành đã xong
 
-- **Tải vẫn trượt cổng ADR-0031.** p95 2427 ms so với ngưỡng 800 ms ở 1.000
-  kết nối; burst 300/s còn FAIL; chưa có soak 24h.
+- **Tải: hai trên ba lượt của cổng ADR-0031 đã đạt, soak 24h chưa chạy.**
+  (Cập nhật 23-09; dòng cũ ghi "p95 2427 ms, burst còn FAIL" là trước PR #633.)
+  Nguyên nhân trượt cũ là tranh khoá trên hàng `chat_v2_conversations`; PR #633
+  thu vùng tới hạn lại. Baseline 30 phút @100/s đạt một lần trên bản sửa
+  (22-09: p95 106 ms, p99 1.441 ms, 0 `503`); burst 300/s đạt, đo lại trên
+  `62a591fa` ngày 23-09: p95 101 ms, p99 208 ms, 9.000.000/9.000.000 lượt giao.
+  p99 lượt dài còn mỏng; chi tiết và đòn bẩy kế tiếp ở
+  `docs/claude/2026-09-22/chat-tranh-khoa-hang-hoi-thoai.md`.
 - **Nhóm `messages` vẫn `PORTED-UNPROVEN`.** Đã có bốn kịch bản parity đầu
   tiên (`parity/scenarios/wai/`, trước đó thư mục này không tồn tại), nhưng
   lật nhãn cần một lượt cổng đầy đủ trên SHA sạch và sẽ đi riêng.
