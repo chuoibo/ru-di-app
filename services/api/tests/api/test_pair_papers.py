@@ -659,6 +659,7 @@ _THAN = {
     ("POST", "/papers/{paper_id}/withdraw"): {"version": 1},
     ("POST", "/papers/{paper_id}/versions/{version}/responses"): {"kind": "dong_y"},
     ("POST", "/papers/{paper_id}/keeps"): {"line": "Một dòng."},
+    ("PUT", "/contexts/{context_id}/notebook/week-role"): {"lo": "toi"},
 }
 
 
@@ -708,7 +709,7 @@ def test_every_pair_route_refuses_a_stranger(client):
                 "paper_not_found",
             ), f"{method} {path}: {answer.text}"
             swept += 1
-    assert swept == 19, f"quét được {swept} cửa, phải là 19"
+    assert swept == 20, f"quét được {swept} cửa, phải là 20"
 
 
 def test_the_list_carries_the_one_line_a_closed_row_shows(client, clock):

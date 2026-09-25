@@ -80,6 +80,7 @@ from app.db.models import (
     PairPaperResponse,
     PairPaperVersion,
     PairPaperView,
+    PairCycleRhythm,
     PairSharedConstraint,
     PayerAcknowledgement,
     PaymentReport,
@@ -419,6 +420,17 @@ class PairKeepRecord:
     person_id: uuid.UUID
     line: str
     created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PairRhythmRecord:
+    """A week's chosen «Người lo» (ADR-0034 §2.4); `nguoi_lo_id` None = both."""
+
+    cycle_id: uuid.UUID
+    tuan: date
+    nguoi_lo_id: uuid.UUID | None
+    chon_boi_id: uuid.UUID
+    updated_at: datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -1718,6 +1730,20 @@ class ApiRepository(Protocol):
     def delete_pair_constraint(
         self, cycle_id: uuid.UUID, owner_id: uuid.UUID, kind: str
     ) -> bool: ...
+
+    def get_pair_rhythm(
+        self, cycle_id: uuid.UUID, tuan: date
+    ) -> PairRhythmRecord | None: ...
+
+    def set_pair_rhythm(
+        self,
+        *,
+        cycle_id: uuid.UUID,
+        tuan: date,
+        nguoi_lo_id: uuid.UUID | None,
+        chon_boi_id: uuid.UUID,
+        now: datetime,
+    ) -> PairRhythmRecord: ...
 
     def create_pair_paper(
         self,
@@ -7977,6 +8003,43 @@ class SqlAlchemyApiRepository:
         self.session.flush()
         return True
 
+    def get_pair_rhythm(
+        self, cycle_id: uuid.UUID, tuan: date
+    ) -> PairRhythmRecord | None:
+        row = self._pair_rhythm_row(cycle_id, tuan)
+        return None if row is None else _rhythm_record(row)
+
+    def _pair_rhythm_row(self, cycle_id: uuid.UUID, tuan: date) -> PairCycleRhythm | None:
+        # A SELECT every time, not `session.get`: the identity map would
+        # answer the read right after a write without asking the database,
+        # and the Go port (which always asks) would then issue one statement
+        # more than this does.
+        return self.session.execute(
+            select(PairCycleRhythm).where(
+                PairCycleRhythm.cycle_id == cycle_id, PairCycleRhythm.tuan == tuan
+            )
+        ).scalar_one_or_none()
+
+    def set_pair_rhythm(
+        self,
+        *,
+        cycle_id: uuid.UUID,
+        tuan: date,
+        nguoi_lo_id: uuid.UUID | None,
+        chon_boi_id: uuid.UUID,
+        now: datetime,
+    ) -> PairRhythmRecord:
+        row = self._pair_rhythm_row(cycle_id, tuan)
+        if row is None:
+            row = PairCycleRhythm(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=nguoi_lo_id, chon_boi_id=chon_boi_id, updated_at=now)
+            self.session.add(row)
+        else:
+            row.nguoi_lo_id = nguoi_lo_id
+            row.chon_boi_id = chon_boi_id
+            row.updated_at = now
+        self.session.flush()
+        return _rhythm_record(row)
+
     def _pair_paper_record(self, paper: PairPaper) -> PairPaperRecord:
         versions = tuple(
             PairVersionRecord(
@@ -8342,3 +8405,13 @@ __all__ = [
     "VoteOptionRecord",
     "VoteRecord",
 ]
+
+
+def _rhythm_record(row: PairCycleRhythm) -> PairRhythmRecord:
+    return PairRhythmRecord(
+        cycle_id=row.cycle_id,
+        tuan=row.tuan,
+        nguoi_lo_id=row.nguoi_lo_id,
+        chon_boi_id=row.chon_boi_id,
+        updated_at=row.updated_at,
+    )

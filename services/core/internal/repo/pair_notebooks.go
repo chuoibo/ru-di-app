@@ -545,3 +545,74 @@ func (r Repository) DeletePairConstraint(ctx context.Context, cycleID, ownerID, 
 	}
 	return true, nil
 }
+
+// PairRhythm is PairRhythmRecord (ADR-0034 §2.4). NguoiLoID nil is «cả hai».
+type PairRhythm struct {
+	CycleID   string
+	Tuan      time.Time
+	NguoiLoID *string
+	ChonBoiID string
+	UpdatedAt time.Time
+}
+
+// PairRhythmInput is set_pair_rhythm's arguments.
+type PairRhythmInput struct {
+	CycleID   string
+	Tuan      time.Time
+	NguoiLoID *string
+	ChonBoiID string
+	Now       time.Time
+}
+
+func rhythmKey(cycleID string, tuan time.Time) []column {
+	return []column{{"cycle_id", "::UUID", cycleID}, {"tuan", "::DATE", calendarDay(tuan)}}
+}
+
+// GetPairRhythm is get_pair_rhythm: an explicit SELECT by the key, every time.
+func (r Repository) GetPairRhythm(ctx context.Context, cycleID string, tuan time.Time) (*PairRhythm, error) {
+	var p PairRhythm
+	err := r.Q.QueryRow(ctx,
+		`SELECT pair_cycle_rhythms.cycle_id, pair_cycle_rhythms.tuan, pair_cycle_rhythms.nguoi_lo_id,
+		        pair_cycle_rhythms.chon_boi_id, pair_cycle_rhythms.updated_at
+		   FROM pair_cycle_rhythms
+		  WHERE pair_cycle_rhythms.cycle_id = $1::UUID AND pair_cycle_rhythms.tuan = $2::DATE`,
+		cycleID, calendarDay(tuan)).
+		Scan(&p.CycleID, &p.Tuan, &p.NguoiLoID, &p.ChonBoiID, &p.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	p.Tuan = calendarDay(p.Tuan)
+	p.UpdatedAt = p.UpdatedAt.UTC()
+	return &p, nil
+}
+
+// SetPairRhythm is set_pair_rhythm: the row by its key, then an INSERT, or an
+// UPDATE of only the columns whose value changed (the session's flush).
+func (r Repository) SetPairRhythm(ctx context.Context, in PairRhythmInput) (PairRhythm, error) {
+	existing, err := r.GetPairRhythm(ctx, in.CycleID, in.Tuan)
+	if err != nil {
+		return PairRhythm{}, err
+	}
+	updated := pythonInstant(in.Now)
+	out := PairRhythm{CycleID: in.CycleID, Tuan: calendarDay(in.Tuan), NguoiLoID: in.NguoiLoID, ChonBoiID: in.ChonBoiID, UpdatedAt: updated.UTC()}
+	if existing == nil {
+		_, err := r.Q.Exec(ctx, renderInsert("pair_cycle_rhythms", []insertColumn{{"cycle_id", "::UUID"}, {"tuan", "::DATE"},
+			{"nguoi_lo_id", "::UUID"}, {"chon_boi_id", "::UUID"}, {"updated_at", "::TIMESTAMP WITH TIME ZONE"}}, 1),
+			in.CycleID, calendarDay(in.Tuan), in.NguoiLoID, in.ChonBoiID, updated)
+		return out, err
+	}
+	var sets []column
+	if !sameText(existing.NguoiLoID, in.NguoiLoID) {
+		sets = append(sets, column{"nguoi_lo_id", "::UUID", in.NguoiLoID})
+	}
+	if existing.ChonBoiID != in.ChonBoiID {
+		sets = append(sets, column{"chon_boi_id", "::UUID", in.ChonBoiID})
+	}
+	if !existing.UpdatedAt.Equal(updated) {
+		sets = append(sets, column{"updated_at", "::TIMESTAMP WITH TIME ZONE", updated})
+	}
+	return out, r.updateRow(ctx, "pair_cycle_rhythms", sets, rhythmKey(in.CycleID, in.Tuan))
+}

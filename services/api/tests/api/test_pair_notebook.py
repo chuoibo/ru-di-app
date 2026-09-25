@@ -458,3 +458,36 @@ def test_taking_chia_gu_back_hides_the_taste_at_the_next_read(client, repository
     gone = client.delete(f"/contexts/{CAP}/notebook/consents/chia_gu", headers=head(NGUOI_KIA))
     assert gone.status_code == 204, gone.text
     assert _so(client).json()["taste"]["theirs"] == []
+
+
+# ADR-0034 §2.4: «Người lo» of the week, inferred or chosen; no gender anywhere.
+
+
+def test_week_role_only_in_a_couple(client):
+    lap_so(client)
+    assert _so(client).json()["week_role"] is None
+    refused = client.put(f"/contexts/{CAP}/notebook/week-role", json={"lo": "toi"}, headers=head(TOI))
+    assert refused.status_code == 409 and refused.json()["code"] == "consent_missing"
+
+
+def test_week_role_defaults_to_whoever_opened_the_notebook_then_can_be_chosen(client):
+    lap_so(client)  # TOI offered lap_so, so TOI opened the notebook
+    dong_thuan(client, "bat_doi")
+    role = _so(client).json()["week_role"]
+    assert role["cach"] == "suy"
+    assert role["nguoi_lo"] == [str(TOI)]
+    assert [d["score"] for d in role["diem"]] == [0, 0]
+    chosen = client.put(f"/contexts/{CAP}/notebook/week-role", json={"lo": "nguoi_kia"}, headers=head(TOI))
+    assert chosen.status_code == 200, chosen.text
+    assert chosen.json()["nguoi_lo"] == [str(NGUOI_KIA)] and chosen.json()["cach"] == "chon"
+    seen = _so(client, actor=NGUOI_KIA).json()["week_role"]
+    assert seen["nguoi_lo"] == [str(NGUOI_KIA)], "cả hai thấy cùng một lựa chọn"
+    share = client.put(f"/contexts/{CAP}/notebook/week-role", json={"lo": "ca_hai"}, headers=head(NGUOI_KIA))
+    assert set(share.json()["nguoi_lo"]) == {str(TOI), str(NGUOI_KIA)}
+
+
+def test_week_role_answers_a_bad_choice_with_422(client):
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    bad = client.put(f"/contexts/{CAP}/notebook/week-role", json={"lo": "nam"}, headers=head(TOI))
+    assert bad.status_code == 422

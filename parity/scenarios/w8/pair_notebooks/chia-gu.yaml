@@ -4,7 +4,9 @@
 # other), the other cannot grant it for them, `taste.theirs` shows only a sharer's
 # tags, `taste.common` needs both, asking again returns the same proposal, and
 # revoking hides the taste at the next read. With both sharing, Nếp's draft names the
-# stop after the common taste and says so (§2.2). Texts are sample data (dữ liệu mẫu).
+# stop after the common taste and says so (§2.2). «Người lo» of the week (§2.4): inferred in
+# every notebook read, then chosen by either person, «ca_hai» for both, 422 for anything
+# else, 409 outside a couple. Texts are sample data (dữ liệu mẫu).
 id: w8/pair_notebooks/chia-gu
 routes:
   - 'GET /contexts/{context_id}/notebook'
@@ -13,6 +15,7 @@ routes:
   - 'DELETE /contexts/{context_id}/notebook/consents/{purpose}'
   - 'POST /contexts/{context_id}/papers/draft'
   - 'GET /papers/{paper_id}'
+  - 'PUT /contexts/{context_id}/notebook/week-role'
 auth_mode: dev
 personas:
   owner: {}
@@ -106,6 +109,14 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"purpose":"chia_gu"}'
+  - id: owner_sets_week_role_as_friends
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/week-role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"lo":"toi"}'
   - id: owner_reads_as_friends
     as: owner
     request:
@@ -177,6 +188,35 @@ steps:
     request:
       method: GET
       path: '/contexts/{{pair}}/notebook'
+  - id: owner_says_mate_leads
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/week-role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"lo":"nguoi_kia"}'
+  - id: mate_reads_who_leads
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: mate_says_share
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/week-role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"lo":"ca_hai"}'
+  - id: owner_says_something_else
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/week-role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"lo":"nam"}'
   - id: owner_drafts_with_common_taste
     as: owner
     request:

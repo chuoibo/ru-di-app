@@ -2720,6 +2720,27 @@ class PairTasteResponse(ApiModel):
     common: list[str]
 
 
+class PairRoleScoreResponse(ApiModel):
+    person_id: UUID
+    score: int
+
+
+class PairWeekRoleResponse(ApiModel):
+    """«Người lo» tuần này (ADR-0034 §2.4): `cach` là «suy» (từ những gì hai
+    người đã làm trong sổ) hoặc «chon» (một trong hai đã chọn cho tuần này)."""
+
+    tuan: date
+    nguoi_lo: list[UUID]
+    cach: Literal["suy", "chon"]
+    diem: list[PairRoleScoreResponse]
+
+
+class PairWeekRoleRequest(ApiModel):
+    """Ai lo tuần này: tôi, người kia, hay «Hôm nay mình share»."""
+
+    lo: Literal["toi", "nguoi_kia", "ca_hai"]
+
+
 class PairNotebookResponse(ApiModel):
     """Sổ, nhìn từ một trong hai người.
 
@@ -2745,6 +2766,8 @@ class PairNotebookResponse(ApiModel):
     granted_purposes: list[PairConsentPurpose]
     #: Null ngoài sổ «Một đôi» (ADR-0034).
     taste: PairTasteResponse | None
+    #: Null ngoài sổ «Một đôi» đang mở (ADR-0034 §2.4).
+    week_role: PairWeekRoleResponse | None
 
 
 class PairProposalCreateRequest(ApiModel):

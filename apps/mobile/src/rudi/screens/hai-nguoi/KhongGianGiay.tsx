@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { typography, useRudiTheme } from "../../theme";
 import { useSoDoi } from "../../to-giay/SoDoi";
 import { cauGu } from "../../to-giay/gu-doi";
+import { cauVaiTuan } from "../../to-giay/vai-tuan";
 import { type ToGiay, goiYChoLam, nenXinTo, phienBan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
 import { Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -16,6 +17,7 @@ import { DongSo } from "./DongSo";
 import { XacNhanViec } from "./XacNhanViec";
 import { BatMotDoi, LapSo } from "./DongYBac";
 import { GiuMotDieu } from "./GiuMotDieu";
+import { AiLoTuanNay } from "./AiLoTuanNay";
 import { GuHaiBan } from "./GuHaiBan";
 import { LoaiSo } from "./LoaiSo";
 import { RangBuoc } from "./RangBuoc";
@@ -43,7 +45,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   const router = useRouter();
   const { colors, space } = useRudiTheme();
   const so = useSoDoi();
-  const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat" | "nguoi-kia" | "gu">(null);
+  const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat" | "nguoi-kia" | "gu" | "vai">(null);
   const daRu = useRef(false);
 
   // `?ru=1` from «Rủ một người đi chơi»: draft straight away, once, and only
@@ -60,6 +62,9 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   // What the two like in common, once both have shared (ADR-0034): the one
   // line of insight the notebook can show without anybody asking for it.
   const cauGuSo = cauGu(so.gu, so.tenNguoiKia);
+  // Whose week it is (ADR-0034 §2.4), inferred or chosen; shown only in an
+  // open «Một đôi», with a way to change it.
+  const cauVai = cauVaiTuan(so.vai, so.toiId, so.tenNguoiKia);
   // «Rủ … tới đây»: once this person's own draft is on the table, open it
   // with the place filled in as the main stop -- once, not on every render.
   const [goiYCho, setGoiYCho] = useState<string | undefined>(choGoiY);
@@ -177,7 +182,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     than = (
       <EmptyState
         action={{ label: "Rủ đi chơi", onPress: () => void so.ruDiChoi() }}
-        body={so.luotCuaToi ? "Tuần này bạn mở lời. Nếp phác sẵn, bạn sửa rồi gửi." : "Tuần này người ấy mở lời. Bạn có thể gửi trước nếu muốn."}
+        body={so.luotCuaToi ? "Tuần này bạn mở lời. Nếp phác sẵn, bạn sửa rồi gửi." : `Tuần này ${so.tenNguoiKia} mở lời. Bạn có thể gửi trước nếu muốn.`}
         illustration={coBuoiNao ? <Nep gap="manh" pose={so.luotCuaToi ? "dua-giay" : "up-xuong"} /> : undefined}
         kind="first-use"
         layout="inline"
@@ -275,6 +280,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           tieuDe={TIEU_DE[viec]}
         />
       ) : null}
+      <AiLoTuanNay dangLam={so.dangLam?.startsWith("vai:") ?? false} onChon={(lo) => so.chonLo(lo)} onClose={dong} open={mo === "vai"} tenNguoiKia={so.tenNguoiKia} toiId={so.toiId} vai={so.vai} />
       <GuHaiBan dangLam={so.dangLam?.includes("chia_gu") ?? false} gu={so.gu} onBat={so.chiaGu} onClose={dong} onSuaGuCuaToi={() => { dong(); router.push("/personalization" as never); }} onTat={so.thoiChiaGu} open={mo === "gu"} tenNguoiKia={so.tenNguoiKia} />
       <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
       <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
@@ -319,6 +325,12 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]} testID="loi-lenh-so">
             {so.loiLenh}
           </Text>
+        ) : null}
+        {cauVai ? (
+          <Pressable accessibilityHint="Đổi ai lo tuần này" accessibilityRole="button" onPress={() => setMo("vai")} style={styles.vai} testID="giay-ai-lo">
+            <Text style={[typography.label, { color: colors.ink }]}>{cauVai.nhan}</Text>
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>{`${cauVai.vi} · Đổi`}</Text>
+          </Pressable>
         ) : null}
         {cauGoiY ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.inkSoft }]} testID="giay-goi-y-cho">
@@ -401,6 +413,7 @@ function dongTom(t: ToGiay): string {
 
 const styles = StyleSheet.create({
   than: { paddingTop: 8 },
+  vai: { gap: 2, paddingVertical: 4 },
   footer: { paddingHorizontal: 16 },
   dev: { borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed", borderRadius: 10, padding: 8, gap: 0 },
 });

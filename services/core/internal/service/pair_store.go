@@ -740,3 +740,27 @@ func (s PairStore) InterestsByPerson(personIDs []string) (map[string][]string, e
 	}
 	return out, nil
 }
+
+// GetPairRhythm is get_pair_rhythm.
+func (s PairStore) GetPairRhythm(cycleID string, tuan pairpaper.Date) (*pairsteps.Rhythm, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	row, err := r.GetPairRhythm(s.Ctx, cycleID, civilDay(tuan))
+	if err != nil || row == nil {
+		return nil, storeError(err)
+	}
+	return &pairsteps.Rhythm{NguoiLoID: row.NguoiLoID}, nil
+}
+
+// SetPairRhythm is set_pair_rhythm.
+func (s PairStore) SetPairRhythm(draft pairsteps.RhythmDraft) error {
+	r, err := s.repository()
+	if err != nil {
+		return err
+	}
+	_, err = r.SetPairRhythm(s.Ctx, repo.PairRhythmInput{CycleID: draft.CycleID, Tuan: civilDay(draft.Tuan),
+		NguoiLoID: draft.NguoiLoID, ChonBoiID: draft.ChonBoiID, Now: draft.Now})
+	return storeError(err)
+}

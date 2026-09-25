@@ -61,7 +61,7 @@ from app.domain import pair_notebook, pair_paper  # noqa: E402
 
 SEED = 27
 FUZZ_CASES = 3000
-FUZZ_SHARDS = 6
+FUZZ_SHARDS = 7
 TARGET = "services/core/internal/domain/pairnotebook/testdata/python_{mode}.json"
 
 #: Copies of the digit rules in scripts/repo_guard.py plus the hex, e-mail and
@@ -189,6 +189,32 @@ def consents_case(
     }
 
 
+def nguoi_lo_case(name: str, participants: list[str], to_giay: list[dict], cycle: str, lap_so: str | None) -> dict:
+    """ADR-0034 §2.4: nguoi_lo_suy, and vai_tuan over it for no choice, each
+    participant chosen, and «cả hai»."""
+    suy = pair_notebook.nguoi_lo_suy(participants, to_giay, cycle_id=cycle, nguoi_lap_so=lap_so)
+    chon = [None, *[{"nguoi_lo_id": p} for p in participants], {"nguoi_lo_id": None}]
+    return {
+        "fn": "nguoi_lo",
+        "name": name,
+        "participants": participants,
+        "to_giay": to_giay,
+        "cycle": cycle,
+        "lap_so": lap_so,
+        "chon": chon,
+        "result": {"suy": suy, "vai": [pair_notebook.vai_tuan(suy, c, participants) for c in chon]},
+    }
+
+
+def to_tin_hieu(cycle, sent_by=None, author="human", responses=(), v1=True) -> dict:
+    return {
+        "cycle_id": cycle,
+        "versions": ([{"version": 1, "author_type": author, "sent_by": sent_by}] if v1 else [])
+        + [{"version": 2, "author_type": "human", "sent_by": sent_by}],
+        "responses": [{"person_id": p, "kind": k} for p, k in responses],
+    }
+
+
 def paper(state: str, paper_id: str, **over: object) -> dict:
     return {
         "id": paper_id,
@@ -234,7 +260,29 @@ def edge_cases() -> list[dict]:
     two = [A, B]
     both_chat = [consent(A, "doc_chat"), consent(B, "doc_chat")]
     doi = [consent(A, "bat_doi", proposal_id="PR-D"), consent(B, "bat_doi", proposal_id="PR-D")]
-    cases = [
+    lo = [
+        nguoi_lo_case("lo: nothing yet goes to the opener", [A, B], [], "CY", B),
+        nguoi_lo_case("lo: nothing and no opener", [A, B], [], "CY", None),
+        nguoi_lo_case(
+            "lo: sent first counts two, an edit one",
+            [A, B],
+            [to_tin_hieu("CY", A), to_tin_hieu("CY", B, responses=[(A, "de_nghi_sua"), (B, "dong_y")])],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case(
+            "lo: other cycle, Nep, unsent and stranger ignored",
+            [A, B],
+            [to_tin_hieu("CU", A), to_tin_hieu("CY", A, author="nep"), to_tin_hieu("CY", None), to_tin_hieu(None, A), to_tin_hieu("CY", C), to_tin_hieu("CY", A, v1=False)],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case("lo: a tie goes to the opener", [A, B], [to_tin_hieu("CY", A), to_tin_hieu("CY", B)], "CY", B),
+        nguoi_lo_case("lo: a tie without the opener among it", [A, B], [to_tin_hieu("CY", A), to_tin_hieu("CY", B)], "CY", C),
+        nguoi_lo_case("lo: repeated participants count once", [A, B, A], [to_tin_hieu("CY", B)], "CY", A),
+        nguoi_lo_case("lo: nobody", [], [to_tin_hieu("CY", A)], "CY", A),
+    ]
+    cases = [*lo,
         # ADR-0034: taste, per person, inside «Một đôi» only.
         consents_case("taste: friends only", [consent(B, "chia_gu", proposal_id="PG-B")], two, NOW),
         consents_case("taste: couple, nobody shares", doi, two, NOW),
@@ -677,6 +725,21 @@ def fuzz_cases() -> list[dict]:
             cases.append(preview_case(f"fuzz {index}", papers, proposals, instant()))
         else:
             cases.append(han_case(f"fuzz {index}", instant()))
+    # ADR-0034 §2.4: its own stream, so every case above stays as it was.
+    rng = random.Random(SEED * 7 + 34)
+    for index in range(200):
+        people = [rng.choice(PEOPLE[:4]) for _ in range(rng.choice((0, 1, 2, 2, 2, 3)))]
+        to_giay = [
+            to_tin_hieu(
+                rng.choice(("CY", "CY", "CY", "CU", None)),
+                rng.choice((A, B, B, C, None)),
+                author=rng.choice(("human", "human", "nep")),
+                responses=[(rng.choice((A, B, C)), rng.choice(("de_nghi_sua", "dong_y"))) for _ in range(rng.randint(0, 3))],
+                v1=rng.random() < 0.9,
+            )
+            for _ in range(rng.randint(0, 6))
+        ]
+        cases.append(nguoi_lo_case(f"fuzz lo {index}", people, to_giay, "CY", rng.choice((A, B, C, None))))
     return cases
 
 

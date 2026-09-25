@@ -35,6 +35,7 @@ import { AppState } from "react-native";
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt, quenLuot } from "../../api";
 import type { NoiDungTo, ToGiay } from "./to-giay";
 import {
+  type ChonLo,
   type LoaiRangBuoc,
   type MucDich,
   type SoHaiNguoi,
@@ -42,6 +43,7 @@ import {
   type XemTruocDongSo,
   danhDauDaXem,
   datRangBuoc,
+  datVaiTuan,
   deNghiDongY,
   deNghiSua,
   docDanhSachTo,
@@ -234,6 +236,7 @@ export function useToGiay(contextId: string, personId: string, { nhip = NHIP_SO_
     dongYDeNghiNay: (proposalId: string) =>
       lam(`dong-y-de-nghi:${proposalId}`, (goi) => dongYDeNghi(contextId, proposalId, goi)),
     thuHoi: (purpose: MucDich) => lam(`thu-hoi:${purpose}`, (goi) => thuHoiDongY(contextId, purpose, goi)),
+    chonVai: (lo: ChonLo) => lam(`vai:${lo}`, (goi) => datVaiTuan(contextId, lo, goi)),
     datRangBuocNay: (kind: LoaiRangBuoc, content: string) =>
       lam(`rang-buoc:${kind}`, (goi) => datRangBuoc(contextId, kind, content, goi)),
     xoaRangBuocNay: (kind: LoaiRangBuoc) => lam(`xoa-rang-buoc:${kind}`, (goi) => xoaRangBuoc(contextId, kind, goi)),

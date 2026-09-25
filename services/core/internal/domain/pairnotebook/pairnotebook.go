@@ -298,3 +298,116 @@ func XemTruocDongSo(papers []Paper, proposals []Proposal, now time.Time, sum256 
 	out.Revision = revision(material, sum256)
 	return out
 }
+
+// ToTinHieu is `_paper_signals`: what nguoi_lo_suy reads of one sheet. A nil
+// CycleID is Python's None; a Version with a nil SentBy was never sent.
+type ToTinHieu struct {
+	CycleID   *string
+	Versions  []PhienBanTinHieu
+	Responses []TraLoiTinHieu
+}
+
+// PhienBanTinHieu is one version as nguoi_lo_suy reads it.
+type PhienBanTinHieu struct {
+	Version    int
+	AuthorType string
+	SentBy     *string
+}
+
+// TraLoiTinHieu is one response as nguoi_lo_suy reads it.
+type TraLoiTinHieu struct {
+	PersonID string
+	Kind     string
+}
+
+// Diem is one participant's score.
+type Diem struct {
+	PersonID string
+	Score    int
+}
+
+// NguoiLo is nguoi_lo_suy's and vai_tuan's dict: NguoiLo lists who leads,
+// Cach is "suy" or "chon" ("" from nguoi_lo_suy alone).
+type NguoiLo struct {
+	NguoiLo []string
+	Cach    string
+	Diem    []Diem
+}
+
+// NguoiLoSuy is nguoi_lo_suy (ADR-0034 §2.3–2.4): who tends to take the lead,
+// read only from this cycle's sheets; a tie or nothing yet goes to whoever
+// opened the notebook, then to the first participant.
+func NguoiLoSuy(participants []string, toGiay []ToTinHieu, cycleID string, nguoiLapSo *string) NguoiLo {
+	people := []string{}
+	seen := map[string]bool{}
+	for _, p := range participants {
+		if !seen[p] {
+			seen[p] = true
+			people = append(people, p)
+		}
+	}
+	diem := map[string]int{}
+	for _, to := range toGiay {
+		if to.CycleID == nil || *to.CycleID != cycleID {
+			continue
+		}
+		for _, v := range to.Versions {
+			if v.Version != 1 {
+				continue
+			}
+			if v.AuthorType == "human" && v.SentBy != nil && seen[*v.SentBy] {
+				diem[*v.SentBy] += 2
+			}
+			break
+		}
+		for _, tl := range to.Responses {
+			if tl.Kind == "de_nghi_sua" && seen[tl.PersonID] {
+				diem[tl.PersonID]++
+			}
+		}
+	}
+	if len(people) == 0 {
+		return NguoiLo{NguoiLo: []string{}, Diem: []Diem{}}
+	}
+	cao := diem[people[0]]
+	for _, p := range people {
+		if diem[p] > cao {
+			cao = diem[p]
+		}
+	}
+	dauBang := []string{}
+	for _, p := range people {
+		if diem[p] == cao {
+			dauBang = append(dauBang, p)
+		}
+	}
+	lo := dauBang[0]
+	if len(dauBang) > 1 && nguoiLapSo != nil && contains(dauBang, *nguoiLapSo) {
+		lo = *nguoiLapSo
+	}
+	out := NguoiLo{NguoiLo: []string{lo}, Diem: []Diem{}}
+	for _, p := range people {
+		out.Diem = append(out.Diem, Diem{PersonID: p, Score: diem[p]})
+	}
+	return out
+}
+
+// VaiTuan is vai_tuan: the week's stored choice, or the inference. chon nil
+// is Python's None (nothing chosen); chon pointing at nil is «cả hai».
+func VaiTuan(suy NguoiLo, chon **string, participants []string) NguoiLo {
+	if chon == nil {
+		return NguoiLo{NguoiLo: append([]string{}, suy.NguoiLo...), Cach: "suy", Diem: suy.Diem}
+	}
+	if *chon == nil {
+		people := []string{}
+		seen := map[string]bool{}
+		for _, p := range participants {
+			if !seen[p] {
+				seen[p] = true
+				people = append(people, p)
+			}
+		}
+		return NguoiLo{NguoiLo: people, Cach: "chon", Diem: suy.Diem}
+	}
+	return NguoiLo{NguoiLo: []string{**chon}, Cach: "chon", Diem: suy.Diem}
+}

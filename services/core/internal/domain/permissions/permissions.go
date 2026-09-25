@@ -229,6 +229,7 @@ var table = map[string]rule{
 	"keep_pair_paper_line":         {roles: []string{"member"}, requires: []string{"is_group_member"}},
 	"view_pair_constraints":        {roles: []string{"member"}, requires: []string{"is_group_member"}},
 	"edit_pair_constraint":         {roles: []string{"member"}, requires: []string{"is_self"}},
+	"set_pair_week_role":           {roles: []string{"member"}, requires: []string{"is_group_member"}},
 	"preview_close_pair_notebook":  {roles: []string{"member"}, requires: []string{"is_group_member"}},
 	"close_pair_notebook":          {roles: []string{"member"}, requires: []string{"is_group_member"}},
 }

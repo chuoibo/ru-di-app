@@ -562,3 +562,21 @@ Lead ký ADR-0034 ngày 25/09. Lát này làm §2.1–2.2; phần Nếp dùng gu
 - Màn «Gu của hai bạn» giờ nói thật «Nếp dùng nó khi phác tờ».
 - Chưa đo trên máy: tuần này của cặp thử đã có tờ chốt, nên không phác được tờ mới mà không dời đồng hồ;
   phần phác theo gu được chứng minh bằng golden (Go↔Python) và parity (bước `owner_drafts_with_common_taste`).
+
+## ADR-0034 lát (b) — «Người lo» của tuần, suy từ tương tác, không giới tính (25/09)
+
+- Máy chủ (Go + Python): `GET …/notebook` có `week_role` trong «Một đôi» đang mở. Không ai chọn thì suy
+  mỗi lần đọc (`nguoi_lo_suy`): trong chu kỳ này, gửi tờ trước tính 2, đề nghị sửa tính 1; hoà hoặc chưa
+  có gì → người lập sổ. Không thu, không suy giới tính; không đọc chat. Route mới `PUT …/notebook/week-role`
+  («toi» / «nguoi_kia» / «ca_hai»), ai trong hai người cũng chọn được, chỉ quyết tuần đó lượt ai, không cấp
+  quyền. Bảng `pair_cycle_rhythms` (migration `f4a8d2c6b1e9`) chỉ lưu lựa chọn; mặc định không lưu.
+- App: dòng «Tuần này Minh lo · <vì sao> · Đổi» trên tờ giấy; sheet «Ai lo tuần này?» với «Để tôi lo» /
+  «Để Minh lo» / «Hôm nay mình share». `luotCuaToi` giờ theo người lo (trước là luôn đúng: QA 🟠 «cả hai
+  cùng được bảo Tuần này bạn mở lời»). Chữ trống «Tuần này người ấy mở lời» → gọi tên.
+- Đo trên máy (Linh, stack dựng lại với core mới + migration): mặc định «Tuần này Minh lo · Hai bạn chủ động
+  như nhau, nên người lập sổ lo trước.»; chọn → «Tuần này bạn lo · Đã chọn cho tuần này.»; share → «Tuần này
+  hai bạn cùng lo»; máy chủ trả cùng lựa chọn cho Minh. Ảnh `vai-01…03` (ngoài repo).
+- **Lỗi thấy trên máy, sửa luôn:** nút «Mình lo» và «Minh lo» gần như cùng một chữ với người yêu tên Minh →
+  «Để tôi lo» / «Để Minh lo».
+- Chưa làm (ghi ở hàng đợi): gậy luân phiên tuần riêng với người lo — bản này coi người lo là người mở lời
+  tuần đó; hạn mức `nep-nhip.json`; câu hỏi tuần (c).

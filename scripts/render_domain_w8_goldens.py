@@ -1166,6 +1166,8 @@ WORLD_DEFAULTS = {
     "places": [],
     # {person name: [tag, ...]}: interests_by_person (ADR-0034 taste).
     "interests": {},
+    # None: no week choice stored; [name or None]: the chosen «Người lo».
+    "rhythm": None,
 }
 
 
@@ -1394,6 +1396,19 @@ class Stub:
     def delete_pair_constraint(self, cycle_id, owner_id, kind):
         self.rec("delete_pair_constraint", cycle_id, owner_id, kind)
         return True
+
+    def get_pair_rhythm(self, cycle_id, tuan):
+        self.rec("get_pair_rhythm", cycle_id, tuan)
+        chon = self.world["rhythm"]
+        if chon is None:
+            return None
+        return SimpleNamespace(nguoi_lo_id=UN(chon[0]))
+
+    def set_pair_rhythm(self, *, cycle_id, tuan, nguoi_lo_id, chon_boi_id, now):
+        self.rec("set_pair_rhythm", cycle_id, tuan, nguoi_lo_id, chon_boi_id, now)
+        # What the next read of this week finds.
+        self.world["rhythm"] = [None if nguoi_lo_id is None else ALIAS_OF[nguoi_lo_id]]
+        return SimpleNamespace(nguoi_lo_id=nguoi_lo_id)
 
     def create_pair_paper(
         self,
@@ -1652,6 +1667,9 @@ CALLERS = {
         schemas.CloseNotebookRequest.model_construct(revision=r["revision"]),
         a,
     ),
+    "set_pair_week_role": lambda s, a, r: s.set_pair_week_role(
+        U(r["context_id"]), schemas.PairWeekRoleRequest.model_construct(lo=r["lo"]), a
+    ),
     "list_pair_papers": lambda s, a, r: s.list_pair_papers(U(r["context_id"]), a),
     "draft_pair_paper": lambda s, a, r: s.draft_pair_paper(U(r["context_id"]), a),
     "pair_paper": lambda s, a, r: s.pair_paper(U(r["paper_id"]), a),
@@ -1686,8 +1704,8 @@ CALLERS = {
         U(r["paper_id"]), schemas.PaperKeepRequest.model_construct(line=r["line"]), a
     ),
 }
-CONTEXT_METHODS = tuple(CALLERS)[:10]
-PAPER_METHODS = tuple(CALLERS)[10:]
+CONTEXT_METHODS = tuple(CALLERS)[:11]
+PAPER_METHODS = tuple(CALLERS)[11:]
 
 
 def run_step(fn: str, now: datetime, actor: list, req: dict, world: dict) -> dict:
@@ -1864,6 +1882,7 @@ DEFAULT_REQ = {
     "delete_pair_constraint": {"context_id": "CAP", "kind": "dung"},
     "preview_close_pair_notebook": {"context_id": "CAP"},
     "close_pair_notebook": {"context_id": "CAP", "revision": "stale"},
+    "set_pair_week_role": {"context_id": "CAP", "lo": "toi"},
     "list_pair_papers": {"context_id": "CAP"},
     "draft_pair_paper": {"context_id": "CAP"},
     "pair_paper": {"paper_id": "PP1"},
@@ -2083,6 +2102,33 @@ def pair_steps_edges() -> list[dict]:
         ),
     ):
         out.append(S(fn, name, req(fn), {"notebooks": [nb(consents=consents, proposals=proposals)], "papers": [], "interests": gu}, actor=("TOI", ("member",))))
+    # ADR-0034 §2.4: «Người lo» of the week, inferred or chosen.
+    doi_lap = doi + both("lap_so")
+    doi_props_lap = doi_props + [prop("PR1", "lap_so", completed=T - DAY)]
+    def gui(pid, ai, cycle="CY1"):
+        return paper(pid, owner=ai, state="da_gui", cycle=cycle, versions=[ver(1, sent_by=ai)])
+    for name, state, papers, rhythm in (
+        ("role_inferred_opener", "active", [], None),
+        ("role_sent_first_wins", "active", [gui("PP2", "TOI"), gui("PP3", "TOI"), gui("PP4", "KIA", cycle="CY2")], None),
+        ("role_chosen_share", "active", [], [None]),
+        ("role_chosen_me", "active", [gui("PP2", "KIA")], ["TOI"]),
+        ("role_pending_cycle", "pending", [], ["TOI"]),
+    ):
+        out.append(
+            S(fn, name, req(fn), {"notebooks": [nb(state=state, consents=doi_lap, proposals=doi_props_lap)], "papers": papers, "rhythm": rhythm}, actor=("TOI", ("member",)))
+        )
+    fn = "set_pair_week_role"
+    for name, lo, locks, rhythm in (
+        ("outside_a_couple", "toi", [nb(consents=both("lap_so"), proposals=[prop("PR1", "lap_so", completed=T - DAY)])], None),
+        ("no_cycle", "toi", [NB_NONE], None),
+        ("pending_cycle", "toi", [nb(state="pending", consents=doi_lap, proposals=doi_props_lap)], None),
+        ("me", "toi", [nb(consents=doi_lap, proposals=doi_props_lap)], None),
+        ("the_other", "nguoi_kia", [nb(consents=doi_lap, proposals=doi_props_lap)], None),
+        ("both", "ca_hai", [nb(consents=doi_lap, proposals=doi_props_lap)], ["KIA"]),
+        ("notebook_created", "toi", [None, NB_NONE], None),
+    ):
+        out.append(S(fn, name, req(fn, lo=lo), {"locks": locks, "papers": [], "rhythm": rhythm}))
+    fn = "pair_notebook"
 
     # --- propose_pair_consent ------------------------------------------------------
     fn = "propose_pair_consent"
@@ -3915,6 +3961,8 @@ def fuzz_step(rng: random.Random, i: int) -> dict:
         r["kind"] = rng.choice(pair_notebook.CONSTRAINT_KINDS * 5 + ("", "Dung"))
     if "content" in r and fn == "put_pair_constraint":
         r["content"] = rng.choice(TEXTS)
+    if "lo" in r:
+        r["lo"] = rng.choice(("toi", "nguoi_kia", "ca_hai"))
     if "revision" in r:
         right = revision_of(w, now)
         r["revision"] = rng.choice((right, right, right, right[:-1] + "x", ""))

@@ -1187,9 +1187,13 @@ func pairRouteGo(repo Repository, name string, a map[string]any) (any, error) {
 			var notebook *PairNotebook
 			if notebook, err = repo.GetPairNotebook(bg, p.text("context_id")); err == nil {
 				if _, err = repo.ListPairPapers(bg, p.text("context_id")); err == nil && notebook != nil {
-					// ADR-0034: tastes are read only inside «Một đôi».
 					people := participantsOf(notebook, members)
-					if p.couple(notebook, people) {
+					// ADR-0034 §2.4: the week's choice, in an open «Một đôi».
+					if notebook.CycleID != nil && notebook.CycleState != nil && *notebook.CycleState == "active" && p.couple(notebook, people) {
+						_, err = repo.GetPairRhythm(bg, *notebook.CycleID, p.monday())
+					}
+					// ADR-0034: tastes are read only inside «Một đôi».
+					if err == nil && p.couple(notebook, people) {
 						_, err = repo.InterestsByPerson(bg, people)
 					}
 				}
@@ -1201,6 +1205,8 @@ func pairRouteGo(repo Repository, name string, a map[string]any) (any, error) {
 		err = p.grantConsent()
 	case "route.revoke_pair_consent":
 		err = p.revokeConsent()
+	case "route.set_pair_week_role":
+		err = p.setWeekRole()
 	case "route.put_pair_constraint":
 		err = p.putConstraint()
 	case "route.delete_pair_constraint":
@@ -1239,4 +1245,50 @@ func pairRouteGo(repo Repository, name string, a map[string]any) (any, error) {
 		panic("unknown route " + name)
 	}
 	return nil, err
+}
+
+// monday is pair_paper.tuan_cua(now): the week's Monday on the wall clock.
+func (p *pairRoute) monday() time.Time {
+	local := p.now.In(wallClockLocation)
+	today := time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, time.UTC)
+	return today.AddDate(0, 0, -((int(local.Weekday()) + 6) % 7))
+}
+
+// setWeekRole is set_pair_week_role (ADR-0034 §2.4).
+func (p *pairRoute) setWeekRole() error {
+	contextID := p.text("context_id")
+	members, err := p.contextOr404(contextID)
+	if err != nil {
+		return err
+	}
+	notebook, err := p.lockedNotebook(contextID)
+	if err != nil {
+		return err
+	}
+	people := participantsOf(notebook, members)
+	if notebook.CycleID == nil || notebook.CycleState == nil || *notebook.CycleState != "active" || !p.couple(notebook, people) {
+		return refuse(409, "consent_missing")
+	}
+	var nguoiLo *string
+	switch p.body()["lo"] {
+	case "toi":
+		id := p.actor
+		nguoiLo = &id
+	case "nguoi_kia":
+		for _, person := range people {
+			if person != p.actor {
+				id := person
+				nguoiLo = &id
+				break
+			}
+		}
+	}
+	if _, err := p.repo.SetPairRhythm(bg, PairRhythmInput{CycleID: *notebook.CycleID, Tuan: p.monday(), NguoiLoID: nguoiLo, ChonBoiID: p.actor, Now: p.now}); err != nil {
+		return err
+	}
+	if _, err := p.repo.ListPairPapers(bg, contextID); err != nil {
+		return err
+	}
+	_, err = p.repo.GetPairRhythm(bg, *notebook.CycleID, p.monday())
+	return err
 }

@@ -56,6 +56,7 @@ _PHUONG_THUC = {
     "_propose_per_person",
     "_pair_taste",
     "_pair_roster_or_404",
+    "set_pair_week_role",
 }
 
 #: Cùng mang chữ `pair` trong tên nhưng thuộc tính năng khác: `_require_pair_is_alive`
@@ -255,6 +256,7 @@ def test_moi_duong_client_goi_deu_la_mot_route_that():
     assert la == [], f"client gọi những đường máy chủ không có: {la}"
 
 
-def test_client_goi_du_muoi_chin_cua():
-    """Và đủ cả mười chín, để «gọi đúng» không đọc thành «gọi hết»."""
-    assert len(_duong_cua_client()) == 19, sorted(_duong_cua_client())
+def test_client_goi_du_hai_muoi_cua():
+    """Và đủ cả hai mươi (mười chín, cộng «Ai lo tuần này?» của ADR-0034), để
+    «gọi đúng» không đọc thành «gọi hết»."""
+    assert len(_duong_cua_client()) == 20, sorted(_duong_cua_client())

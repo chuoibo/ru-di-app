@@ -248,3 +248,42 @@ def test_thu_hoi_chia_gu_la_thoi_ngay():
 def test_chia_gu_khong_bao_gio_la_dong_y_cua_ca_hai():
     ca_hai = [cho_phep(A, "chia_gu", proposal_id="pa"), cho_phep(B, "chia_gu", proposal_id="pb")]
     assert "chia_gu" not in pair_notebook.granted_purposes(ca_hai, HAI_NGUOI, now=NOW)
+
+
+# ADR-0034 §2.3–2.4: «Người lo», from what the two did in this cycle only.
+
+
+def _to(cycle="CY", sent_by=None, author="human", responses=()):
+    return {
+        "cycle_id": cycle,
+        "versions": [{"version": 1, "author_type": author, "sent_by": sent_by}],
+        "responses": [{"person_id": p, "kind": k} for p, k in responses],
+    }
+
+
+def test_chua_co_gi_thi_nguoi_lap_so_lo():
+    r = pair_notebook.nguoi_lo_suy([A, B], [], cycle_id="CY", nguoi_lap_so=B)
+    assert r == {"nguoi_lo": [B], "diem": [[A, 0], [B, 0]]}
+
+
+def test_ai_hay_gui_truoc_thi_lo():
+    to = [_to(sent_by=A), _to(sent_by=A), _to(sent_by=B, responses=[(A, "de_nghi_sua")])]
+    r = pair_notebook.nguoi_lo_suy([A, B], to, cycle_id="CY", nguoi_lap_so=B)
+    assert r["nguoi_lo"] == [A]
+    assert r["diem"] == [[A, 5], [B, 2]]
+
+
+def test_chu_ky_khac_va_to_cua_nep_khong_tinh():
+    to = [_to(cycle="CU", sent_by=A), _to(sent_by=None, author="nep"), _to(author="nep", sent_by=A)]
+    assert pair_notebook.nguoi_lo_suy([A, B], to, cycle_id="CY", nguoi_lap_so=B)["nguoi_lo"] == [B]
+
+
+def test_hoa_ma_khong_co_nguoi_lap_so_thi_nguoi_dau():
+    assert pair_notebook.nguoi_lo_suy([A, B], [_to(sent_by=A), _to(sent_by=B)], cycle_id="CY", nguoi_lap_so=None)["nguoi_lo"] == [A]
+
+
+def test_tuan_da_chon_thang_suy_luan():
+    suy = {"nguoi_lo": [A], "diem": [[A, 2], [B, 0]]}
+    assert pair_notebook.vai_tuan(suy, None, [A, B])["cach"] == "suy"
+    assert pair_notebook.vai_tuan(suy, {"nguoi_lo_id": B}, [A, B]) == {"nguoi_lo": [B], "cach": "chon", "diem": [[A, 2], [B, 0]]}
+    assert pair_notebook.vai_tuan(suy, {"nguoi_lo_id": None}, [A, B])["nguoi_lo"] == [A, B], "hôm nay mình share"

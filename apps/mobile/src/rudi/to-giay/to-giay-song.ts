@@ -68,7 +68,19 @@ export interface SoHaiNguoi {
   granted_purposes?: readonly MucDich[];
   /** Null outside «Một đôi»; absent on a server older than 25/09 (ADR-0034). */
   taste?: GuSo | null;
+  /** «Người lo» of this week; null outside an open «Một đôi» (ADR-0034 §2.4). */
+  week_role?: VaiTuan | null;
 }
+
+/** `PairWeekRoleResponse`: inferred from the notebook (`suy`) or chosen (`chon`). */
+export interface VaiTuan {
+  tuan: string;
+  nguoi_lo: readonly string[];
+  cach: "suy" | "chon";
+  diem: readonly { person_id: string; score: number }[];
+}
+
+export type ChonLo = "toi" | "nguoi_kia" | "ca_hai";
 
 /**
  * One row of `GET /contexts/{id}/papers`; no versions, no responses.
@@ -177,6 +189,10 @@ export function dongYDeNghi(contextId: string, proposalId: string, goi: Goi): Pr
 
 export function thuHoiDongY(contextId: string, purpose: MucDich, goi: Goi): Promise<void> {
   return translatedAsActor<void>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/consents/${purpose}`, { actorId: goi.actorId, method: "DELETE", attempt: goi.attempt });
+}
+
+export function datVaiTuan(contextId: string, lo: ChonLo, goi: Goi): Promise<VaiTuan> {
+  return translatedAsActor<VaiTuan>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/week-role`, { actorId: goi.actorId, method: "PUT", attempt: goi.attempt, body: { lo } });
 }
 
 export function datRangBuoc(contextId: string, kind: LoaiRangBuoc, content: string, goi: Goi): Promise<RangBuocSong> {

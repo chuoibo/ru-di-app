@@ -166,7 +166,10 @@ from app.api.schemas import (
     PairConstraintPutRequest,
     PairConstraintResponse,
     PairNotebookResponse,
+    PairRoleScoreResponse,
     PairTasteResponse,
+    PairWeekRoleRequest,
+    PairWeekRoleResponse,
     PairProposalCreateRequest,
     PairProposalResponse,
     PaperCommandResponse,
@@ -7045,6 +7048,12 @@ class ApiService:
                         my_granted=row.purpose in mine,
                     )
                 )
+        # One read of the sheets serves the open sheet and the week's role;
+        # then the week's choice, then the tastes -- in that order, always.
+        papers = self.repository.list_pair_papers(context_id)
+        open_paper_id = self._open_paper_id(context_id, actor, now=now, papers=papers)
+        week_role = self._week_role(notebook, consents, participants, papers, now=now)
+        taste = self._pair_taste(consents, participants, actor, now=now)
         return PairNotebookResponse(
             context_id=context_id,
             cycle_state=None if notebook is None else notebook.cycle_state,
@@ -7071,7 +7080,7 @@ class ApiService:
             # Slice 1 has no door that turns this on, and a behaviour that
             # cannot be turned off would break the limit rule (spec 6.3).
             nep_gui_ho=False,
-            open_paper_id=self._open_paper_id(context_id, actor, now=now),
+            open_paper_id=open_paper_id,
             # What BOTH have agreed to, on one proposal each: the only reading
             # a screen may light a rung on. `my_consents` and
             # `their_consents_granted` stay per person -- who has answered --
@@ -7085,8 +7094,78 @@ class ApiService:
                     consents, [str(p) for p in participants], now=now
                 )
             ],
-            taste=self._pair_taste(consents, participants, actor, now=now),
+            taste=taste,
+            week_role=week_role,
         )
+
+    def _week_role(
+        self,
+        notebook: PairNotebookRecord | None,
+        consents: list[dict],
+        participants,
+        papers,
+        *,
+        now: datetime,
+    ) -> PairWeekRoleResponse | None:
+        """ADR-0034 §2.4: only in an open «Một đôi»; the week's stored choice
+        if somebody made one, else inferred from this cycle's sheets."""
+        people = [str(p) for p in participants]
+        if (
+            notebook is None
+            or notebook.cycle_id is None
+            or notebook.cycle_state != "active"
+            or not pair_notebook.can_bat_doi(consents, people, now=now)
+        ):
+            return None
+        tuan = pair_paper.tuan_cua(now)
+        chon = self.repository.get_pair_rhythm(notebook.cycle_id, tuan)
+        lap_so = [p for p in notebook.proposals if p.purpose == "lap_so" and p.completed_at is not None]
+        nguoi_lap_so = None if not lap_so else str(max(lap_so, key=lambda p: p.completed_at).proposed_by_id)
+        suy = pair_notebook.nguoi_lo_suy(
+            people,
+            [_paper_signals(p) for p in papers],
+            cycle_id=str(notebook.cycle_id),
+            nguoi_lap_so=nguoi_lap_so,
+        )
+        vai = pair_notebook.vai_tuan(
+            suy,
+            None if chon is None else {"nguoi_lo_id": None if chon.nguoi_lo_id is None else str(chon.nguoi_lo_id)},
+            people,
+        )
+        return PairWeekRoleResponse(
+            tuan=tuan,
+            nguoi_lo=[uuid.UUID(p) for p in vai["nguoi_lo"]],
+            cach=vai["cach"],
+            diem=[PairRoleScoreResponse(person_id=uuid.UUID(p), score=n) for p, n in vai["diem"]],
+        )
+
+    def set_pair_week_role(
+        self, context_id: uuid.UUID, request: PairWeekRoleRequest, actor: Actor
+    ) -> PairWeekRoleResponse:
+        """«Anh lo / Em lo / Hôm nay mình share» for this week (ADR-0034 §2.4).
+        Either of the two may choose; the choice is not a permission."""
+        _context, members = self._pair_context_or_404(context_id, actor)
+        _require_pair_permission("set_pair_week_role", actor, {"is_group_member": True})
+        now = _now()
+        notebook = self._locked_notebook(context_id, now=now)
+        participants = self._participants(notebook, members)
+        consents = _consents_as_dicts(notebook)
+        people = [str(p) for p in participants]
+        if notebook.cycle_id is None or notebook.cycle_state != "active" or not pair_notebook.can_bat_doi(consents, people, now=now):
+            raise ApiProblem(409, "consent_missing", "Hai bạn bật «Một đôi» trước đã.")
+        other = next((p for p in participants if p != actor.id), None)
+        nguoi_lo_id = actor.id if request.lo == "toi" else (other if request.lo == "nguoi_kia" else None)
+        self.repository.set_pair_rhythm(
+            cycle_id=notebook.cycle_id,
+            tuan=pair_paper.tuan_cua(now),
+            nguoi_lo_id=nguoi_lo_id,
+            chon_boi_id=actor.id,
+            now=now,
+        )
+        papers = self.repository.list_pair_papers(context_id)
+        role = self._week_role(notebook, consents, participants, papers, now=now)
+        assert role is not None
+        return role
 
     def _pair_taste(
         self,
@@ -7112,11 +7191,11 @@ class ApiService:
         return None if gu is None else PairTasteResponse(**gu)
 
     def _open_paper_id(
-        self, context_id: uuid.UUID, actor: Actor, *, now: datetime
+        self, context_id: uuid.UUID, actor: Actor, *, now: datetime, papers=None
     ) -> uuid.UUID | None:
         """The one sheet in play, if there is one. A draft belongs to whoever
         started it, so the other person's screen must not learn it exists."""
-        for paper in self.repository.list_pair_papers(context_id):
+        for paper in self.repository.list_pair_papers(context_id) if papers is None else papers:
             state = pair_paper.hieu_luc(_paper_dict(paper), now=now)
             if state not in pair_paper.OPEN_STATES:
                 continue
@@ -8177,6 +8256,19 @@ def _rows_as_dicts(rows) -> list[dict]:
 def _kind_of(row) -> dict:
     kind = getattr(row, "kind", None)
     return {} if kind is None else {"kind": kind}
+
+
+def _paper_signals(paper: PairPaperRecord) -> dict:
+    """What `nguoi_lo_suy` reads of a sheet: its cycle, who sent version 1 and
+    as whom, and who answered with a «đề nghị sửa». Nothing of its content."""
+    return {
+        "cycle_id": None if paper.cycle_id is None else str(paper.cycle_id),
+        "versions": [
+            {"version": v.version, "author_type": v.author_type, "sent_by": None if v.sent_by is None else str(v.sent_by)}
+            for v in paper.versions
+        ],
+        "responses": [{"person_id": str(r.person_id), "kind": r.kind} for r in paper.responses],
+    }
 
 
 def _consents_as_dicts(notebook: PairNotebookRecord) -> list[dict]:

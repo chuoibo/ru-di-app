@@ -30,11 +30,1048 @@
    "granted_by",
    "granted_purposes",
    "gu_hai_nguoi",
+   "nguoi_lo_suy",
+   "vai_tuan",
    "han_de_nghi",
    "xem_truoc_dong_so"
   ]
  },
  "cases": [
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: nothing yet goes to the opener",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       0
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       0
+      ]
+     ]
+    },
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: nothing and no opener",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [],
+   "cycle": "CY",
+   "lap_so": null,
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       0
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       0
+      ]
+     ]
+    },
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: sent first counts two, an edit one",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      }
+     ],
+     "responses": [
+      {
+       "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "kind": "de_nghi_sua"
+      },
+      {
+       "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "kind": "dong_y"
+      }
+     ]
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       3
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       2
+      ]
+     ]
+    },
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        3
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        3
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        3
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        3
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: other cycle, Nep, unsent and stranger ignored",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CU",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "nep",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": null
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": null
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": null,
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       0
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       0
+      ]
+     ]
+    },
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: a tie goes to the opener",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       2
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       2
+      ]
+     ]
+    },
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: a tie without the opener among it",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       2
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       2
+      ]
+     ]
+    },
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: repeated participants count once",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       0
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       2
+      ]
+     ]
+    },
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        0
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: nobody",
+   "participants": [],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [],
+     "diem": []
+    },
+    "vai": [
+     {
+      "nguoi_lo": [],
+      "cach": "suy",
+      "diem": []
+     },
+     {
+      "nguoi_lo": [],
+      "cach": "chon",
+      "diem": []
+     }
+    ]
+   }
+  },
   {
    "fn": "consents",
    "name": "taste: friends only",

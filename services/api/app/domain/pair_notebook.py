@@ -40,6 +40,8 @@ __all__ = [
     "granted_by",
     "granted_purposes",
     "gu_hai_nguoi",
+    "nguoi_lo_suy",
+    "vai_tuan",
     "han_de_nghi",
     "xem_truoc_dong_so",
 ]
@@ -231,6 +233,70 @@ def gu_hai_nguoi(
         "theirs_shared": theirs_shared,
         "theirs": theirs,
         "common": common,
+    }
+
+
+def nguoi_lo_suy(
+    participants: list[str],
+    to_giay: list[dict],
+    *,
+    cycle_id: str,
+    nguoi_lap_so: str | None,
+) -> dict:
+    """Who tends to take the lead in this notebook (ADR-0034 §2.3–2.4).
+
+    Read only from what the two did in THIS cycle's notebook, which both
+    already hold (ADR-0027 §4): a sheet a person sent first (version 1, by a
+    human) counts two, a «đề nghị sửa» they answered with counts one. Nothing
+    about who they are -- no gender, no profile, no chat -- goes in.
+
+    The highest score leads. A tie, or nothing yet, goes to whoever opened
+    the notebook (`nguoi_lap_so`), and failing that to the first participant.
+    `diem` is every participant's score, in participant order, so a screen can
+    say why without the rule being restated there.
+    """
+    people = list(dict.fromkeys(str(p) for p in participants))
+    diem = {p: 0 for p in people}
+    for to in to_giay:
+        if str(to.get("cycle_id")) != str(cycle_id):
+            continue
+        dau = next((v for v in to.get("versions", ()) if v.get("version") == 1), None)
+        if dau is not None and dau.get("author_type") == "human" and dau.get("sent_by") is not None:
+            ai = str(dau["sent_by"])
+            if ai in diem:
+                diem[ai] += 2
+        for tl in to.get("responses", ()):
+            ai = str(tl.get("person_id"))
+            if tl.get("kind") == "de_nghi_sua" and ai in diem:
+                diem[ai] += 1
+    if not people:
+        return {"nguoi_lo": [], "diem": []}
+    cao = max(diem.values())
+    dau_bang = [p for p in people if diem[p] == cao]
+    if len(dau_bang) == 1:
+        lo = dau_bang[0]
+    elif nguoi_lap_so is not None and str(nguoi_lap_so) in dau_bang:
+        lo = str(nguoi_lap_so)
+    else:
+        lo = dau_bang[0]
+    return {"nguoi_lo": [lo], "diem": [[p, diem[p]] for p in people]}
+
+
+def vai_tuan(suy: dict, chon: dict | None, participants: list[str]) -> dict:
+    """This week's «Người lo»: what the two chose for it, or the inference.
+
+    `chon` is the week's stored choice, `{"nguoi_lo_id": id | None}`; None
+    there means «Hôm nay mình share», both lead. Choosing is not a permission:
+    it decides whose turn the week reads as, nothing else (ADR-0034 §2.4).
+    """
+    people = list(dict.fromkeys(str(p) for p in participants))
+    if chon is None:
+        return {"nguoi_lo": list(suy["nguoi_lo"]), "cach": "suy", "diem": suy["diem"]}
+    ai = chon.get("nguoi_lo_id")
+    return {
+        "nguoi_lo": people if ai is None else [str(ai)],
+        "cach": "chon",
+        "diem": suy["diem"],
     }
 
 

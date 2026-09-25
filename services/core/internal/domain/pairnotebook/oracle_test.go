@@ -48,6 +48,8 @@ var goNames = map[string]string{
 	"NotebookError":       "NotebookError",
 	"PER_PERSON_PURPOSES": "PerPersonPurposes",
 	"gu_hai_nguoi":        "GuHaiNguoi",
+	"nguoi_lo_suy":        "NguoiLoSuy",
+	"vai_tuan":            "VaiTuan",
 	"can_bat_doi":         "CanBatDoi",
 	"chat_consent_active": "ChatConsentActive",
 	"dang_cho":            "DangCho",
@@ -303,6 +305,8 @@ func TestPairNotebookMatchesPython(t *testing.T) {
 				replayPreview(t, tl, c)
 			case "han_de_nghi":
 				replayHan(t, tl, c)
+			case "nguoi_lo":
+				replayNguoiLo(t, tl, c)
 			default:
 				t.Fatalf("unknown case kind %q", fn)
 			}
@@ -314,7 +318,7 @@ func TestPairNotebookMatchesPython(t *testing.T) {
 	if fuzzTotal < 2000 || fuzzCases != fuzzTotal {
 		t.Fatalf("fuzz: %d shards carry %d of %d cases", fuzzShards, fuzzCases, fuzzTotal)
 	}
-	for _, fn := range []string{"consents", "preview", "han_de_nghi"} {
+	for _, fn := range []string{"consents", "preview", "han_de_nghi", "nguoi_lo"} {
 		for _, fuzz := range []bool{false, true} {
 			if tl.kinds[fmt.Sprintf("%s/%v", fn, fuzz)] == 0 {
 				t.Fatalf("no %s case with fuzz=%v", fn, fuzz)
@@ -328,4 +332,53 @@ func TestPairNotebookMatchesPython(t *testing.T) {
 		t.Fatalf("chat_consent_active outcomes too lopsided to tell apart: %v", tl.chat)
 	}
 	t.Logf("pair_notebook oracle: %d cases (%v), %d checks, %d mismatches", tl.cases, tl.kinds, tl.checks, tl.mismatches)
+}
+
+func optText(value any) *string {
+	if value == nil {
+		return nil
+	}
+	text := value.(string)
+	return &text
+}
+
+func nguoiLoView(v NguoiLo, withCach bool) map[string]any {
+	diem := []any{}
+	for _, d := range v.Diem {
+		diem = append(diem, []any{d.PersonID, float64(d.Score)})
+	}
+	out := map[string]any{"nguoi_lo": anyList(v.NguoiLo), "diem": diem}
+	if withCach {
+		out["cach"] = v.Cach
+	}
+	return out
+}
+
+func replayNguoiLo(t *testing.T, tl *tally, c map[string]any) {
+	var toGiay []ToTinHieu
+	for _, item := range c["to_giay"].([]any) {
+		row := item.(map[string]any)
+		to := ToTinHieu{CycleID: optText(row["cycle_id"])}
+		for _, v := range row["versions"].([]any) {
+			vm := v.(map[string]any)
+			to.Versions = append(to.Versions, PhienBanTinHieu{Version: int(vm["version"].(float64)), AuthorType: vm["author_type"].(string), SentBy: optText(vm["sent_by"])})
+		}
+		for _, r := range row["responses"].([]any) {
+			rm := r.(map[string]any)
+			to.Responses = append(to.Responses, TraLoiTinHieu{PersonID: rm["person_id"].(string), Kind: rm["kind"].(string)})
+		}
+		toGiay = append(toGiay, to)
+	}
+	participants := stringsOf(c["participants"])
+	suy := NguoiLoSuy(participants, toGiay, c["cycle"].(string), optText(c["lap_so"]))
+	result := c["result"].(map[string]any)
+	tl.check(t, c, "nguoi_lo_suy", nguoiLoView(suy, false), result["suy"])
+	for i, raw := range c["chon"].([]any) {
+		var chon **string
+		if raw != nil {
+			id := optText(raw.(map[string]any)["nguoi_lo_id"])
+			chon = &id
+		}
+		tl.check(t, c, fmt.Sprintf("vai_tuan %d", i), nguoiLoView(VaiTuan(suy, chon, participants), true), result["vai"].([]any)[i])
+	}
 }

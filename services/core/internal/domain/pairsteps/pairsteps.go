@@ -299,6 +299,24 @@ type Store interface {
 	ReplaceOutingStops(outingID string, stops []OutingStopDraft) error
 	// InterestsByPerson is interests_by_person: people with no tags are absent.
 	InterestsByPerson(personIDs []string) (map[string][]string, error)
+	// GetPairRhythm is get_pair_rhythm: the week's stored choice, nil if none.
+	GetPairRhythm(cycleID string, tuan pairpaper.Date) (*Rhythm, error)
+	// SetPairRhythm is set_pair_rhythm; NguoiLoID nil is «cả hai».
+	SetPairRhythm(draft RhythmDraft) error
+}
+
+// Rhythm is PairRhythmRecord, the part the service reads.
+type Rhythm struct {
+	NguoiLoID *string
+}
+
+// RhythmDraft is set_pair_rhythm's arguments.
+type RhythmDraft struct {
+	CycleID   string
+	Tuan      pairpaper.Date
+	NguoiLoID *string
+	ChonBoiID string
+	Now       time.Time
 }
 
 // PlaceRef is the part of a catalogue row _chot and draft_pair_paper read

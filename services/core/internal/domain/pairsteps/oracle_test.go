@@ -30,7 +30,7 @@ import (
 var methods = []string{
 	"pair_notebook", "propose_pair_consent", "grant_pair_consent", "revoke_pair_consent",
 	"put_pair_constraint", "delete_pair_constraint", "preview_close_pair_notebook", "close_pair_notebook",
-	"list_pair_papers", "draft_pair_paper", "pair_paper", "edit_pair_draft", "send_pair_paper",
+	"set_pair_week_role", "list_pair_papers", "draft_pair_paper", "pair_paper", "edit_pair_draft", "send_pair_paper",
 	"mark_pair_paper_viewed", "respond_pair_paper", "withdraw_pair_paper", "skip_pair_week",
 	"record_pair_outing_done", "keep_pair_paper_line",
 }
@@ -509,6 +509,9 @@ type fakeStore struct {
 	constraintVersion int
 	places            []PlaceRef
 	interests         map[string][]string
+	// rhythm is the world's "rhythm": nil for no stored choice, else a
+	// pointer to the chosen person (nil inside for «cả hai»).
+	rhythm **string
 }
 
 func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
@@ -523,6 +526,18 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 	}
 	// "places": [id, name] or [id, name, destination, category, kinds,
 	// traits, rating*10, count], the catalogue get_place and list_places read.
+	// "rhythm": null, or [name or null] -- the week's stored choice.
+	if raw, ok := world["rhythm"].([]any); ok && len(raw) == 1 {
+		var who *string
+		if raw[0] != nil {
+			id, err := h.id(raw[0])
+			if err != nil {
+				return nil, err
+			}
+			who = &id
+		}
+		s.rhythm = &who
+	}
 	// "interests": {person name: [tag, ...]}, interests_by_person (ADR-0034).
 	s.interests = map[string][]string{}
 	if raw, ok := world["interests"].(map[string]any); ok {
@@ -962,6 +977,21 @@ func (s *fakeStore) InterestsByPerson(personIDs []string) (map[string][]string, 
 	return out, nil
 }
 
+func (s *fakeStore) GetPairRhythm(cycleID string, tuan pairpaper.Date) (*Rhythm, error) {
+	s.rec("get_pair_rhythm", s.h.name(cycleID), tuan.ISOFormat())
+	if s.rhythm == nil {
+		return nil, nil
+	}
+	return &Rhythm{NguoiLoID: *s.rhythm}, nil
+}
+
+func (s *fakeStore) SetPairRhythm(d RhythmDraft) error {
+	s.rec("set_pair_rhythm", s.h.name(d.CycleID), d.Tuan.ISOFormat(), s.h.optionalName(d.NguoiLoID), s.h.name(d.ChonBoiID), iso(d.Now))
+	who := d.NguoiLoID
+	s.rhythm = &who
+	return nil
+}
+
 func (s *fakeStore) GetPlace(placeID string) (*PlaceRef, error) {
 	s.rec("get_place", placeID)
 	for _, p := range s.places {
@@ -1030,7 +1060,20 @@ func (h *harness) notebookView(v NotebookView) any {
 		"nep_gui_ho": v.NepGuiHo, "open_paper_id": h.optionalName(v.OpenPaperID),
 		"granted_purposes": stringsAny(v.GrantedPurposes),
 		"taste":            tasteView(v.Taste),
+		"week_role":        h.weekRoleView(v.WeekRole),
 	}
+}
+
+// weekRoleView is PairWeekRoleResponse, or nil.
+func (h *harness) weekRoleView(role *WeekRole) any {
+	if role == nil {
+		return nil
+	}
+	diem := []any{}
+	for _, d := range role.Diem {
+		diem = append(diem, map[string]any{"person_id": h.name(d.PersonID), "score": int64(d.Score)})
+	}
+	return map[string]any{"tuan": role.Tuan.ISOFormat(), "nguoi_lo": h.nameList(role.NguoiLo), "cach": role.Cach, "diem": diem}
 }
 
 // tasteView is PairTasteResponse, or nil.
@@ -1262,6 +1305,17 @@ func (h *harness) replay(c oracletest.Case, args map[string]any) (any, error) {
 		}
 		v, err := PutConstraint(s, actor, contextID, kind, content, now)
 		return outcome(s, h.constraintView(v), err), nil
+	case "set_pair_week_role":
+		lo, err := text("lo")
+		if err != nil {
+			return decode(err)
+		}
+		v, err := SetWeekRole(s, actor, contextID, lo, now)
+		var body any
+		if err == nil {
+			body = h.weekRoleView(&v)
+		}
+		return outcome(s, body, err), nil
 	case "delete_pair_constraint":
 		kind, err := text("kind")
 		if err != nil {
