@@ -228,16 +228,42 @@ nào do model viết.
 *Nguyên tắc của bộ đọc dị ứng tất định (lát 8, vòng sửa 2).* `tuvung.DiUngNguoiHoi` là **lưới an toàn**: dị ứng
 nó đọc được **hợp (union)** với slot `di_ung` của Understand (lát 9), và route công khai `/places/search` không có
 gì khác ngoài nó. Nên nó tối đa hoá độ gợi nhớ (recall) dị ứng được nói ra: đọc thừa chỉ giấu bớt quán (an
-toàn), đọc sót thì không giấu gì (không an toàn). Hệ quả, đã thành luật trong mã: sau từ kích đọc mọi dị nguyên
-tới hết câu, bỏ qua chữ lạ, chỉ dừng ở một từ kích khác hoặc ở từ mở một yêu cầu («tìm», «muốn», «cho mình»,
-«ở», «đi»…); câu hỏi về người khác, «sống/tái», đuôi «thì được/ok» **không** làm bỏ món nào; lỗi gõ cùng chữ khác
-dấu thanh sau từ kích («dị ứng sửa») đọc thành dị nguyên; chỉ một từ kích bị phủ định rõ («không bị dị ứng»,
-«tưởng dị ứng») mới không đọc gì, và teencode mơ hồ («hẻm», «hem» trần, «k» sau con số) không bao giờ là phủ
-định. Cổng cứng chỉ đặt theo hướng không an toàn: recall trên corpus giữ riêng và violation@10 = 0 trên tập vàng
-cả hai đường; số «câu giống chữ bị đọc thành dị ứng» là số báo cáo, không phải cổng. Phía quán giữ quy tắc
+toàn), đọc sót thì không giấu gì (không an toàn).
+
+*Luật đọc (quyết định của Lead, lát 8 vòng sửa 3 — thay các luật mệnh đề của vòng 1 và 2).* Trong **mọi câu có
+một từ kích dị ứng** («dị ứng», «allergic», «không ăn được», «kiêng», «chịu», «react», «tránh», triệu chứng như «nổi
+mẩn», «ngứa», «đi viện»…; gõ có dấu, không dấu, teencode hay các lỗi gõ thường gặp), bộ đọc trả **HỢP mọi dị nguyên
+được nêu ở bất cứ đâu trong câu** — trước hay sau từ kích, qua «nhưng/còn/but», và qua cả một yêu cầu. Ngoại lệ duy
+nhất: câu mà **mọi** từ kích đều bị phủ định («mình không dị ứng gì cả», «không bị dị ứng tôm», «not allergic»,
+«don't have any allergies») và **không có** từ ngoại lệ hay tương phản nào («ngoài», «trừ», «ngoại trừ», «except»,
+«other than», «chỉ», «mỗi», «nhưng», «còn», «but»…) thì không đọc gì; có từ ngoại lệ thì đọc như câu dị ứng
+(«không dị ứng gì ngoài tôm», «ngoài tôm ra thì không dị ứng gì» → tôm). Luật này **cố ý đọc thừa**: «tôm thì mình
+dị ứng, còn cua thì ăn được» đọc cả cua; «dị ứng tôm, tìm quán ốc» đọc cả ốc và giấu quán ốc; «kem hoặc bánh
+ngọt…, dị ứng sữa» đọc cả gluten của «bánh ngọt». Đổi lại, lớp lỗi «luật mệnh đề bỏ mất món đã nói» biến mất: mọi
+luật mệnh đề của vòng 1–2 đều từng bỏ một dị nguyên nói rõ ở một dạng câu thường gặp. Giá phải trả đo được trên
+tập vàng: 8/24 truy vấn di_ung có quán đúng mất quán đó (d05, d09, d12, d20, d30, d33, d35, d62) vì câu hỏi tìm
+đúng món nó bị đọc thành dị nguyên; violation@10 vẫn 0 cả hai đường.
+
+Phần còn lại của luật: (1) các từ giữ một nguyên liệu khỏi món — «không có/nêm/rắc/cho/bỏ/thêm/chứa…», «đừng…»,
+«không ăn» (không có «được»), «no», «without», «-free», «trừ» — chỉ đọc danh sách của chính nó: phía sau tới từ mở
+yêu cầu («tìm», «muốn», «ở»…), và phía trước khi mệnh đề của nó hết ngay sau nó («tôm thì đừng cho nha») — «phở
+không có hành» là hỏi phở; (2) câu không có từ kích nào không đọc gì («quán hải sản» là muốn ăn hải sản); (3) câu
+ngắn (≤ 6 âm tiết) đứng ngay sau một câu dị ứng và chỉ thêm vào nó («Mực nữa.», «Cua cũng vậy.», «Crab too.») đọc
+cùng; (4) «...» là ngập ngừng, không hết câu; (5) một dị nguyên «được nêu» là mọi cụm của `DiUng` không bị dấu phẩy
+cắt ngang — **mọi** cụm, kể cả cụm ngắn nằm trong cụm dài («tôm mực» là tôm và mực, «ốc, chó» là ốc, «hải sản có vỏ»
+cũng là hải sản; một test trên toàn danh sách giữ điều này) — và mọi âm tiết dị nguyên đơn gõ đúng dấu, không dấu
+hay khác dấu thanh («cá», «ca», «sửa»), trừ từ thường trong `khongPhaiLoiGo` («cả», «của», «mẹ», «mức», «mứt»…) và
+các từ ghép được liệt kê («cá nhân», «trung tâm», «nước mắm» chỉ là cá). Teencode mơ hồ («hẻm», «hem» trần, «k»
+sau con số) và «chưa/chẳng/tưởng/đâu» không dấu không bao giờ là phủ định. Cổng cứng chỉ đặt theo hướng không an
+toàn: recall dị ứng và ăn kiêng của người hỏi trên corpus giữ riêng, violation@10 = 0 trên tập vàng cả hai đường;
+số «câu giống chữ bị đọc thành dị ứng» và «đọc thừa» là số báo cáo, không phải cổng. Phía quán giữ quy tắc
 ngược lại cho ăn kiêng (nói «có» sai mới là không an toàn): chỉ đọc từ tên, kinds, traits; nhãn nguyên trường
-(«Chay» của importer OSM) là có; phủ định, false/0/null/N/A/pending/nope, đóng cửa, tạm ngưng, chỉ vài ngày, hay
-ngoặc/gạch/dấu hỏi ngay sau chữ ăn kiêng đều là không.
+(«Chay» của importer OSM) là có; phủ định, false/0/null/N/A/pending/nope/expired, đóng cửa, tạm ngưng, chỉ vài ngày,
+hay ngoặc/gạch/dấu hỏi ngay sau chữ ăn kiêng đều là không; «thịt» (trừ «thịt chay»), «meat» (trừ «meat-free»), «chung
+nồi», «chung dầu», «bếp chung» trong câu làm hỏng chay; «không/chưa chứng nhận», «not certified», «hết hạn»,
+«expired», «halal-style» ở đâu trong câu cũng làm hỏng halal. Phía quán đọc dị nguyên theo mọi cụm ở mọi vị trí
+(đọc thừa là an toàn), thêm «các loại hạt», «loại hạt», «hạt các loại», «hạt dinh dưỡng», «mixed nuts» cho các loại
+hạt.
 
 **5.2 Điểm đến** (`ResolveDestination`), theo thứ tự: (1) `khu_vuc` → điểm đến có bbox chứa tâm vùng; (2) tên điểm
 đến khớp `Fold` trong lời hỏi (danh sách đóng từ `ListDestinations`); (3) Nếp: điểm đến của các id trong

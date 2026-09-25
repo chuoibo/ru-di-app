@@ -11,8 +11,8 @@ import "mobile/services/core/internal/domain/promptsafety"
 //   - Diets (AnKiengQuan): only a plain statement counts. A wrong yes shows a
 //     place to someone who cannot eat there, so a mention in a clause that
 //     denies, wishes, looks back or looks ahead, or a sentence that also
-//     names what breaks the diet («nêm nước mắm», «bếp chung với thịt
-//     heo»), is not a yes.
+//     names what breaks the diet («nêm nước mắm», «nấu chung nồi với
+//     thịt», «halal: không chứng nhận»), is not a yes.
 //
 // Whether the writer typed marks is decided over the whole row (CoDau of
 // every text of it), then each field is read on its own: a bare «cua» in a
@@ -98,7 +98,8 @@ var anKiengQuan = func() *TuVung {
 // «theo mùa», «weekends»). The value lists the forms the word must be typed
 // in when it folds onto another word («chưa» and «chua», «đừng» and
 // «dùng»), nil for any form; in a text with no marks at all, the bare form
-// counts too.
+// counts too. An expired or missing certificate («expired», «hết hạn»,
+// «lapsed», «uncertified») is a denial.
 var tuChan = map[string][]string{
 	"khong": {"không"}, "chua": {"chưa"}, "chang": {"chẳng"}, "ko": nil, "k": nil, "kh": nil, "hok": nil, "hem": nil,
 	"no": nil, "not": nil, "non": nil, "without": nil, "never": nil, "none": nil, "nope": nil, "nah": nil,
@@ -107,6 +108,7 @@ var tuChan = map[string][]string{
 	"uoc": {"ước"}, "mong": {"mong", "mồng"}, "se": {"sẽ"}, "sap": {"sắp"}, "tung": {"từng"}, "neu": {"nếu"}, "cu": {"cũ"},
 	"cho": {"chờ"}, "cap": {"cập"}, "thu": {"thứ"}, "ram": {"rằm"}, "mung": {"mùng"}, "cuoi": {"cuối"}, "mua": {"mùa"},
 	"if": nil, "would": nil, "soon": nil, "wish": nil, "used": nil, "former": nil, "formerly": nil,
+	"expired": nil, "expire": nil, "expires": nil, "lapsed": nil, "revoked": nil, "uncertified": nil,
 	"closed": nil, "close": nil, "temporarily": nil, "discontinued": nil, "unavailable": nil, "partial": nil, "partially": nil,
 	"weekend": nil, "weekends": nil, "seasonal": nil,
 	"monday": nil, "tuesday": nil, "wednesday": nil, "thursday": nil, "friday": nil, "saturday": nil, "sunday": nil,
@@ -172,21 +174,38 @@ func (c cau) cauChua(i int) (int, int) {
 
 // Words that, stated in the same sentence as a diet, break it. A word is not
 // stated when a denial stands at most phuDinhGan syllables before it in the
-// sentence («không dùng trứng, sữa hay mật ong»).
+// sentence («không dùng trứng, sữa hay mật ong»). For halal the list also
+// holds what says the certificate is missing or lapsed («không chứng
+// nhận», «not certified», «hết hạn»), which a denial before it does not
+// undo.
 type tuPha struct {
 	am  []string
 	raw string // for one syllable that folds onto another word
+	// ngoai: syllables (folded) that, right after it, make it another word
+	// («thịt chay» is mock meat).
+	ngoai []string
 }
 
 func pha(text, raw string) tuPha { return tuPha{am: AmTiet(text), raw: raw} }
 
 var (
+	// «thịt», «meat» break a vegetarian diet (a kitchen that also serves
+	// meat, «nấu chung nồi với thịt»), except «thịt chay» (mock meat) and
+	// «meat-free»; so does a shared pot, oil or kitchen.
 	phaChay = []tuPha{pha("nước mắm", ""), pha("mắm", "mắm"), pha("xương", "xương"), pha("mỡ heo", ""), pha("mỡ lợn", ""),
-		pha("fish sauce", ""), pha("bone broth", "")}
+		pha("fish sauce", ""), pha("bone broth", ""), {am: AmTiet("thịt"), raw: "thịt", ngoai: []string{"chay"}},
+		{am: AmTiet("meat"), ngoai: []string{"free", "less"}},
+		pha("chung nồi", ""), pha("chung dầu", ""), pha("chung bếp", ""), pha("bếp chung", ""), pha("shared kitchen", ""),
+		pha("same pot", ""), pha("same oil", ""), pha("shared fryer", "")}
 	phaThuanChay = []tuPha{pha("trứng", "trứng"), pha("sữa", "sữa"), pha("mật ong", ""), pha("phô mai", ""), pha("bơ sữa", ""),
 		pha("egg", ""), pha("eggs", ""), pha("milk", ""), pha("honey", ""), pha("cheese", ""), pha("butter", ""), pha("dairy", "")}
-	phaHalal = []tuPha{pha("heo", ""), pha("lợn", "lợn"), pha("pork", ""), pha("rượu", "rượu"), pha("bia", "bia"), pha("alcohol", ""),
-		pha("beer", ""), pha("wine", ""), pha("bếp chung", "")}
+	phaHalal = []tuPha{pha("heo", ""), pha("lợn", "lợn"), {am: AmTiet("pork"), ngoai: []string{"free"}}, pha("rượu", "rượu"),
+		pha("bia", "bia"), pha("alcohol", ""), pha("beer", ""), pha("wine", ""), pha("bếp chung", "")}
+	// The certificate is missing or lapsed: these deny halal wherever they
+	// stand in the sentence, a denial before them included.
+	phaHalalGiay = []tuPha{pha("không chứng nhận", ""), pha("chưa chứng nhận", ""), pha("không có chứng nhận", ""),
+		pha("hết hạn", ""), pha("not certified", ""), pha("uncertified", ""), pha("no certificate", ""), pha("expired", ""),
+		pha("halal style", "")}
 )
 
 const phuDinhGan = 6
@@ -202,13 +221,13 @@ func (c cau) biPha(i int, id string) bool {
 		lists = [][]tuPha{phaHalal}
 	}
 	lo, hi := c.cauChua(i)
+	if id == "halal" && c.coTrong(lo, hi, phaHalalGiay) >= 0 {
+		return true
+	}
 	for _, list := range lists {
 		for _, p := range list {
 			for k := lo; k+len(p.am) <= hi; k++ {
-				if !khopTai(c.s, k, p.am) {
-					continue
-				}
-				if p.raw != "" && c.raw[k] != p.raw && !(!c.coDau && c.raw[k] == c.s[k]) {
+				if !c.phaTai(k, hi, p) {
 					continue
 				}
 				denied := false
@@ -222,6 +241,30 @@ func (c cau) biPha(i int, id string) bool {
 		}
 	}
 	return false
+}
+
+// phaTai reports whether p stands at k, ending by hi.
+func (c cau) phaTai(k, hi int, p tuPha) bool {
+	if k+len(p.am) > hi || !khopTai(c.s, k, p.am) {
+		return false
+	}
+	if p.raw != "" && c.raw[k] != p.raw && !(!c.coDau && c.raw[k] == c.s[k]) {
+		return false
+	}
+	end := k + len(p.am)
+	return end >= len(c.s) || c.ngatTruoc(end, ngatVe) || !trong(p.ngoai, c.s[end])
+}
+
+// coTrong returns where the first of list stands in [lo, hi), or -1.
+func (c cau) coTrong(lo, hi int, list []tuPha) int {
+	for k := lo; k < hi; k++ {
+		for _, p := range list {
+			if c.phaTai(k, hi, p) {
+				return k
+			}
+		}
+	}
+	return -1
 }
 
 // AnKiengQuan returns the diets one of the fields a place declares itself

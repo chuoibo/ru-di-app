@@ -246,7 +246,7 @@ func TestMotAmChiDocDungDau(t *testing.T) {
 		"cua": {"của", "cửa"}, "ghe": {"ghé", "ghế"}, "ca": {"cà", "cả", "ca"}, "muc": {"mức", "mục"}, "so": {"số", "sợ"},
 		"hau": {"hậu", "hầu"}, "hen": {"hẹn"}, "vem": {"vém"}, "tep": {}, "ruoc": {"rước"}, "mam": {"mâm", "mầm"},
 		"trung": {"trung", "trúng", "trừng"}, "sua": {"sửa", "sứa"}, "me": {"mẹ", "mê", "me", "mẻ"}, "vung": {"vùng", "vững"},
-		"lac": {"lác"}, "hat": {"hát"}, "chao": {"cháo", "chào"}, "hs": {},
+		"lac": {"lác"}, "hat": {"hát"}, "chao": {"cháo", "chào"}, "hs": {}, "mut": {"mứt"}, "trun": {"trùn"},
 	}
 	loiGo := map[string]bool{"vém": true, "trừng": true, "sửa": true, "sứa": true, "mẻ": true, "vững": true, "lác": true}
 	for key, d := range dauMotAm {
@@ -338,4 +338,86 @@ func TestAnKiengQuanTuAnKieng(t *testing.T) {
 	if !reflect.DeepEqual(anKiengQuan.IDs(), AnKieng.IDs()) {
 		t.Fatalf("ids %v, %v", anKiengQuan.IDs(), AnKieng.IDs())
 	}
+}
+
+// No phrase hides a shorter one (slice 8 round 3, blocker 2: «tôm mực» used
+// to swallow «tôm», «ốc, chó» read nothing). Over the whole allergen list:
+// every phrase of DiUng found inside a phrase gives its ids, read on a
+// place and in an asker's allergy sentence; and the phrase cut by a comma
+// at any word still gives the ids of each half that is a phrase, or a
+// one-syllable allergen word typed with its marks, of its own.
+func TestCumKhongGiauCumCon(t *testing.T) {
+	// idsCua returns the ids of every phrase of DiUng that is exactly s.
+	idsCua := func(s []string) map[string]bool {
+		out := map[string]bool{}
+		for _, c := range DiUng.cums {
+			if strings.Join(c.amTiet, " ") == strings.Join(s, " ") {
+				out[c.id] = true
+			}
+		}
+		return out
+	}
+	inside, cut := 0, 0
+	for _, m := range DiUng.Muc() {
+		for _, p := range m.Cum {
+			s := AmTiet(p)
+			want := map[string]bool{}
+			for a := 0; a < len(s); a++ {
+				for b := a + 1; b <= len(s); b++ {
+					for id := range idsCua(s[a:b]) {
+						want[id] = true
+					}
+				}
+			}
+			quan := tapTest(DiUngQuan(p))
+			hoi := tapTest(DiUngNguoiHoi("Mình dị ứng " + p))
+			// The list of a word that keeps an ingredient out, outside an
+			// allergy sentence, is read item by item: the same rule.
+			mon := tapTest(DiUngNguoiHoi("Đừng cho " + p))
+			for id := range want {
+				if !quan[id] {
+					t.Errorf("place «%s» read %v: a phrase inside it gives %s", p, DiUngQuan(p), id)
+				}
+				if !hoi[id] {
+					t.Errorf("asker «dị ứng %s» read %v: a phrase inside it gives %s", p, DiUngNguoiHoi("Mình dị ứng "+p), id)
+				}
+				if !mon[id] {
+					t.Errorf("asker «đừng cho %s» read %v: a phrase inside it gives %s", p, DiUngNguoiHoi("Đừng cho "+p), id)
+				}
+				inside++
+			}
+			words := strings.Fields(p)
+			for k := 1; k < len(words); k++ {
+				left, right := strings.Join(words[:k], " "), strings.Join(words[k:], " ")
+				text := "Mình dị ứng " + left + ", " + right
+				got := tapTest(DiUngNguoiHoi(text))
+				for _, half := range []string{left, right} {
+					halfIDs := idsCua(AmTiet(half))
+					if d, ok := dauMotAm[promptsafety.Fold(half)]; ok && strings.ToLower(half) == d.co {
+						for _, id := range d.hoi {
+							halfIDs[id] = true
+						}
+					}
+					for id := range halfIDs {
+						if !got[id] {
+							t.Errorf("asker %q read %v: «%s» gives %s", text, DiUngNguoiHoi(text), half, id)
+						}
+					}
+				}
+				cut++
+			}
+		}
+	}
+	if inside < 200 || cut < 100 {
+		t.Fatalf("only %d phrases inside phrases and %d cut phrases checked", inside, cut)
+	}
+	t.Logf("%d phrase ids inside phrases, %d cut phrases", inside, cut)
+}
+
+func tapTest(ids []string) map[string]bool {
+	out := map[string]bool{}
+	for _, id := range ids {
+		out[id] = true
+	}
+	return out
 }

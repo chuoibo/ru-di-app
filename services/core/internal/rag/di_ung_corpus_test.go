@@ -32,8 +32,12 @@ type corpusDiUng struct {
 		AnKieng []string `json:"an_kieng"`
 		Loai    string   `json:"loai"`
 		// DocThua: reading more than the label from this row is an accepted
-		// over-read (the corpus's an_toan_neu_doc_thua).
-		DocThua bool `json:"an_toan_neu_doc_thua"`
+		// over-read (the corpus's an_toan_neu_doc_thua). DocThuaChapNhan:
+		// the allergens a safe reader may read beyond the label (v3's
+		// doc_thua_chap_nhan, «cua» in «tôm thì dị ứng, còn cua thì ăn
+		// được»).
+		DocThua         bool     `json:"an_toan_neu_doc_thua"`
+		DocThuaChapNhan []string `json:"doc_thua_chap_nhan"`
 	} `json:"nguoi_hoi"`
 	Quan []struct {
 		ID      string   `json:"id"`
@@ -43,6 +47,8 @@ type corpusDiUng struct {
 		PhucVu  []string `json:"phuc_vu"`
 		Loai    string   `json:"loai"`
 		DocThua bool     `json:"an_toan_neu_doc_thua"`
+		// DocThuaChapNhan: allergen tags beyond the label the corpus accepts.
+		DocThuaChapNhan []string `json:"doc_thua_chap_nhan"`
 	} `json:"quan"`
 }
 
@@ -117,14 +123,66 @@ func hangCorpus(id, truong, chu string) repo.Place {
 	return p
 }
 
+// anQuan reports whether a place tagged tags is hidden from someone
+// allergic to a, the place's hand label. A «hải sản» label is hidden only
+// by the seafood tag itself or by every seafood child: a place tagged only
+// «tôm» is still shown to a crab-allergic asker, so it has not hidden a
+// place that serves seafood in general. Any other label is hidden by
+// itself or by its family head.
+func anQuan(a string, tags map[string]bool) bool {
+	if a == "hai_san" {
+		if tags["hai_san"] {
+			return true
+		}
+		for _, c := range tuvung.MoRongDiUng([]string{"hai_san"}) {
+			if c != "hai_san" && !tags[c] {
+				return false
+			}
+		}
+		return true
+	}
+	for _, c := range tuvung.MoRongDiUng([]string{a}) {
+		if tags[c] {
+			return true
+		}
+	}
+	return false
+}
+
+// Review round 3, finding 7: a place the corpus labels «hải sản» is hidden
+// from every seafood-allergic asker only when tagged seafood itself or
+// with every seafood child; one child is not enough.
+func TestAnQuanHaiSanCanDuHo(t *testing.T) {
+	children := []string{"tom", "cua", "muc", "oc_so", "ca"}
+	for _, c := range []struct {
+		label string
+		tags  []string
+		want  bool
+	}{
+		{"hai_san", []string{"hai_san"}, true},
+		{"hai_san", children, true},
+		{"hai_san", []string{"tom"}, false},
+		{"hai_san", []string{"tom", "cua", "muc", "oc_so"}, false},
+		{"cua", []string{"hai_san"}, true},
+		{"cua", []string{"cua"}, true},
+		{"cua", []string{"tom"}, false},
+		{"sua", []string{"trung"}, false},
+	} {
+		if got := anQuan(c.label, tap(c.tags)); got != c.want {
+			t.Errorf("label %s, tags %v: hidden %v, want %v", c.label, c.tags, got, c.want)
+		}
+	}
+}
+
 // soCorpus is one group's counts.
 type soCorpus struct {
 	// Askers. coNhan rows name an allergen; du of them are read in full
 	// (the label's family closure inside the reading's). thua rows read an
 	// allergen beyond the label where the corpus does not accept it;
-	// thuaChoPhep where it does. kiengSai: a labelled diet missed, or one
-	// read beyond the label where the corpus does not accept it.
-	n, coNhan, du, thua, thuaChoPhep, kiengSai int
+	// thuaChoPhep where it does. kiengLot: a labelled diet missed (the
+	// unsafe direction for a diet filter: gated); kiengThua: one read
+	// beyond the label where the corpus does not accept it (reported).
+	n, coNhan, du, thua, thuaChoPhep, kiengLot, kiengThua int
 	// Places. chua: labelled allergens; chuaLot of them not hidden (the
 	// unsafe miss); chuaThua rows tagged beyond the label (safe, counted
 	// where the corpus does not accept it). phucVuSai: a diet read that the
@@ -134,11 +192,11 @@ type soCorpus struct {
 
 type doCorpus struct {
 	nhom map[string]*soCorpus
-	// lot are the unsafe misses by id: asker allergens, place allergens,
-	// place diets read wrongly.
-	lotHoi, lotQuan, kiengQuanSai []string
+	// lot are the unsafe misses by id: asker allergens, asker diets, place
+	// allergens, place diets read wrongly.
+	lotHoi, lotKiengHoi, lotQuan, kiengQuanSai []string
 	// thua and kieng are the rest, by id, for the log.
-	thuaHoi, kiengHoi, lotKiengQuan, thuaQuan []string
+	thuaHoi, thuaKiengHoi, lotKiengQuan, thuaQuan []string
 }
 
 func (d *doCorpus) g(nhom string) *soCorpus {
@@ -173,27 +231,39 @@ func doDiUng(t *testing.T, c corpusDiUng) doCorpus {
 			}
 		}
 		if extra := ngoai(got, want); len(extra) > 0 {
+			// Accepted: the corpus says any over-read of this row is safe,
+			// or every extra id is in the closure of what it lists as a
+			// safe over-read.
+			ok := r.DocThua
+			if len(r.DocThuaChapNhan) > 0 {
+				ok = ok || len(ngoai(tap(extra), tap(tuvung.MoRongDiUng(append(label, maCorpus(t, r.DocThuaChapNhan)...))))) == 0
+			}
 			for _, x := range []*soCorpus{s, all} {
-				if r.DocThua {
+				if ok {
 					x.thuaChoPhep++
 				} else {
 					x.thua++
 				}
 			}
 			mark := ""
-			if r.DocThua {
+			if ok {
 				mark = "~"
 			}
 			d.thuaHoi = append(d.thuaHoi, fmt.Sprintf("%s%s:%s", mark, r.ID, strings.Join(extra, "+")))
 		}
 		diets := tap(tuvung.DoiKieng(maCorpus(t, r.AnKieng)))
 		gotDiets := tap(tuvung.DoiKieng(y.AnKieng))
-		missD, extraD := ngoai(diets, gotDiets), ngoai(gotDiets, diets)
-		if len(missD) > 0 || (len(extraD) > 0 && !r.DocThua) {
+		if missD := ngoai(diets, gotDiets); len(missD) > 0 {
 			for _, x := range []*soCorpus{s, all} {
-				x.kiengSai++
+				x.kiengLot++
 			}
-			d.kiengHoi = append(d.kiengHoi, fmt.Sprintf("%s:-%v+%v", r.ID, missD, extraD))
+			d.lotKiengHoi = append(d.lotKiengHoi, fmt.Sprintf("%s:%s", r.ID, strings.Join(missD, "+")))
+		}
+		if extraD := ngoai(gotDiets, diets); len(extraD) > 0 && !r.DocThua {
+			for _, x := range []*soCorpus{s, all} {
+				x.kiengThua++
+			}
+			d.thuaKiengHoi = append(d.thuaKiengHoi, fmt.Sprintf("%s:%s", r.ID, strings.Join(extraD, "+")))
 		}
 	}
 	for _, q := range c.Quan {
@@ -213,11 +283,7 @@ func doDiUng(t *testing.T, c corpusDiUng) doCorpus {
 		chua := maCorpus(t, q.Chua)
 		var lot []string
 		for _, a := range chua {
-			hidden := false
-			for _, c := range tuvung.MoRongDiUng([]string{a}) {
-				hidden = hidden || tags[c]
-			}
-			if !hidden {
+			if !anQuan(a, tags) {
 				lot = append(lot, a)
 			}
 		}
@@ -228,7 +294,7 @@ func doDiUng(t *testing.T, c corpusDiUng) doCorpus {
 		if len(lot) > 0 {
 			d.lotQuan = append(d.lotQuan, fmt.Sprintf("%s:%s", q.ID, strings.Join(lot, "+")))
 		}
-		if extra := ngoai(tags, tap(tuvung.MoRongDiUng(chua))); len(extra) > 0 {
+		if extra := ngoai(tags, tap(tuvung.MoRongDiUng(append(chua, maCorpus(t, q.DocThuaChapNhan)...)))); len(extra) > 0 {
 			if !q.DocThua {
 				for _, x := range []*soCorpus{s, all} {
 					x.chuaThua++
@@ -255,7 +321,8 @@ func doDiUng(t *testing.T, c corpusDiUng) doCorpus {
 }
 
 func (s soCorpus) hoi() string {
-	return fmt.Sprintf("n=%d recall=%d/%d doc_thua=%d doc_thua_cho_phep=%d an_kieng_sai=%d", s.n, s.du, s.coNhan, s.thua, s.thuaChoPhep, s.kiengSai)
+	return fmt.Sprintf("n=%d recall=%d/%d doc_thua=%d doc_thua_cho_phep=%d an_kieng_lot=%d an_kieng_thua=%d", s.n, s.du, s.coNhan, s.thua,
+		s.thuaChoPhep, s.kiengLot, s.kiengThua)
 }
 
 func (s soCorpus) quan() string {
@@ -277,10 +344,11 @@ func (d doCorpus) baoCao(t *testing.T) {
 		}
 	}
 	t.Logf("lot hoi: %v", d.lotHoi)
+	t.Logf("an_kieng hoi lot: %v", d.lotKiengHoi)
 	t.Logf("lot quan: %v", d.lotQuan)
 	t.Logf("an_kieng quan sai: %v", d.kiengQuanSai)
 	t.Logf("thua hoi: %v", d.thuaHoi)
-	t.Logf("an_kieng hoi lech: %v", d.kiengHoi)
+	t.Logf("an_kieng hoi thua: %v", d.thuaKiengHoi)
 	t.Logf("an_kieng quan lot: %v", d.lotKiengQuan)
 	t.Logf("thua quan: %v", d.thuaQuan)
 }
@@ -313,15 +381,17 @@ func docCorpusDiUng(t *testing.T, path string) corpusDiUng {
 // this half open, so the numbers below are fitted, not blind.
 //
 // Gated only in the unsafe direction, miss for miss: an asker allergen
-// missed, a place allergen left untagged, a place read as serving a diet.
-// Over-reads and missed diets are reported.
+// missed, an asker diet missed (the diet filter then shows places that do
+// not serve it), a place allergen left untagged (a «hải sản» label needs
+// the seafood tag or every seafood child, anQuan), a place read as serving
+// a diet. Over-reads and a place's missed diets are reported.
 //
 // RAG_DI_UNG_CORPUS may name another corpus of the same schema -- the
 // reviewer's sealed half -- which is then measured through exactly this
 // scoring and reported, never gated.
 const diUngDevSHA256 = "a75d5bbf46d564854f953be19968a203f53b893178df52557eb55ebb85d4bc9b"
 
-var ghimDiUngDev = struct{ lotHoi, lotQuan, kiengQuanSai []string }{}
+var ghimDiUngDev = struct{ lotHoi, lotKiengHoi, lotQuan, kiengQuanSai []string }{}
 
 func TestCorpusDiUngDev(t *testing.T) {
 	raw, err := os.ReadFile("testdata/di_ung_dev_v2.json")
@@ -343,6 +413,7 @@ func TestCorpusDiUngDev(t *testing.T) {
 		got, want []string
 	}{
 		{"asker allergens missed", d.lotHoi, w.lotHoi},
+		{"asker diets missed", d.lotKiengHoi, w.lotKiengHoi},
 		{"place allergens left untagged", d.lotQuan, w.lotQuan},
 		{"places read as serving a diet they do not", d.kiengQuanSai, w.kiengQuanSai},
 	} {

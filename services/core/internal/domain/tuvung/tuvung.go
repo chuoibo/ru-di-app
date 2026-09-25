@@ -15,10 +15,15 @@
 // (fish) folds onto «cà» (coffee, aubergine), so «cá kho», «lẩu cá»… Such a
 // syllable alone is read from the text as typed instead (mot_am.go): on a
 // place only with its own marks (or none, as a whole kind or trait), in an
-// asker's list after a trigger with its marks, none or another tone. Where a
+// asker's allergy sentence with its marks, none or another tone. Where a
 // merge is left in, it errs toward the safe side:
 // «óc chó» (walnut) also reads as «ốc» (shellfish), which can only hide a
 // place from someone allergic to shellfish, never show them one.
+//
+// A phrase never hides a shorter one: a place's text and an asker's
+// allergy sentence read every phrase at every position, so «tôm mực» is
+// shrimp and squid, «tree nuts» also peanut (the «nuts» inside it), «hải
+// sản có vỏ» also seafood. A test holds it over the whole list.
 //
 // Pure: text in, closed ids out. No model ever fills these in (ADR-0017 §2.3).
 package tuvung
@@ -255,18 +260,19 @@ func KhongDau(text string) bool {
 // (dauMotAm).
 var DiUng = dung("di_ung", []Muc{
 	{ID: "hai_san", Nhan: "hải sản", Cum: []string{"hải sản", "thủy hải sản", "đồ biển", "món biển", "đồ tanh", "seafood"}},
-	{ID: "tom", Nhan: "tôm", Cum: []string{"tôm", "tôm hùm", "mắm tôm", "mắm ruốc", "tép", "giáp xác", "shrimp", "shrimps", "prawn", "prawns", "lobster", "lobsters", "shellfish", "crustacean", "crustaceans"}},
+	{ID: "tom", Nhan: "tôm", Cum: []string{"tôm", "tôm hùm", "tôm mực", "mắm tôm", "mắm ruốc", "tép", "giáp xác", "shrimp", "shrimps", "prawn", "prawns", "lobster", "lobsters", "shellfish", "crustacean", "crustaceans"}},
 	{ID: "cua", Nhan: "cua, ghẹ", Cum: []string{"cua biển", "cua đồng", "cua rang", "cua lột", "cua hấp", "cua sốt", "cua hoàng đế", "cua ghẹ", "riêu cua", "bánh canh cua", "lẩu cua", "chả cua", "súp cua", "ghẹ hấp", "ghẹ rang", "ghẹ luộc", "giáp xác", "crab", "crabs", "shellfish", "crustacean", "crustaceans"}},
 	{ID: "muc", Nhan: "mực, bạch tuộc", Cum: []string{"mực nướng", "mực chiên", "mực xào", "mực hấp", "mực ống", "mực lá", "mực một nắng", "khô mực", "râu mực", "tôm mực", "bạch tuộc", "nhuyễn thể", "squid", "squids", "octopus", "calamari"}},
 	{ID: "oc_so", Nhan: "ốc, sò, nghêu, hàu", Cum: []string{"ốc", "sò điệp", "sò huyết", "sò lông", "sò nướng", "nghêu", "hàu nướng", "hàu sống", "hàu phô mai", "hàu sữa", "cơm hến", "bún hến", "nhuyễn thể", "oyster", "oysters", "clam", "clams", "scallop", "scallops", "snail", "snails", "mussel", "mussels", "shellfish",
 		"động vật có vỏ", "hải sản có vỏ", "loại có vỏ", "con có vỏ", "đồ có vỏ"}},
 	{ID: "ca", Nhan: "cá", Cum: []string{"cá kho", "cá nướng", "cá chiên", "cá hấp", "cá lóc", "cá hồi", "cá ngừ", "cá thu", "cá basa", "cá viên", "cá biển", "cá nhỏ", "lẩu cá", "gỏi cá", "chả cá", "bún cá", "cháo cá", "canh cá", "nước mắm", "đồ tanh", "sushi", "sashimi", "fish"}},
 	{ID: "dau_phong", Nhan: "đậu phộng", Cum: []string{"đậu phộng", "đậu phụng", "dầu phộng", "dầu lạc", "lạc rang", "hạt lạc", "kẹo lạc", "peanut", "peanuts", "nut", "nuts"}},
-	{ID: "hat_cay", Nhan: "các loại hạt", Cum: []string{"hạt điều", "hạnh nhân", "óc chó", "hạt dẻ cười", "hạt dẻ nướng", "hạt dẻ rang", "mắc ca", "macca", "hồ đào", "sữa hạt", "walnut", "walnuts", "almond", "almonds", "cashew", "cashews", "hazelnut", "hazelnuts", "pistachio", "pistachios", "tree nut", "tree nuts", "nut", "nuts"}},
+	{ID: "hat_cay", Nhan: "các loại hạt", Cum: []string{"hạt điều", "hạnh nhân", "óc chó", "hạt dẻ cười", "hạt dẻ nướng", "hạt dẻ rang", "mắc ca", "macca", "hồ đào", "sữa hạt", "walnut", "walnuts", "almond", "almonds", "cashew", "cashews", "hazelnut", "hazelnuts", "pistachio", "pistachios", "tree nut", "tree nuts", "nut", "nuts",
+		"các loại hạt", "loại hạt", "hạt các loại", "hạt dinh dưỡng", "mixed nuts"}},
 	{ID: "sua", Nhan: "sữa", Cum: []string{"sữa tươi", "sữa chua", "sữa đặc", "sữa bò", "trà sữa", "cà phê sữa", "cà phê muối", "bạc xỉu", "phô mai", "bơ sữa", "bơ tỏi", "kem sữa", "kem tươi", "kem bơ", "kem que", "sốt kem", "bánh kem", "bánh flan", "bánh sừng bò", "croissant", "latte", "cappuccino", "cheese", "milk", "butter", "cream", "dairy", "lactose", "yogurt", "casein", "whey"}},
 	{ID: "trung", Nhan: "trứng", Cum: []string{"trứng gà", "trứng vịt", "trứng cút", "trứng chiên", "trứng muối", "trứng ốp la", "ốp la", "hột vịt", "hột gà", "lòng trắng trứng", "lòng đỏ trứng", "bánh flan", "egg", "eggs"}},
-	{ID: "lua_mi", Nhan: "lúa mì (gluten)", Cum: []string{"mì", "bánh mì", "bột mì", "lúa mì", "bánh bao", "bánh ngọt", "bánh quy", "bánh bông lan", "bánh kem", "bánh sừng bò", "croissant", "pizza", "pasta", "spaghetti", "wheat", "gluten"}},
-	{ID: "dau_nanh", Nhan: "đậu nành", Cum: []string{"đậu nành", "sữa đậu nành", "đậu hũ", "đậu hủ", "đậu phụ", "tàu hũ", "tào phớ", "nước tương", "xì dầu", "tofu", "soy", "miso"}},
+	{ID: "lua_mi", Nhan: "lúa mì (gluten)", Cum: []string{"mì", "bánh mì", "bột mì", "lúa mì", "bánh bao", "bánh ngọt", "bánh quy", "bánh bông lan", "bánh kem", "bánh sừng bò", "croissant", "pizza", "pasta", "spaghetti", "wheat", "gluten", "lúa mạch", "barley", "rye"}},
+	{ID: "dau_nanh", Nhan: "đậu nành", Cum: []string{"đậu nành", "đậu nàng", "sữa đậu nành", "đậu hũ", "đậu hủ", "đậu phụ", "tàu hũ", "tào phớ", "nước tương", "xì dầu", "tofu", "soy", "miso"}},
 	{ID: "me", Nhan: "mè (vừng)", Cum: []string{"hạt mè", "mè rang", "mè đen", "dầu mè", "muối mè", "kẹo mè", "hạt vừng", "dầu vừng", "muối vừng", "sesame"}},
 })
 
@@ -302,34 +308,6 @@ func MoRongDiUng(ids []string) []string {
 		}
 	}
 	return out
-}
-
-// cumTai returns the ids and length of the longest phrases that start at
-// position i of s (every entry that lists a phrase of that length there, in
-// declaration order), or 0.
-func (v *TuVung) cumTai(s []string, i int) ([]string, int) {
-	best := 0
-	for _, j := range v.dau[s[i]] {
-		if c := v.cums[j]; len(c.amTiet) > best && khopTai(s, i, c.amTiet) {
-			best = len(c.amTiet)
-		}
-	}
-	if best == 0 {
-		return nil, 0
-	}
-	want := map[int]bool{}
-	for _, j := range v.dau[s[i]] {
-		if c := v.cums[j]; len(c.amTiet) == best && khopTai(s, i, c.amTiet) {
-			want[c.thuTuID] = true
-		}
-	}
-	var ids []string
-	for k, m := range v.muc {
-		if want[k] {
-			ids = append(ids, m.ID)
-		}
-	}
-	return ids, best
 }
 
 // cumDungTai returns the ids of the phrases of exactly w syllables that

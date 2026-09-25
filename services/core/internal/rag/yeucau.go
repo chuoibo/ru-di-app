@@ -94,9 +94,9 @@ const (
 )
 
 // DocCau reads what a question's words alone can say, with no model: the one
-// destination they name (never a default; see ResolveDestination), the
-// allergens named beside a trigger (tuvung.DiUngNguoiHoi), the diets, the
-// categories and the atmospheres. It is what the public search uses, and the
+// destination they name (never a default; see ResolveDestination), every
+// allergen of a sentence that holds an allergy trigger
+// (tuvung.DiUngNguoiHoi), the diets, the categories and the atmospheres. It is what the public search uses, and the
 // deterministic half of what the engine's preprocess hands Retrieve beside
 // Understand's slots.
 func DocCau(cau string, dests []DiemDen) (YeuCau, DiemDenGiai) {

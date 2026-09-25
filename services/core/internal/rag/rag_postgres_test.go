@@ -221,7 +221,7 @@ func TestBuildEvalPromoteRollbackAndTombstoneSurvives(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if b1.Docs != 287 || b1.BoKhongAnToan != 2 || b1.CachLy != 2 || trangThai(t, pool, b1.PhienBan) != "built" {
+	if b1.Docs != 290 || b1.BoKhongAnToan != 2 || b1.CachLy != 2 || trangThai(t, pool, b1.PhienBan) != "built" {
 		t.Fatalf("build 1: %+v, state %s", b1, trangThai(t, pool, b1.PhienBan))
 	}
 	var unsafe int
@@ -497,7 +497,8 @@ func TestRetrieveDegradesWithoutSchemaOrVersion(t *testing.T) {
 // 3s the second time, and afterwards the transaction still runs statements
 // and its timeout is still 7s. Without the savepoint the first error would
 // abort the transaction; without the timeout the second call would wait
-// the lock out and answer from the index.
+// the lock out and answer from the index. The request's plan_cache_mode,
+// which the index path forces to custom plans for itself, is restored too.
 func TestIndexFailureCostsTheRequestNothing(t *testing.T) {
 	pool := kho(t)
 	ctx := context.Background()
@@ -509,12 +510,15 @@ func TestIndexFailureCostsTheRequestNothing(t *testing.T) {
 	usable := func(tx pgx.Tx) {
 		t.Helper()
 		var one int
-		var timeout string
-		if err := tx.QueryRow(ctx, `SELECT 1, current_setting('statement_timeout')`).Scan(&one, &timeout); err != nil {
+		var timeout, plan string
+		if err := tx.QueryRow(ctx, `SELECT 1, current_setting('statement_timeout'), current_setting('plan_cache_mode')`).Scan(&one, &timeout, &plan); err != nil {
 			t.Fatalf("the request transaction is broken: %v", err)
 		}
 		if timeout != "7s" {
 			t.Fatalf("the request's statement_timeout is %q, want 7s restored", timeout)
+		}
+		if plan != "force_generic_plan" {
+			t.Fatalf("the request's plan_cache_mode is %q, want force_generic_plan restored", plan)
 		}
 	}
 
@@ -524,7 +528,7 @@ func TestIndexFailureCostsTheRequestNothing(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback(ctx)
-	if _, err := tx.Exec(ctx, `SET LOCAL statement_timeout = '7s'`); err != nil {
+	if _, err := tx.Exec(ctx, `SET LOCAL statement_timeout = '7s'; SET LOCAL plan_cache_mode = 'force_generic_plan'`); err != nil {
 		t.Fatal(err)
 	}
 	kq, err := k(tx).Retrieve(ctx, YeuCau{Cau: "Cà Phê Gác Gỗ", K: 5})
@@ -566,7 +570,7 @@ func TestIndexFailureCostsTheRequestNothing(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx2.Rollback(ctx)
-	if _, err := tx2.Exec(ctx, `SET LOCAL statement_timeout = '7s'`); err != nil {
+	if _, err := tx2.Exec(ctx, `SET LOCAL statement_timeout = '7s'; SET LOCAL plan_cache_mode = 'force_generic_plan'`); err != nil {
 		t.Fatal(err)
 	}
 	start := time.Now()
@@ -841,19 +845,20 @@ func TestVangChiMuc(t *testing.T) {
 	kiemKhongDau(t, v, retrieve)
 }
 
-// r05 is the one miss, and it is the rule working: «Tiệm Sách Cà Phê Rêu»
-// has no price, so under a budget it is kept flagged gia_chua_ro and ranked
-// after every place whose price is known (design 04 §4a), which here is
-// below the tenth. In di_ung the right place is second on d05, d12, d20 and
-// on the reviewer's rewordings of the same asks, d30, d33 (d12's) and d35
-// (d05's).
+// r05 misses, and it is the rule working: «Tiệm Sách Cà Phê Rêu» has no
+// price, so under a budget it is kept flagged gia_chua_ro and ranked after
+// every place whose price is known (design 04 §4a), which here is below the
+// tenth. di_ung misses the same eight right places as the live path (d05,
+// d09, d12, d20, d30, d33, d35, d62), each hidden by the round-3 union rule
+// (design 04 §5.1) because the sentence asks for the allergen it hides;
+// violation@10 stays 0.
 var ghimChiMuc = map[string]string{
 	"ten_rieng":     "n=12 co_lien_quan=12 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"khong_dau":     "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"khi_chat":      "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9878 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"rang_buoc":     "n=10 co_lien_quan=9 recall@10=0.8889 ndcg@10=0.9176 mrr@10=0.8889 violation@10=0.0000 so_vi_pham=0",
-	"di_ung":        "n=40 co_lien_quan=19 recall@10=1.0000 ndcg@10=0.8792 mrr@10=0.8421 violation@10=0.0000 so_vi_pham=0",
+	"di_ung":        "n=86 co_lien_quan=24 recall@10=0.6667 ndcg@10=0.6505 mrr@10=0.6458 violation@10=0.0000 so_vi_pham=0",
 	"lien_diem_den": "n=8 co_lien_quan=8 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"bay_injection": "n=7 co_lien_quan=2 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
-	"tong":          "n=97 co_lien_quan=70 recall@10=0.9857 ndcg@10=0.9549 mrr@10=0.9429 violation@10=0.0000 so_vi_pham=0",
+	"tong":          "n=143 co_lien_quan=75 recall@10=0.8800 ndcg@10=0.8767 mrr@10=0.8733 violation@10=0.0000 so_vi_pham=0",
 }

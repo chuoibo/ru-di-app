@@ -68,6 +68,11 @@ func catCau(text string) cau {
 		if len(c.s) > 0 {
 			c.sau[len(c.s)-1] = string(gap)
 		}
+		// «...» is a pause («dị ứng... ừm... sò điệp»), like «…», not the
+		// end of a sentence.
+		if g := string(gap); pending == ngatCau && strings.Count(g, ".") >= 2 && !strings.ContainsAny(g, "!?;\n\r") {
+			pending = ngatVe
+		}
 		gap = gap[:0]
 		c.s = append(c.s, folded)
 		c.raw = append(c.raw, strings.ToLower(norm.NFC.String(raw)))

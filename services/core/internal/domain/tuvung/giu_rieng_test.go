@@ -117,9 +117,12 @@ type soGiuRieng struct {
 	// Rows naming someone else's allergy, and how many of those the scan
 	// reads (it should: the filter serves the whole outing).
 	nguoiKhac, nguoiKhacDoc int
-	// Asker diets, reported: rows whose diets are read exactly.
+	// Asker diets: rows whose diets are read exactly (reported), and the
+	// labelled diets missed, by id (gated: the diet filter then shows
+	// places that do not serve the diet).
 	kiengDung, kiengCo int
 	kiengLech          []string
+	kiengLot           []string
 	// Places, diet: a diet read that the label does not give is a wrong
 	// «serves diet X»; the target is none. Diets the label gives and the
 	// reading misses are reported.
@@ -187,6 +190,9 @@ func doGiuRieng(t *testing.T, g giuRieng) soGiuRieng {
 			} else {
 				s.kiengLech = append(s.kiengLech, fmt.Sprintf("%s%s:%v→%v", mo, r.ID, diets, gotDiets))
 			}
+			if miss := thieu(tapCo(diets), tapCo(gotDiets)); len(miss) > 0 {
+				s.kiengLot = append(s.kiengLot, fmt.Sprintf("%s%s:%s", mo, r.ID, strings.Join(miss, "+")))
+			}
 		}
 	}
 	for _, q := range g.Quan {
@@ -213,11 +219,7 @@ func doGiuRieng(t *testing.T, g giuRieng) soGiuRieng {
 		}
 		var lot []string
 		for _, a := range chua {
-			hidden := false
-			for _, c := range MoRongDiUng([]string{a}) {
-				hidden = hidden || tags[c]
-			}
-			if !hidden {
+			if !anNhan(a, tags) {
 				lot = append(lot, a)
 			}
 		}
@@ -231,6 +233,49 @@ func doGiuRieng(t *testing.T, g giuRieng) soGiuRieng {
 	return s
 }
 
+// anNhan reports whether a place tagged tags is hidden from someone
+// allergic to a, its label: a «hải sản» label only by the seafood tag or by
+// every seafood child (a place tagged only «tôm» is still shown to a
+// crab-allergic asker); any other by itself or its family head.
+func anNhan(a string, tags map[string]bool) bool {
+	if a == "hai_san" {
+		if tags["hai_san"] {
+			return true
+		}
+		for child, head := range hoDiUng {
+			if head == "hai_san" && !tags[child] {
+				return false
+			}
+		}
+		return true
+	}
+	for _, c := range MoRongDiUng([]string{a}) {
+		if tags[c] {
+			return true
+		}
+	}
+	return false
+}
+
+func TestAnNhanHaiSanCanDuHo(t *testing.T) {
+	for _, c := range []struct {
+		label string
+		tags  []string
+		want  bool
+	}{
+		{"hai_san", []string{"hai_san"}, true},
+		{"hai_san", []string{"tom", "cua", "muc", "oc_so", "ca"}, true},
+		{"hai_san", []string{"tom"}, false},
+		{"hai_san", []string{"tom", "cua", "muc", "oc_so"}, false},
+		{"cua", []string{"hai_san"}, true},
+		{"cua", []string{"tom"}, false},
+	} {
+		if got := anNhan(c.label, tapCo(c.tags)); got != c.want {
+			t.Errorf("label %s, tags %v: hidden %v, want %v", c.label, c.tags, got, c.want)
+		}
+	}
+}
+
 // The readers the corpus measures: the asker's diets are read as DocCau
 // reads them; a place text is read as one field a place declares itself
 // with (its name, a kind, a trait), the only fields the index takes diets
@@ -239,8 +284,9 @@ func docAnKiengNguoiHoi(text string) []string { return DoiKieng(AnKieng.QuetKhon
 func docAnKiengQuan(text string) []string     { return AnKiengQuan(text) }
 
 // Gated on the corpus only in the unsafe direction, miss for miss: every
-// asker allergen read (family-closed), no place text read as serving a
-// diet it does not, no labelled place allergen left untagged. Everything
+// asker allergen read (family-closed), every asker diet read, no place
+// text read as serving a diet it does not, no labelled place allergen left
+// untagged (a «hải sản» label needs the seafood tag or every child). Everything
 // else is reported, not gated -- look-alikes read, allergens read beyond
 // the label, diets missed -- because reading too much only hides places:
 // the asker reader is the safety net unioned with Understand (design 04
@@ -255,7 +301,7 @@ func docAnKiengQuan(text string) []string     { return AnKiengQuan(text) }
 // below are fitted, not blind; the blind measure of this reader is the
 // sealed half of di_ung_heldout_v2, which only the reviewer opens.
 var ghimGiuRieng = struct {
-	lotNhan, quanKiengSai, quanDiUngLot []string
+	lotNhan, kiengLot, quanKiengSai, quanDiUngLot []string
 }{}
 
 func TestGiuRieng(t *testing.T) {
@@ -273,6 +319,7 @@ func TestGiuRieng(t *testing.T) {
 		got, want []string
 	}{
 		{"asker allergens missed", s.lotNhan, w.lotNhan},
+		{"asker diets missed", s.kiengLot, w.kiengLot},
 		{"places read as serving a diet they do not", s.quanKiengSaiID, w.quanKiengSai},
 		{"place allergens left untagged", s.quanDiUngLot, w.quanDiUngLot},
 	} {

@@ -153,10 +153,25 @@ func (k Kho) trongPhienBan(ctx context.Context, version int64, y YeuCau) (kq Ket
 	if _, err = tx.Exec(ctx, `SELECT set_config('statement_timeout', $1, true)`, thoiHanSQL); err != nil {
 		return KetQua{}, err
 	}
+	// After five runs of a prepared statement PostgreSQL may switch to a
+	// generic plan, which for a question naming no destination scans every
+	// destination's documents slowly enough to pass thoiHanSQL (measured:
+	// 300-800 ms and more, against 20 ms planned for the parameters). The
+	// candidate query is planned for its own parameters every time.
+	var oldPlan string
+	if err = tx.QueryRow(ctx, `SELECT current_setting('plan_cache_mode')`).Scan(&oldPlan); err != nil {
+		return KetQua{}, err
+	}
+	if _, err = tx.Exec(ctx, `SELECT set_config('plan_cache_mode', 'force_custom_plan', true)`); err != nil {
+		return KetQua{}, err
+	}
 	if kq, err = k.chiMuc(ctx, tx, version, y); err != nil {
 		return KetQua{}, err
 	}
 	if _, err = tx.Exec(ctx, `SELECT set_config('statement_timeout', $1, true)`, old); err != nil {
+		return KetQua{}, err
+	}
+	if _, err = tx.Exec(ctx, `SELECT set_config('plan_cache_mode', $1, true)`, oldPlan); err != nil {
 		return KetQua{}, err
 	}
 	return kq, tx.Commit(ctx)

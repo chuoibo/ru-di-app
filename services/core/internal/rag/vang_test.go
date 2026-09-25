@@ -15,7 +15,7 @@ import (
 )
 
 // The golden retrieval set (design 04 §8.3): testdata/truy-hoi-dia-diem.json
-// holds 49 hand-written anchor places, one hand-made takedown and 97 queries
+// holds 52 hand-written anchor places, one hand-made takedown and 143 queries
 // in seven groups; sinhNen adds 240 background places deterministically. The
 // same set runs on both paths -- the live-row path here, the index path in
 // rag_postgres_test.go -- and each pins its own numbers; violation@10 must
@@ -549,8 +549,8 @@ func biaTay(v tapVang) map[string]bool {
 // The fixture checks itself before it checks anything else.
 func TestVangTuKiem(t *testing.T) {
 	v := docVang(t)
-	if len(v.Quan) != 289 || len(v.TruyVan) != 97 {
-		t.Fatalf("%d places, %d queries; want 289 and 97", len(v.Quan), len(v.TruyVan))
+	if len(v.Quan) != 292 || len(v.TruyVan) != 143 {
+		t.Fatalf("%d places, %d queries; want 292 and 143", len(v.Quan), len(v.TruyVan))
 	}
 	ids := map[string]bool{}
 	for _, q := range v.Quan {
@@ -659,6 +659,13 @@ func TestVangOracleDocLap(t *testing.T) {
 
 // The live-row path on the golden set: rag/xephang BM25 plus the vocabulary
 // list, the same hard filters, the takedown honoured. Pinned to the digit.
+//
+// di_ung misses eight right places, and every miss is the round-3 rule
+// (design 04 §5.1) doing what it says: a sentence with an allergy trigger
+// reads every allergen it mentions, the food asked for included, so «dị ứng
+// tôm, tìm quán ốc» hides the snail place (d09, d12, d30, d33, d62) and
+// «kem hoặc bánh ngọt …, dị ứng sữa» reads gluten from «bánh ngọt» and
+// hides the bakery (d05, d20, d35). violation@10 stays 0.
 func TestVangHangSong(t *testing.T) {
 	v := docVang(t)
 	rows, bia := v.rows(), biaTay(v)
@@ -672,8 +679,8 @@ var ghimSong = map[string]string{
 	"khong_dau":     "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"khi_chat":      "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9917 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"rang_buoc":     "n=10 co_lien_quan=9 recall@10=1.0000 ndcg@10=0.9590 mrr@10=0.9167 violation@10=0.0000 so_vi_pham=0",
-	"di_ung":        "n=40 co_lien_quan=19 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
+	"di_ung":        "n=86 co_lien_quan=24 recall@10=0.6667 ndcg@10=0.6667 mrr@10=0.6667 violation@10=0.0000 so_vi_pham=0",
 	"lien_diem_den": "n=8 co_lien_quan=8 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"bay_injection": "n=7 co_lien_quan=2 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
-	"tong":          "n=97 co_lien_quan=70 recall@10=1.0000 ndcg@10=0.9848 mrr@10=0.9779 violation@10=0.0000 so_vi_pham=0",
+	"tong":          "n=143 co_lien_quan=75 recall@10=0.8933 ndcg@10=0.8791 mrr@10=0.8727 violation@10=0.0000 so_vi_pham=0",
 }
