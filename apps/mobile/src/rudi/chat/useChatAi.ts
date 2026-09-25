@@ -2,7 +2,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../api";
-import { docAiInvocations, docChatCapabilities, goiAi, gopAiInvocations, thuLaiAi, type AiInvocation, type ChatCapabilities } from "./ai-invocations";
+import { docAiInvocations, docChatCapabilities, goiAi, gopAiInvocations, lenhSanSang, thuLaiAi, type AiInvocation, type ChatCapabilities, type LenhAi } from "./ai-invocations";
 import { vanTay, type BoiCanh } from "../ai/boi-canh";
 
 export function useChatAi(contextId: string, personId: string) {
@@ -42,9 +42,12 @@ export function useChatAi(contextId: string, personId: string) {
     const sub = AppState.addEventListener("change", (state) => { if (state === "active") void refresh(true); });
     return () => { disposed = true; generation.current += 1; clearInterval(timer); sub.remove(); };
   }, [contextId, personId]));
-  const send = async (prompt: string, boiCanh?: BoiCanh) => {
+  const send = async (prompt: string, boiCanh?: BoiCanh, lenh: LenhAi = "plan") => {
     if (sending.current) return false;
-    if (!capabilities?.ai.plan.available) { setError("AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."); return false; }
+    if (!capabilities || !lenhSanSang(capabilities, lenh)) {
+      setError(lenh === "chia_bill" ? "AI chưa gom khoản chi được lúc này. Bạn vẫn có thể thêm khoản chi ở mục Chia bill." : "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.");
+      return false;
+    }
     // Only attach when the server says it reads a bundle. An older server gets
     // the old body, and nothing needs a flag.
     const dinhKem = capabilities.ai.share_scope === "caller_attached" ? boiCanh : undefined;
@@ -52,12 +55,14 @@ export function useChatAi(contextId: string, personId: string) {
     // alone, the same question asked again over newer messages reuses the old
     // logical id, the server finds a matching digest and answers 200 with the
     // OLD card, and the person believes the AI just read what they just said.
-    const khoa = `${prompt}\u0000${dinhKem ? vanTay(dinhKem) : ""}`;
+    // The command is part of it too: the server digests command + prompt +
+    // bundle, so one key reused across two commands would be a 409.
+    const khoa = `${lenh}\u0000${prompt}\u0000${dinhKem ? vanTay(dinhKem) : ""}`;
     if (!attempt.current || attempt.current.prompt !== khoa) attempt.current = { prompt: khoa, id: newAttempt().key };
     const version = generation.current;
     sending.current = true; setBusy(true); setError(null);
     try {
-      const request = await goiAi(contextId, personId, prompt, attempt.current.id, dinhKem);
+      const request = await goiAi(contextId, personId, prompt, attempt.current.id, dinhKem, lenh);
       if (version !== generation.current) return false;
       setRequests((held) => gopAiInvocations(held, [request]));
       attempt.current = null;

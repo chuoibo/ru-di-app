@@ -271,7 +271,9 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	if enabled {
 		reason = nil
 	}
-	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached"}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
+	// chia_bill reads through the same provider as plan (one key, one probe),
+	// so it is advertised with the same answer rather than a second guess.
+	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached"}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
 }
 
 func scan(row pgx.Row) (Invocation, error) {
@@ -290,6 +292,20 @@ func newID() string {
 	return s[:8] + "-" + s[8:12] + "-" + s[12:16] + "-" + s[16:20] + "-" + s[20:]
 }
 
+// lenhNhom is the closed list of commands a group invocation may carry. It
+// mirrors `chat_ai_command_scope` in schema_scope.sql, so a command the table
+// would refuse is refused here as a 400 rather than surfacing as a 500 from the
+// INSERT. Both commands share one queue, one digest, one rate limit and one
+// authority check; only the worker's inference step differs.
+func lenhNhom(command string) bool {
+	return command == lenhPlan || command == lenhChiaBill
+}
+
+const (
+	lenhPlan     = "plan"
+	lenhChiaBill = "chia_bill"
+)
+
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		LogicalID string  `json:"logical_id"`
@@ -301,7 +317,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	if !chatv2.ValidID(in.LogicalID) || in.Command != "plan" || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 {
+	if !chatv2.ValidID(in.LogicalID) || !lenhNhom(in.Command) || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 {
 		failure(w, invalid("invalid_invocation"))
 		return
 	}
@@ -382,7 +398,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		refuse(w, 429, "invocation_rate_limited")
 		return
 	}
-	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,boi_canh,share_expires_at,status) VALUES($1,'group',$2,$3,$4,$5,$6,$7,'plan',$8,$9,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Prompt, goiHoacNull(goi)))
+	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,boi_canh,share_expires_at,status) VALUES($1,'group',$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Command, in.Prompt, goiHoacNull(goi)))
 	if err != nil {
 		failure(w, err)
 		return

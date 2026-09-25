@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNhuongChoNep } from "../../nep/NepProvider";
 import { useEffect, useRef, useState } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import type { ChatCapabilities } from "../../chat/ai-invocations";
+import { lenhSanSang, type ChatCapabilities, type LenhAi } from "../../chat/ai-invocations";
 import { cauBoiCanh, nhanVai, type BoiCanh } from "../../ai/boi-canh";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
 import { chuKhay } from "../../chat/khay-cong-cu";
@@ -54,7 +54,7 @@ export function ToHen({ tin, onOpen, onVote }: { tin: Tin; onOpen: (tin: Tin) =>
   );
 }
 
-export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onPlan, onManual, capabilities, busy, error, initialPrompt, boiCanh, haiNguoi = false, onToGiay }: {
+export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onPlan, onManual, capabilities, busy, error, initialPrompt, boiCanh, haiNguoi = false, onToGiay, lenh = "plan" }: {
   personId: string; contextId: string;
   /** A two-person conversation: the tray's plan slot opens the pair's paper. */
   haiNguoi?: boolean; onToGiay?: () => void;
@@ -63,7 +63,15 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   /** What the screen is showing, already reduced to what would go on the wire. */
   boiCanh: BoiCanh | null;
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null; initialPrompt: string;
+  /**
+   * What the AI panel asks for. `chia_bill` keeps everything that protects the
+   * person (the «Mình đang thấy» preview, «Chỉ gửi lời nhờ», the queue) and
+   * changes only the words and the manual fallback.
+   */
+  lenh?: LenhAi;
 }) {
+  const chiaBill = lenh === "chia_bill";
+  const sanSang = lenhSanSang(capabilities, lenh);
   const { colors } = useRudiTheme();
   const chu = chuKhay(haiNguoi && onToGiay !== undefined);
   const [dinhKem, setDinhKem] = useState(true);
@@ -165,7 +173,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
     <View style={[styles.tools, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <View style={styles.titleRow}>
         <Text accessibilityRole="header" style={[typography.title, styles.flex, { color: colors.ink }]}>
-          {panel === "tools" ? "Thêm vào cuộc trò chuyện" : panel === "poll" ? chu.tieuDePoll : "Phác một tờ hẹn"}
+          {panel === "tools" ? "Thêm vào cuộc trò chuyện" : panel === "poll" ? chu.tieuDePoll : chiaBill ? "Nhờ AI gom khoản chi" : "Phác một tờ hẹn"}
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
@@ -200,7 +208,8 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
             </View>)}
             {draft.choices.length < 6 ? <RudiButton label="Thêm lựa chọn" variant="ghost" compact disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
           </View>
-        ) : <Field label={chu.nhanPlan} accessibilityLabel="Lời nhờ lập kế hoạch" value={draft.prompt} onChangeText={(prompt) => update({ prompt })} editable={!busy} multiline maxLength={2000} placeholder="Ví dụ: tối thứ Sáu, ăn rồi đi dạo quanh hồ" />}
+        ) : chiaBill ? <Field label="Lời nhờ gom khoản chi" accessibilityLabel="Lời nhờ gom khoản chi" value={draft.prompt} onChangeText={(prompt) => update({ prompt })} editable={!busy} multiline maxLength={2000} placeholder="Ví dụ: mình trả 300k tiền nước" />
+          : <Field label={chu.nhanPlan} accessibilityLabel="Lời nhờ lập kế hoạch" value={draft.prompt} onChangeText={(prompt) => update({ prompt })} editable={!busy} multiline maxLength={2000} placeholder="Ví dụ: tối thứ Sáu, ăn rồi đi dạo quanh hồ" />}
       </ScrollView>
       {panel === "poll" ? <View style={styles.footer}>
         {pollError ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
@@ -244,10 +253,17 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
             <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Chỉ lời nhờ trong ô này được gửi cho AI. Lịch sử chat không được chia sẻ.</Text>
           </View>
         )}
+        {chiaBill ? (
+          /* AI does not touch money (ADR-0036 §2.9): say so before sending,
+             not only on the card that comes back. */
+          <Text style={[typography.caption, { color: colors.inkSoft }]} testID="chat-chia-bill-luu-y">
+            AI chỉ đề xuất ai đã trả bao nhiêu, không ghi gì vào sổ. Cả hội xem lại và xác nhận ở mục Chia bill.
+          </Text>
+        ) : null}
         {error ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{error}</Text> : null}
-        {capabilities?.ai.plan.available ? <RudiButton label="Gửi lời nhờ cho AI" loading={busy} disabled={busy || !draft.prompt.trim()} onPress={() => void sendPlan()} />
-          : <Text style={[typography.caption, { color: colors.inkSoft }]}>AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.</Text>}
-        <RudiButton label="Tự tạo kèo" variant="outline" disabled={busy} onPress={onManual} />
+        {sanSang ? <RudiButton label="Gửi lời nhờ cho AI" loading={busy} disabled={busy || !draft.prompt.trim()} onPress={() => void sendPlan()} />
+          : <Text style={[typography.caption, { color: colors.inkSoft }]}>{chiaBill ? "AI chưa gom khoản chi được lúc này. Bạn vẫn có thể thêm khoản chi ở mục Chia bill." : "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."}</Text>}
+        {chiaBill ? null : <RudiButton label="Tự tạo kèo" variant="outline" disabled={busy} onPress={onManual} />}
       </View> : null}
     </View>
   );
