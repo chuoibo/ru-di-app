@@ -314,12 +314,49 @@ export function trichTu(tin: Tin, tenNguoi: (id: string | null) => string): Tric
   else if (tin.kind === "sticker") preview = "Sticker";
   else if (tin.kind === "deleted") preview = "Tin nhắn đã bị xoá";
   else if (tin.kind === "ai_card") {
-    // The same line the server will put in the quote (`messagePreview`).
-    const the = docTheAi(tin.card);
-    preview = the.loai === "tra_loi" ? `Rủ Đi AI: ${chuTraLoi(the).replace(/\s+/g, " ").trim()}` : "";
+    // The group AI's answer is the one AI card the server takes as a reply
+    // target, and the quote it stores is its own line: draw that line here,
+    // not a local approximation, and skip the UTF-16 cut below.
+    if (tin.author_id === null && laBanGhi(tin.card) && tin.card.kind === "tra_loi") {
+      return { id: tin.id, kind: tin.kind, author_id: tin.author_id, preview: xemTruocTraLoiAi(tin.card) };
+    }
+    preview = "";
   } else preview = (tin.body ?? "").replace(/\s+/g, " ").trim();
   if (preview.length > 80) preview = preview.slice(0, 79) + "…";
   return { id: tin.id, kind: tin.kind, author_id: tin.author_id, preview: preview || tenNguoi(tin.author_id) };
+}
+
+/**
+ * Go's unicode.IsSpace, which strings.TrimSpace trims. It is not JavaScript's
+ * `\s`: Go trims U+0085 and keeps U+FEFF, JavaScript's trim() does the
+ * opposite, so the server's rule needs its own set.
+ */
+const KHOANG_TRANG_GO = "[\\t\\n\\v\\f\\r \\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]+";
+const CAT_KHOANG_TRANG_GO = new RegExp(`^${KHOANG_TRANG_GO}|${KHOANG_TRANG_GO}$`, "g");
+
+/**
+ * The quote line the server stores for a reply to the group AI's answer,
+ * rule for rule (`traLoiPreview`, services/core/internal/routes/messages_wai.go):
+ * the words of the FIRST `text` part only, newlines turned into spaces and
+ * nothing else collapsed, trimmed as Go trims, «[Rủ Đi AI]» when there are no
+ * words, and the cut at 80 code points (Go runes), never UTF-16 units. The
+ * vectors both sides are held to live in
+ * services/core/internal/routes/testdata/tra_loi_preview.json.
+ */
+export function xemTruocTraLoiAi(card: unknown): string {
+  let chu = "";
+  const payload = laBanGhi(card) ? card.payload : undefined;
+  const phan = laBanGhi(payload) && Array.isArray(payload.phan) ? payload.phan : [];
+  for (const p of phan) {
+    if (laBanGhi(p) && p.kind === "text") {
+      chu = (laBanGhi(p.payload) ? chuoiNeuCo(p.payload.text) : undefined) ?? "";
+      break;
+    }
+  }
+  chu = chu.split("\n").join(" ").replace(CAT_KHOANG_TRANG_GO, "");
+  if (chu === "") return "[Rủ Đi AI]";
+  const rune = Array.from(`Rủ Đi AI: ${chu}`);
+  return rune.length <= 80 ? rune.join("") : rune.slice(0, 79).join("") + "…";
 }
 
 export type HangHienThi =

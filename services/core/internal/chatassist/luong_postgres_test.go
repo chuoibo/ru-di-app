@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // The group AI answering inside the thread (ADR-0039, proposed), against a
@@ -50,8 +52,29 @@ func TestTinTagPhaiLaTinChuCuaChinhNguoiGoiTrongPhongNay(t *testing.T) {
 	if _, err := f.pool.Exec(ctx, `INSERT INTO contexts(id,display_name,kind,created_by_id) VALUES($1,'Synthetic other room','group',$2)`, phongKhac, f.person); err != nil {
 		t.Fatal(err)
 	}
-	daXoa, cu, anh := newID(), newID(), newID()
+	daXoa, cu, anh, chuDaXoa := newID(), newID(), newID(), newID()
 	if _, err := f.pool.Exec(ctx, `INSERT INTO messages(id,context_id,author_id,kind,deleted_at) VALUES($1,$2,$3,'deleted',clock_timestamp())`, daXoa, f.context, f.person); err != nil {
+		t.Fatal(err)
+	}
+	// deleted_at on its own, kind still 'text'. Today the Python-owned CHECK
+	// ck_messages_deleted_state_matches_timestamp makes that row impossible,
+	// so the deleted_at condition in kiemTrigger is a second guard behind it,
+	// and the "đã xoá" row above (kind='deleted' too) cannot tell whether the
+	// guard is there. This test pins both: the CHECK refuses the row as long
+	// as it exists, and with the CHECK gone -- only from this test's own
+	// schema copy -- kiemTrigger still refuses such a trigger.
+	chuDaXoaSQL := `INSERT INTO messages(id,context_id,author_id,kind,body,deleted_at) VALUES($1,$2,$3,'text','@Rủ Đi đã rút lại',clock_timestamp())`
+	if _, err := f.pool.Exec(ctx, chuDaXoaSQL, chuDaXoa, f.context, f.person); err == nil {
+		t.Fatal("messages accepts kind='text' with deleted_at: the CHECK this guard stands behind is gone")
+	}
+	var check string
+	if err := f.pool.QueryRow(ctx, `SELECT conname FROM pg_constraint WHERE conrelid='messages'::regclass AND contype='c' AND pg_get_constraintdef(oid) LIKE '%deleted_at IS NOT NULL%'`).Scan(&check); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.pool.Exec(ctx, "ALTER TABLE messages DROP CONSTRAINT "+pgx.Identifier{check}.Sanitize()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.pool.Exec(ctx, chuDaXoaSQL, chuDaXoa, f.context, f.person); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := f.pool.Exec(ctx, `INSERT INTO messages(id,context_id,author_id,kind,body,created_at) VALUES($1,$2,$3,'text','@Rủ Đi hôm kia',clock_timestamp()-interval '25 hours')`, cu, f.context, f.person); err != nil {
@@ -61,12 +84,13 @@ func TestTinTagPhaiLaTinChuCuaChinhNguoiGoiTrongPhongNay(t *testing.T) {
 		t.Fatal(err)
 	}
 	for name, trigger := range map[string]string{
-		"phòng khác":      f.tinTag(t, phongKhac, f.person),
-		"người khác viết": f.tinTag(t, f.context, f.peer),
-		"đã xoá":          daXoa,
-		"quá 24 giờ":      cu,
-		"không phải chữ":  anh,
-		"không tồn tại":   newID(),
+		"phòng khác":        f.tinTag(t, phongKhac, f.person),
+		"người khác viết":   f.tinTag(t, f.context, f.peer),
+		"đã xoá":            daXoa,
+		"chữ có deleted_at": chuDaXoa,
+		"quá 24 giờ":        cu,
+		"không phải chữ":    anh,
+		"không tồn tại":     newID(),
 	} {
 		w := f.goiTag(f.token, newID(), trigger, nil)
 		if w.Code != 422 || maTuChoi(w) != "trigger_khong_hop_le" {
@@ -342,6 +366,94 @@ func TestThuLaiSauKhiTinTagDaCoLoiGoiKhac(t *testing.T) {
 	requireCode(t, f.goiTag(f.token, newID(), trigger, nil), 202)
 	if w := f.request("POST", f.route()+"/"+first.ID+"/retry", f.token, map[string]any{}); w.Code != 409 || maTuChoi(w) != "invocation_trigger_taken" {
 		t.Fatalf("thử lại việc cũ khi tin tag đã có lời gọi mới: %d %s", w.Code, w.Body.String())
+	}
+}
+
+// Same bytes, same answer: a same-key retry gets the stored invocation back
+// whatever became of the room's messages since. The check against the room
+// runs for a new call only, and it still runs there.
+func TestCungKhoaSauKhiTinTagDoiVanTraLaiLoiGoiCu(t *testing.T) {
+	f := setup(t, nil)
+	ctx := context.Background()
+	for _, c := range []struct {
+		name string
+		doi  func(trigger, ban string) error
+	}{
+		{"tin tag đã xoá", func(trigger, _ string) error {
+			_, err := f.pool.Exec(ctx, `UPDATE messages SET kind='deleted',body=NULL,deleted_at=clock_timestamp() WHERE id=$1`, trigger)
+			return err
+		}},
+		{"tin tag quá 24 giờ", func(trigger, _ string) error {
+			_, err := f.pool.Exec(ctx, `UPDATE messages SET created_at=created_at-interval '25 hours' WHERE id=$1`, trigger)
+			return err
+		}},
+		{"tin trong gói đã xoá hẳn", func(_, ban string) error {
+			_, err := f.pool.Exec(ctx, `DELETE FROM messages WHERE id=$1`, ban)
+			return err
+		}},
+	} {
+		trigger := f.tinTag(t, f.context, f.person)
+		ban := f.tinTrongPhong(t, f.context, "Q1 nha")
+		logical := newID()
+		extra := map[string]any{"boi_canh": goiThu(luotThu(ban, "Q1 nha"))}
+		w := f.goiTag(f.token, logical, trigger, extra)
+		requireCode(t, w, 202)
+		var first Invocation
+		_ = json.Unmarshal(w.Body.Bytes(), &first)
+		if err := c.doi(trigger, ban); err != nil {
+			t.Fatal(err)
+		}
+		w = f.goiTag(f.token, logical, trigger, extra)
+		var again Invocation
+		_ = json.Unmarshal(w.Body.Bytes(), &again)
+		if w.Code != 200 || again.ID != first.ID {
+			t.Errorf("%s: gửi lại đúng byte cũ: %d %s", c.name, w.Code, w.Body.String())
+		}
+		// A new call about the same message is still checked.
+		if c.name != "tin trong gói đã xoá hẳn" {
+			if w := f.goiTag(f.token, newID(), trigger, nil); w.Code != 422 || maTuChoi(w) != "trigger_khong_hop_le" {
+				t.Errorf("%s: lời gọi MỚI vẫn phải bị kiểm: %d %s", c.name, w.Code, w.Body.String())
+			}
+		} else if w := f.goiTag(f.token, newID(), f.tinTag(t, f.context, f.person), extra); w.Code != 422 || maTuChoi(w) != "boi_canh_mismatch" {
+			t.Errorf("%s: gói MỚI vẫn phải bị kiểm: %d %s", c.name, w.Code, w.Body.String())
+		}
+		if _, err := f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='cancelled',code='cancelled',prompt=NULL,boi_canh=NULL WHERE context_id=$1 AND status IN ('queued','running')`, f.context); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// A job that can never run again is 409 invocation_not_retryable even in a
+// full room; only a job that could run again waits for room with a 429.
+func TestThuLaiKhongDuocLa409KeCaKhiPhongDay(t *testing.T) {
+	f := setup(t, nil)
+	ctx := context.Background()
+	jobs := map[string]string{}
+	for _, c := range []struct{ name, sql string }{
+		{"đã trả lời", `UPDATE chat_ai_invocations SET status='succeeded',prompt=NULL,boi_canh=NULL WHERE id=$1`},
+		{"hết lượt", `UPDATE chat_ai_invocations SET status='failed',code='provider_unavailable',attempts=3 WHERE id=$1`},
+		{"hết hạn chia sẻ", `UPDATE chat_ai_invocations SET status='failed',code='provider_unavailable',attempts=1,share_expires_at=clock_timestamp()-interval '1 minute' WHERE id=$1`},
+		{"còn thử được", `UPDATE chat_ai_invocations SET status='failed',code='provider_unavailable',attempts=1 WHERE id=$1`},
+	} {
+		w := f.goiTag(f.token, newID(), f.tinTag(t, f.context, f.person), nil)
+		requireCode(t, w, 202)
+		var v Invocation
+		_ = json.Unmarshal(w.Body.Bytes(), &v)
+		if _, err := f.pool.Exec(ctx, c.sql, v.ID); err != nil {
+			t.Fatal(err)
+		}
+		jobs[c.name] = v.ID
+	}
+	for i := 0; i < maxDangChayMoiPhong; i++ {
+		requireCode(t, f.goiTag(f.token, newID(), f.tinTag(t, f.context, f.person), nil), 202)
+	}
+	for _, name := range []string{"đã trả lời", "hết lượt", "hết hạn chia sẻ"} {
+		if w := f.request("POST", f.route()+"/"+jobs[name]+"/retry", f.token, map[string]any{}); w.Code != 409 || maTuChoi(w) != "invocation_not_retryable" {
+			t.Errorf("%s, phòng đầy: %d %s", name, w.Code, w.Body.String())
+		}
+	}
+	if w := f.request("POST", f.route()+"/"+jobs["còn thử được"]+"/retry", f.token, map[string]any{}); w.Code != 429 || maTuChoi(w) != "invocation_room_busy" {
+		t.Fatalf("còn thử được, phòng đầy: %d %s", w.Code, w.Body.String())
 	}
 }
 

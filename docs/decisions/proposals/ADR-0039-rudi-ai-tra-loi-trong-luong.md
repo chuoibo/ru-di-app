@@ -155,3 +155,53 @@ mục 2.7 là hiện thực của nó); ADR-0036 §2.6 (không mặt Nếp), §2
 - **Lát 14:** `ghi` với chi tiêu phòng khác hoặc do người khác ghi → từ chối.
 - **Mỗi lát:** chạy lại trong cây sạch đúng SHA; ít nhất hai đột biến tự nghĩ, kiểm tương đương trước,
   đỏ đúng bước dự đoán; số đo ghi thẳng vào commit message.
+
+## 7. Sau review phản biện lát 7 (2026-09-25): điều kiện vào main, giá đã biết, khoảng hở
+
+Review phản biện lát 7 (verdict `REQUEST_CHANGES`, 10 phát hiện) được xử lý ở commit sửa theo review
+trên nhánh `claude/peaceful-hopper-32kwjs`. Ba điều dưới đây không sửa được bằng mã ở lát này, nên
+ghi thẳng vào văn bản sẽ được ký.
+
+### 7.1 Điều kiện vào main
+
+- **`main` không được nhận lát 7** (`5af8655`, `603515f` và commit sửa theo review) **trước khi Lead ký
+  ADR-0039.** Lát này đổi hành vi của hai điều khoản đã ký bằng một văn bản còn ở `proposals/`:
+  - ngoại lệ Go-only `laTraLoiAi` (`routes/messages_wai.go`) sửa **ADR-0021 §2.2.2**, vốn chỉ cho trả
+    lời vào `text|image|sticker`;
+  - chip trên nút gửi và tin `@Rủ Đi` là tin thường thay **khay của ADR-0036** (§2.1, §2.5, §2.8, §4,
+    xem bảng mục 5).
+- Cùng điều kiện: Maestro `49-rudi-ai-trong-luong.yaml` (mục 6) phải được viết — file này **chưa có**
+  trong cây — và chạy trên máy thật, và ảnh chụp (sáng, tối, Reduce Motion) phải được mở ra nhìn. Máy
+  làm lát này không có emulator; flow 30 (hai nhánh AI) và máy kiểm sau flow 40 đã sửa theo luồng mới
+  nhưng cũng **chưa chạy trên máy**.
+
+### 7.2 Thứ tự khoá của publish
+
+- Publish lấy **head của feed phòng trước, rồi KEY SHARE tin tag, rồi job**, đúng thứ tự mọi lệnh ghi
+  chat Go lấy qua `chatlegacychange.BeforeWrite` (head trước, rồi `FOR UPDATE` trên tin). Thứ tự trước
+  (tin tag trước head) khoá chéo với xoá tin và thả cảm xúc: đo được `40P01` ở cả hai đường.
+- Ghi chú khoá chéo **bên trong** `schema_luong.sql` (migration `chatassist` v4) vẫn nói thứ tự cũ.
+  File đó bị ghim checksum; sửa một chữ trong comment là mọi database đã cài v4 báo «checksum mismatch».
+  Ghi chú đúng nằm ở `giuTrigger` (`chatassist/luong.go`) và cạnh chỗ nhúng file (`migrate.go`).
+
+### 7.3 Giá cuốn chiếu cho người dùng app cũ (chấp nhận, không chặn được theo phiên bản)
+
+- Capability `ai.mention` chỉ bảo vệ **app của người gọi**: app cũ không thấy nó thì không gửi
+  `trigger_message_id` và nhận đúng thẻ cũ. Nhưng câu trả lời `tra_loi` là một tin trong phòng, và
+  **thành viên khác** còn dùng app trước lát 7 thấy nó là «Một thẻ bản này chưa hiển thị được.»
+  (`TheAi.tsx:181` của bản cũ), còn danh sách cuộc trò chuyện ghi «[Rủ Đi AI]». Họ không đọc được chữ
+  nào của câu trả lời cho tới khi cập nhật app.
+- Không chặn được theo phiên bản tối thiểu: `chat-capabilities` trả lời theo request của người gọi,
+  không mang phiên bản app nào, và máy chủ không giữ sổ phiên bản app của từng thành viên. Gate
+  `mention` theo phiên bản của người gọi cũng không cứu người đọc. Văn bản này chấp nhận đó là giá của
+  đợt cuốn chiếu; muốn bỏ giá này thì cần một cơ chế khai phiên bản theo thành viên, là việc riêng.
+
+### 7.4 Khoảng hở đã biết: tin @ có thể không được trả lời mà không có dấu hiệu nào
+
+- Nếu người gọi rời màn chat trong lúc tin `@Rủ Đi` còn đang gửi, lời gọi AI bị bỏ: `hoiAiVeTin` không
+  chạy, cặp chờ trong `capChoTin` ở lại bộ nhớ rồi mất. Tin nằm trong luồng, không có câu trả lời, và
+  không có hàng «Rủ Đi AI chưa nhận lời nhờ» nào nói điều đó. App bị tắt giữa cặp cũng vậy.
+- Lối thoát theo thiết kế (§4.1 bước 5 của thiết kế 03) là mục «Nhờ Rủ Đi AI trả lời tin này» trong
+  `MenuTin`, **mở sheet chip trước** rồi mới gọi. Mục đó **chưa làm**: nó cần một sheet xem trước mới
+  (ADR-0036 §2.5: không gói nào rời máy khi chưa hiện trước), và UI mới phải qua cổng ảnh chụp mà máy
+  làm lát này không chạy được. Cho tới khi mục đó có, khoảng hở này là một mục mở của lát 7.

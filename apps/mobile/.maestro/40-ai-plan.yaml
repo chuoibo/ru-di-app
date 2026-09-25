@@ -4,8 +4,10 @@
 # harness đã kiểm khoá còn sống bằng scripts/check_demo_ai_key.py (khoá chết là
 # ĐỎ, không phải bỏ qua). Chạy sau flow 25 trong cùng lượt; tự tạo nhóm «Plan QA»
 # để thẻ AI đầu tiên trong chat là của /plan.
-# Harness kiểm máy chủ sau flow: thẻ ai_card không tác giả, kind text|places|
-# itinerary, mọi place_id nằm trong GET /places (grounded).
+# Harness kiểm máy chủ sau flow (scripts/kiem_the_ai_sau_40.py): câu trả lời
+# ai_card không tác giả — từ lát 7 là tin trả lời `tra_loi` vào tin /plan, các
+# thẻ text|places|itinerary nằm trong payload.phan — và mọi place_id trong mọi
+# phần nằm trong GET /places (grounded).
 appId: com.lakiet.rudi
 ---
 - stopApp
@@ -53,10 +55,12 @@ appId: com.lakiet.rudi
 - tapOn: "Ô soạn tin"
 - inputText: "/plan toi nay ca hoi di an o Da Lat, ngan sach vua"
 - tapOn: "Gửi tin nhắn"
-# Mô hình cần thời gian; 120 s là trần cho một lượt.
+# Mô hình cần thời gian; 120 s là trần cho một lượt. Câu trả lời trong luồng ký
+# chân «Rủ Đi AI · đọc N tin» (hoặc «· chỉ đọc lời nhờ»).
 - extendedWaitUntil:
-    visible: "Rủ Đi AI|Rủ Đi AI gợi ý|Rủ Đi AI phác lịch trình"
+    visible: "Rủ Đi AI · (đọc [0-9]+ tin|chỉ đọc lời nhờ)|Rủ Đi AI|Rủ Đi AI gợi ý|Rủ Đi AI phác lịch trình"
     timeout: 120000
+- assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
 - assertNotVisible: "Rủ Đi AI chưa nối được mô hình trên máy chủ này."
 - assertNotVisible: ".*đang im lặng.*"
 - hideKeyboard

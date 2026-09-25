@@ -95,6 +95,21 @@ test("trả lời vào câu trả lời của AI trích đúng chữ của nó, 
   assert.equal(goi.luot[0].chu, "Tối nay ăn lẩu ở Q1 nhé");
 });
 
+// The server's traLoiPreview and this client are held to ONE vector file; the
+// Go side runs it in TestXemTruocCauTraLoiTheoVectorChung. Before this, a reply
+// with no text part read «Rủ Đi AI: Tờ hẹn: …» here and «[Rủ Đi AI]» on the
+// server, and the client cut on UTF-16 units where the server cuts on runes.
+test("dòng trích câu trả lời của AI khớp máy chủ từng vector (không phần chữ, cắt theo rune)", () => {
+  const vectors = JSON.parse(readFileSync(join(HERE, "..", "..", "..", "services", "core", "internal", "routes", "testdata", "tra_loi_preview.json"), "utf8"));
+  assert.ok(vectors.length >= 10, "tệp vector phải có đủ ca");
+  for (const v of vectors) {
+    const tin = { id: "m", context_id: "c", author_id: null, kind: "ai_card", body: null, image_url: null, card: v.card, created_at: "2030-09-22T10:00:00Z", cursor: "m" };
+    assert.equal(trichTu(tin, () => "Tên người").preview, v.preview, v.ten);
+  }
+  const khongChu = { id: "m", context_id: "c", author_id: null, kind: "ai_card", body: null, image_url: null, card: traLoi({}, [{ kind: "itinerary", payload: { title: "Tối thứ Sáu", stops: [{ time_text: "19:00", note: "ăn", place: cho }] } }]), created_at: "2030-09-22T10:00:00Z", cursor: "m" };
+  assert.equal(trichTu(khongChu, () => "Tên người").preview, "[Rủ Đi AI]");
+});
+
 test("thẻ nhóm ký bằng tia lấp lánh tông ai, không mặt Nếp, không màu mới", () => {
   const nguon = readFileSync(join(SRC, "screens", "chat", "TraLoiAi.tsx"), "utf8");
   assert.match(nguon, /name="sparkles"/);

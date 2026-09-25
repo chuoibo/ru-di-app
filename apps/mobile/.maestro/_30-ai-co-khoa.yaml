@@ -1,21 +1,66 @@
-# Nhánh của flow 30 khi máy chủ CÓ khoá mô hình (--ai, AI=1): lời gọi AI ra một
-# thẻ của Rủ Đi AI (mô hình cần thời gian; 120 s là trần), và /chia-bill ra bản
-# đọc khoản chi hoặc một trong các câu nói thật của máy chủ — không bao giờ im
-# lặng vô danh.
+# Nhánh của flow 30 khi máy chủ CÓ khoá mô hình (--ai, AI=1).
+#
+# Từ lát 7 (ADR-0039, đề xuất) `@Rủ Đi` là một tin thường; khi tin đã lưu, app
+# gọi AI nêu đúng tin đó, và câu trả lời là một TIN TRẢ LỜI vào tin ấy: có khối
+# trích «Trả lời Bạn: …», ký chân «Rủ Đi AI · đọc N tin» (hoặc «· chỉ đọc lời
+# nhờ»). Chip trên nút gửi nói trước sẽ kèm bao nhiêu tin, đếm từ chính gói sẽ
+# gửi. Mô hình cần thời gian; 120 s là trần. Không bao giờ im lặng vô danh.
+#
+# Flow 30 đã gõ «@Ru Di goi y quan an» vào ô soạn, CHƯA gửi.
 appId: com.lakiet.rudi
 ---
 - extendedWaitUntil:
-    visible: "Rủ Đi AI.*"
+    visible: "Kèm [0-9]+ tin gần đây"
+    timeout: 60000
+- assertVisible: "Chỉ gửi lời nhờ"
+- hideKeyboard
+# «Xem» liệt kê đúng gói sẽ gửi, cùng con số.
+- tapOn: "Xem những tin sẽ gửi kèm"
+- extendedWaitUntil:
+    visible: "Rủ Đi AI sẽ đọc đúng [0-9]+ tin dưới đây.*"
+    timeout: 15000
+- takeScreenshot: 30-ai-chip-xem
+- back
+- extendedWaitUntil:
+    visible: "Gửi tin nhắn"
+    timeout: 15000
+- tapOn: "Gửi tin nhắn"
+- extendedWaitUntil:
+    visible: "Rủ Đi AI · (đọc [0-9]+ tin|chỉ đọc lời nhờ)"
     timeout: 120000
+# Câu trả lời trả lời vào đúng tin tag, không phải một thẻ trôi nổi.
+- assertVisible: "Trả lời Bạn: @Ru Di goi y quan an"
+- assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
 - assertNotVisible: "Rủ Đi AI chưa nối được mô hình trên máy chủ này."
 - assertNotVisible: ".*đang im lặng.*"
 - hideKeyboard
 - takeScreenshot: 30-ai-tra-loi
+# /chia-bill: cũng là một tin thường; khi lệnh sẵn sàng thì câu trả lời là tin
+# trả lời vào tin /chia-bill (nháp khoản chi ở lại máy chủ, không vào tin), hoặc
+# hàng nói thật «Chưa gom được khoản chi». Máy chủ chưa bật chia_bill thì chip
+# nói «chưa sẵn sàng» và tin đi như tin thường. Nhánh «sẵn sàng» chạy trước: nó
+# gửi, chip biến mất, nên nhánh sau không chạy lại.
 - tapOn: "Ô soạn tin"
-- inputText: "/chia-bill"
-- tapOn: "Gửi tin nhắn"
+- inputText: "/chia-bill minh tra 300k tien nuoc"
 - extendedWaitUntil:
-    visible: "Đây là bản đọc từ tin nhắn, chưa ghi vào sổ.*|Không thấy khoản chi nào trong các tin gần đây.|Máy chủ từ chối bản đọc lần này. Thử lại sau.|Chia bill từ chat chưa sẵn sàng trên máy chủ này."
-    timeout: 120000
+    visible: "Kèm [0-9]+ tin gần đây|Chỉ gửi lời nhờ, không kèm tin nào|Nhóm chưa có tin nào, chỉ gửi lời nhờ|Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
+    commands:
+      - tapOn: "Gửi tin nhắn"
+      - extendedWaitUntil:
+          visible: "Trả lời Bạn: /chia-bill minh tra 300k tien nuoc|Chưa gom được khoản chi"
+          timeout: 120000
+      - assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
+- runFlow:
+    when:
+      visible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
+    commands:
+      - tapOn: "Gửi tin nhắn"
+      - extendedWaitUntil:
+          visible: "Tin nhắn: /chia-bill minh tra 300k tien nuoc"
+          timeout: 60000
 - hideKeyboard
 - takeScreenshot: 30-chia-bill-that

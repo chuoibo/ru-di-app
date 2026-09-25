@@ -1,0 +1,411 @@
+[
+ {
+  "ten": "phần chữ đầu tiên",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": "Tối nay ăn lẩu ở Q1 nhé"
+      }
+     },
+     {
+      "kind": "places",
+      "payload": {
+       "intro": "Hai chỗ",
+       "places": [
+        {
+         "id": "p1",
+         "name": "Quán Một"
+        }
+       ]
+      }
+     },
+     {
+      "kind": "itinerary",
+      "payload": {
+       "title": "Tối thứ Sáu",
+       "stops": [
+        {
+         "time_text": "19:00",
+         "note": "ăn",
+         "place": {
+          "id": "p1",
+          "name": "Quán Một"
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: Tối nay ăn lẩu ở Q1 nhé"
+ },
+ {
+  "ten": "không có phần chữ nào",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "itinerary",
+      "payload": {
+       "title": "Tối thứ Sáu",
+       "stops": [
+        {
+         "time_text": "19:00",
+         "note": "ăn",
+         "place": {
+          "id": "p1",
+          "name": "Quán Một"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "kind": "places",
+      "payload": {
+       "intro": "Hai chỗ",
+       "places": [
+        {
+         "id": "p1",
+         "name": "Quán Một"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  "preview": "[Rủ Đi AI]"
+ },
+ {
+  "ten": "phần chữ đứng sau tờ hẹn",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "itinerary",
+      "payload": {
+       "title": "Tối thứ Sáu",
+       "stops": [
+        {
+         "time_text": "19:00",
+         "note": "ăn",
+         "place": {
+          "id": "p1",
+          "name": "Quán Một"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "kind": "text",
+      "payload": {
+       "text": "Hẹn 19 giờ ở quán"
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: Hẹn 19 giờ ở quán"
+ },
+ {
+  "ten": "chỉ phần chữ ĐẦU, kể cả khi nó rỗng",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": ""
+      }
+     },
+     {
+      "kind": "text",
+      "payload": {
+       "text": "Câu thứ hai"
+      }
+     }
+    ]
+   }
+  },
+  "preview": "[Rủ Đi AI]"
+ },
+ {
+  "ten": "xuống dòng thành dấu cách, không gộp khoảng trắng",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": "  Ăn lẩu\n\nở Q1  nhé \n"
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: Ăn lẩu  ở Q1  nhé"
+ },
+ {
+  "ten": "tab giữa câu giữ nguyên",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": "Ăn\tlẩu"
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: Ăn\tlẩu"
+ },
+ {
+  "ten": "chỉ có khoảng trắng",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": " \n\t "
+      }
+     }
+    ]
+   }
+  },
+  "preview": "[Rủ Đi AI]"
+ },
+ {
+  "ten": "đúng 80 rune dù dài hơn 80 đơn vị UTF-16",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": "🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜"
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: 🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜"
+ },
+ {
+  "ten": "81 rune thì cắt còn 79 rune và dấu …",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": "🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜"
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: 🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜🍜…"
+ },
+ {
+  "ten": "chữ dài tiếng Việt",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": "Tối nay ăn lẩu ở Q1 nhé, quán mở tới 23 giờ và vừa túi cả hội; nhớ đặt bàn trước bảy giờ."
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: Tối nay ăn lẩu ở Q1 nhé, quán mở tới 23 giờ và vừa túi cả hội; nhớ đặ…"
+ },
+ {
+  "ten": "phan không phải danh sách",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "phan": {}
+   }
+  },
+  "preview": "[Rủ Đi AI]"
+ },
+ {
+  "ten": "chữ không phải chuỗi",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": 5
+      }
+     }
+    ]
+   }
+  },
+  "preview": "[Rủ Đi AI]"
+ },
+ {
+  "ten": "cắt U+0085 và U+00A0 như Go",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": "\u0085\u00a0Xin chào\u00a0"
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: Xin chào"
+ },
+ {
+  "ten": "giữ U+FEFF như Go",
+  "card": {
+   "kind": "tra_loi",
+   "payload": {
+    "ban": 1,
+    "tac_gia": "rudi-ai",
+    "invocation_id": "vector",
+    "lenh": "plan",
+    "doc": {
+     "so_tin": 0,
+     "chi_loi_nho": true
+    },
+    "phan": [
+     {
+      "kind": "text",
+      "payload": {
+       "text": "\ufeffXin chào"
+      }
+     }
+    ]
+   }
+  },
+  "preview": "Rủ Đi AI: \ufeffXin chào"
+ }
+]

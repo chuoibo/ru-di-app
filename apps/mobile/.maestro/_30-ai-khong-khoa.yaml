@@ -1,28 +1,55 @@
 # Nhánh của flow 30 khi máy chủ KHÔNG có khoá mô hình (AI=0): lời gọi AI và
 # /chia-bill đều nhận câu nói thật, không im lặng vô danh.
 #
-# `@Rủ Đi` KHÔNG còn gửi một tin rồi chờ máy chủ trả lời. Nó mở khay lời nhờ,
-# nơi người ta viết rõ điều muốn hỏi — đúng luật ADR-0031: AI chỉ nhận thứ được
-# đưa cho nó, không tự đọc lịch sử chat. Flow này đo đúng đường ấy.
+# Từ lát 7 (ADR-0039, đề xuất) `@Rủ Đi` là một tin THƯỜNG, đi qua hàng gửi như
+# mọi tin; app chỉ gọi AI, nêu đúng tin đó, khi máy chủ nói lệnh sẵn sàng. Không
+# có khoá thì chip ngay trên nút gửi nói thật TRƯỚC khi gửi, tin vẫn vào luồng,
+# và không có lời gọi nào — nên cũng không có hàng «Rủ Đi AI chưa nhận lời nhờ».
+# AI chỉ nhận thứ được đưa cho nó (ADR-0031): ở nhánh này nó không nhận gì.
+#
+# Flow 30 đã gõ «@Ru Di goi y quan an» vào ô soạn, CHƯA gửi.
 appId: com.lakiet.rudi
 ---
-# Lời hứa riêng tư phải nằm ngay trên màn, không chỉ trong tài liệu.
 - extendedWaitUntil:
-    visible: "Chỉ lời nhờ trong ô này được gửi cho AI. Lịch sử chat không được chia sẻ."
+    visible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
     timeout: 60000
-# Không có khoá thì khay nói thẳng, và vẫn chừa đường tự làm.
-- assertVisible: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."
-- assertVisible: "Tự tạo kèo"
+# Không có gì để kèm hay bỏ kèm khi chẳng có lời gọi nào.
+- assertNotVisible: "Chỉ gửi lời nhờ"
+- takeScreenshot: 30-ai-chip-chua-san-sang
+- tapOn: "Gửi tin nhắn"
+- extendedWaitUntil:
+    visible: "Tin nhắn: @Ru Di goi y quan an"
+    timeout: 60000
+- assertNotVisible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
+- assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
+- hideKeyboard
 - takeScreenshot: 30-ai-im-lang-that
-- tapOn: "Bỏ bản nháp"
+# Khay «Tờ hẹn» vẫn nói thẳng khi không có khoá, và vẫn chừa đường tự làm.
+- tapOn: "Thêm vào cuộc trò chuyện"
+- extendedWaitUntil:
+    visible: "Tờ hẹn"
+    timeout: 15000
+- tapOn: "Tờ hẹn"
+- extendedWaitUntil:
+    visible: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."
+    timeout: 20000
+- assertVisible: "Tự tạo kèo"
+- assertNotVisible: "Hỏi Rủ Đi AI"
+- takeScreenshot: 30-khay-to-hen-chua-san-sang
+- tapOn: "Đóng khay công cụ"
+# /chia-bill: cùng chip, cùng một tin thường.
 - extendedWaitUntil:
     visible: "Ô soạn tin"
     timeout: 20000
 - tapOn: "Ô soạn tin"
-- inputText: "/chia-bill"
+- inputText: "/chia-bill minh tra 300k tien nuoc"
+- extendedWaitUntil:
+    visible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
+    timeout: 20000
 - tapOn: "Gửi tin nhắn"
 - extendedWaitUntil:
-    visible: "Chia bill từ chat chưa sẵn sàng trên máy chủ này."
+    visible: "Tin nhắn: /chia-bill minh tra 300k tien nuoc"
     timeout: 60000
+- assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
 - hideKeyboard
 - takeScreenshot: 30-chia-bill-that

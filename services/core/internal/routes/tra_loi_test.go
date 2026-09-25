@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -55,5 +57,32 @@ func TestXemTruocCauTraLoiCuaAi(t *testing.T) {
 	}
 	if got := messagePreview(repo.Message{Kind: "ai_card", Card: []byte(`{"kind":"itinerary","payload":{}}`)}); got != "[Rủ Đi AI: lịch trình]" {
 		t.Fatalf("preview %q", got)
+	}
+}
+
+// The quote line of a reply to the AI's answer is held to one set of vectors
+// on both sides: this test runs them through messagePreview, and the app's
+// tests/tra-loi-ai.test.mjs runs the same file through trichTu, so the line a
+// person sees while composing is the line the server stores.
+func TestXemTruocCauTraLoiTheoVectorChung(t *testing.T) {
+	raw, err := os.ReadFile("testdata/tra_loi_preview.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var vectors []struct {
+		Ten     string          `json:"ten"`
+		Card    json.RawMessage `json:"card"`
+		Preview string          `json:"preview"`
+	}
+	if err = json.Unmarshal(raw, &vectors); err != nil {
+		t.Fatal(err)
+	}
+	if len(vectors) < 10 {
+		t.Fatalf("only %d vectors", len(vectors))
+	}
+	for _, v := range vectors {
+		if got := messagePreview(repo.Message{Kind: "ai_card", Card: v.Card}); got != v.Preview {
+			t.Errorf("%s: %q, want %q", v.Ten, got, v.Preview)
+		}
 	}
 }

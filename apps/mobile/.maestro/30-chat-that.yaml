@@ -96,12 +96,13 @@ appId: com.lakiet.rudi
     visible: "1 phiếu · của bạn"
     timeout: 30000
 - takeScreenshot: 30-binh-chon
-# Gọi AI và /chia-bill rẽ theo máy chủ: không có khoá (AI=0) → câu nói thật,
-# không phải im lặng vô danh; có khoá (--ai, AI=1) → thẻ của Rủ Đi AI và bản đọc
-# khoản chi thật (hoặc câu nói thật vì sao không có).
+# Gọi AI và /chia-bill rẽ theo máy chủ (lát 7, ADR-0039 đề xuất: tin @ là tin
+# thường, câu trả lời là tin trả lời vào đúng tin đó). Ở đây mới GÕ, chưa gửi:
+# mỗi nhánh đọc chip trên nút gửi trước rồi tự bấm gửi. Không có khoá (AI=0) →
+# chip nói «chưa sẵn sàng · Gửi như tin thường», tin vẫn đi; có khoá (--ai,
+# AI=1) → chip «Kèm N tin gần đây», câu trả lời ký «Rủ Đi AI · đọc N tin».
 - tapOn: "Ô soạn tin"
 - inputText: "@Ru Di goi y quan an"
-- tapOn: "Gửi tin nhắn"
 - runFlow:
     when:
       true: ${AI != "1"}

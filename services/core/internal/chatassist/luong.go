@@ -109,10 +109,19 @@ func theCuaViec(j work, part tree.Value, places []*tree.OrderedMap) ([]byte, err
 	return pyjson.Dumps(treejson.From(grounded))
 }
 
-// giuTrigger takes a KEY SHARE lock on the trigger before publish locks the
-// feed or the job. A deletion locks the message FOR UPDATE and then, through
-// chat_ai_trigger_deleted, the job: taking the message first here makes the two
-// wait on one row instead of each holding the lock the other needs next.
+// giuTrigger takes a KEY SHARE lock on the trigger. publish calls it AFTER it
+// holds the room's feed head (lockFeed) and BEFORE it locks the job, which is
+// the order every Go chat write takes: chatlegacychange.BeforeWrite locks the
+// head, then a delete, an edit or a reaction locks the message FOR UPDATE, and
+// a delete then reaches the job through chat_ai_trigger_deleted. Holding the
+// head first makes publish and those writes queue on the head.
+//
+// The order this replaced (the trigger first, then the head) deadlocked: a
+// write held the head and waited for FOR UPDATE on the message while publish
+// held the KEY SHARE and waited for the head. The note inside schema_luong.sql
+// still states that old order; the file is checksummed, so it stays and this
+// comment is the correct one (TestDangTraLoiKhongKhoaCheoVoiXoaVaCamXuc).
+//
 // False means the message is gone outright, not merely taken back.
 func giuTrigger(ctx context.Context, tx pgx.Tx, j work) (bool, error) {
 	if j.trigger == "" {

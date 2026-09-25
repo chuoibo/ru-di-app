@@ -423,7 +423,11 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, res
 		_ = tx.Rollback(ctx)
 		return h.finishFailure(ctx, j, "sharing_unavailable")
 	}
-	// The trigger before the feed and the job: see giuTrigger.
+	// The feed head first, then the trigger, then the job: the order every Go
+	// chat write takes (chatlegacychange.BeforeWrite). See giuTrigger.
+	if err = lockFeed(ctx, tx, j.conversation); err != nil {
+		return err
+	}
 	there, err := giuTrigger(ctx, tx, j)
 	if err != nil {
 		return err
@@ -431,9 +435,6 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, res
 	if !there {
 		_ = tx.Rollback(ctx)
 		return h.finishFailure(ctx, j, "trigger_deleted")
-	}
-	if err = lockFeed(ctx, tx, j.conversation); err != nil {
-		return err
 	}
 	var id string
 	err = tx.QueryRow(ctx, `SELECT id FROM chat_ai_invocations WHERE id=$1 AND status='running' AND lease_id=$2 AND lease_until>clock_timestamp() AND share_expires_at>clock_timestamp() FOR UPDATE`, j.id, j.lease).Scan(&id)

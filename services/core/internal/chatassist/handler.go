@@ -412,23 +412,17 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var goi []byte
-	soTin := 0
 	if in.BoiCanh != nil {
-		if soTin, err = thuocPhong(r.Context(), tx, r.PathValue("context"), in.BoiCanh); err != nil {
-			failure(w, err)
-			return
-		}
 		if goi, err = canonical(in.BoiCanh); err != nil {
 			failure(w, err)
 			return
 		}
 	}
-	if trigger != "" {
-		if err = kiemTrigger(r.Context(), tx, r.PathValue("context"), g.person, trigger); err != nil {
-			failure(w, err)
-			return
-		}
-	}
+	// The replay lookup comes before any check against the room's messages.
+	// The same bytes under the same logical id get the stored invocation back,
+	// whatever became of those messages since: a retry after the `@Rủ Đi`
+	// message was taken back, or after it turned 24 hours old, is still the
+	// same call and must not turn into a 422.
 	sum := inputDigest(in.Command, in.Prompt, goi, trigger)
 	var oldHash []byte
 	var oldMember, oldID string
@@ -453,6 +447,21 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	if !errors.Is(err, pgx.ErrNoRows) {
 		failure(w, err)
 		return
+	}
+	// A new invocation: now the bundle and the trigger are checked against
+	// the room, in the order they always were, before the provider refusal.
+	soTin := 0
+	if in.BoiCanh != nil {
+		if soTin, err = thuocPhong(r.Context(), tx, r.PathValue("context"), in.BoiCanh); err != nil {
+			failure(w, err)
+			return
+		}
+	}
+	if trigger != "" {
+		if err = kiemTrigger(r.Context(), tx, r.PathValue("context"), g.person, trigger); err != nil {
+			failure(w, err)
+			return
+		}
 	}
 	if !available {
 		refuse(w, 503, "provider_unavailable")
@@ -579,6 +588,19 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 		return
 	}
 	if action == "retry" {
+		// Retryability first: a job that can never run again is 409 whatever
+		// the room is doing, not a 429 that invites the client to wait and try
+		// again. The row is held FOR UPDATE, so this cannot change before the
+		// UPDATE below, which keeps the same conditions as its guard.
+		var retryable bool
+		if e := tx.QueryRow(r.Context(), `SELECT status='failed' AND attempts<3 AND prompt IS NOT NULL AND share_expires_at>clock_timestamp() FROM chat_ai_invocations WHERE id=$1`, v.ID).Scan(&retryable); e != nil {
+			failure(w, e)
+			return
+		}
+		if !retryable {
+			refuse(w, 409, "invocation_not_retryable")
+			return
+		}
 		// A retry puts the job back in flight, so it counts against the room
 		// the way a new one does; the hourly count is by creation and stays.
 		if e := gioiHanPhong(r.Context(), tx, r.PathValue("context")); e != nil {
