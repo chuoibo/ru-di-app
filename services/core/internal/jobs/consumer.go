@@ -32,10 +32,17 @@ type Hooks struct {
 	// running finish -- so a caller can tell "consuming" from "dialled", from
 	// "draining" and from "paused".
 	Attached func(up bool)
-	// Paused is called when a handler returned ErrTamDung, once the consumer
-	// stopped taking messages, and returns once the database answers again
-	// (or ctx ends). Nil waits one second.
-	Paused func(ctx context.Context)
+	// Paused is called before each run of the messages a pause kept, and
+	// returns when they should run (or ctx ends): with retry 0 once a handler
+	// returned ErrTamDung and the consumer stopped taking messages, then 1,
+	// 2, ... before each further run of the same pause, while one of them
+	// fails again. A pause ends when every message it kept ran; the next one
+	// starts at 0. Nil waits one second each time.
+	//
+	// ctx also ends when the broker closes the channel under the pause (its
+	// consumer_timeout, a dropped connection): the kept messages went back to
+	// the queue with it, and ConsumeReady returns an error.
+	Paused func(ctx context.Context, retry int)
 	// DeadLettered hears each message this consumer sends to the dead-letter
 	// queue, by id only (design 02 §7): a body that does not decode (its
 	// broker message id when it has the relay's form, "" otherwise), a
@@ -52,7 +59,8 @@ func Consume(ctx context.Context, conn *amqp.Connection, t Topology, queue strin
 }
 
 // ConsumeReady is Consume with hooks. It returns once ctx ends (nil) or the
-// channel or connection fails (an error); a paused consumer does not return.
+// channel or connection fails (an error), paused or not; a pause alone does
+// not end it.
 //
 // A pause gives nothing back to the queue. When a handler returns ErrTamDung
 // the consumer cancels its subscription, keeps that message and every one
@@ -64,7 +72,9 @@ func Consume(ctx context.Context, conn *amqp.Connection, t Topology, queue strin
 // it. Requeueing on every pause let five short database stalls (a lock, not
 // an outage) send a healthy job's message to the dead-letter queue; keeping
 // the messages costs nothing against the limit. A stop while paused closes
-// the channel, and the kept messages go back to the queue then, counted once.
+// the channel, and the kept messages go back to the queue then, counted once;
+// so does a channel the broker closes under a pause (its consumer_timeout),
+// and ConsumeReady then returns an error, so the caller dials again.
 //
 // The handler's context is ctx, not the subscription's: a pause cancels the
 // subscription, while the jobs already running finish (or are released) on
@@ -81,6 +91,19 @@ func ConsumeReady(ctx context.Context, conn *amqp.Connection, t Topology, queue 
 	if err = ch.Qos(concurrency, 0, false); err != nil {
 		return err
 	}
+	// live ends with ctx or with the channel. A channel closed during a
+	// pause ends the pause: the messages kept on it went back to the queue,
+	// and running them again could not acknowledge them.
+	live, dead := context.WithCancel(ctx)
+	defer dead()
+	closed := ch.NotifyClose(make(chan *amqp.Error, 1))
+	go func() {
+		select {
+		case <-closed:
+			dead()
+		case <-live.Done():
+		}
+	}()
 	c := consumer{queue: queue, handler: handler, hooks: hooks, concurrency: concurrency}
 	for {
 		held, err := c.subscribe(ctx, ch, t)
@@ -93,10 +116,13 @@ func ConsumeReady(ctx context.Context, conn *amqp.Connection, t Topology, queue 
 			}
 			return errors.New("jobs: consumer channel closed")
 		}
-		for len(held) > 0 {
-			c.pause(ctx)
+		for retry := 0; len(held) > 0; retry++ {
+			c.pause(live, retry)
 			if ctx.Err() != nil {
 				return nil
+			}
+			if live.Err() != nil {
+				return errors.New("jobs: consumer channel closed while paused")
 			}
 			held = c.runAll(ctx, held)
 		}
@@ -122,15 +148,25 @@ const (
 )
 
 // subscribe consumes until the channel closes, ctx ends, or a handler pauses
-// the consumer. held is nil unless it paused; then it holds every message the
-// consumer kept, which may be none if the pause raced a clean stop.
-func (c *consumer) subscribe(ctx context.Context, ch *amqp.Channel, t Topology) (held []amqp.Delivery, err error) {
+// the consumer. The messages it returns are nil unless it paused; then they
+// are every message the consumer kept, which may be none if the pause raced a
+// clean stop.
+func (c *consumer) subscribe(ctx context.Context, ch *amqp.Channel, t Topology) ([]amqp.Delivery, error) {
 	sub, stopSub := context.WithCancel(ctx)
 	defer stopSub()
 	deliveries, err := ch.ConsumeWithContext(sub, t.Queue(c.queue), "", false, false, false, false, nil)
 	if err != nil {
 		return nil, err
 	}
+	return c.drain(ctx, deliveries, stopSub), nil
+}
+
+// drain runs deliveries until the channel closes. The first handler that
+// pauses the consumer calls stop, which cancels the subscription; every
+// delivery that arrives after that -- sent before the cancel reached the
+// broker -- is kept, not run and not handed back. held is nil unless it
+// paused.
+func (c *consumer) drain(ctx context.Context, deliveries <-chan amqp.Delivery, stop func()) (held []amqp.Delivery) {
 	if c.hooks.Attached != nil {
 		c.hooks.Attached(true)
 	}
@@ -158,7 +194,7 @@ func (c *consumer) subscribe(ctx context.Context, ch *amqp.Channel, t Topology) 
 			if c.settle(ctx, d) == kept {
 				keep(d)
 				if !paused.Swap(true) {
-					stopSub()
+					stop()
 				}
 			}
 		}(d)
@@ -168,18 +204,19 @@ func (c *consumer) subscribe(ctx context.Context, ch *amqp.Channel, t Topology) 
 	}
 	running.Wait()
 	if !paused.Load() {
-		return nil, nil
+		return nil
 	}
 	if held == nil {
 		held = []amqp.Delivery{}
 	}
-	return held, nil
+	return held
 }
 
-// pause waits for the database, through hooks.Paused.
-func (c *consumer) pause(ctx context.Context) {
+// pause waits before the retry-th run of the kept messages, through
+// hooks.Paused.
+func (c *consumer) pause(ctx context.Context, retry int) {
 	if c.hooks.Paused != nil {
-		c.hooks.Paused(ctx)
+		c.hooks.Paused(ctx, retry)
 		return
 	}
 	select {

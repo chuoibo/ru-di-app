@@ -435,7 +435,8 @@ func (h *Handler) claimWith(ctx context.Context, sql string, args ...any) (work,
 // its membership, or taken over after a lapse -- it cancels the job's context,
 // so the model call stops within one beat instead of running to its timeout.
 // A failed statement is retried on the next beat; only a definite "not ours
-// any more" cancels.
+// any more" cancels. stop returns once the renewal in flight, if any, has
+// returned, and no renewal begins after it was called.
 func (h *Handler) heartbeat(ctx context.Context, j work, cancelJob context.CancelFunc) (stop func()) {
 	done := make(chan struct{})
 	finished := make(chan struct{})
@@ -450,6 +451,16 @@ func (h *Handler) heartbeat(ctx context.Context, j work, cancelJob context.Cance
 			case <-ctx.Done():
 				return
 			case <-timer.C:
+				// A stop that came while the last renewal ran wins over the
+				// tick that came meanwhile (select picks at random between
+				// ready cases): stop then waits for at most the one renewal
+				// in flight, not for a chain of them behind a stalled
+				// database -- the hand-back after a failed write waits on it.
+				select {
+				case <-done:
+					return
+				default:
+				}
 				beat, cancel := context.WithTimeout(ctx, 2*time.Second)
 				tag, err := h.nhipPool().Exec(beat, `UPDATE chat_ai_invocations SET lease_until=clock_timestamp()+make_interval(secs => $3) WHERE id=$1 AND lease_id=$2 AND status='running'`, j.id, j.lease, h.worker.Lease.Seconds())
 				cancel()
@@ -487,7 +498,7 @@ func (h *Handler) runJob(ctx context.Context, j work) error {
 	defer stopWatch()
 	jobCtx, cancelTime := context.WithTimeout(jobCtx, 70*time.Second)
 	defer cancelTime()
-	stop := h.heartbeat(jobCtx, j, func() { cancel(errMatLease) })
+	stop := sync.OnceFunc(h.heartbeat(jobCtx, j, func() { cancel(errMatLease) }))
 	defer stop()
 	err := h.process(jobCtx, j)
 	if dangDung(jobCtx) {
@@ -496,7 +507,11 @@ func (h *Handler) runJob(ctx context.Context, j work) error {
 	if err != nil && !errors.Is(err, aiharness.ErrHuy) {
 		// The job's terminal write failed: the database, not the job. Its
 		// lease is handed back now rather than held until it lapses, a whole
-		// lease later, with nobody renewing it.
+		// lease later, with nobody renewing it. The heartbeat stops first,
+		// and stop waits for a renewal in flight: one held up by the same
+		// fault as the write would land after the hand-back and give a job
+		// that cannot run again a whole lease back.
+		stop()
 		_ = h.traLai(jobCtx, j)
 	}
 	return err

@@ -164,7 +164,9 @@ func (r *Relay) Flush(ctx context.Context) (int, error) {
 }
 
 // Run flushes on every outbox notification and at least every tick, until ctx
-// ends or the channel closes (the caller then reconnects).
+// ends (nil), the channel closes, or its listening connection fails (an
+// error either way). Ket then dials the broker again after a closed channel,
+// and listens again on a new database connection after a failed one.
 //
 // LISTEN holds its connection for as long as the relay runs, so that
 // connection is the relay's own, opened with the pool's settings but outside
@@ -204,10 +206,14 @@ func (r *Relay) Run(ctx context.Context, tick time.Duration) error {
 		}
 		wait, cancel := context.WithTimeout(ctx, tick)
 		_, err := conn.WaitForNotification(wait)
+		// Read before cancel(), which ends wait as well: read after it, a
+		// connection that failed looks like a tick that passed, and the
+		// loop flushes as fast as the dead connection answers.
+		idle := wait.Err() != nil
 		cancel()
-		if err != nil && wait.Err() == nil {
-			// The listening connection itself failed, not the wait: the
-			// caller dials again, and a new Run listens on a new one.
+		if err != nil && !idle {
+			// The listening connection itself failed, not the wait: a new
+			// Run listens on a new one.
 			return err
 		}
 	}

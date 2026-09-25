@@ -408,6 +408,23 @@ Lệch khỏi bản thiết kế ở trên, có chủ ý, kèm lý do:
   hỏng, chạy lại, thay vì xếp hàng sau một transaction dài và chặn mọi câu lệnh xếp sau nó. Đổi
   checksum của phiên bản 5 chỉ đụng database nháp trên nhánh này (chưa database chung nào cài).
 
+Vòng sửa 3 (review phản biện của `3b1e819`):
+
+- **Kết nối LISTEN của relay chết** (Postgres khởi động lại, failover, proxy cắt): `Run` trả lỗi ngay,
+  Ket nghe lại trên kết nối mới sau 250 ms (nhân đôi tới 5 s, về 250 ms sau một lượt chạy ≥10 s)
+  **trên cùng kết nối broker**. Không quay số lại: quay số lại trả mọi tin consumer đang giữ về hàng,
+  mỗi tin tính thêm một lần giao, đúng điều vòng 2 đã bỏ. Channel của relay đóng thì vẫn quay số lại.
+- **Tạm dừng lùi dần.** Trước mỗi lần chạy lại tin đang giữ, consumer chờ 250 ms, nhân đôi, tối đa
+  30 s; đợt tạm dừng kết thúc khi mọi tin giữ chạy xong, đợt sau lại từ 250 ms. Một dòng
+  `job consumer paused` mỗi đợt. DB trả ping nhưng từ chối mọi claim thì consumer thử vài lần mỗi
+  phút thay vì ~1 000 lần/giây. Channel đóng giữa lúc tạm dừng (`consumer_timeout`, rớt kết nối) thì
+  consumer trả lỗi và Ket nối lại, như gạch đầu dòng trên đã hứa.
+- **Heartbeat dừng trước khi trả job**: một lần gia hạn đang kẹt cùng lỗi với câu ghi cuối không còn
+  đè lên lease vừa kết thúc. Dừng chờ nhiều nhất lần gia hạn đang bay (≤2 s); không lần nào bắt đầu
+  sau khi đã gọi dừng. Còn lại: một lần gia hạn đã hết giờ phía client (pgx đóng kết nối) vẫn có thể
+  nằm chờ khoá phía server và chạy khi khoá nhả; nó xếp hàng trước câu trả job nên thực tế chạy
+  trước, nhưng chưa có test chặn thứ tự đó.
+
 Còn phải biết khi vận hành:
 
 - **Nối lại broker chờ job dài nhất.** Kết nối broker rớt thì Ket chờ mọi job consumer đã bắt đầu

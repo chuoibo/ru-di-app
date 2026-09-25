@@ -238,3 +238,186 @@ func TestLoiDBSauClaimThiTraLaiNgay(t *testing.T) {
 		t.Fatalf("second attempt: %s attempts=%d", status, attempts)
 	}
 }
+
+// The two branches of the hand-back TestLoiDBSauClaimThiTraLaiNgay does not
+// reach (review of slice 10 round 3, finding 3): the terminal write fails on
+// the job's last attempt, or on a job whose content already went out. Such a
+// job cannot run again, so the hand-back ends its lease now and the next
+// sweep fails it as worker_interrupted: not queued with no attempt left,
+// where no claim can take it and it ends sharing_expired fifteen minutes on
+// (mutant N2), not queued for a second worker to start over after content
+// went out (N1), and not left to wait out its lease (N3).
+//
+// The heartbeat stops before the hand-back. A renewal held up by the same
+// fault as the write used to land after the lease was ended and give the job
+// a whole lease back: 5 runs in 6 in the review. Here that is made certain
+// for the order the fix forbids: the heartbeat's pool is one connection,
+// which the test takes before it lets the lock go and gives back only once
+// the hand-back committed. A heartbeat still running then renews the lease,
+// and the sweep finds it live.
+func TestTraLaiHetLuotHoacDaCoNoiDung(t *testing.T) {
+	for _, c := range []struct{ name, set string }{
+		{"lần thử cuối", "attempts=3"},
+		{"đã có nội dung", "first_token_at=clock_timestamp()"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			f := setup(t, nil)
+			stub := llm.NewStub(llm.Buoc{Text: "Đi dạo hồ nhé.", Cho: 400 * time.Millisecond})
+			f.nepTrenEngine(t, stub)
+			ctx := context.Background()
+			cfg := fastWorker()
+			cfg.Lease = 60 * time.Second
+			cfg.Heartbeat = 50 * time.Millisecond
+			nhipCfg := f.pool.Config().Copy()
+			nhipCfg.MaxConns = 1
+			nhip, err := pgxpool.NewWithConfig(ctx, nhipCfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer nhip.Close()
+			f.handler.WithWorker(cfg).WithNhipPool(nhip)
+			id := f.chenNep(t, 1, func(int) string { return "ghi hỏng" })[0]
+			j, ok, err := f.handler.claimTin(ctx, id, 1, scopeMe)
+			if !ok || err != nil {
+				t.Fatalf("claim: %v %v", ok, err)
+			}
+			if _, err = f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET `+c.set+` WHERE id=$1`, id); err != nil {
+				t.Fatal(err)
+			}
+			_, attemptsBefore, _, _ := f.trangThai(t, id)
+			done := make(chan error, 1)
+			go func() { done <- f.handler.runJob(ctx, j) }()
+			deadline := time.Now().Add(5 * time.Second)
+			for stub.SoGoi() == 0 {
+				if time.Now().After(deadline) {
+					t.Fatal("the model never got the question")
+				}
+				time.Sleep(5 * time.Millisecond)
+			}
+			lock, err := f.pool.Begin(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer lock.Rollback(ctx)
+			if _, err = lock.Exec(ctx, `LOCK TABLE chat_ai_invocations IN ACCESS EXCLUSIVE MODE`); err != nil {
+				t.Fatal(err)
+			}
+			deadline = time.Now().Add(15 * time.Second)
+			for {
+				var waiting int
+				if err = f.pool.QueryRow(ctx, `SELECT count(*) FROM pg_stat_activity WHERE wait_event_type='Lock' AND query=$1`, traLaiSQL).Scan(&waiting); err != nil {
+					t.Fatal(err)
+				}
+				if waiting > 0 {
+					break
+				}
+				if time.Now().After(deadline) {
+					t.Fatal("the worker never tried to hand the job back after its terminal write failed")
+				}
+				time.Sleep(20 * time.Millisecond)
+			}
+			acquire, stop := context.WithTimeout(ctx, 5*time.Second)
+			beat, err := nhip.Acquire(acquire)
+			stop()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = lock.Rollback(ctx); err != nil {
+				t.Fatal(err)
+			}
+			lapsed := func() bool {
+				var ended bool
+				if err := f.pool.QueryRow(ctx, `SELECT COALESCE(lease_until<=clock_timestamp(),true) FROM chat_ai_invocations WHERE id=$1`, id).Scan(&ended); err != nil {
+					t.Fatal(err)
+				}
+				return ended
+			}
+			deadline = time.Now().Add(3 * time.Second)
+			for !lapsed() && time.Now().Before(deadline) {
+				time.Sleep(5 * time.Millisecond)
+			}
+			beat.Release()
+			select {
+			case err = <-done:
+				if err == nil {
+					t.Fatal("runJob reported success for a write that failed")
+				}
+			case <-time.After(10 * time.Second):
+				t.Fatal("runJob never returned")
+			}
+			if !lapsed() {
+				t.Fatal("the job's lease is live after the hand-back: ended and renewed again, or never ended")
+			}
+			if err = f.handler.Sweep(ctx); err != nil {
+				t.Fatal(err)
+			}
+			var status string
+			var code *string
+			var leased bool
+			if err = f.pool.QueryRow(ctx, `SELECT status, code, lease_id IS NOT NULL FROM chat_ai_invocations WHERE id=$1`, id).Scan(&status, &code, &leased); err != nil {
+				t.Fatal(err)
+			}
+			if status != "failed" || code == nil || *code != "worker_interrupted" || leased {
+				t.Fatalf("after the hand-back and one sweep: status=%s code=%v leased=%v, want failed/worker_interrupted", status, code, leased)
+			}
+			if _, attempts, seq, _ := f.trangThai(t, id); attempts != attemptsBefore || seq != 1 || len(f.outbox(t, id)) != 1 {
+				t.Fatalf("attempts=%d (was %d) seq=%d outbox=%d: the job went back to the queue", attempts, attemptsBefore, seq, len(f.outbox(t, id)))
+			}
+		})
+	}
+}
+
+// stop waits for at most the renewal in flight, and no renewal begins after
+// it was called. Found replaying the review's PP1 probe on the first version
+// of this fix: 1 run in 6 never handed the job back within 15 s. select picks
+// at random between ready cases, so a stop that came while a renewal was held
+// up met the tick that came meanwhile and, half the time, began one more
+// renewal: a chain of them, 2 s each behind a stalled database, with the
+// hand-back waiting on it. Twenty rounds of: a renewal held up in the
+// heartbeat's pool of one connection, stop called, the connection let go.
+// Each round the pool may hand out one connection after stop, never two
+// (without the check, two in about half the rounds).
+func TestHeartbeatKhongGiaHanSauKhiDung(t *testing.T) {
+	f := setup(t, nil)
+	ctx := context.Background()
+	cfg := fastWorker()
+	cfg.Heartbeat = time.Millisecond
+	nhipCfg := f.pool.Config().Copy()
+	nhipCfg.MaxConns = 1
+	nhip, err := pgxpool.NewWithConfig(ctx, nhipCfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer nhip.Close()
+	f.handler.WithWorker(cfg).WithNhipPool(nhip)
+	id := f.chenNep(t, 1, func(int) string { return "nhịp" })[0]
+	j, ok, err := f.handler.claimTin(ctx, id, 1, scopeMe)
+	if !ok || err != nil {
+		t.Fatalf("claim: %v %v", ok, err)
+	}
+	var after []int64
+	for range 20 {
+		held, err := nhip.Acquire(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		stop := f.handler.heartbeat(ctx, j, func() { t.Error("heartbeat lost a lease it holds") })
+		time.Sleep(20 * time.Millisecond)
+		before := nhip.Stat().AcquireCount()
+		stopped := make(chan struct{})
+		go func() { stop(); close(stopped) }()
+		time.Sleep(10 * time.Millisecond)
+		held.Release()
+		select {
+		case <-stopped:
+		case <-time.After(5 * time.Second):
+			t.Fatal("stop never returned")
+		}
+		after = append(after, nhip.Stat().AcquireCount()-before)
+	}
+	for _, n := range after {
+		if n > 1 {
+			t.Fatalf("connections handed to renewals after stop, per round: %v -- a renewal began after stop", after)
+		}
+	}
+}

@@ -13,10 +13,13 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/adk/model"
 
@@ -142,10 +145,17 @@ func (k khoaGhi) Write(p []byte) (int, error) {
 
 func moTram(t *testing.T, f fixture, h *Handler, url string, top jobs.Topology, poller bool) *tram {
 	t.Helper()
+	return moTramCo(t, f.pool, h, h.XuLyTin, url, top, poller)
+}
+
+// moTramCo is moTram with the Ket's own pool (its relay and its pings) and
+// the consumer's handler given apart from h, whose poller it runs.
+func moTramCo(t *testing.T, ketPool *pgxpool.Pool, h *Handler, handler func(context.Context, string, jobs.Message) error, url string, top jobs.Topology, poller bool) *tram {
+	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	tr := &tram{stop: cancel, stdout: &bytes.Buffer{}}
-	tr.ket = &jobs.Ket{URL: url, Topology: top, Pool: f.pool, Queues: Queues, Concurrency: h.worker.Workers,
-		Handler: h.XuLyTin, Logger: slog.New(slog.NewJSONHandler(khoaGhi{tr}, nil))}
+	tr.ket = &jobs.Ket{URL: url, Topology: top, Pool: ketPool, Queues: Queues, Concurrency: h.worker.Workers,
+		Handler: handler, Logger: slog.New(slog.NewJSONHandler(khoaGhi{tr}, nil))}
 	tr.done.Add(1)
 	go func() { defer tr.done.Done(); tr.ket.Run(ctx) }()
 	if poller {
@@ -154,6 +164,40 @@ func moTram(t *testing.T, f fixture, h *Handler, url string, top jobs.Topology, 
 	}
 	t.Cleanup(tr.dung)
 	return tr
+}
+
+// tenPool is f.pool with every connection named app, so a test can find the
+// relay's listening connection.
+func tenPool(t *testing.T, pool *pgxpool.Pool, app string) *pgxpool.Pool {
+	t.Helper()
+	cfg := pool.Config().Copy()
+	cfg.ConnConfig.RuntimeParams["application_name"] = app
+	named, err := pgxpool.NewWithConfig(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(named.Close)
+	return named
+}
+
+// choNghe waits until the relay of the Ket whose pool is named app listens.
+// Run listens only after NewRelay declared the topology, bindings included.
+func choNghe(t *testing.T, pool *pgxpool.Pool, app string) {
+	t.Helper()
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		var n int
+		if err := pool.QueryRow(context.Background(), `SELECT count(*) FROM pg_stat_activity WHERE application_name=$1 AND query='LISTEN job_outbox'`, app).Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		if n == 1 {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the relay never listened")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func (tr *tram) dung() {
@@ -322,13 +366,23 @@ func TestHangDoiTreHangCoBrokerVaPoll(t *testing.T) {
 // library's reader blocked on the full channel and the whole connection
 // stalled: 0/50, measured, with the window at three seconds (at one second
 // it still passed).
+//
+// The queue is unbound only once the relay listens (review of slice 10
+// round 3, finding 5: this canary failed about once in ten runs, with
+// «0/50 rows stayed unpublished»). The consumers declare the topology and
+// attach before the relay does on a slow start; a relay that declared after
+// the unbind bound the queue again, and every message routed. Measured: with
+// NewRelay held 500 ms before its declare, the test as it was fails every
+// time with that same line.
 func TestHangDoiRelayGiuHangKhiBiTraVe(t *testing.T) {
 	url := amqpURL(t)
 	f := setup(t, nil)
 	f.nepTrenEngine(t, llm.NewStub(traLoiGiong(50)...))
 	top := topology(t, url)
-	tr := moTram(t, f, f.handler, url, top, false)
+	app := "tra_ve_" + strings.ReplaceAll(newID(), "-", "")
+	tr := moTramCo(t, tenPool(t, f.pool, app), f.handler, f.handler.XuLyTin, url, top, false)
 	tr.choSong(t)
+	choNghe(t, f.pool, app)
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		t.Fatal(err)
@@ -497,5 +551,95 @@ func TestHangDoiDBLoiThiTamDungRoiTiepTuc(t *testing.T) {
 	}
 	if _, attempts, _, _ := f.trangThai(t, id); attempts != 1 {
 		t.Fatalf("attempts=%d, want the one run after the pause", attempts)
+	}
+}
+
+// A database that answers pings but fails every claim at once (review of
+// slice 10 round 3, finding 2): the paused consumer waits longer before each
+// try -- 250 ms, doubling, at most 30 s -- and says so once. Before, it
+// re-ran the kept message as soon as a ping answered: about a thousand
+// claims and 760 «paused» lines a second, for as long as it lasted. Poller
+// off, so every claim counted is the consumer's.
+//
+//   - PB1: a NOT VALID CHECK in the test's own schema refuses status='running'
+//     (any claim that fails the same way every time); it is dropped after five
+//     seconds and the job must then finish.
+//   - PB2: the handler's pool is read-only (default_transaction_read_only=on,
+//     a primary demoted by a failover, a full disk): ping works, every claim
+//     fails with 25006. The Ket's own pool (relay, pings) stays writable.
+func TestHangDoiTamDungLuiDanKhiClaimHongNgay(t *testing.T) {
+	url := amqpURL(t)
+	for _, c := range []struct {
+		name string
+		hong func(t *testing.T, f fixture) (h *Handler, lanh func())
+	}{
+		{"PB1 CHECK chặn claim", func(t *testing.T, f fixture) (*Handler, func()) {
+			if _, err := f.pool.Exec(context.Background(), `ALTER TABLE chat_ai_invocations ADD CONSTRAINT tam_dung_khong_claim CHECK (status <> 'running') NOT VALID`); err != nil {
+				t.Fatal(err)
+			}
+			return f.handler, func() {
+				if _, err := f.pool.Exec(context.Background(), `ALTER TABLE chat_ai_invocations DROP CONSTRAINT tam_dung_khong_claim`); err != nil {
+					t.Fatal(err)
+				}
+			}
+		}},
+		{"PB2 pool chỉ đọc", func(t *testing.T, f fixture) (*Handler, func()) {
+			cfg := f.pool.Config().Copy()
+			cfg.ConnConfig.RuntimeParams["default_transaction_read_only"] = "on"
+			ro, err := pgxpool.NewWithConfig(context.Background(), cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(ro.Close)
+			return New(ro, brain.Configured()).WithNepEngine(f.handler.nepEngine), nil
+		}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			f := setup(t, nil)
+			f.nepTrenEngine(t, llm.NewStub(traLoiGiong(1)...))
+			top := topology(t, url)
+			h, lanh := c.hong(t, f)
+			var claims atomic.Int64
+			var first atomic.Int64
+			tr := moTramCo(t, f.pool, h, func(ctx context.Context, q string, m jobs.Message) error {
+				if claims.Add(1) == 1 {
+					first.Store(time.Now().UnixNano())
+				}
+				return h.XuLyTin(ctx, q, m)
+			}, url, top, false)
+			tr.choSong(t)
+			id := f.chenNep(t, 1, func(int) string { return "câu hỏi số 0" })[0]
+			deadline := time.Now().Add(5 * time.Second)
+			for first.Load() == 0 {
+				if time.Now().After(deadline) {
+					t.Fatalf("the consumer never tried the job; log:\n%s", tr.log())
+				}
+				time.Sleep(5 * time.Millisecond)
+			}
+			time.Sleep(time.Until(time.Unix(0, first.Load()).Add(5 * time.Second)))
+			n := claims.Load()
+			log := tr.log()
+			paused := strings.Count(log, `"msg":"job consumer paused`)
+			t.Logf("%s: %d claims by the consumer in the first 5 s, %d «paused» lines", c.name, n, paused)
+			// At 0, 0.25, 0.75, 1.75 and 3.75 s: five.
+			if n > 6 || paused != 1 || strings.Contains(log, "dead-lettered") {
+				t.Fatalf("%d claims in 5 s (want at most 6), %d «paused» lines (want one per pause); log:\n%s", n, paused, log)
+			}
+			if status, attempts, _, _ := f.trangThai(t, id); status != "queued" || attempts != 0 {
+				t.Fatalf("while every claim fails: %s attempts=%d, want queued and untouched", status, attempts)
+			}
+			if lanh == nil {
+				return
+			}
+			lanh()
+			healed := time.Now()
+			if done := f.choXong(t, []string{id}, 15*time.Second); done != 1 {
+				t.Fatalf("the job did not finish once claims worked again; log:\n%s", tr.log())
+			}
+			t.Logf("%s: done %v after claims worked again, %d claims in all", c.name, time.Since(healed).Round(time.Millisecond), claims.Load())
+			if _, attempts, _, _ := f.trangThai(t, id); attempts != 1 {
+				t.Fatalf("attempts=%d, want the one claim that worked", attempts)
+			}
+		})
 	}
 }

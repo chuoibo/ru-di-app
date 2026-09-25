@@ -120,7 +120,7 @@ func (k *Ket) serve(ctx context.Context, conn *amqp.Connection, logger *slog.Log
 			return
 		}
 		defer relay.Close()
-		_ = relay.Run(on, tick)
+		k.runRelay(on, relay, tick, logger)
 	}()
 	for _, q := range k.Queues {
 		all.Add(1)
@@ -139,8 +139,16 @@ func (k *Ket) serve(ctx context.Context, conn *amqp.Connection, logger *slog.Log
 						k.attached.Add(-1)
 					}
 				},
-				Paused: func(wait context.Context) {
-					logger.Warn("job consumer paused: the database failed under a message", "queue", q)
+				Paused: func(wait context.Context, retry int) {
+					if retry == 0 {
+						// One line per pause, however many tries it takes.
+						logger.Warn("job consumer paused: the database failed under a message", "queue", q)
+					}
+					select {
+					case <-wait.Done():
+						return
+					case <-time.After(choTamDung(retry)):
+					}
 					k.waitDatabase(wait)
 				},
 				DeadLettered: func(id string) {
@@ -152,6 +160,49 @@ func (k *Ket) serve(ctx context.Context, conn *amqp.Connection, logger *slog.Log
 		}(q)
 	}
 	all.Wait()
+}
+
+// runRelay runs the relay until ctx ends or its broker channel closes. When
+// the relay's own database connection fails -- a restart, a failover, a
+// proxy that cut it -- it listens again on a new one after a wait: 250 ms,
+// doubling to 5 s, and 250 ms again after a run that lasted 10 s. The broker
+// connection stays up, so the consumers on it keep what they hold: a
+// redial would hand every message they had not acknowledged back to the
+// queue, one more delivery counted against each.
+func (k *Ket) runRelay(ctx context.Context, relay *Relay, tick time.Duration, logger *slog.Logger) {
+	wait := 250 * time.Millisecond
+	for {
+		began := time.Now()
+		_ = relay.Run(ctx, tick)
+		if ctx.Err() != nil || relay.ch.IsClosed() {
+			return
+		}
+		if time.Since(began) > 10*time.Second {
+			wait = 250 * time.Millisecond
+		}
+		logger.Warn("job relay lost its database connection; listening again", "retry_ms", wait.Milliseconds())
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(wait):
+		}
+		if wait *= 2; wait > 5*time.Second {
+			wait = 5 * time.Second
+		}
+	}
+}
+
+// choTamDung is how long a paused consumer waits before it runs the messages
+// it kept for the retry-th time in one pause (0 for the first): 250 ms,
+// doubling, at most 30 s. A database that answers pings but fails every
+// claim at once is tried a few times a minute, not a thousand times a
+// second; a pause that ends starts the next one at 250 ms again.
+func choTamDung(retry int) time.Duration {
+	d := 250 * time.Millisecond
+	for i := 0; i < retry && d < 30*time.Second; i++ {
+		d *= 2
+	}
+	return min(d, 30*time.Second)
 }
 
 // waitDatabase returns once the database answers a ping, or ctx ends.

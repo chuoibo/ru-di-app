@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"sort"
 	"strings"
@@ -342,6 +343,7 @@ func TestPauseGivesNothingBackToTheQueue(t *testing.T) {
 	runs := map[string]int{}
 	var paused atomic.Int64
 	var dead atomic.Int64
+	var retries []int
 	got := collectHooks(t, conn, top, "ai.nep", 4, func(_ context.Context, m Message) error {
 		mu.Lock()
 		runs[m.Ref]++
@@ -352,8 +354,11 @@ func TestPauseGivesNothingBackToTheQueue(t *testing.T) {
 		}
 		return nil
 	}, Hooks{
-		Paused: func(ctx context.Context) {
+		Paused: func(ctx context.Context, retry int) {
 			paused.Add(1)
+			mu.Lock()
+			retries = append(retries, retry)
+			mu.Unlock()
 			select {
 			case <-ctx.Done():
 			case <-time.After(20 * time.Millisecond):
@@ -365,6 +370,12 @@ func TestPauseGivesNothingBackToTheQueue(t *testing.T) {
 	defer mu.Unlock()
 	if len(got) != 4 || runs[stubborn] != pauses+1 || paused.Load() != pauses || dead.Load() != 0 {
 		t.Fatalf("done %d/4, the stubborn message ran %d times (want %d), %d pauses (want %d), %d dead-lettered", len(got), runs[stubborn], pauses+1, paused.Load(), pauses, dead.Load())
+	}
+	// One pause, tried again and again: the retry count climbs by one each
+	// time, and that count is what the caller's backoff and its one log line
+	// per pause read.
+	if fmt.Sprint(retries) != fmt.Sprint([]int{0, 1, 2, 3, 4, 5}) {
+		t.Fatalf("Paused heard retries %v, want 0 to 5 in one pause", retries)
 	}
 	for i := 1; i < 4; i++ {
 		if runs[ref(40+i)] != 1 {
@@ -437,6 +448,239 @@ func TestRelayListensOnItsOwnConnection(t *testing.T) {
 		t.Fatalf("the notification did not wake the relay: %v", got)
 	}
 	t.Logf("published %v after the commit, tick one minute", time.Since(began).Round(time.Millisecond))
+}
+
+// namedPool is pool with every connection carrying application_name app, so
+// a test can find the relay's own LISTEN connection among the database's.
+func namedPool(t *testing.T, pool *pgxpool.Pool, app string) *pgxpool.Pool {
+	t.Helper()
+	cfg := pool.Config().Copy()
+	cfg.ConnConfig.RuntimeParams["application_name"] = app
+	named, err := pgxpool.NewWithConfig(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(named.Close)
+	return named
+}
+
+// listener waits until exactly one backend of app is listening for the
+// outbox and is not the backend old, and returns its pid.
+func listener(t *testing.T, pool *pgxpool.Pool, app string, old int32, within time.Duration) int32 {
+	t.Helper()
+	deadline := time.Now().Add(within)
+	for {
+		var pids []int32
+		rows, err := pool.Query(context.Background(), `SELECT pid FROM pg_stat_activity WHERE application_name=$1 AND query='LISTEN job_outbox' AND state='idle'`, app)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pids, err = pgx.CollectRows(rows, pgx.RowTo[int32])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(pids) == 1 && pids[0] != old {
+			return pids[0]
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("no new listening connection of %s within %v (listening now: %v, the killed one: %d)", app, within, pids, old)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+// The relay's listening connection dies (a database restart, a failover, a
+// proxy that cut it): Run returns its error at once, so its caller listens
+// again (review of slice 10 round 3, finding 1). Before, cancel() ran before
+// the check and made every failure read as a tick that passed; Run then
+// flushed in a loop on the dead connection, 7,807 transactions in 2 s
+// (mutant N5). A tick that passes with nothing to do is not a failure: Run
+// keeps listening across ten of them.
+func TestRelayReturnsWhenItsListenConnectionDies(t *testing.T) {
+	pool, conn, top := fixture(t)
+	app := fmt.Sprintf("relay_listen_dies_%d", time.Now().UnixNano())
+	relay, err := NewRelay(namedPool(t, pool, app), conn, top)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer relay.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- relay.Run(ctx, 50*time.Millisecond) }()
+	pid := listener(t, pool, app, 0, 5*time.Second)
+	select {
+	case err := <-done:
+		t.Fatalf("Run returned on idle ticks, nothing having failed: %v", err)
+	case <-time.After(500 * time.Millisecond):
+	}
+	if _, err = pool.Exec(context.Background(), `SELECT pg_terminate_backend($1)`, pid); err != nil {
+		t.Fatal(err)
+	}
+	killed := time.Now()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("Run returned nil for a listening connection that died")
+		}
+		t.Logf("Run returned %v after its LISTEN backend was killed: %v", time.Since(killed).Round(time.Millisecond), err)
+	case <-time.After(time.Second):
+		t.Fatal("Run still running 1 s after its LISTEN backend was killed")
+	}
+}
+
+// Ket listens again when the relay's database connection dies, on the same
+// broker connection: a new LISTEN backend within a second, the consumers
+// attached throughout (a redial would hand back every message they had not
+// acknowledged), and a job enqueued afterwards reaches the consumer through
+// the new connection's notification -- the tick is a minute.
+func TestKetListensAgainWhenItsListenConnectionDies(t *testing.T) {
+	pool, _, top := fixture(t)
+	app := fmt.Sprintf("ket_listen_dies_%d", time.Now().UnixNano())
+	var logMu sync.Mutex
+	var logBuf strings.Builder
+	logs := func() string { logMu.Lock(); defer logMu.Unlock(); return logBuf.String() }
+	got := make(chan Message, 4)
+	k := &Ket{URL: os.Getenv("CORE_TEST_AMQP_URL"), Topology: top, Pool: namedPool(t, pool, app), Queues: []string{"ai.nep"}, Concurrency: 2,
+		Handler: func(_ context.Context, _ string, m Message) error { got <- m; return nil },
+		Logger: slog.New(slog.NewTextHandler(writerFunc(func(p []byte) (int, error) {
+			logMu.Lock()
+			defer logMu.Unlock()
+			return logBuf.Write(p)
+		}), nil)),
+		Tick: time.Minute}
+	ctx, cancel := context.WithCancel(context.Background())
+	stopped := make(chan struct{})
+	go func() { defer close(stopped); k.Run(ctx) }()
+	defer func() { cancel(); <-stopped }()
+	deadline := time.Now().Add(10 * time.Second)
+	for !k.Song() {
+		if time.Now().After(deadline) {
+			t.Fatalf("consumer never attached; log:\n%s", logs())
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	old := listener(t, pool, app, 0, 5*time.Second)
+	var detached atomic.Int64
+	watching, stopWatch := context.WithCancel(context.Background())
+	watched := make(chan struct{})
+	go func() {
+		defer close(watched)
+		for watching.Err() == nil {
+			if !k.Song() {
+				detached.Add(1)
+			}
+			time.Sleep(5 * time.Millisecond)
+		}
+	}()
+	if _, err := pool.Exec(context.Background(), `SELECT pg_terminate_backend($1)`, old); err != nil {
+		t.Fatal(err)
+	}
+	killed := time.Now()
+	listener(t, pool, app, old, 2*time.Second)
+	t.Logf("listening again %v after the kill", time.Since(killed).Round(time.Millisecond))
+	tx, err := pool.Begin(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	enqueue(t, tx, "ai.nep", ref(80), 1, nil)
+	if err = tx.Commit(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case m := <-got:
+		if m.Ref != ref(80) {
+			t.Fatalf("delivered %+v, want the job enqueued after the kill", m)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatalf("the job enqueued after the kill was not delivered in 3 s (tick 1 min: the notification never woke the relay); log:\n%s", logs())
+	}
+	stopWatch()
+	<-watched
+	out := logs()
+	if n := strings.Count(out, "job broker connected"); n != 1 || detached.Load() != 0 {
+		t.Fatalf("the broker connection was dialled %d times and the consumer seen detached %d times, want once and never; log:\n%s", n, detached.Load(), out)
+	}
+	if n := strings.Count(out, "job relay lost its database connection"); n != 1 {
+		t.Fatalf("%d relay warnings, want one; log:\n%s", n, out)
+	}
+}
+
+type writerFunc func([]byte) (int, error)
+
+func (f writerFunc) Write(p []byte) (int, error) { return f(p) }
+
+// A channel that closes under a pause ends it (review of slice 10 round 3,
+// finding 2: the paused loop never noticed the broker's consumer_timeout
+// closing the channel, and kept running messages it could no longer
+// acknowledge). ConsumeReady returns an error within a second, however long
+// the pause's wait, so Ket dials again, and the kept message is back in the
+// queue, counted once.
+func TestPausedConsumerLeavesWhenItsChannelCloses(t *testing.T) {
+	pool, conn, top := fixture(t)
+	ctx := context.Background()
+	tx, _ := pool.Begin(ctx)
+	enqueue(t, tx, "ai.nep", ref(90), 1, nil)
+	_ = tx.Commit(ctx)
+	relay, err := NewRelay(pool, conn, top)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer relay.Close()
+	if n, err := relay.Flush(ctx); err != nil || n != 1 {
+		t.Fatal(n, err)
+	}
+	own := dial(t)
+	pausing := make(chan struct{}, 1)
+	var retries atomic.Int64
+	done := make(chan error, 1)
+	run, stop := context.WithCancel(ctx)
+	defer stop()
+	go func() {
+		done <- ConsumeReady(run, own, top, "ai.nep", 2, func(context.Context, Message) error {
+			return fmt.Errorf("claim: %w", ErrTamDung)
+		}, Hooks{Paused: func(wait context.Context, retry int) {
+			retries.Add(1)
+			select {
+			case pausing <- struct{}{}:
+			default:
+			}
+			select {
+			case <-wait.Done():
+			case <-time.After(30 * time.Second):
+			}
+		}})
+	}()
+	select {
+	case <-pausing:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the consumer never paused")
+	}
+	_ = own.Close()
+	closed := time.Now()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("ConsumeReady returned nil for a channel that closed under a pause")
+		}
+		t.Logf("returned %v after the channel closed: %v", time.Since(closed).Round(time.Millisecond), err)
+	case <-time.After(time.Second):
+		t.Fatalf("ConsumeReady still paused 1 s after its channel closed (%d waits)", retries.Load())
+	}
+	ch, _ := conn.Channel()
+	defer ch.Close()
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		q, err := ch.QueueDeclarePassive(top.Queue("ai.nep"), true, false, false, false,
+			amqp.Table{"x-queue-type": "quorum", "x-delivery-limit": int64(DeliveryLimit), "x-dead-letter-exchange": top.DeadExchange(), "x-dead-letter-routing-key": "ai.nep"})
+		if err == nil && q.Messages == 1 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("the kept message is not back in the queue: %d (%v)", q.Messages, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 func waitDead(t *testing.T, ch *amqp.Channel, top Topology, queue string, want int) {
