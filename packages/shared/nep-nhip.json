@@ -1,0 +1,4 @@
+{
+  "_": "Nhịp của sổ đôi (ADR-0034 §2.5). Cùng số với services/api/app/domain/pair_paper.py TO_MOI_NGUOI_MOI_TUAN và services/core/internal/domain/pairpaper; test ở mỗi bên đọc file này và từ chối khi lệch.",
+  "to_moi_nguoi_moi_tuan": 3
+}

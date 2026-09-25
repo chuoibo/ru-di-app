@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
-import { STICKER_IDS, nhanSticker } from "../../chat/sticker";
+import { nhanSticker, stickerChoKhay, type StickerId } from "../../chat/sticker";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
@@ -23,10 +23,13 @@ export function KhaySticker({
   open,
   onClose,
   onChon,
+  haiNguoi = false,
 }: {
   open: boolean;
   onClose: () => void;
   onChon: (id: string) => void;
+  /** A two-person conversation: the four for two follow under their own heading (ADR-0034). */
+  haiNguoi?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
@@ -39,12 +42,26 @@ export function KhaySticker({
   return (
     <Sheet accessibilityLabel="Khay sticker" onClose={onClose} open={open} testID="khay-sticker">
       <Heading size="h2" subtitle="Một hình thay cho một câu." title="Sticker" />
+      {nhom(stickerChoKhay(haiNguoi).chung)}
+      {haiNguoi ? (
+        <>
+          <Text accessibilityRole="header" style={[typography.label, { color: colors.ink }]}>
+            Cho hai người
+          </Text>
+          {nhom(stickerChoKhay(haiNguoi).doi)}
+        </>
+      ) : null}
+    </Sheet>
+  );
+
+  function nhom(ids: readonly StickerId[]) {
+    return (
       <View style={styles.luoi}>
         {/* Each tile is a well of `ground` inside the `card` sheet, so a sticker
             drawn in paper (`card`) shows its faces here exactly as it does in a
             bubble on the page; on `card` tiles the paper vanished on the dark
             scheme (finish review 08/09). */}
-        {STICKER_IDS.map((id, i) => (
+        {ids.map((id, i) => (
           <Pressable
             accessibilityLabel={nhanSticker(id)}
             accessibilityRole="button"
@@ -62,8 +79,8 @@ export function KhaySticker({
           </Pressable>
         ))}
       </View>
-    </Sheet>
-  );
+    );
+  }
 }
 
 const styles = StyleSheet.create({

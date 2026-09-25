@@ -27,6 +27,10 @@ export function cauVaiTuan(vai: VaiTuan | null | undefined, toiId: string, tenNg
   if (vai.cach === "chon") {
     return { nhan, vi: caHai ? "Đã chọn «Hôm nay mình share»." : "Đã chọn cho tuần này.", laToi };
   }
+  if (vai.cach === "luot") {
+    // The baton passed: the usual lead opened the last two weeks.
+    return { nhan, vi: laToi ? `${ten} đã mở lời hai tuần liền, tuần này lượt bạn.` : `Bạn đã mở lời hai tuần liền, tuần này để ${ten}.`, laToi };
+  }
   const diemCua = (id: string) => vai.diem.find((d) => d.person_id === id)?.score ?? 0;
   const lo = vai.nguoi_lo[0];
   const khac = vai.diem.find((d) => d.person_id !== lo);

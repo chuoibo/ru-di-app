@@ -896,3 +896,37 @@ def test_both_shared_uses_what_they_have_in_common_first(client, repository):
     first = _read(client, _draft(client)).json()["versions"][0]
     assert first["content"]["chang"][0]["viec"] == "Cà phê"
     assert first["ly_do"].startswith("Hai bạn cùng thích Cafe")
+
+
+# ADR-0034 §2.5: a ceiling per person per week.
+
+
+def test_a_fourth_sheet_in_one_week_is_refused_and_the_next_week_is_open(client, clock):
+    lap_so(client)
+    for _ in range(3):
+        paper_id = _draft(client)
+        skipped = client.post(f"/papers/{paper_id}/skip", headers=head(TOI))
+        assert skipped.status_code == 200, skipped.text
+    fourth = client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI))
+    assert fourth.status_code == 409, fourth.text
+    assert fourth.json()["code"] == "paper_week_quota"
+    theirs = client.post(f"/contexts/{CAP}/papers/draft", headers=head(NGUOI_KIA))
+    assert theirs.status_code == 201, "hạn mức là của từng người"
+    clock(TUAN_SAU)
+    client.post(f"/papers/{theirs.json()['id']}/skip", headers=head(NGUOI_KIA))
+    assert client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI)).status_code == 201
+
+
+# ADR-0034 §2.4: the baton passes when the usual lead opened two weeks running.
+
+
+def test_the_week_passes_to_the_other_after_two_weeks_opened_by_the_same_person(client, clock):
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    for _ in range(2):
+        paper_id = _draft(client)
+        assert _send(client, paper_id).status_code == 200
+        clock(timedelta(days=7))
+    role = client.get(f"/contexts/{CAP}/notebook", headers=head(TOI)).json()["week_role"]
+    assert role["cach"] == "luot", role
+    assert role["nguoi_lo"] == [str(NGUOI_KIA)]

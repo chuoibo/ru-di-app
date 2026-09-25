@@ -50,6 +50,7 @@ __all__ = [
     "da_du_dong_y",
     "han_tuan",
     "hieu_luc",
+    "TO_MOI_NGUOI_MOI_TUAN",
     "lam_giau_phac",
     "lam_giau_theo_gu",
     "gu_cho_nep",
@@ -58,6 +59,11 @@ __all__ = [
     "phac_to_giay",
     "tuan_cua",
 ]
+
+#: ADR-0034 §2.5: how many sheets one person may start in one week of one
+#: notebook. The same number is `to_moi_nguoi_moi_tuan` in
+#: packages/shared/nep-nhip.json, and a test holds the two equal.
+TO_MOI_NGUOI_MOI_TUAN = 3
 
 #: The week is the one the two of them live in, not the one the server's
 #: machine is in. Vietnam has kept a single offset since 1975, but the zone is

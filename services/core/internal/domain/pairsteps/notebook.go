@@ -143,9 +143,9 @@ func weekRole(s Store, notebook *Notebook, consents []pairnotebook.Consent, part
 	}
 	toGiay := make([]pairnotebook.ToTinHieu, len(papers))
 	for i, paper := range papers {
-		to := pairnotebook.ToTinHieu{CycleID: paper.CycleID}
+		to := pairnotebook.ToTinHieu{CycleID: paper.CycleID, Tuan: paper.Tuan.ISOFormat()}
 		for _, v := range paper.Versions {
-			to.Versions = append(to.Versions, pairnotebook.PhienBanTinHieu{Version: v.Version, AuthorType: v.AuthorType, SentBy: v.SentBy})
+			to.Versions = append(to.Versions, pairnotebook.PhienBanTinHieu{Version: v.Version, AuthorType: v.AuthorType, SentBy: v.SentBy, SentAt: v.SentAt})
 		}
 		for _, r := range paper.Responses {
 			to.Responses = append(to.Responses, pairnotebook.TraLoiTinHieu{PersonID: r.PersonID, Kind: r.Kind})
@@ -158,7 +158,11 @@ func weekRole(s Store, notebook *Notebook, consents []pairnotebook.Consent, part
 		id := chon.NguoiLoID
 		chosen = &id
 	}
-	vai := pairnotebook.VaiTuan(suy, chosen, participants)
+	moLoiTruoc := []*string{
+		pairnotebook.NguoiMoLoi(toGiay, *notebook.CycleID, tuan.AddDays(-7).ISOFormat()),
+		pairnotebook.NguoiMoLoi(toGiay, *notebook.CycleID, tuan.AddDays(-14).ISOFormat()),
+	}
+	vai := pairnotebook.VaiTuan(suy, chosen, participants, moLoiTruoc)
 	return &WeekRole{Tuan: tuan, NguoiLo: vai.NguoiLo, Cach: vai.Cach, Diem: vai.Diem}, nil
 }
 

@@ -32,6 +32,7 @@
    "gu_hai_nguoi",
    "nguoi_lo_suy",
    "vai_tuan",
+   "nguoi_mo_loi",
    "han_de_nghi",
    "xem_truoc_dong_so"
   ]
@@ -59,6 +60,10 @@
      "nguoi_lo_id": null
     }
    ],
+   "mo_loi": [
+    null,
+    null
+   ],
    "result": {
     "suy": {
      "nguoi_lo": [
@@ -75,6 +80,11 @@
       ]
      ]
     },
+    "mo_loi": [
+     null,
+     null,
+     null
+    ],
     "vai": [
      {
       "nguoi_lo": [
@@ -166,6 +176,10 @@
      "nguoi_lo_id": null
     }
    ],
+   "mo_loi": [
+    null,
+    null
+   ],
    "result": {
     "suy": {
      "nguoi_lo": [
@@ -182,6 +196,11 @@
       ]
      ]
     },
+    "mo_loi": [
+     null,
+     null,
+     null
+    ],
     "vai": [
      {
       "nguoi_lo": [
@@ -261,32 +280,38 @@
    "to_giay": [
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
     },
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": [
@@ -315,6 +340,10 @@
      "nguoi_lo_id": null
     }
    ],
+   "mo_loi": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    null
+   ],
    "result": {
     "suy": {
      "nguoi_lo": [
@@ -331,6 +360,11 @@
       ]
      ]
     },
+    "mo_loi": [
+     null,
+     null,
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    ],
     "vai": [
      {
       "nguoi_lo": [
@@ -410,91 +444,108 @@
    "to_giay": [
     {
      "cycle_id": "CU",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
     },
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "nep",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
     },
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": null
+       "sent_by": null,
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": null
+       "sent_by": null,
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
     },
     {
      "cycle_id": null,
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
     },
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+       "sent_by": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+       "sent_by": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
     },
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
@@ -514,6 +565,10 @@
      "nguoi_lo_id": null
     }
    ],
+   "mo_loi": [
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    null
+   ],
    "result": {
     "suy": {
      "nguoi_lo": [
@@ -530,6 +585,11 @@
       ]
      ]
     },
+    "mo_loi": [
+     null,
+     null,
+     "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+    ],
     "vai": [
      {
       "nguoi_lo": [
@@ -609,32 +669,38 @@
    "to_giay": [
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
     },
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
@@ -654,6 +720,10 @@
      "nguoi_lo_id": null
     }
    ],
+   "mo_loi": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    null
+   ],
    "result": {
     "suy": {
      "nguoi_lo": [
@@ -670,6 +740,11 @@
       ]
      ]
     },
+    "mo_loi": [
+     null,
+     null,
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    ],
     "vai": [
      {
       "nguoi_lo": [
@@ -749,32 +824,38 @@
    "to_giay": [
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
     },
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
@@ -794,6 +875,10 @@
      "nguoi_lo_id": null
     }
    ],
+   "mo_loi": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    null
+   ],
    "result": {
     "suy": {
      "nguoi_lo": [
@@ -810,6 +895,11 @@
       ]
      ]
     },
+    "mo_loi": [
+     null,
+     null,
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    ],
     "vai": [
      {
       "nguoi_lo": [
@@ -890,16 +980,19 @@
    "to_giay": [
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
@@ -922,6 +1015,10 @@
      "nguoi_lo_id": null
     }
    ],
+   "mo_loi": [
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    null
+   ],
    "result": {
     "suy": {
      "nguoi_lo": [
@@ -938,6 +1035,11 @@
       ]
      ]
     },
+    "mo_loi": [
+     null,
+     null,
+     "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    ],
     "vai": [
      {
       "nguoi_lo": [
@@ -1030,16 +1132,19 @@
    "to_giay": [
     {
      "cycle_id": "CY",
+     "tuan": "2026-09-14",
      "versions": [
       {
        "version": 1,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       },
       {
        "version": 2,
        "author_type": "human",
-       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
       }
      ],
      "responses": []
@@ -1053,11 +1158,20 @@
      "nguoi_lo_id": null
     }
    ],
+   "mo_loi": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    null
+   ],
    "result": {
     "suy": {
      "nguoi_lo": [],
      "diem": []
     },
+    "mo_loi": [
+     null,
+     null,
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    ],
     "vai": [
      {
       "nguoi_lo": [],
@@ -1068,6 +1182,800 @@
       "nguoi_lo": [],
       "cach": "chon",
       "diem": []
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: A opened two weeks running, the week passes to B",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-07",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-14",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-08-31",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "mo_loi": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       6
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       0
+      ]
+     ]
+    },
+    "mo_loi": [
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    ],
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "luot",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        6
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        6
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        6
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        6
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: B opened first one week, the baton stays",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-07",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-14",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-14",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       "sent_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "mo_loi": [
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       4
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       2
+      ]
+     ]
+    },
+    "mo_loi": [
+     null,
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    ],
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        4
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        4
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        4
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        4
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: unsent or Nep sheets do not open a week",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-07",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-14",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": null
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": null
+      }
+     ],
+     "responses": []
+    },
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-14",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "nep",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "mo_loi": [
+    null,
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       4
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       0
+      ]
+     ]
+    },
+    "mo_loi": [
+     null,
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     null
+    ],
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        4
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        4
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        4
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        4
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: an explicit baton history",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-14",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "mo_loi": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       2
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       0
+      ]
+     ]
+    },
+    "mo_loi": [
+     null,
+     null,
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    ],
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "luot",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "nguoi_lo",
+   "name": "lo: a half history",
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "to_giay": [
+    {
+     "cycle_id": "CY",
+     "tuan": "2026-09-14",
+     "versions": [
+      {
+       "version": 1,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      },
+      {
+       "version": 2,
+       "author_type": "human",
+       "sent_by": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "sent_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+      }
+     ],
+     "responses": []
+    }
+   ],
+   "cycle": "CY",
+   "lap_so": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+   "chon": [
+    null,
+    {
+     "nguoi_lo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    {
+     "nguoi_lo_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    },
+    {
+     "nguoi_lo_id": null
+    }
+   ],
+   "mo_loi": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    null
+   ],
+   "result": {
+    "suy": {
+     "nguoi_lo": [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     ],
+     "diem": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       2
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       0
+      ]
+     ]
+    },
+    "mo_loi": [
+     null,
+     null,
+     "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    ],
+    "vai": [
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "suy",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
+     },
+     {
+      "nguoi_lo": [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+      ],
+      "cach": "chon",
+      "diem": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        2
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ]
+      ]
      }
     ]
    }

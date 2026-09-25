@@ -826,6 +826,8 @@ WORLD_DEFAULTS = {
     "people": default_people(),
     "friends": [["ME", "BAN"], ["ME", "BAN2"]],
     "groupmates": [["ME", "LA"]],
+    # ADR-0034: pairs that are one «Một đôi» (same active couple cycle).
+    "couples": [],
     "edges": [["ME", "BAN", "accepted", None], ["BAN2", "ME", "accepted", "ME"]],
     "summaries": [],
     "pair_contexts": [],
@@ -1054,6 +1056,10 @@ class Stub:
     def are_friends(self, a, b):
         self.rec("are_friends", a, b)
         return pair_in(self.world["friends"], a, b)
+
+    def same_couple(self, a, b):
+        self.rec("same_couple", a, b)
+        return pair_in(self.world["couples"], a, b)
 
     def share_active_context(self, a, b):
         self.rec("share_active_context", a, b)
@@ -1942,6 +1948,11 @@ def people_steps_edges() -> list[dict]:
         "friend": ("BAN", {}),
         "groupmate": ("LA", {}),
         "friend_and_groupmate": ("BAN", {"groupmates": [["ME", "BAN"]]}),
+        "couple_friend": ("BAN", {"couples": [["ME", "BAN"]]}),
+        "couple_groupmate": ("LA", {"couples": [["LA", "ME"]]}),
+        "couple_self_is_self": ("ME", {"couples": [["ME", "BAN"]]}),
+        "couple_but_stranger_is_refused": ("BAN2", {"friends": [], "couples": [["ME", "BAN2"]]}),
+        "couple_erased": ("XOA", {"groupmates": [["ME", "XOA"]], "couples": [["ME", "XOA"]]}),
         "stranger": ("BAN2", {"friends": []}),
         "missing_friend": ("MAT", {"friends": [["ME", "MAT"]]}),
         "missing_stranger": ("MAT", {}),
@@ -2212,6 +2223,8 @@ def fuzz_step(rng: random.Random, i: int) -> dict:
         w["friends"] = pairs_subset(0.4)
     if rng.random() < 0.5:
         w["groupmates"] = pairs_subset(0.35)
+    if rng.random() < 0.3:
+        w["couples"] = pairs_subset(0.2)
     if rng.random() < 0.7:
         edges = []
         for x, y in PAIRS:

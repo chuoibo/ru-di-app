@@ -31,3 +31,10 @@ test("đã chọn, kể cả share", () => {
   assert.equal(share.nhan, "Tuần này hai bạn cùng lo");
   assert.equal(share.laToi, true);
 });
+
+test("gậy sang người kia: nói vì sao, từ phía người đọc", () => {
+  const v = vai([KIA], "luot", [[TOI, 4], [KIA, 0]]);
+  assert.equal(cauVaiTuan(v, TOI, "Minh").vi, "Bạn đã mở lời hai tuần liền, tuần này để Minh.");
+  assert.equal(cauVaiTuan(v, KIA, "Linh").vi, "Linh đã mở lời hai tuần liền, tuần này lượt bạn.");
+  assert.equal(cauVaiTuan(v, KIA, "Linh").nhan, "Tuần này bạn lo");
+});

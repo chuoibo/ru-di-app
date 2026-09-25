@@ -491,3 +491,19 @@ def test_week_role_answers_a_bad_choice_with_422(client):
     dong_thuan(client, "bat_doi")
     bad = client.put(f"/contexts/{CAP}/notebook/week-role", json={"lo": "nam"}, headers=head(TOI))
     assert bad.status_code == 422
+
+
+# ADR-0034: the two of a couple see each other as «Một đôi» on the profile.
+
+
+def test_the_profile_says_couple_only_to_the_two_and_only_while_it_lasts(client):
+    before = client.get(f"/people/{NGUOI_KIA}", headers=head(TOI))
+    assert before.status_code == 200, before.text
+    assert before.json()["relation"] in ("friend", "groupmate")
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    assert client.get(f"/people/{NGUOI_KIA}", headers=head(TOI)).json()["relation"] == "couple"
+    assert client.get(f"/people/{TOI}", headers=head(NGUOI_KIA)).json()["relation"] == "couple"
+    assert client.get(f"/people/{TOI}", headers=head(TOI)).json()["relation"] == "self"
+    client.delete(f"/contexts/{CAP}/notebook/consents/bat_doi", headers=head(NGUOI_KIA))
+    assert client.get(f"/people/{NGUOI_KIA}", headers=head(TOI)).json()["relation"] == before.json()["relation"]

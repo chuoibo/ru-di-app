@@ -6,7 +6,8 @@
 # revoking hides the taste at the next read. With both sharing, Nếp's draft names the
 # stop after the common taste and says so (§2.2). «Người lo» of the week (§2.4): inferred in
 # every notebook read, then chosen by either person, «ca_hai» for both, 422 for anything
-# else, 409 outside a couple. Texts are sample data (dữ liệu mẫu).
+# else, 409 outside a couple. The two see each other as «couple» on the profile. Three
+# sheets per person per week, the fourth refused (§2.5). Texts are sample data (dữ liệu mẫu).
 id: w8/pair_notebooks/chia-gu
 routes:
   - 'GET /contexts/{context_id}/notebook'
@@ -16,6 +17,8 @@ routes:
   - 'POST /contexts/{context_id}/papers/draft'
   - 'GET /papers/{paper_id}'
   - 'PUT /contexts/{context_id}/notebook/week-role'
+  - 'GET /people/{person_id}'
+  - 'POST /papers/{paper_id}/skip'
 auth_mode: dev
 personas:
   owner: {}
@@ -247,3 +250,42 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"purpose":"chia_gu"}'
+  - id: owner_reads_mates_profile_as_a_couple
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}'
+  - id: owner_skips_the_first_draft
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{draft_gu}}/skip'
+  - id: owner_drafts_second
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      draft_2: {from: body, pointer: /id, class: uuid}
+  - id: owner_skips_second
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{draft_2}}/skip'
+  - id: owner_drafts_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      draft_3: {from: body, pointer: /id, class: uuid}
+  - id: owner_skips_third
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{draft_3}}/skip'
+  - id: owner_drafts_a_fourth_in_one_week
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'

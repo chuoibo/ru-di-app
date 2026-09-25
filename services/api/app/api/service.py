@@ -4221,6 +4221,10 @@ class ApiService:
                 403, "person_not_visible", "Không xem được hồ sơ này."
             ) from denied
         assert relation is not None
+        # ADR-0034: the two of a couple see each other as that, and only they
+        # do -- asked after the door, so it is never an oracle for strangers.
+        if relation != "self" and self.repository.same_couple(actor.id, person_id):
+            relation = "couple"
         person = self.repository.get_person(person_id)
         if person is None or person.deleted_at is not None:
             # A SECOND layer, not the contract callers see. Ending an account
@@ -7121,16 +7125,24 @@ class ApiService:
         chon = self.repository.get_pair_rhythm(notebook.cycle_id, tuan)
         lap_so = [p for p in notebook.proposals if p.purpose == "lap_so" and p.completed_at is not None]
         nguoi_lap_so = None if not lap_so else str(max(lap_so, key=lambda p: p.completed_at).proposed_by_id)
+        tin_hieu = [_paper_signals(p) for p in papers]
         suy = pair_notebook.nguoi_lo_suy(
             people,
-            [_paper_signals(p) for p in papers],
+            tin_hieu,
             cycle_id=str(notebook.cycle_id),
             nguoi_lap_so=nguoi_lap_so,
         )
+        # Who opened each of the last two weeks: the baton passes when the
+        # usual lead opened both (ADR-0034 §2.4).
+        mo_loi_truoc = [
+            pair_notebook.nguoi_mo_loi(tin_hieu, cycle_id=str(notebook.cycle_id), tuan=(tuan - timedelta(days=7 * k)).isoformat())
+            for k in (1, 2)
+        ]
         vai = pair_notebook.vai_tuan(
             suy,
             None if chon is None else {"nguoi_lo_id": None if chon.nguoi_lo_id is None else str(chon.nguoi_lo_id)},
             people,
+            mo_loi_truoc=mo_loi_truoc,
         )
         return PairWeekRoleResponse(
             tuan=tuan,
@@ -7609,6 +7621,15 @@ class ApiService:
                     "paper_wrong_state",
                     "Đang có một tờ mở. Xong tờ này đã.",
                 )
+        # ADR-0034 §2.5: a ceiling per person per week, the number shared with
+        # the client in packages/shared/nep-nhip.json.
+        tuan_nay = pair_paper.tuan_cua(now)
+        if sum(1 for p in papers if p.draft_owner_id == actor.id and p.tuan == tuan_nay) >= pair_paper.TO_MOI_NGUOI_MOI_TUAN:
+            raise ApiProblem(
+                409,
+                "paper_week_quota",
+                f"Tuần này bạn đã phác {pair_paper.TO_MOI_NGUOI_MOI_TUAN} tờ rồi. Tuần sau phác tiếp nhé.",
+            )
         constraints = [] if notebook is None else list(notebook.constraints)
         # What this cycle already agreed, and the catalogue around the place
         # it chose -- read before the write, in this order, so the draft is a
@@ -8263,8 +8284,14 @@ def _paper_signals(paper: PairPaperRecord) -> dict:
     as whom, and who answered with a «đề nghị sửa». Nothing of its content."""
     return {
         "cycle_id": None if paper.cycle_id is None else str(paper.cycle_id),
+        "tuan": paper.tuan.isoformat(),
         "versions": [
-            {"version": v.version, "author_type": v.author_type, "sent_by": None if v.sent_by is None else str(v.sent_by)}
+            {
+                "version": v.version,
+                "author_type": v.author_type,
+                "sent_by": None if v.sent_by is None else str(v.sent_by),
+                "sent_at": v.sent_at,
+            }
             for v in paper.versions
         ],
         "responses": [{"person_id": str(r.person_id), "kind": r.kind} for r in paper.responses],

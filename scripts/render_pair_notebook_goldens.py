@@ -61,7 +61,7 @@ from app.domain import pair_notebook, pair_paper  # noqa: E402
 
 SEED = 27
 FUZZ_CASES = 3000
-FUZZ_SHARDS = 7
+FUZZ_SHARDS = 10
 TARGET = "services/core/internal/domain/pairnotebook/testdata/python_{mode}.json"
 
 #: Copies of the digit rules in scripts/repo_guard.py plus the hex, e-mail and
@@ -189,10 +189,19 @@ def consents_case(
     }
 
 
-def nguoi_lo_case(name: str, participants: list[str], to_giay: list[dict], cycle: str, lap_so: str | None) -> dict:
-    """ADR-0034 §2.4: nguoi_lo_suy, and vai_tuan over it for no choice, each
-    participant chosen, and «cả hai»."""
+TUANS = ("2026-08-31", "2026-09-07", "2026-09-14")
+
+
+def nguoi_lo_case(
+    name: str, participants: list[str], to_giay: list[dict], cycle: str, lap_so: str | None, mo_loi=None
+) -> dict:
+    """ADR-0034 §2.4: nguoi_lo_suy; nguoi_mo_loi of three weeks; and vai_tuan
+    over them for no choice, each participant chosen, and «cả hai». `mo_loi`
+    (newest first) defaults to who opened the last two of TUANS."""
     suy = pair_notebook.nguoi_lo_suy(participants, to_giay, cycle_id=cycle, nguoi_lap_so=lap_so)
+    mo = [pair_notebook.nguoi_mo_loi(to_giay, cycle_id=cycle, tuan=t) for t in TUANS]
+    if mo_loi is None:
+        mo_loi = [mo[2], mo[1]]
     chon = [None, *[{"nguoi_lo_id": p} for p in participants], {"nguoi_lo_id": None}]
     return {
         "fn": "nguoi_lo",
@@ -202,15 +211,21 @@ def nguoi_lo_case(name: str, participants: list[str], to_giay: list[dict], cycle
         "cycle": cycle,
         "lap_so": lap_so,
         "chon": chon,
-        "result": {"suy": suy, "vai": [pair_notebook.vai_tuan(suy, c, participants) for c in chon]},
+        "mo_loi": mo_loi,
+        "result": {
+            "suy": suy,
+            "mo_loi": mo,
+            "vai": [pair_notebook.vai_tuan(suy, c, participants, mo_loi_truoc=mo_loi) for c in chon],
+        },
     }
 
 
-def to_tin_hieu(cycle, sent_by=None, author="human", responses=(), v1=True) -> dict:
+def to_tin_hieu(cycle, sent_by=None, author="human", responses=(), v1=True, tuan=TUANS[2], sent_at=NOW) -> dict:
     return {
         "cycle_id": cycle,
-        "versions": ([{"version": 1, "author_type": author, "sent_by": sent_by}] if v1 else [])
-        + [{"version": 2, "author_type": "human", "sent_by": sent_by}],
+        "tuan": tuan,
+        "versions": ([{"version": 1, "author_type": author, "sent_by": sent_by, "sent_at": sent_at}] if v1 else [])
+        + [{"version": 2, "author_type": "human", "sent_by": sent_by, "sent_at": sent_at}],
         "responses": [{"person_id": p, "kind": k} for p, k in responses],
     }
 
@@ -281,6 +296,30 @@ def edge_cases() -> list[dict]:
         nguoi_lo_case("lo: a tie without the opener among it", [A, B], [to_tin_hieu("CY", A), to_tin_hieu("CY", B)], "CY", C),
         nguoi_lo_case("lo: repeated participants count once", [A, B, A], [to_tin_hieu("CY", B)], "CY", A),
         nguoi_lo_case("lo: nobody", [], [to_tin_hieu("CY", A)], "CY", A),
+        # The baton: the usual lead opened both of the last two weeks.
+        nguoi_lo_case(
+            "lo: A opened two weeks running, the week passes to B",
+            [A, B],
+            [to_tin_hieu("CY", A, tuan=TUANS[1]), to_tin_hieu("CY", A, tuan=TUANS[2]), to_tin_hieu("CY", A, tuan=TUANS[0])],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case(
+            "lo: B opened first one week, the baton stays",
+            [A, B],
+            [to_tin_hieu("CY", A, tuan=TUANS[1]), to_tin_hieu("CY", A, tuan=TUANS[2], sent_at=NOW), to_tin_hieu("CY", B, tuan=TUANS[2], sent_at=NOW - MICRO)],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case(
+            "lo: unsent or Nep sheets do not open a week",
+            [A, B],
+            [to_tin_hieu("CY", A, tuan=TUANS[1]), to_tin_hieu("CY", A, tuan=TUANS[2], sent_at=None), to_tin_hieu("CY", A, tuan=TUANS[2], author="nep")],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case("lo: an explicit baton history", [A, B], [to_tin_hieu("CY", A)], "CY", B, mo_loi=[A, A]),
+        nguoi_lo_case("lo: a half history", [A, B], [to_tin_hieu("CY", A)], "CY", B, mo_loi=[A, None]),
     ]
     cases = [*lo,
         # ADR-0034: taste, per person, inside «Một đôi» only.
@@ -736,6 +775,8 @@ def fuzz_cases() -> list[dict]:
                 author=rng.choice(("human", "human", "nep")),
                 responses=[(rng.choice((A, B, C)), rng.choice(("de_nghi_sua", "dong_y"))) for _ in range(rng.randint(0, 3))],
                 v1=rng.random() < 0.9,
+                tuan=rng.choice(TUANS),
+                sent_at=rng.choice((None, NOW, NOW - MICRO, NOW - timedelta(days=1))),
             )
             for _ in range(rng.randint(0, 6))
         ]

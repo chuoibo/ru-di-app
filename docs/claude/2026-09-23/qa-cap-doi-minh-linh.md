@@ -580,3 +580,16 @@ Lead ký ADR-0034 ngày 25/09. Lát này làm §2.1–2.2; phần Nếp dùng gu
   «Để tôi lo» / «Để Minh lo».
 - Chưa làm (ghi ở hàng đợi): gậy luân phiên tuần riêng với người lo — bản này coi người lo là người mở lời
   tuần đó; hạn mức `nep-nhip.json`; câu hỏi tuần (c).
+
+## ADR-0034 lượt 2 (25/09) — gậy, hạn mức tuần, 4 sticker đôi, hồ sơ «Một đôi»
+
+- **Gậy (cân tải):** người lo quen mở lời hai tuần liền → tuần này sang người kia («Bạn đã mở lời hai tuần liền,
+  tuần này để Minh.»). Lựa chọn tuần thắng. Đo bằng golden (Go↔Python) và test api có đồng hồ; chưa đo trên máy
+  (cần hai tuần dữ liệu).
+- **Hạn mức:** tờ thứ tư trong một tuần của một người → 409 «Tuần này bạn đã phác 3 tờ rồi. Tuần sau phác tiếp nhé.»
+  Con số ở `packages/shared/nep-nhip.json`.
+- **4 sticker đôi** «Hẹn nhé!», «Nhớ nhau», «Về tới chưa?», «Ôm cái» — cùng ngữ pháp hình với tám cái cũ (một tư thế
+  Nếp, tối đa một vật, vật đặt từ điểm tiếp xúc của tư thế). Trên máy: khay nhắn riêng có nhóm «Cho hai người»,
+  gửi được, hiện đúng ở cỡ lớn (ảnh `st-01…05`). Chỉnh sau khi nhìn: tim của «Ôm cái» kéo vào tay, tim «Hẹn nhé!» to hơn.
+- **Hồ sơ «Một đôi»:** Linh mở hồ sơ Minh → chip «♥ Một đôi», «Nhắn tin», «Tờ giấy của hai mình» (mở thẳng tờ giấy).
+  Ảnh `hs-01`.

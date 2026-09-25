@@ -2,6 +2,7 @@ package pairsteps
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -150,6 +151,17 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 		if pairpaper.IsOpen(pairpaper.HieuLuc(PaperDict(&papers[i]), now)) {
 			return Command{}, refusal(409, "paper_wrong_state", "Đang có một tờ mở. Xong tờ này đã.")
 		}
+	}
+	// ADR-0034 §2.5: a ceiling per person per week.
+	tuanNay := pairpaper.TuanCua(now)
+	mine := 0
+	for i := range papers {
+		if papers[i].DraftOwnerID == actor.ID && papers[i].Tuan.Compare(tuanNay) == 0 {
+			mine++
+		}
+	}
+	if mine >= pairpaper.ToMoiNguoiMoiTuan {
+		return Command{}, refusal(409, "paper_week_quota", fmt.Sprintf("Tuần này bạn đã phác %d tờ rồi. Tuần sau phác tiếp nhé.", pairpaper.ToMoiNguoiMoiTuan))
 	}
 	// What this cycle already agreed, and the catalogue around the place it
 	// chose -- read before the write, in Python's order.

@@ -50,6 +50,7 @@ var goNames = map[string]string{
 	"gu_hai_nguoi":        "GuHaiNguoi",
 	"nguoi_lo_suy":        "NguoiLoSuy",
 	"vai_tuan":            "VaiTuan",
+	"nguoi_mo_loi":        "NguoiMoLoi",
 	"can_bat_doi":         "CanBatDoi",
 	"chat_consent_active": "ChatConsentActive",
 	"dang_cho":            "DangCho",
@@ -358,10 +359,11 @@ func replayNguoiLo(t *testing.T, tl *tally, c map[string]any) {
 	var toGiay []ToTinHieu
 	for _, item := range c["to_giay"].([]any) {
 		row := item.(map[string]any)
-		to := ToTinHieu{CycleID: optText(row["cycle_id"])}
+		to := ToTinHieu{CycleID: optText(row["cycle_id"]), Tuan: row["tuan"].(string)}
 		for _, v := range row["versions"].([]any) {
 			vm := v.(map[string]any)
-			to.Versions = append(to.Versions, PhienBanTinHieu{Version: int(vm["version"].(float64)), AuthorType: vm["author_type"].(string), SentBy: optText(vm["sent_by"])})
+			to.Versions = append(to.Versions, PhienBanTinHieu{Version: int(vm["version"].(float64)), AuthorType: vm["author_type"].(string),
+				SentBy: optText(vm["sent_by"]), SentAt: instant(vm["sent_at"])})
 		}
 		for _, r := range row["responses"].([]any) {
 			rm := r.(map[string]any)
@@ -373,12 +375,23 @@ func replayNguoiLo(t *testing.T, tl *tally, c map[string]any) {
 	suy := NguoiLoSuy(participants, toGiay, c["cycle"].(string), optText(c["lap_so"]))
 	result := c["result"].(map[string]any)
 	tl.check(t, c, "nguoi_lo_suy", nguoiLoView(suy, false), result["suy"])
+	for i, tuan := range []string{"2026-08-31", "2026-09-07", "2026-09-14"} {
+		var got any
+		if who := NguoiMoLoi(toGiay, c["cycle"].(string), tuan); who != nil {
+			got = *who
+		}
+		tl.check(t, c, "nguoi_mo_loi "+tuan, got, result["mo_loi"].([]any)[i])
+	}
+	var moLoi []*string
+	for _, raw := range c["mo_loi"].([]any) {
+		moLoi = append(moLoi, optText(raw))
+	}
 	for i, raw := range c["chon"].([]any) {
 		var chon **string
 		if raw != nil {
 			id := optText(raw.(map[string]any)["nguoi_lo_id"])
 			chon = &id
 		}
-		tl.check(t, c, fmt.Sprintf("vai_tuan %d", i), nguoiLoView(VaiTuan(suy, chon, participants), true), result["vai"].([]any)[i])
+		tl.check(t, c, fmt.Sprintf("vai_tuan %d", i), nguoiLoView(VaiTuan(suy, chon, participants, moLoi), true), result["vai"].([]any)[i])
 	}
 }

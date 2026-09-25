@@ -945,7 +945,10 @@ class PublicPersonResponse(ApiModel):
     bio: StrictStr | None
     city: StrictStr | None
     created_at: datetime
-    relation: Literal["self", "friend", "groupmate"]
+    #: `couple`: the reader and this person are one «Một đôi» (ADR-0034). Only
+    #: the two of them can ever be told this; to anybody else they are friends
+    #: or groupmates, as before.
+    relation: Literal["self", "friend", "groupmate", "couple"]
 
 
 class SavedPlaceSummary(ApiModel):
@@ -2731,7 +2734,8 @@ class PairWeekRoleResponse(ApiModel):
 
     tuan: date
     nguoi_lo: list[UUID]
-    cach: Literal["suy", "chon"]
+    #: «luot»: người lo quen đã mở lời hai tuần liền, tuần này sang người kia.
+    cach: Literal["suy", "chon", "luot"]
     diem: list[PairRoleScoreResponse]
 
 

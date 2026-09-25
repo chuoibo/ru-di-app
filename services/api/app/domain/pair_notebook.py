@@ -42,6 +42,7 @@ __all__ = [
     "gu_hai_nguoi",
     "nguoi_lo_suy",
     "vai_tuan",
+    "nguoi_mo_loi",
     "han_de_nghi",
     "xem_truoc_dong_so",
 ]
@@ -282,16 +283,48 @@ def nguoi_lo_suy(
     return {"nguoi_lo": [lo], "diem": [[p, diem[p]] for p in people]}
 
 
-def vai_tuan(suy: dict, chon: dict | None, participants: list[str]) -> dict:
+def nguoi_mo_loi(to_giay: list[dict], *, cycle_id: str, tuan: str) -> str | None:
+    """Who opened week `tuan` (ISO Monday): the sender of the earliest sent
+    first version of a human's sheet of that week in this cycle, or None."""
+    dau = None
+    for to in to_giay:
+        if str(to.get("cycle_id")) != str(cycle_id) or to.get("tuan") != tuan:
+            continue
+        v1 = next((v for v in to.get("versions", ()) if v.get("version") == 1), None)
+        if v1 is None or v1.get("author_type") != "human" or v1.get("sent_by") is None or v1.get("sent_at") is None:
+            continue
+        if dau is None or v1["sent_at"] < dau[0]:
+            dau = (v1["sent_at"], str(v1["sent_by"]))
+    return None if dau is None else dau[1]
+
+
+def vai_tuan(
+    suy: dict,
+    chon: dict | None,
+    participants: list[str],
+    *,
+    mo_loi_truoc: list[str | None] = (),
+) -> dict:
     """This week's «Người lo»: what the two chose for it, or the inference.
 
     `chon` is the week's stored choice, `{"nguoi_lo_id": id | None}`; None
     there means «Hôm nay mình share», both lead. Choosing is not a permission:
     it decides whose turn the week reads as, nothing else (ADR-0034 §2.4).
+
+    Without a choice, the baton («gậy»): the inference names who tends to
+    lead, and if that person opened BOTH of the last two weeks
+    (`mo_loi_truoc`, newest first), this week passes to the other one --
+    `cach` = «luot». Leading is a habit, not a duty, and a notebook where one
+    person always opens is the thing this is here to notice.
     """
     people = list(dict.fromkeys(str(p) for p in participants))
     if chon is None:
-        return {"nguoi_lo": list(suy["nguoi_lo"]), "cach": "suy", "diem": suy["diem"]}
+        lo = list(suy["nguoi_lo"])
+        truoc = [str(p) if p is not None else None for p in list(mo_loi_truoc)[:2]]
+        if len(lo) == 1 and len(people) == 2 and len(truoc) == 2 and truoc[0] == truoc[1] == lo[0]:
+            khac = next(p for p in people if p != lo[0])
+            return {"nguoi_lo": [khac], "cach": "luot", "diem": suy["diem"]}
+        return {"nguoi_lo": lo, "cach": "suy", "diem": suy["diem"]}
     ai = chon.get("nguoi_lo_id")
     return {
         "nguoi_lo": people if ai is None else [str(ai)],

@@ -740,6 +740,17 @@ func (p *pairRoute) draftPaper() error {
 			return refuse(409, "paper_wrong_state")
 		}
 	}
+	// ADR-0034 §2.5: three sheets per person per week, read from the rows
+	// already fetched -- no statement of its own.
+	mine := 0
+	for _, paper := range papers {
+		if paper.DraftOwnerID == p.actor && paper.Tuan.Equal(p.monday()) {
+			mine++
+		}
+	}
+	if mine >= pairpaper.ToMoiNguoiMoiTuan {
+		return refuse(409, "paper_week_quota")
+	}
 	local := p.now.In(wallClockLocation)
 	today := time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, time.UTC)
 	monday := today.AddDate(0, 0, -((int(local.Weekday()) + 6) % 7))

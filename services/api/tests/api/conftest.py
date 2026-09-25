@@ -1569,6 +1569,10 @@ class FakeRepository(SeedCatalogueReads):
             for edge in self.friend_edges.values()
         )
 
+    def same_couple(self, a, b):
+        ca, cb = self.active_couple_members.get(a), self.active_couple_members.get(b)
+        return a != b and ca is not None and ca == cb
+
     def share_active_context(self, a, b):
         mine = {cid for (cid, pid) in self.active_memberships if pid == a}
         return any(cid in mine for (cid, pid) in self.active_memberships if pid == b)

@@ -20,6 +20,7 @@
  * `useToGiay` is what does that, once, in one place.
  */
 import { type Attempt, translatedAsActor } from "../../api";
+import nepNhip from "../../../../../packages/shared/nep-nhip.json";
 import type { GuSo } from "./gu-doi";
 import type { NoiDungTo, ToGiay } from "./to-giay";
 
@@ -76,7 +77,8 @@ export interface SoHaiNguoi {
 export interface VaiTuan {
   tuan: string;
   nguoi_lo: readonly string[];
-  cach: "suy" | "chon";
+  /** `luot`: the usual lead opened two weeks running, so this week is the other's. */
+  cach: "suy" | "chon" | "luot";
   diem: readonly { person_id: string; score: number }[];
 }
 
@@ -131,6 +133,8 @@ export const LOI_TO_GIAY: Record<string, string> = {
   paper_expired: "Tuần này hết rồi. Tuần sau mình rủ lại nhé.",
   paper_frozen: "Hai bạn chốt rồi, không sửa nữa.",
   paper_wrong_state: "Tờ giấy không ở trạng thái làm được việc này.",
+  // ADR-0034 §2.5: the number is packages/shared/nep-nhip.json's.
+  paper_week_quota: `Tuần này bạn đã phác ${nepNhip.to_moi_nguoi_moi_tuan} tờ rồi. Tuần sau phác tiếp nhé.`,
   paper_not_withdrawable: "Người kia đã mở tờ này rồi, không rút lại được.",
   paper_self_response: "Đây là tờ bạn gửi, chờ người kia trả lời.",
   paper_needs_recorder: "Cần biết ai ghi là hai bạn đã đi.",

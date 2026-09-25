@@ -666,6 +666,10 @@ func LamGiauPhac(phac Draft, lichSu []Content, choCu *PlaceRow, ungVien []PlaceR
 	}
 }
 
+// ToMoiNguoiMoiTuan is TO_MOI_NGUOI_MOI_TUAN (ADR-0034 §2.5), the same number
+// as `to_moi_nguoi_moi_tuan` in packages/shared/nep-nhip.json.
+const ToMoiNguoiMoiTuan = 3
+
 // loaiTheoGu is _LOAI_THEO_GU (ADR-0034 §2.2).
 var loaiTheoGu = map[string]string{"an-uong": "quan-an-local", "cafe": "cafe", "nightlife": "di-choi-dem", "game": "vui-choi"}
 

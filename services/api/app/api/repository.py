@@ -1526,6 +1526,8 @@ class ApiRepository(Protocol):
 
     def share_active_context(self, a: uuid.UUID, b: uuid.UUID) -> bool: ...
 
+    def same_couple(self, a: uuid.UUID, b: uuid.UUID) -> bool: ...
+
     def list_destinations(self) -> list[DestinationRecord]: ...
 
     def get_destination(self, destination_id: str) -> DestinationRecord | None: ...
@@ -4132,6 +4134,19 @@ class SqlAlchemyApiRepository:
             )
             is not None
         )
+
+    def same_couple(self, a: uuid.UUID, b: uuid.UUID) -> bool:
+        """Are these two one «Một đôi» (ADR-0034): both rows of
+        `active_couple_members` present and naming the same cycle. One
+        explicit SELECT, never `session.get`, so the Go port's one statement
+        is always this one."""
+        rows = self.session.execute(
+            select(ActiveCoupleMember.person_id, ActiveCoupleMember.cycle_id).where(
+                ActiveCoupleMember.person_id.in_([a, b])
+            )
+        ).all()
+        cycles = {person: cycle for person, cycle in rows}
+        return a != b and a in cycles and b in cycles and cycles[a] == cycles[b]
 
     def share_active_context(self, a: uuid.UUID, b: uuid.UUID) -> bool:
         mine = select(Membership.context_id).where(

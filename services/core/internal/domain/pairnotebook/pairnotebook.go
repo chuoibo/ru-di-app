@@ -303,6 +303,7 @@ func XemTruocDongSo(papers []Paper, proposals []Proposal, now time.Time, sum256 
 // CycleID is Python's None; a Version with a nil SentBy was never sent.
 type ToTinHieu struct {
 	CycleID   *string
+	Tuan      string
 	Versions  []PhienBanTinHieu
 	Responses []TraLoiTinHieu
 }
@@ -312,6 +313,7 @@ type PhienBanTinHieu struct {
 	Version    int
 	AuthorType string
 	SentBy     *string
+	SentAt     *time.Time
 }
 
 // TraLoiTinHieu is one response as nguoi_lo_suy reads it.
@@ -392,10 +394,51 @@ func NguoiLoSuy(participants []string, toGiay []ToTinHieu, cycleID string, nguoi
 	return out
 }
 
+// NguoiMoLoi is nguoi_mo_loi: who opened week `tuan` in this cycle -- the
+// sender of the earliest sent human first version of that week -- or nil.
+func NguoiMoLoi(toGiay []ToTinHieu, cycleID, tuan string) *string {
+	var luc *time.Time
+	var ai *string
+	for _, to := range toGiay {
+		if to.CycleID == nil || *to.CycleID != cycleID || to.Tuan != tuan {
+			continue
+		}
+		for _, v := range to.Versions {
+			if v.Version != 1 {
+				continue
+			}
+			if v.AuthorType == "human" && v.SentBy != nil && v.SentAt != nil && (luc == nil || v.SentAt.Before(*luc)) {
+				who := *v.SentBy
+				luc, ai = v.SentAt, &who
+			}
+			break
+		}
+	}
+	return ai
+}
+
 // VaiTuan is vai_tuan: the week's stored choice, or the inference. chon nil
 // is Python's None (nothing chosen); chon pointing at nil is «cả hai».
-func VaiTuan(suy NguoiLo, chon **string, participants []string) NguoiLo {
+// moLoiTruoc is who opened the last two weeks, newest first (nil entries are
+// None): the baton passes when the usual lead opened both.
+func VaiTuan(suy NguoiLo, chon **string, participants []string, moLoiTruoc []*string) NguoiLo {
 	if chon == nil {
+		people := []string{}
+		seen := map[string]bool{}
+		for _, p := range participants {
+			if !seen[p] {
+				seen[p] = true
+				people = append(people, p)
+			}
+		}
+		if len(suy.NguoiLo) == 1 && len(people) == 2 && len(moLoiTruoc) >= 2 &&
+			moLoiTruoc[0] != nil && moLoiTruoc[1] != nil && *moLoiTruoc[0] == suy.NguoiLo[0] && *moLoiTruoc[1] == suy.NguoiLo[0] {
+			khac := people[0]
+			if khac == suy.NguoiLo[0] {
+				khac = people[1]
+			}
+			return NguoiLo{NguoiLo: []string{khac}, Cach: "luot", Diem: suy.Diem}
+		}
 		return NguoiLo{NguoiLo: append([]string{}, suy.NguoiLo...), Cach: "suy", Diem: suy.Diem}
 	}
 	if *chon == nil {

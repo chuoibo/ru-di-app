@@ -67,3 +67,9 @@ Go là bản đầu tiên phục vụ route này; Python là oracle cùng lúc (
 ## Lỗi Python (chỉ báo, không sửa)
 
 Không có.
+
+## Đổi 2026-09-25 (lượt 2) — gậy luân phiên, hạn mức tuần, «Một đôi» trên hồ sơ, 4 sticker đôi (ADR-0034 §2.4–2.5)
+
+Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở lời (tờ đầu tiên gửi trong tuần, `nguoi_mo_loi`) hai tuần liền thì tuần này sang người kia, `cach` = `luot`; tín hiệu tờ thêm `tuan`, `sent_at`. (2) `draft_pair_paper` từ chối 409 `paper_week_quota` khi người gọi đã phác `TO_MOI_NGUOI_MOI_TUAN` (3, cùng số với `packages/shared/nep-nhip.json`) tờ trong tuần. (3) `get_person_profile` trả `relation` = `couple` khi hai người là một «Một đôi» (`same_couple`, hỏi SAU cửa quyền, không phải oracle cho người lạ). (4) Từ vựng sticker thêm `hen-nhe`, `nho-nhau`, `ve-toi-chua`, `om-cai`. Golden pair_notebook (ca baton, 10 shard), pair_steps (`quota_*`, `role_baton_*`), people_steps (`couple_*`), stickers; Go 0 lệch.
+
+- `PUT /contexts/{context_id}/notebook/week-role`: Câu trả lời có thể là `cach` = `luot` khi chưa chọn — ở đây luôn là `chon` vì vừa chọn; hàm dùng chung đổi chữ ký.

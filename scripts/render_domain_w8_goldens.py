@@ -2117,6 +2117,20 @@ def pair_steps_edges() -> list[dict]:
         out.append(
             S(fn, name, req(fn), {"notebooks": [nb(state=state, consents=doi_lap, proposals=doi_props_lap)], "papers": papers, "rhythm": rhythm}, actor=("TOI", ("member",)))
         )
+    # ADR-0034 §2.4: the baton -- TOI opened the last two weeks, so this week
+    # passes to KIA; with a hole in the history it stays.
+    def mo(pid, ai, tuan, luc):
+        return paper(pid, owner=ai, state="het_han", cycle="CY1", tuan=tuan, expires=luc + 3 * DAY, versions=[ver(1, sent_by=ai, sent_at=luc)])
+    tuan1, tuan2 = TUAN - timedelta(days=7), TUAN - timedelta(days=14)
+    luc1, luc2 = T - 7 * DAY, T - 14 * DAY
+    for name, papers in (
+        ("role_baton_passes", [mo("PP2", "TOI", tuan1, luc1), mo("PP3", "TOI", tuan2, luc2)]),
+        ("role_baton_stays_after_a_gap", [mo("PP2", "TOI", tuan1, luc1)]),
+        ("role_baton_other_opened_first", [mo("PP2", "TOI", tuan1, luc1), mo("PP3", "TOI", tuan2, luc2), mo("PP4", "KIA", tuan1, luc1 - HOUR)]),
+    ):
+        out.append(
+            S(fn, name, req(fn), {"notebooks": [nb(consents=doi_lap, proposals=doi_props_lap)], "papers": papers}, actor=("TOI", ("member",)))
+        )
     fn = "set_pair_week_role"
     for name, lo, locks, rhythm in (
         ("outside_a_couple", "toi", [nb(consents=both("lap_so"), proposals=[prop("PR1", "lap_so", completed=T - DAY)])], None),
@@ -2704,6 +2718,15 @@ def pair_steps_edges() -> list[dict]:
         ),
     ):
         out.append(S(fn, name, req(fn), {"locks": locks, "papers": papers, "places": places}))
+    # ADR-0034 §2.5: three sheets per person per week.
+    bo = lambda pid, owner="TOI", tuan=TUAN: paper(pid, owner=owner, state="bo", tuan=tuan, versions=[ver(1, sent_by=None, sent_at=None)])
+    for name, papers in (
+        ("quota_two_leaves_room", [bo("PP2"), bo("PP3")]),
+        ("quota_three_is_the_ceiling", [bo("PP2"), bo("PP3"), bo("PP4")]),
+        ("quota_is_per_person", [bo("PP2", "KIA"), bo("PP3", "KIA"), bo("PP4", "KIA")]),
+        ("quota_is_per_week", [bo("PP2", tuan=TUAN - timedelta(days=7)), bo("PP3", tuan=TUAN - timedelta(days=7)), bo("PP4", tuan=TUAN - timedelta(days=7))]),
+    ):
+        out.append(S(fn, name, req(fn), {"locks": [NB_ACTIVE], "papers": papers}))
     # ADR-0034 §2.2: the tastes of whoever shared theirs, and nobody else's.
     doi = both("lap_so") + both("bat_doi", proposal="PRD")
     doi_props = [prop("PR1", "lap_so", completed=T - DAY), prop("PRD", "bat_doi", completed=T - DAY)]

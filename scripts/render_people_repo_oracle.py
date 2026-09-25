@@ -256,6 +256,9 @@ base.CALLS.update(
         "share_active_context": lambda repository, args: (
             repository.share_active_context(_uuid(args["a"]), _uuid(args["b"]))
         ),
+        "same_couple": lambda repository, args: (
+            repository.same_couple(_uuid(args["a"]), _uuid(args["b"]))
+        ),
         "profile_counts": lambda repository, args: repository.profile_counts(
             _uuid(args["person_id"])
         ),

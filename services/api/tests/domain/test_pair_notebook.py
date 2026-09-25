@@ -287,3 +287,22 @@ def test_tuan_da_chon_thang_suy_luan():
     assert pair_notebook.vai_tuan(suy, None, [A, B])["cach"] == "suy"
     assert pair_notebook.vai_tuan(suy, {"nguoi_lo_id": B}, [A, B]) == {"nguoi_lo": [B], "cach": "chon", "diem": [[A, 2], [B, 0]]}
     assert pair_notebook.vai_tuan(suy, {"nguoi_lo_id": None}, [A, B])["nguoi_lo"] == [A, B], "hôm nay mình share"
+
+
+def _gui(tuan, ai, luc, cycle="CY"):
+    return {"cycle_id": cycle, "tuan": tuan, "versions": [{"version": 1, "author_type": "human", "sent_by": ai, "sent_at": luc}], "responses": []}
+
+
+def test_nguoi_mo_loi_la_nguoi_gui_to_dau_tien_cua_tuan():
+    to = [_gui("2026-09-14", B, NOW - timedelta(days=5)), _gui("2026-09-14", A, NOW - timedelta(days=6)), _gui("2026-09-07", B, NOW - timedelta(days=12))]
+    assert pair_notebook.nguoi_mo_loi(to, cycle_id="CY", tuan="2026-09-14") == A
+    assert pair_notebook.nguoi_mo_loi(to, cycle_id="CY", tuan="2026-08-31") is None
+    assert pair_notebook.nguoi_mo_loi(to, cycle_id="CU", tuan="2026-09-14") is None
+
+
+def test_gay_sang_nguoi_kia_khi_nguoi_lo_da_mo_loi_hai_tuan_lien():
+    suy = {"nguoi_lo": [A], "diem": [[A, 4], [B, 0]]}
+    assert pair_notebook.vai_tuan(suy, None, [A, B], mo_loi_truoc=[A, A]) == {"nguoi_lo": [B], "cach": "luot", "diem": suy["diem"]}
+    assert pair_notebook.vai_tuan(suy, None, [A, B], mo_loi_truoc=[A, B])["cach"] == "suy"
+    assert pair_notebook.vai_tuan(suy, None, [A, B], mo_loi_truoc=[A, None])["cach"] == "suy"
+    assert pair_notebook.vai_tuan(suy, {"nguoi_lo_id": A}, [A, B], mo_loi_truoc=[A, A])["cach"] == "chon", "đã chọn thì thắng gậy"
