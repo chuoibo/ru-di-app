@@ -6,10 +6,22 @@
 -- version INSERTs without these columns (handler.go, nep.go), and each default
 -- is what such a row must hold: due now, never enqueued yet (the trigger below
 -- numbers it anyway), no content out, no model call spent.
+--
+-- The ALTER takes ACCESS EXCLUSIVE on a table every create, claim and
+-- heartbeat writes, and rows here are never deleted. So: every default is
+-- stable (now(), not clock_timestamp()), which PostgreSQL stores once in the
+-- catalogue instead of rewriting each row -- a volatile default rewrote the
+-- whole table under that lock -- and the lock is waited for five seconds at
+-- most. Queued behind a long transaction, the ALTER would block every
+-- statement queued behind it; failing instead, `core migrate-chat` is run
+-- again. SET LOCAL ends with this migration's transaction.
+SET LOCAL lock_timeout = '5s';
 ALTER TABLE chat_ai_invocations
     -- Not claimable before this instant: a retry after a transient provider
-    -- failure waits out its backoff here, in the row, not in a timer.
-    ADD COLUMN available_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    -- failure waits out its backoff here, in the row, not in a timer. For a
+    -- row from an older replica, now() is its transaction's start, never
+    -- later than the claim's clock_timestamp().
+    ADD COLUMN available_at timestamptz NOT NULL DEFAULT now(),
     -- How many times the row has entered 'queued'. A broker message names
     -- (id, enqueue_seq); a message from an earlier entry claims nothing.
     ADD COLUMN enqueue_seq bigint NOT NULL DEFAULT 0 CHECK (enqueue_seq >= 0),

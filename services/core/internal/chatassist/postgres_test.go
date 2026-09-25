@@ -30,6 +30,27 @@ type fixture struct {
 func setup(t *testing.T, model http.HandlerFunc) fixture {
 	t.Helper()
 	ctx := context.Background()
+	pool := taoSchema(t)
+	// The order `core migrate-chat` runs: the outbox first, since version 5's
+	// trigger calls jobs_them.
+	err := jobs.Migrate(ctx, pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = Migrate(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	if err = Migrate(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	return setupTren(t, pool, model)
+}
+
+// taoSchema is a pool whose search_path starts at a fresh schema holding
+// copies of the public tables the chat AI joins, and nothing installed yet.
+func taoSchema(t *testing.T) *pgxpool.Pool {
+	t.Helper()
+	ctx := context.Background()
 	base := testdb.Pool(t)
 	schema := "chat_ai_test_" + strings.ReplaceAll(newID(), "-", "")
 	ident := pgx.Identifier{schema}.Sanitize()
@@ -54,17 +75,14 @@ func setup(t *testing.T, model http.HandlerFunc) fixture {
 			t.Fatal(err)
 		}
 	}
-	// The order `core migrate-chat` runs: the outbox first, since version 5's
-	// trigger calls jobs_them.
-	if err = jobs.Migrate(ctx, pool); err != nil {
-		t.Fatal(err)
-	}
-	if err = Migrate(ctx, pool); err != nil {
-		t.Fatal(err)
-	}
-	if err = Migrate(ctx, pool); err != nil {
-		t.Fatal(err)
-	}
+	return pool
+}
+
+// setupTren is setup on a pool whose schema is already installed.
+func setupTren(t *testing.T, pool *pgxpool.Pool, model http.HandlerFunc) fixture {
+	t.Helper()
+	ctx := context.Background()
+	var err error
 	capabilityCalls := &atomic.Int64{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/internal/brain/v1/capabilities" {

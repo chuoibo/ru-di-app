@@ -165,12 +165,22 @@ func (r *Relay) Flush(ctx context.Context) (int, error) {
 
 // Run flushes on every outbox notification and at least every tick, until ctx
 // ends or the channel closes (the caller then reconnects).
+//
+// LISTEN holds its connection for as long as the relay runs, so that
+// connection is the relay's own, opened with the pool's settings but outside
+// it, and closed when Run returns: a pooled one would be one fewer for the
+// jobs for the life of the process, and would go back to the pool still
+// listening. Each flush takes a pooled connection for its transaction only.
 func (r *Relay) Run(ctx context.Context, tick time.Duration) error {
-	conn, err := r.pool.Acquire(ctx)
+	conn, err := pgx.ConnectConfig(ctx, r.pool.Config().ConnConfig.Copy())
 	if err != nil {
 		return err
 	}
-	defer conn.Release()
+	defer func() {
+		closing, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
+		defer cancel()
+		_ = conn.Close(closing)
+	}()
 	if _, err = conn.Exec(ctx, `LISTEN job_outbox`); err != nil {
 		return err
 	}
@@ -193,7 +203,12 @@ func (r *Relay) Run(ctx context.Context, tick time.Duration) error {
 		default:
 		}
 		wait, cancel := context.WithTimeout(ctx, tick)
-		_, _ = conn.Conn().WaitForNotification(wait)
+		_, err := conn.WaitForNotification(wait)
 		cancel()
+		if err != nil && wait.Err() == nil {
+			// The listening connection itself failed, not the wait: the
+			// caller dials again, and a new Run listens on a new one.
+			return err
+		}
 	}
 }

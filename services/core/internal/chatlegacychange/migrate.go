@@ -13,6 +13,10 @@ import (
 //go:embed schema.sql
 var migration string
 
+// SchemaSQL is the embedded migration, for the gates that read what its
+// triggers write (aigate).
+func SchemaSQL() string { return migration }
+
 // Migrate installs change capture atomically. `core migrate-chat` runs it;
 // normal server startup never runs DDL.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {

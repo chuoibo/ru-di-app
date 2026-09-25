@@ -5,13 +5,20 @@ import (
 	"go/constant"
 	"go/token"
 	"go/types"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"testing"
 
+	aimetrics "mobile/services/core/internal/aiharness/metrics"
+	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/chatassist"
+	"mobile/services/core/internal/chatlegacychange"
+	"mobile/services/core/internal/chatv2"
 	"mobile/services/core/internal/jobs"
 )
 
@@ -24,14 +31,32 @@ import (
 // declared here, per root, with the reason each cannot carry context, and the
 // gate reads the triggers out of the migrations the binary embeds.
 //
+// The SQL read is every migration the Go binary embeds that installs a
+// trigger (TestTriggerGateReadsEveryGoTrigger holds it to that): the chat AI
+// schema and the outbox, and also the legacy change feed, the avatar feed,
+// chat v2 and the engine's metrics. Alembic's triggers are not the Go
+// binary's and are not read.
+//
 // job_outbox (internal/jobs, ADR-0038 proposed): the queue's outbox. A row is
 // (queue, the job's id, its enqueue number, due, expires, published): no
 // payload column, no person column, no text a CHECK does not close
 // (TestJobOutboxHoldsNoFreeText). Only an id ever reaches the broker. And it
 // is written, never read, on these paths: the relay in internal/jobs reads it.
+//
+// chat_legacy_changes and chat_legacy_change_outbox (internal/chatlegacychange):
+// the legacy room's change feed. The group root posts its answer card into
+// messages, and the capture trigger on messages numbers that change: (room,
+// sequence, entity kind, entity id, revision, deleted) and a wake row -- the
+// same rows every Go chat write produces, no text a CHECK does not close
+// (TestTriggerReachedTablesHoldNoFreeText). The feed's head row the root
+// already writes in Go (lockFeed), so the Go gates see that one.
 var (
 	nepViaTrigger   = map[string]string{"job_outbox": "the queue's outbox: ids, sequence numbers and timestamps only; written by the enqueue trigger, read only by the relay"}
-	groupViaTrigger = map[string]string{"job_outbox": "the queue's outbox: ids, sequence numbers and timestamps only; written by the enqueue trigger, read only by the relay"}
+	groupViaTrigger = map[string]string{
+		"job_outbox":                "the queue's outbox: ids, sequence numbers and timestamps only; written by the enqueue trigger, read only by the relay",
+		"chat_legacy_changes":       "the legacy change feed: which message of which room changed, numbered; written by the capture trigger when the answer card is posted",
+		"chat_legacy_change_outbox": "the change feed's wake rows: room and sequence only; written by the same capture trigger",
+	}
 )
 
 var (
@@ -76,6 +101,11 @@ func triggerWrites(sqls []string, table string) map[string][]string {
 				continue
 			}
 			for _, w := range sqlWrite.FindAllStringSubmatch(body, -1) {
+				// ON CONFLICT ... DO UPDATE SET writes the INSERT's table,
+				// already counted; "set" is not a table.
+				if strings.EqualFold(w[1], "set") {
+					continue
+				}
 				out[strings.ToLower(w[1])] = append(out[strings.ToLower(w[1])], trigger)
 			}
 			for _, c := range sqlCall.FindAllStringSubmatch(body, -1) {
@@ -88,7 +118,80 @@ func triggerWrites(sqls []string, table string) map[string][]string {
 	return out
 }
 
-func schemaSQL() []string { return append(chatassist.SchemaFiles(), jobs.SchemaSQL()) }
+func schemaSQL() []string {
+	out := append(chatassist.SchemaFiles(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(), aimetrics.SchemaSQL())
+	return append(out, avatarfeed.SchemaFiles()...)
+}
+
+// Every SQL file under internal/ that creates a trigger is read by the gate:
+// a new package with a trigger on a table the AI roots write cannot slip in
+// beside it. Compared by content, so the file read is the one embedded.
+func TestTriggerGateReadsEveryGoTrigger(t *testing.T) {
+	read := map[string]bool{}
+	for _, s := range schemaSQL() {
+		read[s] = true
+	}
+	seen := 0
+	err := filepath.WalkDir("..", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || filepath.Ext(path) != ".sql" {
+			return err
+		}
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if !regexp.MustCompile(`(?i)\bCREATE\s+(OR\s+REPLACE\s+)?TRIGGER\b`).Match(sqlComment.ReplaceAll(raw, nil)) {
+			return nil
+		}
+		seen++
+		if !read[string(raw)] {
+			t.Errorf("%s creates a trigger the gate does not read", path)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if seen < 7 {
+		t.Fatalf("found %d SQL files with a trigger; the walk slipped", seen)
+	}
+}
+
+// The tables the triggers reach hold no free text either: each column an id,
+// a number, a timestamp or text a CHECK closes, read from the migration that
+// creates the table.
+func TestTriggerReachedTablesHoldNoFreeText(t *testing.T) {
+	all := strings.Join(schemaSQL(), "\n")
+	all = sqlComment.ReplaceAllString(all, "")
+	all = regexp.MustCompile(`CHECK\s*\(`).ReplaceAllString(all, "CHECK (")
+	tables := map[string]bool{}
+	for _, m := range []map[string]string{nepViaTrigger, groupViaTrigger} {
+		for table := range m {
+			tables[table] = true
+		}
+	}
+	for table := range tables {
+		body := regexp.MustCompile(`(?s)CREATE TABLE ` + table + ` \((.*?)\n\);`).FindStringSubmatch(all)
+		if body == nil {
+			t.Errorf("cannot find CREATE TABLE %s in the embedded migrations", table)
+			continue
+		}
+		n := 0
+		for _, line := range strings.Split(body[1], "\n") {
+			def := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(line), ","))
+			if def == "" || strings.HasPrefix(def, "UNIQUE") || strings.HasPrefix(def, "PRIMARY KEY") || strings.HasPrefix(def, "FOREIGN KEY") {
+				continue
+			}
+			n++
+			if columnMayHoldText(def) {
+				t.Errorf("%s column can hold free text: %s", table, def)
+			}
+		}
+		if n < 3 {
+			t.Errorf("%s: read %d columns; the parse slipped", table, n)
+		}
+	}
+}
 
 // writes lists the tables a closure's SQL writes.
 func writes(strs []string) map[string]bool {
@@ -186,6 +289,13 @@ CREATE TRIGGER on_job AFTER UPDATE ON chat_ai_invocations FOR EACH ROW EXECUTE F
 	}
 	if missing, _ := undeclared(map[string]bool{"chat_ai_invocations": true}, map[string]string{}, schemaSQL()); strings.Join(missing, ",") != "job_outbox" {
 		t.Fatalf("an empty declaration did not miss job_outbox: %v", missing)
+	}
+	// A root that posts into messages reaches the legacy change feed through
+	// its capture trigger (review of slice 10: the gate once read only the
+	// chat AI and outbox SQL, and could not see it).
+	posts := map[string]bool{"chat_ai_invocations": true, "messages": true, "chat_legacy_change_heads": true}
+	if missing, _ := undeclared(posts, nepViaTrigger, schemaSQL()); strings.Join(missing, ",") != "chat_legacy_change_outbox,chat_legacy_changes" {
+		t.Fatalf("posting a message without declaring the change feed: missing %v", missing)
 	}
 }
 

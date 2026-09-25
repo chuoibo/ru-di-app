@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -67,15 +68,20 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	return tx.Commit(ctx)
 }
 
+// Reader is a pool or a transaction.
+type Reader interface {
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
 // Installed says whether version 1 is in place: what `serve` and `work`
 // require before running Nếp on the Go engine.
-func Installed(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
+func Installed(ctx context.Context, q Reader) (bool, error) {
 	var ok bool
-	err := pool.QueryRow(ctx, `SELECT to_regclass('aiharness_schema_migrations') IS NOT NULL AND to_regclass('ai_turn_metrics') IS NOT NULL`).Scan(&ok)
+	err := q.QueryRow(ctx, `SELECT to_regclass('aiharness_schema_migrations') IS NOT NULL AND to_regclass('ai_turn_metrics') IS NOT NULL`).Scan(&ok)
 	if err != nil || !ok {
 		return false, err
 	}
-	err = pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM aiharness_schema_migrations WHERE version>=1)`).Scan(&ok)
+	err = q.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM aiharness_schema_migrations WHERE version>=1)`).Scan(&ok)
 	return ok, err
 }
 
@@ -114,12 +120,12 @@ func Xoa(ctx context.Context, q Execer) (int64, error) {
 // that never ran the Go engine) is a pass with nothing to purge, not a
 // failure.
 func DinhKy() jobs.DinhKy {
-	return jobs.DinhKy{Ten: "aiharness.xoa_so_do", Nhip: 10 * time.Minute, Chay: func(ctx context.Context, pool *pgxpool.Pool) error {
-		ok, err := Installed(ctx, pool)
+	return jobs.DinhKy{Ten: "aiharness.xoa_so_do", Nhip: 10 * time.Minute, Chay: func(ctx context.Context, tx pgx.Tx) error {
+		ok, err := Installed(ctx, tx)
 		if err != nil || !ok {
 			return err
 		}
-		_, err = Xoa(ctx, pool)
+		_, err = Xoa(ctx, tx)
 		return err
 	}}
 }

@@ -126,25 +126,29 @@ func (k *Ket) serve(ctx context.Context, conn *amqp.Connection, logger *slog.Log
 		all.Add(1)
 		go func(q string) {
 			defer all.Done()
-			for on.Err() == nil {
-				err := ConsumeReady(on, conn, k.Topology, q, k.Concurrency, func(_ context.Context, m Message) error {
-					return k.Handler(ctx, q, m)
-				}, func(up bool) {
+			// A pause is handled inside: ConsumeReady returns only when the
+			// channel or the connection went (or on ends); take the whole
+			// connection down then and dial again.
+			_ = ConsumeReady(on, conn, k.Topology, q, k.Concurrency, func(_ context.Context, m Message) error {
+				return k.Handler(ctx, q, m)
+			}, Hooks{
+				Attached: func(up bool) {
 					if up {
 						k.attached.Add(1)
 					} else {
 						k.attached.Add(-1)
 					}
-				})
-				if !errors.Is(err, ErrTamDung) {
-					// The channel or the connection went; take the whole
-					// connection down and dial again.
-					off()
-					return
-				}
-				logger.Warn("job consumer paused: the database failed under a message", "queue", q)
-				k.waitDatabase(on)
-			}
+				},
+				Paused: func(wait context.Context) {
+					logger.Warn("job consumer paused: the database failed under a message", "queue", q)
+					k.waitDatabase(wait)
+				},
+				DeadLettered: func(id string) {
+					// Design 02 §7: one warning line, the id and nothing else.
+					logger.Warn("job message dead-lettered", "queue", q, "id", id)
+				},
+			})
+			off()
 		}(q)
 	}
 	all.Wait()

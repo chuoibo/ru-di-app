@@ -180,16 +180,36 @@ func TestDemTinhCaLanThuLai(t *testing.T) {
 }
 
 // The ceiling holds across retries: with one call left a 429 is not retried
-// into a second request, the turn is out of budget.
+// into a second request. What ends the turn is the provider's 429, the error
+// the refused retry was for -- an outage is not an exhausted budget (review
+// of slice 10: twelve 503s ended a Nếp job as ai_het_ngan_sach). A first
+// call the budget refuses is the budget.
 func TestDemChanTaiTran(t *testing.T) {
 	stub := NewStub(Buoc{Loi: genai.APIError{Code: 429}}, Buoc{Text: "không tới"})
 	d := NewDem(stub, 1, nil).WithWait(khongCho)
-	if _, err := chay(t, d); !errors.Is(err, ErrHetNganSach) || stub.SoGoi() != 1 {
-		t.Fatalf("err=%v stub=%d", err, stub.SoGoi())
+	if _, err := chay(t, d); errors.Is(err, ErrHetNganSach) || PhanLoai(err) != obs.Loi429 || stub.SoGoi() != 1 {
+		t.Fatalf("err=%v (%s) stub=%d, want the provider's 429 after one call", err, PhanLoai(err), stub.SoGoi())
+	}
+	stub = NewStub(Buoc{Loi: genai.APIError{Code: 503}}, Buoc{Loi: genai.APIError{Code: 503}}, Buoc{Text: "không tới"})
+	d = NewDem(stub, 2, nil).WithWait(khongCho)
+	if _, err := chay(t, d); errors.Is(err, ErrHetNganSach) || PhanLoai(err) != obs.Loi5xx || stub.SoGoi() != 2 {
+		t.Fatalf("503 twice, room for two: err=%v (%s) stub=%d", err, PhanLoai(err), stub.SoGoi())
 	}
 	d = NewDem(NewStub(), 0, nil)
 	if _, err := chay(t, d); !errors.Is(err, ErrHetNganSach) {
 		t.Fatalf("trần 0: %v", err)
+	}
+	// The durable counter refusing a retry is the same refusal.
+	stub = NewStub(Buoc{Loi: genai.APIError{Code: 503}}, Buoc{Text: "không tới"})
+	giu := 0
+	d = NewDem(stub, MaxModelCallsPerTurn, func(context.Context) error {
+		if giu++; giu > 1 {
+			return ErrHetNganSach
+		}
+		return nil
+	}).WithWait(khongCho)
+	if _, err := chay(t, d); errors.Is(err, ErrHetNganSach) || PhanLoai(err) != obs.Loi5xx || stub.SoGoi() != 1 {
+		t.Fatalf("row refuses the retry: err=%v (%s) stub=%d", err, PhanLoai(err), stub.SoGoi())
 	}
 	// The durable hold runs before each call and can refuse it.
 	held := 0

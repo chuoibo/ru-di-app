@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/testdb"
 )
@@ -44,13 +45,13 @@ func schemaPool(t *testing.T) *pgxpool.Pool {
 
 // Two workers ticking the same task at once: one pass runs, the other is
 // skipped rather than queued, and the lock is free again after the pass --
-// back in the pool, not held by a pooled connection.
+// it ended with the pass's transaction, so no pooled connection holds it.
 func TestMotLuotRunsOnePassAtATime(t *testing.T) {
 	pool := schemaPool(t)
 	ctx := context.Background()
 	var inside, ran atomic.Int64
 	gate := make(chan struct{})
-	d := DinhKy{Ten: fmt.Sprintf("test.one_at_a_time_%d", time.Now().UnixNano()), Nhip: time.Second, Chay: func(context.Context, *pgxpool.Pool) error {
+	d := DinhKy{Ten: fmt.Sprintf("test.one_at_a_time_%d", time.Now().UnixNano()), Nhip: time.Second, Chay: func(context.Context, pgx.Tx) error {
 		if inside.Add(1) > 1 {
 			t.Error("two passes at once")
 		}
@@ -110,19 +111,86 @@ func TestMotLuotRunsOnePassAtATime(t *testing.T) {
 	if got, err := MotLuot(ctx, pool, d); err != nil || !got {
 		t.Fatalf("the lock was not released: %v %v", got, err)
 	}
-	// "The next pass ran" alone proves nothing: a session lock is reentrant,
-	// and the pool may hand the same connection back. Ask the lock table.
+	// "The next pass ran" alone proves nothing: an advisory lock is reentrant
+	// on its backend, and the pool may hand the same connection back. Ask the
+	// lock table.
 	if n := held(); n != 0 {
 		t.Fatalf("advisory lock still held by %d backend(s) after the pass", n)
 	}
 	// A failing pass reports its error and releases the lock too.
-	boom := DinhKy{Ten: d.Ten, Nhip: time.Second, Chay: func(context.Context, *pgxpool.Pool) error { return errors.New("boom") }}
+	boom := DinhKy{Ten: d.Ten, Nhip: time.Second, Chay: func(context.Context, pgx.Tx) error { return errors.New("boom") }}
 	if got, err := MotLuot(ctx, pool, boom); !got || err == nil {
 		t.Fatalf("failing pass: %v %v", got, err)
+	}
+	if n := held(); n != 0 {
+		t.Fatalf("advisory lock still held by %d backend(s) after a failing pass", n)
 	}
 	if got, err := MotLuot(ctx, pool, d); err != nil || !got {
 		t.Fatalf("lock kept after a failing pass: %v %v", got, err)
 	}
+}
+
+// Every periodic task firing at once on a pool of two, one connection of
+// which is busy elsewhere (a job, a LISTEN): each pass runs on the very
+// connection that holds its lock, so they queue for the one free connection
+// and all finish, instead of each holding one and waiting for a second
+// (review of slice 10: at two connections the sweep failed after 5 s and the
+// outbox cleanup after 60 s).
+func TestDinhKyChayTrenKetNoiGiuKhoa(t *testing.T) {
+	base := schemaPool(t)
+	cfg := base.Config().Copy()
+	cfg.MaxConns = 2
+	pool, err := pgxpool.NewWithConfig(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	busy, err := pool.Acquire(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer busy.Release()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	stamp := time.Now().UnixNano()
+	var ds []DinhKy
+	for i := range 4 {
+		ds = append(ds, DinhKy{Ten: fmt.Sprintf("test.small_pool_%d_%d", stamp, i), Nhip: time.Minute, Chay: func(ctx context.Context, tx pgx.Tx) error {
+			// The lock is this transaction's: the pass sees it on its own
+			// backend.
+			var mine int
+			if err := tx.QueryRow(ctx, `SELECT count(*) FROM pg_locks WHERE locktype='advisory' AND granted AND pid=pg_backend_pid()`).Scan(&mine); err != nil {
+				return err
+			}
+			if mine != 1 {
+				return fmt.Errorf("the pass runs on a backend holding %d advisory locks, want its own one", mine)
+			}
+			_, err := Don(ctx, tx)
+			return err
+		}})
+	}
+	began := time.Now()
+	var wg sync.WaitGroup
+	errs := make(chan error, len(ds))
+	for _, d := range ds {
+		wg.Add(1)
+		go func(d DinhKy) {
+			defer wg.Done()
+			ran, err := MotLuot(ctx, pool, d)
+			if err == nil && !ran {
+				err = fmt.Errorf("%s: skipped with nobody else holding its lock", d.Ten)
+			}
+			errs <- err
+		}(d)
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatalf("a pass failed on a pool of two with one connection busy, after %v: %v", time.Since(began).Round(time.Millisecond), err)
+		}
+	}
+	t.Logf("4 passes at once, pool of 2, 1 connection busy: all done in %v", time.Since(began).Round(time.Millisecond))
 }
 
 // Don removes what nobody will publish or read again, and nothing else.

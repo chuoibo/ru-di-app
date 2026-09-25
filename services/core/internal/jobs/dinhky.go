@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -19,9 +20,12 @@ type DinhKy struct {
 	Ten string
 	// Nhip is the period between passes.
 	Nhip time.Duration
-	// Chay runs one pass. It may use any connection of pool; the lock is held
-	// on a connection of its own.
-	Chay func(ctx context.Context, pool *pgxpool.Pool) error
+	// Chay runs one pass inside tx, the transaction that holds the task's
+	// lock. The pass needs no other connection: a pass that held its lock on
+	// one connection and worked on a second could starve a small pool, every
+	// task firing at once, each holding one and waiting for another. It must
+	// not commit or roll back tx; MotLuot does, and the lock ends with it.
+	Chay func(ctx context.Context, tx pgx.Tx) error
 }
 
 var tenPattern = regexp.MustCompile(`^[a-z][a-z0-9_.]{0,63}$`)
@@ -49,39 +53,31 @@ func KiemDinhKy(ds []DinhKy) error {
 // passTimeout bounds one pass, whatever its period.
 const passTimeout = time.Minute
 
-// MotLuot runs one pass of d while holding
-// pg_try_advisory_lock(hashtextextended('jobs:'||ten,0)) on a connection of its
-// own. ran is false when another process holds the lock: that pass is
-// skipped, not queued, because the holder is doing the same work. The lock is
-// released before the connection goes back to the pool; a connection that
-// cannot confirm the release is closed instead, which releases it too.
+// MotLuot runs one pass of d in one transaction on one connection: it takes
+// pg_try_advisory_xact_lock(hashtextextended('jobs:'||ten,0)) there, and the
+// pass runs in that same transaction. ran is false when another process
+// holds the lock: that pass is skipped, not queued, because the holder is
+// doing the same work. Commit or rollback ends the lock with the pass, so no
+// connection ever goes back to the pool still holding it.
 func MotLuot(ctx context.Context, pool *pgxpool.Pool, d DinhKy) (ran bool, err error) {
 	ctx, cancel := context.WithTimeout(ctx, passTimeout)
 	defer cancel()
-	conn, err := pool.Acquire(ctx)
+	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return false, err
 	}
+	defer tx.Rollback(ctx)
 	var got bool
-	if err = conn.QueryRow(ctx, `SELECT pg_try_advisory_lock(hashtextextended('jobs:'||$1,0))`, d.Ten).Scan(&got); err != nil {
-		conn.Release()
+	if err = tx.QueryRow(ctx, `SELECT pg_try_advisory_xact_lock(hashtextextended('jobs:'||$1,0))`, d.Ten).Scan(&got); err != nil {
 		return false, err
 	}
 	if !got {
-		conn.Release()
-		return false, nil
+		return false, tx.Rollback(ctx)
 	}
-	defer func() {
-		unlock, stop := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
-		defer stop()
-		var released bool
-		if e := conn.QueryRow(unlock, `SELECT pg_advisory_unlock(hashtextextended('jobs:'||$1,0))`, d.Ten).Scan(&released); e != nil || !released {
-			_ = conn.Hijack().Close(unlock)
-			return
-		}
-		conn.Release()
-	}()
-	return true, d.Chay(ctx, pool)
+	if err = d.Chay(ctx, tx); err != nil {
+		return true, err
+	}
+	return true, tx.Commit(ctx)
 }
 
 // ChayDinhKy runs every task on its own ticker until ctx ends. A failed pass

@@ -160,6 +160,10 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	}
 	chatCtx, stopChat := context.WithCancel(context.Background())
 	defer stopChat()
+	// The in-process workers and the periodic passes. Waited for before the
+	// pool closes: a stopping worker releases its job with one last
+	// statement, and on a closed pool that job would wait out its lease.
+	var background sync.WaitGroup
 	// Every route, Python's included: registration order decides which route a
 	// request belongs to, and a Python route declared first must still win.
 	table, err := router.New(manifest.Routes)
@@ -277,22 +281,18 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		}
 		go changes.Listen()
 		go avatars.Listen()
-		// The sweep and the outbox cleanup run here whatever runs the jobs, so
-		// the fifteen-minute bound on shared plaintext holds with no worker
-		// up; the purges run wherever the jobs do.
-		periodic := []jobs.DinhKy{assistant.DinhKy(), jobs.DinhKyDon()}
-		if inproc {
-			periodic = append(periodic, aimetrics.DinhKy(), rag.DinhKy())
-		}
+		periodic := servePeriodic(assistant, inproc)
 		if err := jobs.KiemDinhKy(periodic); err != nil {
 			logger.Error("refusing to start", "error", err.Error())
 			return 1
 		}
-		go func() { _ = jobs.ChayDinhKy(chatCtx, pool, logger, periodic) }()
+		background.Add(1)
+		go func() { defer background.Done(); _ = jobs.ChayDinhKy(chatCtx, pool, logger, periodic) }()
 		if inproc {
 			// One process, no broker: the poller claims every due job at its
 			// fast pace. The outbox rows the trigger writes expire unpublished.
-			go assistant.RunWorkers(chatCtx, nil)
+			background.Add(1)
+			go func() { defer background.Done(); assistant.RunWorkers(chatCtx, nil) }()
 		} else {
 			logger.Info("AI jobs run in `core work`, not in this process", "env", EnvInprocWorker+"=0")
 		}
@@ -383,7 +383,27 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	defer cancel()
 	_ = public.Shutdown(shutdown)
 	_ = liveness.Shutdown(shutdown)
+	// Before the deferred pool.Close: RunWorkers returns once every job it
+	// started has finished or been released.
+	background.Wait()
 	return exit
+}
+
+// servePeriodic is what `serve` runs on its own schedule. The sweep and the
+// outbox cleanup run here whatever runs the jobs, so the fifteen-minute bound
+// on shared plaintext holds with no worker up (MOBILE_INPROC_WORKER=0 and
+// `core work` scaled to zero); the purges run wherever the jobs do.
+func servePeriodic(assistant *chatassist.Handler, inproc bool) []jobs.DinhKy {
+	periodic := []jobs.DinhKy{assistant.DinhKy(), jobs.DinhKyDon()}
+	if inproc {
+		periodic = append(periodic, aimetrics.DinhKy(), rag.DinhKy())
+	}
+	return periodic
+}
+
+// workPeriodic is what `core work` runs on its own schedule.
+func workPeriodic(assistant *chatassist.Handler) []jobs.DinhKy {
+	return []jobs.DinhKy{assistant.DinhKy(), jobs.DinhKyDon(), aimetrics.DinhKy(), rag.DinhKy()}
 }
 
 func livez(w http.ResponseWriter, r *http.Request) {
@@ -422,9 +442,10 @@ const (
 	// EnvWorkerQueues lists the queues this worker takes jobs from (both
 	// ai.group and ai.nep when empty), on the broker and in the poller.
 	EnvWorkerQueues = "MOBILE_WORKER_QUEUES"
-	// EnvWorkerDBConns sizes the worker's own database pool (2..50, default
-	// 10). Two more connections are kept apart for the heartbeat and the
-	// model-call counter.
+	// EnvWorkerDBConns sizes the worker's own database pool: at most 50, at
+	// least what the worker can use at once (workerDBFloor), by default the
+	// larger of 10 and that floor. Apart from it: two connections for the
+	// heartbeat and the model-call counter, and the relay's LISTEN.
 	EnvWorkerDBConns = "MOBILE_WORKER_DB_CONNS"
 	// EnvRedisURL and EnvRedisNamespace name the Redis the model-call rate
 	// limiter shares (MOBILE_MODEL_RPM); a Redis that is down lets calls go.
@@ -435,13 +456,39 @@ const (
 // amqpNamespace names the broker objects this deployment declares.
 const amqpNamespace = "rudi"
 
-func workerDBConns(raw string) (int32, error) {
+// workerDBFloor is how many connections of the worker's pool can be in use at
+// once: one per job slot (a job holds at most one at a time; the heartbeat and
+// the model-call counter have their own pool), one per periodic task (each
+// pass runs on the connection that holds its lock, and they can all fire
+// together), and one for the relay's flush when there is a broker (its
+// LISTEN is a connection of its own). Below it, claims and job statements
+// wait behind the periodic passes, and the liveness port says nothing.
+func workerDBFloor(workers, tasks int, broker bool) int {
+	floor := workers + tasks
+	if broker {
+		floor++
+	}
+	return floor
+}
+
+// maxWorkerDBConns keeps `serve`, the workers and the API under the
+// database's connection limit (db.go).
+const maxWorkerDBConns = 50
+
+func workerDBConns(raw string, floor int) (int32, error) {
+	why := fmt.Sprintf("this worker can use %d at once (%s job slots, one per periodic task, one for the relay's flush with a broker)", floor, chatassist.EnvWorkers)
+	if floor > maxWorkerDBConns {
+		return 0, fmt.Errorf("%s: %s, more than the %d a worker may open; lower %s and run more workers", EnvWorkerDBConns, why, maxWorkerDBConns, chatassist.EnvWorkers)
+	}
 	if raw == "" {
-		return 10, nil
+		return int32(max(10, floor)), nil
 	}
 	n, err := strconv.Atoi(raw)
-	if err != nil || n < 2 || n > 50 {
-		return 0, fmt.Errorf("%s must be an integer from 2 to 50, got %q", EnvWorkerDBConns, raw)
+	if err != nil || n < 1 || n > maxWorkerDBConns {
+		return 0, fmt.Errorf("%s must be an integer up to %d, got %q", EnvWorkerDBConns, maxWorkerDBConns, raw)
+	}
+	if n < floor {
+		return 0, fmt.Errorf("%s=%d is too small: %s; raise it to at least %d, or lower %s", EnvWorkerDBConns, n, why, floor, chatassist.EnvWorkers)
 	}
 	return int32(n), nil
 }
@@ -479,15 +526,17 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	if err != nil {
 		return refuse(err)
 	}
-	conns, err := workerDBConns(getenv(EnvWorkerDBConns))
-	if err != nil {
-		return refuse(err)
-	}
 	amqpURL := getenv(EnvAMQPURL)
 	if amqpURL != "" {
 		if err = jobs.CheckURL(amqpURL); err != nil {
 			return refuse(err)
 		}
+	}
+	// Counted from the list this worker will run, before any connection opens.
+	tasks := len(workPeriodic(chatassist.New(nil, nil)))
+	conns, err := workerDBConns(getenv(EnvWorkerDBConns), workerDBFloor(cfg.Workers, tasks, amqpURL != ""))
+	if err != nil {
+		return refuse(err)
 	}
 	client := brain.Configured()
 	if client == nil {
@@ -532,7 +581,7 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 		}
 		assistant.WithNepEngine(engine)
 	}
-	periodic := []jobs.DinhKy{assistant.DinhKy(), jobs.DinhKyDon(), aimetrics.DinhKy(), rag.DinhKy()}
+	periodic := workPeriodic(assistant)
 	if err = jobs.KiemDinhKy(periodic); err != nil {
 		return refuse(err)
 	}

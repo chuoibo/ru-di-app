@@ -97,8 +97,16 @@ func (d *Dem) giuMot(ctx context.Context) error {
 const maxRetry = 2
 
 // GenerateContent forwards to the wrapped model under the counter.
+//
+// When the budget refuses a retry, the turn ends with the provider error the
+// retry was for, not ErrHetNganSach: the provider failing is what happened,
+// and the job's code says so (provider_unavailable with its 5xx or 429
+// class, a transient failure) rather than telling the user an outage was an
+// exhausted budget. A first call the budget refuses is still ErrHetNganSach.
 func (d *Dem) GenerateContent(ctx context.Context, req *model.LLMRequest, stream bool) iter.Seq2[*model.LLMResponse, error] {
 	return func(yield func(*model.LLMResponse, error) bool) {
+		// The retryable provider error the next call would retry.
+		var truoc error
 		for lan := 0; ; lan++ {
 			// The limiter before the counter: a call it refuses never
 			// leaves the process, so it must not spend the turn's budget.
@@ -109,6 +117,9 @@ func (d *Dem) GenerateContent(ctx context.Context, req *model.LLMRequest, stream
 				}
 			}
 			if err := d.giuMot(ctx); err != nil {
+				if truoc != nil && errors.Is(err, ErrHetNganSach) {
+					err = truoc
+				}
 				yield(nil, err)
 				return
 			}
@@ -130,6 +141,7 @@ func (d *Dem) GenerateContent(ctx context.Context, req *model.LLMRequest, stream
 			if last == nil {
 				return
 			}
+			truoc = last
 			select {
 			case <-ctx.Done():
 				yield(nil, ctx.Err())

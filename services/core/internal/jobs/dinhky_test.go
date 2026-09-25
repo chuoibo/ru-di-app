@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
 )
 
 func TestKiemDinhKyRefusesWhatCannotRun(t *testing.T) {
-	pass := func(context.Context, *pgxpool.Pool) error { return nil }
+	pass := func(context.Context, pgx.Tx) error { return nil }
 	good := []DinhKy{{Ten: "jobs.don_outbox", Nhip: time.Minute, Chay: pass}, {Ten: "chatassist.sweep", Nhip: 5 * time.Second, Chay: pass}}
 	if err := KiemDinhKy(good); err != nil {
 		t.Fatal(err)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
 
 	"mobile/services/core/internal/jobs"
 )
@@ -26,12 +26,12 @@ func XoaNhatKy(ctx context.Context, q Querier) (int64, error) {
 // (jobs.DinhKy). A database without the retrieval schema (`core migrate-rag`
 // never ran there) is a pass with nothing to purge, not a failure.
 func DinhKy() jobs.DinhKy {
-	return jobs.DinhKy{Ten: "rag.xoa_nhat_ky", Nhip: 10 * time.Minute, Chay: func(ctx context.Context, pool *pgxpool.Pool) error {
-		ok, err := Installed(ctx, pool)
+	return jobs.DinhKy{Ten: "rag.xoa_nhat_ky", Nhip: 10 * time.Minute, Chay: func(ctx context.Context, tx pgx.Tx) error {
+		ok, err := Installed(ctx, tx)
 		if err != nil || !ok {
 			return err
 		}
-		_, err = XoaNhatKy(ctx, pool)
+		_, err = XoaNhatKy(ctx, tx)
 		return err
 	}}
 }

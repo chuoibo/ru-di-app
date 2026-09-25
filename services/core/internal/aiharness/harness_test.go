@@ -470,10 +470,12 @@ func TestNganSachLoiGoi(t *testing.T) {
 	if MaCua(m.err) != cau.HetNganSach || m.stub.SoGoi() != 0 {
 		t.Fatalf("hết trần: %v, %d lời gọi", m.err, m.stub.SoGoi())
 	}
+	// The last call gets a 429 and its retry has no room: the turn ends with
+	// the provider's failure, transient, not as an exhausted budget.
 	turn.DaGoiTruoc = llm.MaxModelCallsPerTurn - 1
 	m = chayLuot(t, turn, llm.Buoc{Loi: genai.APIError{Code: 429}}, dung(false, "không tới"))
-	if MaCua(m.err) != cau.HetNganSach || m.stub.SoGoi() != 1 || m.res.Record.SoGoiMoHinh != 1 {
-		t.Fatalf("một lời gọi cuối: %v, %d lời gọi", m.err, m.stub.SoGoi())
+	if MaCua(m.err) != cau.ProviderUnavailable || !TamThoi(m.err) || m.res.Record.LoiMoHinh != obs.Loi429 || m.stub.SoGoi() != 1 || m.res.Record.SoGoiMoHinh != 1 {
+		t.Fatalf("một lời gọi cuối: %v (%s), %d lời gọi", m.err, m.res.Record.LoiMoHinh, m.stub.SoGoi())
 	}
 	// With one call left, that call already runs with function calling off.
 	if !strings.Contains(string(m.stub.YeuCau()[0]), `"mode": "NONE"`) {

@@ -403,6 +403,13 @@ func TestHangDoiTinDocVaoDLQ(t *testing.T) {
 	if stub.SoGoi() != 0 {
 		t.Fatal("a message reached the model")
 	}
+	// Design 02 §7: one warning line for the dead-lettered message, by id
+	// only. This body came from no relay, so its id is not repeated, and
+	// nothing it carried reaches the log.
+	log := tr.log()
+	if n := bytes.Count([]byte(log), []byte(`"msg":"job message dead-lettered"`)); n != 1 || !bytes.Contains([]byte(log), []byte(`"id":""`)) || bytes.Contains([]byte(log), []byte("leak")) {
+		t.Fatalf("dead-letter warnings: %d; log:\n%s", n, log)
+	}
 }
 
 // Stopping a worker mid-job releases the job with a new enqueue_seq, so a
@@ -447,26 +454,29 @@ func TestHangDoiNhaKhiDungDuocNhanLaiNgay(t *testing.T) {
 	}
 }
 
-// A database that fails under a message: the consumer requeues it and pauses,
+// A database that fails under a message: the consumer keeps it and pauses,
 // the poller would carry on, and once the database answers the consumer
-// comes back and the message runs -- the job is not lost with the poller off.
+// runs it and comes back -- the job is not lost with the poller off. The
+// worker starts only once the lock is held, so its claim is the statement
+// that times out (started first, it could claim the job before the lock and
+// fail later, a different path: review of slice 10, finding 9). Nothing
+// went back to the queue on the way: no redelivery counted against the job.
 func TestHangDoiDBLoiThiTamDungRoiTiepTuc(t *testing.T) {
 	url := amqpURL(t)
 	f := setup(t, nil)
 	f.nepTrenEngine(t, llm.NewStub(traLoiGiong(1)...))
 	top := topology(t, url)
-	tr := moTram(t, f, f.handler, url, top, false)
-	tr.choSong(t)
 	ctx := context.Background()
+	id := f.chenNep(t, 1, func(int) string { return "câu hỏi số 0" })[0]
 	lock, err := f.pool.Begin(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	id := f.chenNep(t, 1, func(int) string { return "câu hỏi số 0" })[0]
 	if _, err = lock.Exec(ctx, `LOCK TABLE chat_ai_invocations IN ACCESS EXCLUSIVE MODE`); err != nil {
 		t.Fatal(err)
 	}
-	deadline := time.Now().Add(10 * time.Second)
+	tr := moTram(t, f, f.handler, url, top, false)
+	deadline := time.Now().Add(15 * time.Second)
 	for !bytes.Contains([]byte(tr.log()), []byte("job consumer paused")) {
 		if time.Now().After(deadline) {
 			_ = lock.Rollback(ctx)
@@ -474,8 +484,18 @@ func TestHangDoiDBLoiThiTamDungRoiTiepTuc(t *testing.T) {
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
+	// Read through the lock's own transaction: anyone else would wait on it.
+	var status string
+	var attempts int
+	if err = lock.QueryRow(ctx, `SELECT status, attempts FROM chat_ai_invocations WHERE id=$1`, id).Scan(&status, &attempts); err != nil || status != "queued" || attempts != 0 {
+		_ = lock.Rollback(ctx)
+		t.Fatalf("paused, yet the job was claimed: %s attempts=%d %v", status, attempts, err)
+	}
 	_ = lock.Rollback(ctx)
 	if n := f.choXong(t, []string{id}, 15*time.Second); n != 1 {
 		t.Fatalf("the job was lost after the pause; log:\n%s", tr.log())
+	}
+	if _, attempts, _, _ := f.trangThai(t, id); attempts != 1 {
+		t.Fatalf("attempts=%d, want the one run after the pause", attempts)
 	}
 }

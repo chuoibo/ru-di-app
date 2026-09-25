@@ -200,8 +200,9 @@ khủng hoảng chỉ tới người gọi (sửa theo phản biện). Mã mới
 3. **Consumer**: tin sai dạng → `Reject(false)` → DLQ. `claimByID(ref, seq)` là cùng câu UPDATE với
    `claimNext`, ứng viên chọn bởi `id=$1 AND enqueue_seq=$2 AND available_at<=now()`. 0 hàng →
    `Ack` (trùng, đã xong, đã huỷ, tin của lần vào hàng trước, chưa tới hạn). Lỗi DB →
-   `Nack(requeue)`, **dừng tiêu thụ**, về chế độ poll tới khi DB khoẻ. `Ack` chỉ sau khi transaction
-   kết thúc job commit (`publish`, `nepXong`, `finishFailure`, `retryLater`, `release`).
+   **dừng tiêu thụ**, về chế độ poll tới khi DB khoẻ; tin đang cầm được **giữ lại** (không
+   `Nack(requeue)` — sửa ở vòng 2 lát 10, xem §8) rồi chạy lại khi DB trả lời. `Ack` chỉ sau khi
+   transaction kết thúc job commit (`publish`, `nepXong`, `finishFailure`, `retryLater`, `release`).
 4. **Heartbeat** mỗi 5 s trên kết nối dành riêng:
    `UPDATE … SET lease_until=now()+interval '30 s' WHERE id AND lease_id AND status='running'`.
    0 hàng → huỷ context job, writer phát `huy`. Huỷ tay hay trigger rút quyền thành viên
@@ -229,7 +230,9 @@ khủng hoảng chỉ tới người gọi (sửa theo phản biện). Mã mới
    worker khác nhận ngay qua broker (sửa theo phản biện). Job đang stream có tối đa 60 s để xong;
    compose `stop_grace_period: 75s`.
 10. **Tác vụ định kỳ**: `jobs.DinhKy{Ten, Nhip, Chay}`, mỗi lượt giữ
-    `pg_try_advisory_lock(hashtextextended('jobs:'||ten,0))`, chạy trong `core work`. Registry không
+    `pg_try_advisory_xact_lock(hashtextextended('jobs:'||ten,0))` và chạy **trong chính transaction
+    đó** (vòng 2 lát 10: khoá phiên trên một kết nối rồi làm việc trên kết nối thứ hai làm pool nhỏ
+    tự bỏ đói, xem §8), chạy trong `core work`. Registry không
     sở hữu logic; gói sở hữu tự đăng ký: dọn outbox, sweep `chatassist`, xoá 30 ngày
     (`ai_turn_metrics`, `rag_query_log`, `chat_ai_tin_hieu`), củng cố trí nhớ hằng đêm, nhắc 15 phút,
     indexer RAG (sửa theo phản biện).
@@ -372,6 +375,51 @@ Không mở SSE thứ hai: mỗi thành viên đã giữ một WS có auth, ack 
   + Redis, alembic, `core migrate-chat`, `go test -tags broker`, `CORE_REQUIRE_BROKER_TESTS=1`.
   Sentinel `TestBrokerTierReachesRabbitAndRedis`; **mọi SKIP là đỏ**. Thêm stage `go-broker` vào
   `STAGES` (`scripts/gate.sh:75`), một job `test.yml`, sửa `tests/test_gate_covers_every_inline_step.py`.
+
+### 8.1 Vòng sửa 2 của lát 10: vận hành và rollout (review phản biện của `849664a`)
+
+Lệch khỏi bản thiết kế ở trên, có chủ ý, kèm lý do:
+
+- **Pool của `core work`.** Mỗi lượt định kỳ chạy trong transaction giữ khoá của nó (một kết nối);
+  LISTEN của relay là kết nối riêng ngoài pool, mở bằng cấu hình của pool, đóng khi relay dừng.
+  `MOBILE_WORKER_DB_CONNS` có sàn = `MOBILE_AI_WORKERS` + số tác vụ định kỳ (4) + 1 lượt xả của
+  relay khi có broker (mặc định 7); thấp hơn thì từ chối khởi động và nói con số; trống thì
+  `max(10, sàn)`. Ngoài pool: 2 kết nối heartbeat/bộ đếm, 1 kết nối LISTEN.
+- **Tạm dừng vì DB không trả tin về hàng.** Đo trên RabbitMQ 3.12: `Nack(requeue)`, đóng channel,
+  rớt kết nối khi tin chưa Ack đều cộng 1 vào `x-delivery-count`, tin bị dead-letter ở lần trả
+  thứ 6 (`x-delivery-limit=5`, 6 lần giao). Trả tin về hàng mỗi lần tạm dừng thì năm lần DB kẹt
+  khoá ngắn đẩy một tin lành vào DLQ. Nay consumer huỷ đăng ký, giữ tin đang cầm và tin đã được
+  giao sẵn (chưa Ack, trên channel đó), chờ DB, chạy lại chúng rồi đăng ký lại. Chỉ khi process
+  dừng giữa lúc tạm dừng thì channel đóng và tin về hàng, tính một lần. Chưa đo trên 4.x (ở 4.x
+  nghĩa của `x-delivery-count` đổi). DB chết quá `consumer_timeout` của broker (mặc định 30 phút)
+  thì broker đóng channel, tin về hàng tính một lần, Ket nối lại.
+- **DLQ (§7).** Tin bị consumer đưa vào DLQ — thân không giải mã được, handler trả `ErrMalformed`,
+  hoặc lần trả vượt giới hạn (đọc `x-delivery-count` broker đóng lên tin) — để lại đúng một dòng
+  `job message dead-lettered` với `queue` và `id`. Id chỉ được lặp lại khi có đúng dạng relay viết
+  (`<hàng>:<uuid>:<seq>`); tin không do relay phát thì `id` rỗng. Tin bị dead-letter vì process
+  chết đúng ở lần giao cuối thì không ai ở lại để ghi dòng đó.
+- **Ghi cuối hỏng vì DB.** Job đã claim mà ghi kết thúc hỏng (DB, không phải job) thì về hàng ngay
+  (`queued`, `enqueue_seq` mới, lượt thử **đã tiêu**: lỗi lặp lại trên chính job vẫn bị chặn bởi
+  `attempts<3`, kể cả đường brain mà `model_calls` không đếm). Job hết lượt thử hoặc đã có nội dung
+  thì lease kết thúc ngay và sweep đặt `worker_interrupted` ở lượt kế. DB chết hẳn thì câu trả về
+  cũng hỏng, job chờ hết lease như trước.
+- **Phiên bản 5** dùng `DEFAULT now()` (ổn định, PostgreSQL ghi một lần vào catalogue, không ghi lại
+  bảng dưới ACCESS EXCLUSIVE) và `SET LOCAL lock_timeout='5s'`: chờ khoá quá 5 s thì `migrate-chat`
+  hỏng, chạy lại, thay vì xếp hàng sau một transaction dài và chặn mọi câu lệnh xếp sau nó. Đổi
+  checksum của phiên bản 5 chỉ đụng database nháp trên nhánh này (chưa database chung nào cài).
+
+Còn phải biết khi vận hành:
+
+- **Nối lại broker chờ job dài nhất.** Kết nối broker rớt thì Ket chờ mọi job consumer đã bắt đầu
+  xong (≤70 s, hạn của một job) rồi mới quay số lại. Trong lúc đó consumer đã tách (`Song()=false`)
+  nên poller chạy nhịp 250 ms: job mới vẫn được nhận, chỉ với trễ của poll (§9: p95 ~220 ms).
+- **Rollout từ `84e3c31`.** Replica còn chạy bản trước lát 10 (a) claim không xét `available_at`,
+  `first_token_at`, `enqueue_seq`: nó bỏ qua backoff của `retryLater` (job thử lại sớm hơn 1 s/4 s)
+  và — khi lát 11 đặt `first_token_at` — có thể nhận lại job đã có nội dung; (b) xử lý `/retry`
+  không đặt lại `model_calls`: job được thử lại có thể chạm trần 8 lời gọi sớm và kết thúc
+  `ai_het_ngan_sach`. Không mất job, không trả lời đôi (lease và trạng thái vẫn chặn). Cách làm: đưa
+  mọi `serve` và `core work` lên cùng một lần, không để hai bản cùng chạy lâu; lát 11 không được
+  bật `first_token_at` khi còn replica trước lát 10.
 
 ## 9. Cổng, test, canary, đột biến
 

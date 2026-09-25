@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Execer is what Don needs: a pool, a connection or a transaction.
@@ -28,8 +28,8 @@ func Don(ctx context.Context, q Execer) (int64, error) {
 
 // DinhKyDon is the outbox's own periodic task.
 func DinhKyDon() DinhKy {
-	return DinhKy{Ten: "jobs.don_outbox", Nhip: time.Minute, Chay: func(ctx context.Context, pool *pgxpool.Pool) error {
-		_, err := Don(ctx, pool)
+	return DinhKy{Ten: "jobs.don_outbox", Nhip: time.Minute, Chay: func(ctx context.Context, tx pgx.Tx) error {
+		_, err := Don(ctx, tx)
 		return err
 	}}
 }

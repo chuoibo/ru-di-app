@@ -46,6 +46,12 @@ var luongSQL string
 // that makes a job due. A fifth file, for the reason version 2 was a second
 // one.
 //
+// Its available_at default was clock_timestamp() before the version reached
+// main, which rewrote the table under ACCESS EXCLUSIVE; it is now() with a
+// lock_timeout (review of slice 10). That changed its checksum; no shared
+// database had installed it, so only scratch databases on the working branch
+// need it reinstalled.
+//
 //go:embed schema_hang_doi.sql
 var hangDoiSQL string
 
@@ -75,6 +81,13 @@ func SchemaCurrent(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
 
 // Migrate is run explicitly by `core migrate-chat`, never by a request.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
+	return migrateDen(ctx, pool, SchemaVersion)
+}
+
+// migrateDen installs every version up to den, in one transaction. Only the
+// PostgreSQL gates stop short of SchemaVersion: they build the database an
+// older binary left, then install the next version on top of it.
+func migrateDen(ctx context.Context, pool *pgxpool.Pool, den int) error {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -103,17 +116,13 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 			return err
 		}
 	}
-	if err = migrateDrafts(ctx, tx); err != nil {
-		return err
-	}
-	if err = migrateScope(ctx, tx); err != nil {
-		return err
-	}
-	if err = migrateLuong(ctx, tx); err != nil {
-		return err
-	}
-	if err = migrateHangDoi(ctx, tx); err != nil {
-		return err
+	for v, step := range []func(context.Context, pgx.Tx) error{migrateDrafts, migrateScope, migrateLuong, migrateHangDoi} {
+		if v+2 > den {
+			break
+		}
+		if err = step(ctx, tx); err != nil {
+			return err
+		}
 	}
 	return tx.Commit(ctx)
 }

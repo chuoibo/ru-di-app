@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strings"
 	"testing"
@@ -261,6 +262,61 @@ func TestNepQuaEngineGoLoiNhaCungCap(t *testing.T) {
 	}
 }
 
+// A provider outage stays a provider outage to the end (review of slice 10,
+// finding 5): twelve 503s in a row, retried twice inside each attempt and
+// requeued twice, spend the eight calls of the job's ceiling. The ninth call
+// -- a retry of a 503 -- is refused by the ceiling, and the job ends as
+// provider_unavailable with the 5xx class, not as ai_het_ngan_sach with no
+// provider error at all.
+func TestNepQuaEngineGoNhaCungCapSapKeoDai(t *testing.T) {
+	loi := llm.Buoc{Loi: genai.APIError{Code: 503}}
+	var kich []llm.Buoc
+	for range 12 {
+		kich = append(kich, loi)
+	}
+	n := setupNepGo(t, kich...)
+	ctx := context.Background()
+	code, job, raw := n.f.nepPost(t, n.f.token, nepThan("đi đâu?"))
+	if code != 202 {
+		t.Fatalf("status=%d body=%s", code, raw)
+	}
+	var trail []string
+	for lan := 1; lan <= 3; lan++ {
+		if lan > 1 {
+			if _, err := n.f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET available_at=clock_timestamp() WHERE id=$1`, job.ID); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if ok, err := n.f.handler.ProcessOne(ctx); !ok || err != nil {
+			t.Fatalf("lần %d: ProcessOne=%v %v", lan, ok, err)
+		}
+		status, _, _, calls := n.f.trangThai(t, job.ID)
+		var ma *string
+		if err := n.f.pool.QueryRow(ctx, `SELECT code FROM chat_ai_invocations WHERE id=$1`, job.ID).Scan(&ma); err != nil {
+			t.Fatal(err)
+		}
+		m := "-"
+		if ma != nil {
+			m = *ma
+		}
+		trail = append(trail, fmt.Sprintf("%d:%s/%s/%d", lan, status, m, calls))
+	}
+	if got := fmt.Sprint(trail); got != fmt.Sprintf("[1:queued/-/3 2:queued/-/6 3:failed/provider_unavailable/%d]", llm.MaxModelCallsPerTurn) {
+		t.Fatalf("attempts (status/code/model_calls): %s", got)
+	}
+	if n.stub.SoGoi() != llm.MaxModelCallsPerTurn {
+		t.Fatalf("the stub answered %d calls, want the ceiling %d", n.stub.SoGoi(), llm.MaxModelCallsPerTurn)
+	}
+	var lop string
+	var hang int
+	if err := n.f.pool.QueryRow(ctx, `SELECT count(*), min(loi_mo_hinh) FILTER (WHERE lan_thu=3) FROM ai_turn_metrics WHERE invocation_id=$1`, job.ID).Scan(&hang, &lop); err != nil {
+		t.Fatal(err)
+	}
+	if hang != 3 || lop != "5xx" {
+		t.Fatalf("metrics: %d rows, last attempt's class %q, want 3 rows and 5xx", hang, lop)
+	}
+}
+
 // A turn stopped from outside is not a provider failure, and no metrics row
 // says otherwise. What happens to the job depends on who stopped it:
 //
@@ -351,5 +407,25 @@ func TestNepQuaEngineGoHuyTuNgoai(t *testing.T) {
 		}
 		// The attempt was given back, so the next run is attempt 1 again.
 		xongLanSau(t, n, id, 1)
+	})
+
+	// Design 02 §4 steps 7 and 9, the guard slice 11 relies on (review of
+	// slice 10, mutant MB): a job whose first content already went out is
+	// not released on stop -- no second worker may start it over. It stays
+	// running under the same lease, no new entry, no new outbox row, until
+	// the lease lapses and the sweep fails it.
+	t.Run("worker dừng sau nội dung đầu", func(t *testing.T) {
+		n, id, j := batDau(t)
+		if _, err := n.f.pool.Exec(context.Background(), `UPDATE chat_ai_invocations SET first_token_at=clock_timestamp() WHERE id=$1`, id); err != nil {
+			t.Fatal(err)
+		}
+		runCtx, cancel := context.WithCancel(context.Background())
+		time.AfterFunc(50*time.Millisecond, cancel)
+		if err := n.f.handler.runJob(runCtx, j); err != nil {
+			t.Fatalf("runJob: %v", err)
+		}
+		if h := doc(t, n, id); h.status != "running" || h.lease != j.lease || h.attempts != 1 || h.seq != 1 || h.outbox != 1 || h.ketQua || h.ma || h.soDo != 0 {
+			t.Fatalf("a job with content out was released: %+v", h)
+		}
 	})
 }

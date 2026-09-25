@@ -276,8 +276,9 @@ func (h *Handler) poll(ctx context.Context, lag time.Duration, broker Broker, ru
 // once the job's terminal transaction committed, or when the claim found
 // nothing to do -- a duplicate, a job done or cancelled, a message from an
 // earlier entry into the queue, a job another worker holds -- and the message
-// is acknowledged then. A database error is jobs.ErrTamDung: the message is
-// requeued and the consumer pauses while the poller carries on.
+// is acknowledged then. A database error is jobs.ErrTamDung: the consumer
+// keeps the message and pauses while the poller carries on, and runs it again
+// once the database answers.
 func (h *Handler) XuLyTin(ctx context.Context, queue string, m jobs.Message) error {
 	scope, ok := scopeCuaHang(queue)
 	if !ok {
@@ -302,18 +303,21 @@ func (h *Handler) XuLyTin(ctx context.Context, queue string, m jobs.Message) err
 
 // DinhKy is the sweep as a periodic task (jobs.DinhKy). Every process that
 // serves or works runs it, so the fifteen-minute bound on shared plaintext
-// holds even with the worker fleet scaled to zero.
+// holds even with the worker fleet scaled to zero. The pass runs in the
+// transaction that holds the task's lock: one connection, never two.
 func (h *Handler) DinhKy() jobs.DinhKy {
-	return jobs.DinhKy{Ten: "chatassist.sweep", Nhip: h.worker.SweepEvery, Chay: func(ctx context.Context, _ *pgxpool.Pool) error {
-		return h.Sweep(ctx)
+	return jobs.DinhKy{Ten: "chatassist.sweep", Nhip: h.worker.SweepEvery, Chay: func(ctx context.Context, tx pgx.Tx) error {
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		return sweepIn(ctx, tx)
 	}}
 }
 
 // Sweep bounds plaintext retention to the sharing window and fails the jobs a
 // lapsed lease left behind with no way forward: no attempts left, or content
-// already out (a second worker must not write the answer again). One process
-// sweeps at a time: the pass holds pg_try_advisory_xact_lock, and a process
-// that finds it taken skips, since the holder does the same idempotent work.
+// already out (a second worker must not write the answer again). It is the
+// periodic pass in a transaction of its own, for the callers outside the
+// registry (claim, the PostgreSQL gates).
 func (h *Handler) Sweep(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -322,15 +326,27 @@ func (h *Handler) Sweep(ctx context.Context) error {
 		return err
 	}
 	defer tx.Rollback(ctx)
+	if err = sweepIn(ctx, tx); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// sweepIn is one sweep inside tx. One sweep runs at a time: it takes
+// pg_try_advisory_xact_lock first, and a transaction that finds it taken
+// skips, since the holder does the same idempotent work. Both ways in take
+// this same lock, so a claim's sweep and the periodic one never interleave
+// their multi-row UPDATEs.
+func sweepIn(ctx context.Context, tx pgx.Tx) error {
 	var mine bool
-	if err = tx.QueryRow(ctx, `SELECT pg_try_advisory_xact_lock(hashtextextended('chatassist:sweep',0))`).Scan(&mine); err != nil {
+	if err := tx.QueryRow(ctx, `SELECT pg_try_advisory_xact_lock(hashtextextended('chatassist:sweep',0))`).Scan(&mine); err != nil {
 		return err
 	}
 	if !mine {
-		return tx.Commit(ctx)
+		return nil
 	}
 	// Bound plaintext retention to the explicit sharing window, including failed jobs.
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,boi_canh=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`)
+	_, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,boi_canh=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`)
 	if err != nil {
 		return err
 	}
@@ -344,10 +360,7 @@ func (h *Handler) Sweep(ctx context.Context) error {
 	// after its first part or delta left is not replaced; the job fails, what
 	// was shown stays, and the reader is told it was cut off.
 	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code='worker_interrupted',lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE status='running' AND lease_until<clock_timestamp() AND (attempts>=3 OR first_token_at IS NOT NULL)`)
-	if err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return err
 }
 
 // claim is Sweep then claimNext: the deterministic entry the PostgreSQL gates
@@ -480,6 +493,36 @@ func (h *Handler) runJob(ctx context.Context, j work) error {
 	if dangDung(jobCtx) {
 		return h.release(jobCtx, j)
 	}
+	if err != nil && !errors.Is(err, aiharness.ErrHuy) {
+		// The job's terminal write failed: the database, not the job. Its
+		// lease is handed back now rather than held until it lapses, a whole
+		// lease later, with nobody renewing it.
+		_ = h.traLai(jobCtx, j)
+	}
+	return err
+}
+
+// traLaiSQL puts a job whose terminal write failed back in the queue: due
+// now, a new enqueue_seq (so a broker message for it goes out at once), and
+// the attempt stays spent -- a failure that recurs on the job itself stays
+// bounded by attempts<3, including on the brain path, whose model calls
+// model_calls does not count. The broker message of the failed attempt names
+// the old seq and claims nothing when it runs again.
+const traLaiSQL = `UPDATE chat_ai_invocations SET status='queued',lease_id=NULL,lease_until=NULL,available_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND first_token_at IS NULL AND attempts<3`
+
+// traLai hands back a job whose terminal write failed. A job that cannot run
+// again -- no attempts left, or content already out -- has its lease ended
+// instead, and the sweep fails it as worker_interrupted on its next pass,
+// exactly as it would once the lease lapsed. Both match nothing when the job
+// is no longer this worker's.
+func (h *Handler) traLai(ctx context.Context, j work) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	defer cancel()
+	tag, err := h.pool.Exec(ctx, traLaiSQL, j.id, j.lease)
+	if err != nil || tag.RowsAffected() == 1 {
+		return err
+	}
+	_, err = h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET lease_until=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running'`, j.id, j.lease)
 	return err
 }
 

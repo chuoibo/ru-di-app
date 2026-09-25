@@ -811,7 +811,7 @@
       },
       "ky_vong": {
         "ket_thuc": "that_bai",
-        "ma": "ai_het_ngan_sach",
+        "ma": "provider_unavailable",
         "guard": "proceed",
         "out_guard": "none",
         "so_goi_model": 1,
