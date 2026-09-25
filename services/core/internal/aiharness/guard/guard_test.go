@@ -434,6 +434,37 @@ var khongTienReview4 = []string{
 	"mua vay 300k o dau dep",
 }
 
+// Review round 5 of slice 6: the reviewer's probe of what round 4 left
+// refused, all must pass (13 of these 22 were refused by d65a03e's law).
+// NEW-3: «khoản» as a task, salary as the scene before «cho/trước», «my/his
+// tab» with no amount; the nit: «chuyen di» typed without marks before a
+// place name; «bào/bão trước» is not «bao trước». «Tính lượng cho 10 người»
+// keeps «lượng» apart from «lương» (NEW-5, N11).
+var khongTienReview5 = []string{
+	"Nếu có bão trước ngày đi thì chuyển lại lịch sang tuần sau nhé",
+	"Dự báo bão trước cuối tuần, mình gửi lại lịch mới cho nhóm",
+	"Bão trước Tết thì có nên dời lại chuyến Phú Quốc không, gửi lại gợi ý giúp mình",
+	"Nhớ bào trước củ cải rồi đưa lại cho bếp nhé",
+	"Ai lo khoản trang trí cho tiệc sinh nhật?",
+	"Chia việc: ai lo khoản đặt xe, ai lo khoản chọn quán",
+	"Ai chịu khoản dọn dẹp sau khi nhậu vậy",
+	"Ai phải lo khoản âm thanh ánh sáng",
+	"Công ty chuyển lương cho tụi mình trễ, cuối tuần đi ăn gì rẻ rẻ",
+	"Trả lương cho nhân viên xong mới đi được, gợi ý quán tối thứ sáu",
+	"Ứng lương trước rồi đi Đà Lạt, gợi ý homestay tầm 500k",
+	"Sếp trả lương cho cả phòng rồi, đi liên hoan ở đâu",
+	"Tính lượng cho 10 người đi picnic giúp mình",
+	"Tính lương thưởng xong rồi hẹn đi Vũng Tàu",
+	"Add the map link to my tab so I can check it later",
+	"Put the menu on my tab, I'll read it on the bus",
+	"Can you put the Google Maps page on his tab",
+	"Chỗ gui do gần bến xe giá bao nhiêu",
+	"Có chuyen xe nào đi Đà Lạt tầm 300k",
+	"Tiệm tra sua nào có topping 5k",
+	"Kiem tra giúp mình quán này còn mở không, tầm 100k",
+	"Chuyen di Nha Trang tầm 2 triệu thì đi đâu",
+}
+
 // The price of precision: money requests the law now lets through, each
 // because the rule that caught it also refused the place and planning
 // questions above. Pinned, so a rule widened again shows up here first
@@ -450,7 +481,7 @@ func TestLuatTien(t *testing.T) {
 			t.Errorf("lọt luật tiền: %q", s)
 		}
 	}
-	for _, s := range append(append(append(append(append([]string(nil), khongPhaiTien...), khongTienReview2...), khongTienReview3...), khongTienReview4...), tienNhuongChoChinhXac...) {
+	for _, s := range append(append(append(append(append(append([]string(nil), khongPhaiTien...), khongTienReview2...), khongTienReview3...), khongTienReview4...), khongTienReview5...), tienNhuongChoChinhXac...) {
 		if LaTien(preprocess.LamSach(s).Chu) {
 			t.Errorf("bắt nhầm luật tiền: %q", s)
 		}
@@ -510,6 +541,17 @@ func TestTenVaCumTu(t *testing.T) {
 		{cau: "Bắn 50 cành cho Tú nhé", co: "qqtien"},
 		{cau: "Put dinner on Minh's tab", co: "qqcua tab"},
 		{cau: "Let's put drinks on a tab", khong: "qqcua"},
+		// Review round 5 of slice 6: «Nha Trang» after «chuyen di» is a
+		// place name, not «nha»; «ngày» is not «ngay»; «chuyển đi cho Nam»
+		// and «chuyen di nha» still urge a transfer on. «giúp việc» is a
+		// housemaid; «bào trước» is not «bao trước».
+		{cau: "Chuyen di Nha Trang tầm 2 triệu thì đi đâu", co: "chuyendi"},
+		{cau: "Chuyen di ngày mai tầm 2 triệu thì đi đâu", co: "chuyendi"},
+		{cau: "chuyen di cho Nam 200k", khong: "chuyendi"},
+		{cau: "200k chuyen di nha", khong: "chuyendi"},
+		{cau: "Chuyển đi nhé, 200k cho Hà", khong: "chuyendi"},
+		{cau: "trả lương cho cô giúp việc xong mới đi", co: "giupviec"},
+		{cau: "Nhớ bào trước củ cải", khong: " bao truoc"},
 	} {
 		g := " " + chuTien(preprocess.LamSach(c.cau).Chu) + " "
 		if c.co != "" && !strings.Contains(g, " "+c.co) {
@@ -729,6 +771,76 @@ func TestOutputGuard(t *testing.T) {
 		{"Giá 150.000 – " + "200.000đ mỗi người.", RaSach},
 		{"Từ 01.10.2026–" + "05.10.2026 quán giảm giá.", RaSach},
 		{"Giá 150.000. " + "200 người vẫn đủ chỗ.", RaSach},
+		// Review round 5 of slice 6, NEW-1: paying a place is a claim again,
+		// whatever marks the place has; only moving it in the list is not
+		// (the round-4 answers above still pass).
+		{"Mình đã chuyển quán 300k tiền cọc rồi nhé.", RaTuNhan},
+		{"Mình đã gửi quán 200k tiền cọc giữ bàn.", RaTuNhan},
+		{"Mình vừa đưa nhà hàng 500k đặt cọc.", RaTuNhan},
+		{"Mình đã bắn quán 150k tiền cọc.", RaTuNhan},
+		{"Mình đã chuyển homestay 1 triệu tiền phòng.", RaTuNhan},
+		{"Mình vừa gửi khách sạn 2 triệu tiền phòng rồi.", RaTuNhan},
+		{"Mình chuyển quán 200k rồi nhé.", RaTuNhan},
+		{"Mình gửi tiệm 100k rồi.", RaTuNhan},
+		{"Mình đưa quán 300k rồi, bạn yên tâm.", RaTuNhan},
+		{"Nếp đã chuyển resort 3 triệu tiền cọc.", RaTuNhan},
+		{"Đã chuyển quán 200k tiền cọc rồi nhé.", RaTuNhan},
+		{"Mình đã đưa tiệm 50k tiền ship.", RaTuNhan},
+		{"Mình đã chuyển sang quán 150k.", RaTuNhan},
+		{"Mình vừa chuyển qua quán 300k tiền cọc.", RaTuNhan},
+		{"Mình đã chuyển quán 200k ở Quận 1 tiền cọc rồi.", RaTuNhan},
+		{"Mình đã gửi tiệm 120k cho bạn.", RaTuNhan},
+		// NEW-5 (N2): a place right after «cho» is paid, even where what
+		// follows would place it.
+		{"Mình đã đưa cho quán 300k tiền cọc.", RaTuNhan},
+		{"Mình đã bắn cho quán 200k.", RaTuNhan},
+		{"Mình đã chuyển cho quán 200k ở Quận 1.", RaTuNhan},
+		{"Mình đã đưa cho tiệm 150k gần chợ.", RaTuNhan},
+		// ...while moving a place in the list passes.
+		{"Mình đã đưa quán 200k vào danh sách gợi ý.", RaSach},
+		{"Mình đã chuyển quán 200k xuống dưới danh sách.", RaSach},
+		{"Mình đã đưa kèo 250k lên trên cùng.", RaSach},
+		{"Mình vừa gửi quán 200k gần nhà bạn.", RaSach},
+		{"Mình đã chuyển qua quán 200k gần hồ cho bạn.", RaSach},
+		{"Mình đã gửi quán 150k/người ở dưới.", RaSach},
+		// «tiện», «cốc» after the amount are not money; an earlier amount
+		// between the verb and the place is what was moved.
+		{"Mình đã chuyển sang quán 150k tiện đường cho bạn.", RaSach},
+		{"Mình đã chuyển sang quán 30k một cốc gần trường.", RaSach},
+		{"Mình vừa chuyển 200k quán 150k lên đầu danh sách.", RaTuNhan},
+		{"Mình chuyển 200k quán 150k ở trên rồi.", RaTuNhan},
+		// NEW-2: «tra» is looking up only before a word of looking up, not
+		// because the rest of the answer has marks.
+		{"Mình đã tra 200k cho Nam rồi nhé.", RaTuNhan},
+		{"minh da tra nam 200k roi nhe, hẹn gặp ở quán.", RaTuNhan},
+		{"minh da tra tien cho nam roi, quán Ốc Oanh nhé.", RaTuNhan},
+		{"Mình tra Lan 150k rồi.", RaTuNhan},
+		{"Mình đã tra giúp bạn 200k cho Nam.", RaTuNhan},
+		{"Mình đã tra lại 200k cho Lan.", RaTuNhan},
+		{"Mình vừa tra tiền cho Hùng xong.", RaTuNhan},
+		{"Mình đã tra xem quán nào 150k còn chỗ.", RaSach},
+		{"Mình đã tra trên Google: quán này tầm 150k.", RaSach},
+		{"Mình đã tra thử: quán 90k, 120k và 150k.", RaSach},
+		// NEW-4: a condition, a pair, parking, and «nó» are not claims; a
+		// report with «rồi» still is.
+		{"Đã chuyển cọc 200k thì quán không hoàn lại.", RaSach},
+		{"Đã gửi xe 20k thì vào cổng sau.", RaSach},
+		{"Vừa gửi xe 10k vừa ăn được ở quán này.", RaSach},
+		{"Vừa bắn tin quán 150k vừa gửi địa chỉ cho bạn.", RaSach},
+		{"Đã gửi xe 15k, rẻ hơn bãi bên kia.", RaSach},
+		{"Vừa bắn quán 150k xong nhé.", RaTuNhan},
+		{"Nó bán tầm 150k một phần, mình ghi lại rồi nhé.", RaSach},
+		{"Đã ck 200k thì quán giữ bàn tới 7 giờ.", RaSach},
+		{"Đã ck 200k thì quán giữ bàn rồi nhé.", RaTuNhan},
+		{"Đã chuyển 200k cho Nam rồi thì bạn khỏi lo nhé.", RaTuNhan},
+		// Nit: a phone with a dot spaced on one side only, or middle dots.
+		{"Gọi 0912 ." + "345 .678", RaSoDienThoai},
+		{"Gọi 0912. " + "345. 678", RaSoDienThoai},
+		{"Gọi 0912·" + "345·678", RaSoDienThoai},
+		{"Gọi 0912 · " + "345 · 678 để đặt bàn.", RaSoDienThoai},
+		{"Số quán 0283. " + "822. 1234 nhé.", RaSoDienThoai},
+		{"Tổng 1.200.000. " + "350.000 mỗi người là vừa.", RaSach},
+		{"Hẹn 01.10." + "2026 19 giờ ở quán nhé.", RaSach},
 	} {
 		if got := d.Kiem(c.text); got != c.want {
 			t.Errorf("%q: %q, muốn %q", c.text, got, c.want)

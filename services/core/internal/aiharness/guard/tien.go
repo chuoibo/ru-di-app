@@ -179,6 +179,9 @@ var ghep = []cumTu{
 	{chu: "ứng dụng"}, {chu: "ứng viên"}, {chu: "ứng xử"},
 	{chu: "bắn cung"}, {chu: "bắn súng"}, {chu: "bắn pháo hoa"}, {chu: "bắn bi"},
 	{chu: "ting ting"}, {chu: "bồi thường"},
+	// «giúp việc» is a housemaid, not «giúp» asking for help: «trả lương
+	// cho cô giúp việc xong mới đi được» (review round 5 of slice 6, NEW-3).
+	{chu: "giúp việc"},
 	// «2 trăm mét» is a distance, «2 trăm người» a crowd.
 	{chu: "trăm mét"}, {chu: "trăm m", thanh: "trammet"}, {chu: "trăm km"}, {chu: "trăm người"}, {chu: "trăm chỗ"},
 	// «trà …», the common drinks.
@@ -292,9 +295,17 @@ var (
 )
 
 // diGiuc: after «chuyển đi», these urge the transfer on («chuyển đi cho
-// Nam», «200k chuyển đi nha»); any other «chuyen di» typed without marks is
-// a trip.
-var diGiuc = map[string]bool{"cho": true, "nha": true, "nhe": true, "luon": true, "lien": true, "gium": true, "giup": true, "dum": true, "ngay": true}
+// Nam», «200k chuyển đi nha»), typed as spelled here or without marks, and
+// not as part of a proper noun; any other «chuyen di» typed without marks is
+// a trip: «Chuyen di Nha Trang tầm 2 triệu thì đi đâu», «chuyen di ngày mai»
+// (review round 5 of slice 6, nit).
+var diGiuc = map[string]string{"cho": "cho", "nha": "nha", "nhe": "nhé", "luon": "luôn", "lien": "liền", "gium": "giùm", "giup": "giúp", "dum": "dùm", "ngay": "ngay"}
+
+// giucDi says whether t, right after «chuyển đi», urges the transfer on.
+func giucDi(t tu) bool {
+	sp, ok := diGiuc[t.f]
+	return ok && (t.goc == t.gap || t.goc == sp) && !t.rieng
+}
 
 // thuRe: «thu 7», «thu hai» typed without marks is a weekday.
 var thuRe = regexp.MustCompile(` thu (?:[2-8]|hai|ba|tu|sau|bay) `)
@@ -352,6 +363,9 @@ const (
 	// What may follow «thu lại», «đòi lại» after buying for the group:
 	// money, when, from whom, or the small words that close a request.
 	sauThuLai = `(?:tien|qqtien|qqso|sau|giup|gium|dum|ho|nha|nhe|nhen|di|luon|tung|moi|tu|cua|ca|het)`
+	// What makes «khoản» a sum rather than a task: money after it, an
+	// amount, a debt, or «này/đó/kia/ấy» pointing at a spend already named.
+	khoanTien = `(?:tien|phi|chi|bill|hoa don|no|qqtien|qqso|nay|do|kia|ay)`
 )
 
 var luatTiens = []luatTien{
@@ -376,7 +390,10 @@ var luatTiens = []luatTien{
 		// drinks on a tab at that bar» asks about the bar (review round 4 of
 		// slice 6, R2). qqcua is a word typed with «'s» right before «tab»
 		// (chuTien). At most four words between the verb and «on», as before.
-		`|\b(?:put|add|charge|stick)\b(?: \S+){0,4} (?:on|to) (?:my|his|her|our|their|your|qqcua) tab\b` +
+		// «my/his/… tab» needs an amount too: «Add the map link to my tab so
+		// I can check it later» is a browser tab (review round 5, NEW-3).
+		`|\b(?:put|add|charge|stick)\b(?: \S+){0,4} (?:on|to) qqcua tab\b` +
+		`|\b(?:put|add|charge|stick)\b(?: \S+){0,4} (?:on|to) (?:my|his|her|our|their|your) tab(?: \S+){0,3} ` + so + `\b` +
 		`|\b(?:put|add|charge|stick)(?:(?: \S+){0,3} ` + so + `|(?: \S+){0,2} ` + so + ` \S+|(?: \S+)? ` + so + `(?: \S+){2}| ` + so + `(?: \S+){3}) (?:on|to)(?: \S+)? tab\b`)},
 	// Split: «chia» a sum or a bill, or what each person pays.
 	{"chia", regexp.MustCompile(`\bchia` + w(2) + `(?:tien|bill|hoa don|khoan|chi phi)\b` +
@@ -384,7 +401,11 @@ var luatTiens = []luatTien{
 		// Whose share it is: «phần tiền của nó ai chịu», «ai chịu tiền taxi».
 		// «ai lo phần …» needs money after «phần»: «ai lo phần mua đồ nướng»
 		// divides the work (review round 4 of slice 6, R2).
-		`|\b(?:phan (?:tien|cua)|tien(?: \S+)? cua|khoan)(?: \S+){0,3} ai (?:chiu|tra|bu|lo|gop|bao)\b|\bai (?:se |phai )?(?:chiu|lo|bu|gop) (?:phan )?(?:tien|khoan|bill|hoa don)\b|\btien(?: \S+){1,3} ai (?:chiu|bu|lo|bao)\b` +
+		// «khoản» is money only with money, an amount or «này/đó» after it:
+		// «ai lo khoản trang trí», «khoản đặt xe, ai lo» divide the work
+		// (review round 5 of slice 6, NEW-3).
+		`|\b(?:phan (?:tien|cua)|tien(?: \S+)? cua)(?: \S+){0,3} ai (?:chiu|tra|bu|lo|gop|bao)\b|\bkhoan(?: ` + khoanTien + `(?: \S+){0,2})? ai (?:chiu|tra|bu|lo|gop|bao)\b` +
+		`|\bai (?:se |phai )?(?:chiu|lo|bu|gop) (?:phan )?(?:(?:tien|bill|hoa don)\b|khoan(?: ` + khoanTien + `\b|$))|\btien(?: \S+){1,3} ai (?:chiu|bu|lo|bao)\b` +
 		`|\b(?:chia|split|bill|hoa don|aa|het qqtien|tong (?:cong )?(?:qqtien|bill|hoa don|tien|chi))\b.*\b` + moiNguoi + `(?: \S+)? (?:bao nhieu|bn)\b` +
 		`|\b(?:tong|het) (?:tien|qqtien|bill|hoa don)\b.*\bchia\b` +
 		`|^tien \S+(?: \S+){0,3} ` + moiNguoi + ` (?:bao nhieu|bn)\b` +
@@ -403,7 +424,13 @@ var luatTiens = []luatTien{
 		// 1 triệu 5», «ứng lương giúp mình». «Chờ trả lương xong rồi đi nhậu»
 		// only dates the outing, and «tính lượng bia» is not «lương» (dauTien;
 		// review round 4 of slice 6, R2).
-		`|\b(?:tra|chuyen|gui|ung|phat|dua|ck|bank|tinh) luong(?: thang \S+)? (?:cho|giup|gium|ho|dum|truoc|them|qqtien|qqso)\b` +
+		// After «cho» or «trước» the wage is asked for only with an amount or
+		// a «giúp» within four words, or where the question ends within
+		// three («Nhắc sếp trả lương cho tụi mình»): «Công ty chuyển lương
+		// cho tụi mình trễ, cuối tuần đi ăn gì rẻ rẻ», «Sếp trả lương cho cả
+		// phòng rồi, đi liên hoan ở đâu» only set the scene (review round 5
+		// of slice 6, NEW-3).
+		`|\b(?:tra|chuyen|gui|ung|phat|dua|ck|bank|tinh) luong(?: thang \S+)? (?:(?:giup|gium|ho|dum|them|qqtien|qqso)\b|(?:cho|truoc)(?:(?: \S+){0,4} (?:qqtien|qqso|giup|gium|ho|dum)\b|(?: \S+){0,3}$))` +
 		// Who holds whose money: «ai đang giữ tiền của ai».
 		`|\bai (?:dang |con |van )?giu tien(?: cua| quy| nhom| chung)\b|\btien cua ai\b` +
 		// Passing on that one has paid: «nhắn Hạnh là mình chuyển rồi».
@@ -434,14 +461,15 @@ var luatTiens = []luatTien{
 
 // tu is one word of the question.
 type tu struct {
-	goc  string // as typed, lower case
-	gap  string // folded
-	f    string // what the rules read
-	hoa  bool   // starts with a capital letter
-	dau  bool   // starts a sentence
-	ten  bool   // a name: capitalized mid-sentence, on its own
-	ngat bool   // a clause break follows it
-	cua  bool   // typed with a possessive «'s» («Minh's»)
+	goc   string // as typed, lower case
+	gap   string // folded
+	f     string // what the rules read
+	hoa   bool   // starts with a capital letter
+	dau   bool   // starts a sentence
+	ten   bool   // a name: capitalized mid-sentence, on its own
+	rieng bool   // part of a proper noun: capitalized mid-sentence, beside another («Nha Trang»)
+	ngat  bool   // a clause break follows it
+	cua   bool   // typed with a possessive «'s» («Minh's»)
 }
 
 // laRutGon: «it's», «let's», «what's»... end in «'s» without owning anything.
@@ -512,6 +540,7 @@ func tachTu(s string) []tu {
 	}
 	for i := range toks {
 		toks[i].ten = giua(i) && !giua(i-1) && !giua(i+1)
+		toks[i].rieng = giua(i) && (giua(i-1) || giua(i+1))
 	}
 	return toks
 }
@@ -583,9 +612,10 @@ func chuTien(s string) string {
 			// «50 cành» is 50k where an amount can stand («bắn 50 cành cho
 			// Trinh»); «gửi 20 cành hồng» is flowers (review round 4, R2).
 			f = "k"
-		case (t.goc == "báo" || t.goc == "bảo") && i+1 < len(toks) && toks[i+1].gap == "truoc":
-			// «báo trước», «bảo trước» tell ahead; only «bao trước» pays
-			// ahead (review round 4 of slice 6, R-pre).
+		case t.gap == "bao" && t.goc != "bao" && i+1 < len(toks) && toks[i+1].gap == "truoc":
+			// «báo trước», «bảo trước» tell ahead, «bào trước» grates ahead,
+			// «bão trước» is a storm; only «bao trước» pays ahead (review
+			// round 4 of slice 6, R-pre; round 5 probe).
 			f = "bao_"
 		case t.cua && i+1 < len(toks) && toks[i+1].gap == "tab":
 			// «Minh's tab»: a person's tab (tieng_anh).
@@ -616,7 +646,7 @@ func chuTien(s string) string {
 	for i := 0; i < len(toks); i++ {
 		t := toks[i]
 		// «chuyển đi cho Nam», «200k chuyển đi»: «đi» urges the transfer on.
-		if t.f == "chuyen" && i+1 < len(toks) && toks[i+1].f == "di" && (i+2 == len(toks) || diGiuc[toks[i+2].f]) {
+		if t.f == "chuyen" && i+1 < len(toks) && toks[i+1].f == "di" && (i+2 == len(toks) || giucDi(toks[i+2])) {
 			chu = append(chu, "chuyen")
 			i++
 			continue

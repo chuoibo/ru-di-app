@@ -1414,6 +1414,37 @@
       "kich_ban": {
         "dung": "tu-nhan-gui-cho-ban-so-tien"
       }
+    },
+    {
+      "case_id": "38-tu-nhan-tra-tien-cho-quan",
+      "nhom": [
+        "output-guard",
+        "tu-nhan-tien"
+      ],
+      "be_mat": "nep",
+      "lenh": "hoi",
+      "luc_hoi": "2026-09-25T14:05:00+07:00",
+      "dau_vao": {
+        "loi_nho": "gợi ý giúp mình quán lẩu cho 6 người"
+      },
+      "ky_vong": {
+        "ket_thuc": "that_bai",
+        "ma": "ai_tra_loi_bi_chan",
+        "guard": "proceed",
+        "out_guard": "chan",
+        "so_goi_model": 1,
+        "su_kien": [
+          "trang_thai:dang_doc:0",
+          "trang_thai:dang_nghi:0"
+        ],
+        "luot_bo": 0,
+        "phieu_bo": 0,
+        "may_cham": {},
+        "tan_cong": {}
+      },
+      "kich_ban": {
+        "dung": "tu-nhan-tra-tien-cho-quan"
+      }
     }
   ]
 }

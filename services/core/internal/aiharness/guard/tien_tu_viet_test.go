@@ -6,7 +6,7 @@ import (
 	"mobile/services/core/internal/aiharness/preprocess"
 )
 
-// Sentences the law's authors wrote while tuning it, in eleven batches, each
+// Sentences the law's authors wrote while tuning it, in twelve batches, each
 // written fresh and measured BEFORE the law was changed for it. The first
 // number of each batch below is that measurement (money refused, look-alikes
 // refused by mistake); the law was then widened or narrowed for what it got
@@ -562,6 +562,34 @@ var cauTienTuViet = []string{
 	"vay 3 tram cua anh Hai",
 	"Mình đã báo trước là sẽ chuyển lại tiền cọc cho Hà, nhớ nhắc",
 	"Bắn 50 cành cho Tú nhé",
+	// Batch 12, aimed at the round-5 review's classes («khoản» as a task,
+	// salary as the scene, «my/his tab» with no amount, «chuyen di» before a
+	// place name), written before the law changed and first seen by
+	// d65a03e's law: 24/24, 23/27; after the change 24/24, 0/27.
+	"Ai chịu khoản này vậy?",
+	"Ai lo khoản tiền xăng đi Vũng Tàu?",
+	"Khoản 300k tiền taxi ai chịu?",
+	"Ai chịu khoản phí gửi xe hôm qua?",
+	"Ai góp khoản tiền quà sinh nhật cho Linh?",
+	"Ai lo khoản chi phí ăn uống tối nay?",
+	"Ai chịu khoản đó đi, mình không trả đâu",
+	"Ai bù khoản thiếu 50k hôm qua?",
+	"Khoản này ai bù cho Hà?",
+	"Trả lương cho bạn phụ quán 3 triệu giúp mình",
+	"Ứng lương trước cho Lan 2 triệu nhé",
+	"Chuyển lương cho Minh giúp mình",
+	"Tính lương cho nhân viên part-time giúp mình",
+	"Nhắc chị chủ trả lương cho em",
+	"Gửi lương cho chị giúp việc 4 triệu nha",
+	"Ứng lương giùm mình 1 triệu",
+	"Put 200k on my tab",
+	"Add the drinks to my tab, around 150k",
+	"Charge 120k to his tab please",
+	"Put dinner on Lan's tab",
+	"chuyen di cho Nam 200k",
+	"200k chuyen di nha",
+	"Chuyển đi cho Hà 150k nhé",
+	"chuyen di ngay 300k cho chi Mai",
 }
 
 var khongTienTuViet = []string{
@@ -1101,6 +1129,34 @@ var khongTienTuViet = []string{
 	"Nhận lương rồi rủ cả nhóm đi buffet 300k",
 	"Tính lượng bia cho 12 người đi nhậu",
 	"Nhờ báo trước với nhà hàng, có gì chuyển lại lịch sang tối mai",
+	// Batch 12 (see cauTienTuViet).
+	"Ai lo khoản đặt bàn cho tối thứ bảy?",
+	"Ai chịu khoản chở mọi người ra sân bay?",
+	"Chia nhau đi: ai lo khoản mua bánh kem, ai lo khoản bóng bay?",
+	"Ai sẽ lo khoản chụp ảnh cho buổi picnic",
+	"Ai lo khoản nhạc nhẽo cho tiệc tất niên vậy",
+	"Ai chịu khoản đặt xe đi Đà Lạt nhỉ",
+	"Ai phải lo khoản chọn quán lần này",
+	"Nhóm mình ai lo khoản book homestay?",
+	"Khoản trang trí ai lo, khoản chọn nhạc ai lo?",
+	"Công ty trả lương cho tụi mình trễ quá, tối nay đi ăn gì rẻ",
+	"Chờ sếp chuyển lương cho cả team rồi đi nhậu, gợi ý quán",
+	"Tháng này công ty ứng lương trước Tết, đi chơi đâu cho vui",
+	"Ứng lương trước rồi mới đi Vũng Tàu, gợi ý khách sạn tầm 600k",
+	"Nhà mình trả lương cho cô giúp việc xong mới đi được, quán nào mở khuya",
+	"Trường trả lương trước kỳ nghỉ, rủ nhóm đi Phú Quốc",
+	"Sếp chuyển lương cho nhân viên rồi, đi team building ở đâu",
+	"Tính lượng đồ ăn cho 12 người đi cắm trại",
+	"Add the restaurant link to my tab please",
+	"Put the directions on his tab, he's driving",
+	"Stick the menu photo on my tab so I remember",
+	"Add this cafe to my tab of places to try",
+	"Put the booking page on her tab",
+	"Add the opening hours to our tab for Saturday",
+	"Chuyen di Nha Trang 3 ngày nên ở đâu",
+	"Chuyen di Nha Trang tầm 3 triệu thì ở khách sạn nào",
+	"Lên lịch chuyen di Nha Trang cho nhóm 6 người",
+	"Chuyen di Ngày mai đi đâu thì hợp",
 }
 
 func TestLuatTienTuViet(t *testing.T) {
