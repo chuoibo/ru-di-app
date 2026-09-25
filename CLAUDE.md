@@ -13,7 +13,8 @@ một writer; không coi proxy sang Python là hoàn tất migration.
 
 Chat v2 bắt buộc E2EE, không fallback plaintext; lịch sử cũ chỉ đọc và có
 nhãn. Server không giữ khoá giải mã chat. AI chỉ nhận nội dung được gọi/chia
-sẻ rõ ràng, không tự đọc chat/gu/lịch sử. Giữ ba luật tiền và tài liệu frozen.
+sẻ rõ ràng, không tự đọc chat/gu/lịch sử (ngoại lệ: gu của người đã tự bật
+`chia_gu` trong sổ đôi của họ — ADR-0034). Giữ ba luật tiền và tài liệu frozen.
 Native Android/iOS, crypto review độc lập, tải và người dùng thực là cổng
 riêng. SQLite không phải backend; kho mã hoá trên thiết bị là ngoại lệ đúng
 tầng. Tài liệu tiến độ: `docs/architecture/02-chat-go-e2ee.md`. Các mô tả
