@@ -8,6 +8,10 @@
     { "id": "cho-ti", "label": "Chờ tí" },
     { "id": "ket-xe", "label": "Kẹt xe" },
     { "id": "tra-tien-ne", "label": "Trả tiền nè" },
-    { "id": "tuyet-voi", "label": "Tuyệt vời" }
+    { "id": "tuyet-voi", "label": "Tuyệt vời" },
+    { "id": "hen-nhe", "label": "Hẹn nhé!" },
+    { "id": "nho-nhau", "label": "Nhớ nhau" },
+    { "id": "ve-toi-chua", "label": "Về tới chưa?" },
+    { "id": "om-cai", "label": "Ôm cái" }
   ]
 }

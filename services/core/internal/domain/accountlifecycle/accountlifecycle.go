@@ -86,6 +86,7 @@ var erasure = [...]Branch{
 		"pair_paper_responses",
 		"pair_paper_outings",
 		"pair_paper_keeps",
+		"pair_cycle_rhythms",
 		"messages",
 		"message_reactions",
 		"memories",

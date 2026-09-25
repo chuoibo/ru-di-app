@@ -116,3 +116,27 @@ Diff này đổi `PaperStopInput.place_id`/`PaperStop.place_id` từ `uuid.UUID`
 Diff này thêm `_chi_chu_thay` (Go `pairsteps.chiChuThay`): người không phải chủ bản phác chỉ thấy một tờ khi tờ không ở `nhap` **và** có ít nhất một phiên bản đã gửi (`sent_at` khác null). Trước đây luật là «không phải `nhap`», nên bản phác chưa gửi mà chủ bấm «Tuần này nghỉ» (`nghi_tuan`), bỏ (`bo`) hay để hết tuần (`het_han`) hiện ra trong danh sách và chi tiết của người kia, kèm nội dung và lý do riêng — tái hiện trên stack cô lập 24/09 bằng hai phiên thật. Áp ở `list_pair_papers` (lọc) và `_readable_paper_or_404` (`may_view_paper`, 404 `paper_not_found`), nên mọi lệnh đọc/ghi tờ đi qua cửa này. Golden `python_pair_steps.json` thêm `unsent_*`/`sent_then_skipped_as_kia`; bản sao route trong repo oracle Postgres đổi theo.
 
 - `PUT /contexts/{context_id}/notebook/constraints/{kind}`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 — `chia_gu`: gu trong sổ đôi, mỗi người tự bật (ADR-0034 §2.1–2.2)
+
+Diff này thêm mục đích đồng ý `chia_gu` (CONSENT_PURPOSES, PER_PERSON_PURPOSES; CHECK `ck_pair_consent_proposals_consent_purpose_known` mở rộng ở migration `e3b7c1d9a4f2`), hàm thuần `pair_notebook.gu_hai_nguoi` (Go `pairnotebook.GuHaiNguoi`) và trường `taste` của `PairNotebookResponse` (`_pair_taste`, Go `pairsteps.pairTaste`). Golden: `python_pair_notebook*.json` (ca `taste: *`, fuzz có `chia_gu`), `python_pair_steps*.json` (ca `taste_*`); Go replay 0 lệch; tầng Postgres Python 720 xanh.
+
+- `PUT /contexts/{context_id}/notebook/constraints/{kind}`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 — Nếp dùng gu của người đã bật `chia_gu` khi phác tờ (ADR-0034 §2.2)
+
+Diff này tách `_pair_context_or_404` thành `_pair_roster_or_404` (cùng ba lệnh đọc, cùng thứ tự, cùng câu trả lời; chỉ giữ thêm tên hiển thị của hàng thành viên — Go `pairRosterOr404`, `Member.DisplayName`) và thêm vào `draft_pair_paper` bước gu: `_gu_cho_nep` + hàm thuần `pair_paper.gu_cho_nep` / `loai_theo_gu` / `lam_giau_theo_gu` (Go `pairpaper.GuChoNep` / `LoaiTheoGu` / `LamGiauTheoGu`). Golden: `python_pair_paper*.json` (ca `gu_cho_nep`, `lam_giau_theo_gu`, fuzz riêng), `python_pair_steps.json` (7 ca `taste_*` của draft); Go replay 0 lệch.
+
+- `PUT /contexts/{context_id}/notebook/constraints/{kind}`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 — «Người lo» của tuần trong sổ đôi (ADR-0034 §2.3–2.4)
+
+Diff này thêm `week_role` vào `PairNotebookResponse` (`_week_role`, Go `pairsteps.weekRole`): chỉ trong «Một đôi» đang mở; lựa chọn của tuần (`get_pair_rhythm`, bảng mới `pair_cycle_rhythms`, migration `f4a8d2c6b1e9`) nếu có, không thì suy bằng hàm thuần `pair_notebook.nguoi_lo_suy` (gửi tờ trước ×2, đề nghị sửa ×1, trong chu kỳ này; hoà → người lập sổ) và `vai_tuan`. Không có giới tính. `pair_notebook` giờ đọc tờ một lần cho cả tờ mở lẫn người lo (`_open_paper_id(papers=…)`). Route mới `PUT …/notebook/week-role` (Go phục vụ, evidence riêng). Golden `python_pair_notebook*.json` (ca `lo:*`), `python_pair_steps*.json` (`role_*`, `set_pair_week_role`), permissions; repo oracle Postgres Go có 4 ca week-role.
+
+- `PUT /contexts/{context_id}/notebook/constraints/{kind}`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 (lượt 2) — gậy luân phiên, hạn mức tuần, «Một đôi» trên hồ sơ, 4 sticker đôi (ADR-0034 §2.4–2.5)
+
+Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở lời (tờ đầu tiên gửi trong tuần, `nguoi_mo_loi`) hai tuần liền thì tuần này sang người kia, `cach` = `luot`; tín hiệu tờ thêm `tuan`, `sent_at`. (2) `draft_pair_paper` từ chối 409 `paper_week_quota` khi người gọi đã phác `TO_MOI_NGUOI_MOI_TUAN` (3, cùng số với `packages/shared/nep-nhip.json`) tờ trong tuần. (3) `get_person_profile` trả `relation` = `couple` khi hai người là một «Một đôi» (`same_couple`, hỏi SAU cửa quyền, không phải oracle cho người lạ). (4) Từ vựng sticker thêm `hen-nhe`, `nho-nhau`, `ve-toi-chua`, `om-cai`. Golden pair_notebook (ca baton, 10 shard), pair_steps (`quota_*`, `role_baton_*`), people_steps (`couple_*`), stickers; Go 0 lệch.
+
+- `PUT /contexts/{context_id}/notebook/constraints/{kind}`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.

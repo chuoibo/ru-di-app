@@ -98,3 +98,18 @@ của người đó (`repo/erasure.go` + Python).
    luật E2EE/consent — Lead xác nhận 2026-09-25.
 3. §2.6 — **đồng ý**: vận hành 1 lời gọi/sổ đôi/tuần; một lượt đo chất lượng `gemini-3.1-flash-lite`, **trần 30
    lời gọi**, gọi một lần, đóng băng kết quả ra file, báo lại số lời gọi thực tế.
+
+## 5. Ghi chú thực thi (2026-09-25, không đổi quyết định)
+
+- **Gậy** không chạy thành một lịch luân phiên cứng tách khỏi «Người lo»: như thế tuần lẻ màn sẽ nói «Minh lo»
+  mà lượt mở lời là của Linh — hai sự thật cho một câu hỏi. Bản làm: người lo suy từ tương tác (§2.4); **gậy là
+  luật cân tải trên nó** — nếu người lo quen đã mở lời (tờ gửi đầu tiên của tuần) **hai tuần liền**, tuần này
+  sang người kia, `cach` = `luot`, màn nói vì sao. Lựa chọn của tuần luôn thắng. Không lưu gì thêm.
+- **Nhịp:** `packages/shared/nep-nhip.json` giữ một con số, 3 tờ mỗi người mỗi tuần mỗi sổ (409
+  `paper_week_quota`); Python, Go và app đọc cùng số, test mỗi bên đối chiếu. «Nếp bước ra» khi cả hai đều đã
+  đề nghị sửa **chưa làm**: nó sẽ tắt phần phác theo gu vừa ship, cần Lead xem lại có còn muốn.
+- **Hồ sơ «Một đôi»:** `GET /people/{id}` trả `relation` = `couple` chỉ cho hai người trong đôi, hỏi sau cửa
+  quyền (không thành oracle cho người lạ); người khác vẫn thấy «Bạn bè»/«Cùng nhóm» như cũ.
+- **4 sticker đôi** (`hen-nhe`, `nho-nhau`, `ve-toi-chua`, `om-cai`): cùng từ vựng đóng, máy chủ nhận ở mọi
+  cuộc trò chuyện; khay chỉ bày chúng trong cuộc trò chuyện hai người, dưới «Cho hai người». Không nhân vật nào
+  mang giới.

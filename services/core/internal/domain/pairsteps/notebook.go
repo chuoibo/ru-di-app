@@ -39,6 +39,18 @@ type NotebookView struct {
 	// GrantedPurposes is what BOTH agreed to on one proposal, in ladder order:
 	// the only reading a screen may light a rung on (QA 23/09).
 	GrantedPurposes []string
+	// Taste is _pair_taste: nil outside «Một đôi» (ADR-0034).
+	Taste *pairnotebook.Taste
+	// WeekRole is _week_role: nil outside an open «Một đôi» (ADR-0034 §2.4).
+	WeekRole *WeekRole
+}
+
+// WeekRole is PairWeekRoleResponse.
+type WeekRole struct {
+	Tuan    pairpaper.Date
+	NguoiLo []string
+	Cach    string
+	Diem    []pairnotebook.Diem
 }
 
 // ReadNotebook is pair_notebook (GET /contexts/{context_id}/notebook).
@@ -94,11 +106,127 @@ func ReadNotebook(s Store, actor Actor, contextID string, now time.Time) (Notebo
 		view.MyConsents = append(view.MyConsents, ConsentState{Purpose: purpose, Granted: contains(mine, purpose)})
 		view.TheirConsentsGranted = append(view.TheirConsentsGranted, ConsentState{Purpose: purpose, Granted: contains(theirs, purpose)})
 	}
-	if view.OpenPaperID, err = openPaperID(s, actor, contextID, now); err != nil {
+	// One read of the sheets serves the open sheet and the week's role; then
+	// the week's choice, then the tastes -- Python's order.
+	papers, err := s.ListPairPapers(contextID)
+	if err != nil {
+		return NotebookView{}, err
+	}
+	view.OpenPaperID = openPaperIn(papers, actor, now)
+	if view.WeekRole, err = weekRole(s, notebook, consents, participants, papers, now); err != nil {
 		return NotebookView{}, err
 	}
 	view.GrantedPurposes = pairnotebook.GrantedPurposes(consents, participants, &now)
+	if view.Taste, err = pairTaste(s, consents, participants, actor, now); err != nil {
+		return NotebookView{}, err
+	}
 	return view, nil
+}
+
+// weekRole is _week_role (ADR-0034 §2.4).
+func weekRole(s Store, notebook *Notebook, consents []pairnotebook.Consent, participants []string, papers []Paper, now time.Time) (*WeekRole, error) {
+	if notebook == nil || notebook.CycleID == nil || !isActive(notebook) || !pairnotebook.CanBatDoi(consents, participants, &now) {
+		return nil, nil
+	}
+	tuan := pairpaper.TuanCua(now)
+	chon, err := s.GetPairRhythm(*notebook.CycleID, tuan)
+	if err != nil {
+		return nil, err
+	}
+	var nguoiLapSo *string
+	var luc *time.Time
+	for _, p := range notebook.Proposals {
+		if p.Purpose == "lap_so" && p.CompletedAt != nil && (luc == nil || p.CompletedAt.After(*luc)) {
+			id := p.ProposedByID
+			nguoiLapSo, luc = &id, p.CompletedAt
+		}
+	}
+	toGiay := make([]pairnotebook.ToTinHieu, len(papers))
+	for i, paper := range papers {
+		to := pairnotebook.ToTinHieu{CycleID: paper.CycleID, Tuan: paper.Tuan.ISOFormat()}
+		for _, v := range paper.Versions {
+			to.Versions = append(to.Versions, pairnotebook.PhienBanTinHieu{Version: v.Version, AuthorType: v.AuthorType, SentBy: v.SentBy, SentAt: v.SentAt})
+		}
+		for _, r := range paper.Responses {
+			to.Responses = append(to.Responses, pairnotebook.TraLoiTinHieu{PersonID: r.PersonID, Kind: r.Kind})
+		}
+		toGiay[i] = to
+	}
+	suy := pairnotebook.NguoiLoSuy(participants, toGiay, *notebook.CycleID, nguoiLapSo)
+	var chosen **string
+	if chon != nil {
+		id := chon.NguoiLoID
+		chosen = &id
+	}
+	moLoiTruoc := []*string{
+		pairnotebook.NguoiMoLoi(toGiay, *notebook.CycleID, tuan.AddDays(-7).ISOFormat()),
+		pairnotebook.NguoiMoLoi(toGiay, *notebook.CycleID, tuan.AddDays(-14).ISOFormat()),
+	}
+	vai := pairnotebook.VaiTuan(suy, chosen, participants, moLoiTruoc)
+	return &WeekRole{Tuan: tuan, NguoiLo: vai.NguoiLo, Cach: vai.Cach, Diem: vai.Diem}, nil
+}
+
+// SetWeekRole is set_pair_week_role: «Anh lo / Em lo / Hôm nay mình share».
+// lo is the request's, which pydantic held to toi|nguoi_kia|ca_hai.
+func SetWeekRole(s Store, actor Actor, contextID, lo string, now time.Time) (WeekRole, error) {
+	members, err := pairContextOr404(s, actor, contextID)
+	if err != nil {
+		return WeekRole{}, err
+	}
+	if err := requirePairPermission("set_pair_week_role", actor, fact{"is_group_member", true}); err != nil {
+		return WeekRole{}, err
+	}
+	notebook, err := lockedNotebook(s, contextID, now)
+	if err != nil {
+		return WeekRole{}, err
+	}
+	participants := Participants(notebook, members)
+	consents := ConsentsOf(notebook)
+	if notebook.CycleID == nil || !isActive(notebook) || !pairnotebook.CanBatDoi(consents, participants, &now) {
+		return WeekRole{}, refusal(409, "consent_missing", "Hai bạn bật «Một đôi» trước đã.")
+	}
+	var nguoiLo *string
+	switch lo {
+	case "toi":
+		id := actor.ID
+		nguoiLo = &id
+	case "nguoi_kia":
+		for _, p := range participants {
+			if p != actor.ID {
+				id := p
+				nguoiLo = &id
+				break
+			}
+		}
+	}
+	if err := s.SetPairRhythm(RhythmDraft{CycleID: *notebook.CycleID, Tuan: pairpaper.TuanCua(now), NguoiLoID: nguoiLo, ChonBoiID: actor.ID, Now: now}); err != nil {
+		return WeekRole{}, err
+	}
+	papers, err := s.ListPairPapers(contextID)
+	if err != nil {
+		return WeekRole{}, err
+	}
+	role, err := weekRole(s, notebook, consents, participants, papers, now)
+	if err != nil {
+		return WeekRole{}, err
+	}
+	if role == nil {
+		return WeekRole{}, &Invariant{Reason: "week role missing right after it was set"}
+	}
+	return *role, nil
+}
+
+// pairTaste is _pair_taste: tastes are read only once the domain has said a
+// couple exists; outside «Một đôi» nobody's tags are fetched at all.
+func pairTaste(s Store, consents []pairnotebook.Consent, participants []string, actor Actor, now time.Time) (*pairnotebook.Taste, error) {
+	if !pairnotebook.CanBatDoi(consents, participants, &now) {
+		return nil, nil
+	}
+	tags, err := s.InterestsByPerson(append([]string{}, participants...))
+	if err != nil {
+		return nil, err
+	}
+	return pairnotebook.GuHaiNguoi(consents, participants, actor.ID, tags, now), nil
 }
 
 // openPaperID is _open_paper_id: the first sheet in play, skipping a draft
@@ -108,6 +236,11 @@ func openPaperID(s Store, actor Actor, contextID string, now time.Time) (*string
 	if err != nil {
 		return nil, err
 	}
+	return openPaperIn(papers, actor, now), nil
+}
+
+// openPaperIn is _open_paper_id over sheets already read.
+func openPaperIn(papers []Paper, actor Actor, now time.Time) *string {
 	for i := range papers {
 		paper := &papers[i]
 		state := pairpaper.HieuLuc(PaperDict(paper), now)
@@ -118,9 +251,9 @@ func openPaperID(s Store, actor Actor, contextID string, now time.Time) (*string
 			continue
 		}
 		id := paper.ID
-		return &id, nil
+		return &id
 	}
-	return nil, nil
+	return nil
 }
 
 // ProposeConsent is propose_pair_consent. purpose is the request's, which
@@ -140,6 +273,9 @@ func ProposeConsent(s Store, actor Actor, contextID, purpose string, now time.Ti
 	cycleID := notebook.CycleID
 	if purpose != "lap_so" && !isActive(notebook) {
 		return ProposalView{}, refusal(409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã.")
+	}
+	if slices.Contains(pairnotebook.PerPersonPurposes(), purpose) {
+		return proposePerPerson(s, notebook, members, purpose, actor, now)
 	}
 	// One offer per rung at a time. The other person already asking for the
 	// same thing is an offer to ANSWER, by id: a second proposal made each of
@@ -179,6 +315,45 @@ func ProposeConsent(s Store, actor Actor, contextID, purpose string, now time.Ti
 		return ProposalView{}, err
 	}
 	if err := s.GrantConsent(proposal.ID, actor.ID, now); err != nil {
+		return ProposalView{}, err
+	}
+	return proposalView(proposal), nil
+}
+
+// proposePerPerson is _propose_per_person (ADR-0034 §2.1): only inside «Một
+// đôi»; filed, granted by its proposer and completed in one go, so nobody is
+// ever left to «agree» to somebody else's taste. Asking again while it is on
+// returns the proposal in force.
+func proposePerPerson(s Store, notebook *Notebook, members []string, purpose string, actor Actor, now time.Time) (ProposalView, error) {
+	participants := Participants(notebook, members)
+	if !pairnotebook.CanBatDoi(ConsentsOf(notebook), participants, &now) {
+		return ProposalView{}, refusal(409, "consent_missing", "Hai bạn bật «Một đôi» trước đã.")
+	}
+	for _, row := range notebook.Consents {
+		if row.PersonID != actor.ID || row.GrantedAt == nil || row.RevokedAt != nil {
+			continue
+		}
+		for _, proposal := range notebook.Proposals {
+			if proposal.ID == row.ProposalID && proposal.Purpose == purpose && proposal.CompletedAt != nil {
+				return proposalView(proposal), nil
+			}
+		}
+	}
+	proposal, err := s.CreateConsentProposal(ProposalDraft{
+		CycleID:      *notebook.CycleID,
+		Purpose:      purpose,
+		ProposedByID: actor.ID,
+		TermsVersion: DieuKhoanHienTai,
+		ExpiresAt:    pairnotebook.HanDeNghi(now),
+		Now:          now,
+	})
+	if err != nil {
+		return ProposalView{}, err
+	}
+	if err := s.GrantConsent(proposal.ID, actor.ID, now); err != nil {
+		return ProposalView{}, err
+	}
+	if err := s.CompleteConsentProposal(proposal.ID, now); err != nil {
 		return ProposalView{}, err
 	}
 	return proposalView(proposal), nil

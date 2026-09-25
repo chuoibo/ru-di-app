@@ -945,7 +945,10 @@ class PublicPersonResponse(ApiModel):
     bio: StrictStr | None
     city: StrictStr | None
     created_at: datetime
-    relation: Literal["self", "friend", "groupmate"]
+    #: `couple`: the reader and this person are one «Một đôi» (ADR-0034). Only
+    #: the two of them can ever be told this; to anybody else they are friends
+    #: or groupmates, as before.
+    relation: Literal["self", "friend", "groupmate", "couple"]
 
 
 class SavedPlaceSummary(ApiModel):
@@ -2498,7 +2501,7 @@ class ReelResponse(ApiModel):
 # bản mới, mốc gửi, người gửi, id outing. Một trường như thế trong body là một
 # đường cho client nói dối về điều nó không được quyết.
 
-PairConsentPurpose = Literal["lap_so", "bat_doi", "doc_chat"]
+PairConsentPurpose = Literal["lap_so", "bat_doi", "doc_chat", "chia_gu"]
 PairConstraintKind = Literal["khong_an_duoc", "dung"]
 PairResponseKind = Literal["dong_y", "de_nghi_sua"]
 PairAuthorType = Literal["human", "nep"]
@@ -2710,6 +2713,38 @@ class PairProposalResponse(ApiModel):
     my_granted: StrictBool
 
 
+class PairTasteResponse(ApiModel):
+    """Gu trong sổ đôi (ADR-0034 §2.1–2.2): gu người kia chỉ khi HỌ đã bật
+    `chia_gu`; gu chung chỉ khi CẢ HAI đã bật."""
+
+    mine_shared: StrictBool
+    theirs_shared: StrictBool
+    theirs: list[str]
+    common: list[str]
+
+
+class PairRoleScoreResponse(ApiModel):
+    person_id: UUID
+    score: int
+
+
+class PairWeekRoleResponse(ApiModel):
+    """«Người lo» tuần này (ADR-0034 §2.4): `cach` là «suy» (từ những gì hai
+    người đã làm trong sổ) hoặc «chon» (một trong hai đã chọn cho tuần này)."""
+
+    tuan: date
+    nguoi_lo: list[UUID]
+    #: «luot»: người lo quen đã mở lời hai tuần liền, tuần này sang người kia.
+    cach: Literal["suy", "chon", "luot"]
+    diem: list[PairRoleScoreResponse]
+
+
+class PairWeekRoleRequest(ApiModel):
+    """Ai lo tuần này: tôi, người kia, hay «Hôm nay mình share»."""
+
+    lo: Literal["toi", "nguoi_kia", "ca_hai"]
+
+
 class PairNotebookResponse(ApiModel):
     """Sổ, nhìn từ một trong hai người.
 
@@ -2733,6 +2768,10 @@ class PairNotebookResponse(ApiModel):
     #: Hai «có» của hai lời đề nghị khác nhau không phải một thoả thuận; màn
     #: hình chỉ được sáng một bậc theo trường này (QA 23/09).
     granted_purposes: list[PairConsentPurpose]
+    #: Null ngoài sổ «Một đôi» (ADR-0034).
+    taste: PairTasteResponse | None
+    #: Null ngoài sổ «Một đôi» đang mở (ADR-0034 §2.4).
+    week_role: PairWeekRoleResponse | None
 
 
 class PairProposalCreateRequest(ApiModel):

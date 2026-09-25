@@ -46,8 +46,12 @@ export function SoDoiSongProvider({
       lapSo: so?.cycle_state === "active",
       batDoi: caHaiDongY(so, "bat_doi"),
       docChat: caHaiDongY(so, "doc_chat"),
-      luotCuaToi: true,
-      coLuot: false,
+      // Whose turn the week is: this week's «Người lo» (ADR-0034 §2.4), and
+      // everybody's turn where there is none (outside «Một đôi»).
+      luotCuaToi: so?.week_role ? so.week_role.nguoi_lo.includes(toiId) : true,
+      // A turn exists only where the week has a «Người lo»; elsewhere either
+      // person may open, and the screen must not claim otherwise.
+      coLuot: Boolean(so?.week_role),
       // «Rủ đi chơi» refused because the week holds the other person's
       // private draft: wait for it, do not offer the same failing press (B1).
       xinToBiChan: sauKhiXinTo(song.lenhBiChan?.ten === "xin-to" ? song.lenhBiChan.ma : null, toMo !== undefined) === "cho-nguoi-kia",
@@ -61,6 +65,8 @@ export function SoDoiSongProvider({
         cuaToi: d.proposed_by_id === toiId,
       })),
       daDong: false,
+      gu: so?.taste ?? null,
+      vai: so?.week_role ?? null,
       daNap: song.pha !== "dang-nap",
       dangLam: song.dangLam,
       loiLenh: song.loiLenh,
@@ -76,6 +82,9 @@ export function SoDoiSongProvider({
       deNghiLapSo: () => void song.xinLapSo(),
       deNghiBatDoi: () => void song.xinBac("bat_doi"),
       thuHoiBatDoi: () => void song.thuHoi("bat_doi"),
+      chiaGu: () => void song.xinBac("chia_gu"),
+      thoiChiaGu: () => void song.thuHoi("chia_gu"),
+      chonLo: (lo) => void song.chonVai(lo),
       datRangBuoc: async (rb) => {
         // Two fields, two writes, and an empty one is a delete: the route takes
         // one kind at a time and refuses a blank line, because emptying a

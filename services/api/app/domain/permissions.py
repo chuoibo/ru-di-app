@@ -594,6 +594,9 @@ _TABLE: dict[str, dict] = {
     # owner says about themselves.
     "view_pair_constraints": {"roles": {"member"}, "requires": ("is_group_member",)},
     "edit_pair_constraint": {"roles": {"member"}, "requires": ("is_self",)},
+    # ADR-0034 §2.4: either of the two may say who leads this week; it decides
+    # whose turn the week reads as and grants nothing.
+    "set_pair_week_role": {"roles": {"member"}, "requires": ("is_group_member",)},
     # Closing is a two-step door on purpose (§7.6): the preview is a read that
     # produces the revision the close must carry, so the count somebody agreed
     # to and the rows being closed are provably the same rows.

@@ -61,7 +61,7 @@ from app.domain import pair_notebook, pair_paper  # noqa: E402
 
 SEED = 27
 FUZZ_CASES = 3000
-FUZZ_SHARDS = 6
+FUZZ_SHARDS = 10
 TARGET = "services/core/internal/domain/pairnotebook/testdata/python_{mode}.json"
 
 #: Copies of the digit rules in scripts/repo_guard.py plus the hex, e-mail and
@@ -85,6 +85,8 @@ GUARD_RULES = (
 A = "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
 B = "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
 C = "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+#: Tastes gu_hai_nguoi reads: out of vocabulary order, one retired tag.
+GU = {A: ["cafe", "an-uong", "game"], B: ["game", "outdoor", "cafe", "tag-da-bo"], C: ["karaoke"]}
 NOW = datetime(2026, 9, 13, 12, 0, tzinfo=UTC)
 MICRO = timedelta(microseconds=1)
 VIETNAM = timezone(timedelta(hours=7))
@@ -171,6 +173,11 @@ def consents_case(
         result["chat_consent_active"] = pair_notebook.chat_consent_active(
             consents, participants, now=now
         )
+        # ADR-0034: what each person asked about may see of the two tastes.
+        result["gu"] = [
+            [person, pair_notebook.gu_hai_nguoi(consents, participants, person, GU, now=now)]
+            for person in ask
+        ]
     return {
         "fn": "consents",
         "name": name,
@@ -179,6 +186,47 @@ def consents_case(
         "now": now,
         "ask": ask,
         "result": result,
+    }
+
+
+TUANS = ("2026-08-31", "2026-09-07", "2026-09-14")
+
+
+def nguoi_lo_case(
+    name: str, participants: list[str], to_giay: list[dict], cycle: str, lap_so: str | None, mo_loi=None
+) -> dict:
+    """ADR-0034 §2.4: nguoi_lo_suy; nguoi_mo_loi of three weeks; and vai_tuan
+    over them for no choice, each participant chosen, and «cả hai». `mo_loi`
+    (newest first) defaults to who opened the last two of TUANS."""
+    suy = pair_notebook.nguoi_lo_suy(participants, to_giay, cycle_id=cycle, nguoi_lap_so=lap_so)
+    mo = [pair_notebook.nguoi_mo_loi(to_giay, cycle_id=cycle, tuan=t) for t in TUANS]
+    if mo_loi is None:
+        mo_loi = [mo[2], mo[1]]
+    chon = [None, *[{"nguoi_lo_id": p} for p in participants], {"nguoi_lo_id": None}]
+    return {
+        "fn": "nguoi_lo",
+        "name": name,
+        "participants": participants,
+        "to_giay": to_giay,
+        "cycle": cycle,
+        "lap_so": lap_so,
+        "chon": chon,
+        "mo_loi": mo_loi,
+        "result": {
+            "suy": suy,
+            "mo_loi": mo,
+            "vai": [pair_notebook.vai_tuan(suy, c, participants, mo_loi_truoc=mo_loi) for c in chon],
+        },
+    }
+
+
+def to_tin_hieu(cycle, sent_by=None, author="human", responses=(), v1=True, tuan=TUANS[2], sent_at=NOW) -> dict:
+    return {
+        "cycle_id": cycle,
+        "tuan": tuan,
+        "versions": ([{"version": 1, "author_type": author, "sent_by": sent_by, "sent_at": sent_at}] if v1 else [])
+        + [{"version": 2, "author_type": "human", "sent_by": sent_by, "sent_at": sent_at}],
+        "responses": [{"person_id": p, "kind": k} for p, k in responses],
     }
 
 
@@ -226,7 +274,76 @@ def han_case(name: str, now: datetime) -> dict:
 def edge_cases() -> list[dict]:
     two = [A, B]
     both_chat = [consent(A, "doc_chat"), consent(B, "doc_chat")]
-    cases = [
+    doi = [consent(A, "bat_doi", proposal_id="PR-D"), consent(B, "bat_doi", proposal_id="PR-D")]
+    lo = [
+        nguoi_lo_case("lo: nothing yet goes to the opener", [A, B], [], "CY", B),
+        nguoi_lo_case("lo: nothing and no opener", [A, B], [], "CY", None),
+        nguoi_lo_case(
+            "lo: sent first counts two, an edit one",
+            [A, B],
+            [to_tin_hieu("CY", A), to_tin_hieu("CY", B, responses=[(A, "de_nghi_sua"), (B, "dong_y")])],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case(
+            "lo: other cycle, Nep, unsent and stranger ignored",
+            [A, B],
+            [to_tin_hieu("CU", A), to_tin_hieu("CY", A, author="nep"), to_tin_hieu("CY", None), to_tin_hieu(None, A), to_tin_hieu("CY", C), to_tin_hieu("CY", A, v1=False)],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case("lo: a tie goes to the opener", [A, B], [to_tin_hieu("CY", A), to_tin_hieu("CY", B)], "CY", B),
+        nguoi_lo_case("lo: a tie without the opener among it", [A, B], [to_tin_hieu("CY", A), to_tin_hieu("CY", B)], "CY", C),
+        nguoi_lo_case("lo: repeated participants count once", [A, B, A], [to_tin_hieu("CY", B)], "CY", A),
+        nguoi_lo_case("lo: nobody", [], [to_tin_hieu("CY", A)], "CY", A),
+        # The baton: the usual lead opened both of the last two weeks.
+        nguoi_lo_case(
+            "lo: A opened two weeks running, the week passes to B",
+            [A, B],
+            [to_tin_hieu("CY", A, tuan=TUANS[1]), to_tin_hieu("CY", A, tuan=TUANS[2]), to_tin_hieu("CY", A, tuan=TUANS[0])],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case(
+            "lo: B opened first one week, the baton stays",
+            [A, B],
+            [to_tin_hieu("CY", A, tuan=TUANS[1]), to_tin_hieu("CY", A, tuan=TUANS[2], sent_at=NOW), to_tin_hieu("CY", B, tuan=TUANS[2], sent_at=NOW - MICRO)],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case(
+            "lo: unsent or Nep sheets do not open a week",
+            [A, B],
+            [to_tin_hieu("CY", A, tuan=TUANS[1]), to_tin_hieu("CY", A, tuan=TUANS[2], sent_at=None), to_tin_hieu("CY", A, tuan=TUANS[2], author="nep")],
+            "CY",
+            B,
+        ),
+        nguoi_lo_case("lo: an explicit baton history", [A, B], [to_tin_hieu("CY", A)], "CY", B, mo_loi=[A, A]),
+        nguoi_lo_case("lo: a half history", [A, B], [to_tin_hieu("CY", A)], "CY", B, mo_loi=[A, None]),
+    ]
+    cases = [*lo,
+        # ADR-0034: taste, per person, inside «Một đôi» only.
+        consents_case("taste: friends only", [consent(B, "chia_gu", proposal_id="PG-B")], two, NOW),
+        consents_case("taste: couple, nobody shares", doi, two, NOW),
+        consents_case("taste: couple, one shares", doi + [consent(B, "chia_gu", proposal_id="PG-B")], two, NOW),
+        consents_case(
+            "taste: couple, both share",
+            doi + [consent(A, "chia_gu", proposal_id="PG-A"), consent(B, "chia_gu", proposal_id="PG-B")],
+            two,
+            NOW,
+        ),
+        consents_case(
+            "taste: taken back",
+            doi + [consent(A, "chia_gu", proposal_id="PG-A"), consent(B, "chia_gu", proposal_id="PG-B", revoked_at=NOW - MICRO)],
+            two,
+            NOW,
+        ),
+        consents_case(
+            "taste: both share on one proposal is still two people",
+            doi + [consent(A, "chia_gu", proposal_id="PG"), consent(B, "chia_gu", proposal_id="PG")],
+            two,
+            NOW,
+        ),
         # QA 23/09: each person filed their own proposal for the same rung.
         # Per purpose that read as «both agreed»; per proposal it is nothing.
         consents_case(
@@ -549,7 +666,7 @@ def edge_cases() -> list[dict]:
 # ---------------------------------------------------------------------------
 
 PEOPLE = (A, B, C, A.upper(), "", "ngu" + E_DOT_CIRCUMFLEX)
-PURPOSES = ("lap_so", "bat_doi", "doc_chat", "doc_chat", "doc_het", "", "DOC_CHAT")
+PURPOSES = ("lap_so", "bat_doi", "doc_chat", "doc_chat", "doc_het", "", "DOC_CHAT", "chia_gu", "bat_doi")
 DELTAS = (
     -timedelta(days=3),
     -timedelta(seconds=1),
@@ -600,7 +717,7 @@ def fuzz_cases() -> list[dict]:
                     rows.append(
                         {
                             "person_id": person,
-                            "purpose": "doc_chat" if rng.random() < 0.9 else "bat_doi",
+                            "purpose": rng.choice(("doc_chat", "doc_chat", "bat_doi", "bat_doi", "chia_gu")),
                             "granted_at": instant(0.05),
                             "revoked_at": instant(0.9),
                             "proposal_expires_at": rng.choice(
@@ -608,6 +725,18 @@ def fuzz_cases() -> list[dict]:
                             ),
                         }
                     )
+                    if rng.random() < 0.5:
+                        # ADR-0034: each person's own taste switch, own proposal.
+                        rows.append(
+                            {
+                                "person_id": person,
+                                "purpose": "chia_gu",
+                                "granted_at": instant(0.05),
+                                "revoked_at": instant(0.9),
+                                "proposal_expires_at": NOW + timedelta(days=3),
+                                "proposal_id": "PG-" + person[:4],
+                            }
+                        )
                 rng.shuffle(rows)
             cases.append(
                 consents_case(
@@ -635,6 +764,23 @@ def fuzz_cases() -> list[dict]:
             cases.append(preview_case(f"fuzz {index}", papers, proposals, instant()))
         else:
             cases.append(han_case(f"fuzz {index}", instant()))
+    # ADR-0034 §2.4: its own stream, so every case above stays as it was.
+    rng = random.Random(SEED * 7 + 34)
+    for index in range(200):
+        people = [rng.choice(PEOPLE[:4]) for _ in range(rng.choice((0, 1, 2, 2, 2, 3)))]
+        to_giay = [
+            to_tin_hieu(
+                rng.choice(("CY", "CY", "CY", "CU", None)),
+                rng.choice((A, B, B, C, None)),
+                author=rng.choice(("human", "human", "nep")),
+                responses=[(rng.choice((A, B, C)), rng.choice(("de_nghi_sua", "dong_y"))) for _ in range(rng.randint(0, 3))],
+                v1=rng.random() < 0.9,
+                tuan=rng.choice(TUANS),
+                sent_at=rng.choice((None, NOW, NOW - MICRO, NOW - timedelta(days=1))),
+            )
+            for _ in range(rng.randint(0, 6))
+        ]
+        cases.append(nguoi_lo_case(f"fuzz lo {index}", people, to_giay, "CY", rng.choice((A, B, C, None))))
     return cases
 
 

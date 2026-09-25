@@ -47,12 +47,15 @@ không lạc.
 
 Còn mở, theo thứ tự:
 
-1. **Chờ Lead ký [ADR-0034](../decisions/ADR-0034-gay-vai-nhip-chia-gu-va-cau-hoi-tuan-cua-so-doi.md)**
-   trước khi code: consent `chia_gu` theo người, gu chung / gu người kia, giới tính tự khai cho vai mặc
-   định, gậy/vai/nhịp/nghỉ tuần, câu hỏi tuần bằng mô hình (1 lời gọi/sổ/tuần; lượt đo chất lượng cần
-   Lead duyệt số lời gọi riêng).
-2. Sau ADR: migration (`people.gioi_tinh`, `chia_gu`, `pair_cycle_rhythms`, `pair_week_insights`), route
-   vai/nhịp/nghỉ/câu trả lời, worker tuần gọi brain, 4 sticker đôi ở bốn danh sách, hồ sơ «Một đôi».
+1. **[ADR-0034](../decisions/ADR-0034-gay-vai-nhip-chia-gu-va-cau-hoi-tuan-cua-so-doi.md) đã ký 25/09.**
+   Xong 25/09: lát 1 `chia_gu`; (a) Nếp dùng gu người đã bật khi phác tờ; (b) người lo suy từ tương tác +
+   «Để tôi lo / Để <tên> lo / Hôm nay mình share» (`pair_cycle_rhythms`, không giới tính; nghỉ tuần dùng
+   «Tuần này nghỉ» sẵn có). Lượt 2 xong 25/09: gậy cân tải, hạn mức 3 tờ/người/tuần, 4 sticker đôi, hồ sơ «Một đôi». Còn: «Nếp bước ra»
+   khi cả hai tự lo (chờ Lead, xem ADR-0034 §5); (c) câu
+   hỏi tuần bằng brain stub (`pair_week_insights`, 0 lời gọi), rồi lượt đo thật tối đa 30 lời gọi
+   `gemini-3.1-flash-lite` — báo Lead trước khi chạy; (d) 4 sticker đôi, hồ sơ «Một đôi».
+2. Xoá tài khoản: hàng `pair_consents` (kể cả `chia_gu`) đang được GIỮ như mọi hàng đồng ý; gu của người
+   bị xoá mất theo `person_interests`, nên không còn gì để hiện. Xem lại khi thêm hai bảng mới ở (b)/(c).
 3. Không cần ADR — đã xong 24/09 (lượt «còn nợ» 1): khoảnh khắc hẹn, kỷ niệm của hai bạn, ảnh dọc
    trên tường, «Thêm vào kèo» cho sổ đôi, Khám phá chữ 1.3, câu chữ «máy chủ». Còn: chất giấy chế
    độ tối (hợp đồng màu spec §16 — cần lượt thiết kế có đọc mù). «Rủ … tới đây» từ trang quán: xong

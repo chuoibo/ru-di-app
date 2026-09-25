@@ -60,6 +60,7 @@ from app.api.schemas import (  # noqa: E402
     CloseNotebookRequest,
     PairConstraintPutRequest,
     PairProposalCreateRequest,
+    PairWeekRoleRequest,
     PaperDraftEditRequest,
     PaperKeepRequest,
     PaperResponseRequest,
@@ -280,6 +281,11 @@ ROUTES = {
         "preview_close_pair_notebook", _context
     ),
     "route.close_pair_notebook": _route("close_pair_notebook", _close_body),
+    # ADR-0034 §2.4.
+    "route.set_pair_week_role": _route(
+        "set_pair_week_role",
+        lambda r, a, n: (_uuid(a["context_id"]), PairWeekRoleRequest.model_validate(a["body"])),
+    ),
     "route.list_pair_papers": _route("list_pair_papers", _context),
     "route.draft_pair_paper": _route("draft_pair_paper", _context),
     "route.pair_paper": _route("pair_paper", _paper),

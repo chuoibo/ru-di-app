@@ -3021,7 +3021,7 @@ class PairConsentProposal(Base):
     __tablename__ = "pair_consent_proposals"
     __table_args__ = (
         CheckConstraint(
-            "purpose IN ('lap_so', 'bat_doi', 'doc_chat')", name="consent_purpose_known"
+            "purpose IN ('lap_so', 'bat_doi', 'doc_chat', 'chia_gu')", name="consent_purpose_known"
         ),
         CheckConstraint(
             "expires_at > created_at", name="consent_expires_after_created"
@@ -3432,6 +3432,36 @@ class PairPaperKeep(Base):
     person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     line: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairCycleRhythm(Base):
+    """«Người lo» of one week, when the two chose it (ADR-0034 §2.4).
+
+    Only a choice is stored. The default is inferred from the notebook at every
+    read (`pair_notebook.nguoi_lo_suy`) and never written, so it cannot go
+    stale. `nguoi_lo_id` NULL is «Hôm nay mình share»: both lead that week.
+    """
+
+    __tablename__ = "pair_cycle_rhythms"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["cycle_id"], ["pair_notebook_cycles.id"], name="fk_pair_cycle_rhythms_cycle"
+        ),
+        ForeignKeyConstraint(
+            ["nguoi_lo_id"], ["people.id"], name="fk_pair_cycle_rhythms_nguoi_lo"
+        ),
+        ForeignKeyConstraint(
+            ["chon_boi_id"], ["people.id"], name="fk_pair_cycle_rhythms_chon_boi"
+        ),
+    )
+
+    cycle_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    tuan: Mapped[date] = mapped_column(Date, primary_key=True)
+    nguoi_lo_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    chon_boi_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 

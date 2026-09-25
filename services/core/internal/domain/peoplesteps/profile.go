@@ -174,6 +174,17 @@ func GetPersonProfile(s Store, actor Actor, personID string) (PublicPerson, erro
 	if relation == "" {
 		return PublicPerson{}, &Invariant{Reason: "view_person_profile allowed without a relation"}
 	}
+	// ADR-0034: the two of a couple see each other as that, and only they do
+	// -- asked after the door, so it is never an oracle for strangers.
+	if relation != "self" {
+		couple, err := s.SameCouple(actor.ID, personID)
+		if err != nil {
+			return PublicPerson{}, err
+		}
+		if couple {
+			relation = "couple"
+		}
+	}
 	person, err := s.GetPerson(personID)
 	if err != nil {
 		return PublicPerson{}, err

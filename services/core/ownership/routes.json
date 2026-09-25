@@ -1941,8 +1941,21 @@
       "evidence": "docs/migration/routes/pair_notebooks/POST-contexts-context_id-notebook-close.md"
     },
     {
-      "id": "GET /contexts/{context_id}/papers",
+      "id": "PUT /contexts/{context_id}/notebook/week-role",
       "order": 146,
+      "kind": "route",
+      "method": "PUT",
+      "path": "/contexts/{context_id}/notebook/week-role",
+      "group": "pair_notebooks",
+      "class": "core",
+      "owner": "go",
+      "python": "live",
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/routes/pair_notebooks/PUT-contexts-context_id-notebook-week-role.md"
+    },
+    {
+      "id": "GET /contexts/{context_id}/papers",
+      "order": 147,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/papers",
@@ -1955,7 +1968,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/papers/draft",
-      "order": 147,
+      "order": 148,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/papers/draft",
@@ -1968,7 +1981,7 @@
     },
     {
       "id": "GET /papers/{paper_id}",
-      "order": 148,
+      "order": 149,
       "kind": "route",
       "method": "GET",
       "path": "/papers/{paper_id}",
@@ -1981,7 +1994,7 @@
     },
     {
       "id": "PATCH /papers/{paper_id}/draft",
-      "order": 149,
+      "order": 150,
       "kind": "route",
       "method": "PATCH",
       "path": "/papers/{paper_id}/draft",
@@ -1994,7 +2007,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/send",
-      "order": 150,
+      "order": 151,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/send",
@@ -2007,7 +2020,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/viewed",
-      "order": 151,
+      "order": 152,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/versions/{version}/viewed",
@@ -2020,7 +2033,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/responses",
-      "order": 152,
+      "order": 153,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/versions/{version}/responses",
@@ -2033,7 +2046,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/withdraw",
-      "order": 153,
+      "order": 154,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/withdraw",
@@ -2046,7 +2059,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/skip",
-      "order": 154,
+      "order": 155,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/skip",
@@ -2059,7 +2072,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/done",
-      "order": 155,
+      "order": 156,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/done",
@@ -2072,7 +2085,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/keeps",
-      "order": 156,
+      "order": 157,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/keeps",
@@ -2085,7 +2098,7 @@
     },
     {
       "id": "GET /healthz",
-      "order": 157,
+      "order": 158,
       "kind": "route",
       "method": "GET",
       "path": "/healthz",

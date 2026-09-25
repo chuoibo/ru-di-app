@@ -118,6 +118,7 @@ func All() []Route {
 		grantPairConsent(),
 		revokePairConsent(),
 		putPairConstraint(),
+		setPairWeekRole(),
 		deletePairConstraint(),
 		previewClosePairNotebook(),
 		closePairNotebook(),

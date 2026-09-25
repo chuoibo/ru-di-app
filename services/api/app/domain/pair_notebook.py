@@ -26,18 +26,23 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime, timedelta
 
-from app.domain import pair_paper
+from app.domain import interests, pair_paper
 
 __all__ = [
     "CONSENT_PURPOSES",
     "CONSTRAINT_KINDS",
     "CYCLE_STATES",
     "NotebookError",
+    "PER_PERSON_PURPOSES",
     "can_bat_doi",
     "chat_consent_active",
     "dang_cho",
     "granted_by",
     "granted_purposes",
+    "gu_hai_nguoi",
+    "nguoi_lo_suy",
+    "vai_tuan",
+    "nguoi_mo_loi",
     "han_de_nghi",
     "xem_truoc_dong_so",
 ]
@@ -55,7 +60,14 @@ CYCLE_STATES = ("pending", "active", "closed")
 #: The consent ladder of section 6.1, tier 2 upward. Tier 1 («nhận lời đi
 #: chơi») is the invitation itself and has no row. `doc_chat` is tier 4 and is
 #: off until somebody turns it on: there is no default that reads a chat.
-CONSENT_PURPOSES = ("lap_so", "bat_doi", "doc_chat")
+#: `chia_gu` (ADR-0034) is not a rung both climb: each person turns it on for
+#: THEMSELVES -- «let the other see my taste, and let Nếp use it here» -- and a
+#: proposal for it has one answer, its proposer's. It sits in this tuple so the
+#: per-person switches (`my_consents`, `their_consents_granted`) carry it.
+CONSENT_PURPOSES = ("lap_so", "bat_doi", "doc_chat", "chia_gu")
+
+#: Purposes one person decides alone (ADR-0034 §2.1).
+PER_PERSON_PURPOSES = ("chia_gu",)
 
 #: The two shared constraints of section 6.4. Two, not a free list: a list
 #: grows into a profile, and this is meant to stay the smallest thing that
@@ -184,6 +196,141 @@ def chat_consent_active(
     the conversation, not after.
     """
     return "doc_chat" in granted_purposes(consents, participants, now=now)
+
+
+def gu_hai_nguoi(
+    consents: tuple[dict, ...] | list[dict],
+    participants: tuple[str, ...] | list[str],
+    toi: str,
+    gu_theo_nguoi: dict[str, list[str]],
+    *,
+    now: datetime,
+) -> dict | None:
+    """What of the two tastes one person may see (ADR-0034 §2.1–2.2).
+
+    Only in a notebook both have made «Một đôi»; `None` otherwise, because a
+    taste is not something two friends' notebook shares. Within it: the other
+    person's tags only if THEY turned `chia_gu` on, and the tags the two have
+    in common only if BOTH did -- «common» names the other person's taste too,
+    so it needs their yes as much as «theirs» does. My own switch is reported
+    so the screen can offer it; my own tags are on my profile already.
+
+    Tags come back in vocabulary order, and a stored tag the vocabulary no
+    longer has is left out rather than shown as a raw id.
+    """
+    people = [str(p) for p in participants]
+    me = str(toi)
+    if not can_bat_doi(consents, people, now=now):
+        return None
+    other = next((p for p in people if p != me), None)
+    mine_shared = "chia_gu" in granted_by(consents, me, now=now)
+    theirs_shared = other is not None and "chia_gu" in granted_by(consents, other, now=now)
+    their_tags = set(gu_theo_nguoi.get(other, [])) if theirs_shared and other is not None else set()
+    my_tags = set(gu_theo_nguoi.get(me, []))
+    theirs = [tag for tag in interests.INTEREST_IDS if tag in their_tags]
+    common = [tag for tag in theirs if tag in my_tags] if mine_shared else []
+    return {
+        "mine_shared": mine_shared,
+        "theirs_shared": theirs_shared,
+        "theirs": theirs,
+        "common": common,
+    }
+
+
+def nguoi_lo_suy(
+    participants: list[str],
+    to_giay: list[dict],
+    *,
+    cycle_id: str,
+    nguoi_lap_so: str | None,
+) -> dict:
+    """Who tends to take the lead in this notebook (ADR-0034 §2.3–2.4).
+
+    Read only from what the two did in THIS cycle's notebook, which both
+    already hold (ADR-0027 §4): a sheet a person sent first (version 1, by a
+    human) counts two, a «đề nghị sửa» they answered with counts one. Nothing
+    about who they are -- no gender, no profile, no chat -- goes in.
+
+    The highest score leads. A tie, or nothing yet, goes to whoever opened
+    the notebook (`nguoi_lap_so`), and failing that to the first participant.
+    `diem` is every participant's score, in participant order, so a screen can
+    say why without the rule being restated there.
+    """
+    people = list(dict.fromkeys(str(p) for p in participants))
+    diem = {p: 0 for p in people}
+    for to in to_giay:
+        if str(to.get("cycle_id")) != str(cycle_id):
+            continue
+        dau = next((v for v in to.get("versions", ()) if v.get("version") == 1), None)
+        if dau is not None and dau.get("author_type") == "human" and dau.get("sent_by") is not None:
+            ai = str(dau["sent_by"])
+            if ai in diem:
+                diem[ai] += 2
+        for tl in to.get("responses", ()):
+            ai = str(tl.get("person_id"))
+            if tl.get("kind") == "de_nghi_sua" and ai in diem:
+                diem[ai] += 1
+    if not people:
+        return {"nguoi_lo": [], "diem": []}
+    cao = max(diem.values())
+    dau_bang = [p for p in people if diem[p] == cao]
+    if len(dau_bang) == 1:
+        lo = dau_bang[0]
+    elif nguoi_lap_so is not None and str(nguoi_lap_so) in dau_bang:
+        lo = str(nguoi_lap_so)
+    else:
+        lo = dau_bang[0]
+    return {"nguoi_lo": [lo], "diem": [[p, diem[p]] for p in people]}
+
+
+def nguoi_mo_loi(to_giay: list[dict], *, cycle_id: str, tuan: str) -> str | None:
+    """Who opened week `tuan` (ISO Monday): the sender of the earliest sent
+    first version of a human's sheet of that week in this cycle, or None."""
+    dau = None
+    for to in to_giay:
+        if str(to.get("cycle_id")) != str(cycle_id) or to.get("tuan") != tuan:
+            continue
+        v1 = next((v for v in to.get("versions", ()) if v.get("version") == 1), None)
+        if v1 is None or v1.get("author_type") != "human" or v1.get("sent_by") is None or v1.get("sent_at") is None:
+            continue
+        if dau is None or v1["sent_at"] < dau[0]:
+            dau = (v1["sent_at"], str(v1["sent_by"]))
+    return None if dau is None else dau[1]
+
+
+def vai_tuan(
+    suy: dict,
+    chon: dict | None,
+    participants: list[str],
+    *,
+    mo_loi_truoc: list[str | None] = (),
+) -> dict:
+    """This week's «Người lo»: what the two chose for it, or the inference.
+
+    `chon` is the week's stored choice, `{"nguoi_lo_id": id | None}`; None
+    there means «Hôm nay mình share», both lead. Choosing is not a permission:
+    it decides whose turn the week reads as, nothing else (ADR-0034 §2.4).
+
+    Without a choice, the baton («gậy»): the inference names who tends to
+    lead, and if that person opened BOTH of the last two weeks
+    (`mo_loi_truoc`, newest first), this week passes to the other one --
+    `cach` = «luot». Leading is a habit, not a duty, and a notebook where one
+    person always opens is the thing this is here to notice.
+    """
+    people = list(dict.fromkeys(str(p) for p in participants))
+    if chon is None:
+        lo = list(suy["nguoi_lo"])
+        truoc = [str(p) if p is not None else None for p in list(mo_loi_truoc)[:2]]
+        if len(lo) == 1 and len(people) == 2 and len(truoc) == 2 and truoc[0] == truoc[1] == lo[0]:
+            khac = next(p for p in people if p != lo[0])
+            return {"nguoi_lo": [khac], "cach": "luot", "diem": suy["diem"]}
+        return {"nguoi_lo": lo, "cach": "suy", "diem": suy["diem"]}
+    ai = chon.get("nguoi_lo_id")
+    return {
+        "nguoi_lo": people if ai is None else [str(ai)],
+        "cach": "chon",
+        "diem": suy["diem"],
+    }
 
 
 def _revision(rows: list[str]) -> str:

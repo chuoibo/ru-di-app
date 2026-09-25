@@ -20,10 +20,14 @@
  * `useToGiay` is what does that, once, in one place.
  */
 import { type Attempt, translatedAsActor } from "../../api";
+import nepNhip from "../../../../../packages/shared/nep-nhip.json";
+import type { GuSo } from "./gu-doi";
 import type { NoiDungTo, ToGiay } from "./to-giay";
 
-/** Four rungs of the consent ladder, of which slice 1 uses three. */
-export type MucDich = "lap_so" | "bat_doi" | "doc_chat";
+/** The rungs both climb: only these are ever pending for the other person. */
+export type MucDichBac = "lap_so" | "bat_doi" | "doc_chat";
+/** The ladder, plus `chia_gu`: each person's own taste switch (ADR-0034). */
+export type MucDich = MucDichBac | "chia_gu";
 export type LoaiRangBuoc = "khong_an_duoc" | "dung";
 
 export interface DongYCuaToi {
@@ -33,7 +37,8 @@ export interface DongYCuaToi {
 
 export interface DeNghiCho {
   id: string;
-  purpose: MucDich;
+  /** A `chia_gu` proposal completes as it is filed, so it is never pending. */
+  purpose: MucDichBac;
   expires_at: string;
   proposed_by_id: string;
   my_granted: boolean;
@@ -62,7 +67,22 @@ export interface SoHaiNguoi {
    * older than 23/09, where the client falls back to the per-person maps.
    */
   granted_purposes?: readonly MucDich[];
+  /** Null outside «Một đôi»; absent on a server older than 25/09 (ADR-0034). */
+  taste?: GuSo | null;
+  /** «Người lo» of this week; null outside an open «Một đôi» (ADR-0034 §2.4). */
+  week_role?: VaiTuan | null;
 }
+
+/** `PairWeekRoleResponse`: inferred from the notebook (`suy`) or chosen (`chon`). */
+export interface VaiTuan {
+  tuan: string;
+  nguoi_lo: readonly string[];
+  /** `luot`: the usual lead opened two weeks running, so this week is the other's. */
+  cach: "suy" | "chon" | "luot";
+  diem: readonly { person_id: string; score: number }[];
+}
+
+export type ChonLo = "toi" | "nguoi_kia" | "ca_hai";
 
 /**
  * One row of `GET /contexts/{id}/papers`; no versions, no responses.
@@ -113,6 +133,8 @@ export const LOI_TO_GIAY: Record<string, string> = {
   paper_expired: "Tuần này hết rồi. Tuần sau mình rủ lại nhé.",
   paper_frozen: "Hai bạn chốt rồi, không sửa nữa.",
   paper_wrong_state: "Tờ giấy không ở trạng thái làm được việc này.",
+  // ADR-0034 §2.5: the number is packages/shared/nep-nhip.json's.
+  paper_week_quota: `Tuần này bạn đã phác ${nepNhip.to_moi_nguoi_moi_tuan} tờ rồi. Tuần sau phác tiếp nhé.`,
   paper_not_withdrawable: "Người kia đã mở tờ này rồi, không rút lại được.",
   paper_self_response: "Đây là tờ bạn gửi, chờ người kia trả lời.",
   paper_needs_recorder: "Cần biết ai ghi là hai bạn đã đi.",
@@ -171,6 +193,10 @@ export function dongYDeNghi(contextId: string, proposalId: string, goi: Goi): Pr
 
 export function thuHoiDongY(contextId: string, purpose: MucDich, goi: Goi): Promise<void> {
   return translatedAsActor<void>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/consents/${purpose}`, { actorId: goi.actorId, method: "DELETE", attempt: goi.attempt });
+}
+
+export function datVaiTuan(contextId: string, lo: ChonLo, goi: Goi): Promise<VaiTuan> {
+  return translatedAsActor<VaiTuan>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/week-role`, { actorId: goi.actorId, method: "PUT", attempt: goi.attempt, body: { lo } });
 }
 
 export function datRangBuoc(contextId: string, kind: LoaiRangBuoc, content: string, goi: Goi): Promise<RangBuocSong> {

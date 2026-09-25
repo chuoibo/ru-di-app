@@ -29,6 +29,7 @@ from .pair_helpers import (
     TOI,
     TUAN,
     TUAN_SAU,
+    dong_thuan,
     head,
     lap_so,
     noi_dung,
@@ -658,6 +659,7 @@ _THAN = {
     ("POST", "/papers/{paper_id}/withdraw"): {"version": 1},
     ("POST", "/papers/{paper_id}/versions/{version}/responses"): {"kind": "dong_y"},
     ("POST", "/papers/{paper_id}/keeps"): {"line": "Một dòng."},
+    ("PUT", "/contexts/{context_id}/notebook/week-role"): {"lo": "toi"},
 }
 
 
@@ -707,7 +709,7 @@ def test_every_pair_route_refuses_a_stranger(client):
                 "paper_not_found",
             ), f"{method} {path}: {answer.text}"
             swept += 1
-    assert swept == 19, f"quét được {swept} cửa, phải là 19"
+    assert swept == 20, f"quét được {swept} cửa, phải là 20"
 
 
 def test_the_list_carries_the_one_line_a_closed_row_shows(client, clock):
@@ -858,3 +860,73 @@ def test_a_sheet_that_was_sent_stays_readable_to_both_after_it_closes(client):
     assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 200
     theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
     assert paper_id in [p["id"] for p in theirs]
+
+
+# ADR-0034 §2.2: Nếp uses the tastes of whoever shared them, and nobody else's.
+
+
+def _doi_co_gu(client, repository):
+    repository.person_interests[TOI] = {"cafe", "game"}
+    repository.person_interests[NGUOI_KIA] = {"cafe", "nightlife"}
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+
+
+def test_a_taste_nobody_shared_changes_nothing_in_the_draft(client, repository):
+    _doi_co_gu(client, repository)
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["viec"] == "Ăn tối"
+    assert first["ly_do"] is None
+
+
+def test_the_other_persons_shared_taste_names_the_stop_and_the_reason(client, repository):
+    _doi_co_gu(client, repository)
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    first = _read(client, _draft(client)).json()["versions"][0]
+    stop = first["content"]["chang"][0]
+    assert stop["viec"] == "Cà phê", "gu người kia đã chia: Cafe"
+    assert stop.get("place_id") is None, "chưa có buổi nào để biết thành phố, nên không bịa chỗ"
+    assert first["ly_do"] == "Người Ấy thích Cafe, nên Nếp phác theo đó."
+
+
+def test_both_shared_uses_what_they_have_in_common_first(client, repository):
+    _doi_co_gu(client, repository)
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(TOI))
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["viec"] == "Cà phê"
+    assert first["ly_do"].startswith("Hai bạn cùng thích Cafe")
+
+
+# ADR-0034 §2.5: a ceiling per person per week.
+
+
+def test_a_fourth_sheet_in_one_week_is_refused_and_the_next_week_is_open(client, clock):
+    lap_so(client)
+    for _ in range(3):
+        paper_id = _draft(client)
+        skipped = client.post(f"/papers/{paper_id}/skip", headers=head(TOI))
+        assert skipped.status_code == 200, skipped.text
+    fourth = client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI))
+    assert fourth.status_code == 409, fourth.text
+    assert fourth.json()["code"] == "paper_week_quota"
+    theirs = client.post(f"/contexts/{CAP}/papers/draft", headers=head(NGUOI_KIA))
+    assert theirs.status_code == 201, "hạn mức là của từng người"
+    clock(TUAN_SAU)
+    client.post(f"/papers/{theirs.json()['id']}/skip", headers=head(NGUOI_KIA))
+    assert client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI)).status_code == 201
+
+
+# ADR-0034 §2.4: the baton passes when the usual lead opened two weeks running.
+
+
+def test_the_week_passes_to_the_other_after_two_weeks_opened_by_the_same_person(client, clock):
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    for _ in range(2):
+        paper_id = _draft(client)
+        assert _send(client, paper_id).status_code == 200
+        clock(timedelta(days=7))
+    role = client.get(f"/contexts/{CAP}/notebook", headers=head(TOI)).json()["week_role"]
+    assert role["cach"] == "luot", role
+    assert role["nguoi_lo"] == [str(NGUOI_KIA)]

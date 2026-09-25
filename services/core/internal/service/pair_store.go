@@ -85,7 +85,7 @@ func (s PairStore) ListMembers(contextID string) ([]pairsteps.Member, error) {
 	}
 	out := make([]pairsteps.Member, len(rows))
 	for i, row := range rows {
-		out[i] = pairsteps.Member{PersonID: row.PersonID, State: row.State}
+		out[i] = pairsteps.Member{PersonID: row.PersonID, State: row.State, DisplayName: row.DisplayName}
 	}
 	return out, nil
 }
@@ -722,4 +722,45 @@ func pairNguonJSON(nguon pairpaper.Nguon) ([]byte, error) {
 // civilDay is a date as the repository takes one: midnight UTC of that day.
 func civilDay(d pairpaper.Date) time.Time {
 	return time.Date(d.Year, time.Month(d.Month), d.Day, 0, 0, 0, 0, time.UTC)
+}
+
+// InterestsByPerson is interests_by_person, as a map for the taste reading.
+func (s PairStore) InterestsByPerson(personIDs []string) (map[string][]string, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.InterestsByPerson(s.Ctx, personIDs)
+	if err != nil {
+		return nil, storeError(err)
+	}
+	out := map[string][]string{}
+	for _, row := range rows {
+		out[row.PersonID] = row.Tags
+	}
+	return out, nil
+}
+
+// GetPairRhythm is get_pair_rhythm.
+func (s PairStore) GetPairRhythm(cycleID string, tuan pairpaper.Date) (*pairsteps.Rhythm, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	row, err := r.GetPairRhythm(s.Ctx, cycleID, civilDay(tuan))
+	if err != nil || row == nil {
+		return nil, storeError(err)
+	}
+	return &pairsteps.Rhythm{NguoiLoID: row.NguoiLoID}, nil
+}
+
+// SetPairRhythm is set_pair_rhythm.
+func (s PairStore) SetPairRhythm(draft pairsteps.RhythmDraft) error {
+	r, err := s.repository()
+	if err != nil {
+		return err
+	}
+	_, err = r.SetPairRhythm(s.Ctx, repo.PairRhythmInput{CycleID: draft.CycleID, Tuan: civilDay(draft.Tuan),
+		NguoiLoID: draft.NguoiLoID, ChonBoiID: draft.ChonBoiID, Now: draft.Now})
+	return storeError(err)
 }

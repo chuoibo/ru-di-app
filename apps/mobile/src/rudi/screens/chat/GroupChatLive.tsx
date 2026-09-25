@@ -975,7 +975,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           />
         </View>
       )}
-      <KhaySticker onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
+      <KhaySticker haiNguoi={nhanRieng} onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
       <MenuTin
         cuaToi={menuTin !== null && menuTin.author_id === personId}
         onClose={() => setMenuTin(null)}

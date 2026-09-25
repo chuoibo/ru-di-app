@@ -402,6 +402,12 @@ func (p *peopleRoute) getPersonProfile() error {
 		}
 		return err
 	}
+	// ADR-0034: «couple» is asked after the door, for anybody but oneself.
+	if target != p.actor {
+		if _, err := p.repo.SameCouple(bg, p.actor, target); err != nil {
+			return err
+		}
+	}
 	person, err := p.repo.GetPerson(bg, target)
 	if err != nil {
 		return err
