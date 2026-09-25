@@ -438,6 +438,9 @@
     "src/rudi/ui/lich/lich-thang.ts",
     "src/rudi/ui/ban-xoay.ts",
     "src/rudi/ui/cau-ru.ts",
-    "src/rudi/nguoi/anh-dai-dien-cache.ts"
+    "src/rudi/nguoi/anh-dai-dien-cache.ts",
+    // S1, the money screens: who sits where at the bill table, the
+    // collection's tape and the settlement's arrows; see tests/hinh-tien.test.mjs.
+    "src/rudi/ui/hinh-tien.ts"
   ]
 }

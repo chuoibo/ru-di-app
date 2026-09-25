@@ -106,8 +106,9 @@ export function CanhGap({ san, tieuDe, phuDe, nhanTren, keo = false, coMoTa = fa
     <View onLayout={doKhoi} style={styles.khoi} testID={testID}>
       {sanKhau && keo ? <GestureDetector gesture={cuChi}>{sanKhau}</GestureDetector> : sanKhau}
       <View style={styles.chu}>
+        {/* Condensed caps stack two marks over a capital («SỔ»): one clipped line needs the room above. */}
         {nhanTren ? (
-          <Text numberOfLines={1} style={[typography.stamp, { color: colors.inkSoft }]}>
+          <Text numberOfLines={1} style={[typography.stamp, { lineHeight: 18, color: colors.inkSoft }]}>
             {nhanTren}
           </Text>
         ) : null}

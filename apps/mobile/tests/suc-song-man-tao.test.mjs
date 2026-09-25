@@ -44,9 +44,6 @@ const NO = [
   "groups/New.tsx",
   "groups/Invite.tsx",
   "friends/AddFriend.tsx",
-  "chia-bill/ChiaBillLive.tsx",
-  "dot-thu/DotThuLive.tsx",
-  "Bill.tsx",
   "hai-nguoi/KhongGianGiay.tsx",
   "hai-nguoi/ToLoiRu.tsx",
   "hai-nguoi/DeNghiSua.tsx",
@@ -73,6 +70,12 @@ const PRIMITIVE = {
   LatTrang: "LatTrang",
   HinhNhan: "Avatar",
   ToGiay: "ToGiay",
+  // S1, the money screens: the ledger page, the bill table, the settlement's arrows.
+  TrangSo: "TrangSo",
+  BanGanMon: "BanGanMon",
+  BanAn: "BanAn",
+  SoDoChuyen: "SoDoChuyen",
+  DaiTienDo: "DaiTienDo",
 };
 
 /** Strip comments and string bodies, so a primitive named in prose does not count. */

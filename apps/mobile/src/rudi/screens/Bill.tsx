@@ -30,7 +30,7 @@ import { BILL_ITEMS, COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, demoAssets, formatVnd 
 import { noiLuuNgan } from "../luu-tru";
 import { nguCanhMo } from "../ngu-canh-mo";
 import { useRudiSession } from "../session";
-import { bongDen, giayHoaDon, lopPhu, typography, useRudiTheme } from "../theme";
+import { bongDen, giayHoaDon, lopPhu, mucNguoi, typography, useRudiTheme } from "../theme";
 import {
   Chip,
   DemoBadge,
@@ -52,7 +52,9 @@ import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { RosterPicker } from "../ui/RosterPicker";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
+import { SoDoChuyen } from "../ui/SoDoChuyen";
 import { Stamp } from "../ui/Stamp";
+import { TrangSo } from "../ui/TrangSo";
 
 function ReceiptPaper({ compact = false }: { compact?: boolean }) {
   const { colors } = useRudiTheme();
@@ -346,7 +348,7 @@ export function SettlementScreen() {
  * would be the second allocator this repo has already thrown out once.
  */
 function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: string }) {
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark, radius } = useRudiTheme();
   const router = useRouter();
   const { phien } = useRudiSession();
   // A two-person notebook shows its money as shared spending (`ban-tinh.ts`
@@ -394,7 +396,8 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
         expenseVersionIds: null,
         attempt: attemptFor(attempts.current, `mo-dot:${contextId}:${soDot}`),
       });
-      router.push(`/batches/${dot.batchId}` as never);
+      // The round opens in the ledger's own context: a pair's is never the current group.
+      router.push(`/batches/${dot.batchId}?ctx=${contextId}` as never);
     } catch (error) {
       setLoiDot(error instanceof ApiError ? error.message : "Không mở được đợt thu.");
     } finally {
@@ -479,16 +482,28 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
   return (
     <RudiScreen tone="split" testID="settlement-screen">
       <TopBar onBack={laDoi ? () => setMoChuyen(false) : undefined} title={laDoi ? "Cân lại chi tiêu" : "Quyết toán chuyến đi"} />
-      {/* The ledger's first line, not a hero: the sum the server holds, its name beside it. */}
-      <View style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
-        <View style={styles.flex}>
-          <Text style={[typography.label, { color: colors.ink }]}>{hero.nhan}</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
+      {/* The ledger's first line, not a hero: the sum the server holds, its
+          name beside it, written at the head of the group's ledger page. */}
+      <TrangSo ke={false} testID="trang-so-quyet-toan">
+        <View style={styles.hangDauSo}>
+          <View style={styles.flex}>
+            <Text style={[typography.label, { color: colors.ink }]}>{hero.nhan}</Text>
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
+          </View>
+          {/* A state («Chưa có chuyến») is not a sum: in the money face it read as a
+              value sitting where a number goes (QA 23/09). */}
+          <Text style={hero.laSo ? [typography.money, { color: colors.split }] : [typography.caption, { color: colors.inkSoft }]}>{hero.so}</Text>
         </View>
-        {/* A state («Chưa có chuyến») is not a sum: in the money face it read as a
-            value sitting where a number goes (QA 23/09). */}
-        <Text style={hero.laSo ? [typography.money, { color: colors.split }] : [typography.caption, { color: colors.inkSoft }]}>{hero.so}</Text>
-      </View>
+      </TrangSo>
+      {/* Who pays whom, drawn: ink arrows between the people, no number on
+          them -- the amounts are the rows under it. */}
+      {du.chuyenTien.length > 0 ? (
+        <SoDoChuyen
+          chuyen={du.chuyenTien.map((row) => ({ tu: row.fromId, toi: row.toId }))}
+          nguoi={du.nguoi.map((n) => ({ id: n.personId, ten: n.ten }))}
+          testID="so-do-chuyen"
+        />
+      ) : null}
       <SectionHeader title="Các khoản chuyển" />
       {du.chuyenTien.length === 0 ? (
         <Text style={[typography.body, { color: colors.inkSoft }]}>Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.</Text>
@@ -496,9 +511,13 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
       <View>
         {du.chuyenTien.map((row) => (
           <View key={`${row.fromId}-${row.toId}`} style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
+            <Avatar name={tenCua(du.nguoi, row.fromId)} personId={row.fromId} size={32} />
             <View style={styles.flex}>
+              {/* One line, two inks: «An → Bình» reads the same aloud. */}
               <Text style={[typography.label, { color: colors.ink }]}>
-                {tenCua(du.nguoi, row.fromId)} → {tenCua(du.nguoi, row.toId)}
+                <Text style={{ color: mucNguoi(row.fromId, dark) }}>{tenCua(du.nguoi, row.fromId)}</Text>
+                {" → "}
+                <Text style={{ color: mucNguoi(row.toId, dark) }}>{tenCua(du.nguoi, row.toId)}</Text>
               </Text>
               <Text style={[typography.caption, { color: colors.inkFaint }]}>Đề xuất, chưa phải nghĩa vụ</Text>
             </View>
@@ -526,7 +545,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
             <ListRow
               icon="receipt-outline"
               key={dot.id}
-              onPress={() => router.push(`/batches/${dot.id}` as never)}
+              onPress={() => router.push(`/batches/${dot.id}?ctx=${contextId}` as never)}
               subtitle={cauTomTatDot(dot)}
               title={cauTrangThaiDot(dot.trangThai)}
               tone="split"
@@ -675,6 +694,7 @@ const styles = StyleSheet.create({
   nguoiThu: { gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   nguoiThuDau: { flexDirection: "row", alignItems: "center", gap: 12 },
   hangChuyen: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hangDauSo: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 },
   transferRight: { alignItems: "flex-end", gap: 6 },
   ghiChu: { flexDirection: "row", alignItems: "flex-start", gap: 9 },
 });

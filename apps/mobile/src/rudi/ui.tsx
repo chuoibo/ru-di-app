@@ -53,6 +53,12 @@ type ScreenProps = {
    * header drops its fixed keyline for the one `ThanhCanh` fades in.
    */
   canh?: ReactNode;
+  /**
+   * A stepped flow's step: whenever it changes the list goes back to its top,
+   * so a new page starts at its head and its title, not wherever the reader
+   * had scrolled the last one to (a plain list only; a staged one folds).
+   */
+  cuonVeDau?: string | number;
 };
 
 export function RudiScreen({
@@ -73,6 +79,7 @@ export function RudiScreen({
   header,
   onRefresh,
   canh,
+  cuonVeDau,
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
@@ -100,6 +107,10 @@ export function RudiScreen({
         }
       }
     : undefined;
+  useEffect(() => {
+    if (cuonVeDau === undefined) return;
+    cuon.current?.scrollTo({ y: 0, animated: false });
+  }, [cuonVeDau]);
   useEffect(() => {
     if (!avoidKeyboard) return;
     const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));

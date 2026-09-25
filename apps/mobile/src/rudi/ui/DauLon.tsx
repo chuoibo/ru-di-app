@@ -21,6 +21,7 @@ export function DauLon({
   dong = false,
   tre = 0,
   tilt = -6,
+  co = "lon",
   style,
   testID,
 }: {
@@ -29,6 +30,8 @@ export function DauLon({
   dong?: boolean;
   tre?: number;
   tilt?: number;
+  /** `vua` for a seal pressed onto a page beside Nếp rather than across the screen. */
+  co?: "lon" | "vua";
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
@@ -41,11 +44,11 @@ export function DauLon({
   }));
   return (
     <Animated.View accessibilityLabel={nhan} accessibilityRole="text" style={[styles.dau, { borderColor: muc }, kieu, style]} testID={testID}>
-      <View pointerEvents="none" style={[styles.trong, { borderColor: muc }]}>
+      <View pointerEvents="none" style={[styles.trong, co === "vua" && styles.trongVua, { borderColor: muc }]}>
         <View pointerEvents="none" style={styles.muc}>
           <Grain material="mucIn" opacity={0.18} />
         </View>
-        <Text style={[styles.chu, { color: muc }]}>{nhan}</Text>
+        <Text style={[styles.chu, co === "vua" && styles.chuVua, { color: muc }]}>{nhan}</Text>
       </View>
     </Animated.View>
   );
@@ -56,4 +59,6 @@ const styles = StyleSheet.create({
   trong: { borderWidth: 1, borderRadius: 7, paddingHorizontal: 18, paddingVertical: 8, overflow: "hidden", alignItems: "center" },
   muc: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
   chu: { fontFamily: displayFace.condensedBold, fontSize: 24, lineHeight: 28, letterSpacing: 2.2, textTransform: "uppercase" },
+  trongVua: { paddingHorizontal: 12, paddingVertical: 5 },
+  chuVua: { fontSize: 18, lineHeight: 22, letterSpacing: 1.6 },
 });
