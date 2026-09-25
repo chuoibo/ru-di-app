@@ -425,8 +425,14 @@ func docTrang(ten, noiDung string) (*trang, error) {
 	}
 
 	than := dong[het+1:]
-	if strings.Count(strings.Join(than, "\n"), "«") != strings.Count(strings.Join(than, "\n"), "»") {
-		return nil, errors.New("số « và » không khớp")
+	// Every «…» opens and closes on one line, in order. Equal counts alone let
+	// a step saying bấm »Đánh dấu đã trả« through (review 13 round 3, NF3): it
+	// reads like a quoted button, but reTrich sees no quote in it, so no label
+	// rule did.
+	for _, l := range than {
+		if !ngoacThanhCap(l) {
+			return nil, fmt.Errorf("« và » không thành cặp trên dòng: %q", l)
+		}
 	}
 	var tongQuan []string
 	var muc *Doan
@@ -515,6 +521,29 @@ func docTrang(ten, noiDung string) (*trang, error) {
 	return t, nil
 }
 
+// ngoacThanhCap reports whether the «» marks of one line pair up in order:
+// every « is closed by a » before the next « and before the line ends, and
+// every » closes a «. reTrich reads a label only inside such a pair, so a
+// mark outside one is text that no label rule sees.
+func ngoacThanhCap(l string) bool {
+	mo := false
+	for _, r := range l {
+		switch r {
+		case '«':
+			if mo {
+				return false
+			}
+			mo = true
+		case '»':
+			if !mo {
+				return false
+			}
+			mo = false
+		}
+	}
+	return !mo
+}
+
 // kiemManTien holds a money screen's manual to navigation only (design 04
 // §4b, «Màn tiền chỉ có đoạn điều hướng»). It must have exactly one section,
 // headed tieuDeManTien; every non-blank line of that section must be a step;
@@ -532,6 +561,9 @@ func docTrang(ten, noiDung string) (*trang, error) {
 //     to a labelled edge of that manual's route;
 //   - the title of a non-money screen whose manual has a di_toi here, when
 //     that title is printed on that screen (the place a person starts from).
+//
+// The money screen's own title is none of these, printed on it or not: it is
+// where the person already is, not a way in or out.
 //
 // A declared way that is not a labelled edge refuses the whole manual: the
 // payment button declared as a way out («Đánh dấu đã trả», which leads

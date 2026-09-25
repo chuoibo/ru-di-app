@@ -16,10 +16,11 @@
  *       manual's own screen, and every `di_toi` is an edge the app has: in
  *       the route's `_rut.json` `di_toi`, between two tabs, or named in
  *       `CANH_NGOAI_RUT` with the reason;
- *   (c) every «…» in a body is declared in that file's `nhanUI`, and every
- *       `nhanUI` entry is a literal somewhere in `apps/mobile/{src,app}` (a
- *       string, a template with `${}` read as `…`, or JSX text -- never a
- *       comment, because comments are not nodes);
+ *   (c) every « and » of a body pairs up on its line, in order; every «…»
+ *       in a body is declared in that file's `nhanUI`, and every `nhanUI`
+ *       entry is a literal somewhere in `apps/mobile/{src,app}` (a string, a
+ *       template with `${}` read as `…`, or JSX text -- never a comment,
+ *       because comments are not nodes);
  *   (d) a manual for a money screen (a route whose first segment is in
  *       `MAN_NEP_LUI`, read from `phieu.ts` rather than copied here) says
  *       `tien: true`, keeps to a single navigation section headed «Tới màn
@@ -27,8 +28,9 @@
  *       of it that a manual declares is a labelled edge of the code (a
  *       button with that label that leads there, `_rut.json` `canh`), and
  *       every step quotes at least one of those doors (or the title, printed
- *       on it, of a non-money screen with a way in) and no other label; no
- *       manual anywhere states an amount.
+ *       on it, of a non-money screen with a way in) and no other label, not
+ *       even the money screen's own title; no manual anywhere states an
+ *       amount.
  *
  * (e) is the part that keeps the rest honest. A checker that goes blind -- a
  * regex that stops matching, a set that comes back empty -- reports nothing,
@@ -162,6 +164,26 @@ function khoaTrung(json) {
   return null;
 }
 
+/**
+ * Whether the « and » of one line pair up in order: every « is closed by a »
+ * before the next « and before the line ends, and every » closes a «. Equal
+ * counts alone let »Đánh dấu đã trả« through (review 13 round 3, NF3): it
+ * reads like a quoted button, but no «…» match sees it.
+ */
+function ngoacThanhCap(dong) {
+  let mo = false;
+  for (const c of dong) {
+    if (c === "«") {
+      if (mo) return false;
+      mo = true;
+    } else if (c === "»") {
+      if (!mo) return false;
+      mo = false;
+    }
+  }
+  return !mo;
+}
+
 /** Front matter between a `---json` first line and the next `---` line, and the body after it. */
 function tachSoTay(noiDung) {
   const dong = noiDung.split("\n");
@@ -216,10 +238,11 @@ function kiemSoTay(ten, noiDung, nguCanh) {
     }
   }
 
-  // (c) Labels: quoted only from nhanUI, and nhanUI only from the source.
-  const moNgoac = (than.match(/«/g) ?? []).length;
-  const dongNgoac = (than.match(/»/g) ?? []).length;
-  if (moNgoac !== dongNgoac) loi.push(`${ten}: số « (${moNgoac}) và » (${dongNgoac}) không khớp`);
+  // (c) Labels: «…» pair up on every line, are quoted only from nhanUI, and
+  // nhanUI only from the source.
+  for (const dong of than.split("\n")) {
+    if (!ngoacThanhCap(dong)) loi.push(`${ten}: « và » không thành cặp trên dòng: ${JSON.stringify(dong)}`);
+  }
   const trich = [...than.matchAll(/«([^«»]*)»/g)].map((m) => m[1]);
   for (const q of trich) if (!nhanUI.has(q)) loi.push(`${ten}: trích «${q}» mà nhãn không khai trong nhanUI`);
   const daDung = new Set([...trich, ...dau.di_toi.map((d) => d.nhan)]);
@@ -261,8 +284,8 @@ function kiemSoTay(ten, noiDung, nguCanh) {
  * screen is a label of a declared way in or out that is a labelled edge of
  * the code, or the title of a non-money screen with such a way in, printed
  * on that screen. Every step of a money section must quote a door, and
- * nothing but doors: a heading printed on the screen («Chi theo nhóm») or the
- * payment button beside a door is not one.
+ * nothing but doors: a heading printed on the screen («Chi theo nhóm»), the
+ * payment button beside a door, or the money screen's own title is not one.
  */
 function kiemCuaManTien(cacTep, nguCanh) {
   const trang = [];
@@ -499,7 +522,7 @@ const RUT_GO = [
   { canh: [{ den: "a", nhan: "Về A" }], di_toi: ["a"], man: "finance", nhan: ["Về A"], tep: ["app/finance.tsx"] },
   { canh: [], di_toi: ["a"], man: "welcome", nhan: [], tep: ["app/welcome.tsx"] },
 ];
-const LITERAL_GO = new Set(["Màn A", "Mở tiền", "Nút B", "Về A", "Màn C", "Quyết toán", "Về tài chính", "Đánh dấu đã trả"]);
+const LITERAL_GO = new Set(["Màn A", "Mở tiền", "Nút B", "Về A", "Màn C", "Quyết toán", "Về tài chính", "Đánh dấu đã trả", "Tiền"]);
 function nguCanhGo(routes = RUT_GO) {
   return {
     cacMan: new Set(routes.map((r) => r.man)),
@@ -619,6 +642,17 @@ test("(e) canary: fixture của bộ nạp Go — cửa tiêu đề chỉ là ti
   };
   assert.deepEqual(kiemTatCa(soTayGo([], qMd), nguCanhGo(rutGo(q))), []);
   assert.deepEqual(kiemTatCa(soTayGo(chiTieuDe("Quyết toán"), qMd), nguCanhGo(rutGo(q))), khongPhaiCua("Quyết toán"));
+  // NF2 of review 13 round 3: the money screen's own title, beside a real
+  // door, printed on it or not. On the committed manuals both money titles
+  // are doors in as well, so only this fixture, where «Tiền» is none, tells
+  // a rule that counts the own title as a door from one that does not.
+  const tieuDeRieng = [
+    ['"nhanUI":["Về A","Mở tiền"]', '"nhanUI":["Về A","Mở tiền","Tiền"]'],
+    [XONG, "- Ở «Tiền», bấm «Về A»."],
+  ];
+  const tieuDeRiengLoi = ['tien.md: màn tiền: bước trích «Tiền», không phải lối vào hay lối ra nào: "Ở «Tiền», bấm «Về A»."'];
+  assert.deepEqual(kiemTatCa(soTayGo(tieuDeRieng), nguCanhGo()), tieuDeRiengLoi);
+  assert.deepEqual(kiemTatCa(soTayGo(tieuDeRieng), nguCanhGo(rutGo({ ...RUT_GO[2], nhan: ["Tiền", "Về A"] }))), tieuDeRiengLoi);
 });
 
 // The bypass of review 13, exactly as the reviewer made it on a scratch copy
@@ -737,6 +771,30 @@ test("(e) canary: front matter có khoá trùng bị từ chối, kể cả nhan
   // P9's second nhanUI on the real finance manual.
   const nhanUI2 = suaSoTay("tai-chinh.md", ['"tien": true', `"tien": true,\n  ${NHAN_TC.replace(/\]$/, ', "Đánh dấu đã trả"]')}`]);
   assert.deepEqual(kiemTatCa(nhanUI2), ["tai-chinh.md: front matter có khoá trùng «nhanUI»"]);
+});
+
+test("(e) canary: « và » phải thành cặp trên từng dòng, theo thứ tự", () => {
+  // Each case breaks one part of the rule: a « left open at the end of the
+  // line, a » with no « before it, a « opened again before it closed, marks
+  // reversed, a quote across two lines, and one outside the steps.
+  const loiDong = (ten, ...dong) => dong.map((d) => `${ten}: « và » không thành cặp trên dòng: ${JSON.stringify(d)}`);
+  const buoc = (dong) => MAU_DUNG.replace("1. Bấm «Tạo kèo».", dong);
+  assert.deepEqual(kiemSoTay("x.md", buoc("1. Bấm «Tạo kèo."), NGU_CANH), loiDong("x.md", "1. Bấm «Tạo kèo."));
+  assert.deepEqual(kiemSoTay("x.md", buoc("1. Bấm «Tạo kèo»»."), NGU_CANH), loiDong("x.md", "1. Bấm «Tạo kèo»»."));
+  assert.deepEqual(kiemSoTay("x.md", buoc("1. Bấm «Kèo bay «Tạo kèo»."), NGU_CANH), loiDong("x.md", "1. Bấm «Kèo bay «Tạo kèo»."));
+  assert.deepEqual(kiemSoTay("x.md", buoc("1. Bấm »Tạo kèo«."), NGU_CANH), loiDong("x.md", "1. Bấm »Tạo kèo«."));
+  // Across two lines the «…» match still reads «Tạo\nkèo», which is no label.
+  assert.deepEqual(kiemSoTay("x.md", buoc("1. Bấm «Tạo\nkèo»."), NGU_CANH), [
+    ...loiDong("x.md", "1. Bấm «Tạo", "kèo»."),
+    'x.md: trích «Tạo\nkèo» mà nhãn không khai trong nhanUI',
+  ]);
+  const tongQuan = MAU_DUNG.replace("Tổng quan ngắn.", "Tổng quan ngắn, có nút »Tạo kèo«.");
+  assert.notEqual(tongQuan, MAU_DUNG);
+  assert.deepEqual(kiemSoTay("x.md", tongQuan, NGU_CANH), loiDong("x.md", "Tổng quan ngắn, có nút »Tạo kèo«."));
+  // Review 13 round 3, probe Q1 exactly, on the real finance manual: the
+  // payment button between reversed marks, beside a door.
+  const q1 = "- Bấm «Xem quyết toán», chuyển khoản xong thì bấm »Đánh dấu đã trả«.";
+  assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", themBuocTC(q1))), loiDong("tai-chinh.md", q1));
 });
 
 test("(e) canary: route lạ trong man hoặc di_toi bị từ chối", () => {

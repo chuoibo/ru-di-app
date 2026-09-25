@@ -148,7 +148,16 @@ func TestNapTuChoiMoiLoi(t *testing.T) {
 		{"di_toi không phải cạnh của mã", thay("data/a.md", `{"nhan":"Nút B","man":"b"}`, `{"nhan":"Nút B","man":"welcome"}`), "a.md: di_toi «Nút B» từ «a» tới «welcome» không phải cạnh nào của mã"},
 		// Body.
 		{"trích nhãn không khai", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút Z»."), "trích «Nút Z» mà nhãn không khai trong nhanUI"},
-		{"« và » lệch", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút B."), "số « và » không khớp"},
+		// «» pair up on every line, in order (review 13 round 3, NF3). Each
+		// case breaks one part of the rule: a « left open at the end of the
+		// line, a » with no « before it, a « opened again before it closed,
+		// marks reversed, a quote across two lines, and one outside the steps.
+		{"« không đóng trên dòng", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút B."), `a.md: « và » không thành cặp trên dòng: "1. Bấm «Nút B."`},
+		{"» thừa", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút B»»."), `a.md: « và » không thành cặp trên dòng: "1. Bấm «Nút B»»."`},
+		{"« mở lại trước khi đóng", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút Z «Nút B»."), `a.md: « và » không thành cặp trên dòng: "1. Bấm «Nút Z «Nút B»."`},
+		{"» « đảo ngược", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm »Nút Z«."), `a.md: « và » không thành cặp trên dòng: "1. Bấm »Nút Z«."`},
+		{"«…» vắt qua hai dòng", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút\nZ»."), `a.md: « và » không thành cặp trên dòng: "1. Bấm «Nút"`},
+		{"» « đảo ngược ở tổng quan", thay("data/a.md", "Tổng quan của màn A.", "Tổng quan của màn A, có nút »Nút Z«."), `a.md: « và » không thành cặp trên dòng: "Tổng quan của màn A, có nút »Nút Z«."`},
 		{"quá năm bước", thay("data/a.md", "1. Bấm «Nút B».", "1. a\n2. b\n3. c\n4. d\n5. e\n6. Bấm «Nút B»."), "có 6 bước, tối đa 5"},
 		{"mục không có bước", thay("data/a.md", "1. Bấm «Nút B».", "Bấm «Nút B»."), "mục «Đi sang B» không có bước nào"},
 		{"tiêu đề ###", thay("data/a.md", "## Đi sang B", "### Đi sang B"), "chỉ dùng tiêu đề «## »"},
@@ -332,6 +341,11 @@ func TestDuLieuThatBiSuaBiTuChoi(t *testing.T) {
 		{"nhanUI thứ hai", []sua{{"data/tai-chinh.md", `"tien": true`, `"tien": true,` + "\n  " + strings.TrimSuffix(nhanTC, "]") + `, "Đánh dấu đã trả"]`}},
 			"tai-chinh.md: front matter có khoá trùng «nhanUI»"},
 		{"khoá nut", []sua{{"data/ca-nhan.md", "---json\n{", "---json\n{\n  \"nut\": [],"}}, `ca-nhan.md: front matter không đọc được: json: unknown field "nut"`},
+		// Review 13 round 3, probe Q1 exactly: the payment button between
+		// reversed marks, beside a door. The counts match and reTrich saw only
+		// the door, so every label rule passed it.
+		{"dấu «» đảo ngược quanh nút trả tiền", []sua{themBuoc("- Bấm «Xem quyết toán», chuyển khoản xong thì bấm »Đánh dấu đã trả«.")},
+			`tai-chinh.md: « và » không thành cặp trên dòng: "- Bấm «Xem quyết toán», chuyển khoản xong thì bấm »Đánh dấu đã trả«."`},
 		{"lách của review 13, đúng nguyên bản", []sua{nhanTra, diToiTra("finance"), buocTra}, "tai-chinh.md: di_toi «Đánh dấu đã trả» về chính màn «finance»"},
 		{"lách qua một cạnh thật của mã", []sua{nhanTra, diToiTra("settlements/[id]"), buocTra}, "tai-chinh.md: màn tiền: lối ra «Đánh dấu đã trả» tới «settlements/[id]» không phải nút nào của «finance» dẫn tới đó"},
 		{"lách qua một cạnh mã không có", []sua{nhanTra, diToiTra("messages"), buocTra}, "tai-chinh.md: di_toi «Đánh dấu đã trả» từ «finance» tới «messages» không phải cạnh nào của mã"},
@@ -414,6 +428,29 @@ func TestManTienCuaLaTieuDe(t *testing.T) {
 	chiTieuDe(m, "Quyết toán")
 	if _, err := napTu(m); err == nil || !strings.Contains(err.Error(), khongPhaiCua+"Quyết toán»") {
 		t.Errorf("money screen's title: %v", err)
+	}
+
+	// The money screen's own title, beside a real door, printed on it or not
+	// (review 13 round 3, NF2). On the embedded data both money titles are
+	// doors in as well, so only a fixture where «Tiền» is none tells a rule
+	// that counts the own title as a door from one that does not.
+	doi := func(m map[string]string, tep, cu, moi string) {
+		t.Helper()
+		if !strings.Contains(m[tep], cu) {
+			t.Fatalf("fixture drifted: %s no longer contains %q", tep, cu)
+		}
+		m[tep] = strings.Replace(m[tep], cu, moi, 1)
+	}
+	for _, inTrenMan := range []bool{false, true} {
+		m = mauDung()
+		doi(m, "data/tien.md", `"nhanUI":["Về A","Mở tiền"]`, `"nhanUI":["Về A","Mở tiền","Tiền"]`)
+		doi(m, "data/tien.md", "- Xong thì bấm «Về A».", "- Ở «Tiền», bấm «Về A».")
+		if inTrenMan {
+			doi(m, "data/_rut.json", `"man":"finance","nhan":["Về A"]`, `"man":"finance","nhan":["Tiền","Về A"]`)
+		}
+		if _, err := napTu(m); err == nil || !strings.Contains(err.Error(), `tien.md: màn tiền: bước trích «Tiền», không phải lối vào hay lối ra nào: "Ở «Tiền», bấm «Về A»."`) {
+			t.Errorf("own title (printed on the screen: %v): %v", inTrenMan, err)
+		}
 	}
 }
 

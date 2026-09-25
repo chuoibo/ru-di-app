@@ -253,6 +253,21 @@ func TestDuongToiTranhManTien(t *testing.T) {
 			t.Fatalf("a -> z = %v: not the way with the fewest money screens", buoc(got))
 		}
 	}
+	// Counted along the whole rest of the way, not only one step ahead: the
+	// reviewer's graph (review 13 round 3, NF1). finance is two steps past b,
+	// so b and x each look clean one step ahead, and b has the smaller id.
+	s = doThiGia("a>b", "a>c", "b>x", "x>finance", "finance>z", "c>y", "y>w", "w>z")
+	if got, _ := s.duongToi("a", "z"); !reflect.DeepEqual(buoc(got), []string{"c[]", "y[]", "w[]", "z[]"}) {
+		t.Fatalf("a -> z = %v: passed through finance two steps ahead", buoc(got))
+	}
+	// Counted, not «any or none»: when every way that short passes through a
+	// money screen, a way through one beats a way through two, even when its
+	// money screen is the very next step and the other way starts on a clean
+	// screen with the smaller id.
+	s = doThiGia("a>finance", "finance>p", "p>q", "q>z", "a>c", "c>settlements/[id]", "settlements/[id]>batches/[id]", "batches/[id]>z")
+	if got, _ := s.duongToi("a", "z"); !reflect.DeepEqual(buoc(got), []string{"finance[]", "p[]", "q[]", "z[]"}) {
+		t.Fatalf("a -> z = %v: not the way through the fewest money screens", buoc(got))
+	}
 	// When every shortest way passes through one, it is taken; a longer way
 	// is never preferred to it.
 	s = doThiGia("a>settlements/[id]", "settlements/[id]>z", "a>c", "c>e", "e>z")
