@@ -513,3 +513,32 @@ def test_luot_tron_voi_brain_gia_ghi_manifest_khong_noi_dung(
     out = capsys.readouterr().out
     assert re.search(r"^Eval-Run: \S+ lap=2 goi=32/32 model=", out, re.M)
     assert re.search(r"^Eval-Nhom-Plan: vung \d+/16 \(>=2/2\) pass@1 ", out, re.M)
+
+
+# --- the grader's opening hours agree with the Go filter (giomo) ----------
+
+
+def test_open_at_cua_bo_cham_khop_bo_loc_go():
+    """services/core/internal/domain/giomo filters places by these very rules.
+
+    If the Python grader and the Go filter disagree on when a place is open, a
+    case can fail for a reason the engine never saw. Both read one hand-made
+    golden; only the catalogue spelling (every day alike) is checked here,
+    because the grader has no weekday.
+    """
+    golden_path = (
+        harness.REPO_ROOT
+        / "services/core/internal/domain/giomo/testdata/mo_cua_golden.json"
+    )
+    golden = json.loads(golden_path.read_text(encoding="utf-8"))
+    checked = 0
+    for row in golden["doc_duoc"]:
+        if row["kieu"] != "danh_muc":
+            continue
+        for _day, hhmm, want in row["luc"]:
+            assert harness.open_at({"open_hours": row["gio"]}, hhmm) is want, (
+                row["gio"],
+                hhmm,
+            )
+            checked += 1
+    assert checked >= 15

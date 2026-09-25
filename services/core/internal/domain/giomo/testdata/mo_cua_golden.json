@@ -1,0 +1,17 @@
+{
+  "_ghi_chu": "Ca mở cửa tính tay. kieu=danh_muc là định dạng catalogue, không phụ thuộc thứ: tests/skills/test_tra_loi_trong_nhom.py đối chiếu open_at của harness Python với đúng các ca này, để bộ chấm Python và bộ lọc Go không lệch nhau.",
+  "doc_duoc": [
+    {"kieu": "danh_muc", "gio": "10:00 – 22:30", "luc": [["Mo", "09:59", false], ["Mo", "10:00", true], ["Th", "22:29", true], ["Th", "22:30", false]]},
+    {"kieu": "danh_muc", "gio": "18:00 – 01:00", "luc": [["Tu", "00:30", true], ["Tu", "01:00", false], ["Mo", "18:00", true], ["Mo", "17:59", false]]},
+    {"kieu": "danh_muc", "gio": "16:00 – 00:00", "luc": [["Su", "23:59", true], ["Mo", "00:00", false], ["We", "16:00", true]]},
+    {"kieu": "danh_muc", "gio": "00:00 – 23:59", "luc": [["We", "23:59", false], ["We", "12:00", true], ["We", "00:00", true]]},
+    {"kieu": "danh_muc", "gio": "17:00 - 02:00", "luc": [["Sa", "01:30", true], ["Sa", "02:00", false], ["Sa", "16:59", false]]},
+    {"kieu": "osm", "gio": "24/7", "luc": [["Mo", "00:00", true], ["Su", "23:59", true]]},
+    {"kieu": "osm", "gio": "Su 20:00-02:00", "luc": [["Mo", "01:00", true], ["Mo", "02:00", false], ["Sa", "21:00", false], ["Su", "20:00", true]]},
+    {"kieu": "osm", "gio": "Mo-Fr 08:00-22:00; Sa,Su 09:00-23:00", "luc": [["Sa", "08:30", false], ["Sa", "22:30", true], ["Fr", "22:30", false], ["Mo", "08:00", true]]},
+    {"kieu": "osm", "gio": "Mo-Su 07:00-11:00,17:00-22:00; We off", "luc": [["We", "08:00", false], ["Th", "08:00", true], ["Th", "12:00", false], ["Th", "17:00", true]]},
+    {"kieu": "osm", "gio": "Fr-Mo 10:00-14:00", "luc": [["Su", "11:00", true], ["Tu", "11:00", false], ["Mo", "13:59", true]]},
+    {"kieu": "osm", "gio": "08:00-24:00", "luc": [["We", "23:59", true], ["Th", "00:00", false]]}
+  ],
+  "khong_ro": ["", "   ", "sunrise-sunset", "Mo-Fr 08:00-17:00; PH off", "Jan-Mar Mo 08:00-12:00", "25:00 – 26:00", "10:60 – 12:00", "Mo-Fr", "closed", "10h – 22h"]
+}
