@@ -14,8 +14,10 @@
 //
 // Pure: no database, no model, no network, no clock. Everything is parsed and
 // validated once, at package init; a manual that does not parse, names a
-// screen the app does not have, or sends a person to a route _rut.json does
-// not know stops the process at start instead of becoming a wrong answer.
+// screen the app does not have, declares a way the app does not have (not an
+// edge of _rut.json, not the tab bar, not a named exception), or lets a money
+// screen say more than how to get there and on, stops the process at start
+// instead of becoming a wrong answer.
 //
 // Four questions are answered here: TheoMan (the manual of one screen), Tim
 // (which passages answer a question, lexically, through rag/xephang), DuongToi
@@ -63,9 +65,10 @@ type Doan struct {
 	// Each one is declared in the screen's nhanUI, which the drift gate holds
 	// to a literal in the app's source.
 	Nhan []string
-	// Tien marks a money screen. Its manual has exactly one section and every
-	// step of it names a way in or out (see kiemManTien); nothing on a money
-	// screen says how to pay, split or settle.
+	// Tien marks a money screen (its route's first segment is in manTienDau).
+	// Its manual has exactly one section, headed tieuDeManTien, and every step
+	// of it names a way in or out that is a button of the code (see
+	// kiemManTien); nothing on a money screen says how to pay, split or settle.
 	Tien bool
 }
 
@@ -74,7 +77,8 @@ type Hoi struct {
 	// Cau is the question as the person typed it, with or without diacritics.
 	Cau string
 	// Man is the screen the person is on, as declared (`outings/[id]`) or as
-	// walked (`/outings/7`). Its sections come first when they match at all.
+	// walked (`/outings/7`). Its sections come first when they score at least
+	// half the best match (tyLeGhim).
 	Man string
 	// K is how many passages to return; zero or less means KMacDinh.
 	K int
@@ -100,19 +104,22 @@ type Buoc struct {
 func TheoMan(man string) []Doan { return soTay.theoMan(man) }
 
 // Tim returns at most h.K passages (KMacDinh when h.K ≤ 0) that answer h.Cau,
-// best first. Ranking is BM25 over rag/xephang terms of the section heading
-// and body (see chuDeXep). A passage must share at least one
-// content word with the question (see tuDem); passages of h.Man that do come
-// first, then the rest, each group in score order, ties broken by id. A done
-// context returns nil.
+// best first. Only the first MaxRuneCau runes of h.Cau are read; its
+// teencode syllables the manual does not use are rewritten first (see teen).
+// Ranking is BM25 over rag/xephang terms of the section heading and body (see
+// chuDeXep). A passage must share at least one content syllable with the
+// question (see tuDem); passages of h.Man scoring at least tyLeGhim of the
+// best come first, then the rest, each group in score order, ties broken by
+// id. A done context returns nil.
 func Tim(ctx context.Context, h Hoi) []Doan { return soTay.tim(ctx, h) }
 
 // DuongToi returns the shortest way from screen tu to screen den, one Buoc per
 // tap, and whether there is one within MaxBuoc steps. Screens may be given as
 // declared or as walked. tu == den is a way of zero steps. Among ways of the
-// same length it prefers, step by step from tu, an edge a manual labels, then
-// the smaller route id, so the same graph gives the same way on every run.
-// The sign-in screens (manVao) are never passed through.
+// same length it prefers the one passing through the fewest money screens
+// (manTienDau), then, step by step from tu, an edge a manual labels, then the
+// smaller route id, so the same graph gives the same way on every run. The
+// sign-in screens (manVao) are never passed through.
 func DuongToi(tu, den string) ([]Buoc, bool) { return soTay.duongToi(tu, den) }
 
 // BanDung is the first 12 hex characters of the sha256 of the embedded

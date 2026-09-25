@@ -1,6 +1,48 @@
 {
   "routes": [
     {
+      "canh": [
+        {
+          "den": "achievements",
+          "nhan": "Thành tích"
+        },
+        {
+          "den": "explore",
+          "nhan": "Mở Khám phá"
+        },
+        {
+          "den": "finance",
+          "nhan": "Tài chính của tôi"
+        },
+        {
+          "den": "friends",
+          "nhan": "Bạn bè"
+        },
+        {
+          "den": "personalization",
+          "nhan": "Sở thích"
+        },
+        {
+          "den": "settings",
+          "nhan": "Cài đặt"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Chi theo nhóm"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Xem quyết toán"
+        },
+        {
+          "den": "welcome",
+          "nhan": "Đăng xuất"
+        },
+        {
+          "den": "welcome",
+          "nhan": "Đăng xuất bản trải nghiệm"
+        }
+      ],
       "di_toi": [
         "achievements",
         "explore",
@@ -49,6 +91,7 @@
         "Tài khoản",
         "Tên",
         "Tường của tôi",
+        "Xem quyết toán",
         "Xong",
         "dau-van-cay",
         "khoản chi,",
@@ -70,7 +113,8 @@
         "… Số này đọc từ sổ cái, không phải số dư ngân hàng.",
         "… lời mời đang chờ",
         "… địa điểm",
-        "…/… điểm tới cấp … · tính từ … khoản chi, … nhóm trong sổ của bạn"
+        "…/… điểm tới cấp … · tính từ … khoản chi, … nhóm trong sổ của bạn",
+        "…/… đã mở"
       ],
       "tep": [
         "app/achievements.tsx",
@@ -79,6 +123,12 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "ai-match",
+          "nhan": "Match gu cả nhóm bằng AI"
+        }
+      ],
       "di_toi": [
         "ai-match",
         "places/[id]"
@@ -106,6 +156,7 @@
         "Tối nay cả hội đi đâu?",
         "Từ 90% hợp gu",
         "Vì sao hợp …?",
+        "Xóa lọc",
         "Đây là gợi ý có thể chỉnh. Rủ Đi không tự thêm nơi vào kế hoạch của nhóm.",
         "Đã lưu",
         "Đã thêm vào …",
@@ -118,6 +169,12 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "messages",
+          "nhan": "Tới Tin nhắn"
+        }
+      ],
       "di_toi": [
         "messages"
       ],
@@ -159,6 +216,24 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "check-ins/new",
+          "nhan": "Check-in nhóm"
+        },
+        {
+          "den": "check-ins/new",
+          "nhan": "Đến nơi rồi?"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tôi đã tới"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tường nhóm"
+        }
+      ],
       "di_toi": [
         "check-ins/new",
         "groups/[id]/wall",
@@ -222,6 +297,28 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "hai-nguoi/chon-nguoi",
+          "nhan": "Rủ một người đi chơi"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Đăng kỷ niệm"
+        },
+        {
+          "den": "outings/new",
+          "nhan": "Tạo cuộc hẹn"
+        },
+        {
+          "den": "smart-split/[id]/review",
+          "nhan": "Chia hóa đơn"
+        },
+        {
+          "den": "stories/new",
+          "nhan": "Đăng story"
+        }
+      ],
       "di_toi": [
         "create",
         "explore",
@@ -233,8 +330,13 @@
       ],
       "man": "create",
       "nhan": [
+        "Chia hóa đơn",
         "Mình làm gì tiếp?",
-        "Tạo mới"
+        "Rủ một người đi chơi",
+        "Tạo cuộc hẹn",
+        "Tạo mới",
+        "Đăng kỷ niệm",
+        "Đăng story"
       ],
       "tep": [
         "app/create.tsx",
@@ -242,6 +344,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [],
       "man": "destinations",
       "nhan": [
@@ -257,6 +360,16 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "ai-match",
+          "nhan": "Match gu cả nhóm bằng AI"
+        },
+        {
+          "den": "destinations",
+          "nhan": "Đổi điểm đến"
+        }
+      ],
       "di_toi": [
         "ai-match",
         "destinations",
@@ -293,6 +406,7 @@
         "Tối nay cả hội đi đâu?",
         "Từ 90% hợp gu",
         "Vì sao hợp …?",
+        "Xóa lọc",
         "Ô tìm địa điểm",
         "Đang đọc câu «",
         "Đang đọc câu «…»...",
@@ -312,6 +426,48 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "achievements",
+          "nhan": "Thành tích"
+        },
+        {
+          "den": "explore",
+          "nhan": "Mở Khám phá"
+        },
+        {
+          "den": "finance",
+          "nhan": "Tài chính của tôi"
+        },
+        {
+          "den": "friends",
+          "nhan": "Bạn bè"
+        },
+        {
+          "den": "personalization",
+          "nhan": "Sở thích"
+        },
+        {
+          "den": "settings",
+          "nhan": "Cài đặt"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Chi theo nhóm"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Xem quyết toán"
+        },
+        {
+          "den": "welcome",
+          "nhan": "Đăng xuất"
+        },
+        {
+          "den": "welcome",
+          "nhan": "Đăng xuất bản trải nghiệm"
+        }
+      ],
       "di_toi": [
         "achievements",
         "explore",
@@ -351,6 +507,7 @@
         "Tài khoản",
         "Tên",
         "Tường của tôi",
+        "Xem quyết toán",
         "Xong",
         "dau-van-cay",
         "nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.",
@@ -366,7 +523,8 @@
         "ảnh",
         "… Số này đọc từ sổ cái, không phải số dư ngân hàng.",
         "… lời mời đang chờ",
-        "… địa điểm"
+        "… địa điểm",
+        "…/… đã mở"
       ],
       "tep": [
         "app/finance.tsx",
@@ -374,6 +532,12 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "friends/add",
+          "nhan": "Thêm bạn bằng số điện thoại"
+        }
+      ],
       "di_toi": [
         "friends/add",
         "groups/[id]/chat",
@@ -399,6 +563,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "welcome"
       ],
@@ -421,6 +586,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "trips/[id]/album",
         "welcome"
@@ -446,6 +612,36 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/members",
+          "nhan": "Thành viên nhóm"
+        },
+        {
+          "den": "groups/[id]/members",
+          "nhan": "Xem hồ sơ"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Thông tin nhóm"
+        },
+        {
+          "den": "people/[id]",
+          "nhan": "Thành viên nhóm"
+        },
+        {
+          "den": "people/[id]",
+          "nhan": "Xem hồ sơ"
+        },
+        {
+          "den": "votes/[id]",
+          "nhan": "Bình chọn"
+        },
+        {
+          "den": "votes/[id]",
+          "nhan": "Mở bình chọn"
+        }
+      ],
       "di_toi": [
         "groups/[id]/members",
         "groups/[id]/to-giay",
@@ -553,6 +749,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "messages",
         "welcome"
@@ -579,6 +776,20 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/album",
+          "nhan": "Album chuyến đi"
+        },
+        {
+          "den": "groups/[id]/invite",
+          "nhan": "Mời bằng số điện thoại"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tường kỷ niệm"
+        }
+      ],
       "di_toi": [
         "groups/[id]/album",
         "groups/[id]/invite",
@@ -602,6 +813,20 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/chat",
+          "nhan": "Tin nhắn"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Kỷ niệm của hai bạn"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Giữ một tấm ảnh của buổi này"
+        }
+      ],
       "di_toi": [
         "groups/[id]/chat",
         "groups/[id]/wall",
@@ -638,6 +863,32 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Đăng vào tường nhóm"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Chia sẻ khoảnh khắc với cả nhóm"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Chia sẻ … ảnh"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Thêm khoảnh khắc"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Thêm ảnh"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Thả khoảnh khắc"
+        }
+      ],
       "di_toi": [
         "groups/[id]/wall",
         "moments/new"
@@ -668,6 +919,7 @@
         "Kỷ niệm của hai bạn",
         "Một câu (không bắt buộc)",
         "Mới trước",
+        "Mở album",
         "Mở ảnh …",
         "Những ngày mình đi cùng nhau",
         "Team Đà Lạt",
@@ -716,6 +968,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "messages"
       ],
@@ -726,6 +979,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "friends/add",
         "welcome"
@@ -747,6 +1001,16 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "friends/add",
+          "nhan": "Thêm bạn bằng số điện thoại"
+        },
+        {
+          "den": "friends/add",
+          "nhan": "Thêm bạn khác"
+        }
+      ],
       "di_toi": [
         "friends/add",
         "groups/[id]/to-giay"
@@ -757,6 +1021,7 @@
         "Chưa đọc được danh sách bạn",
         "Rủ ai?",
         "Rủ một người đi chơi",
+        "Thêm bạn bằng số điện thoại",
         "Thêm bạn khác"
       ],
       "tep": [
@@ -765,6 +1030,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [],
       "man": "index",
       "nhan": [],
@@ -773,6 +1039,16 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "moi",
+          "nhan": "Tôi có lời mời"
+        },
+        {
+          "den": "personalization",
+          "nhan": "Vào bản trải nghiệm Team Đà Lạt"
+        }
+      ],
       "di_toi": [
         "moi",
         "otp",
@@ -799,6 +1075,32 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "friends/add",
+          "nhan": "Thêm bạn bằng số điện thoại"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Thông tin nhóm"
+        },
+        {
+          "den": "groups/new",
+          "nhan": "Tạo nhóm"
+        },
+        {
+          "den": "moi",
+          "nhan": "Tôi có lời mời"
+        },
+        {
+          "den": "votes/[id]",
+          "nhan": "Bình chọn"
+        },
+        {
+          "den": "votes/[id]",
+          "nhan": "Mở bình chọn"
+        }
+      ],
       "di_toi": [
         "friends/add",
         "groups/[id]/chat",
@@ -846,6 +1148,7 @@
         "Thông tin nhóm",
         "Tin nhắn",
         "Tuần này tối thứ Bảy rảnh không?",
+        "Tôi có lời mời",
         "Tạo nhóm",
         "Vì sao phác vậy",
         "Vị trí",
@@ -875,6 +1178,20 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "explore",
+          "nhan": "Vào nhóm"
+        },
+        {
+          "den": "welcome",
+          "nhan": "Xem bản trải nghiệm"
+        },
+        {
+          "den": "welcome",
+          "nhan": "Để sau"
+        }
+      ],
       "di_toi": [
         "explore",
         "welcome"
@@ -900,6 +1217,32 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Đăng vào tường nhóm"
+        },
+        {
+          "den": "messages",
+          "nhan": "Tới Tin nhắn"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Chia sẻ khoảnh khắc với cả nhóm"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Chia sẻ … ảnh"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Thêm khoảnh khắc"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Thêm ảnh"
+        }
+      ],
       "di_toi": [
         "groups/[id]/wall",
         "messages",
@@ -929,6 +1272,7 @@
         "Một câu cho khoảnh khắc (… ký tự còn lại)",
         "Một khoảnh khắc cho nhóm",
         "Mới trước",
+        "Mở album",
         "Mở ảnh …",
         "Những ngày mình đi cùng nhau",
         "Team Đà Lạt",
@@ -971,6 +1315,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "login"
       ],
@@ -993,6 +1338,16 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/members",
+          "nhan": "Thành viên nhóm"
+        },
+        {
+          "den": "smart-split/[id]/review",
+          "nhan": "Chia bill buổi này"
+        }
+      ],
       "di_toi": [
         "groups/[id]/members",
         "places/[id]",
@@ -1034,6 +1389,7 @@
         "Ô giờ chặng",
         "Ô tên chặng",
         "Đã tới",
+        "Đóng",
         "Để sau",
         "Địa điểm trong danh mục (tuỳ chọn)",
         "… · … người …"
@@ -1044,6 +1400,12 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "outings/new",
+          "nhan": "Tạo kèo"
+        }
+      ],
       "di_toi": [
         "outings/[id]",
         "outings/new",
@@ -1057,6 +1419,7 @@
         "Kèo của nhóm",
         "Thêm vào",
         "Thêm vào kèo",
+        "Tạo kèo",
         "với",
         "với … · … …"
       ],
@@ -1066,6 +1429,32 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "check-ins/new",
+          "nhan": "Check-in nhóm"
+        },
+        {
+          "den": "check-ins/new",
+          "nhan": "Đến nơi rồi?"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tôi đã tới"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tường nhóm"
+        },
+        {
+          "den": "outings/[id]",
+          "nhan": "Mở kèo đã tạo"
+        },
+        {
+          "den": "outings/new",
+          "nhan": "Viết kèo mới"
+        }
+      ],
       "di_toi": [
         "check-ins/new",
         "groups/[id]/wall",
@@ -1161,6 +1550,16 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "posts/[id]",
+          "nhan": "Mở bài: …"
+        },
+        {
+          "den": "posts/new",
+          "nhan": "Đăng bài mới"
+        }
+      ],
       "di_toi": [
         "groups/[id]/chat",
         "posts/[id]",
@@ -1189,6 +1588,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "explore"
       ],
@@ -1208,6 +1608,16 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "ai-match",
+          "nhan": "Match gu cả nhóm bằng AI"
+        },
+        {
+          "den": "outings/chon",
+          "nhan": "Thêm vào kèo"
+        }
+      ],
       "di_toi": [
         "ai-match",
         "groups/[id]/to-giay",
@@ -1247,6 +1657,7 @@
         "Từ 90% hợp gu",
         "Vì sao hợp nhóm?",
         "Vì sao hợp …?",
+        "Xóa lọc",
         "Đang mở",
         "Đây là gợi ý có thể chỉnh. Rủ Đi không tự thêm nơi vào kế hoạch của nhóm.",
         "Đã lưu",
@@ -1265,6 +1676,32 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "check-ins/new",
+          "nhan": "Check-in nhóm"
+        },
+        {
+          "den": "check-ins/new",
+          "nhan": "Đến nơi rồi?"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tôi đã tới"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tường nhóm"
+        },
+        {
+          "den": "messages",
+          "nhan": "Tới Tin nhắn"
+        },
+        {
+          "den": "outings/new",
+          "nhan": "Tạo kèo"
+        }
+      ],
       "di_toi": [
         "check-ins/new",
         "groups/[id]/wall",
@@ -1344,6 +1781,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "people/[id]"
       ],
@@ -1370,6 +1808,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "people/[id]"
       ],
@@ -1395,6 +1834,48 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "achievements",
+          "nhan": "Thành tích"
+        },
+        {
+          "den": "explore",
+          "nhan": "Mở Khám phá"
+        },
+        {
+          "den": "finance",
+          "nhan": "Tài chính của tôi"
+        },
+        {
+          "den": "friends",
+          "nhan": "Bạn bè"
+        },
+        {
+          "den": "personalization",
+          "nhan": "Sở thích"
+        },
+        {
+          "den": "settings",
+          "nhan": "Cài đặt"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Chi theo nhóm"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Xem quyết toán"
+        },
+        {
+          "den": "welcome",
+          "nhan": "Đăng xuất"
+        },
+        {
+          "den": "welcome",
+          "nhan": "Đăng xuất bản trải nghiệm"
+        }
+      ],
       "di_toi": [
         "achievements",
         "explore",
@@ -1434,6 +1915,7 @@
         "Tài khoản",
         "Tên",
         "Tường của tôi",
+        "Xem quyết toán",
         "Xong",
         "dau-van-cay",
         "nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.",
@@ -1449,7 +1931,8 @@
         "ảnh",
         "… Số này đọc từ sổ cái, không phải số dư ngân hàng.",
         "… lời mời đang chờ",
-        "… địa điểm"
+        "… địa điểm",
+        "…/… đã mở"
       ],
       "tep": [
         "app/(tabs)/profile.tsx",
@@ -1457,6 +1940,28 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "personalization",
+          "nhan": "Sở thích"
+        },
+        {
+          "den": "settings/da-chan",
+          "nhan": "Người đã chặn"
+        },
+        {
+          "den": "settings/phien",
+          "nhan": "Phiên đăng nhập"
+        },
+        {
+          "den": "settings/ve-rudi",
+          "nhan": "Điều khoản và dữ liệu"
+        },
+        {
+          "den": "settings/xoa-tai-khoan",
+          "nhan": "Xoá tài khoản"
+        }
+      ],
       "di_toi": [
         "personalization",
         "settings/da-chan",
@@ -1492,6 +1997,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [],
       "man": "settings/da-chan",
       "nhan": [
@@ -1510,6 +2016,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [],
       "man": "settings/phien",
       "nhan": [
@@ -1528,6 +2035,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [],
       "man": "settings/ve-rudi",
       "nhan": [
@@ -1542,6 +2050,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "welcome"
       ],
@@ -1564,6 +2073,20 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "messages",
+          "nhan": "Tới Tin nhắn"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Xác nhận cách chia"
+        },
+        {
+          "den": "smart-split/[id]/assignment",
+          "nhan": "Dùng giấy mẫu"
+        }
+      ],
       "di_toi": [
         "batches/[id]",
         "messages",
@@ -1610,6 +2133,7 @@
         "Tạo đợt thu từ sổ",
         "TỔNG CỘNG",
         "Tổng hóa đơn Xóm Lèo",
+        "Tới Tin nhắn",
         "Xem lại hóa đơn",
         "Xác nhận cách chia",
         "sẽ nhận (bill Xóm Lèo)",
@@ -1636,6 +2160,20 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "messages",
+          "nhan": "Tới Tin nhắn"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Xác nhận cách chia"
+        },
+        {
+          "den": "smart-split/[id]/assignment",
+          "nhan": "Dùng giấy mẫu"
+        }
+      ],
       "di_toi": [
         "batches/[id]",
         "messages",
@@ -1683,6 +2221,7 @@
         "Tạo đợt thu từ sổ",
         "TỔNG CỘNG",
         "Tổng hóa đơn Xóm Lèo",
+        "Tới Tin nhắn",
         "Xem lại hóa đơn",
         "Xác nhận cách chia",
         "sẽ nhận (bill Xóm Lèo)",
@@ -1709,6 +2248,28 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "messages",
+          "nhan": "Tới Tin nhắn"
+        },
+        {
+          "den": "messages",
+          "nhan": "Về Tin nhắn"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Xem quyết toán"
+        },
+        {
+          "den": "settlements/[id]",
+          "nhan": "Xác nhận cách chia"
+        },
+        {
+          "den": "smart-split/[id]/assignment",
+          "nhan": "Dùng giấy mẫu"
+        }
+      ],
       "di_toi": [
         "batches/[id]",
         "messages",
@@ -1823,6 +2384,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [],
       "man": "stories/[personId]",
       "nhan": [
@@ -1844,6 +2406,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [],
       "man": "stories/new",
       "nhan": [
@@ -1867,6 +2430,28 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Đăng vào tường nhóm"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Chia sẻ khoảnh khắc với cả nhóm"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Chia sẻ … ảnh"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Thêm khoảnh khắc"
+        },
+        {
+          "den": "moments/new",
+          "nhan": "Thêm ảnh"
+        }
+      ],
       "di_toi": [
         "groups/[id]/wall",
         "moments/new",
@@ -1897,6 +2482,7 @@
         "Gắn thẻ bạn bè",
         "Kể hội bạn nghe về khoảnh khắc này...",
         "Mới trước",
+        "Mở album",
         "Mở ảnh …",
         "Những ngày mình đi cùng nhau",
         "Team Đà Lạt",
@@ -1933,6 +2519,20 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Thông tin nhóm"
+        },
+        {
+          "den": "votes/[id]",
+          "nhan": "Bình chọn"
+        },
+        {
+          "den": "votes/[id]",
+          "nhan": "Mở bình chọn"
+        }
+      ],
       "di_toi": [
         "groups/[id]/to-giay",
         "groups/[id]/wall",
@@ -1995,6 +2595,24 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "check-ins/new",
+          "nhan": "Check-in nhóm"
+        },
+        {
+          "den": "check-ins/new",
+          "nhan": "Đến nơi rồi?"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tôi đã tới"
+        },
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Tường nhóm"
+        }
+      ],
       "di_toi": [
         "check-ins/new",
         "groups/[id]/wall",
@@ -2058,6 +2676,20 @@
       ]
     },
     {
+      "canh": [
+        {
+          "den": "groups/[id]/wall",
+          "nhan": "Thông tin nhóm"
+        },
+        {
+          "den": "votes/[id]",
+          "nhan": "Bình chọn"
+        },
+        {
+          "den": "votes/[id]",
+          "nhan": "Mở bình chọn"
+        }
+      ],
       "di_toi": [
         "groups/[id]/to-giay",
         "groups/[id]/wall",
@@ -2120,6 +2752,7 @@
       ]
     },
     {
+      "canh": [],
       "di_toi": [
         "login"
       ],

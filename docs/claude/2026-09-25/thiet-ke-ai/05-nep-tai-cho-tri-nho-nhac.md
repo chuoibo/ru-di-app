@@ -94,20 +94,50 @@ bị thay, vì gu vẫn bị cấm.
 - **Một chỗ:** `services/core/internal/huongdan/data/*.md`, nhúng `go:embed` (sửa theo phản biện) [P2-6].
   Core build với `context: ./services/core` và `go:embed` không ra khỏi module, nên `docs/huong-dan-app/`
   (bản gốc) và `apps/mobile/huong-dan/` (RAG) đều bỏ.
-- Mỗi luồng một mục, front matter `{id, man[], buoc[], hanhDong[], loTrinh[], nhanUI[]}`. Người review
-  viết văn; model soạn nháp chỉ khi Lead duyệt số lời gọi.
+- **Định dạng đã chốt khi dựng** (theo bản dựng lát 13, `5c3a3c1`; ghi lại theo review lát 13 phát hiện 6).
+  Bản thiết kế ban đầu (mỗi luồng một mục, front matter `{id, man[], buoc[], hanhDong[], loTrinh[], nhanUI[]}`)
+  không được dựng. Dựng: **mỗi màn một file**, front matter là JSON giữa dòng `---json` và dòng `---`, đúng
+  năm khoá `{man, tieu_de, nhanUI[], di_toi[{nhan, man}], tien}`; khoá lạ bị từ chối, kể cả tên cũ `nut`,
+  `buoc`, `hanhDong`. `man` là route id đúng như `PhieuNguCanh.man`. Mỗi mục `## ` là một việc và một đoạn
+  truy hồi, 1–5 bước; id mục = `<tệp>/<slug tiêu đề>`. Luật nạp (`huongdan.nap`, phaiNap panic lúc init):
+  mọi `man`/`di_toi[].man` có trong `_rut.json`; không `di_toi` nào về chính màn đó; mọi `di_toi` là một
+  cạnh của mã (`_rut.json` `di_toi`, thanh tab, hoặc ngoại lệ có tên `canhNgoaiRut` kèm lý do — hiện chỉ
+  `plan → create`, nút «Tạo mới» của `RudiTabBar`); mọi «…», kể cả trong tiêu đề mục và tổng quan, khai trong
+  `nhanUI`; `tien` phải đúng theo route (`manTienDau` = `MAN_NEP_LUI`). Màn tiền: một mục duy nhất, tiêu đề
+  cố định «Tới màn này và đi tiếp», không chữ số, mọi dòng là bước, mỗi bước trích một «cửa»; cửa là nhãn của
+  một lối vào/ra đã khai mà **là cạnh có nhãn của mã** (`_rut.json` `canh`: nút mang đúng nhãn đó và điều
+  hướng tới đúng màn đó), hoặc tiêu đề của một màn không phải màn tiền có lối vào, in trên màn đó. Người
+  review viết văn; model soạn nháp chỉ khi Lead duyệt số lời gọi.
+- **`buoc` và `hanhDong` đi trên phiếu v2, không vào front matter.** Trạng thái màn thuộc về mã màn đó
+  (registry đóng `BuocMan` trong `phieu.ts`), không thuộc văn sổ tay. Lát 9 thêm bảng Go `buocMuc`
+  (cùng registry tool): mỗi giá trị `BuocMan` → danh sách id mục của đúng màn đó. `TheoMan(man)` giữ chữ ký;
+  `explain_screen` lấy `TheoMan(phieu.man)` rồi đưa các mục của `buocMuc[phieu.buoc]` lên trước; `buoc` lạ
+  hoặc không có mục thì giữ thứ tự tệp. `hanhDong` không lọc sổ tay: nó chỉ quyết chip nào được ra.
+  Test lệch khi đó: mọi `BuocMan` có mục trong `buocMuc` hoặc nằm trong danh sách «không có hướng dẫn
+  riêng» kèm lý do; mọi id trong `buocMuc` tồn tại và thuộc đúng màn.
 - `apps/mobile/tools/rut-huong-dan.mjs` rút ra `data/_rut.json`: route (cây expo-router), nhãn (literal
-  JSX), cạnh điều hướng (`router.push/replace` literal). Cổng tươi: CI chạy lại, diff phải rỗng. `banBuild`
+  JSX), cạnh điều hướng (`router.push/replace` literal), và cạnh có nhãn `canh` (nhãn và điều hướng nằm trên
+  cùng một thứ người ta bấm: một thẻ JSX với handler `on…`/`href` của chính nó, hoặc một object menu
+  `{title|label, href|on…}`; thêm theo review lát 13). Cổng tươi: CI chạy lại, diff phải rỗng. `banBuild`
   = 12 hex đầu sha256 của `_rut.json`, client nhúng qua `nep/huong-dan-ban.ts` (sửa theo phản biện) [P2-6].
-- **API:** `TheoMan(man, buoc)` tra đúng. `Tim(ctx, Hoi{Cau, Man, Buoc, HanhDong, K: 4})` tìm từ vựng
-  trong RAM trên ~300 đoạn đã `Fold`, ≤50 ms; version hoá trong DB để sau [P2-6]. `DuongToi(tu, den)` là
-  BFS trên đồ thị màn cho câu «làm sao tới X», ≤5 bước. Ruột `search_app_manual` thuộc thiết kế 04.
+- **API (theo bản dựng):** `TheoMan(man)` trả các mục của một màn theo thứ tự tệp (nhận route khai hoặc
+  route đi). `Tim(ctx, Hoi{Cau, Man, K})`, K mặc định 4: chỉ đọc 2000 rune đầu của câu (`MaxRuneCau`, bằng
+  `maxHoiNep`); âm tiết teencode mà sổ tay không dùng được viết lại theo bảng đóng `teen` (không dịch tiếng
+  Anh); BM25 qua `rag/xephang` trên tiêu đề mục + thân; một mục chỉ «khớp» khi chung ít nhất một âm tiết nội
+  dung (ngoài `tuDem`). **Luật ghim:** mục của màn đang đứng chỉ lên trước khi điểm ≥ 1/2 điểm cao nhất
+  (`tyLeGhim`), phần còn lại giữ thứ tự điểm. Ghim mọi mục khớp (bản đầu) làm câu hỏi từ màn khác có MRR
+  0.3526 trên bộ `truy-hoi-man-khac.json`. Tìm trong RAM, ≤50 ms; version hoá trong DB để sau [P2-6].
+  `DuongToi(tu, den)` là BFS trên đồ thị màn cho câu «làm sao tới X», ≤5 bước, không đi qua màn đăng nhập,
+  và giữa các đường cùng độ dài thì chọn đường đi qua ít màn tiền nhất. Ruột `search_app_manual` thuộc thiết
+  kế 04.
 - **Luật trả lời «muốn chọn A/B/C thì làm sao»:** ≤5 bước; `nguon[]` liệt kê id mục đã trích; nhãn trong
   «…» chỉ lấy từ `nhanUI` của mục đã trích. Output guard (cửa sổ 48 rune, thiết kế 01 §3.5) quét mọi «…».
   Nhãn lạ trước delta đầu: thử lại một lần. Sau khi đã stream: bỏ «», đếm `nhan_la`, **không rút lại**
   (theo hợp đồng chung).
-- **Cổng lệch:** mọi `nhanUI` là literal có thật trong `apps/mobile/{src,app}`; mọi `man/buoc/hanhDong`
-  có trong registry; mọi `loTrinh` nằm trong `lo-trinh.ts` và ngoài `MAN_NEP_LUI`.
+- **Cổng lệch** (`apps/mobile/tests/huong-dan-khop-ma.test.mjs`, kiểm độc lập với bộ nạp Go): `_rut.json` và
+  `huong-dan-ban.ts` tươi; mọi `nhanUI` là literal có thật trong `apps/mobile/{src,app}` và được dùng; mọi
+  `di_toi` là cạnh của mã (cùng danh sách ngoại lệ `CANH_NGOAI_RUT`), không về chính màn; luật màn tiền như
+  trên, kể cả cửa phải là cạnh có nhãn. Khi phiếu v2 và `buocMuc` có (lát 9): mọi `buoc` có trong registry.
 
 ## 4. Tool và chip của Nếp (theo hợp đồng chung)
 

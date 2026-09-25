@@ -20,16 +20,26 @@
  *     live under `src/**\/screens/**`. One level on purpose: the screen a route
  *     mounts is what the route "is"; following every import would hand each
  *     route the whole kit and every list would read the same.
- *   - labels: the literal values of `label`, `accessibilityLabel`, `title` and
- *     `placeholder`, and literal JSX text. A template literal is kept with each
- *     `${...}` written as «…» (`Rủ ${ten} tới đây` -> `Rủ … tới đây`), which is
- *     how the manual quotes a label that carries a name.
+ *   - labels: the literal values of `label`, `accessibilityLabel`, `title`,
+ *     `placeholder` and `action`, and literal JSX text. A template literal is
+ *     kept with each `${...}` written as «…» (`Rủ ${ten} tới đây` ->
+ *     `Rủ … tới đây`), which is how the manual quotes a label that carries a
+ *     name.
  *   - navigation: `router.push/replace/navigate(...)`, `href=...` and an
  *     object's `href:` property, whose target is literal enough to name a
  *     route. `/outings/${id}?ctx=...` is cut at the query and matched against
  *     the route tree, so it records `outings/[id]`. A target no route matches
  *     keeps its path with a leading `/`, so it stays visible instead of
  *     silently dropping out.
+ *   - labelled edges (`canh`): a label and a navigation that belong to ONE
+ *     thing a person taps. Either one JSX tag whose label attribute and whose
+ *     `on…` handler (or `href`) sit on the same tag (`<RudiButton
+ *     label="Xem quyết toán" onPress={() => router.replace(…)} />`), or one
+ *     object literal whose `title`/`label` sits next to its `href` or an
+ *     `on…` handler that navigates (a menu written as data, `action={{ label,
+ *     onPress }}`). This is what lets the manual's money doors be held to a
+ *     button that really leads there, not merely to a word printed somewhere
+ *     on the screen. The label of such an object is a label too.
  *
  * Parsing is TypeScript's own parser (already a dev dependency), not regex:
  * comments are trivia rather than nodes, so a label mentioned only in a
@@ -63,7 +73,9 @@ const THU_MUC_APP = join(GOC_MOBILE, "app");
 const THU_MUC_SRC = join(GOC_MOBILE, "src");
 
 /** JSX attributes whose value is words a person reads (or hears). */
-const THUOC_TINH_NHAN = new Set(["label", "accessibilityLabel", "title", "placeholder"]);
+const THUOC_TINH_NHAN = new Set(["label", "accessibilityLabel", "title", "placeholder", "action"]);
+/** Properties of an object literal that name the thing it describes. */
+const KHOA_NHAN = new Set(["title", "label"]);
 /** How a `${...}` inside a template is written in labels and manuals. */
 export const CHO_TRONG = "…";
 /** Placeholder for a dynamic piece of a navigation target, before matching. */
@@ -244,6 +256,11 @@ function dichCuaBieuThuc(e) {
 }
 
 function dichTrongTep(sf) {
+  return dichTrongNut(sf);
+}
+
+/** Raw navigation targets anywhere under one node. */
+function dichTrongNut(goc) {
   const ra = [];
   const di = (node) => {
     if (
@@ -266,6 +283,62 @@ function dichTrongTep(sf) {
       // A menu written as data (`{ title, href: "/outings/new" }`) and pushed
       // through a variable: the literal lives here, not at the call.
       ra.push(...(dichCuaBieuThuc(node.initializer) ?? []));
+    }
+    ts.forEachChild(node, di);
+  };
+  di(goc);
+  return ra;
+}
+
+function tenThuocTinh(p) {
+  return p.name && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) ? p.name.text : null;
+}
+
+/**
+ * Labelled edges of one file, as [label, raw target] pairs: see the file
+ * header. Only a handler named `on…` counts as the tap, so a tag's other
+ * props (an `action={{ … }}` object, a render prop) never lend their
+ * navigation to the tag's own label; that object is read on its own.
+ */
+function canhTrongTep(sf) {
+  const ra = [];
+  const ghep = (nhan, dich) => {
+    for (const n of nhan) {
+      const g = gon(n);
+      if (!g || !coChu(g)) continue;
+      for (const d of dich) ra.push([g, d]);
+    }
+  };
+  const di = (node) => {
+    if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
+      const nhan = [];
+      const dich = [];
+      for (const p of node.attributes.properties) {
+        if (!ts.isJsxAttribute(p) || !ts.isIdentifier(p.name)) continue;
+        const ten = p.name.text;
+        const v = p.initializer;
+        if (THUOC_TINH_NHAN.has(ten)) {
+          if (v && ts.isStringLiteral(v)) nhan.push(v.text);
+          else if (v && ts.isJsxExpression(v)) nhan.push(...chuCuaBieuThuc(v.expression));
+        } else if (ten === "href") {
+          if (v && ts.isStringLiteral(v)) dich.push(v.text);
+          else if (v && ts.isJsxExpression(v)) dich.push(...(dichCuaBieuThuc(v.expression) ?? []));
+        } else if (/^on[A-Z]/.test(ten) && v && ts.isJsxExpression(v) && v.expression) {
+          dich.push(...dichTrongNut(v.expression));
+        }
+      }
+      ghep(nhan, dich);
+    } else if (ts.isObjectLiteralExpression(node)) {
+      const nhan = [];
+      const dich = [];
+      for (const p of node.properties) {
+        if (!ts.isPropertyAssignment(p)) continue;
+        const ten = tenThuocTinh(p);
+        if (ten !== null && KHOA_NHAN.has(ten)) nhan.push(...chuCuaBieuThuc(p.initializer));
+        else if (ten === "href") dich.push(...(dichCuaBieuThuc(p.initializer) ?? []));
+        else if (ten !== null && /^on[A-Z]/.test(ten)) dich.push(...dichTrongNut(p.initializer));
+      }
+      ghep(nhan, dich);
     }
     ts.forEachChild(node, di);
   };
@@ -331,25 +404,48 @@ export function rutBanDo() {
     .map((p) => ({ p, man: maMan(posix(relative(THU_MUC_APP, p))) }))
     .filter((x) => x.man !== null);
   const cacMan = [...new Set(tepMan.map((x) => x.man))].sort();
-  const theoMan = new Map(cacMan.map((m) => [m, { man: m, tep: new Set(), nhan: new Set(), di_toi: new Set() }]));
+  const theoMan = new Map(cacMan.map((m) => [m, { man: m, tep: new Set(), nhan: new Set(), di_toi: new Set(), canh: new Map() }]));
   for (const { p, man } of tepMan) {
     const muc = theoMan.get(man);
     const sf = docNguon(p);
     for (const tep of [p, ...tepManDuocNhap(p, sf)]) {
       const sfTep = tep === p ? sf : docNguon(tep);
       muc.tep.add(posix(relative(GOC_MOBILE, tep)));
-      for (const n of nhanTrongTep(sfTep)) muc.nhan.add(n);
-      for (const d of dichTrongTep(sfTep)) {
-        const den = manDich(d, cacMan);
-        if (den !== null) muc.di_toi.add(den);
-      }
+      docMotTep(sfTep, cacMan, muc);
     }
   }
   const routes = cacMan.map((m) => {
     const muc = theoMan.get(m);
-    return { di_toi: [...muc.di_toi].sort(), man: m, nhan: [...muc.nhan].sort(), tep: [...muc.tep].sort() };
+    return {
+      canh: sapCanh(muc.canh),
+      di_toi: [...muc.di_toi].sort(),
+      man: m,
+      nhan: [...muc.nhan].sort(),
+      tep: [...muc.tep].sort(),
+    };
   });
   return { routes };
+}
+
+/** Adds one parsed file's labels, targets and labelled edges to a route's sets. */
+function docMotTep(sf, cacMan, muc) {
+  for (const n of nhanTrongTep(sf)) muc.nhan.add(n);
+  for (const d of dichTrongTep(sf)) {
+    const den = manDich(d, cacMan);
+    if (den !== null) muc.di_toi.add(den);
+  }
+  for (const [nhan, tho] of canhTrongTep(sf)) {
+    const den = manDich(tho, cacMan);
+    if (den === null) continue;
+    muc.nhan.add(nhan);
+    muc.canh.set(JSON.stringify([den, nhan]), { den, nhan });
+  }
+}
+
+/** Labelled edges sorted by target, then label: the order `_rut.json` holds. */
+function sapCanh(canh) {
+  const so = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+  return [...canh.values()].sort((a, b) => so(a.den, b.den) || so(a.nhan, b.nhan));
 }
 
 /** The exact bytes `_rut.json` must hold. */
@@ -424,15 +520,12 @@ export function literalTrongMa() {
   return ra;
 }
 
-/** Labels and route targets of one source text, the way `rutBanDo` reads a file. */
+/** Labels, route targets and labelled edges of one source text, the way `rutBanDo` reads a file. */
 export function rutTuNguon(chu, cacMan, ten = "nguon.tsx") {
   const sf = ts.createSourceFile(ten, chu, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-  const diToi = new Set();
-  for (const d of dichTrongTep(sf)) {
-    const den = manDich(d, cacMan);
-    if (den !== null) diToi.add(den);
-  }
-  return { nhan: [...nhanTrongTep(sf)].sort(), di_toi: [...diToi].sort() };
+  const muc = { nhan: new Set(), di_toi: new Set(), canh: new Map() };
+  docMotTep(sf, cacMan, muc);
+  return { nhan: [...muc.nhan].sort(), di_toi: [...muc.di_toi].sort(), canh: sapCanh(muc.canh) };
 }
 
 const laChinh = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);

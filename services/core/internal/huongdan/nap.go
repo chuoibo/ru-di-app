@@ -23,7 +23,21 @@ const (
 	// thuMucTab is where expo-router keeps the tab screens; _rut.json records
 	// it in each route's `tep`.
 	thuMucTab = "app/(tabs)/"
+	// tieuDeManTien is the one heading a money screen's single section may
+	// have. A heading is text a person reads like any step, and a free one is
+	// room for «how to pay» that no door rule looks at; fixed, it says nothing
+	// but «how to get here and on».
+	tieuDeManTien = "Tới màn này và đi tiếp"
 )
+
+// canhNgoaiRut are the manual edges that are real although no route's code
+// shows them, each with the reason. A manual's di_toi must be an edge of the
+// code (_rut.json di_toi), a tab-bar edge, or one of these; a test holds every
+// entry to the manuals that use it and to the source that makes it real.
+var canhNgoaiRut = map[[2]string]string{
+	{"plan", "create"}: "nút tròn «Tạo mới» của thanh tab (src/rudi/ui/RudiTabBar.tsx, router.push(\"/create\")) " +
+		"do app/(tabs)/_layout.tsx vẽ; _layout không phải route nên bộ rút không gán cạnh này cho màn nào",
+}
 
 // SoTay is a parsed and validated manual. Immutable once built, so safe for
 // concurrent use.
@@ -34,8 +48,11 @@ type SoTay struct {
 	theoID   map[string]int    // section id -> index in doan
 	chiMuc   *xephang.ChiMuc   // over chuChiMuc of each section, ids = section ids
 	thuat    []map[string]bool // terms of each section's indexed text, for tuDem
+	tuVung   map[string]bool   // every term of every section: the manual's own words, for chuanHoi
 	cacMan   []string          // every route id in _rut.json, sorted
 	coMan    map[string]bool
+	tab      []string          // routes whose file sits in app/(tabs)/, sorted
+	banDo    *banDoRut         // _rut.json as the rules read it
 	ke       map[string][]canh // from -> edges, sorted by Den
 	nguoc    map[string][]string
 	ban      string
@@ -75,6 +92,26 @@ type tuyenRut struct {
 	DiToi []string `json:"di_toi"`
 	Nhan  []string `json:"nhan"`
 	Tep   []string `json:"tep"`
+	// Canh are the labelled edges: a label and a navigation on one thing a
+	// person taps (see apps/mobile/tools/rut-huong-dan.mjs).
+	Canh []canhRut `json:"canh"`
+}
+
+type canhRut struct {
+	Den  string `json:"den"`
+	Nhan string `json:"nhan"`
+}
+
+// banDoRut is _rut.json as the rules read it.
+type banDoRut struct {
+	diToi map[string]map[string]bool  // route -> routes its code navigates to
+	nhan  map[string]map[string]bool  // route -> labels printed on it
+	canh  map[string]map[canhRut]bool // route -> its labelled edges
+	tab   map[string]bool             // tab routes
+}
+
+func (b *banDoRut) laCanhMa(tu, den string) bool {
+	return b.diToi[tu][den] || (b.tab[tu] && b.tab[den])
 }
 
 // phaiNap is nap for package init: the manual this binary carries either
@@ -99,12 +136,34 @@ func nap(fsys fs.FS) (*SoTay, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &SoTay{trangCua: map[string]*trang{}, theoID: map[string]int{}, coMan: map[string]bool{}}
+	s := &SoTay{trangCua: map[string]*trang{}, theoID: map[string]int{}, coMan: map[string]bool{}, tuVung: map[string]bool{}}
+	bd := &banDoRut{diToi: map[string]map[string]bool{}, nhan: map[string]map[string]bool{}, canh: map[string]map[canhRut]bool{}, tab: map[string]bool{}}
+	s.banDo = bd
 	for _, r := range rut.Routes {
 		s.cacMan = append(s.cacMan, r.Man)
 		s.coMan[r.Man] = true
+		bd.diToi[r.Man] = map[string]bool{}
+		for _, d := range r.DiToi {
+			bd.diToi[r.Man][d] = true
+		}
+		bd.nhan[r.Man] = map[string]bool{}
+		for _, n := range r.Nhan {
+			bd.nhan[r.Man][n] = true
+		}
+		bd.canh[r.Man] = map[canhRut]bool{}
+		for _, c := range r.Canh {
+			bd.canh[r.Man][c] = true
+		}
+		for _, tep := range r.Tep {
+			if strings.HasPrefix(tep, thuMucTab) {
+				bd.tab[r.Man] = true
+				s.tab = append(s.tab, r.Man)
+				break
+			}
+		}
 	}
 	sort.Strings(s.cacMan)
+	sort.Strings(s.tab)
 
 	tenTep, err := fs.Glob(fsys, mauSoTay)
 	if err != nil {
@@ -131,10 +190,15 @@ func nap(fsys fs.FS) (*SoTay, error) {
 		return nil, errors.Join(loi...)
 	}
 
-	// Cross-file rules: the routes exist, one manual per screen.
+	// Cross-file rules: the routes exist, one manual per screen, and every
+	// way a manual declares is a way the app has.
 	for _, t := range s.trang {
 		if !s.coMan[t.man] {
 			loi = append(loi, fmt.Errorf("%s.md: màn «%s» không có trong _rut.json", t.ten, t.man))
+		}
+		// The money flag is not the file's to decide: it follows the route.
+		if t.tien != laManTien(t.man) {
+			loi = append(loi, fmt.Errorf("%s.md: tien phải là %v cho màn «%s»", t.ten, laManTien(t.man), t.man))
 		}
 		if khac, ok := s.trangCua[t.man]; ok {
 			loi = append(loi, fmt.Errorf("%s.md: màn «%s» đã có sổ tay %s.md", t.ten, t.man, khac.ten))
@@ -143,6 +207,10 @@ func nap(fsys fs.FS) (*SoTay, error) {
 		for _, d := range t.diToi {
 			if !s.coMan[d.Man] {
 				loi = append(loi, fmt.Errorf("%s.md: di_toi «%s» tới «%s» không có trong _rut.json", t.ten, d.Nhan, d.Man))
+				continue
+			}
+			if _, ngoai := canhNgoaiRut[[2]string{t.man, d.Man}]; s.coMan[t.man] && !bd.laCanhMa(t.man, d.Man) && !ngoai {
+				loi = append(loi, fmt.Errorf("%s.md: di_toi «%s» từ «%s» tới «%s» không phải cạnh nào của mã (_rut.json di_toi, thanh tab, canhNgoaiRut)", t.ten, d.Nhan, t.man, d.Man))
 			}
 		}
 	}
@@ -151,7 +219,7 @@ func nap(fsys fs.FS) (*SoTay, error) {
 	}
 	for _, t := range s.trang {
 		if t.tien {
-			if err := kiemManTien(t, s.trang); err != nil {
+			if err := kiemManTien(t, s.trang, bd); err != nil {
 				loi = append(loi, fmt.Errorf("%s.md: %w", t.ten, err))
 			}
 		}
@@ -173,6 +241,7 @@ func nap(fsys fs.FS) (*SoTay, error) {
 			thuat := map[string]bool{}
 			for _, th := range xephang.Thuat(chu) {
 				thuat[th] = true
+				s.tuVung[th] = true
 			}
 			s.thuat = append(s.thuat, thuat)
 		}
@@ -186,7 +255,9 @@ func nap(fsys fs.FS) (*SoTay, error) {
 }
 
 // docRut decodes _rut.json strictly: an unknown field is a changed extractor
-// this package has not been taught to read.
+// this package has not been taught to read. A labelled edge must be an edge
+// of its route (in di_toi) with a label printed on it (in nhan): the
+// extractor writes it that way, and a hand edit that breaks it is refused.
 func docRut(tho []byte) (*banRut, error) {
 	dec := json.NewDecoder(bytes.NewReader(tho))
 	dec.DisallowUnknownFields()
@@ -214,6 +285,14 @@ func docRut(tho []byte) (*banRut, error) {
 		for _, d := range t.DiToi {
 			if !co[d] {
 				return nil, fmt.Errorf("_rut.json: «%s» đi tới «%s» không có trong cây route", t.Man, d)
+			}
+		}
+		for _, c := range t.Canh {
+			if !chua(t.DiToi, c.Den) {
+				return nil, fmt.Errorf("_rut.json: cạnh có nhãn «%s» của «%s» tới «%s» không có trong di_toi", c.Nhan, t.Man, c.Den)
+			}
+			if c.Nhan == "" || !chua(t.Nhan, c.Nhan) {
+				return nil, fmt.Errorf("_rut.json: cạnh có nhãn «%s» của «%s» mang nhãn không có trong nhan", c.Nhan, t.Man)
 			}
 		}
 	}
@@ -277,6 +356,11 @@ func docTrang(ten, noiDung string) (*trang, error) {
 		if !t.nhanUI[d.Nhan] {
 			return nil, fmt.Errorf("di_toi đi bằng nhãn «%s» không khai trong nhanUI", d.Nhan)
 		}
+		// A way to the screen one is already on is not a way anywhere; on a
+		// money screen it would turn any button into a «door».
+		if d.Man == t.man {
+			return nil, fmt.Errorf("di_toi «%s» về chính màn «%s»", d.Nhan, t.man)
+		}
 	}
 
 	than := dong[het+1:]
@@ -321,6 +405,15 @@ func docTrang(ten, noiDung string) (*trang, error) {
 			daThay[id] = true
 			muc = &Doan{ID: id, Man: t.man, TieuDeMan: t.tieuDe, TieuDe: tieuDe, Tien: t.tien}
 			chuMuc = nil
+			// A heading is read like a step: what it quotes is a label too.
+			for _, q := range reTrich.FindAllStringSubmatch(tieuDe, -1) {
+				if !t.nhanUI[q[1]] {
+					return nil, fmt.Errorf("tiêu đề mục «%s» trích «%s» mà nhãn không khai trong nhanUI", tieuDe, q[1])
+				}
+				if !chua(muc.Nhan, q[1]) {
+					muc.Nhan = append(muc.Nhan, q[1])
+				}
+			}
 			continue
 		}
 		if muc == nil {
@@ -362,25 +455,48 @@ func docTrang(ten, noiDung string) (*trang, error) {
 }
 
 // kiemManTien holds a money screen's manual to navigation only (design 04
-// §4b, «Màn tiền chỉ có đoạn điều hướng»). It must have exactly one section;
-// every non-blank line of that section must be a step; and every step must
-// quote at least one door of this screen: a label some manual's di_toi uses to
-// come here, a label this manual's di_toi uses to leave, or the title of a
-// screen whose manual has a di_toi here (the place a person starts from). A
-// step that names no door («Bấm «Tiền đã về» khi đã nhận») is how-to-pay text
-// and refuses the whole manual. Digits were already refused in docTrang.
-func kiemManTien(t *trang, tatCa []*trang) error {
+// §4b, «Màn tiền chỉ có đoạn điều hướng»). It must have exactly one section,
+// headed tieuDeManTien; every non-blank line of that section must be a step;
+// and every step must quote at least one door of this screen.
+//
+// A door is a way in or out that the code itself shows:
+//   - a label this manual's di_toi uses to leave, which must be a labelled
+//     edge of this route in _rut.json (a button with that label whose
+//     handler goes there);
+//   - a label another manual's di_toi uses to come here, held the same way
+//     to a labelled edge of that manual's route;
+//   - the title of a non-money screen whose manual has a di_toi here, when
+//     that title is printed on that screen (the place a person starts from).
+//
+// A declared way that is not a labelled edge refuses the whole manual: the
+// payment button declared as a way out («Đánh dấu đã trả», which leads
+// nowhere) is exactly that. A step that names no door («Bấm «Tiền đã về» khi
+// đã nhận») is how-to-pay text and refuses it too. Digits were already
+// refused in docTrang.
+func kiemManTien(t *trang, tatCa []*trang, bd *banDoRut) error {
 	if len(t.doan) != 1 {
 		return fmt.Errorf("màn tiền chỉ được có một mục chỉ đường, đang có %d", len(t.doan))
 	}
+	if t.doan[0].TieuDe != tieuDeManTien {
+		return fmt.Errorf("màn tiền: tiêu đề mục phải là «%s», đang là «%s»", tieuDeManTien, t.doan[0].TieuDe)
+	}
 	cua := map[string]bool{}
 	for _, d := range t.diToi {
+		if !bd.canh[t.man][canhRut{Den: d.Man, Nhan: d.Nhan}] {
+			return fmt.Errorf("màn tiền: lối ra «%s» tới «%s» không phải nút nào của «%s» dẫn tới đó (canh trong _rut.json)", d.Nhan, d.Man, t.man)
+		}
 		cua[d.Nhan] = true
 	}
 	for _, khac := range tatCa {
 		for _, d := range khac.diToi {
-			if d.Man == t.man {
-				cua[d.Nhan] = true
+			if d.Man != t.man {
+				continue
+			}
+			if !bd.canh[khac.man][canhRut{Den: t.man, Nhan: d.Nhan}] {
+				return fmt.Errorf("màn tiền: lối vào «%s» từ %s.md không phải nút nào của «%s» dẫn tới đây (canh trong _rut.json)", d.Nhan, khac.ten, khac.man)
+			}
+			cua[d.Nhan] = true
+			if !khac.tien && bd.nhan[khac.man][khac.tieuDe] {
 				cua[khac.tieuDe] = true
 			}
 		}
@@ -410,10 +526,10 @@ func kiemManTien(t *trang, tatCa []*trang) error {
 
 // chuDeXep is the text a section is ranked on: its heading, then its body,
 // whose «…» are the labels. Measured on testdata/truy-hoi-so-tay.json
-// (recall@5 / MRR): body alone 0.9615 / 0.8148; heading + body 0.9725 /
-// 0.8560; heading twice + body the same; screen title + heading + body
-// 0.9615 / 0.8590, because «Chat nhóm» on every chat section makes all of them
-// match «nhóm» and pinning then buries the answer on another screen.
+// (recall@5 / MRR, ranking of 5c3a3c1): body alone 0.9615 / 0.8148; heading +
+// body 0.9725 / 0.8560; heading twice + body the same; screen title + heading
+// + body 0.9615 / 0.8590, because «Chat nhóm» on every chat section makes all
+// of them match «nhóm» and pinning then buries the answer on another screen.
 func chuDeXep(d Doan) string {
 	return d.TieuDe + "\n" + d.Chu
 }

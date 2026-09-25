@@ -185,12 +185,16 @@ dưới 3 quán biết chắc mở, và câu trả lời phải nói «chưa có
   cũ vì thế chỉ làm giảm độ gợi nhớ, không bao giờ làm sai giá, giờ hay dị ứng.
 
 **(b) Sổ tay app** (sửa theo phản biện) [P2-6]. Gói `internal/huongdan`, dữ liệu `data/*.md` qua `go:embed`, tìm
-từ vựng trong bộ nhớ trên khoảng 300 đoạn bằng `rag/xephang` (không DB, hạn 0.3 s). Mỗi màn một file: front
-matter `man` (đúng route id của `PhieuNguCanh.man`), `tieu_de`, `nut[]`, `di_toi[{nut, man}]`, `tien: bool`;
-mỗi mục H2 là một việc («Thêm một chặng») và là một đoạn. `huongdan.BanDung()` = 12 hex đầu sha256 của dữ liệu
-nhúng; phiếu v2 mang hash bản build của client, lệch thì gắn cờ `ban_app_khac` và câu trả lời nói có thể khác
-bản app. Màn tiền chỉ có đoạn điều hướng. «Làm sao tới X»: BFS trên đồ thị `di_toi` từ màn hiện tại, trả các bước
-tất định. Đoạn của màn hiện tại luôn được ghim vào bằng chứng.
+từ vựng trong bộ nhớ bằng `rag/xephang` (không DB, ≤50 ms một câu). Định dạng đã dựng (ghi theo review lát 13
+phát hiện 6; chi tiết ở thiết kế 05 §3): mỗi màn một file, front matter JSON giữa `---json` và `---` với đúng
+năm khoá `man` (đúng route id của `PhieuNguCanh.man`), `tieu_de`, `nhanUI[]`, `di_toi[{nhan, man}]`, `tien: bool`
+(không phải `nut[]`/`di_toi[{nut, man}]` như bản đầu); mỗi mục H2 là một việc («Thêm một chặng») và là một đoạn.
+`huongdan.BanDung()` = 12 hex đầu sha256 của `_rut.json` nhúng; phiếu v2 mang hash bản build của client, lệch thì
+gắn cờ `ban_app_khac` và câu trả lời nói có thể khác bản app. Màn tiền chỉ có đoạn điều hướng: một mục, tiêu đề cố
+định, không chữ số, mỗi bước trích một cửa là cạnh có nhãn của mã (`_rut.json` `canh`). «Làm sao tới X»: BFS trên
+đồ thị cạnh của mã + thanh tab + `di_toi` của sổ tay, trả các bước tất định, tránh đi qua màn tiền khi có đường
+cùng độ dài. **Luật ghim đã dựng** (thay «đoạn của màn hiện tại luôn được ghim»): trong `Tim`, mục của màn hiện tại
+chỉ lên trước khi điểm ≥ 1/2 điểm cao nhất; `explain_screen` vẫn đưa trọn màn hiện tại qua `TheoMan`.
 
 **(c) Lịch sử chuyến của nhóm** (sống, không chỉ mục). `list_group_outings` chạy SQL có kiểu theo `context_id`
 của job và tư cách thành viên đang hoạt động; **model không truyền đối số danh tính nào**. Trả kèo, chặng, số
@@ -361,6 +365,11 @@ một fixture sinh ra 300 quán trên 3 điểm đến. Khoảng 120 truy vấn 
 - Cổng promote, eval thật (embedding thật do Lead duyệt số lời gọi; kết quả ngoài repo ở `~/.cache/rudi-bang-chung/`):
   quán recall@10 ≥0.90, nDCG@10 ≥0.75, MRR@10 ≥0.70, **violation@10 = 0** (tuyệt đối); sổ tay recall@5 ≥0.90;
   nhóm `khong_dau` cách nhóm có dấu ≤0.05; mọi số ≥ bản active − 0.01. Hiệu chuẩn lại sau đường nền đầu tiên.
+  Cách đọc đã dựng cho sổ tay (`TestKhoangCachDau`): recall@5 nhóm có dấu trừ nhóm `khong_dau` ≤0.05 (gõ không
+  dấu mất tối đa 0.05); hai nhóm là hai bộ câu khác nhau nên nhóm không dấu CAO hơn không nói gì về gập dấu.
+  Phép đo trực tiếp đi kèm: mọi câu có dấu, bỏ dấu đi, xếp hạng y hệt. Sổ tay có hai bộ vàng:
+  `truy-hoi-so-tay.json` (91 câu, 77 câu đứng trên màn có đáp án) và `truy-hoi-man-khac.json` (46 câu, mọi câu
+  hỏi từ màn không có đáp án); cả hai ghim sha256, ghim số theo nhóm `co_dau`/`khong_dau`/`teen`.
 - Đầu-cuối: `tra_loi_trong_nhom.py` chạy qua engine Go (lát 9): ≥14/16 ổn định qua 5 lần (theo hợp đồng
   chung); riêng ca 01, 03, 13, 16 đạt cả 5 lần (bản gốc: 3 lần chạy).
 

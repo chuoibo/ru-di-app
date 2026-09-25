@@ -10,6 +10,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"mobile/services/core/internal/rag/xephang"
 )
@@ -55,11 +56,14 @@ func TestTheoManTraMucTheoThuTuTep(t *testing.T) {
 }
 
 // Money screens expose navigation only. What is enforced, exactly: a manual
-// with tien: true loads only if it has one section, no digit anywhere in its
-// body, no line in that section that is not a step, and every step quotes a
-// door of the screen (kiemManTien; the refusals are in nap_test.go). What that
-// cannot tell apart is a step that names a door AND says how to pay in the
-// same line; the drift gate's review of the prose is what covers that.
+// with tien: true loads only if its route is a money route, it has one
+// section headed tieuDeManTien, no digit anywhere in its body, no line in
+// that section that is not a step, every declared way in or out is a button
+// of the code that leads there (a labelled edge of _rut.json), and every step
+// quotes one of those doors (kiemManTien; the refusals, with the bypass of
+// review 13, are in nap_test.go). What that cannot tell apart is a step that
+// names a door AND says how to pay in the same line; a person reviewing the
+// prose is what covers that.
 func TestManTienChiCoMotMucChiDuong(t *testing.T) {
 	want := map[string][]string{
 		"finance":                 {"tai-chinh/toi-man-nay-va-di-tiep"},
@@ -96,6 +100,17 @@ func TestManTienChiCoMotMucChiDuong(t *testing.T) {
 // The money flag is not trusted from the file: it must agree with the money
 // segments the app itself declares (MAN_NEP_LUI in phieu.ts).
 func TestTienKhopManNepLui(t *testing.T) {
+	lui := manNepLui(t)
+	for _, tr := range soTay.trang {
+		if want := lui[strings.Split(tr.man, "/")[0]]; tr.tien != want {
+			t.Errorf("%s.md: tien %v, phieu.ts says %v", tr.ten, tr.tien, want)
+		}
+	}
+}
+
+// manNepLui reads MAN_NEP_LUI, the money segments, from phieu.ts.
+func manNepLui(t *testing.T) map[string]bool {
+	t.Helper()
 	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "apps", "mobile", "src", "rudi", "nep", "phieu.ts"))
 	if err != nil {
 		t.Fatal(err)
@@ -111,37 +126,136 @@ func TestTienKhopManNepLui(t *testing.T) {
 	if len(lui) < 4 {
 		t.Fatalf("read %d money segments from phieu.ts", len(lui))
 	}
-	for _, tr := range soTay.trang {
-		if want := lui[strings.Split(tr.man, "/")[0]]; tr.tien != want {
-			t.Errorf("%s.md: tien %v, phieu.ts says %v", tr.ten, tr.tien, want)
+	return lui
+}
+
+// Sections of the screen the person is on come first when they score at
+// least tyLeGhim of the best matching score; every other section keeps its
+// place in the ranking with no screen. The cases hold both sides: a current
+// screen section pinned, and one that matched but was not.
+func TestTimGhimTheoTyLe(t *testing.T) {
+	ctx := context.Background()
+	daGhim, khongGhim := 0, 0
+	for _, c := range []struct{ cau, man string }{
+		{"tạo kèo", "outings/new"},
+		{"xem lại các buổi đã đi", "plan"},
+		{"gửi ảnh cho cả nhóm xem", "plan"},
+		{"mình lỡ vote nhầm, đổi lại được không", "groups/[id]/chat"},
+	} {
+		amTiet := soTay.chuanHoi(xephang.AmTiet(c.cau))
+		noiDung := thuatNoiDung(amTiet)
+		diem, cao := map[string]float64{}, -1.0
+		for _, kq := range soTay.chiMuc.Tim(strings.Join(amTiet, " "), soTay.chiMuc.Len()) {
+			if soTay.khop(soTay.theoID[kq.ID], noiDung) {
+				diem[kq.ID] = kq.Diem
+				if cao < 0 {
+					cao = kq.Diem
+				}
+			}
+		}
+		khong := idCua(Tim(ctx, Hoi{Cau: c.cau, K: 100}))
+		var ghim, con []string
+		for _, id := range khong {
+			laMan := soTay.doan[soTay.theoID[id]].Man == c.man
+			switch {
+			case laMan && diem[id] >= tyLeGhim*cao:
+				ghim = append(ghim, id)
+				daGhim++
+			case laMan:
+				con = append(con, id)
+				khongGhim++
+			default:
+				con = append(con, id)
+			}
+		}
+		co := idCua(Tim(ctx, Hoi{Cau: c.cau, Man: c.man, K: 100}))
+		if want := append(ghim, con...); !reflect.DeepEqual(co, want) {
+			t.Errorf("%q on %s: %v, want %v", c.cau, c.man, co, want)
+		}
+		if walked := idCua(Tim(ctx, Hoi{Cau: c.cau, Man: "/" + strings.ReplaceAll(c.man, "[id]", "7"), K: 100})); !reflect.DeepEqual(walked, co) {
+			t.Errorf("%q: as walked %v, as declared %v", c.cau, walked, co)
+		}
+	}
+	if daGhim < 2 || khongGhim < 2 {
+		t.Fatalf("pinned %d, left in place %d: the cases no longer hold both sides", daGhim, khongGhim)
+	}
+	// What the share is for. Asked on plan, «nhóm» matches the plan sections
+	// that mention a group; they no longer go ahead of the chat sections.
+	if got := idCua(Tim(ctx, Hoi{Cau: "gửi ảnh cho cả nhóm xem", Man: "plan", K: 4})); len(got) == 0 || strings.HasPrefix(got[0], "len-plan/") {
+		t.Errorf("a weak plan section pinned first: %v", got)
+	}
+	// And what it keeps: asked where the answer is, the answer comes first.
+	if got := idCua(Tim(ctx, Hoi{Cau: "tạo kèo", Man: "outings/new", K: 4})); len(got) == 0 || !strings.HasPrefix(got[0], "tao-keo/") {
+		t.Errorf("tạo kèo on outings/new: %v", got)
+	}
+}
+
+// Tim reads at most MaxRuneCau runes of a question: what comes after is not
+// folded, not ranked, and cannot slow it down.
+func TestTimCatCau(t *testing.T) {
+	ctx := context.Background()
+	// A megabyte of a word the manual does not know, then a real question.
+	dai := strings.Repeat("xyz ", 1<<18) + "đăng xuất"
+	if got := Tim(ctx, Hoi{Cau: dai, K: 5}); len(got) != 0 {
+		t.Errorf("words after the cap were read: %v", idCua(got))
+	}
+	if got := Tim(ctx, Hoi{Cau: "xyz đăng xuất", K: 5}); len(got) == 0 {
+		t.Fatal("identity: the same words inside the cap must match")
+	}
+	// Within the cap the question is read whole.
+	q := "tạo kèo " + strings.Repeat("ờ ", 1<<19)
+	if a, b := idCua(Tim(ctx, Hoi{Cau: q, K: 10})), idCua(Tim(ctx, Hoi{Cau: catCau(q), K: 10})); !reflect.DeepEqual(a, b) || len(a) == 0 {
+		t.Errorf("long question %v, its first %d runes %v", a, MaxRuneCau, b)
+	}
+	tot := time.Hour
+	for i := 0; i < 3; i++ {
+		bd := time.Now()
+		Tim(ctx, Hoi{Cau: dai, K: 5})
+		if d := time.Since(bd); d < tot {
+			tot = d
+		}
+	}
+	t.Logf("%d-byte question: %v", len(dai), tot)
+	if tot > 50*time.Millisecond {
+		t.Errorf("%d-byte question took %v, bound 50ms", len(dai), tot)
+	}
+	for _, c := range []struct {
+		in   string
+		rune int
+	}{
+		{"", 0}, {"tạo kèo", 7}, {strings.Repeat("ạ", MaxRuneCau), MaxRuneCau}, {strings.Repeat("ạ", MaxRuneCau+1), MaxRuneCau},
+		{strings.Repeat("\xff", MaxRuneCau+5), MaxRuneCau},
+	} {
+		if got := utf8.RuneCountInString(catCau(c.in)); got != c.rune {
+			t.Errorf("catCau of %d bytes kept %d runes, want %d", len(c.in), got, c.rune)
 		}
 	}
 }
 
-// Sections of the screen the person is on come first when they match at all.
-func TestTimGhimManDangDung(t *testing.T) {
-	ctx := context.Background()
-	khong := idCua(Tim(ctx, Hoi{Cau: "tạo kèo", K: 100}))
-	if len(khong) < 5 || strings.HasPrefix(khong[0], "tao-keo/") {
-		t.Fatalf("unpinned ranking %v: the check below needs a tao-keo section that is not first", khong)
+// The teencode table rewrites only syllables the manual does not use, and
+// the «f»/«w» spellings only into a syllable the manual does use.
+func TestChuanHoiTeencode(t *testing.T) {
+	s := &SoTay{tuVung: map[string]bool{"dt": true, "phieu": true, "quan": true, "o": true}}
+	got := s.chuanHoi([]string{"ko", "bik", "bo", "fieu", "o", "dau", "v", "wan", "dt", "sdt", "fb", "wifi"})
+	want := []string{"khong", "biet", "bo", "phieu", "o", "dau", "vay", "quan", "dt", "so", "dien", "thoai", "fb", "wifi"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("chuanHoi = %v, want %v", got, want)
 	}
-	co := idCua(Tim(ctx, Hoi{Cau: "tạo kèo", Man: "outings/new", K: 100}))
-	var ghim, con []string
-	for _, id := range khong {
-		if strings.HasPrefix(id, "tao-keo/") {
-			ghim = append(ghim, id)
-		} else {
-			con = append(con, id)
+	for k, v := range teen {
+		if got := xephang.AmTiet(k); len(got) != 1 || got[0] != k {
+			t.Errorf("teen key %q folds to %v: it would never match a folded syllable", k, got)
+		}
+		if strings.Join(xephang.AmTiet(v), " ") != v {
+			t.Errorf("teen value %q is not folded syllables", v)
 		}
 	}
-	if want := append(ghim, con...); !reflect.DeepEqual(co, want) {
-		t.Fatalf("pinned %v, want %v (the current screen's matches first, each group in score order)", co, want)
+	// On the real manual: «fieu» and «ko»/«dc» reach the words they stand for.
+	ctx := context.Background()
+	if got := idCua(Tim(ctx, Hoi{Cau: "bo fieu o dau v", Man: "plan", K: 3})); len(got) == 0 || got[0] != "chat-nhom/bo-phieu-hoac-doi-phieu" {
+		t.Errorf("bo fieu: %v", got)
 	}
-	if len(ghim) < 2 {
-		t.Fatalf("only %d tao-keo sections matched", len(ghim))
-	}
-	if walked := idCua(Tim(ctx, Hoi{Cau: "tạo kèo", Man: "/outings/new", K: 100})); !reflect.DeepEqual(walked, co) {
-		t.Fatalf("as walked %v, as declared %v", walked, co)
+	if got := idCua(Tim(ctx, Hoi{Cau: "tu tao keo ko can AI dc ko", Man: "profile", K: 3})); len(got) == 0 || got[0] != "chat-nhom/tu-tao-keo-khong-can-ai" {
+		t.Errorf("ko can AI: %v", got)
 	}
 }
 
