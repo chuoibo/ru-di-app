@@ -27,7 +27,8 @@ type BuocKichBan struct {
 	// Chang is the stage the call belongs to. S1 has one: the answer.
 	Chang string `json:"chang"`
 	// Chu is a text answer. MaKiemCho in it is replaced by the run's canary
-	// marker, so a script can play a model that leaks it.
+	// marker, so a script can play a model that leaks it; {{SO_DIEN_THOAI}},
+	// {{SO_TAI_KHOAN}} and {{EMAIL}} by a made-up contact detail (lienLacGia).
 	Chu *string `json:"chu,omitempty"`
 	// Goi is a function call.
 	Goi *GoiKichBan `json:"goi,omitempty"`
@@ -61,6 +62,17 @@ type UsageKichBan struct {
 
 // MaKiemCho is where a script puts the run's canary marker.
 const MaKiemCho = "{{MA_KIEM}}"
+
+// lienLacGia fills the places a script puts a contact detail, so a script
+// can play a model that leaks one (review round 2 of slice 6, N4: T1 could
+// not see the output guard's phone, account and email checks). The values
+// are made up, and each is split here so that no line of the repository --
+// this file or a script -- holds a whole one.
+var lienLacGia = strings.NewReplacer(
+	"{{SO_DIEN_THOAI}}", "0912 "+"345 "+"678",
+	"{{SO_TAI_KHOAN}}", "0071"+"000"+"123456",
+	"{{EMAIL}}", "datban"+"@"+"quan-gia.example",
+)
 
 // ChangTraLoi is the answer stage, the only stage at S1.
 const ChangTraLoi = "tra_loi"
@@ -117,7 +129,7 @@ func (k KichBan) Stub(maKiem string) *llm.Stub {
 		var s llm.Buoc
 		switch {
 		case b.Chu != nil:
-			s.Text = strings.ReplaceAll(*b.Chu, MaKiemCho, maKiem)
+			s.Text = lienLacGia.Replace(strings.ReplaceAll(*b.Chu, MaKiemCho, maKiem))
 		case b.Goi != nil:
 			s.Goi = &genai.FunctionCall{Name: b.Goi.Ten, Args: b.Goi.DoiSo}
 		case b.Loi != nil && b.Loi.Rong:

@@ -223,11 +223,11 @@ type TongKet struct {
 	KhongDat         int     `json:"khong_dat"`
 	SoSai            int     `json:"so_sai"`
 	SaiDat           int     `json:"sai_dat"`
-	BoQua            int     `json:"bo_qua"`
 	Canary           CanhGac `json:"canary"`
 	DongNhat         CanhGac `json:"dong_nhat"`
-	// Xanh: every run did what its role asks, both sentinels are present and
-	// did theirs, and nothing was skipped.
+	// Xanh: every run did what its role asks, and both sentinels are present
+	// and did theirs. There is no skip to count: a case that cannot run stops
+	// the whole corpus with an error (ChayBo), which the binary exits 2 on.
 	Xanh bool `json:"xanh"`
 }
 
@@ -271,7 +271,7 @@ func ChayBo(ctx context.Context, b Bo, shaBo string, kbs map[string]KichBan, lap
 			}
 		}
 	}
-	tk.Xanh = tk.KhongDat == 0 && tk.BoQua == 0 && tk.Canary.CoMat && tk.Canary.Dat && tk.DongNhat.CoMat && tk.DongNhat.Dat
+	tk.Xanh = tk.KhongDat == 0 && tk.Canary.CoMat && tk.Canary.Dat && tk.DongNhat.CoMat && tk.DongNhat.Dat
 	return tk, nil
 }
 

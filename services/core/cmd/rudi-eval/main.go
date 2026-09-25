@@ -136,8 +136,8 @@ func chay(ctx context.Context, args []string, in io.Reader, out, errw io.Writer)
 	if err := enc.Encode(map[string]aieval.TongKet{"tong_ket": tk}); err != nil {
 		return raSai
 	}
-	fmt.Fprintf(errw, "bộ %s: %d ca, %d lượt chạy, %d đạt, %d không đạt; kịch bản sai %d/%d trượt đúng chỗ; canary %s; đồng nhất %s; bỏ qua %d\n",
-		tk.Bo, tk.SoCa, tk.SoLuot, tk.Dat, tk.KhongDat, tk.SaiDat, tk.SoSai, trangThai(tk.Canary, "đỏ đúng chỗ"), trangThai(tk.DongNhat, "xanh"), tk.BoQua)
+	fmt.Fprintf(errw, "bộ %s: %d ca, %d lượt chạy, %d đạt, %d không đạt; kịch bản sai %d/%d trượt đúng chỗ; canary %s; đồng nhất %s\n",
+		tk.Bo, tk.SoCa, tk.SoLuot, tk.Dat, tk.KhongDat, tk.SaiDat, tk.SoSai, trangThai(tk.Canary, "đỏ đúng chỗ"), trangThai(tk.DongNhat, "xanh"))
 	if !tk.Xanh {
 		return raDo
 	}
@@ -162,7 +162,8 @@ type yeuCau struct {
 }
 
 // giaoThuc answers the line protocol. A line it cannot run is answered with
-// {"loi": ...} and the exit code is red at the end; a line it cannot read
+// {"loi": ...}, and a run that does not do what its role asks is reported as
+// it is; either makes the exit code red at the end. A line it cannot read
 // stops it.
 func giaoThuc(ctx context.Context, kbs map[string]aieval.KichBan, in io.Reader, out, errw io.Writer) int {
 	enc := json.NewEncoder(out)
@@ -205,6 +206,9 @@ func giaoThuc(ctx context.Context, kbs map[string]aieval.KichBan, in io.Reader, 
 					break
 				}
 				_ = enc.Encode(r)
+				if !r.Dat {
+					rc = raDo
+				}
 			}
 		case "hieu", "dem_hang":
 			loi(y.Op, "chưa có ở lát 6b (hieu: lát 9; dem_hang: lát 15)")

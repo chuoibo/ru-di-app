@@ -117,8 +117,6 @@ tk, runs = lines[-1]["tong_ket"], lines[:-1]
 bad = []
 if len(runs) != tk["so_luot"] or tk["so_luot"] == 0:
     bad.append(f"{len(runs)} dòng chạy, tong_ket nói {tk['so_luot']}")
-if tk["bo_qua"] != 0:
-    bad.append(f"{tk['bo_qua']} ca bị bỏ qua")
 not_ok = [f"{r['case_id']} [{r['vai']}, {r['kich_ban']}]" for r in runs if not r["dat"]]
 if not_ok:
     bad.append("lượt không đạt: " + ", ".join(not_ok))
@@ -141,6 +139,6 @@ if not tk["xanh"]:
 if bad:
     sys.exit("HỎNG: " + "; ".join(bad))
 print(f"T1 Nếp: {tk['so_ca']} ca, {tk['so_luot']} lượt chạy, {tk['dat']} đạt; kịch bản sai {tk['sai_dat']}/{tk['so_sai']} trượt đúng chỗ; "
-      f"canary đỏ đúng ở {canary_check}; đồng nhất xanh; bỏ qua 0; hai lần chạy trùng byte; "
+      f"canary đỏ đúng ở {canary_check}; đồng nhất xanh; không SKIP; hai lần chạy trùng byte; "
       f"prompt {tk['prompt_version_nep']}, corpus {tk['sha_bo'][:12]}")
 PY

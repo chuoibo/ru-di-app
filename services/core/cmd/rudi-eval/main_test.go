@@ -57,7 +57,6 @@ func TestKichBanKhongMoKetNoi(t *testing.T) {
 		TongKet struct {
 			Xanh   bool `json:"xanh"`
 			SoCa   int  `json:"so_ca"`
-			BoQua  int  `json:"bo_qua"`
 			Canary struct {
 				Dat   bool     `json:"dat"`
 				Truot []string `json:"truot"`
@@ -71,10 +70,10 @@ func TestKichBanKhongMoKetNoi(t *testing.T) {
 		t.Fatal(err)
 	}
 	tk := cuoi.TongKet
-	if !tk.Xanh || tk.SoCa < 20 || tk.BoQua != 0 || !tk.Canary.Dat || strings.Join(tk.Canary.Truot, ",") != "khong_bia_dia_diem" || !tk.DongNhat.Dat {
+	if !tk.Xanh || tk.SoCa < 20 || !tk.Canary.Dat || strings.Join(tk.Canary.Truot, ",") != "khong_bia_dia_diem" || !tk.DongNhat.Dat {
 		t.Fatalf("tổng kết: %+v", tk)
 	}
-	if !strings.Contains(errw, "canary đỏ đúng chỗ; đồng nhất xanh; bỏ qua 0") {
+	if !strings.HasSuffix(strings.TrimSpace(errw), "canary đỏ đúng chỗ; đồng nhất xanh") {
 		t.Fatalf("stderr: %s", errw)
 	}
 }
@@ -192,6 +191,20 @@ func TestGiaoThucDong(t *testing.T) {
 	}
 	if !strings.Contains(dong[3], `"loi"`) || !strings.Contains(dong[3], "lát 9") || !strings.Contains(dong[4], "op lạ") {
 		t.Fatalf("op sau: %s / %s", dong[3], dong[4])
+	}
+	// Review round 2 (nit): a run that is red makes the exit red, even
+	// when every line was read and answered. The identity case, played by a
+	// script whose words differ from what the case pins, is such a run; the
+	// same case with its own script exits green.
+	if rc, out, errw := goi(t, `{"op":"chay","ca":`+nen.String()+`}`+"\n", "--mo-hinh", "kich-ban", "--kich-ban", kichBanGoc); rc != raXanh {
+		t.Fatalf("ca xanh: thoát %d\n%s\n%s", rc, out, errw)
+	}
+	do := strings.Replace(nen.String(), `"dung":"tra-loi-ngan"`, `"dung":"tra-loi-khac"`, 1)
+	if do == nen.String() {
+		t.Fatal("không đổi được kịch bản của ca đồng nhất")
+	}
+	if rc, out, errw := goi(t, `{"op":"chay","ca":`+do+`}`+"\n", "--mo-hinh", "kich-ban", "--kich-ban", kichBanGoc); rc != raDo || !strings.Contains(out, `"dat":false`) {
+		t.Fatalf("lượt đỏ vẫn thoát %d:\n%s\n%s", rc, out, errw)
 	}
 	// A line that is not JSON stops the protocol.
 	if rc, _, _ := goi(t, "{không phải json\n", "--mo-hinh", "kich-ban", "--kich-ban", kichBanGoc); rc != raSai {

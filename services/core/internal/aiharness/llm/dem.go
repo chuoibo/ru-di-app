@@ -48,6 +48,17 @@ func (d *Dem) WithWait(cho func(n int) time.Duration) *Dem { d.cho = cho; return
 // Name is the wrapped model's name.
 func (d *Dem) Name() string { return d.inner.Name() }
 
+// GetGoogleLLMVariant is the wrapped model's backend, so ADK prepares each
+// request for the backend that will really serve it. Dem deliberately has no
+// Client method: ADK opens a live session straight from that client, and
+// such a session would never pass the counter.
+func (d *Dem) GetGoogleLLMVariant() genai.Backend {
+	if v, ok := d.inner.(googleLLM); ok {
+		return v.GetGoogleLLMVariant()
+	}
+	return genai.BackendUnspecified
+}
+
 // SoGoi is how many calls have gone out, retries included.
 func (d *Dem) SoGoi() int {
 	d.mu.Lock()

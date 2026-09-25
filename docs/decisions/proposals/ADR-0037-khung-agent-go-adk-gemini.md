@@ -110,8 +110,20 @@ và ở `f251db7` mỗi job chỉ làm một việc: gửi một payload sang br
 - Không gắn tác tử eBPF auto-instrumentation cho Go vào `core serve`/`core work` (§2.8): nó xuất span
   của ADK ra ngoài mà không cần một dòng mã nào của ta.
 - Không bật `MOBILE_AI_ENGINE_NEP=go` ở bất kỳ host nào trước khi: eval T1 (stub) xanh trong CI (lát 6b),
-  ADR này được ký, và review bảo mật việc giữ khoá Gemini trong tiến trình core (thiết kế 01 §9 câu 4)
-  xong. Compose không đưa khoá cho `core` trừ khi ghép rõ `docker-compose.nep-go.yml`.
+  ADR này được ký, review bảo mật việc giữ khoá Gemini trong tiến trình core (thiết kế 01 §9 câu 4)
+  xong, **và luật tiền tất định (`guard/tien.go`) đạt recall ≥ 0,95 với tỉ lệ bắt nhầm ≤ 0,02 trên một
+  corpus niêm phong mà tác giả luật chưa từng mở**, do người khác đo trên đúng SHA sau khi commit
+  (Lead có thể đổi hai con số khi ký). Số trên corpus tác giả đã đọc (DEV, bộ giữ riêng cũ, câu của
+  review, câu tự viết) không tính: chúng chỉ là test hồi quy. Compose không đưa khoá cho `core` trừ
+  khi ghép rõ `docker-compose.nep-go.yml`.
+- Không đọc luật tiền như hàng rào duy nhất. Nó là lớp 0 của một chồng phòng thủ, chỉnh để **ưu tiên
+  độ chính xác**: bắt nhầm một câu hỏi quán/ngân sách là chặn thẳng một câu hỏi hợp lệ với 0 lời gọi
+  model và không có cơ hội thứ hai; lọt một câu tiền thì câu đó còn gặp (1) system instruction cấm
+  tạo, chia, tất toán, nhắc tiền và cấm tự nhận đã làm gì; (2) engine không có tool nào chuyển, ghi
+  hay chia tiền — model chỉ viết được chữ; (3) output guard chặn câu tự nhận đã chuyển/ghi/gửi, mọi
+  số điện thoại, số tài khoản, email; (4) từ lát 9, bước Understand là bộ phân loại thứ hai, độc lập
+  (`tien: none|split_draft|money_action`, thiết kế 01 §3.3). Không nới lớp 1–3 với lý do «luật tiền
+  đã chặn rồi».
 - Không hứa «rút lại» một đoạn đã stream. Không nhả byte nào trước khi output guard quét nó.
 - Không để engine chọn khoá phòng hay lane; lane do máy chủ suy từ dữ liệu của chính nó.
 - Không mở quyền đọc mới cho Nếp (catalogue, kèo của chính mình, trí nhớ) bằng văn bản này. Các quyền

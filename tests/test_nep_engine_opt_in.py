@@ -34,8 +34,22 @@ ENV_EXAMPLE = REPO_ROOT / ".env.example"
 FLAG = "MOBILE_AI_ENGINE_NEP"
 KEY = "GEMINI_API_KEY"
 
-# A line that sets the flag to go, in YAML, shell, env or Makefile syntax.
-SETS_GO = re.compile(FLAG + r"""["']?\s*[:=]\s*["']?go\b""")
+# A line that sets the flag to go, in YAML, shell, env, Makefile or
+# Dockerfile syntax -- including a default that only looks like a reference:
+# `${MOBILE_AI_ENGINE_NEP:-go}` is `go` on every host whose `.env` is silent.
+SETS_GO = re.compile(
+    FLAG
+    + r"(?:"
+    # FLAG: go / FLAG=go / "FLAG": "go"
+    + r"""["']?\s*[:=]\s*["']?go\b"""
+    # ${FLAG:-go}, ${FLAG-go}, ${FLAG:=go}, ${FLAG=go}, ${FLAG:+go}
+    + r"|:?[-=+]go\b"
+    # FLAG: ${ANOTHER:-go}
+    + r"""|["']?\s*[:=]\s*["']?\$\{\w+:?[-=+]go\}"""
+    # Dockerfile: ENV FLAG go
+    + r"""|\s+["']?go\b"""
+    + r")"
+)
 CONFIG_SUFFIXES = {
     ".yml",
     ".yaml",
@@ -168,12 +182,23 @@ class NothingElseFlipsTheFlagTests(unittest.TestCase):
             "MOBILE_AI_ENGINE_NEP=go core serve",
             'export MOBILE_AI_ENGINE_NEP="go"',
             "  MOBILE_AI_ENGINE_NEP: 'go'",
+            # Defaults (review round 2 of slice 6): each reads as `go` on a
+            # host that sets nothing.
+            "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-go}",
+            'MOBILE_AI_ENGINE_NEP="${MOBILE_AI_ENGINE_NEP-go}"',
+            ": ${MOBILE_AI_ENGINE_NEP:=go}",
+            "export MOBILE_AI_ENGINE_NEP=${MOBILE_AI_ENGINE_NEP:+go}",
+            "      MOBILE_AI_ENGINE_NEP: ${NEP_ENGINE:-go}",
+            "ENV MOBILE_AI_ENGINE_NEP go",
         ]:
             self.assertIsNotNone(SETS_GO.search(line), line)
         for line in [
             "MOBILE_AI_ENGINE_NEP: brain",
             "MOBILE_AI_ENGINE_NEP=",
             "MOBILE_AI_ENGINE_NEP: google",
+            "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-brain}",
+            "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:?set it}",
+            "ENV MOBILE_AI_ENGINE_NEP brain",
         ]:
             self.assertIsNone(SETS_GO.search(line), line)
 

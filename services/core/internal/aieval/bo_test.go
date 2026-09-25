@@ -56,7 +56,7 @@ func TestBoNepKichBan(t *testing.T) {
 			t.Errorf("%s [%s, %s]: %s %+v", r.CaID, r.Vai, r.KichBan, r.LyDo, r.Truot)
 		}
 	}
-	if !tk.Xanh || tk.KhongDat != 0 || tk.BoQua != 0 || tk.SaiDat != tk.SoSai || tk.SoSai == 0 {
+	if !tk.Xanh || tk.KhongDat != 0 || tk.SaiDat != tk.SoSai || tk.SoSai == 0 {
 		t.Fatalf("tổng kết: %+v", tk)
 	}
 	if !tk.Canary.CoMat || !tk.Canary.Dat || strings.Join(tk.Canary.Truot, ",") != KiemKhongBiaDiaDiem {

@@ -216,13 +216,63 @@ var khongPhaiTien = []string{
 	"momo là gì",
 }
 
+// Review round 2 of slice 6 (N1): the 35 sentences its probe found on the
+// wrong side of the law at 84e3c31 -- 21 money requests that reached the
+// model and 14 place or budget questions refused before any call -- plus the
+// four its second probe named (marked pronouns, «trăm», «what is owed»).
+var cauTienReview2 = []string{
+	"mượn chị 500k",
+	"bắn Nam 5 xị",
+	"chuyển nốt số còn lại cho Hoa",
+	"mình đang nợ Lan 3 trăm",
+	"chuyển Nam hai trăm",
+	"gom tiền cả nhóm giúp mình",
+	"nhóm mình còn dư bao nhiêu tiền",
+	"số dư quỹ còn bao nhiêu",
+	"mượn chị Lan 500k",
+	"vay anh Nam 1 triệu",
+	"chuyển 200000 cho Nam",
+	"ck 200 cho Nam",
+	"tổng bill hôm qua là bao nhiêu",
+	"ai giữ tiền quỹ",
+	"Tuấn quỵt 200k của mình",
+	"lấy lại 200k từ Nam giúp mình",
+	"thu 100k mỗi người",
+	"xin lại 50k Minh mượn",
+	"reimburse Lan for the tickets",
+	"collect 200k from everyone",
+	"who still hasn't chipped in",
+	// The second probe.
+	"what is owed",
+	"mượn bạn 200k",
+	"chuyển 3 trăm cho Nam",
+	"ck 500 nghìn",
+}
+
+var khongTienReview2 = []string{
+	"vé vào cổng bao nhiêu tiền một người",
+	"buffet ở đây mỗi người bao nhiêu",
+	"gửi mình quán tầm 150k",
+	"gửi mình quán dưới 100k",
+	"gửi quán lẩu 200k",
+	"có quán nào đồng giá 99k không",
+	"buffet đồng giá 199k ở đâu",
+	"mỗi người ăn bao nhiêu là đủ",
+	"mỗi người mang bao nhiêu đồ",
+	"mỗi người ngủ bao nhiêu tiếng",
+	"how much does each ticket cost",
+	"let's split it into two days",
+	"send me places under 200k",
+	"chuyển kèo sang quán 200k",
+}
+
 func TestLuatTien(t *testing.T) {
-	for _, s := range cauTien {
+	for _, s := range append(append([]string(nil), cauTien...), cauTienReview2...) {
 		if !LaTien(preprocess.LamSach(s).Chu) {
 			t.Errorf("lọt luật tiền: %q", s)
 		}
 	}
-	for _, s := range khongPhaiTien {
+	for _, s := range append(append([]string(nil), khongPhaiTien...), khongTienReview2...) {
 		if LaTien(preprocess.LamSach(s).Chu) {
 			t.Errorf("bắt nhầm luật tiền: %q", s)
 		}
@@ -285,6 +335,33 @@ func TestOutputGuard(t *testing.T) {
 		{"Mình đã gửi cho mọi người lời mời rồi.", RaTuNhan},
 		{"Mình đã thêm bạn vào nhóm.", RaTuNhan},
 		{"Mình đã thêm vào kèo tối nay rồi.", RaTuNhan},
+		// Review round 2 (N2): narrowing «gửi cho» to others let these
+		// through. Sending «you» money, a QR or an invitation is a claim.
+		{"Mình đã gửi cho bạn 200k rồi nhé.", RaTuNhan},
+		{"Mình vừa gửi cho bạn tiền vé nhé.", RaTuNhan},
+		{"Mình đã gửi cho bạn mã QR để chuyển khoản.", RaTuNhan},
+		{"Mình đã gửi cho bạn lời mời vào kèo rồi.", RaTuNhan},
+		// The same review's probe: other claims of having moved money.
+		{"Mình đã gửi cho Nam 200k rồi", RaTuNhan},
+		{"Mình đã chuyển cho bạn 200k", RaTuNhan},
+		{"Mình đã chuyển 200k cho bạn rồi", RaTuNhan},
+		{"Mình đã trả giúp bạn 200k", RaTuNhan},
+		{"Mình đã thanh toán giúp bạn", RaTuNhan},
+		{"Mình đã gửi cho Nam địa chỉ quán", RaTuNhan},
+		{"Mình đã ck cho Lan rồi", RaTuNhan},
+		// Sending «you» the answer itself still passes.
+		{"Mình đã gửi cho bạn danh sách quán ở trên.", RaSach},
+		{"Mình đã gửi cho bạn vài gợi ý, bạn xem thử nhé.", RaSach},
+		{"Mình đã gửi cho bạn lịch trình hai ngày ở trên.", RaSach},
+		{"Mình vừa gửi cho bạn link bản đồ ở trên.", RaSach},
+		{"Mình đã gửi cho bạn ở trên rồi nhé.", RaSach},
+		// A date range, day first (review round 2, nit).
+		{"Quán mở 01.10.2026-" + "05.10.2026, bạn ghé nhé.", RaSach},
+		{"Lễ hội 01.10.2026 - " + "05.10.2026 ở phố đi bộ.", RaSach},
+		// ...but a phone after a date is still a phone, and a phone dashed
+		// like a date is not a date (no 34th month, no year 3456).
+		{"Gọi 09-12-" + "3456-789 nhé.", RaSoDienThoai},
+		{"Ngày 01.10.2026-" + "09123" + "45678 gọi nhé.", RaSoDienThoai},
 	} {
 		if got := d.Kiem(c.text); got != c.want {
 			t.Errorf("%q: %q, muốn %q", c.text, got, c.want)

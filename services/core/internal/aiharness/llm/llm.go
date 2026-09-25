@@ -61,7 +61,33 @@ var (
 const adkKhongUngVien = "empty response"
 
 // geminiModel is ADK's gemini model with that one error given its meaning.
+// Embedding the interface hides every method ADK's concrete type has beyond
+// model.LLM, so the two ADK looks for are forwarded: GetGoogleLLMVariant
+// (without it ADK reads the backend as Unspecified, skips the Gemini-API-only
+// request fixes and refuses live) and Client.
 type geminiModel struct{ model.LLM }
+
+// googleLLM is what ADK asks a model for its backend
+// (internal/llminternal/googlellm.GoogleLLM).
+type googleLLM interface {
+	GetGoogleLLMVariant() genai.Backend
+}
+
+// GetGoogleLLMVariant forwards to ADK's model.
+func (g geminiModel) GetGoogleLLMVariant() genai.Backend {
+	if v, ok := g.LLM.(googleLLM); ok {
+		return v.GetGoogleLLMVariant()
+	}
+	return genai.BackendUnspecified
+}
+
+// Client forwards to ADK's model.
+func (g geminiModel) Client() *genai.Client {
+	if c, ok := g.LLM.(interface{ Client() *genai.Client }); ok {
+		return c.Client()
+	}
+	return nil
+}
 
 // GenerateContent forwards to ADK's model.
 func (g geminiModel) GenerateContent(ctx context.Context, req *model.LLMRequest, stream bool) iter.Seq2[*model.LLMResponse, error] {

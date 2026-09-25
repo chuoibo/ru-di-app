@@ -86,6 +86,37 @@ func TestGeminiQuaLoopback(t *testing.T) {
 	}
 }
 
+// Review round 2 (N3): wrapping ADK's model to map «empty response» hid the
+// two methods ADK asks its model for. The model NewGemini builds still says
+// it is the Gemini API and still hands out its client; the per-turn counter
+// passes the backend on and, on purpose, not the client.
+func TestGeminiVanLaGeminiAPI(t *testing.T) {
+	m, err := NewGemini(context.Background(), "synthetic-key", "http://127.0.0.1:9")
+	if err != nil {
+		t.Fatal(err)
+	}
+	v, ok := m.(interface{ GetGoogleLLMVariant() genai.Backend })
+	if !ok || v.GetGoogleLLMVariant() != genai.BackendGeminiAPI {
+		t.Fatalf("%T không báo backend Gemini API (ok=%v)", m, ok)
+	}
+	c, ok := m.(interface{ Client() *genai.Client })
+	if !ok || c.Client() == nil || c.Client().ClientConfig().Backend != genai.BackendGeminiAPI {
+		t.Fatalf("%T không đưa client genai (ok=%v)", m, ok)
+	}
+	d := NewDem(m, 1, nil)
+	var dm model.LLM = d
+	if v, ok := dm.(interface{ GetGoogleLLMVariant() genai.Backend }); !ok || v.GetGoogleLLMVariant() != genai.BackendGeminiAPI {
+		t.Fatal("Dem không chuyển tiếp backend")
+	}
+	if _, ok := dm.(interface{ Client() *genai.Client }); ok {
+		t.Fatal("Dem lộ client genai: một phiên live mở từ đó sẽ không qua bộ đếm")
+	}
+	// A stub has no backend, and says so.
+	if v := NewDem(NewStub(), 1, nil).GetGoogleLLMVariant(); v != genai.BackendUnspecified {
+		t.Fatalf("stub: %v", v)
+	}
+}
+
 // A prompt the provider blocks comes back with no candidate, only
 // promptFeedback. ADK's non-streaming call turns that into a bare error; the
 // real transport, driven into it through loopback, must surface it as
