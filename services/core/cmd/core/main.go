@@ -53,12 +53,14 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: core serve | healthcheck | routes --json | features --json | migrate-chat")
+		fmt.Fprintln(stderr, "usage: core serve | work | healthcheck | routes --json | features --json | migrate-chat")
 		return 2
 	}
 	switch args[0] {
 	case "serve":
 		return serve(getenv, stderr)
+	case "work":
+		return work(getenv, stderr)
 	case "healthcheck":
 		return healthcheck(getenv, stderr)
 	case "routes":
@@ -105,6 +107,16 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	}
 	served := append(manifest.GoServed(force), candidates...)
 	chat, err := resolveChatFeatures(getenv(chatlegacychange.CandidateEnv), cfg.AuthMode)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	inproc, err := inprocWorker(getenv(EnvInprocWorker))
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	workerCfg, err := chatassist.WorkerConfigFromEnv(getenv)
 	if err != nil {
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
@@ -213,11 +225,18 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			allowedOrigins = strings.Split(origins, ",")
 		}
 		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, chatCtx, allowedOrigins)
-		assistant := chatassist.New(pool, brain.Configured())
+		assistant := chatassist.New(pool, brain.Configured()).WithWorker(workerCfg)
 		avatars := avatarfeed.New(avatarfeed.Store{Pool: pool}, pool, chatCtx, allowedOrigins)
 		go changes.Listen()
 		go avatars.Listen()
-		go assistant.Run(chatCtx)
+		if inproc {
+			go assistant.Run(chatCtx)
+		} else {
+			// Jobs run in `core work`. The sweeps stay here too, so the
+			// fifteen-minute bound on shared plaintext holds with no worker up.
+			go assistant.RunSweeper(chatCtx)
+			logger.Info("AI jobs run in `core work`, not in this process", "env", EnvInprocWorker+"=0")
+		}
 		fallback := front
 		feature := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if chatlegacychange.Matches(r.URL.Path) {
@@ -315,6 +334,61 @@ func livez(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = io.WriteString(w, "ok\n")
+}
+
+// EnvInprocWorker says whether `core serve` also runs the AI workers. Unset or
+// "1" keeps today's single-process deploy; "0" leaves the jobs to `core work`.
+const EnvInprocWorker = "MOBILE_INPROC_WORKER"
+
+func inprocWorker(raw string) (bool, error) {
+	switch raw {
+	case "", "1":
+		return true, nil
+	case "0":
+		return false, nil
+	}
+	return false, fmt.Errorf("%s must be 0 or 1, got %q", EnvInprocWorker, raw)
+}
+
+func work(getenv func(string) string, stderr io.Writer) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return workUntil(ctx, getenv, stderr)
+}
+
+// workUntil runs the AI workers and sweeps, and nothing else: no listener, no
+// routes. It refuses to start on the same conditions a worker inside `serve`
+// would have failed on later, loudly, instead of claiming jobs it can only fail.
+func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer) int {
+	logger := slog.New(slog.NewJSONHandler(stderr, nil))
+	cfg, err := chatassist.WorkerConfigFromEnv(getenv)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	client := brain.Configured()
+	if client == nil {
+		logger.Error("refusing to start", "error", "no model service configured (MOBILE_BRAIN_URL or MOBILE_PYTHON_UPSTREAM, and MOBILE_INTERNAL_TOKEN): a worker would claim every job only to fail it")
+		return 1
+	}
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	defer pool.Close()
+	check, cancel := context.WithTimeout(ctx, 5*time.Second)
+	var installed bool
+	err = pool.QueryRow(check, `SELECT to_regclass('chat_ai_invocations') IS NOT NULL`).Scan(&installed)
+	cancel()
+	if err != nil || !installed {
+		logger.Error("refusing to start", "error", "the chat schema is missing or unreachable: run `core migrate-chat` (compose: service migrate-chat) first")
+		return 1
+	}
+	logger.Info("AI worker started", "workers", cfg.Workers, "lease_seconds", int(cfg.Lease.Seconds()))
+	chatassist.New(pool, client).WithWorker(cfg).Run(ctx)
+	logger.Info("AI worker stopped")
+	return 0
 }
 
 func healthcheck(getenv func(string) string, stderr io.Writer) int {

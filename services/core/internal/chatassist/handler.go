@@ -25,9 +25,10 @@ import (
 )
 
 type Handler struct {
-	pool  *pgxpool.Pool
-	brain *brain.Client
-	mux   *featureroute.Mux
+	pool   *pgxpool.Pool
+	brain  *brain.Client
+	mux    *featureroute.Mux
+	worker WorkerConfig
 }
 
 // Invocation excludes inputs and session digests from every public response.
@@ -44,7 +45,7 @@ type Invocation struct {
 const columns = `id,command,status,code,message_id,created_at,updated_at`
 
 func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
-	h := &Handler{pool: pool, brain: client, mux: featureroute.NewMux()}
+	h := &Handler{pool: pool, brain: client, mux: featureroute.NewMux(), worker: DefaultWorkerConfig()}
 	h.mux.HandleFunc("GET /contexts/{context}/chat-capabilities", h.capabilities)
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations", h.create)
 	h.mux.HandleFunc("GET /contexts/{context}/ai-invocations", h.list)
