@@ -26,12 +26,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ApiError, taiAnhNhom, thongDiepNguoiDoc } from "../../../api";
+import { ApiError, newAttempt, taiAnhNhom, thongDiepNguoiDoc } from "../../../api";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
   docTheAi,
   gioPhut,
+  lichTrinhTrongThe,
+  tacGiaTin,
   glyphPhanUng,
   khoaHang,
   nhomTheoNgay,
@@ -50,7 +52,10 @@ import { useBanNhap } from "../../chat/useBanNhap";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { useChatChanges } from "../../chat/useChatChanges";
 import { useChatAi } from "../../chat/useChatAi";
-import { chuHangLoiGoi, docLenhAi, lenhSanSang, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
+import { chuHangLoiGoi, lenhSanSang, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
+import { timNhacAi } from "../../chat/nhac-ai";
+import { goiSeGui } from "../../chat/chip-boi-canh";
+import type { BoiCanh } from "../../ai/boi-canh";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
@@ -66,6 +71,8 @@ import { KhaySticker } from "./KhaySticker";
 import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 import { MenuTin } from "./MenuTin";
 import { TheAiView } from "./TheAi";
+import { TraLoiAi } from "./TraLoiAi";
+import { ChipBoiCanh } from "./ChipBoiCanh";
 import { CongCuChat, ToHen, type KhayChat } from "./SoHen";
 import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
 import { KhayToHenChung } from "./ToHenChungKhay";
@@ -74,17 +81,18 @@ import { docKhoiNhap } from "../../chat/to-hen-chung";
 import { Nep } from "../../ui/art/Nep";
 import { useNepNguCanh } from "../../nep/NepProvider";
 
+/**
+ * The commands the composer suggests. Choosing one fills the composer and
+ * sends nothing (chat-ui-contract.md): an AI request is an ordinary message
+ * the person finishes writing, with the preview chip above the send button
+ * (ADR-0039). Only `/vote` opens a form, because a poll is not a message.
+ */
 const LENH = [
-  { nhan: "/plan", goiY: "/plan tối nay đi đâu?", moTa: "Rủ Đi AI phác lịch trình" },
+  { nhan: "/plan", goiY: "/plan ", moTa: "Rủ Đi AI phác lịch trình" },
   { nhan: "/vote", goiY: "/vote", moTa: "Viết câu hỏi và lựa chọn" },
-  { nhan: "/chia-bill", goiY: "/chia-bill", moTa: "Rủ Đi AI gom khoản chi để cả hội xác nhận" },
-  { nhan: "@Rủ Đi", goiY: "@Rủ Đi ", moTa: "Nhờ phác một tờ hẹn" },
+  { nhan: "/chia-bill", goiY: "/chia-bill ", moTa: "Rủ Đi AI gom khoản chi để cả hội xác nhận" },
+  { nhan: "@Rủ Đi", goiY: "@Rủ Đi ", moTa: "Hỏi Rủ Đi AI ngay trong nhóm" },
 ] as const;
-
-/** A body that calls on the model (not `/vote`, which the server answers itself). */
-function goiMoHinh(body: string): boolean {
-  return /^\/(plan|chia-?bill)\b/i.test(body) || /@(rủ đi|ru di|rudi)/i.test(body);
-}
 
 /**
  * One send that has not landed yet, drawn where the message will be.
@@ -170,11 +178,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     return byVote;
   }, [chat.tin]);
   const coToHenChoBinhChon = (voteId: string) => binhChonDaCoToHen.get(voteId) ?? null;
-  const [promptAi, setPromptAi] = useState("");
-  // Which command the AI tray sends. Only `/chia-bill` sets it; every other way
-  // into (or out of) the tray is a plan, so leaving the tray resets it.
-  const [lenhAi, setLenhAi] = useState<LenhAi>("plan");
-  useEffect(() => { if (khay !== "plan") setLenhAi("plan"); }, [khay]);
+  // «Chỉ gửi lời nhờ» on the chip above the send button. Back on after every
+  // send: the choice is about one message, not a setting.
+  const [kemTin, setKemTin] = useState(true);
+  // The AI half of an `@Rủ Đi` send whose message has not landed yet, by the
+  // send's attempt key: a message retried from its failed row still gets its
+  // answer, with the bundle frozen at the first press.
+  const capChoTin = useRef(new Map<string, { lenh: LenhAi; loiNho: string; goi: BoiCanh | undefined }>());
   const [menuTin, setMenuTin] = useState<Tin | null>(null);
   // ADR-0023 §2.4: báo cáo một tin nhắn. Khay riêng, mở sau khi khay menu
   // đóng, để hai khay không chồng lên nhau trên màn nhỏ.
@@ -270,7 +280,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   );
 
   const tenNguoi = useCallback(
-    (id: string | null) => (id === null ? "Rủ Đi AI" : id === personId ? "Bạn" : tenTheoId[id] ?? "Thành viên"),
+    (id: string | null) => {
+      const tacGia = tacGiaTin({ author_id: id });
+      return tacGia.loai === "ai" ? "Rủ Đi AI" : tacGia.id === personId ? "Bạn" : tenTheoId[tacGia.id] ?? "Thành viên";
+    },
     [tenTheoId, personId],
   );
 
@@ -295,9 +308,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       if (card.loai === "itinerary") return !!card.nhapChung && card.nhapChung.status === "open" && !card.outingId;
       return card.loai === "poll" && !changes.votes[card.vote_id]?.is_closed && !changes.votes[card.vote_id]?.deleted;
     };
+    // An answer in the thread that proposes an itinerary is a tờ hẹn too.
     const bat = (tin: Tin) => {
       const card = docTheAi(tin.card);
-      return card.loai === "itinerary" || (card.loai === "poll" && !changes.votes[card.vote_id]?.is_closed && !changes.votes[card.vote_id]?.deleted);
+      return lichTrinhTrongThe(card) !== null || (card.loai === "poll" && !changes.votes[card.vote_id]?.is_closed && !changes.votes[card.vote_id]?.deleted);
     };
     // The slot answers "hội đang chốt cái gì?", so a sheet the group can still
     // edit outranks a finished one even when the finished one is newer. Without
@@ -305,6 +319,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     return chat.tin.find(dangMo) ?? chat.tin.find(bat) ?? null;
   }, [chat.tin, changes.votes, nhanRieng]);
   const coChu = nhap.trim().length > 0;
+  // The message being typed also asks the AI (ADR-0039). Not in a pair: the
+  // AI engine serves groups only, and there it would say «chưa sẵn sàng».
+  const nhacDangGo = nhanRieng ? null : timNhacAi(nhap);
+  // What would go with it: nothing at all when this server takes no bundle.
+  const goiChip = ai.capabilities?.ai.share_scope === "caller_attached" ? boiCanhAi : null;
   const moLenh = (nhap.startsWith("/") && !nhap.includes(" ")) || nhap === "@";
   const lenhPhuHop = LENH.filter((lenh) => lenh.nhan.toLocaleLowerCase().startsWith(nhap.toLocaleLowerCase()));
   const viewabilityConfig = useRef(CHAT_VIEWABILITY).current;
@@ -355,28 +374,41 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     return () => sub.remove();
   }, []);
 
+  /** Ask the AI to answer a message that has just been stored. */
+  const hoiAiVeTin = (khoa: string, trigger: string) => {
+    const cap = capChoTin.current.get(khoa);
+    if (!cap) return;
+    capChoTin.current.delete(khoa);
+    void ai.goiCap({ khoa, trigger, ...cap });
+  };
+
   const gui = async (command?: string): Promise<boolean> => {
     const body = (command ?? nhap).trim();
     if (!body || guiRef.current) return false;
-    if (goiMoHinh(body)) {
-      // `/chia-bill` goes through the same tray as `/plan`: the same «Mình
-      // đang thấy» preview, the same «Chỉ gửi lời nhờ», the same queue.
-      const { lenh, prompt } = docLenhAi(body);
-      setLenhAi(lenh); setPromptAi(prompt); setKhay("plan"); doiNhap("");
-      return false;
-    }
     if (body === "/vote") { setKhay("poll"); doiNhap(""); return false; }
+    // An `@Rủ Đi`, `/plan` or `/chia-bill` message is an ordinary message
+    // (ADR-0039): it is sent exactly like any other, and only once the server
+    // has stored it is the AI asked, naming it. The key is the send's own, so
+    // retrying either half can never double the other; the bundle is frozen
+    // here, at the press, before the question joins the list it reads.
+    const nhac = command === undefined && !nhanRieng ? timNhacAi(body) : null;
+    const attempt = newAttempt();
+    if (nhac !== null && lenhSanSang(ai.capabilities, nhac.lenh)) {
+      capChoTin.current.set(attempt.key, { lenh: nhac.lenh, loiNho: nhac.loiNho, goi: goiSeGui(goiChip, kemTin) });
+    }
     guiRef.current = true;
     setDangGui(true);
     setDangGuiThan(body);
     if (command === undefined) doiNhap("");
     const traLoiCu = traLoi;
     setTraLoi(null);
+    setKemTin(true);
     veCuoi();
     try {
-      const daGui = await chat.gui(body, traLoiCu);
+      const daGui = await chat.gui(body, traLoiCu, attempt);
       // Landed for a conversation that has left the screen: nothing to show here.
       if (daGui === null) return false;
+      hoiAiVeTin(attempt.key, daGui.id);
       veCuoi();
       const cau = cauYDinh(daGui);
       if (cau !== null) setThongBao({ tu: "Rủ Đi", cau, luc: new Date().toISOString() });
@@ -393,8 +425,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   };
 
   const moToHen = (tin?: Tin) => {
-    const card = docTheAi(tin?.card);
-    if (card.loai === "itinerary" && card.outingId) { router.push(`/outings/${card.outingId}` as never); return; }
+    const card = lichTrinhTrongThe(docTheAi(tin?.card));
+    if (card?.outingId) { router.push(`/outings/${card.outingId}` as never); return; }
     // A sheet the group still owns opens where it can be edited together; an AI
     // suggestion still goes to the form where one person accepts it.
     const nhap = docKhoiNhap(tin?.card);
@@ -508,7 +540,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   /** Send a failed row again, with the key it was minted with. */
   const thuLaiGui = async (khoa: string) => {
     try {
-      if ((await chat.thuLaiMot(khoa)) !== null) veCuoi();
+      const daGui = await chat.thuLaiMot(khoa);
+      if (daGui !== null) {
+        hoiAiVeTin(khoa, daGui.id);
+        veCuoi();
+      }
     } catch {
       // Same as above: the row itself carries the second refusal.
     }
@@ -568,6 +604,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const tin = item.tin;
     const cuaToi = tin.author_id === personId;
     const laAi = tin.kind === "ai_card";
+    const theCuaTin = docTheAi(tin.card);
     const laSticker = tin.kind === "sticker";
     const daXoa = tin.kind === "deleted";
     const chips = (tin.reactions ?? []).filter((r) => r.count > 0);
@@ -611,7 +648,17 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               </Text>
             </View>
           ) : null}
-          {laAi ? (
+          {laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
+            <TraLoiAi
+              contextId={contextId}
+              onMenu={() => setMenuTin(tin)}
+              onOpenPlan={() => moToHen(tin)}
+              personId={personId}
+              tenNguoi={tenNguoi}
+              the={theCuaTin}
+              tin={tin}
+            />
+          ) : laAi ? (
             <TheAiView
               the={docTheAi(tin.card)}
               contextId={contextId}
@@ -735,7 +782,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             <Nep pose="moi" size={96} />
             <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : "Có hội rồi. Mở lời thôi."}</Text>
             <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
-            {!nhanRieng ? <RudiButton label="Rủ hội một buổi" variant="outline" full={false} onPress={() => { setLenhAi("plan"); setKhay("plan"); }} /> : null}
+            {!nhanRieng ? <RudiButton label="Rủ hội một buổi" variant="outline" full={false} onPress={() => setKhay("plan")} /> : null}
           </View>
         </View>
       ) : null}
@@ -753,7 +800,23 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         // shows there at once, and a command shows the model is being asked.
         ListHeaderComponent={
           <>
-            {ai.error && khay !== "plan" ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn, paddingVertical: 10 }]}>{ai.error}</Text> : null}
+            {ai.error ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn, paddingVertical: 10 }]}>{ai.error}</Text> : null}
+            {/* The AI half of an `@Rủ Đi` send that failed after the message
+                landed. Only the person who asked sees it; «Thử lại» replays the
+                same key with the same frozen bundle. */}
+            {ai.cho.filter((cap) => cap.loi !== null).map((cap) => (
+              <View key={cap.khoa} style={[styles.invocation, { backgroundColor: colors.card, borderColor: colors.line }]} testID="chat-loi-nho-hong">
+                <View style={styles.dauAi}>
+                  <Ionicons name="alert-circle-outline" size={20} color={colors.inkSoft} />
+                  <Text style={[typography.label, { color: colors.ink }]}>Rủ Đi AI chưa nhận lời nhờ</Text>
+                </View>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{cap.loi}</Text>
+                <View style={styles.requestActions}>
+                  <RudiButton label="Thử lại" compact full={false} variant="outline" onPress={() => ai.thuLaiCap(cap.khoa)} />
+                  <RudiButton label="Bỏ" compact full={false} variant="ghost" onPress={() => ai.boCap(cap.khoa)} />
+                </View>
+              </View>
+            ))}
             {ai.requests.filter((request) => request.status !== "succeeded" && request.status !== "cancelled").map((request) => (
               <View key={request.id} style={[styles.invocation, { backgroundColor: colors.card, borderColor: colors.line }]}>
                 <View style={styles.dauAi}>
@@ -769,7 +832,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             ))}
             {/* Every logical send owns its pending and failed row. */}
             {chat.hangCho.map((t) => (
-              <HangChoGui key={t.attempt.key} onBoQua={() => chat.boQua(t.attempt.key)} onThuLai={() => void thuLaiGui(t.attempt.key)} tin={t} />
+              <HangChoGui key={t.attempt.key} onBoQua={() => { capChoTin.current.delete(t.attempt.key); chat.boQua(t.attempt.key); }} onThuLai={() => void thuLaiGui(t.attempt.key)} tin={t} />
             ))}
             {dangGuiThan === null && thongBao !== null ? (
             <View style={styles.hang}>
@@ -787,7 +850,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             </View>
           ) : dangGuiThan !== null ? (
             <View style={styles.choGui}>
-              {goiMoHinh(dangGuiThan) ? (
+              {timNhacAi(dangGuiThan) !== null ? (
                 <View style={styles.hang}>
                   <View style={[styles.khoi, styles.khoiAi]}>
                     <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
@@ -859,7 +922,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       {moLenh && lenhPhuHop.length > 0 ? (
         <ScrollView keyboardShouldPersistTaps="handled" style={[styles.lenh, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
           {lenhPhuHop.map((l) => (
-            <Pressable accessibilityRole="button" key={l.nhan} onPress={() => { setKhay(l.nhan === "/vote" ? "poll" : "plan"); setLenhAi(l.nhan === "/chia-bill" ? "chia_bill" : "plan"); doiNhap(""); }} style={styles.lenhHang}>
+            <Pressable accessibilityRole="button" key={l.nhan} onPress={() => { if (l.nhan === "/vote") { setKhay("poll"); doiNhap(""); } else doiNhap(l.goiY); }} style={styles.lenhHang}>
               <Text style={[typography.label, { color: colors.accent }]}>{l.nhan}</Text>
               <Text style={[typography.caption, { color: colors.inkSoft }]}>{l.moTa}</Text>
             </Pressable>
@@ -916,17 +979,21 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           xacNhanBo={xacNhanBoToHen}
         />
       ) : null}
-      {!khongNhanTin && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy} boiCanh={boiCanhAi}
-        initialPrompt={promptAi}
-        lenh={lenhAi}
+      {!khongNhanTin && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
         onPoll={gui}
-        onPlan={async (prompt, boiCanh) => { const draft = nhapRef.current; const sent = await ai.send(prompt, boiCanh, lenhAi); if (sent) { setPromptAi(""); if (goiMoHinh(draft.text)) xoaNhapCu(draft.revision); } return sent; }}
+        // The tray no longer asks the AI itself: it starts the message.
+        onHoiAi={() => { setKhay(null); if (timNhacAi(nhapRef.current.text) === null) doiNhap((LENH[0].goiY + nhapRef.current.text).trimEnd() + " "); }}
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
         onToGiay={nhanRieng ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
+      {!khongNhanTin && nhacDangGo !== null ? (
+        <View style={{ marginHorizontal: space.md }}>
+          <ChipBoiCanh goi={goiChip} kemTin={kemTin} onDoi={setKemTin} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
+        </View>
+      ) : null}
       {khongNhanTin ? (
         <View style={[styles.dungNhan, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Cuộc trò chuyện này không còn nhận tin.</Text>

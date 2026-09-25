@@ -285,6 +285,14 @@ func TestGroupEngineNeverReadsMessageTextAcrossPackages(t *testing.T) {
 		t.Fatalf("only %d roots in chatassist; the load is incomplete", len(roots))
 	}
 	c := g.reach(roots...)
+	// The in-thread answer (ADR-0039) added two reads of `messages`: the
+	// trigger check and publish's lock on the trigger. Both must be inside the
+	// walk, or they are reads no gate looks at.
+	for _, must := range []string{pkgChat + ".kiemTrigger", pkgChat + ".giuTrigger"} {
+		if !c.funcs[must] {
+			t.Fatalf("the group closure never reaches %s; a read of messages is outside the gate", must)
+		}
+	}
 	reads := 0
 	for _, s := range c.strings {
 		for _, q := range readsMessages.FindAllString(s, -1) {

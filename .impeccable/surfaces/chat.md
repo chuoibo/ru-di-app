@@ -40,7 +40,10 @@ tạo kèo thẳng từ form riêng của một người.
 - **Thẻ AI và tờ hẹn chung phải phân biệt được bằng mắt.** Thẻ AI ký bằng tia
   lấp lánh tông `ai`; tờ hẹn chung ký bằng biểu tượng người, tông `accent`. Một
   tờ của hội mượn dấu của mô hình là nói sai ai viết nó.
-- **AI chỉ nhận đúng lời nhờ trong ô**, có dòng báo phạm vi chia sẻ ngay cạnh.
+- **AI chỉ nhận đúng lời nhờ trong tin @Rủ Đi và đúng gói hiện trên chip trên
+  nút gửi**; chip nói số tin đọc từ chính gói, «Xem» liệt kê đúng gói, «Chỉ
+  gửi lời nhờ» là một chạm. Câu trả lời trả lời vào tin tag, ký ở chân bằng tia
+  lấp lánh tông `ai`, không mặt Nếp.
 - Ngày người đọc thấy là **ngày/tháng/năm**; ISO chỉ sống trên dây.
 
 ## Cổng phải xanh trước khi đổi hệ

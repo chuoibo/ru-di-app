@@ -358,6 +358,13 @@
     "src/rudi/ai/sse.ts",
     "src/rudi/chat/boi-canh-chat.ts",
     "src/rudi/chat/ai-invocations.ts",
+    // ADR-0039: whether a typed message also asks Rủ Đi AI (NFC/NFD, never an
+    // email), and the chip whose count is read from the bundle that is sent.
+    // Compiled because both rules are negative -- an email address is NOT a
+    // mention, and the chip does NOT count the screen -- and only running the
+    // functions settles a negative. See `nhac-ai.test.mjs`, `chip-boi-canh.test.mjs`.
+    "src/rudi/chat/nhac-ai.ts",
+    "src/rudi/chat/chip-boi-canh.ts",
     "src/rudi/chat/to-hen-chung.ts",
     "src/rudi/chat/useBanNhap.ts",
     "src/rudi/chat/viewability.ts",

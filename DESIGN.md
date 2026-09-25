@@ -1700,6 +1700,27 @@ plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đườn
   tờ, mọi hành động có tên bằng chữ; icon-only chỉ cho hành động đã có quy ước
   toàn cầu trên chính màn ấy (tim, chuông, back, đóng, gửi).
 
+### Trả lời của Rủ Đi AI trong luồng (`chat/TraLoiAi.tsx`, `ChipBoiCanh.tsx`)
+ADR-0039 (đề xuất, chờ Lead ký), lát 7 của kế hoạch AI v2. Bản này là **lõi
+dùng lại thành phần sẵn có**; hình hoàn thiện (hàng «đang đọc» có shimmer,
+chữ chạy) là lát 12, làm ở nơi có `/impeccable`.
+- **Tin `@Rủ Đi` là tin thường**: bong bóng của người gửi như mọi tin. AI
+  trả lời bằng một tin `ai_card` kind `tra_loi` **trả lời vào đúng tin đó**,
+  như một thành viên trả lời trong luồng.
+- **Câu trả lời căn trái**, không avatar: trích tin tag ở trên (viền trái
+  tông `ai`, nền `card`, cùng hình trích của tin thường), chữ là bong bóng
+  `card` viền `line` bo 18; phần quán hay lịch trình là tờ `ToGiay` anh em
+  (`TheAiView`), **không thẻ lồng thẻ**.
+- **Ký ở chân**: `sparkles` 15 + `caption` tông `ai`, «Rủ Đi AI · đọc {n}
+  tin» hoặc «Rủ Đi AI · chỉ đọc lời nhờ». `n` là số máy chủ đã kiểm
+  (`doc.so_tin`), không phải số client khai. **Không mặt Nếp** (ADR-0036
+  §2.6), không màu mới: token có sẵn.
+- **Chip xem trước trên nút gửi** thay khối «Mình đang thấy» của khay: một
+  dòng nền `aiSoft`, chữ `ink`, hai chữ bấm được tông `ai` (cặp `ai` trên
+  `aiSoft` qua 4.5:1, `mau-tren-nen-ai`), «Kèm {n} tin gần đây · Xem · Chỉ
+  gửi lời nhờ». `n` đọc từ chính gói sẽ gửi; «Xem» mở `Sheet` liệt kê đúng
+  gói đó. Vùng chạm 48dp đến từ `hitSlop`.
+
 ### Tờ giấy gấp ba (`ui/ToGiay.tsx`: `ToGiay`, `VetGap`, `GocGapThat`)
 Tờ của **sổ hai người** (spec «Nếp truyền giấy» §1.6, §15.3, §16): một lá
 thư gấp ba, các hàng của một lá thư ngăn bằng vết gấp. **Không phải `Card`**,

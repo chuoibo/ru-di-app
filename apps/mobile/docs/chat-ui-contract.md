@@ -23,10 +23,16 @@ thế giới của toàn app để trang trí riêng màn chat.
   cho lỗi, quyền riêng tư, xung đột hay tiền.
 - Bubble và sticker mở menu bằng chạm, Enter/Space hoặc long press. Poll
   có radio có trạng thái, số phiếu từ server và xác nhận đóng cho người tạo.
-- Lời nhờ AI chỉ gửi nội dung trong ô có thông báo chia sẻ rõ. Danh sách
-  invocation và lỗi lấy từ server; gửi tin mới không làm mất lỗi trước đó.
-  Khi provider chưa sẵn sàng, “Tự tạo kèo” dẫn sang form tạo kèo thủ công.
-  Nhánh này chưa có tờ nháp chung trước khi chốt.
+- Lời nhờ AI là lời nhờ trong tin `@Rủ Đi` (hoặc `/plan`, `/chia-bill` ở đầu
+  tin) cùng đúng gói hiện trên chip ngay trên nút gửi: «Kèm {n} tin gần đây ·
+  Xem · Chỉ gửi lời nhờ». Tin đi như mọi tin, cả nhóm thấy; chỉ khi tin đã
+  lưu thì client mới gọi AI, nêu đúng tin đó (`trigger_message_id`). Rủ Đi AI
+  trả lời vào chính tin tag, ký ở chân «Rủ Đi AI · đọc {n} tin». Danh sách
+  invocation và lỗi lấy từ server; gửi tin mới không làm mất lỗi trước đó; lời
+  gọi hỏng sau khi tin đã lưu có hàng riêng người gọi với «Thử lại» (cùng
+  khoá, cùng gói đã đóng băng). Khi provider chưa sẵn sàng, chip nói «Rủ Đi AI
+  chưa sẵn sàng · Gửi như tin thường», và “Tự tạo kèo” ở khay tờ hẹn dẫn sang
+  form tạo kèo thủ công.
 
 - Nháp form bình chọn và lời nhờ AI giữ trong bộ nhớ theo tài khoản/nhóm;
   trở lại phòng khôi phục đủ trường, có nút bỏ nháp riêng. Đăng xuất/đổi tài
@@ -148,8 +154,11 @@ thay bằng chứng chống ghi trùng ở server.
 
 Ô soạn cho nhập nhiều dòng, có giới hạn chiều cao; nút gửi bị vô hiệu khi
 không có chữ. Gõ tiền tố `/` hoặc `@` mở các lệnh phù hợp trong `LENH`;
-chọn gợi ý điền vào ô soạn, chưa tự gửi. Các lệnh AI đang có là dấu vết
-legacy, không xác lập quyền đọc chat cho AI ở v2.
+chọn gợi ý điền vào ô soạn, chưa tự gửi (`/vote` vẫn mở biểu mẫu bình chọn).
+`@Rủ Đi` là «Hỏi Rủ Đi AI ngay trong nhóm». Tin có `@Rủ Đi` được nhận ở bất
+kỳ vị trí nào, không bao giờ trong một địa chỉ email
+([nhac-ai.ts](../src/rudi/chat/nhac-ai.ts)); máy chủ không bao giờ tự gọi AI
+vì chữ trong tin. Lời gọi AI không xác lập quyền đọc chat cho AI ở v2.
 
 **Luật Thấy Mới Đánh Dấu.** `baoTinHienThi` chỉ đưa ID tin mà FlatList báo
 viewable vào `danhDauHienThi`. [viewability.ts](../src/rudi/chat/viewability.ts)

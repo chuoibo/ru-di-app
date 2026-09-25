@@ -36,6 +36,11 @@ func TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan(t *testing.T) {
 	// nothing. Count what was actually examined, and require that the one
 	// legitimate read of `messages` in this package was among it.
 	daDoc, daThay := 0, 0
+	// The reads added for the in-thread answer (ADR-0039): the trigger check
+	// (it is the only one naming deleted_at) and publish's lock on the trigger.
+	// Each must be among what the gate examined, or a later edit to either is
+	// a read nobody checks.
+	thayTinTag, thayGiuTag := false, false
 	for _, f := range duong {
 		if strings.HasSuffix(f, "_test.go") {
 			continue
@@ -47,6 +52,12 @@ func TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan(t *testing.T) {
 		daDoc++
 		for _, cau := range docBang.FindAllString(string(raw), -1) {
 			daThay++
+			if strings.Contains(cau, "deleted_at") && strings.Contains(cau, "author_id") {
+				thayTinTag = true
+			}
+			if cau == "SELECT id FROM messages" {
+				thayGiuTag = true
+			}
 			// `body` is the message text. Naming it in a read of `messages` is
 			// the server reading the conversation, which is the thing this
 			// package exists to not do.
@@ -60,6 +71,9 @@ func TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan(t *testing.T) {
 	}
 	if daThay == 0 {
 		t.Fatal("không thấy câu đọc `messages` nào, mà kiểm quyền sở hữu bối cảnh có đúng một câu như thế; mẫu đã trượt")
+	}
+	if !thayTinTag || !thayGiuTag {
+		t.Fatalf("cổng không thấy câu đọc tin tag (kiemTrigger=%v, giuTrigger=%v); câu đọc mới nhất đang nằm ngoài cổng", thayTinTag, thayGiuTag)
 	}
 }
 

@@ -27,7 +27,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { Chip, Field, Heading, Inline, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { dinhDangTienVnd } from "../../../screens/chat/ke-hoach";
 import { docAnhChupChat } from "../../chat/thay-doi";
-import { docTheAi } from "../../chat/tin-song";
+import { docTheAi, lichTrinhTrongThe } from "../../chat/tin-song";
 import type { ChangGui } from "../../../screens/len-plan/buoi-di";
 import { docKeoTuChat, taoKeoTuChat } from "../../chat/ai-invocations";
 import { HangChang } from "./HangChang";
@@ -82,8 +82,9 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
     void docAnhChupChat(phien.context_id, phien.person_id, [{ sequence: 0, revision: 0, type: "message", entity_id: sourceMessageId }]).then((snapshot) => {
       if (!active) return;
       const message = snapshot.messages.find((item) => item.id === sourceMessageId);
-      const card = docTheAi(message?.card);
-      if (card.loai !== "itinerary") throw new Error("Unavailable plan");
+      // An itinerary card, or the itinerary part of an answer in the thread.
+      const card = lichTrinhTrongThe(docTheAi(message?.card));
+      if (card === null) throw new Error("Unavailable plan");
       setTitle(card.the.tieuDe);
       setStops(card.the.chang.map((stop) => ({ at: stop.gio, label: stop.diaDiem.ten, place_name: stop.diaDiem.ten, place_id: stop.diaDiem.id })));
       setReviewTime(card.the.chang.some((stop) => !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(stop.gio)));

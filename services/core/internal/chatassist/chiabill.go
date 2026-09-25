@@ -14,6 +14,7 @@ import (
 	"mobile/services/core/internal/domain/allocator"
 	"mobile/services/core/internal/domain/chatintent"
 	"mobile/services/core/internal/domain/companion"
+	"mobile/services/core/internal/domain/tree"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/treejson"
@@ -292,20 +293,20 @@ func theChiaBill(drafts []khoanNhap, names map[string]string, soNguoi int) strin
 	return dau + "\n" + cuoi
 }
 
-// theChu is a text card through GroundCard, so the published shape is the
-// one parity pins and the client already draws; no new card kind.
-func theChu(text string) ([]byte, error) {
+// phanChu is the raw text card the summary is published as. It goes through
+// GroundCard like every other card, so the shape is the one parity pins and
+// the client already draws; no new card kind.
+func phanChu(text string) tree.Value {
 	payload := pyjson.NewOrderedMap()
 	payload.Set("text", pyjson.String(text))
 	raw := pyjson.NewOrderedMap()
 	raw.Set("kind", pyjson.String("text"))
 	raw.Set("payload", payload)
-	grounded, err := companion.GroundCard(treejson.To(raw), nil)
-	if err != nil {
-		return nil, err
-	}
-	return pyjson.Dumps(treejson.From(grounded))
+	return treejson.To(raw)
 }
+
+// theChu is the text card a job without a trigger publishes.
+func theChu(text string) ([]byte, error) { return theCuaViec(work{}, phanChu(text), nil) }
 
 func (h *Handler) processChiaBill(ctx context.Context, j work, dap dapThem) error {
 	nguon, err := nguonChiaBill(j.goi, j.prompt, j.person, dap.authors)
@@ -323,7 +324,9 @@ func (h *Handler) processChiaBill(ctx context.Context, j work, dap dapThem) erro
 	if err != nil {
 		return h.finishFailure(ctx, j, "invalid_ai_result")
 	}
-	card, err := theChu(theChiaBill(drafts, nhanNguoiTra(dap.memberships), len(shared)))
+	// In the thread the summary is the reply's one part; the drafts stay on
+	// the invocation row (`result`), never in the message the room reads.
+	card, err := theCuaViec(j, phanChu(theChiaBill(drafts, nhanNguoiTra(dap.memberships), len(shared))), nil)
 	if err != nil {
 		return h.finishFailure(ctx, j, "invalid_ai_result")
 	}

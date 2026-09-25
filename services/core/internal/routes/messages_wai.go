@@ -92,7 +92,11 @@ func postContextMessage() Route {
 				f := messageFacts(*target)
 				facts = &f
 			}
-			if err := messageedit.CheckReplyTarget(facts, contextID); err != nil {
+			// Go-only, and before the oracle on purpose: see laTraLoiAi. Every
+			// other target still meets CheckReplyTarget exactly as Python does.
+			if laTraLoiAi(target, contextID) {
+				// A reply to the AI's answer is the thread going on.
+			} else if err := messageedit.CheckReplyTarget(facts, contextID); err != nil {
 				var refused *messageedit.Error
 				if errors.As(err, &refused) {
 					switch refused.Code {
@@ -536,7 +540,9 @@ func markContextRead() Route {
 // actOnMessageIntent acts on a `/vote` command in a stored text message and on
 // nothing else. `/plan`, `@Rủ Đi` and `/chia-bill` are ordinary text: AI runs
 // only when a person invokes it through the invocation queue (ADR-0036 §2.1),
-// so no branch here may reach a model, the message table or a limiter.
+// so no branch here may reach a model, the message table or a limiter. Since
+// ADR-0039 the client posts the `@Rủ Đi` message first and then invokes the AI
+// naming it as `trigger_message_id`; the text itself still starts nothing.
 func actOnMessageIntent(ctx context.Context, call *endpoint.Call, store repo.Repository, contextID string, posted *pyjson.OrderedMap, stored repo.Message) (*pyjson.OrderedMap, error) {
 	out := clonePosted(posted)
 	if stored.Kind != "text" || stored.Body == nil {
@@ -659,6 +665,64 @@ func messageInContext(ctx context.Context, store repo.Repository, contextID, mes
 	return message, nil
 }
 
+// laTraLoiAi reports whether a reply target is the group AI's answer in this
+// room: an `ai_card` with no author whose card is `tra_loi` (ADR-0039 §2.5,
+// proposed). Replying to it is how a person asks a follow-up, so it is
+// quotable although ADR-0021 §2.2.2 makes every other card unquotable.
+//
+// A named, Go-only exception, and deliberately not an edit to
+// messageedit.CheckReplyTarget: that function is a port with a Python oracle.
+// Only the Go worker ever writes a `tra_loi` row and POST /messages cannot
+// (GroundCard refuses the kind), so no Python-served database holds one and
+// parity never reaches this branch. A poll, a shared sheet, an older AI card
+// or a card a person posted still meet the oracle and its 422.
+func laTraLoiAi(target *repo.Message, contextID string) bool {
+	if target == nil || target.ContextID != contextID || target.Kind != "ai_card" || target.AuthorID != nil {
+		return false
+	}
+	return cardKind(target.Card) == "tra_loi"
+}
+
+// cardField is obj[key] when v is an object, nil otherwise.
+func cardField(v pyjson.Value, key string) pyjson.Value {
+	obj, _ := v.(*pyjson.OrderedMap)
+	if obj == nil {
+		return nil
+	}
+	value, _ := obj.Get(key)
+	return value
+}
+
+// cardKind is the "kind" string of a stored card, "" for anything else.
+func cardKind(card []byte) string {
+	kind, _ := cardField(cardValue(card), "kind").(pyjson.String)
+	return string(kind)
+}
+
+// traLoiPreview is the one line a quote of the AI's answer shows: «Rủ Đi AI: »
+// and the start of its first text part, 80 runes at most in all (ADR-0021
+// §2.2.3), cut the way a text message is. Go-only, like the kind it reads.
+func traLoiPreview(card []byte) string {
+	text := ""
+	parts, _ := cardField(cardField(cardValue(card), "payload"), "phan").(pyjson.List)
+	for _, part := range parts {
+		if kind, _ := cardField(part, "kind").(pyjson.String); kind == "text" {
+			body, _ := cardField(cardField(part, "payload"), "text").(pyjson.String)
+			text = string(body)
+			break
+		}
+	}
+	text = strings.TrimSpace(strings.ReplaceAll(text, "\n", " "))
+	if text == "" {
+		return "[Rủ Đi AI]"
+	}
+	runes := []rune("Rủ Đi AI: " + text)
+	if len(runes) <= 80 {
+		return string(runes)
+	}
+	return string(runes[:79]) + "…"
+}
+
 func messageFacts(record repo.Message) messageedit.Facts {
 	return messageedit.Facts{ID: record.ID, ContextID: record.ContextID, AuthorID: record.AuthorID, Kind: record.Kind}
 }
@@ -771,6 +835,9 @@ func messagePreview(record repo.Message) string {
 	case "deleted":
 		return "Tin nhắn đã bị xoá"
 	case "ai_card":
+		if record.AuthorID == nil && cardKind(record.Card) == "tra_loi" {
+			return traLoiPreview(record.Card)
+		}
 		card := cardValue(record.Card)
 		obj, _ := card.(*pyjson.OrderedMap)
 		kind := ""

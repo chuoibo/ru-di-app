@@ -183,6 +183,9 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		if err == nil && installed {
 			installed, err = avatarfeed.Installed(check, pool)
 		}
+		if err == nil && installed {
+			installed, err = chatassist.SchemaCurrent(check, pool)
+		}
 		cancel()
 		if err != nil {
 			logger.Error("refusing to start", "error", "cannot check the chat schema; is the database reachable? "+chatOffHint)
@@ -378,8 +381,7 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	}
 	defer pool.Close()
 	check, cancel := context.WithTimeout(ctx, 5*time.Second)
-	var installed bool
-	err = pool.QueryRow(check, `SELECT to_regclass('chat_ai_invocations') IS NOT NULL`).Scan(&installed)
+	installed, err := chatassist.SchemaCurrent(check, pool)
 	cancel()
 	if err != nil || !installed {
 		logger.Error("refusing to start", "error", "the chat schema is missing or unreachable: run `core migrate-chat` (compose: service migrate-chat) first")

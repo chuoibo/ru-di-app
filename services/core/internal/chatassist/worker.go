@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"mobile/services/core/internal/domain/companion"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/service"
@@ -26,6 +25,11 @@ type work struct {
 	// The context the caller handed over, exactly as it was stored. Nil when the
 	// caller sent none, which is still the shape an older client produces.
 	goi []byte
+	// The `@Rủ Đi` message the answer replies to; "" for a job from a client
+	// that names none, which then publishes the card it always did.
+	trigger string
+	// How many shared turns the server confirmed at create (so_tin_doc).
+	soTin int
 }
 
 // WorkerConfig sizes the inference workers. The defaults are what the engine
@@ -203,7 +207,7 @@ func (h *Handler) claimNext(ctx context.Context, id string) (work, bool, error) 
 	defer tx.Rollback(ctx)
 	var j work
 	j.lease = newID()
-	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() AND ($3='' OR id::text=$3) ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command`, j.lease, h.worker.Lease.Seconds(), id).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command)
+	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() AND ($3='' OR id::text=$3) ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,''),COALESCE(j.so_tin_doc,0)`, j.lease, h.worker.Lease.Seconds(), id).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command, &j.trigger, &j.soTin)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return work{}, false, tx.Commit(ctx)
 	}
@@ -301,11 +305,7 @@ func (h *Handler) process(ctx context.Context, j work) error {
 	if err != nil {
 		return h.finishFailure(ctx, j, "provider_unavailable")
 	}
-	grounded, err := companion.GroundCard(treejson.To(raw), treejson.MapsTo(dap.places))
-	if err != nil {
-		return h.finishFailure(ctx, j, "invalid_ai_result")
-	}
-	card, err := pyjson.Dumps(treejson.From(grounded))
+	card, err := theCuaViec(j, treejson.To(raw), treejson.MapsTo(dap.places))
 	if err != nil {
 		return h.finishFailure(ctx, j, "invalid_ai_result")
 	}
@@ -419,6 +419,15 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, res
 		_ = tx.Rollback(ctx)
 		return h.finishFailure(ctx, j, "sharing_unavailable")
 	}
+	// The trigger before the feed and the job: see giuTrigger.
+	there, err := giuTrigger(ctx, tx, j)
+	if err != nil {
+		return err
+	}
+	if !there {
+		_ = tx.Rollback(ctx)
+		return h.finishFailure(ctx, j, "trigger_deleted")
+	}
 	if err = lockFeed(ctx, tx, j.conversation); err != nil {
 		return err
 	}
@@ -431,8 +440,14 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, res
 		return err
 	}
 	// Message creation and the job's terminal transition commit together. The
-	// change-feed trigger captures the card in this same transaction.
-	message, err := (repo.Repository{Q: tx}).CreateMessage(ctx, repo.MessageInput{ContextID: j.conversation, Kind: "ai_card", Card: card, Now: time.Now().UTC()})
+	// change-feed trigger captures the card in this same transaction. With a
+	// trigger the card is a reply to it, the way a member answers in a thread;
+	// the author stays NULL, and the card itself says who wrote it.
+	input := repo.MessageInput{ContextID: j.conversation, Kind: "ai_card", Card: card, Now: time.Now().UTC()}
+	if j.trigger != "" {
+		input.ReplyToID = &j.trigger
+	}
+	message, err := (repo.Repository{Q: tx}).CreateMessage(ctx, input)
 	if err != nil {
 		return err
 	}

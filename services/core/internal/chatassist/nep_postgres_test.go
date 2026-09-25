@@ -184,7 +184,13 @@ func TestNepPhienBiThuHoiThiKhongGoiNao(t *testing.T) {
 func TestNepChungHanMucVoiNhom(t *testing.T) {
 	f := setup(t, (&nepGia{}).serve)
 	for i := 0; i < 4; i++ {
-		f.create(t)
+		job := f.create(t)
+		// Settled at once: the room holds at most three jobs in flight
+		// (ADR-0039), and this test is about the per-person limit, which
+		// counts every job created in the last minute whatever its status.
+		if _, err := f.pool.Exec(context.Background(), `UPDATE chat_ai_invocations SET status='cancelled',prompt=NULL,boi_canh=NULL WHERE id=$1`, job.ID); err != nil {
+			t.Fatal(err)
+		}
 	}
 	for i := 0; i < 4; i++ {
 		if code, _, raw := f.nepPost(t, f.token, nepThan("Câu "+string(rune('a'+i)))); code != 202 {

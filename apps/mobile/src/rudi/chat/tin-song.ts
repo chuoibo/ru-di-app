@@ -74,8 +74,9 @@ export type TrangTin = {
 /**
  * `POST /messages` answers the stored message plus what the server did about a
  * `/vote` command. Nothing else is acted on there any more: `/plan`, `@Rủ Đi`
- * and `/chia-bill` are ordinary text on the server (ADR-0036 §2.1), and this
- * client never sends them anyway (`GroupChatLive` opens the AI tray instead).
+ * and `/chia-bill` are ordinary text on the server (ADR-0036 §2.1). Since
+ * ADR-0039 this client sends them as the ordinary messages they are, and then
+ * invokes the AI naming the stored message (`nhac-ai.ts`, `useChatAi.ts`).
  */
 export type TinDaGui = Tin & {
   intent?: "vote" | null;
@@ -312,7 +313,11 @@ export function trichTu(tin: Tin, tenNguoi: (id: string | null) => string): Tric
   if (tin.kind === "image") preview = tin.body ? `Ảnh: ${tin.body}` : "Ảnh";
   else if (tin.kind === "sticker") preview = "Sticker";
   else if (tin.kind === "deleted") preview = "Tin nhắn đã bị xoá";
-  else preview = (tin.body ?? "").replace(/\s+/g, " ").trim();
+  else if (tin.kind === "ai_card") {
+    // The same line the server will put in the quote (`messagePreview`).
+    const the = docTheAi(tin.card);
+    preview = the.loai === "tra_loi" ? `Rủ Đi AI: ${chuTraLoi(the).replace(/\s+/g, " ").trim()}` : "";
+  } else preview = (tin.body ?? "").replace(/\s+/g, " ").trim();
   if (preview.length > 80) preview = preview.slice(0, 79) + "…";
   return { id: tin.id, kind: tin.kind, author_id: tin.author_id, preview: preview || tenNguoi(tin.author_id) };
 }
@@ -359,6 +364,12 @@ export function gioPhut(iso: string): string {
   return `${hh}:${mm}`;
 }
 
+/** One part of the AI's answer in the thread: the three card kinds a reply may carry. */
+export type PhanTraLoi =
+  | { loai: "text"; text: string }
+  | { loai: "places"; the: Extract<TheKeHoach, { kind: "places" }> }
+  | { loai: "itinerary"; the: KeHoach; outingId?: string; nhapChung?: KhoiNhapTrongThe };
+
 export type TheAi =
   | { loai: "text"; text: string }
   | { loai: "places"; the: Extract<TheKeHoach, { kind: "places" }> }
@@ -368,7 +379,62 @@ export type TheAi =
       loai: "expense_draft";
       drafts: { title: string; amount_vnd: number; paid_by_id: string; shared_by: string[]; needs_review: boolean }[];
     }
+  | {
+      /**
+       * The group AI's answer inside the thread (ADR-0039, proposed): a reply
+       * to the `@Rủ Đi` message, signed in the card because the author column
+       * is empty. `soTin` is the count the SERVER confirmed, never the client's.
+       */
+      loai: "tra_loi";
+      invocationId: string;
+      lenh: string;
+      soTin: number;
+      chiLoiNho: boolean;
+      phan: PhanTraLoi[];
+    }
   | { loai: "khac" };
+
+/**
+ * Who wrote a row, the one place that decides it. A row with no author is the
+ * AI's: the database keeps `author_id` NULL for every card the AI publishes,
+ * and a reply in the thread says so in its own card as well (`tac_gia`). A
+ * card a person posted (a poll) carries that person, and is theirs.
+ */
+export type TacGia = { loai: "ai" } | { loai: "nguoi"; id: string };
+
+export function tacGiaTin(tin: { author_id: string | null }): TacGia {
+  return tin.author_id === null ? { loai: "ai" } : { loai: "nguoi", id: tin.author_id };
+}
+
+/**
+ * The itinerary a card proposes: the card itself, or the itinerary part of an
+ * answer in the thread. The same sheet either way -- it opens the same form and
+ * becomes the same kèo, stamped on the message that carries it.
+ */
+export function lichTrinhTrongThe(the: TheAi): Extract<TheAi, { loai: "itinerary" }> | null {
+  if (the.loai === "itinerary") return the;
+  if (the.loai === "tra_loi") {
+    const phan = the.phan.find((p) => p.loai === "itinerary");
+    return phan?.loai === "itinerary" ? phan : null;
+  }
+  return null;
+}
+
+/**
+ * The signature at the foot of an answer in the thread: who wrote it and what
+ * it read, from the count the server confirmed.
+ */
+export function chuKyTraLoi(the: Extract<TheAi, { loai: "tra_loi" }>): string {
+  return the.chiLoiNho ? "Rủ Đi AI · chỉ đọc lời nhờ" : `Rủ Đi AI · đọc ${the.soTin} tin`;
+}
+
+/** One line for an answer in the thread: its words, or the name of what it proposes. */
+export function chuTraLoi(the: Extract<TheAi, { loai: "tra_loi" }>): string {
+  for (const p of the.phan) if (p.loai === "text") return p.text;
+  const lich = the.phan.find((p) => p.loai === "itinerary");
+  if (lich?.loai === "itinerary") return `Tờ hẹn: ${lich.the.tieuDe}`;
+  return the.phan.some((p) => p.loai === "places") ? "Gợi ý địa điểm" : "";
+}
 
 function laBanGhi(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -444,6 +510,23 @@ export function docTheAi(card: unknown): TheAi {
           }))
         : [];
       return { loai: "expense_draft", drafts };
+    }
+    case "tra_loi": {
+      // Every part is read by this same function, so a part is exactly as
+      // trusted as a card of its own kind; a part of any other kind is dropped.
+      // The kèo made from the answer's itinerary is stamped on the answer
+      // itself (`payload.outing_id`), so it is carried down to that part.
+      const doc = laBanGhi(p.doc) ? p.doc : {};
+      const daThanhKeo = typeof p.outing_id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.outing_id) ? { outingId: p.outing_id } : {};
+      const phan: PhanTraLoi[] = [];
+      for (const raw of Array.isArray(p.phan) ? p.phan.slice(0, 3) : []) {
+        const the = docTheAi(raw);
+        if (the.loai === "text" || the.loai === "places") phan.push(the);
+        else if (the.loai === "itinerary") phan.push({ ...the, ...daThanhKeo });
+      }
+      const soTin = typeof doc.so_tin === "number" && Number.isInteger(doc.so_tin) && doc.so_tin >= 0 ? doc.so_tin : 0;
+      if (p.tac_gia !== "rudi-ai" || typeof p.invocation_id !== "string" || phan.length === 0) return { loai: "khac" };
+      return { loai: "tra_loi", invocationId: p.invocation_id, lenh: String(p.lenh ?? "plan"), soTin, chiLoiNho: doc.chi_loi_nho === true || soTin === 0, phan };
     }
     default:
       return { loai: "khac" };

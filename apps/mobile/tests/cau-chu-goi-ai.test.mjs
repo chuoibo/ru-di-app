@@ -74,7 +74,7 @@ const MIEN_TRU = {
   json_required:
     "translatedAsActor luôn gửi Content-Type: application/json; chỉ một client khác mới chạm được mã này.",
   invalid_body:
-    "Thân yêu cầu dựng từ đúng các trường máy chủ đọc (logical_id, command, prompt, boi_canh); thân thừa trường hay sai JSON là app hỏng.",
+    "Thân yêu cầu dựng từ đúng các trường máy chủ đọc (logical_id, command, prompt, boi_canh, trigger_message_id khi máy chủ khai mention); thân thừa trường hay sai JSON là app hỏng.",
   invalid_context:
     "contextId lấy từ chính nhóm đang mở, luôn là UUID; không có gì người dùng gõ đi vào đường dẫn.",
   invocation_already_published:
@@ -277,25 +277,33 @@ for (const duong of DUONG) test(`${duong.ten}: không câu nào lộ chữ của
   }
 });
 
-/* ------------------------------------------------ 4. lệnh cũ không đi lên - */
+/* ------------------------------------------------ 4. lệnh AI là tin thường, rồi mới là lời gọi */
 
-test("lệnh AI cũ gõ trong khung chat mở khay AI, không đi lên POST /messages", () => {
-  // ADR-0036 §2.1 turned `/plan`, `@Rủ Đi` and `/chia-bill` into ordinary text
-  // on the server. The client must keep catching them locally: sent as text,
-  // the group would read a bare command where the person meant to ask the AI.
-  const nguon = readFileSync(join(GOC_APP, "src", "rudi", "screens", "chat", "GroupChatLive.tsx"), "utf8");
-  const ham = /function goiMoHinh\(body: string\): boolean \{\n([\s\S]*?)\n\}/.exec(nguon);
-  assert.ok(ham, "không thấy goiMoHinh trong GroupChatLive.tsx");
-  const goiMoHinh = new Function("body", ham[1]);
+test("tin @Rủ Đi đi lên như tin thường, rồi mới có lời gọi AI tường minh nêu đúng tin đó", async () => {
+  // ADR-0039 (proposed) replaced the rule this case used to hold. It said a
+  // typed AI command must be caught before POST /messages, because the server
+  // reads `/plan` and `@Rủ Đi` as ordinary text (ADR-0036 §2.1). The server
+  // still does -- it never starts AI from text -- so the invariant moved, not
+  // vanished: the message is posted FIRST as the ordinary message it is, and
+  // only then does the client call the queue, naming the stored message as
+  // `trigger_message_id`. Moving it here is ADR-0036 §3b: a quality gate is
+  // moved, never dropped in the name of cleanup.
+  const { timNhacAi } = await import("../dist-test/rudi/chat/nhac-ai.js");
   for (const lenh of ["/plan tối nay đi đâu", "/PLAN", "/chia-bill", "/chiabill", "@Rủ Đi gợi ý quán", "@rudi ơi", "@ru di"]) {
-    assert.equal(goiMoHinh(lenh), true, `«${lenh}» sẽ đi lên máy chủ như tin thường`);
+    assert.notEqual(timNhacAi(lenh), null, `«${lenh}» phải kèm một lời gọi AI`);
   }
-  for (const thuong of ["/vote Ăn gì? Phở | Bún", "tối nay ăn gì", "/planning"]) {
-    assert.equal(goiMoHinh(thuong), false, `«${thuong}» bị chặn nhầm như lệnh AI`);
+  // repo-guard: allow=email reason=synthetic-invalid-domain
+  for (const thuong of ["/vote Ăn gì? Phở | Bún", "tối nay ăn gì", "/planning", "gửi lan@rudi.invalid"]) {
+    assert.equal(timNhacAi(thuong), null, `«${thuong}» bị đọc nhầm là lời nhờ AI`);
   }
+  const nguon = readFileSync(join(GOC_APP, "src", "rudi", "screens", "chat", "GroupChatLive.tsx"), "utf8");
+  assert.doesNotMatch(nguon, /goiMoHinh/, "đoạn chặn cũ còn trong GroupChatLive.tsx");
   const gui = nguon.slice(nguon.indexOf("const gui = async (command?: string)"));
-  const chan = gui.indexOf("if (goiMoHinh(body)) {");
-  const diLen = gui.indexOf("chat.gui(body");
-  assert.ok(chan > 0 && diLen > 0 && chan < diLen, "gui() phải chặn lệnh AI trước khi gọi chat.gui");
-  assert.match(gui.slice(chan, diLen), /return false;/, "nhánh lệnh AI phải dừng, không rơi xuống chat.gui");
+  const diLen = gui.indexOf("await chat.gui(body, traLoiCu, attempt)");
+  const goiAi = gui.indexOf("hoiAiVeTin(attempt.key, daGui.id)");
+  assert.ok(diLen > 0 && goiAi > diLen, "gui() phải gửi tin trước, rồi mới gọi AI với id của tin đã lưu");
+  assert.doesNotMatch(gui.slice(0, diLen), /setKhay\("plan"\)/, "lệnh AI không còn được chặn vào khay trước chat.gui");
+  // The AI call reuses the send's key and names the stored message.
+  const hook = readFileSync(join(GOC_APP, "src", "rudi", "chat", "useChatAi.ts"), "utf8");
+  assert.match(hook, /goiAi\(contextId, personId, cap\.loiNho, cap\.khoa, goi, cap\.lenh, trigger\)/);
 });

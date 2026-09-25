@@ -33,16 +33,22 @@ type Handler struct {
 
 // Invocation excludes inputs and session digests from every public response.
 type Invocation struct {
-	ID        string    `json:"id"`
-	Command   string    `json:"command"`
-	Status    string    `json:"status"`
-	Code      *string   `json:"code"`
-	MessageID *string   `json:"message_id"`
+	ID        string  `json:"id"`
+	Command   string  `json:"command"`
+	Status    string  `json:"status"`
+	Code      *string `json:"code"`
+	MessageID *string `json:"message_id"`
+	// The `@Rủ Đi` message this invocation answers; null for an invocation
+	// from a client that does not name one.
+	TriggerMessageID *string `json:"trigger_message_id"`
+	// How many shared turns the server confirmed; null on rows from before
+	// the column existed.
+	SoTinDoc  *int      `json:"so_tin_doc"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-const columns = `id,command,status,code,message_id,created_at,updated_at`
+const columns = `id,command,status,code,message_id,trigger_message_id::text,so_tin_doc,created_at,updated_at`
 
 func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 	h := &Handler{pool: pool, brain: client, mux: featureroute.NewMux(), worker: DefaultWorkerConfig()}
@@ -141,13 +147,17 @@ func readBody(w http.ResponseWriter, r *http.Request, v any, tran int64) error {
 
 type grant struct {
 	person, member, kind string
-	digest               []byte
+	// lane is the room's transport as the server finds it, never as a client
+	// says it: "legacy" for every room this endpoint serves today, because a
+	// v2 room is refused below before anything is written.
+	lane   string
+	digest []byte
 }
 
 // authority locks in person -> session -> membership -> context order. The same
 // rows are held through publication, never through the external inference call.
 func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byte) (grant, error) {
-	g := grant{digest: digest}
+	g := grant{digest: digest, lane: laneLegacy}
 	if !chatv2.ValidID(conversation) {
 		return g, invalid("invalid_context")
 	}
@@ -177,6 +187,7 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 			return g, err
 		}
 		if v2 {
+			g.lane = laneV2
 			return g, &denied{409, "encrypted_invocation_required"}
 		}
 	}
@@ -300,12 +311,15 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	}
 	// chia_bill reads through the same provider as plan (one key, one probe),
 	// so it is advertised with the same answer rather than a second guess.
-	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached"}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
+	// `mention` says this server takes `trigger_message_id` and answers inside
+	// the thread. A client that does not see it sends no trigger, so an older
+	// server never meets a field its DisallowUnknownFields would refuse.
+	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached", "mention": true}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
 }
 
 func scan(row pgx.Row) (Invocation, error) {
 	var v Invocation
-	err := row.Scan(&v.ID, &v.Command, &v.Status, &v.Code, &v.MessageID, &v.CreatedAt, &v.UpdatedAt)
+	err := row.Scan(&v.ID, &v.Command, &v.Status, &v.Code, &v.MessageID, &v.TriggerMessageID, &v.SoTinDoc, &v.CreatedAt, &v.UpdatedAt)
 	return v, err
 }
 func newID() string {
@@ -333,20 +347,34 @@ const (
 	lenhChiaBill = "chia_bill"
 )
 
+// The two values of `chat_ai_invocations.lane`.
+const (
+	laneLegacy = "legacy"
+	laneV2     = "v2"
+)
+
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		LogicalID string  `json:"logical_id"`
 		Command   string  `json:"command"`
 		Prompt    string  `json:"prompt"`
 		BoiCanh   *bundle `json:"boi_canh"`
+		// The `@Rủ Đi` message this answers (ADR-0039). Optional, so an app
+		// from before it keeps working. There is no `lane` field on purpose:
+		// the lane is the server's finding, and a client sending one is 400.
+		TriggerMessageID *string `json:"trigger_message_id"`
 	}
 	if err := readBody(w, r, &in, maxBodyWithBundle); err != nil {
 		failure(w, err)
 		return
 	}
-	if !chatv2.ValidID(in.LogicalID) || !lenhNhom(in.Command) || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 {
+	if !chatv2.ValidID(in.LogicalID) || !lenhNhom(in.Command) || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 || (in.TriggerMessageID != nil && !chatv2.ValidID(*in.TriggerMessageID)) {
 		failure(w, invalid("invalid_invocation"))
 		return
+	}
+	trigger := ""
+	if in.TriggerMessageID != nil {
+		trigger = *in.TriggerMessageID
 	}
 	// Bounds are pure, so they run before anything opens a transaction: an
 	// oversized body never reaches the database and never probes the provider.
@@ -377,8 +405,9 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var goi []byte
+	soTin := 0
 	if in.BoiCanh != nil {
-		if err = thuocPhong(r.Context(), tx, r.PathValue("context"), in.BoiCanh); err != nil {
+		if soTin, err = thuocPhong(r.Context(), tx, r.PathValue("context"), in.BoiCanh); err != nil {
 			failure(w, err)
 			return
 		}
@@ -387,7 +416,13 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	sum := sha256.Sum256(append([]byte(in.Command+"\x00"+in.Prompt+"\x00"), goi...))
+	if trigger != "" {
+		if err = kiemTrigger(r.Context(), tx, r.PathValue("context"), g.person, trigger); err != nil {
+			failure(w, err)
+			return
+		}
+	}
+	sum := inputDigest(in.Command, in.Prompt, goi, trigger)
 	var oldHash []byte
 	var oldMember, oldID string
 	err = tx.QueryRow(r.Context(), `SELECT id,input_digest,membership_id FROM chat_ai_invocations WHERE context_id=$1 AND person_id=$2 AND logical_id=$3`, r.PathValue("context"), g.person, in.LogicalID).Scan(&oldID, &oldHash, &oldMember)
@@ -425,7 +460,17 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		refuse(w, 429, "invocation_rate_limited")
 		return
 	}
-	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,boi_canh,share_expires_at,status) VALUES($1,'group',$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Command, in.Prompt, goiHoacNull(goi)))
+	if err = gioiHanPhong(r.Context(), tx, r.PathValue("context")); err != nil {
+		failure(w, err)
+		return
+	}
+	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,boi_canh,share_expires_at,status,trigger_message_id,lane,so_tin_doc) VALUES($1,'group',$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+interval '15 minutes','queued',$11,$12,$13) RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Command, in.Prompt, goiHoacNull(goi), in.TriggerMessageID, g.lane, soTin))
+	if daCoTraLoi(err) {
+		// Another logical call already answers this message: one message, one
+		// answer. Not invocation_conflict, which means "this id, other bytes".
+		refuse(w, 409, "invocation_trigger_taken")
+		return
+	}
 	if err != nil {
 		failure(w, err)
 		return
@@ -435,6 +480,19 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	reply(w, 202, v)
+}
+
+// inputDigest is what idempotency compares. A call without a trigger keeps the
+// exact digest it had before triggers existed, so a retry that straddles a
+// deploy still replays; a trigger joins the digest, so the same logical id
+// sent again for a different message is a conflict, never a replay of the
+// answer to the first one.
+func inputDigest(command, prompt string, goi []byte, trigger string) [32]byte {
+	in := append([]byte(command+"\x00"+prompt+"\x00"), goi...)
+	if trigger != "" {
+		in = append(in, []byte("\x00"+trigger)...)
+	}
+	return sha256.Sum256(in)
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
@@ -514,7 +572,18 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 		return
 	}
 	if action == "retry" {
+		// A retry puts the job back in flight, so it counts against the room
+		// the way a new one does; the hourly count is by creation and stays.
+		if e := gioiHanPhong(r.Context(), tx, r.PathValue("context")); e != nil {
+			failure(w, e)
+			return
+		}
 		tag, e := tx.Exec(r.Context(), `UPDATE chat_ai_invocations SET status='queued',code=NULL,session_digest=$2,updated_at=clock_timestamp() WHERE id=$1 AND status='failed' AND attempts<3 AND prompt IS NOT NULL AND share_expires_at>clock_timestamp()`, v.ID, g.digest)
+		if daCoTraLoi(e) {
+			// While this one sat failed, a newer call took its message.
+			refuse(w, 409, "invocation_trigger_taken")
+			return
+		}
 		if e != nil {
 			failure(w, e)
 			return

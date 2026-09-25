@@ -16,6 +16,13 @@ export type ChatCapabilities = {
     /** Absent on a server from before `command=chia_bill` existed: read as unavailable. */
     chia_bill?: { available: boolean; reason: string | null };
     share_scope: "invocation_only" | "caller_attached";
+    /**
+     * The server takes `trigger_message_id` and answers inside the thread, as a
+     * reply to the `@Rủ Đi` message (ADR-0039). Absent on an older server,
+     * which would refuse the unknown field: then no trigger is sent, and the
+     * answer arrives as the card it always was.
+     */
+    mention?: boolean;
   };
   media: { image: boolean; sticker: boolean; voice: boolean };
 };
@@ -28,16 +35,11 @@ export function lenhSanSang(capabilities: ChatCapabilities | null, lenh: LenhAi)
 }
 
 /**
- * What a typed command asks for, and the words that go with it. `/chia-bill`
- * alone still needs a request the server will accept (it refuses an empty
- * prompt), so it gets a plain one; the words after it are the caller's own and
- * may carry an expense of their own («/chia-bill mình trả 300k tiền nước»).
+ * What a bare `/chia-bill` asks for. The server refuses an empty prompt, so a
+ * command with no words after it still needs a plain request; words after it
+ * are the caller's own and may carry an expense of their own («/chia-bill
+ * mình trả 300k tiền nước»). Reading a typed message is `nhac-ai.ts`.
  */
-export function docLenhAi(body: string): { lenh: LenhAi; prompt: string } {
-  const chia = /^\/chia-?bill\b\s*/i.exec(body);
-  if (chia) return { lenh: "chia_bill", prompt: body.slice(chia[0].length).trim() || LOI_NHO_CHIA_BILL };
-  return { lenh: "plan", prompt: body.replace(/^\/plan\s*|^@(rủ đi|ru di|rudi)\s*/i, "") };
-}
 export const LOI_NHO_CHIA_BILL = "Gom giúp các khoản chi trong đoạn chat";
 
 export type AiInvocation = {
@@ -47,6 +49,10 @@ export type AiInvocation = {
   status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
   code: string | null;
   message_id: string | null;
+  /** The `@Rủ Đi` message it answers; absent or null on an invocation without one. */
+  trigger_message_id?: string | null;
+  /** How many shared messages the server confirmed; absent on older servers. */
+  so_tin_doc?: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -83,6 +89,12 @@ export const LOI_GOI_AI: Record<string, string> = {
   membership_required: "Bạn không còn ở trong nhóm này nên chưa nhờ AI ở đây được.",
   encrypted_invocation_required: "Nhóm này đã chuyển sang chat mã hoá, nên cách nhờ AI này chưa dùng được ở đây.",
   invocation_not_found: "Không còn thấy lời nhờ này nữa. Bạn gửi một lời nhờ mới nhé.",
+  // ADR-0039: the answer is a reply to the `@Rủ Đi` message, so the message
+  // itself can be the reason a request is refused.
+  trigger_khong_hop_le: "Rủ Đi AI chỉ trả lời tin nhờ của chính bạn trong nhóm này, gửi trong một ngày qua và chưa xoá. Bạn gửi một tin mới có @Rủ Đi nhé.",
+  invocation_trigger_taken: "Tin này đã được nhờ Rủ Đi AI trả lời rồi. Câu trả lời sẽ hiện ngay dưới tin.",
+  invocation_room_busy: "Rủ Đi AI đang trả lời ba lời nhờ trong nhóm. Đợi một câu xong rồi nhờ tiếp nhé.",
+  invocation_room_rate_limited: "Nhóm đã nhờ Rủ Đi AI nhiều trong một giờ qua. Nghỉ tay một chút rồi nhờ tiếp nhé.",
 };
 
 /**
@@ -93,16 +105,26 @@ export const LOI_GOI_AI: Record<string, string> = {
  */
 export const LOI_KET_QUA_AI: Record<string, string> = {
   chia_bill_no_expenses: "Rủ Đi AI chưa thấy khoản chi nào có số tiền trong đoạn chat gửi kèm. Bạn gửi kèm tin có số tiền, hoặc thêm khoản chi ở mục Chia bill.",
+  trigger_deleted: "Tin nhờ Rủ Đi AI không còn nữa, nên câu trả lời không được gửi. Bạn gửi một tin mới có @Rủ Đi nhé.",
 };
 
 /** A job whose answer would be the same on retry offers no «Thử lại». */
 export function thuLaiDuoc(request: AiInvocation): boolean {
-  return request.status === "failed" && request.code !== "chia_bill_no_expenses";
+  return request.status === "failed" && request.code !== "chia_bill_no_expenses" && request.code !== "trigger_deleted";
 }
 
 /** The words on a pending or failed invocation row, per command. */
 export function chuHangLoiGoi(request: AiInvocation): { tieuDe: string; cau: string } {
   const chia = request.command === "chia_bill";
+  // An answer in the thread says what it is reading, with the count the
+  // server confirmed (design 03 §5: «Rủ Đi AI đang đọc {n} tin…»).
+  if (request.trigger_message_id && (request.status === "queued" || request.status === "running")) {
+    const n = request.so_tin_doc ?? 0;
+    return {
+      tieuDe: n > 0 ? `Rủ Đi AI đang đọc ${n} tin…` : "Rủ Đi AI đang đọc lời nhờ…",
+      cau: "Câu trả lời sẽ hiện ngay dưới tin của bạn.",
+    };
+  }
   if (request.status === "failed") {
     return {
       tieuDe: chia ? "Chưa gom được khoản chi" : "Chưa phác được tờ hẹn",
@@ -122,11 +144,14 @@ export function chuHangLoiGoi(request: AiInvocation): { tieuDe: string; cau: str
  *   the wire is byte for byte the old one.
  * @param lenh `chia_bill` rides the same queue, digest, limits and preview as
  *   `plan`; only the server's inference step differs.
+ * @param triggerMessageId the `@Rủ Đi` message this answers, already stored.
+ *   Omitted entirely (not sent as null) when the server does not declare
+ *   `mention`, so an older server keeps receiving exactly the old body.
  */
-export function goiAi(contextId: string, personId: string, prompt: string, logicalId: string, boiCanh?: BoiCanh, lenh: LenhAi = "plan") {
+export function goiAi(contextId: string, personId: string, prompt: string, logicalId: string, boiCanh?: BoiCanh, lenh: LenhAi = "plan", triggerMessageId?: string) {
   return translatedAsActor<AiInvocation>(LOI_GOI_AI, `/contexts/${contextId}/ai-invocations`, {
     ...options(contextId, personId), method: "POST",
-    body: { logical_id: logicalId, command: lenh, prompt, ...(boiCanh ? { boi_canh: boiCanh } : {}) },
+    body: { logical_id: logicalId, command: lenh, prompt, ...(boiCanh ? { boi_canh: boiCanh } : {}), ...(triggerMessageId ? { trigger_message_id: triggerMessageId } : {}) },
   });
 }
 export function thuLaiAi(contextId: string, personId: string, id: string) {

@@ -20,23 +20,29 @@
  * deliberately outside `tin`), and whatever the person is typing is already in
  * the prompt.
  */
-import { docTheAi, type Tin } from "./tin-song";
+import { chuTraLoi, docTheAi, tacGiaTin, type Tin } from "./tin-song";
 import { GIOI_HAN_BOI_CANH, chuGon, ganNgan, type BoiCanh, type LuotBoiCanh, type VaiLuot } from "../ai/boi-canh";
 
 /** A deleted row is still a turn. Its old text is never what travels. */
 const CHU_DA_XOA = "Tin nhắn đã bị xoá";
 
 function vaiCua(tin: Tin, personId: string): VaiLuot {
-  if (tin.author_id === null) return "ai";
-  return tin.author_id === personId ? "toi" : "ban";
+  const tacGia = tacGiaTin(tin);
+  if (tacGia.loai === "ai") return "ai";
+  return tacGia.id === personId ? "toi" : "ban";
 }
 
-/** A card travels as a label plus the one line carrying the group's decision. */
+/**
+ * A card travels as a label plus the one line carrying the group's decision.
+ * The AI's own earlier answer travels as its words, so a follow-up reads what
+ * was said rather than «Một thẻ».
+ */
 function chuTheAi(card: unknown): string {
   const the = docTheAi(card);
   if (the.loai === "poll") return `Thẻ bình chọn: ${chuGon(the.question)}`;
   if (the.loai === "itinerary") return `Tờ hẹn: ${chuGon(the.the.tieuDe)}`;
   if (the.loai === "text") return chuGon(the.text);
+  if (the.loai === "tra_loi") return chuGon(chuTraLoi(the)) || "Một thẻ";
   return "Một thẻ";
 }
 

@@ -28,6 +28,31 @@ var draftsSQL string
 //go:embed schema_scope.sql
 var scopeSQL string
 
+// Version 4 lets the group AI answer inside the thread: the invocation names
+// the `@Rủ Đi` message it answers, and the room it runs in carries its lane.
+// A fourth file, for the reason version 2 was a second one.
+//
+//go:embed schema_luong.sql
+var luongSQL string
+
+// SchemaVersion is the chat AI schema this binary reads and writes. `serve`
+// and `work` refuse to start below it: every INSERT and every claim names the
+// columns of version 4, so an older schema would turn each request into a 500
+// behind a healthy /healthz instead of one loud refusal at startup.
+const SchemaVersion = 4
+
+// SchemaCurrent reports whether the chat AI schema is installed at
+// SchemaVersion or later. It runs no DDL.
+func SchemaCurrent(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
+	var table bool
+	if err := pool.QueryRow(ctx, `SELECT to_regclass('chat_ai_schema_migrations') IS NOT NULL`).Scan(&table); err != nil || !table {
+		return false, err
+	}
+	var current bool
+	err := pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_ai_schema_migrations WHERE version >= $1)`, SchemaVersion).Scan(&current)
+	return current, err
+}
+
 // Migrate is run explicitly by `core migrate-chat`, never by a request.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	tx, err := pool.Begin(ctx)
@@ -62,6 +87,9 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 	if err = migrateScope(ctx, tx); err != nil {
+		return err
+	}
+	if err = migrateLuong(ctx, tx); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
@@ -108,5 +136,26 @@ func migrateScope(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	_, err := tx.Exec(ctx, `INSERT INTO chat_ai_schema_migrations VALUES(3,$1)`, digest)
+	return err
+}
+
+// migrateLuong installs version 4 on top of version 3, in the same
+// transaction and with the same pinned checksum as the versions before it.
+func migrateLuong(ctx context.Context, tx pgx.Tx) error {
+	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(luongSQL)))
+	var old string
+	if err := tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM chat_ai_schema_migrations WHERE version=4),'')`).Scan(&old); err != nil {
+		return err
+	}
+	if old != "" {
+		if old != digest {
+			return fmt.Errorf("chat AI thread migration checksum mismatch")
+		}
+		return nil
+	}
+	if _, err := tx.Exec(ctx, luongSQL); err != nil {
+		return err
+	}
+	_, err := tx.Exec(ctx, `INSERT INTO chat_ai_schema_migrations VALUES(4,$1)`, digest)
 	return err
 }

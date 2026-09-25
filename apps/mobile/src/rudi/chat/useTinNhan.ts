@@ -305,11 +305,14 @@ export function useTinNhan(contextId: string, personId: string) {
   );
 
   const gui = useCallback(
-    async (body: string, traLoi: TrichDan | null = null): Promise<TinDaGui | null> => {
+    async (body: string, traLoi: TrichDan | null = null, attempt: Attempt = newAttempt()): Promise<TinDaGui | null> => {
       // A deliberate send is a new logical message. Failed messages keep
       // their original bytes and key in the visible queue, where retry lives.
+      // The caller may mint the attempt itself when a second call has to be
+      // keyed to this one: an `@Rủ Đi` message and the AI call that answers it
+      // share one key (ADR-0039), so retrying either never doubles the other.
       const nhap: TinChoGui = {
-        attempt: newAttempt(), kind: "text", than: body, phuDe: null, traLoi,
+        attempt, kind: "text", than: body, phuDe: null, traLoi,
         trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString(),
       };
       return chay(nhap, (a) => guiTin(contextId, personId, body, a, { replyToId: traLoi?.id ?? null }));
