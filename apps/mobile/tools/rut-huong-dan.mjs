@@ -36,8 +36,19 @@
  * docstring never counts as being on screen.
  *
  * Output is deterministic: sorted keys, sorted arrays, 2-space indent,
- * trailing newline. `--check` exits 1 when the committed file is stale.
+ * trailing newline.
+ *
+ * The same run writes `src/rudi/nep/huong-dan-ban.ts`: the first 12 hex
+ * characters of the sha256 of the exact `_rut.json` bytes. The server embeds
+ * `_rut.json` and computes the same value (`huongdan.BanDung()`), so a phiếu
+ * that carries the app's constant says which build of the map the app was made
+ * with, and Nếp can tell when its manual describes a different app. Hashing
+ * `_rut.json` rather than the manuals is deliberate: the map changes when the
+ * code does, which is what makes two builds different screens.
+ *
+ * `--check` exits 1 when either committed file is stale.
  */
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -46,6 +57,7 @@ import ts from "typescript";
 export const GOC_MOBILE = fileURLToPath(new URL("..", import.meta.url));
 const GOC_REPO = resolve(GOC_MOBILE, "../..");
 export const DUONG_RUT = join(GOC_REPO, "services/core/internal/huongdan/data/_rut.json");
+export const DUONG_BAN = join(GOC_MOBILE, "src/rudi/nep/huong-dan-ban.ts");
 
 const THU_MUC_APP = join(GOC_MOBILE, "app");
 const THU_MUC_SRC = join(GOC_MOBILE, "src");
@@ -345,6 +357,29 @@ export function chuoiRut() {
   return jsonOnDinh(rutBanDo());
 }
 
+/** First 12 hex characters of the sha256 of `_rut.json` as UTF-8: what `huongdan.BanDung()` returns. */
+export function banDung(rut) {
+  return createHash("sha256").update(rut, "utf8").digest("hex").slice(0, 12);
+}
+
+/** The exact text `huong-dan-ban.ts` must hold for a given `_rut.json`. */
+export function chuoiBan(rut) {
+  return [
+    "/**",
+    " * Which build of the app map this app was made with: the first 12 hex",
+    " * characters of the sha256 of services/core/internal/huongdan/data/_rut.json.",
+    " *",
+    " * Written by `tools/rut-huong-dan.mjs` together with `_rut.json`; do not edit.",
+    " * The server computes the same value from the copy it embeds",
+    " * (`huongdan.BanDung()`), so a phiếu carrying it tells Nếp whether its manual",
+    " * describes the app this person holds. `tests/huong-dan-khop-ma.test.mjs` and",
+    " * a Go test in `services/core/internal/huongdan` turn a stale value red.",
+    " */",
+    `export const HUONG_DAN_BAN = "${banDung(rut)}";`,
+    "",
+  ].join("\n");
+}
+
 /**
  * Every piece of text one source file can put in front of a person: string
  * literals, templates as `…` patterns, JSX text, and mixed JSX children as one
@@ -403,16 +438,25 @@ export function rutTuNguon(chu, cacMan, ten = "nguon.tsx") {
 const laChinh = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (laChinh) {
   const moi = chuoiRut();
+  const banMoi = chuoiBan(moi);
   if (process.argv.includes("--check")) {
-    const cu = existsSync(DUONG_RUT) ? readFileSync(DUONG_RUT, "utf8") : null;
-    if (cu !== moi) {
-      console.error(`${posix(relative(GOC_REPO, DUONG_RUT))} is stale: run \`node tools/rut-huong-dan.mjs\` in apps/mobile.`);
-      process.exit(1);
+    let cu = true;
+    for (const [duong, noiDung] of [
+      [DUONG_RUT, moi],
+      [DUONG_BAN, banMoi],
+    ]) {
+      if ((existsSync(duong) ? readFileSync(duong, "utf8") : null) !== noiDung) {
+        console.error(`${posix(relative(GOC_REPO, duong))} is stale: run \`node tools/rut-huong-dan.mjs\` in apps/mobile.`);
+        cu = false;
+      }
     }
-    console.log("_rut.json is fresh");
+    if (!cu) process.exit(1);
+    console.log(`_rut.json and huong-dan-ban.ts are fresh (${banDung(moi)})`);
   } else {
     writeFileSync(DUONG_RUT, moi);
+    writeFileSync(DUONG_BAN, banMoi);
     const { routes } = JSON.parse(moi);
     console.log(`wrote ${posix(relative(GOC_REPO, DUONG_RUT))}: ${routes.length} routes`);
+    console.log(`wrote ${posix(relative(GOC_REPO, DUONG_BAN))}: ${banDung(moi)}`);
   }
 }

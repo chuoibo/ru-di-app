@@ -7,7 +7,9 @@
  *
  *   (a) `_rut.json` -- the map of routes, labels and navigation pulled out of
  *       the source by `tools/rut-huong-dan.mjs` -- is regenerated here in memory
- *       and must equal the committed bytes;
+ *       and must equal the committed bytes; and `src/rudi/nep/huong-dan-ban.ts`
+ *       must carry the first 12 hex of the sha256 of those committed bytes, the
+ *       value the server's `huongdan.BanDung()` computes from its embedded copy;
  *   (b) every manual's front matter parses, and its `man` and every
  *       `di_toi[].man` is a route that map knows;
  *   (c) every «…» in a body is declared in that file's `nhanUI`, and every
@@ -32,7 +34,17 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 
 import { MAN_NEP_LUI } from "../dist-test/rudi/nep/phieu.js";
-import { DUONG_RUT, chuoiRut, literalTrongMa, literalTuNguon, maMan, rutTuNguon } from "../tools/rut-huong-dan.mjs";
+import {
+  DUONG_BAN,
+  DUONG_RUT,
+  banDung,
+  chuoiBan,
+  chuoiRut,
+  literalTrongMa,
+  literalTuNguon,
+  maMan,
+  rutTuNguon,
+} from "../tools/rut-huong-dan.mjs";
 
 const THU_MUC_SO_TAY = dirname(DUONG_RUT);
 const KHOA_DAU = ["di_toi", "man", "nhanUI", "tien", "tieu_de"];
@@ -65,6 +77,16 @@ function kiemTuoi(daCommit, sinhLai) {
   let i = 0;
   while (i < a.length && i < b.length && a[i] === b[i]) i++;
   return `_rut.json lệch từ dòng ${i + 1}: đang có ${JSON.stringify(a[i] ?? "")}, mã sinh ra ${JSON.stringify(b[i] ?? "")}. Chạy \`node tools/rut-huong-dan.mjs\` trong apps/mobile.`;
+}
+
+/**
+ * Null when `huong-dan-ban.ts` holds exactly what the extractor writes for the
+ * committed `_rut.json`; otherwise which constant it has and which it needs.
+ */
+function kiemBan(banDaCommit, rutDaCommit) {
+  if (banDaCommit === chuoiBan(rutDaCommit)) return null;
+  const co = /HUONG_DAN_BAN = "([^"]*)"/.exec(banDaCommit ?? "")?.[1] ?? "(không đọc được)";
+  return `huong-dan-ban.ts cũ: đang có ${co}, _rut.json đã commit băm ra ${banDung(rutDaCommit)}. Chạy \`node tools/rut-huong-dan.mjs\` trong apps/mobile.`;
 }
 
 function laManTien(man) {
@@ -152,6 +174,7 @@ function kiemSoTay(ten, noiDung, { cacMan, literal }) {
 
 const RUT_DA_COMMIT = readFileSync(DUONG_RUT, "utf8");
 const RUT_SINH_LAI = chuoiRut();
+const BAN_DA_COMMIT = readFileSync(DUONG_BAN, "utf8");
 const CAC_MAN = new Set(JSON.parse(RUT_DA_COMMIT).routes.map((r) => r.man));
 const LITERAL = literalTrongMa();
 const NGU_CANH = { cacMan: CAC_MAN, literal: LITERAL };
@@ -175,6 +198,11 @@ const MAU_DUNG = [
 
 test("(a) _rut.json khớp từng byte với bản rút lại từ mã", () => {
   assert.equal(kiemTuoi(RUT_DA_COMMIT, RUT_SINH_LAI), null);
+});
+
+test("(a) huong-dan-ban.ts mang đúng băm của _rut.json đã commit", () => {
+  assert.equal(kiemBan(BAN_DA_COMMIT, RUT_DA_COMMIT), null);
+  assert.match(banDung(RUT_DA_COMMIT), /^[0-9a-f]{12}$/);
 });
 
 test("(a) bản rút có đủ các màn chính và không đích nào lạc ra ngoài cây route", () => {
@@ -241,6 +269,20 @@ test("(e) canary: route lạ trong man hoặc di_toi bị từ chối", () => {
 test("(e) canary: _rut.json cũ một byte bị bắt ở luật tươi", () => {
   assert.equal(kiemTuoi(RUT_SINH_LAI, RUT_SINH_LAI), null);
   assert.match(kiemTuoi(RUT_SINH_LAI.replace('"Tôi đã tới"', '"Tôi đã tới rồi"'), RUT_SINH_LAI) ?? "", /_rut\.json lệch từ dòng \d+/);
+});
+
+test("(e) canary: hằng bản dựng cũ bị bắt ở luật băm", () => {
+  const dung = chuoiBan(RUT_DA_COMMIT);
+  assert.equal(kiemBan(dung, RUT_DA_COMMIT), null);
+  // The constant of an older build: the file is otherwise byte-identical.
+  const cu = dung.replace(banDung(RUT_DA_COMMIT), "ffffffffffff");
+  assert.notEqual(cu, dung);
+  assert.match(kiemBan(cu, RUT_DA_COMMIT) ?? "", /huong-dan-ban\.ts cũ: đang có ffffffffffff/);
+  // The map moved by one label and the constant was not regenerated.
+  const rutMoi = RUT_DA_COMMIT.replace('"Tôi đã tới"', '"Tôi đã tới rồi"');
+  assert.notEqual(rutMoi, RUT_DA_COMMIT);
+  assert.match(kiemBan(dung, rutMoi) ?? "", /huong-dan-ban\.ts cũ/);
+  assert.match(kiemBan(null, RUT_DA_COMMIT) ?? "", /không đọc được/);
 });
 
 test("(e) canary: bộ gom literal thấy chuỗi, template và chữ JSX, không thấy comment", () => {

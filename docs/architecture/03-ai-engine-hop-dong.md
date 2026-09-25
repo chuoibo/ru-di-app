@@ -72,7 +72,7 @@ worker: aiharness.Engine.Run(turn, sink)
 | 10 | Hàng đợi: outbox, RabbitMQ, poller dự phòng, tác vụ định kỳ, limiter theo lời gọi | một phần: gói `jobs` `d76a0a4`, tầng broker `7246744`; chưa nối vào `chatassist` (migration, trigger, consumer, `retryLater`, định kỳ, limiter) |
 | 11 | Stream SSE; bảng Nếp mới và animation (`/impeccable`, sửa `DESIGN.md`) | một phần: gói `aistream` `9bb26b0`, client `ai/sse.ts` `aab71de`; chưa có route `/events`, writer trong worker, cửa sổ 48 ký tự, UI |
 | 12 | Stream cả phòng qua frame WS; UI nhóm hoàn thiện | chưa |
-| 13 | Nếp tại chỗ: phiếu v2, sổ tay app, chip, tool phía máy chủ | một phần: dữ liệu sổ tay 13 màn + cổng lệch `e69012b`, sửa theo lát 7 `603515f`; gói Go `huongdan` đang làm |
+| 13 | Nếp tại chỗ: phiếu v2, sổ tay app, chip, tool phía máy chủ | một phần: dữ liệu sổ tay 13 màn + cổng lệch `e69012b`, sửa theo lát 7 `603515f`; gói thuần `internal/huongdan` (`TheoMan`, `Tim` qua `rag/xephang`, `DuongToi` BFS ≤5 bước, `BanDung` + hằng `nep/huong-dan-ban.ts`, bộ vàng 91 câu recall@5 0.9725) đã gộp nhưng review phản biện REQUEST_CHANGES: luật màn tiền lách được bằng một `di_toi` về chính màn đó; nhóm teencode recall@5 0.8333 dưới ngưỡng và chưa ghim theo nhóm. Chưa: phiếu v2 (`buoc`, `hanhDong`, `banBuild`), tool `search_app_manual`/`explain_screen` (lát 9), chip, `useNepMoc`, sửa câu gợi ý |
 | 14 | Chia bill từ thẻ, dấu «Đã ghi vào sổ» suy từ dòng chi tiêu thật | chưa |
 | 15 | Trí nhớ Nếp | chưa |
 | 16 | RAG vector, làm giàu, độ tươi | chưa |
