@@ -37,15 +37,21 @@ KEY = "GEMINI_API_KEY"
 # A line that sets the flag to go, in YAML, shell, env, Makefile or
 # Dockerfile syntax -- including a default that only looks like a reference:
 # `${MOBILE_AI_ENGINE_NEP:-go}` is `go` on every host whose `.env` is silent.
+#
+# The value is `go`, bare or quoted, or reached through defaults nested to
+# any depth: `${A:-${B:-"go"}}` (review round 3 of slice 6, N-a).
+_VALUE_GO = r"""["']?(?:\$\{\w+:?[-=+]["']?)*go\b"""
 SETS_GO = re.compile(
     FLAG
     + r"(?:"
-    # FLAG: go / FLAG=go / "FLAG": "go"
-    + r"""["']?\s*[:=]\s*["']?go\b"""
-    # ${FLAG:-go}, ${FLAG-go}, ${FLAG:=go}, ${FLAG=go}, ${FLAG:+go}
-    + r"|:?[-=+]go\b"
-    # FLAG: ${ANOTHER:-go}
-    + r"""|["']?\s*[:=]\s*["']?\$\{\w+:?[-=+]go\}"""
+    # FLAG: go / FLAG=go / "FLAG": "go" / Makefile FLAG := go, ?= go, += go,
+    # ::= go -- and any of them with a default for a value.
+    + r"""["']?\s*(?::{1,2}=|\?=|\+=|:|=)\s*"""
+    + _VALUE_GO
+    # ${FLAG:-go}, ${FLAG-go}, ${FLAG:=go}, ${FLAG=go}, ${FLAG:+go},
+    # ${FLAG:-"go"}, ${FLAG:-${OTHER:-go}}
+    + r"|:?[-=+]"
+    + _VALUE_GO
     # Dockerfile: ENV FLAG go
     + r"""|\s+["']?go\b"""
     + r")"
@@ -190,6 +196,20 @@ class NothingElseFlipsTheFlagTests(unittest.TestCase):
             "export MOBILE_AI_ENGINE_NEP=${MOBILE_AI_ENGINE_NEP:+go}",
             "      MOBILE_AI_ENGINE_NEP: ${NEP_ENGINE:-go}",
             "ENV MOBILE_AI_ENGINE_NEP go",
+            # Review round 3 of slice 6 (N-a): Makefile assignments, quoted
+            # defaults and nested defaults.
+            "MOBILE_AI_ENGINE_NEP := go",
+            "MOBILE_AI_ENGINE_NEP ?= go",
+            "MOBILE_AI_ENGINE_NEP += go",
+            "MOBILE_AI_ENGINE_NEP ::= go",
+            "export MOBILE_AI_ENGINE_NEP := go",
+            '      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-"go"}',
+            "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-'go'}",
+            'MOBILE_AI_ENGINE_NEP="${MOBILE_AI_ENGINE_NEP:-"go"}"',
+            "      MOBILE_AI_ENGINE_NEP: ${A:-${B:-go}}",
+            "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-${NEP_ENGINE:-go}}",
+            "MOBILE_AI_ENGINE_NEP=${A:-${B:-${C:-'go'}}}",
+            "core: MOBILE_AI_ENGINE_NEP ?= ${NEP:-go}",
         ]:
             self.assertIsNotNone(SETS_GO.search(line), line)
         for line in [
@@ -199,6 +219,14 @@ class NothingElseFlipsTheFlagTests(unittest.TestCase):
             "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-brain}",
             "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:?set it}",
             "ENV MOBILE_AI_ENGINE_NEP brain",
+            "MOBILE_AI_ENGINE_NEP := brain",
+            "MOBILE_AI_ENGINE_NEP ?= $(NEP_ENGINE)",
+            "      MOBILE_AI_ENGINE_NEP: ${A:-${B:-brain}}",
+            "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-\"google\"}",
+            # Comparisons read the flag; they do not set it.
+            'if [ "$MOBILE_AI_ENGINE_NEP" != go ]; then exit 1; fi',
+            'if [ "$MOBILE_AI_ENGINE_NEP" == go ]; then echo on; fi',
+            "ifeq ($(MOBILE_AI_ENGINE_NEP),go)",
         ]:
             self.assertIsNone(SETS_GO.search(line), line)
 

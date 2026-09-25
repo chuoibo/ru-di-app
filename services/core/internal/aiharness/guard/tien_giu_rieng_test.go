@@ -16,10 +16,10 @@ import (
 // The labelled corpora of the money law. Each file is pinned by hash: a
 // sentence edited to fit the law turns its test red before it can turn
 // anything green. Neither is a held-out number any more -- the law's author
-// read both while writing it. The held-out number is the reviewer's, on the
-// sealed corpus (tien_niem_phong.json) that never enters this repository and
-// that the law's author never opened; ADR-0037 proposal §4 makes that number
-// a condition of the flag.
+// read both while writing it. The held-out number is the reviewer's, on a
+// sealed corpus that never enters this repository and that the law's author
+// never opened; ADR-0037 proposal §4 makes that number, judged at its 95%
+// bounds on at least 220 sentences per class, a condition of the flag.
 type boTien struct {
 	file, sha256 string
 	tien, khong  int
@@ -49,10 +49,13 @@ var (
 	}
 	// The DEV half of the v2 corpora, split by seed 20260925 from one pool
 	// with the sealed half (same groups, no shared sentence even after
-	// folding). Opened while writing the law.
+	// folding). Opened while writing the law. Review round 3 of slice 6
+	// (M2): its note named the generator that also holds the sealed half;
+	// that name is gone from the note, and no sentence or label moved (the
+	// hash below is the note's edit, nothing else).
 	boDevV2 = boTien{
 		file:   "testdata/tien_dev_v2.json",
-		sha256: "399f94b5989dd0e2c2a9806b3b7f448df54942348272e02edf56d5612832deba",
+		sha256: "cb2ca38243f0562c219f598c6576ee401070b65df478e9338fbef90b4577ae1a",
 		tien:   151, khong: 135, bat: 151, batNham: 0,
 	}
 )
@@ -167,8 +170,8 @@ func TestMoiLuatTienDeuCoCau(t *testing.T) {
 			khong = append(khong, c.Cau)
 		}
 	}
-	tien = append(append(append(tien, cauTien...), cauTienReview2...), cauTienTuViet...)
-	khong = append(append(append(khong, khongPhaiTien...), khongTienReview2...), khongTienTuViet...)
+	tien = append(append(append(append(tien, cauTien...), cauTienReview2...), cauTienReview3...), cauTienTuViet...)
+	khong = append(append(append(append(khong, khongPhaiTien...), khongTienReview2...), khongTienReview3...), khongTienTuViet...)
 	// Read each sentence once; every rule then runs on the same reading.
 	doc := func(ss []string) []string {
 		out := make([]string, len(ss))
@@ -216,6 +219,14 @@ func TestCachDocNoiChon(t *testing.T) {
 		{"Mỗi người trả khoảng bao nhiêu ở quán nướng đó", "qquoc"},
 		{"ck 250 cho Nam", "qqso"},
 		{"thu 7 quan nao 100k", "thungay"},
+		// Review round 3 of slice 6.
+		{"Quán nào không cần đặt cọc khi đặt bàn", "qqthuoctinh"},
+		{"Quán nào nhận ví điện tử, mình không mang tiền mặt", "qqthuoctinh"},
+		{"Kèo sinh nhật Lan, gợi ý quán tầm 200k mỗi người, ai nấy tự trả phần mình", "qqtutra"},
+		{"chuyển Thắng 60 tiền cà phê", "qqso"},
+		{"Trả Hòa 120 hôm qua mình thiếu", "qqso"},
+		{"Hôm qua đưa Lộc 150, nhớ giùm", "qqso"},
+		{"Giùm tao bắn 50 cành cho con Trinh", "qqtien"},
 	} {
 		g := chuTien(preprocess.LamSach(c.cau).Chu)
 		if !strings.Contains(g, c.cho) {

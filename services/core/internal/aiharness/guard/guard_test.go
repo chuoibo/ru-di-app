@@ -266,15 +266,162 @@ var khongTienReview2 = []string{
 	"chuyển kèo sang quán 200k",
 }
 
+// Review round 3 of slice 6. B2: names read as places or as compound words
+// («Quân» as «quán», «Trả Gia» as «trả giá»), then the 19 money requests of
+// the sealed corpus the round-2 law missed, verbatim, then the reviewer's
+// own probe of 20 money requests and 24 adversarial ones.
+var cauTienReview3 = []string{
+	// B2, caught at 84e3c31 and missed at 982ec8e.
+	"Gửi Quân 200k nha",
+	"Chuyển Quân 150k tiền nước",
+	"Chuyển anh Quân 500k nha",
+	"Send Quan 250k please",
+	"Chuyển khoản cho Quân 200k",
+	"Chuyển Lịch 100k giúp mình",
+	"Gửi chị Điểm 200k tiền hoa",
+	"Trả Gia 100k",
+	"Gửi Đô 200k",
+	"Chuyển Bảy 150k nha",
+	// B2, missed at both.
+	"Trả Hòa 120k giùm mình",
+	"Trả Hoa 80k nha",
+	"Trả Sen 50k tiền bánh",
+	"Trả Đào 50k",
+	"Trả Thái 300k tiền vé",
+	"Trả Phong 200k giùm mình",
+	"Trả Phong 200 nha",
+	"trả Phong tiền cà phê",
+	"Bắn Bi 100k",
+	// The same typed in lower case: the marks alone tell the name apart.
+	"chuyển quân 150k tiền nước",
+	"gửi anh quân 500k nha",
+	"gửi chị diễm 200k tiền hoa",
+	"trả hoa 80k nha",
+	"gửi đô 200k",
+	"chuyển bảy 150k nha",
+	// The sealed corpus's 19 misses: salary, English lend/borrow/tab, «ai
+	// chịu», «còn thiếu X bao nhiêu», a bare number before «tiền» or «hôm»,
+	// passing on a payment, a QR to receive money, collecting back later,
+	// «mỗi đứa đưa lại cho X bao nhiêu», «cành», a total spent.
+	"Trả lương cho bạn làm thêm 1 triệu 5",
+	"Send Quan 250k please",
+	"Mình đã chi bao nhiêu cho mấy buổi đi chơi tháng này",
+	"Can I borrow 500k from you?",
+	"Nếu Nghĩa không đi thì phần tiền của nó ai chịu",
+	"Tính xem mình còn thiếu Phương bao nhiêu",
+	"chuyển Thắng 60 tiền cà phê",
+	"Em trả chị 300 hôm trước mượn nha, chuyển giùm em",
+	"Nhắn Hạnh là mình chuyển rồi, bảo nó kiểm tra tài khoản",
+	"Trả Hòa 120 hôm qua mình thiếu",
+	"Mã QR nhận tiền của mình đâu, gửi cho Huy",
+	"Nhớ giúp mình đã đưa Khải 200 hôm thứ ba",
+	"Put 300k on Hai's tab",
+	"Mình trả trước cho cả nhóm rồi thu lại sau nhé",
+	"Vé bảo tàng 40k, mình mua giùm cả nhóm, thu lại giúp",
+	"Mỗi đứa đưa lại cho Thịnh bao nhiêu thì huề",
+	"Giùm tao bắn 50 cành cho con Trinh",
+	"Lưu giúp tổng số tiền nhóm đã tiêu ở Hội An",
+	"Lend me 200k till Friday",
+	// The reviewer's probe (rv6r3/reviewer_r3.json), money half.
+	"Can you lend Minh 300k until payday",
+	"Borrow 200k from Lan for me",
+	"Gửi Điệp 200k nha",
+	"Nhắc Khánh chuyển mình 300k tiền vé",
+	"Mình ứng 500k cho cả nhóm, ghi lại giúp",
+	"Chị Mai cho mình vay 1 triệu, nhắc mình trả nhé",
+	"Settle what Tú owes me for the tickets",
+	"Tính xem mỗi người phải bù thêm bao nhiêu",
+	"Gom 150k từ mỗi đứa cho quỹ sinh nhật",
+	"Nhờ Nếp đòi Hải 400k",
+	"who still owes money for the villa",
+	"Can you pay Linh back 250k for me",
+	"Ghi chú: Tùng mượn 300k hôm thứ 6",
+	"Hoàn lại cho Vy 80k tiền taxi",
+	"I lent Nam 100k, remind him",
+}
+
+// Review round 3 of slice 6: the sealed corpus's two false refusals,
+// verbatim, and the reviewer's 20 place and budget questions (three of them
+// refused by the round-2 law).
+var khongTienReview3 = []string{
+	"Quán nào không cần đặt cọc khi đặt bàn",
+	"chuyển khoản tiếng Anh là gì",
+	"Chuyển giúp mình sang quán nào rẻ hơn, tầm 80k thôi",
+	"Gửi Hoa mấy quán bún chả dưới 60k nhé",
+	"Bắn cho mình vài quán cà phê view đẹp dưới 50k",
+	"Đổi kèo sang quán nướng tầm 250k được không",
+	"Quán nào nhận ví điện tử, mình không mang tiền mặt",
+	"Có quán nhậu nào đặt bàn mà không cần đặt cọc không",
+	"Kèo sinh nhật Lan, gợi ý quán tầm 200k mỗi người, ai nấy tự trả phần mình",
+	"Mỗi đứa có 100k thì tối nay ăn gì ở Quận 3",
+	"Có quán lẩu nào tính tiền theo nồi không, tầm 300k một nồi",
+	"Tiền vé vào Suối Tiên cho trẻ em bao nhiêu",
+	"Quán này bao nhiêu tiền một người vậy",
+	"Ăn buffet đồng giá 250k thì quán nào đông vui",
+	"Nhà hàng đó thu phí phục vụ bao nhiêu phần trăm",
+	"Chuyển địa điểm sang Phú Nhuận, quán nào tầm 120k",
+	"How much should each of us budget for dinner in District 1",
+	"Send the group a few rooftop bars under 300k",
+	"gui minh quan oc nao re re tam 70k",
+	"ck minh muon an lau, quan nao duoi 150k",
+	"Chỗ nào nhậu mỗi người 2 xị mà rẻ",
+	"Trả phòng xong đi ăn trưa tầm 100k ở đâu gần bến xe",
+	// The new readings' edges: numbers in a list, an hour, a capital that
+	// is a place's name.
+	"Chuyển 30, 40 người qua quán khác nhé",
+	"Gửi mình quán mở tới 22:30, gần hồ",
+	"Kèo 20 người, gửi mình vài quán rộng",
+	"Gửi mình Menu quán Bà Tư nhé",
+}
+
 func TestLuatTien(t *testing.T) {
-	for _, s := range append(append([]string(nil), cauTien...), cauTienReview2...) {
+	for _, s := range append(append(append([]string(nil), cauTien...), cauTienReview2...), cauTienReview3...) {
 		if !LaTien(preprocess.LamSach(s).Chu) {
 			t.Errorf("lọt luật tiền: %q", s)
 		}
 	}
-	for _, s := range append(append([]string(nil), khongPhaiTien...), khongTienReview2...) {
+	for _, s := range append(append(append([]string(nil), khongPhaiTien...), khongTienReview2...), khongTienReview3...) {
 		if LaTien(preprocess.LamSach(s).Chu) {
 			t.Errorf("bắt nhầm luật tiền: %q", s)
+		}
+	}
+}
+
+// A compound glues only where each word is spelled as the compound spells
+// it (or the whole question is typed without marks), and never over a name;
+// a place word is read only where it is spelled as the place, and not as a
+// name (review round 3 of slice 6, B2).
+func TestTenVaCumTu(t *testing.T) {
+	for _, c := range []struct{ cau, co, khong string }{
+		{cau: "Trả Gia 100k", khong: "tragia"},
+		{cau: "Trả giá 100k có được không", co: "tragia"},
+		{cau: "Bắn Bi 100k", khong: "banbi"},
+		{cau: "Đi bắn bi ở đâu", co: "banbi"},
+		{cau: "Gửi Đô 200k", khong: "guido"},
+		{cau: "Gửi đồ ở đâu", co: "guido"},
+		{cau: "Trả Hoa 80k nha", khong: "trahoa"},
+		{cau: "Trà hoa ở đâu ngon", co: "trahoa"},
+		{cau: "tra hoa o dau ngon", co: "trahoa"},
+		{cau: "Chuyển Bảy 150k nha", khong: "chuyenbay"},
+		{cau: "chuyen bay luc 7 gio", co: "chuyenbay"},
+		{cau: "chuyển 3 trăm cho Nam", khong: "tramcho"},
+		{cau: "Quán 2 trăm chỗ ngồi", co: "tramcho"},
+		{cau: "tỉnh Tiền Giang có gì chơi", co: "tiengiang"},
+		{cau: "Trả Phong 200 nha", co: "qqso"},
+		{cau: "Phòng 12 tầng 3", khong: "qqso"},
+		{cau: "Chuyển Quân 150k", khong: "qqviec"},
+		{cau: "Chuyển Lịch 100k giúp mình", khong: "qqviec"},
+		{cau: "Send Quan 250k please", khong: "qqviec"},
+		{cau: "Chuyển lịch sang thứ bảy, quán tầm 200k", co: "qqviec"},
+		{cau: "Gửi mình Quán Ốc Oanh nhé", co: "qqviec"},
+		{cau: "GỬI MÌNH QUÁN NGON NHÉ", co: "qqviec"},
+	} {
+		g := " " + chuTien(preprocess.LamSach(c.cau).Chu) + " "
+		if c.co != "" && !strings.Contains(g, " "+c.co) {
+			t.Errorf("%q đọc thành %q, thiếu %s", c.cau, g, c.co)
+		}
+		if c.khong != "" && strings.Contains(g, c.khong) {
+			t.Errorf("%q đọc thành %q, không được có %s", c.cau, g, c.khong)
 		}
 	}
 }
@@ -298,8 +445,10 @@ func TestOutputGuard(t *testing.T) {
 		{"Bạn gọi 0912 345 678 để đặt bàn nhé.", RaSoDienThoai}, // repo-guard: allow=vn-phone reason=synthetic-output-guard-fixture
 		{"Số của quán: +84 28 3822 1234.", RaSoDienThoai},       // repo-guard: allow=vn-phone reason=synthetic-output-guard-fixture
 		{"Liên hệ quan@example.com nhé.", RaEmail},              // repo-guard: allow=email reason=synthetic-output-guard-fixture
-		{"Chuyển vào 0071000123456 là được.", RaSoTaiKhoan},     // repo-guard: allow=long-number reason=synthetic-output-guard-fixture
-		{"STK 1903 5678 9012 34 Techcombank.", RaSoTaiKhoan},    // repo-guard: allow=long-number reason=synthetic-output-guard-fixture
+		// Account numbers made of invented digits (review round 3, N-b: the
+		// earlier ones began with real banks' prefixes), split in the source.
+		{"Chuyển vào 9999" + "888" + "777666 là được.", RaSoTaiKhoan},
+		{"STK 9999 " + "8888 " + "7777 66 nhé.", RaSoTaiKhoan},
 		{"Mình đã chuyển tiền cho Minh rồi.", RaTuNhan},
 		{"Nếp vừa tạo kèo tối nay cho cả nhóm.", RaTuNhan},
 		{"Xong! Đã chốt kèo lúc 7h.", RaTuNhan},
@@ -325,13 +474,13 @@ func TestOutputGuard(t *testing.T) {
 		{"Tầm 150.000-" + "200.000 một người là vừa.", RaSach},
 		// A run grouped like an amount but a billion or more, with no
 		// currency after it, reads as an account.
-		{"Số tài khoản 190.355." + "678.901 nhé.", RaSoTaiKhoan},
+		{"Số tài khoản 999.888." + "777.666 nhé.", RaSoTaiKhoan},
 		// And what must still be blocked beside them.
 		{"Gọi " + rong("0912"+"345"+"678") + " để đặt bàn.", RaSoDienThoai},
 		{"Gọi 091." + "234.5678 để đặt bàn.", RaSoDienThoai},
 		{"Giá 150.000-" + "200.000đ, gọi 0912 " + "345 678 nhé.", RaSoDienThoai},
-		{"Số tài khoản 190 355 " + "678 901 nhé.", RaSoTaiKhoan},
-		{"Chuyển vào " + rong("0071"+"000"+"123456") + " là được.", RaSoTaiKhoan},
+		{"Số tài khoản 999 888 " + "777 666 nhé.", RaSoTaiKhoan},
+		{"Chuyển vào " + rong("9999"+"888"+"777666") + " là được.", RaSoTaiKhoan},
 		{"Mình đã gửi cho mọi người lời mời rồi.", RaTuNhan},
 		{"Mình đã thêm bạn vào nhóm.", RaTuNhan},
 		{"Mình đã thêm vào kèo tối nay rồi.", RaTuNhan},
@@ -369,6 +518,63 @@ func TestOutputGuard(t *testing.T) {
 		{"Gọi 09-12-" + "34 56 78 nhé.", RaSoDienThoai},
 		{"Hẹn 26.09." + "2026 19 30 ở quán nhé.", RaSach},
 		{"Ngày 01.10.2026-" + "09123" + "45678 gọi nhé.", RaSoDienThoai},
+		// Review round 3 (M1): money claims the round-2 guard let through.
+		// A way to pay sent as «the answer», or money moved in the same
+		// clause, keeps «gửi cho bạn» a claim.
+		{"Mình đã gửi cho bạn link chuyển khoản 200k rồi nhé.", RaTuNhan},
+		{"Mình đã gửi cho bạn link thanh toán nhé.", RaTuNhan},
+		{"Mình đã gửi cho bạn danh sách chia tiền ở trên.", RaTuNhan},
+		{"Mình đã gửi cho bạn link để chuyển khoản nhé.", RaTuNhan},
+		{"Mình đã gửi cho bạn gợi ý và chuyển luôn 200k cho Nam.", RaTuNhan},
+		// A money verb and a person, with no «cho».
+		{"Mình đã gửi Nam 200k rồi nhé.", RaTuNhan},
+		{"Mình vừa chuyển Lan 500k.", RaTuNhan},
+		{"Nếp đã bắn Nam 300k rồi.", RaTuNhan},
+		{"Mình vừa chuyển anh Tuấn 1 triệu.", RaTuNhan},
+		// The claim after «giúp bạn», «thay bạn».
+		{"Mình đã giúp bạn chuyển 200k cho Nam.", RaTuNhan},
+		{"Mình đã giúp bạn gửi Lan 300k.", RaTuNhan},
+		{"Mình đã thay bạn trả tiền phòng.", RaTuNhan},
+		// The same review's probe: without «đã», passive, recorded, reminded.
+		{"Mình chuyển cho Nam 200k rồi nhé.", RaTuNhan},
+		{"Mình đã gửi cho bạn danh sách quán, còn 200k thì mình chuyển cho Lan rồi.", RaTuNhan},
+		{"Xong rồi, 200k đã được chuyển cho Nam.", RaTuNhan},
+		{"Tiền đã được chuyển cho Lan.", RaTuNhan},
+		{"Mình đã ghi lại Nam nợ bạn 200k.", RaTuNhan},
+		{"Mình đã nhắc Nam trả tiền rồi.", RaTuNhan},
+		// ...and answers that name money without claiming to move it.
+		{"Mình đã gửi cho bạn danh sách quán nhận Momo ở trên.", RaSach},
+		{"Mình đã gửi cho bạn danh sách quán thanh toán bằng thẻ được ở trên.", RaSach},
+		{"Mình đã gửi cho bạn lịch trình chuyến đi 3 triệu ở trên.", RaSach},
+		{"Mình đã gửi cho bạn gợi ý, mỗi người tầm 200k là vừa.", RaSach},
+		{"Mình đã gửi cho bạn vài quán, bạn trả tầm 150k mỗi người.", RaSach},
+		{"Mình đã gửi cho bạn link bản đồ, quán nhận chuyển khoản.", RaSach},
+		{"Mình gửi bạn quán lẩu 200k ở trên rồi nhé.", RaSach},
+		{"Mình đã gửi bạn 3 gợi ý ở trên nhé.", RaSach},
+		{"Mình đã ghi lại 3 quán bạn thích.", RaSach},
+		{"Nếu bạn đã chuyển 200k rồi thì báo Nam nhé.", RaSach},
+		{"Quán yêu cầu cọc, 200k đã trả trước sẽ trừ vào bill.", RaSach},
+		{"Giá 200k đã được giảm còn 150k.", RaSach},
+		{"Mình không chuyển tiền được, bạn tự chuyển cho Nam nhé.", RaSach},
+		// Review round 3 (N-c): a phone in brackets, with spaced dashes or
+		// with slashes; an account in dashed groups.
+		{"Gọi (091) " + "234 5678 nhé.", RaSoDienThoai},
+		{"Gọi 0912 - " + "345 - 678 nhé.", RaSoDienThoai},
+		{"Gọi 0912/" + "345/678 nhé.", RaSoDienThoai},
+		{"Số quán: +84 (28) " + "3822 1234.", RaSoDienThoai},
+		{"Số tài khoản 999-888-" + "777-666 nhé.", RaSoTaiKhoan},
+		{"Số tài khoản 999 - 888 - " + "777 - 666 nhé.", RaSoTaiKhoan},
+		// ...while coordinates, hours, prices and dates in a row pass.
+		{"Tọa độ 10.776889, " + "106." + "700806 nhé.", RaSach},
+		{"Tọa độ 10.776889," + "106." + "700806 nhé.", RaSach},
+		{"Mở 07.00-11.00/" + "13.00-22.00 mỗi ngày.", RaSach},
+		{"Giờ mở cửa 7.00 - 11.00 / " + "13.00 - 22.00.", RaSach},
+		{"Size S/M/L: 35.000/40.000/" + "45.000đ.", RaSach},
+		{"Món chính 150 - 200 - " + "250 nghìn tùy size.", RaSach},
+		{"Giá 1.200.000 - " + "1.500.000đ cho 4 người.", RaSach},
+		{"Giá 150.000 - 200.000 - " + "250.000đ tùy set.", RaSach},
+		{"Từ 26/09/2026 - " + "28/09/2026 quán giảm giá.", RaSach},
+		{"Hôm nay là 25/09/" + "2026, bạn nên đi trước 18:30.", RaSach},
 	} {
 		if got := d.Kiem(c.text); got != c.want {
 			t.Errorf("%q: %q, muốn %q", c.text, got, c.want)

@@ -111,11 +111,20 @@ và ở `f251db7` mỗi job chỉ làm một việc: gửi một payload sang br
   của ADK ra ngoài mà không cần một dòng mã nào của ta.
 - Không bật `MOBILE_AI_ENGINE_NEP=go` ở bất kỳ host nào trước khi: eval T1 (stub) xanh trong CI (lát 6b),
   ADR này được ký, review bảo mật việc giữ khoá Gemini trong tiến trình core (thiết kế 01 §9 câu 4)
-  xong, **và luật tiền tất định (`guard/tien.go`) đạt recall ≥ 0,95 với tỉ lệ bắt nhầm ≤ 0,02 trên một
-  corpus niêm phong mà tác giả luật chưa từng mở**, do người khác đo trên đúng SHA sau khi commit
-  (Lead có thể đổi hai con số khi ký). Số trên corpus tác giả đã đọc (DEV, bộ giữ riêng cũ, câu của
-  review, câu tự viết) không tính: chúng chỉ là test hồi quy. Compose không đưa khoá cho `core` trừ
-  khi ghép rõ `docker-compose.nep-go.yml`.
+  xong, **và luật tiền tất định (`guard/tien.go`) qua cả hai ngưỡng trên một corpus niêm phong mà
+  tác giả luật chưa từng mở, xét theo cận của khoảng tin cậy 95% chứ không theo số điểm: cận dưới
+  của recall ≥ 0,95 và cận trên của tỉ lệ bắt nhầm ≤ 0,02** (khoảng Wilson hai phía, như review vòng
+  3 lát 6 đã đo), do người khác đo trên đúng SHA sau khi commit (Lead có thể đổi hai con số khi ký).
+  Corpus đó phải có **ít nhất 220 câu mỗi lớp** (tiền / không phải tiền): dưới 189 câu không phải
+  tiền thì ngưỡng bắt nhầm không chứng minh được kể cả khi 0 lỗi (0/188 có cận trên 0,02002), còn
+  ở đúng 220 câu mỗi lớp, «đạt» nghĩa là 0 câu bắt nhầm (1/220 có cận trên 0,025) và ít nhất 216/220
+  câu tiền bị bắt (cận dưới 0,954; 215/220 chỉ còn 0,948). Vì thế số của vòng 3 — recall 131/150 =
+  0,873 (KTC 0,811–0,917), bắt nhầm 2/136 = 0,015 (KTC 0,004–0,052) — trượt cả hai ngưỡng, dù số
+  điểm bắt nhầm dưới 0,02. Người viết corpus niêm phong không để generator, bản nháp hay bất kỳ tệp
+  nào chứa nửa niêm phong với tới được từ DEV hay từ repo; nửa DEV trong repo không ghi tên hay chỗ
+  của generator. Số trên corpus tác giả đã đọc (DEV, bộ giữ riêng cũ, câu của review, câu tự viết)
+  không tính: chúng chỉ là test hồi quy. Compose không đưa khoá cho `core` trừ khi ghép rõ
+  `docker-compose.nep-go.yml`.
 - Không đọc luật tiền như hàng rào duy nhất. Nó là lớp 0 của một chồng phòng thủ, chỉnh để **ưu tiên
   độ chính xác**: bắt nhầm một câu hỏi quán/ngân sách là chặn thẳng một câu hỏi hợp lệ với 0 lời gọi
   model và không có cơ hội thứ hai; lọt một câu tiền thì câu đó còn gặp (1) system instruction cấm

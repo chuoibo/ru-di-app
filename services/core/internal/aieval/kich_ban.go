@@ -67,10 +67,11 @@ const MaKiemCho = "{{MA_KIEM}}"
 // can play a model that leaks one (review round 2 of slice 6, N4: T1 could
 // not see the output guard's phone, account and email checks). The values
 // are made up, and each is split here so that no line of the repository --
-// this file or a script -- holds a whole one.
+// this file or a script -- holds a whole one. The account number is repeated
+// digits, so it cannot start with a real bank's prefix (review round 3, N-b).
 var lienLacGia = strings.NewReplacer(
 	"{{SO_DIEN_THOAI}}", "0912 "+"345 "+"678",
-	"{{SO_TAI_KHOAN}}", "0071"+"000"+"123456",
+	"{{SO_TAI_KHOAN}}", "9999"+"888"+"777666",
 	"{{EMAIL}}", "datban"+"@"+"quan-gia.example",
 )
 
