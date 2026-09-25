@@ -62,6 +62,13 @@ và ở `f251db7` mỗi job chỉ làm một việc: gửi một payload sang br
    - Không chữ, không đối số tool, không nội dung lỗi của provider.
    - Nhãn guard lưu đúng ba giá trị `proceed | restricted | refused`; không nhãn nhạy cảm nào gắn với người.
    - Core không bao giờ cài provider OTel toàn cục.
+   - **Luật vận hành, cổng mã không thấy được:** không chạy tác tử eBPF auto-instrumentation cho Go
+     (`go.opentelemetry.io/auto` hoặc công cụ dựng trên nó) trên host chạy `core serve` hay `core work`.
+     Tracer toàn cục của otel đã import `go.opentelemetry.io/auto/sdk` để tác tử đó gắn vào tiến trình lúc
+     chạy và bật lên; khi đó span của ADK (mang nguyên câu hỏi, câu trả lời, kết quả tool) ra khỏi tiến
+     trình mà không đổi dòng mã nào và không cần cài provider. Cổng OTel (`aigate/otel_gate_test.go`) chỉ
+     giữ phần mã: không import SDK, exporter, `adk/telemetry` hay `go.opentelemetry.io/auto`, không gọi
+     `Set…Provider`, và `auto/sdk` chỉ được vào đồ thị qua `otel/internal/global`.
 9. **Câu từ chối là câu cố định** trong `aiharness/cau`, không phải chữ model. Mọi mã có câu tiếng Việt,
    và cổng `cau-chu-goi-ai.test.mjs` đọc cả danh sách này.
 10. **CI chỉ dùng stub:** `model.LLM` kịch bản và `geministub` loopback. Lời gọi thật chỉ đi qua binary
@@ -100,6 +107,11 @@ và ở `f251db7` mỗi job chỉ làm một việc: gửi một payload sang br
   tên tool: BeforeTool vẫn từ chối.
 - Không gọi model thật trong CI, test hay parity. Không trỏ `BaseURL` tới host không phải loopback khi test.
 - Không ghi chữ người dùng, chữ model, đối số tool hay nhãn nhạy cảm theo người vào log, metrics hay span.
+- Không gắn tác tử eBPF auto-instrumentation cho Go vào `core serve`/`core work` (§2.8): nó xuất span
+  của ADK ra ngoài mà không cần một dòng mã nào của ta.
+- Không bật `MOBILE_AI_ENGINE_NEP=go` ở bất kỳ host nào trước khi: eval T1 (stub) xanh trong CI (lát 6b),
+  ADR này được ký, và review bảo mật việc giữ khoá Gemini trong tiến trình core (thiết kế 01 §9 câu 4)
+  xong. Compose không đưa khoá cho `core` trừ khi ghép rõ `docker-compose.nep-go.yml`.
 - Không hứa «rút lại» một đoạn đã stream. Không nhả byte nào trước khi output guard quét nó.
 - Không để engine chọn khoá phòng hay lane; lane do máy chủ suy từ dữ liệu của chính nó.
 - Không mở quyền đọc mới cho Nếp (catalogue, kèo của chính mình, trí nhớ) bằng văn bản này. Các quyền
@@ -127,8 +139,9 @@ Không đổi bởi văn bản này:
 
 - Lát 3: `go vet`, `go test ./...`, `scripts/go_postgres_tier.sh` (skip là đỏ), `make parity`,
   `scripts/chat_e2e_go.sh`, build Docker, chạy lại trong cây sạch đúng SHA.
-- Lát 6: eval T1 bằng stub chạy trong CI; request golden ổn định từng byte dưới `-race`, GOMAXPROCS 1 và 8;
-  cổng ranh giới, cổng quan sát, cổng OTel, cổng «chỉ stub» đều xanh, canary đỏ đúng chỗ.
+- Lát 6 (tách 6a engine, 6b eval T1 trong CI; lát 6 chỉ xong khi cả hai xong): eval T1 bằng stub chạy trong
+  CI; request golden ổn định từng byte dưới `-race`, GOMAXPROCS 1 và 8; cổng ranh giới, cổng quan sát,
+  cổng OTel, cổng «chỉ stub» đều xanh, canary đỏ đúng chỗ.
 - Lát 9: eval T3 lõi ≥14/16, ổn định qua 5 lần, với số lời gọi thật đã được Lead duyệt.
 - Mỗi lát: ít nhất hai đột biến tự nghĩ, kiểm tương đương trước, đỏ đúng bước dự đoán; số đo ghi
   thẳng vào commit message.

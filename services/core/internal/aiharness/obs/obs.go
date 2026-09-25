@@ -76,9 +76,13 @@ type KetThuc string
 const (
 	KetThucXong    KetThuc = "xong"
 	KetThucThatBai KetThuc = "that_bai"
+	// KetThucHuy is a turn stopped from outside (the job's lease is gone, or
+	// the worker is stopping). It is logged, and has no metrics row: nothing
+	// about the model or the provider happened (aiharness/metrics).
+	KetThucHuy KetThuc = "huy"
 )
 
-func (v KetThuc) Valid() bool { return v == KetThucXong || v == KetThucThatBai }
+func (v KetThuc) Valid() bool { return v == KetThucXong || v == KetThucThatBai || v == KetThucHuy }
 
 // Code is the refusal or failure code, "" when the turn answered.
 type Code string

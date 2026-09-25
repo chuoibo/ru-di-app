@@ -11,6 +11,7 @@ package llm
 import (
 	"context"
 	"errors"
+	"iter"
 	"net"
 	"net/http"
 	"net/url"
@@ -45,7 +46,36 @@ var (
 	ErrNotConfigured = errors.New("llm: GEMINI_API_KEY is not set")
 	// ErrHetNganSach: the turn has spent MaxModelCallsPerTurn.
 	ErrHetNganSach = errors.New("llm: model call budget for this turn is spent")
+	// ErrKhongUngVien: the provider answered with no candidate at all, which
+	// is what Gemini does when it blocks the prompt itself
+	// (promptFeedback.blockReason). ADK's non-streaming call drops the block
+	// reason and reports a bare error, so the engine reads this as the
+	// provider's safety refusal, not as the provider being down.
+	ErrKhongUngVien = errors.New("llm: the provider returned no candidate (a blocked prompt)")
 )
+
+// adkKhongUngVien is the message of the error ADK's gemini model returns for
+// a response with no candidates (google.golang.org/adk v1.7.0,
+// model/gemini/gemini.go). TestGeminiChanCauHoi drives the real transport
+// into it, so an ADK upgrade that changes the message is red there.
+const adkKhongUngVien = "empty response"
+
+// geminiModel is ADK's gemini model with that one error given its meaning.
+type geminiModel struct{ model.LLM }
+
+// GenerateContent forwards to ADK's model.
+func (g geminiModel) GenerateContent(ctx context.Context, req *model.LLMRequest, stream bool) iter.Seq2[*model.LLMResponse, error] {
+	return func(yield func(*model.LLMResponse, error) bool) {
+		for resp, err := range g.LLM.GenerateContent(ctx, req, stream) {
+			if err != nil && err.Error() == adkKhongUngVien {
+				err = ErrKhongUngVien
+			}
+			if !yield(resp, err) {
+				return
+			}
+		}
+	}
+}
 
 // CheckBaseURL accepts an override only for a loopback host: the override
 // exists to point the real genai transport at a local stub, never to send
@@ -85,7 +115,7 @@ func NewGemini(ctx context.Context, apiKey, baseURL string) (model.LLM, error) {
 		}
 		baseURL = DefaultBaseURL
 	}
-	return gemini.NewModel(ctx, Model, &genai.ClientConfig{
+	m, err := gemini.NewModel(ctx, Model, &genai.ClientConfig{
 		APIKey:  apiKey,
 		Backend: genai.BackendGeminiAPI,
 		// No HTTPRetryOptions: retries are this package's, so each one passes
@@ -93,6 +123,10 @@ func NewGemini(ctx context.Context, apiKey, baseURL string) (model.LLM, error) {
 		HTTPOptions: genai.HTTPOptions{BaseURL: baseURL},
 		HTTPClient:  &http.Client{Timeout: 45 * time.Second},
 	})
+	if err != nil {
+		return nil, err
+	}
+	return geminiModel{m}, nil
 }
 
 // GeminiFromEnv reads GEMINI_API_KEY and MOBILE_GEMINI_BASE_URL once.

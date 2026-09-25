@@ -405,9 +405,21 @@ func (h *Handler) WithNepGo() *Handler {
 	return h
 }
 
-// nepSanSang says whether a question to Nếp can be taken at all. On the Go
-// engine that is the host's choice, made and checked at startup (the worker
-// refuses to start without its key); on the brain it is the brain's probe.
+// nepSanSang says whether a question to Nếp can be taken at all. On the brain
+// it is the brain's probe. On the Go engine it answers true without asking
+// anything, and how much that true knows depends on where the worker runs:
+//
+//   - worker in this process (WithNepEngine): exact. The engine was built at
+//     startup, and `serve` refused to start without its key, a loopback-only
+//     base URL and the metrics schema;
+//   - worker in `core work` (WithNepGo): the host's choice only. Nothing here
+//     knows whether any `core work` is up. Design 01 §1 derives this from a
+//     worker heartbeat, and no slice has built one yet: the heartbeat of
+//     slice 4 renews one job's lease, it is not a worker's presence. Until a
+//     worker liveness record exists (with the queue, slice 10, at the
+//     earliest), a question asked with no worker up waits and ends as
+//     sharing_expired when its fifteen minutes close -- as it does on the
+//     brain path, whose probe asks the brain, not the workers.
 func (h *Handler) nepSanSang(ctx context.Context) bool {
 	if h.nepGo {
 		return true
@@ -469,12 +481,23 @@ func luotEngine(j work) (aiharness.Turn, error) {
 // nepXong as the brain's; a turn that ends without one fails the job with the
 // engine's code, whose sentence the app already has (LOI_KET_QUA_NEP). One
 // metrics row follows the terminal transition, and never decides it.
+//
+// A turn stopped from outside (aiharness.ErrHuy: the heartbeat found the
+// lease gone and cancelled the job, or the worker is stopping) touches
+// nothing: the job is not this worker's to end. A lost lease already belongs
+// to someone else or to a cancellation; a stopping worker's lease lapses, and
+// the job is claimed again while it has attempts left, or failed by the sweep
+// as worker_interrupted -- the same recovery as a crashed worker. It writes
+// no metrics row either: nothing about the model or the provider happened.
 func (h *Handler) nepQuaEngine(ctx context.Context, j work) error {
 	turn, err := luotEngine(j)
 	if err != nil {
 		return h.nepThatBai(ctx, j, "invalid_ai_result")
 	}
 	res, runErr := h.nepEngine.Run(ctx, turn, aiharness.BoQua{})
+	if errors.Is(runErr, aiharness.ErrHuy) {
+		return runErr
+	}
 	if runErr != nil {
 		err = h.nepThatBai(ctx, j, string(aiharness.MaCua(runErr)))
 	} else {

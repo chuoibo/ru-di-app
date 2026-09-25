@@ -9,19 +9,24 @@
 //     flagged, a panel turn or a slip string that trips them is dropped;
 //  3. the model, through ADK: one llmagent and one runner for this turn only,
 //     under the per-turn call counter and the step budget;
-//  4. the output guard on the whole answer, then Done -- or Fail with a code
-//     whose sentence is fixed in aiharness/cau.
+//  4. the output guard on the whole answer; Run returns the Result, or an
+//     error whose code (MaCua) has a sentence fixed in aiharness/cau.
 //
-// S1 (slice 6) runs Nếp only, with no tools and no streaming: the Sink gets
-// status events and exactly one Done or Fail, never a Delta. The engine reads
-// and writes no database; the worker stores the answer and the metrics row.
+// S1 (slice 6) runs Nếp only, with no tools and no streaming: the Sink hears
+// status events only, never a Phan, a Delta or a LamLai. How the turn ended is
+// Run's return value, never a Sink event (design 01 §2): the transport emits
+// `xong` after the worker's transaction commits, and `that_bai` after the
+// worker fails the job. The engine reads and writes no database; the worker
+// stores the answer and the metrics row.
 package aiharness
 
 import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"sort"
 	"strconv"
@@ -95,25 +100,50 @@ type Turn struct {
 	GiuLuot func(context.Context) error
 }
 
-// Sink receives what a turn emits. S1 emits Status events, then exactly one
-// Done or Fail; Delta is part of the contract for the streaming slice and is
-// never called here.
+// PhanKind is the kind of one grounded part of an answer, the `kind` of the
+// stream event phan{kind,json} and of the parts of a `tra_loi` card (contract
+// §3).
+type PhanKind string
+
+const (
+	PhanText         PhanKind = "text"
+	PhanPlaces       PhanKind = "places"
+	PhanItinerary    PhanKind = "itinerary"
+	PhanExpenseDraft PhanKind = "expense_draft"
+)
+
+// Sink receives what a turn emits while it runs, and only that (design 01
+// §2). It never hears how the turn ended: `xong` and `that_bai` belong to the
+// transport, and `xong` goes out only after the worker's transaction that
+// stores the answer has committed -- so an answer for a revoked session or a
+// cancelled job is never streamed before the database refuses it. The ending
+// is Run's return value.
 type Sink interface {
-	Status(cau.TrangThai)
+	// TrangThai -> trang_thai{cau}. n is how many messages the turn reads;
+	// it is not in the event (the caller's SSE takes it from its own bundle,
+	// the room frame carries it in the so_tin envelope, design 02 §5.3).
+	TrangThai(ma cau.TrangThai, n int)
+	// Phan -> phan{kind,json}, only once that part is grounded. S1 never
+	// calls it.
+	Phan(i int, kind PhanKind, v json.RawMessage)
+	// Delta -> delta{p,text}; only the output guard's streaming window calls
+	// it. S1 never calls it.
 	Delta(p int, text string)
-	Done(Result)
-	Fail(cau.Ma)
+	// LamLai -> lam_lai, only before the first Delta. S1 never calls it.
+	LamLai()
 }
 
 // BoQua is a Sink that discards everything: the worker's, until streaming.
 type BoQua struct{}
 
-func (BoQua) Status(cau.TrangThai) {}
-func (BoQua) Delta(int, string)    {}
-func (BoQua) Done(Result)          {}
-func (BoQua) Fail(cau.Ma)          {}
+func (BoQua) TrangThai(cau.TrangThai, int)        {}
+func (BoQua) Phan(int, PhanKind, json.RawMessage) {}
+func (BoQua) Delta(int, string)                   {}
+func (BoQua) LamLai()                             {}
 
-// Result is a finished turn. Record is filled on failure too.
+// Result is a finished turn. Record is filled on failure too. S1 has the text
+// only; the parts, chips and sources of design 01 §2 come with the slices
+// that produce them.
 type Result struct {
 	Text   string
 	Record obs.TurnRecord
@@ -124,8 +154,15 @@ type Loi struct{ Ma cau.Ma }
 
 func (e *Loi) Error() string { return "aiharness: turn ended with " + string(e.Ma) }
 
+// ErrHuy is a turn stopped from outside: the job's context was cancelled
+// because its lease is gone (cancelled, revoked, taken over) or the worker is
+// stopping. It is not a failure of the turn, the model or the provider, and
+// has no job code: the job is not this worker's to end. It wraps
+// context.Canceled.
+var ErrHuy = fmt.Errorf("aiharness: turn stopped from outside: %w", context.Canceled)
+
 // MaCua is the job code for err: the turn's own code, or provider_unavailable
-// for anything else.
+// for anything else. ErrHuy has none; callers check it first.
 func MaCua(err error) cau.Ma {
 	var l *Loi
 	if errors.As(err, &l) {
@@ -197,7 +234,12 @@ func FromEnv(ctx context.Context, getenv func(string) string, logger *slog.Logge
 
 func ms(d time.Duration) int { return int(d / time.Millisecond) }
 
-// Run runs one turn to its end.
+// soTinNep is the n of Nếp's status events: a personal question reads no
+// room messages.
+const soTinNep = 0
+
+// Run runs one turn to its end and returns how it ended; the Sink hears only
+// what happened on the way.
 func (e *Engine) Run(ctx context.Context, t Turn, s Sink) (Result, error) {
 	batDau := e.now()
 	rec := obs.TurnRecord{
@@ -207,7 +249,7 @@ func (e *Engine) Run(ctx context.Context, t Turn, s Sink) (Result, error) {
 	}
 	// The first status goes out before any I/O: the panel's «thinking»
 	// state never waits on the model.
-	s.Status(cau.DangDoc)
+	s.TrangThai(cau.DangDoc, soTinNep)
 	rec.MsTrangThaiDau = ms(e.now().Sub(batDau))
 	var res Result
 	var err error
@@ -219,19 +261,19 @@ func (e *Engine) Run(ctx context.Context, t Turn, s Sink) (Result, error) {
 		err = &Loi{Ma: cau.InvalidAIResult}
 	}
 	rec.MsTong = ms(e.now().Sub(batDau))
-	rec.KetThuc = obs.KetThucXong
-	if err != nil {
+	switch {
+	case err == nil:
+		rec.KetThuc = obs.KetThucXong
+	case errors.Is(err, ErrHuy):
+		// Stopped from outside: no code, and no provider class either.
+		rec.KetThuc = obs.KetThucHuy
+	default:
 		rec.KetThuc = obs.KetThucThatBai
 		rec.Code = obs.Code(MaCua(err))
 	}
 	obs.Log(ctx, e.logger, rec)
 	res.Record = rec
-	if err != nil {
-		s.Fail(MaCua(err))
-		return res, err
-	}
-	s.Done(res)
-	return res, nil
+	return res, err
 }
 
 func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, batDau time.Time) (Result, error) {
@@ -276,7 +318,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		dem.WithWait(e.cho)
 	}
 	rec.MsTienXuLy = ms(e.now().Sub(batDau))
-	s.Status(cau.DangNghi)
+	s.TrangThai(cau.DangNghi, soTinNep)
 	var td agent.TheoDoi
 	cfg := agent.CauHinh{
 		Ten:             nepTen,
@@ -289,7 +331,11 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	moHinh := e.now()
 	runCtx, cancel := context.WithTimeout(ctx, e.han)
 	text, err := agent.Chay(runCtx, dem, cfg, luot, cuoi, &td)
-	hetGio := runCtx.Err() == context.DeadlineExceeded && ctx.Err() == nil
+	// Stopped from outside (the heartbeat cancelled the job, or the worker is
+	// stopping) is told apart from running out of time: the turn's own
+	// deadline, or the job's, is the budget; a cancellation is neither.
+	huy := errors.Is(ctx.Err(), context.Canceled)
+	hetGio := errors.Is(runCtx.Err(), context.DeadlineExceeded)
 	cancel()
 	rec.MsMoHinh = ms(e.now().Sub(moHinh))
 	rec.SoGoiMoHinh = dem.SoGoi()
@@ -297,11 +343,18 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	rec.Buoc, rec.TokensIn, rec.TokensOut, rec.TokensCache, rec.TokensNghi = snap.Buoc, snap.TokensIn, snap.TokensOut, snap.TokensCache, snap.TokensNghi
 	switch {
 	case err == nil:
+	case huy:
+		return Result{}, ErrHuy
 	case errors.Is(err, llm.ErrHetNganSach) || errors.Is(err, agent.ErrHetBuoc):
 		return Result{}, &Loi{Ma: cau.HetNganSach}
 	case hetGio:
 		rec.LoiMoHinh = obs.LoiTimeout
 		return Result{}, &Loi{Ma: cau.HetNganSach}
+	case errors.Is(err, llm.ErrKhongUngVien):
+		// The provider blocked the prompt itself: its safety refusal, the
+		// same as a candidate withheld for safety below.
+		rec.LoiMoHinh = obs.LoiSafety
+		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	default:
 		rec.LoiMoHinh = llm.PhanLoai(err)
 		return Result{}, &Loi{Ma: cau.ProviderUnavailable}

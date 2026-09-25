@@ -130,6 +130,7 @@ one-shot `migrate-chat`, sau `migrate` (alembic) và trước `core`.
 |---|---|---|
 | `make up` / 8099 (`docker-compose.yml`) | `dev` | **tắt** (lược đồ có sẵn) |
 | `docker-compose.journey.yml` | chồng lên file trên, không có `core` riêng | như trên |
+| `docker-compose.nep-go.yml` | chồng lên file trên, chỉ sửa `core` | như trên; bật `MOBILE_AI_ENGINE_NEP=go` và đưa `GEMINI_API_KEY` vào `core`. **Chưa dùng** trước khi eval T1 xanh, ADR-0037 được ký và review bảo mật khoá trong core xong |
 | `scripts/e2e_slice.sh` | `prod` | **bật**, luôn migrate |
 | `scripts/chat_e2e_stack.sh` / `chat_e2e_go.sh` | `prod` | **bật**, không đặt cờ nào |
 | `scripts/parity_stacks.sh` | `dev` và `prod` | **tắt rõ** (`=0`): parity so đường legacy với oracle Python |

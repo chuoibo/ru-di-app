@@ -1,0 +1,13 @@
+# Nếp qua engine Go (ADR-0037, lát 6). Ghép RÕ với docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.nep-go.yml up -d core
+# Chỉ file này đưa GEMINI_API_KEY vào `core` (cửa trước công khai) và bật
+# MOBILE_AI_ENGINE_NEP=go; không ghép thì core chạy `brain` và không có khoá.
+# CHƯA dùng: cần eval T1 (stub) xanh trong CI (lát 6b), ADR-0037 được ký, và
+# review bảo mật việc giữ khoá trong core (thiết kế 01 §9 câu 4).
+services:
+  core:
+    environment:
+      MOBILE_AI_ENGINE_NEP: go
+      # `:?` và không phải `:-`: ai đã ghép file này là muốn engine Go, thiếu
+      # khoá thì core từ chối khởi động; báo ngay lúc dựng thì rõ hơn.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?docker-compose.nep-go.yml cần GEMINI_API_KEY}

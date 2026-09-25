@@ -10,7 +10,9 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
+	"mobile/services/core/internal/domain/thoigian"
 	"mobile/services/core/internal/pyjson"
 )
 
@@ -226,5 +228,35 @@ func TestNepDanhSachKhopVoiPhieuTs(t *testing.T) {
 		if strings.Join(c.ts, ",") != strings.Join(c.go_, ",") {
 			t.Errorf("%s lệch: phieu.ts %v, Go %v", c.ten, c.ts, c.go_)
 		}
+	}
+}
+
+// The engine's turn is built from the stored job alone: «now» is the
+// instant the question was stored (created_at), never the worker's clock,
+// and the attempt, slip and session come across field for field.
+func TestLuotEngineTuHangDaLuu(t *testing.T) {
+	// Thursday 24/09/2026 22:47:05 in Vietnam, stored as UTC.
+	luc := time.Date(2026, 9, 24, 15, 47, 5, 0, time.UTC)
+	con := 2
+	goi, _ := json.Marshal(goiNep{
+		Phieu: &phieuNep{Man: "outings/[id]", TieuDe: "Đà Lạt", Nhip: &nhipPhieu{Kieu: "sap-toi", ConNgay: &con}, LoaiSo: "hoi", SoLieu: map[string]any{"soNguoi": 4}, GoiY: []string{"Còn thiếu gì?"}},
+		Luot:  []luotNep{{Vai: "toi", Chu: "chỗ nào yên tĩnh"}, {Vai: "nep", Chu: "Hồ Tuyền Lâm."}},
+	})
+	j := work{id: "0b7d3a1c-5f2e-4c1a-9e3b-2d6f8a4c1e90", prompt: "tối nay đi đâu?", goi: goi, createdAt: luc, attempt: 2}
+	turn, err := luotEngine(j)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !turn.Luc.Equal(luc) || turn.LanThu != 2 || turn.InvocationID != j.id || turn.LoiNho != "tối nay đi đâu?" {
+		t.Fatalf("lượt: luc=%v lan=%d id=%s hỏi=%q", turn.Luc, turn.LanThu, turn.InvocationID, turn.LoiNho)
+	}
+	p := turn.PhieuNep
+	if p == nil || p.Man != "outings/[id]" || p.TieuDe != "Đà Lạt" || p.Nhip == nil || *p.Nhip.ConNgay != 2 || p.LoaiSo != "hoi" ||
+		p.SoLieu["soNguoi"] != 4.0 || len(p.GoiY) != 1 || len(turn.LuotNep) != 2 || turn.LuotNep[1].Vai != "nep" {
+		t.Fatalf("phiếu/phiên: %+v %+v", p, turn.LuotNep)
+	}
+	// And the line the model reads from it, to the minute.
+	if got := thoigian.DongBayGio(turn.Luc); got != "Bây giờ: Thứ Năm 24/09/2026 22:47 (Asia/Ho_Chi_Minh, 2026-09-24T22:47:05+07:00)" {
+		t.Fatalf("dòng bây giờ: %s", got)
 	}
 }

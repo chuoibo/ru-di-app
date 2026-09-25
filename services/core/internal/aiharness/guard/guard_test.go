@@ -143,6 +143,34 @@ var cauTien = []string{
 	"who owes me money",
 	"split the bill for tonight",
 	"transfer money to Lan",
+	// The review of slice 6 measured these reaching the model: everyday
+	// word order, amounts after the verb, records, debts, chasing, English.
+	"chuyển 200k cho Nam giúp mình",
+	"trả Minh 150k giúp mình",
+	"gửi Minh 150 nghìn giúp mình",
+	"ck cho Nam 200k",
+	"chia đều 600k cho 3 người",
+	"ghi lại khoản 300k ăn tối hôm qua",
+	"tạo khoản chi 500k tiền xăng",
+	"thêm chi phí 200k vào sổ",
+	"Nam còn thiếu mình 100k",
+	"nhắc Nam đóng tiền",
+	"ai chưa đóng tiền",
+	"send Nam 200k",
+	"pay Nam 200k for dinner",
+	// Beyond both lists: other orders, unmarked text, slang amounts.
+	"Nếp ơi, trả giúp mình Hùng 300 nghìn",
+	"bắn 200k cho Vy nhé",
+	"mỗi người phải chịu bao nhiêu",
+	"ghi nợ giúp mình",
+	"đòi nợ Tú giúp mình",
+	"tra Nam 150k",
+	"ung truoc 500k giup minh",
+	"chuyen tien cho Lan",
+	"mình đã ck cho Lan rồi, ghi lại giúp",
+	"quét VietQR trả 150k",
+	"đặt cọc giùm mình",
+	"1.5tr chuyển cho Minh luôn",
 }
 
 var khongPhaiTien = []string{
@@ -160,6 +188,32 @@ var khongPhaiTien = []string{
 	"làm sao để xem ai đã chia sẻ ảnh",
 	"tiền đâu mà đi Đà Lạt haha",
 	"chuyển chỗ ngồi được không",
+	// Homographs: typed with tone marks, these are not the money word they
+	// fold onto (nó/nợ, trà/trả, đợi/đòi, bạn/bắn, muốn/mượn, chuyến/chuyển,
+	// hoãn/hoàn, đông/đóng, tỉnh/tính, tiện/tiền, cốc/cọc).
+	"đợi nó 10 phút rồi đi ăn nhé",
+	"nhắc nó mang áo mưa",
+	"trà sữa 30k ở đâu ngon",
+	"tra sua 30k o dau ngon",
+	"chuyến này tầm 2 triệu có đủ không",
+	"hoãn lại kèo tối nay",
+	"quán này tính tiền theo giờ à",
+	"quán này đông không, tầm 200k một người",
+	"mình muốn đi quán 200k một người",
+	"bạn gợi ý quán 200k đi",
+	"mỗi bạn tầm 200k thì đi đâu",
+	"tỉnh Tiền Giang có gì chơi",
+	"quán này có tiện đi lại không",
+	"chuyện hôm qua vui ghê",
+	"đổi kèo sang quán 150k",
+	"cốc trà 25k có đắt không",
+	// Compounds whose first word is a money verb.
+	"kiểm tra giá quán 200k",
+	"tra cứu quán dưới 100k",
+	"gửi xe ở đây 5k à",
+	"ck mình đi công tác rồi, cuối tuần đi đâu",
+	"để ck mình chọn quán",
+	"momo là gì",
 }
 
 func TestLuatTien(t *testing.T) {
@@ -173,6 +227,16 @@ func TestLuatTien(t *testing.T) {
 			t.Errorf("bắt nhầm luật tiền: %q", s)
 		}
 	}
+}
+
+// rong writes ASCII digits as fullwidth digits (U+FF10..U+FF19).
+func rong(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= '0' && r <= '9' {
+			return r - '0' + '０'
+		}
+		return r
+	}, s)
 }
 
 func TestOutputGuard(t *testing.T) {
@@ -200,6 +264,27 @@ func TestOutputGuard(t *testing.T) {
 		{"Mình đã đọc câu hỏi, bạn thử mở màn Khám phá nhé.", RaSach},
 		{"Mình đã ghi nhận ý bạn: thích chỗ yên tĩnh.", RaSach},
 		{"Bạn có thể lưu ý giờ đóng cửa.", RaSach},
+		// The review of slice 6 found these legitimate answers blocked. The
+		// digit runs are split in the source so it holds no long number; the
+		// value under test is the joined string.
+		{"Giá khoảng 150.000-" + "200.000đ mỗi người.", RaSach},
+		{"Ngân sách 150 000 " + "000 đồng là thoải mái.", RaSach},
+		{"Thứ Bảy 26.09." + "2026 19 giờ gặp nhau nhé.", RaSach},
+		{"Mình đã gửi cho bạn gợi ý ở trên rồi.", RaSach},
+		{"Mình đã thêm vào danh sách gợi ý.", RaSach},
+		{"Tầm 150.000-" + "200.000 một người là vừa.", RaSach},
+		// A run grouped like an amount but a billion or more, with no
+		// currency after it, reads as an account.
+		{"Số tài khoản 190.355." + "678.901 nhé.", RaSoTaiKhoan},
+		// And what must still be blocked beside them.
+		{"Gọi " + rong("0912"+"345"+"678") + " để đặt bàn.", RaSoDienThoai},
+		{"Gọi 091." + "234.5678 để đặt bàn.", RaSoDienThoai},
+		{"Giá 150.000-" + "200.000đ, gọi 0912 " + "345 678 nhé.", RaSoDienThoai},
+		{"Số tài khoản 190 355 " + "678 901 nhé.", RaSoTaiKhoan},
+		{"Chuyển vào " + rong("0071"+"000"+"123456") + " là được.", RaSoTaiKhoan},
+		{"Mình đã gửi cho mọi người lời mời rồi.", RaTuNhan},
+		{"Mình đã thêm bạn vào nhóm.", RaTuNhan},
+		{"Mình đã thêm vào kèo tối nay rồi.", RaTuNhan},
 	} {
 		if got := d.Kiem(c.text); got != c.want {
 			t.Errorf("%q: %q, muốn %q", c.text, got, c.want)

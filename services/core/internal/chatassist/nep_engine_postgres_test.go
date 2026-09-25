@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"strings"
 	"testing"
@@ -17,7 +18,6 @@ import (
 	"mobile/services/core/internal/aiharness/llm"
 	aimetrics "mobile/services/core/internal/aiharness/metrics"
 	"mobile/services/core/internal/aiharness/prompts"
-	"mobile/services/core/internal/domain/thoigian"
 )
 
 // Nếp end to end on the Go engine (MOBILE_AI_ENGINE_NEP=go) against a real
@@ -52,9 +52,22 @@ func setupNepGo(t *testing.T, kich ...llm.Buoc) nepGo {
 
 func (n nepGo) ask(t *testing.T, body map[string]any) (string, NepInvocation) {
 	t.Helper()
+	return n.askLuc(t, body, time.Time{})
+}
+
+// askLuc is ask with the question's created_at moved to luc (when set)
+// before the worker claims it, so «now» can be told apart from the moment
+// the job runs.
+func (n nepGo) askLuc(t *testing.T, body map[string]any, luc time.Time) (string, NepInvocation) {
+	t.Helper()
 	code, job, raw := n.f.nepPost(t, n.f.token, body)
 	if code != 202 {
 		t.Fatalf("status=%d body=%s", code, raw)
+	}
+	if !luc.IsZero() {
+		if _, err := n.f.pool.Exec(context.Background(), `UPDATE chat_ai_invocations SET created_at=$2 WHERE id=$1`, job.ID, luc); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if ok, err := n.f.handler.ProcessOne(context.Background()); !ok || err != nil {
 		t.Fatalf("ProcessOne=%v %v", ok, err)
@@ -92,7 +105,14 @@ func TestNepQuaEngineGo(t *testing.T) {
 	var tinTruoc int
 	_ = n.f.pool.QueryRow(ctx, `SELECT count(*) FROM messages`).Scan(&tinTruoc)
 
-	id, done := n.ask(t, nepThan("@Rủ Đi tối nay đi đâu?"))
+	// The question was stored hours before the worker runs it (the sharing
+	// window is share_expires_at, still open): «now» must be that instant,
+	// Thursday 22:47 in Vietnam, not the worker's clock.
+	luc := time.Date(2026, 9, 24, 15, 47, 5, 0, time.UTC)
+	if time.Since(luc) < time.Hour {
+		t.Fatalf("đồng hồ máy chạy test ở %v: mốc %v phải sớm hơn hàng giờ", time.Now(), luc)
+	}
+	id, done := n.askLuc(t, nepThan("@Rủ Đi tối nay đi đâu?"), luc)
 	if done.Status != "succeeded" || done.Text == nil || *done.Text != "Tối nay bạn đi dạo hồ nhé." {
 		t.Fatalf("kết quả: %+v", done)
 	}
@@ -104,12 +124,13 @@ func TestNepQuaEngineGo(t *testing.T) {
 		t.Fatalf("%d lời gọi mô hình", n.stub.SoGoi())
 	}
 	req := string(n.stub.YeuCau()[0])
-	// «Now» comes from the stored created_at, on Vietnam's clock.
-	var created time.Time
-	if err := n.f.pool.QueryRow(ctx, `SELECT created_at FROM chat_ai_invocations WHERE id=$1`, id).Scan(&created); err != nil {
-		t.Fatal(err)
-	}
-	for _, can := range []string{thoigian.DongBayGio(created), "tối nay đi đâu?", "Mình thích yên tĩnh", "Vậy mình gợi ý chỗ vắng.", "man: explore", "tieuDe: Khám phá", "soLieu: soNguoi=4", "«tối nay» là"} {
+	// «Now» comes from the stored created_at, on Vietnam's clock, exactly;
+	// and so does the evening «tối nay» names.
+	for _, can := range []string{
+		"Bây giờ: Thứ Năm 24/09/2026 22:47 (Asia/Ho_Chi_Minh, 2026-09-24T22:47:05+07:00)",
+		"- «tối nay» là Thứ Năm 24/09/2026",
+		"tối nay đi đâu?", "Mình thích yên tĩnh", "Vậy mình gợi ý chỗ vắng.", "man: explore", "tieuDe: Khám phá", "soLieu: soNguoi=4",
+	} {
 		if !strings.Contains(req, can) {
 			t.Errorf("yêu cầu thiếu %q", can)
 		}
@@ -190,5 +211,58 @@ func TestNepQuaEngineGoLoiNhaCungCap(t *testing.T) {
 	}
 	if h := n.soDo(t, id); h.ketThuc != "that_bai" || h.code == nil || *h.code != "provider_unavailable" {
 		t.Fatalf("hàng số đo: %+v", h)
+	}
+}
+
+// A turn stopped from outside (the heartbeat cancelled the job, or the worker
+// is stopping) is not a provider failure: the job is left to its lease, not
+// failed with provider_unavailable, and no metrics row says otherwise. Once
+// the lease lapses the next claim runs it again and answers.
+func TestNepQuaEngineGoHuyTuNgoai(t *testing.T) {
+	n := setupNepGo(t, llm.Buoc{Text: "không bao giờ tới", Cho: time.Minute}, llm.Buoc{Text: "Đi dạo hồ nhé."})
+	ctx := context.Background()
+	code, job, raw := n.f.nepPost(t, n.f.token, nepThan("đi đâu?"))
+	if code != 202 {
+		t.Fatalf("status=%d body=%s", code, raw)
+	}
+	j, ok, err := n.f.handler.claim(ctx)
+	if !ok || err != nil {
+		t.Fatalf("claim=%v %v", ok, err)
+	}
+	runCtx, cancel := context.WithCancel(ctx)
+	time.AfterFunc(50*time.Millisecond, cancel)
+	if err := n.f.handler.runJob(runCtx, j); !errors.Is(err, aiharness.ErrHuy) {
+		t.Fatalf("runJob: %v", err)
+	}
+	var status, lease string
+	var coKetQua, coMa, conHoi bool
+	if err := n.f.pool.QueryRow(ctx, `SELECT status, COALESCE(lease_id::text,''), result IS NOT NULL, code IS NOT NULL, prompt IS NOT NULL FROM chat_ai_invocations WHERE id=$1`, job.ID).
+		Scan(&status, &lease, &coKetQua, &coMa, &conHoi); err != nil {
+		t.Fatal(err)
+	}
+	if status != "running" || lease != j.lease || coKetQua || coMa || !conHoi {
+		t.Fatalf("job bị đụng: status=%s lease khớp=%v kết quả=%v mã=%v còn câu hỏi=%v", status, lease == j.lease, coKetQua, coMa, conHoi)
+	}
+	var hang int
+	_ = n.f.pool.QueryRow(ctx, `SELECT count(*) FROM ai_turn_metrics WHERE invocation_id=$1`, job.ID).Scan(&hang)
+	if hang != 0 {
+		t.Fatalf("%d hàng số đo cho lượt bị huỷ", hang)
+	}
+	// The lease lapses; the job is claimed again and answered.
+	if _, err := n.f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET lease_until=clock_timestamp()-interval '1 second' WHERE id=$1`, job.ID); err != nil {
+		t.Fatal(err)
+	}
+	if ok, err := n.f.handler.ProcessOne(ctx); !ok || err != nil {
+		t.Fatalf("ProcessOne=%v %v", ok, err)
+	}
+	w := n.f.request("GET", "/me/nep/ai-invocations/"+job.ID, n.f.token, nil)
+	requireCode(t, w, 200)
+	var done NepInvocation
+	_ = json.Unmarshal(w.Body.Bytes(), &done)
+	if done.Status != "succeeded" || done.Text == nil || *done.Text != "Đi dạo hồ nhé." {
+		t.Fatalf("lần hai: %+v", done)
+	}
+	if h := n.soDo(t, job.ID); h.lanThu != 2 || h.ketThuc != "xong" {
+		t.Fatalf("hàng số đo lần hai: %+v", h)
 	}
 }

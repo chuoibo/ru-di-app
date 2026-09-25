@@ -86,6 +86,30 @@ func TestGeminiQuaLoopback(t *testing.T) {
 	}
 }
 
+// A prompt the provider blocks comes back with no candidate, only
+// promptFeedback. ADK's non-streaming call turns that into a bare error; the
+// real transport, driven into it through loopback, must surface it as
+// ErrKhongUngVien, classified as the provider's safety refusal.
+func TestGeminiChanCauHoi(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"promptFeedback":{"blockReason":"SAFETY"},"usageMetadata":{"promptTokenCount":9}}`)
+	}))
+	defer srv.Close()
+	m, err := NewGemini(context.Background(), "synthetic-key", srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := &model.LLMRequest{Model: Model, Contents: []*genai.Content{genai.NewContentFromText("xin chào", "user")}}
+	var got error
+	for _, err := range m.GenerateContent(context.Background(), req, false) {
+		got = err
+	}
+	if !errors.Is(got, ErrKhongUngVien) || PhanLoai(got) != obs.LoiSafety {
+		t.Fatalf("không ứng viên: %v (%s)", got, PhanLoai(got))
+	}
+}
+
 func chay(t *testing.T, d *Dem) (string, error) {
 	t.Helper()
 	var text string
@@ -159,6 +183,7 @@ func TestPhanLoai(t *testing.T) {
 		{&genai.APIError{Code: 503}, obs.Loi5xx},
 		{genai.APIError{Code: 400}, obs.LoiKhac},
 		{errors.New("boom"), obs.LoiKhac},
+		{fmt.Errorf("flow: %w", ErrKhongUngVien), obs.LoiSafety},
 	} {
 		if got := PhanLoai(c.err); got != c.want {
 			t.Errorf("%v: %s, muốn %s", c.err, got, c.want)

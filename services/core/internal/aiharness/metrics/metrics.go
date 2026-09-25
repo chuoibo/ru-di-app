@@ -81,10 +81,16 @@ func Installed(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
 // insert names every column; metrics_test.go holds it to obs.Columns().
 const insert = `INSERT INTO ai_turn_metrics(invocation_id,lan_thu,bot,lenh,guard,out_guard,ket_thuc,code,loi_mo_hinh,prompt_version,buoc,so_goi_model,so_cong_cu,tokens_in,tokens_out,tokens_cached,tokens_thoughts,luot_bo,phieu_bo,ngay_mo_ho,ky_tu_an,khong_dau,ms_trang_thai_dau,ms_tien_xu_ly,ms_mo_hinh,ms_tong) VALUES($1,$2,$3,$4,$5,$6,$7,NULLIF($8,''),$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26) ON CONFLICT (invocation_id,lan_thu) DO NOTHING`
 
-// Ghi writes one record. An invalid record is refused before any SQL.
+// Ghi writes one record. An invalid record is refused before any SQL, and a
+// turn stopped from outside (obs.KetThucHuy) writes nothing: a lost lease or
+// a stopping worker says nothing about the model or the provider, and a row
+// for it would read as a failed turn.
 func Ghi(ctx context.Context, q Execer, rec obs.TurnRecord) error {
 	if err := rec.Valid(); err != nil {
 		return err
+	}
+	if rec.KetThuc == obs.KetThucHuy {
+		return nil
 	}
 	_, err := q.Exec(ctx, insert, rec.Values()...)
 	return err

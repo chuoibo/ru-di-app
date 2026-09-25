@@ -1,10 +1,13 @@
 package metrics
 
 import (
+	"context"
 	"regexp"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/obs"
@@ -89,5 +92,41 @@ func TestCotKhopBanGhi(t *testing.T) {
 	sort.Strings(inGo)
 	if strings.Join(inSQL, ",") != strings.Join(inGo, ",") {
 		t.Fatalf("CHECK code lệch cau.Tat(): %v vs %v (mã mới cần migration version mới)", inSQL, inGo)
+	}
+}
+
+// execDem counts the statements it is given and runs none.
+type execDem struct{ n int }
+
+func (e *execDem) Exec(context.Context, string, ...any) (pgconn.CommandTag, error) {
+	e.n++
+	return pgconn.CommandTag{}, nil
+}
+
+// A turn stopped from outside has no row: nothing reaches the database, so a
+// lost lease never reads as a failed turn. A failed turn beside it does.
+func TestHuyKhongCoHang(t *testing.T) {
+	rec := obs.TurnRecord{
+		InvocationID: "0b7d3a1c-5f2e-4c1a-9e3b-2d6f8a4c1e90", LanThu: 1, Bot: obs.BotNep, Lenh: obs.LenhHoi,
+		Guard: obs.GuardProceed, OutGuard: obs.OutNone, KetThuc: obs.KetThucHuy, LoiMoHinh: obs.LoiKhong,
+		PromptVersion: "0123456789ab",
+	}
+	var e execDem
+	if err := Ghi(context.Background(), &e, rec); err != nil || e.n != 0 {
+		t.Fatalf("lượt huỷ: err=%v, %d câu SQL", err, e.n)
+	}
+	rec.KetThuc, rec.Code = obs.KetThucThatBai, obs.Code(cau.ProviderUnavailable)
+	if err := Ghi(context.Background(), &e, rec); err != nil || e.n != 1 {
+		t.Fatalf("lượt thất bại: err=%v, %d câu SQL", err, e.n)
+	}
+	// The table's ket_thuc CHECK holds exactly the endings that get a row.
+	got := regexp.MustCompile(`'([a-z_]+)'`).FindAllStringSubmatch(columnLines(t)["ket_thuc"], -1)
+	var inSQL []string
+	for _, c := range got {
+		inSQL = append(inSQL, c[1])
+	}
+	sort.Strings(inSQL)
+	if strings.Join(inSQL, ",") != string(obs.KetThucThatBai)+","+string(obs.KetThucXong) || !obs.KetThucHuy.Valid() {
+		t.Fatalf("CHECK ket_thuc: %v", inSQL)
 	}
 }

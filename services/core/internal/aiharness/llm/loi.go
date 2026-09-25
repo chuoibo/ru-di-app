@@ -18,6 +18,9 @@ func PhanLoai(err error) obs.LoiMoHinh {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return obs.LoiTimeout
 	}
+	if errors.Is(err, ErrKhongUngVien) {
+		return obs.LoiSafety
+	}
 	code := 0
 	var v genai.APIError
 	var p *genai.APIError
