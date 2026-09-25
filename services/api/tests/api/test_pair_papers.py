@@ -29,6 +29,7 @@ from .pair_helpers import (
     TOI,
     TUAN,
     TUAN_SAU,
+    dong_thuan,
     head,
     lap_so,
     noi_dung,
@@ -858,3 +859,39 @@ def test_a_sheet_that_was_sent_stays_readable_to_both_after_it_closes(client):
     assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 200
     theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
     assert paper_id in [p["id"] for p in theirs]
+
+
+# ADR-0034 §2.2: Nếp uses the tastes of whoever shared them, and nobody else's.
+
+
+def _doi_co_gu(client, repository):
+    repository.person_interests[TOI] = {"cafe", "game"}
+    repository.person_interests[NGUOI_KIA] = {"cafe", "nightlife"}
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+
+
+def test_a_taste_nobody_shared_changes_nothing_in_the_draft(client, repository):
+    _doi_co_gu(client, repository)
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["viec"] == "Ăn tối"
+    assert first["ly_do"] is None
+
+
+def test_the_other_persons_shared_taste_names_the_stop_and_the_reason(client, repository):
+    _doi_co_gu(client, repository)
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    first = _read(client, _draft(client)).json()["versions"][0]
+    stop = first["content"]["chang"][0]
+    assert stop["viec"] == "Cà phê", "gu người kia đã chia: Cafe"
+    assert stop.get("place_id") is None, "chưa có buổi nào để biết thành phố, nên không bịa chỗ"
+    assert first["ly_do"] == "Người Ấy thích Cafe, nên Nếp phác theo đó."
+
+
+def test_both_shared_uses_what_they_have_in_common_first(client, repository):
+    _doi_co_gu(client, repository)
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(TOI))
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["viec"] == "Cà phê"
+    assert first["ly_do"].startswith("Hai bạn cùng thích Cafe")

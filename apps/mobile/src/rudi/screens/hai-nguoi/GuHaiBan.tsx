@@ -59,8 +59,8 @@ export function GuHaiBan({
           <>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
               {gu?.theirs_shared
-                ? `Bật thì ${tenNguoiKia} thấy gu của bạn, và hai bạn thấy mình cùng thích gì.`
-                : `Bật thì ${tenNguoiKia} thấy gu của bạn. Gu của ${tenNguoiKia} chỉ hiện khi chính họ bật.`}
+                ? `Bật thì ${tenNguoiKia} thấy gu của bạn, hai bạn thấy mình cùng thích gì, và Nếp phác tờ theo đó.`
+                : `Bật thì ${tenNguoiKia} thấy gu của bạn và Nếp dùng nó khi phác tờ. Gu của ${tenNguoiKia} chỉ hiện khi chính họ bật.`}
             </Text>
             <RudiButton disabled={dangLam} label={`Cho ${tenNguoiKia} thấy gu của mình`} loading={dangLam} onPress={onBat} />
           </>

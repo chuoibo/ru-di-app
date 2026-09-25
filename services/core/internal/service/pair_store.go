@@ -85,7 +85,7 @@ func (s PairStore) ListMembers(contextID string) ([]pairsteps.Member, error) {
 	}
 	out := make([]pairsteps.Member, len(rows))
 	for i, row := range rows {
-		out[i] = pairsteps.Member{PersonID: row.PersonID, State: row.State}
+		out[i] = pairsteps.Member{PersonID: row.PersonID, State: row.State, DisplayName: row.DisplayName}
 	}
 	return out, nil
 }

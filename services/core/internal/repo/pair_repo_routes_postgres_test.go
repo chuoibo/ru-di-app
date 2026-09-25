@@ -55,6 +55,8 @@ type pairRoute struct {
 	now     time.Time
 	nowText time.Time
 	a       map[string]any
+	// names is the active roster's display names, as contextOr404 read them.
+	names map[string]string
 }
 
 // isoformat is datetime.isoformat() of the instant the case wrote, in the
@@ -103,9 +105,11 @@ func (p *pairRoute) contextOr404(contextID string) ([]string, error) {
 		return nil, err
 	}
 	members := []string{}
+	p.names = map[string]string{}
 	for _, row := range rows {
 		if row.State == "active" {
 			members = append(members, row.PersonID)
+			p.names[row.PersonID] = row.DisplayName
 		}
 	}
 	return members, nil
@@ -170,6 +174,12 @@ func (p *pairRoute) grantedPurposes(consents []PairConsent, participants []strin
 // completed proposal as standing past its offer window, which grantedPurposes
 // above (the older per-purpose reading) does not.
 func (p *pairRoute) couple(notebook *PairNotebook, people []string) bool {
+	now := p.now
+	return pairnotebook.CanBatDoi(p.consentsOf(notebook), people, &now)
+}
+
+// consentsOf is `_consents_as_dicts` over the locked rows.
+func (p *pairRoute) consentsOf(notebook *PairNotebook) []pairnotebook.Consent {
 	completed := map[string]*time.Time{}
 	for _, row := range notebook.Proposals {
 		completed[row.ID] = row.CompletedAt
@@ -180,8 +190,7 @@ func (p *pairRoute) couple(notebook *PairNotebook, people []string) bool {
 		consents = append(consents, pairnotebook.Consent{PersonID: c.PersonID, Purpose: c.Purpose, GrantedAt: c.GrantedAt,
 			RevokedAt: c.RevokedAt, ProposalExpiresAt: &expires, ProposalID: c.ProposalID, ProposalCompletedAt: completed[c.ProposalID]})
 	}
-	now := p.now
-	return pairnotebook.CanBatDoi(consents, people, &now)
+	return consents
 }
 
 func (p *pairRoute) dangCho(completed *time.Time, expires time.Time) bool {
@@ -711,7 +720,8 @@ func (p *pairRoute) readPaper() error {
 
 func (p *pairRoute) draftPaper() error {
 	contextID := p.text("context_id")
-	if _, err := p.contextOr404(contextID); err != nil {
+	members, err := p.contextOr404(contextID)
+	if err != nil {
 		return err
 	}
 	notebook, err := p.lockedNotebook(contextID)
@@ -777,6 +787,54 @@ func (p *pairRoute) draftPaper() error {
 			Chang: []pairpaper.Stop{{Gio: "18:30", Viec: "Ăn tối", CanKiem: true}}},
 		Nguon: pairpaper.Nguon{Scope: "chung", Dung: uses, Luc: p.isoformat()},
 	}, history, choCuRow, rows, boxes)
+	// ADR-0034: the sharers' tastes, read only inside «Một đôi».
+	if people := participantsOf(notebook, members); p.couple(notebook, people) {
+		consents := p.consentsOf(notebook)
+		chia := []string{}
+		for _, person := range people {
+			now := p.now
+			if containsText(pairnotebook.GrantedBy(consents, person, &now), "chia_gu") {
+				chia = append(chia, person)
+			}
+		}
+		if len(chia) > 0 {
+			rowsByPerson, err := p.repo.InterestsByPerson(bg, chia)
+			if err != nil {
+				return err
+			}
+			tags := map[string][]string{}
+			for _, row := range rowsByPerson {
+				tags[row.PersonID] = row.Tags
+			}
+			distinct := map[string]bool{}
+			for _, person := range people {
+				distinct[person] = true
+			}
+			gu := pairpaper.GuChoNep(chia, tags, p.names, len(chia) == len(distinct) && len(distinct) == 2)
+			var guRows []pairpaper.PlaceRow
+			dau := draft.Content.Chang[0]
+			if loai := pairpaper.LoaiTheoGu(gu); loai != "" && choCu != nil && (dau.PlaceID == nil || *dau.PlaceID == "") {
+				places, err := p.repo.ListPlaces(bg, PlaceFilter{DestinationID: &choCu.DestinationID, Category: &loai})
+				if err != nil {
+					return err
+				}
+				for _, place := range places {
+					guRows = append(guRows, placeRow(place))
+				}
+			}
+			daDi := []string{}
+			for _, nd := range history {
+				for _, c := range nd.Chang {
+					if c.PlaceID != nil && *c.PlaceID != "" {
+						daDi = append(daDi, *c.PlaceID)
+					}
+				}
+			}
+			if len(gu) > 0 {
+				draft = pairpaper.LamGiauTheoGu(draft, gu, guRows, daDi, boxes)
+			}
+		}
+	}
 	stops := []any{}
 	for _, stop := range draft.Content.Chang {
 		stops = append(stops, map[string]any{"gio": stop.Gio, "viec": stop.Viec, "place_id": stop.PlaceID, "can_kiem": stop.CanKiem})

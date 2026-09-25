@@ -3,13 +3,16 @@
 # null. Inside, asking files, grants and completes in one go (never pending for the
 # other), the other cannot grant it for them, `taste.theirs` shows only a sharer's
 # tags, `taste.common` needs both, asking again returns the same proposal, and
-# revoking hides the taste at the next read. Texts are sample data (dữ liệu mẫu).
+# revoking hides the taste at the next read. With both sharing, Nếp's draft names the
+# stop after the common taste and says so (§2.2). Texts are sample data (dữ liệu mẫu).
 id: w8/pair_notebooks/chia-gu
 routes:
   - 'GET /contexts/{context_id}/notebook'
   - 'POST /contexts/{context_id}/notebook/proposals'
   - 'POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant'
   - 'DELETE /contexts/{context_id}/notebook/consents/{purpose}'
+  - 'POST /contexts/{context_id}/papers/draft'
+  - 'GET /papers/{paper_id}'
 auth_mode: dev
 personas:
   owner: {}
@@ -174,6 +177,18 @@ steps:
     request:
       method: GET
       path: '/contexts/{{pair}}/notebook'
+  - id: owner_drafts_with_common_taste
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      draft_gu: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_the_draft
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{draft_gu}}'
   - id: owner_takes_taste_back
     as: owner
     request:

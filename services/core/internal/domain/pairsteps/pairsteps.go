@@ -99,6 +99,9 @@ type Context struct {
 type Member struct {
 	PersonID string
 	State    string
+	// DisplayName is MembershipRecord.display_name: the draft names whose
+	// taste it used (ADR-0034).
+	DisplayName string
 }
 
 // Consent is PairConsentRecord, the keys `_consents_as_dicts` reads.
@@ -407,6 +410,20 @@ func requirePairPermission(action string, actor Actor, facts ...fact) error {
 // pairContextOr404 is _pair_context_or_404: the active members of the pair
 // the actor is in, or one 404 for no context, a group, and a stranger.
 func pairContextOr404(s Store, actor Actor, contextID string) ([]string, error) {
+	roster, err := pairRosterOr404(s, actor, contextID)
+	if err != nil {
+		return nil, err
+	}
+	members := []string{}
+	for _, row := range roster {
+		members = append(members, row.PersonID)
+	}
+	return members, nil
+}
+
+// pairRosterOr404 is _pair_roster_or_404: the same reads, the active rows
+// whole.
+func pairRosterOr404(s Store, actor Actor, contextID string) ([]Member, error) {
 	record, err := s.GetContext(contextID)
 	if err != nil {
 		return nil, err
@@ -425,13 +442,13 @@ func pairContextOr404(s Store, actor Actor, contextID string) ([]string, error) 
 	if err != nil {
 		return nil, err
 	}
-	members := []string{}
+	roster := []Member{}
 	for _, row := range rows {
 		if row.State == "active" {
-			members = append(members, row.PersonID)
+			roster = append(roster, row)
 		}
 	}
-	return members, nil
+	return roster, nil
 }
 
 // Participants is _participants: the live cycle's own list, or the

@@ -517,7 +517,7 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 		calls:             []any{},
 		context:           &Context{Kind: "pair"},
 		member:            true,
-		roster:            []Member{{PersonID: h.ids["TOI"], State: "active"}, {PersonID: h.ids["KIA"], State: "active"}},
+		roster:            []Member{{PersonID: h.ids["TOI"], State: "active", DisplayName: "Tên TOI"}, {PersonID: h.ids["KIA"], State: "active", DisplayName: "Tên KIA"}},
 		conflicts:         map[string][]any{},
 		constraintVersion: 1,
 	}
@@ -622,7 +622,8 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 			if err != nil {
 				return nil, err
 			}
-			s.roster = append(s.roster, Member{PersonID: person, State: state})
+			name, _ := pair[0].(string)
+			s.roster = append(s.roster, Member{PersonID: person, State: state, DisplayName: "Tên " + name})
 		}
 	}
 	notebooks := func(key string) ([]*Notebook, error) {

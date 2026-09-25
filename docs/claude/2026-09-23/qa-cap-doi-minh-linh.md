@@ -549,3 +549,16 @@ Lead ký ADR-0034 ngày 25/09. Lát này làm §2.1–2.2; phần Nếp dùng gu
   Linh bấm «Cho Minh thấy gu của mình» → «Hai bạn cùng thích Cafe và Outdoor.» hiện trong sheet và dưới
   tờ giấy; «Thôi cho Minh thấy…» → dòng chung biến mất, lần đọc sau. Ảnh `gu-01…03` (ngoài repo).
 - Không hứa điều chưa làm: câu «Nếp dùng gu khi phác tờ» bị bỏ khỏi màn cho tới lát (a).
+
+### Lát (a) — Nếp dùng gu khi phác tờ (25/09)
+
+- `draft_pair_paper` (Go + Python): sau bản phác theo lịch sử, nếu là «Một đôi» và có người đã bật
+  `chia_gu`, Nếp đọc gu CHỈ của những người đó (`gu_cho_nep`: gu chung trước, rồi gu từng người). Lịch sử
+  thắng: đã đề xuất được chỗ cùng kiểu lần trước thì giữ. Không thì gu chọn kiểu chỗ (an-uong →
+  quán local, cafe → cafe, nightlife → đi chơi đêm, game → vui chơi; outdoor/món local/shopping/karaoke
+  không có «kiểu» trong danh mục nên bỏ qua) và đề xuất chỗ chưa đi, điểm cao nhất, cùng thành phố với
+  buổi trước, tránh chữ trong hai ô. Chưa có buổi nào (không biết thành phố) thì chỉ đặt tên chặng —
+  không bịa chỗ. `nguon.dung` ghi `gu:<id>` của người có gu được dùng; lý do nói gu của ai.
+- Màn «Gu của hai bạn» giờ nói thật «Nếp dùng nó khi phác tờ».
+- Chưa đo trên máy: tuần này của cặp thử đã có tờ chốt, nên không phác được tờ mới mà không dời đồng hồ;
+  phần phác theo gu được chứng minh bằng golden (Go↔Python) và parity (bước `owner_drafts_with_common_taste`).

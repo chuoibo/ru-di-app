@@ -49,6 +49,6 @@ export function cauGu(gu: GuSo | null | undefined, tenNguoiKia: string): CauGu |
   return {
     chung: chung === null ? null : chung.length > 0 ? `Hai bạn cùng thích ${noiDanhSach(chung)}.` : "Hai bạn chưa trùng gu nào. Một dịp để rủ nhau thử cái mới.",
     cuaHo: cuaHo === null ? null : cuaHo.length > 0 ? `${ten} thích ${noiDanhSach(cuaHo)}.` : `${ten} chưa chọn gu nào.`,
-    cuaToi: gu.mine_shared ? `${ten} thấy gu của bạn trong sổ này.` : "Gu của bạn đang để riêng.",
+    cuaToi: gu.mine_shared ? `${ten} thấy gu của bạn, và Nếp dùng nó khi phác tờ cho hai bạn.` : "Gu của bạn đang để riêng.",
   };
 }

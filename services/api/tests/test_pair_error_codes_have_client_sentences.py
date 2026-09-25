@@ -55,6 +55,7 @@ _PHUONG_THUC = {
     "_pair_chat_consent",
     "_propose_per_person",
     "_pair_taste",
+    "_pair_roster_or_404",
 }
 
 #: Cùng mang chữ `pair` trong tên nhưng thuộc tính năng khác: `_require_pair_is_alive`

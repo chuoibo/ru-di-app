@@ -24,7 +24,7 @@ test("người kia bật thì thấy gu họ bằng nhãn, bỏ id lạ", () => 
 test("cả hai bật: gu chung, kể cả khi chưa trùng", () => {
   assert.equal(cauGu(gu({ mine_shared: true, theirs_shared: true, theirs: ["cafe"], common: ["cafe"] }), "Minh").chung, "Hai bạn cùng thích Cafe.");
   assert.match(cauGu(gu({ mine_shared: true, theirs_shared: true, theirs: ["game"] }), "Minh").chung, /chưa trùng gu/);
-  assert.equal(cauGu(gu({ mine_shared: true }), "Minh").cuaToi, "Minh thấy gu của bạn trong sổ này.");
+  assert.equal(cauGu(gu({ mine_shared: true }), "Minh").cuaToi, "Minh thấy gu của bạn, và Nếp dùng nó khi phác tờ cho hai bạn.");
 });
 
 test("nối danh sách kiểu tiếng Việt", () => {

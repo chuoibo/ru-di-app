@@ -497,6 +497,26 @@ def pp_lam_giau(routine, rang_buoc, now, lich_su, cho_cu, ung_vien):
     )
 
 
+def gu_of(spec):
+    """Tastes from [[tag, chung, ten, [nguoi, ...]], ...]."""
+    return [{"tag": t, "chung": c, "ten": n, "nguoi": list(ps)} for t, c, n, ps in spec]
+
+
+def pp_gu_cho_nep(nguoi_chia, gu, ten, ca_hai):
+    return pair_paper.gu_cho_nep(nguoi_chia, gu, ten, ca_hai=ca_hai)
+
+
+def pp_theo_gu(routine, rang_buoc, now, lich_su, cho_cu, ung_vien, gu, ung_vien_gu, da_di):
+    # ADR-0034: the draft after lam_giau_phac, told the shared tastes.
+    return pair_paper.lam_giau_theo_gu(
+        pp_lam_giau(routine, rang_buoc, now, lich_su, cho_cu, ung_vien),
+        gu=gu_of(gu),
+        ung_vien=[row_of(r) for r in ung_vien_gu],
+        da_di=list(da_di),
+        rang_buoc=[{"content": c} for c in rang_buoc],
+    )
+
+
 def pair_paper_constants() -> dict:
     return {
         "all": sorted(pair_paper.__all__),
@@ -837,6 +857,48 @@ def pair_paper_edges() -> list[dict]:
             },
         )
     )
+    # ADR-0034 §2.2: tastes Nếp may use, and the draft told them.
+    for name, chia, gu, ten, ca_hai in (
+        ("both_share_common_first", ["TOI-ID", "KIA-ID"], {"TOI-ID": ["game", "cafe"], "KIA-ID": ["cafe", "outdoor", "tag-bo"]}, {"TOI-ID": "Linh", "KIA-ID": "Minh"}, True),
+        ("one_shares", ["KIA-ID"], {"KIA-ID": ["nightlife", "an-uong"]}, {"KIA-ID": "Minh"}, False),
+        ("sharer_without_tags", ["KIA-ID"], {}, {"KIA-ID": "Minh"}, False),
+        ("sharer_without_a_name", ["KIA-ID"], {"KIA-ID": ["cafe"]}, {}, False),
+        ("two_share_but_not_both_participants", ["TOI-ID", "KIA-ID"], {"TOI-ID": ["cafe"], "KIA-ID": ["cafe"]}, {"TOI-ID": "Linh", "KIA-ID": "Minh"}, False),
+        ("hostile_name", ["KIA-ID"], {"KIA-ID": ["cafe"]}, {"KIA-ID": TEXTS[7]}, False),
+    ):
+        out.append(case("gu_cho_nep", name, {"nguoi_chia": chia, "gu": gu, "ten": ten, "ca_hai": ca_hai}))
+    chung_cafe = [["cafe", True, None, ["TOI-ID", "KIA-ID"]]]
+    minh_nightlife = [["outdoor", False, "Minh", ["KIA-ID"]], ["nightlife", False, "Minh", ["KIA-ID"]]]
+    cafe2 = ["p-cafe2", "Cafe Hải Sản", "cafe", [], [], 49, 3]
+    cafe3 = ["p-cafe3", "Tiệm Chiều", "cafe", [], ["yên tĩnh"], 45, 9]
+    for name, rang_buoc, lich_su, cho_cu, ung_vien, gu, ung_vien_gu, da_di_ids in (
+        ("no_taste", [], [], None, [], [], [], []),
+        ("no_usable_taste", [], [], None, [], [["outdoor", True, None, ["TOI-ID", "KIA-ID"]]], [], []),
+        ("no_history_names_the_stop", [], [], None, [], chung_cafe, [], []),
+        ("one_sharer_names_the_stop", ["Hải sản"], [], None, [], minh_nightlife, [], []),
+        ("history_place_wins", [], [da_di], lau, [["p-lau2", "Lẩu Hai", "quan-an-local", [], [], 45, 3]], chung_cafe, [cafe, cafe3], ["p-lau"]),
+        ("history_without_new_place_then_taste_picks", [], [da_di], lau, [], chung_cafe, [cafe, cafe3, cafe2], ["p-lau"]),
+        ("taste_avoids_a_box", ["hải sản"], [da_di], lau, [], chung_cafe, [cafe2, cafe3], ["p-lau"]),
+        ("taste_skips_visited_and_other_kinds", [], [da_di], lau, [], chung_cafe, [cafe, ["p-x", "Khu Vui", "vui-choi", [], [], 50, 9]], ["p-lau", "p-cafe"]),
+        ("long_name_falls_back", [], [da_di], lau, [], chung_cafe, [["p-dai", "Quán " + "x" * 190, "cafe", [], [], 50, 1]], ["p-lau"]),
+    ):
+        out.append(
+            case(
+                "lam_giau_theo_gu",
+                name,
+                {
+                    "routine": good,
+                    "rang_buoc": rang_buoc,
+                    "now": T,
+                    "lich_su": lich_su,
+                    "cho_cu": cho_cu,
+                    "ung_vien": ung_vien,
+                    "gu": gu,
+                    "ung_vien_gu": ung_vien_gu,
+                    "da_di": da_di_ids,
+                },
+            )
+        )
     return out
 
 
@@ -1040,6 +1102,42 @@ def pair_paper_fuzz(seed: int, count: int) -> list[dict]:
                 },
             )
         )
+    # ADR-0034: its own stream, so every case above stays as it was.
+    rng = random.Random(seed * 1000 + 13)
+    tags = ("an-uong", "cafe", "nightlife", "mon-local", "outdoor", "shopping", "karaoke", "game", "tag-bo", "")
+    people = ("TOI-ID", "KIA-ID")
+    for i in range(max(1, count // 10)):
+        chia = rng.sample(people, rng.randint(0, 2))
+        gu = {p: [rng.choice(tags) for _ in range(rng.randint(0, 4))] for p in people if rng.random() < 0.9}
+        out.append(
+            case(
+                "gu_cho_nep",
+                f"fuzz-gu/{i}",
+                {"nguoi_chia": chia, "gu": gu, "ten": {p: rng.choice(("Minh", "", TEXTS[3])) for p in people}, "ca_hai": rng.random() < 0.7},
+            )
+        )
+        spec = [
+            [rng.choice(tags), rng.random() < 0.5, rng.choice((None, "Minh", rng.choice(TEXTS))), list(rng.sample(people, rng.randint(1, 2)))]
+            for _ in range(rng.randint(0, 3))
+        ]
+        spec = [[t, c, (n if not c and n is not None else (None if c else "Minh")), ps] for t, c, n, ps in spec]
+        out.append(
+            case(
+                "lam_giau_theo_gu",
+                f"fuzz-theo-gu/{i}",
+                {
+                    "routine": {"ngay": ["date", "2030-09-21"], "gio": "18:30", "viec": "Ăn tối", "di_tiep": None, "ly_do": rng.choice(("", "Nếp nhớ."))},
+                    "rang_buoc": [rng.choice(words + TEXTS) for _ in range(rng.randint(0, 2))],
+                    "now": random_instant(rng),
+                    "lich_su": rng.choice(([], [["2030-09-14", [["19:30", "Ăn", rng.choice(ids)]]]])),
+                    "cho_cu": rng.choice((None, row())),
+                    "ung_vien": [row() for _ in range(rng.randint(0, 3))],
+                    "gu": spec,
+                    "ung_vien_gu": [row() for _ in range(rng.randint(0, 5))],
+                    "da_di": [rng.choice(ids) for _ in range(rng.randint(0, 2))],
+                },
+            )
+        )
     return out
 
 
@@ -1214,7 +1312,7 @@ class Stub:
     def list_members(self, context_id):
         self.rec("list_members", context_id)
         return [
-            SimpleNamespace(person_id=U(person), state=state)
+            SimpleNamespace(person_id=U(person), state=state, display_name=f"Tên {person}")
             for person, state in self.world["roster"]
         ]
 
@@ -2560,6 +2658,25 @@ def pair_steps_edges() -> list[dict]:
         ),
     ):
         out.append(S(fn, name, req(fn), {"locks": locks, "papers": papers, "places": places}))
+    # ADR-0034 §2.2: the tastes of whoever shared theirs, and nobody else's.
+    doi = both("lap_so") + both("bat_doi", proposal="PRD")
+    doi_props = [prop("PR1", "lap_so", completed=T - DAY), prop("PRD", "bat_doi", completed=T - DAY)]
+    kia_chia = [grant("KIA", "chia_gu", proposal="PGK")], [prop("PGK", "chia_gu", completed=T - DAY)]
+    toi_chia = [grant("TOI", "chia_gu", proposal="PGT")], [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)]
+    gu = {"TOI": ["cafe", "game"], "KIA": ["nightlife", "cafe", "tag-da-bo"]}
+    chi_lau = [catalogue[0], catalogue[3], ["p-cafe2", "Cafe Hải Sản", "d-da-lat", "cafe", [], [], 49, 3]]
+    for name, consents, proposals, papers, places in (
+        ("taste_nobody_shared", doi, doi_props, [], catalogue),
+        ("taste_friends_only", both("lap_so") + kia_chia[0], [prop("PR1", "lap_so", completed=T - DAY)] + kia_chia[1], [], catalogue),
+        ("taste_they_shared_no_history", doi + kia_chia[0], doi_props + kia_chia[1], [], catalogue),
+        ("taste_both_shared_no_history", doi + kia_chia[0] + toi_chia[0], doi_props + kia_chia[1] + toi_chia[1], [], catalogue),
+        ("taste_history_place_wins", doi + kia_chia[0] + toi_chia[0], doi_props + kia_chia[1] + toi_chia[1], [agreed()], catalogue),
+        ("taste_after_history_ran_out", doi + kia_chia[0] + toi_chia[0], doi_props + kia_chia[1] + toi_chia[1], [agreed()], chi_lau),
+        ("taste_only_i_shared", doi + toi_chia[0], doi_props + toi_chia[1], [agreed()], chi_lau),
+    ):
+        out.append(
+            S(fn, name, req(fn), {"locks": [nb(consents=consents, proposals=proposals)], "papers": papers, "places": places, "interests": gu})
+        )
 
     # --- pair_paper ----------------------------------------------------------------------
     fn = "pair_paper"
@@ -3857,6 +3974,8 @@ FUNCTIONS = {
     "chuyen": pp_chuyen,
     "phac_to_giay": pp_phac,
     "lam_giau_phac": pp_lam_giau,
+    "gu_cho_nep": pp_gu_cho_nep,
+    "lam_giau_theo_gu": pp_theo_gu,
     **{
         name: (lambda name: lambda **kw: run_step(name, **kw))(name) for name in CALLERS
     },

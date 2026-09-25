@@ -6979,6 +6979,14 @@ class ApiService:
         answer «does these two people have a notebook» for anybody holding an
         id, which is the one question a two-person notebook must not answer.
         """
+        context, roster = self._pair_roster_or_404(context_id, actor)
+        return context, tuple(row.person_id for row in roster)
+
+    def _pair_roster_or_404(
+        self, context_id: uuid.UUID, actor: Actor
+    ) -> tuple[ContextRecord, tuple[MembershipRecord, ...]]:
+        """`_pair_context_or_404` with the active rows whole, names included:
+        the draft names whose taste it used (ADR-0034)."""
         context = self.repository.get_context(context_id)
         if (
             context is None
@@ -6986,12 +6994,12 @@ class ApiService:
             or not self.repository.is_member(context_id, actor.id)
         ):
             raise ApiProblem(404, "notebook_not_found", "Không có sổ này.")
-        members = tuple(
-            row.person_id
+        roster = tuple(
+            row
             for row in self.repository.list_members(context_id)
             if row.state == "active"
         )
-        return context, members
+        return context, roster
 
     def _participants(
         self, notebook: PairNotebookRecord | None, members: tuple[uuid.UUID, ...]
@@ -7498,7 +7506,7 @@ class ApiService:
         """Ask the notebook for a sheet. One command, never a read with a side
         effect (ADR-0027 §6): a GET that wrote a sheet would mean opening the
         screen twice left two."""
-        self._pair_context_or_404(context_id, actor)
+        _context, roster = self._pair_roster_or_404(context_id, actor)
         now = _now()
         notebook = self._locked_notebook(context_id, now=now)
         _require_pair_permission(
@@ -7550,6 +7558,24 @@ class ApiService:
             ung_vien=[row.to_row() for row in ung_vien],
             rang_buoc=[{"content": c.content} for c in constraints],
         )
+        # ADR-0034 §2.2: the tastes of whoever shared theirs, and nobody
+        # else's. Read only in «Một đôi» and only for a sharer.
+        gu = self._gu_cho_nep(notebook, roster, now=now)
+        if gu:
+            loai = pair_paper.loai_theo_gu(gu)
+            tim = loai is not None and cho_cu is not None and not phac["content"]["chang"][0].get("place_id")
+            ung_vien_gu = (
+                self.repository.list_places(destination_id=cho_cu.destination_id, category=loai)
+                if tim
+                else []
+            )
+            phac = pair_paper.lam_giau_theo_gu(
+                phac,
+                gu=gu,
+                ung_vien=[row.to_row() for row in ung_vien_gu],
+                da_di=[c["place_id"] for nd in lich_su for c in nd["chang"] if c.get("place_id")],
+                rang_buoc=[{"content": c.content} for c in constraints],
+            )
         paper = self.repository.create_pair_paper(
             context_id=context_id,
             cycle_id=notebook.cycle_id,
@@ -7566,6 +7592,29 @@ class ApiService:
             now=now,
         )
         return _wire_command(paper, paper.state)
+
+    def _gu_cho_nep(
+        self,
+        notebook: PairNotebookRecord,
+        roster: tuple[MembershipRecord, ...],
+        *,
+        now: datetime,
+    ) -> list[dict]:
+        participants = self._participants(notebook, tuple(row.person_id for row in roster))
+        people = [str(p) for p in participants]
+        consents = _consents_as_dicts(notebook)
+        if not pair_notebook.can_bat_doi(consents, people, now=now):
+            return []
+        chia = [p for p in participants if "chia_gu" in pair_notebook.granted_by(consents, str(p), now=now)]
+        if not chia:
+            return []
+        tags = self.repository.interests_by_person(list(chia))
+        return pair_paper.gu_cho_nep(
+            [str(p) for p in chia],
+            {str(person): list(values) for person, values in tags.items()},
+            {str(row.person_id): row.display_name for row in roster},
+            ca_hai=len(chia) == len(set(people)) == 2,
+        )
 
     def _readable_paper_or_404(
         self, paper_id: uuid.UUID, actor: Actor
