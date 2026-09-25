@@ -32,7 +32,6 @@ const SRC = fileURLToPath(new URL("../src/rudi", import.meta.url));
 
 /** Known offenders at the start of ADR-0037, each fixed in its slice. `file#tag` keys. */
 const NO_DA_BIET = new Set([
-  "screens/hai-nguoi/ToLoiRu.tsx#Stamp",
   "hanh-trinh/ManHinhHanhTrinh.tsx#Text",
   "hanh-trinh/ManHinhHanhTrinh.tsx#RudiButton",
 ]);

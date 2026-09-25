@@ -30,8 +30,12 @@ export function DauLon({
   dong?: boolean;
   tre?: number;
   tilt?: number;
-  /** `vua` for a seal pressed onto a page beside Nếp rather than across the screen. */
-  co?: "lon" | "vua";
+  /**
+   * `vua` for a seal pressed onto a page beside Nếp rather than across the
+   * screen; `nho` for one pressed onto a small object (the first page of a
+   * closed notebook), where «SỔ ĐÃ MỞ» at `vua` broke into three lines.
+   */
+  co?: "lon" | "vua" | "nho";
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
@@ -44,11 +48,11 @@ export function DauLon({
   }));
   return (
     <Animated.View accessibilityLabel={nhan} accessibilityRole="text" style={[styles.dau, { borderColor: muc }, kieu, style]} testID={testID}>
-      <View pointerEvents="none" style={[styles.trong, co === "vua" && styles.trongVua, { borderColor: muc }]}>
+      <View pointerEvents="none" style={[styles.trong, co === "vua" && styles.trongVua, co === "nho" && styles.trongNho, { borderColor: muc }]}>
         <View pointerEvents="none" style={styles.muc}>
           <Grain material="mucIn" opacity={0.18} />
         </View>
-        <Text style={[styles.chu, co === "vua" && styles.chuVua, { color: muc }]}>{nhan}</Text>
+        <Text style={[styles.chu, co === "vua" && styles.chuVua, co === "nho" && styles.chuNho, { color: muc }]}>{nhan}</Text>
       </View>
     </Animated.View>
   );
@@ -61,4 +65,7 @@ const styles = StyleSheet.create({
   chu: { fontFamily: displayFace.condensedBold, fontSize: 24, lineHeight: 28, letterSpacing: 2.2, textTransform: "uppercase" },
   trongVua: { paddingHorizontal: 12, paddingVertical: 5 },
   chuVua: { fontSize: 18, lineHeight: 22, letterSpacing: 1.6 },
+  // One line of condensed caps: lineHeight 18 keeps the marks over «Ổ» and «Ở» (see CanhGap).
+  trongNho: { paddingHorizontal: 8, paddingVertical: 3 },
+  chuNho: { fontSize: 14, lineHeight: 18, letterSpacing: 1 },
 });

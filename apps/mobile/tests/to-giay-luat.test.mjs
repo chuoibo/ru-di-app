@@ -17,6 +17,7 @@ import {
   daDongY,
   goiYChoLam,
   nenXinTo,
+  sauKhiXinTo,
   demHauQuaDongSo,
   khacGi,
   laKeHoach,
@@ -233,6 +234,20 @@ test("?ru=1 chỉ xin tờ khi đã đọc xong và chưa có tờ mở", () => 
   assert.equal(nenXinTo(true, to("da_gui", [phienBan(1, TOI)])), "thoi", "tờ đang mở: không xin tờ thứ hai");
   assert.equal(nenXinTo(true, to("nhap", [phienBan(1, null)])), "thoi");
   assert.equal(nenXinTo(true, to("nghi_tuan", [phienBan(1, TOI)])), "xin");
+});
+
+test("B1: chưa lập sổ thì ?ru=1 không xin tờ, vì tờ xin lúc đó thành tờ mồ côi chặn tuần của người kia", () => {
+  assert.equal(nenXinTo(true, undefined, false), "thoi", "chưa có sổ: không phác tờ nào");
+  assert.equal(nenXinTo(false, undefined, false), "cho", "chưa đọc xong thì vẫn chờ, kể cả khi sổ chưa lập");
+  assert.equal(nenXinTo(true, undefined, true), "xin", "sổ đã lập, chưa có tờ mở: xin");
+  assert.equal(nenXinTo(true, undefined), "xin", "mặc định vẫn là sổ đã lập (fixture, lối gọi cũ)");
+});
+
+test("B1: «Rủ đi chơi» bị từ chối vì tuần đã có tờ của người kia thì màn chờ, không báo lỗi suông", () => {
+  assert.equal(sauKhiXinTo("paper_wrong_state", false), "cho-nguoi-kia", "không thấy tờ nào mở mà máy chủ nói sai trạng thái: tờ ở phía người kia");
+  assert.equal(sauKhiXinTo("paper_wrong_state", true), null, "đang thấy một tờ mở: đó là lỗi thường");
+  assert.equal(sauKhiXinTo("paper_expired", false), null, "lời từ chối khác vẫn là lời từ chối");
+  assert.equal(sauKhiXinTo(null, false), null);
 });
 
 test("«Rủ … tới đây» cho một chỗ đã ở trên tờ thì nói vậy, không mở trình sửa", () => {

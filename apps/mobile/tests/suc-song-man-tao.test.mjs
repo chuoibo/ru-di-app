@@ -44,11 +44,6 @@ const NO = [
   "groups/New.tsx",
   "groups/Invite.tsx",
   "friends/AddFriend.tsx",
-  "hai-nguoi/KhongGianGiay.tsx",
-  "hai-nguoi/ToLoiRu.tsx",
-  "hai-nguoi/DeNghiSua.tsx",
-  "hai-nguoi/DongYBac.tsx",
-  "hai-nguoi/ChonNguoi.tsx",
 ];
 
 /** The paper stage's primitives, by the module they live in. */
@@ -76,6 +71,10 @@ const PRIMITIVE = {
   BanAn: "BanAn",
   SoDoChuyen: "SoDoChuyen",
   DaiTienDo: "DaiTienDo",
+  // S2, the two-person notebook: its cover, the pact's signatures, the calendar leaves.
+  SoBia: "SoBia",
+  ChuKy: "ChuKy",
+  LaLich: "LaLich",
 };
 
 /** Strip comments and string bodies, so a primitive named in prose does not count. */

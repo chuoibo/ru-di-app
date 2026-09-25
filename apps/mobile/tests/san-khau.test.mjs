@@ -26,8 +26,10 @@ import { CANH_IDS, CANH_KHONG_NEP, KHUNG_CANH, SAN_CANH, hinhCanh } from "../dis
 import { KHUNG_KY_HOA, NET_KY_HOA, SAN_KY_HOA, hinhKyHoa } from "../dist-test/rudi/art/ky-hoa.js";
 import { kiemSanKhau, lopPhang, nguonSangCua, sanKhauKyHoa, sanKhauTuCanh, tachDoSau } from "../dist-test/rudi/art/san-khau.js";
 import {
+  BIA_MO,
   NHIP_DAU,
   bongTheoGoc,
+  choLatBia,
   giaiDoanDau,
   giamToc,
   gocBatTang,
@@ -259,6 +261,48 @@ test("ba nhịp của dấu: lao (tăng tốc), chạm mực, xong đúng lúc l
   assert.equal(giaiDoanDau(NHIP_DAU.lao + NHIP_DAU.cham / 2).muc, 0.5);
   assert.deepEqual(giaiDoanDau(NHIP_DAU.lao + NHIP_DAU.cham), { roi: 1, muc: 1, xong: true });
   assert.ok(NHIP_DAU.lao + NHIP_DAU.cham <= MOTION_MS.shared, "một cú dập nằm trong shared");
+});
+
+/*
+ * The notebook cover of M6 (plan S2). The room is checked by projecting the
+ * cover's four corners independently, every quarter degree, the way CSS and
+ * React Native draw `perspective` then `rotateY` about the spine's centre: a
+ * point `z` nearer is drawn `p / (p - z)` larger about the transform origin.
+ */
+function gocBia(rong, cao, goc, p) {
+  const r = (goc * Math.PI) / 180;
+  return [0, rong].flatMap((x) =>
+    [-cao / 2, cao / 2].map((y) => {
+      const z = x * Math.sin(r);
+      const k = p / (p - z);
+      return { x: x * Math.cos(r) * k, y: y * k };
+    }),
+  );
+}
+
+function raNgoai(rong, cao, cho) {
+  const ngoai = [];
+  for (let g = 0; g <= BIA_MO.gocToiDa; g += 0.25) {
+    for (const d of gocBia(rong, cao, g, BIA_MO.phoiCanh)) {
+      if (d.x < -cho.trai - 1e-9 || Math.abs(d.y) > cao / 2 + cho.doc + 1e-9) ngoai.push({ g, ...d });
+    }
+  }
+  return ngoai;
+}
+
+test("bìa sổ mở: qua thẳng đứng, chưa nằm phẳng; giữ đủ chỗ cho bìa ở mọi góc", () => {
+  assert.ok(BIA_MO.gocToiDa > 90 && BIA_MO.gocToiDa < 180, "bìa phải mở quá thẳng đứng (thấy mặt trong) mà chưa nằm phẳng");
+  for (const rong of [96, 112, 128, 140, 180]) {
+    const cao = Math.round(rong * 1.32);
+    const cho = choLatBia(rong, cao);
+    assert.deepEqual(raNgoai(rong, cao, cho), [], `rong=${rong}: bìa vẽ ra ngoài chỗ giữ`);
+    // Canary: the room is not vacuous; without it the swing does leave the book.
+    assert.ok(raNgoai(rong, cao, { trai: 0, doc: 0 }).length > 0, `rong=${rong}: canary không đỏ`);
+    // And not wasteful: no more than a dp over what the corners reach.
+    const xa = Math.max(...Array.from({ length: BIA_MO.gocToiDa * 4 + 1 }, (_, i) => Math.max(...gocBia(rong, cao, i / 4, BIA_MO.phoiCanh).map((d) => -d.x))));
+    assert.ok(cho.trai - xa <= 1, `rong=${rong}: giữ ${cho.trai}, bìa chỉ tới ${xa.toFixed(1)}`);
+  }
+  assert.deepEqual(choLatBia(140, 185, 0), { trai: 0, doc: 0 }, "bìa đóng không cần chỗ");
 });
 
 // --- the validator catches each broken stage --------------------------------

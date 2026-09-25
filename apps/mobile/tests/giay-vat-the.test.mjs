@@ -157,3 +157,18 @@ test("đường đục: hai đầu là mực, các gạch đều nhau, ngữ ph�
   kiemLop("đường đục", [{ d, mau: "muc", net: 1 }], 20, 100, 0.01);
   assert.equal(duongDut([0, 0], [0, 0]), "M 0 0 L 0 0");
 });
+
+test("nét chữ ký: một đường mở, đúng ngữ pháp Java, nằm trong hộp, bắt đầu ở chỗ bút chạm, tất định", async () => {
+  const { netChuKy } = await import("../dist-test/rudi/art/giay.js");
+  for (const w of [120, 160, 240, 400]) {
+    const d = netChuKy(w, 16);
+    const lenh = phanTich(d);
+    assert.equal(lenh[0].c, "M");
+    assert.ok(lenh.slice(1).every(({ c }) => c === "C"), "chỉ M rồi C: một nét bút, không khép");
+    assert.ok(!/Z/.test(d), "nét chữ ký là đường mở");
+    kiemLop(`chữ ký ${w}`, [{ d, mau: "muc", net: 1.8 }], w, 16);
+    const cuoi = lenh.at(-1).args;
+    assert.ok(cuoi[4] > w * 0.9, `nét kết thúc gần mép phải (${cuoi[4]} / ${w})`);
+    assert.equal(netChuKy(w, 16), d, "cùng bề rộng, cùng nét");
+  }
+});

@@ -1,16 +1,18 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { ganDanhSachNhom, type Phien } from "../../../phien";
 import { docDanhSachBan, type Ban } from "../../../screens/ca-nhan/ban-be";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
+import { mucNguoi, typography, useRudiTheme } from "../../theme";
 import { CAP_DEMO, NGUOI_KIA_DEMO } from "../../to-giay/fixtures-doi";
 import { Heading, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { HinhNhan } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
+import { PressScale } from "../../ui/PressScale";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
@@ -36,7 +38,7 @@ type Trang = { pha: "dang-doc" } | { pha: "xong"; ban: Ban[] } | { pha: "hong"; 
 
 function ChonNguoiSong({ phien }: { phien: Phien }) {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const { datPhien } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangMo, setDangMo] = useState<string | null>(null);
@@ -95,17 +97,31 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
           />
         ) : null}
         {trang.pha === "xong" && trang.ban.length > 0 ? (
-          <NhomHang>
+          // Friends as people, not rows: each a paper standee in their own ink
+          // (ADR-0037 D6) on a card you press to open your notebook together.
+          <View style={styles.luoi}>
             {trang.ban.map((ban) => (
-              <ListRow
+              <PressScale
+                accessibilityHint="Mở tờ giấy của hai bạn"
+                accessibilityLabel={ban.display_name}
+                accessibilityRole="button"
+                accessibilityState={{ busy: dangMo === ban.person_id, disabled: dangMo !== null }}
+                disabled={dangMo !== null}
+                haptic="select"
                 key={ban.person_id}
-                icon="person-outline"
-                onPress={dangMo === null ? () => void ruNguoi(ban) : undefined}
-                subtitle={dangMo === ban.person_id ? "Đang mở sổ của hai bạn…" : "Mở tờ giấy của hai bạn"}
-                title={ban.display_name}
-              />
+                onPress={() => void ruNguoi(ban)}
+                style={[styles.the, { backgroundColor: colors.card, borderColor: colors.lineStrong, opacity: dangMo !== null && dangMo !== ban.person_id ? 0.55 : 1 }]}
+              >
+                <HinhNhan name={ban.display_name} personId={ban.person_id} size={46} />
+                <Text numberOfLines={1} style={[typography.label, { color: mucNguoi(ban.person_id, dark) }]}>
+                  {ban.display_name}
+                </Text>
+                <Text numberOfLines={2} style={[typography.caption, styles.giua, { color: colors.inkSoft }]}>
+                  {dangMo === ban.person_id ? "Đang mở sổ của hai bạn…" : "Mở tờ giấy của hai bạn"}
+                </Text>
+              </PressScale>
             ))}
-          </NhomHang>
+          </View>
         ) : null}
         {loiMo !== null ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loiMo}</Text>
@@ -132,3 +148,9 @@ function ChonNguoiTraiNghiem() {
     </RudiScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  luoi: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  the: { flexGrow: 1, flexBasis: 104, maxWidth: 180, minHeight: 132, alignItems: "center", gap: 4, paddingVertical: 12, paddingHorizontal: 8, borderWidth: 1, borderRadius: 10 },
+  giua: { textAlign: "center" },
+});

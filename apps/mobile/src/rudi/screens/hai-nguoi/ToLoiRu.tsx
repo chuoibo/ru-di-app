@@ -10,6 +10,8 @@ import { useTenCho } from "../../to-giay/useTenCho";
 import { cauLanHen, demNgay } from "../../to-giay/moc-hen";
 import { homNay } from "../../keo/nhip-keo";
 import { RudiButton } from "../../ui";
+import { ChuThichLe } from "../../ui/ChuThichLe";
+import { NepDien } from "../../ui/NepDien";
 import { Stamp } from "../../ui/Stamp";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
 
@@ -28,13 +30,20 @@ import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
  *
  * The state is a `Stamp` with a readable word, never a colour alone (spec
  * §12.1), and the word is the READER's: the same `da_gui` sheet says «Đã gửi»
- * to its sender and «Gửi cho bạn» to its recipient. Coral on the stamp is for
- * a sheet that still asks something; a plan, a memory, a closed week is a
- * fact and stamps in ink, so the one coral lead on the surface stays with the
- * button that asks (spec §16.4; blind read: a filled coral «KÝ ỨC» beat the
- * footer button to the eye). Always the outline seal: a filled ink block with
- * white capitals read as a button (blind read, round 2), and a rubber stamp
- * is a ring of ink anyway.
+ * to its sender and «Gửi cho bạn» to its recipient. The stamp is always ink:
+ * the sheet is `paper`, and on the dark `paper` coral text reads 4.12:1, under
+ * the floor (ADR-0037 D14). Whose turn it is stays said twice without it --
+ * the coral folded corner and the solid coral button. Always the outline
+ * seal: a filled ink block with white capitals read as a button (blind read,
+ * round 2), and a rubber stamp is a ring of ink anyway.
+ *
+ * UI v3 (ADR-0037, plan S2): a draft is in pencil -- its lines in the soft
+ * ink over a dashed pencil rule, with the margin note «Nếp phác, bạn sửa» --
+ * and becomes ink when it is sent. Pencil follows the sheet's state, not who
+ * wrote which line: the paper route carries no per-line provenance, and a
+ * live draft already comes back as `author_type: "human"` (the person asked
+ * for it), so «untouched by a person» cannot be told apart on the wire.
+ * Sending it is M7: Nếp folds the letter in three.
  *
  * Buttons come from `nutChoTo`: the first primary is `solid`, the second
  * `outline` -- `soft` lost to `outline` in a blind read, the reverse of what
@@ -117,6 +126,10 @@ export function ToLoiRu({
   const hang = pb?.content.chang ?? [];
   const tenCho = useTenCho([...hang, ...hangCu].map((c) => c.place_id));
   const doi = dangQuyet && pb && truocDo ? khacGi(pb, truocDo, (id) => tenCho[id]) : [];
+  // Not sent yet: pencil, not ink.
+  const butChi = to.state === "nhap";
+  // This person just sent it, under their own finger: the letter is folded (M7).
+  const vuaGui = vuaDoi && to.state === "da_gui" && pb?.author_type === "human" && pb.sent_by === toiId;
 
   const bam: Record<string, (() => void) | undefined> = {
     gui: onGui,
@@ -142,6 +155,11 @@ export function ToLoiRu({
 
   return (
     <View style={styles.khoi} testID={testID}>
+      {vuaGui ? (
+        <View style={styles.nepGui}>
+          <NepDien khoanhKhac="M7" suKien={`${to.id}:gui:${to.version}`} />
+        </View>
+      ) : null}
       <ToGiayView dan={dan && luotCuaToi} testID={testID ? `${testID}-to` : undefined}>
         <View accessibilityLabel={cau} accessibilityRole="summary" accessible style={styles.thanTo}>
           {hang.length === 0 ? (
@@ -151,9 +169,9 @@ export function ToLoiRu({
             <View key={`${c.gio}-${i}`}>
               {i > 0 ? <VetGap /> : null}
               <View style={styles.hang}>
-                <Text style={[typography.label, styles.gio, { color: colors.ink }]}>{c.gio}</Text>
-                <View style={styles.viec}>
-                  <Text style={[typography.body, { color: colors.ink }]}>{c.viec}</Text>
+                <Text style={[typography.label, styles.gio, { color: butChi ? colors.inkSoft : colors.ink }]}>{c.gio}</Text>
+                <View style={[styles.viec, butChi && [styles.butChi, { borderBottomColor: colors.lineStrong }]]}>
+                  <Text style={[typography.body, { color: butChi ? colors.inkSoft : colors.ink }]}>{c.viec}</Text>
                   {c.place_id && tenCho[c.place_id] ? (
                     <Text style={[typography.caption, { color: colors.inkSoft }]} testID={testID ? `${testID}-cho-${i}` : undefined}>
                       <Ionicons color={colors.inkSoft} name="location-outline" size={13} /> {tenCho[c.place_id]}
@@ -173,11 +191,12 @@ export function ToLoiRu({
               label={nhanDau(to, toiId, tenNguoiKia)}
               testID={testID ? `${testID}-stamp` : undefined}
               tilt={vuaDoi ? -2 : 0}
-              tone={luotCuaToi ? "accent" : "ink"}
+              tone="ink"
             />
           </View>
         </View>
       </ToGiayView>
+      {butChi ? <ChuThichLe icon="pencil">Nếp phác, bạn sửa. Gửi đi thì tờ thành mực của bạn.</ChuThichLe> : null}
       {dauTien?.ly_do && to.state !== "da_giu" ? <Text style={[typography.label, styles.lyDo, { color: colors.inkSoft }]}>Vì: {dauTien.ly_do}</Text> : null}
       {doi.length > 0 || lyDoSua ? (
         <View style={[styles.doi, { borderLeftColor: colors.lineStrong }]} testID={testID ? `${testID}-khac-gi` : undefined}>
@@ -310,6 +329,9 @@ const styles = StyleSheet.create({
   hang: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   gio: { minWidth: 52, fontVariant: ["tabular-nums"], paddingTop: 2 },
   viec: { flex: 1 },
+  // Nếp's pencil: a dashed rule under the soft-ink words.
+  butChi: { borderBottomWidth: 1, borderStyle: "dashed", paddingBottom: 3 },
+  nepGui: { alignItems: "flex-end" },
   hangCuoi: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 },
   // Flush with the status line under it: the 6dp inset read as a stray indent (QA 23/09).
   lyDo: {},

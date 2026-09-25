@@ -53,6 +53,18 @@ export interface TrangThaiSoDoi {
   docChat: boolean;
   /** Whose turn to open the week. Slice 1 alternates by who sent last. */
   luotCuaToi: boolean;
+  /**
+   * Whether `luotCuaToi` means anything here. The fixture keeps a turn; the
+   * live notebook has none on the wire (ADR-0027 §6.3), so the screen must not
+   * tell a person «Tuần này bạn mở lời» on a guess (QC 24/09, B1).
+   */
+  coLuot: boolean;
+  /**
+   * The last «Rủ đi chơi» was refused because this week already has a sheet
+   * this person cannot see (the other person's private draft): the surface
+   * waits for it instead of offering the same failing button (B1).
+   */
+  xinToBiChan: boolean;
   rangBuoc: { toi: RangBuoc; nguoiKia: RangBuoc };
   toGiay: readonly ToGiay[];
   /** Consent proposals still waiting for the other person. */
@@ -115,6 +127,8 @@ export interface SoDoiApi extends TrangThaiSoDoi {
 
   /** «Rủ đi chơi»: Nếp drafts a sheet for me. */
   ruDiChoi: () => void;
+  /** Read the notebook again now (a wait on the other person is news only they can make). */
+  lamMoi: () => void;
   suaNhap: (id: string, content: NoiDungTo, lyDo: string | null) => void;
   gui: (id: string) => void;
   boNhap: (id: string) => void;
@@ -150,6 +164,8 @@ function seed(): TrangThaiSoDoi {
     batDoi: false,
     docChat: false,
     luotCuaToi: true,
+    coLuot: true,
+    xinToBiChan: false,
     rangBuoc: RANG_BUOC_MAU,
     toGiay: TO_GIAY_CU,
     deNghiCho: [],
@@ -209,6 +225,8 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
         doi((ds) => [...ds, phacToGiay(id, NEP_PHAC_MAU)]);
         return id;
       },
+      // The fixture has no other writer: there is nothing new to read.
+      lamMoi: () => undefined,
       suaNhap: (id, content, lyDo) => doi((ds) => suaNhap(ds, id, content, lyDo)),
       gui: (id) => {
         const now = bayGio();

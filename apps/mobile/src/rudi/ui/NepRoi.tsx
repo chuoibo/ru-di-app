@@ -7,9 +7,10 @@
 import { View, type StyleProp, type ViewStyle } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 
-import { KHUNG_NEP, type GapNep } from "../art/nep";
+import { KHUNG_NEP, type GapNep, type PoseNep } from "../art/nep";
 import type { TietMuc } from "../art/nep-dien";
 import { tuTheRoi } from "../art/nep-roi";
+import { Nep } from "./art/Nep";
 import { VeLop } from "./art/VeLop";
 import { useNhuongChoNep } from "../nep/NepProvider";
 import { KhungSkia, luoiSkia } from "./KhungSkia";
@@ -49,6 +50,21 @@ export function NepTinh({ tm, khoa, width, gap = "trang", style }: { tm: TietMuc
   return (
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={style}>
       <VeLop height={width} khungH={KHUNG_NEP} khungW={KHUNG_NEP} lop={lop} width={width} />
+    </View>
+  );
+}
+
+/**
+ * Nếp standing on a page in one of its still poses (the classic figure, not
+ * the puppet): handing a sheet over, pressing one face down, folding one up.
+ * The same two rules as `NepTinh`: decoration a screen reader skips, and one
+ * Nếp at a time, so the dock's tucks away while this one is on the page.
+ */
+export function NepTrongTrang({ pose, size = 112, gap = "manh", style }: { pose: PoseNep; size?: number; gap?: GapNep; style?: StyleProp<ViewStyle> }) {
+  useNhuongChoNep(true);
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={style}>
+      <Nep gap={gap} pose={pose} size={size} />
     </View>
   );
 }

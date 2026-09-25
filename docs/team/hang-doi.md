@@ -9,6 +9,36 @@ Xếp theo mức độ nghiêm trọng, không theo thứ tự nghĩ ra.
 
 ---
 
+## MỚI 2026-09-25: UI v3 «Sân khấu giấy», việc phía máy chủ và máy thật mà client không tự làm được
+
+Nhánh `claude/practical-faraday-mswgmv`, kế hoạch `docs/architecture/04-ui-v3-san-khau-giay.md`.
+Client đã khoanh vùng các lỗi dưới đây. Phần gốc nằm ở máy chủ hoặc cần máy thật, nên ghi lại để
+không lạc.
+
+1. **B1, phía máy chủ: bản phác mồ côi trước khi có sổ.**
+   - Hiện trạng: máy chủ nhận `POST /contexts/{id}/papers` khi sổ chưa lập, và tạo `pair_papers`
+     trạng thái `nhap` với `cycle_id` NULL.
+   - Hậu quả: sau khi sổ lập, bản phác ấy (chỉ chủ nó thấy) chặn cả tuần của người kia. Người kia
+     bấm «Rủ đi chơi» sẽ nhận `paper_wrong_state`.
+   - Tái hiện trên stack seed 25/09: một hàng `nhap · cycle_id NULL · chủ Tuấn Kiệt`; Minh Anh bấm
+     «Rủ đi chơi» nhận «Tờ giấy không ở trạng thái làm được việc này.».
+   - Client đã sửa ở S2: `nenXinTo` không xin tờ khi sổ chưa lập. Bị từ chối kiểu đó thì màn hiện
+     «Tờ tuần này ở phía …» kèm «Làm mới», không lặp lại nút hỏng. Bản live thôi nói «Tuần này bạn
+     mở lời», vì trên dây không có lượt.
+   - Còn phải quyết ở máy chủ: từ chối xin tờ khi `cycle_state != active` (`cycle_not_active`),
+     hoặc gắn bản phác vào chu kỳ khi sổ mở; và luật khi cả hai cùng muốn mở lời trong một tuần.
+   - Cần Lead xác nhận luật mong muốn (QC 24/09 đã hỏi). Mọi thay đổi route phải qua cổng parity.
+2. **Flow Maestro chạy lại trên máy thật.** Container không có Android SDK/KVM.
+   - Flow 28 (bàn gán món mới, cuộn-về-đầu khi đổi bước).
+   - Flow 29 (đợt thu, trang sổ).
+   - Flow 47 (sổ đôi: bìa sổ, giao kèo có chữ ký, tờ bút chì).
+   - Vị trí các chữ flow bấm đã đo trên web 412×915, nhưng «thấy được» của Maestro trên máy mới là
+     bằng chứng.
+3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&
+   npx expo run:android`.
+
+---
+
 ## MỚI 2026-09-24 — sổ đôi sau QA cặp đôi: chờ Lead ký ADR-0034
 
 Đợt 1–6 của kế hoạch sửa QA cặp đôi (23/09) đã lên `main` (`71e50a9f` … `764bbf64`), cộng bít lỗ rò

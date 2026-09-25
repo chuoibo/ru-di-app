@@ -107,3 +107,30 @@ export function giaiDoanDau(t: number): { roi: number; muc: number; xong: boolea
   const muc = kep((t - NHIP_DAU.lao) / NHIP_DAU.cham, 0, 1);
   return { roi, muc, xong: t >= NHIP_DAU.lao + NHIP_DAU.cham };
 }
+
+/**
+ * How far a notebook cover swings open (M6, «bìa sổ mở»): past upright and
+ * short of flat, so the inside of the cover stays in view as a page and the
+ * cover never ends edge-on. `phoiCanh` is the perspective distance in dp.
+ */
+export const BIA_MO = Object.freeze({ gocToiDa: 108, phoiCanh: 800 });
+
+/**
+ * The room a cover of `rong` x `cao` needs round its book while it swings
+ * from shut (0) to `goc` degrees about the spine: `trai` to the left of the
+ * spine, where the inside of the cover ends up, and `doc` above and below,
+ * where its free edge grows as it comes toward the eye (a point `z` nearer is
+ * drawn `p / (p - z)` times larger, about the hinge's centre). A book that
+ * keeps this room never paints over its neighbours mid-swing.
+ */
+export function choLatBia(rong: number, cao: number, goc: number = BIA_MO.gocToiDa, p: number = BIA_MO.phoiCanh): { trai: number; doc: number } {
+  let trai = 0;
+  let doc = 0;
+  for (let g = 0; g <= goc; g += 1) {
+    const r = (g * Math.PI) / 180;
+    const phong = p / (p - rong * Math.sin(r));
+    trai = Math.max(trai, -rong * Math.cos(r) * phong);
+    doc = Math.max(doc, ((phong - 1) * cao) / 2);
+  }
+  return { trai: Math.ceil(trai), doc: Math.ceil(doc) };
+}

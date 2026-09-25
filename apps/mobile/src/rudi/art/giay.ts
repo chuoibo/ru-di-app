@@ -197,3 +197,20 @@ export function duongDut(a: Diem, b: Diem, gach = 4, ho = 3): string {
   }
   return phan.join(" ");
 }
+
+/**
+ * The flourish under a signature (the pact of the two-person notebook, plan
+ * S2): a small loop where the pen lands, then one long easing stroke that
+ * rises at its end, `w` wide and `h` tall. One open path of cubics -- it is
+ * drawn on as a stroke, so it has a length and a start. Deterministic.
+ */
+export function netChuKy(w: number, h = 14): string {
+  const y = h * 0.62;
+  const loop = Math.min(18, w * 0.12);
+  return duong(
+    "M", 2, y,
+    "C", 2 + loop * 0.35, y - h * 0.55, 2 + loop, y - h * 0.5, 2 + loop * 0.8, y,
+    "C", 2 + loop * 0.62, y + h * 0.32, 2 + loop * 0.18, y + h * 0.18, 2 + loop * 0.55, y,
+    "C", w * 0.38, y - h * 0.18, w * 0.7, y + h * 0.28, w - 2, y - h * 0.46,
+  );
+}

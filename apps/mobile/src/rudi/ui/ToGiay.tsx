@@ -1,8 +1,9 @@
+import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import Svg, { Line, Polygon, Polyline } from "react-native-svg";
 
-import { useRudiTheme } from "../theme";
+import { phuMau, useRudiTheme } from "../theme";
 
 /**
  * The two-person notebook's sheet: a letter folded in thirds (spec «Nếp truyền
@@ -111,13 +112,21 @@ function GocGapThat({ c, gap, muc, nen, vien }: { c: number; gap: string; muc: s
  * called it.
  */
 export function VetGap({ style }: { style?: StyleProp<ViewStyle> }) {
-  const { colors, space } = useRudiTheme();
-  return <View style={[styles.vet, { backgroundColor: colors.paperShade, marginVertical: space.sm, marginHorizontal: -space.md }, style]} />;
+  const { colors, dark, space } = useRudiTheme();
+  // UI v3 (ADR-0037, plan S2 «gấp ba thật»): the panel after a crease lies at
+  // a slight angle to the light, so a soft shade falls from the crease into
+  // it and fades within a few dp. Drawn under the crease, taking no height.
+  return (
+    <View style={[styles.vet, { backgroundColor: colors.paperShade, marginVertical: space.sm, marginHorizontal: -space.md }, style]}>
+      <LinearGradient colors={[phuMau(colors.ink, dark ? 0.18 : 0.06), phuMau(colors.ink, 0)]} pointerEvents="none" style={styles.bongGap} />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   to: { alignSelf: "stretch", borderWidth: StyleSheet.hairlineWidth },
   gocVuong: { borderTopRightRadius: 0 },
+  bongGap: { position: "absolute", left: 0, right: 0, top: 1, height: 9 },
   goc: { position: "absolute", top: -StyleSheet.hairlineWidth, right: -StyleSheet.hairlineWidth },
   vet: { alignSelf: "stretch", height: StyleSheet.hairlineWidth },
 });

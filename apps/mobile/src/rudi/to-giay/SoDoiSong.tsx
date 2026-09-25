@@ -15,10 +15,11 @@
  *   closing, and opening another is a new agreement (§7.6).
  * - `luotCuaToi` is always true. The turn decides whose name Nếp drafts a sheet
  *   FOR, not who may ask, and slice 1 has no turn on the wire (ADR-0027 §6.3).
+ *   `coLuot` is false so no screen reads it as «Tuần này bạn mở lời» (B1).
  */
 import { type ReactNode, useMemo } from "react";
 
-import { type NoiDungTo } from "./to-giay";
+import { type NoiDungTo, sauKhiXinTo } from "./to-giay";
 import { SoDoiContext, type SoDoiApi } from "./SoDoi";
 import { caHaiDongY, ghiRangBuocTuanTu, rangBuocCua, toTomTatThanhTo } from "./so-doi-map";
 import { useToGiay } from "./useToGiay";
@@ -46,6 +47,10 @@ export function SoDoiSongProvider({
       batDoi: caHaiDongY(so, "bat_doi"),
       docChat: caHaiDongY(so, "doc_chat"),
       luotCuaToi: true,
+      coLuot: false,
+      // «Rủ đi chơi» refused because the week holds the other person's
+      // private draft: wait for it, do not offer the same failing press (B1).
+      xinToBiChan: sauKhiXinTo(song.lenhBiChan?.ten === "xin-to" ? song.lenhBiChan.ma : null, toMo !== undefined) === "cho-nguoi-kia",
       rangBuoc: { toi: rangBuocCua(so, toiId), nguoiKia: rangBuocCua(so, nguoiKiaId) },
       toGiay: toMo ? [toMo, ...toKhac] : toKhac,
       deNghiCho: (so?.pending_proposals ?? []).map((d) => ({
@@ -90,6 +95,7 @@ export function SoDoiSongProvider({
       dongYDeNghi: (id: string) => song.dongYDeNghiNay(id),
 
       ruDiChoi: () => void song.xinTo(),
+      lamMoi: () => void song.lamMoi(),
       suaNhap: (_id: string, content: NoiDungTo, lyDo: string | null) => void song.suaNhap(content, lyDo),
       gui: () => void song.gui(),
       // «Bỏ» a draft and «nghỉ tuần» are one command on the wire: §3.3's table
