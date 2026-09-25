@@ -34,6 +34,11 @@ const PHAM_VI = [
   "hai-nguoi/DeNghiSua.tsx",
   "hai-nguoi/DongYBac.tsx",
   "hai-nguoi/ChonNguoi.tsx",
+  // S8, the last v2 forms: preferences, a post, a story, a post's page.
+  "Onboarding.tsx",
+  "nguoi/DangBaiScreen.tsx",
+  "story/DangStoryScreen.tsx",
+  "tuong/BaiChiTietScreen.tsx",
 ];
 
 /** Screens not redone yet. Strike each one off in the slice that redoes it. */

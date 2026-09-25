@@ -17,11 +17,10 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { attemptFor, type Attempt } from "../../../api";
 import { PHAN_UNG } from "../../chat/tin-song";
-import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
 import { cauLucNao, loiRaChu, nhanMuc } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
+import { bongGiay, mucNguoi, typography, useRudiTheme } from "../../theme";
 import {
   CAU_KHONG_BINH_LUAN,
   apPhanUng,
@@ -42,7 +41,11 @@ import {
   type BinhLuanBai,
   type LoaiPhanUng,
 } from "../../tuong/bai-chi-tiet";
-import { Card, Divider, Field, IconButton, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { IconButton, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
+import { KhungAnh } from "../../ui/KhungAnh";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { nghiengAnh } from "../../ky-niem/ky-niem";
 import { Sheet } from "../../ui/Sheet";
 import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 import { EmptyState } from "../../ui/EmptyState";
@@ -57,7 +60,7 @@ type TrangBl =
 
 export function BaiChiTietScreen() {
   const router = useRouter();
-  const { colors, radius, space } = useRudiTheme();
+  const { colors, dark, radius, space } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const params = useLocalSearchParams<{ id?: string }>();
   let postId = "";
@@ -170,18 +173,18 @@ export function BaiChiTietScreen() {
       {bai.pha === "dang-doc" ? <SkeletonCard lines={3} media={0} /> : null}
       {bai.pha === "hong" ? <ErrorState body={bai.loi} onRetry={() => void napBai()} title="Chưa mở được bài" /> : null}
       {bai.pha === "xong" ? (
-        <Card>
+        // The post as a page pinned to the wall (ADR-0037 D1): the author in
+        // their ink, the photograph as a print leaning on its own angle.
+        <View style={[styles.trang, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
           <Pressable
             accessibilityLabel={`Xem hồ sơ ${bai.bai.author_display_name ?? ""}`.trim()}
             accessibilityRole="button"
             onPress={() => router.push(`/people/${bai.bai.author_id}` as never)}
             style={styles.tacGia}
           >
-            <View style={[styles.chuDau, { backgroundColor: colors.accentSoft }]}>
-              <Text style={[typography.label, { color: colors.accent }]}>{chuDau(bai.bai.author_display_name ?? "")}</Text>
-            </View>
+            <AvatarNguoi name={bai.bai.author_display_name ?? "Thành viên"} personId={bai.bai.author_id} size={36} />
             <View style={styles.tacGiaChu}>
-              <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>
+              <Text numberOfLines={1} style={[typography.label, { color: mucNguoi(bai.bai.author_id, dark) }]}>
                 {bai.bai.author_display_name && bai.bai.author_display_name !== "" ? bai.bai.author_display_name : "Thành viên"}
               </Text>
               <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -196,13 +199,15 @@ export function BaiChiTietScreen() {
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>Chưa tải được ảnh</Text>
               </View>
             ) : (
-              <Image
-                accessibilityLabel="Ảnh bài đăng"
-                contentFit="cover"
-                onError={() => setAnhHong(true)}
-                source={nguonAnhBai(bai.bai.image_url, toi)}
-                style={[styles.anh, { borderRadius: radius.small }]}
-              />
+              <KhungAnh tilt={nghiengAnh(bai.bai.id)}>
+                <Image
+                  accessibilityLabel="Ảnh bài đăng"
+                  contentFit="cover"
+                  onError={() => setAnhHong(true)}
+                  source={nguonAnhBai(bai.bai.image_url, toi)}
+                  style={styles.anh}
+                />
+              </KhungAnh>
             )
           ) : null}
           <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauTuongTacBai(bai.bai)}</Text>
@@ -231,7 +236,7 @@ export function BaiChiTietScreen() {
               );
             })}
           </View>
-        </Card>
+        </View>
       ) : null}
       {bai.pha === "xong" ? <Text style={[typography.label, { color: colors.ink }]}>Bình luận</Text> : null}
       {bl.pha === "dang-doc" ? <SkeletonRow lines={2} /> : null}
@@ -252,7 +257,7 @@ export function BaiChiTietScreen() {
         coTheBinhLuan(bai.bai) ? (
           <View style={styles.soan}>
             <View style={styles.oSoan}>
-              <Field accessibilityLabel="Ô viết bình luận" onChangeText={setNhap} placeholder="Viết bình luận…" value={nhap} />
+              <ONhapMuc accessibilityLabel="Ô viết bình luận" onChangeText={setNhap} placeholder="Viết bình luận…" value={nhap} />
             </View>
             <IconButton accessibilityLabel="Gửi bình luận" disabled={ban || nhap.trim() === ""} icon="arrow-up" loading={ban} onPress={() => void guiBl()} solid />
           </View>
@@ -277,9 +282,11 @@ export function BaiChiTietScreen() {
         keyExtractor={(c) => c.id}
         keyboardShouldPersistTaps="handled"
         renderItem={({ item: c }) => (
-          <Card style={styles.binhLuan}>
+          // A comment is a note in the margin, ruled in its writer's ink:
+          // no card inside the page, no box round every line.
+          <View style={[styles.binhLuan, { borderLeftColor: c.author_id === toi ? colors.lineStrong : mucNguoi(c.author_id, dark) }]}>
             <View style={styles.blDau}>
-              <Text numberOfLines={1} style={[typography.label, { color: colors.ink, flex: 1 }]}>
+              <Text numberOfLines={1} style={[typography.label, { color: c.author_id === toi ? colors.ink : mucNguoi(c.author_id, dark), flex: 1 }]}>
                 {c.author_id === toi ? "Bạn" : c.author_display_name}
               </Text>
               <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauLucNao(c.created_at)}</Text>
@@ -289,9 +296,8 @@ export function BaiChiTietScreen() {
                 </Pressable>
               ) : null}
             </View>
-            <Divider />
             <Text style={[typography.body, { color: colors.ink }]}>{c.body}</Text>
-          </Card>
+          </View>
         )}
       />
       <Sheet accessibilityLabel="Báo cáo bài đăng" onClose={() => setBaoCaoMo(false)} open={baoCaoMo}>
@@ -317,7 +323,8 @@ const styles = StyleSheet.create({
   anhHong: { alignItems: "center", justifyContent: "center" },
   phanUng: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   nutPhanUng: { borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6 },
-  binhLuan: { gap: 6 },
+  trang: { gap: 12, padding: 14, borderWidth: 1, borderRadius: 4 },
+  binhLuan: { gap: 4, borderLeftWidth: 3, paddingLeft: 12, paddingVertical: 4 },
   blDau: { flexDirection: "row", alignItems: "center", gap: 8 },
   soan: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   oSoan: { flex: 1 },

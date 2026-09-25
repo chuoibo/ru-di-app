@@ -285,19 +285,30 @@ function ThePoll({
             disabled={dangBo !== null || dong}
             key={o.id}
             onPress={() => void bo(o.id)}
+            // Each choice is a sticky note; every ballot is an ink thumbprint
+            // on it, so the count is seen before it is read (ADR-0037 D1).
             style={({ pressed }) => [
               styles.luaChon,
-              { borderColor: colors.lineStrong, backgroundColor: cuaToi ? colors.accentSoft : colors.card },
+              styles.giayNho,
+              { borderColor: cuaToi ? colors.accent : colors.lineStrong, borderWidth: cuaToi ? 2 : 1, backgroundColor: cuaToi ? colors.accentSoft : colors.card },
               pressed && styles.bam,
             ]}
           >
-            <Ionicons color={cuaToi ? colors.accent : colors.lineStrong} name={cuaToi ? "checkmark-circle" : "ellipse-outline"} size={22} />
             <View style={styles.flex}>
               <Text style={[typography.body, { color: colors.ink }]}>{o.label}</Text>
+              {so > 0 ? (
+                <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.vanTay}>
+                  {Array.from({ length: Math.min(so, 12) }, (_, i) => (
+                    <View key={i} style={[styles.dauVanTay, { backgroundColor: colors.ink, opacity: 0.72, transform: [{ rotate: `${(i * 37) % 60 - 30}deg` }] }]} />
+                  ))}
+                  {so > 12 ? <Text style={[typography.caption, { color: colors.inkSoft }]}>+{so - 12}</Text> : null}
+                </View>
+              ) : null}
               <Text style={[typography.caption, { color: cuaToi ? colors.accent : colors.inkSoft }]}>
                 {dangBo === o.id ? "Đang gửi phiếu…" : `${so} phiếu${cuaToi ? " · của bạn" : ""}`}
               </Text>
             </View>
+            {cuaToi ? <Ionicons color={colors.accent} name="checkmark-circle" size={22} /> : null}
           </Pressable>
         );
       }) : null}
@@ -339,6 +350,9 @@ function ThePoll({
 }
 
 const styles = StyleSheet.create({
+  giayNho: { borderRadius: 3, borderTopRightRadius: 12 },
+  vanTay: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, paddingVertical: 4 },
+  dauVanTay: { width: 10, height: 13, borderRadius: 6 },
   flex: { flex: 1 },
   card: { gap: 8, padding: 14, borderWidth: 1 },
   chuKy: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 6, paddingTop: 2 },

@@ -11,7 +11,8 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { newAttempt } from "../../../api";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
@@ -19,14 +20,17 @@ import { taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
 import { loiRaChu } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
 import { dangStory } from "../../story/story";
-import { typography, useRudiTheme } from "../../theme";
-import { Card, Field, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { bongGiay, typography, useRudiTheme } from "../../theme";
+import { RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Nep } from "../../ui/art/Nep";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { StampButton } from "../../ui/StampButton";
 
 const TRAN_CHU_THICH = 200;
 
 export function DangStoryScreen() {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const [anh, setAnh] = useState<TempPhoto | null>(null);
   const [chuThich, setChuThich] = useState("");
@@ -81,46 +85,51 @@ export function DangStoryScreen() {
     <RudiScreen testID="dang-story-screen">
       <TopBar title="Đăng story" />
       <Text style={[typography.body, { color: colors.inkSoft }]}>Một tấm ảnh, chỉ bạn bè thấy, trong 24 giờ.</Text>
-      <Card style={styles.khungAnh}>
+      {/* A polaroid that lasts a day (ADR-0037 D1): the picture, then the
+          caption on its white margin, and an hourglass for the 24 hours. The
+          empty frame is itself the way to pick the photo. */}
+      <View style={[styles.polaroid, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(2, dark)]}>
         {anh === null ? (
-          <View style={[styles.anhTrong, { borderColor: colors.lineStrong, borderRadius: radius.small }]}>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>Chưa có ảnh nào.</Text>
-          </View>
+          <Pressable accessibilityLabel="Chưa có ảnh nào, chạm để chọn" accessibilityRole="button" disabled={dangGui} onPress={() => void chonAnhMoi()} style={[styles.anhTrong, { borderColor: colors.lineStrong, backgroundColor: colors.ground }]}>
+            <Nep gap="trang" pose="giu-khung" size={88} />
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh nào. Chạm để chọn.</Text>
+          </Pressable>
         ) : (
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={[styles.anhXem, { borderRadius: radius.small }]} />
+          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={styles.anhXem} />
         )}
-        <View style={styles.chips}>
-          <RudiButton compact disabled={dangGui} full={false} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chonAnhMoi()} variant="outline" />
-          {anh !== null ? <RudiButton compact disabled={dangGui} full={false} label="Bỏ ảnh" onPress={() => void boAnhDaChon()} variant="ghost" /> : null}
-        </View>
-        {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
-      </Card>
-      <Card>
-        <Field
+        <ONhapMuc
           accessibilityLabel="Ô chú thích"
           label="Chú thích, nếu muốn"
           maxLength={TRAN_CHU_THICH}
           multiline
-          numberOfLines={3}
+          numberOfLines={2}
           onChangeText={setChuThich}
           placeholder="Một câu cho tấm ảnh."
           value={chuThich}
         />
-        <Text style={[typography.caption, { color: conLai < 20 ? colors.warn : colors.inkFaint }]}>Còn {conLai} ký tự.</Text>
-      </Card>
-      {loi ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text>
-        </Card>
-      ) : null}
-      <RudiButton disabled={!guiDuoc} icon="aperture-outline" label="Đăng story" loading={dangGui} onPress={() => void gui()} />
+        <View style={styles.dongCuoi}>
+          <Ionicons color={colors.inkSoft} name="hourglass-outline" size={16} />
+          <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>24 giờ</Text>
+          <Text style={[typography.caption, { color: conLai < 20 ? colors.warn : colors.inkSoft }]}>Còn {conLai} ký tự.</Text>
+        </View>
+      </View>
+      <View style={styles.chips}>
+        <RudiButton compact disabled={dangGui} full={false} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chonAnhMoi()} variant="outline" />
+        {anh !== null ? <RudiButton compact disabled={dangGui} full={false} label="Bỏ ảnh" onPress={() => void boAnhDaChon()} variant="ghost" /> : null}
+      </View>
+      {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
+      {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+      <StampButton disabled={!guiDuoc} label="Đăng story" loading={dangGui} onPress={() => void gui()} size="vua" tilt={-1} />
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  khungAnh: { gap: 10 },
+  flex: { flex: 1 },
+  // A polaroid: even sides, the deep margin under the picture for the words.
+  polaroid: { gap: 12, padding: 12, paddingBottom: 18, borderWidth: 1, borderRadius: 3, alignSelf: "center", width: "100%", maxWidth: 420 },
   anhXem: { width: "100%", aspectRatio: 3 / 4 },
-  anhTrong: { width: "100%", aspectRatio: 3 / 4, alignItems: "center", justifyContent: "center", borderWidth: 1, borderStyle: "dashed" },
+  anhTrong: { width: "100%", aspectRatio: 3 / 4, alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderStyle: "dashed" },
+  dongCuoi: { flexDirection: "row", alignItems: "center", gap: 6 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 });

@@ -364,6 +364,9 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 | Tường, khoảnh khắc | ảnh in nghiêng có washi, instax | `KhungAnh` + `nghiengAnh`, `Washi` |
 | Thành tích | tờ tem | `Tem` |
 | Hồ sơ | trang hộ chiếu | `DauLon co="nho"` |
+| Sở thích | bảng sticker (chọn là dán), mức chi là phong bì | `GuGlyph`, `StampButton` |
+| Đăng bài, story | trang thư và bốn phong bì người đọc; polaroid 24 giờ | `ONhapMuc`, `NapGiay` |
+| Bình chọn trong chat | giấy nhớ, mỗi phiếu là một dấu vân tay mực | — |
 | Ô nhập | dòng mực, không hộp | `ONhapMuc` (`Field` chỉ còn ở màn chưa làm lại) |
 
 **Luật đã thay luật v2:**

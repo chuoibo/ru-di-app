@@ -24,7 +24,8 @@
 | S4 | `dbca268` | Khám phá, Lên plan, 15 thành phố; sửa B5 |
 | S5 | `763149b` | chat, người, bảng Nếp; sửa B2, B3, B8; mực người qua AvatarNguoi |
 | S6 | `733b4e8` | kỷ niệm, thành tích, hộ chiếu; sửa B4 |
-| S7 | commit chứa file này | vào cửa, B7, quét 768/1280/tối/giảm chuyển động, DESIGN v3 |
+| S7 | `ed3d49e` | vào cửa, B7, quét 768/1280/tối/giảm chuyển động, DESIGN v3 |
+| S8 | commit sau S7 | Sở thích, Đăng bài, Story, Chi tiết bài, thẻ bình chọn |
 
 Hai commit merge `origin/main`: `1f61fcd`, `f67c286`. Mỗi commit lát có số đo cổng, đột biến và
 số chạy cây sạch trong commit message.
@@ -56,11 +57,9 @@ số chạy cây sạch trong commit message.
    - smoke crash Skia (dev client cũ phải rơi về SVG).
 2. B1 phía máy chủ (bản phác mồ côi khi sổ chưa lập): cần Lead chốt luật, qua cổng parity.
 3. Chưa làm lại, còn dùng khuôn v2:
-   - Sở thích (bảng sticker, ba phong bì);
-   - Đăng bài, Story, Chi tiết bài;
-   - thẻ bình chọn trong luồng (ThePoll);
    - Cài đặt (giữ trơn có chủ ý);
    - hành trình bản đồ.
+   Sở thích, Đăng bài, Story, Chi tiết bài và thẻ bình chọn đã làm ở lát S8 (commit sau S7).
 4. DESIGN.md: mục v3 là hợp đồng hiện hành; phần v2 bên dưới chưa viết lại toàn bộ.
 5. Cỡ chữ lớn (fontScale 1.3/2.0) chỉ đo được trên máy thật; web headless luôn là 1.0.
 6. Chữ «bút chì» của tờ sổ đôi đi theo trạng thái tờ, không theo từng dòng. Muốn theo dòng thì

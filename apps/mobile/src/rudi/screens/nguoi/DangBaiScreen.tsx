@@ -31,12 +31,15 @@ import { docNhomCuaToi, type NhomTomTat } from "../../../phien";
 import { loiRaChu } from "../../nguoi/ho-so-nguoi";
 import { laPair } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
-import { Chip, Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { bongGiay, typography, useRudiTheme } from "../../theme";
+import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { NapGiay } from "../../ui/NapGiay";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { StampButton } from "../../ui/StampButton";
 
 export function DangBaiScreen() {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark, radius } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const [than, setThan] = useState("");
   const [muc, setMuc] = useState<Audience>(MAC_DINH_NGUOI_DOC);
@@ -127,14 +130,17 @@ export function DangBaiScreen() {
   return (
     <RudiScreen testID="dang-bai-screen">
       <TopBar title="Đăng bài" />
-      <Field
-        label="Bạn muốn kể gì?"
-        multiline
-        numberOfLines={5}
-        onChangeText={setThan}
-        placeholder="Chuyến vừa rồi, quán mới, hay chỉ một câu."
-        value={than}
-      />
+      {/* The post is a page of a letter: ruled lines, the words in ink (ADR-0037 D1). */}
+      <View style={[styles.trangThu, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
+        <ONhapMuc
+          label="Bạn muốn kể gì?"
+          multiline
+          numberOfLines={5}
+          onChangeText={setThan}
+          placeholder="Chuyến vừa rồi, quán mới, hay chỉ một câu."
+          value={than}
+        />
+      </View>
       {/* ADR-0022 §2.1: one photograph of one's own, optional; it goes up first
           as a personal picture and the post that shows it comes second. */}
       <View style={styles.khungAnh}>
@@ -149,13 +155,15 @@ export function DangBaiScreen() {
         </View>
         {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
       </View>
-      <Heading subtitle="Chọn ai đọc được bài này. Bốn mức không xếp từ hẹp tới rộng: bạn bè và nhóm là hai tập khác nhau." title="Ai đọc được?" />
-      <View>
+      <Heading title="Ai đọc được?" />
+      {/* Four envelopes, one per audience; the chosen one is sealed. The rule
+          behind the four sits under a flap, still one tap away. */}
+      <View style={styles.phongBiLuoi}>
         {AUDIENCES.map((a) => {
           const chon = muc === a;
           return (
             <Pressable
-              // Named so a driver (and a screen reader) can pick this row and
+              // Named so a driver (and a screen reader) can pick this one and
               // not the sentence under a neighbour, which mentions «Bạn bè» too.
               accessibilityLabel={`Mức người đọc: ${MUC_NGUOI_DOC[a].nhan}`}
               accessibilityRole="radio"
@@ -163,24 +171,24 @@ export function DangBaiScreen() {
               key={a}
               onPress={() => setMuc(a)}
               style={({ pressed }) => [
-                styles.hang,
-                { borderBottomColor: colors.line },
+                styles.phongBi,
+                { backgroundColor: chon ? colors.accentSoft : colors.card, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 },
                 pressed && styles.bam,
               ]}
             >
-              <Ionicons color={chon ? colors.accent : colors.lineStrong} name={chon ? "checkmark-circle" : "ellipse-outline"} size={22} />
-              <View style={styles.hangChu}>
-                <Text style={[typography.label, { color: colors.ink }]}>
-                  {MUC_NGUOI_DOC[a].nhan}
-                </Text>
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                  {MUC_NGUOI_DOC[a].giaiThich}
-                </Text>
+              <View style={[styles.napPhongBi, { borderColor: chon ? colors.accent : colors.lineStrong }]} />
+              <View style={styles.phongBiChu}>
+                <Text style={[typography.label, { color: colors.ink }]}>{MUC_NGUOI_DOC[a].nhan}</Text>
+                <Text numberOfLines={3} style={[typography.caption, { color: colors.inkSoft }]}>{MUC_NGUOI_DOC[a].giaiThich}</Text>
               </View>
+              {chon ? <Ionicons color={colors.accent} name="checkmark-circle" size={20} style={styles.dauChon} /> : null}
             </Pressable>
           );
         })}
       </View>
+      <NapGiay tieuDe="Vì sao bốn mức?">
+        <Text style={[typography.body, { color: colors.ink }]}>Bốn mức không xếp từ hẹp tới rộng: bạn bè và nhóm là hai tập khác nhau.</Text>
+      </NapGiay>
       {muc === "group" ? (
         <View style={styles.khoi}>
           <Text style={[typography.label, { color: colors.ink }]}>Nhóm nào?</Text>
@@ -203,18 +211,19 @@ export function DangBaiScreen() {
         </View>
       ) : null}
       {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-      <RudiButton
-        disabled={!guiDuoc}
-        icon="send-outline"
-        label="Đăng"
-        loading={dangGui}
-        onPress={() => void gui()}
-      />
+      <StampButton disabled={!guiDuoc} label="Đăng" loading={dangGui} onPress={() => void gui()} size="vua" tilt={-1} />
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  trangThu: { borderWidth: 1, borderRadius: 4, padding: 14 },
+  phongBiLuoi: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  phongBi: { flexGrow: 1, flexBasis: 150, minHeight: 104, borderRadius: 4, paddingTop: 22, paddingHorizontal: 12, paddingBottom: 12, overflow: "hidden" },
+  // Small enough that its tip ends above the words (it crossed «Chỉ mình tôi» at 44).
+  napPhongBi: { position: "absolute", top: -26, alignSelf: "center", width: 30, height: 30, borderWidth: 1, transform: [{ rotate: "45deg" }] },
+  phongBiChu: { gap: 2 },
+  dauChon: { position: "absolute", top: 6, right: 6 },
   hang: { minHeight: 60, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   hangChu: { flex: 1, gap: 2 },
   khoi: { gap: 8 },
