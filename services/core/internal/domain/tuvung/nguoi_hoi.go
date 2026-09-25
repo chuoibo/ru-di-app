@@ -2,21 +2,34 @@ package tuvung
 
 // DiUngNguoiHoi reads the allergens an asker names, which are a hard filter
 // (design 04 §5.1): a place whose own words mention any of them, or any of
-// their family, is never shown. A mention with no trigger is a wish, not an
-// allergy -- «quán hải sản» asks for seafood -- so it is not returned.
+// their family, is never shown.
 //
-// The list may follow a trigger («mình dị ứng cua, ghẹ», «không ăn được tôm
-// và mực», «allergic to peanuts») or precede one («tôm thì mình dị ứng»,
-// «ăn cua xong là sưng môi», «gluten-free», «nut allergy»). Inside the list
-// a one-syllable allergen counts as typed with its marks or with none
-// («dị ứng cá», «di ung ca»), but not typed with other marks («cả», «cà»).
-// The list runs while each word is an allergen, a filler («với», «đồ») or a
-// connector («và», «lẫn»), and never past the end of a sentence. A trigger
-// that is denied («không bị dị ứng», «tưởng dị ứng»), or asked about
-// someone unnamed («có ai dị ứng tôm không?»), reads nothing; an item that
-// is a way of cooking («hải sản sống») or an exception («sữa đậu nành thì
-// uống được») is dropped. Another person's allergy is read like the
-// asker's: the filter serves the whole outing (§5.1).
+// The rule that decides every choice below: this reader is the safety net.
+// The engine unions what it reads with Understand's slots (slice 9), and
+// the public search has nothing else, so it maximises recall of stated
+// allergens. Reading one too many only hides more places, which is safe;
+// missing one hides nothing, which is not. Where a sentence is ambiguous
+// («dị ứng tôm tái», «có ai dị ứng tôm thì báo», «sữa và trứng thì ok
+// không»), every allergen it names in an allergy context is read.
+//
+// A mention with no trigger is a wish, not an allergy -- «quán hải sản»
+// asks for seafood -- so it is not returned. After a trigger («dị ứng»,
+// «không ăn được», «kiêng», «tránh», «trừ», «không có», «allergic to»,
+// «no»…) every allergen up to the end of the sentence is read, unknown
+// words skipped («dị ứng rất nặng với tôm», «mấy món có tôm», «đạm sữa bò»,
+// «tôm, à mà cả cua nữa»); the list stops early only at another trigger or
+// at a word that starts a request («tìm», «muốn», «cho mình», «ở», «đi»…:
+// «dị ứng tôm, tìm quán ốc» wants ốc). When a trigger ends its clause with
+// nothing after it («tôm thì mình dị ứng», «ăn tôm không được», «cua, ghẹ,
+// rồi tôm nữa, mấy con đó mình dị ứng hết»), or is a symptom («ăn cua là
+// ngứa»), the allergens before it in the sentence are read the same way.
+// Inside the list a one-syllable allergen counts typed with its marks, with
+// none or with another tone («dị ứng cá», «di ung ca», «dị ứng sửa»). The
+// one thing that reads nothing is a denied trigger: «không bị dị ứng»,
+// «tưởng dị ứng», «not allergic» -- and only a plain denial word counts
+// («hẻm», a bare «hem» or a «k» after a number never do). Another person's
+// allergy is read like the asker's: the filter serves the whole outing
+// (§5.1).
 //
 // Sorted in declaration order; not closed over families (MoRongDiUng).
 func DiUngNguoiHoi(text string) []string {
@@ -29,7 +42,7 @@ func DiUngNguoiHoi(text string) []string {
 			i++
 			continue
 		}
-		if c.kichBiPhuDinh(i, k) || c.hoiNguoiKhac(i) {
+		if c.kichBiPhuDinh(i, k) {
 			i += n
 			continue
 		}
@@ -40,10 +53,12 @@ func DiUngNguoiHoi(text string) []string {
 		// The list comes before the trigger only when nothing follows it:
 		// «tôm thì mình dị ứng», «ăn cua xong là sưng môi» -- but in «quán
 		// nào có cua, mình không ăn được cay» the trigger has its own object.
-		if k.truoc && read == 0 && (!k.sau || c.hetMenhDe(i+n)) {
-			c.docTruoc(i, found)
+		if k.truoc && read == 0 && (!k.sau || c.hetMenhDe(i+n)) && (!k.cuoi || c.hetMenhDeHan(i+n)) {
+			c.docTruoc(i, found, false)
+		} else if k.ke {
+			c.docTruoc(i, found, true)
 		}
-		i = next
+		i = max(next, i+n)
 	}
 	for i := range c.s {
 		for _, t := range tuThan {
@@ -63,16 +78,19 @@ func DiUngNguoiHoi(text string) []string {
 	return out
 }
 
-// chuanHoa maps teencode syllables onto the words triggers are written in.
+// chuanHoa maps teencode syllables onto the words triggers are written in
+// («mk dị ứg», «zị ứng», «đậu fộng», «hem ăn đc»). Two never map: «hẻm»
+// (an alley), which folds onto «hem», and a «k» right after a number,
+// which is thousand («200 k»), not «không».
 var chuanHoa = map[string]string{
 	"ko": "khong", "k": "khong", "kh": "khong", "khg": "khong", "kg": "khong", "hok": "khong", "hem": "khong",
 	"hk": "khong", "khum": "khong", "dc": "duoc", "vs": "voi", "j": "gi", "fong": "phong", "fung": "phung",
-	"mk": "minh", "mik": "minh", "zi": "di", "ug": "ung", "un": "ung",
+	"mk": "minh", "mik": "minh", "zi": "di", "dj": "di", "ug": "ung", "un": "ung",
 }
 
 func (c *cau) chuanHoaNguoiHoi() {
 	for i, w := range c.s {
-		if to, ok := chuanHoa[w]; ok {
+		if to, ok := chuanHoa[w]; ok && !(w == "hem" && c.raw[i] != "hem") && !(w == "k" && i > 0 && laSo(c.s[i-1])) {
 			c.s[i] = to
 		}
 		// «hông» is the southern «không»; «hồng» is not.
@@ -80,6 +98,16 @@ func (c *cau) chuanHoaNguoiHoi() {
 			c.s[i] = "khong"
 		}
 	}
+}
+
+// laSo reports whether a folded syllable is all digits.
+func laSo(w string) bool {
+	for _, r := range w {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return w != ""
 }
 
 // kich is one trigger: sau when the list may follow it, truoc when it may
@@ -92,6 +120,16 @@ type kich struct {
 	// phuDinh: the trigger is itself a negation («không ăn được»), so no
 	// negation before it is looked for.
 	phuDinh bool
+	// cuoi: a common word («bị», «không được») that is a trigger only where
+	// its clause ends right after it («mực nướng thì mình bị,», «mình ăn
+	// tôm không được.»).
+	cuoi bool
+	// ke: an English noun that follows its list («tree nut allergy»,
+	// «gluten-free»): the words right before it are read whatever follows.
+	ke bool
+	// nghiem: raw must be typed exactly, never bare («né», not the particle
+	// «ne»/«nè»).
+	nghiem bool
 }
 
 var kichDiUng = func() []kich {
@@ -100,12 +138,23 @@ var kichDiUng = func() []kich {
 		am := AmTiet(text)
 		out = append(out, kich{am: am, sau: sau, truoc: truoc, raw: raw, phuDinh: am[0] == "khong" || am[0] == "chang" || am[0] == "cha"})
 	}
-	for _, t := range []string{"dị ứng", "allergic to", "allergic", "allergy", "allergies", "sốc phản vệ", "phản vệ",
-		"bất dung nạp", "không dung nạp", "intolerant", "intolerance", "kiêng", "tránh",
-		"can't eat", "cannot eat", "can not eat", "can't have"} {
+	for _, t := range []string{"dị ứng", "diung", "ziung", "djung", "allergic to", "allergic", "sốc phản vệ", "phản vệ",
+		"bất dung nạp", "không dung nạp", "kiêng", "ngoại trừ", "except",
+		"can't eat", "cannot eat", "can not eat", "can't have", "không chịu được", "không hợp"} {
 		add(t, true, true, "")
 	}
-	for _, verb := range []string{"ăn", "uống"} {
+	for _, t := range []string{"allergy", "allergies", "intolerant", "intolerance"} {
+		add(t, true, true, "")
+		out[len(out)-1].ke = true
+	}
+	// One syllable that folds onto another word: typed as itself, or bare.
+	for _, t := range []string{"tránh", "trừ", "kỵ", "kị", "cữ"} {
+		add(t, true, true, t)
+	}
+	add("né", true, true, "né")
+	out[len(out)-1].nghiem = true
+	// «chả» is also a dish («bún chả ăn kèm…»): only «chả ăn được» counts.
+	for _, verb := range []string{"ăn", "uống", "đụng", "dùng", "xài"} {
 		for _, neg := range []string{"không", "chẳng", "chả"} {
 			add(neg+" "+verb+" được", true, true, "")
 		}
@@ -113,14 +162,30 @@ var kichDiUng = func() []kich {
 		add("chẳng "+verb, true, true, "")
 		add(verb+" không được", true, true, "")
 	}
+	// «không» with a verb of putting in: «không nêm nước tương», «không có
+	// đậu hũ», «không rắc hạt điều», «đừng cho đậu phộng». What follows is
+	// to be avoided; what precedes is the dish. «đừng» must be typed as
+	// itself: «dùng cho» (used for) folds onto «đừng cho».
+	for _, verb := range []string{"có", "nêm", "rắc", "cho", "bỏ", "thêm", "sử dụng", "chứa", "lấy", "muốn"} {
+		add("không "+verb, true, false, "")
+		add("đừng "+verb, true, false, "đừng")
+	}
+	add("đừng", true, false, "đừng")
 	add("no", true, false, "no")
+	add("without", true, false, "")
 	add("free", false, true, "")
-	for _, t := range []string{"nổi mẩn", "nổi mề đay", "mề đay", "khó thở", "đau bụng", "tiêu chảy"} {
+	out[len(out)-1].ke = true
+	for _, t := range []string{"nổi mẩn", "nổi mề đay", "mề đay", "khó thở", "đau bụng", "tiêu chảy", "nổi ban", "sưng môi", "sưng mặt",
+		"đi viện", "nhập viện", "cấp cứu"} {
 		add(t, false, true, "")
 	}
 	add("ngứa", false, true, "ngứa")
 	add("sưng", false, true, "sưng")
 	add("nôn", false, true, "nôn")
+	for _, t := range []string{"không được", "bị"} {
+		am := AmTiet(t)
+		out = append(out, kich{am: am, truoc: true, cuoi: true, phuDinh: am[0] == "khong"})
+	}
 	return out
 }()
 
@@ -142,7 +207,7 @@ func (c cau) kichTai(i int) (kich, int) {
 		if len(k.am) <= n || !khopTai(c.s, i, k.am) {
 			continue
 		}
-		if k.raw != "" && c.raw[i] != k.raw && c.raw[i] != c.s[i] {
+		if k.raw != "" && c.raw[i] != k.raw && (k.nghiem || c.raw[i] != c.s[i]) {
 			continue
 		}
 		inside := false
@@ -157,7 +222,10 @@ func (c cau) kichTai(i int) (kich, int) {
 }
 
 // kichBiPhuDinh: «không dị ứng», «không bị dị ứng», «chưa từng dị ứng»,
-// «không phải dị ứng», «tưởng dị ứng», «not allergic».
+// «không phải dị ứng», «tưởng dị ứng», «not allergic». Only a plain denial
+// counts: «chưa», «chẳng», «tưởng» typed with their marks (a bare «chua»
+// may be «sữa chua», a bare «tuong» «nước tương»), never a bare «hem» or
+// «hong», which may be «hẻm» and «hồng».
 func (c cau) kichBiPhuDinh(i int, k kich) bool {
 	if k.phuDinh {
 		return false
@@ -173,48 +241,43 @@ func (c cau) kichBiPhuDinh(i int, k kich) bool {
 		return false
 	}
 	switch c.s[j] {
-	case "khong", "chua", "chang", "not", "never", "no":
+	case "khong":
+		return c.raw[j] != "hem" && c.raw[j] != "hong"
+	case "not", "never", "no":
 		return true
+	case "chua":
+		return c.raw[j] == "chưa"
+	case "chang":
+		return c.raw[j] == "chẳng"
 	case "tuong":
-		return c.raw[j] == "tưởng" || c.raw[j] == "tuong"
+		return c.raw[j] == "tưởng"
 	}
 	return false
 }
 
-// hoiNguoiKhac: the trigger sits in a question about someone unnamed, «có
-// ai dị ứng tôm không?», «ai dị ứng hải sản?» -- but not «ai cũng dị ứng».
-func (c cau) hoiNguoiKhac(i int) bool {
-	start := i
-	for start > 0 && !c.ngatTruoc(start, ngatCau) {
-		start--
-	}
-	for k := start; k < i; k++ {
-		if c.s[k] != "ai" || (k != start && c.s[k-1] != "co") {
-			continue
-		}
-		if k+1 < len(c.s) && c.s[k+1] == "cung" {
-			continue
-		}
-		return true
-	}
-	return false
+// moYeuCau are words that open a request, which ends an allergy list: «dị
+// ứng tôm, tìm quán ốc», «dị ứng tôm, muốn ăn cua rang me», «dị ứng cá, đi
+// ăn ở Hội An». The value is the form the word must be typed in when it
+// folds onto another word («đi» and «dì», «ở» and «ơ»); "" any form.
+var moYeuCau = map[string]string{
+	"tim": "tìm", "kiem": "kiếm", "kim": "kím", "muon": "muốn", "them": "thèm", "can": "cần", "cho": "cho", "di": "đi",
+	"dat": "đặt", "o": "ở",
+	"find": "", "looking": "", "recommend": "", "suggest": "", "where": "", "want": "", "search": "", "show": "",
 }
 
-// Words a list may hold besides allergens: fillers before an item and
-// connectors between items.
-var noiDiUng = map[string]bool{
-	"voi": true, "va": true, "hoac": true, "hay": true, "lan": true, "and": true, "or": true, "them": true, "nua": true,
-	"bi": true, "do": true, "mon": true, "cac": true, "loai": true, "nang": true, "nhe": true, "co": true,
-}
+// moYeuCauNghiem are request words whose bare form is an allergen or a
+// dish: a bare «ghe» may be «ghẹ», a bare «goi» «gỏi».
+var moYeuCauNghiem = map[string]string{"ghe": "ghé", "goi": "gợi"}
 
-// demTruoc are the words that may sit between a list and the trigger after
-// it: «tôm THÌ MÌNH dị ứng», «đồ biển LÀ EM CHỊU, dị ứng», «ăn tôm VÀO LÀ
-// ngứa».
-var demTruoc = map[string]bool{
-	"thi": true, "la": true, "a": true, "minh": true, "em": true, "tui": true, "toi": true, "to": true, "t": true,
-	"m": true, "e": true, "anh": true, "chi": true, "bi": true, "phai": true, "vi": true, "chiu": true, "rieng": true,
-	"nha": true, "an": true, "uong": true, "vao": true, "xong": true, "cu": true, "deu": true, "ma": true,
-	"severe": true, "mild": true, "bad": true, "have": true, "i": true,
+func (c cau) moYeuCau(j int) bool {
+	if form, ok := moYeuCauNghiem[c.s[j]]; ok {
+		return c.raw[j] == form
+	}
+	form, ok := moYeuCau[c.s[j]]
+	if !ok {
+		return false
+	}
+	return form == "" || c.raw[j] == form || c.raw[j] == c.s[j]
 }
 
 // laCa: «cả» is a connector («dị ứng cả tôm lẫn cua»); so is a bare «ca»
@@ -285,10 +348,11 @@ func (c cau) mucHoiKetThuc(j int) ([]string, int) {
 }
 
 // sauKich are the words that may follow a trigger that ends its clause:
-// «dị ứng nha», «dị ứng nặng lắm», «dị ứng hết», «allergy here».
+// «dị ứng nha», «dị ứng nặng lắm», «dị ứng hết á», «allergy here».
 var sauKich = map[string]bool{
 	"nha": true, "nhe": true, "nhen": true, "do": true, "lam": true, "nang": true, "het": true, "a": true, "luon": true,
 	"lun": true, "roi": true, "qua": true, "vi": true, "here": true, "please": true, "pls": true, "nhiu": true, "nhieu": true,
+	"ne": true, "thoi": true, "ha": true, "day": true,
 }
 
 // hetMenhDe reports whether the clause ends at position j, particles aside:
@@ -310,66 +374,57 @@ func (c cau) hetMenhDe(j int) bool {
 	return false
 }
 
-// docSau reads the list after a trigger from position j and returns where it
-// ended and how many items it read.
+// hetMenhDeHan is hetMenhDe for a common-word trigger: particles, then a
+// break or the end, nothing else.
+func (c cau) hetMenhDeHan(j int) bool {
+	for j < len(c.s) && !c.ngatTruoc(j, ngatVe) && sauKich[c.s[j]] {
+		j++
+	}
+	return j >= len(c.s) || c.ngatTruoc(j, ngatVe)
+}
+
+// docSau reads the list after a trigger from position j: every allergen up
+// to the end of the sentence, unknown words skipped, stopping at another
+// trigger or, once past the first word, at a word that opens a request. It
+// returns where it stopped and how many items it read.
 func (c cau) docSau(j int, found map[string]bool) (int, int) {
 	start := j
-	var items [][]string
+	read := 0
 	first := true
-	for j < len(c.s) && !(j == start && c.ngatTruoc(j, ngatCau)) && !(j > start && c.ngatTruoc(j, ngatCau)) {
+	for j < len(c.s) && !c.ngatTruoc(j, ngatCau) {
+		if k, n := c.kichTai(j); n > 0 && k.sau {
+			break
+		}
+		if j > start && c.moYeuCau(j) {
+			break
+		}
 		if c.laCa(j, first) {
 			j++
 			continue
 		}
 		if ids, w := c.mucHoi(j); w > 0 {
 			first = false
-			next := j + w
-			// «không ăn được hải sản sống» is about raw food, not seafood.
-			if next < len(c.s) && !c.ngatTruoc(next, ngatVe) && (c.raw[next] == "sống" || c.raw[next] == "tái") {
-				j = next + 1
-				continue
+			for _, id := range ids {
+				found[id] = true
 			}
-			items = append(items, ids)
-			j = next
+			read++
+			j += w
 			continue
 		}
-		if noiDiUng[c.s[j]] {
-			j++
-			continue
-		}
-		break
+		j++
 	}
-	// «dị ứng sữa bò, sữa đậu nành thì uống được»: the last item is the
-	// exception, not the allergy.
-	if len(items) > 1 && j+1 < len(c.s) && c.s[j] == "thi" && c.laDuoc(j+1) {
-		items = items[:len(items)-1]
-	}
-	for _, ids := range items {
-		for _, id := range ids {
-			found[id] = true
-		}
-	}
-	return j, len(items)
+	return j, read
 }
 
-// laDuoc: «ăn được», «uống được», «ok», «không sao», «thoải mái»…
-func (c cau) laDuoc(j int) bool {
-	for _, t := range [][]string{{"an", "duoc"}, {"uong", "duoc"}, {"duoc"}, {"ok"}, {"oke"}, {"okay"}, {"fine"}, {"khong", "sao"}, {"thoai", "mai"}, {"binh", "thuong"}} {
-		if khopTai(c.s, j, t) {
-			return true
-		}
-	}
-	return false
-}
-
-// docTruoc reads the list before the trigger at position i.
-func (c cau) docTruoc(i int, found map[string]bool) {
-	j := i - 1
-	for j >= 0 && !c.ngatTruoc(j+1, ngatCau) && demTruoc[c.s[j]] {
-		j--
-	}
+// docTruoc reads the list before the trigger at position i: every allergen
+// back to the start of the sentence, unknown words skipped, stopping at
+// another trigger that reads its own list or at a word that opens a
+// request. With ke it reads only the words right before the trigger
+// («tree nut allergy», «severe peanut and sesame allergy») and stops at the
+// first word that is neither an allergen, a connector nor a modifier.
+func (c cau) docTruoc(i int, found map[string]bool, ke bool) {
 	itemAfter := false
-	for j >= 0 && !c.ngatTruoc(j+1, ngatCau) {
+	for j := i - 1; j >= 0 && !c.ngatTruoc(j+1, ngatCau); {
 		// A bare «ca» just before an item is «cả»; «cả» always is.
 		if c.s[j] == "ca" && (c.raw[j] == "cả" || (c.raw[j] == "ca" && itemAfter)) {
 			j--
@@ -384,11 +439,20 @@ func (c cau) docTruoc(i int, found map[string]bool) {
 			itemAfter = true
 			continue
 		}
-		if noiDiUng[c.s[j]] {
-			j--
-			itemAfter = false
-			continue
+		if k, n := c.kichTai(j); n > 0 && k.sau && j+n <= i {
+			break
 		}
-		break
+		if c.moYeuCau(j) || (ke && !keTruoc[c.s[j]]) {
+			break
+		}
+		j--
+		itemAfter = false
 	}
+}
+
+// keTruoc are the words that may sit inside an English list before its
+// noun: «severe peanut and tree nut allergy», «a mild egg allergy».
+var keTruoc = map[string]bool{
+	"and": true, "or": true, "severe": true, "mild": true, "bad": true, "serious": true, "strong": true, "slight": true,
+	"a": true, "an": true, "my": true, "i": true, "have": true, "has": true, "plus": true, "also": true,
 }

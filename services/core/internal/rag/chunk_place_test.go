@@ -2,9 +2,13 @@ package rag
 
 import (
 	"encoding/hex"
+	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
+
+	"mobile/services/core/internal/domain/tuvung"
 )
 
 // Golden content hashes of the chunker (Chunker = "place.v1"): any change to
@@ -168,6 +172,126 @@ func TestAnKiengChiTuKindVaTrait(t *testing.T) {
 		h, _ := DungHoSo(v.hang(0, q))
 		if !reflect.DeepEqual(h.AnKieng, c.want) {
 			t.Errorf("%s: diets %v, want %v", c.ten, h.AnKieng, c.want)
+		}
+	}
+}
+
+func coTrong(list []string, id string) bool {
+	for _, x := range list {
+		if x == id {
+			return true
+		}
+	}
+	return false
+}
+
+// nhanChayCuaImporter is the kind the OSM importer writes for
+// cuisine=vegetarian, read from the importer itself so the two never drift.
+func nhanChayCuaImporter(t *testing.T) string {
+	t.Helper()
+	raw, err := os.ReadFile("../../../api/app/places/osm.py")
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := regexp.MustCompile(`"vegetarian":\s*"([^"]+)"`).FindSubmatch(raw)
+	if m == nil {
+		t.Fatal("osm.py maps no label for cuisine=vegetarian")
+	}
+	return string(m[1])
+}
+
+// Review round 2, N2: a kind that is exactly a diet label states the diet,
+// in any case, with or without marks -- above all the importer's own label
+// for vegetarian cuisine -- and the name is read under the same strict
+// rules as a kind. A vegetarian search then finds the importer's
+// vegetarian place again, by its category and by its exact name. Identity:
+// the same place with a plain kind and name tags nothing and is filtered
+// out of a vegetarian search.
+func TestAnKiengTuNhanImporterVaTen(t *testing.T) {
+	v := docVang(t)
+	chay := nhanChayCuaImporter(t)
+	base := quanMau{ID: "x-chay-osm", DiemDen: "d-da-lat", Ten: "Quán Hoa Sen", Loai: "quan-an-local", Gio: str("10:00 – 21:00")}
+	cases := []struct {
+		ten  string
+		set  func(*quanMau)
+		want []string
+	}{
+		{"kind của importer", func(q *quanMau) { q.Kinds = []string{chay} }, []string{"chay"}},
+		{"kind của importer, hàng không dấu", func(q *quanMau) { q.Ten, q.Kinds = "Quan Hoa Sen", []string{chay} }, []string{"chay"}},
+		{"kind viết hoa", func(q *quanMau) { q.Kinds = []string{strings.ToUpper(chay)} }, []string{"chay"}},
+		{"kind Vegetarian", func(q *quanMau) { q.Kinds = []string{"Vegetarian"} }, []string{"chay"}},
+		{"kind Thuan chay không dấu", func(q *quanMau) { q.Kinds = []string{"Thuan chay"} }, []string{"chay", "thuan_chay"}},
+		{"kind Halal", func(q *quanMau) { q.Kinds = []string{"HALAL"} }, []string{"halal"}},
+		{"tên quán chay", func(q *quanMau) { q.Ten = "Quán Chay Hoa Sen" }, []string{"chay"}},
+		{"tên Vegan", func(q *quanMau) { q.Ten = "Vegan House Hoa Sen" }, []string{"chay", "thuan_chay"}},
+		{"tên phủ định", func(q *quanMau) { q.Ten = "Hoa Sen Không Chay" }, nil},
+		{"tên cơm cháy", func(q *quanMau) { q.Ten = "Cơm Cháy Hoa Sen" }, nil},
+		{"kind chạy bộ", func(q *quanMau) { q.Kinds = []string{"Chạy bộ"} }, nil},
+		{"kind tạm ngưng", func(q *quanMau) { q.Kinds = []string{chay + " (tạm ngưng)"} }, nil},
+		{"trait vegetarian: false", func(q *quanMau) { q.Traits = []string{"vegetarian: false"} }, nil},
+		{"kind thường", func(q *quanMau) { q.Kinds = []string{"cơm gà"} }, nil},
+	}
+	for _, c := range cases {
+		q := base
+		c.set(&q)
+		h, _ := DungHoSo(v.hang(0, q))
+		if !reflect.DeepEqual(h.AnKieng, c.want) {
+			t.Errorf("%s: diets %v, want %v", c.ten, h.AnKieng, c.want)
+		}
+	}
+	// End to end on the live path: the importer's vegetarian place, named
+	// «Quán Chay Hoa Sen» with the kind «Chay».
+	place := base
+	place.Ten, place.Kinds = "Quán Chay Hoa Sen", []string{chay}
+	rows := append(v.rows(), v.hang(0, place))
+	for _, cau := range []string{"quán chay ở Đà Lạt", "Quán Chay Hoa Sen Đà Lạt"} {
+		y, _ := DocCau(cau, v.dests())
+		y.K = 10
+		if !coTrong(y.AnKieng, "chay") {
+			t.Fatalf("%q reads no diet: %+v", cau, y)
+		}
+		found := false
+		for _, h := range xepSong(rows, nil, y).Quan {
+			found = found || h.ID == place.ID
+		}
+		if !found {
+			t.Errorf("%q does not find the importer's vegetarian place", cau)
+		}
+	}
+	plain := base
+	plain.Kinds = []string{"cơm gà"}
+	rows = append(v.rows(), v.hang(0, plain))
+	y, _ := DocCau("quán chay ở Đà Lạt", v.dests())
+	for _, h := range xepSong(rows, nil, y).Quan {
+		if h.ID == plain.ID {
+			t.Fatal("identity: a place that states no diet passed a vegetarian search")
+		}
+	}
+}
+
+// Review round 2, N3: whether a bare one-syllable allergen was typed
+// without marks on purpose is decided over the whole row, and a kind that
+// is that word alone is a label. The reviewer's kinds «Cua» and
+// «cua», «ghe» tagged nothing; a bare «cua» inside the prose of a row with
+// no marks at all still tags nothing («quan cua minh» is «quán của mình»).
+func TestMotAmTheoCaHang(t *testing.T) {
+	v := docVang(t)
+	for _, c := range []struct {
+		ten  string
+		q    quanMau
+		want []string
+	}{
+		{"kind Cua", quanMau{Ten: "Quán Bến Nhỏ", Kinds: []string{"Cua"}}, []string{"hai_san", "cua"}},
+		{"kinds cua, ghe", quanMau{Ten: "Quán Bến Nhỏ", Kinds: []string{"cua", "ghe"}}, []string{"hai_san", "cua"}},
+		{"kind Muc, hàng không dấu", quanMau{Ten: "Quan Ben Nho", Kinds: []string{"Muc"}}, []string{"hai_san", "muc"}},
+		{"cua trong mô tả, hàng có dấu", quanMau{Ten: "Quán Bến Nhỏ", Kinds: []string{"bún"}, MoTa: str("bun rieu, co them cua")}, []string{"hai_san", "cua"}},
+		{"cua trong mô tả, hàng không dấu", quanMau{Ten: "Quan Ben Nho", Kinds: []string{"bun"}, MoTa: str("quan cua minh")}, nil},
+	} {
+		q := c.q
+		q.ID, q.DiemDen, q.Loai, q.Gio = "x-mot-am", "d-da-lat", "quan-an-local", str("10:00 – 21:00")
+		h, _ := DungHoSo(v.hang(0, q))
+		if !reflect.DeepEqual(tuvung.MoRongDiUng(h.DiUng), c.want) && !(len(c.want) == 0 && len(h.DiUng) == 0) {
+			t.Errorf("%s: allergens %v, want (closed) %v", c.ten, h.DiUng, c.want)
 		}
 	}
 }

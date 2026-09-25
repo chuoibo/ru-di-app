@@ -232,36 +232,31 @@ func doGiuRieng(t *testing.T, g giuRieng) soGiuRieng {
 }
 
 // The readers the corpus measures: the asker's diets are read as DocCau
-// reads them; a place text is read as one structured field (a kind or a
-// trait), the only fields the index takes diets from.
+// reads them; a place text is read as one field a place declares itself
+// with (its name, a kind, a trait), the only fields the index takes diets
+// from.
 func docAnKiengNguoiHoi(text string) []string { return DoiKieng(AnKieng.QuetKhongPhuDinh(text)) }
 func docAnKiengQuan(text string) []string     { return AnKiengQuan(text) }
 
-// Pinned on the corpus, number for number and miss for miss. The three
-// targets are hard: every asker allergen read (family-closed), no allergen
-// read from a look-alike, no place text read as serving a diet it does not.
-// The rest is pinned so a change shows. A leading «~» marks a row the
-// corpus author labelled a best guess (mo_ho).
+// Gated on the corpus only in the unsafe direction, miss for miss: every
+// asker allergen read (family-closed), no place text read as serving a
+// diet it does not, no labelled place allergen left untagged. Everything
+// else is reported, not gated -- look-alikes read, allergens read beyond
+// the label, diets missed -- because reading too much only hides places:
+// the asker reader is the safety net unioned with Understand (design 04
+// §5.1), and a gate on over-reading is what pushed round 1 into dropping
+// stated allergens to make «look-alikes 0/60» pass. A leading «~» marks a
+// row the corpus author labelled a best guess (mo_ho).
 //
-// Measured blind on the code before this fix (5c3a3c1), the same corpus
-// gave: asker recall 60/166, look-alikes read 2/60 (h240, h249), 4 extra,
-// others' allergens 4/6, asker diets 31/38; places: 15 wrong diets, 8/24
-// diets missed, 22/61 allergens missed, 18 extra. The implementer read the
-// corpus before writing the fix, so the numbers below are fitted to it, not
-// blind: they say the fix covers these 407 rows, not how it does on the
-// next 407.
+// Measured blind on 5c3a3c1, the same corpus gave: asker recall 60/166,
+// look-alikes read 2/60 (h240, h249), 4 extra, others' allergens 4/6, asker
+// diets 31/38; places: 15 wrong diets, 8/24 diets missed, 22/61 allergens
+// missed, 18 extra. It has been read by every fixer since, so the numbers
+// below are fitted, not blind; the blind measure of this reader is the
+// sealed half of di_ung_heldout_v2, which only the reviewer opens.
 var ghimGiuRieng = struct {
-	so                                       string
-	lotNhan, giaMaoSai, thua, kiengLech      []string
-	quanKiengSai, quanKiengLot, quanDiUngLot []string
-}{
-	so: "nguoi_hoi: recall 166/166, gia_mao sai 0/60, thua 2, nguoi_khac doc 6/6, an_kieng dung 31/38\n" +
-		"quan: an_kieng sai 0, an_kieng lot 5/24, di_ung lot 0/61, di_ung thua 24",
-	thua: []string{"h191:ca", "h198:hai_san+tom"},
-	kiengLech: []string{"~h183:[]→[chay]", "h202:[]→[chay]", "h203:[]→[chay]", "~h270:[]→[chay]", "~h271:[]→[chay]",
-		"~h274:[]→[chay]", "~h277:[]→[chay]"},
-	quanKiengLot: []string{"q032:chay", "q033:chay", "q096:chay", "~q099:chay", "q118:chay"},
-}
+	lotNhan, quanKiengSai, quanDiUngLot []string
+}{}
 
 func TestGiuRieng(t *testing.T) {
 	g := docGiuRieng(t)
@@ -270,26 +265,16 @@ func TestGiuRieng(t *testing.T) {
 	}
 	s := doGiuRieng(t, g)
 	t.Logf("%s", s)
-	if s.duNhan != s.coNhan {
-		t.Errorf("asker allergens missed on %d of %d rows: %v", s.coNhan-s.duNhan, s.coNhan, s.lotNhan)
-	}
-	if s.giaMaoSai != 0 {
-		t.Errorf("allergens read from %d look-alikes: %v", s.giaMaoSai, s.giaMaoSaiID)
-	}
-	if s.quanKiengSai != 0 {
-		t.Errorf("%d wrong «serves diet X» on place texts: %v", s.quanKiengSai, s.quanKiengSaiID)
-	}
+	t.Logf("reported, not gated: look-alikes read %v; beyond the label %v; asker diets off %v; place diets missed %v",
+		s.giaMaoSaiID, s.thuaID, s.kiengLech, s.quanKiengLot)
 	w := ghimGiuRieng
-	if s.String() != w.so {
-		t.Errorf("numbers:\n got  %s\n want %s", s, w.so)
-	}
 	for _, c := range []struct {
 		ten       string
 		got, want []string
 	}{
-		{"lot nhan", s.lotNhan, w.lotNhan}, {"gia_mao sai", s.giaMaoSaiID, w.giaMaoSai}, {"thua", s.thuaID, w.thua},
-		{"an_kieng lech", s.kiengLech, w.kiengLech}, {"quan an_kieng sai", s.quanKiengSaiID, w.quanKiengSai},
-		{"quan an_kieng lot", s.quanKiengLot, w.quanKiengLot}, {"quan di_ung lot", s.quanDiUngLot, w.quanDiUngLot},
+		{"asker allergens missed", s.lotNhan, w.lotNhan},
+		{"places read as serving a diet they do not", s.quanKiengSaiID, w.quanKiengSai},
+		{"place allergens left untagged", s.quanDiUngLot, w.quanDiUngLot},
 	} {
 		if strings.Join(c.got, " ") != strings.Join(c.want, " ") {
 			t.Errorf("%s:\n got  %q\n want %q", c.ten, c.got, c.want)

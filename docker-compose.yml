@@ -227,10 +227,13 @@ services:
     restart: "no"
 
   # Lược đồ chỉ mục truy hồi quán (internal/rag, thiết kế 04 §2.4), với bảng
-  # phiên bản riêng `rag_schema_migrations`. Chạy SAU `migrate-chat`, TRƯỚC
-  # `core`. `serve` không đòi lược đồ này — thiếu nó thì /places/search xếp
-  # trên hàng sống — nhưng có sẵn thì `core rag build` chạy được ngay. Dựng,
-  # đánh giá, đưa lên một phiên bản vẫn là việc tay của người vận hành.
+  # phiên bản riêng `rag_schema_migrations`. Chạy SAU `migrate-chat`. `serve`
+  # không đòi lược đồ này — thiếu nó, hay đang cài dở, thì /places/search xếp
+  # trên hàng sống — nên `core` chỉ đợi nó KHỞI ĐỘNG, không đợi nó THÀNH CÔNG:
+  # một lần migrate-rag hỏng (ví dụ checksum lệch) hiện ở `docker compose ps`
+  # với mã thoát khác 0 chứ không giữ cả cửa trước ở ngoài. Có sẵn lược đồ thì
+  # `core rag build` chạy được ngay. Dựng, đánh giá, đưa lên một phiên bản vẫn
+  # là việc tay của người vận hành.
   migrate-rag:
     <<: *core-image
     command: ["migrate-rag"]
@@ -277,8 +280,10 @@ services:
         condition: service_healthy
       migrate-chat:
         condition: service_completed_successfully
+      # Ordering only (see migrate-rag above): serve reads the retrieval
+      # schema through rag.Installed and falls back to live rows without it.
       migrate-rag:
-        condition: service_completed_successfully
+        condition: service_started
     healthcheck:
       # Liveness of core itself, on its loopback port — not a proxied /healthz,
       # which would report Python's health under core's name.

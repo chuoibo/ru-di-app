@@ -103,7 +103,11 @@ lọc cứng bằng SQL trước, rồi mới xếp hạng; model chỉ chấm l
 - Khi `MOBILE_AI_ENGINE_GROUP=go` mà schema từ vựng chưa cài, `work` từ chối khởi động kèm câu gợi ý kiểu
   `chatOffHint` (theo hợp đồng chung: đòi version ≥ N). Thiếu schema vector thì chạy chỉ-từ-vựng, ghi log
   một lần, `core rag status` báo `degraded`. `serve` không đòi schema RAG: route công khai duy nhất dùng nó
-  (`/places/search`, §7) có đường lùi trên hàng sống.
+  (`/places/search`, §7) có đường lùi trên hàng sống. Vì vậy trong compose `core` chỉ đợi `migrate-rag`
+  **khởi động** (`service_started`), không đợi nó **thành công**: migrate-rag hỏng (ví dụ checksum lệch) thì
+  container đó thoát mã khác 0 và hiện trong `docker compose ps`, còn cửa trước vẫn lên và xếp trên hàng sống
+  (lát 8 vòng sửa 2, N7). `migrate-chat` giữ `service_completed_successfully`: ở prod `serve` bật tính năng
+  chat mặc định và từ chối khởi động khi thiếu lược đồ đó.
 
 ### 2.5 Ảnh Postgres (lát 16)
 - `infra/postgres/Dockerfile`: `FROM postgres:16-alpine@sha256:…`, pgvector v0.8.x dựng từ tarball ghim sha256.
@@ -219,6 +223,20 @@ phần tất định của preprocess: chữ của chính người hỏi (bản 
 `tuvung` trên lời người gọi và gói chat được trao (lưới dự phòng cho «mình dị ứng hải sản» ở tin cũ). Slot đã
 qua kiểm của Go và guard, JSON Understand nằm trong `<du_lieu nguon="hieu">` (bản 01); RAG không nhận chữ tự do
 nào do model viết.
+
+*Nguyên tắc của bộ đọc dị ứng tất định (lát 8, vòng sửa 2).* `tuvung.DiUngNguoiHoi` là **lưới an toàn**: dị ứng
+nó đọc được **hợp (union)** với slot `di_ung` của Understand (lát 9), và route công khai `/places/search` không có
+gì khác ngoài nó. Nên nó tối đa hoá độ gợi nhớ (recall) dị ứng được nói ra: đọc thừa chỉ giấu bớt quán (an
+toàn), đọc sót thì không giấu gì (không an toàn). Hệ quả, đã thành luật trong mã: sau từ kích đọc mọi dị nguyên
+tới hết câu, bỏ qua chữ lạ, chỉ dừng ở một từ kích khác hoặc ở từ mở một yêu cầu («tìm», «muốn», «cho mình»,
+«ở», «đi»…); câu hỏi về người khác, «sống/tái», đuôi «thì được/ok» **không** làm bỏ món nào; lỗi gõ cùng chữ khác
+dấu thanh sau từ kích («dị ứng sửa») đọc thành dị nguyên; chỉ một từ kích bị phủ định rõ («không bị dị ứng»,
+«tưởng dị ứng») mới không đọc gì, và teencode mơ hồ («hẻm», «hem» trần, «k» sau con số) không bao giờ là phủ
+định. Cổng cứng chỉ đặt theo hướng không an toàn: recall trên corpus giữ riêng và violation@10 = 0 trên tập vàng
+cả hai đường; số «câu giống chữ bị đọc thành dị ứng» là số báo cáo, không phải cổng. Phía quán giữ quy tắc
+ngược lại cho ăn kiêng (nói «có» sai mới là không an toàn): chỉ đọc từ tên, kinds, traits; nhãn nguyên trường
+(«Chay» của importer OSM) là có; phủ định, false/0/null/N/A/pending/nope, đóng cửa, tạm ngưng, chỉ vài ngày, hay
+ngoặc/gạch/dấu hỏi ngay sau chữ ăn kiêng đều là không.
 
 **5.2 Điểm đến** (`ResolveDestination`), theo thứ tự: (1) `khu_vuc` → điểm đến có bbox chứa tâm vùng; (2) tên điểm
 đến khớp `Fold` trong lời hỏi (danh sách đóng từ `ListDestinations`); (3) Nếp: điểm đến của các id trong

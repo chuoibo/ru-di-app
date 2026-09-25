@@ -129,18 +129,29 @@ func DungHoSo(p repo.Place) (HoSo, promptsafety.KetQuaSau) {
 	// in full: the scan is deterministic, reaches no model, and can only
 	// hide a place, so a field that may not be quoted may still keep a
 	// seafood-allergic asker away from a seafood place (design 04 §4a).
+	// Whether the writer typed marks is judged over the whole row, then each
+	// string is read alone; a kind or a trait is also read as a label, so an
+	// importer's bare «Cua» or «Muc» counts.
+	raw := treejson.MapTo(service.PlaceRow(p))
+	texts := chuMoTa(raw)
+	coDauRaw := tuvung.CoDau(texts...)
 	var diUng []string
-	for _, text := range chuMoTa(treejson.MapTo(service.PlaceRow(p))) {
-		diUng = append(diUng, tuvung.DiUngQuan(text)...)
+	for _, text := range texts {
+		diUng = append(diUng, tuvung.DiUngQuanHang(text, coDauRaw)...)
+	}
+	for _, label := range append(append([]string(nil), p.Kinds...), p.Traits...) {
+		diUng = append(diUng, tuvung.DiUngNhan(label, coDauRaw)...)
 	}
 	h.DiUng = tuvung.DiUng.LocHopLe(diUng)
-	// Diets come only from what the place declares about itself, its kinds
-	// and traits, each read alone; a review or a description saying «chay»
-	// may be a wish, a complaint or the past, and a wrong yes here is the
-	// unsafe answer.
+	// Diets come only from what the place declares about itself, its name,
+	// kinds and traits, each read alone, with the marks of the row SafeDeep
+	// kept; a review or a description saying «chay» may be a wish, a
+	// complaint or the past, and a wrong yes here is the unsafe answer.
+	declared := append(append([]string{chu(safe, "name")}, kinds...), traits...)
+	coDauSafe := tuvung.CoDau(chuMoTa(safe)...)
 	var anKieng []string
-	for _, field := range append(append([]string(nil), kinds...), traits...) {
-		anKieng = append(anKieng, tuvung.AnKiengQuan(field)...)
+	for _, field := range declared {
+		anKieng = append(anKieng, tuvung.AnKiengQuanHang(field, coDauSafe)...)
 	}
 	h.AnKieng = tuvung.DoiKieng(anKieng)
 	// Atmospheres, a soft preference, come from the same safe words the

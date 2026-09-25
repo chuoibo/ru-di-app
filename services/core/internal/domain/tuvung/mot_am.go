@@ -6,14 +6,18 @@ package tuvung
 // most common way to name the allergen («dị ứng cua»), so it is read here,
 // from the syllable as typed:
 //
-//   - in a place's words, only when typed with exactly its own marks («cá»,
-//     never «cà» or a bare «ca»; a mark-less «cua» only in a text that
-//     carries marks elsewhere, where «của» would have had its own), never
-//     where a longer phrase of DiUng starts at the same syllable, and never
-//     in the everyday compounds listed with it («cá nhân», «mực nước»);
-//   - in an asker's words, only inside the list that follows or precedes a
-//     trigger (DiUngNguoiHoi), typed with its marks or with none at all:
-//     after «dị ứng» a bare «ca» is fish, which is the safe reading.
+//   - in a place's words, when typed with exactly its own marks («cá», never
+//     «cà» or a bare «ca»; a mark-less «cua» only in a row that carries
+//     marks elsewhere, where «của» would have had its own), never where a
+//     longer phrase of DiUng starts at the same syllable, and never in the
+//     everyday compounds listed with it («cá nhân», «mực nước»); and when it
+//     is a whole item of a kind or trait, a label and not prose («Cua»,
+//     «Muc», «Oc, Nhau»), typed with its marks or none;
+//   - in an asker's words, only inside the list a trigger opens
+//     (DiUngNguoiHoi), typed with its marks, with none, or with the same
+//     letters under another tone («dị ứng sửa», «dị ứng mẻ», «trừng»): a
+//     typo there reads as the allergen, the safe side. The exceptions are
+//     the everyday words in khongPhaiLoiGo, far likelier than a typo.
 type motAm struct {
 	// co is the syllable with its own marks, lower case.
 	co string
@@ -36,6 +40,7 @@ var dauMotAm = map[string]motAm{
 	"so":   {co: "sò", quan: []string{"oc_so"}, hoi: []string{"oc_so"}},
 	"hau":  {co: "hàu", quan: []string{"oc_so"}, hoi: []string{"oc_so"}},
 	"hen":  {co: "hến", quan: []string{"oc_so"}, hoi: []string{"oc_so"}},
+	"vem":  {co: "vẹm", quan: []string{"oc_so"}, hoi: []string{"oc_so"}},
 	"tep":  {co: "tép", quan: []string{"tom"}, hoi: []string{"tom"}},
 	"ruoc": {co: "ruốc", quan: []string{"tom"}, hoi: []string{"tom"}},
 	// «mắm» on a menu is nearly always fish (nước mắm, mắm nêm); an asker
@@ -53,6 +58,15 @@ var dauMotAm = map[string]motAm{
 	"chao": {co: "chao", quan: []string{"dau_nanh"}, hoi: []string{"dau_nanh"}, sau: []string{"đèn", "đảo", "ôi"}},
 	// Teencode for «hải sản»; never on a place.
 	"hs": {co: "hs", hoi: []string{"hai_san"}},
+}
+
+// khongPhaiLoiGo are everyday words spelt with an allergen word's letters
+// under another tone, so common that after a trigger they are the word, not
+// a typo: «dị ứng cả tôm» (both), «dị ứng của bé» (of), «mẹ mình» (mother),
+// «ở mức nhẹ» (level), «ghé quán» (drop by), «hát» (sing), «cháo»
+// (porridge), «chào» (hello), «cà phê».
+var khongPhaiLoiGo = map[string]bool{
+	"cả": true, "cà": true, "của": true, "mẹ": true, "mức": true, "ghé": true, "hát": true, "cháo": true, "chào": true,
 }
 
 func trong(list []string, raw string) bool {
@@ -86,13 +100,34 @@ func (c cau) motAmQuan(i int) []string {
 	return d.quan
 }
 
+// motAmNhan returns the ids of a one-syllable allergen word that is a whole
+// item of a label (a kind, a trait: «Cua», «Muc», «Oc, Nhau», «Hải sản |
+// Cá»), typed with its own marks or none, or nil. A label is a name for
+// what is served, not prose: a lone «Cua» is not «của».
+func (c cau) motAmNhan(i int) []string {
+	d, ok := dauMotAm[c.s[i]]
+	if !ok || d.quan == nil || (c.raw[i] != d.co && c.raw[i] != c.s[i]) {
+		return nil
+	}
+	if i > 0 && !c.ngatTruoc(i, ngatVe) {
+		return nil
+	}
+	if i+1 < len(c.s) && !c.ngatTruoc(i+1, ngatVe) {
+		return nil
+	}
+	return d.quan
+}
+
 // motAmHoi returns the ids a one-syllable allergen word at position i of an
-// asker's list gives, or nil. The syllable may be typed with its marks or
-// with none; the everyday compounds are compared folded, since a text
-// without marks spells them the same.
+// asker's list gives, or nil. The syllable may be typed with its marks,
+// with none, or with its letters under another tone; the everyday compounds
+// are compared folded, since a text without marks spells them the same.
 func (c cau) motAmHoi(i int) []string {
 	d, ok := dauMotAm[c.s[i]]
-	if !ok || (c.raw[i] != d.co && c.raw[i] != c.s[i]) {
+	if !ok {
+		return nil
+	}
+	if c.raw[i] != d.co && c.raw[i] != c.s[i] && (boThanh(c.raw[i]) != boThanh(d.co) || khongPhaiLoiGo[c.raw[i]]) {
 		return nil
 	}
 	if i+1 < len(c.s) && !c.ngatTruoc(i+1, ngatVe) {

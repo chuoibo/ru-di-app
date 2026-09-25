@@ -233,15 +233,22 @@ func TestCatCauMatchesAmTiet(t *testing.T) {
 }
 
 // Every one-syllable allergen word is read on a place typed with its own
-// marks, and never typed as the everyday word it folds onto; after a trigger
-// it is read typed either way.
+// marks, and never typed as the everyday word it folds onto. After a
+// trigger it is read typed with its marks, with none, or with its letters
+// under another tone (a typo reads as the allergen, the safe side), but
+// never as a word with other letters («cửa», «mức» is in khongPhaiLoiGo)
+// or as one of the everyday words khongPhaiLoiGo names.
 func TestMotAmChiDocDungDau(t *testing.T) {
+	// dongAmCua: other words that fold onto the same syllable. loiGo: the
+	// ones spelt with the same letters under another tone, which an asker's
+	// list reads as the allergen.
 	dongAmCua := map[string][]string{
 		"cua": {"của", "cửa"}, "ghe": {"ghé", "ghế"}, "ca": {"cà", "cả", "ca"}, "muc": {"mức", "mục"}, "so": {"số", "sợ"},
-		"hau": {"hậu", "hầu"}, "hen": {"hẹn"}, "tep": {}, "ruoc": {"rước"}, "mam": {"mâm", "mầm"}, "trung": {"trung", "trúng"},
-		"sua": {"sửa", "sứa"}, "me": {"mẹ", "mê", "me"}, "vung": {"vùng"}, "lac": {"lác"}, "hat": {"hát"}, "chao": {"cháo", "chào"},
-		"hs": {},
+		"hau": {"hậu", "hầu"}, "hen": {"hẹn"}, "vem": {"vém"}, "tep": {}, "ruoc": {"rước"}, "mam": {"mâm", "mầm"},
+		"trung": {"trung", "trúng", "trừng"}, "sua": {"sửa", "sứa"}, "me": {"mẹ", "mê", "me", "mẻ"}, "vung": {"vùng", "vững"},
+		"lac": {"lác"}, "hat": {"hát"}, "chao": {"cháo", "chào"}, "hs": {},
 	}
+	loiGo := map[string]bool{"vém": true, "trừng": true, "sửa": true, "sứa": true, "mẻ": true, "vững": true, "lác": true}
 	for key, d := range dauMotAm {
 		others, ok := dongAmCua[key]
 		if !ok {
@@ -269,10 +276,45 @@ func TestMotAmChiDocDungDau(t *testing.T) {
 			if o == key {
 				continue // a bare form is the allergen after a trigger
 			}
-			if got := DiUngNguoiHoi("Mình dị ứng " + o); len(got) != 0 {
+			got := DiUngNguoiHoi("Mình dị ứng " + o)
+			if loiGo[o] && !reflect.DeepEqual(got, want) {
+				t.Errorf("asker «dị ứng %s» (a typo of «%s») read %v, want %v", o, d.co, got, want)
+			}
+			if !loiGo[o] && len(got) != 0 {
 				t.Errorf("asker «dị ứng %s» read %v", o, got)
 			}
 		}
+	}
+	for w := range khongPhaiLoiGo {
+		if got := DiUngNguoiHoi("Mình dị ứng " + w); len(got) != 0 {
+			t.Errorf("asker «dị ứng %s» read %v: an everyday word, not a typo", w, got)
+		}
+	}
+}
+
+// A kind or trait that is one allergen word alone is a label, read typed
+// with its marks or none; inside prose the bare word is not.
+func TestMotAmNhan(t *testing.T) {
+	for _, c := range []struct {
+		nhan  string
+		coDau bool
+		want  []string
+	}{
+		{"Cua", false, []string{"cua"}}, {"cua", false, []string{"cua"}}, {"Muc", false, []string{"muc"}},
+		{"Hau", false, []string{"oc_so"}}, {"Oc, Nhau", false, []string{"oc_so"}}, {"Hải sản | Cá", true, []string{"hai_san", "ca"}},
+		{"Quan cua minh", false, nil}, {"Quán của mình", true, nil}, {"Lac", false, nil}, {"Trung Hoa", false, nil},
+	} {
+		if got := DiUngNhan(c.nhan, c.coDau); !same(got, c.want) {
+			t.Errorf("DiUngNhan(%q) = %v, want %v", c.nhan, got, c.want)
+		}
+	}
+	// The same bare word in prose: only a row with marks elsewhere makes it
+	// crab (N3: the marks rule is decided over the row).
+	if got := DiUngQuanHang("cua", false); len(got) != 0 {
+		t.Errorf("a bare «cua» in a mark-less row read %v", got)
+	}
+	if got := DiUngQuanHang("cua ghe", true); !reflect.DeepEqual(got, []string{"cua"}) {
+		t.Errorf("«cua ghe» in a row with marks read %v", got)
 	}
 }
 

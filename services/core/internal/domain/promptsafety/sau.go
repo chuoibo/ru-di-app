@@ -56,10 +56,19 @@ var identity = []struct {
 //
 // A field is unsafe for the reasons Safe uses: longer than its bound,
 // carrying a control character (a line break included), or matching the
-// instruction catalogue on folded text.
+// instruction catalogue on folded text. A key is text too: the brain gets
+// the card keys and all, so an object key is held to the same test under
+// the item bound (a field name longer than maxItem is no field name), and a
+// row whose own field names fail it is dropped whole -- no field of the
+// catalogue is named like that, and a name cannot be emptied like a value.
 func SafeDeep(place *tree.OrderedMap) (*tree.OrderedMap, KetQuaSau) {
 	if place == nil || !Safe(place) {
 		return nil, KetQuaSau{Bo: true}
+	}
+	for _, key := range place.Keys() {
+		if !keySafe(key) {
+			return nil, KetQuaSau{Bo: true}
+		}
 	}
 	for _, f := range identity {
 		value, _ := place.Get(f.field)
@@ -131,9 +140,12 @@ func SafeDeep(place *tree.OrderedMap) (*tree.OrderedMap, KetQuaSau) {
 	return out, report
 }
 
+// keySafe is an object key held to fieldSafe under the item bound.
+func keySafe(key string) bool { return fieldSafe(tree.String(key), maxItem) }
+
 // everyStringSafe reports whether every string inside value -- itself, or
-// any item of a list or value of an object, at any depth -- is safe text
-// under the bound.
+// any item of a list, or any key or value of an object, at any depth -- is
+// safe text under the bound (keys under keySafe's).
 func everyStringSafe(value tree.Value, maxChars int) bool {
 	switch v := value.(type) {
 	case tree.String:
@@ -147,7 +159,7 @@ func everyStringSafe(value tree.Value, maxChars int) bool {
 	case *tree.OrderedMap:
 		for _, k := range v.Keys() {
 			item, _ := v.Get(k)
-			if !everyStringSafe(item, maxChars) {
+			if !keySafe(k) || !everyStringSafe(item, maxChars) {
 				return false
 			}
 		}
@@ -180,7 +192,7 @@ func keepSafe(value tree.Value, most int, ok func(tree.Value) bool) (tree.List, 
 
 // reviewSafe is one review: an object whose author and body are safe text,
 // and whose every other string -- a note, a rating sent as text, anything
-// nested -- is safe under the body's bound.
+// nested, every key -- is safe under the body's bound.
 func reviewSafe(value tree.Value) bool {
 	review, ok := value.(*tree.OrderedMap)
 	if !ok {
@@ -198,14 +210,15 @@ func reviewSafe(value tree.Value) bool {
 		if k == "body" || k == "author" {
 			continue
 		}
-		if item, _ := review.Get(k); !everyStringSafe(item, maxReviewBody) {
+		if item, _ := review.Get(k); !keySafe(k) || !everyStringSafe(item, maxReviewBody) {
 			return false
 		}
 	}
 	return true
 }
 
-// groupFitSafe is group_fit: its relation and every other string in it.
+// groupFitSafe is group_fit: its relation and every other string and key
+// in it.
 func groupFitSafe(value tree.Value) bool {
 	return everyStringSafe(value, maxItem)
 }

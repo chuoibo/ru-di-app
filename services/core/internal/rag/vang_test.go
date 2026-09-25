@@ -15,10 +15,11 @@ import (
 )
 
 // The golden retrieval set (design 04 §8.3): testdata/truy-hoi-dia-diem.json
-// holds 46 hand-written anchor places, one hand-made takedown and 67 queries
+// holds 49 hand-written anchor places, one hand-made takedown and 97 queries
 // in seven groups; sinhNen adds 240 background places deterministically. The
 // same set runs on both paths -- the live-row path here, the index path in
-// vang_postgres_test.go -- and each pins its own numbers.
+// rag_postgres_test.go -- and each pins its own numbers; violation@10 must
+// be 0 on both.
 
 type diemDenMau struct {
 	ID    string  `json:"id"`
@@ -548,8 +549,8 @@ func biaTay(v tapVang) map[string]bool {
 // The fixture checks itself before it checks anything else.
 func TestVangTuKiem(t *testing.T) {
 	v := docVang(t)
-	if len(v.Quan) != 289 || len(v.TruyVan) != 83 {
-		t.Fatalf("%d places, %d queries; want 289 and 83", len(v.Quan), len(v.TruyVan))
+	if len(v.Quan) != 289 || len(v.TruyVan) != 97 {
+		t.Fatalf("%d places, %d queries; want 289 and 97", len(v.Quan), len(v.TruyVan))
 	}
 	ids := map[string]bool{}
 	for _, q := range v.Quan {
@@ -671,8 +672,8 @@ var ghimSong = map[string]string{
 	"khong_dau":     "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"khi_chat":      "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9917 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"rang_buoc":     "n=10 co_lien_quan=9 recall@10=1.0000 ndcg@10=0.9590 mrr@10=0.9167 violation@10=0.0000 so_vi_pham=0",
-	"di_ung":        "n=26 co_lien_quan=13 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
+	"di_ung":        "n=40 co_lien_quan=19 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"lien_diem_den": "n=8 co_lien_quan=8 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"bay_injection": "n=7 co_lien_quan=2 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
-	"tong":          "n=83 co_lien_quan=64 recall@10=1.0000 ndcg@10=0.9834 mrr@10=0.9758 violation@10=0.0000 so_vi_pham=0",
+	"tong":          "n=97 co_lien_quan=70 recall@10=1.0000 ndcg@10=0.9848 mrr@10=0.9779 violation@10=0.0000 so_vi_pham=0",
 }

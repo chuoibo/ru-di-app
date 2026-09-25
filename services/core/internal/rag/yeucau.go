@@ -31,7 +31,7 @@ type YeuCau struct {
 	// DiUng are the allergens the asker named (tuvung.DiUng ids); a place
 	// whose own words mention any of them, or any of their family, is out.
 	DiUng []string
-	// AnKieng are the diets a place must declare in its kinds or traits.
+	// AnKieng are the diets a place must declare in its name, kinds or traits.
 	AnKieng []string
 	// NganSach is the ceiling per person in whole đồng: a place whose lowest
 	// price is above it is out; one with no price stays, flagged and last.

@@ -627,6 +627,40 @@ func TestTakedownHoldsWithoutAnActiveVersion(t *testing.T) {
 	}
 }
 
+// Review round 2, N4: with an active version the public search ranks a few
+// rows through the index and pads the rest of the thirty by taste, profiling
+// each live row as it goes; a takedown made after the build must hold in
+// that padding too. «lẩu nấm ở Đà Lạt» ranks a handful of rows, so the café
+// comes up in the taste padding if nothing stops it. Identity: the café next
+// door is padded in.
+func TestTakedownHoldsInTheRankedShortlistPadding(t *testing.T) {
+	pool := kho(t)
+	ctx := context.Background()
+	v := docVang(t)
+	nap(t, pool, v)
+	built, _ := dungDuaLen(t, pool)
+	if err := Tombstone(ctx, pool, "dl-ca-phe-gac-go", "takedown"); err != nil {
+		t.Fatal(err)
+	}
+	ngan, err := Kho{Q: pool}.DanhSachNgan(ctx, "lẩu nấm ở Đà Lạt", taste.Profile{})
+	if err != nil || ngan.PhienBan != built.PhienBan || len(ngan.Rows) != ToiDaNgan {
+		t.Fatalf("shortlist: %d rows, version %d (built %d), %v", len(ngan.Rows), ngan.PhienBan, built.PhienBan, err)
+	}
+	if ngan.Trung == 0 || ngan.Trung >= ToiDaNgan {
+		t.Fatalf("%d ranked rows: the padding is not under test", ngan.Trung)
+	}
+	var got []string
+	for _, r := range ngan.Rows {
+		got = append(got, r.ID)
+	}
+	if co(got, "dl-ca-phe-gac-go") {
+		t.Fatalf("the taken-down place reached the shortlist's padding: %v", got)
+	}
+	if !co(got[ngan.Trung:], "dl-ca-phe-hoai-niem") {
+		t.Fatalf("identity: the other café is not in the padding: %v", got)
+	}
+}
+
 // Review finding 9: by hand only takedown and closed; the build's own
 // reasons are refused, so no one can write a tombstone the next build
 // silently lifts.
@@ -810,14 +844,16 @@ func TestVangChiMuc(t *testing.T) {
 // r05 is the one miss, and it is the rule working: «Tiệm Sách Cà Phê Rêu»
 // has no price, so under a budget it is kept flagged gia_chua_ro and ranked
 // after every place whose price is known (design 04 §4a), which here is
-// below the tenth.
+// below the tenth. In di_ung the right place is second on d05, d12, d20 and
+// on the reviewer's rewordings of the same asks, d30, d33 (d12's) and d35
+// (d05's).
 var ghimChiMuc = map[string]string{
 	"ten_rieng":     "n=12 co_lien_quan=12 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"khong_dau":     "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"khi_chat":      "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9878 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"rang_buoc":     "n=10 co_lien_quan=9 recall@10=0.8889 ndcg@10=0.9176 mrr@10=0.8889 violation@10=0.0000 so_vi_pham=0",
-	"di_ung":        "n=26 co_lien_quan=13 recall@10=1.0000 ndcg@10=0.9148 mrr@10=0.8846 violation@10=0.0000 so_vi_pham=0",
+	"di_ung":        "n=40 co_lien_quan=19 recall@10=1.0000 ndcg@10=0.8792 mrr@10=0.8421 violation@10=0.0000 so_vi_pham=0",
 	"lien_diem_den": "n=8 co_lien_quan=8 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"bay_injection": "n=7 co_lien_quan=2 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
-	"tong":          "n=83 co_lien_quan=64 recall@10=0.9844 ndcg@10=0.9692 mrr@10=0.9609 violation@10=0.0000 so_vi_pham=0",
+	"tong":          "n=97 co_lien_quan=70 recall@10=0.9857 ndcg@10=0.9549 mrr@10=0.9429 violation@10=0.0000 so_vi_pham=0",
 }
