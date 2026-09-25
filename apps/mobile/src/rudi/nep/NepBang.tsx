@@ -139,7 +139,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         </Text>
       ) : null}
 
-      {buc.duongAnh ? (
+      {buc.nguonAnh ? (
         <Pressable accessibilityRole="button" onPress={buc.dep} style={styles.khungAnh}>
           {/* Qua `MediaSlot` chứ không phải một `<Image>` trần: ADR-0017 §2.5 nói
               một tấm ảnh không bao giờ đi mà thiếu xuất xứ, và ảnh này CÓ xuất
@@ -152,7 +152,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
             nguon={{
               loai: "danh-muc",
               anh: anhDanhMuc(
-                { uri: buc.duongAnh },
+                buc.nguonAnh,
                 { author: "Nếp", license: "AI vẽ, có dấu SynthID" },
               ),
             }}
@@ -178,10 +178,12 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
             the tone (`colors[`${tone}Ink`]`), and `tests/rudi-khong-hex.test.mjs`
             allows no file but `theme.ts` to spell a colour. */}
         {/* Vẽ là tool vòng 2 trong bảng quyền: nó GHI và nó tốn một lượt quota
-            thật, nên hỏi mỗi lần, không nhớ câu trả lời trước. */}
+            thật, nên hỏi mỗi lần, không nhớ câu trả lời trước. Nó câm ở màn
+            tiền y như chữ (ADR-0036 §2.9): `duocHoi` gác cả hai nút, và máy
+            chủ gác lại bằng `man`. */}
         <RudiButton
           compact
-          disabled={!nhap.trim() || buc.dangCho}
+          disabled={!nhap.trim() || buc.dangCho || !duocHoi}
           full={false}
           label="Vẽ"
           loading={buc.dangCho}
@@ -193,7 +195,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
               `Mình sẽ vẽ «${moTa}». Mất tầm hai phút.`,
               [
                 { text: "Thôi", style: "cancel" },
-                { text: "Vẽ đi", onPress: () => void buc.nhoVe(moTa) },
+                { text: "Vẽ đi", onPress: () => void buc.nhoVe(moTa, phieu?.man) },
               ],
             );
           }}
