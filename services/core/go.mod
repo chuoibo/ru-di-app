@@ -7,6 +7,7 @@ toolchain go1.25.14
 require (
 	github.com/coder/websocket v1.8.15
 	github.com/jackc/pgx/v5 v5.7.1
+	github.com/rabbitmq/amqp091-go v1.15.0
 	github.com/redis/go-redis/v9 v9.17.3
 	golang.org/x/text v0.18.0
 	golang.org/x/tools v0.49.0

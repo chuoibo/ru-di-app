@@ -1,0 +1,159 @@
+package jobs
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	amqp "github.com/rabbitmq/amqp091-go"
+)
+
+// Relay publishes due outbox rows. A row is marked published only after the
+// broker confirmed it and did not return it as unroutable, in the same
+// transaction that held the row: a crash between the two produces a
+// duplicate message, never a lost job. Several relays are safe together
+// (SKIP LOCKED), and a duplicate is harmless because a consumer claims a job by
+// id and enqueue sequence.
+type Relay struct {
+	pool     *pgxpool.Pool
+	topology Topology
+	ch       *amqp.Channel
+	returns  chan amqp.Return
+	// ConfirmTimeout bounds the wait for the broker's confirms of one batch.
+	ConfirmTimeout time.Duration
+}
+
+// NewRelay opens a confirm-mode channel on conn and declares the topology.
+func NewRelay(pool *pgxpool.Pool, conn *amqp.Connection, t Topology) (*Relay, error) {
+	ch, err := conn.Channel()
+	if err != nil {
+		return nil, err
+	}
+	if err = ch.Confirm(false); err != nil {
+		return nil, err
+	}
+	if err = t.Declare(ch); err != nil {
+		return nil, err
+	}
+	return &Relay{pool: pool, topology: t, ch: ch, returns: ch.NotifyReturn(make(chan amqp.Return, 256)),
+		ConfirmTimeout: 2 * time.Second}, nil
+}
+
+// Close closes the relay's channel.
+func (r *Relay) Close() error { return r.ch.Close() }
+
+type pending struct {
+	id    int64
+	queue string
+	msg   Message
+}
+
+// ErrNotConfirmed means the broker did not take a batch; nothing was marked.
+var ErrNotConfirmed = errors.New("jobs: broker did not confirm the batch")
+
+// Flush publishes one batch of up to 256 due rows and returns how many it
+// marked published. Rows past their expiry are deleted unpublished: the job
+// they point at has closed its sharing window and cannot run anyway.
+func (r *Relay) Flush(ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+	if _, err = tx.Exec(ctx, `DELETE FROM job_outbox WHERE (published_at IS NULL AND expires_at IS NOT NULL AND expires_at<=clock_timestamp()) OR published_at<clock_timestamp()-interval '1 hour'`); err != nil {
+		return 0, err
+	}
+	rows, err := tx.Query(ctx, `SELECT id,queue,ref_id::text,enqueue_seq FROM job_outbox WHERE published_at IS NULL AND available_at<=clock_timestamp() ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 256`)
+	if err != nil {
+		return 0, err
+	}
+	batch, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (pending, error) {
+		var p pending
+		err := row.Scan(&p.id, &p.queue, &p.msg.Ref, &p.msg.Seq)
+		p.msg.V = 1
+		return p, err
+	})
+	if err != nil {
+		return 0, err
+	}
+	if len(batch) == 0 {
+		return 0, tx.Commit(ctx)
+	}
+	confirms := make([]*amqp.DeferredConfirmation, 0, len(batch))
+	ids := make([]int64, 0, len(batch))
+	for _, p := range batch {
+		body, err := p.msg.Encode()
+		if err != nil {
+			return 0, err
+		}
+		dc, err := r.ch.PublishWithDeferredConfirmWithContext(ctx, r.topology.Exchange(), p.queue, true, false, amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "application/json",
+			MessageId:    p.msg.ID(p.queue),
+			Body:         body,
+		})
+		if err != nil {
+			return 0, err
+		}
+		confirms = append(confirms, dc)
+		ids = append(ids, p.id)
+	}
+	wait, stop := context.WithTimeout(ctx, r.ConfirmTimeout)
+	defer stop()
+	for _, dc := range confirms {
+		ok, err := dc.WaitContext(wait)
+		if err != nil || !ok {
+			return 0, ErrNotConfirmed
+		}
+	}
+	// A mandatory message nobody could route comes back as basic.return,
+	// which the broker sends before its ack; the batch is not published.
+	select {
+	case <-r.returns:
+		return 0, ErrNotConfirmed
+	default:
+	}
+	if _, err = tx.Exec(ctx, `UPDATE job_outbox SET published_at=clock_timestamp() WHERE id=ANY($1)`, ids); err != nil {
+		return 0, err
+	}
+	return len(ids), tx.Commit(ctx)
+}
+
+// Run flushes on every outbox notification and at least every tick, until ctx
+// ends or the channel closes (the caller then reconnects).
+func (r *Relay) Run(ctx context.Context, tick time.Duration) error {
+	conn, err := r.pool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+	if _, err = conn.Exec(ctx, `LISTEN job_outbox`); err != nil {
+		return err
+	}
+	closed := r.ch.NotifyClose(make(chan *amqp.Error, 1))
+	for {
+		for {
+			n, err := r.Flush(ctx)
+			if err != nil || n < 256 {
+				break
+			}
+		}
+		select {
+		case <-ctx.Done():
+			return nil
+		case e := <-closed:
+			if e != nil {
+				return e
+			}
+			return errors.New("jobs: relay channel closed")
+		default:
+		}
+		wait, cancel := context.WithTimeout(ctx, tick)
+		_, _ = conn.Conn().WaitForNotification(wait)
+		cancel()
+	}
+}
