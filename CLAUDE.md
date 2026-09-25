@@ -75,7 +75,7 @@ command.upgrade(c,'head',sql=True)" >/dev/null && echo ok
 
 | | |
 |---|---|
-| `services/core/` | Go 1.23, cửa trước công khai. **Phục vụ 126/156 route** (`LIVE-GO`), phần còn lại proxy về Python |
+| `services/core/` | Go 1.25, cửa trước công khai. **Phục vụ 126/156 route** (`LIVE-GO`), phần còn lại proxy về Python |
 | `services/api/` | FastAPI legacy, còn phục vụ 30 route, **và là oracle** để cổng parity so Go |
 | `parity/` | Module Go riêng, hộp đen: dựng hai stack, phát lại kịch bản, so byte HTTP + hàng DB + kho ảnh |
 

@@ -29,7 +29,7 @@ Theo dõi tiến độ thật tại `docs/architecture/02-chat-go-e2ee.md`.
 The backend is **mid-migration and both halves are live**. Do not read either one
 as "the" backend.
 
-- **`services/core/`** — Go 1.23, the public front door and the core being ported
+- **`services/core/`** — Go 1.25, the public front door and the core being ported
   (ADR-0029). `cmd/` + `internal/<package>`, no ORM. **It serves 126 of the 156
   routes today** (`state: LIVE-GO`); the rest it proxies to Python.
 - **`services/api/`** — FastAPI, Python 3.12. Legacy runtime, still serving 30

@@ -12,7 +12,7 @@
 > thì đọc `services/core/ownership/routes.json`, không đọc cây này.
 
 ```
-services/core/                      Go 1.23 — cửa trước + lõi đang chuyển (ADR-0029)
+services/core/                      Go 1.25 — cửa trước + lõi đang chuyển (ADR-0029)
   ownership/routes.json             manifest: route nào Go sở hữu, trạng thái, bằng chứng
 parity/                             module Go riêng, hộp đen: so Python trước / Go sau
 services/api/                       FastAPI, Python 3.12+ (đang chuyển; cuối cùng chỉ còn brain AI)
