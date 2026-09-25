@@ -1,0 +1,22 @@
+{
+  "ten": "429-503-roi-duoc",
+  "mo_ta": "Hai lần 429 rồi 503 được thử lại trong trần, lần ba trả lời: ba lời gọi.",
+  "buoc": [
+    {
+      "chang": "tra_loi",
+      "loi": {
+        "code": 429
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "loi": {
+        "code": 503
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Được nhé, bạn thử đi bộ quanh hồ lúc chiều mát."
+    }
+  ]
+}

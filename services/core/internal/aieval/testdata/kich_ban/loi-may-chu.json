@@ -1,0 +1,12 @@
+{
+  "ten": "loi-may-chu",
+  "mo_ta": "Nhà cung cấp trả 500: không thử lại, lượt thất bại provider_unavailable.",
+  "buoc": [
+    {
+      "chang": "tra_loi",
+      "loi": {
+        "code": 500
+      }
+    }
+  ]
+}

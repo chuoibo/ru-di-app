@@ -1,0 +1,11 @@
+{
+  "ten": "an-toan",
+  "mo_ta": "Ứng viên bị giữ lại vì an toàn (finish SAFETY, không chữ).",
+  "buoc": [
+    {
+      "chang": "tra_loi",
+      "chu": "",
+      "finish": "SAFETY"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "ten": "tra-loi-ngan",
+  "mo_ta": "Một câu trả lời ngắn, có dấu, xưng mình/bạn; có đếm token.",
+  "buoc": [
+    {
+      "chang": "tra_loi",
+      "chu": "Tối mai bạn thử ra bãi sau hóng gió nhé.",
+      "usage": {
+        "vao": 812,
+        "ra": 41,
+        "cache": 0,
+        "nghi": 7
+      }
+    }
+  ]
+}

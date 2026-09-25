@@ -57,6 +57,11 @@ const (
 	vaiToi, vaiNep = "toi", "nep"
 )
 
+// NepMaxChu is Nếp's answer ceiling in runes, exported for the eval
+// (aieval/hang.go), which reads the engine's numbers instead of restating
+// them (design 06 §2).
+const NepMaxChu = nepMaxChu
+
 // Nhip mirrors the slip's timing (keo/nhip-keo.ts).
 type Nhip struct {
 	Kieu      string

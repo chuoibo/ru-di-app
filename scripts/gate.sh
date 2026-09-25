@@ -72,7 +72,7 @@ REPO_ROOT="$PWD"
 
 # Every stage, in run order: cheapest and most likely to fail first, so a
 # broken tree is reported in seconds rather than after a docker build.
-STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres go-broker e2e chat-e2e crypto)
+STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test eval-kich-ban api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres go-broker e2e chat-e2e crypto)
 
 stage_help() {
   case "$1" in
@@ -88,6 +88,7 @@ stage_help() {
     python-touch) echo "no Python change on this branch reaches a route Go already serves (ADR-0029 §2.9)" ;;
     go-vet)    echo "gofmt -l and go vet on services/core, the Go front door (ADR-0029)" ;;
     go-test)   echo "go test ./... on services/core: config, transparent proxy, route manifest (ADR-0029)" ;;
+    eval-kich-ban) echo "eval T1: Nếp through Engine.Run on the scripted stub; invariants, canary red where predicted, identity green, no SKIP, core never links aieval (test.yml: eval-kich-ban)" ;;
     api)       echo "pytest services/api/tests tests (test.yml: api)" ;;
     migration) echo "alembic upgrade head --sql, no database (test.yml: api, inline)" ;;
     pinned-import) echo "app imports under the fastapi version pinned in requirements-dev.txt, not the machine's (test.yml: docker, cheap half)" ;;
@@ -445,6 +446,8 @@ do_go-vet() {
 }
 
 do_go-test() { ( cd services/core && go test -count=1 ./... ); }
+
+do_eval-kich-ban() { scripts/eval_kich_ban.sh; }
 
 do_go-postgres() { scripts/go_postgres_tier.sh; }
 
@@ -857,6 +860,16 @@ check_prereq() {
       [ -f services/core/go.mod ] || return 2
       have docker && have go || { echo "cần docker và go"; return 1; }
       docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời"; return 1; } ;;
+    eval-kich-ban)
+      # Go and python3 only: T1 runs on the scripted stub, with no database,
+      # no Docker and no network. Present without the script or the corpus is
+      # a defect: the stage would have nothing to run and read green.
+      [ -d services/core ] || { echo "services/core không có trên nhánh này"; return 1; }
+      [ -f services/core/go.mod ] || return 2
+      [ -x scripts/eval_kich_ban.sh ] || return 2
+      [ -f services/core/internal/aieval/testdata/corpus/nep-kich-ban.json ] || return 2
+      have go || { echo "cần go"; return 1; }
+      have python3 || { echo "cần python3"; return 1; } ;;
     go-broker)
       # Docker is needed only for a service the caller did not hand over as a
       # URL; with all three set, a Docker-less machine runs this stage too.
@@ -1073,6 +1086,7 @@ broken_why() {
     parity) echo "parity/ có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
     go-postgres) echo "services/core có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
     go-broker) echo "services/core có mặt nhưng thiếu go.mod hoặc scripts/go_broker_tier.sh -- từ chối bỏ qua" ;;
+    eval-kich-ban) echo "services/core có mặt nhưng thiếu go.mod, scripts/eval_kich_ban.sh hoặc corpus Nếp -- từ chối bỏ qua" ;;
     demo-watch) echo "thiếu scripts/demo_watch.py -- xoá canh gác không được biến chặng này thành xanh" ;;
     hero-walk) echo "thiếu scripts/hero_walk.sh -- xoá bài đi bộ không được biến chặng này thành xanh" ;;
     *) echo "thiếu file mà chặng này cần -- từ chối bỏ qua" ;;

@@ -1,0 +1,51 @@
+{
+  "ten": "goi-cong-cu-mai",
+  "mo_ta": "Mô hình cứ đòi gọi một công cụ không được khai: bị cắt ở bước 3, bước cuối tắt function calling.",
+  "buoc": [
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "search_places",
+        "doi_so": {
+          "q": "quán yên tĩnh"
+        }
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "search_places",
+        "doi_so": {
+          "q": "quán yên tĩnh"
+        }
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "search_places",
+        "doi_so": {
+          "q": "quán yên tĩnh"
+        }
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "search_places",
+        "doi_so": {
+          "q": "quán yên tĩnh"
+        }
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "search_places",
+        "doi_so": {
+          "q": "quán yên tĩnh"
+        }
+      }
+    }
+  ]
+}

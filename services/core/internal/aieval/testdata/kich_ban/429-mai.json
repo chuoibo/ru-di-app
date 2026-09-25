@@ -1,0 +1,24 @@
+{
+  "ten": "429-mai",
+  "mo_ta": "Ba lần 429: hai lần thử lại hết, lượt thất bại provider_unavailable sau ba lời gọi.",
+  "buoc": [
+    {
+      "chang": "tra_loi",
+      "loi": {
+        "code": 429
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "loi": {
+        "code": 429
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "loi": {
+        "code": 429
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "ten": "khong-ung-vien",
+  "mo_ta": "Nhà cung cấp chặn chính câu hỏi: không có ứng viên nào; không thử lại.",
+  "buoc": [
+    {
+      "chang": "tra_loi",
+      "loi": {
+        "khong_ung_vien": true
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Không bao giờ tới lần hai."
+    }
+  ]
+}

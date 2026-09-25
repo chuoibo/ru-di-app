@@ -85,6 +85,10 @@ COVERED_BY: dict[str, tuple[str, ...]] = {
     # setup, and stay two stages for the reason given just above.
     "contract": ("contract", "cors"),
     "core": ("ownership", "python-touch", "go-vet", "go-test", "go-postgres", "go-broker"),
+    # Eval T1 (design 06 §6). A job of its own rather than a step of `core`
+    # because it answers a different question -- does the AI pipeline hold its
+    # invariants on the scripted corpus -- and a red T1 should say so by name.
+    "eval-kich-ban": ("eval-kich-ban",),
     "parity": ("parity",),
     # The third link in the chain `client-routes` and `server-routes` are the
     # first two of, and a job of its own rather than a fifth stage on `api`

@@ -275,6 +275,27 @@ jobs:
           python3 scripts/check_go_owned_python_touch.py --selftest
           python3 scripts/check_go_owned_python_touch.py --base origin/main
 
+  # Tier T1 of the AI eval (design 06 §6): the engine run through its own seam,
+  # aiharness.Engine.Run, on the scripted stub over the hand-written Nếp
+  # corpus. A job of its own, not a step of `core`, so a red T1 is named for
+  # what it is. It needs Go and nothing else -- no database, no Docker, no
+  # network, no key. The script refuses a SKIP, a missing sentinel, a canary
+  # that is not red where predicted, an identity case that is not green, two
+  # runs that differ, and cmd/core linking internal/aieval.
+  eval-kich-ban:
+    name: scripted Nếp eval (T1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - name: Invariants on every request, canary red, identity green
+        run: scripts/eval_kich_ban.sh
+
   # ADR-0029: the parity harness. Same commands as the `parity` stage of
   # scripts/gate.sh, but split across jobs that run at the same time.
   #

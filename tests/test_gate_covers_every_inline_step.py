@@ -282,6 +282,12 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="d047409862b0e7ef",
         why="",
     ),
+    "test.yml::eval-kich-ban::Invariants on every request, canary red, identity green": Covered(
+        kind=GATE_KIND,
+        stages=("eval-kich-ban",),
+        body_sha="4649fc37ad4aaf30",
+        why="",
+    ),
     "test.yml::core::Route manifest matches the app and the binary": Covered(
         kind=GATE_KIND,
         stages=("ownership",),

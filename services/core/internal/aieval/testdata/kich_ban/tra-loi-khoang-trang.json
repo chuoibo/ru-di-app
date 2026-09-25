@@ -1,0 +1,10 @@
+{
+  "ten": "tra-loi-khoang-trang",
+  "mo_ta": "Câu trả lời có khoảng trắng hai đầu: engine phải cắt, không đổi chữ nào khác.",
+  "buoc": [
+    {
+      "chang": "tra_loi",
+      "chu": "   Mình gợi ý bạn đi dạo công viên gần nhà nhé.  \n"
+    }
+  ]
+}

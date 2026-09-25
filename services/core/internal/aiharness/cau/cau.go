@@ -9,6 +9,8 @@
 // line -- because that test parses it.
 package cau
 
+import "sort"
+
 // Ma is a code a turn can end with instead of an answer. The job's `code`
 // column carries it; the app turns it into the sentence below.
 type Ma string
@@ -97,3 +99,13 @@ func (s TrangThai) Valid() bool { _, ok := cauTrangThai[s]; return ok }
 
 // CauTrangThai is the fixed words for s.
 func CauTrangThai(s TrangThai) string { return cauTrangThai[s] }
+
+// TatTrangThai lists every status, sorted, for the eval's constants.
+func TatTrangThai() []TrangThai {
+	out := make([]TrangThai, 0, len(cauTrangThai))
+	for s := range cauTrangThai {
+		out = append(out, s)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
