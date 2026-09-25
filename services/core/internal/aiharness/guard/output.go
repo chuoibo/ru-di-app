@@ -40,8 +40,11 @@ var (
 	// and four is still a phone.
 	soTienNhom = regexp.MustCompile(`^[1-9]\d{0,2}(?:[.,]\d{3})+$`)
 	soTienCach = regexp.MustCompile(`^[1-9]\d{0,2}(?: \d{3})+$`)
-	ngayDau    = regexp.MustCompile(`^(?:0?[1-9]|[12]\d|3[01])[.\-](?:0?[1-9]|1[0-2])[.\-](?:(?:19|20)\d{2}|\d{2})(?:\s?-\s?|\s|$)`)
-	tienSau    = regexp.MustCompile(`^\s?(?i:đồng|đ|₫|dong|vnđ|vnd)(?:$|[^\p{L}\p{M}\d])`)
+	ngayDau    = regexp.MustCompile(`^(?:0?[1-9]|[12]\d|3[01])[.\-](?:0?[1-9]|1[0-2])[.\-](?:(?:19|20)\d{2}|\d{2})(\s?-\s?|\s|$)`)
+	// What may follow a date and a space inside one run: an hour, maybe with
+	// its minutes (a date, then «19», or «19 30»).
+	gioSau  = regexp.MustCompile(`^(?:[01]?\d|2[0-3])(?:[\s.]?[0-5]\d)?$`)
+	tienSau = regexp.MustCompile(`^\s?(?i:đồng|đ|₫|dong|vnđ|vnd)(?:$|[^\p{L}\p{M}\d])`)
 	// A claim, in Nếp's own voice, of an action it cannot take: Nếp has no
 	// tool that moves money, writes an outing or sends anything to anyone.
 	// «Sent» is a claim whoever it went to («Mình đã gửi cho bạn 200k», «…
@@ -77,9 +80,19 @@ func laTien(run string, coTien bool) bool {
 // khongPhaiLienLac says whether a run of digits is an amount or a date rather
 // than a phone or an account; sau is the text right after the run.
 func khongPhaiLienLac(run, sau string) bool {
-	if m := ngayDau.FindString(run); m != "" {
-		rest := strings.TrimSpace(run[len(m):])
-		return demSo(rest) < 9 || khongPhaiLienLac(rest, sau)
+	if g := ngayDau.FindStringSubmatch(run); g != nil {
+		rest := strings.TrimSpace(run[len(g[0]):])
+		switch {
+		case rest == "":
+			return true
+		case strings.Contains(g[1], "-"):
+			// A range of days: what follows the dash must itself be a date.
+			// Counting its digits instead let a phone written in dashed pairs
+			// pass as «a date, then a few digits».
+			return ngayDau.MatchString(rest) && khongPhaiLienLac(rest, sau)
+		default:
+			return gioSau.MatchString(rest) || khongPhaiLienLac(rest, sau)
+		}
 	}
 	coTien := tienSau.MatchString(sau)
 	if laTien(run, coTien) || (soTienCach.MatchString(run) && coTien) {
@@ -98,10 +111,15 @@ func soLienLac(text string) LoaiRa {
 		if demSo(run) < 9 || khongPhaiLienLac(run, text[m[1]:]) {
 			continue
 		}
-		// A date in front is not part of the number that follows it.
+		// A date in front is not part of the number that follows it -- when
+		// what follows is a whole contact number on its own. Otherwise the
+		// «date» was the head of a phone written in dashed pairs, and the run
+		// is read whole.
 		truoc := text[:m[0]]
 		if d := ngayDau.FindString(run); d != "" {
-			run, truoc = strings.TrimSpace(run[len(d):]), ""
+			if rest := strings.TrimSpace(run[len(d):]); demSo(rest) >= 9 {
+				run, truoc = rest, ""
+			}
 		}
 		if laSoDienThoai.MatchString(run) && (strings.HasPrefix(run, "0") || strings.HasSuffix(truoc, "+")) {
 			return RaSoDienThoai

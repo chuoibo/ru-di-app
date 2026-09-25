@@ -361,6 +361,13 @@ func TestOutputGuard(t *testing.T) {
 		// ...but a phone after a date is still a phone, and a phone dashed
 		// like a date is not a date (no 34th month, no year 3456).
 		{"Gọi 09-12-" + "3456-789 nhé.", RaSoDienThoai},
+		// A phone in dashed pairs whose second pair is a month reads as «a
+		// date, a dash, a few digits»; after a dash only a whole date passes.
+		{"Gọi 09-12-" + "34-56-78 nhé.", RaSoDienThoai},
+		{"Gọi 09-05-" + "12-34-56 để đặt bàn.", RaSoDienThoai},
+		{"Gọi 03-11-" + "22-33-44 nhé.", RaSoDienThoai},
+		{"Gọi 09-12-" + "34 56 78 nhé.", RaSoDienThoai},
+		{"Hẹn 26.09." + "2026 19 30 ở quán nhé.", RaSach},
 		{"Ngày 01.10.2026-" + "09123" + "45678 gọi nhé.", RaSoDienThoai},
 	} {
 		if got := d.Kiem(c.text); got != c.want {
