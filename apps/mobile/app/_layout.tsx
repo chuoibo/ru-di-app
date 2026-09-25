@@ -10,6 +10,7 @@ import { datLoiMoiDen } from "../src/rudi/loi-moi-den";
 import { useRudiFonts } from "../src/rudi/fonts";
 import { stackAnimation } from "../src/rudi/motion";
 import { RudiSessionProvider, useRudiSession } from "../src/rudi/session";
+import { LuongAnhDaiDien } from "../src/rudi/nguoi/LuongAnhDaiDien";
 import { NepNoi } from "../src/rudi/nep/NepNoi";
 import { NepProvider } from "../src/rudi/nep/NepProvider";
 import { SoDoiProvider } from "../src/rudi/to-giay/SoDoi";
@@ -166,6 +167,8 @@ function RootInner() {
     <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <RudiSessionProvider>
+      {/* Friends' new avatars reach every screen while the app is open. */}
+      <LuongAnhDaiDien />
       {/* The two-person notebook of the experience build: in memory, wire-shaped,
           swapped for the ADR-0027 routes in Phase 4. Inside the session so it can
           later read the bearer; outside the Stack so every route sees one notebook. */}

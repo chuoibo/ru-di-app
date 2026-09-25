@@ -1,6 +1,6 @@
 # ADR-0034 — Gậy, vai, nhịp, chia gu và câu hỏi tuần của sổ đôi
 
-**Trạng thái:** Đề xuất — chờ Lead ký · **Lựa chọn gốc:** Lead, 2026-09-23 (trả lời trong phiên QA cặp đôi)
+**Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-25 — Lead chọn §4 và xác nhận bản sửa §2.3–2.4 («oke») · **Lựa chọn gốc:** Lead, 2026-09-23 (trả lời trong phiên QA cặp đôi)
 **Soạn:** Claude, 2026-09-24 · **Sửa bổ sung:** ADR-0019 §2.1, ADR-0027 §4/§7, spec «Nếp truyền giấy» §4.2/§6.1,
 dòng `CLAUDE.md` «AI … không tự đọc chat/gu/lịch sử»
 **Liên quan:** ADR-0021 §2.5 (pair), ADR-0027 (sổ hai người), ADR-0031 (chat E2EE), ADR-0033 (Nếp nổi)
@@ -37,16 +37,20 @@ thôi dùng ngay lượt sau. Không bật = không ai đọc gu người đó (
 - **Gu của người kia** hiện ở khối «Linh thích …» trên sổ/hồ sơ, chỉ khi **người đó** đã bật `chia_gu`.
 - Nếp chỉ dùng gu của người đã bật; nguồn ghi vào `nguon.dung` («gu:<người>») như mọi nguồn khác.
 
-### 2.3 Giới tính tự khai (chỉ để chọn vai mặc định)
+### 2.3 Không có trường giới tính
 
-Cột mới `people.gioi_tinh` ∈ {nam, nu, khac, khong_noi} hoặc null, **không bắt buộc**, hỏi ở bước tên lúc đăng
-ký, sửa được ở Cá nhân. **Không hiện cho ai ngoài chính người đó**, không vào phân tích, không vào mô hình. Dùng
-duy nhất cho §2.4.
+Lead 25/09: «không cần thiết là Nam — AI tự phân tích xem ai có vai đó hơn qua mọi thứ hai người tương tác».
+Vì vậy **không** thêm cột giới tính, và vai **không** mang tên giới («Người lo», không phải «bên Nam»). App
+không suy ra giới tính hay đặc điểm nhạy cảm nào từ hành vi (đoán giới từ cách cư xử là gán khuôn cho một người
+không hề đồng ý). Cái được suy ra là **ai hay chủ động lo**, và chỉ từ nguồn đã được phép (§2.4).
 
 ### 2.4 Vai và gậy
 
-- **Người lo** mặc định = người khai «nam»; không khai / cùng khai / khai khác → người lập sổ (người khởi xướng
-  `lap_so` hoàn tất).
+- **Người lo** mặc định = người **chủ động hơn trong sổ**, suy ra chỉ từ nguồn đã được phép: ai gửi tờ trước,
+  ai đề nghị sửa, ai khởi xướng `lap_so`, trong chu kỳ này (ADR-0027 §4 cho đọc); chat **chỉ** khi `doc_chat` còn
+  hiệu lực (chat là E2EE — máy chủ không đọc được nếu không có consent đó). Lời gọi mô hình tuần (§2.6) trả
+  kèm đề xuất người lo — **không thêm lời gọi**; không có lời gọi thì máy đếm các tín hiệu trên theo luật tất
+  định; hoà hoặc chưa có dữ liệu → người lập sổ. Lý do đề xuất ghi vào `nguon.dung` như mọi nguồn khác.
 - Mỗi tuần đổi được: «Anh lo / Em lo / Hôm nay mình share» (share = cả hai cùng là Người lo, tuần đó không có
   Người chấm).
 - **Gậy** tính, không lưu: bắt đầu từ Người lo tuần của `lap_so`, luân phiên theo tuần; không gửi vẫn sang; nối
@@ -72,21 +76,25 @@ Một lượt đo chất lượng thật chỉ chạy khi Lead duyệt riêng s�
 
 ### 2.7 Dữ liệu mới
 
-Migration Alembic: `people.gioi_tinh`; mở CHECK `ck_pair_consent_proposals_consent_purpose_known` thêm `chia_gu`
+Migration Alembic: mở CHECK `ck_pair_consent_proposals_consent_purpose_known` thêm `chia_gu`
 (consent theo người: một đề nghị có một người nhận là chính người đề nghị); bảng `pair_cycle_rhythms` (khung tuần,
 vai tuần đã chọn), `pair_week_insights` (hash đầu vào, câu hỏi, insight, `created_at`). Xoá tài khoản xoá các hàng
 của người đó (`repo/erasure.go` + Python).
 
 ## 3. Cái này KHÔNG cho phép
 
+- Không thu, không suy ra giới tính; không đặt tên vai theo giới.
+
 - Không cho Nếp đọc gu của người chưa bật `chia_gu`, kể cả khi người kia đã bật.
-- Không hiện giới tính cho ai, không dùng nó cho gì ngoài vai mặc định.
 - Không cho vai cấp quyền sửa hộ dữ liệu riêng của người kia (ADR-0027 §4 giữ nguyên).
 - Không gọi mô hình ngoài lượt tuần đã khai, không gọi lại cho cùng hash, không đưa hai ô ràng buộc ra dịch vụ
   ngoài khi chưa có hợp đồng dữ liệu (ADR-0027 §7).
 
-## 4. Việc cần Lead ký
+## 4. Lead đã chọn (2026-09-25)
 
-1. §2.1–2.2: đổi ADR-0019 §2.1 và dòng `CLAUDE.md` cho trường hợp **đã bật `chia_gu`**.
-2. §2.3: thêm trường giới tính tự khai.
-3. §2.6: chi phí vận hành 1 lời gọi/sổ/tuần, và một lượt đo chất lượng có trần số lời gọi do Lead duyệt.
+1. §2.1–2.2 — **đồng ý**: `chia_gu` mỗi người tự bật; đổi ADR-0019 §2.1 và dòng `CLAUDE.md` cho đúng trường hợp
+   đã bật.
+2. §2.3–2.4 — **không dùng giới tính**; AI xác định người lo từ tương tác. Bản ở trên là cách làm điều đó trong
+   luật E2EE/consent — Lead xác nhận 2026-09-25.
+3. §2.6 — **đồng ý**: vận hành 1 lời gọi/sổ đôi/tuần; một lượt đo chất lượng `gemini-3.1-flash-lite`, **trần 30
+   lời gọi**, gọi một lần, đóng băng kết quả ra file, báo lại số lời gọi thực tế.

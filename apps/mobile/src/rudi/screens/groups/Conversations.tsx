@@ -34,7 +34,7 @@ import { Heading, RudiButton, RudiScreen } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { Canh } from "../../ui/art/Canh";
 import { ErrorState } from "../../ui/ErrorState";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
 type Trang =
@@ -174,10 +174,10 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                   onPress={() => void moNhom(nhom)}
                   style={({ pressed }) => [styles.hangChinh, pressed && styles.bam]}
                 >
-                  {/* A pair (ADR-0021 §2.5) is the other person, so their initial
+                  {/* A pair (ADR-0021 §2.5) is the other person, so their avatar
                       stands where a group shows the roster glyph. */}
                   {laPair(nhom) ? (
-                    <Avatar name={tenCuocTroChuyen(nhom)} size={44} />
+                    <AvatarNguoi name={tenCuocTroChuyen(nhom)} personId={nhom.counterpart?.id} size={44} />
                   ) : (
                     <View style={[styles.hinh, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
                       <Ionicons color={colors.accent} name={duocMoi ? "mail-open-outline" : "people-outline"} size={22} />

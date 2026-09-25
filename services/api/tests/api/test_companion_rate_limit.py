@@ -1,15 +1,14 @@
-"""How much of the project's model quota one identity may spend on the companion.
+"""How much of the project's model quota one identity may spend on suggestions.
 
-Two routes reach Gemini and were not metered:
+Two routes reached Gemini and were not metered:
 
 ``GET  /contexts/{id}/suggestion``  calls the model on **every** request. There
 is no cache and no cadence rule in front of it, so a client that polls -- or a
 loop -- spends one model call per request for as long as it runs.
 
-``POST /contexts/{id}/ai-turn``     calls the model whenever ``plan_turn``
-allows it. That rule is a conversation cadence, not a ceiling: it refuses while
-the companion spoke last, and the caller lifts that refusal by posting one more
-message. Two cheap requests per model call is not a cap.
+``POST /contexts/{id}/ai-turn``     was the other one. It was deleted with the
+automatic companion (ADR-0036 §2.1), and its window with it; the one AI path
+left is the invocation queue, metered in the Go core.
 
 ``app/api/search_rate_limit.py`` was written for exactly this failure and its
 own docstring said "two routes spend that quota and both are metered here" --
@@ -43,7 +42,7 @@ import anyio
 import pytest
 
 from app.api import companion_places
-from app.api.deps import get_companion, get_repository, get_suggester
+from app.api.deps import get_repository, get_suggester
 from app.api.main import create_app
 from app.api.repository import (
     MembershipRecord,
@@ -54,16 +53,14 @@ from app.api.repository import (
     PersonRecord,
     RecapOutingRecord,
 )
-from app.api.routes.messages import get_companion_turn_limiter
 from app.api.routes.suggestions import get_suggestion_limiter
 from app.api.search_rate_limit import (
-    COMPANION_TURN_LIMIT_PER_WINDOW,
     SUGGESTION_LIMIT_PER_WINDOW,
     FixedWindowLimiter,
 )
 from app.domain.suggestion import SUGGESTION_KIND
 
-from .conftest import SeedCatalogueReads, ASGITestClient
+from .conftest import ASGITestClient, SeedCatalogueReads
 
 NOW = datetime(2030, 8, 27, 12, 0, tzinfo=UTC)
 CONTEXT_ID = uuid.UUID("3cc00000-cccc-4ccc-8ccc-0000c0000001")
@@ -97,11 +94,6 @@ CATALOGUE = [
     },
 ]
 
-COMPANION_CARD = {
-    "kind": "places",
-    "payload": {"intro": "Tối nay ăn nướng nhé", "place_ids": ["p-tiem-nuong"]},
-}
-
 SUGGESTION_CARD = {
     "kind": SUGGESTION_KIND,
     "payload": {
@@ -127,22 +119,13 @@ def other_actor() -> dict[str, str]:
 
 
 class StubRepository(SeedCatalogueReads):
-    """Only the reads these two workflows make, and nothing else.
+    """Only the reads the suggestion workflow makes, and nothing else.
 
     The shared fake in `conftest.py` knows nothing about messages, trips or the
     memory wall, and teaching it those would be a much larger change than the
     counter under test. What this stands in for is narrow: one group, one human
     line already said, one finished trip behind it -- the smallest state in
-    which **both** routes reach the model on every single request.
-
-    Every request reaching the model is the property that makes this file able
-    to fail. `create_message` deliberately does not append to what
-    `list_messages` returns: if it did, the companion's own card would be the
-    last message, `plan_turn` would answer `already_spoke_last`, and the burst
-    would stop after one call whether a limiter existed or not. Every case here
-    would then be green against an unmetered app. The cadence rule is real and
-    is tested in `tests/domain/test_companion.py`; holding it open here is what
-    isolates the ceiling.
+    which the route reaches the model on every single request.
     """
 
     def __init__(self) -> None:
@@ -228,17 +211,6 @@ class StubRepository(SeedCatalogueReads):
         return MemoryPage(memories=(), has_more=False)
 
 
-class CountingCompanion:
-    """Records every call, so a refusal that still paid can be seen."""
-
-    def __init__(self) -> None:
-        self.calls: list[dict] = []
-
-    def reply(self, **kwargs) -> dict:
-        self.calls.append(kwargs)
-        return COMPANION_CARD
-
-
 class CountingSuggester:
     """Same job on the other route."""
 
@@ -252,17 +224,12 @@ class CountingSuggester:
 
 
 @pytest.fixture
-def companion():
-    return CountingCompanion()
-
-
-@pytest.fixture
 def suggester():
     return CountingSuggester()
 
 
 @pytest.fixture
-def client(monkeypatch, companion, suggester):
+def client(monkeypatch, suggester):
     async def run_sync_inline(function, *args, **kwargs):
         del kwargs
         return function(*args)
@@ -274,16 +241,8 @@ def client(monkeypatch, companion, suggester):
     )
     app = create_app()
     app.dependency_overrides[get_repository] = lambda: StubRepository()
-    app.dependency_overrides[get_companion] = lambda: companion
     app.dependency_overrides[get_suggester] = lambda: suggester
     return ASGITestClient(app)
-
-
-def turn(client, headers=None):
-    return client.post(
-        f"/contexts/{CONTEXT_ID}/ai-turn",
-        headers=HEADERS if headers is None else headers,
-    )
 
 
 def suggestion(client, headers=None):
@@ -304,13 +263,6 @@ def install(client, dependency, code, message, limit=3):
 
 
 @pytest.fixture
-def metered_turns(client):
-    return install(
-        client, get_companion_turn_limiter, "turn_rate_limited", "Too many turns."
-    )
-
-
-@pytest.fixture
 def metered_suggestions(client):
     return install(
         client, get_suggestion_limiter, "suggestion_rate_limited", "Too many cards."
@@ -322,21 +274,6 @@ def metered_suggestions(client):
 # ---------------------------------------------------------------------------
 
 
-def test_without_a_ceiling_every_turn_in_a_burst_reaches_the_model(client, companion):
-    """The premise, asserted rather than assumed.
-
-    If the conversation cadence already stopped a burst, a window on this route
-    would be protecting nothing and the cases below would prove only that a
-    counter counts. It does not: with the caller still talking, `plan_turn`
-    says `ok` every time.
-    """
-
-    for _ in range(5):
-        assert turn(client).json()["spoke"] is True
-
-    assert len(companion.calls) == 5
-
-
 def test_without_a_ceiling_every_suggestion_in_a_burst_reaches_the_model(
     client, suggester
 ):
@@ -344,63 +281,6 @@ def test_without_a_ceiling_every_suggestion_in_a_burst_reaches_the_model(
         assert suggestion(client).json()["suggested"] is True
 
     assert len(suggester.calls) == 5
-
-
-# ---------------------------------------------------------------------------
-# POST /contexts/{id}/ai-turn
-# ---------------------------------------------------------------------------
-
-
-def test_a_burst_of_companion_turns_from_one_person_is_cut_off(client, metered_turns):
-    for _ in range(3):
-        assert turn(client).status_code == 200
-
-    assert turn(client).status_code == 429
-
-
-def test_the_refused_turns_are_the_ones_that_never_reach_the_model(
-    client, companion, metered_turns
-):
-    """The assertion that makes the gate worth having.
-
-    The point is not the status code, it is that the model call did not happen.
-    A 429 raised after the companion answered has spent exactly what it refused.
-    """
-
-    for _ in range(6):
-        turn(client)
-
-    assert len(companion.calls) == 3
-
-
-def test_a_refused_turn_names_the_companion_and_not_search_or_scans(client):
-    """The refusal names the thing that was refused.
-
-    `FixedWindowLimiter` takes its code and sentence from the caller precisely
-    so a third and fourth route cannot answer with `search_rate_limited`, which
-    would tell the person -- and the client branching on the code -- about a
-    feature they were not using.
-    """
-
-    for _ in range(COMPANION_TURN_LIMIT_PER_WINDOW):
-        turn(client)
-    body = turn(client).json()
-
-    assert body["code"] == "companion_turn_rate_limited"
-    assert "search" not in body["detail"].lower()
-    assert "scan" not in body["detail"].lower()
-
-
-def test_the_turn_cut_off_is_per_person_not_a_switch_that_silences_the_group(
-    client, metered_turns
-):
-    """A single global counter would make one person's loop everyone's outage."""
-
-    for _ in range(3):
-        assert turn(client).status_code == 200
-
-    assert turn(client, headers=other_actor()).status_code == 200
-    assert turn(client).status_code == 429
 
 
 # ---------------------------------------------------------------------------
@@ -443,52 +323,26 @@ def test_the_suggestion_cut_off_is_per_person(client, metered_suggestions):
 
 
 # ---------------------------------------------------------------------------
-# The two windows, and the two that already existed
+# The shipped windows
 # ---------------------------------------------------------------------------
 
 
-def test_spending_the_turn_ceiling_leaves_the_suggestion_ceiling_whole(client):
-    """The two routes are metered apart, and this is the only case saying so.
-
-    Every other case here stays green if both routes count into ONE window:
-    turns alone still stop at their ceiling, cards alone still stop at theirs.
-    A shared window is visible only when one identity uses both -- and then
-    somebody who chatted with the companion opens the group's home screen and
-    is refused a suggestion in a sentence about a feature they were not using.
-
-    Same argument, and the same shape, as
-    `test_spending_the_search_ceiling_leaves_the_scan_ceiling_whole`.
-    """
-
-    turn_codes = [
-        turn(client).status_code for _ in range(COMPANION_TURN_LIMIT_PER_WINDOW + 1)
-    ]
-
-    assert turn_codes[-1] == 429
-    assert suggestion(client).status_code == 200
-
-
 def test_the_shipped_routes_meter_without_any_test_installing_a_limiter(
-    client, companion, suggester
+    client, suggester
 ):
     """Every case above that installs its own limiter stays green if the app
-    ships with none. These two spend the real ceilings.
+    ships with none. This one spends the real ceiling.
     """
 
-    turn_codes = [
-        turn(client).status_code for _ in range(COMPANION_TURN_LIMIT_PER_WINDOW + 1)
-    ]
     card_codes = [
         suggestion(client).status_code for _ in range(SUGGESTION_LIMIT_PER_WINDOW + 1)
     ]
 
-    assert turn_codes == [200] * COMPANION_TURN_LIMIT_PER_WINDOW + [429]
     assert card_codes == [200] * SUGGESTION_LIMIT_PER_WINDOW + [429]
-    assert len(companion.calls) == COMPANION_TURN_LIMIT_PER_WINDOW
     assert len(suggester.calls) == SUGGESTION_LIMIT_PER_WINDOW
 
 
-def test_each_application_carries_its_own_companion_windows(client):
+def test_each_application_carries_its_own_suggestion_window(client):
     """A module-level limiter would make a suite's colour depend on its order.
 
     Measured, not argued: `app.api.main.app` is a module-level singleton, so a
@@ -497,15 +351,11 @@ def test_each_application_carries_its_own_companion_windows(client):
 
     other = create_app()
 
-    assert (
-        client.app.state.companion_turn_limiter
-        is not other.state.companion_turn_limiter
-    )
     assert client.app.state.suggestion_limiter is not other.state.suggestion_limiter
 
 
 def test_every_paid_route_carries_its_own_window(client):
-    """One object per route, not one object with six names.
+    """One object per route, not one object with five names.
 
     The cheapest way to "add" a limiter is to hand the new routes an object
     that already existed. Every ceiling assertion above survives that, because
@@ -518,8 +368,7 @@ def test_every_paid_route_carries_its_own_window(client):
         id(state.receipt_scan_limiter),
         id(state.chat_expense_limiter),
         id(state.screenshot_scan_limiter),
-        id(state.companion_turn_limiter),
         id(state.suggestion_limiter),
     }
 
-    assert len(windows) == 6
+    assert len(windows) == 5

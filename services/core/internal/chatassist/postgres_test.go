@@ -293,7 +293,7 @@ func TestInvocationCancellationAndExpiredLease(t *testing.T) {
 		t.Fatal(err)
 	}
 	requireCode(t, f.request("POST", f.route()+"/"+job.ID+"/cancel", f.token, nil), 200)
-	if err = f.handler.publish(ctx, j, json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic stale worker"}}`)); err != nil {
+	if err = f.handler.publish(ctx, j, json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic stale worker"}}`), nil); err != nil {
 		t.Fatal(err)
 	}
 	another := f.create(t)
@@ -410,7 +410,7 @@ func TestExpiredUnclaimedLeaseCannotDispatchOrPublish(t *testing.T) {
 	if _, err = f.handler.prepare(ctx, j); err == nil {
 		t.Fatal("expired worker retained dispatch permission")
 	}
-	if err = f.handler.publish(ctx, j, json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic expired worker"}}`)); err != nil {
+	if err = f.handler.publish(ctx, j, json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic expired worker"}}`), nil); err != nil {
 		t.Fatal(err)
 	}
 	var count int

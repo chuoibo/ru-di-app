@@ -17,6 +17,12 @@
  * Tên ảnh `takeScreenshot` được ghim nguyên bộ: đổi tên một ảnh là làm gãy
  * phép so ảnh trước/sau của Lead.
  *
+ * Một phép khẳng định ÂM (`assertNotVisible`, `notVisible`) trên chữ đã bị XOÁ
+ * có chủ đích là hợp lệ: nó chặn chữ đó quay lại. Những chữ như thế nằm trong
+ * `daXoa` của fixture, mỗi chữ một lý do. Chữ trong `daXoa` chỉ được dùng ở
+ * phép khẳng định âm, và nếu nó xuất hiện lại trong mã thì đỏ (hoặc nó đã quay
+ * lại, hoặc danh sách đã cũ).
+ *
  * Không chứng minh: flow chạy xanh. Đó là việc của máy thật.
  */
 import assert from "node:assert/strict";
@@ -65,9 +71,10 @@ function trichChuoi() {
       if ((m = /^\s*-?\s*takeScreenshot:\s*(.+)$/.exec(dong))) anh.push(giaTri(m[1]));
       else if ((m = /^\s*-?\s*inputText:\s*(.+)$/.exec(dong))) go.push(giaTri(m[1]));
       else if ((m = /^\s*-?\s*id:\s*(.+)$/.exec(dong))) id.push({ f, s: giaTri(m[1]) });
-      else if ((m = /^\s*-?\s*(?:tapOn|assertVisible|assertNotVisible|longPressOn|doubleTapOn|visible|notVisible|text|element):\s*(.+)$/.exec(dong))) {
-        const s = giaTri(m[1]);
-        if (s !== "" && !s.startsWith("{") && !s.startsWith("[") && !/^\$\{/.test(s)) chu.push({ f, s });
+      else if ((m = /^\s*-?\s*(tapOn|assertVisible|assertNotVisible|longPressOn|doubleTapOn|visible|notVisible|text|element):\s*(.+)$/.exec(dong))) {
+        const s = giaTri(m[2]);
+        const am = m[1] === "assertNotVisible" || m[1] === "notVisible";
+        if (s !== "" && !s.startsWith("{") && !s.startsWith("[") && !/^\$\{/.test(s)) chu.push({ f, s, am });
       }
     }
   }
@@ -120,13 +127,26 @@ function conSong(s) {
 
 const DONG = JSON.parse(readFileSync(new URL("./fixtures/chuoi-maestro-dong.json", import.meta.url), "utf8"));
 
+const DA_XOA = DONG.daXoa ?? {};
+
 test("mọi chữ Maestro bấm hay kiểm còn có mặt trong mã, seed, máy chủ hay chữ flow gõ vào", () => {
   assert.ok(chu.length > 400, `chỉ trích được ${chu.length} chuỗi: bộ đọc YAML đã hỏng`);
   const chet = [...new Set(chu.filter(({ s }) => !conSong(s)).map(({ s }) => s))].sort();
-  const moi = chet.filter((s) => !DONG.dong.includes(s));
+  const moi = chet.filter((s) => !DONG.dong.includes(s) && !(s in DA_XOA));
   assert.deepEqual(moi, [], `chuỗi Maestro không còn ở đâu (đổi tên nhãn thì sửa flow cùng commit):\n${moi.join("\n")}`);
   const daSong = DONG.dong.filter((s) => !chet.includes(s));
   assert.deepEqual(daSong, [], `chuỗi trong danh sách «dựng động» mà nay đã tìm thấy: gạch nó khỏi fixtures/chuoi-maestro-dong.json:\n${daSong.join("\n")}`);
+});
+
+test("chữ đã xoá có chủ đích: chỉ ở phép khẳng định âm, có lý do, và không quay lại trong mã", () => {
+  for (const [s, lyDo] of Object.entries(DA_XOA)) {
+    assert.ok(typeof lyDo === "string" && lyDo.length > 20, `«${s}» trong daXoa thiếu lý do`);
+    const dung = chu.filter((c) => c.s === s);
+    assert.ok(dung.length > 0, `«${s}» trong daXoa mà không flow nào còn dùng: gạch khỏi danh sách`);
+    const duong = dung.filter((c) => !c.am).map((c) => c.f);
+    assert.deepEqual(duong, [], `«${s}» đã xoá mà flow vẫn chờ hay bấm nó (không chỉ khẳng định âm)`);
+    assert.ok(!conSong(s), `«${s}» lại có trong mã: hoặc nó quay lại, hoặc gạch khỏi daXoa`);
+  }
 });
 
 test("mọi testID Maestro dùng còn trong mã", () => {

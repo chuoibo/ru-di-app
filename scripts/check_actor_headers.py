@@ -33,7 +33,7 @@ cấp ngoài cùng, nó thu:
 
 * các **đường route** hàm đó nhắc tới — trực tiếp bằng template literal
   (`${base}/contexts/${id}/messages`), hoặc gián tiếp qua một hàm dựng URL
-  trong cùng file (`searchUrl`, `messagesUrl`, `placesUrl`, `aiTurnUrl`);
+  trong cùng file (`searchUrl`, `messagesUrl`, `placesUrl`);
 * các **phương thức** HTTP nó nhắc tới (`method: "POST"`), mặc định GET như
   `fetch` mặc định;
 * **bằng chứng có actor**: hoặc chuỗi `X-Actor-ID` viết thẳng trong thân hàm,

@@ -203,7 +203,7 @@ cmd_up() {
   # The chat change feed and the AI engine are turned off here, explicitly.
   # They are Go-only by design (ADR-0031): Python has no such routes, their
   # triggers add tables the row snapshot would report as a diff, and they seal
-  # ai-turn/expense-draft on purpose. Parity compares the legacy path against
+  # expense-draft on purpose. Parity compares the legacy path against
   # the Python oracle; the chat features are measured by scripts/chat_e2e_go.sh.
   # Without this line a prod-mode run refuses to start: the features are on by
   # default in prod and this database has no chat schema.

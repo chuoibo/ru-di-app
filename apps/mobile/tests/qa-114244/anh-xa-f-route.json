@@ -7,7 +7,7 @@
   "F05": { "ten": "QR Friend Add", "routes": [] },
   "F06": { "ten": "Create Group", "routes": ["POST /contexts", "POST /contexts/{context_id}/members", "GET /contexts/{context_id}/members", "GET /contexts/{context_id}"] },
   "F07": { "ten": "Group Chat", "routes": ["POST /contexts/{context_id}/messages", "GET /contexts/{context_id}/messages"] },
-  "F08": { "ten": "AI Member", "routes": ["POST /contexts/{context_id}/ai-turn"] },
+  "F08": { "ten": "AI Member", "routes": ["POST /contexts/{context_id}/ai-invocations", "GET /contexts/{context_id}/ai-invocations", "POST /contexts/{context_id}/ai-invocations/{id}/retry"] },
   "F09": { "ten": "Discover Places", "routes": ["GET /places"] },
   "F10": { "ten": "Place Detail", "routes": ["GET /places/{place_id}"] },
   "F11": { "ten": "AI Place Match", "routes": ["GET /contexts/{context_id}/suggestion"] },

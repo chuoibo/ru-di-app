@@ -96,7 +96,6 @@
     // the failure it guards is the app casting the deciding vote. See
     // `tests/ket-qua-binh-chon.test.mjs`.
     "src/screens/binh-chon/ket-qua.ts",
-    "src/screens/chat/ai.ts",
     "src/screens/chat/nhom.ts",
     "src/screens/chat/nhap-tu-chat.ts",
     // F31/F33/F34/F36. Compile both the four-route client and the markup the
@@ -371,6 +370,17 @@
     // wall owner's comment policy -- pure copy and the six routes.
     "src/rudi/tuong/bai-chi-tiet.ts",
     "src/rudi/nguoi/anh-ca-nhan.ts",
+    // Which avatar each frame shows: the server's version in the address, one
+    // batched ask for the unknown, a push beats an older answer, another account
+    // forgets everything. See `tests/anh-dai-dien.test.mjs`.
+    "src/rudi/nguoi/anh-dai-dien.ts",
+    // The avatar stream's handshake, backoff and pause rules, driven with a
+    // fake socket and hand-run timers. See `tests/luong-anh-dai-dien.test.mjs`.
+    "src/rudi/nguoi/luong-anh-dai-dien.ts",
+    // The web session store: resume from the HttpOnly cookie, set it once per
+    // token, clear it on sign-out, and never touch Web Storage. See
+    // `tests/phien-web.test.mjs`.
+    "src/phien-web.ts",
     "src/rudi/nguoi/chinh-sach-tuong.ts",
     // L4 (ADR-0022 §2.3): stories -- the four routes, the ring's label, and a
     // deadline check that must be strict at the exact second like the server.
@@ -412,6 +422,11 @@
     // giây là sáu chục lần gõ cửa), và một job id lạ KHÔNG được dựng thành
     // đường đi ra ngoài.
     "src/rudi/nep/media.ts",
+    // Nếp's words (ADR-0036 §2.7). Compiled because its laws are negative: the
+    // session sent is never more than the server accepts, the preview counts
+    // exactly what goes, a money-screen slip is NOT asked, and every refusal
+    // code the Go handlers emit has a sentence (tests/cau-chu-goi-ai.test.mjs).
+    "src/rudi/nep/hoi.ts",
     "src/screens/quan-tri/quan-tri.ts",
     // ADR-0037 «Sân khấu giấy»: person inks and paper-stage tokens, pure.
     "src/rudi/nguoi/muc-nguoi.ts",

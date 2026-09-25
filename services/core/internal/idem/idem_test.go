@@ -842,7 +842,6 @@ func TestEveryChatWriteReplayMustReachAuthorization(t *testing.T) {
 		{"POST", "/contexts/abc/messages/msg/reactions"},
 		{"DELETE", "/contexts/abc/messages/msg/reactions/like"},
 		{"POST", "/contexts/abc/messages/msg/expense-draft"},
-		{"POST", "/contexts/abc/ai-turn"},
 		{"PUT", "/contexts/abc/read-mark"},
 	} {
 		t.Run(test.method+test.path, func(t *testing.T) {

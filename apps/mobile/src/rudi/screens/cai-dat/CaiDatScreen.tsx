@@ -15,15 +15,16 @@ import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
 
 import { ApiError, newAttempt, taiAnhDaiDien, thongDiepNguoiDoc } from "../../../api";
-import { nguonAnhDaiDien } from "../../nguoi/anh-ca-nhan";
+import { baoDaDoiAnh } from "../../nguoi/anh-dai-dien";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
+import { AnhNhomError } from "../../../camera/anh-nhom";
 import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach } from "../../nguoi/chinh-sach-tuong";
 import { docHoSoToi, suaHoSoToi, type HoSoToi } from "../../../phien";
 import { NHAN_GIAO_DIEN } from "../../giao-dien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, Inline, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, Segmented, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { useGiaoDien } from "../../ui/GiaoDienProvider";
 
 export function CaiDatScreen() {
@@ -35,13 +36,6 @@ export function CaiDatScreen() {
   const [loi, setLoi] = useState<string | null>(null);
   const [dangLuu, setDangLuu] = useState(false);
   const [dangDoiAnh, setDangDoiAnh] = useState(false);
-  // The avatar address never changes, so a fresh upload is invisible until the
-  // query string does. Counting the uploads is enough to make the frame reload.
-  const [lanTaiAnh, setLanTaiAnh] = useState(0);
-  // 404 là câu trả lời BÌNH THƯỜNG khi chưa ai tải ảnh nào lên. Không bắt
-  // lấy nó thì khung ảnh vẽ ra một vòng tròn rỗng, tệ hơn hai chữ cái
-  // (bảng 2026-09-07 chụp được đúng vòng tròn rỗng ấy).
-  const [anhHong, setAnhHong] = useState(false);
 
   const nap = useCallback(async () => {
     if (phien === null) return;
@@ -95,12 +89,16 @@ export function CaiDatScreen() {
     if (daChon === null) return;
     setDangDoiAnh(true);
     try {
-      await nenVaDung(daChon, (nen) => taiAnhDaiDien(phien.person_id, nen, phien.person_id));
-      setAnhHong(false);
-      setLanTaiAnh((truoc) => truoc + 1);
+      const daTai = await nenVaDung(daChon, (nen) => taiAnhDaiDien(phien.person_id, nen, phien.person_id));
+      // The new id is the new version: every frame on this phone switches now;
+      // the stream tells everyone who shares a group with us.
+      baoDaDoiAnh(phien.person_id, phien.person_id, daTai.id);
     } catch (error) {
       await boAnh(daChon);
-      setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
+      // `AnhNhomError` carries the device's own words ("not a picture", "too
+      // large"); replacing them with the network sentence sent people looking
+      // at their Wi-Fi for a file that was never an image (measured 2026-09-24).
+      setLoi(error instanceof ApiError || error instanceof AnhNhomError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
       setDangDoiAnh(false);
     }
@@ -109,9 +107,6 @@ export function CaiDatScreen() {
   if (!phienDaDoc) return null;
 
   const timDuoc = hoSo?.discoverable_by_phone ?? true;
-  // A 404 is the ordinary answer before the first upload, and `Avatar` draws
-  // initials for a frame that would not load, so the screen never asks first.
-  const nguonMat = phien === null ? null : nguonAnhDaiDien(phien.person_id, phien.person_id, lanTaiAnh);
 
   return (
     <RudiScreen testID="cai-dat-screen">
@@ -124,16 +119,13 @@ export function CaiDatScreen() {
       <NhomHang>
         <View style={styles.khoi}>
           <Inline gap={12}>
-            <Avatar
-              name={hoSo?.display_name ?? "Bạn"}
-              onError={() => setAnhHong(true)}
-              size={64}
-              source={anhHong ? null : nguonMat}
-            />
+            {/* A 404 before the first upload is ordinary; the frame draws
+                initials for it rather than an empty ring (board 2026-09-07). */}
+            <AvatarNguoi name={hoSo?.display_name ?? "Bạn"} personId={phien?.person_id} size={64} />
             <View style={styles.hangChu}>
               <Text style={[typography.label, { color: colors.ink }]}>{hoSo?.display_name ?? "Bạn"}</Text>
               <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                Ảnh này hiện ở hội, ở tường và trong danh sách bạn bè.
+                Ảnh này hiện với những người chung nhóm với bạn.
               </Text>
             </View>
           </Inline>

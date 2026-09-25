@@ -1,12 +1,12 @@
-"""Slash commands and mentions in `POST /contexts/{id}/messages` (M3).
+"""Slash commands in `POST /contexts/{id}/messages` (M3, narrowed by ADR-0036).
 
 What this layer proves: the message is stored before anything else happens;
-`/plan` and `@Rủ Đi` ask the companion for a turn and a full window is
-reported in the body rather than as 429; `/vote` creates a poll and a poll card
-in the caller's name that the cadence does not read as an AI turn; a malformed
-vote and `/chia-bill` answer honestly; a client card is grounded by the same
-whitelist as the model's, so `poll` cannot be forged; and a forward poll that
-finds nothing echoes its cursor.
+`/vote` creates a poll and a poll card in the caller's name and calls no model;
+a malformed vote answers honestly; `/plan`, `@Rủ Đi` and `/chia-bill` are
+ordinary text that reaches no model and names no intent (ADR-0036 §2.1: AI runs
+only when invoked through the invocation queue); the old `/ai-turn` route is
+gone; a client card is grounded by the same whitelist as the model's, so `poll`
+cannot be forged; and a forward poll that finds nothing echoes its cursor.
 """
 
 from __future__ import annotations
@@ -30,8 +30,6 @@ from app.api.repository import (
     VoteOptionRecord,
     VoteRecord,
 )
-from app.api.routes.messages import get_message_intent_limiter
-from app.api.search_rate_limit import FixedWindowLimiter
 from app.domain.chat_expense import ChatExpenseError
 
 from .conftest import ASGITestClient, SeedCatalogueReads
@@ -217,7 +215,7 @@ class TableReader:
         return self.table.get(text, {"is_expense": False})
 
 
-def _client(repository, companion, monkeypatch, *, limiter=None, reader=None):
+def _client(repository, companion, monkeypatch, *, reader=None):
     async def run_sync_inline(function, *args, **kwargs):
         del kwargs
         return function(*args)
@@ -229,8 +227,6 @@ def _client(repository, companion, monkeypatch, *, limiter=None, reader=None):
     app = create_app()
     app.dependency_overrides[get_repository] = lambda: repository
     app.dependency_overrides[get_companion] = lambda: companion
-    if limiter is not None:
-        app.dependency_overrides[get_message_intent_limiter] = lambda: limiter
     app.dependency_overrides[get_chat_expense_reader] = lambda: reader or TableReader(
         fail=ChatExpenseError("CHAT_READER_NOT_CONFIGURED")
     )
@@ -256,50 +252,38 @@ def test_an_ordinary_message_is_stored_and_asks_nobody_anything(
     response = _post(client, "tối nay ăn gì")
     assert response.status_code == 201, response.text
     body = response.json()
-    assert body["intent"] is None and body["companion"] is None and body["vote"] is None
+    assert body["intent"] is None and body["vote"] is None
     assert body["intent_error"] is None
     assert [m.body for m in repository.messages] == ["tối nay ăn gì"]
     assert companion.calls == 0
 
 
-@pytest.mark.parametrize("text", ["/plan tối mai đi đâu", "@Rủ Đi gợi ý quán đi"])
-def test_plan_and_mention_ask_the_companion_after_the_message_is_stored(
-    client, repository, companion, text
+@pytest.mark.parametrize(
+    "text", ["/plan tối mai đi đâu", "@Rủ Đi gợi ý quán đi", "/chia-bill", "/chiabill"]
+)
+def test_an_old_ai_command_is_an_ordinary_message_and_reaches_no_model(
+    repository, companion, monkeypatch, text
 ):
+    """ADR-0036 §2.1: AI runs only when a person invokes it.
+
+    The text is kept exactly as typed and nothing else happens: no intent is
+    named, no error is reported, no card is written, and neither the companion
+    nor the expense reader is asked anything. The shrunken response carries
+    no `companion` or `expense_card` field at all.
+    """
+    reader = TableReader({"tối qua tôi trả 180k": {"is_expense": True}})
+    client = _client(repository, companion, monkeypatch, reader=reader)
+    _post(client, "tối qua tôi trả 180k")
     response = _post(client, text)
     assert response.status_code == 201, response.text
     body = response.json()
-    assert body["intent"] == ("plan" if text.startswith("/") else "mention")
-    assert body["companion"]["spoke"] is True
-    assert body["companion"]["message"]["card"] == TEXT_CARD
-    assert companion.calls == 1
-    kinds = [(m.kind, m.author_id) for m in repository.messages]
-    assert kinds == [("text", MEMBER_ID), ("ai_card", None)]
-
-
-def test_a_full_companion_window_is_reported_in_the_body_not_as_429(
-    repository, companion, monkeypatch
-):
-    client = _client(
-        repository,
-        companion,
-        monkeypatch,
-        limiter=FixedWindowLimiter(
-            limit=0,
-            window_seconds=60,
-            code="rate_limited",
-            message="Thử lại sau một phút.",
-        ),
-    )
-    response = _post(client, "/plan đi đâu")
-    assert response.status_code == 201, response.text
-    assert response.json()["intent"] == "plan"
-    assert response.json()["intent_error"] == "companion_rate_limited"
-    assert response.json()["companion"] is None
+    assert body["body"] == text
+    assert body["intent"] is None and body["intent_error"] is None
+    assert body["vote"] is None
+    assert "companion" not in body and "expense_card" not in body
+    assert [m.kind for m in repository.messages] == ["text", "text"]
     assert companion.calls == 0
-    assert [m.body for m in repository.messages] == ["/plan đi đâu"], (
-        "tin nhắn phải được giữ"
-    )
+    assert reader.texts == []
 
 
 def test_vote_creates_a_poll_and_a_poll_card_in_the_callers_name(
@@ -321,23 +305,19 @@ def test_vote_creates_a_poll_and_a_poll_card_in_the_callers_name(
     assert companion.calls == 0, "một cuộc bình chọn không tốn lượt AI"
 
 
-def test_a_poll_card_does_not_count_as_the_companion_speaking_last(
-    client, repository, companion
-):
+def test_the_old_ai_turn_route_is_gone(client, repository, companion):
+    """The route used to be how a poll card was checked against the cadence.
+
+    It is deleted in both backends (ADR-0036 §3b): the Go front door proxies
+    an unknown route here, so Python must answer 404 rather than keep a turn.
+    """
     _post(client, "/vote Đi đâu? Đà Lạt | Vũng Tàu")
-    # The last message is the poll card. An unrequested turn is refused only
-    # while the COMPANION spoke last; a person's poll card is not that.
     turn = client.post(
         f"/contexts/{CONTEXT_ID}/ai-turn", headers=actor_headers(actor_id=MEMBER_ID)
     )
-    assert turn.status_code == 200, turn.text
-    assert turn.json()["spoke"] is True, turn.json()
-    # Control: after the companion itself spoke, the same unrequested turn is refused.
-    again = client.post(
-        f"/contexts/{CONTEXT_ID}/ai-turn", headers=actor_headers(actor_id=MEMBER_ID)
-    )
-    assert again.json()["spoke"] is False
-    assert again.json()["reason"] == "already_spoke_last"
+    assert turn.status_code == 404, turn.text
+    assert companion.calls == 0
+    assert [m.kind for m in repository.messages] == ["text", "ai_card"]
 
 
 def test_a_malformed_vote_is_named_not_guessed(client, repository):
@@ -348,101 +328,6 @@ def test_a_malformed_vote_is_named_not_guessed(client, repository):
     assert response.json()["vote"] is None
     assert repository.votes == {}
     assert len(repository.messages) == 1
-
-
-def test_chia_bill_without_a_configured_reader_says_so(client, repository):
-    _post(client, "tối qua tôi trả 180k tiền ăn")
-    response = _post(client, "/chia-bill")
-    assert response.status_code == 201
-    assert response.json()["intent"] == "chia_bill"
-    assert response.json()["intent_error"] == "chia_bill_not_available"
-    assert response.json()["expense_card"] is None
-    assert len(repository.messages) == 2, "hai tin người vẫn được giữ, không có thẻ"
-
-
-def test_chia_bill_reads_recent_human_text_into_one_draft_card(
-    repository, companion, monkeypatch
-):
-    reader = TableReader(
-        {
-            "tối qua tôi trả 180k tiền ăn": {
-                "is_expense": True,
-                "title": "Tiền ăn",
-                "amount_text": "180k",
-            },
-            "mình ứng 1 triệu tiền phòng": {
-                "is_expense": True,
-                "title": "Tiền phòng",
-                "amount_text": "1 triệu",
-            },
-        }
-    )
-    client = _client(repository, companion, monkeypatch, reader=reader)
-    _post(client, "tối qua tôi trả 180k tiền ăn")
-    _post(client, "haha ok")
-    _post(client, "mình ứng 1 triệu tiền phòng")
-    response = _post(client, "/chia-bill")
-    assert response.status_code == 201, response.text
-    body = response.json()
-    assert body["intent"] == "chia_bill" and body["intent_error"] is None
-    card = body["expense_card"]
-    assert card["kind"] == "ai_card" and card["author_id"] is None
-    drafts = card["card"]["payload"]["drafts"]
-    assert [d["title"] for d in drafts] == ["Tiền ăn", "Tiền phòng"], (
-        "cũ trước, đúng thứ tự đã tiêu"
-    )
-    assert [d["amount_vnd"] for d in drafts] == [180000, 1000000]
-    assert all(d["paid_by_id"] == str(MEMBER_ID) for d in drafts), (
-        "người trả = tác giả tin, không phải mô hình nói"
-    )
-    assert all(d["shared_by"] == [str(MEMBER_ID)] for d in drafts)
-    assert all(d["needs_review"] is True for d in drafts)
-    assert all(isinstance(d["amount_vnd"], int) for d in drafts)
-    # The command itself was not read, and no expense exists: only messages.
-    assert "/chia-bill" not in reader.texts
-    assert repository.messages[-1].kind == "ai_card"
-    assert repository.messages[-1].card["kind"] == "expense_draft"
-
-
-def test_chia_bill_with_nothing_to_split_posts_no_card(
-    repository, companion, monkeypatch
-):
-    client = _client(repository, companion, monkeypatch, reader=TableReader())
-    _post(client, "haha ok")
-    response = _post(client, "/chia-bill")
-    assert response.json()["intent_error"] == "chia_bill_no_expenses"
-    assert response.json()["expense_card"] is None
-    assert all(m.kind == "text" for m in repository.messages)
-
-
-def test_a_reader_that_names_a_person_sinks_the_whole_batch(
-    repository, companion, monkeypatch
-):
-    reader = TableReader(
-        {
-            "tôi trả 180k": {
-                "is_expense": True,
-                "title": "x",
-                "amount_text": "180k",
-                "paid_by": "Nam",
-            }
-        }
-    )
-    client = _client(repository, companion, monkeypatch, reader=reader)
-    _post(client, "tôi trả 180k")
-    response = _post(client, "/chia-bill")
-    assert response.json()["intent_error"] == "chia_bill_refused"
-    assert response.json()["expense_card"] is None
-
-
-def test_chia_bill_reads_at_most_eight_messages(repository, companion, monkeypatch):
-    reader = TableReader()
-    client = _client(repository, companion, monkeypatch, reader=reader)
-    for i in range(12):
-        _post(client, f"tin {i}")
-    _post(client, "/chia-bill")
-    assert len(reader.texts) == 8
-    assert reader.texts[0] == "tin 11", "đọc từ tin mới nhất"
 
 
 def test_a_client_card_is_grounded_and_a_poll_cannot_be_forged(client, repository):

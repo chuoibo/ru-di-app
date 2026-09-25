@@ -16,7 +16,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DIRECTION_CONTRACT_NHOM_CHAT } from "../dist-test/ui/direction.js";
-import { AI_WORK_ITEM, cauAiChuaNoiDuoc, goiAiTurn } from "../dist-test/screens/chat/ai.js";
 import {
   dinhDangTienVnd,
   keHoachTuCard,

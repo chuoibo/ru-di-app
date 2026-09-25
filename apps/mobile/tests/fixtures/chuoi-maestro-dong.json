@@ -277,5 +277,8 @@
     "48-hoi-truoc-khi-bo",
     "48-khay-to-hen",
     "91-deeplink-opens-settlement"
-  ]
+  ],
+  "daXoa": {
+    ".*đang im lặng.*": "ADR-0036 §2.1 xoá v1 tận gốc (main 2a602ba, #650): câu «… đang im lặng» không còn trong mã. Flow 40 và _30 giữ assertNotVisible để chặn nó quay lại."
+  }
 }

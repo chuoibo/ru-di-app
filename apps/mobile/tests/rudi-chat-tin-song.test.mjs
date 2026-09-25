@@ -129,13 +129,12 @@ test("thayPhanUng chỉ đụng đúng một tin; glyph có cho cả sáu loại
 });
 
 test("cauYDinh nói đúng điều máy chủ làm với lệnh", () => {
-  assert.match(cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), intent_error: "companion_rate_limited" }), /Hết lượt/);
   assert.match(cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), intent_error: "vote_malformed" }), /\/vote/);
-  assert.match(
-    cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), companion: { context_id: CTX, spoke: false, reason: "unavailable", message: null } }),
-    /chưa bật/,
-  );
-  assert.equal(cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), companion: { context_id: CTX, spoke: true, reason: "ok", message: tin("z", "2030-08-27T12:00:01Z") } }), null);
+  // ADR-0036 §2.1: the server no longer acts on /plan, @Rủ Đi or /chia-bill,
+  // so there is no AI outcome to put into words, and a code it no longer sends
+  // says nothing rather than a guess.
+  assert.equal(cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), intent_error: "companion_rate_limited" }), null);
+  assert.equal(cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), intent: "vote", intent_error: null }), null);
   assert.equal(cauYDinh(tin("a", "2030-08-27T12:00:00Z")), null);
 });
 

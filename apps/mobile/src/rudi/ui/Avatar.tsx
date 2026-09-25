@@ -23,7 +23,7 @@ export interface AvatarProps {
    * ink, the same on every screen. Without it the avatar keeps the screen's
    * tone, as before.
    */
-  personId?: string;
+  personId?: string | null;
   /**
    * Fetch the person's own avatar as `actorId` (the viewer) when no `source`
    * is given; a 404 is remembered for the session and the initial is drawn

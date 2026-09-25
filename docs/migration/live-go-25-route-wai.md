@@ -181,3 +181,10 @@ Diff này thêm `_chi_chu_thay` (Go `pairsteps.chiChuThay`): người không ph�
 - `POST /contexts/{context_id}/ai-turn`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
 - `POST /contexts/{context_id}/messages`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
 - `POST /places/search`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-24 (c) — xoá `ai-turn` và các nhánh AI tự kích hoạt của `POST /messages` (ADR-0036 §2.1, §3b)
+
+Một đường gọi AI duy nhất là hàng đợi lời gọi (`POST /contexts/{id}/ai-invocations`). Diff này xoá, trong cùng một commit ở cả Go lẫn Python cùng manifest: route `POST /contexts/{context_id}/ai-turn` (Go `takeCompanionTurnRoute`/`takeCompanionTurn`, Python `take_companion_turn`), nhánh `/plan`·`@Rủ Đi` (companion) và nhánh `/chia-bill` của `actOnMessageIntent`/`act_on_message_intent`, nhịp `PlanTurn`/`plan_turn` cùng route brain `companion-plan`, hai cửa sổ `companion_turn_limiter`/`message_intent_limiter`. Từ đây hàng `ai-turn` không còn trong manifest; cửa trước Go không có route nên proxy sang Python và Python trả 404.
+
+- `POST /contexts/{context_id}/messages`: hành vi ĐỔI có chủ ý. Chữ «/plan …», «@Rủ Đi …», «/chia-bill …» là tin nhắn thường: `intent` null, `intent_error` null, không gọi mô hình, không ghi thẻ. Thân trả lời bỏ hai trường `companion` và `expense_card`; `intent` chỉ còn `"vote"`, `intent_error` chỉ còn `"vote_malformed"`. Nhánh `/vote` không đổi một byte (kịch bản `wai/messages-flow.yaml`). Hai bên đổi cùng lúc, `PostedMessageResponse` và `clonePosted` cùng thứ tự trường `intent, vote, intent_error`.
+- `POST /contexts/{context_id}/messages/{message_id}/expense-draft`: không đổi. Kịch bản `wai/ai-turn-and-expense-draft.yaml` giữ nửa này, bỏ sáu bước `ai-turn`.

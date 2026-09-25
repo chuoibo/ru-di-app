@@ -50,13 +50,14 @@ import { useBanNhap } from "../../chat/useBanNhap";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { useChatChanges } from "../../chat/useChatChanges";
 import { useChatAi } from "../../chat/useChatAi";
+import { chuHangLoiGoi, docLenhAi, lenhSanSang, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
 import { bangMauChat, typography, useRudiTheme } from "../../theme";
 import { IconButton, RudiButton } from "../../ui";
 import { useMotion } from "../../ui/useMotion";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { Sticker } from "../../ui/stickers/Sticker";
 import type { TinChoGui } from "../../chat/hang-cho";
 import { Sheet } from "../../ui/Sheet";
@@ -76,6 +77,7 @@ import { useNepNguCanh } from "../../nep/NepProvider";
 const LENH = [
   { nhan: "/plan", goiY: "/plan tối nay đi đâu?", moTa: "Rủ Đi AI phác lịch trình" },
   { nhan: "/vote", goiY: "/vote", moTa: "Viết câu hỏi và lựa chọn" },
+  { nhan: "/chia-bill", goiY: "/chia-bill", moTa: "Rủ Đi AI gom khoản chi để cả hội xác nhận" },
   { nhan: "@Rủ Đi", goiY: "@Rủ Đi ", moTa: "Nhờ phác một tờ hẹn" },
 ] as const;
 
@@ -169,6 +171,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   }, [chat.tin]);
   const coToHenChoBinhChon = (voteId: string) => binhChonDaCoToHen.get(voteId) ?? null;
   const [promptAi, setPromptAi] = useState("");
+  // Which command the AI tray sends. Only `/chia-bill` sets it; every other way
+  // into (or out of) the tray is a plan, so leaving the tray resets it.
+  const [lenhAi, setLenhAi] = useState<LenhAi>("plan");
+  useEffect(() => { if (khay !== "plan") setLenhAi("plan"); }, [khay]);
   const [menuTin, setMenuTin] = useState<Tin | null>(null);
   // ADR-0023 §2.4: báo cáo một tin nhắn. Khay riêng, mở sau khi khay menu
   // đóng, để hai khay không chồng lên nhau trên màn nhỏ.
@@ -353,9 +359,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const body = (command ?? nhap).trim();
     if (!body || guiRef.current) return false;
     if (goiMoHinh(body)) {
-      if (/^\/chia-?bill\b/i.test(body)) {
-        setThongBao({ tu: "Rủ Đi", cau: "Đọc khoản chi từ lịch sử chat chưa được bật. Bạn có thể thêm khoản chi ở Chia bill.", luc: new Date().toISOString() });
-      } else { setPromptAi(body.replace(/^\/plan\s*|^@(rủ đi|ru di|rudi)\s*/i, "")); setKhay("plan"); doiNhap(""); }
+      // `/chia-bill` goes through the same tray as `/plan`: the same «Mình
+      // đang thấy» preview, the same «Chỉ gửi lời nhờ», the same queue.
+      const { lenh, prompt } = docLenhAi(body);
+      setLenhAi(lenh); setPromptAi(prompt); setKhay("plan"); doiNhap("");
       return false;
     }
     if (body === "/vote") { setKhay("poll"); doiNhap(""); return false; }
@@ -372,8 +379,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       if (daGui === null) return false;
       veCuoi();
       const cau = cauYDinh(daGui);
-      const tuAi = daGui.companion !== null && daGui.companion !== undefined && !daGui.companion.spoke;
-      if (cau !== null) setThongBao({ tu: tuAi ? "Rủ Đi AI" : "Rủ Đi", cau, luc: new Date().toISOString() });
+      if (cau !== null) setThongBao({ tu: "Rủ Đi", cau, luc: new Date().toISOString() });
       return !daGui.intent_error;
     } catch {
       // The failed row owns the exact text, quote and retry key. Leave any
@@ -584,7 +590,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         ]}
       >
         {!cuaToi && !laAi ? (
-          cuoiChuoi ? <Avatar name={tenNguoi(tin.author_id)} size={30} /> : <View style={styles.choChuDau} />
+          cuoiChuoi ? <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
         ) : null}
         <View style={[styles.khoi, cuaToi && !laAi && styles.khoiToi, laAi && styles.khoiAi]}>
           {!cuaToi && !laAi && dauChuoi ? (
@@ -729,7 +735,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             <Nep pose="moi" size={96} />
             <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : "Có hội rồi. Mở lời thôi."}</Text>
             <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
-            {!nhanRieng ? <RudiButton label="Rủ hội một buổi" variant="outline" full={false} onPress={() => setKhay("plan")} /> : null}
+            {!nhanRieng ? <RudiButton label="Rủ hội một buổi" variant="outline" full={false} onPress={() => { setLenhAi("plan"); setKhay("plan"); }} /> : null}
           </View>
         </View>
       ) : null}
@@ -752,12 +758,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               <View key={request.id} style={[styles.invocation, { backgroundColor: colors.card, borderColor: colors.line }]}>
                 <View style={styles.dauAi}>
                   <Ionicons name={request.status === "failed" ? "alert-circle-outline" : "time-outline"} size={20} color={colors.inkSoft} />
-                  <Text style={[typography.label, { color: colors.ink }]}>{request.status === "failed" ? "Chưa phác được tờ hẹn" : request.status === "queued" ? "Lời nhờ đang chờ" : "Đang phác tờ hẹn…"}</Text>
+                  <Text style={[typography.label, { color: colors.ink }]}>{chuHangLoiGoi(request).tieuDe}</Text>
                 </View>
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>{request.status === "failed" ? "Lời nhờ vẫn được giữ. Bạn có thể thử lại hoặc tự tạo kèo." : "Bạn cứ trò chuyện, kết quả sẽ về đây."}</Text>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{chuHangLoiGoi(request).cau}</Text>
                 {request.status === "failed" ? <View style={styles.requestActions}>
-                  <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !ai.capabilities?.ai.plan.available} onPress={() => void ai.retry(request.id)} />
-                  <RudiButton label="Tự tạo kèo" compact full={false} variant="ghost" onPress={() => moToHen()} />
+                  {thuLaiDuoc(request) ? <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !lenhSanSang(ai.capabilities, request.command ?? "plan")} onPress={() => void ai.retry(request.id)} /> : null}
+                  {request.command !== "chia_bill" ? <RudiButton label="Tự tạo kèo" compact full={false} variant="ghost" onPress={() => moToHen()} /> : null}
                 </View> : null}
               </View>
             ))}
@@ -853,7 +859,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       {moLenh && lenhPhuHop.length > 0 ? (
         <ScrollView keyboardShouldPersistTaps="handled" style={[styles.lenh, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
           {lenhPhuHop.map((l) => (
-            <Pressable accessibilityRole="button" key={l.nhan} onPress={() => { setKhay(l.nhan === "/vote" ? "poll" : "plan"); doiNhap(""); }} style={styles.lenhHang}>
+            <Pressable accessibilityRole="button" key={l.nhan} onPress={() => { setKhay(l.nhan === "/vote" ? "poll" : "plan"); setLenhAi(l.nhan === "/chia-bill" ? "chia_bill" : "plan"); doiNhap(""); }} style={styles.lenhHang}>
               <Text style={[typography.label, { color: colors.accent }]}>{l.nhan}</Text>
               <Text style={[typography.caption, { color: colors.inkSoft }]}>{l.moTa}</Text>
             </Pressable>
@@ -912,11 +918,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       ) : null}
       {!khongNhanTin && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy} boiCanh={boiCanhAi}
         initialPrompt={promptAi}
+        lenh={lenhAi}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
         onPoll={gui}
-        onPlan={async (prompt, boiCanh) => { const draft = nhapRef.current; const sent = await ai.send(prompt, boiCanh); if (sent) { setPromptAi(""); if (goiMoHinh(draft.text)) xoaNhapCu(draft.revision); } return sent; }}
+        onPlan={async (prompt, boiCanh) => { const draft = nhapRef.current; const sent = await ai.send(prompt, boiCanh, lenhAi); if (sent) { setPromptAi(""); if (goiMoHinh(draft.text)) xoaNhapCu(draft.revision); } return sent; }}
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
         onToGiay={nhanRieng ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}

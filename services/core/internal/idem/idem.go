@@ -675,7 +675,7 @@ func ChatReplayNeedsAuthorization(method, path string) bool {
 		return false
 	}
 	switch parts[2] {
-	case "messages", "ai-turn", "read-mark":
+	case "messages", "read-mark":
 		return true
 	default:
 		return false
