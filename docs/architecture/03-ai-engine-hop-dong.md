@@ -65,8 +65,8 @@ worker: aiharness.Engine.Run(turn, sink)
 | 3 | Go 1.23.4 → 1.25 | xong: `637b7f3` (1.25.14) |
 | 4 | Tách worker: `claimByID`, heartbeat, `core work`, pool riêng | xong: `d596621` (pool riêng và semaphore tool để lát 6/10) |
 | 5 | Cổng đọc xuyên gói (`go/packages`), phải có trước khi engine chuyển code | xong: `71fb311` (`internal/aigate`) |
-| 6 | Engine S1: Nếp qua Go, chưa stream; `Engine.Run`; eval T1 trong CI | xong: `0a752a7` (sau cờ `MOBILE_AI_ENGINE_NEP=go`, mặc định vẫn `brain`); review phản biện đang chạy |
-| 7 | Nhóm trong luồng (lõi, còn đi brain): tin @ là tin thường, chip, `tra_loi`, `reply_to` | xong phần lõi: `5af8655`; chưa mở ảnh chụp, chưa chạy Maestro 49 (cần máy); review phản biện đang chạy |
+| 6 | Engine S1: Nếp qua Go, chưa stream; `Engine.Run`; eval T1 trong CI | đã gộp `0a752a7` (sau cờ `MOBILE_AI_ENGINE_NEP=go`, mặc định `brain`), **chưa xong**: review phản biện REQUEST_CHANGES (thiếu T1 trong CI, luật tiền sót câu thường gặp, `Sink` tự phát xong/thất bại, test «bây giờ» không đỏ được); đang sửa. Cờ không được bật `go` trước khi T1 xanh |
+| 7 | Nhóm trong luồng (lõi, còn đi brain): tin @ là tin thường, chip, `tra_loi`, `reply_to` | đã gộp `5af8655`, **chưa xong**: review phản biện REQUEST_CHANGES (khoá chết publish ↔ xoá/thả cảm xúc tin, flow 30/40 đỏ, thứ tự replay và hạn phòng); đang sửa. Chưa mở ảnh chụp, chưa chạy Maestro 49. Không vào `main` trước khi Lead ký ADR-0039 |
 | 8 | RAG S1 từ vựng; `thoigian`, `giomo`, `Fold`, `SafeDeep`; sửa lỗi quán mặc định Đà Lạt trên đường Go | một phần: `giomo` `2acd75b`, `thoigian` + `Fold` trong `0a752a7`, `rag/xephang` `544ebc7`; gói `rag`, `tuvung`, `SafeDeep`, shortlist `/places/search` đang làm |
 | 9 | Engine S2: nhóm qua Go, understand, fast path, agent, `chia_bill` port; cổng ≥14/16 | chưa |
 | 10 | Hàng đợi: outbox, RabbitMQ, poller dự phòng, tác vụ định kỳ, limiter theo lời gọi | một phần: gói `jobs` `d76a0a4`, tầng broker `7246744`; chưa nối vào `chatassist` (migration, trigger, consumer, `retryLater`, định kỳ, limiter) |
