@@ -315,6 +315,27 @@ const GEO_PRECISIONS = new Set([
   "rooftop", "street", "ward_centroid", "province_centroid", "suy_luan", "none",
 ]);
 
+/** Precisions honest enough to put a pin on. A province centroid is the middle
+ *  of a province and `suy_luan` is a model's guess: both are "has coordinates",
+ *  neither is where the place is, and a pin or a route there sends people to a
+ *  spot with nothing at it. Same line the ingest draws with `MappablePoint`. */
+const GEO_PRECISIONS_VE_DUOC = new Set(["rooftop", "street", "ward_centroid"]);
+
+/** Whether a point may be drawn on a map or handed to a map app as a point.
+ *
+ *  An absent precision means the row predates the field (fixtures, the old
+ *  seed); the database refuses coordinates without one, so a server row that
+ *  has a point always says how good it is. */
+export function veDuocLenBanDo(place: {
+  lat: number | null;
+  lng: number | null;
+  geoPrecision?: string | null;
+}): boolean {
+  if (!Number.isFinite(place.lat) || !Number.isFinite(place.lng)) return false;
+  if (place.geoPrecision === undefined || place.geoPrecision === null) return true;
+  return GEO_PRECISIONS_VE_DUOC.has(place.geoPrecision);
+}
+
 export function parsePlace(raw: unknown, field: string): Place {
   const p = raw as Record<string, unknown>;
   const flag = p.flag ?? null;

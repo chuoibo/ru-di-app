@@ -46,6 +46,9 @@ export type ChoChieu = {
    *  already checks `Number.isFinite` before drawing anything. */
   lat: number | null;
   lng: number | null;
+  /** `Place.geoPrecision`. A province centroid keeps its name and address in
+   *  the plan but never becomes a marker or a route end. */
+  geoPrecision?: string | null;
   address?: string | null;
   category?: string;
 };

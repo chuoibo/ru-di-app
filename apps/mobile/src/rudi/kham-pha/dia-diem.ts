@@ -20,6 +20,7 @@ import {
   parseCatalogue,
   type Category,
   type Place,
+  veDuocLenBanDo,
 } from "../../screens/kham-pha/places";
 import type { TimKiemState } from "../../screens/kham-pha/tim-kiem";
 import { quenDiemDen } from "./diem-den";
@@ -672,10 +673,14 @@ export function cauDuongDi(place: Pick<Place, "distanceKm" | "travelMinutes">): 
  *  `geo:0,0?q=name` is the form the geo URI scheme defines for "search for this
  *  name", and it is what the map app would otherwise have had to guess from
  *  `geo:null,null` -- which it cannot parse, so the button would open nothing
- *  for a quarter of the catalogue. */
-export function duongChiDuong(place: Pick<Place, "lat" | "lng" | "name">): string {
+ *  for a quarter of the catalogue.
+ *
+ *  A point that is not drawable (province centroid, model guess) is treated
+ *  the same as no point: routing to the middle of a province is worse than
+ *  letting the map app search the name. */
+export function duongChiDuong(place: Pick<Place, "lat" | "lng" | "name" | "geoPrecision">): string {
   const q = encodeURIComponent(place.name);
-  if (place.lat === null || place.lng === null) return `geo:0,0?q=${q}`;
+  if (!veDuocLenBanDo(place)) return `geo:0,0?q=${q}`;
   return `geo:${place.lat},${place.lng}?q=${q}`;
 }
 

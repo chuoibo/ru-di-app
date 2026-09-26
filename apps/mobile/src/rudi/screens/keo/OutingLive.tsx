@@ -167,7 +167,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   }, [hanhTrinh, napDanhMuc]);
 
   const cho = useMemo(
-    () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, address: p.address, category: p.category })),
+    () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, geoPrecision: p.geoPrecision, address: p.address, category: p.category })),
     [danhMuc],
   );
   const stopsHien = trang.pha === "xong" ? (draft?.stops ?? trang.keo.stops) : [];
