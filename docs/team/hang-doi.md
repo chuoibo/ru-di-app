@@ -15,19 +15,13 @@ Nhánh `claude/practical-faraday-mswgmv`, kế hoạch `docs/architecture/04-ui-
 Client đã khoanh vùng các lỗi dưới đây. Phần gốc nằm ở máy chủ hoặc cần máy thật, nên ghi lại để
 không lạc.
 
-1. **B1, phía máy chủ: bản phác mồ côi trước khi có sổ.**
-   - Hiện trạng: máy chủ nhận `POST /contexts/{id}/papers` khi sổ chưa lập, và tạo `pair_papers`
-     trạng thái `nhap` với `cycle_id` NULL.
-   - Hậu quả: sau khi sổ lập, bản phác ấy (chỉ chủ nó thấy) chặn cả tuần của người kia. Người kia
-     bấm «Rủ đi chơi» sẽ nhận `paper_wrong_state`.
-   - Tái hiện trên stack seed 25/09: một hàng `nhap · cycle_id NULL · chủ Tuấn Kiệt`; Minh Anh bấm
-     «Rủ đi chơi» nhận «Tờ giấy không ở trạng thái làm được việc này.».
-   - Client đã sửa ở S2: `nenXinTo` không xin tờ khi sổ chưa lập. Bị từ chối kiểu đó thì màn hiện
-     «Tờ tuần này ở phía …» kèm «Làm mới», không lặp lại nút hỏng. Bản live thôi nói «Tuần này bạn
-     mở lời», vì trên dây không có lượt.
-   - Còn phải quyết ở máy chủ: từ chối xin tờ khi `cycle_state != active` (`cycle_not_active`),
-     hoặc gắn bản phác vào chu kỳ khi sổ mở; và luật khi cả hai cùng muốn mở lời trong một tuần.
-   - Cần Lead xác nhận luật mong muốn (QC 24/09 đã hỏi). Mọi thay đổi route phải qua cổng parity.
+1. **B1, phía máy chủ: ĐÃ XONG 26/09 (ADR-0038 §2.1, commit `6ff0013`, `2050c8d`).**
+   - Luật đã chọn: khi cả hai đồng ý `lap_so`, mọi tờ tạm còn mở của cuộc trò chuyện thành trang đầu của sổ
+     (gắn `cycle_id`, `is_temporary = false`). Tờ tạm đã hết hạn giữ nguyên. Không bỏ tính năng lời rủ tạm của
+     ADR-0027, không huỷ chữ người ta đang viết.
+   - Python và Go cùng commit; golden `python_pair_steps.json` render lại từ dịch vụ Python; oracle câu lệnh
+     Postgres pair: 226 ca, 0 mismatch.
+   - Hàng mồ côi còn sót trên máy đang chạy (tạo trước 26/09) tự hết hạn cuối tuần của nó; không cần migration.
 2. **Flow Maestro chạy lại trên máy thật.** Container không có Android SDK/KVM.
    - Flow 28 (bàn gán món mới, cuộn-về-đầu khi đổi bước).
    - Flow 29 (đợt thu, trang sổ).
@@ -50,21 +44,16 @@ không lạc.
      bằng chứng.
 3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&
    npx expo run:android`.
-5. **Đọc mù 26/09 (lát S9): những điều người đọc lần đầu hiểu sai mà S9 chưa sửa.**
-   Một subagent context mới đọc 11 ảnh không nhãn (xem `docs/claude/2026-09-25/san-khau-giay/README.md`).
-   Đã sửa trong S9: ô màu bong bóng đang chọn không nhìn ra; câu «Bạn bè» ở Đăng bài bị cắt «…»;
-   hồ sơ người khác nói năm tham gia hai lần. Còn lại, cần quyết thiết kế:
-   - Nút chính bị tắt («Lưu tên», «Đăng», «Đăng story», «Lưu sở thích», «Nhắn tin» của người cùng
-     nhóm) có tương phản thấp và không nói vì sao tắt. Đây là kiểu `disabled` chung của `RudiButton`
-     và `StampButton`, đổi thì chạm `test_contrast_floor.py`.
-   - Mép giấy 10dp của Nếp ở cạnh phải (ADR-0035) được đọc là «khung trắng bị cắt, lỗi hiển thị» ở
-     8/11 ảnh. ADR-0035 giữ nguyên trong v3, nên cần Lead quyết có đổi hay không.
-   - Dấu vân tay mực trong phiếu bầu được đọc là «chấm xám méo»: cần một nhãn nhỏ hoặc hình rõ hơn.
-   - Con dấu («QUẢN TRỊ») và chip trông như nút bấm.
-   - Câu chữ khó hiểu: «Mở nhóm này» (người lập nhóm), «Trang ngày của hội», «Mở một trang đường mới»;
-     «Lịch trình» và «Hành trình» dễ nhầm; nhãn gu tiếng Anh (Nightlife, Outdoor…) xen tiếng Việt.
-   - Nút gửi bình luận đỏ đậm khi ô còn trống. «0 tim» cạnh sáu loại cảm xúc.
-   - Mức chi cao nhất là 250K–500K; người tiêu hơn 500K không có ô để chọn (quyết sản phẩm).
+5. **Đọc mù 26/09 (lát S9): ĐÃ QUYẾT VÀ ĐÃ LÀM ở S10 (ADR-0038).** Nút tắt nói vì sao hoặc không hiện; mép
+   Nếp là ruy băng; câu chữ («Bản đồ», «Người lập nhóm», nhãn gu tiếng Việt ở cả client, Python, Go); mức chi
+   thứ tư «Trên 500K». Còn mở, không chặn:
+   - Dấu vân tay mực trong phiếu bầu vẫn được đọc là «chấm xám»: chưa đổi.
+   - Nút gửi bình luận đỏ khi ô trống; «0 tim» cạnh sáu loại cảm xúc: chưa đổi.
+6. **Hai test tầng Go Postgres đỏ vì môi trường container, không vì mã** (đo 26/09): `TestPhotoStorageOracle`
+   và `TestPeopleRepositoryOracle` (route `delete_own_account`). Ảnh parity chạy dưới user `app`, còn test chạy
+   dưới root nên `t.TempDir()` tạo thư mục 0700 của root; Python trong container bị PermissionError errno 13.
+   Cần chạy lại trên máy dev không phải root. Tương tự, 20 test Python đỏ ở container này vì gói `cryptography`
+   của hệ thống hỏng (`pyo3_runtime.PanicException`) và vì các target make/docker.
 
 ---
 

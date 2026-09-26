@@ -258,6 +258,7 @@ export function PersonalizationScreen() {
                 <View style={[styles.napPhongBi, { borderColor: colors.lineStrong }]} />
                 <View style={[styles.dayPhongBi, { height: 2 + i * 3, backgroundColor: colors.lineStrong }]} />
                 <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>{k.nhan}</Text>
+                <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{k.phu}</Text>
               </Pressable>
             );
           })}
@@ -292,7 +293,8 @@ const styles = StyleSheet.create({
   dauChon: { position: "absolute", top: 6, right: 6 },
   giua: { textAlign: "center" },
   hangPhongBi: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  phongBi: { flexGrow: 1, flexBasis: 90, minHeight: 64, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
+  // Four envelopes since ADR-0038 §2.5: two to a row, never a lone fourth.
+  phongBi: { flexGrow: 1, flexBasis: 140, minHeight: 72, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
   napPhongBi: { position: "absolute", top: -14, width: 40, height: 28, borderWidth: 1, transform: [{ rotate: "45deg" }] },
   dayPhongBi: { position: "absolute", bottom: 0, left: 0, right: 0, opacity: 0.5 },
   privacyText: { textAlign: "center", paddingHorizontal: 18 },

@@ -62,7 +62,7 @@ export const SO_THICH: readonly SoThichMuc[] = [
 
 /** A budget band, per person, per outing, in đồng.
  *
- * `tu` is inclusive and `den` is exclusive, so the three bands below tile
+ * `tu` is inclusive and `den` is exclusive, so the four bands below tile
  * without overlapping and no amount belongs to two of them. `den: null` is the
  * open top end; `tu: 0` is the open bottom.
  */
@@ -83,6 +83,8 @@ export const NGAN_SACH: readonly NganSachKhoang[] = [
   { id: "tiet-kiem", tu: 0, den: 100_000, nhan: "Dưới 100K", phu: "Tiết kiệm" },
   { id: "vua-phai", tu: 100_000, den: 250_000, nhan: "100K–250K", phu: "Vừa phải" },
   { id: "thoai-mai", tu: 250_000, den: 500_000, nhan: "250K–500K", phu: "Thoải mái" },
+  // ADR-0038 §2.5: the band the top one used to force people out of.
+  { id: "rong-tay", tu: 500_000, den: null, nhan: "Trên 500K", phu: "Rộng tay" },
 ];
 
 /** What the address book toggle actually resolved to.

@@ -13,7 +13,7 @@ import test from "node:test";
 
 import { hinhRuyBang } from "../dist-test/rudi/art/giay.js";
 import { coTheDang, lyDoChuaDang } from "../dist-test/screens/ca-nhan/bai-dang.js";
-import { SO_THICH } from "../dist-test/screens/vao-cua/so-thich.js";
+import { NGAN_SACH, SO_THICH } from "../dist-test/screens/vao-cua/so-thich.js";
 import { kiemLop, phanTich } from "./_kiem-lop.mjs";
 
 const doc = (tep) => readFileSync(new URL(`../src/${tep}`, import.meta.url), "utf8");
@@ -83,4 +83,13 @@ test("§2.4: câu chữ mới, id không đổi", () => {
   const ht = doc("rudi/hanh-trinh/ManHinhHanhTrinh.tsx");
   assert.match(ht, />Các chặng trong ngày</);
   assert.match(ht, />Ngày này chưa có điểm nào trên bản đồ</);
+});
+
+test("§2.5: mức chi thứ tư nối liền mức cũ và không có trần; id cũ giữ nguyên", () => {
+  assert.deepEqual(NGAN_SACH.map((k) => k.id), ["tiet-kiem", "vua-phai", "thoai-mai", "rong-tay"]);
+  for (let i = 1; i < NGAN_SACH.length; i += 1) assert.equal(NGAN_SACH[i].tu, NGAN_SACH[i - 1].den, `hở hoặc chồng giữa ${NGAN_SACH[i - 1].id} và ${NGAN_SACH[i].id}`);
+  const top = NGAN_SACH.at(-1);
+  assert.equal(top.den, null, "mức trên cùng phải không có trần");
+  assert.equal(top.tu, 500_000);
+  assert.ok(NGAN_SACH.every((k) => Number.isInteger(k.tu) && (k.den === null || Number.isInteger(k.den))), "luật 1: số nguyên đồng");
 });

@@ -16,7 +16,7 @@
    ],
    [
     "nightlife",
-    "Nightlife"
+    "Ch\u01a1i \u0111\u00eam"
    ],
    [
     "mon-local",
@@ -24,11 +24,11 @@
    ],
    [
     "outdoor",
-    "Outdoor"
+    "Ngo\u00e0i tr\u1eddi"
    ],
    [
     "shopping",
-    "Shopping"
+    "Mua s\u1eafm"
    ],
    [
     "karaoke",
@@ -36,7 +36,7 @@
    ],
    [
     "game",
-    "Game"
+    "Ch\u01a1i game"
    ]
   ],
   "interest_ids": [
@@ -68,12 +68,19 @@
     "label": "250K\u2013500K",
     "min_vnd": 250000,
     "max_vnd": 500000
+   },
+   {
+    "id": "rong-tay",
+    "label": "Tr\u00ean 500K",
+    "min_vnd": 500000,
+    "max_vnd": null
    }
   ],
   "budget_band_ids": [
    "tiet-kiem",
    "vua-phai",
-   "thoai-mai"
+   "thoai-mai",
+   "rong-tay"
   ]
  },
  "cases": [
@@ -1266,6 +1273,31 @@
      "label": "250K\u2013500K",
      "min_vnd": 250000,
      "max_vnd": 500000
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "test_band_ids_resolve_to_themselves/rong-tay",
+   "args": [
+    "rong-tay"
+   ],
+   "result": {
+    "ok": "rong-tay"
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "test_band_ids_resolve_to_themselves/rong-tay",
+   "args": [
+    "rong-tay"
+   ],
+   "result": {
+    "ok": {
+     "id": "rong-tay",
+     "label": "Tr\u00ean 500K",
+     "min_vnd": 500000,
+     "max_vnd": null
     }
    }
   },
