@@ -33,7 +33,8 @@ import {
   type CheckIn,
 } from "../../../screens/len-plan/buoi-di";
 import { tabBarHeight } from "../../adaptive";
-import { docDanhMuc } from "../../kham-pha/dia-diem";
+import { choDeChon, docDanhMucCoLui } from "../../kham-pha/dia-diem";
+import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
   cauDaToi,
   changGuiTu,
@@ -51,7 +52,7 @@ import {
 import { homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { typography, useRudiTheme } from "../../theme";
-import { Chip, Field, IconButton, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { Chip, Field, IconButton, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
 import { Money } from "../../ui/Money";
 import { ReorderList } from "../../ui/ReorderList";
@@ -110,6 +111,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const [gio, setGio] = useState(gioTiepTheo());
   const [nhan, setNhan] = useState("");
   const [danhMuc, setDanhMuc] = useState<Place[]>([]);
+  const [timCho, setTimCho] = useState("");
   const [choDiaDiem, setChoDiaDiem] = useState<Place | null>(null);
   const [ganChoChang, setGanChoChang] = useState<ChangDung | null>(null);
   const [draft, setDraft] = useState<{ stops: ChangDung[]; revision: number } | null>(null);
@@ -151,7 +153,10 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const napDanhMuc = useCallback(async () => {
     if (danhMuc.length > 0) return;
     try {
-      setDanhMuc((await docDanhMuc()).places);
+      // The destination the person picked on Khám phá, not the default one:
+      // the default is a curated town, so reading it here meant no real place
+      // could ever be attached to a stop.
+      setDanhMuc((await docDanhMucCoLui(await docDiemDenDaChon())).places);
     } catch (error) {
       setThongBao(loiRaChu(error));
     }
@@ -170,6 +175,14 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, geoPrecision: p.geoPrecision, address: p.address, category: p.category })),
     [danhMuc],
   );
+  const choHienRa = useMemo(() => choDeChon(danhMuc, timCho), [danhMuc, timCho]);
+  const oTimCho = (
+    <SearchField accessibilityLabel="Ô tìm địa điểm" onChangeText={setTimCho} placeholder="Tìm theo tên, món, địa chỉ" value={timCho} />
+  );
+  const khongKhop =
+    danhMuc.length > 0 && choHienRa.length === 0 ? (
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>Không có chỗ nào khớp «{timCho}». Thử tên ngắn hơn nhé.</Text>
+    ) : null;
   const stopsHien = trang.pha === "xong" ? (draft?.stops ?? trang.keo.stops) : [];
 
   // The context slip. Declared here rather than in the route adapter because
@@ -287,8 +300,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             </View>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Địa điểm trong danh mục (tuỳ chọn)</Text>
             {/* One scrolling row: at font 1.3 the catalogue wrapped into eight rows and pushed the submit off-screen. */}
+            {oTimCho}
             <ScrollView contentContainerStyle={styles.hangChip} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false}>
-              {danhMuc.map((p) => (
+              {choHienRa.map((p) => (
                 <Chip
                   key={p.id}
                   label={p.name}
@@ -297,6 +311,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                 />
               ))}
             </ScrollView>
+            {khongKhop}
             {thongBao !== null && moThem ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
             <RudiButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} />
           </View>
@@ -304,11 +319,13 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
         <Sheet accessibilityLabel="Gắn địa điểm" onClose={() => setGanChoChang(null)} open={ganChoChang !== null}>
           <View style={styles.khay}>
             <Text style={[typography.h2, { color: colors.ink }]}>Gắn địa điểm cho «{ganChoChang?.label ?? ""}»</Text>
+            {oTimCho}
             <ScrollView contentContainerStyle={styles.hangChip} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false}>
-              {danhMuc.map((p) => (
+              {choHienRa.map((p) => (
                 <Chip key={p.id} label={p.name} onPress={() => { if (ganChoChang !== null) void ganChang(trang.keo, ganChoChang, p); }} />
               ))}
             </ScrollView>
+            {khongKhop}
             <RudiButton label="Để sau" onPress={() => setGanChoChang(null)} variant="ghost" />
           </View>
         </Sheet>

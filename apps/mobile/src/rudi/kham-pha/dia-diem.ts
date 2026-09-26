@@ -574,6 +574,20 @@ export function locTheoTen(places: Place[], q: string): Place[] {
   });
 }
 
+/** How many places a picker shows at once. */
+export const CHIP_TOI_DA = 12;
+
+/**
+ * The places a picker offers for a query: the first dozen name matches.
+ *
+ * A province holds thousands of real places, and a chip per place is both a
+ * haystack and the render that got the app killed on Khám phá. The search box
+ * narrows; the cap keeps the row a choice.
+ */
+export function choDeChon(places: Place[], q: string): Place[] {
+  return locTheoTen(places, q).slice(0, CHIP_TOI_DA);
+}
+
 /**
  * «Đang mở · 10:00 – 22:30», «Đã đóng · mở 10:00 – 22:30», or the truth.
  *

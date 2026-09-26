@@ -23,7 +23,8 @@ import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../
 import type { Phien } from "../../../phien";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import { tenCua, type ThanhVien } from "../../chia-bill/hoa-don";
-import { docDanhMuc } from "../../kham-pha/dia-diem";
+import { docDanhMucCoLui } from "../../kham-pha/dia-diem";
+import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
   cauKyNiem,
   cauTuongTac,
@@ -165,7 +166,9 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
     chay(async () => {
       setMoCheckIn(true);
       if (danhMuc === null) {
-        const dm = await docDanhMuc();
+        // The destination picked on Khám phá; the default is a curated town
+        // where nobody in the group is checking in.
+        const dm = await docDanhMucCoLui(await docDiemDenDaChon());
         setDanhMuc(dm.places.map((p) => ({ id: p.id, name: p.name })));
       }
     });

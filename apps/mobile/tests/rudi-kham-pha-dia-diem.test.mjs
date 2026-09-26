@@ -30,6 +30,8 @@ import {
   cauMoCua,
   cauNguonDuLieu,
   cauTimKiem,
+  CHIP_TOI_DA,
+  choDeChon,
   chiTietNgan,
   daoLuu,
   docAnhDiaDiem,
@@ -504,4 +506,22 @@ test("nút xem thêm không hứa nhiều hơn số còn lại", () => {
   assert.equal(cauXemThem(2371), "Xem thêm 20 nơi");
   assert.equal(cauXemThem(7), "Xem thêm 7 nơi");
   assert.equal(cauXemThem(1500, 1200), "Xem thêm 1.200 nơi");
+});
+
+test("picker gắn địa điểm: tối đa một tá chip, ô tìm thu hẹp theo tên, không dấu vẫn ra", () => {
+  const tinh = Array.from({ length: 2391 }, (_, i) => ({ ...CHO, id: `p-${i}`, name: `Quán số ${i}`, address: null }));
+  tinh.push({ ...CHO, id: "xom-lao", name: "Tiệm Nướng Xóm Lào", address: "Hẻm 12 Bùi Viện" });
+  assert.equal(CHIP_TOI_DA, 12);
+  assert.equal(choDeChon(tinh, "").length, 12, "một tỉnh thật không thành 2.392 chip");
+  assert.deepEqual(choDeChon(tinh, "xom lao").map((p) => p.id), ["xom-lao"]);
+  assert.deepEqual(choDeChon(tinh, "bui vien").map((p) => p.id), ["xom-lao"], "địa chỉ cũng được tìm");
+  assert.equal(choDeChon(tinh, "không có quán này").length, 0);
+});
+
+test("OutingLive: chip chỉ vẽ từ choDeChon, danh mục đọc theo điểm đến đã chọn", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const src = await readFile(new URL("../src/rudi/screens/keo/OutingLive.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(src, /danhMuc\.map\(\(p\) => \(\s*<Chip/, "render cả danh mục thành chip là lỗi lowmemorykiller lặp lại");
+  assert.match(src, /docDanhMucCoLui\(await docDiemDenDaChon\(\)\)/);
+  assert.doesNotMatch(src, /\bdocDanhMuc\(\)/, "đọc danh mục mặc định thì không gắn được địa điểm thật");
 });
