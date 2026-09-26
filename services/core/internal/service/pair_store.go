@@ -145,6 +145,15 @@ func (s PairStore) ActivatePairCycle(cycleID string, now time.Time) error {
 	return storeError(r.ActivatePairCycle(s.Ctx, cycleID, now))
 }
 
+// AdoptTemporaryPaper is adopt_temporary_paper.
+func (s PairStore) AdoptTemporaryPaper(paperID, cycleID string) error {
+	r, err := s.repository()
+	if err != nil {
+		return err
+	}
+	return storeError(r.AdoptTemporaryPaper(s.Ctx, paperID, cycleID))
+}
+
 // ClosePairCycle is close_pair_cycle.
 func (s PairStore) ClosePairCycle(cycleID string, now time.Time) error {
 	r, err := s.repository()

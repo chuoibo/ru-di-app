@@ -7421,6 +7421,20 @@ class ApiService:
             self.repository.complete_consent_proposal(proposal.id, now=now)
             if proposal.purpose == "lap_so":
                 self.repository.activate_pair_cycle(notebook.cycle_id, now=now)
+                # ADR-0038 §2.1: the invitation being written before the
+                # notebook existed becomes its first page. Left temporary it
+                # stays readable by its owner only and still holds the one
+                # open sheet, so the other person is refused a sheet they
+                # cannot see until the week runs out.
+                for paper in self.repository.list_pair_papers(context_id):
+                    if (
+                        paper.is_temporary
+                        and pair_paper.hieu_luc(_paper_dict(paper), now=now)
+                        in pair_paper.OPEN_STATES
+                    ):
+                        self.repository.adopt_temporary_paper(
+                            paper.id, cycle_id=notebook.cycle_id
+                        )
             elif proposal.purpose == "bat_doi":
                 # K2: one person, one couple. Both rows in this transaction, so
                 # a notebook cannot end up half a couple.

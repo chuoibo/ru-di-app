@@ -318,7 +318,22 @@ func (p *pairRoute) grantConsent() error {
 	}
 	switch proposal.Purpose {
 	case "lap_so":
-		return p.repo.ActivatePairCycle(bg, *notebook.CycleID, p.now)
+		if err := p.repo.ActivatePairCycle(bg, *notebook.CycleID, p.now); err != nil {
+			return err
+		}
+		// ADR-0038 §2.1: an open temporary invitation is filed under the cycle.
+		papers, err := p.repo.ListPairPapers(bg, p.text("context_id"))
+		if err != nil {
+			return err
+		}
+		for _, paper := range papers {
+			if paper.IsTemporary && pairpaper.IsOpen(p.hieuLuc(paper)) {
+				if err := p.repo.AdoptTemporaryPaper(bg, paper.ID, *notebook.CycleID); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	case "bat_doi":
 		for _, person := range participants {
 			err := p.repo.SetCoupleMember(bg, person, *notebook.CycleID, p.now)
