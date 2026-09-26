@@ -616,11 +616,14 @@ func (r Repository) AddPaperKeep(ctx context.Context, paperID, personID, line st
 }
 
 // AdoptTemporaryPaper is adopt_temporary_paper (ADR-0038 §2.1): the paper by
-// id; nothing for a missing paper or one already filed under a cycle;
-// otherwise cycle_id and is_temporary=false in one UPDATE, so
+// id, the bare row as session.get reads it (no versions, views or responses);
+// nothing for a missing paper or one already filed under a cycle; otherwise
+// cycle_id and is_temporary=false in one UPDATE, so
 // paper_temporary_has_no_cycle holds.
 func (r Repository) AdoptTemporaryPaper(ctx context.Context, paperID, cycleID string) error {
-	paper, err := r.GetPairPaper(ctx, paperID)
+	paper, err := scanPairPaper(r.Q.QueryRow(ctx, `SELECT `+pairPaperLabelled+`
+		   FROM pair_papers
+		  WHERE pair_papers.id = $1::UUID`, paperID))
 	if err != nil || paper == nil || !paper.IsTemporary {
 		return err
 	}
