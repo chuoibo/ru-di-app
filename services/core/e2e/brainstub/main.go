@@ -22,8 +22,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 )
+
+// nghinDong is "<n>k", the one money form the chat-expense stub reads.
+var nghinDong = regexp.MustCompile(`\b(\d{1,7})k\b`)
 
 func main() {
 	listen := os.Getenv("BRAIN_STUB_LISTEN")
@@ -92,6 +97,40 @@ func main() {
 				"title": "Tờ hẹn dựng sẵn cho tầng E2E",
 				"stops": stops,
 			},
+		})
+	})
+	// chat-expense is the existing skill chia_bill reads each shared message
+	// through. The stub reads "<n>k" as n thousand đồng, an integer, and
+	// anything else as "not an expense". Like the real skill, it never names a
+	// person: who paid is the core's answer, from the message author.
+	mux.HandleFunc("/internal/brain/v1/chat-expense", func(w http.ResponseWriter, r *http.Request) {
+		if token != "" && r.Header.Get("X-Internal-Token") != token {
+			http.Error(w, `{"code":"forbidden"}`, http.StatusForbidden)
+			return
+		}
+		var payload struct {
+			Text string `json:"text"`
+		}
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&payload); err != nil {
+			http.Error(w, `{"code":"brain_request_invalid"}`, http.StatusUnprocessableEntity)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		m := nghinDong.FindStringSubmatch(payload.Text)
+		if m == nil {
+			_ = json.NewEncoder(w).Encode(map[string]any{"is_expense": false, "title": nil, "amount_vnd": nil, "needs_review": false})
+			return
+		}
+		n, err := strconv.ParseInt(m[1], 10, 64)
+		if err != nil || n <= 0 || n > 1_000_000 {
+			_ = json.NewEncoder(w).Encode(map[string]any{"is_expense": false, "title": nil, "amount_vnd": nil, "needs_review": false})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"is_expense":   true,
+			"title":        "Khoản dựng sẵn cho tầng E2E",
+			"amount_vnd":   n * 1000,
+			"needs_review": true,
 		})
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

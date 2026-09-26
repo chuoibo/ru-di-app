@@ -53,6 +53,9 @@ OTP=0
 # Đối chứng âm cho phép đo bàn phím: tắt KeyboardAvoidingView trong bundle, và
 # do_ban_phim.py PHẢI hỏng. Xanh ở đây là thước đo mù.
 TAT_KAV=0
+# Nếp vẽ đè lên mọi route. Tắt nó là CHẨN ĐOÁN, không phải mặc định: một thứ
+# ship cho người dùng mà bảng không chạm tới thì không cổng nào canh nó.
+TAT_NEP=0
 # --ai (cùng --otp): API phải có khoá Gemini còn sống; chạy thêm flow 40 và kiểm thẻ AI grounded.
 AI=0
 # --anh (cùng --otp): API phải đã nhập ảnh Wikimedia cho ít nhất một địa điểm;
@@ -92,6 +95,7 @@ while [ $# -gt 0 ]; do
     --lap) LAP="$2"; shift 2 ;;
     --otp) OTP=1; shift ;;
     --tat-kav) TAT_KAV=1; shift ;;
+    --tat-nep) TAT_NEP=1; shift ;;
     --ai) AI=1; shift ;;
     --anh) ANH=1; shift ;;
     *) echo "tham số lạ: $1" >&2; exit 64 ;;
@@ -1702,7 +1706,15 @@ PY3
   echo "máy chủ có $so_anh địa điểm có ảnh bìa, tất cả đều mang tác giả + giấy phép"
 }
 
-# Khoá AI còn sống không — hỏi bằng đường sản phẩm, không hỏi biến môi trường.
+# Khoá AI có mặt không — hỏi bằng đường sản phẩm, không hỏi biến môi trường.
+#
+# Trước đây lượt thăm dò này gọi `POST /contexts/{id}/ai-turn` với
+# `requested: true`, tức là tiêu một lời gọi mô hình thật mỗi lần chạy. Route đó
+# đã bị xoá (ADR-0036 §2.1), và đường AI duy nhất còn lại là hàng đợi lời gọi,
+# nơi một lượt thăm dò sẽ ghi một thẻ vào nhóm. Nên giờ hỏi
+# `GET /contexts/{id}/chat-capabilities`: máy chủ hỏi brain xem nhà cung cấp có
+# được cấu hình không, KHÔNG gọi mô hình. Cái giá: probe này thấy được khoá
+# THIẾU, không thấy được khoá có mặt mà đã chết. Khoá chết lộ ra ở flow AI.
 kiem_khoa_ai() {
   local goc so body tok ctx ket
   goc="http://127.0.0.1:$API_PORT"
@@ -1713,17 +1725,12 @@ kiem_khoa_ai() {
       -H "Idempotency-Key: ai-probe-ctx-$so" -d '{"display_name":"Tham do AI"}' \
     | python3 -c 'import json,sys;print(json.load(sys.stdin).get("id",""))')"
   [ -n "$ctx" ] || khong_do_duoc "người thăm dò AI không mở được nhóm."
-  curl -sS -o /dev/null -X POST "$goc/contexts/$ctx/messages" -H 'Content-Type: application/json' \
-      -H "Authorization: Bearer $tok" -H "Idempotency-Key: ai-probe-msg-$so" \
-      -d '{"kind":"text","body":"Toi nay ca hoi di an o Da Lat, ngan sach vua, goi y giup","image_url":null,"card":null}'
-  ket="$(curl -sS -X POST "$goc/contexts/$ctx/ai-turn" -H 'Content-Type: application/json' \
-      -H "Authorization: Bearer $tok" -d '{"requested":true}' \
-    | python3 -c 'import json,sys;d=json.load(sys.stdin);print("%s|%s" % (d.get("spoke"), d.get("reason")))')"
+  ket="$(curl -sS "$goc/contexts/$ctx/chat-capabilities" -H "Authorization: Bearer $tok" \
+    | python3 -c 'import json,sys;p=json.load(sys.stdin).get("ai",{}).get("plan",{});print("%s|%s" % (p.get("available"), p.get("reason")))')"
   case "$ket" in
-    True\|*) echo "khoá AI còn sống trên API $API_PORT (lượt thăm dò: mô hình đã trả lời)" ;;
-    *\|unavailable) hong "khoá AI CHẾT hoặc thiếu trên API $API_PORT (ai-turn: unavailable). Flow AI không chạy, và đó là màu đỏ." ;;
-    *\|ungrounded) echo "khoá AI sống nhưng lượt thăm dò trả thẻ không grounded ($ket) — vẫn đo tiếp" ;;
-    *) khong_do_duoc "ai-turn thăm dò trả «$ket», không kết luận được về khoá." ;;
+    True\|*) echo "máy chủ khai AI sẵn sàng trên API $API_PORT (chat-capabilities; không gọi mô hình nên chưa chứng minh khoá còn sống)" ;;
+    False\|provider_unavailable) hong "khoá AI thiếu trên API $API_PORT (chat-capabilities: provider_unavailable). Flow AI không chạy, và đó là màu đỏ." ;;
+    *) khong_do_duoc "chat-capabilities thăm dò trả «$ket», không kết luận được về khoá." ;;
   esac
 }
 
@@ -1929,6 +1936,17 @@ if [ "$ANH" = 1 ]; then kiem_co_anh_dia_diem; fi
   fi
   if [ "$TAT_KAV" = 1 ]; then
     export EXPO_PUBLIC_QA_TAT_KAV=1
+  fi
+  # Nếp vẽ đè lên mọi route và dock của nó kéo được, nên vùng chạm của nó rơi
+  # được lên bất kỳ nút nào của bất kỳ màn nào. Bảng `--otp` 22-09 đã dính:
+  # dock nuốt cú bấm «Đồng ý» ở flow 25, lời mời không được nhận, và chín flow
+  # sau đỏ vì một lý do chẳng liên quan gì tới thứ chúng đo.
+  #
+  # Tắt Nếp cho bảng để hai mươi lăm flow kia tất định trở lại. ĐỔI LẠI: bảng
+  # này không còn phủ Nếp chút nào, và Nếp vẫn cần flow riêng của nó — ghi ở
+  # `apps/mobile/src/rudi/nep/qa-nep.ts`, chưa làm trong thay đổi này.
+  if [ "$TAT_NEP" = 1 ]; then
+    export EXPO_PUBLIC_QA_TAT_NEP=1
   fi
   if [ -n "$API_PORT" ]; then
     export EXPO_PUBLIC_API_URL="http://localhost:$API_PORT"

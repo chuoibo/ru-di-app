@@ -1,5 +1,8 @@
 # W8 concurrency · POST …/notebook/proposals. The notebook row is the lock: three lap_so
-# offers at once on a pair with no cycle yet open one cycle and write three offers.
+# offers at once on a pair with no cycle yet open one cycle and write ONE offer; the two
+# that queue behind it find it standing and return it (2026-09-23, one offer per rung).
+# The other person asking for the same rung is told to answer it (409
+# consent_proposal_pending) and does, by the id read from the notebook.
 # Three bat_doi offers under one header key are one offer, one 201 and two replays.
 # Texts are sample data (dữ liệu mẫu).
 id: w8/concurrency/post-contexts-context_id-notebook-proposals
@@ -73,10 +76,15 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"purpose":"lap_so"}'
+  - id: mate_reads_the_standing_offer
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
     bind:
-      lap_so: {from: body, pointer: /id, class: uuid}
-  - id: owner_grants_lap_so
-    as: owner
+      lap_so: {from: body, pointer: /pending_proposals/0/id, class: uuid}
+  - id: mate_grants_lap_so
+    as: mate
     request:
       method: POST
       path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'

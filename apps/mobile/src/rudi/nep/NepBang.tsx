@@ -7,9 +7,11 @@ import { Nep } from "../ui/art/Nep";
 import { RudiButton } from "../ui";
 import { anhDanhMuc, MediaSlot } from "../ui/MediaSlot";
 import { Sheet } from "../ui/Sheet";
-import type { PhieuNguCanh } from "./phieu";
+import { cauPhienDiKem, gomPhien, nepDuocHoi } from "./hoi";
+import { cauNguCanh } from "./phieu";
 import { useNep } from "./NepProvider";
 import { useNepAnh } from "./useNepAnh";
+import { useNepHoi } from "./useNepHoi";
 
 /**
  * The panel Nếp talks in.
@@ -24,28 +26,12 @@ import { useNepAnh } from "./useNepAnh";
  * context-aware is to show the person the whole of what was shared and nothing
  * more. If the line looks thin, that is the point: it is the real payload.
  *
- * Until `/me/nep/*` exists (đợt C) the composer says so out loud instead of
- * pretending to think. `screens/chat/ai.ts` draws the line the shell already
- * keeps: `rate_limited` and `cooldown` are deliberate silence and draw nothing,
- * but `unavailable` must be said. A spinner that never resolves is the version
- * of this screen that lies.
+ * The block's second line counts the turns of this panel session that go with
+ * the next question (ADR-0036 §2.5, §2.7): the preview is built from the very
+ * list `goiNep` sends, not re-derived from the screen. The session lives in
+ * `useNepHoi`'s state and ends when the panel closes. The answer comes back to
+ * this person alone and is shown here, never in any room (§2.8).
  */
-
-function dongNgucCanh(phieu: PhieuNguCanh | null): string {
-  if (!phieu) return "Mình chưa rõ bạn đang ở đâu trong app.";
-  const phan: string[] = [phieu.tieuDe ? `Bạn đang ở ${phieu.tieuDe}` : `Bạn đang ở màn ${phieu.man}`];
-  if (phieu.nhip) {
-    const n = phieu.nhip;
-    if (n.kieu === "sap-toi") phan.push(`còn ${n.conNgay} ngày nữa`);
-    else if (n.kieu === "hom-nay") phan.push("hôm nay");
-    else if (n.kieu === "dang-dien-ra") phan.push("đang diễn ra");
-    else if (n.kieu === "da-qua") phan.push(`đã qua ${n.truocNgay} ngày`);
-  }
-  if (phieu.soLieu) {
-    for (const [k, v] of Object.entries(phieu.soLieu)) phan.push(`${k}: ${v}`);
-  }
-  return `${phan.join(" · ")}.`;
-}
 
 export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
   const { phieu } = useNep();
@@ -53,7 +39,15 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
   const { cheDo, nguon } = useRudiSession();
   const buc = useNepAnh(nguon.kieu === "live" ? nguon.actorId : null);
   const [nhap, datNhap] = useState("");
-  const [daGui, datDaGui] = useState(false);
+  const phien = useNepHoi(nguon.kieu === "live" ? nguon.actorId : null, phieu, open);
+  const duocHoi = nepDuocHoi(phieu);
+  // Exactly the turns the next send carries, so the count cannot drift from the payload.
+  const soLuotDiKem = gomPhien(phien.luot, nhap.trim()).length;
+  const guiCau = async () => {
+    const cau = nhap.trim();
+    if (!cau || phien.dangHoi || !duocHoi) return;
+    if (await phien.hoi(cau)) datNhap("");
+  };
 
   const goiY = phieu?.goiY ?? [];
 
@@ -70,9 +64,14 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
       </View>
 
       <View style={[styles.the, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
-        <Text style={[typography.label, { color: colors.aiInk }]}>Mình đang thấy</Text>
+        {/* `aiInk` is ink ON the solid ai colour (white in light mode); on `aiSoft`
+            it vanished. `ai` reads on `aiSoft` in both themes. */}
+        <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
         <Text style={[typography.body, { color: colors.ink }]} testID="nep-ngu-canh">
-          {dongNgucCanh(phieu)}
+          {cauNguCanh(phieu)}
+        </Text>
+        <Text style={[typography.caption, { color: colors.inkSoft }]} testID="nep-phien-di-kem">
+          {cauPhienDiKem(soLuotDiKem)}
         </Text>
       </View>
 
@@ -91,9 +90,40 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         </ScrollView>
       ) : null}
 
-      {daGui ? (
-        <Text style={[typography.body, styles.loi, { color: colors.ink }]} testID="nep-chua-noi">
-          Mình chưa trả lời bằng chữ được. Nhưng mình vẽ được: bấm «Vẽ» nhé.
+      {phien.luot.length > 0 ? (
+        <View style={styles.phien} testID="nep-phien">
+          {phien.luot.map((l, i) => (
+            <Text
+              // The session only ever grows at the end, so the index is stable.
+              key={i}
+              style={[
+                typography.body,
+                l.vai === "toi" ? styles.cauHoi : null,
+                { color: l.vai === "toi" ? colors.inkSoft : colors.ink },
+              ]}
+              testID={l.vai === "nep" ? "nep-tra-loi" : undefined}
+            >
+              {l.chu}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+
+      {phien.dangHoi ? (
+        <Text style={[typography.body, styles.loi, { color: colors.inkSoft }]} testID="nep-dang-nghi">
+          Nếp đang nghĩ…
+        </Text>
+      ) : null}
+
+      {phien.loi ? (
+        <Text style={[typography.body, styles.loi, { color: colors.ink }]} testID="nep-loi-hoi">
+          {phien.loi}
+        </Text>
+      ) : null}
+
+      {!duocHoi ? (
+        <Text style={[typography.body, styles.loi, { color: colors.inkSoft }]} testID="nep-im-man-tien">
+          Ở màn tiền Nếp không trả lời. Ra màn khác rồi hỏi nhé.
         </Text>
       ) : null}
 
@@ -136,7 +166,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         <TextInput
           accessibilityLabel="Hỏi Nếp"
           onChangeText={datNhap}
-          onSubmitEditing={() => nhap.trim() && datDaGui(true)}
+          onSubmitEditing={() => void guiCau()}
           placeholder="Hỏi Nếp một câu"
           placeholderTextColor={colors.inkFaint}
           returnKeyType="send"
@@ -152,6 +182,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         <RudiButton
           compact
           disabled={!nhap.trim() || buc.dangCho}
+          full={false}
           label="Vẽ"
           loading={buc.dangCho}
           onPress={() => {
@@ -169,7 +200,15 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           tone="ai"
           variant="outline"
         />
-        <RudiButton compact disabled={!nhap.trim()} label="Gửi" onPress={() => datDaGui(true)} tone="ai" />
+        <RudiButton
+          compact
+          disabled={!nhap.trim() || phien.dangHoi || !duocHoi}
+          full={false}
+          label="Gửi"
+          loading={phien.dangHoi}
+          onPress={() => void guiCau()}
+          tone="ai"
+        />
       </View>
     </Sheet>
   );
@@ -182,7 +221,12 @@ const styles = StyleSheet.create({
   goiY: { gap: 8, paddingVertical: 12 },
   chip: { borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 12, paddingVertical: 8 },
   loi: { marginTop: 12 },
+  phien: { gap: 8, marginTop: 12 },
+  cauHoi: { alignSelf: "flex-end", textAlign: "right" },
   khungAnh: { marginTop: 12, borderRadius: 14, overflow: "hidden" },
   soan: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 16, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
-  o: { flex: 1, paddingVertical: 10 },
+  // Two compact buttons share this row with the input. Buttons default to
+  // `full` (width 100%, no shrink), which squeezed the input to zero width on
+  // Android (QA 23/09); they opt out above, and the input keeps a floor.
+  o: { flex: 1, minWidth: 120, paddingVertical: 10 },
 });

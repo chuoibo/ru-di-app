@@ -20,7 +20,7 @@ import { type ReactNode, useMemo } from "react";
 
 import { type NoiDungTo } from "./to-giay";
 import { SoDoiContext, type SoDoiApi } from "./SoDoi";
-import { caHaiDongY, rangBuocCua, toTomTatThanhTo } from "./so-doi-map";
+import { caHaiDongY, ghiRangBuocTuanTu, rangBuocCua, toTomTatThanhTo } from "./so-doi-map";
 import { useToGiay } from "./useToGiay";
 
 export function SoDoiSongProvider({
@@ -45,7 +45,9 @@ export function SoDoiSongProvider({
       lapSo: so?.cycle_state === "active",
       batDoi: caHaiDongY(so, "bat_doi"),
       docChat: caHaiDongY(so, "doc_chat"),
-      luotCuaToi: true,
+      // Whose turn the week is: this week's «Người lo» (ADR-0034 §2.4), and
+      // everybody's turn where there is none (outside «Một đôi»).
+      luotCuaToi: so?.week_role ? so.week_role.nguoi_lo.includes(toiId) : true,
       rangBuoc: { toi: rangBuocCua(so, toiId), nguoiKia: rangBuocCua(so, nguoiKiaId) },
       toGiay: toMo ? [toMo, ...toKhac] : toKhac,
       deNghiCho: (so?.pending_proposals ?? []).map((d) => ({
@@ -56,6 +58,11 @@ export function SoDoiSongProvider({
         cuaToi: d.proposed_by_id === toiId,
       })),
       daDong: false,
+      gu: so?.taste ?? null,
+      vai: so?.week_role ?? null,
+      daNap: song.pha !== "dang-nap",
+      dangLam: song.dangLam,
+      loiLenh: song.loiLenh,
 
       capId: contextId,
       toiId,
@@ -68,22 +75,26 @@ export function SoDoiSongProvider({
       deNghiLapSo: () => void song.xinLapSo(),
       deNghiBatDoi: () => void song.xinBac("bat_doi"),
       thuHoiBatDoi: () => void song.thuHoi("bat_doi"),
-      datRangBuoc: (rb) => {
+      chiaGu: () => void song.xinBac("chia_gu"),
+      thoiChiaGu: () => void song.thuHoi("chia_gu"),
+      chonLo: (lo) => void song.chonVai(lo),
+      datRangBuoc: async (rb) => {
         // Two fields, two writes, and an empty one is a delete: the route takes
         // one kind at a time and refuses a blank line, because emptying a
         // constraint is what DELETE is for.
-        if (rb.khong_an_duoc !== undefined) {
-          const noi_dung = rb.khong_an_duoc.trim();
-          void (noi_dung ? song.datRangBuocNay("khong_an_duoc", noi_dung) : song.xoaRangBuocNay("khong_an_duoc"));
-        }
-        if (rb.dung !== undefined) {
-          const noi_dung = rb.dung.trim();
-          void (noi_dung ? song.datRangBuocNay("dung", noi_dung) : song.xoaRangBuocNay("dung"));
-        }
+        //
+        // One after the other, and only the box that changed. `lam` runs one
+        // command at a time and answers `false` to a second one fired while the
+        // first is in flight; the two used to be fired together, so «Đừng»
+        // never reached the server and the sheet closed as if it had (QA 23/09).
+        return ghiRangBuocTuanTu(rangBuocCua(so, toiId), rb, {
+          dat: (kind, noiDung) => song.datRangBuocNay(kind, noiDung),
+          xoa: (kind) => song.xoaRangBuocNay(kind),
+        });
       },
       dongSo: (revision: string) => void song.dongSoNay(revision),
 
-      dongYDeNghi: (id: string) => void song.dongYDeNghiNay(id),
+      dongYDeNghi: (id: string) => song.dongYDeNghiNay(id),
 
       ruDiChoi: () => void song.xinTo(),
       suaNhap: (_id: string, content: NoiDungTo, lyDo: string | null) => void song.suaNhap(content, lyDo),

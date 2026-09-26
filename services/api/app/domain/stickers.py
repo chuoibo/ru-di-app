@@ -37,6 +37,12 @@ STICKERS: tuple[Sticker, ...] = (
     Sticker("ket-xe", "Kẹt xe"),
     Sticker("tra-tien-ne", "Trả tiền nè"),
     Sticker("tuyet-voi", "Tuyệt vời"),
+    # ADR-0034: the four a two-person conversation adds. In the vocabulary like
+    # the rest -- the server does not know who is a couple, and must not.
+    Sticker("hen-nhe", "Hẹn nhé!"),
+    Sticker("nho-nhau", "Nhớ nhau"),
+    Sticker("ve-toi-chua", "Về tới chưa?"),
+    Sticker("om-cai", "Ôm cái"),
 )
 
 STICKER_IDS: frozenset[str] = frozenset(sticker.id for sticker in STICKERS)

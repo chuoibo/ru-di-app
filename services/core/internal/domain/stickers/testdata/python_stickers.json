@@ -13,7 +13,11 @@
    "cho-ti",
    "ket-xe",
    "tra-tien-ne",
-   "tuyet-voi"
+   "tuyet-voi",
+   "hen-nhe",
+   "nho-nhau",
+   "ve-toi-chua",
+   "om-cai"
   ],
   "labels": [
    "\u0110i th\u00f4i!",
@@ -23,7 +27,11 @@
    "Ch\u1edd t\u00ed",
    "K\u1eb9t xe",
    "Tr\u1ea3 ti\u1ec1n n\u00e8",
-   "Tuy\u1ec7t v\u1eddi"
+   "Tuy\u1ec7t v\u1eddi",
+   "H\u1eb9n nh\u00e9!",
+   "Nh\u1edb nhau",
+   "V\u1ec1 t\u1edbi ch\u01b0a?",
+   "\u00d4m c\u00e1i"
   ],
   "pattern": "^[a-z0-9-]{1,32}$",
   "names": [
@@ -107,6 +115,46 @@
    "name": "yes/tuyet-voi",
    "args": {
     "value": "tuyet-voi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/hen-nhe",
+   "args": {
+    "value": "hen-nhe"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/nho-nhau",
+   "args": {
+    "value": "nho-nhau"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/ve-toi-chua",
+   "args": {
+    "value": "ve-toi-chua"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/om-cai",
+   "args": {
+    "value": "om-cai"
    },
    "result": {
     "ok": true

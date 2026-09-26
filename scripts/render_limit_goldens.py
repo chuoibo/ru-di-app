@@ -356,14 +356,6 @@ ROUTES = [
         b"",
     ),
     (
-        "companion-turn",
-        "companion_turn_limiter",
-        "POST",
-        f"/contexts/{CONTEXT}/ai-turn",
-        DEV,
-        b"",
-    ),
-    (
         "suggestion",
         "suggestion_limiter",
         "GET",

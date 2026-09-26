@@ -39,7 +39,6 @@ MANIFEST = ROOT / "services" / "core" / "ownership" / "routes.json"
 # Routes whose primary purpose is a model call (ADR-0029 §2.1).
 AI_ROUTES = {
     "POST /contexts/{context_id}/messages/{message_id}/expense-draft",
-    "POST /contexts/{context_id}/ai-turn",
     "POST /places/search",
     "POST /receipts/scan",
     "POST /screenshots/scan",

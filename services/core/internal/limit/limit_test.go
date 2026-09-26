@@ -402,17 +402,17 @@ func TestMonotonicAdvancesWithTime(t *testing.T) {
 func TestNewSetBuildsDistinctWindowsReadingTheClockOncePerActorWindow(t *testing.T) {
 	clock := &handClock{}
 	set := NewSet(clock.read)
-	if clock.reads != 11 {
-		t.Fatalf("clock read %d times at construction, want 11 (one per actor window)", clock.reads)
+	if clock.reads != 9 {
+		t.Fatalf("clock read %d times at construction, want 9 (one per actor window)", clock.reads)
 	}
-	if set.MessageIntentLimiter == set.CompanionTurnLimiter {
-		t.Fatal("message intent must own its window, not share the companion turn's")
-	}
-	// Same size, never the same object: draining one leaves the other.
-	for i := 0; i < CompanionTurnLimitPerWindow; i++ {
-		set.CompanionTurnLimiter.Check("a")
-	}
-	if set.CompanionTurnLimiter.Check("a").Allowed || !set.MessageIntentLimiter.Check("a").Allowed {
-		t.Fatal("companion turn and message intent share a count")
+	// One object per door, never one object with two names: a shared window
+	// lets one feature's burst disable its neighbour.
+	actor, _ := windowsByState(set)
+	seen := map[*ActorWindow[string]]string{}
+	for state, window := range actor {
+		if other, ok := seen[window]; ok {
+			t.Fatalf("%s and %s share one window", state, other)
+		}
+		seen[window] = state
 	}
 }

@@ -216,8 +216,6 @@ export function useTinNhan(contextId: string, personId: string) {
         const daGui = await goi(cho.attempt);
         if (theHe !== theHeRef.current) return null;
         const them: Tin[] = [daGui];
-        if (daGui.companion?.message) them.push(daGui.companion.message);
-        if (daGui.expense_card) them.push(daGui.expense_card);
         datHang(boKhoiHang(hangRef.current, cho.attempt.key));
         dat(gopTin(tinRef.current, them), { loi: null });
         void napMoi();

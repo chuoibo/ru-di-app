@@ -76,8 +76,11 @@ var ErrSetup = errors.New("parity setup")
 // StepResult is one step's response, raw and normalised.
 type StepResult struct {
 	StepID string
-	Raw    httpclient.Response
-	Norm   compare.Exchange
+	// Path is the scenario's declared request path, carried so an accepted
+	// divergence can be scoped to the route it was decided for.
+	Path string
+	Raw  httpclient.Response
+	Norm compare.Exchange
 	// Change is what the step wrote to the stack's database; nil without a DB.
 	Change     *dbsnap.Change
 	NormChange *dbsnap.Change
@@ -228,7 +231,7 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 				}
 			}
 		}
-		result := StepResult{StepID: step.ID, PythonRequests: -1}
+		result := StepResult{StepID: step.ID, Path: step.Request.Path, PythonRequests: -1}
 		if step.Concurrent > 0 {
 			result.Burst = responses
 		} else {
@@ -284,10 +287,10 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 	for i := range run.Steps {
 		if run.Steps[i].Burst != nil {
 			for _, raw := range run.Steps[i].Burst {
-				run.Steps[i].BurstNorm = append(run.Steps[i].BurstNorm, normaliseExchange(binder, raw))
+				run.Steps[i].BurstNorm = append(run.Steps[i].BurstNorm, normaliseExchange(binder, run.Steps[i].Path, raw))
 			}
 		} else {
-			run.Steps[i].Norm = normaliseExchange(binder, run.Steps[i].Raw)
+			run.Steps[i].Norm = normaliseExchange(binder, run.Steps[i].Path, run.Steps[i].Raw)
 		}
 		if run.Steps[i].Change != nil {
 			run.Steps[i].NormChange = run.Steps[i].Change.Normalise(binder.Apply)
@@ -478,27 +481,105 @@ func Diff(reference, candidate *Run) []StepDiff {
 }
 
 // RoutesNotServedInCore lists the routes a scenario names that the candidate
-// serves in Go although every step of the run reached Python. When Go serves a
-// route the scenario exercises, at least one step must have been answered
-// without Python, or the Go code is not what answered. It is a floor, not a
-// per-step proof: a scenario naming two served routes passes on a step of
-// either.
+// serves in Go although no step ADDRESSING THAT ROUTE was answered without
+// Python. When Go serves a route a scenario exercises, at least one step whose
+// method and path match that route must have been answered in core, or the Go
+// code is not what answered.
+//
+// The earlier version asked this once per scenario rather than once per route:
+// any single step answered in core credited every route the file named. Its own
+// comment said so -- "a scenario naming two served routes passes on a step of
+// either" -- and that is a hole a file cannot fall into by accident but can be
+// walked into on purpose. `/static` is the case that forced this: the guest
+// pages are Go's and their stylesheet is not, and both live in one scenario, so
+// moving `/static` to Go would have been credited by the guest page's own steps
+// while every stylesheet fetch still fell through to Python. The gate would
+// have gone green over an unmoved route.
+//
+// Still a floor, and the remaining slack is named rather than hidden: a step
+// whose path matches two declared routes credits both, because the scenario
+// does not know Starlette's registration order and cannot tell which of them
+// actually answered.
 func RoutesNotServedInCore(sc *scenario.Scenario, run *Run, served map[string]bool) []string {
-	inCore := false
+	answeredInCore := map[string]bool{}
 	for _, step := range run.Steps {
 		if step.PythonRequests == 0 {
-			inCore = true
-			break
+			answeredInCore[step.StepID] = true
 		}
 	}
 	var missing []string
 	for _, id := range sc.Routes {
-		if served[id] && !inCore {
+		if !served[id] {
+			continue
+		}
+		matches := routePattern(id)
+		if matches == nil {
+			continue
+		}
+		hit := false
+		for _, step := range sc.Steps {
+			if !answeredInCore[step.ID] {
+				continue
+			}
+			if matches.MatchString(step.Request.Method + " " + stepPath(step.Request.Path)) {
+				hit = true
+				break
+			}
+		}
+		if !hit {
 			missing = append(missing, id)
 		}
 	}
 	return missing
 }
+
+// routePattern turns `GET /a/{id}/b` into a matcher for a step's method and
+// path. A `{{binding}}` in the step fills exactly one segment, so both kinds of
+// placeholder become the same wildcard.
+//
+// A MOUNT is not a route and must not be matched like one. `MOUNT /static`
+// answers ANY method on ANY path beneath its prefix, and no step will ever
+// carry the literal method "MOUNT" -- the corpus reaches it with
+// `GET /static/khong-co.css`. Comparing the method strictly would report a
+// mounted prefix as never served the moment it moved to Go, which is a red
+// with nothing behind it.
+func routePattern(routeID string) *regexp.Regexp {
+	method, path, ok := strings.Cut(routeID, " ")
+	if !ok {
+		return nil
+	}
+	if method == "MOUNT" {
+		rx, err := regexp.Compile(`^[A-Z]+ ` + regexp.QuoteMeta(strings.TrimSuffix(path, "/")) + `(/.*)?$`)
+		if err != nil {
+			return nil
+		}
+		return rx
+	}
+	parts := strings.Split(path, "/")
+	for i, seg := range parts {
+		if strings.HasPrefix(seg, "{") {
+			parts[i] = "[^/]+"
+		} else {
+			parts[i] = regexp.QuoteMeta(seg)
+		}
+	}
+	rx, err := regexp.Compile("^" + regexp.QuoteMeta(method) + " " + strings.Join(parts, "/") + "$")
+	if err != nil {
+		return nil
+	}
+	return rx
+}
+
+// stepPath is a step's path with the query string dropped and every
+// `{{binding}}` collapsed to one segment's worth of wildcard-matchable text.
+func stepPath(path string) string {
+	if i := strings.IndexByte(path, '?'); i >= 0 {
+		path = path[:i]
+	}
+	return bindingRef.ReplaceAllString(path, "x")
+}
+
+var bindingRef = regexp.MustCompile(`\{\{[^}]+\}\}`)
 
 // AcceptedCounts counts, per name, the steps where the two transcripts differ
 // in a way ADR-0029 §2.4 accepts.
@@ -680,14 +761,25 @@ func exchangeText(exchange compare.Exchange) string {
 	return fmt.Sprintf("%03d\n%s\n\n%s", exchange.Status, strings.Join(lines, "\n"), exchange.Body)
 }
 
-func normaliseExchange(binder *normalize.Binder, raw httpclient.Response) compare.Exchange {
+func normaliseExchange(binder *normalize.Binder, path string, raw httpclient.Response) compare.Exchange {
 	header := http.Header{}
 	for name, values := range raw.Header {
 		for _, value := range values {
+			if strings.EqualFold(name, "etag") {
+				// An ETag is a validator, not an id: it must be COMPARED.
+				// Masked, a 32-hex digest is numbered <hex32#n> per stack, so
+				// two DIFFERENT digests both become <hex32#1> and the etag
+				// silently stops being compared at all -- the same shape of
+				// hole <digest#n> once gave fingerprint drift. Measured: with
+				// the mask on, Python's mtime-derived etag and Go's
+				// content-derived etag compared equal on every /static step.
+				header[name] = append(header[name], value)
+				continue
+			}
 			header[name] = append(header[name], binder.Apply(value))
 		}
 	}
-	return compare.Exchange{Status: raw.Status, Header: header, Body: binder.Apply(string(raw.Body))}
+	return compare.Exchange{Path: path, Status: raw.Status, Header: header, Body: binder.Apply(string(raw.Body))}
 }
 
 // compareBursts compares two bursts response by response in their ordered form.

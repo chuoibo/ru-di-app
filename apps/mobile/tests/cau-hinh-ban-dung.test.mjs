@@ -36,11 +36,15 @@
  */
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const eas = JSON.parse(readFileSync(fileURLToPath(new URL("../eas.json", import.meta.url)), "utf8"));
-const app = JSON.parse(readFileSync(fileURLToPath(new URL("../app.json", import.meta.url)), "utf8"));
+const eas = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../eas.json", import.meta.url)), "utf8"),
+);
+const app = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../app.json", import.meta.url)), "utf8"),
+);
 
 /** Profiles with no server to point at, and why. B3 in docs/architecture/01. */
 const CHUA_CO_MAY_CHU = {
@@ -56,7 +60,10 @@ function apiUrlOf(profile) {
 
 test("mọi profile build đều được kể tên, không profile nào lọt qua im lặng", () => {
   // A new profile is a new way to ship, so it has to arrive through here.
-  assert.deepEqual(Object.keys(eas.build).sort(), Object.keys(CHUA_CO_MAY_CHU).sort());
+  assert.deepEqual(
+    Object.keys(eas.build).sort(),
+    Object.keys(CHUA_CO_MAY_CHU).sort(),
+  );
 });
 
 test("profile đã ghi nhận là chưa có máy chủ thì không được lặng lẽ mọc URL", () => {
@@ -73,13 +80,23 @@ test("profile không nằm trong danh sách phải khai địa chỉ, và phải
   for (const profile of Object.keys(eas.build)) {
     if (profile in CHUA_CO_MAY_CHU) continue;
     const url = apiUrlOf(profile);
-    assert.notEqual(url, null, `${profile} dựng ra một app không biết gọi máy chủ nào`);
-    assert.match(url, /^https:\/\//, `${profile} gọi ${url}: Android chặn cleartext từ API 28`);
+    assert.notEqual(
+      url,
+      null,
+      `${profile} dựng ra một app không biết gọi máy chủ nào`,
+    );
+    assert.match(
+      url,
+      /^https:\/\//,
+      `${profile} gọi ${url}: Android chặn cleartext từ API 28`,
+    );
   }
 });
 
 test("nếu có profile đi http thì app.json phải khai cleartext, không để mặc định quyết", () => {
-  const httpProfiles = Object.keys(eas.build).filter((p) => apiUrlOf(p)?.startsWith("http://"));
+  const httpProfiles = Object.keys(eas.build).filter((p) =>
+    apiUrlOf(p)?.startsWith("http://"),
+  );
   const declared = app.expo.android?.usesCleartextTraffic;
   if (httpProfiles.length === 0) {
     // Nothing ships http today, so nothing may claim it needs cleartext either.
@@ -105,14 +122,54 @@ test("nếu có profile đi http thì app.json phải khai cleartext, không đ�
  *
  * There is no legitimate value for them in a shippable profile, so unlike the
  * API URL above this is not a "recorded gap" but a flat refusal. */
-test("không profile nào được ghim danh tính dev vào bản dựng", () => {
+/* Danh sách này từng viết tay, và một danh sách viết tay thì mù với cờ QA tiếp
+ * theo: thêm `EXPO_PUBLIC_QA_TAT_NEP` vào `src/` mà quên thêm vào đây thì cổng
+ * vẫn xanh trong khi cờ ấy ship được. Giờ đọc thẳng từ mã nguồn — mọi
+ * `EXPO_PUBLIC_QA_*` và `EXPO_PUBLIC_RUDI_*` app thật sự đọc đều bị cấm. */
+function bienCamTrongBanShip() {
+  const goc = new URL("../src/", import.meta.url);
+  const thay = new Set([
+    "EXPO_PUBLIC_RUDI_ACTOR",
+    "EXPO_PUBLIC_RUDI_CONTEXT",
+    "EXPO_PUBLIC_RUDI_FIXTURE",
+  ]);
+  const doc = (thuMuc) => {
+    for (const muc of readdirSync(thuMuc, { withFileTypes: true })) {
+      const duong = new URL(muc.name + (muc.isDirectory() ? "/" : ""), thuMuc);
+      if (muc.isDirectory()) {
+        doc(duong);
+        continue;
+      }
+      if (!/\.tsx?$/.test(muc.name)) continue;
+      for (const [, ten] of readFileSync(duong, "utf8").matchAll(
+        /process\.env\.(EXPO_PUBLIC_QA_[A-Z0-9_]+)/g,
+      )) {
+        thay.add(ten);
+      }
+    }
+  };
+  doc(goc);
+  return [...thay].sort();
+}
+
+test("không profile nào được ghim danh tính dev hay cờ QA vào bản dựng", () => {
+  const cam = bienCamTrongBanShip();
+  // Một danh sách rỗng nghĩa là phép quét hỏng, không phải là không có cờ nào.
+  assert.ok(
+    cam.length >= 4,
+    `chỉ tìm thấy ${cam.length} biến cấm; phép quét mã nguồn hỏng`,
+  );
+  assert.ok(
+    cam.includes("EXPO_PUBLIC_QA_TAT_KAV"),
+    "phép quét bỏ sót cờ QA đã biết",
+  );
   for (const profile of Object.keys(eas.build)) {
     const env = eas.build[profile]?.env ?? {};
-    for (const bien of ["EXPO_PUBLIC_RUDI_ACTOR", "EXPO_PUBLIC_RUDI_CONTEXT", "EXPO_PUBLIC_RUDI_FIXTURE", "EXPO_PUBLIC_QA_TAT_KAV"]) {
+    for (const bien of cam) {
       assert.equal(
         bien in env,
         false,
-        `${profile} ghim ${bien}: bản dựng sẽ hiện tiền của một người lạ cho mọi người`,
+        `${profile} ghim ${bien}: cờ EXPO_PUBLIC_* được nội tuyến lúc dựng, nên bản ship sẽ mang theo nó -- ghim danh tính thì mọi người thấy tiền của một người lạ, ghim cờ QA thì người dùng thật mất phần giao diện bị tắt`,
       );
     }
   }

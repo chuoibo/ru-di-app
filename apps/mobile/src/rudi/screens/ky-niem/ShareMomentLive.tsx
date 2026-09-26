@@ -10,13 +10,15 @@
  */
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ApiError, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
+import { tiLeKhung } from "../../ky-niem/ti-le";
+import { laPair } from "../../nhan-rieng/nhan-rieng";
 import { CAPTION_DAI_NHAT, dangAnhLenTuong } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -43,13 +45,26 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const tenCho = typeof params.ten === "string" && params.ten !== "" ? params.ten : null;
   const { colors, radius } = useRudiTheme();
   const contextId = phien.context_id;
-  const tenNhom = phien.contexts?.find((n) => n.id === contextId)?.display_name ?? "nhóm hiện tại";
+  const nhom = phien.contexts?.find((n) => n.id === contextId);
+  const laDoi = laPair(nhom);
+  const tenNhom = laDoi ? `kỷ niệm của bạn và ${nhom?.display_name || "người ấy"}` : nhom?.display_name ?? "nhóm hiện tại";
   const [anh, setAnh] = useState<TempPhoto | null>(null);
   const [caption, setCaption] = useState("");
   const [giaiDoan, setGiaiDoan] = useState<GiaiDoanTaiAnh | null>(null);
   const [ban, setBan] = useState(false);
   const [thongBao, setThongBao] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
+  // The pick outlives a failed upload (`nenVaDung`), so leaving the screen
+  // without sharing is what discards it.
+  const anhRef = useRef<TempPhoto | null>(null);
+  anhRef.current = anh;
+  const daGuiRef = useRef(false);
+  useEffect(
+    () => () => {
+      if (anhRef.current !== null && !daGuiRef.current) void boAnh(anhRef.current);
+    },
+    [],
+  );
 
   if (contextId === null) {
     return (
@@ -80,6 +95,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
     setThongBao(null);
     try {
       await nenVaDung(anh, (nen) => dangAnhLenTuong(ctx, nen, caption.trim() === "" ? null : caption.trim(), phien.person_id, attempts.current, placeId), setGiaiDoan);
+      daGuiRef.current = true;
       router.replace(`/groups/${ctx}/wall` as never);
     } catch (error) {
       // The draft stays: the caption is still in the field, the photo is
@@ -95,9 +111,24 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const cauTrangThai = cauGiaiDoan(giaiDoan);
 
   return (
-    <RudiScreen contentStyle={styles.screen} testID="share-moment-screen">
+    <RudiScreen
+      contentStyle={styles.screen}
+      // The one action stays on screen however tall the photo is: under the
+      // print and the caption it was pushed past the fold (QA 23/09).
+      footer={
+        <View style={styles.footer}>
+          <RudiButton disabled={ban || anh === null} icon="paper-plane-outline" label={laDoi ? "Giữ vào kỷ niệm của hai bạn" : "Chia sẻ ngay vào nhóm"} loading={ban} onPress={() => void chiaSe()} />
+          {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
+        </View>
+      }
+      footerInset={12}
+      testID="share-moment-screen"
+    >
       <TopBar title="Thả khoảnh khắc" />
-      <Heading title="Một khoảnh khắc cho nhóm" subtitle={`Ảnh và một câu, lên tường của ${tenNhom}. Chỉ thành viên nhóm thấy.`} />
+      <Heading
+        subtitle={laDoi ? `Ảnh và một câu, vào ${tenNhom}. Chỉ hai bạn thấy.` : `Ảnh và một câu, lên tường của ${tenNhom}. Chỉ thành viên nhóm thấy.`}
+        title={laDoi ? "Giữ một khoảnh khắc" : "Một khoảnh khắc cho nhóm"}
+      />
       {placeId === null ? null : (
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
           {`Gắn vào ${tenCho ?? "địa điểm bạn vừa mở"}: ảnh sẽ hiện ở màn chỗ đó, cho người trong nhóm.`}
@@ -112,7 +143,10 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh. Chọn một tấm từ thư viện.</Text>
           </View>
         ) : (
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anh, { borderRadius: radius.small, backgroundColor: colors.ground }]} />
+          // The frame takes the photo's own shape, within a portrait-to-wide
+          // range: a square frame put two grey bands beside every portrait
+          // photo and read as a card still loading, not as a print (QA 23/09).
+          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anh, { aspectRatio: tiLeKhung(anh), borderRadius: radius.small, backgroundColor: colors.ground }]} />
         )}
       </View>
       <RudiButton disabled={ban} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chon()} variant="outline" />
@@ -125,9 +159,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
         placeholder="Ví dụ: Đà Lạt về đêm"
         value={caption}
       />
-      <Text style={[typography.caption, { color: colors.inkSoft }]}>Đăng vào {tenNhom}. Máy chủ lột dữ liệu EXIF của ảnh trước khi lưu.</Text>
-      <RudiButton disabled={ban || anh === null} icon="paper-plane-outline" label="Chia sẻ ngay vào nhóm" loading={ban} onPress={() => void chiaSe()} />
-      {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
+      <Text style={[typography.caption, { color: colors.inkSoft }]}>Đăng vào {tenNhom}. Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.</Text>
     </RudiScreen>
   );
 }
@@ -136,6 +168,7 @@ const styles = StyleSheet.create({
   screen: { maxWidth: 640 },
   instax: { gap: 10, padding: 12, paddingBottom: 18, borderWidth: 1 },
   khungTrong: { alignItems: "center", justifyContent: "center", gap: 8, aspectRatio: 1 },
-  anh: { width: "100%", aspectRatio: 1 },
+  anh: { width: "100%" },
+  footer: { paddingHorizontal: 16, gap: 6 },
   chuThich: { textAlign: "center" },
 });

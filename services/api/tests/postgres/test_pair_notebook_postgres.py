@@ -333,3 +333,17 @@ def test_muc_dich_ngoai_tu_vung_bi_tu_choi(postgres_session: Session):
     with pytest.raises(IntegrityError):
         postgres_session.flush()
     postgres_session.rollback()
+
+
+def test_chia_gu_la_muc_dich_hop_le_mot_nguoi_tu_bat(postgres_session: Session):
+    # ADR-0034 §2.1: `chia_gu` is in the vocabulary, and one person's own
+    # proposal, granted only by them, is a complete row set.
+    context_id, a, b = _cap(postgres_session)
+    cycle_id = _chu_ky(
+        postgres_session, _so(postgres_session, context_id), people=(a, b)
+    )
+    proposal_id = _dong_y(
+        postgres_session, cycle_id, purpose="chia_gu", by=a, people=(a,)
+    )
+    postgres_session.flush()
+    assert postgres_session.get(PairConsentProposal, proposal_id).purpose == "chia_gu"

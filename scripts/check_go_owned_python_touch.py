@@ -238,8 +238,15 @@ def gate(base: str) -> int:
         print(f"::error::base {base!r} does not resolve")
         return 2
     rows = json.loads(MANIFEST.read_text(encoding="utf-8"))["routes"]
+    # Only handler routes are traced. A mount (``MOUNT /static``) is served by
+    # framework code (Starlette ``StaticFiles``), not by a function in ``app/``,
+    # so there is no root to build a call graph from.
     live_go = {
-        row["id"] for row in rows if row["owner"] == "go" and row["python"] == "live"
+        row["id"]
+        for row in rows
+        if row["owner"] == "go"
+        and row["python"] == "live"
+        and row.get("kind", "route") == "route"
     }
     if not live_go:
         print("go-owned python touch OK: no route is served by Go with live Python")

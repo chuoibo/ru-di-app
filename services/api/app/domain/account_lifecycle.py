@@ -114,6 +114,8 @@ ERASURE: dict[str, tuple[str, ...]] = {
         "pair_paper_responses",
         "pair_paper_outings",
         "pair_paper_keeps",
+        # ADR-0034: a week's chosen «Người lo» belongs to the cycle, like its sheets.
+        "pair_cycle_rhythms",
         "messages",
         "message_reactions",
         "memories",

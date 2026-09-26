@@ -28,6 +28,7 @@ function BacDongY({
   onDongY,
   nhanDeNghi,
   nguoiKiaDongY,
+  tenNguoiKia,
   testID,
 }: {
   open: boolean;
@@ -50,6 +51,8 @@ function BacDongY({
   onDongY: () => void;
   nhanDeNghi: string;
   nguoiKiaDongY: (() => void) | null;
+  /** Who is waiting on this, by name; the app knows it, so it says it. */
+  tenNguoiKia?: string;
   testID: string;
 }) {
   const { colors, space } = useRudiTheme();
@@ -74,13 +77,13 @@ function BacDongY({
           // nói rằng đang chờ chính mình.
           <>
             <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
-              Người ấy đã đề nghị. Bạn đồng ý thì sổ mở.
+              {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì bậc này bật cho cả hai."}
             </Text>
             <RudiButton label="Đồng ý" onPress={onDongY} />
           </>
         ) : dangCho ? (
           <Text style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-dang-cho`}>
-            Đã đề nghị. Chờ người ấy đồng ý trên máy của người ấy; im lặng không phải đồng ý.
+            Đã đề nghị. Chờ {tenNguoiKia ?? "người ấy"} đồng ý trên máy của họ; im lặng không phải đồng ý.
           </Text>
         ) : (
           <RudiButton label={nhanDeNghi} onPress={onDeNghi} />
@@ -94,12 +97,16 @@ function BacDongY({
   );
 }
 
-export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null }) {
+export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null; tenNguoiKia?: string }) {
   return (
     <BacDongY
       {...props}
       choPhep={["Một chỗ hai bạn truyền giấy cho nhau mỗi tuần.", "Hai ô ràng buộc: «Không ăn được» và «Đừng».", "Nếp phác một tờ khi tới lượt, bạn sửa rồi gửi."]}
-      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Không ai ngoài hai bạn thấy sổ này."]}
+      // Said as far as it is true: only the two of them can open the notebook
+      // in the app, but the chat is not end to end encrypted yet (its lock
+      // label says so), and «nobody but you two sees this» beside an open lock
+      // promised more than the product keeps (QA 23/09).
+      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Chỉ hai bạn mở được sổ này trong app; tin nhắn thì chưa mã hoá đầu cuối."]}
       nhanDeNghi="Đề nghị lập sổ"
       testID="lap-so"
       tieuDe="Lập sổ hai người"
@@ -107,11 +114,13 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
   );
 }
 
-export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null }) {
+export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null; tenNguoiKia?: string }) {
   return (
     <BacDongY
       {...props}
-      choPhep={["Sổ này là sổ đôi: mỗi người chỉ có một.", "Nếp nói chuyện với hai bạn như với một đôi.", "Mở đường cho vai «Người lo» và «Người chấm»."]}
+      // Only what switching it on does today. The roles («Người lo», «Người
+      // chấm») are not built yet, so the sheet no longer promises them.
+      choPhep={["Sổ này là sổ đôi: mỗi người chỉ có một.", "Nếp biết đây là sổ của một đôi."]}
       khongKeoTheo={["Nếp vẫn không đọc tin nhắn; đó là một công tắc khác.", "Không đăng gì, không ai được báo.", "Tắt được bất cứ lúc nào, sổ vẫn còn."]}
       nhanDeNghi="Đề nghị bật «Một đôi»"
       testID="bat-mot-doi"

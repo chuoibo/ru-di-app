@@ -69,6 +69,9 @@
       }
      }
     ],
+    "specials": {
+     "request": "http"
+    },
     "dependencies": [
      {
       "call": "app.api.deps.get_actor",
@@ -197,36 +200,6 @@
       "specials": {
        "request": "request"
       }
-     },
-     {
-      "call": "app.api.deps.get_companion",
-      "name": "companion",
-      "use_cache": true,
-      "cache_key": [
-       "app.api.deps.get_companion",
-       []
-      ]
-     },
-     {
-      "call": "app.api.routes.messages.get_message_intent_limiter",
-      "name": "limiter",
-      "use_cache": true,
-      "cache_key": [
-       "app.api.routes.messages.get_message_intent_limiter",
-       []
-      ],
-      "specials": {
-       "request": "request"
-      }
-     },
-     {
-      "call": "app.api.deps.get_chat_expense_reader",
-      "name": "reader",
-      "use_cache": true,
-      "cache_key": [
-       "app.api.deps.get_chat_expense_reader",
-       []
-      ]
      }
     ]
    }
@@ -521,6 +494,9 @@
       }
      }
     ],
+    "specials": {
+     "request": "http"
+    },
     "dependencies": [
      {
       "call": "app.api.deps.get_actor",
@@ -726,6 +702,9 @@
       }
      }
     ],
+    "specials": {
+     "request": "http"
+    },
     "dependencies": [
      {
       "call": "app.api.deps.get_actor",
@@ -929,6 +908,9 @@
       }
      }
     ],
+    "specials": {
+     "request": "http"
+    },
     "dependencies": [
      {
       "call": "app.api.deps.get_actor",
@@ -1110,6 +1092,9 @@
       }
      }
     ],
+    "specials": {
+     "request": "http"
+    },
     "dependencies": [
      {
       "call": "app.api.deps.get_actor",
@@ -1264,228 +1249,8 @@
    }
   },
   {
-   "id": "POST /contexts/{context_id}/ai-turn",
-   "order": 66,
-   "method": "POST",
-   "path": "/contexts/{context_id}/ai-turn",
-   "name": "take_companion_turn",
-   "endpoint": "app.api.routes.messages.take_companion_turn",
-   "status_code": null,
-   "path_convertors": {
-    "context_id": "StringConvertor"
-   },
-   "body": {
-    "kind": "json",
-    "field_info": "Body",
-    "media_type": "application/json",
-    "embed": false,
-    "required": false
-   },
-   "dependant": {
-    "call": "app.api.routes.messages.take_companion_turn",
-    "name": null,
-    "use_cache": true,
-    "cache_key": [
-     "app.api.routes.messages.take_companion_turn",
-     []
-    ],
-    "path": [
-     {
-      "name": "context_id",
-      "alias": "context_id",
-      "in": "path",
-      "field_info": "Path",
-      "annotation": "uuid.UUID",
-      "required": true,
-      "sequence": false,
-      "scalar": true,
-      "schema": {
-       "type": "uuid"
-      }
-     }
-    ],
-    "body": [
-     {
-      "name": "request",
-      "alias": "request",
-      "in": "body",
-      "field_info": "Body",
-      "annotation": "app.api.schemas.CompanionTurnRequest | None",
-      "required": false,
-      "default": null,
-      "sequence": false,
-      "scalar": false,
-      "embed": null,
-      "media_type": "application/json",
-      "schema": {
-       "type": "default",
-       "schema": {
-        "type": "nullable",
-        "schema": {
-         "type": "ref",
-         "ref": "app.api.schemas.CompanionTurnRequest"
-        }
-       },
-       "default": null
-      }
-     }
-    ],
-    "dependencies": [
-     {
-      "call": "app.api.deps.get_actor",
-      "name": "actor",
-      "use_cache": true,
-      "cache_key": [
-       "app.api.deps.get_actor",
-       []
-      ],
-      "header": [
-       {
-        "name": "authorization",
-        "alias": "Authorization",
-        "in": "header",
-        "field_info": "Header",
-        "annotation": "str | None",
-        "required": false,
-        "default": null,
-        "sequence": false,
-        "scalar": true,
-        "convert_underscores": true,
-        "schema": {
-         "type": "default",
-         "schema": {
-          "type": "nullable",
-          "schema": {
-           "type": "str"
-          }
-         },
-         "default": null
-        }
-       },
-       {
-        "name": "actor_id",
-        "alias": "X-Actor-ID",
-        "in": "header",
-        "field_info": "Header",
-        "annotation": "str | None",
-        "required": false,
-        "default": null,
-        "sequence": false,
-        "scalar": true,
-        "convert_underscores": true,
-        "schema": {
-         "type": "default",
-         "schema": {
-          "type": "nullable",
-          "schema": {
-           "type": "str"
-          }
-         },
-         "default": null
-        }
-       },
-       {
-        "name": "actor_roles",
-        "alias": "X-Actor-Roles",
-        "in": "header",
-        "field_info": "Header",
-        "annotation": "str | None",
-        "required": false,
-        "default": null,
-        "sequence": false,
-        "scalar": true,
-        "convert_underscores": true,
-        "schema": {
-         "type": "default",
-         "schema": {
-          "type": "nullable",
-          "schema": {
-           "type": "str"
-          }
-         },
-         "default": null
-        }
-       },
-       {
-        "name": "actor_contexts",
-        "alias": "X-Actor-Contexts",
-        "in": "header",
-        "field_info": "Header",
-        "annotation": "str | None",
-        "required": false,
-        "default": null,
-        "sequence": false,
-        "scalar": true,
-        "convert_underscores": true,
-        "schema": {
-         "type": "default",
-         "schema": {
-          "type": "nullable",
-          "schema": {
-           "type": "str"
-          }
-         },
-         "default": null
-        }
-       }
-      ],
-      "specials": {
-       "request": "request"
-      },
-      "dependencies": [
-       {
-        "call": "app.api.deps.get_repository",
-        "name": "repository",
-        "use_cache": true,
-        "cache_key": [
-         "app.api.deps.get_repository",
-         []
-        ],
-        "specials": {
-         "request": "request"
-        }
-       }
-      ]
-     },
-     {
-      "call": "app.api.deps.get_companion",
-      "name": "companion",
-      "use_cache": true,
-      "cache_key": [
-       "app.api.deps.get_companion",
-       []
-      ]
-     },
-     {
-      "call": "app.api.deps.get_repository",
-      "name": "repository",
-      "use_cache": true,
-      "cache_key": [
-       "app.api.deps.get_repository",
-       []
-      ],
-      "specials": {
-       "request": "request"
-      }
-     },
-     {
-      "call": "app.api.routes.messages.get_companion_turn_limiter",
-      "name": "limiter",
-      "use_cache": true,
-      "cache_key": [
-       "app.api.routes.messages.get_companion_turn_limiter",
-       []
-      ],
-      "specials": {
-       "request": "request"
-      }
-     }
-    ]
-   }
-  },
-  {
    "id": "PUT /contexts/{context_id}/members/{person_id}/role",
-   "order": 67,
+   "order": 66,
    "method": "PUT",
    "path": "/contexts/{context_id}/members/{person_id}/role",
    "name": "set_context_member_role",
@@ -1690,7 +1455,7 @@
   },
   {
    "id": "PUT /contexts/{context_id}/read-mark",
-   "order": 68,
+   "order": 67,
    "method": "PUT",
    "path": "/contexts/{context_id}/read-mark",
    "name": "mark_context_read",
@@ -1747,6 +1512,9 @@
       }
      }
     ],
+    "specials": {
+     "request": "http"
+    },
     "dependencies": [
      {
       "call": "app.api.deps.get_actor",
@@ -1881,34 +1649,6 @@
   }
  ],
  "definitions": {
-  "app.api.schemas.CompanionTurnRequest": {
-   "type": "model",
-   "class": "app.api.schemas.CompanionTurnRequest",
-   "custom_init": false,
-   "root_model": false,
-   "config": {
-    "extra_fields_behavior": "forbid"
-   },
-   "decorators": {},
-   "schema": {
-    "type": "model-fields",
-    "model_name": "CompanionTurnRequest",
-    "fields": [
-     {
-      "name": "requested",
-      "schema": {
-       "type": "default",
-       "schema": {
-        "type": "bool"
-       },
-       "default": false
-      },
-      "annotation": "bool",
-      "required": false
-     }
-    ]
-   }
-  },
   "app.api.schemas.MemberRoleRequest": {
    "type": "model",
    "class": "app.api.schemas.MemberRoleRequest",

@@ -19,13 +19,14 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
 import { xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
+import { useNepNguCanh } from "../../nep/NepProvider";
 import { useRudiSession } from "../../session";
 import { StoryRail } from "../story/StoryRail";
 import { typography, useRudiTheme } from "../../theme";
@@ -33,7 +34,7 @@ import { Heading, RudiButton, RudiScreen } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { Canh } from "../../ui/art/Canh";
 import { ErrorState } from "../../ui/ErrorState";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
 type Trang =
@@ -59,6 +60,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   const { datPhien } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangBam, setDangBam] = useState<string | null>(null);
+  useNepNguCanh({ man: "messages", tieuDe: "Tin nhắn", goiY: ["Rủ ai đó đi chơi tuần này", "Cuộc hẹn nào sắp tới?"] });
 
   const nap = useCallback(async () => {
     try {
@@ -79,6 +81,15 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       void nap();
     }, [nap]),
   );
+  // Focus alone missed the common case: the app was already on this tab when
+  // the other person sent the invitation, and coming back from the background
+  // fires no focus event (QA 23/09: an invitee saw nothing until re-login).
+  useEffect(() => {
+    const dangKy = AppState.addEventListener("change", (tt) => {
+      if (tt === "active") void nap();
+    });
+    return () => dangKy.remove();
+  }, [nap]);
 
   const moNhom = async (nhom: NhomTomTat) => {
     setDangBam(nhom.id);
@@ -139,13 +150,16 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
         <EmptyState
           action={{ label: "Tạo nhóm", onPress: () => router.push("/groups/new") }}
-          body="Mở một nhóm mới, hoặc nhận lời mời của người đã ở trong nhóm."
+          body="Mở một nhóm cho cả hội, nhận lời mời của người đã ở trong nhóm, hoặc kết bạn bằng số điện thoại để nhắn riêng và rủ một người đi chơi."
           illustration={<Canh id="chua-co-hoi" width={168} />}
           kind="first-use"
           layout="inline"
           secondary={{ label: "Tôi có lời mời", onPress: () => router.push("/moi") }}
           title="Chưa có nhóm nào"
         />
+      ) : null}
+      {trang.pha === "xong" && trang.nhom.length === 0 ? (
+        <RudiButton icon="person-add-outline" label="Thêm bạn bằng số điện thoại" onPress={() => router.push("/friends/add")} variant="ghost" />
       ) : null}
       {trang.pha === "xong" ? (
         <View>
@@ -154,16 +168,16 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
             return (
               <View key={nhom.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
                 <Pressable
-                  accessibilityLabel={`Mở nhóm ${tenCuocTroChuyen(nhom)}`}
+                  accessibilityLabel={laPair(nhom) ? `Mở cuộc trò chuyện với ${tenCuocTroChuyen(nhom)}` : `Mở nhóm ${tenCuocTroChuyen(nhom)}`}
                   accessibilityRole="button"
                   disabled={nhom.my_state !== "active" || dangBam !== null}
                   onPress={() => void moNhom(nhom)}
                   style={({ pressed }) => [styles.hangChinh, pressed && styles.bam]}
                 >
-                  {/* A pair (ADR-0021 §2.5) is the other person, so their initial
+                  {/* A pair (ADR-0021 §2.5) is the other person, so their avatar
                       stands where a group shows the roster glyph. */}
                   {laPair(nhom) ? (
-                    <Avatar name={tenCuocTroChuyen(nhom)} size={44} />
+                    <AvatarNguoi name={tenCuocTroChuyen(nhom)} personId={nhom.counterpart?.id} size={44} />
                   ) : (
                     <View style={[styles.hinh, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
                       <Ionicons color={colors.accent} name={duocMoi ? "mail-open-outline" : "people-outline"} size={22} />

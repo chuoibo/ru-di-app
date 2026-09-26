@@ -287,3 +287,36 @@ test("không giá trị nào ném ra lọt lên màn dưới dạng [object ...]
     assert.doesNotMatch(loi.message, /canvas|Failed/i, `${ten}: lọt chữ máy lên màn`);
   }
 });
+
+// QA 23/09, found on the device 24/09: Expo's global `fetch` builds multipart
+// only from a string, a Blob or an object with `bytes()`, and threw
+// «Unsupported FormDataPart implementation» on React Native's `{ uri }` part --
+// every photo upload failed as «Không nối được» with no request sent.
+test("khi app đã cài cách đọc file, phần ảnh là bytes() chứ không phải {uri}", async () => {
+  const { datCachDocTepAnh } = await import("../dist-test/api.js");
+  const docDuoc = [];
+  datCachDocTepAnh(async (uri) => {
+    docDuoc.push(uri);
+    return new Uint8Array([0xff, 0xd8, 0xff]);
+  });
+  const goc = FormData.prototype.append;
+  const phan = [];
+  FormData.prototype.append = function (ten, gt, ...con) {
+    phan.push([ten, gt]);
+    return goc.call(this, ten, typeof gt === "object" && !(gt instanceof Blob) ? "phan" : gt, ...con);
+  };
+  bacFetch(() => traLoiOk(ANH_TRA_VE));
+  try {
+    await taiAnhNhom(NHOM, { uri: "file:///tmp/nho.jpg" }, NGUOI);
+  } finally {
+    FormData.prototype.append = goc;
+    datCachDocTepAnh(null);
+  }
+  const [ten, gt] = phan[0];
+  assert.equal(ten, "file");
+  assert.equal(gt.uri, undefined, "không còn phần {uri} kiểu React Native");
+  assert.equal(gt.name, "anh.jpg");
+  assert.equal(gt.type, "image/jpeg");
+  assert.deepEqual([...(await gt.bytes())], [0xff, 0xd8, 0xff]);
+  assert.deepEqual(docDuoc, ["file:///tmp/nho.jpg"]);
+});

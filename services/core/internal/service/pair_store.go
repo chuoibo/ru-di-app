@@ -85,7 +85,7 @@ func (s PairStore) ListMembers(contextID string) ([]pairsteps.Member, error) {
 	}
 	out := make([]pairsteps.Member, len(rows))
 	for i, row := range rows {
-		out[i] = pairsteps.Member{PersonID: row.PersonID, State: row.State}
+		out[i] = pairsteps.Member{PersonID: row.PersonID, State: row.State, DisplayName: row.DisplayName}
 	}
 	return out, nil
 }
@@ -493,6 +493,57 @@ func (s PairStore) CreateOuting(draft pairsteps.OutingDraft) (string, error) {
 	return outing.ID, nil
 }
 
+// placeRefOf is the part of `PlaceRecord.to_row()` the pair doors read.
+func placeRefOf(place repo.Place) pairsteps.PlaceRef {
+	return pairsteps.PlaceRef{ID: place.ID, Name: place.Name, DestinationID: place.DestinationID, Category: place.Category,
+		Kinds: place.Kinds, Traits: place.Traits, Rating: place.Rating, RatingCount: place.RatingCount}
+}
+
+// GetPlace is get_place.
+func (s PairStore) GetPlace(placeID string) (*pairsteps.PlaceRef, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	place, err := r.GetPlace(s.Ctx, placeID)
+	if err != nil || place == nil {
+		return nil, storeError(err)
+	}
+	ref := placeRefOf(*place)
+	return &ref, nil
+}
+
+// ListPlaces is list_places(destination_id=..., category=...).
+func (s PairStore) ListPlaces(destinationID, category string) ([]pairsteps.PlaceRef, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	places, err := r.ListPlaces(s.Ctx, repo.PlaceFilter{DestinationID: &destinationID, Category: &category})
+	if err != nil {
+		return nil, storeError(err)
+	}
+	out := make([]pairsteps.PlaceRef, len(places))
+	for i, place := range places {
+		out[i] = placeRefOf(place)
+	}
+	return out, nil
+}
+
+// ReplaceOutingStops is replace_outing_stops(expected_revision=None).
+func (s PairStore) ReplaceOutingStops(outingID string, stops []pairsteps.OutingStopDraft) error {
+	r, err := s.repository()
+	if err != nil {
+		return err
+	}
+	rows := make([]repo.TimelineStop, len(stops))
+	for i, stop := range stops {
+		rows[i] = repo.TimelineStop{MinuteOfDay: stop.MinuteOfDay, Label: stop.Label, PlaceName: stop.PlaceName, PlaceID: stop.PlaceID}
+	}
+	_, err = r.ReplaceOutingStops(s.Ctx, outingID, rows, nil)
+	return storeError(err)
+}
+
 // --- records ----------------------------------------------------------------
 
 // PairNotebookOf is the PairNotebookRecord the pair methods read, nil for
@@ -509,6 +560,7 @@ func PairNotebookOf(notebook *repo.PairNotebook) *pairsteps.Notebook {
 	}
 	for _, row := range notebook.Consents {
 		out.Consents = append(out.Consents, pairsteps.Consent{
+			ProposalID:        row.ProposalID,
 			PersonID:          row.PersonID,
 			Purpose:           row.Purpose,
 			GrantedAt:         row.GrantedAt,
@@ -549,6 +601,8 @@ func PairPaperOf(paper *repo.PairPaper) (*pairsteps.Paper, error) {
 	out := &pairsteps.Paper{
 		ID:             paper.ID,
 		ContextID:      paper.ContextID,
+		CycleID:        paper.CycleID,
+		IsTemporary:    paper.IsTemporary,
 		DraftOwnerID:   paper.DraftOwnerID,
 		State:          paper.State,
 		CurrentVersion: int(paper.CurrentVersion),
@@ -668,4 +722,45 @@ func pairNguonJSON(nguon pairpaper.Nguon) ([]byte, error) {
 // civilDay is a date as the repository takes one: midnight UTC of that day.
 func civilDay(d pairpaper.Date) time.Time {
 	return time.Date(d.Year, time.Month(d.Month), d.Day, 0, 0, 0, 0, time.UTC)
+}
+
+// InterestsByPerson is interests_by_person, as a map for the taste reading.
+func (s PairStore) InterestsByPerson(personIDs []string) (map[string][]string, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.InterestsByPerson(s.Ctx, personIDs)
+	if err != nil {
+		return nil, storeError(err)
+	}
+	out := map[string][]string{}
+	for _, row := range rows {
+		out[row.PersonID] = row.Tags
+	}
+	return out, nil
+}
+
+// GetPairRhythm is get_pair_rhythm.
+func (s PairStore) GetPairRhythm(cycleID string, tuan pairpaper.Date) (*pairsteps.Rhythm, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	row, err := r.GetPairRhythm(s.Ctx, cycleID, civilDay(tuan))
+	if err != nil || row == nil {
+		return nil, storeError(err)
+	}
+	return &pairsteps.Rhythm{NguoiLoID: row.NguoiLoID}, nil
+}
+
+// SetPairRhythm is set_pair_rhythm.
+func (s PairStore) SetPairRhythm(draft pairsteps.RhythmDraft) error {
+	r, err := s.repository()
+	if err != nil {
+		return err
+	}
+	_, err = r.SetPairRhythm(s.Ctx, repo.PairRhythmInput{CycleID: draft.CycleID, Tuan: civilDay(draft.Tuan),
+		NguoiLoID: draft.NguoiLoID, ChonBoiID: draft.ChonBoiID, Now: draft.Now})
+	return storeError(err)
 }

@@ -222,8 +222,6 @@ func windowsByState(set *Set) (map[string]*ActorWindow[string], map[string]*Addr
 			"receipt_scan_limiter":          set.ReceiptScanLimiter,
 			"chat_expense_limiter":          set.ChatExpenseLimiter,
 			"screenshot_scan_limiter":       set.ScreenshotScanLimiter,
-			"companion_turn_limiter":        set.CompanionTurnLimiter,
-			"message_intent_limiter":        set.MessageIntentLimiter,
 			"suggestion_limiter":            set.SuggestionLimiter,
 			"contextual_suggestion_limiter": set.ContextualSuggestionLimiter,
 			"face_detection_limiter":        set.FaceDetectionLimiter,
@@ -294,11 +292,9 @@ func TestOracleShippedRefusalsAreByteIdentical(t *testing.T) {
 			}
 		}
 	}
-	// Every window but message_intent_limiter has a captured 429: that one
-	// never answers 429, its refusal is `intent_error` in a 201 body written
-	// after the message is stored, which needs a database to reach.
+	// Every window has a captured 429.
 	for state := range actor {
-		if !seen[state] && state != "message_intent_limiter" {
+		if !seen[state] {
 			t.Errorf("no Python 429 captured for %s", state)
 		}
 	}

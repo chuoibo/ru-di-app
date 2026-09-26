@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
@@ -5,6 +6,9 @@ import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc, tenNgan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
+import { useTenCho } from "../../to-giay/useTenCho";
+import { cauLanHen, demNgay } from "../../to-giay/moc-hen";
+import { homNay } from "../../keo/nhip-keo";
 import { RudiButton } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
@@ -58,6 +62,8 @@ export function ToLoiRu({
   onDaDi,
   onGiu,
   onHuy,
+  onXemKeo,
+  tatCa,
   testID,
 }: {
   to: ToGiay;
@@ -76,6 +82,11 @@ export function ToLoiRu({
   onDaDi?: () => void;
   onGiu?: () => void;
   onHuy?: () => void;
+  /** The outing this agreed sheet became; shown with the affirmative actions,
+   *  above the escapes -- under «Huỷ buổi này» it read as an afterthought. */
+  onXemKeo?: () => void;
+  /** Every sheet of the notebook, to say which of their evenings this one is. */
+  tatCa?: readonly ToGiay[];
   testID?: string;
 }) {
   const { colors, space } = useRudiTheme();
@@ -100,9 +111,12 @@ export function ToLoiRu({
     truoc.current = `${to.id}:${to.state}`;
   }, [to.id, to.state]);
   const dangQuyet = ["da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(to.state);
-  const doi = dangQuyet && pb && to.version > 1 ? khacGi(pb, phienBanTruoc(to)) : [];
+  const truocDo = dangQuyet && to.version > 1 ? phienBanTruoc(to) : undefined;
+  const hangCu = truocDo?.content.chang ?? [];
   const lyDoSua = dangQuyet && to.version > 1 ? pb?.ly_do ?? null : null;
   const hang = pb?.content.chang ?? [];
+  const tenCho = useTenCho([...hang, ...hangCu].map((c) => c.place_id));
+  const doi = dangQuyet && pb && truocDo ? khacGi(pb, truocDo, (id) => tenCho[id]) : [];
 
   const bam: Record<string, (() => void) | undefined> = {
     gui: onGui,
@@ -138,7 +152,14 @@ export function ToLoiRu({
               {i > 0 ? <VetGap /> : null}
               <View style={styles.hang}>
                 <Text style={[typography.label, styles.gio, { color: colors.ink }]}>{c.gio}</Text>
-                <Text style={[typography.body, styles.viec, { color: colors.ink }]}>{c.viec}</Text>
+                <View style={styles.viec}>
+                  <Text style={[typography.body, { color: colors.ink }]}>{c.viec}</Text>
+                  {c.place_id && tenCho[c.place_id] ? (
+                    <Text style={[typography.caption, { color: colors.inkSoft }]} testID={testID ? `${testID}-cho-${i}` : undefined}>
+                      <Ionicons color={colors.inkSoft} name="location-outline" size={13} /> {tenCho[c.place_id]}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
             </View>
           ))}
@@ -168,6 +189,15 @@ export function ToLoiRu({
         </View>
       ) : null}
       <Text style={[typography.caption, { color: colors.inkSoft }]}>{cau}</Text>
+      {/* The agreed evening, as a moment rather than a status: how far it is,
+          and which of their evenings it is (QA 23/09: after «Đã chốt» the
+          screen held one red button and nothing else). */}
+      {to.state === "chot" && (demNgay(to, homNay()) !== null || tatCa) ? (
+        <View style={styles.moc} testID={testID ? `${testID}-moc` : undefined}>
+          {demNgay(to, homNay()) !== null ? <Stamp dong={vuaDoi} label={demNgay(to, homNay()) ?? ""} tilt={-3} tone="ink" /> : null}
+          {tatCa ? <Text style={[typography.label, styles.mocChu, { color: colors.ink }]}>{cauLanHen(to, tatCa)}</Text> : null}
+        </View>
+      ) : null}
       {to.keeps.length > 0 ? (
         <View style={styles.giu}>
           {to.keeps.map((k) => (
@@ -187,6 +217,7 @@ export function ToLoiRu({
           ))}
         </View>
       ) : null}
+      {onXemKeo ? <RudiButton icon="calendar-outline" label="Xem kèo" onPress={onXemKeo} variant={chinh.length === 0 ? "solid" : "outline"} /> : null}
       {phu.length > 0 ? (
         // Tách khỏi nhóm trên bằng một nét: đây là các lối THOÁT, và «Bỏ bản
         // phác này» vứt đi thứ vừa viết còn «Huỷ buổi này» xoá một buổi người
@@ -280,7 +311,10 @@ const styles = StyleSheet.create({
   gio: { minWidth: 52, fontVariant: ["tabular-nums"], paddingTop: 2 },
   viec: { flex: 1 },
   hangCuoi: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 },
-  lyDo: { paddingHorizontal: 6 },
+  // Flush with the status line under it: the 6dp inset read as a stray indent (QA 23/09).
+  lyDo: {},
+  moc: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap", paddingVertical: 4 },
+  mocChu: { flexShrink: 1 },
   thoat: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, marginTop: 6 },
   doi: { borderLeftWidth: StyleSheet.hairlineWidth, paddingLeft: 12, gap: 2 },
   giu: { gap: 2, paddingHorizontal: 6 },

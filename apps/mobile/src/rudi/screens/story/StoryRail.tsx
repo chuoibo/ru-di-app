@@ -15,7 +15,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docStories, laCuaToi, nhanVong, type NhomStoryWire } from "../../story/story";
 import { typography, useRudiTheme } from "../../theme";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { Skeleton } from "../../ui/Skeleton";
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; nhom: NhomStoryWire[] } | { pha: "hong"; loi: string };
@@ -92,7 +92,7 @@ export function StoryRail({ personId }: { personId: string }) {
                       },
                     ]}
                   >
-                    <Avatar name={cuaToi ? "Bạn" : nhom.author.display_name} size={CO} />
+                    <AvatarNguoi name={cuaToi ? "Bạn" : nhom.author.display_name} personId={nhom.author.id} size={CO} />
                   </View>
                   <Text numberOfLines={1} style={[typography.caption, { color: colors.ink }]}>
                     {cuaToi ? "Bạn" : nhom.author.display_name}

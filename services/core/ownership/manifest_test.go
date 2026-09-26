@@ -133,3 +133,43 @@ func ids(routes []Route) string {
 	}
 	return strings.Join(parts, ",")
 }
+
+// The one framework row Go may serve is named, and naming it must not open the
+// door for the other four -- each of those is rendered BY FastAPI and needs its
+// own decision. The allowlist is also not a way past the evidence rule.
+func TestOnlyTheNamedFrameworkRowMayMoveToGo(t *testing.T) {
+	mount := func(id, path string) Route {
+		return Route{ID: id, Order: 0, Kind: "mount", Method: "MOUNT", Path: path,
+			Group: "framework", Class: "framework", Owner: OwnerPython, Python: PythonLive, State: "PY"}
+	}
+	static := goOwned(mount("MOUNT /static", "/static"))
+	if _, err := Parse(encode(t, []Route{static})); err != nil {
+		t.Fatalf("MOUNT /static is the named row, yet: %v", err)
+	}
+
+	// Still refused without evidence: the allowlist skips one rule, not two.
+	noEvidence := static
+	noEvidence.Evidence = ""
+	if _, err := Parse(encode(t, []Route{noEvidence})); err == nil ||
+		!strings.Contains(err.Error(), "without evidence") {
+		t.Fatalf("evidence is still required; err = %v", err)
+	}
+
+	// The rows FastAPI renders are still refused.
+	for _, id := range []string{"GET /openapi.json", "GET /docs", "GET /redoc", "GET /docs/oauth2-redirect"} {
+		method, path, _ := strings.Cut(id, " ")
+		r := goOwned(Route{ID: id, Order: 0, Kind: "route", Method: method, Path: path,
+			Group: "framework", Class: "framework", Owner: OwnerPython, Python: PythonLive, State: "PY"})
+		if _, err := Parse(encode(t, []Route{r})); err == nil ||
+			!strings.Contains(err.Error(), "only API routes") {
+			t.Fatalf("%s should still be refused; err = %v", id, err)
+		}
+	}
+
+	// And a mount that merely looks like it is not the named one.
+	other := goOwned(mount("MOUNT /statics", "/statics"))
+	if _, err := Parse(encode(t, []Route{other})); err == nil ||
+		!strings.Contains(err.Error(), "only API routes") {
+		t.Fatalf("MOUNT /statics is not the named row; err = %v", err)
+	}
+}

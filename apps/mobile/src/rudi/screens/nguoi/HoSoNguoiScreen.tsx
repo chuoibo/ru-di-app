@@ -37,7 +37,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { cauTuongTacBai } from "../../tuong/bai-chi-tiet";
 import { HanhDongHoSoSheet } from "./HanhDongHoSo";
 import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
@@ -103,14 +103,14 @@ export function HoSoNguoiScreen() {
     }
   };
 
-  const nhanTin = async () => {
+  const nhanTin = async (den: "chat" | "to-giay" = "chat") => {
     if (phien === null || personId === "" || dangMoChat) return;
     setDangMoChat(true);
     setLoiChat(null);
     try {
       const cap = await moNhanRieng(personId, phien.person_id, attemptFor(attempts.current, `dm:${personId}`));
       datPhien(await ganDanhSachNhom(phien, ghepVaoDanhSach(phien.contexts, cap)));
-      router.push(`/groups/${cap.id}/chat` as never);
+      router.push(`/groups/${cap.id}/${den}` as never);
     } catch (error) {
       setLoiChat(loiRaChu(error));
     } finally {
@@ -185,7 +185,7 @@ export function HoSoNguoiScreen() {
         <>
           <View style={styles.hoSo}>
             <View style={styles.dau}>
-              <Avatar name={hoSo.hoSo.display_name} size={60} />
+              <AvatarNguoi name={hoSo.hoSo.display_name} personId={personId} size={60} />
               <View style={styles.dauChu}>
                 <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>
                   {hoSo.hoSo.display_name}
@@ -196,7 +196,7 @@ export function HoSoNguoiScreen() {
               </View>
             </View>
             <View style={styles.chips}>
-              <Chip label={cauQuanHe(hoSo.hoSo.relation)} />
+              <Chip icon={hoSo.hoSo.relation === "couple" ? "heart" : undefined} label={cauQuanHe(hoSo.hoSo.relation)} selected={hoSo.hoSo.relation === "couple"} />
               {hoSo.hoSo.city ? <Chip icon="location-outline" label={hoSo.hoSo.city} /> : null}
             </View>
             {hoSo.hoSo.bio ? (
@@ -237,7 +237,7 @@ export function HoSoNguoiScreen() {
                 {loiChinhSach ? <Text style={[typography.caption, { color: colors.warn }]}>{loiChinhSach}</Text> : null}
               </View>
             ) : null}
-            {hoSo.hoSo.relation === "friend" ? (
+            {hoSo.hoSo.relation === "friend" || hoSo.hoSo.relation === "couple" ? (
               <View style={styles.khoiChat}>
                 <RudiButton
                   icon="chatbubble-outline"
@@ -245,6 +245,17 @@ export function HoSoNguoiScreen() {
                   loading={dangMoChat}
                   onPress={() => void nhanTin()}
                 />
+                {/* ADR-0034: for the two of a couple, the notebook is one tap
+                    from the other's profile, not three screens away. */}
+                {hoSo.hoSo.relation === "couple" ? (
+                  <RudiButton
+                    disabled={dangMoChat}
+                    icon="mail-outline"
+                    label="Tờ giấy của hai mình"
+                    onPress={() => void nhanTin("to-giay")}
+                    variant="outline"
+                  />
+                ) : null}
                 {loiChat ? <Text style={[typography.caption, { color: colors.warn }]}>{loiChat}</Text> : null}
               </View>
             ) : null}

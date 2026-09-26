@@ -33,6 +33,8 @@ export type TempPhoto = {
   uri: string;
   width: number;
   height: number;
+  /** The picker said PNG: it may have transparency, which a JPEG turns black. */
+  laPng?: boolean;
 };
 
 /** A photo that has been shrunk and stripped, ready to send. */

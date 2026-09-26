@@ -67,7 +67,7 @@ func (h *Handler) promotion(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) promote(w http.ResponseWriter, r *http.Request) {
 	var in promotionInput
-	if err := readBody(w, r, &in); err != nil {
+	if err := readBody(w, r, &in, 32<<10); err != nil {
 		failure(w, err)
 		return
 	}

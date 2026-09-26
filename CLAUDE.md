@@ -13,7 +13,8 @@ một writer; không coi proxy sang Python là hoàn tất migration.
 
 Chat v2 bắt buộc E2EE, không fallback plaintext; lịch sử cũ chỉ đọc và có
 nhãn. Server không giữ khoá giải mã chat. AI chỉ nhận nội dung được gọi/chia
-sẻ rõ ràng, không tự đọc chat/gu/lịch sử. Giữ ba luật tiền và tài liệu frozen.
+sẻ rõ ràng, không tự đọc chat/gu/lịch sử (ngoại lệ: gu của người đã tự bật
+`chia_gu` trong sổ đôi của họ — ADR-0034). Giữ ba luật tiền và tài liệu frozen.
 Native Android/iOS, crypto review độc lập, tải và người dùng thực là cổng
 riêng. SQLite không phải backend; kho mã hoá trên thiết bị là ngoại lệ đúng
 tầng. Tài liệu tiến độ: `docs/architecture/02-chat-go-e2ee.md`. Các mô tả
@@ -79,6 +80,11 @@ command.upgrade(c,'head',sql=True)" >/dev/null && echo ok
 | `parity/` | Module Go riêng, hộp đen: dựng hai stack, phát lại kịch bản, so byte HTTP + hàng DB + kho ảnh |
 
 **Nguồn sự thật về ai phục vụ route nào là `services/core/ownership/routes.json`**, không phải cây thư mục — `scripts/check_route_ownership.py` gác nó. Xoá mã Python để "xong port" là xoá luôn bằng chứng port đúng.
+
+Ngoại lệ duy nhất, có tên (ADR-0036): khi một hành vi bị **xoá hẳn** chứ không phải
+được port, Python không còn là oracle của nó vì không còn gì để so. Lúc đó bản Go,
+bản Python và hàng manifest phải đi trong **cùng một commit** — bỏ bản Go trước thì
+cửa trước proxy thẳng sang Python và hành vi sống lại nguyên vẹn mà mọi cổng vẫn xanh.
 
 Mô tả dưới đây là **tầng phía Python**, giữ vì nó vẫn chạy và vẫn là oracle.
 

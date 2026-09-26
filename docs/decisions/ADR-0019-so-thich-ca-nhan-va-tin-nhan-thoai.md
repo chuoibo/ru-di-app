@@ -18,7 +18,10 @@ Bảng `person_interests(person_id, tag)` với **từ vựng đóng do máy ch�
 
 `PUT /people/me/interests` ghi; `GET /people/me` trả về. Sửa được bất cứ lúc nào từ màn Cá nhân — mockup 01.03 nói rõ *«Preferences là editable sau onboarding»*.
 
-Sở thích của một người **không hiện cho người khác**. `GET /people/{id}` không mang chúng. Trong nhóm chỉ hiện dạng **tổng hợp** («nhóm này nghiêng về đồ nướng và cafe»), tính từ nhiều người, không quy được về một ai.
+Sở thích của một người **không hiện cho người khác**. `GET /people/{id}` không mang chúng.
+*(Sửa bổ sung 2026-09-25, [ADR-0034](ADR-0034-gay-vai-nhip-chia-gu-va-cau-hoi-tuan-cua-so-doi.md) §2.1–2.2: ngoại lệ duy
+nhất là trong một sổ đôi đang bật, người đã TỰ bật `chia_gu` cho người kia thấy gu của mình và cho Nếp dùng nó; thu hồi
+là thôi ngay.)* Trong nhóm chỉ hiện dạng **tổng hợp** («nhóm này nghiêng về đồ nướng và cafe»), tính từ nhiều người, không quy được về một ai.
 
 ### 2.2 Hồ sơ nhóm viết cứng bị thay
 

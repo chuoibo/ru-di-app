@@ -11,1266 +11,2434 @@
  },
  "cases": [
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/0",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ]
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "asked_too_often"
+     "kind": "itinerary",
+     "payload": {
+      "title": "",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/1",
    "args": {
-    "conversation": {
-     "messages": [],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "poll",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ]
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_kind_unknown",
+     "code": "companion_card_kind_unknown"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/2",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": "hello"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "hello",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/3",
    "args": {
-    "conversation": {
-     "messages": [],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": "  "
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_empty",
+     "code": "companion_card_empty"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/4",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": "T\u1ed1i nay \u0111i \u0111\u00e2u?"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "T\u1ed1i nay \u0111i \u0111\u00e2u?",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/5",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": ""
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/6",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": "hello"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "already_spoke_last"
+     "kind": "text",
+     "payload": {
+      "text": "hello"
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/7",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": "T\u1ed1i nay \u0111i \u0111\u00e2u?"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "T\u1ed1i nay \u0111i \u0111\u00e2u?",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/8",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": "Ch\u1ee3 \u0111\u00eam"
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "Ch\u1ee3 \u0111\u00eam",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/9",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "missing",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": "  "
+     },
+     "extra": "dropped"
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "already_spoke_last"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_place_not_in_catalogue",
+     "code": "companion_place_not_in_catalogue"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/10",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p1",
+       "p3",
+       "missing"
+      ]
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": true,
-     "reason": "ok"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_place_not_in_catalogue",
+     "code": "companion_place_not_in_catalogue"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/11",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p3",
+       "p2"
+      ],
+      "intro": null
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "already_spoke_last"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_malformed",
+     "code": "companion_card_malformed"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/12",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": 7
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": true,
-     "reason": "ok"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_malformed",
+     "code": "companion_card_malformed"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/13",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:26+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": "hello"
+     },
+     "extra": "dropped"
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "rate_limited"
+     "kind": "itinerary",
+     "payload": {
+      "title": "hello",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       }
+      ],
+      "omitted_stop_count": 1
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/14",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p1",
+       "p1",
+       "p1"
+      ]
+     },
+     "extra": "dropped"
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "already_spoke_last"
+     "kind": "places",
+     "payload": {
+      "intro": "",
+      "places": [
+       {
+        "id": "p1",
+        "name": "Ch\u1ee3",
+        "address": "A"
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/15",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": "  "
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "rate_limited"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_empty",
+     "code": "companion_card_empty"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/16",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": "T\u1ed1i nay \u0111i \u0111\u00e2u?"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "rate_limited"
+     "kind": "text",
+     "payload": {
+      "text": "T\u1ed1i nay \u0111i \u0111\u00e2u?"
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/17",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p3",
+       "p2",
+       "p1",
+       "p2",
+       "p3"
+      ]
+     },
+     "extra": "dropped"
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+     "kind": "places",
+     "payload": {
+      "intro": "",
+      "places": [
+       {
+        "id": "p3",
+        "name": "C\u00e0 ph\u00ea",
+        "address": "C"
+       },
+       {
+        "id": "p2",
+        "name": "Qu\u00e1n \u1ed0c",
+        "address": "B",
+        "price_min_vnd": 50000
+       },
+       {
+        "id": "p1",
+        "name": "Ch\u1ee3",
+        "address": "A"
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/18",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p2",
+       "p1",
+       "p2",
+       "p2",
+       "p3"
+      ],
+      "intro": "  "
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "places",
+     "payload": {
+      "intro": "  ",
+      "places": [
+       {
+        "id": "p2",
+        "name": "Qu\u00e1n \u1ed0c",
+        "address": "B",
+        "price_min_vnd": 50000
+       },
+       {
+        "id": "p1",
+        "name": "Ch\u1ee3",
+        "address": "A"
+       },
+       {
+        "id": "p3",
+        "name": "C\u00e0 ph\u00ea",
+        "address": "C"
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/19",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ]
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/20",
    "args": {
-    "conversation": {
-     "messages": [],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p3",
+       "p2"
+      ]
+     }
     },
-    "requested": false
+    "allowed_places": []
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_place_not_in_catalogue",
+     "code": "companion_place_not_in_catalogue"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/21",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:26+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ]
+     },
+     "extra": "dropped"
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/22",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:26+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ]
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p2",
+         "name": "Qu\u00e1n \u1ed0c",
+         "address": "B",
+         "price_min_vnd": 50000
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/23",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": ""
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": true,
-     "reason": "ok"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_empty",
+     "code": "companion_card_empty"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/24",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p2"
+      ],
+      "intro": 7
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": true,
-     "reason": "ok"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_malformed",
+     "code": "companion_card_malformed"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/25",
    "args": {
-    "conversation": {
-     "messages": [],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p3",
+       "p2"
+      ],
+      "intro": "Ch\u1ee3 \u0111\u00eam"
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+     "kind": "places",
+     "payload": {
+      "intro": "Ch\u1ee3 \u0111\u00eam",
+      "places": [
+       {
+        "id": "p3",
+        "name": "C\u00e0 ph\u00ea",
+        "address": "C"
+       },
+       {
+        "id": "p2",
+        "name": "Qu\u00e1n \u1ed0c",
+        "address": "B",
+        "price_min_vnd": 50000
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/26",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p3"
+      ],
+      "intro": "hello"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "places",
+     "payload": {
+      "intro": "hello",
+      "places": [
+       {
+        "id": "p3",
+        "name": "C\u00e0 ph\u00ea",
+        "address": "C"
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/27",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:26+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p3",
+       "p2",
+       "p1",
+       "p1",
+       "p2",
+       "p3",
+       "p1"
+      ]
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "places",
+     "payload": {
+      "intro": "",
+      "places": [
+       {
+        "id": "p3",
+        "name": "C\u00e0 ph\u00ea",
+        "address": "C"
+       },
+       {
+        "id": "p2",
+        "name": "Qu\u00e1n \u1ed0c",
+        "address": "B",
+        "price_min_vnd": 50000
+       },
+       {
+        "id": "p1",
+        "name": "Ch\u1ee3",
+        "address": "A"
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/28",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "poll",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ]
+     },
+     "extra": "dropped"
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": true,
-     "reason": "ok"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_kind_unknown",
+     "code": "companion_card_kind_unknown"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/29",
    "args": {
-    "conversation": {
-     "messages": [],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": "  "
+     },
+     "extra": "dropped"
     },
-    "requested": true
+    "allowed_places": []
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_place_not_in_catalogue",
+     "code": "companion_place_not_in_catalogue"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/30",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [],
+      "title": "T\u1ed1i nay \u0111i \u0111\u00e2u?"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "already_spoke_last"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_empty",
+     "code": "companion_card_empty"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/31",
    "args": {
-    "conversation": {
-     "messages": [],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": "Ch\u1ee3 \u0111\u00eam"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+     "kind": "text",
+     "payload": {
+      "text": "Ch\u1ee3 \u0111\u00eam"
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/32",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p3",
+       "p2",
+       "p1",
+       "p1"
+      ]
+     }
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "places",
+     "payload": {
+      "intro": "",
+      "places": [
+       {
+        "id": "p3",
+        "name": "C\u00e0 ph\u00ea",
+        "address": "C"
+       },
+       {
+        "id": "p2",
+        "name": "Qu\u00e1n \u1ed0c",
+        "address": "B",
+        "price_min_vnd": 50000
+       },
+       {
+        "id": "p1",
+        "name": "Ch\u1ee3",
+        "address": "A"
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/33",
    "args": {
-    "conversation": {
-     "messages": [],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": 7
+     },
+     "extra": "dropped"
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_malformed",
+     "code": "companion_card_malformed"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/34",
    "args": {
-    "conversation": {
-     "messages": [],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "places",
+     "payload": {
+      "place_ids": [
+       "p3",
+       "p2",
+       "p2",
+       "p2",
+       "p1",
+       "missing",
+       "p1"
+      ],
+      "intro": "  "
+     },
+     "extra": "dropped"
     },
-    "requested": true
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "no_conversation"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_place_not_in_catalogue",
+     "code": "companion_place_not_in_catalogue"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/35",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": "hello"
+     }
     },
-    "requested": false
+    "allowed_places": []
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "already_spoke_last"
+     "kind": "text",
+     "payload": {
+      "text": "hello"
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/36",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "poll",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "missing",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p2",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "missing",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": "Ch\u1ee3 \u0111\u00eam"
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": false,
-     "reason": "already_spoke_last"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_kind_unknown",
+     "code": "companion_card_kind_unknown"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/37",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ],
+      "title": ""
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": false,
-     "reason": "already_spoke_last"
+     "kind": "itinerary",
+     "payload": {
+      "title": "",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       }
+      ]
+     }
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/38",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "text",
+     "payload": {
+      "text": null
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
-    "ok": {
-     "may_speak": true,
-     "reason": "ok"
+    "raised": {
+     "type": "CompanionError",
+     "message": "companion_card_malformed",
+     "code": "companion_card_malformed"
     }
    }
   },
   {
-   "fn": "plan_turn",
+   "fn": "ground_card",
    "name": "fuzz/39",
    "args": {
-    "conversation": {
-     "messages": [
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:20+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:21+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:22+00:00"
-      },
-      {
-       "author_kind": "ai",
-       "created_at": "$dt:2026-06-01T11:58:23+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:24+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:25+00:00"
-      },
-      {
-       "author_kind": "human",
-       "created_at": "$dt:2026-06-01T11:58:26+00:00"
-      }
-     ],
-     "now": "$dt:2026-06-01T12:00:00+00:00"
+    "raw": {
+     "kind": "itinerary",
+     "payload": {
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p3",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       },
+       {
+        "place_id": "p1",
+        "time_text": "18:00",
+        "note": "x"
+       }
+      ]
+     }
     },
-    "requested": false
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3",
+      "address": "A"
+     },
+     {
+      "id": "p2",
+      "name": "Qu\u00e1n \u1ed0c",
+      "address": "B",
+      "price_min_vnd": 50000
+     },
+     {
+      "id": "p3",
+      "name": "C\u00e0 ph\u00ea",
+      "address": "C"
+     }
+    ]
    },
    "result": {
     "ok": {
-     "may_speak": true,
-     "reason": "ok"
+     "kind": "itinerary",
+     "payload": {
+      "title": "",
+      "stops": [
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p3",
+         "name": "C\u00e0 ph\u00ea",
+         "address": "C"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       },
+       {
+        "time_text": "18:00",
+        "note": "x",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3",
+         "address": "A"
+        }
+       }
+      ]
+     }
     }
    }
   }

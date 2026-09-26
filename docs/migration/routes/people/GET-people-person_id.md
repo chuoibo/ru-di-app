@@ -96,3 +96,9 @@ Corpus sinh: `generated/w10-422/get-people-person_id.yaml` (18 bước).
 
 - Chặn không ẩn hồ sơ khi còn nhóm hoặc pair chung (ADR-0023 §2.3.2 chỉ nói bài, story, nhắn riêng).
 - Người đã xoá tài khoản (dev) đọc chính mình là 404, còn `GET /people/me` là 200 hàng ẩn danh.
+
+## Đổi 2026-09-25 (lượt 2) — gậy luân phiên, hạn mức tuần, «Một đôi» trên hồ sơ, 4 sticker đôi (ADR-0034 §2.4–2.5)
+
+Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở lời (tờ đầu tiên gửi trong tuần, `nguoi_mo_loi`) hai tuần liền thì tuần này sang người kia, `cach` = `luot`; tín hiệu tờ thêm `tuan`, `sent_at`. (2) `draft_pair_paper` từ chối 409 `paper_week_quota` khi người gọi đã phác `TO_MOI_NGUOI_MOI_TUAN` (3, cùng số với `packages/shared/nep-nhip.json`) tờ trong tuần. (3) `get_person_profile` trả `relation` = `couple` khi hai người là một «Một đôi» (`same_couple`, hỏi SAU cửa quyền, không phải oracle cho người lạ). (4) Từ vựng sticker thêm `hen-nhe`, `nho-nhau`, `ve-toi-chua`, `om-cai`. Golden pair_notebook (ca baton, 10 shard), pair_steps (`quota_*`, `role_baton_*`), people_steps (`couple_*`), stickers; Go 0 lệch.
+
+- `GET /people/{person_id}`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.

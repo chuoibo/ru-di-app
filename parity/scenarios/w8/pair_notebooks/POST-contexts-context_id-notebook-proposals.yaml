@@ -181,8 +181,6 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"purpose":"lap_so"}'
-    bind:
-      p2: {from: body, pointer: /id, class: uuid}
   - id: mate_proposes_lap_so
     as: mate
     request:
@@ -191,8 +189,6 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"purpose":"lap_so"}'
-    bind:
-      p3: {from: body, pointer: /id, class: uuid}
   - id: owner_proposes_bat_doi_while_pending
     as: owner
     request:

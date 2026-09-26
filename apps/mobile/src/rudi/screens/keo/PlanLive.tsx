@@ -19,7 +19,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import type { Phien } from "../../../phien";
 import { nhanKhoangNgay, type BuoiDi } from "../../../screens/len-plan/buoi-di";
+import { henHaiBan, type HenHaiBan } from "../../keo/hen-hai-ban";
 import { cauSoChang, docKeoCuaNhom } from "../../keo/keo";
+import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
+import { useNepNguCanh } from "../../nep/NepProvider";
 import { chiaKeo, dauLich, homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { displayFace, typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen, SectionHeader } from "../../ui";
@@ -82,7 +85,7 @@ function KeoDan({ keo, today, onOpen }: { keo: BuoiDi; today: string; onOpen: ()
   );
 }
 
-function HangKeo({ keo, today, mo = false, onOpen }: { keo: BuoiDi; today: string; mo?: boolean; onOpen: () => void }) {
+function HangKeo({ keo, today, mo = false, voi, onOpen }: { keo: BuoiDi; today: string; mo?: boolean; voi?: string; onOpen: () => void }) {
   const { colors } = useRudiTheme();
   const nhan = nhanNhip(nhipKeo(keo.starts_on, keo.ends_on, today));
   return (
@@ -96,11 +99,59 @@ function HangKeo({ keo, today, mo = false, onOpen }: { keo: BuoiDi; today: strin
       <View style={styles.hangChu}>
         <Text numberOfLines={2} style={[typography.title, { color: mo ? colors.inkSoft : colors.ink }]}>{keo.title}</Text>
         <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
-          {nhanKhoangNgay(keo.starts_on, keo.ends_on)} · {keo.headcount} người · {cauSoChang(keo.stops.length)}
+          {voi ? `với ${voi} · ` : ""}{nhanKhoangNgay(keo.starts_on, keo.ends_on)} · {voi ? "" : `${keo.headcount} người · `}{cauSoChang(keo.stops.length)}
           {nhan ? ` · ${nhan}` : ""}
         </Text>
       </View>
     </Pressable>
+  );
+}
+
+/**
+ * The outings of every pair the person is active in, read beside the current
+ * group's: a pair is never the current group, so a plan two people agreed on
+ * would otherwise never reach this tab. A pair that fails to read is left out
+ * rather than failing the tab -- it is a second list, not the page.
+ */
+function HenCuaHaiBan({ phien, today }: { phien: Phien; today: string }) {
+  const router = useRouter();
+  const [hen, setHen] = useState<HenHaiBan<BuoiDi>[]>([]);
+  const doi = (phien.contexts ?? []).filter((n) => laPair(n) && n.my_state === "active" && n.id !== phien.context_id);
+  const khoaDoi = doi.map((d) => d.id).join(",");
+
+  useFocusEffect(
+    useCallback(() => {
+      let conDung = true;
+      void Promise.allSettled(doi.map((d) => docKeoCuaNhom(d.id, phien.person_id))).then((ket) => {
+        if (!conDung) return;
+        const theoDoi = new Map<string, BuoiDi[]>();
+        ket.forEach((k, i) => {
+          if (k.status === "fulfilled") theoDoi.set(doi[i].id, k.value);
+        });
+        setHen(henHaiBan(doi.map((d) => ({ id: d.id, tenNguoiKia: tenCuocTroChuyen(d) })), theoDoi, today));
+      });
+      return () => {
+        conDung = false;
+      };
+      // `doi` is rebuilt every render; its ids are what the read depends on.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [khoaDoi, phien.person_id, today]),
+  );
+
+  if (hen.length === 0) return null;
+  return (
+    <View testID="hen-hai-ban">
+      <SectionHeader title="Hẹn của hai bạn" />
+      {hen.map((h) => (
+        <HangKeo
+          key={h.keo.id}
+          keo={h.keo}
+          onOpen={() => router.push(`/outings/${h.keo.id}?ctx=${h.contextId}` as never)}
+          today={today}
+          voi={h.tenNguoiKia}
+        />
+      ))}
+    </View>
   );
 }
 
@@ -110,6 +161,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const contextId = phien.context_id;
   const today = homNay();
+  useNepNguCanh({ man: "plan", tieuDe: "Lên plan", goiY: ["Kèo nào sắp tới?", "Gợi ý một buổi cuối tuần"] });
 
   const nap = useCallback(async () => {
     if (contextId === null) return;
@@ -130,7 +182,8 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
   if (contextId === null) {
     return (
       <RudiScreen bottomInset="tab" onRefresh={nap} testID="plan-screen">
-        <Heading title="Lên plan" subtitle="Vào một nhóm trước; kèo là của nhóm." />
+        <Heading title="Lên plan" subtitle="Kèo của nhóm nằm ở đây khi bạn vào một nhóm." />
+        <HenCuaHaiBan phien={phien} today={today} />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} variant="outline" />
       </RudiScreen>
     );
@@ -183,6 +236,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
           ) : null}
         </>
       ) : null}
+      <HenCuaHaiBan phien={phien} today={today} />
       {chia && chia.daQua.length > 0 ? (
         <View>
           <SectionHeader title="Đã qua" />

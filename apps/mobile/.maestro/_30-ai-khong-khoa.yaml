@@ -14,7 +14,7 @@ appId: com.lakiet.rudi
 - assertVisible: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."
 - assertVisible: "Tự tạo kèo"
 - takeScreenshot: 30-ai-im-lang-that
-- tapOn: "Đóng công cụ chat"
+- tapOn: "Bỏ bản nháp"
 - extendedWaitUntil:
     visible: "Ô soạn tin"
     timeout: 20000

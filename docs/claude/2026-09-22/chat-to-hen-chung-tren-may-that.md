@@ -22,6 +22,10 @@ Kiểm trước/sau bằng số, không bằng niềm tin:
 | `GET /contexts/{id}/shared-drafts` | 404 | **405** |
 | `POST /contexts/{id}/shared-drafts` | 404 | **400** |
 
+> **Cập nhật 23-09-2026.** Không còn cần đặt cờ: ở `prod` core bật feed thay đổi
+> và engine AI nhóm mặc định, và `e2e_slice.sh` luôn chạy `core migrate-chat`.
+> Luật cờ mới ghi ở `docs/architecture/02-chat-go-e2ee.md`.
+
 ## Flow 48 đỏ, và đỏ ĐÚNG
 
 Lượt đầu chạy tới bước cuối rồi đỏ ở `.*đã thành kèo.*`. Mở ảnh ra nhìn thì

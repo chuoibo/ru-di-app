@@ -44,6 +44,17 @@ export function tokenPhienHienTai(): string | null {
   return tokenPhien;
 }
 
+/** The bearer alone, for a token that is not (yet) the module's own: the web
+ *  store hands a freshly issued one to the server so it can set the reload
+ *  cookie. Kept here so this file stays the one place a bearer is spelled. */
+export function headerChiBearer(token: string): Record<string, string> {
+  // Written as a quoted key, as below: the CORS gate recognises an exported
+  // header builder by the identity header literal in its body.
+  const headers: Record<string, string> = {};
+  headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
 export function actorHeaders(
   actorId: string,
   roles = "member,advancer,recipient,batch_owner",

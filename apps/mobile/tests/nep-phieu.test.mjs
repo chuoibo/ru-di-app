@@ -71,3 +71,25 @@ test("màn thường không bị nhầm thành màn tiền, kể cả khi tên b
     assert.equal(nepPhaiLui(man), false, man);
   }
 });
+
+test("màn đăng nhập và lần đầu là màn Nếp vắng, theo cả đoạn đường", async () => {
+  const { nepPhaiVang, nepPhaiLui } = await import("../dist-test/rudi/nep/phieu.js");
+  for (const man of ["/welcome", "login", "/otp", "/moi", "/personalization"]) assert.equal(nepPhaiVang(man), true, man);
+  for (const man of ["/welcomes", "/moidien", "/messages", "/profile", "/groups/1/chat", "", 7]) assert.equal(nepPhaiVang(man), false, String(man));
+  // The money law is a separate list and does not grow with this one.
+  assert.equal(nepPhaiLui("/personalization"), false);
+});
+
+test("câu «Mình đang thấy» đọc như câu, không như bảng gỡ lỗi", async () => {
+  const { cauNguCanh, donPhieu } = await import("../dist-test/rudi/nep/phieu.js");
+  const phieu = donPhieu({
+    man: "groups/[id]/to-giay",
+    tieuDe: "Tờ giấy của hai mình",
+    loaiSo: "doi",
+    nhip: { kieu: "sap-toi", conNgay: 2 },
+    soLieu: { soChang: 2, soNguoi: "hai bạn" },
+  });
+  assert.equal(cauNguCanh(phieu), "Bạn đang ở Tờ giấy của hai mình · sổ một đôi · còn 2 ngày nữa · hai bạn · 2 chặng.");
+  assert.doesNotMatch(cauNguCanh(phieu), /so[A-Z]/);
+  assert.match(cauNguCanh(null), /chưa kể gì/);
+});

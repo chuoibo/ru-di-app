@@ -72,7 +72,7 @@ func TestRefusals(t *testing.T) {
 		}, "dev or prod"},
 		"bad bind class": {func(s string) string {
 			return strings.Replace(s, "class: uuid", "class: number", 1)
-		}, "uuid or token"},
+		}, "uuid, token or echo"},
 		"two documents": {func(s string) string { return s + "\n---\nid: other\n" }, "one scenario"},
 	}
 	for name, tc := range cases {

@@ -50,6 +50,13 @@ x-api-image: &api-image
   # cache hit. Nếu để mỗi service tự đặt tên ảnh thì `make up` dựng ba lần.
   image: mobile-local/api:dev
 
+# Cùng lý do với x-api-image: `core` và `migrate-chat` chạy chung một ảnh, dựng
+# một lần.
+x-core-image: &core-image
+  build:
+    context: ./services/core
+  image: mobile-local/core:dev
+
 x-api-env: &api-env
   # Tên host là `postgres` — tên service trong mạng compose. `localhost` ở đây
   # trỏ vào chính container, đó là lỗi số một khi bê URL từ .env của máy sang.
@@ -204,12 +211,25 @@ services:
     # thì "chạy được trên máy tôi" quay lại qua cửa sau: code chạy từ bind
     # mount còn ảnh thì chưa ai chứng minh là dựng được.
 
+  # Lược đồ của feed thay đổi chat và engine AI nhóm do Go sở hữu, không nằm
+  # trong alembic. Chạy một lần SAU `migrate` (trigger và khoá ngoại của nó cần
+  # bảng alembic đã có) và TRƯỚC `core`: ở prod core bật hai tính năng này mặc
+  # định và từ chối khởi động nếu thiếu lược đồ, vì phục vụ không bao giờ chạy
+  # DDL. Stack này chạy `dev` nên core để chúng tắt (log Warn nói lý do), nhưng
+  # lược đồ vẫn có sẵn: trigger ghi lại thay đổi dù tính năng bật hay tắt.
+  migrate-chat:
+    <<: *core-image
+    command: ["migrate-chat"]
+    environment: *api-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
   # Cửa trước Go (ADR-0029). Route manifest cho Go thì Go trả lời, còn lại proxy
   # nguyên vẹn sang `api`. Giữ cổng 8099 để mobile, README và script không đổi.
   core:
-    build:
-      context: ./services/core
-    image: mobile-local/core:dev
+    <<: *core-image
     environment:
       # Go routes authenticate and query for themselves: same database and auth
       # mode as `api`, from the one anchor both read.
@@ -233,6 +253,8 @@ services:
     depends_on:
       api:
         condition: service_healthy
+      migrate-chat:
+        condition: service_completed_successfully
     healthcheck:
       # Liveness of core itself, on its loopback port — not a proxied /healthz,
       # which would report Python's health under core's name.

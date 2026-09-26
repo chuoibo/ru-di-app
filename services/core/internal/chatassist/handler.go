@@ -56,13 +56,25 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 	h.mux.HandleFunc("GET /contexts/{context}/shared-drafts/{id}", h.draftGet)
 	h.mux.HandleFunc("PATCH /contexts/{context}/shared-drafts/{id}", h.draftPatch)
 	h.mux.HandleFunc("POST /contexts/{context}/shared-drafts/{id}/discard", h.draftDiscard)
+	// Nếp's own questions (ADR-0036 §2.7, §2.8): same queue, sealed result.
+	h.mux.HandleFunc("POST /me/nep/ai-invocations", h.nepCreate)
+	h.mux.HandleFunc("GET /me/nep/ai-invocations/{id}", h.nepGet)
 	return h
 }
 
-// Matches also seals the old automatic-history entry points in this candidate.
+// Matches also seals the per-message expense-draft entry point, which reads a
+// stored message for the model without anyone handing it over. The old
+// automatic turn (`ai-turn`) is not sealed here: it is deleted in both
+// backends (ADR-0036 §2.1), so it falls through to Python's 404.
+//
+// `/me/nep/ai-invocations` is Go-only and sits beside `/me/nep/media`, which
+// Python still serves; only the exact `ai-invocations` segment is taken here.
 func Matches(path string) bool {
 	p := strings.Split(strings.Trim(path, "/"), "/")
-	return len(p) >= 3 && p[0] == "contexts" && (p[2] == "chat-capabilities" || p[2] == "ai-invocations" || p[2] == "plan-promotions" || p[2] == "shared-drafts" || p[2] == "ai-turn" || (len(p) == 5 && p[2] == "messages" && p[4] == "expense-draft"))
+	if len(p) >= 3 && p[0] == "me" && p[1] == "nep" && p[2] == "ai-invocations" {
+		return true
+	}
+	return len(p) >= 3 && p[0] == "contexts" && (p[2] == "chat-capabilities" || p[2] == "ai-invocations" || p[2] == "plan-promotions" || p[2] == "shared-drafts" || (len(p) == 5 && p[2] == "messages" && p[4] == "expense-draft"))
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +82,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
-	if strings.HasSuffix(r.URL.Path, "/ai-turn") || strings.HasSuffix(r.URL.Path, "/expense-draft") {
+	if strings.HasSuffix(r.URL.Path, "/expense-draft") {
 		refuse(w, 403, "explicit_invocation_required")
 		return
 	}
@@ -102,11 +114,14 @@ type denied struct {
 func (e *denied) Error() string { return e.code }
 func invalid(code string) error { return &denied{400, code} }
 
-func readBody(w http.ResponseWriter, r *http.Request, v any) error {
+// The ceiling is per route, not per package. Only the invocation route carries
+// a context bundle; raising the shared limit would widen the blast radius of
+// every other body for no reason.
+func readBody(w http.ResponseWriter, r *http.Request, v any, tran int64) error {
 	if strings.Split(r.Header.Get("Content-Type"), ";")[0] != "application/json" {
 		return &denied{415, "json_required"}
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, 32<<10)
+	r.Body = http.MaxBytesReader(w, r.Body, tran)
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
 	if err := d.Decode(v); err != nil {
@@ -130,26 +145,8 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 	if !chatv2.ValidID(conversation) {
 		return g, invalid("invalid_context")
 	}
-	err := tx.QueryRow(ctx, `SELECT person_id FROM account_sessions WHERE token_digest=$1`, digest).Scan(&g.person)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return g, &denied{401, "authentication_required"}
-	}
-	if err != nil {
-		return g, err
-	}
-	var exists string
-	err = tx.QueryRow(ctx, `SELECT id FROM people WHERE id=$1 AND deleted_at IS NULL FOR SHARE`, g.person).Scan(&exists)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return g, &denied{401, "authentication_required"}
-	}
-	if err != nil {
-		return g, err
-	}
-	err = tx.QueryRow(ctx, `SELECT id FROM account_sessions WHERE token_digest=$1 AND person_id=$2 AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR SHARE`, digest, g.person).Scan(&exists)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return g, &denied{401, "authentication_required"}
-	}
-	if err != nil {
+	var err error
+	if g.person, err = phien(ctx, tx, digest); err != nil {
 		return g, err
 	}
 	err = tx.QueryRow(ctx, `SELECT id FROM memberships WHERE context_id=$1 AND person_id=$2 AND state='active' AND left_at IS NULL FOR SHARE`, conversation, g.person).Scan(&g.member)
@@ -178,6 +175,36 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 		}
 	}
 	return g, nil
+}
+
+// phien resolves a bearer session to the person behind it, locking person then
+// session in the order every caller in this package uses. It is the whole of
+// what a personal (`/me/nep`) invocation may learn about its caller: no room,
+// no membership, no name.
+func phien(ctx context.Context, tx pgx.Tx, digest []byte) (string, error) {
+	var person, exists string
+	err := tx.QueryRow(ctx, `SELECT person_id FROM account_sessions WHERE token_digest=$1`, digest).Scan(&person)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", &denied{401, "authentication_required"}
+	}
+	if err != nil {
+		return "", err
+	}
+	err = tx.QueryRow(ctx, `SELECT id FROM people WHERE id=$1 AND deleted_at IS NULL FOR SHARE`, person).Scan(&exists)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", &denied{401, "authentication_required"}
+	}
+	if err != nil {
+		return "", err
+	}
+	err = tx.QueryRow(ctx, `SELECT id FROM account_sessions WHERE token_digest=$1 AND person_id=$2 AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR SHARE`, digest, person).Scan(&exists)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", &denied{401, "authentication_required"}
+	}
+	if err != nil {
+		return "", err
+	}
+	return person, nil
 }
 
 func (h *Handler) begin(r *http.Request) (pgx.Tx, grant, error) {
@@ -241,6 +268,11 @@ func (h *Handler) preflight(r *http.Request) error {
 	return tx.Commit(r.Context())
 }
 
+// `share_scope` is a gate, not a label. While it reads `invocation_only` the
+// client attaches no bundle at all, so an older server keeps receiving exactly
+// the old body. Flipping it here is what turns the context path on, and it is
+// flipped only now that the preview block above the send button exists
+// (ADR-0036 §4 forbids the one without the other).
 func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	tx, g, err := h.begin(r)
 	if err != nil {
@@ -260,7 +292,9 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	if enabled {
 		reason = nil
 	}
-	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "share_scope": "invocation_only"}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
+	// chia_bill reads through the same provider as plan (one key, one probe),
+	// so it is advertised with the same answer rather than a second guess.
+	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached"}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
 }
 
 func scan(row pgx.Row) (Invocation, error) {
@@ -279,19 +313,42 @@ func newID() string {
 	return s[:8] + "-" + s[8:12] + "-" + s[12:16] + "-" + s[16:20] + "-" + s[20:]
 }
 
+// lenhNhom is the closed list of commands a group invocation may carry. It
+// mirrors `chat_ai_command_scope` in schema_scope.sql, so a command the table
+// would refuse is refused here as a 400 rather than surfacing as a 500 from the
+// INSERT. Both commands share one queue, one digest, one rate limit and one
+// authority check; only the worker's inference step differs.
+func lenhNhom(command string) bool {
+	return command == lenhPlan || command == lenhChiaBill
+}
+
+const (
+	lenhPlan     = "plan"
+	lenhChiaBill = "chia_bill"
+)
+
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		LogicalID string `json:"logical_id"`
-		Command   string `json:"command"`
-		Prompt    string `json:"prompt"`
+		LogicalID string  `json:"logical_id"`
+		Command   string  `json:"command"`
+		Prompt    string  `json:"prompt"`
+		BoiCanh   *bundle `json:"boi_canh"`
 	}
-	if err := readBody(w, r, &in); err != nil {
+	if err := readBody(w, r, &in, maxBodyWithBundle); err != nil {
 		failure(w, err)
 		return
 	}
-	if !chatv2.ValidID(in.LogicalID) || in.Command != "plan" || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 {
+	if !chatv2.ValidID(in.LogicalID) || !lenhNhom(in.Command) || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 {
 		failure(w, invalid("invalid_invocation"))
 		return
+	}
+	// Bounds are pure, so they run before anything opens a transaction: an
+	// oversized body never reaches the database and never probes the provider.
+	if in.BoiCanh != nil {
+		if err := kiemBoiCanh(in.BoiCanh, in.Prompt); err != nil {
+			failure(w, err)
+			return
+		}
 	}
 	if err := h.preflight(r); err != nil {
 		failure(w, err)
@@ -313,7 +370,18 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	sum := sha256.Sum256([]byte(in.Command + "\x00" + in.Prompt))
+	var goi []byte
+	if in.BoiCanh != nil {
+		if err = thuocPhong(r.Context(), tx, r.PathValue("context"), in.BoiCanh); err != nil {
+			failure(w, err)
+			return
+		}
+		if goi, err = canonical(in.BoiCanh); err != nil {
+			failure(w, err)
+			return
+		}
+	}
+	sum := sha256.Sum256(append([]byte(in.Command+"\x00"+in.Prompt+"\x00"), goi...))
 	var oldHash []byte
 	var oldMember, oldID string
 	err = tx.QueryRow(r.Context(), `SELECT id,input_digest,membership_id FROM chat_ai_invocations WHERE context_id=$1 AND person_id=$2 AND logical_id=$3`, r.PathValue("context"), g.person, in.LogicalID).Scan(&oldID, &oldHash, &oldMember)
@@ -351,7 +419,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		refuse(w, 429, "invocation_rate_limited")
 		return
 	}
-	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,share_expires_at,status) VALUES($1,$2,$3,$4,$5,$6,$7,'plan',$8,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Prompt))
+	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,boi_canh,share_expires_at,status) VALUES($1,'group',$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Command, in.Prompt, goiHoacNull(goi)))
 	if err != nil {
 		failure(w, err)
 		return
@@ -455,7 +523,7 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 			refuse(w, 409, "invocation_already_published")
 			return
 		}
-		_, err = tx.Exec(r.Context(), `UPDATE chat_ai_invocations SET status='cancelled',code='cancelled',prompt=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1`, v.ID)
+		_, err = tx.Exec(r.Context(), `UPDATE chat_ai_invocations SET status='cancelled',code='cancelled',prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1`, v.ID)
 		if err != nil {
 			failure(w, err)
 			return

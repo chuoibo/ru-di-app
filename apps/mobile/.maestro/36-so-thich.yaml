@@ -39,13 +39,12 @@ appId: com.lakiet.rudi
 - takeScreenshot: 36-da-chon
 # Nút gọi đúng việc nó làm (đợt chuyển mình UI 06/09): có phiên thì «Lưu sở thích».
 - tapOn: "Lưu sở thích"
-# Tài khoản mới chưa có nhóm nào, nên đích sau khi lưu là màn nhóm rỗng.
+# Tài khoản mới chưa có nhóm nào, nên đích sau khi lưu là tab Tin nhắn rỗng.
 - extendedWaitUntil:
     visible: "Chưa có nhóm nào"
     timeout: 30000
-# Màn nhóm rỗng KHÔNG có thanh tab — muốn tới Cá nhân thì phải có một nhóm
-# trước. Đo được ở lượt mini đầu tiên: bước «tapOn Cá nhân» ngay tại đây đỏ, và
-# nó đỏ vì flow viết sai chứ không vì màn sai.
+# Từ 23/09 tab Tin nhắn rỗng CÓ thanh tab. Flow vẫn tạo nhóm trước vì phần sau
+# đo dòng Sở thích trong nhóm; đi thẳng Cá nhân cũng được.
 - tapOn: "Tạo nhóm"
 - extendedWaitUntil:
     visible: "Đặt tên cho hội"

@@ -15,7 +15,9 @@ import { SoDoiSongProvider } from "../../../src/rudi/to-giay/SoDoiSong";
  * reads that shaped it in Phase 2 still describe what ships.
  */
 export default function ToGiayRoute() {
-  const params = useLocalSearchParams<{ id: string; ru?: string }>();
+  const params = useLocalSearchParams<{ id: string; ru?: string; cho?: string }>();
+  // `?cho=` is the catalogue place the invitation starts from («Rủ … tới đây»).
+  const cho = typeof params.cho === "string" && params.cho !== "" ? params.cho : undefined;
   const { phien, phienDaDoc } = useRudiSession();
   if (!phienDaDoc) return null;
   const ruNgay = params.ru === "1";
@@ -32,7 +34,7 @@ export default function ToGiayRoute() {
         tenNguoiKia={tenCuocTroChuyen(phien.contexts?.find((n) => n.id === params.id))}
         toiId={phien.person_id}
       >
-        <KhongGianGiayScreen contextId={params.id} ruNgay={ruNgay} />
+        <KhongGianGiayScreen choGoiY={cho} contextId={params.id} ruNgay={ruNgay} />
       </SoDoiSongProvider>
     );
   }

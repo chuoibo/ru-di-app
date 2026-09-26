@@ -114,14 +114,14 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Ô nhập mã"
 - inputText: "${OTP_CODE}"
-# D được mời nhưng chưa đồng ý → danh sách nhóm với lời mời đang chờ, không phải tab.
+# D được mời nhưng chưa đồng ý → tab Tin nhắn, hàng «Hoi QA · bạn được mời» với
+# nút đồng ý (từ 23/09 người chưa có nhóm vào tab Tin nhắn, có thanh tab).
 - extendedWaitUntil:
-    visible: "Chưa có nhóm nào"
+    visible: "Hoi QA"
     timeout: 60000
-- assertVisible: "Lời mời đang chờ"
-- assertVisible: "Hoi QA"
+- assertVisible: ".*bạn được mời.*"
 - takeScreenshot: 25-d-loi-moi-cho
-- tapOn: "Đồng ý"
+- tapOn: "Đồng ý vào nhóm"
 - extendedWaitUntil:
     visible: "Khám phá"
     timeout: 60000

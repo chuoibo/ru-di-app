@@ -91,3 +91,66 @@ Corpus sinh tự động: `parity/scenarios/generated/w8-422/post-contexts-conte
 - Sau khi đóng sổ, lệnh xin tờ vẫn thành công như lời rủ đầu tiên (`cycle_active_or_temporary` coi «chu kỳ đã đóng» là «chưa có chu kỳ»), trái với chú thích «stops a sheet appearing in a notebook that … has been closed».
 - Tờ mở đã quá hạn (`het_han` khi đọc, `state` mở trong cột) chặn không được bằng kiểm service nhưng vẫn giữ unique index: lệnh xin tờ tuần sau sẽ nhận `IntegrityError` → 500 cho tới khi ai đó khép tờ cũ. Suy từ mã, không đo được.
 - Hai request ghi đầu tiên cùng lúc trên pair chưa có hàng sổ → 500 (xem thẻ `POST …/notebook/proposals`).
+
+## Đổi 2026-09-23 (b) — `place_id` của tờ giấy là id danh mục; chốt ghi chặng vào kèo (QA cặp đôi)
+
+Diff này đổi `PaperStopInput.place_id`/`PaperStop.place_id` từ `uuid.UUID` sang `StrictStr` 1..80 (đúng kiểu `OutingStopInput.place_id`: danh mục dùng slug như `p-lau-ga`, trước đây mọi chỗ có thật đều bị 422), `_noi_dung_wire` đọc `str(place_id)` thay vì `uuid.UUID(...)`, và `ApiService._chot` (Go `pairsteps.chot`) đọc `get_place` cho từng chặng có id, đặt tên kèo «<tên quán hoặc việc chặng đầu, ≤190 ký tự> · dd/mm» thay vì «Tờ lời rủ dd/mm», rồi sau `link_paper_outing` gọi `replace_outing_stops(expected_revision=None)` cùng transaction: chặng đã đồng ý thành timeline của kèo; id danh mục không còn thì giữ nhãn, bỏ id. Go: `routes/pair_papers.go` (`optionalStringField`), `pairsteps/wire.go`, `pairsteps/papers.go`, `service/pair_store.go` (`GetPlace`, `ReplaceOutingStops`); golden `python_pair_steps.json` tái sinh (+4 ca `agreed_place_*`), repo oracle thêm ca «a catalogue place names the outing and its stop» và dump `outing_stops`.
+
+- `POST /contexts/{context_id}/papers/draft`: Route này đọc nội dung tờ qua `_noi_dung_wire` (hoặc chỉ bị chạm theo tên hàm): `place_id` đã lưu trả nguyên chữ. Mọi hàng ghi trước 23/09 đều là UUID dạng chuẩn (`model_dump` của `uuid.UUID`), nên byte trả lời không đổi với dữ liệu cũ; hàng mang `place_id` không phải UUID trước đây là 409 `paper_wrong_state`, nay đọc được.
+
+## Đổi 2026-09-24 — bản phác đọc lịch sử chu kỳ và danh mục quanh chỗ đã chọn (QA cặp đôi, Đợt 4)
+
+Trước đây bản phác luôn là «18:30 · Ăn tối», không đọc gì của sổ (QA 23/09 mục 11: «insight
+cho đôi hiện là 0»). Giờ `draft_pair_paper` (Go `pairsteps.DraftPaper`) đọc thêm, trước khi ghi,
+theo đúng thứ tự: `list_pair_papers` (như cũ) → `get_place` của chỗ gần nhất trong lịch sử
+(nếu có) → `list_places(destination_id, category)` của chỗ đó (nếu tìm thấy) → `create_pair_paper`.
+Phần chữ do hàm thuần mới `pair_paper.lam_giau_phac` / `pairpaper.LamGiauPhac` quyết:
+
+- **Nguồn**: chỉ tờ `chot`/`da_di`/`da_giu` của **chu kỳ đang hoạt động** (`cycle_id` = chu kỳ của
+  sổ, không `is_temporary`), tối đa 4, mới nhất trước — ADR-0027 §4 (lập sổ = đồng ý lưu lịch sử
+  chu kỳ; lời rủ tạm không lập kho) và §8 (chu kỳ đã đóng không dùng để phác). Tờ đọc không được
+  thì bỏ qua, không làm hỏng lệnh.
+- **Giờ**: giờ chặng chính của tờ đã chốt gần nhất. **Chỗ**: trong cùng thành phố + cùng loại với
+  chỗ tham chiếu, chưa có trong lịch sử, không trùng chữ (gấp chữ thường ASCII + khối Latin tiếng
+  Việt, U+0130 giữ nguyên) với cụm nào của hai ô ràng buộc (tách theo `, ; / \n`, cụm ≥ 2 ký tự) trên
+  tên/loại/kinds/traits; điểm cao nhất, hoà thì nhiều lượt chấm hơn, hoà nữa thì hàng đứng trước.
+  Chặng vẫn `can_kiem=true`; lý do nói rõ đã/chưa kiểm gì (ADR-0027 §7: danh mục không chứng minh
+  món). Câu kiểm là bắt buộc khi có đề xuất chỗ; lý do ≤ 200 ký tự, câu lịch sử nhường trước, tên
+  quá dài thì không đề xuất chỗ.
+- `nguon.dung` thêm `lich_su`, `danh_muc` khi dùng (sau `routine`, trước `rang_buoc`).
+- Sổ chưa có tờ đã chốt nào: byte trả lời và hàng ghi **y như trước**.
+
+Bằng chứng: golden `python_pair_paper*.json` (+`lam_giau_phac`: 25 ca cạnh + 30 ca fuzz luồng riêng,
+Go khớp 100%); `python_pair_steps*.json` (+11 ca `history_*`, bản ghi tờ mang `cycle`); repo oracle
+Postgres thêm ca «an agreed place and new places of its kind» và phủ `SELECT places.id` cho route;
+test API `test_next_weeks_draft_*`, `test_the_draft_avoids_*`, `test_a_sheet_that_was_never_agreed_*`.
+
+## Đổi 2026-09-24 — tờ chưa từng gửi chỉ chủ bản phác thấy, ở mọi trạng thái (lỗ rò riêng tư, QA cặp đôi)
+
+Diff này thêm `_chi_chu_thay` (Go `pairsteps.chiChuThay`): người không phải chủ bản phác chỉ thấy một tờ khi tờ không ở `nhap` **và** có ít nhất một phiên bản đã gửi (`sent_at` khác null). Trước đây luật là «không phải `nhap`», nên bản phác chưa gửi mà chủ bấm «Tuần này nghỉ» (`nghi_tuan`), bỏ (`bo`) hay để hết tuần (`het_han`) hiện ra trong danh sách và chi tiết của người kia, kèm nội dung và lý do riêng — tái hiện trên stack cô lập 24/09 bằng hai phiên thật. Áp ở `list_pair_papers` (lọc) và `_readable_paper_or_404` (`may_view_paper`, 404 `paper_not_found`), nên mọi lệnh đọc/ghi tờ đi qua cửa này. Golden `python_pair_steps.json` thêm `unsent_*`/`sent_then_skipped_as_kia`; bản sao route trong repo oracle Postgres đổi theo.
+
+- `POST /contexts/{context_id}/papers/draft`: Route này đọc/ghi tờ qua `_readable_paper_or_404`: với tờ chưa từng gửi ở trạng thái đóng, người không phải chủ nay nhận 404 `paper_not_found` (trước: đọc được, hoặc lỗi trạng thái). Tờ đã gửi: byte không đổi.
+
+## Đổi 2026-09-25 — `chia_gu`: gu trong sổ đôi, mỗi người tự bật (ADR-0034 §2.1–2.2)
+
+Diff này thêm mục đích đồng ý `chia_gu` (CONSENT_PURPOSES, PER_PERSON_PURPOSES; CHECK `ck_pair_consent_proposals_consent_purpose_known` mở rộng ở migration `e3b7c1d9a4f2`), hàm thuần `pair_notebook.gu_hai_nguoi` (Go `pairnotebook.GuHaiNguoi`) và trường `taste` của `PairNotebookResponse` (`_pair_taste`, Go `pairsteps.pairTaste`). Golden: `python_pair_notebook*.json` (ca `taste: *`, fuzz có `chia_gu`), `python_pair_steps*.json` (ca `taste_*`); Go replay 0 lệch; tầng Postgres Python 720 xanh.
+
+- `POST /contexts/{context_id}/papers/draft`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 — Nếp dùng gu của người đã bật `chia_gu` khi phác tờ (ADR-0034 §2.2)
+
+Diff này tách `_pair_context_or_404` thành `_pair_roster_or_404` (cùng ba lệnh đọc, cùng thứ tự, cùng câu trả lời; chỉ giữ thêm tên hiển thị của hàng thành viên — Go `pairRosterOr404`, `Member.DisplayName`) và thêm vào `draft_pair_paper` bước gu: `_gu_cho_nep` + hàm thuần `pair_paper.gu_cho_nep` / `loai_theo_gu` / `lam_giau_theo_gu` (Go `pairpaper.GuChoNep` / `LoaiTheoGu` / `LamGiauTheoGu`). Golden: `python_pair_paper*.json` (ca `gu_cho_nep`, `lam_giau_theo_gu`, fuzz riêng), `python_pair_steps.json` (7 ca `taste_*` của draft); Go replay 0 lệch.
+
+- `POST /contexts/{context_id}/papers/draft`: Sau `lam_giau_phac`: nếu là «Một đôi» và có người đã bật `chia_gu`, đọc `interests_by_person` CHỈ của những người đó; lịch sử đã đề xuất được chỗ thì giữ; không thì gu đầu tiên có kiểu chỗ chọn kiểu, `list_places(destination của buổi trước, kiểu đó)`, đề xuất chỗ chưa đi, điểm cao nhất, không trùng chữ hai ô; chưa có buổi nào thì chỉ đặt tên chặng. `nguon.dung` thêm `gu:<id>`, lý do nói gu của ai. Không ai bật thì không đọc gì thêm, bản phác như cũ.
+
+## Đổi 2026-09-25 — «Người lo» của tuần trong sổ đôi (ADR-0034 §2.3–2.4)
+
+Diff này thêm `week_role` vào `PairNotebookResponse` (`_week_role`, Go `pairsteps.weekRole`): chỉ trong «Một đôi» đang mở; lựa chọn của tuần (`get_pair_rhythm`, bảng mới `pair_cycle_rhythms`, migration `f4a8d2c6b1e9`) nếu có, không thì suy bằng hàm thuần `pair_notebook.nguoi_lo_suy` (gửi tờ trước ×2, đề nghị sửa ×1, trong chu kỳ này; hoà → người lập sổ) và `vai_tuan`. Không có giới tính. `pair_notebook` giờ đọc tờ một lần cho cả tờ mở lẫn người lo (`_open_paper_id(papers=…)`). Route mới `PUT …/notebook/week-role` (Go phục vụ, evidence riêng). Golden `python_pair_notebook*.json` (ca `lo:*`), `python_pair_steps*.json` (`role_*`, `set_pair_week_role`), permissions; repo oracle Postgres Go có 4 ca week-role.
+
+- `POST /contexts/{context_id}/papers/draft`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 (lượt 2) — gậy luân phiên, hạn mức tuần, «Một đôi» trên hồ sơ, 4 sticker đôi (ADR-0034 §2.4–2.5)
+
+Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở lời (tờ đầu tiên gửi trong tuần, `nguoi_mo_loi`) hai tuần liền thì tuần này sang người kia, `cach` = `luot`; tín hiệu tờ thêm `tuan`, `sent_at`. (2) `draft_pair_paper` từ chối 409 `paper_week_quota` khi người gọi đã phác `TO_MOI_NGUOI_MOI_TUAN` (3, cùng số với `packages/shared/nep-nhip.json`) tờ trong tuần. (3) `get_person_profile` trả `relation` = `couple` khi hai người là một «Một đôi» (`same_couple`, hỏi SAU cửa quyền, không phải oracle cho người lạ). (4) Từ vựng sticker thêm `hen-nhe`, `nho-nhau`, `ve-toi-chua`, `om-cai`. Golden pair_notebook (ca baton, 10 shard), pair_steps (`quota_*`, `role_baton_*`), people_steps (`couple_*`), stickers; Go 0 lệch.
+
+- `POST /contexts/{context_id}/papers/draft`: 409 `paper_week_quota` `Tuần này bạn đã phác 3 tờ rồi. Tuần sau phác tiếp nhé.` khi người gọi đã phác 3 tờ trong tuần này của sổ; đếm trên tờ đã đọc, không thêm lệnh.

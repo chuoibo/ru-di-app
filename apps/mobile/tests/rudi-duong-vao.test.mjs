@@ -137,12 +137,14 @@ test("the web QA harness's own addresses are not touched", () => {
  * `manDau` a person who signed in with a code saw the welcome carousel on every
  * launch, because `diemVaoTuUrl(null)` is right about the URL and knows nothing
  * about the disk. */
-test("manDau: không phiên → welcome; nhóm active → explore; còn lại → danh sách nhóm", () => {
+test("manDau: không phiên → welcome; nhóm active → explore; còn lại → tab Tin nhắn", () => {
   assert.equal(manDau(null), "/welcome");
   assert.equal(manDau({ context_id: "ctx", membership_state: "active" }), "/explore");
-  assert.equal(manDau({ context_id: null, membership_state: null }), "/groups/empty");
+  // No group is not a dead end: the tab bar has to be there so Cá nhân → Bạn bè
+  // and a pending friend request are reachable (QA 23/09).
+  assert.equal(manDau({ context_id: null, membership_state: null }), "/messages");
   // Signed in is not joined: the invitee still has to press «Đồng ý», and that
-  // button lives on the group list, not on a tab that would invent its numbers.
-  assert.equal(manDau({ context_id: "ctx", membership_state: "invited" }), "/groups/empty");
-  assert.equal(manDau({ context_id: "ctx", membership_state: "left" }), "/groups/empty");
+  // button lives on the Tin nhắn tab, not on a tab that would invent its numbers.
+  assert.equal(manDau({ context_id: "ctx", membership_state: "invited" }), "/messages");
+  assert.equal(manDau({ context_id: "ctx", membership_state: "left" }), "/messages");
 });

@@ -62,7 +62,6 @@ import { CAU_KHONG_RO, chiTietLoi, moTaLoi } from "../dist-test/ui/loi-tren-man.
 import { themChiTiet } from "../dist-test/ui/loi-may-chu.js";
 import { fetchPlaces } from "../dist-test/screens/kham-pha/places.js";
 import { askSearch } from "../dist-test/screens/kham-pha/tim-kiem.js";
-import { goiAiTurn } from "../dist-test/screens/chat/ai.js";
 import { khoiDongNhom } from "../dist-test/screens/chat/nhom.js";
 import {
   guiTheAi,
@@ -267,12 +266,6 @@ test("fetchPlaces: không thứ gì bị ném thành chữ máy", async () => {
 test("askSearch: không thứ gì bị ném thành chữ máy", async () => {
   await quetMotCua("askSearch", (f) =>
     askSearch("quán nướng gần đây", { base: BASE, fetchImpl: f, actorId: "nguoi-1" }),
-  );
-});
-
-test("goiAiTurn: không thứ gì bị ném thành chữ máy", async () => {
-  await quetMotCua("goiAiTurn", (f) =>
-    voiFetch(f, () => goiAiTurn({ contextId: "ctx-1", actorId: "nguoi-1", base: BASE })),
   );
 });
 

@@ -3,7 +3,6 @@ package companion
 import (
 	"errors"
 	"testing"
-	"time"
 
 	"mobile/services/core/internal/domain/tree"
 	"mobile/services/core/internal/oracletest"
@@ -28,8 +27,6 @@ func TestCompanionMatchesPython(t *testing.T) {
 
 func replay(c oracletest.Case, args map[string]any) (any, error) {
 	switch c.Fn {
-	case "plan_turn":
-		return replayPlan(args)
 	case "ground_card":
 		raw, err := oracletest.AsPyJSON(args["raw"])
 		if err != nil {
@@ -47,54 +44,6 @@ func replay(c oracletest.Case, args map[string]any) (any, error) {
 	default:
 		return nil, oracletest.Decode(errors.New(c.Fn))
 	}
-}
-
-func replayPlan(args map[string]any) (any, error) {
-	conv, err := oracletest.Row(args["conversation"], "messages", "now")
-	if err != nil {
-		return nil, oracletest.Decode(err)
-	}
-	now, err := aware(conv["now"])
-	if err != nil {
-		return nil, err
-	}
-	items, err := oracletest.List(conv["messages"])
-	if err != nil {
-		return nil, oracletest.Decode(err)
-	}
-	kinds := make([]string, 0, len(items))
-	created := make([]time.Time, 0, len(items))
-	for _, item := range items {
-		row, ok := item.(map[string]any)
-		if !ok {
-			return nil, oracletest.Decode(errors.New("message is not a dict"))
-		}
-		at, err := aware(row["created_at"])
-		if err != nil {
-			return nil, err
-		}
-		kind, _ := row["author_kind"].(string)
-		kinds = append(kinds, kind)
-		created = append(created, at)
-	}
-	requested, _ := args["requested"].(bool)
-	got := PlanTurn(kinds, created, now, requested)
-	return map[string]any{"may_speak": got.MaySpeak, "reason": got.Reason}, nil
-}
-
-func aware(raw any) (time.Time, error) {
-	if _, ok := raw.(oracletest.PyNaive); ok {
-		return time.Time{}, &Error{"companion_timestamp_naive"}
-	}
-	stamp, ok := raw.(oracletest.PyInstant)
-	if !ok {
-		return time.Time{}, oracletest.Decode(errors.New("companion timestamp must be an ISO-8601 string"))
-	}
-	t, err := oracletest.TimeOfStamp(stamp)
-	if err != nil {
-		return time.Time{}, oracletest.Decode(err)
-	}
-	return t, nil
 }
 
 func placesOf(raw any) ([]*tree.OrderedMap, error) {

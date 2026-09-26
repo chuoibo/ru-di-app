@@ -4,6 +4,7 @@ package chate2e
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -23,18 +24,21 @@ func TestGoiAiCoXacNhan(t *testing.T) {
 
 	t.Run("I1 lối vào ngầm cũ bị niêm phong", func(t *testing.T) {
 		// Both of these used to let the model read history without anyone
-		// choosing to share it. They must refuse, and refuse by name.
-		for _, path := range []string{
-			"/contexts/" + group + "/ai-turn",
-			"/contexts/" + group + "/messages/" + newUUID() + "/expense-draft",
-		} {
-			response := author.Do("POST", path, map[string]any{"prompt": "x"}, Idem(newKey()))
-			if response.Status != http.StatusForbidden {
-				t.Fatalf("%s phải 403, nhận %d — %s", path, response.Status, response.trim())
-			}
-			if code, _ := response.JSON["code"].(string); code != "explicit_invocation_required" {
-				t.Fatalf("%s bị chặn nhưng sai mã: %s", path, response.trim())
-			}
+		// choosing to share it. The per-message expense draft is sealed by
+		// name; the automatic turn is deleted everywhere (ADR-0036 §2.1), so
+		// it is not served at all.
+		draft := "/contexts/" + group + "/messages/" + newUUID() + "/expense-draft"
+		response := author.Do("POST", draft, map[string]any{"prompt": "x"}, Idem(newKey()))
+		if response.Status != http.StatusForbidden {
+			t.Fatalf("%s phải 403, nhận %d — %s", draft, response.Status, response.trim())
+		}
+		if code, _ := response.JSON["code"].(string); code != "explicit_invocation_required" {
+			t.Fatalf("%s bị chặn nhưng sai mã: %s", draft, response.trim())
+		}
+		turn := "/contexts/" + group + "/ai-turn"
+		response = author.Do("POST", turn, map[string]any{"prompt": "x"}, Idem(newKey()))
+		if response.Status != http.StatusNotFound {
+			t.Fatalf("%s phải không còn (404), nhận %d — %s", turn, response.Status, response.trim())
 		}
 	})
 
@@ -44,8 +48,103 @@ func TestGoiAiCoXacNhan(t *testing.T) {
 		if !ok {
 			t.Fatalf("thiếu khối ai trong năng lực — %s", response.trim())
 		}
-		if scope, _ := ai["share_scope"].(string); scope != "invocation_only" {
-			t.Fatalf("phạm vi chia sẻ phải là invocation_only, nhận %q", scope)
+		// `caller_attached` is a gate the client reads, not a label: while the
+		// server says `invocation_only` the client attaches no context at all.
+		// Flipping it is what turns the path on, so the value is worth pinning.
+		if scope, _ := ai["share_scope"].(string); scope != "caller_attached" {
+			t.Fatalf("phạm vi chia sẻ phải là caller_attached, nhận %q", scope)
+		}
+	})
+
+	t.Run("I5 gói bối cảnh do người gọi trao", func(t *testing.T) {
+		// The only case in this tier that sends what the screen actually sends.
+		// Without it the whole context path is exercised by nothing here.
+		luot := func(id, chu string) map[string]any {
+			return map[string]any{"id": id, "vai": "ban", "biDanh": "Bạn 1", "loai": "chu", "luc": "2030-09-22T10:00:00Z", "chu": chu}
+		}
+		goi := func(items ...map[string]any) map[string]any {
+			return map[string]any{"ban": 1, "nguon": "chat-nhom", "luot": items, "tongLuot": len(items), "daCat": false}
+		}
+		mot := author.Expect(201, "POST", "/contexts/"+group+"/messages",
+			map[string]any{"kind": "text", "body": "Tao dị ứng hải sản"}, Idem(newKey())).Str(t, "id")
+		hai := author.Expect(201, "POST", "/contexts/"+group+"/messages",
+			map[string]any{"kind": "text", "body": "Dưới 300k thôi"}, Idem(newKey())).Str(t, "id")
+
+		// A turn whose id is not a message of this room refuses, and refuses
+		// before anything reaches the model.
+		lac := author.Do("POST", "/contexts/"+group+"/ai-invocations", map[string]any{
+			"logical_id": newUUID(), "command": "plan", "prompt": "Lên kế hoạch giúp",
+			"boi_canh": goi(luot(newUUID(), "Câu của phòng khác")),
+		}, Idem(newKey()))
+		if lac.Status != 422 {
+			t.Fatalf("id tin lạ phòng phải 422, nhận %d — %s", lac.Status, lac.trim())
+		}
+
+		created := author.Do("POST", "/contexts/"+group+"/ai-invocations", map[string]any{
+			"logical_id": newUUID(), "command": "plan", "prompt": "Lên kế hoạch giúp",
+			"boi_canh": goi(luot(mot, "Tao dị ứng hải sản"), luot(hai, "Dưới 300k thôi")),
+		}, Idem(newKey()))
+		if created.Status != http.StatusAccepted && created.Status != http.StatusCreated {
+			t.Fatalf("lời gọi mang bối cảnh phải 202/201, nhận %d — %s", created.Status, created.trim())
+		}
+		id := created.Str(t, "id")
+
+		deadline := time.Now().Add(jobWait)
+		state := ""
+		for time.Now().Before(deadline) {
+			response := author.Expect(200, "GET", "/contexts/"+group+"/ai-invocations/"+id, nil)
+			state, _ = response.JSON["status"].(string)
+			if state == "succeeded" || state == "failed" || state == "cancelled" {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+		if state != "succeeded" {
+			t.Fatalf("job mang bối cảnh dừng ở %q, mong succeeded", state)
+		}
+		// The public shape of a job never carries the prompt or the context back.
+		body := author.Expect(200, "GET", "/contexts/"+group+"/ai-invocations/"+id, nil).trim()
+		for _, cam := range []string{"dị ứng", "300k", "boi_canh", "prompt"} {
+			if strings.Contains(body, cam) {
+				t.Fatalf("phản hồi job để lộ %q — %s", cam, body)
+			}
+		}
+	})
+
+	t.Run("I6 chia_bill đi cùng hàng đợi, ra thẻ chữ", func(t *testing.T) {
+		// ADR-0036 §2.9: the same queue as plan, the existing chat-expense
+		// skill, a text card a person reads, and nothing written to money.
+		luot := map[string]any{"vai": "ban", "biDanh": "Bạn 1", "loai": "chu", "luc": "2030-09-22T10:00:00Z", "chu": "Tao trả 300k tiền nước"}
+		luot["id"] = author.Expect(201, "POST", "/contexts/"+group+"/messages",
+			map[string]any{"kind": "text", "body": "Tao trả 300k tiền nước"}, Idem(newKey())).Str(t, "id")
+		created := author.Do("POST", "/contexts/"+group+"/ai-invocations", map[string]any{
+			"logical_id": newUUID(), "command": "chia_bill", "prompt": "/chia-bill",
+			"boi_canh": map[string]any{"ban": 1, "nguon": "chat-nhom", "luot": []any{luot}, "tongLuot": 1, "daCat": false},
+		}, Idem(newKey()))
+		if created.Status != http.StatusAccepted && created.Status != http.StatusCreated {
+			t.Fatalf("lời gọi chia_bill phải 202/201, nhận %d — %s", created.Status, created.trim())
+		}
+		id := created.Str(t, "id")
+		deadline := time.Now().Add(jobWait)
+		var final Response
+		for time.Now().Before(deadline) {
+			final = author.Expect(200, "GET", "/contexts/"+group+"/ai-invocations/"+id, nil)
+			if state, _ := final.JSON["status"].(string); state == "succeeded" || state == "failed" || state == "cancelled" {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+		if state, _ := final.JSON["status"].(string); state != "succeeded" {
+			t.Fatalf("job chia_bill dừng ở %q — %s", state, final.trim())
+		}
+		if command, _ := final.JSON["command"].(string); command != "chia_bill" {
+			t.Fatalf("job trả lệnh %q — %s", command, final.trim())
+		}
+		// The public job shape still carries neither the context nor the drafts.
+		for _, cam := range []string{"300000", "drafts", "boi_canh"} {
+			if strings.Contains(final.trim(), cam) {
+				t.Fatalf("phản hồi job để lộ %q — %s", cam, final.trim())
+			}
 		}
 	})
 

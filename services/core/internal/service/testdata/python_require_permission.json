@@ -11415,6 +11415,168 @@
   },
   {
    "name": "allowed_by_actor_role",
+   "action": "set_pair_week_role",
+   "actor_roles": [
+    "member"
+   ],
+   "extra_roles": [],
+   "resource_id": "resource-under-test",
+   "context": [
+    {
+     "name": "is_group_member",
+     "proves": true,
+     "python": "True"
+    }
+   ],
+   "outcome": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "name": "no_roles",
+   "action": "set_pair_week_role",
+   "actor_roles": [],
+   "extra_roles": [],
+   "resource_id": "resource-under-test",
+   "context": [
+    {
+     "name": "is_group_member",
+     "proves": true,
+     "python": "True"
+    }
+   ],
+   "outcome": {
+    "kind": "problem",
+    "status": 403,
+    "code": "permission_denied",
+    "detail": "role_not_permitted"
+   }
+  },
+  {
+   "name": "role_only_via_extra",
+   "action": "set_pair_week_role",
+   "actor_roles": [],
+   "extra_roles": [
+    "member"
+   ],
+   "resource_id": "resource-under-test",
+   "context": [
+    {
+     "name": "is_group_member",
+     "proves": true,
+     "python": "True"
+    }
+   ],
+   "outcome": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "name": "unrelated_role",
+   "action": "set_pair_week_role",
+   "actor_roles": [
+    "group_admin"
+   ],
+   "extra_roles": [],
+   "resource_id": "resource-under-test",
+   "context": [
+    {
+     "name": "is_group_member",
+     "proves": true,
+     "python": "True"
+    }
+   ],
+   "outcome": {
+    "kind": "problem",
+    "status": 403,
+    "code": "permission_denied",
+    "detail": "role_not_permitted"
+   }
+  },
+  {
+   "name": "last_false",
+   "action": "set_pair_week_role",
+   "actor_roles": [
+    "member"
+   ],
+   "extra_roles": [],
+   "resource_id": "resource-under-test",
+   "context": [
+    {
+     "name": "is_group_member",
+     "proves": false,
+     "python": "False"
+    }
+   ],
+   "outcome": {
+    "kind": "problem",
+    "status": 403,
+    "code": "permission_denied",
+    "detail": "is_group_member"
+   }
+  },
+  {
+   "name": "last_truthy_int",
+   "action": "set_pair_week_role",
+   "actor_roles": [
+    "member"
+   ],
+   "extra_roles": [],
+   "resource_id": "resource-under-test",
+   "context": [
+    {
+     "name": "is_group_member",
+     "proves": false,
+     "python": "1"
+    }
+   ],
+   "outcome": {
+    "kind": "problem",
+    "status": 403,
+    "code": "permission_denied",
+    "detail": "is_group_member"
+   }
+  },
+  {
+   "name": "last_string_true",
+   "action": "set_pair_week_role",
+   "actor_roles": [
+    "member"
+   ],
+   "extra_roles": [],
+   "resource_id": "resource-under-test",
+   "context": [
+    {
+     "name": "is_group_member",
+     "proves": false,
+     "python": "'True'"
+    }
+   ],
+   "outcome": {
+    "kind": "problem",
+    "status": 403,
+    "code": "permission_denied",
+    "detail": "is_group_member"
+   }
+  },
+  {
+   "name": "last_missing",
+   "action": "set_pair_week_role",
+   "actor_roles": [
+    "member"
+   ],
+   "extra_roles": [],
+   "resource_id": "resource-under-test",
+   "context": [],
+   "outcome": {
+    "kind": "problem",
+    "status": 403,
+    "code": "permission_denied",
+    "detail": "is_group_member"
+   }
+  },
+  {
+   "name": "allowed_by_actor_role",
    "action": "share_evidence",
    "actor_roles": [
     "member"

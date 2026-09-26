@@ -16,7 +16,7 @@
  */
 import { Redirect, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom } from "../../../phien";
@@ -72,6 +72,15 @@ export function GroupNewScreen() {
         title="Đặt tên cho hội"
         subtitle="Bạn là quản trị của nhóm này. Mời bạn bè sau, bằng lời mời đích danh hoặc link."
       />
+      {/* A couple is not a group: QA 23/09 found two people inventing «Minh &
+          Linh» here because nothing pointed them at the direct conversation,
+          where the two-person notebook lives. */}
+      <Pressable accessibilityRole="link" onPress={() => router.push("/friends/add")}>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>
+          Chỉ hai người? Không cần nhóm: kết bạn bằng số điện thoại rồi nhắn riêng, sổ hai người nằm ở đó.{" "}
+          <Text style={{ color: colors.accent }}>Thêm bạn</Text>
+        </Text>
+      </Pressable>
       <View style={styles.form}>
         <Field
           accessibilityLabel="Ô tên nhóm"

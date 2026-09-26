@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"mobile/services/core/internal/domain/interests"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -32,13 +33,17 @@ const OfferWindow = 7 * 24 * time.Hour
 func CycleStates() []string { return []string{"pending", "active", "closed"} }
 
 // ConsentPurposes is CONSENT_PURPOSES, the ladder from tier 2 upward, in order.
-func ConsentPurposes() []string { return []string{"lap_so", "bat_doi", "doc_chat"} }
+// `chia_gu` (ADR-0034) is each person's own switch, not a rung both climb.
+func ConsentPurposes() []string { return []string{"lap_so", "bat_doi", "doc_chat", "chia_gu"} }
+
+// PerPersonPurposes is PER_PERSON_PURPOSES: what one person decides alone.
+func PerPersonPurposes() []string { return []string{"chia_gu"} }
 
 // ConstraintKinds is CONSTRAINT_KINDS.
 func ConstraintKinds() []string { return []string{"khong_an_duoc", "dung"} }
 
 // ladder is CONSENT_PURPOSES as the functions below read it.
-var ladder = [...]string{"lap_so", "bat_doi", "doc_chat"}
+var ladder = [...]string{"lap_so", "bat_doi", "doc_chat", "chia_gu"}
 
 // NotebookError is NotebookError: a refusal carrying the wire code.
 type NotebookError struct {
@@ -55,24 +60,32 @@ func (e *NotebookError) Error() string { return e.Code }
 // week.
 func HanDeNghi(now time.Time) time.Time { return now.AddDate(0, 0, 7) }
 
-// Consent is one row of `_consents_as_dicts`: the keys `_live` and
-// `granted_by` read.
+// Consent is one row of `_consents_as_dicts`: the keys `_live`, `granted_by`
+// and `granted_purposes` read. ProposalID "" is Python's absent key: every such
+// row belongs to one shared group, the old per-purpose reading.
 type Consent struct {
-	PersonID          string
-	Purpose           string
-	GrantedAt         *time.Time
-	RevokedAt         *time.Time
-	ProposalExpiresAt *time.Time
+	PersonID            string
+	Purpose             string
+	GrantedAt           *time.Time
+	RevokedAt           *time.Time
+	ProposalExpiresAt   *time.Time
+	ProposalID          string
+	ProposalCompletedAt *time.Time
 }
 
-// live is _live: granted, not revoked, and the PROPOSAL not lapsed. A nil now
-// is Python's `now=None`, which skips the expiry test entirely.
+// live is _live: granted, not revoked, and the PROPOSAL not lapsed -- unless it
+// was completed: an agreed rung stands until revoked, it does not switch itself
+// off when its offer window ends (QA 23/09). A nil now is Python's `now=None`,
+// which skips the expiry test entirely.
 func live(consent Consent, now *time.Time) bool {
 	if consent.GrantedAt == nil {
 		return false
 	}
 	if consent.RevokedAt != nil {
 		return false
+	}
+	if consent.ProposalCompletedAt != nil {
+		return true
 	}
 	if consent.ProposalExpiresAt != nil && now != nil && !now.Before(*consent.ProposalExpiresAt) {
 		return false
@@ -110,8 +123,12 @@ func GrantedBy(consents []Consent, personID string, now *time.Time) []string {
 }
 
 // GrantedPurposes is granted_purposes: the purposes every one of the distinct
-// participants has granted. Fewer than two distinct people unlock nothing, and
-// duplicates in participants count once, as Python's set does.
+// participants has granted ON ONE PROPOSAL (ADR-0027: «cả hai chấp nhận cùng đề
+// nghị»). Two people who each filed their own proposal have each agreed only
+// with themselves; counted per purpose that read as «both» with nothing
+// completed, and the same count gates Nếp reading the chat (QA 23/09). Fewer
+// than two distinct people unlock nothing, and duplicates in participants count
+// once, as Python's set does.
 func GrantedPurposes(consents []Consent, participants []string, now *time.Time) []string {
 	people := map[string]bool{}
 	for _, person := range participants {
@@ -120,15 +137,27 @@ func GrantedPurposes(consents []Consent, participants []string, now *time.Time) 
 	if len(people) < 2 {
 		return []string{}
 	}
-	count := map[string]int{}
-	for person := range people {
-		for _, purpose := range GrantedBy(consents, person, now) {
-			count[purpose]++
+	type key struct{ purpose, proposal string }
+	agreed := map[key]map[string]bool{}
+	for _, row := range consents {
+		if !onLadder(row.Purpose) || !live(row, now) || !people[row.PersonID] {
+			continue
+		}
+		k := key{row.Purpose, row.ProposalID}
+		if agreed[k] == nil {
+			agreed[k] = map[string]bool{}
+		}
+		agreed[k][row.PersonID] = true
+	}
+	held := map[string]bool{}
+	for k, who := range agreed {
+		if len(who) == len(people) {
+			held[k.purpose] = true
 		}
 	}
 	out := []string{}
 	for _, rung := range ladder {
-		if count[rung] == len(people) {
+		if held[rung] {
 			out = append(out, rung)
 		}
 	}
@@ -153,6 +182,53 @@ func CanBatDoi(consents []Consent, participants []string, now *time.Time) bool {
 // at now. Python requires the keyword; the service always passes its clock.
 func ChatConsentActive(consents []Consent, participants []string, now time.Time) bool {
 	return contains(GrantedPurposes(consents, participants, &now), "doc_chat")
+}
+
+// Taste is gu_hai_nguoi's dict (ADR-0034 §2.1–2.2).
+type Taste struct {
+	MineShared   bool
+	TheirsShared bool
+	Theirs       []string
+	Common       []string
+}
+
+// GuHaiNguoi is gu_hai_nguoi: what of the two tastes `me` may see. Nil outside
+// «Một đôi»; the other's tags only if they turned `chia_gu` on; the common tags
+// only if both did. Tags in vocabulary order, unknown ones left out.
+func GuHaiNguoi(consents []Consent, participants []string, me string, guTheoNguoi map[string][]string, now time.Time) *Taste {
+	if !CanBatDoi(consents, participants, &now) {
+		return nil
+	}
+	var other *string
+	for _, person := range participants {
+		if person != me {
+			other = &person
+			break
+		}
+	}
+	mineShared := contains(GrantedBy(consents, me, &now), "chia_gu")
+	theirsShared := other != nil && contains(GrantedBy(consents, *other, &now), "chia_gu")
+	theirTags := map[string]bool{}
+	if theirsShared {
+		for _, tag := range guTheoNguoi[*other] {
+			theirTags[tag] = true
+		}
+	}
+	myTags := map[string]bool{}
+	for _, tag := range guTheoNguoi[me] {
+		myTags[tag] = true
+	}
+	taste := &Taste{MineShared: mineShared, TheirsShared: theirsShared, Theirs: []string{}, Common: []string{}}
+	for _, tag := range interests.InterestIDs() {
+		if !theirTags[tag] {
+			continue
+		}
+		taste.Theirs = append(taste.Theirs, tag)
+		if mineShared && myTags[tag] {
+			taste.Common = append(taste.Common, tag)
+		}
+	}
+	return taste
 }
 
 // Proposal is one row of `_proposals_as_dicts`.
@@ -221,4 +297,160 @@ func XemTruocDongSo(papers []Paper, proposals []Proposal, now time.Time, sum256 
 	}
 	out.Revision = revision(material, sum256)
 	return out
+}
+
+// ToTinHieu is `_paper_signals`: what nguoi_lo_suy reads of one sheet. A nil
+// CycleID is Python's None; a Version with a nil SentBy was never sent.
+type ToTinHieu struct {
+	CycleID   *string
+	Tuan      string
+	Versions  []PhienBanTinHieu
+	Responses []TraLoiTinHieu
+}
+
+// PhienBanTinHieu is one version as nguoi_lo_suy reads it.
+type PhienBanTinHieu struct {
+	Version    int
+	AuthorType string
+	SentBy     *string
+	SentAt     *time.Time
+}
+
+// TraLoiTinHieu is one response as nguoi_lo_suy reads it.
+type TraLoiTinHieu struct {
+	PersonID string
+	Kind     string
+}
+
+// Diem is one participant's score.
+type Diem struct {
+	PersonID string
+	Score    int
+}
+
+// NguoiLo is nguoi_lo_suy's and vai_tuan's dict: NguoiLo lists who leads,
+// Cach is "suy" or "chon" ("" from nguoi_lo_suy alone).
+type NguoiLo struct {
+	NguoiLo []string
+	Cach    string
+	Diem    []Diem
+}
+
+// NguoiLoSuy is nguoi_lo_suy (ADR-0034 §2.3–2.4): who tends to take the lead,
+// read only from this cycle's sheets; a tie or nothing yet goes to whoever
+// opened the notebook, then to the first participant.
+func NguoiLoSuy(participants []string, toGiay []ToTinHieu, cycleID string, nguoiLapSo *string) NguoiLo {
+	people := []string{}
+	seen := map[string]bool{}
+	for _, p := range participants {
+		if !seen[p] {
+			seen[p] = true
+			people = append(people, p)
+		}
+	}
+	diem := map[string]int{}
+	for _, to := range toGiay {
+		if to.CycleID == nil || *to.CycleID != cycleID {
+			continue
+		}
+		for _, v := range to.Versions {
+			if v.Version != 1 {
+				continue
+			}
+			if v.AuthorType == "human" && v.SentBy != nil && seen[*v.SentBy] {
+				diem[*v.SentBy] += 2
+			}
+			break
+		}
+		for _, tl := range to.Responses {
+			if tl.Kind == "de_nghi_sua" && seen[tl.PersonID] {
+				diem[tl.PersonID]++
+			}
+		}
+	}
+	if len(people) == 0 {
+		return NguoiLo{NguoiLo: []string{}, Diem: []Diem{}}
+	}
+	cao := diem[people[0]]
+	for _, p := range people {
+		if diem[p] > cao {
+			cao = diem[p]
+		}
+	}
+	dauBang := []string{}
+	for _, p := range people {
+		if diem[p] == cao {
+			dauBang = append(dauBang, p)
+		}
+	}
+	lo := dauBang[0]
+	if len(dauBang) > 1 && nguoiLapSo != nil && contains(dauBang, *nguoiLapSo) {
+		lo = *nguoiLapSo
+	}
+	out := NguoiLo{NguoiLo: []string{lo}, Diem: []Diem{}}
+	for _, p := range people {
+		out.Diem = append(out.Diem, Diem{PersonID: p, Score: diem[p]})
+	}
+	return out
+}
+
+// NguoiMoLoi is nguoi_mo_loi: who opened week `tuan` in this cycle -- the
+// sender of the earliest sent human first version of that week -- or nil.
+func NguoiMoLoi(toGiay []ToTinHieu, cycleID, tuan string) *string {
+	var luc *time.Time
+	var ai *string
+	for _, to := range toGiay {
+		if to.CycleID == nil || *to.CycleID != cycleID || to.Tuan != tuan {
+			continue
+		}
+		for _, v := range to.Versions {
+			if v.Version != 1 {
+				continue
+			}
+			if v.AuthorType == "human" && v.SentBy != nil && v.SentAt != nil && (luc == nil || v.SentAt.Before(*luc)) {
+				who := *v.SentBy
+				luc, ai = v.SentAt, &who
+			}
+			break
+		}
+	}
+	return ai
+}
+
+// VaiTuan is vai_tuan: the week's stored choice, or the inference. chon nil
+// is Python's None (nothing chosen); chon pointing at nil is «cả hai».
+// moLoiTruoc is who opened the last two weeks, newest first (nil entries are
+// None): the baton passes when the usual lead opened both.
+func VaiTuan(suy NguoiLo, chon **string, participants []string, moLoiTruoc []*string) NguoiLo {
+	if chon == nil {
+		people := []string{}
+		seen := map[string]bool{}
+		for _, p := range participants {
+			if !seen[p] {
+				seen[p] = true
+				people = append(people, p)
+			}
+		}
+		if len(suy.NguoiLo) == 1 && len(people) == 2 && len(moLoiTruoc) >= 2 &&
+			moLoiTruoc[0] != nil && moLoiTruoc[1] != nil && *moLoiTruoc[0] == suy.NguoiLo[0] && *moLoiTruoc[1] == suy.NguoiLo[0] {
+			khac := people[0]
+			if khac == suy.NguoiLo[0] {
+				khac = people[1]
+			}
+			return NguoiLo{NguoiLo: []string{khac}, Cach: "luot", Diem: suy.Diem}
+		}
+		return NguoiLo{NguoiLo: append([]string{}, suy.NguoiLo...), Cach: "suy", Diem: suy.Diem}
+	}
+	if *chon == nil {
+		people := []string{}
+		seen := map[string]bool{}
+		for _, p := range participants {
+			if !seen[p] {
+				seen[p] = true
+				people = append(people, p)
+			}
+		}
+		return NguoiLo{NguoiLo: people, Cach: "chon", Diem: suy.Diem}
+	}
+	return NguoiLo{NguoiLo: []string{**chon}, Cach: "chon", Diem: suy.Diem}
 }

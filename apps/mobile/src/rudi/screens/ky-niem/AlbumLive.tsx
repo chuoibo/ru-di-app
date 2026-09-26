@@ -52,7 +52,7 @@ import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 function loiRaChu(error: unknown): string {
   if (error instanceof AlbumError) return error.message;
   if (error instanceof Error && error.message !== "") return error.message;
-  return "Chưa đọc được album từ máy chủ.";
+  return "Chưa mở được album. Kéo xuống để thử lại.";
 }
 
 function cauKhoang(a: { period_label: string; in_progress: boolean; headcount: number }): string {

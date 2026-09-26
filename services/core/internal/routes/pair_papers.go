@@ -277,7 +277,8 @@ func paperContentAndReason(request *pyval.Model) (pairsteps.ContentInput, *strin
 		if err != nil {
 			return pairsteps.ContentInput{}, nil, err
 		}
-		placeID, err := optionalUUIDField(stop, "place_id")
+		// A catalogue id (slug), the spelling OutingStopInput.place_id takes.
+		placeID, err := optionalStringField(stop, "place_id")
 		if err != nil {
 			return pairsteps.ContentInput{}, nil, err
 		}

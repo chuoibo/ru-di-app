@@ -25,6 +25,8 @@ import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import { tenCua, type ThanhVien } from "../../chia-bill/hoa-don";
 import { docDanhMucCoLui } from "../../kham-pha/dia-diem";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
+import { tiLeKhung } from "../../ky-niem/ti-le";
+import { laPair } from "../../nhan-rieng/nhan-rieng";
 import {
   cauKyNiem,
   cauTuongTac,
@@ -39,7 +41,7 @@ import {
 } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, Field, Inline, RudiButton, RudiScreen, SearchField, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { Sheet } from "../../ui/Sheet";
@@ -74,6 +76,8 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [roster, setRoster] = useState<ThanhVien[]>([]);
   const [thongBao, setThongBao] = useState<string | null>(null);
+  // Each memory's photo ratio, learned from the image as it loads (the wire has no size).
+  const [tiLe, setTiLe] = useState<Record<string, number>>({});
   const [ban, setBan] = useState(false);
   const [moBinhLuan, setMoBinhLuan] = useState<string | null>(null);
   const [binhLuan, setBinhLuan] = useState<Record<string, BinhLuan[]>>({});
@@ -84,7 +88,11 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
   const [choChon, setChoChon] = useState<Cho | null>(null);
   const [cauCheckIn, setCauCheckIn] = useState("");
   const attempts = useRef<Record<string, Attempt>>({});
-  const tenNhom = phien.contexts?.find((n) => n.id === contextId)?.display_name ?? "Nhóm";
+  const nhom = phien.contexts?.find((n) => n.id === contextId);
+  // A pair's wall is the two of them keeping their evenings, not a group's
+  // board: it is named for them and says who sees it.
+  const laDoi = laPair(nhom);
+  const tenNhom = laDoi ? `Bạn và ${nhom?.display_name || "người ấy"}` : nhom?.display_name ?? "Nhóm";
 
   const docTrangDau = useCallback(async () => {
     const t = await docTuongNhom(contextId, me);
@@ -232,11 +240,11 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
 
   return (
     <RudiScreen overlay={khayCheckIn} testID="group-wall-screen">
-      <TopBar subtitle="Chỉ thành viên nhóm thấy" title="Tường nhóm" />
+      <TopBar subtitle={laDoi ? "Chỉ hai bạn thấy" : "Chỉ thành viên nhóm thấy"} title={laDoi ? "Kỷ niệm của hai bạn" : "Tường nhóm"} />
       <Text style={[typography.h1, { color: colors.ink }]}>{tenNhom}</Text>
       {thongBao !== null && !moCheckIn ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
       <Inline gap={8} wrap>
-        <RudiButton compact full={false} icon="camera-outline" label="Thả khoảnh khắc" onPress={() => router.push("/moments/new" as never)} />
+        <RudiButton compact full={false} icon="camera-outline" label="Thả khoảnh khắc" onPress={() => router.push(`/moments/new?ctx=${contextId}` as never)} />
         <RudiButton compact disabled={ban} full={false} icon="location-outline" label="Check-in" onPress={() => void moCheckInForm()} variant="outline" />
       </Inline>
 
@@ -260,7 +268,7 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
             return (
               <View key={k.id} style={[styles.bai, { borderBottomColor: colors.line }]}>
                 <View style={styles.dong}>
-                  <Avatar name={tacGia} size={36} />
+                  <AvatarNguoi name={tacGia} personId={k.authorId} size={36} />
                   <View style={styles.flex}>
                     <Text style={[typography.label, { color: colors.ink }]}>{tacGia}</Text>
                     <Text style={[typography.caption, { color: colors.inkFaint }]}>{gioViet(k.createdAt)}</Text>
@@ -268,7 +276,18 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                 </View>
                 {anh !== null ? (
                   <KhungAnh xuatXu={`${tacGia} · ${gioViet(k.createdAt)}`}>
-                    <Image accessibilityLabel={cauKyNiem(k)} contentFit="cover" source={anh} style={[styles.anh, { backgroundColor: colors.line }]} />
+                    <Image
+                      accessibilityLabel={cauKyNiem(k)}
+                      contentFit="cover"
+                      // The frame takes the photo's shape once it is known: a
+                      // portrait memory was cut to a 4:3 strip (QA 23/09).
+                      onLoad={(e) => {
+                        const r = tiLeKhung(e.source);
+                        setTiLe((cu) => (cu[k.id] === r ? cu : { ...cu, [k.id]: r }));
+                      }}
+                      source={anh}
+                      style={[styles.anh, { aspectRatio: tiLe[k.id] ?? 4 / 3, backgroundColor: colors.line }]}
+                    />
                   </KhungAnh>
                 ) : null}
                 {k.kind === "checkin" ? (
@@ -337,7 +356,7 @@ const styles = StyleSheet.create({
   form: { gap: 10, paddingBottom: 4 },
   bai: { gap: 10, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   dong: { flexDirection: "row", alignItems: "center", gap: 10 },
-  anh: { width: "100%", aspectRatio: 4 / 3 },
+  anh: { width: "100%" },
   checkin: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   hanhDong: { flexDirection: "row", alignItems: "center", gap: 4 },
   nutHanhDong: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 6, paddingRight: 12 },

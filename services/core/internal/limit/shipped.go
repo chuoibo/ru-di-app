@@ -14,8 +14,6 @@ const (
 	ChatExpenseLimitPerWindow                  = ReceiptScanLimitPerWindow
 	ScreenshotScanWindowSeconds                = ReceiptScanWindowSeconds
 	ScreenshotScanLimitPerWindow               = ReceiptScanLimitPerWindow
-	CompanionTurnWindowSeconds                 = ReceiptScanWindowSeconds
-	CompanionTurnLimitPerWindow                = ReceiptScanLimitPerWindow
 	SuggestionWindowSeconds                    = ReceiptScanWindowSeconds
 	SuggestionLimitPerWindow                   = ReceiptScanLimitPerWindow
 	ContextualSuggestionWindowSeconds          = ReceiptScanWindowSeconds
@@ -73,12 +71,6 @@ var (
 		WindowSeconds: ScreenshotScanWindowSeconds,
 		Code:          "screenshot_scan_rate_limited",
 		Message:       vietnameseCeiling("đọc ảnh chụp màn hình", ScreenshotScanLimitPerWindow, ScreenshotScanWindowSeconds),
-	}
-	CompanionTurnConfig = ActorConfig{
-		Limit:         CompanionTurnLimitPerWindow,
-		WindowSeconds: CompanionTurnWindowSeconds,
-		Code:          "companion_turn_rate_limited",
-		Message:       vietnameseCeiling("hỏi trợ lý nhóm", CompanionTurnLimitPerWindow, CompanionTurnWindowSeconds),
 	}
 	SuggestionConfig = ActorConfig{
 		Limit:         SuggestionLimitPerWindow,
@@ -153,8 +145,6 @@ type Set struct {
 	ReceiptScanLimiter          *ActorWindow[string] // POST /receipts/scan
 	ChatExpenseLimiter          *ActorWindow[string] // POST /contexts/{context_id}/messages/{message_id}/expense-draft
 	ScreenshotScanLimiter       *ActorWindow[string] // POST /screenshots/scan
-	CompanionTurnLimiter        *ActorWindow[string] // POST /contexts/{context_id}/ai-turn
-	MessageIntentLimiter        *ActorWindow[string] // POST /contexts/{context_id}/messages (refusal goes in the 201 body)
 	SuggestionLimiter           *ActorWindow[string] // GET /contexts/{context_id}/suggestion
 	ContextualSuggestionLimiter *ActorWindow[string] // GET /contexts/{context_id}/contextual-suggestion
 	FaceDetectionLimiter        *ActorWindow[string] // POST /contexts/{context_id}/photos/{photo_id}/face-boxes
@@ -178,8 +168,6 @@ func NewSet(clock Clock) *Set {
 		ReceiptScanLimiter:          NewActorWindow[string](ReceiptScanConfig, clock),
 		ChatExpenseLimiter:          NewActorWindow[string](ChatExpenseConfig, clock),
 		ScreenshotScanLimiter:       NewActorWindow[string](ScreenshotScanConfig, clock),
-		CompanionTurnLimiter:        NewActorWindow[string](CompanionTurnConfig, clock),
-		MessageIntentLimiter:        NewActorWindow[string](CompanionTurnConfig, clock),
 		SuggestionLimiter:           NewActorWindow[string](SuggestionConfig, clock),
 		ContextualSuggestionLimiter: NewActorWindow[string](ContextualSuggestionConfig, clock),
 		FaceDetectionLimiter:        NewActorWindow[string](FaceDetectionConfig, clock),

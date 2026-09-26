@@ -11,12 +11,19 @@ import (
 	"mobile/services/core/internal/domain/companion"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
+	"mobile/services/core/internal/service"
 	"mobile/services/core/internal/treejson"
 )
 
 type work struct {
-	id, conversation, person, member, prompt, lease string
-	digest                                          []byte
+	id, conversation, person, member, prompt, lease, command string
+	// `group` or `me`. A personal job has no room and no membership, so
+	// conversation and member are empty for it.
+	scope  string
+	digest []byte
+	// The context the caller handed over, exactly as it was stored. Nil when the
+	// caller sent none, which is still the shape an older client produces.
+	goi []byte
 }
 
 // Run owns two bounded inference workers. Leases recover a crashed worker;
@@ -51,7 +58,13 @@ func (h *Handler) claim(ctx context.Context) (work, bool, error) {
 	}
 	defer tx.Rollback(ctx)
 	// Bound plaintext retention to the explicit sharing window, including failed jobs.
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`)
+	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,boi_canh=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`)
+	if err != nil {
+		return work{}, false, err
+	}
+	// A sealed personal answer is delivered, not kept: it goes when the sharing
+	// window it was produced under closes (ADR-0036 §2.8).
+	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET result=NULL,updated_at=clock_timestamp() WHERE scope='me' AND result IS NOT NULL AND share_expires_at<=clock_timestamp()`)
 	if err != nil {
 		return work{}, false, err
 	}
@@ -61,7 +74,7 @@ func (h *Handler) claim(ctx context.Context) (work, bool, error) {
 	}
 	var j work
 	j.lease = newID()
-	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+interval '75 seconds',updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.context_id,j.person_id,j.membership_id,j.session_digest,j.prompt`, j.lease).Scan(&j.id, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt)
+	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+interval '75 seconds',updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command`, j.lease).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return work{}, false, tx.Commit(ctx)
 	}
@@ -79,30 +92,42 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	if err != nil || !ok {
 		return ok, err
 	}
-	catalogue, err := h.prepare(ctx, j)
+	// Before prepare: a personal job has no room, and nothing the server owns
+	// about a room is laid on top of it (ADR-0036 §4).
+	if j.scope == scopeMe {
+		return true, h.processNep(ctx, j)
+	}
+	dap, err := h.prepare(ctx, j)
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "sharing_unavailable")
 	}
-	conversation := pyjson.NewOrderedMap()
-	conversation.Set("author_kind", pyjson.String("human"))
-	conversation.Set("kind", pyjson.String("text"))
-	conversation.Set("body", pyjson.String(j.prompt))
+	if j.command == lenhChiaBill {
+		return true, h.processChiaBill(ctx, j, dap)
+	}
+	conversation, err := hoiThoai(j.goi, j.prompt, dap.toi)
+	if err != nil {
+		return true, h.finishFailure(ctx, j, "invalid_ai_result")
+	}
+	catalogue := pyjson.List{}
+	for _, place := range dap.places {
+		catalogue = append(catalogue, place)
+	}
 	payload := pyjson.NewOrderedMap()
-	payload.Set("conversation", pyjson.List{conversation})
-	payload.Set("members", pyjson.List{})
+	payload.Set("conversation", conversation)
+	payload.Set("members", dap.members)
 	payload.Set("places", catalogue)
-	payload.Set("budget_per_person_vnd", pyjson.Null{})
+	if dap.budget == nil {
+		payload.Set("budget_per_person_vnd", pyjson.Null{})
+	} else {
+		payload.Set("budget_per_person_vnd", pyjson.NewInt(*dap.budget))
+	}
 	inference, cancel := context.WithTimeout(ctx, 60*time.Second)
 	raw, err := h.brain.PostJSONContext(inference, "companion-reply", payload)
 	cancel()
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "provider_unavailable")
 	}
-	places := make([]*pyjson.OrderedMap, 0, len(catalogue))
-	for _, v := range catalogue {
-		places = append(places, v.(*pyjson.OrderedMap))
-	}
-	grounded, err := companion.GroundCard(treejson.To(raw), treejson.MapsTo(places))
+	grounded, err := companion.GroundCard(treejson.To(raw), treejson.MapsTo(dap.places))
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "invalid_ai_result")
 	}
@@ -110,55 +135,91 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "invalid_ai_result")
 	}
-	return true, h.publish(ctx, j, card)
+	return true, h.publish(ctx, j, card, nil)
 }
 
-func (h *Handler) prepare(ctx context.Context, j work) (pyjson.List, error) {
+// dapThem is what the server lays on top of the caller's bundle (ADR-0036
+// §2.3): only things it owns and never encrypted. It never holds a word of the
+// conversation; that arrives from the client or not at all.
+type dapThem struct {
+	// The catalogue the model may choose from, best match for the group first.
+	places []*pyjson.OrderedMap
+	// Who is in the room, by display name where one is safe (see roster).
+	members pyjson.List
+	// The caller's label in that roster, which the transcript uses too.
+	toi string
+	// The group's stated per-person budget, nil when nobody answered.
+	budget *int64
+	// chia_bill only: who wrote each shared turn (message id -> person id),
+	// read from `messages.author_id`, never from the bundle's own claim.
+	authors map[string]string
+	// chia_bill only: the active members, the proposed "shared by" of every
+	// draft, as v1 proposed it.
+	memberships []repo.Membership
+}
+
+func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
 	if err != nil {
-		return nil, err
+		return dapThem{}, err
 	}
 	defer tx.Rollback(ctx)
 	g, err := authority(ctx, tx, j.conversation, j.digest)
 	if err != nil {
-		return nil, err
+		return dapThem{}, err
 	}
 	if g.member != j.member || g.person != j.person || g.kind != "group" {
-		return nil, &denied{403, "sharing_unavailable"}
+		return dapThem{}, &denied{403, "sharing_unavailable"}
 	}
 	var live bool
 	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_ai_invocations WHERE id=$1 AND status='running' AND lease_id=$2 AND lease_until>clock_timestamp() AND share_expires_at>clock_timestamp())`, j.id, j.lease).Scan(&live); err != nil {
-		return nil, err
+		return dapThem{}, err
 	}
 	if !live {
-		return nil, &denied{409, "invocation_cancelled"}
+		return dapThem{}, &denied{409, "invocation_cancelled"}
 	}
-	// The catalogue is public. Never select chat, roster, taste, or outing history.
-	rows, err := tx.Query(ctx, `SELECT jsonb_strip_nulls(jsonb_build_object('id',id,'name',name,'address',address,'price_min_vnd',price_min_vnd,'price_max_vnd',price_max_vnd,'open_hours',open_hours,'category',category)) FROM places ORDER BY id LIMIT 40`)
+	store := repo.Repository{Q: tx}
+	if j.command == lenhChiaBill {
+		// Splitting a bill needs who is in the room and who wrote what; it has
+		// no use for taste, budget or the catalogue, so it never reads them.
+		out := dapThem{authors: map[string]string{}}
+		if out.memberships, err = store.ListMembers(ctx, j.conversation); err != nil {
+			return dapThem{}, err
+		}
+		if len(j.goi) > 0 {
+			var bc bundle
+			if err = json.Unmarshal(j.goi, &bc); err != nil {
+				return dapThem{}, err
+			}
+			if out.authors, err = tacGia(ctx, tx, j.conversation, &bc); err != nil {
+				return dapThem{}, err
+			}
+		}
+		return out, tx.Commit(ctx)
+	}
+	// Roster, taste, budget and the public catalogue: the four things the
+	// server owns and never encrypted. Never the conversation.
+	//
+	// The catalogue is the one v1 handed the model, computed by the same code:
+	// the default destination's places, ranked by the group's own taste, cut
+	// to forty, through promptsafety. The earlier version here took the first
+	// forty rows by id, so a group that only drinks coffee could be handed
+	// forty restaurants and no café, and the model had nothing better to pick.
+	group, err := service.GroupTaste(ctx, store, j.conversation, time.Now().UTC())
 	if err != nil {
-		return nil, err
+		return dapThem{}, err
 	}
-	out := pyjson.List{}
-	for rows.Next() {
-		var b []byte
-		if err = rows.Scan(&b); err != nil {
-			rows.Close()
-			return nil, err
-		}
-		v, e := pyjson.Loads(b)
-		if e != nil {
-			rows.Close()
-			return nil, e
-		}
-		out = append(out, v)
+	places, err := service.ModelPlaceRows(ctx, store, group)
+	if err != nil {
+		return dapThem{}, err
 	}
-	rows.Close()
-	if err = rows.Err(); err != nil {
-		return nil, err
+	members, toi, err := roster(ctx, tx, store, j.conversation, j.person, j.goi)
+	if err != nil {
+		return dapThem{}, err
 	}
-	return out, tx.Commit(ctx)
+	return dapThem{places: places, members: members, toi: toi, budget: group.BudgetPerPersonVND}, tx.Commit(ctx)
 }
 
 func (h *Handler) finishFailure(ctx context.Context, j work, code string) error {
@@ -168,7 +229,10 @@ func (h *Handler) finishFailure(ctx context.Context, j work, code string) error 
 	return err
 }
 
-func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage) error {
+// publish posts the card and closes the job in one transaction. result is the
+// structured outcome kept on the invocation row (chia_bill's drafts); nil
+// leaves the column NULL, which is what a plan job has always stored.
+func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, result json.RawMessage) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
@@ -198,7 +262,7 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage) err
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',message_id=$3,prompt=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2`, j.id, j.lease, message.ID)
+	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',message_id=$3,result=$4,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2`, j.id, j.lease, message.ID, ketQuaHoacNull(result))
 	if err != nil {
 		return err
 	}

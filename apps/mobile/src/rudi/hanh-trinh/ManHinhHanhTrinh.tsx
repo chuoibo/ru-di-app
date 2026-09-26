@@ -19,6 +19,7 @@ import { chuKhoangCach, chuThoiGian, tomTatHanhTrinh } from "./tom-tat";
 import { kieuBanDo, type MocBanDo } from "./kieu-ban-do";
 
 import { useMotion } from "../ui/useMotion";
+import { useNhuongChoNep } from "../nep/NepProvider";
 import { Canh } from "../ui/art/Canh";
 import { KyHoa } from "../ui/art/KyHoa";
 
@@ -73,6 +74,9 @@ export function ManHinhHanhTrinh({
   const [availableHeight, setAvailableHeight] = useState(height * 0.65);
   const wide = width >= 840 && fontScale < 1.8;
   const motion = useMotion();
+  // The map runs edge to edge and pans under a finger at the right edge too,
+  // and its attribution sits 8dp in: there is no margin here, so Nếp makes room.
+  useNhuongChoNep(true);
   const padding = useMemo(() => ({ top: 72, left: 40, right: 40, bottom: 40 }), []);
 
   const mocs: MocBanDo[] = useMemo(

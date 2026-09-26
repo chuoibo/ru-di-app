@@ -161,7 +161,10 @@ def interactive_boundaries() -> list[tuple[str, str, str]]:
         ),
         (
             "app: ô nhập Field, viền trên thẻ",
-            kit_border_token(r"borderColor:\s*colors\.(\w+)", field),
+            # The resting boundary: `mauVien` is warn on error and accent while
+            # focused, and this token otherwise (c36b114b moved it off the
+            # style literal). Rest is the state a person has to find the box in.
+            kit_border_token(r"const mauVien = [^;]*:\s*colors\.(\w+);", field),
             "card",
         ),
         (

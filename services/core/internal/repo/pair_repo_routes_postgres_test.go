@@ -18,11 +18,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 	"unicode"
+
+	"mobile/services/core/internal/domain/pairnotebook"
+	"mobile/services/core/internal/domain/pairpaper"
 )
 
 // routeRefusal is an ApiProblem: what the route answers instead of a body.
@@ -38,14 +40,13 @@ func refuse(status int, code string) error { return &routeRefusal{status, code} 
 var (
 	pairOpen        = map[string]bool{"nhap": true, "da_gui": true, "da_xem": true, "de_nghi_sua": true, "dong_y": true}
 	pairPlan        = map[string]bool{"chot": true, "da_di": true}
-	pairPurposes    = []string{"lap_so", "bat_doi", "doc_chat"}
+	pairPurposes    = []string{"lap_so", "bat_doi", "doc_chat", "chia_gu"}
 	pairKinds       = map[string]bool{"khong_an_duoc": true, "dung": true}
 	pairEventStates = map[string][]string{
 		"gui": {"nhap"}, "xem": {"da_gui", "da_xem"}, "dong_y": {"da_gui", "da_xem", "dong_y"},
 		"de_nghi_sua": {"da_gui", "da_xem", "dong_y"}, "rut": {"da_gui"},
 		"nghi_tuan": {"nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"}, "da_di": {"chot"}, "giu": {"da_di", "da_giu"},
 	}
-	canonicalUUID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 )
 
 type pairRoute struct {
@@ -54,6 +55,8 @@ type pairRoute struct {
 	now     time.Time
 	nowText time.Time
 	a       map[string]any
+	// names is the active roster's display names, as contextOr404 read them.
+	names map[string]string
 }
 
 // isoformat is datetime.isoformat() of the instant the case wrote, in the
@@ -102,9 +105,11 @@ func (p *pairRoute) contextOr404(contextID string) ([]string, error) {
 		return nil, err
 	}
 	members := []string{}
+	p.names = map[string]string{}
 	for _, row := range rows {
 		if row.State == "active" {
 			members = append(members, row.PersonID)
+			p.names[row.PersonID] = row.DisplayName
 		}
 	}
 	return members, nil
@@ -164,6 +169,30 @@ func (p *pairRoute) grantedPurposes(consents []PairConsent, participants []strin
 	return out
 }
 
+// couple is can_bat_doi over the locked rows, by the domain function itself:
+// the taste reading (ADR-0034) and chia_gu both turn on it, and it counts a
+// completed proposal as standing past its offer window, which grantedPurposes
+// above (the older per-purpose reading) does not.
+func (p *pairRoute) couple(notebook *PairNotebook, people []string) bool {
+	now := p.now
+	return pairnotebook.CanBatDoi(p.consentsOf(notebook), people, &now)
+}
+
+// consentsOf is `_consents_as_dicts` over the locked rows.
+func (p *pairRoute) consentsOf(notebook *PairNotebook) []pairnotebook.Consent {
+	completed := map[string]*time.Time{}
+	for _, row := range notebook.Proposals {
+		completed[row.ID] = row.CompletedAt
+	}
+	consents := []pairnotebook.Consent{}
+	for _, c := range notebook.Consents {
+		expires := c.ProposalExpiresAt
+		consents = append(consents, pairnotebook.Consent{PersonID: c.PersonID, Purpose: c.Purpose, GrantedAt: c.GrantedAt,
+			RevokedAt: c.RevokedAt, ProposalExpiresAt: &expires, ProposalID: c.ProposalID, ProposalCompletedAt: completed[c.ProposalID]})
+	}
+	return consents
+}
+
 func (p *pairRoute) dangCho(completed *time.Time, expires time.Time) bool {
 	return completed == nil && p.now.Before(expires)
 }
@@ -184,6 +213,53 @@ func (p *pairRoute) proposeConsent() error {
 	}
 	if purpose != "lap_so" && (notebook.CycleState == nil || *notebook.CycleState != "active") {
 		return refuse(409, "consent_missing")
+	}
+	// ADR-0034: chia_gu is one person's own switch, only inside «Một đôi»,
+	// completed as it is filed; asking again while it is on changes nothing.
+	if purpose == "chia_gu" {
+		if !p.couple(notebook, participantsOf(notebook, members)) {
+			return refuse(409, "consent_missing")
+		}
+		for _, c := range notebook.Consents {
+			if c.PersonID != p.actor || c.GrantedAt == nil || c.RevokedAt != nil {
+				continue
+			}
+			for _, row := range notebook.Proposals {
+				if row.ID == c.ProposalID && row.Purpose == purpose && row.CompletedAt != nil {
+					return nil
+				}
+			}
+		}
+		proposal, err := p.repo.CreateConsentProposal(bg, ConsentProposalInput{CycleID: *notebook.CycleID, Purpose: purpose,
+			ProposedByID: p.actor, TermsVersion: 1, ExpiresAt: pythonInstant(p.now).Add(7 * 24 * time.Hour), Now: p.now})
+		if err != nil {
+			return err
+		}
+		if err := p.repo.GrantConsent(bg, proposal.ID, p.actor, p.now); err != nil {
+			return err
+		}
+		return p.repo.CompleteConsentProposal(bg, proposal.ID, p.now)
+	}
+	// One offer per rung (2026-09-23): the other person's standing offer is
+	// answered, not duplicated; one's own is returned untouched. Read from the
+	// notebook already locked, so no statement is added.
+	for _, row := range notebook.Proposals {
+		if row.Purpose != purpose || row.CompletedAt != nil || !p.now.Before(row.ExpiresAt) {
+			continue
+		}
+		stands := false
+		for _, c := range notebook.Consents {
+			if c.ProposalID == row.ID && c.PersonID == row.ProposedByID && c.GrantedAt != nil && c.RevokedAt == nil {
+				stands = true
+			}
+		}
+		if !stands {
+			continue
+		}
+		if row.ProposedByID != p.actor {
+			return refuse(409, "consent_proposal_pending")
+		}
+		return nil
 	}
 	cycle := notebook.CycleID
 	if cycle == nil {
@@ -460,10 +536,27 @@ func (p *pairRoute) readablePaper(paperID string) (*PairPaper, error) {
 	if _, err := p.contextOr404(paper.ContextID); err != nil {
 		return nil, err
 	}
-	if paper.State == "nhap" && paper.DraftOwnerID != p.actor {
+	if !chiChuThayRepo(paper, p.actor) {
 		return nil, refuse(404, "paper_not_found")
 	}
 	return paper, nil
+}
+
+// chiChuThayRepo is `_chi_chu_thay` on the stored state: a sheet nobody ever
+// sent is its owner's draft whatever its state.
+func chiChuThayRepo(paper *PairPaper, actor string) bool {
+	if paper.DraftOwnerID == actor {
+		return true
+	}
+	if paper.State == "nhap" {
+		return false
+	}
+	for _, v := range paper.Versions {
+		if v.SentAt != nil {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *pairRoute) lockedPaper() (*PairPaper, error) {
@@ -523,11 +616,38 @@ func contentDay(content json.RawMessage) (time.Time, bool) {
 		if _, ok := stop["viec"]; !ok {
 			return time.Time{}, false
 		}
-		if place, ok := stop["place_id"].(string); ok && place != "" && !canonicalUUID.MatchString(place) {
-			return time.Time{}, false
-		}
 	}
 	return day, true
+}
+
+// agreedStop is one `_noi_dung_wire(content).chang` element as _chot reads it.
+type agreedStop struct {
+	gio, viec string
+	placeID   *string
+}
+
+// agreedStops is `_noi_dung_wire(content).chang` for a content contentDay
+// accepted; the cases store only str gio/viec and str-or-null place_id.
+func agreedStops(content json.RawMessage) []agreedStop {
+	var fields struct {
+		Chang []struct {
+			Gio     string  `json:"gio"`
+			Viec    string  `json:"viec"`
+			PlaceID *string `json:"place_id"`
+		} `json:"chang"`
+	}
+	if err := json.Unmarshal(content, &fields); err != nil {
+		panic(err)
+	}
+	out := []agreedStop{}
+	for _, stop := range fields.Chang {
+		place := stop.PlaceID
+		if place != nil && *place == "" {
+			place = nil
+		}
+		out = append(out, agreedStop{gio: stop.Gio, viec: stop.Viec, placeID: place})
+	}
+	return out
 }
 
 // dayOf is `_ngay_cua(paper)`.
@@ -600,7 +720,8 @@ func (p *pairRoute) readPaper() error {
 
 func (p *pairRoute) draftPaper() error {
 	contextID := p.text("context_id")
-	if _, err := p.contextOr404(contextID); err != nil {
+	members, err := p.contextOr404(contextID)
+	if err != nil {
 		return err
 	}
 	notebook, err := p.lockedNotebook(contextID)
@@ -619,6 +740,17 @@ func (p *pairRoute) draftPaper() error {
 			return refuse(409, "paper_wrong_state")
 		}
 	}
+	// ADR-0034 §2.5: three sheets per person per week, read from the rows
+	// already fetched -- no statement of its own.
+	mine := 0
+	for _, paper := range papers {
+		if paper.DraftOwnerID == p.actor && paper.Tuan.Equal(p.monday()) {
+			mine++
+		}
+	}
+	if mine >= pairpaper.ToMoiNguoiMoiTuan {
+		return refuse(409, "paper_week_quota")
+	}
 	local := p.now.In(wallClockLocation)
 	today := time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, time.UTC)
 	monday := today.AddDate(0, 0, -((int(local.Weekday()) + 6) % 7))
@@ -631,13 +763,145 @@ func (p *pairRoute) draftPaper() error {
 	if len(notebook.Constraints) > 0 {
 		uses = append(uses, "rang_buoc")
 	}
-	content, _ := json.Marshal(map[string]any{"ngay": saturday.Format("2006-01-02"),
-		"chang": []any{map[string]any{"gio": "18:30", "viec": "Ăn tối", "place_id": nil, "can_kiem": true}}})
-	nguon, _ := json.Marshal(map[string]any{"scope": "chung", "dung": uses, "luc": p.isoformat()})
+	// The cycle's agreed sheets and the catalogue around their place: the
+	// reads draft_pair_paper makes before it writes. The wording of the draft
+	// is lam_giau_phac's, whose own oracle is the pairpaper golden.
+	history := agreedHistory(papers, notebook)
+	var choCu *Place
+	for _, nd := range history {
+		if id := nd.Chang[0].PlaceID; id != nil && *id != "" {
+			if choCu, err = p.repo.GetPlace(bg, *id); err != nil {
+				return err
+			}
+			break
+		}
+	}
+	var rows []pairpaper.PlaceRow
+	var choCuRow *pairpaper.PlaceRow
+	if choCu != nil {
+		places, err := p.repo.ListPlaces(bg, PlaceFilter{DestinationID: &choCu.DestinationID, Category: &choCu.Category})
+		if err != nil {
+			return err
+		}
+		for _, place := range places {
+			rows = append(rows, placeRow(place))
+		}
+		row := placeRow(*choCu)
+		choCuRow = &row
+	}
+	boxes := make([]string, len(notebook.Constraints))
+	for i, c := range notebook.Constraints {
+		boxes[i] = c.Content
+	}
+	draft := pairpaper.LamGiauPhac(pairpaper.Draft{
+		Content: pairpaper.Content{Ngay: saturday.Format("2006-01-02"),
+			Chang: []pairpaper.Stop{{Gio: "18:30", Viec: "Ăn tối", CanKiem: true}}},
+		Nguon: pairpaper.Nguon{Scope: "chung", Dung: uses, Luc: p.isoformat()},
+	}, history, choCuRow, rows, boxes)
+	// ADR-0034: the sharers' tastes, read only inside «Một đôi».
+	if people := participantsOf(notebook, members); p.couple(notebook, people) {
+		consents := p.consentsOf(notebook)
+		chia := []string{}
+		for _, person := range people {
+			now := p.now
+			if containsText(pairnotebook.GrantedBy(consents, person, &now), "chia_gu") {
+				chia = append(chia, person)
+			}
+		}
+		if len(chia) > 0 {
+			rowsByPerson, err := p.repo.InterestsByPerson(bg, chia)
+			if err != nil {
+				return err
+			}
+			tags := map[string][]string{}
+			for _, row := range rowsByPerson {
+				tags[row.PersonID] = row.Tags
+			}
+			distinct := map[string]bool{}
+			for _, person := range people {
+				distinct[person] = true
+			}
+			gu := pairpaper.GuChoNep(chia, tags, p.names, len(chia) == len(distinct) && len(distinct) == 2)
+			var guRows []pairpaper.PlaceRow
+			dau := draft.Content.Chang[0]
+			if loai := pairpaper.LoaiTheoGu(gu); loai != "" && choCu != nil && (dau.PlaceID == nil || *dau.PlaceID == "") {
+				places, err := p.repo.ListPlaces(bg, PlaceFilter{DestinationID: &choCu.DestinationID, Category: &loai})
+				if err != nil {
+					return err
+				}
+				for _, place := range places {
+					guRows = append(guRows, placeRow(place))
+				}
+			}
+			daDi := []string{}
+			for _, nd := range history {
+				for _, c := range nd.Chang {
+					if c.PlaceID != nil && *c.PlaceID != "" {
+						daDi = append(daDi, *c.PlaceID)
+					}
+				}
+			}
+			if len(gu) > 0 {
+				draft = pairpaper.LamGiauTheoGu(draft, gu, guRows, daDi, boxes)
+			}
+		}
+	}
+	stops := []any{}
+	for _, stop := range draft.Content.Chang {
+		stops = append(stops, map[string]any{"gio": stop.Gio, "viec": stop.Viec, "place_id": stop.PlaceID, "can_kiem": stop.CanKiem})
+	}
+	content, _ := json.Marshal(map[string]any{"ngay": draft.Content.Ngay, "chang": stops})
+	nguon, _ := json.Marshal(map[string]any{"scope": "chung", "dung": draft.Nguon.Dung, "luc": draft.Nguon.Luc})
+	var lyDo *string
+	if draft.LyDo != "" {
+		lyDo = &draft.LyDo
+	}
 	_, err = p.repo.CreatePairPaper(bg, PairPaperInput{ContextID: contextID, CycleID: notebook.CycleID,
-		DraftOwnerID: p.actor, Tuan: monday, ExpiresAt: weekEnd, Content: content, Nguon: nguon, AuthorType: "human",
-		Now: p.now})
+		DraftOwnerID: p.actor, Tuan: monday, ExpiresAt: weekEnd, Content: content, LyDo: lyDo, Nguon: nguon,
+		AuthorType: "human", Now: p.now})
 	return err
+}
+
+// agreedHistory is `_lich_su_chu_ky`: the active cycle's agreed contents,
+// newest first (ListPairPapers' order), at most four, unreadable ones skipped.
+func agreedHistory(papers []PairPaper, notebook *PairNotebook) []pairpaper.Content {
+	if notebook == nil || notebook.CycleID == nil || notebook.CycleState == nil || *notebook.CycleState != "active" {
+		return nil
+	}
+	var out []pairpaper.Content
+	for i := range papers {
+		paper := &papers[i]
+		if paper.CycleID == nil || *paper.CycleID != *notebook.CycleID || paper.IsTemporary ||
+			(paper.State != "chot" && paper.State != "da_di" && paper.State != "da_giu") {
+			continue
+		}
+		current := versionOf(paper, paper.CurrentVersion)
+		if current == nil {
+			continue
+		}
+		day, ok := contentDay(current.Content)
+		if !ok {
+			continue
+		}
+		stops := agreedStops(current.Content)
+		if len(stops) == 0 {
+			continue
+		}
+		content := pairpaper.Content{Ngay: day.Format("2006-01-02")}
+		for _, stop := range stops {
+			content.Chang = append(content.Chang, pairpaper.Stop{Gio: stop.gio, Viec: stop.viec, PlaceID: stop.placeID})
+		}
+		out = append(out, content)
+		if len(out) == 4 {
+			break
+		}
+	}
+	return out
+}
+
+func placeRow(place Place) pairpaper.PlaceRow {
+	return pairpaper.PlaceRow{ID: place.ID, Name: place.Name, Category: place.Category, Kinds: place.Kinds,
+		Traits: place.Traits, Rating: place.Rating, RatingCount: place.RatingCount}
 }
 
 func (p *pairRoute) editDraft() error {
@@ -796,8 +1060,25 @@ func (p *pairRoute) chot(paper *PairPaper, version int64) error {
 	if !ok {
 		return refuse(409, "paper_wrong_state")
 	}
+	chang := agreedStops(current.Content)
+	places := make([]*Place, len(chang))
+	for i, stop := range chang {
+		if stop.placeID == nil {
+			continue
+		}
+		if places[i], err = p.repo.GetPlace(bg, *stop.placeID); err != nil {
+			return err
+		}
+	}
+	ten := []rune(chang[0].viec)
+	if places[0] != nil {
+		ten = []rune(places[0].Name)
+	}
+	if len(ten) > 190 {
+		ten = ten[:190]
+	}
 	outing, err := p.repo.CreateOuting(bg, OutingInput{ContextID: paper.ContextID, CreatedByID: p.actor,
-		Title: "Tờ lời rủ " + day.Format("02/01"), StartsOn: day, EndsOn: day, Headcount: 2, Now: p.now})
+		Title: string(ten) + " · " + day.Format("02/01"), StartsOn: day, EndsOn: day, Headcount: 2, Now: p.now})
 	if err != nil {
 		return err
 	}
@@ -810,6 +1091,22 @@ func (p *pairRoute) chot(paper *PairPaper, version int64) error {
 		}
 		return err
 	}
+	if err != nil {
+		return err
+	}
+	stops := make([]TimelineStop, len(chang))
+	for i, stop := range chang {
+		clock, err := time.Parse("15:04", stop.gio)
+		if err != nil {
+			return err
+		}
+		stops[i] = TimelineStop{MinuteOfDay: int64(clock.Hour()*60 + clock.Minute()), Label: stop.viec}
+		if places[i] != nil {
+			name, id := places[i].Name, places[i].ID
+			stops[i].PlaceName, stops[i].PlaceID = &name, &id
+		}
+	}
+	_, err = p.repo.ReplaceOutingStops(bg, outing.ID, stops, nil)
 	return err
 }
 
@@ -896,9 +1193,21 @@ func pairRouteGo(repo Repository, name string, a map[string]any) (any, error) {
 	var err error
 	switch name {
 	case "route.pair_notebook":
-		if _, err = p.contextOr404(p.text("context_id")); err == nil {
-			if _, err = repo.GetPairNotebook(bg, p.text("context_id")); err == nil {
-				_, err = repo.ListPairPapers(bg, p.text("context_id"))
+		var members []string
+		if members, err = p.contextOr404(p.text("context_id")); err == nil {
+			var notebook *PairNotebook
+			if notebook, err = repo.GetPairNotebook(bg, p.text("context_id")); err == nil {
+				if _, err = repo.ListPairPapers(bg, p.text("context_id")); err == nil && notebook != nil {
+					people := participantsOf(notebook, members)
+					// ADR-0034 §2.4: the week's choice, in an open «Một đôi».
+					if notebook.CycleID != nil && notebook.CycleState != nil && *notebook.CycleState == "active" && p.couple(notebook, people) {
+						_, err = repo.GetPairRhythm(bg, *notebook.CycleID, p.monday())
+					}
+					// ADR-0034: tastes are read only inside «Một đôi».
+					if err == nil && p.couple(notebook, people) {
+						_, err = repo.InterestsByPerson(bg, people)
+					}
+				}
 			}
 		}
 	case "route.propose_pair_consent":
@@ -907,6 +1216,8 @@ func pairRouteGo(repo Repository, name string, a map[string]any) (any, error) {
 		err = p.grantConsent()
 	case "route.revoke_pair_consent":
 		err = p.revokeConsent()
+	case "route.set_pair_week_role":
+		err = p.setWeekRole()
 	case "route.put_pair_constraint":
 		err = p.putConstraint()
 	case "route.delete_pair_constraint":
@@ -945,4 +1256,50 @@ func pairRouteGo(repo Repository, name string, a map[string]any) (any, error) {
 		panic("unknown route " + name)
 	}
 	return nil, err
+}
+
+// monday is pair_paper.tuan_cua(now): the week's Monday on the wall clock.
+func (p *pairRoute) monday() time.Time {
+	local := p.now.In(wallClockLocation)
+	today := time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, time.UTC)
+	return today.AddDate(0, 0, -((int(local.Weekday()) + 6) % 7))
+}
+
+// setWeekRole is set_pair_week_role (ADR-0034 §2.4).
+func (p *pairRoute) setWeekRole() error {
+	contextID := p.text("context_id")
+	members, err := p.contextOr404(contextID)
+	if err != nil {
+		return err
+	}
+	notebook, err := p.lockedNotebook(contextID)
+	if err != nil {
+		return err
+	}
+	people := participantsOf(notebook, members)
+	if notebook.CycleID == nil || notebook.CycleState == nil || *notebook.CycleState != "active" || !p.couple(notebook, people) {
+		return refuse(409, "consent_missing")
+	}
+	var nguoiLo *string
+	switch p.body()["lo"] {
+	case "toi":
+		id := p.actor
+		nguoiLo = &id
+	case "nguoi_kia":
+		for _, person := range people {
+			if person != p.actor {
+				id := person
+				nguoiLo = &id
+				break
+			}
+		}
+	}
+	if _, err := p.repo.SetPairRhythm(bg, PairRhythmInput{CycleID: *notebook.CycleID, Tuan: p.monday(), NguoiLoID: nguoiLo, ChonBoiID: p.actor, Now: p.now}); err != nil {
+		return err
+	}
+	if _, err := p.repo.ListPairPapers(bg, contextID); err != nil {
+		return err
+	}
+	_, err = p.repo.GetPairRhythm(bg, *notebook.CycleID, p.monday())
+	return err
 }

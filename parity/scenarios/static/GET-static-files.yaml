@@ -1,0 +1,154 @@
+# MOUNT /static -- the three files the guest pages ask for.
+#
+# This mount had no scenario at all until today: the corpus only ever reached
+# its 404. So `etag`, `last-modified`, `accept-ranges`, the 304 and the 206 had
+# no contract, and a port could have changed any of them unnoticed.
+#
+# WHY TWO HEADERS ARE COMPARED BY NAME AND NOT BY VALUE. Starlette derives the
+# ETag from the file's mtime and size, never from its bytes:
+#
+#     etag = md5(f"{st_mtime}-{st_size}")
+#
+# Measured across two builds of IDENTICAL content, the served etag was
+# 643656382d0b4df1c31428b69735d3ec and a31f7470416e1f039dddfaf64f1362c5 while
+# md5(content) stayed 397aab04ee043894e776a8a6a2605f7e in both. The value is
+# build metadata, it already changes on every image rebuild, and an embedded
+# file has no mtime at all -- so Go hashes the content instead. ADR-0029 §2.4
+# STATIC-VALIDATOR-VALUE accepts exactly that: the two headers must be PRESENT
+# on both sides and keep Python's shape; their values may differ. Every status,
+# every other header and every byte of every body is compared exactly.
+#
+# Each conditional request is sent the validator ITS OWN side issued, bound from
+# that side's response. That is what keeps the 304 and If-Range branches
+# comparable without masking anything: the binding decides what is SENT, never
+# what is compared.
+#
+# WHAT THIS FILE CANNOT PROVE: that the CSS is correct. It measures the serving
+# mechanism. It also cannot prove the multi-range branch, whose multipart
+# boundary is random on both sides and so can never match byte for byte; Go
+# answers such a request with the whole file, which is a legal answer and a
+# deterministic one.
+id: static/get-static-files
+routes:
+  - 'MOUNT /static'
+auth_mode: dev
+personas:
+  reader: {}
+steps:
+  - id: stylesheet
+    as: anonymous
+    request: {method: GET, path: '/static/guest.css'}
+    bind:
+      css_etag: {from: header, name: etag, class: echo}
+      css_last_modified: {from: header, name: last-modified, class: echo}
+
+  - id: script
+    as: anonymous
+    request: {method: GET, path: '/static/guest.js'}
+
+  - id: design_system
+    as: anonymous
+    request: {method: GET, path: '/static/design_system.css'}
+
+  - id: head_stylesheet
+    as: anonymous
+    request: {method: HEAD, path: '/static/guest.css'}
+
+  # Each side is asked about the validator it gave out.
+  - id: revalidate_with_etag
+    as: anonymous
+    request:
+      method: GET
+      path: '/static/guest.css'
+      headers: {'if-none-match': '{{css_etag}}'}
+
+  - id: revalidate_with_date
+    as: anonymous
+    request:
+      method: GET
+      path: '/static/guest.css'
+      headers: {'if-modified-since': '{{css_last_modified}}'}
+
+  # A validator neither side ever issued: both must send the file.
+  - id: revalidate_stale
+    as: anonymous
+    request:
+      method: GET
+      path: '/static/guest.css'
+      headers: {'if-none-match': '"khong-phai-cua-ai"'}
+
+  - id: byte_range
+    as: anonymous
+    request:
+      method: GET
+      path: '/static/guest.css'
+      headers: {'range': 'bytes=0-9'}
+
+  - id: suffix_range
+    as: anonymous
+    request:
+      method: GET
+      path: '/static/guest.css'
+      headers: {'range': 'bytes=-10'}
+
+  - id: range_with_matching_if_range
+    as: anonymous
+    request:
+      method: GET
+      path: '/static/guest.css'
+      headers: {'if-range': '{{css_etag}}', 'range': 'bytes=0-9'}
+
+  # A stale If-Range must drop the Range and send the whole file.
+  - id: range_with_stale_if_range
+    as: anonymous
+    request:
+      method: GET
+      path: '/static/guest.css'
+      headers: {'if-range': '"khong-phai-cua-ai"', 'range': 'bytes=0-9'}
+
+  # text/plain and an EMPTY body -- not the JSON its neighbours use.
+  - id: range_past_the_end
+    as: anonymous
+    request:
+      method: GET
+      path: '/static/guest.css'
+      headers: {'range': 'bytes=99999-100000'}  # repo-guard: allow=long-number reason=http-byte-range
+
+  - id: missing_file
+    as: anonymous
+    request: {method: GET, path: '/static/khong-co.css'}
+
+  - id: head_missing_file
+    as: anonymous
+    request: {method: HEAD, path: '/static/khong-co.css'}
+
+  - id: the_directory
+    as: anonymous
+    request: {method: GET, path: '/static/'}
+
+  - id: nested_name
+    as: anonymous
+    request: {method: GET, path: '/static/a/b/c.css'}
+
+  - id: escaped_traversal
+    as: anonymous
+    request: {method: GET, path: '/static/..%2f..%2fmain.py'}
+
+  # 405 with NO Allow header. The API router's 405 carries one; this mount's
+  # does not, and "tidying" that up would be a divergence.
+  - id: post_is_refused
+    as: anonymous
+    request: {method: POST, path: '/static/guest.css'}
+
+  # A signed-in caller is served the same bytes: this mount reads no session.
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"display_name":"Người đọc trang khách (dữ liệu mẫu)"}'
+
+  - id: stylesheet_while_signed_in
+    as: reader
+    request: {method: GET, path: '/static/guest.css'}

@@ -23,18 +23,23 @@
  *   token is lost in the network, and the person is locked out until somebody
  *   rotates the invitation for them. An `Idempotency-Key` turns that into a
  *   replay of the same answer.
- * - **The fallback store.** On web there is no SecureStore. The session is
- *   kept in memory for that session of the browser and nowhere else, which is
- *   the honest behaviour rather than quietly writing a credential to
- *   `localStorage`.
+ * - **The web store.** On web there is no SecureStore, and the bearer is
+ *   still never written to `localStorage`, where any page script can read it
+ *   at rest. It lives in memory; what
+ *   survives a reload is an HttpOnly, path-scoped, SameSite=Strict cookie the
+ *   server sets and no script can read (`phien-web.ts`,
+ *   `services/core/internal/websession`). Before that store existed every
+ *   reload signed the person out (measured 2026-09-24).
  */
 import {
+  BASE_URL,
   datTokenPhien,
   newAttempt,
   tokenPhienHienTai,
   translatedAnonymous,
   translatedAsActor,
 } from "./api";
+import { khoPhienWeb, type KhoAnToan } from "./phien-web";
 
 /** What the server hands back once, and what we keep. */
 export type TinCuoiTomTat = {
@@ -85,12 +90,7 @@ export type Phien = {
   contexts?: NhomTomTat[];
 };
 
-/** Where a secret is kept between launches. */
-export type KhoAnToan = {
-  doc(khoa: string): Promise<string | null>;
-  ghi(khoa: string, giaTri: string): Promise<void>;
-  xoa(khoa: string): Promise<void>;
-};
+export type { KhoAnToan } from "./phien-web";
 
 const KHOA = "rudi.phien";
 
@@ -106,7 +106,7 @@ const LOI_DANG_XUAT: Record<string, string> = {
   http_401: "Phiên đã hết hiệu lực rồi.",
 };
 
-/** In memory only. The fallback, and what the web build always gets. */
+/** In memory only: the fallback where there is neither SecureStore nor a browser (node). */
 export function khoTrongBoNho(): KhoAnToan {
   let giu: string | null = null;
   return {
@@ -125,7 +125,8 @@ export function khoTrongBoNho(): KhoAnToan {
 let khoMacDinh: KhoAnToan | null = null;
 
 /**
- * SecureStore when the platform has it, memory when it does not.
+ * SecureStore when the platform has it; in a browser, the cookie-backed web
+ * store; memory otherwise.
  *
  * Resolved once and remembered, because the answer cannot change inside one
  * run of the app, and because a failed dynamic import should not be retried on
@@ -145,7 +146,10 @@ export async function khoAnToanMacDinh(): Promise<KhoAnToan> {
       xoa: (khoa) => store.deleteItemAsync(khoa),
     };
   } catch {
-    khoMacDinh = khoTrongBoNho();
+    khoMacDinh =
+      typeof document !== "undefined" && typeof fetch === "function"
+        ? khoPhienWeb(BASE_URL)
+        : khoTrongBoNho();
   }
   return khoMacDinh;
 }
@@ -268,7 +272,7 @@ const LOI_OTP_GUI: Record<string, string> = {
   otp_resend_too_soon: "Mã vừa được gửi. Đợi một chút rồi gửi lại.",
   otp_too_many_requests: "Số này vừa nhận nhiều mã. Thử lại sau ít phút.",
   rate_limited: "Thử lại sau một phút.",
-  identity_key_missing: "Máy chủ chưa sẵn sàng cho đăng nhập.",
+  identity_key_missing: "Rủ Đi chưa sẵn sàng cho đăng nhập. Thử lại sau ít phút.",
   sms_unavailable: "Chưa gửi được tin nhắn lúc này, thử lại sau.",
 };
 
@@ -277,7 +281,7 @@ const LOI_OTP_XAC_MINH: Record<string, string> = {
   otp_too_many_attempts: "Sai quá nhiều lần. Xin mã mới.",
   challenge_id_invalid: "Lượt xin mã bị lỗi. Xin mã mới.",
   rate_limited: "Thử lại sau một phút.",
-  identity_key_missing: "Máy chủ chưa sẵn sàng cho đăng nhập.",
+  identity_key_missing: "Rủ Đi chưa sẵn sàng cho đăng nhập. Thử lại sau ít phút.",
 };
 
 /** Ask the server to send a code. The number goes in the body, never a path. */
@@ -343,6 +347,19 @@ export async function ganDanhSachNhom(
 }
 
 /**
+ * The display name the session greets with, after `PATCH /people/me` changed it.
+ *
+ * The session is minted with whatever name the server had at sign-in, often
+ * its placeholder; without writing the new one back, a person who just typed
+ * their name kept being «Thành viên mới» until the next sign-in (QA 23/09).
+ */
+export async function doiTenTrongPhien(phien: Phien, ten: string, kho?: KhoAnToan): Promise<Phien> {
+  const moi: Phien = { ...phien, profile: { ...phien.profile, display_name: ten } };
+  await ghiNho(moi, kho);
+  return moi;
+}
+
+/**
  * Make one of the listed groups the current one, and remember it.
  *
  * The conversation list is where a person with several groups picks which one
@@ -353,7 +370,7 @@ export async function ganDanhSachNhom(
 export async function chonNhom(phien: Phien, contextId: string, kho?: KhoAnToan): Promise<Phien> {
   const nhom = phien.contexts?.find((ung) => ung.id === contextId);
   if (nhom === undefined) {
-    throw new Error("Nhóm này không có trong danh sách máy chủ vừa trả.");
+    throw new Error("Nhóm này không còn trong danh sách của bạn.");
   }
   if (nhom.my_state !== "active") {
     throw new Error("Bạn chưa đồng ý vào nhóm này.");
@@ -390,7 +407,7 @@ export type HoSoToi = {
 };
 
 const LOI_HO_SO: Record<string, string> = {
-  person_not_found: "Máy chủ chưa có hồ sơ cho tài khoản này.",
+  person_not_found: "Chưa có hồ sơ cho tài khoản này. Đăng nhập lại giúp mình.",
   http_422: "Hồ sơ chưa hợp lệ: tên không được rỗng, giới thiệu tối đa 500 chữ.",
 };
 
@@ -467,7 +484,17 @@ export async function khoiPhucPhien(kho?: KhoAnToan): Promise<Phien | null> {
     return null;
   }
   datTokenPhien(phien.token);
-  return phien;
+  if (phien.contexts !== undefined) return phien;
+  // A session resumed on the web (and any record older than the field) knows
+  // who but not which groups: ask, the way a sign-in by OTP does. Offline, the
+  // person is still signed in; the group list fills on its next refresh.
+  try {
+    const coNhom = chonNhomMacDinh({ ...phien, contexts: await docNhomCuaToi(phien.person_id) });
+    await store.ghi(KHOA, JSON.stringify(coNhom));
+    return coNhom;
+  } catch {
+    return phien;
+  }
 }
 
 /**

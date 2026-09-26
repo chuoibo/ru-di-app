@@ -26,7 +26,7 @@ import { tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
@@ -97,7 +97,7 @@ export function GroupMembersScreen() {
         subtitle={
           trang.pha === "xong"
             ? `${conSong.filter((tv) => tv.state === "active").length} đang ở trong nhóm, ${conSong.filter((tv) => tv.state === "invited").length} đang được mời.`
-            : "Đang đọc danh sách từ máy chủ..."
+            : "Đang đọc danh sách thành viên…"
         }
       />
       <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
@@ -119,7 +119,7 @@ export function GroupMembersScreen() {
             const duocMoi = tv.state === "invited";
             return (
               <View key={tv.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
-                <Avatar name={ten} ring={laToi} size={40} />
+                <AvatarNguoi name={ten} personId={tv.person_id} ring={laToi} size={40} />
                 <View style={styles.hangChu}>
                   <Text style={[typography.body, { color: duocMoi ? colors.inkSoft : colors.ink }]}>
                     {ten}

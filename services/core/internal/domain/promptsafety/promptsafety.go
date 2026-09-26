@@ -67,6 +67,14 @@ func fieldSafe(value tree.Value, maxChars int) bool {
 	return instruction.FindString(fold(s)) == ""
 }
 
+// TextSafe is field_is_safe for one piece of free text that is not a catalogue
+// row: the same length bound, control-character refusal and instruction
+// catalogue a place name gets. Chat assist uses it on members' display names,
+// which people type themselves and which now reach the model.
+func TextSafe(s string, maxChars int) bool {
+	return fieldSafe(tree.String(s), maxChars)
+}
+
 func listSafe(value tree.Value) bool {
 	if value == nil {
 		return true

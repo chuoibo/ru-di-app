@@ -161,6 +161,9 @@ func peopleGoCall(repo Repository, rec *recorder, method string, a map[string]an
 	case "share_active_context":
 		ok, err := repo.ShareActiveContext(bg, s("a"), s("b"))
 		return tBool(ok), err
+	case "same_couple":
+		ok, err := repo.SameCouple(bg, s("a"), s("b"))
+		return tBool(ok), err
 	case "profile_counts":
 		c, err := repo.ProfileCounts(bg, s("person_id"))
 		return tRecord("ProfileCounts", "friends", tInt(c.Friends), "contexts", tInt(c.Contexts),
@@ -548,6 +551,9 @@ func peopleRepoOracleCases(tables []string) ([]peopleCase, oracleSpec) {
 	for _, pair := range [][2]string{{w.an, w.binh}, {w.binh, w.an}, {w.an, w.chi}, {w.chi, w.binh}, {w.an, w.ban},
 		{w.binh, w.erased}, {w.hang, w.ban}, {w.hang, w.an}, {w.an, w.an}, {w.moi, w.moi}, {w.an, missing}} {
 		relations = append(relations, read("share_active_context", "a", pair[0], "b", pair[1]))
+	}
+	for _, pair := range [][2]string{{w.an, w.binh}, {w.binh, w.an}, {w.an, w.an}, {w.an, missing}, {w.an, w.stranger}} {
+		relations = append(relations, read("same_couple", "a", pair[0], "b", pair[1]))
 	}
 	add("are_friends and share_active_context: every relation", "", base, none, relations...)
 	var counts []oracleCall

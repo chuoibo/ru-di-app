@@ -74,7 +74,7 @@ type Bind struct {
 	Pointer string `yaml:"pointer"` // JSON pointer, for from: body
 	Name    string `yaml:"name"`    // header name, for from: header
 	Regex   string `yaml:"regex"`   // optional; the first group is captured
-	Class   string `yaml:"class"`   // uuid | token
+	Class   string `yaml:"class"`   // uuid | token | echo (echo does not mask)
 }
 
 // Anonymous is the caller with no credentials.
@@ -275,8 +275,13 @@ func (sc *Scenario) validate() error {
 			default:
 				return fmt.Errorf("%s: bind %q from %q must be body or header", where, name, bind.From)
 			}
-			if bind.Class != "uuid" && bind.Class != "token" {
-				return fmt.Errorf("%s: bind %q class %q must be uuid or token", where, name, bind.Class)
+			// "echo" binds a value to send it back without naming it to the
+			// binder, so it is still COMPARED as it arrived. uuid and token
+			// both mask what they bind, which is right for an id and wrong for
+			// a value whose divergence is the thing under test -- a masked
+			// value can never be seen to differ.
+			if bind.Class != "uuid" && bind.Class != "token" && bind.Class != "echo" {
+				return fmt.Errorf("%s: bind %q class %q must be uuid, token or echo", where, name, bind.Class)
 			}
 			if bind.Regex != "" {
 				re, err := regexp.Compile(bind.Regex)

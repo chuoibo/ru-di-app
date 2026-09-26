@@ -945,7 +945,10 @@ class PublicPersonResponse(ApiModel):
     bio: StrictStr | None
     city: StrictStr | None
     created_at: datetime
-    relation: Literal["self", "friend", "groupmate"]
+    #: `couple`: the reader and this person are one «Một đôi» (ADR-0034). Only
+    #: the two of them can ever be told this; to anybody else they are friends
+    #: or groupmates, as before.
+    relation: Literal["self", "friend", "groupmate", "couple"]
 
 
 class SavedPlaceSummary(ApiModel):
@@ -1822,26 +1825,6 @@ class ChatExpenseDraftResponse(ApiModel):
         return self
 
 
-class CompanionTurnRequest(ApiModel):
-    """Whether a person asked for this turn or the client is offering one.
-
-    The body is optional and the default is the offer, because that is what the
-    shipped client sends: it posts this route after every message with no body
-    at all. Only a caller that knows a human addressed the companion should set
-    the flag -- the server cannot tell, and deliberately does not look, since
-    `plan_turn` is handed message metadata and never message text.
-    """
-
-    requested: bool = False
-
-
-class CompanionTurnResponse(ApiModel):
-    context_id: UUID
-    spoke: bool
-    reason: str
-    message: MessageResponse | None
-
-
 class MessageListResponse(ApiModel):
     context_id: UUID
     messages: list[MessageResponse]
@@ -1851,28 +1834,16 @@ class MessageListResponse(ApiModel):
 
 class PostedMessageResponse(MessageResponse):
     """`POST /messages` answers with the stored message and what the server did
-    about a slash command or mention in it (M3, `app/domain/chat_intent.py`).
+    about a `/vote` command in it (M3, `app/domain/chat_intent.py`).
 
-    The message is ALWAYS stored first; the companion, the vote or a refusal
-    ride along in the same answer so a rate-limited or refused intent never
-    turns into a lost message and a retried duplicate.
+    The message is ALWAYS stored first; the vote or a refusal rides along in
+    the same answer so a refused intent never turns into a lost message and a
+    retried duplicate. No other command is acted on here (ADR-0036 §2.1).
     """
 
-    intent: Literal["plan", "chia_bill", "vote", "mention"] | None = None
-    companion: CompanionTurnResponse | None = None
+    intent: Literal["vote"] | None = None
     vote: VoteResponse | None = None
-    # `/chia-bill`: one server-authored `expense_draft` card, or nothing.
-    expense_card: MessageResponse | None = None
-    intent_error: (
-        Literal[
-            "vote_malformed",
-            "companion_rate_limited",
-            "chia_bill_not_available",
-            "chia_bill_no_expenses",
-            "chia_bill_refused",
-        ]
-        | None
-    ) = None
+    intent_error: Literal["vote_malformed"] | None = None
 
 
 class BatchCreateRequest(ApiModel):
@@ -2530,7 +2501,7 @@ class ReelResponse(ApiModel):
 # bản mới, mốc gửi, người gửi, id outing. Một trường như thế trong body là một
 # đường cho client nói dối về điều nó không được quyết.
 
-PairConsentPurpose = Literal["lap_so", "bat_doi", "doc_chat"]
+PairConsentPurpose = Literal["lap_so", "bat_doi", "doc_chat", "chia_gu"]
 PairConstraintKind = Literal["khong_an_duoc", "dung"]
 PairResponseKind = Literal["dong_y", "de_nghi_sua"]
 PairAuthorType = Literal["human", "nep"]
@@ -2564,7 +2535,10 @@ class PaperStopInput(ApiModel):
     #: which is agreed can become an outing without reinterpreting its hours.
     gio: Annotated[StrictStr, Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")]
     viec: Annotated[StrictStr, Field(min_length=1, max_length=200)]
-    place_id: UUID | None = None
+    #: A catalogue place's id, the same spelling `OutingStopInput.place_id`
+    #: takes (slugs such as «p-lau-ga-la-e»). It was a UUID, which no catalogue
+    #: place is, so a sheet could never name a real place (QA 23/09).
+    place_id: Annotated[StrictStr, Field(min_length=1, max_length=80)] | None = None
     can_kiem: StrictBool = True
 
 
@@ -2580,7 +2554,7 @@ class PaperContentInput(ApiModel):
 class PaperStop(ApiModel):
     gio: StrictStr
     viec: StrictStr
-    place_id: UUID | None
+    place_id: StrictStr | None
     can_kiem: StrictBool
 
 
@@ -2739,6 +2713,38 @@ class PairProposalResponse(ApiModel):
     my_granted: StrictBool
 
 
+class PairTasteResponse(ApiModel):
+    """Gu trong sổ đôi (ADR-0034 §2.1–2.2): gu người kia chỉ khi HỌ đã bật
+    `chia_gu`; gu chung chỉ khi CẢ HAI đã bật."""
+
+    mine_shared: StrictBool
+    theirs_shared: StrictBool
+    theirs: list[str]
+    common: list[str]
+
+
+class PairRoleScoreResponse(ApiModel):
+    person_id: UUID
+    score: int
+
+
+class PairWeekRoleResponse(ApiModel):
+    """«Người lo» tuần này (ADR-0034 §2.4): `cach` là «suy» (từ những gì hai
+    người đã làm trong sổ) hoặc «chon» (một trong hai đã chọn cho tuần này)."""
+
+    tuan: date
+    nguoi_lo: list[UUID]
+    #: «luot»: người lo quen đã mở lời hai tuần liền, tuần này sang người kia.
+    cach: Literal["suy", "chon", "luot"]
+    diem: list[PairRoleScoreResponse]
+
+
+class PairWeekRoleRequest(ApiModel):
+    """Ai lo tuần này: tôi, người kia, hay «Hôm nay mình share»."""
+
+    lo: Literal["toi", "nguoi_kia", "ca_hai"]
+
+
 class PairNotebookResponse(ApiModel):
     """Sổ, nhìn từ một trong hai người.
 
@@ -2758,6 +2764,14 @@ class PairNotebookResponse(ApiModel):
     #: một hành vi trái luật hạn mức (§6.3). Công tắc tới ở lát 2.
     nep_gui_ho: StrictBool
     open_paper_id: UUID | None
+    #: Bậc mà CẢ HAI đã đồng ý trên CÙNG MỘT lời đề nghị, theo thứ tự thang.
+    #: Hai «có» của hai lời đề nghị khác nhau không phải một thoả thuận; màn
+    #: hình chỉ được sáng một bậc theo trường này (QA 23/09).
+    granted_purposes: list[PairConsentPurpose]
+    #: Null ngoài sổ «Một đôi» (ADR-0034).
+    taste: PairTasteResponse | None
+    #: Null ngoài sổ «Một đôi» đang mở (ADR-0034 §2.4).
+    week_role: PairWeekRoleResponse | None
 
 
 class PairProposalCreateRequest(ApiModel):

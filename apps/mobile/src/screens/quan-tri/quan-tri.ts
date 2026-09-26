@@ -145,7 +145,7 @@ export async function datVaiTro(
 
 const ROI_NHOM_REFUSALS: Record<string, string> = {
   permission_denied:
-    "Chỉ chính bạn mới rời nhóm thay bạn được. Máy chủ không có đường để một người xoá người khác khỏi nhóm.",
+    "Chỉ chính bạn mới rời nhóm thay bạn được. Rủ Đi không cho một người xoá người khác khỏi nhóm.",
   membership_not_found: "Bạn không còn là thành viên đang hoạt động của nhóm này.",
 };
 
@@ -175,7 +175,7 @@ export async function roiNhom(
 const LOI_MOI_REFUSALS: Record<string, string> = {
   outing_not_found: "Chuyến này không còn nữa. Đọc lại danh sách chuyến rồi thử lại.",
   person_not_registered:
-    "Người này chưa có tên trên máy chủ, nên chưa mời được. Thêm họ vào nhóm trước.",
+    "Người này chưa có tài khoản Rủ Đi, nên chưa mời được. Thêm họ vào nhóm trước.",
   participant_not_in_context:
     "Người này không ở trong nhóm, nên chưa mời kiểu “thành viên nhóm” được.",
   invite_already_exists: "Người này đã được mời vào chuyến rồi.",
@@ -341,7 +341,7 @@ export function loiNhacQuanTriCuoi(
     "Nhóm chỉ còn một quản trị, nên app không cho bỏ quyền của người đó. " +
     // Hyphen, never an em-dash: `tests/dau-gach-dai.test.mjs` gates the source
     // against one reaching a person's screen, and this string is user-facing.
-    "Máy chủ không có đường phong quản trị mới khi nhóm không còn quản trị nào. " +
+    "Rủ Đi chưa có cách phong quản trị mới khi nhóm không còn quản trị nào. " +
     "Đặt thêm một người làm quản trị trước, rồi mới bỏ quyền."
   );
 }

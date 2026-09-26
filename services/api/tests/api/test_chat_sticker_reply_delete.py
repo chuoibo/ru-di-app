@@ -4,8 +4,9 @@ What this layer proves: a sticker is stored by id and an unknown id is a 422
 with a sentence; a reply carries a server-built quote and quoting the wrong
 thing is refused with the same 404 for absent and cross-group; deleting one's
 own message leaves a `deleted` row with no payload and no reactions and the
-list says so; other people's messages and cards cannot be deleted; and the
-companion is never handed the words of a deleted message.
+list says so; and other people's messages and cards cannot be deleted. (The
+case «the companion is never handed a deleted message» left with the automatic
+companion, ADR-0036 §2.1: no server path reads the message table for AI.)
 
 Built on the chat fake of `test_chat_intents.py`, widened with the three
 repository methods this slice added.
@@ -68,16 +69,6 @@ class ChatRepositoryWithEdits(ChatRepository):
         return None
 
 
-class RecordingCompanion(CountingCompanion):
-    def __init__(self) -> None:
-        super().__init__()
-        self.conversations: list[list[dict]] = []
-
-    def reply(self, **kwargs) -> dict:
-        self.conversations.append(kwargs["conversation"])
-        return super().reply(**kwargs)
-
-
 @pytest.fixture
 def repository():
     return ChatRepositoryWithEdits()
@@ -85,7 +76,7 @@ def repository():
 
 @pytest.fixture
 def companion():
-    return RecordingCompanion()
+    return CountingCompanion()
 
 
 @pytest.fixture
@@ -312,23 +303,6 @@ def test_a_stranger_to_the_group_is_refused_before_the_row_is_read(client):
         headers=actor_headers(actor_id=MEMBER_ID),
     )
     assert response.status_code == 403, response.text
-
-
-def test_the_companion_is_never_handed_the_words_of_a_deleted_message(
-    client, companion
-):
-    gone = _text(client, "địa chỉ nhà tôi là ...").json()
-    client.delete(
-        f"/contexts/{CONTEXT_ID}/messages/{gone['id']}",
-        headers=actor_headers(actor_id=MEMBER_ID),
-    )
-    response = _text(client, "/plan tối nay đi đâu")
-    assert response.status_code == 201, response.text
-    assert companion.calls == 1
-    (conversation,) = companion.conversations
-    kinds = {row["kind"] for row in conversation}
-    assert "deleted" not in kinds
-    assert all("địa chỉ nhà" not in (row["body"] or "") for row in conversation)
 
 
 def test_an_expense_draft_cannot_be_read_from_a_deleted_message(client):

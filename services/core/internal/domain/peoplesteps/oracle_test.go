@@ -276,6 +276,7 @@ type fakeStore struct {
 	calls        []any
 	people       map[string]*Person
 	friends      [][2]string
+	couples      [][2]string
 	groupmates   [][2]string
 	edges        []edgeRow
 	summaries    []SummaryRecord
@@ -347,6 +348,9 @@ func (h *harness) newStore(raw map[string]any, now time.Time) (*fakeStore, error
 		return nil, err
 	}
 	if s.groupmates, err = h.pairs(world["groupmates"]); err != nil {
+		return nil, err
+	}
+	if s.couples, err = h.pairs(world["couples"]); err != nil {
 		return nil, err
 	}
 	edges, err := oracletest.List(world["edges"])
@@ -655,6 +659,11 @@ func (s *fakeStore) ListPersonInterests(personID string) ([]string, error) {
 func (s *fakeStore) AreFriends(a, b string) (bool, error) {
 	s.rec("are_friends", s.h.name(a), s.h.name(b))
 	return samePair(s.friends, a, b), nil
+}
+
+func (s *fakeStore) SameCouple(a, b string) (bool, error) {
+	s.rec("same_couple", s.h.name(a), s.h.name(b))
+	return samePair(s.couples, a, b), nil
 }
 
 func (s *fakeStore) ShareActiveContext(a, b string) (bool, error) {

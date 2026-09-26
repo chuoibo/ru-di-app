@@ -10,6 +10,7 @@ real PostgreSQL server.
 
 from __future__ import annotations
 
+import dataclasses
 import uuid
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -58,8 +59,10 @@ from app.api.repository import (
     OtpChallengeRecord,
     OutingInviteRecord,
     OutingRecord,
+    OutingStopRecord,
     PairConsentRecord,
     PairConstraintRecord,
+    PairRhythmRecord,
     PairKeepRecord,
     PairNotebookRecord,
     PairPaperRecord,
@@ -351,6 +354,7 @@ class FakeRepository(SeedCatalogueReads):
         self.pair_consents: dict[tuple[uuid.UUID, uuid.UUID], dict] = {}
         self.active_couple_members: dict[uuid.UUID, uuid.UUID] = {}
         self.pair_constraints: dict[tuple[uuid.UUID, uuid.UUID, str], dict] = {}
+        self.pair_rhythms: dict = {}
         self.pair_papers: dict[uuid.UUID, dict] = {}
         self.pair_paper_versions: dict[tuple[uuid.UUID, int], dict] = {}
         self.pair_paper_views: dict[tuple[uuid.UUID, int, uuid.UUID], datetime] = {}
@@ -1565,6 +1569,10 @@ class FakeRepository(SeedCatalogueReads):
             for edge in self.friend_edges.values()
         )
 
+    def same_couple(self, a, b):
+        ca, cb = self.active_couple_members.get(a), self.active_couple_members.get(b)
+        return a != b and ca is not None and ca == cb
+
     def share_active_context(self, a, b):
         mine = {cid for (cid, pid) in self.active_memberships if pid == a}
         return any(cid in mine for (cid, pid) in self.active_memberships if pid == b)
@@ -2362,6 +2370,28 @@ class FakeRepository(SeedCatalogueReads):
     def get_outing(self, outing_id):
         return self.outings.get(outing_id)
 
+    def replace_outing_stops(self, *, outing_id, stops, expected_revision=None):
+        """The agreed sheet's stops written onto its outing (2026-09-23).
+
+        Only what `_chot` needs: the stops in order, one revision up. The
+        timeline's own edit routes are proved against PostgreSQL, not here.
+        """
+        record = self.outings[outing_id]
+        written = tuple(
+            OutingStopRecord(
+                id=uuid.uuid4(),
+                position=i,
+                minute_of_day=stop["minute_of_day"],
+                label=stop["label"],
+                place_name=stop.get("place_name"),
+                place_id=stop.get("place_id"),
+            )
+            for i, stop in enumerate(stops)
+        )
+        record = dataclasses.replace(record, stops=written, timeline_revision=record.timeline_revision + 1)
+        self.outings[outing_id] = record
+        return record
+
     def list_outings(self, context_id):
         return tuple(
             outing
@@ -2567,6 +2597,14 @@ class FakeRepository(SeedCatalogueReads):
 
     def delete_pair_constraint(self, cycle_id, owner_id, kind):
         return self.pair_constraints.pop((cycle_id, owner_id, kind), None) is not None
+
+    def get_pair_rhythm(self, cycle_id, tuan):
+        return self.pair_rhythms.get((cycle_id, tuan))
+
+    def set_pair_rhythm(self, *, cycle_id, tuan, nguoi_lo_id, chon_boi_id, now):
+        row = PairRhythmRecord(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=nguoi_lo_id, chon_boi_id=chon_boi_id, updated_at=now)
+        self.pair_rhythms[(cycle_id, tuan)] = row
+        return row
 
     def _pair_paper_record(self, paper_id):
         paper = self.pair_papers[paper_id]

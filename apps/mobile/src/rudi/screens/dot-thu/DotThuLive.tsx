@@ -205,7 +205,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
       <SectionHeader title="Ai chuyển cho ai" />
       {daPhatRoi ? (
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
-          Người được nhận tiền là người bấm «Tiền đã về»; số ở trên là số máy chủ đếm từ biên nhận, không phải ai tự khai.
+          Người được nhận tiền là người bấm «Tiền đã về»; số ở trên đếm từ biên nhận, không phải ai tự khai.
         </Text>
       ) : null}
       {trang.nghiaVu.length === 0 ? (
@@ -247,7 +247,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
         <>
           <RudiButton disabled={ban} icon="paper-plane-outline" label="Phát đợt thu" onPress={() => setSapPhat(true)} tone="split" />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            Phát là không hoàn lại: mỗi người nợ nhận một link riêng để xem phần của mình, nghĩa vụ chỉ tồn tại từ lúc đó. Link chỉ hiện một lần và được giữ trên máy này. Máy chủ chỉ phát khi người ứng tiền đã xác nhận.
+            Phát là không hoàn lại: mỗi người nợ nhận một link riêng để xem phần của mình, nghĩa vụ chỉ tồn tại từ lúc đó. Link chỉ hiện một lần và được giữ trên máy này. Chỉ phát được khi người ứng tiền đã xác nhận.
           </Text>
         </>
       ) : null}
@@ -267,7 +267,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
           <SectionHeader title="Gửi link riêng" />
           {trang.links === null ? (
             <Text style={[typography.body, { color: colors.inkSoft }]}>
-              Link của đợt này được phát ở máy khác. Máy chủ chỉ giữ dấu vân của link, nên máy này không lấy lại được; bảng thu ở trên vẫn là thật.
+              Link của đợt này được phát ở máy khác. Rủ Đi chỉ giữ dấu vân của link, nên máy này không lấy lại được; bảng thu ở trên vẫn là thật.
             </Text>
           ) : null}
           {trang.links !== null && trang.links.length === 0 ? (

@@ -7,7 +7,9 @@ way a screen reader would --
   * every clickable / long-clickable / checkable node must carry a name
     (`text` or `content-desc`, on itself or on a descendant);
   * every such node must be at least 48×48 dp (Material touch target), read
-    from `bounds` at the device density;
+    from `bounds` at the device density -- except a target flush with the
+    left or right edge of the SCREEN and at least 48dp tall, reported apart
+    as `mep` (see `audit`);
   * no two clickable nodes on one screen may share the exact same name
     (a reader announcing «Lưu, nút» four times cannot tell which is which),
     unless the name is a row label that legitimately repeats (`--allow-dup`).
@@ -105,7 +107,7 @@ def qua_dev_launcher(serial: str, xml_path: Path) -> ET.Element | None:
 
 def audit(root: ET.Element, dpi: int, allow_dup: set[str]) -> dict:
     scale = dpi / 160
-    unnamed, small, dups, cut = [], [], [], []
+    unnamed, small, dups, cut, mep = [], [], [], [], []
     seen: dict[str, int] = {}
     # The bottom edge of every scroll container: a target whose box ends
     # there is cut by the fold, not drawn small (five such rows on 2026-09-07).
@@ -113,6 +115,20 @@ def audit(root: ET.Element, dpi: int, allow_dup: set[str]) -> dict:
         bounds_of(n)[3] for n in root.iter("node") if n.get("scrollable") == "true"
     }
     edges.add(max((bounds_of(n)[3] for n in root.iter("node")), default=0))
+    # A target flush with the side of the screen cannot be overshot: a finger
+    # that goes past it lands on the bezel and still counts at the last pixel,
+    # so its width along that axis is effectively unbounded (Fitts). That is
+    # what lets Nếp's tucked slip stay inside the page's 16dp margin instead
+    # of widening to 48dp over the page's own buttons, which is how it once
+    # took the «Đồng ý» of an invitation (flow 25). Only the side edges, and
+    # only at a full 48dp of height: a short sliver at the edge is still small.
+    # Only for TAP targets: under gesture navigation the outer ~30dp of each
+    # side belongs to the system's Back swipe (measured 78px at 2.625 on
+    # 23/09). A tap there still reaches the app; a horizontal inward drag does
+    # not, so an edge control that needs one earns no exemption from this.
+    # This audit cannot tell a tap target from a drag target in the tree; the
+    # component that claims the exemption has to not need the drag.
+    man_phai = max((bounds_of(n)[2] for n in root.iter("node")), default=0)
     for n in root.iter("node"):
         interactive = (
             n.get("clickable") == "true"
@@ -133,12 +149,20 @@ def audit(root: ET.Element, dpi: int, allow_dup: set[str]) -> dict:
         if name and (w < MIN_DP - 0.5 or h < MIN_DP - 0.5) and "ScrollView" not in cls:
             if bottom in edges and h < MIN_DP - 0.5:
                 cut.append({"name": name[:60], "dp": [round(w), round(h)]})
+            elif (left == 0 or right == man_phai) and h >= MIN_DP - 0.5:
+                mep.append({"name": name[:60], "dp": [round(w), round(h)]})
             else:
                 small.append({"name": name[:60], "dp": [round(w), round(h)]})
     for name, count in seen.items():
         if count > 1 and name not in allow_dup:
             dups.append({"name": name[:60], "count": count})
-    return {"unnamed": unnamed, "small": small, "duplicates": dups, "cut": cut}
+    return {
+        "unnamed": unnamed,
+        "small": small,
+        "duplicates": dups,
+        "cut": cut,
+        "mep": mep,
+    }
 
 
 def main() -> int:
@@ -197,15 +221,24 @@ def main() -> int:
         (out / f"{slug}.json").write_text(
             json.dumps({"link": link, **res}, ensure_ascii=False, indent=2)
         )
-        n_un, n_sm, n_du, n_cut = (
+        n_un, n_sm, n_du, n_cut, n_mep = (
             len(res["unnamed"]),
             len(res["small"]),
             len(res["duplicates"]),
             len(res["cut"]),
+            len(res["mep"]),
         )
         if n_un or n_sm or n_du:
             red = True
-        rows.append((link, f"cắt bởi mép: {n_cut}" if n_cut else "", n_un, n_sm, n_du))
+        note = " · ".join(
+            s
+            for s in (
+                f"cắt bởi mép: {n_cut}" if n_cut else "",
+                f"sát cạnh màn: {n_mep}" if n_mep else "",
+            )
+            if s
+        )
+        rows.append((link, note, n_un, n_sm, n_du))
     print(f"{'màn':44} {'chưa tên':>8} {'<48dp':>6} {'trùng':>6}")
     for link, note, n_un, n_sm, n_du in rows:
         print(f"{link[:44]:44} {n_un:>8} {n_sm:>6} {n_du:>6} {note}")

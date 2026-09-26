@@ -31,7 +31,12 @@ import (
 	"cmp"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
+
+	"mobile/services/core/internal/domain/interests"
 )
 
 // MuiGio is the key of MUI_GIO.
@@ -482,4 +487,333 @@ func PhacToGiay(routine Routine, coRangBuoc bool, now time.Time) (Draft, error) 
 		LyDo:    routine.LyDo,
 		Nguon:   Nguon{Scope: "chung", Dung: dung, Luc: ISOFormat(now)},
 	}, nil
+}
+
+// daiLyDo is _DAI_LY_DO: the longest reason line, in code points.
+const daiLyDo = 200
+
+// viecTheoLoai is _VIEC_THEO_LOAI.
+var viecTheoLoai = map[string]string{"cafe": "Cà phê", "vui-choi": "Đi chơi", "di-choi-dem": "Đi chơi tối"}
+
+// PlaceRow is the part of a catalogue row lam_giau_phac reads. Kinds and
+// Traits hold only the str items of the row's lists; nil ratings are None.
+type PlaceRow struct {
+	ID, Name, Category string
+	Kinds, Traits      []string
+	Rating             *float64
+	RatingCount        *int64
+}
+
+// gap is _gap: lower case for ASCII and the Latin blocks Vietnamese is written
+// in, every other code point as it is. U+0130 is kept: its Python lower case
+// is two code points.
+func gap(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		if (r >= 0x41 && r <= 0x5A || r >= 0xC0 && r <= 0x24F || r >= 0x1E00 && r <= 0x1EFF) && r != 0x130 {
+			r = unicode.ToLower(r)
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
+// cumTuCam is _cum_tu_cam over the boxes' contents.
+func cumTuCam(rangBuoc []string) []string {
+	var out []string
+	for _, content := range rangBuoc {
+		for _, manh := range strings.FieldsFunc(content, func(r rune) bool { return r == ',' || r == ';' || r == '/' || r == '\n' }) {
+			cum := strings.Trim(gap(manh), " \t\r")
+			if utf8.RuneCountInString(cum) >= 2 {
+				out = append(out, cum)
+			}
+		}
+	}
+	return out
+}
+
+// pham is _pham.
+func pham(row PlaceRow, cam []string) bool {
+	chu := append([]string{row.Name, row.Category}, row.Kinds...)
+	chu = append(chu, row.Traits...)
+	for _, c := range cam {
+		for _, g := range chu {
+			if strings.Contains(gap(g), c) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// cauVua is _cau_vua: the first sentence list that fits, joined; ok false for none.
+func cauVua(luaChon [][]string) (string, bool) {
+	for _, cau := range luaChon {
+		var co []string
+		for _, c := range cau {
+			if c != "" {
+				co = append(co, c)
+			}
+		}
+		noi := strings.Join(co, " ")
+		if noi != "" && utf8.RuneCountInString(noi) <= daiLyDo {
+			return noi, true
+		}
+	}
+	return "", false
+}
+
+// hangCho is the (rating, rating_count) key lam_giau_phac ranks by.
+func hangCho(row PlaceRow) (float64, int64) {
+	r, n := -1.0, int64(-1)
+	if row.Rating != nil {
+		r = *row.Rating
+	}
+	if row.RatingCount != nil {
+		n = *row.RatingCount
+	}
+	return r, n
+}
+
+// LamGiauPhac is lam_giau_phac: the template, told the notebook's agreed
+// history (newest first), the catalogue row of the place it chose and the
+// catalogue's places of that kind in that city. rangBuoc is the boxes'
+// contents.
+func LamGiauPhac(phac Draft, lichSu []Content, choCu *PlaceRow, ungVien []PlaceRow, rangBuoc []string) Draft {
+	var ls []Content
+	for _, nd := range lichSu {
+		if len(nd.Chang) > 0 {
+			ls = append(ls, nd)
+		}
+	}
+	if len(ls) == 0 {
+		return phac
+	}
+	chinh := ls[0].Chang[0]
+	gio := chinh.Gio
+	var truoc string
+	noiCu := choCu != nil && chinh.PlaceID != nil && choCu.ID == *chinh.PlaceID
+	if noiCu {
+		truoc = "Lần trước hai bạn hẹn " + gio + " ở " + choCu.Name + "; Nếp giữ giờ đó."
+	} else {
+		truoc = "Lần trước hai bạn hẹn " + gio + ", «" + chinh.Viec + "»; Nếp giữ giờ đó."
+	}
+	truocNgan := "Lần trước hai bạn hẹn " + gio + "; Nếp giữ giờ đó."
+	dau := phac.Content.Chang[0]
+	dau.Gio = gio
+	them := []string{"lich_su"}
+	var chon *PlaceRow
+	var cam []string
+	if choCu != nil {
+		daDi := map[string]bool{}
+		for _, nd := range ls {
+			for _, c := range nd.Chang {
+				if c.PlaceID != nil && *c.PlaceID != "" {
+					daDi[*c.PlaceID] = true
+				}
+			}
+		}
+		cam = cumTuCam(rangBuoc)
+		var hr float64
+		var hn int64
+		for i := range ungVien {
+			row := ungVien[i]
+			if daDi[row.ID] || pham(row, cam) {
+				continue
+			}
+			r, n := hangCho(row)
+			// Python's tuple `>`: the first unequal element decides.
+			if chon == nil || (r != hr && r > hr) || (r == hr && n > hn) {
+				chon, hr, hn = &ungVien[i], r, n
+			}
+		}
+	}
+	lyDo, co := "", false
+	if chon != nil {
+		kiem := "Chỗ này chưa ai kiểm, hai bạn xem lại."
+		if len(cam) > 0 {
+			kiem = "Đã tránh chỗ trùng chữ trong hai ô ràng buộc; món thì hai bạn kiểm lại."
+		}
+		thu := "Thử " + chon.Name + ": cùng kiểu " + choCu.Name + ", hai bạn chưa đi."
+		if noiCu {
+			thu = "Thử " + chon.Name + ", cùng kiểu chỗ đó mà hai bạn chưa đi."
+		}
+		thuNgan := "Thử " + chon.Name + ", chỗ hai bạn chưa đi."
+		lyDo, co = cauVua([][]string{
+			{phac.LyDo, truoc, thu, kiem},
+			{truoc, thu, kiem},
+			{truocNgan, thuNgan, kiem},
+			{thuNgan, kiem},
+		})
+		if co {
+			id := chon.ID
+			dau.PlaceID = &id
+			if viec, ok := viecTheoLoai[chon.Category]; ok {
+				dau.Viec = viec
+			}
+			them = append(them, "danh_muc")
+		}
+	}
+	if !co {
+		lyDo, _ = cauVua([][]string{{phac.LyDo, truoc}, {truoc}, {truocNgan}})
+	}
+	chang := append([]Stop{dau}, phac.Content.Chang[1:]...)
+	dung := append(append([]string{phac.Nguon.Dung[0]}, them...), phac.Nguon.Dung[1:]...)
+	return Draft{
+		Content: Content{Ngay: phac.Content.Ngay, Chang: chang},
+		LyDo:    lyDo,
+		Nguon:   Nguon{Scope: phac.Nguon.Scope, Dung: dung, Luc: phac.Nguon.Luc},
+	}
+}
+
+// ToMoiNguoiMoiTuan is TO_MOI_NGUOI_MOI_TUAN (ADR-0034 §2.5), the same number
+// as `to_moi_nguoi_moi_tuan` in packages/shared/nep-nhip.json.
+const ToMoiNguoiMoiTuan = 3
+
+// loaiTheoGu is _LOAI_THEO_GU (ADR-0034 §2.2).
+var loaiTheoGu = map[string]string{"an-uong": "quan-an-local", "cafe": "cafe", "nightlife": "di-choi-dem", "game": "vui-choi"}
+
+// GuMuc is one element of gu_cho_nep: a taste Nếp may use. Ten is nil for a
+// taste both share (Python's None).
+type GuMuc struct {
+	Tag   string
+	Chung bool
+	Ten   *string
+	Nguoi []string
+}
+
+// GuChoNep is gu_cho_nep: the sharers' tastes, most shared first.
+func GuChoNep(nguoiChia []string, guTheoNguoi map[string][]string, tenTheoNguoi map[string]string, caHai bool) []GuMuc {
+	theo := map[string][]string{}
+	for _, p := range nguoiChia {
+		co := map[string]bool{}
+		for _, t := range guTheoNguoi[p] {
+			co[t] = true
+		}
+		theo[p] = []string{}
+		for _, t := range interests.InterestIDs() {
+			if co[t] {
+				theo[p] = append(theo[p], t)
+			}
+		}
+	}
+	out := []GuMuc{}
+	chung := map[string]bool{}
+	if caHai && len(nguoiChia) == 2 {
+		a, b := nguoiChia[0], nguoiChia[1]
+		for _, t := range theo[a] {
+			if slices.Contains(theo[b], t) {
+				chung[t] = true
+				out = append(out, GuMuc{Tag: t, Chung: true, Nguoi: slices.Clone(nguoiChia)})
+			}
+		}
+	}
+	for _, p := range nguoiChia {
+		ten := tenTheoNguoi[p]
+		if ten == "" {
+			ten = "Người ấy"
+		}
+		for _, t := range theo[p] {
+			if !chung[t] {
+				name := ten
+				out = append(out, GuMuc{Tag: t, Ten: &name, Nguoi: []string{p}})
+			}
+		}
+	}
+	return out
+}
+
+// LoaiTheoGu is loai_theo_gu: the kind of the first usable taste, "" for None.
+func LoaiTheoGu(gu []GuMuc) string {
+	for _, muc := range gu {
+		if loai, ok := loaiTheoGu[muc.Tag]; ok {
+			return loai
+		}
+	}
+	return ""
+}
+
+// LamGiauTheoGu is lam_giau_theo_gu: the draft told the tastes the two chose
+// to share; a draft that already proposes a place is returned unchanged.
+func LamGiauTheoGu(phac Draft, gu []GuMuc, ungVien []PlaceRow, daDi []string, rangBuoc []string) Draft {
+	dau := phac.Content.Chang[0]
+	if dau.PlaceID != nil && *dau.PlaceID != "" {
+		return phac
+	}
+	var muc *GuMuc
+	for i := range gu {
+		if _, ok := loaiTheoGu[gu[i].Tag]; ok {
+			muc = &gu[i]
+			break
+		}
+	}
+	if muc == nil {
+		return phac
+	}
+	loai := loaiTheoGu[muc.Tag]
+	nhan := ""
+	for _, t := range interests.InterestTags() {
+		if t.ID == muc.Tag {
+			nhan = t.Label
+		}
+	}
+	ai := "Hai bạn cùng thích"
+	if !muc.Chung {
+		ai = *muc.Ten + " thích"
+	}
+	cam := cumTuCam(rangBuoc)
+	var chon *PlaceRow
+	var hr float64
+	var hn int64
+	for i := range ungVien {
+		row := ungVien[i]
+		if row.Category != loai || slices.Contains(daDi, row.ID) || pham(row, cam) {
+			continue
+		}
+		r, n := hangCho(row)
+		if chon == nil || (r != hr && r > hr) || (r == hr && n > hn) {
+			chon, hr, hn = &ungVien[i], r, n
+		}
+	}
+	truoc := phac.LyDo
+	moi := dau
+	if viec, ok := viecTheoLoai[loai]; ok {
+		moi.Viec = viec
+	}
+	lyDo, co := "", false
+	if chon != nil {
+		kiem := "Chỗ này chưa ai kiểm, hai bạn xem lại."
+		if len(cam) > 0 {
+			kiem = "Đã tránh chỗ trùng chữ trong hai ô ràng buộc; món thì hai bạn kiểm lại."
+		}
+		thu := ai + " " + nhan + ": thử " + chon.Name + ", hai bạn chưa đi."
+		thuNgan := "Thử " + chon.Name + ", hai bạn chưa đi."
+		lyDo, co = cauVua([][]string{{truoc, thu, kiem}, {thu, kiem}, {thuNgan, kiem}})
+		if co {
+			id := chon.ID
+			moi.PlaceID = &id
+		}
+	}
+	if !co {
+		cau := ai + " " + nhan + ", nên Nếp phác theo đó."
+		if lyDo, co = cauVua([][]string{{truoc, cau}, {cau}}); !co {
+			lyDo = truoc
+		}
+	}
+	dung := slices.Clone(phac.Nguon.Dung)
+	them := []string{}
+	for _, nguoi := range muc.Nguoi {
+		them = append(them, "gu:"+nguoi)
+	}
+	if len(dung) > 0 && dung[len(dung)-1] == "rang_buoc" {
+		dung = append(append(dung[:len(dung)-1], them...), "rang_buoc")
+	} else {
+		dung = append(dung, them...)
+	}
+	chang := append([]Stop{moi}, phac.Content.Chang[1:]...)
+	return Draft{
+		Content: Content{Ngay: phac.Content.Ngay, Chang: chang},
+		LyDo:    lyDo,
+		Nguon:   Nguon{Scope: phac.Nguon.Scope, Dung: dung, Luc: phac.Nguon.Luc},
+	}
 }

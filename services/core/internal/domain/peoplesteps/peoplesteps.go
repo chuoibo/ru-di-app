@@ -203,6 +203,8 @@ type Store interface {
 	ListPersonInterests(personID string) ([]string, error)
 	AreFriends(a, b string) (bool, error)
 	ShareActiveContext(a, b string) (bool, error)
+	// SameCouple is same_couple: both in active_couple_members, same cycle.
+	SameCouple(a, b string) (bool, error)
 	GetPlace(placeID string) (*Place, error)
 	ListSavedPlaces(personID string) ([]SavedPlace, error)
 	SavePlace(personID, placeID string, now time.Time) (SavedPlace, bool, error)

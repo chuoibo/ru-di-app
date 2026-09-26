@@ -10,6 +10,7 @@ import (
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
+	"mobile/services/core/internal/service"
 	"mobile/services/core/internal/treejson"
 )
 
@@ -45,17 +46,17 @@ func readGroupSuggestion() Route {
 				Title: record.Outing.Title, SplitTotalVND: record.SplitTotalVND, Headcount: record.Outing.Headcount,
 			})
 		}
-		group, err := groupTaste(ctx, store, contextID, time.Now().UTC())
+		group, err := service.GroupTaste(ctx, store, contextID, time.Now().UTC())
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		places, err := modelPlaceRows(ctx, store, group)
+		places, err := service.ModelPlaceRows(ctx, store, group)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
 		categoryOf := map[string]string{}
 		for _, place := range places {
-			id := placeID(place)
+			id := service.PlaceID(place)
 			if value, ok := place.Get("category"); ok {
 				if text, ok := value.(pyjson.String); ok {
 					categoryOf[id] = string(text)
@@ -179,11 +180,11 @@ func readContextualSuggestion() Route {
 		if !conversation.Has(digest) {
 			return silent("no_conversation"), nil
 		}
-		group, err := groupTaste(ctx, store, contextID, time.Now().UTC())
+		group, err := service.GroupTaste(ctx, store, contextID, time.Now().UTC())
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		places, err := modelPlaceRows(ctx, store, group)
+		places, err := service.ModelPlaceRows(ctx, store, group)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}

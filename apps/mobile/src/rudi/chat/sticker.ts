@@ -28,8 +28,28 @@ export const STICKER_IDS = [
   "ket-xe",
   "tra-tien-ne",
   "tuyet-voi",
+  "hen-nhe",
+  "nho-nhau",
+  "ve-toi-chua",
+  "om-cai",
 ] as const;
 export type StickerId = (typeof STICKER_IDS)[number];
+
+/**
+ * The four a two-person conversation adds (ADR-0034, «4 sticker đôi»). They
+ * are in the same closed vocabulary -- the server accepts them anywhere -- but
+ * the tray offers them only where there are two people, under their own
+ * heading, so a group's tray stays the eight it had.
+ */
+export const STICKER_DOI: readonly StickerId[] = ["hen-nhe", "nho-nhau", "ve-toi-chua", "om-cai"];
+
+/** The tray's list for a conversation: the eight, plus the four for two. */
+export function stickerChoKhay(haiNguoi: boolean): { chung: readonly StickerId[]; doi: readonly StickerId[] } {
+  return {
+    chung: STICKER_IDS.filter((id) => !STICKER_DOI.includes(id)),
+    doi: haiNguoi ? STICKER_DOI : [],
+  };
+}
 
 /** Palette roles, resolved to theme colours by the component. `coral` is brand; `line` is the paper's shade. */
 export type MauSticker = "accent" | "ink" | "split" | "card" | "coral" | "line";
@@ -394,6 +414,89 @@ function tuyetVoi(chiTiet: boolean): LopVe[] {
   return [...nguoi, ...tia];
 }
 
+/**
+ * A heart, as two cubic Béziers from the point at the bottom. Drawn by the
+ * builders like every other path here (no `A`, fixed arity).
+ */
+function tim(cx: number, cy: number, s: number): string {
+  return duong(
+    "M", cx, cy + s * 0.9,
+    "C", cx - s * 1.25, cy + s * 0.05, cx - s * 0.75, cy - s * 0.95, cx, cy - s * 0.3,
+    "C", cx + s * 0.75, cy - s * 0.95, cx + s * 1.25, cy + s * 0.05, cx, cy + s * 0.9,
+    "Z",
+  );
+}
+
+/**
+ * The four for two people (ADR-0034), in the grammar of the eight: one pose
+ * that does the sentence, at most one object, the object placed from the
+ * pose's own contact point. Nothing in them says who is which: no gendered
+ * figure, no names, the same Nếp for both.
+ */
+
+/** «Hẹn nhé!»: the folded invitation handed across -- the paper this whole notebook is. */
+function henNhe(chiTiet: boolean): LopVe[] {
+  const { nguoi, P } = dat("dua-giay", 0.84, -4, chiTiet);
+  // The sheet is the pose's own (drawn in the palm at P(79..91, 39..55)); the
+  // one addition is a small heart lifting off its top edge: what the sheet is for.
+  const [tx, ty] = P(86, 28);
+  const w = chiTiet ? 2.2 : 2.8;
+  const r = chiTiet ? 7.5 : 8.5;
+  return [...nguoi, { d: tim(tx, ty, r), mau: "gap" }, { d: tim(tx, ty, r), mau: "muc", net: w }];
+}
+
+/** «Nhớ nhau»: holding the folded sheet close, eyes down, and one heart above. */
+function nhoNhau(chiTiet: boolean): LopVe[] {
+  const { nguoi, P } = dat("gap-lai", 0.86, 4, chiTiet);
+  // The heart floats up and to the right of the head, over the fold: a
+  // thought, not a prop. Two small dots lead to it at the detailed size.
+  const [hx, hy] = P(80, 14);
+  const w = chiTiet ? 2.2 : 2.8;
+  const r = chiTiet ? 8 : 9;
+  const cham: LopVe[] = chiTiet
+    ? [
+        { d: tronVe(hx - 11, hy + 13, 1.6), mau: "muc" },
+        { d: tronVe(hx - 7, hy + 8, 2), mau: "muc" },
+      ]
+    : [];
+  return [...nguoi, ...cham, { d: tim(hx, hy, r), mau: "gap" }, { d: tim(hx, hy, r), mau: "muc", net: w }];
+}
+
+/** «Về tới chưa?»: bending to look toward a small house down the road, its window lit. */
+function veToiChua(chiTiet: boolean): LopVe[] {
+  const { nguoi } = dat("ghe-nhin", 0.7, -4, chiTiet);
+  const w = chiTiet ? 2.2 : 2.8;
+  // The house stands on the same ground line, at the right edge, smaller than
+  // the figure: it is further away. One lit window, coral: somebody is home --
+  // or is about to be. A door only at the detailed size.
+  const x = 64, dayY = CHAN_NEP, rong = 28, cao = 20, maiY = dayY - cao - 14;
+  const than = [[x, dayY - cao], [x + rong, dayY - cao], [x + rong, dayY], [x, dayY]] as [number, number][];
+  const mai = [[x - 3, dayY - cao], [x + rong / 2, maiY], [x + rong + 3, dayY - cao]] as [number, number][];
+  const nha: LopVe[] = [
+    { d: daGiacVe(than), mau: "giay" },
+    { d: daGiacVe(mai), mau: "giay" },
+    { d: khungBo(x + 5, dayY - cao + 5, 8, 7, 1.5), mau: "gap" },
+    ...(chiTiet ? [{ d: khungBo(x + rong - 11, dayY - 12, 6, 12, 1.5), mau: "bong" as const }] : []),
+    { d: daGiacVe(than), mau: "muc", net: w },
+    { d: daGiacVe(mai), mau: "muc", net: w },
+  ];
+  return [...nha, ...nguoi];
+}
+
+/** «Ôm cái»: both arms out, a small bow, and a heart held between the hands. */
+function omCai(chiTiet: boolean): LopVe[] {
+  const { nguoi, P } = dat("dua-hai-tay", 0.82, -6, chiTiet);
+  // The hands meet around P(82, 66) (`tra-tien-ne` hands its notes from the
+  // same point). The heart sits just past them and a little up: offered, and
+  // big enough to read at tray size.
+  const [ax, ay] = P(82, 66);
+  const w = chiTiet ? 2.2 : 2.8;
+  const r = chiTiet ? 10 : 11;
+  const [cx, cy] = [ax + 5, ay - 5];
+  // Heart first, then the figure: the hands are seen holding it.
+  return [{ d: tim(cx, cy, r), mau: "gap" }, { d: tim(cx, cy, r), mau: "muc", net: w }, ...nguoi];
+}
+
 // ---- the shapes --------------------------------------------------------------
 
 const HINH: Record<StickerId, LopSticker[]> = {
@@ -405,6 +508,10 @@ const HINH: Record<StickerId, LopSticker[]> = {
   "ket-xe": [...tuLopVe(ketXe(true))],
   "tra-tien-ne": [...tuLopVe(traTienNe(true))],
   "tuyet-voi": [...tuLopVe(tuyetVoi(true))],
+  "hen-nhe": [...tuLopVe(henNhe(true))],
+  "nho-nhau": [...tuLopVe(nhoNhau(true))],
+  "ve-toi-chua": [...tuLopVe(veToiChua(true))],
+  "om-cai": [...tuLopVe(omCai(true))],
 };
 
 /** The dashed frame and question mark drawn for an id this build does not know. */
@@ -429,6 +536,10 @@ const HINH_RUT_GON: Record<StickerId, LopSticker[]> = {
   "ket-xe": tuLopVe(ketXe(false)),
   "tra-tien-ne": tuLopVe(traTienNe(false)),
   "tuyet-voi": tuLopVe(tuyetVoi(false)),
+  "hen-nhe": tuLopVe(henNhe(false)),
+  "nho-nhau": tuLopVe(nhoNhau(false)),
+  "ve-toi-chua": tuLopVe(veToiChua(false)),
+  "om-cai": tuLopVe(omCai(false)),
 };
 
 /** `chiTiet` false picks the compact reading, for tiles under 72dp (the tray draws 64). */

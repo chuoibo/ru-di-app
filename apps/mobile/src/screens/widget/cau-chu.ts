@@ -96,10 +96,10 @@ export function loiWidget(status: number, code: string): string {
   if (code === "permission_denied" || status === 403) {
     return "Ảnh của nhóm chỉ thành viên xem được. Nhờ người tạo nhóm mời bạn vào rồi thử lại.";
   }
-  if (status === 401) return "Chưa đăng nhập nên chưa hỏi được máy chủ.";
+  if (status === 401) return "Chưa đăng nhập nên chưa đọc được.";
   if (status === 404) return "Không mở được nhóm này.";
-  if (status === 0) return "Không nối được máy chủ. Kiểm tra mạng rồi thử lại.";
-  if (status >= 500) return "Máy chủ đang lỗi, chưa đọc được ảnh mới nhất.";
+  if (status === 0) return "Không kết nối được Rủ Đi. Kiểm tra mạng rồi thử lại.";
+  if (status >= 500) return "Rủ Đi đang gặp sự cố, chưa đọc được ảnh mới nhất.";
   return "Chưa đọc được ảnh mới nhất của nhóm.";
 }
 

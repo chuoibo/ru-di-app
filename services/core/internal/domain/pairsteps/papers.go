@@ -1,8 +1,14 @@
 package pairsteps
 
 import (
+	"errors"
+	"fmt"
+	"slices"
+	"strconv"
+	"strings"
 	"time"
 
+	"mobile/services/core/internal/domain/pairnotebook"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -32,7 +38,8 @@ type Command struct {
 	OutingID *string
 }
 
-// StopInput is PaperStopInput after validation; PlaceID is str(UUID) or nil.
+// StopInput is PaperStopInput after validation; PlaceID is a catalogue id
+// (1..80 characters, a slug such as «p-lau-ga-la-e») or nil.
 type StopInput struct {
 	Gio     string
 	Viec    string
@@ -97,7 +104,7 @@ func ListPapers(s Store, actor Actor, contextID string, now time.Time) ([]PaperS
 	for i := range papers {
 		paper := &papers[i]
 		state := pairpaper.HieuLuc(PaperDict(paper), now)
-		if state == "nhap" && paper.DraftOwnerID != actor.ID {
+		if !chiChuThay(paper, state, actor.ID) {
 			continue
 		}
 		var kept *string
@@ -122,7 +129,8 @@ func ListPapers(s Store, actor Actor, contextID string, now time.Time) ([]PaperS
 // DraftPaper is draft_pair_paper: the notebook locked (and created), the door,
 // one open sheet at a time, then Nep's template for this week.
 func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command, error) {
-	if _, err := pairContextOr404(s, actor, contextID); err != nil {
+	roster, err := pairRosterOr404(s, actor, contextID)
+	if err != nil {
 		return Command{}, err
 	}
 	notebook, err := lockedNotebook(s, contextID, now)
@@ -144,10 +152,82 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 			return Command{}, refusal(409, "paper_wrong_state", "Đang có một tờ mở. Xong tờ này đã.")
 		}
 	}
+	// ADR-0034 §2.5: a ceiling per person per week.
+	tuanNay := pairpaper.TuanCua(now)
+	mine := 0
+	for i := range papers {
+		if papers[i].DraftOwnerID == actor.ID && papers[i].Tuan.Compare(tuanNay) == 0 {
+			mine++
+		}
+	}
+	if mine >= pairpaper.ToMoiNguoiMoiTuan {
+		return Command{}, refusal(409, "paper_week_quota", fmt.Sprintf("Tuần này bạn đã phác %d tờ rồi. Tuần sau phác tiếp nhé.", pairpaper.ToMoiNguoiMoiTuan))
+	}
+	// What this cycle already agreed, and the catalogue around the place it
+	// chose -- read before the write, in Python's order.
+	lichSu, err := lichSuChuKy(papers, notebook)
+	if err != nil {
+		return Command{}, err
+	}
+	var choCu *PlaceRef
+	for _, nd := range lichSu {
+		if id := nd.Chang[0].PlaceID; id != nil && *id != "" {
+			if choCu, err = s.GetPlace(*id); err != nil {
+				return Command{}, err
+			}
+			break
+		}
+	}
+	var ungVien []pairpaper.PlaceRow
+	var choCuRow *pairpaper.PlaceRow
+	if choCu != nil {
+		rows, err := s.ListPlaces(choCu.DestinationID, choCu.Category)
+		if err != nil {
+			return Command{}, err
+		}
+		for _, row := range rows {
+			ungVien = append(ungVien, row.row())
+		}
+		r := choCu.row()
+		choCuRow = &r
+	}
 	ngay := pairpaper.NgayDeXuat(now)
 	phac, err := pairpaper.PhacToGiay(pairpaper.Routine{Ngay: &ngay, Gio: khungGio, Viec: khungViec}, len(notebook.Constraints) > 0, now)
 	if err != nil {
 		return Command{}, err
+	}
+	boxes := make([]string, len(notebook.Constraints))
+	for i, c := range notebook.Constraints {
+		boxes[i] = c.Content
+	}
+	phac = pairpaper.LamGiauPhac(phac, lichSu, choCuRow, ungVien, boxes)
+	// ADR-0034 §2.2: the tastes of whoever shared theirs, and nobody else's.
+	gu, err := guChoNep(s, notebook, roster, now)
+	if err != nil {
+		return Command{}, err
+	}
+	if len(gu) > 0 {
+		loai := pairpaper.LoaiTheoGu(gu)
+		dau := phac.Content.Chang[0]
+		var ungVienGu []pairpaper.PlaceRow
+		if loai != "" && choCu != nil && (dau.PlaceID == nil || *dau.PlaceID == "") {
+			rows, err := s.ListPlaces(choCu.DestinationID, loai)
+			if err != nil {
+				return Command{}, err
+			}
+			for _, row := range rows {
+				ungVienGu = append(ungVienGu, row.row())
+			}
+		}
+		daDi := []string{}
+		for _, nd := range lichSu {
+			for _, c := range nd.Chang {
+				if c.PlaceID != nil && *c.PlaceID != "" {
+					daDi = append(daDi, *c.PlaceID)
+				}
+			}
+		}
+		phac = pairpaper.LamGiauTheoGu(phac, gu, ungVienGu, daDi, boxes)
 	}
 	var lyDo *string
 	if phac.LyDo != "" {
@@ -171,6 +251,74 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 	return wireCommand(&paper, paper.State, nil), nil
 }
 
+// chiChuThay is _chi_chu_thay: a sheet nobody ever sent is its owner's draft
+// whatever its state -- skipping the week on it, discarding it or letting its
+// week run out does not hand it to the other person (QA 24/09).
+func chiChuThay(paper *Paper, state, actorID string) bool {
+	if paper.DraftOwnerID == actorID {
+		return true
+	}
+	if state == "nhap" {
+		return false
+	}
+	for _, v := range paper.Versions {
+		if v.SentAt != nil {
+			return true
+		}
+	}
+	return false
+}
+
+// lichSuToiDa is _LICH_SU_TOI_DA.
+const lichSuToiDa = 4
+
+// lichSuChuKy is _lich_su_chu_ky: the agreed contents of the notebook's
+// ACTIVE cycle, newest first (ListPairPapers' order), at most lichSuToiDa. A
+// sheet whose stored content does not read is skipped.
+func lichSuChuKy(papers []Paper, notebook *Notebook) ([]pairpaper.Content, error) {
+	if notebook == nil || notebook.CycleID == nil || !isActive(notebook) {
+		return nil, nil
+	}
+	var out []pairpaper.Content
+	for i := range papers {
+		paper := &papers[i]
+		if paper.CycleID == nil || *paper.CycleID != *notebook.CycleID || paper.IsTemporary ||
+			(paper.State != "chot" && paper.State != "da_di" && paper.State != "da_giu") {
+			continue
+		}
+		var current *Version
+		for j := range paper.Versions {
+			if paper.Versions[j].Version == paper.CurrentVersion {
+				current = &paper.Versions[j]
+				break
+			}
+		}
+		if current == nil {
+			continue
+		}
+		wire, err := NoiDungWire(current.Content)
+		var refused *Refusal
+		if errors.As(err, &refused) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(wire.Chang) == 0 {
+			continue
+		}
+		content := pairpaper.Content{Ngay: wire.Ngay.ISOFormat()}
+		for _, stop := range wire.Chang {
+			content.Chang = append(content.Chang, pairpaper.Stop{Gio: stop.Gio, Viec: stop.Viec, PlaceID: stop.PlaceID})
+		}
+		out = append(out, content)
+		if len(out) == lichSuToiDa {
+			break
+		}
+	}
+	return out, nil
+}
+
 // readablePaperOr404 is _readable_paper_or_404.
 func readablePaperOr404(s Store, actor Actor, paperID string) (*Paper, []string, error) {
 	paper, err := s.GetPairPaper(paperID)
@@ -185,7 +333,7 @@ func readablePaperOr404(s Store, actor Actor, paperID string) (*Paper, []string,
 		return nil, nil, err
 	}
 	if err := requirePairPermission("view_pair_paper", actor,
-		fact{"may_view_paper", paper.State != "nhap" || paper.DraftOwnerID == actor.ID},
+		fact{"may_view_paper", chiChuThay(paper, paper.State, actor.ID)},
 	); err != nil {
 		return nil, nil, err
 	}
@@ -371,9 +519,16 @@ func dongY(s Store, paper *Paper, version int, actor Actor, now time.Time) (Comm
 	return wireCommand(paper, "chot", &outingID), nil
 }
 
-// OutingTitle is the title _chot gives the outing: «Tờ lời rủ dd/mm».
-func OutingTitle(ngay pairpaper.Date) string {
-	return "Tờ lời rủ " + twoDigits(ngay.Day) + "/" + twoDigits(ngay.Month)
+// OutingTitle is the title _chot gives the outing: what was agreed -- the
+// catalogue place's name, or the first stop's line -- then « · dd/mm». Python
+// cuts the name at 190 code points (`ten[:190]`), so the title stays inside
+// OutingCreateRequest's 200.
+func OutingTitle(ten string, ngay pairpaper.Date) string {
+	runes := []rune(ten)
+	if len(runes) > 190 {
+		runes = runes[:190]
+	}
+	return string(runes) + " · " + twoDigits(ngay.Day) + "/" + twoDigits(ngay.Month)
 }
 
 func twoDigits(value int) string {
@@ -401,10 +556,26 @@ func chot(s Store, paper *Paper, version int, actor Actor, now time.Time) (strin
 	if err != nil {
 		return "", err
 	}
+	// The places the sheet names, read before anything is written: a key the
+	// catalogue no longer knows keeps its line and drops its id, because the
+	// outing's timeline refuses unknown places (QA 23/09).
+	places := make([]*PlaceRef, len(content.Chang))
+	for i, stop := range content.Chang {
+		if stop.PlaceID == nil {
+			continue
+		}
+		if places[i], err = s.GetPlace(*stop.PlaceID); err != nil {
+			return "", err
+		}
+	}
+	ten := content.Chang[0].Viec
+	if places[0] != nil {
+		ten = places[0].Name
+	}
 	outingID, err := s.CreateOuting(OutingDraft{
 		ContextID:          paper.ContextID,
 		CreatedByID:        actor.ID,
-		Title:              OutingTitle(content.Ngay),
+		Title:              OutingTitle(ten, content.Ngay),
 		StartsOn:           content.Ngay,
 		EndsOn:             content.Ngay,
 		Headcount:          2,
@@ -428,7 +599,40 @@ func chot(s Store, paper *Paper, version int, actor Actor, now time.Time) (strin
 		}
 		return *already, nil
 	}
+	// The agreed stops become the outing's timeline, in the same transaction.
+	stops := make([]OutingStopDraft, len(content.Chang))
+	for i, stop := range content.Chang {
+		minute, err := gioThanhPhut(stop.Gio)
+		if err != nil {
+			return "", err
+		}
+		stops[i] = OutingStopDraft{MinuteOfDay: minute, Label: stop.Viec}
+		if places[i] != nil {
+			name, id := places[i].Name, places[i].ID
+			stops[i].PlaceName, stops[i].PlaceID = &name, &id
+		}
+	}
+	if err := s.ReplaceOutingStops(outingID, stops); err != nil {
+		return "", err
+	}
 	return outingID, nil
+}
+
+// gioThanhPhut is _minute_of_day for a stop the schema already held to HH:MM.
+func gioThanhPhut(gio string) (int64, error) {
+	parts := strings.Split(gio, ":")
+	if len(parts) != 2 {
+		return 0, &Invariant{Reason: "a stored stop's gio is not HH:MM: " + gio}
+	}
+	hour, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, err
+	}
+	minute, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, err
+	}
+	return int64(hour*60 + minute), nil
 }
 
 // deNghiSua is _de_nghi_sua: a counter-proposal is a new version its author
@@ -567,4 +771,38 @@ func KeepLine(s Store, actor Actor, paperID, line string, now time.Time) (Keep, 
 		return Keep{}, err
 	}
 	return keep, nil
+}
+
+// guChoNep is _gu_cho_nep: nothing outside «Một đôi», nothing for a person
+// who has not shared, and interests read only for those who have.
+func guChoNep(s Store, notebook *Notebook, roster []Member, now time.Time) ([]pairpaper.GuMuc, error) {
+	members := []string{}
+	names := map[string]string{}
+	for _, row := range roster {
+		members = append(members, row.PersonID)
+		names[row.PersonID] = row.DisplayName
+	}
+	participants := Participants(notebook, members)
+	consents := ConsentsOf(notebook)
+	if !pairnotebook.CanBatDoi(consents, participants, &now) {
+		return nil, nil
+	}
+	chia := []string{}
+	for _, person := range participants {
+		if slices.Contains(pairnotebook.GrantedBy(consents, person, &now), "chia_gu") {
+			chia = append(chia, person)
+		}
+	}
+	if len(chia) == 0 {
+		return nil, nil
+	}
+	tags, err := s.InterestsByPerson(append([]string{}, chia...))
+	if err != nil {
+		return nil, err
+	}
+	distinct := map[string]bool{}
+	for _, person := range participants {
+		distinct[person] = true
+	}
+	return pairpaper.GuChoNep(chia, tags, names, len(chia) == len(distinct) && len(distinct) == 2), nil
 }

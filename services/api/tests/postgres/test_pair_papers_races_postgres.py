@@ -34,14 +34,18 @@ from app.api.repository import SqlAlchemyApiRepository
 from app.api.schemas import (
     CloseNotebookRequest,
     PaperAgreeRequest,
+    PaperContentInput,
+    PaperDraftEditRequest,
     PaperReviseRequest,
     PaperSendRequest,
+    PaperStopInput,
 )
 from app.api.service import ApiService
 from app.db.models import (
     Context,
     Membership,
     Outing,
+    OutingStop,
     PairNotebook,
     PairPaper,
     PairPaperOuting,
@@ -154,10 +158,21 @@ def two_connections(postgres_engine: Engine) -> Iterator[tuple[Session, Session]
             cleanup.execute(
                 delete(PairNotebook).where(PairNotebook.context_id.in_(_CREATED))
             )
+            # A plan now carries the stops the two agreed on, and a stop
+            # holds its outing by a foreign key without a cascade.
+            cleanup.execute(
+                text(
+                    "DELETE FROM outing_stops WHERE outing_id IN"
+                    " (SELECT id FROM outings WHERE context_id = ANY(:ids))"
+                ),
+                {"ids": _CREATED},
+            )
             cleanup.execute(
                 text("DELETE FROM outings WHERE context_id = ANY(:ids)"),
                 {"ids": _CREATED},
             )
+            cleanup.execute(text("DELETE FROM places WHERE id = 'p-lau-ga-mau'"))
+            cleanup.execute(text("DELETE FROM destinations WHERE id = 'd-mau-cap'"))
             cleanup.execute(
                 delete(Membership).where(Membership.person_id.in_(_CREATED))
             )
@@ -488,3 +503,71 @@ def test_chot_hai_lan_tren_cung_mot_to_khong_sinh_keo_thu_hai(
         "một hàng kèo thừa ở đây là một buổi đi không ai hẹn, nằm trong danh "
         "sách của hai người"
     )
+
+
+def test_chot_ghi_chang_da_dong_y_vao_keo_va_dat_ten_theo_cho(
+    two_connections: tuple[Session, Session], monkeypatch: pytest.MonkeyPatch
+):
+    """Tờ đã chốt thành một kèo có tên và có chặng, không phải một cái ngày.
+
+    Trước 23/09 kèo sinh ra tên «Tờ lời rủ dd/mm», không chặng nào: hai chặng
+    hai người vừa đồng ý biến mất. Chặng có id danh mục mang theo tên quán; id
+    danh mục không còn thì chặng giữ nhãn, bỏ id (timeline từ chối chỗ lạ).
+    """
+    _monkeypatched_now(monkeypatch)
+    first, _second = two_connections
+    first.execute(
+        text(
+            "INSERT INTO destinations (id, name, lat, lng, bbox_south, bbox_west,"
+            " bbox_north, bbox_east, created_at, updated_at) VALUES ('d-mau-cap',"
+            " 'Nơi (dữ liệu mẫu)', 12, 109, 11, 108, 13, 110, :t, :t)"
+        ),
+        {"t": NOW},
+    )
+    first.execute(
+        text(
+            "INSERT INTO places (id, destination_id, name, category, lat, lng, source,"
+            " created_at, updated_at) VALUES ('p-lau-ga-mau', 'd-mau-cap',"
+            " 'Lẩu gà lá é (dữ liệu mẫu)', 'food', 10.77, 106.7, 'seed', :t, :t)"
+        ),
+        {"t": NOW},
+    )
+    first.commit()
+    context_id, a, b = _cap(first)
+    service = ApiService(SqlAlchemyApiRepository(first))
+    _mo_so(service, context_id, a, b)
+    drafted = service.draft_pair_paper(context_id, _actor(a, context_id))
+    service.edit_pair_draft(
+        drafted.id,
+        PaperDraftEditRequest(
+            content=PaperContentInput(
+                ngay=(NOW + timedelta(days=3)).date(),
+                chang=[
+                    PaperStopInput(gio="19:00", viec="Ăn lẩu", place_id="p-lau-ga-mau"),
+                    PaperStopInput(gio="21:30", viec="Đi bộ hồ", place_id="p-da-dong-cua"),
+                ],
+            )
+        ),
+        _actor(a, context_id),
+    )
+    service.send_pair_paper(drafted.id, PaperSendRequest(version=1), _actor(a, context_id))
+    chot = service.respond_pair_paper(
+        drafted.id, 1, PaperAgreeRequest(kind="dong_y"), _actor(b, context_id)
+    )
+    first.commit()
+    assert chot.state == "chot" and chot.outing_id is not None
+    outing = first.get(Outing, chot.outing_id)
+    assert outing is not None and outing.title == "Lẩu gà lá é (dữ liệu mẫu) · 21/09"
+    stops = [
+        (s.position, s.minute_of_day, s.label, s.place_name, s.place_id)
+        for s in first.execute(
+            select(OutingStop)
+            .where(OutingStop.outing_id == chot.outing_id)
+            .order_by(OutingStop.position)
+        ).scalars()
+    ]
+    assert stops == [
+        (0, 19 * 60, "Ăn lẩu", "Lẩu gà lá é (dữ liệu mẫu)", "p-lau-ga-mau"),
+        (1, 21 * 60 + 30, "Đi bộ hồ", None, None),
+    ]
+    assert outing.timeline_revision == 1

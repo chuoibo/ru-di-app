@@ -109,7 +109,7 @@ test("cauSauKhiScanHong nối câu máy chủ với lối ra nhập tay", () => 
 });
 
 test("cauNguonBill: bill gõ tay nói là gõ tay, không nói «chưa nhận diện»", () => {
-  assert.equal(cauNguonBill(hoaDonHaiMon()), "Bạn nhập tay 2 món. Máy chủ chưa đọc ảnh nào.");
+  assert.equal(cauNguonBill(hoaDonHaiMon()), "Bạn nhập tay 2 món, chưa đọc từ ảnh nào.");
   assert.equal(cauNguonBill(hoaDonTrong()), "Chưa có món nào. Thêm món bên dưới.");
   const docTuAnh = { ...hoaDonHaiMon(), lines: hoaDonHaiMon().lines.map((l) => ({ ...l, read: { name: l.name, quantity: 1, lineTotalVnd: l.lineTotalVnd } })) };
   assert.equal(cauNguonBill(docTuAnh), "Đã nhận diện 2 món");
@@ -120,7 +120,7 @@ test("nhanDongMon: không nhãn trên bill gõ tay; trên bill đọc từ ảnh
   const tay = hoaDonHaiMon();
   assert.equal(nhanDongMon(tay, tay.lines[0]), null);
   const doc = { ...tay, lines: [{ ...tay.lines[0], read: { name: "Bun bo", quantity: 1, lineTotalVnd: 150000 } }, tay.lines[1]] };
-  assert.deepEqual(nhanDongMon(doc, doc.lines[0]), { chu: "Máy chủ đọc từ ảnh", canKiem: false });
+  assert.deepEqual(nhanDongMon(doc, doc.lines[0]), { chu: "Rủ Đi đọc từ ảnh", canKiem: false });
   assert.deepEqual(nhanDongMon(doc, doc.lines[1]), { chu: "Bạn thêm tay", canKiem: false });
-  assert.deepEqual(nhanDongMon({ ...doc, needsReview: true }, doc.lines[0]), { chu: "Máy chủ đọc từ ảnh, cần bạn kiểm lại", canKiem: true });
+  assert.deepEqual(nhanDongMon({ ...doc, needsReview: true }, doc.lines[0]), { chu: "Rủ Đi đọc từ ảnh, cần bạn kiểm lại", canKiem: true });
 });

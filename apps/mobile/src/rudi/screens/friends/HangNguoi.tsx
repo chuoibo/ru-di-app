@@ -1,15 +1,15 @@
 /**
- * One person, the way every friend surface shows one (M2): a warm initial
- * tile, the name, a caption, and an optional trailing action pair. The friend
- * list and the add-by-phone confirm step share it so a person reads the same
- * on both screens. `HangNguoiCho` is the same silhouette in grey while the
- * server answers.
+ * One person, the way every friend surface shows one (M2): their avatar
+ * (photograph or initials), the name, a caption, and an optional trailing
+ * action pair. The friend list and the add-by-phone confirm step share it so a
+ * person reads the same on both screens. `HangNguoiCho` is the same
+ * silhouette in grey while the server answers.
  */
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
 /**
@@ -22,16 +22,19 @@ export function HangNguoi({
   phu,
   duoi,
   onPress,
+  personId,
 }: {
   ten: string;
   phu: string;
   duoi?: ReactNode;
   onPress?: () => void;
+  /** A friend's id draws their photograph; absent (a stranger's request) stays initials. */
+  personId?: string;
 }) {
   const { colors } = useRudiTheme();
   const than = (
     <>
-      <Avatar name={ten} size={40} />
+      <AvatarNguoi name={ten} personId={personId} size={40} />
       <View style={styles.hangChu}>
         <Text numberOfLines={1} style={[typography.body, { color: colors.ink }]}>
           {ten}

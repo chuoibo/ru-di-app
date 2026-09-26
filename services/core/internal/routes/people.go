@@ -245,6 +245,10 @@ func (p peopleStore) ShareActiveContext(a, b string) (bool, error) {
 	return p.store.ShareActiveContext(p.ctx, a, b)
 }
 
+func (p peopleStore) SameCouple(a, b string) (bool, error) {
+	return p.store.SameCouple(p.ctx, a, b)
+}
+
 func (p peopleStore) GetPlace(placeID string) (*peoplesteps.Place, error) {
 	place, err := p.store.GetPlace(p.ctx, placeID)
 	if err != nil || place == nil {

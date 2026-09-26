@@ -37,8 +37,6 @@ from app.api.errors import ApiProblem
 __all__ = [
     "CHAT_EXPENSE_LIMIT_PER_WINDOW",
     "CHAT_EXPENSE_WINDOW_SECONDS",
-    "COMPANION_TURN_LIMIT_PER_WINDOW",
-    "COMPANION_TURN_WINDOW_SECONDS",
     "CONTEXTUAL_SUGGESTION_LIMIT_PER_WINDOW",
     "CONTEXTUAL_SUGGESTION_WINDOW_SECONDS",
     "FACE_DETECTION_LIMIT_PER_WINDOW",
@@ -55,7 +53,6 @@ __all__ = [
     "SUGGESTION_WINDOW_SECONDS",
     "FixedWindowLimiter",
     "build_chat_expense_limiter",
-    "build_companion_turn_limiter",
     "build_contextual_suggestion_limiter",
     "build_face_detection_limiter",
     "build_receipt_scan_limiter",
@@ -100,15 +97,6 @@ CHAT_EXPENSE_LIMIT_PER_WINDOW = RECEIPT_SCAN_LIMIT_PER_WINDOW
 # counter prevents one feature's retry loop from disabling its neighbour.
 SCREENSHOT_SCAN_WINDOW_SECONDS = RECEIPT_SCAN_WINDOW_SECONDS
 SCREENSHOT_SCAN_LIMIT_PER_WINDOW = RECEIPT_SCAN_LIMIT_PER_WINDOW
-
-# `POST /contexts/{id}/ai-turn` spends one text-model call whenever the
-# conversation cadence lets the companion speak. That cadence is not a ceiling:
-# `plan_turn` refuses while the companion spoke last, and the caller lifts the
-# refusal by posting one more message, so an unmetered loop costs two cheap
-# requests per model call rather than one. Same human-burst allowance as the
-# routes above, and its own counter for the same reason.
-COMPANION_TURN_WINDOW_SECONDS = RECEIPT_SCAN_WINDOW_SECONDS
-COMPANION_TURN_LIMIT_PER_WINDOW = RECEIPT_SCAN_LIMIT_PER_WINDOW
 
 # `GET /contexts/{id}/suggestion` is the worst of the set: no cache, no
 # cadence, one model call on every request, and a GET, so a client that polls
@@ -304,21 +292,6 @@ def build_chat_expense_limiter() -> FixedWindowLimiter:
             "Quá nhiều lượt đọc khoản chi từ tin nhắn; tối đa "
             f"{CHAT_EXPENSE_LIMIT_PER_WINDOW} lượt mỗi "
             f"{CHAT_EXPENSE_WINDOW_SECONDS} giây. Thử lại sau ít phút."
-        ),
-    )
-
-
-def build_companion_turn_limiter() -> FixedWindowLimiter:
-    """The per-actor ceiling on the group companion, owned by one application."""
-
-    return FixedWindowLimiter(
-        limit=COMPANION_TURN_LIMIT_PER_WINDOW,
-        window_seconds=COMPANION_TURN_WINDOW_SECONDS,
-        code="companion_turn_rate_limited",
-        message=(
-            "Quá nhiều lượt hỏi trợ lý nhóm; tối đa "
-            f"{COMPANION_TURN_LIMIT_PER_WINDOW} lượt mỗi "
-            f"{COMPANION_TURN_WINDOW_SECONDS} giây. Thử lại sau ít phút."
         ),
     )
 

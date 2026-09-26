@@ -37,6 +37,8 @@ from app.api.schemas import (
     PairNotebookResponse,
     PairProposalCreateRequest,
     PairProposalResponse,
+    PairWeekRoleRequest,
+    PairWeekRoleResponse,
 )
 from app.api.service import ApiService
 
@@ -179,3 +181,19 @@ def close_pair_notebook(
 
     ApiService(repository).close_pair_notebook(context_id, request, actor)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put(
+    "/contexts/{context_id}/notebook/week-role",
+    response_model=PairWeekRoleResponse,
+    responses=ERRORS,
+)
+def set_pair_week_role(
+    context_id: UUID,
+    request: PairWeekRoleRequest,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> PairWeekRoleResponse:
+    """«Anh lo / Em lo / Hôm nay mình share» for this week (ADR-0034 §2.4).
+    Choosing decides whose turn the week reads as; it grants nothing."""
+    return ApiService(repository).set_pair_week_role(context_id, request, actor)

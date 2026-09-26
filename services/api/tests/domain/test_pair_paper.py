@@ -229,3 +229,79 @@ def test_phac_to_giay_doi_ngay_that():
             {"ngay": "2026-09-20", "gio": "18:30", "viec": "x"}, (), now=NOW
         )
     assert loi.value.code == "paper_draft_needs_date"
+
+
+# ADR-0034 §2.2: Nếp uses the tastes of whoever shared them, and nobody else's.
+
+
+def _phac_mau():
+    return pair_paper.phac_to_giay({"ngay": date(2026, 9, 19), "gio": "18:30", "viec": "Ăn tối", "di_tiep": None}, (), now=NOW)
+
+
+def _quan(pid, name, cat="cafe", rating=40, count=10, **over):
+    return {"id": pid, "name": name, "category": cat, "kinds": [], "traits": [], "rating": rating / 10, "rating_count": count, **over}
+
+
+def test_gu_cho_nep_chung_truoc_roi_tung_nguoi():
+    gu = pair_paper.gu_cho_nep([A, B], {A: ["game", "cafe"], B: ["cafe", "outdoor", "tag-bo"]}, {A: "Linh", B: "Minh"}, ca_hai=True)
+    assert [(m["tag"], m["chung"], m["ten"]) for m in gu] == [
+        ("cafe", True, None),
+        ("game", False, "Linh"),
+        ("outdoor", False, "Minh"),
+    ]
+    assert gu[0]["nguoi"] == [A, B]
+
+
+def test_gu_cho_nep_mot_nguoi_chia_thi_khong_co_gu_chung():
+    gu = pair_paper.gu_cho_nep([B], {B: ["cafe"]}, {B: "Minh"}, ca_hai=False)
+    assert gu == [{"tag": "cafe", "chung": False, "ten": "Minh", "nguoi": [B]}]
+
+
+def test_khong_gu_thi_khong_doi_gi():
+    phac = _phac_mau()
+    assert pair_paper.lam_giau_theo_gu(phac, gu=[], ung_vien=[], da_di=[], rang_buoc=[]) == phac
+
+
+def test_lich_su_da_de_xuat_cho_thi_gu_nhuong():
+    phac = _phac_mau()
+    phac["content"]["chang"][0]["place_id"] = "p-cu"
+    gu = [{"tag": "cafe", "chung": True, "ten": None, "nguoi": [A, B]}]
+    assert pair_paper.lam_giau_theo_gu(phac, gu=gu, ung_vien=[_quan("p1", "Quán Một")], da_di=[], rang_buoc=[]) == phac
+
+
+def test_gu_chung_chon_quan_chua_di_tot_nhat_va_ghi_nguon():
+    gu = [{"tag": "cafe", "chung": True, "ten": None, "nguoi": [A, B]}]
+    ra = pair_paper.lam_giau_theo_gu(
+        _phac_mau(),
+        gu=gu,
+        ung_vien=[_quan("p1", "Quán Một", rating=48), _quan("p2", "Quán Hai", rating=45), _quan("p3", "Quán Ba", cat="vui-choi", rating=50)],
+        da_di=["p1"],
+        rang_buoc=[],
+    )
+    dau = ra["content"]["chang"][0]
+    assert dau["place_id"] == "p2" and dau["viec"] == "Cà phê"
+    assert "Hai bạn cùng thích Cafe: thử Quán Hai" in ra["ly_do"]
+    assert ra["nguon"]["dung"][-2:] == [f"gu:{A}", f"gu:{B}"]
+
+
+def test_gu_mot_nguoi_khong_co_cho_thi_chi_dat_ten_chang():
+    gu = [{"tag": "outdoor", "chung": False, "ten": "Minh", "nguoi": [B]}, {"tag": "nightlife", "chung": False, "ten": "Minh", "nguoi": [B]}]
+    ra = pair_paper.lam_giau_theo_gu(_phac_mau(), gu=gu, ung_vien=[], da_di=[], rang_buoc=[])
+    dau = ra["content"]["chang"][0]
+    assert dau.get("place_id") is None
+    assert dau["viec"] == "Đi chơi tối", "outdoor không có loại chỗ, nên dùng nightlife"
+    assert "Minh thích Nightlife, nên Nếp phác theo đó." in ra["ly_do"]
+    assert ra["nguon"]["dung"][-1] == f"gu:{B}"
+
+
+def test_gu_tranh_cho_trung_chu_rang_buoc():
+    gu = [{"tag": "cafe", "chung": True, "ten": None, "nguoi": [A, B]}]
+    ra = pair_paper.lam_giau_theo_gu(
+        _phac_mau(),
+        gu=gu,
+        ung_vien=[_quan("p1", "Cafe Hải Sản", rating=49), _quan("p2", "Quán Hai", rating=40)],
+        da_di=[],
+        rang_buoc=[{"content": "hải sản"}],
+    )
+    assert ra["content"]["chang"][0]["place_id"] == "p2"
+    assert "Đã tránh chỗ trùng chữ" in ra["ly_do"]

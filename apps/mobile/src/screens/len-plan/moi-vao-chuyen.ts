@@ -93,7 +93,7 @@ export function danhSachMoiDuoc(
         ...chung,
         moiDuoc: false,
         vi: da.revoked_at
-          ? "Đã thu hồi lời mời. Máy chủ giữ lại dòng cũ nên không mời lại người này vào chuyến này được."
+          ? "Đã thu hồi lời mời. Lời mời cũ vẫn được giữ lại nên không mời lại người này vào chuyến này được."
           : "Đã mời vào chuyến này.",
       };
     }

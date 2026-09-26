@@ -416,3 +416,18 @@ def test_sua_nhap_ghi_tai_cho_va_khong_them_phien_ban(kho, postgres_session):
     assert len(doc.versions) == 1, "nháp không có lịch sử"
     assert doc.versions[0].content["chang"][0]["gio"] == "19:00"
     assert doc.versions[0].ly_do == "Đổi giờ."
+
+
+def test_vai_tuan_ghi_roi_doi_roi_share_qua_kho_that(kho, postgres_session):
+    """ADR-0034 §2.4: one row per cycle and week; choosing again changes the
+    row; «Hôm nay mình share» is NULL; the read finds exactly what was written."""
+    context_id, a, b, cycle_id = _so_mo(kho, postgres_session)
+    tuan = date(2030, 9, 16)
+    assert kho.get_pair_rhythm(cycle_id, tuan) is None
+    kho.set_pair_rhythm(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=b, chon_boi_id=a, now=NOW)
+    ghi = kho.get_pair_rhythm(cycle_id, tuan)
+    assert (ghi.nguoi_lo_id, ghi.chon_boi_id) == (b, a)
+    kho.set_pair_rhythm(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=None, chon_boi_id=b, now=NOW + timedelta(minutes=1))
+    share = kho.get_pair_rhythm(cycle_id, tuan)
+    assert share.nguoi_lo_id is None and share.chon_boi_id == b
+    assert kho.get_pair_rhythm(cycle_id, tuan + timedelta(days=7)) is None, "tuần khác, hàng khác"

@@ -12,6 +12,7 @@ package compare
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -31,25 +32,93 @@ const Response204ContentLength = "RESPONSE-204-CONTENT-LENGTH"
 // AcceptedDivergence maps each accepted divergence to the scenario that must
 // show it on every run, so an exception whose cause went away is noticed
 // instead of lingering.
+// StaticValidatorValue is ADR-0029 §2.4's STATIC-VALIDATOR-VALUE, for
+// MOUNT /static alone.
+//
+// Starlette derives the ETag from the file's mtime and size, never from its
+// bytes: etag = md5(f"{st_mtime}-{st_size}"). Measured across two builds of
+// IDENTICAL content, the served etag was 643656382d0b4df1c31428b69735d3ec and
+// a31f7470416e1f039dddfaf64f1362c5 while md5(content) stayed
+// 397aab04ee043894e776a8a6a2605f7e in both. The value is build metadata: it
+// already changes on every image rebuild, so no client can depend on it, and an
+// embedded file has no mtime at all. Go hashes the content instead.
+//
+// ONLY the value is accepted. Both sides must still send both headers, the
+// etag must still be a quoted 32-character hex digest on both, and every
+// status, every other header and every byte of every body is compared exactly.
+// A header dropped, a shape changed or a path outside the mount is a difference.
+const StaticValidatorValue = "STATIC-VALIDATOR-VALUE"
+
 var AcceptedDivergence = map[string]string{
 	Response204ContentLength: "w0/replay-204",
+	StaticValidatorValue:     "static/get-static-files",
 }
+
+// staticValidators are the headers StaticValidatorValue covers, and nothing
+// else on a /static response is covered.
+var staticValidators = []string{"etag", "last-modified"}
+
+var quotedMD5 = regexp.MustCompile(`^"[0-9a-f]{32}"$`)
 
 // Accepted names the accepted divergences a pair of exchanges shows.
 func Accepted(reference, candidate Exchange) []string {
+	var names []string
+	if accepted204(reference, candidate) {
+		names = append(names, Response204ContentLength)
+	}
+	if acceptedStaticValidator(reference, candidate) {
+		names = append(names, StaticValidatorValue)
+	}
+	return names
+}
+
+func accepted204(reference, candidate Exchange) bool {
 	if reference.Status != 204 || candidate.Status != 204 {
-		return nil
+		return false
 	}
 	ref := lowered(reference.Header)["content-length"]
 	_, inCandidate := lowered(candidate.Header)["content-length"]
-	if len(ref) == 1 && ref[0] == "0" && !inCandidate {
-		return []string{Response204ContentLength}
-	}
-	return nil
+	return len(ref) == 1 && ref[0] == "0" && !inCandidate
 }
 
-// Exchange is one response after normalisation.
+// acceptedStaticValidator holds only beneath the mount, only when both sides
+// sent both validators, only when the etag keeps its shape on both, and only
+// when a value actually differs -- an equal pair has nothing to accept.
+func acceptedStaticValidator(reference, candidate Exchange) bool {
+	if reference.Path != candidate.Path || !strings.HasPrefix(reference.Path, "/static/") {
+		return false
+	}
+	if reference.Status != candidate.Status {
+		return false
+	}
+	ref, cand := lowered(reference.Header), lowered(candidate.Header)
+	differs := false
+	for _, name := range staticValidators {
+		r, inRef := ref[name]
+		c, inCand := cand[name]
+		if !inRef && !inCand {
+			// A 304 sends the etag and not last-modified, on both sides.
+			continue
+		}
+		if len(r) != 1 || len(c) != 1 {
+			return false
+		}
+		if name == "etag" && (!quotedMD5.MatchString(r[0]) || !quotedMD5.MatchString(c[0])) {
+			return false
+		}
+		if r[0] != c[0] {
+			differs = true
+		}
+	}
+	return differs
+}
+
+// Exchange is one exchange after normalisation: the path that was asked for,
+// and the response that came back. The path is the scenario's declared path,
+// bindings and all, and is used only to scope an accepted divergence to the
+// route it was decided for -- never to compare.
 type Exchange struct {
+	Path   string
 	Status int
 	Header http.Header
 	Body   string
@@ -76,9 +145,19 @@ func Step(reference, candidate Exchange) []Difference {
 	}
 	refHeaders := lowered(reference.Header)
 	candHeaders := lowered(candidate.Header)
-	accepted204 := len(Accepted(reference, candidate)) > 0
+	skip := map[string]bool{}
+	for _, name := range Accepted(reference, candidate) {
+		switch name {
+		case Response204ContentLength:
+			skip["content-length"] = true
+		case StaticValidatorValue:
+			for _, header := range staticValidators {
+				skip[header] = true
+			}
+		}
+	}
 	for _, name := range unionNames(refHeaders, candHeaders) {
-		if Volatile[name] || (accepted204 && name == "content-length") {
+		if Volatile[name] || skip[name] {
 			continue
 		}
 		ref, inRef := refHeaders[name]

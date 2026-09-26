@@ -184,10 +184,43 @@ export function coTheDeNghiSua(to: ToGiay, toiId: string): boolean {
 }
 
 /**
+ * Whether `?ru=1` («Rủ một người đi chơi», «Rủ … tới đây») should ask for a
+ * draft: not before the first read has landed, and not when a sheet is
+ * already open -- the notebook refuses a second one, and the refusal used to
+ * show as «Tờ giấy không ở trạng thái làm được việc này.» over a sheet the
+ * person could see was fine.
+ */
+export function nenXinTo(daNap: boolean, to: ToGiay | undefined): "cho" | "xin" | "thoi" {
+  if (!daNap) return "cho";
+  return to !== undefined && TRANG_THAI_MO.includes(to.state) ? "thoi" : "xin";
+}
+
+/**
+ * What «Rủ … tới đây» can do with the sheet on the table: open the editor on
+ * this person's own draft or on a sheet they may answer (`mo`), wait while
+ * the draft is still being made (`cho`), or say why the place cannot go on
+ * this week's sheet (`bao`) -- before, the place was dropped without a word.
+ */
+export function goiYChoLam(
+  to: ToGiay | undefined,
+  toiId: string,
+  tenNguoiKia: string,
+  choId: string,
+): { lam: "mo" } | { lam: "cho" } | { lam: "bao"; cau: string } {
+  if (to === undefined) return { lam: "cho" };
+  if (TRANG_THAI_MO.includes(to.state) && phienBan(to)?.content.chang.some((c) => c.place_id === choId))
+    return { lam: "bao", cau: "Chỗ này đã ở trên tờ tuần này rồi." };
+  if (to.state === "nhap" || coTheDeNghiSua(to, toiId)) return { lam: "mo" };
+  if (["da_gui", "da_xem", "de_nghi_sua"].includes(to.state))
+    return { lam: "bao", cau: `Tờ tuần này đang chờ ${tenNguoiKia} trả lời. Chỗ bạn chọn chưa được thêm. Khi tờ quay về tay bạn thì đổi được.` };
+  return { lam: "bao", cau: "Tuần này hai bạn đã có tờ rồi. Chỗ bạn chọn chưa được thêm, để dành cho tuần sau nhé." };
+}
+
+/**
  * What changed in the CONTENT between two versions, as lines a person can
  * read (§3.3 rule 3: «hiện cái gì đã đổi»). Empty when nothing did.
  */
-export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] {
+export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined, tenCho: (id: string) => string | undefined = () => undefined): string[] {
   if (!vTruoc) return [];
   const ra: string[] = [];
   if (v.content.ngay !== vTruoc.content.ngay)
@@ -201,6 +234,14 @@ export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] 
     else if (a && b) {
       if (a.gio !== b.gio) ra.push(`Giờ ${ten.toLowerCase()}: ${a.gio} → ${b.gio}`);
       if (a.viec !== b.viec) ra.push(`Việc ${ten.toLowerCase()}: ${a.viec} → ${b.viec}`);
+      // A change of place is a change of plan even when the line stays «Ăn
+      // tối»; before 24/09 it was invisible, and a sheet that only changed its
+      // place could not even be sent.
+      if ((a.place_id ?? null) !== (b.place_id ?? null)) {
+        const cu = a.place_id ? tenCho(a.place_id) ?? "một chỗ trong danh mục" : "chưa chọn chỗ";
+        const moi = b.place_id ? tenCho(b.place_id) ?? "một chỗ trong danh mục" : "bỏ chỗ";
+        ra.push(`${ten}: ${cu} → ${moi}`);
+      }
     }
   }
   // The reason is not a diff line: the sheet already prints the current
