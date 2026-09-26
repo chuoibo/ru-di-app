@@ -55,7 +55,14 @@ def seed_place_catalog(session: Session) -> tuple[int, int]:
 
     Existing rows are left exactly as they are: this function is for filling an
     empty catalogue, not for republishing over one somebody has since imported.
+
+    A database that holds the fed catalogue (`source='vnlocal'`) gets nothing at
+    all. The compose `migrate` container calls this on every start, and it
+    inserts by missing id -- so once `rudi-ingest purge-dev` had removed the
+    invented rows, the next restart would have put all of them back.
     """
+    if session.scalar(select(Place.id).where(Place.source == "vnlocal").limit(1)) is not None:
+        return 0, 0
     da_co_dd = set(session.scalars(select(Destination.id)).all())
     them_dd = 0
     for row in SEED_DESTINATIONS:
