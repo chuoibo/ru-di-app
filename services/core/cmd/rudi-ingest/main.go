@@ -23,7 +23,7 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr *os.File) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: rudi-ingest migrate|land|apply [flags]")
+		fmt.Fprintln(stderr, "usage: rudi-ingest migrate|land|apply|photos|purge-dev [flags]")
 		return 2
 	}
 	ctx := context.Background()
@@ -148,6 +148,40 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 		for reason, count := range result.Skipped {
 			fmt.Fprintf(stdout, "  bỏ qua %s: %d\n", reason, count)
 		}
+		return 0
+
+	case "purge-dev":
+		set := flag.NewFlagSet("purge-dev", flag.ContinueOnError)
+		commit := set.Bool("apply", false, "ghi thật; mặc định chỉ chạy thử rồi hoàn tác")
+		if err := set.Parse(args[1:]); err != nil {
+			return 2
+		}
+		// Always run for real inside a transaction, then keep or roll back: a
+		// dry run that counted with SELECTs could disagree with what the
+		// DELETEs would actually do.
+		tx, err := pool.Begin(ctx)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		defer tx.Rollback(ctx)
+		report, err := ingest.PurgeDevCatalogue(ctx, tx)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		mode := "chạy thử, đã hoàn tác (thêm --apply để ghi)"
+		if *commit {
+			if err := tx.Commit(ctx); err != nil {
+				fmt.Fprintln(stderr, err)
+				return 1
+			}
+			mode = "đã ghi"
+		}
+		fmt.Fprintf(stdout, "%s\n  địa điểm seed %d · ảnh %d (xếp hàng xoá file %d)\n"+
+			"  bookmark %d · chặng bỏ liên kết %d · kỷ niệm bỏ liên kết %d · điểm đến cũ %d\n",
+			mode, report.SeedPlaces, report.Photos, report.QueuedObjects,
+			report.SavedPlaces, report.OutingStops, report.Memories, report.Destinations)
 		return 0
 	}
 	fmt.Fprintf(stderr, "lệnh lạ: %s\n", args[0])
