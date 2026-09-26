@@ -46,9 +46,9 @@ không lạc.
    npx expo run:android`.
 5. **Đọc mù 26/09 (lát S9): ĐÃ QUYẾT VÀ ĐÃ LÀM ở S10 (ADR-0038).** Nút tắt nói vì sao hoặc không hiện; mép
    Nếp là ruy băng; câu chữ («Bản đồ», «Người lập nhóm», nhãn gu tiếng Việt ở cả client, Python, Go); mức chi
-   thứ tư «Trên 500K». Còn mở, không chặn:
-   - Dấu vân tay mực trong phiếu bầu vẫn được đọc là «chấm xám»: chưa đổi.
-   - Nút gửi bình luận đỏ khi ô trống; «0 tim» cạnh sáu loại cảm xúc: chưa đổi.
+   thứ tư «Trên 500K». Hai mục nhỏ cuối cũng đã sửa (S11): phiếu bầu là vân tay có vân (phiếu của bạn mang
+   mực của bạn), nút gửi bình luận khi ô trống là viền đứt chứ không còn đĩa cam. Còn mở, không chặn: «0 tim»
+   cạnh sáu loại cảm xúc.
 6. **Hai test tầng Go Postgres đỏ vì môi trường container, không vì mã** (đo 26/09): `TestPhotoStorageOracle`
    và `TestPeopleRepositoryOracle` (route `delete_own_account`). Ảnh parity chạy dưới user `app`, còn test chạy
    dưới root nên `t.TempDir()` tạo thư mục 0700 của root; Python trong container bị PermissionError errno 13.

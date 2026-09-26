@@ -341,7 +341,10 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                       </Text>
                     ))}
                     <Field accessibilityLabel="Ô viết bình luận" onChangeText={setNhap} placeholder="Viết bình luận…" value={nhap} />
-                    <RudiButton compact disabled={ban || nhap.trim() === ""} full={false} label="Gửi bình luận" loading={ban} onPress={() => void guiBinhLuan(k)} variant="soft" />
+                    {/* ADR-0038 §2.2: the send appears with something to send. */}
+                    {nhap.trim() !== "" || ban ? (
+                      <RudiButton compact disabled={ban} full={false} label="Gửi bình luận" loading={ban} onPress={() => void guiBinhLuan(k)} variant="soft" />
+                    ) : null}
                   </View>
                 ) : null}
               </View>

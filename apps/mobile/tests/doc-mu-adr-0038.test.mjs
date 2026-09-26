@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { hinhRuyBang } from "../dist-test/rudi/art/giay.js";
+import { hinhRuyBang, hinhVanTay } from "../dist-test/rudi/art/giay.js";
 import { coTheDang, lyDoChuaDang } from "../dist-test/screens/ca-nhan/bai-dang.js";
 import { NGAN_SACH, SO_THICH } from "../dist-test/screens/vao-cua/so-thich.js";
 import { kiemLop, phanTich } from "./_kiem-lop.mjs";
@@ -92,4 +92,33 @@ test("§2.5: mức chi thứ tư nối liền mức cũ và không có trần; i
   assert.equal(top.den, null, "mức trên cùng phải không có trần");
   assert.equal(top.tu, 500_000);
   assert.ok(NGAN_SACH.every((k) => Number.isInteger(k.tu) && (k.den === null || Number.isInteger(k.den))), "luật 1: số nguyên đồng");
+});
+
+test("đọc mù: phiếu bầu là vân tay có vân, không phải chấm đặc; phiếu của bạn mang mực của bạn", () => {
+  for (const [w, h] of [[12, 15], [24, 30]]) {
+    const lop = hinhVanTay(w, h);
+    kiemLop(`vân tay ${w}×${h}`, lop, w, h);
+    assert.ok(lop.length >= 3, `vân tay cần ít nhất ba đường vân, có ${lop.length}`);
+    for (const l of lop) {
+      assert.ok(l.net !== undefined && l.net > 0, "vân tay là nét, không phải khối tô");
+      assert.ok(!/Z/.test(l.d), "mỗi đường vân để hở một phần tư, không phải vòng bia");
+    }
+    const dau = lop.map((l) => phanTich(l.d)[0].args[0]);
+    assert.ok(dau.some((x) => x > w / 2) && dau.some((x) => x < w / 2), "chỗ hở phải so le hai bên để đọc ra xoáy vân");
+  }
+  const theAi = doc("rudi/screens/chat/TheAi.tsx");
+  assert.doesNotMatch(theAi, /dauVanTay/, "chấm đặc cũ quay lại");
+  assert.match(theAi, /lop=\{HINH_VAN_TAY\}/);
+  assert.match(theAi, /doiMau=\{cuaToi && i === 0 \? \{ muc: mucNguoi\(personId, dark\) \} : undefined\}/);
+});
+
+test("đọc mù: nút gửi chính chưa có gì để gửi không còn là đĩa cam đặc", () => {
+  const ui = doc("rudi/ui.tsx");
+  const nut = ui.slice(ui.indexOf("export function IconButton("), ui.indexOf("export function IconButton(") + 2600);
+  assert.match(nut, /const tatSolid = solid && disabled && !loading;/);
+  assert.match(nut, /const background = tatSolid\s*\? colors\.card/);
+  assert.match(nut, /const glyph = tatSolid\s*\? colors\.inkSoft/);
+  assert.match(nut, /tatSolid && \{ borderColor: colors\.lineStrong, borderStyle: "dashed"/);
+  const tuong = doc("rudi/screens/ky-niem/GroupWallLive.tsx");
+  assert.match(tuong, /\{nhap\.trim\(\) !== "" \|\| ban \? \(\s*<RudiButton[^>]*label="Gửi bình luận"/, "nút gửi bình luận tường hiện khi ô còn trống");
 });

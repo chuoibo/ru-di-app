@@ -579,14 +579,22 @@ export function IconButton({
   tone?: RudiTone;
 }) {
   const { colors } = useRudiTheme();
-  const background = solid
+  // ADR-0038 §2.2: a primary icon with nothing to act on yet (send, with the
+  // box empty) is not a full coral disc. It is the same outline every button
+  // takes when it cannot be used yet: dashed edge, soft ink glyph.
+  const tatSolid = solid && disabled && !loading;
+  const background = tatSolid
+    ? colors.card
+    : solid
     ? toneColor(colors, tone)
     : selected
       ? toneSoftColor(colors, tone)
       : quiet || dim
         ? "transparent"
         : colors.card;
-  const glyph = solid
+  const glyph = tatSolid
+    ? colors.inkSoft
+    : solid
     ? colors[`${tone}Ink` as const]
     : selected
       ? toneColor(colors, tone)
@@ -600,6 +608,7 @@ export function IconButton({
       aria-busy={loading}
       aria-disabled={disabled || loading}
       aria-pressed={selected}
+      accessibilityState={{ disabled: disabled || loading, busy: loading, selected }}
       disabled={disabled || loading}
       hitSlop={4}
       onPress={onPress}
@@ -607,6 +616,7 @@ export function IconButton({
       style={[
         styles.iconButton,
         { backgroundColor: background, borderColor: quiet || dim || solid ? "transparent" : colors.line },
+        tatSolid && { borderColor: colors.lineStrong, borderStyle: "dashed" as const, borderWidth: 1.5 },
       ]}
     >
       {loading ? <ActivityIndicator color={glyph} size="small" /> : <Ionicons color={glyph} name={icon} size={22} />}

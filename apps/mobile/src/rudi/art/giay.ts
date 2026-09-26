@@ -12,6 +12,9 @@
  */
 import { type Diem, type LopVe, daGiac, doanCungTron, duong, netGay, tron } from "./net";
 
+/** Bezier handle for a quarter of an ellipse. */
+const K_ELIP = 0.5523;
+
 const PI = Math.PI;
 
 /** A deterministic wobble in -1..1 for index `i`: two octaves of sines, never random. */
@@ -190,6 +193,41 @@ export function hinhRuyBang(w: number, h: number, sauV = 6): { than: string; nep
   const x = w / 3;
   // The crease ends where it meets the V: on the edge from (0, h) to (w/2, h - v).
   return { than: daGiac(vong), nep: netGay([[x, 0], [x, h - v * (x / (w / 2))]]) };
+}
+
+/**
+ * An ink thumbprint (ADR-0037 D1, redrawn after the ADR-0038 blind read): the mark one
+ * ballot leaves on a poll's sticky note. The first draft was a filled blob and
+ * was read as «a broken grey dot»; a print is read by its ridges, so this is
+ * `vong` nested loops, each three quarters of an ellipse, the open quarter
+ * alternating side so they read as a whorl and not as target rings. Strokes
+ * only (`net`), inside a `w` x `h` box.
+ */
+export function hinhVanTay(w: number, h: number, vong = 4): LopVe[] {
+  const cx = w / 2;
+  const cy = h / 2;
+  const net = Math.max(0.9, Math.min(w, h) / 12);
+  const lop: LopVe[] = [];
+  for (let i = 0; i < vong; i += 1) {
+    const rx = w / 2 - net / 2 - i * (w / 2 - net) / vong;
+    const ry = h / 2 - net / 2 - i * (h / 2 - net) / vong;
+    if (rx <= net || ry <= net) break;
+    const kx = rx * K_ELIP;
+    const ky = ry * K_ELIP;
+    // Three quarters: right -> bottom -> left -> top; mirrored on odd rings.
+    const s = i % 2 === 0 ? 1 : -1;
+    lop.push({
+      d: duong(
+        "M", cx + s * rx, cy,
+        "C", cx + s * rx, cy + ky, cx + s * kx, cy + ry, cx, cy + ry,
+        "C", cx - s * kx, cy + ry, cx - s * rx, cy + ky, cx - s * rx, cy,
+        "C", cx - s * rx, cy - ky, cx - s * kx, cy - ry, cx, cy - ry,
+      ),
+      mau: "muc",
+      net,
+    });
+  }
+  return lop;
 }
 
 /**

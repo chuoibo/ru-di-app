@@ -29,6 +29,13 @@ import { Money } from "../../ui/Money";
 import { HangChang } from "../keo/HangChang";
 import type { BinhChonSong } from "../../chat/thay-doi";
 import { RudiButton } from "../../ui";
+import { hinhVanTay } from "../../art/giay";
+import { mucNguoi } from "../../nguoi/muc-nguoi";
+import { VeLop } from "../../ui/art/VeLop";
+
+/** One ballot's thumbprint on a poll note, drawn once for every note. */
+const VAN_TAY = { w: 16, h: 20 } as const;
+const HINH_VAN_TAY = hinhVanTay(VAN_TAY.w, VAN_TAY.h);
 
 /**
  * The sheet of paper every card is drawn on, signed at the foot.
@@ -205,7 +212,7 @@ function ThePoll({
   tenToHen?: string | null;
   banToHen?: number | null;
 }) {
-  const { colors } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const [ketQua, setKetQua] = useState<CuocBinhChonWire | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [dangBo, setDangBo] = useState<string | null>(null);
@@ -299,7 +306,18 @@ function ThePoll({
               {so > 0 ? (
                 <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.vanTay}>
                   {Array.from({ length: Math.min(so, 12) }, (_, i) => (
-                    <View key={i} style={[styles.dauVanTay, { backgroundColor: colors.ink, opacity: 0.72, transform: [{ rotate: `${(i * 37) % 60 - 30}deg` }] }]} />
+                    // A drawn print with ridges, not a filled blob (read as «a
+                    // grey dot» in the blind read); yours is in your own ink.
+                    <VeLop
+                      doiMau={cuaToi && i === 0 ? { muc: mucNguoi(personId, dark) } : undefined}
+                      height={VAN_TAY.h}
+                      key={i}
+                      khungH={VAN_TAY.h}
+                      khungW={VAN_TAY.w}
+                      lop={HINH_VAN_TAY}
+                      style={{ transform: [{ rotate: `${(i * 37) % 60 - 30}deg` }] }}
+                      width={VAN_TAY.w}
+                    />
                   ))}
                   {so > 12 ? <Text style={[typography.caption, { color: colors.inkSoft }]}>+{so - 12}</Text> : null}
                 </View>
@@ -352,7 +370,6 @@ function ThePoll({
 const styles = StyleSheet.create({
   giayNho: { borderRadius: 3, borderTopRightRadius: 12 },
   vanTay: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, paddingVertical: 4 },
-  dauVanTay: { width: 10, height: 13, borderRadius: 6 },
   flex: { flex: 1 },
   card: { gap: 8, padding: 14, borderWidth: 1 },
   chuKy: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 6, paddingTop: 2 },
