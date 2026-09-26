@@ -264,7 +264,15 @@ export function PersonalizationScreen() {
         </View>
       </View>
       {loi !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-      <StampButton disabled={!duDieuKien || dangLuu} label={nhanNut} loading={dangLuu} onPress={() => void xong()} size="vua" tilt={-1} />
+      <StampButton
+        disabled={!duDieuKien || dangLuu}
+        label={nhanNut}
+        loading={dangLuu}
+        lyDo={duDieuKien ? undefined : `Chọn thêm ${TOI_THIEU - muc.length} mục nữa.`}
+        onPress={() => void xong()}
+        size="vua"
+        tilt={-1}
+      />
       <Text style={[typography.note, styles.privacyText, { color: colors.inkFaint }]}>
         {cauLuuTru(personId !== null)}
       </Text>

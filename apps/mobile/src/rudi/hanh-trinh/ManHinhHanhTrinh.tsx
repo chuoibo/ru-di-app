@@ -173,7 +173,7 @@ export function ManHinhHanhTrinh({
           style={[styles.the, wide ? styles.theRong : styles.theHep, { paddingBottom: 12 + chanDuoi, maxHeight: wide ? undefined : availableHeight * (fontScale >= 1.8 ? 0.65 : 0.56), width: wide ? 360 : undefined }]}
         >
           <Pressable accessibilityRole="button" accessibilityState={{ expanded: !collapsed }} onPress={() => setCollapsed(!collapsed)} style={{ minHeight: 48, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={[typography.label, { color: colors.ink }]}>Trang ngày của hội</Text>
+            <Text style={[typography.label, { color: colors.ink }]}>Các chặng trong ngày</Text>
             <Text style={[typography.caption, { color: colors.accent }]}>{collapsed ? "Mở trang" : "Thu gọn"}</Text>
           </Pressable>
           {collapsed ? <Text style={[typography.note, { color: colors.inkSoft }]}>{tomChu}</Text> : <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>
@@ -211,7 +211,7 @@ export function ManHinhHanhTrinh({
           ) : (
             <View style={styles.khoiThe}>
               <Canh id="tim-khong-ra" width={144} />
-              <Text style={[typography.h2, { color: colors.ink }]}>Mở một trang đường mới</Text>
+              <Text style={[typography.h2, { color: colors.ink }]}>Ngày này chưa có điểm nào trên bản đồ</Text>
               <Text style={[typography.note, { color: colors.inkSoft }]}>
                 Gắn một quán hoặc một địa điểm vào lịch trình, đường đi sẽ hiện ở đây.
               </Text>

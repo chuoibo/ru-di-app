@@ -17,7 +17,7 @@ test("chưa ai bật: không nói gu của ai", () => {
 
 test("người kia bật thì thấy gu họ bằng nhãn, bỏ id lạ", () => {
   const c = cauGu(gu({ theirs_shared: true, theirs: ["cafe", "outdoor", "tag-la"] }), "Minh");
-  assert.equal(c.cuaHo, "Minh thích Cafe và Outdoor.");
+  assert.equal(c.cuaHo, "Minh thích Cafe và Ngoài trời.");
   assert.equal(c.chung, null, "gu chung cần cả hai bật");
 });
 

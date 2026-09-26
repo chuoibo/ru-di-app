@@ -23,7 +23,7 @@ import {
   AUDIENCES,
   MAC_DINH_NGUOI_DOC,
   MUC_NGUOI_DOC,
-  coTheDang,
+  coTheDang, lyDoChuaDang,
   guiBai,
   type Audience,
 } from "../../../screens/ca-nhan/bai-dang";
@@ -212,7 +212,7 @@ export function DangBaiScreen() {
         </View>
       ) : null}
       {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-      <StampButton disabled={!guiDuoc} label="Đăng" loading={dangGui} onPress={() => void gui()} size="vua" tilt={-1} />
+      <StampButton disabled={!guiDuoc} label="Đăng" loading={dangGui} lyDo={lyDoChuaDang(form) ?? undefined} onPress={() => void gui()} size="vua" tilt={-1} />
     </RudiScreen>
   );
 }

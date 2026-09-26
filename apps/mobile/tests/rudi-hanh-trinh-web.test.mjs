@@ -82,7 +82,7 @@ if (!existsSync(INDEX)) {
       const urlTruoc = await page.evaluate(() => location.pathname + location.hash);
       assert.match(urlTruoc, /plan/, `mong /plan, nhận ${urlTruoc}`);
 
-      await page.clickLabel("Hành trình");
+      await page.clickLabel("Bản đồ");
       await page.waitFor(
         () => document.body?.innerText?.includes("Khớp hành trình"),
         { timeout: 20000, label: "nút Khớp hành trình" },
@@ -130,7 +130,7 @@ if (!existsSync(INDEX)) {
         return nut ? nut.getAttribute("aria-selected") : null;
       });
       assert.equal(chon, "true", `chặng đã chọn phải còn highlight khi về Lịch trình, nhận ${chon}`);
-      await page.clickLabel("Hành trình");
+      await page.clickLabel("Bản đồ");
       await openEditor();
       await page.evaluate(() => {
         const input = document.querySelector('input[aria-label="Giờ xuất phát"]');
@@ -141,7 +141,7 @@ if (!existsSync(INDEX)) {
       await page.clickChu("Xem trên bản đồ");
       await page.waitFor(() => !document.querySelector('input[aria-label="Giờ xuất phát"]'), { timeout: 5000, label: "editor closed" });
       await page.clickLabel("Lịch trình");
-      await page.clickLabel("Hành trình");
+      await page.clickLabel("Bản đồ");
       await openEditor();
       assert.equal(await page.evaluate(() => document.querySelector('input[aria-label="Giờ xuất phát"]')?.value), "07:45", "bản nháp phải còn sau khi đổi chế độ");
       await page.clickChu("Xem trên bản đồ");

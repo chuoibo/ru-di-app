@@ -367,6 +367,15 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 | Hành trình bản đồ | trang ngày xé khỏi sổ, đặt đè lên bản đồ, mép xé và lỗ gáy quay về phía bản đồ | `NenGiay` + `hinhTrangXe` |
 | Cài đặt nhóm | góc trang chat xem trước màu bong bóng; «Rời nhóm» tách xa dưới nét kẻ | `bangMauChat` |
 | Thành viên | vai quản trị là con dấu mực | `Stamp tone="ink"` |
+
+Sau lượt đọc mù 26/09 (ADR-0038):
+
+- **Nút chưa dùng được phải nói vì sao, hoặc không hiện.** Không mờ bằng opacity nữa: `RudiButton` và
+  `StampButton` tắt là viền đứt `lineStrong` trên `card`, chữ `inkSoft` (≥ 4,5:1, `test_contrast_floor.py`),
+  và prop `lyDo` in lý do ngay dưới nút. Nút mà việc chưa có nghĩa thì không vẽ («Lưu tên» khi tên chưa đổi).
+- **Mép Nếp là dải ruy băng đánh dấu trang** màu `accent`, đuôi chữ V (`hinhRuyBang`), trong đúng 10dp của
+  ADR-0035. Kéo Nếp ra thì ruy băng mờ đi, mặt Nếp hiện.
+- Câu chữ: tab «Lịch trình / Bản đồ»; «Người lập nhóm»; nhãn gu tiếng Việt; mức chi thứ tư «Trên 500K».
 | Sở thích | bảng sticker (chọn là dán), mức chi là phong bì | `GuGlyph`, `StampButton` |
 | Đăng bài, story | trang thư và bốn phong bì người đọc; polaroid 24 giờ | `ONhapMuc`, `NapGiay` |
 | Bình chọn trong chat | giấy nhớ, mỗi phiếu là một dấu vân tay mực | — |

@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 
 import { TAB_BAR_HEIGHT } from "../adaptive";
+import { hinhRuyBang } from "../art/giay";
 import { so } from "../art/net";
 import { useRudiTheme } from "../theme";
 import { Nep } from "../ui/art/Nep";
@@ -219,6 +220,13 @@ export function NepDock() {
   const kieuNep = useAnimatedStyle(() => ({
     opacity: interpolate(caiX.value, [0, NEP_DIA - NEP_MEP_HEP], [1, 0], Extrapolation.CLAMP),
   }));
+  // ADR-0038 §2.3: tucked, the 10dp that shows is a bookmark ribbon in Nếp's
+  // coral, a thing people know means «pull here»; it gives way to Nếp's face
+  // as the slip comes out.
+  const kieuRuyBang = useAnimatedStyle(() => ({
+    opacity: interpolate(caiX.value, [0, NEP_DIA - NEP_MEP_HEP], [0, 1], Extrapolation.CLAMP),
+  }));
+  const ruyBang = hinhRuyBang(NEP_MEP_HEP, kich.h);
 
   // The panel covers the edge anyway, and a slip sliding under a sheet reads
   // as a bug rather than as depth. The same holds for any other sheet: the
@@ -302,6 +310,13 @@ export function NepDock() {
                 <Animated.View style={[styles.oNep, kieuNep]}>
                   <Nep pose="doi" size={NEP_CO} testID="nep-hinh" />
                 </Animated.View>
+                <Animated.View pointerEvents="none" style={[styles.ruyBang, { height: kich.h }, kieuRuyBang]} testID="nep-ruy-bang">
+                  <Svg height={kich.h} width={NEP_MEP_HEP}>
+                    <Path d={ruyBang.than} fill={pressed ? colors.accentEnd : colors.accent} />
+                    <Path d={ruyBang.than} fill="none" stroke={colors.lineStrong} strokeLinejoin="round" strokeWidth={StyleSheet.hairlineWidth} />
+                    <Path d={ruyBang.nep} fill="none" stroke={colors.accentInk} strokeOpacity={0.35} strokeWidth={1} />
+                  </Svg>
+                </Animated.View>
               </>
             )}
           </Pressable>
@@ -373,6 +388,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  ruyBang: { position: "absolute", left: 0, top: 0, width: NEP_MEP_HEP },
   oNep: {
     width: NEP_DIA,
     alignItems: "center",

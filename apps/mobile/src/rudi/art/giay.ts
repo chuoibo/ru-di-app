@@ -179,6 +179,20 @@ export function hinhTrangXe(w: number, h: number, canh: "tren" | "trai", bienDo 
 }
 
 /**
+ * A bookmark ribbon hanging down a notebook's edge (ADR-0038 §2.3): the face of
+ * Nếp's tucked slip. A strip `w` wide and `h` tall whose lower end is cut in a
+ * V (`sauV` deep, at most a quarter of the height), the cut every ribbon in a
+ * notebook has. `nep` is the crease a hand-folded ribbon keeps, a third in.
+ */
+export function hinhRuyBang(w: number, h: number, sauV = 6): { than: string; nep: string } {
+  const v = Math.min(sauV, h / 4);
+  const vong: Diem[] = [[0, 0], [w, 0], [w, h], [w / 2, h - v], [0, h]];
+  const x = w / 3;
+  // The crease ends where it meets the V: on the edge from (0, h) to (w/2, h - v).
+  return { than: daGiac(vong), nep: netGay([[x, 0], [x, h - v * (x / (w / 2))]]) };
+}
+
+/**
  * An envelope seen from the back: the body, the flap (closed = a triangle
  * down to 55% of the height; open = the same triangle flipped up above the
  * body, `mo` 0..1 between the two), and the two diagonal folds of the pocket.

@@ -188,7 +188,7 @@ export const PLACES: DemoPlace[] = [
     distance: "2,3 km",
     price: "100K - 180K/người",
     match: 88,
-    tags: ["Chụp ảnh", "Hoa", "Outdoor"],
+    tags: ["Chụp ảnh", "Hoa", "Ngoài trời"],
     category: "Vui chơi",
     anh: null,
   },

@@ -115,15 +115,20 @@ export function CaiDatNhomSheet({
       {!laPair ? (
         <View style={styles.khoi}>
           <Field accessibilityLabel="Ô tên nhóm" label="Tên nhóm" onChangeText={setTen} value={ten} />
-          <RudiButton
-            compact
-            disabled={!coGiDeDoi({ display_name: ten }) || ten.trim() === nhom.display_name}
-            full={false}
-            label="Lưu tên"
-            loading={dangLuu === "ten"}
-            onPress={() => void luuTen()}
-            variant="soft"
-          />
+          {/* ADR-0038 §2.2: the save appears once there is something to
+              save, instead of a greyed button under an unchanged name. */}
+          {ten.trim() !== nhom.display_name ? (
+            <RudiButton
+              compact
+              disabled={!coGiDeDoi({ display_name: ten })}
+              full={false}
+              label="Lưu tên"
+              loading={dangLuu === "ten"}
+              lyDo="Tên nhóm không để trống được."
+              onPress={() => void luuTen()}
+              variant="soft"
+            />
+          ) : null}
         </View>
       ) : null}
       <Text style={[typography.label, { color: colors.ink }]}>Màu bong bóng</Text>

@@ -40,10 +40,10 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Tường cá nhân"
     timeout: 60000
-# Đối chứng dương: còn là bạn thì cửa nhắn riêng MỞ. Hai người vẫn chung nhóm
-# sau khi chặn, nên nút «Nhắn tin» vẫn còn trên màn — dạng khoá, kèm câu «Kết
-# bạn để nhắn riêng.». Chính câu ấy là thứ phân biệt hai trạng thái, không phải
-# sự có mặt của cái nút.
+# Đối chứng dương: còn là bạn thì cửa nhắn riêng MỞ. Sau khi chặn, hai người
+# vẫn chung nhóm; từ ADR-0038 §2.2 màn không còn vẽ nút «Nhắn tin» khoá, chỉ
+# còn câu «Kết bạn để nhắn riêng.». Chính câu ấy là thứ phân biệt hai trạng
+# thái.
 - assertVisible: "Nhắn tin"
 - assertNotVisible: "Kết bạn để nhắn riêng."
 - takeScreenshot: 45-truoc-khi-chan

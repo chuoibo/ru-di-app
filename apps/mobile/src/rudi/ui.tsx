@@ -458,6 +458,12 @@ type ButtonProps = {
   /** When the visible label is not enough on its own («Nhắn tin» on a row
    *  that names somebody): the sentence a screen reader, and Maestro, get. */
   accessibilityLabel?: string;
+  /**
+   * ADR-0038 §2.2: why a disabled button cannot be used yet («Chọn một tấm
+   * ảnh trước đã.»), printed under it and given to a screen reader as the
+   * hint. A disabled button without a reason should usually not be shown.
+   */
+  lyDo?: string;
 };
 
 export function RudiButton({
@@ -472,10 +478,17 @@ export function RudiButton({
   full = true,
   style,
   accessibilityLabel,
+  lyDo,
 }: ButtonProps) {
   const { colors, radius } = useRudiTheme();
-  const solid = variant === "solid";
-  const foreground = solid ? colors[`${tone}Ink` as const] : toneColor(colors, tone);
+  // ADR-0038 §2.2: not yet usable is not faded. The button keeps a readable
+  // label and a dashed edge, both measured (`test_contrast_floor.py`); while
+  // it loads it keeps its own face.
+  const tat = disabled && !loading;
+  const vienTat = colors.lineStrong;
+  const chuTat = colors.inkSoft;
+  const solid = variant === "solid" && !tat;
+  const foreground = tat ? chuTat : solid ? colors[`${tone}Ink` as const] : toneColor(colors, tone);
   const base = [
     styles.button,
     compact && styles.buttonCompact,
@@ -486,7 +499,7 @@ export function RudiButton({
     // (a warm neutral) only on accent, where it is the brand world's line.
     variant === "outline" && { backgroundColor: colors.card, borderColor: tone === "accent" ? colors.lineStrong : toneColor(colors, tone) },
     variant === "ghost" && { backgroundColor: "transparent", borderColor: "transparent" },
-    disabled && styles.disabled,
+    tat && { backgroundColor: colors.card, borderColor: vienTat, borderStyle: "dashed" as const, borderWidth: 1.5 },
     style,
   ];
   const body = (
@@ -499,13 +512,15 @@ export function RudiButton({
     </>
   );
 
-  return (
+  const nut = (
     // Press feedback is a spring on the UI thread (scale 1 -> 0.98), the
     // `instant` step of the motion vocabulary; the old opacity dim ran on the
     // JS thread and could not honour Reduce Motion.
     <PressScale
+      accessibilityHint={tat && lyDo ? lyDo : undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
       disabled={disabled || loading}
       onPress={onPress}
       pressedScale={0.98}
@@ -525,6 +540,16 @@ export function RudiButton({
       ) : null}
       {body}
     </PressScale>
+  );
+  if (!tat || !lyDo) return nut;
+  return (
+    <View style={[styles.nutCoLyDo, full ? styles.nutCoLyDoFull : null]}>
+      {nut}
+      <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
+        <Ionicons color={chuTat} name="information-circle-outline" size={16} />
+        <Text style={[typography.caption, styles.lyDoChu, { color: chuTat }]}>{lyDo}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -1119,7 +1144,10 @@ const styles = StyleSheet.create({
   buttonCompact: { minHeight: 48, paddingHorizontal: 14 },
   buttonLabel: { zIndex: 1 },
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
-  disabled: { opacity: 0.45 },
+  nutCoLyDo: { gap: 6, alignSelf: "flex-start" },
+  nutCoLyDoFull: { alignSelf: "stretch" },
+  lyDo: { flexDirection: "row", alignItems: "flex-start", gap: 6, paddingHorizontal: 4 },
+  lyDoChu: { flexShrink: 1 },
   iconButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   chipTinh: { minHeight: 30, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5 },
   chip: { minHeight: 48, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 10 },

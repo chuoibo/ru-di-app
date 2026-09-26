@@ -119,7 +119,15 @@ export function DangStoryScreen() {
       </View>
       {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
       {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-      <StampButton disabled={!guiDuoc} label="Đăng story" loading={dangGui} onPress={() => void gui()} size="vua" tilt={-1} />
+      <StampButton
+        disabled={!guiDuoc}
+        label="Đăng story"
+        loading={dangGui}
+        lyDo={anh === null ? "Chọn một tấm ảnh trước đã." : chuThich.length > TRAN_CHU_THICH ? `Chú thích dài quá ${TRAN_CHU_THICH} chữ.` : undefined}
+        onPress={() => void gui()}
+        size="vua"
+        tilt={-1}
+      />
     </RudiScreen>
   );
 }

@@ -299,14 +299,10 @@ export function HoSoNguoiScreen() {
             ) : null}
             {hoSo.hoSo.relation === "groupmate" ? (
               <View style={styles.khoiChat}>
-                <RudiButton
-                  disabled
-                  icon="chatbubble-outline"
-                  label="Nhắn tin"
-                  onPress={() => undefined}
-                  variant="ghost"
-                />
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>Kết bạn để nhắn riêng.</Text>
+                {/* ADR-0038 §2.2: no locked «Nhắn tin» that reads as broken;
+                    the sentence says what opens it and the button beside it
+                    does that. */}
+                <Text style={[typography.body, { color: colors.inkSoft }]}>Kết bạn để nhắn riêng.</Text>
                 {/* B3 (QC 24/09): the sentence said «make friends» with nothing
                     to press; adding somebody from the same group meant knowing
                     their number. Not offered to a person just blocked here. */}

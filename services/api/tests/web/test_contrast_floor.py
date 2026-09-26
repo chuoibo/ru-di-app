@@ -196,6 +196,18 @@ def interactive_boundaries() -> list[tuple[str, str, str]]:
             ),
             "ground",
         ),
+        # ADR-0038 §2.2: a button not yet usable is a dashed outline on card,
+        # not a faded fill; its edge is the whole affordance left.
+        (
+            "app: nút RudiButton chưa dùng được, viền đứt trên nền trang",
+            kit_border_token(r"const vienTat = colors\.(\w+);", button),
+            "ground",
+        ),
+        (
+            "app: nút RudiButton chưa dùng được, viền đứt trên thẻ",
+            kit_border_token(r"const vienTat = colors\.(\w+);", button),
+            "card",
+        ),
         # Guest page. All three live inside <section class="card">.
         (
             "khách: nút .btn--quiet, viền trên thẻ",
@@ -373,6 +385,26 @@ class TextContrastStillHolds(unittest.TestCase):
                     TEXT_FLOOR,
                     f"phụ đề Heading `{match.group(1)}` trên `ground` ở {mode}",
                 )
+
+    def test_a_disabled_button_keeps_readable_words(self):
+        """ADR-0038 §2.2: the blind read of 26/09 could not read five greyed-out
+        primary buttons. Not yet usable keeps its words at the text floor."""
+        button = kit_component("RudiButton")
+        rudi = re.search(r"const chuTat = colors\.(\w+);", button)
+        self.assertIsNotNone(rudi, "RudiButton không còn khai `chuTat`")
+        stamp = kit_component("StampButton")
+        dau = re.search(r"const mucChu = tat \? colors\.(\w+) : muc;", stamp)
+        self.assertIsNotNone(dau, "StampButton không còn khai mực của dấu chưa bấm được")
+        self.assertNotRegex(button + stamp, r"opacity:\s*disabled", "nút tắt lại được làm mờ bằng opacity")
+        for mode in ("light", "dark"):
+            colours = palette(mode)
+            for ten, token in (("RudiButton", rudi.group(1)), ("StampButton", dau.group(1))):
+                with self.subTest(mode=mode, nut=ten):
+                    self.assertGreaterEqual(
+                        round(contrast(colours[token], colours["card"]), 2),
+                        TEXT_FLOOR,
+                        f"chữ nút {ten} chưa dùng được `{token}` trên `card` ở {mode}",
+                    )
 
     def test_placeholder_tone_clears_the_text_floor(self):
         for mode in ("light", "dark"):

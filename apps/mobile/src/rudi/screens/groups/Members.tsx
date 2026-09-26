@@ -129,7 +129,7 @@ export function GroupMembersScreen() {
                     {laToi ? " (bạn)" : ""}
                   </Text>
                   <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                    {duocMoi ? "Đã mời, chưa đồng ý" : tv.role === "admin" && tv.state === "active" ? "Mở nhóm này" : "Thành viên"}
+                    {duocMoi ? "Đã mời, chưa đồng ý" : tv.role === "admin" && tv.state === "active" ? "Người lập nhóm" : "Thành viên"}
                   </Text>
                 </View>
                 {coTheDoiVaiTro(conSong, phien.person_id, tv) ? (
