@@ -403,25 +403,65 @@ func TestARegionalSpecialityNeverGetsAPin(t *testing.T) {
 
 // TestTheProjectionRefusesToCallAnAreaAnAddress. `dia_chi_day_du` is named
 // "full address" and on real rows holds "Phường Tân Mai, Biên Hòa, Đồng Nai".
-// Reading that name instead of that content is the mistake this guards.
+// Reading that name instead of that content is the mistake this guards; the
+// feed's own `chi_vung` verdict is the same mistake caught at the source.
 func TestTheProjectionRefusesToCallAnAreaAnAddress(t *testing.T) {
-	rec, _, reject := Parse(validLine(t, func(r map[string]any) {
-		r["dia_chi"] = nil
-		r["dia_chi_day_du"] = "Phường Tân Mai, Biên Hòa, Đồng Nai"
-	}))
-	if reject != nil {
-		t.Fatal(reject)
+	area := "Phường Tân Mai, Biên Hòa, Đồng Nai"
+	cases := []struct {
+		name   string
+		mutate func(map[string]any)
+		want   string // "" means no address
+	}{
+		{"full address field is an area", func(r map[string]any) {
+			r["dia_chi"] = nil
+			r["dia_chi_day_du"] = area
+		}, ""},
+		{"an older batch falls back to dia_chi", func(r map[string]any) {
+			r["dia_chi"] = "248/5 Đường Phan Trung"
+		}, "248/5 Đường Phan Trung"},
+		{"house number is shown", func(r map[string]any) {
+			r["dia_chi"] = nil
+			r["dia_chi_hien_thi"] = "12 Nguyễn Huệ, Quận 1"
+			r["dia_chi_hien_thi_dang"] = "so_nha"
+		}, "12 Nguyễn Huệ, Quận 1"},
+		{"street is shown", func(r map[string]any) {
+			r["dia_chi_hien_thi"] = "Đường Bùi Viện"
+			r["dia_chi_hien_thi_dang"] = "ten_duong"
+		}, "Đường Bùi Viện"},
+		{"landmark is shown", func(r map[string]any) {
+			r["dia_chi_hien_thi"] = "Trước trường THPT Nguyễn Thị Diệu"
+			r["dia_chi_hien_thi_dang"] = "moc"
+		}, "Trước trường THPT Nguyễn Thị Diệu"},
+		// On real rows marked `chi_vung`, `dia_chi` often holds the same area,
+		// so the verdict must override dia_chi rather than fall back to it.
+		{"area is not an address even when dia_chi repeats it", func(r map[string]any) {
+			r["dia_chi"] = area
+			r["dia_chi_hien_thi"] = area
+			r["dia_chi_hien_thi_dang"] = "chi_vung"
+		}, ""},
+		{"an unclassified string is not an address", func(r map[string]any) {
+			r["dia_chi"] = "1 Đường Ví Dụ"
+			r["dia_chi_hien_thi"] = nil
+			r["dia_chi_hien_thi_dang"] = nil
+		}, ""},
 	}
-	if got := Project(rec); got.Address != nil {
-		t.Errorf("an area became an address: %q", *got.Address)
-	}
-
-	rec, _, _ = Parse(validLine(t, func(r map[string]any) {
-		r["dia_chi"] = "248/5 Đường Phan Trung"
-	}))
-	projection := Project(rec)
-	if projection.Address == nil || *projection.Address != "248/5 Đường Phan Trung" {
-		t.Errorf("a real address was dropped: %v", projection.Address)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			rec, unknown, reject := Parse(validLine(t, c.mutate))
+			if reject != nil {
+				t.Fatal(reject)
+			}
+			if len(unknown) != 0 {
+				t.Errorf("display-address keys counted as drift: %v", unknown)
+			}
+			got := Project(rec).Address
+			switch {
+			case c.want == "" && got != nil:
+				t.Errorf("shown as an address: %q", *got)
+			case c.want != "" && (got == nil || *got != c.want):
+				t.Errorf("address = %v, want %q", got, c.want)
+			}
+		})
 	}
 }
 

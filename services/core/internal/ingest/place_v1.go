@@ -147,17 +147,24 @@ type Record struct {
 	KhuVucRaw     string   `json:"khu_vuc_raw"`
 	DiaChi        string   `json:"dia_chi"`
 	DiaChiDayDu   string   `json:"dia_chi_day_du"`
-	DiemXepHang   *float64 `json:"diem_xep_hang_llm"`
-	DoTin         *float64 `json:"do_tin"`
-	SoBai         int      `json:"so_bai"`
-	Posts         []PostRef
-	Frames        []Frame
-	Geo           *Geo
-	TrungLapVoi   []string        `json:"trung_lap_voi"`
-	CreatedAt     string          `json:"created_at"`
-	UpdatedAt     string          `json:"updated_at"`
-	Review        json.RawMessage `json:"review"`
-	TomLuoc       json.RawMessage `json:"tom_luoc"`
+	// DisplayAddress is the feed's `dia_chi_hien_thi` group. HasDisplay is
+	// whether the delivery carries the group at all: batches before 0007 do
+	// not, and "the feed never said" is a different statement from "the feed
+	// said this row has no address".
+	DisplayAddress     string   `json:"dia_chi_hien_thi"`
+	DisplayAddressForm string   `json:"dia_chi_hien_thi_dang"`
+	HasDisplay         bool     `json:"-"`
+	DiemXepHang        *float64 `json:"diem_xep_hang_llm"`
+	DoTin              *float64 `json:"do_tin"`
+	SoBai              int      `json:"so_bai"`
+	Posts              []PostRef
+	Frames             []Frame
+	Geo                *Geo
+	TrungLapVoi        []string        `json:"trung_lap_voi"`
+	CreatedAt          string          `json:"created_at"`
+	UpdatedAt          string          `json:"updated_at"`
+	Review             json.RawMessage `json:"review"`
+	TomLuoc            json.RawMessage `json:"tom_luoc"`
 }
 
 // knownKeys is every top-level key this side expects. An unfamiliar key is not
@@ -171,7 +178,9 @@ var knownKeys = map[string]bool{
 	"province_match": true, "tinh_raw": true, "khu_vuc_raw": true,
 	"dia_chi": true, "dia_chi_xac_nhan": true, "dia_chi_nguon": true,
 	"dia_chi_day_du": true, "dia_chi_khac": true, "geo": true,
-	"diem_xep_hang_llm": true, "do_tin": true, "so_bai": true, "review": true,
+	"dia_chi_hien_thi": true, "dia_chi_hien_thi_dang": true,
+	"dia_chi_hien_thi_nguon": true,
+	"diem_xep_hang_llm":      true, "do_tin": true, "so_bai": true, "review": true,
 	"tom_luoc": true, "posts": true, "frames": true, "trung_lap_voi": true,
 	"trung_toa_do_voi": true,
 	"created_at":       true, "updated_at": true,
@@ -221,6 +230,7 @@ func Parse(line []byte) (*Record, []string, *Reject) {
 	if err := json.Unmarshal(line, &rec); err != nil {
 		return nil, unknown, &Reject{RejectBadJSON, err.Error()}
 	}
+	_, rec.HasDisplay = loose["dia_chi_hien_thi_dang"]
 	// `posts`, `frames` and `geo` are unmarshalled by name rather than by tag so
 	// that a malformed one of them is a reject with its own code instead of a
 	// bare "cannot unmarshal" on the whole line.

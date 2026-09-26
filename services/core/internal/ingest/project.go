@@ -64,15 +64,7 @@ func Project(rec *Record) Projection {
 		projection.SourceUpdate = &rec.UpdatedAt
 	}
 
-	// `dia_chi` is the address the feed actually holds. `dia_chi_day_du` is not
-	// used, despite being called "full address": on the rows that were read it
-	// holds an area -- "Phường Tân Mai, Biên Hòa, Đồng Nai" -- and putting that
-	// in a column called `address` is how a screen comes to show a ward where a
-	// street should be. Null here means the screen says there is no address,
-	// which is true.
-	if address := strings.TrimSpace(rec.DiaChi); address != "" {
-		projection.Address = &address
-	}
+	projection.Address = rec.displayAddress()
 
 	if prose := strings.TrimSpace(reviewString(rec.Review, "mo_ta_tong_quan")); prose != "" {
 		projection.Description = &prose
@@ -81,6 +73,38 @@ func Project(rec *Record) Projection {
 
 	projection.setPoint(rec)
 	return projection
+}
+
+// displayAddresses are the forms of `dia_chi_hien_thi` that name a place a
+// person can stand in front of: a house number, a street, or a landmark
+// ("trước trường THPT Nguyễn Thị Diệu"). `chi_vung` is left out on purpose --
+// it is an area, and a screen that shows "Phường Tân Mai, Biên Hòa" under
+// "Địa chỉ" is promising a door and handing over a ward.
+var displayAddresses = map[string]bool{"so_nha": true, "ten_duong": true, "moc": true}
+
+// displayAddress is the address a screen may show, or nil for "no address".
+//
+// None of these strings is a verified address -- `dia_chi_xac_nhan` holds on
+// under two hundred rows -- so this column is for reading, never for routing.
+//
+// `dia_chi_day_du` is never used, despite being called "full address": on the
+// rows that were read it holds an area, and reading the name of a field
+// instead of its content is how a ward ends up where a street should be.
+func (rec *Record) displayAddress() *string {
+	candidate := rec.DiaChi
+	if rec.HasDisplay {
+		// The feed classified the string. Its verdict replaces `dia_chi`
+		// rather than supplementing it: on rows it calls `chi_vung`, `dia_chi`
+		// often holds that very area.
+		candidate = ""
+		if displayAddresses[rec.DisplayAddressForm] {
+			candidate = rec.DisplayAddress
+		}
+	}
+	if address := strings.TrimSpace(candidate); address != "" {
+		return &address
+	}
+	return nil
 }
 
 // setPoint decides what coordinates, if any, the catalogue keeps.
