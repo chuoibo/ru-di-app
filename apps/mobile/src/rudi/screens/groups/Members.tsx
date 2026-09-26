@@ -142,7 +142,7 @@ export function GroupMembersScreen() {
                     variant="soft"
                   />
                 ) : tv.role === "admin" && tv.state === "active" ? (
-                  <Stamp label="Quản trị" />
+                  <Stamp label="Quản trị" tilt={-3} tone="ink" />
                 ) : null}
               </View>
             );

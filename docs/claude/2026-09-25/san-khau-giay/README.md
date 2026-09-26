@@ -25,7 +25,8 @@
 | S5 | `763149b` | chat, người, bảng Nếp; sửa B2, B3, B8; mực người qua AvatarNguoi |
 | S6 | `733b4e8` | kỷ niệm, thành tích, hộ chiếu; sửa B4 |
 | S7 | `ed3d49e` | vào cửa, B7, quét 768/1280/tối/giảm chuyển động, DESIGN v3 |
-| S8 | commit sau S7 | Sở thích, Đăng bài, Story, Chi tiết bài, thẻ bình chọn |
+| S8 | `b359c6a` | Sở thích, Đăng bài, Story, Chi tiết bài, thẻ bình chọn |
+| S9 | commit sau S8 | hành trình bản đồ, cài đặt nhóm, hồ sơ người khác, vai quản trị; trả hết nợ chữ trên giấy; đọc mù |
 
 Hai commit merge `origin/main`: `1f61fcd`, `f67c286`. Mỗi commit lát có số đo cổng, đột biến và
 số chạy cây sạch trong commit message.
@@ -47,6 +48,15 @@ số chạy cây sạch trong commit message.
   - bìa mở biến mất;
   - ô tên kèo nổi lên ở màn rộng;
   - giấy nhớ trên nền `paper` tối.
+- Đọc mù (S9, 26/09): một subagent context mới, không đọc mã, xem 11 ảnh không nhãn (Sở thích,
+  Đăng bài ×3, Story, Chi tiết bài, thẻ bình chọn, hành trình, cài đặt nhóm, hồ sơ người khác,
+  thành viên) và trả lời «màn này làm gì, bấm vào đâu, có gì khó hiểu».
+  - Đoán đúng việc chính ở 11/11 màn (tự tin cao 10, vừa 1: hành trình).
+  - Một ảnh là khung cũ trước bản sửa nắp phong bì của S8; lời chê «nắp đè tiêu đề» ứng với khung
+    đó, khung hiện tại không còn.
+  - Sửa ngay trong S9: ô màu đang chọn không nhìn ra (viền cùng màu với ô), câu «Bạn bè» bị cắt
+    «…» ngay chỗ chọn người đọc (D8), hồ sơ nói năm tham gia hai lần.
+  - Phần còn lại ghi ở `docs/team/hang-doi.md`, mục 2026-09-25, điểm 5.
 
 ## Cái gì còn mở
 
@@ -56,10 +66,9 @@ số chạy cây sạch trong commit message.
    - đo `dumpsys gfxinfo`;
    - smoke crash Skia (dev client cũ phải rơi về SVG).
 2. B1 phía máy chủ (bản phác mồ côi khi sổ chưa lập): cần Lead chốt luật, qua cổng parity.
-3. Chưa làm lại, còn dùng khuôn v2:
-   - Cài đặt (giữ trơn có chủ ý);
-   - hành trình bản đồ.
-   Sở thích, Đăng bài, Story, Chi tiết bài và thẻ bình chọn đã làm ở lát S8 (commit sau S7).
+3. Cài đặt vẫn giữ trơn có chủ ý (chỉ đổi mép `Sheet`). Mọi màn khác đã làm lại: S8 (Sở thích,
+   Đăng bài, Story, Chi tiết bài, thẻ bình chọn) và S9 (hành trình bản đồ, cài đặt nhóm, hồ sơ
+   người khác, vai quản trị).
 4. DESIGN.md: mục v3 là hợp đồng hiện hành; phần v2 bên dưới chưa viết lại toàn bộ.
 5. Cỡ chữ lớn (fontScale 1.3/2.0) chỉ đo được trên máy thật; web headless luôn là 1.0.
 6. Chữ «bút chì» của tờ sổ đôi đi theo trạng thái tờ, không theo từng dòng. Muốn theo dòng thì

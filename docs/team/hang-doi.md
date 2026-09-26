@@ -50,6 +50,21 @@ không lạc.
      bằng chứng.
 3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&
    npx expo run:android`.
+5. **Đọc mù 26/09 (lát S9): những điều người đọc lần đầu hiểu sai mà S9 chưa sửa.**
+   Một subagent context mới đọc 11 ảnh không nhãn (xem `docs/claude/2026-09-25/san-khau-giay/README.md`).
+   Đã sửa trong S9: ô màu bong bóng đang chọn không nhìn ra; câu «Bạn bè» ở Đăng bài bị cắt «…»;
+   hồ sơ người khác nói năm tham gia hai lần. Còn lại, cần quyết thiết kế:
+   - Nút chính bị tắt («Lưu tên», «Đăng», «Đăng story», «Lưu sở thích», «Nhắn tin» của người cùng
+     nhóm) có tương phản thấp và không nói vì sao tắt. Đây là kiểu `disabled` chung của `RudiButton`
+     và `StampButton`, đổi thì chạm `test_contrast_floor.py`.
+   - Mép giấy 10dp của Nếp ở cạnh phải (ADR-0035) được đọc là «khung trắng bị cắt, lỗi hiển thị» ở
+     8/11 ảnh. ADR-0035 giữ nguyên trong v3, nên cần Lead quyết có đổi hay không.
+   - Dấu vân tay mực trong phiếu bầu được đọc là «chấm xám méo»: cần một nhãn nhỏ hoặc hình rõ hơn.
+   - Con dấu («QUẢN TRỊ») và chip trông như nút bấm.
+   - Câu chữ khó hiểu: «Mở nhóm này» (người lập nhóm), «Trang ngày của hội», «Mở một trang đường mới»;
+     «Lịch trình» và «Hành trình» dễ nhầm; nhãn gu tiếng Anh (Nightlife, Outdoor…) xen tiếng Việt.
+   - Nút gửi bình luận đỏ đậm khi ô còn trống. «0 tim» cạnh sáu loại cảm xúc.
+   - Mức chi cao nhất là 250K–500K; người tiêu hơn 500K không có ô để chọn (quyết sản phẩm).
 
 ---
 

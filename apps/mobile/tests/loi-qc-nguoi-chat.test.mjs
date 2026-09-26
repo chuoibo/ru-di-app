@@ -43,3 +43,24 @@ test("mực người đi qua AvatarNguoi: avatar sống mang vòng mực của �
   const nguon = doc("ui/AvatarNguoi.tsx");
   assert.match(nguon, /<Avatar \{\.\.\.rest\}[^>]*personId=\{personId\}/, "AvatarNguoi nuốt personId: mọi avatar sống mất mực riêng");
 });
+
+test("cài đặt nhóm: bong bóng xem trước vẽ bằng đúng bảng màu chat của theme đang chọn", () => {
+  const nguon = doc("screens/chat/CaiDatNhom.tsx");
+  assert.match(nguon, /const mauChon = bangMauChat\(nhom\.theme, dark\);/, "xem trước không đọc theme của nhóm qua bangMauChat");
+  const bong = nguon.slice(nguon.indexOf('testID="xem-truoc-bong-bong"'), nguon.indexOf('testID="bong-bong-mau"') + 200);
+  assert.match(bong, /backgroundColor: mauChon\.bubble, borderColor: mauChon\.bubble \}\]\} testID="bong-bong-mau"/, "bong bóng của bạn không mang màu theme");
+  assert.match(bong, /color: mauChon\.bubbleInk/, "chữ trong bong bóng không dùng mực của theme");
+  // «Rời nhóm» sits under its own rule, after every other row.
+  const ke = nguon.indexOf("styles.ke");
+  assert.ok(ke > nguon.indexOf('title="Thành viên"') && ke < nguon.indexOf('label="Rời nhóm"'), "«Rời nhóm» không còn tách dưới nét kẻ");
+});
+
+test("đọc mù S9: ô màu đang chọn có vòng mực và dấu tick; câu mức người đọc không bị cắt", () => {
+  const caiDat = doc("screens/chat/CaiDatNhom.tsx");
+  assert.match(caiDat, /borderColor: chon \? colors\.ink : colors\.lineStrong/, "ô đang chọn viền bằng màu của chính theme: nhìn không ra ô nào đang chọn");
+  assert.match(caiDat, /\{chon \? <Ionicons [^>]*name="checkmark"/, "ô đang chọn thiếu dấu tick");
+  const dangBai = doc("screens/nguoi/DangBaiScreen.tsx");
+  const dong = dangBai.split("\n").find((l) => l.includes("MUC_NGUOI_DOC[a].giaiThich"));
+  assert.ok(dong, "không thấy câu giải thích mức người đọc");
+  assert.doesNotMatch(dong, /numberOfLines/, "câu ai đọc được bài bị cắt «…» ngay chỗ chọn (D8)");
+});

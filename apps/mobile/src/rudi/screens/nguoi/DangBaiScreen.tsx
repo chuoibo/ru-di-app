@@ -179,7 +179,8 @@ export function DangBaiScreen() {
               <View style={[styles.napPhongBi, { borderColor: chon ? colors.accent : colors.lineStrong }]} />
               <View style={styles.phongBiChu}>
                 <Text style={[typography.label, { color: colors.ink }]}>{MUC_NGUOI_DOC[a].nhan}</Text>
-                <Text numberOfLines={3} style={[typography.caption, { color: colors.inkSoft }]}>{MUC_NGUOI_DOC[a].giaiThich}</Text>
+                {/* Never clipped: who can read a post is said in full where it is chosen (D8). */}
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{MUC_NGUOI_DOC[a].giaiThich}</Text>
               </View>
               {chon ? <Ionicons color={colors.accent} name="checkmark-circle" size={20} style={styles.dauChon} /> : null}
             </Pressable>

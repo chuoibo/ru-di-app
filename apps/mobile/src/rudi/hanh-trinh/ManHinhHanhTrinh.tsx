@@ -21,6 +21,11 @@ import { kieuBanDo, type MocBanDo } from "./kieu-ban-do";
 import { useMotion } from "../ui/useMotion";
 import { useNhuongChoNep } from "../nep/NepProvider";
 import { Canh } from "../ui/art/Canh";
+import { NenGiay } from "../ui/NenGiay";
+import { hinhTrangXe } from "../art/giay";
+
+/** Depth of the torn edge; the page overlaps the map by twice this. */
+const XE = 3;
 import { KyHoa } from "../ui/art/KyHoa";
 
 export function ManHinhHanhTrinh({
@@ -155,7 +160,18 @@ export function ManHinhHanhTrinh({
         ) : null}
       </View>
       </View>
-        <View style={[styles.the, { backgroundColor: colors.paper, borderColor: colors.line, paddingBottom: 12 + chanDuoi, maxHeight: wide ? undefined : availableHeight * (fontScale >= 1.8 ? 0.65 : 0.56), width: wide ? 360 : undefined }]}>
+        {/* The day page is a page torn out of the trip notebook and laid over
+            the map: the torn edge and its binding holes face the map. It is a
+            `card` sheet, not `paper`: its accent and faint text stay legible
+            at night (D14). */}
+        <NenGiay
+          cao={2}
+          hinh={(w, h) => {
+            const t = hinhTrangXe(w, h, wide ? "trai" : "tren", XE);
+            return { nen: t.nen, vien: t.vien, them: t.lo };
+          }}
+          style={[styles.the, wide ? styles.theRong : styles.theHep, { paddingBottom: 12 + chanDuoi, maxHeight: wide ? undefined : availableHeight * (fontScale >= 1.8 ? 0.65 : 0.56), width: wide ? 360 : undefined }]}
+        >
           <Pressable accessibilityRole="button" accessibilityState={{ expanded: !collapsed }} onPress={() => setCollapsed(!collapsed)} style={{ minHeight: 48, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={[typography.label, { color: colors.ink }]}>Trang ngày của hội</Text>
             <Text style={[typography.caption, { color: colors.accent }]}>{collapsed ? "Mở trang" : "Thu gọn"}</Text>
@@ -207,7 +223,7 @@ export function ManHinhHanhTrinh({
           {actions}
           </ScrollView>}
           {primaryAction}
-        </View>
+        </NenGiay>
     </View>
   );
 }
@@ -344,7 +360,10 @@ const styles = StyleSheet.create({
   khung: { flex: 1, minHeight: 0 },
   hangNut: { paddingHorizontal: 12, paddingTop: 8, alignItems: "flex-start" },
   dan: { flex: 1 },
-  the: { paddingHorizontal: 16, gap: 8, borderTopWidth: StyleSheet.hairlineWidth },
+  the: { paddingHorizontal: 16, gap: 8 },
+  // The torn edge and the holes (13dp in) sit over the map's last few dp.
+  theHep: { marginTop: -XE * 2, paddingTop: XE * 2 + 12 },
+  theRong: { marginLeft: -XE * 2, paddingLeft: XE * 2 + 18, paddingTop: 8 },
   khoiThe: { gap: 6 },
   thanh: { marginHorizontal: -14, marginTop: -2 },
   thanhTrong: { paddingHorizontal: 14, gap: 8 },

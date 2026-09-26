@@ -10,7 +10,7 @@
  * re-render. Shapes stay inside their box, so a component can lay them out
  * with the size it measured and nothing spills past its edge.
  */
-import { type Diem, daGiac, doanCungTron, duong, netGay } from "./net";
+import { type Diem, type LopVe, daGiac, doanCungTron, duong, netGay, tron } from "./net";
 
 const PI = Math.PI;
 
@@ -152,6 +152,30 @@ export function hinhCuong(w: number, h: number, bienDo = 3): { nen: string; vien
   const day = diemXe(w, 0, h - bienDo, bienDo);
   const vong: Diem[] = [[0, 0], [w, 0], ...day];
   return { nen: daGiac(vong), vien: netGay([...vong, vong[0]]) };
+}
+
+/**
+ * A page torn out of the trip notebook and laid over the map: torn along the
+ * edge that faces the map (`tren` on a phone, where the page sits under the
+ * map; `trai` on a wide screen, where it sits beside it), with the row of
+ * binding holes the tear ran through. `lo` are marks for `NenGiay.them`.
+ */
+export function hinhTrangXe(w: number, h: number, canh: "tren" | "trai", bienDo = 3): { nen: string; vien: string; lo: LopVe[] } {
+  const buocLo = 22;
+  const rLo = 2.4;
+  const sauLo = bienDo * 2 + 7;
+  if (canh === "tren") {
+    const mep = diemXe(0, w, bienDo, bienDo);
+    const vong: Diem[] = [...mep, [w, h], [0, h]];
+    const lo: LopVe[] = [];
+    for (let x = buocLo; x <= w - buocLo / 2; x += buocLo) lo.push({ d: tron(x, sauLo, rLo), mau: "bong" });
+    return { nen: daGiac(vong), vien: netGay([...vong, vong[0]]), lo };
+  }
+  const mep = diemXe(0, h, bienDo, bienDo).map(([y, x]) => [x, y] as const);
+  const vong: Diem[] = [...mep, [w, h], [w, 0]];
+  const lo: LopVe[] = [];
+  for (let y = buocLo; y <= h - buocLo / 2; y += buocLo) lo.push({ d: tron(sauLo, y, rLo), mau: "bong" });
+  return { nen: daGiac(vong), vien: netGay([...vong, vong[0]]), lo };
 }
 
 /**

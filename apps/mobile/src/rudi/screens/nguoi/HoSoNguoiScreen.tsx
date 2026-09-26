@@ -6,8 +6,9 @@
  * is loaded after and fails on its own, so a wall that does not answer does
  * not hide a person who did.
  *
- * UI v2 (đợt 7): initial, name, when they joined, the relation as a word;
- * posts are rows on the paper with a hairline between them.
+ * UI v3 (S9): the head is the same passport «Cá nhân» shows its owner, the
+ * name in the person's own ink; posts are rows on the paper with a hairline
+ * between them.
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Canh } from "../../ui/art/Canh";
@@ -34,7 +35,9 @@ import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
 import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach, type ChinhSachBinhLuan } from "../../nguoi/chinh-sach-tuong";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
+import { bongGiay, typography, useRudiTheme } from "../../theme";
+import { mucNguoi } from "../../nguoi/muc-nguoi";
+import { Ionicons } from "@expo/vector-icons";
 import { cauTuongTacBai } from "../../tuong/bai-chi-tiet";
 import { HanhDongHoSoSheet } from "./HanhDongHoSo";
 import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -55,7 +58,7 @@ type TrangTuong =
 
 export function HoSoNguoiScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   const params = useLocalSearchParams<{ id?: string }>();
   // Written as a statement, not `x ? x : ""`: the id-default scanner reads that
@@ -200,30 +203,49 @@ export function HoSoNguoiScreen() {
       {hoSo.pha === "xong" ? (
         <>
           <View style={styles.hoSo}>
-            <View style={styles.dau}>
-              <AvatarNguoi name={hoSo.hoSo.display_name} personId={personId} size={60} />
-              <View style={styles.dauChu}>
-                <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>
-                  {hoSo.hoSo.display_name}
-                </Text>
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                  {cauNgayVao(hoSo.hoSo.created_at)}
-                </Text>
+            {/* A passport, the same one «Cá nhân» shows its owner (plan S5):
+                the cloth band, then the data page -- photo, the name in this
+                person's own ink (D6), the city, the date they joined. */}
+            <View style={[styles.hoChieu, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]} testID="ho-so-nguoi-ho-chieu">
+              <View style={[styles.bia, { backgroundColor: colors.cover }]}>
+                <Text style={[typography.stamp, { color: colors.coverInk }]}>Hộ chiếu Rủ Đi</Text>
+                <Ionicons color={colors.coverInkSoft} name="compass-outline" size={18} />
+              </View>
+              <View style={styles.trang}>
+                <View style={styles.dau}>
+                  <View style={[styles.anhHoChieu, { borderColor: colors.lineStrong }]}>
+                    <AvatarNguoi name={hoSo.hoSo.display_name} personId={personId} ring size={64} />
+                  </View>
+                  <View style={styles.dauChu}>
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>Họ tên</Text>
+                    <Text numberOfLines={2} style={[typography.h1, { color: mucNguoi(personId, dark) }]}>
+                      {hoSo.hoSo.display_name}
+                    </Text>
+                    {hoSo.hoSo.city ? (
+                      <>
+                        <Text style={[typography.caption, { color: colors.inkSoft }]}>Thành phố</Text>
+                        <Text style={[typography.label, { color: colors.ink }]}>{hoSo.hoSo.city}</Text>
+                      </>
+                    ) : null}
+                  </View>
+                </View>
+                {hoSo.hoSo.bio ? (
+                  <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.hoSo.bio}</Text>
+                ) : (
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                    {hoSo.hoSo.relation === "self"
+                      ? "Bạn chưa viết giới thiệu. Sửa ở Cá nhân."
+                      : "Người này chưa viết giới thiệu."}
+                  </Text>
+                )}
+                {/* One line, not a stamp beside a sentence saying the same year
+                    (blind read, S9); flow 33 reads «Tham gia từ tháng …». */}
+                <View style={styles.hangDau}>
+                  <Chip icon={hoSo.hoSo.relation === "couple" ? "heart" : undefined} label={cauQuanHe(hoSo.hoSo.relation)} selected={hoSo.hoSo.relation === "couple"} />
+                  <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>{cauNgayVao(hoSo.hoSo.created_at)}</Text>
+                </View>
               </View>
             </View>
-            <View style={styles.chips}>
-              <Chip icon={hoSo.hoSo.relation === "couple" ? "heart" : undefined} label={cauQuanHe(hoSo.hoSo.relation)} selected={hoSo.hoSo.relation === "couple"} />
-              {hoSo.hoSo.city ? <Chip icon="location-outline" label={hoSo.hoSo.city} /> : null}
-            </View>
-            {hoSo.hoSo.bio ? (
-              <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.hoSo.bio}</Text>
-            ) : (
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                {hoSo.hoSo.relation === "self"
-                  ? "Bạn chưa viết giới thiệu. Sửa ở Cá nhân."
-                  : "Người này chưa viết giới thiệu."}
-              </Text>
-            )}
             {hoSo.hoSo.relation === "self" ? (
               <RudiButton
                 compact
@@ -356,6 +378,12 @@ export function HoSoNguoiScreen() {
 
 const styles = StyleSheet.create({
   hoSo: { gap: 10 },
+  hoChieu: { borderWidth: 1, borderRadius: 8, overflow: "hidden" },
+  bia: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 8 },
+  trang: { gap: 10, padding: 14 },
+  anhHoChieu: { borderWidth: 1, padding: 4, borderRadius: 4 },
+  hangDau: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" },
+  flex: { flex: 1 },
   dau: { flexDirection: "row", alignItems: "center", gap: 14 },
   dauChu: { flex: 1, gap: 2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

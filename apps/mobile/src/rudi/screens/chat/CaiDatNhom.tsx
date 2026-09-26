@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
@@ -50,6 +51,7 @@ export function CaiDatNhomSheet({
   const [xacNhanRoi, setXacNhanRoi] = useState(false);
   const attempts = useRef<Record<string, Attempt>>({});
   const laPair = nhom.kind === "pair";
+  const mauChon = bangMauChat(nhom.theme, dark);
 
   useEffect(() => {
     if (open) {
@@ -125,6 +127,17 @@ export function CaiDatNhomSheet({
         </View>
       ) : null}
       <Text style={[typography.label, { color: colors.ink }]}>Màu bong bóng</Text>
+      {/* A corner of the chat page in the chosen theme, drawn by the same
+          palette the chat itself reads (`bangMauChat`): what the swatch picks
+          is what the group will see, their bubble beside yours. */}
+      <View accessibilityLabel={`Xem trước: ${nhanTheme(nhom.theme ?? "mac-dinh")}`} accessible style={[styles.xemTruoc, { backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control }]} testID="xem-truoc-bong-bong">
+        <View style={[styles.bong, styles.bongHo, { backgroundColor: colors.card, borderColor: colors.line }]}>
+          <Text style={[typography.note, { color: colors.ink }]}>Tối nay đi đâu?</Text>
+        </View>
+        <View style={[styles.bong, styles.bongToi, { backgroundColor: mauChon.bubble, borderColor: mauChon.bubble }]} testID="bong-bong-mau">
+          <Text style={[typography.note, { color: mauChon.bubbleInk }]}>Phố cổ nhé!</Text>
+        </View>
+      </View>
       <View accessibilityRole="radiogroup" style={styles.themes}>
         {THEME_CHAT.map((slug) => {
           const mau = bangMauChat(slug, dark);
@@ -141,11 +154,15 @@ export function CaiDatNhomSheet({
                 {
                   borderRadius: radius.control,
                   backgroundColor: mau.bubble,
-                  borderColor: chon ? mau.accent : colors.lineStrong,
+                  // The theme's own accent is often the bubble's colour, so a
+                  // border in it vanished (blind read, S9): the chosen swatch
+                  // is ringed in ink and carries a tick.
+                  borderColor: chon ? colors.ink : colors.lineStrong,
                   borderWidth: chon ? 3 : 1,
                 },
               ]}
             >
+              {chon ? <Ionicons color={mau.bubbleInk} name="checkmark" size={16} /> : null}
               <Text style={[typography.label, { color: mau.bubbleInk }]}>Aa</Text>
             </Pressable>
           );
@@ -194,6 +211,8 @@ export function CaiDatNhomSheet({
         />
       ) : null}
       {loi ? <Text style={[typography.caption, { color: colors.warn }]}>{loi}</Text> : null}
+      {/* Leaving sits apart, under a rule, well away from the rows above. */}
+      {!laPair ? <View style={[styles.ke, { backgroundColor: colors.line }]} /> : null}
       {!laPair ? (
         xacNhanRoi ? (
           <View style={styles.khoi}>
@@ -215,4 +234,9 @@ const styles = StyleSheet.create({
   oTheme: { width: 52, height: 52, alignItems: "center", justifyContent: "center" },
   hangCongTac: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
   hangChu: { flex: 1, gap: 2 },
+  xemTruoc: { borderWidth: StyleSheet.hairlineWidth, padding: 12, gap: 6 },
+  bong: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7, maxWidth: "78%" },
+  bongHo: { alignSelf: "flex-start", borderBottomLeftRadius: 4 },
+  bongToi: { alignSelf: "flex-end", borderBottomRightRadius: 4 },
+  ke: { height: StyleSheet.hairlineWidth, marginTop: 24, marginBottom: 4 },
 });

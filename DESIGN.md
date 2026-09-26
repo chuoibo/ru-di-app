@@ -363,7 +363,10 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 | Lên plan | vé; kèo đã qua là cuống | `TheVe`, `CuongPhieu` |
 | Tường, khoảnh khắc | ảnh in nghiêng có washi, instax | `KhungAnh` + `nghiengAnh`, `Washi` |
 | Thành tích | tờ tem | `Tem` |
-| Hồ sơ | trang hộ chiếu | `DauLon co="nho"` |
+| Hồ sơ của mình và của người khác | trang hộ chiếu; tên người khác in bằng mực của họ | `DauLon co="nho"`, `mucNguoi` |
+| Hành trình bản đồ | trang ngày xé khỏi sổ, đặt đè lên bản đồ, mép xé và lỗ gáy quay về phía bản đồ | `NenGiay` + `hinhTrangXe` |
+| Cài đặt nhóm | góc trang chat xem trước màu bong bóng; «Rời nhóm» tách xa dưới nét kẻ | `bangMauChat` |
+| Thành viên | vai quản trị là con dấu mực | `Stamp tone="ink"` |
 | Sở thích | bảng sticker (chọn là dán), mức chi là phong bì | `GuGlyph`, `StampButton` |
 | Đăng bài, story | trang thư và bốn phong bì người đọc; polaroid 24 giờ | `ONhapMuc`, `NapGiay` |
 | Bình chọn trong chat | giấy nhớ, mỗi phiếu là một dấu vân tay mực | — |
@@ -2473,6 +2476,21 @@ python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo tr�
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/art-duong.test.mjs   # thêm 12/09: bản trang trùng sha256 fixtures/nep-trang-baseline.json; manh đúng một dải coral (laDaiGap), không mực lên dải, dày ≥ 2.5/5.5; lấp đầy ≥ 0.87, tỉ lệ ≥ 0.94; ba pose mới một coral; thuGapBa 0 coral, 5 đỉnh, hai vết ở 1/3, 2/3
 cd apps/mobile && node --test tests/so-ban-tinh-mot-cho.test.mjs   # ngoài so/ban-tinh.ts và ba chỗ có sẵn không file nào so loại sổ; ba chỗ ấy vẫn còn; ban-tinh.ts là lá
 cd apps/mobile && node --test tests/dau-gach-dai.test.mjs          # tuVung của BAN_TINH và mọi chuỗi app không có gạch dài
+```
+
+Cổng riêng của v3 «Sân khấu giấy» (đều nằm trong `npm test`, chạy lẻ được như sau từ
+`apps/mobile`, sau `npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs`):
+
+```bash
+node --test tests/chu-tren-giay.test.mjs          # D14: không chữ cam/cảnh báo/mờ trên nền paper; danh sách nợ đã về rỗng (S9)
+node --test tests/giay-vat-the.test.mjs           # vật giấy (hoá đơn, vé, tem, cuống, phong bì, trang xé) đúng ngữ pháp Java, trong hộp, tất định
+node --test tests/thanh-pho.test.mjs              # 15 sân khấu thành phố + bưu thiếp chung, id đọc từ destinations_vn.py, câu mô tả «Ký hoạ …»
+node --test tests/ky-niem-giay.test.mjs           # ảnh in nghiêng tất định theo id, album rỗng tách «chưa có kèo» khỏi «kèo chưa tới ngày», huy hiệu mới
+node --test tests/loi-qc-nguoi-chat.test.mjs      # ghim bản sửa B2/B3/B8, mực người qua AvatarNguoi, bong bóng xem trước dùng đúng bangMauChat
+node --test tests/route-fixture-co-phien.test.mjs # B5: ba route fixture chuyển về màn live khi có phiên
+node --test tests/khong-vien-web.test.mjs         # B7: mọi TextInput mang KHONG_VIEN_WEB, không còn khung focus của trình duyệt
+node --test tests/suc-song-man-tao.test.mjs       # màn tạo, màn tiền, sổ đôi và các màn trong phạm vi phải render ít nhất một vật sân khấu
+node --test tests/san-khau.test.mjs tests/nep-roi.test.mjs tests/muc-nguoi.test.mjs tests/token-san-khau.test.mjs tests/skia-ranh-gioi.test.mjs tests/chuoi-maestro-con-song.test.mjs
 ```
 
 Màn native thì cổng là **emulator**, không phải web export (dòng FINISH của

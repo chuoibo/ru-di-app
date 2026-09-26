@@ -17,7 +17,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { diemRangCua, diemXe, hinhCuong, hinhHoaDon, hinhPhongBi, hinhTem, hinhVe } from "../dist-test/rudi/art/giay.js";
+import { diemRangCua, diemXe, hinhCuong, hinhHoaDon, hinhPhongBi, hinhTem, hinhTrangXe, hinhVe } from "../dist-test/rudi/art/giay.js";
 import { kiemLop, phanTich } from "./_kiem-lop.mjs";
 
 // Narrow phone card, wide phone, the sketch frame, a tablet column, a spread page.
@@ -107,6 +107,32 @@ test("mép xé: hai đầu nằm trên đường, mọi điểm trong biên đ�
   for (const [, y] of diem) assert.ok(Math.abs(y - 50) <= 3 + 1e-9);
   assert.ok(new Set(diem.map(([, y]) => y.toFixed(3))).size >= 5, "mép xé phải gồ ghề, không phải đường thẳng");
   assert.deepEqual(diemXe(0, 240, 50, 3), diem);
+});
+
+test("trang xé của hành trình: xé đúng cạnh hướng về bản đồ, ba cạnh kia thẳng, lỗ gáy dọc mép xé", () => {
+  for (const w of RONG) {
+    for (const h of CAO) {
+      const tren = hinhTrangXe(w, h, "tren", 3);
+      const trai = hinhTrangXe(w, h, "trai", 3);
+      for (const [ten, t] of [["tren", tren], ["trai", trai]]) {
+        kiemLop(`${ten} ${w}×${h}`, [to(t.nen), vien(t.vien), ...t.lo], w, h);
+      }
+      const dTren = diemCuoi(tren.nen);
+      const mepTren = dTren.filter(([, y]) => y <= 6 + 1e-9);
+      assert.ok(new Set(mepTren.map(([, y]) => y.toFixed(3))).size >= 3, `tren ${w}×${h}: mép trên phải gồ ghề`);
+      assert.ok(dTren.some(([x, y]) => x === w && y === h) && dTren.some(([x, y]) => x === 0 && y === h), "tren: đáy thẳng, đủ hai góc");
+      const dTrai = diemCuoi(trai.nen);
+      const mepTrai = dTrai.filter(([x]) => x <= 6 + 1e-9);
+      assert.ok(new Set(mepTrai.map(([x]) => x.toFixed(3))).size >= 3, `trai ${w}×${h}: mép trái phải gồ ghề`);
+      assert.ok(dTrai.some(([x, y]) => x === w && y === 0) && dTrai.some(([x, y]) => x === w && y === h), "trai: cạnh phải thẳng, đủ hai góc");
+      // Holes run along the torn edge, inside the page, clear of the tear.
+      for (const l of tren.lo) for (const [, y] of diemCuoi(l.d)) assert.ok(y > 6 && y < 22, `tren: lỗ gáy lệch khỏi mép xé (${y})`);
+      for (const l of trai.lo) for (const [x] of diemCuoi(l.d)) assert.ok(x > 6 && x < 22, `trai: lỗ gáy lệch khỏi mép xé (${x})`);
+      if (w >= 160) assert.ok(tren.lo.length >= 5, "tren: có hàng lỗ gáy");
+      if (h >= 96) assert.ok(trai.lo.length >= 3, "trai: có hàng lỗ gáy");
+      assert.deepEqual(hinhTrangXe(w, h, "tren", 3), tren);
+    }
+  }
 });
 
 test("phong bì: đóng thì nắp úp xuống thân, mở thì nắp lật lên tới đỉnh hộp", () => {

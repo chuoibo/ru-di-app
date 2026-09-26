@@ -31,10 +31,8 @@ import ts from "typescript";
 const SRC = fileURLToPath(new URL("../src/rudi", import.meta.url));
 
 /** Known offenders at the start of ADR-0037, each fixed in its slice. `file#tag` keys. */
-const NO_DA_BIET = new Set([
-  "hanh-trinh/ManHinhHanhTrinh.tsx#Text",
-  "hanh-trinh/ManHinhHanhTrinh.tsx#RudiButton",
-]);
+// Paid off in S9: the journey's day page is a `card` sheet now. Keep it empty.
+const NO_DA_BIET = new Set([]);
 
 function sourceFiles(dir) {
   const out = [];
