@@ -61,8 +61,11 @@ appId: com.lakiet.rudi
 - assertVisible: "1 tim · 1 bình luận"
 - takeScreenshot: 42-chi-tiet-bai
 - pressKey: Back
-- extendedWaitUntil:
-    visible: ".* · 1 tim · 1 bình luận"
+# The wall reloads on focus and starts from the top again.
+- scrollUntilVisible:
+    element:
+      text: ".* · 1 tim · 1 bình luận"
+    direction: DOWN
     timeout: 30000
 - scrollUntilVisible:
     element:

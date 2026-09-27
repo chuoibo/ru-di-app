@@ -125,7 +125,10 @@ appId: com.lakiet.rudi
 - tapOn: "Tờ giấy của hai mình"
 - tapOn: "Mở sổ cặp đôi"
 - tapOn: "Đồng ý là một đôi"
-- tapOn: "Xong"
+# Agreeing closes the sheet by itself; the header now names the couple.
+- extendedWaitUntil:
+    visible: "Một đôi · .*"
+    timeout: 30000
 - pressKey: Back
 - pressKey: Back
 - extendedWaitUntil:
