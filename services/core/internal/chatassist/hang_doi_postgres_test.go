@@ -15,6 +15,7 @@ import (
 
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/llm"
+	"mobile/services/core/internal/nepnho"
 )
 
 // The queue's database half (slice 10; design 02 §3.2, §4, §9): the enqueue
@@ -467,9 +468,17 @@ func TestGioiHanTuChoiThiThuLaiSau(t *testing.T) {
 // that writes its row; jobs_them is the only function that names the table,
 // and only the AFTER trigger's function calls jobs_them; no trigger, rule or
 // other function reaches job_outbox.
+//
+// Nếp's memory ledger (internal/nepnho) is the one other writer: its
+// deletions ride the memory lane, through its own enqueue trigger on
+// nep_xoa. It is migrated here so the answer does not depend on which
+// package's tests ran first on the shared database.
 func TestHaiTriggerLaDuongGhiDuyNhatVaoOutbox(t *testing.T) {
 	f := setup(t, nil)
 	ctx := context.Background()
+	if err := nepnho.Migrate(ctx, f.pool); err != nil {
+		t.Fatal(err)
+	}
 	var triggers []string
 	rows, err := f.pool.Query(ctx, `SELECT t.tgname||':'||CASE WHEN (t.tgtype & 2)<>0 THEN 'before' ELSE 'after' END||':'||p.proname
 		FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
@@ -508,12 +517,12 @@ func TestHaiTriggerLaDuongGhiDuyNhatVaoOutbox(t *testing.T) {
 	if got := names(`\mjob_outbox\M`); fmt.Sprint(got) != "[jobs_them]" {
 		t.Fatalf("functions naming job_outbox: %v", got)
 	}
-	if got := names(`\mjobs_them\M`); fmt.Sprint(got) != "[chat_ai_enqueue]" {
+	if got := names(`\mjobs_them\M`); fmt.Sprint(got) != "[chat_ai_enqueue nep_xoa_enqueue]" {
 		t.Fatalf("functions calling jobs_them: %v", got)
 	}
 	var callers []string
 	rows, err = f.pool.Query(ctx, `SELECT c.relname||'.'||t.tgname FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_class c ON c.oid=t.tgrelid
-		WHERE NOT t.tgisinternal AND c.relnamespace=current_schema()::regnamespace AND p.proname IN ('jobs_them','chat_ai_enqueue')`)
+		WHERE NOT t.tgisinternal AND c.relnamespace=current_schema()::regnamespace AND p.proname IN ('jobs_them','chat_ai_enqueue','nep_xoa_enqueue')`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -526,7 +535,7 @@ func TestHaiTriggerLaDuongGhiDuyNhatVaoOutbox(t *testing.T) {
 	}
 	rows.Close()
 	sort.Strings(callers)
-	if fmt.Sprint(callers) != "[chat_ai_invocations.chat_ai_enqueue]" {
+	if fmt.Sprint(callers) != "[chat_ai_invocations.chat_ai_enqueue nep_xoa.nep_xoa_enqueue]" {
 		t.Fatalf("triggers that reach jobs_them: %v", callers)
 	}
 	var onOutbox int

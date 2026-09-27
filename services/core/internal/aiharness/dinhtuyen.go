@@ -142,6 +142,9 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		Nguon: e.nguon, Quyen: e.quyen, SoCai: sc,
 	}
 	khoi := e.khoiThem(t, rec, kq)
+	if b := e.hoSoNep(runCtx, t, hoi.Chu); b != "" {
+		khoi = append(khoi, b)
+	}
 	if ten, _, ok := tactu.Nhanh(kq, bc); ok && !q.KhongCongCu && (ten == tools.SearchPlaces || ten == tools.SearchAppManual) {
 		if res, chay, err := e.nepTruyHoi(runCtx, rec, dem, kq, bc, hoi.Chu, ten); chay {
 			if err != nil {
@@ -155,6 +158,8 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	}
 	var td agent.TheoDoi
 	var text string
+	ngan, phien, xong := e.bamPhien(runCtx, t, luot)
+	defer xong()
 	if kq.Huong == hieu.TraLoiThang || q.KhongCongCu {
 		rec.Duong = obs.DuongThang
 		blocks := khoi
@@ -179,7 +184,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		var ra tactu.Ra
 		ra, err = tactu.Chay(runCtx, dem, tactu.Vao{
 			Ten: nepTen, Instruction: prompts.NepAgent(e.maKiem), NhietDo: nepNhietDo, MaxTokens: nepMaxTokens,
-			Router: kq, Cau: hoi.Chu, KhoiThem: khoi, NganHan: phienThietBi(luot), Phien: phienNep, BoiCanh: bc,
+			Router: kq, Cau: hoi.Chu, KhoiThem: khoi, NganHan: ngan, Phien: phien, BoiCanh: bc,
 			DuTru: duTruKiem,
 		}, &td)
 		text = ra.Text
@@ -501,6 +506,48 @@ func nganHanNep(ls []LuotNep, rec *obs.TurnRecord) []trinho.Luot {
 
 // phienNep names the device's session inside one turn.
 const phienNep = "panel"
+
+// hoSoNep is the personalization block of a Nếp turn: the person's own
+// recalled facts, at most five, only while their memory toggle is on (the
+// adapter returns "" otherwise). A failed recall answers without it: memory
+// is an aid, never a reason to fail the turn.
+func (e *Engine) hoSoNep(ctx context.Context, t Turn, cau string) string {
+	if e.hoSo == nil || t.Bot != obs.BotNep || t.NguoiHoi == "" {
+		return ""
+	}
+	b, err := e.hoSo.HoSoNep(ctx, t.NguoiHoi, cau)
+	if err != nil {
+		return ""
+	}
+	return b
+}
+
+// bamPhien buffers the device's session of this turn in the short-term
+// store, one key per turn (stm-personalization §5.1, option A: the device
+// stays the session's source), and returns the port and key the tool part
+// reads, and the release that drops the key when the turn ends. Without a
+// store, or when the buffer cannot be written, the turns stay in memory.
+func (e *Engine) bamPhien(ctx context.Context, t Turn, luot []trinho.Luot) (trinho.NganHan, string, func()) {
+	trongRam := func() (trinho.NganHan, string, func()) { return phienThietBi(luot), phienNep, func() {} }
+	if e.nganHan == nil || t.NguoiHoi == "" || t.InvocationID == "" {
+		return trongRam()
+	}
+	phien, err := e.nganHan.PhienLuot(t.NguoiHoi, t.InvocationID)
+	if err != nil {
+		return trongRam()
+	}
+	xoa := func() { _ = e.nganHan.Xoa(context.WithoutCancel(ctx), phien) }
+	for _, l := range luot {
+		if l.Luc.IsZero() {
+			l.Luc = t.Luc
+		}
+		if err := e.nganHan.Them(ctx, phien, l); err != nil {
+			xoa()
+			return trongRam()
+		}
+	}
+	return e.nganHan, phien, xoa
+}
 
 // phienThietBi is the panel session the device sent, as the short-term
 // memory port of the tool part (stm-personalization §5.1, option A: the

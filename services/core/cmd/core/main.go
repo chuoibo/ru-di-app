@@ -59,6 +59,7 @@ import (
 	"mobile/services/core/internal/identity"
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/limit"
+	"mobile/services/core/internal/nepnho"
 	"mobile/services/core/internal/proxy"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/rag"
@@ -267,10 +268,17 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		}
 		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, chatCtx, allowedOrigins)
 		assistant := chatassist.New(pool, brain.Configured()).WithWorker(workerCfg)
+		mem, err := openNepMem(chatCtx, getenv, logger, pool)
+		if err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+		defer mem.close()
+		memory := nepnho.NewHandler(pool, mem.kho)
 		avatars := avatarfeed.New(avatarfeed.Store{Pool: pool}, pool, chatCtx, allowedOrigins)
 		if nepGo {
 			if inproc {
-				engine, err := nepEngine(chatCtx, getenv, logger, pool)
+				engine, err := nepEngine(chatCtx, getenv, logger, pool, mem)
 				if err == nil {
 					err = aiSchemaReady(chatCtx, pool)
 				}
@@ -285,7 +293,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		}
 		go changes.Listen()
 		go avatars.Listen()
-		periodic := servePeriodic(assistant, inproc)
+		periodic := append(servePeriodic(assistant, inproc), mem.periodic()...)
 		if err := jobs.KiemDinhKy(periodic); err != nil {
 			logger.Error("refusing to start", "error", err.Error())
 			return 1
@@ -310,10 +318,14 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				avatars.ServeHTTP(w, r)
 				return
 			}
+			if nepnho.Matches(r.URL.Path) {
+				memory.ServeHTTP(w, r)
+				return
+			}
 			assistant.ServeHTTP(w, r)
 		}))
 		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if chatlegacychange.Matches(r.URL.Path) || avatarfeed.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
+			if chatlegacychange.Matches(r.URL.Path) || avatarfeed.Matches(r.URL.Path) || nepnho.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
 				feature.ServeHTTP(w, r)
 				return
 			}
@@ -526,9 +538,26 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	if err != nil {
 		return refuse(err)
 	}
-	queues, err := jobs.ParseQueues(getenv(EnvWorkerQueues), chatassist.Queues)
+	// The memory lane rides with the AI queues when Nếp's memory is
+	// configured (its deletions retry there); the configuration is checked
+	// now, before any connection opens.
+	if _, err = openNepMem(ctx, getenv, logger, nil); err != nil {
+		return refuse(err)
+	}
+	allowed := chatassist.Queues
+	memOn := getenv(EnvNepMemoryKey) != ""
+	if memOn {
+		allowed = append(append([]string(nil), chatassist.Queues...), nepnho.HangNho)
+	}
+	queues, err := jobs.ParseQueues(getenv(EnvWorkerQueues), allowed)
 	if err != nil {
 		return refuse(err)
+	}
+	var chatQueues []string
+	for _, q := range queues {
+		if q != nepnho.HangNho {
+			chatQueues = append(chatQueues, q)
+		}
 	}
 	amqpURL := getenv(EnvAMQPURL)
 	if amqpURL != "" {
@@ -538,6 +567,9 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	}
 	// Counted from the list this worker will run, before any connection opens.
 	tasks := len(workPeriodic(chatassist.New(nil, nil)))
+	if memOn {
+		tasks += 2 // nep.xoa, nep.don
+	}
 	conns, err := workerDBConns(getenv(EnvWorkerDBConns), workerDBFloor(cfg.Workers, tasks, amqpURL != ""))
 	if err != nil {
 		return refuse(err)
@@ -554,7 +586,7 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	if nepGo {
 		// Built once here only to refuse before any connection opens: a key
 		// and a loopback base URL, or no worker at all.
-		if _, err = nepEngine(ctx, getenv, logger, nil); err != nil {
+		if _, err = nepEngine(ctx, getenv, logger, nil, nepMem{}); err != nil {
 			return refuse(err)
 		}
 	}
@@ -578,20 +610,25 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 		return refuse(errors.New("the chat schema is missing, older than this binary, or unreachable: run `core migrate-chat` (compose: service migrate-chat) first"))
 	}
 	assistant := chatassist.New(pool, client).WithWorker(cfg).WithNhipPool(beat)
-	if _, err = assistant.WithQueues(queues); err != nil {
+	if _, err = assistant.WithQueues(chatQueues); err != nil {
 		return refuse(err)
 	}
+	mem, err := openNepMem(ctx, getenv, logger, pool)
+	if err != nil {
+		return refuse(err)
+	}
+	defer mem.close()
 	if nepGo {
 		if err := aiSchemaReady(ctx, pool); err != nil {
 			return refuse(err)
 		}
 		// Now with the tools' read ports over the pool.
-		if engine, err = nepEngine(ctx, getenv, logger, pool); err != nil {
+		if engine, err = nepEngine(ctx, getenv, logger, pool, mem); err != nil {
 			return refuse(err)
 		}
 		assistant.WithNepEngine(engine)
 	}
-	periodic := workPeriodic(assistant)
+	periodic := append(workPeriodic(assistant), mem.periodic()...)
 	if err = jobs.KiemDinhKy(periodic); err != nil {
 		return refuse(err)
 	}
@@ -612,8 +649,17 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	var broker chatassist.Broker
 	if amqpURL != "" {
 		topology, _ := jobs.NewTopology(amqpNamespace)
+		handler := assistant.XuLyTin
+		if mem.kho != nil {
+			handler = func(ctx context.Context, queue string, m jobs.Message) error {
+				if queue == nepnho.HangNho {
+					return mem.kho.XuLyTin(ctx, m)
+				}
+				return assistant.XuLyTin(ctx, queue, m)
+			}
+		}
 		ket := &jobs.Ket{URL: amqpURL, Topology: topology, Pool: pool, Queues: queues, Concurrency: cfg.Workers,
-			Handler: assistant.XuLyTin, Logger: logger}
+			Handler: handler, Logger: logger}
 		broker = ket
 		side.Add(1)
 		go func() { defer side.Done(); ket.Run(ctx) }()
@@ -656,9 +702,12 @@ func nepEngineName(goEngine bool) string {
 // embedding call), and, when db is set, the tools' read ports over it
 // (internal/aidoc: the catalogue, destinations, areas and the person's own
 // upcoming outings, each read in a READ ONLY transaction under a semaphore).
-// The long-term memory port has no production adapter yet (the infra
-// track's nepnho): the memory tools answer loi_nguon until it lands.
-func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Logger, db aidoc.Beginner) (*aiharness.Engine, error) {
+// mem adds Nếp's long-term memory (internal/nepnho: the memory tools' port
+// and personalization, at most five of the person's own facts while their
+// toggle is on) and the per-turn short-term buffer (internal/aictx) when
+// they are configured; unset, the memory tools answer loi_nguon and the
+// device's turns stay in memory.
+func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Logger, db aidoc.Beginner, mem nepMem) (*aiharness.Engine, error) {
 	limiter, err := modelLimiter(getenv)
 	if err != nil {
 		return nil, err
@@ -674,8 +723,13 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 	opts = append(opts, aiharness.WithHieu(hieu.Moi(hieu.WithViDuLuoi(hieu.MoiKhoViDuLuoi(embedder, hieu.ViDuMacDinh)))))
 	if db != nil {
 		doc := aidoc.Moi(db, 0)
-		opts = append(opts, aiharness.WithNguon(tools.NguonDuLieu{Quan: aidoc.Lexical{C: doc}, Cho: aidoc.Doc{C: doc}, CaNhan: aidoc.Doc{C: doc}}))
+		nguon := tools.NguonDuLieu{Quan: aidoc.Lexical{C: doc}, Cho: aidoc.Doc{C: doc}, CaNhan: aidoc.Doc{C: doc}}
+		if mem.kho != nil {
+			nguon.TriNho = mem.kho
+		}
+		opts = append(opts, aiharness.WithNguon(nguon))
 	}
+	opts = append(opts, mem.engineOptions()...)
 	engine, err := aiharness.FromEnv(ctx, getenv, logger, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
@@ -801,6 +855,7 @@ func featureRoutes() []featureView {
 		"chatlegacychange": chatlegacychange.Routes(),
 		"avatarfeed":       avatarfeed.Routes(),
 		"websession":       websession.Routes(),
+		"nepnho":           nepnho.Routes(),
 	}
 	var out []featureView
 	for _, pkg := range ownership.FeaturePackages {
@@ -913,6 +968,12 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	}
 	if err == nil {
 		err = avatarfeed.Migrate(ctx, pool)
+	}
+	// Nếp's memory ledger, after the job outbox: its deletions ride the
+	// memory lane (jobs_them), and its trigger on people must exist before
+	// any account can be deleted by a binary that holds memory.
+	if err == nil {
+		err = nepnho.Migrate(ctx, pool)
 	}
 	if err != nil {
 		fmt.Fprintln(stderr, "chat migration failed:", err)

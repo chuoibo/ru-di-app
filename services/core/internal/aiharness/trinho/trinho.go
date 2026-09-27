@@ -84,9 +84,47 @@ type SuThat struct {
 
 // TatCa is everything remembered about one person, for what_you_remember:
 // listed in full by Go, never summarised by the model (ADR-0041).
+//
+// Every field after SuThat was added by the nepnho adapter (infra
+// memory-policy): what_you_remember must be truthful about everything held,
+// not only the facts ready for recall.
 type TatCa struct {
 	SuThat []SuThat
+	// DangXoa are facts the person asked to forget whose deletion has not
+	// been counted complete yet: still held, never recalled.
+	DangXoa []SuThat
+	// KhongSo are facts the store holds without a receipt (a write whose
+	// ledger row failed): never recalled, listed because they are held,
+	// and deleted with the next forget-all.
+	KhongSo []SuThat
+	// SuKien counts the typed app events held, by kind, in their 30-day
+	// window. Counts only: an event holds ids and enums, never words.
+	SuKien map[LoaiSuKien]int
+	// Bat is the memory toggle.
+	Bat bool
 }
+
+// LoaiSuKien is the closed kind of a typed app event (design 05 §6, source
+// 1): a kind and typed ids or enums, never words. Added with TatCa.SuKien.
+type LoaiSuKien string
+
+const (
+	MoDiaDiem      LoaiSuKien = "mo_dia_diem"
+	LuuDiaDiem     LoaiSuKien = "luu_dia_diem"
+	BoLuu          LoaiSuKien = "bo_luu"
+	ThemChang      LoaiSuKien = "them_chang"
+	ChonPhuongTien LoaiSuKien = "chon_phuong_tien"
+	ChonThoiLuong  LoaiSuKien = "chon_thoi_luong"
+	LocDanhMuc     LoaiSuKien = "loc_danh_muc"
+	ChonDiemDen    LoaiSuKien = "chon_diem_den"
+	TaoKeo         LoaiSuKien = "tao_keo"
+	CheckIn        LoaiSuKien = "check_in"
+)
+
+// LoaiSuKiens is the closed set of LoaiSuKien.
+var LoaiSuKiens = dong.Moi("loai_su_kien",
+	MoDiaDiem, LuuDiaDiem, BoLuu, ThemChang, ChonPhuongTien, ChonThoiLuong,
+	LocDanhMuc, ChonDiemDen, TaoKeo, CheckIn)
 
 // QuenGi names what to forget: exactly one of ID (a fact the person picked)
 // or MoTa (the person's own description, which the adapter resolves by the

@@ -415,6 +415,18 @@ var nepCongCuDoc = map[string]string{
 	// headcount only; and the group tools no Nếp turn may call.
 	"outings":     "my_upcoming_outings: the asker's own outings (title, dates, headcount), model-called only",
 	"memberships": "my_upcoming_outings: which groups the asker is an active member of, model-called only",
+	// The asker's OWN long-term memory (internal/nepnho, ADR-0043 draft):
+	// every statement is scoped by the job's person id, never a model
+	// argument; none of these tables holds a word (the words live in the
+	// memory sidecar); recall and personalization return nothing while the
+	// person's toggle is off. Reached by the memory tools and by
+	// personalization (aiharness.HoSo), never by the group
+	// (TestGroupNeverReachesMemoryStores).
+	"nep_cai_dat": "the asker's memory toggle and consent version: recall, personalization and writes are gated on it",
+	"nep_su_that": "receipts of the asker's own facts (mem0 id, kind, times; no words): only a fact with a live receipt is recalled",
+	"nep_quen":    "keyed hashes of facts the asker forgot: a forgotten fact is not written again",
+	"nep_su_kien": "counts by kind of the asker's own typed app events for what_you_remember: kinds and ids, no words",
+	"nep_xoa":     "the asker's deletion ledger: forget_fact runs its saga (ids, closed codes, counts)",
 }
 
 // nepWriteOnly are the tables Nếp's path may write and never read, each named
@@ -619,5 +631,61 @@ func TestGroupNeverReachesMemoryTools(t *testing.T) {
 		if cg.funcs[m] {
 			t.Errorf("the group bot can reach %s", m)
 		}
+	}
+}
+
+// The group bot reaches no memory store: no function of internal/nepnho
+// (the long-term ledger, its sidecar client, personalization), none of the
+// short-term store's Nếp keys (aictx.PhienNep, PhienLuot, XoaNguoi), from
+// any handler or job the group can run. Nếp's job reaches every one of them
+// (the canary: the walk follows the engine's HoSo and NganHanLuot ports and
+// the tools' TriNho port through their interfaces to the adapters).
+func TestGroupNeverReachesMemoryStores(t *testing.T) {
+	g := load(t)
+	const (
+		nepnho = "mobile/services/core/internal/nepnho"
+		aictx  = "mobile/services/core/internal/aictx"
+	)
+	nepKeys := []string{aictx + ".PhienNep", "(*" + aictx + ".Kho).PhienLuot", "(*" + aictx + ".Kho).XoaNguoi"}
+	var nep []*types.Func
+	for _, r := range nepRoots {
+		nep = append(nep, g.root(t, r))
+	}
+	cn := g.reach(nep...)
+	for _, must := range append([]string{
+		"(*" + nepnho + ".Kho).HoSoNep",
+		"(*" + nepnho + ".Kho).Nho",
+		"(*" + nepnho + ".Kho).Quen",
+		"(*" + nepnho + ".KhachHTTP).Tim",
+		"(*" + nepnho + ".KhachHTTP).Xoa",
+		"(*" + aictx + ".Kho).Them",
+	}, nepKeys[:2]...) {
+		if !cn.funcs[must] {
+			t.Fatalf("Nếp's closure never reaches %s: the walk is blind to the memory ports", must)
+		}
+	}
+	var group []*types.Func
+	for _, name := range []string{"capabilities", "create", "list", "get", "retry", "cancel", "promote", "promotion",
+		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill"} {
+		group = append(group, g.root(t, "(*"+pkgChat+".Handler)."+name))
+	}
+	cg := g.reach(group...)
+	if len(cg.funcs) < 50 {
+		t.Fatalf("the group closure is too small (%d functions)", len(cg.funcs))
+	}
+	var bad []string
+	for name := range cg.funcs {
+		if strings.Contains(name, nepnho+".") || strings.Contains(name, nepnho+")") {
+			bad = append(bad, name)
+		}
+	}
+	for _, k := range nepKeys {
+		if cg.funcs[k] {
+			bad = append(bad, k)
+		}
+	}
+	sort.Strings(bad)
+	for _, b := range bad {
+		t.Errorf("the group bot can reach %s", b)
 	}
 }

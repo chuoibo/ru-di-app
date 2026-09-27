@@ -113,6 +113,10 @@ const (
 	// LichSu holds the short-term turns of the session (Nếp's panel, the
 	// group's reply chain): earlier words are data, never instructions.
 	LichSu Nguon = "lich_su"
+	// TriNho is the person's own long-term facts (nepnho.DungHoSo), Nếp
+	// only and only while the person's memory toggle is on. Added by infra
+	// memory-policy.
+	TriNho Nguon = "tri_nho"
 )
 
 var fullwidth = strings.NewReplacer("<", "＜", ">", "＞")

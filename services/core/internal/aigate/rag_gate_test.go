@@ -61,6 +61,9 @@ var (
 	cteName     = regexp.MustCompile(`(?i)(?:\bwith|,)\s+([a-z_][a-z0-9_]*)\s+as\s*\(`)
 	doUpdateSet = regexp.MustCompile(`(?i)\bdo\s+update\s+set\b`)
 	sqlTableKw  = regexp.MustCompile(`(?i)\b(from|join|update|into)\s+([a-z_][a-z0-9_.]*)`)
+	// A row-lock clause names no table: FOR UPDATE SKIP LOCKED is not a
+	// write to a table called skip.
+	lockClause = regexp.MustCompile(`(?i)\bfor\s+(?:no\s+key\s+)?(?:update|share)\b`)
 )
 
 func ragTables(strs []string) map[string][]string {
@@ -70,6 +73,7 @@ func ragTables(strs []string) map[string][]string {
 			continue
 		}
 		scan := doUpdateSet.ReplaceAllString(s, "do nothing")
+		scan = lockClause.ReplaceAllString(scan, "")
 		ctes := map[string]bool{}
 		for _, m := range cteName.FindAllStringSubmatch(scan, -1) {
 			ctes[strings.ToLower(m[1])] = true

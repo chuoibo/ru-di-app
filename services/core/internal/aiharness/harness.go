@@ -57,6 +57,7 @@ import (
 	"mobile/services/core/internal/aiharness/preprocess"
 	"mobile/services/core/internal/aiharness/prompts"
 	"mobile/services/core/internal/aiharness/tools"
+	"mobile/services/core/internal/aiharness/trinho"
 	"mobile/services/core/internal/aiharness/truyhoi"
 )
 
@@ -234,6 +235,29 @@ type Engine struct {
 	kiem kiemchung.Verifier
 	// quyen is the tool permission table (nil: tools.MacDinh).
 	quyen *tools.Quyen
+	// hoSo lays the person's own recalled facts into a Nếp turn's data
+	// block (nil: none). Nếp only: the group path never calls it.
+	hoSo HoSo
+	// nganHan buffers a Nếp turn's device session for the tool part (nil:
+	// the turns stay in this process's memory, phienThietBi).
+	nganHan NganHanLuot
+}
+
+// HoSo is personalization for one Nếp turn (production: nepnho.Kho). It
+// returns the <du_lieu nguon="tri_nho"> block of at most five of the
+// person's own facts, or "" when the person's memory toggle is off or
+// nothing is recalled. The engine never asks it for the group.
+type HoSo interface {
+	HoSoNep(ctx context.Context, nguoi, cau string) (string, error)
+}
+
+// NganHanLuot is the short-term memory a Nếp turn buffers its device
+// session in (production: aictx.Kho on the redis-ai instance): one key per
+// turn, named by PhienLuot, written when the turn starts and dropped when it
+// ends.
+type NganHanLuot interface {
+	trinho.NganHan
+	PhienLuot(nguoi, luot string) (string, error)
 }
 
 // Option configures an Engine.
@@ -278,6 +302,13 @@ func WithKiem(k kiemchung.Verifier) Option { return func(e *Engine) { e.kiem = k
 
 // WithQuyen sets the tool permission table (tests).
 func WithQuyen(q *tools.Quyen) Option { return func(e *Engine) { e.quyen = q } }
+
+// WithHoSo sets personalization for Nếp's turns (production: nepnho.Kho).
+func WithHoSo(h HoSo) Option { return func(e *Engine) { e.hoSo = h } }
+
+// WithNganHan sets where a Nếp turn buffers its device session (production:
+// aictx.Kho).
+func WithNganHan(n NganHanLuot) Option { return func(e *Engine) { e.nganHan = n } }
 
 // withHanLuot shortens the turn deadline (tests).
 func withHanLuot(d time.Duration) Option { return func(e *Engine) { e.han = d } }

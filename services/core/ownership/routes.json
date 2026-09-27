@@ -2273,6 +2273,38 @@
       "package": "websession",
       "state": "GO-ONLY",
       "evidence": "services/core/internal/websession/postgres_test.go"
+    },
+    {
+      "id": "GET /me/nep/tri-nho/cai-dat",
+      "method": "GET",
+      "path": "/me/nep/tri-nho/cai-dat",
+      "package": "nepnho",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/nepnho/nepnho_postgres_test.go"
+    },
+    {
+      "id": "PUT /me/nep/tri-nho/cai-dat",
+      "method": "PUT",
+      "path": "/me/nep/tri-nho/cai-dat",
+      "package": "nepnho",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/nepnho/nepnho_postgres_test.go"
+    },
+    {
+      "id": "POST /me/nep/su-kien",
+      "method": "POST",
+      "path": "/me/nep/su-kien",
+      "package": "nepnho",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/nepnho/nepnho_postgres_test.go"
+    },
+    {
+      "id": "DELETE /me/nep/tri-nho",
+      "method": "DELETE",
+      "path": "/me/nep/tri-nho",
+      "package": "nepnho",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/nepnho/nepnho_postgres_test.go"
     }
   ]
 }

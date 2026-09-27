@@ -37,6 +37,16 @@ var migrations = []struct {
 	{2, schemaTuVung2SQL},
 }
 
+// SchemaFiles are the retrieval schema's versions, in order, for the gates
+// that read which tables Go creates.
+func SchemaFiles() []string {
+	out := make([]string, 0, len(migrations))
+	for _, m := range migrations {
+		out = append(out, m.sql)
+	}
+	return out
+}
+
 // SchemaVersion is the retrieval schema this binary reads and writes.
 const SchemaVersion = 2
 

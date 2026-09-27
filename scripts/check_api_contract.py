@@ -428,6 +428,7 @@ GO_CHAT_HANDLERS = (
     "services/core/internal/chatlegacychange/handler.go",
     "services/core/internal/avatarfeed/handler.go",
     "services/core/internal/websession/websession.go",
+    "services/core/internal/nepnho/handler.go",
 )
 
 #: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`
