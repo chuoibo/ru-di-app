@@ -12,11 +12,15 @@ COPY go.mod ./
 RUN go mod download
 COPY . .
 RUN go vet ./... \
- && go build -trimpath -ldflags="-s -w" -o /out/core ./cmd/core
+ && go build -trimpath -ldflags="-s -w" -o /out/core ./cmd/core \
+ && go build -trimpath -ldflags="-s -w" -o /out/rudi-ingest ./cmd/rudi-ingest
 
 # distroless/static: no shell, no package manager, nothing to exec into.
 FROM ${RUNTIME_IMAGE}
 COPY --from=build /out/core /core
+# The catalogue loader ships in the same image, so the sync service runs the
+# binary that was vetted with the server it feeds (entrypoint /rudi-ingest).
+COPY --from=build /out/rudi-ingest /rudi-ingest
 # The same uid as services/api, so both processes can share the media volume
 # once uploads move to Go.
 USER 10001:10001
