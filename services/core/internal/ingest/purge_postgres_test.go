@@ -33,8 +33,8 @@ func devCatalogue(t *testing.T, tx pgx.Tx, ctx context.Context) (person string) 
 		 VALUES (gen_random_uuid(), 'seed-1', '0123456789abcdef0123456789abcdef',
 		   'image/jpeg', 10, 1, 1, 'A', 'CC BY 4.0', 'https://example.test/a', 0)`,
 		`INSERT INTO people (id, display_name) VALUES ('` + person + `', 'Synthetic purge person')`,
-		`INSERT INTO saved_places (person_id, place_id) VALUES ('` + person + `', 'seed-1')`,
-		`INSERT INTO saved_places (person_id, place_id) VALUES ('` + person + `', 'vnl-1')`,
+		`INSERT INTO saved_places (id, person_id, place_id) VALUES (gen_random_uuid(), '` + person + `', 'seed-1')`,
+		`INSERT INTO saved_places (id, person_id, place_id) VALUES (gen_random_uuid(), '` + person + `', 'vnl-1')`,
 	} {
 		if _, err := tx.Exec(ctx, sql); err != nil {
 			t.Fatalf("fixture: %v\n%s", err, sql)
@@ -124,8 +124,8 @@ func TestPurgeWillNotOrphanARealRow(t *testing.T) {
 	tx, ctx := migrated(t)
 	devCatalogue(t, tx, ctx)
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO places (id, destination_id, name, category, source)
-		VALUES ('osm-1', 'd-probe', 'Chợ Thật', 'vui-choi', 'osm')`); err != nil {
+		INSERT INTO places (id, destination_id, name, category, source, source_ref, license)
+		VALUES ('osm-1', 'd-probe', 'Chợ Thật', 'vui-choi', 'osm', 'node/1', 'ODbL-1.0')`); err != nil {
 		t.Fatal(err)
 	}
 	_, err := PurgeDevCatalogue(ctx, tx)

@@ -4,9 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -29,7 +28,7 @@ type PhotoResult struct {
 // run wants one province and a few per place.
 type PhotoOptions struct {
 	BatchID      string
-	FramesRoot   string
+	Source       FrameSource
 	ProvinceCode *int16
 	PerPlace     int
 }
@@ -122,7 +121,7 @@ func ImportPhotos(ctx context.Context, pool *pgxpool.Pool, store *storage.PhotoS
 		result.Places++
 
 		for order, frame := range frames {
-			written, reason, err := importFrame(ctx, pool, store, opt.FramesRoot, placeID, frame, order)
+			written, reason, err := importFrame(ctx, pool, store, opt.Source, placeID, frame, order)
 			if err != nil {
 				return result, err
 			}
@@ -164,27 +163,30 @@ func score(frame Frame) float64 {
 
 // importFrame returns whether it wrote a new row, or the reason it did not.
 func importFrame(ctx context.Context, pool *pgxpool.Pool, store *storage.PhotoStorage,
-	root, placeID string, frame Frame, order int) (bool, string, error) {
-	source := frameURL(frame)
+	source FrameSource, placeID string, frame Frame, order int) (bool, string, error) {
+	sourceURL := frameURL(frame)
 	var already bool
 	if err := pool.QueryRow(ctx, `
 		SELECT EXISTS (SELECT 1 FROM place_photos
-		  WHERE place_id = $1 AND source_url = $2)`, placeID, source).Scan(&already); err != nil {
+		  WHERE place_id = $1 AND source_url = $2)`, placeID, sourceURL).Scan(&already); err != nil {
 		return false, "", err
 	}
 	if already {
 		return false, "", nil
 	}
 
-	// The key is a name relative to the feed's frame directory. Anything that
-	// climbs out of it is refused rather than followed.
-	path := filepath.Join(root, filepath.Clean("/"+frame.StorageKey))
-	if !strings.HasPrefix(path, filepath.Clean(root)+string(os.PathSeparator)) {
+	raw, err := source.Read(ctx, frame.StorageKey)
+	switch {
+	case errors.Is(err, ErrFrameRefused):
 		return false, "duong_dan_ra_ngoai", nil
-	}
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return false, "khong_doc_duoc_tep", nil
+	case errors.Is(err, ErrFrameMissing):
+		// Not uploaded yet. The feed bumps the place when it is, and the
+		// place comes back in a later pull.
+		return false, "chua_co_trong_nguon", nil
+	case err != nil:
+		// Transport trouble is not a verdict on the frame: fail the pass so
+		// the batch stays unmarked and is retried.
+		return false, "", fmt.Errorf("read frame %s: %w", frame.StorageKey, err)
 	}
 	clean, err := sanitize.Sanitize(raw)
 	if err != nil {
@@ -216,7 +218,7 @@ func importFrame(ctx context.Context, pool *pgxpool.Pool, store *storage.PhotoSt
 		VALUES (gen_random_uuid(), $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 		ON CONFLICT (place_id, source_url) DO NOTHING`,
 		placeID, key, clean.ContentType, len(clean.Data), clean.Width,
-		clean.Height, source, order, platform, postID, frame.Giay,
+		clean.Height, sourceURL, order, platform, postID, frame.Giay,
 		frame.Diem, subject, hex.EncodeToString(digest[:])); err != nil {
 		return false, "", err
 	}

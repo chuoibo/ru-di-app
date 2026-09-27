@@ -11,6 +11,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/ingest"
@@ -23,10 +26,14 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr *os.File) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: rudi-ingest migrate|land|apply|photos|purge-dev [flags]")
+		fmt.Fprintln(stderr, "usage: rudi-ingest migrate|land|apply|photos|pull|sync|purge-dev [flags]")
 		return 2
 	}
-	ctx := context.Background()
+	// SIGTERM/SIGINT cancel the context: a running round finishes its current
+	// statement, its transaction rolls back, and the next start resumes from
+	// the cursor that matches what is committed.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 	dsn := getenv(db.EnvDatabaseURL)
 	if dsn == "" {
 		fmt.Fprintf(stderr, "%s is required\n", db.EnvDatabaseURL)
@@ -116,15 +123,24 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 	case "photos":
 		set := flag.NewFlagSet("photos", flag.ContinueOnError)
 		batch := set.String("batch", "", "mã đợt đã hạ")
-		root := set.String("frames-root", "", "thư mục khung hình của nguồn")
+		root := set.String("frames-root", "", "thư mục khung hình của nguồn (bỏ trống = đọc MinIO nguồn)")
 		province := set.Int("province", 0, "chỉ nạp một tỉnh (0 = tất cả)")
 		perPlace := set.Int("per-place", 3, "số ảnh tối đa mỗi địa điểm")
 		if err := set.Parse(args[1:]); err != nil {
 			return 2
 		}
-		if *batch == "" || *root == "" {
-			fmt.Fprintln(stderr, "--batch và --frames-root là bắt buộc")
+		if *batch == "" {
+			fmt.Fprintln(stderr, "--batch là bắt buộc")
 			return 2
+		}
+		var source ingest.FrameSource = ingest.DirFrames{Root: *root}
+		if *root == "" {
+			s3, err := s3Frames(getenv)
+			if err != nil {
+				fmt.Fprintln(stderr, err)
+				return 2
+			}
+			source = s3
 		}
 		// The same root the API serves bytes from. Written anywhere else, the
 		// rows would point at objects no reader can find.
@@ -133,7 +149,7 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 			fmt.Fprintln(stderr, err)
 			return 1
 		}
-		opt := ingest.PhotoOptions{BatchID: *batch, FramesRoot: *root, PerPlace: *perPlace}
+		opt := ingest.PhotoOptions{BatchID: *batch, Source: source, PerPlace: *perPlace}
 		if *province > 0 {
 			code := int16(*province)
 			opt.ProvinceCode = &code
@@ -149,6 +165,74 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 			fmt.Fprintf(stdout, "  bỏ qua %s: %d\n", reason, count)
 		}
 		return 0
+
+	case "pull", "sync":
+		set := flag.NewFlagSet(args[0], flag.ContinueOnError)
+		every := set.Duration("every", 0, "sync: chạy lặp mỗi khoảng này (0 = một vòng rồi thoát)")
+		perPlace := set.Int("per-place", 3, "số ảnh tối đa mỗi địa điểm")
+		maxRows := set.Int("batch-rows", 2000, "số dòng tối đa mỗi đợt")
+		if err := set.Parse(args[1:]); err != nil {
+			return 2
+		}
+		srcDSN := getenv("VNLOCAL_PG_DSN")
+		if srcDSN == "" {
+			fmt.Fprintln(stderr, "VNLOCAL_PG_DSN is required")
+			return 1
+		}
+		src, err := db.Open(ctx, srcDSN)
+		if err != nil {
+			fmt.Fprintln(stderr, "feed database:", err)
+			return 1
+		}
+		defer src.Close()
+		feed := ingest.PGFeed{Pool: src}
+		opt := ingest.SyncOptions{Pull: ingest.PullOptions{MaxRows: *maxRows}, PerPlace: *perPlace}
+
+		if args[0] == "pull" {
+			// Pull and apply only; photographs are `sync`'s job.
+			report, err := ingest.SyncOnce(ctx, pool, feed, nil, nil, opt)
+			if err != nil {
+				fmt.Fprintln(stderr, err)
+				return 1
+			}
+			fmt.Fprintln(stdout, report)
+			return 0
+		}
+
+		frames, err := s3Frames(getenv)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 2
+		}
+		store, err := storage.New()
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		opt.Photos = true
+		for {
+			started := time.Now()
+			report, err := ingest.SyncOnce(ctx, pool, feed, frames, store, opt)
+			stamp := started.UTC().Format(time.RFC3339)
+			if err != nil {
+				// A daemon logs and waits for the next round: the feed's
+				// machine rebooting is not a reason to stop syncing forever.
+				fmt.Fprintf(stderr, "%s lỗi sau %s: %v\n", stamp, time.Since(started).Round(time.Second), err)
+				if *every == 0 {
+					return 1
+				}
+			} else {
+				fmt.Fprintf(stdout, "%s %s · %s\n", stamp, report, time.Since(started).Round(time.Second))
+			}
+			if *every == 0 {
+				return 0
+			}
+			select {
+			case <-ctx.Done():
+				return 0
+			case <-time.After(*every):
+			}
+		}
 
 	case "purge-dev":
 		set := flag.NewFlagSet("purge-dev", flag.ContinueOnError)
@@ -186,4 +270,22 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 	}
 	fmt.Fprintf(stderr, "lệnh lạ: %s\n", args[0])
 	return 2
+}
+
+// s3Frames reads the feed's frame bucket with the credentials the vnlocal
+// machine issued (read-only on that bucket).
+func s3Frames(getenv func(string) string) (ingest.S3Frames, error) {
+	frames := ingest.S3Frames{
+		Endpoint:  getenv("VNLOCAL_S3_ENDPOINT"),
+		Bucket:    getenv("VNLOCAL_S3_FRAMES_BUCKET"),
+		AccessKey: getenv("VNLOCAL_S3_ACCESS_KEY"),
+		SecretKey: getenv("VNLOCAL_S3_SECRET"),
+	}
+	if frames.Bucket == "" {
+		frames.Bucket = "vnlocal-frames"
+	}
+	if frames.Endpoint == "" || frames.AccessKey == "" || frames.SecretKey == "" {
+		return frames, fmt.Errorf("VNLOCAL_S3_ENDPOINT, VNLOCAL_S3_ACCESS_KEY and VNLOCAL_S3_SECRET are required")
+	}
+	return frames, nil
 }

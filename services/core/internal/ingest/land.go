@@ -123,36 +123,7 @@ func Land(ctx context.Context, pool *pgxpool.Pool, manifest *Manifest) (LandResu
 			line := make([]byte, len(scanner.Bytes()))
 			copy(line, scanner.Bytes())
 
-			rec, unknown, reject := Parse(line)
-			for _, name := range unknown {
-				result.Drift[name]++
-			}
-			if reject != nil {
-				result.Rejected[reject.Code]++
-				sourceKey := ""
-				if rec != nil {
-					sourceKey = rec.PlaceID
-				}
-				batch.Queue(`
-					INSERT INTO ingest_reject
-					  (batch_id, line_no, reason, detail, source_key)
-					VALUES ($1,$2,$3,$4,NULLIF($5,''))
-					ON CONFLICT DO NOTHING`,
-					manifest.Dot, lineNo, reject.Code, reject.Detail, sourceKey)
-				continue
-			}
-			if claimed, corrected := rec.CapPrecision(); corrected {
-				result.Overclaimed[claimed]++
-			}
-			batch.Queue(`
-				INSERT INTO ingest_place_raw
-				  (batch_id, line_no, payload, payload_sha, source_key,
-				   source_updated_at)
-				VALUES ($1,$2,$3,$4,$5,$6)
-				ON CONFLICT (batch_id, line_no) DO NOTHING`,
-				manifest.Dot, lineNo, line, LineDigest(line), rec.PlaceID,
-				nullableTime(rec.UpdatedAt))
-			result.Landed++
+			landLine(batch, &result, manifest.Dot, lineNo, line)
 		}
 		closeErr := handle.Close()
 		if err := scanner.Err(); err != nil {
@@ -181,6 +152,43 @@ func Land(ctx context.Context, pool *pgxpool.Pool, manifest *Manifest) (LandResu
 		return result, err
 	}
 	return result, tx.Commit(ctx)
+}
+
+// landLine checks one feed row and queues it: into the landing table as it
+// arrived, or into the reject table with its reason. Shared by the file load
+// and the database pull, so a row is judged the same way whichever road it
+// came by.
+func landLine(batch *pgx.Batch, result *LandResult, batchID string, lineNo int, line []byte) {
+	rec, unknown, reject := Parse(line)
+	for _, name := range unknown {
+		result.Drift[name]++
+	}
+	if reject != nil {
+		result.Rejected[reject.Code]++
+		sourceKey := ""
+		if rec != nil {
+			sourceKey = rec.PlaceID
+		}
+		batch.Queue(`
+			INSERT INTO ingest_reject
+			  (batch_id, line_no, reason, detail, source_key)
+			VALUES ($1,$2,$3,$4,NULLIF($5,''))
+			ON CONFLICT DO NOTHING`,
+			batchID, lineNo, reject.Code, reject.Detail, sourceKey)
+		return
+	}
+	if claimed, corrected := rec.CapPrecision(); corrected {
+		result.Overclaimed[claimed]++
+	}
+	batch.Queue(`
+		INSERT INTO ingest_place_raw
+		  (batch_id, line_no, payload, payload_sha, source_key,
+		   source_updated_at)
+		VALUES ($1,$2,$3,$4,$5,$6)
+		ON CONFLICT (batch_id, line_no) DO NOTHING`,
+		batchID, lineNo, line, LineDigest(line), rec.PlaceID,
+		nullableTime(rec.UpdatedAt))
+	result.Landed++
 }
 
 func sendBatch(ctx context.Context, tx pgx.Tx, batch *pgx.Batch) error {
