@@ -406,3 +406,31 @@ cũng đạt. `git diff --check` đạt. Đã dừng các service, Metro và Pos
 QA thuộc phiên sau kiểm thử; giữ log/fixture ngoài repo. Emulator `5570`
 đang mở app thật với local `8199`; emulator `5574` và các stack khác không
 bị thay đổi.
+
+
+## Bàn giao lên main ngày 28/09/2026
+
+Tách 110 file tính năng và phụ thuộc nhật ký sang checkout riêng, gộp với
+main `0b51d5be` có thêm 68 commit. Không lấy thay đổi copy/UI/nghiên cứu
+không liên quan trong workspace gốc. Do main đã dùng số ADR 0037/0038,
+hai tài liệu mới chuyển thành ADR-0039 (nhật ký) và ADR-0040 (cộng đồng).
+Giữ các thay đổi Skia, FlatList/View, gzip và janitor hiện có trên main.
+
+Trên cây sạch `cf2dcf60`: 61 test PostgreSQL với race/codec, sentinel,
+0 skip. Sau đổi số ADR (source runtime giữ nguyên), cây sạch `0ec19fa9`
+chạy HTTP/WS33 request PASS. Hai mutant không tương đương đã thử lại
+cùng harness: friends cho người lạ đọc200 thay404 và bỏ media_checked
+choapproved thayreview đều đỏ ở đúng assertion; identity3PASS gồm sentinel.
+Browser thật: feed200; legacy submit202 → pending, người lạ404; 0 lỗi JS.
+Ảnh đã mở và reviewer Impeccable SHIP riêng UI bridge sau merge:
+[phone](../assets/community/feed-phone.png),
+[desktop](../assets/community/feed-desktop.png),
+[pending](../assets/community/legacy-pending.png).
+
+Lượt gate đầu trên cây sạch bắt hai thiếu sót tích hợp: evidence route
+còn trỏ số ADR cũ và Composer import helper của phần workspace chưa
+commit. Bản bàn giao sửa đường dẫn evidence và dùng trực tiếp điều kiện
+kind khác pair (cùng semantics), không kéo theo thay đổi loại sổ khác.
+Số gate sau cùng nằm trong commit bàn giao; không coi số test trước gộp
+là số của main mới. Full native, burst/soak và chất lượng AI không được
+suy rộng từ kiểm tra browser/contract sau gộp.

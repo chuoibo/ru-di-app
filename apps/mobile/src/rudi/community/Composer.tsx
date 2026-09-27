@@ -11,7 +11,6 @@ import { Field, RudiButton, RudiScreen, TopBar } from "../ui";
 import { createPost, getPost, type Audience, type Media } from "./api";
 import { MediaPicker } from "./MediaPicker";
 import { MentionPicker } from "./MentionPicker";
-import { coTuongNhom } from "../so/ban-tinh";
 export function Composer() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -35,7 +34,7 @@ export function Composer() {
     const [revision, setRevision] = useState(0);
     const attempt = useRef(newAttempt().key);
     useEffect(() => { if (!phien)
-        return; void docNhomCuaToi(phien.person_id).then((rows) => setGroups(rows.filter((g) => g.my_state === "active" && coTuongNhom(g)))).catch(() => { }); if (params.edit)
+        return; void docNhomCuaToi(phien.person_id).then((rows) => setGroups(rows.filter((g) => g.my_state === "active" && g.kind !== "pair"))).catch(() => { }); if (params.edit)
         void getPost(phien.person_id, params.edit).then((p) => { setBody(p.body); setAudience(p.audience); setTopics(p.topics.join(", ")); setMentions(p.mentions); setMedia(p.media); setRevision(p.revision); setGroup(p.context_id); }).catch((e) => setError(String(e.message))); }, [phien, params.edit]);
     const send = async () => {
         if (!phien || busy || uploading)

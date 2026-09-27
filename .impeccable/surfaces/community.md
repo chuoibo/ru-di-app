@@ -161,3 +161,19 @@ test và không mở review mới. Chưa có bằng chứng native iOS, thiết 
 hay số đo frame timing; không diễn giải các lượt đạt thành chứng nhận toàn
 nền tảng. `DESIGN.md`, sidecar và các sai lệch có sẵn tiếp tục được giữ
 nguyên; bản sửa không tạo thêm tài sản thị giác hoặc luật thiết kế.
+
+
+### Tích hợp main ngày 28/09/2026
+
+Đã gộp cùng main `0b51d5be`; giữ theme/FlatList/View mới của main và
+bridge chia sẻ lên cộng đồng. Browser trên source `0ec19fa9`: feed200,
+legacy submit202 → pending, người lạ404, không lỗi JavaScript. Parent và
+finish reviewer đã mở ảnh phone/desktop/sheet/pending; reviewer SHIP riêng
+phạm vi bridge/UI sau merge, không chứng nhận native trên main mới.
+
+Ảnh tổng hợp đưa kèm commit: [phone](../../docs/assets/community/feed-phone.png),
+[desktop](../../docs/assets/community/feed-desktop.png),
+[pending](../../docs/assets/community/legacy-pending.png).
+Composer dùng trực tiếp điều kiện kind khác pair thay helper tương đương
+của workspace cũ; giữ nguyên lựa chọn và hình thức hiển thị. Không sửa
+DESIGN.md hoặc sidecar trong bước tích hợp.
