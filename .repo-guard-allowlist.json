@@ -585,19 +585,19 @@
     },
     {
       "path": "docs/assets/community/feed-phone.png",
-      "sha256": "5c8b30dfb840c07068ef6d431be7906c533549f64c6ad843cad71475099db869",
+      "sha256": "008a6afc252dff3ccc812b7327863d9939b4cf7e438d6fb3bbe3996f2fa56de7",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp UI cộng đồng từ browser chạy mã đã gộp main 0ec19fa9, dữ liệu tổng hợp do community-fixture tạo; tên Synthetic community actor và nội dung kiểm thử, không có người thật, token hay dữ liệu tài chính. Đã mở và kiểm tra từng ảnh; ghim đúng digest, không mở rộng quy tắc."
+      "reason": "Ảnh UI trên source sạch f496af16, dữ liệu tổng hợp từ community-fixture; không người thật, token hay tài chính. Parent và Impeccable finish reviewer đã mở cả ba ảnh phone/desktop/composer-focus và chấp nhận đúng phạm vi tích hợp UI. Ghim đúng digest, không mở rộng quy tắc."
     },
     {
       "path": "docs/assets/community/feed-desktop.png",
-      "sha256": "603c09eb66344f4fcbf271365019260be21360aded9272aa8660f06bf7917fbc",
+      "sha256": "a43d1591a3eb4229296f76fc0282368aa442cce5bff12145ab32edcc1e449a6a",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp UI cộng đồng từ browser chạy mã đã gộp main 0ec19fa9, dữ liệu tổng hợp do community-fixture tạo; tên Synthetic community actor và nội dung kiểm thử, không có người thật, token hay dữ liệu tài chính. Đã mở và kiểm tra từng ảnh; ghim đúng digest, không mở rộng quy tắc."
+      "reason": "Ảnh UI trên source sạch f496af16, dữ liệu tổng hợp từ community-fixture; không người thật, token hay tài chính. Parent và Impeccable finish reviewer đã mở cả ba ảnh phone/desktop/composer-focus và chấp nhận đúng phạm vi tích hợp UI. Ghim đúng digest, không mở rộng quy tắc."
     },
     {
       "path": "docs/assets/community/legacy-pending.png",
@@ -606,6 +606,14 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh chụp UI cộng đồng từ browser chạy mã đã gộp main 0ec19fa9, dữ liệu tổng hợp do community-fixture tạo; tên Synthetic community actor và nội dung kiểm thử, không có người thật, token hay dữ liệu tài chính. Đã mở và kiểm tra từng ảnh; ghim đúng digest, không mở rộng quy tắc."
+    },
+    {
+      "path": "docs/assets/community/composer-focus.png",
+      "sha256": "5f1976e3edb1cef9c135a1a4fc088763f944310665aa58a5452387dd6d454ec2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh UI trên source sạch f496af16, dữ liệu tổng hợp từ community-fixture; không người thật, token hay tài chính. Parent và Impeccable finish reviewer đã mở cả ba ảnh phone/desktop/composer-focus và chấp nhận đúng phạm vi tích hợp UI. Ghim đúng digest, không mở rộng quy tắc."
     }
   ]
 }

@@ -178,3 +178,13 @@ Composer dùng helper coTuongNhom tối thiểu trong module chính sách
 ban-tinh; giữ nguyên ba loại sổ của main. Sửa độ tương phản nút Để sau
 trên nền giấy và dùng focus border theo theme cho hai ô nhập. Không sửa
 DESIGN.md hoặc sidecar trong bước tích hợp.
+
+
+Xác nhận cuối trên cây sạch `f496af16`: browser feed200, 0 lỗi JS;
+parent và finish reviewer mở ảnh phone/desktop/composer-focus mới,
+reviewer SHIP riêng sửa tích hợp. Nút Để sau đọc rõ trên paper, composer
+có border focus theo theme. [Composer đang focus](../../docs/assets/community/composer-focus.png).
+Mobile 1.239 PASS, 0 fail/skip; export web/iOS/Android PASS (bundle,
+không phải native E2E). Không suy rộng kết luận sang frame timing hay
+native sau merge. Các ảnh feed kèm commit được cập nhật từ lượt này;
+ảnh legacy-pending vẫn là lượt `0ec19fa9`, bridge không đổi sau đó.

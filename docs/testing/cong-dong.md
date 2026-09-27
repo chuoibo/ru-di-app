@@ -454,3 +454,35 @@ Mobile sau sửa typecheck: 1.232 PASS, 6 FAIL, 0 skip. Nguyên nhân và bản 
   không nới bộ quét, không xoá test. Chưa gọi đó là native pass sau merge.
 
 Lượt kiểm lại bản sửa được ghi bằng SHA và số cụ thể trong commit bàn giao.
+
+
+## Kết quả chốt để push main
+
+Cây sạch có code cuối: `f496af16897ee2b5de2185feae9cac136786725e`.
+- `make gate ONLY="guard guard-range ruff contract client-routes server-routes
+  screens cors ownership python-touch go-vet go-test shared mobile"`: 14 PASS,
+  0 FAIL, 0 SKIP. Mobile 1.239 test PASS, 0 fail/skip; export cả web/iOS/Android.
+- PostgreSQL race/codec community + diary + db + startup: 61 PASS, sentinel,
+  0 SKIP. HTTP/WS: 33 request PASS, hai replica độc lập, thấy bài/bình luận mới.
+- Identity 3 PASS; hai mutant không tương đương ACL friends và media_checked
+  đều đỏ đúng assertion dự đoán. Harness và source cùng SHA `f496af16`, dùng
+  overlay ngoài checkout; không sửa source đang đo.
+- Browser bản cuối: feed200, 0 lỗi JS; đã mở phone/desktop/composer-focus,
+  finish reviewer Impeccable SHIP riêng phần tích hợp frontend.
+
+Lượt full gate trước sửa frontend/metadata ở `0ec19fa9`: API 3.799 PASS,
+804 SKIP; migration/pinned-import/docker PASS; parity baseline dev có
+354 scenario, 10.836 bước, 0 sai khác, DB/media lane bật, 199 route Go.
+Full gate bị dừng chủ động sau baseline ở vòng canary mở rộng để chốt
+bàn giao theo yêu cầu; không có kết luận PASS cho full parity, prod parity,
+full PostgreSQL/Python/Go, e2e/chat-e2e/crypto ở lượt sau merge. Native gate
+bỏ qua vì runner không có Maestro trên PATH; demo-watch/hero-walk không
+có demo8099. Android cộng đồng đã chạy thật ở lượt trước merge, không
+được thay bằng bundle pass hay nói đã chạy lại trên SHA mới.
+
+Các commit sau SHA code cuối chỉ chốt tài liệu/ảnh đã mở và số kiểm chứng.
+Guard tree/range sẽ chạy trên commit bàn giao; không gọi bản này là full
+gate xanh hoặc đã đạt mọi yêu cầu tải/AI/native. Cờ mặc định vẫn tắt; local
+8199 đang giữ bản runtime đã kiểm chứng trước merge, không tự thay bằng
+binary mới chỉ vì push. Chưa có model thì bài public giữ pending như đã
+thống nhất. Burst20k/soak24h/native iOS/frame timing vẫn là các cổng mở.
