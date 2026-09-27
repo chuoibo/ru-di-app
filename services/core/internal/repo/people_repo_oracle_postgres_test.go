@@ -762,7 +762,7 @@ func peopleRepoOracleCases(tables []string) ([]peopleCase, oracleSpec) {
 	add("route POST /people/{id}/block: a declined edge the other way", "", base, none,
 		onPerson(edges, "block_person", w.chi, w.ban))
 	add("route POST /people/{id}/block: a person with nothing", "", base, none, onPerson(edges, "block_person", w.an, w.moi))
-	add("route POST /people/{id}/block: an ended account", "", base, none, onPerson(edges, "block_person", w.an, w.erased))
+	add("route POST /people/{id}/block: an ended account", "404:person_not_found", base, none, onPerson(edges, "block_person", w.an, w.erased))
 	add("route POST /people/{id}/block: a pending request, under a Vietnam session TimeZone", "", vietnam, none,
 		onPerson(edges, "block_person", w.ban, w.dung))
 	add("route POST /people/{id}/block: nobody", "404:person_not_found", base, none, onPerson(edges, "block_person", w.an, missing))
@@ -810,6 +810,10 @@ func peopleRepoOracleCases(tables []string) ([]peopleCase, oracleSpec) {
 	add("route PUT /people/{id}: a rename by oneself", "", base, none, register(w.ban, w.ban, "Tên do mình đặt (dữ liệu mẫu)"))
 	add("route PUT /people/{id}: a rename by somebody else", "403:permission_denied", base, none,
 		register(w.an, w.ban, "Tên người khác đặt (dữ liệu mẫu)"))
+	// A stranger's guess, right or wrong, is answered alike and writes nothing:
+	// a phone-derived id must not confirm the name behind it.
+	add("route PUT /people/{id}: a stranger's right guess and wrong guess", "", base, none,
+		register(w.moi, w.ban, "Bạn thân (dữ liệu mẫu)"), register(w.moi, w.ban, "Đoán sai (dữ liệu mẫu)"))
 	add("route PUT /people/{id}: an ended account", "404:person_not_found", base, none,
 		register(w.an, w.erased, "Hồi sinh (dữ liệu mẫu)"))
 
