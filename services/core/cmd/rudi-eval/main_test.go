@@ -13,6 +13,10 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	"mobile/services/core/internal/aieval"
+	"mobile/services/core/internal/aieval/giagemini"
+	"mobile/services/core/internal/aiharness/llm"
 )
 
 const (
@@ -33,6 +37,21 @@ type demRa struct{ n atomic.Int64 }
 func (d *demRa) RoundTrip(*http.Request) (*http.Response, error) {
 	d.n.Add(1)
 	return nil, errors.New("rudi-eval test: no request may leave the process")
+}
+
+// chiLoopback forwards requests to the loopback stand-ins and counts and
+// refuses every other.
+type chiLoopback struct {
+	cu http.RoundTripper
+	n  atomic.Int64
+}
+
+func (c *chiLoopback) RoundTrip(r *http.Request) (*http.Response, error) {
+	if h := r.URL.Hostname(); h == "127.0.0.1" || h == "localhost" || h == "::1" {
+		return c.cu.RoundTrip(r)
+	}
+	c.n.Add(1)
+	return nil, errors.New("rudi-eval test: no request may leave the loopback")
 }
 
 // Invariant 10, at run time: with a key in the environment, `kich-ban` runs
@@ -78,18 +97,142 @@ func TestKichBanKhongMoKetNoi(t *testing.T) {
 	}
 }
 
-// The modes design 06 names for later slices are refused, not faked.
-func TestMoHinhChuaCo(t *testing.T) {
-	for _, m := range []string{"that", "ghi", "phat-lai"} {
-		rc, _, errw := goi(t, "", "--mo-hinh", m, "--bo", boGoc)
-		if rc != raSai || !strings.Contains(errw, "chưa có ở lát 6b") {
-			t.Errorf("%s: %d %s", m, rc, errw)
-		}
-	}
-	for _, args := range [][]string{{"--bo", boGoc}, {"--mo-hinh", "kich-ban", "--bo", boGoc, "--chi-buoc", "hieu"}, {"--mo-hinh", "kich-ban", "--bo", boGoc, "--lap", "0"}, {"--mo-hinh", "kich-ban", "thua"}} {
+// Bad invocations are refused before anything runs.
+func TestThamSoSai(t *testing.T) {
+	for _, args := range [][]string{{"--bo", boGoc}, {"--mo-hinh", "la", "--bo", boGoc}, {"--mo-hinh", "kich-ban", "--bo", boGoc, "--chi-buoc", "hieu"},
+		{"--mo-hinh", "kich-ban", "--bo", boGoc, "--lap", "0"}, {"--mo-hinh", "kich-ban", "thua"}, {"--mo-hinh", "phat-lai"},
+		{"--mo-hinh", "ghi"}, {"--mo-hinh", "that", "--bo", boGoc, "--chi-buoc", "tra_loi", "--tran-goi", "9"}} {
 		if rc, _, _ := goi(t, "", args...); rc != raSai {
 			t.Errorf("%v: thoát %d", args, rc)
 		}
+	}
+}
+
+const boT1Hieu = "../../internal/aieval/testdata/hieu/t1-hieu.json"
+
+// moiTruongGia points the provider env at loopback stand-ins and scripts the
+// model with the T1 router set's outputs, in case order.
+func moiTruongGia(t *testing.T) (*giagemini.May, *giagemini.XepLai) {
+	t.Helper()
+	may, xl := giagemini.Moi(), giagemini.MoiXepLai()
+	t.Cleanup(may.Close)
+	t.Cleanup(xl.Close)
+	t.Setenv("GEMINI_API_KEY", "khoa-gia-khong-duoc-dung")
+	t.Setenv("MOBILE_GEMINI_BASE_URL", may.URL())
+	t.Setenv("MOBILE_RERANK_URL", xl.URL())
+	raw, err := os.ReadFile(boT1Hieu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := aieval.DocBoHieu(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var kich []llm.Buoc
+	for _, c := range b.Ca {
+		for _, r := range c.Ra {
+			kich = append(kich, llm.Buoc{Text: string(r)})
+		}
+	}
+	may.Dat(llm.NewStub(kich...))
+	return may, xl
+}
+
+func thuMuc(t *testing.T, out string) string {
+	t.Helper()
+	dong := strings.Split(strings.TrimSpace(out), "\n")
+	var r struct {
+		ThuMuc string `json:"thu_muc"`
+	}
+	if err := json.Unmarshal([]byte(dong[len(dong)-1]), &r); err != nil || r.ThuMuc == "" {
+		t.Fatalf("không có thu_muc: %v %q", err, out)
+	}
+	return r.ThuMuc
+}
+
+// Invariant 10 at run time, with a key AND a reachable stand-in in the
+// environment: `kich-ban` and `phat-lai` never enter the provider door
+// (soLanDungNhaCungCap) and send no request; `ghi` enters it once. The
+// replay of the recorded router set reproduces its grades with 0 calls.
+func TestKichBanPhatLaiKhongDungClient(t *testing.T) {
+	may, xl := moiTruongGia(t)
+	cu := http.DefaultTransport
+	d := &chiLoopback{cu: cu}
+	http.DefaultTransport = d
+	defer func() { http.DefaultTransport = cu }()
+	dem := func() int64 { return may.SoYeuCau() + xl.SoYeuCau() + d.n.Load() }
+	truoc := soLanDungNhaCungCap.Load()
+	if rc, _, errw := goi(t, "", "--mo-hinh", "kich-ban", "--bo", boGoc); rc != raXanh || soLanDungNhaCungCap.Load() != truoc || dem() != 0 {
+		t.Fatalf("kich-ban: thoát %d, cửa nhà cung cấp %d, %d yêu cầu\n%s", rc, soLanDungNhaCungCap.Load()-truoc, dem(), errw)
+	}
+	goc := t.TempDir()
+	rc, out, errw := goi(t, "", "--mo-hinh", "ghi", "--chi-buoc", "hieu", "--bo", boT1Hieu, "--tran-goi", "400", "--out", goc, "--git-sha", "abc1234", "--cay", "sach")
+	if rc != raXanh || soLanDungNhaCungCap.Load() != truoc+1 {
+		t.Fatalf("ghi: thoát %d, cửa %d\n%s", rc, soLanDungNhaCungCap.Load()-truoc, errw)
+	}
+	dir := thuMuc(t, out)
+	sau := dem()
+	if sau == 0 || d.n.Load() != 0 {
+		t.Fatalf("ghi: %d yêu cầu tới máy giả, %d ra ngoài", sau, d.n.Load())
+	}
+	rc, out, errw = goi(t, "", "--mo-hinh", "phat-lai", "--bang", dir, "--out", goc, "--git-sha", "abc1234")
+	if rc != raXanh || soLanDungNhaCungCap.Load() != truoc+1 || dem() != sau {
+		t.Fatalf("phat-lai: thoát %d, cửa %d, %d yêu cầu mới\n%s", rc, soLanDungNhaCungCap.Load()-truoc-1, dem()-sau, errw)
+	}
+	m, err := aieval.DocManifest(thuMuc(t, out))
+	if err != nil || m.SoVoiNguon == nil || !m.SoVoiNguon.Trung || m.Goi.DaDung != 0 {
+		t.Fatalf("phát lại: %v %+v", err, m.SoVoiNguon)
+	}
+}
+
+// --tran-goi is required and hard: no flag, or an estimate over it, is
+// refused before the provider door; --du-toan prints the estimate and
+// builds nothing.
+func TestThatCanTranGoi(t *testing.T) {
+	moiTruongGia(t)
+	truoc := soLanDungNhaCungCap.Load()
+	if rc, _, errw := goi(t, "", "--mo-hinh", "that", "--bo", boGoc); rc != raSai || !strings.Contains(errw, "--tran-goi N bắt buộc") {
+		t.Fatalf("thiếu trần: %d\n%s", rc, errw)
+	}
+	if rc, _, errw := goi(t, "", "--mo-hinh", "that", "--bo", boGoc, "--tran-goi", "10"); rc != raSai || !strings.Contains(errw, "TỪ CHỐI: dự toán") {
+		t.Fatalf("dự toán > trần: %d\n%s", rc, errw)
+	}
+	rc, out, _ := goi(t, "", "--mo-hinh", "that", "--bo", boGoc, "--lap", "2", "--du-toan")
+	var r struct {
+		DuToan aieval.DuToan `json:"du_toan"`
+	}
+	if rc != raXanh || json.Unmarshal([]byte(out), &r) != nil || r.DuToan.Lap != 2 || r.DuToan.Tran != r.DuToan.SoLuot*(8+2+2)+1 {
+		t.Fatalf("--du-toan: %d %s", rc, out)
+	}
+	if soLanDungNhaCungCap.Load() != truoc {
+		t.Fatal("cửa nhà cung cấp được mở trước khi dự toán qua trần")
+	}
+}
+
+// `that` is the real API: inside a test binary the constructor refuses the
+// real host (testing.Testing), so the door opens and sends nothing; a
+// missing key is refused with where to add it, echoing no value.
+func TestThatDuoiTestBiTuChoi(t *testing.T) {
+	moiTruongGia(t)
+	t.Setenv("MOBILE_GEMINI_BASE_URL", "")
+	d := &demRa{}
+	cu := http.DefaultTransport
+	http.DefaultTransport = d
+	defer func() { http.DefaultTransport = cu }()
+	rc, _, errw := goi(t, "", "--mo-hinh", "that", "--bo", boGoc, "--tran-goi", "100000", "--out", t.TempDir())
+	if rc != raSai || !strings.Contains(errw, "loopback") || d.n.Load() != 0 {
+		t.Fatalf("that dưới go test: %d, %d yêu cầu\n%s", rc, d.n.Load(), errw)
+	}
+	t.Setenv("GEMINI_API_KEY", "")
+	rc, _, errw = goi(t, "", "--mo-hinh", "that", "--bo", boGoc, "--tran-goi", "100000", "--out", t.TempDir())
+	if rc != raSai || !strings.Contains(errw, "cài đặt môi trường") {
+		t.Fatalf("thiếu khoá: %d\n%s", rc, errw)
+	}
+	// ghi with a non-loopback override is refused by the constructor.
+	t.Setenv("GEMINI_API_KEY", "khoa-gia-khong-duoc-dung")
+	t.Setenv("MOBILE_GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/")
+	if rc, _, errw := goi(t, "", "--mo-hinh", "ghi", "--bo", boGoc, "--tran-goi", "100000", "--out", t.TempDir()); rc != raSai || d.n.Load() != 0 {
+		t.Fatalf("ghi tới máy thật: %d\n%s", rc, errw)
 	}
 }
 

@@ -27,13 +27,23 @@
 #   * a real model: GEMINI_API_KEY is set to a dummy and every proxy variable
 #     points at a closed loopback port, so a client built by mistake has
 #     nowhere to go; TestKichBanKhongMoKetNoi counts requests in-process.
+#
+# The same go test run carries the offline T2 check (design 06 §6, slice 18),
+# pinned by sentinels below: a corpus recorded through the real genai
+# transport, embedder and reranker client against loopback stand-ins
+# (`ghi`), replayed (`phat-lai`) with identical grades and not one request;
+# a cassette missing a recording is bang_lech, never the network; the call
+# ceiling stops a run at exactly N; and `kich-ban`/`phat-lai` never enter the
+# provider door with a key in the environment. It is deterministic: the
+# stand-ins answer from the hand-written scripts, and a replay runs on the
+# fixed clock.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 CORE=services/core
 BO=internal/aieval/testdata/corpus/nep-kich-ban.json
 AIEVAL=mobile/services/core/internal/aieval
-SENTINELS=(TestBoNepKichBan TestKichBanKhongMoKetNoi)
+SENTINELS=(TestBoNepKichBan TestKichBanKhongMoKetNoi TestGhiRoiPhatLaiTrungDiem TestPhatLaiThieuBanGhiLaBangLech TestTranGoiDungDungN TestKichBanPhatLaiKhongDungClient TestKhongDungClientGenai)
 CANARY_CHECK=khong_bia_dia_diem
 
 command -v go >/dev/null 2>&1 || { echo "thiếu go" >&2; exit 2; }

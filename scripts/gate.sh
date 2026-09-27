@@ -88,7 +88,7 @@ stage_help() {
     python-touch) echo "no Python change on this branch reaches a route Go already serves (ADR-0029 §2.9)" ;;
     go-vet)    echo "gofmt -l and go vet on services/core, the Go front door (ADR-0029)" ;;
     go-test)   echo "go test ./... on services/core: config, transparent proxy, route manifest (ADR-0029)" ;;
-    eval-kich-ban) echo "eval T1: Nếp through Engine.Run on the scripted stub; invariants, canary red where predicted, identity green, no SKIP, core never links aieval (test.yml: eval-kich-ban)" ;;
+    eval-kich-ban) echo "eval T1: Nếp through Engine.Run on the scripted stub; invariants, canary red where predicted, identity green, no SKIP, core never links aieval; plus offline T2: a cassette recorded from loopback stand-ins replays with identical grades and 0 calls (test.yml: eval-kich-ban)" ;;
     ai-infer)  echo "inference sidecar offline: sparse contract, mem0 with no PostHog/SQLite/text in logs, owner isolation, deletes counted to zero, Gemini wire body; no SKIP, sentinels (test.yml: ai-infer)" ;;
     api)       echo "pytest services/api/tests tests (test.yml: api)" ;;
     migration) echo "alembic upgrade head --sql, no database (test.yml: api, inline)" ;;

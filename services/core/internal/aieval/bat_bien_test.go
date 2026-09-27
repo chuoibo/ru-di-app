@@ -19,7 +19,7 @@ func coBan(t *testing.T) (Ca, LuotDaCham) {
 	b, _, kbs := napBo(t)
 	for _, c := range b.Ca {
 		if c.CaID == CaDongNhat {
-			l, _, err := chayLuot(context.Background(), c, kbs[c.KichBan.Dung], 1)
+			l, _, err := chayKichBan(context.Background(), c, kbs[c.KichBan.Dung], 1)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/adk/v2/model"
+
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/aiharness/testkit"
@@ -50,6 +52,10 @@ type KetQuaChay struct {
 	// Dat says the run did what its role asks; LyDo says why not.
 	Dat  bool   `json:"dat"`
 	LyDo string `json:"ly_do,omitempty"`
+	// LoiHaTang marks, in the model modes, a run that ended on the
+	// provider's 429 or 5xx after the retries: an infrastructure error,
+	// neither passed nor failed (design 06 §5).
+	LoiHaTang bool `json:"loi_ha_tang,omitempty"`
 }
 
 // KetQuaLuot is how the turn ended.
@@ -74,7 +80,7 @@ func banGhiMap(r obs.TurnRecord) map[string]any {
 // The clock is fixed at the case's instant: durations are zero and the run
 // is repeatable byte for byte, which is what T1 asks of a scripted run.
 func ChayLuot(ctx context.Context, c Ca, kb KichBan, lap int) (KetQuaChay, error) {
-	l, out, err := chayLuot(ctx, c, kb, lap)
+	l, out, err := chayKichBan(ctx, c, kb, lap)
 	if err != nil {
 		return KetQuaChay{}, err
 	}
@@ -82,61 +88,122 @@ func ChayLuot(ctx context.Context, c Ca, kb KichBan, lap int) (KetQuaChay, error
 	return out, nil
 }
 
+// chayKichBan runs one script on one case, unscored: the stub, the script's
+// length, the clock fixed at the case's instant, no wait between retries.
+func chayKichBan(ctx context.Context, c Ca, kb KichBan, lap int) (LuotDaCham, KetQuaChay, error) {
+	l, out, err := chayLuot(ctx, c, lap, cachChay{
+		moHinh: kb.Stub(maKiemCua(c.CaID)),
+		soBuoc: len(kb.Buoc),
+		buoc:   kb.Buoc,
+		cho:    khongCho,
+	})
+	out.KichBan = kb.Ten
+	return l, out, err
+}
+
+// moHinhLuot is the model one turn runs on, which keeps the canonical form
+// of every request it was handed: the scripted stub, or the cassette.
+type moHinhLuot interface {
+	model.LLM
+	YeuCau() [][]byte
+}
+
+// cachChay is how one turn is run.
+type cachChay struct {
+	moHinh moHinhLuot
+	// soBuoc is how many replies the script holds (kich_ban_lech reads
+	// it); the model modes have no script and do not read it.
+	soBuoc int
+	// buoc is the script's steps (the chặng each request is scored as);
+	// nil in the model modes.
+	buoc []BuocKichBan
+	// dongHo is the clock the engine and the recorder time the turn with.
+	// nil fixes it at the case's instant: every duration is zero and the
+	// run repeats byte for byte.
+	dongHo func() time.Time
+	// cho is the wait before model retry n; nil keeps the engine's own.
+	cho func(int) time.Duration
+	// them are further engine options (the model modes' router with its
+	// example bank, their reranker).
+	them []aiharness.Option
+}
+
+func khongCho(int) time.Duration { return 0 }
+
 // chayLuot runs the turn and gathers what the checks read, unscored.
-func chayLuot(ctx context.Context, c Ca, kb KichBan, lap int) (LuotDaCham, KetQuaChay, error) {
+func chayLuot(ctx context.Context, c Ca, lap int, cc cachChay) (LuotDaCham, KetQuaChay, error) {
 	g, err := GieoCa(c, lap)
 	if err != nil {
 		return LuotDaCham{}, KetQuaChay{}, err
 	}
-	stub := kb.Stub(g.MaKiem)
 	var nhatKy bytes.Buffer
-	dongHo := func() time.Time { return g.Turn.Luc }
-	e, err := aiharness.New(
-		aiharness.WithModel(stub),
+	dongHo := cc.dongHo
+	if dongHo == nil {
+		dongHo = func() time.Time { return g.Turn.Luc }
+	}
+	opts := []aiharness.Option{
+		aiharness.WithModel(cc.moHinh),
 		aiharness.WithLogger(slog.New(slog.NewJSONHandler(&nhatKy, nil))),
 		aiharness.WithMaKiem(g.MaKiem),
-		aiharness.WithRetryWait(func(int) time.Duration { return 0 }),
 		aiharness.WithClock(dongHo),
 		aiharness.WithNguon(nguonCua(c.DauVao.TheGioi, g.Turn.Luc)),
-	)
+	}
+	if cc.cho != nil {
+		opts = append(opts, aiharness.WithRetryWait(cc.cho))
+	}
+	opts = append(opts, cc.them...)
+	e, err := aiharness.New(opts...)
 	if err != nil {
 		return LuotDaCham{}, KetQuaChay{}, err
 	}
 	sink := NewGhiLai(dongHo)
 	res, runErr := e.Run(ctx, g.Turn, sink)
 	if errors.Is(runErr, aiharness.ErrHuy) {
-		// Nothing outside stops a scripted turn but the caller's context:
-		// that is the harness failing, not the turn.
+		// Nothing outside stops a turn but the caller's context: that is
+		// the harness failing (or, in a real run, the watchdog), not the
+		// turn.
 		return LuotDaCham{}, KetQuaChay{}, runErr
 	}
 	l := LuotDaCham{
 		LuotDaChay:  LuotDaChay{Turn: g.Turn, SuKien: sink.SuKien(), KetThuc: res.Record.KetThuc, Chu: res.Text, BanGhi: res.Record},
-		BuocKichBan: kb.Buoc,
+		BuocKichBan: cc.buoc,
 		MaKiem:      g.MaKiem,
 		NhatKy:      nhatKy.String(),
 		// How many replies the script holds: a turn that asked for more ran
 		// off its script.
-		SoBuocKichBan: len(kb.Buoc),
+		SoBuocKichBan: cc.soBuoc,
 	}
 	if runErr != nil {
 		l.Ma = aiharness.MaCua(runErr)
 	}
 	// Empty lists print as [], never null: a reader of the line should not
 	// have to know which fields Go leaves nil.
-	out := KetQuaChay{CaID: c.CaID, KichBan: kb.Ten, Lap: lap, SuKien: l.SuKien, YeuCauHash: []string{}, Truot: []Truot{}}
-	for _, raw := range stub.YeuCau() {
+	out := KetQuaChay{CaID: c.CaID, Lap: lap, SuKien: l.SuKien, YeuCauHash: []string{}, Truot: []Truot{}}
+	for _, raw := range cc.moHinh.YeuCau() {
 		y, err := DocYeuCau(raw)
 		if err != nil {
 			return LuotDaCham{}, KetQuaChay{}, fmt.Errorf("đọc lại yêu cầu: %w", err)
 		}
 		l.YeuCau = append(l.YeuCau, y)
 		c := ""
-		if i := len(l.YeuCau) - 1; i < len(kb.Buoc) {
-			c = kb.Buoc[i].Chang
+		if i := len(l.YeuCau) - 1; i < len(cc.buoc) {
+			c = cc.buoc[i].Chang
+		} else if cc.buoc == nil {
+			// A model mode: no script, the stage is read off the request.
+			c = ChangTuYeuCau(y.SystemInstruction)
 		}
 		l.Chang = append(l.Chang, c)
 		sum := sha256.Sum256(raw)
 		out.YeuCauHash = append(out.YeuCauHash, hex.EncodeToString(sum[:]))
+	}
+	if cc.buoc == nil {
+		// A model mode: the answer steps are what the model wrote.
+		if d, ok := cc.moHinh.(interface{ DapAn() []string }); ok {
+			for i, t := range d.DapAn() {
+				t := t
+				l.BuocKichBan = append(l.BuocKichBan, BuocKichBan{Chang: changCua(l.LuotDaChay, i), Chu: &t})
+			}
+		}
 	}
 	bg := banGhiMap(res.Record)
 	rawBG, _ := json.Marshal(bg)

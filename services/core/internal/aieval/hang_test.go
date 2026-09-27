@@ -100,39 +100,82 @@ func TestGhiLai(t *testing.T) {
 }
 
 // Invariant 10, on the source: the eval package and the eval binary hold no
-// way to build a model client or read a key. Nothing here calls the genai or
-// ADK constructors or the engine's env constructors, names the key
-// variables, or reads the environment at all; so `kich-ban` cannot open a
-// connection whatever GEMINI_API_KEY holds. Slice 18's `that` mode will need
-// a named exception here, reviewed with it.
+// way to build a model client or read a key, with ONE named exception:
+// cmd/rudi-eval/nha_cung_cap.go, the provider door of `that` and `ghi`
+// (design 06 §6.1, slice 18). Nothing else calls the genai, ADK, embedder or
+// reranker constructors or the engine's env constructors, names the key
+// variables, or reads the environment at all; and inside the exception the
+// constructors are called only from dungNhaCungCap, which main reaches only
+// for `that` and `ghi` (TestKichBanPhatLaiKhongDungClient counts it at run
+// time). So `kich-ban` and `phat-lai` cannot open a connection whatever
+// GEMINI_API_KEY holds.
 func TestKhongDungClientGenai(t *testing.T) {
 	fset := token.NewFileSet()
 	var loi []string
 	quet := map[string]int{}
-	for _, dir := range []string{".", filepath.Join("..", "..", "cmd", "rudi-eval")} {
+	cmdDir := filepath.Join("..", "..", "cmd", "rudi-eval")
+	ngoaiLe := filepath.Join(cmdDir, "nha_cung_cap.go")
+	for _, dir := range []string{".", "giagemini", cmdDir} {
 		paths, _ := filepath.Glob(filepath.Join(dir, "*.go"))
 		for _, p := range paths {
-			if strings.HasSuffix(p, "_test.go") {
+			if strings.HasSuffix(p, "_test.go") || p == ngoaiLe {
 				continue
 			}
 			src, err := os.ReadFile(p)
 			if err != nil {
 				t.Fatal(err)
 			}
+			if dir == "giagemini" {
+				// The loopback stand-in builds no client and reads no
+				// environment either; it may name nothing forbidden.
+				loi = append(loi, dungClient(fset, p, src)...)
+				continue
+			}
 			loi = append(loi, dungClient(fset, p, src)...)
 			quet[dir]++
 		}
 	}
-	if quet["."] < 5 || quet[filepath.Join("..", "..", "cmd", "rudi-eval")] < 1 {
+	if quet["."] < 5 || quet[cmdDir] < 2 {
 		t.Fatalf("quét quá ít file: %v", quet)
 	}
 	for _, l := range loi {
 		t.Error(l)
 	}
+	// The exception: every forbidden use sits inside dungNhaCungCap or
+	// coPhuTuMoiTruong (the estimate reads whether a reranker is set) or is
+	// the file's getenv variable.
+	src, err := os.ReadFile(ngoaiLe)
+	if err != nil {
+		t.Fatalf("ngoại lệ có tên phải tồn tại: %v", err)
+	}
+	f, err := parser.ParseFile(fset, ngoaiLe, src, parser.SkipObjectResolution)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range f.Decls {
+		ten := ""
+		switch v := d.(type) {
+		case *ast.FuncDecl:
+			ten = v.Name.Name
+		case *ast.GenDecl:
+			ten = "var/const"
+		}
+		start, end := fset.Position(d.Pos()).Offset, fset.Position(d.End()).Offset
+		for _, l := range dungClient(fset, "x.go", append([]byte("package x\n"), vungImport(f, fset, src)+string(src[start:end])...)) {
+			switch {
+			case ten == "dungNhaCungCap", ten == "coPhuTuMoiTruong":
+			case ten == "var/const" && (strings.Contains(l, "os.Getenv") || strings.Contains(l, "names")):
+			default:
+				t.Errorf("nha_cung_cap.go: %s ngoài dungNhaCungCap (%s)", l, ten)
+			}
+		}
+	}
 	// Canary: the scan is red on each way in.
 	for name, src := range map[string]string{
 		"env.go":    "package x\nimport \"mobile/services/core/internal/aiharness/llm\"\nfunc f() { llm.GeminiFromEnv(nil, nil) }\n",
 		"new.go":    "package x\nimport \"mobile/services/core/internal/aiharness/llm\"\nfunc f() { llm.NewGemini(nil, \"\", \"\") }\n",
+		"nhung.go":  "package x\nimport \"mobile/services/core/internal/aiharness/nhung\"\nfunc f() { nhung.NewGemini(nil, \"\", \"\") }\n",
+		"rerank.go": "package x\nimport \"mobile/services/core/internal/rerank\"\nfunc f() { rerank.TuEnv(nil) }\n",
 		"engine.go": "package x\nimport \"mobile/services/core/internal/aiharness\"\nfunc f() { aiharness.FromEnv(nil, nil, nil) }\n",
 		"genai.go":  "package x\nimport g \"google.golang.org/genai\"\nfunc f() { g.NewClient(nil, nil) }\n",
 		"adk.go":    "package x\nimport \"google.golang.org/adk/v2/model/gemini\"\n",
@@ -146,12 +189,27 @@ func TestKhongDungClientGenai(t *testing.T) {
 	}
 }
 
+// vungImport is f's import block, so one declaration can be scanned with
+// the names it resolves.
+func vungImport(f *ast.File, fset *token.FileSet, src []byte) string {
+	var b strings.Builder
+	for _, d := range f.Decls {
+		if g, ok := d.(*ast.GenDecl); ok && g.Tok == token.IMPORT {
+			b.Write(src[fset.Position(g.Pos()).Offset:fset.Position(g.End()).Offset])
+			b.WriteString("\n")
+		}
+	}
+	return b.String()
+}
+
 var (
 	goiCam = map[string]map[string]bool{
-		"mobile/services/core/internal/aiharness/llm": {"NewGemini": true, "GeminiFromEnv": true, "EnvAPIKey": true, "EnvBaseURL": true},
-		"mobile/services/core/internal/aiharness":     {"FromEnv": true},
-		"google.golang.org/genai":                     {"NewClient": true},
-		"os":                                          {"Getenv": true, "LookupEnv": true, "Environ": true},
+		"mobile/services/core/internal/aiharness/llm":   {"NewGemini": true, "GeminiFromEnv": true, "EnvAPIKey": true, "EnvBaseURL": true},
+		"mobile/services/core/internal/aiharness":       {"FromEnv": true},
+		"mobile/services/core/internal/aiharness/nhung": {"NewGemini": true, "FromEnv": true},
+		"mobile/services/core/internal/rerank":          {"TuEnv": true, "Moi": true, "EnvURL": true},
+		"google.golang.org/genai":                       {"NewClient": true},
+		"os":                                            {"Getenv": true, "LookupEnv": true, "Environ": true},
 	}
 	importCam = []string{"google.golang.org/adk/v2/model/gemini"}
 	chuoiCam  = regexp.MustCompile(`GEMINI_API_KEY|GOOGLE_API_KEY|MOBILE_GEMINI_BASE_URL|GOOGLE_GEMINI_BASE_URL`)

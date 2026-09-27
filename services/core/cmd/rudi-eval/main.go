@@ -8,29 +8,38 @@
 // cmd/core never imports internal/aieval (aigate and scripts/eval_kich_ban.sh
 // hold that line).
 //
-// Slice 6b has one model mode, `kich-ban`: the scripted stub of aiharness/llm
-// over hand-written scripts. In that mode the binary builds no genai client
-// and reads no API key, whatever the environment holds (invariant 10): there
-// is no code path here that could, which TestKhongDungClientGenai in aieval
-// holds on the source and TestKichBanKhongMoKetNoi holds at run time. The
-// other modes of design 06 (`phat-lai`, `ghi`, `that`) and `--chi-buoc hieu`
-// come with slices 9 and 18 and are refused until then. `--chi-buoc hieu
-// --bo <router set>` runs the router alone over a T1 router set (every case
-// carries its scripted router output); a converted T3 set is refused here.
+// Model modes (--mo-hinh):
 //
-// Two ways to drive it:
+//   - kich-ban (T1): the scripted stub over hand-written scripts. No client,
+//     no key, no environment read.
+//   - phat-lai (T2): the cassette of an earlier run (--bang <run dir>),
+//     nothing behind it: a request it has no recording for is bang_lech,
+//     never a network call. No client, no key.
+//   - ghi: records a cassette from a Gemini stand-in on loopback
+//     (MOBILE_GEMINI_BASE_URL); the offline tests' mode.
+//   - that (T3): records a cassette from the real Gemini API, under a
+//     hard ceiling --tran-goi N on provider calls (model + embedding +
+//     rerank) that the Lead approved. The estimate (--du-toan) is printed
+//     first and a run whose estimate exceeds N is refused before any client
+//     exists; a watchdog stops the run at N and marks it unfinished.
+//
+// Only nha_cung_cap.go may build a provider client or read the environment,
+// and only `that` and `ghi` reach it (invariant 10; TestKhongDungClientGenai
+// on the source, TestKichBanPhatLaiKhongDungClient at run time).
+//
+// --chi-buoc hieu runs the router alone on a router set: in kich-ban on a
+// T1 set (scripted outputs); in the model modes on any set, which is how the
+// converted money/allergy corpora are measured (money_action recall and
+// false refusals, with Wilson intervals, in bang-diem.md).
 //
 //	rudi-eval --mo-hinh kich-ban --bo <corpus.json> [--kich-ban <dir>] [--lap n]
-//
-// runs a whole corpus: one JSON line per run on stdout, then one line
-// {"tong_ket": ...}; exit 0 only when every run did what its role asks and
-// both sentinel cases (canary red where predicted, identity green) are there.
-//
+//	rudi-eval --mo-hinh that --bo <corpus.json> --tran-goi N [--lap k] [--chi-buoc hieu]
+//	rudi-eval --mo-hinh phat-lai --bang <run dir>
 //	rudi-eval --mo-hinh kich-ban [--kich-ban <dir>]  < requests.jsonl
 //
-// speaks the line protocol of design 06 §3.2 on stdin/stdout, for the runner:
-// {"op":"hang"} and {"op":"chay","ca":{...},"lap":n}. `hieu` and `dem_hang`
-// belong to slices 9 and 15.
+// The model modes write the run directory under ~/.cache/rudi-bang-chung/eval/
+// (or --out, which must lie outside any git worktree) and print its path on
+// the last stdout line as {"thu_muc": ..., "trang_thai": ...}.
 package main
 
 import (
@@ -62,23 +71,24 @@ const (
 	raSai  = 2
 )
 
-const moHinhKichBan = "kich-ban"
-
-// moHinhChuaCo is every mode design 06 names that this slice has not built.
-var moHinhChuaCo = map[string]string{
-	"phat-lai": "lát 18 (cassette)",
-	"ghi":      "lát 18 (cassette)",
-	"that":     "lát 9 (lời gọi thật, cần Lead duyệt số lượng)",
-}
+const moHinhKichBan = aieval.MoHinhKichBan
 
 func chay(ctx context.Context, args []string, in io.Reader, out, errw io.Writer) int {
 	fs := flag.NewFlagSet("rudi-eval", flag.ContinueOnError)
 	fs.SetOutput(errw)
-	moHinh := fs.String("mo-hinh", "", "mô hình: kich-ban (lát này chỉ có chế độ này)")
+	moHinh := fs.String("mo-hinh", "", "mô hình: kich-ban | phat-lai | ghi | that")
 	bo := fs.String("bo", "", "file corpus; vắng thì đọc giao thức dòng JSON trên stdin")
 	kichBan := fs.String("kich-ban", "", "thư mục kịch bản stub; mặc định là ../kich_ban cạnh thư mục của corpus")
 	lap := fs.Int("lap", 1, "số lần chạy kịch bản đúng của mỗi ca")
-	chiBuoc := fs.String("chi-buoc", "", "chỉ chạy một chặng: hieu (router, bộ T1 có đầu ra kịch bản)")
+	chiBuoc := fs.String("chi-buoc", "", "chỉ chạy một chặng: hieu (router)")
+	var mh coMoHinh
+	fs.IntVar(&mh.tranGoi, "tran-goi", 0, "that/ghi: trần CỨNG số lời gọi nhà cung cấp (model + nhúng + xếp lại) Lead đã duyệt; bắt buộc, không có mặc định")
+	fs.BoolVar(&mh.duToan, "du-toan", false, "that/ghi: chỉ in dự toán lời gọi (JSON) rồi thoát, không dựng client")
+	fs.StringVar(&mh.out, "out", "", "thư mục gốc kho bằng chứng; mặc định ~/.cache/rudi-bang-chung/eval; phải nằm ngoài cây git")
+	fs.StringVar(&mh.bang, "bang", "", "phat-lai: thư mục lượt gốc (có manifest.json, bang-ghi.json, cham.jsonl)")
+	fs.StringVar(&mh.gia, "gia", "", "file giá model; mặc định testdata/gia-model.json của aieval cạnh corpus")
+	fs.StringVar(&mh.gitSHA, "git-sha", "", "SHA của cây đã build binary; mặc định đọc từ thông tin build")
+	fs.StringVar(&mh.cay, "cay", "", "trạng thái cây: sach | ban; mặc định đọc từ thông tin build")
 	if err := fs.Parse(args); err != nil {
 		return raSai
 	}
@@ -86,12 +96,13 @@ func chay(ctx context.Context, args []string, in io.Reader, out, errw io.Writer)
 		fmt.Fprintf(errw, "rudi-eval: tham số thừa %q\n", fs.Args())
 		return raSai
 	}
-	if lat, ok := moHinhChuaCo[*moHinh]; ok {
-		fmt.Fprintf(errw, "rudi-eval: --mo-hinh %s chưa có ở lát 6b; thuộc %s\n", *moHinh, lat)
-		return raSai
-	}
-	if *moHinh != moHinhKichBan {
-		fmt.Fprintf(errw, "rudi-eval: --mo-hinh phải là %s (có %q)\n", moHinhKichBan, *moHinh)
+	switch *moHinh {
+	case moHinhKichBan:
+	case aieval.MoHinhThat, aieval.MoHinhGhi, aieval.MoHinhPhatLai:
+		mh.cheDo, mh.bo, mh.kichBan, mh.lap, mh.chiBuoc = *moHinh, *bo, *kichBan, *lap, *chiBuoc
+		return chayMoHinh(ctx, mh, out, errw)
+	default:
+		fmt.Fprintf(errw, "rudi-eval: --mo-hinh phải là kich-ban, phat-lai, ghi hoặc that (có %q)\n", *moHinh)
 		return raSai
 	}
 	switch *chiBuoc {
@@ -173,7 +184,7 @@ func chayHieu(ctx context.Context, bo string, out, errw io.Writer) int {
 	}
 	for _, c := range b.Ca {
 		if len(c.Ra) == 0 {
-			fmt.Fprintf(errw, "rudi-eval: ca %s không có đầu ra kịch bản: bộ này đo router thật (--mo-hinh that, lát 9)\n", c.ID)
+			fmt.Fprintf(errw, "rudi-eval: ca %s không có đầu ra kịch bản: bộ này đo router thật (--mo-hinh that --chi-buoc hieu --tran-goi N)\n", c.ID)
 			return raSai
 		}
 	}

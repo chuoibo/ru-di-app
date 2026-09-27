@@ -1,0 +1,19 @@
+{
+  "ghi_chu": "GIÁ CẦN NGƯỜI XÁC NHẬN. Không ô nào dưới đây là giá thật: mọi giá để null cho tới khi chủ sản phẩm chép từ trang giá của Google (trang giá Gemini API) vào, dạng chuỗi số thập phân (ví dụ \"0.10\"), kèm nguon (đường dẫn trang) và ngay_xac_nhan (YYYY-MM-DD). Còn null thì rudi-eval in «chưa có giá» thay cho con số. Đơn vị là USD cho mỗi 1 triệu token; ty_gia_vnd (chuỗi, đồng cho 1 USD) là tuỳ chọn, để in thêm tổng bằng đồng. gemini-embedding-2 qua Gemini API không trả số token nên chi phí nhúng chưa tính được dù có giá.",
+  "don_vi": "USD",
+  "ty_gia_vnd": null,
+  "model": {
+    "gemini-3.5-flash-lite": {
+      "vao_moi_trieu": null,
+      "ra_moi_trieu": null,
+      "cache_moi_trieu": null,
+      "nguon": null,
+      "ngay_xac_nhan": null
+    },
+    "gemini-embedding-2": {
+      "vao_moi_trieu": null,
+      "nguon": null,
+      "ngay_xac_nhan": null
+    }
+  }
+}
