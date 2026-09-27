@@ -298,6 +298,78 @@
       ]
     },
     {
+      "canh": [],
+      "di_toi": [],
+      "man": "community",
+      "nhan": [],
+      "tep": [
+        "app/(tabs)/community.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "community/keeps",
+      "nhan": [],
+      "tep": [
+        "app/community/keeps.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "community/new",
+      "nhan": [],
+      "tep": [
+        "app/community/new.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "community/notifications",
+      "nhan": [],
+      "tep": [
+        "app/community/notifications.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "community/posts/[id]",
+      "nhan": [],
+      "tep": [
+        "app/community/posts/[id].tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "community/review",
+      "nhan": [],
+      "tep": [
+        "app/community/review.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "community/search",
+      "nhan": [],
+      "tep": [
+        "app/community/search.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "community/topic",
+      "nhan": [],
+      "tep": [
+        "app/community/topic.tsx"
+      ]
+    },
+    {
       "canh": [
         {
           "den": "hai-nguoi/chon-nguoi",
@@ -358,6 +430,17 @@
       "tep": [
         "app/destinations/index.tsx",
         "src/rudi/screens/explore/DiemDenScreen.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [
+        "welcome"
+      ],
+      "man": "diaries/[id]",
+      "nhan": [],
+      "tep": [
+        "app/diaries/[id].tsx"
       ]
     },
     {
@@ -1352,12 +1435,17 @@
           "nhan": "Thành viên nhóm"
         },
         {
+          "den": "outings/[id]/ending",
+          "nhan": "Giữ lại cuộc đi"
+        },
+        {
           "den": "smart-split/[id]/review",
           "nhan": "Chia bill buổi này"
         }
       ],
       "di_toi": [
         "groups/[id]/members",
+        "outings/[id]/ending",
         "places/[id]",
         "plan",
         "smart-split/[id]/review",
@@ -1376,6 +1464,7 @@
         "Chặng mới",
         "Chặng …",
         "Ghép thứ tự nháp vào bản mới",
+        "Giữ lại cuộc đi",
         "Giữ tay nắm bên phải rồi kéo để đổi thứ tự. Giờ hẹn không đổi khi bạn đổi thứ tự.",
         "Gắn địa điểm",
         "Gắn địa điểm cho «",
@@ -1408,6 +1497,17 @@
       "tep": [
         "app/outings/[id]/index.tsx",
         "src/rudi/screens/keo/OutingLive.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [
+        "welcome"
+      ],
+      "man": "outings/[id]/ending",
+      "nhan": [],
+      "tep": [
+        "app/outings/[id]/ending.tsx"
       ]
     },
     {
@@ -1814,15 +1914,22 @@
         "Báo cáo bài này",
         "Báo cáo bài đăng",
         "Bình luận",
+        "Chia sẻ lên cộng đồng",
         "Chưa có bình luận",
         "Chưa mở được bài",
         "Chưa tải được ảnh",
         "Chưa đọc được bình luận",
+        "Gửi bài cũ lên cộng đồng",
+        "Gửi bài lên cộng đồng",
         "Gửi bình luận",
+        "Trong lúc chờ duyệt, chỉ bạn thấy bài này. Khi được duyệt, mọi người có thể xem và bình luận.",
         "Tải thêm bình luận",
         "Viết bình luận…",
         "Xoá bình luận: …",
+        "Xác nhận gửi duyệt",
         "Ô viết bình luận",
+        "Đang mở bài",
+        "Để sau",
         "Ảnh bài đăng"
       ],
       "tep": [
@@ -1833,6 +1940,7 @@
     {
       "canh": [],
       "di_toi": [
+        "community/new",
         "people/[id]"
       ],
       "man": "posts/new",
@@ -1848,6 +1956,8 @@
         "Một tấm ảnh, nếu muốn. Ai đọc được bài thì xem được ảnh.",
         "Mức người đọc: …",
         "Nhóm nào?",
+        "Thử lại",
+        "Đang mở trang viết",
         "Đăng",
         "Đăng bài",
         "Ảnh đã chọn"

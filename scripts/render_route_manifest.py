@@ -187,6 +187,7 @@ def _ordered(row: dict) -> dict:
         "in_memory",
         "state",
         "evidence",
+        "native",
     )
     optional = {"in_memory", "evidence"}
     return {
@@ -199,7 +200,8 @@ def _ordered(row: dict) -> dict:
 def build(previous: dict | None, prune: bool) -> dict:
     rows = _app_rows()
     old = {r["id"]: r for r in (previous or {}).get("routes", [])}
-    gone = sorted(set(old) - {row["id"] for row in rows})
+    native = [r for r in old.values() if r.get("native")]
+    gone = sorted(set(old) - {row["id"] for row in rows} - {r["id"] for r in native})
     if gone and not prune:
         raise SystemExit(f"routes left the app, rerun with --prune if intended: {gone}")
     for row in rows:
@@ -208,6 +210,9 @@ def build(previous: dict | None, prune: bool) -> dict:
         for field in CARRIED_FIELDS:
             if field in carried:
                 row[field] = carried[field]
+    for row in native:
+        row["order"] = len(rows)
+        rows.append(row)
     rendered = {"schema": 1, "routes": [_ordered(row) for row in rows]}
     # Go-only feature routes (internal/featureroute) are not in the Python app,
     # so this script cannot render them. They are carried over verbatim; the

@@ -36,6 +36,7 @@ var (
 
 // Route is one manifest row.
 type Route struct {
+	Native   bool     `json:"native,omitempty"`
 	ID       string   `json:"id"`
 	Order    int      `json:"order"`
 	Kind     string   `json:"kind"`
@@ -124,13 +125,13 @@ func (m *Manifest) validate() error {
 		if r.Owner != OwnerPython && r.Owner != OwnerGo {
 			return fmt.Errorf("%s: owner = %q", where, r.Owner)
 		}
-		if r.Python != PythonLive && r.Python != PythonFrozen {
+		if r.Python != PythonLive && r.Python != PythonFrozen && !(r.Native && r.Python == "absent") {
 			return fmt.Errorf("%s: python = %q", where, r.Python)
 		}
 		if (r.Owner == OwnerGo) != goServedStates[r.State] {
 			return fmt.Errorf("%s: owner %q does not match state %q", where, r.Owner, r.State)
 		}
-		if (r.Python == PythonFrozen) != pythonFrozenStates[r.State] {
+		if !r.Native && (r.Python == PythonFrozen) != pythonFrozenStates[r.State] {
 			return fmt.Errorf("%s: python %q does not match state %q", where, r.Python, r.State)
 		}
 		if r.Owner == OwnerGo && r.Evidence == "" {
@@ -243,7 +244,7 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 func (m *Manifest) GoServed(force Force) []Route {
 	var served []Route
 	for _, r := range m.Routes {
-		if r.Owner == OwnerGo && !force.All && !force.Routes[r.ID] {
+		if !r.Native && r.Owner == OwnerGo && !force.All && !force.Routes[r.ID] {
 			served = append(served, r)
 		}
 	}

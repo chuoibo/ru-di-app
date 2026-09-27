@@ -1,0 +1,51 @@
+# Requires a real synthetic session and the community tab already open.
+# Run against the dedicated QA application, not the fixture smoke suite.
+appId: com.lakiet.rudi
+---
+- extendedWaitUntil:
+    visible: "Dành cho bạn"
+    timeout: 30000
+- tapOn:
+    text: "Để sau"
+    optional: true
+- tapOn: "Đăng khoảnh khắc"
+- extendedWaitUntil:
+    visible:
+      id: "community-body"
+    timeout: 15000
+- tapOn:
+    id: "community-body"
+- inputText: "Synthetic E2E: di dao quanh ho cung ban be."
+- hideKeyboard
+- takeScreenshot: community-composer
+- scrollUntilVisible:
+    element:
+      text: "Gửi lên cộng đồng"
+    direction: DOWN
+- tapOn: "Gửi lên cộng đồng"
+- extendedWaitUntil:
+    visible: "Một câu chuyện"
+    timeout: 30000
+- assertVisible: "Đang chờ duyệt.*"
+- takeScreenshot: community-pending
+- tapOn: "Thêm lựa chọn cho bài"
+- tapOn: "Cất lại cho bạn bè"
+- extendedWaitUntil:
+    visible: ".*Bạn bè"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      text: "Bình luận"
+    direction: DOWN
+- tapOn: "Bình luận"
+- inputText: "Synthetic E2E: hen chuyen sau."
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      text: "Gửi bình luận"
+    direction: DOWN
+- tapOn: "Gửi bình luận"
+- extendedWaitUntil:
+    visible: "Synthetic E2E: hen chuyen sau."
+    timeout: 15000
+- takeScreenshot: community-comment

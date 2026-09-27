@@ -107,6 +107,20 @@ def test_ready_answers_with_the_token(brain_client):
     assert response.json() == {"status": "ready"}
 
 
+def test_diary_brain_requires_internal_authority(brain_client, monkeypatch):
+    client, _app = brain_client
+    path = "/internal/brain/v1/diary"
+    assert client.post(path, json={}).status_code == 401
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    response = client.post(
+        path,
+        headers={INTERNAL_TOKEN_HEADER: TEST_TOKEN},
+        json={"source": {}, "images": []},
+    )
+    assert response.status_code == 502
+    assert response.json() == {"code": "diary_ai_unavailable"}
+
+
 def test_capabilities_require_internal_token_and_never_return_key(
     brain_client, monkeypatch
 ):

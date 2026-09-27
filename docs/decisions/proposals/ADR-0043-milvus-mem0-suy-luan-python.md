@@ -234,6 +234,10 @@
 - **Cột nhắc người chưa được xoá theo tài khoản**, không thuộc `nepnho`: `chat_ai_invocations`,
   `chat_plan_promotions`, `chat_shared_drafts` (chatassist), `chat_v2_devices`, `chat_v2_events`
   (chatv2). `nepnho.CotNguoiGo` liệt kê chúng là `chua`. Gói sở hữu phải tự làm.
+  Sau khi gộp bảng tin cộng đồng của `main`: mười ba cột nhắc người của `community` (trigger
+  `community_erase` của chính gói xoá, chưa có test nào đếm lại sau khi xoá tài khoản) và ba cột của
+  `diary` (`outing_diaries`, `outing_diary_jobs` do trigger `diary_erase_for_account` xoá, test
+  postgres của `diary` đếm; `outing_endings.ended_by` chưa được xoá) cũng được liệt kê là `chua`.
 
 ## 6. Bằng chứng (lúc soạn)
 

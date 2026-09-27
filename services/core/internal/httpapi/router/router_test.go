@@ -129,6 +129,19 @@ func TestMatchesStarletteGoldens(t *testing.T) {
 		t.Errorf("%d of %d cases disagree with Starlette", mismatches, len(cases))
 	}
 	for _, row := range routes {
+		if row.Native {
+			// Go-native routes have no Python oracle. Exercise the actual
+			// matcher for every manifest entry instead of forging goldens.
+			path := row.Path
+			for _, name := range []string{"outing", "diary", "job", "person", "photo"} {
+				path = strings.ReplaceAll(path, "{"+name+"}", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+			}
+			match, ok := r.FirstFull(row.Method, path)
+			if !ok || match.Route.ID != row.ID {
+				t.Errorf("native route %s did not match: %+v", row.ID, match)
+			}
+			continue
+		}
 		if !fullRoutes[row.ID] {
 			t.Errorf("no golden case FULL-matches %q", row.ID)
 		}

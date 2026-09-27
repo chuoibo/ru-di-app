@@ -1,0 +1,15 @@
+# Requires the author's synthetic session and the public text-only legacy reader open.
+appId: com.lakiet.rudi
+---
+- extendedWaitUntil:
+    visible: "Chia sẻ lên cộng đồng"
+    timeout: 30000
+- tapOn: "Chia sẻ lên cộng đồng"
+- assertVisible: "Gửi bài lên cộng đồng"
+- assertVisible: "Trong lúc chờ duyệt.*"
+- tapOn: "Xác nhận gửi duyệt"
+- extendedWaitUntil:
+    visible: "Một câu chuyện"
+    timeout: 30000
+- assertVisible: "Đang chờ duyệt.*"
+- takeScreenshot: community-legacy-pending

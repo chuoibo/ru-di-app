@@ -43,6 +43,11 @@
       "where": "apps/mobile/src/api.ts :: string>",
       "count": 2,
       "reason": "Cùng một hạn chế: khai báo 'export async function translatedAsActor<T>(' và 'export async function translatedAnonymous<T>(' bị đọc thành lời gọi. Xem ghi chú ở mục ngay trên."
+    },
+    {
+      "where": "apps/mobile/src/rudi/community/api.ts :: uri",
+      "count": 1,
+      "reason": "Đọc byte ảnh/video cục bộ do Expo picker trả về để upload. Không là URL API; endpoint upload /v2/community/media vẫn được kiểm hợp đồng."
     }
   ]
 }

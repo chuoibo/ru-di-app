@@ -215,6 +215,50 @@ def companion_reply(
         raise _code_error(502, "companion_unavailable") from None
 
 
+@router.post("/diary")
+def diary_compose(
+    body: dict,
+    _: Annotated[None, Depends(require_internal_token)],
+) -> dict:
+    """Compose a diary from caller-approved sources; inference only."""
+    from app.api.diary_gemini import compose_diary
+
+    try:
+        return compose_diary(body)
+    except ValueError:
+        raise _code_error(422, "invalid_diary_source") from None
+    except Exception:
+        raise _code_error(502, "diary_ai_unavailable") from None
+
+
+@router.post("/community-moderate")
+def community_moderate(
+    body: dict,
+    _: Annotated[None, Depends(require_internal_token)],
+) -> dict:
+    """Infer relevance and safety; Go retains all publication authority."""
+    from app.api.community_inference import infer_community
+
+    try:
+        return infer_community("moderate", body)
+    except Exception:
+        raise _code_error(502, "community_ai_unavailable") from None
+
+
+@router.post("/community-nep")
+def community_nep(
+    body: dict,
+    _: Annotated[None, Depends(require_internal_token)],
+) -> dict:
+    """Return a draft from the explicitly confirmed excerpt only."""
+    from app.api.community_inference import infer_community
+
+    try:
+        return infer_community("nep", body)
+    except Exception:
+        raise _code_error(502, "community_ai_unavailable") from None
+
+
 @router.post("/nep-reply")
 def nep_reply(
     body: dict,

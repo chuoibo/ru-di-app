@@ -111,7 +111,16 @@
     "Đã gửi lời mời tới Ban QA",
     "Đã mời Ban QA",
     "Đăng nhập bằng số điện thoại",
-    "Ảnh: Anh tu QA"
+    "Ảnh: Anh tu QA",
+    "3 / 40 ảnh đã chọn",
+    "Chọn ảnh ${PHOTO_DAY}",
+    "Cùng 1 người bạn",
+    "Hai ngày gom nắng",
+    "Một chiều có nhau",
+    "Mở Hai ngày gom nắng",
+    "Photo taken.*",
+    "Video taken.*",
+    "Đưa trang 2 lên trước"
   ],
   "id": [],
   "anh": [
@@ -280,9 +289,40 @@
     "48-da-thanh-keo",
     "48-hoi-truoc-khi-bo",
     "48-khay-to-hen",
-    "91-deeplink-opens-settlement"
+    "91-deeplink-opens-settlement",
+    "community-comment",
+    "community-composer",
+    "community-legacy-pending",
+    "community-native-photo-tag",
+    "community-native-video",
+    "community-pending",
+    "diary-01-ending",
+    "diary-02-sources",
+    "diary-03-book",
+    "diary-04-wall",
+    "diary-05-published",
+    "diary-06-moment-ending",
+    "diary-07-moment",
+    "diary-08-moment-saved",
+    "diary-11-ai-unavailable",
+    "diary-ai-draft",
+    "diary-ai-saved"
   ],
   "daXoa": {
     ".*đang im lặng.*": "ADR-0036 §2.1 xoá v1 tận gốc (main 2a602ba, #650): câu «… đang im lặng» không còn trong mã. Flow 40 và _30 giữ assertNotVisible để chặn nó quay lại."
+  },
+  "congDongMoi": {
+    "lyDo": "Flow mới cho cộng đồng và nhật ký thêm chuỗi dựng động/fixture tổng hợp/picker Android. Không đổi hay bỏ selector, không nới bộ quét, không thêm chuỗi thiếu của flow cũ.",
+    "nguon": {
+      "3 / 40 ảnh đã chọn": "EndingScreen: selected.length / 40",
+      "Chọn ảnh ${PHOTO_DAY}": "EndingScreen: caption || day; PHOTO_DAY do fixture cấp",
+      "Cùng 1 người bạn": "MentionPicker: selected.length",
+      "Hai ngày gom nắng": "Tên chuyến tổng hợp do lượt E2E cấp",
+      "Một chiều có nhau": "Tên cuộc hẹn tổng hợp do lượt E2E cấp",
+      "Mở Hai ngày gom nắng": "Wall: tên nhật ký từ fixture",
+      "Photo taken.*": "Nhãn trợ năng Android Photo Picker, không phải nhãn app",
+      "Video taken.*": "Nhãn trợ năng Android Photo Picker, không phải nhãn app",
+      "Đưa trang 2 lên trước": "EndingScreen: chỉ số trang i + 1"
+    }
   }
 }

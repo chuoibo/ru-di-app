@@ -127,7 +127,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
     >
       <TopBar title="Thả khoảnh khắc" />
       <Heading
-        subtitle={laDoi ? `Ảnh và một câu, vào ${tenNhom}. Chỉ hai bạn thấy.` : `Ảnh và một câu, lên tường của ${tenNhom}. Chỉ thành viên nhóm thấy.`}
+        subtitle={laDoi ? `Ảnh và một câu, vào ${tenNhom}. Hai bạn xem được; mỗi người có thể chọn ảnh này vào diary công khai.` : `Ảnh và một câu, lên tường của ${tenNhom}. Hội mình xem được; thành viên có thể chọn ảnh này vào diary công khai.`}
         title={laDoi ? "Giữ một khoảnh khắc" : "Một khoảnh khắc cho nhóm"}
       />
       {placeId === null ? null : (

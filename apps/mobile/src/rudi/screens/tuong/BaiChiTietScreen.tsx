@@ -58,7 +58,7 @@ type TrangBl =
   | { pha: "xong"; danhSach: BinhLuanBai[]; conNua: boolean; conTro: string | null }
   | { pha: "hong"; loi: string };
 
-export function BaiChiTietScreen() {
+export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () => Promise<void> } = {}) {
   const router = useRouter();
   const { colors, dark, radius, space } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
@@ -74,6 +74,9 @@ export function BaiChiTietScreen() {
   // ADR-0023 §2.4: báo cáo bài của người khác. Nút nằm dưới cùng, sau bình
   // luận: nó là việc hiếm và không nên tranh chỗ với việc thường.
   const [baoCaoMo, setBaoCaoMo] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
   const toi = phien?.person_id ?? "";
 
@@ -236,6 +239,9 @@ export function BaiChiTietScreen() {
               );
             })}
           </View>
+          {onShareCommunity && bai.bai.author_id === toi && bai.bai.audience === "public" && !bai.bai.image_url ? (
+            <RudiButton label="Chia sẻ lên cộng đồng" accessibilityLabel="Chia sẻ lên cộng đồng" icon="people-outline" variant="outline" onPress={() => { setShareError(null); setShareOpen(true); }} />
+          ) : null}
         </View>
       ) : null}
       {bai.pha === "xong" ? <Text style={[typography.label, { color: colors.ink }]}>Bình luận</Text> : null}
@@ -310,6 +316,17 @@ export function BaiChiTietScreen() {
             targetId={bai.bai.id}
           />
         ) : null}
+      </Sheet>
+      <Sheet accessibilityLabel="Gửi bài cũ lên cộng đồng" onClose={() => { if (!shareBusy) setShareOpen(false); }} open={shareOpen}>
+        <Text style={[typography.h2, { color: colors.ink }]}>Gửi bài lên cộng đồng</Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Trong lúc chờ duyệt, chỉ bạn thấy bài này. Khi được duyệt, mọi người có thể xem và bình luận.</Text>
+        {shareError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.warn }]}>{shareError}</Text> : null}
+        <RudiButton label="Xác nhận gửi duyệt" loading={shareBusy} disabled={shareBusy} onPress={() => {
+          if (!onShareCommunity || shareBusy) return;
+          setShareBusy(true); setShareError(null);
+          void onShareCommunity().catch((error) => { setShareError(loiRaChu(error)); }).finally(() => setShareBusy(false));
+        }} />
+        <RudiButton label="Để sau" variant="ghost" disabled={shareBusy} onPress={() => setShareOpen(false)} />
       </Sheet>
     </RudiScreen>
   );

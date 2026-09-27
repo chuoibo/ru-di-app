@@ -9,9 +9,12 @@ const (
 	// tai_khoan deletion completed (trigger nep_xoa_nguoi, then the memory
 	// lane for what the sidecar holds).
 	Xoa CachXoa = "xoa"
-	// Chua: not erased by account deletion yet, and not nepnho's to erase
-	// (one writer per table). Named here so the gap is on a list with its
-	// owner, not silent; each is on the open list of ADR-0043.
+	// Chua: not erased by nepnho and not nepnho's to erase (one writer per
+	// table): either not erased by account deletion yet, or erased by the
+	// owning package's own trigger, which this gate does not count (the reason
+	// says which, and names the owner's test when one exists). Named here so
+	// the gap is on a list with its owner, not silent; each is on the open
+	// list of ADR-0043.
 	Chua CachXoa = "chua"
 )
 
@@ -39,4 +42,24 @@ var CotNguoiGo = []CotNguoi{
 	{"chat_shared_drafts", "created_by", Chua, "chatassist: who started a shared sheet"},
 	{"chat_v2_devices", "person_id", Chua, "chatv2 (lab): device keys of the person (chat_v2_members reaches the person only through a device); the E2EE rollout owns their erasure"},
 	{"chat_v2_events", "actor_id", Chua, "chatv2 (lab): who caused a room event; ids only, no plaintext"},
+	// internal/community (ADR-0040): its trigger community_erase (schema.sql)
+	// deletes these rows, or nulls the audit actor, when people.deleted_at is
+	// set. No community test counts them after a deletion yet.
+	{"community_moderators", "person_id", Chua, "community: moderator grant; deleted by community's own trigger community_erase, not counted by any test yet"},
+	{"community_media", "owner_id", Chua, "community: uploaded media rows (the storage GC is queued by community_media_gc); deleted by community_erase, not counted by any test yet"},
+	{"community_comment_drafts", "author_id", Chua, "community: comments awaiting moderation, with their text; deleted by community_erase, not counted by any test yet"},
+	{"community_follows", "person_id", Chua, "community: who follows whom (a person target is text, erased by the same trigger); deleted by community_erase, not counted by any test yet"},
+	{"community_preferences", "person_id", Chua, "community: feed preferences; deleted by community_erase, not counted by any test yet"},
+	{"community_keeps", "person_id", Chua, "community: saved posts; deleted by community_erase, not counted by any test yet"},
+	{"community_feeds", "person_id", Chua, "community: ranked feed snapshots; deleted by community_erase, not counted by any test yet"},
+	{"community_feedback", "person_id", Chua, "community: feed feedback; deleted by community_erase, not counted by any test yet"},
+	{"community_interactions", "person_id", Chua, "community: interaction signals for ranking; deleted by community_erase, not counted by any test yet"},
+	{"community_audit", "actor_id", Chua, "community: moderation audit trail; the actor is set NULL by community_erase (the FK is ON DELETE SET NULL), not counted by any test yet"},
+	{"community_notifications", "person_id", Chua, "community: notifications; deleted by community_erase, not counted by any test yet"},
+	{"community_idempotency", "person_id", Chua, "community: idempotency keys; deleted by community_erase, not counted by any test yet"},
+	{"community_limits", "person_id", Chua, "community: rate-limit counters; deleted by community_erase, not counted by any test yet"},
+	// internal/diary (ADR-0039).
+	{"outing_diaries", "owner_id", Chua, "diary: memory books (versions and photos cascade); deleted by diary's own trigger diary_erase_for_account, counted by diary's TestPostgresAccountErasurePurgesBooksVersionsAndJobs"},
+	{"outing_diary_jobs", "owner_id", Chua, "diary: AI jobs holding the excerpts sent for a book; deleted by diary_erase_for_account, counted by the same diary test"},
+	{"outing_endings", "ended_by", Chua, "diary: who closed an outing (the FK has no ON DELETE); not erased by account deletion yet: an id only, no text of the person"},
 }

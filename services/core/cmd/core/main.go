@@ -54,8 +54,10 @@ import (
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
 	"mobile/services/core/internal/chatlegacychange"
+	"mobile/services/core/internal/community"
 	"mobile/services/core/internal/config"
 	"mobile/services/core/internal/db"
+	"mobile/services/core/internal/diary"
 	"mobile/services/core/internal/googleid"
 	"mobile/services/core/internal/httpapi/dispatch"
 	"mobile/services/core/internal/httpapi/endpoint"
@@ -101,6 +103,12 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return listRoutes(args[1:], stdout, stderr)
 	case "features":
 		return listFeatures(args[1:], stdout, stderr)
+	case "migrate-diaries":
+		return migrateDiaries(getenv, stdout, stderr)
+	case "migrate-community":
+		return migrateCommunity(getenv, stdout, stderr)
+	case "community-media-worker":
+		return communityMediaWorker(getenv, stderr)
 	case "migrate-chat", "migrate-chat-candidate":
 		return migrateChat(getenv, stdout, stderr)
 	case "migrate-rag":
@@ -383,6 +391,42 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				return
 			}
 			fallback.ServeHTTP(w, r)
+		})
+	}
+	if pool != nil && cfg.AuthMode == "prod" {
+		if getenv("MOBILE_COMMUNITY_ENABLED") == "1" {
+			check, cancel := context.WithTimeout(ctx, 10*time.Second)
+			err := community.CheckSchema(check, pool)
+			cancel()
+			if err != nil {
+				logger.Error("refusing to start", "error", err.Error())
+				return 1
+			}
+			social := community.New(pool, brain.Configured(), strings.Split(origins, ","))
+			go social.Run(chatCtx)
+			inner := front
+			feature := cors.New(origins, origins != "").Middleware(social)
+			front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if community.Matches(r.URL.Path) {
+					feature.ServeHTTP(w, r)
+					return
+				}
+				if social.GuardLegacy(w, r) {
+					return
+				}
+				inner.ServeHTTP(w, r)
+			})
+		}
+		books := diary.New(pool, brain.Configured())
+		go books.Run(chatCtx)
+		inner := front
+		feature := cors.New(origins, origins != "").Middleware(books)
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if diary.Matches(r.URL.Path) {
+				feature.ServeHTTP(w, r)
+				return
+			}
+			inner.ServeHTTP(w, r)
 		})
 	}
 	if pool != nil {
@@ -994,6 +1038,12 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 	for _, id := range routes.ImplementedIDs() {
 		implemented[id] = true
 	}
+	for _, pattern := range diary.Patterns {
+		implemented[pattern] = true
+	}
+	for _, pattern := range community.Patterns {
+		implemented[pattern] = true
+	}
 	views := []routeView{}
 	for _, r := range manifest.Routes {
 		if implemented[r.ID] {
@@ -1205,4 +1255,58 @@ func purgeExpired(args []string, getenv func(string) string, stdout, stderr io.W
 		case <-time.After(*every):
 		}
 	}
+}
+
+func migrateCommunity(getenv func(string) string, stdout, stderr io.Writer) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "community migration: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = community.Migrate(ctx, pool); err != nil {
+		fmt.Fprintln(stderr, "community migration failed:", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Đã áp dụng migration cộng đồng. Bật MOBILE_COMMUNITY_ENABLED sau các cổng kiểm chứng.")
+	return 0
+}
+
+func communityMediaWorker(getenv func(string) string, stderr io.Writer) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "community media: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = community.CheckSchema(ctx, pool); err != nil {
+		fmt.Fprintln(stderr, "community media worker:", err)
+		return 1
+	}
+	if err = community.New(pool, nil, nil).RunMedia(ctx); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	return 0
+}
+
+func migrateDiaries(getenv func(string) string, stdout, stderr io.Writer) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "diary migration: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = diary.Migrate(ctx, pool); err != nil {
+		fmt.Fprintln(stderr, "diary migration failed:", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Đã áp dụng migration ending và sổ kỷ niệm.")
+	return 0
 }

@@ -8,6 +8,8 @@
     "target": "es2022"
   },
   "include": [
+    "src/rudi/community/api.ts",
+    "src/rudi/diary/api.ts",
     // QA 23/09: the placeholder-name check (held equal to both server spellings)
     // and the invite-by-number steps (a 403 rename no longer aborts the invite).
     "src/rudi/ten-giu-cho.ts",
