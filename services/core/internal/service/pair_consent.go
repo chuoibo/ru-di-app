@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"mobile/services/core/internal/domain/pairnotebook"
@@ -54,4 +55,43 @@ func PairChatConsent(ctx context.Context, r repo.Repository, contextID string, n
 	pair := PairNotebookOf(notebook)
 	answer := pairnotebook.ChatConsentActive(pairsteps.ConsentsOf(pair), pairsteps.Participants(pair, members), now)
 	return &answer, nil
+}
+
+// PairTasteSharers is ApiService._pair_taste_sharers: nil when the context is
+// not a pair; otherwise the participants whose `chia_gu` is on now (ADR-0034
+// §2.1). Asked at every read, never cached.
+func PairTasteSharers(ctx context.Context, r repo.Repository, contextID string, now time.Time) (map[string]bool, error) {
+	record, err := r.GetContext(ctx, contextID)
+	if err != nil {
+		return nil, err
+	}
+	if record == nil || record.Kind != kindPair {
+		return nil, nil
+	}
+	sharers := map[string]bool{}
+	notebook, err := r.GetPairNotebook(ctx, contextID)
+	if err != nil {
+		return nil, err
+	}
+	if notebook == nil {
+		return sharers, nil
+	}
+	rows, err := r.ListMembers(ctx, contextID)
+	if err != nil {
+		return nil, err
+	}
+	members := []string{}
+	for _, row := range rows {
+		if row.State == "active" {
+			members = append(members, row.PersonID)
+		}
+	}
+	pair := PairNotebookOf(notebook)
+	consents := pairsteps.ConsentsOf(pair)
+	for _, person := range pairsteps.Participants(pair, members) {
+		if slices.Contains(pairnotebook.GrantedBy(consents, person, &now), "chia_gu") {
+			sharers[person] = true
+		}
+	}
+	return sharers, nil
 }

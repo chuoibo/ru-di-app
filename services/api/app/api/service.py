@@ -1163,6 +1163,31 @@ class ApiService:
             now=_now(),
         )
 
+    def _pair_taste_sharers(self, context_id: uuid.UUID) -> frozenset[str] | None:
+        """`None` when this is not a pair; otherwise who has `chia_gu` on, now.
+
+        Asked at every read, never cached, like the chat consent: revoking
+        takes effect on the next turn (ADR-0034 §2.1).
+        """
+        context = self.repository.get_context(context_id)
+        if context is None or context.kind != KIND_PAIR:
+            return None
+        notebook = self.repository.get_pair_notebook(context_id)
+        if notebook is None:
+            return frozenset()
+        members = tuple(
+            row.person_id
+            for row in self.repository.list_members(context_id)
+            if row.state == "active"
+        )
+        consents = _consents_as_dicts(notebook)
+        now = _now()
+        return frozenset(
+            str(person)
+            for person in self._participants(notebook, members)
+            if "chia_gu" in pair_notebook.granted_by(consents, str(person), now=now)
+        )
+
     def group_taste(self, context_id: uuid.UUID) -> TasteProfile:
         """One group's taste, summed from its ACTIVE members' own answers.
 
@@ -1191,6 +1216,16 @@ class ApiService:
             for member in self.repository.list_members(context_id)
             if member.state == "active"
         ]
+        # ADR-0034 §2.1–2.2: inside a pair, Nếp uses the taste of the people
+        # who turned `chia_gu` on, and nobody else's -- «không bật = không ai
+        # đọc gu người đó». The chat consent above stays as the first gate;
+        # this only narrows who is summed. Nobody sharing is «chưa biết», not
+        # an empty sum that would read as «thích gì cũng được».
+        sharers = self._pair_taste_sharers(context_id)
+        if sharers is not None:
+            people = [person for person in people if str(person) in sharers]
+            if not people:
+                return UNKNOWN
         interests = self.repository.interests_by_person(people)
         bands = self.repository.budget_bands_by_person(people)
         return profile_for_group(
