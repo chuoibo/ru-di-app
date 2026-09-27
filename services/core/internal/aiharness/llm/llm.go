@@ -19,9 +19,12 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/adk/model"
-	"google.golang.org/adk/model/gemini"
+	"google.golang.org/adk/v2/model"
+	"google.golang.org/adk/v2/model/gemini"
 	"google.golang.org/genai"
+
+	// Clears ADK's content-capture switch before any ADK call.
+	_ "mobile/services/core/internal/aiharness/otelchan"
 )
 
 // Model is the one model every text-producing step uses.
@@ -55,7 +58,7 @@ var (
 )
 
 // adkKhongUngVien is the message of the error ADK's gemini model returns for
-// a response with no candidates (google.golang.org/adk v1.7.0,
+// a response with no candidates (google.golang.org/adk/v2 v2.4.0,
 // model/gemini/gemini.go). TestGeminiChanCauHoi drives the real transport
 // into it, so an ADK upgrade that changes the message is red there.
 const adkKhongUngVien = "empty response"

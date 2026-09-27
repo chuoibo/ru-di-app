@@ -43,7 +43,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"google.golang.org/adk/model"
+	"google.golang.org/adk/v2/model"
 
 	"mobile/services/core/internal/aiharness/agent"
 	"mobile/services/core/internal/aiharness/cau"

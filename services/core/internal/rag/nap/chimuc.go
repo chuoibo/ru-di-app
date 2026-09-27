@@ -10,7 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/adk/model"
+	"google.golang.org/adk/v2/model"
 
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/repo"

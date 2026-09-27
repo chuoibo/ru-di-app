@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"google.golang.org/adk/model"
+	"google.golang.org/adk/v2/model"
 
 	"mobile/services/core/internal/aiharness"
 	aimetrics "mobile/services/core/internal/aiharness/metrics"

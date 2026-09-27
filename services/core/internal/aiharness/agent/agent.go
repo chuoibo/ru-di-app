@@ -15,13 +15,16 @@ import (
 	"strings"
 	"sync"
 
-	adkagent "google.golang.org/adk/agent"
-	"google.golang.org/adk/agent/llmagent"
-	"google.golang.org/adk/model"
-	"google.golang.org/adk/runner"
-	"google.golang.org/adk/session"
-	"google.golang.org/adk/tool"
+	adkagent "google.golang.org/adk/v2/agent"
+	"google.golang.org/adk/v2/agent/llmagent"
+	"google.golang.org/adk/v2/model"
+	"google.golang.org/adk/v2/runner"
+	"google.golang.org/adk/v2/session"
+	"google.golang.org/adk/v2/tool"
 	"google.golang.org/genai"
+
+	// Clears ADK's content-capture switch before any ADK call.
+	_ "mobile/services/core/internal/aiharness/otelchan"
 )
 
 // CauHinh is one bot's agent.
@@ -105,7 +108,7 @@ func AnToan() []*genai.SafetySetting {
 }
 
 func (t *TheoDoi) truocMoHinh(cfg CauHinh) llmagent.BeforeModelCallback {
-	return func(_ adkagent.CallbackContext, req *model.LLMRequest) (*model.LLMResponse, error) {
+	return func(_ adkagent.Context, req *model.LLMRequest) (*model.LLMResponse, error) {
 		t.mu.Lock()
 		t.Buoc++
 		b := t.Buoc
@@ -135,7 +138,7 @@ func (t *TheoDoi) truocMoHinh(cfg CauHinh) llmagent.BeforeModelCallback {
 	}
 }
 
-func (t *TheoDoi) sauMoHinh(_ adkagent.CallbackContext, resp *model.LLMResponse, _ error) (*model.LLMResponse, error) {
+func (t *TheoDoi) sauMoHinh(_ adkagent.Context, resp *model.LLMResponse, _ error) (*model.LLMResponse, error) {
 	if resp == nil {
 		return nil, nil
 	}
@@ -150,7 +153,34 @@ func (t *TheoDoi) sauMoHinh(_ adkagent.CallbackContext, resp *model.LLMResponse,
 	if resp.FinishReason != "" {
 		t.Finish = resp.FinishReason
 	}
+	if chiNghi(resp) {
+		// ADK v2 calls the model again after a thought-only reply (up to ten
+		// times, base_flow.go maxConsecutiveThoughtOnlyTurns), appending a
+		// synthetic «Continue processing…» user turn. v1 ended the turn on
+		// it with an empty answer, and the engine's budgets and replies were
+		// written against that: one empty text part makes the reply a final
+		// answer again, so the turn ends here exactly as it did.
+		out := *resp
+		c := *resp.Content
+		c.Parts = append(append([]*genai.Part(nil), resp.Content.Parts...), &genai.Part{Text: ""})
+		out.Content = &c
+		return &out, nil
+	}
 	return nil, nil
+}
+
+// chiNghi reports a complete reply whose every part is a thought: no text,
+// no function call.
+func chiNghi(resp *model.LLMResponse) bool {
+	if resp.Partial || resp.Content == nil || len(resp.Content.Parts) == 0 {
+		return false
+	}
+	for _, p := range resp.Content.Parts {
+		if p != nil && !p.Thought {
+			return false
+		}
+	}
+	return true
 }
 
 const (
@@ -206,7 +236,7 @@ func Chay(ctx context.Context, m model.LLM, cfg CauHinh, luot []Luot, cuoi strin
 		return "", err
 	}
 	for _, l := range luot {
-		ev := session.NewEventWithContext(ctx, "truoc")
+		ev := session.NewEvent(ctx, "truoc")
 		role := genai.Role(genai.RoleUser)
 		ev.Author = "user"
 		if !l.Nguoi {

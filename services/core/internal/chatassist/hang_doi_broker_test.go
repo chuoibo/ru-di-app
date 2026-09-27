@@ -21,7 +21,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"google.golang.org/adk/model"
+	"google.golang.org/adk/v2/model"
 
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/brain"

@@ -7,7 +7,7 @@ import (
 	"iter"
 	"time"
 
-	"google.golang.org/adk/model"
+	"google.golang.org/adk/v2/model"
 	"google.golang.org/genai"
 
 	"mobile/services/core/internal/aiharness/llm"

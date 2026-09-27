@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/adk/agent"
-	"google.golang.org/adk/tool"
-	"google.golang.org/adk/tool/functiontool"
+	"google.golang.org/adk/v2/agent"
+	"google.golang.org/adk/v2/tool"
+	"google.golang.org/adk/v2/tool/functiontool"
 
 	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/hieu"
@@ -63,7 +63,7 @@ func dk[A any](t Ten, kiem func(*BoiCanh, *A) *loiTS, chay func(context.Context,
 			Name:        string(t),
 			Description: MoTaDay(t),
 			InputSchema: r.Schema(),
-		}, func(tc agent.ToolContext, a A) (map[string]any, error) {
+		}, func(tc agent.Context, a A) (map[string]any, error) {
 			// The arguments already passed truoc (BeforeTool). They are
 			// checked once more here because the check also resolves
 			// aliases and merges constraints into fields ADK's decode

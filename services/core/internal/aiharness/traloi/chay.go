@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"google.golang.org/adk/model"
+	"google.golang.org/adk/v2/model"
 
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/cautruc"

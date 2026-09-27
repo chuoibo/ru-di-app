@@ -135,7 +135,7 @@ func TestKhongDungClientGenai(t *testing.T) {
 		"new.go":    "package x\nimport \"mobile/services/core/internal/aiharness/llm\"\nfunc f() { llm.NewGemini(nil, \"\", \"\") }\n",
 		"engine.go": "package x\nimport \"mobile/services/core/internal/aiharness\"\nfunc f() { aiharness.FromEnv(nil, nil, nil) }\n",
 		"genai.go":  "package x\nimport g \"google.golang.org/genai\"\nfunc f() { g.NewClient(nil, nil) }\n",
-		"adk.go":    "package x\nimport \"google.golang.org/adk/model/gemini\"\n",
+		"adk.go":    "package x\nimport \"google.golang.org/adk/v2/model/gemini\"\n",
 		"getenv.go": "package x\nimport \"os\"\nfunc f() { _ = os.Getenv(\"X\") }\n",
 		"key.go":    "package x\nconst k = \"GEMINI_API_KEY\"\n",
 		"keyref.go": "package x\nimport \"mobile/services/core/internal/aiharness/llm\"\nvar k = llm.EnvAPIKey\n",
@@ -153,7 +153,7 @@ var (
 		"google.golang.org/genai":                     {"NewClient": true},
 		"os":                                          {"Getenv": true, "LookupEnv": true, "Environ": true},
 	}
-	importCam = []string{"google.golang.org/adk/model/gemini"}
+	importCam = []string{"google.golang.org/adk/v2/model/gemini"}
 	chuoiCam  = regexp.MustCompile(`GEMINI_API_KEY|GOOGLE_API_KEY|MOBILE_GEMINI_BASE_URL|GOOGLE_GEMINI_BASE_URL`)
 )
 

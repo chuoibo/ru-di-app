@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/adk/model"
+	"google.golang.org/adk/v2/model"
 
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/crag"

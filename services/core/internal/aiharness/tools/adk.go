@@ -1,8 +1,8 @@
 package tools
 
 import (
-	"google.golang.org/adk/agent"
-	"google.golang.org/adk/tool"
+	"google.golang.org/adk/v2/agent"
+	"google.golang.org/adk/v2/tool"
 )
 
 // BoCongCu builds the turn's ADK tools: one functiontool per tool the bot
@@ -27,14 +27,14 @@ func (bc *BoiCanh) BoCongCu() ([]tool.Tool, error) {
 // TruocTool is the llmagent BeforeToolCallback: a non-nil map is the
 // tool's answer and the tool does not run (a refusal, or the first result
 // of an identical call).
-func (bc *BoiCanh) TruocTool(_ agent.ToolContext, t tool.Tool, args map[string]any) (map[string]any, error) {
+func (bc *BoiCanh) TruocTool(_ agent.Context, t tool.Tool, args map[string]any) (map[string]any, error) {
 	return bc.truoc(t.Name(), args), nil
 }
 
 // SauTool is the llmagent AfterToolCallback: it records a finished call's
 // evidence in the ledger and renders it for the model. A refusal or an
 // error answer passes through unchanged.
-func (bc *BoiCanh) SauTool(tc agent.ToolContext, t tool.Tool, args, _ map[string]any, err error) (map[string]any, error) {
+func (bc *BoiCanh) SauTool(tc agent.Context, t tool.Tool, args, _ map[string]any, err error) (map[string]any, error) {
 	if err != nil {
 		return bc.loiChay(t.Name(), err), nil
 	}
@@ -48,7 +48,7 @@ func (bc *BoiCanh) SauTool(tc agent.ToolContext, t tool.Tool, args, _ map[string
 // toolset does not have (an invented or unpermitted tool) and for a run
 // that failed; the model gets a closed code, never the error's text or the
 // list of tools ADK would otherwise print.
-func (bc *BoiCanh) LoiTool(_ agent.ToolContext, t tool.Tool, _ map[string]any, err error) (map[string]any, error) {
+func (bc *BoiCanh) LoiTool(_ agent.Context, t tool.Tool, _ map[string]any, err error) (map[string]any, error) {
 	ten := t.Name()
 	ok := false
 	if x, e := Tens.Parse(ten); e == nil {

@@ -5,6 +5,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -23,12 +24,14 @@ import (
 //
 // What this gate checks, and what it does not. The core binary DOES link
 // OpenTelemetry: the otel API and its global tracer, ADK's internal
-// telemetry (adk/internal/telemetry), otelhttp, and go.opentelemetry.io/
+// telemetry (adk/v2/internal/telemetry, and since v2 the workflow engine's
+// node spans), otelhttp, and go.opentelemetry.io/
 // auto/sdk -- which the global tracer itself imports
 // (otel/internal/global/trace.go) so that an eBPF auto-instrumentation agent
 // can attach to the process and flip it on at run time, exporting ADK's spans
 // with no code change and no provider installed. The gate forbids, on the
-// source, importing the SDK, an exporter, ADK's telemetry setup or
+// source, importing the SDK, an exporter, ADK's telemetry setup (v1 and v2),
+// ADK v2's REST server (its debug telemetry installs an SDK exporter) or
 // go.opentelemetry.io/auto, and calling a Set…Provider; on the linked graph,
 // the SDK and the exporters, and auto/sdk reached from anywhere but the otel
 // API. It cannot see a process being instrumented from outside, so that half
@@ -41,6 +44,9 @@ var otelForbidden = []string{
 	"go.opentelemetry.io/otel/sdk",
 	"go.opentelemetry.io/otel/exporters",
 	"google.golang.org/adk/telemetry",
+	"google.golang.org/adk/v2/telemetry",
+	"google.golang.org/adk/v2/server",
+	"go.opentelemetry.io/contrib/detectors",
 	"go.opentelemetry.io/contrib/exporters",
 }
 
@@ -162,7 +168,7 @@ func TestCoreBinaryDoesNotLinkOtelSDK(t *testing.T) {
 	for _, p := range pkgs {
 		walk(p)
 	}
-	for _, must := range []string{"google.golang.org/adk/agent/llmagent", "go.opentelemetry.io/otel"} {
+	for _, must := range []string{"google.golang.org/adk/v2/agent/llmagent", "go.opentelemetry.io/otel"} {
 		if !seen[must] {
 			t.Fatalf("%s is not in core's graph; the walk is broken (%d packages)", must, len(seen))
 		}
@@ -182,12 +188,82 @@ func TestCoreBinaryDoesNotLinkOtelSDK(t *testing.T) {
 	t.Logf("auto/sdk in the graph: %v, imported by %v", seen[otelAutoForbidden+"/sdk"], importers[otelAutoForbidden+"/sdk"])
 }
 
+// ADK v2 records whole prompts and answers when
+// OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT asks it to
+// (adk/v2/internal/telemetry/logger.go). Every non-test package of the module
+// that imports ADK has otelchan, which clears that variable at init, among
+// its dependencies, so content capture stays off whatever the host's
+// environment holds; and no other non-test source names the variable.
+func TestEveryADKUserClearsContentCapture(t *testing.T) {
+	pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName | packages.NeedImports | packages.NeedDeps | packages.NeedFiles, Dir: "../.."}, "./...")
+	if err != nil {
+		t.Fatal(err)
+	}
+	users := 0
+	for _, p := range pkgs {
+		if p.PkgPath != otelChan && adkUser(p) {
+			users++
+			if !dependsOn(p, otelChan, map[string]bool{}) {
+				t.Errorf("%s imports ADK without %s", p.PkgPath, otelChan)
+			}
+		}
+		if p.PkgPath == otelChan {
+			continue
+		}
+		for _, f := range p.GoFiles {
+			b, err := os.ReadFile(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(string(b), otelCaptureEnv) {
+				t.Errorf("%s names %s; only %s may", f, otelCaptureEnv, otelChan)
+			}
+		}
+	}
+	if users < 10 {
+		t.Fatalf("only %d ADK users found; the walk is broken", users)
+	}
+}
+
+const (
+	otelChan       = module + "/internal/aiharness/otelchan"
+	otelCaptureEnv = "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+)
+
+func adkUser(p *packages.Package) bool {
+	for path := range p.Imports {
+		if path == "google.golang.org/adk/v2" || strings.HasPrefix(path, "google.golang.org/adk/v2/") {
+			return true
+		}
+	}
+	return false
+}
+
+func dependsOn(p *packages.Package, want string, seen map[string]bool) bool {
+	if p.PkgPath == want {
+		return true
+	}
+	if seen[p.PkgPath] {
+		return false
+	}
+	seen[p.PkgPath] = true
+	for _, imp := range p.Imports {
+		if dependsOn(imp, want, seen) {
+			return true
+		}
+	}
+	return false
+}
+
 // Canary: the source check is red on each thing it forbids.
 func TestOtelGateCanRed(t *testing.T) {
 	fset := token.NewFileSet()
 	for name, src := range map[string]string{
 		"sdk.go":    "package x\nimport _ \"go.opentelemetry.io/otel/sdk/trace\"\n",
-		"adk.go":    "package x\nimport _ \"google.golang.org/adk/telemetry\"\n",
+		"adk.go":    "package x\nimport _ \"google.golang.org/adk/v2/telemetry\"\n",
+		"adkv1.go":  "package x\nimport _ \"google.golang.org/adk/telemetry\"\n",
+		"rest.go":   "package x\nimport _ \"google.golang.org/adk/v2/server/adkrest\"\n",
+		"gcp.go":    "package x\nimport _ \"go.opentelemetry.io/contrib/detectors/gcp\"\n",
 		"auto.go":   "package x\nimport _ \"go.opentelemetry.io/auto/sdk\"\n",
 		"set.go":    "package x\nimport \"go.opentelemetry.io/otel\"\nfunc f() { otel.SetTracerProvider(nil) }\n",
 		"alias.go":  "package x\nimport o \"go.opentelemetry.io/otel\"\nfunc f() { o.SetTextMapPropagator(nil) }\n",

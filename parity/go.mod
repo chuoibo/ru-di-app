@@ -1,8 +1,8 @@
 module mobile/parity
 
-go 1.25.0
+go 1.26.6
 
-toolchain go1.25.14
+toolchain go1.26.8
 
 require (
 	github.com/jackc/pgx/v5 v5.7.1
