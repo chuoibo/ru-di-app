@@ -257,13 +257,21 @@ func (r Repository) ListPersonContextSummaries(ctx context.Context, personID str
 		createdAt           time.Time
 	}
 	var newest []newestRow
+	// One row per group through ix_messages_context_feed: a LATERAL LIMIT 1
+	// per context. DISTINCT ON over `context_id IN (...)` read every message
+	// of every group the person is in to keep one each.
 	messageRows, err := r.Q.Query(ctx,
-		`SELECT DISTINCT ON (messages.context_id) messages.id, messages.context_id, messages.author_id, messages.kind,
-		        messages.body, messages.image_url, messages.card, messages.reply_to_id, messages.deleted_at,
-		        messages.created_at
+		`SELECT anon_1.id, anon_1.context_id, anon_1.author_id, anon_1.kind, anon_1.body, anon_1.image_url,
+		        anon_1.card, anon_1.reply_to_id, anon_1.deleted_at, anon_1.created_at
+		   FROM contexts JOIN LATERAL (SELECT messages.id AS id, messages.context_id AS context_id,
+		        messages.author_id AS author_id, messages.kind AS kind, messages.body AS body,
+		        messages.image_url AS image_url, messages.card AS card, messages.reply_to_id AS reply_to_id,
+		        messages.deleted_at AS deleted_at, messages.created_at AS created_at
 		   FROM messages
-		  WHERE messages.context_id IN (`+uuidPlaceholders(1, n)+`)
-		  ORDER BY messages.context_id, messages.created_at DESC, messages.id DESC`, uuidArgs(contextIDs)...)
+		  WHERE messages.context_id = contexts.id ORDER BY messages.created_at DESC, messages.id DESC
+		  LIMIT $1::INTEGER) AS anon_1 ON true
+		  WHERE contexts.id IN (`+uuidPlaceholders(2, n)+`) ORDER BY anon_1.context_id`,
+		append([]any{1}, uuidArgs(contextIDs)...)...)
 	if err != nil {
 		return nil, err
 	}

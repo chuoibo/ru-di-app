@@ -19,25 +19,31 @@ type PlacePhoto struct {
 	ByteSize    int64
 	Width       int64
 	Height      int64
-	Author      string
-	License     string
-	SourceURL   string
-	Title       *string
-	SortOrder   int64
+	// Nil when the source cannot say. Feed frames are posts people published
+	// on a platform; who took them and under what terms is not recorded, and
+	// the catalogue decided to show them without a credit rather than invent
+	// one. Scanning NULL into a string is what made every read 500.
+	Author    *string
+	License   *string
+	SourceURL string
+	Title     *string
+	SortOrder int64
 }
 
 // Mapped column order of db.models.PlacePhoto, including created_at the
 // record type does not surface.
 const placePhotoColumns = `place_photos.id, place_photos.place_id, place_photos.storage_key,
 	place_photos.content_type, place_photos.byte_size, place_photos.width, place_photos.height,
-	place_photos.author, place_photos.license, place_photos.source_url, place_photos.title,
-	place_photos.sort_order, place_photos.created_at`
+	place_photos.author, place_photos.license, place_photos.source_url, place_photos.platform,
+	place_photos.post_id, place_photos.frame_second, place_photos.score, place_photos.subject,
+	place_photos.content_sha256, place_photos.title, place_photos.sort_order, place_photos.created_at`
 
 func scanPlacePhoto(row pgx.Row) (*PlacePhoto, error) {
 	var p PlacePhoto
 	var created time.Time
 	err := row.Scan(&p.ID, &p.PlaceID, &p.StorageKey, &p.ContentType, &p.ByteSize, &p.Width, &p.Height,
-		&p.Author, &p.License, &p.SourceURL, &p.Title, &p.SortOrder, &created)
+		&p.Author, &p.License, &p.SourceURL, new(any), new(any), new(any), new(any), new(any), new(any),
+		&p.Title, &p.SortOrder, &created)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -107,6 +113,42 @@ func (r Repository) PhotoCovers(ctx context.Context, placeIDs []string) (map[str
 		}
 	}
 	return out, rows.Err()
+}
+
+// PhotoCoversAndCounts is PhotoCovers and PhotoCounts in one statement: the
+// first photo of each place by (sort_order, id) and how many it has. One
+// round trip and one row per place, instead of two statements with one bind
+// parameter per place and every photo row shipped back to pick the first.
+func (r Repository) PhotoCoversAndCounts(ctx context.Context, placeIDs []string) (map[string]PlacePhoto, map[string]int64, error) {
+	covers, counts := map[string]PlacePhoto{}, map[string]int64{}
+	if len(placeIDs) == 0 {
+		return covers, counts, nil
+	}
+	rows, err := r.Q.Query(ctx,
+		`SELECT DISTINCT ON (place_photos.place_id) `+placePhotoColumns+`,
+		        count(*) OVER (PARTITION BY place_photos.place_id)
+		   FROM place_photos
+		  WHERE place_photos.place_id = ANY($1::VARCHAR[])
+		  ORDER BY place_photos.place_id, place_photos.sort_order, place_photos.id`,
+		placeIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p PlacePhoto
+		var n int64
+		var created time.Time
+		if err := rows.Scan(&p.ID, &p.PlaceID, &p.StorageKey, &p.ContentType, &p.ByteSize,
+			&p.Width, &p.Height, &p.Author, &p.License, &p.SourceURL,
+			new(any), new(any), new(any), new(any), new(any), new(any), &p.Title,
+			&p.SortOrder, &created, &n); err != nil {
+			return nil, nil, err
+		}
+		covers[p.PlaceID] = p
+		counts[p.PlaceID] = n
+	}
+	return covers, counts, rows.Err()
 }
 
 // PhotoCounts is photo_counts: places with none are absent.

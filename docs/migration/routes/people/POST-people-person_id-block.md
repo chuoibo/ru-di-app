@@ -119,3 +119,9 @@ Corpus sinh: `generated/w10-422/post-people-person_id-block.yaml` (18 bước).
 - Chặn một tài khoản đã xoá là 200 và chèn cạnh mới tới hàng ẩn danh.
 - `open_block_edge` biến **mọi** `IntegrityError` thành `EDGE_EXISTS` và service nuốt nó: một người gọi dev chưa có hàng `people` chặn một người có thật nhận 200 dù chèn thất bại vì khoá ngoại.
 - Chặn không ẩn hồ sơ khi hai người còn nhóm hoặc pair chung (`groupmate`), và pair sau khi chặn vẫn là «nhóm chung».
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `POST /people/{person_id}/block`: đổi thật: `ApiService._reachable_person` — C2: người lạ không dò được số điện thoại; Go peoplesteps.ReachablePerson; `ApiService.block_person` — C2, như trên (Go blocks.go).

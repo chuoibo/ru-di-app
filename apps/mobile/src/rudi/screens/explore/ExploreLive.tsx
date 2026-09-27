@@ -23,7 +23,7 @@
  * show the category drawn by the art layer.
  */
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,7 +35,10 @@ import { askSearch, hieuDuocGi, type TimKiemState } from "../../../screens/kham-
 import { SO_THICH } from "../../../screens/vao-cua/so-thich";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
+  canDocLaiDanhMuc,
   anhBiaThe,
+  cauXemThem,
+  HANG_MOI_LUOT,
   bieuTuongLoai,
   boLuuDiaDiem,
   cauChuaCo,
@@ -52,7 +55,7 @@ import {
   type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
-import { Chip, IconButton, ResponsiveRow, RudiScreen, SearchField, SectionHeader } from "../../ui";
+import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField, SectionHeader } from "../../ui";
 import { Wordmark } from "../../ui/Wordmark";
 import { SanKhau } from "../../ui/SanKhau";
 import { sanKhauThanhPho } from "../../art/thanh-pho";
@@ -127,6 +130,12 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   // which, so this starts as null and is filled from the answer -- the screen
   // never guesses a city name it has not been told.
   const [diemDen, setDiemDen] = useState<{ id: string; name: string } | null>(null);
+  // The destination the list on screen was read for, readable inside `nap`
+  // without making the read depend on it (it would re-run on its own answer).
+  const dangHien = useRef<string | null>(null);
+  // When, and for which destination, the catalogue was last read.
+  const lanDoc = useRef<{ diemDen: string | null; luc: number } | null>(null);
+  const [soHang, setSoHang] = useState(HANG_MOI_LUOT);
   const [rongSan, setRongSan] = useState(0);
   // Whose taste the badges are relative to. Starts as «chưa biết» because that
   // is true until the server has answered, and it is what the screen says.
@@ -139,6 +148,17 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const nap = useCallback(async () => {
     try {
       const daChon = await docDiemDenDaChon();
+      if (!canDocLaiDanhMuc(lanDoc.current, daChon, Date.now())) {
+        // Only the bookmarks can have changed on the way back (a save on the
+        // detail screen), and they are a small read.
+        setDaLuu(await docDaLuu(phien.person_id));
+        return;
+      }
+      // A different city was chosen: the old list must not stand under the
+      // new name while a large catalogue loads (seconds, on real data).
+      if (daChon !== null && dangHien.current !== null && daChon !== dangHien.current) {
+        setTrang({ pha: "dang-doc" });
+      }
       const [danhMuc, luu] = await Promise.all([
         // A destination this phone remembers may be gone from the catalogue
         // (an import can drop one). That is a 404, and the right answer is the
@@ -147,6 +167,11 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
         docDanhMucCoLui(daChon, phien.person_id),
         docDaLuu(phien.person_id),
       ]);
+      // The id that was asked for, not the one the server answered with: after
+      // a fallback the two differ for good, and comparing against the answer
+      // would blank the list to a skeleton on every return to this tab.
+      dangHien.current = daChon ?? danhMuc.destination?.id ?? null;
+      lanDoc.current = { diemDen: dangHien.current, luc: Date.now() };
       setDiemDen(danhMuc.destination);
       setGu(danhMuc.gu);
       setTrang({ pha: "xong", places: danhMuc.places, categories: danhMuc.categories });
@@ -179,7 +204,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
     const cau = query.trim();
     if (!cau) return;
     setTimKiem({ kind: "dang-tim", query: cau });
-    setTimKiem(await askSearch(cau, { actorId: phien.person_id }));
+    setTimKiem(await askSearch(cau, { actorId: phien.person_id, destination: diemDen?.id ?? null }));
   };
 
   const boTim = () => {
@@ -200,6 +225,10 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
   const khoaKetQua = `${loai ?? ""}|${timKiem.kind === "co-ket-qua" ? timKiem.query : ""}`;
+  // A new list starts from its first step again.
+  useEffect(() => {
+    setSoHang(HANG_MOI_LUOT);
+  }, [khoaKetQua, query, diemDen?.id]);
   const hienRa = FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated);
   // The lead is a photograph at reading size. A catalogue that has no picture
   // for its first place (a fresh server, no licensed photos yet) would open
@@ -318,8 +347,8 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
             // this line used to say «Đà Lạt» over a list of anywhere.
             title={
               dangLoc
-                ? `${danhSach.length} kết quả`
-                : `${trang.places.length} nơi ở ${diemDen === null ? "đây" : diemDen.name}`
+                ? `${danhSach.length.toLocaleString("vi-VN")} kết quả`
+                : `${trang.places.length.toLocaleString("vi-VN")} nơi ở ${diemDen === null ? "đây" : diemDen.name}`
             }
           />
           {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
@@ -378,7 +407,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
               ) : null}
               {conLai.length > 0 ? (
                 <ResponsiveRow gap={0} minItemWidth={300}>
-                  {conLai.map((place) => (
+                  {conLai.slice(0, soHang).map((place) => (
                     <PlaceRow
                       daLuu={daLuu.includes(place.id)}
                       dd={hienThiDiaDiem(place)}
@@ -388,6 +417,13 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
                     />
                   ))}
                 </ResponsiveRow>
+              ) : null}
+              {conLai.length > soHang ? (
+                <RudiButton
+                  label={cauXemThem(conLai.length - soHang)}
+                  onPress={() => setSoHang((n) => n + HANG_MOI_LUOT)}
+                  variant="outline"
+                />
               ) : null}
             </Animated.View>
           )}

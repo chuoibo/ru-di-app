@@ -501,36 +501,36 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"kind":"dong_y"}'
-  - id: fourth_owner_drafts
-    as: owner
+  - id: fourth_mate_drafts
+    as: mate
     request:
       method: POST
       path: '/contexts/{{pair}}/papers/draft'
     bind:
       paper_4: {from: body, pointer: /id, class: uuid}
-  - id: fourth_owner_sends
-    as: owner
+  - id: fourth_mate_sends
+    as: mate
     request:
       method: POST
       path: '/papers/{{paper_4}}/send'
       headers:
         content-type: 'application/json'
       body_raw: '{"version":1}'
-  - id: mate_skips_fourth
-    as: mate
+  - id: owner_skips_fourth
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_4}}/skip'
-  - id: mate_agrees_cancelled
-    as: mate
+  - id: owner_agrees_cancelled
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_4}}/versions/1/responses'
       headers:
         content-type: 'application/json'
       body_raw: '{"kind":"dong_y"}'
-  - id: mate_counter_cancelled
-    as: mate
+  - id: owner_counter_cancelled
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_4}}/versions/1/responses'

@@ -28,7 +28,8 @@ type UploadedImage struct {
 func (r Repository) GetPersonImage(ctx context.Context, personID, imageID string) (*UploadedImage, error) {
 	var m UploadedImage
 	err := r.Q.QueryRow(ctx,
-		`SELECT uploaded_images.id, uploaded_images.storage_key, uploaded_images.context_id,
+		`SELECT uploaded_images.id, uploaded_images.storage_key, uploaded_images.content_sha256,
+		        uploaded_images.context_id,
 		        uploaded_images.owner_person_id, uploaded_images.uploaded_by_id, uploaded_images.purpose,
 		        uploaded_images.content_type, uploaded_images.byte_size, uploaded_images.width,
 		        uploaded_images.height, uploaded_images.created_at
@@ -36,7 +37,7 @@ func (r Repository) GetPersonImage(ctx context.Context, personID, imageID string
 		  WHERE uploaded_images.owner_person_id = $1::UUID AND uploaded_images.id = $2::UUID
 		    AND uploaded_images.purpose = $3::VARCHAR`,
 		personID, imageID, "personal").
-		Scan(&m.ID, &m.StorageKey, &m.ContextID, &m.OwnerPersonID, &m.UploadedByID, &m.Purpose,
+		Scan(&m.ID, &m.StorageKey, new(*string), &m.ContextID, &m.OwnerPersonID, &m.UploadedByID, &m.Purpose,
 			&m.ContentType, &m.ByteSize, &m.Width, &m.Height, &m.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil

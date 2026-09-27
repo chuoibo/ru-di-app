@@ -137,11 +137,20 @@ func listPlacesWAI() Route {
 		if diemDen == nil {
 			return endpoint.Reply{}, endpoint.Refuse(404, "destination_not_found", "Không có điểm đến nào với mã này.")
 		}
-		filter := repo.PlaceFilter{DestinationID: &diemDen.ID}
-		rows, err := store.ListPlaces(ctx, filter)
+		// No known taste means no personal ranking and no reasons: the body is
+		// the same for every such caller, so a cached one is served as is.
+		replyKey := ""
+		if !group.Known() {
+			replyKey = diemDen.ID + "\x00" + deref(category) + "\x00" + deref(query)
+			if body := catalogue.reply(replyKey); body != nil {
+				return endpoint.Reply{Body: body}, nil
+			}
+		}
+		snap, err := catalogue.load(ctx, store, diemDen.ID)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
+		rows := snap.rows
 		selected := make([]repo.Place, 0, len(rows))
 		q := ""
 		if query != nil {
@@ -156,10 +165,7 @@ func listPlacesWAI() Route {
 			}
 			selected = append(selected, row)
 		}
-		cards, err := withPhotos(ctx, store, selected)
-		if err != nil {
-			return endpoint.Reply{}, err
-		}
+		cards := cardsWithPhotos(selected, snap.covers, snap.counts)
 		written := map[string]reasonPair{}
 		if group.Known() {
 			safe := treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(cards)))
@@ -172,6 +178,13 @@ func listPlacesWAI() Route {
 			})
 			if len(safe) > maxReasonRows {
 				safe = safe[:maxReasonRows]
+			}
+			// The list rows were read without description, reviews and
+			// activities; the reasons prompt quotes whole cards, so its few
+			// rows are read in full and rebuilt exactly as before.
+			safe, err = fullCards(ctx, store, safe, snap)
+			if err != nil {
+				return endpoint.Reply{}, err
 			}
 			written = fetchReasons(safe, group)
 		}
@@ -197,8 +210,18 @@ func listPlacesWAI() Route {
 		body.Set("categories", wireCategories())
 		body.Set("group", wireGroupSummary(group))
 		body.Set("destination", wireDestination(*diemDen, nil))
+		if replyKey != "" {
+			catalogue.keepReply(replyKey, body, snap)
+		}
 		return endpoint.Reply{Body: body}, nil
 	}}
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return "\x01" // absent, distinct from an empty value
+	}
+	return *s
 }
 
 func listPlacePhotos() Route {
@@ -384,7 +407,28 @@ func searchPlacesWAI() Route {
 			body.Set("group", wireGroupSummary(group))
 			return endpoint.Reply{Body: body}
 		}
-		rows, err := store.ListPlaces(ctx, repo.PlaceFilter{})
+		// `?destination=` narrows the search to one destination; without it
+		// the whole catalogue is searched, as before. Read off the raw query
+		// string: the route's contract (from Python, which has no such
+		// parameter) does not declare it, so call.Values never carries it --
+		// reading it there answered 500. An unknown destination is ignored
+		// rather than refused, so this Go-only narrowing can never turn an
+		// answer Python gives into a different status.
+		filter := repo.PlaceFilter{}
+		if wanted := destinationQuery(call); wanted != "" {
+			diemDen, err := service.DestinationOrDefault(ctx, store, &wanted)
+			if err != nil {
+				return endpoint.Reply{}, err
+			}
+			if diemDen != nil && diemDen.ID == wanted {
+				filter.DestinationID = &diemDen.ID
+			}
+		}
+		slim, err := store.ListPlaceCards(ctx, filter)
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		rows, err := fullRowsInOrder(ctx, store, searchCandidates(slim, query, group))
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
@@ -595,14 +639,65 @@ func withPhotos(ctx context.Context, store repo.Repository, rows []repo.Place) (
 	for i, row := range rows {
 		ids[i] = row.ID
 	}
-	covers, err := store.PhotoCovers(ctx, ids)
+	covers, counts, err := store.PhotoCoversAndCounts(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
-	counts, err := store.PhotoCounts(ctx, ids)
+	return cardsWithPhotos(rows, covers, counts), nil
+}
+
+// fullCards replaces each card with one built from the place's full row, in
+// the same order and through the same conversion the list applied, so what a
+// prompt sees is byte-for-byte what it saw when the list read every column.
+func fullCards(ctx context.Context, store repo.Repository, cards []*pyjson.OrderedMap,
+	snap *catalogueSnapshot) ([]*pyjson.OrderedMap, error) {
+	ids := make([]string, len(cards))
+	for i, card := range cards {
+		ids[i] = service.PlaceID(card)
+	}
+	rows, err := store.PlacesByIDs(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
+	byID := make(map[string]repo.Place, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row
+	}
+	ordered := make([]repo.Place, 0, len(ids))
+	for _, id := range ids {
+		if row, ok := byID[id]; ok {
+			ordered = append(ordered, row)
+		}
+	}
+	return treejson.MapsFrom(treejson.MapsTo(cardsWithPhotos(ordered, snap.covers, snap.counts))), nil
+}
+
+// fullRowsInOrder reads the given places in full, keeping their order; a row
+// deleted since the slim read is dropped.
+func fullRowsInOrder(ctx context.Context, store repo.Repository, slim []repo.Place) ([]repo.Place, error) {
+	ids := make([]string, len(slim))
+	for i, row := range slim {
+		ids[i] = row.ID
+	}
+	rows, err := store.PlacesByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[string]repo.Place, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row
+	}
+	out := make([]repo.Place, 0, len(ids))
+	for _, id := range ids {
+		if row, ok := byID[id]; ok {
+			out = append(out, row)
+		}
+	}
+	return out, nil
+}
+
+// cardsWithPhotos builds list cards from rows and a photo summary already read.
+func cardsWithPhotos(rows []repo.Place, covers map[string]repo.PlacePhoto, counts map[string]int64) []*pyjson.OrderedMap {
 	out := make([]*pyjson.OrderedMap, 0, len(rows))
 	for _, row := range rows {
 		card := service.PlaceRow(row)
@@ -611,8 +706,8 @@ func withPhotos(ctx context.Context, store repo.Repository, rows []repo.Place) (
 		if cover, ok := covers[row.ID]; ok {
 			url := "/places/" + row.ID + "/photos/" + cover.ID
 			card.Set("photo_url", pyjson.String(url))
-			card.Set("photo_author", pyjson.String(cover.Author))
-			card.Set("photo_license", pyjson.String(cover.License))
+			card.Set("photo_author", textOrNull(cover.Author))
+			card.Set("photo_license", textOrNull(cover.License))
 		} else {
 			card.Set("photo_url", pyjson.Null{})
 			card.Set("photo_author", pyjson.Null{})
@@ -620,7 +715,7 @@ func withPhotos(ctx context.Context, store repo.Repository, rows []repo.Place) (
 		}
 		out = append(out, card)
 	}
-	return out, nil
+	return out
 }
 
 func wirePlaceCard(place *pyjson.OrderedMap, reason, verdict *string, group taste.Profile) (*pyjson.OrderedMap, error) {
@@ -636,7 +731,7 @@ func wirePlaceCard(place *pyjson.OrderedMap, reason, verdict *string, group tast
 		"id", "name", "category", "kinds", "rating", "rating_count", "distance_km",
 		"price_min_vnd", "price_max_vnd", "address", "open_now", "open_hours",
 		"travel_minutes", "photo_count", "photo_url", "photo_author", "photo_license",
-		"traits", "group_fit", "flag", "lat", "lng", "source", "license",
+		"traits", "group_fit", "flag", "lat", "lng", "geo_precision", "source", "license",
 	} {
 		if value, ok := place.Get(key); ok {
 			out.Set(key, value)
@@ -748,8 +843,8 @@ func wirePlacePhoto(placeID string, photo repo.PlacePhoto) *pyjson.OrderedMap {
 	out := pyjson.NewOrderedMap()
 	out.Set("id", pyjson.String(photo.ID))
 	out.Set("url", pyjson.String("/places/"+placeID+"/photos/"+photo.ID))
-	out.Set("author", pyjson.String(photo.Author))
-	out.Set("license", pyjson.String(photo.License))
+	out.Set("author", textOrNull(photo.Author))
+	out.Set("license", textOrNull(photo.License))
 	out.Set("source_url", pyjson.String(photo.SourceURL))
 	out.Set("title", textOrNull(photo.Title))
 	out.Set("width", pyjson.NewInt(photo.Width))
@@ -800,4 +895,12 @@ func fetchReasons(places []*pyjson.OrderedMap, group taste.Profile) map[string]r
 		out[key] = pair
 	}
 	return out
+}
+
+// destinationQuery is the raw `?destination=` of a request, "" when absent.
+func destinationQuery(call *endpoint.Call) string {
+	if call.Request == nil || call.Request.URL == nil {
+		return ""
+	}
+	return strings.TrimSpace(call.Request.URL.Query().Get("destination"))
 }

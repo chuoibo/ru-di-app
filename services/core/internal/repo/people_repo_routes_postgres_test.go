@@ -255,16 +255,28 @@ func (p *peopleRoute) blockPerson() error {
 	if err := p.require("block_person", map[string]bool{"is_not_self": p.actor != target}, nil); err != nil {
 		return err
 	}
+	// _reachable_person: the person, their edge, then (only if still
+	// undecided) a shared group; an ended account or a hidden stranger is
+	// the same 404 as an id nobody holds.
 	person, err := p.repo.GetPerson(bg, target)
 	if err != nil {
 		return err
 	}
-	if person == nil {
+	if person == nil || person.DeletedAt != nil {
 		return refuse(404, "person_not_found")
 	}
 	edge, err := p.repo.GetFriendEdge(bg, p.actor, target)
 	if err != nil {
 		return err
+	}
+	if !person.DiscoverableByPhone && edge == nil {
+		shared, err := p.repo.ShareActiveContext(bg, p.actor, target)
+		if err != nil {
+			return err
+		}
+		if !shared {
+			return refuse(404, "person_not_found")
+		}
 	}
 	var existing *friendship.Edge
 	if edge != nil {
@@ -438,7 +450,20 @@ func (p *peopleRoute) registerPerson() error {
 		}
 		return err
 	}
-	if existing.DisplayName == name {
+	// A stranger (not the person, a friend, a groupmate) gets their own
+	// words back and nothing written, however a guessed name compares.
+	knows := p.actor == target
+	if !knows {
+		if knows, err = p.repo.AreFriends(bg, p.actor, target); err != nil {
+			return err
+		}
+	}
+	if !knows {
+		if knows, err = p.repo.ShareActiveContext(bg, p.actor, target); err != nil {
+			return err
+		}
+	}
+	if !knows || existing.DisplayName == name {
 		return nil
 	}
 	if err := p.require("rename_person_identity", map[string]bool{"is_self": p.actor == target}, nil); err != nil {

@@ -94,6 +94,24 @@ def _cho_doc_chat(
     session.flush()
 
 
+def _chia_gu(session: Session, cycle_id: uuid.UUID, *people: uuid.UUID) -> None:
+    """Each person turns `chia_gu` on for themselves (ADR-0034 §2.1): a pair's
+    taste sums only the people who did."""
+    for person_id in people:
+        proposal = PairConsentProposal(
+            cycle_id=cycle_id,
+            purpose="chia_gu",
+            proposed_by_id=person_id,
+            expires_at=NOW + timedelta(days=30),
+        )
+        session.add(proposal)
+        session.flush()
+        session.add(
+            PairConsent(proposal_id=proposal.id, person_id=person_id, granted_at=NOW)
+        )
+    session.flush()
+
+
 def _service(session: Session, monkeypatch: pytest.MonkeyPatch) -> ApiService:
     monkeypatch.setattr("app.api.service._now", lambda: NOW)
     return ApiService(SqlAlchemyApiRepository(session))
@@ -131,7 +149,9 @@ def test_gu_cua_cap_la_chua_biet_cho_toi_khi_ca_hai_dong_y_tren_hang_that(
         PairConsent(proposal_id=proposal_id, person_id=b, granted_at=NOW)
     )
     postgres_session.flush()
+    assert service.group_taste(context_id) is UNKNOWN, "đọc chat không mở gu của ai"
 
+    _chia_gu(postgres_session, cycle_id, a, b)
     du = service.group_taste(context_id)
     assert du is not UNKNOWN
     assert du.people_answered == 2
@@ -154,6 +174,7 @@ def test_thu_hoi_lam_gu_ve_lai_chua_biet_ngay_lan_doc_sau(
     )
     repository.activate_pair_cycle(cycle_id, now=NOW)
     _cho_doc_chat(postgres_session, cycle_id, by=a, people=(a, b))
+    _chia_gu(postgres_session, cycle_id, a, b)
     assert service.group_taste(context_id) is not UNKNOWN
 
     repository.revoke_consents(cycle_id, "doc_chat", b, now=NOW)
@@ -179,6 +200,7 @@ def test_mot_loi_de_nghi_het_han_khong_con_la_mot_loi_dong_y(
     )
     repository.activate_pair_cycle(cycle_id, now=NOW)
     _cho_doc_chat(postgres_session, cycle_id, by=a, people=(a, b))
+    _chia_gu(postgres_session, cycle_id, a, b)
 
     monkeypatch.setattr("app.api.service._now", lambda: NOW)
     service = ApiService(repository)

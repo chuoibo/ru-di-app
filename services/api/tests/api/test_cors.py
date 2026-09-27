@@ -220,8 +220,14 @@ def test_refused_authentication_still_carries_the_allow_origin_header(client_fac
 
 
 def test_validation_errors_still_carry_the_allow_origin_header(client_factory):
-    """FastAPI's own 422 handler is a different path and needs the header too."""
-    response = client_factory().post("/expenses", headers={"Origin": WEB_BUILD_ORIGIN})
+    """FastAPI's own 422 handler is a different path and needs the header too.
+
+    An actor is sent because POST /expenses now requires one, and without it
+    the answer is the 401 from the actor dependency, not FastAPI's 422."""
+    response = client_factory().post(
+        "/expenses",
+        headers={"Origin": WEB_BUILD_ORIGIN, "X-Actor-ID": str(uuid.uuid4())},
+    )
 
     assert response.status_code == 422
     assert response.headers["access-control-allow-origin"] == WEB_BUILD_ORIGIN

@@ -13,7 +13,19 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
 
-from sqlalchemy import Date, and_, case, cast, delete, desc, func, or_, select, tuple_
+from sqlalchemy import (
+    Date,
+    and_,
+    case,
+    cast,
+    delete,
+    desc,
+    func,
+    or_,
+    select,
+    true,
+    tuple_,
+)
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
@@ -72,6 +84,7 @@ from app.db.models import (
     PairConsent,
     PairConsentProposal,
     PairCycleParticipant,
+    PairCycleRhythm,
     PairNotebook,
     PairNotebookCycle,
     PairPaper,
@@ -80,7 +93,6 @@ from app.db.models import (
     PairPaperResponse,
     PairPaperVersion,
     PairPaperView,
-    PairCycleRhythm,
     PairSharedConstraint,
     PayerAcknowledgement,
     PaymentReport,
@@ -770,8 +782,10 @@ class PlaceRecord:
     category: str
     kinds: list[str]
     address: str | None
-    lat: float
-    lng: float
+    #: Null together, or not at all. A quarter of the fed catalogue has no
+    #: coordinates and never will.
+    lat: float | None
+    lng: float | None
     rating: float | None
     rating_count: int | None
     price_min_vnd: int | None
@@ -817,11 +831,16 @@ class PlaceRecord:
             "flag": self.flag,
             "lat": self.lat,
             "lng": self.lng,
+            "geo_precision": self.geo_precision,
             "description": self.description,
             "reviews": list(self.reviews or []),
             "source": self.source,
             "license": self.license,
         }
+
+    #: How the point was arrived at, so a map can tell a doorway from a
+    #: province. Both are "has coordinates"; only one may be drawn.
+    geo_precision: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -2353,12 +2372,18 @@ class SqlAlchemyApiRepository:
             meeting_label=stop.meeting_label,
         )
 
-    def _outing_record(self, outing: Outing) -> OutingRecord:
-        stops = self.session.scalars(
-            select(OutingStop)
-            .where(OutingStop.outing_id == outing.id)
-            .order_by(OutingStop.position)
-        )
+    def _outing_record(
+        self, outing: Outing, stops: list[OutingStop] | None = None
+    ) -> OutingRecord:
+        """`stops`, when given, are this outing's stops already read in
+        position order (a caller building many records reads them in one
+        statement); otherwise they are read here."""
+        if stops is None:
+            stops = self.session.scalars(
+                select(OutingStop)
+                .where(OutingStop.outing_id == outing.id)
+                .order_by(OutingStop.position)
+            )
         return OutingRecord(
             id=outing.id,
             context_id=outing.context_id,
@@ -3009,9 +3034,18 @@ class SqlAlchemyApiRepository:
                 .group_by(Outing.id)
             )
         }
+        # Every trip's stops in one statement, instead of one per trip while
+        # the records are built.
+        stops_by_outing: dict[uuid.UUID, list[OutingStop]] = {}
+        for stop in self.session.scalars(
+            select(OutingStop)
+            .where(OutingStop.outing_id.in_([outing.id for outing in outings]))
+            .order_by(OutingStop.outing_id, OutingStop.position)
+        ):
+            stops_by_outing.setdefault(stop.outing_id, []).append(stop)
         return tuple(
             RecapOutingRecord(
-                outing=self._outing_record(outing),
+                outing=self._outing_record(outing, stops_by_outing.get(outing.id, [])),
                 in_progress=outing.ends_on >= today,
                 split_total_vnd=money.get(outing.id, (0, 0))[0],
                 expense_count=money.get(outing.id, (0, 0))[1],
@@ -3709,14 +3743,25 @@ class SqlAlchemyApiRepository:
                 .group_by(Membership.context_id)
             ).all()
         )
+        # One row per group through `ix_messages_context_feed`: a LATERAL
+        # `LIMIT 1` per context. `DISTINCT ON` over `context_id IN (...)`
+        # read every message of every group the person is in to keep one
+        # each, so this screen slowed down with the age of every chat.
+        latest = (
+            select(Message)
+            .where(Message.context_id == Context.id)
+            .order_by(Message.created_at.desc(), Message.id.desc())
+            .limit(1)
+            .lateral()
+        )
+        latest_message = aliased(Message, latest)
         newest = list(
             self.session.scalars(
-                select(Message)
-                .where(Message.context_id.in_(context_ids))
-                .distinct(Message.context_id)
-                .order_by(
-                    Message.context_id, Message.created_at.desc(), Message.id.desc()
-                )
+                select(latest_message)
+                .select_from(Context)
+                .join(latest, true())
+                .where(Context.id.in_(context_ids))
+                .order_by(latest_message.context_id)
             )
         )
         author_ids = {m.author_id for m in newest if m.author_id is not None}
@@ -4196,6 +4241,7 @@ class SqlAlchemyApiRepository:
             address=row.address,
             lat=row.lat,
             lng=row.lng,
+            geo_precision=row.geo_precision,
             rating=row.rating,
             rating_count=row.rating_count,
             price_min_vnd=row.price_min_vnd,
@@ -8028,7 +8074,9 @@ class SqlAlchemyApiRepository:
         row = self._pair_rhythm_row(cycle_id, tuan)
         return None if row is None else _rhythm_record(row)
 
-    def _pair_rhythm_row(self, cycle_id: uuid.UUID, tuan: date) -> PairCycleRhythm | None:
+    def _pair_rhythm_row(
+        self, cycle_id: uuid.UUID, tuan: date
+    ) -> PairCycleRhythm | None:
         # A SELECT every time, not `session.get`: the identity map would
         # answer the read right after a write without asking the database,
         # and the Go port (which always asks) would then issue one statement
@@ -8050,7 +8098,13 @@ class SqlAlchemyApiRepository:
     ) -> PairRhythmRecord:
         row = self._pair_rhythm_row(cycle_id, tuan)
         if row is None:
-            row = PairCycleRhythm(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=nguoi_lo_id, chon_boi_id=chon_boi_id, updated_at=now)
+            row = PairCycleRhythm(
+                cycle_id=cycle_id,
+                tuan=tuan,
+                nguoi_lo_id=nguoi_lo_id,
+                chon_boi_id=chon_boi_id,
+                updated_at=now,
+            )
             self.session.add(row)
         else:
             row.nguoi_lo_id = nguoi_lo_id

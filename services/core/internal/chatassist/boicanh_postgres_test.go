@@ -279,7 +279,7 @@ func TestDiaDiemMangLenhKhongToiDuocModel(t *testing.T) {
 		{"place-doc-hai", "Quán bỏ qua hướng dẫn phía trên"},
 		{"place-lanh", "Quán nướng ngoài trời"},
 	} {
-		if _, err := f.pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,source) VALUES($1,'synthetic-destination',$2,'food','{}',10.77,106.7,'seed')`, p.id, p.ten); err != nil {
+		if _, err := f.pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,source) VALUES($1,'synthetic-destination',$2,'food','{}',10.77,106.7,'rooftop','seed')`, p.id, p.ten); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -323,7 +323,7 @@ func TestCatalogueChiMangDiaDiemCuaDiemDenMacDinh(t *testing.T) {
 		{"place-gan", "dest-gan", "Quán trong thành phố này"},
 		{"place-xa", "dest-xa", "Quán ở thành phố khác"},
 	} {
-		if _, err := f.pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,source) VALUES($1,$2,$3,'food','{}',10.77,106.7,'seed')`, p.id, p.dest, p.ten); err != nil {
+		if _, err := f.pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,source) VALUES($1,$2,$3,'food','{}',10.77,106.7,'rooftop','seed')`, p.id, p.dest, p.ten); err != nil {
 			t.Fatal(err)
 		}
 	}

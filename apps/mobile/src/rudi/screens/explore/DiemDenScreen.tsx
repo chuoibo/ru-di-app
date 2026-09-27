@@ -105,7 +105,9 @@ export function DiemDenScreen() {
       {trang.pha === "xong" && loc.length === 0 ? (
         <EmptyState
           action={{ label: "Xóa ô tìm", onPress: () => setTim("") }}
-          body="Rủ Đi mới biết mười lăm nơi. Thử tên khác, hoặc xoá ô tìm để xem hết."
+          // The count comes from the list: a number written into the sentence
+          // said «mười lăm» long after the catalogue had 48 (2026-09-23).
+          body={`Rủ Đi mới biết ${trang.ds.length.toLocaleString("vi-VN")} nơi. Thử tên khác, hoặc xoá ô tìm để xem hết.`}
           kind="no-results"
           layout="inline"
           illustration={<Canh id="bo-loc-che-het" width={168} />} title="Chưa có nơi nào khớp"
@@ -137,7 +139,9 @@ export function DiemDenScreen() {
                 ) : null}
                 <View style={styles.theChu}>
                   <Text style={[typography.title, { color: colors.ink }]}>{d.name}</Text>
-                  <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dongPhuDiemDen(d)}</Text>
+                  {dongPhuDiemDen(d) === "" ? null : (
+                    <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dongPhuDiemDen(d)}</Text>
+                  )}
                   {d.blurb === null ? null : (
                     <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>
                       {d.blurb}

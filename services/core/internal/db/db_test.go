@@ -53,3 +53,32 @@ func TestUnitWithoutQueriesCommitsNothing(t *testing.T) {
 		t.Fatalf("Tx after commit = %v", err)
 	}
 }
+
+func TestMaxConnsCanBeSetPerProcess(t *testing.T) {
+	t.Setenv(EnvMaxConns, "3")
+	config, err := PoolConfig("postgresql://u:p@h:5432/d")
+	if err != nil || config.MaxConns != 3 {
+		t.Fatalf("MaxConns = %v, %v; want 3", config.MaxConns, err)
+	}
+	t.Setenv(EnvMaxConns, "nonsense")
+	config, _ = PoolConfig("postgresql://u:p@h:5432/d")
+	if config.MaxConns != maxConns {
+		t.Errorf("a bad value must fall back to %d, got %d", maxConns, config.MaxConns)
+	}
+}
+
+func TestTheServerIsToldToNoticeDeadClients(t *testing.T) {
+	config, err := PoolConfig("postgresql://u:p@h:5432/d")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for key, want := range map[string]string{"tcp_keepalives_idle": "60", "tcp_user_timeout": "60000"} {
+		if got := config.ConnConfig.RuntimeParams[key]; got != want {
+			t.Errorf("%s = %q, want %q", key, got, want)
+		}
+	}
+	custom, _ := PoolConfig("postgresql://u:p@h:5432/d?tcp_keepalives_idle=5")
+	if custom.ConnConfig.RuntimeParams["tcp_keepalives_idle"] != "5" {
+		t.Error("a URL's own setting must win")
+	}
+}

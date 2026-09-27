@@ -22,7 +22,8 @@ import (
 
 // uploadedImageColumns is `select(UploadedImage)`: every mapped column, in the
 // model's declaration order, unlabelled.
-const uploadedImageColumns = `uploaded_images.id, uploaded_images.storage_key, uploaded_images.context_id,
+const uploadedImageColumns = `uploaded_images.id, uploaded_images.storage_key, uploaded_images.content_sha256,
+	uploaded_images.context_id,
 	uploaded_images.owner_person_id, uploaded_images.uploaded_by_id, uploaded_images.purpose,
 	uploaded_images.content_type, uploaded_images.byte_size, uploaded_images.width,
 	uploaded_images.height, uploaded_images.created_at`
@@ -31,7 +32,7 @@ const uploadedImageColumns = `uploaded_images.id, uploaded_images.storage_key, u
 // `_uploaded_image_record`: nil for no row.
 func scanUploadedImage(row pgx.Row) (*UploadedImage, error) {
 	var m UploadedImage
-	err := row.Scan(&m.ID, &m.StorageKey, &m.ContextID, &m.OwnerPersonID, &m.UploadedByID, &m.Purpose,
+	err := row.Scan(&m.ID, &m.StorageKey, new(*string), &m.ContextID, &m.OwnerPersonID, &m.UploadedByID, &m.Purpose,
 		&m.ContentType, &m.ByteSize, &m.Width, &m.Height, &m.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -82,11 +83,11 @@ func (r Repository) CreateUploadedImage(ctx context.Context, in UploadedImageInp
 	}
 	created := pythonInstant(in.Now)
 	if _, err := r.Q.Exec(ctx,
-		`INSERT INTO uploaded_images (id, storage_key, context_id, owner_person_id, uploaded_by_id, purpose,
-		                              content_type, byte_size, width, height, created_at)
-		 VALUES ($1::UUID, $2::VARCHAR, $3::UUID, $4::UUID, $5::UUID, $6::VARCHAR, $7::VARCHAR, $8::INTEGER,
-		         $9::INTEGER, $10::INTEGER, $11::TIMESTAMP WITH TIME ZONE)`,
-		id, in.StorageKey, in.ContextID, in.OwnerPersonID, in.UploadedByID, in.Purpose, in.ContentType,
+		`INSERT INTO uploaded_images (id, storage_key, content_sha256, context_id, owner_person_id, uploaded_by_id,
+		                              purpose, content_type, byte_size, width, height, created_at)
+		 VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::UUID, $5::UUID, $6::UUID, $7::VARCHAR, $8::VARCHAR,
+		         $9::INTEGER, $10::INTEGER, $11::INTEGER, $12::TIMESTAMP WITH TIME ZONE)`,
+		id, in.StorageKey, nil, in.ContextID, in.OwnerPersonID, in.UploadedByID, in.Purpose, in.ContentType,
 		in.ByteSize, in.Width, in.Height, created); err != nil {
 		return UploadedImage{}, err
 	}

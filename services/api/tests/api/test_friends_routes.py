@@ -79,9 +79,7 @@ def test_requester_cannot_accept_their_own_request_over_http(client, repository)
     asked = _ask(client)
     assert asked.status_code == 201, asked.text
 
-    forged = _respond(
-        client, asked.json()["id"], actor=ADVANCER_ID, decision="accept"
-    )
+    forged = _respond(client, asked.json()["id"], actor=ADVANCER_ID, decision="accept")
 
     assert forged.status_code == 403, forged.text
     # And the graph did not move.
@@ -285,7 +283,9 @@ def test_nobody_may_read_somebody_elses_friend_list(client, repository):
 # --- looking somebody up by telephone number --------------------------------
 
 
-def test_lookup_finds_the_person_who_holds_that_number(client, repository, identity_key):
+def test_lookup_finds_the_person_who_holds_that_number(
+    client, repository, identity_key
+):
     """The control. Without it the leak tests below would pass on a dead route."""
     minted = client.post("/identity/person-id", json={"phone": FAKE_MOBILE})
     assert minted.status_code == 200, minted.text
@@ -353,9 +353,7 @@ def test_lookup_refusal_for_a_non_mobile_does_not_echo_it(client, identity_key):
     assert DIGIT_RUN.search(refused.text) is None, refused.text
 
 
-def test_lookup_of_an_unregistered_number_says_nothing_about_it(
-    client, identity_key
-):
+def test_lookup_of_an_unregistered_number_says_nothing_about_it(client, identity_key):
     unknown = client.post(
         "/friends/lookup",
         headers=actor_headers(actor_id=ADVANCER_ID, roles="member"),
@@ -424,3 +422,58 @@ def test_lookup_is_rate_limited(client, repository, identity_key):
 
     assert last.status_code == 429, last.text
     assert DIGIT_RUN.search(last.text) is None, last.text
+
+
+# --- a number is not a way around «don't find me by number» -----------------
+
+
+def _hidden(repository, person_id, name):
+    """Somebody who turned off being found by their phone number."""
+    _person(repository, person_id, name)
+    repository.update_person_profile(
+        person_id, changes={"discoverable_by_phone": False}
+    )
+    return person_id
+
+
+def test_a_request_to_somebody_hidden_answers_like_nobody(client, repository):
+    """A person id is derivable from a phone number by anyone. If asking a
+    hidden stranger answered differently from asking an id nobody holds, the
+    request would tell a caller whether a number has an account -- and the
+    201 would carry the name behind it."""
+    _person(repository, ADVANCER_ID, "Anh")
+    _hidden(repository, OTHER_ID, "Ẩn")
+
+    hidden = _ask(client, addressee=OTHER_ID)
+    nobody = _ask(client, addressee=uuid.uuid4())
+
+    assert hidden.status_code == nobody.status_code == 404, hidden.text
+    assert hidden.json() == nobody.json()
+    assert "Ẩn" not in hidden.text
+
+
+def test_blocking_somebody_hidden_answers_like_nobody(client, repository):
+    _person(repository, ADVANCER_ID, "Anh")
+    _hidden(repository, OTHER_ID, "Ẩn")
+    headers = actor_headers(actor_id=ADVANCER_ID, roles="member")
+
+    hidden = client.post(f"/people/{OTHER_ID}/block", headers=headers)
+    nobody = client.post(f"/people/{uuid.uuid4()}/block", headers=headers)
+
+    assert hidden.status_code == nobody.status_code == 404, hidden.text
+    assert hidden.json() == nobody.json()
+
+
+def test_a_hidden_stranger_who_sent_a_request_can_still_be_blocked(client, repository):
+    """The edge they created is how they reached you, and blocking must work
+    on exactly that person."""
+    _person(repository, ADVANCER_ID, "Anh")
+    _hidden(repository, OTHER_ID, "Ẩn")
+    asked = _ask(client, requester=OTHER_ID, addressee=ADVANCER_ID)
+    assert asked.status_code == 201, asked.text
+
+    blocked = client.post(
+        f"/people/{OTHER_ID}/block",
+        headers=actor_headers(actor_id=ADVANCER_ID, roles="member"),
+    )
+    assert blocked.status_code == 200, blocked.text

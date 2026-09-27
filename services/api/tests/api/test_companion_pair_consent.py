@@ -31,6 +31,7 @@ from .pair_helpers import (
     NGUOI_LA,
     T0,
     TOI,
+    de_nghi,
     dong_thuan,
     head,
     lap_so,
@@ -62,6 +63,13 @@ def seeded(repository, monkeypatch):
     repository.person_interests[NGUOI_LA] = {"cafe"}
 
 
+def chia_gu(client, *people):
+    """Each person turns `chia_gu` on for themselves (ADR-0034 §2.1)."""
+    for person in people:
+        turned_on = de_nghi(client, "chia_gu", actor=person)
+        assert turned_on.status_code == 201, turned_on.text
+
+
 def test_mot_nguoi_dong_y_van_chua_du(client, repository):
     """Im lặng của người kia không phải một lời đồng ý."""
     lap_so(client)
@@ -82,6 +90,8 @@ def test_thu_hoi_co_hieu_luc_ngay_lan_doc_sau(client, repository):
     """
     lap_so(client)
     dong_thuan(client, "doc_chat")
+    dong_thuan(client, "bat_doi")
+    chia_gu(client, TOI, NGUOI_KIA)
     service = ApiService(repository)
     assert service.group_taste(CAP) is not UNKNOWN
 
@@ -99,6 +109,8 @@ def test_gu_cua_mot_cap_la_chua_biet_cho_toi_khi_ca_hai_dong_y(client, repositor
     assert service.group_taste(CAP) is UNKNOWN
 
     dong_thuan(client, "doc_chat")
+    dong_thuan(client, "bat_doi")
+    chia_gu(client, TOI, NGUOI_KIA)
     sau_khi = service.group_taste(CAP)
     assert sau_khi is not UNKNOWN
     assert sau_khi.people_answered == 2
@@ -119,3 +131,27 @@ def test_duong_cua_hoi_ban_khong_doi_mot_byte(client, repository):
     lap_so(client)
     sau = ApiService(repository).group_taste(HOI)
     assert sau == truoc, "gu của hội bạn phải giống hệt, từng trường"
+
+
+def test_nep_chi_dung_gu_cua_nguoi_da_bat_chia_gu(client, repository):
+    """ADR-0034 §2.2: consent đọc chat của cả hai KHÔNG mở gu của ai.
+
+    Trong một cặp, «tổng gu» là gu của từng người: trừ phần của mình đi là ra
+    phần của người kia. Nên người chưa bật `chia_gu` không được cộng vào.
+    """
+    lap_so(client)
+    dong_thuan(client, "doc_chat")
+    dong_thuan(client, "bat_doi")
+    service = ApiService(repository)
+    assert service.group_taste(CAP) is UNKNOWN, "chưa ai bật chia_gu"
+
+    chia_gu(client, TOI)
+    chi_toi = service.group_taste(CAP)
+    assert chi_toi.people_answered == 1
+    assert "outdoor" in chi_toi.interests, "gu của người đã bật"
+    assert "an-uong" not in chi_toi.interests, "gu của người chưa bật lọt vào"
+
+    chia_gu(client, NGUOI_KIA)
+    ca_hai = service.group_taste(CAP)
+    assert ca_hai.people_answered == 2
+    assert "an-uong" in ca_hai.interests

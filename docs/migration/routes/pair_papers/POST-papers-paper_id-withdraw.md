@@ -15,8 +15,8 @@ Thứ tự (đọc từ mã, kịch bản đo):
 3. Validation `PaperWithdrawRequest` (`services/api/app/api/schemas.py:2687-2688`): `version` strict int ≥ 1 (`owner_version_string`, `owner_version_missing`, `owner_version_zero`).
 4. `_locked_paper` (`services/api/app/api/service.py:7685-7699`): 404 `paper_not_found` (`stranger_withdraws_unknown`), 404 `notebook_not_found` (`stranger_withdraws_real_paper`), 403 role (`owner_withdraws_as_advancer`), 404 cho nháp của người khác (`mate_withdraws_owner_draft`).
 5. `co_the_rut` (`services/api/app/domain/pair_paper.py:181-222`) tính từ hàng đã khoá: cột `state == 'da_gui'`; phiên bản hiện hành `author_type='human'` và `sent_by == actor`; không có view và không có phản hồi của người khác cho phiên bản hiện hành.
-6. `_require_pair_permission("withdraw_pair_paper", {"is_group_member": True, "paper_unseen_unanswered": co_the})` (`service.py:7961-7965`; `services/api/app/domain/permissions.py:582-585`): role; rồi `co_the` sai → 409 `paper_not_withdrawable` `Người kia đã mở tờ này rồi, không rút lại được.` **cho mọi lý do**: nháp (`owner_withdraws_draft`), người nhận (`mate_withdraws_sent`, `mate_withdraws_sent_stale`), đã xem (`owner_withdraws_seen`, `mate_withdraws_seen_counter`), không phải người gửi phiên bản hiện hành (`owner_withdraws_countered`), đã rút (`owner_withdraws_again`), đã chốt (`mate_withdraws_plan`).
-7. `version != current_version` → 409 `paper_version_stale` (`service.py:7966-7970`; `owner_withdraws_stale`, `mate_withdraws_counter_stale`) — chỉ sau khi rút được.
+6. `_require_pair_permission("withdraw_pair_paper", {"is_group_member": True, "paper_unseen_unanswered": co_the})` (`service.py:7961-7965`; `services/api/app/domain/permissions.py:582-585`): role; rồi `co_the` sai → 409 `paper_not_withdrawable` `Người kia đã mở tờ này rồi, không rút lại được.` **cho mọi lý do**: nháp (`owner_withdraws_draft`), người nhận (`mate_withdraws_sent`, `mate_withdraws_sent_stale`), đã xem (`mate_withdraws_seen`, `mate_withdraws_seen_counter`), không phải người gửi phiên bản hiện hành (`mate_withdraws_countered`), đã rút (`owner_withdraws_again`), đã chốt (`mate_withdraws_plan`).
+7. `version != current_version` → 409 `paper_version_stale` (`service.py:7966-7970`; `owner_withdraws_stale`, `owner_withdraws_counter_stale`) — chỉ sau khi rút được.
 8. `chuyen(paper, "rut", co_the_rut=True)`: tờ quá hạn → 409 `paper_expired`.
 
 ## Đầu vào
@@ -30,7 +30,7 @@ Thứ tự (đọc từ mã, kịch bản đo):
 ## Tác dụng phụ
 
 - `pair_papers.state='rut'` (`repository.py:8155-8173`). Phiên bản, phản hồi, view giữ nguyên. Người kia vẫn đọc được tờ `rut` (`mate_reads_withdrawn`).
-- Người viết đề nghị sửa rút được phiên bản của mình khi người kia chưa xem (`mate_withdraws_counter`, `owner_reads_withdrawn_counter`).
+- Người viết đề nghị sửa rút được phiên bản của mình khi người kia chưa xem (`owner_withdraws_counter`, `mate_reads_withdrawn_counter`).
 - `idempotency_keys` khi có header và 200. Từ chối rollback.
 
 ## Lỗi
@@ -58,7 +58,7 @@ Thứ tự (đọc từ mã, kịch bản đo):
 
 ## Kịch bản parity
 
-`parity/scenarios/w8/pair_papers/POST-papers-paper_id-withdraw.yaml` (46 bước, `dev`; mọi tờ là tờ tạm): `anonymous_withdraws`, `stranger_withdraws_unknown`, `owner_withdraws_draft`, `mate_withdraws_owner_draft`, `stranger_withdraws_real_paper`, `owner_withdraws_as_advancer`, `mate_withdraws_sent`, `mate_withdraws_sent_stale`, `owner_withdraws_stale`, `owner_version_string`, `owner_version_missing`, `owner_version_zero`, `owner_withdraws`, `owner_withdraws_again`, `mate_reads_withdrawn`, `owner_withdraws_seen`, `owner_withdraws_countered`, `mate_withdraws_counter_stale`, `mate_withdraws_counter`, `owner_reads_withdrawn_counter`, `mate_withdraws_seen_counter`, `mate_withdraws_plan`, `owner_withdraws_with_header_key`, `owner_replays_header_key`, `owner_header_key_other_version`.
+`parity/scenarios/w8/pair_papers/POST-papers-paper_id-withdraw.yaml` (46 bước, `dev`; mọi tờ là tờ tạm): `anonymous_withdraws`, `stranger_withdraws_unknown`, `owner_withdraws_draft`, `mate_withdraws_owner_draft`, `stranger_withdraws_real_paper`, `owner_withdraws_as_advancer`, `mate_withdraws_sent`, `mate_withdraws_sent_stale`, `owner_withdraws_stale`, `owner_version_string`, `owner_version_missing`, `owner_version_zero`, `owner_withdraws`, `owner_withdraws_again`, `mate_reads_withdrawn`, `mate_withdraws_seen`, `mate_withdraws_countered`, `owner_withdraws_counter_stale`, `owner_withdraws_counter`, `mate_reads_withdrawn_counter`, `mate_withdraws_seen_counter`, `mate_withdraws_plan`, `owner_withdraws_with_header_key`, `owner_replays_header_key`, `owner_header_key_other_version`.
 
 `crossreplay/POST-papers-paper_id-withdraw.yaml` (15 bước). `concurrency/POST-papers-paper_id-withdraw.yaml` (9 bước): chỉ ba lần cùng header key.
 
@@ -94,3 +94,9 @@ Diff này thêm `_chi_chu_thay` (Go `pairsteps.chiChuThay`): người không ph�
 Diff này tách `_pair_context_or_404` thành `_pair_roster_or_404` (cùng ba lệnh đọc, cùng thứ tự, cùng câu trả lời; chỉ giữ thêm tên hiển thị của hàng thành viên — Go `pairRosterOr404`, `Member.DisplayName`) và thêm vào `draft_pair_paper` bước gu: `_gu_cho_nep` + hàm thuần `pair_paper.gu_cho_nep` / `loai_theo_gu` / `lam_giau_theo_gu` (Go `pairpaper.GuChoNep` / `LoaiTheoGu` / `LamGiauTheoGu`). Golden: `python_pair_paper*.json` (ca `gu_cho_nep`, `lam_giau_theo_gu`, fuzz riêng), `python_pair_steps.json` (7 ca `taste_*` của draft); Go replay 0 lệch.
 
 - `POST /papers/{paper_id}/withdraw`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `POST /papers/{paper_id}/withdraw`: chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `ApiService._readable_paper_or_404`.

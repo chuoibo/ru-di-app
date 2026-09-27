@@ -9,6 +9,7 @@ import secrets
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -166,12 +167,12 @@ from app.api.schemas import (
     PairConstraintPutRequest,
     PairConstraintResponse,
     PairNotebookResponse,
+    PairProposalCreateRequest,
+    PairProposalResponse,
     PairRoleScoreResponse,
     PairTasteResponse,
     PairWeekRoleRequest,
     PairWeekRoleResponse,
-    PairProposalCreateRequest,
-    PairProposalResponse,
     PaperCommandResponse,
     PaperContent,
     PaperContentInput,
@@ -1163,6 +1164,31 @@ class ApiService:
             now=_now(),
         )
 
+    def _pair_taste_sharers(self, context_id: uuid.UUID) -> frozenset[str] | None:
+        """`None` when this is not a pair; otherwise who has `chia_gu` on, now.
+
+        Asked at every read, never cached, like the chat consent: revoking
+        takes effect on the next turn (ADR-0034 §2.1).
+        """
+        context = self.repository.get_context(context_id)
+        if context is None or context.kind != KIND_PAIR:
+            return None
+        notebook = self.repository.get_pair_notebook(context_id)
+        if notebook is None:
+            return frozenset()
+        members = tuple(
+            row.person_id
+            for row in self.repository.list_members(context_id)
+            if row.state == "active"
+        )
+        consents = _consents_as_dicts(notebook)
+        now = _now()
+        return frozenset(
+            str(person)
+            for person in self._participants(notebook, members)
+            if "chia_gu" in pair_notebook.granted_by(consents, str(person), now=now)
+        )
+
     def group_taste(self, context_id: uuid.UUID) -> TasteProfile:
         """One group's taste, summed from its ACTIVE members' own answers.
 
@@ -1191,6 +1217,16 @@ class ApiService:
             for member in self.repository.list_members(context_id)
             if member.state == "active"
         ]
+        # ADR-0034 §2.1–2.2: inside a pair, Nếp uses the taste of the people
+        # who turned `chia_gu` on, and nobody else's -- «không bật = không ai
+        # đọc gu người đó». The chat consent above stays as the first gate;
+        # this only narrows who is summed. Nobody sharing is «chưa biết», not
+        # an empty sum that would read as «thích gì cũng được».
+        sharers = self._pair_taste_sharers(context_id)
+        if sharers is not None:
+            people = [person for person in people if str(person) in sharers]
+            if not people:
+                return UNKNOWN
         interests = self.repository.interests_by_person(people)
         bands = self.repository.budget_bands_by_person(people)
         return profile_for_group(
@@ -1311,6 +1347,19 @@ class ApiService:
                 raise ApiProblem(
                     409, exc.code.lower(), "Person identity conflicted"
                 ) from exc
+        knows = (
+            actor.id == person_id
+            or self.repository.are_friends(actor.id, person_id)
+            or self.repository.share_active_context(actor.id, person_id)
+        )
+        if not knows:
+            # A person id is derivable from a phone number by anyone. For a
+            # stranger, «same name: 200 / other name: 403» confirmed a guessed
+            # real name behind a number. So a stranger gets one answer however
+            # the guess compares: their own words back, and nothing written.
+            # That is also what the inviter who first named a not-yet-signed-up
+            # friend gets when retrying, which is why it is 200 and not 403.
+            return replace(existing, display_name=display_name), False
         if existing.display_name == display_name:
             # A retry is not an attempt to change anything, and answering 403
             # to a client's own retry makes a dropped response look like an
@@ -4571,15 +4620,38 @@ class ApiService:
             len(report.storage_keys),
         )
 
+    def _reachable_person(self, actor_id: uuid.UUID, person_id: uuid.UUID):
+        """Whether `person_id` is somebody this actor may act on, and the edge.
+
+        A person id is derivable from a phone number by anyone
+        (`POST /identity/person-id`). If block and friend-request answered 404
+        for «no such person» and something else for everybody else, any
+        signed-in caller could learn whether a number has an account -- and,
+        through the friend request's echo, whose name it carries -- straight
+        past `discoverable_by_phone`, the one switch a person has for exactly
+        this. So a person is reachable only when they said they may be found
+        by number, or the two already have a friend edge in any state (a
+        pending request is how a stranger reaches you, and is what blocking
+        must still work on), or they share an active group. Anyone else
+        answers exactly like an id nobody holds.
+        """
+        person = self.repository.get_person(person_id)
+        if person is None or person.deleted_at is not None:
+            return False, None
+        edge = self.repository.get_friend_edge(actor_id, person_id)
+        if person.discoverable_by_phone or edge is not None:
+            return True, edge
+        return self.repository.share_active_context(actor_id, person_id), edge
+
     def block_person(self, person_id: uuid.UUID, actor: Actor) -> BlockResponse:
         """Block somebody (ADR-0023 §2.3). Idempotent: blocking twice is the
         same wall, answered 200, not an error."""
         _require_permission(
             "block_person", actor, {"is_not_self": actor.id != person_id}
         )
-        if self.repository.get_person(person_id) is None:
+        reachable, edge = self._reachable_person(actor.id, person_id)
+        if not reachable:
             raise ApiProblem(404, "person_not_found", "Chưa có ai mang danh tính này.")
-        edge = self.repository.get_friend_edge(actor.id, person_id)
         try:
             open_block(
                 blocker_id=str(actor.id),
@@ -6078,11 +6150,28 @@ class ApiService:
             excluded_member_ids=excluded_member_ids,
         )
 
-    def propose_expense(self, proposal: ExpenseInput) -> ExpenseProposalResponse:
+    def propose_expense(
+        self, proposal: ExpenseInput, actor: Actor
+    ) -> ExpenseProposalResponse:
         try:
             allocation_result = allocate(_allocator_input(proposal))
         except AllocationError as exc:
             raise ApiProblem(422, exc.code, "Expense cannot be allocated") from exc
+        # A proposal writes an `expenses` row into the named group, so the
+        # caller must be signed in and a member of it -- the same gate the
+        # confirmation and bill creation already use. Before this, any caller,
+        # anonymous included, could write rows into any group and learn from
+        # 201-versus-404 whether a group id exists; a group that does not exist
+        # now answers like one the caller is not in.
+        _require_permission(
+            "confirm_expense_proposal",
+            actor,
+            {
+                "is_group_member": self.repository.is_member(
+                    proposal.context_id, actor.id
+                )
+            },
+        )
         try:
             identity = self.repository.create_expense(proposal.context_id)
         except RepositoryConflict as exc:
@@ -6779,10 +6868,10 @@ class ApiService:
             actor,
             {"is_not_self": actor.id != addressee_id},
         )
-        if self.repository.get_person(addressee_id) is None:
+        reachable, existing = self._reachable_person(actor.id, addressee_id)
+        if not reachable:
             raise ApiProblem(404, "person_not_found", "Chưa có ai mang danh tính này.")
 
-        existing = self.repository.get_friend_edge(actor.id, addressee_id)
         try:
             open_friendship_request(
                 requester_id=str(actor.id),
@@ -7123,8 +7212,16 @@ class ApiService:
             return None
         tuan = pair_paper.tuan_cua(now)
         chon = self.repository.get_pair_rhythm(notebook.cycle_id, tuan)
-        lap_so = [p for p in notebook.proposals if p.purpose == "lap_so" and p.completed_at is not None]
-        nguoi_lap_so = None if not lap_so else str(max(lap_so, key=lambda p: p.completed_at).proposed_by_id)
+        lap_so = [
+            p
+            for p in notebook.proposals
+            if p.purpose == "lap_so" and p.completed_at is not None
+        ]
+        nguoi_lap_so = (
+            None
+            if not lap_so
+            else str(max(lap_so, key=lambda p: p.completed_at).proposed_by_id)
+        )
         tin_hieu = [_paper_signals(p) for p in papers]
         suy = pair_notebook.nguoi_lo_suy(
             people,
@@ -7135,12 +7232,22 @@ class ApiService:
         # Who opened each of the last two weeks: the baton passes when the
         # usual lead opened both (ADR-0034 §2.4).
         mo_loi_truoc = [
-            pair_notebook.nguoi_mo_loi(tin_hieu, cycle_id=str(notebook.cycle_id), tuan=(tuan - timedelta(days=7 * k)).isoformat())
+            pair_notebook.nguoi_mo_loi(
+                tin_hieu,
+                cycle_id=str(notebook.cycle_id),
+                tuan=(tuan - timedelta(days=7 * k)).isoformat(),
+            )
             for k in (1, 2)
         ]
         vai = pair_notebook.vai_tuan(
             suy,
-            None if chon is None else {"nguoi_lo_id": None if chon.nguoi_lo_id is None else str(chon.nguoi_lo_id)},
+            None
+            if chon is None
+            else {
+                "nguoi_lo_id": None
+                if chon.nguoi_lo_id is None
+                else str(chon.nguoi_lo_id)
+            },
             people,
             mo_loi_truoc=mo_loi_truoc,
         )
@@ -7148,7 +7255,10 @@ class ApiService:
             tuan=tuan,
             nguoi_lo=[uuid.UUID(p) for p in vai["nguoi_lo"]],
             cach=vai["cach"],
-            diem=[PairRoleScoreResponse(person_id=uuid.UUID(p), score=n) for p, n in vai["diem"]],
+            diem=[
+                PairRoleScoreResponse(person_id=uuid.UUID(p), score=n)
+                for p, n in vai["diem"]
+            ],
         )
 
     def set_pair_week_role(
@@ -7163,10 +7273,18 @@ class ApiService:
         participants = self._participants(notebook, members)
         consents = _consents_as_dicts(notebook)
         people = [str(p) for p in participants]
-        if notebook.cycle_id is None or notebook.cycle_state != "active" or not pair_notebook.can_bat_doi(consents, people, now=now):
+        if (
+            notebook.cycle_id is None
+            or notebook.cycle_state != "active"
+            or not pair_notebook.can_bat_doi(consents, people, now=now)
+        ):
             raise ApiProblem(409, "consent_missing", "Hai bạn bật «Một đôi» trước đã.")
         other = next((p for p in participants if p != actor.id), None)
-        nguoi_lo_id = actor.id if request.lo == "toi" else (other if request.lo == "nguoi_kia" else None)
+        nguoi_lo_id = (
+            actor.id
+            if request.lo == "toi"
+            else (other if request.lo == "nguoi_kia" else None)
+        )
         self.repository.set_pair_rhythm(
             cycle_id=notebook.cycle_id,
             tuan=pair_paper.tuan_cua(now),
@@ -7207,7 +7325,9 @@ class ApiService:
     ) -> uuid.UUID | None:
         """The one sheet in play, if there is one. A draft belongs to whoever
         started it, so the other person's screen must not learn it exists."""
-        for paper in self.repository.list_pair_papers(context_id) if papers is None else papers:
+        for paper in (
+            self.repository.list_pair_papers(context_id) if papers is None else papers
+        ):
             state = pair_paper.hieu_luc(_paper_dict(paper), now=now)
             if state not in pair_paper.OPEN_STATES:
                 continue
@@ -7263,7 +7383,9 @@ class ApiService:
                 409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã."
             )
         if request.purpose in pair_notebook.PER_PERSON_PURPOSES:
-            return self._propose_per_person(notebook, members, request.purpose, actor, now=now)
+            return self._propose_per_person(
+                notebook, members, request.purpose, actor, now=now
+            )
         # One offer per rung at a time. The other person already asking for the
         # same thing is an offer to ANSWER, by its id: a second proposal made
         # each of them agree only with themselves, and the rung read «both»
@@ -7276,13 +7398,21 @@ class ApiService:
         standing = {
             row.proposal_id
             for row in notebook.consents
-            if row.granted_at is not None and row.revoked_at is None
-            and any(p.id == row.proposal_id and p.proposed_by_id == row.person_id for p in notebook.proposals)
+            if row.granted_at is not None
+            and row.revoked_at is None
+            and any(
+                p.id == row.proposal_id and p.proposed_by_id == row.person_id
+                for p in notebook.proposals
+            )
         }
         for row in notebook.proposals:
-            if row.purpose != request.purpose or row.id not in standing or not pair_notebook.dang_cho(
-                {"completed_at": row.completed_at, "expires_at": row.expires_at},
-                now=now,
+            if (
+                row.purpose != request.purpose
+                or row.id not in standing
+                or not pair_notebook.dang_cho(
+                    {"completed_at": row.completed_at, "expires_at": row.expires_at},
+                    now=now,
+                )
             ):
                 continue
             if row.proposed_by_id != actor.id:
@@ -7345,10 +7475,18 @@ class ApiService:
         if not pair_notebook.can_bat_doi(consents, participants, now=now):
             raise ApiProblem(409, "consent_missing", "Hai bạn bật «Một đôi» trước đã.")
         for row in notebook.consents:
-            if row.person_id != actor.id or row.granted_at is None or row.revoked_at is not None:
+            if (
+                row.person_id != actor.id
+                or row.granted_at is None
+                or row.revoked_at is not None
+            ):
                 continue
             proposal = next(
-                (p for p in notebook.proposals if p.id == row.proposal_id and p.purpose == purpose),
+                (
+                    p
+                    for p in notebook.proposals
+                    if p.id == row.proposal_id and p.purpose == purpose
+                ),
                 None,
             )
             if proposal is not None and proposal.completed_at is not None:
@@ -7638,7 +7776,12 @@ class ApiService:
         # ADR-0034 §2.5: a ceiling per person per week, the number shared with
         # the client in packages/shared/nep-nhip.json.
         tuan_nay = pair_paper.tuan_cua(now)
-        if sum(1 for p in papers if p.draft_owner_id == actor.id and p.tuan == tuan_nay) >= pair_paper.TO_MOI_NGUOI_MOI_TUAN:
+        if (
+            sum(
+                1 for p in papers if p.draft_owner_id == actor.id and p.tuan == tuan_nay
+            )
+            >= pair_paper.TO_MOI_NGUOI_MOI_TUAN
+        ):
             raise ApiProblem(
                 409,
                 "paper_week_quota",
@@ -7650,7 +7793,11 @@ class ApiService:
         # function of the rows the lock was taken over.
         lich_su = _lich_su_chu_ky(papers, notebook)
         cho_cu_id = next(
-            (nd["chang"][0]["place_id"] for nd in lich_su if nd["chang"][0]["place_id"]),
+            (
+                nd["chang"][0]["place_id"]
+                for nd in lich_su
+                if nd["chang"][0]["place_id"]
+            ),
             None,
         )
         cho_cu = None if cho_cu_id is None else self.repository.get_place(cho_cu_id)
@@ -7677,9 +7824,15 @@ class ApiService:
         gu = self._gu_cho_nep(notebook, roster, now=now)
         if gu:
             loai = pair_paper.loai_theo_gu(gu)
-            tim = loai is not None and cho_cu is not None and not phac["content"]["chang"][0].get("place_id")
+            tim = (
+                loai is not None
+                and cho_cu is not None
+                and not phac["content"]["chang"][0].get("place_id")
+            )
             ung_vien_gu = (
-                self.repository.list_places(destination_id=cho_cu.destination_id, category=loai)
+                self.repository.list_places(
+                    destination_id=cho_cu.destination_id, category=loai
+                )
                 if tim
                 else []
             )
@@ -7687,7 +7840,12 @@ class ApiService:
                 phac,
                 gu=gu,
                 ung_vien=[row.to_row() for row in ung_vien_gu],
-                da_di=[c["place_id"] for nd in lich_su for c in nd["chang"] if c.get("place_id")],
+                da_di=[
+                    c["place_id"]
+                    for nd in lich_su
+                    for c in nd["chang"]
+                    if c.get("place_id")
+                ],
                 rang_buoc=[{"content": c.content} for c in constraints],
             )
         paper = self.repository.create_pair_paper(
@@ -7714,12 +7872,18 @@ class ApiService:
         *,
         now: datetime,
     ) -> list[dict]:
-        participants = self._participants(notebook, tuple(row.person_id for row in roster))
+        participants = self._participants(
+            notebook, tuple(row.person_id for row in roster)
+        )
         people = [str(p) for p in participants]
         consents = _consents_as_dicts(notebook)
         if not pair_notebook.can_bat_doi(consents, people, now=now):
             return []
-        chia = [p for p in participants if "chia_gu" in pair_notebook.granted_by(consents, str(p), now=now)]
+        chia = [
+            p
+            for p in participants
+            if "chia_gu" in pair_notebook.granted_by(consents, str(p), now=now)
+        ]
         if not chia:
             return []
         tags = self.repository.interests_by_person(list(chia))
@@ -7740,9 +7904,7 @@ class ApiService:
         _require_pair_permission(
             "view_pair_paper",
             actor,
-            {
-                "may_view_paper": _chi_chu_thay(paper, paper.state, actor.id)
-            },
+            {"may_view_paper": _chi_chu_thay(paper, paper.state, actor.id)},
         )
         return paper, members
 
@@ -8159,7 +8321,11 @@ def _lich_su_chu_ky(papers, notebook) -> list[dict]:
     sources are never used to draft again (§8). A sheet whose stored content
     cannot be read is skipped rather than failing the draft.
     """
-    if notebook is None or notebook.cycle_id is None or notebook.cycle_state != "active":
+    if (
+        notebook is None
+        or notebook.cycle_id is None
+        or notebook.cycle_state != "active"
+    ):
         return []
     out: list[dict] = []
     for paper in papers:
@@ -8192,6 +8358,7 @@ def _lich_su_chu_ky(papers, notebook) -> list[dict]:
         if len(out) == _LICH_SU_TOI_DA:
             break
     return out
+
 
 #: The bridge between the two vocabularies. The permission table answers with
 #: the name of the predicate that failed; the client's dictionary translates
@@ -8308,7 +8475,9 @@ def _paper_signals(paper: PairPaperRecord) -> dict:
             }
             for v in paper.versions
         ],
-        "responses": [{"person_id": str(r.person_id), "kind": r.kind} for r in paper.responses],
+        "responses": [
+            {"person_id": str(r.person_id), "kind": r.kind} for r in paper.responses
+        ],
     }
 
 

@@ -1,0 +1,166 @@
+# Stack RuDi chạy trên DB và MinIO của máy vnlocal.
+#
+# Khác docker-compose.yml ở gốc repo (máy dev, Postgres cục bộ, seed dữ liệu
+# bịa) ở ba chỗ:
+#   - không có dịch vụ postgres: DB `rudi` nằm trên máy vnlocal
+#     (vnlocal HANDOFF-RUDI-TRA-LOI.md), DSN lấy từ file bí mật
+#   - không seed: danh mục đến từ `rudi-ingest sync`, không bao giờ từ
+#     app.places.seed_catalog
+#   - thêm dịch vụ `ingest`: kéo danh mục mỗi 10 phút, ghi ảnh vào cùng volume
+#     mà API đọc
+#
+# Chạy từ gốc repo:
+#   docker compose -f deploy/vnlocal/compose.yml up -d --build
+#
+# Bí mật (không commit, mode 600):
+#   ~/.config/rudi/vnlocal.env  MOBILE_DATABASE_URL, VNLOCAL_PG_DSN, VNLOCAL_S3_*
+#   ~/.config/rudi/stack.env    MOBILE_INTERNAL_TOKEN, MOBILE_PERSON_ID_KEY,
+#                               MOBILE_OTP_DEBUG_CODE (chỉ khi chưa có cổng SMS)
+name: rudi-vnlocal
+
+x-api-image: &api-image
+  build:
+    context: ../../services/api
+  image: rudi-vnlocal/api:dev
+
+x-core-image: &core-image
+  build:
+    context: ../../services/core
+  image: rudi-vnlocal/core:dev
+
+x-secrets: &secrets
+  env_file:
+    - ${HOME}/.config/rudi/vnlocal.env
+    - ${HOME}/.config/rudi/stack.env
+
+x-env: &env
+  MOBILE_AUTH_MODE: ${MOBILE_AUTH_MODE:-prod}
+  MOBILE_MEDIA_ROOT: /var/lib/rudi/media
+
+services:
+  # Một lần rồi thoát, theo thứ tự: Alembic → bảng Go của chat → bảng nạp danh mục.
+  migrate:
+    <<: [*api-image, *secrets]
+    command: ["alembic", "upgrade", "head"]
+    environment: *env
+    restart: "no"
+
+  migrate-chat:
+    <<: [*core-image, *secrets]
+    command: ["migrate-chat"]
+    environment: *env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  migrate-ingest:
+    <<: [*core-image, *secrets]
+    entrypoint: ["/rudi-ingest"]
+    command: ["migrate"]
+    environment: *env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  api:
+    <<: [*api-image, *secrets]
+    command: ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *env
+      FORWARDED_ALLOW_IPS: "*"
+    volumes:
+      - rudi-media-data:/var/lib/rudi/media
+    expose: ["8000"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3).status == 200 else 1)",
+        ]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 30
+    restart: unless-stopped
+
+  core:
+    <<: [*core-image, *secrets]
+    environment:
+      <<: *env
+      MOBILE_PYTHON_UPSTREAM: http://api:8000
+      MOBILE_BRAIN_URL: http://api:8000
+      # Connection budget on the shared server (rudi_owner CONNECTION LIMIT
+      # 40): core 18 + api 15 (SQLAlchemy 5 + overflow 10) + ingest 3 +
+      # janitor 1 = 37,
+      # leaving room for one-shot migrations and an operator's psql.
+      MOBILE_DB_MAX_CONNS: "18"
+      # Catalogue snapshot per destination; sync applies a batch every ~10 min.
+      MOBILE_CATALOGUE_CACHE_TTL: ${RUDI_CATALOGUE_CACHE_TTL:-30s}
+    # Go serves the photo bytes (GET /places/{id}/photos/{photo_id} is
+    # owner: go in ownership/routes.json), so it must see the files `ingest`
+    # writes -- same volume, same path.
+    volumes:
+      - rudi-media-data:/var/lib/rudi/media
+    ports:
+      - "${RUDI_API_PORT:-8124}:8000"
+    depends_on:
+      api:
+        condition: service_healthy
+      migrate-chat:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/core", "healthcheck"]
+      interval: 5s
+      timeout: 3s
+      start_period: 3s
+      retries: 30
+    restart: unless-stopped
+
+  # Kéo danh mục từ DB `vnlocal` (keyset synced_at, place_id), áp vào `places`,
+  # rồi chép ảnh từ bucket `vnlocal-frames` qua bộ sanitize vào volume media.
+  ingest:
+    <<: [*core-image, *secrets]
+    entrypoint: ["/rudi-ingest"]
+    command: ["sync", "--every", "${RUDI_SYNC_EVERY:-10m}"]
+    environment:
+      <<: *env
+      MOBILE_DB_MAX_CONNS: "3"
+    volumes:
+      - rudi-media-data:/var/lib/rudi/media
+    # The image's HEALTHCHECK probes the core server, which this container
+    # does not run; a round's success is in its log line instead.
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate-ingest:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Removes expired OTP challenges, sessions and idempotency keys every 6h,
+  # then unlinks files queued for deletion (internal/janitor); audit_events is
+  # never touched.
+  janitor:
+    <<: [*core-image, *secrets]
+    command: ["purge-expired", "--every", "6h"]
+    environment:
+      <<: *env
+      MOBILE_DB_MAX_CONNS: "1"
+    # Reaps files queued in pending_object_deletes, so it sees the same media.
+    volumes:
+      - rudi-media-data:/var/lib/rudi/media
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  rudi-media-data:

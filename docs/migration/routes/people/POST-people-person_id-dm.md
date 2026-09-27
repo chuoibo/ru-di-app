@@ -103,3 +103,9 @@ Corpus sinh: `generated/w10-422/post-people-person_id-dm.yaml` (18 bước).
 - `unavailable` trong thân route này luôn `false`, kể cả khi pair đã chặn (chỉ quan sát được khi mở lại pair sau khi kết bạn lại, nơi không còn chặn).
 - `can_open(other_exists=…)` và `_is_blocked_with` không chặn thêm gì so với «là bạn»: chặn và xoá tài khoản đều đã gỡ cạnh `accepted` trước đó. Hai lớp trùng.
 - Dev: người đã xoá tài khoản vẫn kết bạn được và mở pair cũ nhận 404 `context_not_found` `Context does not exist` (tiếng Anh, khác câu 404 của cửa này), trong khi người kia nhận câu chung.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `POST /people/{person_id}/dm`: đổi thật: `SqlAlchemyApiRepository.list_person_context_summaries` — tin mới nhất bằng LATERAL thay vì quét — cùng kết quả; Go repo/conversations.go.

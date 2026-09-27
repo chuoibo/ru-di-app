@@ -53,6 +53,7 @@ _PHUONG_THUC = {
     "keep_pair_paper_line",
     "_require_pair_permission",
     "_pair_chat_consent",
+    "_pair_taste_sharers",
     "_propose_per_person",
     "_pair_taste",
     "_pair_roster_or_404",

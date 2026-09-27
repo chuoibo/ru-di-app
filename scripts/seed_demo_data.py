@@ -499,6 +499,10 @@ def record_expense(context_id: uuid.UUID, spec: dict, occurred_at: datetime) -> 
             "surcharges": [],
             "discounts": [],
         },
+        # A proposal writes into the group, so it is made by a member of it.
+        actor=payer,
+        roles=OWNER_ROLES,
+        context_id=context_id,
         write_key=idempotency_key(f"expense:{spec['slug']}"),
     )
     confirmation = call(

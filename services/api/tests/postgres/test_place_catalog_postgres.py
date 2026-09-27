@@ -28,6 +28,7 @@ def _place(**overrides) -> Place:
         address=None,
         lat=11.94,
         lng=108.44,
+        geo_precision="rooftop",
         traits=[],
         source="osm",
         source_ref="node/777",
@@ -43,6 +44,31 @@ def test_the_seeder_is_idempotent(postgres_session: Session):
     assert truoc is not None, "conftest phải seed danh mục"
     dests, places = seed_place_catalog(postgres_session)
     assert (dests, places) == (0, 0)
+
+
+def test_the_seeder_does_not_bring_back_a_purged_catalogue(postgres_session: Session):
+    """Once the fed catalogue is in, a restart must not reseed what was purged."""
+    postgres_session.add(
+        _place(
+            id="vnl-probe",
+            source="vnlocal",
+            source_ref="plc_probe",
+            license=None,
+            lat=None,
+            lng=None,
+            geo_precision=None,
+        )
+    )
+    postgres_session.flush()
+    seed = (
+        postgres_session.get(Place, "p-01")
+        or postgres_session.scalars(select(Place).where(Place.source == "seed")).first()
+    )
+    assert seed is not None, "conftest phải seed danh mục"
+    postgres_session.delete(seed)
+    postgres_session.flush()
+    assert seed_place_catalog(postgres_session) == (0, 0)
+    assert postgres_session.get(Place, seed.id) is None
 
 
 def test_the_twelve_seed_rows_keep_their_ids(postgres_session: Session):

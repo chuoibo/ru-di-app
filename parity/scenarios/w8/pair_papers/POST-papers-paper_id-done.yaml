@@ -240,31 +240,31 @@ steps:
     request:
       method: POST
       path: '/papers/{{paper_3}}/done'
-  - id: closed_owner_drafts
-    as: owner
+  - id: closed_mate_drafts
+    as: mate
     request:
       method: POST
       path: '/contexts/{{pair}}/papers/draft'
     bind:
       paper_4: {from: body, pointer: /id, class: uuid}
-  - id: closed_owner_dates
-    as: owner
+  - id: closed_mate_dates
+    as: mate
     request:
       method: PATCH
       path: '/papers/{{paper_4}}/draft'
       headers:
         content-type: 'application/json'
       body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
-  - id: closed_owner_sends
-    as: owner
+  - id: closed_mate_sends
+    as: mate
     request:
       method: POST
       path: '/papers/{{paper_4}}/send'
       headers:
         content-type: 'application/json'
       body_raw: '{"version":1}'
-  - id: closed_mate_agrees
-    as: mate
+  - id: closed_owner_agrees
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_4}}/versions/1/responses'
