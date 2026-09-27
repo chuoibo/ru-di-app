@@ -12,10 +12,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"log/slog"
 	"mobile/services/core/internal/gzipjson"
+	"mobile/services/core/internal/janitor"
 	"net"
 	"net/http"
 	"os"
@@ -66,6 +68,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return listRoutes(args[1:], stdout, stderr)
 	case "migrate-chat", "migrate-chat-candidate":
 		return migrateChat(getenv, stdout, stderr)
+	case "purge-expired":
+		return purgeExpired(args[1:], getenv, stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -465,4 +469,43 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintln(stdout, "Đã áp dụng migration chat: feed thay đổi và engine AI nhóm. Ownership route giữ nguyên.")
 	return 0
+}
+
+// purgeExpired removes expired OTP challenges, sessions and idempotency keys
+// (internal/janitor). `--every 6h` keeps running; SIGTERM stops it between
+// passes.
+func purgeExpired(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
+	set := flag.NewFlagSet("purge-expired", flag.ContinueOnError)
+	every := set.Duration("every", 0, "run repeatedly at this interval (0 = once)")
+	if err := set.Parse(args); err != nil {
+		return 2
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "purge-expired: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	for {
+		report, err := janitor.Purge(ctx, pool, time.Now().UTC())
+		if err != nil && ctx.Err() == nil {
+			fmt.Fprintln(stderr, "purge-expired:", err)
+			if *every == 0 {
+				return 1
+			}
+		} else {
+			fmt.Fprintf(stdout, "purge-expired: otp %d · sessions %d · idempotency %d\n",
+				report.OTPChallenges, report.Sessions, report.IdempotencyKeys)
+		}
+		if *every == 0 {
+			return 0
+		}
+		select {
+		case <-ctx.Done():
+			return 0
+		case <-time.After(*every):
+		}
+	}
 }

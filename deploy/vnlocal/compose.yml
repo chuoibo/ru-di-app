@@ -97,7 +97,8 @@ services:
       MOBILE_PYTHON_UPSTREAM: http://api:8000
       MOBILE_BRAIN_URL: http://api:8000
       # Connection budget on the shared server (rudi_owner CONNECTION LIMIT
-      # 40): core 18 + api 15 (SQLAlchemy 5 + overflow 10) + ingest 3 = 36,
+      # 40): core 18 + api 15 (SQLAlchemy 5 + overflow 10) + ingest 3 +
+      # janitor 1 = 37,
       # leaving room for one-shot migrations and an operator's psql.
       MOBILE_DB_MAX_CONNS: "18"
       # Catalogue snapshot per destination; sync applies a batch every ~10 min.
@@ -139,6 +140,21 @@ services:
       disable: true
     depends_on:
       migrate-ingest:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Removes expired OTP challenges, sessions and idempotency keys every 6h
+  # (internal/janitor); audit_events is never touched.
+  janitor:
+    <<: [*core-image, *secrets]
+    command: ["purge-expired", "--every", "6h"]
+    environment:
+      <<: *env
+      MOBILE_DB_MAX_CONNS: "1"
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
         condition: service_completed_successfully
     restart: unless-stopped
 
