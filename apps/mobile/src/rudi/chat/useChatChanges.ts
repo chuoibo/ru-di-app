@@ -2,14 +2,28 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { ApiError, BASE_URL, tokenPhienHienTai } from "../../api";
+import { docKhungAi, laKhungAi } from "../ai/phong-ai";
+import type { NhanKhungAi } from "../ai/useRoomAi";
 import { docAnhChupChat, docThayDoi, docTrangThayDoi, gopBinhChon, type AnhChupChat, type BinhChonSong, type TrangThayDoi } from "./thay-doi";
 
-/** The legacy feed is explicit; it is never a plaintext fallback for v2. */
-export function useChatChanges(contextId: string, personId: string, apply: (snapshot: AnhChupChat) => void) {
+/**
+ * The legacy feed is explicit; it is never a plaintext fallback for v2.
+ *
+ * With `ai` the socket also asks for the room's `ai` frames (slice 12): the
+ * authenticate frame says `"ai": true`, and each frame goes to `ai.khung`
+ * BEFORE the page lane -- never waiting on a hydration in progress, never
+ * acknowledged, never moving the cursor -- so a frame that arrives while a
+ * page hydrates does not close the socket the way an unexpected page does.
+ * Each new socket starts the room's answers over (`ai.moi`): the server
+ * replays whatever is still being written.
+ */
+export function useChatChanges(contextId: string, personId: string, apply: (snapshot: AnhChupChat) => void, ai?: NhanKhungAi) {
   const [votes, setVotes] = useState<Record<string, BinhChonSong>>({});
   const [connection, setConnection] = useState<"connecting" | "live" | "recovering" | "unsupported">("connecting");
   const applyRef = useRef(apply);
   applyRef.current = apply;
+  const aiRef = useRef(ai);
+  aiRef.current = ai;
   useFocusEffect(useCallback(() => {
     let disposed = false;
     let generation = 0;
@@ -50,15 +64,25 @@ export function useChatChanges(contextId: string, personId: string, apply: (snap
       socket = current;
       current.onopen = () => {
         if (!active(version)) { current.close(); return; }
-        current.send(JSON.stringify({ type: "authenticate", token }));
+        const nhanAi = aiRef.current;
+        nhanAi?.moi();
+        current.send(JSON.stringify(nhanAi ? { type: "authenticate", token, ai: true } : { type: "authenticate", token }));
       };
       current.onmessage = async (event) => {
         if (!active(version) || socket !== current) return;
+        let raw: unknown;
+        try { raw = JSON.parse(String(event.data)); } catch { current.close(); return; }
+        // A room frame is not a page: routed before the busy check.
+        if (laKhungAi(raw)) {
+          const k = docKhungAi(raw);
+          if (k) aiRef.current?.khung(k);
+          return;
+        }
         // HTTP reconciliation and the socket share one ordered apply lane.
         if (busy) { current.close(); return; }
         busy = true;
         try {
-          if (await page(JSON.parse(String(event.data)), version)) {
+          if (await page(raw, version)) {
             if (current.readyState === WebSocket.OPEN) current.send(JSON.stringify({ type: "ack", sequence: after }));
             failures = 0;
             setConnection("live");

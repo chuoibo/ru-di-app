@@ -117,8 +117,25 @@ export function thuLaiDuoc(request: AiInvocation): boolean {
   return request.status === "failed" && request.code !== "chia_bill_no_expenses" && request.code !== "trigger_deleted";
 }
 
+/**
+ * Who is looking at a pending answer in the thread: the person who asked, or
+ * another member of the room watching it through the `ai` frames (slice 12).
+ */
+export type NguoiXem = "nguoi_hoi" | "thanh_vien";
+
+/**
+ * The second line of a pending answer, for each viewer. The answer goes under
+ * the `@Rủ Đi` message, which is the requester's own; another member reads it
+ * under someone else's, quoted just above the row. `cau-chu-goi-ai.test.mjs`
+ * holds these to the same voice as the refusal sentences.
+ */
+export const CAU_CHO_TRA_LOI: Record<NguoiXem, string> = {
+  nguoi_hoi: "Câu trả lời sẽ hiện ngay dưới tin của bạn.",
+  thanh_vien: "Câu trả lời sẽ hiện ngay dưới tin nhờ này.",
+};
+
 /** The words on a pending or failed invocation row, per command. */
-export function chuHangLoiGoi(request: AiInvocation): { tieuDe: string; cau: string } {
+export function chuHangLoiGoi(request: AiInvocation, nguoiXem: NguoiXem = "nguoi_hoi"): { tieuDe: string; cau: string } {
   const chia = request.command === "chia_bill";
   // An answer in the thread says what it is reading, with the count the
   // server confirmed (design 03 §5: «Rủ Đi AI đang đọc {n} tin…»).
@@ -126,7 +143,7 @@ export function chuHangLoiGoi(request: AiInvocation): { tieuDe: string; cau: str
     const n = request.so_tin_doc ?? 0;
     return {
       tieuDe: n > 0 ? `Rủ Đi AI đang đọc ${n} tin…` : "Rủ Đi AI đang đọc lời nhờ…",
-      cau: "Câu trả lời sẽ hiện ngay dưới tin của bạn.",
+      cau: CAU_CHO_TRA_LOI[nguoiXem],
     };
   }
   if (request.status === "failed") {
@@ -169,13 +186,17 @@ export type HangTraLoiSong =
  *
  * A failure, a cancel or a revoked read hides the row: the invocation list
  * the screen already polls then shows the failed row with its «Thử lại»,
- * which is the one place the words for a failed request live.
+ * which is the one place the words for a failed request live. Another
+ * member of the room (`nguoiXem = "thanh_vien"`, slice 12) gets the same
+ * row, with the line that says the answer goes under someone else's message;
+ * a failure hides it and nothing replaces it: the reason is the requester's.
  */
 export function hangTraLoiSong(
   request: AiInvocation,
   traLoi: TraLoiSong,
   chu: string,
   daCoThe: (messageId: string) => boolean,
+  nguoiXem: NguoiXem = "nguoi_hoi",
 ): HangTraLoiSong {
   if (traLoi.pha === "loi" || traLoi.pha === "huy" || traLoi.pha === "thu_hoi") return { kieu: "an" };
   if (traLoi.pha === "xong") {
@@ -183,7 +204,17 @@ export function hangTraLoiSong(
     if (id && daCoThe(id)) return { kieu: "an" };
   }
   if (chu !== "") return { kieu: "viet", chu };
-  return { kieu: "nghi", ...chuHangLoiGoi(request) };
+  return { kieu: "nghi", ...chuHangLoiGoi(request, nguoiXem) };
+}
+
+/**
+ * The invocation another member's row stands for, built from what the room's
+ * frames said (slice 12): its id, the message it answers, the count the
+ * server confirmed. Another member never reads the invocation itself (it is
+ * the requester's), so this is only what the row needs to draw.
+ */
+export function loiGoiCuaPhong(inv: string, tin: string, soTin: number): AiInvocation {
+  return { id: inv, status: "running", code: null, message_id: null, trigger_message_id: tin, so_tin_doc: soTin > 0 ? soTin : null, created_at: "", updated_at: "" };
 }
 
 /**

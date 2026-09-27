@@ -52,7 +52,9 @@ import { useBanNhap } from "../../chat/useBanNhap";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { useChatChanges } from "../../chat/useChatChanges";
 import { useChatAi } from "../../chat/useChatAi";
-import { chuHangLoiGoi, laTraLoiDangCho, lenhSanSang, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
+import { chuHangLoiGoi, laTraLoiDangCho, lenhSanSang, loiGoiCuaPhong, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
+import { luotChoNguoiXem } from "../../ai/phong-ai";
+import { useRoomAi } from "../../ai/useRoomAi";
 import { timNhacAi } from "../../chat/nhac-ai";
 import { goiSeGui } from "../../chat/chip-boi-canh";
 import type { BoiCanh } from "../../ai/boi-canh";
@@ -72,7 +74,7 @@ import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 import { MenuTin } from "./MenuTin";
 import { TheAiView } from "./TheAi";
 import { TraLoiAi } from "./TraLoiAi";
-import { TraLoiAiDangViet } from "./TraLoiAiDangViet";
+import { HangTraLoiAiDangViet, TraLoiAiDangViet } from "./TraLoiAiDangViet";
 import { ChipBoiCanh } from "./ChipBoiCanh";
 import { CongCuChat, ToHen, type KhayChat } from "./SoHen";
 import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
@@ -147,7 +149,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const { phien, datPhien } = useRudiSession();
   const personId = phien?.person_id ?? "";
   const chat = useTinNhan(contextId, personId);
-  const changes = useChatChanges(contextId, personId, chat.nhanAnhChup);
+  // The room's answers as other members watch them: `ai` frames on the
+  // feed's own socket (slice 12).
+  const phongAi = useRoomAi(contextId);
+  const changes = useChatChanges(contextId, personId, chat.nhanAnhChup, phongAi.nhan);
   const ai = useChatAi(contextId, personId);
   const { text: nhap, change: doiNhap, snapshot: nhapRef, clearIfUnchanged: xoaNhapCu } = useBanNhap();
   const [dangGui, setDangGui] = useState(false);
@@ -294,6 +299,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // row gives way the moment the published card is here.
   const tinTheoId = useMemo(() => new Map(chat.tin.map((t) => [t.id, t])), [chat.tin]);
   const daCoThe = useCallback((messageId: string) => tinTheoId.has(messageId), [tinTheoId]);
+  // Other members' answers being written, in the thread. The viewer's own
+  // (their invocation, or an answer to their own message) is left to their
+  // requester row, which follows the invocation itself.
+  const traLoiPhong = useMemo(() => {
+    const cuaToi = new Set(ai.requests.map((r) => r.id));
+    return luotChoNguoiXem(phongAi.kho, (inv, tin) => cuaToi.has(inv) || tinTheoId.get(tin)?.author_id === personId);
+  }, [phongAi.kho, ai.requests, tinTheoId, personId]);
   // Built from `tinHien`, the list the screen is drawing, not from `chat.tin`.
   // `tinChoHoiThoai` hides a `/vote` command once its poll card exists, so that
   // command is not on screen -- and "this is what you are looking at" has to be
@@ -824,7 +836,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             ))}
             {/* The requester's own answer in the thread while it is written:
                 the reading sentence, the words as they come, then the real
-                card (slice 11). Other members see only the card (slice 12). */}
+                card (slice 11). */}
             {ai.requests.filter(laTraLoiDangCho).map((request) => (
               <TraLoiAiDangViet
                 contextId={contextId}
@@ -837,6 +849,21 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 request={request}
                 tenNguoi={tenNguoi}
                 trigger={request.trigger_message_id ? tinTheoId.get(request.trigger_message_id) ?? null : null}
+              />
+            ))}
+            {/* Everyone else in the room watches the same answer: the same row
+                and state machine, fed by the feed socket's `ai` frames, until
+                the card arrives (slice 12). */}
+            {traLoiPhong.map((l) => (
+              <HangTraLoiAiDangViet
+                daCoThe={daCoThe}
+                giamChuyenDong={reduced}
+                key={`phong-${l.inv}`}
+                nguoiXem="thanh_vien"
+                request={loiGoiCuaPhong(l.inv, l.tin, l.soTin)}
+                tenNguoi={tenNguoi}
+                traLoi={l.traLoi}
+                trigger={tinTheoId.get(l.tin) ?? null}
               />
             ))}
             {ai.requests.filter((request) => request.status !== "succeeded" && request.status !== "cancelled" && !laTraLoiDangCho(request)).map((request) => (

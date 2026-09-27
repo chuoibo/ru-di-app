@@ -2,9 +2,10 @@ import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
+import { KHO_PHONG_TRONG, buocPhong, docKhungAi, luotChoNguoiXem, type KhoPhongAi } from "../../src/rudi/ai/phong-ai";
 import { TRA_LOI_DAU, buocTraLoi, type TraLoiSong } from "../../src/rudi/ai/tra-loi-song";
 import type { SuKienSSE } from "../../src/rudi/ai/sse";
-import type { AiInvocation } from "../../src/rudi/chat/ai-invocations";
+import { loiGoiCuaPhong, type AiInvocation } from "../../src/rudi/chat/ai-invocations";
 import type { Tin } from "../../src/rudi/chat/tin-song";
 import { CUA_FIXTURE_DEV } from "../../src/rudi/cua-fixture";
 import { NepPhien } from "../../src/rudi/nep/NepPhien";
@@ -16,7 +17,8 @@ import { Chip, Heading, Inline, RudiScreen, SectionHeader, TopBar } from "../../
  * Lab board for slice 11: the streamed answer in each of its states, drawn by
  * the components that ship (`NepPhien`, `HangTraLoiAiDangViet`) from states
  * built by the same reducer the screens run (`buocTraLoi`). Invented words,
- * no server. «Chạy thử» replays a whole answer at the server's pace (16 runes
+ * no server. Slice 12 adds another member's view: the same row fed by the
+ * room's WebSocket `ai` frames, folded by the screen's own `buocPhong`. «Chạy thử» replays a whole answer at the server's pace (16 runes
  * every 25 ms) so the growing text can be watched. Never in a store build.
  */
 const CAU_HOI = "Tối nay đi đâu ngắm đèn?";
@@ -54,6 +56,32 @@ const HOI_NHOM: AiInvocation = {
   created_at: "2026-09-27T12:00:00Z",
   updated_at: "2026-09-27T12:00:00Z",
 };
+/** Another member's view: WebSocket frames as the server sends them, read and folded by the screen's code. */
+const INV_PHONG = "0b8f1c9e-aaaa-4bbb-8ccc-00000000aa01";
+const TIN_PHONG = "0b8f1c9e-aaaa-4bbb-8ccc-00000000bb01";
+const khungPhong = (id: string, e: string, d: unknown) => ({ type: "ai", inv: INV_PHONG, tin: TIN_PHONG, so_tin: 6, id, e, d });
+const gopPhong = (ds: unknown[]): KhoPhongAi =>
+  ds.reduce<KhoPhongAi>((kho, raw) => {
+    const k = docKhungAi(raw);
+    return k ? buocPhong(kho, k, 0) : kho;
+  }, KHO_PHONG_TRONG);
+const PHONG_DANG_DOC = gopPhong([khungPhong("1-0", "trang_thai", { cau: "dang_doc" })]);
+const PHONG_DANG_VIET = gopPhong([
+  khungPhong("1-0", "trang_thai", { cau: "dang_doc" }),
+  ...NHIP.slice(0, 4).map((t, i) => khungPhong(`2-${i}`, "delta", { p: 0, text: t })),
+]);
+const TIN_CUA_LAN: Tin = {
+  id: TIN_PHONG,
+  context_id: "lab",
+  author_id: "lab-lan",
+  kind: "text",
+  body: "@Rủ Đi tối nay ăn gì gần hồ?",
+  image_url: null,
+  card: null,
+  created_at: "2026-09-27T12:00:00Z",
+  cursor: "lab",
+};
+
 const TIN_NHAC: Tin = {
   id: "lab-trigger",
   context_id: "lab",
@@ -88,6 +116,11 @@ export default function TraLoiSongLab() {
 
   const khung = { borderRadius: 14, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, padding: 16 } as const;
   const ten = () => "Bạn";
+  const tenPhong = (id: string | null) => (id === "lab-lan" ? "Lan" : "Bạn");
+  const hangPhong = (kho: KhoPhongAi) =>
+    luotChoNguoiXem(kho, () => false).map((l) => (
+      <HangTraLoiAiDangViet daCoThe={() => false} giamChuyenDong={giam} key={l.inv} nguoiXem="thanh_vien" request={loiGoiCuaPhong(l.inv, l.tin, l.soTin)} tenNguoi={tenPhong} traLoi={l.traLoi} trigger={TIN_CUA_LAN} />
+    ));
   return (
     <RudiScreen>
       <TopBar title="Chữ AI hiện dần" />
@@ -126,6 +159,13 @@ export default function TraLoiSongLab() {
       <View style={{ gap: 8 }} testID="lab-nhom">
         <HangTraLoiAiDangViet daCoThe={() => false} giamChuyenDong={giam} request={HOI_NHOM} tenNguoi={ten} traLoi={TRA_LOI_DAU} trigger={TIN_NHAC} />
         <HangTraLoiAiDangViet daCoThe={() => false} giamChuyenDong={giam} request={HOI_NHOM} tenNguoi={ten} traLoi={DANG_VIET_THAT} trigger={TIN_NHAC} />
+      </View>
+
+      <SectionHeader title="Luồng nhóm · thành viên khác" />
+      <Text style={{ ...typography.note, color: colors.inkFaint }}>Lan hỏi, bạn xem: cùng hàng đó, chữ tới qua kết nối của luồng tin.</Text>
+      <View style={{ gap: 8 }} testID="lab-phong">
+        {hangPhong(PHONG_DANG_DOC)}
+        {hangPhong(PHONG_DANG_VIET)}
       </View>
     </RudiScreen>
   );

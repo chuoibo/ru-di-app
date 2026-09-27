@@ -437,3 +437,24 @@ test("Nếp: câu trạng thái của stream đúng từng chữ bảng cauTrang
     assert.doesNotMatch(cau, /[a-z]+_[a-z_]+|lỗi|[—–]/i, cau);
   }
 });
+
+/* ------------------------------------------------ 6. hàng chờ của người xem khác (lát 12) */
+
+test("Nhóm: câu dưới hàng «đang đọc» nói đúng tin của ai, cho người hỏi và cho thành viên khác", async () => {
+  // Slice 12: another member watches the same pending answer. The line under
+  // «Rủ Đi AI đang đọc {n} tin…» must not tell them the answer goes under
+  // «tin của bạn» -- it goes under someone else's message, quoted just above.
+  // One module holds both lines (ai-invocations.ts); held here to the same
+  // voice as every sentence of this gate.
+  const { CAU_CHO_TRA_LOI } = await import("../dist-test/rudi/chat/ai-invocations.js");
+  assert.deepEqual(Object.keys(CAU_CHO_TRA_LOI).sort(), ["nguoi_hoi", "thanh_vien"]);
+  assert.notEqual(CAU_CHO_TRA_LOI.nguoi_hoi, CAU_CHO_TRA_LOI.thanh_vien);
+  assert.match(CAU_CHO_TRA_LOI.nguoi_hoi, /của bạn/);
+  assert.doesNotMatch(CAU_CHO_TRA_LOI.thanh_vien, /của bạn/, "thành viên khác không phải người gửi tin nhờ");
+  for (const cau of Object.values(CAU_CHO_TRA_LOI)) {
+    assert.doesNotMatch(cau, /[a-z]+_[a-z_]+/, `câu chứa mã máy: ${cau}`);
+    assert.doesNotMatch(cau, /lỗi|HTTP|\b(4\d\d|5\d\d)\b/i, `câu viết như báo lỗi: ${cau}`);
+    assert.doesNotMatch(cau, /[—–]/, `câu dùng gạch dài: ${cau}`);
+    assert.ok(cau.trim().length > 20, `câu quá ngắn: ${cau}`);
+  }
+});
