@@ -1,5 +1,9 @@
 # Requires a saved diary with two pages and two synthetic photos on PHOTO_DAY.
 appId: com.lakiet.rudi
+env:
+  PHOTO_COUNT: "3"
+  PAGE_NUMBER: "2"
+  TRIP_TITLE: "Hai ngày gom nắng"
 ---
 - openLink: "rudi://diaries/${DIARY_ID}"
 - extendedWaitUntil:
@@ -29,13 +33,18 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Tấm nào mở đầu câu chuyện?"
 - scrollUntilVisible:
     element:
-      text: "Đưa trang 2 lên trước"
+      text: "Đưa trang ${PAGE_NUMBER} lên trước"
       enabled: true
     direction: DOWN
     timeout: 60000
 - tapOn:
-    text: "Đưa trang 2 lên trước"
+    text: "Đưa trang ${PAGE_NUMBER} lên trước"
     enabled: true
+- scrollUntilVisible:
+    element:
+      text: "Chỉ mình tôi"
+    direction: UP
+- tapOn: "Chỉ mình tôi"
 - scrollUntilVisible:
     element:
       text: "Lưu riêng tư"

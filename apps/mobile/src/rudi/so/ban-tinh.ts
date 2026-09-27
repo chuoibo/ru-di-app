@@ -14,7 +14,7 @@
  * appear has not granted anything (spec §13.3, Codex round two).
  */
 
-export const LOAI_SO = ["hoi", "hai-nguoi", "doi"] as const;
+export const LOAI_SO = ["hoi", "doi"] as const;
 export type LoaiSo = (typeof LOAI_SO)[number];
 
 /** What Nếp is allowed to do in a notebook of this kind. Absent means silent. */
@@ -42,18 +42,8 @@ export const BAN_TINH: Record<LoaiSo, BanTinhSo> = {
     coVai: false,
     nhip: { toMoiTuan: 0, lanLaMoiThang: 0, nhacMoiThang: 0 },
     nepDuocLam: [],
-    tuVung: { goiTapThe: "cả hội", cauMo: "Đi đâu cả hội?", nutMoLoi: "Rủ cả hội", tenKhongGian: "Kế hoạch" },
+    tuVung: { goiTapThe: "hội mình", cauMo: "Hội mình hẹn ở đâu?", nutMoLoi: "Rủ cả hội", tenKhongGian: "Kế hoạch" },
     tienHien: "chia-bill",
-  },
-  // Two friends who opened a notebook: sheets are passed, nothing else is on.
-  // Consent tier 2 of spec §7.2; tier 3 turns this into `doi`.
-  "hai-nguoi": {
-    quyetDinh: "to-giay",
-    coVai: false,
-    nhip: { toMoiTuan: 1, lanLaMoiThang: 0, nhacMoiThang: 0 },
-    nepDuocLam: ["phac-to"],
-    tuVung: { goiTapThe: "hai bạn", cauMo: "Đi đâu không?", nutMoLoi: "Rủ đi chơi", tenKhongGian: "Tờ giấy của hai mình" },
-    tienHien: "chi-tieu-chung",
   },
   // A couple: two roles, the weekly sheet, the private notebook, Nếp's four jobs.
   doi: {
@@ -74,7 +64,7 @@ export const BAN_TINH: Record<LoaiSo, BanTinhSo> = {
  */
 export function loaiSoCua(nhom: { kind?: "group" | "pair" }, doi: { bat: boolean } | null): LoaiSo {
   if (nhom.kind !== "pair") return "hoi";
-  return doi?.bat ? "doi" : "hai-nguoi";
+  return doi?.bat ? "doi" : "hoi";
 }
 
 export function banTinhCua(loai: LoaiSo): BanTinhSo {

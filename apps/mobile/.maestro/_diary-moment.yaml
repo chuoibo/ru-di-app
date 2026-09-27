@@ -1,5 +1,9 @@
 # Run with an authenticated synthetic owner and an open same-day MOMENT_ID.
 appId: com.lakiet.rudi
+env:
+  PHOTO_COUNT: "3"
+  PAGE_NUMBER: "2"
+  TRIP_TITLE: "Hai ngày gom nắng"
 ---
 - openLink: "rudi://outings/${MOMENT_ID}/ending"
 - extendedWaitUntil:
@@ -34,7 +38,7 @@ appId: com.lakiet.rudi
 - scrollUntilVisible:
     element:
       text: "Lưu riêng tư"
-    direction: DOWN
+    direction: UP
 - tapOn: "Lưu riêng tư"
 - assertVisible: "Đã giữ lại một cuộc đi."
 - takeScreenshot: diary-08-moment-saved

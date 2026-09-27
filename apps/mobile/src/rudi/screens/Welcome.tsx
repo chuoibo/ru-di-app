@@ -47,20 +47,20 @@ import { Wordmark } from "../ui/Wordmark";
 
 export const WELCOME_PAGES = [
   {
-    title: "Hẹn hội bạn. Rủ Đi lo phần còn lại.",
-    body: "Rủ cả hội hay chỉ một người: khám phá, lên plan, chia bill và giữ trọn kỷ niệm trong một nơi.",
+    title: "Một lời rủ. Nhiều ngày đáng nhớ.",
+    body: "Hội bạn hay người thương, từ lúc chưa biết đi đâu đến khi có chuyện mang về.",
   },
   {
-    title: "Tìm nơi hợp cả hội",
-    body: "Gợi ý theo gu nhóm, khoảng cách và ngân sách. Bạn luôn được sửa trước khi chốt.",
+    title: "Hẹn ở nơi ai cũng muốn tới",
+    body: "Một quán quen, một góc mới. Chọn theo gu, đường đi và khoản cả hội muốn dành.",
   },
   {
-    title: "Chia bill từng đồng",
-    body: "Gán món, xem ai nợ ai. Quyết toán và tài chính đọc cùng một sổ.",
+    title: "Vui cùng nhau, rõ phần mỗi người",
+    body: "Ai dùng món nào, phần người ấy ở đó. Từng đồng rõ ràng, để lời hẹn sau vẫn nhẹ tênh.",
   },
   {
-    title: "Giữ kỷ niệm của hội",
-    body: "Tường riêng, album chuyến đi, check-in khi tới nơi. Đây là không gian của nhóm bạn, không phải mạng xã hội mở.",
+    title: "Đi rồi, còn điều để nhớ",
+    body: "Một buổi hẹn thành khoảnh khắc. Những ngày đi xa thành cuốn sổ. Giữ riêng, hoặc mở cho mọi người.",
   },
 ];
 
@@ -155,7 +155,7 @@ export function WelcomeScreen() {
             <Wordmark height={markHeight} color={colors.coverInk} />
             <Washi tone="accent" tilt={-2} height={34} style={styles.tape}>
               {/* Static dark ink: the tape is coral in both schemes, and the scheme's light ink on coral would read 2.4:1. */}
-              <Text style={[styles.tagline, { color: mauSang.ink }]}>AI đi chơi, chia bill thông minh</Text>
+              <Text style={[styles.tagline, { color: mauSang.ink }]}>Từ lời rủ đến trang kỷ niệm</Text>
             </Washi>
           </View>
 

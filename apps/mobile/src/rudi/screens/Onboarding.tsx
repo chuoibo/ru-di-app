@@ -194,7 +194,7 @@ export function PersonalizationScreen() {
           value={ten}
         />
       ) : null}
-      <Heading title="Cho Rủ Đi biết gu của bạn" />
+      <Heading title="Điều gì khiến bạn muốn ra ngoài?" subtitle="Chọn vài điều mình thích. Gu đổi theo ngày, bạn luôn sửa lại được." />
       <View style={styles.block}>
         {/* A sheet of stickers (ADR-0037 D1, plan S6/S7): each taste is its
             drawing on a paper sticker; choosing one presses it onto the page --

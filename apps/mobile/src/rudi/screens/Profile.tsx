@@ -520,7 +520,7 @@ function TaiChinhNhap() {
       <View style={styles.ghiChu}>
         <Ionicons color={colors.split} name="calculator-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
-          Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa confirm sổ cái. Đây không phải số dư ngân hàng.
+          Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa ghi vào sổ. Đây không phải số dư ngân hàng.
         </Text>
       </View>
     </RudiScreen>

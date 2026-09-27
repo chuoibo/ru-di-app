@@ -188,7 +188,7 @@ export function DangBaiScreen() {
         })}
       </View>
       <NapGiay tieuDe="Vì sao bốn mức?">
-        <Text style={[typography.body, { color: colors.ink }]}>Bốn mức không xếp từ hẹp tới rộng: bạn bè và nhóm là hai tập khác nhau.</Text>
+        <Text style={[typography.body, { color: colors.ink }]}>Chọn Bạn bè không tự chia sẻ với cả nhóm; chọn Nhóm không tự chia sẻ với mọi bạn bè.</Text>
       </NapGiay>
       {muc === "group" ? (
         <View style={styles.khoi}>

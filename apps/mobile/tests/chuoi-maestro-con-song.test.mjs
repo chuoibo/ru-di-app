@@ -90,7 +90,7 @@ const traVe = (s) => s.replace(/[\ue000-\ue00c]/g, (c) => THOAT[c.charCodeAt(0) 
 /** The literal pieces a Maestro regex needs, each alternative separately. */
 function manhChu(chuoi) {
   const ra = [];
-  const an = chuoi.replace(/\\([.()?*+[\]|^$\\])/g, (_, c) => cat(c));
+  const an = chuoi.replace(/\$\{[^}]+\}/g, ".*").replace(/\\([.()?*+[\]|^$\\])/g, (_, c) => cat(c));
   for (const nhanh of an.split("|")) {
     const manh = nhanh
       .split(/\.\*|\.\+|\\d\+?|\\s\+?|\[[^\]]*\][*+?]?|[()^$?*+]|\{\d+(?:,\d*)?\}/)
@@ -160,6 +160,8 @@ test("tên ảnh takeScreenshot được ghim nguyên bộ", () => {
 });
 
 test("bộ tách mảnh chữ: regex thành mảnh chữ thật, mỗi nhánh riêng", () => {
+  assert.deepEqual(manhChu("Chọn ảnh ${PHOTO_DAY}"), [["Chọn ảnh"]]);
+  assert.deepEqual(manhChu("Mở sổ ${TITLE} sai nhãn"), [["Mở sổ", "sai nhãn"]]);
   assert.deepEqual(manhChu("Bạn nhập tay 2 món.*"), [["Bạn nhập tay 2 món"]]);
   assert.deepEqual(manhChu("Rủ Đi thôi!|Khám phá"), [["Rủ Đi thôi!"], ["Khám phá"]]);
   assert.deepEqual(manhChu("Còn \\d+ ngày"), [["Còn", "ngày"]]);

@@ -19,6 +19,10 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Khám phá"
     timeout: 60000
+- tapOn: "Lên plan"
+- extendedWaitUntil:
+    visible: "Tạo mới"
+    timeout: 30000
 - tapOn: "Tạo mới"
 - extendedWaitUntil:
     visible: "Chia hóa đơn"

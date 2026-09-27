@@ -1,3 +1,5 @@
+import { docSo as docSoDoi } from "../to-giay/to-giay-song";
+import { caHaiDongY } from "../to-giay/so-doi-map";
 /**
  * The bill on the fixture build, and the settlement on both builds.
  *
@@ -355,7 +357,15 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
   // `tienHien`), with the transfer list one tap away instead of on top. Only a
   // `pair` context: a group that happens to have two members is not a couple,
   // and the screen does not guess.
-  const laDoi = laPair(phien?.contexts?.find((c) => c.id === contextId)) && banTinhCua("hai-nguoi").tienHien === "chi-tieu-chung";
+  const [laDoi, setLaDoi] = useState(false);
+  useFocusEffect(useCallback(() => {
+    let current = true;
+    setLaDoi(false);
+    if (laPair(phien?.contexts?.find((c) => c.id === contextId))) {
+      void docSoDoi(contextId, { actorId }).then((so) => { if (current) setLaDoi(caHaiDongY(so, "bat_doi") && banTinhCua("doi").tienHien === "chi-tieu-chung"); }).catch(() => undefined);
+    }
+    return () => { current = false; };
+  }, [actorId, contextId, phien?.contexts]));
   const [moChuyen, setMoChuyen] = useState(false);
   const [du, setDu] = useState<QuyetToanLive | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
@@ -586,7 +596,7 @@ function QuyetToanNhap() {
       <TopBar title="Quyết toán chuyến đi" right={<DemoBadge />} />
       {/* A ledger, not a dashboard: every sum is a row, teal only on the number. */}
       <View>
-        <DongTien dam nhan="Tổng chi tiêu cả chuyến (8 người)" phu="Nháp trên máy, chưa confirm vào sổ cái" tone="split" vnd={picture.tripTotal} />
+        <DongTien dam nhan="Tổng chi tiêu cả chuyến (8 người)" phu="Bản tính nháp trên máy, chưa ghi vào sổ" tone="split" vnd={picture.tripTotal} />
         <DongTien nhan="Bill Xóm Lèo" vnd={picture.billTotal} />
         <DongTien nhan="Homestay + xăng" phu="Phần còn lại của chuyến" vnd={picture.otherTotal} />
       </View>

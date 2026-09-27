@@ -90,7 +90,7 @@ export function AddFriendScreen() {
         <TopBar title="Thêm bạn" />
         <Heading
           title={`Đã gửi lời mời tới ${tenThat(trang.nguoi.display_name) ?? `số đuôi ${duoiSo(phone)}`}`}
-          subtitle="Khi người ấy đồng ý, hai bạn là bạn bè và thấy tường của nhau."
+          subtitle="Khi người ấy đồng ý, hai bạn có thể nhắn riêng và xem những bài chia sẻ với bạn bè."
         />
         <View style={[styles.danhThiep, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
           <HinhNhan name={tenThat(trang.nguoi.display_name) ?? "?"} personId={trang.nguoi.person_id} size={56} />

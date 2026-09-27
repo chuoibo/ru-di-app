@@ -2,13 +2,19 @@
 
 <!-- impeccable:product-schema 1 -->
 
-> **Nguồn của bản ghi này.** Phiên chạy không có công cụ hỏi người dùng
+> **Nguồn lịch sử của bản ghi ban đầu.** Phiên chạy không có công cụ hỏi người dùng
 > (`AskUserQuestion` không tồn tại trong tool surface, đã kiểm bằng ToolSearch),
 > nên không có vòng phỏng vấn nào diễn ra. Mọi mục dưới đây rút từ ba nguồn văn
 > bản đã có, và mục nào là **suy luận** thì ghi rõ `[suy luận]`:
 > `/home/lakiet/mobile/product/feature_list.md` (spec 47 feature),
 > `/home/lakiet/mobile/product/mockup.png` + 5 tờ trong `features/`,
 > và `CLAUDE.md` của repo. Người chốt lại bản ghi này là Lead.
+
+> **Cập nhật 27/09/2026.** Quyết định đã được người dùng duyệt và
+> [ADR-0039](docs/decisions/ADR-0039-khep-cuoc-di-va-so-ky-niem.md) thay thế
+> các mô tả cũ về nhóm 4–10 người, chế độ hai người riêng và AI tự giữ ngữ cảnh.
+> Các phần không liên quan vẫn giữ nguyên; bằng chứng triển khai xem
+> [Sổ kỷ niệm native](docs/testing/so-ky-niem-native.md).
 
 ## Platform
 
@@ -23,20 +29,26 @@ hệ thứ hai.
 
 ## Stack
 
-Đã có sẵn, không phải quyết định mở: Expo / React Native + TypeScript cho app;
-FastAPI + Jinja + CSS thuần cho trang khách; `packages/shared/` là tầng dùng
-chung giữa hai bề mặt (hiện có `money.mjs`, `money-format.cases.json`,
-`tokens.json`).
+Expo / React Native + TypeScript cho app; `packages/shared/` giữ hợp đồng
+và token dùng chung. Theo ADR-0031, toàn bộ backend nghiệp vụ mới, API,
+phân quyền, persistence, worker và migration thuộc Go/SQL; Python chỉ làm
+inference, extraction và evaluation AI. FastAPI + Jinja + CSS thuần là runtime
+trang khách legacy trong giai đoạn chuyển đổi, không phải mẫu cho backend mới.
+Mỗi module có một writer; ownership hiện hành nằm trong
+`services/core/ownership/routes.json`.
 
 ## Users
 
 Hội bạn người Việt, phần lớn là sinh viên và người đi làm trẻ, đi chơi và ăn
-uống theo nhóm 4 tới 10 người. Trong một buổi có hai vai rõ rệt:
+uống theo **Hội bạn từ hai người** hoặc **Cặp đôi có đồng thuận**. Không có
+chế độ hai người riêng. Sổ bạn bè cũ hiện như hội hai người; `pair` chỉ là
+định danh lưu trữ/hội thoại, không tự xác nhận tình cảm hay mở lịch sử.
+Trong một buổi có hai vai rõ rệt:
 
 - **Người tổ chức.** Rủ, chốt chỗ, ứng tiền trả bill, rồi phải đòi lại. Đây là
   người chịu toàn bộ công việc khó chịu hôm nay, và là người mở app.
-- **Người được rủ.** Chỉ muốn biết đúng hai điều: mình nợ bao nhiêu, và chuyển
-  cho ai. Người này thường **không cài app** — họ mở một link trong chat nhóm.
+- **Người được rủ.** Muốn biết phần mình bao nhiêu và gồm những khoản nào.
+  Người này thường **không cài app** — họ mở một link trong chat nhóm.
 
 Việc thật đang diễn ra: chốt chỗ ăn giữa mười ý kiến, và chia một hoá đơn mà
 mỗi người gọi món khác nhau.
@@ -44,25 +56,30 @@ mỗi người gọi món khác nhau.
 ## Product Purpose
 
 Đưa cả vòng "tìm chỗ đi → rủ nhau → lên kế hoạch → đi chơi → ăn uống → chia
-tiền → lưu kỷ niệm" vào một app, với một AI sống bên trong từng nhóm và có
-context của nhóm đó (ai thích gì, ai đã trả, ai còn nợ, nhóm từng đi đâu).
+tiền → lưu kỷ niệm" vào app **Rủ Đi**. **Nếp** là bạn đồng hành kể chuyện,
+không phải quyết định tự đổi tên ứng dụng. AI chỉ nhận phần người dùng chủ động
+chọn và xác nhận chia sẻ; không tự đọc chat, gu hay lịch sử.
 
-Thành công của bản PoC này là **một đường đi chạy thật, đẹp thật**, không phải
-47 feature nông:
+Đường đi PoC lịch sử tập trung vào chia bill là **một đường đi chạy thật,
+đẹp thật**, không phải 47 feature nông:
 
 ```
 mở app → đăng nhập → Khám phá (AI MATCH) → vào nhóm → chat, AI gợi ý chỗ ăn
-→ chốt → chụp bill → AI đọc từng món → gán món cho người → AI chia
+→ chốt → chụp bill → AI đọc từng món → gán món cho người → allocator chia
 → kết quả: ai trả bao nhiêu → Cá nhân thấy tài chính cập nhật
 ```
 
 ## Positioning
 
-Splitwise chia tiền nhưng không biết nhóm bạn là ai và không rủ được ai đi đâu.
-Nhóm chat rủ được nhưng không chia được tiền. Rủ Đi giữ **context của nhóm
-xuyên suốt cả vòng**: cùng một AI đã gợi ý quán là AI đọc hoá đơn của quán đó
-và biết ai đã ngồi ở đó. Đó là câu một sản phẩm hàng xóm không sao chép thật
-được nếu chỉ làm một chặng.
+Rủ Đi nối lời rủ, cuộc đi, phần tiền và câu chuyện mỗi người muốn giữ.
+Buổi đi chơi ngắn thành **Khoảnh khắc**; du lịch thành **Sổ chuyến đi**.
+Cùng ngày hay nhiều ngày chỉ là gợi ý loại, người dùng xác nhận.
+Mỗi thành viên tự giữ bản của mình trên tường cá nhân, mặc định **Chỉ mình tôi**;
+xem trước rồi chủ động chọn **Công khai**, không tự đăng lên tường người khác.
+
+*Mô tả lịch sử đã thay thế:* AI "giữ context của nhóm xuyên suốt cả vòng"
+không còn là cam kết sản phẩm. Ngữ cảnh cho mỗi lần AI làm việc phải có phạm vi
+chia sẻ rõ ràng, không phải quyền đọc toàn nhóm.
 
 Chốt về tiền: sản phẩm **không giữ tiền, không chuyển tiền, và không nói chuyển
 vào đâu**. Nó nói mỗi người phải bỏ ra bao nhiêu và vì những khoản nào, rồi dừng.
@@ -74,8 +91,8 @@ khoản nhận) đã được gỡ khỏi sản phẩm.
 - Điện thoại, mạng di động, buổi tối, trong hoặc ngay sau bữa ăn. Người ta đang
   đứng dậy ra về khi chuyện chia tiền xảy ra.
 - Hoá đơn là **ảnh chụp giấy** dưới ánh đèn quán: cong, loá, nghiêng.
-- Người trả tiền chuyển khoản bằng app ngân hàng riêng, quét QR. Rủ Đi chỉ sinh
-  mã; không có xác nhận ngân hàng nào chảy ngược về sản phẩm.
+- Người dùng tự thu xếp chuyển tiền ngoài app; mô tả PoC cũ về sinh QR đã
+  được gỡ theo ADR-0015. Không có xác nhận ngân hàng chảy ngược về sản phẩm.
 - Người được rủ mở link trên trình duyệt mặc định, thường không đăng nhập.
 
 ## Capabilities and Constraints
@@ -107,9 +124,28 @@ Ràng buộc riêng của tầng hiển thị:
 Đã quyết: bốn điểm đến Khám phá · Lên plan · Tin nhắn · Cá nhân + nút tạo mới nổi
 (ADR-0013); phạm vi v1 = P0 của `product/feature_list.md` (ADR-0016, đề xuất).
 
+### Khép cuộc đi và sổ kỷ niệm (ADR-0039)
+
+- Người tổ chức khép cuộc đi; cặp đôi cho cả hai, hội cho chủ hội thay khi
+  người tạo đã rời hội. Khép cuộc đi không làm hoàn tất đợt thu.
+- Mỗi thành viên sở hữu, sửa và công khai bản của riêng mình. Ảnh nhóm mà họ
+  được quyền đọc và chủ động chọn có thể nằm trong bản công khai, không cần
+  xin phép từng tác giả; chủ sổ chịu trách nhiệm gỡ hoặc thay khi được yêu cầu.
+  Công khai không mở URL ảnh nhóm gốc; thu hồi phải chặn cả metadata và byte ảnh.
+- Trước khi dựng bằng AI, người dùng xem và xác nhận đúng gói ảnh/ngữ cảnh
+  sẽ gửi. Có thể không gửi chat hoặc tự xếp trang không dùng AI. Hiện có ô dán
+  trích đoạn được chọn thủ công; chưa có trình chọn chat E2EE trên thiết bị.
+  Server không giữ khóa giải mã chat; AI không tự đọc chat, gu hoặc lịch sử.
+- AI chỉ dựng nháp riêng, người dùng sửa trước khi lưu; dựng lại không ghi đè
+  bản đã sửa. AI không quyết định quyền, không viết sổ cái, không tự công khai.
+  Go/SQL sở hữu vòng đời và tác vụ; Python chỉ inference tại seam brain.
+
 ## Brand Commitments
 
-Ràng buộc, vì đã có trong mockup mà leader duyệt:
+Tên ứng dụng vẫn là **Rủ Đi**; Nếp là nhân vật đồng hành kể chuyện.
+Hệ hiện hành giữ giấy, mực, coral và Bricolage theo `DESIGN.md`.
+Những mô tả logo, slogan và ba tông dưới đây có nguồn từ mockup lịch sử;
+không dùng chúng để khôi phục gradient trên control hoặc thay hệ đang chạy:
 
 - Tên và wordmark **Rủ Đi**, chữ script nghiêng, dấu hỏi trên "u" là một phần
   của hình.
@@ -131,15 +167,26 @@ Có thật, đường dẫn cụ thể:
 - `/home/lakiet/mobile/product/features/02..06-*.png` (1055×1491 mỗi tờ) —
   5 tờ feature, có màn chia bill 4 bước và màn AI chat.
 - `/home/lakiet/mobile/product/feature_list.md` — spec 47 feature.
-- `GEMINI_API_KEY` trong `.env` ở gốc repo. Đọc được; **không** commit, không
-  in ra log, không đưa vào thông báo lỗi.
+- Lượt Gemini thật được ghi trong tài liệu kiểm thử bên dưới; khóa provider
+  thuộc cấu hình tiến trình brain, không phải bằng chứng để chép vào tài liệu/log.
 - 41 golden vector allocator trong `services/api/tests/domain/golden/`.
+
+Bổ sung 27/09/2026 theo [bằng chứng native](docs/testing/so-ky-niem-native.md):
+Android Pixel 6 đã build/cài và chạy luồng sổ, sáng/tối, chữ lớn 1.3 và giảm
+chuyển động; Gemini thật đã dựng từ ảnh được chọn. Đây là báo cáo của lượt
+triển khai, không phải lượt kiểm thử chạy lại bởi người cập nhật tài liệu.
+Chất lượng lời kể bám nguồn vẫn đang sửa: phát hiện suy diễn ngày/cảm xúc,
+chưa có corpus evaluation chứng minh loại hết. Chưa có full gate xanh ở clean
+tree tại SHA cuối, chưa kiểm native iOS, chưa audit câu chữ toàn bộ màn/layer.
+Export iOS không thay bằng chứng native iOS.
 
 Chưa có và **không được bịa**:
 
 - Chưa có người dùng thật, chưa có testimonial, chưa có số liệu tăng trưởng,
   chưa có tên đối tác, chưa có đánh giá trên store.
-- Chưa có bằng chứng hành vi nào (ADR-0006 gác Giai đoạn 0).
+- Ghi nhận lịch sử: ADR-0006 gác Giai đoạn 0 vì thiếu bằng chứng hành vi.
+  Lượt native nêu trên chỉ chứng minh các luồng và cấu hình đã kiểm, không
+  chứng minh người dùng thật hiểu sản phẩm hay mọi cổng phát hành đã đạt.
 - Số liệu trong mockup (4.7 sao, 326 đánh giá, "AI MATCH 95%", tên Minh Anh /
   Quang Huy...) là **dữ liệu trình diễn**, phải dán nhãn là dữ liệu mẫu ở bất
   kỳ màn nào dùng lại chúng.

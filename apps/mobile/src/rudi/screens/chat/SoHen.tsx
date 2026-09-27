@@ -68,7 +68,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null; initialPrompt: string;
   /**
    * What the AI panel asks for. `chia_bill` keeps everything that protects the
-   * person (the «Mình đang thấy» preview, «Chỉ gửi lời nhờ», the queue) and
+   * person (the «Phần sẽ gửi cùng lời nhờ» preview, «Chỉ gửi lời nhờ», the queue) and
    * changes only the words and the manual fallback.
    */
   lenh?: LenhAi;
@@ -181,6 +181,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
+      {panel === "tools" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Ảnh gửi vào đây có thể được bạn đồng hành chọn vào sổ chuyến đi công khai. Nếu muốn gỡ, hãy nhắn người giữ sổ nhé.</Text> : null}
       {panel !== "tools" && undo?.panel === panel ? <View style={styles.draftRow}>
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Đã bỏ bản nháp.</Text>
         <RudiButton label="Hoàn tác" variant="ghost" compact full={false} disabled={busy} onPress={undoDiscard} />
@@ -226,7 +227,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
              from the message list: a preview rebuilt from the screen would be a
              picture OF the payload instead of the payload. */
           <View style={[styles.thay, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
-            <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
+            <Text style={[typography.label, { color: colors.ai }]}>Phần sẽ gửi cùng lời nhờ</Text>
             <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]} testID="chat-boi-canh">
               {cauBoiCanh(dinhKem ? boiCanh : null)}
             </Text>

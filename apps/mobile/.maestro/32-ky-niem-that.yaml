@@ -144,8 +144,11 @@ appId: com.lakiet.rudi
     visible: "Cá nhân"
     timeout: 30000
 - tapOn: "Cá nhân"
-- extendedWaitUntil:
-    visible: "Thành tích"
+- scrollUntilVisible:
+    element:
+      text: "Thành tích"
+    direction: DOWN
+    centerElement: true
     timeout: 60000
 - tapOn: "Thành tích"
 - extendedWaitUntil:

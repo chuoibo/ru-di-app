@@ -1,0 +1,18 @@
+# Release APK only: a cold deep link must restore the session and open this book.
+appId: com.lakiet.rudi
+env:
+  EXPECTED_AUDIENCE: "Chỉ mình tôi"
+---
+- stopApp
+- openLink: "rudi://diaries/${DIARY_ID}"
+- extendedWaitUntil:
+    visible:
+      id: "diary-reader-screen"
+    timeout: 60000
+- assertNotVisible: "Rủ Đi thôi!"
+- scrollUntilVisible:
+    element:
+      text: "Sửa cuốn sổ"
+    direction: DOWN
+    timeout: 60000
+- assertVisible: "${EXPECTED_AUDIENCE} · Có Nếp giúp viết"

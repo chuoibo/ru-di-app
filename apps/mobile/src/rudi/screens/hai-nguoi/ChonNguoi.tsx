@@ -17,14 +17,14 @@ import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
 /**
- * «Rủ một người đi chơi» (the one new entry in «Tạo mới», spec §20.1): pick
+ * «Hẹn người thương» (the one new entry in «Tạo mới», spec §20.1): pick
  * the person, land in the pair's paper surface with a sheet already drafted.
  *
  * A real session lists the person's actual friends and opens (or finds) the
  * direct conversation with the one picked, through the same
  * `POST /people/{id}/dm` the friend list's «Nhắn tin» uses. Before 23/09 this
  * screen offered the fixture pair to everybody, so a signed-in person with no
- * friends at all saw «Người ấy — Sổ hai người đang mở», and pressing on
+ * friends at all saw «Người ấy — Mở sổ lời hẹn», and pressing on
  * through it did nothing (QA 23/09). The fixture row stays for the experience
  * build only.
  */
@@ -77,9 +77,9 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
   };
 
   return (
-    <RudiScreen header={<TopBar back title="Rủ một người đi chơi" subtitle="Nếp phác sẵn, bạn gửi" />} testID="chon-nguoi">
+    <RudiScreen header={<TopBar back title="Hẹn người thương" subtitle="Một lời hẹn, hai người cùng chọn" />} testID="chon-nguoi">
       <View style={{ gap: 10, paddingTop: 8 }}>
-        <Heading size="h2" subtitle="Tờ giấy đi vào sổ hai người của hai bạn, không vào hội." title="Rủ ai?" />
+        <Heading size="h2" subtitle="Chọn người bạn muốn mở sổ cặp đôi. Hai bạn cùng đồng ý trước khi gửi lời hẹn." title="Rủ ai?" />
         {trang.pha === "dang-doc" ? (
           <SkeletonGroup>
             <SkeletonRow leading={40} />
@@ -90,7 +90,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
         {trang.pha === "xong" && trang.ban.length === 0 ? (
           <EmptyState
             action={{ label: "Thêm bạn bằng số điện thoại", onPress: () => router.push("/friends/add") }}
-            body="Sổ hai người mở giữa hai người đã là bạn. Kết bạn trước, rồi quay lại rủ."
+            body="Kết bạn trước để tìm thấy nhau ở đây. Sổ cặp đôi chỉ mở khi cả hai đồng ý."
             kind="first-use"
             layout="inline"
             title="Chưa có bạn nào để rủ"
@@ -102,7 +102,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
           <View style={styles.luoi}>
             {trang.ban.map((ban) => (
               <PressScale
-                accessibilityHint="Mở tờ giấy của hai bạn"
+                accessibilityHint="Mở chỗ hẹn của hai bạn"
                 accessibilityLabel={ban.display_name}
                 accessibilityRole="button"
                 accessibilityState={{ busy: dangMo === ban.person_id, disabled: dangMo !== null }}
@@ -117,7 +117,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
                   {ban.display_name}
                 </Text>
                 <Text numberOfLines={2} style={[typography.caption, styles.giua, { color: colors.inkSoft }]}>
-                  {dangMo === ban.person_id ? "Đang mở sổ của hai bạn…" : "Mở tờ giấy của hai bạn"}
+                  {dangMo === ban.person_id ? "Đang mở sổ của hai bạn…" : "Mở chỗ hẹn của hai bạn"}
                 </Text>
               </PressScale>
             ))}
@@ -138,11 +138,11 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
 function ChonNguoiTraiNghiem() {
   const router = useRouter();
   return (
-    <RudiScreen header={<TopBar back title="Rủ một người đi chơi" subtitle="Nếp phác sẵn, bạn gửi" />} testID="chon-nguoi">
+    <RudiScreen header={<TopBar back title="Hẹn người thương" subtitle="Một lời hẹn, hai người cùng chọn" />} testID="chon-nguoi">
       <View style={{ gap: 10, paddingTop: 8 }}>
-        <Heading size="h2" subtitle="Tờ giấy đi vào sổ hai người của hai bạn, không vào hội." title="Rủ ai?" />
+        <Heading size="h2" subtitle="Chọn người bạn muốn mở sổ cặp đôi. Hai bạn cùng đồng ý trước khi gửi lời hẹn." title="Rủ ai?" />
         <NhomHang>
-          <ListRow icon="person-outline" onPress={() => router.replace(`/groups/${CAP_DEMO.id}/to-giay?ru=1` as never)} subtitle="Sổ hai người đang mở" title={NGUOI_KIA_DEMO.ten} />
+          <ListRow icon="person-outline" onPress={() => router.replace(`/groups/${CAP_DEMO.id}/to-giay?ru=1` as never)} subtitle="Mở sổ lời hẹn" title={NGUOI_KIA_DEMO.ten} />
         </NhomHang>
       </View>
     </RudiScreen>

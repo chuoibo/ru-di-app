@@ -100,7 +100,7 @@ const DON_VI: Record<KhoaSoLieu, string> = {
   soViec: "việc",
 };
 
-const TEN_SO: Record<LoaiSo, string> = { hoi: "nhóm bạn", "hai-nguoi": "sổ hai người", doi: "sổ một đôi" };
+const TEN_SO: Record<LoaiSo, string> = { hoi: "hội bạn", doi: "sổ một đôi" };
 
 /**
  * The «Mình đang thấy» line: the whole of what the screen shared, in words.

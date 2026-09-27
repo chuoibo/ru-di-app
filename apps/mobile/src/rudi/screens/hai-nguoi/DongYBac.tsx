@@ -115,7 +115,7 @@ function BacDongY({
           // nói rằng đang chờ chính mình.
           <>
             <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
-              {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì bậc này bật cho cả hai."}
+              {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì sổ này trở thành sổ cặp đôi."}
             </Text>
             <StampButton label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
           </>
@@ -139,7 +139,7 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
   return (
     <BacDongY
       {...props}
-      choPhep={["Một chỗ hai bạn truyền giấy cho nhau mỗi tuần.", "Hai ô ràng buộc: «Không ăn được» và «Đừng».", "Nếp phác một tờ khi tới lượt, bạn sửa rồi gửi."]}
+      choPhep={["Một chỗ hai bạn truyền giấy cho nhau mỗi tuần.", "Những điều cần tránh: «Không ăn được» và «Đừng».", "Nếp phác một tờ khi tới lượt, bạn sửa rồi gửi."]}
       // Said as far as it is true: only the two of them can open the notebook
       // in the app, but the chat is not end to end encrypted yet (its lock
       // label says so), and «nobody but you two sees this» beside an open lock
@@ -147,7 +147,7 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
       khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Chỉ hai bạn mở được sổ này trong app; tin nhắn thì chưa mã hoá đầu cuối."]}
       nhanDeNghi="Đề nghị lập sổ"
       testID="lap-so"
-      tieuDe="Lập sổ hai người"
+      tieuDe="Lập sổ lời hẹn"
     />
   );
 }
@@ -159,7 +159,7 @@ export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: 
       // Only what switching it on does today. The roles («Người lo», «Người
       // chấm») are not built yet, so the sheet no longer promises them.
       choPhep={["Sổ này là sổ đôi: mỗi người chỉ có một.", "Nếp biết đây là sổ của một đôi."]}
-      khongKeoTheo={["Nếp vẫn không đọc tin nhắn; đó là một công tắc khác.", "Không đăng gì, không ai được báo.", "Tắt được bất cứ lúc nào, sổ vẫn còn."]}
+      khongKeoTheo={["Đồng ý là cặp đôi không cấp quyền đọc chat cho Nếp. AI chỉ nhận phần bạn chọn và xác nhận gửi.", "Không đăng gì, không ai được báo.", "Tắt được bất cứ lúc nào, sổ vẫn còn."]}
       nhanDeNghi="Đề nghị bật «Một đôi»"
       testID="bat-mot-doi"
       tieuDe="Bật «Một đôi»"

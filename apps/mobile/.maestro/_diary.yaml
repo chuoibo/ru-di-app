@@ -1,6 +1,10 @@
 # Real native session with synthetic data; OUTING_ID is an open trip with three photos.
 # Run after sign-in, independently of the fixture-based smoke suite.
 appId: com.lakiet.rudi
+env:
+  PHOTO_COUNT: "3"
+  PAGE_NUMBER: "2"
+  TRIP_TITLE: "Hai ngày gom nắng"
 ---
 - openLink: "rudi://outings/${OUTING_ID}"
 - extendedWaitUntil:
@@ -19,7 +23,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Mang theo điều gì vào sổ?"
     timeout: 30000
-- assertVisible: "3 / 40 ảnh đã chọn"
+- assertVisible: "${PHOTO_COUNT} / 40 ảnh đã chọn"
 - takeScreenshot: diary-02-sources
 - scrollUntilVisible:
     element:
@@ -43,10 +47,10 @@ appId: com.lakiet.rudi
 - tapOn: "Về tường nhà mình"
 - scrollUntilVisible:
     element:
-      text: "Mở Hai ngày gom nắng"
+      text: "Mở ${TRIP_TITLE}"
     direction: DOWN
 - takeScreenshot: diary-04-wall
-- tapOn: "Mở Hai ngày gom nắng"
+- tapOn: "Mở ${TRIP_TITLE}"
 - extendedWaitUntil:
     visible:
       id: "diary-reader-screen"

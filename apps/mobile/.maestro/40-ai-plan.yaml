@@ -53,11 +53,14 @@ appId: com.lakiet.rudi
 - tapOn: "Ô soạn tin"
 - inputText: "/plan toi nay ca hoi di an o Da Lat, ngan sach vua"
 - tapOn: "Gửi tin nhắn"
+- hideKeyboard
+- assertVisible: "Phần sẽ gửi cùng lời nhờ"
+- tapOn: "Chỉ gửi lời nhờ"
+- tapOn: "Gửi lời nhờ cho AI"
 # Mô hình cần thời gian; 120 s là trần cho một lượt.
 - extendedWaitUntil:
     visible: "Rủ Đi AI|Rủ Đi AI gợi ý|Rủ Đi AI phác lịch trình"
     timeout: 120000
 - assertNotVisible: "Rủ Đi AI chưa nối được mô hình trên máy chủ này."
 - assertNotVisible: ".*đang im lặng.*"
-- hideKeyboard
 - takeScreenshot: 40-ai-tra-loi

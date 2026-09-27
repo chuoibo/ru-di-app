@@ -199,7 +199,10 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
   if (contextId === null) {
     return (
       <RudiScreen bottomInset="tab" onRefresh={nap} testID="plan-screen">
-        <Heading title="Lên plan" subtitle="Kèo của nhóm nằm ở đây khi bạn vào một nhóm." />
+        <View style={styles.dau}>
+          <View style={styles.flex}><Heading title="Lên plan" subtitle="Gom hội mình lại, rồi dành một ngày cho nhau." /></View>
+          <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create")} variant="outline" />
+        </View>
         <HenCuaHaiBan phien={phien} today={today} />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} variant="outline" />
       </RudiScreen>
@@ -214,14 +217,10 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
     <RudiScreen bottomInset="tab" onRefresh={nap} testID="plan-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
-          <Heading title="Lên plan" subtitle={`Kèo của ${tenNhom(phien)}`} />
+          <Heading title="Lên plan" subtitle={`Những lời hẹn của ${tenNhom(phien)}`} />
         </View>
-        {/* The tab bar's own stamp is the create door; this one is the shortcut
-            for a person already looking at the list. Hidden while the list is
-            empty, where the empty state carries the same words. */}
-        {trang.pha === "xong" && trang.keo.length > 0 ? (
-          <RudiButton compact full={false} icon="add" label="Tạo kèo" onPress={() => router.push("/outings/new")} variant="outline" />
-        ) : null}
+        {/* Five navigation destinations leave creation in the plan header. */}
+        <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create")} variant="outline" />
       </View>
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup style={styles.khung}>
@@ -234,7 +233,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" && trang.keo.length === 0 ? (
         <EmptyState
           action={{ label: "Tạo kèo", onPress: () => router.push("/outings/new") }}
-          body="Rủ một buổi đầu tiên: ngày, số người, ngân sách. Chặng và địa điểm thêm sau."
+          body="Bắt đầu bằng một lời rủ: hôm nào, mấy người, dành bao nhiêu. Những nơi muốn ghé mình thêm dần."
           illustration={<RouteLine color={colors.inkFaint} dashed height={72} stops={3} width={200} />}
           kind="first-use"
           title="Chưa có kèo nào"

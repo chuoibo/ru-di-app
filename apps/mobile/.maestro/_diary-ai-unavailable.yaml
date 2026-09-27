@@ -1,7 +1,16 @@
 # Dedicated negative case: run only on a local brain without provider credentials.
 # The saved edition must survive an unsuccessful regeneration.
 appId: com.lakiet.rudi
+env:
+  PHOTO_COUNT: "3"
+  PAGE_NUMBER: "2"
+  TRIP_TITLE: "Hai ngày gom nắng"
 ---
+- openLink: "rudi://diaries/${DIARY_ID}"
+- extendedWaitUntil:
+    visible:
+      id: "diary-reader-screen"
+    timeout: 30000
 - openLink: "rudi://outings/${OUTING_ID}/ending"
 - extendedWaitUntil:
     visible: "Hai ngày gom nắng"

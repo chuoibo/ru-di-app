@@ -42,12 +42,12 @@ appId: com.lakiet.rudi
 - assertVisible: "Tờ giấy của hai mình"
 - tapOn: "Tờ giấy của hai mình"
 - extendedWaitUntil:
-    visible: "Chưa có sổ hai người"
+    visible: "Một chỗ cho chuyện hai mình"
     timeout: 60000
 - takeScreenshot: 47a-chua-co-so
 - tapOn: "Đề nghị lập sổ"
 - extendedWaitUntil:
-    visible: "Lập sổ hai người"
+    visible: "Lập sổ lời hẹn"
     timeout: 30000
 - takeScreenshot: 47b-bac-lap-so
 - tapOn: "Đề nghị lập sổ"
@@ -93,7 +93,58 @@ appId: com.lakiet.rudi
     timeout: 30000
 - takeScreenshot: 47c-ho-de-nghi
 - tapOn: "Đồng ý"
-# Cả hai đã đồng ý: sổ mở, và màn đổi sang lời mời viết tờ đầu tiên.
+# Opening a notebook does not establish a couple (ADR-0039).
+- extendedWaitUntil:
+    visible: "Hai người cũng thành một hội"
+    timeout: 60000
+- assertNotVisible: "Rủ đi chơi"
+- tapOn: "Mở sổ cặp đôi"
+- tapOn:
+    id: "loai-so-doi"
+- tapOn: "Đề nghị bật «Một đôi»"
+- assertVisible: "Đã đề nghị.*"
+- tapOn: "Để sau"
+- pressKey: Back
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 30000
+- runFlow: _dang-xuat-neu-co.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!"
+    timeout: 60000
+- runFlow: _dang-nhap-c.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- tapOn: "Nhắn riêng"
+- extendedWaitUntil:
+    visible: "Tờ giấy của hai mình"
+    timeout: 60000
+- tapOn: "Tờ giấy của hai mình"
+- tapOn: "Mở sổ cặp đôi"
+- tapOn: "Đồng ý là một đôi"
+- tapOn: "Xong"
+- pressKey: Back
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 30000
+- runFlow: _dang-xuat-neu-co.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!"
+    timeout: 60000
+- runFlow: _dang-nhap-d.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- tapOn: "Nhắn riêng"
+- extendedWaitUntil:
+    visible: "Tờ giấy của hai mình"
+    timeout: 60000
+- tapOn: "Tờ giấy của hai mình"
 - extendedWaitUntil:
     visible: "Rủ đi chơi"
     timeout: 60000

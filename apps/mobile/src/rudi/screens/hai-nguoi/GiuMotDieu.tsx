@@ -23,7 +23,7 @@ export function GiuMotDieu({ open, onClose, onGiu, testID }: { open: boolean; on
   return (
     <Sheet accessibilityLabel="Giữ lại một điều" onClose={onClose} open={open} testID={testID ?? "giu-mot-dieu"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
-        <Heading size="h2" subtitle="Một dòng thôi. Tờ này về ký ức khi có nó." title="Giữ lại một điều" />
+        <Heading size="h2" subtitle="Viết một điều bạn muốn nhớ về buổi đi này." title="Giữ lại một điều" />
         {/* One line, one field, and the keyboard's own Done key keeps it: the
             sheet has no keyboard avoidance, so the button under the field can
             sit beneath the keyboard while it is up. */}

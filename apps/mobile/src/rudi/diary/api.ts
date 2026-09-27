@@ -72,3 +72,16 @@ export function togglePhoto(ids: readonly string[], id: string, limit: number): 
   if (ids.length >= limit) return [...ids];
   return [...ids, id];
 }
+
+/** Reopening an edition keeps explicitly imported photos available to its editor. */
+export function includeSavedPhotos(source: DiarySource, saved: Diary): DiarySource {
+  const photos = [...source.photos];
+  const known = new Set(photos.map((p) => p.id));
+  const ids = [saved.document.cover_id, ...saved.document.pages.flatMap((p) => p.photo_ids)];
+  for (const id of ids) {
+    if (!id || known.has(id)) continue;
+    known.add(id);
+    photos.push({ id, url: publishedPhoto(saved.id, id), caption: "", day: source.ends_on });
+  }
+  return { ...source, photos };
+}

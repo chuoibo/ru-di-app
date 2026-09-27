@@ -4,18 +4,25 @@
 # lặng vô danh.
 appId: com.lakiet.rudi
 ---
+# The command opens a consent tray; submit the explicit request before waiting.
+- hideKeyboard
+- assertVisible: "Phần sẽ gửi cùng lời nhờ"
+- tapOn: "Chỉ gửi lời nhờ"
+- tapOn: "Gửi lời nhờ cho AI"
 - extendedWaitUntil:
     visible: "Rủ Đi AI.*"
     timeout: 120000
 - assertNotVisible: "Rủ Đi AI chưa nối được mô hình trên máy chủ này."
 - assertNotVisible: ".*đang im lặng.*"
-- hideKeyboard
 - takeScreenshot: 30-ai-tra-loi
 - tapOn: "Ô soạn tin"
 - inputText: "/chia-bill"
 - tapOn: "Gửi tin nhắn"
-- extendedWaitUntil:
-    visible: "Đây là bản đọc từ tin nhắn, chưa ghi vào sổ.*|Không thấy khoản chi nào trong các tin gần đây.|Máy chủ từ chối bản đọc lần này. Thử lại sau.|Chia bill từ chat chưa sẵn sàng trên máy chủ này."
-    timeout: 120000
 - hideKeyboard
+- assertVisible: "AI chỉ đề xuất ai đã trả bao nhiêu, không ghi gì vào sổ. Cả hội xem lại và xác nhận ở mục Chia bill."
+- tapOn: "Chỉ gửi lời nhờ"
+- tapOn: "Gửi lời nhờ cho AI"
+- extendedWaitUntil:
+    visible: "Rủ Đi AI chưa thấy khoản chi nào có số tiền trong đoạn chat gửi kèm. Bạn gửi kèm tin có số tiền, hoặc thêm khoản chi ở mục Chia bill."
+    timeout: 120000
 - takeScreenshot: 30-chia-bill-that

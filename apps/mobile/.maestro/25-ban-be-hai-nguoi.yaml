@@ -35,10 +35,12 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 60000
 - tapOn: "Cá nhân"
-- extendedWaitUntil:
-    visible: "Bạn bè, lời mời đã nhận và đã gửi"
+- scrollUntilVisible:
+    element:
+      text: "Bạn bè"
+    direction: DOWN
     timeout: 60000
-- tapOn: "Bạn bè, lời mời đã nhận và đã gửi"
+- tapOn: "Bạn bè"
 - extendedWaitUntil:
     visible: "Chưa có bạn nào"
     timeout: 30000
@@ -126,10 +128,12 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 60000
 - tapOn: "Cá nhân"
-- extendedWaitUntil:
-    visible: "Bạn bè, lời mời đã nhận và đã gửi"
+- scrollUntilVisible:
+    element:
+      text: "Bạn bè"
+    direction: DOWN
     timeout: 60000
-- tapOn: "Bạn bè, lời mời đã nhận và đã gửi"
+- tapOn: "Bạn bè"
 - extendedWaitUntil:
     visible: "Đã nhận"
     timeout: 30000
