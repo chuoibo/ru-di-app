@@ -47,3 +47,11 @@ chứng minh được kịch bản chạm tới nó — luật này tôi đã t�
   harness, **không** qua Google thật. Cái được chứng minh là **ánh xạ** của Go, không phải hành vi của nhà cung
   cấp.
 - `MOBILE_OTP_DEBUG_CODE` cố định ở cả hai stack. Đường sinh mã ngẫu nhiên thật không nằm trong tầm đo.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `POST /auth/google`: đổi thật: `SqlAlchemyApiRepository.list_person_context_summaries` — tin mới nhất bằng LATERAL thay vì quét — cùng kết quả; Go repo/conversations.go.
+- `POST /auth/otp/verify`: đổi thật: `SqlAlchemyApiRepository.list_person_context_summaries` — tin mới nhất bằng LATERAL thay vì quét — cùng kết quả; Go repo/conversations.go.
+- `POST /sessions`: đổi thật: `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository.list_person_context_summaries` — tin mới nhất bằng LATERAL thay vì quét — cùng kết quả; Go repo/conversations.go.

@@ -106,7 +106,9 @@ def _chia_gu(session: Session, cycle_id: uuid.UUID, *people: uuid.UUID) -> None:
         )
         session.add(proposal)
         session.flush()
-        session.add(PairConsent(proposal_id=proposal.id, person_id=person_id, granted_at=NOW))
+        session.add(
+            PairConsent(proposal_id=proposal.id, person_id=person_id, granted_at=NOW)
+        )
     session.flush()
 
 

@@ -71,7 +71,11 @@ OUTSIDER_HEADERS = {
 
 
 def _propose(client, participants=None):
-    response = client.post("/expenses", headers=actor_headers(), json=expense_payload(participants=participants))
+    response = client.post(
+        "/expenses",
+        headers=actor_headers(),
+        json=expense_payload(participants=participants),
+    )
     assert response.status_code == 201, response.text
     return response.json()
 
@@ -248,7 +252,9 @@ def test_a_former_member_cannot_confirm_after_leaving(client, repository):
     assert repository.confirmed == {}
 
 
-def test_an_outsider_cannot_propose_an_expense_into_someone_elses_group(client, repository):
+def test_an_outsider_cannot_propose_an_expense_into_someone_elses_group(
+    client, repository
+):
     """A proposal writes an `expenses` row into the named group.
 
     It used to take anyone, which let a stranger fill another group's table
@@ -257,7 +263,9 @@ def test_an_outsider_cannot_propose_an_expense_into_someone_elses_group(client, 
     """
 
     before = len(repository.expenses)
-    response = client.post("/expenses", headers=OUTSIDER_HEADERS, json=expense_payload())
+    response = client.post(
+        "/expenses", headers=OUTSIDER_HEADERS, json=expense_payload()
+    )
 
     assert response.status_code == 403, response.text
     assert response.json()["code"] == "permission_denied"
@@ -272,7 +280,9 @@ def test_nobody_at_all_cannot_propose(client, repository):
     assert len(repository.expenses) == before
 
 
-def test_a_group_that_does_not_exist_answers_like_one_the_caller_is_not_in(client, repository):
+def test_a_group_that_does_not_exist_answers_like_one_the_caller_is_not_in(
+    client, repository
+):
     """No 404 to tell a stranger which group ids are real."""
 
     payload = expense_payload() | {"context_id": "9ff00000-ffff-4fff-8fff-0000f0000009"}

@@ -20,7 +20,9 @@ def test_proposal_calls_allocator_but_does_not_write_the_ledger(client, reposito
 
 
 def test_malformed_wire_money_never_reaches_domain_or_storage(client, repository):
-    response = client.post("/expenses", headers=actor_headers(), json=expense_payload(total="82000"))
+    response = client.post(
+        "/expenses", headers=actor_headers(), json=expense_payload(total="82000")
+    )
 
     assert response.status_code == 422
     assert repository.expenses == {}
@@ -30,7 +32,9 @@ def test_malformed_wire_money_never_reaches_domain_or_storage(client, repository
 def test_confirm_writes_version_and_allocations_and_calls_central_permissions(
     client, repository, monkeypatch
 ):
-    proposed = client.post("/expenses", headers=actor_headers(), json=expense_payload()).json()
+    proposed = client.post(
+        "/expenses", headers=actor_headers(), json=expense_payload()
+    ).json()
     calls = []
     real = permissions.denial_reason
 
@@ -64,7 +68,9 @@ def test_confirm_writes_version_and_allocations_and_calls_central_permissions(
 
 
 def test_confirm_rejects_unreviewed_allocation_change(client, repository):
-    proposed = client.post("/expenses", headers=actor_headers(), json=expense_payload()).json()
+    proposed = client.post(
+        "/expenses", headers=actor_headers(), json=expense_payload()
+    ).json()
     allocations = proposed["allocation"]["allocations"]
     allocations[str(ADVANCER_ID)] += 1
 
@@ -84,7 +90,9 @@ def test_confirm_rejects_unreviewed_allocation_change(client, repository):
 
 
 def test_confirm_permission_is_not_an_inline_role_check(client, repository):
-    proposed = client.post("/expenses", headers=actor_headers(), json=expense_payload()).json()
+    proposed = client.post(
+        "/expenses", headers=actor_headers(), json=expense_payload()
+    ).json()
     response = client.post(
         f"/expenses/{proposed['expense_id']}/confirm",
         headers=actor_headers(roles="group_admin"),

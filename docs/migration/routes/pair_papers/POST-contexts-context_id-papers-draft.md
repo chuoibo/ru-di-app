@@ -35,7 +35,7 @@ Cùng `now`, dưới khoá hàng sổ (`service.py:7641-7661`; `repository.py:80
 - `pair_papers`: `context_id`, `context_kind='pair'`, `cycle_id` = chu kỳ sống hoặc NULL, `is_temporary = (cycle_id IS NULL)`, `draft_owner_id` = actor, `state='nhap'`, `current_version=1`, `tuan` = thứ Hai tuần này theo `Asia/Ho_Chi_Minh` (`services/api/app/domain/pair_paper.py:107-115`), `expires_at` = nửa đêm cuối Chủ nhật đó viết UTC (`pair_paper.py:118-133`), `created_at`, `done_recorded_*` NULL.
 - `pair_paper_versions` v1: `content` = `{"ngay": <thứ Bảy tuần này, hoặc hôm nay nếu thứ Bảy đã qua>, "chang": [{"gio": "18:30", "viec": "Ăn tối", "place_id": null, "can_kiem": true}]}` (`service.py:8039`, `pair_paper.py:136-147`, `:305-352`); `ly_do` NULL; `nguon` = `{"scope": "chung", "dung": ["routine"] (+ "rang_buoc" nếu chu kỳ sống có ít nhất một dòng ràng buộc, của bất kỳ ai), "luc": now.isoformat()}` (`luc` dạng `+00:00`); `author_type='human'`; `sent_at`/`sent_by` NULL.
 - Không kiểm «một tờ mỗi tuần»: nghỉ tuần rồi xin tiếp trong cùng tuần là 201.
-- Sau khi đóng sổ, chu kỳ đã đóng không phải chu kỳ sống, nên tờ mới lại là tờ tạm (`owner_drafts_after_close`, `owner_reads_after_close`).
+- Sau khi đóng sổ, chu kỳ đã đóng không phải chu kỳ sống, nên tờ mới lại là tờ tạm (`mate_drafts_after_close`, `mate_reads_after_close`). Chủ đã phác đủ 3 tờ trong tuần (t1, d2, d4) nên tờ thứ tư của chủ là 409 `paper_week_quota` (`owner_hits_week_quota`).
 - `idempotency_keys` khi có header và 201. Từ chối rollback, kể cả hàng sổ.
 
 ## Lỗi
@@ -70,7 +70,7 @@ Cùng `now`, dưới khoá hàng sổ (`service.py:7641-7661`; `repository.py:80
 - Tờ tạm: `owner_drafts_temporary`, `owner_reads_temporary`, `owner_drafts_again`, `mate_drafts_while_owner_draft_open`.
 - Chu kỳ: `owner_drafts_in_pending_notebook`, `owner_drafts_while_temporary_open`, `owner_skips_temporary`, `owner_puts_constraint`, `owner_drafts_with_ignored_body`, `owner_reads_prefilled`, `mate_drafts`, `owner_reads_mates_draft` (404).
 - Header key: `owner_drafts_with_header_key`, `owner_replays_header_key`, `mate_uses_owner_header_key`, `owner_header_key_with_body`.
-- Sau khi đóng: `owner_previews_close`, `owner_closes`, `owner_drafts_after_close`, `owner_reads_after_close`, `owner_lists_end`.
+- Sau khi đóng: `owner_previews_close`, `owner_closes`, `owner_hits_week_quota`, `mate_drafts_after_close`, `mate_reads_after_close`, `owner_lists_end`.
 
 `crossreplay/POST-…-papers-draft.yaml` (13 bước). `concurrency/POST-…-papers-draft.yaml` (11 bước): ba lần xin cùng lúc trên sổ đã có hàng → một 201, hai 409 (tờ được đọc sau khoá); ba lần cùng header key → một tờ, một 201, hai lần phát lại.
 
@@ -154,3 +154,9 @@ Diff này thêm `week_role` vào `PairNotebookResponse` (`_week_role`, Go `pairs
 Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở lời (tờ đầu tiên gửi trong tuần, `nguoi_mo_loi`) hai tuần liền thì tuần này sang người kia, `cach` = `luot`; tín hiệu tờ thêm `tuan`, `sent_at`. (2) `draft_pair_paper` từ chối 409 `paper_week_quota` khi người gọi đã phác `TO_MOI_NGUOI_MOI_TUAN` (3, cùng số với `packages/shared/nep-nhip.json`) tờ trong tuần. (3) `get_person_profile` trả `relation` = `couple` khi hai người là một «Một đôi» (`same_couple`, hỏi SAU cửa quyền, không phải oracle cho người lạ). (4) Từ vựng sticker thêm `hen-nhe`, `nho-nhau`, `ve-toi-chua`, `om-cai`. Golden pair_notebook (ca baton, 10 shard), pair_steps (`quota_*`, `role_baton_*`), people_steps (`couple_*`), stickers; Go 0 lệch.
 
 - `POST /contexts/{context_id}/papers/draft`: 409 `paper_week_quota` `Tuần này bạn đã phác 3 tờ rồi. Tuần sau phác tiếp nhé.` khi người gọi đã phác 3 tờ trong tuần này của sổ; đếm trên tờ đã đọc, không thêm lệnh.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `POST /contexts/{context_id}/papers/draft`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._gu_cho_nep`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `ApiService.draft_pair_paper`, `_lich_su_chu_ky`, `_paper_signals`.

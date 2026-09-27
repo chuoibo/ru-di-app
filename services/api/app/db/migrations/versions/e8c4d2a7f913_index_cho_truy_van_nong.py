@@ -25,7 +25,9 @@ depends_on = None
 
 def upgrade() -> None:
     op.create_index("ix_memberships_person", "memberships", ["person_id"])
-    op.create_index("ix_memberships_context_state", "memberships", ["context_id", "state"])
+    op.create_index(
+        "ix_memberships_context_state", "memberships", ["context_id", "state"]
+    )
     op.create_index("ix_stories_live", "stories", ["expires_at"])
 
 

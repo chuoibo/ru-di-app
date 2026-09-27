@@ -13,7 +13,19 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
 
-from sqlalchemy import Date, and_, case, cast, delete, desc, func, or_, select, true, tuple_
+from sqlalchemy import (
+    Date,
+    and_,
+    case,
+    cast,
+    delete,
+    desc,
+    func,
+    or_,
+    select,
+    true,
+    tuple_,
+)
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
@@ -72,6 +84,7 @@ from app.db.models import (
     PairConsent,
     PairConsentProposal,
     PairCycleParticipant,
+    PairCycleRhythm,
     PairNotebook,
     PairNotebookCycle,
     PairPaper,
@@ -80,7 +93,6 @@ from app.db.models import (
     PairPaperResponse,
     PairPaperVersion,
     PairPaperView,
-    PairCycleRhythm,
     PairSharedConstraint,
     PayerAcknowledgement,
     PaymentReport,
@@ -825,6 +837,7 @@ class PlaceRecord:
             "source": self.source,
             "license": self.license,
         }
+
     #: How the point was arrived at, so a map can tell a doorway from a
     #: province. Both are "has coordinates"; only one may be drawn.
     geo_precision: str | None = None
@@ -8061,7 +8074,9 @@ class SqlAlchemyApiRepository:
         row = self._pair_rhythm_row(cycle_id, tuan)
         return None if row is None else _rhythm_record(row)
 
-    def _pair_rhythm_row(self, cycle_id: uuid.UUID, tuan: date) -> PairCycleRhythm | None:
+    def _pair_rhythm_row(
+        self, cycle_id: uuid.UUID, tuan: date
+    ) -> PairCycleRhythm | None:
         # A SELECT every time, not `session.get`: the identity map would
         # answer the read right after a write without asking the database,
         # and the Go port (which always asks) would then issue one statement
@@ -8083,7 +8098,13 @@ class SqlAlchemyApiRepository:
     ) -> PairRhythmRecord:
         row = self._pair_rhythm_row(cycle_id, tuan)
         if row is None:
-            row = PairCycleRhythm(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=nguoi_lo_id, chon_boi_id=chon_boi_id, updated_at=now)
+            row = PairCycleRhythm(
+                cycle_id=cycle_id,
+                tuan=tuan,
+                nguoi_lo_id=nguoi_lo_id,
+                chon_boi_id=chon_boi_id,
+                updated_at=now,
+            )
             self.session.add(row)
         else:
             row.nguoi_lo_id = nguoi_lo_id

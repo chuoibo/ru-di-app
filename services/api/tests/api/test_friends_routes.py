@@ -79,9 +79,7 @@ def test_requester_cannot_accept_their_own_request_over_http(client, repository)
     asked = _ask(client)
     assert asked.status_code == 201, asked.text
 
-    forged = _respond(
-        client, asked.json()["id"], actor=ADVANCER_ID, decision="accept"
-    )
+    forged = _respond(client, asked.json()["id"], actor=ADVANCER_ID, decision="accept")
 
     assert forged.status_code == 403, forged.text
     # And the graph did not move.
@@ -285,7 +283,9 @@ def test_nobody_may_read_somebody_elses_friend_list(client, repository):
 # --- looking somebody up by telephone number --------------------------------
 
 
-def test_lookup_finds_the_person_who_holds_that_number(client, repository, identity_key):
+def test_lookup_finds_the_person_who_holds_that_number(
+    client, repository, identity_key
+):
     """The control. Without it the leak tests below would pass on a dead route."""
     minted = client.post("/identity/person-id", json={"phone": FAKE_MOBILE})
     assert minted.status_code == 200, minted.text
@@ -353,9 +353,7 @@ def test_lookup_refusal_for_a_non_mobile_does_not_echo_it(client, identity_key):
     assert DIGIT_RUN.search(refused.text) is None, refused.text
 
 
-def test_lookup_of_an_unregistered_number_says_nothing_about_it(
-    client, identity_key
-):
+def test_lookup_of_an_unregistered_number_says_nothing_about_it(client, identity_key):
     unknown = client.post(
         "/friends/lookup",
         headers=actor_headers(actor_id=ADVANCER_ID, roles="member"),
@@ -432,7 +430,9 @@ def test_lookup_is_rate_limited(client, repository, identity_key):
 def _hidden(repository, person_id, name):
     """Somebody who turned off being found by their phone number."""
     _person(repository, person_id, name)
-    repository.update_person_profile(person_id, changes={"discoverable_by_phone": False})
+    repository.update_person_profile(
+        person_id, changes={"discoverable_by_phone": False}
+    )
     return person_id
 
 
@@ -473,6 +473,7 @@ def test_a_hidden_stranger_who_sent_a_request_can_still_be_blocked(client, repos
     assert asked.status_code == 201, asked.text
 
     blocked = client.post(
-        f"/people/{OTHER_ID}/block", headers=actor_headers(actor_id=ADVANCER_ID, roles="member")
+        f"/people/{OTHER_ID}/block",
+        headers=actor_headers(actor_id=ADVANCER_ID, roles="member"),
     )
     assert blocked.status_code == 200, blocked.text

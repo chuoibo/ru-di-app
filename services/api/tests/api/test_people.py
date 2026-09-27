@@ -60,7 +60,9 @@ def test_a_stranger_cannot_confirm_a_guessed_name(client, repository):
     assert right.status_code == wrong.status_code == 200
     assert right.json()["display_name"] == "Quyên"
     assert wrong.json()["display_name"] == "Kẻ giả danh"
-    assert repository.get_person(FRIEND_ID).display_name == "Quyên", "a stranger renamed somebody"
+    assert repository.get_person(FRIEND_ID).display_name == "Quyên", (
+        "a stranger renamed somebody"
+    )
 
 
 def test_somebody_else_cannot_rename_a_person_who_already_has_a_name(client):

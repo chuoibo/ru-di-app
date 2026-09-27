@@ -41,18 +41,19 @@ def upgrade() -> None:
     op.alter_column("places", "lng", existing_type=sa.Float(), nullable=True)
     op.add_column("places", sa.Column("geo_precision", sa.Text(), nullable=True))
     op.add_column("places", sa.Column("geo_evidence", sa.Text(), nullable=True))
-    op.add_column("places", sa.Column("province_code", sa.SmallInteger(), nullable=True))
     op.add_column(
-        "places", sa.Column("source_updated_at", sa.DateTime(timezone=True), nullable=True)
+        "places", sa.Column("province_code", sa.SmallInteger(), nullable=True)
+    )
+    op.add_column(
+        "places",
+        sa.Column("source_updated_at", sa.DateTime(timezone=True), nullable=True),
     )
     op.add_column("places", sa.Column("source_kind", sa.Text(), nullable=True))
     op.add_column("places", sa.Column("confidence", sa.Float(), nullable=True))
     op.add_column("places", sa.Column("evidence_posts", sa.Integer(), nullable=True))
     op.add_column(
         "places",
-        sa.Column(
-            "status", sa.Text(), nullable=False, server_default="active"
-        ),
+        sa.Column("status", sa.Text(), nullable=False, server_default="active"),
     )
     op.add_column("places", sa.Column("superseded_by", sa.Text(), nullable=True))
 
@@ -98,9 +99,7 @@ def upgrade() -> None:
     op.create_foreign_key(
         "fk_places_superseded_by", "places", "places", ["superseded_by"], ["id"]
     )
-    op.create_index(
-        "ix_places_province", "places", ["province_code", "category", "id"]
-    )
+    op.create_index("ix_places_province", "places", ["province_code", "category", "id"])
     op.create_index("ix_places_status", "places", ["status"])
 
     # A fourth source. The imported row must still point back at what produced
@@ -161,9 +160,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_uploaded_images_content_sha256", "uploaded_images", ["content_sha256"]
     )
-    op.add_column(
-        "place_photos", sa.Column("content_sha256", sa.Text(), nullable=True)
-    )
+    op.add_column("place_photos", sa.Column("content_sha256", sa.Text(), nullable=True))
     op.create_check_constraint(
         "place_photos_content_sha256_shape",
         "place_photos",

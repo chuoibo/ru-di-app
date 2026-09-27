@@ -133,9 +133,12 @@ def test_opening_a_group_without_an_identity_is_refused_not_a_crash(
     assert raised.value.status_code == 409
     assert raised.value.code == "person_not_registered"
     # Nothing half-written: a refused group leaves no row behind.
-    assert postgres_session.scalar(
-        select(Context).where(Context.created_by_id == stranger)
-    ) is None
+    assert (
+        postgres_session.scalar(
+            select(Context).where(Context.created_by_id == stranger)
+        )
+        is None
+    )
 
 
 def test_inviting_somebody_who_was_never_named_is_refused_not_a_crash(
@@ -192,7 +195,9 @@ def test_a_second_member_may_not_rename_somebody_who_already_has_a_name(
     # stored name -- a phone-derived id must not confirm a guessed name -- so
     # the answer is their own words back. What the guest page reads is what
     # must not move, and it does not.
-    record, created = service.register_person(friend, "Kẻ giả danh", _actor(uuid.uuid4()))
+    record, created = service.register_person(
+        friend, "Kẻ giả danh", _actor(uuid.uuid4())
+    )
 
     assert created is False
     assert record.display_name == "Kẻ giả danh"

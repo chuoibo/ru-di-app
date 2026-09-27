@@ -103,3 +103,9 @@ Corpus 422 sinh: route bị hoãn trong `scripts/render_parity_422_scenarios.py`
 - Chia sàn trên số không âm; bản Go dùng phép chia nguyên có dấu cũng ra cùng kết quả vì mọi toán hạng không âm, nhưng `remaining` và `delta` có thể âm.
 - `BudgetError` không được bắt ở service: bản Go nên giữ 500 thay vì dịch sang 4xx nếu tái hiện kiểm tra miền.
 - Người rời vẫn giữ phần chia trong sổ; chỉ `active_member_count` đổi.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `GET /contexts/{context_id}/budget`: đổi thật: `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository.group_recap` — như trên, một câu cho mọi kèo.

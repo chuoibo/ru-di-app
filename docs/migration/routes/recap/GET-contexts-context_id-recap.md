@@ -81,3 +81,9 @@ Chỉ đọc: SELECT `outings`, `expense_versions`, `confirmed_allocations`, `ex
 - Ranh giới nửa đêm giờ Việt Nam: `today` lấy từ đồng hồ Python, còn ngày của khoản chi và kỷ niệm tính trong PostgreSQL. Bản Go phải quy đổi cùng múi `Asia/Ho_Chi_Minh` ở cả hai chỗ. Kịch bản dùng ngày 2020/2021/2099 nên không chạm biên.
 - Tiền là số nguyên: `SUM` của PostgreSQL trả `numeric`; Python ép `int` (`repository.py:2941-2944`). Go phải quét vào `int64`, tuyệt đối không ra `520000.0`.
 - Nhóm lớn: không có phân trang, không có giới hạn số chuyến.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `GET /contexts/{context_id}/recap`: đổi thật: `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository.group_recap` — như trên, một câu cho mọi kèo.

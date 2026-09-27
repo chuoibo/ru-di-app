@@ -60,9 +60,10 @@ def test_the_seeder_does_not_bring_back_a_purged_catalogue(postgres_session: Ses
         )
     )
     postgres_session.flush()
-    seed = postgres_session.get(Place, "p-01") or postgres_session.scalars(
-        select(Place).where(Place.source == "seed")
-    ).first()
+    seed = (
+        postgres_session.get(Place, "p-01")
+        or postgres_session.scalars(select(Place).where(Place.source == "seed")).first()
+    )
     assert seed is not None, "conftest phải seed danh mục"
     postgres_session.delete(seed)
     postgres_session.flush()

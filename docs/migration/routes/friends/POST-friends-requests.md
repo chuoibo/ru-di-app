@@ -100,3 +100,9 @@ Nhánh 422 `self_edge` của domain (`service.py:7207-7208`, `friendship.py:126-
 - Đua hai người cùng hỏi nhau (nhánh INSERT → 409) và 409 in-flight cần request đồng thời; harness chạy tuần tự.
 - Thứ tự `get_friend_edge` khi một cặp có nhiều dòng sống là không thể (index unique); khi có nhiều dòng `declined` thì chúng bị bỏ qua.
 - DB lane so dòng `friend_requests` và `idempotency_keys`; `created_at` được đặt từ đồng hồ Python chứ không từ Postgres, bản Go phải ghi giá trị do ứng dụng cấp (hoặc chứng minh thứ tự hạng thời gian không đổi).
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `POST /friends/requests`: đổi thật: `ApiService._reachable_person` — C2: người lạ không dò được số điện thoại; Go peoplesteps.ReachablePerson; `ApiService.send_friend_request` — C2, như trên (Go routes/friend_writes.go).
