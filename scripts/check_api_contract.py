@@ -424,6 +424,8 @@ class Contract:
 #: `services/core` in front of the proxy (ADR-0031), so a client calling them is
 #: right and the OpenAPI document is simply not the whole server any more.
 GO_CHAT_HANDLERS = (
+    "services/core/internal/community/handler.go",
+    "services/core/internal/diary/handler.go",
     "services/core/internal/chatassist/handler.go",
     "services/core/internal/chatlegacychange/handler.go",
     "services/core/internal/avatarfeed/handler.go",

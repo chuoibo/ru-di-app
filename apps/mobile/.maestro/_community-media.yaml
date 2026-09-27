@@ -1,0 +1,44 @@
+# Requires the synthetic author session, composer open, friend An QA, and a synthetic photo in the Android picker.
+appId: com.lakiet.rudi
+---
+- extendedWaitUntil:
+    visible:
+      id: "community-body"
+    timeout: 15000
+- tapOn:
+    id: "community-body"
+- inputText: "Synthetic photo trip with An QA."
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      text: "Thêm ảnh hoặc video"
+    direction: DOWN
+- tapOn: "Thêm ảnh hoặc video"
+- tapOn:
+    text: "Photo taken.*"
+    index: 0
+- extendedWaitUntil:
+    visible: "Bỏ tệp"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Tag bạn bè"
+    direction: DOWN
+- tapOn: "Tag bạn bè"
+- scrollUntilVisible:
+    element:
+      text: "An QA"
+    direction: DOWN
+- tapOn: "An QA"
+- assertVisible: "Cùng 1 người bạn"
+- scrollUntilVisible:
+    element:
+      text: "Riêng tư · Bạn bè.*"
+    direction: DOWN
+- tapOn: "Riêng tư · Bạn bè.*"
+- tapOn: "Đăng lên tường"
+- extendedWaitUntil:
+    visible: "Một câu chuyện"
+    timeout: 15000
+- assertVisible: "Synthetic photo trip with An QA."
+- takeScreenshot: community-native-photo-tag

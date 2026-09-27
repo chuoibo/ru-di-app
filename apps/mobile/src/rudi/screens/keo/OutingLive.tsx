@@ -377,6 +377,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
               {trang.keo.title}
             </Text>
           ) : null}
+          {trang.pha === "xong" && nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()).kieu !== "sap-toi" ? <RudiButton compact variant="outline" icon="book-outline" label="Giữ lại cuộc đi" onPress={() => router.push(`/outings/${trang.keo.id}/ending` as never)} /> : null}
           {trang.pha === "xong" ? <ThanhCheDo cheDo={che.cheDo} onDoi={che.doiCheDo} /> : null}
           {hanhTrinh && thongBao ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{thongBao}</Text> : null}
         </View>

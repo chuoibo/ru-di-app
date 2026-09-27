@@ -1,3 +1,4 @@
+import { DiaryWall } from "../diary/Wall";
 /**
  * Cá nhân, Tài chính and Thành tích: the person's own pages.
  *
@@ -166,7 +167,7 @@ export function ProfileScreen() {
         // A real session: the server's profile and counts. The fixture hero
         // below is Team Đà Lạt's story and must never be shown to a signed-in
         // person as if it were theirs.
-        <HoSoSong phien={session.phien} />
+        <><HoSoSong phien={session.phien} /><DiaryWall person={session.phien.person_id} owner={session.phien.person_id} /></>
       ) : (
         <View style={styles.hero}>
           <View style={styles.heroDau}>

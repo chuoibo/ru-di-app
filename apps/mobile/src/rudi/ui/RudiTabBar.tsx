@@ -15,8 +15,9 @@ import { useMotion } from "./useMotion";
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
-/** Icon per destination, filled when current; ADR-0013 fixes the four names. */
+/** Icon per destination, filled when current. */
 const ICONS: Record<string, [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]> = {
+  community: ["people-outline", "people"],
   explore: ["compass-outline", "compass"],
   plan: ["map-outline", "map"],
   messages: ["chatbubbles-outline", "chatbubbles"],
@@ -28,12 +29,9 @@ export const RAIL_WIDTH = 104;
 const FAB = 56;
 
 /**
- * The notebook's bottom edge: a paper strip with an ink hairline, four
- * destinations, and the create stamp in the middle. Replaces the stock bar
- * that had a FAB glued beside it with `marginRight: 22` notches; here the FAB
- * is the fifth column, so the geometry cannot drift. The active tab carries a
- * short washi strip that slides between destinations over `standard`; on a
- * medium or expanded window the same bar stands as a left rail.
+ * The notebook's edge strip, with five destinations when Community is present.
+ * A four-destination shell retains its create column. The active strip follows
+ * reduced-motion preferences; larger windows use the same navigation as a rail.
  */
 export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   const { colors, brand, dark } = useRudiTheme();
@@ -46,7 +44,8 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   const routes = state.routes;
   const count = routes.length;
   const fabAt = Math.floor(count / 2); // between plan and messages
-  const columns = count + 1;
+  const hasCreateColumn = count < 5;
+  const columns = count + (hasCreateColumn ? 1 : 0);
 
   const indicator = useSharedValue(state.index);
   useEffect(() => {
@@ -54,7 +53,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   }, [state.index, indicator, motion]);
 
   const indicatorStyle = useAnimatedStyle(() => {
-    const column = indicator.value >= fabAt ? indicator.value + 1 : indicator.value;
+    const column = hasCreateColumn && indicator.value >= fabAt ? indicator.value + 1 : indicator.value;
     return layout.rail
       ? { transform: [{ translateY: column * 72 }] }
       : { left: `${(column / columns) * 100}%` as const };
@@ -115,7 +114,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
     </View>
   );
 
-  items.splice(fabAt, 0, fab);
+  if (hasCreateColumn) items.splice(fabAt, 0, fab);
 
   const bottom = Math.max(insets.bottom, 10);
   const glass = Platform.OS === "ios" && !layout.rail;

@@ -1,3 +1,4 @@
+import { DiaryWall } from "../../diary/Wall";
 /**
  * Somebody else's profile and wall (M8): `/people/{id}`.
  *
@@ -336,6 +337,7 @@ export function HoSoNguoiScreen() {
               <SkeletonLines lines={2} />
             </SkeletonGroup>
           ) : null}
+          {phien && !daChan ? <DiaryWall person={phien.person_id} owner={personId} /> : null}
           {tuong.pha === "hong" ? <ErrorState body={tuong.loi} onRetry={() => void napTuong()} title="Chưa đọc được tường" /> : null}
           {tuong.pha === "xong" && tuong.bai.length === 0 ? (
             <EmptyState illustration={<Canh id="chua-co-ky-niem" width={150} />} kind="first-use" layout="inline" title={cauTuongRong(hoSo.hoSo.relation)} />
