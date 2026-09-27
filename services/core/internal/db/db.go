@@ -62,6 +62,23 @@ func PoolConfig(raw string) (*pgxpool.Config, error) {
 		// pgx echoes the URL in some errors; never let a password reach a log.
 		return nil, fmt.Errorf("%s is not a valid PostgreSQL URL", EnvDatabaseURL)
 	}
+	// Let the server notice a client that died. A process killed in the middle
+	// of a batch leaves its backend waiting to write to a socket nobody reads;
+	// statement_timeout cannot fire there, and the OS keepalive default is two
+	// hours. Seen on the vnlocal box: a replaced sync container's INSERT sat
+	// "active" for 52 minutes holding the pull lock, and the new one waited on
+	// it. These are ordinary per-session settings (PostgreSQL 12+), ignored on
+	// a unix socket; a URL that sets them itself wins.
+	for key, value := range map[string]string{
+		"tcp_keepalives_idle":     "60",
+		"tcp_keepalives_interval": "10",
+		"tcp_keepalives_count":    "6",
+		"tcp_user_timeout":        "60000",
+	} {
+		if _, set := config.ConnConfig.RuntimeParams[key]; !set {
+			config.ConnConfig.RuntimeParams[key] = value
+		}
+	}
 	config.MaxConns = maxConns
 	if n, err := strconv.Atoi(strings.TrimSpace(os.Getenv(EnvMaxConns))); err == nil && n > 0 && n <= 100 {
 		config.MaxConns = int32(n)
