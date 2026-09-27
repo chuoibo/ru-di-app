@@ -428,5 +428,80 @@
   "bytes": 121861,
   "sha8": "e91d1a8f",
   "moTa": "F04.S05 Tài chính C1–C3; UI-060: «Chi theo nhóm» không có hàng nào"
+ },
+ "EV-F05-503-C1-ct": {
+  "bytes": 101384,
+  "sha8": "66465071",
+  "moTa": "UI-068: danh sách tin trả 503. Tin vẫn hiện đủ, nhưng câu lỗi chung nằm trên ô soạn, không có «Thử lại» (C1, khung đỏ = câu lỗi)"
+ },
+ "EV-F05-BAO-CAO-C1": {
+  "bytes": 76304,
+  "sha8": "b48ec149",
+  "moTa": "UI-067: sheet báo cáo, «Làm phiền, quấy rối» đang chọn chỉ khác màu nền; các lý do khác trông như link chữ (C1)"
+ },
+ "EV-F05-BO-CUC-G8-C1-ct": {
+  "bytes": 97675,
+  "sha8": "e81d6dd7",
+  "moTa": "UI-062, UI-064, UI-065: Team Đà Lạt ở C1. Chữ gợi ý của ô soạn nằm trên, lệch 20px so với «+» và nút gửi. Avatar thấp hơn bong bóng 22px, giờ lặp dưới mỗi cụm. Thẻ bình chọn 0 phiếu cao 39% màn"
+ },
+ "EV-F05-GHIM-TREN-NEN-C1-ct": {
+  "bytes": 99422,
+  "sha8": "58833ff1",
+  "moTa": "UI-070: sheet Cài đặt nhóm đang mở, dải ghim «Cùng chọn» vẫn sáng trên nền mờ (C1, khung đỏ = dải ghim)"
+ },
+ "EV-F05-MENU-C1": {
+  "bytes": 55843,
+  "sha8": "122da522",
+  "moTa": "UI-001: menu của một tin, sáu nút cảm xúc 44×44, «Trả lời», «Sao chép», «Xoá» (C1)"
+ },
+ "EV-F05-OFFLINE-C1": {
+  "bytes": 96740,
+  "sha8": "804d8fcb",
+  "moTa": "Mất mạng khi gửi: hàng tin ở lại với câu vì sao, «Thử lại» và «Bỏ»; thử lại thì gửi đúng một lần (đạt, C1)"
+ },
+ "EV-F05-PHIEU-C1": {
+  "bytes": 94126,
+  "sha8": "073e2758",
+  "moTa": "UI-065: bình chọn 3 lựa chọn, 12 phiếu (7/4/1): thẻ cao 498px, bằng 59% màn; dấu vân tay 24×25; phiếu của mình nổi rõ (C1)"
+ },
+ "EV-F05-RONG-C1": {
+  "bytes": 116571,
+  "sha8": "28d2c261",
+  "moTa": "Tin nhắn của tài khoản mới: «Chưa có nhóm nào», lời giải thích, «Tạo nhóm», «Tôi có lời mời», «Thêm bạn bằng số điện thoại» (đạt, C1)"
+ },
+ "EV-F05-SOAN-7-DONG-C1": {
+  "bytes": 116168,
+  "sha8": "5d92f02e",
+  "moTa": "UI-062: gõ 7 dòng, ô soạn vẫn 64px, chỉ thấy khoảng 2,5 dòng, dòng trên bị mép cắt (C1)"
+ },
+ "EV-F05-THONG-BAO-C1": {
+  "bytes": 87969,
+  "sha8": "02394e3c",
+  "moTa": "UI-069: thả cảm xúc bị 503, thẻ thông báo ở cuối chat, mang dáng tin AI (✦ Rủ Đi), «Đã hiểu» 328×48 (C1)"
+ },
+ "EV-F05-THONG-BAO-CU-C1": {
+  "bytes": 78475,
+  "sha8": "7de95416",
+  "moTa": "UI-069: cùng lỗi khi đang đọc tin cũ: thẻ ở y 2086, ngoài màn, không có gì báo (C1)"
+ },
+ "EV-F05-TO-HEN-C1": {
+  "bytes": 84711,
+  "sha8": "3b4af91d",
+  "moTa": "UI-066: khay «Tờ hẹn chung của hội» mở từ bình chọn đã chốt; Esc không đóng, chỉ X (C1)"
+ },
+ "EV-F05-URL-C2-ct": {
+  "bytes": 84496,
+  "sha8": "9ad013a9",
+  "moTa": "UI-063: bong bóng có link dài rộng 346px trong cửa sổ 320, mất đầu link ở mép trái (C2, khung đỏ = bong bóng)"
+ },
+ "EV-F05.S02-BASE-ghep": {
+  "bytes": 120197,
+  "sha8": "f0d143c1",
+  "moTa": "F05.S02 chat Team Đà Lạt C1–C3: UI-062 (ô soạn), UI-064 (avatar và giờ), UI-065 (thẻ bình chọn chiếm gần nửa màn, cả màn ở C2)"
+ },
+ "EV-F05.S02-dai-BASE-ghep": {
+  "bytes": 140090,
+  "sha8": "0105683b",
+  "moTa": "F05.S02 nhóm 20 người, lịch sử 40 tin tổng hợp, C1–C3: đoạn dài, 4 dòng, emoji đọc trọn; bong bóng link dài tràn (UI-063)"
  }
 }

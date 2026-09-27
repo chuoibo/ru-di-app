@@ -114,7 +114,47 @@ export async function donKeoThu(mt = docMoiTruong()) {
   return so;
 }
 
+/**
+ * F05: a long history in the chat-test group's legacy thread, which the chat
+ * seed leaves empty (its messages went to the v2 lab). Forty synthetic lines
+ * from four of its members, among them the shapes that break bubbles: a long
+ * paragraph, an unbroken URL, several lines, emoji only. Idempotent: nothing
+ * is sent when the thread already has forty legacy messages.
+ */
+export const CHAT_DAI = [
+  "Tối nay ai rảnh không?",
+  "Mình rảnh sau 8 giờ.",
+  "Đi ăn lẩu nhé, quán cũ gần hồ.",
+  "Ok, để mình gọi đặt bàn.",
+  "Nhớ gọi thêm rau.",
+  "Mình kể cho cả nhóm nghe chuyện hôm qua: đi từ sáng sớm, trời mưa lất phất suốt đoạn đèo, xe chết máy hai lần, cả bọn đẩy xe qua một con dốc dài rồi ngồi uống trà nóng ở một quán nhỏ ven đường, bà chủ quán còn cho thêm một đĩa khoai lang nướng, xong trời tạnh thì cả nhóm đi tiếp tới tận chiều mới tới nơi, mệt nhưng vui.",
+  "https://example.com/chia-se/album/2026/chuyen-di-da-lat-cuoi-tuan-cua-ca-nhom-kiem-thu-khong-co-khoang-trang-nao-de-ngat-dong-abcdefghijklmnopqrstuvwxyz0123456789",
+  "Dòng một\nDòng hai\nDòng ba\nDòng bốn",
+  "😂😂😂",
+  "Mai mấy giờ xuất phát?",
+];
+
+export async function datLichSuChat(mt = docMoiTruong()) {
+  const { readFileSync } = await import("node:fs");
+  const s = JSON.parse(readFileSync(mt.chatSessions, "utf8"));
+  const phien = [];
+  for (let i = 0; i < 4; i += 1) phien.push(await layPhien(mt.api, personaTheoTen(`chat-${i}`, mt.chatSessions), mt.out));
+  const trang = await goiApi(mt.api, "GET", `/contexts/${s.groupId}/messages?limit=50`, undefined, phien[0].token);
+  const co = (trang.messages ?? []).length;
+  if (co >= 40) {
+    console.log(`lịch sử chat đã có ${co} tin, không gửi thêm`);
+    return { groupId: s.groupId, co };
+  }
+  for (let i = co; i < 40; i += 1) {
+    const body = CHAT_DAI[i % CHAT_DAI.length];
+    await goiApi(mt.api, "POST", `/contexts/${s.groupId}/messages`, { kind: "text", body, image_url: null, card: null }, phien[i % 4].token);
+  }
+  console.log(`đã gửi ${40 - co} tin vào nhóm chat-test`);
+  return { groupId: s.groupId, co: 40 };
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (process.argv.includes("--don-keo-thu")) await donKeoThu();
+  if (process.argv.includes("--chat")) await datLichSuChat();
   console.log(JSON.stringify(await datKeoBienThe()));
 }

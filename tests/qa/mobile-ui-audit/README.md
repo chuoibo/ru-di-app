@@ -43,6 +43,10 @@ node kich-ban/f03-phan-xu.mjs        # phán quyết bằng mắt của F03
 node kich-ban/f04-tien.mjs [--chi buoc,chan,lui,ban,ban-20,anh,aria,m2,ghi,c9,qt,dot-rong,dot,chia-se,tien-ve,loi,lanh,nep,c8,tablet,demo,mo15,lat]
                                     # F04 Tiền: Team Đà Lạt chỉ đọc sổ; mọi lần ghi sổ vào nhóm chat-test (append-only)
 node kich-ban/f04-phan-xu.mjs        # phán quyết bằng mắt của F04
+node seed-bien-the.mjs --chat        # 40 tin tổng hợp cho luồng chat cũ của nhóm chat-test (bỏ qua nếu đã đủ)
+node kich-ban/f05-chat.mjs [--chi bong-dai,soan,gui,offline,anh,sticker,menu,menu-dong,bao-cao,cong-cu,cai-dat,tin-moi,bo-cuc,phieu,rong,ghim-phu,thong-bao,ghim,lanh,loi,c8,dm,votes]
+                                    # F05 Chat: Team Đà Lạt chỉ đọc; mọi lần ghi vào nhóm chat-test
+node kich-ban/f05-phan-xu.mjs        # phán quyết bằng mắt của F05
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node chot-anh.mjs <docs-dir> <danh-sach.json>   # chép ảnh được chọn, ghim sha256 vào allowlist
 ```
@@ -52,6 +56,10 @@ Thư viện dùng chung nằm ở `thu-vien/`, không phải `lib/`: `.gitignore
 
 Mọi lần cuộn của harness chỉ được cuộn dọc: `scrollIntoView` cũng cuộn ngang khung `overflow: hidden`, việc ngón tay
 không làm được (F04 đo ra một PASS giả vì thế). `tamCua` và các kịch bản trả lại cuộn ngang sau mỗi lần cuộn.
+
+Danh sách tin của chat là FlatList đảo ngược: thứ tự DOM ngược thứ tự trên màn, và danh sách tự nhảy về cuối khi
+nạp thêm. Kịch bản F05 tìm bong bóng theo nhãn và vị trí trên màn, không theo thứ tự DOM, và chạm vào tin mới gửi
+(nằm sẵn ở cuối) thay vì cuộn tới tin cũ.
 
 Sổ `results.jsonl` chỉ được ghi thêm. Hàng sinh từ lỗi của harness được rút bằng `soGhi(out).rut(tc, lyDo)`:
 dòng gốc ở lại trong sổ, ma trận bỏ nó khỏi bảng và liệt kê trong mục «Hàng đã rút» kèm lý do.

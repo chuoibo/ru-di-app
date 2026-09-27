@@ -175,8 +175,8 @@ Mặc định không né bàn phím.
 | L18 | Menu tin | `chat/MenuTin.tsx` | F05.S02 | — | Sheet | nút cảm xúc 44dp; xác nhận xoá trong sheet; sao chép |
 | L19 | Khay sticker | `chat/KhaySticker.tsx` | F05.S02 | — | Sheet | |
 | L20 | Khay công cụ | `chat/SoHen.tsx` `CongCuChat` | F05.S02 | có | X, Esc | inline |
-| L21 | Khay tờ hẹn chung | `chat/ToHenChungKhay.tsx` | F05.S02 | — | chỉ X | inline |
-| L22 | Thẻ thông báo chat «Đã hiểu» | `chat/GroupChatLive.tsx` | F05.S02 | — | «Đã hiểu» | |
+| L21 | Khay tờ hẹn chung | `chat/ToHenChungKhay.tsx` | F05.S02 | — | chỉ X | inline. Đo ở checkpoint 6: Esc không đóng (UI-066), Back rời chat (UI-038) |
+| L22 | Thẻ thông báo chat «Đã hiểu» | `chat/GroupChatLive.tsx` | F05.S02 | — | «Đã hiểu» | nhận lỗi cảm xúc, lỗi gửi ảnh, lỗi xoá, câu ý định sau khi gửi. Luôn thêm ở cuối chat (UI-069) |
 | L23 | ~12 sheet sổ đôi | `hai-nguoi/*.tsx`, `KhongGianGiay.tsx` | F07.S02 | DeNghiSua 5 ô, RangBuoc 2, GiuMotDieu 1 | Sheet | sheet cài đặt điều hướng mà không đóng |
 | L24 | Check-in | `ky-niem/GroupWallLive.tsx` | F08.S01 | tìm + ô | Sheet | |
 | L25 | Xem ảnh | `ui/PhotoViewer.tsx` (RN `Modal` duy nhất) | F08.S02, F08.S03 | — | «Đóng», Android back | pinch, pan, chạm đúp; không vuốt xuống để đóng |

@@ -4,8 +4,11 @@
 - MODE = **AUDIT_ONLY**: không sửa mã app; chỉ thêm tài liệu, ảnh bằng chứng và harness đo.
 - protocol_version: không áp dụng (không đụng giao thức v1 hay trang khách).
 - Verdict: không có (chưa có reviewer thật; đây là báo cáo phát hiện).
-- Trạng thái: **đang làm, checkpoint 5** (xong F00–F04). Mục «Checkpoint» ở cuối là nguồn sự thật về
+- Trạng thái: **đang làm, checkpoint 6** (xong F00–F05). Mục «Checkpoint» ở cuối là nguồn sự thật về
   phần đã và chưa đo.
+- `main` đã đi tiếp tới `33d29fe` trong lúc audit: 49 commit, có hai feature mới (Cộng đồng, Nhật ký chuyến) và
+  sửa ở Khám phá, Kèo, Hồ sơ. Đợt này **giữ mốc `7ea1a7c`** tới hết pipeline, để số đo giữa các checkpoint so được
+  với nhau. Feature mới nằm trong hàng đợi sau pipeline (mục «Checkpoint»).
 
 Tài liệu đi kèm:
 - `inventory.md`: danh mục feature → screen → lớp UI → motion.
@@ -30,6 +33,7 @@ Tài liệu đi kèm:
 | Gián đoạn | Máy khởi động lại hai lần: giữa F02, và giữa F04 lúc phiên chờ hạn mức. Mỗi lần Postgres, API và cửa Go được dựng lại trên đúng thư mục dữ liệu cũ, không seed lại; phiên đã lưu vẫn dùng được |
 | Dữ liệu biến thể (F03) | `tests/qa/mobile-ui-audit/seed-bien-the.mjs` tạo qua API của app hai kèo giả: tên 96 ký tự với 12 chặng dài (một nhãn 57 ký tự liền), và kèo 2 ngày không chặng. Ca nào ghi vào hai kèo này thì đặt lại chặng sau đó. Việc dọn dẹp chỉ chạy trên DB cục bộ: xoá kèo «Kèo thử…» do ca tạo kèo sinh ra, xoá check-in của kèo biến thể. Không route nào xoá được hai thứ này, và đã kiểm trước: không bảng hay tin chat nào tham chiếu tới chúng |
 | Ghi tiền (F04) | Sổ tiền là append-only (trigger chặn sửa, xoá nghĩa vụ), nên mọi lần ghi ở lại trên DB cục bộ. Team Đà Lạt **không bị ghi sổ**: 1 khoản chi, 1 đợt, 0 biên nhận như lúc seed; chỉ có thêm 17 bill nháp (`POST /bills` ở bước 2 → 3, không route nào liệt kê, UI không hiện). Mọi lần ghi đi vào nhóm chat-test 20 người: 3 khoản chi (13.705.678đ và hai khoản «Trà đá» 20.000đ), 1 đợt đã phát (19 link, lưu trong localStorage của context test rồi mất khi đóng), 3 biên nhận «Tiền đã về». Ghi tiền không đăng tin chat (đã đọc mã Go), nên ảnh F05 không bị ảnh hưởng |
+| Ghi chat (F05) | Team Đà Lạt chỉ được đọc: vẫn 13 tin như lúc seed. Mọi lần ghi đi vào luồng chat cũ (chưa mã hoá đầu cuối) của nhóm chat-test 20 người: 40 tin tổng hợp do `seed-bien-the.mjs --chat` gửi qua API (đoạn dài, URL 158 ký tự, 4 dòng, emoji), cộng các tin của từng ca. Tổng hiện có 59 tin: 51 chữ, 3 thẻ (2 bình chọn, 1 tờ hẹn chung «Lẩu» bản 1), 3 tin đã xoá, 1 ảnh tổng hợp 480×360, 1 sticker. Có 13 phiếu (1 ở bình chọn đã chốt, 12 ở bình chọn mở, do chat-0 tới chat-11 bỏ qua API) và 1 báo cáo «quấy rối» nhắm vào một tin của Chat Test 02. Chat hai người chat-0/chat-1 chỉ được mở, 0 tin. Thêm một tài khoản mới `moi-50` (không nhóm) cho trạng thái rỗng. Không route nào xoá tin khỏi luồng cũ (xoá chỉ đổi thành «Tin nhắn đã bị xoá»), nên các hàng này ở lại trên DB cục bộ |
 
 ### Ma trận cấu hình
 
@@ -71,17 +75,17 @@ Cách lấy mẫu:
 | Trình đọc màn hình thật, haptics, BackHandler, vuốt back iOS | BLOCKED | Chỉ đo cây ARIA trên web |
 | Độ mượt / FPS | Không đo | SwiftShader headless không đại diện cho máy; motion chỉ kết luận về hình dạng (đi đâu, dừng đâu, có bị ngắt, giảm chuyển động) |
 
-## B. Coverage thực tế (checkpoint 5)
+## B. Coverage thực tế (checkpoint 6)
 
 Đếm lấy từ `coverage-matrix.md` (sinh máy). Mọi hàng BLOCKED và NOT_TESTED đều được đếm.
 
 | Phạm vi | PASS | FAIL | BLOCKED | NOT_TESTED | N/A |
 |---|---|---|---|---|---|
-| Tất cả (538 hàng) | 171 | 126 | 181 | 56 | 4 |
-| Web | 171 | 126 | 61 | 56 | 4 |
+| Tất cả (576 hàng) | 194 | 152 | 181 | 45 | 4 |
+| Web | 194 | 152 | 61 | 45 | 4 |
 | Android native | 0 | 0 | 60 | 0 | 0 |
 | iOS native | 0 | 0 | 60 | 0 | 0 |
-| Method RUNTIME-WEB | 171 | 124 | 1 | 56 | 3 |
+| Method RUNTIME-WEB | 194 | 150 | 1 | 45 | 3 |
 | Method STATIC | 0 | 2 | 180 | 0 | 1 |
 
 Theo feature đã đo:
@@ -93,6 +97,7 @@ Theo feature đã đo:
 | F02 Khám phá | 24 | 26 | 12 | 1 | 2 |
 | F03 Plan · Kèo · Hành trình | 56 | 39 | 25 | 0 | 0 |
 | F04 Tiền | 40 | 36 | 15 | 0 | 1 |
+| F05 Tin nhắn · Chat | 23 | 26 | 12 | 0 | 0 |
 
 Một hàng BLOCKED trên web là thật sự không chạy được trong giả lập: giữ ngón tay trên bản đồ (`TC-L11-GIU`). Giả lập
 cảm ứng CDP không sinh `contextmenu` từ cú giữ như Chrome Android thật.
@@ -101,7 +106,7 @@ Hai hàng STATIC có kết quả FAIL ở F04 là phép tính trên chính hàm 
 `dist-test`), cùng vị từ với test của repo, cho số người vượt phạm vi test. Chúng đỡ cho hàng runtime cùng issue,
 không thay thế nó.
 
-Hàng rút: `coverage-matrix.md` có mục «Hàng đã rút» cho 14 test case có phán quyết sinh từ lỗi của harness.
+Hàng rút: `coverage-matrix.md` có mục «Hàng đã rút» cho 21 test case có phán quyết sinh từ lỗi của harness.
 Sổ gốc giữ nguyên các dòng đó; ma trận chỉ bỏ chúng khỏi bảng và ghi lý do.
 
 Inventory:
@@ -110,13 +115,13 @@ Inventory:
 
 ## C. Issues
 
-61 issue sau checkpoint 5, chi tiết và ảnh ở `issues.md`.
+70 issue sau checkpoint 6, chi tiết và ảnh ở `issues.md`.
 
 | Mức | BUG | UX ISSUE | VISUAL POLISH |
 |---|---|---|---|
 | P1 | UI-005, UI-049 | | |
-| P2 | UI-003, UI-004, UI-006, UI-011, UI-016, UI-022, UI-032, UI-035, UI-036, UI-048 | UI-002, UI-018, UI-019, UI-021, UI-023, UI-024, UI-033, UI-034, UI-050, UI-051, UI-052 | |
-| P3 | UI-010, UI-013, UI-027, UI-042, UI-046, UI-053 | UI-001, UI-007, UI-008, UI-009, UI-012, UI-015, UI-017, UI-020, UI-028, UI-029, UI-030, UI-037, UI-038, UI-039, UI-041, UI-043, UI-044, UI-056, UI-057, UI-058, UI-059, UI-060 | UI-014, UI-025, UI-026, UI-031, UI-040, UI-045, UI-047, UI-054, UI-055, UI-061 |
+| P2 | UI-003, UI-004, UI-006, UI-011, UI-016, UI-022, UI-032, UI-035, UI-036, UI-048, UI-062, UI-063 | UI-002, UI-018, UI-019, UI-021, UI-023, UI-024, UI-033, UI-034, UI-050, UI-051, UI-052 | |
+| P3 | UI-010, UI-013, UI-027, UI-042, UI-046, UI-053 | UI-001, UI-007, UI-008, UI-009, UI-012, UI-015, UI-017, UI-020, UI-028, UI-029, UI-030, UI-037, UI-038, UI-039, UI-041, UI-043, UI-044, UI-056, UI-057, UI-058, UI-059, UI-060, UI-066, UI-067, UI-068, UI-069 | UI-014, UI-025, UI-026, UI-031, UI-040, UI-045, UI-047, UI-054, UI-055, UI-061, UI-064, UI-065, UI-070 |
 
 Đổi mức: UI-018 từ P3 lên P2 ở checkpoint 3. Nút back của `TopBar` trong kit (37 file màn) cũng không kiểm
 `canGoBack()`, và F02 đo lại được ở `/places/[id]`, một màn không có thanh tab nên mở thẳng bằng link thì
@@ -128,6 +133,15 @@ trong app không còn lối ra.
 - **UI-049 (P1, web, đợt thu):** «Gửi cho <tên>» không bao giờ gửi được link trên web. Trình duyệt không có Web
   Share thì không có lối nào khác, mà link chỉ có một bản trên máy đã phát. Có Web Share thì link đi được nhưng
   màn vẫn báo «Kiểm tra mạng» ở ngoài khung nhìn và không ghi đã mở khay.
+- **Chat so với Messenger (người yêu cầu nêu 27/09):** mỗi điểm đã được đo.
+  - **UI-062 (P2, web):** ô soạn là textarea 2 hàng không cao lên; chữ nằm trên, lệch 20px so với «+» và nút gửi,
+    dư 32px dưới chữ. Gõ 7 dòng chỉ thấy khoảng 2,5 dòng. Mã có ý đồ ngược lại (ô cao dần, dòng đơn nằm giữa):
+    react-native-web không nhận `textAlignVertical` và không tự đổi chiều cao textarea.
+  - **UI-063 (P2, web):** bong bóng có link dài luôn rộng 346px; ở 320dp mất đầu link ở mép trái.
+  - **UI-064 (P3):** avatar đứng ngang dòng giờ, thấp hơn bong bóng 22px; giờ lặp dưới mọi cụm (5 lần «13:27» trên
+    một màn).
+  - **UI-065 (P3):** thẻ bình chọn 3 lựa chọn cao 39% màn khi 0 phiếu và 59% khi 12 phiếu; «N phiếu» lặp 4 lần;
+    trải cả bề ngang tablet. Nhận xét «chưa sáng tạo, chưa đẹp» là phán đoán của người yêu cầu, ghi nguyên văn.
 - **UI-048 (P2, chia bill):** số tiền của món bị ellipsis còn «12.3…» ở mọi bề rộng điện thoại khi tên món dài.
 - **UI-050 (P2, chia bill):** bàn gán món chồng ghế từ 9 người; ở nhóm 20 người chạm một ghế đổi ghế bên cạnh.
 - **UI-051, UI-052 (P2, chia bill):** lý do không đi tiếp và lỗi máy chủ hiện ở đầu trang ngoài màn; lùi về bước 1,
@@ -160,8 +174,8 @@ Mỗi dòng cần xác nhận runtime: `Onboarding.tsx:252` hoá ra dương tín
 - `screens/Bill.tsx:250` (expanded)
 - `screens/chia-bill/ChiaBillLive.tsx:391` (busy), `:467` và `:578` (expanded, **đã xác nhận runtime** ở F04)
 - `screens/hai-nguoi/ChonNguoi.tsx:108` (busy)
-- `screens/chat/TheAi.tsx:290` (checked)
-- `screens/chat/CaiDatNhom.tsx:154` (selected, checked)
+- `screens/chat/TheAi.tsx:290` (checked, **đã xác nhận runtime** ở F05)
+- `screens/chat/CaiDatNhom.tsx:154` (selected, checked, **đã xác nhận runtime** ở F05)
 - `screens/chat/SoHen.tsx:235` (expanded)
 - `screens/keo/CreateOutingLive.tsx:235` (selected)
 - `screens/tuong/BaiChiTietScreen.tsx:222` (selected)
@@ -206,15 +220,31 @@ Phát hiện bị loại vì là lỗi của harness, không phải của app:
 - «M3 và M4 nhảy tư thế ở C9»: tiêu chí «một ảnh» quá chặt. Xem ảnh đầu và cuối thì cùng tư thế; lần đổi pixel duy
   nhất là SVG nhường Skia. Phán quyết bằng mắt: đạt.
 
+Ở F05:
+- «Ô soạn nhiều dòng đạt»: tiêu chí đầu chỉ kiểm ô không vượt trần và có cuộn trong ô, nên ô không cao lên (64 → 64)
+  vẫn thành PASS. Rút và đo lại với điều kiện ô phải cao lên: FAIL (UI-062).
+- «Chọn sticker không gửi gì», «Menu tin có 8 nút cảm xúc»: bộ chọn lấy nhầm nền «Đóng» phủ cả màn và nút «Đóng bảng».
+- «Back từ khay sticker về trang trống»: mở chat lạnh nên lịch sử không có màn trước. Các ca Back nay vào chat từ
+  Tin nhắn.
+- «Trích dẫn trỏ nhầm tin»: danh sách tin là FlatList đảo ngược, thứ tự DOM ngược thứ tự trên màn; harness lấy phần
+  tử «Trích:» cuối DOM, tức trả lời cũ nhất.
+- «Báo cáo chạm trượt»: `scrollIntoView` tới một tin cũ đua với cú nhảy về cuối của danh sách đảo ngược. Ca báo cáo
+  nay dùng một tin mới do Chat Test 02 gửi, nằm sẵn ở cuối.
+- «Cài đặt nhóm thiếu công tắc AI»: chat thật cố ý không truyền công tắc «Rủ Đi AI tự gợi ý» (AI chỉ nhận nội dung
+  được gọi). Tiêu chí đòi nhầm.
+- «Dải ghim trên nền mờ đạt»: tiêu chí tự động chỉ đo điểm chạm. Phán quyết bằng mắt: dải không bị làm mờ (UI-070).
+- Không thành hàng nào: câu hỏi bình chọn của harness có dấu hỏi ở giữa, và form từ chối đúng luật («Đặt dấu hỏi ở
+  cuối câu hỏi.»); một lượt chọn tin để mở menu không thấy bong bóng chữ nào vì thẻ bình chọn chiếm vùng tìm.
+
 Mỗi trường hợp đã sửa trong harness, và giữ ghi chú ở đây để người đọc biết đã được loại trừ.
 
 ## D. Thay đổi
 
 Không sửa file nào trong `apps/`, `services/`, `packages/`. Thêm:
-- `docs/claude/2026-09-27/mobile-ui-audit/`: tài liệu và ảnh (86 ảnh, 11,35 MiB, ngân sách 20 MiB);
+- `docs/claude/2026-09-27/mobile-ui-audit/`: tài liệu và ảnh (101 ảnh, 12,73 MiB, ngân sách 20 MiB);
 - `tests/qa/mobile-ui-audit/`: harness. Thư viện dùng chung ở `thu-vien/` (trước là `lib/`, xem sự cố 2);
-  `kich-ban/f02-phan-xu.mjs`, `f03-phan-xu.mjs`, `f04-phan-xu.mjs` ghi các phán quyết bằng mắt kèm ảnh đã xem;
-  `seed-bien-the.mjs` tạo dữ liệu biến thể qua API;
+  `kich-ban/f02-phan-xu.mjs` tới `f05-phan-xu.mjs` ghi các phán quyết bằng mắt kèm ảnh đã xem;
+  `seed-bien-the.mjs` tạo dữ liệu biến thể qua API (thêm `--chat`: 40 tin tổng hợp cho nhóm chat-test);
 - các mục ghim ảnh trong `.repo-guard-allowlist.json`.
 
 ## E. Verification
@@ -226,6 +256,7 @@ Không sửa file nào trong `apps/`, `services/`, `packages/`. Thêm:
 | `npm test` (gồm `build:check`), `CHROME_BIN` trỏ Chromium | 1220 test: 1219 pass, **1 fail có sẵn** trước mọi thay đổi |
 | `node tu-kiem.mjs --dot-bien` (harness) | 16/16 xanh; đột biến M1 (bỏ ngưỡng tràn ngang) và M2 (coi mọi nền trong suốt) đỏ **đúng dòng dự đoán**. Chạy lại sau khi đổi `lib/` thành `thu-vien/`: vẫn 16/16, M1 và M2 đỏ đúng chỗ |
 | `node tu-kiem.mjs` sau khi vá `tamCua` (F04) | 16/16 xanh |
+| `node tu-kiem.mjs --dot-bien` ở checkpoint 6 | 16/16 xanh; M1 đỏ ở «tràn ngang: phần tử 500px», M2 đỏ ở «chữ bị che bởi lớp đục», đúng dự đoán |
 | Chặn file bị `.gitignore` bỏ qua (bước mới của script commit) | canary: một file trong thư mục `lib/` giả bị liệt kê; identity: 0 file bị bỏ qua ngoài `node_modules/` |
 
 Test fail có sẵn:
@@ -273,10 +304,18 @@ Test fail có sẵn:
   ngắn hơn.
 - Chia sẻ trên web (UI-049) đo bằng `navigator.share` giả lập hai kiểu (xong, người dùng đóng); khay chia sẻ thật
   của Android và iOS chưa chạy. Đọc bill từ ảnh chỉ đo nhánh máy chủ chưa có khoá AI.
+- Chat (F05):
+  - Hai lỗi P2 (ô soạn UI-062, link dài UI-063) sinh từ cách react-native-web dựng textarea và bẻ chữ. Trên native
+    chúng có thể không xảy ra; phần native của hai issue là đọc mã hoặc giả thuyết, chưa đo.
+  - «Như Messenger» là quy ước tham chiếu người yêu cầu chọn, không phải spec của repo. Issue ghi số đo, còn cách sửa
+    để thiết kế chốt.
+  - Chỉ đo luồng chat cũ «Chưa mã hoá đầu cuối». Chat v2 E2EE chỉ có ở chat-lab, app chưa dùng.
+  - Không có bàn phím ảo: C8 chỉ là cửa sổ thấp.
 
 ## Checkpoint
 
-- **Đã xong:** F00 (vỏ toàn cục), F01 (vào cửa), F02 (Khám phá), F03 (Plan · Kèo · Hành trình), F04 (Tiền).
+- **Đã xong:** F00 (vỏ toàn cục), F01 (vào cửa), F02 (Khám phá), F03 (Plan · Kèo · Hành trình), F04 (Tiền),
+  F05 (Tin nhắn · Chat).
   - F00:
     - định tuyến theo phiên, URL lạ;
     - thanh tab và rail ở 9 cấu hình;
@@ -318,9 +357,25 @@ Test fail có sẵn:
       tiền về và Nếp M4; «Tạo đợt thu» khi không còn khoản ngoài đợt;
     - 503 và thử lại ở quyết toán, đợt thu, tài chính; tài chính mất mạng; back lạnh 4 màn;
     - mép Nếp ở màn tiền, khoảng cách Nếp tới số tiền khi cuộn; MO10, MO13 (M3/M4), MO14, MO15 ở C1/C9.
-- **Tiếp theo:** F05 Chat → F06 Nhóm và người → F07 Sổ đôi → F08 Kỷ niệm → F09 Hồ sơ/Cài đặt →
-  F10 bảng QA dev → F11 demo → E1–E6.
+  - F05:
+    - baseline Tin nhắn, chat nhóm, chat nhóm lịch sử dài, chat hai người, `/votes/[id]` ở C1–C3, và C4–C7/C9;
+      Tin nhắn của tài khoản mới (rỗng) ở C1/C3;
+    - ô soạn trống và 7 dòng; gửi; mất mạng rồi «Thử lại»; ảnh qua bộ chọn tệp (huỷ, gửi); link 158 ký tự ở
+      C1/C2/C3/C5;
+    - menu tin: cảm xúc, trả lời, sao chép, xoá; 4 cách đóng menu; khay sticker 3 cách đóng rồi gửi;
+    - khay công cụ 3 cách đóng; bình chọn: tạo, bỏ phiếu, chốt, mở tờ hẹn chung; bình chọn 12 phiếu ở C1/C3;
+    - báo cáo tin; Cài đặt nhóm (5 màu, rời nhóm, Esc); thẻ thông báo «Đã hiểu» ở cuối và khi đọc tin cũ;
+    - tin mới từ người thứ hai khi đang đọc tin cũ; dải ghim (dưới dải, trên nền mờ); back lạnh; 503; C8;
+    - bố cục so với Messenger (avatar, giờ, ô soạn, thẻ bình chọn) theo nhận xét của người yêu cầu.
+- **Tiếp theo:** F06 Nhóm và người → F07 Sổ đôi → F08 Kỷ niệm → F09 Hồ sơ/Cài đặt → F10 bảng QA dev → F11 demo
+  → E1–E6 → verify cuối.
+- **Hàng đợi sau pipeline** (người yêu cầu nhắc 27/09): các feature mới trên `main` (`7ea1a7c` → `33d29fe`) được
+  audit trên bản dựng mới, sau khi xong mọi bước trên:
+  - Cộng đồng: tab mới và 7 route `/community/*`, bảng tin có kiểm duyệt, realtime;
+  - Nhật ký chuyến: `/diaries/[id]`, `/outings/[id]/ending`;
+  - retest các màn cũ mà `main` đã sửa: thanh tab và rail (F00), Khám phá và địa điểm (F02), picker của kèo (F03),
+    Hồ sơ, bài và tường (F06, F08, F09).
 - **Còn NOT_TESTED:**
-  - mọi hàng của F05–F11 trong `coverage-matrix.md`;
+  - mọi hàng của F06–F11 trong `coverage-matrix.md`;
   - `TC-F02-CHI-TIET-RU`, nút «Rủ <tên> tới đây», cần persona có sổ đôi, chuyển F07;
   - 4 hàng F00 đã ghi ở checkpoint trước.

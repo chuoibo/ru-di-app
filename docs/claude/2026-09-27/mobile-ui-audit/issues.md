@@ -20,8 +20,8 @@
 | Mức | Issue |
 |---|---|
 | P1 | UI-005, UI-049 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070 |
 
 ---
 
@@ -72,7 +72,7 @@
 | Tái hiện | Mở bất kỳ tab nào, đọc thuộc tính ARIA của 4 phần tử `role="tab"` |
 | Expected | Tab đang chọn có `aria-selected="true"`, và các tab nằm trong một `role="tablist"` |
 | Actual | Cả 4 tab đều không có `aria-selected`, và không có `tablist`. Nhìn bằng mắt vẫn phân biệt được tab đang chọn (màu, icon đặc, dải washi), nhưng trình đọc màn hình thì không |
-| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`); nút gập/mở dòng món của chia bill ở bước 2 và 3 không có `aria-expanded` (F04, `ChiaBillLive.tsx:467` và `:578`, hàng `TC-F04-ARIA-GAP`; bước 2 có đổi nhãn «Sửa/Gấp», bước 3 không). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) |
+| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`); nút gập/mở dòng món của chia bill ở bước 2 và 3 không có `aria-expanded` (F04, `ChiaBillLive.tsx:467` và `:578`, hàng `TC-F04-ARIA-GAP`; bước 2 có đổi nhãn «Sửa/Gấp», bước 3 không); F05: lựa chọn của thẻ bình chọn, `role=radio` không có `aria-checked` kể cả lựa chọn của mình (`chat/TheAi.tsx:288–290`, `TC-F05-BINH-CHON-PHIEU`), và 5 ô «Màu bong bóng» của Cài đặt nhóm, `role=radio` không trạng thái dù mắt thấy dấu tích (`chat/CaiDatNhom.tsx:152–154`, `TC-L17-VONGDOI`). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) |
 | Hậu quả | Trên web, người dùng trình đọc màn hình không biết tab nào, ngày nào, chip gu nào, màu nào đang được chọn, và mục nào đang mở/gập |
 | Đề xuất | Truyền thêm prop `aria-*` mà RNW đọc được, đúng với role: `aria-checked` cho radio/checkbox/switch, `aria-expanded` cho nút gập mở, `aria-busy`, `aria-selected` **chỉ** cho tab/option/row. Sửa ở checkpoint 3: `HangChang` từng được nêu ở đây làm ví dụ đúng, nhưng nó đặt `aria-selected` trên `role=button`, là thuộc tính không hợp lệ (axe critical, UI-042); nút nên dùng `aria-pressed` hoặc `aria-current`. Gom lại trong một helper ở kit; thêm `role="tablist"` cho thanh tab |
 | Tiêu chí gỡ | Quét DOM: mỗi control có trạng thái đều mang thuộc tính ARIA tương ứng; tab đang chọn có `aria-selected=true` |
@@ -237,11 +237,11 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (vùng bấm, lệch spec hệ thống) · **P3** |
-| Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã) |
+| Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã). Thêm F03, F04, F05 (xem Actual) |
 | Nền tảng, cấu hình | web, C1, C2, C3 (đo runtime). Native: cùng `minHeight: 44` (STATIC) |
 | Expected | DESIGN.md §Mục tiêu chạm: «Mọi node bấm được ≥48×48dp, kể cả `TextInput`» |
-| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`) |
-| Evidence | ![ô nhập 44](evidence/EV-F01-O-NHAP-44-C1.jpg) |
+| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`). F05 (chat): 6 nút cảm xúc của menu tin 44×44 (`chat/MenuTin.tsx:97`, `TC-F05-MENU-PHAN-UNG`); bong bóng một dòng cao 46, và bong bóng là chỗ duy nhất mở menu tin (`TC-F05-BO-CUC-TIN` G20) |
+| Evidence | ![ô nhập 44](evidence/EV-F01-O-NHAP-44-C1.jpg) ![menu tin: hàng cảm xúc 44dp, C1](evidence/EV-F05-MENU-C1.jpg) |
 | Source | `src/rudi/ui/ONhapMuc.tsx:60` (`minHeight: 44`) |
 | Đề xuất | `minHeight: 48` (vẫn không hộp, dòng kẻ giữ nguyên) |
 | Tiêu chí gỡ | Mọi `input` một dòng ≥48dp cao |
@@ -295,7 +295,7 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (điều hướng) · **P2**. Checkpoint 2 ghi P3; nâng ở checkpoint 3 vì phạm vi không còn là một màn: đo lại ở `/places/[id]`, và nút back của `TopBar` trong kit cũng gọi `router.back()` không kiểm `canGoBack()` |
-| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
+| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. F05 · `/groups/[id]/chat` mở lạnh: chạm «Quay lại» của đầu chat, URL giữ nguyên (`TC-F05.S02-BACK-LANH`); màn chat không có thanh tab. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
 | Nền tảng, cấu hình | web, C1 |
 | Tái hiện | Mở thẳng `/login` (không có lịch sử), chạm «Quay lại» |
 | Expected | Đưa về màn hợp lý (Welcome), hoặc không vẽ nút khi không có nơi để về |
@@ -596,13 +596,13 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE · **P3** |
-| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet) |
+| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn) |
 | Nền tảng, cấu hình | web, C1 (trên Android Chrome, cử chỉ back hệ thống cũng là Back trình duyệt). Native Android: `Sheet` nghe `BackHandler` nên đóng sheet (STATIC) |
 | Tái hiện | Từ Lên plan mở kèo, mở sheet «Chặng mới», gõ dở tên chặng, bấm Back |
 | Expected | Back đóng sheet, ở lại màn kèo |
 | Actual | Sheet đóng vì màn bị gỡ: URL về `/plan`, 12/12 ô của lưới chạm đổi, chữ đang gõ mất |
-| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt |
-| Source | `src/rudi/ui/Sheet.tsx:145` chỉ nghe `hardwareBackPress` (react-native-web không phát) |
+| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn |
+| Source | `src/rudi/ui/Sheet.tsx:145` chỉ nghe `hardwareBackPress` (react-native-web không phát). Khay công cụ: `chat/SoHen.tsx:111` (`BackHandler`, chỉ Android). Khay tờ hẹn chung: không nghe gì, nên trên Android Back cũng rời chat (STATIC) |
 | Đề xuất sửa | Trên web, đẩy một mục lịch sử khi mở sheet và đóng sheet ở `popstate` (như khay `/create`) |
 | Tiêu chí gỡ | Back khi sheet mở: sheet đóng, URL giữ nguyên |
 
@@ -934,6 +934,166 @@
 | Source | `screens/Bill.tsx:488` (`hangDauSo`, hai cột cố định) |
 | Đề xuất sửa | Khi không có số (`hero.laSo` sai), đặt trạng thái dưới câu thay vì chia cột |
 | Tiêu chí gỡ | Ở C2 câu giải thích ≤ 5 dòng |
+
+## F05 Tin nhắn · Chat
+
+Người yêu cầu xem chat trên web và so với Messenger (27/09). Họ nêu năm điểm:
+- bong bóng tin xuất hiện ở đâu;
+- giờ hiện thế nào;
+- chữ trong ô soạn nằm trên, còn phần dưới ô bị dư;
+- «+» và nút gửi không thẳng hàng;
+- tin dài «rớt xuống dưới».
+
+Họ cũng chê thẻ bình chọn «chưa sáng tạo, chưa đẹp mắt». Mỗi điểm được đo thành số trong
+`kich-ban/f05-chat.mjs` (phần `bo-cuc`, `soan`, `bong-dai`, `phieu`) rồi ghi thành issue dưới đây:
+- UI-062: ô soạn và tin dài trong ô;
+- UI-063: tin dài trong bong bóng;
+- UI-064: avatar và giờ;
+- UI-065: thẻ bình chọn.
+
+Nhận xét thẩm mỹ của người yêu cầu được ghi nguyên văn là phán đoán của họ. Phần có thể kiểm là số đo đi kèm.
+
+### UI-062 · Web: ô soạn tin là textarea 2 hàng không cao lên; chữ nằm trên, lệch 20px so với «+» và nút gửi
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (bố cục web trái với chính ý đồ ghi trong mã) · **P2**: khi gõ tin dài, phần lớn chữ khuất, phải cuộn trong một ô 64px |
+| Feature / Screen / Layer | F05 · `/groups/[id]/chat` (nhóm và chat hai người) · ô soạn |
+| Nền tảng, cấu hình | web, mọi cấu hình đã chụp (C1–C7, C9). Đo số ở C1. Native: Android có `textAlignVertical: "center"` và ô multiline tự cao lên, nên dòng đơn nằm giữa (STATIC). iOS không có `textAlignVertical`: một dòng 24px trong ô `minHeight` 48 có thể lệch khoảng 8px (HYPOTHESIS, chưa đo) |
+| Người yêu cầu nêu | «chỗ box nhắn tin sao mà nó bị ở trên trong khi đó box bị dư ra ở dưới», «các dấu cộng dấu gửi không aligned», «tin nhắn dài bị rớt xuống dưới» |
+| Tái hiện | Mở một chat. (a) Nhìn ô soạn trống. (b) Gõ 7 dòng, Enter giữa các dòng |
+| Expected | Như Messenger và như chú thích trong mã («the composer grows with its text, so one line sits in the middle of the pill»): một dòng nằm giữa viên thuốc, cùng đường giữa với «+» và nút gửi. Ô cao dần theo chữ tới trần 120 rồi mới cuộn |
+| Actual | (a) Ô cao 64 (2 hàng), viên thuốc 78. Giữa dòng chữ ở y 785, giữa «+» và nút gửi ở y 805: lệch 20px. Dư 32px dưới dòng chữ. (b) 7 dòng: ô vẫn 64, chữ cuộn trong ô, chỉ thấy khoảng 2,5 dòng, dòng trên cùng bị mép cắt ngang. Enter xuống dòng, không gửi (tin trong nhóm 42 → 42) |
+| Evidence | ![ô soạn trống, C1](evidence/EV-F05-BO-CUC-G8-C1-ct.jpg) ![7 dòng, C1](evidence/EV-F05-SOAN-7-DONG-C1.jpg) (hàng `TC-F05-SOAN-CAN`, `TC-F05-SOAN-NHIEU-DONG`, `TC-F05-BO-CUC-TIN` G8 và G20: cùng số đo) |
+| Source | `screens/chat/GroupChatLive.tsx:967` (`TextInput multiline`, không truyền `rows`), `:1082` (`oNhap`: `minHeight` 48, `maxHeight` 120, `textAlignVertical: "center"`), `:1077` (`soan`: `alignItems: "flex-end"`). react-native-web 0.21 `TextInput`: `rows = multiline ? rows ?? numberOfLines : 1`. Thiếu cả hai thì `<textarea>` không có `rows`, trình duyệt lấy mặc định 2 hàng. Textarea không tự cao lên. `textAlignVertical` chỉ có ở Android |
+| Hậu quả | Cảm giác ô soạn «lệch» ở mọi màn chat trên web. Tin nhiều dòng không đọc lại được trước khi gửi, trừ khi cuộn trong ô 64px |
+| Đề xuất sửa | Trên web truyền `rows={1}`. Tự đổi chiều cao theo `onContentSizeChange` (RNW có phát cho multiline), kẹp 48–120. Khi chỉ có một dòng, căn «+» và nút gửi theo giữa ô |
+| Tiêu chí gỡ | Web C1: ô trống thì giữa dòng chữ lệch ≤ 4px so với giữa «+» và nút gửi, không dư quá phần padding. Gõ 7 dòng thì ô cao tới 120 rồi mới cuộn |
+
+### UI-063 · Web: bong bóng có link dài tràn khỏi cột 82%, ở 320dp mất đầu link ở mép trái
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (bố cục) · **P2**: mất nội dung ở C2. Vẫn còn đường đi tiếp: «Sao chép» trong menu tin chép đủ link |
+| Feature / Screen | F05 · `/groups/[id]/chat` · bong bóng tin của mình |
+| Nền tảng, cấu hình | web, C1, C2, C3, C5. Native: Android và iOS tự bẻ một từ dài hơn dòng theo ký tự (HYPOTHESIS, chưa đo) |
+| Điều kiện | Tin là một URL 158 ký tự. Link chỉ có chỗ ngắt ở `-` và `/`, đoạn liền dài nhất 36 ký tự |
+| Người yêu cầu nêu | «tin nhắn dài bị rớt xuống dưới». Với link dài, chữ không rớt xuống dòng mà đẩy bong bóng ra ngoài |
+| Expected | Bong bóng ≤ 82% bề ngang hàng, nằm trọn trong màn; link xuống dòng ở bất kỳ ký tự nào khi cần (Messenger bẻ link dài trong bong bóng) |
+| Actual | Bong bóng luôn rộng 346px, ở mọi bề rộng: C1 x 28–374 (trần 294); C2 x −42–304, mất «http» ở mép trái; C3 x −2–344, chạm mép; C5 x 68–414 (trần 326) |
+| Evidence | ![C2, khung đỏ = bong bóng](evidence/EV-F05-URL-C2-ct.jpg) (hàng `TC-F05-URL-DAI`) |
+| Source | `screens/chat/GroupChatLive.tsx:1054` (`khoi: { maxWidth: "82%" }`), `:1052` (`hangToi: justifyContent: "flex-end"`). Chữ của RNW dùng `overflow-wrap: break-word`: kiểu này không làm nhỏ bề rộng tối thiểu của phần tử flex, nên bong bóng giữ 346px và tràn khỏi cột. Tin của mình căn phải, nên phần tràn đi ra bên trái |
+| Hậu quả | Link hay mã dài dán vào chat bị mất đầu trên máy hẹp. Người đọc thấy «s://example.com/…» |
+| Đề xuất sửa | Chữ trong bong bóng: `overflowWrap: "anywhere"` (hoặc `wordBreak: "break-word"`) trên web, thêm `minWidth: 0` / `flexShrink: 1` cho chuỗi phần tử bọc |
+| Tiêu chí gỡ | Tin trên ở C1, C2, C3, C5: bong bóng nằm trong [0, bề rộng cửa sổ] và ≤ 82% hàng |
+
+### UI-064 · Chat: avatar đứng ngang dòng giờ, thấp hơn bong bóng 22px; giờ lặp dưới mọi cụm tin
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F05 · `/groups/[id]/chat` · hàng tin của người khác |
+| Nền tảng, cấu hình | web, C1 (đo trong Team Đà Lạt và nhóm 20 người). Native: cùng bố cục flex (STATIC) |
+| Người yêu cầu nêu | «tin nhắn box xuất hiện ở đâu rồi thời gian xuất hiện như nào», so với Messenger |
+| Expected | Theo quy ước Messenger: avatar nằm cạnh bong bóng cuối của cụm, đáy avatar bằng đáy bong bóng. Giờ là một dải giữa màn khi hai cụm cách nhau một quãng; giờ của từng tin hiện khi chạm |
+| Actual | Mọi avatar trên màn thấp hơn đáy bong bóng 22px, đứng ngang dòng giờ. Giờ hiện dưới mỗi cụm (cùng người trong 5 phút). Team Đà Lạt: 5 nhãn giờ trên một màn cho 11 tin, cả 5 đều «13:27». Thẻ bình chọn và thẻ tờ hẹn của người khác trải hết bề ngang, không có avatar hay tên ở đầu; tên người tạo ký ở chân thẻ |
+| Evidence | ![Team Đà Lạt, C1](evidence/EV-F05-BO-CUC-G8-C1-ct.jpg) (hàng `TC-F05-BO-CUC-TIN` G8 và G20) |
+| Source | `screens/chat/GroupChatLive.tsx:1051` (`hang: { flexDirection: "row", alignItems: "flex-end" }`). Avatar là anh em với cột `khoi`; cột này chứa tên, bong bóng và dòng giờ + cảm xúc (`:581–680`), nên avatar bám đáy dòng giờ. Giờ hiện khi `cuoiChuoi` (`:677`), cụm theo `cungNguoi` 5 phút (`:553`) |
+| Hậu quả | Luồng tin trông lỏng và nhiều chữ thừa. Avatar không chỉ vào bong bóng nào. Lặp «13:27» năm lần không cho thêm thông tin |
+| Đề xuất sửa | Đưa avatar vào hàng của bong bóng, căn đáy với bong bóng cuối. Dòng giờ và cảm xúc đặt dưới, thụt theo cột bong bóng. Giờ gom thành dải giữa màn khi hai cụm cách nhau quá N phút (N do thiết kế chốt); giờ từng tin hiện khi chạm |
+| Tiêu chí gỡ | Đáy avatar = đáy bong bóng cuối của cụm ± 4px. Trong một quãng không nghỉ, trên màn chỉ có một nhãn giờ |
+
+### UI-065 · Thẻ bình chọn trong chat: to so với nội dung, «N phiếu» lặp 4 lần, trải hết bề ngang tablet
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3**. Người yêu cầu nhận xét «chưa được sáng tạo, chưa được đẹp mắt, quá xấu» (27/09). Đó là phán đoán thẩm mỹ của họ, ghi nguyên văn. Dưới đây là phần đo được |
+| Feature / Screen | F05 · `/groups/[id]/chat` · thẻ bình chọn (`screens/chat/TheAi.tsx`), dải ghim «Cùng chọn» |
+| Nền tảng, cấu hình | web, C1, C3, C6. Native: cùng mã (STATIC) |
+| Actual | **0 phiếu** (Team Đà Lạt, 3 lựa chọn): thẻ cao 333px, bằng 39% chiều cao màn C1. Mỗi lựa chọn là một hộp viền 60px chỉ có tên và «0 phiếu», rồi thêm «0 phiếu» tổng: «N phiếu» 4 lần. Câu hỏi ở cỡ tiêu đề; tên người tạo ở chân thẻ. **12 phiếu** (nhóm 20 người, 7/4/1, một phiếu của người xem): thẻ cao 498px, bằng 59% màn ở C1 và 62% ở C3. Mỗi lựa chọn 88–90px, dấu vân tay 24×25, tối đa 12 dấu rồi «+N»; phiếu của mình có viền, nền đỏ nhạt, dấu tay màu mực riêng và dấu tích. Không có tỉ lệ hay phần trăm. Dải ghim «Cùng chọn · Xem phiếu» ở đầu vẫn hiện khi thẻ đang ở ngay trên màn. Ở C6 thẻ trải cả hàng 768dp: mỗi hộp lựa chọn rộng khoảng 780px, chỉ có một chữ ở góc trái. Trong chính app, màn demo `/votes/[id]` (F05.S04) đã dùng mẫu gọn hơn: một hàng có icon và vòng chọn |
+| Expected | Thẻ gọn so với nội dung, đọc được bên nào hơn mà không phải đếm, số phiếu không lặp khi bằng 0, bề ngang có trần trên tablet. Đây là quy ước phổ biến (Messenger: hàng lựa chọn một dòng, thanh tỉ lệ, avatar người đã bầu), không phải spec của repo. ADR-0037 D1 chọn dấu vân tay có chủ đích («count is seen before it is read»), nên cách thể hiện là việc của thiết kế |
+| Evidence | ![0 phiếu, C1](evidence/EV-F05-BO-CUC-G8-C1-ct.jpg) ![12 phiếu, C1](evidence/EV-F05-PHIEU-C1.jpg) (hàng `TC-F05-BINH-CHON-THE` G8 và G20, `TC-F05-BINH-CHON-CO-PHIEU` C1/C3: đọc được và phiếu của mình nổi rõ, nên hàng này PASS; ảnh ghép C6 trong `EV-F05.S02-rong-BASE-ghep`, ngoài git) |
+| Source | `screens/chat/TheAi.tsx:284–335` (mỗi lựa chọn là `Pressable` `minHeight` 52, padding 8, chữ «{so} phiếu» luôn hiện; dòng «{tong} phiếu»), `:370–384` (style, `luaChon` ở `:380`) |
+| Hậu quả | Một bình chọn 3 lựa chọn đẩy gần hết cuộc trò chuyện khỏi màn điện thoại. Ở 320dp, nó chiếm cả vùng tin |
+| Đề xuất sửa | Để thiết kế chốt. Hướng đo được: hàng lựa chọn một dòng (tên trái, số phải); ẩn «0 phiếu» từng hàng khi chưa ai bầu, thay bằng một câu «Chưa có phiếu». Dấu tay hoặc thanh đặt trên cùng một thang để so được. Trần bề ngang ở tablet. Ẩn dải ghim khi thẻ đang trên màn. Có thể dùng lại mẫu hàng của `/votes/[id]` |
+| Tiêu chí gỡ | Bình chọn 3 lựa chọn, 0 phiếu: thẻ ≤ 25% chiều cao C1; «phiếu» xuất hiện ≤ 1 lần khi chưa ai bầu; ở C6 thẻ ≤ 560dp |
+
+### UI-066 · Khay «Tờ hẹn chung» không đóng bằng Esc, trong khi khay công cụ ngay cạnh thì đóng
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (bàn phím, nhất quán) · **P3** |
+| Feature / Screen / Layer | F05 · `/groups/[id]/chat` · L21 `ToHenChungKhay.tsx` |
+| Nền tảng, cấu hình | web, C1. Nút Back: xem UI-038 |
+| Tái hiện | Đóng một bình chọn, chạm «Mở tờ hẹn chung cho lựa chọn này», bấm Esc |
+| Expected | Esc đóng khay như khay công cụ (L20) |
+| Actual | Khay vẫn mở. Chỉ nút X đóng được. Khay chiếm nửa dưới màn, với form 5 ô và 3 nút |
+| Evidence | ![khay tờ hẹn chung, C1](evidence/EV-F05-TO-HEN-C1.jpg) (hàng `TC-L21-VONGDOI`) |
+| Source | `screens/chat/SoHen.tsx:116` bắt `Escape` cho khay công cụ. `ToHenChungKhay.tsx` không bắt phím nào và không có `BackHandler` (gắn ở `GroupChatLive.tsx:895`) |
+| Đề xuất sửa | Dùng chung cơ chế đóng của khay công cụ (Esc trên web, `BackHandler` trên Android) |
+| Tiêu chí gỡ | Esc đóng khay; focus về nút đã mở nó |
+
+### UI-067 · Sheet báo cáo: lý do đang chọn chỉ khác màu nền, không có trạng thái cho trình đọc màn hình
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (accessibility) · **P3** |
+| Feature / Screen / Layer | F05 · L16 báo cáo tin. Cùng component ở F06 (sheet hành động hồ sơ, `HanhDongHoSo.tsx`) và F08 (bài, `BaiChiTietScreen.tsx`) |
+| Nền tảng, cấu hình | web, C1 (đo). Native: cùng mã, nút không có `accessibilityState` nào nên TalkBack/VoiceOver cũng không đọc được lý do nào đang chọn (STATIC) |
+| Tái hiện | Menu một tin của người khác → «Báo cáo» → chọn «Làm phiền, quấy rối» |
+| Expected | Năm lý do là nhóm chọn một: mỗi lý do là `radio` có `aria-checked`, và nhìn cũng ra là lựa chọn (vòng chọn hoặc dấu tích) |
+| Actual | `radiogroup` chứa 5 `button`. Lý do đang chọn chỉ đổi nền (biến thể `soft` và `ghost`), không có trạng thái nào trong DOM. Bốn lý do còn lại trông như link chữ đỏ. axe: `aria-prohibited-attr` ×1 trong sheet. Gửi báo cáo và «Xong» hoạt động đúng |
+| Evidence | ![sheet báo cáo, đã chọn một lý do, C1](evidence/EV-F05-BAO-CAO-C1.jpg) (hàng `TC-L16-VONGDOI`) |
+| Source | `screens/nguoi/NoiDungBaoCao.tsx:76–86` (`RudiButton` với `variant={lyDo === muc.ma ? "soft" : "ghost"}`) |
+| Đề xuất sửa | Mỗi lý do là `accessibilityRole="radio"` kèm `aria-checked` trên web (xem UI-003) và dấu tích; hoặc dùng component chọn một của kit |
+| Tiêu chí gỡ | Quét DOM: 5 phần tử `role=radio`, đúng một cái `aria-checked=true`; axe sạch |
+
+### UI-068 · Chat: một request tin hỏng thì hiện câu lỗi chung, không có «Thử lại», dù tin vẫn hiện đủ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F05 · `/groups/[id]/chat` |
+| Nền tảng, cấu hình | web, C1 |
+| Điều kiện | `GET /contexts/{id}/messages` trả 503. Luồng thay đổi (`changes/snapshot`) vẫn chạy |
+| Tái hiện | Từ Tin nhắn mở Team Đà Lạt khi request trên hỏng; 15 s sau cho máy chủ ổn lại |
+| Expected | Tin vẫn tới từ luồng thay đổi, nên hoặc không báo, hoặc nói đúng phần nào chưa tải được, kèm cách thử lại |
+| Actual | 11 tin hiện đủ, nhưng câu màu cảnh báo «Rủ Đi đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.» đứng ngay trên ô soạn (y 722). Người dùng chưa làm «việc» nào. Câu bảo «thử lại» nhưng không có nút. Câu tự tắt 15 s sau khi máy chủ ổn (đúng) |
+| Evidence | ![câu lỗi trên ô soạn, C1](evidence/EV-F05-503-C1-ct.jpg) (hàng `TC-F05.S02-503`) |
+| Source | `screens/chat/GroupChatLive.tsx:866–867` (`chat.loi` là một dòng chữ, không nút) |
+| Đề xuất sửa | Khi đã có tin từ luồng thay đổi thì bỏ câu, hoặc nói «Chưa tải được tin cũ hơn» kèm «Thử lại» |
+| Tiêu chí gỡ | Cùng điều kiện: không có câu lỗi khi tin đã hiện, hoặc câu có «Thử lại» và nói đúng phần hỏng |
+
+### UI-069 · Thẻ thông báo «Đã hiểu» mọc ở cuối chat, ngoài tầm nhìn khi đang đọc tin cũ; trông như tin của AI
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F05 · `/groups/[id]/chat` · L22 |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Máy chủ trả 503 cho cảm xúc. Thẻ này cũng nhận lỗi gửi ảnh, lỗi xoá tin và câu ý định sau khi gửi |
+| Tái hiện | Cuộn lên đọc tin cũ (1400px), mở menu một tin cũ, chạm «Thích» |
+| Expected | Người vừa chạm biết là chưa được: câu hiện gần tin vừa chạm hoặc trong vùng đang xem |
+| Actual | Thẻ được thêm ở cuối chat, y 2086–2266, ngoài màn. Chip cảm xúc không hiện, không có gì khác báo lỗi; nút «Tin mới nhất» có từ trước. Khi đang ở cuối chat thì thẻ trong tầm nhìn (y 544–724), «Đã hiểu» 328×48 gỡ được thẻ (`TC-L22-VONGDOI` đạt). Trong cả hai trường hợp, thẻ mang biểu tượng ✦ và màu AI, đầu đề «Rủ Đi», rồi câu lại bắt đầu bằng «Rủ Đi đang gặp sự cố…»: một lỗi hệ thống trông như AI trả lời. «Việc này» cũng không nói việc nào hỏng |
+| Evidence | ![ở cuối chat, C1](evidence/EV-F05-THONG-BAO-C1.jpg) ![đang đọc tin cũ: không thấy gì, C1](evidence/EV-F05-THONG-BAO-CU-C1.jpg) (hàng `TC-L22-KHI-DOC-CU`) |
+| Source | `screens/chat/GroupChatLive.tsx:538–551` (`phanUng` → `setThongBao`), `:784–797` (thẻ với `sparkles` và `colors.ai`), `:350` (chỉ cuộn về cuối khi `ganCuoi`) |
+| Đề xuất sửa | Lỗi của một thao tác trên một tin: đặt câu ngay dưới tin đó. Thẻ lỗi hệ thống không dùng dáng AI. Câu nêu đúng thao tác («Chưa thả được cảm xúc») |
+| Tiêu chí gỡ | Cùng điều kiện khi đang đọc tin cũ: câu lỗi nằm trong vùng đang xem; thẻ không có biểu tượng hay màu của AI |
+
+### UI-070 · Web: dải ghim của chat sáng trên nền mờ khi sheet đang mở; chạm vào thì chỉ đóng sheet
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** (cùng họ với UI-041) |
+| Feature / Screen / Layer | F05 · `/groups/[id]/chat` · dải ghim, dưới mọi sheet `ui/Sheet.tsx` mở trong chat (đo với L17 Cài đặt nhóm và L18 menu tin; thấy trong ảnh L16) |
+| Nền tảng, cấu hình | web, C1. Native: `zIndex` chỉ xếp các phần tử anh em nên có lẽ không bị (HYPOTHESIS) |
+| Tái hiện | Nhóm có bình chọn mở hoặc tờ hẹn chung; mở «Cài đặt nhóm»; chạm vào dải «Cùng chọn · Xem phiếu» |
+| Expected | Nền mờ phủ cả dải như phủ đầu chat và danh sách tin |
+| Actual | Đầu chat và danh sách tin bị làm mờ, riêng dải vẫn sáng như dùng được. Chạm vào giữa dải trúng nền «Đóng»: sheet đóng, không mở phiếu |
+| Evidence | ![Cài đặt nhóm đang mở, khung đỏ = dải ghim, C1](evidence/EV-F05-GHIM-TREN-NEN-C1-ct.jpg) (hàng `TC-F05-GHIM-TREN-NEN`, phân xử bằng mắt) |
+| Source | `screens/chat/GroupChatLive.tsx:1031` (`dayGhim: { …, zIndex: 1 }`); `ui/Sheet.tsx:178–180` (sheet là `absoluteFill` trong cây của màn, không có `zIndex`). Trên web, `z-index: 1` vẽ dải lên trên nền mờ |
+| Đề xuất sửa | Bỏ `zIndex` của dải, hoặc cho lớp sheet `zIndex` cao hơn |
+| Tiêu chí gỡ | Khi sheet mở, dải bị làm mờ như phần còn lại của màn |
 
 ## F09 Hồ sơ · Cài đặt
 

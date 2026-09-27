@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (86 ảnh, tổng 11.35 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (101 ảnh, tổng 12.73 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -90,3 +90,18 @@
 | [EV-F04.S03-BASE-ghep](evidence/EV-F04.S03-BASE-ghep.jpg) | F04.S03 Quyết toán C1–C3; UI-061: ở C2 dòng đầu sổ 9 dòng hẹp | 158549 | `d74dab91` |
 | [EV-F04.S04-BASE-ghep](evidence/EV-F04.S04-BASE-ghep.jpg) | F04.S04 Đợt thu đã phát, C1–C3 (đạt) | 165685 | `a601a56e` |
 | [EV-F04.S05-BASE-ghep](evidence/EV-F04.S05-BASE-ghep.jpg) | F04.S05 Tài chính C1–C3; UI-060: «Chi theo nhóm» không có hàng nào | 121861 | `e91d1a8f` |
+| [EV-F05-503-C1-ct](evidence/EV-F05-503-C1-ct.jpg) | UI-068: danh sách tin trả 503. Tin vẫn hiện đủ, nhưng câu lỗi chung nằm trên ô soạn, không có «Thử lại» (C1, khung đỏ = câu lỗi) | 101384 | `66465071` |
+| [EV-F05-BAO-CAO-C1](evidence/EV-F05-BAO-CAO-C1.jpg) | UI-067: sheet báo cáo, «Làm phiền, quấy rối» đang chọn chỉ khác màu nền; các lý do khác trông như link chữ (C1) | 76304 | `b48ec149` |
+| [EV-F05-BO-CUC-G8-C1-ct](evidence/EV-F05-BO-CUC-G8-C1-ct.jpg) | UI-062, UI-064, UI-065: Team Đà Lạt ở C1. Chữ gợi ý của ô soạn nằm trên, lệch 20px so với «+» và nút gửi. Avatar thấp hơn bong bóng 22px, giờ lặp dưới mỗi cụm. Thẻ bình chọn 0 phiếu cao 39% màn | 97675 | `e81d6dd7` |
+| [EV-F05-GHIM-TREN-NEN-C1-ct](evidence/EV-F05-GHIM-TREN-NEN-C1-ct.jpg) | UI-070: sheet Cài đặt nhóm đang mở, dải ghim «Cùng chọn» vẫn sáng trên nền mờ (C1, khung đỏ = dải ghim) | 99422 | `58833ff1` |
+| [EV-F05-MENU-C1](evidence/EV-F05-MENU-C1.jpg) | UI-001: menu của một tin, sáu nút cảm xúc 44×44, «Trả lời», «Sao chép», «Xoá» (C1) | 55843 | `122da522` |
+| [EV-F05-OFFLINE-C1](evidence/EV-F05-OFFLINE-C1.jpg) | Mất mạng khi gửi: hàng tin ở lại với câu vì sao, «Thử lại» và «Bỏ»; thử lại thì gửi đúng một lần (đạt, C1) | 96740 | `804d8fcb` |
+| [EV-F05-PHIEU-C1](evidence/EV-F05-PHIEU-C1.jpg) | UI-065: bình chọn 3 lựa chọn, 12 phiếu (7/4/1): thẻ cao 498px, bằng 59% màn; dấu vân tay 24×25; phiếu của mình nổi rõ (C1) | 94126 | `073e2758` |
+| [EV-F05-RONG-C1](evidence/EV-F05-RONG-C1.jpg) | Tin nhắn của tài khoản mới: «Chưa có nhóm nào», lời giải thích, «Tạo nhóm», «Tôi có lời mời», «Thêm bạn bằng số điện thoại» (đạt, C1) | 116571 | `28d2c261` |
+| [EV-F05-SOAN-7-DONG-C1](evidence/EV-F05-SOAN-7-DONG-C1.jpg) | UI-062: gõ 7 dòng, ô soạn vẫn 64px, chỉ thấy khoảng 2,5 dòng, dòng trên bị mép cắt (C1) | 116168 | `5d92f02e` |
+| [EV-F05-THONG-BAO-C1](evidence/EV-F05-THONG-BAO-C1.jpg) | UI-069: thả cảm xúc bị 503, thẻ thông báo ở cuối chat, mang dáng tin AI (✦ Rủ Đi), «Đã hiểu» 328×48 (C1) | 87969 | `02394e3c` |
+| [EV-F05-THONG-BAO-CU-C1](evidence/EV-F05-THONG-BAO-CU-C1.jpg) | UI-069: cùng lỗi khi đang đọc tin cũ: thẻ ở y 2086, ngoài màn, không có gì báo (C1) | 78475 | `7de95416` |
+| [EV-F05-TO-HEN-C1](evidence/EV-F05-TO-HEN-C1.jpg) | UI-066: khay «Tờ hẹn chung của hội» mở từ bình chọn đã chốt; Esc không đóng, chỉ X (C1) | 84711 | `3b4af91d` |
+| [EV-F05-URL-C2-ct](evidence/EV-F05-URL-C2-ct.jpg) | UI-063: bong bóng có link dài rộng 346px trong cửa sổ 320, mất đầu link ở mép trái (C2, khung đỏ = bong bóng) | 84496 | `9ad013a9` |
+| [EV-F05.S02-BASE-ghep](evidence/EV-F05.S02-BASE-ghep.jpg) | F05.S02 chat Team Đà Lạt C1–C3: UI-062 (ô soạn), UI-064 (avatar và giờ), UI-065 (thẻ bình chọn chiếm gần nửa màn, cả màn ở C2) | 120197 | `f0d143c1` |
+| [EV-F05.S02-dai-BASE-ghep](evidence/EV-F05.S02-dai-BASE-ghep.jpg) | F05.S02 nhóm 20 người, lịch sử 40 tin tổng hợp, C1–C3: đoạn dài, 4 dòng, emoji đọc trọn; bong bóng link dài tràn (UI-063) | 140090 | `0105683b` |
