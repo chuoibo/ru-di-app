@@ -625,7 +625,7 @@ func TestGroupNeverReachesMemoryTools(t *testing.T) {
 	}
 	var group []*types.Func
 	for _, name := range []string{"capabilities", "create", "list", "get", "retry", "cancel", "promote", "promotion",
-		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill"} {
+		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill", "processNhomEngine"} {
 		group = append(group, g.root(t, "(*"+pkgChat+".Handler)."+name))
 	}
 	cg := g.reach(group...)
@@ -671,19 +671,14 @@ func TestGroupNeverReachesMemoryStores(t *testing.T) {
 	}
 	var group []*types.Func
 	for _, name := range []string{"capabilities", "create", "list", "get", "retry", "cancel", "promote", "promotion",
-		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill"} {
+		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill", "processNhomEngine"} {
 		group = append(group, g.root(t, "(*"+pkgChat+".Handler)."+name))
 	}
 	cg := g.reach(group...)
 	if len(cg.funcs) < 50 {
 		t.Fatalf("the group closure is too small (%d functions)", len(cg.funcs))
 	}
-	var bad []string
-	for name := range cg.funcs {
-		if strings.Contains(name, nepnho+".") || strings.Contains(name, nepnho+")") {
-			bad = append(bad, name)
-		}
-	}
+	bad := nepnhoTrong(g, cg, nepnho)
 	for _, k := range nepKeys {
 		if cg.funcs[k] {
 			bad = append(bad, k)
@@ -693,4 +688,43 @@ func TestGroupNeverReachesMemoryStores(t *testing.T) {
 	for _, b := range bad {
 		t.Errorf("the group bot can reach %s", b)
 	}
+	// Since slice 9 the group's worker root runs the engine
+	// (processNhomEngine → Engine.RunNhom): the walk must see the group's
+	// tools, its split reading and its short-term buffer, or the check above
+	// proves nothing about the engine.
+	for _, must := range []string{
+		"(*mobile/services/core/internal/aiharness.Engine).RunNhom",
+		"mobile/services/core/internal/aiharness/tools.chayAnhNhom",
+		"mobile/services/core/internal/aiharness/chiabill.Goi",
+		"(*" + aictx + ".Kho).PhienLuotNhom",
+	} {
+		if !cg.funcs[must] {
+			t.Errorf("the group closure never reaches %s: the walk is blind to the group's engine path", must)
+		}
+	}
+	// Canary: the same roots with Nếp's personalization go red.
+	withHoSo := g.reach(append(group, g.root(t, "(*"+nepnho+".Kho).HoSoNep"))...)
+	if len(nepnhoTrong(g, withHoSo, nepnho)) == 0 {
+		t.Fatal("a group closure reaching Nếp's personalization stayed green")
+	}
+}
+
+// nepnhoTrong is every function of package nepnho in closure c, except an
+// Error method reached only as the builtin error interface's that calls
+// nothing of the module: the walk resolves every err.Error() to every module
+// error type, and such a method formats a string and touches no store.
+func nepnhoTrong(g *graph, c closure, nepnho string) []string {
+	var bad []string
+	for name := range c.funcs {
+		if !strings.Contains(name, nepnho+".") && !strings.Contains(name, nepnho+")") {
+			continue
+		}
+		if strings.HasSuffix(name, ").Error") {
+			if f, ok := g.byName[name]; ok && len(g.reach(f).funcs) == 1 {
+				continue
+			}
+		}
+		bad = append(bad, name)
+	}
+	return bad
 }

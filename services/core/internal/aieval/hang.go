@@ -19,6 +19,9 @@ type Hang struct {
 	MaxModelCallsPerTurn int    `json:"max_model_calls_per_turn"`
 	NepMaxChu            int    `json:"nep_max_chu"`
 	PromptVersionNep     string `json:"prompt_version_nep"`
+	// NhomMaxChu and PromptVersionNhom are the group's (slice 9).
+	NhomMaxChu        int    `json:"nhom_max_chu"`
+	PromptVersionNhom string `json:"prompt_version_nhom"`
 	// Ma is every code a turn can end with instead of an answer.
 	Ma []string `json:"ma"`
 	// TrangThai is every status a turn can emit.
@@ -27,9 +30,8 @@ type Hang struct {
 	CongCu map[string][]string `json:"cong_cu"`
 }
 
-// chayTrenEngine are the bots the engine runs; the group bot is not on it
-// yet.
-var chayTrenEngine = map[obs.Bot]bool{obs.BotNep: true}
+// chayTrenEngine are the bots the engine runs (the group since slice 9).
+var chayTrenEngine = map[obs.Bot]bool{obs.BotNep: true, obs.BotNhom: true}
 
 // CongCuDuocPhep lists the tools bot may declare, read from the permission
 // table (tools/testdata/quyen.golden.json through tools.MacDinh), never
@@ -52,6 +54,8 @@ func DocHang() Hang {
 		MaxModelCallsPerTurn: llm.MaxModelCallsPerTurn,
 		NepMaxChu:            aiharness.NepMaxChu,
 		PromptVersionNep:     prompts.VersionNep(),
+		NhomMaxChu:           aiharness.NhomMaxChu,
+		PromptVersionNhom:    prompts.VersionNhom(),
 		CongCu:               map[string][]string{},
 	}
 	for _, m := range cau.Tat() {

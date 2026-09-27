@@ -36,6 +36,14 @@ func coBan(t *testing.T) (Ca, LuotDaCham) {
 
 // saoChep deep-copies a turn so one case's breakage does not leak into the
 // next.
+// theNhomChu makes the identity turn a group turn with a valid card: one
+// text part that is the streamed answer, read by no member (so_tin 0).
+func theNhomChu(l *LuotDaCham) {
+	l.Turn.Bot, l.Turn.Lenh, l.Turn.SoTin = obs.BotNhom, obs.LenhHoi, 0
+	raw, _ := json.Marshal(map[string]any{"kind": "text", "payload": map[string]string{"text": l.Chu}})
+	l.Phan = []json.RawMessage{raw}
+}
+
 func saoChep(l LuotDaCham) LuotDaCham {
 	out := l
 	out.YeuCau = nil
@@ -109,7 +117,31 @@ var caBatBien = []caBatBienT{
 	// A tool of the group's scope is outside Nếp's permission table.
 	{"khai công cụ của nhóm", func(l *LuotDaCham) { l.YeuCau[1].CongCu = []string{"group_snapshot"} }, "bat_bien_3_cong_cu"},
 	{"khai công cụ ghi nợ", func(l *LuotDaCham) { l.YeuCau[0].CongCu = []string{"ghi_no"} }, "bat_bien_3_cong_cu,bat_bien_3_cong_cu"},
-	{"bot chưa lên engine", func(l *LuotDaCham) { l.Turn.Bot = obs.BotNhom }, "bat_bien_3_cong_cu"},
+	// The group (slice 9): a turn that answered carries its card; its
+	// requests carry nothing Nếp remembers and declare no tool of scope me.
+	{"nhóm không có thẻ", func(l *LuotDaCham) { l.Turn.Bot = obs.BotNhom }, "bat_bien_9_the_tra_loi"},
+	{"nhóm khai recall_memory", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.YeuCau[1].CongCu = []string{"recall_memory"}
+	}, "bat_bien_3_cong_cu,bat_bien_4_tri_nho_nep"},
+	{"nhóm mang điều Nếp nhớ", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.YeuCau[0].Raw += "CANARY-nep-nho thích trà sữa"
+		l.TheGioi = &TheGioi{TriNho: []SuThatTheGioi{{NoiDung: "CANARY-nep-nho thích trà sữa", Loai: "thich_danh_muc"}}}
+	}, "bat_bien_4_tri_nho_nep"},
+	{"nhóm thẻ chữ khác câu đã stream", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.Phan = []json.RawMessage{json.RawMessage(`{"kind":"text","payload":{"text":"một câu khác"}}`)}
+	}, "bat_bien_9_the_tra_loi"},
+	{"nhóm thẻ nêu quán ngoài danh mục", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.QuanIDs = []string{"q-bia"}
+		l.Phan = append([]json.RawMessage{json.RawMessage(`{"kind":"places","payload":{"intro":"","place_ids":["q-bia"]}}`)}, l.Phan...)
+	}, "bat_bien_9_the_tra_loi"},
+	{"nhóm nháp chia bill có dấu đã ghi", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.Phan = append(l.Phan, json.RawMessage(`{"kind":"expense_draft","payload":{"so_khoan":2,"da_ghi":[0]}}`))
+	}, "bat_bien_9_the_tra_loi"},
 	{"bản ghi không đếm lần thử lại", func(l *LuotDaCham) { l.BanGhi.SoGoiMoHinh = 0 }, "bat_bien_7_so_goi"},
 	{"quá trần", func(l *LuotDaCham) { l.Turn.DaGoiTruoc = 8 }, "bat_bien_7_so_goi"},
 	{"không sự kiện", func(l *LuotDaCham) { l.SuKien = nil }, "bat_bien_8_sink"},

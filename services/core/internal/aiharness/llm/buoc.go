@@ -33,6 +33,10 @@ const (
 	// answer (the loop's last step, the fast path's one call, the direct
 	// answer).
 	BuocAgentTraLoi LoaiGoi = "agent_tra_loi"
+	// BuocChiaBill is the group's one structured call that reads the shared
+	// messages for expenses (aiharness/chiabill): titles copied from a
+	// message and whole-đồng amounts, nothing else.
+	BuocChiaBill LoaiGoi = "chia_bill"
 )
 
 // mucNghi is each step's thinking level, set explicitly so a provider
@@ -51,6 +55,7 @@ var mucNghi = map[LoaiGoi]genai.ThinkingLevel{
 	BuocKiemLai:      genai.ThinkingLevelMinimal,
 	BuocAgentKeHoach: genai.ThinkingLevelLow,
 	BuocAgentTraLoi:  genai.ThinkingLevelMinimal,
+	BuocChiaBill:     genai.ThinkingLevelMinimal,
 }
 
 // MucNghi is step b's thinking level (MINIMAL for a step outside the set,
@@ -82,6 +87,12 @@ const (
 	DuongThang Duong = "thang"
 	// DuongHoiLai: router, the verifier on its question back.
 	DuongHoiLai Duong = "hoi_lai"
+	// DuongNhapChiaBill: router, the group's one expense reading. No
+	// verifier: the draft releases no model prose, only our fixed template
+	// around titles that are word-for-word spans of a member's message and
+	// amounts that are integers of đồng (aiharness chiaBillParts); a
+	// verifier would rightly flag a split draft as money.
+	DuongNhapChiaBill Duong = "nhap_chia_bill"
 )
 
 // BuocGoi is one step of a path's worst case.
@@ -120,9 +131,14 @@ var KeHoach = map[Duong][]BuocGoi{
 		{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3},
 		{BuocAgentKeHoach, MaxStepsNhom - 1, 2}, {BuocAgentTraLoi, 1, 0}, {BuocKiem, 1, 0},
 	},
-	DuongThang:  {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocAgentTraLoi, 1, 0}, {BuocKiem, 1, 0}},
-	DuongHoiLai: {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocKiem, 1, 0}},
+	DuongThang:        {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocAgentTraLoi, 1, 0}, {BuocKiem, 1, 0}},
+	DuongHoiLai:       {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocKiem, 1, 0}},
+	DuongNhapChiaBill: {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocChiaBill, 1, 0}},
 }
+
+// KhongKiem are the paths that release no model prose and so have no
+// verifier (TestKeHoachTrongTran holds every other path to one).
+var KhongKiem = map[Duong]bool{DuongNhapChiaBill: true}
 
 // ToiDaDuong is path d's worst case in model calls.
 func ToiDaDuong(d Duong) int {

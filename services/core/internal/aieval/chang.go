@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/adk/v2/model"
 
+	"mobile/services/core/internal/aiharness/chiabill"
 	"mobile/services/core/internal/aiharness/crag"
 	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/kiemchung"
@@ -29,8 +30,9 @@ var heChang struct {
 	// bang maps an exact instruction to its stage.
 	bang map[string]string
 	// agentTruoc and agentSau are Nếp's prose instruction around the canary
-	// marker.
+	// marker; nhomTruoc and nhomSau the group's.
 	agentTruoc, agentSau string
+	nhomTruoc, nhomSau   string
 }
 
 func heCua(req *model.LLMRequest) (s string) {
@@ -66,6 +68,14 @@ func dungHeChang() {
 		r, _ := hieu.YeuCau(hieu.Vao{Bot: obs.BotNep, Cau: "x", Luc: LucBoHieu}, nil)
 		return r
 	})
+	them(ChangHieu, func() *model.LLMRequest {
+		r, _ := hieu.YeuCau(hieu.Vao{Bot: obs.BotNhom, Cau: "x", Luc: LucBoHieu}, nil)
+		return r
+	})
+	them(ChangChiaBill, func() *model.LLMRequest {
+		r, _ := chiabill.YeuCau(chiabill.Vao{LoiNho: "x"})
+		return r
+	})
 	them(ChangCham, func() *model.LLMRequest { return crag.YeuCauCham(crag.Vao{}) })
 	them(ChangTraLoiCauTruc, func() *model.LLMRequest { return traloi.YeuCauTraLoi(traloi.Vao{Cau: "x"}, crag.KetQua{}, nil, nil) })
 	them(ChangKiem, func() *model.LLMRequest { return kiemchung.YeuCauKiem([]string{"x"}, nil) })
@@ -73,6 +83,10 @@ func dungHeChang() {
 	mau := prompts.NepAgent(moc)
 	if i := strings.Index(mau, moc); i >= 0 {
 		h.agentTruoc, h.agentSau = mau[:i], mau[i+len(moc):]
+	}
+	mau = prompts.NhomAgent(moc)
+	if i := strings.Index(mau, moc); i >= 0 {
+		h.nhomTruoc, h.nhomSau = mau[:i], mau[i+len(moc):]
 	}
 }
 
@@ -86,13 +100,16 @@ func ChangTuYeuCau(sys string) string {
 	if c, ok := h.bang[sys]; ok {
 		return c
 	}
-	if h.agentTruoc != "" && strings.HasPrefix(sys, h.agentTruoc) {
-		rest := sys[len(h.agentTruoc):]
+	for _, m := range [][2]string{{h.agentTruoc, h.agentSau}, {h.nhomTruoc, h.nhomSau}} {
+		if m[0] == "" || !strings.HasPrefix(sys, m[0]) {
+			continue
+		}
+		rest := sys[len(m[0]):]
 		i := 0
 		for i < len(rest) && (rest[i] >= '0' && rest[i] <= '9' || rest[i] >= 'a' && rest[i] <= 'z') {
 			i++
 		}
-		if strings.HasPrefix(rest[i:], h.agentSau) {
+		if strings.HasPrefix(rest[i:], m[1]) {
 			return ChangTraLoi
 		}
 	}

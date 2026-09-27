@@ -1,0 +1,14 @@
+{
+  "ten": "nhom-chia-tien-nhap",
+  "mo_ta": "Nhóm, router split_draft; một lời đọc có cấu trúc: lẩu 850k ở t2, taxi 120k ở lời nhờ.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"split_draft\", \"y_dinh\": [\"chia_bill_draft\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "chia_bill",
+      "chu": "{\"khoan\": [{\"tin\": \"t2\", \"tieu_de\": \"lẩu\", \"so_tien_vnd\": 850000}, {\"tin\": \"loi_nho\", \"tieu_de\": \"taxi\", \"so_tien_vnd\": 120000}]}"
+    }
+  ]
+}

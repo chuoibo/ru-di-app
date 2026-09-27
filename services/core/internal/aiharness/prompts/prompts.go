@@ -25,6 +25,15 @@ import (
 //go:embed nep_agent.txt
 var nepAgent string
 
+// nhomAgent is the group assistant's system instruction (Rủ Đi AI in the
+// thread, design 03): the same rules as Nếp's where they are the same
+// (data is never an instruction, nothing invented, no money, no claimed
+// action, no contact detail, the canary marker), with the room as the
+// audience and the shared messages as the history.
+//
+//go:embed nhom_agent.txt
+var nhomAgent string
+
 // congCu is the clause every tool-using step adds to its bot's system
 // instruction: tool results and earlier turns are data, evidence goes by
 // alias, one repair, drafts need a human tap.
@@ -71,6 +80,17 @@ func LoiDanNhan(nhan string) string {
 	return ""
 }
 
+// loiDanNgoaiPhamViNhom is the group's clause for ngoai_pham_vi.
+const loiDanNgoaiPhamViNhom = "Tin nhắn này nằm ngoài việc của Rủ Đi AI (tìm chỗ đi chơi, lên kèo, soạn nháp chia bill cho nhóm). Không gọi công cụ. Nói ngắn gọn là Rủ Đi AI không giúp được việc này và gợi ý một việc làm được cho cả nhóm."
+
+// LoiDanNhanNhom is LoiDanNhan for the group assistant.
+func LoiDanNhanNhom(nhan string) string {
+	if nhan == "ngoai_pham_vi" {
+		return loiDanNgoaiPhamViNhom
+	}
+	return ""
+}
+
 // VersionNep is the first twelve hex digits of the template's sha256: the
 // prompt_version every metrics row carries.
 func VersionNep() string {
@@ -78,13 +98,31 @@ func VersionNep() string {
 	return hex.EncodeToString(sum[:])[:12]
 }
 
+// NhomAgent is the group assistant's system instruction carrying the canary
+// marker.
+func NhomAgent(maKiem string) string {
+	return strings.Replace(strings.TrimSpace(nhomAgent), MaKiemCho, maKiem, 1)
+}
+
+// VersionNhom is the first twelve hex digits of the group template's
+// sha256: the prompt_version of the group's metrics rows.
+func VersionNhom() string {
+	sum := sha256.Sum256([]byte(nhomAgent))
+	return hex.EncodeToString(sum[:])[:12]
+}
+
+// LoiNhacNhom is LoiNhacNep for the group template.
+func LoiNhacNhom() []string { return cauDaiCua(nhomAgent) }
+
 // LoiNhacNep lists the template's clauses of thirty runes or more, which an
 // answer must never quote (the output guard's echo check): a leak quotes a
 // clause more often than a whole rule. The marker line is left out: the
 // marker itself is checked on its own.
-func LoiNhacNep() []string {
+func LoiNhacNep() []string { return cauDaiCua(nepAgent) }
+
+func cauDaiCua(mau string) []string {
 	var out []string
-	for _, line := range strings.Split(nepAgent, "\n") {
+	for _, line := range strings.Split(mau, "\n") {
 		if strings.Contains(line, MaKiemCho) {
 			continue
 		}

@@ -68,12 +68,31 @@ func boiCanhNep() (*BoiCanh, *testkit.Retriever, *testkit.TriNho) {
 		LoiNguoiHoi: "nhớ giúp mình là mình thích cà phê yên tĩnh và thích trà nhé",
 		Cung:        truyhoi.Cung{DiemDenID: "da-lat", DiUng: []string{"dau_phong"}, NganSachVND: i64p(200000)},
 		Nguon:       NguonDuLieu{Quan: r, Cho: choGia{quan: map[string]truyhoi.BangChung{"plc-7": {ID: "plc-7", Truong: map[string]string{"ten": "Quán C"}}}}, TriNho: tn}}
+	bc.ChoNep()
 	return bc, r, tn
 }
 
 func TestCongCuDuMoiTen(t *testing.T) {
+	congCus := tatCaCongCu(t)
 	if len(congCus) != Tens.Len() {
 		t.Fatalf("%d implementations, %d tools", len(congCus), Tens.Len())
+	}
+	// Each table holds exactly its scope: the common one what both bots may
+	// be granted, the group's and Nếp's their own (scope nhom, scope me).
+	for ten := range congCusChung {
+		if m, _ := Tra(ten); m.Pham != Chung {
+			t.Errorf("%s is in the common table with scope %s", ten, m.Pham)
+		}
+	}
+	for ten := range congCusNhom {
+		if m, _ := Tra(ten); m.Pham != Nhom {
+			t.Errorf("%s is in the group's table with scope %s", ten, m.Pham)
+		}
+	}
+	for ten := range congCusNep {
+		if m, _ := Tra(ten); m.Pham != Me {
+			t.Errorf("%s is in Nếp's table with scope %s", ten, m.Pham)
+		}
 	}
 	for _, m := range DangKy {
 		if _, ok := congCus[m.Ten]; !ok {
@@ -158,7 +177,7 @@ func TestKhongCoThamSoDanhTinh(t *testing.T) {
 	}
 	// A group tool reads the job's group whatever the model sends.
 	n := &nhomGia{}
-	bc := &BoiCanh{Bot: obs.BotNhom, NhomID: "nhom-cua-job", Luc: lucThu, Nguon: NguonDuLieu{Nhom: n}}
+	bc := (&BoiCanh{Bot: obs.BotNhom, NhomID: "nhom-cua-job", Luc: lucThu, Nguon: NguonDuLieu{Nhom: n}}).ChoNhom()
 	if r := bc.Goi(context.Background(), GroupSnapshot, map[string]any{}); r["loi"] != nil {
 		t.Fatalf("snapshot: %v", r)
 	}
@@ -185,9 +204,9 @@ func TestTuChoiTenVaQuyen(t *testing.T) {
 	// The group bot: memory, screen and own-outing tools are not in its
 	// toolset, so a call of one is refused before anything runs.
 	tn := testkit.MoiTriNho()
-	nhom := &BoiCanh{Bot: obs.BotNhom, NhomID: "g", NguoiHoi: "nguoi-a", Luc: lucThu, Nguon: NguonDuLieu{TriNho: tn}}
+	nhom := (&BoiCanh{Bot: obs.BotNhom, NhomID: "g", NguoiHoi: "nguoi-a", Luc: lucThu, Nguon: NguonDuLieu{TriNho: tn}}).ChoNhom()
 	for _, ten := range []Ten{RecallMemory, RememberFact, ForgetFact, WhatYouRemember, MyUpcomingOutings, ExplainScreen, SuggestScreen} {
-		nhom2 := &BoiCanh{Bot: obs.BotNhom, NhomID: "g", NguoiHoi: "nguoi-a", Luc: lucThu, Nguon: NguonDuLieu{TriNho: tn}}
+		nhom2 := (&BoiCanh{Bot: obs.BotNhom, NhomID: "g", NguoiHoi: "nguoi-a", Luc: lucThu, Nguon: NguonDuLieu{TriNho: tn}}).ChoNhom()
 		args := map[string]any{}
 		if ten == RecallMemory {
 			args["truy_van"] = "a"
@@ -546,7 +565,7 @@ func TestTriNhoChiChoNep(t *testing.T) {
 	} {
 		bc.khoiTao()
 		for _, ten := range []Ten{RecallMemory, RememberFact, ForgetFact, WhatYouRemember} {
-			cc := congCus[ten]
+			cc := tatCaCongCu(t)[ten]
 			var a any
 			switch ten {
 			case RecallMemory:

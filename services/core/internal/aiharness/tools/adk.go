@@ -1,6 +1,8 @@
 package tools
 
 import (
+	"fmt"
+
 	"google.golang.org/adk/v2/agent"
 	"google.golang.org/adk/v2/tool"
 )
@@ -20,7 +22,11 @@ func (bc *BoiCanh) BoCongCu() ([]tool.Tool, error) {
 	bc.mu.Unlock()
 	var out []tool.Tool
 	for _, t := range bc.quyen().DuocPhep(bc.Bot, false) {
-		tt, err := congCus[t].moi(bc)
+		cc, ok := bc.congCu(t)
+		if !ok {
+			return nil, fmt.Errorf("tools: %s is granted to %s but this turn has no implementation of it (ChoNep, ChoNhom)", t, bc.Bot)
+		}
+		tt, err := cc.moi(bc)
 		if err != nil {
 			return nil, err
 		}

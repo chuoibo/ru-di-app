@@ -88,11 +88,19 @@ type BoiCanh struct {
 	ThamChieu []string
 	Nguon     NguonDuLieu
 	// Quyen is the permission table; nil is MacDinh.
-	Quyen  *Quyen
+	Quyen *Quyen
+	// Che are permitted tools this turn masks: still declared (the bot's
+	// declarations stay one prefix for the implicit cache), never allowed
+	// on a step and refused if called anyway («che, không gỡ»). The group
+	// masks draft_poll until a poll draft has a card kind (design 03 §4.3).
+	Che    []Ten
 	SoCai  *SoCai
 	HanGoi time.Duration
 
-	mu     sync.Mutex
+	mu sync.Mutex
+	// rieng is the bot's own tool table (ChoNep, ChoNhom); nil offers the
+	// common tools only.
+	rieng  map[Ten]congCu
 	sai    int
 	epCuoi bool
 	// buoc is the agent step whose tool calls run now (DatBuoc; 0 for the
@@ -316,9 +324,21 @@ func (bc *BoiCanh) DuocPhep() []Ten {
 		if y, ghi := yDinhGhi[t]; ghi && !coYDinh(bc.YDinh, y) {
 			continue
 		}
+		if coTen(bc.Che, t) {
+			continue
+		}
 		out = append(out, t)
 	}
 	return out
+}
+
+func coTen(ts []Ten, t Ten) bool {
+	for _, x := range ts {
+		if x == t {
+			return true
+		}
+	}
+	return false
 }
 
 // yDinhGhi is the intent each memory write needs in the router's output.
@@ -427,7 +447,7 @@ func (bc *BoiCanh) truoc(ten string, args map[string]any) map[string]any {
 	if !coTrongBo {
 		return bc.tuChoi(ten, &loiTS{loi: KhongDuocPhep, sua: true})
 	}
-	cc, ok := congCus[t]
+	cc, ok := bc.congCu(t)
 	if !ok {
 		return bc.tuChoi(ten, &loiTS{loi: KhongDuocPhep, sua: true})
 	}
@@ -636,7 +656,7 @@ func (bc *BoiCanh) Goi(ctx context.Context, t Ten, args map[string]any) map[stri
 		return r
 	}
 	_, raw := khoa(string(t), args)
-	cc := congCus[t]
+	cc, _ := bc.congCu(t)
 	a, l := cc.kiem(bc, raw)
 	if l != nil {
 		return bc.tuChoi(string(t), l)

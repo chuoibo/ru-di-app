@@ -21,6 +21,7 @@ import (
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/prompts"
 )
 
 var update = flag.Bool("update", false, "rewrite testdata/yeu_cau/*.golden.json")
@@ -551,12 +552,15 @@ func TestHanLuot(t *testing.T) {
 }
 
 // A group turn is not the engine's yet, and costs no model call.
-func TestNhomChuaChayQuaEngine(t *testing.T) {
+// Run sends a group turn to the group's path (RunNhom): its record names
+// the group bot and the group's prompt version, and its answer is a card.
+func TestRunGuiNhomSangDuongNhom(t *testing.T) {
 	turn := luotCoBan()
 	turn.Bot = obs.BotNhom
-	m := chayLuot(t, turn, ruThang())
-	if m.err == nil || m.stub.SoGoi() != 0 {
-		t.Fatalf("%v %d", m.err, m.stub.SoGoi())
+	turn.Lane = LaneLegacy
+	m := chayLuot(t, turn, ruThang(), dung(false, "Chào cả nhóm nhé."), kiemDat())
+	if m.err != nil || m.res.Record.Bot != obs.BotNhom || string(m.res.Record.PromptVersion) != prompts.VersionNhom() || len(m.res.Phan) != 1 {
+		t.Fatalf("%v %+v %d", m.err, m.res.Record, len(m.res.Phan))
 	}
 }
 

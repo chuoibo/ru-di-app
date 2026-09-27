@@ -798,25 +798,68 @@ func chayNhac(context.Context, *BoiCanh, *thamSoNhac) (ketQuaTho, error) {
 	return ketQuaTho{them: map[string]any{"loi": string(ChuaCo)}}, nil
 }
 
-// congCus is every tool's implementation, one per registry name
-// (TestCongCuDuMoiTen).
-var congCus = map[Ten]congCu{
-	SearchPlaces:      dk(SearchPlaces, kiemTim, chayTim),
-	GetPlace:          dk(GetPlace, kiemQuan, chayQuan),
-	ListDestinations:  dk[khongThamSo](ListDestinations, nil, chayDiemDen),
-	NearestArea:       dk(NearestArea, kiemKhuVuc, chayKhuVuc),
-	SearchAppManual:   dk[thamSoSoTay](SearchAppManual, nil, chaySoTay),
+// Every tool's implementation, one per registry name, in three tables by
+// scope (TestCongCuDuMoiTen): the tools either bot may be granted, the
+// group's own and Nếp's own (scope me: the screen, the person's own outings,
+// memory and reminders). A turn's BoiCanh carries its bot's own table as a
+// value (ChoNep, ChoNhom), so nothing on the group's path names Nếp's table
+// -- not at run time, and not in what a static walk of the code can reach
+// (internal/aigate: the group never reaches a memory tool).
+var congCusChung = map[Ten]congCu{
+	SearchPlaces:     dk(SearchPlaces, kiemTim, chayTim),
+	GetPlace:         dk(GetPlace, kiemQuan, chayQuan),
+	ListDestinations: dk[khongThamSo](ListDestinations, nil, chayDiemDen),
+	NearestArea:      dk(NearestArea, kiemKhuVuc, chayKhuVuc),
+	SearchAppManual:  dk[thamSoSoTay](SearchAppManual, nil, chaySoTay),
+	ProposePlaces:    dk(ProposePlaces, kiemDeXuat, chayDeXuat),
+	ProposeItinerary: dk(ProposeItinerary, kiemLichTrinh, chayLichTrinh),
+}
+
+var congCusNhom = map[Ten]congCu{
+	DraftPoll:        dk(DraftPoll, kiemBinhChon, chayBinhChon),
+	GroupSnapshot:    dk[khongThamSo](GroupSnapshot, nil, chayAnhNhom),
+	ListGroupOutings: dk[thamSoChuyenNhom](ListGroupOutings, nil, chayChuyenNhom),
+}
+
+var congCusNep = map[Ten]congCu{
 	ExplainScreen:     dk[khongThamSo](ExplainScreen, nil, chayGiaiThich),
 	SuggestScreen:     dk(SuggestScreen, kiemMan, chayMan),
-	ProposePlaces:     dk(ProposePlaces, kiemDeXuat, chayDeXuat),
-	ProposeItinerary:  dk(ProposeItinerary, kiemLichTrinh, chayLichTrinh),
-	DraftPoll:         dk(DraftPoll, kiemBinhChon, chayBinhChon),
-	GroupSnapshot:     dk[khongThamSo](GroupSnapshot, nil, chayAnhNhom),
-	ListGroupOutings:  dk[thamSoChuyenNhom](ListGroupOutings, nil, chayChuyenNhom),
 	MyUpcomingOutings: dk[thamSoK](MyUpcomingOutings, nil, chayChuyenCuaToi),
 	RecallMemory:      dk[thamSoNho](RecallMemory, nil, chayNho),
 	RememberFact:      dk(RememberFact, kiemGhiNho, chayGhiNho),
 	ForgetFact:        dk(ForgetFact, kiemQuen, chayQuen),
 	WhatYouRemember:   dk[khongThamSo](WhatYouRemember, nil, chayNhoGi),
 	SetReminder:       dk[thamSoNhac](SetReminder, nil, chayNhac),
+}
+
+// ChoNep gives the turn Nếp's own tools beside the common ones. The engine
+// calls it on every Nếp turn's context.
+func (bc *BoiCanh) ChoNep() *BoiCanh {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+	bc.rieng = congCusNep
+	return bc
+}
+
+// ChoNhom gives the turn the group's own tools beside the common ones. The
+// engine calls it on every group turn's context.
+func (bc *BoiCanh) ChoNhom() *BoiCanh {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+	bc.rieng = congCusNhom
+	return bc
+}
+
+// congCu is tool t's implementation for this turn: a common tool, or one of
+// the bot's own table; false for a tool this turn has no table for (a
+// context built without ChoNep or ChoNhom offers the common tools only).
+func (bc *BoiCanh) congCu(t Ten) (congCu, bool) {
+	if cc, ok := congCusChung[t]; ok {
+		return cc, true
+	}
+	bc.mu.Lock()
+	rieng := bc.rieng
+	bc.mu.Unlock()
+	cc, ok := rieng[t]
+	return cc, ok
 }

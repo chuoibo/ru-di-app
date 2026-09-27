@@ -161,7 +161,9 @@ func (m nepMem) engineOptions() []aiharness.Option {
 		opts = append(opts, aiharness.WithHoSo(m.kho))
 	}
 	if m.ngan != nil {
-		opts = append(opts, aiharness.WithNganHan(m.ngan))
+		// The same redis-ai store holds the group's legacy-lane buffer under
+		// its own keys (aictx PhienNhom, EX 900); it refuses a v2 room.
+		opts = append(opts, aiharness.WithNganHan(m.ngan), aiharness.WithNganHanNhom(m.ngan))
 	}
 	return opts
 }

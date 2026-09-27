@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Tier T1 of the AI eval (design 06 §6): the engine run through its own seam,
-# aiharness.Engine.Run, on the scripted stub, over the hand-written Nếp corpus.
+# aiharness.Engine.Run, on the scripted stub, over the hand-written Nếp corpus
+# and the group assistant's (slice 9: Rủ Đi AI in the thread, its tra_loi card).
 #
 #   scripts/eval_kich_ban.sh
 #
@@ -41,14 +42,16 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 CORE=services/core
-BO=internal/aieval/testdata/corpus/nep-kich-ban.json
+BOS=(internal/aieval/testdata/corpus/nep-kich-ban.json internal/aieval/testdata/corpus/nhom-kich-ban.json)
 AIEVAL=mobile/services/core/internal/aieval
-SENTINELS=(TestBoNepKichBan TestKichBanKhongMoKetNoi TestGhiRoiPhatLaiTrungDiem TestPhatLaiThieuBanGhiLaBangLech TestTranGoiDungDungN TestKichBanPhatLaiKhongDungClient TestKhongDungClientGenai)
+SENTINELS=(TestBoNepKichBan TestBoNhomKichBan TestKichBanKhongMoKetNoi TestGhiRoiPhatLaiTrungDiem TestPhatLaiThieuBanGhiLaBangLech TestTranGoiDungDungN TestKichBanPhatLaiKhongDungClient TestKhongDungClientGenai)
 CANARY_CHECK=khong_bia_dia_diem
 
 command -v go >/dev/null 2>&1 || { echo "thiếu go" >&2; exit 2; }
 command -v python3 >/dev/null 2>&1 || { echo "thiếu python3" >&2; exit 2; }
-[ -f "$CORE/$BO" ] || { echo "HỎNG: không có corpus $CORE/$BO" >&2; exit 1; }
+for BO in "${BOS[@]}"; do
+  [ -f "$CORE/$BO" ] || { echo "HỎNG: không có corpus $CORE/$BO" >&2; exit 1; }
+done
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT INT TERM
@@ -89,7 +92,6 @@ for sentinel in "${SENTINELS[@]}"; do
   fi
 done
 
-echo "--- rudi-eval --mo-hinh kich-ban trên $BO (hai lần)"
 ( cd "$CORE" && go build -tags eval -o "$work/rudi-eval" ./cmd/rudi-eval )
 chay_bo() {
   (
@@ -100,6 +102,8 @@ chay_bo() {
         "$work/rudi-eval" --mo-hinh kich-ban --bo "$BO"
   )
 }
+for BO in "${BOS[@]}"; do
+echo "--- rudi-eval --mo-hinh kich-ban trên $BO (hai lần)"
 set +e
 chay_bo >"$work/lan1.jsonl" 2>"$work/lan1.err"
 rc=$?
@@ -148,7 +152,8 @@ if not tk["xanh"]:
     bad.append("tong_ket không xanh")
 if bad:
     sys.exit("HỎNG: " + "; ".join(bad))
-print(f"T1 Nếp: {tk['so_ca']} ca, {tk['so_luot']} lượt chạy, {tk['dat']} đạt; kịch bản sai {tk['sai_dat']}/{tk['so_sai']} trượt đúng chỗ; "
+print(f"T1 {tk['bo']}: {tk['so_ca']} ca, {tk['so_luot']} lượt chạy, {tk['dat']} đạt; kịch bản sai {tk['sai_dat']}/{tk['so_sai']} trượt đúng chỗ; "
       f"canary đỏ đúng ở {canary_check}; đồng nhất xanh; không SKIP; hai lần chạy trùng byte; "
       f"prompt {tk['prompt_version_nep']}, corpus {tk['sha_bo'][:12]}")
 PY
+done

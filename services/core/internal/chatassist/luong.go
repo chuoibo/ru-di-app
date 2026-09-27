@@ -102,6 +102,14 @@ func theCuaViec(j work, part tree.Value, places []*tree.OrderedMap) ([]byte, err
 		}
 		return pyjson.Dumps(treejson.From(grounded))
 	}
+	// The brain's text keeps the oracle's bound byte for byte: GroundReply
+	// holds a text to the group ceiling (the Go engine's), so the brain's is
+	// cut by GroundCard first, as it was before that ceiling existed.
+	if g, err := companion.GroundCard(part, places); err == nil {
+		if k, _ := g.Get("kind"); k == tree.String("text") {
+			part = g
+		}
+	}
 	grounded, err := companion.GroundReply(companion.ReplyMeta{InvocationID: j.id, Command: j.command, Read: j.soTin}, []tree.Value{part}, places)
 	if err != nil {
 		return nil, err

@@ -55,6 +55,18 @@ func GieoCa(c Ca, lap int) (Gieo, error) {
 	for _, l := range c.DauVao.Luot {
 		t.LuotNep = append(t.LuotNep, aiharness.LuotNep{Vai: l.Vai, Chu: l.Chu})
 	}
+	// A group case's room, as chatassist.processNhomEngine builds the turn:
+	// the room, its lane, the confirmed count, the shared turns with their
+	// authors, the active members.
+	if n := c.DauVao.Nhom; n != nil {
+		t.Phong, t.Lane, t.SoTin = phongCua(c.CaID), n.Lane, n.SoTin
+		for _, l := range n.Luot {
+			t.LuotNhom = append(t.LuotNhom, aiharness.LuotNhom{ID: l.ID, Vai: l.Vai, Ten: l.Ten, Chu: l.Chu, TacGia: l.TacGia})
+		}
+		for _, m := range n.ThanhVien {
+			t.ThanhVien = append(t.ThanhVien, aiharness.ThanhVienNhom{ID: m.ID, Ten: m.Ten})
+		}
+	}
 	return Gieo{Turn: t, MaKiem: maKiemCua(c.CaID)}, nil
 }
 
@@ -64,6 +76,13 @@ func idCua(caID string, lap int) string {
 	sum := sha256.Sum256([]byte("invocation|" + caID + "|" + strconv.Itoa(lap)))
 	h := hex.EncodeToString(sum[:16])
 	return h[0:8] + "-" + h[8:12] + "-5" + h[13:16] + "-8" + h[17:20] + "-" + h[20:32]
+}
+
+// phongCua is a UUID-shaped room id derived from the case.
+func phongCua(caID string) string {
+	sum := sha256.Sum256([]byte("phong|" + caID))
+	h := hex.EncodeToString(sum[:16])
+	return h[0:8] + "-" + h[8:12] + "-4" + h[13:16] + "-8" + h[17:20] + "-" + h[20:32]
 }
 
 // maKiemCua is the case's canary marker: twelve hex digits, the engine's own

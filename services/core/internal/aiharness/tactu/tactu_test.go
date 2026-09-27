@@ -68,8 +68,10 @@ func dung(bot obs.Bot, kq hieu.KetQua, kich ...llm.Buoc) *the {
 		Nguon: tools.NguonDuLieu{Quan: r, Cho: choGia{}, TriNho: tn}}
 	if bot == obs.BotNhom {
 		bc.NhomID = "nhom-1"
+		bc.ChoNhom()
 	} else {
 		bc.Man = "plan"
+		bc.ChoNep()
 	}
 	return &the{r: r, tn: tn, stub: llm.NewStub(kich...), v: Vao{Ten: string(bot), Instruction: "You are a test assistant.",
 		Router: kq, Cau: "tìm quán chay yên tĩnh ở Đà Lạt", BoiCanh: bc}}

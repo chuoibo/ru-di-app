@@ -87,9 +87,12 @@ const (
 	ChangCham          = "cham"
 	ChangTraLoiCauTruc = "tra_loi_cau_truc"
 	ChangKiem          = "kiem"
+	// ChangChiaBill is the group's one structured reading of the shared
+	// messages for a split draft (aiharness/chiabill).
+	ChangChiaBill = "chia_bill"
 )
 
-var cacChang = map[string]bool{ChangHieu: true, ChangTraLoi: true, ChangCham: true, ChangTraLoiCauTruc: true, ChangKiem: true}
+var cacChang = map[string]bool{ChangHieu: true, ChangTraLoi: true, ChangCham: true, ChangTraLoiCauTruc: true, ChangKiem: true, ChangChiaBill: true}
 
 var finishHopLe = map[string]bool{
 	"": true, string(genai.FinishReasonStop): true, string(genai.FinishReasonMaxTokens): true,

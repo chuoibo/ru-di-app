@@ -122,13 +122,20 @@ func TestHoSoVaoKhoiDuLieuNep(t *testing.T) {
 	if m.err != nil || strings.Contains(string(m.stub.YeuCau()[1]), "CANARY") {
 		t.Fatalf("failed recall: %v", m.err)
 	}
-	// A group turn never reaches personalization: it ends before any call,
-	// even with a model ready to answer every step of Nếp's path.
+	// A group turn never reaches personalization: it runs on the group's
+	// path (slice 9), answering every step, and the profile is never asked
+	// and no request carries a remembered fact.
 	h4 := &hoSoGia{khoi: khoiTriNho}
 	turn.Bot = "nhom"
+	turn.Lane = LaneLegacy
 	m = chayOpts(t, []Option{WithHoSo(h4)}, turn, ruThang(), dung(false, "Mình gợi ý chỗ vắng nhé."), kiemDat())
-	if len(h4.goi) != 0 || m.stub.SoGoi() != 0 || m.err == nil {
+	if len(h4.goi) != 0 || m.stub.SoGoi() == 0 || m.err != nil {
 		t.Fatalf("a group turn reached Nếp's path: profile asked %d times, %d model calls, %v", len(h4.goi), m.stub.SoGoi(), m.err)
+	}
+	for i, y := range m.stub.YeuCau() {
+		if strings.Contains(string(y), "CANARY-tri-nho") {
+			t.Fatalf("group request %d carries a remembered fact", i+1)
+		}
 	}
 }
 

@@ -54,9 +54,13 @@ const (
 	// TTLNhom bounds a legacy-lane group buffer: the 15-minute sharing
 	// window (ADR-0038 §6).
 	TTLNhom = 15 * time.Minute
-	// GiuToiDa is how many turns a buffer keeps; Doc returns the newest
+	// GiuToiDa is how many turns a Nếp buffer keeps; Doc returns the newest
 	// trinho.MaxLuotNganHan of them.
 	GiuToiDa = 12
+	// GiuToiDaNhom is how many turns a group buffer keeps and Doc returns:
+	// every shared turn of the bundle (trinho.MaxLuotNhom), since the card
+	// says how many the assistant read.
+	GiuToiDaNhom = trinho.MaxLuotNhom
 	// MaxChu bounds one turn's words.
 	MaxChu = 4000
 )
@@ -178,6 +182,21 @@ func ttl(p phien) time.Duration {
 	return TTLNhom
 }
 
+// giu is how many turns a buffer keeps, and doc how many Doc returns.
+func giu(p phien) int64 {
+	if p.loai == "nep" {
+		return GiuToiDa
+	}
+	return GiuToiDaNhom
+}
+
+func doc(p phien) int64 {
+	if p.loai == "nep" {
+		return trinho.MaxLuotNganHan
+	}
+	return trinho.MaxLuotNhom
+}
+
 // Owns reports whether a Redis key belongs to this package in this
 // namespace; the gates use it.
 func (k *Kho) Owns(key string) bool { return strings.HasPrefix(key, k.prefix) }
@@ -237,7 +256,7 @@ func (k *Kho) Them(ctx context.Context, s string, l trinho.Luot) error {
 	han := ttl(p)
 	_, err = k.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 		pipe.RPush(ctx, key, v)
-		pipe.LTrim(ctx, key, -GiuToiDa, -1)
+		pipe.LTrim(ctx, key, -giu(p), -1)
 		pipe.ExpireNX(ctx, key, han)
 		if p.loai == "nep" {
 			idx := k.chiMuc(p.chu)
@@ -250,15 +269,16 @@ func (k *Kho) Them(ctx context.Context, s string, l trinho.Luot) error {
 	return err
 }
 
-// Doc implements trinho.NganHan: the newest trinho.MaxLuotNganHan turns,
-// oldest first.
+// Doc implements trinho.NganHan: the newest trinho.MaxLuotNganHan turns of
+// a Nếp buffer, every turn of a group buffer (trinho.MaxLuotNhom), oldest
+// first.
 func (k *Kho) Doc(ctx context.Context, s string) ([]trinho.Luot, error) {
 	p, err := docPhien(s)
 	if err != nil {
 		return nil, err
 	}
 	key := k.khoa(p)
-	vs, err := k.client.LRange(ctx, key, -trinho.MaxLuotNganHan, -1).Result()
+	vs, err := k.client.LRange(ctx, key, -doc(p), -1).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -323,3 +343,11 @@ func (k *Kho) XoaNguoi(ctx context.Context, nguoi string) (int, error) {
 // PhienLuot implements aiharness.NganHanLuot: the buffer of one Nếp turn,
 // named by the asking person and the invocation (PhienNep).
 func (k *Kho) PhienLuot(nguoi, luot string) (string, error) { return PhienNep(nguoi, luot) }
+
+// PhienLuotNhom implements aiharness.NganHanNhom: the buffer of one group
+// invocation in room phong (PhienNhom). lane is the room's transport as the
+// server derived it; anything but the legacy lane is refused (ErrE2EE), so
+// nothing of an end-to-end encrypted room is ever written.
+func (k *Kho) PhienLuotNhom(phong, luot, lane string) (string, error) {
+	return PhienNhom(phong, luot, Lane(lane))
+}

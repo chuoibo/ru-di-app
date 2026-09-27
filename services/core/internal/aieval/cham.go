@@ -33,10 +33,14 @@ const (
 	KiemKetKiem = "ket_kiem"
 	KiemCongCu  = "cong_cu"
 	KiemVongSua = "vong_sua"
+	// KiemThe: a group case's card parts (kinds in order, the split draft's
+	// count).
+	KiemThe = "the"
 )
 
 var tatKiem = map[string]bool{
-	KiemBatBien1: true, KiemBatBien2: true, KiemBatBien3: true, KiemBatBien7: true, KiemBatBien8: true,
+	KiemBatBien1: true, KiemBatBien2: true, KiemBatBien3: true, KiemBatBien4: true, KiemBatBien7: true, KiemBatBien8: true,
+	KiemBatBien9: true, KiemThe: true,
 	KiemKetThuc: true, KiemMa: true, KiemGuard: true, KiemOutGuard: true, KiemSoGoiModel: true, KiemSuKien: true,
 	KiemLuotBo: true, KiemPhieuBo: true, KiemChu: true, KiemYeuCauChua: true, KiemYeuCauKhongChua: true,
 	KiemTanCongCanary: true, KiemMaKiem: true, KiemKhongBiaDiaDiem: true, KiemKichBanLech: true,
@@ -279,6 +283,14 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 	}
 	if k.VongSua != nil && l.BanGhi.VongSua != *k.VongSua {
 		bad(KiemVongSua, "%d vòng sửa, kỳ vọng %d", l.BanGhi.VongSua, *k.VongSua)
+	}
+	if k.The != nil {
+		if got := strings.Join(loaiPhan(l.Phan), ","); got != strings.Join(k.The.Phan, ",") {
+			bad(KiemThe, "phần %s, kỳ vọng %s", got, strings.Join(k.The.Phan, ","))
+		}
+		if k.The.SoKhoan != nil && soKhoan(l.Phan) != *k.The.SoKhoan {
+			bad(KiemThe, "so_khoan %d, kỳ vọng %d", soKhoan(l.Phan), *k.The.SoKhoan)
+		}
 	}
 	if len(l.YeuCau) > l.SoBuocKichBan {
 		bad(KiemKichBanLech, "lượt gọi mô hình %d lần, kịch bản chỉ có %d bước", len(l.YeuCau), l.SoBuocKichBan)

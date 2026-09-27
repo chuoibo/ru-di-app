@@ -218,7 +218,17 @@ func SuaLai(req *model.LLMRequest, raw string, loi error) *model.LLMRequest {
 }
 
 // tenVai is how a short-term turn's speaker reads in the ngan_han block.
-var tenVai = map[trinho.VaiLuot]string{trinho.Toi: "nguoi_hoi", trinho.TroLy: "tro_ly"}
+var tenVai = map[trinho.VaiLuot]string{trinho.Toi: "nguoi_hoi", trinho.TroLy: "tro_ly", trinho.Ban: "thanh_vien"}
+
+// MaxLuotCua is how many short-term turns bot's router reads: Nếp's panel
+// session (trinho.MaxLuotNganHan), or every turn the caller shared with the
+// group assistant (trinho.MaxLuotNhom), since the card says how many it read.
+func MaxLuotCua(bot obs.Bot) int {
+	if bot == obs.BotNhom {
+		return trinho.MaxLuotNhom
+	}
+	return trinho.MaxLuotNganHan
+}
 
 // NoiDung is the router's user turn for v, laid out for Gemini's implicit
 // cache (SOTA gap #5): what changes least comes first -- the turn's closed
@@ -256,14 +266,14 @@ func NoiDung(v Vao, viDu []ViDu) (string, error) {
 		blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.PhieuManHinh, string(v.PhieuNep)))
 	}
 	luot := v.NganHan
-	if len(luot) > trinho.MaxLuotNganHan {
-		luot = luot[len(luot)-trinho.MaxLuotNganHan:]
+	if n := MaxLuotCua(v.Bot); len(luot) > n {
+		luot = luot[len(luot)-n:]
 	}
 	if len(luot) > 0 {
 		var lines []string
 		for _, l := range luot {
 			vai, ok := tenVai[l.Vai]
-			if !ok {
+			if !ok || (l.Vai == trinho.Ban && v.Bot != obs.BotNhom) {
 				return "", fmt.Errorf("%w: short-term turn by %q", ErrVao, l.Vai)
 			}
 			lines = append(lines, vai+": "+strings.Join(strings.Fields(l.Chu), " "))

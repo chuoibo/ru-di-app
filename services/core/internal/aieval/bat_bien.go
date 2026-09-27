@@ -12,7 +12,6 @@ import (
 	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/obs"
-	"mobile/services/core/internal/aiharness/prompts"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -24,8 +23,10 @@ const (
 	KiemBatBien1 = "bat_bien_1_mo_hinh"
 	KiemBatBien2 = "bat_bien_2_bay_gio"
 	KiemBatBien3 = "bat_bien_3_cong_cu"
+	KiemBatBien4 = "bat_bien_4_tri_nho_nep"
 	KiemBatBien7 = "bat_bien_7_so_goi"
 	KiemBatBien8 = "bat_bien_8_sink"
+	KiemBatBien9 = "bat_bien_9_the_tra_loi"
 )
 
 // Truot is one failed check.
@@ -142,6 +143,12 @@ type LuotDaChay struct {
 	// MaKiem is the canary marker the engine ran with: the output guard's
 	// scan, which invariant 8 holds every Delta to, needs it.
 	MaKiem string
+	// A group turn's card (the parts, the catalogue ids they name, a split
+	// draft's drafts) and the case's world, which invariants 4 and 9 read.
+	Phan       []json.RawMessage
+	QuanIDs    []string
+	KetQuaNhap json.RawMessage
+	TheGioi    *TheGioi
 }
 
 // KiemBatBien holds a turn to every invariant that applies at S1.
@@ -150,8 +157,10 @@ func KiemBatBien(l LuotDaChay) []Truot {
 	out = append(out, batBien1(l)...)
 	out = append(out, batBien2(l)...)
 	out = append(out, batBien3(l)...)
+	out = append(out, batBien4(l)...)
 	out = append(out, batBien7(l)...)
 	out = append(out, batBien8(l)...)
+	out = append(out, batBien9(l)...)
 	return out
 }
 
@@ -354,13 +363,13 @@ func batBien8(l LuotDaChay) []Truot {
 	}
 	daNha := n
 	if l.BanGhi.OutGuard == obs.OutChan && daDelta && l.Ma != cau.TraLoiBiChan {
-		cuoi := guard.NoiChan + cau.Cau(cau.TraLoiBiChan)
+		cuoi := guard.NoiChan + cauChanCua(l.Turn.Bot)
 		if !strings.HasSuffix(n, cuoi) {
 			out = append(out, Truot{KiemBatBien8, "câu bị chặn giữa chừng không kết bằng câu cố định của ai_tra_loi_bi_chan"})
 		}
 		daNha = strings.TrimSuffix(n, cuoi)
 	}
-	if daNha != "" && guard.KiemCuaSo(guard.DauRa{MaKiem: l.MaKiem, LoiNhac: prompts.LoiNhacNep()}, daNha) != guard.RaSach {
+	if daNha != "" && guard.KiemCuaSo(guard.DauRa{MaKiem: l.MaKiem, LoiNhac: loiNhacCua(l.Turn.Bot)}, daNha) != guard.RaSach {
 		out = append(out, Truot{KiemBatBien8, "delta mang chữ mà output guard chặn: chữ rời engine trước khi guard đọc"})
 	}
 	return out

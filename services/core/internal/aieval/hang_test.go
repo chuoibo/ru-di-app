@@ -35,11 +35,17 @@ func TestHang(t *testing.T) {
 	raw, _ := json.Marshal(h)
 	nep := strings.Join(h.CongCu["nep"], ",")
 	if !strings.Contains(nep, "search_places") || !strings.Contains(nep, "what_you_remember") ||
-		strings.Contains(nep, "group_snapshot") || strings.Contains(nep, "set_reminder") || len(h.CongCu) != 1 {
+		strings.Contains(nep, "group_snapshot") || strings.Contains(nep, "set_reminder") || len(h.CongCu) != 2 {
 		t.Fatalf("công cụ: %s", raw)
 	}
-	if _, chay := CongCuDuocPhep(obs.BotNhom); chay {
-		t.Fatal("bot nhóm chưa lên engine ở lát này")
+	// The group (slice 9): its own tools, never one of scope me.
+	nhom, chay := CongCuDuocPhep(obs.BotNhom)
+	s := strings.Join(nhom, ",")
+	if !chay || !strings.Contains(s, "group_snapshot") || strings.Contains(s, "recall_memory") || strings.Contains(s, "explain_screen") {
+		t.Fatalf("công cụ nhóm: %v", nhom)
+	}
+	if h.NhomMaxChu != aiharness.NhomMaxChu || h.PromptVersionNhom != prompts.VersionNhom() {
+		t.Fatalf("hằng nhóm: %+v", h)
 	}
 }
 

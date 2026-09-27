@@ -1,0 +1,14 @@
+{
+  "ten": "nhom-chia-tien-nhap-so-le",
+  "mo_ta": "Nhóm, lời đọc chia bill ghi số tiền có phần lẻ: bị từ chối, không làm tròn.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"split_draft\", \"y_dinh\": [\"chia_bill_draft\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "chia_bill",
+      "chu": "{\"khoan\": [{\"tin\": \"t2\", \"tieu_de\": \"lẩu\", \"so_tien_vnd\": 850000.5}]}"
+    }
+  ]
+}

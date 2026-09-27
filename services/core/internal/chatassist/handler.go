@@ -38,6 +38,12 @@ type Handler struct {
 	// waits on a probe of the brain.
 	nepEngine *aiharness.Engine
 	nepGo     bool
+	// nhomEngine, when set, runs the group's jobs in Go instead of the
+	// brain's companion-reply and chat-expense (MOBILE_AI_ENGINE_GROUP=go);
+	// nhomGo says the host chose it even where this process runs no worker,
+	// so `hoi` is taken.
+	nhomEngine *aiharness.Engine
+	nhomGo     bool
 	// scopes limits the jobs this process claims (WithQueues); nil is all.
 	scopes []string
 	// nhip, when set, carries the heartbeat and the model-call counter
@@ -361,7 +367,15 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	enabled := g.kind == "group" && h.available(r.Context())
+	// On the Go engine (MOBILE_AI_ENGINE_GROUP=go) the brain is not asked:
+	// the engine was built at startup or `serve` refused to start.
+	enabled := g.kind == "group" && (h.nhomGo || h.available(r.Context()))
+	// `hoi` (the router decides what is asked) runs only on the Go engine.
+	hoiCo := enabled && h.nhomGo
+	var hoiVi any = "provider_unavailable"
+	if hoiCo {
+		hoiVi = nil
+	}
 	var reason any = "provider_unavailable"
 	if g.kind != "group" {
 		reason = "group_plan_only"
@@ -381,7 +395,7 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	// room lane's onlookers (`phong`) come with the WebSocket frame of slice
 	// 12; until then no room says `phong`. A client that sees no field reads
 	// `khong`.
-	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
+	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
 }
 
 // The values of chat-capabilities' ai.stream (contract §3).
@@ -416,12 +430,21 @@ func newID() string {
 }
 
 // lenhNhom is the closed list of commands a group invocation may carry. It
-// mirrors `chat_ai_command_scope` in schema_scope.sql, so a command the table
+// mirrors `chat_ai_command_scope` (schema_hoi.sql), so a command the table
 // would refuse is refused here as a 400 rather than surfacing as a 500 from the
-// INSERT. Both commands share one queue, one digest, one rate limit and one
-// authority check; only the worker's inference step differs.
-func lenhNhom(command string) bool {
-	return command == lenhPlan || command == lenhChiaBill
+// INSERT. Every command shares one queue, one digest, one rate limit and one
+// authority check; only the worker's inference step differs. `hoi` (the
+// router decides what is asked, design 03 §4.3) runs only on the Go engine
+// (MOBILE_AI_ENGINE_GROUP=go) and only as an answer in the thread: it must
+// name its trigger.
+func (h *Handler) lenhNhom(command string, coTrigger bool) bool {
+	switch command {
+	case lenhPlan, lenhChiaBill:
+		return true
+	case lenhHoi:
+		return h.nhomGo && coTrigger
+	}
+	return false
 }
 
 const (
@@ -450,7 +473,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	if !chatv2.ValidID(in.LogicalID) || !lenhNhom(in.Command) || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 || (in.TriggerMessageID != nil && !chatv2.ValidID(*in.TriggerMessageID)) {
+	if !chatv2.ValidID(in.LogicalID) || !h.lenhNhom(in.Command, in.TriggerMessageID != nil) || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 || (in.TriggerMessageID != nil && !chatv2.ValidID(*in.TriggerMessageID)) {
 		failure(w, invalid("invalid_invocation"))
 		return
 	}

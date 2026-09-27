@@ -66,10 +66,14 @@ const (
 	// DuongTruyHoi: retrieval with the grader's corrective round and the
 	// grounded, verified answer (crag + traloi).
 	DuongTruyHoi Duong = "truy_hoi"
+	// DuongNhapChiaBill: the group's split draft (metrics schema v5): one
+	// structured reading of the shared messages, our template around it,
+	// nothing written.
+	DuongNhapChiaBill Duong = "nhap_chia_bill"
 )
 
 // Duongs are the engine's paths, "" excluded.
-var Duongs = []Duong{DuongTuChoiTien, DuongHoiLai, DuongThang, DuongNhanh, DuongTacTu, DuongTruyHoi}
+var Duongs = []Duong{DuongTuChoiTien, DuongHoiLai, DuongThang, DuongNhanh, DuongTacTu, DuongTruyHoi, DuongNhapChiaBill}
 
 func (v Duong) Valid() bool { return v == DuongKhong || coTrong(Duongs, v) }
 

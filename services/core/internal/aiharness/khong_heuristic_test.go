@@ -37,6 +37,7 @@ var (
 		"mobile/services/core/internal/aiharness",
 		"mobile/services/core/internal/aiharness/agent",
 		"mobile/services/core/internal/aiharness/cautruc",
+		"mobile/services/core/internal/aiharness/chiabill",
 		"mobile/services/core/internal/aiharness/crag",
 		"mobile/services/core/internal/aiharness/hieu",
 		"mobile/services/core/internal/aiharness/kiemchung",
@@ -52,6 +53,17 @@ var (
 	nguonChu = []string{
 		"mobile/services/core/internal/aiharness.Turn.LoiNho",
 		"mobile/services/core/internal/aiharness.LuotNep.Chu",
+		// The group's shared turns (slice 9): the members' words and the
+		// labels the room knows them by, and the split reading's messages,
+		// request and the titles the model copied from them.
+		"mobile/services/core/internal/aiharness.LuotNhom.Chu",
+		"mobile/services/core/internal/aiharness.LuotNhom.Ten",
+		"mobile/services/core/internal/aiharness.ThanhVienNhom.Ten",
+		"mobile/services/core/internal/aiharness/chiabill.Tin.Chu",
+		"mobile/services/core/internal/aiharness/chiabill.Tin.Ten",
+		"mobile/services/core/internal/aiharness/chiabill.Vao.LoiNho",
+		"mobile/services/core/internal/aiharness/chiabill.Khoan.TieuDe",
+		"mobile/services/core/internal/aiharness/chiabill.khoanTho.TieuDe",
 		"mobile/services/core/internal/aiharness/hieu.Vao.Cau",
 		"mobile/services/core/internal/aiharness/hieu.TruyVan.Cau",
 		"mobile/services/core/internal/aiharness/hieu.TruyVan.CauCoDau",
@@ -677,6 +689,20 @@ func TestKhongDocNghiaTrenDuongEngine(t *testing.T) {
 			t.Errorf("the walk never reached %s: it is blind", k)
 		}
 	}
+	// The group's path too (slice 9): the split reading's word-span check
+	// gets the member's words and the model's title, and the group's router
+	// input carries the shared turns.
+	for _, k := range []string{
+		"mobile/services/core/internal/aiharness/chiabill.doanCuaTin#p0",
+		"mobile/services/core/internal/aiharness/chiabill.doanCuaTin#p1",
+	} {
+		if !d.thamSo[k] {
+			t.Errorf("the walk never tainted %s: it is blind to the group's path", k)
+		}
+	}
+	if !d.truong["mobile/services/core/internal/aiharness/trinho.Luot.Chu"] || !d.truong["mobile/services/core/internal/aiharness/chiabill.Tin.Chu"] {
+		t.Error("the walk never reached the group's shared turns")
+	}
 	coThamSo := false
 	for k := range d.thamSo {
 		coThamSo = coThamSo || strings.Contains(k, "nepTruyHoi")
@@ -706,7 +732,9 @@ func TestKhongDocNghiaTrenDuongEngine(t *testing.T) {
 		"khongheuristic.CumTuTraLoi", "khongheuristic.CumTuHoiLai", "khongheuristic.CumTuVongLap",
 		// One per source of text from outside that comes back as data.
 		"khongheuristic.PhieuTheoTu", "khongheuristic.GoiYTheoTu", "khongheuristic.SoLieuTheoTu",
-		"khongheuristic.BangChungTheoTu", "khongheuristic.HoSoTheoTu", "khongheuristic.SuThatTheoTu"} {
+		"khongheuristic.BangChungTheoTu", "khongheuristic.HoSoTheoTu", "khongheuristic.SuThatTheoTu",
+		// The group path (slice 9).
+		"khongheuristic.TienTheoTinNhom", "khongheuristic.TieuDeTheoTu"} {
 		if !theoHam[h] {
 			t.Errorf("canary %s is green: the walk cannot see it", h)
 		}

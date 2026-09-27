@@ -204,10 +204,14 @@ const (
 	Toi VaiLuot = "toi"
 	// TroLy: the assistant.
 	TroLy VaiLuot = "tro_ly"
+	// Ban: another member of the group, in a turn the caller shared with
+	// the group assistant (the group only; Nếp's panel has no third
+	// speaker).
+	Ban VaiLuot = "ban"
 )
 
 // VaiLuots is the closed set of VaiLuot.
-var VaiLuots = dong.Moi("vai_luot", Toi, TroLy)
+var VaiLuots = dong.Moi("vai_luot", Toi, TroLy, Ban)
 
 // Luot is one short-term turn. BangChungIDs are the evidence ids the
 // assistant's turn cited, so a later «the second one» can be resolved by the
@@ -225,10 +229,18 @@ type Luot struct {
 // only turns that called the assistant and its answers, never other chat.
 const MaxLuotNganHan = 8
 
+// MaxLuotNhom is how many shared turns a group session holds and Doc
+// returns for it: the bundle's ceiling (chatassist maxLuot), because the
+// card the room reads says how many messages the assistant read
+// (doc.so_tin), and every one of them must reach the model for that to be
+// true.
+const MaxLuotNhom = 40
+
 // NganHan is the short-term memory of one open session (phien), which
 // expires on its own (a TTL in the adapter); nothing in it is long-term.
 type NganHan interface {
-	// Doc returns the session's turns, oldest first, at most MaxLuotNganHan.
+	// Doc returns the session's turns, oldest first, at most MaxLuotNganHan
+	// (a group session: at most MaxLuotNhom).
 	Doc(ctx context.Context, phien string) ([]Luot, error)
 	// Them appends one turn.
 	Them(ctx context.Context, phien string, l Luot) error

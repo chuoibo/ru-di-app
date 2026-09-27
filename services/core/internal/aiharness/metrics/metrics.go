@@ -49,12 +49,20 @@ func SchemaV3SQL() string { return schemaV3SQL }
 // it cannot be told from; rows of earlier binaries rewritten).
 func SchemaV4SQL() string { return schemaV4SQL }
 
+//go:embed schema_v5.sql
+var schemaV5SQL string
+
+// SchemaV5SQL is version 5 (the group's split-draft path).
+func SchemaV5SQL() string { return schemaV5SQL }
+
 // PhienBan is the schema version this binary writes rows for.
-const PhienBan = 4
+const PhienBan = 5
 
 // cacPhienBan are the versions in order. An applied version is never
 // edited: its checksum is recorded and a changed file is refused.
-func cacPhienBan() []string { return []string{schemaSQL, schemaV2SQL, schemaV3SQL, schemaV4SQL} }
+func cacPhienBan() []string {
+	return []string{schemaSQL, schemaV2SQL, schemaV3SQL, schemaV4SQL, schemaV5SQL}
+}
 
 // Execer is a pool or a transaction.
 type Execer interface {

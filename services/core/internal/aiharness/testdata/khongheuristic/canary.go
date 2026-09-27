@@ -12,6 +12,7 @@ import (
 
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/agent"
+	"mobile/services/core/internal/aiharness/chiabill"
 	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/preprocess"
 	"mobile/services/core/internal/aiharness/prompts"
@@ -153,6 +154,23 @@ func HoSoTheoTu(ctx context.Context, h aiharness.HoSo) bool {
 // SuThatTheoTu reads a remembered fact for a word.
 func SuThatTheoTu(s trinho.SuThat) bool {
 	return regexp.MustCompile(`dị ứng`).MatchString(s.NoiDung)
+}
+
+// TienTheoTinNhom decides a money refusal from a word of a member's shared
+// message (the group path, slice 9): the router's label is the only
+// money classifier.
+func TienTheoTinNhom(t aiharness.Turn) bool {
+	for _, l := range t.LuotNhom {
+		if strings.Contains(l.Chu, "chuyển khoản") {
+			return true
+		}
+	}
+	return false
+}
+
+// TieuDeTheoTu keeps an expense title by a word the model wrote.
+func TieuDeTheoTu(k chiabill.Khoan) bool {
+	return strings.HasPrefix(k.TieuDe, "tiền")
 }
 
 // HopLe uses the text only the ways the rule allows.

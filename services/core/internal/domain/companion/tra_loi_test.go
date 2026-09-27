@@ -54,14 +54,14 @@ var catalogue = []*tree.OrderedMap{
 
 var meta = ReplyMeta{InvocationID: "0b7c8a1e-2f43-4c55-9a8e-1d2f3a4b5c6d", Command: "plan", Read: 20}
 
-// Each part is exactly what GroundCard makes of it: the reply adds an envelope,
-// never a second opinion about a part.
+// A places or itinerary part, and a text within the oracle's bound, is
+// exactly what GroundCard makes of it: the reply adds an envelope, never a
+// second opinion about a catalogue part.
 func TestGroundReplyPartIsGroundCardOutput(t *testing.T) {
 	for _, raw := range []string{
 		`{"kind":"text","payload":{"text":"Tối nay ăn lẩu nhé"}}`,
 		`{"kind":"places","payload":{"intro":"Hai chỗ","place_ids":["p2","p1","p2"]}}`,
 		`{"kind":"itinerary","payload":{"title":"Tối thứ Sáu","stops":[{"place_id":"p1","time_text":"19:00","note":"ăn"}]}}`,
-		`{"kind":"text","payload":{"text":"` + strings.Repeat("ơ", MaxText+50) + `"}}`,
 	} {
 		want, err := GroundCard(parse(t, raw), catalogue)
 		if err != nil {

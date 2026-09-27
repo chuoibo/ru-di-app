@@ -55,15 +55,23 @@ var luongSQL string
 //go:embed schema_hang_doi.sql
 var hangDoiSQL string
 
+// Version 6 lets the group ask with `hoi` (slice 9: the group assistant on
+// the Go engine). A sixth file, for the reason version 2 was a second one.
+//
+//go:embed schema_hoi.sql
+var hoiSQL string
+
 // SchemaVersion is the chat AI schema this binary reads and writes. `serve`
 // and `work` refuse to start below it: every claim names the columns of
 // version 5, so an older schema would turn each job into an error behind a
 // healthy /healthz instead of one loud refusal at startup.
-const SchemaVersion = 5
+const SchemaVersion = 6
 
 // SchemaFiles are the embedded versions in order, for the gates that read
 // what the schema does (aigate).
-func SchemaFiles() []string { return []string{schemaSQL, draftsSQL, scopeSQL, luongSQL, hangDoiSQL} }
+func SchemaFiles() []string {
+	return []string{schemaSQL, draftsSQL, scopeSQL, luongSQL, hangDoiSQL, hoiSQL}
+}
 
 // SchemaCurrent reports whether every chat AI schema version up to
 // SchemaVersion is installed. It runs no DDL. Every version, not only the
@@ -116,7 +124,7 @@ func migrateDen(ctx context.Context, pool *pgxpool.Pool, den int) error {
 			return err
 		}
 	}
-	for v, step := range []func(context.Context, pgx.Tx) error{migrateDrafts, migrateScope, migrateLuong, migrateHangDoi} {
+	for v, step := range []func(context.Context, pgx.Tx) error{migrateDrafts, migrateScope, migrateLuong, migrateHangDoi, migrateHoi} {
 		if v+2 > den {
 			break
 		}
@@ -153,6 +161,27 @@ func migrateHangDoi(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	_, err := tx.Exec(ctx, `INSERT INTO chat_ai_schema_migrations VALUES(5,$1)`, digest)
+	return err
+}
+
+// migrateHoi installs version 6 on top of version 5, in the same transaction
+// and with the same pinned checksum as the versions before it.
+func migrateHoi(ctx context.Context, tx pgx.Tx) error {
+	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(hoiSQL)))
+	var old string
+	if err := tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM chat_ai_schema_migrations WHERE version=6),'')`).Scan(&old); err != nil {
+		return err
+	}
+	if old != "" {
+		if old != digest {
+			return fmt.Errorf("chat AI group hoi migration checksum mismatch")
+		}
+		return nil
+	}
+	if _, err := tx.Exec(ctx, hoiSQL); err != nil {
+		return err
+	}
+	_, err := tx.Exec(ctx, `INSERT INTO chat_ai_schema_migrations VALUES(6,$1)`, digest)
 	return err
 }
 

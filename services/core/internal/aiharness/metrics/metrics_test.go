@@ -126,8 +126,16 @@ func TestNhanNhayCamKhongLuu(t *testing.T) {
 	if obs.NhanGuard("nhay_cam").Valid() {
 		t.Fatal("a record may hold nhay_cam")
 	}
-	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV4SQL {
+	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV5SQL {
 		t.Fatal("PhienBan is not the last version")
+	}
+	// Version 5's path list is exactly obs.Duongs.
+	want5 := []string{"''"}
+	for _, d := range obs.Duongs {
+		want5 = append(want5, "'"+string(d)+"'")
+	}
+	if !strings.Contains(schemaV5SQL, "CHECK (duong IN ("+strings.Join(want5, ",")+"))") {
+		t.Fatalf("version 5's duong CHECK is not obs.Duongs %v", want5)
 	}
 	// Version 4 keeps the table from holding router columns without a label
 	// (the row a nhay_cam turn wrote under version 3), and rewrites them.

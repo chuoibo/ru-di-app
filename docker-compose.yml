@@ -273,6 +273,7 @@ services:
       # key. Not before eval T1 is green in CI, ADR-0037 is signed and the key
       # in core has had its security review (design 01 §9 q4).
       MOBILE_AI_ENGINE_NEP: brain
+      MOBILE_AI_ENGINE_GROUP: brain
     ports:
       - "${MOBILE_API_PORT:-8099}:8000"
     depends_on:
@@ -340,6 +341,7 @@ services:
       MOBILE_BRAIN_URL: http://api:8000
       MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
       MOBILE_AI_ENGINE_NEP: brain
+      MOBILE_AI_ENGINE_GROUP: brain
       MOBILE_AMQP_URL: amqp://rudi:rudi-dev-only@rabbitmq:5672/
       MOBILE_REDIS_URL: redis://redis:6379/0
       MOBILE_CORE_LIVENESS_LISTEN: 127.0.0.1:8001

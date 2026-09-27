@@ -69,6 +69,59 @@ type DauVao struct {
 	DaGoiTruoc int    `json:"da_goi_truoc,omitempty"`
 	// TheGioi is what the engine's data ports hold for this run.
 	TheGioi *TheGioi `json:"the_gioi,omitempty"`
+	// Nhom is a group case's room (be_mat nhom): what the worker reads from
+	// the stored job and the room (chatassist processNhomEngine).
+	Nhom *DauVaoNhom `json:"nhom,omitempty"`
+}
+
+// DauVaoNhom is a group case's room: its lane, how many shared turns the
+// server confirmed, the shared turns and the active members.
+type DauVaoNhom struct {
+	Lane      string        `json:"lane"`
+	SoTin     int           `json:"so_tin"`
+	Luot      []LuotNhomCa  `json:"luot,omitempty"`
+	ThanhVien []ThanhVienCa `json:"thanh_vien"`
+}
+
+// LuotNhomCa is one shared turn (aiharness.LuotNhom).
+type LuotNhomCa struct {
+	ID     string `json:"id"`
+	Vai    string `json:"vai"`
+	Ten    string `json:"ten,omitempty"`
+	Chu    string `json:"chu"`
+	TacGia string `json:"tac_gia,omitempty"`
+}
+
+// ThanhVienCa is one active member (aiharness.ThanhVienNhom).
+type ThanhVienCa struct {
+	ID  string `json:"id"`
+	Ten string `json:"ten"`
+}
+
+func (n *DauVaoNhom) kiem() error {
+	if n == nil {
+		return errors.New("ca nhóm thiếu dau_vao.nhom")
+	}
+	if n.Lane != "legacy" && n.Lane != "v2" {
+		return fmt.Errorf("lane %q lạ", n.Lane)
+	}
+	if n.SoTin < 0 || n.SoTin > 40 || len(n.Luot) > 40 {
+		return errors.New("so_tin hay số lượt ngoài trần gói (40)")
+	}
+	if len(n.ThanhVien) == 0 {
+		return errors.New("phòng không có thành viên nào")
+	}
+	for _, m := range n.ThanhVien {
+		if !dangUUID.MatchString(m.ID) {
+			return fmt.Errorf("thành viên %q không có dạng UUID", m.ID)
+		}
+	}
+	for _, l := range n.Luot {
+		if l.ID == "" || (l.Vai != "toi" && l.Vai != "ban" && l.Vai != "ai") || (l.TacGia != "" && !dangUUID.MatchString(l.TacGia)) {
+			return fmt.Errorf("lượt nhóm %q sai dạng", l.ID)
+		}
+	}
+	return nil
 }
 
 // TheGioi is a case's world: what the engine's data ports hold for the run,
@@ -84,8 +137,13 @@ type TheGioi struct {
 	// order (the last again past the end); BiLoai beside each counts what
 	// each hard constraint removed.
 	TruyHoi []LanTruyHoi `json:"truy_hoi,omitempty"`
-	// TriNho are the person's long-term facts.
+	// TriNho are the person's long-term facts. In a group case they are the
+	// canary of invariant 4: no request of the group may carry one.
 	TriNho []SuThatTheGioi `json:"tri_nho,omitempty"`
+	// ChuyenDi and SoThanhVien are the group's outings and member count (the
+	// group's tools, group_snapshot and list_group_outings).
+	ChuyenDi    []MucTheGioi `json:"chuyen_di,omitempty"`
+	SoThanhVien int          `json:"so_thanh_vien,omitempty"`
 }
 
 // MucTheGioi is one catalogue item: an id and its evidence fields.
@@ -149,6 +207,15 @@ type KyVong struct {
 	KetKiem *string   `json:"ket_kiem,omitempty"`
 	CongCu  *[]string `json:"cong_cu,omitempty"`
 	VongSua *int      `json:"vong_sua,omitempty"`
+	// The is a group case's `tra_loi` card: the kinds of its parts in order,
+	// and for a split draft how many drafts it points to.
+	The *KyVongThe `json:"the,omitempty"`
+}
+
+// KyVongThe is what the group's card must hold.
+type KyVongThe struct {
+	Phan    []string `json:"phan"`
+	SoKhoan *int     `json:"so_khoan,omitempty"`
 }
 
 // MayCham is the rule checks on the request and the answer.
@@ -281,12 +348,30 @@ func (c Ca) Kiem(kbs map[string]KichBan) error {
 			return fmt.Errorf("nhom %q sai dạng", n)
 		}
 	}
-	// S1 runs Nếp only, and Nếp has one command.
-	if c.BeMat != string(obs.BotNep) {
-		return fmt.Errorf("be_mat %q: lát này chỉ có nep", c.BeMat)
+	// Nếp has one command; the group (slice 9) has three and a room.
+	switch obs.Bot(c.BeMat) {
+	case obs.BotNep:
+		if c.Lenh != string(obs.LenhHoi) {
+			return fmt.Errorf("lenh %q: Nếp chỉ có hoi", c.Lenh)
+		}
+		if c.DauVao.Nhom != nil {
+			return errors.New("dau_vao.nhom chỉ dành cho ca nhóm")
+		}
+	case obs.BotNhom:
+		if !obs.Lenh(c.Lenh).Valid() {
+			return fmt.Errorf("lenh %q: nhóm có plan, chia_bill, hoi", c.Lenh)
+		}
+		if err := c.DauVao.Nhom.kiem(); err != nil {
+			return err
+		}
+		if c.DauVao.Phieu != nil || len(c.DauVao.Luot) > 0 {
+			return errors.New("ca nhóm không có phiếu và lượt của Nếp")
+		}
+	default:
+		return fmt.Errorf("be_mat %q lạ", c.BeMat)
 	}
-	if c.Lenh != string(obs.LenhHoi) {
-		return fmt.Errorf("lenh %q: Nếp chỉ có hoi", c.Lenh)
+	if c.KyVong.The != nil && c.BeMat != string(obs.BotNhom) {
+		return errors.New("ky_vong.the chỉ dành cho ca nhóm")
 	}
 	if _, err := c.Luc(); err != nil {
 		return err
@@ -395,12 +480,30 @@ func (k KyVong) kiem() error {
 	if k.VongSua != nil && (*k.VongSua < 0 || *k.VongSua > llm.MaxCorrectiveRounds) {
 		return errors.New("vong_sua ngoài trần")
 	}
+	if k.The != nil {
+		seen := map[string]bool{}
+		for _, p := range k.The.Phan {
+			if !loaiPhanThe[p] || seen[p] {
+				return fmt.Errorf("the.phan %v: loại lạ hay lặp", k.The.Phan)
+			}
+			seen[p] = true
+		}
+		if len(k.The.Phan) == 0 || len(k.The.Phan) > 3 {
+			return errors.New("the.phan phải có 1..3 phần")
+		}
+		if k.The.SoKhoan != nil && (*k.The.SoKhoan < 1 || *k.The.SoKhoan > 8) {
+			return errors.New("the.so_khoan ngoài 1..8")
+		}
+	}
 	// A request expectation on a turn that makes no call is vacuous.
 	if k.SoGoiModel == 0 && (len(k.MayCham.YeuCauChua) > 0 || len(k.MayCham.YeuCauKhongChua) > 0 || len(k.MayCham.YeuCauTruyHoiChua) > 0) {
 		return errors.New("kỳ vọng trên yêu cầu mà lượt không gọi mô hình")
 	}
 	return nil
 }
+
+// loaiPhanThe are the part kinds of a `tra_loi` card (contract §3).
+var loaiPhanThe = map[string]bool{"text": true, "places": true, "itinerary": true, "expense_draft": true}
 
 var dangUUID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
@@ -422,6 +525,9 @@ func (g *TheGioi) kiem() error {
 		return nil
 	}
 	if err := muc(g.DiemDen); err != nil {
+		return err
+	}
+	if err := muc(g.ChuyenDi); err != nil {
 		return err
 	}
 	for _, l := range g.TruyHoi {

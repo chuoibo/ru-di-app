@@ -64,6 +64,8 @@ type KetQuaLuot struct {
 	Ma      string         `json:"ma,omitempty"`
 	Chu     string         `json:"chu,omitempty"`
 	BanGhi  map[string]any `json:"ban_ghi"`
+	// Phan is a group turn's card parts, as the engine returned them.
+	Phan []json.RawMessage `json:"phan,omitempty"`
 }
 
 // banGhiMap is the record as the log line and the metrics row carry it.
@@ -165,7 +167,8 @@ func chayLuot(ctx context.Context, c Ca, lap int, cc cachChay) (LuotDaCham, KetQ
 		return LuotDaCham{}, KetQuaChay{}, runErr
 	}
 	l := LuotDaCham{
-		LuotDaChay:  LuotDaChay{Turn: g.Turn, SuKien: sink.SuKien(), KetThuc: res.Record.KetThuc, Chu: res.Text, BanGhi: res.Record, MaKiem: g.MaKiem},
+		LuotDaChay: LuotDaChay{Turn: g.Turn, SuKien: sink.SuKien(), KetThuc: res.Record.KetThuc, Chu: res.Text, BanGhi: res.Record, MaKiem: g.MaKiem,
+			Phan: res.Phan, QuanIDs: res.QuanIDs, KetQuaNhap: res.KetQuaNhap, TheGioi: c.DauVao.TheGioi},
 		BuocKichBan: cc.buoc,
 		NhatKy:      nhatKy.String(),
 		// How many replies the script holds: a turn that asked for more ran
@@ -208,7 +211,7 @@ func chayLuot(ctx context.Context, c Ca, lap int, cc cachChay) (LuotDaCham, KetQ
 	rawBG, _ := json.Marshal(bg)
 	rawSK, _ := json.Marshal(l.SuKien)
 	l.BanGhiJSON, l.SuKienJSON = string(rawBG), string(rawSK)
-	out.KetQua = KetQuaLuot{KetThuc: string(l.KetThuc), Ma: string(l.Ma), Chu: l.Chu, BanGhi: bg}
+	out.KetQua = KetQuaLuot{KetThuc: string(l.KetThuc), Ma: string(l.Ma), Chu: l.Chu, BanGhi: bg, Phan: l.Phan}
 	out.SoGoiModel = len(l.YeuCau)
 	if err := res.Record.Valid(); err != nil {
 		out.Loi = err.Error()
@@ -397,5 +400,6 @@ func nguonCua(g *TheGioi, luc time.Time) tools.NguonDuLieu {
 		// A world is checked (TheGioi.kiem) before it is built.
 		_, _ = tn.Ghi(context.Background(), g.NguoiHoi, trinho.SuThatMoi{NoiDung: f.NoiDung, Loai: trinho.LoaiSuThat(f.Loai), TuLuc: luc, Nguon: trinho.NoiRo})
 	}
-	return tools.NguonDuLieu{Quan: quan, Cho: cho, TriNho: tn}
+	nhom := &testkit.Nhom{ChuyenDis: bang(g.ChuyenDi, truyhoi.GroupHistory), SoNguoi: g.SoThanhVien}
+	return tools.NguonDuLieu{Quan: quan, Cho: cho, Nhom: nhom, TriNho: tn}
 }

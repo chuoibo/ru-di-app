@@ -62,7 +62,9 @@ func TestNepMemRedisAiKhoiDong(t *testing.T) {
 	}
 	env["MOBILE_AUTH_MODE"] = "dev"
 	m, err := openNepMem(ctx, envOf(env), logger, pool)
-	if err != nil || m.ngan == nil || m.kho != nil || len(m.engineOptions()) != 1 {
+	// The short-term store serves Nếp's turns and the group's legacy-lane
+	// buffer: two options, one store.
+	if err != nil || m.ngan == nil || m.kho != nil || len(m.engineOptions()) != 2 {
 		t.Fatalf("dev: %+v %v", m, err)
 	}
 	m.close()

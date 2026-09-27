@@ -13,8 +13,8 @@ import (
 // and the grader (the sufficiency judgement) is the first cut wherever it
 // runs. Red if a constant or a table row grows a path past the ceiling.
 func TestKeHoachTrongTran(t *testing.T) {
-	if len(KeHoach) != 5 {
-		t.Fatalf("%d paths", len(KeHoach))
+	if len(KeHoach) != 6 || len(KhongKiem) != 1 {
+		t.Fatalf("%d paths, %d without a verifier", len(KeHoach), len(KhongKiem))
 	}
 	for d, buocs := range KeHoach {
 		if n := ToiDaDuong(d); n > MaxModelCallsPerTurn || n <= 0 {
@@ -40,6 +40,16 @@ func TestKeHoachTrongTran(t *testing.T) {
 			}
 			coKiem = coKiem || b.Loai == BuocKiem
 			coRouter = coRouter || (b.Loai == BuocRouter && i == 0)
+		}
+		if KhongKiem[d] {
+			// A path with no verifier releases no model prose: no answer step
+			// of any kind may be on it.
+			for _, b := range buocs {
+				if b.Loai == BuocKiem || b.Loai == BuocTraLoi || b.Loai == BuocAgentTraLoi || b.Loai == BuocAgentKeHoach || b.Loai == BuocSinhLai {
+					t.Errorf("%s: a path without a verifier has the prose step %s", d, b.Loai)
+				}
+			}
+			coKiem = true
 		}
 		if !coKiem || !coRouter {
 			t.Errorf("%s: verifier %v, router first %v", d, coKiem, coRouter)

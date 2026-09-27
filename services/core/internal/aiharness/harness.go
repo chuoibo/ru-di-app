@@ -124,6 +124,55 @@ type Turn struct {
 	// GiuLuot, when set, holds one model call on the job's durable counter
 	// before the call goes out; nil counts in memory only (slices 6 and 9).
 	GiuLuot func(context.Context) error
+
+	// The group turn (Bot nhom; design 03): what the worker read from the
+	// stored job and the room, nothing looked up by the engine.
+	//
+	// Phong is the room; Lane its transport as the server derived it
+	// ("legacy" or "v2"): for a v2 room no shared turn reaches the model or
+	// the short-term store. SoTin is how many shared turns the server
+	// confirmed belong to the room (so_tin_doc), the n the card says it read.
+	Phong string
+	Lane  string
+	SoTin int
+	// LuotNhom are the turns the caller explicitly shared, in the bundle's
+	// order (the recent messages and the reply chain to an earlier answer);
+	// the tag message itself is LoiNho.
+	LuotNhom []LuotNhom
+	// ThanhVien are the room's active members, the caller among them, under
+	// the roster's labels.
+	ThanhVien []ThanhVienNhom
+}
+
+// Lanes of a room (chat_ai_invocations.lane).
+const (
+	LaneLegacy = "legacy"
+	LaneV2     = "v2"
+)
+
+// LuotNhom is one shared turn of a group invocation.
+type LuotNhom struct {
+	// ID is the message's id (checked to belong to the room at create).
+	ID string
+	// Vai is who wrote it: "toi" (the caller), "ban" (another member) or
+	// "ai" (an earlier answer of the assistant).
+	Vai string
+	// Ten is the writer's label as the room knows them (the roster's, safe
+	// to show a model); "" for the caller and the assistant.
+	Ten string
+	Chu string
+	// TacGia is the author's person id as messages.author_id has it, "" when
+	// the server could not confirm one: a split draft bills only a
+	// confirmed author, never a name the model wrote.
+	TacGia string
+}
+
+// ThanhVienNhom is one active member of the room.
+type ThanhVienNhom struct {
+	// ID is the person id; it never reaches a prompt (the router sees the
+	// alias m1, m2, …).
+	ID  string
+	Ten string
 }
 
 // PhanKind is the kind of one grounded part of an answer, the `kind` of the
@@ -177,6 +226,15 @@ type Result struct {
 	// for the panel to offer as chips; empty otherwise.
 	LuaChon []string
 	Record  obs.TurnRecord
+
+	// The group's answer: the parts of its `tra_loi` card in order, each in
+	// the raw form companion.GroundReply grounds ({"kind","payload"}); the
+	// catalogue ids those parts name, whose rows the worker loads for that
+	// grounding; and a split draft's drafts for the invocation's result
+	// column (nil otherwise). All three are nil for Nếp.
+	Phan       []json.RawMessage
+	QuanIDs    []string
+	KetQuaNhap json.RawMessage
 }
 
 // Loi is a turn that ended without an answer.
@@ -248,7 +306,23 @@ type Engine struct {
 	// nhipPhat paces the release of a verified answer (phatRa); 0 releases
 	// it at once.
 	nhipPhat time.Duration
+	// nganHanNhom buffers a legacy-lane group turn's shared messages for
+	// the tool part (nil: in memory). Never Nếp's store port: the group
+	// path names neither nganHan nor hoSo (internal/aigate).
+	nganHanNhom NganHanNhom
 }
+
+// NganHanNhom is the short-term memory a group turn buffers its shared
+// messages in (production: aictx.Kho): one key per invocation, named by
+// PhienLuotNhom, which refuses any lane but the legacy one.
+type NganHanNhom interface {
+	trinho.NganHan
+	PhienLuotNhom(phong, luot, lane string) (string, error)
+}
+
+// WithNganHanNhom sets where a group turn buffers its shared messages
+// (production: aictx.Kho).
+func WithNganHanNhom(n NganHanNhom) Option { return func(e *Engine) { e.nganHanNhom = n } }
 
 // HoSo is personalization for one Nếp turn (production: nepnho.Kho). It
 // returns at most five of the person's own facts, none when the person's
@@ -380,28 +454,36 @@ const soTinNep = 0
 // Run runs one turn to its end and returns how it ended; the Sink hears only
 // what happened on the way.
 func (e *Engine) Run(ctx context.Context, t Turn, s Sink) (Result, error) {
+	switch t.Bot {
+	case obs.BotNhom:
+		return e.RunNhom(ctx, t, s)
+	case obs.BotNep:
+		return e.boc(ctx, t, s, obs.PromptVersion(prompts.VersionNep()), soTinNep, e.nepVaPhat)
+	}
+	// A bot outside the closed set is a wiring mistake, answered without a
+	// model call.
+	return e.boc(ctx, t, s, obs.PromptVersion(prompts.VersionNep()), soTinNep,
+		func(context.Context, Turn, Sink, *obs.TurnRecord, time.Time) (Result, error) {
+			return Result{}, &Loi{Ma: cau.InvalidAIResult}
+		})
+}
+
+// boc runs one bot's turn: the record, the first status before any I/O, the
+// ending and the one log line. It names neither bot's path, so the group's
+// entry (RunNhom) reaches nothing of Nếp's through it.
+func (e *Engine) boc(ctx context.Context, t Turn, s Sink, pv obs.PromptVersion, soTin int,
+	chay func(context.Context, Turn, Sink, *obs.TurnRecord, time.Time) (Result, error)) (Result, error) {
 	batDau := e.now()
 	rec := obs.TurnRecord{
 		InvocationID: obs.ID(t.InvocationID), LanThu: t.LanThu, Bot: t.Bot, Lenh: t.Lenh,
 		Guard: obs.GuardProceed, OutGuard: obs.OutNone, LoiMoHinh: obs.LoiKhong,
-		PromptVersion: obs.PromptVersion(prompts.VersionNep()), KetKiem: obs.KiemKhongChay,
+		PromptVersion: pv, KetKiem: obs.KiemKhongChay,
 	}
 	// The first status goes out before any I/O: the panel's «thinking»
 	// state never waits on the model.
-	s.TrangThai(cau.DangDoc, soTinNep)
+	s.TrangThai(cau.DangDoc, soTin)
 	rec.MsTrangThaiDau = ms(e.now().Sub(batDau))
-	var res Result
-	var err error
-	if t.Bot == obs.BotNep {
-		res, err = e.nep(ctx, t, s, &rec, batDau)
-		if err == nil {
-			res, err = e.phatRa(ctx, res, s, &rec)
-		}
-	} else {
-		// The group bot moves onto the engine in slice 9; until then a group
-		// turn here is a wiring mistake, answered without a model call.
-		err = &Loi{Ma: cau.InvalidAIResult}
-	}
+	res, err := chay(ctx, t, s, &rec, batDau)
 	rec.MsTong = ms(e.now().Sub(batDau))
 	switch {
 	case err == nil:
@@ -425,19 +507,47 @@ func (e *Engine) Run(ctx context.Context, t Turn, s Sink) (Result, error) {
 // validation for privacy). Whether the text claims an action or money is
 // the verifier's judgement (kiemchung), never a phrase rule here.
 func (e *Engine) kiemDauRa(text string, rec *obs.TurnRecord) (Result, error) {
+	return e.kiemDauRaK(khuonNep(), text, rec)
+}
+
+// khuon is a bot's output shape: its answer ceiling in runes, the clauses of
+// its instruction an answer must never quote, and the fixed sentence that
+// ends a text the streaming window stops part-way.
+type khuon struct {
+	maxChu  int
+	loiNhac []string
+	cauChan string
+}
+
+func khuonNep() khuon {
+	return khuon{maxChu: nepMaxChu, loiNhac: prompts.LoiNhacNep(), cauChan: cau.Cau(cau.TraLoiBiChan)}
+}
+
+// nepVaPhat is Nếp's turn, then the release of its verified answer
+// (phatRa).
+func (e *Engine) nepVaPhat(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, batDau time.Time) (Result, error) {
+	res, err := e.nep(ctx, t, s, rec, batDau)
+	if err == nil {
+		res, err = e.phatRa(ctx, res, s, rec, khuonNep())
+	}
+	return res, err
+}
+
+// kiemDauRaK is kiemDauRa for the output shape k.
+func (e *Engine) kiemDauRaK(k khuon, text string, rec *obs.TurnRecord) (Result, error) {
 	text = strings.TrimSpace(text)
 	if text == "" {
 		rec.LoiMoHinh = obs.LoiBadResp
 		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	}
-	if !utf8.ValidString(text) || utf8.RuneCountInString(text) > nepMaxChu {
+	if !utf8.ValidString(text) || utf8.RuneCountInString(text) > k.maxChu {
 		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	}
 	// The streaming window's scan (the whole-answer checks, and the head of
 	// every prompt clause), so a text that passes here also passes the
 	// window it streams through (phatRa) and nothing is written for an
 	// answer the window would then withhold.
-	if guard.KiemCuaSo(guard.DauRa{MaKiem: e.maKiem, LoiNhac: prompts.LoiNhacNep()}, text) != guard.RaSach {
+	if guard.KiemCuaSo(guard.DauRa{MaKiem: e.maKiem, LoiNhac: k.loiNhac}, text) != guard.RaSach {
 		rec.OutGuard = obs.OutChan
 		return Result{}, &Loi{Ma: cau.TraLoiBiChan}
 	}
@@ -454,13 +564,13 @@ func (e *Engine) kiemDauRa(text string, rec *obs.TurnRecord) (Result, error) {
 // would stop leaves nothing; if the window ever stopped one part-way, the
 // part that left stays and the fixed sentence ends it, and Result.Text is
 // what the Deltas carried, joined.
-func (e *Engine) phatRa(ctx context.Context, res Result, s Sink, rec *obs.TurnRecord) (Result, error) {
+func (e *Engine) phatRa(ctx context.Context, res Result, s Sink, rec *obs.TurnRecord, k khuon) (Result, error) {
 	nhip := e.nhipPhat
 	if _, ok := s.(BoQua); ok {
 		// Nobody reads a discarding Sink: no pause is worth its latency.
 		nhip = 0
 	}
-	kq, err := guard.PhatTheoNhip(ctx, s, 0, guard.DauRa{MaKiem: e.maKiem, LoiNhac: prompts.LoiNhacNep()}, nepMaxChu, cau.Cau(cau.TraLoiBiChan), res.Text, nhip)
+	kq, err := guard.PhatTheoNhip(ctx, s, 0, guard.DauRa{MaKiem: e.maKiem, LoiNhac: k.loiNhac}, k.maxChu, k.cauChan, res.Text, nhip)
 	switch {
 	case err != nil:
 		return Result{}, ErrHuy

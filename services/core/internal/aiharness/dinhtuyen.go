@@ -150,7 +150,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	}
 	if q.HoiLai {
 		rec.Duong = obs.DuongHoiLai
-		res, err := e.hoiLai(runCtx, rec, dem, kq)
+		res, err := e.hoiLai(runCtx, rec, dem, kq, khuonNep())
 		if err != nil && !isLoi(err) {
 			return Result{}, loi(err)
 		}
@@ -166,13 +166,14 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		Cung: cung, Mem: mem, DiUngNgoaiDanhMuc: kq.Slots.DiUngNgoaiDanhMuc, DiemDen: idsDiemDen(dsDiemDen),
 		Nguon: e.nguon, Quyen: e.quyen, SoCai: sc,
 	}
+	bc.ChoNep()
 	khoi := e.khoiThem(t, rec, kq)
 	if ten, _, ok := tactu.Nhanh(kq, bc); ok && !q.KhongCongCu && (ten == tools.SearchPlaces || ten == tools.SearchAppManual) {
-		if res, chay, err := e.nepTruyHoi(runCtx, rec, dem, kq, bc, hoi.Chu, ten); chay {
+		if res, chay, err := e.nepTruyHoi(runCtx, rec, dem, kq, bc, hoi.Chu, ten, khuonNep()); chay {
 			if err != nil {
 				return Result{}, loi(err)
 			}
-			return e.luuYDiUng(res, kq, rec)
+			return e.luuYDiUng(res, kq, rec, khuonNep())
 		}
 	}
 	// Personalization, on the paths whose answer reads it: the recalled
@@ -240,7 +241,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		rec.LoiMoHinh = obs.LoiSafety
 		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	}
-	res, err := e.xacMinh(runCtx, rec, dem, text, sc, bc.ViecCho())
+	res, err := e.xacMinh(runCtx, rec, dem, text, sc, bc.ViecCho(), khuonNep())
 	if err != nil && !isLoi(err) {
 		return Result{}, loi(err)
 	}
@@ -250,7 +251,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	}
 	// The allergen caveat's structural check is the last check that can
 	// withhold the answer, so it runs before anything is written.
-	res, err = e.luuYDiUng(res, kq, rec)
+	res, err = e.luuYDiUng(res, kq, rec, khuonNep())
 	if err != nil {
 		return Result{}, err
 	}
@@ -270,11 +271,11 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 // flagged an allergen outside the closed list: no filter could check it,
 // whatever path answered. The caveat is ours; the structural checks run
 // once more on the whole text (its length cap).
-func (e *Engine) luuYDiUng(res Result, kq hieu.KetQua, rec *obs.TurnRecord) (Result, error) {
+func (e *Engine) luuYDiUng(res Result, kq hieu.KetQua, rec *obs.TurnRecord, k khuon) (Result, error) {
 	if !kq.Slots.DiUngNgoaiDanhMuc {
 		return res, nil
 	}
-	out, err := e.kiemDauRa(cau.DiUngNgoaiDanhMuc+" "+res.Text, rec)
+	out, err := e.kiemDauRaK(k, cau.DiUngNgoaiDanhMuc+" "+res.Text, rec)
 	if err != nil {
 		return Result{}, err
 	}
@@ -288,13 +289,13 @@ func (e *Engine) luuYDiUng(res Result, kq hieu.KetQua, rec *obs.TurnRecord) (Res
 // fresh context on the question's sentences and the kept options, with no
 // evidence. A question that claims an action or money, or a sentence the
 // verifier judges unsupported, ends the turn with the fixed sentence.
-func (e *Engine) hoiLai(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem, kq hieu.KetQua) (Result, error) {
-	res, err := e.kiemDauRa(kq.CauHoiLai, rec)
+func (e *Engine) hoiLai(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem, kq hieu.KetQua, k khuon) (Result, error) {
+	res, err := e.kiemDauRaK(k, kq.CauHoiLai, rec)
 	if err != nil {
 		return Result{}, err
 	}
 	for _, c := range kq.LuaChonHoiLai {
-		if r, err := e.kiemDauRa(c, rec); err == nil {
+		if r, err := e.kiemDauRaK(k, c, rec); err == nil {
 			res.LuaChon = append(res.LuaChon, r.Text)
 		}
 	}
@@ -315,7 +316,7 @@ func isLoi(err error) bool {
 // never relax, crag's grade and one corrective round, then traloi's
 // grounded, verified answer. chay is false when the source has no port
 // (the tools then answer loi_nguon to the model).
-func (e *Engine) nepTruyHoi(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem, kq hieu.KetQua, bc *tools.BoiCanh, cauHoi string, ten tools.Ten) (Result, bool, error) {
+func (e *Engine) nepTruyHoi(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem, kq hieu.KetQua, bc *tools.BoiCanh, cauHoi string, ten tools.Ten, k khuon) (Result, bool, error) {
 	y := truyhoi.YeuCau{Cung: bc.Cung, Mem: bc.Mem}
 	var tim truyhoi.Retriever
 	switch ten {
@@ -383,8 +384,29 @@ func (e *Engine) nepTruyHoi(ctx context.Context, rec *obs.TurnRecord, dem *llm.D
 		rec.OutGuard = obs.OutChan
 		return Result{}, true, &Loi{Ma: cau.TraLoiBiChan}
 	}
-	res, err := e.kiemDauRa(r.Chu, rec)
+	res, err := e.kiemDauRaK(k, r.Chu, rec)
+	if err == nil {
+		// The places part of the grounded answer (traloi): the ledger ids it
+		// put forward, for the group's card. Nếp shows only the text.
+		res.QuanIDs = quanCuaPhan(r.Phan)
+	}
 	return res, true, err
+}
+
+// quanCuaPhan is the place ids of a grounded answer's places part.
+func quanCuaPhan(ps []traloi.Phan) []string {
+	for _, p := range ps {
+		if p.Kind != traloi.KindPlaces {
+			continue
+		}
+		var v struct {
+			IDs []string `json:"ids"`
+		}
+		if json.Unmarshal(p.JSON, &v) == nil {
+			return v.IDs
+		}
+	}
+	return nil
 }
 
 // xacMinh releases a prose answer only after the verifier, in a fresh
@@ -395,12 +417,12 @@ func (e *Engine) nepTruyHoi(ctx context.Context, rec *obs.TurnRecord, dem *llm.D
 // sentence saying it will remember exactly what was queued is not read as
 // a promise of an action no tool performed. The output guard's structural
 // checks run before it.
-func (e *Engine) xacMinh(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem, text string, sc *tools.SoCai, viec []truyhoi.BangChung) (Result, error) {
+func (e *Engine) xacMinh(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem, text string, sc *tools.SoCai, viec []truyhoi.BangChung, k khuon) (Result, error) {
 	chu, _, _ := traloi.GhepVanXuoi(strings.TrimSpace(text), sc)
 	// The structural checks first: they cost no call, and a leaked marker,
 	// a quoted instruction or a phone number is never sent on to another
 	// model, not even to the verifier.
-	res, err := e.kiemDauRa(chu, rec)
+	res, err := e.kiemDauRaK(k, chu, rec)
 	if err != nil {
 		return Result{}, err
 	}

@@ -108,6 +108,11 @@ func TestLapLaiCungYeuCau(t *testing.T) {
 func TestMoiPhepKiemDaThayDo(t *testing.T) {
 	b, sha, kbs := napBo(t)
 	_, rs, _ := chayCaBo(t, b, sha, kbs, 1)
+	// The group's corpus (slice 9) carries the checks of its card.
+	bn, shaN, _ := napBoNhom(t)
+	_, rsN, _ := chayCaBo(t, bn, shaN, kbs, 1)
+	rs = append(rs, rsN...)
+	b.Ca = append(append([]Ca(nil), b.Ca...), bn.Ca...)
 	thay := map[string]string{}
 	for _, c := range b.Ca {
 		for _, s := range c.KichBan.Sai {
@@ -184,7 +189,8 @@ func TestBoKiem(t *testing.T) {
 		{"kỳ vọng yêu cầu khi không gọi", func(m map[string]any) {
 			caCua(m, "06-man-tien")["ky_vong"].(map[string]any)["may_cham"] = map[string]any{"yeu_cau_chua": []any{"x"}}
 		}, "không gọi mô hình"},
-		{"bề mặt nhóm", func(m map[string]any) { caCua(m, "01-chi-hoi")["be_mat"] = "nhom" }, "chỉ có nep"},
+		{"bề mặt nhóm thiếu phòng", func(m map[string]any) { caCua(m, "01-chi-hoi")["be_mat"] = "nhom" }, "thiếu dau_vao.nhom"},
+		{"bề mặt lạ", func(m map[string]any) { caCua(m, "01-chi-hoi")["be_mat"] = "phong" }, "be_mat"},
 		{"không có sự kiện", func(m map[string]any) { caCua(m, "01-chi-hoi")["ky_vong"].(map[string]any)["su_kien"] = []any{} }, "su_kien"},
 	} {
 		var m map[string]any
