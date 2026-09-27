@@ -1,0 +1,2664 @@
+{
+ "bo": "di-ung-v2",
+ "phien_ban": 1,
+ "mo_ta": "Router Nếp: slot di_ung/an_kieng chuyển từ nửa người hỏi của corpus dị ứng đã lộ (T3, đo hồi quy, không phải cổng). Thiếu một dị nguyên bắt buộc là lỗi không an toàn; đọc thừa được đếm riêng. Nửa quán thuộc tầng nạp dữ liệu, không chuyển.",
+ "nguon": {
+  "tep": "nguon/di_ung_niem_phong_v2.json",
+  "sha256": "f4b6a451420042b1302604afcef6129674a70bde89e5cc35881a172fabbbb769"
+ },
+ "luc": "2026-09-25T14:05:00+07:00",
+ "bao_trum": {
+  "hai_san": [
+   "tom",
+   "cua",
+   "ca",
+   "muc",
+   "oc_so"
+  ]
+ },
+ "ca": [
+  {
+   "id": "di-ung-v2-np2-nh-001",
+   "bot": "nep",
+   "cau": "Bạn mình dị ứng đậu phộng, còn mình thì dị ứng mè.",
+   "nhom": "nhieu_nguoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "me"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-002",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng cua biển với lại mực ống từ nhỏ tới giờ.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-003",
+   "bot": "nep",
+   "cau": "Cua rang me mình không ăn được.",
+   "nhom": "song_chin",
+   "ghi_chu": "me ở đây là trái me; đọc thêm mè là đọc thừa",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-004",
+   "bot": "nep",
+   "cau": "Sữa tươi thì bị, sữa chua thì không sao.",
+   "nhom": "song_chin",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-005",
+   "bot": "nep",
+   "cau": "Mình kiêng sữa và các chế phẩm từ sữa.",
+   "nhom": "dam_sua_che_pham",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-006",
+   "bot": "nep",
+   "cau": "Hải sản nói chung là mình dị ứng.",
+   "nhom": "tat_ca_mot_so",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-007",
+   "bot": "nep",
+   "cau": "Mình kỵ sò điệp lắm, ăn là nổi mẩn.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-008",
+   "bot": "nep",
+   "cau": "ck mk dị ứng đậu phộng, mk thì ko",
+   "nhom": "teencode",
+   "ghi_chu": "dị ứng của chồng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-009",
+   "bot": "nep",
+   "cau": "Em dị ứng mọi loại hải sản luôn á.",
+   "nhom": "tat_ca_mot_so",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-010",
+   "bot": "nep",
+   "cau": "Di ung sua bo, bo dau phong voi gluten, quan nao tranh duoc thi tot.",
+   "nhom": "khong_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-011",
+   "bot": "nep",
+   "cau": "Em bị dị ứng mực ống với cá, với lại nghêu ạ.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "muc",
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-012",
+   "bot": "nep",
+   "cau": "Hạt mưa rơi lộp độp, tìm quán cafe ngồi đi.",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-013",
+   "bot": "nep",
+   "cau": "cả trứng gà, đạm sữa bò lẫn mực là mình di ung hết",
+   "nhom": "teencode",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "sua",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-014",
+   "bot": "nep",
+   "cau": "Tui dị ứng tép với lại vừng nha.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-015",
+   "bot": "nep",
+   "cau": "Mình dị ứng hạt điều nhẹ thôi, ăn chút xíu không sao.",
+   "nhom": "muc_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-016",
+   "bot": "nep",
+   "cau": "Mình dị ứng mè, không biết có sao không, và đậu phộng.",
+   "nhom": "chen_tu",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-017",
+   "bot": "nep",
+   "cau": "Mình ăn bột mì rồi hải sản không được, dị ứng.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-018",
+   "bot": "nep",
+   "cau": "Tối nay ăn hải sản không?",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-019",
+   "bot": "nep",
+   "cau": "Bánh không có bột mì thì mình ăn được.",
+   "nhom": "thi_duoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-020",
+   "bot": "nep",
+   "cau": "Mình dị ứng đủ thứ hải sản, tôm cua cá mực gì cũng dính.",
+   "nhom": "tat_ca_mot_so",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "ca",
+     "muc",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-021",
+   "bot": "nep",
+   "cau": "Mình không dung nạp lactose.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-022",
+   "bot": "nep",
+   "cau": "Cả nhà mình đều dị ửng ghẹ với lại sửa bò.",
+   "nhom": "sai_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-023",
+   "bot": "nep",
+   "cau": "Nhớ giùm mình: dị ứng phô mai, hạt điều, tép với lại gluten.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "hat_cay",
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-024",
+   "bot": "nep",
+   "cau": "di ung muc voi tom",
+   "nhom": "khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-025",
+   "bot": "nep",
+   "cau": "Tôi mắc chứng dị ứng đậu nành bẩm sinh.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-026",
+   "bot": "nep",
+   "cau": "Mình dị ứng hạt đìêu.",
+   "nhom": "sai_dau",
+   "ghi_chu": "dấu đặt lệch chỗ",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-027",
+   "bot": "nep",
+   "cau": "hông ăn đc hải sản nha, dị ứng á",
+   "nhom": "teencode",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-028",
+   "bot": "nep",
+   "cau": "Món nào không có tôm thì mình chơi được.",
+   "nhom": "thi_duoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-029",
+   "bot": "nep",
+   "cau": "Mình chỉ dị ứng tôm sống thôi, tôm chín ăn được.",
+   "nhom": "song_chin",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-030",
+   "bot": "nep",
+   "cau": "Allergic to any nuts, please.",
+   "nhom": "tieng_anh",
+   "ghi_chu": "any nuts: đọc thêm đậu phộng là đọc thừa an toàn",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-031",
+   "bot": "nep",
+   "cau": "mk bị dị ứg hải sản á",
+   "nhom": "teencode",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-032",
+   "bot": "nep",
+   "cau": "Mấy món xào có mực mình không ăn được.",
+   "nhom": "mon_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-033",
+   "bot": "nep",
+   "cau": "Allergic to soy, squid and sesame, please keep that in mind.",
+   "nhom": "tieng_anh",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "me",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-034",
+   "bot": "nep",
+   "cau": "Ăn gì cũng được, không kiêng gì.",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-035",
+   "bot": "nep",
+   "cau": "I'm allergic to all seafood.",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-036",
+   "bot": "nep",
+   "cau": "Anh dị ứng tôm hùm với lại mực lá, đặt bàn nhớ dặn quán.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-037",
+   "bot": "nep",
+   "cau": "ca nha minh deu di ung do bien roi dau phong",
+   "nhom": "khong_dau",
+   "ghi_chu": "sinh từ mẫu danh sách; «ca» không dấu ở đây là «cả», đọc thêm cá là đọc thừa an toàn",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san",
+     "dau_phong"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-038",
+   "bot": "nep",
+   "cau": "Mình dị ứng mắm tôm.",
+   "nhom": "dam_sua_che_pham",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-039",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng ốc rồi mắm tôm từ nhỏ tới giờ.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-040",
+   "bot": "nep",
+   "cau": "Mình kiêng gluten, tôm sú, phô mai nữa vì bị dị ứng.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-041",
+   "bot": "nep",
+   "cau": "minh di ung ca nha",
+   "nhom": "khong_dau",
+   "ghi_chu": "«ca nha» cũng đọc được là «cả nhà»; nghĩa gần nhất là cá",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-042",
+   "bot": "nep",
+   "cau": "Không có đậu phộng thì được.",
+   "nhom": "thi_duoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-043",
+   "bot": "nep",
+   "cau": "Ai dị ứng các loại hạt thì ăn chè có sao không?",
+   "nhom": "cau_hoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-044",
+   "bot": "nep",
+   "cau": "Hễ là hải sản là mình nổi mề đay.",
+   "nhom": "tat_ca_mot_so",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-045",
+   "bot": "nep",
+   "cau": "Mình ok với mọi món, chỉ dị ứng trứng.",
+   "nhom": "hem_k_ok",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-046",
+   "bot": "nep",
+   "cau": "mk ko ăn đc sữa bò vs phô mai",
+   "nhom": "teencode",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-047",
+   "bot": "nep",
+   "cau": "Mình không dị ứng hải sản đâu, yên tâm.",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-048",
+   "bot": "nep",
+   "cau": "Mình thì không dị ứng gì, nhưng anh Tư dị ứng tôm.",
+   "nhom": "nhieu_nguoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-049",
+   "bot": "nep",
+   "cau": "Dị ứng cả đậu nành lẫn lúa mì, quán nào tránh được thì tốt.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-050",
+   "bot": "nep",
+   "cau": "I'm vegan.",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "thuan_chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-051",
+   "bot": "nep",
+   "cau": "Nhà mình ăn halal.",
+   "nhom": "an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "halal"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-052",
+   "bot": "nep",
+   "cau": "Mình bị nhẹ với sữa thôi, nhưng nặng với trứng.",
+   "nhom": "muc_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-053",
+   "bot": "nep",
+   "cau": "Không có hải sản là ổn.",
+   "nhom": "thi_duoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-054",
+   "bot": "nep",
+   "cau": "Mình kiêng đồ biển do dị ứng.",
+   "nhom": "mot_di_ung",
+   "ghi_chu": "đồ biển = hải sản",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-055",
+   "bot": "nep",
+   "cau": "Mình dị ứng nghêu sò ốc hến.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-056",
+   "bot": "nep",
+   "cau": "em bi di ung hai san a, nho giup em",
+   "nhom": "khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-057",
+   "bot": "nep",
+   "cau": "Em dị ứng trứng, ủa quên, cả đậu nành nữa ạ.",
+   "nhom": "chen_tu",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-058",
+   "bot": "nep",
+   "cau": "Hẻm 3 có quán hải sản ngon mà mình dị ứng tôm hùm.",
+   "nhom": "hem_k_ok",
+   "ghi_chu": "quán hải sản ngon không ở ngữ cảnh dị ứng; đọc thêm hải sản là đọc thừa",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-059",
+   "bot": "nep",
+   "cau": "Mình ăn chay.",
+   "nhom": "an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-060",
+   "bot": "nep",
+   "cau": "Hôm nay mùng một, mình ăn chay.",
+   "nhom": "an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-061",
+   "bot": "nep",
+   "cau": "minh an thuan chay",
+   "nhom": "khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "thuan_chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-062",
+   "bot": "nep",
+   "cau": "Mình dị ứng cả cá lẫn hạt macca.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-063",
+   "bot": "nep",
+   "cau": "Có quán nào hợp với người dị ứng mè không?",
+   "nhom": "cau_hoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-064",
+   "bot": "nep",
+   "cau": "Vợ mình dị ứng hải sản.",
+   "nhom": "nhieu_nguoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-065",
+   "bot": "nep",
+   "cau": "Any place without eggs and milk is ok.",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-066",
+   "bot": "nep",
+   "cau": "Chụp hình ở cửa sổ quán đó đẹp lắm.",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-067",
+   "bot": "nep",
+   "cau": "Tôm nướng hay tôm luộc gì mình cũng dị ứng.",
+   "nhom": "song_chin",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-068",
+   "bot": "nep",
+   "cau": "Nhớ giùm mình: dị ứng tôm sú, luôn cả cua biển.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-069",
+   "bot": "nep",
+   "cau": "Cà phê sữa đá ở đâu ngon?",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-070",
+   "bot": "nep",
+   "cau": "Đồ biển gì mình cũng dị ứng hết trơn.",
+   "nhom": "tat_ca_mot_so",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-071",
+   "bot": "nep",
+   "cau": "Mình rảnh vào trung tuần.",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-072",
+   "bot": "nep",
+   "cau": "Tụi em dị ứng hải săn hết á, nhất là tôm.",
+   "nhom": "sai_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-073",
+   "bot": "nep",
+   "cau": "Con ghẹ con cua gì mình cũng ăn không được.",
+   "nhom": "mon_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-074",
+   "bot": "nep",
+   "cau": "Có ai dị ứng tôm thì báo, mình dị ứng cua.",
+   "nhom": "nhieu_nguoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-075",
+   "bot": "nep",
+   "cau": "Mình dị ứng hầu hết hải sản.",
+   "nhom": "tat_ca_mot_so",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-076",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm nha mọi người.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-077",
+   "bot": "nep",
+   "cau": "Mình dị ứng với trễ hẹn lắm nha.",
+   "nhom": "gan_giong",
+   "ghi_chu": "nghĩa bóng",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-078",
+   "bot": "nep",
+   "cau": "Allergic to fish and squid.",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-079",
+   "bot": "nep",
+   "cau": "Cả nhà mình đều dị ứng bột mì với cá ngừ, với lại sò.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "oc_so",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-080",
+   "bot": "nep",
+   "cau": "Mình ăn chay kỳ, hôm nay đúng ngày chay.",
+   "nhom": "an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-081",
+   "bot": "nep",
+   "cau": "Dị ứng gluten nè, sữa nè, mà nói chung ít thôi.",
+   "nhom": "chen_tu",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-082",
+   "bot": "nep",
+   "cau": "Mình hay ăn đậu phộng rang khi coi phim.",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-083",
+   "bot": "nep",
+   "cau": "Dị ứng phô mai, trứng gà, gluten nữa, quán nào tránh được thì tốt.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "trung",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-084",
+   "bot": "nep",
+   "cau": "Trứng vịt lộn ở đâu ngon?",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-085",
+   "bot": "nep",
+   "cau": "Hẻm nhỏ xíu cũng ok, miễn không có tôm.",
+   "nhom": "hem_k_ok",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-086",
+   "bot": "nep",
+   "cau": "Mình dị ứng tép, tôm khô cũng không được.",
+   "nhom": "mot_di_ung",
+   "ghi_chu": "tép → tôm",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-087",
+   "bot": "nep",
+   "cau": "No tree nuts and peanuts for me, allergies.",
+   "nhom": "tieng_anh",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-088",
+   "bot": "nep",
+   "cau": "Người yêu mình dị ứng cua, mình dị ứng ghẹ, chắc né luôn quán cua.",
+   "nhom": "nhieu_nguoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-089",
+   "bot": "nep",
+   "cau": "Tầm 80k, mình ăn thuần chay.",
+   "nhom": "hem_k_ok",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "thuan_chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-090",
+   "bot": "nep",
+   "cau": "minh di ung cua va ghe",
+   "nhom": "khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-091",
+   "bot": "nep",
+   "cau": "Cua, à quên, đậu phộng nữa là mình dị ứng hết.",
+   "nhom": "chen_tu",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-092",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng trứng rồi mựt lá từ nhỏ tới giờ.",
+   "nhom": "sai_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-093",
+   "bot": "nep",
+   "cau": "Mình dị ứng cá hồi rồi lúa mỉ rồi các loại hạt.",
+   "nhom": "sai_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "hat_cay",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-094",
+   "bot": "nep",
+   "cau": "Nhóm có hai người dị ứng trứng, một người dị ứng sữa.",
+   "nhom": "nhieu_nguoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "trung"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-095",
+   "bot": "nep",
+   "cau": "Mình có cơ địa dị ứng với sữa bò.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-096",
+   "bot": "nep",
+   "cau": "Cửa hàng tiện lợi gần đây có không?",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-097",
+   "bot": "nep",
+   "cau": "Mình dị ừng cua.",
+   "nhom": "sai_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-098",
+   "bot": "nep",
+   "cau": "No tree nuts plus wheat for me, allergies.",
+   "nhom": "tieng_anh",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-099",
+   "bot": "nep",
+   "cau": "Dị ứng đậu hũ, luôn cả lúa mì, quán nào tránh được thì tốt.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-100",
+   "bot": "nep",
+   "cau": "Nhớ giùm mình nha, dị ứng cả hải sản lẫn đậu nành luôn.",
+   "nhom": "chen_tu",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-101",
+   "bot": "nep",
+   "cau": "Đồ có mè mình không ăn được nha.",
+   "nhom": "mon_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-102",
+   "bot": "nep",
+   "cau": "Mực ống, lòng trắng trừng với hạt macca là mình dị ửng hết.",
+   "nhom": "sai_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "hat_cay",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-103",
+   "bot": "nep",
+   "cau": "I can't eat shrimp or crab.",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-104",
+   "bot": "nep",
+   "cau": "Mình kiêng sữa, mực, dầu mè, lạc vì bị dị ứng.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "dau_phong",
+     "sua",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-105",
+   "bot": "nep",
+   "cau": "Dị ứng gluten kiểu nhẹ, nhưng vẫn muốn tránh.",
+   "nhom": "muc_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-106",
+   "bot": "nep",
+   "cau": "Em bị dị ứng protein sữa bò, phô mai cũng không được.",
+   "nhom": "dam_sua_che_pham",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-107",
+   "bot": "nep",
+   "cau": "Mình không thích ăn cá lắm.",
+   "nhom": "so_thich",
+   "ghi_chu": "không thích, không phải dị ứng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-108",
+   "bot": "nep",
+   "cau": "Tránh giúp mình bột mì với sữa bò, mực với lạc nha, mình bị dị ứng.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "dau_phong",
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-109",
+   "bot": "nep",
+   "cau": "Mình là người ăn chay nhưng vẫn ăn trứng.",
+   "nhom": "an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-110",
+   "bot": "nep",
+   "cau": "Miễn không có cua là được.",
+   "nhom": "thi_duoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-111",
+   "bot": "nep",
+   "cau": "Budget 200k, k ăn được hải sản.",
+   "nhom": "hem_k_ok",
+   "ghi_chu": "k vừa là nghìn vừa là không",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-112",
+   "bot": "nep",
+   "cau": "Mình ăn không được tôm, còn lại ăn hết.",
+   "nhom": "mon_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-113",
+   "bot": "nep",
+   "cau": "Gần trung tâm thì tiện hơn.",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-114",
+   "bot": "nep",
+   "cau": "Em bi di ung tep roi ca hoi a.",
+   "nhom": "khong_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-115",
+   "bot": "nep",
+   "cau": "minh bi di ung lac roi trung, muc ong nua, ca cua bien tu nho toi gio",
+   "nhom": "khong_dau",
+   "ghi_chu": "sinh từ mẫu danh sách; «ca» không dấu ở đây là «cả», đọc thêm cá là đọc thừa an toàn",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "muc",
+     "dau_phong",
+     "trung"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-116",
+   "bot": "nep",
+   "cau": "Mình theo đạo Hồi, cần đồ ăn halal.",
+   "nhom": "an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "halal"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-117",
+   "bot": "nep",
+   "cau": "Mình dị ứng đậu nàng.",
+   "nhom": "sai_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-118",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng sò, cá ngừ nữa từ nhỏ tới giờ.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-119",
+   "bot": "nep",
+   "cau": "dị ứng tôm vs ghẹ nha mng",
+   "nhom": "teencode",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-120",
+   "bot": "nep",
+   "cau": "Tranh giup minh ca cac loai hat, muc la lan hau nha, minh bi di ung.",
+   "nhom": "khong_dau",
+   "ghi_chu": "sinh từ mẫu danh sách; «ca» không dấu ở đây là «cả», đọc thêm cá là đọc thừa an toàn",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "oc_so",
+     "hat_cay"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-121",
+   "bot": "nep",
+   "cau": "Dị ứng hải sản có ăn lẩu thái được không ta?",
+   "nhom": "cau_hoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-122",
+   "bot": "nep",
+   "cau": "Dị ứng cua đồng với lại hạt điều, quán nào tránh được thì tốt.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-123",
+   "bot": "nep",
+   "cau": "Ăn ốc là mình nổi mẩn đỏ liền.",
+   "nhom": "mon_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-124",
+   "bot": "nep",
+   "cau": "Mình dị ứng tất cả hải sản.",
+   "nhom": "tat_ca_mot_so",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-125",
+   "bot": "nep",
+   "cau": "My allergies: peanuts plus tree nuts.",
+   "nhom": "tieng_anh",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-126",
+   "bot": "nep",
+   "cau": "Em bị dị ứng đậu phộng từ nhỏ.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-127",
+   "bot": "nep",
+   "cau": "Mì Ý với mấy món bột mì mình ăn không được.",
+   "nhom": "mon_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-128",
+   "bot": "nep",
+   "cau": "minh an chay truong",
+   "nhom": "khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-129",
+   "bot": "nep",
+   "cau": "Anh dị ứng bột mì với trứng gà, với lại dầu mè, đặt bàn nhớ dặn quán.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung",
+     "me",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-130",
+   "bot": "nep",
+   "cau": "OK, vậy chốt quán chay nha, mình ăn chay.",
+   "nhom": "hem_k_ok",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-131",
+   "bot": "nep",
+   "cau": "Mình dị ứng nước mắm, chắc do cá.",
+   "nhom": "dam_sua_che_pham",
+   "ghi_chu": "nước mắm → cá",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-132",
+   "bot": "nep",
+   "cau": "Mình dị ứng trứng sống, mayonnaise cũng tránh.",
+   "nhom": "song_chin",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-133",
+   "bot": "nep",
+   "cau": "Mình cần quán halal, dưới 200k là ok.",
+   "nhom": "hem_k_ok",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "halal"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-134",
+   "bot": "nep",
+   "cau": "k sao, mình dị ứng đậu nành thôi, còn lại ok.",
+   "nhom": "hem_k_ok",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-135",
+   "bot": "nep",
+   "cau": "a di ung vẹm r cua đồng r tép, book bàn nhớ dặn quán.",
+   "nhom": "teencode",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-136",
+   "bot": "nep",
+   "cau": "Mình dị ứng cả cua đồng lẫn nước tương.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-137",
+   "bot": "nep",
+   "cau": "Mình dị ứng cá, hồi nhỏ bị nặng lắm, giờ thêm mực.",
+   "nhom": "chen_tu",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-138",
+   "bot": "nep",
+   "cau": "Tránh giúp mình hải sản, cái này quan trọng nha, với trứng gà nha, mình bị dị ứng.",
+   "nhom": "chen_tu",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-139",
+   "bot": "nep",
+   "cau": "My friend is allergic to dairy, I'm fine.",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-140",
+   "bot": "nep",
+   "cau": "Dị ứng cua nặng lắm, chỉ cần chung nồi là ngứa.",
+   "nhom": "muc_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-141",
+   "bot": "nep",
+   "cau": "Trung thu này đi đâu chơi?",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-142",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng đồ biển với lại đạm sữa bò từ nhỏ tới giờ.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san",
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-143",
+   "bot": "nep",
+   "cau": "Mình không ăn chay đâu, ăn gì cũng được.",
+   "nhom": "an_kieng",
+   "ghi_chu": "phủ định ăn chay",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-144",
+   "bot": "nep",
+   "cau": "Mình dị ửng trừng gà, ốc nữa.",
+   "nhom": "sai_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-145",
+   "bot": "nep",
+   "cau": "mk dị ứng tôm nha",
+   "nhom": "teencode",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-146",
+   "bot": "nep",
+   "cau": "Mình muốn ăn cá kho tộ.",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-147",
+   "bot": "nep",
+   "cau": "mình bị allergy với shrimp",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-148",
+   "bot": "nep",
+   "cau": "nho gium minh: di ung nuoc tuong roi cua dong",
+   "nhom": "khong_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-149",
+   "bot": "nep",
+   "cau": "Quán này có hợp người dị ứng động vật có vỏ không?",
+   "nhom": "cau_hoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-150",
+   "bot": "nep",
+   "cau": "anh di ung ca voi trung, dat ban nho dan quan",
+   "nhom": "khong_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-151",
+   "bot": "nep",
+   "cau": "Không bỏ trứng thì mình ăn được.",
+   "nhom": "thi_duoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-152",
+   "bot": "nep",
+   "cau": "No gluten for me, I'm celiac.",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-153",
+   "bot": "nep",
+   "cau": "cả nhà mình đều dị ứng dầu mè vs lạc, vs lại cua",
+   "nhom": "teencode",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "dau_phong",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-154",
+   "bot": "nep",
+   "cau": "Mình ăn chay mà dị ứng đậu nành thì ăn gì?",
+   "nhom": "cau_hoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ],
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-155",
+   "bot": "nep",
+   "cau": "t dị ứng cả tép, mè lẫn trứng nhe.",
+   "nhom": "teencode",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "trung",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-156",
+   "bot": "nep",
+   "cau": "Mình dị ứng... ừm... sò điệp với hàu.",
+   "nhom": "chen_tu",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-157",
+   "bot": "nep",
+   "cau": "Mình ăn bơ đậu phộng, bột mì, vừng và ốc không được, dị ứng.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so",
+     "dau_phong",
+     "me",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-158",
+   "bot": "nep",
+   "cau": "Tránh giúp mình mực ống với cá nha, mình bị dị ứng.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-159",
+   "bot": "nep",
+   "cau": "Món nào có đậu phộng rắc lên là mình chịu.",
+   "nhom": "mon_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-160",
+   "bot": "nep",
+   "cau": "Allergic to squid plus clams, please keep that in mind.",
+   "nhom": "tieng_anh",
+   "ghi_chu": "sinh từ mẫu danh sách; oysters/clams/mussels → động vật có vỏ",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-161",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm nhưng cua thì ăn thoải mái.",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-162",
+   "bot": "nep",
+   "cau": "Tôm sú, để coi, nước tương, rồi cua là mình dị ứng hết.",
+   "nhom": "chen_tu",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-163",
+   "bot": "nep",
+   "cau": "Mình dị ứng vài loại hải sản, chủ yếu là tôm với cua.",
+   "nhom": "tat_ca_mot_so",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "hai_san"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-164",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng cua đồng với lạc từ nhỏ tới giờ.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-165",
+   "bot": "nep",
+   "cau": "Anh dị ứng mực, cái này quan trọng nha, với lúa mì, đặt bàn nhớ dặn quán.",
+   "nhom": "chen_tu",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-166",
+   "bot": "nep",
+   "cau": "Em bị dị ứng cá hồi, luôn cả mực lá ạ.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-167",
+   "bot": "nep",
+   "cau": "Mình không phải dị ứng sữa, chỉ là không thích.",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-168",
+   "bot": "nep",
+   "cau": "Mình dị ứng sửa.",
+   "nhom": "sai_dau",
+   "ghi_chu": "sửa = sữa gõ sai dấu",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-169",
+   "bot": "nep",
+   "cau": "Dị ứng đậu phộng mức sốc phản vệ, đi đâu cũng mang bút tiêm.",
+   "nhom": "muc_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-170",
+   "bot": "nep",
+   "cau": "Mình không kén ăn đâu.",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-171",
+   "bot": "nep",
+   "cau": "Mình dị ứng trứng, bánh flan có trứng không?",
+   "nhom": "cau_hoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-172",
+   "bot": "nep",
+   "cau": "Mình dị ứng hải sãn với sửa.",
+   "nhom": "sai_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san",
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-173",
+   "bot": "nep",
+   "cau": "My allergies: tree nuts and peanuts.",
+   "nhom": "tieng_anh",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-174",
+   "bot": "nep",
+   "cau": "Mình dị ứng trừng gà.",
+   "nhom": "sai_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-175",
+   "bot": "nep",
+   "cau": "minh khong an duoc gluten dau, banh mi cung khong",
+   "nhom": "khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-176",
+   "bot": "nep",
+   "cau": "t dị ứng đậu fộng vs hạt điều",
+   "nhom": "teencode",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-177",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng mực, ăn vô là sưng môi.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-178",
+   "bot": "nep",
+   "cau": "Mình dị ứng sửa bò với trứng.",
+   "nhom": "sai_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-179",
+   "bot": "nep",
+   "cau": "I'm allergic to dairy plus crab.",
+   "nhom": "tieng_anh",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-180",
+   "bot": "nep",
+   "cau": "Con tôm là kẻ thù của mình, ăn vô là nổi mẩn.",
+   "nhom": "mon_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-181",
+   "bot": "nep",
+   "cau": "Mình ngán tôm rồi, đổi món khác đi.",
+   "nhom": "so_thich",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-182",
+   "bot": "nep",
+   "cau": "Mình dị ứng sữa đậu nành, sữa bò thì bình thường.",
+   "nhom": "dam_sua_che_pham",
+   "ghi_chu": "sữa đậu nành → đậu nành; đọc thêm sữa là đọc thừa",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-183",
+   "bot": "nep",
+   "cau": "Mục tiêu tuần này là đi ăn hết phố ẩm thực.",
+   "nhom": "gan_giong",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-184",
+   "bot": "nep",
+   "cau": "minh bi di ung tat ca cac loai hai san luon",
+   "nhom": "khong_dau",
+   "ghi_chu": "«tat ca» = tất cả; đọc thêm cá là đọc thừa an toàn",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-185",
+   "bot": "nep",
+   "cau": "e bị dị ứg tép, cua đồng, đậu nành nữa ạ",
+   "nhom": "teencode",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-186",
+   "bot": "nep",
+   "cau": "Cả đậu phộng lẫn mực lá là mình dị ứng hết.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-187",
+   "bot": "nep",
+   "cau": "Hỏi thử coi có ai dị ứng hải sản không nha.",
+   "nhom": "nhieu_nguoi",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "doc_thua_an_toan": true
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-188",
+   "bot": "nep",
+   "cau": "Tránh giúp mình mực lá, hình như cả trứng gà nữa nha, mình bị dị ứng.",
+   "nhom": "chen_tu",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-189",
+   "bot": "nep",
+   "cau": "Tôi dị ứng lạc.",
+   "nhom": "mot_di_ung",
+   "ghi_chu": "lạc = đậu phộng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-190",
+   "bot": "nep",
+   "cau": "Mình dị ứng bột mì.",
+   "nhom": "mot_di_ung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-191",
+   "bot": "nep",
+   "cau": "Nhớ giùm mình: dị ứng gluten nè, sữa nè, ờ, óc chó nữa.",
+   "nhom": "chen_tu",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay",
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-192",
+   "bot": "nep",
+   "cau": "Mình dị ứng đạm sữa bò.",
+   "nhom": "dam_sua_che_pham",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-193",
+   "bot": "nep",
+   "cau": "Mình ăn chay không hành tỏi.",
+   "nhom": "an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-194",
+   "bot": "nep",
+   "cau": "minh kieng dam sua bo voi hat dieu, voi lai dau nanh vi bi di ung",
+   "nhom": "khong_dau",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay",
+     "sua",
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-195",
+   "bot": "nep",
+   "cau": "mình ăn hạt điều, ghẹ, tôm vs lại nghêu k đc, di ung",
+   "nhom": "teencode",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "oc_so",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-196",
+   "bot": "nep",
+   "cau": "Anh dị ứng các loại hạt, vẹm và dầu mè, đặt bàn nhớ dặn quán.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so",
+     "hat_cay",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-197",
+   "bot": "nep",
+   "cau": "Mình dị ứng con tôm, hến và cua.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-198",
+   "bot": "nep",
+   "cau": "mk dị ứng sò vs hàu",
+   "nhom": "teencode",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-199",
+   "bot": "nep",
+   "cau": "e bị dj ứng bột mì vs tôm ạ",
+   "nhom": "teencode",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-200",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng đậu hũ.",
+   "nhom": "mot_di_ung",
+   "ghi_chu": "đậu hũ → đậu nành",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-201",
+   "bot": "nep",
+   "cau": "Dị ứng các loại hạt, đồ biển và bột mì, quán nào tránh được thì tốt.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san",
+     "hat_cay",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-202",
+   "bot": "nep",
+   "cau": "Tui dị ứng gluten, cua biển và trứng gà nha.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua",
+     "trung",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-203",
+   "bot": "nep",
+   "cau": "Anh dị ứng mè với lạc, với lại cá biển, đặt bàn nhớ dặn quán.",
+   "nhom": "danh_sach",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "dau_phong",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-204",
+   "bot": "nep",
+   "cau": "e ăn vegan nhe",
+   "nhom": "teencode",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "thuan_chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v2-np2-nh-205",
+   "bot": "nep",
+   "cau": "di ung cả sò điệp, hạt điều lẫn bơ đậu phộng, quán nào tránh dc thì tốt",
+   "nhom": "teencode",
+   "ghi_chu": "sinh từ mẫu danh sách",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so",
+     "dau_phong",
+     "hat_cay"
+    ]
+   }
+  }
+ ]
+}

@@ -43,6 +43,9 @@ type YeuCau struct {
 	// CongCu is every tool the request declares, by name: ADK's tool map and
 	// the function declarations in the generation config.
 	CongCu []string
+	// PhanHoiCongCu are the tool responses the request carries back to the
+	// model, each as JSON: where the loop shows evidence under aliases.
+	PhanHoiCongCu []string
 }
 
 // Chu is every word the model reads in the request: the system instruction,
@@ -71,7 +74,10 @@ func DocYeuCau(raw []byte) (YeuCau, error) {
 		Contents []struct {
 			Role  string `json:"role"`
 			Parts []struct {
-				Text string `json:"text"`
+				Text             string `json:"text"`
+				FunctionResponse *struct {
+					Response json.RawMessage `json:"response"`
+				} `json:"functionResponse"`
 			} `json:"parts"`
 		} `json:"contents"`
 		Config *struct {
@@ -95,6 +101,9 @@ func DocYeuCau(raw []byte) (YeuCau, error) {
 		var b strings.Builder
 		for _, p := range c.Parts {
 			b.WriteString(p.Text)
+			if p.FunctionResponse != nil {
+				y.PhanHoiCongCu = append(y.PhanHoiCongCu, string(p.FunctionResponse.Response))
+			}
 		}
 		y.Contents = append(y.Contents, NoiDung{Vai: c.Role, Chu: b.String()})
 	}
@@ -119,6 +128,9 @@ func DocYeuCau(raw []byte) (YeuCau, error) {
 type LuotDaChay struct {
 	Turn   aiharness.Turn
 	YeuCau []YeuCau
+	// Chang is the stage of each request, from the script step it consumed
+	// ("" past the script's end).
+	Chang  []string
 	SuKien []SuKien
 	// KetThuc and Ma are how Run ended; Chu is the answer.
 	KetThuc obs.KetThuc
@@ -156,11 +168,14 @@ func batBien1(l LuotDaChay) []Truot {
 
 const moKhoiMayChu = `<du_lieu nguon="may_chu">`
 
-// Invariant 2: the «now» line of every request carries the RFC 3339 form, at
-// +07:00, of pairpaper.Local(Turn.Luc) -- computed here, not by the engine's
-// own formatter, so dropping the line, reading the worker's clock or printing
-// UTC is red. The words around it are design 01 §3.1's; the eval reads only
-// the RFC 3339 part.
+// Invariant 2: the «now» line of every request that reads time -- the
+// router's, which resolves dates, and the prose answer's -- carries the RFC
+// 3339 form, at +07:00, of pairpaper.Local(Turn.Luc), computed here, not by
+// the engine's own formatter, so dropping the line, reading the worker's
+// clock or printing UTC is red. The grader, the structured answer and the
+// verifier read no clock (the constraints carry the resolved instant). The
+// words around the line are design 01 §3.1's; the eval reads only the RFC
+// 3339 part.
 func batBien2(l LuotDaChay) []Truot {
 	muon := pairpaper.Local(l.Turn.Luc).Format(time.RFC3339)
 	if !strings.HasSuffix(muon, "+07:00") {
@@ -168,6 +183,9 @@ func batBien2(l LuotDaChay) []Truot {
 	}
 	var out []Truot
 	for i, y := range l.YeuCau {
+		if c := changCua(l, i); c != ChangHieu && c != ChangTraLoi {
+			continue
+		}
 		dong, err := dongBayGio(y)
 		if err != nil {
 			out = append(out, Truot{KiemBatBien2, fmt.Sprintf("yêu cầu %d: %v", i+1, err)})
@@ -316,4 +334,12 @@ func batBien8(l LuotDaChay) []Truot {
 		}
 	}
 	return out
+}
+
+// changCua is request i's stage, "" past the script.
+func changCua(l LuotDaChay, i int) string {
+	if i < len(l.Chang) {
+		return l.Chang[i]
+	}
+	return ""
 }

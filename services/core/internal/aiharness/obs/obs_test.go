@@ -15,6 +15,8 @@ func mau() TurnRecord {
 		InvocationID: "0b7d3a1c-5f2e-4c1a-9e3b-2d6f8a4c1e90", LanThu: 1, Bot: BotNep, Lenh: LenhHoi,
 		Guard: GuardProceed, OutGuard: OutNone, KetThuc: KetThucXong, LoiMoHinh: LoiKhong,
 		PromptVersion: "0123456789ab", Buoc: 1, SoGoiMoHinh: 1, TokensIn: 120, TokensOut: 40, MsTong: 5,
+		NhanGuard: "sach", YDinh: "find_places", SoYDinh: 1, Tien: "none", Huong: "truy_hoi_mot_buoc", Duong: DuongTruyHoi,
+		CongCu: CacCongCu{"search_places"}, VongSua: 1, KetKiem: KiemDat,
 	}
 }
 
@@ -43,6 +45,12 @@ func TestBanGhiKhongCoTruongChuTuDo(t *testing.T) {
 				t.Errorf("%s (%s) không có Valid(): không đóng", f.Name, f.Type)
 			}
 		case reflect.Int, reflect.Bool:
+		case reflect.Slice:
+			// Only a list of one closed string type, itself validated.
+			if f.Type.Elem().Kind() != reflect.String || f.Type.Elem() == reflect.TypeOf("") ||
+				!f.Type.Elem().Implements(vtype) || !f.Type.Implements(vtype) {
+				t.Errorf("%s (%s) không phải danh sách đóng", f.Name, f.Type)
+			}
 		default:
 			t.Errorf("%s có kiểu %s: chỉ enum, số nguyên và bool", f.Name, f.Type)
 		}
@@ -74,6 +82,14 @@ func TestMoiTruongChuoiTuChoiChu(t *testing.T) {
 	}
 	if n < 9 {
 		t.Fatalf("chỉ thử %d trường chuỗi", n)
+	}
+	// The closed list refuses a question, and a repeated name.
+	for _, bad := range []CacCongCu{{CongCu(cau)}, {"search_places", "search_places"}} {
+		r := mau()
+		r.CongCu = bad
+		if r.Valid() == nil {
+			t.Errorf("cong_cu nhận %v", bad)
+		}
 	}
 	neg := mau()
 	neg.TokensIn = -1

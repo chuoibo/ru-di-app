@@ -1,7 +1,11 @@
 {
   "ten": "an-toan",
-  "mo_ta": "Ứng viên bị giữ lại vì an toàn (finish SAFETY, không chữ).",
+  "mo_ta": "Bước trả lời bị chặn vì an toàn.",
   "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
     {
       "chang": "tra_loi",
       "chu": "",

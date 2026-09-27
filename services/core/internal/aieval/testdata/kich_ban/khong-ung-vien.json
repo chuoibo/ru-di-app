@@ -1,7 +1,11 @@
 {
   "ten": "khong-ung-vien",
-  "mo_ta": "Nhà cung cấp chặn chính câu hỏi: không có ứng viên nào; không thử lại.",
+  "mo_ta": "Nhà cung cấp chặn chính yêu cầu trả lời (không ứng viên).",
   "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
     {
       "chang": "tra_loi",
       "loi": {

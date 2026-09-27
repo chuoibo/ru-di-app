@@ -1,0 +1,14 @@
+{
+  "ten": "hoi-lai",
+  "mo_ta": "Router hỏi lại một câu; verifier chấm câu hỏi và hai lựa chọn rồi lượt kết thúc.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"find_places\"], \"huong\": \"hoi_lai\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": true, \"tra_loi_cau_cho\": false, \"tu_tin\": \"thap\", \"cau_hoi_lai\": \"Bạn muốn đi ở thành phố nào?\", \"lua_chon_hoi_lai\": [\"Vũng Tàu\", \"Đà Lạt\"]}"
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}, {\"so\": 2, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}, {\"so\": 3, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

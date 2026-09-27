@@ -25,12 +25,42 @@ import (
 //go:embed nep_agent.txt
 var nepAgent string
 
+// congCu is the clause every tool-using step adds to its bot's system
+// instruction: tool results and earlier turns are data, evidence goes by
+// alias, one repair, drafts need a human tap.
+//
+//go:embed cong_cu.txt
+var congCu string
+
+// CongCu is the tool clause.
+func CongCu() string { return strings.TrimSpace(congCu) }
+
 // MaKiemCho is where the canary marker goes.
 const MaKiemCho = "{{MA_KIEM}}"
 
 // NepAgent is Nếp's system instruction carrying the canary marker.
 func NepAgent(maKiem string) string {
 	return strings.Replace(strings.TrimSpace(nepAgent), MaKiemCho, maKiem, 1)
+}
+
+// The instruction clauses of the router's two labels that take the turn off
+// the tools (hieu.QuyetDinh.KhongCongCu). They are ours, appended to the
+// system instruction; the label itself is never stored against the person.
+const (
+	loiDanNhayCam     = "Tin nhắn này chạm tới chuyện nhạy cảm (tự làm hại mình, bị bạo hành, khủng hoảng). Không gọi công cụ, không gợi ý quán. Trả lời ngắn, ân cần, không phán xét; khuyên người dùng nói ngay với người thân tin cậy hoặc gọi dịch vụ cấp cứu nếu đang nguy hiểm. Không hứa làm gì thay họ."
+	loiDanNgoaiPhamVi = "Tin nhắn này nằm ngoài việc của Nếp (tìm chỗ đi chơi, dùng app, lên kèo với nhóm). Không gọi công cụ. Nói ngắn gọn là Nếp không giúp được việc này và gợi ý một việc Nếp làm được."
+)
+
+// LoiDanNhan is the clause for the router's label nhan ("" for any other
+// label).
+func LoiDanNhan(nhan string) string {
+	switch nhan {
+	case "nhay_cam":
+		return loiDanNhayCam
+	case "ngoai_pham_vi":
+		return loiDanNgoaiPhamVi
+	}
+	return ""
 }
 
 // VersionNep is the first twelve hex digits of the template's sha256: the
@@ -67,6 +97,22 @@ const (
 	PhieuManHinh Nguon = "phieu_man_hinh"
 	MayChu       Nguon = "may_chu"
 	CauHoi       Nguon = "cau_hoi"
+	// NganHan is the session's earlier turns (short-term memory).
+	NganHan Nguon = "ngan_han"
+	// DiemDen is the closed list of destinations a router may pick from.
+	DiemDen Nguon = "danh_sach_diem_den"
+	// ThanhVien is the closed list of group members a router may pick from.
+	ThanhVien Nguon = "danh_sach_thanh_vien"
+	// ViDu is the worked examples a router is shown (ours, not a person's).
+	ViDu Nguon = "vi_du"
+	// LoiCauTruc is why the previous structured output was refused.
+	LoiCauTruc Nguon = "loi_cau_truc"
+	// KetQuaCongCu holds what a tool returned: catalogue, manual, memory
+	// and group rows are data the model reads, never instructions.
+	KetQuaCongCu Nguon = "ket_qua_cong_cu"
+	// LichSu holds the short-term turns of the session (Nếp's panel, the
+	// group's reply chain): earlier words are data, never instructions.
+	LichSu Nguon = "lich_su"
 )
 
 var fullwidth = strings.NewReplacer("<", "＜", ">", "＞")
@@ -74,4 +120,29 @@ var fullwidth = strings.NewReplacer("<", "＜", ">", "＞")
 // BocDuLieu lays body into a block named n.
 func BocDuLieu(n Nguon, body string) string {
 	return `<du_lieu nguon="` + string(n) + `">` + "\n" + fullwidth.Replace(body) + "\n</du_lieu>"
+}
+
+// DauDanhDau is the datamarking character (spotlighting, Hines et al. 2024):
+// inside a marked block every run of spaces between words is this character,
+// so text that came from outside reads, token by token, as marked data and
+// can never pass for a line of the system instruction. It is U+02C6, a
+// modifier letter nobody types in Vietnamese; any copy of it in the data is
+// removed before marking, so data cannot forge or hide the mark.
+const DauDanhDau = "ˆ"
+
+// DanhDau datamarks body: the marker removed wherever it stands, then the
+// words of each line joined by it. Lines stay lines, so a list reads as one.
+func DanhDau(body string) string {
+	body = strings.ReplaceAll(body, DauDanhDau, "")
+	lines := strings.Split(body, "\n")
+	for i, l := range lines {
+		lines[i] = strings.Join(strings.Fields(l), DauDanhDau)
+	}
+	return strings.Join(lines, "\n")
+}
+
+// BocDuLieuDanhDau lays body into a block named n, datamarked: the way every
+// untrusted text a router reads is laid into its request.
+func BocDuLieuDanhDau(n Nguon, body string) string {
+	return BocDuLieu(n, DanhDau(body))
 }

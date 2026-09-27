@@ -176,7 +176,7 @@ func TestGiaoThucDong(t *testing.T) {
 	if rc != raDo || len(dong) != 5 {
 		t.Fatalf("thoát %d, %d dòng:\n%s\n%s", rc, len(dong), out, errw)
 	}
-	if !strings.Contains(dong[0], `"max_model_calls_per_turn":8`) || !strings.Contains(dong[0], `"cong_cu":{"nep":[]}`) {
+	if !strings.Contains(dong[0], `"max_model_calls_per_turn":8`) || !strings.Contains(dong[0], `"cong_cu":{"nep":["search_places",`) {
 		t.Fatalf("hang: %s", dong[0])
 	}
 	for i := 1; i <= 2; i++ {
@@ -209,5 +209,38 @@ func TestGiaoThucDong(t *testing.T) {
 	// A line that is not JSON stops the protocol.
 	if rc, _, _ := goi(t, "{không phải json\n", "--mo-hinh", "kich-ban", "--kich-ban", kichBanGoc); rc != raSai {
 		t.Fatalf("dòng hỏng: thoát %d", rc)
+	}
+}
+
+// --chi-buoc hieu runs the router's T1 set green with no request leaving the
+// process, and refuses a converted T3 set, which needs a real model.
+func TestChiBuocHieu(t *testing.T) {
+	t.Setenv("GEMINI_API_KEY", "khoa-gia-khong-duoc-dung")
+	d := &demRa{}
+	cu := http.DefaultTransport
+	http.DefaultTransport = d
+	defer func() { http.DefaultTransport = cu }()
+	rc, out, errw := goi(t, "", "--mo-hinh", "kich-ban", "--chi-buoc", "hieu", "--bo", "../../internal/aieval/testdata/hieu/t1-hieu.json")
+	if rc != raXanh || d.n.Load() != 0 {
+		t.Fatalf("thoát %d, %d yêu cầu:\n%s", rc, d.n.Load(), errw)
+	}
+	dong := strings.Split(strings.TrimSpace(out), "\n")
+	var cuoi struct {
+		TongKet struct {
+			SoCa int `json:"so_ca"`
+			Dat  int `json:"dat"`
+		} `json:"tong_ket"`
+	}
+	if err := json.Unmarshal([]byte(dong[len(dong)-1]), &cuoi); err != nil || cuoi.TongKet.SoCa < 20 || cuoi.TongKet.Dat != cuoi.TongKet.SoCa {
+		t.Fatalf("%v %+v", err, cuoi)
+	}
+	rc, _, errw = goi(t, "", "--mo-hinh", "kich-ban", "--chi-buoc", "hieu", "--bo", "../../internal/aieval/testdata/hieu/tien_v3.json")
+	if rc != raSai || !strings.Contains(errw, "router thật") {
+		t.Fatalf("thoát %d:\n%s", rc, errw)
+	}
+	for _, args := range [][]string{{"--mo-hinh", "kich-ban", "--chi-buoc", "hieu"}, {"--mo-hinh", "kich-ban", "--chi-buoc", "tra_loi", "--bo", boGoc}} {
+		if rc, _, _ := goi(t, "", args...); rc != raSai {
+			t.Errorf("%v: thoát %d", args, rc)
+		}
 	}
 }

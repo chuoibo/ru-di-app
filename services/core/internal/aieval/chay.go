@@ -15,6 +15,10 @@ import (
 
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/testkit"
+	"mobile/services/core/internal/aiharness/tools"
+	"mobile/services/core/internal/aiharness/trinho"
+	"mobile/services/core/internal/aiharness/truyhoi"
 )
 
 // Roles a run plays in a corpus.
@@ -93,6 +97,7 @@ func chayLuot(ctx context.Context, c Ca, kb KichBan, lap int) (LuotDaCham, KetQu
 		aiharness.WithMaKiem(g.MaKiem),
 		aiharness.WithRetryWait(func(int) time.Duration { return 0 }),
 		aiharness.WithClock(dongHo),
+		aiharness.WithNguon(nguonCua(c.DauVao.TheGioi, g.Turn.Luc)),
 	)
 	if err != nil {
 		return LuotDaCham{}, KetQuaChay{}, err
@@ -105,9 +110,10 @@ func chayLuot(ctx context.Context, c Ca, kb KichBan, lap int) (LuotDaCham, KetQu
 		return LuotDaCham{}, KetQuaChay{}, runErr
 	}
 	l := LuotDaCham{
-		LuotDaChay: LuotDaChay{Turn: g.Turn, SuKien: sink.SuKien(), KetThuc: res.Record.KetThuc, Chu: res.Text, BanGhi: res.Record},
-		MaKiem:     g.MaKiem,
-		NhatKy:     nhatKy.String(),
+		LuotDaChay:  LuotDaChay{Turn: g.Turn, SuKien: sink.SuKien(), KetThuc: res.Record.KetThuc, Chu: res.Text, BanGhi: res.Record},
+		BuocKichBan: kb.Buoc,
+		MaKiem:      g.MaKiem,
+		NhatKy:      nhatKy.String(),
 		// How many replies the script holds: a turn that asked for more ran
 		// off its script.
 		SoBuocKichBan: len(kb.Buoc),
@@ -124,6 +130,11 @@ func chayLuot(ctx context.Context, c Ca, kb KichBan, lap int) (LuotDaCham, KetQu
 			return LuotDaCham{}, KetQuaChay{}, fmt.Errorf("đọc lại yêu cầu: %w", err)
 		}
 		l.YeuCau = append(l.YeuCau, y)
+		c := ""
+		if i := len(l.YeuCau) - 1; i < len(kb.Buoc) {
+			c = kb.Buoc[i].Chang
+		}
+		l.Chang = append(l.Chang, c)
 		sum := sha256.Sum256(raw)
 		out.YeuCauHash = append(out.YeuCauHash, hex.EncodeToString(sum[:]))
 	}
@@ -282,4 +293,43 @@ func (tk *TongKet) dem(r KetQuaChay) {
 	} else {
 		tk.KhongDat++
 	}
+}
+
+// nguonCua builds the engine's data ports over a case's world, as the
+// in-memory fakes of aiharness/testkit. Every port is set: an empty world
+// answers with nothing, never with loi_nguon.
+func nguonCua(g *TheGioi, luc time.Time) tools.NguonDuLieu {
+	if g == nil {
+		g = &TheGioi{}
+	}
+	bang := func(ms []MucTheGioi, n truyhoi.Nguon) []truyhoi.BangChung {
+		var out []truyhoi.BangChung
+		for _, m := range ms {
+			tr := make(map[string]string, len(m.Truong))
+			for k, v := range m.Truong {
+				tr[k] = v
+			}
+			out = append(out, truyhoi.BangChung{ID: m.ID, Nguon: n, Truong: tr})
+		}
+		return out
+	}
+	cho := testkit.Cho{DiemDens: bang(g.DiemDen, "")}
+	quan := &testkit.TheoLuot{}
+	for _, l := range g.TruyHoi {
+		kq := truyhoi.KetQuaTruyHoi{BangChung: bang(l.Quan, truyhoi.Places)}
+		if len(l.BiLoai) > 0 {
+			kq.BiLoai = map[truyhoi.RangBuoc]int{}
+			for r, n := range l.BiLoai {
+				kq.BiLoai[truyhoi.RangBuoc(r)] = n
+			}
+		}
+		quan.KetQua = append(quan.KetQua, kq)
+		cho.Quans = append(cho.Quans, kq.BangChung...)
+	}
+	tn := testkit.MoiTriNho()
+	for _, f := range g.TriNho {
+		// A world is checked (TheGioi.kiem) before it is built.
+		_, _ = tn.Ghi(context.Background(), g.NguoiHoi, trinho.SuThatMoi{NoiDung: f.NoiDung, Loai: trinho.LoaiSuThat(f.Loai), TuLuc: luc, Nguon: trinho.NoiRo})
+	}
+	return tools.NguonDuLieu{Quan: quan, Cho: cho, TriNho: tn}
 }

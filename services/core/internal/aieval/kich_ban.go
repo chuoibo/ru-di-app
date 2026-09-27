@@ -24,7 +24,11 @@ type KichBan struct {
 
 // BuocKichBan is one scripted reply: exactly one of Chu, Goi and Loi.
 type BuocKichBan struct {
-	// Chang is the stage the call belongs to. S1 has one: the answer.
+	// Chang is the stage the call belongs to (cacChang): the router, the
+	// prose answer, the retrieval grader, the grounded structured answer or
+	// the verifier. The scorer reads it: the canary marker belongs in the
+	// system instruction of the prose answer only, and the «now» line in the
+	// router's and the prose answer's requests.
 	Chang string `json:"chang"`
 	// Chu is a text answer. MaKiemCho in it is replaced by the run's canary
 	// marker, so a script can play a model that leaks it; {{SO_DIEN_THOAI}},
@@ -75,8 +79,17 @@ var lienLacGia = strings.NewReplacer(
 	"{{EMAIL}}", "datban"+"@"+"quan-gia.example",
 )
 
-// ChangTraLoi is the answer stage, the only stage at S1.
-const ChangTraLoi = "tra_loi"
+// The stages of a Nếp turn on the router path, in the order a turn can reach
+// them.
+const (
+	ChangHieu          = "hieu"
+	ChangTraLoi        = "tra_loi"
+	ChangCham          = "cham"
+	ChangTraLoiCauTruc = "tra_loi_cau_truc"
+	ChangKiem          = "kiem"
+)
+
+var cacChang = map[string]bool{ChangHieu: true, ChangTraLoi: true, ChangCham: true, ChangTraLoiCauTruc: true, ChangKiem: true}
 
 var finishHopLe = map[string]bool{
 	"": true, string(genai.FinishReasonStop): true, string(genai.FinishReasonMaxTokens): true,
@@ -113,8 +126,8 @@ func (k KichBan) Kiem() error {
 		if n != 1 {
 			return fmt.Errorf("kịch bản %s bước %d: cần đúng một trong chu, goi, loi", k.Ten, i+1)
 		}
-		if b.Chang != ChangTraLoi {
-			return fmt.Errorf("kịch bản %s bước %d: chặng %q không có ở S1", k.Ten, i+1, b.Chang)
+		if !cacChang[b.Chang] {
+			return fmt.Errorf("kịch bản %s bước %d: chặng %q lạ", k.Ten, i+1, b.Chang)
 		}
 		if !finishHopLe[b.Finish] {
 			return fmt.Errorf("kịch bản %s bước %d: finish %q lạ", k.Ten, i+1, b.Finish)

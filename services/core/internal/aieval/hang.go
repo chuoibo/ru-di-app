@@ -8,6 +8,7 @@ import (
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/aiharness/prompts"
+	"mobile/services/core/internal/aiharness/tools"
 )
 
 // Hang is the engine's numbers and closed sets, as the eval and its future
@@ -26,18 +27,22 @@ type Hang struct {
 	CongCu map[string][]string `json:"cong_cu"`
 }
 
-// congCuDuocPhep is what each bot the engine runs may declare. At S1 Nếp is
-// an agent with no tool (design 01 §8, slice 6), and the group bot is not on
-// the engine yet. Slice 9 builds the registry and tools/testdata/
-// quyen.golden.json; this map is then read from that golden file, not written
-// here.
-var congCuDuocPhep = map[obs.Bot][]string{obs.BotNep: {}}
+// chayTrenEngine are the bots the engine runs; the group bot is not on it
+// yet.
+var chayTrenEngine = map[obs.Bot]bool{obs.BotNep: true}
 
-// CongCuDuocPhep lists the tools bot may declare, and whether the engine runs
-// that bot at all.
+// CongCuDuocPhep lists the tools bot may declare, read from the permission
+// table (tools/testdata/quyen.golden.json through tools.MacDinh), never
+// restated here, and whether the engine runs that bot at all.
 func CongCuDuocPhep(bot obs.Bot) ([]string, bool) {
-	ds, ok := congCuDuocPhep[bot]
-	return append([]string{}, ds...), ok
+	if !chayTrenEngine[bot] {
+		return []string{}, false
+	}
+	out := []string{}
+	for _, t := range tools.MacDinh.DuocPhep(bot, false) {
+		out = append(out, string(t))
+	}
+	return out, true
 }
 
 // DocHang reads the constants off the engine.
@@ -56,7 +61,7 @@ func DocHang() Hang {
 	for _, s := range cau.TatTrangThai() {
 		h.TrangThai = append(h.TrangThai, string(s))
 	}
-	for bot := range congCuDuocPhep {
+	for bot := range chayTrenEngine {
 		ds, _ := CongCuDuocPhep(bot)
 		h.CongCu[string(bot)] = ds
 	}

@@ -182,7 +182,7 @@ func TestBoKiem(t *testing.T) {
 		{"xong mà có mã", func(m map[string]any) { caCua(m, "01-chi-hoi")["ky_vong"].(map[string]any)["ma"] = "invalid_ai_result" }, "xong mà có ma"},
 		{"mã lạ", func(m map[string]any) { caCua(m, "12-loi-may-chu")["ky_vong"].(map[string]any)["ma"] = "loi_la" }, "aiharness/cau"},
 		{"kỳ vọng yêu cầu khi không gọi", func(m map[string]any) {
-			caCua(m, "04-luat-tien-chuyen")["ky_vong"].(map[string]any)["may_cham"] = map[string]any{"yeu_cau_chua": []any{"x"}}
+			caCua(m, "06-man-tien")["ky_vong"].(map[string]any)["may_cham"] = map[string]any{"yeu_cau_chua": []any{"x"}}
 		}, "không gọi mô hình"},
 		{"bề mặt nhóm", func(m map[string]any) { caCua(m, "01-chi-hoi")["be_mat"] = "nhom" }, "chỉ có nep"},
 		{"không có sự kiện", func(m map[string]any) { caCua(m, "01-chi-hoi")["ky_vong"].(map[string]any)["su_kien"] = []any{} }, "su_kien"},
@@ -211,7 +211,7 @@ func TestKichBanKiem(t *testing.T) {
 	}{
 		{"hai thứ một bước", KichBan{Ten: "a", MoTa: "m", Buoc: []BuocKichBan{{Chang: ChangTraLoi, Chu: &chu, Loi: &LoiKichBan{Code: 500}}}}},
 		{"không thứ gì", KichBan{Ten: "a", MoTa: "m", Buoc: []BuocKichBan{{Chang: ChangTraLoi}}}},
-		{"chặng lạ", KichBan{Ten: "a", MoTa: "m", Buoc: []BuocKichBan{{Chang: "hieu", Chu: &chu}}}},
+		{"chặng lạ", KichBan{Ten: "a", MoTa: "m", Buoc: []BuocKichBan{{Chang: "hieu_lai", Chu: &chu}}}},
 		{"mã 200", KichBan{Ten: "a", MoTa: "m", Buoc: []BuocKichBan{{Chang: ChangTraLoi, Loi: &LoiKichBan{Code: 200}}}}},
 		{"finish lạ", KichBan{Ten: "a", MoTa: "m", Buoc: []BuocKichBan{{Chang: ChangTraLoi, Chu: &chu, Finish: "XONG"}}}},
 		{"thiếu mô tả", KichBan{Ten: "a", Buoc: []BuocKichBan{{Chang: ChangTraLoi, Chu: &chu}}}},

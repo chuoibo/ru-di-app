@@ -30,8 +30,12 @@ func TestHang(t *testing.T) {
 	if len(h.Ma) != len(cau.Tat()) || len(h.TrangThai) != 2 || h.TrangThai[0] != string(cau.DangDoc) {
 		t.Fatalf("tập đóng: %v %v", h.Ma, h.TrangThai)
 	}
+	// Nếp's tools are the permission table's, read from it: the memory and
+	// own-outing tools, never a group tool, never set_reminder.
 	raw, _ := json.Marshal(h)
-	if !strings.Contains(string(raw), `"cong_cu":{"nep":[]}`) {
+	nep := strings.Join(h.CongCu["nep"], ",")
+	if !strings.Contains(nep, "search_places") || !strings.Contains(nep, "what_you_remember") ||
+		strings.Contains(nep, "group_snapshot") || strings.Contains(nep, "set_reminder") || len(h.CongCu) != 1 {
 		t.Fatalf("công cụ: %s", raw)
 	}
 	if _, chay := CongCuDuocPhep(obs.BotNhom); chay {

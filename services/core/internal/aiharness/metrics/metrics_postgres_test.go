@@ -91,7 +91,9 @@ func invocation(t *testing.T, pool *pgxpool.Pool) string {
 func record(id string) obs.TurnRecord {
 	return obs.TurnRecord{InvocationID: obs.ID(id), LanThu: 1, Bot: obs.BotNep, Lenh: obs.LenhHoi, Guard: obs.GuardProceed,
 		OutGuard: obs.OutNone, KetThuc: obs.KetThucXong, LoiMoHinh: obs.LoiKhong, PromptVersion: "0123456789ab",
-		Buoc: 1, SoGoiMoHinh: 1, TokensIn: 800, TokensOut: 40, MsTong: 900}
+		Buoc: 1, SoGoiMoHinh: 1, TokensIn: 800, TokensOut: 40, MsTong: 900,
+		NhanGuard: "sach", YDinh: "find_places", SoYDinh: 1, Tien: "none", Huong: "truy_hoi_mot_buoc", Duong: obs.DuongTruyHoi,
+		CongCu: obs.CacCongCu{"search_places", "get_place"}, VongSua: 1, KetKiem: obs.KiemDat, SoXepLai: 1}
 }
 
 func TestGhiDocXoaVaCascade(t *testing.T) {
@@ -175,7 +177,7 @@ func TestBangThatKhongChuaChuTuDo(t *testing.T) {
 		n++
 		switch typ {
 		case "uuid", "smallint", "integer", "boolean", "timestamp with time zone":
-		case "text", "character":
+		case "text", "character", "ARRAY":
 			if !checked {
 				t.Errorf("cột chữ %s không có CHECK", name)
 			}
@@ -185,6 +187,48 @@ func TestBangThatKhongChuaChuTuDo(t *testing.T) {
 	}
 	if n != len(obs.Columns())+1 {
 		t.Fatalf("%d cột, muốn %d", n, len(obs.Columns())+1)
+	}
+}
+
+// A changed version 2 is refused too, and a row carrying a tool name
+// outside the registry is refused by the table itself.
+func TestChecksumLechV2VaMangDong(t *testing.T) {
+	pool := setup(t)
+	ctx := context.Background()
+	id := invocation(t, pool)
+	if _, err := pool.Exec(ctx, `INSERT INTO ai_turn_metrics(invocation_id,lan_thu,bot,lenh,guard,out_guard,ket_thuc,loi_mo_hinh,prompt_version,buoc,so_goi_model,so_cong_cu,tokens_in,tokens_out,tokens_cached,tokens_thoughts,luot_bo,phieu_bo,ngay_mo_ho,ky_tu_an,khong_dau,ms_trang_thai_dau,ms_tien_xu_ly,ms_mo_hinh,ms_tong,cong_cu)
+		VALUES($1,1,'nep','hoi','proceed','none','xong','none','0123456789ab',0,0,0,0,0,0,0,0,0,0,0,false,0,0,0,0,ARRAY['search_places','Tối nay đi đâu'])`, id); err == nil {
+		t.Fatal("cong_cu nhận một chuỗi ngoài danh sách")
+	}
+	if _, err := pool.Exec(ctx, `UPDATE aiharness_schema_migrations SET digest='khac' WHERE version=2`); err != nil {
+		t.Fatal(err)
+	}
+	if err := metrics.Migrate(ctx, pool); err == nil || !strings.Contains(err.Error(), "checksum") {
+		t.Fatalf("checksum v2 lệch không bị từ chối: %v", err)
+	}
+}
+
+// Version 3 in the live table: nhay_cam is refused, the other labels are
+// not, and a changed version 3 is refused like the others.
+func TestV3KhongNhanNhayCam(t *testing.T) {
+	pool := setup(t)
+	ctx := context.Background()
+	id := invocation(t, pool)
+	r := record(id)
+	if err := metrics.Ghi(ctx, pool, r); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE ai_turn_metrics SET nhan_guard='nhay_cam' WHERE invocation_id=$1`, id); err == nil {
+		t.Fatal("the table took nhay_cam")
+	}
+	if _, err := pool.Exec(ctx, `UPDATE ai_turn_metrics SET nhan_guard='ngoai_pham_vi' WHERE invocation_id=$1`, id); err != nil {
+		t.Fatalf("ngoai_pham_vi refused: %v", err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE aiharness_schema_migrations SET digest='khac' WHERE version=3`); err != nil {
+		t.Fatal(err)
+	}
+	if err := metrics.Migrate(ctx, pool); err == nil || !strings.Contains(err.Error(), "checksum") {
+		t.Fatalf("checksum v3 lệch không bị từ chối: %v", err)
 	}
 }
 

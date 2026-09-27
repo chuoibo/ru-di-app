@@ -104,13 +104,12 @@ type Buoc struct {
 func TheoMan(man string) []Doan { return soTay.theoMan(man) }
 
 // Tim returns at most h.K passages (KMacDinh when h.K ≤ 0) that answer h.Cau,
-// best first. Only the first MaxRuneCau runes of h.Cau are read; its
-// teencode syllables the manual does not use are rewritten first (see teen).
-// Ranking is BM25 over rag/xephang terms of the section heading and body (see
-// chuDeXep). A passage must share at least one content syllable with the
-// question (see tuDem); passages of h.Man scoring at least tyLeGhim of the
-// best come first, then the rest, each group in score order, ties broken by
-// id. A done context returns nil.
+// best first. h.Cau is the query the MODEL wrote; only its first MaxRuneCau
+// runes are read, and no word list or teencode table rewrites or gates it.
+// Ranking is BM25 over every rag/xephang term of the query against the
+// section heading and body (see chuDeXep); passages of h.Man scoring at least
+// tyLeGhim of the best come first, then the rest, each group in score order,
+// ties broken by id. A done context returns nil.
 func Tim(ctx context.Context, h Hoi) []Doan { return soTay.tim(ctx, h) }
 
 // DuongToi returns the shortest way from screen tu to screen den, one Buoc per

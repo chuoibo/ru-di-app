@@ -433,7 +433,7 @@ func (g *gioiHanGia) Xin(context.Context, string) (bool, error) {
 func TestGioiHanTuChoiThiThuLaiSau(t *testing.T) {
 	f := setup(t, nil)
 	ctx := context.Background()
-	stub := llm.NewStub(llm.Buoc{Text: "Đi dạo hồ nhé."})
+	stub := llm.NewStub(kichNep("Đi dạo hồ nhé.", 0, nil)...)
 	tuChoi := &gioiHanGia{}
 	f.nepTrenEngine(t, stub, aiharness.WithGioiHan(tuChoi))
 	id := f.chenNep(t, 1, func(int) string { return "đi đâu?" })[0]
@@ -456,7 +456,7 @@ func TestGioiHanTuChoiThiThuLaiSau(t *testing.T) {
 	if ok, err := f.handler.ProcessOne(ctx); !ok || err != nil {
 		t.Fatalf("ProcessOne=%v %v", ok, err)
 	}
-	if status, _, _, calls = f.trangThai(t, id); status != "succeeded" || calls != 1 || stub.SoGoi() != 1 {
+	if status, _, _, calls = f.trangThai(t, id); status != "succeeded" || calls != 3 || stub.SoGoi() != 3 {
 		t.Fatalf("fail open: status=%s model_calls=%d stub=%d", status, calls, stub.SoGoi())
 	}
 }

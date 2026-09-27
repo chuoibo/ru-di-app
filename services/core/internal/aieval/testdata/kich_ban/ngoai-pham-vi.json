@@ -1,0 +1,18 @@
+{
+  "ten": "ngoai-pham-vi",
+  "mo_ta": "Router gắn nhãn ngoai_pham_vi dù chọn truy_hoi_mot_buoc: lượt đi thẳng, không truy hồi, không công cụ.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"ngoai_pham_vi\", \"tien\": \"none\", \"y_dinh\": [\"find_places\"], \"huong\": \"truy_hoi_mot_buoc\", \"slots\": {\"diem_den_id\": \"dd-vung-tau-01\"}, \"can_truy_hoi\": [\"places\"], \"truy_van\": [{\"nguon\": \"places\", \"cau\": \"quán Vũng Tàu\"}], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Việc này Nếp không giúp được. Nếp có thể tìm chỗ đi chơi cho bạn."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}, {\"so\": 2, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

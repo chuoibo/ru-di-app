@@ -1,23 +1,32 @@
 // Package aiharness is the AI engine: one seam, Engine.Run, that the worker
-// and the eval both call (ADR-0037 §2.3). A turn goes through fixed stages:
+// and the eval both call (ADR-0037 §2.3). Nếp's turn goes through fixed
+// stages (dinhtuyen.go), and no stage reads MEANING from the person's words
+// by a word list or a pattern (the owner's rule, 2026-09-25): the MODEL
+// decides, Go checks structure, budgets, permissions and set membership.
 //
-//  1. preprocess (deterministic): NFC, @mentions out, invisible characters
-//     out, whitespace collapsed; the «now» line from the instant the question
-//     was stored, and the dates it mentions resolved on Vietnam's clock;
-//  2. guard (deterministic): the money screen first, then the money law, then
-//     the injection patterns on every untrusted source -- the question is
-//     flagged, a panel turn or a slip string that trips them is dropped;
-//  3. the model, through ADK: one llmagent and one runner for this turn only,
-//     under the per-turn call counter and the step budget;
-//  4. the output guard on the whole answer; Run returns the Result, or an
+//  1. the money screen of the slip (structural: the route the device sent),
+//     then preprocess: NFC, invisible characters out, the @mention of the
+//     assistant out;
+//  2. the router (hieu): ONE structured call that labels the guard, the
+//     intents, the money class, the path, the hard constraints and the
+//     dates; its money_action ends the turn with the fixed refusal, its
+//     chen_lenh keeps the text as data but leaves only the read tools;
+//  3. the path the router chose: a direct answer, the retrieval path (crag's
+//     one corrective round, then the grounded structured answer of traloi),
+//     or the tools (tactu: the fast path or the bounded ADK loop);
+//  4. the verifier (kiemchung) in a fresh context on every released prose,
+//     which carries the judgement of claimed actions and money, then the
+//     output guard's structural checks (canary, quoted instruction, phone,
+//     email, account or card number formats). Run returns the Result, or an
 //     error whose code (MaCua) has a sentence fixed in aiharness/cau.
 //
-// S1 (slice 6) runs Nếp only, with no tools and no streaming: the Sink hears
-// status events only, never a Phan, a Delta or a LamLai. How the turn ended is
-// Run's return value, never a Sink event (design 01 §2): the transport emits
-// `xong` after the worker's transaction commits, and `that_bai` after the
-// worker fails the job. The engine reads and writes no database; the worker
-// stores the answer and the metrics row.
+// The Sink hears status events only, never a Phan, a Delta or a LamLai
+// (streaming is built elsewhere). How the turn ended is Run's return value,
+// never a Sink event (design 01 §2): the transport emits `xong` after the
+// worker's transaction commits, and `that_bai` after the worker fails the
+// job. The engine reads and writes no database: its data comes through the
+// tools' ports (tools.NguonDuLieu), and the worker stores the answer and the
+// metrics row.
 package aiharness
 
 import (
@@ -38,12 +47,17 @@ import (
 
 	"mobile/services/core/internal/aiharness/agent"
 	"mobile/services/core/internal/aiharness/cau"
+	"mobile/services/core/internal/aiharness/cautruc"
+	"mobile/services/core/internal/aiharness/crag"
 	"mobile/services/core/internal/aiharness/guard"
+	"mobile/services/core/internal/aiharness/hieu"
+	"mobile/services/core/internal/aiharness/kiemchung"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/aiharness/preprocess"
 	"mobile/services/core/internal/aiharness/prompts"
-	"mobile/services/core/internal/domain/nepphieu"
+	"mobile/services/core/internal/aiharness/tools"
+	"mobile/services/core/internal/aiharness/truyhoi"
 )
 
 // Nếp's generation settings and bounds (design 01 §3.4b, §3.5, §5).
@@ -94,8 +108,11 @@ type Turn struct {
 	LanThu int
 	Lenh   obs.Lenh
 	// Luc is chat_ai_invocations.created_at: the only source of «now».
-	Luc      time.Time
-	LoiNho   string
+	Luc    time.Time
+	LoiNho string
+	// NguoiHoi is the asking person's id, from the job (never from a model
+	// argument): the scope of Nếp's own-outings and memory tools.
+	NguoiHoi string
 	PhieuNep *PhieuNep
 	LuotNep  []LuotNep
 	// DaGoiTruoc is the model calls earlier attempts of the same job spent.
@@ -150,8 +167,11 @@ func (BoQua) LamLai()                             {}
 // only; the parts, chips and sources of design 01 §2 come with the slices
 // that produce them.
 type Result struct {
-	Text   string
-	Record obs.TurnRecord
+	Text string
+	// LuaChon are the short options of a question back (router path only),
+	// for the panel to offer as chips; empty otherwise.
+	LuaChon []string
+	Record  obs.TurnRecord
 }
 
 // Loi is a turn that ended without an answer.
@@ -200,6 +220,20 @@ type Engine struct {
 	// gioiHan, when set, is asked before every model call (the per-model
 	// rate limiter, design 02 §6); nil lets every call through.
 	gioiHan llm.GioiHan
+	// hieu is the router every Nếp turn goes through (dinhtuyen.go). New
+	// sets hieu.Moi() (no worked examples) when no option gives one.
+	hieu hieu.Hieu
+	// nguon are the tools' data ports; a nil port makes its tools answer
+	// loi_nguon, and the retrieval path falls back to the tools.
+	nguon tools.NguonDuLieu
+	// xepLai is the reranker (nil: truyhoi.Passthrough, flagged no_rerank).
+	xepLai truyhoi.Reranker
+	// cham grades a retrieval (nil: crag.ChamLLM); kiem verifies an answer
+	// (nil: kiemchung.VerifierLLM).
+	cham crag.Cham
+	kiem kiemchung.Verifier
+	// quyen is the tool permission table (nil: tools.MacDinh).
+	quyen *tools.Quyen
 }
 
 // Option configures an Engine.
@@ -226,6 +260,25 @@ func WithRetryWait(cho func(int) time.Duration) Option { return func(e *Engine) 
 // limiter that cannot answer lets the call through.
 func WithGioiHan(g llm.GioiHan) Option { return func(e *Engine) { e.gioiHan = g } }
 
+// WithHieu sets the router (production: hieu.Moi with the worked examples).
+func WithHieu(h hieu.Hieu) Option { return func(e *Engine) { e.hieu = h } }
+
+// WithNguon sets the tools' data ports (production: internal/aidoc over the
+// pool, which holds the database code the engine may not).
+func WithNguon(n tools.NguonDuLieu) Option { return func(e *Engine) { e.nguon = n } }
+
+// WithXepLai sets the reranker of the retrieval path.
+func WithXepLai(x truyhoi.Reranker) Option { return func(e *Engine) { e.xepLai = x } }
+
+// WithCham sets the retrieval grader (tests; production uses crag.ChamLLM).
+func WithCham(c crag.Cham) Option { return func(e *Engine) { e.cham = c } }
+
+// WithKiem sets the verifier (tests; production uses kiemchung.VerifierLLM).
+func WithKiem(k kiemchung.Verifier) Option { return func(e *Engine) { e.kiem = k } }
+
+// WithQuyen sets the tool permission table (tests).
+func WithQuyen(q *tools.Quyen) Option { return func(e *Engine) { e.quyen = q } }
+
 // withHanLuot shortens the turn deadline (tests).
 func withHanLuot(d time.Duration) Option { return func(e *Engine) { e.han = d } }
 
@@ -237,6 +290,15 @@ func New(opts ...Option) (*Engine, error) {
 	}
 	if e.model == nil {
 		return nil, errors.New("aiharness: no model")
+	}
+	if e.hieu == nil {
+		e.hieu = hieu.Moi()
+	}
+	if e.cham == nil {
+		e.cham = crag.ChamLLM{}
+	}
+	if e.kiem == nil {
+		e.kiem = kiemchung.VerifierLLM{}
 	}
 	if e.maKiem == "" {
 		var b [6]byte
@@ -272,7 +334,7 @@ func (e *Engine) Run(ctx context.Context, t Turn, s Sink) (Result, error) {
 	rec := obs.TurnRecord{
 		InvocationID: obs.ID(t.InvocationID), LanThu: t.LanThu, Bot: t.Bot, Lenh: t.Lenh,
 		Guard: obs.GuardProceed, OutGuard: obs.OutNone, LoiMoHinh: obs.LoiKhong,
-		PromptVersion: obs.PromptVersion(prompts.VersionNep()),
+		PromptVersion: obs.PromptVersion(prompts.VersionNep()), KetKiem: obs.KiemKhongChay,
 	}
 	// The first status goes out before any I/O: the panel's «thinking»
 	// state never waits on the model.
@@ -303,93 +365,13 @@ func (e *Engine) Run(ctx context.Context, t Turn, s Sink) (Result, error) {
 	return res, err
 }
 
-func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, batDau time.Time) (Result, error) {
-	// The money screen first, before anything else is read (ADR-0033 §2.2).
-	if t.PhieuNep != nil && nepphieu.PhaiLui(t.PhieuNep.Man) {
-		rec.Guard = obs.GuardRefused
-		return Result{}, &Loi{Ma: cau.NepLuiManTien}
-	}
-	hoi := preprocess.LamSach(t.LoiNho)
-	rec.KyTuAn += hoi.KyTuAn
-	rec.KhongDau = hoi.KhongDau
-	if hoi.Chu == "" {
-		return Result{}, &Loi{Ma: cau.InvalidAIResult}
-	}
-	// The money law: a request to act on money costs no model call.
-	if guard.LaTien(hoi.Chu) {
-		rec.Guard = obs.GuardRefused
-		return Result{}, &Loi{Ma: cau.NepKhongChamTien}
-	}
-	// The person's own question is flagged, not dropped: it is theirs, it
-	// goes as data, and the output guard stands behind it.
-	if nghi, _ := guard.Nghi(hoi.Chu); nghi {
-		rec.Guard = obs.GuardRestricted
-	}
-	phieu := e.phieu(t.PhieuNep, rec)
-	luot := locLuot(t.LuotNep, rec)
-	mayChu, moHo := preprocess.DongMayChu(hoi.Chu, t.Luc)
-	rec.NgayMoHo = moHo
-	var blocks []string
-	if phieu != "" {
-		blocks = append(blocks, prompts.BocDuLieu(prompts.PhieuManHinh, phieu))
-	}
-	blocks = append(blocks, prompts.BocDuLieu(prompts.MayChu, strings.Join(mayChu, "\n")), prompts.BocDuLieu(prompts.CauHoi, hoi.Chu))
-	cuoi := strings.Join(blocks, "\n\n")
-
-	conLai := llm.MaxModelCallsPerTurn - t.DaGoiTruoc
-	if conLai <= 0 {
-		return Result{}, &Loi{Ma: cau.HetNganSach}
-	}
-	dem := llm.NewDem(e.model, conLai, t.GiuLuot).WithGioiHan(e.gioiHan)
-	if e.cho != nil {
-		dem.WithWait(e.cho)
-	}
-	rec.MsTienXuLy = ms(e.now().Sub(batDau))
-	s.TrangThai(cau.DangNghi, soTinNep)
-	var td agent.TheoDoi
-	cfg := agent.CauHinh{
-		Ten:             nepTen,
-		Instruction:     prompts.NepAgent(e.maKiem),
-		NhietDo:         nepNhietDo,
-		MaxOutputTokens: nepMaxTokens,
-		MaxBuoc:         nepMaxBuoc,
-		ConLai:          dem.ConLai,
-	}
-	moHinh := e.now()
-	runCtx, cancel := context.WithTimeout(ctx, e.han)
-	text, err := agent.Chay(runCtx, dem, cfg, luot, cuoi, &td)
-	// Stopped from outside (the heartbeat cancelled the job, or the worker is
-	// stopping) is told apart from running out of time: the turn's own
-	// deadline, or the job's, is the budget; a cancellation is neither.
-	huy := errors.Is(ctx.Err(), context.Canceled)
-	hetGio := errors.Is(runCtx.Err(), context.DeadlineExceeded)
-	cancel()
-	rec.MsMoHinh = ms(e.now().Sub(moHinh))
-	rec.SoGoiMoHinh = dem.SoGoi()
-	snap := td.Snapshot()
-	rec.Buoc, rec.TokensIn, rec.TokensOut, rec.TokensCache, rec.TokensNghi = snap.Buoc, snap.TokensIn, snap.TokensOut, snap.TokensCache, snap.TokensNghi
-	switch {
-	case err == nil:
-	case huy:
-		return Result{}, ErrHuy
-	case errors.Is(err, llm.ErrHetNganSach) || errors.Is(err, agent.ErrHetBuoc):
-		return Result{}, &Loi{Ma: cau.HetNganSach}
-	case hetGio:
-		rec.LoiMoHinh = obs.LoiTimeout
-		return Result{}, &Loi{Ma: cau.HetNganSach}
-	case errors.Is(err, llm.ErrKhongUngVien):
-		// The provider blocked the prompt itself: its safety refusal, the
-		// same as a candidate withheld for safety below.
-		rec.LoiMoHinh = obs.LoiSafety
-		return Result{}, &Loi{Ma: cau.InvalidAIResult}
-	default:
-		rec.LoiMoHinh = llm.PhanLoai(err)
-		return Result{}, &Loi{Ma: cau.ProviderUnavailable, TamThoi: rec.LoiMoHinh == obs.Loi429 || rec.LoiMoHinh == obs.Loi5xx}
-	}
-	if llm.BiChanAnToan(snap.Finish) {
-		rec.LoiMoHinh = obs.LoiSafety
-		return Result{}, &Loi{Ma: cau.InvalidAIResult}
-	}
+// kiemDauRa holds a text about to be released to the panel's shape and to
+// the output guard's STRUCTURAL checks: not empty, valid UTF-8, within
+// Nếp's length, no canary marker, no quoted clause of the instruction, and
+// no phone number, email, bank account or card number (data-format
+// validation for privacy). Whether the text claims an action or money is
+// the verifier's judgement (kiemchung), never a phrase rule here.
+func (e *Engine) kiemDauRa(text string, rec *obs.TurnRecord) (Result, error) {
 	text = strings.TrimSpace(text)
 	if text == "" {
 		rec.LoiMoHinh = obs.LoiBadResp
@@ -405,24 +387,42 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	return Result{Text: text}, nil
 }
 
-// sach cleans one slip string and says whether it may go to the model.
+// loiMoHinh is how a failed model stage ends the turn: stopped from
+// outside, out of budget or time, blocked by the provider, or the provider
+// failing (transient for a 429 or a 5xx).
+func loiMoHinh(err error, huy, hetGio bool, rec *obs.TurnRecord) error {
+	switch {
+	case huy:
+		return ErrHuy
+	case errors.Is(err, llm.ErrHetNganSach) || errors.Is(err, agent.ErrHetBuoc) || errors.Is(err, tools.ErrHetLuotGoi):
+		return &Loi{Ma: cau.HetNganSach}
+	case hetGio:
+		rec.LoiMoHinh = obs.LoiTimeout
+		return &Loi{Ma: cau.HetNganSach}
+	case errors.Is(err, llm.ErrKhongUngVien), errors.Is(err, cautruc.ErrBiChan):
+		// The provider blocked the prompt itself, or withheld a structured
+		// answer: its safety refusal, the same as a candidate withheld for
+		// safety.
+		rec.LoiMoHinh = obs.LoiSafety
+		return &Loi{Ma: cau.InvalidAIResult}
+	default:
+		rec.LoiMoHinh = llm.PhanLoai(err)
+		return &Loi{Ma: cau.ProviderUnavailable, TamThoi: rec.LoiMoHinh == obs.Loi429 || rec.LoiMoHinh == obs.Loi5xx}
+	}
+}
+
+// sach cleans one slip string structurally (NFC, invisible characters) and
+// counts what it removed. Nothing is dropped for its words: the text goes
+// to the model as data.
 func sach(s string, rec *obs.TurnRecord) (string, bool) {
 	c := preprocess.LamSach(s)
 	rec.KyTuAn += c.KyTuAn
-	if c.Chu == "" {
-		return "", false
-	}
-	if nghi, _ := guard.Nghi(c.Chu); nghi {
-		rec.PhieuBo++
-		return "", false
-	}
-	return c.Chu, true
+	return c.Chu, c.Chu != ""
 }
 
-// phieu renders the slip, one field per line, dropping any string the guard
-// flags. The order and the number format are fixed, so the request is stable
-// byte for byte.
-func (e *Engine) phieu(p *PhieuNep, rec *obs.TurnRecord) string {
+// renderPhieu renders the slip, one field per line. The order and the
+// number format are fixed, so the request is stable byte for byte.
+func renderPhieu(p *PhieuNep, rec *obs.TurnRecord) string {
 	if p == nil {
 		return ""
 	}
@@ -485,51 +485,4 @@ func (e *Engine) phieu(p *PhieuNep, rec *obs.TurnRecord) string {
 		lines = append(lines, "goiY: "+strings.Join(goiY, " | "))
 	}
 	return strings.Join(lines, "\n")
-}
-
-// locLuot turns the panel session into ADK events. The session is split into
-// exchanges -- a question and the answers after it -- and a flagged turn drops
-// its whole exchange: an answer to a dropped question, or a question whose
-// answer was forged, is out of context either way. A device can send back a
-// «nep» turn it wrote itself, so Nếp's own turns are guarded like the
-// person's (design 01 §3.2).
-func locLuot(ls []LuotNep, rec *obs.TurnRecord) []agent.Luot {
-	type trao struct {
-		luot []agent.Luot
-		bo   bool
-	}
-	var ds []*trao
-	for _, l := range ls {
-		c := preprocess.LamSach(l.Chu)
-		rec.KyTuAn += c.KyTuAn
-		nguoi := l.Vai == vaiToi
-		if nguoi || len(ds) == 0 {
-			ds = append(ds, &trao{})
-		}
-		cur := ds[len(ds)-1]
-		nghi, _ := guard.Nghi(c.Chu)
-		if c.Chu == "" || nghi || (l.Vai != vaiToi && l.Vai != vaiNep) {
-			cur.bo = true
-		}
-		// A leading answer with no question before it has nothing to answer.
-		if !nguoi && len(cur.luot) == 0 {
-			cur.bo = true
-		}
-		chu := c.Chu
-		if nguoi {
-			chu = prompts.BocDuLieu(prompts.CauHoi, c.Chu)
-		} else {
-			chu = strings.NewReplacer("<", "＜", ">", "＞").Replace(c.Chu)
-		}
-		cur.luot = append(cur.luot, agent.Luot{Nguoi: nguoi, Chu: chu})
-	}
-	var out []agent.Luot
-	for _, d := range ds {
-		if d.bo {
-			rec.LuotBo += len(d.luot)
-			continue
-		}
-		out = append(out, d.luot...)
-	}
-	return out
 }

@@ -81,7 +81,9 @@ type dongHo struct {
 	luc   map[int][]time.Time
 }
 
-var cauSo = regexp.MustCompile(`câu hỏi số (\d+)`)
+// cauSo finds the question's number, datamarked (words joined by ˆ) in the
+// router's and the answer's requests.
+var cauSo = regexp.MustCompile(`câu[ ˆ]hỏi[ ˆ]số[ ˆ](\d+)`)
 
 func newDongHo(inner model.LLM) *dongHo { return &dongHo{inner: inner, luc: map[int][]time.Time{}} }
 
@@ -240,21 +242,13 @@ func phanVi(ds []time.Duration, p float64) time.Duration {
 	return s[i]
 }
 
-func traLoiGiong(n int) []llm.Buoc {
-	out := make([]llm.Buoc, n)
-	for i := range out {
-		out[i] = llm.Buoc{Text: "Đi dạo hồ nhé."}
-	}
-	return out
-}
-
 // Through the real routes, with the poller off: a Nếp question on the Go
 // engine and a group question on the brain path each travel create -> outbox
 // -> relay -> consumer -> answer, and the outbox rows end published.
 func TestHangDoiDauCuoiQuaBroker(t *testing.T) {
 	url := amqpURL(t)
 	f := setup(t, nil)
-	stub := llm.NewStub(traLoiGiong(3)...)
+	stub := nepGiong(3, "Đi dạo hồ nhé.")
 	f.nepTrenEngine(t, stub)
 	top := topology(t, url)
 	tr := moTram(t, f, f.handler, url, top, false)
@@ -287,8 +281,8 @@ func TestHangDoiDauCuoiQuaBroker(t *testing.T) {
 	if err := f.pool.QueryRow(context.Background(), `SELECT count(*) FROM job_outbox WHERE published_at IS NULL`).Scan(&unpublished); err != nil || unpublished != 0 {
 		t.Fatalf("%d outbox rows unpublished: %v", unpublished, err)
 	}
-	if stub.SoGoi() != 3 {
-		t.Fatalf("stub answered %d, want 3", stub.SoGoi())
+	if stub.hieu.SoGoi() != 3 || stub.tra.SoGoi() != 3 || stub.kiem.SoGoi() != 3 {
+		t.Fatalf("stub answered %d/%d/%d, want 3 of each stage", stub.hieu.SoGoi(), stub.tra.SoGoi(), stub.kiem.SoGoi())
 	}
 }
 
@@ -311,7 +305,7 @@ func TestHangDoiTreHangCoBrokerVaPoll(t *testing.T) {
 		f := setup(t, nil)
 		f.handler.WithWorker(WorkerConfig{Workers: 4, Tick: 250 * time.Millisecond, NetEvery: 2 * time.Second, NetLag: 5 * time.Second,
 			Lease: 30 * time.Second, Heartbeat: 5 * time.Second, SweepEvery: 5 * time.Second})
-		m := newDongHo(llm.NewStub(traLoiGiong(50)...))
+		m := newDongHo(nepGiong(50, "Đi dạo hồ nhé."))
 		f.nepTrenEngine(t, m)
 		tr := moTram(t, f, f.handler, brokerURL, topology(t, url), poller)
 		if brokerURL == url {
@@ -377,7 +371,7 @@ func TestHangDoiTreHangCoBrokerVaPoll(t *testing.T) {
 func TestHangDoiRelayGiuHangKhiBiTraVe(t *testing.T) {
 	url := amqpURL(t)
 	f := setup(t, nil)
-	f.nepTrenEngine(t, llm.NewStub(traLoiGiong(50)...))
+	f.nepTrenEngine(t, nepGiong(50, "Đi dạo hồ nhé."))
 	top := topology(t, url)
 	app := "tra_ve_" + strings.ReplaceAll(newID(), "-", "")
 	tr := moTramCo(t, tenPool(t, f.pool, app), f.handler, f.handler.XuLyTin, url, top, false)
@@ -472,7 +466,11 @@ func TestHangDoiTinDocVaoDLQ(t *testing.T) {
 func TestHangDoiNhaKhiDungDuocNhanLaiNgay(t *testing.T) {
 	url := amqpURL(t)
 	f := setup(t, nil)
-	m := newDongHo(llm.NewStub(llm.Buoc{Text: "không bao giờ tới", Cho: time.Minute}, llm.Buoc{Text: "Đi dạo hồ nhé."}))
+	// The first attempt's router call never returns; the second attempt
+	// runs a whole turn.
+	lan := nepGiong(1, "Đi dạo hồ nhé.")
+	lan.hieu = llm.NewStub(llm.Buoc{Text: "không bao giờ tới", Cho: time.Minute}, llm.Buoc{Text: ruTraLoiThang})
+	m := newDongHo(lan)
 	f.nepTrenEngine(t, m)
 	top := topology(t, url)
 	a := moTram(t, f, f.handler, url, top, false)
@@ -518,7 +516,7 @@ func TestHangDoiNhaKhiDungDuocNhanLaiNgay(t *testing.T) {
 func TestHangDoiDBLoiThiTamDungRoiTiepTuc(t *testing.T) {
 	url := amqpURL(t)
 	f := setup(t, nil)
-	f.nepTrenEngine(t, llm.NewStub(traLoiGiong(1)...))
+	f.nepTrenEngine(t, nepGiong(1, "Đi dạo hồ nhé."))
 	top := topology(t, url)
 	ctx := context.Background()
 	id := f.chenNep(t, 1, func(int) string { return "câu hỏi số 0" })[0]
@@ -596,7 +594,7 @@ func TestHangDoiTamDungLuiDanKhiClaimHongNgay(t *testing.T) {
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			f := setup(t, nil)
-			f.nepTrenEngine(t, llm.NewStub(traLoiGiong(1)...))
+			f.nepTrenEngine(t, nepGiong(1, "Đi dạo hồ nhé."))
 			top := topology(t, url)
 			h, lanh := c.hong(t, f)
 			var claims atomic.Int64

@@ -49,7 +49,7 @@ worker: aiharness.Engine.Run(turn, sink)
 | Sự kiện stream (enum đóng, gói `aistream`) | `hello`, `trang_thai{cau}`, `phan{kind,json}`, `delta{p,text}`, `lam_lai`, `xong{message_id \| text,chips,nguon}`, `that_bai{code}`, `huy`, `thu_hoi`, `ket_noi_lai`, cộng dòng `: ping`. Không có sự kiện «rút lại»: guard chặn trước khi phát |
 | Đường stream | SSE `GET /contexts/{c}/ai-invocations/{id}/events` và `GET /me/nep/ai-invocations/{id}/events` cho người gọi. Người xem khác trong phòng lane cũ nhận frame `ai` trên WS `chatlegacychange` sẵn có. Frame này bật bằng một trường trong frame authenticate, để client cũ không vỡ. Phong bì frame mang `tin` (id lời gọi) và `so_tin` (số tin đã đọc), vì `trang_thai{cau}` không có chỗ cho con số. Capability: một trường `ai.stream` ∈ {`phong`, `nguoi_goi`, `khong`}. Phòng v2: key phòng **không bao giờ** được ghi; `lane` do máy chủ tự suy |
 | Thẻ nhóm | `ai_card` kind `tra_loi` `{ban, tac_gia:"rudi-ai", invocation_id, lenh, doc{so_tin, chi_loi_nho}, phan[≤3: text/places/itinerary/expense_draft], outing_id?}`. Author trong DB là NULL (sống qua E2EE). `reply_to_id` là tin tag. Kiểm bằng `GroundReply` mới; `GroundCard` giữ nguyên cho oracle |
-| Registry tool (một nơi: `aiharness/tools`) | `search_places`, `get_place`, `list_destinations`, `nearest_area`, `group_snapshot`, `list_group_outings`, `search_app_manual`, `explain_screen`, `propose_places`, `propose_itinerary`, `draft_poll`, `suggest_screen`, `my_upcoming_outings`, `recall_memory`, `remember_fact`, `forget_fact`, `set_reminder`. Bot nào gọi được tool nào do `quyen.golden.json` quyết |
+| Registry tool (một nơi: `aiharness/tools`) | `search_places`, `get_place`, `list_destinations`, `nearest_area`, `group_snapshot`, `list_group_outings`, `search_app_manual`, `explain_screen`, `propose_places`, `propose_itinerary`, `draft_poll`, `suggest_screen`, `my_upcoming_outings`, `recall_memory`, `remember_fact`, `forget_fact`, `what_you_remember`, `set_reminder`. Bot nào gọi được tool nào do `quyen.golden.json` quyết (mục 8) |
 | Quyền tool | Tool đọc chạy trong tx ReadOnly. Tool nháp không chạm DB. Không tool nào ghi tiền, nghĩa vụ, hay chốt kèo. `recall_memory`/`remember_fact`/`forget_fact`/`set_reminder` chỉ tới được từ gốc scope=me |
 | Trí nhớ Nếp | Gói `nepnho` là writer duy nhất. «Quên» là **xoá cứng** kèm tombstone băm. Fact bị thay hoặc hết hạn xoá ngay khi củng cố. Chỉ trích từ lời của chính người dùng; từ chối fact về người khác. Xoá qua **một trigger Go trên `people.deleted_at`** phủ mọi bảng Go có `person_id` |
 | Quan sát | Chỉ id, enum, số đếm, thời gian. Không nội dung, không tham số tool, không nhãn nhạy cảm gắn với người. Không cài OTel provider toàn cục |
@@ -65,14 +65,14 @@ worker: aiharness.Engine.Run(turn, sink)
 | 3 | Go 1.23.4 → 1.25 | xong: `637b7f3` (1.25.14) |
 | 4 | Tách worker: `claimByID`, heartbeat, `core work`, pool riêng | xong: `d596621` (pool riêng và semaphore tool để lát 6/10) |
 | 5 | Cổng đọc xuyên gói (`go/packages`), phải có trước khi engine chuyển code | xong: `71fb311` (`internal/aigate`) |
-| 6 | Engine S1: Nếp qua Go, chưa stream; `Engine.Run`; eval T1 trong CI | **chưa xong** — tách hai phần, lát 6 chỉ xong khi cả hai xong và review phản biện chấp nhận. **6a (engine)**: `0a752a7`, sửa review vòng 1 `7bde12b`: `Sink` đúng thiết kế 01 §2 (engine không phát xong/thất bại); «bây giờ» có test đỏ được; khoá Gemini chỉ vào core khi ghép rõ `docker-compose.nep-go.yml`. **6b (eval T1)**: `84e3c31` — `internal/aieval`, `cmd/rudi-eval --mo-hinh kich-ban`, corpus Nếp, `scripts/eval_kich_ban.sh`, chặng `eval-kich-ban` và job CI; T1 xanh tại máy, canary đỏ đúng `khong_bia_dia_diem`; **job CI chưa thấy chạy trên Actions**. Review vòng 2 (trên `7bde12b` và `84e3c31`) trả REQUEST_CHANGES; sửa ở `982ec8e`: luật tiền ưu tiên độ chính xác (câu hỏi quán/ngân sách không bị chặn trước lời gọi model), đo trên corpus DEV v2 và 35 câu của review, cách phòng thủ nhiều lớp ghi ở ADR-0037 §4; output guard chặn lại «Mình đã gửi cho bạn …»; model Gemini vẫn báo backend Gemini API; T1 thấy phần số điện thoại, email, số tài khoản và trích lời nhắc của output guard. Review vòng 3 (trên `982ec8e`) trả REQUEST_CHANGES: corpus niêm phong v2 đo luật `982ec8e` được recall 131/150 (KTC 95% 0,811–0,917), bắt nhầm 2/136 (0,004–0,052) — chưa đạt, và corpus đó đã dùng hết (review liệt kê nguyên văn mọi câu trượt). B1 (số điện thoại viết theo cặp gạch ngang lọt output guard) sửa ở `8e14975`; B2 (tên người sau động từ tiền bị đọc thành địa điểm hay cụm từ: «Gửi Quân 200k», «Trả Gia 100k»), M1 (output guard: «gửi cho bạn link chuyển khoản 200k», «đã gửi Nam 200k», «đã giúp bạn chuyển …»; T1 thêm ca 32–33), M2 (ADR-0037 §4 xét ngưỡng theo cận KTC 95% trên corpus niêm phong ≥ 220 câu mỗi lớp; ghi chú DEV thôi trỏ tới generator) và ba nit N-a/N-b/N-c sửa ở commit ngay sau `849664a`. **Cờ `MOBILE_AI_ENGINE_NEP` ở `brain`** tới khi: trên một corpus niêm phong mới (≥ 220 câu mỗi lớp, không generator nào với tới được từ DEV), do người khác đo, cận dưới KTC 95% của recall ≥ 0,95 và cận trên của tỉ lệ bắt nhầm ≤ 0,02 (ADR-0037 §4), job CI T1 thấy chạy xanh, ADR-0037 được ký và review bảo mật khoá trong core xong. `aiboicanh` dời sang lát 9. `make parity` chưa chạy (không có Docker). **Vòng 3–4 (2026-09-25)**: `f587575` sửa tên người bị đọc thành quán; review vòng 4 đo trên corpus niêm phong v3 (260 câu tiền, 245 câu không phải tiền, người sửa không mở): recall 221/260 = 0,850 (KTC 0,802–0,888), bắt nhầm 7/245 = 0,029 (KTC 0,014–0,058) — trượt cả hai cận; REQUEST_CHANGES vì bản sửa thêm hồi quy cùng loại B2 (chặn nhầm câu hỏi quán/kế hoạch, «chuyen 3 tram cho nam» lọt). **Quyết định**: luật tiền tất định đóng băng về recall (chỉ sửa giảm bắt nhầm và hồi quy); ADR-0037 §4 đổi ngưỡng bật cờ thành (a) luật một mình: cận trên bắt nhầm ≤ 0,02, (b) hợp luật + bộ phân loại tiền của Understand (lát 9, lời gọi thật do Lead duyệt): cận dưới recall ≥ 0,95. **Vòng sửa 4** (commit ngay sau `5a97262`; luật chỉ được hẹp lại hoặc sửa hồi quy): R1 «chuyen 3 tram cho nam» lại bị từ chối như ở `849664a` («cho» không dấu không bao giờ là «chỗ»); R2 thu hẹp mọi cách đọc chặn nhầm câu hỏi quán/kế hoạch («ai lo/chịu phần» phải có tiền, «tab» phải có số tiền hay là tab của một người, «lương» đọc theo dấu và phải có người nhận hay số tiền, mua/đặt giúp cả nhóm chỉ khi thu/đòi lại tiền, cụm ghép xét từng từ, «cành» chỉ ở chỗ số tiền đứng được); R-pre «báo/bảo trước» không còn là «bao trước»; R3 output guard đọc «tra» theo dấu và không coi quán/kèo giữa động từ và số tiền là tự nhận; nit: tự nhận sau mệnh đề «gửi cho bạn …», không chủ ngữ, «ghi Nam nợ bạn 200k»; số điện thoại gạch ngang dài, gạch dưới, chấm cách; tọa độ chỉ qua khi là cặp vĩ/kinh độ ≤ 6 chữ số lẻ; T1 thêm ca 36 (ký tự ẩn trong từ tiền, 0 lời gọi) và 37 («gửi cho bạn 200k» bị chặn). Probe của reviewer: câu tiền 0/4 → 4/4, bắt nhầm 27/39 → 0/39; niêm phong v2 149/150 → 150/150, bắt nhầm 0/136; giá phải trả: 1 câu tiền tự viết («Ai chịu phần bánh sinh nhật của Hoa»). Cờ vẫn `brain`; niêm phong v3 chờ người khác đo lại trên SHA mới. **Vòng 5 (`b624ae1`)**: chỉ thu hẹp luật tiền theo chính sách đóng băng; trên corpus niêm phong v3 bắt nhầm 5/245 = 0,0204 (KTC 0,0087–0,0469; trước 7/245), recall 221/260 không đổi — §4(a) vẫn trượt (245 câu cần 0/245). Review REQUEST_CHANGES: output guard nay để lọt câu tự nhận đã trả tiền cho quán («Mình đã gửi quán 200k tiền cọc») mà bản trước chặn; còn vài bắt nhầm cùng loại dd61637. **Vòng sửa 5** (commit ngay sau `d65a03e`; sửa review vòng 5 của `b624ae1`, bản gốc `69a677a`): NEW-1 output guard lại chặn câu tự nhận trả tiền cho quán — sau «chuyển/đưa/bắn/gửi», quán viết đúng dấu giữa động từ và số tiền chỉ được miễn khi «sang/qua» theo ngay động từ hoặc sau số tiền là chỗ xếp quán («lên/xuống/vào … danh sách», «gần», «ở»); tiền, cọc, «rồi», hết câu vẫn chặn (12 câu của reviewer 0/12 → 12/12; 13 câu R3 vẫn qua); NEW-2 «tra» là tra cứu chỉ khi ngay sau là từ tra cứu viết đúng dấu, không theo dấu cả câu (0/5 → 5/5); NEW-3 luật tiền chỉ hẹp lại: «khoản» là tiền khi sau nó có tiền, số tiền hay «này/đó»; lương sau «cho/trước» cần số tiền, «giúp» hoặc hết câu; «my/his tab» cần số tiền (probe của reviewer bắt nhầm 13/22 → 0/22, kể cả «bào trước» và «Chuyen di Nha Trang»); NEW-4 bốn câu chặn nhầm (câu điều kiện «… thì …», «gửi xe», «nó») qua; NEW-5 test giết N2, N11; nit: số điện thoại chấm lệch một bên và chấm giữa bị chặn; T1 thêm ca 38 (tự nhận chuyển tiền cọc cho quán). Recall trên mọi corpus nhìn thấy không đổi, 0 câu mới bị từ chối. Cờ vẫn `brain`; niêm phong v3 chờ người khác đo lại trên SHA mới. |
+| 6 | Engine S1: Nếp qua Go, chưa stream; `Engine.Run`; eval T1 trong CI | **chưa xong** — tách hai phần, lát 6 chỉ xong khi cả hai xong và review phản biện chấp nhận. **6a (engine)**: `0a752a7`, sửa review vòng 1 `7bde12b`: `Sink` đúng thiết kế 01 §2 (engine không phát xong/thất bại); «bây giờ» có test đỏ được; khoá Gemini chỉ vào core khi ghép rõ `docker-compose.nep-go.yml`. **6b (eval T1)**: `84e3c31` — `internal/aieval`, `cmd/rudi-eval --mo-hinh kich-ban`, corpus Nếp, `scripts/eval_kich_ban.sh`, chặng `eval-kich-ban` và job CI; T1 xanh tại máy, canary đỏ đúng `khong_bia_dia_diem`; **job CI chưa thấy chạy trên Actions**. Review vòng 2 (trên `7bde12b` và `84e3c31`) trả REQUEST_CHANGES; sửa ở `982ec8e`: luật tiền ưu tiên độ chính xác (câu hỏi quán/ngân sách không bị chặn trước lời gọi model), đo trên corpus DEV v2 và 35 câu của review, cách phòng thủ nhiều lớp ghi ở ADR-0037 §4; output guard chặn lại «Mình đã gửi cho bạn …»; model Gemini vẫn báo backend Gemini API; T1 thấy phần số điện thoại, email, số tài khoản và trích lời nhắc của output guard. Review vòng 3 (trên `982ec8e`) trả REQUEST_CHANGES: corpus niêm phong v2 đo luật `982ec8e` được recall 131/150 (KTC 95% 0,811–0,917), bắt nhầm 2/136 (0,004–0,052) — chưa đạt, và corpus đó đã dùng hết (review liệt kê nguyên văn mọi câu trượt). B1 (số điện thoại viết theo cặp gạch ngang lọt output guard) sửa ở `8e14975`; B2 (tên người sau động từ tiền bị đọc thành địa điểm hay cụm từ: «Gửi Quân 200k», «Trả Gia 100k»), M1 (output guard: «gửi cho bạn link chuyển khoản 200k», «đã gửi Nam 200k», «đã giúp bạn chuyển …»; T1 thêm ca 32–33), M2 (ADR-0037 §4 xét ngưỡng theo cận KTC 95% trên corpus niêm phong ≥ 220 câu mỗi lớp; ghi chú DEV thôi trỏ tới generator) và ba nit N-a/N-b/N-c sửa ở commit ngay sau `849664a`. **Cờ `MOBILE_AI_ENGINE_NEP` ở `brain`** tới khi: trên một corpus niêm phong mới (≥ 220 câu mỗi lớp, không generator nào với tới được từ DEV), do người khác đo, cận dưới KTC 95% của recall ≥ 0,95 và cận trên của tỉ lệ bắt nhầm ≤ 0,02 (ADR-0037 §4), job CI T1 thấy chạy xanh, ADR-0037 được ký và review bảo mật khoá trong core xong. `aiboicanh` dời sang lát 9. `make parity` chưa chạy (không có Docker). **Vòng 3–4 (2026-09-25)**: `f587575` sửa tên người bị đọc thành quán; review vòng 4 đo trên corpus niêm phong v3 (260 câu tiền, 245 câu không phải tiền, người sửa không mở): recall 221/260 = 0,850 (KTC 0,802–0,888), bắt nhầm 7/245 = 0,029 (KTC 0,014–0,058) — trượt cả hai cận; REQUEST_CHANGES vì bản sửa thêm hồi quy cùng loại B2 (chặn nhầm câu hỏi quán/kế hoạch, «chuyen 3 tram cho nam» lọt). **Quyết định**: luật tiền tất định đóng băng về recall (chỉ sửa giảm bắt nhầm và hồi quy); ADR-0037 §4 đổi ngưỡng bật cờ thành (a) luật một mình: cận trên bắt nhầm ≤ 0,02, (b) hợp luật + bộ phân loại tiền của Understand (lát 9, lời gọi thật do Lead duyệt): cận dưới recall ≥ 0,95. **Vòng sửa 4** (commit ngay sau `5a97262`; luật chỉ được hẹp lại hoặc sửa hồi quy): R1 «chuyen 3 tram cho nam» lại bị từ chối như ở `849664a` («cho» không dấu không bao giờ là «chỗ»); R2 thu hẹp mọi cách đọc chặn nhầm câu hỏi quán/kế hoạch («ai lo/chịu phần» phải có tiền, «tab» phải có số tiền hay là tab của một người, «lương» đọc theo dấu và phải có người nhận hay số tiền, mua/đặt giúp cả nhóm chỉ khi thu/đòi lại tiền, cụm ghép xét từng từ, «cành» chỉ ở chỗ số tiền đứng được); R-pre «báo/bảo trước» không còn là «bao trước»; R3 output guard đọc «tra» theo dấu và không coi quán/kèo giữa động từ và số tiền là tự nhận; nit: tự nhận sau mệnh đề «gửi cho bạn …», không chủ ngữ, «ghi Nam nợ bạn 200k»; số điện thoại gạch ngang dài, gạch dưới, chấm cách; tọa độ chỉ qua khi là cặp vĩ/kinh độ ≤ 6 chữ số lẻ; T1 thêm ca 36 (ký tự ẩn trong từ tiền, 0 lời gọi) và 37 («gửi cho bạn 200k» bị chặn). Probe của reviewer: câu tiền 0/4 → 4/4, bắt nhầm 27/39 → 0/39; niêm phong v2 149/150 → 150/150, bắt nhầm 0/136; giá phải trả: 1 câu tiền tự viết («Ai chịu phần bánh sinh nhật của Hoa»). Cờ vẫn `brain`; niêm phong v3 chờ người khác đo lại trên SHA mới. **Vòng 5 (`b624ae1`)**: chỉ thu hẹp luật tiền theo chính sách đóng băng; trên corpus niêm phong v3 bắt nhầm 5/245 = 0,0204 (KTC 0,0087–0,0469; trước 7/245), recall 221/260 không đổi — §4(a) vẫn trượt (245 câu cần 0/245). Review REQUEST_CHANGES: output guard nay để lọt câu tự nhận đã trả tiền cho quán («Mình đã gửi quán 200k tiền cọc») mà bản trước chặn; còn vài bắt nhầm cùng loại dd61637. **Vòng sửa 5** (commit ngay sau `d65a03e`; sửa review vòng 5 của `b624ae1`, bản gốc `69a677a`): NEW-1 output guard lại chặn câu tự nhận trả tiền cho quán — sau «chuyển/đưa/bắn/gửi», quán viết đúng dấu giữa động từ và số tiền chỉ được miễn khi «sang/qua» theo ngay động từ hoặc sau số tiền là chỗ xếp quán («lên/xuống/vào … danh sách», «gần», «ở»); tiền, cọc, «rồi», hết câu vẫn chặn (12 câu của reviewer 0/12 → 12/12; 13 câu R3 vẫn qua); NEW-2 «tra» là tra cứu chỉ khi ngay sau là từ tra cứu viết đúng dấu, không theo dấu cả câu (0/5 → 5/5); NEW-3 luật tiền chỉ hẹp lại: «khoản» là tiền khi sau nó có tiền, số tiền hay «này/đó»; lương sau «cho/trước» cần số tiền, «giúp» hoặc hết câu; «my/his tab» cần số tiền (probe của reviewer bắt nhầm 13/22 → 0/22, kể cả «bào trước» và «Chuyen di Nha Trang»); NEW-4 bốn câu chặn nhầm (câu điều kiện «… thì …», «gửi xe», «nó») qua; NEW-5 test giết N2, N11; nit: số điện thoại chấm lệch một bên và chấm giữa bị chặn; T1 thêm ca 38 (tự nhận chuyển tiền cọc cho quán). Recall trên mọi corpus nhìn thấy không đổi, 0 câu mới bị từ chối. Cờ vẫn `brain`; niêm phong v3 chờ người khác đo lại trên SHA mới. **Tích hợp lõi agent không heuristic (nhánh `agent-core/integrated`, chưa review, chưa vào main)**: `Engine.Run` của Nếp chỉ còn đường router, đường cũ bị gỡ: màn tiền (kiểm cấu trúc route) → tiền xử lý cấu trúc (NFC, ký tự ẩn, mention) → `hieu` (một lời gọi có schema: nhãn guard, lớp tiền, ý định, đường, ràng buộc, ngày ISO) → `money_action`/`split_draft` ra câu cố định sau đúng 1 lời gọi; `chen_lenh` giữ chữ làm dữ liệu nhưng chỉ còn tool đọc; hỏi lại một câu → đường truy hồi (`crag` chấm + tối đa một vòng sửa do model chọn, rồi `traloi` trả lời có cấu trúc, grounding thuộc tập, verifier, sinh lại một lần) / trả lời thẳng / `tactu` (đường nhanh `explain_screen` hoặc vòng ADK, bước giữa `AUTO`, bước cuối `NONE`) → mọi văn xuôi phát ra qua kiểm cấu trúc rồi verifier LLM ở ngữ cảnh mới (verifier mang phán đoán «tự nhận hành động» và tiền; đầu ra verifier hỏng thì không phát). Gỡ khỏi đường quyết định **và xoá**: `guard.LaTien` (`guard/tien.go` cùng hai file test), `guard.Nghi` (mẫu từ khoá chèn lệnh), luật cụm từ «tự nhận» của output guard, `preprocess.DongMayChu` và `thoigian.Giai` (đọc ngày bằng từ khoá). Output guard chỉ còn kiểm cấu trúc: mã kiểm, trích nguyên câu lời nhắc, định dạng số điện thoại/email/số tài khoản/thẻ (kiểm định dạng, không đọc nghĩa). Câu viết tay của năm vòng review guard giữ làm dữ liệu đo ở `aieval/testdata/hieu/nguon/` (`guard_cu_cau.json`, `tien_dev_v2.json`, `tien_giu_rieng.json`). Hệ quả: luật tiền tất định và ngưỡng bật cờ §4 của ADR-0037 không còn đối tượng; tiền giờ là nhãn của router, đo bằng bộ T3 `tien_v2/v3` khi có khoá và Lead duyệt số lời gọi — **cờ `MOBILE_AI_ENGINE_NEP` vẫn ở `brain`**. T1 Nếp phiên bản 2 (47 ca) chạy đủ chặng `hieu`/`tra_loi`/`cham`/`tra_loi_cau_truc`/`kiem` trên thế giới giả theo ca. `ai_turn_metrics` phiên bản 2 thêm 11 cột nhãn/đếm (nhãn guard, ý định đầu, số ý định, tiền, hướng, đường, tool đã chạy, vòng sửa, phán quyết verifier, sinh lại, số lần rerank). |
 | 7 | Nhóm trong luồng (lõi, còn đi brain): tin @ là tin thường, chip, `tra_loi`, `reply_to` | **chưa xong, không vào main** trước khi Lead ký ADR-0039 (ADR-0039 §7.1). Lõi `5af8655`, sổ tay `603515f`; review phản biện ra `REQUEST_CHANGES` (10 phát hiện), đã sửa ở commit sửa lát 7 (review lại: APPROVE, 3 phát hiện nhỏ): khoá chéo publish ↔ xoá tin/thả cảm xúc (giờ head → tin tag → job, có test đua Postgres), replay trước kiểm tin tag, thử lại xét còn thử được trước hạn phòng, dòng trích khớp máy chủ theo một tệp vector chung, flow 30 hai nhánh AI và máy kiểm sau flow 40 đọc `tra_loi`. **Còn mở:** Maestro 49 chưa viết, flow 30/40/49 chưa chạy trên máy, chưa mở ảnh chụp (sáng, tối, Reduce Motion); tin @ có thể không được trả lời mà không có dấu hiệu nào khi rời màn lúc tin đang gửi — mục «Nhờ Rủ Đi AI trả lời tin này» chưa làm (§7.4); thành viên dùng app cũ thấy «Một thẻ bản này chưa hiển thị được.» (§7.3, chấp nhận) |
-| 8 | RAG S1 từ vựng; `thoigian`, `giomo`, `Fold`, `SafeDeep`; sửa lỗi quán mặc định Đà Lạt trên đường Go | **một phần**: `giomo` `2acd75b`, `thoigian` + `Fold` trong `0a752a7`, `rag/xephang` `544ebc7`, gói `rag` + `tuvung` + `SafeDeep` + shortlist `/places/search` `a97b6e9`; sửa theo review phản biện vòng 1 ở `a609187` (dị ứng một âm tiết, ăn kiêng chỉ từ kinds/traits với phủ định rộng, dị ứng quét cả trường bị cách ly, savepoint/timeout và tombstone trên hàng sống có test đỏ được, cặp từ có dấu nối riêng — schema rag v2, eval thử khung giờ, tombstone tay chỉ `takedown`/`closed` + `untombstone`, service compose `migrate-rag`). Review lại `a609187` trả REQUEST_CHANGES (blocker N1: ba luật bỏ dị ứng khớp corpus giữ riêng làm sót dị ứng nói rõ; major N2: nhãn «Chay» của importer OSM không đọc được). Vòng sửa 2 là commit con trực tiếp của `a609187` (một commit không ghi được SHA của chính nó): bộ đọc dị ứng người hỏi viết lại theo nguyên tắc lưới an toàn (tối đa recall, đọc thừa là an toàn — thiết kế 04 §5.1), bỏ cả ba luật bỏ dị ứng, cổng cứng chỉ còn recall và violation@10; ăn kiêng quán đọc cả tên, nhãn nguyên trường «Chay», phủ định false/0/null/N/A/pending/nope/đóng cửa/chỉ vài ngày/ngoặc/gạch; dấu thanh quyết theo cả hàng; test takedown ở phần đệm shortlist có phiên bản active; `SafeDeep` xét cả khoá object; `core` chỉ đợi `migrate-rag` khởi động. Vòng sửa 2 là `71dd295`. Review lại `71dd295` (commit con của `a609187`; trên nhánh nằm dưới `be0f7a0`): trên nửa niêm phong của corpus dị ứng v2 (người sửa không mở) bộ đọc người hỏi đọc đủ 164/171 câu (95,9%; bản `a609187` 86/171), 0/14 câu giống bị đọc, quán sót dị nguyên 1/67, gắn nhầm ăn kiêng 1; nhưng REQUEST_CHANGES với hai blocker mới: câu «X thì mình dị ứng, còn Y thì ăn được» đọc Y và bỏ X (hồi quy so với `a609187`), và cụm «tôm mực» nuốt «tôm». Vòng sửa 3 là commit con trực tiếp của `be0f7a0` (một commit không ghi được SHA của chính nó): theo quyết định của Lead (thiết kế 04 §5.1), câu có từ kích dị ứng đọc HỢP mọi dị nguyên nêu trong câu, trước hay sau từ kích, qua «nhưng/còn/but» và qua cả yêu cầu; câu chỉ toàn phủ định không từ ngoại lệ thì không đọc; mọi cụm ở mọi vị trí được đọc nên cụm dài không nuốt cụm ngắn (test trên toàn danh sách); quán thêm «các loại hạt»…, «thịt/chung nồi/chung dầu» làm hỏng chay, «expired/không chứng nhận/hết hạn» làm hỏng halal; truy vấn ứng viên của chỉ mục luôn lập kế hoạch theo tham số (generic plan làm câu không nêu điểm đến vượt 800 ms và lùi về hàng sống); tập vàng thêm 46 câu di_ung và 3 quán neo của review vòng 3, violation@10 = 0 cả hai đường. **Chưa xong** vì năm việc: số mù của vòng sửa 3 là số đã đo (`8808fa4`, review vòng 4): trên corpus niêm phong v3 (339 câu người hỏi, 122 quán) bộ đọc người hỏi đọc đủ 258/266 câu (97,0%, KTC 94,2–98,5; `be0f7a0` 78,6%), đọc thừa ngoài danh sách chấp nhận 8/339, 0/53 câu giống bị đọc; quán sót dị nguyên 3/66 (`be0f7a0` 9/66), gắn nhầm ăn kiêng 1/122. REQUEST_CHANGES không blocker: dị ứng sau «;», xuống dòng hay câu kề bị bỏ; danh sách từ kích/ngoại lệ đóng («riêng tôm thì có», «avoid», «hives»); luật hợp đọc cả món được hỏi khi câu chỉ phủ định («không dị ứng gì nhưng muốn tìm quán hải sản» → hải sản); luật hợp cả câu giấu cả món được hỏi tìm trong câu (8/24 truy vấn di_ung có quán đúng mất quán đó: «dị ứng tôm, tìm quán ốc», «bánh ngọt…, dị ứng sữa») — Lead xác nhận giá này hay chỉnh luật; sửa lỗi «luôn Đà Lạt» trên engine Go (lát 9: engine gọi `rag.Retrieve`/`ResolveDestination`, `worker.go` thôi dùng `ModelPlaceRows`); Lead chưa xác nhận lệch Go-only của payload brain ở `/places/search` (ghi ở `docs/migration/live-go-25-route-wai.md`) — không vào `main` trước khi Lead xác nhận; và `make parity`, compose chưa chạy (không có Docker) |
-| 9 | Engine S2: nhóm qua Go, understand, fast path, agent, `chia_bill` port; cổng ≥14/16 | chưa |
+| 8 | RAG S1 từ vựng; `thoigian`, `giomo`, `Fold`, `SafeDeep`; sửa lỗi quán mặc định Đà Lạt trên đường Go | **một phần**: `giomo` `2acd75b`, `thoigian` + `Fold` trong `0a752a7`, `rag/xephang` `544ebc7`, gói `rag` + `tuvung` + `SafeDeep` + shortlist `/places/search` `a97b6e9`; sửa theo review phản biện vòng 1 ở `a609187` (dị ứng một âm tiết, ăn kiêng chỉ từ kinds/traits với phủ định rộng, dị ứng quét cả trường bị cách ly, savepoint/timeout và tombstone trên hàng sống có test đỏ được, cặp từ có dấu nối riêng — schema rag v2, eval thử khung giờ, tombstone tay chỉ `takedown`/`closed` + `untombstone`, service compose `migrate-rag`). Review lại `a609187` trả REQUEST_CHANGES (blocker N1: ba luật bỏ dị ứng khớp corpus giữ riêng làm sót dị ứng nói rõ; major N2: nhãn «Chay» của importer OSM không đọc được). Vòng sửa 2 là commit con trực tiếp của `a609187` (một commit không ghi được SHA của chính nó): bộ đọc dị ứng người hỏi viết lại theo nguyên tắc lưới an toàn (tối đa recall, đọc thừa là an toàn — thiết kế 04 §5.1), bỏ cả ba luật bỏ dị ứng, cổng cứng chỉ còn recall và violation@10; ăn kiêng quán đọc cả tên, nhãn nguyên trường «Chay», phủ định false/0/null/N/A/pending/nope/đóng cửa/chỉ vài ngày/ngoặc/gạch; dấu thanh quyết theo cả hàng; test takedown ở phần đệm shortlist có phiên bản active; `SafeDeep` xét cả khoá object; `core` chỉ đợi `migrate-rag` khởi động. Vòng sửa 2 là `71dd295`. Review lại `71dd295` (commit con của `a609187`; trên nhánh nằm dưới `be0f7a0`): trên nửa niêm phong của corpus dị ứng v2 (người sửa không mở) bộ đọc người hỏi đọc đủ 164/171 câu (95,9%; bản `a609187` 86/171), 0/14 câu giống bị đọc, quán sót dị nguyên 1/67, gắn nhầm ăn kiêng 1; nhưng REQUEST_CHANGES với hai blocker mới: câu «X thì mình dị ứng, còn Y thì ăn được» đọc Y và bỏ X (hồi quy so với `a609187`), và cụm «tôm mực» nuốt «tôm». Vòng sửa 3 là commit con trực tiếp của `be0f7a0` (một commit không ghi được SHA của chính nó): theo quyết định của Lead (thiết kế 04 §5.1), câu có từ kích dị ứng đọc HỢP mọi dị nguyên nêu trong câu, trước hay sau từ kích, qua «nhưng/còn/but» và qua cả yêu cầu; câu chỉ toàn phủ định không từ ngoại lệ thì không đọc; mọi cụm ở mọi vị trí được đọc nên cụm dài không nuốt cụm ngắn (test trên toàn danh sách); quán thêm «các loại hạt»…, «thịt/chung nồi/chung dầu» làm hỏng chay, «expired/không chứng nhận/hết hạn» làm hỏng halal; truy vấn ứng viên của chỉ mục luôn lập kế hoạch theo tham số (generic plan làm câu không nêu điểm đến vượt 800 ms và lùi về hàng sống); tập vàng thêm 46 câu di_ung và 3 quán neo của review vòng 3, violation@10 = 0 cả hai đường. **Chưa xong** vì năm việc: số mù của vòng sửa 3 là số đã đo (`8808fa4`, review vòng 4): trên corpus niêm phong v3 (339 câu người hỏi, 122 quán) bộ đọc người hỏi đọc đủ 258/266 câu (97,0%, KTC 94,2–98,5; `be0f7a0` 78,6%), đọc thừa ngoài danh sách chấp nhận 8/339, 0/53 câu giống bị đọc; quán sót dị nguyên 3/66 (`be0f7a0` 9/66), gắn nhầm ăn kiêng 1/122. REQUEST_CHANGES không blocker: dị ứng sau «;», xuống dòng hay câu kề bị bỏ; danh sách từ kích/ngoại lệ đóng («riêng tôm thì có», «avoid», «hives»); luật hợp đọc cả món được hỏi khi câu chỉ phủ định («không dị ứng gì nhưng muốn tìm quán hải sản» → hải sản); luật hợp cả câu giấu cả món được hỏi tìm trong câu (8/24 truy vấn di_ung có quán đúng mất quán đó: «dị ứng tôm, tìm quán ốc», «bánh ngọt…, dị ứng sữa») — Lead xác nhận giá này hay chỉnh luật; sửa lỗi «luôn Đà Lạt» trên engine Go (lát 9: engine gọi `rag.Retrieve`/`ResolveDestination`, `worker.go` thôi dùng `ModelPlaceRows`); Lead chưa xác nhận lệch Go-only của payload brain ở `/places/search` (ghi ở `docs/migration/live-go-25-route-wai.md`) — không vào `main` trước khi Lead xác nhận; và `make parity`, compose chưa chạy (không có Docker) **Tích hợp lõi agent (`agent-core/integrated`)**: phía câu hỏi của Nếp không còn đọc chữ bằng từ vựng hay bộ giải điểm đến: ràng buộc cứng (điểm đến là id trong danh sách đóng, dị ứng/ăn kiêng là id, ngân sách số nguyên đồng, giờ mở tính từ ngày ISO của router) do model trích, Go ép thành bộ lọc không nới qua `aidoc.Lexical` → `rag.Retrieve` (cờ `lexical_only`). `tuvung.DiUngNguoiHoi`, `rag.DocCau`, `rag/diemden` **còn giữ** vì `POST /places/search` (route parity, `routes/places_wai.go`) dùng — không thuộc đường engine; gắn nhãn phía nạp (`rag/chunk_place.go`) chờ hàng hạ tầng thay bằng làm giàu LLM. |
+| 9 | Engine S2: nhóm qua Go, understand, fast path, agent, `chia_bill` port; cổng ≥14/16 | chưa **Một phần — lõi Nếp (`agent-core/integrated`)**: router `hieu`, tool + vòng ADK `tactu`, CRAG + `traloi` + verifier đã nối vào engine cho Nếp; nhóm vẫn đi brain; chưa có T3 thật (cần khoá). |
 | 10 | Hàng đợi: outbox, RabbitMQ, poller dự phòng, tác vụ định kỳ, limiter theo lời gọi | **phần máy chủ đã nối, chưa xong lát**: gói `jobs` `d76a0a4`, tầng broker `7246744`, nối vào `chatassist` ở `849664a`. Review phản biện của `849664a` ra `REQUEST_CHANGES` (2 blocker: trần 15 phút chữ rõ khi worker co về 0 không có test đỏ được; `core work` tự bỏ đói ở cỡ pool cấu hình cho phép) và 10 phát hiện nhỏ; vòng sửa 2 sửa cả 12 ở `3b1e819`, review lại ở vòng 3 (dưới). Có: `chatassist` phiên bản 5 (`available_at`, `enqueue_seq`, `first_token_at`, `model_calls`, giữ mọi DEFAULT; mọi DEFAULT ổn định — `now()`, không ghi lại bảng — và `lock_timeout` 5 s; trigger BEFORE đánh số khi vào `queued`, trigger AFTER gọi `jobs_them` khi số đổi — quyết định nằm một chỗ, lệch chữ «cùng điều kiện» của thiết kế 02 §3.2 nhưng cùng tập sự kiện); `migrate-chat` cài `jobs` trước `chatassist`; `serve`/`work` đòi đủ phiên bản của cả hai bảng; claim theo (id, `enqueue_seq`); consumer `ai.group`/`ai.nep` trong `core work` (`MOBILE_WORKER_QUEUES`), một relay mỗi process (LISTEN trên kết nối riêng, ngoài pool), Ack sau commit; lỗi DB → consumer tạm dừng và **giữ** tin (không trả về hàng, nên tạm dừng không tính vào `x-delivery-limit`), chạy lại khi DB trả lời; tin vào DLQ → một dòng cảnh báo chỉ id; poller 2 s (trễ 5 s) luôn chạy, 250 ms khi không có broker; lease sau nội dung đầu; `retryLater`/`release`; ghi cuối của job hỏng vì DB → job về hàng ngay (lượt thử đã tiêu) thay vì chờ hết lease; trần `model_calls` trong hàng qua `Turn.GiuLuot`, trần từ chối một lần thử lại sau 429/5xx thì mã là `provider_unavailable` với lớp lỗi của nhà cung cấp, không phải `ai_het_ngan_sach`; registry `jobs.DinhKy` (dọn outbox, sweep, xoá 30 ngày `ai_turn_metrics` và `rag_query_log`), mỗi lượt chạy trong transaction giữ `pg_try_advisory_xact_lock` của nó — một kết nối, không hai; `serve` luôn chạy sweep và dọn outbox kể cả `MOBILE_INPROC_WORKER=0` (test đơn vị và test `serve` thật trên Postgres), và chờ worker trong process nhả job xong mới đóng pool; `MOBILE_WORKER_DB_CONNS` có sàn = worker + 4 tác vụ + 1 relay, thấp hơn thì từ chối khởi động; limiter GCRA Redis `MOBILE_MODEL_RPM` fail-open; cổng `aigate` đọc mọi SQL có trigger mà binary Go nhúng, khai `job_outbox` cho gốc Nếp và gốc nhóm, `chat_legacy_changes`/`chat_legacy_change_outbox` cho gốc nhóm; compose `rabbitmq`/`redis`/`worker` ghim digest sau profile `hang-doi`. Sửa kèm: relay đọc hết `basic.return` (bản cũ để kênh return đầy làm treo cả kết nối). **Còn mở:** review lại vòng sửa 3; compose chưa dựng thử trên máy có Docker, job CI broker chưa thấy chạy trên Actions; tầng broker ở đây chạy RabbitMQ 3.12 — «tạm dừng không tính vào giới hạn» và ngưỡng DLQ chưa đo trên 4.x; `retryLater` chỉ áp cho engine Go, đường brain giữ hành vi cũ; ân hạn 60 s khi SIGTERM cho job đã có nội dung chờ writer của lát 11 (hôm nay chưa gì đặt `first_token_at`); nối lại broker chờ job dài nhất (≤70 s, poller gánh trong lúc đó); replica cũ trong lúc rollout bỏ qua backoff và không đặt lại `model_calls` khi `/retry` (ghi chú rollout ở thiết kế 02 §8); giữ trước số lời gọi dự kiến lúc claim chưa làm; `MOBILE_MODEL_RPM` chờ hạn mức thật của khoá; lease 30 s chưa bật; Nếp vẫn không biết có worker nào đang sống (`nepSanSang`) **Review vòng 3 (sau `3b1e819`)**: hai blocker vòng 2 đã sửa (sweep khi worker = 0 có test đỏ được; pool không tự bỏ đói), 6/6 đột biến cũ đỏ; REQUEST_CHANGES với blocker mới: relay không bao giờ trả lỗi khi kết nối LISTEN chết (nhánh chết vì `cancel()` trước `wait.Err()`), sau khi Postgres khởi động lại mỗi `core work` chạy ~3 900 giao dịch/giây — có từ trước commit này; và consumer tạm dừng quay ~1 000 lần/giây khi DB trả ping nhưng từ chối claim. **Vòng sửa 3 (commit ngay sau `5a97262`, chưa có review lại)**: relay đọc `wait.Err()` trước `cancel()`, kết nối LISTEN chết thì `Run` trả lỗi (57P01 ngay lập tức; test broker giết backend bằng `pg_terminate_backend`, đòi ≤1 s) và Ket nghe lại trên kết nối mới **mà không quay số lại broker** (LISTEN mới sau lần chờ đầu 250 ms, consumer không tách lần nào, job ghi sau đó tới consumer qua NOTIFY với nhịp 1 phút) — lệch chữ «Ket nối lại» của vòng 2 có chủ ý: quay số lại trả mọi tin consumer đang giữ về hàng, mỗi tin tính thêm một lần giao; consumer tạm dừng chờ 250 ms nhân đôi tới 30 s trước mỗi lần chạy lại tin đang giữ, một dòng log mỗi đợt tạm dừng, channel đóng giữa lúc tạm dừng thì consumer trả lỗi để Ket nối lại (điều thiết kế 02 §8.1 đã hứa mà code chưa làm); đo PB1 (CHECK NOT VALID chặn `status='running'`) và PB2 (pool chỉ đọc): 5 claim trong 5 s và 1 dòng «paused» mỗi ca (bỏ lần chờ: hàng nghìn claim trong 5 s); heartbeat dừng trước khi trả job (`sync.OnceFunc`) và không lần gia hạn nào bắt đầu sau khi dừng (trước đó `select` chọn ngẫu nhiên giữa «dừng» và nhịp đã tới, nên việc dừng có thể chờ một chuỗi lần gia hạn 2 s sau DB đang kẹt — tìm ra khi chạy lại probe PP1 của review: 1/6 lần không trả job trong 15 s), hai nhánh lần thử cuối/đã có nội dung có test Postgres; tin tới sau khi tạm dừng bắt đầu được giữ (test đơn vị với kênh giao do test bơm); canary `TestHangDoiRelayGiuHangKhiBiTraVe` chập chờn vì relay khai báo topology (gắn lại binding) sau khi test đã gỡ — test nay chờ relay LISTEN rồi mới gỡ, 20/20 lần xanh dưới `-race`. Đột biến N1, N2, N3, N5, N6 của review đều đỏ. **Vẫn mở thêm**: Ket quay số lại ngay sau một phiên ngắn (NewRelay hay consumer hỏng ngay khi nối thì quay vòng nhanh — có từ trước, chưa có test); poller không lùi dần khi claim hỏng (nhịp 250 ms, 4 lần/giây); một lần gia hạn đã hết giờ phía client vẫn có thể nằm chờ khoá phía server rồi chạy khi khoá nhả (xếp trước câu trả job nên thực tế chạy trước; chưa có test). **Vòng 4 (`12ccd0f`)**: relay trả lỗi khi kết nối LISTEN chết và Ket nghe lại (0 s, nghe lại sau 257 ms), consumer tạm dừng lùi dần 250 ms→30 s, heartbeat dừng trước khi trả job, canary chập chờn tìm ra nguyên nhân (20/20). Review lại: **APPROVE**, hai phát hiện thấp (`Song()` vẫn báo sống khi relay không nghe được → poller chậm 5–6 s; ba hành vi chưa có test đỏ được). Phía máy chủ lát 10 xong; còn mở: compose `worker`/`rabbitmq`/`redis` chưa chạy lần nào (không có Docker), job CI broker chưa thấy chạy trên Actions, RabbitMQ 4.x chưa đo. |
 | 11 | Stream SSE; bảng Nếp mới và animation (`/impeccable`, sửa `DESIGN.md`) | một phần: gói `aistream` `9bb26b0`, client `ai/sse.ts` `aab71de`; chưa có route `/events`, writer trong worker, cửa sổ 48 ký tự, UI |
 | 12 | Stream cả phòng qua frame WS; UI nhóm hoàn thiện | chưa |
-| 13 | Nếp tại chỗ: phiếu v2, sổ tay app, chip, tool phía máy chủ | một phần: dữ liệu sổ tay 13 màn + cổng lệch `e69012b`, sửa theo lát 7 `603515f`; gói thuần `internal/huongdan` (`TheoMan`, `Tim` qua `rag/xephang`, `DuongToi` BFS ≤5 bước, `BanDung` + hằng `nep/huong-dan-ban.ts`) `5c3a3c1`; review phản biện REQUEST_CHANGES (10 phát hiện) đã sửa ở `c7a3cde`: luật màn tiền không còn lách bằng `di_toi` về chính màn hay khai nút trả tiền làm lối ra (cửa phải là cạnh có nhãn của mã, `_rut.json` `canh`), tiêu đề mục màn tiền cố định; bộ vàng thứ hai 46 câu hỏi từ màn khác (viết và băm trước khi đổi xếp hạng); luật ghim theo tỷ lệ điểm 1/2, bảng teencode, cắt 2000 rune. Số đo: bộ 91 câu recall@5 0.9505 MRR 0.9211, bộ màn khác 0.9130 / 0.7880; **nhóm teencode của bộ 91 câu recall@5 0.8333, dưới ngưỡng 0.90** (hai câu tiếng Anh «checkin», «log out», không dịch là chủ ý). Review lại bản sửa đó APPROVE với 8 phát hiện nhỏ, sửa ở `79c5ed8` (review lại vòng 2: APPROVE, 3 nit, sửa ở `658c909` (cherry-pick của `1dff602`, con trực tiếp của `be0f7a0`): quy tắc «ít màn tiền nhất» có test đếm trên cả đường — đồ thị màn tiền cách hai bước của review, và đường qua một màn tiền ngay bước kế thắng đường qua hai màn tiền phía sau; tiêu đề của chính màn tiền không phải cửa, có ca fixture ở Go và mobile, in trên màn hay không; « và » phải thành cặp trên từng dòng theo thứ tự, dấu đảo ngược, lẻ, lồng hay vắt dòng bị từ chối ở Go và mobile, probe Q1 của review thành canary trên dữ liệu thật; review lại bản sửa vòng 3 (review lát 13 vòng 4): APPROVE, 1 nit NF4 — luật « » theo dòng chưa có ca ở dòng tiêu đề mục ở cả hai phía, phía Go chưa có ca ở dòng văn trong mục — sửa ở commit `fix(huongdan)` vòng 4 là con trực tiếp của `591cce5`: ca «## Đi sang »Nút B«» và «Xem »Nút Z«.» trên fixture Go, ở Go và cổng mobile): bộ rút chỉ ghép mỗi cú bấm với nhãn gọi tên nó (`onAction` ↔ `action`, `onPress`/`href` ↔ `label`/`accessibilityLabel`/`title`), nên tiêu đề mục «Chi theo nhóm» không còn là cạnh có nhãn (`_rut.json` 129 cạnh có nhãn, băm `27a579cd74f3`); bước màn tiền chỉ được trích cửa; khoá front matter trùng hay sai hoa thường bị từ chối (Go và mobile); cổng mobile soi lại fixture Go của luật màn tiền; số đo bộ vàng không đổi. Chưa: phiếu v2 (`buoc`, `hanhDong`, `banBuild`; cách `buoc` đi qua `buocMuc` ở thiết kế 05 §3), tool `search_app_manual`/`explain_screen` (lát 9), chip, `useNepMoc`, sửa câu gợi ý; tổng quan của màn tiền chưa theo luật chỉ trích cửa (probe Q3; hiện không vào `Doan` và không ra API nào — phải có luật cửa trước khi API nào đưa nó ra); văn xuôi dạy trả tiền không «…» trên dòng có cửa (P8) luật không thấy, kể cả tên nút đặt trong dấu na ná « » như ‹…›, "…" (hay “…”) và 《…》 — luật nhãn và luật cặp chỉ đọc « và », nên ‹Đánh dấu đã trả› cạnh một cửa trên `tai-chinh.md` nạp được ở cả Go và mobile (probe Y2 của review vòng 4); người review văn giữ |
+| 13 | Nếp tại chỗ: phiếu v2, sổ tay app, chip, tool phía máy chủ | một phần: dữ liệu sổ tay 13 màn + cổng lệch `e69012b`, sửa theo lát 7 `603515f`; gói thuần `internal/huongdan` (`TheoMan`, `Tim` qua `rag/xephang`, `DuongToi` BFS ≤5 bước, `BanDung` + hằng `nep/huong-dan-ban.ts`) `5c3a3c1`; review phản biện REQUEST_CHANGES (10 phát hiện) đã sửa ở `c7a3cde`: luật màn tiền không còn lách bằng `di_toi` về chính màn hay khai nút trả tiền làm lối ra (cửa phải là cạnh có nhãn của mã, `_rut.json` `canh`), tiêu đề mục màn tiền cố định; bộ vàng thứ hai 46 câu hỏi từ màn khác (viết và băm trước khi đổi xếp hạng); luật ghim theo tỷ lệ điểm 1/2, bảng teencode, cắt 2000 rune. Số đo: bộ 91 câu recall@5 0.9505 MRR 0.9211, bộ màn khác 0.9130 / 0.7880; **nhóm teencode của bộ 91 câu recall@5 0.8333, dưới ngưỡng 0.90** (hai câu tiếng Anh «checkin», «log out», không dịch là chủ ý). Review lại bản sửa đó APPROVE với 8 phát hiện nhỏ, sửa ở `79c5ed8` (review lại vòng 2: APPROVE, 3 nit, sửa ở `658c909` (cherry-pick của `1dff602`, con trực tiếp của `be0f7a0`): quy tắc «ít màn tiền nhất» có test đếm trên cả đường — đồ thị màn tiền cách hai bước của review, và đường qua một màn tiền ngay bước kế thắng đường qua hai màn tiền phía sau; tiêu đề của chính màn tiền không phải cửa, có ca fixture ở Go và mobile, in trên màn hay không; « và » phải thành cặp trên từng dòng theo thứ tự, dấu đảo ngược, lẻ, lồng hay vắt dòng bị từ chối ở Go và mobile, probe Q1 của review thành canary trên dữ liệu thật; review lại bản sửa vòng 3 (review lát 13 vòng 4): APPROVE, 1 nit NF4 — luật « » theo dòng chưa có ca ở dòng tiêu đề mục ở cả hai phía, phía Go chưa có ca ở dòng văn trong mục — sửa ở commit `fix(huongdan)` vòng 4 là con trực tiếp của `591cce5`: ca «## Đi sang »Nút B«» và «Xem »Nút Z«.» trên fixture Go, ở Go và cổng mobile): bộ rút chỉ ghép mỗi cú bấm với nhãn gọi tên nó (`onAction` ↔ `action`, `onPress`/`href` ↔ `label`/`accessibilityLabel`/`title`), nên tiêu đề mục «Chi theo nhóm» không còn là cạnh có nhãn (`_rut.json` 129 cạnh có nhãn, băm `27a579cd74f3`); bước màn tiền chỉ được trích cửa; khoá front matter trùng hay sai hoa thường bị từ chối (Go và mobile); cổng mobile soi lại fixture Go của luật màn tiền; số đo bộ vàng không đổi. Chưa: phiếu v2 (`buoc`, `hanhDong`, `banBuild`; cách `buoc` đi qua `buocMuc` ở thiết kế 05 §3), tool `search_app_manual`/`explain_screen` (lát 9), chip, `useNepMoc`, sửa câu gợi ý; tổng quan của màn tiền chưa theo luật chỉ trích cửa (probe Q3; hiện không vào `Doan` và không ra API nào — phải có luật cửa trước khi API nào đưa nó ra); văn xuôi dạy trả tiền không «…» trên dòng có cửa (P8) luật không thấy, kể cả tên nút đặt trong dấu na ná « » như ‹…›, "…" (hay “…”) và 《…》 — luật nhãn và luật cặp chỉ đọc « và », nên ‹Đánh dấu đã trả› cạnh một cửa trên `tai-chinh.md` nạp được ở cả Go và mobile (probe Y2 của review vòng 4); người review văn giữ **Tích hợp lõi agent**: `search_app_manual`/`explain_screen` chạy phía máy chủ trong engine (đường truy hồi đọc sổ tay qua `tools.SoTay`, đường nhanh `explain_screen`); nút «…» trong câu trả lời phải trùng nhãn nút sổ tay trả về trong lượt. Chip chưa. |
 | 14 | Chia bill từ thẻ, dấu «Đã ghi vào sổ» suy từ dòng chi tiêu thật | chưa |
 | 15 | Trí nhớ Nếp | chưa |
 | 16 | RAG vector, làm giàu, độ tươi | chưa |
@@ -109,3 +109,285 @@ worker: aiharness.Engine.Run(turn, sink)
 - Có cho `dieu_da_dan` giữ điều dị ứng do chính người dùng nói không.
 - Judge cùng họ model với generator: chấp nhận rủi ro tự thiên vị, chỉ giảm bằng hiệu chuẩn κ.
 - `/impeccable` không có trong session cloud: các lát UI (11, 12, 13) chạy ở nơi có skill.
+
+## 8. Luật không heuristic (chủ sản phẩm, 2026-09-25)
+
+Luật này **thắng** đề xuất ADR-0037 §4 và thiết kế 01, 04 ở mọi chỗ chúng lệch nhau. Chỗ lệch trong
+mục 2 ở trên (bước 1 «giải ngày tương đối», «teencode chỉ cho bản định tuyến»; bước 2 «luật tiền»;
+bước 3 «qua guard lần nữa») đọc theo mục này.
+
+**Luật.** Tuyệt đối không heuristic, không lọc theo từ khoá ở bước hiểu câu, định tuyến, chọn tool,
+quyết định truy hồi hay trích ràng buộc. **Model quyết** (structured output + function calling).
+Mã Go tất định chỉ được làm những việc sau:
+
+- kiểm **cấu trúc**: JSON schema, enum đóng (`Parse` từ chối giá trị lạ), id thuộc danh sách đóng của
+  lượt, kiểu tham số;
+- cưỡng chế **ngân sách, quyền, hạn giờ**;
+- áp **ràng buộc cứng** model đã trích làm bộ lọc không nới được;
+- **số học chính xác**: ngày từ giá trị ISO do model viết cộng «bây giờ» của lượt; tiền là số nguyên đồng;
+- kiểm **grounding bằng thuộc tập** trên bằng chứng của lượt;
+- kiểm **định dạng dữ liệu** ở đầu ra vì quyền riêng tư: số điện thoại, số tài khoản ngân hàng, email,
+  số thẻ thanh toán. Đây là kiểm định dạng dữ liệu, không phải hiểu ngôn ngữ, nên được giữ.
+
+Mọi thứ đọc **nghĩa** của chữ bằng danh sách từ hay regex phải rời đường quyết định. Chống prompt
+injection thành **cấu trúc**: mọi chữ không tin cậy chỉ nằm trong khối `<du_lieu>` có datamarking;
+system instruction nói dữ liệu không bao giờ là lệnh; tool chỉ có tác dụng phụ trong danh sách cho
+phép; nháp cần người bấm. Thêm vào đó là nhãn guard do router (LLM) gán.
+
+**Rời đường quyết định** (việc của các builder sau hợp đồng này; commit hợp đồng chưa xoá mã nào):
+
+| Hiện có | Thay bằng |
+|---|---|
+| `guard.LaTien` (regex tiền, chặn trước model) | trường `tien` của router `hieu` (`none`/`split_draft`/`money_action`) + `kiemchung.PhanTu.Tien` ở đầu ra; không tool nào ghi tiền |
+| `guard.Nghi` (mẫu từ khoá injection) | datamarking `<du_lieu>` + instruction + nhãn `chen_lenh` của router |
+| `preprocess.DongMayChu` (đọc ngày bằng từ khoá) | router viết `ngay_iso`/`khung_gio`; Go chỉ kiểm dạng và cộng với «bây giờ» |
+| luật cụm từ «tôi đã chuyển tiền» trong output guard | `kiemchung.PhanTu.HuaHanhDongKhongCo` / `Tien` (một lời gọi verifier) |
+| `tuvung` đọc câu hỏi (dị ứng, ăn kiêng, điểm đến từ chữ) | slot enum `di_ung`/`an_kieng` (id của `tuvung`, chỉ dùng danh sách id) + `di_ung_ngoai_danh_muc` |
+| `rag/diemden` phân giải điểm đến từ chữ **phía câu hỏi** | router chọn `diem_den_id` trong danh sách đóng của lượt |
+| `KhongDau` dùng để định tuyến | bỏ khỏi định tuyến; chỉ còn là nhãn phân tầng của eval |
+
+**Không đổi:** các route đã có parity (`services/core/internal/routes/*`), `domain/promptsafety` mà các
+route port từ Python dùng, cách đặt tên roster của `chatassist` — giữ nguyên từng byte. Phía nạp dữ
+liệu (`rag/chunk_place.go` gắn nhãn quán qua `tuvung`) đổi sang làm giàu bằng LLM ở mảng hạ tầng/SDLC
+riêng; hợp đồng này không chạm nạp dữ liệu. `chatintent.Parse` (lệnh `/plan`, `@rudi` người dùng gõ)
+là cú pháp gọi tường minh, cổng consent, không phải hiểu ý định — giữ, nhưng không được mở rộng thành
+đoán ý định.
+
+**Cổng (port) của lõi agent**, tất cả trong `services/core/internal/aiharness`:
+
+| Gói | Hợp đồng | Go làm gì | Model làm gì |
+|---|---|---|---|
+| `dong` | `Tap[T]`: enum đóng, `Parse`/`ParseAll` từ chối giá trị lạ và trùng | — | — |
+| `hieu` | `Vao`, `KetQua`, `Slots`, `LuocDo(Vao) *genai.Schema` (nguồn sự thật duy nhất của schema), `Doc` (đọc chặt), interface `Hieu` | kiểm cấu trúc; id thuộc danh sách; ngày ISO hợp lệ lịch; tiền nguyên ≥0; ý định và nguồn theo bot; các trường nhất quán với nhau (`huong` ↔ `truy_van` ↔ `can_hoi_lai`). Sai một chỗ là từ chối cả kết quả, không lặng lẽ bỏ ràng buộc cứng | nhãn guard, 1–3 ý định, tiền, `huong`, slot, nguồn cần truy hồi, câu truy vấn viết lại, câu hỏi lại, độ tin |
+| `truyhoi` | `YeuCau{Nguon, Cau, Cung, Mem, K}`, `BangChung`, `KetQuaTruyHoi{BangChung, Degraded, BiLoai}`, `Retriever`, `Reranker`, `Passthrough`, `Cung.HopChat` | lọc cứng không nới; hợp ràng buộc của router vào mọi lời gọi tool, chặt hơn thắng; xếp hạng (BM25, dense, sparse, RRF, reranker) | viết `Cau`; chọn nguồn |
+| `trinho` | `TriNho{Nho, Ghi, Quen, LietKe}`, `SuThat`, `NganHan{Doc, Them, Xoa}`, `Luot` | một chủ mỗi fact; quên là xoá cứng; ≤8 lượt ngắn hạn | quyết điều gì đáng nhớ, «quên» chỉ vào đâu, fact nào liên quan |
+| `tools` | 18 tên tool (enum), `DangKy` (mô tả một dòng, lớp tác dụng, phạm vi), schema tham số, bảng quyền `testdata/quyen.golden.json`, `SoCai` (sổ cái lượt, bí danh `p1`/`m1`…), mã lỗi tool đóng | lọc toolset theo quyền và chính sách; `proceed_restricted` chỉ còn tool đọc; đếm lời gọi; chống gọi lặp y hệt; ghi bằng chứng; prompt chỉ thấy bí danh, id thật không vào prompt | chọn tool và tham số |
+| `crag` | `DanhGia{KetLuan, RangBuocThieu, NoiLong, VietLai}`, `LuocDo`, `Doc`, `SuaYeuCau` | áp đúng một bước sửa model đề xuất; `NoiLong` chỉ nhận ràng buộc mềm; ≤1 vòng | chấm bằng chứng đủ/thiếu/mâu thuẫn; đề xuất nới mềm hoặc viết lại |
+| `kiemchung` | `TuyenBo`, `KiemTra` + `Kiem` (tất định), `PhanTu{MenhDe{So, BangChungIDs, Ket}}`, `LuocDo`, `Doc`, interface `Verifier` | id ∈ sổ cái, số/giờ bằng đúng trường bằng chứng, nhãn nút có trong bằng chứng sổ tay; verifier chỉ trả chỉ số câu + enum (`ho_tro`/`khong_ho_tro`/`khong_thong_tin`), không chữ tự do; **mỗi câu 1..n phải được chấm đúng một lần** (schema `minItems = maxItems = n`, `Doc` từ chối thiếu câu); verifier hỏng là không phát | từng mệnh đề có được bằng chứng hỗ trợ không; có hứa hành động không tool nào làm không; có đụng tiền không |
+| `testkit` | bản giả trong bộ nhớ của `TriNho`, `NganHan`, `Retriever` | không xếp hạng gì (xếp hạng là của adapter thật) | — |
+| `llm` (`ngansach.go`) | `MaxToolCallsPerTurn`=10 (Nếp `MaxToolCallsNep`=6), `MaxStepsNhom`=4, `MaxStepsNep`=3, `MaxCorrectiveRounds`=1, `MaxEmbedCallsPerTurn`=2, `MaxRerankCallsPerTurn`=2, cạnh `MaxModelCallsPerTurn`=8 | cưỡng chế | — |
+
+Adapter Milvus (dense + sparse), reranker Qwen qua HTTP, sidecar mem0 và Redis cho ngắn hạn đến từ
+mảng hạ tầng và hiện thực đúng các interface trên; engine chỉ biết chúng qua cờ `Degraded`.
+
+**Bảng quyền tool** (`tools/testdata/quyen.golden.json`, bộ nạp từ chối bảng lệch mã):
+
+| Bot | Tool |
+|---|---|
+| cả hai | `search_places`, `get_place`, `list_destinations`, `nearest_area`, `search_app_manual`, `propose_places`, `propose_itinerary` |
+| chỉ Nếp (phạm vi `me`) | `explain_screen`, `suggest_screen`, `my_upcoming_outings`, `recall_memory`, `remember_fact`, `forget_fact`, `what_you_remember` |
+| chỉ nhóm (phạm vi `nhom`) | `draft_poll`, `group_snapshot`, `list_group_outings` |
+| chưa bật | `set_reminder` (bật cùng lát 17) |
+
+Không có lớp tác dụng nào ghi tiền, nghĩa vụ, kèo, bình chọn hay tin nhắn; tool không khai được nếu
+cần lớp đó.
+
+**Nghiên cứu đã nhận vào hợp đồng** (`intent-routing`, `agentic-rag-tools`, `reflection-verification`;
+`stm-personalization` chưa có lúc viết): model chọn `huong` (trả lời thẳng / truy hồi một bước / tác tử / hỏi lại), router
+viết `truy_van` theo nguồn, cờ dị ứng ngoài danh mục, `mo_ho_voi`, lựa chọn cho câu hỏi lại,
+`tra_loi_cau_cho`, số người, người tham gia (enum id thành viên, chỉ nhóm), hợp ràng buộc chặt hơn
+thắng, đếm số bị loại theo từng ràng buộc cứng, trần tool của Nếp 6, chống gọi lặp theo tham số chuẩn
+hoá, ngắn hạn 4 lượt trao đổi, verifier một lời gọi cho cả câu trả lời trong ngữ cảnh mới, chỉ trả chỉ số
+câu và enum, bằng chứng dưới bí danh, trần reranker riêng, giữ một lời gọi dự trữ trước mọi lời gọi tuỳ
+chọn, không stream trước rồi kiểm sau. Chế độ gọi
+hàm: bước giữa `VALIDATED`, bước cuối `NONE`, không dùng `ANY` trong vòng agent. Không truy hồi suy
+đoán trên chỉ mục cá nhân hay nhóm; truy hồi suy đoán trên chỉ mục công khai chỉ được giữ khi ràng buộc
+cứng của router khớp đúng. **Không nhận:** hợp luật tiền tất định với router (trái luật này); để
+router chép nguyên văn thời gian/ngân sách rồi Go tự giải (trái luật này và trái hợp đồng: model viết
+ISO và số nguyên đồng); điểm đến dạng tên tự do (hợp đồng: id trong danh sách đóng); các luật K6/K7/K9
+(bắt số, nhãn nút sau «bấm/nhấn», mẫu câu khẳng định an toàn dị ứng) và CRAG tất định theo ngưỡng điểm
+reranker (trái luật này: đọc nghĩa bằng từ hoặc ngưỡng tự chế; CRAG là việc của `crag` bằng LLM); coi
+verifier hỏng là đạt (verifier giờ mang phán đoán tiền và hứa hành động, nên hỏng là không phát); nhãn
+verifier năm bậc (hợp đồng chốt `ho_tro`/`khong_ho_tro`, thêm `khong_thong_tin` cho câu không nêu gì để đối chiếu — §8.3).
+
+**Router `hieu` đã hiện thực** (nhánh `agent-core/router`, chờ tích hợp): `hieu.Router` gọi đúng một
+lời flash-lite qua `llm.Dem` với `ResponseSchema = LuocDo(Vao)`, `application/json`,
+`ThinkingLevel MINIMAL`, không đặt nhiệt độ (Gemini 3.5 bỏ qua), trần 1024 token ra. System
+instruction tĩnh theo bot (`hieu/loi_nhac/{chung,nep,nhom}.txt`, ghép lúc khởi động, có phiên bản
+sha256[:12]): định nghĩa từng nhãn guard, tiền (`money_action`/`split_draft` theo bot), ý định kèm ví dụ
+có dấu / không dấu / teencode, `huong`, cách giải ngày ra `ngay_iso` từ dòng «Bây giờ» và lịch 14 ngày
+máy chủ tính sẵn, điểm đến chỉ là id trong danh sách, khi nào hỏi lại đúng một câu. Lượt người dùng là
+các khối `<du_lieu>`; mọi chữ từ ngoài (câu hỏi, ngắn hạn, phiếu màn, tên điểm đến/thành viên) được
+**datamark** (`prompts.BocDuLieuDanhDau`, dấu U+02C6 thay khoảng trắng, dấu giả trong dữ liệu bị xoá).
+Few-shot động chọn **theo embedding** (`nhung`, `KhoViDu`, 4 ví dụ, ≤2 mỗi ý định, kho tổng hợp
+`hieu/vi_du.json` qua `Doc` lúc khởi động); embedder hỏng thì chạy không ví dụ. Đọc chặt bằng `Doc`;
+sai cấu trúc thì **sửa một lần** (đầu ra hỏng thành lượt của model, lý do thành khối `loi_cau_truc`)
+chỉ khi sau đó còn ≥1 lời gọi cho câu trả lời (`DuTru`), rồi rơi về `ErrKhongHieu` → câu cố định
+`invalid_ai_result` («hỏi lại theo cách khác»). Chính sách `QuyetDinhCho` là hàm thuần của nhãn model:
+Nếp từ chối mọi `tien ≠ none` (0 lời gọi thêm), nhóm từ chối `money_action` và chỉ cho `split_draft`
+thành nháp; `chen_lenh` giữ chữ của người hỏi làm dữ liệu nhưng `HanChe` (chỉ tool đọc); `hoi_lai` kết
+thúc lượt bằng câu hỏi của model (qua output guard). Engine có `WithHieu`: đường Nếp qua router không
+gọi `guard.LaTien`, `guard.Nghi`, `preprocess.DongMayChu` (test AST giữ điều đó); đường cũ còn nguyên
+cho tới khi tích hợp bật router mặc định. Bộ đo: `aieval/testdata/hieu/` — corpus tiền/dị ứng đã lộ
+chuyển nguyên vị trí vào `nguon/` và đổi thành bộ T3 (`tien_v2/v3`, `di_ung_v2/v3`, 1 335 ca, đo hồi
+quy, **không** phải cổng), bộ T1 `t1-hieu.json` (20 ca, mọi ý định hai bot) chạy bằng
+`rudi-eval --mo-hinh kich-ban --chi-buoc hieu --bo …`. Chưa có: chạy T3 thật (cần khoá và Lead duyệt
+số lời gọi), câu cố định cho `nhay_cam`/`ngoai_pham_vi` và cho nhóm (chưa có mã trong `cau`), token
+của lời gọi router chưa cộng vào hàng metrics.
+
+### 8.1 Hiện thực tool và vòng agent (nhánh `agent-core/tools`)
+
+- `tools`: mỗi tool là một ADK `functiontool` với struct tham số có kiểu; schema JSON chuyển từ đúng
+  schema `genai` của hợp đồng (`sangJSON`, từ khoá lạ thì dừng lúc khởi động), đối tượng cấm thuộc
+  tính lạ, mảng cấm phần tử lặp. Mô tả tool = mục đích một dòng + «trả gì, khi nào không gọi»
+  (`MoTaDay`) để model tự quyết. `BoiCanh` giữ danh tính lấy từ job (người hỏi, nhóm, màn hình),
+  ràng buộc của router, danh sách đóng, sổ cái và nháp; không tool nào có tham số danh tính.
+- `BeforeTool` (`TruocTool`): tên phải là tool bot được phép trong lượt (bảng quyền, chế độ hạn chế);
+  tham số qua schema rồi qua kiểm thuộc tập (bí danh `p1`/`m1`/`f1`/`t1`, `diem_den_id` trong danh
+  sách lượt, mã khu vực); lời gọi y hệt trả kết quả cũ kèm `lap_lai`; đếm ngân sách tool. Lời gọi hỏng
+  đầu tiên được trả `{"loi","truong","yeu_cau"}` để sửa; lời hỏng thứ hai trả thêm `tra_loi_ngay` và
+  bước kế bị ép `NONE`. `AfterTool` (`SauTool`) ghi bằng chứng vào `SoCai` rồi mới dựng kết quả
+  cho model: bằng chứng chỉ mang bí danh, nằm trong `<du_lieu nguon="ket_qua_cong_cu">`. `OnToolError`
+  (`LoiTool`) đổi tên tool bịa hay lỗi chạy thành mã đóng, không lộ văn bản lỗi hay danh sách tool.
+- `search_places`: ràng buộc cứng của router hợp vào mọi lời gọi (`HopRangBuoc`, chặt hơn thắng);
+  tham số model chỉ thêm hoặc siết, điểm đến/giờ mở khác router thì bị từ chối. `remember_fact` chỉ
+  lưu khi chính model phân loại `ca_nhan` và nội dung qua kiểm định dạng riêng tư
+  (`guard.DinhDang`: email, số điện thoại, số tài khoản/thẻ; kiểm định dạng, không đọc nghĩa).
+  `nearest_area` trả danh sách khu vực của điểm đến để model chọn; Go không so mô tả với tên.
+  `set_reminder` chưa cấp cho bot nào và trả `chua_co`.
+- `internal/aidoc` (ngoài `aiharness`, vì engine không giữ mã database — `TestRanhGioiEngine`): mọi đọc chạy trong giao dịch `READ ONLY` dưới semaphore (mặc định 4). Retriever từ vựng
+  ánh xạ `truyhoi.YeuCau` sang `rag.YeuCau` từng trường, không `DocCau`, không `tuvung` trên câu hỏi;
+  chữ truy vấn chỉ vào xếp hạng BM25/trigram của `rag`. Kết quả luôn gắn `lexical_only`.
+- `tactu`: đường nhanh khi router chọn `truy_hoi_mot_buoc` với đúng một ý định trong
+  `find_places`/`app_help`/`explain_screen` và đủ slot (điểm đến; truy vấn sổ tay; phiếu màn hình),
+  nhãn guard `sach`, tiền `none`: Go gọi thẳng tool qua cùng cổng kiểm, rồi một lời gọi trả lời chế
+  độ `NONE`. Còn lại là vòng ADK: Nếp ≤3 bước, nhóm ≤4, bước giữa `AUTO`, bước cuối `NONE`. Ngắn
+  hạn (`trinho.NganHan`) vào prompt trong một khối `<du_lieu nguon="lich_su">`, bằng chứng cũ là
+  `t1`, `t2`…; `GhiLuot` chỉ gọi sau khi câu trả lời đã qua mọi kiểm đầu ra.
+- Còn mở: chế độ bước giữa là `AUTO` theo giao việc, còn nghiên cứu và mục trên đề nghị `VALIDATED`
+  (một hằng `agent.CheDoGiua`, cần cassette model thật để chọn); `BiLoai` của retriever từ vựng chưa
+  đếm theo từng ràng buộc (rag chưa trả); gu nhóm (ADR-0034 `chia_gu`) chưa có trong
+  `group_snapshot`; engine (`aiharness.Engine`) chưa nối `tactu` — khi nối, cổng `aigate` của Nếp
+  phải mở allowlist có lý do và canary cho `places`, `destinations`, `outings`, `memberships`.
+
+### 8.2 Tích hợp: đường Nếp trong engine (nhánh `agent-core/integrated`)
+
+Ba nhánh `agent-core/router`, `agent-core/tools`, `agent-core/crag` gộp một chỗ và nối vào `Engine.Run`
+của Nếp (sau cờ `MOBILE_AI_ENGINE_NEP=go`, cờ vẫn ở `brain`). Đường duy nhất (`aiharness/dinhtuyen.go`):
+
+1. màn tiền của phiếu (kiểm cấu trúc route, 0 lời gọi) → tiền xử lý cấu trúc (NFC, ký tự ẩn, mention);
+2. `hieu` (1 lời gọi, sửa tối đa 1 lần khi còn ngân sách): danh sách điểm đến đóng đọc qua cổng
+   `DocCho`; `money_action`/`split_draft` → `nep_khong_cham_tien`; `chen_lenh` → `HanChe` (chỉ tool
+   đọc); `nhay_cam`/`ngoai_pham_vi` → trả lời thẳng không tool, không truy hồi, thêm lời dặn của nhãn;
+   `hoi_lai` → câu hỏi và các lựa chọn của model qua kiểm cấu trúc rồi qua verifier;
+3. ràng buộc của router thành `truyhoi.Cung`/`Mem` (`tools.RangBuocTuRouter`, số học trên ngày ISO);
+4. đường: router chọn `truy_hoi_mot_buoc` với đúng một ý định `find_places`/`app_help` và đủ slot →
+   `traloi.Chay` (retriever `aidoc.Lexical` hoặc `tools.SoTay`, `crag` chấm, tối đa một vòng sửa do
+   model chọn, trả lời có cấu trúc, grounding thuộc tập, verifier, sinh lại một lần, dự phòng cố định);
+   `tra_loi_thang` → một lời gọi không tool; còn lại → `tactu` (đường nhanh `explain_screen` hoặc vòng
+   ADK ≤3 bước, bước cuối `NONE`, giữ một lời gọi cho verifier);
+5. văn xuôi (đường thẳng và `tactu`): token `[[p:…]]` render từ sổ cái, kiểm cấu trúc trước (mã kiểm,
+   trích lời nhắc, định dạng liên lạc — không tốn lời gọi, không gửi rò rỉ sang model khác), rồi
+   verifier: cờ `hua_hanh_dong_khong_co`/`tien` luôn chặn; câu `khong_ho_tro` luôn chặn, có bằng chứng
+   hay không (§8.3); ghi trí nhớ model xếp hàng trong lượt chỉ được ghi sau khi câu trả lời qua hết.
+
+Số lời gọi mô hình theo đường (stub, đo ở T1 và test engine): từ chối tiền 1; hỏi lại 2 (router, verifier); thẳng 3;
+truy hồi 4 (router, chấm, trả lời, verifier) — 6 khi verifier bắt và sinh lại; vòng tool 4 với một
+bước tool; trần 8 giữ qua `llm.Dem` và `DaGoiTruoc`.
+
+Dữ liệu tool: `cmd/core` nối `aidoc` (catalogue, điểm đến, khu vực, chuyến sắp tới của chính người
+hỏi) cho Nếp; cổng trí nhớ dài hạn chưa có adapter sản xuất (hàng hạ tầng) nên tool trí nhớ trả
+`loi_nguon`. Ngắn hạn: thiết bị là nguồn phiên và gửi lại mỗi câu (phương án A của nghiên cứu
+stm-personalization, ADR-0036 §4), máy chủ không giữ phiên. Ví dụ few-shot của router nhúng lười ở
+lượt đầu (`hieu.KhoViDuLuoi`): khởi động không gọi nhà cung cấp embedding.
+
+`aigate`: đường Nếp nay đọc bảng qua tool — danh sách cho phép có lý do từng bảng (`nepCongCuDoc`:
+catalogue và chỉ mục của nó, điểm đến, chuyến đi/thành viên của chính người hỏi) và canary: mỗi mục
+phải thật sự bị với tới; cổng nay thấy hàm đăng ký trong biến cấp gói (bảng tool) và câu SQL nối chuỗi.
+
+Còn mở: xem cuối §8.3.
+
+### 8.3 Sửa sau ba review của nhánh tích hợp (no-heuristics, correctness, privacy)
+
+**Verifier và đầu ra.**
+
+- Verifier phải chấm **mọi** câu: enum `ket` thêm `khong_thong_tin` (câu chào, câu hỏi lại, lời mời
+  xem thẻ) để việc «câu này không nêu gì» cũng là một phán đoán được ghi ra; `Doc` từ chối đầu ra thiếu
+  câu, nên `{"menh_de":[]}` (model lười hay lệnh cài trong bằng chứng) không còn phát được gì. Trên
+  đường truy hồi (`traloi`), chỉ câu `khong_ho_tro` là phát hiện; câu `khong_thong_tin` không bắt sinh lại.
+- Câu `khong_ho_tro` chặn trên mọi đường, kể cả khi lượt không có bằng chứng: câu trả lời thẳng hay
+  vòng tool không gọi tool nào không phát được quán, giá, giờ bịa.
+- Câu hỏi lại của router (và từng lựa chọn còn lại sau kiểm cấu trúc) qua verifier như mọi văn xuôi:
+  hỏi lại tốn 2 lời gọi.
+- Cờ dị ứng ngoài danh mục đi vào yêu cầu mà bộ chấm và bước trả lời đọc (`cung.di_ung_ngoai_danh_muc`),
+  và mọi câu trả lời của lượt mở đầu bằng câu lưu ý cố định `cau.DiUngNgoaiDanhMuc`, bất kể đường nào.
+
+**Nhãn của router.** `nhay_cam` và `ngoai_pham_vi` đưa lượt ra khỏi tool và truy hồi (trả lời thẳng
+dưới lời dặn `prompts.LoiDanNhan`, vẫn qua verifier). Nhãn `nhay_cam` **không bao giờ được lưu**: bản
+ghi và dòng log ghi `""`; metrics schema v3 (`aiharness_schema_migrations` phiên bản 3, v1/v2 không
+sửa) xoá mọi hàng cũ mang nhãn đó và CHECK không nhận nó nữa — hàng metrics trỏ tới lời gọi, lời gọi
+trỏ tới người.
+
+**Tool và chèn lệnh (cấu trúc, không đọc chữ).**
+
+- Hai cổng, mỗi cổng tự đứng được:
+  - **Ý định của người hỏi.** `remember_fact` chỉ có trong bộ tool khi router (đọc tin nhắn của chính
+    người hỏi, đầu ra có schema) ghi ý định `remember`; `forget_fact` chỉ khi có `forget`
+    (`BoiCanh.YDinh`). Không có ý định thì model không thấy tool, gọi bừa thì bị từ chối, không xếp
+    hàng gì. Chữ vào dưới dạng dữ liệu (quán, sổ tay, trí nhớ, phiếu màn hình, lịch sử) không thêm được
+    ý định nào.
+  - **Dữ liệu đã vào lượt.** Sau khi một tool trả dữ liệu bất kỳ (quán, chuyến đi của thành viên khác,
+    hàng danh mục, sổ tay) không tool có tác dụng phụ nào (lớp `tri_nho`, `nhac`) chạy nữa. Sau trí nhớ
+    của chính người hỏi thì không ghi điều mới; chỉ `forget_fact` còn chạy (người hỏi đã nhờ quên, và
+    cần bí danh `recall_memory` vừa cho; xoá chỉ thu hẹp cái được giữ).
+- `remember_fact`/`forget_fact` chỉ **xếp hàng**; `BoiCanh.CamKet` ghi sau khi câu trả lời qua verifier
+  và mọi kiểm đầu ra (kể cả lần kiểm cấu trúc cuối khi mở đầu bằng câu lưu ý dị ứng) — lượt không phát
+  gì thì không ghi gì.
+- Lời gọi tool trả về ở bước `NONE` (hay sau `tra_loi_ngay`) bị từ chối, không chạy (`agent.CauHinh.BuocCuoi`).
+- Dữ liệu tool trên đường `tactu` được datamark từng trường, cắt 300 rune, JSON không escape `<>` để khối
+  tự đổi chúng sang toàn khổ.
+
+**Truy hồi.**
+
+- Khung giờ router viết là **khung** (`truyhoi.Cung.MoTrong`, ánh xạ `rag.YeuCau.Khung`, «mở vào lúc nào
+  đó trong khung»); chỉ khi không có `den` mới là thời điểm (`MoLuc`). Qua nửa đêm thì `den` là ngày sau.
+- Mọi `truy_van` router viết cho nguồn đều chạy, cùng ràng buộc cứng, kết quả trộn xoay vòng.
+- Lỗi retriever trên đường truy hồi không còn ghi là lỗi mô hình: lượt chuyển sang đường tool, tool trả
+  `loi_nguon`.
+- `huongdan.Tim` bỏ bảng teencode, luật f→ph/w→qu và cổng từ dừng: BM25 trên mọi âm tiết của truy vấn
+  model viết, ghim theo id màn. Bộ vàng thứ ba `truy-hoi-truy-van-model.json` (26 câu teencode viết lại
+  như router được dặn) đạt recall@5 1.0000, MRR 0.8942.
+
+**Ngân sách.** Kho ví dụ của router dựng một lần, hạn riêng 10 s, không giữ khoá qua mạng; lượt chờ tối
+đa 2 s rồi định tuyến không ví dụ. `MaxEmbedCallsPerTurn` nay được cưỡng chế (`nhung.DemLuot`, engine
+đặt vào `hieu.Vao.DemNhung`), embedding câu hỏi có hạn riêng 3 s.
+
+**Cổng.** `aiharness/khong_heuristic_test.go` đi theo chữ của lượt (câu hỏi, lịch sử, truy vấn và nội
+dung trí nhớ model viết) qua biến, trường, tham số, giá trị trả về và closure trên 13 gói của đường
+engine (gốc `aiharness`, `agent`, `cautruc`, `crag`, `hieu`, `kiemchung`, `tactu`, `tools`, `traloi`,
+`trinho`, `truyhoi`, `aidoc`, `huongdan`): chữ chỉ được làm sạch cấu trúc, cắt, vào khối datamark, kiểm
+rỗng/độ dài/UTF-8/định dạng riêng tư, hoặc đưa cho bộ xếp hạng. Canary `testdata/khongheuristic` đỏ ở
+sáu cách đọc nghĩa mà review thấy lọt. `traloi`: đường import cấm sửa thành `domain/tuvung`, có canary
+đường tồn tại. `aigate`: nhóm không với tới tool trí nhớ, Nếp thì có.
+
+Cổng cũng đi theo **văn xuôi model viết** (câu trả lời của vòng agent `agent.Chay`, `tactu.Ra.Text`,
+câu nháp `traloi.Cau.Chu`, `traloi.KetQua.Chu`, câu hỏi lại và lựa chọn của router): luật cụm từ đoán
+«tự nhận hành động/tiền» từ câu trả lời đã gỡ và không được quay lại (phán đoán đó là của verifier).
+Ngoại lệ có tên, đọc tay: ba bộ tách cấu trúc (`traloi.tachCau` đọc token `[[p:…]]` và nhãn «…» của
+schema mình, `GhepVanXuoi` dựng token từ sổ cái, `TachCauVanXuoi` tách câu ở `. ! ? …` và xuống dòng),
+output guard `guard.DauRa.Kiem` (mã canary, trích lời nhắc, định dạng riêng tư), và ba trường chứa bí
+danh/nhãn đem so thuộc tập (grounding). Ba canary mới (cụm từ trên câu trả lời, trên câu hỏi lại, trên
+kết quả của `agent.Chay`) đỏ; cổng cũ xanh trên đột biến «chặn khi câu trả lời chứa "đã chuyển"».
+
+**Để lại có lý do (minor).**
+
+- `tuvung.LaTuDung` trong `rag/yeucau.go` bỏ từ dừng khỏi truy vấn OR của `rag`: đây là **chấm điểm
+  truy hồi** (thứ hạng), không lọc và không quyết định; dùng chung với route parity `/places/search` nên
+  không đổi byte ở đây.
+- Output guard dùng đơn vị tiền (`đồng`, `nghìn`, `triệu`, `k`) để phân biệt một dãy số là số tiền hay số
+  tài khoản (`tienSau`, `tienDonVi` trong `guard/output.go`): đây là **kiểm định dạng dữ liệu vì quyền
+  riêng tư**, không phải hiểu câu; hệ quả đã biết: một dãy chín chữ số theo sau là «đồng» được phát, cùng dãy đó đứng một mình bị chặn.
+- `tu_tin` và `mo_ho_voi` của router chỉ được ghi (eval), chưa đổi đường; đổi cần đo T3.
+- `my_upcoming_outings` giữ trong bộ tool của Nếp chờ Lead quyết theo ADR-0033 §4; tiêm lệnh qua tiêu
+  đề chuyến đi đã bị chặn về cấu trúc (datamark, không ghi sau dữ liệu ngoài).
+- Câu trả lời thẳng bị verifier chấm không có bằng chứng: câu nhắc lại điều ở lịch sử (quán lượt trước)
+  có thể bị chấm `khong_ho_tro` và bị giữ. Hướng an toàn (giữ, không phát bịa); nới cần đưa bằng chứng
+  tham chiếu của lượt trước vào verifier, đo ở T3.
+- Câu trả lời dài hơn `kiemchung.MaxMenhDe` câu: phần dư gộp vào câu cuối (`TachCauVanXuoi`) nên vẫn được
+  chấm; câu hỏi lại cộng lựa chọn vượt 12 câu thì verifier từ chối và lượt giữ câu trả lời (fail-closed).
+
+Còn mở: T3 thật (khoá + Lead duyệt số lời gọi); độ trễ nháp-rồi-kiểm (chưa stream, `crag-kiem-chung.md`
+§3 cần Lead chọn); `set_reminder`, gu nhóm, adapter trí nhớ sản xuất; bước giữa `AUTO` hay `VALIDATED`;
+verifier chưa biết tool ghi nào đã xếp hàng trong lượt nên câu «mình sẽ nhớ» bị giữ (hướng an toàn) —
+cần đưa danh sách hành động đã làm vào verifier khi adapter trí nhớ bật; ADR-0033 §4 cho
+`my_upcoming_outings`; bot nhóm vẫn đi brain.

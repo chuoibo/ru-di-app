@@ -172,7 +172,11 @@ func TestSweepKetThucJobHetLuotThu(t *testing.T) {
 // hand-back is waiting on it.
 func TestLoiDBSauClaimThiTraLaiNgay(t *testing.T) {
 	f := setup(t, nil)
-	stub := llm.NewStub(llm.Buoc{Text: "Đi dạo hồ nhé.", Cho: 400 * time.Millisecond}, llm.Buoc{Text: "Đi dạo hồ nhé."})
+	// The turn's last call (the verifier) is the slow one: every call has
+	// taken its place on the job's row before the table is locked.
+	lan1 := kichNep("Đi dạo hồ nhé.", 0, nil)
+	lan1[2].Cho = 400 * time.Millisecond
+	stub := llm.NewStub(append(lan1, kichNep("Đi dạo hồ nhé.", 0, nil)...)...)
 	f.nepTrenEngine(t, stub)
 	f.handler.WithWorker(fastWorker())
 	ctx := context.Background()
@@ -184,7 +188,7 @@ func TestLoiDBSauClaimThiTraLaiNgay(t *testing.T) {
 	done := make(chan error, 1)
 	go func() { done <- f.handler.runJob(ctx, j) }()
 	deadline := time.Now().Add(5 * time.Second)
-	for stub.SoGoi() == 0 {
+	for stub.SoGoi() < len(lan1) {
 		if time.Now().After(deadline) {
 			t.Fatal("the model never got the question")
 		}
@@ -262,7 +266,11 @@ func TestTraLaiHetLuotHoacDaCoNoiDung(t *testing.T) {
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			f := setup(t, nil)
-			stub := llm.NewStub(llm.Buoc{Text: "Đi dạo hồ nhé.", Cho: 400 * time.Millisecond})
+			// The verifier's call is the slow one: every call has taken its
+			// place on the job's row before the lock (as above).
+			lan := kichNep("Đi dạo hồ nhé.", 0, nil)
+			lan[2].Cho = 400 * time.Millisecond
+			stub := llm.NewStub(lan...)
 			f.nepTrenEngine(t, stub)
 			ctx := context.Background()
 			cfg := fastWorker()
@@ -288,7 +296,7 @@ func TestTraLaiHetLuotHoacDaCoNoiDung(t *testing.T) {
 			done := make(chan error, 1)
 			go func() { done <- f.handler.runJob(ctx, j) }()
 			deadline := time.Now().Add(5 * time.Second)
-			for stub.SoGoi() == 0 {
+			for stub.SoGoi() < len(lan) {
 				if time.Now().After(deadline) {
 					t.Fatal("the model never got the question")
 				}

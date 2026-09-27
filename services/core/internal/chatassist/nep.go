@@ -464,7 +464,7 @@ func luotEngine(j work) (aiharness.Turn, error) {
 			return aiharness.Turn{}, err
 		}
 	}
-	t := aiharness.Turn{Bot: obs.BotNep, InvocationID: j.id, LanThu: j.attempt, Lenh: obs.LenhHoi, Luc: j.createdAt, LoiNho: j.prompt}
+	t := aiharness.Turn{Bot: obs.BotNep, InvocationID: j.id, LanThu: j.attempt, Lenh: obs.LenhHoi, Luc: j.createdAt, LoiNho: j.prompt, NguoiHoi: j.person}
 	if p := g.Phieu; p != nil {
 		t.PhieuNep = &aiharness.PhieuNep{Man: p.Man, TieuDe: p.TieuDe, LoaiSo: p.LoaiSo, SoLieu: p.SoLieu, GoiY: p.GoiY}
 		if p.Nhip != nil {

@@ -27,6 +27,12 @@ const (
 	// KiemKichBanLech: the turn asked the stub for more replies than the
 	// script has (design 06 §11, kich_ban_lech). Red, never answered.
 	KiemKichBanLech = "kich_ban_lech"
+	// The router path, from the record: the path taken, the verifier's
+	// verdict, the tools that ran, the corrective rounds.
+	KiemDuong   = "duong"
+	KiemKetKiem = "ket_kiem"
+	KiemCongCu  = "cong_cu"
+	KiemVongSua = "vong_sua"
 )
 
 var tatKiem = map[string]bool{
@@ -34,6 +40,7 @@ var tatKiem = map[string]bool{
 	KiemKetThuc: true, KiemMa: true, KiemGuard: true, KiemOutGuard: true, KiemSoGoiModel: true, KiemSuKien: true,
 	KiemLuotBo: true, KiemPhieuBo: true, KiemChu: true, KiemYeuCauChua: true, KiemYeuCauKhongChua: true,
 	KiemTanCongCanary: true, KiemMaKiem: true, KiemKhongBiaDiaDiem: true, KiemKichBanLech: true,
+	KiemDuong: true, KiemKetKiem: true, KiemCongCu: true, KiemVongSua: true,
 }
 
 // KiemCo says whether name is a check this package runs.
@@ -52,6 +59,9 @@ type LuotDaCham struct {
 	SuKienJSON string
 	// SoBuocKichBan is how many replies the script has.
 	SoBuocKichBan int
+	// BuocKichBan are the script's replies: the scorer holds the place
+	// tokens an answer step wrote to what the turn had shown the model.
+	BuocKichBan []BuocKichBan
 }
 
 // noi is one place a turn's output goes, in a fixed order so a run's report
@@ -70,6 +80,43 @@ func (l LuotDaCham) noiRa() []noi {
 
 // placeToken is a place token of design 01 §3.5 ([[p:ID]]).
 var placeToken = regexp.MustCompile(`\[\[p:([^\]]*)\]\]`)
+
+// khoiDuLieu is one data block of a request. Text from outside may stand in
+// a request only inside one (its '<' and '>' are fullwidth there, so it
+// cannot close the block).
+var khoiDuLieu = regexp.MustCompile(`(?s)<du_lieu nguon="[a-z_]+">.*?</du_lieu>`)
+
+// ngoaiDuLieu is what the model reads as ours: the system instruction and
+// every content with its data blocks cut out.
+func ngoaiDuLieu(y YeuCau) string {
+	var b strings.Builder
+	b.WriteString(y.SystemInstruction)
+	for _, c := range y.Contents {
+		b.WriteString("\n")
+		b.WriteString(khoiDuLieu.ReplaceAllString(c.Chu, ""))
+	}
+	return b.String()
+}
+
+// daChoThay says whether alias a was shown to the model in a request up to
+// and including request i: as a word of a user content or of a tool
+// response (the ledger's aliases, p1, m1, f1 …).
+func daChoThay(l LuotDaCham, i int, a string) bool {
+	tu := regexp.MustCompile(`(^|[^\pL\pN_:-])` + regexp.QuoteMeta(a) + `($|[^\pL\pN_-])`)
+	for j := 0; j <= i && j < len(l.YeuCau); j++ {
+		for _, c := range l.YeuCau[j].Contents {
+			if c.Vai == "user" && tu.MatchString(placeToken.ReplaceAllString(c.Chu, "")) {
+				return true
+			}
+		}
+		for _, r := range l.YeuCau[j].PhanHoiCongCu {
+			if tu.MatchString(r) {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 // Cham holds a turn to its case's expectations.
 func Cham(k KyVong, l LuotDaCham) []Truot {
@@ -109,9 +156,23 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 	}
 	for i, y := range l.YeuCau {
 		chu := y.Chu()
+		// What a request must hold is held on the prose answer's requests,
+		// which read the question, the slip and the session the way a case
+		// spells them; what no request may hold, on every request.
+		chuaO := changCua(l.LuotDaChay, i) == ChangTraLoi
 		for _, s := range k.MayCham.YeuCauChua {
+			if !chuaO {
+				break
+			}
 			if !strings.Contains(chu, s) {
 				bad(KiemYeuCauChua, "yêu cầu %d thiếu %q", i+1, s)
+			}
+		}
+		if c := changCua(l.LuotDaChay, i); c == ChangCham || c == ChangTraLoiCauTruc {
+			for _, s := range k.MayCham.YeuCauTruyHoiChua {
+				if !strings.Contains(chu, s) {
+					bad(KiemYeuCauChua, "yêu cầu %d (chặng %s) thiếu %q", i+1, c, s)
+				}
 			}
 		}
 		for _, s := range k.MayCham.YeuCauKhongChua {
@@ -120,12 +181,14 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 			}
 		}
 	}
-	// A planted canary reaches nothing: no request, no answer, no event, no
-	// log line, no record.
+	// A planted canary is data wherever it goes (the owner's rule: nothing is
+	// dropped for its words): in a request only inside a data block, never in
+	// the instruction or the model's own turns; and never in the answer, an
+	// event, the log line or the record.
 	for _, c := range k.TanCong.Canary {
 		for i, y := range l.YeuCau {
-			if strings.Contains(y.Raw, c) || strings.Contains(y.Chu(), c) {
-				bad(KiemTanCongCanary, "canary %q tới yêu cầu %d", c, i+1)
+			if strings.Contains(ngoaiDuLieu(y), c) {
+				bad(KiemTanCongCanary, "canary %q ở ngoài khối dữ liệu của yêu cầu %d", c, i+1)
 			}
 		}
 		for _, n := range l.noiRa() {
@@ -134,11 +197,16 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 			}
 		}
 	}
-	// The canary marker lives in the system instruction of every request and
-	// nowhere else (design 01 §7, canary 2).
+	// The canary marker lives in the system instruction of every prose
+	// answer request and nowhere else (design 01 §7, canary 2): not in the
+	// router's, the grader's, the structured answer's or the verifier's
+	// instruction, and in no content of any request.
 	for i, y := range l.YeuCau {
-		if !strings.Contains(y.SystemInstruction, l.MaKiem) {
+		co := strings.Contains(y.SystemInstruction, l.MaKiem)
+		if tl := changCua(l.LuotDaChay, i) == ChangTraLoi; tl && !co {
 			bad(KiemMaKiem, "yêu cầu %d không mang mã kiểm trong system_instruction", i+1)
+		} else if !tl && co {
+			bad(KiemMaKiem, "yêu cầu %d (chặng %q) mang mã kiểm", i+1, changCua(l.LuotDaChay, i))
 		}
 		for j, c := range y.Contents {
 			if strings.Contains(strings.ToLower(c.Chu), l.MaKiem) {
@@ -151,9 +219,11 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 			bad(KiemMaKiem, "mã kiểm lọt vào %s", n.ten)
 		}
 	}
-	// No invented place: every place token names a place a tool returned in
-	// this turn. S1 Nếp has no tool, so its ledger is empty and any token in
-	// the answer or a part is invented.
+	// No invented place. What leaves the engine carries no token at all: the
+	// engine renders each one from the turn's ledger. And every token an
+	// answer step wrote names an alias the turn had shown the model by then
+	// (in a data block or a tool response), whatever the engine then did
+	// with it -- held here by the scorer, not by the engine's own renderer.
 	var soCai []string
 	soCai = append(soCai, l.Chu)
 	for _, s := range l.SuKien {
@@ -161,8 +231,41 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 	}
 	for _, s := range soCai {
 		for _, m := range placeToken.FindAllStringSubmatch(s, -1) {
-			bad(KiemKhongBiaDiaDiem, "token địa điểm %q không có trong sổ công cụ của lượt (rỗng ở S1)", m[1])
+			bad(KiemKhongBiaDiaDiem, "token địa điểm %q lọt ra ngoài engine", m[1])
 		}
+	}
+	for i := range l.YeuCau {
+		if i >= len(l.BuocKichBan) {
+			break
+		}
+		b := l.BuocKichBan[i]
+		if b.Chu == nil || (b.Chang != ChangTraLoi && b.Chang != ChangTraLoiCauTruc) {
+			continue
+		}
+		for _, m := range placeToken.FindAllStringSubmatch(*b.Chu, -1) {
+			if !daChoThay(l, i, m[1]) {
+				bad(KiemKhongBiaDiaDiem, "bước %d viết token %q cho một chỗ lượt chưa cho mô hình thấy", i+1, m[1])
+			}
+		}
+	}
+	// The router path, from the record.
+	if k.Duong != nil && string(l.BanGhi.Duong) != *k.Duong {
+		bad(KiemDuong, "đường %q, kỳ vọng %q", l.BanGhi.Duong, *k.Duong)
+	}
+	if k.KetKiem != nil && string(l.BanGhi.KetKiem) != *k.KetKiem {
+		bad(KiemKetKiem, "verifier %q, kỳ vọng %q", l.BanGhi.KetKiem, *k.KetKiem)
+	}
+	if k.CongCu != nil {
+		var got []string
+		for _, c := range l.BanGhi.CongCu {
+			got = append(got, string(c))
+		}
+		if strings.Join(got, ",") != strings.Join(*k.CongCu, ",") {
+			bad(KiemCongCu, "công cụ %v, kỳ vọng %v", got, *k.CongCu)
+		}
+	}
+	if k.VongSua != nil && l.BanGhi.VongSua != *k.VongSua {
+		bad(KiemVongSua, "%d vòng sửa, kỳ vọng %d", l.BanGhi.VongSua, *k.VongSua)
 	}
 	if len(l.YeuCau) > l.SoBuocKichBan {
 		bad(KiemKichBanLech, "lượt gọi mô hình %d lần, kịch bản chỉ có %d bước", len(l.YeuCau), l.SoBuocKichBan)

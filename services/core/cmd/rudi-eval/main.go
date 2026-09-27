@@ -14,7 +14,9 @@
 // is no code path here that could, which TestKhongDungClientGenai in aieval
 // holds on the source and TestKichBanKhongMoKetNoi holds at run time. The
 // other modes of design 06 (`phat-lai`, `ghi`, `that`) and `--chi-buoc hieu`
-// come with slices 9 and 18 and are refused until then.
+// come with slices 9 and 18 and are refused until then. `--chi-buoc hieu
+// --bo <router set>` runs the router alone over a T1 router set (every case
+// carries its scripted router output); a converted T3 set is refused here.
 //
 // Two ways to drive it:
 //
@@ -42,7 +44,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"google.golang.org/adk/model"
+
 	"mobile/services/core/internal/aieval"
+	"mobile/services/core/internal/aiharness/hieu"
 )
 
 func main() {
@@ -73,7 +78,7 @@ func chay(ctx context.Context, args []string, in io.Reader, out, errw io.Writer)
 	bo := fs.String("bo", "", "file corpus; vắng thì đọc giao thức dòng JSON trên stdin")
 	kichBan := fs.String("kich-ban", "", "thư mục kịch bản stub; mặc định là ../kich_ban cạnh thư mục của corpus")
 	lap := fs.Int("lap", 1, "số lần chạy kịch bản đúng của mỗi ca")
-	chiBuoc := fs.String("chi-buoc", "", "chỉ chạy một chặng (hieu): lát 9")
+	chiBuoc := fs.String("chi-buoc", "", "chỉ chạy một chặng: hieu (router, bộ T1 có đầu ra kịch bản)")
 	if err := fs.Parse(args); err != nil {
 		return raSai
 	}
@@ -89,8 +94,12 @@ func chay(ctx context.Context, args []string, in io.Reader, out, errw io.Writer)
 		fmt.Fprintf(errw, "rudi-eval: --mo-hinh phải là %s (có %q)\n", moHinhKichBan, *moHinh)
 		return raSai
 	}
-	if *chiBuoc != "" {
-		fmt.Fprintln(errw, "rudi-eval: --chi-buoc thuộc lát 9 (bước Understand chưa có)")
+	switch *chiBuoc {
+	case "":
+	case "hieu":
+		return chayHieu(ctx, *bo, out, errw)
+	default:
+		fmt.Fprintf(errw, "rudi-eval: --chi-buoc chỉ nhận hieu (có %q)\n", *chiBuoc)
 		return raSai
 	}
 	if *lap < 1 {
@@ -139,6 +148,48 @@ func chay(ctx context.Context, args []string, in io.Reader, out, errw io.Writer)
 	fmt.Fprintf(errw, "bộ %s: %d ca, %d lượt chạy, %d đạt, %d không đạt; kịch bản sai %d/%d trượt đúng chỗ; canary %s; đồng nhất %s\n",
 		tk.Bo, tk.SoCa, tk.SoLuot, tk.Dat, tk.KhongDat, tk.SaiDat, tk.SoSai, trangThai(tk.Canary, "đỏ đúng chỗ"), trangThai(tk.DongNhat, "xanh"))
 	if !tk.Xanh {
+		return raDo
+	}
+	return raXanh
+}
+
+// chayHieu runs a router set (--chi-buoc hieu) on the scripted stub: T1
+// only. A set whose cases carry no scripted output (the converted T3 sets)
+// needs a real model, which this mode never builds.
+func chayHieu(ctx context.Context, bo string, out, errw io.Writer) int {
+	if bo == "" {
+		fmt.Fprintln(errw, "rudi-eval: --chi-buoc hieu cần --bo")
+		return raSai
+	}
+	raw, err := os.ReadFile(bo)
+	if err != nil {
+		fmt.Fprintf(errw, "rudi-eval: %v\n", err)
+		return raSai
+	}
+	b, err := aieval.DocBoHieu(raw)
+	if err != nil {
+		fmt.Fprintf(errw, "rudi-eval: %v\n", err)
+		return raSai
+	}
+	for _, c := range b.Ca {
+		if len(c.Ra) == 0 {
+			fmt.Fprintf(errw, "rudi-eval: ca %s không có đầu ra kịch bản: bộ này đo router thật (--mo-hinh that, lát 9)\n", c.ID)
+			return raSai
+		}
+	}
+	enc := json.NewEncoder(out)
+	enc.SetEscapeHTML(false)
+	tk := aieval.ChayBoHieu(ctx, hieu.Moi(), b, func(c aieval.CaHieu) model.LLM { return aieval.StubHieu(c) }, func(r aieval.KetQuaHieu) {
+		if !r.Dat {
+			fmt.Fprintf(errw, "ĐỎ %s: %v\n", r.ID, r.Truot)
+		}
+		_ = enc.Encode(r)
+	})
+	if err := enc.Encode(map[string]aieval.TongKetHieu{"tong_ket": tk}); err != nil {
+		return raSai
+	}
+	fmt.Fprintf(errw, "bộ %s: %d ca, %d đạt, %d lời gọi (tối đa %d/ca)\n", tk.Bo, tk.SoCa, tk.Dat, tk.TongGoi, tk.MaxGoi)
+	if tk.Dat != tk.SoCa {
 		return raDo
 	}
 	return raXanh

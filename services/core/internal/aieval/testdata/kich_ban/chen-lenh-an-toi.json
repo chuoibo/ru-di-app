@@ -1,0 +1,18 @@
+{
+  "ten": "chen-lenh-an-toi",
+  "mo_ta": "Router gắn nhãn chen_lenh: lượt hạn chế, vẫn trả lời người hỏi.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"chen_lenh\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Tối nay bạn thử một món nước nóng cho ấm bụng nhé."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

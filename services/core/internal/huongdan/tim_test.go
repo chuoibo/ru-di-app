@@ -130,34 +130,26 @@ func manNepLui(t *testing.T) map[string]bool {
 }
 
 // Sections of the screen the person is on come first when they score at
-// least tyLeGhim of the best MATCHING score; every other section keeps its
-// place in the ranking with no screen. The cases hold both sides: a current
-// screen section pinned, and one that matched but was not; and a question
-// whose best score overall belongs to a section that does not match, so
-// measuring the share against that score instead unpins a section.
+// least tyLeGhim of the best score; every other section keeps its place in
+// the ranking with no screen. Every term of the query ranks: no word list
+// decides whether a section matches. The cases hold both sides: a
+// current-screen section pinned, and one that scored but was not.
 func TestTimGhimTheoTyLe(t *testing.T) {
 	ctx := context.Background()
-	daGhim, khongGhim, nhoKhop := 0, 0, 0
+	daGhim, khongGhim := 0, 0
 	for _, c := range []struct{ cau, man string }{
 		{"tạo kèo", "outings/new"},
 		{"xem lại các buổi đã đi", "plan"},
 		{"gửi ảnh cho cả nhóm xem", "plan"},
-		{"mình lỡ vote nhầm, đổi lại được không", "groups/[id]/chat"},
-		// «ở đâu» puts kham-pha/doi-diem-den first on question words alone.
-		{"tạo ở đâu", "create"},
+		{"bỏ phiếu lại cho lựa chọn khác", "groups/[id]/chat"},
+		{"tạo kèo mới ở đâu", "create"},
 	} {
-		amTiet := soTay.chuanHoi(xephang.AmTiet(c.cau))
-		noiDung := thuatNoiDung(amTiet)
-		diem, cao, caoMoiMuc := map[string]float64{}, -1.0, -1.0
+		amTiet := xephang.AmTiet(c.cau)
+		diem, cao := map[string]float64{}, -1.0
 		for _, kq := range soTay.chiMuc.Tim(strings.Join(amTiet, " "), soTay.chiMuc.Len()) {
-			if caoMoiMuc < 0 {
-				caoMoiMuc = kq.Diem
-			}
-			if soTay.khop(soTay.theoID[kq.ID], noiDung) {
-				diem[kq.ID] = kq.Diem
-				if cao < 0 {
-					cao = kq.Diem
-				}
+			diem[kq.ID] = kq.Diem
+			if cao < 0 {
+				cao = kq.Diem
 			}
 		}
 		khong := idCua(Tim(ctx, Hoi{Cau: c.cau, K: 100}))
@@ -168,9 +160,6 @@ func TestTimGhimTheoTyLe(t *testing.T) {
 			case laMan && diem[id] >= tyLeGhim*cao:
 				ghim = append(ghim, id)
 				daGhim++
-				if diem[id] < tyLeGhim*caoMoiMuc {
-					nhoKhop++
-				}
 			case laMan:
 				con = append(con, id)
 				khongGhim++
@@ -186,23 +175,36 @@ func TestTimGhimTheoTyLe(t *testing.T) {
 			t.Errorf("%q: as walked %v, as declared %v", c.cau, walked, co)
 		}
 	}
-	if daGhim < 2 || khongGhim < 2 || nhoKhop < 1 {
-		t.Fatalf("pinned %d, left in place %d, pinned only because the share is of the best matching score %d: the cases no longer hold every side",
-			daGhim, khongGhim, nhoKhop)
+	if daGhim < 2 || khongGhim < 2 {
+		t.Fatalf("pinned %d, left in place %d: the cases no longer hold both sides", daGhim, khongGhim)
 	}
-	// What the share is for. Asked on plan, «nhóm» matches the plan sections
-	// that mention a group; they no longer go ahead of the chat sections.
-	if got := idCua(Tim(ctx, Hoi{Cau: "gửi ảnh cho cả nhóm xem", Man: "plan", K: 4})); len(got) == 0 || strings.HasPrefix(got[0], "len-plan/") {
-		t.Errorf("a weak plan section pinned first: %v", got)
-	}
-	// And what it keeps: asked where the answer is, the answer comes first.
+	// And what the pin keeps: asked where the answer is, the answer comes
+	// first.
 	if got := idCua(Tim(ctx, Hoi{Cau: "tạo kèo", Man: "outings/new", K: 4})); len(got) == 0 || !strings.HasPrefix(got[0], "tao-keo/") {
 		t.Errorf("tạo kèo on outings/new: %v", got)
 	}
-	// Even when a section that shares only «ở đâu» with the question scores
-	// highest: it does not match, so it sets no bar for pinning.
-	if got := idCua(Tim(ctx, Hoi{Cau: "tạo ở đâu", Man: "create", K: 4})); len(got) == 0 || got[0] != "tao-moi/chon-viec-muon-tao" {
-		t.Errorf("tạo ở đâu on create: %v", got)
+}
+
+// No Go table reads the query: a teencode spelling is ranked as the
+// syllables it is (the model rewrites «ko», «fieu» into the manual's words
+// before the query reaches Tim), and a query of question words alone ranks
+// whatever shares them, by BM25, with nothing gated out. An empty query, or
+// one with no syllable, returns nothing.
+func TestTimKhongDocTu(t *testing.T) {
+	ctx := context.Background()
+	if got := idCua(Tim(ctx, Hoi{Cau: "bỏ phiếu", K: 3})); len(got) == 0 || got[0] != "chat-nhom/bo-phieu-hoac-doi-phieu" {
+		t.Errorf("the model's rewrite of «bo fieu»: %v", got)
+	}
+	if a, b := idCua(Tim(ctx, Hoi{Cau: "fieu", K: 3})), idCua(Tim(ctx, Hoi{Cau: "phieu", K: 3})); reflect.DeepEqual(a, b) {
+		t.Errorf("«fieu» was rewritten to «phieu» by Go: %v", a)
+	}
+	if got := Tim(ctx, Hoi{Cau: "làm sao thì được không", K: 3}); len(got) == 0 {
+		t.Error("question words were gated out")
+	}
+	for _, q := range []string{"", "   ", "?!"} {
+		if got := Tim(ctx, Hoi{Cau: q, Man: "plan"}); got != nil {
+			t.Errorf("%q returned %v", q, idCua(got))
+		}
 	}
 }
 
@@ -244,52 +246,6 @@ func TestTimCatCau(t *testing.T) {
 	} {
 		if got := utf8.RuneCountInString(catCau(c.in)); got != c.rune {
 			t.Errorf("catCau of %d bytes kept %d runes, want %d", len(c.in), got, c.rune)
-		}
-	}
-}
-
-// The teencode table rewrites only syllables the manual does not use, and
-// the «f»/«w» spellings only into a syllable the manual does use.
-func TestChuanHoiTeencode(t *testing.T) {
-	s := &SoTay{tuVung: map[string]bool{"dt": true, "phieu": true, "quan": true, "o": true}}
-	got := s.chuanHoi([]string{"ko", "bik", "bo", "fieu", "o", "dau", "v", "wan", "dt", "sdt", "fb", "wifi"})
-	want := []string{"khong", "biet", "bo", "phieu", "o", "dau", "vay", "quan", "dt", "so", "dien", "thoai", "fb", "wifi"}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("chuanHoi = %v, want %v", got, want)
-	}
-	for k, v := range teen {
-		if got := xephang.AmTiet(k); len(got) != 1 || got[0] != k {
-			t.Errorf("teen key %q folds to %v: it would never match a folded syllable", k, got)
-		}
-		if strings.Join(xephang.AmTiet(v), " ") != v {
-			t.Errorf("teen value %q is not folded syllables", v)
-		}
-	}
-	// On the real manual: «fieu» and «ko»/«dc» reach the words they stand for.
-	ctx := context.Background()
-	if got := idCua(Tim(ctx, Hoi{Cau: "bo fieu o dau v", Man: "plan", K: 3})); len(got) == 0 || got[0] != "chat-nhom/bo-phieu-hoac-doi-phieu" {
-		t.Errorf("bo fieu: %v", got)
-	}
-	if got := idCua(Tim(ctx, Hoi{Cau: "tu tao keo ko can AI dc ko", Man: "profile", K: 3})); len(got) == 0 || got[0] != "chat-nhom/tu-tao-keo-khong-can-ai" {
-		t.Errorf("ko can AI: %v", got)
-	}
-}
-
-// A section that shares only question words («bấm», «gì», «thì») with the
-// question does not match, so it is neither pinned nor returned.
-func TestTimTuDemKhongLamKhop(t *testing.T) {
-	got := idCua(Tim(context.Background(), Hoi{Cau: "bấm gì thì đăng xuất", Man: "groups/[id]/chat", K: 10}))
-	if len(got) == 0 || got[0] != "ca-nhan/cai-dat-va-dang-xuat" {
-		t.Fatalf("got %v, want the sign-out section first", got)
-	}
-	for _, id := range got {
-		if strings.HasPrefix(id, "chat-nhom/") {
-			t.Fatalf("%s matched on question words alone: %v", id, got)
-		}
-	}
-	for _, q := range []string{"", "   ", "làm sao thì được không", "ko dc j z", "?!"} {
-		if got := Tim(context.Background(), Hoi{Cau: q, Man: "plan"}); got != nil {
-			t.Errorf("%q returned %v", q, idCua(got))
 		}
 	}
 }
@@ -372,14 +328,6 @@ func TestTimXacDinhDongThoi(t *testing.T) {
 	close(loi)
 	for q := range loi {
 		t.Errorf("%q ranked differently on another call", q)
-	}
-}
-
-func TestTuDemLaAmTietDaGap(t *testing.T) {
-	for w := range tuDem {
-		if got := xephang.AmTiet(w); len(got) != 1 || got[0] != w {
-			t.Errorf("stop word %q folds to %v: it would never match a folded syllable", w, got)
-		}
 	}
 }
 

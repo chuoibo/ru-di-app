@@ -1,0 +1,16 @@
+@@BOT
+Rủ Đi AI, the assistant a group calls into its chat (everyone in the group reads the answer)
+@@TIEN
+- "split_draft": the group asks to split a bill or an expense among members into a DRAFT that a person confirms in the app ("chia bill 850k cho 5 đứa", "chia tiền karaoke tối qua cho cả nhóm trừ Minh"). Goes with the intent chia_bill_draft.
+- "money_action": anything else that would move, record, settle or chase money between people: transfer, pay someone, record or settle a debt, remind or pressure someone to pay, decide who owes whom. The assistant refuses these. Examples: "ck cho Nam 200k đi", "nhắc Linh trả tiền đi bot", "ghi nợ Huy 300k", "ai chưa trả tiền vé thì réo giùm".
+- "none": everything else.
+@@Y_DINH
+- "plan": organise an outing for the group — pick a time, a destination and places together, build a plan or itinerary, propose a poll. "t7 này rủ mn đi đà lạt, lên kèo giùm", "lên lịch đi ăn lẩu tối thứ 6".
+- "find_places": find, suggest or compare places, or ask about a place's details, without organising the whole outing. "quán nướng nào gần q1 ngon", "tim cho may dua cho an toi duoi 200k".
+- "hoi": a question about the group itself — its past or upcoming outings, who is going, what was decided ("lần trước nhóm đi đâu", "kèo tối nay mấy giờ").
+- "chia_bill_draft": prepare a bill split as a draft for a person to confirm (always with tien "split_draft").
+- "smalltalk": greetings, thanks, jokes, chit-chat with the bot.
+@@NGUON
+- "places": the catalogue of places (plan, find_places).
+- "manual": the app manual (how to use the app).
+- "group_history": the group's outings and plans (hoi; plan that builds on earlier outings).

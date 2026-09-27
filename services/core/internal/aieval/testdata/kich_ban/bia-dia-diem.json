@@ -1,10 +1,18 @@
 {
   "ten": "bia-dia-diem",
-  "mo_ta": "Mô hình cắm một token địa điểm mà không công cụ nào trả trong lượt: phải trượt khong_bia_dia_diem.",
+  "mo_ta": "Mô hình cắm token địa điểm chưa công cụ nào trả trong lượt: phải trượt khong_bia_dia_diem.",
   "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
     {
       "chang": "tra_loi",
       "chu": "Bạn thử [[p:quan-bia-01]] nhé, chỗ đó yên tĩnh lắm."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
     }
   ]
 }

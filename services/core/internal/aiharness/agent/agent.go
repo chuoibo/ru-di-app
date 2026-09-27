@@ -20,6 +20,7 @@ import (
 	"google.golang.org/adk/model"
 	"google.golang.org/adk/runner"
 	"google.golang.org/adk/session"
+	"google.golang.org/adk/tool"
 	"google.golang.org/genai"
 )
 
@@ -37,7 +38,28 @@ type CauHinh struct {
 	// ConLai, when set, reports the model calls left in the turn's budget;
 	// with one left the step runs with function calling off too.
 	ConLai func() int
+
+	// Tools is the turn's permitted toolset (tools.BoiCanh.BoCongCu); none
+	// for a turn that answers without tools.
+	Tools []tool.Tool
+	// TruocTool, SauTool and LoiTool are the tool callbacks (permission and
+	// argument checks, evidence ledger, closed error codes).
+	TruocTool llmagent.BeforeToolCallback
+	SauTool   llmagent.AfterToolCallback
+	LoiTool   llmagent.OnToolErrorCallback
+	// EpTraLoi, when set and true, makes the next step the final answer
+	// (function calling off): the repair or the tool budget is spent.
+	EpTraLoi func() bool
+	// BuocCuoi, when set, is told that a step with function calling off has
+	// started (tools.BoiCanh.DatBuocCuoi): a function call the model returns
+	// on it anyway is refused by the tool callbacks, never run.
+	BuocCuoi func()
 }
+
+// CheDoGiua is the function calling mode of every step but the last when
+// the turn has tools: AUTO, the MODEL decides whether to call a tool or to
+// answer (never ANY, which forces calls). The last step is NONE.
+const CheDoGiua = genai.FunctionCallingConfigModeAuto
 
 // Luot is one earlier turn of the session.
 type Luot struct {
@@ -91,7 +113,7 @@ func (t *TheoDoi) truocMoHinh(cfg CauHinh) llmagent.BeforeModelCallback {
 		if b > cfg.MaxBuoc {
 			return nil, ErrHetBuoc
 		}
-		if b == cfg.MaxBuoc || (cfg.ConLai != nil && cfg.ConLai() <= 1) {
+		if b == cfg.MaxBuoc || (cfg.ConLai != nil && cfg.ConLai() <= 1) || (cfg.EpTraLoi != nil && cfg.EpTraLoi()) {
 			if req.Config == nil {
 				req.Config = &genai.GenerateContentConfig{}
 			}
@@ -100,6 +122,14 @@ func (t *TheoDoi) truocMoHinh(cfg CauHinh) llmagent.BeforeModelCallback {
 				req.Config.SystemInstruction = &genai.Content{Role: genai.RoleUser}
 			}
 			req.Config.SystemInstruction.Parts = append(req.Config.SystemInstruction.Parts, &genai.Part{Text: TraLoiNgay})
+			if cfg.BuocCuoi != nil {
+				cfg.BuocCuoi()
+			}
+		} else if len(cfg.Tools) > 0 {
+			if req.Config == nil {
+				req.Config = &genai.GenerateContentConfig{}
+			}
+			req.Config.ToolConfig = &genai.ToolConfig{FunctionCallingConfig: &genai.FunctionCallingConfig{Mode: CheDoGiua}}
 		}
 		return nil, nil
 	}
@@ -135,6 +165,18 @@ const (
 // user message, and returns the final answer's text.
 func Chay(ctx context.Context, m model.LLM, cfg CauHinh, luot []Luot, cuoi string, td *TheoDoi) (string, error) {
 	nhiet := cfg.NhietDo
+	var truocTool []llmagent.BeforeToolCallback
+	var sauTool []llmagent.AfterToolCallback
+	var loiTool []llmagent.OnToolErrorCallback
+	if cfg.TruocTool != nil {
+		truocTool = append(truocTool, cfg.TruocTool)
+	}
+	if cfg.SauTool != nil {
+		sauTool = append(sauTool, cfg.SauTool)
+	}
+	if cfg.LoiTool != nil {
+		loiTool = append(loiTool, cfg.LoiTool)
+	}
 	a, err := llmagent.New(llmagent.Config{
 		Name:  cfg.Ten,
 		Model: m,
@@ -146,6 +188,10 @@ func Chay(ctx context.Context, m model.LLM, cfg CauHinh, luot []Luot, cuoi strin
 			MaxOutputTokens: cfg.MaxOutputTokens,
 			SafetySettings:  AnToan(),
 		},
+		Tools:                    cfg.Tools,
+		BeforeToolCallbacks:      truocTool,
+		AfterToolCallbacks:       sauTool,
+		OnToolErrorCallbacks:     loiTool,
 		BeforeModelCallbacks:     []llmagent.BeforeModelCallback{td.truocMoHinh(cfg)},
 		AfterModelCallbacks:      []llmagent.AfterModelCallback{td.sauMoHinh},
 		DisallowTransferToParent: true,

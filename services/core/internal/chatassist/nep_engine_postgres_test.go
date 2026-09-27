@@ -98,7 +98,7 @@ func (n nepGo) soDo(t *testing.T, id string) hangSoDo {
 }
 
 func TestNepQuaEngineGo(t *testing.T) {
-	n := setupNepGo(t, llm.Buoc{Text: "Tối nay bạn đi dạo hồ nhé.", Usage: &genai.GenerateContentResponseUsageMetadata{PromptTokenCount: 700, CandidatesTokenCount: 12}})
+	n := setupNepGo(t, kichNep("Tối nay bạn đi dạo hồ nhé.", 0, &genai.GenerateContentResponseUsageMetadata{PromptTokenCount: 700, CandidatesTokenCount: 12})...)
 	ctx := context.Background()
 	if _, err := n.f.pool.Exec(ctx, `INSERT INTO messages(id,context_id,author_id,kind,body) VALUES($1,$2,$3,'text','Synthetic group chat sentinel')`, newID(), n.f.context, n.f.peer); err != nil {
 		t.Fatal(err)
@@ -121,16 +121,22 @@ func TestNepQuaEngineGo(t *testing.T) {
 	if n.brain.calls != 0 || n.f.capabilityCalls.Load() != 0 {
 		t.Fatalf("não bị gọi: %d lần, thăm dò %d", n.brain.calls, n.f.capabilityCalls.Load())
 	}
-	if n.stub.SoGoi() != 1 {
+	// The router, the answer, the verifier.
+	if n.stub.SoGoi() != 3 {
 		t.Fatalf("%d lời gọi mô hình", n.stub.SoGoi())
 	}
-	req := string(n.stub.YeuCau()[0])
-	// «Now» comes from the stored created_at, on Vietnam's clock, exactly;
-	// and so does the evening «tối nay» names.
+	// «Now» comes from the stored created_at, on Vietnam's clock, exactly,
+	// in the router's request and the answer's; the evening the router
+	// resolved is laid on the calendar; the words from outside go as
+	// datamarked data.
+	if !strings.Contains(string(n.stub.YeuCau()[0]), "Bây giờ: Thứ Năm 24/09/2026 22:47 (Asia/Ho_Chi_Minh, 2026-09-24T22:47:05+07:00)") {
+		t.Error("yêu cầu router thiếu dòng «Bây giờ»")
+	}
+	req := string(n.stub.YeuCau()[1])
 	for _, can := range []string{
 		"Bây giờ: Thứ Năm 24/09/2026 22:47 (Asia/Ho_Chi_Minh, 2026-09-24T22:47:05+07:00)",
-		"- «tối nay» là Thứ Năm 24/09/2026",
-		"tối nay đi đâu?", "Mình thích yên tĩnh", "Vậy mình gợi ý chỗ vắng.", "man: explore", "tieuDe: Khám phá", "soLieu: soNguoi=4",
+		"- ngày: Thứ Năm 24/09/2026", "- giờ: 18:00–23:00",
+		"tốiˆnayˆđiˆđâu?", "Mìnhˆthíchˆyênˆtĩnh", "Vậyˆmìnhˆgợiˆýˆchỗˆvắng.", "man:ˆexplore", "tieuDe:ˆKhámˆphá", "soLieu:ˆsoNguoi=4",
 	} {
 		if !strings.Contains(req, can) {
 			t.Errorf("yêu cầu thiếu %q", can)
@@ -151,7 +157,7 @@ func TestNepQuaEngineGo(t *testing.T) {
 	}
 	h := n.soDo(t, id)
 	if h.bot != "nep" || h.lenh != "hoi" || h.guard != "proceed" || h.outGuard != "none" || h.ketThuc != "xong" || h.code != nil ||
-		h.lanThu != 1 || h.soGoi != 1 || h.buoc != 1 || h.version != prompts.VersionNep() {
+		h.lanThu != 1 || h.soGoi != 3 || h.buoc != 1 || h.version != prompts.VersionNep() {
 		t.Fatalf("hàng số đo: %+v", h)
 	}
 	// The one log line carries no words of the question or the answer.
@@ -162,16 +168,17 @@ func TestNepQuaEngineGo(t *testing.T) {
 	}
 }
 
-// The money law on the Go path: refused with the engine's code, no model
-// call, the inputs scrubbed, one metrics row saying so -- and no words.
+// Money on the Go path: the ROUTER classes it (the owner's rule), and the
+// turn is refused with the engine's code after that one call, the inputs
+// scrubbed, one metrics row saying so -- and no words.
 func TestNepQuaEngineGoLuatTien(t *testing.T) {
-	n := setupNepGo(t, llm.Buoc{Text: "không bao giờ tới"})
+	n := setupNepGo(t, llm.Buoc{Text: ruTien}, llm.Buoc{Text: "không bao giờ tới"})
 	id, done := n.ask(t, nepThan("chuyển khoản cho Minh 200k giúp mình"))
 	if done.Status != "failed" || done.Code == nil || *done.Code != "nep_khong_cham_tien" || done.Text != nil {
 		t.Fatalf("kết quả: %+v", done)
 	}
-	if n.stub.SoGoi() != 0 || n.brain.calls != 0 {
-		t.Fatalf("luật tiền vẫn gọi: stub=%d não=%d", n.stub.SoGoi(), n.brain.calls)
+	if n.stub.SoGoi() != 1 || n.brain.calls != 0 {
+		t.Fatalf("từ chối tiền gọi thêm: stub=%d não=%d", n.stub.SoGoi(), n.brain.calls)
 	}
 	var promptNull, goiNull bool
 	_ = n.f.pool.QueryRow(context.Background(), `SELECT prompt IS NULL, boi_canh IS NULL FROM chat_ai_invocations WHERE id=$1`, id).Scan(&promptNull, &goiNull)
@@ -179,7 +186,7 @@ func TestNepQuaEngineGoLuatTien(t *testing.T) {
 		t.Fatal("câu hỏi bị từ chối vẫn nằm lại")
 	}
 	h := n.soDo(t, id)
-	if h.guard != "refused" || h.ketThuc != "that_bai" || h.code == nil || *h.code != "nep_khong_cham_tien" || h.soGoi != 0 {
+	if h.guard != "refused" || h.ketThuc != "that_bai" || h.code == nil || *h.code != "nep_khong_cham_tien" || h.soGoi != 1 {
 		t.Fatalf("hàng số đo: %+v", h)
 	}
 }
@@ -187,7 +194,7 @@ func TestNepQuaEngineGoLuatTien(t *testing.T) {
 // An answer the output guard stops never reaches the sealed result.
 func TestNepQuaEngineGoChanDauRa(t *testing.T) {
 	// repo-guard: allow=vn-phone reason=synthetic-output-guard-fixture
-	n := setupNepGo(t, llm.Buoc{Text: "Bạn gọi quán số 0912 345 678 nhé."})
+	n := setupNepGo(t, llm.Buoc{Text: ruTraLoiThang}, llm.Buoc{Text: "Bạn gọi quán số 0912 345 678 nhé."})
 	id, done := n.ask(t, nepThan("quán nào mở khuya?"))
 	if done.Status != "failed" || done.Code == nil || *done.Code != "ai_tra_loi_bi_chan" || done.Text != nil {
 		t.Fatalf("kết quả: %+v", done)
@@ -197,7 +204,8 @@ func TestNepQuaEngineGoChanDauRa(t *testing.T) {
 	if !resultNull {
 		t.Fatal("câu trả lời bị chặn vẫn nằm trong result")
 	}
-	if h := n.soDo(t, id); h.outGuard != "chan" || h.soGoi != 1 {
+	// The structural check stops it before the verifier: two calls.
+	if h := n.soDo(t, id); h.outGuard != "chan" || h.soGoi != 2 {
 		t.Fatalf("hàng số đo: %+v", h)
 	}
 }
@@ -363,7 +371,7 @@ func TestNepQuaEngineGoHuyTuNgoai(t *testing.T) {
 	}
 	batDau := func(t *testing.T) (nepGo, string, work) {
 		t.Helper()
-		n := setupNepGo(t, llm.Buoc{Text: "không bao giờ tới", Cho: time.Minute}, llm.Buoc{Text: "Đi dạo hồ nhé."})
+		n := setupNepGo(t, append([]llm.Buoc{{Text: "không bao giờ tới", Cho: time.Minute}}, kichNep("Đi dạo hồ nhé.", 0, nil)...)...)
 		n.f.handler.WithWorker(fastWorker())
 		code, job, raw := n.f.nepPost(t, n.f.token, nepThan("đi đâu?"))
 		if code != 202 {

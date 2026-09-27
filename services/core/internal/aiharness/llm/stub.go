@@ -20,6 +20,9 @@ type Buoc struct {
 	Text string
 	// Goi, when set, makes the reply a function call instead.
 	Goi *genai.FunctionCall
+	// CacGoi, when set, makes the reply several function calls in one
+	// response (the model's parallel calls).
+	CacGoi []*genai.FunctionCall
 	// Loi, when set, makes the reply an error (a genai.APIError for a
 	// provider failure).
 	Loi error
@@ -103,12 +106,18 @@ func (s *Stub) GenerateContent(ctx context.Context, req *model.LLMRequest, strea
 		if finish == "" {
 			finish = genai.FinishReasonStop
 		}
-		part := &genai.Part{Text: b.Text}
+		parts := []*genai.Part{{Text: b.Text}}
 		if b.Goi != nil {
-			part = &genai.Part{FunctionCall: b.Goi}
+			parts = []*genai.Part{{FunctionCall: b.Goi}}
+		}
+		if len(b.CacGoi) > 0 {
+			parts = nil
+			for _, g := range b.CacGoi {
+				parts = append(parts, &genai.Part{FunctionCall: g})
+			}
 		}
 		yield(&model.LLMResponse{
-			Content:       &genai.Content{Role: "model", Parts: []*genai.Part{part}},
+			Content:       &genai.Content{Role: "model", Parts: parts},
 			UsageMetadata: b.Usage,
 			FinishReason:  finish,
 			TurnComplete:  true,

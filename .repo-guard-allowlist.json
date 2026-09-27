@@ -561,11 +561,11 @@
     },
     {
       "path": "services/core/go.mod",
-      "sha256": "8b608a72f725403d55d2cee87ffbfd9f853b3db73db45c38e810d38daac3491f",
+      "sha256": "021cd3d2ffa3f9a397ee60015aaee24efed70462b1211b788d7a51d9c146f831",
       "rules": [
         "long-number"
       ],
-      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc. Thêm google.golang.org/adk v1.7.0 + google.golang.org/genai v1.71.0 cho engine AI Go (ADR-0037, lát 6); pseudo-version của genproto/go-rendezvous vẫn là ngày giờ, không có dữ liệu người dùng. Ghim lại 2026-09-25 sau khi gộp lát 3 (go 1.25.0 / toolchain go1.25.14), x/tools v0.49.0 cho aigate, amqp091-go v1.15.0 cho jobs, adk + genai cho lát 6: đã kiểm bằng máy rằng cả 3 chỗ luật bắt đều nằm trong chuỗi pseudo-version v0.0.0-<14 số>-<12 hex>."
+      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc. Thêm google.golang.org/adk v1.7.0 + google.golang.org/genai v1.71.0 cho engine AI Go (ADR-0037, lát 6); pseudo-version của genproto/go-rendezvous vẫn là ngày giờ, không có dữ liệu người dùng. Ghim lại 2026-09-25 sau khi gộp lát 3 (go 1.25.0 / toolchain go1.25.14), x/tools v0.49.0 cho aigate, amqp091-go v1.15.0 cho jobs, adk + genai cho lát 6: đã kiểm bằng máy rằng cả 3 chỗ luật bắt đều nằm trong chuỗi pseudo-version v0.0.0-<14 số>-<12 hex>. Ghim lại 2026-09-25 (tích hợp lõi agent, agent-core/integrated): chỉ thêm dòng require trực tiếp github.com/google/jsonschema-go v0.4.2 (trước đã là phụ thuộc gián tiếp qua ADK, go.sum không đổi) cho kiểm schema tham số tool; không dòng pseudo-version nào đổi, vẫn đúng 3 chỗ luật bắt như trên."
     },
     {
       "path": "services/core/go.sum",

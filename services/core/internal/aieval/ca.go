@@ -14,6 +14,8 @@ import (
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/trinho"
+	"mobile/services/core/internal/aiharness/truyhoi"
 )
 
 // The two sentinel cases every corpus carries (design 06 §12, row T1): the
@@ -65,6 +67,43 @@ type DauVao struct {
 	Phieu      *Phieu `json:"phieu,omitempty"`
 	Luot       []Luot `json:"luot,omitempty"`
 	DaGoiTruoc int    `json:"da_goi_truoc,omitempty"`
+	// TheGioi is what the engine's data ports hold for this run.
+	TheGioi *TheGioi `json:"the_gioi,omitempty"`
+}
+
+// TheGioi is a case's world: what the engine's data ports hold for the run,
+// as in-memory fakes (aiharness/testkit), so the tools and the retrieval
+// path have something to read. Made-up data only. No world is an empty one:
+// every port answers, with nothing in it.
+type TheGioi struct {
+	// NguoiHoi is the asking person's id (Turn.NguoiHoi), UUID-shaped.
+	NguoiHoi string `json:"nguoi_hoi,omitempty"`
+	// DiemDen are the destinations the router may pick from.
+	DiemDen []MucTheGioi `json:"diem_den,omitempty"`
+	// TruyHoi are the places retriever's answers, one per retrieval in
+	// order (the last again past the end); BiLoai beside each counts what
+	// each hard constraint removed.
+	TruyHoi []LanTruyHoi `json:"truy_hoi,omitempty"`
+	// TriNho are the person's long-term facts.
+	TriNho []SuThatTheGioi `json:"tri_nho,omitempty"`
+}
+
+// MucTheGioi is one catalogue item: an id and its evidence fields.
+type MucTheGioi struct {
+	ID     string            `json:"id"`
+	Truong map[string]string `json:"truong"`
+}
+
+// LanTruyHoi is one retrieval's answer.
+type LanTruyHoi struct {
+	Quan   []MucTheGioi   `json:"quan"`
+	BiLoai map[string]int `json:"bi_loai,omitempty"`
+}
+
+// SuThatTheGioi is one remembered fact.
+type SuThatTheGioi struct {
+	NoiDung string `json:"noi_dung"`
+	Loai    string `json:"loai"`
 }
 
 // Phieu mirrors the device's context slip (nep/phieu.ts), keys and all.
@@ -103,15 +142,28 @@ type KyVong struct {
 	PhieuBo int      `json:"phieu_bo"`
 	MayCham MayCham  `json:"may_cham"`
 	TanCong TanCong  `json:"tan_cong"`
+	// The router path, from the turn's record, each checked when set: the
+	// path the engine took, the verifier's verdict, the tools that ran (in
+	// registry order) and the corrective rounds.
+	Duong   *string   `json:"duong,omitempty"`
+	KetKiem *string   `json:"ket_kiem,omitempty"`
+	CongCu  *[]string `json:"cong_cu,omitempty"`
+	VongSua *int      `json:"vong_sua,omitempty"`
 }
 
 // MayCham is the rule checks on the request and the answer.
 type MayCham struct {
 	// Chu, when set, is the exact answer.
 	Chu *string `json:"chu,omitempty"`
-	// YeuCauChua must be in every request; YeuCauKhongChua in none.
+	// YeuCauChua must be in every prose answer request (stage tra_loi);
+	// YeuCauKhongChua in no request of any stage.
 	YeuCauChua      []string `json:"yeu_cau_chua,omitempty"`
 	YeuCauKhongChua []string `json:"yeu_cau_khong_chua,omitempty"`
+	// YeuCauTruyHoiChua must be in every request of the retrieval path's
+	// grader and structured answer (stages cham, tra_loi_cau_truc): the
+	// constraints as the MODEL extracted them, which the grader and the
+	// answer are shown.
+	YeuCauTruyHoiChua []string `json:"yeu_cau_truy_hoi_chua,omitempty"`
 }
 
 // TanCong is the attack a case plants.
@@ -269,6 +321,9 @@ func (c Ca) Kiem(kbs map[string]KichBan) error {
 	if err := c.KyVong.kiem(); err != nil {
 		return err
 	}
+	if err := c.DauVao.TheGioi.kiem(); err != nil {
+		return err
+	}
 	if _, ok := kbs[c.KichBan.Dung]; !ok {
 		return fmt.Errorf("không có kịch bản %q", c.KichBan.Dung)
 	}
@@ -322,9 +377,67 @@ func (k KyVong) kiem() error {
 	if k.LuotBo < 0 || k.PhieuBo < 0 {
 		return errors.New("luot_bo, phieu_bo âm")
 	}
+	if k.Duong != nil && !obs.Duong(*k.Duong).Valid() {
+		return fmt.Errorf("duong %q ngoài tập đóng", *k.Duong)
+	}
+	if k.KetKiem != nil && !obs.KetKiem(*k.KetKiem).Valid() {
+		return fmt.Errorf("ket_kiem %q ngoài tập đóng", *k.KetKiem)
+	}
+	if k.CongCu != nil {
+		var cc obs.CacCongCu
+		for _, t := range *k.CongCu {
+			cc = append(cc, obs.CongCu(t))
+		}
+		if !cc.Valid() {
+			return fmt.Errorf("cong_cu %v ngoài sổ công cụ", *k.CongCu)
+		}
+	}
+	if k.VongSua != nil && (*k.VongSua < 0 || *k.VongSua > llm.MaxCorrectiveRounds) {
+		return errors.New("vong_sua ngoài trần")
+	}
 	// A request expectation on a turn that makes no call is vacuous.
-	if k.SoGoiModel == 0 && (len(k.MayCham.YeuCauChua) > 0 || len(k.MayCham.YeuCauKhongChua) > 0) {
+	if k.SoGoiModel == 0 && (len(k.MayCham.YeuCauChua) > 0 || len(k.MayCham.YeuCauKhongChua) > 0 || len(k.MayCham.YeuCauTruyHoiChua) > 0) {
 		return errors.New("kỳ vọng trên yêu cầu mà lượt không gọi mô hình")
+	}
+	return nil
+}
+
+var dangUUID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+
+// kiem checks a world's shape: ids present, the person UUID-shaped, the
+// facts of a closed kind, the removal counts named by hard constraints.
+func (g *TheGioi) kiem() error {
+	if g == nil {
+		return nil
+	}
+	if g.NguoiHoi != "" && !dangUUID.MatchString(g.NguoiHoi) {
+		return fmt.Errorf("nguoi_hoi %q không có dạng UUID", g.NguoiHoi)
+	}
+	muc := func(ms []MucTheGioi) error {
+		for _, m := range ms {
+			if m.ID == "" || len(m.Truong) == 0 {
+				return errors.New("mục thế giới thiếu id hoặc trường")
+			}
+		}
+		return nil
+	}
+	if err := muc(g.DiemDen); err != nil {
+		return err
+	}
+	for _, l := range g.TruyHoi {
+		if err := muc(l.Quan); err != nil {
+			return err
+		}
+		for r, n := range l.BiLoai {
+			if !truyhoi.RangBuocCungs.Co(truyhoi.RangBuoc(r)) || n < 0 {
+				return fmt.Errorf("bi_loai %q=%d không phải ràng buộc cứng", r, n)
+			}
+		}
+	}
+	for _, f := range g.TriNho {
+		if !trinho.LoaiSuThats.Co(trinho.LoaiSuThat(f.Loai)) || f.NoiDung == "" {
+			return fmt.Errorf("sự thật %q loại %q", f.NoiDung, f.Loai)
+		}
 	}
 	return nil
 }

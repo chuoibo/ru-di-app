@@ -28,14 +28,52 @@ import (
 // Neither file is edited to fit the ranker: each is pinned to the sha256 it
 // had when written (TestBoVangKhongSua). A new question goes into a new file
 // committed before the change it grades.
+//
+//   - duongTruyVan (review no-heuristics, 26 queries): every teencode
+//     question of the two sets above, rewritten as the router is told to
+//     write truy_van (full words, diacritics, the app's words). Since no Go
+//     table reads teencode any more, the text that reaches Tim on the
+//     engine path is the MODEL's query; a person stood in for the router
+//     here, wrote them before measuring, and a T3 run with the real router
+//     replaces this set.
 const (
 	duongVang    = "testdata/truy-hoi-so-tay.json"
 	duongManKhac = "testdata/truy-hoi-man-khac.json"
+	duongTruyVan = "testdata/truy-hoi-truy-van-model.json"
 )
 
 var bamBoVang = map[string]string{
 	duongVang:    "1f4768f93fd533b238052e5c1325e79f707449b4dcc5ddc8b9f2cc4338788f4e",
 	duongManKhac: "f3287aedd0498261459133db8a2ba182b0d356257e0f032c4d0656d6c241dfc2",
+	duongTruyVan: "2b90cdaa1c4574fbf7110967a73df15cd5b7bbae08cea0f4b30b08c4b7620119",
+}
+
+// docTruyVan reads duongTruyVan as golden questions (go "co_dau").
+func docTruyVan(t testing.TB) []cauVang {
+	t.Helper()
+	raw, err := os.ReadFile(duongTruyVan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var f struct {
+		GhiChu string `json:"ghi_chu"`
+		Cau    []struct {
+			Hoi  string   `json:"hoi"`
+			Goc  string   `json:"goc"`
+			Man  string   `json:"man"`
+			Dung []string `json:"dung"`
+		} `json:"cau"`
+	}
+	dec := json.NewDecoder(strings.NewReader(string(raw)))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&f); err != nil {
+		t.Fatal(err)
+	}
+	var out []cauVang
+	for _, c := range f.Cau {
+		out = append(out, cauVang{Hoi: c.Hoi, Man: c.Man, Dung: c.Dung, Go: "co_dau"})
+	}
+	return out
 }
 
 type cauVang struct {
@@ -47,6 +85,9 @@ type cauVang struct {
 
 func docBoVang(t testing.TB, duong string) []cauVang {
 	t.Helper()
+	if duong == duongTruyVan {
+		return docTruyVan(t)
+	}
 	raw, err := os.ReadFile(duong)
 	if err != nil {
 		t.Fatal(err)
@@ -214,30 +255,38 @@ func TestBoVangKhongSua(t *testing.T) {
 // these, and the change then has to say so here. Only the whole of each set
 // is held to the bar of design 05 §3 (recall@5 ≥ 0.90).
 //
-// Measured when pinned. On duongVang five questions miss: «checkin o dau»
-// and «log out o dau» share no term with the manual («check-in», «đăng
-// xuất»; the teencode table does not translate English, by design), so the
-// teencode group stays at 0.8333, UNDER the bar; «thêm quán này vào buổi đi
-// chơi của nhóm» finds one of its two sections; «mình lỡ vote nhầm, đổi lại
-// được không» and «xem lại các buổi đã đi» were found only because every
-// matching section of the current screen used to be pinned, and are the
-// price of pinning by share (tyLeGhim). On duongManKhac four miss.
+// Measured when pinned (review no-heuristics, 2026-09-25: the teencode
+// table and the stop-word gate are gone, every query term ranks). Recall@5
+// did not move on any group of the two person-typed sets; MRR fell where
+// raw teencode reaches Tim (duongVang teen 0.7917 → 0.7354, duongManKhac
+// teen 0.7143 → 0.6458, the wholes 0.9211 → 0.9136 and 0.7880 → 0.7672,
+// duongVang co_dau 0.8886 → 0.8883). Raw teencode no longer reaches Tim on
+// the engine path: the model's rewrite does, and duongTruyVan, those same
+// questions as the router writes them, holds recall@5 1.0000 and MRR
+// 0.8942. On duongVang five questions miss: «checkin o dau» and «log out o
+// dau» share no term with the manual in raw form; «thêm quán này vào buổi
+// đi chơi của nhóm» finds one of its two sections; «mình lỡ vote nhầm, đổi
+// lại được không» and «xem lại các buổi đã đi» are the price of pinning by
+// share (tyLeGhim). On duongManKhac four miss.
 //
 // The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
 // duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
 // 0.3526 (teen 0.8214 / 0.2905).
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9211"},
-		"co_dau":    {"0.9405", "0.8886"},
+		"":          {"0.9505", "0.9136"},
+		"co_dau":    {"0.9405", "0.8883"},
 		"khong_dau": {"1.0000", "1.0000"},
-		"teen":      {"0.8333", "0.7917"},
+		"teen":      {"0.8333", "0.7354"},
+	},
+	duongTruyVan: {
+		"": {"1.0000", "0.8942"},
 	},
 	duongManKhac: {
-		"":          {"0.9130", "0.7880"},
+		"":          {"0.9130", "0.7672"},
 		"co_dau":    {"0.8000", "0.7444"},
 		"khong_dau": {"1.0000", "0.8873"},
-		"teen":      {"0.9286", "0.7143"},
+		"teen":      {"0.9286", "0.6458"},
 	},
 }
 

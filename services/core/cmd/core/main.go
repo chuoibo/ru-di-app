@@ -36,9 +36,13 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	"mobile/services/core/internal/aidoc"
 	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/llm"
 	aimetrics "mobile/services/core/internal/aiharness/metrics"
+	"mobile/services/core/internal/aiharness/nhung"
+	"mobile/services/core/internal/aiharness/tools"
 	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
@@ -266,7 +270,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		avatars := avatarfeed.New(avatarfeed.Store{Pool: pool}, pool, chatCtx, allowedOrigins)
 		if nepGo {
 			if inproc {
-				engine, err := nepEngine(chatCtx, getenv, logger)
+				engine, err := nepEngine(chatCtx, getenv, logger, pool)
 				if err == nil {
 					err = aiSchemaReady(chatCtx, pool)
 				}
@@ -548,7 +552,9 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	}
 	var engine *aiharness.Engine
 	if nepGo {
-		if engine, err = nepEngine(ctx, getenv, logger); err != nil {
+		// Built once here only to refuse before any connection opens: a key
+		// and a loopback base URL, or no worker at all.
+		if _, err = nepEngine(ctx, getenv, logger, nil); err != nil {
 			return refuse(err)
 		}
 	}
@@ -577,6 +583,10 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	}
 	if nepGo {
 		if err := aiSchemaReady(ctx, pool); err != nil {
+			return refuse(err)
+		}
+		// Now with the tools' read ports over the pool.
+		if engine, err = nepEngine(ctx, getenv, logger, pool); err != nil {
 			return refuse(err)
 		}
 		assistant.WithNepEngine(engine)
@@ -640,7 +650,15 @@ func nepEngineName(goEngine bool) string {
 // refuses what would only fail every job later: no key, a base URL that is
 // not loopback, or a rate limit with nowhere to keep its count. It opens no
 // connection; the key is never logged.
-func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Logger) (*aiharness.Engine, error) {
+//
+// The engine gets the router with its worked examples, embedded through the
+// same key on the first turn that routes (hieu.KhoViDuLuoi: startup makes no
+// embedding call), and, when db is set, the tools' read ports over it
+// (internal/aidoc: the catalogue, destinations, areas and the person's own
+// upcoming outings, each read in a READ ONLY transaction under a semaphore).
+// The long-term memory port has no production adapter yet (the infra
+// track's nepnho): the memory tools answer loi_nguon until it lands.
+func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Logger, db aidoc.Beginner) (*aiharness.Engine, error) {
 	limiter, err := modelLimiter(getenv)
 	if err != nil {
 		return nil, err
@@ -648,6 +666,15 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 	var opts []aiharness.Option
 	if limiter != nil {
 		opts = append(opts, aiharness.WithGioiHan(limiter))
+	}
+	embedder, err := nhung.FromEnv(ctx, getenv)
+	if err != nil {
+		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+	}
+	opts = append(opts, aiharness.WithHieu(hieu.Moi(hieu.WithViDuLuoi(hieu.MoiKhoViDuLuoi(embedder, hieu.ViDuMacDinh)))))
+	if db != nil {
+		doc := aidoc.Moi(db, 0)
+		opts = append(opts, aiharness.WithNguon(tools.NguonDuLieu{Quan: aidoc.Lexical{C: doc}, Cho: aidoc.Doc{C: doc}, CaNhan: aidoc.Doc{C: doc}}))
 	}
 	engine, err := aiharness.FromEnv(ctx, getenv, logger, opts...)
 	if err != nil {

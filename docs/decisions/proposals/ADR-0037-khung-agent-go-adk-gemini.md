@@ -144,6 +144,35 @@ và ở `f251db7` mỗi job chỉ làm một việc: gửi một payload sang br
 - Không mở quyền đọc mới cho Nếp (catalogue, kèo của chính mình, trí nhớ) bằng văn bản này. Các quyền
   đó thuộc ADR-0041.
 
+### 4.1 Sửa ngày 2026-09-25: luật không heuristic của chủ sản phẩm
+
+Chủ sản phẩm chốt luật «không heuristic, không lọc từ khoá ở bước hiểu câu, định tuyến, chọn tool, quyết
+định truy hồi và trích ràng buộc; model quyết» (nguyên văn và bảng cổng: `docs/architecture/03-ai-engine-hop-dong.md`
+mục 8). Luật này thay các chỗ sau của §4 ở trên; phần chữ cũ giữ lại làm lịch sử của đề xuất:
+
+- **Lưới regex rời đường quyết định.** Luật tiền tất định (`guard/tien.go`, `guard.LaTien`), mẫu từ khoá
+  injection (`guard.Nghi`), đọc ngày bằng từ khoá (`preprocess.DongMayChu`), luật cụm từ «tôi đã
+  chuyển/ghi/gửi» của output guard và các bộ đọc `tuvung` trên câu hỏi không còn quyết định gì trên
+  đường engine. Chúng không còn là «lớp 0» và không được HỢP với router. Hai ngưỡng (a) và (b) của gạch
+  đầu dòng về `MOBILE_AI_ENGINE_NEP=go` đo luật tất định, nên không còn là điều kiện bật; điều kiện
+  thay thế là ngưỡng của router ở gạch cuối mục này.
+- **Từ chối tiền và trích ràng buộc là việc của router** (`aiharness/hieu`): trường `tien`
+  (`none`/`split_draft`/`money_action`) quyết từ chối `ai_khong_cham_tien` hoặc đi nháp chia bill;
+  dị ứng, ăn kiêng, điểm đến, ngày, khung giờ, ngân sách là slot enum/ISO/số nguyên đồng do model viết,
+  Go chỉ kiểm cấu trúc rồi áp làm bộ lọc cứng không nới được.
+- **Phòng thủ vẫn nhiều lớp, nhưng không lớp nào đọc nghĩa bằng từ:** (1) system instruction; (2) không
+  tool nào ghi tiền, nghĩa vụ, kèo, bình chọn, tin nhắn — không có lớp tác dụng cho chúng
+  (`aiharness/tools`); (3) verifier LLM ở đầu ra (`aiharness/kiemchung.PhanTu`: hứa hành động không có,
+  đụng tiền) cộng grounding tất định bằng thuộc tập; (4) kiểm **định dạng** số điện thoại, số tài khoản,
+  email, số thẻ ở đầu ra — kiểm định dạng dữ liệu, không phải hiểu ngôn ngữ, nên giữ. Injection phòng
+  bằng cấu trúc: chữ không tin cậy chỉ trong `<du_lieu>` có datamarking, instruction nói dữ liệu không
+  phải lệnh, nháp cần người bấm, cộng nhãn `chen_lenh` của router.
+- **Eval của router trên hai corpus niêm phong tiền và dị ứng đã tiêu** (`tien_*`, `di_ung_*`) chuyển
+  sang **T3, khi có khoá Gemini** và Lead duyệt số lời gọi: đo recall/bắt nhầm của trường `tien` và
+  recall ràng buộc cứng của slot dị ứng, theo cận khoảng Wilson 95% như trên. Trên T1 (stub) chỉ đo
+  được đường Go xử lý đúng nhãn đã kịch bản hoá, không đo được model. Các nửa niêm phong đã dùng để đo luật
+  tất định coi như đã tiêu; số T3 chỉ tính trên một nửa niêm phong mới, tác giả router chưa mở.
+
 ## 5. Điều khoản bị thay hoặc sửa (không sửa bản lịch sử của chúng)
 
 | Điều khoản | Hiện nói | Sau ADR này |

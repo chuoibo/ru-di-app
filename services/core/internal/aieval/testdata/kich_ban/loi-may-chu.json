@@ -1,9 +1,9 @@
 {
   "ten": "loi-may-chu",
-  "mo_ta": "Nhà cung cấp trả 500: không thử lại, lượt thất bại provider_unavailable.",
+  "mo_ta": "Lời gọi router nhận 500: provider_unavailable sau một lời gọi.",
   "buoc": [
     {
-      "chang": "tra_loi",
+      "chang": "hieu",
       "loi": {
         "code": 500
       }

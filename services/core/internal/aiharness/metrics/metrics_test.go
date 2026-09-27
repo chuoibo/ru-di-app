@@ -29,6 +29,16 @@ func columnLines(t *testing.T) map[string]string {
 		name := strings.Fields(line)[0]
 		out[name] = line
 	}
+	// Version 2 adds columns, one ADD COLUMN per line.
+	for _, line := range strings.Split(schemaV2SQL, "\n") {
+		line = strings.TrimSpace(line)
+		def, ok := strings.CutPrefix(line, "ADD COLUMN ")
+		if !ok {
+			continue
+		}
+		def = strings.TrimSuffix(strings.TrimSuffix(def, ";"), ",")
+		out[strings.Fields(def)[0]] = def
+	}
 	return out
 }
 
@@ -40,23 +50,27 @@ func TestBangKhongChuaChuTuDo(t *testing.T) {
 	if len(cols) < 25 {
 		t.Fatalf("chỉ %d cột", len(cols))
 	}
-	closed := regexp.MustCompile(`^\w+ (text|char\(\d+\))( NOT NULL)? CHECK \(\w+ (IN \('[^']*'(,'[^']*')*\)|~ '\^\[0-9a-f\]\{\d+\}\$')\)$`)
+	closed := regexp.MustCompile(`^\w+ (text|char\(\d+\))( NOT NULL)?( DEFAULT '[a-z_]*')? CHECK \(\w+ (IN \('[^']*'(,'[^']*')*\)|~ '\^\[0-9a-f\]\{\d+\}\$')\)$`)
+	// A text array only as a subset of a closed list.
+	closedArray := regexp.MustCompile(`^\w+ text\[\] NOT NULL DEFAULT '\{\}' CHECK \(\w+ <@ ARRAY\['[a-z_]+'(,'[a-z_]+')*\]::text\[\]\)$`)
 	plain := regexp.MustCompile(`^\w+ (uuid|smallint|integer|boolean|timestamptz)\b`)
 	for name, def := range cols {
 		switch {
 		case plain.MatchString(def):
 		case closed.MatchString(def):
+		case closedArray.MatchString(def):
 		default:
 			t.Errorf("cột %s có thể chứa chữ tự do: %s", name, def)
 		}
 	}
-	sql := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(schemaSQL, "")
+	sql := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(schemaSQL+schemaV2SQL+schemaV3SQL, "")
 	if regexp.MustCompile(`(?i)\b(jsonb?|bytea|varchar|character varying)\b`).MatchString(sql) {
 		t.Error("schema có kiểu chứa được chữ tự do")
 	}
 	// Canary: the check is red on a column that could carry words.
-	for _, bad := range []string{"note text", "detail text NOT NULL", "tool_args jsonb", "prompt varchar(200)"} {
-		if plain.MatchString(bad) || closed.MatchString(bad) {
+	for _, bad := range []string{"note text", "detail text NOT NULL", "tool_args jsonb", "prompt varchar(200)",
+		"notes text[] NOT NULL DEFAULT '{}'", "tags text[] NOT NULL DEFAULT '{}' CHECK (cardinality(tags) < 3)"} {
+		if plain.MatchString(bad) || closed.MatchString(bad) || closedArray.MatchString(bad) {
 			t.Errorf("cổng không bắt được %q", bad)
 		}
 	}
@@ -95,6 +109,28 @@ func TestCotKhopBanGhi(t *testing.T) {
 	}
 }
 
+// Version 3 is the last word on nhan_guard: its CHECK admits exactly what a
+// record may hold (obs.NhanGuards and ""), and never nhay_cam.
+func TestNhanNhayCamKhongLuu(t *testing.T) {
+	m := regexp.MustCompile(`ADD CONSTRAINT ai_turn_metrics_nhan_guard_check CHECK \(nhan_guard IN \(([^)]*)\)\)`).FindStringSubmatch(schemaV3SQL)
+	if m == nil {
+		t.Fatal("version 3 does not replace the nhan_guard CHECK")
+	}
+	want := []string{"''"}
+	for _, v := range obs.NhanGuards {
+		want = append(want, "'"+string(v)+"'")
+	}
+	if m[1] != strings.Join(want, ",") || strings.Contains(m[1], "nhay_cam") {
+		t.Fatalf("CHECK %s, want %s", m[1], strings.Join(want, ","))
+	}
+	if obs.NhanGuard("nhay_cam").Valid() {
+		t.Fatal("a record may hold nhay_cam")
+	}
+	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV3SQL {
+		t.Fatal("PhienBan is not the last version")
+	}
+}
+
 // execDem counts the statements it is given and runs none.
 type execDem struct{ n int }
 
@@ -109,7 +145,7 @@ func TestHuyKhongCoHang(t *testing.T) {
 	rec := obs.TurnRecord{
 		InvocationID: "0b7d3a1c-5f2e-4c1a-9e3b-2d6f8a4c1e90", LanThu: 1, Bot: obs.BotNep, Lenh: obs.LenhHoi,
 		Guard: obs.GuardProceed, OutGuard: obs.OutNone, KetThuc: obs.KetThucHuy, LoiMoHinh: obs.LoiKhong,
-		PromptVersion: "0123456789ab",
+		PromptVersion: "0123456789ab", KetKiem: obs.KiemKhongChay,
 	}
 	var e execDem
 	if err := Ghi(context.Background(), &e, rec); err != nil || e.n != 0 {

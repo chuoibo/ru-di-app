@@ -31,6 +31,41 @@ import (
 	"mobile/services/core/internal/rag/xephang"
 )
 
+// DemLuot counts one turn's embedding calls against
+// llm.MaxEmbedCallsPerTurn, apart from its model calls. Safe for concurrent
+// use.
+type DemLuot struct{ con atomic.Int64 }
+
+// MoiDemLuot is a counter holding the whole per-turn budget.
+func MoiDemLuot() *DemLuot {
+	d := &DemLuot{}
+	d.con.Store(llm.MaxEmbedCallsPerTurn)
+	return d
+}
+
+// ErrHetLuotNhung: the turn's embedding calls are spent.
+var ErrHetLuotNhung = errors.New("nhung: the turn's embedding calls are spent")
+
+// Giu takes one call from the budget, or refuses once it is spent. A nil
+// counter counts nothing: a caller outside a turn (the index build).
+func (d *DemLuot) Giu() error {
+	if d == nil {
+		return nil
+	}
+	if d.con.Add(-1) < 0 {
+		return ErrHetLuotNhung
+	}
+	return nil
+}
+
+// ConLai is how many calls are left (MaxEmbedCallsPerTurn for nil).
+func (d *DemLuot) ConLai() int {
+	if d == nil {
+		return llm.MaxEmbedCallsPerTurn
+	}
+	return int(max(d.con.Load(), 0))
+}
+
 // Model is the embedding model; Dims its output dimensionality here.
 const (
 	Model = "gemini-embedding-001"

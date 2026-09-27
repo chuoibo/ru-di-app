@@ -43,6 +43,9 @@ func GieoCa(c Ca, lap int) (Gieo, error) {
 		LoiNho:     c.DauVao.LoiNho,
 		DaGoiTruoc: c.DauVao.DaGoiTruoc,
 	}
+	if g := c.DauVao.TheGioi; g != nil {
+		t.NguoiHoi = g.NguoiHoi
+	}
 	if p := c.DauVao.Phieu; p != nil {
 		t.PhieuNep = &aiharness.PhieuNep{Man: p.Man, TieuDe: p.TieuDe, LoaiSo: p.LoaiSo, SoLieu: p.SoLieu, GoiY: p.GoiY}
 		if p.Nhip != nil {

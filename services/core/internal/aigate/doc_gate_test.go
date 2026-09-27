@@ -43,6 +43,15 @@ type graph struct {
 	byName map[string]*types.Func
 	// Concrete module methods by name, for resolving interface calls.
 	methods map[string][]*types.Func
+	// varInit is every package-level variable's initializer: a registry
+	// built there (a tool table, a handler map) holds functions no call
+	// syntax names, and a walk that skipped it would not see them.
+	varInit map[*types.Var]khoiTao
+}
+
+type khoiTao struct {
+	expr ast.Expr
+	info *types.Info
 }
 
 var (
@@ -65,7 +74,7 @@ func load(t *testing.T) *graph {
 			return
 		}
 		g := &graph{decl: map[*types.Func]*ast.FuncDecl{}, info: map[*types.Func]*types.Info{},
-			byName: map[string]*types.Func{}, methods: map[string][]*types.Func{}}
+			byName: map[string]*types.Func{}, methods: map[string][]*types.Func{}, varInit: map[*types.Var]khoiTao{}}
 		for _, p := range pkgs {
 			for _, e := range p.Errors {
 				loadErr = e
@@ -73,6 +82,18 @@ func load(t *testing.T) *graph {
 			}
 			for _, f := range p.Syntax {
 				for _, d := range f.Decls {
+					if gd, ok := d.(*ast.GenDecl); ok && gd.Tok == token.VAR {
+						for _, spec := range gd.Specs {
+							vs := spec.(*ast.ValueSpec)
+							for i, name := range vs.Names {
+								v, ok := p.TypesInfo.Defs[name].(*types.Var)
+								if !ok || i >= len(vs.Values) {
+									continue
+								}
+								g.varInit[v] = khoiTao{expr: vs.Values[i], info: p.TypesInfo}
+							}
+						}
+					}
 					fd, ok := d.(*ast.FuncDecl)
 					if !ok {
 						continue
@@ -141,7 +162,49 @@ type closure struct {
 func (g *graph) reach(roots ...*types.Func) closure {
 	out := closure{funcs: map[string]bool{}}
 	seen := map[*types.Func]bool{}
+	seenVar := map[*types.Var]bool{}
 	todo := append([]*types.Func(nil), roots...)
+	var visit func(n ast.Node, info *types.Info)
+	visit = func(root ast.Node, info *types.Info) {
+		ast.Inspect(root, func(n ast.Node) bool {
+			switch x := n.(type) {
+			case *ast.BasicLit:
+				if x.Kind == token.STRING {
+					if s, err := strconv.Unquote(x.Value); err == nil {
+						out.strings = append(out.strings, s)
+					}
+				}
+			case *ast.BinaryExpr:
+				// A query built by concatenation («SELECT " + cols + " FROM
+				// outings …») is read whole too: its verb and its table
+				// may sit in different literals.
+				if x.Op == token.ADD {
+					if s, ok := noiChuoi(x, info); ok {
+						out.strings = append(out.strings, s)
+					}
+				}
+			case *ast.Ident:
+				switch obj := info.Uses[x].(type) {
+				case *types.Func:
+					// Every function object, called or passed as a value. One
+					// outside the module has no body here and is dropped, unless
+					// it is an interface method some module type implements.
+					todo = append(todo, obj)
+				case *types.Const:
+					if obj.Val().Kind() == constant.String {
+						out.strings = append(out.strings, constant.StringVal(obj.Val()))
+					}
+				case *types.Var:
+					// A package-level registry: walk its initializer once.
+					if k, ok := g.varInit[obj]; ok && !seenVar[obj] {
+						seenVar[obj] = true
+						visit(k.expr, k.info)
+					}
+				}
+			}
+			return true
+		})
+	}
 	for len(todo) > 0 {
 		f := todo[len(todo)-1].Origin()
 		todo = todo[:len(todo)-1]
@@ -158,31 +221,46 @@ func (g *graph) reach(roots ...*types.Func) closure {
 			continue
 		}
 		out.funcs[f.FullName()] = true
-		ast.Inspect(decl, func(n ast.Node) bool {
-			switch x := n.(type) {
-			case *ast.BasicLit:
-				if x.Kind == token.STRING {
-					if s, err := strconv.Unquote(x.Value); err == nil {
-						out.strings = append(out.strings, s)
-					}
-				}
-			case *ast.Ident:
-				switch obj := info.Uses[x].(type) {
-				case *types.Func:
-					// Every function object, called or passed as a value. One
-					// outside the module has no body here and is dropped, unless
-					// it is an interface method some module type implements.
-					todo = append(todo, obj)
-				case *types.Const:
-					if obj.Val().Kind() == constant.String {
-						out.strings = append(out.strings, constant.StringVal(obj.Val()))
-					}
-				}
-			}
-			return true
-		})
+		visit(decl, info)
 	}
 	return out
+}
+
+// noiChuoi joins the string leaves of a concatenation (literals and string
+// constants), a space standing for any other operand; ok is false when no
+// leaf is a string.
+func noiChuoi(e *ast.BinaryExpr, info *types.Info) (string, bool) {
+	var parts []string
+	co := false
+	var di func(ast.Expr)
+	di = func(x ast.Expr) {
+		switch v := x.(type) {
+		case *ast.BinaryExpr:
+			if v.Op == token.ADD {
+				di(v.X)
+				di(v.Y)
+				return
+			}
+		case *ast.ParenExpr:
+			di(v.X)
+			return
+		case *ast.BasicLit:
+			if v.Kind == token.STRING {
+				if s, err := strconv.Unquote(v.Value); err == nil {
+					parts, co = append(parts, s), true
+					return
+				}
+			}
+		case *ast.Ident:
+			if c, ok := info.Uses[v].(*types.Const); ok && c.Val().Kind() == constant.String {
+				parts, co = append(parts, constant.StringVal(c.Val())), true
+				return
+			}
+		}
+		parts = append(parts, " ")
+	}
+	di(e)
+	return strings.Join(parts, ""), co
 }
 
 var (
@@ -253,9 +331,35 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 		}
 	}
 	allowed := map[string]bool{"chat_ai_invocations": true, "account_sessions": true, "people": true}
-	used := tables(c.strings)
+	for name := range nepCongCuDoc {
+		allowed[name] = true
+	}
+	// The tools' read ports bring the catalogue index's queries (CTEs and
+	// unnest()), read with the rag gate's narrow exclusions.
+	used := ragTables(c.strings)
 	if len(used) == 0 {
 		t.Fatal("no SQL found on Nếp's path; the extraction has slipped")
+	}
+	// Canaries: every allowlisted tool table is reached (an entry no path
+	// needs is a stale permission), the walk sees the tool registry built in
+	// a package-level variable (tools.congCus) and a query built by
+	// concatenation (aidoc's own outings).
+	for name := range nepCongCuDoc {
+		if _, ok := used[name]; !ok {
+			t.Errorf("allowlist entry %s is reached by nothing on Nếp's path: drop it", name)
+		}
+	}
+	for _, must := range []string{"mobile/services/core/internal/aiharness/tools.chayChuyenCuaToi", "(mobile/services/core/internal/aidoc.Doc).ChuyenDiSapToi"} {
+		if !c.funcs[must] {
+			t.Fatalf("closure never reaches %s: a registry in a package-level variable is invisible to the walk", must)
+		}
+	}
+	concat := false
+	for _, q := range used["outings"] {
+		concat = concat || (strings.Contains(q, "SELECT") && strings.Contains(q, "memberships"))
+	}
+	if !concat {
+		t.Fatal("the outings query is built by concatenation and the walk did not read it whole")
 	}
 	for _, name := range sortedKeys(used) {
 		if nepWriteOnly[name] {
@@ -283,6 +387,34 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 		}
 	}
 	t.Logf("Nếp closure: %d functions, tables %v", len(c.funcs), sortedKeys(used))
+}
+
+// nepCongCuDoc are the tables Nếp's tools may READ, each with why (the
+// owner's rule of 2026-09-25 wires the model-chosen tools into Nếp's path;
+// contract docs/architecture/03-ai-engine-hop-dong.md §8, permission table
+// tools/testdata/quyen.golden.json). None is room context: no message, no
+// roster, no taste, no budget. Every read runs in a READ ONLY transaction
+// (internal/aidoc) and only when the MODEL called the tool; the walk is
+// static and cannot see the permission table, so the group tools' tables
+// (outings, memberships) show up here too -- the permission test in
+// aiharness/tools (TestTuChoiTenVaQuyen) is what keeps Nếp from calling
+// group_snapshot or list_group_outings.
+var nepCongCuDoc = map[string]string{
+	// The shared catalogue: search_places, get_place, the retrieval path.
+	"places": "catalogue rows, the same for every person; get_place and the retriever's cards",
+	// Its lexical index (rag.Retrieve behind aidoc.Lexical).
+	"rag_docs":              "catalogue index: hard filters in SQL, never a person's data",
+	"rag_chunks":            "catalogue index: BM25 ranking of the model's query",
+	"rag_index_versions":    "catalogue index: which version is active",
+	"rag_tombstones":        "catalogue index: removed places are never shown",
+	"rag_schema_migrations": "catalogue index: whether the index is installed",
+	// list_destinations, nearest_area, the router's closed destination list.
+	"destinations": "the destinations the app covers, the same for every person",
+	// my_upcoming_outings: the ASKING person's own upcoming outings, scoped by
+	// the job's person id (never a model argument), titles, dates and
+	// headcount only; and the group tools no Nếp turn may call.
+	"outings":     "my_upcoming_outings: the asker's own outings (title, dates, headcount), model-called only",
+	"memberships": "my_upcoming_outings: which groups the asker is an active member of, model-called only",
 }
 
 // nepWriteOnly are the tables Nếp's path may write and never read, each named
@@ -451,5 +583,41 @@ func TestTheWalkSeesMethodValuesOtherPackagesAndInterfaces(t *testing.T) {
 	}
 	if !messageText.MatchString(readsMessages.FindString("SELECT m.id, m.body FROM messages m WHERE m.context_id=$1")) {
 		t.Fatal("a read of text went unseen")
+	}
+}
+
+// The memory tools are Nếp's alone (scope me): nothing the group bot's
+// handlers and jobs can reach runs one, in any package, while Nếp's job
+// does reach them (the canary: the walk sees the tool registry's function
+// values). Defence in depth behind the permission table, before the group
+// bot moves onto the engine (privacy review 7).
+func TestGroupNeverReachesMemoryTools(t *testing.T) {
+	g := load(t)
+	const tools = "mobile/services/core/internal/aiharness/tools"
+	memory := []string{tools + ".chayNho", tools + ".chayGhiNho", tools + ".chayQuen", tools + ".chayNhoGi",
+		"(*" + tools + ".BoiCanh).CamKet"}
+	var nep []*types.Func
+	for _, r := range nepRoots {
+		nep = append(nep, g.root(t, r))
+	}
+	cn := g.reach(nep...)
+	for _, m := range memory {
+		if !cn.funcs[m] {
+			t.Fatalf("Nếp's closure never reaches %s: the walk is blind to the registry", m)
+		}
+	}
+	var group []*types.Func
+	for _, name := range []string{"capabilities", "create", "list", "get", "retry", "cancel", "promote", "promotion",
+		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill"} {
+		group = append(group, g.root(t, "(*"+pkgChat+".Handler)."+name))
+	}
+	cg := g.reach(group...)
+	if !cg.funcs["(*"+pkgChat+".Handler).prepare"] || len(cg.funcs) < 50 {
+		t.Fatalf("the group closure is too small (%d functions)", len(cg.funcs))
+	}
+	for _, m := range memory {
+		if cg.funcs[m] {
+			t.Errorf("the group bot can reach %s", m)
+		}
 	}
 }

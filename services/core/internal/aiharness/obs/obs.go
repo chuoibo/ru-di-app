@@ -151,6 +151,20 @@ type TurnRecord struct {
 	MsTienXuLy     int `col:"ms_tien_xu_ly"`
 	MsMoHinh       int `col:"ms_mo_hinh"`
 	MsTong         int `col:"ms_tong"`
+	// The router path (metrics schema version 2, obs/dinhtuyen.go): the
+	// model's labels, the path the engine took, the tools that ran, whether
+	// the grader's corrective round ran, and the verifier's verdict.
+	NhanGuard NhanGuard `col:"nhan_guard"`
+	YDinh     YDinh     `col:"y_dinh"`
+	SoYDinh   int       `col:"so_y_dinh"`
+	Tien      Tien      `col:"tien"`
+	Huong     Huong     `col:"huong"`
+	Duong     Duong     `col:"duong"`
+	CongCu    CacCongCu `col:"cong_cu"`
+	VongSua   int       `col:"vong_sua"`
+	KetKiem   KetKiem   `col:"ket_kiem"`
+	SinhLai   bool      `col:"sinh_lai"`
+	SoXepLai  int       `col:"so_xep_lai"`
 }
 
 type validator interface{ Valid() bool }
@@ -160,7 +174,7 @@ func (r TurnRecord) Valid() error {
 	v := reflect.ValueOf(r)
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
-		if f.Kind() != reflect.String {
+		if f.Kind() != reflect.String && f.Kind() != reflect.Slice {
 			if f.Kind() == reflect.Int && f.Int() < 0 {
 				return fmt.Errorf("obs: %s is negative", v.Type().Field(i).Tag.Get("col"))
 			}
@@ -197,6 +211,14 @@ func (r TurnRecord) Values() []any {
 			out[i] = int(f.Int())
 		case reflect.Bool:
 			out[i] = f.Bool()
+		case reflect.Slice:
+			// A closed list (CacCongCu): plain strings, never nil, so the
+			// log line prints [] and the column gets '{}'.
+			s := make([]string, f.Len())
+			for j := range s {
+				s[j] = f.Index(j).String()
+			}
+			out[i] = s
 		}
 	}
 	return out

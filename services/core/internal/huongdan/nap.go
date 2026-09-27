@@ -48,8 +48,6 @@ type SoTay struct {
 	doan     []Doan            // every section, file by file, in file order
 	theoID   map[string]int    // section id -> index in doan
 	chiMuc   *xephang.ChiMuc   // over chuChiMuc of each section, ids = section ids
-	thuat    []map[string]bool // terms of each section's indexed text, for tuDem
-	tuVung   map[string]bool   // every term of every section: the manual's own words, for chuanHoi
 	cacMan   []string          // every route id in _rut.json, sorted
 	coMan    map[string]bool
 	tab      []string          // routes whose file sits in app/(tabs)/, sorted
@@ -137,7 +135,7 @@ func nap(fsys fs.FS) (*SoTay, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &SoTay{trangCua: map[string]*trang{}, theoID: map[string]int{}, coMan: map[string]bool{}, tuVung: map[string]bool{}}
+	s := &SoTay{trangCua: map[string]*trang{}, theoID: map[string]int{}, coMan: map[string]bool{}}
 	bd := &banDoRut{diToi: map[string]map[string]bool{}, nhan: map[string]map[string]bool{}, canh: map[string]map[canhRut]bool{}, tab: map[string]bool{}}
 	s.banDo = bd
 	for _, r := range rut.Routes {
@@ -239,12 +237,6 @@ func nap(fsys fs.FS) (*SoTay, error) {
 			s.doan = append(s.doan, d)
 			chu := chuDeXep(d)
 			chuChiMuc = append(chuChiMuc, xephang.Doan{ID: d.ID, Chu: chu})
-			thuat := map[string]bool{}
-			for _, th := range xephang.Thuat(chu) {
-				thuat[th] = true
-				s.tuVung[th] = true
-			}
-			s.thuat = append(s.thuat, thuat)
 		}
 	}
 	s.chiMuc = xephang.Dung(chuChiMuc)
