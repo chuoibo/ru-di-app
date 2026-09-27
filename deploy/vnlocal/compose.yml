@@ -96,6 +96,12 @@ services:
       <<: *env
       MOBILE_PYTHON_UPSTREAM: http://api:8000
       MOBILE_BRAIN_URL: http://api:8000
+      # Connection budget on the shared server (rudi_owner CONNECTION LIMIT
+      # 40): core 18 + api 15 (SQLAlchemy 5 + overflow 10) + ingest 3 = 36,
+      # leaving room for one-shot migrations and an operator's psql.
+      MOBILE_DB_MAX_CONNS: "18"
+      # Catalogue snapshot per destination; sync applies a batch every ~10 min.
+      MOBILE_CATALOGUE_CACHE_TTL: ${RUDI_CATALOGUE_CACHE_TTL:-30s}
     # Go serves the photo bytes (GET /places/{id}/photos/{photo_id} is
     # owner: go in ownership/routes.json), so it must see the files `ingest`
     # writes -- same volume, same path.
@@ -122,7 +128,9 @@ services:
     <<: [*core-image, *secrets]
     entrypoint: ["/rudi-ingest"]
     command: ["sync", "--every", "${RUDI_SYNC_EVERY:-10m}"]
-    environment: *env
+    environment:
+      <<: *env
+      MOBILE_DB_MAX_CONNS: "3"
     volumes:
       - rudi-media-data:/var/lib/rudi/media
     # The image's HEALTHCHECK probes the core server, which this container

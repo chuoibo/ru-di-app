@@ -53,3 +53,16 @@ func TestUnitWithoutQueriesCommitsNothing(t *testing.T) {
 		t.Fatalf("Tx after commit = %v", err)
 	}
 }
+
+func TestMaxConnsCanBeSetPerProcess(t *testing.T) {
+	t.Setenv(EnvMaxConns, "3")
+	config, err := PoolConfig("postgresql://u:p@h:5432/d")
+	if err != nil || config.MaxConns != 3 {
+		t.Fatalf("MaxConns = %v, %v; want 3", config.MaxConns, err)
+	}
+	t.Setenv(EnvMaxConns, "nonsense")
+	config, _ = PoolConfig("postgresql://u:p@h:5432/d")
+	if config.MaxConns != maxConns {
+		t.Errorf("a bad value must fall back to %d, got %d", maxConns, config.MaxConns)
+	}
+}

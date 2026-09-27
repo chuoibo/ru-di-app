@@ -1148,6 +1148,10 @@ class Membership(Base):
             "person_id",
             postgresql_where=text("left_at IS NULL"),
         ),
+        # The actor lookup on every request filters on person_id alone and
+        # cannot use the partial index above (migration e8c4d2a7f913).
+        Index("ix_memberships_person", "person_id"),
+        Index("ix_memberships_context_state", "context_id", "state"),
         CheckConstraint(
             "(state = 'left') = (left_at IS NOT NULL)",
             # The convention adds the `ck_<table>_` prefix; naming it here too
@@ -2435,6 +2439,8 @@ class Story(Base):
         # «Live stories by the people who are my friends»: author, then the
         # deadline the feed filters on.
         Index("ix_stories_author_live", "author_id", desc("expires_at")),
+        # The feed's `expires_at > now` over a 24-hour window, whoever wrote it.
+        Index("ix_stories_live", "expires_at"),
         # ADR-0022 §2.1: the personal-photo gate asks «does a live story this
         # reader may see show this photograph», by url.
         Index("ix_stories_image_url", "image_url"),

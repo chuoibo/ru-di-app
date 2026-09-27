@@ -19,6 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -32,6 +34,13 @@ const EnvDatabaseURL = "MOBILE_DATABASE_URL"
 // maxConns keeps Go plus SQLAlchemy under PostgreSQL's default 100 connections
 // while both processes run against one database (ADR-0029 §2.2).
 const maxConns = 15
+
+// EnvMaxConns overrides maxConns for one process. A shared server gives the
+// whole app a connection budget (the vnlocal box: 40 for `rudi_owner`), and
+// the processes split it -- the API server needs many, the catalogue sync a
+// few. It is a separate variable because MOBILE_DATABASE_URL is shared with
+// SQLAlchemy, whose driver would refuse pgx's `pool_max_conns` parameter.
+const EnvMaxConns = "MOBILE_DB_MAX_CONNS"
 
 // PoolConfig parses a database URL, accepting the SQLAlchemy spelling the
 // Python service uses ("postgresql+psycopg://...").
@@ -54,6 +63,9 @@ func PoolConfig(raw string) (*pgxpool.Config, error) {
 		return nil, fmt.Errorf("%s is not a valid PostgreSQL URL", EnvDatabaseURL)
 	}
 	config.MaxConns = maxConns
+	if n, err := strconv.Atoi(strings.TrimSpace(os.Getenv(EnvMaxConns))); err == nil && n > 0 && n <= 100 {
+		config.MaxConns = int32(n)
+	}
 	return config, nil
 }
 
