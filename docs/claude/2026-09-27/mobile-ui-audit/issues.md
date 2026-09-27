@@ -19,9 +19,9 @@
 
 | Mức | Issue |
 |---|---|
-| P1 | UI-005 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047 |
+| P1 | UI-005, UI-049 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061 |
 
 ---
 
@@ -72,7 +72,7 @@
 | Tái hiện | Mở bất kỳ tab nào, đọc thuộc tính ARIA của 4 phần tử `role="tab"` |
 | Expected | Tab đang chọn có `aria-selected="true"`, và các tab nằm trong một `role="tablist"` |
 | Actual | Cả 4 tab đều không có `aria-selected`, và không có `tablist`. Nhìn bằng mắt vẫn phân biệt được tab đang chọn (màu, icon đặc, dải washi), nhưng trình đọc màn hình thì không |
-| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) |
+| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`); nút gập/mở dòng món của chia bill ở bước 2 và 3 không có `aria-expanded` (F04, `ChiaBillLive.tsx:467` và `:578`, hàng `TC-F04-ARIA-GAP`; bước 2 có đổi nhãn «Sửa/Gấp», bước 3 không). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) |
 | Hậu quả | Trên web, người dùng trình đọc màn hình không biết tab nào, ngày nào, chip gu nào, màu nào đang được chọn, và mục nào đang mở/gập |
 | Đề xuất | Truyền thêm prop `aria-*` mà RNW đọc được, đúng với role: `aria-checked` cho radio/checkbox/switch, `aria-expanded` cho nút gập mở, `aria-busy`, `aria-selected` **chỉ** cho tab/option/row. Sửa ở checkpoint 3: `HangChang` từng được nêu ở đây làm ví dụ đúng, nhưng nó đặt `aria-selected` trên `role=button`, là thuộc tính không hợp lệ (axe critical, UI-042); nút nên dùng `aria-pressed` hoặc `aria-current`. Gom lại trong một helper ở kit; thêm `role="tablist"` cho thanh tab |
 | Tiêu chí gỡ | Quét DOM: mỗi control có trạng thái đều mang thuộc tính ARIA tương ứng; tab đang chọn có `aria-selected=true` |
@@ -240,7 +240,7 @@
 | Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã) |
 | Nền tảng, cấu hình | web, C1, C2, C3 (đo runtime). Native: cùng `minHeight: 44` (STATIC) |
 | Expected | DESIGN.md §Mục tiêu chạm: «Mọi node bấm được ≥48×48dp, kể cả `TextInput`» |
-| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44 |
+| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`) |
 | Evidence | ![ô nhập 44](evidence/EV-F01-O-NHAP-44-C1.jpg) |
 | Source | `src/rudi/ui/ONhapMuc.tsx:60` (`minHeight: 44`) |
 | Đề xuất | `minHeight: 48` (vẫn không hộp, dòng kẻ giữ nguyên) |
@@ -295,7 +295,7 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (điều hướng) · **P2**. Checkpoint 2 ghi P3; nâng ở checkpoint 3 vì phạm vi không còn là một màn: đo lại ở `/places/[id]`, và nút back của `TopBar` trong kit cũng gọi `router.back()` không kiểm `canGoBack()` |
-| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
+| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
 | Nền tảng, cấu hình | web, C1 |
 | Tái hiện | Mở thẳng `/login` (không có lịch sử), chạm «Quay lại» |
 | Expected | Đưa về màn hợp lý (Welcome), hoặc không vẽ nút khi không có nơi để về |
@@ -726,6 +726,214 @@
 | Source | `src/rudi/ui.tsx:156`: khe `header` ở tablet nhận `tabletInner` (`alignSelf: "center"`, `maxWidth: 960`) mà không có `width: "100%"`, nên co về bề rộng nội tại |
 | Đề xuất sửa | Thêm `width: "100%"` cho khe `header` ở tablet |
 | Tiêu chí gỡ | C6/C7: nút Quay lại thẳng mép trái cột nội dung |
+
+## F04 Tiền
+
+### UI-048 · Số tiền của món bị cắt: «12.345.678đ» hiện thành «12.3…»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (hiển thị tiền) · **P2** |
+| Feature / Screen | F04 · `/smart-split/[id]/review`, bước 2 «Xem lại hóa đơn» (dòng món) và bước 3 «Ai dùng món nào?» (thẻ món trên bàn) |
+| Nền tảng, cấu hình | web, C1–C5 (bước 2), C2 (bước 3). Native: cùng bố cục flex (STATIC) |
+| Điều kiện | Bill nhập tay 3 món: tên 70 ký tự có dấu cách, «Bia», tên liền 41 ký tự; tiền 12.345.678đ, 960.000đ, 400.000đ |
+| Tái hiện | Nhập tay 3 món như trên; xem dòng món ở bước 2 (mở hay gập đều vậy); sang bước 3 ở 320dp |
+| Expected | Số tiền không bao giờ bị cắt; tên món xuống dòng hoặc nhường chỗ trước |
+| Actual | Bước 2: số tiền của hai món có tên dài chỉ còn 30–48px và bị ellipsis, «12.3…» và «400.…», ở mọi bề rộng điện thoại (C1 41px, C2 30px, C3 37px, C4 39px, C5 47px). «Bia» 960.000đ đọc trọn. Bill trên 3 dòng thì các dòng gập lại, nên dòng này là chỗ duy nhất hiện số tiền của món. Bước 3 ở C2: thẻ món giữa bàn hiện «12.345.6…» (68px) |
+| Evidence | ![bước 2, C1](evidence/EV-F04-TIEN-CAT-B2-C1-ct.jpg) ![bước 3, C2](evidence/EV-F04-TIEN-CAT-B3-C2-ct.jpg) (hàng `TC-F04-MON-DAI`, đo `scrollWidth > clientWidth` trên phần tử có tên là số tiền) |
+| Source | `chia-bill/ChiaBillLive.tsx:482` (`Money` trong hàng `dongDau`, cạnh `tenMon: { flexShrink: 1 }` và vạch chấm `chamDan`, dòng 755–756); `ui/Money.tsx` mặc định `numberOfLines={1}`; thẻ món `ui/BanGanMon.tsx:156`, rộng `theMon(rx).w` ≤ 128 |
+| Hậu quả | Người chia bill không đọc được số tiền của chính món vừa gõ; với bill dài chỉ còn cách mở từng dòng |
+| Đề xuất sửa | Số tiền `flexShrink: 0` (không bao giờ co); tên món co và xuống dòng; trên thẻ món cho số tiền xuống dòng hoặc thu cỡ chữ thay vì ellipsis |
+| Tiêu chí gỡ | Bill trên, bước 2 ở C1–C5 và bước 3 ở C2: 0 phần tử số tiền có `scrollWidth > clientWidth` |
+
+### UI-049 · Web: «Gửi cho <tên>» ở đợt thu không gửi được link, và báo nhầm «Kiểm tra mạng»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG · **P1** trên web ở trình duyệt không có Web Share: không gửi được link nào, không có lối khác. Ở trình duyệt có Web Share, link đi được nhưng màn báo lỗi sai (mức P2 nếu tách riêng) |
+| Feature / Screen / Layer | F04 · `/batches/[id]`, mục «Gửi link riêng» · L32 Chia sẻ |
+| Nền tảng, cấu hình | web, C1. Native: `Share.share` của React Native trả `{ action }`, nên nhánh này không xảy ra (STATIC) |
+| Điều kiện | Đợt vừa phát trên chính máy này; phong bì có 19 link |
+| Tái hiện | Chạm «Gửi cho Chat Test 14» trong ba trường hợp: (a) trình duyệt không có `navigator.share`; (b) có, và chia sẻ xong; (c) có, người dùng đóng khay |
+| Expected | (a) Có lối khác để chép link, hoặc câu nói đúng là trình duyệt không chia sẻ được. (b) Hàng ghi «Đã mở khay chia sẻ». (c) Không báo lỗi |
+| Actual | Cả ba trường hợp: câu «Không kết nối được Rủ Đi. Kiểm tra mạng rồi thử lại.» hiện ở đầu trang (y −2855, ngoài màn), hàng vẫn «Chưa gửi link». Với người dùng, nút không làm gì |
+| Evidence | ![sau khi chạm Gửi](evidence/EV-F04-CHIA-SE-KHONG-CO-C1.jpg) (hàng `TC-L32-VONGDOI`) |
+| Source | `dot-thu/DotThuLive.tsx:160–161`. `Share.share` của react-native-web trả về `navigator.share(...)`, giải quyết với `undefined`, nên `ketQua.action` ném TypeError; không có `navigator.share` thì reject. Lỗi rơi vào `loiRaChu` → `thongDiepNguoiDoc(0)` = `LOI_KHONG_NOI_DUOC` (`src/api.ts:291`). Câu hiện ở `DotThuLive.tsx:207`, đầu trang |
+| Hậu quả | Link khách chỉ có một bản, giữ trên máy đã phát (`dot-thu/kho-link.ts`). Người tổ chức phát đợt trên web, ở trình duyệt không có Web Share, không gửi được link nào, kể cả khi sang máy khác. Người nợ thường không cài app và không nhận được phần của mình |
+| Đề xuất sửa | Web: không có `navigator.share` thì hiện «Chép link» (clipboard); coi `undefined` là đã mở khay; `AbortError` là người dùng đóng, không phải lỗi; câu lỗi đặt cạnh hàng vừa chạm |
+| Tiêu chí gỡ | Ba trường hợp trên: (a) chép được link, (b) hàng ghi «Đã mở khay chia sẻ», (c) không có câu lỗi |
+
+### UI-050 · Bàn gán món: từ 9 người tên đè hình nhân; nhóm 20 người chạm một ghế lại đổi ghế bên cạnh
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (thao tác trên tiền) · **P2** |
+| Feature / Screen | F04 · bước 3 «Ai dùng món nào?» (`ui/BanGanMon.tsx`, `ui/hinh-tien.ts` `viTriGhe`) |
+| Nền tảng, cấu hình | web, C1, C2, C6 (nhóm 20 người, runtime); 288–700dp (tính bằng hàm của app) |
+| Điều kiện | Nhóm chat-test 20 thành viên (app cho phép), món đầu «cả nhóm» |
+| Tái hiện | Mở bước 3; chạm vào giữa hình nhân «Chat Test 07» |
+| Expected | Chạm vào hình nhân nào thì đúng ghế đó đổi; tên đọc được. PRODUCT.md: nhóm 4 tới 10 người |
+| Actual | Runtime: tâm hình nhân của 10/20 ghế ở C1, 17/20 ở C2, 6/20 ở C6 nằm dưới ghế khác (`elementFromPoint`); chạm thật vào «Chat Test 07» đổi «Chat Test 08». Tên ghế nào cũng thành «Chat Test …». Tính bằng `viTriGhe` với chính vị từ của `tests/hinh-tien.test.mjs`: n ≤ 8 không chỗ nào đè; n = 9 tên đè hình nhân 2 chỗ, n = 10 4 chỗ (288–358dp); n ≥ 12 tên đè tên; n ≥ 16 hình nhân đè nhau. Với 8 người (Team Đà Lạt), chạm và kéo thẻ đều đạt (`TC-F04-BAN-CHAM`, `TC-F04-BAN-KEO`) |
+| Evidence | ![20 người, C1](evidence/EV-F04-BAN-20-C1-ct.jpg) ![20 người, C2](evidence/EV-F04-BAN-20-C2-ct.jpg) (hàng `TC-F04-BAN-20`, `TC-F04-BAN-HINH`) |
+| Source | `ui/hinh-tien.ts` `viTriGhe`: ghế đặt đều trên một elip có bán kính trần 170, mỗi ghế rộng `RONG_GHE` 72; `tests/hinh-tien.test.mjs:35` và `:57` chỉ lặp `n = 1…8` |
+| Hậu quả | Ở nhóm đông, chạm nhầm là gán món cho người khác; phải kiểm lại bằng danh sách bên dưới. Ở nhóm 9–10 người tên bị che |
+| Đề xuất sửa | Từ 9 người thì xếp ghế hai vòng hoặc thu nhỏ, hoặc để danh sách «tên · món» (`RosterPicker`) làm lối chính; mở rộng test tới n = 20 |
+| Tiêu chí gỡ | Vị từ của `hinh-tien.test.mjs` xanh với n tới 20 ở 288–700; chạm tâm mỗi hình nhân trúng đúng ghế |
+
+### UI-051 · Chia bill: lý do không đi tiếp được và lỗi máy chủ hiện ở đầu trang, ngoài tầm nhìn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P2** |
+| Feature / Screen | F04 · `/smart-split/[id]/review`: bước 2, bước 3 và bước xem ảnh |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | (1) Bill 6 món, một món không tên, cuộn xuống, chạm «Tiếp: ai dùng món nào?». (2) Bước 3, «Bỏ hết» ở một món, chạm «Xem kết quả». (3) Máy chủ trả 503 khi tạo bill, chạm «Tiếp». (4) Chọn ảnh bill, «Dùng ảnh này» khi máy chủ không đọc được ảnh |
+| Expected | Lỗi là một câu cạnh chỗ vừa bấm (DESIGN.md); hoặc nút tự giải thích ngay tại chỗ |
+| Actual | Cả bốn: màn ở nguyên bước, nút không mờ, câu lý do hoặc câu lỗi hiện ở đầu trang ngoài khung nhìn (y −248 và −194; −256; −578; −89). Phần thấy được không đổi gì. Ở (2) hàng món có chữ «Chưa chọn người» màu cảnh báo, nhưng câu chính ở đầu trang. Thêm: câu ở (2) ghi «còn 12.345.678 chưa có người trả», thiếu «đ» |
+| Evidence | ![sau khi chạm Tiếp](evidence/EV-F04-CHAN-TEN-C1.jpg) ![503](evidence/EV-F04-HOA-DON-503-C1.jpg) ![đọc ảnh](evidence/EV-F04-ANH-DOC-C1.jpg) (hàng `TC-F04-CHAN-TEN`, `TC-F04-CHAN-NGUOI`, `TC-F04-BILL-503`) |
+| Source | `chia-bill/ChiaBillLive.tsx:374` (`thongBao` ngay dưới `Stepper`, đầu trang); `Stepper` in `lockedReason` cũng ở đầu; nút chân `nutChinh` (dòng 352) chỉ `disabled={ban}`; `src/assignment.ts:206` (`formatVnd(con)` không kèm «đ») |
+| Hậu quả | Người dùng chạm mà không thấy gì, dễ chạm lại hoặc nghĩ app treo; với lỗi máy chủ thì không biết đã ghi hay chưa |
+| Đề xuất sửa | Đặt câu lý do và câu lỗi ngay trên nút ở chân trang (vùng `footer`), hoặc cuộn tới câu và đưa focus vào đó |
+| Tiêu chí gỡ | Bốn trường hợp trên: câu nằm trong khung nhìn ngay sau khi chạm |
+
+### UI-052 · Chia bill: về bước 1, Back trình duyệt hay tải lại đều mất bill đang gõ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (mất dữ liệu người dùng vừa nhập, chưa ghi) · **P2** |
+| Feature / Screen | F04 · `/smart-split/[id]/review` |
+| Nền tảng, cấu hình | web, C1. Native: Back phần cứng Android rời route như Back trình duyệt (STATIC: màn không có `BackHandler` hay `beforeRemove`) |
+| Tái hiện | (1) Gõ bill 3 món, «Quay lại» của đầu màn tới bước 1, chạm «Nhập tay». (2) Ở bước 3 bấm Back của trình duyệt, rồi Forward. (3) Ở bước 3 tải lại trang |
+| Expected | Bill đã gõ còn, hoặc có câu hỏi trước khi bỏ |
+| Actual | (1) «Quay lại» lùi 4 → 3 → 2 và giữ bill (đạt, `TC-F04-LUI-TRONG`). Nhưng từ bước 2 về bước 1 thì bước 1 chỉ có «Chọn ảnh bill», «Nhập tay», «Cách chia», và «Nhập tay» mở một bill trống. (2) Back đưa về `/plan`; Forward mở lại bước 1, bill mất. (3) Tải lại về bước 1, không câu nào nhắc bill vừa làm. Bản nháp đã gửi lên máy chủ (`POST /bills`) ở lại mồ côi: không route nào liệt kê bill theo nhóm |
+| Evidence | ![sau «Nhập tay»](evidence/EV-F04-LUI-MAT-C1.jpg) (hàng `TC-F04-LUI-VE-BUOC1`, `TC-F04-BACK-TRINH-DUYET`, `TC-F04-TAI-LAI`) |
+| Source | `chia-bill/ChiaBillLive.tsx:183` (bước là state, không nằm trong URL); `quayLai` (dòng 337) lùi `xem-lai` về `bat-dau`; `nhapTay` (dòng 282) thay bill bằng `hoaDonTrong()` |
+| Hậu quả | Một bill dài phải gõ lại từ đầu sau một cú Back quen tay |
+| Đề xuất sửa | Bước 1 giữ lối «Tiếp tục bill đang gõ» khi đã có món; hỏi trước khi bỏ; đưa bước vào URL (`?buoc=`) hoặc giữ nháp trong bộ nhớ phiên để Back và tải lại lấy lại được |
+| Tiêu chí gỡ | Ba thao tác trên không làm mất món nào mà không hỏi |
+
+### UI-053 · Web: ô chọn dựng bằng Pressable (checkbox, radio) không đổi bằng phím Space
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (accessibility, web) · **P3** |
+| Feature / Screen | F04 · ghế ở bàn gán món và ô «tên · món» bên dưới. Cùng cơ chế ở mọi Pressable có `accessibilityRole` checkbox, radio hoặc switch (12 chỗ trong `src`) |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | Tab tới ghế đầu (nhận focus, `tabindex` 0), bấm Space, rồi Enter. Làm tương tự với một ô «Minh Anh · …» |
+| Expected | Checkbox đổi bằng Space (WAI-ARIA) |
+| Actual | Space không đổi gì ở cả hai; Enter thì đổi |
+| Evidence | Hàng `TC-F04-BAN-PHIM` (đọc `aria-checked` trước và sau phím) |
+| Source | react-native-web `modules/usePressEvents/PressResponder.js:66–71`: `isValidKeyPress` chỉ nhận Space khi phần tử là `button` hoặc `role="button"` |
+| Hậu quả | Người dùng bàn phím và trình đọc màn hình trên web gặp checkbox không theo quy ước |
+| Đề xuất sửa | Helper trong kit bắt `onKeyDown` Space cho các role checkbox, radio, switch trên web |
+| Tiêu chí gỡ | Space đổi `aria-checked` ở ghế và ô danh sách |
+
+### UI-054 · Sơ đồ quyết toán: từ 10 người, nhãn tên đè nhau và tràn mép
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F04 · `/settlements/[id]` (`ui/SoDoChuyen.tsx`, `ui/hinh-tien.ts` `soDoChuyen`) |
+| Nền tảng, cấu hình | web, C1, C2 (nhóm 20 người, runtime); 288–398dp (tính) |
+| Actual | 20 người: 25 cặp nhãn đè nhau ở C1, 32 ở C2; nhãn đầu và cuối hàng ra ngoài mép màn. Tính với dải tên 72dp của test repo: tới 9 người không đè; 10 người có 4 cặp đè và 2 nhãn ra ngoài khung ở mọi bề rộng điện thoại; ở 398dp bắt đầu từ 12 người. Danh sách «Các khoản chuyển» bên dưới vẫn đọc trọn, số tiền không bị cắt |
+| Evidence | ![20 người, C1](evidence/EV-F04-QT-20-C1.jpg) (hàng `TC-F04-QT-20`, `TC-F04-SO-DO-HINH`) |
+| Source | `ui/hinh-tien.ts` `hang()` (x = w·(i+0.5)/n, không có trần số người mỗi hàng); nhãn rộng 88 (`SoDoChuyen.tsx`, `styles.nhan`); test repo dựng tối đa 6 người trả |
+| Hậu quả | Sơ đồ, phần kể chuyện của màn, thành một chuỗi chữ đè ở nhóm đông. Không mất thông tin vì danh sách còn đó |
+| Đề xuất sửa | Ở điện thoại, chia hàng khi quá khoảng 4 người một hàng, hoặc chỉ hiện chữ cái đầu khi chật |
+| Tiêu chí gỡ | Nhóm 10 người ở 288–398: 0 cặp nhãn đè, 0 nhãn ra ngoài khung |
+
+### UI-055 · Nếp M2 ở bước xem ảnh bill bị đẩy ra ngoài màn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F04 · bước xem trước ảnh («Ảnh này đúng bill chứ?») |
+| Nền tảng, cấu hình | web, C1, C2, C3 (đạt ở C6) |
+| Actual | Hộp Nếp M2 luôn ở x 321–433 vì tiêu đề giữ bề rộng 293px: ra ngoài màn 43px ở C1, 73px ở C3; ở C2 nằm hẳn ngoài màn, không thấy Nếp. Ở C2 tiêu đề chạm x 309, qua lề phải 16dp |
+| Evidence | ![C1](evidence/EV-F04-NEP-M2-C1-ct.jpg) ![C2](evidence/EV-F04-NEP-M2-C2-ct.jpg) (hàng `TC-F04-NEP-M2-KHUNG`) |
+| Source | `chia-bill/ChiaBillLive.tsx:429` (hàng `hangDau` gồm `Heading` và `NepDien`; style dòng 748 không cho `Heading` co) |
+| Hậu quả | Khoảnh khắc M2 (Nếp giơ máy ảnh) mất hoặc bị cắt đúng trên điện thoại; trái luật `NepDien` «chiếm chỗ riêng trong bố cục» |
+| Đề xuất sửa | `Heading` `flex: 1` trong hàng này, để co và xuống dòng |
+| Tiêu chí gỡ | Hộp Nếp M2 nằm trọn trong màn ở C1–C3 |
+
+### UI-056 · Đọc ảnh bill không được: câu khuyên nhập tay nhưng bước này không có nút «Nhập tay»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F04 · bước xem ảnh |
+| Nền tảng, cấu hình | web, C1; máy chủ chưa cấu hình khoá đọc bill, trả 503 sau 91 ms |
+| Actual | Câu «Rủ Đi chưa bật phần đọc bill từ ảnh. Đây là lỗi phía Rủ Đi, không phải ảnh bạn chụp. Bạn có thể nhập món bằng tay.» (ngoài màn, xem UI-051). Nút trên màn: «Quay lại», «Dùng ảnh này», «Chọn ảnh khác»; muốn nhập tay phải lùi về bước 1. «Dùng ảnh này» vẫn mời gửi lại |
+| Evidence | ![sau khi đọc hỏng](evidence/EV-F04-ANH-DOC-C1.jpg) (hàng `TC-F04-ANH-DOC`) |
+| Source | `chia-bill/ChiaBillLive.tsx:427–440` (bước `xem-anh` chỉ có hai nút); `chia-bill/hoa-don.ts:129` (`cauSauKhiScanHong`) |
+| Đề xuất sửa | Khi đọc hỏng, đặt nút «Nhập tay» cạnh câu; ẩn «Dùng ảnh này» khi lỗi là cấu hình máy chủ |
+| Tiêu chí gỡ | Sau khi đọc hỏng, lối nhập tay có ngay trên màn |
+
+### UI-057 · Mép Nếp ở màn tiền là nút «chạm để kéo ra» nhưng chạm không làm gì
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (accessibility) · **P3** |
+| Feature / Screen | F04 · mọi màn trong `MAN_NEP_LUI` (`finance`, `settlements`, `batches`, `smart-split`) |
+| Nền tảng, cấu hình | web, C1 |
+| Actual | Mép 56×64, `role=button`, `tabindex=0`, nhãn «Nếp đang cài trong mép sổ, chạm để kéo ra». Chạm, rồi Enter khi có focus: Nếp không ra, không có bảng. Đúng luật «Nếp Không Chạm Số», nhưng nhãn và vai trò hứa một việc màn này cố ý không làm |
+| Evidence | ![đã chạm mép](evidence/EV-F04-NEP-MEP-C1-ct.jpg) (hàng `TC-F04-NEP-MEP`) |
+| Source | `nep/trang-thai.ts:131` (`cham` bị bỏ qua khi `luiLai`); nhãn ở `nep/NepDock.tsx:240–241` |
+| Đề xuất sửa | Ở màn tiền: bỏ vai trò nút và khỏi thứ tự Tab, hoặc đổi nhãn thành trạng thái |
+| Tiêu chí gỡ | Ở màn tiền, không phần tử nào có nhãn hứa hành động mà không làm |
+
+### UI-058 · «Tạo đợt thu từ sổ» vẫn hiện khi mọi khoản đã vào đợt
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F04 · `/settlements/[id]` |
+| Nền tảng, cấu hình | web, C1 |
+| Điều kiện | Team Đà Lạt: khoản duy nhất đã nằm trong đợt đã phát; 7 khoản chuyển chưa về |
+| Actual | Nút hiện kèm câu «Gom mọi khoản đã ghi mà chưa vào đợt nào…». Chạm: máy chủ từ chối (409 `no_unbatched_allocations`); câu «Sổ chưa có khoản nào để thu…» hiện đúng, ngay trên nút; số đợt 1 → 1 |
+| Evidence | ![sau khi chạm](evidence/EV-F04-DOT-RONG-C1.jpg) (hàng `TC-F04-DOT-RONG`) |
+| Source | `screens/Bill.tsx:556` (nút hiện khi `du.chuyenTien.length > 0`; danh sách chuyển tính từ số dư, gồm cả khoản đã vào đợt) |
+| Đề xuất sửa | Chỉ hiện nút khi có khoản chưa vào đợt; nếu không, nói «mọi khoản đã vào đợt» và dẫn tới đợt đó |
+| Tiêu chí gỡ | Sổ không còn khoản ngoài đợt thì không có nút mời một việc chắc chắn bị từ chối |
+
+### UI-059 · Trang «Đã ghi sổ»: dòng người trả bị cắt mất «(trả)»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F04 · bước 5 «Ghi sổ» |
+| Nền tảng, cấu hình | web, C1 |
+| Actual | «Chat Test 01 (trả)», tên 12 ký tự, hiện «Chat Test 0…»: phần bị cắt đúng là dấu hiệu ai đã trả. Các dòng khác đọc trọn |
+| Evidence | ![trang sổ](evidence/EV-F04-DA-GHI-C1.jpg) (hàng `TC-F04-DA-GHI-TRA`) |
+| Source | `chia-bill/ChiaBillLive.tsx:710` (ghép «(trả)» vào cuối tên); `ui/TrangSo.tsx:81` (`numberOfLines={1}`) |
+| Đề xuất sửa | Đưa «đã trả» thành nhãn riêng, không nằm trong phần có thể bị cắt |
+| Tiêu chí gỡ | Ở C1–C3, dòng người trả luôn thấy chữ «trả» |
+
+### UI-060 · Tài chính: mục «Chi theo nhóm» không có hàng nào
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F04 · `/finance` |
+| Nền tảng, cấu hình | web, C1–C7 |
+| Actual | Tiêu đề «Chi theo nhóm» có nút «Xem quyết toán», bên dưới chỉ có câu «Người khác đang nợ bạn 1.120.000đ. Số này đọc từ sổ cái…», không có số theo nhóm nào |
+| Evidence | ![Tài chính C1–C3](evidence/EV-F04.S05-BASE-ghep.jpg) |
+| Source | `screens/Profile.tsx:403–413`; wire `Finance` (`screens/ca-nhan/tai-chinh.ts:33–47`) không có trường theo nhóm |
+| Đề xuất sửa | Đổi tiêu đề cho khớp điều mục thật nói, hoặc thêm số theo nhóm khi máy chủ có |
+| Tiêu chí gỡ | Tiêu đề mục khớp nội dung bên dưới |
+
+### UI-061 · Quyết toán ở 320dp: dòng đầu sổ ép lời giải thích thành 9 dòng hẹp
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F04 · `/settlements/[id]` |
+| Nền tảng, cấu hình | web, C2 (C1 5 dòng, C3 7 dòng) |
+| Actual | Tiêu đề và câu giải thích dồn vào cột trái vì trạng thái «Chưa có chuyến» giữ cột phải; ở C2 thành 9 dòng |
+| Evidence | ![Quyết toán C1–C3](evidence/EV-F04.S03-BASE-ghep.jpg) |
+| Source | `screens/Bill.tsx:488` (`hangDauSo`, hai cột cố định) |
+| Đề xuất sửa | Khi không có số (`hero.laSo` sai), đặt trạng thái dưới câu thay vì chia cột |
+| Tiêu chí gỡ | Ở C2 câu giải thích ≤ 5 dòng |
 
 ## F09 Hồ sơ · Cài đặt
 

@@ -186,7 +186,7 @@ Mặc định không né bàn phím.
 | L29 | Nắp gấp `NapGiay` | `ui/NapGiay.tsx` | nhiều màn | — | gập | |
 | L30 | Pager Welcome | `screens/Welcome.tsx` | F01.S01 | — | vuốt, chấm | carousel |
 | L31 | Bộ chọn ảnh (file chooser trên web) | `ky-niem/chon-anh.ts`, `ChiaBillLive.tsx` | F04, F05, F08, F09 | — | huỷ | trên native là picker hệ thống |
-| L32 | Chia sẻ (`Share`) | `dot-thu/DotThuLive.tsx` | F04.S04 | — | — | web: `navigator.share` nếu có |
+| L32 | Chia sẻ (`Share`) | `dot-thu/DotThuLive.tsx` | F04.S04 | — | — | web: `navigator.share` nếu có. Đo ở checkpoint 5: trên web cả ba trường hợp (không có, chia sẻ xong, đóng khay) đều báo lỗi mạng (UI-049) |
 | L33 | Link ngoài (chỉ đường) | `explore/PlaceDetailLive.tsx` | F02.S03 | — | — | |
 | L34 | 3 route modal trượt từ dưới | `check-ins/new`, `moments/new`, `stories/new` | F03, F08 | có | vuốt xuống (iOS), back | không chặn mất bản nháp |
 | L35 | Kit trạng thái: Skeleton, ErrorState, EmptyState | `ui/Skeleton.tsx`, `ErrorState`, `EmptyState` | mọi màn | — | — | lỗi là câu chữ có `aria-live` |
@@ -226,7 +226,7 @@ Không có trong app (N/A, đã rà mã):
 | MO19 | Nhấn giữ 250 ms rồi kéo đổi thứ tự | `ReorderList` | nhấn giữ |
 | MO20 | Cross-fade SVG → Skia | `KhungSkia` | nạp Skia xong |
 | MO21 | FadeIn khi xuất hiện | `ChonNgayLich`, `NapGiay`, `ExploreLive` | mở |
-| MO22 | Đếm số tiền 200 ms | `Money.tsx` (`countUp`) | hiện số |
+| MO22 | Đếm số tiền 200 ms | `Money.tsx` (`countUp`) | hiện số; grep ở checkpoint 5: không màn nào bật `countUp` (N/A) |
 | MO23 | Camera bản đồ `fitBounds`/`easeTo` 200 ms | `BanDo.tsx` | chọn chặng |
 | MO24 | Zoom ảnh: pinch, pan, chạm đúp | `PhotoViewer.tsx` | xem ảnh |
 | MO25 | Pager Welcome | `Welcome.tsx` | vuốt |

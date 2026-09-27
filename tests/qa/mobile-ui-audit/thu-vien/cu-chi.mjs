@@ -101,7 +101,15 @@ export async function tamCua(page, selector, { cuon = true } = {}) {
   return page.evaluate(({ sel, cuon }) => {
     const e = document.querySelector(sel);
     if (!e) return null;
-    if (cuon) e.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+    if (cuon) {
+      e.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+      // scrollIntoView also scrolls overflow-hidden rows sideways, which no
+      // finger can (F04, 27/09: a heading pushed to x = -97 and a clipped Nếp
+      // measured as fitting). Put those back; real horizontal scrollers stay.
+      for (let n = e.parentElement; n; n = n.parentElement) {
+        if (n.scrollLeft && !/(auto|scroll)/.test(getComputedStyle(n).overflowX)) n.scrollLeft = 0;
+      }
+    }
     const r = e.getBoundingClientRect();
     return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height, top: r.top, bottom: r.bottom };
   }, { sel: selector, cuon });

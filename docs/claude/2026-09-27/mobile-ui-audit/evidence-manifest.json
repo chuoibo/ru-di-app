@@ -323,5 +323,110 @@
   "bytes": 122541,
   "sha8": "91f11615",
   "moTa": "UI-039: chạm «Thêm chặng» hai lần cách 60 ms, không sheet nào mở (C1)"
+ },
+ "EV-F04-ANH-DOC-C1": {
+  "bytes": 78511,
+  "sha8": "cb2a26b7",
+  "moTa": "UI-056 và UI-051: máy chủ không đọc được ảnh; câu khuyên nhập tay nằm ngoài màn, bước này không có nút «Nhập tay» (C1)"
+ },
+ "EV-F04-BAN-20-C1-ct": {
+  "bytes": 205309,
+  "sha8": "b5cebfe9",
+  "moTa": "UI-050: bàn gán món của nhóm 20 người, ghế và tên chồng nhau (C1)"
+ },
+ "EV-F04-BAN-20-C2-ct": {
+  "bytes": 132842,
+  "sha8": "2e4ff9d7",
+  "moTa": "UI-050: như trên ở 320dp: 17/20 ghế chạm trúng ghế khác (C2)"
+ },
+ "EV-F04-CHAN-TEN-C1": {
+  "bytes": 97112,
+  "sha8": "fb4e2a55",
+  "moTa": "UI-051: vừa chạm «Tiếp» với một món chưa có tên: lý do nằm ở đầu trang, ngoài màn; cũng thấy «12.3…» và «400.…» của UI-048 (C1)"
+ },
+ "EV-F04-CHIA-SE-KHONG-CO-C1": {
+  "bytes": 119839,
+  "sha8": "8995e14f",
+  "moTa": "UI-049: đã chạm «Gửi cho Chat Test 14» trên web: phần thấy được không đổi, hàng vẫn «Chưa gửi link» (C1)"
+ },
+ "EV-F04-DA-GHI-C1": {
+  "bytes": 177408,
+  "sha8": "04c1c4e5",
+  "moTa": "UI-059: trang «Đã ghi sổ», dòng người trả hiện «Chat Test 0…», mất «(trả)»; Nếp M3 và dấu «Đã ghi sổ» (C1)"
+ },
+ "EV-F04-DOT-RONG-C1": {
+  "bytes": 167634,
+  "sha8": "6a2ec2fa",
+  "moTa": "UI-058: «Tạo đợt thu từ sổ» khi mọi khoản đã vào đợt: máy chủ từ chối, câu đúng lý do cạnh nút (C1)"
+ },
+ "EV-F04-HOA-DON-503-C1": {
+  "bytes": 99532,
+  "sha8": "5d3e0050",
+  "moTa": "UI-051: máy chủ trả 503 khi tạo bill: câu lỗi ở đầu trang, phần thấy được không đổi (C1)"
+ },
+ "EV-F04-LUI-MAT-C1": {
+  "bytes": 106166,
+  "sha8": "f96513a2",
+  "moTa": "UI-052: lùi về bước 1 rồi «Nhập tay»: bill 3 món vừa gõ thành bill trống (C1)"
+ },
+ "EV-F04-M3-C9-dau-cuoi": {
+  "bytes": 32130,
+  "sha8": "14caf393",
+  "moTa": "MO13 M3 ở C9: ảnh vùng Nếp đầu (SVG) và cuối (Skia) cùng tư thế (đạt)"
+ },
+ "EV-F04-NEP-M2-C1-ct": {
+  "bytes": 81966,
+  "sha8": "14b72c9f",
+  "moTa": "UI-055: xem trước ảnh bill, Nếp M2 bị mép phải cắt 43px (C1)"
+ },
+ "EV-F04-NEP-M2-C2-ct": {
+  "bytes": 52526,
+  "sha8": "105fb982",
+  "moTa": "UI-055: ở 320dp Nếp M2 nằm hẳn ngoài màn, tiêu đề chạm mép (C2)"
+ },
+ "EV-F04-NEP-MEP-C1-ct": {
+  "bytes": 158471,
+  "sha8": "4310a647",
+  "moTa": "UI-057: mép Nếp ở màn Quyết toán đã được chạm, không có gì xảy ra (C1)"
+ },
+ "EV-F04-PHAT-HOI-C1": {
+  "bytes": 138548,
+  "sha8": "467c983e",
+  "moTa": "Phát đợt thu hai bước: câu hỏi nói rõ không hoàn lại (đạt, C1)"
+ },
+ "EV-F04-QT-20-C1": {
+  "bytes": 196661,
+  "sha8": "459a3846",
+  "moTa": "UI-054: quyết toán nhóm 20 người, nhãn tên trên sơ đồ đè thành một chuỗi và tràn mép (C1)"
+ },
+ "EV-F04-TIEN-CAT-B2-C1-ct": {
+  "bytes": 110513,
+  "sha8": "52c9cc7f",
+  "moTa": "UI-048: bước 2, dòng món hiện «12.3…» thay cho 12.345.678đ (C1, khung đỏ = số tiền bị cắt)"
+ },
+ "EV-F04-TIEN-CAT-B3-C2-ct": {
+  "bytes": 101364,
+  "sha8": "7c8cd863",
+  "moTa": "UI-048: bước 3, thẻ món trên bàn hiện «12.345.6…» (C2)"
+ },
+ "EV-F04.S01-BASE-ghep": {
+  "bytes": 112307,
+  "sha8": "877b1df0",
+  "moTa": "F04.S01 Chia hoá đơn bước 1, C1–C3 (đạt)"
+ },
+ "EV-F04.S03-BASE-ghep": {
+  "bytes": 158549,
+  "sha8": "d74dab91",
+  "moTa": "F04.S03 Quyết toán C1–C3; UI-061: ở C2 dòng đầu sổ 9 dòng hẹp"
+ },
+ "EV-F04.S04-BASE-ghep": {
+  "bytes": 165685,
+  "sha8": "a601a56e",
+  "moTa": "F04.S04 Đợt thu đã phát, C1–C3 (đạt)"
+ },
+ "EV-F04.S05-BASE-ghep": {
+  "bytes": 121861,
+  "sha8": "e91d1a8f",
+  "moTa": "F04.S05 Tài chính C1–C3; UI-060: «Chi theo nhóm» không có hàng nào"
  }
 }

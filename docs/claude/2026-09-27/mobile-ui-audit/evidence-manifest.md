@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (65 ảnh, tổng 8.86 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (86 ảnh, tổng 11.35 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -69,3 +69,24 @@
 | [EV-F03-TAO-ngan-sach-trong-C1](evidence/EV-F03-TAO-ngan-sach-trong-C1.jpg) | UI-034: ô ngân sách chỉ có placeholder «250000»; chạm «Tạo kèo» không thấy gì xảy ra (C1) | 118145 | `53f2ea99` |
 | [EV-F03-THEM-C8](evidence/EV-F03-THEM-C8.jpg) | UI-040: sheet «Chặng mới» cao 93% ở cửa sổ 390×460 (C8) | 54504 | `7caf28a4` |
 | [EV-F03-THEM-cham-dup-C1](evidence/EV-F03-THEM-cham-dup-C1.jpg) | UI-039: chạm «Thêm chặng» hai lần cách 60 ms, không sheet nào mở (C1) | 122541 | `91f11615` |
+| [EV-F04-ANH-DOC-C1](evidence/EV-F04-ANH-DOC-C1.jpg) | UI-056 và UI-051: máy chủ không đọc được ảnh; câu khuyên nhập tay nằm ngoài màn, bước này không có nút «Nhập tay» (C1) | 78511 | `cb2a26b7` |
+| [EV-F04-BAN-20-C1-ct](evidence/EV-F04-BAN-20-C1-ct.jpg) | UI-050: bàn gán món của nhóm 20 người, ghế và tên chồng nhau (C1) | 205309 | `b5cebfe9` |
+| [EV-F04-BAN-20-C2-ct](evidence/EV-F04-BAN-20-C2-ct.jpg) | UI-050: như trên ở 320dp: 17/20 ghế chạm trúng ghế khác (C2) | 132842 | `2e4ff9d7` |
+| [EV-F04-CHAN-TEN-C1](evidence/EV-F04-CHAN-TEN-C1.jpg) | UI-051: vừa chạm «Tiếp» với một món chưa có tên: lý do nằm ở đầu trang, ngoài màn; cũng thấy «12.3…» và «400.…» của UI-048 (C1) | 97112 | `fb4e2a55` |
+| [EV-F04-CHIA-SE-KHONG-CO-C1](evidence/EV-F04-CHIA-SE-KHONG-CO-C1.jpg) | UI-049: đã chạm «Gửi cho Chat Test 14» trên web: phần thấy được không đổi, hàng vẫn «Chưa gửi link» (C1) | 119839 | `8995e14f` |
+| [EV-F04-DA-GHI-C1](evidence/EV-F04-DA-GHI-C1.jpg) | UI-059: trang «Đã ghi sổ», dòng người trả hiện «Chat Test 0…», mất «(trả)»; Nếp M3 và dấu «Đã ghi sổ» (C1) | 177408 | `04c1c4e5` |
+| [EV-F04-DOT-RONG-C1](evidence/EV-F04-DOT-RONG-C1.jpg) | UI-058: «Tạo đợt thu từ sổ» khi mọi khoản đã vào đợt: máy chủ từ chối, câu đúng lý do cạnh nút (C1) | 167634 | `6a2ec2fa` |
+| [EV-F04-HOA-DON-503-C1](evidence/EV-F04-HOA-DON-503-C1.jpg) | UI-051: máy chủ trả 503 khi tạo bill: câu lỗi ở đầu trang, phần thấy được không đổi (C1) | 99532 | `5d3e0050` |
+| [EV-F04-LUI-MAT-C1](evidence/EV-F04-LUI-MAT-C1.jpg) | UI-052: lùi về bước 1 rồi «Nhập tay»: bill 3 món vừa gõ thành bill trống (C1) | 106166 | `f96513a2` |
+| [EV-F04-M3-C9-dau-cuoi](evidence/EV-F04-M3-C9-dau-cuoi.jpg) | MO13 M3 ở C9: ảnh vùng Nếp đầu (SVG) và cuối (Skia) cùng tư thế (đạt) | 32130 | `14caf393` |
+| [EV-F04-NEP-M2-C1-ct](evidence/EV-F04-NEP-M2-C1-ct.jpg) | UI-055: xem trước ảnh bill, Nếp M2 bị mép phải cắt 43px (C1) | 81966 | `14b72c9f` |
+| [EV-F04-NEP-M2-C2-ct](evidence/EV-F04-NEP-M2-C2-ct.jpg) | UI-055: ở 320dp Nếp M2 nằm hẳn ngoài màn, tiêu đề chạm mép (C2) | 52526 | `105fb982` |
+| [EV-F04-NEP-MEP-C1-ct](evidence/EV-F04-NEP-MEP-C1-ct.jpg) | UI-057: mép Nếp ở màn Quyết toán đã được chạm, không có gì xảy ra (C1) | 158471 | `4310a647` |
+| [EV-F04-PHAT-HOI-C1](evidence/EV-F04-PHAT-HOI-C1.jpg) | Phát đợt thu hai bước: câu hỏi nói rõ không hoàn lại (đạt, C1) | 138548 | `467c983e` |
+| [EV-F04-QT-20-C1](evidence/EV-F04-QT-20-C1.jpg) | UI-054: quyết toán nhóm 20 người, nhãn tên trên sơ đồ đè thành một chuỗi và tràn mép (C1) | 196661 | `459a3846` |
+| [EV-F04-TIEN-CAT-B2-C1-ct](evidence/EV-F04-TIEN-CAT-B2-C1-ct.jpg) | UI-048: bước 2, dòng món hiện «12.3…» thay cho 12.345.678đ (C1, khung đỏ = số tiền bị cắt) | 110513 | `52c9cc7f` |
+| [EV-F04-TIEN-CAT-B3-C2-ct](evidence/EV-F04-TIEN-CAT-B3-C2-ct.jpg) | UI-048: bước 3, thẻ món trên bàn hiện «12.345.6…» (C2) | 101364 | `7c8cd863` |
+| [EV-F04.S01-BASE-ghep](evidence/EV-F04.S01-BASE-ghep.jpg) | F04.S01 Chia hoá đơn bước 1, C1–C3 (đạt) | 112307 | `877b1df0` |
+| [EV-F04.S03-BASE-ghep](evidence/EV-F04.S03-BASE-ghep.jpg) | F04.S03 Quyết toán C1–C3; UI-061: ở C2 dòng đầu sổ 9 dòng hẹp | 158549 | `d74dab91` |
+| [EV-F04.S04-BASE-ghep](evidence/EV-F04.S04-BASE-ghep.jpg) | F04.S04 Đợt thu đã phát, C1–C3 (đạt) | 165685 | `a601a56e` |
+| [EV-F04.S05-BASE-ghep](evidence/EV-F04.S05-BASE-ghep.jpg) | F04.S05 Tài chính C1–C3; UI-060: «Chi theo nhóm» không có hàng nào | 121861 | `e91d1a8f` |
