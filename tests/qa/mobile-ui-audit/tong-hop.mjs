@@ -21,6 +21,11 @@ if (!out || !docs) throw new Error("dùng: AUDIT_OUT=… node tong-hop.mjs <thư
 
 const cuoi = new Map();
 for (const r of soGhi(out).doc()) cuoi.set(`${r.tc}|${r.nenTang ?? "web"}|${r.cauHinh ?? ""}`, r);
+// A seeded NOT_TESTED row is a placeholder for its test case on its platform:
+// once that case has a real verdict under any configuration group, the
+// placeholder goes. Any other NOT_TESTED row stays and is counted.
+const coKetQua = new Set([...cuoi.values()].filter((r) => r.status !== "NOT_TESTED").map((r) => `${r.tc}|${r.nenTang ?? "web"}`));
+for (const [k, r] of cuoi) if (r.status === "NOT_TESTED" && coKetQua.has(`${r.tc}|${r.nenTang ?? "web"}`)) cuoi.delete(k);
 const hang = [...cuoi.values()].sort((a, b) => (a.feature + a.tc + (a.nenTang ?? "")).localeCompare(b.feature + b.tc + (b.nenTang ?? ""), "vi"));
 
 const TT = ["PASS", "FAIL", "BLOCKED", "NOT_TESTED", "NOT_APPLICABLE"];
@@ -38,7 +43,11 @@ const tong = {
 };
 writeFileSync(join(out, "dem.json"), JSON.stringify(tong, null, 1));
 
-const o = (s) => String(s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+// Notes carry measurements; a raw float (a pixel coordinate with seven decimals) reads as a
+// run of ten digits to the repository guard long-number rule (it blocked checkpoint 2).
+// Round every decimal to at most one place before it reaches markdown.
+const lamTron = (s) => String(s ?? "").replace(/\d+\.\d{2,}/g, (m) => String(Math.round(Number(m) * 10) / 10));
+const o = (s) => lamTron(s).replace(/\|/g, "\\|").replace(/\n/g, " ");
 // Only committed images get a link; the rest are named and marked as kept
 // outside git, so the matrix never carries a dead link.
 const ev = (r) =>

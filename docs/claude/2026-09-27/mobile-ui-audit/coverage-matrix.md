@@ -9,17 +9,17 @@ trên bản web trong Chromium; STATIC là chỉ đọc mã; HYPOTHESIS là nghi
 
 | Phạm vi | Đếm |
 |---|---|
-| Tất cả (323 hàng) | PASS 33 · FAIL 18 · BLOCKED 180 · NOT_TESTED 91 · NOT_APPLICABLE 1 |
-| Web (Chromium) | PASS 33 · FAIL 18 · BLOCKED 60 · NOT_TESTED 91 · NOT_APPLICABLE 1 |
+| Tất cả (339 hàng) | PASS 51 · FAIL 25 · BLOCKED 180 · NOT_TESTED 82 · NOT_APPLICABLE 1 |
+| Web (Chromium) | PASS 51 · FAIL 25 · BLOCKED 60 · NOT_TESTED 82 · NOT_APPLICABLE 1 |
 | Android native | PASS 0 · FAIL 0 · BLOCKED 60 · NOT_TESTED 0 · NOT_APPLICABLE 0 |
 | iOS native | PASS 0 · FAIL 0 · BLOCKED 60 · NOT_TESTED 0 · NOT_APPLICABLE 0 |
-| Method RUNTIME-WEB | PASS 33 · FAIL 18 · BLOCKED 0 · NOT_TESTED 91 · NOT_APPLICABLE 1 |
+| Method RUNTIME-WEB | PASS 51 · FAIL 25 · BLOCKED 0 · NOT_TESTED 82 · NOT_APPLICABLE 1 |
 | Method STATIC | PASS 0 · FAIL 0 · BLOCKED 180 · NOT_TESTED 0 · NOT_APPLICABLE 0 |
 | Method HYPOTHESIS | PASS 0 · FAIL 0 · BLOCKED 0 · NOT_TESTED 0 · NOT_APPLICABLE 0 |
 
 ## F00
 
-Đếm: PASS 33 · FAIL 17 · BLOCKED 15 · NOT_TESTED 7 · NOT_APPLICABLE 1
+Đếm: PASS 33 · FAIL 17 · BLOCKED 15 · NOT_TESTED 4 · NOT_APPLICABLE 1
 
 | ID | Feature | Screen | Layer | State | Action | Platform/config | Expected | Status | Method | Evidence | Issue |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -45,13 +45,11 @@ trên bản web trong Chromium; STATIC là chỉ đọc mã; HYPOTHESIS là nghi
 | TC-F00.S03-FONT | F00 | F00.S03 | - | cỡ chữ hệ thống 1.3 và 2.0 | mở (tabs) | web | không mất nội dung, không mất vùng bấm | BLOCKED (react-native-web cố định fontScale = 1.0; cỡ chữ 1.3/2.0 chỉ đo được trên máy thật) | STATIC |  |  |
 | TC-F00.S03-NATIVE | F00 | F00.S03 | - | mọi trạng thái | mở (tabs) | android | như web, trên thiết bị Android | BLOCKED (không chạy được Android: container không có /dev/kvm, không có Android SDK (proxy chặn dl.google.com)) | STATIC |  |  |
 | TC-F00.S03-NATIVE | F00 | F00.S03 | - | mọi trạng thái | mở (tabs) | ios | như web, trên thiết bị iOS | BLOCKED (không chạy được iOS: không có macOS / iOS Simulator) | STATIC |  |  |
-| TC-F00.S04-BASE | F00 | F00.S04 | - | baseline, dữ liệu seed | mở /create | web C1,C2,C3 | khay tạo: hiển thị đủ, không tràn, không cắt, không che, vùng bấm và tên truy cập đạt | NOT_TESTED | RUNTIME-WEB |  |  |
 | TC-F00.S04-BASE | F00 | F00.S04 | L01 | khay mở | mở khay | web C1,C3 | khay đủ 5 việc, tiêu đề, nút đóng, không tràn | PASS (C1 cao 75%, C3 80%) | RUNTIME-WEB | [EV-F00-KT-mo-C1](evidence/EV-F00-KT-mo-C1.jpg) EV-F00-KT-mo-C3 (ngoài git) |  |
 | TC-F00.S04-BASE | F00 | F00.S04 | L01 | khay mở | mở khay | web C2 | khay đủ 5 việc, cao ≤82% | FAIL (92%) | RUNTIME-WEB | [EV-F00-KT-mo-C2](evidence/EV-F00-KT-mo-C2.jpg) | UI-007 |
 | TC-F00.S04-FONT | F00 | F00.S04 | - | cỡ chữ hệ thống 1.3 và 2.0 | mở /create | web | không mất nội dung, không mất vùng bấm | BLOCKED (react-native-web cố định fontScale = 1.0; cỡ chữ 1.3/2.0 chỉ đo được trên máy thật) | STATIC |  |  |
 | TC-F00.S04-NATIVE | F00 | F00.S04 | - | mọi trạng thái | mở /create | android | như web, trên thiết bị Android | BLOCKED (không chạy được Android: container không có /dev/kvm, không có Android SDK (proxy chặn dl.google.com)) | STATIC |  |  |
 | TC-F00.S04-NATIVE | F00 | F00.S04 | - | mọi trạng thái | mở /create | ios | như web, trên thiết bị iOS | BLOCKED (không chạy được iOS: không có macOS / iOS Simulator) | STATIC |  |  |
-| TC-F00.S05-BASE | F00 | F00.S05 | - | baseline, dữ liệu seed | mở (toàn cục) | web C1,C2,C3 | dock và bảng Nếp: hiển thị đủ, không tràn, không cắt, không che, vùng bấm và tên truy cập đạt | NOT_TESTED | RUNTIME-WEB |  |  |
 | TC-F00.S05-BASE | F00 | F00.S05 | L02 | Khám phá, Nếp thu | nhìn mép phải | web C1,C3 | mép 10dp trong lề, không che chữ | PASS | RUNTIME-WEB | [EV-F00-NEP-mep-C1](evidence/EV-F00-NEP-mep-C1.jpg) |  |
 | TC-F00.S05-BASE | F00 | F00.S05 | L02 | Khám phá, Nếp thu | nhìn mép phải | web C2 | mép 10dp trong lề, không che chữ | FAIL (mép x310–320 đè chữ chip «Vui chơi» trong hàng chip tràn mép) | RUNTIME-WEB | EV-F00-TAB-C2 (ngoài git) | UI-014 |
 | TC-F00.S05-FONT | F00 | F00.S05 | - | cỡ chữ hệ thống 1.3 và 2.0 | mở (toàn cục) | web | không mất nội dung, không mất vùng bấm | BLOCKED (react-native-web cố định fontScale = 1.0; cỡ chữ 1.3/2.0 chỉ đo được trên máy thật) | STATIC |  |  |
@@ -85,7 +83,6 @@ trên bản web trong Chromium; STATIC là chỉ đọc mã; HYPOTHESIS là nghi
 | TC-L03-MO-C3 | F00 | F00.S05 | L03 | Khám phá | chạm mép Nếp, chạm Nếp | web C3 | bảng Nếp mở; ô hỏi nằm trong màn | PASS (mở 29 ms; panel top 419, cao 381/800; ô hỏi 738–782) | RUNTIME-WEB | EV-F00-NEP-BANG-C3 (ngoài git) |  |
 | TC-L03-MO-C8 | F00 | F00.S05 | L03 | Khám phá | chạm mép Nếp, chạm Nếp | web C8 | bảng Nếp mở; ô hỏi nằm trong màn | PASS (mở 35 ms; panel top 79, cao 381/460; ô hỏi 398–442) | RUNTIME-WEB | [EV-F00-NEP-BANG-C8](evidence/EV-F00-NEP-BANG-C8.jpg) |  |
 | TC-L03-VE | F00 | F00.S05 | L03 | bảng Nếp, đã gõ mô tả | bấm «Vẽ» | web C1 | hỏi xác nhận rồi vẽ, hoặc nói vì sao không vẽ được | FAIL (không dialog, không alert, không request, không chữ trạng thái) | RUNTIME-WEB | [EV-F00-NEP-VE-C1](evidence/EV-F00-NEP-VE-C1.jpg) | UI-011 |
-| TC-L03-VONGDOI | F00 | F00.S05 | L03 | đóng → mở → dùng → đóng → mở lại | vòng đời Bảng Nếp + Alert «Nhờ Nếp vẽ?» | web C1 | mở đúng chỗ, đóng hết mọi cách được thiết kế, không sót lớp chặn, focus trả về | NOT_TESTED | RUNTIME-WEB |  |  |
 | TC-L03-VONGDOI | F00 | F00.S05 | L03 | đóng → mở → Esc | mở bảng Nếp từ mép, đóng bằng Esc | web C1,C3,C8 | mở, ô hỏi trong màn, đóng không sót | PASS (nút «Vẽ» ghi riêng (UI-011); chip gợi ý 36dp (UI-012)) | RUNTIME-WEB | [EV-F00-NEP-BANG-C1](evidence/EV-F00-NEP-BANG-C1.jpg) [EV-F00-NEP-BANG-C8](evidence/EV-F00-NEP-BANG-C8.jpg) |  |
 | TC-L04-VONGDOI | F00 | (nhiều màn) | L04 | M1 lần 2 trong một phiên | mở khay tạo hai lần | web C1 | M1 chỉ diễn một lần mỗi phiên | NOT_TESTED (đã quay khung hai lần mở; tư thế Nếp đổi ở cả hai lần, khung hình không đủ để tách diễn lại M1 khỏi tư thế nghỉ; cần đọc trạng thái useKhoanhKhac hoặc thiết bị) | RUNTIME-WEB | [EV-F00-M1-lan1-C1](evidence/EV-F00-M1-lan1-C1.jpg) [EV-F00-M1-lan2-C1](evidence/EV-F00-M1-lan2-C1.jpg) |  |
 | TC-L05-VONGDOI | F00 | F00.S03 | L05 | đóng → mở → dùng → đóng → mở lại | vòng đời Thanh tab / rail | web C1 | mở đúng chỗ, đóng hết mọi cách được thiết kế, không sót lớp chặn, focus trả về | NOT_TESTED | RUNTIME-WEB |  |  |
@@ -99,31 +96,50 @@ trên bản web trong Chromium; STATIC là chỉ đọc mã; HYPOTHESIS là nghi
 
 ## F01
 
-Đếm: PASS 0 · FAIL 0 · BLOCKED 15 · NOT_TESTED 6 · NOT_APPLICABLE 0
+Đếm: PASS 18 · FAIL 7 · BLOCKED 15 · NOT_TESTED 0 · NOT_APPLICABLE 0
 
 | ID | Feature | Screen | Layer | State | Action | Platform/config | Expected | Status | Method | Evidence | Issue |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| TC-F01.S01-BASE | F01 | F01.S01 | - | baseline, dữ liệu seed | mở /welcome | web C1,C2,C3 | Welcome: hiển thị đủ, không tràn, không cắt, không che, vùng bấm và tên truy cập đạt | NOT_TESTED | RUNTIME-WEB |  |  |
+| TC-F01-LOGIN-503 | F01 | F01.S02 | - | máy chủ trả 503 khi gửi mã | «Gửi mã» | web C1 | câu lỗi tiếng Việt, không lộ mã lỗi, gửi lại được | PASS («Rủ Đi đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.») | RUNTIME-WEB | [EV-F01-LOGIN-503-C1](evidence/EV-F01-LOGIN-503-C1.jpg) |  |
+| TC-F01-LOGIN-BACK-LANH | F01 | F01.S02 | - | mở /login bằng link (không lịch sử) | chạm «Quay lại» | web C1 | về màn trước hợp lý (Welcome), không đứng im | FAIL (sau khi chạm vẫn /login) | RUNTIME-WEB | [EV-F01-LOGIN-back-lanh-C1](evidence/EV-F01-LOGIN-back-lanh-C1.jpg) | UI-018 |
+| TC-F01-LOGIN-C8 | F01 | F01.S02 | - | cửa sổ 390×460 | mở /login | web C8 | ô số và «Gửi mã» trong màn | PASS (nút 378–430/460) | RUNTIME-WEB | [EV-F01-LOGIN-C8](evidence/EV-F01-LOGIN-C8.jpg) |  |
+| TC-F01-LOGIN-SO-SAI | F01 | F01.S02 | - | gõ 12345 | «Gửi mã» | web C1 | một câu lỗi tiếng Việt dưới ô, không gửi | PASS («Chưa đúng dạng số di động Việt Nam: 10 chữ số, bắt đầu bằng 0.») | RUNTIME-WEB | [EV-F01-LOGIN-so-sai-C1](evidence/EV-F01-LOGIN-so-sai-C1.jpg) |  |
+| TC-F01-MOI-SAI | F01 | F01.S04 | - | mã lời mời sai | «Nhận lời mời» | web C1 | câu nói đúng chuyện: mã không đúng hoặc đã hết hạn | FAIL (máy chủ: 404 code invite_not_found; app: «Phần này chưa mở được trên bản app này. Cập nhật app rồi thử lại.») | RUNTIME-WEB | [EV-F01-MOI-sai-C1](evidence/EV-F01-MOI-sai-C1.jpg) | UI-019 |
+| TC-F01-OTP-BACK | F01 | F01.S03 | - | đang ở OTP | Back trình duyệt | web C1 | về Đăng nhập, giữ số đã nhập (giống «Đổi số») | PASS (tới /login; ô số còn 10 ký tự) | RUNTIME-WEB |  |  |
+| TC-F01-OTP-DUNG | F01 | F01.S03 | - | mã đúng, tài khoản mới | gõ 000000 | web C1 | vào Sở thích (người mới) | PASS (tới /personalization) | RUNTIME-WEB | [EV-F01-SO-THICH-moi-C1](evidence/EV-F01-SO-THICH-moi-C1.jpg) |  |
+| TC-F01-OTP-SAI | F01 | F01.S03 | - | mã sai | gõ 111111 | web C1 | một câu lỗi (còn bao nhiêu lượt), các ô OTP xoá để gõ lại | PASS («Mã chưa đúng. Còn 4 lần thử.»; 6 ô OTP rỗng sau lỗi, focus về «Ô nhập mã» (đo lại 2 lần với 2 tài khoản mới)) | RUNTIME-WEB | [EV-F01-OTP-sai-C1](evidence/EV-F01-OTP-sai-C1.jpg) |  |
+| TC-F01-SO-THICH-A11Y | F01 | F01.S05 | - | đã chọn 3 gu | đọc thuộc tính ARIA của chip | web C1 | chip đã chọn có aria-checked=true (hoặc aria-selected) | PASS ([{"g":"Ăn uống","checked":"true","selected":null,"role":"checkbox"},{"g":"Cafe","checked":"true","selected":null,"role":"checkbox"},{"g":"Chơi đêm","checked":"true","selected":null,"role":"checkbox"}]) | RUNTIME-WEB | [EV-F01-SO-THICH-da-chon-C1](evidence/EV-F01-SO-THICH-da-chon-C1.jpg) |  |
+| TC-F01-SO-THICH-CHUA-CHON | F01 | F01.S05 | - | chưa chọn gu | bấm «Lưu sở thích» | web C1 | không lưu; lý do nhìn thấy được | PASS (nút «Lưu sở thích» aria-disabled=true; câu «Chọn ít nhất 3 để tiếp tục.» dưới lưới gu (cách nút khoảng 250dp)) | RUNTIME-WEB | [EV-F01-SO-THICH-moi-C1](evidence/EV-F01-SO-THICH-moi-C1.jpg) |  |
+| TC-F01-SO-THICH-LUU | F01 | F01.S05 | - | đủ 3 gu + mức chi | «Lưu sở thích» | web C1 | lưu và sang màn đầu của người chưa có nhóm | PASS (tới /messages) | RUNTIME-WEB | EV-F01-SAU-SO-THICH-C1 (ngoài git) |  |
+| TC-F01-SO-THICH-MOI | F01 | F01.S05 | - | tài khoản mới | đặt tên dài có emoji, chọn 3 gu, mức chi, lưu | web C1 | lưu và sang màn đầu của người chưa có nhóm | PASS (chưa đủ 3 gu: nút aria-disabled và câu «Chọn ít nhất 3 để tiếp tục.»; đủ: tới /messages) | RUNTIME-WEB | [EV-F01-SO-THICH-da-chon-C1](evidence/EV-F01-SO-THICH-da-chon-C1.jpg) |  |
+| TC-F01-WEL-AXE | F01 | F01.S01 | - | Welcome | axe WCAG 2 A/AA | web C1,C3 | 0 vi phạm | FAIL (aria-prohibited-attr×1 (cụm chấm có aria-label trên div không role), scrollable-region-focusable×1 (pager không nhận focus bàn phím)) | RUNTIME-WEB |  | UI-020 |
+| TC-F01.S01-BASE | F01 | F01.S01 | - | chưa đăng nhập | mở /welcome | web C1,C2,C3,C8 | bìa, trang 1, CTA và «Tìm hiểu thêm» trong màn; C8 rút gọn | PASS (đã mở ảnh 4 cấu hình; axe: 2 vi phạm ghi riêng (UI-020)) | RUNTIME-WEB | [EV-F00.S01-BASE-ghep](evidence/EV-F00.S01-BASE-ghep.jpg) |  |
 | TC-F01.S01-FONT | F01 | F01.S01 | - | cỡ chữ hệ thống 1.3 và 2.0 | mở /welcome | web | không mất nội dung, không mất vùng bấm | BLOCKED (react-native-web cố định fontScale = 1.0; cỡ chữ 1.3/2.0 chỉ đo được trên máy thật) | STATIC |  |  |
 | TC-F01.S01-NATIVE | F01 | F01.S01 | - | mọi trạng thái | mở /welcome | android | như web, trên thiết bị Android | BLOCKED (không chạy được Android: container không có /dev/kvm, không có Android SDK (proxy chặn dl.google.com)) | STATIC |  |  |
 | TC-F01.S01-NATIVE | F01 | F01.S01 | - | mọi trạng thái | mở /welcome | ios | như web, trên thiết bị iOS | BLOCKED (không chạy được iOS: không có macOS / iOS Simulator) | STATIC |  |  |
-| TC-F01.S02-BASE | F01 | F01.S02 | - | baseline, dữ liệu seed | mở /login | web C1,C2,C3 | Đăng nhập: hiển thị đủ, không tràn, không cắt, không che, vùng bấm và tên truy cập đạt | NOT_TESTED | RUNTIME-WEB |  |  |
+| TC-F01.S02-BASE | F01 | F01.S02 | - | chưa đăng nhập | mở /login | web C1,C2,C3,C8 | đủ ô số, «Gửi mã», «Tôi có lời mời», không tràn/cắt/che | PASS (ô số 44dp ghi riêng (UI-001); axe 0 vi phạm) | RUNTIME-WEB | [EV-F01.S02-BASE-ghep](evidence/EV-F01.S02-BASE-ghep.jpg) |  |
 | TC-F01.S02-FONT | F01 | F01.S02 | - | cỡ chữ hệ thống 1.3 và 2.0 | mở /login | web | không mất nội dung, không mất vùng bấm | BLOCKED (react-native-web cố định fontScale = 1.0; cỡ chữ 1.3/2.0 chỉ đo được trên máy thật) | STATIC |  |  |
 | TC-F01.S02-NATIVE | F01 | F01.S02 | - | mọi trạng thái | mở /login | android | như web, trên thiết bị Android | BLOCKED (không chạy được Android: container không có /dev/kvm, không có Android SDK (proxy chặn dl.google.com)) | STATIC |  |  |
 | TC-F01.S02-NATIVE | F01 | F01.S02 | - | mọi trạng thái | mở /login | ios | như web, trên thiết bị iOS | BLOCKED (không chạy được iOS: không có macOS / iOS Simulator) | STATIC |  |  |
-| TC-F01.S03-BASE | F01 | F01.S03 | - | baseline, dữ liệu seed | mở /otp | web C1,C2,C3 | OTP: hiển thị đủ, không tràn, không cắt, không che, vùng bấm và tên truy cập đạt | NOT_TESTED | RUNTIME-WEB |  |  |
+| TC-F01.S03-BASE | F01 | F01.S03 | - | vừa gửi mã (tài khoản mới) | vào /otp | web C1 | 6 ô, số đã che, «Đổi số», «Gửi lại mã» vô hiệu kèm đếm ngược | PASS (số hiện dạng che «••• ••• xxx»; lý do vô hiệu là dòng đếm ngược dưới nút (đúng ADR-0038)) | RUNTIME-WEB | [EV-F01-OTP-sai-C1](evidence/EV-F01-OTP-sai-C1.jpg) |  |
 | TC-F01.S03-FONT | F01 | F01.S03 | - | cỡ chữ hệ thống 1.3 và 2.0 | mở /otp | web | không mất nội dung, không mất vùng bấm | BLOCKED (react-native-web cố định fontScale = 1.0; cỡ chữ 1.3/2.0 chỉ đo được trên máy thật) | STATIC |  |  |
 | TC-F01.S03-NATIVE | F01 | F01.S03 | - | mọi trạng thái | mở /otp | android | như web, trên thiết bị Android | BLOCKED (không chạy được Android: container không có /dev/kvm, không có Android SDK (proxy chặn dl.google.com)) | STATIC |  |  |
 | TC-F01.S03-NATIVE | F01 | F01.S03 | - | mọi trạng thái | mở /otp | ios | như web, trên thiết bị iOS | BLOCKED (không chạy được iOS: không có macOS / iOS Simulator) | STATIC |  |  |
-| TC-F01.S04-BASE | F01 | F01.S04 | - | baseline, dữ liệu seed | mở /moi | web C1,C2,C3 | Nhập lời mời: hiển thị đủ, không tràn, không cắt, không che, vùng bấm và tên truy cập đạt | NOT_TESTED | RUNTIME-WEB |  |  |
+| TC-F01.S04-BASE | F01 | F01.S04 | - | chưa đăng nhập | mở /moi | web C1,C2,C3,C8 | phong bì, ô mã, «Nhận lời mời»; không lộ «bản trải nghiệm» ở bản prod | PASS (nút «Xem bản trải nghiệm» vắng đúng ADR-0016; ô mã 44dp (UI-001)) | RUNTIME-WEB |  |  |
 | TC-F01.S04-FONT | F01 | F01.S04 | - | cỡ chữ hệ thống 1.3 và 2.0 | mở /moi | web | không mất nội dung, không mất vùng bấm | BLOCKED (react-native-web cố định fontScale = 1.0; cỡ chữ 1.3/2.0 chỉ đo được trên máy thật) | STATIC |  |  |
 | TC-F01.S04-NATIVE | F01 | F01.S04 | - | mọi trạng thái | mở /moi | android | như web, trên thiết bị Android | BLOCKED (không chạy được Android: container không có /dev/kvm, không có Android SDK (proxy chặn dl.google.com)) | STATIC |  |  |
 | TC-F01.S04-NATIVE | F01 | F01.S04 | - | mọi trạng thái | mở /moi | ios | như web, trên thiết bị iOS | BLOCKED (không chạy được iOS: không có macOS / iOS Simulator) | STATIC |  |  |
-| TC-F01.S05-BASE | F01 | F01.S05 | - | baseline, dữ liệu seed | mở /personalization | web C1,C2,C3 | Sở thích: hiển thị đủ, không tràn, không cắt, không che, vùng bấm và tên truy cập đạt | NOT_TESTED | RUNTIME-WEB |  |  |
+| TC-F01.S05-BASE | F01 | F01.S05 | - | đã đăng nhập | mở /personalization | web C1,C2,C3,C8 | lưới gu 3 cột (2 ở 320), 4 mức chi có «Trên 500K · Rộng tay», nút lưu, không tràn | PASS (axe 0 vi phạm; chip gu role=checkbox có aria-checked; mức chi role=radio có aria-checked) | RUNTIME-WEB |  |  |
 | TC-F01.S05-FONT | F01 | F01.S05 | - | cỡ chữ hệ thống 1.3 và 2.0 | mở /personalization | web | không mất nội dung, không mất vùng bấm | BLOCKED (react-native-web cố định fontScale = 1.0; cỡ chữ 1.3/2.0 chỉ đo được trên máy thật) | STATIC |  |  |
 | TC-F01.S05-NATIVE | F01 | F01.S05 | - | mọi trạng thái | mở /personalization | android | như web, trên thiết bị Android | BLOCKED (không chạy được Android: container không có /dev/kvm, không có Android SDK (proxy chặn dl.google.com)) | STATIC |  |  |
 | TC-F01.S05-NATIVE | F01 | F01.S05 | - | mọi trạng thái | mở /personalization | ios | như web, trên thiết bị iOS | BLOCKED (không chạy được iOS: không có macOS / iOS Simulator) | STATIC |  |  |
-| TC-L30-VONGDOI | F01 | F01.S01 | L30 | đóng → mở → dùng → đóng → mở lại | vòng đời Pager Welcome | web C1 | mở đúng chỗ, đóng hết mọi cách được thiết kế, không sót lớp chặn, focus trả về | NOT_TESTED | RUNTIME-WEB |  |  |
+| TC-L30-TIM-HIEU | F01 | F01.S01 | L30 | Welcome trang 4 (sau khi vuốt) | chạm «Tìm hiểu thêm» | web C1 | sang trang kế (từ trang cuối về trang đầu) | FAIL (sang trang 2 vì state trang vẫn là 0) | RUNTIME-WEB |  | UI-016 |
+| TC-L30-VONGDOI | F01 | F01.S01 | L30 | pager | vuốt, chấm, «Tìm hiểu thêm» | web C1 | trang, chấm, mốc khớp nhau | FAIL | RUNTIME-WEB | [EV-F01-WEL-trang2-C1](evidence/EV-F01-WEL-trang2-C1.jpg) | UI-016, UI-017 |
+| TC-L30-VUOT-NHANH | F01 | F01.S01 | L30 | Welcome trang 1 | vuốt nhanh (khoảng 1077 px/s) và chậm (278, 400 px/s) | web C1 | mỗi lần vuốt sang đúng một trang | FAIL (chậm: sang 1 trang; nhanh: nhảy 2 trang (scroll-snap-stop normal)) | RUNTIME-WEB |  | UI-017 |
+| TC-L30-VUOT | F01 | F01.S01 | L30 | Welcome trang 1 | vuốt trái 3 lần | web C1 | chấm trang và mốc trên đường theo đúng trang đang hiện | FAIL (nội dung sang trang 3 và 4, chấm và mốc đứng ở trang 1 suốt; aria-label luôn «Trang 1 trên 4») | RUNTIME-WEB | [EV-F01-WEL-trang2-C1](evidence/EV-F01-WEL-trang2-C1.jpg) | UI-016 |
+| TC-MO09-C1 | F01 | F01.S01 | - | Welcome | chạm «Rủ Đi thôi!» | web C1 | lật bìa rồi sang Đăng nhập | PASS (tới /login; 20 khung trong 1,6 s (xem ảnh ghép để đọc trình tự)) | RUNTIME-WEB | [EV-F01-MO09-bia-C1](evidence/EV-F01-MO09-bia-C1.jpg) |  |
+| TC-MO09-C9 | F01 | F01.S01 | - | Welcome | chạm «Rủ Đi thôi!» | web C9 | không lật bìa, sang Đăng nhập ngay | PASS (tới /login; 5 khung trong 1,6 s (xem ảnh ghép để đọc trình tự)) | RUNTIME-WEB | EV-F01-MO09-bia-C9 (ngoài git) |  |
+| TC-MO09 | F01 | F01.S01 | - | Welcome | chạm «Rủ Đi thôi!» | web C1,C9 | C1: lật bìa rồi sang Đăng nhập; C9: không lật, cắt thẳng | PASS (C1: bìa quay khoảng 180–370 ms lộ trang giấy trống, Đăng nhập hiện ở 476 ms. C9: một khung bìa ở tư thế cuối (khoảng 16 ms) rồi Đăng nhập ở 156 ms) | RUNTIME-WEB | [EV-F01-MO09-bia-C1](evidence/EV-F01-MO09-bia-C1.jpg) |  |
 
 ## F02
 

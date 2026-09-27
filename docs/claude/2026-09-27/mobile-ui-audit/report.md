@@ -4,7 +4,7 @@
 - MODE = **AUDIT_ONLY**: không sửa mã app; chỉ thêm tài liệu, ảnh bằng chứng và harness đo.
 - protocol_version: không áp dụng (không đụng giao thức v1 hay trang khách).
 - Verdict: không có (chưa có reviewer thật; đây là báo cáo phát hiện).
-- Trạng thái: **đang làm, checkpoint 1** (xong F00). Mục «Checkpoint» ở cuối là nguồn sự thật về
+- Trạng thái: **đang làm, checkpoint 2** (xong F00, F01). Mục «Checkpoint» ở cuối là nguồn sự thật về
   phần đã và chưa đo.
 
 Tài liệu đi kèm:
@@ -68,17 +68,17 @@ Cách lấy mẫu:
 | Trình đọc màn hình thật, haptics, BackHandler, vuốt back iOS | BLOCKED | Chỉ đo cây ARIA trên web |
 | Độ mượt / FPS | Không đo | SwiftShader headless không đại diện cho máy; motion chỉ kết luận về hình dạng (đi đâu, dừng đâu, có bị ngắt, giảm chuyển động) |
 
-## B. Coverage thực tế (checkpoint 1)
+## B. Coverage thực tế (checkpoint 2)
 
 Đếm lấy từ `coverage-matrix.md` (sinh máy). Mọi hàng BLOCKED và NOT_TESTED đều được đếm.
 
 | Phạm vi | PASS | FAIL | BLOCKED | NOT_TESTED | N/A |
 |---|---|---|---|---|---|
-| Tất cả (323 hàng) | 33 | 18 | 180 | 91 | 1 |
-| Web | 33 | 18 | 60 | 91 | 1 |
+| Tất cả (339 hàng) | 51 | 25 | 180 | 82 | 1 |
+| Web | 51 | 25 | 60 | 82 | 1 |
 | Android native | 0 | 0 | 60 | 0 | 0 |
 | iOS native | 0 | 0 | 60 | 0 | 0 |
-| Method RUNTIME-WEB | 33 | 18 | 0 | 91 | 1 |
+| Method RUNTIME-WEB | 51 | 25 | 0 | 82 | 1 |
 | Method STATIC | 0 | 0 | 180 | 0 | 0 |
 
 Inventory:
@@ -87,19 +87,38 @@ Inventory:
 
 ## C. Issues
 
-15 issue sau checkpoint 1, chi tiết và ảnh ở `issues.md`.
+20 issue sau checkpoint 2, chi tiết và ảnh ở `issues.md`.
 
 | Mức | BUG | UX ISSUE | VISUAL POLISH |
 |---|---|---|---|
 | P1 | UI-005 | | |
-| P2 | UI-003, UI-004, UI-006, UI-011 | UI-002 | |
-| P3 | UI-010, UI-013 | UI-001, UI-007, UI-008, UI-009, UI-012, UI-015 | UI-014 |
+| P2 | UI-003, UI-004, UI-006, UI-011, UI-016 | UI-002, UI-019 | |
+| P3 | UI-010, UI-013 | UI-001, UI-007, UI-008, UI-009, UI-012, UI-015, UI-017, UI-018, UI-020 | UI-014 |
 
 Điểm cần đọc trước:
 - **UI-005 (P1, web + trình đọc màn hình):** đóng khay «Tạo mới» bằng Back trình duyệt để lại
   `aria-hidden="true"` trên cả màn và thanh tab.
 - **UI-003 (P2, hệ thống):** `accessibilityState` không tới DOM trên web ở 35 chỗ, nên trạng thái
   chọn/đánh dấu/mở gập vô hình với công nghệ hỗ trợ.
+
+Danh sách quét tĩnh cho UI-003: 20/35 chỗ dùng `accessibilityState` mà không truyền kèm `aria-*` tương ứng.
+Mỗi dòng cần xác nhận runtime: `Onboarding.tsx:252` hoá ra dương tính giả (role radio đã có `aria-checked`).
+- `ui.tsx:523` (busy)
+- `ui/ReorderList.tsx:81` (disabled)
+- `ui/CoverButton.tsx:35` (busy)
+- `ui/RudiTabBar.tsx:84` (selected, **đã xác nhận runtime**)
+- `hanh-trinh/ManHinhHanhTrinh.tsx:175` (expanded) và `:265` (selected)
+- `screens/Group.tsx:266` (expanded)
+- `screens/Bill.tsx:250` (expanded)
+- `screens/chia-bill/ChiaBillLive.tsx:391` (busy), `:467` và `:578` (expanded)
+- `screens/hai-nguoi/ChonNguoi.tsx:108` (busy)
+- `screens/chat/TheAi.tsx:290` (checked)
+- `screens/chat/CaiDatNhom.tsx:154` (selected, checked)
+- `screens/chat/SoHen.tsx:235` (expanded)
+- `screens/keo/CreateOutingLive.tsx:235` (selected)
+- `screens/tuong/BaiChiTietScreen.tsx:222` (selected)
+- `screens/explore/DiemDenScreen.tsx:125` (selected)
+- `screens/nguoi/DangBaiScreen.tsx:170` (selected)
 
 Phát hiện bị loại vì là lỗi của harness, không phải của app:
 - «fling không đóng sheet»: CDP giao sự kiện chậm 30–125 ms nên cú vuốt chỉ còn khoảng 200 px/s.
@@ -143,14 +162,20 @@ Test fail có sẵn:
 
 ## Checkpoint
 
-- **Đã xong:** F00 (vỏ toàn cục):
-  - định tuyến theo phiên, URL lạ;
-  - thanh tab và rail ở 9 cấu hình;
-  - khay tạo: 7 cách đóng, chạm đúp, ngắt, focus, kích thước ở 6 cấu hình, `/create` lạnh;
-  - dock và bảng Nếp;
-  - khôi phục phiên chậm;
-  - MO01/MO02/MO04 kèm giảm chuyển động.
-- **Đã chụp baseline nhưng chưa ghi kết luận:** Welcome, Login, Lời mời (F01).
-- **Tiếp theo:** F01 Vào cửa → F02 Khám phá → F03 Plan/Kèo/Hành trình → F04 Tiền → F05 Chat → F06 Nhóm và người →
-  F07 Sổ đôi → F08 Kỷ niệm → F09 Hồ sơ/Cài đặt → F10 bảng QA dev → F11 demo → E1–E6.
-- **Còn NOT_TESTED:** mọi hàng của F01–F11 trong `coverage-matrix.md`.
+- **Đã xong:** F00 (vỏ toàn cục), F01 (vào cửa).
+  - F00:
+    - định tuyến theo phiên, URL lạ;
+    - thanh tab và rail ở 9 cấu hình;
+    - khay tạo: 7 cách đóng, chạm đúp, ngắt, focus, kích thước ở 6 cấu hình, `/create` lạnh;
+    - dock và bảng Nếp;
+    - khôi phục phiên chậm;
+    - MO01/MO02/MO04 kèm giảm chuyển động.
+  - F01:
+    - Welcome: pager, lật bìa C1/C9, C8;
+    - Đăng nhập: back lạnh, số sai, 503, C8;
+    - OTP thật cho 2 tài khoản mới: sai mã, đúng mã, Back;
+    - Sở thích người mới: chưa đủ, đủ, lưu, ARIA;
+    - Lời mời sai.
+- **Tiếp theo:** F02 Khám phá → F03 Plan/Kèo/Hành trình → F04 Tiền → F05 Chat → F06 Nhóm và người → F07 Sổ đôi →
+  F08 Kỷ niệm → F09 Hồ sơ/Cài đặt → F10 bảng QA dev → F11 demo → E1–E6.
+- **Còn NOT_TESTED:** mọi hàng của F02–F11 trong `coverage-matrix.md`.

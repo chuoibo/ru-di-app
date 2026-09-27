@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (26 ảnh, tổng 3.71 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (39 ảnh, tổng 5.58 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -28,5 +28,18 @@
 | [EV-F00-TAB-ghep-a](evidence/EV-F00-TAB-ghep-a.jpg) | Baseline thanh tab ở C1, C2, C3, biên 599, biên 600 (Khám phá) | 221550 | `e89d7318` |
 | [EV-F00-TAB-ghep-b](evidence/EV-F00-TAB-ghep-b.jpg) | Baseline rail ở C6, biên 839, biên 840, C7 (Khám phá) | 223331 | `9d888e93` |
 | [EV-F00.S01-BASE-ghep](evidence/EV-F00.S01-BASE-ghep.jpg) | Baseline Welcome khi chưa đăng nhập ở C1, C2, C3 | 165496 | `73046663` |
+| [EV-F01-LOGIN-503-C1](evidence/EV-F01-LOGIN-503-C1.jpg) | Đăng nhập khi máy chủ trả 503: câu lỗi tiếng Việt (C1) | 149746 | `108243ab` |
+| [EV-F01-LOGIN-C8](evidence/EV-F01-LOGIN-C8.jpg) | Đăng nhập ở cửa sổ thấp 390×460 (C8) | 99251 | `8d4c5e42` |
+| [EV-F01-LOGIN-back-lanh-C1](evidence/EV-F01-LOGIN-back-lanh-C1.jpg) | UI-018: mở thẳng /login rồi chạm «Quay lại», vẫn đứng ở Đăng nhập (C1) | 135092 | `3397acf4` |
+| [EV-F01-LOGIN-so-sai-C1](evidence/EV-F01-LOGIN-so-sai-C1.jpg) | Đăng nhập với số sai dạng: câu lỗi dưới ô (C1) | 145007 | `2c1eacc1` |
+| [EV-F01-MO09-bia-C1](evidence/EV-F01-MO09-bia-C1.jpg) | MO09: khung hình lật bìa Welcome rồi sang Đăng nhập (C1) | 228778 | `5029b977` |
+| [EV-F01-MOI-sai-C1](evidence/EV-F01-MOI-sai-C1.jpg) | UI-019: mã lời mời sai được báo «Cập nhật app rồi thử lại» (C1) | 120825 | `0e686085` |
 | [EV-F01-O-NHAP-44-C1](evidence/EV-F01-O-NHAP-44-C1.jpg) | UI-001: ô số điện thoại cao 44dp ở Đăng nhập (C1) | 143787 | `f614a1ec` |
+| [EV-F01-OTP-sai-C1](evidence/EV-F01-OTP-sai-C1.jpg) | OTP sau mã sai: câu còn lượt thử, ô xoá, gửi lại vô hiệu kèm đếm ngược (C1) | 116072 | `f4a61462` |
+| [EV-F01-SO-THICH-da-chon-C1](evidence/EV-F01-SO-THICH-da-chon-C1.jpg) | Sở thích sau khi chọn 3 gu, «Đã chọn 3.» (C1) | 142458 | `192bacbb` |
+| [EV-F01-SO-THICH-moi-C1](evidence/EV-F01-SO-THICH-moi-C1.jpg) | Sở thích của tài khoản mới: ô tên, lưới gu, mức chi (C1) | 137681 | `95012d3c` |
+| [EV-F01-WEL-trang2-C1](evidence/EV-F01-WEL-trang2-C1.jpg) | UI-016: sau một lần vuốt, Welcome hiện trang 3 nhưng chấm trang và mốc đường vẫn ở trang 1 (C1) | 194131 | `b185d277` |
+| [EV-F01.S01-BASE-ghep](evidence/EV-F01.S01-BASE-ghep.jpg) | Baseline Welcome ở C1, C2, C3, C8 | 168313 | `90678682` |
 | [EV-F01.S02-BASE-ghep](evidence/EV-F01.S02-BASE-ghep.jpg) | Baseline Đăng nhập ở C1, C2, C3 | 142565 | `ce3fe306` |
+| [EV-F01.S04-BASE-ghep](evidence/EV-F01.S04-BASE-ghep.jpg) | Baseline Lời mời ở C1, C2, C3, C8 | 145323 | `f38d6b41` |
+| [EV-F01.S05-BASE-ghep](evidence/EV-F01.S05-BASE-ghep.jpg) | Baseline Sở thích ở C1, C2, C3, C8 | 183447 | `0954363f` |

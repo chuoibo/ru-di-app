@@ -20,8 +20,8 @@
 | Mức | Issue |
 |---|---|
 | P1 | UI-005 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-019 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-018, UI-020 |
 
 ---
 
@@ -62,7 +62,7 @@
 | Đề xuất | Catch-all đọc phiên như `/` (`duong-vao.ts`), hoặc Welcome/Login chuyển thẳng về tab khi đã có phiên |
 | Tiêu chí gỡ | URL lạ khi có phiên thì dẫn về tab (hoặc trang lỗi có lối về); flow Maestro 00/91 vẫn xanh |
 
-### UI-003 · Trên web, `accessibilityState` không tới DOM: thanh tab không báo tab đang chọn (và 34 chỗ khác)
+### UI-003 · Trên web, `accessibilityState` không tới DOM: thanh tab không báo tab đang chọn (và các chỗ chỉ dùng `accessibilityState`)
 
 | Trường | Nội dung |
 |---|---|
@@ -72,7 +72,7 @@
 | Tái hiện | Mở bất kỳ tab nào, đọc thuộc tính ARIA của 4 phần tử `role="tab"` |
 | Expected | Tab đang chọn có `aria-selected="true"`, và các tab nằm trong một `role="tablist"` |
 | Actual | Cả 4 tab đều không có `aria-selected`, và không có `tablist`. Nhìn bằng mắt vẫn phân biệt được tab đang chọn (màu, icon đặc, dải washi), nhưng trình đọc màn hình thì không |
-| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Trong app có 35 chỗ dùng `accessibilityState` (selected, checked, expanded, busy, disabled), ví dụ `ui/RudiTabBar.tsx:84`, `ui/ChonNgayLich.tsx`, `screens/Onboarding.tsx`, `chat/CaiDatNhom.tsx` |
+| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime; đã xác nhận: thanh tab |
 | Hậu quả | Trên web, người dùng trình đọc màn hình không biết tab nào, ngày nào, chip gu nào, màu nào đang được chọn, và mục nào đang mở/gập |
 | Đề xuất | Truyền thêm prop `aria-selected`/`aria-checked`/`aria-expanded`/`aria-busy` (RNW đọc được; `HangChang` và `RosterPicker` đã làm vậy), hoặc gom lại trong một helper ở kit; thêm `role="tablist"` cho thanh tab |
 | Tiêu chí gỡ | Quét DOM: mỗi control có trạng thái đều mang thuộc tính ARIA tương ứng; tab đang chọn có `aria-selected=true` |
@@ -245,6 +245,77 @@
 | Source | `src/rudi/ui/ONhapMuc.tsx:60` (`minHeight: 44`) |
 | Đề xuất | `minHeight: 48` (vẫn không hộp, dòng kẻ giữ nguyên) |
 | Tiêu chí gỡ | Mọi `input` một dòng ≥48dp cao |
+
+### UI-016 · Welcome trên web: chấm trang và mốc trên đường đứng yên ở trang 1 khi vuốt
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (web) · **P2** |
+| Feature / Screen / Layer | F01 · `/welcome` · L30 pager (`src/rudi/screens/Welcome.tsx`) |
+| Nền tảng, cấu hình | web, C1. Native: `onMomentumScrollEnd` có phát, nên suy ra không bị (STATIC) |
+| Tái hiện | Mở `/welcome`, vuốt trái trên đoạn chữ |
+| Expected | Chấm trang, mốc sáng trên đường vẽ, và nhãn truy cập «Trang x trên 4» theo trang đang hiện |
+| Actual | Nội dung sang trang 3 («Chia bill từng đồng») nhưng chấm và mốc vẫn ở trang 1; `aria-label` luôn «Trang 1 trên 4». Hệ quả: «Tìm hiểu thêm» ở trang cuối đưa sang trang 2 thay vì trang 1 |
+| Evidence | ![trang 3, chấm ở trang 1](evidence/EV-F01-WEL-trang2-C1.jpg) · `scrollLeft` 0 → 780 → 1170, nhãn không đổi |
+| Source | `Welcome.tsx:186-192` (`onMomentumScrollEnd={onScroll}` là nơi duy nhất cập nhật `page`); `react-native-web/dist/exports/ScrollView/ScrollViewBase.js` không phát sự kiện momentum nào |
+| Hậu quả | Màn đầu tiên của bản web nói sai vị trí; người dùng trình đọc màn hình nghe «Trang 1» ở mọi trang |
+| Đề xuất | Cập nhật `page` trong `onScroll` (có `scrollEventThrottle`) theo `Math.round(x / pageWidth)` |
+| Tiêu chí gỡ | Sau mỗi lần vuốt, chấm, mốc và nhãn khớp `scrollLeft / pageWidth` |
+
+### UI-019 · Mã lời mời sai được báo thành «Cập nhật app rồi thử lại»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (thông điệp lỗi sai chuyện) · **P2** |
+| Feature / Screen | F01 · `/moi` (`screens/LoiMoi.tsx`), `src/api.ts` `thongDiepNguoiDoc` |
+| Nền tảng, cấu hình | web, C1. Native: cùng hàm dịch lỗi (STATIC) |
+| Tái hiện | Mở `/moi`, dán `khong-phai-ma-that`, bấm «Nhận lời mời» |
+| Expected | Câu nói đúng chuyện: mã không đúng hoặc đã hết hạn, hỏi lại người mời |
+| Actual | «Phần này chưa mở được trên bản app này. Cập nhật app rồi thử lại.» Máy chủ trả `404 {"code":"invite_not_found","detail":"Invite link is not valid"}` |
+| Evidence | ![mã sai](evidence/EV-F01-MOI-sai-C1.jpg) |
+| Source | `src/api.ts:300-313`: `detail` chỉ được dùng khi là tiếng Việt; 404 luôn được coi là «app và máy chủ lệch phiên bản»; `code` bị bỏ qua |
+| Hậu quả | Người gõ nhầm hoặc cầm link hết hạn đi cập nhật app vô ích. Có thể lặp ở mọi 404 «không tìm thấy» thật (HYPOTHESIS, sẽ ghi khi gặp) |
+| Đề xuất | Dịch theo `code` (`invite_not_found` → «Mã lời mời không đúng hoặc đã hết hạn…»); chỉ dùng câu «cập nhật app» cho 404 không kèm code |
+| Tiêu chí gỡ | Mã sai hiện câu về mã, không nhắc cập nhật app |
+
+### UI-017 · Welcome trên web: vuốt nhanh nhảy qua một trang
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (web) · **P3** |
+| Feature / Screen / Layer | F01 · `/welcome` · L30 |
+| Nền tảng, cấu hình | web, C1 (cảm ứng giả lập, timestamp đúng) |
+| Actual | Vuốt 250dp trong 900 ms hoặc 200dp trong 500 ms: sang 1 trang. Vuốt 280dp trong 260 ms (khoảng 1077 px/s): nhảy 2 trang, bỏ qua trang 2 |
+| Source | `pagingEnabled` trên web thành `scroll-snap-type: x mandatory` với `scroll-snap-stop: normal` |
+| Đề xuất | `scroll-snap-stop: always` cho từng trang trên web (hoặc tự dừng ở trang kế trong `onScroll`) |
+| Tiêu chí gỡ | Vuốt nhanh cũng chỉ sang một trang |
+
+### UI-018 · Nút «Quay lại» không làm gì khi màn được mở thẳng bằng link
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** (có thể nâng khi tổng hợp các màn, xem `report.md`) |
+| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). Các màn khác dùng `router.back()` sẽ được đo ở feature của chúng |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | Mở thẳng `/login` (không có lịch sử), chạm «Quay lại» |
+| Expected | Đưa về màn hợp lý (Welcome), hoặc không vẽ nút khi không có nơi để về |
+| Actual | Đứng yên ở `/login`, không phản hồi |
+| Evidence | ![sau khi chạm Quay lại](evidence/EV-F01-LOGIN-back-lanh-C1.jpg) |
+| Source | `src/rudi/ui/CoverBand.tsx:45`; chỉ `app/create.tsx` kiểm `canGoBack()` |
+| Đề xuất | `router.canGoBack() ? router.back() : router.replace(<màn cha>)` trong nút back của kit |
+| Tiêu chí gỡ | Mở lạnh rồi chạm «Quay lại» luôn đi tới một màn |
+
+### UI-020 · Welcome: cụm chấm trang không đọc được, pager không nhận focus bàn phím
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (accessibility, web) · **P3** |
+| Feature / Screen / Layer | F01 · `/welcome` · L30 |
+| Nền tảng, cấu hình | web, C1 và C3 (axe WCAG 2 A/AA) |
+| Actual | axe: `aria-prohibited-attr` (cụm chấm mang `aria-label` trên `div` không có role, nên không được đọc); `scrollable-region-focusable` (vùng pager cuộn ngang không nhận focus: người dùng bàn phím chỉ xem trang 2–4 được qua «Tìm hiểu thêm») |
+| Source | `Welcome.tsx:201` (`View` chấm có `accessibilityLabel`, không role); `ScrollView` pager |
+| Đề xuất | Đặt role cho cụm chấm (`progressbar` hoặc `text` có `aria-live`), hoặc gắn nhãn vào pager; `tabIndex=0` cho vùng cuộn trên web |
+| Tiêu chí gỡ | axe 0 vi phạm trên `/welcome` |
 
 ## F09 Hồ sơ · Cài đặt
 

@@ -9,9 +9,11 @@
  * the side-by-side sheet is EV-<screen>-BASE-ghep. A line per capture goes to
  * stdout with the signal summary; nothing is judged here.
  */
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { danhSach } from "../lib/cau-hinh.mjs";
+import { chayAxe } from "../lib/axe.mjs";
 import { chup, ghepAnh } from "../lib/chup.mjs";
 import { choOn, duongDan } from "../lib/dieu-huong.mjs";
 import { khoiDong, trangMoi } from "../lib/moi-truong.mjs";
@@ -39,7 +41,15 @@ try {
       await choOn(t.page, { mang: t.mang });
       const evId = `EV-${id}-BASE-${ch.id}`;
       const m = await chup(t.page, { out: mt.out, id: evId, suKien: t.suKien, on: t.on });
-      console.log(JSON.stringify({ ev: evId, duong: await duongDan(t.page), ...m.tomTat, loiTrang: m.suKien.pageerror.length, http: m.suKien.http.map((h) => `${h.status} ${h.method} ${h.url}`).slice(0, 4) }));
+      // axe on the two themes only (C1 light, C3 dark): contrast is a property
+      // of the palette, not of the width.
+      let axe = null;
+      if (["C1", "C3"].includes(ch.id)) {
+        axe = await chayAxe(t.page).catch((e) => ({ loi: String(e).slice(0, 120) }));
+        writeFileSync(join(mt.out, "metrics", `${evId}-axe.json`), JSON.stringify(axe, null, 1));
+      }
+      const axeTom = axe?.vi ? axe.vi.map((v) => `${v.rule}×${v.so}`).join(",") || "-" : axe?.loi ?? "";
+      console.log(JSON.stringify({ ev: evId, duong: await duongDan(t.page), ...m.tomTat, axe: axeTom, loiTrang: m.suKien.pageerror.length, http: m.suKien.http.map((h) => `${h.status} ${h.method} ${h.url}`).slice(0, 4) }));
       anh.push({ file: join(mt.out, "jpg", `${evId}.jpg`), nhan: `${ch.id} ${ch.width}×${ch.height} ${ch.colorScheme}` });
       await t.context.close();
     }

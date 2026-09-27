@@ -119,14 +119,79 @@
   "sha8": "73046663",
   "moTa": "Baseline Welcome khi chưa đăng nhập ở C1, C2, C3"
  },
+ "EV-F01-LOGIN-503-C1": {
+  "bytes": 149746,
+  "sha8": "108243ab",
+  "moTa": "Đăng nhập khi máy chủ trả 503: câu lỗi tiếng Việt (C1)"
+ },
+ "EV-F01-LOGIN-C8": {
+  "bytes": 99251,
+  "sha8": "8d4c5e42",
+  "moTa": "Đăng nhập ở cửa sổ thấp 390×460 (C8)"
+ },
+ "EV-F01-LOGIN-back-lanh-C1": {
+  "bytes": 135092,
+  "sha8": "3397acf4",
+  "moTa": "UI-018: mở thẳng /login rồi chạm «Quay lại», vẫn đứng ở Đăng nhập (C1)"
+ },
+ "EV-F01-LOGIN-so-sai-C1": {
+  "bytes": 145007,
+  "sha8": "2c1eacc1",
+  "moTa": "Đăng nhập với số sai dạng: câu lỗi dưới ô (C1)"
+ },
+ "EV-F01-MO09-bia-C1": {
+  "bytes": 228778,
+  "sha8": "5029b977",
+  "moTa": "MO09: khung hình lật bìa Welcome rồi sang Đăng nhập (C1)"
+ },
+ "EV-F01-MOI-sai-C1": {
+  "bytes": 120825,
+  "sha8": "0e686085",
+  "moTa": "UI-019: mã lời mời sai được báo «Cập nhật app rồi thử lại» (C1)"
+ },
  "EV-F01-O-NHAP-44-C1": {
   "bytes": 143787,
   "sha8": "f614a1ec",
   "moTa": "UI-001: ô số điện thoại cao 44dp ở Đăng nhập (C1)"
  },
+ "EV-F01-OTP-sai-C1": {
+  "bytes": 116072,
+  "sha8": "f4a61462",
+  "moTa": "OTP sau mã sai: câu còn lượt thử, ô xoá, gửi lại vô hiệu kèm đếm ngược (C1)"
+ },
+ "EV-F01-SO-THICH-da-chon-C1": {
+  "bytes": 142458,
+  "sha8": "192bacbb",
+  "moTa": "Sở thích sau khi chọn 3 gu, «Đã chọn 3.» (C1)"
+ },
+ "EV-F01-SO-THICH-moi-C1": {
+  "bytes": 137681,
+  "sha8": "95012d3c",
+  "moTa": "Sở thích của tài khoản mới: ô tên, lưới gu, mức chi (C1)"
+ },
+ "EV-F01-WEL-trang2-C1": {
+  "bytes": 194131,
+  "sha8": "b185d277",
+  "moTa": "UI-016: sau một lần vuốt, Welcome hiện trang 3 nhưng chấm trang và mốc đường vẫn ở trang 1 (C1)"
+ },
+ "EV-F01.S01-BASE-ghep": {
+  "bytes": 168313,
+  "sha8": "90678682",
+  "moTa": "Baseline Welcome ở C1, C2, C3, C8"
+ },
  "EV-F01.S02-BASE-ghep": {
   "bytes": 142565,
   "sha8": "ce3fe306",
   "moTa": "Baseline Đăng nhập ở C1, C2, C3"
+ },
+ "EV-F01.S04-BASE-ghep": {
+  "bytes": 145323,
+  "sha8": "f38d6b41",
+  "moTa": "Baseline Lời mời ở C1, C2, C3, C8"
+ },
+ "EV-F01.S05-BASE-ghep": {
+  "bytes": 183447,
+  "sha8": "0954363f",
+  "moTa": "Baseline Sở thích ở C1, C2, C3, C8"
  }
 }
