@@ -39,6 +39,7 @@ export function useChatAi(contextId: string, personId: string) {
   requestsRef.current = requests;
   const capabilitiesRef = useRef(capabilities);
   capabilitiesRef.current = capabilities;
+  const refreshRef = useRef<(() => Promise<void>) | null>(null);
   useFocusEffect(useCallback(() => {
     let disposed = false;
     let reading = false;
@@ -58,12 +59,13 @@ export function useChatAi(contextId: string, personId: string) {
       } catch { /* Capabilities fail closed; older servers cannot enable AI. */ }
       finally { reading = false; }
     };
+    refreshRef.current = () => refresh();
     void refresh(true);
     const timer = setInterval(() => {
       if (requestsRef.current.some((request) => request.status === "queued" || request.status === "running")) void refresh();
     }, 2000);
     const sub = AppState.addEventListener("change", (state) => { if (state === "active") void refresh(true); });
-    return () => { disposed = true; generation.current += 1; clearInterval(timer); sub.remove(); };
+    return () => { disposed = true; refreshRef.current = null; generation.current += 1; clearInterval(timer); sub.remove(); };
   }, [contextId, personId]));
 
   /**
@@ -107,5 +109,12 @@ export function useChatAi(contextId: string, personId: string) {
       if (version === generation.current) setError(cause instanceof ApiError ? cause.message : thongDiepNguoiDoc(0, null));
     } finally { sending.current = false; if (version === generation.current) setBusy(false); }
   };
-  return { capabilities, requests, cho, busy, error, goiCap, thuLaiCap, boCap, retry };
+  /**
+   * One invocation as the list this hook already polls last saw it: the
+   * streamed reply's fallback reads here instead of adding a second poll.
+   */
+  const docMot = useCallback(async (id: string) => requestsRef.current.find((r) => r.id === id) ?? null, []);
+  /** Read the list now (a stream just ended, so its row is about to change). */
+  const lamMoi = useCallback(() => { void refreshRef.current?.(); }, []);
+  return { capabilities, requests, cho, busy, error, goiCap, thuLaiCap, boCap, retry, docMot, lamMoi };
 }

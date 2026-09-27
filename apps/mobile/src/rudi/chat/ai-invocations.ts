@@ -1,5 +1,6 @@
 import { newAttempt, translatedAsActor } from "../../api";
 import type { BoiCanh } from "../ai/boi-canh";
+import type { TraLoiSong } from "../ai/tra-loi-song";
 import type { BodyTaoBuoiDi, ChangGui } from "../../screens/len-plan/buoi-di";
 
 export type ChatCapabilities = {
@@ -139,6 +140,50 @@ export function chuHangLoiGoi(request: AiInvocation): { tieuDe: string; cau: str
     tieuDe: request.status === "queued" ? "Lời nhờ đang chờ" : chia ? "Đang gom khoản chi…" : "Đang phác tờ hẹn…",
     cau: "Bạn cứ trò chuyện, kết quả sẽ về đây.",
   };
+}
+
+/**
+ * Whether an invocation is answered in the thread and still being written:
+ * the requester sees it as a pending reply that streams (slice 11), not as
+ * the old «đang phác» row.
+ */
+export function laTraLoiDangCho(request: AiInvocation): boolean {
+  return Boolean(request.trigger_message_id) && (request.status === "queued" || request.status === "running");
+}
+
+/** Reads one invocation from the list the screen already polls. */
+export type DocMotLoiGoi = (id: string) => Promise<AiInvocation | null>;
+
+/** What the requester's pending reply row draws for one streamed answer. */
+export type HangTraLoiSong =
+  | { kieu: "an" }
+  | { kieu: "nghi"; tieuDe: string; cau: string }
+  | { kieu: "viet"; chu: string };
+
+/**
+ * The pending reply under an `@Rủ Đi` message, for the person who asked:
+ * the reading sentence the row already had (`chuHangLoiGoi`), then the words
+ * as they arrive, then nothing once the published card (`xong.message_id`)
+ * is in the thread, because the card IS the answer. Until the card lands the
+ * streamed words stay, so the reply never blinks out between the two.
+ *
+ * A failure, a cancel or a revoked read hides the row: the invocation list
+ * the screen already polls then shows the failed row with its «Thử lại»,
+ * which is the one place the words for a failed request live.
+ */
+export function hangTraLoiSong(
+  request: AiInvocation,
+  traLoi: TraLoiSong,
+  chu: string,
+  daCoThe: (messageId: string) => boolean,
+): HangTraLoiSong {
+  if (traLoi.pha === "loi" || traLoi.pha === "huy" || traLoi.pha === "thu_hoi") return { kieu: "an" };
+  if (traLoi.pha === "xong") {
+    const id = traLoi.ketThuc?.messageId ?? request.message_id;
+    if (id && daCoThe(id)) return { kieu: "an" };
+  }
+  if (chu !== "") return { kieu: "viet", chu };
+  return { kieu: "nghi", ...chuHangLoiGoi(request) };
 }
 
 /**

@@ -14,8 +14,10 @@
  *   - a refused stream (401, 403, 404) is not retried: asking again cannot
  *     change who may read it.
  *
- * Resuming sends the last event id back (`Last-Event-ID`), so a reconnect
- * continues where it stopped instead of replaying the answer.
+ * Resuming sends the last event id back (`Last-Event-ID`, or `?after=` where a
+ * header would cost a CORS preflight the server does not answer: the web
+ * build), so a reconnect continues where it stopped instead of replaying the
+ * answer.
  */
 
 export const SU_KIEN = [
@@ -117,6 +119,14 @@ export interface TuyChonLuong {
   headers: Record<string, string>;
   /** Where to resume from, when the screen already saw part of the answer. */
   sauId?: string | null;
+  /**
+   * How the resume position travels: the `Last-Event-ID` header (native), or
+   * the `?after=` query the contract gives clients that should not set it
+   * (web, §4.1). Default `header`.
+   */
+  viTriQua?: "header" | "query";
+  /** Consecutive empty failures before polling takes over (default `SO_LAN_HONG_TOI_DA`). */
+  hongToiDa?: number;
   khiSuKien(e: SuKienSSE): void;
   /** The stream is not usable; poll the invocation instead. */
   khiChuyenSangHoi(lyDo: LyDoChuyenSangHoi): void;
@@ -131,6 +141,12 @@ export interface TuyChonLuong {
 /** Consecutive failures after which the stream gives way to polling. */
 export const SO_LAN_HONG_TOI_DA = 3;
 
+/** The URL of one attempt: `?after=` carries the position when asked to. */
+export function urlNoiLai(url: string, sauId: string | null, viTriQua: "header" | "query"): string {
+  if (viTriQua !== "query" || !sauId) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}after=${encodeURIComponent(sauId)}`;
+}
+
 /**
  * Opens and keeps an invocation's stream until it ends, is refused, or `dong`
  * is called. Never throws: every outcome is one of the three callbacks.
@@ -140,6 +156,8 @@ export function moLuong(o: TuyChonLuong): { dong(): void } {
   const hen = o.hen ?? ((fn: () => void, ms: number) => setTimeout(fn, ms));
   const boHen = o.boHen ?? ((h: unknown) => clearTimeout(h as ReturnType<typeof setTimeout>));
   let sauId = o.sauId ?? null;
+  const viTriQua = o.viTriQua ?? "header";
+  const hongToiDa = Math.max(1, o.hongToiDa ?? SO_LAN_HONG_TOI_DA);
   let daDong = false;
   let hong = 0;
   let cho: unknown = null;
@@ -167,13 +185,16 @@ export function moLuong(o: TuyChonLuong): { dong(): void } {
     let noiLaiSau: number | null = null;
     try {
       const headers: Record<string, string> = { ...o.headers, Accept: "text/event-stream" };
-      if (sauId) headers["Last-Event-ID"] = sauId;
-      const res = await fetcher(o.url, { headers, signal: dieuKhien.signal });
+      if (sauId && viTriQua === "header") headers["Last-Event-ID"] = sauId;
+      const res = await fetcher(urlNoiLai(o.url, sauId, viTriQua), { headers, signal: dieuKhien.signal });
       if (res.status === 401 || res.status === 403 || res.status === 404) {
         ketThuc();
         return;
       }
-      if (res.status === 503) {
+      // 503 stream_unavailable|stream_capacity and 429 stream_rate_limited
+      // both mean «read the invocation instead» (contract §4.1): retrying the
+      // stream would only spend the limit again.
+      if (res.status === 503 || res.status === 429) {
         chuyenSangHoi("may-chu-tu-choi");
         return;
       }
@@ -223,7 +244,7 @@ export function moLuong(o: TuyChonLuong): { dong(): void } {
       return;
     }
     hong = nhanDuoc ? 0 : hong + 1;
-    if (hong >= SO_LAN_HONG_TOI_DA) {
+    if (hong >= hongToiDa) {
       chuyenSangHoi("loi-lap-lai");
       return;
     }

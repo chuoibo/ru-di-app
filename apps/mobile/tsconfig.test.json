@@ -356,6 +356,10 @@
     // three ways it gives up are all behaviour, so the function is run.
     // See `tests/sse-doc.test.mjs`.
     "src/rudi/ai/sse.ts",
+    // Slice 11: one streamed answer as the screen draws it (dedupe by id,
+    // parts, the end replacing the words, Reduce Motion by sentence) and the
+    // follower that falls back to polling. See `tests/tra-loi-song.test.mjs`.
+    "src/rudi/ai/tra-loi-song.ts",
     "src/rudi/chat/boi-canh-chat.ts",
     "src/rudi/chat/ai-invocations.ts",
     // ADR-0039: whether a typed message also asks Rủ Đi AI (NFC/NFD, never an

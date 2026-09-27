@@ -412,3 +412,28 @@ test("tin @Rủ Đi đi lên như tin thường, rồi mới có lời gọi AI 
   const hook = readFileSync(join(GOC_APP, "src", "rudi", "chat", "useChatAi.ts"), "utf8");
   assert.match(hook, /goiAi\(contextId, personId, cap\.loiNho, cap\.khoa, goi, cap\.lenh, trigger\)/);
 });
+
+/* ------------------------------------------------ 5. câu «đang nghĩ» của stream (lát 11) */
+
+test("Nếp: câu trạng thái của stream đúng từng chữ bảng cauTrangThai trong cau.go, và không câu chết", async () => {
+  // trang_thai{cau} carries a code; the panel prints the engine's own words
+  // for it. One source of truth (cau.go), one copy (hoi.ts), held equal here.
+  const { CAU_TRANG_THAI_NEP } = await import("../dist-test/rudi/nep/hoi.js");
+  const nguon = readFileSync(CAU_ENGINE, "utf8");
+  const ten = new Map();
+  for (const m of nguon.matchAll(/^\s*(\w+)\s+TrangThai\s*=\s*"([a-z_]+)"/gm)) ten.set(m[1], m[2]);
+  const khoi = /var cauTrangThai = map\[TrangThai\]string\{([\s\S]*?)\n\}/.exec(nguon);
+  assert.ok(khoi, "không thấy bảng `cauTrangThai` trong aiharness/cau/cau.go");
+  const bang = new Map();
+  for (const dong of khoi[1].split("\n").map((d) => d.trim()).filter(Boolean)) {
+    const m = /^(\w+):\s*"([^"]+)",$/.exec(dong);
+    assert.ok(m, `dòng cauTrangThai không đúng dạng Ten: "câu",: ${dong}`);
+    assert.ok(ten.has(m[1]), `cau.go dùng ${m[1]} mà không khai hằng TrangThai`);
+    bang.set(ten.get(m[1]), m[2]);
+  }
+  assert.ok(bang.size >= 2, `chỉ đọc được ${bang.size} câu trạng thái, bộ đọc đang hỏng`);
+  assert.deepEqual(Object.fromEntries([...bang].sort()), Object.fromEntries(Object.entries(CAU_TRANG_THAI_NEP).sort()));
+  for (const cau of Object.values(CAU_TRANG_THAI_NEP)) {
+    assert.doesNotMatch(cau, /[a-z]+_[a-z_]+|lỗi|[—–]/i, cau);
+  }
+});

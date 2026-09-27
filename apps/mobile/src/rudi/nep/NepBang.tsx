@@ -12,6 +12,8 @@ import { cauNguCanh } from "./phieu";
 import { useNep } from "./NepProvider";
 import { useNepAnh } from "./useNepAnh";
 import { useNepHoi } from "./useNepHoi";
+import { NepPhien } from "./NepPhien";
+import { useMotion } from "../ui/useMotion";
 
 /**
  * The panel Nếp talks in.
@@ -36,6 +38,7 @@ import { useNepHoi } from "./useNepHoi";
 export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
   const { phieu } = useNep();
   const { colors } = useRudiTheme();
+  const { reduced } = useMotion();
   const { cheDo, nguon } = useRudiSession();
   const buc = useNepAnh(nguon.kieu === "live" ? nguon.actorId : null);
   const [nhap, datNhap] = useState("");
@@ -90,29 +93,20 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         </ScrollView>
       ) : null}
 
-      {phien.luot.length > 0 ? (
-        <View style={styles.phien} testID="nep-phien">
-          {phien.luot.map((l, i) => (
-            <Text
-              // The session only ever grows at the end, so the index is stable.
-              key={i}
-              style={[
-                typography.body,
-                l.vai === "toi" ? styles.cauHoi : null,
-                { color: l.vai === "toi" ? colors.inkSoft : colors.ink },
-              ]}
-              testID={l.vai === "nep" ? "nep-tra-loi" : undefined}
-            >
-              {l.chu}
-            </Text>
-          ))}
-        </View>
-      ) : null}
-
-      {phien.dangHoi ? (
-        <Text style={[typography.body, styles.loi, { color: colors.inkSoft }]} testID="nep-dang-nghi">
-          Nếp đang nghĩ…
-        </Text>
+      {/* The session and the answer being written. Never beside money: the
+          panel cannot be asked there (`duocHoi`), and an answer still in
+          flight when the screen turns into a money screen stops showing. */}
+      {duocHoi ? (
+        <NepPhien
+          cauDangHoi={phien.cauDangHoi}
+          chips={phien.chips}
+          dangDo={phien.dangDo}
+          dangHoi={phien.dangHoi}
+          giamChuyenDong={reduced}
+          luot={phien.luot}
+          onChip={datNhap}
+          song={phien.song}
+        />
       ) : null}
 
       {phien.loi ? (
@@ -223,8 +217,6 @@ const styles = StyleSheet.create({
   goiY: { gap: 8, paddingVertical: 12 },
   chip: { borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 12, paddingVertical: 8 },
   loi: { marginTop: 12 },
-  phien: { gap: 8, marginTop: 12 },
-  cauHoi: { alignSelf: "flex-end", textAlign: "right" },
   khungAnh: { marginTop: 12, borderRadius: 14, overflow: "hidden" },
   soan: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 16, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
   // Two compact buttons share this row with the input. Buttons default to

@@ -52,7 +52,7 @@ import { useBanNhap } from "../../chat/useBanNhap";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { useChatChanges } from "../../chat/useChatChanges";
 import { useChatAi } from "../../chat/useChatAi";
-import { chuHangLoiGoi, lenhSanSang, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
+import { chuHangLoiGoi, laTraLoiDangCho, lenhSanSang, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
 import { timNhacAi } from "../../chat/nhac-ai";
 import { goiSeGui } from "../../chat/chip-boi-canh";
 import type { BoiCanh } from "../../ai/boi-canh";
@@ -72,6 +72,7 @@ import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 import { MenuTin } from "./MenuTin";
 import { TheAiView } from "./TheAi";
 import { TraLoiAi } from "./TraLoiAi";
+import { TraLoiAiDangViet } from "./TraLoiAiDangViet";
 import { ChipBoiCanh } from "./ChipBoiCanh";
 import { CongCuChat, ToHen, type KhayChat } from "./SoHen";
 import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
@@ -289,6 +290,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
 
   const tinHien = useMemo(() => tinChoHoiThoai(chat.tin), [chat.tin]);
   const hang = useMemo(() => nhomTheoNgay(tinHien), [tinHien]);
+  // Which messages are in the thread, for the streamed reply's hand-over: its
+  // row gives way the moment the published card is here.
+  const tinTheoId = useMemo(() => new Map(chat.tin.map((t) => [t.id, t])), [chat.tin]);
+  const daCoThe = useCallback((messageId: string) => tinTheoId.has(messageId), [tinTheoId]);
   // Built from `tinHien`, the list the screen is drawing, not from `chat.tin`.
   // `tinChoHoiThoai` hides a `/vote` command once its poll card exists, so that
   // command is not on screen -- and "this is what you are looking at" has to be
@@ -817,7 +822,24 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 </View>
               </View>
             ))}
-            {ai.requests.filter((request) => request.status !== "succeeded" && request.status !== "cancelled").map((request) => (
+            {/* The requester's own answer in the thread while it is written:
+                the reading sentence, the words as they come, then the real
+                card (slice 11). Other members see only the card (slice 12). */}
+            {ai.requests.filter(laTraLoiDangCho).map((request) => (
+              <TraLoiAiDangViet
+                contextId={contextId}
+                daCoThe={daCoThe}
+                docMot={ai.docMot}
+                giamChuyenDong={reduced}
+                key={`song-${request.id}`}
+                khiKetThuc={ai.lamMoi}
+                personId={personId}
+                request={request}
+                tenNguoi={tenNguoi}
+                trigger={request.trigger_message_id ? tinTheoId.get(request.trigger_message_id) ?? null : null}
+              />
+            ))}
+            {ai.requests.filter((request) => request.status !== "succeeded" && request.status !== "cancelled" && !laTraLoiDangCho(request)).map((request) => (
               <View key={request.id} style={[styles.invocation, { backgroundColor: colors.card, borderColor: colors.line }]}>
                 <View style={styles.dauAi}>
                   <Ionicons name={request.status === "failed" ? "alert-circle-outline" : "time-outline"} size={20} color={colors.inkSoft} />
