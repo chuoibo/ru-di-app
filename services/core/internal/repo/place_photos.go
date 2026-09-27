@@ -34,14 +34,16 @@ type PlacePhoto struct {
 // record type does not surface.
 const placePhotoColumns = `place_photos.id, place_photos.place_id, place_photos.storage_key,
 	place_photos.content_type, place_photos.byte_size, place_photos.width, place_photos.height,
-	place_photos.author, place_photos.license, place_photos.source_url, place_photos.title,
-	place_photos.sort_order, place_photos.created_at`
+	place_photos.author, place_photos.license, place_photos.source_url, place_photos.platform,
+	place_photos.post_id, place_photos.frame_second, place_photos.score, place_photos.subject,
+	place_photos.content_sha256, place_photos.title, place_photos.sort_order, place_photos.created_at`
 
 func scanPlacePhoto(row pgx.Row) (*PlacePhoto, error) {
 	var p PlacePhoto
 	var created time.Time
 	err := row.Scan(&p.ID, &p.PlaceID, &p.StorageKey, &p.ContentType, &p.ByteSize, &p.Width, &p.Height,
-		&p.Author, &p.License, &p.SourceURL, &p.Title, &p.SortOrder, &created)
+		&p.Author, &p.License, &p.SourceURL, new(any), new(any), new(any), new(any), new(any), new(any),
+		&p.Title, &p.SortOrder, &created)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -138,7 +140,8 @@ func (r Repository) PhotoCoversAndCounts(ctx context.Context, placeIDs []string)
 		var n int64
 		var created time.Time
 		if err := rows.Scan(&p.ID, &p.PlaceID, &p.StorageKey, &p.ContentType, &p.ByteSize,
-			&p.Width, &p.Height, &p.Author, &p.License, &p.SourceURL, &p.Title,
+			&p.Width, &p.Height, &p.Author, &p.License, &p.SourceURL,
+			new(any), new(any), new(any), new(any), new(any), new(any), &p.Title,
 			&p.SortOrder, &created, &n); err != nil {
 			return nil, nil, err
 		}

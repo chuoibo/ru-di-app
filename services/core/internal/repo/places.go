@@ -116,7 +116,10 @@ func placeSelect(slim bool) string {
 	               places.travel_minutes, places.distance_km, places.photo_count, places.traits,
 	               places.group_fit, ` + activities + `, places.flag, ` + description + `,
 	               ` + reviews + `, places.source, places.source_ref, places.license,
-	               places.geo_precision, places.created_at, places.updated_at
+	               places.province_code, places.geo_precision, places.geo_evidence,
+	               places.source_updated_at, places.source_kind, places.confidence,
+	               places.evidence_posts, places.status, places.superseded_by,
+	               places.created_at, places.updated_at
 	          FROM places`
 }
 
@@ -161,13 +164,18 @@ func scanPlace(row pgx.Row) (Place, error) {
 	var p Place
 	var kinds, traits, groupFit, activities, reviews []byte
 	var created, updated any
+	// Mapped columns the record does not carry: read because select(Place)
+	// reads every mapped column, and the oracle compares the statement.
+	var provinceCode, geoEvidence, sourceUpdated, sourceKind, confidence, evidencePosts, status, supersededBy any
 	if err := row.Scan(&p.ID, &p.DestinationID, &p.Name, &p.Category, &kinds,
 		&p.Address, &p.Lat, &p.Lng, &p.Rating, &p.RatingCount,
 		&p.PriceMinVND, &p.PriceMaxVND, &p.OpenHours, &p.OpenNow,
 		&p.TravelMinutes, &p.DistanceKM, &p.PhotoCount, &traits,
 		&groupFit, &activities, &p.Flag, &p.Description,
 		&reviews, &p.Source, &p.SourceRef, &p.License,
-		&p.GeoPrecision, &created, &updated); err != nil {
+		&provinceCode, &p.GeoPrecision, &geoEvidence, &sourceUpdated, &sourceKind,
+		&confidence, &evidencePosts, &status, &supersededBy,
+		&created, &updated); err != nil {
 		return Place{}, err
 	}
 	var err error
@@ -204,7 +212,11 @@ func (r Repository) GetPlace(ctx context.Context, placeID string) (*Place, error
 		        places.activities AS places_activities, places.flag AS places_flag,
 		        places.description AS places_description, places.reviews AS places_reviews,
 		        places.source AS places_source, places.source_ref AS places_source_ref,
-		        places.license AS places_license, places.geo_precision AS places_geo_precision,
+		        places.license AS places_license, places.province_code AS places_province_code,
+		        places.geo_precision AS places_geo_precision, places.geo_evidence AS places_geo_evidence,
+		        places.source_updated_at AS places_source_updated_at, places.source_kind AS places_source_kind,
+		        places.confidence AS places_confidence, places.evidence_posts AS places_evidence_posts,
+		        places.status AS places_status, places.superseded_by AS places_superseded_by,
 		        places.created_at AS places_created_at,
 		        places.updated_at AS places_updated_at
 		   FROM places

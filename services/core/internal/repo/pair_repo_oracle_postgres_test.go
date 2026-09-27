@@ -852,20 +852,20 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 	add("route POST responses: a catalogue place names the outing and its stop", "", base,
 		tweak(`INSERT INTO destinations (id, name, lat, lng, bbox_south, bbox_west, bbox_north, bbox_east, created_at, updated_at)
 		       VALUES ('d-cap', 'Nơi (dữ liệu mẫu)', 12, 109, 11, 108, 13, 110, '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
-			tweak(`INSERT INTO places (id, destination_id, name, category, lat, lng, source, created_at, updated_at)
+			tweak(`INSERT INTO places (id, destination_id, name, category, lat, lng, geo_precision, source, created_at, updated_at)
 			       VALUES ('e0000099-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'd-cap', 'Lẩu gà lá é (dữ liệu mẫu)', 'food', 10.77,
-			               106.7, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
+			               106.7, 'rooftop', 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
 				onPaper("respond_pair_paper", w.an, w.pAB1, "version", 2, "body", body("kind", "dong_y")))))
 	// draft_pair_paper reads the cycle's agreed sheets and the catalogue
 	// around their place: a plan at a catalogue place, newest in fa.
 	add("route POST papers/draft: an agreed place and new places of its kind", "", base,
 		tweak(`INSERT INTO destinations (id, name, lat, lng, bbox_south, bbox_west, bbox_north, bbox_east, created_at, updated_at)
 		       VALUES ('d-nhip', 'Nơi (dữ liệu mẫu)', 12, 109, 11, 108, 13, 110, '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
-			tweak(`INSERT INTO places (id, destination_id, name, category, kinds, traits, lat, lng, rating, rating_count, source, created_at, updated_at)
-			       VALUES ('p-cu', 'd-nhip', 'Chỗ cũ (dữ liệu mẫu)', 'food', '[]', '[]', 10.77, 106.7, 4.6, 12, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
-			              ('p-moi-a', 'd-nhip', 'Chỗ mới A (dữ liệu mẫu)', 'food', '["muộn"]', '[]', 10.77, 106.7, 4.9, 3, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
-			              ('p-moi-b', 'd-nhip', 'Chỗ mới B (dữ liệu mẫu)', 'food', '[]', '["yên tĩnh"]', 10.77, 106.7, 4.8, 40, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
-			              ('p-cafe', 'd-nhip', 'Cà phê (dữ liệu mẫu)', 'cafe', '[]', '[]', 10.77, 106.7, 5.0, 1, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
+			tweak(`INSERT INTO places (id, destination_id, name, category, kinds, traits, lat, lng, geo_precision, rating, rating_count, source, created_at, updated_at)
+			       VALUES ('p-cu', 'd-nhip', 'Chỗ cũ (dữ liệu mẫu)', 'food', '[]', '[]', 10.77, 106.7, 'rooftop', 4.6, 12, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
+			              ('p-moi-a', 'd-nhip', 'Chỗ mới A (dữ liệu mẫu)', 'food', '["muộn"]', '[]', 10.77, 106.7, 'rooftop', 4.9, 3, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
+			              ('p-moi-b', 'd-nhip', 'Chỗ mới B (dữ liệu mẫu)', 'food', '[]', '["yên tĩnh"]', 10.77, 106.7, 'rooftop', 4.8, 40, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
+			              ('p-cafe', 'd-nhip', 'Cà phê (dữ liệu mẫu)', 'cafe', '[]', '[]', 10.77, 106.7, 'rooftop', 5.0, 1, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
 				tweak(`INSERT INTO pair_papers (id, context_id, context_kind, cycle_id, is_temporary, draft_owner_id, state, current_version,
 				                           tuan, created_at, expires_at)
 				       VALUES ('`+fid(kindPaper, 0x85)+`', '`+w.fa+`', 'pair', '`+w.cyFA+`', false, '`+w.phuong+`', 'chot', 1,
