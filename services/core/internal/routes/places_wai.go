@@ -408,21 +408,21 @@ func searchPlacesWAI() Route {
 			return endpoint.Reply{Body: body}
 		}
 		// `?destination=` narrows the search to one destination; without it
-		// the whole catalogue is searched, as before.
+		// the whole catalogue is searched, as before. Read off the raw query
+		// string: the route's contract (from Python, which has no such
+		// parameter) does not declare it, so call.Values never carries it --
+		// reading it there answered 500. An unknown destination is ignored
+		// rather than refused, so this Go-only narrowing can never turn an
+		// answer Python gives into a different status.
 		filter := repo.PlaceFilter{}
-		destinationID, err := optionalStringParam(call, "destination")
-		if err != nil {
-			return endpoint.Reply{}, err
-		}
-		if destinationID != nil {
-			diemDen, err := service.DestinationOrDefault(ctx, store, destinationID)
+		if wanted := destinationQuery(call); wanted != "" {
+			diemDen, err := service.DestinationOrDefault(ctx, store, &wanted)
 			if err != nil {
 				return endpoint.Reply{}, err
 			}
-			if diemDen == nil {
-				return endpoint.Reply{}, endpoint.Refuse(404, "destination_not_found", "Không có điểm đến nào với mã này.")
+			if diemDen != nil && diemDen.ID == wanted {
+				filter.DestinationID = &diemDen.ID
 			}
-			filter.DestinationID = &diemDen.ID
 		}
 		slim, err := store.ListPlaceCards(ctx, filter)
 		if err != nil {
@@ -895,4 +895,12 @@ func fetchReasons(places []*pyjson.OrderedMap, group taste.Profile) map[string]r
 		out[key] = pair
 	}
 	return out
+}
+
+// destinationQuery is the raw `?destination=` of a request, "" when absent.
+func destinationQuery(call *endpoint.Call) string {
+	if call.Request == nil || call.Request.URL == nil {
+		return ""
+	}
+	return strings.TrimSpace(call.Request.URL.Query().Get("destination"))
 }
