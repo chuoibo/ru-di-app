@@ -18,6 +18,7 @@ import (
 	"log/slog"
 	"mobile/services/core/internal/gzipjson"
 	"mobile/services/core/internal/janitor"
+	"mobile/services/core/internal/media/storage"
 	"net"
 	"net/http"
 	"os"
@@ -488,8 +489,24 @@ func purgeExpired(args []string, getenv func(string) string, stdout, stderr io.W
 		return 1
 	}
 	defer pool.Close()
+	// Files queued for deletion live under MOBILE_MEDIA_ROOT; without it the
+	// row purge still runs and the file reaper waits for a configured root.
+	var store janitor.ObjectStore
+	if getenv(storage.MediaRootEnv) != "" {
+		if s, err := storage.New(); err == nil {
+			store = s
+		}
+	}
 	for {
 		report, err := janitor.Purge(ctx, pool, time.Now().UTC())
+		if err == nil && store != nil {
+			var reaped janitor.ReapReport
+			reaped, err = janitor.ReapObjects(ctx, pool, store)
+			if err == nil && !reaped.Disabled {
+				fmt.Fprintf(stdout, "purge-expired: files deleted %d · already gone %d · still referenced %d · failed %d\n",
+					reaped.Deleted, reaped.Missing, reaped.Kept, reaped.Failed)
+			}
+		}
 		if err != nil && ctx.Err() == nil {
 			fmt.Fprintln(stderr, "purge-expired:", err)
 			if *every == 0 {

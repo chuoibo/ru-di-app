@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"mobile/services/core/internal/ingest"
 	"mobile/services/core/internal/testdb"
 )
 
@@ -85,5 +86,50 @@ func TestPurgeRemovesOnlyWhatHasExpired(t *testing.T) {
 	}
 	if report.OTPChallenges < 1 || report.Sessions < 1 || report.IdempotencyKeys < 2 {
 		t.Errorf("report = %+v", report)
+	}
+}
+
+// TestReapUnlinksOnlyUnreferencedQueuedFiles: a queued key no row names is
+// unlinked and dequeued; one a photo row still names is dequeued and kept.
+func TestReapUnlinksOnlyUnreferencedQueuedFiles(t *testing.T) {
+	ctx := context.Background()
+	pool := testdb.Pool(t)
+	if err := ingest.Migrate(ctx, pool); err != nil { // owns pending_object_deletes
+		t.Fatal(err)
+	}
+	const gone, kept, place = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "reap-test-place"
+	exec := func(sql string, args ...any) {
+		t.Helper()
+		if _, err := pool.Exec(ctx, sql, args...); err != nil {
+			t.Fatalf("%v\n%s", err, sql)
+		}
+	}
+	clean := func() {
+		exec(`DELETE FROM pending_object_deletes WHERE storage_key IN ($1, $2)`, gone, kept)
+		exec(`DELETE FROM place_photos WHERE place_id = $1`, place)
+		exec(`DELETE FROM places WHERE id = $1`, place)
+		exec(`DELETE FROM destinations WHERE id = 'd-reap-test'`)
+	}
+	clean()
+	t.Cleanup(clean)
+	exec(`INSERT INTO destinations (id, name, lat, lng, bbox_south, bbox_west, bbox_north, bbox_east)
+	      VALUES ('d-reap-test', 'Reap', 10, 106, 9, 105, 11, 107)`)
+	exec(`INSERT INTO places (id, destination_id, name, category, source) VALUES ($1, 'd-reap-test', 'Reap', 'cafe', 'seed')`, place)
+	exec(`INSERT INTO place_photos (id, place_id, storage_key, content_type, byte_size, width, height,
+	        author, license, source_url, sort_order)
+	      VALUES (gen_random_uuid(), $1, $2, 'image/jpeg', 1, 1, 1, 'A', 'CC BY 4.0', 'https://example.test/r', 0)`, place, kept)
+	exec(`INSERT INTO pending_object_deletes (storage_key, reason) VALUES ($1, 'test'), ($2, 'test')`, gone, kept)
+
+	store := fakeStore{gone: true, kept: true}
+	report, err := ReapObjects(ctx, pool, store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Deleted != 1 || report.Kept != 1 || store[gone] || !store[kept] {
+		t.Fatalf("report %+v, store %v: want the unreferenced file gone and the named one kept", report, store)
+	}
+	var left int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM pending_object_deletes WHERE storage_key IN ($1, $2)`, gone, kept).Scan(&left); err != nil || left != 0 {
+		t.Fatalf("queue rows left = %d, %v", left, err)
 	}
 }

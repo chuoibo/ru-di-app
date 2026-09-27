@@ -143,14 +143,18 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
-  # Removes expired OTP challenges, sessions and idempotency keys every 6h
-  # (internal/janitor); audit_events is never touched.
+  # Removes expired OTP challenges, sessions and idempotency keys every 6h,
+  # then unlinks files queued for deletion (internal/janitor); audit_events is
+  # never touched.
   janitor:
     <<: [*core-image, *secrets]
     command: ["purge-expired", "--every", "6h"]
     environment:
       <<: *env
       MOBILE_DB_MAX_CONNS: "1"
+    # Reaps files queued in pending_object_deletes, so it sees the same media.
+    volumes:
+      - rudi-media-data:/var/lib/rudi/media
     healthcheck:
       disable: true
     depends_on:
