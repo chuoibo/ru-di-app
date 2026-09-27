@@ -465,7 +465,12 @@ func (r *Record) HasPoint() bool {
 // city, each claiming to be a restaurant that is not there. `suy_luan` is the
 // same problem from the other direction: a model's guess with no address
 // behind it. Both are better shown as "we do not know where this is".
-var unmappable = map[string]bool{"province_centroid": true, "suy_luan": true, "none": true}
+//
+// A ward centroid is off the map too. The feed's own contract says so
+// (vnlocal HANDOFF-KET-NOI §6.2: filter by area, never pin): a ward is several
+// streets across, and a pin at its middle points at a door that is not there.
+var unmappable = map[string]bool{
+	"ward_centroid": true, "province_centroid": true, "suy_luan": true, "none": true}
 
 // MappablePoint reports whether this row's coordinates are worth drawing.
 //

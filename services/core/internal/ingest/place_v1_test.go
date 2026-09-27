@@ -255,7 +255,7 @@ func TestHavingAPointAndBeingFindableAreDifferentClaims(t *testing.T) {
 	}{
 		{"rooftop", true},
 		{"street", true},
-		{"ward_centroid", true},
+		{"ward_centroid", false}, // an area, not a door (feed contract §6.2)
 		{"province_centroid", false},
 		{"suy_luan", false},
 		{"none", false},

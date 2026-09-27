@@ -315,11 +315,12 @@ const GEO_PRECISIONS = new Set([
   "rooftop", "street", "ward_centroid", "province_centroid", "suy_luan", "none",
 ]);
 
-/** Precisions honest enough to put a pin on. A province centroid is the middle
- *  of a province and `suy_luan` is a model's guess: both are "has coordinates",
- *  neither is where the place is, and a pin or a route there sends people to a
- *  spot with nothing at it. Same line the ingest draws with `MappablePoint`. */
-const GEO_PRECISIONS_VE_DUOC = new Set(["rooftop", "street", "ward_centroid"]);
+/** Precisions honest enough to put a pin on. A ward or province centroid is
+ *  the middle of an area and `suy_luan` is a model's guess: all are "has
+ *  coordinates", none is where the place is, and a pin or a route there sends
+ *  people to a spot with nothing at it. Same line the ingest draws with
+ *  `MappablePoint`, and the feed's own contract (HANDOFF-KET-NOI §6.2). */
+const GEO_PRECISIONS_VE_DUOC = new Set(["rooftop", "street"]);
 
 /** Whether a point may be drawn on a map or handed to a map app as a point.
  *

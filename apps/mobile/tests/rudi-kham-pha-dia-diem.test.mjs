@@ -184,10 +184,10 @@ test("câu mở cửa, dòng phụ và đường chỉ đường nói đúng s�
 
 test("chỉ đường không dẫn tới tâm tỉnh hay điểm model đoán: đưa tên cho app bản đồ tìm", () => {
   const cho = { lat: 10.7769, lng: 106.7009, name: "Xóm Lào" };
-  for (const geoPrecision of ["rooftop", "street", "ward_centroid"]) {
+  for (const geoPrecision of ["rooftop", "street"]) {
     assert.equal(duongChiDuong({ ...cho, geoPrecision }), "geo:10.7769,106.7009?q=X%C3%B3m%20L%C3%A0o", geoPrecision);
   }
-  for (const geoPrecision of ["province_centroid", "suy_luan", "none"]) {
+  for (const geoPrecision of ["ward_centroid", "province_centroid", "suy_luan", "none"]) {
     assert.equal(duongChiDuong({ ...cho, geoPrecision }), "geo:0,0?q=X%C3%B3m%20L%C3%A0o", geoPrecision);
   }
   assert.equal(duongChiDuong({ lat: null, lng: null, name: "Xóm Lào", geoPrecision: null }), "geo:0,0?q=X%C3%B3m%20L%C3%A0o");
