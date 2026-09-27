@@ -48,12 +48,16 @@ func (k Kind) Terminal() bool { return k == Xong || k == ThatBai || k == Huy || 
 
 // Event is one stream entry. ID is the Redis entry id, which is also the SSE id
 // a client resumes from. Inv is the invocation an entry of a room key belongs
-// to; it never goes on the wire (the reader already knows which it follows).
+// to; it never goes on an SSE wire (the reader already knows which it
+// follows), only on the room WebSocket's frame (KhungPhong), with Tin and
+// SoTin (see Nhan).
 type Event struct {
-	ID   string
-	Kind Kind
-	Data json.RawMessage
-	Inv  string
+	ID    string
+	Kind  Kind
+	Data  json.RawMessage
+	Inv   string
+	Tin   string
+	SoTin int
 }
 
 var (

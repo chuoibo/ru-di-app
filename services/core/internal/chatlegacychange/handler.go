@@ -37,6 +37,9 @@ type Handler struct {
 	pending           chan struct{}
 	slots             chan struct{}
 	actors            map[string]int
+	// ai, when set, carries the room key's answers to the members who ask
+	// for them (WithAi; phong.go).
+	ai *phongAi
 }
 
 func New(store Store, ctx context.Context, origins []string) *Handler {
@@ -229,11 +232,19 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 	defer conn.CloseNow()
 	conn.SetReadLimit(4096)
 	headers := r.Header.Clone()
+	// A connection authenticated by header never gets `ai` frames: only the
+	// authenticate frame can ask for them.
+	wantsAI := false
 	if needsAuth {
 		ctx, cancel := context.WithTimeout(r.Context(), h.AuthTimeout)
 		var frame struct {
 			Type  string `json:"type"`
 			Token string `json:"token"`
+			// AI opts this connection into the room's `ai` frames (slice
+			// 12). A client from before them closes its socket on any
+			// message that is not a page, so the frames flow only to one
+			// that asks. An older server ignores the field.
+			AI bool `json:"ai"`
 		}
 		err = wsjson.Read(ctx, conn, &frame)
 		cancel()
@@ -242,6 +253,7 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		headers.Set("Authorization", "Bearer "+frame.Token)
+		wantsAI = frame.AI
 	}
 	connectionCtx, stopConnection := context.WithCancel(r.Context())
 	defer stopConnection()
@@ -275,6 +287,12 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 	ticker := time.NewTicker(h.ReconcileInterval)
 	defer ticker.Stop()
 	first := true
+	// pump carries the room's `ai` frames on this connection while it may
+	// (phong.go): started once the first page is acknowledged, for a
+	// connection that asked, in a legacy-lane room; stopped the moment a page
+	// finds the room in v2, and with the connection.
+	var pump *bomAi
+	defer func() { pump.dung() }()
 	actorSlot := ""
 	defer func() {
 		if actorSlot != "" {
@@ -328,6 +346,18 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			after = page.NextSequence
+		}
+		// Every page re-ran authorize in its own snapshot (a revoked member's
+		// connection is closed above, and its pump dies with it); the lane
+		// comes from that same snapshot.
+		if wantsAI && h.ai != nil {
+			switch {
+			case page.Lane == LaneLegacy && pump == nil:
+				pump = h.ai.mo(connectionCtx, conn, room, stopConnection)
+			case page.Lane != LaneLegacy && pump != nil:
+				pump.dung()
+				pump = nil
+			}
 		}
 		if page.HasMore {
 			continue

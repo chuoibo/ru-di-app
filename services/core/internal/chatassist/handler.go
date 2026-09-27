@@ -69,6 +69,18 @@ type Handler struct {
 	// nhipPhat paces text released after a commit (phat.go); WithStream
 	// sets aiharness.NhipPhat.
 	nhipPhat time.Duration
+	// phong says this process's change-feed WebSocket carries the room
+	// key's `ai` frames to the room's members (WithPhong, slice 12).
+	phong bool
+}
+
+// WithPhong says the room's members see answers as they are written: this
+// process's change-feed WebSocket carries the room key as `ai` frames
+// (chatlegacychange.Handler.WithAi, same stream). chat-capabilities then
+// says ai.stream = phong for a legacy-lane group room whose stream is up.
+func (h *Handler) WithPhong() *Handler {
+	h.phong = true
+	return h
 }
 
 // Invocation excludes inputs and session digests from every public response.
@@ -391,10 +403,10 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	//
 	// `stream` says who can watch an answer being written (contract §3):
 	// `nguoi_goi` when the requester can open …/events on a live stream,
-	// `khong` when this host has no stream or its Redis is unreachable. The
-	// room lane's onlookers (`phong`) come with the WebSocket frame of slice
-	// 12; until then no room says `phong`. A client that sees no field reads
-	// `khong`.
+	// `khong` when this host has no stream or its Redis is unreachable, and
+	// `phong` when every member of the room watches it too, through the
+	// change feed's WebSocket `ai` frame (slice 12). A client that sees no
+	// field reads `khong`.
 	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
 }
 
@@ -409,6 +421,12 @@ const (
 func (h *Handler) aiStream(g grant) string {
 	if h.stream == nil || !h.stream.Song() || g.kind != "group" {
 		return aiStreamKhong
+	}
+	// The grant reached here is always the legacy lane (a v2 room is
+	// refused before capabilities answer), and only a legacy-lane room key
+	// is ever written.
+	if h.phong && g.lane == laneLegacy {
+		return aiStreamPhong
 	}
 	return aiStreamNguoiGoi
 }

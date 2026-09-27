@@ -217,6 +217,16 @@ func (BoQua) Phan(int, PhanKind, json.RawMessage) {}
 func (BoQua) Delta(int, string)                   {}
 func (BoQua) LamLai()                             {}
 
+// ChiTrangThai passes the statuses and a restart on to its Sink and drops
+// the text: the group worker's Sink while a turn runs. A group's answer
+// reaches its readers only after its card is posted (contract §4.1), from
+// the card itself, so nothing the turn releases may go anywhere before
+// then. Like BoQua it is never paced: nobody reads the text it drops.
+type ChiTrangThai struct{ Sink }
+
+func (ChiTrangThai) Phan(int, PhanKind, json.RawMessage) {}
+func (ChiTrangThai) Delta(int, string)                   {}
+
 // Result is a finished turn. Record is filled on failure too. S1 has the text
 // only; the parts, chips and sources of design 01 §2 come with the slices
 // that produce them.
@@ -566,7 +576,8 @@ func (e *Engine) kiemDauRaK(k khuon, text string, rec *obs.TurnRecord) (Result, 
 // what the Deltas carried, joined.
 func (e *Engine) phatRa(ctx context.Context, res Result, s Sink, rec *obs.TurnRecord, k khuon) (Result, error) {
 	nhip := e.nhipPhat
-	if _, ok := s.(BoQua); ok {
+	switch s.(type) {
+	case BoQua, ChiTrangThai:
 		// Nobody reads a discarding Sink: no pause is worth its latency.
 		nhip = 0
 	}

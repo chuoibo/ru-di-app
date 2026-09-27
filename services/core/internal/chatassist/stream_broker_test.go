@@ -55,6 +55,7 @@ type dongSong struct {
 	ns     string
 	srv    *httptest.Server
 	stop   chan struct{}
+	hub    *aistream.Hub
 }
 
 func moDongSong(t *testing.T, f fixture) dongSong {
@@ -79,7 +80,7 @@ func moDongSong(t *testing.T, f fixture) dongSong {
 	stop := make(chan struct{})
 	f.handler.WithStream(s, hub, stop)
 	srv := httptest.NewServer(cors.New("", false).Middleware(f.handler))
-	d := dongSong{fixture: f, stream: s, rdb: rdb, ns: ns, srv: srv, stop: stop}
+	d := dongSong{fixture: f, stream: s, rdb: rdb, ns: ns, srv: srv, stop: stop, hub: hub}
 	t.Cleanup(func() {
 		srv.Close()
 		cancel()
@@ -393,10 +394,16 @@ func TestStreamNhomLaneCuQuaKhoaPhong(t *testing.T) {
 	if n := d.rdb.Exists(context.Background(), d.khoaMoi(v.ID)).Val(); n != 0 {
 		t.Fatal("a legacy-lane job wrote its invocation key")
 	}
-	// chat-capabilities says the requester can watch.
+	// chat-capabilities says the requester can watch; with the room's
+	// frames on (WithPhong), the whole room.
 	w := f.request("GET", "/contexts/"+f.context+"/chat-capabilities", f.token, nil)
 	if !strings.Contains(w.Body.String(), `"stream":"nguoi_goi"`) {
 		t.Fatalf("capabilities: %s", w.Body.String())
+	}
+	f.handler.WithPhong()
+	w = f.request("GET", "/contexts/"+f.context+"/chat-capabilities", f.peerToken, nil)
+	if !strings.Contains(w.Body.String(), `"stream":"phong"`) {
+		t.Fatalf("capabilities with the room frames: %s", w.Body.String())
 	}
 }
 

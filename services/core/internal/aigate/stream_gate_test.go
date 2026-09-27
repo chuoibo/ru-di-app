@@ -346,7 +346,8 @@ func TestMoiDuongGhiLuongQuaCuaSo(t *testing.T) {
 	t.Logf("stream writes outside aistream: %v", found)
 }
 
-// Design 02 §9: no log call in aistream or jobs takes answer text. Any
+// Design 02 §9: no log call in aistream or jobs -- nor, since slice 12, in
+// chatlegacychange, which writes the room's frames -- takes answer text. Any
 // argument of a log/slog call there -- a key, a value, a field -- whose name
 // or string reads text, delta, chunk or payload is red, except inside len():
 // a size may be logged. DeltaData logs only its size (LogValue), which
@@ -357,7 +358,9 @@ func TestLogAistreamJobsKhongNhanChu(t *testing.T) {
 	var bad []string
 	calls := 0
 	for f, decl := range g.decl {
-		if f.Pkg() == nil || (f.Pkg().Path() != pkgAistream && f.Pkg().Path() != module+"/internal/jobs") {
+		// chatlegacychange carries the room's `ai` frames (slice 12): what
+		// it writes on a member's socket is never logged either.
+		if f.Pkg() == nil || (f.Pkg().Path() != pkgAistream && f.Pkg().Path() != module+"/internal/jobs" && f.Pkg().Path() != module+"/internal/chatlegacychange") {
 			continue
 		}
 		info := g.info[f]

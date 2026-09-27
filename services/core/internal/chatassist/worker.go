@@ -912,14 +912,9 @@ func (h *Handler) finishFailure(ctx context.Context, j work, code string) error 
 // publish posts the card and closes the job in one transaction. result is the
 // structured outcome kept on the invocation row (chia_bill's drafts); nil
 // leaves the column NULL, which is what a plan job has always stored.
+// Every group card, the brain's and the Go engine's alike, reaches its
+// stream only after this commit (contract §4.1).
 func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, result json.RawMessage) error {
-	return h.publishCo(ctx, j, card, result, true)
-}
-
-// publishCo is publish; nhaChu says whether the card's text still has to
-// reach the stream after the commit (the brain's card, and chia_bill's), or
-// already did through the engine's window before it (the Go engine's).
-func (h *Handler) publishCo(ctx context.Context, j work, card json.RawMessage, result json.RawMessage, nhaChu bool) error {
 	if h.truocChot != nil {
 		h.truocChot(ctx)
 	}
@@ -978,9 +973,7 @@ func (h *Handler) publishCo(ctx context.Context, j work, card json.RawMessage, r
 	// Only now, with the card in the room: its text reaches the stream (a
 	// card that fails to post leaves no text behind for readers; review of
 	// slice 11, finding 8), and the stream ends with its id.
-	if nhaChu {
-		j.luong.nhaThe(card, h.nhipSauChot())
-	}
+	j.luong.nhaThe(card, h.nhipSauChot())
 	j.luong.xongNhom(message.ID)
 	return nil
 }

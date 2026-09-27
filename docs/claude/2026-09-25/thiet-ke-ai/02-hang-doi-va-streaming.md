@@ -511,7 +511,7 @@ dòng, cắt giữa ký tự UTF-8, nối lại, 503 → polling) và flow Maest
 1. **Host production** cho RabbitMQ và Redis: managed hay tự chạy; TLS; ACL. Repo chưa mô tả host nào.
 2. **Hợp đồng chưa ghi hai trường phong bì của frame phòng**: `tin` (neo hàng «đang trả lời» vào
    tin tag) và `so_tin` (cho «đang đọc {n} tin…»). `trang_thai{cau}` không có chỗ cho `n`. Đề xuất
-   giữ chúng ở phong bì WS, ghi vào `03-ai-engine-hop-dong.md` khi Lead ký.
+   giữ chúng ở phong bì WS, ghi vào `03-ai-engine-hop-dong.md` khi Lead ký. Lát 12 đã làm đúng vậy (phong bì `inv`, `tin`, `so_tin`, hợp đồng §4.2); còn chờ Lead ký.
 3. **Mục tiêu 300 ms cho người xem trong phòng khi broker chết**: poll 250 ms cộng claim có thể vượt.
    Đề xuất chế độ suy giảm ≤600 ms, ghi rõ là suy giảm.
 4. **Kênh metadata cho phòng v2** (lát 20): `chatv2http` chưa có sự kiện tạm nào (kiểu typing).

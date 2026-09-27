@@ -99,10 +99,17 @@ func (h *Handler) moLuong(ctx context.Context, j work) *luongViec {
 	if err != nil {
 		return nil
 	}
-	return &luongViec{phong: inv != "", w: h.stream.NewWriter(aistream.WriterOptions{
+	opt := aistream.WriterOptions{
 		Key: key, MaxLen: maxLen, Inv: inv, ExpireAt: j.shareExpires,
 		BeforeContent: func() error { return h.danhDauNoiDung(ctx, j) },
-	})}
+	}
+	if inv != "" {
+		// A room key reaches every member watching the room (slice 12): its
+		// entries name the message the answer goes under and how many shared
+		// messages it reads, and no text of it goes before the card is posted.
+		opt.Tin, opt.SoTin, opt.SauChotThoi = j.trigger, j.soTin, true
+	}
+	return &luongViec{phong: inv != "", w: h.stream.NewWriter(opt)}
 }
 
 // errKhongCoNoiDung: first_token_at could not be set under this lease.

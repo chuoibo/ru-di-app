@@ -98,7 +98,23 @@ func (s *Stream) Append(ctx context.Context, key string, maxLen int64, kind Kind
 // trimmed even while newer invocations keep refreshing it. The caller decides
 // which keys a job may write; for a v2 (E2EE) job that is never a room key.
 func (s *Stream) AppendBatch(ctx context.Context, key string, maxLen int64, inv string, entries []Entry, expireAt time.Time) ([]string, error) {
-	if !s.Keys.Owns(key) || (inv != "" && !idPattern.MatchString(inv)) {
+	return s.appendBatch(ctx, key, maxLen, Nhan{Inv: inv}, entries, expireAt)
+}
+
+// Nhan is what a room key's entries say about the invocation they belong to,
+// besides the event itself: its id (inv), the `@Rủ Đi` message it answers
+// (tin) and how many shared messages the server confirmed it reads (so_tin),
+// so an onlooker's row anchors under that message and says «đang đọc {n}
+// tin…» (design 02 §11.2). Ids and a count only: never anyone's words.
+type Nhan struct {
+	Inv, Tin string
+	SoTin    int
+}
+
+func (s *Stream) appendBatch(ctx context.Context, key string, maxLen int64, nhan Nhan, entries []Entry, expireAt time.Time) ([]string, error) {
+	inv := nhan.Inv
+	if !s.Keys.Owns(key) || (inv != "" && !idPattern.MatchString(inv)) ||
+		(nhan.Tin != "" && (inv == "" || !idPattern.MatchString(nhan.Tin))) || nhan.SoTin < 0 {
 		return nil, ErrName
 	}
 	if len(entries) == 0 {
@@ -119,6 +135,12 @@ func (s *Stream) AppendBatch(ctx context.Context, key string, maxLen int64, inv 
 		values := []any{"e", string(e.Kind), "j", string(raw)}
 		if inv != "" {
 			values = append(values, "inv", inv)
+		}
+		if nhan.Tin != "" {
+			values = append(values, "tin", nhan.Tin)
+		}
+		if nhan.SoTin > 0 {
+			values = append(values, "so", strconv.Itoa(nhan.SoTin))
 		}
 		adds = append(adds, pipe.XAdd(ctx, &redis.XAddArgs{Stream: key, MaxLen: maxLen, Approx: true, Values: values}))
 		terminal = terminal || e.Kind.Terminal()
@@ -189,10 +211,19 @@ func event(m redis.XMessage) (Event, bool) {
 	kind, _ := m.Values["e"].(string)
 	data, _ := m.Values["j"].(string)
 	inv, _ := m.Values["inv"].(string)
+	tin, _ := m.Values["tin"].(string)
+	so, _ := m.Values["so"].(string)
 	if !Kind(kind).Valid() || !json.Valid([]byte(data)) {
 		return Event{}, false
 	}
-	return Event{ID: m.ID, Kind: Kind(kind), Data: json.RawMessage(data), Inv: inv}, true
+	e := Event{ID: m.ID, Kind: Kind(kind), Data: json.RawMessage(data), Inv: inv}
+	if idPattern.MatchString(tin) {
+		e.Tin = tin
+	}
+	if n, err := strconv.Atoi(so); err == nil && n > 0 {
+		e.SoTin = n
+	}
+	return e, true
 }
 
 // EndedAt reports whether the entry `id` of key is a terminal event of inv

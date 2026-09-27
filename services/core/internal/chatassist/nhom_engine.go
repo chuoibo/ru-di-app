@@ -157,10 +157,10 @@ func (h *Handler) chuanBiNhom(ctx context.Context, j work) ([]repo.Membership, m
 }
 
 // processNhomEngine runs one group job on the Go engine: the turn from the
-// stored job and the room, the engine (its verified text streamed to the
-// job's stream through the output guard's window as it is released), the
-// card grounded by companion.GroundReply against the catalogue rows of the
-// places it names, and one publish as a reply to the tag message. A turn
+// stored job and the room, the engine (its statuses streamed as they happen,
+// its text held), the card grounded by companion.GroundReply against the
+// catalogue rows of the places it names, and one publish as a reply to the
+// tag message, after which the card's text streams, paced. A turn
 // stopped from outside touches nothing (aiharness.ErrHuy). One metrics row
 // follows the terminal transition and never decides it.
 func (h *Handler) processNhomEngine(ctx context.Context, j work) error {
@@ -185,7 +185,12 @@ func (h *Handler) processNhomEngine(ctx context.Context, j work) error {
 		LoiNho: loiNhoNhom(j.prompt), NguoiHoi: j.person, DaGoiTruoc: j.modelCalls, GiuLuot: h.giuLuot(j),
 		Phong: j.conversation, Lane: lane, SoTin: j.soTin, LuotNhom: luot, ThanhVien: thanhVienNhom(ms, j.person),
 	}
-	res, runErr := h.nhomEngine.RunNhom(ctx, turn, j.luong.sink())
+	// The turn's statuses reach the stream as they happen; its text does not:
+	// the card's text goes out after the card is posted (publish), the only
+	// text any reader of a group answer ever gets (contract §4.1). A room
+	// key's writer refuses text before that anyway (SauChotThoi); dropping it
+	// here also skips pacing words nobody will read.
+	res, runErr := h.nhomEngine.RunNhom(ctx, turn, aiharness.ChiTrangThai{Sink: j.luong.sink()})
 	if errors.Is(runErr, aiharness.ErrHuy) {
 		return runErr
 	}
@@ -197,10 +202,9 @@ func (h *Handler) processNhomEngine(ctx context.Context, j work) error {
 			err = h.finishFailure(ctx, j, "invalid_ai_result")
 			break
 		}
-		// The text already reached the stream through the engine's window
-		// (draft, verify, stream); publish posts the card and ends the
-		// stream with its id, releasing nothing again.
-		err = h.publishCo(ctx, j, card, res.KetQuaNhap, false)
+		// publish posts the card, then releases its text through the output
+		// guard's window, paced, and ends the stream with the card's id.
+		err = h.publish(ctx, j, card, res.KetQuaNhap)
 	case aiharness.TamThoi(runErr) && !dangDung(ctx):
 		var later bool
 		if later, err = h.retryLater(ctx, j); err == nil && !later {

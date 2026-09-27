@@ -36,8 +36,18 @@ func (d DeltaData) LogValue() slog.Value {
 type WriterOptions struct {
 	Key    string
 	MaxLen int64
-	// Inv is set when Key is a room key: every entry names its invocation.
-	Inv string
+	// Inv is set when Key is a room key: every entry names its invocation,
+	// and Tin and SoTin, when set, the message it answers and how many
+	// shared messages it reads (Nhan).
+	Inv   string
+	Tin   string
+	SoTin int
+	// SauChotThoi holds every content event (phan, delta) back until SauChot:
+	// a room key's text reaches the whole room, so none of it may go before
+	// the job's ending committed (contract §4.1: a group's deltas come after
+	// its card is posted, just before xong). A content event before then is
+	// refused and does not settle anything: SauChot still opens the stream.
+	SauChotThoi bool
 	// ExpireAt is the job's sharing window end.
 	ExpireAt time.Time
 	// Flush is how long a delta waits for more before it goes (60 ms);
@@ -155,6 +165,9 @@ func (w *Writer) choNoiDung() bool {
 	if state != 0 {
 		return state == 1
 	}
+	if w.opt.SauChotThoi {
+		return false
+	}
 	// Serialized with writes, so two first deltas never both run it.
 	w.flushMu.Lock()
 	defer w.flushMu.Unlock()
@@ -194,7 +207,7 @@ func (w *Writer) flush() {
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), w.opt.Timeout)
-	_, err := w.s.AppendBatch(ctx, w.opt.Key, w.opt.MaxLen, w.opt.Inv, batch, w.opt.ExpireAt)
+	_, err := w.s.appendBatch(ctx, w.opt.Key, w.opt.MaxLen, Nhan{Inv: w.opt.Inv, Tin: w.opt.Tin, SoTin: w.opt.SoTin}, batch, w.opt.ExpireAt)
 	cancel()
 	w.mu.Lock()
 	defer w.mu.Unlock()

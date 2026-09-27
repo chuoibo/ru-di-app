@@ -333,6 +333,10 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			background.Add(1)
 			go func() { defer background.Done(); stream.Listen(chatCtx, hub, nil) }()
 			assistant.WithStream(stream, hub, chatCtx.Done())
+			// The room's members watch the answer on the change feed's
+			// WebSocket (slice 12): the same stream and hub.
+			changes.WithAi(stream, hub)
+			assistant.WithPhong()
 		}
 		go changes.Listen()
 		go avatars.Listen()
