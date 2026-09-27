@@ -1,6 +1,37 @@
 # Bàn giao sổ kỷ niệm — 28/09/2026
 
-**PR nháp, chưa đủ điều kiện merge main.** Người dùng yêu cầu dừng để bàn giao vì quota; không tuyên bố toàn bộ feature đã finished. Máy thật được người dùng hoãn đến đợt kiểm cuối sản phẩm; Android emulator vẫn là cổng bắt buộc hiện tại.
+**Cập nhật cùng ngày (lượt tiếp nối):** các nợ ở mục «Hồi quy toàn app chưa xong» đã chạy lại và sửa — xem mục «Lượt tiếp nối» ngay dưới. Phần còn lại của tài liệu là ghi chép bàn giao gốc, giữ nguyên để đối chiếu. Máy thật vẫn hoãn theo người dùng; iOS chưa kiểm.
+
+## Lượt tiếp nối — hồi quy native đến xanh
+
+Làm trên worktree `diary-v3`, runtime riêng (Go 8209, AI 8210, PostgreSQL 55437 `mobile_diary_final`). Dev client dựng lại vì main thêm `expo-video` (dấu vân `package.json` cũ làm harness từ chối đo).
+
+**Bảng broad `--otp --ai` (emulator-5576, dev client):** chạy 6 lượt có kết luận; lượt cuối trên `97caf844` **XANH 26/26 flow**, mọi phép kiểm máy chủ/DB sau bảng, canary 37/41/42/43 đỏ đúng chỗ, canary OTP (mã sai) đỏ đúng chỗ. Cần `MOBILE_DATABASE_URL` (DB tổng hợp) và python có SQLAlchemy trên PATH cho phép kiểm 43/45. Nguyên nhân gốc đã sửa, đều là flow/harness lạc hậu so với main, không phải app hỏng:
+
+| Flow | Nguyên nhân | Sửa |
+|---|---|---|
+| 33, 42 | Kệ «Những ngày muốn giữ» (0ec19fa9) đẩy tường bài xuống dưới nếp gấp; «Đăng bài mới» mở composer Cộng đồng chế độ tường | Cuộn tới/lui; 33 lái composer mới. Phép kiểm máy chủ giữ nghĩa: bài friends/only_me vẫn vào `posts` đúng audience |
+| 30 | Khay lời nhờ giữ lựa chọn «chỉ gửi lời nhờ» từ /plan sang /chia-bill | Chỉ chạm khi nút còn hiện, rồi khẳng định không tin nào đi kèm |
+| 44 | Câu Giao diện đổi từ c36b114b | Theo câu hiện hành |
+| 47 | `"\."` trong YAML nháy kép — flow không parse được ngay trên main; sheet «Một đôi» tự đóng khi đồng ý | Nháy đơn; chờ tiêu đề «Một đôi · …» |
+| 45 (harness) | dd75752b: người tắt «Tìm theo số» chỉ nhận lời mời kết bạn từ người chung nhóm | Dựng nhóm trước rồi mới kết bạn (đo API: 404 trước nhóm, 201 sau) |
+| 32 | Chạm tab khi pop cuối còn chạy, màn Cá nhân về đầu trang (đỏ 1/3 lượt, cũng là chỗ lượt broad bàn giao đỏ) | Chờ hoạt ảnh xong và màn Cá nhân hiện rồi mới cuộn |
+| 40, `_30-*` | Assertion phủ định «Rủ Đi AI chưa nối được mô hình…» vô nghĩa từ 86725ae2; `chuoi-maestro-dong.json` che 5 chuỗi cũ | Theo câu hiện hành; gạch 5 chuỗi. Nhánh không-khoá `_30-ai-khong-khoa` **chưa chạy native** (runtime có khoá) |
+
+34, 37, 43, 45, 48 từng đỏ chỉ dây chuyền (cooldown OTP, người lái lệch sau một flow đỏ).
+
+**Review diff:** `KhongGianGiay` — cặp chưa bật «Một đôi» mở từ «Rủ X tới đây» không còn nuốt địa điểm im lặng hay mở «Đề nghị sửa»; tờ còn đang mở giữ nút trả lời; tờ cũ không ngày có tiêu đề. Test Go gác «hai-nguoi» cũ đọc thành «hoi» (đột biến bỏ phép chuẩn hoá → đỏ).
+
+**Chuỗi diary trên release (emulator-5574, không Metro):** seed mới, đăng nhập OTP, `_diary` (công khai: người đọc độc lập 200/200 tài liệu + byte bìa), `_diary-moment` (riêng tư), `_diary-edit` (revision 2→3, đổi bìa, đảo trang, về riêng tư, người ngoài 404/404) xanh trên APK cuối. Privacy identity «Chỉ mình tôi» xanh, canary «Công khai» đỏ đúng assertion audience, link lạnh xanh — trên release `97caf844`, khác APK cuối đúng ở handler xoá.
+
+**Lỗi thật tìm được:** xoá sổ mở từ link (không có màn phía sau) gọi `router.back()` không làm gì — người dùng kẹt trên cuốn sổ đã xoá. Đỏ đúng bước trên release `97caf844`; sửa về tab Cá nhân khi không lùi được; flow mới `_diary-delete.yaml` (mở lạnh) xanh trên APK cuối, chủ sổ GET 404, tường không còn cuốn đó.
+
+**AI diary (mở):** 6 lần gọi Gemini trong lượt này, 1 thành công, 5 bị bộ chấm grounding của brain trả 422 (`ungrounded_diary_result`, hai lượt viết/chấm). Mỗi lần app hiện «Mình thử lại nhé», bản đã lưu giữ nguyên revision. Cơ chế này có từ main, không nằm trong diff; cần đánh giá prompt/model riêng, không sửa ở đây. Chỉ số trên fixture tổng hợp «thẻ màu», không suy cho nội dung thật.
+
+**Motion APK cuối:** cuộn cuốn sổ 12 lần: 566 frame, 38 janky (6,71%), p50 16 ms, p95 34 ms, p99 42 ms, 2 missed vsync. Emulator SwiftShader, không chứng nhận 60 fps.
+
+**Chưa làm:** picker ảnh Android trên APK cuối (lượt bàn giao đã qua), ma trận ảnh Tạo mới (chưa nhóm, dark, font 2), iOS, máy thật, TalkBack.
+
 
 ## Phạm vi và nền tích hợp
 

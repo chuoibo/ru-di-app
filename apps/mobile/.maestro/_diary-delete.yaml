@@ -1,0 +1,30 @@
+# Delete a book from a cold link: nothing sits behind the reader, so after the
+# confirm the app must leave the deleted book (it used to stay on it). The
+# harness then asks the API: the owner's GET is 404 and the wall list lacks it.
+appId: com.lakiet.rudi
+---
+- stopApp
+- openLink: "rudi://diaries/${DIARY_ID}"
+- extendedWaitUntil:
+    visible:
+      id: "diary-reader-screen"
+    timeout: 60000
+- scrollUntilVisible:
+    element:
+      text: "Xóa cuốn sổ"
+    direction: DOWN
+    timeout: 60000
+- tapOn: "Xóa cuốn sổ"
+- assertVisible: "Bỏ cuốn sổ này khỏi tường?"
+- tapOn: "Giữ sổ lại"
+- assertNotVisible: "Bỏ cuốn sổ này khỏi tường?"
+- tapOn: "Xóa cuốn sổ"
+- assertVisible: "Bỏ cuốn sổ này khỏi tường?"
+- tapOn: "Xóa cuốn sổ"
+- extendedWaitUntil:
+    notVisible:
+      id: "diary-reader-screen"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "Những ngày muốn giữ"
+    timeout: 30000

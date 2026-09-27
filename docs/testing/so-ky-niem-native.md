@@ -1,6 +1,6 @@
 # Sổ kỷ niệm — triển khai và kiểm chứng native
 
-> Trạng thái mới nhất: [bàn giao PR nháp 28/09/2026](ban-giao-so-ky-niem-2026-09-28.md). Chưa đủ điều kiện merge; phân biệt SHA đã test và sửa cuối chưa chạy hết gate.
+> Trạng thái mới nhất: [bàn giao 28/09/2026, mục «Lượt tiếp nối»](ban-giao-so-ky-niem-2026-09-28.md): bảng broad OTP+AI xanh 26/26, chuỗi diary release, một lỗi xoá-từ-link đã sửa. Số đo cổng đầy đủ nằm ở commit gộp vào main.
 
 ## Phạm vi
 

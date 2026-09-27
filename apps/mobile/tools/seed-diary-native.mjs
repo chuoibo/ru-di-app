@@ -1,4 +1,5 @@
 /** Synthetic local-only fixture for the native diary flows. Never logs tokens. */
+import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { resolve, relative } from "node:path";
@@ -8,7 +9,13 @@ const base = process.env.DIARY_TEST_API ?? "http://127.0.0.1:8199";
 if (!["localhost", "127.0.0.1"].includes(new URL(base).hostname)) throw new Error("Local test API required");
 const output = resolve(process.env.DIARY_TEST_OUTPUT ?? "/tmp/rudi-diary-native-v3.json");
 const repo = resolve(import.meta.dirname, "../../..");
-if (!relative(repo, output).startsWith("..")) throw new Error("Fixture credentials must stay outside the repo");
+// Every worktree of this clone, not just this one: a fixture dropped into a
+// sibling worktree is one `git add -A` away from being committed there.
+const worktrees = execFileSync("git", ["-C", repo, "worktree", "list", "--porcelain"], { encoding: "utf8" })
+  .split("\n").filter((line) => line.startsWith("worktree ")).map((line) => resolve(line.slice(9)));
+for (const tree of [repo, ...worktrees]) {
+  if (!relative(tree, output).startsWith("..")) throw new Error("Fixture credentials must stay outside every worktree");
+}
 let session;
 async function call(path, body, form = false) {
   const r = await fetch(base + path, {
