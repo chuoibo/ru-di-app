@@ -1764,7 +1764,7 @@ plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đườn
   toàn cầu trên chính màn ấy (tim, chuông, back, đóng, gửi).
 
 ### Trả lời của Rủ Đi AI trong luồng (`chat/TraLoiAi.tsx`, `ChipBoiCanh.tsx`)
-ADR-0039 (đề xuất, chờ Lead ký), lát 7 của kế hoạch AI v2. Bản này là **lõi
+ADR-0046 (đề xuất, chờ Lead ký), lát 7 của kế hoạch AI v2. Bản này là **lõi
 dùng lại thành phần sẵn có**; hình hoàn thiện (hàng «đang đọc» có shimmer,
 chữ chạy) là lát 12, làm ở nơi có `/impeccable`.
 - **Tin `@Rủ Đi` là tin thường**: bong bóng của người gửi như mọi tin. AI

@@ -41,7 +41,7 @@ import (
 // chat v2 and the engine's metrics. Alembic's triggers are not the Go
 // binary's and are not read.
 //
-// job_outbox (internal/jobs, ADR-0038 proposed): the queue's outbox. A row is
+// job_outbox (internal/jobs, ADR-0045 proposed): the queue's outbox. A row is
 // (queue, the job's id, its enqueue number, due, expires, published): no
 // payload column, no person column, no text a CHECK does not close
 // (TestJobOutboxHoldsNoFreeText). Only an id ever reaches the broker. And it

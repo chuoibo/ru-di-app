@@ -20,7 +20,7 @@ import (
 )
 
 // Replying to the group AI's answer is how a person asks a follow-up
-// (ADR-0039 §2.5, proposed): a Go-only exception placed before the oracle's
+// (ADR-0046 §2.5, proposed): a Go-only exception placed before the oracle's
 // CheckReplyTarget. Every other card -- a poll, an older AI card, a card that
 // only claims to be an answer -- still meets the oracle's 422.
 func TestTraLoiVaoCauTraLoiCuaAi(t *testing.T) {

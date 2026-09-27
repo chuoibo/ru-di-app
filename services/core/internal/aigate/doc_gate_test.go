@@ -437,7 +437,7 @@ var nepCongCuDoc = map[string]string{
 // nepWriteOnly are the tables Nếp's path may write and never read, each named
 // here with why it cannot carry context.
 //
-// ai_turn_metrics (aiharness/metrics, ADR-0037 §2.8): one row per turn the Go
+// ai_turn_metrics (aiharness/metrics, ADR-0044 §2.8): one row per turn the Go
 // engine ran, written after the job ended. It is not context: the path only
 // INSERTs into it, so nothing in it can reach a model; and it cannot hold
 // words, so nothing of a question or an answer can be kept there either --
@@ -542,7 +542,7 @@ func TestGroupEngineNeverReadsMessageTextAcrossPackages(t *testing.T) {
 		t.Fatalf("only %d roots in chatassist; the load is incomplete", len(roots))
 	}
 	c := g.reach(roots...)
-	// The in-thread answer (ADR-0039) added two reads of `messages`: the
+	// The in-thread answer (ADR-0046) added two reads of `messages`: the
 	// trigger check and publish's lock on the trigger. Both must be inside the
 	// walk, or they are reads no gate looks at.
 	for _, must := range []string{pkgChat + ".kiemTrigger", pkgChat + ".giuTrigger"} {

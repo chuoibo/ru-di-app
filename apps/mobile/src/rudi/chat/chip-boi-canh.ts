@@ -1,6 +1,6 @@
 /**
  * The words of the chip above the send button while a message asks Rủ Đi AI
- * (ADR-0039 §2.3, proposed; keeps ADR-0036 §2.5).
+ * (ADR-0046 §2.3, proposed; keeps ADR-0036 §2.5).
  *
  * The chip replaces the «Mình đang thấy» block of the old AI tray and keeps
  * its promise: it says how many messages go along, «Xem» lists exactly those,

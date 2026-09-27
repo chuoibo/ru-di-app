@@ -482,7 +482,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		Command   string  `json:"command"`
 		Prompt    string  `json:"prompt"`
 		BoiCanh   *bundle `json:"boi_canh"`
-		// The `@Rủ Đi` message this answers (ADR-0039). Optional, so an app
+		// The `@Rủ Đi` message this answers (ADR-0046). Optional, so an app
 		// from before it keeps working. There is no `lane` field on purpose:
 		// the lane is the server's finding, and a client sending one is 400.
 		TriggerMessageID *string `json:"trigger_message_id"`

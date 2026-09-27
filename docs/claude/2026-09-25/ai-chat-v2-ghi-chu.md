@@ -7,7 +7,7 @@ phải lượt thí nghiệm). Verdict: không có reviewer người; thiết k�
 Ghi chú này ghi lại **cái người dùng yêu cầu**, **cái đã chốt**, và **cái không làm kèm lý do**.
 Thiết kế chi tiết từng mảng nằm ở `docs/claude/2026-09-25/thiet-ke-ai/`; hợp đồng chung giữa
 các mảng ở `docs/architecture/03-ai-engine-hop-dong.md`; đề xuất ADR ở
-`docs/decisions/proposals/ADR-0037…0042`.
+`docs/decisions/` ADR-0041, ADR-0042, ADR-0044…0047 (lúc viết là đề xuất 0037…0042 trong `proposals/`; chủ sản phẩm chốt và đổi số ngày 2026-09-27).
 
 ## 1. Hiện trạng đã đọc lại từ code (trước khi đổi)
 
@@ -107,7 +107,7 @@ các mảng ở `docs/architecture/03-ai-engine-hop-dong.md`; đề xuất ADR �
 ## 6. Cái còn mở
 
 Xem mục «Việc cần người/Lead quyết» trong hợp đồng chung. Nổi bật:
-- Lead ký ADR-0037…0042 và phần sửa `DESIGN.md`.
+- Lead ký ADR-0037…0042 (nay là ADR-0041, ADR-0042, ADR-0044…0047, chủ sản phẩm chốt 2026-09-27) và phần sửa `DESIGN.md`.
 - Ngân sách lời gọi model thật cho từng lượt đo.
 - Host production cho RabbitMQ và Redis; FCM credentials cho push.
 - Skill `/impeccable` không có trong session cloud này, nên các lát UI chạy ở nơi có skill.

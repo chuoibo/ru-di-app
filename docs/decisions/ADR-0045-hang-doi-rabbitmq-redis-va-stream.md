@@ -1,8 +1,11 @@
-# ADR-0038 — Hàng đợi Go trên RabbitMQ, chữ chạy qua Redis Streams; Postgres vẫn là sự thật
+# ADR-0045 — Hàng đợi Go trên RabbitMQ, chữ chạy qua Redis Streams; Postgres vẫn là sự thật
 
 - Ngày: 2026-09-25.
-- Trạng thái: **ĐỀ XUẤT — chờ Lead ký; số hiệu cấp lúc vào main.** Nếu main đã có ADR-0038 thì
-  lấy số trống kế tiếp và sửa mọi chỗ dẫn chiếu trong cùng commit.
+- Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
+  định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
+- Số hiệu: lúc đề xuất là **ADR-0038** (`docs/decisions/proposals/`). `main` đã có ADR-0038 khác nên
+  văn bản nhận số trống kế tiếp khi chốt: 0037→0044, 0038→0045, 0039→0046, 0040→0047. Commit, nhánh
+  và tài liệu viết trước 2026-09-27 còn gọi nó là ADR-0038 (đề xuất).
 - Quyết định sản phẩm: người dùng chốt trong phiên 2026-09-25. Hàng đợi là Go + RabbitMQ + Redis,
   không Celery. Câu trả lời chữ stream qua SSE. Phòng lane cũ: cả phòng thấy chữ chạy. Phòng
   E2EE v2: chỉ người gọi thấy.
@@ -54,7 +57,7 @@ event đã ACK». Python chỉ làm AI (ADR-0031 §1, CLAUDE.md).
    `delta` nào rời worker (`first_token_at IS NULL`), `attempts<3`, còn trong 30 s đầu. Job đã phát
    nội dung mà worker chết thì kết thúc `worker_interrupted`, không chạy lại từ đầu. Mỗi job có
    **một** trần lời gọi model (`MaxModelCallsPerTurn`), đếm nguyên tử trên hàng job qua mọi lần
-   thử, kể cả retry do `aiharness/llm` tự làm (retry riêng của genai bị tắt, ADR-0037 §2.5).
+   thử, kể cả retry do `aiharness/llm` tự làm (retry riêng của genai bị tắt, ADR-0044 §2.5).
 6. **Redis có thêm một vai: stream chữ tạm thời (Redis Streams).** Chỉ worker ghi, qua gói
    `aistream`. Mọi key có TTL không quá cửa sổ chia sẻ. Redis không persistence (`--save ""`,
    không AOF). Mất Redis chỉ mất chữ đang chạy. Kết quả cuối vẫn commit trong Postgres, và client

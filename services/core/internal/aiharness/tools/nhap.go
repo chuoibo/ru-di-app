@@ -4,7 +4,7 @@ import "mobile/services/core/internal/huongdan"
 
 // BanNhap is what the draft tools put into the answer. Nothing here touches a
 // database: a places part, an itinerary or a poll becomes anything only when
-// a human taps it (ADR-0037 §4, «nháp cần người bấm»). Ids are the real
+// a human taps it (ADR-0044 §4, «nháp cần người bấm»). Ids are the real
 // evidence ids, resolved by Go from the aliases the model wrote.
 type BanNhap struct {
 	// Quan are the places of the places part, in the model's order.

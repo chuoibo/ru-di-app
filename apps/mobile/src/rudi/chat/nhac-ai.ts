@@ -1,5 +1,5 @@
 /**
- * Finding `@Rủ Đi` in what a person typed, and what goes with it (ADR-0039,
+ * Finding `@Rủ Đi` in what a person typed, and what goes with it (ADR-0046,
  * proposed).
  *
  * Since the group AI answers inside the thread, `@Rủ Đi …` is an ordinary

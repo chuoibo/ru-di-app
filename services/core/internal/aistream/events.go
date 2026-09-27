@@ -3,7 +3,7 @@
 // requester, Nếp) and per room (onlookers in the legacy lane), a per-process
 // hub woken by Redis pub/sub, and an SSE encoder for the HTTP side.
 //
-// Postgres stays the truth (ADR-0031 §2, amended by the ADR-0038 proposal): the
+// Postgres stays the truth (ADR-0031 §2, amended by the ADR-0045 proposal): the
 // published message or the sealed result is what counts, and a lost stream only
 // means a client falls back to polling. Stream entries expire with the sharing
 // window, are never written to disk (Redis runs without persistence) and are

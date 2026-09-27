@@ -285,7 +285,7 @@ for (const duong of DUONG) test(`${duong.ten}: không câu nào lộ chữ của
  * trả lời; app đọc mã ở `LOI_KET_QUA_NEP`. Mã đến từ ba chỗ, đều đọc từ mã Go:
  * (1) `nepThatBai(ctx, j, "mã")` trong `chatassist/nep.go`, (2) hai mã của lượt
  * quét trong `chatassist/worker.go`, (3) bảng câu cố định của engine Go
- * (`aiharness/cau/cau.go`, ADR-0037 §2.9), vì với `MOBILE_AI_ENGINE_NEP=go` mã
+ * (`aiharness/cau/cau.go`, ADR-0044 §2.9), vì với `MOBILE_AI_ENGINE_NEP=go` mã
  * của engine đi thẳng vào cột `code`. Câu của engine trong app phải đúng TỪNG
  * CHỮ câu trong cau.go: một nguồn sự thật, hai bản chép, và cổng này giữ chúng
  * không lệch.
@@ -385,7 +385,7 @@ test("Nếp: câu kết quả giọng người, không hai mã chung một câu"
 /* ------------------------------------------------ 4. lệnh AI là tin thường, rồi mới là lời gọi */
 
 test("tin @Rủ Đi đi lên như tin thường, rồi mới có lời gọi AI tường minh nêu đúng tin đó", async () => {
-  // ADR-0039 (proposed) replaced the rule this case used to hold. It said a
+  // ADR-0046 (proposed) replaced the rule this case used to hold. It said a
   // typed AI command must be caught before POST /messages, because the server
   // reads `/plan` and `@Rủ Đi` as ordinary text (ADR-0036 §2.1). The server
   // still does -- it never starts AI from text -- so the invariant moved, not

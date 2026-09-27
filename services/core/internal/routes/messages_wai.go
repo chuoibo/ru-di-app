@@ -541,7 +541,7 @@ func markContextRead() Route {
 // nothing else. `/plan`, `@Rủ Đi` and `/chia-bill` are ordinary text: AI runs
 // only when a person invokes it through the invocation queue (ADR-0036 §2.1),
 // so no branch here may reach a model, the message table or a limiter. Since
-// ADR-0039 the client posts the `@Rủ Đi` message first and then invokes the AI
+// ADR-0046 the client posts the `@Rủ Đi` message first and then invokes the AI
 // naming it as `trigger_message_id`; the text itself still starts nothing.
 func actOnMessageIntent(ctx context.Context, call *endpoint.Call, store repo.Repository, contextID string, posted *pyjson.OrderedMap, stored repo.Message) (*pyjson.OrderedMap, error) {
 	out := clonePosted(posted)
@@ -666,7 +666,7 @@ func messageInContext(ctx context.Context, store repo.Repository, contextID, mes
 }
 
 // laTraLoiAi reports whether a reply target is the group AI's answer in this
-// room: an `ai_card` with no author whose card is `tra_loi` (ADR-0039 §2.5,
+// room: an `ai_card` with no author whose card is `tra_loi` (ADR-0046 §2.5,
 // proposed). Replying to it is how a person asks a follow-up, so it is
 // quotable although ADR-0021 §2.2.2 makes every other card unquotable.
 //

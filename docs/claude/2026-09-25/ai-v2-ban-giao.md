@@ -25,7 +25,7 @@ review mỗi bộ. Kết quả đúng kiểu thất bại của heuristic: vá l
 
 - **Luật tiền của Nếp** — `services/core/internal/aiharness/guard/tien.go` (từ chối việc tiền với 0 lời gọi
   model). Đo trên corpus niêm phong v3 (260 câu tiền, 245 câu không phải tiền): recall 221/260 = 0,850, bắt
-  nhầm 5/245 ở `b624ae1`. Recall đã **đóng băng** trong đề xuất ADR-0037 §4: recall là việc của bộ phân loại
+  nhầm 5/245 ở `b624ae1`. Recall đã **đóng băng** trong đề xuất ADR-0044 §4: recall là việc của bộ phân loại
   LLM (Understand), luật chỉ còn là lưới.
 - **Bộ đọc dị ứng người hỏi** — `services/core/internal/domain/tuvung/nguoi_hoi.go` (đọc «mình dị ứng X» để làm
   bộ lọc cứng). Trên nhánh là bản vòng 3 (`8808fa4`): corpus niêm phong v3 đọc đủ 258/266 câu. Bản vòng 4
@@ -47,7 +47,7 @@ phong**, muốn đo mù phải viết bộ mới:
 ## 3. Đã xong và có review phản biện APPROVE
 
 - Lát 7 — Rủ Đi AI trả lời trong luồng (tin `@Rủ Đi` là tin thường, trả lời là reply, chip ngữ cảnh); không vào
-  `main` trước khi Lead ký ADR-0039; chưa chạy Maestro 49, chưa mở ảnh chụp.
+  `main` trước khi Lead ký ADR-0046; chưa chạy Maestro 49, chưa mở ảnh chụp.
 - Lát 10 — hàng đợi phía máy chủ.
 - Sổ tay app cho Nếp (`internal/huongdan`: `TheoMan`, `Tim`, `DuongToi`, `BanDung`) + cổng lệch mã.
 - Hạ tầng: Go 1.25.14, tách worker (`core work`), cổng đọc xuyên gói `aigate`, tầng test broker, eval T1 (stub).
@@ -55,4 +55,4 @@ phong**, muốn đo mù phải viết bộ mới:
 ## 4. Chưa chạy được ở máy này
 
 `make parity`, compose (`worker`, `rabbitmq`, `redis`), tầng Postgres đầy đủ bằng Docker, Maestro/ảnh chụp,
-mọi lời gọi model thật. ADR-0037…0042 vẫn là đề xuất chờ Lead ký.
+mọi lời gọi model thật. ADR-0037…0042 vẫn là đề xuất chờ Lead ký (cập nhật 2026-09-27: chủ sản phẩm chốt, nay là ADR-0041, ADR-0042, ADR-0044…0047).

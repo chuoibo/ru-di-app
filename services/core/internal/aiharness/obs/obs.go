@@ -1,6 +1,6 @@
 // Package obs is what the AI engine records about a turn: ids, closed enums,
 // counts and durations -- never a word the person or the model wrote, never a
-// tool argument, never a sensitive label tied to a person (ADR-0037 §2.8).
+// tool argument, never a sensitive label tied to a person (ADR-0044 §2.8).
 //
 // The shape enforces it. Every string-kinded field of TurnRecord is a named
 // type with a Valid method over a closed set, and obs_test.go fails on a field

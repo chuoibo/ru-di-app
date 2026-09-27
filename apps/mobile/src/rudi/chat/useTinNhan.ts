@@ -310,7 +310,7 @@ export function useTinNhan(contextId: string, personId: string) {
       // their original bytes and key in the visible queue, where retry lives.
       // The caller may mint the attempt itself when a second call has to be
       // keyed to this one: an `@Rủ Đi` message and the AI call that answers it
-      // share one key (ADR-0039), so retrying either never doubles the other.
+      // share one key (ADR-0046), so retrying either never doubles the other.
       const nhap: TinChoGui = {
         attempt, kind: "text", than: body, phuDe: null, traLoi,
         trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString(),

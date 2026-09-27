@@ -4,7 +4,7 @@
 - Commit gốc: `f251db7`.
 - protocol_version: không áp dụng (không phải lượt thí nghiệm).
 - Trạng thái: **thiết kế đã được người dùng duyệt, chờ Lead ký ADR**. ADR đi kèm:
-  `docs/decisions/proposals/ADR-0037-khung-agent-go-adk-gemini.md`.
+  `docs/decisions/ADR-0044-khung-agent-go-adk-gemini.md`.
 - Phạm vi: lõi engine `services/core/internal/aiharness` dùng chung cho «Rủ Đi AI» (nhóm) và Nếp.
   Hàng đợi, streaming, RAG, trí nhớ, UI nhóm và eval có bản thiết kế riêng trong cùng thư mục;
   ở đây chỉ nói chỗ harness chạm vào chúng.
@@ -408,7 +408,7 @@ tool đọc → 25006, outing khác context → rỗng, `SafeDeep` bỏ hàng.
 
 | Lát | Phần harness | Cổng riêng |
 |---|---|---|
-| 0 | Tài liệu này + đề xuất ADR-0037 | — |
+| 0 | Tài liệu này + đề xuất ADR-0044 | — |
 | 3 | Go 1.23.4 → 1.25: `go 1.25.0` và toolchain 1.25 patch mới nhất ở core và parity; `ARG GO_IMAGE` ghim digest; `COPY go.mod go.sum ./`; sửa cảnh báo vet mới (định dạng printf không hằng từ 1.24, analyzer `waitgroup`/`hostport` của 1.25); soát GODEBUG đổi theo dòng `go`; test ghim `norm.Version=="15.0.0"`; dòng «Go 1.23» của CLAUDE.md. **Chưa thêm ADK.** | `go vet`, `go test ./...`, `scripts/go_postgres_tier.sh`, `make parity`, `scripts/chat_e2e_go.sh`, build Docker, chạy lại cây sạch |
 | 4 | (hạ tầng) worker tách, pool riêng; harness dựa vào đó cho semaphore DB | — |
 | 5 | (cổng) cổng đọc xuyên gói — **điều kiện trước** lát 6 | — |
@@ -425,7 +425,7 @@ tool đọc → 25006, outing khác context → rỗng, `SafeDeep` bỏ hàng.
 ## 9. Chưa chốt
 
 1. **`draft_poll` lệch hợp đồng thẻ.** Registry có `draft_poll`, nhưng `phan` của `tra_loi` chỉ nhận
-   `text/places/itinerary/expense_draft`. Tới khi ADR-0039 thêm kind (hoặc bỏ tool), golden quyền **tắt**
+   `text/places/itinerary/expense_draft`. Tới khi ADR-0046 thêm kind (hoặc bỏ tool), golden quyền **tắt**
    `draft_poll` cho nhóm và ý định `poll_draft` rơi về `chat_answer`.
 2. Trần chữ nhóm: đề xuất 1500 rune; Lead chốt.
 3. Câu chữ và đường dây nóng của câu hỗ trợ tự hại; cách giao riêng cho người gọi trong nhóm.

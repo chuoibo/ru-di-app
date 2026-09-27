@@ -366,7 +366,7 @@
     "src/rudi/ai/tra-loi-song.ts",
     "src/rudi/chat/boi-canh-chat.ts",
     "src/rudi/chat/ai-invocations.ts",
-    // ADR-0039: whether a typed message also asks Rủ Đi AI (NFC/NFD, never an
+    // ADR-0046: whether a typed message also asks Rủ Đi AI (NFC/NFD, never an
     // email), and the chip whose count is read from the bundle that is sent.
     // Compiled because both rules are negative -- an email address is NOT a
     // mention, and the chip does NOT count the screen -- and only running the

@@ -34,7 +34,7 @@ import (
 //     router, run by a caller that builds the model (this package never
 //     builds a client). Spent means their words were read while rules were
 //     written against them: a regression measure, never a release gate --
-//     the gate is a fresh sealed half (ADR-0037 §4.1).
+//     the gate is a fresh sealed half (ADR-0044 §4.1).
 //
 // The scorers compare closed labels only. They read no message.
 

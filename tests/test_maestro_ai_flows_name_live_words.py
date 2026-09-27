@@ -1,6 +1,6 @@
 """The AI flows wait only for words the app still draws.
 
-Slice 7 (ADR-0039, proposed) deleted the AI tray's sentence «Chỉ lời nhờ trong
+Slice 7 (ADR-0046, proposed) deleted the AI tray's sentence «Chỉ lời nhờ trong
 ô này được gửi cho AI. Lịch sử chat không được chia sẻ.», and flow 30's AI=0
 branch went on waiting 60 s for it: a core chat flow turned red, and nothing
 short of an emulator run could say so. This reads the AI flows and the app's

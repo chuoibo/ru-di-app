@@ -1,7 +1,7 @@
 # Nhánh của flow 30 khi máy chủ KHÔNG có khoá mô hình (AI=0): lời gọi AI và
 # /chia-bill đều nhận câu nói thật, không im lặng vô danh.
 #
-# Từ lát 7 (ADR-0039, đề xuất) `@Rủ Đi` là một tin THƯỜNG, đi qua hàng gửi như
+# Từ lát 7 (ADR-0046, đề xuất) `@Rủ Đi` là một tin THƯỜNG, đi qua hàng gửi như
 # mọi tin; app chỉ gọi AI, nêu đúng tin đó, khi máy chủ nói lệnh sẵn sàng. Không
 # có khoá thì chip ngay trên nút gửi nói thật TRƯỚC khi gửi, tin vẫn vào luồng,
 # và không có lời gọi nào — nên cũng không có hàng «Rủ Đi AI chưa nhận lời nhờ».

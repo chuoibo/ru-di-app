@@ -1,16 +1,19 @@
 # ADR-0043 — Trí nhớ Nếp: Postgres là sổ, Milvus là chỉ mục dẫn xuất, mem0 là thư viện trong sidecar suy luận Python
 
 - Ngày: 2026-09-27.
-- Trạng thái: **ĐỀ XUẤT — chờ Lead ký; số hiệu cấp lúc vào main.** Nếu main đã có ADR-0043 khác
-  thì văn bản này nhận số trống kế tiếp.
-- Thực hiện một phần ADR-0041 §2.5–§2.9 (trí nhớ «lặng lẽ nhưng có công bố»). Cùng đợt: ADR-0037
-  engine, ADR-0038 hàng đợi, ADR-0040 RAG.
+- Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
+  định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
+- Số hiệu: giữ nguyên số lúc đề xuất (không trùng số nào trên `main`); chuyển khỏi `proposals/`.
+- Thực hiện một phần ADR-0041 §2.5–§2.9 (trí nhớ «lặng lẽ nhưng có công bố»). Cùng đợt: ADR-0044
+  engine, ADR-0045 hàng đợi, ADR-0047 RAG.
 - Nguồn đã đọc: `scratchpad/research/mem0.md` và `stm-personalization.md` (phần **Kiểm chứng** thắng
   phần thân khi hai bên khác nhau), `research/milvus.md`, thiết kế 05 §6, hợp đồng sidecar trong
   `services/ai-infer` (commit `90a9f7e`); §2.6 thêm `research/qwen-reranker.md` (cùng phần
   Kiểm chứng) và quyết định của chủ sản phẩm ngày 2026-09-27 về reranker.
 - **Có lệch khỏi ADR-0031**. Mục 4 nêu tên từng chỗ lệch; ADR này chỉ có hiệu lực khi Lead ký chấp
   nhận các chỗ lệch đó.
+  Ngày 2026-09-27 chủ sản phẩm chốt văn bản này cùng các chỗ lệch ở mục 4 (mục 7). Đó là quyết định
+  của chủ sản phẩm, không phải chữ ký Lead.
 
 ## 1. Bối cảnh
 
@@ -251,3 +254,15 @@ Số đo nằm trong commit message của lát này. Tóm tắt:
 
 Chưa có: người dùng thật; model trích thật trên tiếng Việt (chưa có bộ eval trí nhớ); đo trên bản
 triển khai.
+
+## 7. Quyết định của chủ sản phẩm ngày 2026-09-27
+
+- **Chấp nhận văn bản**, gồm các chỗ lệch khỏi ADR-0031 ở mục 4. Các điểm ở mục 5 vẫn là quyết định
+  còn mở; văn bản này không chốt thay chúng.
+- **Chấp nhận luật allowlist `aggregate-base64-fragments` cho `services/core/go.sum`**, trong mục đã
+  có của `.repo-guard-allowlist.json` (cùng `long-number`, ghim theo `sha256` của file).
+  - Lý do: cây phụ thuộc của Milvus client đưa vào `go.sum` nhiều dòng băm `h1:` (base64). Dòng băm do
+    toolchain Go sinh, không viết lại được, và không mang dữ liệu người dùng.
+  - Phạm vi: đúng một file, đúng digest đang ghim. Đổi một byte của `go.sum` (thêm hay nâng phụ thuộc)
+    thì digest lệch và `repo_guard` đỏ: phải xem lại nội dung rồi ghim lại, như mọi mục allowlist khác.
+    Luật này **không** mở cho file `go.sum` nào khác, và không mở theo tên file.

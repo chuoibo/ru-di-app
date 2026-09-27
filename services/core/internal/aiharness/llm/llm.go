@@ -1,11 +1,11 @@
 // Package llm is the AI engine's only door to a model: the Gemini model built
 // from Go (ADK's gemini constructor over google.golang.org/genai), a scripted
 // stub for every test, and the per-turn counter that holds a turn to
-// MaxModelCallsPerTurn, retries included (ADR-0037 §2.5).
+// MaxModelCallsPerTurn, retries included (ADR-0044 §2.5).
 //
 // Nothing else in the engine builds a model client. Under `go test` a Gemini
 // client can only be pointed at a loopback host, so no test, gate or parity
-// run can reach the real provider (ADR-0037 §2.10, ADR-0034 §2.6).
+// run can reach the real provider (ADR-0044 §2.10, ADR-0034 §2.6).
 package llm
 
 import (

@@ -1,5 +1,5 @@
 /**
- * The group AI's answer inside the thread (ADR-0039, proposed): a reply to
+ * The group AI's answer inside the thread (ADR-0046, proposed): a reply to
  * the `@Rủ Đi` message, drawn like a member's reply rather than a card on its
  * own.
  *

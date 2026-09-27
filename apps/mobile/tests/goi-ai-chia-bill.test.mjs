@@ -4,7 +4,7 @@
  * `command: "chia_bill"` cùng gói bối cảnh y như plan; máy chủ cũ không khai
  * chia_bill thì client coi là chưa sẵn sàng; hàng lời gọi hỏng nói đúng việc và
  * không mời thử lại khi thử lại cũng ra đúng câu trả lời cũ; chip xem trước
- * trên nút gửi (thay khối «Mình đang thấy» của khay, ADR-0039) giữ «Chỉ gửi
+ * trên nút gửi (thay khối «Mình đang thấy» của khay, ADR-0046) giữ «Chỉ gửi
  * lời nhờ» cho cả hai lệnh.
  *
  * KHÔNG đo: màn thật render ra sao (ảnh chụp là cổng riêng), hay mô hình đọc
@@ -111,7 +111,7 @@ test("mỗi câu kết quả là một mã worker Go thật sự ghi, và viết
 });
 
 test("chip xem trước giữ «Chỉ gửi lời nhờ» cho cả chia_bill, và lời gọi mang đúng lệnh đã gõ", () => {
-  // The preview is the chip above the send button now (ADR-0039 §2.3). It
+  // The preview is the chip above the send button now (ADR-0046 §2.3). It
   // takes no command at all: what protects the person cannot differ by
   // command, so it cannot be switched off by one.
   const chip = readFileSync(join(GOC_APP, "src", "rudi", "screens", "chat", "ChipBoiCanh.tsx"), "utf8");

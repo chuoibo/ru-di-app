@@ -1,17 +1,20 @@
-# ADR-0040 — RAG agentic trên retriever lai có kiểu, và vòng đời nạp dữ liệu
+# ADR-0047 — RAG agentic trên retriever lai có kiểu, và vòng đời nạp dữ liệu
 
 - Ngày: 2026-09-25.
-- Trạng thái: **ĐỀ XUẤT — chờ Lead ký; số hiệu cấp lúc vào main.** Nếu main đã có ADR-0040 khác thì văn bản
-  này nhận số trống kế tiếp, như ADR-0036 từng đổi số.
+- Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
+  định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
+- Số hiệu: lúc đề xuất là **ADR-0040** (`docs/decisions/proposals/`). `main` đã có ADR-0040 khác nên
+  văn bản nhận số trống kế tiếp khi chốt: 0037→0044, 0038→0045, 0039→0046, 0040→0047. Commit, nhánh
+  và tài liệu viết trước 2026-09-27 còn gọi nó là ADR-0040 (đề xuất).
 - Quyết định sản phẩm: người dùng chốt trong phiên lập kế hoạch 2026-09-25. Hai điều người dùng quan tâm
   nhất là cơ chế RAG agentic nào tốt nhất, và dữ liệu được nạp theo quy trình nào. Embedding bằng model
-  Gemini (không phải model chat) được chấp nhận. Kế hoạch đã duyệt; ADR này chờ chữ ký Lead.
+  Gemini (không phải model chat) được chấp nhận. Kế hoạch đã duyệt; chủ sản phẩm chốt ADR này ngày 2026-09-27.
 - Thiết kế chi tiết: `docs/claude/2026-09-25/thiet-ke-ai/04-rag-va-nap-du-lieu.md` (commit gốc `f251db7`).
-- Cùng đợt: ADR-0037 engine, ADR-0038 hàng đợi và stream, ADR-0039 nhóm trong luồng, ADR-0041 Nếp, ADR-0042
+- Cùng đợt: ADR-0044 engine, ADR-0045 hàng đợi và stream, ADR-0046 nhóm trong luồng, ADR-0041 Nếp, ADR-0042
   eval. Văn bản này chỉ quyết truy hồi và nạp dữ liệu.
 - Sửa và thay một số điều khoản cũ, liệt kê ở mục 5; **không sửa bản lịch sử** của ADR nào.
 - Không đổi bởi văn bản này: ba luật tiền; ADR-0017 §2.2 và §2.4 (chỉ script nhập gọi OSM/Wikimedia);
-  ADR-0029 §2.7 (brain nội bộ, không credential DB); ADR-0033 §2.2; ADR-0036 §2.5 (ADR-0039 sửa riêng cho
+  ADR-0029 §2.7 (brain nội bộ, không credential DB); ADR-0033 §2.2; ADR-0036 §2.5 (ADR-0046 sửa riêng cho
   chip xem trước).
 
 ## 1. Bối cảnh
@@ -28,7 +31,7 @@
 
 ## 2. Quyết định
 
-1. **Cơ chế là Adaptive-CRAG trên retriever lai có kiểu, toàn bộ trong Go.** Understand của engine (ADR-0037)
+1. **Cơ chế là Adaptive-CRAG trên retriever lai có kiểu, toàn bộ trong Go.** Understand của engine (ADR-0044)
    chọn nguồn; truy hồi lọc cứng rồi xếp hạng; chấm lại; sửa đúng một vòng; rồi trả lời, hỏi lại **một**
    câu, hoặc từ chối và nêu ràng buộc không thoả. RAG **không** là orchestrator: không router riêng, không
    vòng lặp riêng. Nó là ruột của `search_places`, `get_place`, `list_group_outings`, `search_app_manual`,
@@ -46,7 +49,7 @@
 5. **Trần.** `search_places` 3 s trọn gói; ≤2 lời gọi model bên trong, đếm vào `MaxModelCallsPerTurn` của
    `aiharness/llm`; SQL `statement_timeout` 800 ms trong tx ReadOnly; bằng chứng ≤12k ký tự.
 6. **Kiểm câu trả lời không đi đường riêng.** Luật cục bộ (giá/giờ gần `[[p:ID]]` khớp ledger, «nhãn nút» có
-   thật trong sổ tay) chạy trong output guard cửa sổ 48 rune của ADR-0037, nơi duy nhất sinh `delta`. Luật cấp
+   thật trong sổ tay) chạy trong output guard cửa sổ 48 rune của ADR-0044, nơi duy nhất sinh `delta`. Luật cấp
    thẻ chạy trong `GroundReply` trên đúng ledger của lượt. Không «stream tạm rồi thay», không rút lại, không
    sinh lại sau delta đầu.
 7. **Schema do Go sở hữu.** Gói `internal/rag` là writer duy nhất của `rag_*`, có bảng version riêng
@@ -115,11 +118,11 @@
 | ADR-0036 §4, dòng «Không cho Nếp đọc hội thoại nhóm, gu, hay lịch sử» | Không nói gì về dữ liệu công khai | Giữ nguyên ba thứ bị cấm. Dữ liệu công khai do máy chủ sở hữu (§2.12) không thuộc ba thứ đó; quyền đọc cụ thể của Nếp do ADR-0041 bật |
 | ADR-0017 §2.3, «không nhờ AI điền» | Cột không biết để trống | Giữ nguyên cho mọi cột `places`. Làm giàu ở bảng riêng, chỉ là tín hiệu truy hồi (§2.11) |
 | ADR-0017 §2.2, ODbL | Hàng OSM ghi nguồn | Áp thêm cho làm giàu phái sinh từ hàng OSM: giữ `license`, không vào Git |
-| ADR-0029 §2.7, danh sách việc của brain | Brain làm bước model cho route AI | Thêm action `place-enrich` (extraction lúc nạp), đúng ràng buộc của §2.7. Khớp ADR-0037 §2.13 |
+| ADR-0029 §2.7, danh sách việc của brain | Brain làm bước model cho route AI | Thêm action `place-enrich` (extraction lúc nạp), đúng ràng buộc của §2.7. Khớp ADR-0044 §2.13 |
 | Hành vi `POST /places/search` | Gửi cả danh mục (khớp Python) | Shortlist ≤30 hàng; ngoại lệ Go-only có tên (§2.14) |
 
 Không đổi bởi văn bản này: ADR-0033 §2.5 và §4, ADR-0036 §2.7 (thuộc ADR-0041); hình dạng thẻ `tra_loi`
-(ADR-0039); grounding của `POST /messages` (`GroundCard`, oracle).
+(ADR-0046); grounding của `POST /messages` (`GroundCard`, oracle).
 
 ## 6. Cổng nghiệm thu
 

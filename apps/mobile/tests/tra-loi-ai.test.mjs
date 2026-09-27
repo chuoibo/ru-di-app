@@ -1,4 +1,4 @@
-/* Câu trả lời của Rủ Đi AI trong luồng (ADR-0039, đề xuất).
+/* Câu trả lời của Rủ Đi AI trong luồng (ADR-0046, đề xuất).
  *
  * Đo: `docTheAi` đọc thẻ `tra_loi` mà không tin hình của nó — mỗi phần qua
  * đúng hàm đọc thẻ, phần lạ bị bỏ, thẻ không ký «rudi-ai» hay không còn phần

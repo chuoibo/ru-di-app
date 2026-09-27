@@ -1,5 +1,5 @@
 // Package aiharness is the AI engine: one seam, Engine.Run, that the worker
-// and the eval both call (ADR-0037 §2.3). Nếp's turn goes through fixed
+// and the eval both call (ADR-0044 §2.3). Nếp's turn goes through fixed
 // stages (dinhtuyen.go), and no stage reads MEANING from the person's words
 // by a word list or a pattern (the owner's rule, 2026-09-25): the MODEL
 // decides, Go checks structure, budgets, permissions and set membership.

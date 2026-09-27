@@ -1,7 +1,7 @@
 // Package agent builds one ADK llmagent and one runner per turn, runs it, and
 // throws both away. The ADK session is an in-memory service that lives for
 // that one turn: earlier panel turns are laid into it as user and model
-// events, and nothing survives the turn (ADR-0037 §2.7). ADK's memory service
+// events, and nothing survives the turn (ADR-0044 §2.7). ADK's memory service
 // is never used.
 //
 // Budget callbacks run on every model step, tools or not: a step counter that

@@ -1,6 +1,6 @@
 // Package cau holds the fixed Vietnamese sentences of the AI engine: why a
 // turn ended without an answer, and what a turn is doing while it runs. A
-// refusal is a sentence written here, never words a model wrote (ADR-0037
+// refusal is a sentence written here, never words a model wrote (ADR-0044
 // §2.9).
 //
 // apps/mobile/tests/cau-chu-goi-ai.test.mjs reads the table below: every code

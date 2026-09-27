@@ -1,4 +1,4 @@
-// Package tools is the engine's one tool registry (ADR-0037 §4: no second
+// Package tools is the engine's one tool registry (ADR-0044 §4: no second
 // registry): the closed list of tool names, what each is for, its side-effect
 // class and scope, its argument schema, the per-bot permission table loaded
 // from testdata/quyen.golden.json, and the per-turn ledger (SoCai) that

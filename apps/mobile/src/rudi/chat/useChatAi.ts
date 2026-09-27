@@ -6,7 +6,7 @@ import { docAiInvocations, docChatCapabilities, goiAi, gopAiInvocations, thuLaiA
 import type { BoiCanh } from "../ai/boi-canh";
 
 /**
- * The second half of an `@Rủ Đi` send (ADR-0039, proposed): the message is
+ * The second half of an `@Rủ Đi` send (ADR-0046, proposed): the message is
  * already stored, and this is the explicit call that asks the AI to answer it.
  *
  * Held in memory only, like the send queue it follows. The key is the

@@ -4,7 +4,7 @@
 - Commit gốc: `f251db7`.
 - protocol_version: không áp dụng (không phải lượt thí nghiệm).
 - Trạng thái: **thiết kế đã được người dùng duyệt, chờ Lead ký ADR**. ADR đi kèm:
-  `docs/decisions/proposals/ADR-0040-rag-agentic-va-vong-doi-nap-du-lieu.md`.
+  `docs/decisions/ADR-0047-rag-agentic-va-vong-doi-nap-du-lieu.md`.
 - Phạm vi: truy hồi cho hai bot (catalogue quán, sổ tay app, lịch sử chuyến của nhóm, móc xếp hạng cho
   trí nhớ Nếp) và vòng đời đưa dữ liệu vào chỉ mục. Router, vòng lặp agent, output guard, hàng đợi,
   stream và phía ghi của trí nhớ thuộc các bản khác trong cùng thư mục; ở đây chỉ nói chỗ RAG chạm vào.
@@ -311,7 +311,7 @@ một lần. Bỏ: phòng lane cũ thấy mọi byte, và không có «rút lạ
 | Hạng mục | Trần |
 |---|---|
 | Lời gọi model trong `search_places` | ≤2 (chấm lại vòng 1 và 2), đếm vào `MaxModelCallsPerTurn` của `aiharness/llm` (theo hợp đồng chung) [P1-6][P2-10] |
-| Lời gọi embedding mỗi lượt (lát 16) | ≤2, bộ đếm riêng `MaxEmbedCallsPerTurn` (đề xuất §10 câu 1, ADR-0040 §3), không ăn vào trần sinh chữ `MaxModelCallsPerTurn`; cùng limiter theo lời gọi |
+| Lời gọi embedding mỗi lượt (lát 16) | ≤2, bộ đếm riêng `MaxEmbedCallsPerTurn` (đề xuất §10 câu 1, ADR-0047 §3), không ăn vào trần sinh chữ `MaxModelCallsPerTurn`; cùng limiter theo lời gọi |
 | `search_places` trọn gói | 3 s kể cả chấm lại [P2-4]; SQL `SET LOCAL statement_timeout='800ms'`, tx ReadOnly |
 | Bằng chứng | ≤8 quán × 600 ký tự, ≤5 đoạn sổ tay, ≤5 kèo; tổng ≤12k ký tự |
 | Kết nối DB | theo semaphore DB toàn tiến trình của worker (bản 01, lát 4) [P1-17][P2-11] |
@@ -328,7 +328,7 @@ một lần. Bỏ: phòng lane cũ thấy mọi byte, và không có «rút lạ
 | Không quán nào qua lọc cứng | `khong_thoa` kèm tên ràng buộc; không bao giờ nới ràng buộc cứng |
 
 **5.10 Quan sát.** Chỉ id, enum, số đếm, thời gian, điểm (`rag_query_log`, `slog`). Không chữ truy vấn, không
-chữ bằng chứng (ADR-0037 §2.8, bản đề xuất).
+chữ bằng chứng (ADR-0044 §2.8, bản đề xuất).
 
 ## 6. Vòng đời nạp dữ liệu
 
@@ -380,7 +380,7 @@ Làm giàu từ hàng OSM là cơ sở dữ liệu phái sinh: giữ `license`, 
   khi suy ra được), qua `Filter` rồi `SafeDeep`: dùng `rag.Retrieve` khi có version `active`, không thì chấm từ
   vựng bằng `rag/xephang` trên hàng `places` sống; không bao giờ quay về gửi cả danh mục. Đây là **lệch Go-only trên payload brain** của một route
   `LIVE-GO`: parity chạy không khoá nên cả hai phía rơi vào nhánh `unavailable` và vẫn giống từng byte, tức parity
-  **không thấy** thay đổi này. Bằng chứng là test Go trên payload (canary 3). ADR-0040 nêu tên ngoại lệ này.
+  **không thấy** thay đổi này. Bằng chứng là test Go trên payload (canary 3). ADR-0047 nêu tên ngoại lệ này.
 
 ## 8. Cổng, test, canary, đột biến
 
@@ -441,7 +441,7 @@ một fixture sinh ra 300 quán trên 3 điểm đến. Khoảng 120 truy vấn 
 
 | Lát | Phần RAG | Cổng riêng |
 |---|---|---|
-| 0 | Tài liệu này + đề xuất ADR-0040 | — |
+| 0 | Tài liệu này + đề xuất ADR-0047 | — |
 | 8 | `rag` từ vựng: schema, build/eval/promote/rollback/tombstone, chunker quán; `thoigian`, `giomo`, `tuvung`; `Fold`, `SafeDeep`; `ResolveDestination`; shortlist `/places/search` | tập vàng tất định trong CI; canary 1, 3, 4 |
 | 9 | `search_places` = `rag.Retrieve` (3 s), chấm lại, một vòng sửa, hỏi lại/từ chối, luật cục bộ vào output guard, `list_group_outings`; engine Go thôi dùng `ModelPlaceRows` | canary 2, 5; T3 ≥14/16 |
 | 10 | (hạ tầng) xoá 30 ngày `rag_query_log` đăng ký vào `jobs.DinhKy` | — |

@@ -1,16 +1,19 @@
-# ADR-0037 — Khung agent Go: ADK-Go, Gemini gọi từ Go, một pipeline có hậu kiểm
+# ADR-0044 — Khung agent Go: ADK-Go, Gemini gọi từ Go, một pipeline có hậu kiểm
 
 - Ngày: 2026-09-25.
-- Trạng thái: **ĐỀ XUẤT — chờ Lead ký; số hiệu cấp lúc vào main.** Nếu main đã có ADR-0037 khác thì
-  văn bản này nhận số trống kế tiếp, như ADR-0036 từng đổi số.
+- Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
+  định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
+- Số hiệu: lúc đề xuất là **ADR-0037** (`docs/decisions/proposals/`). `main` đã có ADR-0037 khác nên
+  văn bản nhận số trống kế tiếp khi chốt: 0037→0044, 0038→0045, 0039→0046, 0040→0047. Commit, nhánh
+  và tài liệu viết trước 2026-09-27 còn gọi nó là ADR-0037 (đề xuất).
 - Quyết định sản phẩm: người dùng chốt trong phiên lập kế hoạch 2026-09-25 (model, ADK-Go, Gemini từ
-  Go, Python chỉ còn eval/extraction/skill cũ). Kế hoạch đã duyệt; ADR này chờ chữ ký Lead.
+  Go, Python chỉ còn eval/extraction/skill cũ). Kế hoạch đã duyệt; chủ sản phẩm chốt ADR này ngày 2026-09-27.
 - Thiết kế chi tiết: `docs/claude/2026-09-25/thiet-ke-ai/01-harness-agent.md` (commit gốc `f251db7`).
-- Cùng đợt: ADR-0038 hàng đợi + streaming, ADR-0039 nhóm trong luồng, ADR-0040 RAG + nạp dữ liệu,
+- Cùng đợt: ADR-0045 hàng đợi + streaming, ADR-0046 nhóm trong luồng, ADR-0047 RAG + nạp dữ liệu,
   ADR-0041 Nếp, ADR-0042 eval. Văn bản này chỉ quyết khung engine.
 - Sửa và thay một số điều khoản cũ, liệt kê ở mục 5; **không sửa bản lịch sử** của ADR nào.
 - Không đổi bởi văn bản này: ba luật tiền, ADR-0004, ADR-0033 §2.2 (Nếp lui ở màn tiền), ADR-0036 §2.2,
-  §2.4 và §2.9 (ADR-0036 §2.1, §2.5 do ADR-0039 sửa; §2.3 do ADR-0040 sửa).
+  §2.4 và §2.9 (ADR-0036 §2.1, §2.5 do ADR-0046 sửa; §2.3 do ADR-0047 sửa).
 
 ## 1. Bối cảnh
 
@@ -37,7 +40,7 @@ và ở `f251db7` mỗi job chỉ làm một việc: gửi một payload sang br
    `norm.Version == "15.0.0"`, vì so khớp Unicode với oracle Python 3.12 phụ thuộc vào nó.
 2. **ADK-Go (`google.golang.org/adk` v1.7.0) và genai (`google.golang.org/genai` v1.71.0).** Gemini
    được gọi **trực tiếp từ Go**. Mọi bước sinh chữ dùng một hằng model duy nhất, `gemini-3.5-flash-lite`.
-   Model embedding là việc của ADR-0040.
+   Model embedding là việc của ADR-0047.
 3. **Một engine, một seam.** Gói `internal/aiharness`, `Engine.Run(ctx, Turn, Sink)`. Worker và eval
    gọi đúng hàm này. Không bản thiết kế nào khác được có vòng lặp, router hay registry tool thứ hai.
    RAG là phần ruột của tool, không phải một orchestrator.
@@ -78,7 +81,7 @@ và ở `f251db7` mỗi job chỉ làm một việc: gửi một payload sang br
 12. **Chuyển dần sau cờ.** `MOBILE_AI_ENGINE_{NEP,GROUP}` mặc định `brain`, đọc một lần lúc khởi động.
     Action Python `companion-reply`/`nep-reply` giữ làm đường nền eval. Khi Go ≥ Python trên corpus, chúng
     bị xoá cùng mã Go gọi brain và hàng manifest trong **một** commit (mẫu ADR-0036 §3b), rồi bỏ cờ.
-13. **Python còn đúng ba việc AI:** eval, extraction lúc nạp dữ liệu (ADR-0040), và skill cũ (đọc hoá đơn,
+13. **Python còn đúng ba việc AI:** eval, extraction lúc nạp dữ liệu (ADR-0047), và skill cũ (đọc hoá đơn,
     ảnh chụp màn hình, vision). Không thêm action Python nào cho bot chat.
 
 ## 3. Hệ quả
@@ -188,8 +191,8 @@ mục 8). Luật này thay các chỗ sau của §4 ở trên; phần chữ cũ 
 
 Không đổi bởi văn bản này:
 - ADR-0034 §2.6: câu hỏi tuần của sổ đôi vẫn ghi đi brain. Chuyển nó sang Go cần quyết định riêng.
-- ADR-0036 §2.3: thuộc ADR-0040. ADR-0033 §2.5, §4, ADR-0036 §2.7 và §4 (vế Nếp): thuộc ADR-0041.
-  ADR-0036 §2.1, §2.5, §2.8 và §4 (vế nhóm): thuộc ADR-0039.
+- ADR-0036 §2.3: thuộc ADR-0047. ADR-0033 §2.5, §4, ADR-0036 §2.7 và §4 (vế Nếp): thuộc ADR-0041.
+  ADR-0036 §2.1, §2.5, §2.8 và §4 (vế nhóm): thuộc ADR-0046.
 
 ## 6. Cổng nghiệm thu của khung
 

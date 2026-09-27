@@ -89,7 +89,7 @@ import { KHONG_VIEN_WEB } from "../../ui/khong-vien-web";
  * The commands the composer suggests. Choosing one fills the composer and
  * sends nothing (chat-ui-contract.md): an AI request is an ordinary message
  * the person finishes writing, with the preview chip above the send button
- * (ADR-0039). Only `/vote` opens a form, because a poll is not a message.
+ * (ADR-0046). Only `/vote` opens a form, because a poll is not a message.
  */
 const LENH = [
   { nhan: "/plan", goiY: "/plan ", moTa: "Rủ Đi AI phác lịch trình" },
@@ -337,7 +337,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     return chat.tin.find(dangMo) ?? chat.tin.find(bat) ?? null;
   }, [chat.tin, changes.votes, nhanRieng]);
   const coChu = nhap.trim().length > 0;
-  // The message being typed also asks the AI (ADR-0039). Not in a pair: the
+  // The message being typed also asks the AI (ADR-0046). Not in a pair: the
   // AI engine serves groups only, and there it would say «chưa sẵn sàng».
   const nhacDangGo = nhanRieng ? null : timNhacAi(nhap);
   // What would go with it: nothing at all when this server takes no bundle.
@@ -405,7 +405,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     if (!body || guiRef.current) return false;
     if (body === "/vote") { setKhay("poll"); doiNhap(""); return false; }
     // An `@Rủ Đi`, `/plan` or `/chia-bill` message is an ordinary message
-    // (ADR-0039): it is sent exactly like any other, and only once the server
+    // (ADR-0046): it is sent exactly like any other, and only once the server
     // has stored it is the AI asked, naming it. The key is the send's own, so
     // retrying either half can never double the other; the bundle is frozen
     // here, at the press, before the question joins the list it reads.

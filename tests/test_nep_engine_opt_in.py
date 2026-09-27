@@ -1,6 +1,6 @@
 """Nếp's Go engine is opt-in, and so is the Gemini key on the public door.
 
-ADR-0037 (proposed) moves Nếp's model call from the Python brain into Go, in
+ADR-0044 (proposed) moves Nếp's model call from the Python brain into Go, in
 whichever process runs the AI worker -- by default `core serve`, the public
 front door. Slice 6 shipped that engine behind MOBILE_AI_ENGINE_NEP, and its
 review found two ways the switch could be thrown without anyone choosing to:
@@ -9,7 +9,7 @@ review found two ways the switch could be thrown without anyone choosing to:
      `core` the Gemini key on every stack, even with the flag at `brain`;
   2. nothing pinned that no committed configuration sets the flag to `go`.
 
-The flag must stay `brain` until eval T1 is green in CI (slice 6b), ADR-0037
+The flag must stay `brain` until eval T1 is green in CI (slice 6b), ADR-0044
 is signed and the key in core has had its security review (design 01 §9 q4).
 These cases hold that: the base stack pins `brain` and gives core no key; the
 one override file that opts in says so and needs the key explicitly; and no

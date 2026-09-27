@@ -8,7 +8,7 @@ import (
 )
 
 // The group AI's answer inside the thread: an `ai_card` of kind `tra_loi`,
-// published as a reply to the `@Rủ Đi` message that asked (ADR-0039, proposed;
+// published as a reply to the `@Rủ Đi` message that asked (ADR-0046, proposed;
 // contract docs/architecture/03-ai-engine-hop-dong.md §3).
 //
 // Go-only, on purpose. GroundCard is a port with a Python oracle, and parity

@@ -1,4 +1,4 @@
-/* Chip xem trước trên nút gửi (ADR-0039 §2.3, đề xuất; giữ ADR-0036 §2.5).
+/* Chip xem trước trên nút gửi (ADR-0046 §2.3, đề xuất; giữ ADR-0036 §2.5).
  *
  * Đo: số tin trên chip đọc từ CHÍNH gói sẽ gửi, không từ danh sách trên màn
  * (hai con số lệch nhau ngay khi gói bị cắt theo byte hay theo trần lượt);

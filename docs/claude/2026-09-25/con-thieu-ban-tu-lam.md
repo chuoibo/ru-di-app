@@ -51,10 +51,23 @@ Hai cờ engine vẫn mặc định `brain` (Python cũ): người dùng chưa t
   `DESIGN.md` và Lead ký), dòng trả lời đang chạy trong nhóm, chip.
 - Maestro flow 49/50, `make parity`, compose: cần Docker.
 
-### 2.4 Quyết định của Lead / chủ sản phẩm
-- Ký ADR-0037…0043 (đề xuất ở `docs/decisions/proposals/`).
-- Xác nhận luật allowlist `aggregate-base64-fragments` cho `services/core/go.sum` (cây phụ thuộc Milvus
-  client; dòng băm không viết lại được).
+### 2.4 Đã quyết — chủ sản phẩm chốt ngày 2026-09-27
+Các mục dưới đây đã rời danh sách «cần quyết». Đây là quyết định của chủ sản phẩm, không phải chữ ký Lead.
+- Bảy đề xuất ADR chấp nhận và chuyển khỏi `proposals/`. Bốn số trùng với `main` (đã có ADR-0037…0040)
+  được đổi: đề xuất 0037 (engine) → **ADR-0044**, 0038 (hàng đợi và
+  stream) → **ADR-0045**, 0039 (nhóm trong luồng) → **ADR-0046**, 0040 (RAG) → **ADR-0047**; ADR-0041,
+  ADR-0042, ADR-0043 giữ số.
+- Luồng AI trong chat là kiểu Meta AI trong Messenger: trong 1:1 hoặc nhóm, người gọi gắn `@Rủ Đi`, AI
+  đọc đoạn hội thoại người gọi kèm theo (chip «Kèm {n} tin gần đây · Xem · Chỉ gửi lời nhờ») và trả lời
+  trong luồng (ADR-0046 §8.1). 1:1 chưa làm — xem mục 3.
+- Ngoại lệ `chatassist` đọc chữ tin đã lưu cho `chia_bill` (chỉ phòng này, chỉ tin người gọi chia sẻ,
+  chỉ phòng legacy không E2EE): chấp nhận (ADR-0046 §8.3).
+- Luật allowlist `aggregate-base64-fragments` cho `services/core/go.sum`: chấp nhận (ADR-0043 §7).
+- Thứ tự merge: PR #654 vào `main` ngay; chat 1:1 đi PR mới. §7.1 của ADR-0046 thôi chặn merge;
+  Maestro 49 trên máy thật và ảnh chụp thành việc tiếp theo, vẫn bắt buộc trước khi dựa vào cờ ở
+  production (ADR-0046 §8.2).
+
+### 2.5 Quyết định của Lead / chủ sản phẩm còn mở
 - Mục tiêu «token đầu p50 ≤2,5 s» giờ tính cho chữ đầu **đã qua verifier** (gần cuối lượt): chấp nhận hay
   đổi thiết kế.
 - Milvus GC `dropTolerance` và bản backup/snapshot so với lời hứa «quên»; trần chữ nhóm 1500.
@@ -62,12 +75,17 @@ Hai cờ engine vẫn mặc định `brain` (Python cũ): người dùng chưa t
   HuggingFace trước.
 - Pháp lý cho trí nhớ cá nhân hoá (Luật BVDLCN 2025, Nghị định 356/2025); ADR-0041 còn trích Nghị định 13/2023.
 
-### 2.5 Dữ liệu đo
+### 2.6 Dữ liệu đo
 - Viết bộ niêm phong mới (≥220 câu/lớp) cho router: bộ tiền/dị ứng cũ đã lộ, chỉ còn dùng bắt hồi quy.
 - Bộ tiếng Việt cho truy hồi (có dấu, không dấu, teencode), cho trí nhớ, và ≥150 nhãn người để hiệu chỉnh
   judge. Mọi số golden hiện đo bằng embedding giả.
 
 ## 3. Còn mở phía code (tôi hoặc người làm tiếp)
+- **Việc kế tiếp: Rủ Đi AI trong chat 1:1** (ADR-0046 §8.1), PR mới sau khi PR #654 vào `main`. Hiện
+  `chatassist` từ chối ngữ cảnh kind `pair` bằng `409 group_plan_only` và client không gửi lời nhờ trong
+  cặp. Lát phải tự có bằng chứng riêng của cặp (sổ đôi ADR-0027, `chia_gu` chỉ theo ADR-0034).
+- Maestro 49 trên máy thật, flow 30/40 trên máy, ảnh chụp sáng/tối/Reduce Motion (ADR-0046 §8.2):
+  không chặn merge nữa, vẫn bắt buộc trước khi dựa vào cờ ở production.
 - Lát 12 (người khác trong phòng thấy chữ chạy qua frame WS) — đang làm.
 - Review phản biện lát 9, lát 11 vòng 2 và phần mobile — đang làm.
 - Client chưa gửi lệnh `hoi` cho nhóm; `set_reminder`; nhắc chủ động (lát 17); tín hiệu 👍/👎 (lát 18);

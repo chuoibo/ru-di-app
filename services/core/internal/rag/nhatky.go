@@ -10,7 +10,7 @@ import (
 )
 
 // NhatKyRetention is how long a rag_query_log row lives (design 04 §4,
-// ADR-0040 §3): thirty days, the same as the engine's metrics rows.
+// ADR-0047 §3): thirty days, the same as the engine's metrics rows.
 const NhatKyRetention = 30 * 24 * time.Hour
 
 // XoaNhatKy deletes query log rows past NhatKyRetention.

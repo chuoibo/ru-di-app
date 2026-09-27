@@ -3,7 +3,7 @@
 - Ngày: 2026-09-25. Commit gốc: `f251db7`. Nhánh: `claude/peaceful-hopper-32kwjs`.
 - protocol_version: không áp dụng (không phải lượt thí nghiệm). Verdict: không có reviewer người.
 - Trạng thái: **thiết kế đã được người dùng duyệt, chờ Lead ký ADR**. Đề xuất đi kèm:
-  `docs/decisions/proposals/ADR-0038-hang-doi-rabbitmq-redis-va-stream.md`.
+  `docs/decisions/ADR-0045-hang-doi-rabbitmq-redis-va-stream.md`.
 - Thắng khi lệch: `docs/architecture/03-ai-engine-hop-dong.md`. Tài liệu này chép từ bản thiết kế
   `infra` và hai phản biện (tmp, sẽ mất). Lát 4 đã vào main (`d596621`: `core work`, heartbeat,
   `ClaimByID`, sweep riêng); hàng đợi, outbox, Redis và SSE chưa có code; mọi số dưới đây là mục
@@ -496,7 +496,7 @@ dòng, cắt giữa ký tự UTF-8, nối lại, 503 → polling) và flow Maest
 
 | Lát | Phần của mảng này |
 |---|---|
-| 0 | Tài liệu này + đề xuất ADR-0038 |
+| 0 | Tài liệu này + đề xuất ADR-0045 |
 | 4 | `claimNext`/`claimByID`/`process`, heartbeat 5 s, lease 30 s có điều kiện, `core work`, `MOBILE_INPROC_WORKER`, pool riêng + semaphore, sweep ở cả hai process. Tầng: postgres |
 | 5 | Cổng đọc xuyên gói khai `job_outbox` cho gốc Nếp và gốc nhóm |
 | 10 | Gói `jobs`, migration §3.1–3.2, relay, consumer, DLQ, `retryLater`, poller, registry định kỳ, limiter theo lời gọi, `model_calls`; compose `rabbitmq`, `worker`; tầng broker + job CI |

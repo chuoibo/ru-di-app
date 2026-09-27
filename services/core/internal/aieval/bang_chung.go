@@ -508,7 +508,7 @@ func bangDiemHieu(b *strings.Builder, m Manifest) {
 	w := func(f string, a ...any) { fmt.Fprintf(b, f, a...) }
 	h := *m.Hieu
 	w("## Router (--chi-buoc hieu)\n\n")
-	w("Bộ router đo **một** lời gọi router mỗi ca (không chạy phần còn lại của lượt). Bộ chuyển từ corpus đã lộ là số đo hồi quy, không phải cổng phát hành (ADR-0037 §4.1).\n\n")
+	w("Bộ router đo **một** lời gọi router mỗi ca (không chạy phần còn lại của lượt). Bộ chuyển từ corpus đã lộ là số đo hồi quy, không phải cổng phát hành (ADR-0044 §4.1).\n\n")
 	w("| ca chạy xong | đạt mọi nhãn | router không ra kết quả | lời gọi (tổng, max/ca) |\n|---|---|---|---|\n| %d | %d | %d | %d, %d |\n\n", h.SoCa, h.Dat, h.LoiHieu, h.TongGoi, h.MaxGoi)
 	ct := ChiSoTienCua(h)
 	w("Tiền (lớp bị từ chối = money_action hoặc split_draft; Nếp từ chối cả hai):\n\n")
@@ -649,7 +649,7 @@ func Trailer(goc, phatLai Manifest) (string, bool) {
 		w("Eval-Tien: recall %s tu-choi-nham %s\n", wilsonGon(ct.Recall), wilsonGon(ct.TuChoiSai))
 		w("Eval-Di-Ung: thieu %d thua %d an-kieng-sai %d\n", h.DiUngThieu, h.DiUngThua, h.AnKiengSai)
 		w("Eval-Chi-Phi: %s token vao=%d cache=%d ra=%d\n", sd.ChiPhi.Tong, sd.Token.Vao, sd.Token.Cache, sd.Token.Ra)
-		w("Eval-Chua-Do: một lời gọi router mỗi ca, không phải cả lượt; bộ đã lộ = đo hồi quy, không phải cổng (ADR-0037 §4.1); mốc M chờ Lead ký\n")
+		w("Eval-Chua-Do: một lời gọi router mỗi ca, không phải cả lượt; bộ đã lộ = đo hồi quy, không phải cổng (ADR-0044 §4.1); mốc M chờ Lead ký\n")
 		return b.String(), true
 	}
 	var truot []string

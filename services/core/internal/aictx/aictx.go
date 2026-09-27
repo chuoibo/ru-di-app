@@ -52,7 +52,7 @@ const (
 	// retries (research stm §5.1).
 	TTLNep = 5 * time.Minute
 	// TTLNhom bounds a legacy-lane group buffer: the 15-minute sharing
-	// window (ADR-0038 §6).
+	// window (ADR-0045 §6).
 	TTLNhom = 15 * time.Minute
 	// GiuToiDa is how many turns a Nếp buffer keeps; Doc returns the newest
 	// trinho.MaxLuotNganHan of them.

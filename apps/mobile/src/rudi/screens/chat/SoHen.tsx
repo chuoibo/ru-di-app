@@ -65,7 +65,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   panel: KhayChat; onPanel: (panel: KhayChat) => void; onImage: () => void; onSticker: () => void;
   onPoll: (command: string) => Promise<boolean>; onManual: () => void;
   /**
-   * «Hỏi Rủ Đi AI»: the tray no longer sends to the AI itself. Since ADR-0039
+   * «Hỏi Rủ Đi AI»: the tray no longer sends to the AI itself. Since ADR-0046
    * an AI request is an ordinary `@Rủ Đi` message, written in the composer
    * with the preview chip above its send button, so this puts `/plan ` there.
    */
@@ -192,7 +192,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
             {draft.choices.length < 6 ? <RudiButton label="Thêm lựa chọn" variant="ghost" compact disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
           </View>
         ) : (
-          /* The words that replaced the tray's own prompt box (ADR-0039): an
+          /* The words that replaced the tray's own prompt box (ADR-0046): an
              AI request is a message in the thread now, so the tray points at
              the composer instead of sending on the person's behalf. */
           <Text style={[typography.body, { color: colors.ink }]} testID="chat-khay-hoi-ai">

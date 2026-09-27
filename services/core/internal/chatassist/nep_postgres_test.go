@@ -186,7 +186,7 @@ func TestNepChungHanMucVoiNhom(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		job := f.create(t)
 		// Settled at once: the room holds at most three jobs in flight
-		// (ADR-0039), and this test is about the per-person limit, which
+		// (ADR-0046), and this test is about the per-person limit, which
 		// counts every job created in the last minute whatever its status.
 		if _, err := f.pool.Exec(context.Background(), `UPDATE chat_ai_invocations SET status='cancelled',prompt=NULL,boi_canh=NULL WHERE id=$1`, job.ID); err != nil {
 			t.Fatal(err)

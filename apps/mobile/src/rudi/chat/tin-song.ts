@@ -75,7 +75,7 @@ export type TrangTin = {
  * `POST /messages` answers the stored message plus what the server did about a
  * `/vote` command. Nothing else is acted on there any more: `/plan`, `@Rủ Đi`
  * and `/chia-bill` are ordinary text on the server (ADR-0036 §2.1). Since
- * ADR-0039 this client sends them as the ordinary messages they are, and then
+ * ADR-0046 this client sends them as the ordinary messages they are, and then
  * invokes the AI naming the stored message (`nhac-ai.ts`, `useChatAi.ts`).
  */
 export type TinDaGui = Tin & {
@@ -418,7 +418,7 @@ export type TheAi =
     }
   | {
       /**
-       * The group AI's answer inside the thread (ADR-0039, proposed): a reply
+       * The group AI's answer inside the thread (ADR-0046, proposed): a reply
        * to the `@Rủ Đi` message, signed in the card because the author column
        * is empty. `soTin` is the count the SERVER confirmed, never the client's.
        */

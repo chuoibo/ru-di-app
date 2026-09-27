@@ -4,7 +4,7 @@
 - Commit gốc: `f251db7`.
 - protocol_version: không áp dụng (không phải lượt thí nghiệm).
 - Trạng thái: **thiết kế đã được người dùng duyệt, chờ Lead ký ADR**. ADR đi kèm:
-  `docs/decisions/proposals/ADR-0042-bo-do-chat-luong-ai-va-tin-hieu.md`.
+  `docs/decisions/ADR-0042-bo-do-chat-luong-ai-va-tin-hieu.md`.
 - Phạm vi: đo chất lượng của «Rủ Đi AI» (nhóm) và Nếp: corpus, bộ chấm, thống kê, tầng CI, ngân sách
   lời gọi thật, trailer trong commit, thang M0–M4, tín hiệu phản hồi online. Engine, hàng đợi, nhóm, RAG và
   Nếp có thiết kế 01–05 cùng thư mục; ở đây chỉ nói chỗ bộ đo chạm vào chúng.

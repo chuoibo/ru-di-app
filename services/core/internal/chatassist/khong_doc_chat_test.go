@@ -36,7 +36,7 @@ func TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan(t *testing.T) {
 	// nothing. Count what was actually examined, and require that the one
 	// legitimate read of `messages` in this package was among it.
 	daDoc, daThay := 0, 0
-	// The reads added for the in-thread answer (ADR-0039): the trigger check
+	// The reads added for the in-thread answer (ADR-0046): the trigger check
 	// (it is the only one naming deleted_at) and publish's lock on the trigger.
 	// Each must be among what the gate examined, or a later edit to either is
 	// a read nobody checks.

@@ -1,19 +1,22 @@
-# ADR-0039 — Rủ Đi AI trả lời trong luồng: tin @ là tin thường, câu trả lời là một tin trả lời
+# ADR-0046 — Rủ Đi AI trả lời trong luồng: tin @ là tin thường, câu trả lời là một tin trả lời
 
 - Ngày: 2026-09-25.
-- Trạng thái: **ĐỀ XUẤT — chờ Lead ký; số hiệu cấp lúc vào main.** Nếu main đã có ADR-0039 khác thì
-  văn bản này nhận số trống kế tiếp, như ADR-0036 từng đổi số.
+- Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
+  định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
+- Số hiệu: lúc đề xuất là **ADR-0039** (`docs/decisions/proposals/`). `main` đã có ADR-0039 khác nên
+  văn bản nhận số trống kế tiếp khi chốt: 0037→0044, 0038→0045, 0039→0046, 0040→0047. Commit, nhánh
+  và tài liệu viết trước 2026-09-27 còn gọi nó là ADR-0039 (đề xuất).
 - Quyết định sản phẩm: người dùng chốt trong phiên lập kế hoạch 2026-09-25. Nội dung: cơ chế kiểu Meta
   AI trong Messenger, chip xem trước gọn, cả phòng thấy chữ chạy ở lane cũ, chỉ người gọi thấy ở E2EE
-  v2. Kế hoạch đã duyệt; ADR này chờ chữ ký Lead.
+  v2. Kế hoạch đã duyệt; chủ sản phẩm chốt ADR này ngày 2026-09-27.
 - Thiết kế chi tiết: `docs/claude/2026-09-25/thiet-ke-ai/03-rudi-ai-trong-luong.md` (commit gốc `f251db7`).
-- Cùng đợt: ADR-0037 engine, ADR-0038 hàng đợi và stream, ADR-0040 RAG, ADR-0041 Nếp, ADR-0042 eval.
+- Cùng đợt: ADR-0044 engine, ADR-0045 hàng đợi và stream, ADR-0047 RAG, ADR-0041 Nếp, ADR-0042 eval.
   Văn bản này chỉ quyết hình dạng của bot nhóm trong luồng chat.
 - Sửa ADR-0036 §2.1, §2.5, §2.8 và §4. Thêm một ngoại lệ Go-only cho ADR-0021 §2.2.2. Chi tiết ở mục
   5; **không sửa bản lịch sử** của ADR nào.
 - Không đổi bởi văn bản này:
   - ba luật tiền;
-  - ADR-0036 §2.2, §2.4, §2.6, §2.9 (§2.3 do ADR-0040 sửa);
+  - ADR-0036 §2.2, §2.4, §2.6, §2.9 (§2.3 do ADR-0047 sửa);
   - ADR-0031 §7: văn bản này hiện thực nó cho nhóm, không thay nó.
 
 ## 1. Bối cảnh
@@ -66,7 +69,7 @@
 6. **Lane cũ: cả phòng thấy chữ chạy.**
    - Người gọi nhận SSE `…/ai-invocations/{id}/events`. Người xem khác nhận frame `ai` trên WS
      `chatlegacychange` sẵn có, bật bằng opt-in.
-   - Sự kiện là enum đóng của `aistream` (ADR-0038).
+   - Sự kiện là enum đóng của `aistream` (ADR-0045).
    - Cửa sổ output guard 48 rune là nơi **duy nhất** sinh `delta`. Không byte nào tới phòng trước khi
      guard quét nó, và **không có «rút lại»**.
    - Frame phòng không mang mã guard.
@@ -78,7 +81,7 @@
 8. **Một tin tag, một câu trả lời.** Có unique index trên `trigger_message_id` cho `queued|running|
    succeeded`. Tin tag bị xoá thì một trigger Go huỷ job và xoá chữ. Hạn phòng: 3 lời gọi đang chạy,
    30 mỗi giờ. Hạn 8/phút/người giữ nguyên. Số lời gọi model mỗi lượt theo `MaxModelCallsPerTurn`
-   (ADR-0037).
+   (ADR-0044).
 9. **AI nhóm không chạm tiền.**
    - `chia_bill` giữ nháp ở cột `result`. Phần `expense_draft` trên thẻ chỉ là con trỏ: không số tiền,
      không id người.
@@ -164,8 +167,12 @@ ghi thẳng vào văn bản sẽ được ký.
 
 ### 7.1 Điều kiện vào main
 
+> **Đã thay bằng §8.2 (chủ sản phẩm, 2026-09-27).** Văn bản đã được chốt, nên vế «trước khi Lead ký»
+> hết đối tượng; Maestro 49 và ảnh chụp không còn chặn việc vào `main` mà thành việc tiếp theo, vẫn bắt
+> buộc trước khi dựa vào các cờ ở production. Phần dưới giữ nguyên để đọc lịch sử.
+
 - **`main` không được nhận lát 7** (`5af8655`, `603515f` và commit sửa theo review) **trước khi Lead ký
-  ADR-0039.** Lát này đổi hành vi của hai điều khoản đã ký bằng một văn bản còn ở `proposals/`:
+  ADR-0046.** Lát này đổi hành vi của hai điều khoản đã ký bằng một văn bản còn ở `proposals/`:
   - ngoại lệ Go-only `laTraLoiAi` (`routes/messages_wai.go`) sửa **ADR-0021 §2.2.2**, vốn chỉ cho trả
     lời vào `text|image|sticker`;
   - chip trên nút gửi và tin `@Rủ Đi` là tin thường thay **khay của ADR-0036** (§2.1, §2.5, §2.8, §4,
@@ -205,3 +212,44 @@ ghi thẳng vào văn bản sẽ được ký.
   `MenuTin`, **mở sheet chip trước** rồi mới gọi. Mục đó **chưa làm**: nó cần một sheet xem trước mới
   (ADR-0036 §2.5: không gói nào rời máy khi chưa hiện trước), và UI mới phải qua cổng ảnh chụp mà máy
   làm lát này không chạy được. Cho tới khi mục đó có, khoảng hở này là một mục mở của lát 7.
+
+## 8. Quyết định của chủ sản phẩm ngày 2026-09-27
+
+Chủ sản phẩm chốt ngày 2026-09-27. Đây là quyết định của chủ sản phẩm, không phải chữ ký Lead.
+
+### 8.1 Luồng: Rủ Đi AI như Meta AI trong Messenger, cả 1:1 lẫn nhóm
+
+- Trong một cuộc trò chuyện **1:1 hoặc nhóm**, một người gắn `@Rủ Đi` ngay trong cuộc trò chuyện. AI đọc
+  **đoạn hội thoại trước đó mà người gọi kèm theo** (các tin gần đây, hiện ở chip «Kèm {n} tin gần đây ·
+  Xem · Chỉ gửi lời nhờ»; «Chỉ gửi lời nhờ» là không kèm tin nào) rồi trả lời **trong luồng**, như một
+  người tham gia: câu trả lời là tin trả lời vào tin `@Rủ Đi` (§2).
+- AI không tự đọc gì ngoài phần người gọi kèm (giữ ADR-0036 §2.5 và luật toàn repo): không tự kéo lịch
+  sử, gu hay tin chưa được chia sẻ.
+- **1:1 chưa làm.** Ngữ cảnh kind `pair` hiện bị `chatassist` từ chối bằng `409 group_plan_only`, và
+  client không gửi lời nhờ trong cặp. Đó là **lát tiếp theo**, làm trong một PR mới sau khi PR #654
+  vào `main`. Lát đó phải tự chứng minh phần riêng của cặp (sổ đôi, ADR-0027; `chia_gu` chỉ theo
+  ADR-0034) chứ không thừa hưởng bằng chứng của nhóm.
+
+### 8.2 Gỡ §7.1 khỏi điều kiện vào main
+
+- Chủ sản phẩm gỡ §7.1 như một điều kiện chặn merge. Thứ tự: PR #654 vào `main` ngay; chat 1:1 đi
+  PR mới (§8.1).
+- Maestro `49-rudi-ai-trong-luong.yaml` chạy trên **máy thật**, flow 30/40 chạy trên máy, và ảnh chụp
+  (sáng, tối, Reduce Motion) được mở ra nhìn trở thành **việc tiếp theo**. Chúng **vẫn bắt buộc** trước
+  khi dựa vào các cờ (`MOBILE_AI_ENGINE_GROUP`, capability `ai.mention`/`ai.hoi`) ở production. Gỡ
+  điều kiện merge không phải bằng chứng hình ảnh hay bằng chứng máy thật.
+- §7.3 (giá cuốn chiếu cho app cũ) và §7.4 (tin @ có thể không được trả lời mà không có dấu hiệu) vẫn
+  nguyên là giá và khoảng hở đã biết.
+
+### 8.3 Ngoại lệ: `chatassist` đọc chữ tin đã lưu cho `chia_bill` — chấp nhận
+
+- Chủ sản phẩm **chấp nhận** ngoại lệ để `chatassist` đọc chữ máy chủ đã lưu của tin (`body`) khi dựng
+  nháp `chia_bill` (`chatassist.chuDaLuu`, câu SQL duy nhất đọc `body`, ghim nguyên văn).
+- Ngoại lệ chỉ đúng khi cả ba điều cùng đúng:
+  - chỉ **phòng này** (phòng của lời gọi);
+  - chỉ **các tin người gọi đã chia sẻ** (id trong gói người gọi trao);
+  - chỉ **phòng legacy không E2EE** (lane cũ).
+- Phòng E2EE v2 không có chữ nào máy chủ đọc được, và máy chủ không giữ khoá giải mã chat (luật toàn
+  repo): tin v2 hay tin đã xoá không bao giờ được gán người trả. Mở rộng ra ngoài ba điều trên là quyết
+  định mới, cần ADR mới.
+- Chi tiết kỹ thuật: `docs/architecture/03-ai-engine-hop-dong.md` §8.7.

@@ -1,12 +1,13 @@
 # ADR-0042 — Bộ đo chất lượng AI và tín hiệu phản hồi không mang nội dung
 
 - Ngày: 2026-09-25.
-- Trạng thái: **ĐỀ XUẤT — chờ Lead ký; số hiệu cấp lúc vào main.** Nếu main đã có ADR-0042 khác thì văn bản
-  này nhận số trống kế tiếp, như ADR-0036 từng đổi số.
+- Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
+  định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
+- Số hiệu: giữ nguyên số lúc đề xuất (không trùng số nào trên `main`); chuyển khỏi `proposals/`.
 - Quyết định sản phẩm: người dùng chốt trong phiên lập kế hoạch 2026-09-25 rằng mục tiêu đợt này là cả hai con AI
-  **thật sự thông minh**, và «thông minh» phải đo được. Kế hoạch đã duyệt; ADR này chờ chữ ký Lead.
+  **thật sự thông minh**, và «thông minh» phải đo được. Kế hoạch đã duyệt; chủ sản phẩm chốt ADR này ngày 2026-09-27.
 - Thiết kế chi tiết: `docs/claude/2026-09-25/thiet-ke-ai/06-bo-do-chat-luong.md` (commit gốc `f251db7`).
-- Cùng đợt: ADR-0037 engine, ADR-0038 hàng đợi và stream, ADR-0039 nhóm trong luồng, ADR-0040 RAG và nạp dữ
+- Cùng đợt: ADR-0044 engine, ADR-0045 hàng đợi và stream, ADR-0046 nhóm trong luồng, ADR-0047 RAG và nạp dữ
   liệu, ADR-0041 Nếp. Văn bản này chỉ quyết cách đo và tín hiệu phản hồi.
 - Sửa và bổ sung một số điều khoản cũ, liệt kê ở mục 5; **không sửa bản lịch sử** của ADR nào.
 - Không đổi: ba luật tiền; ADR-0034 §2.6 (mỗi lượt đo thật cần Lead duyệt số lời gọi); ADR-0010 §6.1 (không để
@@ -17,7 +18,7 @@
 - Bộ đo hiện có là một file (`services/api/tests/skills/tra_loi_trong_nhom.py`): 16 ca, gọi brain thật, bộ chấm
   luật có test đỏ khi đáp sai. Chính nó ghi rằng nhiệt độ 0.0 và `--lap` lần «không chặn được gì» (`:27-28`).
   Số hôm nay là 10/16 trên một lần chạy mỗi ca, không có khoảng tin cậy.
-- Engine sắp đổi từ một lời gọi mỗi job thành nhiều lời gọi có tool, truy hồi, trí nhớ và stream (ADR-0037).
+- Engine sắp đổi từ một lời gọi mỗi job thành nhiều lời gọi có tool, truy hồi, trí nhớ và stream (ADR-0044).
   Không có phép đo lặp lại được thì không ai nói được bản mới hơn hay kém bản cũ.
 - Lời gọi thật tốn tiền và phải được Lead duyệt từng lần; lần gần nhất duyệt 54, dùng đúng 54. Dự toán cần một
   trần cứng để tính, không phải một con số đoán.
@@ -89,7 +90,7 @@
     - Bảng `chat_ai_chi_so_ngay`: không id người, không id phòng.
     - `thu_lai`, `hoi_lai_ngay`, `bo_giua_chung` suy ở máy chủ chỉ từ metadata, tính thẳng vào bảng ngày.
       «Bỏ giữa chừng» là huỷ sau token đầu, không phải SSE đóng.
-    - Hai route `GO-ONLY` `…/ai-invocations/{id}/tin-hieu`. Gộp và xoá là tác vụ định kỳ của ADR-0038.
+    - Hai route `GO-ONLY` `…/ai-invocations/{id}/tin-hieu`. Gộp và xoá là tác vụ định kỳ của ADR-0045.
       Xoá tài khoản qua trigger Go trên `people.deleted_at` của ADR-0041.
 12. **Dữ liệu dùng chung nằm ở testdata của gói Go sở hữu**, Python đọc theo đường dẫn (tiền lệ
     `hoi_thoai_golden.json`); không thư mục gốc mới, tập vàng truy hồi không chép. Bộ 16 ca lõi đóng băng tại
@@ -99,7 +100,7 @@
 
 - CI thêm một job (T1: Go, Docker Postgres, Python). Commit chạm prompt hay tool tốn thêm một dòng trailer, hoặc
   một lý do viết ra. Đó là ma sát có chủ ý.
-- Trần lời gọi theo mốc (với `MaxModelCallsPerTurn` = 8 như ADR-0037 đề xuất): M0 80; lát 9 là 704; M2 là 1 280;
+- Trần lời gọi theo mốc (với `MaxModelCallsPerTurn` = 8 như ADR-0044 đề xuất): M0 80; lát 9 là 704; M2 là 1 280;
   M3 khoảng 4 300 chia thành nhiều lần duyệt, cộng 600 cho hiệu chuẩn judge. Đây là trần; thật thường khoảng một nửa.
 - Checker trailer chứng minh trailer có, đúng hình và khớp mã ở SHA đó. Nó **không** chứng minh lượt đã chạy: điều
   đó do manifest trong kho và phép phát lại ở mục 5.
@@ -131,7 +132,7 @@
 | CLAUDE.md, «số đo viết thẳng vào commit message» | Số đo trong commit message | Với số chất lượng AI: đúng các khoá `Eval-*`, để checker đọc được |
 | CLAUDE.md, bảng «Mỗi tầng test chứng minh được gì» | Chưa có hàng AI | Thêm hàng T1, T2, T3, judge, T5, mỗi hàng có cột «Không chứng minh». Sửa khi ADR được ký |
 | ADR-0036 §3b, «Đừng xoá một cổng chất lượng dưới danh nghĩa dọn dẹp» | Nguyên tắc | Áp dụng cụ thể: bộ đo cũ sống tới lát 19 |
-| ADR-0037 §2.10, «Lời gọi thật chỉ đi qua binary eval» | Chưa nêu tên | Binary là `cmd/rudi-eval`, ba chế độ như §2.1 |
+| ADR-0044 §2.10, «Lời gọi thật chỉ đi qua binary eval» | Chưa nêu tên | Binary là `cmd/rudi-eval`, ba chế độ như §2.1 |
 
 Không đổi bởi văn bản này:
 - ADR-0023 §2.1: bản đồ xoá đóng giữ nguyên. Ngoại lệ trigger Go cho bảng chỉ Go có là của ADR-0041; bảng tín
@@ -142,7 +143,7 @@ Không đổi bởi văn bản này:
 
 - Lát 2: T0 thống kê xanh, canary đỏ; M0 với 80 lời gọi Lead duyệt, số vào commit message.
 - Lát 6: T1 trong CI xanh, ca canh gác đỏ đúng chỗ, không SKIP; cổng `go list -deps`.
-- Lát 9: T3 lõi ≥14/16 vững, ca 01, 03, 13, 16 đạt 5/5 (ADR-0040), với trần đã duyệt.
+- Lát 9: T3 lõi ≥14/16 vững, ca 01, 03, 13, 16 đạt 5/5 (ADR-0047), với trần đã duyệt.
 - Lát 18: T2 phát lại tái lập được một lượt T3; T4 trên `geministub`; judge qua hiệu chuẩn hoặc in «chưa hiệu
   chuẩn»; route tín hiệu từ chối chữ tự do; M2 và M3.
 - Mỗi lát: ít nhất hai đột biến tự nghĩ, kiểm tương đương trước, đỏ đúng bước dự đoán; chạy lại trong cây sạch

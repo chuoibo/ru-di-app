@@ -1,6 +1,6 @@
 """The flow-40 server check reads the group AI's answer in the shape it has now.
 
-Since slice 7 (ADR-0039, proposed) a `/plan` asked in the thread is answered by
+Since slice 7 (ADR-0046, proposed) a `/plan` asked in the thread is answered by
 an ai_card of kind `tra_loi`, a reply whose parts sit in ``payload.phan``. The
 check that ran after Maestro flow 40 only counted top-level
 ``text|places|itinerary`` cards, so against that answer it reported "no AI card

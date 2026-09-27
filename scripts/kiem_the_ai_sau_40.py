@@ -4,7 +4,7 @@
 after flow 40 has asked `/plan` in the «Plan QA» group. It prints one line,
 ``answers|unknown_places|blind|kinds``, which the shell reads.
 
-Two shapes of answer reach a room. Since slice 7 (ADR-0039, proposed) an app
+Two shapes of answer reach a room. Since slice 7 (ADR-0046, proposed) an app
 that names a trigger gets a `tra_loi` reply: ``{"kind": "tra_loi", "payload":
 {"tac_gia": "rudi-ai", "phan": [card, ...]}}``, where every part is one of the
 cards below. An app from before that change gets the card itself, unwrapped.

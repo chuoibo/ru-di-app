@@ -1,6 +1,6 @@
 # Nhánh của flow 30 khi máy chủ CÓ khoá mô hình (--ai, AI=1).
 #
-# Từ lát 7 (ADR-0039, đề xuất) `@Rủ Đi` là một tin thường; khi tin đã lưu, app
+# Từ lát 7 (ADR-0046, đề xuất) `@Rủ Đi` là một tin thường; khi tin đã lưu, app
 # gọi AI nêu đúng tin đó, và câu trả lời là một TIN TRẢ LỜI vào tin ấy: có khối
 # trích «Trả lời Bạn: …», ký chân «Rủ Đi AI · đọc N tin» (hoặc «· chỉ đọc lời
 # nhờ»). Chip trên nút gửi nói trước sẽ kèm bao nhiêu tin, đếm từ chính gói sẽ

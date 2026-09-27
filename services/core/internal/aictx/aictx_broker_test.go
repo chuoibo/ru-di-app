@@ -130,7 +130,7 @@ func TestNhomLegacyEX900KhongKeoDai(t *testing.T) {
 	}
 	key := k.prefix + "grp:" + nguoiA + ":" + luot1
 	// EX 900 from the write itself, written here as the number: the
-	// sharing window (ADR-0038 §6) is the rule, TTLNhom only its spelling.
+	// sharing window (ADR-0045 §6) is the rule, TTLNhom only its spelling.
 	const cuaSo = 900 * time.Second
 	if d := k.client.PTTL(ctx, key).Val(); d <= cuaSo-5*time.Second || d > cuaSo {
 		t.Fatalf("group buffer TTL %v, want EX 900", d)

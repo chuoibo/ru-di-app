@@ -1,6 +1,6 @@
 /**
  * The chip above the send button while the message being typed asks Rủ Đi AI
- * (ADR-0039 §2.3, proposed): «Kèm {n} tin gần đây · Xem · Chỉ gửi lời nhờ».
+ * (ADR-0046 §2.3, proposed): «Kèm {n} tin gần đây · Xem · Chỉ gửi lời nhờ».
  *
  * It is the preview ADR-0036 §2.5 requires above the send button, folded to
  * one line. Every word comes from `chat/chip-boi-canh.ts`, which reads the

@@ -37,7 +37,7 @@ type HoSo struct {
 }
 
 // ErrBotNhom: a profile asked for the group assistant. The group reaches no
-// memory (ADR-0039 §10, design 05 §6): a caller that asks is a bug, and the
+// memory (ADR-0046 §10, design 05 §6): a caller that asks is a bug, and the
 // answer is an error, not an empty profile it could mistake for "nothing
 // remembered".
 var ErrBotNhom = errors.New("nepnho: the group assistant has no memory profile")

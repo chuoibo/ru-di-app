@@ -2,7 +2,7 @@
 
 - Ngày: 2026-09-25. Commit gốc: `f251db7`. protocol_version: không áp dụng (không phải lượt thí nghiệm).
 - Trạng thái: **thiết kế đã được người dùng duyệt, chờ Lead ký ADR**. ADR đi kèm:
-  `docs/decisions/proposals/ADR-0041-nep-thay-man-nho-lang-le-nhac-khi-cho-phep.md`.
+  `docs/decisions/ADR-0041-nep-thay-man-nho-lang-le-nhac-khi-cho-phep.md`.
 - Phạm vi: phiếu ngữ cảnh v2, sổ tay app, tool và chip của Nếp, trí nhớ (`nepnho`), nhắc chủ động
   (`nepnhac`), push tối thiểu (`push`), bảng Nếp và animation. Vòng lặp, router, registry tool: thiết
   kế 01. Hàng đợi, SSE, task id: thiết kế 02. Ruột truy hồi: thiết kế 04. Bộ đo: thiết kế 06.
@@ -474,7 +474,7 @@ vào commit message.
 | 13 | phiếu v2 cho 7 màn, sổ tay, chip, `my_upcoming_outings`, sửa gợi ý | 8, 9 |
 | 15 | `nepnho`, công tắc, công bố, sự kiện, trích, củng cố, trigger xoá | 10 (hàng `memory`, `DinhKy`), 13 |
 | 17 | `nepnhac` trong app, rồi `push` | 15, FCM credentials |
-| 18, 19 | bộ ca Nếp trong binary eval chung; rồi gỡ `nep-reply` cùng manifest (ADR-0037) | thiết kế 06 |
+| 18, 19 | bộ ca Nếp trong binary eval chung; rồi gỡ `nep-reply` cùng manifest (ADR-0044) | thiết kế 06 |
 
 ## 12. Quyết định còn mở
 

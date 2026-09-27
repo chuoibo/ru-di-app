@@ -19,7 +19,7 @@ export type ChatCapabilities = {
     share_scope: "invocation_only" | "caller_attached";
     /**
      * The server takes `trigger_message_id` and answers inside the thread, as a
-     * reply to the `@Rủ Đi` message (ADR-0039). Absent on an older server,
+     * reply to the `@Rủ Đi` message (ADR-0046). Absent on an older server,
      * which would refuse the unknown field: then no trigger is sent, and the
      * answer arrives as the card it always was.
      */
@@ -90,7 +90,7 @@ export const LOI_GOI_AI: Record<string, string> = {
   membership_required: "Bạn không còn ở trong nhóm này nên chưa nhờ AI ở đây được.",
   encrypted_invocation_required: "Nhóm này đã chuyển sang chat mã hoá, nên cách nhờ AI này chưa dùng được ở đây.",
   invocation_not_found: "Không còn thấy lời nhờ này nữa. Bạn gửi một lời nhờ mới nhé.",
-  // ADR-0039: the answer is a reply to the `@Rủ Đi` message, so the message
+  // ADR-0046: the answer is a reply to the `@Rủ Đi` message, so the message
   // itself can be the reason a request is refused.
   trigger_khong_hop_le: "Rủ Đi AI chỉ trả lời tin nhờ của chính bạn trong nhóm này, gửi trong một ngày qua và chưa xoá. Bạn gửi một tin mới có @Rủ Đi nhé.",
   invocation_trigger_taken: "Tin này đã được nhờ Rủ Đi AI trả lời rồi. Câu trả lời sẽ hiện ngay dưới tin.",

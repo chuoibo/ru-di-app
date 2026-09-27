@@ -13,7 +13,7 @@ import (
 	"mobile/services/core/internal/treejson"
 )
 
-// The group AI answers inside the thread (ADR-0039, proposed; design 03).
+// The group AI answers inside the thread (ADR-0046, proposed; design 03).
 //
 // The person's `@Rủ Đi …` words are an ordinary message, posted through the
 // ordinary send queue. The client then invokes the AI explicitly and names that

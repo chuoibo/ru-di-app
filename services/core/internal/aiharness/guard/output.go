@@ -8,7 +8,7 @@ import (
 )
 
 // LoaiRa is why the output guard stopped an answer. It lives in tests and the
-// eval only: the metrics row keeps «stopped», never the kind (ADR-0037 §2.8).
+// eval only: the metrics row keeps «stopped», never the kind (ADR-0044 §2.8).
 type LoaiRa string
 
 const (

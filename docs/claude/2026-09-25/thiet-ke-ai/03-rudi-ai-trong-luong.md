@@ -4,11 +4,11 @@
 - Commit gốc: `f251db7`.
 - protocol_version: không áp dụng (không phải lượt thí nghiệm).
 - Trạng thái: **thiết kế đã được người dùng duyệt, chờ Lead ký ADR**. ADR đi kèm:
-  `docs/decisions/proposals/ADR-0039-rudi-ai-tra-loi-trong-luong.md`.
+  `docs/decisions/ADR-0046-rudi-ai-tra-loi-trong-luong.md`.
 - Phạm vi: bot nhóm «Rủ Đi AI» (`scope='group'`, lệnh `plan | chia_bill | hoi`).
   - Tin `@Rủ Đi` là tin thường. Chip xem trước nằm trên nút gửi.
   - Thẻ `tra_loi` trả lời vào tin tag. Lane cũ: cả phòng thấy chữ chạy. E2EE v2: chỉ người gọi thấy.
-  - Engine ở thiết kế 01 (ADR-0037). Hàng đợi, Redis và frame WS ở thiết kế 02 (ADR-0038). Ở đây chỉ
+  - Engine ở thiết kế 01 (ADR-0044). Hàng đợi, Redis và frame WS ở thiết kế 02 (ADR-0045). Ở đây chỉ
     nói chỗ bot nhóm chạm vào hai phần đó.
 - Thứ tự ưu tiên khi lệch: bảng «Hợp đồng chung» (`docs/architecture/03-ai-engine-hop-dong.md`) đè
   lên bản thiết kế gốc.
@@ -203,7 +203,7 @@ có allowlist theo gốc; `khong_doc_chat` mở ra `internal/**` (sửa theo ph�
 - **Lát 7 (còn đi brain).** `plan` (kể cả `@Rủ Đi`, vẫn ánh xạ sang `plan`) đi `companion-reply` và
   `GroundCard` như hôm nay; thẻ kết quả thành **một** phần của `tra_loi`. `chia_bill` giữ `chiabill.go`,
   đăng `tra_loi` với `[text(theChiaBill), expense_draft{so_khoan}]`.
-- **Lát 9 (engine Go).** `hoi` và `plan` chạy `aiharness.Engine.Run` (ADR-0037).
+- **Lát 9 (engine Go).** `hoi` và `plan` chạy `aiharness.Engine.Run` (ADR-0044).
   - Ý định đóng của nhóm: `chat_answer, plan, find_places, chia_bill_draft, app_help`; `poll_draft` tắt.
   - `lenh=plan` ép ý định `plan`; `lenh=chia_bill` ép `chia_bill_draft`; `lenh=hoi` để Understand chọn
     1–3 ý định. Đây là ý định «hỏi chuyện thường» người dùng muốn có trong nhóm.
@@ -374,7 +374,7 @@ CREATE TABLE chat_ai_expense_claims (   -- migration riêng, số cấp lúc lê
 | Người gọi rời nhóm giữa chừng | `chat_ai_membership_revoked` huỷ; SSE người gọi `thu_hoi` |
 | Output guard chặn giữa chừng | Giữ phần đã nhả, cộng câu cố định; không rút lại |
 | Mọi phần rớt kiểm | `invalid_ai_result`; phòng thấy câu thất bại chung |
-| Worker chết | Theo ADR-0038: chạy lại chỉ khi `first_token_at IS NULL`, phòng nhận `lam_lai`; đăng vẫn một lần |
+| Worker chết | Theo ADR-0045: chạy lại chỉ khi `first_token_at IS NULL`, phòng nhận `lam_lai`; đăng vẫn một lần |
 | Redis mất | Không có chữ chạy; tin thật vẫn tới qua change feed |
 | Phòng v2 trước lát 20 | 409 `encrypted_invocation_required` như hôm nay |
 | Injection trong một lượt gói | Guard gắn `nghi_chi_thi`, bọc `<du_lieu>`; Understand không chở chữ tự do đi tiếp |
@@ -429,7 +429,7 @@ CREATE TABLE chat_ai_expense_claims (   -- migration riêng, số cấp lúc lê
 | 1 | Hàng `chatassist` loại `GO-ONLY` trong manifest; `core routes --json` phát `chatassist.Routes()` | – |
 | 2 | Đường nền M0 của eval nhóm: 16 ca × 5 lần | – |
 | 5 | Cổng đọc xuyên gói thấy `kiemTrigger`, CTE chuỗi, câu đọc `card` | – |
-| 7 | Lõi trong luồng, còn đi brain: migration, `reply_to`, `tra_loi` một phần, `laTraLoiAi`, hạn phòng, chip, gửi theo cặp, `TraLoiAi`, `tacGiaTin`, ADR-0039 và mọi câu chữ | 1 |
+| 7 | Lõi trong luồng, còn đi brain: migration, `reply_to`, `tra_loi` một phần, `laTraLoiAi`, hạn phòng, chip, gửi theo cặp, `TraLoiAi`, `tacGiaTin`, ADR-0046 và mọi câu chữ | 1 |
 | 9 | `hoi` trên engine Go, nhiều phần, chuỗi (`ban:2`), Understand, `chia_bill` một lời gọi; cổng ≥14/16 | 5, 7, 8 |
 | 11 | SSE người gọi; hàng «đang đọc» | 9, 10 |
 | 12 | Frame `ai` cho người xem; UI hoàn thiện bằng `/impeccable` | 11 |

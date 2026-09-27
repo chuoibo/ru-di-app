@@ -1,5 +1,5 @@
 // Package otelchan keeps ADK's message-content capture off in every process
-// that links the engine (ADR-0037 §2.8).
+// that links the engine (ADR-0044 §2.8).
 //
 // ADK v2 records whole prompts and answers on spans and log records when
 // OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT says so

@@ -1,4 +1,4 @@
-/* Tin nào cũng là lời nhờ Rủ Đi AI (ADR-0039, đề xuất).
+/* Tin nào cũng là lời nhờ Rủ Đi AI (ADR-0046, đề xuất).
  *
  * Đo: `@Rủ Đi` được nhận ở bất kỳ vị trí nào trong tin, ở cả dạng NFC lẫn NFD
  * (bàn phím gõ dấu rời), có dấu hay không dấu; KHÔNG bao giờ bị nhận trong

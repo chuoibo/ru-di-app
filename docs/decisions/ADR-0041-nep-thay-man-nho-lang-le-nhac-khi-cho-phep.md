@@ -1,12 +1,13 @@
 # ADR-0041 — Nếp thấy rõ màn, nhớ lặng lẽ có nói trước, nhắc khi được cho phép
 
 - Ngày: 2026-09-25.
-- Trạng thái: **ĐỀ XUẤT — chờ Lead ký; số hiệu cấp lúc vào main.** Nếu main đã có ADR-0041 khác thì
-  văn bản này nhận số trống kế tiếp, như ADR-0036 từng đổi số.
+- Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
+  định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
+- Số hiệu: giữ nguyên số lúc đề xuất (không trùng số nào trên `main`); chuyển khỏi `proposals/`.
 - Quyết định sản phẩm: người dùng chốt trong phiên lập kế hoạch 2026-09-25 (trí nhớ «lặng lẽ nhưng có
-  công bố», hỗ trợ đúng lúc đúng chỗ, nhắc chủ động opt-in). Kế hoạch đã duyệt; ADR này chờ chữ ký Lead.
+  công bố», hỗ trợ đúng lúc đúng chỗ, nhắc chủ động opt-in). Kế hoạch đã duyệt; chủ sản phẩm chốt ADR này ngày 2026-09-27.
 - Thiết kế chi tiết: `docs/claude/2026-09-25/thiet-ke-ai/05-nep-tai-cho-tri-nho-nhac.md` (commit gốc `f251db7`).
-- Cùng đợt: ADR-0037 engine, ADR-0038 hàng đợi và stream, ADR-0039 nhóm trong luồng, ADR-0040 RAG,
+- Cùng đợt: ADR-0044 engine, ADR-0045 hàng đợi và stream, ADR-0046 nhóm trong luồng, ADR-0047 RAG,
   ADR-0042 eval.
 - Thay ADR-0033 §2.5 và gạch đầu 1 của §4; thay ADR-0036 §2.7 và ba gạch đầu về Nếp của §4; bổ sung
   ADR-0024 §2.1–§2.4 và §4; thêm một vế cho dòng quy tắc AI của CLAUDE.md. Chi tiết ở mục 5; **không
@@ -40,7 +41,7 @@
 3. **Nếp chỉ hành động bằng chip có cấu trúc:** `mo`, `chi`, `mo_to`, `dien_nhap` (điền sẵn form trong
    RAM; người dùng tự bấm tạo). Chip không rút ra từ chữ trả lời, không dẫn tới màn tiền, không điền
    ngân sách.
-4. **Nếp được đọc thêm đúng ba thứ:** (a) catalogue địa điểm công khai, qua registry tool của ADR-0037;
+4. **Nếp được đọc thêm đúng ba thứ:** (a) catalogue địa điểm công khai, qua registry tool của ADR-0044;
    (b) kèo sắp tới của **chính người đó**, không cột ngân sách, không lưu, chỉ khi họ hỏi trong lời gọi
    của chính họ hoặc đã bật «Nếp nhắc»; (c) trí nhớ về chính người đó khi đã bật «Nếp nhớ». Chat nhóm,
    gu, sở thích theo người, sổ tiền và lịch sử nhóm vẫn cấm.
@@ -77,7 +78,7 @@
   `ownership/routes.json` loại `GO-ONLY` cùng commit với handler. Bảng mới có bảng version riêng theo
   gói, số cấp theo thứ tự lên main.
 - Củng cố và nhắc 15 phút chạy trong `jobs.DinhKy`; trích trí nhớ và push đi qua hàng `memory`, `notify`
-  (ADR-0038). Trích thêm tối đa một lời gọi flash-lite mỗi job, đếm bằng bộ đếm của `aiharness/llm`.
+  (ADR-0045). Trích thêm tối đa một lời gọi flash-lite mỗi job, đếm bằng bộ đếm của `aiharness/llm`.
 - Cổng đọc xuyên gói phải vào main **trước** khi phiếu v2 tra catalogue; allowlist khai theo từng gốc.
 - `expo-notifications` bắt dựng lại native; FCM credentials do Lead cấp; iOS ngoài phạm vi. Chưa có
   credentials thì chỉ `LogSender`, như ADR-0024 §4.
@@ -107,7 +108,7 @@
 | ADR-0033 §2.5 | Phiếu khoá đóng: route, tiêu đề, nhịp, loại sổ, số đếm, gợi ý | Phiếu v2 ở §2.1; vẫn khoá đóng, vẫn không tên người, chat, tiền |
 | ADR-0033 §4, gạch đầu 1 | Không tự đọc hội thoại, gu, lịch sử; muốn thế thì mở quyết định khác | Đây là quyết định đó, và nó hẹp: chỉ ba thứ ở §2.4 |
 | ADR-0036 §2.7 | Nếp nhận lượt của phiên đang mở; phiên chỉ trên máy | Giữ; thêm task id trong RAM (§2.12), `hoi` ≤48 h khi bật nhớ, và §2.4 (b), (c) |
-| ADR-0036 §4 «Không cho AI tự nói khi không ai gọi» | — | Giữ cho mọi đường có model. Ngoại lệ có tên: lời nhắc của Nếp, câu mẫu, không gọi model, chỉ khi đã bật, chỉ qua tờ thứ hai hoặc push. Bot nhóm không đổi (ADR-0039) |
+| ADR-0036 §4 «Không cho AI tự nói khi không ai gọi» | — | Giữ cho mọi đường có model. Ngoại lệ có tên: lời nhắc của Nếp, câu mẫu, không gọi model, chỉ khi đã bật, chỉ qua tờ thứ hai hoặc push. Bot nhóm không đổi (ADR-0046) |
 | ADR-0036 §4 «Không cho Nếp đọc hội thoại nhóm, gu, hay lịch sử» | — | Chat nhóm và gu vẫn cấm; «lịch sử» mở đúng §2.4 (b), (c) |
 | ADR-0036 §4 «Không cho giữ phiên Nếp ở máy chủ hay xuống đĩa thiết bị» | — | Giữ cho lượt phiên và cho đĩa; ngoại lệ: `hoi` ≤48 h khi bật nhớ |
 | ADR-0024 §2.1.1 | `kind` đóng, 6 giá trị | Thêm `nep_nhac`; CHECK chỉ liệt kê kind đã có writer |

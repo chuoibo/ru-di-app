@@ -15,7 +15,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// The core never installs an OpenTelemetry provider (ADR-0037 §2.8). ADK
+// The core never installs an OpenTelemetry provider (ADR-0044 §2.8). ADK
 // traces every model call and tool call through the global otel API, and its
 // span attributes carry whole tool results; with the global providers left as
 // they are, those spans go nowhere. One call to otel.SetTracerProvider, or
@@ -35,7 +35,7 @@ import (
 // go.opentelemetry.io/auto, and calling a Set…Provider; on the linked graph,
 // the SDK and the exporters, and auto/sdk reached from anywhere but the otel
 // API. It cannot see a process being instrumented from outside, so that half
-// is an operations rule (ADR-0037 §4): no Go eBPF auto-instrumentation agent
+// is an operations rule (ADR-0044 §4): no Go eBPF auto-instrumentation agent
 // (go.opentelemetry.io/auto or any tool built on it) on a host that runs
 // `core serve` or `core work`.
 

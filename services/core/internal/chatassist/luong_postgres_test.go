@@ -14,7 +14,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// The group AI answering inside the thread (ADR-0039, proposed), against a
+// The group AI answering inside the thread (ADR-0046, proposed), against a
 // real database: the trigger check, one answer per message, the reply that
 // quotes the mention, the deletion trigger and the room limits.
 
