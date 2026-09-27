@@ -364,3 +364,15 @@ test("địa chỉ route ghép đúng dù base có hay không có dấu gạch c
   assert.equal(searchUrl("http://x.test"), "http://x.test/places/search");
   assert.equal(searchUrl("http://x.test/"), "http://x.test/places/search");
 });
+
+test("tìm trong điểm đến đang xem: ?destination= đi kèm, không có thì như cũ", async () => {
+  const urls = [];
+  const fetchImpl = async (url) => {
+    urls.push(url);
+    return new Response(JSON.stringify({ query: "x", understood: null, places: [], source: "none", group: null }), { status: 200 });
+  };
+  await askSearch("phở", { base: BASE, fetchImpl, actorId: ACTOR, destination: "d-tinh-79" });
+  await askSearch("phở", { base: BASE, fetchImpl, actorId: ACTOR });
+  assert.equal(urls[0], `${BASE}/places/search?destination=d-tinh-79`);
+  assert.equal(urls[1], `${BASE}/places/search`);
+});

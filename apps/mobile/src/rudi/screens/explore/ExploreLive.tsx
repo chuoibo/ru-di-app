@@ -191,7 +191,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
     const cau = query.trim();
     if (!cau) return;
     setTimKiem({ kind: "dang-tim", query: cau });
-    setTimKiem(await askSearch(cau, { actorId: phien.person_id }));
+    setTimKiem(await askSearch(cau, { actorId: phien.person_id, destination: diemDen?.id ?? null }));
   };
 
   const boTim = () => {

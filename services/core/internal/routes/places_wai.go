@@ -388,7 +388,28 @@ func searchPlacesWAI() Route {
 			body.Set("group", wireGroupSummary(group))
 			return endpoint.Reply{Body: body}
 		}
-		rows, err := store.ListPlaces(ctx, repo.PlaceFilter{})
+		// `?destination=` narrows the search to one destination; without it
+		// the whole catalogue is searched, as before.
+		filter := repo.PlaceFilter{}
+		destinationID, err := optionalStringParam(call, "destination")
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		if destinationID != nil {
+			diemDen, err := service.DestinationOrDefault(ctx, store, destinationID)
+			if err != nil {
+				return endpoint.Reply{}, err
+			}
+			if diemDen == nil {
+				return endpoint.Reply{}, endpoint.Refuse(404, "destination_not_found", "Không có điểm đến nào với mã này.")
+			}
+			filter.DestinationID = &diemDen.ID
+		}
+		slim, err := store.ListPlaceCards(ctx, filter)
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		rows, err := fullRowsInOrder(ctx, store, searchCandidates(slim, query, group))
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
@@ -630,6 +651,30 @@ func fullCards(ctx context.Context, store repo.Repository, cards []*pyjson.Order
 		}
 	}
 	return treejson.MapsFrom(treejson.MapsTo(cardsWithPhotos(ordered, snap.covers, snap.counts))), nil
+}
+
+// fullRowsInOrder reads the given places in full, keeping their order; a row
+// deleted since the slim read is dropped.
+func fullRowsInOrder(ctx context.Context, store repo.Repository, slim []repo.Place) ([]repo.Place, error) {
+	ids := make([]string, len(slim))
+	for i, row := range slim {
+		ids[i] = row.ID
+	}
+	rows, err := store.PlacesByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[string]repo.Place, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row
+	}
+	out := make([]repo.Place, 0, len(ids))
+	for _, id := range ids {
+		if row, ok := byID[id]; ok {
+			out = append(out, row)
+		}
+	}
+	return out, nil
 }
 
 // cardsWithPhotos builds list cards from rows and a photo summary already read.

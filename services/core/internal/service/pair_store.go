@@ -519,7 +519,7 @@ func (s PairStore) ListPlaces(destinationID, category string) ([]pairsteps.Place
 	if err != nil {
 		return nil, err
 	}
-	places, err := r.ListPlaces(s.Ctx, repo.PlaceFilter{DestinationID: &destinationID, Category: &category})
+	places, err := r.ListPlaceCards(s.Ctx, repo.PlaceFilter{DestinationID: &destinationID, Category: &category})
 	if err != nil {
 		return nil, storeError(err)
 	}

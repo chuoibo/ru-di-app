@@ -62,7 +62,7 @@ func postMeetingPoint() Route {
 			}
 			origins = append(origins, area)
 		}
-		rows, err := store.ListPlaces(ctx, repo.PlaceFilter{})
+		rows, err := store.ListPlaceCards(ctx, repo.PlaceFilter{})
 		if err != nil {
 			return endpoint.Reply{}, err
 		}

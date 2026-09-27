@@ -335,7 +335,9 @@ func ModelPlaceRows(ctx context.Context, store repo.Repository, group taste.Prof
 	if diemDen != nil {
 		filter.DestinationID = &diemDen.ID
 	}
-	rows, err := store.ListPlaces(ctx, filter)
+	// Slim rows: what reaches the model is ClientPlaces' nine fields, and
+	// scoring and promptsafety read none of the three columns left out.
+	rows, err := store.ListPlaceCards(ctx, filter)
 	if err != nil {
 		return nil, err
 	}

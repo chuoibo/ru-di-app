@@ -63,7 +63,7 @@ func socialMap() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		catalogue, err := store.ListPlaces(ctx, repo.PlaceFilter{})
+		catalogue, err := store.ListPlaceCards(ctx, repo.PlaceFilter{})
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
