@@ -20,8 +20,8 @@
 | Mức | Issue |
 |---|---|
 | P1 | UI-005 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047 |
 
 ---
 
@@ -72,9 +72,9 @@
 | Tái hiện | Mở bất kỳ tab nào, đọc thuộc tính ARIA của 4 phần tử `role="tab"` |
 | Expected | Tab đang chọn có `aria-selected="true"`, và các tab nằm trong một `role="tablist"` |
 | Actual | Cả 4 tab đều không có `aria-selected`, và không có `tablist`. Nhìn bằng mắt vẫn phân biệt được tab đang chọn (màu, icon đặc, dải washi), nhưng trình đọc màn hình thì không |
-| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime; đã xác nhận: thanh tab |
+| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) |
 | Hậu quả | Trên web, người dùng trình đọc màn hình không biết tab nào, ngày nào, chip gu nào, màu nào đang được chọn, và mục nào đang mở/gập |
-| Đề xuất | Truyền thêm prop `aria-selected`/`aria-checked`/`aria-expanded`/`aria-busy` (RNW đọc được; `HangChang` và `RosterPicker` đã làm vậy), hoặc gom lại trong một helper ở kit; thêm `role="tablist"` cho thanh tab |
+| Đề xuất | Truyền thêm prop `aria-*` mà RNW đọc được, đúng với role: `aria-checked` cho radio/checkbox/switch, `aria-expanded` cho nút gập mở, `aria-busy`, `aria-selected` **chỉ** cho tab/option/row. Sửa ở checkpoint 3: `HangChang` từng được nêu ở đây làm ví dụ đúng, nhưng nó đặt `aria-selected` trên `role=button`, là thuộc tính không hợp lệ (axe critical, UI-042); nút nên dùng `aria-pressed` hoặc `aria-current`. Gom lại trong một helper ở kit; thêm `role="tablist"` cho thanh tab |
 | Tiêu chí gỡ | Quét DOM: mỗi control có trạng thái đều mang thuộc tính ARIA tương ứng; tab đang chọn có `aria-selected=true` |
 
 ### UI-004 · Rail (≥600dp, web): vạch chỉ báo tab đang chọn nằm lệch khỏi tab
@@ -240,7 +240,7 @@
 | Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã) |
 | Nền tảng, cấu hình | web, C1, C2, C3 (đo runtime). Native: cùng `minHeight: 44` (STATIC) |
 | Expected | DESIGN.md §Mục tiêu chạm: «Mọi node bấm được ≥48×48dp, kể cả `TextInput`» |
-| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44 |
+| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44 |
 | Evidence | ![ô nhập 44](evidence/EV-F01-O-NHAP-44-C1.jpg) |
 | Source | `src/rudi/ui/ONhapMuc.tsx:60` (`minHeight: 44`) |
 | Đề xuất | `minHeight: 48` (vẫn không hộp, dòng kẻ giữ nguyên) |
@@ -295,7 +295,7 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (điều hướng) · **P2**. Checkpoint 2 ghi P3; nâng ở checkpoint 3 vì phạm vi không còn là một màn: đo lại ở `/places/[id]`, và nút back của `TopBar` trong kit cũng gọi `router.back()` không kiểm `canGoBack()` |
-| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
+| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
 | Nền tảng, cấu hình | web, C1 |
 | Tái hiện | Mở thẳng `/login` (không có lịch sử), chạm «Quay lại» |
 | Expected | Đưa về màn hợp lý (Welcome), hoặc không vẽ nút khi không có nơi để về |
@@ -433,7 +433,8 @@
 | Root cause | Hai rAF không phải tín hiệu «canvas đã vẽ»; dựng surface CanvasKit mất lâu hơn |
 | Giới hạn | Độ dài khoảng trống phụ thuộc GPU, SwiftShader chậm hơn máy thật. Cơ chế gỡ SVG trước khi canvas có khung đầu thì không phụ thuộc máy |
 | Đề xuất sửa | Chỉ gỡ SVG sau khung vẽ thật đầu tiên của canvas |
-| Tiêu chí gỡ | Ở C9 không khung nào có vùng sân khấu trống |
+| Thêm (F03, M5) | Cùng cú bàn giao, ở chỗ khác: tạo kèo ở C9 rồi tới kèo mới, con rối Nếp cạnh tiêu đề là SVG ở tư thế đầu từ 410 tới 606 ms, rồi cắt sang Skia ở tư thế cuối lúc 908 ms (chụp đúng vùng Nếp mỗi 150 ms, ghi `data-renderer` từng lần). ADR-0037 D3 muốn giảm chuyển động hiện ngay khung cuối tĩnh; ở đây có một cú nhảy tư thế. Ở C1 tiết mục chạy 4 ảnh và dừng ở 1327 ms, trong trần 1400 ms (đạt) |
+| Tiêu chí gỡ | Ở C9 không khung nào có vùng sân khấu trống; Nếp M5 ở C9 chỉ có một ảnh từ lúc hiện |
 
 ### UI-028 · Thành phố chưa có quán: trạng thái rỗng khuyên bỏ một bộ lọc không tồn tại
 
@@ -491,6 +492,240 @@
 | Source | `src/rudi/screens/explore/DiemDenScreen.tsx:120` (`Math.floor((rongLuoi - KHE) / 2)`) |
 | Đề xuất sửa | Dùng `gridFor` như các lưới thẻ khác |
 | Tiêu chí gỡ | C7 hiện 3 cột |
+
+## F03 Plan · Kèo · Hành trình
+
+### UI-032 · Kèo nhiều ngày: chế độ Bản đồ không hiện chặng nào, mọi ngày báo «chưa có điểm nào»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG · **P2** |
+| Feature / Screen | F03 · `/outings/[id]`, chế độ Bản đồ (`hanh-trinh/SoHanhTrinh.tsx`) |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã chia ngày (STATIC) |
+| Điều kiện | Kèo seed «Đà Lạt cuối tuần», 3 ngày, 3 chặng đều gắn quán trong danh mục (đủ toạ độ). Các chặng được thêm từ Lịch trình, như mọi chặng thêm bằng «Thêm chặng» hay «Thêm vào kèo» |
+| Tái hiện | Mở kèo, chọn «Bản đồ», lần lượt Ngày 1, 2, 3 |
+| Expected | Mỗi chặng có địa điểm hiện một mốc ở ngày của nó. Chặng chưa xếp ngày thì được nói ra, không bị lặng lẽ bỏ |
+| Actual | Cả 3 ngày: 0 mốc, và câu «Ngày này chưa có điểm nào trên bản đồ. Gắn một quán hoặc một địa điểm vào lịch trình…», trong khi 3 chặng đã gắn quán (0/3). Đối chứng: kèo **1 ngày** có 12 chặng thì hiện 6 mốc (đạt) |
+| Evidence | ![kèo 3 ngày trên Bản đồ](evidence/EV-F03-BAN-DO-chang-goc-C1.jpg) (hàng `TC-F03-BAN-DO-CHANG-NHIEU-NGAY`) |
+| Source | `SoHanhTrinh.tsx` (`visible = draft.stops.filter((s) => s.day === day)`); `hanh-trinh/ke-hoach.ts:15` (`nhapTuKeo` chỉ gán ngày khi `day === undefined` và kèo dài một ngày); `src/api.ts` `luuDongThoiGian` gửi chặng không có `day`. Máy chủ trả `day: null` cho chặng của kèo nhiều ngày (đọc API: 3/3 chặng `null`), còn kèo một ngày thì được máy chủ gán ngày |
+| Hậu quả | Với chuyến đi nhiều ngày, loại phổ biến nhất, Bản đồ luôn trống, và lời nhắn còn bảo người dùng làm việc họ đã làm |
+| Đề xuất sửa | Chặng không có ngày thì đưa vào một mục «Chưa xếp ngày», hoặc mặc định vào ngày đầu; hoặc bắt `Thêm chặng`/`Thêm vào kèo` chọn ngày với kèo nhiều ngày |
+| Tiêu chí gỡ | Kèo 3 ngày có 3 chặng gắn quán: tổng mốc qua các ngày = 3, hoặc có dòng nói rõ 3 chặng chưa xếp ngày |
+
+### UI-033 · Bản đồ, ngày trống: «Về Lịch trình» và lời giải thích nằm dưới mép vùng cuộn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (layout, mất nội dung) · **P2** |
+| Feature / Screen / Layer | F03 · `/outings/[id]` Bản đồ · L13 trang ngày (`ManHinhHanhTrinh.tsx`) |
+| Nền tảng, cấu hình | web; hỏng ở C1, C2, C3, C4, C8; đạt ở C6, C7 |
+| Tái hiện | Kèo 2 ngày chưa có chặng, chọn «Bản đồ» |
+| Expected | Trạng thái rỗng và nút «Về Lịch trình» thấy được mà không phải cuộn trong một khung nhỏ |
+| Actual | Trang ngày là một vùng cuộn cao tối đa 56% của 65% chiều cao màn. Vùng đó chỉ lộ tranh và tiêu đề; câu giải thích bị cắt giữa chừng; «Về Lịch trình» thấy 0% (C1: nút ở 791–839, vùng thấy 571–772). Nút vô hiệu «Xem cách đi gọn hơn» (viền đứt) lại chiếm chỗ chính bên dưới. Ở C8 (390×460) vùng cuộn cao **0px**: không với tới được gì của trạng thái rỗng |
+| Evidence | ![C1](evidence/EV-F03-BAN-DO-rong-C1-ct.jpg) ![C8](evidence/EV-F03-BAN-DO-rong-C8-ct.jpg) (hàng `TC-F03-VE-LICH-TRINH`) |
+| Source | `ManHinhHanhTrinh.tsx:167-225`: `maxHeight: availableHeight * 0.56` cho trang ngày; khối rỗng (tranh 144, tiêu đề, ghi chú, nút) nằm trong `ScrollView`; `primaryAction` ở ngoài, dưới cùng |
+| Hậu quả | Người mở Bản đồ ở một ngày trống không thấy lối về và không thấy lời giải thích; vẫn còn công tắc «Lịch trình» ở đầu màn |
+| Đề xuất sửa | Ở ngày trống: bỏ tranh hoặc thu nhỏ, đưa «Về Lịch trình» lên trước, ẩn nút gợi ý tuyến khi không có hoạt động |
+| Tiêu chí gỡ | C1–C4 và C8: «Về Lịch trình» thấy trọn không cần cuộn |
+
+### UI-034 · Tạo kèo: ô ngân sách trông như đã điền, bỏ trống thì «Tạo kèo» như không làm gì
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P2** |
+| Feature / Screen | F03 · `/outings/new` (`keo/CreateOutingLive.tsx`) |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | Gõ tên kèo, không chọn mức chi, chạm «Tạo kèo» |
+| Expected | Hoặc tạo kèo, hoặc một câu thấy được ngay nói thiếu ngân sách; ô trống không trông như có số |
+| Actual | Ô «hoặc gõ số đồng» hiện «250000» là **placeholder**, nhưng đọc như số đã điền (giá trị thật rỗng). Chạm «Tạo kèo»: ở lại `/outings/new`. Câu «Ngân sách mỗi người là số tiền Việt Nam, viết bằng chữ số.» nằm ở y=854–902, dưới nút và ngoài khung 844 (có `aria-live`, nên trình đọc màn hình nghe, người nhìn thì không). Đối chứng: chọn «300 nghìn» thì tạo được (đạt, cả C9) |
+| Evidence | ![sau khi chạm Tạo kèo](evidence/EV-F03-TAO-ngan-sach-trong-C1.jpg) (hàng `TC-F03-TAO-NGAN-SACH-TRONG`) |
+| Source | `CreateOutingLive.tsx:248` (placeholder của ô ngân sách); `src/screens/len-plan/buoi-di.ts:164-171` (từ chối ngân sách rỗng); câu lỗi render cuối form, không cuộn tới |
+| Đề xuất sửa | Điền sẵn một mức chi thật, hoặc placeholder dạng «ví dụ 250.000đ»; khi từ chối thì cuộn tới câu lỗi và đặt focus vào ô ngân sách |
+| Tiêu chí gỡ | Bỏ trống ngân sách rồi «Tạo kèo»: câu lỗi thấy được ngay |
+
+### UI-035 · `/trips/[id]/timeline` hiện dữ liệu demo cho người đã đăng nhập, dưới id kèo thật
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (dữ liệu sai hiển thị như thật) · **P2** |
+| Feature / Screen | F03 · `/trips/[id]/timeline` (route demo) |
+| Nền tảng, cấu hình | web, C1–C3 |
+| Điều kiện | Đã đăng nhập (phiên thật); id là kèo «Đà Lạt cuối tuần» của nhóm |
+| Tái hiện | Mở `/trips/<id kèo>/timeline` |
+| Expected | Như hai route demo anh em (sửa B5, QC 24/09): có phiên thì chuyển về màn sống (`/outings/[id]`) |
+| Actual | Hiện lịch trình demo: «07:00 Khởi hành từ TP.HCM», «11:00 Check-in homestay», «12:30 Ăn trưa - Bánh căn Lệ», ảnh bìa, «2.500.000đ dự kiến một người». Không có nhãn demo, không có nút Quay lại. Hai route anh em đạt: `/trips/[id]/itinerary` → `/outings/[id]`, `/check-ins/new` → `/plan` |
+| Evidence | ![timeline demo khi đã đăng nhập](evidence/EV-F03-DEMO-TIMELINE-C1.jpg) |
+| Source | `app/trips/[id]/timeline.tsx` export thẳng `TripTimelineScreen`, thiếu khối `if (phien !== null) return <Redirect …/>` mà `app/trips/[id]/itinerary.tsx` và `app/check-ins/new.tsx` có |
+| Hậu quả | Link cũ hoặc gõ tay đưa người dùng thật tới một lịch trình bịa mang tên nhóm của họ |
+| Đề xuất sửa | Chép khối chặn B5 sang `timeline.tsx` |
+| Tiêu chí gỡ | Có phiên: `/trips/<id>/timeline` về `/outings/<id>` |
+
+### UI-036 · Đổi thứ tự chặng trên web chỉ làm được bằng kéo
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (accessibility, web) · **P2** |
+| Feature / Screen | F03 · `/outings/[id]` Lịch trình · `ui/ReorderList.tsx` |
+| Nền tảng, cấu hình | web, C1. Native: `accessibilityActions` tăng/giảm là API chuẩn (STATIC, chưa chạy) |
+| Tái hiện | Focus tay nắm «Thứ tự Cà phê sáng», nhấn mũi tên xuống |
+| Expected | Có lối đổi thứ tự không cần kéo, như thao tác tăng/giảm vị trí trên native |
+| Actual | Tay nắm là `role=slider`, không có `tabindex` (không nhận focus), không có `aria-valuenow`/`aria-valuemax`; phím mũi tên không đổi gì. Kéo bằng tay (giữ 450 ms rồi kéo 160dp) thì đạt ở C1 và C9, trang không cuộn theo. «Xếp theo giờ hẹn» chỉ xếp theo giờ, không thay được thứ tự tuỳ ý |
+| Evidence | Hàng `TC-F03-SAP-XEP-PHIM` (đọc DOM); axe ở màn kèo: `aria-required-attr` «Thứ tự …» ×3 (×12 ở kèo 12 chặng) |
+| Source | `ReorderList.tsx:78-84`: `accessibilityRole="adjustable"`, `accessibilityValue` (object, RNW bỏ), `accessibilityActions` (RNW không có) |
+| Hậu quả | Người dùng bàn phím hoặc trình đọc màn hình trên web không đổi được thứ tự chặng |
+| Đề xuất sửa | Trên web, thêm hai nút «Lên/Xuống một chặng» (hoặc xử lý phím mũi tên và `tabIndex=0`), truyền `aria-valuenow/min/max` trực tiếp |
+| Tiêu chí gỡ | Chỉ bằng bàn phím đổi được thứ tự một chặng; axe không còn `aria-required-attr` ở tay nắm |
+
+### UI-037 · Nếp vắng suốt màn kèo, cả khi đang ở Lịch trình
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F03 · `/outings/[id]` |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | Từ Lên plan (có mép Nếp) mở một kèo |
+| Expected | Nếp chỉ nhường chỗ khi bản đồ hiện (chú thích ở `ManHinhHanhTrinh`: bản đồ chạy mép tới mép) |
+| Actual | Lên plan: có Nếp. Kèo ở Lịch trình: không. Bản đồ: không. Lịch trình lại: không. Quay về Lên plan: có |
+| Evidence | ![kèo ở Lịch trình, không có mép Nếp](evidence/EV-F03-NEP-lich-trinh-C1.jpg) (hàng `TC-F03-NEP-LICH-TRINH`) |
+| Source | `OutingLive.tsx:382-385` giữ `SoHanhTrinh` luôn mount, chỉ `display: none`; `ManHinhHanhTrinh.tsx:84` gọi `useNhuongChoNep(true)` vô điều kiện |
+| Đề xuất sửa | `useNhuongChoNep(hienBanDo)`, truyền cờ chế độ từ màn kèo |
+| Tiêu chí gỡ | Kèo ở Lịch trình có mép Nếp; Bản đồ thì không |
+
+### UI-038 · Web: Back khi đang mở sheet rời cả màn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet) |
+| Nền tảng, cấu hình | web, C1 (trên Android Chrome, cử chỉ back hệ thống cũng là Back trình duyệt). Native Android: `Sheet` nghe `BackHandler` nên đóng sheet (STATIC) |
+| Tái hiện | Từ Lên plan mở kèo, mở sheet «Chặng mới», gõ dở tên chặng, bấm Back |
+| Expected | Back đóng sheet, ở lại màn kèo |
+| Actual | Sheet đóng vì màn bị gỡ: URL về `/plan`, 12/12 ô của lưới chạm đổi, chữ đang gõ mất |
+| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt |
+| Source | `src/rudi/ui/Sheet.tsx:145` chỉ nghe `hardwareBackPress` (react-native-web không phát) |
+| Đề xuất sửa | Trên web, đẩy một mục lịch sử khi mở sheet và đóng sheet ở `popstate` (như khay `/create`) |
+| Tiêu chí gỡ | Back khi sheet mở: sheet đóng, URL giữ nguyên |
+
+### UI-039 · «Thêm chặng» là công tắc: chạm đúp mở rồi đóng ngay
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | Chạm «Thêm chặng» hai lần cách 60 ms |
+| Expected | Đúng một sheet mở |
+| Actual | 0 sheet sau 1,3 s: lần chạm thứ hai đóng sheet vừa mở |
+| Evidence | ![sau chạm đúp](evidence/EV-F03-THEM-cham-dup-C1.jpg) (hàng `TC-L08-CHAM-DUP`) |
+| Source | `OutingLive.tsx:289-292` (`setMoThem((v) => !v)`) |
+| Đề xuất sửa | Nút mở chỉ mở (`setMoThem(true)`); đóng thuộc về sheet |
+| Tiêu chí gỡ | Chạm đúp: 1 sheet |
+
+### UI-040 · Sheet «Chặng mới» cao 93% ở cửa sổ thấp
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen / Layer | F03 · L08 · `ui/Sheet.tsx` |
+| Nền tảng, cấu hình | web, C8 (390×460). C2 67%, C6 42% (đạt) |
+| Expected | Sheet ≤ 82% chiều cao (DESIGN.md) |
+| Actual | Sheet cao 427px, 93% màn; chỉ còn 33px nền mờ phía trên để chạm đóng. Nút gửi vẫn thấy được |
+| Evidence | ![C8](evidence/EV-F03-THEM-C8.jpg) (hàng `TC-L08-KICH-THUOC`) |
+| Source | `Sheet.tsx`: trần 82% chỉ áp cho `ScrollView` bên trong; tay cầm và lề cộng thêm ngoài trần |
+| Đề xuất sửa | Áp trần cho cả khung sheet |
+| Tiêu chí gỡ | C8: sheet ≤ 82% |
+
+### UI-041 · Sheet «Sửa trang ngày»: đầu màn không bị làm mờ nhưng chạm vào không có tác dụng
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F03 · `/outings/[id]` Bản đồ · L10 (`hanh-trinh/SoHanhTrinh.tsx`) |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | Bản đồ, chạm «Sửa trang ngày», rồi chạm công tắc «Lịch trình» phía trên sheet |
+| Expected | Nền mờ phủ cả đầu màn; chạm ra ngoài thì đóng sheet |
+| Actual | Đầu màn (Quay lại, tiêu đề, công tắc) vẫn sáng như dùng được, nhưng chạm không đổi chế độ và cũng không đóng sheet (vẫn 1 dialog). Thêm: nút tên «Sửa trang ngày» mở sheet tiêu đề «Những hẹn quan trọng» |
+| Evidence | ![sheet Sửa trang ngày](evidence/EV-F03-SUA-NGAY-C1.jpg) (hàng `TC-L10-NEN`) |
+| Source | `SoHanhTrinh.tsx:156`: `Sheet` nằm trong thân màn, không ở khe `overlay` của `RudiScreen` như sheet của Lịch trình (`OutingLive.tsx:293`, chú thích «Editors live over the route») |
+| Đề xuất sửa | Đưa hai sheet của Bản đồ lên khe `overlay`; thống nhất tên nút và tiêu đề sheet |
+| Tiêu chí gỡ | Khi sheet mở, đầu màn bị làm mờ và chạm vào thì đóng sheet |
+
+### UI-042 · ARIA sai vai trò ở màn kèo
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (accessibility) · **P3** |
+| Feature / Screen | F03 · `/outings/[id]` |
+| Nền tảng, cấu hình | web, C1 và C3 (axe WCAG 2 A/AA) |
+| Actual | axe critical: `aria-allowed-attr` ×3 (×12 ở kèo 12 chặng): nút chặng `role=button` mang `aria-selected`. `aria-required-parent` ×2: «Lịch trình» và «Bản đồ» là `role=tab` mà không có `tablist` (công tắc vẫn báo `aria-selected` đúng khi đổi). `aria-required-attr`: slider «Thứ tự …» thiếu `aria-valuenow` (UI-036), mặt quay giờ cũng là slider không có giá trị |
+| Evidence | Báo cáo axe của ảnh baseline S03 (ở C1 và C3); hàng `TC-F03-CHE-DO`, `TC-L15-KEO` |
+| Source | `keo/HangChang.tsx:129` (`aria-selected` trên button); `hanh-trinh/ThanhCheDo.tsx` (tab không có tablist); `ui/ReorderList.tsx:78`, `ui/BanXoay.tsx:85-88` (`adjustable` + `accessibilityValue`) |
+| Đề xuất sửa | `aria-pressed` hoặc `aria-current` cho chặng đang chọn; bọc công tắc bằng `role=tablist`; truyền `aria-valuenow`/`aria-valuetext` trực tiếp |
+| Tiêu chí gỡ | axe 0 vi phạm critical trên màn kèo |
+
+### UI-043 · Điều khiển bản đồ và popup cụm mang tên tiếng Anh; Esc không đóng popup
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (accessibility, ngôn ngữ) · **P3** |
+| Feature / Screen / Layer | F03 · Bản đồ · L12 (`hanh-trinh/BanDo.tsx`) |
+| Nền tảng, cấu hình | web, C1 |
+| Actual | Nút la bàn của MapLibre tên «Drag to rotate map, click to reset north»; nút đóng popup cụm tên «Close popup». Esc không đóng popup cụm (nút đóng thì đóng). Phần còn lại của popup đạt: nằm trọn trong bản đồ, mục 48px, focus vào danh sách |
+| Evidence | ![popup cụm](evidence/EV-F03-CUM-C1.jpg) (hàng `TC-F03-BAN-DO-NHAN`, `TC-L12-CUM`) |
+| Source | `BanDo.tsx`: `NavigationControl` và `Popup` dùng nhãn mặc định của MapLibre (có tuỳ chọn `locale`) |
+| Đề xuất sửa | Truyền `locale` tiếng Việt cho `Map`; nghe `keydown` Escape khi popup mở |
+| Tiêu chí gỡ | Không còn nhãn tiếng Anh; Esc đóng popup |
+
+### UI-044 · Lên plan: dòng thông tin của vé kèo bị cắt
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F03 · `/plan` · vé trong «Sau đó» |
+| Nền tảng, cấu hình | web; C1 2/3 dòng (thiếu 31 và 135px), C2 2/3 (86, 190px), C4 2/3 (43, 147px), C5 1/3 (104px); C6/C7 đạt |
+| Actual | «24/10/2026 · 8 người · 12 chặng · Còn 27 ngày» còn «…12 chă…»; «31/10 - 01/11/2026 · 8 người · Chưa có chặng nào · Còn 34 ngày» mất cả «Chưa có chặng nào». Phần mất là số chặng và đếm ngược, thông tin phụ nhưng là lý do để mở vé |
+| Evidence | ![C2](evidence/EV-F03-META-C2-ct.jpg) (hàng `TC-F03-META`) |
+| Source | `keo/PlanLive.tsx:103` (`HangKeo`, dòng thông tin `numberOfLines={1}`) |
+| Đề xuất sửa | Hai dòng, hoặc bỏ năm khỏi ngày, hoặc đưa đếm ngược lên cuống vé |
+| Tiêu chí gỡ | C2: không dòng nào mất số chặng |
+
+### UI-045 · Ở 320dp cột tên chặng còn 53px
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F03 · `/outings/[id]` Lịch trình · `keo/HangChang.tsx` |
+| Nền tảng, cấu hình | web, C2 (320). C1: cột 123px, 4 dòng (đạt ngưỡng đo 120px) |
+| Actual | Cột tên chặng rộng 53px, giữa cột giờ, nút «Tôi đã tới» và tay nắm: nhãn 57 ký tự gãy khoảng 9 dòng, «Lưng Chừng Cafe» 3 dòng, «Chưa ai tới» 2 dòng. Không tràn ngang (đạt) |
+| Evidence | ![C2](evidence/EV-F03-DAI-lien-C2.jpg) (hàng `TC-F03-COT-CHANG`) |
+| Đề xuất sửa | Dưới khoảng 360dp, đưa nút check-in xuống dòng dưới tên |
+| Tiêu chí gỡ | C2: cột tên ≥ 120px |
+
+### UI-046 · `/outings/chon` thiếu `?place` thì kẹt skeleton vô hạn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG · **P3** (không có lối vào từ UI; chỉ qua link hỏng) |
+| Feature / Screen | F03 · `/outings/chon` (`keo/PickOutingLive.tsx`) |
+| Nền tảng, cấu hình | web, C1–C3 |
+| Actual | Sau 6 s vẫn 1 skeleton, chỉ có tiêu đề «Thêm vào kèo»; nút Quay lại mở lạnh không làm gì (UI-018) |
+| Evidence | ![thiếu place](evidence/EV-F03-CHON-thieu-C1.jpg) |
+| Source | `PickOutingLive.tsx:59` (`if (!placeId) return;` để trạng thái «đang đọc» mãi) |
+| Đề xuất sửa | Thiếu `place` thì hiện ErrorState có lối về Khám phá |
+| Tiêu chí gỡ | Mở `/outings/chon`: một câu và một lối ra trong ≤ 1 s |
+
+### UI-047 · Tablet: đầu màn kèo co vào giữa, lệch khỏi cột nội dung
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F03 · `/outings/[id]`; chung cho mọi màn dùng khe `header` của `RudiScreen` (STATIC, chat đo ở F05) |
+| Nền tảng, cấu hình | web; C6 và C7 hỏng, C1 đạt |
+| Actual | C6 (768): nút Quay lại ở x=310, nội dung bắt đầu ở x=16 (lệch 294px), công tắc Lịch trình/Bản đồ chỉ rộng 139px. C7 (1024): lệch 390px, công tắc 139px |
+| Evidence | ![C6](evidence/EV-F03-TABLET-C6.jpg) (hàng `TC-F03-DAU-MAN`) |
+| Source | `src/rudi/ui.tsx:156`: khe `header` ở tablet nhận `tabletInner` (`alignSelf: "center"`, `maxWidth: 960`) mà không có `width: "100%"`, nên co về bề rộng nội tại |
+| Đề xuất sửa | Thêm `width: "100%"` cho khe `header` ở tablet |
+| Tiêu chí gỡ | C6/C7: nút Quay lại thẳng mép trái cột nội dung |
 
 ## F09 Hồ sơ · Cài đặt
 

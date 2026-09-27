@@ -164,8 +164,8 @@ Mặc định không né bàn phím.
 | L07 | Báo cáo bài | `tuong/BaiChiTietScreen.tsx` | F08.S08 | có | Sheet | |
 | L08 | Chặng mới | `keo/OutingLive.tsx` | F03.S03 | có + `BanXoay` | Sheet | |
 | L09 | Gắn quán | `keo/OutingLive.tsx` | F03.S03 | tìm | Sheet | |
-| L10 | Sửa ngày | `hanh-trinh/SoHanhTrinh.tsx` | F03.S04 | 6 ô + 2 công tắc | Sheet | không nằm trong khe overlay: nền có thể không phủ header |
-| L11 | Điểm hẹn | `hanh-trinh/SoHanhTrinh.tsx` | F03.S04 | có | Sheet | như L10 |
+| L10 | Sửa ngày | `hanh-trinh/SoHanhTrinh.tsx` | F03.S04 | 6 ô + 2 công tắc | Sheet | không nằm trong khe overlay: đã đo ở checkpoint 4, nền không phủ đầu màn (UI-041); tiêu đề sheet «Những hẹn quan trọng» |
+| L11 | Điểm hẹn | `hanh-trinh/SoHanhTrinh.tsx` | F03.S04 | có | Sheet | như L10; mở bằng chuột phải trên web, giữ ngón tay trên native (`onLongPress`) |
 | L12 | Popup cụm bản đồ | `hanh-trinh/BanDo.tsx` (web) | F03.S04 | — | nút đóng | maplibre Popup |
 | L13 | Trang ngày gập được | `hanh-trinh/ManHinhHanhTrinh.tsx` | F03.S04 | — | gập/mở | |
 | L14 | Lá lịch tháng | `ui/ChonNgayLich.tsx` | F03.S02 | — | chọn ngày | ô ngày 44dp |

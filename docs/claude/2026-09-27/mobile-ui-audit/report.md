@@ -4,8 +4,8 @@
 - MODE = **AUDIT_ONLY**: không sửa mã app; chỉ thêm tài liệu, ảnh bằng chứng và harness đo.
 - protocol_version: không áp dụng (không đụng giao thức v1 hay trang khách).
 - Verdict: không có (chưa có reviewer thật; đây là báo cáo phát hiện).
-- Trạng thái: **đang làm, checkpoint 3** (xong F00, F01, F02). Mục «Checkpoint» ở cuối là nguồn sự thật
-  về phần đã và chưa đo.
+- Trạng thái: **đang làm, checkpoint 4** (xong F00–F03). Mục «Checkpoint» ở cuối là nguồn sự thật về
+  phần đã và chưa đo.
 
 Tài liệu đi kèm:
 - `inventory.md`: danh mục feature → screen → lớp UI → motion.
@@ -28,6 +28,7 @@ Tài liệu đi kèm:
 | Dữ liệu | `seed:rudi` (Team Đà Lạt: 8 người, 13 tin, 1 kèo 3 ngày, bill 1.280.000đ, 1 đợt thu, 5 kỷ niệm) + chat seed (22 người tổng hợp, nhóm 20 thành viên, 2 DM). Toàn bộ là dữ liệu giả; số điện thoại bị che trên mọi ảnh |
 | Phiên | OTP qua API một lần cho mỗi persona, rồi gắn vào trang bằng `POST /sessions/web` (cookie HttpOnly, đúng đường app tự dùng sau khi tải lại). Luồng OTP qua UI được audit riêng ở F01 |
 | Gián đoạn | Máy khởi động lại giữa F02. Postgres, API và cửa Go được dựng lại trên đúng thư mục dữ liệu cũ, không seed lại; phiên đã lưu vẫn dùng được. Mọi hàng F02 ghi sau đó chạy trên cùng dữ liệu |
+| Dữ liệu biến thể (F03) | `tests/qa/mobile-ui-audit/seed-bien-the.mjs` tạo qua API của app hai kèo giả: tên 96 ký tự với 12 chặng dài (một nhãn 57 ký tự liền), và kèo 2 ngày không chặng. Ca nào ghi vào hai kèo này thì đặt lại chặng sau đó. Việc dọn dẹp chỉ chạy trên DB cục bộ: xoá kèo «Kèo thử…» do ca tạo kèo sinh ra, xoá check-in của kèo biến thể. Không route nào xoá được hai thứ này, và đã kiểm trước: không bảng hay tin chat nào tham chiếu tới chúng |
 
 ### Ma trận cấu hình
 
@@ -69,17 +70,17 @@ Cách lấy mẫu:
 | Trình đọc màn hình thật, haptics, BackHandler, vuốt back iOS | BLOCKED | Chỉ đo cây ARIA trên web |
 | Độ mượt / FPS | Không đo | SwiftShader headless không đại diện cho máy; motion chỉ kết luận về hình dạng (đi đâu, dừng đâu, có bị ngắt, giảm chuyển động) |
 
-## B. Coverage thực tế (checkpoint 3)
+## B. Coverage thực tế (checkpoint 4)
 
 Đếm lấy từ `coverage-matrix.md` (sinh máy). Mọi hàng BLOCKED và NOT_TESTED đều được đếm.
 
 | Phạm vi | PASS | FAIL | BLOCKED | NOT_TESTED | N/A |
 |---|---|---|---|---|---|
-| Tất cả (387 hàng) | 75 | 51 | 180 | 78 | 3 |
-| Web | 75 | 51 | 60 | 78 | 3 |
+| Tất cả (467 hàng) | 131 | 90 | 181 | 62 | 3 |
+| Web | 131 | 90 | 61 | 62 | 3 |
 | Android native | 0 | 0 | 60 | 0 | 0 |
 | iOS native | 0 | 0 | 60 | 0 | 0 |
-| Method RUNTIME-WEB | 75 | 51 | 0 | 78 | 3 |
+| Method RUNTIME-WEB | 131 | 90 | 1 | 62 | 3 |
 | Method STATIC | 0 | 0 | 180 | 0 | 0 |
 
 Theo feature đã đo:
@@ -89,8 +90,12 @@ Theo feature đã đo:
 | F00 Vỏ toàn cục | 33 | 17 | 15 | 4 | 1 |
 | F01 Vào cửa | 18 | 7 | 15 | 0 | 0 |
 | F02 Khám phá | 24 | 26 | 12 | 1 | 2 |
+| F03 Plan · Kèo · Hành trình | 56 | 39 | 25 | 0 | 0 |
 
-Hàng rút: `coverage-matrix.md` có mục «Hàng đã rút» cho 7 test case có phán quyết sinh từ lỗi của harness.
+Một hàng BLOCKED trên web là thật sự không chạy được trong giả lập: giữ ngón tay trên bản đồ (`TC-L11-GIU`). Giả lập
+cảm ứng CDP không sinh `contextmenu` từ cú giữ như Chrome Android thật.
+
+Hàng rút: `coverage-matrix.md` có mục «Hàng đã rút» cho 14 test case có phán quyết sinh từ lỗi của harness.
 Sổ gốc giữ nguyên các dòng đó; ma trận chỉ bỏ chúng khỏi bảng và ghi lý do.
 
 Inventory:
@@ -99,13 +104,13 @@ Inventory:
 
 ## C. Issues
 
-31 issue sau checkpoint 3, chi tiết và ảnh ở `issues.md`.
+47 issue sau checkpoint 4, chi tiết và ảnh ở `issues.md`.
 
 | Mức | BUG | UX ISSUE | VISUAL POLISH |
 |---|---|---|---|
 | P1 | UI-005 | | |
-| P2 | UI-003, UI-004, UI-006, UI-011, UI-016, UI-022 | UI-002, UI-018, UI-019, UI-021, UI-023, UI-024 | |
-| P3 | UI-010, UI-013, UI-027 | UI-001, UI-007, UI-008, UI-009, UI-012, UI-015, UI-017, UI-020, UI-028, UI-029, UI-030 | UI-014, UI-025, UI-026, UI-031 |
+| P2 | UI-003, UI-004, UI-006, UI-011, UI-016, UI-022, UI-032, UI-035, UI-036 | UI-002, UI-018, UI-019, UI-021, UI-023, UI-024, UI-033, UI-034 | |
+| P3 | UI-010, UI-013, UI-027, UI-042, UI-046 | UI-001, UI-007, UI-008, UI-009, UI-012, UI-015, UI-017, UI-020, UI-028, UI-029, UI-030, UI-037, UI-038, UI-039, UI-041, UI-043, UI-044 | UI-014, UI-025, UI-026, UI-031, UI-040, UI-045, UI-047 |
 
 Đổi mức: UI-018 từ P3 lên P2 ở checkpoint 3. Nút back của `TopBar` trong kit (37 file màn) cũng không kiểm
 `canGoBack()`, và F02 đo lại được ở `/places/[id]`, một màn không có thanh tab nên mở thẳng bằng link thì
@@ -121,6 +126,15 @@ trong app không còn lối ra.
 - **UI-022 (P2, web):** «Chỉ đường» và dòng địa chỉ là nút chết trên web (`geo:` qua `window.open`), không
   có câu báo. Trên iOS nghi vấn luôn báo «chưa có ứng dụng bản đồ» (chưa đo).
 - **UI-024 (P2):** nút ✦ «Hỏi Rủ Đi AI» chỉ thả câu mẫu; danh sách lập tức báo «0 kết quả» trước khi có câu hỏi.
+- **UI-032 (P2, Kèo):** với kèo nhiều ngày, chế độ Bản đồ không hiện chặng nào. Chặng thêm từ Lịch trình
+  hay «Thêm vào kèo» không có ngày, và màn chỉ vẽ chặng có ngày. Kèo 1 ngày thì đạt.
+- **UI-034 (P2, tạo kèo):** ô ngân sách hiện placeholder «250000» như đã điền; bỏ trống thì «Tạo kèo» từ
+  chối bằng một câu nằm ngoài màn.
+- **UI-035 (P2):** `/trips/[id]/timeline` hiện lịch trình demo cho người đã đăng nhập, thiếu lớp chặn B5 mà
+  hai route anh em có.
+- **UI-036 (P2, web):** đổi thứ tự chặng chỉ làm được bằng kéo; tay nắm không nhận focus.
+- **UI-003 sửa đề xuất:** checkpoint 3 nêu `HangChang` làm ví dụ đúng, nhưng nó đặt `aria-selected` trên
+  `button`, là thuộc tính không hợp lệ (UI-042). Đề xuất đã sửa theo role.
 
 Danh sách quét tĩnh cho UI-003: 20/35 chỗ dùng `accessibilityState` mà không truyền kèm `aria-*` tương ứng.
 Mỗi dòng cần xác nhận runtime: `Onboarding.tsx:252` hoá ra dương tính giả (role radio đã có `aria-checked`).
@@ -156,14 +170,25 @@ Phát hiện bị loại vì là lỗi của harness, không phải của app:
 - Ảnh ghép có khung đỏ cũ: bản chú thích của lượt trước còn sót khi lượt mới không khoanh gì. `chup` nay xoá
   bản cũ.
 
+Ở F03:
+- «Tạo kèo không đi đâu»: lượt đầu harness không điền ngân sách. Chính điều này lộ ra bẫy UI-034, được đo
+  thành ca riêng.
+- «Câu lỗi nhãn chặng không có»: câu thật là «Đặt tên cho chặng, ví dụ Ăn tối.», regex của harness đoán sai.
+- «Đóng sheet Gắn quán để sót lớp»: lưới chạm «trước» được chụp trước khi cuộn chặng vào tầm nhìn.
+- «Lịch tháng không khép»: phép đếm ô ngày tính cả hai lá ngày.
+- «Nhãn chuỗi liền bị che»: tín hiệu che là hàng đang cuộn dưới đầu màn cố định; tiêu chí quá chặt.
+- «Kéo nghiêng / giữ ngón tay trên bản đồ không làm gì»: giả lập cảm ứng không sinh `contextmenu`; ghi BLOCKED.
+- Giả định sai trong seed: thay lịch trình không đổi id chặng, nên check-in không tự mất. Đã đo lại và sửa.
+
 Mỗi trường hợp đã sửa trong harness, và giữ ghi chú ở đây để người đọc biết đã được loại trừ.
 
 ## D. Thay đổi
 
 Không sửa file nào trong `apps/`, `services/`, `packages/`. Thêm:
-- `docs/claude/2026-09-27/mobile-ui-audit/`: tài liệu và ảnh (51 ảnh, 7,52 MiB, ngân sách 20 MiB);
+- `docs/claude/2026-09-27/mobile-ui-audit/`: tài liệu và ảnh (65 ảnh, 8,86 MiB, ngân sách 20 MiB);
 - `tests/qa/mobile-ui-audit/`: harness. Thư viện dùng chung ở `thu-vien/` (trước là `lib/`, xem sự cố 2);
-  `kich-ban/f02-phan-xu.mjs` ghi các phán quyết bằng mắt kèm ảnh đã xem;
+  `kich-ban/f02-phan-xu.mjs`, `f03-phan-xu.mjs` ghi các phán quyết bằng mắt kèm ảnh đã xem;
+  `seed-bien-the.mjs` tạo dữ liệu biến thể qua API;
 - các mục ghim ảnh trong `.repo-guard-allowlist.json`.
 
 ## E. Verification
@@ -179,7 +204,14 @@ Không sửa file nào trong `apps/`, `services/`, `packages/`. Thêm:
 Test fail có sẵn:
 - `tests/rudi-hanh-trinh-web.test.mjs:76`: «timed out waiting for Lịch trình trên /plan».
 - Test này mở bản build-check không backend, trỏ tới host `.invalid`.
-- Nghi vấn: màn trả `null` trong lúc chờ khôi phục phiên (xem UI-009). Sẽ đo ở F03.
+- Đã đo ở F03. Kết luận: không tái hiện như lỗi màn.
+  - Chạy lại riêng test: vẫn đỏ, hết 25 s.
+  - Cùng bản build-check, cùng Chromium, mở bằng Playwright: `/plan` (demo khi chưa đăng nhập) hiện
+    «Lịch trình» sau 660 ms với cờ `--disable-gpu` như test, và 803 ms với SwiftShader.
+  - Request `.invalid` hỏng ngay (ERR_NAME_NOT_RESOLVED ở 553 ms).
+  - Bản E1 khi chặn hết API cũng hiện sau 654 ms.
+  - Nguyên nhân nằm trong harness `chrome-cdp` của test, chưa khoanh. Giả thuyết cũ (UI-009) không đứng vững
+    cho ca này.
 
 ### Sự cố quy trình
 
@@ -215,7 +247,7 @@ Test fail có sẵn:
 
 ## Checkpoint
 
-- **Đã xong:** F00 (vỏ toàn cục), F01 (vào cửa), F02 (Khám phá).
+- **Đã xong:** F00 (vỏ toàn cục), F01 (vào cửa), F02 (Khám phá), F03 (Plan · Kèo · Hành trình).
   - F00:
     - định tuyến theo phiên, URL lạ;
     - thanh tab và rail ở 9 cấu hình;
@@ -237,9 +269,19 @@ Test fail có sẵn:
     - «Thêm vào kèo», «Chỉ đường», back lạnh;
     - chữ bị cắt đo bằng DOM ở C1–C7;
     - MO12: bật dựng C1/C9, bỏ lọc C1/C9, nhảy bố cục theo từng khung hình.
-- **Tiếp theo:** F03 Plan/Kèo/Hành trình → F04 Tiền → F05 Chat → F06 Nhóm và người → F07 Sổ đôi →
-  F08 Kỷ niệm → F09 Hồ sơ/Cài đặt → F10 bảng QA dev → F11 demo → E1–E6.
+  - F03:
+    - baseline 8 màn ở C1–C3, danh sách/form/kèo ở C4–C7, kèo 12 chặng và kèo rỗng;
+    - Nếp ở màn kèo; công tắc Lịch trình/Bản đồ và việc giữ chế độ;
+    - Bản đồ: ngày trống ở 7 cấu hình, mốc theo ngày ở kèo 1 ngày và 3 ngày;
+    - sheet «Chặng mới»: 7 cách đóng, focus, chạm đúp, nhãn rỗng, gửi thật, C8/C2/C6;
+    - gắn quán, kéo đổi thứ tự (C1, C9) và lối bàn phím, check-in;
+    - tạo kèo: thiếu tên, bẫy ngân sách, chip, lịch tháng, tạo thật và M5 (C1, C9), C8;
+    - thêm quán vào kèo, route thiếu tham số, 3 route demo, 503, offline, back lạnh;
+    - các lớp L09–L15: sheet sửa ngày, điểm hẹn, popup cụm, trang ngày gập, lá lịch, mặt quay giờ;
+    - đầu màn ở tablet.
+- **Tiếp theo:** F04 Tiền → F05 Chat → F06 Nhóm và người → F07 Sổ đôi → F08 Kỷ niệm → F09 Hồ sơ/Cài đặt →
+  F10 bảng QA dev → F11 demo → E1–E6.
 - **Còn NOT_TESTED:**
-  - mọi hàng của F03–F11 trong `coverage-matrix.md`;
+  - mọi hàng của F04–F11 trong `coverage-matrix.md`;
   - `TC-F02-CHI-TIET-RU`, nút «Rủ <tên> tới đây», cần persona có sổ đôi, chuyển F07;
   - 4 hàng F00 đã ghi ở checkpoint trước.

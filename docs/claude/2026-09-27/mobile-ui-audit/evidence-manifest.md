@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (51 ảnh, tổng 7.52 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (65 ảnh, tổng 8.86 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -55,3 +55,17 @@
 | [EV-F02-OFFLINE-C1](evidence/EV-F02-OFFLINE-C1.jpg) | UI-030: mất mạng rồi quay lại tab, danh sách 10 nơi đã tải bị thay bằng màn lỗi (C1) | 108756 | `d24ae63a` |
 | [EV-F02.S02-rong-BASE-ghep](evidence/EV-F02.S02-rong-BASE-ghep.jpg) | UI-031: Điểm đến ở 768 và 1024 vẫn 2 cột (C6, C7) | 135829 | `aad86a2c` |
 | [EV-F02.S03-dai-BASE-ghep](evidence/EV-F02.S03-dai-BASE-ghep.jpg) | Dữ liệu dài đạt: tên quán 76 ký tự xuống dòng, giá 1.250.000đ – 12.500.000đ đọc trọn (C1–C3) | 184779 | `bd541cf0` |
+| [EV-F03-BAN-DO-chang-goc-C1](evidence/EV-F03-BAN-DO-chang-goc-C1.jpg) | UI-032: kèo 3 ngày có 3 chặng gắn quán, Bản đồ ngày nào cũng «chưa có điểm nào» (C1) | 84899 | `2930ad57` |
+| [EV-F03-BAN-DO-rong-C1-ct](evidence/EV-F03-BAN-DO-rong-C1-ct.jpg) | UI-033: ngày trống, vùng cuộn của trang ngày giấu «Về Lịch trình» (C1, khung đỏ = vùng thấy) | 96390 | `83a483f7` |
+| [EV-F03-BAN-DO-rong-C8-ct](evidence/EV-F03-BAN-DO-rong-C8-ct.jpg) | UI-033: ở cửa sổ 390×460 vùng cuộn của trang ngày cao 0 (C8) | 56236 | `06125867` |
+| [EV-F03-CHON-thieu-C1](evidence/EV-F03-CHON-thieu-C1.jpg) | UI-046: /outings/chon thiếu ?place, skeleton đứng mãi (C1) | 55267 | `438028b3` |
+| [EV-F03-CUM-C1](evidence/EV-F03-CUM-C1.jpg) | UI-043: popup cụm mốc trên bản đồ; nút đóng tên tiếng Anh (C1) | 107038 | `f10a1a03` |
+| [EV-F03-DAI-lien-C2](evidence/EV-F03-DAI-lien-C2.jpg) | UI-045: ở 320dp cột tên chặng còn 53px, nhãn dài gãy 9 dòng (C2) | 59855 | `68d616db` |
+| [EV-F03-DEMO-TIMELINE-C1](evidence/EV-F03-DEMO-TIMELINE-C1.jpg) | UI-035: /trips/<id>/timeline hiện lịch trình demo cho người đã đăng nhập (C1) | 156578 | `e89e6459` |
+| [EV-F03-META-C2-ct](evidence/EV-F03-META-C2-ct.jpg) | UI-044: dòng thông tin vé «Sau đó» bị cắt ở Lên plan (C2, khung đỏ ghi px thiếu) | 101150 | `53bc1bc0` |
+| [EV-F03-NEP-lich-trinh-C1](evidence/EV-F03-NEP-lich-trinh-C1.jpg) | UI-037: màn kèo ở chế độ Lịch trình không có mép Nếp (C1) | 122541 | `91f11615` |
+| [EV-F03-SUA-NGAY-C1](evidence/EV-F03-SUA-NGAY-C1.jpg) | UI-041: sheet «Sửa trang ngày» không làm mờ đầu màn (C1) | 83590 | `c81d84ea` |
+| [EV-F03-TABLET-C6](evidence/EV-F03-TABLET-C6.jpg) | UI-047: ở 768 đầu màn kèo co vào giữa, lệch khỏi cột nội dung (C6) | 185109 | `c9b258bc` |
+| [EV-F03-TAO-ngan-sach-trong-C1](evidence/EV-F03-TAO-ngan-sach-trong-C1.jpg) | UI-034: ô ngân sách chỉ có placeholder «250000»; chạm «Tạo kèo» không thấy gì xảy ra (C1) | 118145 | `53f2ea99` |
+| [EV-F03-THEM-C8](evidence/EV-F03-THEM-C8.jpg) | UI-040: sheet «Chặng mới» cao 93% ở cửa sổ 390×460 (C8) | 54504 | `7caf28a4` |
+| [EV-F03-THEM-cham-dup-C1](evidence/EV-F03-THEM-cham-dup-C1.jpg) | UI-039: chạm «Thêm chặng» hai lần cách 60 ms, không sheet nào mở (C1) | 122541 | `91f11615` |

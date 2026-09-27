@@ -253,5 +253,75 @@
   "bytes": 184779,
   "sha8": "bd541cf0",
   "moTa": "Dữ liệu dài đạt: tên quán 76 ký tự xuống dòng, giá 1.250.000đ – 12.500.000đ đọc trọn (C1–C3)"
+ },
+ "EV-F03-BAN-DO-chang-goc-C1": {
+  "bytes": 84899,
+  "sha8": "2930ad57",
+  "moTa": "UI-032: kèo 3 ngày có 3 chặng gắn quán, Bản đồ ngày nào cũng «chưa có điểm nào» (C1)"
+ },
+ "EV-F03-BAN-DO-rong-C1-ct": {
+  "bytes": 96390,
+  "sha8": "83a483f7",
+  "moTa": "UI-033: ngày trống, vùng cuộn của trang ngày giấu «Về Lịch trình» (C1, khung đỏ = vùng thấy)"
+ },
+ "EV-F03-BAN-DO-rong-C8-ct": {
+  "bytes": 56236,
+  "sha8": "06125867",
+  "moTa": "UI-033: ở cửa sổ 390×460 vùng cuộn của trang ngày cao 0 (C8)"
+ },
+ "EV-F03-CHON-thieu-C1": {
+  "bytes": 55267,
+  "sha8": "438028b3",
+  "moTa": "UI-046: /outings/chon thiếu ?place, skeleton đứng mãi (C1)"
+ },
+ "EV-F03-CUM-C1": {
+  "bytes": 107038,
+  "sha8": "f10a1a03",
+  "moTa": "UI-043: popup cụm mốc trên bản đồ; nút đóng tên tiếng Anh (C1)"
+ },
+ "EV-F03-DAI-lien-C2": {
+  "bytes": 59855,
+  "sha8": "68d616db",
+  "moTa": "UI-045: ở 320dp cột tên chặng còn 53px, nhãn dài gãy 9 dòng (C2)"
+ },
+ "EV-F03-DEMO-TIMELINE-C1": {
+  "bytes": 156578,
+  "sha8": "e89e6459",
+  "moTa": "UI-035: /trips/<id>/timeline hiện lịch trình demo cho người đã đăng nhập (C1)"
+ },
+ "EV-F03-META-C2-ct": {
+  "bytes": 101150,
+  "sha8": "53bc1bc0",
+  "moTa": "UI-044: dòng thông tin vé «Sau đó» bị cắt ở Lên plan (C2, khung đỏ ghi px thiếu)"
+ },
+ "EV-F03-NEP-lich-trinh-C1": {
+  "bytes": 122541,
+  "sha8": "91f11615",
+  "moTa": "UI-037: màn kèo ở chế độ Lịch trình không có mép Nếp (C1)"
+ },
+ "EV-F03-SUA-NGAY-C1": {
+  "bytes": 83590,
+  "sha8": "c81d84ea",
+  "moTa": "UI-041: sheet «Sửa trang ngày» không làm mờ đầu màn (C1)"
+ },
+ "EV-F03-TABLET-C6": {
+  "bytes": 185109,
+  "sha8": "c9b258bc",
+  "moTa": "UI-047: ở 768 đầu màn kèo co vào giữa, lệch khỏi cột nội dung (C6)"
+ },
+ "EV-F03-TAO-ngan-sach-trong-C1": {
+  "bytes": 118145,
+  "sha8": "53f2ea99",
+  "moTa": "UI-034: ô ngân sách chỉ có placeholder «250000»; chạm «Tạo kèo» không thấy gì xảy ra (C1)"
+ },
+ "EV-F03-THEM-C8": {
+  "bytes": 54504,
+  "sha8": "7caf28a4",
+  "moTa": "UI-040: sheet «Chặng mới» cao 93% ở cửa sổ 390×460 (C8)"
+ },
+ "EV-F03-THEM-cham-dup-C1": {
+  "bytes": 122541,
+  "sha8": "91f11615",
+  "moTa": "UI-039: chạm «Thêm chặng» hai lần cách 60 ms, không sheet nào mở (C1)"
  }
 }
