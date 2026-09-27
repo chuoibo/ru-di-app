@@ -429,8 +429,28 @@ Browser thật: feed200; legacy submit202 → pending, người lạ404; 0 lỗi
 
 Lượt gate đầu trên cây sạch bắt hai thiếu sót tích hợp: evidence route
 còn trỏ số ADR cũ và Composer import helper của phần workspace chưa
-commit. Bản bàn giao sửa đường dẫn evidence và dùng trực tiếp điều kiện
-kind khác pair (cùng semantics), không kéo theo thay đổi loại sổ khác.
+commit. Bản bàn giao sửa đường dẫn evidence và thêm helper coTuongNhom tối
+thiểu vào module chính sách, không kéo theo thay đổi loại sổ khác.
 Số gate sau cùng nằm trong commit bàn giao; không coi số test trước gộp
 là số của main mới. Full native, burst/soak và chất lượng AI không được
 suy rộng từ kiểm tra browser/contract sau gộp.
+
+
+Lượt sạch `90f2efa6`: PostgreSQL race/codec 61 PASS, sentinel, 0 skip;
+HTTP/WS hai replica 33 request PASS; identity3PASS và hai mutant ACL/media
+đỏ đúng assertion, cùng harness SHA. Hai lượt dựng fixture HTTP đầu dừng
+trước khi tạo fixture; lượt sau hoàn tất, không thay source hay giảm assertion.
+
+Mobile sau sửa typecheck: 1.232 PASS, 6 FAIL, 0 skip. Nguyên nhân và bản sửa:
+- Nút Để sau màu accent trên paper: dùng chữ ink, giữ hit target 48.
+- Hai TextInput thiếu focus theo quy ước web mới: bỏ viền browser, vẽ
+  border theo theme khi focus, không bỏ dấu hiệu focus.
+- Bộ phân loại sổ phải ở một module: helper tối thiểu đặt trong ban-tinh.
+- Test nhật ký mang theo giả định hai loại sổ của workspace cũ: giữ ba
+  loại của main theo ADR-0027; pair không có consent vẫn là hai-nguoi.
+- Fixture Maestro chưa biết các flow mới: bổ sung tên screenshot và chín
+  chuỗi động/nhãn Android kèm nguồn giải thích. Đây là mở rộng fixture cho
+  flow mới, ngoại lệ với ghi chú chỉ co danh sách cũ; không đổi selector,
+  không nới bộ quét, không xoá test. Chưa gọi đó là native pass sau merge.
+
+Lượt kiểm lại bản sửa được ghi bằng SHA và số cụ thể trong commit bàn giao.

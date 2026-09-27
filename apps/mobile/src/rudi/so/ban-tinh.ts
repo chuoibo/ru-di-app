@@ -80,3 +80,8 @@ export function loaiSoCua(nhom: { kind?: "group" | "pair" }, doi: { bat: boolean
 export function banTinhCua(loai: LoaiSo): BanTinhSo {
   return BAN_TINH[loai];
 }
+
+/** Group walls exclude private pair conversations, regardless of couple consent. */
+export function coTuongNhom(nhom: { kind?: "group" | "pair" }): boolean {
+  return nhom.kind !== "pair";
+}

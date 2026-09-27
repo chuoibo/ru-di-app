@@ -1,15 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { initialPhotos, selectedBundle, movePage, togglePhoto } from '../dist-test/rudi/diary/api.js';
-import { LOAI_SO, loaiSoCua, banTinhCua } from '../dist-test/rudi/so/ban-tinh.js';
+import { LOAI_SO, loaiSoCua, banTinhCua, coTuongNhom } from '../dist-test/rudi/so/ban-tinh.js';
 
-test('hai quan hệ: pair chưa đồng thuận là hội bạn, không tự thành cặp đôi', () => {
-  assert.deepEqual(LOAI_SO, ['hoi', 'doi']);
-  assert.equal(loaiSoCua({kind:'pair'}, null), 'hoi');
-  assert.equal(loaiSoCua({kind:'pair'}, {bat:false}), 'hoi');
+test('giữ ba loại sổ hiện hành: pair chưa đồng thuận không tự thành cặp đôi', () => {
+  assert.deepEqual(LOAI_SO, ['hoi', 'hai-nguoi', 'doi']);
+  assert.equal(loaiSoCua({kind:'pair'}, null), 'hai-nguoi');
+  assert.equal(loaiSoCua({kind:'pair'}, {bat:false}), 'hai-nguoi');
   assert.equal(loaiSoCua({kind:'pair'}, {bat:true}), 'doi');
   assert.equal(loaiSoCua({kind:'group'}, {bat:true}), 'hoi');
   assert.equal(banTinhCua('hoi').tienHien, 'chia-bill');
+});
+test('chỉ nhóm có tường chung, cuộc nhắn riêng không có', () => {
+  assert.equal(coTuongNhom({kind:'group'}), true);
+  assert.equal(coTuongNhom({}), true);
+  assert.equal(coTuongNhom({kind:'pair'}), false);
 });
 const source = {title:'Synthetic trip',starts_on:'2026-01-01',ends_on:'2026-01-02',kind:'trip',places:[],excerpts:[],photos:[{id:'a',day:'2026-01-01',caption:''},{id:'b',day:'2026-01-03',caption:''}]};
 test('gợi ý ảnh theo ngày nhưng gửi đúng lựa chọn, không tự gửi chat', () => {

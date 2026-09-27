@@ -174,6 +174,7 @@ phạm vi bridge/UI sau merge, không chứng nhận native trên main mới.
 Ảnh tổng hợp đưa kèm commit: [phone](../../docs/assets/community/feed-phone.png),
 [desktop](../../docs/assets/community/feed-desktop.png),
 [pending](../../docs/assets/community/legacy-pending.png).
-Composer dùng trực tiếp điều kiện kind khác pair thay helper tương đương
-của workspace cũ; giữ nguyên lựa chọn và hình thức hiển thị. Không sửa
+Composer dùng helper coTuongNhom tối thiểu trong module chính sách
+ban-tinh; giữ nguyên ba loại sổ của main. Sửa độ tương phản nút Để sau
+trên nền giấy và dùng focus border theo theme cho hai ô nhập. Không sửa
 DESIGN.md hoặc sidecar trong bước tích hợp.

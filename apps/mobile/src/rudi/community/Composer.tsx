@@ -11,6 +11,8 @@ import { Field, RudiButton, RudiScreen, TopBar } from "../ui";
 import { createPost, getPost, type Audience, type Media } from "./api";
 import { MediaPicker } from "./MediaPicker";
 import { MentionPicker } from "./MentionPicker";
+import { coTuongNhom } from "../so/ban-tinh";
+import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
 export function Composer() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -21,6 +23,7 @@ export function Composer() {
         wall?: string;
     }>();
     const [body, setBody] = useState("");
+    const [bodyFocused, setBodyFocused] = useState(false);
     const [audience, setAudience] = useState<Audience>(params.wall ? "friends" : "public");
     const [topics, setTopics] = useState("");
     const [mentions, setMentions] = useState<string[]>([]);
@@ -34,7 +37,7 @@ export function Composer() {
     const [revision, setRevision] = useState(0);
     const attempt = useRef(newAttempt().key);
     useEffect(() => { if (!phien)
-        return; void docNhomCuaToi(phien.person_id).then((rows) => setGroups(rows.filter((g) => g.my_state === "active" && g.kind !== "pair"))).catch(() => { }); if (params.edit)
+        return; void docNhomCuaToi(phien.person_id).then((rows) => setGroups(rows.filter((g) => g.my_state === "active" && coTuongNhom(g)))).catch(() => { }); if (params.edit)
         void getPost(phien.person_id, params.edit).then((p) => { setBody(p.body); setAudience(p.audience); setTopics(p.topics.join(", ")); setMentions(p.mentions); setMedia(p.media); setRevision(p.revision); setGroup(p.context_id); }).catch((e) => setError(String(e.message))); }, [phien, params.edit]);
     const send = async () => {
         if (!phien || busy || uploading)
@@ -67,7 +70,7 @@ export function Composer() {
     return <RudiScreen avoidKeyboard footerInset={insets.bottom + 12} testID="community-composer" footer={<RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} disabled={busy || uploading || !body.trim() || (audience === "group" && !group)} onPress={() => void send()}/>}>
     <TopBar title={params.edit ? "Viết tiếp câu chuyện" : "Kể một khoảnh khắc"}/>
     <Text style={[typography.h1, { color: colors.ink }]}>Hôm nay có gì đáng nhớ?</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Một cuộc đi thật, một điều bạn muốn kể.</Text>
-    <TextInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Quán nhỏ ở góc phố, chuyến đi còn vương nắng…" placeholderTextColor={colors.inkFaint} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change(() => setBody(value))} style={[typography.body, { color: colors.ink, minHeight: 180, textAlignVertical: "top", paddingVertical: 20, lineHeight: 28 }]}/>
+    <TextInput testID="community-body" accessibilityLabel="Nội dung bài đăng" placeholder="Quán nhỏ ở góc phố, chuyến đi còn vương nắng…" placeholderTextColor={colors.inkFaint} multiline maxLength={5000} value={body} editable={!busy} onChangeText={(value) => change(() => setBody(value))} onFocus={() => setBodyFocused(true)} onBlur={() => setBodyFocused(false)} style={[typography.body, KHONG_VIEN_WEB, { borderBottomWidth: 1, borderBottomColor: bodyFocused ? colors.accent : colors.line, color: colors.ink, minHeight: 180, textAlignVertical: "top", paddingVertical: 20, lineHeight: 28 }]}/>
     <MediaPicker person={phien.person_id} media={media} onChange={(v) => change(() => setMedia(v))} onBusy={setUploading}/>
     <Field label="Chủ đề" placeholder="Ví dụ: cà phê, đi bộ, Đà Lạt" value={topics} onChangeText={(v) => change(() => setTopics(v))}/>
     <Text style={[typography.caption, { color: colors.inkFaint }]}>Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy.</Text>
