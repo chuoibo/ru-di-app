@@ -126,13 +126,14 @@ func TestRagReadsOnlyTheCatalogueAcrossPackages(t *testing.T) {
 	c := g.reach(roots...)
 	for _, must := range []string{
 		"(" + pkgRag + ".Kho).Retrieve",
-		"(" + pkgRag + ".Kho).DanhSachNgan",
+		"(" + pkgRag + ".Kho).RetrieveVersion",
 		pkgRag + ".Build",
 		pkgRag + ".Evaluate",
 		pkgRag + ".Promote",
 		pkgRag + ".Rollback",
 		// The reads it makes through the repository are inside the walk.
 		"(mobile/services/core/internal/repo.Repository).ListPlaces",
+		"(mobile/services/core/internal/repo.Repository).ListPlaceCards",
 		"(mobile/services/core/internal/repo.Repository).PlacesByID",
 		"(mobile/services/core/internal/repo.Repository).ListDestinations",
 	} {

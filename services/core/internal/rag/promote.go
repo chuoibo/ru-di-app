@@ -190,7 +190,8 @@ func thamDo(dest string) []YeuCau {
 
 func locSQL(ctx context.Context, q Querier, version int64, r rangBuoc) (map[string]bool, error) {
 	luc, khung, ngan := r.thamSo()
-	rows, err := q.Query(ctx, sqlLoc, version, r.diemDen, r.diUngSQL(), nonNil(r.anKieng), ngan, luc, khung)
+	tron, tinh, hop := r.diemDenSQL()
+	rows, err := q.Query(ctx, sqlLoc, version, tron, tinh, hop, r.diUngSQL(), nonNil(r.anKieng), ngan, luc, khung)
 	if err != nil {
 		return nil, err
 	}

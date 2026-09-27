@@ -16,7 +16,6 @@ import (
 	"mobile/services/core/internal/domain/taste"
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/pyjson"
-	"mobile/services/core/internal/rag"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/service"
 	"mobile/services/core/internal/treejson"
@@ -409,33 +408,37 @@ func searchPlacesWAI() Route {
 			return endpoint.Reply{Body: body}
 		}
 		// `?destination=` narrows the search to one destination; without it
-		// the words decide which destination is searched. Read off the raw
-		// query string: the route's contract (from Python, which has no such
+		// the whole catalogue is searched, as before. Read off the raw query
+		// string: the route's contract (from Python, which has no such
 		// parameter) does not declare it, so call.Values never carries it --
 		// reading it there answered 500. An unknown destination is ignored
 		// rather than refused, so this Go-only narrowing can never turn an
 		// answer Python gives into a different status.
-		held := ""
+		filter := repo.PlaceFilter{}
 		if wanted := destinationQuery(call); wanted != "" {
 			diemDen, err := service.DestinationOrDefault(ctx, store, &wanted)
 			if err != nil {
 				return endpoint.Reply{}, err
 			}
 			if diemDen != nil && diemDen.ID == wanted {
-				held = diemDen.ID
+				filter.DestinationID = &diemDen.ID
 			}
 		}
-		// The model sees a shortlist, never the catalogue: at most
-		// rag.ToiDaNgan rows, of the destination `?destination=` holds or
-		// else the one the words name. A Go-only deviation on the brain
-		// payload (design 04 §7): parity runs keyless, so both stacks answer
+		// Light rows for the whole (or the held) catalogue, then full rows
+		// only for the few searchCandidates keeps: at most rag.ToiDaNgan, the
+		// most any search hands the model (design 04 §7). A Go-only deviation
+		// on the brain payload: parity runs keyless, so both stacks answer
 		// `unavailable` whatever the payload, and
 		// places_search_shortlist_postgres_test.go is the evidence instead.
-		ngan, err := rag.Kho{Q: store.Q}.DanhSachNganTai(ctx, query, group, held)
+		slim, err := store.ListPlaceCards(ctx, filter)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		cards, err := withPhotos(ctx, store, ngan.Rows)
+		rows, err := fullRowsInOrder(ctx, store, searchCandidates(slim, query, group))
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		cards, err := withPhotos(ctx, store, rows)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
@@ -684,6 +687,30 @@ func fullCards(ctx context.Context, store repo.Repository, cards []*pyjson.Order
 		}
 	}
 	return treejson.MapsFrom(treejson.MapsTo(cardsWithPhotos(ordered, snap.covers, snap.counts))), nil
+}
+
+// fullRowsInOrder reads the given places in full, keeping their order; a row
+// deleted since the slim read is dropped.
+func fullRowsInOrder(ctx context.Context, store repo.Repository, slim []repo.Place) ([]repo.Place, error) {
+	ids := make([]string, len(slim))
+	for i, row := range slim {
+		ids[i] = row.ID
+	}
+	rows, err := store.PlacesByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[string]repo.Place, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row
+	}
+	out := make([]repo.Place, 0, len(ids))
+	for _, id := range ids {
+		if row, ok := byID[id]; ok {
+			out = append(out, row)
+		}
+	}
+	return out, nil
 }
 
 // cardsWithPhotos builds list cards from rows and a photo summary already read.

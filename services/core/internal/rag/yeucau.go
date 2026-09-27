@@ -16,9 +16,14 @@ type Querier = repo.Querier
 // own words. Nothing a model wrote reaches it as free text (design 04 §5.1).
 type YeuCau struct {
 	// DiemDen is the resolved destination; "" searches every destination.
-	// The engine asks back instead of passing ""; the public search, which
-	// cannot ask, passes it when the words name none.
+	// The engine asks back instead of passing "". Retrieve widens it to the
+	// destination's scope (PhamViCua): a curated city with the province rows
+	// inside its box, a province with its curated cities.
 	DiemDen string
+	// phamVi is DiemDen's scope once Retrieve has read it (PhamViCua); nil
+	// holds the filter to the id alone, which is what the promotion gate
+	// probes.
+	phamVi *PhamVi
 	// Cau is the asker's own words (the routing copy). Only the lexical
 	// lists read it, folded.
 	Cau string

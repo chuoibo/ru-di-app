@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"mobile/services/core/internal/aiharness/truyhoi"
+	"mobile/services/core/internal/ingest"
 	"mobile/services/core/internal/testdb"
 )
 
@@ -247,5 +248,69 @@ func TestDocChoNhomCaNhan(t *testing.T) {
 	}
 	if _, err := d.ChuyenDiSapToi(ctx, "not-a-uuid", ngay, 5); !errors.Is(err, ErrID) {
 		t.Fatalf("a non-uuid identity: %v", err)
+	}
+}
+
+// The router's destination list and the engine's lexical retriever when the
+// catalogue holds a curated city and the province destinations the ingest
+// seeds (d-tinh-N) side by side. The list names each for what it is, from
+// the geography; the model's pick of the city finds the ingested place
+// filed under the province that lies inside the city, and not the one
+// elsewhere in the province; its pick of the province finds the city's own
+// place too.
+func TestDiemDenTinhVaThanhPho(t *testing.T) {
+	pool := kho(t)
+	ctx := context.Background()
+	if _, err := pool.Exec(ctx, `DELETE FROM places`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM destinations`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO destinations(id,name,province,lat,lng,bbox_south,bbox_west,bbox_north,bbox_east,sort_order)
+		VALUES('d-da-lat','Đà Lạt','Lâm Đồng',11.9404,108.4583,11.88,108.38,12.0,108.52,10)`); err != nil {
+		t.Fatal(err)
+	}
+	if n, err := ingest.SeedProvinceDestinations(ctx, pool); err != nil || n != int64(len(ingest.ProvinceBoxes)) {
+		t.Fatalf("seeded %d: %v", n, err)
+	}
+	for _, p := range []struct {
+		id, dd, ten string
+		lat, lng    any
+	}{
+		{"dl-tuyen-chon", "d-da-lat", "Lẩu Gà Tuyển Chọn", 11.94, 108.45},
+		{"tinh68-trong-da-lat", "d-tinh-68", "Lẩu Gà Phố Núi", 11.945, 108.44},
+		{"tinh68-bao-loc", "d-tinh-68", "Lẩu Gà Bảo Lộc", 11.55, 107.8},
+	} {
+		if _, err := pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,traits,source,price_min_vnd)
+			VALUES($1,$2,$3,'quan-an-local','["lẩu gà"]'::jsonb,$4,$5,'rooftop','[]'::jsonb,'seed',80000)`, p.id, p.dd, p.ten, p.lat, p.lng); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ds, err := Doc{C: Moi(pool, 2)}.DiemDen(ctx)
+	if err != nil || len(ds) != 1+len(ingest.ProvinceBoxes) {
+		t.Fatalf("destinations %d %v", len(ds), err)
+	}
+	ten := map[string]string{}
+	for _, d := range ds {
+		ten[d.ID] = d.Truong["ten"]
+	}
+	if ten["d-da-lat"] != "Đà Lạt (thuộc Tỉnh Lâm Đồng)" || ten["d-tinh-68"] != "Tỉnh Lâm Đồng (toàn tỉnh/thành)" {
+		t.Fatalf("the list does not tell the city from its province: %q / %q", ten["d-da-lat"], ten["d-tinh-68"])
+	}
+	l := Lexical{C: Moi(pool, 2)}
+	tim := func(dd string) map[string]bool {
+		t.Helper()
+		kq, err := l.Tim(ctx, truyhoi.YeuCau{Nguon: truyhoi.Places, Cau: "lẩu gà", Cung: truyhoi.Cung{DiemDenID: dd}, K: truyhoi.MaxK})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return ids(kq.BangChung)
+	}
+	if got := tim("d-da-lat"); !got["dl-tuyen-chon"] || !got["tinh68-trong-da-lat"] || got["tinh68-bao-loc"] {
+		t.Fatalf("Đà Lạt: %v", got)
+	}
+	if got := tim("d-tinh-68"); !got["dl-tuyen-chon"] || !got["tinh68-trong-da-lat"] || !got["tinh68-bao-loc"] {
+		t.Fatalf("Lâm Đồng: %v", got)
 	}
 }

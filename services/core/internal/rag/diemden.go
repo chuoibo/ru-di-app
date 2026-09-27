@@ -18,6 +18,8 @@ type DiemDen struct {
 	ID   string
 	Ten  string
 	Tinh string
+	// The centre.
+	Lat, Lng float64
 	// The bounding box.
 	Nam, Tay, Bac, Dong float64
 }
@@ -26,7 +28,7 @@ type DiemDen struct {
 func DiemDenTuRepo(rows []repo.Destination) []DiemDen {
 	out := make([]DiemDen, len(rows))
 	for i, r := range rows {
-		d := DiemDen{ID: r.ID, Ten: r.Name, Nam: r.BBoxSouth, Tay: r.BBoxWest, Bac: r.BBoxNorth, Dong: r.BBoxEast}
+		d := DiemDen{ID: r.ID, Ten: r.Name, Lat: r.Lat, Lng: r.Lng, Nam: r.BBoxSouth, Tay: r.BBoxWest, Bac: r.BBoxNorth, Dong: r.BBoxEast}
 		if r.Province != nil {
 			d.Tinh = *r.Province
 		}
@@ -91,7 +93,11 @@ var tenKhac = map[string][]string{
 // cannot: an area slot whose centre lies in a destination's box; else the one
 // destination the words name (a name, a known other name, or an area label);
 // else the one most of the slip's places are in; else the one most of the
-// group's stops are in. Two destinations named, or a tie, is unresolved. It
+// group's stops are in. Two destinations named, or a tie, is unresolved --
+// except that a province destination named beside a curated one lying in it
+// («Hà Nội» names both d-ha-noi and «Thành phố Hà Nội», d-tinh-1) is the
+// same place said twice, and the curated one is taken: its scope already
+// holds the province's places inside it (PhamViCua). It
 // never falls back to a default -- not the first by sort order, not the
 // smallest -- because «luôn Đà Lạt» was exactly that fallback (design 04 §7).
 func ResolveDestination(dests []DiemDen, g GoiY) DiemDenGiai {
@@ -107,6 +113,7 @@ func ResolveDestination(dests []DiemDen, g GoiY) DiemDenGiai {
 		}
 	}
 	named, spans := tenTrongCau(dests, g.Cau)
+	boTinhTrung(dests, named)
 	switch len(named) {
 	case 1:
 		for id := range named {
@@ -125,11 +132,16 @@ func ResolveDestination(dests []DiemDen, g GoiY) DiemDenGiai {
 	return DiemDenGiai{Thieu: "khu_vuc"}
 }
 
-// chua is the destination whose box holds the area's centre; "" for none or
-// for more than one.
+// chua is the destination whose box holds the area's centre: the one
+// curated destination whose box holds it; else, when no curated box does,
+// the province destination it lies in (TinhChua). "" for none, or for two
+// curated boxes.
 func chua(dests []DiemDen, a areas.Area) string {
 	found := ""
 	for _, d := range dests {
+		if LaTinh(d.ID) {
+			continue
+		}
 		if d.Nam <= a.Lat && a.Lat <= d.Bac && d.Tay <= a.Lng && a.Lng <= d.Dong {
 			if found != "" && found != d.ID {
 				return ""
@@ -137,7 +149,23 @@ func chua(dests []DiemDen, a areas.Area) string {
 			found = d.ID
 		}
 	}
-	return found
+	if found != "" {
+		return found
+	}
+	return TinhChua(dests, a.Lat, a.Lng)
+}
+
+// boTinhTrung drops from named every province destination that a named
+// curated destination lies in (TinhCua).
+func boTinhTrung(dests []DiemDen, named map[string]bool) {
+	for id := range named {
+		if LaTinh(id) {
+			continue
+		}
+		if p := TinhCua(dests, id); p != "" {
+			delete(named, p)
+		}
+	}
 }
 
 // daSo is the strictly most frequent known id; "" when empty or tied.

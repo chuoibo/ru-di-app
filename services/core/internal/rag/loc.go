@@ -10,7 +10,9 @@ import (
 // rangBuoc is a YeuCau's hard filters, prepared once: the allergen set closed
 // over families, the diets with what they imply.
 type rangBuoc struct {
-	diemDen  string
+	// phamVi is where the places may be (PhamVi); rangBuocCua holds it to
+	// the one destination id, Retrieve widens it to the destination's scope.
+	phamVi   PhamVi
 	diUng    map[string]bool
 	anKieng  []string
 	nganSach *int64
@@ -19,12 +21,25 @@ type rangBuoc struct {
 }
 
 func rangBuocCua(y YeuCau) rangBuoc {
-	r := rangBuoc{diemDen: y.DiemDen, diUng: map[string]bool{}, anKieng: tuvung.AnKieng.LocHopLe(y.AnKieng),
+	r := rangBuoc{diUng: map[string]bool{}, anKieng: tuvung.AnKieng.LocHopLe(y.AnKieng),
 		nganSach: y.NganSach, luc: y.Luc, khung: y.Khung}
+	switch {
+	case y.phamVi != nil:
+		r.phamVi = *y.phamVi
+	case y.DiemDen != "":
+		r.phamVi = PhamVi{Tron: []string{y.DiemDen}}
+	}
 	for _, id := range tuvung.MoRongDiUng(y.DiUng) {
 		r.diUng[id] = true
 	}
 	return r
+}
+
+// diemDenSQL are the scope as the SQL filter's three parameters: the
+// destinations taken whole, the province destinations taken inside the box,
+// and the box.
+func (r rangBuoc) diemDenSQL() (tron, tinh []string, hop []float64) {
+	return nonNil(r.phamVi.Tron), nonNil(r.phamVi.Tinh), r.phamVi.hopSQL()
 }
 
 // diUngSQL is the closed allergen set as the SQL filter's array.
@@ -58,7 +73,7 @@ func (r rangBuoc) thamSo() (luc, khung, ngan any) {
 // check; this one runs on the live row every hit is hydrated from, so a stale
 // index can lose a place but never show one that breaks a filter.
 func (r rangBuoc) dat(h HoSo) (bool, []string) {
-	if r.diemDen != "" && h.DiemDen != r.diemDen {
+	if !r.phamVi.Chua(h.DiemDen, h.Lat, h.Lng, h.CoToaDo) {
 		return false, nil
 	}
 	for _, a := range h.DiUng {

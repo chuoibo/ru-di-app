@@ -17,7 +17,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"mobile/services/core/internal/domain/taste"
+	"mobile/services/core/internal/ingest"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/testdb"
 )
@@ -593,9 +593,8 @@ func TestIndexFailureCostsTheRequestNothing(t *testing.T) {
 }
 
 // Review finding 4 (MF): a takedown holds with no active version, on the
-// live-row path, through Retrieve and through the public search's
-// shortlist (its ranked part and its taste padding). Identity: the place
-// next door is still there.
+// live-row path, through Retrieve. Identity: the place next door is still
+// there.
 func TestTakedownHoldsWithoutAnActiveVersion(t *testing.T) {
 	pool := kho(t)
 	ctx := context.Background()
@@ -615,16 +614,7 @@ func TestTakedownHoldsWithoutAnActiveVersion(t *testing.T) {
 	if !co(ids(kq), "dl-ca-phe-hoai-niem") {
 		t.Fatalf("identity: the other café is gone too: %v", ids(kq))
 	}
-	ngan, err := k.DanhSachNgan(ctx, "Cà Phê Gác Gỗ ở Đà Lạt", taste.Profile{})
-	if err != nil || ngan.PhienBan != 0 || len(ngan.Rows) != ToiDaNgan {
-		t.Fatalf("shortlist: %d rows, version %d, %v", len(ngan.Rows), ngan.PhienBan, err)
-	}
-	for _, r := range ngan.Rows {
-		if r.ID == "dl-ca-phe-gac-go" {
-			t.Fatal("the taken-down place reached the shortlist")
-		}
-	}
-	// Lifted by hand, it is back on both.
+	// Lifted by hand, it is back.
 	if reason, err := Untombstone(ctx, pool, "dl-ca-phe-gac-go"); err != nil || reason != "takedown" {
 		t.Fatalf("untombstone: %q %v", reason, err)
 	}
@@ -634,40 +624,6 @@ func TestTakedownHoldsWithoutAnActiveVersion(t *testing.T) {
 	kq, _ = k.Retrieve(ctx, YeuCau{DiemDen: "d-da-lat", Cau: "Cà Phê Gác Gỗ", K: 50})
 	if len(kq.Quan) == 0 || kq.Quan[0].ID != "dl-ca-phe-gac-go" {
 		t.Fatalf("after untombstone: %v", ids(kq))
-	}
-}
-
-// Review round 2, N4: with an active version the public search ranks a few
-// rows through the index and pads the rest of the thirty by taste, profiling
-// each live row as it goes; a takedown made after the build must hold in
-// that padding too. «lẩu nấm ở Đà Lạt» ranks a handful of rows, so the café
-// comes up in the taste padding if nothing stops it. Identity: the café next
-// door is padded in.
-func TestTakedownHoldsInTheRankedShortlistPadding(t *testing.T) {
-	pool := kho(t)
-	ctx := context.Background()
-	v := docVang(t)
-	nap(t, pool, v)
-	built, _ := dungDuaLen(t, pool)
-	if err := Tombstone(ctx, pool, "dl-ca-phe-gac-go", "takedown"); err != nil {
-		t.Fatal(err)
-	}
-	ngan, err := Kho{Q: pool}.DanhSachNgan(ctx, "lẩu nấm ở Đà Lạt", taste.Profile{})
-	if err != nil || ngan.PhienBan != built.PhienBan || len(ngan.Rows) != ToiDaNgan {
-		t.Fatalf("shortlist: %d rows, version %d (built %d), %v", len(ngan.Rows), ngan.PhienBan, built.PhienBan, err)
-	}
-	if ngan.Trung == 0 || ngan.Trung >= ToiDaNgan {
-		t.Fatalf("%d ranked rows: the padding is not under test", ngan.Trung)
-	}
-	var got []string
-	for _, r := range ngan.Rows {
-		got = append(got, r.ID)
-	}
-	if co(got, "dl-ca-phe-gac-go") {
-		t.Fatalf("the taken-down place reached the shortlist's padding: %v", got)
-	}
-	if !co(got[ngan.Trung:], "dl-ca-phe-hoai-niem") {
-		t.Fatalf("identity: the other café is not in the padding: %v", got)
 	}
 }
 
@@ -867,4 +823,122 @@ var ghimChiMuc = map[string]string{
 	"lien_diem_den": "n=8 co_lien_quan=8 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"bay_injection": "n=7 co_lien_quan=2 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"tong":          "n=143 co_lien_quan=75 recall@10=0.8800 ndcg@10=0.8767 mrr@10=0.8733 violation@10=0.0000 so_vi_pham=0",
+}
+
+// origin/main's `rudi-ingest migrate` seeds a destination per province
+// (d-tinh-N) beside the curated cities, and files every ingested place under
+// its province. A destination is then a scope (PhamViCua), on the live path
+// and on the index path alike: Đà Lạt takes the d-tinh-68 rows inside its box
+// and not Bảo Lộc's, nor a row with no coordinates; Lâm Đồng takes its own
+// rows and Đà Lạt's. The words still name the city, not "" (the four cases
+// that went ambiguous once the provinces were seeded).
+func TestDiemDenTinhVaThanhPho(t *testing.T) {
+	pool := kho(t)
+	ctx := context.Background()
+	for i, d := range curatedVN {
+		if _, err := pool.Exec(ctx, `INSERT INTO destinations(id,name,province,lat,lng,bbox_south,bbox_west,bbox_north,bbox_east,sort_order) VALUES($1,$2,$2,$3,$4,$5,$6,$7,$8,$9)`,
+			d.ID, d.Ten, d.Lat, d.Lng, d.Nam, d.Tay, d.Bac, d.Dong, 10*(i+1)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if n, err := ingest.SeedProvinceDestinations(ctx, pool); err != nil || n != int64(len(ingest.ProvinceBoxes)) {
+		t.Fatalf("seeded %d province destinations: %v", n, err)
+	}
+	f := func(v float64) *float64 { return &v }
+	for _, p := range []struct {
+		id, dd, ten string
+		lat, lng    *float64
+	}{
+		{"dl-lau-ga-tuyen-chon", "d-da-lat", "Lẩu Gà Lá É Tuyển Chọn", f(11.94), f(108.45)},
+		{"tinh68-lau-ga-trong-da-lat", "d-tinh-68", "Lẩu Gà Lá É Phố Núi", f(11.945), f(108.44)},
+		{"tinh68-lau-ga-bao-loc", "d-tinh-68", "Lẩu Gà Lá É Bảo Lộc", f(11.55), f(107.8)},
+		{"tinh68-lau-ga-khong-toa-do", "d-tinh-68", "Lẩu Gà Lá É Không Tọa Độ", nil, nil},
+		{"tinh1-lau-ga-ha-noi", "d-tinh-1", "Lẩu Gà Lá É Hà Nội", f(21.03), f(105.85)},
+	} {
+		chen(t, pool, repo.Place{ID: p.id, DestinationID: p.dd, Name: p.ten, Category: "quan-an-local",
+			Kinds: []string{"lẩu gà"}, Traits: []string{}, Lat: p.lat, Lng: p.lng, PriceMinVND: ptr64(80000), Source: "seed"})
+	}
+	rows, err := repo.Repository{Q: pool}.ListDestinations(ctx)
+	if err != nil || len(rows) != len(curatedVN)+len(ingest.ProvinceBoxes) {
+		t.Fatalf("%d destinations: %v", len(rows), err)
+	}
+	dests := DiemDenTuRepo(rows)
+	for _, c := range []struct{ cau, khuVuc, want string }{
+		{"lẩu Hà Nội", "", "d-ha-noi"},
+		{"cafe Đà Nẵng", "", "d-da-nang"},
+		{"quán ở Hồ Chí Minh", "", "d-tphcm"},
+		{"", "hcm-quan-1", "d-tphcm"},
+		{"quán ngon ở Đà Lạt", "", "d-da-lat"},
+	} {
+		if got := ResolveDestination(dests, GoiY{Cau: c.cau, KhuVuc: c.khuVuc}); got.ID != c.want {
+			t.Errorf("%q/%q resolved to %+v, want %s", c.cau, c.khuVuc, got, c.want)
+		}
+	}
+	check := func(label string, wantVersion bool) {
+		t.Helper()
+		k := Kho{Q: pool}
+		for _, c := range []struct {
+			dd      string
+			want    []string
+			notWant []string
+		}{
+			{"d-da-lat", []string{"dl-lau-ga-tuyen-chon", "tinh68-lau-ga-trong-da-lat"},
+				[]string{"tinh68-lau-ga-bao-loc", "tinh68-lau-ga-khong-toa-do", "tinh1-lau-ga-ha-noi"}},
+			{"d-tinh-68", []string{"dl-lau-ga-tuyen-chon", "tinh68-lau-ga-trong-da-lat", "tinh68-lau-ga-bao-loc", "tinh68-lau-ga-khong-toa-do"},
+				[]string{"tinh1-lau-ga-ha-noi"}},
+			{"d-ha-noi", []string{"tinh1-lau-ga-ha-noi"}, []string{"dl-lau-ga-tuyen-chon", "tinh68-lau-ga-trong-da-lat"}},
+		} {
+			kq, err := k.Retrieve(ctx, YeuCau{DiemDen: c.dd, Cau: "lẩu gà lá é", K: 20})
+			if err != nil || (kq.PhienBan != 0) != wantVersion {
+				t.Fatalf("%s %s: version %d, %v", label, c.dd, kq.PhienBan, err)
+			}
+			got := ids(kq)
+			for _, id := range c.want {
+				if !co(got, id) {
+					t.Errorf("%s: %s lost %s: %v", label, c.dd, id, got)
+				}
+			}
+			for _, id := range c.notWant {
+				if co(got, id) {
+					t.Errorf("%s: %s took %s: %v", label, c.dd, id, got)
+				}
+			}
+		}
+	}
+	check("live rows", false)
+	dungDuaLen(t, pool)
+	check("index", true)
+}
+
+// The live path reads a destination as light rows and only its best
+// songToiDa in full: a destination of 600 rows still finds the one the words
+// name when it sorts last by id (a cut by position would lose it), and the
+// full row's allergens still hold after the light check let it through.
+func TestSongDocNheRoiDocDuToiDa(t *testing.T) {
+	pool := kho(t)
+	ctx := context.Background()
+	if _, err := pool.Exec(ctx, `INSERT INTO destinations(id,name,province,lat,lng,bbox_south,bbox_west,bbox_north,bbox_east,sort_order)
+		VALUES('d-da-lat','Đà Lạt','Lâm Đồng',11.9404,108.4583,11.88,108.38,12.0,108.52,10)`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,traits,source,price_min_vnd)
+		SELECT 'a-'||lpad(i::text,4,'0'),'d-da-lat','Quán Thử '||i,'cafe','["cà phê"]'::jsonb,11.94,108.45,'rooftop','[]'::jsonb,'seed',30000
+		  FROM generate_series(1,600) i`); err != nil {
+		t.Fatal(err)
+	}
+	f := func(v float64) *float64 { return &v }
+	desc := "Món chính là tôm hùm nướng."
+	chen(t, pool, repo.Place{ID: "zz-gac-go-dac-biet", DestinationID: "d-da-lat", Name: "Gác Gỗ Đặc Biệt", Category: "cafe",
+		Kinds: []string{"cà phê"}, Traits: []string{}, Lat: f(11.94), Lng: f(108.45), PriceMinVND: ptr64(30000), Source: "seed", Description: &desc})
+	k := Kho{Q: pool}
+	kq, err := k.Retrieve(ctx, YeuCau{DiemDen: "d-da-lat", Cau: "Gác Gỗ Đặc Biệt", K: 5})
+	if err != nil || !kq.Degraded || len(kq.Quan) == 0 || kq.Quan[0].ID != "zz-gac-go-dac-biet" {
+		t.Fatalf("the named place, last by id among 601: %v %v", ids(kq), err)
+	}
+	// Its seafood is only in the description, which the light row does not
+	// carry: the full row is checked again and it is out.
+	kq, err = k.Retrieve(ctx, YeuCau{DiemDen: "d-da-lat", Cau: "Gác Gỗ Đặc Biệt", DiUng: []string{"hai_san"}, K: 5})
+	if err != nil || co(ids(kq), "zz-gac-go-dac-biet") {
+		t.Fatalf("an allergen named only in the heavy description slipped through: %v %v", ids(kq), err)
+	}
 }

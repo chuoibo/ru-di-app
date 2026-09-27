@@ -37,6 +37,9 @@ func (k Kho) Retrieve(ctx context.Context, y YeuCau) (KetQua, error) {
 	if err != nil {
 		return KetQua{}, err
 	}
+	if y, err = k.voiPhamVi(ctx, y); err != nil {
+		return KetQua{}, err
+	}
 	if installed {
 		v, err := k.phienBanActive(ctx)
 		if err != nil {
@@ -51,6 +54,21 @@ func (k Kho) Retrieve(ctx context.Context, y YeuCau) (KetQua, error) {
 		}
 	}
 	return k.song(ctx, installed, y)
+}
+
+// voiPhamVi widens y's destination to its scope (PhamViCua): a curated city
+// also takes the province rows inside its box, a province its curated
+// cities. It reads the destinations table once.
+func (k Kho) voiPhamVi(ctx context.Context, y YeuCau) (YeuCau, error) {
+	if y.DiemDen == "" || y.phamVi != nil {
+		return y, nil
+	}
+	pv, err := phamViTai(ctx, k.Q, y.DiemDen)
+	if err != nil {
+		return y, err
+	}
+	y.phamVi = &pv
+	return y, nil
 }
 
 // RetrieveVersion answers from one named version: an active one, or a built
@@ -68,6 +86,9 @@ func (k Kho) RetrieveVersion(ctx context.Context, version int64, y YeuCau) (KetQ
 	if state != "built" && state != "evaluated" && state != "active" {
 		return KetQua{}, ErrPhienBan
 	}
+	if y, err = k.voiPhamVi(ctx, y); err != nil {
+		return KetQua{}, err
+	}
 	return k.trongPhienBan(ctx, version, y)
 }
 
@@ -82,24 +103,56 @@ func (k Kho) phienBanActive(ctx context.Context) (int64, error) {
 
 // song is the live-row path.
 func (k Kho) song(ctx context.Context, installed bool, y YeuCau) (KetQua, error) {
-	rows, bia, err := k.hangSong(ctx, installed, y.DiemDen)
+	rows, bia, err := k.hangSong(ctx, installed, y)
 	if err != nil {
 		return KetQua{}, err
 	}
 	return xepSong(rows, bia, y), nil
 }
 
-// hangSong reads the live places of a destination ("" for all) and the
-// tombstoned ids, which hold on this path too: a place taken down is down
-// whether or not an index version answers.
-func (k Kho) hangSong(ctx context.Context, installed bool, diemDen string) ([]repo.Place, map[string]bool, error) {
-	filter := repo.PlaceFilter{}
-	if diemDen != "" {
-		filter.DestinationID = &diemDen
-	}
-	rows, err := repo.Repository{Q: k.Q}.ListPlaces(ctx, filter)
-	if err != nil {
-		return nil, nil, err
+// songToiDa bounds how many live rows the live path reads in full.
+const songToiDa = 400
+
+// hangSong reads the live places of y's scope and the tombstoned ids, which
+// hold on this path too: a place taken down is down whether or not an index
+// version answers.
+//
+// The scope is read as light rows first (repo.ListPlaceCards: no
+// description, reviews or activities, which are most of a fed row's bytes),
+// checked against the hard filters on what they hold, and only the rows that
+// pass -- at most songToiDa, the lexical ranking's best over the light rows
+// first -- are read in full. No path reads a whole destination, let alone
+// the whole catalogue, with the heavy columns (origin/main 581c624). The
+// full rows are checked again by the caller: the light check can only let
+// through a row the full one refuses (an allergen named in a review), never
+// the reverse.
+func (k Kho) hangSong(ctx context.Context, installed bool, y YeuCau) ([]repo.Place, map[string]bool, error) {
+	store := repo.Repository{Q: k.Q}
+	r := rangBuocCua(y)
+	var nhe []repo.Place
+	if len(r.phamVi.Tron) == 0 {
+		all, err := store.ListPlaceCards(ctx, repo.PlaceFilter{})
+		if err != nil {
+			return nil, nil, err
+		}
+		nhe = all
+	} else {
+		for _, id := range append(append([]string(nil), r.phamVi.Tron...), r.phamVi.Tinh...) {
+			id := id
+			part, err := store.ListPlaceCards(ctx, repo.PlaceFilter{DestinationID: &id})
+			if err != nil {
+				return nil, nil, err
+			}
+			for _, p := range part {
+				lat, lng, co := 0.0, 0.0, p.Lat != nil && p.Lng != nil
+				if co {
+					lat, lng = *p.Lat, *p.Lng
+				}
+				if r.phamVi.Chua(p.DestinationID, lat, lng, co) {
+					nhe = append(nhe, p)
+				}
+			}
+		}
 	}
 	bia := map[string]bool{}
 	if installed {
@@ -108,6 +161,33 @@ func (k Kho) hangSong(ctx context.Context, installed bool, diemDen string) ([]re
 			return nil, nil, err
 		}
 		bia = ids
+	}
+	pass := locSong(nhe, bia, r)
+	ids := make([]string, 0, min(len(pass), songToiDa))
+	if len(pass) <= songToiDa {
+		for _, p := range pass {
+			ids = append(ids, p.h.ID)
+		}
+	} else {
+		yk := y
+		yk.K = songToiDa
+		taken := map[string]bool{}
+		for _, h := range xepHoSo(pass, yk, r).Quan {
+			taken[h.ID] = true
+			ids = append(ids, h.ID)
+		}
+		for _, p := range pass {
+			if len(ids) == songToiDa {
+				break
+			}
+			if !taken[p.h.ID] {
+				ids = append(ids, p.h.ID)
+			}
+		}
+	}
+	rows, err := store.PlacesByID(ctx, ids)
+	if err != nil {
+		return nil, nil, err
 	}
 	return rows, bia, nil
 }
@@ -236,12 +316,15 @@ const nguongTrigram = 0.3
 // passes it may be ranked, and no other. Tombstones are anti-joined here,
 // for every version alike.
 const locDieuKien = `d.version_id = $1
-     AND ($2::text = '' OR d.destination_id = $2::text)
-     AND NOT (d.di_ung_nguon && $3::text[])
-     AND d.an_kieng_nguon @> $4::text[]
-     AND ($5::bigint IS NULL OR d.price_min_vnd IS NULL OR d.price_min_vnd <= $5::bigint)
-     AND ($6::integer IS NULL OR d.open_week IS NULL OR d.open_week @> $6::integer)
-     AND ($7::text IS NULL OR d.open_week IS NULL OR d.open_week && $7::text::int4multirange)
+     AND (cardinality($2::text[]) = 0 OR d.destination_id = ANY($2::text[])
+          OR (d.destination_id = ANY($3::text[])
+              AND d.lat BETWEEN ($4::float8[])[1] AND ($4::float8[])[3]
+              AND d.lng BETWEEN ($4::float8[])[2] AND ($4::float8[])[4]))
+     AND NOT (d.di_ung_nguon && $5::text[])
+     AND d.an_kieng_nguon @> $6::text[]
+     AND ($7::bigint IS NULL OR d.price_min_vnd IS NULL OR d.price_min_vnd <= $7::bigint)
+     AND ($8::integer IS NULL OR d.open_week IS NULL OR d.open_week @> $8::integer)
+     AND ($9::text IS NULL OR d.open_week IS NULL OR d.open_week && $9::text::int4multirange)
      AND d.canonical_id IS NULL
      AND NOT EXISTS (SELECT 1 FROM rag_tombstones t WHERE t.corpus = 'place' AND t.doc_id = d.doc_id)`
 
@@ -255,24 +338,24 @@ const sqlUngVien = `
 WITH loc AS (
   SELECT d.doc_id, d.name_fold, d.category, d.khi_chat FROM rag_docs d WHERE ` + locDieuKien + `
 ), ts AS (
-  SELECT c.doc_id, max(ts_rank_cd(c.tsv, to_tsquery('simple', $8::text))) AS s
+  SELECT c.doc_id, max(ts_rank_cd(c.tsv, to_tsquery('simple', $10::text))) AS s
     FROM rag_chunks c JOIN loc ON loc.doc_id = c.doc_id
-   WHERE c.version_id = $1 AND $8::text <> '' AND c.tsv @@ to_tsquery('simple', $8::text)
+   WHERE c.version_id = $1 AND $10::text <> '' AND c.tsv @@ to_tsquery('simple', $10::text)
    GROUP BY c.doc_id
 ), tg AS (
-  SELECT loc.doc_id, GREATEST(word_similarity(loc.name_fold, $9::text), word_similarity($9::text, loc.name_fold)) AS s
-    FROM loc WHERE $9::text <> ''
+  SELECT loc.doc_id, GREATEST(word_similarity(loc.name_fold, $11::text), word_similarity($11::text, loc.name_fold)) AS s
+    FROM loc WHERE $11::text <> ''
 ), mem AS (
   SELECT loc.doc_id,
-         2 * (SELECT count(*) FROM unnest(loc.khi_chat) k WHERE k = ANY($11::text[]))
-           + CASE WHEN loc.category = ANY($10::text[]) THEN 1 ELSE 0 END AS s
+         2 * (SELECT count(*) FROM unnest(loc.khi_chat) k WHERE k = ANY($13::text[]))
+           + CASE WHEN loc.category = ANY($12::text[]) THEN 1 ELSE 0 END AS s
     FROM loc
 )
 SELECT 'ts', doc_id, dense_rank() OVER (ORDER BY s DESC)::integer
   FROM (SELECT doc_id, s FROM ts ORDER BY s DESC, doc_id COLLATE "C" LIMIT 50) a
 UNION ALL
 SELECT 'tg', doc_id, dense_rank() OVER (ORDER BY s DESC)::integer
-  FROM (SELECT doc_id, s FROM tg WHERE s >= $12::float8 ORDER BY s DESC, doc_id COLLATE "C" LIMIT 50) b
+  FROM (SELECT doc_id, s FROM tg WHERE s >= $14::float8 ORDER BY s DESC, doc_id COLLATE "C" LIMIT 50) b
 UNION ALL
 SELECT 'mem', doc_id, dense_rank() OVER (ORDER BY s DESC)::integer
   FROM (SELECT doc_id, s FROM mem WHERE s > 0 ORDER BY s DESC, doc_id COLLATE "C" LIMIT 200) c
@@ -291,7 +374,8 @@ func ungVienSQL(ctx context.Context, q Querier, version int64, y YeuCau, r rangB
 	if khiChat == nil {
 		khiChat = []string{}
 	}
-	rows, err := q.Query(ctx, sqlUngVien, version, r.diemDen, r.diUngSQL(), nonNil(r.anKieng), ngan, luc, khung,
+	tron, tinh, hop := r.diemDenSQL()
+	rows, err := q.Query(ctx, sqlUngVien, version, tron, tinh, hop, r.diUngSQL(), nonNil(r.anKieng), ngan, luc, khung,
 		tsQuery(thuatTruyVan(y)), folded, loaiCho, khiChat, nguongTrigram)
 	if err != nil {
 		return nil, 0, err

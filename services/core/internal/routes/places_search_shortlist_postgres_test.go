@@ -156,9 +156,10 @@ func handlerOn(t *testing.T, pool *pgxpool.Pool) http.Handler {
 	return coreWithEnv(t, env, func(next http.Handler) http.Handler { return next })
 }
 
-// Canary 3: a 5,003-place catalogue reaches the brain as at most 30 rows.
-// Before this change the same request sent all 5,002 rows Filter keeps
-// (measured on the base route code).
+// Canary 3: a 5,003-place catalogue reaches the brain as at most 30 rows
+// (rag.ToiDaNgan), chosen by origin/main's searchCandidates over light rows,
+// each cut by promptsafety (modelShortlist). Before the AI v2 branch the same
+// request sent all 5,002 rows Filter keeps; origin/main capped it at 120.
 func TestPlacesSearchSendsAShortlistNotTheCatalogue(t *testing.T) {
 	var brain brainGhi
 	brain.server(t)
@@ -175,9 +176,11 @@ func TestPlacesSearchSendsAShortlistNotTheCatalogue(t *testing.T) {
 	if out["source"] != "none" || len(out["places"].([]any)) != 0 {
 		t.Fatalf("a keyless brain must still answer unavailable: %v", out)
 	}
-	t.Logf("5003 places in the catalogue, %d sent, %v for the whole request (live rows, no index)", len(p.Catalogue), elapsed.Round(time.Millisecond))
+	t.Logf("5003 places in the catalogue, %d sent, %v for the whole request", len(p.Catalogue), elapsed.Round(time.Millisecond))
 
-	// The rows keep the card's shape, in its field order, safe or cut.
+	// The rows keep the card's shape, in its field order, safe or cut. The
+	// injected name ranks among the words' best (it says «quán» and «cà
+	// phê»), so Filter is what keeps it out, not the cap.
 	var sawInjected bool
 	for _, row := range p.Catalogue {
 		if row["id"] == "dl-quan-ngon-inj" {
@@ -199,40 +202,8 @@ func TestPlacesSearchSendsAShortlistNotTheCatalogue(t *testing.T) {
 		t.Fatal("the quiet café with a quarantined review should rank in the shortlist")
 	}
 
-	// Named destination: every row is in it.
-	search(t, h, "cà phê ở Hội An")
-	p = brain.last(t)
-	if len(p.Catalogue) == 0 || len(p.Catalogue) > rag.ToiDaNgan {
-		t.Fatalf("%d rows for Hội An", len(p.Catalogue))
-	}
-	for _, row := range p.Catalogue {
-		if row["destination_id"] != "d-hoi-an" {
-			t.Fatalf("a %v row in a Hội An search", row["destination_id"])
-		}
-	}
-	if p.Catalogue[0]["id"] != "ha-ca-phe-hoai-niem" {
-		t.Fatalf("the words' best match is not first: %v", p.Catalogue[0]["id"])
-	}
-
-	// An allergy named in the words is a hard filter on the shortlist.
-	search(t, h, "quán yên tĩnh ở Đà Lạt, mình dị ứng hải sản")
-	for _, row := range brain.last(t).Catalogue {
-		if row["id"] == "dl-lau-hai-san" {
-			t.Fatal("a seafood place was shortlisted for someone allergic to seafood")
-		}
-	}
-	// Identity: without the allergy it is there.
-	search(t, h, "quán yên tĩnh ở Đà Lạt")
-	found := false
-	for _, row := range brain.last(t).Catalogue {
-		found = found || row["id"] == "dl-lau-hai-san"
-	}
-	if !found {
-		t.Fatal("identity: the seafood place is missing when no allergy was named")
-	}
-
-	// `?destination=` (origin/main) holds the shortlist to that destination,
-	// over what the words name; an unknown one is ignored, not refused.
+	// `?destination=` (origin/main) holds the shortlist to that destination;
+	// an unknown one is ignored, not refused: the same rows as no parameter.
 	searchAt(t, h, "/places/search?destination=d-tphcm", "cà phê ở Hội An")
 	p = brain.last(t)
 	if len(p.Catalogue) == 0 || len(p.Catalogue) > rag.ToiDaNgan {
@@ -243,62 +214,21 @@ func TestPlacesSearchSendsAShortlistNotTheCatalogue(t *testing.T) {
 			t.Fatalf("a %v row in a search held to d-tphcm", row["destination_id"])
 		}
 	}
-	searchAt(t, h, "/places/search?destination=d-khong-co", "cà phê ở Hội An")
-	p = brain.last(t)
-	if len(p.Catalogue) == 0 {
-		t.Fatal("an unknown ?destination= emptied the shortlist instead of being ignored")
-	}
-	for _, row := range p.Catalogue {
-		if row["destination_id"] != "d-hoi-an" {
-			t.Fatalf("an unknown ?destination= moved the search: a %v row", row["destination_id"])
+	idsOf := func(p payload) []string {
+		var out []string
+		for _, row := range p.Catalogue {
+			out = append(out, row["id"].(string))
 		}
+		return out
 	}
-	if n := len(brain.bodies); n != 6 {
-		t.Fatalf("%d brain calls for 6 searches", n)
+	search(t, h, "cà phê ở Hội An")
+	plain := idsOf(brain.last(t))
+	searchAt(t, h, "/places/search?destination=d-khong-co", "cà phê ở Hội An")
+	unknown := idsOf(brain.last(t))
+	if len(plain) == 0 || strings.Join(plain, ",") != strings.Join(unknown, ",") {
+		t.Fatalf("an unknown ?destination= moved the search:\n%v\n%v", plain, unknown)
 	}
-}
-
-// With an active index version the shortlist is still at most 30 rows, the
-// words' hits first, and the request's transaction survives the index path.
-func TestPlacesSearchUsesTheActiveIndex(t *testing.T) {
-	var brain brainGhi
-	brain.server(t)
-	ctx := context.Background()
-	base := testdb.Pool(t)
-	tx, err := base.Begin(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext('rag_test_pg_trgm'))`); err == nil {
-		_, err = tx.Exec(ctx, `CREATE EXTENSION IF NOT EXISTS pg_trgm`)
-	}
-	if err != nil {
-		_ = tx.Rollback(ctx)
-		t.Fatal(err)
-	}
-	if err := tx.Commit(ctx); err != nil {
-		t.Fatal(err)
-	}
-	pool := catalogueSchema(t)
-	if err := rag.Migrate(ctx, pool); err != nil {
-		t.Fatal(err)
-	}
-	b, err := rag.Build(ctx, pool)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if g, err := rag.Evaluate(ctx, pool, b.PhienBan); err != nil || !g.Dat {
-		t.Fatalf("eval %+v %v", g, err)
-	}
-	if err := rag.Promote(ctx, pool, b.PhienBan); err != nil {
-		t.Fatal(err)
-	}
-	h := handlerOn(t, pool)
-	started := time.Now()
-	search(t, h, "Cà Phê Hoài Niệm")
-	t.Logf("%v for the whole request with an active index over %d documents", time.Since(started).Round(time.Millisecond), b.Docs)
-	p := brain.last(t)
-	if len(p.Catalogue) == 0 || len(p.Catalogue) > rag.ToiDaNgan || p.Catalogue[0]["id"] != "ha-ca-phe-hoai-niem" {
-		t.Fatalf("%d rows, first %v", len(p.Catalogue), p.Catalogue[0]["id"])
+	if n := len(brain.bodies); n != 4 {
+		t.Fatalf("%d brain calls for 4 searches", n)
 	}
 }

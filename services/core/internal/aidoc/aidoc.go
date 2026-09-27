@@ -300,15 +300,35 @@ func daHa(ctx context.Context, tx pgx.Tx, ids []string) (map[string]bool, error)
 	return out, rows.Err()
 }
 
-// DiemDen returns every destination.
+// DiemDen returns every destination: the closed list the router picks a
+// destination id from. A catalogue holds curated cities and the province
+// destinations the ingest seeds side by side (rag.PhamViCua), so «Hà Nội»
+// and «Thành phố Hà Nội» both appear; each name says which it is, from the
+// geography alone -- a province is «toàn tỉnh/thành», a curated city names
+// the province destination it lies in (rag.TinhCua) -- and either choice
+// retrieves the places filed under the other that lie in it.
 func (d Doc) DiemDen(ctx context.Context) ([]truyhoi.BangChung, error) {
 	var out []truyhoi.BangChung
 	err := d.C.Doc(ctx, func(tx pgx.Tx) error {
 		ds, err := repo.Repository{Q: tx}.ListDestinations(ctx)
-		for _, x := range ds {
-			out = append(out, truyhoi.BangChung{ID: x.ID, Truong: map[string]string{"ten": x.Name}})
+		if err != nil {
+			return err
 		}
-		return err
+		all := rag.DiemDenTuRepo(ds)
+		ten := map[string]string{}
+		for _, x := range ds {
+			ten[x.ID] = x.Name
+		}
+		for _, x := range ds {
+			name := x.Name
+			if rag.LaTinh(x.ID) {
+				name += " (toàn tỉnh/thành)"
+			} else if p := rag.TinhCua(all, x.ID); p != "" {
+				name += " (thuộc " + ten[p] + ")"
+			}
+			out = append(out, truyhoi.BangChung{ID: x.ID, Truong: map[string]string{"ten": name}})
+		}
+		return nil
 	})
 	return out, err
 }
