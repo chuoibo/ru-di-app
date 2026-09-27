@@ -49,7 +49,7 @@
 |---|---|---|---|---|---|
 | F02.S01 | `(tabs)/explore` | live `explore/ExploreLive.tsx`; demo `Discovery.tsx` | dòng thành phố, sân khấu thành phố (Skia/SVG), ô tìm + nút AI, hàng chip lọc, «N nơi ở …», danh sách `HangDiaDiem` | catalog rỗng, lọc ra 0, AI chưa cấu hình, ảnh hỏng/chậm, lỗi mạng | tìm, lọc, kéo nghiêng sân khấu, tim, mở quán, đổi thành phố |
 | F02.S02 | `/destinations` | `explore/DiemDenScreen.tsx` | lưới bưu thiếp 15 thành phố | 1/2/3 cột theo bề rộng | chọn → `router.back()` |
-| F02.S03 | `/places/[id]` | live `explore/PlaceDetailLive.tsx`; demo `Discovery.tsx` | sân khấu quán, ảnh + dòng nguồn, thông tin, chỉ đường, thêm vào kèo, rủ một người, thêm kỷ niệm | ảnh hỏng, không ảnh, tên dài | chỉ đường (link ngoài), `/outings/chon`, `/groups/[id]/to-giay`, `/moments/new` |
+| F02.S03 | `/places/[id]` | live `explore/PlaceDetailLive.tsx`; demo `Discovery.tsx` | sân khấu quán, ảnh + dòng nguồn, thông tin, chỉ đường, thêm vào kèo, «Rủ <tên> tới đây» (chỉ hiện khi người xem có sổ đôi đang mở, tối đa 3), thêm kỷ niệm | ảnh hỏng, không ảnh, tên dài | chỉ đường (link ngoài), `/outings/chon`, `/groups/[id]/to-giay`, `/moments/new` |
 | F02.S04 | `/ai-match` | demo `Discovery.tsx` | match gu cả nhóm | có phiên → redirect `/explore` | |
 
 ### F03 Lên plan · Kèo · Hành trình
@@ -216,7 +216,7 @@ Không có trong app (N/A, đã rà mã):
 | MO09 | Lật bìa Welcome 84° + đường hiện dần | `Welcome.tsx` | CTA |
 | MO10 | Lật trang giữa các bước bill | `ui/LatTrang.tsx` | sang bước |
 | MO11 | Dock Nếp: rút/thu, kéo dọc, tự thu 6 s | `NepDock.tsx` | chạm mép |
-| MO12 | Sân khấu pop-up + nghiêng khi kéo | `SanKhau`, `useThiSai` | mở Khám phá, chi tiết quán |
+| MO12 | Sân khấu pop-up: bật dựng khi mount, gập theo cuộn, mount lại khi bỏ lọc. Kéo nghiêng (`useThiSaiKeo`) chỉ nối ở bảng dev `ThuSanKhau` và `/dev/san-khau` (F10); nghiêng máy (ADR-0037 D3, chỉ native) chưa nối ở đâu (sửa ở checkpoint 3) | `SanKhau`, `KhungSkia`, `useThiSai` | mở tab Khám phá, bỏ lọc; kéo nghiêng ở F10 |
 | MO13 | Nếp diễn M1–M8 | `NepDien.tsx`, `NepRoi` | sự kiện |
 | MO14 | Đóng dấu (rơi 130 ms + chạm 60 ms) | `Stamp`, `DauLon`, `useNhipDau` | xác nhận |
 | MO15 | Mực tự vẽ (chữ ký, sơ đồ chuyển) | `ChuKy`, `SoDoChuyen` | hiện màn |

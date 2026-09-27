@@ -193,5 +193,65 @@
   "bytes": 183447,
   "sha8": "0954363f",
   "moTa": "Baseline Sở thích ở C1, C2, C3, C8"
+ },
+ "EV-F02-AI-HOI-C1": {
+  "bytes": 128147,
+  "sha8": "fd418478",
+  "moTa": "UI-024: gửi câu mẫu khi máy chủ không có AI: thẻ «chưa đủ chắc… nói rõ số người, ngân sách» chồng lên trạng thái rỗng (C1)"
+ },
+ "EV-F02-AI-MAU-C1": {
+  "bytes": 115780,
+  "sha8": "e287c864",
+  "moTa": "UI-024: ngay sau khi chạm ✦, danh sách báo «0 kết quả / Chưa thấy nơi phù hợp» trước khi hỏi (C1)"
+ },
+ "EV-F02-CAT-LUU-ghep": {
+  "bytes": 252359,
+  "sha8": "4f9bbe89",
+  "moTa": "UI-023: nhãn «Lưu địa điểm» ở chân trang chi tiết bị cắt ở C1–C4, đọc trọn ở C5–C7"
+ },
+ "EV-F02-CAT-META-ghep": {
+  "bytes": 282677,
+  "sha8": "dc5df952",
+  "moTa": "UI-021: dòng «điểm · km · giá mỗi người» của hàng địa điểm bị cắt ở C1–C5, khung đỏ ghi số px thiếu"
+ },
+ "EV-F02-HOI-AN-C1": {
+  "bytes": 124385,
+  "sha8": "8ee170fa",
+  "moTa": "UI-028: Hội An chưa có quán mà trạng thái rỗng khuyên «thử từ khoá khác, bỏ bớt bộ lọc» và «Xóa lọc» (C1)"
+ },
+ "EV-F02-LOI-503-C1": {
+  "bytes": 97460,
+  "sha8": "4f72b4a3",
+  "moTa": "UI-029: danh mục trả 503, màn lỗi dùng câu mặc định «Kiểm tra mạng rồi thử lại. Những gì bạn đã nhập vẫn còn nguyên.» (C1)"
+ },
+ "EV-F02-MO12-bat-C1": {
+  "bytes": 267945,
+  "sha8": "7c0cf701",
+  "moTa": "UI-025 và MO12: khung hình mở tab Khám phá, danh sách hiện trước rồi bị sân khấu đẩy xuống; sân khấu dừng ở tư thế đứng (C1)"
+ },
+ "EV-F02-MO12-bo-loc-C1": {
+  "bytes": 238546,
+  "sha8": "6051f9a7",
+  "moTa": "UI-026: bỏ lọc «Cafe» làm sân khấu dựng lại từ phẳng tới đứng (C1)"
+ },
+ "EV-F02-MO12-bo-loc-C9": {
+  "bytes": 92776,
+  "sha8": "3ed44ab3",
+  "moTa": "UI-027: giảm chuyển động, bỏ lọc: sân khấu có ở 117ms, trống ở 176ms, có lại ở 609ms (C9)"
+ },
+ "EV-F02-OFFLINE-C1": {
+  "bytes": 108756,
+  "sha8": "d24ae63a",
+  "moTa": "UI-030: mất mạng rồi quay lại tab, danh sách 10 nơi đã tải bị thay bằng màn lỗi (C1)"
+ },
+ "EV-F02.S02-rong-BASE-ghep": {
+  "bytes": 135829,
+  "sha8": "aad86a2c",
+  "moTa": "UI-031: Điểm đến ở 768 và 1024 vẫn 2 cột (C6, C7)"
+ },
+ "EV-F02.S03-dai-BASE-ghep": {
+  "bytes": 184779,
+  "sha8": "bd541cf0",
+  "moTa": "Dữ liệu dài đạt: tên quán 76 ký tự xuống dòng, giá 1.250.000đ – 12.500.000đ đọc trọn (C1–C3)"
  }
 }

@@ -11,15 +11,15 @@
  */
 import { join } from "node:path";
 
-import { cauHinh } from "../lib/cau-hinh.mjs";
-import { chup, ghepAnh } from "../lib/chup.mjs";
-import { quayKhung, ghepKhung } from "../lib/chuyen-dong.mjs";
-import { cdpCua, cham, keo, tamCua } from "../lib/cu-chi.mjs";
-import { choOn, duongDan } from "../lib/dieu-huong.mjs";
-import { loiMayChu, goHet } from "../lib/mang.mjs";
-import { khoiDong, trangMoi } from "../lib/moi-truong.mjs";
-import { personaMoi } from "../lib/phien.mjs";
-import { soGhi } from "../lib/ghi.mjs";
+import { cauHinh } from "../thu-vien/cau-hinh.mjs";
+import { chup, ghepAnh } from "../thu-vien/chup.mjs";
+import { quayKhung, ghepKhung } from "../thu-vien/chuyen-dong.mjs";
+import { cdpCua, cham, keo, tamCua } from "../thu-vien/cu-chi.mjs";
+import { choOn, duongDan } from "../thu-vien/dieu-huong.mjs";
+import { loiMayChu, goHet } from "../thu-vien/mang.mjs";
+import { khoiDong, trangMoi } from "../thu-vien/moi-truong.mjs";
+import { personaMoi } from "../thu-vien/phien.mjs";
+import { soGhi } from "../thu-vien/ghi.mjs";
 
 const chi = (() => {
   const i = process.argv.indexOf("--chi");

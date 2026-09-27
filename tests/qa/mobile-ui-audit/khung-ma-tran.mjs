@@ -8,7 +8,7 @@
  * not in the ledger yet).
  */
 import { LOP, MAN } from "./danh-muc.mjs";
-import { soGhi } from "./lib/ghi.mjs";
+import { soGhi } from "./thu-vien/ghi.mjs";
 
 const out = process.env.AUDIT_OUT;
 if (!out) throw new Error("đặt AUDIT_OUT");

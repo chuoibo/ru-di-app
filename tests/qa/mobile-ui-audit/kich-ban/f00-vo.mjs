@@ -11,16 +11,16 @@
  */
 import { join } from "node:path";
 
-import { cauHinh } from "../lib/cau-hinh.mjs";
-import { chup, ghepAnh } from "../lib/chup.mjs";
-import { batDauLayMau, ketThucLayMau, phanTich, quayKhung, ghepKhung } from "../lib/chuyen-dong.mjs";
-import { cdpCua, cham, keo, tamCua } from "../lib/cu-chi.mjs";
-import { choOn, duongDan, moLanh } from "../lib/dieu-huong.mjs";
-import { tre } from "../lib/mang.mjs";
-import { choDialog, demDialog, dong, focusHienTai, inertConLai, luoiChamTrang, soLuoi } from "../lib/lop-phu.mjs";
-import { khoiDong, trangMoi } from "../lib/moi-truong.mjs";
-import { personaTheoTen } from "../lib/phien.mjs";
-import { soGhi } from "../lib/ghi.mjs";
+import { cauHinh } from "../thu-vien/cau-hinh.mjs";
+import { chup, ghepAnh } from "../thu-vien/chup.mjs";
+import { batDauLayMau, ketThucLayMau, phanTich, quayKhung, ghepKhung } from "../thu-vien/chuyen-dong.mjs";
+import { cdpCua, cham, keo, tamCua } from "../thu-vien/cu-chi.mjs";
+import { choOn, duongDan, moLanh } from "../thu-vien/dieu-huong.mjs";
+import { tre } from "../thu-vien/mang.mjs";
+import { choDialog, demDialog, dong, focusHienTai, inertConLai, luoiChamTrang, soLuoi } from "../thu-vien/lop-phu.mjs";
+import { khoiDong, trangMoi } from "../thu-vien/moi-truong.mjs";
+import { personaTheoTen } from "../thu-vien/phien.mjs";
+import { soGhi } from "../thu-vien/ghi.mjs";
 
 const chi = (() => {
   const i = process.argv.indexOf("--chi");
@@ -217,8 +217,8 @@ try {
   // --------------------------------------------------- slow session resume
   if (chay("resume-cham")) {
     const ch = cauHinh("C1");
-    const { taoContext } = await import("../lib/trinh-duyet.mjs");
-    const { layPhien, ganPhien } = await import("../lib/phien.mjs");
+    const { taoContext } = await import("../thu-vien/trinh-duyet.mjs");
+    const { layPhien, ganPhien } = await import("../thu-vien/phien.mjs");
     const context = await taoContext(mt.browser, ch);
     const page = await context.newPage();
     const phien = await layPhien(mt.api, P("dalat-0"), `${mt.out}/phien`);

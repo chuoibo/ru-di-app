@@ -13,14 +13,24 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { soGhi } from "./lib/ghi.mjs";
+import { soGhi } from "./thu-vien/ghi.mjs";
 
 const out = process.env.AUDIT_OUT;
 const docs = process.argv[2];
 if (!out || !docs) throw new Error("dùng: AUDIT_OUT=… node tong-hop.mjs <thư mục docs>");
 
 const cuoi = new Map();
-for (const r of soGhi(out).doc()) cuoi.set(`${r.tc}|${r.nenTang ?? "web"}|${r.cauHinh ?? ""}`, r);
+// A withdrawal drops every EARLIER row of its test case; later rows count again.
+const daRut = new Map();
+for (const r of soGhi(out).doc()) {
+  if (r.rut) {
+    let so = 0;
+    for (const k of [...cuoi.keys()]) if (k.startsWith(`${r.tc}|`)) (cuoi.delete(k), so++);
+    daRut.set(r.tc, { lyDo: r.lyDo, so: (daRut.get(r.tc)?.so ?? 0) + so });
+    continue;
+  }
+  cuoi.set(`${r.tc}|${r.nenTang ?? "web"}|${r.cauHinh ?? ""}`, r);
+}
 // A seeded NOT_TESTED row is a placeholder for its test case on its platform:
 // once that case has a real verdict under any configuration group, the
 // placeholder goes. Any other NOT_TESTED row stays and is counted.
@@ -81,6 +91,11 @@ for (const f of Object.keys(tong.theoFeature)) {
     const ghiChu = r.ghiChu ? ` (${o(r.ghiChu)})` : "";
     md += `| ${o(r.tc)} | ${o(r.feature)} | ${o(r.screen)} | ${o(r.layer)} | ${o(r.state)} | ${o(r.action)} | ${o(nen)} | ${o(r.expected)} | ${r.status}${ghiChu} | ${r.method} | ${ev(r)} | ${o(r.issue ?? "")} |\n`;
   }
+  md += "\n";
+}
+if (daRut.size) {
+  md += "## Hàng đã rút\n\nHàng do lỗi của harness (sai selector, sai tên nút) được rút khỏi bảng trên; sổ vẫn giữ nguyên dòng gốc.\n\n| ID | Số hàng rút | Lý do |\n|---|---|---|\n";
+  for (const [tc, v] of daRut) md += `| ${o(tc)} | ${v.so} | ${o(v.lyDo)} |\n`;
   md += "\n";
 }
 writeFileSync(join(docs, "coverage-matrix.md"), md);

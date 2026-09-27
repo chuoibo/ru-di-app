@@ -1,4 +1,4 @@
-/* Self-check of the detectors in lib/do-dac.mjs and lib/lop-phu.mjs.
+/* Self-check of the detectors in thu-vien/do-dac.mjs and thu-vien/lop-phu.mjs.
  *
  * A detector that cannot go red proves nothing when it stays green, so every
  * signal family gets a CANARY page with the defect planted (must fire) and the
@@ -6,7 +6,7 @@
  * all the time and must not report: a pager's off-screen slide and a chip row
  * that scrolls sideways.
  *
- *   node tu-kiem.mjs              run the table against lib/do-dac.mjs
+ *   node tu-kiem.mjs              run the table against thu-vien/do-dac.mjs
  *   node tu-kiem.mjs --dot-bien   also run two self-chosen mutants of it; each
  *                                 must turn exactly its predicted rows red
  *
@@ -19,8 +19,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { moTrinhDuyet } from "./lib/trinh-duyet.mjs";
-import { soLuoi } from "./lib/lop-phu.mjs";
+import { moTrinhDuyet } from "./thu-vien/trinh-duyet.mjs";
+import { soLuoi } from "./thu-vien/lop-phu.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 
@@ -102,7 +102,7 @@ const DOT_BIEN = [
 const browser = await moTrinhDuyet();
 let loi = 0;
 try {
-  const goc = join(HERE, "lib", "do-dac.mjs");
+  const goc = join(HERE, "thu-vien", "do-dac.mjs");
   const ket = await chayBang(browser, goc);
   for (const k of ket) {
     console.log(`${k.ok ? "XANH" : "ĐỎ  "}  ${k.ten}`);

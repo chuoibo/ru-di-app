@@ -12,12 +12,12 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { danhSach } from "../lib/cau-hinh.mjs";
-import { chayAxe } from "../lib/axe.mjs";
-import { chup, ghepAnh } from "../lib/chup.mjs";
-import { choOn, duongDan } from "../lib/dieu-huong.mjs";
-import { khoiDong, trangMoi } from "../lib/moi-truong.mjs";
-import { personaTheoTen } from "../lib/phien.mjs";
+import { danhSach } from "../thu-vien/cau-hinh.mjs";
+import { chayAxe } from "../thu-vien/axe.mjs";
+import { chup, ghepAnh } from "../thu-vien/chup.mjs";
+import { choOn, duongDan } from "../thu-vien/dieu-huong.mjs";
+import { khoiDong, trangMoi } from "../thu-vien/moi-truong.mjs";
+import { personaTheoTen } from "../thu-vien/phien.mjs";
 
 const arg = (ten, macDinh) => {
   const i = process.argv.indexOf(`--${ten}`);

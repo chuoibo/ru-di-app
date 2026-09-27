@@ -1,14 +1,14 @@
 /* F00 motion: the tab indicator slide (MO02), the create tray under reduced
  * motion (MO03/MO04 at C9), and M1 playing once per session (L04).
- * Shapes of transitions only; no frame-rate claims (see lib/chuyen-dong.mjs).
+ * Shapes of transitions only; no frame-rate claims (see thu-vien/chuyen-dong.mjs).
  */
 import { join } from "node:path";
-import { cauHinh } from "../lib/cau-hinh.mjs";
-import { batDauLayMau, ketThucLayMau, phanTich, quayKhung, ghepKhung } from "../lib/chuyen-dong.mjs";
-import { cdpCua, cham, tamCua } from "../lib/cu-chi.mjs";
-import { choDialog, dong } from "../lib/lop-phu.mjs";
-import { khoiDong, trangMoi } from "../lib/moi-truong.mjs";
-import { personaTheoTen } from "../lib/phien.mjs";
+import { cauHinh } from "../thu-vien/cau-hinh.mjs";
+import { batDauLayMau, ketThucLayMau, phanTich, quayKhung, ghepKhung } from "../thu-vien/chuyen-dong.mjs";
+import { cdpCua, cham, tamCua } from "../thu-vien/cu-chi.mjs";
+import { choDialog, dong } from "../thu-vien/lop-phu.mjs";
+import { khoiDong, trangMoi } from "../thu-vien/moi-truong.mjs";
+import { personaTheoTen } from "../thu-vien/phien.mjs";
 
 const mt = await khoiDong();
 const log = (o) => console.log(JSON.stringify(o));

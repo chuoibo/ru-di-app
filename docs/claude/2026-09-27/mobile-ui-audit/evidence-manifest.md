@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (39 ảnh, tổng 5.58 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (51 ảnh, tổng 7.52 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -43,3 +43,15 @@
 | [EV-F01.S02-BASE-ghep](evidence/EV-F01.S02-BASE-ghep.jpg) | Baseline Đăng nhập ở C1, C2, C3 | 142565 | `ce3fe306` |
 | [EV-F01.S04-BASE-ghep](evidence/EV-F01.S04-BASE-ghep.jpg) | Baseline Lời mời ở C1, C2, C3, C8 | 145323 | `f38d6b41` |
 | [EV-F01.S05-BASE-ghep](evidence/EV-F01.S05-BASE-ghep.jpg) | Baseline Sở thích ở C1, C2, C3, C8 | 183447 | `0954363f` |
+| [EV-F02-AI-HOI-C1](evidence/EV-F02-AI-HOI-C1.jpg) | UI-024: gửi câu mẫu khi máy chủ không có AI: thẻ «chưa đủ chắc… nói rõ số người, ngân sách» chồng lên trạng thái rỗng (C1) | 128147 | `fd418478` |
+| [EV-F02-AI-MAU-C1](evidence/EV-F02-AI-MAU-C1.jpg) | UI-024: ngay sau khi chạm ✦, danh sách báo «0 kết quả / Chưa thấy nơi phù hợp» trước khi hỏi (C1) | 115780 | `e287c864` |
+| [EV-F02-CAT-LUU-ghep](evidence/EV-F02-CAT-LUU-ghep.jpg) | UI-023: nhãn «Lưu địa điểm» ở chân trang chi tiết bị cắt ở C1–C4, đọc trọn ở C5–C7 | 252359 | `4f9bbe89` |
+| [EV-F02-CAT-META-ghep](evidence/EV-F02-CAT-META-ghep.jpg) | UI-021: dòng «điểm · km · giá mỗi người» của hàng địa điểm bị cắt ở C1–C5, khung đỏ ghi số px thiếu | 282677 | `dc5df952` |
+| [EV-F02-HOI-AN-C1](evidence/EV-F02-HOI-AN-C1.jpg) | UI-028: Hội An chưa có quán mà trạng thái rỗng khuyên «thử từ khoá khác, bỏ bớt bộ lọc» và «Xóa lọc» (C1) | 124385 | `8ee170fa` |
+| [EV-F02-LOI-503-C1](evidence/EV-F02-LOI-503-C1.jpg) | UI-029: danh mục trả 503, màn lỗi dùng câu mặc định «Kiểm tra mạng rồi thử lại. Những gì bạn đã nhập vẫn còn nguyên.» (C1) | 97460 | `4f72b4a3` |
+| [EV-F02-MO12-bat-C1](evidence/EV-F02-MO12-bat-C1.jpg) | UI-025 và MO12: khung hình mở tab Khám phá, danh sách hiện trước rồi bị sân khấu đẩy xuống; sân khấu dừng ở tư thế đứng (C1) | 267945 | `7c0cf701` |
+| [EV-F02-MO12-bo-loc-C1](evidence/EV-F02-MO12-bo-loc-C1.jpg) | UI-026: bỏ lọc «Cafe» làm sân khấu dựng lại từ phẳng tới đứng (C1) | 238546 | `6051f9a7` |
+| [EV-F02-MO12-bo-loc-C9](evidence/EV-F02-MO12-bo-loc-C9.jpg) | UI-027: giảm chuyển động, bỏ lọc: sân khấu có ở 117ms, trống ở 176ms, có lại ở 609ms (C9) | 92776 | `3ed44ab3` |
+| [EV-F02-OFFLINE-C1](evidence/EV-F02-OFFLINE-C1.jpg) | UI-030: mất mạng rồi quay lại tab, danh sách 10 nơi đã tải bị thay bằng màn lỗi (C1) | 108756 | `d24ae63a` |
+| [EV-F02.S02-rong-BASE-ghep](evidence/EV-F02.S02-rong-BASE-ghep.jpg) | UI-031: Điểm đến ở 768 và 1024 vẫn 2 cột (C6, C7) | 135829 | `aad86a2c` |
+| [EV-F02.S03-dai-BASE-ghep](evidence/EV-F02.S03-dai-BASE-ghep.jpg) | Dữ liệu dài đạt: tên quán 76 ký tự xuống dòng, giá 1.250.000đ – 12.500.000đ đọc trọn (C1–C3) | 184779 | `bd541cf0` |

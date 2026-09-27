@@ -20,8 +20,8 @@
 | Mức | Issue |
 |---|---|
 | P1 | UI-005 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-019 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-018, UI-020 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031 |
 
 ---
 
@@ -294,14 +294,14 @@
 
 | Trường | Nội dung |
 |---|---|
-| Category / Severity | UX ISSUE · **P3** (có thể nâng khi tổng hợp các màn, xem `report.md`) |
-| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). Các màn khác dùng `router.back()` sẽ được đo ở feature của chúng |
+| Category / Severity | UX ISSUE (điều hướng) · **P2**. Checkpoint 2 ghi P3; nâng ở checkpoint 3 vì phạm vi không còn là một màn: đo lại ở `/places/[id]`, và nút back của `TopBar` trong kit cũng gọi `router.back()` không kiểm `canGoBack()` |
+| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
 | Nền tảng, cấu hình | web, C1 |
 | Tái hiện | Mở thẳng `/login` (không có lịch sử), chạm «Quay lại» |
 | Expected | Đưa về màn hợp lý (Welcome), hoặc không vẽ nút khi không có nơi để về |
 | Actual | Đứng yên ở `/login`, không phản hồi |
-| Evidence | ![sau khi chạm Quay lại](evidence/EV-F01-LOGIN-back-lanh-C1.jpg) |
-| Source | `src/rudi/ui/CoverBand.tsx:45`; chỉ `app/create.tsx` kiểm `canGoBack()` |
+| Evidence | ![sau khi chạm Quay lại](evidence/EV-F01-LOGIN-back-lanh-C1.jpg) · F02: mở thẳng `/places/p-tiem-nuong-xom-lao`, chạm «Quay lại», URL vẫn là `/places/p-tiem-nuong-xom-lao` sau 900 ms (`TC-F02-CHI-TIET-BACK-LANH`). Màn chi tiết không có thanh tab, nên trong app không còn lối ra |
+| Source | `src/rudi/ui/CoverBand.tsx:45`; `src/rudi/ui.tsx:235` (`TopBar`); chỉ `app/create.tsx` kiểm `canGoBack()` |
 | Đề xuất | `router.canGoBack() ? router.back() : router.replace(<màn cha>)` trong nút back của kit |
 | Tiêu chí gỡ | Mở lạnh rồi chạm «Quay lại» luôn đi tới một màn |
 
@@ -316,6 +316,181 @@
 | Source | `Welcome.tsx:201` (`View` chấm có `accessibilityLabel`, không role); `ScrollView` pager |
 | Đề xuất | Đặt role cho cụm chấm (`progressbar` hoặc `text` có `aria-live`), hoặc gắn nhãn vào pager; `tabIndex=0` cho vùng cuộn trên web |
 | Tiêu chí gỡ | axe 0 vi phạm trên `/welcome` |
+
+## F02 Khám phá
+
+### UI-021 · Hàng địa điểm: dòng giá bị cắt, mất giá trên và «mỗi người»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (mất nội dung) · **P2** |
+| Feature / Screen / Layer | F02 · `/explore` · hàng `HangDiaDiem` và cặp so sánh đầu danh sách |
+| Nền tảng, cấu hình | web, C1–C6 (đo DOM); C7 đạt. Native: cùng component, `numberOfLines={1}` cũng cắt (STATIC) |
+| Điều kiện ban đầu | Minh Anh, Đà Lạt, 10 nơi đều có giờ mở cửa |
+| Tái hiện | Mở Khám phá, đọc dòng «điểm · km · giá» của mỗi hàng |
+| Expected | Khoảng giá đọc trọn, ví dụ «200.000đ – 250.000đ mỗi người». Chính mã ghi dải giá có dòng riêng để không bị cắt (QA 23/09) |
+| Actual | Dòng bị ellipsis, người xem chỉ thấy «4.8 (64) · 3.9 km · 250.000đ …». Số dòng chứa giá bị cắt: C1 9/10 (thiếu 35–127px) · C2 10/10 (68–162px) · C3 10/10 (28–142px) · C4 10/10 (13–134px) · C5 8/10 (22–107px) · C6 8/10 (48–119px) · C7 0/10 |
+| Evidence | ![dòng giá bị cắt C1–C5](evidence/EV-F02-CAT-META-ghep.jpg) Số đo: `scrollWidth − clientWidth` của phần tử một dòng, `kich-ban/f02-kham-pha.mjs --chi cat-chu`, hàng `TC-F02-META` |
+| Source | `src/rudi/kham-pha/dia-diem.ts:541-565` (`chiTietNgan` trả [điểm, km, giá, giờ mở]); `src/rudi/screens/explore/HangDiaDiem.tsx:206-207`, `:236-242`, `:313-321` (coi phần tử **cuối** là dải giá, cho nó dòng riêng; phần còn lại ghép thành một dòng `numberOfLines={1}`) |
+| Root cause | Quán có giờ mở thì giá không còn là phần tử cuối. Giá rơi vào dòng ghép một dòng; dòng riêng lại thuộc về giờ mở cửa. Bản sửa QA 23/09 mất tác dụng với mọi quán có giờ mở |
+| Hậu quả | Giá, thông tin chọn quán quan trọng nhất, bị ẩn ở mọi điện thoại |
+| Đề xuất sửa | Tìm dải giá theo loại (icon `wallet-outline`), không theo vị trí; hoặc cho giá một dòng riêng, giờ mở một dòng khác |
+| Tiêu chí gỡ | 0/10 dòng chứa giá bị cắt ở C1–C6, đo lại bằng `cat-chu` |
+
+### UI-022 · «Chỉ đường» trên web không làm gì và không báo gì
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG · **P2** |
+| Feature / Screen / Layer | F02 · `/places/[id]` · L33 link ngoài |
+| Nền tảng, cấu hình | web, C1 (Chromium 141, Linux) |
+| Tái hiện | Mở chi tiết Tiệm Nướng Xóm Lào. Chạm «Chỉ đường», hoặc chạm dòng địa chỉ («Mở địa chỉ trên bản đồ») |
+| Expected | Mở bản đồ ở tab mới, hoặc một câu nói vì sao không mở được |
+| Actual | Một lời gọi `window.open("geo:11.9404,108.4383?q=…", "_blank", "noopener")`, trả `null`. Không có trang mới trong 3 giây, URL không đổi, không có câu nào hiện. Nhánh `catch` («Máy này chưa có ứng dụng bản đồ để chỉ đường.») không bao giờ chạy trên web, vì `Linking.openURL` của react-native-web không ném |
+| Evidence | Số đo runtime: bọc `window.open` rồi lắng nghe trang mới, ở hàng `TC-F02-CHI-TIET-CHI-DUONG` và `TC-L33-VONGDOI`. Ảnh sau khi chạm trông y như trước khi chạm, nên không commit |
+| Source | `src/rudi/kham-pha/dia-diem.ts:582` (URL `geo:`); `src/rudi/screens/explore/PlaceDetailLive.tsx:154-160`, `:314`, `:321` (cả hai lối cùng gọi `chiDuong`) |
+| Hậu quả | Trên web, và trên trình duyệt không có ứng dụng nhận `geo:`, cả hai lối chỉ đường là nút chết |
+| iOS | UNVERIFIED HYPOTHESIS: iOS không có scheme `geo:`, nên `Linking.openURL` sẽ từ chối, và máy luôn nói «chưa có ứng dụng bản đồ» dù có Apple Maps. Chưa chạy được vì không có macOS |
+| Đề xuất sửa | Chọn URL theo nền tảng (`Platform.select`): web dùng URL https của một dịch vụ bản đồ, iOS dùng `maps:` hoặc `https://maps.apple.com/?ll=`, Android giữ `geo:`. Kiểm `Linking.canOpenURL` trước khi mở |
+| Tiêu chí gỡ | Web: chạm «Chỉ đường» mở trang mới hoặc hiện câu. iOS: đo trên máy |
+
+### UI-023 · Nhãn «Lưu địa điểm» ở chân trang chi tiết bị cắt trên điện thoại
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (layout, mất nội dung) · **P2** |
+| Feature / Screen | F02 · `/places/[id]` · chân trang hai nút |
+| Nền tảng, cấu hình | web. Bị cắt: C1 (thiếu 5px), C2 (34px), C3 (17px), C4 (11px). Đọc trọn: C5, C6, C7 |
+| Tái hiện | Mở chi tiết bất kỳ quán nào, nhìn chân trang |
+| Expected | Nhãn nút đọc trọn |
+| Actual | «Lưu địa đi…» ở 390, «Lưu đ…» ở 320. Ở 320 không còn đoán được nút làm gì nếu không nhìn icon |
+| Evidence | ![nhãn Lưu theo bề rộng](evidence/EV-F02-CAT-LUU-ghep.jpg) (hàng `TC-F02-NHAN-LUU`) |
+| Source | `PlaceDetailLive.tsx:166-183` và `:483-497`: nút trái `flex: 1`, nút phải `flex: 1.4`, chia theo tỉ lệ chứ không theo nhãn; nhãn `RudiButton` kẹp một dòng (`src/rudi/ui.tsx:509`) |
+| Hậu quả | Mất chữ trên một hành động chính của màn, ở mọi điện thoại dưới 430dp |
+| Đề xuất sửa | Để nhãn quyết định bề rộng nút trái; hoặc rút nhãn thành «Lưu»; hoặc xếp dọc hai nút dưới khoảng 400dp |
+| Tiêu chí gỡ | Nhãn đọc trọn ở C2 |
+
+### UI-024 · Nút ✦ «Hỏi Rủ Đi AI» không hỏi; danh sách báo «0 kết quả» trước khi có câu hỏi
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P2** |
+| Feature / Screen | F02 · `/explore` · ô tìm và nút ✦ |
+| Nền tảng, cấu hình | web, C1. Máy chủ cục bộ không có khoá AI |
+| Tái hiện | 1. Chạm ✦. 2. Muốn hỏi thật: chạm vào ô rồi Enter |
+| Expected | ✦ đặt câu mẫu và sẵn sàng gửi (gửi luôn, hoặc focus vào ô). Danh sách không báo thất bại khi chưa hỏi gì. AI không trả lời được thì nói rõ AI chưa sẵn sàng |
+| Actual | Bước 1: ô nhận câu «quán nướng cho 6 người, 200k mỗi người», focus ở lại nút ✦. Danh sách lọc theo tên với cả câu, lập tức hiện «0 kết quả», «Chưa thấy nơi phù hợp / Thử từ khóa khác, hoặc bỏ bớt bộ lọc…» và nút «Xóa lọc». Bước 2: `POST /places/search` trả 200, `source: "none"`, 0 nơi. Thẻ «Rủ Đi AI chưa đủ chắc để xếp hạng cho câu này. Thử nói rõ số người, ngân sách hoặc khu vực.» chồng lên cùng trạng thái rỗng, dù câu mẫu đã có số người và ngân sách. Kèm theo: placeholder «…hoặc hỏi Rủ Đi AI» bị cắt thành «…hoặc hỏi Rủ …» ở 390 (đọc trọn ở 430) |
+| Evidence | ![sau khi chạm ✦](evidence/EV-F02-AI-MAU-C1.jpg) ![sau khi gửi](evidence/EV-F02-AI-HOI-C1.jpg) |
+| Source | `ExploreLive.tsx:261` (`onPress={() => setQuery(CAU_MAU)}`); `:191-196` (`locTheoTen` đòi mọi từ trong ô khớp tên); `:348-356` (một kiểu trạng thái rỗng); `src/rudi/kham-pha/dia-diem.ts:596-597` (câu cho `khong-tra-loi`); `src/screens/kham-pha/tim-kiem.ts` (`source: "none"` nghĩa là mô hình không trả lời, hoặc câu trả lời bị từ chối vì không bám danh mục) |
+| Hậu quả | Lối vào AI nổi bật nhất trông như hỏng ngay lần chạm đầu, và lời khuyên tự mâu thuẫn với câu mẫu của chính app |
+| Ghi chú môi trường | Bước 2 đo trên máy chủ không có AI; với AI thật có thể ra kết quả. Bước 1 không phụ thuộc AI |
+| Đề xuất sửa | ✦ đặt câu rồi gọi `hoi()`, hoặc ít nhất focus vào ô. Khi ô chứa câu hỏi chưa gửi thì chưa lọc theo tên. Với `source: "none"`, nói «Rủ Đi AI chưa trả lời được lúc này», không bảo người dùng sửa câu |
+| Tiêu chí gỡ | Chạm ✦ không bao giờ hiện «0 kết quả» trước khi có câu trả lời |
+
+### UI-025 · Lần đầu mở Khám phá, danh sách hiện rồi bị sân khấu đẩy xuống 149dp
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH (layout shift) · **P3** |
+| Feature / Screen | F02 · `/explore` · sân khấu thành phố |
+| Nền tảng, cấu hình | web, C1 và C9 |
+| Tái hiện | Từ Cá nhân chạm tab Khám phá lần đầu trong phiên |
+| Expected | Phần đầu giữ chỗ cho sân khấu, dòng «10 nơi ở Đà Lạt» vẽ một lần ở chỗ cuối cùng |
+| Actual | Lấy mẫu mỗi khung hình: dòng «10 nơi ở Đà Lạt» vẽ ở y=257, rồi nhảy xuống y=406. Nhảy sau 95–104 ms ở C1 và 28–37 ms ở C9; cả danh sách dịch 149dp. Ảnh ghép: khung 332 ms danh sách sát ô tìm, khung 474 ms mới có chỗ trống cho sân khấu |
+| Evidence | ![khung hình mở tab](evidence/EV-F02-MO12-bat-C1.jpg) (hàng `TC-F02-NHAY`) |
+| Source | `ExploreLive.tsx:239-242` và `:401`: khung `sanThanhPho` không có chiều cao; `SanKhau` chỉ vẽ sau khi `onLayout` cho ra `rongSan` |
+| Hậu quả | Nội dung nhảy dưới ngón tay đúng lúc vừa hiện. Với người bật giảm chuyển động, đây là chuyển động họ không muốn |
+| Đề xuất sửa | Cho `sanThanhPho` một `aspectRatio` (khung.w/khung.h) để giữ chỗ trước khi đo |
+| Tiêu chí gỡ | `TC-F02-NHAY` nhảy 0dp ở C1 và C9 |
+
+### UI-026 · Bỏ lọc hoặc xoá tìm làm sân khấu dựng lại từ đầu mỗi lần
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F02 · `/explore` · MO12 |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | Chạm chip «Cafe», rồi chạm lại để bỏ lọc |
+| Expected | Theo chú thích trong `ExploreLive.tsx:236` («It stands up once per city»), sân khấu quay lại ở tư thế đứng |
+| Actual | Sân khấu mount lại và chạy lại cú bật dựng từ phẳng tới đứng mỗi lần bỏ lọc (khoảng 1 giây trong môi trường này; SwiftShader không đại diện cho thời lượng) |
+| Evidence | ![bỏ lọc ở C1](evidence/EV-F02-MO12-bo-loc-C1.jpg) |
+| Source | `ExploreLive.tsx:239` (render có điều kiện `!dangLoc && query === ""`); `src/rudi/ui/SanKhau.tsx:55-66` (bật dựng một lần mỗi lần **mount**) |
+| Đề xuất sửa | Giữ `SanKhau` mount và gập bằng `gap` (API đã có), thay vì unmount |
+| Tiêu chí gỡ | Bỏ lọc không phát lại cú bật dựng |
+
+### UI-027 · Giảm chuyển động: sân khấu trống một lúc khi mount lại
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (hiển thị) · **P3** |
+| Feature / Screen | F02 · `/explore` · `KhungSkia` (chung cho mọi tranh Skia) |
+| Nền tảng, cấu hình | web, C9 (`prefers-reduced-motion: reduce`). C1 không thấy trống: ở đó SVG được giữ trong 400 ms của cú fade |
+| Tái hiện | Như UI-026, ở C9 |
+| Expected | Chú thích `KhungSkia` hứa không bao giờ trống: SVG ở lại tới khi canvas Skia đã vẽ |
+| Actual | Dòng thời gian `data-renderer` trên cùng đồng hồ với screencast: 71 ms SVG và Skia cùng mount, Skia opacity 0; 145 ms SVG bị gỡ, Skia opacity 1. Khung 176 ms vùng sân khấu trống; khung 609 ms tranh Skia mới hiện. Trống khoảng 430–460 ms |
+| Evidence | ![bỏ lọc ở C9](evidence/EV-F02-MO12-bo-loc-C9.jpg) |
+| Source | `src/rudi/ui/KhungSkia.tsx:65-93` (`HienSauKhiVe` đợi đúng hai `requestAnimationFrame`, rồi fade; giảm chuyển động nên thời lượng 0), `:130-134` (gỡ SVG khi fade xong) |
+| Root cause | Hai rAF không phải tín hiệu «canvas đã vẽ»; dựng surface CanvasKit mất lâu hơn |
+| Giới hạn | Độ dài khoảng trống phụ thuộc GPU, SwiftShader chậm hơn máy thật. Cơ chế gỡ SVG trước khi canvas có khung đầu thì không phụ thuộc máy |
+| Đề xuất sửa | Chỉ gỡ SVG sau khung vẽ thật đầu tiên của canvas |
+| Tiêu chí gỡ | Ở C9 không khung nào có vùng sân khấu trống |
+
+### UI-028 · Thành phố chưa có quán: trạng thái rỗng khuyên bỏ một bộ lọc không tồn tại
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F02 · `/explore` sau `/destinations` |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | «Đổi điểm đến», chọn Hội An (0 nơi trong danh mục) |
+| Expected | Nói rõ Hội An chưa có địa điểm, lối ra là đổi điểm đến |
+| Actual | «0 nơi ở Hội An», «Chưa thấy nơi phù hợp», «Thử từ khóa khác, hoặc bỏ bớt bộ lọc để thấy lại cả danh mục.» và nút «Xóa lọc», trong khi không có bộ lọc hay từ khoá nào |
+| Evidence | ![Hội An rỗng](evidence/EV-F02-HOI-AN-C1.jpg) |
+| Source | `ExploreLive.tsx:348-356`: một `EmptyState` cho mọi danh sách rỗng, không xét `dangLoc` |
+| Đề xuất sửa | Nhánh riêng khi `!dangLoc`: «Hội An chưa có địa điểm nào», kèm «Đổi điểm đến» |
+| Tiêu chí gỡ | Thành phố rỗng không hiện «Xóa lọc» |
+
+### UI-029 · Khám phá gặp lỗi máy chủ nhưng bảo người dùng kiểm tra mạng
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F02 · `/explore` · L35 trạng thái lỗi |
+| Nền tảng, cấu hình | web, C1; `/places` trả 503 (chặn ở trình duyệt) |
+| Actual | Tiêu đề «Chưa đọc được danh mục», thân là câu mặc định của kit: «Kiểm tra mạng rồi thử lại. Những gì bạn đã nhập vẫn còn nguyên.» Màn này không có gì để nhập. «Thử lại» tải lại được «10 nơi ở Đà Lạt» (đạt) |
+| Evidence | ![503](evidence/EV-F02-LOI-503-C1.jpg) |
+| Source | `ExploreLive.tsx:271` không truyền `body`, dù `trang.loi` đã có câu đúng nguyên nhân (`loiRaChu` → `thongDiepNguoiDoc`; 5xx là «Rủ Đi đang gặp sự cố…»). Đếm tĩnh toàn `src/`: 24 chỗ dùng `ErrorState` khác đều truyền `body`, đây là chỗ duy nhất |
+| Đề xuất sửa | `body={trang.loi}` |
+| Tiêu chí gỡ | 503 hiện câu về máy chủ; mất mạng hiện câu về mạng |
+
+### UI-030 · Mất mạng rồi quay lại tab: danh sách đã tải bị thay bằng màn lỗi
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F02 · `/explore` · L35 |
+| Nền tảng, cấu hình | web, C1 (`context.setOffline(true)`) |
+| Tái hiện | Mở Khám phá (10 nơi), ngắt mạng, chạm tab «Lên plan», rồi quay lại «Khám phá» |
+| Expected | Nội dung đã tải vẫn xem được, kèm một câu báo đang offline |
+| Actual | Hiện «Chưa đọc được danh mục» và «Thử lại»; 10 nơi đã tải biến mất (tên thành phố và sân khấu vẫn còn) |
+| Evidence | ![offline](evidence/EV-F02-OFFLINE-C1.jpg) |
+| Source | `ExploreLive.tsx:159-163` (`useFocusEffect` gọi `nap()` mỗi lần focus), `:154-156` (lỗi thì `setTrang({ pha: "hong" })`, bất kể đã có dữ liệu) |
+| Đề xuất sửa | Khi đã có dữ liệu, lỗi lúc nạp lại chỉ hiện một dòng báo và giữ danh sách |
+| Tiêu chí gỡ | Mất mạng rồi đổi tab không làm mất danh sách |
+
+### UI-031 · Lưới Điểm đến luôn 2 cột, kể cả ở expanded
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F02 · `/destinations` |
+| Nền tảng, cấu hình | web; C6 (768) đạt, C7 (1024) không đạt |
+| Expected | DESIGN.md: expanded 3 cột; `gridFor(…, maxColumns = 3)` cho hàng thẻ |
+| Actual | Ở 1024 vẫn 2 cột, mỗi thẻ khoảng 450px; một màn chỉ thấy 8/15 thành phố |
+| Evidence | ![Điểm đến C6, C7](evidence/EV-F02.S02-rong-BASE-ghep.jpg) |
+| Source | `src/rudi/screens/explore/DiemDenScreen.tsx:120` (`Math.floor((rongLuoi - KHE) / 2)`) |
+| Đề xuất sửa | Dùng `gridFor` như các lưới thẻ khác |
+| Tiêu chí gỡ | C7 hiện 3 cột |
 
 ## F09 Hồ sơ · Cài đặt
 

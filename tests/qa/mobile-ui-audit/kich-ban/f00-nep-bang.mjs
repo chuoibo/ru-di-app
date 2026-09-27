@@ -2,14 +2,14 @@
  * the bottom, and the «Vẽ» button whose confirmation is `Alert.alert`
  * (react-native-web ships Alert as an empty function).
  */
-import { cauHinh } from "../lib/cau-hinh.mjs";
-import { chup } from "../lib/chup.mjs";
-import { cdpCua, cham, tamCua } from "../lib/cu-chi.mjs";
-import { choOn } from "../lib/dieu-huong.mjs";
-import { choDialog, demDialog, dong, inertConLai } from "../lib/lop-phu.mjs";
-import { khoiDong, trangMoi } from "../lib/moi-truong.mjs";
-import { personaTheoTen } from "../lib/phien.mjs";
-import { soGhi } from "../lib/ghi.mjs";
+import { cauHinh } from "../thu-vien/cau-hinh.mjs";
+import { chup } from "../thu-vien/chup.mjs";
+import { cdpCua, cham, tamCua } from "../thu-vien/cu-chi.mjs";
+import { choOn } from "../thu-vien/dieu-huong.mjs";
+import { choDialog, demDialog, dong, inertConLai } from "../thu-vien/lop-phu.mjs";
+import { khoiDong, trangMoi } from "../thu-vien/moi-truong.mjs";
+import { personaTheoTen } from "../thu-vien/phien.mjs";
+import { soGhi } from "../thu-vien/ghi.mjs";
 
 const mt = await khoiDong();
 const so = soGhi(mt.out);

@@ -5,11 +5,11 @@
  *
  *   AUDIT_WEB=… AUDIT_OUT=… node kich-ban/khoi-dong.mjs
  */
-import { cauHinh } from "../lib/cau-hinh.mjs";
-import { chup } from "../lib/chup.mjs";
-import { choOn, duongDan } from "../lib/dieu-huong.mjs";
-import { khoiDong, trangMoi } from "../lib/moi-truong.mjs";
-import { personaDaLat } from "../lib/phien.mjs";
+import { cauHinh } from "../thu-vien/cau-hinh.mjs";
+import { chup } from "../thu-vien/chup.mjs";
+import { choOn, duongDan } from "../thu-vien/dieu-huong.mjs";
+import { khoiDong, trangMoi } from "../thu-vien/moi-truong.mjs";
+import { personaDaLat } from "../thu-vien/phien.mjs";
 
 const mt = await khoiDong();
 try {
