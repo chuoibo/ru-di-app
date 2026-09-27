@@ -137,11 +137,11 @@ func listPlacesWAI() Route {
 		if diemDen == nil {
 			return endpoint.Reply{}, endpoint.Refuse(404, "destination_not_found", "Không có điểm đến nào với mã này.")
 		}
-		filter := repo.PlaceFilter{DestinationID: &diemDen.ID}
-		rows, err := store.ListPlaces(ctx, filter)
+		snap, err := catalogue.load(ctx, store, diemDen.ID)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
+		rows := snap.rows
 		selected := make([]repo.Place, 0, len(rows))
 		q := ""
 		if query != nil {
@@ -156,10 +156,7 @@ func listPlacesWAI() Route {
 			}
 			selected = append(selected, row)
 		}
-		cards, err := withPhotos(ctx, store, selected)
-		if err != nil {
-			return endpoint.Reply{}, err
-		}
+		cards := cardsWithPhotos(selected, snap.covers, snap.counts)
 		written := map[string]reasonPair{}
 		if group.Known() {
 			safe := treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(cards)))
@@ -172,6 +169,13 @@ func listPlacesWAI() Route {
 			})
 			if len(safe) > maxReasonRows {
 				safe = safe[:maxReasonRows]
+			}
+			// The list rows were read without description, reviews and
+			// activities; the reasons prompt quotes whole cards, so its few
+			// rows are read in full and rebuilt exactly as before.
+			safe, err = fullCards(ctx, store, safe, snap)
+			if err != nil {
+				return endpoint.Reply{}, err
 			}
 			written = fetchReasons(safe, group)
 		}
@@ -595,14 +599,41 @@ func withPhotos(ctx context.Context, store repo.Repository, rows []repo.Place) (
 	for i, row := range rows {
 		ids[i] = row.ID
 	}
-	covers, err := store.PhotoCovers(ctx, ids)
+	covers, counts, err := store.PhotoCoversAndCounts(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
-	counts, err := store.PhotoCounts(ctx, ids)
+	return cardsWithPhotos(rows, covers, counts), nil
+}
+
+// fullCards replaces each card with one built from the place's full row, in
+// the same order and through the same conversion the list applied, so what a
+// prompt sees is byte-for-byte what it saw when the list read every column.
+func fullCards(ctx context.Context, store repo.Repository, cards []*pyjson.OrderedMap,
+	snap *catalogueSnapshot) ([]*pyjson.OrderedMap, error) {
+	ids := make([]string, len(cards))
+	for i, card := range cards {
+		ids[i] = service.PlaceID(card)
+	}
+	rows, err := store.PlacesByIDs(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
+	byID := make(map[string]repo.Place, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row
+	}
+	ordered := make([]repo.Place, 0, len(ids))
+	for _, id := range ids {
+		if row, ok := byID[id]; ok {
+			ordered = append(ordered, row)
+		}
+	}
+	return treejson.MapsFrom(treejson.MapsTo(cardsWithPhotos(ordered, snap.covers, snap.counts))), nil
+}
+
+// cardsWithPhotos builds list cards from rows and a photo summary already read.
+func cardsWithPhotos(rows []repo.Place, covers map[string]repo.PlacePhoto, counts map[string]int64) []*pyjson.OrderedMap {
 	out := make([]*pyjson.OrderedMap, 0, len(rows))
 	for _, row := range rows {
 		card := service.PlaceRow(row)
@@ -620,7 +651,7 @@ func withPhotos(ctx context.Context, store repo.Repository, rows []repo.Place) (
 		}
 		out = append(out, card)
 	}
-	return out, nil
+	return out
 }
 
 func wirePlaceCard(place *pyjson.OrderedMap, reason, verdict *string, group taste.Profile) (*pyjson.OrderedMap, error) {

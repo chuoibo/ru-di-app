@@ -113,6 +113,41 @@ func (r Repository) PhotoCovers(ctx context.Context, placeIDs []string) (map[str
 	return out, rows.Err()
 }
 
+// PhotoCoversAndCounts is PhotoCovers and PhotoCounts in one statement: the
+// first photo of each place by (sort_order, id) and how many it has. One
+// round trip and one row per place, instead of two statements with one bind
+// parameter per place and every photo row shipped back to pick the first.
+func (r Repository) PhotoCoversAndCounts(ctx context.Context, placeIDs []string) (map[string]PlacePhoto, map[string]int64, error) {
+	covers, counts := map[string]PlacePhoto{}, map[string]int64{}
+	if len(placeIDs) == 0 {
+		return covers, counts, nil
+	}
+	rows, err := r.Q.Query(ctx,
+		`SELECT DISTINCT ON (place_photos.place_id) `+placePhotoColumns+`,
+		        count(*) OVER (PARTITION BY place_photos.place_id)
+		   FROM place_photos
+		  WHERE place_photos.place_id = ANY($1::VARCHAR[])
+		  ORDER BY place_photos.place_id, place_photos.sort_order, place_photos.id`,
+		placeIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p PlacePhoto
+		var n int64
+		var created time.Time
+		if err := rows.Scan(&p.ID, &p.PlaceID, &p.StorageKey, &p.ContentType, &p.ByteSize,
+			&p.Width, &p.Height, &p.Author, &p.License, &p.SourceURL, &p.Title,
+			&p.SortOrder, &created, &n); err != nil {
+			return nil, nil, err
+		}
+		covers[p.PlaceID] = p
+		counts[p.PlaceID] = n
+	}
+	return covers, counts, rows.Err()
+}
+
 // PhotoCounts is photo_counts: places with none are absent.
 func (r Repository) PhotoCounts(ctx context.Context, placeIDs []string) (map[string]int64, error) {
 	out := map[string]int64{}
