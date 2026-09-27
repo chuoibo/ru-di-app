@@ -7,7 +7,8 @@
   engine, ADR-0038 hàng đợi, ADR-0040 RAG.
 - Nguồn đã đọc: `scratchpad/research/mem0.md` và `stm-personalization.md` (phần **Kiểm chứng** thắng
   phần thân khi hai bên khác nhau), `research/milvus.md`, thiết kế 05 §6, hợp đồng sidecar trong
-  `services/ai-infer` (commit `90a9f7e`).
+  `services/ai-infer` (commit `90a9f7e`); §2.6 thêm `research/qwen-reranker.md` (cùng phần
+  Kiểm chứng) và quyết định của chủ sản phẩm ngày 2026-09-27 về reranker.
 - **Có lệch khỏi ADR-0031**. Mục 4 nêu tên từng chỗ lệch; ADR này chỉ có hiệu lực khi Lead ký chấp
   nhận các chỗ lệch đó.
 
@@ -125,8 +126,53 @@
 
 - Mỗi lượt Nếp: tối đa 5 ký ức của chính người hỏi, đặt vào khối `<du_lieu nguon="tri_nho">` của lời
   gọi trả lời (router không thấy khối này). Chỉ khi cờ bật.
-- Đường này chưa có reranker: thêm một lời gọi model thì mất vào trần 8 lời gọi.
+- Đường này chưa có reranker (§2.6 chỉ rerank truy hồi địa điểm và sổ tay): rerank ký ức cá nhân
+  vẫn là quyết định mở ở §5.
 - Nhớ lại lỗi thì lượt vẫn trả lời, chỉ thiếu khối này.
+
+### 2.6 Reranker: Qwen3-Reranker-4B trên GPU, gọi qua HTTP (chủ sản phẩm chốt 2026-09-27)
+
+- **Model sản xuất**: Qwen3-Reranker-4B (Apache-2.0) trên GPU sau vLLM, hợp đồng `/rerank` của vLLM
+  (nghiên cứu `scratchpad/research/qwen-reranker.md`, phần **Kiểm chứng** thắng phần thân). Trên
+  MMTEB-R, 4B hơn 0.6B +6,4 điểm; 8B gần như bằng 4B. Máy dev đứng thay bằng `llama-server` với
+  GGUF 0.6B ở `127.0.0.1:18081` (CPU chậm, đo được ~140–255 token/s: chỉ dùng cho test với hạn rộng).
+- **Gọi từ orchestrator Go** (`internal/rerank`), không qua Milvus Model Ranker: một request cho mọi
+  tài liệu, hạn riêng, lỗi thì không làm hỏng truy hồi. Đường là `POST {URL}/rerank`, **không**
+  `/v1/rerank` (vLLM 0.30 báo `/v1/rerank` lỗi thời). Chỉ đọc `results[].index` và
+  `results[].relevance_score`; mọi index phải trong `[0, n)`, không trùng, đủ một cho mỗi tài liệu;
+  điểm phải hữu hạn. Phần `document` vọng lại không bao giờ được đọc; không body nào vào log.
+- **Cấu hình** (đọc một lần lúc khởi động engine Go, `cmd/core` → `aiharness.WithXepLai`):
+  - `MOBILE_RERANK_URL` — trống thì không rerank: mọi truy hồi giữ thứ tự RRF và gắn cờ `no_rerank`.
+    `http` chỉ tới loopback; ra khỏi máy phải `https` (câu hỏi của người dùng và token đi trên
+    request). URL sai thì tiến trình từ chối khởi động.
+  - `MOBILE_RERANK_MODEL` — tên model gửi trong request (vLLM `--served-model-name`), mặc định
+    `Qwen3-Reranker-4B`.
+  - `MOBILE_RERANK_TIMEOUT` — hạn mỗi lời gọi, `(0, 60s]`, mặc định `3s`.
+  - `MOBILE_RERANK_TOKEN` — bearer tuỳ chọn (vLLM `--api-key`), ≥ 16 ký tự, không khoảng trắng,
+    không bao giờ ghi log.
+- **Nối vào engine**: engine giữ reranker; mỗi lượt Nếp bọc nó trong bộ đếm `rerank.Dem` với
+  `llm.MaxRerankCallsPerTurn` = 2 và đặt vào ngữ cảnh của lượt (`truyhoi.VoiXepLai`). Retriever
+  hybrid dùng chung giữa các lượt (`internal/hybrid`) rerank bằng reranker lượt của nó mang tới, nên
+  tool `search_places` của vòng agent được rerank; vòng sửa của đường truy hồi (`crag`) rerank **một
+  lần** trên ứng viên đã trộn của mọi truy vấn router, còn retriever thì nhường
+  (`truyhoi.HoanXepLai`, không rerank và không gắn cờ). Cả hai đường đếm chung một ngân sách; lời gọi
+  thứ ba trong lượt giữ thứ tự RRF và gắn `no_rerank`. `so_xep_lai` của hàng metrics là số lời gọi thật.
+- **Ứng viên**: reranker đọc tối đa 30 ứng viên đầu theo thứ tự RRF (`truyhoi.UngVienXepLai`), trả
+  `k` của request; đường truy hồi xin 30 ứng viên khi có reranker rồi cắt còn 8 sau rerank.
+  Truy vấn reranker chấm là **dạng khôi phục dấu** của router (điểm Qwen3-Reranker tụt mạnh với câu
+  không dấu, nghiên cứu §3.4).
+- **Hỏng**: quá hạn, lỗi HTTP, trả lời sai hợp đồng, mạch đang mở hay hết ngân sách lượt → giữ nguyên
+  thứ tự RRF, gắn `no_rerank`, lượt đi tiếp. **Không thử lại trong lượt**. Cầu dao mở sau 5 lỗi trong
+  30 s và mở 60 s: reranker chết tốn một lần quá hạn mỗi cửa sổ, không phải mỗi lượt.
+- **Điểm chỉ để xếp**: điểm nằm riêng ở `BangChung.DiemXepLai`, không ghi đè điểm truy hồi và không
+  bao giờ là ngưỡng cắt (model nhỏ chấm tài liệu liên quan và bẫy từ vựng cùng gần 1,0). Ràng buộc
+  cứng đã lọc trước khi reranker thấy ứng viên.
+- **Làm sạch token**: chuỗi token đặc biệt của họ Qwen (kể cả dạng full-width sau NFKC, dạng có khoảng
+  trắng trong ngoặc, các added token `<tool_call>`/`<think>`) và nhãn template bị gỡ khỏi truy vấn và
+  tài liệu trước khi gửi. Đây là làm sạch cấu trúc theo từ vựng token của model, không đọc nghĩa.
+- **Đây là suy luận AI** (ADR-0031 cho phép), không phải backend nghiệp vụ; client là Go, server là
+  vLLM/llama.cpp không trạng thái: «quên» và xoá tài khoản không phải dọn gì ở reranker (nếu bật
+  prefix cache ghi ra đĩa của vLLM thì phải tắt).
 - Bot nhóm không nhận gì:
   - `Engine.Run` kết thúc lượt nhóm trước mọi lời gọi.
   - Cổng `aigate` `TestGroupNeverReachesMemoryStores` đỏ nếu bất kỳ handler/job nhóm nào với tới gói
@@ -173,9 +219,11 @@
     đã xong trong khoảng đó.
 
   Đề xuất (a).
-- **Kích thước reranker** cho cá nhân hoá (Qwen3-Reranker 0,6B hay 4B, hay giữ không rerank):
-  - Chạy trong sidecar thì không tốn lời gọi Gemini.
-  - Cần đo latency p95 trên CPU và độ chính xác trên bộ eval tiếng Việt trước khi bật.
+- **Reranker cho cá nhân hoá** (ký ức): truy hồi địa điểm/sổ tay đã chốt 4B trên GPU (§2.6); có
+  rerank cả ký ức cá nhân không thì còn mở.
+  - Không tốn lời gọi Gemini, nhưng tính vào ngân sách rerank của lượt.
+  - Cần đo latency p95 trên GPU thật và độ chính xác trên bộ eval tiếng Việt trước khi bật; golden so
+    với `transformers` fp32 là bắt buộc khi đổi image hay model (Kiểm chứng, điều chỉnh 2).
 - **Hạn ghi 5 s**: Milvus local thỉnh thoảng đứng khoảng 5 s ở lần chèn (đo đầu-cuối: 107 ms thường,
   5,2 s khi đứng). `remember_fact` đang ghi đồng bộ sau khi câu trả lời qua kiểm, trong trần 8 s của
   lượt.

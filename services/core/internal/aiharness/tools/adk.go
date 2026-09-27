@@ -5,16 +5,21 @@ import (
 	"google.golang.org/adk/v2/tool"
 )
 
-// BoCongCu builds the turn's ADK tools: one functiontool per tool the bot
-// may call this turn (DuocPhep), in registry order, each declared with the
-// contract's argument schema and the long description. A tool the bot may
-// not call is not declared at all, so the model never sees it.
+// BoCongCu builds the turn's ADK tools: one functiontool per tool the
+// permission table grants the bot (Quyen.DuocPhep(bot, false)), in registry
+// order, each declared with the contract's argument schema and the long
+// description. The declarations are the same for every turn and every step
+// of the bot, so the request keeps one prefix for Gemini's implicit cache;
+// what this turn and this step may call is narrowed by TenChoPhep
+// (FunctionCallingConfig.AllowedFunctionNames) and enforced again by
+// TruocTool. A tool the table does not grant the bot is never declared:
+// that is permission, not policy.
 func (bc *BoiCanh) BoCongCu() ([]tool.Tool, error) {
 	bc.mu.Lock()
 	bc.khoiTao()
 	bc.mu.Unlock()
 	var out []tool.Tool
-	for _, t := range bc.DuocPhep() {
+	for _, t := range bc.quyen().DuocPhep(bc.Bot, false) {
 		tt, err := congCus[t].moi(bc)
 		if err != nil {
 			return nil, err

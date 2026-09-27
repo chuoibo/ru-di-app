@@ -189,7 +189,7 @@ func TestChenLenhTrongDuLieuQuanTacTu(t *testing.T) {
 			t.Fatalf("%s: tool data not datamarked:\n%s", name, buoc2)
 		}
 		// Without the intent the model is never shown the write tools.
-		if len(yDinh) == 1 && strings.Contains(string(m.stub.YeuCau()[1]), `"remember_fact"`) {
+		if choPhep, _ := congCuCua(t, m.stub.YeuCau()[1]); len(yDinh) == 1 && coTen(choPhep, "remember_fact") {
 			t.Fatalf("%s: remember_fact offered", name)
 		}
 	}

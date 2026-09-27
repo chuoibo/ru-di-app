@@ -22,10 +22,14 @@ const HanTruyHoi = 3 * time.Second
 const TopN = 8
 
 // DuTruCham is how many model calls must remain for the grader to run: the
-// grader itself, the answer and its verification. Below it the grade is
-// skipped and the answer step works from the first retrieval; the verifier
-// still guards what is released.
-const DuTruCham = 3
+// grader itself and the whole answer cycle after it (the answer, its
+// verifier, the one regeneration and its verifier; llm.KeHoach). The
+// grader is the sufficiency judgement and the first step cut when the
+// budget runs short (the worst-case plan's cut order): below this the
+// grade is skipped and the answer step works from the first retrieval,
+// with its regeneration still possible; the verifier still guards what is
+// released.
+var DuTruCham = llm.SauBuoc(llm.DuongTruyHoi, llm.BuocCham)
 
 // ThuTuNoi is the order soft constraints may be relaxed in (design 04 §5.5):
 // vibe, then kind of place, then area. A relaxation may drop a later one
@@ -230,7 +234,9 @@ func motLan(ctx context.Context, y truyhoi.YeuCau, bp BoPhan, cong tools.Ten, sc
 	ctx, huy := context.WithTimeout(ctx, HanTruyHoi)
 	defer huy()
 	kq.SoTruyHoi++
-	r, err := bp.Tim.Tim(ctx, y)
+	// This loop reranks (below, once over what the retriever merged from
+	// every query): the retriever must not rerank the same candidates too.
+	r, err := bp.Tim.Tim(truyhoi.HoanXepLai(ctx), y)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("%w: %w", ErrNguon, err)
 	}

@@ -75,7 +75,7 @@ worker: aiharness.Engine.Run(turn, sink)
 | 13 | Nếp tại chỗ: phiếu v2, sổ tay app, chip, tool phía máy chủ | một phần: dữ liệu sổ tay 13 màn + cổng lệch `e69012b`, sửa theo lát 7 `603515f`; gói thuần `internal/huongdan` (`TheoMan`, `Tim` qua `rag/xephang`, `DuongToi` BFS ≤5 bước, `BanDung` + hằng `nep/huong-dan-ban.ts`) `5c3a3c1`; review phản biện REQUEST_CHANGES (10 phát hiện) đã sửa ở `c7a3cde`: luật màn tiền không còn lách bằng `di_toi` về chính màn hay khai nút trả tiền làm lối ra (cửa phải là cạnh có nhãn của mã, `_rut.json` `canh`), tiêu đề mục màn tiền cố định; bộ vàng thứ hai 46 câu hỏi từ màn khác (viết và băm trước khi đổi xếp hạng); luật ghim theo tỷ lệ điểm 1/2, bảng teencode, cắt 2000 rune. Số đo: bộ 91 câu recall@5 0.9505 MRR 0.9211, bộ màn khác 0.9130 / 0.7880; **nhóm teencode của bộ 91 câu recall@5 0.8333, dưới ngưỡng 0.90** (hai câu tiếng Anh «checkin», «log out», không dịch là chủ ý). Review lại bản sửa đó APPROVE với 8 phát hiện nhỏ, sửa ở `79c5ed8` (review lại vòng 2: APPROVE, 3 nit, sửa ở `658c909` (cherry-pick của `1dff602`, con trực tiếp của `be0f7a0`): quy tắc «ít màn tiền nhất» có test đếm trên cả đường — đồ thị màn tiền cách hai bước của review, và đường qua một màn tiền ngay bước kế thắng đường qua hai màn tiền phía sau; tiêu đề của chính màn tiền không phải cửa, có ca fixture ở Go và mobile, in trên màn hay không; « và » phải thành cặp trên từng dòng theo thứ tự, dấu đảo ngược, lẻ, lồng hay vắt dòng bị từ chối ở Go và mobile, probe Q1 của review thành canary trên dữ liệu thật; review lại bản sửa vòng 3 (review lát 13 vòng 4): APPROVE, 1 nit NF4 — luật « » theo dòng chưa có ca ở dòng tiêu đề mục ở cả hai phía, phía Go chưa có ca ở dòng văn trong mục — sửa ở commit `fix(huongdan)` vòng 4 là con trực tiếp của `591cce5`: ca «## Đi sang »Nút B«» và «Xem »Nút Z«.» trên fixture Go, ở Go và cổng mobile): bộ rút chỉ ghép mỗi cú bấm với nhãn gọi tên nó (`onAction` ↔ `action`, `onPress`/`href` ↔ `label`/`accessibilityLabel`/`title`), nên tiêu đề mục «Chi theo nhóm» không còn là cạnh có nhãn (`_rut.json` 129 cạnh có nhãn, băm `27a579cd74f3`); bước màn tiền chỉ được trích cửa; khoá front matter trùng hay sai hoa thường bị từ chối (Go và mobile); cổng mobile soi lại fixture Go của luật màn tiền; số đo bộ vàng không đổi. Chưa: phiếu v2 (`buoc`, `hanhDong`, `banBuild`; cách `buoc` đi qua `buocMuc` ở thiết kế 05 §3), tool `search_app_manual`/`explain_screen` (lát 9), chip, `useNepMoc`, sửa câu gợi ý; tổng quan của màn tiền chưa theo luật chỉ trích cửa (probe Q3; hiện không vào `Doan` và không ra API nào — phải có luật cửa trước khi API nào đưa nó ra); văn xuôi dạy trả tiền không «…» trên dòng có cửa (P8) luật không thấy, kể cả tên nút đặt trong dấu na ná « » như ‹…›, "…" (hay “…”) và 《…》 — luật nhãn và luật cặp chỉ đọc « và », nên ‹Đánh dấu đã trả› cạnh một cửa trên `tai-chinh.md` nạp được ở cả Go và mobile (probe Y2 của review vòng 4); người review văn giữ **Tích hợp lõi agent**: `search_app_manual`/`explain_screen` chạy phía máy chủ trong engine (đường truy hồi đọc sổ tay qua `tools.SoTay`, đường nhanh `explain_screen`); nút «…» trong câu trả lời phải trùng nhãn nút sổ tay trả về trong lượt. Chip chưa. |
 | 14 | Chia bill từ thẻ, dấu «Đã ghi vào sổ» suy từ dòng chi tiêu thật | chưa |
 | 15 | Trí nhớ Nếp | **một phần — lát `infra/memory-policy`, chờ Lead ký ADR-0043 (đề xuất)**: `internal/nepnho` là writer duy nhất của `nep_*` (bảng version riêng; biên nhận không chữ; tombstone HMAC; sự kiện kiểu đóng 30 ngày); client HTTP của sidecar `services/ai-infer` (sidecar là writer duy nhất của Milvus trí nhớ); nhớ lại chỉ khi cờ bật; «quên» là saga sidecar xoá → `remaining` 0 → Go liệt kê lại → biên nhận, thử lại trên làn `memory` của outbox; tắt cờ xoá hết; xoá tài khoản qua trigger `people.deleted_at` + `purge_user` tới 0, biên nhận chỉ giữ HMAC; 4 route GO-ONLY `/me/nep/tri-nho*`, `/me/nep/su-kien`; `internal/aictx` bộ đệm theo lượt trên `redis-ai` (TTL nguyên tử, AES-GCM, UNLINK, nhóm legacy EX 900, không gì cho v2, kiểm `save`/`appendonly` lúc khởi động); cá nhân hoá ≤5 ký ức vào khối dữ liệu của Nếp khi cờ bật, bot nhóm không có (canary `aigate`). Chưa: bộ eval trí nhớ tiếng Việt, model trích thật, reranker, UI công bố/cài đặt, các quyết định mở của ADR-0043 §5 |
-| 16 | RAG vector, làm giàu, độ tươi | **một phần (nhánh `infra/rag-unified`, gộp `infra/retrieval-core` và `infra/ingest-sdlc`, chưa vào main)**: một hệ truy hồi + nạp trên **Milvus v3.0.2** — **một schema, một writer** (§8.4): `internal/vectordb` khai schema duy nhất (`rd.v2`: chunk id, `doc_id`, dense 1536, MILCO, `text` giữ dấu + `text_khong_dau` gấp dấu với hai hàm BM25, thuộc tính lọc cứng), tên `rd_places__vN`/`rd_manual__vN` sau alias `rd_places`/`rd_manual`, một hàm dựng client (telemetry tắt); `rag/nap` (pipeline nạp: làm giàu LLM enum đóng + dòng ngữ cảnh mỗi chunk, hàng duyệt, phiên bản collection, cổng eval, promote/rollback bằng alias) ghi qua `vectordb/napkho`, adapter duy nhất; `internal/hybrid` (dense `gemini-embedding-2` + BM25 có dấu + BM25 không dấu — nhánh thưa **chỉ là hàm BM25 của Milvus**, MILCO gác lại chờ xác nhận license (chủ sản phẩm 2026-09-27), mã adapter MILCO tắt mặc định và không nối vào đường truy hồi; RRF có trọng số cấu hình ở `rag/nap/cauhinh.json` «hop», gấp chunk về quán, kiểm lại mọi hit) đọc đúng bảng nạp ghi (`thuoctinh` đọc `places` + `place_enrichments` qua `nap.ApDung` + `rag_tombstones`), nối vào `truyhoi.Retriever` của tool khi có `MOBILE_MILVUS_ADDR`, không có thì `aidoc.Lexical`; `internal/rerank` (Qwen3 qua `/rerank`, lọc token cấu trúc NFKC, điểm riêng `DiemXepLai`, timeout `MOBILE_RERANK_TIMEOUT`); embedding **chỉ** `gemini-embedding-2` 1536, tiền tố thêm một lần trong `aiharness/nhung`; `scripts/go_milvus_tier.sh` (skip là đỏ, 16 sentinel) chạy ở job CI `milvus` riêng (runner tự host có Milvus + reranker). **Chưa**: gọi Gemini thật (không khoá), đo bằng encoder thật (trọng số hợp nhất và số vàng hiện đo trên stub), bộ eval tiếng Việt §C4, reranker chưa gắn vào engine (`WithXepLai`), hai bảng cache nhúng (`rag_embedding_cache` của nạp, `nhung_cache` của truy hồi) chưa gộp. |
+| 16 | RAG vector, làm giàu, độ tươi | **một phần (nhánh `infra/rag-unified`, gộp `infra/retrieval-core` và `infra/ingest-sdlc`, chưa vào main)**: một hệ truy hồi + nạp trên **Milvus v3.0.2** — **một schema, một writer** (§8.4): `internal/vectordb` khai schema duy nhất (`rd.v2`: chunk id, `doc_id`, dense 1536, MILCO, `text` giữ dấu + `text_khong_dau` gấp dấu với hai hàm BM25, thuộc tính lọc cứng), tên `rd_places__vN`/`rd_manual__vN` sau alias `rd_places`/`rd_manual`, một hàm dựng client (telemetry tắt); `rag/nap` (pipeline nạp: làm giàu LLM enum đóng + dòng ngữ cảnh mỗi chunk, hàng duyệt, phiên bản collection, cổng eval, promote/rollback bằng alias) ghi qua `vectordb/napkho`, adapter duy nhất; `internal/hybrid` (dense `gemini-embedding-2` + BM25 có dấu + BM25 không dấu — nhánh thưa **chỉ là hàm BM25 của Milvus**, MILCO gác lại chờ xác nhận license (chủ sản phẩm 2026-09-27), mã adapter MILCO tắt mặc định và không nối vào đường truy hồi; RRF có trọng số cấu hình ở `rag/nap/cauhinh.json` «hop», gấp chunk về quán, kiểm lại mọi hit) đọc đúng bảng nạp ghi (`thuoctinh` đọc `places` + `place_enrichments` qua `nap.ApDung` + `rag_tombstones`), nối vào `truyhoi.Retriever` của tool khi có `MOBILE_MILVUS_ADDR`, không có thì `aidoc.Lexical`; `internal/rerank` (Qwen3 qua `/rerank`, lọc token cấu trúc NFKC, điểm riêng `DiemXepLai`, timeout `MOBILE_RERANK_TIMEOUT`); embedding **chỉ** `gemini-embedding-2` 1536, tiền tố thêm một lần trong `aiharness/nhung`; `scripts/go_milvus_tier.sh` (skip là đỏ, 17 sentinel) chạy ở job CI `milvus` riêng (runner tự host có Milvus + reranker). **Chưa**: gọi Gemini thật (không khoá), đo bằng encoder thật (trọng số hợp nhất và số vàng hiện đo trên stub), bộ eval tiếng Việt §C4, hai bảng cache nhúng (`rag_embedding_cache` của nạp, `nhung_cache` của truy hồi) chưa gộp. |
 | 17 | Nhắc chủ động: trong app, rồi push | chưa |
 | 18 | Eval M3 và tín hiệu phản hồi | chưa |
 | 19 | Gỡ action Python `companion-reply`/`nep-reply` (một commit cùng manifest) | chưa |
@@ -163,13 +163,13 @@ là cú pháp gọi tường minh, cổng consent, không phải hiểu ý đị
 |---|---|---|---|
 | `dong` | `Tap[T]`: enum đóng, `Parse`/`ParseAll` từ chối giá trị lạ và trùng | — | — |
 | `hieu` | `Vao`, `KetQua`, `Slots`, `LuocDo(Vao) *genai.Schema` (nguồn sự thật duy nhất của schema), `Doc` (đọc chặt), interface `Hieu` | kiểm cấu trúc; id thuộc danh sách; ngày ISO hợp lệ lịch; tiền nguyên ≥0; ý định và nguồn theo bot; các trường nhất quán với nhau (`huong` ↔ `truy_van` ↔ `can_hoi_lai`). Sai một chỗ là từ chối cả kết quả, không lặng lẽ bỏ ràng buộc cứng | nhãn guard, 1–3 ý định, tiền, `huong`, slot, nguồn cần truy hồi, câu truy vấn viết lại, câu hỏi lại, độ tin |
-| `truyhoi` | `YeuCau{Nguon, Cau, Cung, Mem, K}`, `BangChung`, `KetQuaTruyHoi{BangChung, Degraded, BiLoai}`, `Retriever`, `Reranker`, `Passthrough`, `Cung.HopChat` | lọc cứng không nới; hợp ràng buộc của router vào mọi lời gọi tool, chặt hơn thắng; xếp hạng (BM25, dense, sparse, RRF, reranker) | viết `Cau`; chọn nguồn |
+| `truyhoi` | `YeuCau{Nguon, Cau, CauCoDau, Cung, Mem, K}`, ngữ cảnh `VoiXepLai`/`HoanXepLai`, `BangChung`, `KetQuaTruyHoi{BangChung, Degraded, BiLoai}`, `Retriever`, `Reranker`, `Passthrough`, `Cung.HopChat` | lọc cứng không nới; hợp ràng buộc của router vào mọi lời gọi tool, chặt hơn thắng; xếp hạng (BM25, dense, sparse, RRF, reranker) | viết `Cau`; chọn nguồn |
 | `trinho` | `TriNho{Nho, Ghi, Quen, LietKe}`, `SuThat`, `NganHan{Doc, Them, Xoa}`, `Luot` | một chủ mỗi fact; quên là xoá cứng; ≤8 lượt ngắn hạn | quyết điều gì đáng nhớ, «quên» chỉ vào đâu, fact nào liên quan |
 | `tools` | 18 tên tool (enum), `DangKy` (mô tả một dòng, lớp tác dụng, phạm vi), schema tham số, bảng quyền `testdata/quyen.golden.json`, `SoCai` (sổ cái lượt, bí danh `p1`/`m1`…), mã lỗi tool đóng | lọc toolset theo quyền và chính sách; `proceed_restricted` chỉ còn tool đọc; đếm lời gọi; chống gọi lặp y hệt; ghi bằng chứng; prompt chỉ thấy bí danh, id thật không vào prompt | chọn tool và tham số |
 | `crag` | `DanhGia{KetLuan, RangBuocThieu, NoiLong, VietLai}`, `LuocDo`, `Doc`, `SuaYeuCau` | áp đúng một bước sửa model đề xuất; `NoiLong` chỉ nhận ràng buộc mềm; ≤1 vòng | chấm bằng chứng đủ/thiếu/mâu thuẫn; đề xuất nới mềm hoặc viết lại |
 | `kiemchung` | `TuyenBo`, `KiemTra` + `Kiem` (tất định), `PhanTu{MenhDe{So, BangChungIDs, Ket}}`, `LuocDo`, `Doc`, interface `Verifier` | id ∈ sổ cái, số/giờ bằng đúng trường bằng chứng, nhãn nút có trong bằng chứng sổ tay; verifier chỉ trả chỉ số câu + enum (`ho_tro`/`khong_ho_tro`/`khong_thong_tin`), không chữ tự do; **mỗi câu 1..n phải được chấm đúng một lần** (schema `minItems = maxItems = n`, `Doc` từ chối thiếu câu); verifier hỏng là không phát | từng mệnh đề có được bằng chứng hỗ trợ không; có hứa hành động không tool nào làm không; có đụng tiền không |
 | `testkit` | bản giả trong bộ nhớ của `TriNho`, `NganHan`, `Retriever` | không xếp hạng gì (xếp hạng là của adapter thật) | — |
-| `llm` (`ngansach.go`) | `MaxToolCallsPerTurn`=10 (Nếp `MaxToolCallsNep`=6), `MaxStepsNhom`=4, `MaxStepsNep`=3, `MaxCorrectiveRounds`=1, `MaxEmbedCallsPerTurn`=2, `MaxRerankCallsPerTurn`=2, cạnh `MaxModelCallsPerTurn`=8 | cưỡng chế | — |
+| `llm` (`ngansach.go`) | `MaxToolCallsPerTurn`=10 (Nếp `MaxToolCallsNep`=6), `MaxStepsNhom`=4, `MaxStepsNep`=3, `MaxCorrectiveRounds`=1, `MaxEmbedCallsPerTurn`=2, `MaxRerankCallsPerTurn`=2, cạnh `MaxModelCallsPerTurn`=8; `buoc.go`: loại lời gọi, mức nghĩ từng bước, kế hoạch xấu nhất `KeHoach` và thứ tự cắt (§8.6) | cưỡng chế | — |
 
 Adapter Milvus (dense + sparse), reranker Qwen qua HTTP, sidecar mem0 và Redis cho ngắn hạn đến từ
 mảng hạ tầng và hiện thực đúng các interface trên; engine chỉ biết chúng qua cờ `Degraded`.
@@ -255,11 +255,11 @@ của lời gọi router chưa cộng vào hàng metrics.
 - `tactu`: đường nhanh khi router chọn `truy_hoi_mot_buoc` với đúng một ý định trong
   `find_places`/`app_help`/`explain_screen` và đủ slot (điểm đến; truy vấn sổ tay; phiếu màn hình),
   nhãn guard `sach`, tiền `none`: Go gọi thẳng tool qua cùng cổng kiểm, rồi một lời gọi trả lời chế
-  độ `NONE`. Còn lại là vòng ADK: Nếp ≤3 bước, nhóm ≤4, bước giữa `AUTO`, bước cuối `NONE`. Ngắn
+  độ `NONE`. Còn lại là vòng ADK: Nếp ≤3 bước, nhóm ≤4, bước giữa `VALIDATED` với `AllowedFunctionNames` của bước (§8.6), bước cuối `NONE`. Ngắn
   hạn (`trinho.NganHan`) vào prompt trong một khối `<du_lieu nguon="lich_su">`, bằng chứng cũ là
   `t1`, `t2`…; `GhiLuot` chỉ gọi sau khi câu trả lời đã qua mọi kiểm đầu ra.
-- Còn mở: chế độ bước giữa là `AUTO` theo giao việc, còn nghiên cứu và mục trên đề nghị `VALIDATED`
-  (một hằng `agent.CheDoGiua`, cần cassette model thật để chọn); `BiLoai` của retriever từ vựng chưa
+- Đã chốt (§8.6): bước giữa `VALIDATED` + `AllowedFunctionNames`, khai báo tool cố định theo bot; còn mở
+  đo trên cassette model thật (một hằng `agent.CheDoGiua`); `BiLoai` của retriever từ vựng chưa
   đếm theo từng ràng buộc (rag chưa trả); gu nhóm (ADR-0034 `chia_gu`) chưa có trong
   `group_snapshot`; engine (`aiharness.Engine`) chưa nối `tactu` — khi nối, cổng `aigate` của Nếp
   phải mở allowlist có lý do và canary cho `places`, `destinations`, `outings`, `memberships`.
@@ -391,7 +391,7 @@ kết quả của `agent.Chay`) đỏ; cổng cũ xanh trên đột biến «ch�
   chấm; câu hỏi lại cộng lựa chọn vượt 12 câu thì verifier từ chối và lượt giữ câu trả lời (fail-closed).
 
 Còn mở: T3 thật (khoá + Lead duyệt số lời gọi); độ trễ nháp-rồi-kiểm (chưa stream, `crag-kiem-chung.md`
-§3 cần Lead chọn); `set_reminder`, gu nhóm, adapter trí nhớ sản xuất; bước giữa `AUTO` hay `VALIDATED`;
+§3 cần Lead chọn); `set_reminder`, gu nhóm, adapter trí nhớ sản xuất; bước giữa `AUTO` hay `VALIDATED` (đã chọn `VALIDATED`, §8.6);
 verifier chưa biết tool ghi nào đã xếp hàng trong lượt nên câu «mình sẽ nhớ» bị giữ (hướng an toàn) —
 cần đưa danh sách hành động đã làm vào verifier khi adapter trí nhớ bật; ADR-0033 §4 cho
 `my_upcoming_outings`; bot nhóm vẫn đi brain.
@@ -456,7 +456,7 @@ sha256 tập vàng của phán quyết đang dùng.
 
 `google.golang.org/adk` v1.7.0 → `google.golang.org/adk/v2` v2.4.0 (bản mới nhất; go.mod của nó đòi
 `go 1.26.6`), nên Go 1.25.14 → go1.26.8. Hành vi engine giữ nguyên: ngân sách (`llm.Dem`,
-`MaxModelCallsPerTurn`, trần bước `MaxBuoc`), luật chế độ AUTO/NONE, bảng quyền, từ chối ở BeforeTool, cổng OTel.
+`MaxModelCallsPerTurn`, trần bước `MaxBuoc`), luật chế độ AUTO/NONE (nay VALIDATED/NONE, §8.6), bảng quyền, từ chối ở BeforeTool, cổng OTel.
 
 Những gì v2 bắt phải đổi:
 
@@ -494,8 +494,84 @@ encoder chuẩn: byte input đổi nhưng hai stack nhận cùng byte.
   nên chưa cần; nếu bật thì mỗi lần tóm tắt là một lời gọi model phải vào `llm.Dem` và phải qua cổng riêng tư
   (bản tóm tắt là nội dung chat).
 - *Context caching*: ADK-Go v2.4.0 **không** có cấu hình cache tường minh như `ContextCacheConfig` của
-  adk-python. Cache ngầm của Gemini vẫn tự áp và đã được đếm (`TheoDoi.TokensCache`). Muốn cache tường minh thì
+  adk-python. Cache ngầm của Gemini vẫn tự áp và đã được đếm (nay `llm.Dem.Token` trên mọi lời gọi, §8.6). Muốn cache tường minh thì
   phải gọi API cache của genai ngoài ADK.
 - *`platform.WithTaskRunner` / `WithTimeProvider` / `WithUUIDProvider`*: tool call và id/thời điểm event
   tất định, dùng được cho test engine phát lại byte.
 - *`agent.StrictContextMock`*: fake context cho test callback mà không phải vá lại khi interface lớn thêm.
+
+### 8.6 Reranker trong engine và năm lỗ SOTA không tốn lời gọi (nhánh `ai/rerank-sota`, 2026-09-27)
+
+Nguồn: quyết định reranker của chủ sản phẩm (ADR-0043 §2.6) và `docs/claude/2026-09-25/doi-chieu-sota.md`
+(gap #3, #5, #7, #10, rủi ro D.6). Không thêm lời gọi model nào; mọi thứ dưới đây là cấu trúc, tập hợp và đếm.
+
+**Reranker** (chi tiết ở ADR-0043 §2.6). `cmd/core` dựng `rerank.TuEnv` từ `MOBILE_RERANK_URL`,
+`MOBILE_RERANK_MODEL` (mặc định `Qwen3-Reranker-4B`), `MOBILE_RERANK_TIMEOUT` (mặc định 3s),
+`MOBILE_RERANK_TOKEN` (bearer tuỳ chọn) và đưa vào `aiharness.WithXepLai`. Mỗi lượt Nếp bọc reranker trong
+`rerank.Dem` (`MaxRerankCallsPerTurn` = 2) và mang nó trong ngữ cảnh (`truyhoi.VoiXepLai`): retriever hybrid
+dùng chung rerank tối đa 30 ứng viên RRF đầu cho tool `search_places`; vòng sửa của đường truy hồi rerank một
+lần trên ứng viên đã trộn của mọi truy vấn router, retriever thì nhường (`truyhoi.HoanXepLai`). Không cấu
+hình, hỏng, quá hạn, mạch mở hay hết ngân sách: thứ tự RRF và cờ `no_rerank`, không thử lại trong lượt. Điểm
+chỉ ở `DiemXepLai`, không bao giờ là ngưỡng.
+
+**Hai dạng truy vấn của router (gap #3).** Mỗi phần tử `truy_van` có `cau` — câu **tự đủ nghĩa**, mọi tham
+chiếu tới lượt trước đã giải, giữ cách viết của người hỏi (không dấu thì để không dấu) — và `cau_co_dau`
+(tuỳ chọn trong schema, nhưng không được rỗng khi có; bằng `cau` thì coi như không có) — cùng câu đó đã
+**khôi phục dấu**, teencode viết ra. Cả hai do model viết (khôi phục dấu là đọc chữ, không phải việc của
+Go). Retriever dùng: nhánh dense, trường BM25 có dấu và reranker đọc `cau_co_dau`; trường BM25 gấp dấu đọc
+`cau` (`vectordb.ThuaTruyVan.TextKhongDau`). Router viết `truy_van` cho cả `tac_tu`. Không HyDE, không lời
+gọi viết lại riêng. Vòng sửa viết lại truy vấn thì bỏ dạng có dấu cũ.
+
+**Bố cục cho cache ngầm của Gemini (gap #5).**
+- System instruction tĩnh theo bot và theo bước (router, chấm, trả lời, verifier: file nhúng; agent:
+  `NepAgent` + `CongCu`, đường trả lời thẳng dùng `NepAgent` là tiền tố byte của nó). Ngoại lệ có chủ ý:
+  lượt `nhay_cam`/`ngoai_pham_vi` nối mệnh đề an toàn vào system — an toàn thắng cache.
+- **Khai báo tool cố định theo bot**: mọi bước, mọi lượt khai đúng tập bảng quyền cấp cho bot, theo thứ tự
+  sổ đăng ký (`tools.BoiCanh.BoCongCu`). Cái bước được gọi thu hẹp bằng
+  `FunctionCallingConfig{Mode: VALIDATED, AllowedFunctionNames}` (`tools.BoiCanh.TenChoPhep`: bỏ tool
+  hạn chế theo `chen_lenh`, theo ý định ghi, và tool ghi trí nhớ sau khi đã có dữ liệu; rỗng thì `NONE`) —
+  «che, không gỡ». Tool bảng quyền không cấp cho bot thì không bao giờ khai (quyền, không phải chính sách).
+  `BeforeTool` vẫn từ chối y như cũ. Đã đọc go-genai v1.71.0: chú thích của hằng
+  `FunctionCallingConfigModeValidated` nói `allowed_function_names` giới hạn lời gọi ở chế độ này; chú thích
+  của trường `AllowedFunctionNames` còn ghi «chỉ khi ANY» — hai chú thích lệch nhau, cần cassette model thật
+  để xác nhận phía server.
+- Phần động ở cuối: lượt người dùng của router xếp danh sách đóng → ví dụ → phiếu → ngắn hạn → `may_chu`
+  («bây giờ» + lịch) → câu hỏi; lượt của agent để khối ký ức trước khối `may_chu`, câu hỏi cuối cùng.
+- Metrics: `llm.Dem` cộng `PromptTokenCount`, `CandidatesTokenCount`, `CachedContentTokenCount`,
+  `ThoughtsTokenCount` của **mọi** lời gọi (router, chấm, trả lời, verifier, bước agent) vào `tokens_in`,
+  `tokens_out`, `tokens_cached`, `tokens_thoughts` của hàng metrics (trước chỉ bước agent). Chỉ số đếm. Tỉ lệ
+  cache theo từng bước chưa có cột riêng.
+
+**Mức nghĩ tường minh từng bước (gap #7).** `llm.MucNghi`: router, sửa router, chấm, trả lời, sinh lại,
+verifier và bước trả lời của agent `MINIMAL`; bước lập kế hoạch của agent (gọi hàm bật) `LOW`. Chỉ đặt
+`ThinkingLevel`, không bao giờ `ThinkingBudget` (`TestMucNghiTuongMinh`, `TestMucNghiVaKhaiBaoCoDinh`).
+
+**Bất biến taint trong vòng agent (gap #10), tất định, 0 lời gọi** (`tools/taint.go`). Từ bước 2 (sau khi
+model đã đọc kết quả tool), mọi tham số của lời gọi tool phải là: giá trị router trích từ lời người hỏi
+(slot: điểm đến, ngày, giờ, ngân sách, dị ứng, ăn kiêng, loại chỗ, khí chất — danh sách chỉ được lặp lại
+phần tử của router), hoặc câu truy vấn router viết (một trong hai dạng, được đưa vào prompt trong khối
+`<du_lieu nguon="truy_van">`), hoặc chữ tự do model đã viết ở bước 1 (trước khi đọc kết quả nào), hoặc id có
+trong sổ của lượt (bí danh bằng chứng — mỗi tool tự kiểm — hay id hàng danh mục tool trả trong lượt: điểm đến,
+khu vực), hoặc số đếm `k`/enum đóng không có slot router. Ràng buộc cứng được kiểm lại trên tham số (ngày, giờ,
+ngân sách phải đúng của router). Tool nháp giữ nội dung nháp của nó (người bấm mới thành gì), nhưng ngày phải
+là của router khi router có. Tham số lạ bị từ chối (`TestTaintBietMoiThamSo`). Vi phạm trả `tham_so_sai` như
+lỗi tham số, tính vào một lần sửa. Đây là so khớp nguyên chuỗi và thuộc tập; `TestKhongDocNghiaTrenDuongEngine`
+vẫn xanh với hai trường mới được gieo.
+
+**Ngân sách xấu nhất (rủi ro D.6).** `llm.KeHoach` liệt kê các bước LLM của từng đường và số lời gọi tối đa:
+
+| Đường | Bước (tối đa) | Tổng |
+|---|---|---|
+| truy hồi | router 1 · sửa router 1 · chấm 1 · trả lời 1 · verifier 1 · sinh lại 1 · verifier 1 | 7 |
+| tác tử Nếp | router 1 · sửa 1 · bước agent 3 (bước cuối `NONE`) · verifier 1 | 6 |
+| tác tử nhóm | router 1 · sửa 1 · bước agent 4 · verifier 1 | 7 |
+| trả lời thẳng | router 1 · sửa 1 · trả lời 1 · verifier 1 | 4 |
+| hỏi lại | router 1 · sửa 1 · verifier 1 | 3 |
+
+Không đường nào vượt `MaxModelCallsPerTurn` = 8. Sufficiency **không** là lời gọi riêng: bộ chấm `crag` là phán
+đoán duy nhất và **bị cắt đầu tiên** — `crag.DuTruCham` = 5 (bộ chấm cộng cả chu trình trả lời sau nó), trước là
+3 nên với ngân sách hụt nó ăn mất lần sinh lại. Thứ tự cắt: (1) bộ chấm, (2) sinh lại và verifier của nó,
+(3) sửa router; không bao giờ cắt router, câu trả lời hay verifier (không còn lời gọi cho verifier thì không
+viết câu trả lời, câu dự phòng cố định đứng). `llm.Dem` vẫn là chặn cứng. Test: `TestKeHoachTrongTran` (tĩnh,
+gắn với `MaxStepsNep`/`MaxStepsNhom`), `TestXauNhatMoiDuongTrongTran` (chạy từng đường Nếp tới trường hợp xấu
+nhất qua `Engine.Run`: số lời gọi bằng đúng kế hoạch), `TestCatTheoThuTu` (lượt thử lại còn 5/3/2 lời gọi).

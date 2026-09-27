@@ -176,7 +176,10 @@ func chayTim(ctx context.Context, bc *BoiCanh, a *thamSoTim) (ketQuaTho, error) 
 	if a.K != nil {
 		k = *a.K
 	}
-	y := truyhoi.YeuCau{Nguon: truyhoi.Places, Cau: a.TruyVan, Cung: a.cung, Mem: a.mem, K: k}
+	// A search text that is one of the router's queries goes with the
+	// router's diacritics-restored form of it; the model's own text has
+	// none (restoring marks is the router's writing, never Go's).
+	y := truyhoi.YeuCau{Nguon: truyhoi.Places, Cau: a.TruyVan, CauCoDau: bc.CoDauCua(a.TruyVan), Cung: a.cung, Mem: a.mem, K: k}
 	kq, err := bc.Nguon.Quan.Tim(ctx, y)
 	if err != nil {
 		return ketQuaTho{}, err

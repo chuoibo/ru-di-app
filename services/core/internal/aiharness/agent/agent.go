@@ -23,6 +23,8 @@ import (
 	"google.golang.org/adk/v2/tool"
 	"google.golang.org/genai"
 
+	"mobile/services/core/internal/aiharness/llm"
+
 	// Clears ADK's content-capture switch before any ADK call.
 	_ "mobile/services/core/internal/aiharness/otelchan"
 )
@@ -57,12 +59,28 @@ type CauHinh struct {
 	// started (tools.BoiCanh.DatBuocCuoi): a function call the model returns
 	// on it anyway is refused by the tool callbacks, never run.
 	BuocCuoi func()
+	// ChoPhep, when set, names the tools the model may call on this step
+	// (tools.BoiCanh.TenChoPhep): the declarations stay the bot's whole
+	// permitted set in registry order, so the request's prefix is the same
+	// on every step and every turn, and the step is restricted by
+	// FunctionCallingConfig.AllowedFunctionNames («mask, don't remove»).
+	// An empty list turns function calling off for the step.
+	ChoPhep func() []string
+	// BatDauBuoc, when set, is told the number of each step as it starts
+	// (tools.BoiCanh.DatBuoc), before the model is called: the tool calls
+	// it returns belong to that step (the taint invariant from step 2 on).
+	BatDauBuoc func(n int)
 }
 
 // CheDoGiua is the function calling mode of every step but the last when
-// the turn has tools: AUTO, the MODEL decides whether to call a tool or to
-// answer (never ANY, which forces calls). The last step is NONE.
-const CheDoGiua = genai.FunctionCallingConfigModeAuto
+// the turn has tools: VALIDATED, the MODEL decides whether to call a tool
+// or to answer, and a call it makes is constrained to the step's
+// AllowedFunctionNames (genai v1.71.0 types.go: «If allowed_function_names
+// are set, the predicted function calls will be limited to any one of
+// allowed_function_names»; the field's own comment still says «only when
+// the Mode is ANY», which the enum's comment supersedes). Never ANY, which
+// forces calls. The last step is NONE.
+const CheDoGiua = genai.FunctionCallingConfigModeValidated
 
 // Luot is one earlier turn of the session.
 type Luot struct {
@@ -116,10 +134,20 @@ func (t *TheoDoi) truocMoHinh(cfg CauHinh) llmagent.BeforeModelCallback {
 		if b > cfg.MaxBuoc {
 			return nil, ErrHetBuoc
 		}
-		if b == cfg.MaxBuoc || (cfg.ConLai != nil && cfg.ConLai() <= 1) || (cfg.EpTraLoi != nil && cfg.EpTraLoi()) {
-			if req.Config == nil {
-				req.Config = &genai.GenerateContentConfig{}
-			}
+		if cfg.BatDauBuoc != nil {
+			cfg.BatDauBuoc(b)
+		}
+		if req.Config == nil {
+			req.Config = &genai.GenerateContentConfig{}
+		}
+		var choPhep []string
+		if len(cfg.Tools) > 0 && cfg.ChoPhep != nil {
+			choPhep = cfg.ChoPhep()
+		}
+		khongCongCu := len(cfg.Tools) > 0 && cfg.ChoPhep != nil && len(choPhep) == 0
+		if b == cfg.MaxBuoc || (cfg.ConLai != nil && cfg.ConLai() <= 1) || (cfg.EpTraLoi != nil && cfg.EpTraLoi()) || khongCongCu {
+			// The answer: thinking at the answer's level, never a budget.
+			req.Config.ThinkingConfig = llm.CauHinhNghi(llm.BuocAgentTraLoi)
 			req.Config.ToolConfig = &genai.ToolConfig{FunctionCallingConfig: &genai.FunctionCallingConfig{Mode: genai.FunctionCallingConfigModeNone}}
 			if req.Config.SystemInstruction == nil {
 				req.Config.SystemInstruction = &genai.Content{Role: genai.RoleUser}
@@ -129,10 +157,12 @@ func (t *TheoDoi) truocMoHinh(cfg CauHinh) llmagent.BeforeModelCallback {
 				cfg.BuocCuoi()
 			}
 		} else if len(cfg.Tools) > 0 {
-			if req.Config == nil {
-				req.Config = &genai.GenerateContentConfig{}
-			}
-			req.Config.ToolConfig = &genai.ToolConfig{FunctionCallingConfig: &genai.FunctionCallingConfig{Mode: CheDoGiua}}
+			// A planning step: the model chooses a tool or answers.
+			req.Config.ThinkingConfig = llm.CauHinhNghi(llm.BuocAgentKeHoach)
+			req.Config.ToolConfig = &genai.ToolConfig{FunctionCallingConfig: &genai.FunctionCallingConfig{Mode: CheDoGiua, AllowedFunctionNames: choPhep}}
+		} else {
+			// No tool at all (the direct answer): an answer step.
+			req.Config.ThinkingConfig = llm.CauHinhNghi(llm.BuocAgentTraLoi)
 		}
 		return nil, nil
 	}

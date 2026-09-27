@@ -223,7 +223,7 @@ func TestHieuMotLoiGoi(t *testing.T) {
 	}
 	if kq.Tien != TienNone || kq.Slots.DiemDenID != "da-lat" || kq.Slots.NgayISO != "2026-09-26" ||
 		!reflect.DeepEqual(kq.Slots.DiUng, []string{"tom"}) || *kq.Slots.NganSachVND != 200000 ||
-		!reflect.DeepEqual(kq.TruyVan, []TruyVan{{truyhoi.Places, "quán ăn tối không có tôm ở Đà Lạt"}}) {
+		!reflect.DeepEqual(kq.TruyVan, []TruyVan{{Nguon: truyhoi.Places, Cau: "quán ăn tối không có tôm ở Đà Lạt"}}) {
 		t.Fatalf("%+v", kq)
 	}
 }

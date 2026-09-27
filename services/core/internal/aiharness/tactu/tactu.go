@@ -135,6 +135,9 @@ func Chay(ctx context.Context, dem *llm.Dem, v Vao, td *agent.TheoDoi) (Ra, erro
 	if bc == nil || !bc.Bot.Valid() {
 		return Ra{}, ErrVao
 	}
+	// The router's output is the tool context's reference for what the
+	// person stated (the taint invariant) and for a query's restored form.
+	bc.Slots, bc.TruyVan = v.Router.Slots, v.Router.TruyVan
 	var luot []trinho.Luot
 	if v.NganHan != nil && v.Phien != "" {
 		var err error
@@ -188,6 +191,13 @@ func Chay(ctx context.Context, dem *llm.Dem, v Vao, td *agent.TheoDoi) (Ra, erro
 		cfg.TruocTool, cfg.SauTool, cfg.LoiTool = bc.TruocTool, bc.SauTool, bc.LoiTool
 		cfg.EpTraLoi = bc.EpTraLoi
 		cfg.BuocCuoi = bc.DatBuocCuoi
+		cfg.ChoPhep = bc.TenChoPhep
+		cfg.BatDauBuoc = bc.DatBuoc
+		// The router's search texts, the only free texts a tool call may
+		// carry once a tool has returned data (tools.BoiCanh.kiemTaint).
+		if s := KhoiTruyVan(v.Router.TruyVan); s != "" {
+			blocks = append(blocks, s)
+		}
 	}
 	blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.CauHoi, v.Cau))
 	text, err := agent.Chay(ctx, m, cfg, nil, strings.Join(blocks, "\n\n"), td)
@@ -250,6 +260,24 @@ func trichDan(bc *tools.BoiCanh, n tools.BanNhap) []string {
 		}
 	}
 	return out
+}
+
+// KhoiTruyVan renders the router's search texts as one datamarked block,
+// one line per query: its source, its text as the router wrote it, and
+// its diacritics-restored form when it has one. Empty with no query.
+func KhoiTruyVan(ts []hieu.TruyVan) string {
+	if len(ts) == 0 {
+		return ""
+	}
+	var lines []string
+	for _, t := range ts {
+		line := string(t.Nguon) + ": " + strings.Join(strings.Fields(t.Cau), " ")
+		if t.CauCoDau != "" {
+			line += " | " + strings.Join(strings.Fields(t.CauCoDau), " ")
+		}
+		lines = append(lines, line)
+	}
+	return prompts.BocDuLieuDanhDau(prompts.TruyVan, strings.Join(lines, "\n"))
 }
 
 // KhoiLichSu renders the short-term turns as ONE data block, oldest first,

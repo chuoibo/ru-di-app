@@ -69,6 +69,14 @@ type BoiCanh struct {
 	DiUngNgoaiDanhMuc bool
 	// DiemDen is the closed list of destination ids offered this turn.
 	DiemDen []string
+	// Slots and TruyVan are the router's own output for this turn: the
+	// values it extracted from the person's words and the search texts it
+	// wrote (each with its diacritics-restored form). From the agent's
+	// second step on they are the only constraint values and free texts a
+	// tool argument may carry (kiemTaint), and a search whose text is one
+	// of them uses its restored form too.
+	Slots   hieu.Slots
+	TruyVan []hieu.TruyVan
 	// ThamChieu are evidence ids of earlier turns, offered to the model as
 	// t1, t2, … (never as ids).
 	ThamChieu []string
@@ -81,6 +89,14 @@ type BoiCanh struct {
 	mu     sync.Mutex
 	sai    int
 	epCuoi bool
+	// buoc is the agent step whose tool calls run now (DatBuoc; 0 for the
+	// fast path's direct dispatch, which the router decided).
+	buoc int
+	// chuBuocDau are the free texts of calls made on the first step, written
+	// before any tool result was read; idHang the catalogue row ids tools
+	// returned this turn (destinations, areas).
+	chuBuocDau []string
+	idHang     map[string]bool
 	// cuoi: the agent's step with function calling off has started; a
 	// function call the model returns anyway is refused, never run.
 	cuoi bool
@@ -331,8 +347,12 @@ func (bc *BoiCanh) truoc(ten string, args map[string]any) map[string]any {
 	}
 	k, raw := khoa(ten, args)
 	r, _ := LuocDoJSON(t)
-	if err := r.Validate(banSao(args)); err != nil {
+	sao := banSao(args)
+	if err := r.Validate(sao); err != nil {
 		return bc.tuChoi(ten, thamSoSai("", "arguments must match the declared schema"))
+	}
+	if l := bc.kiemTaint(t, sao); l != nil {
+		return bc.tuChoi(ten, l)
 	}
 	if _, l := cc.kiem(bc, raw); l != nil {
 		return bc.tuChoi(ten, l)
@@ -443,6 +463,14 @@ func (bc *BoiCanh) ghi(t Ten, args map[string]any, kq ketQuaTho) map[string]any 
 	bc.mu.Lock()
 	bc.ngoai = bc.ngoai || ngoai
 	bc.nho = bc.nho || nho
+	for _, h := range kq.hang {
+		if id := h["id"]; id != "" {
+			if bc.idHang == nil {
+				bc.idHang = map[string]bool{}
+			}
+			bc.idHang[id] = true
+		}
+	}
 	bc.mu.Unlock()
 	out := map[string]any{}
 	for k, v := range kq.them {

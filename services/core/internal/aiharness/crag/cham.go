@@ -43,7 +43,7 @@ func BiDanhCham(i int, _ truyhoi.BangChung) string { return fmt.Sprintf("b%d", i
 
 // YeuCauCham is the grader's request for v, byte-stable for the same v.
 func YeuCauCham(v Vao) *model.LLMRequest {
-	return cautruc.YeuCau(strings.TrimSpace(chamHe), NoiDungCham(v), LuocDo(), MaxTokensCham)
+	return cautruc.YeuCau(llm.BuocCham, strings.TrimSpace(chamHe), NoiDungCham(v), LuocDo(), MaxTokensCham)
 }
 
 // NoiDungCham is the grader's user turn: the request, the evidence, the

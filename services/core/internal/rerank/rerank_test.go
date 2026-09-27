@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -233,11 +234,64 @@ func TestSpecialTokensAreStripped(t *testing.T) {
 	}
 }
 
-func TestOnlyLoopback(t *testing.T) {
-	if _, err := Moi("http://10.1.2.3:8080", "", 0); err == nil {
-		t.Fatal("a non-loopback reranker was accepted")
+// Plain http only to a loopback host; https anywhere (the GPU service).
+func TestOnlyLoopbackOrTLS(t *testing.T) {
+	// A URL carrying credentials in its user info is refused too.
+	conUser := (&url.URL{Scheme: "https", User: url.UserPassword("u", "p"), Host: "gpu.internal"}).String()
+	for _, bad := range []string{conUser, "http://10.1.2.3:8080", "ftp://127.0.0.1", "http://gpu.internal/", "https://gpu.internal/?x=1", ""} {
+		if _, err := Moi(bad, "", 0); !errors.Is(err, ErrURL) {
+			t.Errorf("%q accepted (%v)", bad, err)
+		}
+	}
+	for _, good := range []string{"http://127.0.0.1:18081", "http://localhost:8000/", "https://reranker.gpu.internal:8443", "https://127.0.0.1:8443/base"} {
+		if _, err := Moi(good, "", 0); err != nil {
+			t.Errorf("%q refused: %v", good, err)
+		}
 	}
 	if q, err := TuEnv(func(string) string { return "" }); q != nil || err != nil {
 		t.Fatal("a reranker without MOBILE_RERANK_URL")
+	}
+}
+
+// The model name defaults to the production model; the token, when set,
+// rides as a bearer header and is refused when too short.
+func TestModelAndToken(t *testing.T) {
+	env := func(kv map[string]string) func(string) string { return func(k string) string { return kv[k] } }
+	var auth atomic.Value
+	auth.Store("")
+	f := &fakeServer{answer: byLength}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth.Store(r.Header.Get("Authorization"))
+		f.ServeHTTP(w, r)
+	}))
+	t.Cleanup(srv.Close)
+	q, err := TuEnv(env(map[string]string{EnvURL: srv.URL}))
+	if err != nil || q.Model() != "Qwen3-Reranker-4B" {
+		t.Fatalf("default model: %v %v", q, err)
+	}
+	if _, err := q.XepLai(context.Background(), "quán", bcs("a", "bb"), 2); err != nil {
+		t.Fatal(err)
+	}
+	if a := auth.Load().(string); a != "" {
+		t.Fatalf("a token was sent without one configured: %q", a)
+	}
+	if got := f.bodies[0]["model"]; got != "Qwen3-Reranker-4B" {
+		t.Fatalf("model sent %v", got)
+	}
+	tok := strings.Repeat("k", 32)
+	q, err = TuEnv(env(map[string]string{EnvURL: srv.URL, EnvModel: "qwen3-reranker-0.6b", EnvToken: tok}))
+	if err != nil || q.Model() != "qwen3-reranker-0.6b" {
+		t.Fatalf("model from env: %v %v", q, err)
+	}
+	if _, err := q.XepLai(context.Background(), "quán", bcs("a", "bb"), 2); err != nil {
+		t.Fatal(err)
+	}
+	if a := auth.Load().(string); a != "Bearer "+tok {
+		t.Fatalf("authorization %q", a)
+	}
+	for _, bad := range []string{"short", strings.Repeat("k", 20) + " x"} {
+		if _, err := TuEnv(env(map[string]string{EnvURL: srv.URL, EnvToken: bad})); err == nil {
+			t.Errorf("token %q accepted", bad)
+		}
 	}
 }

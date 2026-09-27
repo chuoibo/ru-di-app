@@ -28,8 +28,12 @@ import (
 // ErrBiChan: the provider's own safety filter withheld the answer.
 var ErrBiChan = errors.New("cautruc: the provider's safety filter withheld the answer")
 
-// YeuCau is a one-turn structured request.
-func YeuCau(he, noiDung string, schema *genai.Schema, maxRa int32) *model.LLMRequest {
+// YeuCau is a one-turn structured request for step b (its thinking level,
+// llm.CauHinhNghi). The system instruction is the step's static text and
+// comes first; everything that changes per turn is in the one user turn
+// after it, so the request's prefix is the same for every turn of the step
+// (Gemini's implicit cache matches on prefixes).
+func YeuCau(b llm.LoaiGoi, he, noiDung string, schema *genai.Schema, maxRa int32) *model.LLMRequest {
 	return &model.LLMRequest{
 		Model:    llm.Model,
 		Contents: []*genai.Content{{Role: genai.RoleUser, Parts: []*genai.Part{{Text: noiDung}}}},
@@ -38,7 +42,7 @@ func YeuCau(he, noiDung string, schema *genai.Schema, maxRa int32) *model.LLMReq
 			ResponseMIMEType:  "application/json",
 			ResponseSchema:    schema,
 			MaxOutputTokens:   maxRa,
-			ThinkingConfig:    &genai.ThinkingConfig{ThinkingLevel: genai.ThinkingLevelMinimal},
+			ThinkingConfig:    llm.CauHinhNghi(b),
 			SafetySettings:    agent.AnToan(),
 		},
 	}

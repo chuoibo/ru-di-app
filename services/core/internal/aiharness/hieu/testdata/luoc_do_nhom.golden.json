@@ -231,7 +231,12 @@
       "items": {
         "properties": {
           "cau": {
-            "description": "the query, rewritten clearly with Vietnamese accents",
+            "description": "the query standing on its own: references to earlier turns resolved, in the person's own spelling",
+            "maxLength": 200,
+            "type": "STRING"
+          },
+          "cau_co_dau": {
+            "description": "the same query with Vietnamese diacritics restored and teencode spelled out",
             "maxLength": 200,
             "type": "STRING"
           },
@@ -246,7 +251,8 @@
         },
         "propertyOrdering": [
           "nguon",
-          "cau"
+          "cau",
+          "cau_co_dau"
         ],
         "required": [
           "nguon",

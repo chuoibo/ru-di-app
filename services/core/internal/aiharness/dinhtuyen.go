@@ -24,6 +24,7 @@ import (
 	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/domain/nepphieu"
 	"mobile/services/core/internal/domain/thoigian"
+	"mobile/services/core/internal/rerank"
 )
 
 // duTruKiem is the model call every released prose keeps for its verifier.
@@ -77,6 +78,16 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	// context, nhung.TheoLuot).
 	demNhung := nhung.MoiDemLuot()
 	runCtx = nhung.VoiDemLuot(runCtx, demNhung)
+	// One reranker budget for the whole turn (llm.MaxRerankCallsPerTurn):
+	// the retriever the tools share across turns reranks with the counted
+	// reranker its turn carries, and the retrieval path's corrective loop
+	// reranks with the same one. Unconfigured, no reranker travels and
+	// every retrieval says no_rerank.
+	var demXL *rerank.Dem
+	if e.xepLai != nil {
+		demXL = rerank.NewDem(e.xepLai, llm.MaxRerankCallsPerTurn)
+		runCtx = truyhoi.VoiXepLai(runCtx, demXL)
+	}
 	loi := func(err error) error {
 		return loiMoHinh(err, errors.Is(ctx.Err(), context.Canceled), errors.Is(runCtx.Err(), context.DeadlineExceeded), rec)
 	}
@@ -99,7 +110,16 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	defer func() {
 		rec.MsMoHinh = ms(e.now().Sub(moHinh))
 		rec.SoGoiMoHinh = dem.SoGoi()
+		// Usage of every call of the turn (router, grader, answer,
+		// verifier, agent steps), the implicit cache's share included.
+		tok := dem.Token()
+		rec.TokensIn, rec.TokensOut, rec.TokensCache, rec.TokensNghi = tok.In, tok.Out, tok.Cache, tok.Thought
 		rec.SoCongCu = sc.TongGoi()
+		if demXL != nil {
+			// Every rerank call of the turn, the tools' and the corrective
+			// loop's alike.
+			rec.SoXepLai = demXL.SoGoi()
+		}
 		rec.CongCu = obs.CacCongCu{}
 		for _, c := range sc.DaChay() {
 			rec.CongCu = append(rec.CongCu, obs.CongCu(c))
@@ -148,7 +168,9 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	}
 	khoi := e.khoiThem(t, rec, kq)
 	if b := e.hoSoNep(runCtx, t, hoi.Chu); b != "" {
-		khoi = append(khoi, b)
+		// Before the server's block, whose «now» line changes on every
+		// call: the most volatile data goes last (implicit caching).
+		khoi = append(khoi[:len(khoi)-1:len(khoi)-1], b, khoi[len(khoi)-1])
 	}
 	if ten, _, ok := tactu.Nhanh(kq, bc); ok && !q.KhongCongCu && (ten == tools.SearchPlaces || ten == tools.SearchAppManual) {
 		if res, chay, err := e.nepTruyHoi(runCtx, rec, dem, kq, bc, hoi.Chu, ten); chay {
@@ -199,7 +221,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		}
 	}
 	snap := td.Snapshot()
-	rec.Buoc, rec.TokensIn, rec.TokensOut, rec.TokensCache, rec.TokensNghi = snap.Buoc, snap.TokensIn, snap.TokensOut, snap.TokensCache, snap.TokensNghi
+	rec.Buoc = snap.Buoc
 	if err != nil {
 		return Result{}, loi(err)
 	}
@@ -298,24 +320,33 @@ func (e *Engine) nepTruyHoi(ctx context.Context, rec *obs.TurnRecord, dem *llm.D
 	default:
 		return Result{}, false, nil
 	}
-	var caus []string
+	var caus []hieu.TruyVan
 	for _, tv := range kq.TruyVan {
 		if tv.Nguon == y.Nguon {
-			caus = append(caus, tv.Cau)
+			caus = append(caus, tv)
 		}
 	}
 	if len(caus) == 0 {
 		return Result{}, false, nil
 	}
 	// Every query the router wrote for the source runs (it may write up to
-	// hieu.MaxTruyVan); their results are merged by Go (nhieuTruyVan), the
-	// first query standing for them in the request the grader reads.
-	y.Cau = caus[0]
+	// hieu.MaxTruyVan), each in its two forms (self-contained as written,
+	// and diacritics-restored); their results are merged by Go
+	// (nhieuTruyVan), the first query standing for them in the request the
+	// grader reads.
+	y.Cau, y.CauCoDau = caus[0].Cau, caus[0].CauCoDau
 	y.DiUngNgoaiDanhMuc = bc.DiUngNgoaiDanhMuc
 	tim = nhieuTruyVan{tim: tim, caus: caus}
+	// The turn's counted reranker, if one is configured: the corrective
+	// loop reranks the merged candidates of every query once, so it asks
+	// the retrieval for UngVienXepLai of them.
+	xl, _ := truyhoi.XepLaiTrong(ctx)
+	if xl != nil {
+		y.K = truyhoi.UngVienXepLai
+	}
 	rec.Duong = obs.DuongTruyHoi
 	r, err := traloi.Chay(ctx, traloi.Vao{Cau: cauHoi, YeuCau: y}, traloi.BoPhan{
-		BoPhan:   crag.BoPhan{Tim: tim, XepLai: e.xepLai, Cham: e.cham, NganSach: &crag.NganSachXepLai{}},
+		BoPhan:   crag.BoPhan{Tim: tim, XepLai: xl, Cham: e.cham, NganSach: &crag.NganSachXepLai{}},
 		Verifier: e.kiem,
 	}, bc.SoCai, dem)
 	rec.VongSua, rec.SoXepLai, rec.SinhLai = r.Crag.Vong, r.Crag.SoXepLai, r.Vet.SinhLai

@@ -107,9 +107,9 @@ func (f *Fake) Tim(_ context.Context, y YeuCauTim) ([]Trung, error) {
 			case FDense:
 				d = nhung.Cosine(y.Dense, r.Dense)
 			case FBM25:
-				d = shared(TuCoDau(y.Thua.Text), TuCoDau(r.Text))
+				d = shared(TuCoDau(y.Thua.TextCua(FBM25)), TuCoDau(r.Text))
 			case FBM25KhongDau:
-				d = shared(TuKhongDau(y.Thua.Text), TuKhongDau(r.Text))
+				d = shared(TuKhongDau(y.Thua.TextCua(FBM25KhongDau)), TuKhongDau(r.Text))
 			default:
 				continue
 			}

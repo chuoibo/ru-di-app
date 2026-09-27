@@ -1,7 +1,14 @@
 // Package rerank is the truyhoi.Reranker adapter over a Qwen3-Reranker
-// served by llama-server (or vLLM) at POST /rerank: the orchestrator, not
-// Milvus, calls the model, so the call is counted, has its own deadline and
-// can fail without failing the retrieval (research qwen-reranker.md §4).
+// served over HTTP at POST /rerank (the vLLM contract; llama-server serves
+// the same shape): the orchestrator, not Milvus, calls the model, so the
+// call is counted, has its own deadline and can fail without failing the
+// retrieval (research qwen-reranker.md §4). Production is
+// Qwen3-Reranker-4B on a GPU behind vLLM (owner, 2026-09-27; ADR-0043
+// §2.6); the local stand-in is llama-server with the 0.6B GGUF.
+//
+// The path is /rerank, never /v1/rerank: vLLM 0.30 answers the latter with
+// a deprecation warning naming /rerank (research qwen-reranker.md,
+// Kiểm chứng, adjustment 1).
 //
 // The contract it keeps:
 //   - One request per call, all documents in it; its own timeout; no retry
@@ -74,6 +81,9 @@ const (
 	EnvModel = "MOBILE_RERANK_MODEL"
 	// EnvTimeout is the per-call deadline, a Go duration («3s», «10s»).
 	EnvTimeout = "MOBILE_RERANK_TIMEOUT"
+	// EnvToken is the optional bearer token of the serving endpoint (vLLM
+	// --api-key). Never logged; sent only over TLS or to a loopback host.
+	EnvToken = "MOBILE_RERANK_TOKEN"
 )
 
 // Defaults. MacDinhTimeout is the deadline a serving deployment (a GPU, or
@@ -92,14 +102,19 @@ const (
 	MaxTaiLieu     = 64
 	MaxKyTuTaiLieu = 2000
 	MaxKyTuTruyVan = 500
-	macDinhMoHinh  = "qwen3-reranker-0.6b"
-	maxBodyTraLoi  = 1 << 20
+	// MacDinhMoHinh is the served model name sent when MOBILE_RERANK_MODEL
+	// is unset: the production model (vLLM --served-model-name).
+	// llama-server ignores the field.
+	MacDinhMoHinh = "Qwen3-Reranker-4B"
+	minToken      = 16
+	maxBodyTraLoi = 1 << 20
 )
 
 // Qwen is the adapter. Safe for concurrent use.
 type Qwen struct {
 	url     string
 	model   string
+	token   string
 	http    *http.Client
 	timeout time.Duration
 	// Breaker: open after loiMo failures within cuaSo, for moTrong.
@@ -120,29 +135,75 @@ type ThongKe struct {
 	Goi, Loi, BoQua, MoMach int
 }
 
-// Moi builds the adapter for base (loopback only, like every inference
-// service core reaches).
+// CauHinh is the adapter's configuration.
+type CauHinh struct {
+	// URL is the server's base; /rerank is appended.
+	URL string
+	// Model is the served model name ("" is MacDinhMoHinh).
+	Model string
+	// Timeout is the per-call deadline (<= 0 is MacDinhTimeout).
+	Timeout time.Duration
+	// Token is the optional bearer token.
+	Token string
+}
+
+// ErrURL: a base URL the adapter refuses.
+var ErrURL = errors.New("rerank: " + EnvURL + " must be an http URL of a loopback host, or an https URL")
+
+// kiemURL accepts http(s) to a loopback host (the local stand-in, a sidecar
+// on the same machine) and https to any other host (the GPU service across
+// a private network). Plain http off the host is refused: the query is the
+// person's question, and the token rides on the same request.
+func kiemURL(base string) (*url.URL, error) {
+	u, err := url.Parse(base)
+	if err != nil || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return nil, ErrURL
+	}
+	switch u.Scheme {
+	case "https":
+		return u, nil
+	case "http":
+		if llm.CheckBaseURL(base) == nil {
+			return u, nil
+		}
+	}
+	return nil, ErrURL
+}
+
+// Moi builds the adapter for base, with no token.
 func Moi(base, model string, timeout time.Duration) (*Qwen, error) {
-	if err := llm.CheckBaseURL(base); err != nil {
-		return nil, fmt.Errorf("rerank: %s: %w", EnvURL, err)
+	return MoiCauHinh(CauHinh{URL: base, Model: model, Timeout: timeout})
+}
+
+// MoiCauHinh builds the adapter.
+func MoiCauHinh(c CauHinh) (*Qwen, error) {
+	u, err := kiemURL(c.URL)
+	if err != nil {
+		return nil, err
 	}
-	u, _ := url.Parse(base)
+	if c.Token != "" && (len(c.Token) < minToken || strings.ContainsAny(c.Token, " \t\r\n")) {
+		return nil, fmt.Errorf("rerank: %s must be at least %d characters with no whitespace", EnvToken, minToken)
+	}
 	u.Path = strings.TrimRight(u.Path, "/") + "/rerank"
-	if model == "" {
-		model = macDinhMoHinh
+	if c.Model == "" {
+		c.Model = MacDinhMoHinh
 	}
-	if timeout <= 0 {
-		timeout = MacDinhTimeout
+	if c.Timeout <= 0 {
+		c.Timeout = MacDinhTimeout
 	}
-	return &Qwen{url: u.String(), model: model, http: &http.Client{}, timeout: timeout,
+	return &Qwen{url: u.String(), model: c.Model, token: c.Token, http: &http.Client{}, timeout: c.Timeout,
 		loiMo: MacDinhLoiMo, cuaSo: MacDinhCuaSo, moTrong: MacDinhMoTrong, now: time.Now}, nil
 }
+
+// Model is the served model name the adapter sends.
+func (q *Qwen) Model() string { return q.model }
 
 // TuEnv builds the adapter when MOBILE_RERANK_URL is set, and returns
 // (nil, nil) otherwise: the caller then uses truyhoi.Passthrough and flags
 // truyhoi.NoRerank. MOBILE_RERANK_TIMEOUT, when set, is the per-call
 // deadline (a positive Go duration up to MaxTimeout); unset is
-// MacDinhTimeout.
+// MacDinhTimeout. MOBILE_RERANK_MODEL unset is MacDinhMoHinh;
+// MOBILE_RERANK_TOKEN, when set, is sent as a bearer token.
 func TuEnv(getenv func(string) string) (*Qwen, error) {
 	base := strings.TrimSpace(getenv(EnvURL))
 	if base == "" {
@@ -156,7 +217,8 @@ func TuEnv(getenv func(string) string) (*Qwen, error) {
 		}
 		timeout = d
 	}
-	return Moi(base, strings.TrimSpace(getenv(EnvModel)), timeout)
+	return MoiCauHinh(CauHinh{URL: base, Model: strings.TrimSpace(getenv(EnvModel)), Timeout: timeout,
+		Token: strings.TrimSpace(getenv(EnvToken))})
 }
 
 // Timeout is the per-call deadline in force.
@@ -296,6 +358,9 @@ func (q *Qwen) goi(ctx context.Context, query string, docs []string) ([]float64,
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if q.token != "" {
+		req.Header.Set("Authorization", "Bearer "+q.token)
+	}
 	resp, err := q.http.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("rerank: transport: %w", err)

@@ -3,6 +3,7 @@ package aiharness
 import (
 	"context"
 
+	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/truyhoi"
 )
 
@@ -13,22 +14,23 @@ import (
 // are of the same candidates), the degradation flags united. Pure
 // bookkeeping over ids and counts: it reads no query. A request whose query
 // is not the first one (the grader's rewrite in a corrective round) runs as
-// it is, since the rewrite replaces the router's queries.
+// it is, since the rewrite replaces the router's queries. Each query goes
+// with its own diacritics-restored form (hieu.TruyVan).
 type nhieuTruyVan struct {
 	tim  truyhoi.Retriever
-	caus []string
+	caus []hieu.TruyVan
 }
 
 var _ truyhoi.Retriever = nhieuTruyVan{}
 
 func (n nhieuTruyVan) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi, error) {
-	if len(n.caus) < 2 || y.Cau != n.caus[0] {
+	if len(n.caus) < 2 || y.Cau != n.caus[0].Cau {
 		return n.tim.Tim(ctx, y)
 	}
 	kqs := make([]truyhoi.KetQuaTruyHoi, 0, len(n.caus))
 	for _, c := range n.caus {
 		y2 := y
-		y2.Cau = c
+		y2.Cau, y2.CauCoDau = c.Cau, c.CauCoDau
 		kq, err := n.tim.Tim(ctx, y2)
 		if err != nil {
 			return truyhoi.KetQuaTruyHoi{}, err

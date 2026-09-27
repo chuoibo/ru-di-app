@@ -15,7 +15,7 @@ import (
 func TestGoi(t *testing.T) {
 	s := llm.NewStub(llm.Buoc{Text: `{"a":1}`}, llm.Buoc{Text: "x", Finish: genai.FinishReasonSafety})
 	dem := llm.NewDem(s, 2, nil)
-	req := YeuCau("he", "noi dung", &genai.Schema{Type: genai.TypeObject}, 64)
+	req := YeuCau(llm.BuocKiem, "he", "noi dung", &genai.Schema{Type: genai.TypeObject}, 64)
 	if got, err := Goi(context.Background(), dem, req); err != nil || got != `{"a":1}` {
 		t.Fatal(got, err)
 	}

@@ -56,6 +56,7 @@ SENTINELS=(
   TestHybridHonDenseChiMot
   TestHybridDauCuoiKhongViPham
   TestHybridQuaRerankThat
+  TestHybridRerankTheoLuot
   TestRerankGoldenQuaServer
   # ingestion (rag/nap over napkho): both BM25 fields, filter parity with Go
   # on rows with unknown allergens/price/hours, the golden set with no

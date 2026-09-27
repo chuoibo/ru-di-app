@@ -117,6 +117,10 @@ const (
 	// only and only while the person's memory toggle is on. Added by infra
 	// memory-policy.
 	TriNho Nguon = "tri_nho"
+	// TruyVan holds the router's search texts for the tool part: the only
+	// free texts a tool call may carry once a tool has returned data (the
+	// taint invariant, tools.BoiCanh.kiemTaint).
+	TruyVan Nguon = "truy_van"
 )
 
 var fullwidth = strings.NewReplacer("<", "＜", ">", "＞")

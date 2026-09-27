@@ -300,7 +300,7 @@ func bangChungCua(ids []string, sc *tools.SoCai) []truyhoi.BangChung {
 // YeuCauTraLoi is the answer step's first request, byte-stable for the same
 // input.
 func YeuCauTraLoi(v Vao, r crag.KetQua, bi []string, sc *tools.SoCai) *model.LLMRequest {
-	return cautruc.YeuCau(strings.TrimSpace(traLoiHe), NoiDungTraLoi(v, r, sc), LuocDo(bi), MaxTokensTraLoi)
+	return cautruc.YeuCau(llm.BuocTraLoi, strings.TrimSpace(traLoiHe), NoiDungTraLoi(v, r, sc), LuocDo(bi), MaxTokensTraLoi)
 }
 
 // NoiDungTraLoi is the answer step's user turn.

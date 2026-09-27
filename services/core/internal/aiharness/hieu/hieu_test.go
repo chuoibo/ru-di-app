@@ -92,7 +92,7 @@ func TestDocHopLe(t *testing.T) {
 		*kq.Slots.SoNguoi != 4 || !reflect.DeepEqual(kq.Slots.NguoiThamGia, []string{"u1"}) ||
 		!reflect.DeepEqual(kq.Slots.DiUng, []string{"tom"}) || !reflect.DeepEqual(kq.Slots.ThamChieu, []string{"p2"}) ||
 		!reflect.DeepEqual(kq.CanTruyHoi, []truyhoi.Nguon{truyhoi.Places}) ||
-		!reflect.DeepEqual(kq.TruyVan, []TruyVan{{truyhoi.Places, "quán cà phê yên tĩnh ở Đà Lạt"}}) || kq.TuTin != Cao {
+		!reflect.DeepEqual(kq.TruyVan, []TruyVan{{Nguon: truyhoi.Places, Cau: "quán cà phê yên tĩnh ở Đà Lạt"}}) || kq.TuTin != Cao {
 		t.Fatalf("%+v", kq)
 	}
 	// A direct answer: empty slots, no source, no query.

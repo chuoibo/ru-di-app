@@ -123,6 +123,30 @@ func (y yeuCau) chu() string {
 	return string(raw)
 }
 
+// choPhep is the step's AllowedFunctionNames, sorted.
+func (y yeuCau) choPhep() []string {
+	cfg, _ := y["config"].(map[string]any)
+	tc, _ := cfg["toolConfig"].(map[string]any)
+	fc, _ := tc["functionCallingConfig"].(map[string]any)
+	var out []string
+	for _, n := range fc["allowedFunctionNames"].([]any) {
+		out = append(out, n.(string))
+	}
+	sort.Strings(out)
+	return out
+}
+
+// tenKhaiBao is every tool the permission table grants bot, sorted: what
+// every step declares, whatever the turn allows.
+func tenKhaiBao(bot obs.Bot) []string {
+	var out []string
+	for _, t := range tools.MacDinh.DuocPhep(bot, false) {
+		out = append(out, string(t))
+	}
+	sort.Strings(out)
+	return out
+}
+
 func tenDuocPhep(bot obs.Bot) []string {
 	var out []string
 	// The router of these tests names no remember / forget intent, so the
@@ -148,8 +172,8 @@ func TestVongLapMoHinhQuyet(t *testing.T) {
 	if len(ys) != 2 {
 		t.Fatalf("%d model calls", len(ys))
 	}
-	if !reflect.DeepEqual(ys[0].congCu(), tenDuocPhep(obs.BotNep)) || ys[0].cheDo() != string(genai.FunctionCallingConfigModeAuto) {
-		t.Fatalf("step 1: tools %v mode %q", ys[0].congCu(), ys[0].cheDo())
+	if !reflect.DeepEqual(ys[0].congCu(), tenKhaiBao(obs.BotNep)) || !reflect.DeepEqual(ys[0].choPhep(), tenDuocPhep(obs.BotNep)) || ys[0].cheDo() != string(genai.FunctionCallingConfigModeValidated) {
+		t.Fatalf("step 1: tools %v allowed %v mode %q", ys[0].congCu(), ys[0].choPhep(), ys[0].cheDo())
 	}
 	if c := ys[1].chu(); !strings.Contains(c, `\"id\":\"p1\"`) || !strings.Contains(c, `du_lieu nguon=\"ket_qua_cong_cu\"`) {
 		t.Fatalf("step 2 does not carry the aliased evidence: %s", c)
@@ -182,7 +206,7 @@ func TestBuocCuoiNONE(t *testing.T) {
 	if len(ys) != llm.MaxStepsNep {
 		t.Fatalf("%d steps", len(ys))
 	}
-	for i, want := range []string{"AUTO", "AUTO", "NONE"} {
+	for i, want := range []string{"VALIDATED", "VALIDATED", "NONE"} {
 		if ys[i].cheDo() != want {
 			t.Errorf("step %d mode %q, want %s", i+1, ys[i].cheDo(), want)
 		}
@@ -229,7 +253,7 @@ func TestCongCuLaRoiSuaMotLan(t *testing.T) {
 	if c := ys[2].chu(); !strings.Contains(c, `"loi":"tham_so_sai"`) || !strings.Contains(c, `"tra_loi_ngay":true`) {
 		t.Fatalf("second invalid: %s", c)
 	}
-	if ys[1].cheDo() != "AUTO" || ys[2].cheDo() != "NONE" {
+	if ys[1].cheDo() != "VALIDATED" || ys[2].cheDo() != "NONE" {
 		t.Fatalf("modes %q %q", ys[1].cheDo(), ys[2].cheDo())
 	}
 	if len(x.r.Da) != 0 {

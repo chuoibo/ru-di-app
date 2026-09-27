@@ -41,8 +41,22 @@ type ThuaVec struct {
 // search it with (text for BM25, a vector for MILCO).
 type ThuaTruyVan struct {
 	Loai LoaiThua
+	// Text is the BM25 query of the marked field (FBM25), and of the folded
+	// field too unless TextKhongDau is set.
 	Text string
-	Vec  ThuaVec
+	// TextKhongDau, when set, is the folded field's (FBM25KhongDau) query:
+	// the person's own spelling, while Text carries the router's
+	// diacritics-restored form (hieu.TruyVan.CauCoDau).
+	TextKhongDau string
+	Vec          ThuaVec
+}
+
+// TextCua is the BM25 query text of field f (FBM25 or FBM25KhongDau).
+func (q ThuaTruyVan) TextCua(f string) string {
+	if f == FBM25KhongDau && q.TextKhongDau != "" {
+		return q.TextKhongDau
+	}
+	return q.Text
 }
 
 // Truong is the collection field the leg searches.

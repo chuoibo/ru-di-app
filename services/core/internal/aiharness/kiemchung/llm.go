@@ -49,7 +49,7 @@ func BiDanhKiem(i int) string { return fmt.Sprintf("e%d", i+1) }
 
 // YeuCauKiem is the verifier's request, byte-stable for the same input.
 func YeuCauKiem(cau []string, bc []truyhoi.BangChung) *model.LLMRequest {
-	return cautruc.YeuCau(strings.TrimSpace(kiemHe), NoiDungKiem(cau, bc), LuocDo(len(cau), biDanhs(len(bc))), MaxTokensKiem)
+	return cautruc.YeuCau(llm.BuocKiem, strings.TrimSpace(kiemHe), NoiDungKiem(cau, bc), LuocDo(len(cau), biDanhs(len(bc))), MaxTokensKiem)
 }
 
 // NoiDungKiem is the verifier's user turn: the numbered sentences, then the

@@ -67,6 +67,7 @@ const (
 	pTruyVan       = "truy_van"
 	pNguon         = "nguon"
 	pCau           = "cau"
+	pCauCoDau      = "cau_co_dau"
 	pCanHoiLai     = "can_hoi_lai"
 	pCauHoiLai     = "cau_hoi_lai"
 	pLuaChonHoiLai = "lua_chon_hoi_lai"
@@ -191,9 +192,11 @@ func LuocDo(v Vao) (*genai.Schema, error) {
 		Properties: map[string]*genai.Schema{
 			pNguon: enumStr(ng.Values()),
 			pCau: {Type: genai.TypeString, MaxLength: i64(MaxChuTruyVan),
-				Description: "the query, rewritten clearly with Vietnamese accents"},
+				Description: "the query standing on its own: references to earlier turns resolved, in the person's own spelling"},
+			pCauCoDau: {Type: genai.TypeString, MaxLength: i64(MaxChuTruyVan),
+				Description: "the same query with Vietnamese diacritics restored and teencode spelled out"},
 		},
-		PropertyOrdering: []string{pNguon, pCau},
+		PropertyOrdering: []string{pNguon, pCau, pCauCoDau},
 		Required:         []string{pNguon, pCau},
 	}
 
@@ -242,8 +245,9 @@ type tho struct {
 }
 
 type truyVanTho struct {
-	Nguon *string `json:"nguon"`
-	Cau   *string `json:"cau"`
+	Nguon    *string `json:"nguon"`
+	Cau      *string `json:"cau"`
+	CauCoDau *string `json:"cau_co_dau"`
 }
 
 type slotTho struct {
@@ -407,7 +411,18 @@ func docTruyVan(ts []truyVanTho, ng dong.Tap[truyhoi.Nguon], can []truyhoi.Nguon
 		if c := utf8.RuneCountInString(*q.Cau); c == 0 || c > MaxChuTruyVan || !utf8.ValidString(*q.Cau) {
 			return nil, loi("a query is empty or too long")
 		}
-		out = append(out, TruyVan{Nguon: n, Cau: *q.Cau})
+		tv := TruyVan{Nguon: n, Cau: *q.Cau}
+		if q.CauCoDau != nil {
+			// Optional, but never empty when written: a blank second form
+			// is a malformed field, not «the same».
+			if c := utf8.RuneCountInString(*q.CauCoDau); c == 0 || c > MaxChuTruyVan || !utf8.ValidString(*q.CauCoDau) {
+				return nil, loi("a query's diacritics form is empty or too long")
+			}
+			if *q.CauCoDau != *q.Cau {
+				tv.CauCoDau = *q.CauCoDau
+			}
+		}
+		out = append(out, tv)
 	}
 	return out, nil
 }

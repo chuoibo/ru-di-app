@@ -66,6 +66,7 @@ import (
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/rag"
 	"mobile/services/core/internal/rag/nap"
+	"mobile/services/core/internal/rerank"
 	"mobile/services/core/internal/routes"
 	"mobile/services/core/internal/sms"
 	"mobile/services/core/internal/vectordb"
@@ -741,6 +742,21 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 			nguon.TriNho = mem.kho
 		}
 		opts = append(opts, aiharness.WithNguon(nguon))
+	}
+	// The reranker (MOBILE_RERANK_URL; production Qwen3-Reranker-4B on a
+	// GPU behind vLLM, ADR-0043 §2.6): the engine counts it per turn and
+	// the places retriever reranks with it. Unset, every retrieval keeps
+	// the RRF order and says no_rerank. A URL that is set but refused (plain
+	// http off the host, a short token, a bad timeout) stops the start.
+	xepLai, err := rerank.TuEnv(getenv)
+	if err != nil {
+		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+	}
+	if xepLai != nil {
+		opts = append(opts, aiharness.WithXepLai(xepLai))
+		logger.Info("nep reranker configured", "model", xepLai.Model(), "timeout", xepLai.Timeout().String())
+	} else {
+		logger.Info("nep reranker not configured: retrieval keeps the RRF order (no_rerank)")
 	}
 	opts = append(opts, mem.engineOptions()...)
 	engine, err := aiharness.FromEnv(ctx, getenv, logger, opts...)

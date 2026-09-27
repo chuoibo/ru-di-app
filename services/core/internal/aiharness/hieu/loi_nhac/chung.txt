@@ -55,7 +55,7 @@ slots — typed constraints. Leave a slot out when the message (with the earlier
 
 can_truy_hoi — the sources whose data the answer needs; [] when none:
 {{NGUON}}
-truy_van — for truy_hoi_mot_buoc (and optionally for tac_tu) up to 3 queries, each on one source of can_truy_hoi: rewrite what the person wants as a clear Vietnamese search sentence WITH diacritics, teencode spelled out, the resolved references filled in, no greeting. For tra_loi_thang and hoi_lai, [].
+truy_van — for truy_hoi_mot_buoc and tac_tu, up to 3 queries, each on one source of can_truy_hoi, each written twice. cau: a search sentence that stands on its own — every reference to an earlier turn of ngan_han resolved and filled in ("quán đó" becomes what it names), no greeting — in the person's own spelling (keep it without diacritics if they typed it so). cau_co_dau: the same query as a clear Vietnamese sentence WITH diacritics, teencode spelled out. Write what to look for, never a guessed answer. For tac_tu, these are the only search texts a tool may still use after it has read results. For tra_loi_thang and hoi_lai, [].
 
 can_hoi_lai — true exactly when huong is "hoi_lai".
 cau_hoi_lai — only when can_hoi_lai: ONE short, friendly Vietnamese question with diacritics. lua_chon_hoi_lai — up to 3 short answer options for it, when natural.

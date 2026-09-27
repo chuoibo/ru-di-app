@@ -228,12 +228,31 @@ type Slots struct {
 	ThamChieu []string
 }
 
-// TruyVan is one retrieval query the model wrote for a source: a clear
-// rewrite of what the person wants (accents restored and teencode resolved
-// by the model, never by a Go table).
+// TruyVan is one retrieval query the model wrote for a source, in two forms
+// (the SOTA gap #3, at zero extra calls: the router already reads the
+// message and the session):
+//   - Cau: SELF-CONTAINED, every reference to an earlier turn resolved
+//     («quán đó», «chỗ hôm qua» → what it names), in the person's own
+//     spelling (marks or none, as typed). The folded BM25 field reads it.
+//   - CauCoDau: the same query with Vietnamese diacritics restored and
+//     teencode written out. The dense leg, the marked BM25 field and the
+//     reranker read it; "" means Cau already is that form.
+//
+// Both are the model's writing, never a Go table's: restoring marks is a
+// reading of the words. No hypothetical answer is written (no HyDE): a
+// query is what to look for, never a guess at what will be found.
 type TruyVan struct {
-	Nguon truyhoi.Nguon
-	Cau   string
+	Nguon    truyhoi.Nguon
+	Cau      string
+	CauCoDau string
+}
+
+// CoDau is the diacritics-restored form, or Cau when the model wrote none.
+func (t TruyVan) CoDau() string {
+	if t.CauCoDau != "" {
+		return t.CauCoDau
+	}
+	return t.Cau
 }
 
 // KetQua is the router's checked output.

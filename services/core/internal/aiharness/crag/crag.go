@@ -174,7 +174,9 @@ func SuaYeuCau(y truyhoi.YeuCau, d DanhGia, vong int) (truyhoi.YeuCau, bool, err
 		out.Mem = m
 	}
 	if d.VietLai != "" {
-		out.Cau = d.VietLai
+		// The rewrite replaces the query in both its forms: the router's
+		// diacritics-restored form was of the old query.
+		out.Cau, out.CauCoDau = d.VietLai, ""
 	}
 	return out, true, nil
 }

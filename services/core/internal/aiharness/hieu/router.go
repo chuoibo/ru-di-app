@@ -196,7 +196,7 @@ func YeuCau(v Vao, viDu []ViDu) (*model.LLMRequest, error) {
 			ResponseMIMEType:  "application/json",
 			ResponseSchema:    schema,
 			MaxOutputTokens:   MaxTokensRa,
-			ThinkingConfig:    &genai.ThinkingConfig{ThinkingLevel: genai.ThinkingLevelMinimal},
+			ThinkingConfig:    llm.CauHinhNghi(llm.BuocRouter),
 			SafetySettings:    agent.AnToan(),
 		},
 	}, nil
@@ -220,18 +220,17 @@ func SuaLai(req *model.LLMRequest, raw string, loi error) *model.LLMRequest {
 // tenVai is how a short-term turn's speaker reads in the ngan_han block.
 var tenVai = map[trinho.VaiLuot]string{trinho.Toi: "nguoi_hoi", trinho.TroLy: "tro_ly"}
 
-// NoiDung is the router's user turn for v: the server's clock and calendar,
-// then the turn's closed lists and history, the examples, and the message
-// last. Every text that came from outside is datamarked.
+// NoiDung is the router's user turn for v, laid out for Gemini's implicit
+// cache (SOTA gap #5): what changes least comes first -- the turn's closed
+// lists (the same for every turn of a deployment), then the worked
+// examples, the slip and the history -- and what changes on every call
+// last: the server's clock and calendar («bây giờ»), then the message.
+// Every text that came from outside is datamarked.
 func NoiDung(v Vao, viDu []ViDu) (string, error) {
 	if strings.TrimSpace(v.Cau) == "" || v.Luc.IsZero() {
 		return "", ErrVao
 	}
 	var blocks []string
-	blocks = append(blocks, prompts.BocDuLieu(prompts.MayChu, DongLich(v)))
-	if v.Bot == obs.BotNep && len(v.PhieuNep) > 0 {
-		blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.PhieuManHinh, string(v.PhieuNep)))
-	}
 	if len(v.DanhSachDiemDen) > 0 {
 		var lines []string
 		for _, d := range v.DanhSachDiemDen {
@@ -245,6 +244,16 @@ func NoiDung(v Vao, viDu []ViDu) (string, error) {
 			lines = append(lines, m.ID+" | "+m.Ten)
 		}
 		blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.ThanhVien, strings.Join(lines, "\n")))
+	}
+	if len(viDu) > 0 {
+		var parts []string
+		for _, d := range viDu {
+			parts = append(parts, "cau: "+d.Cau+"\njson: "+string(d.Ra))
+		}
+		blocks = append(blocks, prompts.BocDuLieu(prompts.ViDu, strings.Join(parts, "\n\n")))
+	}
+	if v.Bot == obs.BotNep && len(v.PhieuNep) > 0 {
+		blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.PhieuManHinh, string(v.PhieuNep)))
 	}
 	luot := v.NganHan
 	if len(luot) > trinho.MaxLuotNganHan {
@@ -264,13 +273,7 @@ func NoiDung(v Vao, viDu []ViDu) (string, error) {
 		}
 		blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.NganHan, strings.Join(lines, "\n")))
 	}
-	if len(viDu) > 0 {
-		var parts []string
-		for _, d := range viDu {
-			parts = append(parts, "cau: "+d.Cau+"\njson: "+string(d.Ra))
-		}
-		blocks = append(blocks, prompts.BocDuLieu(prompts.ViDu, strings.Join(parts, "\n\n")))
-	}
+	blocks = append(blocks, prompts.BocDuLieu(prompts.MayChu, DongLich(v)))
 	blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.CauHoi, v.Cau))
 	return strings.Join(blocks, "\n\n"), nil
 }

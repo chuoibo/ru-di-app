@@ -30,8 +30,37 @@ type Dem struct {
 	// lim, when set, is asked before every call (GioiHan).
 	lim GioiHan
 
-	mu sync.Mutex
-	n  int
+	mu  sync.Mutex
+	n   int
+	tok Token
+}
+
+// Token are one turn's usage counts, summed over every call the counter let
+// through (router, grader, answer, verifier, agent steps alike): counts
+// only, never content. Cache is Gemini's CachedContentTokenCount, the
+// prompt tokens its implicit cache served.
+type Token struct {
+	In, Out, Cache, Thought int
+}
+
+// Token is the usage summed so far.
+func (d *Dem) Token() Token {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.tok
+}
+
+func (d *Dem) ghiToken(resp *model.LLMResponse) {
+	if resp == nil || resp.UsageMetadata == nil || resp.Partial {
+		return
+	}
+	u := resp.UsageMetadata
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.tok.In += int(u.PromptTokenCount)
+	d.tok.Out += int(u.CandidatesTokenCount)
+	d.tok.Cache += int(u.CachedContentTokenCount)
+	d.tok.Thought += int(u.ThoughtsTokenCount)
 }
 
 // NewDem wraps inner for one turn with room for max calls.
@@ -131,6 +160,7 @@ func (d *Dem) GenerateContent(ctx context.Context, req *model.LLMRequest, stream
 					break
 				}
 				yielded = true
+				d.ghiToken(resp)
 				if !yield(resp, err) {
 					return
 				}

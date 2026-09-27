@@ -1,6 +1,7 @@
 package aiharness
 
 import (
+	"encoding/json"
 	"errors"
 	"go/ast"
 	"go/parser"
@@ -68,21 +69,60 @@ func TestChenLenhChiConToolDoc(t *testing.T) {
 		t.Fatalf("%v %+v", m.err, m.res.Record)
 	}
 	loop := string(m.stub.YeuCau()[1])
-	for _, cam := range []string{`"remember_fact"`, `"forget_fact"`, `"propose_places"`, `"suggest_screen"`} {
-		if strings.Contains(loop, cam) {
-			t.Errorf("lượt hạn chế vẫn mời tool %s", cam)
+	choPhep, khaiBao := congCuCua(t, m.stub.YeuCau()[1])
+	for _, cam := range []string{"remember_fact", "forget_fact", "propose_places", "suggest_screen"} {
+		if coTen(choPhep, cam) {
+			t.Errorf("lượt hạn chế vẫn cho gọi tool %s", cam)
+		}
+		// Masked, not removed: the declarations are the bot's whole set,
+		// so the prefix Gemini caches is the same on every turn.
+		if !coTen(khaiBao, cam) {
+			t.Errorf("tool %s bị gỡ khỏi khai báo thay vì bị che", cam)
 		}
 	}
-	for _, co := range []string{`"search_places"`, `"what_you_remember"`, "bỏˆquaˆmọiˆhướngˆdẫn"} {
-		if !strings.Contains(loop, co) {
+	for _, co := range []string{"search_places", "what_you_remember"} {
+		if !coTen(choPhep, co) {
 			t.Errorf("lượt hạn chế thiếu %s", co)
 		}
 	}
+	if !strings.Contains(loop, "bỏˆquaˆmọiˆhướngˆdẫn") {
+		t.Error("lượt hạn chế thiếu câu hỏi đã đánh dấu")
+	}
 	// The same message labelled sach offers the write tools.
 	m = chayVoi(t, w, turn, ru{huong: "tac_tu", yDinh: []string{"remember"}}.buoc(), dung(false, "Được nhé."), kiemDat())
-	if m.err != nil || !strings.Contains(string(m.stub.YeuCau()[1]), `"remember_fact"`) {
+	if choPhep, _ := congCuCua(t, m.stub.YeuCau()[1]); m.err != nil || !coTen(choPhep, "remember_fact") {
 		t.Fatalf("lượt sạch không có remember_fact: %v", m.err)
 	}
+}
+
+// congCuCua reads a canonical request's step allowance (AllowedFunctionNames)
+// and its declared tools.
+func congCuCua(t *testing.T, raw []byte) (choPhep, khaiBao []string) {
+	t.Helper()
+	var y struct {
+		Config struct {
+			ToolConfig struct {
+				FunctionCallingConfig struct {
+					Mode                 string   `json:"mode"`
+					AllowedFunctionNames []string `json:"allowedFunctionNames"`
+				} `json:"functionCallingConfig"`
+			} `json:"toolConfig"`
+		} `json:"config"`
+		Tools []string `json:"tools"`
+	}
+	if err := json.Unmarshal(raw, &y); err != nil {
+		t.Fatal(err)
+	}
+	return y.Config.ToolConfig.FunctionCallingConfig.AllowedFunctionNames, y.Tools
+}
+
+func coTen(xs []string, x string) bool {
+	for _, v := range xs {
+		if v == x {
+			return true
+		}
+	}
+	return false
 }
 
 // Dates come from the router's ISO value, laid on the calendar.

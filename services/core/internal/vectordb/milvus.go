@@ -540,10 +540,10 @@ func (y YeuCauTim) Nhanhs() ([]Nhanh, error) {
 		switch y.Thua.Loai {
 		case ThuaBM25:
 			if w.BM25 > 0 {
-				out = append(out, Nhanh{FBM25, entity.Text(y.Thua.Text), nil, w.BM25})
+				out = append(out, Nhanh{FBM25, entity.Text(y.Thua.TextCua(FBM25)), nil, w.BM25})
 			}
 			if w.BM25KhongDau > 0 {
-				out = append(out, Nhanh{FBM25KhongDau, entity.Text(y.Thua.Text), nil, w.BM25KhongDau})
+				out = append(out, Nhanh{FBM25KhongDau, entity.Text(y.Thua.TextCua(FBM25KhongDau)), nil, w.BM25KhongDau})
 			}
 		case ThuaMILCO:
 			se, err := y.Thua.Vec.embedding()

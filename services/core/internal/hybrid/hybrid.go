@@ -96,7 +96,11 @@ type Kho struct {
 	// TenDiaDiem and TenHuongDan are the aliases searched.
 	TenDiaDiem  string
 	TenHuongDan string
-	// Rerank is optional; nil means truyhoi.Passthrough and NoRerank.
+	// Rerank is optional and overrides the turn's reranker. Production
+	// leaves it nil: the Kho is shared across turns, and each turn's
+	// counted reranker arrives in the context (truyhoi.VoiXepLai, set by
+	// the engine from aiharness.WithXepLai). Neither: truyhoi.Passthrough
+	// and NoRerank.
 	Rerank truyhoi.Reranker
 	// BiLoai is optional; nil counts only the re-check's drops.
 	BiLoai DemBiLoai
@@ -134,10 +138,11 @@ func (d DuPhong) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyH
 
 var _ truyhoi.Retriever = (*Kho)(nil)
 
-// cauXepHang is the text the legs rank with: the model's query, then the
-// labels of the soft preferences it picked (closed ids), so they rank.
-func cauXepHang(y truyhoi.YeuCau) string {
-	parts := []string{y.Cau}
+// cauXepHang is the text the legs rank with: the model's query cau (one of
+// the router's two forms), then the labels of the soft preferences it
+// picked (closed ids), so they rank.
+func cauXepHang(y truyhoi.YeuCau, cau string) string {
+	parts := []string{cau}
 	for _, id := range y.Mem.LoaiCho {
 		parts = append(parts, tuvung.LoaiCho.Nhan(id))
 	}
@@ -188,7 +193,15 @@ func (k *Kho) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi,
 	if n == 0 {
 		n = MacDinhK
 	}
-	text := cauXepHang(y)
+	// The router's two forms of the query (hieu.TruyVan): the
+	// diacritics-restored one for the dense leg, the marked BM25 field and
+	// the reranker; the person's own spelling for the folded BM25 field.
+	coDau := y.Cau
+	if y.CauCoDau != "" {
+		coDau = y.CauCoDau
+	}
+	text := cauXepHang(y, coDau)
+	textNguyen := cauXepHang(y, y.Cau)
 
 	// Chunks, not places, come back: ask for more so n places survive the
 	// fold and the re-check.
@@ -200,6 +213,9 @@ func (k *Kho) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi,
 	}
 	if k.Thua != nil {
 		if q, err := k.Thua.TruyVan(ctx, text); err == nil {
+			if q.Loai == vectordb.ThuaBM25 && textNguyen != text {
+				q.TextKhongDau = nhung.ChuanNFC(textNguyen)
+			}
 			req.Thua = &q
 		} else {
 			kq.Degraded = append(kq.Degraded, truyhoi.NoSparse)
@@ -238,16 +254,33 @@ func (k *Kho) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi,
 		return truyhoi.KetQuaTruyHoi{}, err
 	}
 
-	if k.Rerank == nil {
+	xl, hoan := truyhoi.XepLaiTrong(ctx)
+	if k.Rerank != nil {
+		xl = k.Rerank
+	}
+	switch {
+	case hoan:
+		// The caller reranks the candidates (crag, over every query's
+		// merged candidates): retrieval order, no flag of ours.
+		bc, _ = truyhoi.Passthrough{}.XepLai(ctx, coDau, bc, n)
+	case xl == nil:
 		kq.Degraded = append(kq.Degraded, truyhoi.NoRerank)
-		bc, _ = truyhoi.Passthrough{}.XepLai(ctx, y.Cau, bc, n)
-	} else {
-		out, err := k.Rerank.XepLai(ctx, y.Cau, bc, n)
+		bc, _ = truyhoi.Passthrough{}.XepLai(ctx, coDau, bc, n)
+	default:
+		// The reranker reads the first UngVienXepLai candidates in RRF
+		// order and keeps n; the query it scores against is the
+		// diacritics-restored one (an unmarked query drops Qwen3-Reranker's
+		// scores sharply, research qwen-reranker.md §3.4).
+		pool := bc
+		if len(pool) > truyhoi.UngVienXepLai {
+			pool = pool[:truyhoi.UngVienXepLai]
+		}
+		out, err := xl.XepLai(ctx, coDau, pool, n)
 		if err != nil {
 			// Whatever a failed reranker returned, the answer is the RRF
 			// order it was given.
 			kq.Degraded = append(kq.Degraded, truyhoi.NoRerank)
-			out, _ = truyhoi.Passthrough{}.XepLai(ctx, y.Cau, bc, n)
+			out, _ = truyhoi.Passthrough{}.XepLai(ctx, coDau, bc, n)
 		}
 		if !hopLe(out, bc, n) {
 			return truyhoi.KetQuaTruyHoi{}, errors.New("hybrid: the reranker added or duplicated evidence")

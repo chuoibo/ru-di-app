@@ -206,9 +206,15 @@ type YeuCau struct {
 	// Cau is the query text: what the model wrote as the tool argument, or
 	// the person's own words on the fast path. Adapters embed it and rank
 	// with it; they never parse constraints out of it.
-	Cau  string
-	Cung Cung
-	Mem  Mem
+	Cau string
+	// CauCoDau is the router's diacritics-restored form of Cau ("" when the
+	// router wrote none, or Cau already has its marks). Written by the
+	// model, never computed: restoring Vietnamese diacritics is a reading
+	// of the words. The dense leg, the marked BM25 field and the reranker
+	// use it; the folded BM25 field keeps Cau, the person's own spelling.
+	CauCoDau string
+	Cung     Cung
+	Mem      Mem
 	// K is how many items to return; 0 means the adapter's default.
 	K int
 	// DiUngNgoaiDanhMuc is the router's flag: the person named an allergen
@@ -311,4 +317,46 @@ func (Passthrough) XepLai(_ context.Context, _ string, bc []BangChung, topN int)
 		return append([]BangChung(nil), bc...), nil
 	}
 	return append([]BangChung(nil), bc[:topN]...), nil
+}
+
+// UngVienXepLai is how many candidates, in retrieval order, a reranker is
+// given at most (research qwen-reranker.md §5.3: 30 in, the request's k
+// out). Candidates past it are cut before the reranker, never after.
+const UngVienXepLai = 30
+
+// xepLaiLuot is the turn's reranker as the context carries it.
+type xepLaiLuot struct {
+	r Reranker
+	// hoan: the caller reranks what the retriever returns (the corrective
+	// loop reranks the merged candidates of every query once), so the
+	// retriever neither reranks nor flags NoRerank.
+	hoan bool
+}
+
+type khoaXepLai struct{}
+
+// VoiXepLai is ctx carrying the turn's reranker (a counted one: the engine
+// wraps the configured reranker in rerank.Dem with MaxRerankCallsPerTurn).
+// A retriever shared across turns reranks with the one its turn carries,
+// so every rerank call of a turn, whichever path makes it, is counted
+// against one budget.
+func VoiXepLai(ctx context.Context, r Reranker) context.Context {
+	return context.WithValue(ctx, khoaXepLai{}, xepLaiLuot{r: r})
+}
+
+// HoanXepLai is ctx telling the retriever that its caller reranks: the
+// retriever returns its candidates in retrieval order (up to the request's
+// K) and adds no NoRerank flag, which the caller adds if its own rerank
+// does not happen.
+func HoanXepLai(ctx context.Context) context.Context {
+	x, _ := ctx.Value(khoaXepLai{}).(xepLaiLuot)
+	x.hoan = true
+	return context.WithValue(ctx, khoaXepLai{}, x)
+}
+
+// XepLaiTrong is the turn's reranker ctx carries (nil: none), and whether
+// the caller reranks instead (HoanXepLai).
+func XepLaiTrong(ctx context.Context) (r Reranker, hoan bool) {
+	x, _ := ctx.Value(khoaXepLai{}).(xepLaiLuot)
+	return x.r, x.hoan
 }
