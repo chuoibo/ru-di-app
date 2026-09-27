@@ -21,8 +21,8 @@ Thứ tự (đọc từ mã, kịch bản đo):
 6. `_require_pair_permission("respond_pair_paper", …)` (`service.py:7788-7796`; `services/api/app/domain/permissions.py:575-578`), theo thứ tự (role đã qua ở bước 4): `version_current` → 409 `paper_version_stale` (`owner_agrees_version_2`, `mate_agrees_stale_v1`); `is_not_version_sender` → 409 `paper_self_response` (`owner_agrees_own_sent`, `mate_agrees_own_v2`, `mate_counter_own_v2`, `owner_agrees_own_v3`).
 7. Nhánh `dong_y` (`service.py:7801-7837`):
    - ghi hàng `dong_y`; nếu người này đã đồng ý phiên bản đó (`paper_already_agreed`) → **200** với trạng thái hiện tại (`hieu_luc`) và `outing_id` hiện có, không ghi gì (`mate_agrees_v3_again` → `chot`, `mate_agrees_after_done` → `da_di`, `mate_agrees_after_keep` → `da_giu`);
-   - ngược lại `chuyen(paper, "dong_y", du_dong_y=…)`: tờ mở quá hạn → 409 `paper_expired`; `hieu_luc` ngoài `da_gui, da_xem, dong_y` → 409 `paper_wrong_state` (hàng vừa ghi rollback; `owner_agrees_own_draft`, `owner_agrees_withdrawn`, `mate_agrees_cancelled`).
-8. Nhánh `de_nghi_sua` (`service.py:7898-7946`): `chuyen(paper, "de_nghi_sua")`: quá hạn → 409 `paper_expired`; `chot`/`da_di` → 409 `paper_frozen` `Hai bạn chốt rồi, không sửa nữa.` (`mate_counter_frozen`, `mate_counter_after_done`); trạng thái khác ngoài `da_gui, da_xem, dong_y` → 409 `paper_wrong_state` (`owner_counter_own_draft`, `mate_counter_after_keep`, `mate_counter_cancelled`).
+   - ngược lại `chuyen(paper, "dong_y", du_dong_y=…)`: tờ mở quá hạn → 409 `paper_expired`; `hieu_luc` ngoài `da_gui, da_xem, dong_y` → 409 `paper_wrong_state` (hàng vừa ghi rollback; `owner_agrees_own_draft`, `owner_agrees_withdrawn`, `owner_agrees_cancelled`).
+8. Nhánh `de_nghi_sua` (`service.py:7898-7946`): `chuyen(paper, "de_nghi_sua")`: quá hạn → 409 `paper_expired`; `chot`/`da_di` → 409 `paper_frozen` `Hai bạn chốt rồi, không sửa nữa.` (`mate_counter_frozen`, `mate_counter_after_done`); trạng thái khác ngoài `da_gui, da_xem, dong_y` → 409 `paper_wrong_state` (`owner_counter_own_draft`, `mate_counter_after_keep`, `owner_counter_cancelled`).
 
 ## Đầu vào
 
@@ -88,7 +88,7 @@ Cùng `now`, dưới khoá hàng tờ:
 - Thân 422 (route bị bộ sinh hoãn): `mate_kind_missing`, `mate_kind_unknown`, `mate_kind_number`, `mate_agree_with_content`, `mate_counter_without_content`, `mate_counter_three_stops`, `mate_counter_ly_do_201`, `mate_body_null`, `mate_body_array`, `mate_kind_uppercase`, `mate_version_word`, `mate_version_decimal`, `mate_version_leading_zero`.
 - Ba phiên bản: `mate_counter_proposes`, `mate_agrees_stale_v1`, `mate_agrees_own_v2`, `mate_counter_own_v2`, `owner_counter_v2`, `mate_agrees_v3`, `owner_reads_plan`, `mate_agrees_v3_again`, `owner_agrees_own_v3`, `mate_counter_frozen`, `owner_records_done`, `mate_agrees_after_done`, `mate_counter_after_done`, `owner_keeps`, `mate_agrees_after_keep`, `mate_counter_after_keep`.
 - Header key: `mate_agrees_with_header_key`, `mate_replays_header_key`, `mate_header_key_other_body`.
-- Chữ độc: `mate_counter_task_nul`, `mate_counter_hostile`, `owner_reads_hostile_counter`; tờ rút và tờ huỷ: `mate_withdraws_v2`, `owner_agrees_withdrawn`, `mate_agrees_cancelled`, `mate_counter_cancelled`.
+- Chữ độc: `mate_counter_task_nul`, `mate_counter_hostile`, `owner_reads_hostile_counter`; tờ rút và tờ huỷ: `mate_withdraws_v2`, `owner_agrees_withdrawn`, `owner_agrees_cancelled`, `owner_counter_cancelled`.
 
 `crossreplay/…responses.yaml` (16 bước): `dong_y` lưu qua Python được cửa trước phát lại, một outing; `de_nghi_sua` cùng khoá 422; đề nghị sửa lưu ở cửa trước được Python phát lại, hai phiên bản.
 
@@ -123,3 +123,33 @@ Diff này đổi `PaperStopInput.place_id`/`PaperStop.place_id` từ `uuid.UUID`
 Diff này thêm `_chi_chu_thay` (Go `pairsteps.chiChuThay`): người không phải chủ bản phác chỉ thấy một tờ khi tờ không ở `nhap` **và** có ít nhất một phiên bản đã gửi (`sent_at` khác null). Trước đây luật là «không phải `nhap`», nên bản phác chưa gửi mà chủ bấm «Tuần này nghỉ» (`nghi_tuan`), bỏ (`bo`) hay để hết tuần (`het_han`) hiện ra trong danh sách và chi tiết của người kia, kèm nội dung và lý do riêng — tái hiện trên stack cô lập 24/09 bằng hai phiên thật. Áp ở `list_pair_papers` (lọc) và `_readable_paper_or_404` (`may_view_paper`, 404 `paper_not_found`), nên mọi lệnh đọc/ghi tờ đi qua cửa này. Golden `python_pair_steps.json` thêm `unsent_*`/`sent_then_skipped_as_kia`; bản sao route trong repo oracle Postgres đổi theo.
 
 - `POST /papers/{paper_id}/versions/{version}/responses`: Route này đọc/ghi tờ qua `_readable_paper_or_404`: với tờ chưa từng gửi ở trạng thái đóng, người không phải chủ nay nhận 404 `paper_not_found` (trước: đọc được, hoặc lỗi trạng thái). Tờ đã gửi: byte không đổi.
+
+## Đổi 2026-09-25 — `chia_gu`: gu trong sổ đôi, mỗi người tự bật (ADR-0034 §2.1–2.2)
+
+Diff này thêm mục đích đồng ý `chia_gu` (CONSENT_PURPOSES, PER_PERSON_PURPOSES; CHECK `ck_pair_consent_proposals_consent_purpose_known` mở rộng ở migration `e3b7c1d9a4f2`), hàm thuần `pair_notebook.gu_hai_nguoi` (Go `pairnotebook.GuHaiNguoi`) và trường `taste` của `PairNotebookResponse` (`_pair_taste`, Go `pairsteps.pairTaste`). Golden: `python_pair_notebook*.json` (ca `taste: *`, fuzz có `chia_gu`), `python_pair_steps*.json` (ca `taste_*`); Go replay 0 lệch; tầng Postgres Python 720 xanh.
+
+- `POST /papers/{paper_id}/versions/{version}/responses`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 — Nếp dùng gu của người đã bật `chia_gu` khi phác tờ (ADR-0034 §2.2)
+
+Diff này tách `_pair_context_or_404` thành `_pair_roster_or_404` (cùng ba lệnh đọc, cùng thứ tự, cùng câu trả lời; chỉ giữ thêm tên hiển thị của hàng thành viên — Go `pairRosterOr404`, `Member.DisplayName`) và thêm vào `draft_pair_paper` bước gu: `_gu_cho_nep` + hàm thuần `pair_paper.gu_cho_nep` / `loai_theo_gu` / `lam_giau_theo_gu` (Go `pairpaper.GuChoNep` / `LoaiTheoGu` / `LamGiauTheoGu`). Golden: `python_pair_paper*.json` (ca `gu_cho_nep`, `lam_giau_theo_gu`, fuzz riêng), `python_pair_steps.json` (7 ca `taste_*` của draft); Go replay 0 lệch.
+
+- `POST /papers/{paper_id}/versions/{version}/responses`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 — «Người lo» của tuần trong sổ đôi (ADR-0034 §2.3–2.4)
+
+Diff này thêm `week_role` vào `PairNotebookResponse` (`_week_role`, Go `pairsteps.weekRole`): chỉ trong «Một đôi» đang mở; lựa chọn của tuần (`get_pair_rhythm`, bảng mới `pair_cycle_rhythms`, migration `f4a8d2c6b1e9`) nếu có, không thì suy bằng hàm thuần `pair_notebook.nguoi_lo_suy` (gửi tờ trước ×2, đề nghị sửa ×1, trong chu kỳ này; hoà → người lập sổ) và `vai_tuan`. Không có giới tính. `pair_notebook` giờ đọc tờ một lần cho cả tờ mở lẫn người lo (`_open_paper_id(papers=…)`). Route mới `PUT …/notebook/week-role` (Go phục vụ, evidence riêng). Golden `python_pair_notebook*.json` (ca `lo:*`), `python_pair_steps*.json` (`role_*`, `set_pair_week_role`), permissions; repo oracle Postgres Go có 4 ca week-role.
+
+- `POST /papers/{paper_id}/versions/{version}/responses`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 (lượt 2) — gậy luân phiên, hạn mức tuần, «Một đôi» trên hồ sơ, 4 sticker đôi (ADR-0034 §2.4–2.5)
+
+Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở lời (tờ đầu tiên gửi trong tuần, `nguoi_mo_loi`) hai tuần liền thì tuần này sang người kia, `cach` = `luot`; tín hiệu tờ thêm `tuan`, `sent_at`. (2) `draft_pair_paper` từ chối 409 `paper_week_quota` khi người gọi đã phác `TO_MOI_NGUOI_MOI_TUAN` (3, cùng số với `packages/shared/nep-nhip.json`) tờ trong tuần. (3) `get_person_profile` trả `relation` = `couple` khi hai người là một «Một đôi» (`same_couple`, hỏi SAU cửa quyền, không phải oracle cho người lạ). (4) Từ vựng sticker thêm `hen-nhe`, `nho-nhau`, `ve-toi-chua`, `om-cai`. Golden pair_notebook (ca baton, 10 shard), pair_steps (`quota_*`, `role_baton_*`), people_steps (`couple_*`), stickers; Go 0 lệch.
+
+- `POST /papers/{paper_id}/versions/{version}/responses`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `POST /papers/{paper_id}/versions/{version}/responses`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.

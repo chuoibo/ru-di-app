@@ -293,6 +293,77 @@ func wireNotebook(view pairsteps.NotebookView) *pyjson.OrderedMap {
 		granted = append(granted, pyjson.String(purpose))
 	}
 	out.Set("granted_purposes", granted)
+	out.Set("taste", wirePairTaste(view.Taste))
+	if view.WeekRole == nil {
+		out.Set("week_role", pyjson.Null{})
+	} else {
+		out.Set("week_role", wireWeekRole(*view.WeekRole))
+	}
+	return out
+}
+
+// wireWeekRole is PairWeekRoleResponse (ADR-0034 §2.4).
+func wireWeekRole(role pairsteps.WeekRole) *pyjson.OrderedMap {
+	nguoiLo := pyjson.List{}
+	for _, id := range role.NguoiLo {
+		nguoiLo = append(nguoiLo, pyjson.String(id))
+	}
+	diem := pyjson.List{}
+	for _, d := range role.Diem {
+		item := pyjson.NewOrderedMap()
+		item.Set("person_id", pyjson.String(d.PersonID))
+		item.Set("score", pyjson.NewInt(int64(d.Score)))
+		diem = append(diem, item)
+	}
+	out := pyjson.NewOrderedMap()
+	out.Set("tuan", pyjson.String(role.Tuan.ISOFormat()))
+	out.Set("nguoi_lo", nguoiLo)
+	out.Set("cach", pyjson.String(role.Cach))
+	out.Set("diem", diem)
+	return out
+}
+
+// setPairWeekRole is PUT /contexts/{context_id}/notebook/week-role
+// (set_pair_week_role, ADR-0034 §2.4).
+func setPairWeekRole() Route {
+	return Route{ID: "PUT /contexts/{context_id}/notebook/week-role", Status: 200, Serve: func(ctx context.Context, call *endpoint.Call) (endpoint.Reply, error) {
+		contextID, err := pathUUID(call, "context_id")
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		request, err := bodyModel(call, "request")
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		lo, err := stringField(request, "lo")
+		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		role, err := pairsteps.SetWeekRole(pairStore(ctx, call), pairActor(call), contextID, lo, pairNow())
+		if err != nil {
+			return endpoint.Reply{}, pairError(err)
+		}
+		return endpoint.Reply{Body: wireWeekRole(role)}, nil
+	}}
+}
+
+// wirePairTaste is PairTasteResponse | None (ADR-0034).
+func wirePairTaste(taste *pairnotebook.Taste) pyjson.Value {
+	if taste == nil {
+		return pyjson.Null{}
+	}
+	list := func(values []string) pyjson.List {
+		out := pyjson.List{}
+		for _, value := range values {
+			out = append(out, pyjson.String(value))
+		}
+		return out
+	}
+	out := pyjson.NewOrderedMap()
+	out.Set("mine_shared", pyjson.Bool(taste.MineShared))
+	out.Set("theirs_shared", pyjson.Bool(taste.TheirsShared))
+	out.Set("theirs", list(taste.Theirs))
+	out.Set("common", list(taste.Common))
 	return out
 }
 

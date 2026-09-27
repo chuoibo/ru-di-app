@@ -32,6 +32,8 @@ import { Money } from "../../ui/Money";
 import { RouteLine } from "../../ui/RouteLine";
 import { SkeletonCard, SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
+import { CuongPhieu } from "../../ui/CuongPhieu";
+import { TheVe } from "../../ui/TheVe";
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; keo: BuoiDi[] } | { pha: "hong"; loi: string };
 
@@ -58,51 +60,66 @@ function DauLich({ iso, lon = false, mo = false }: { iso: string; lon?: boolean;
   );
 }
 
+/** The next outing as its ticket (ADR-0037 D1, plan S4): the day torn off as the stub. */
 function KeoDan({ keo, today, onOpen }: { keo: BuoiDi; today: string; onOpen: () => void }) {
-  const { colors, radius } = useRudiTheme();
+  const { colors } = useRudiTheme();
   const nhip = nhipKeo(keo.starts_on, keo.ends_on, today);
   const nhan = nhanNhip(nhip);
   return (
-    <Pressable
-      accessibilityLabel={`Mở kèo ${keo.title}`}
-      accessibilityRole="button"
-      onPress={onOpen}
-      style={({ pressed }) => [styles.dan, { backgroundColor: colors.accentSoft, borderRadius: radius.base }, pressed && styles.bam]}
-    >
-      <DauLich iso={keo.starts_on} lon />
-      <View style={styles.danChu}>
-        {nhan ? <Stamp label={nhan} tilt={-2} tone={nhip.kieu === "dang-dien-ra" || nhip.kieu === "hom-nay" ? "split" : "accent"} /> : null}
+    <Pressable accessibilityLabel={`Mở kèo ${keo.title}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => pressed && styles.bam}>
+      <TheVe
+        cao={2}
+        cuong={
+          <>
+            <DauLich iso={keo.starts_on} lon />
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>{keo.headcount} người</Text>
+          </>
+        }
+        testID="keo-dan"
+      >
+        {nhan ? <Stamp label={nhan} tilt={-2} tone={nhip.kieu === "dang-dien-ra" || nhip.kieu === "hom-nay" ? "split" : "ink"} /> : null}
         <Text style={[typography.h2, { color: colors.ink }]}>{keo.title}</Text>
-        <Text style={[typography.body, { color: colors.inkSoft }]}>
-          {nhanKhoangNgay(keo.starts_on, keo.ends_on)} · {keo.headcount} người
-        </Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>{nhanKhoangNgay(keo.starts_on, keo.ends_on)}</Text>
+        {keo.stops.length > 0 ? <RouteLine color={colors.inkSoft} height={24} stops={Math.min(5, keo.stops.length)} width={120} /> : null}
         <View style={styles.tienRow}>
-          <Money size="label" vnd={keo.budget_per_person_vnd} />
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>một người · {cauSoChang(keo.stops.length)}</Text>
+          {keo.budget_per_person_vnd > 0 ? <Money size="label" vnd={keo.budget_per_person_vnd} /> : null}
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>
+            {keo.budget_per_person_vnd > 0 ? "một người · " : ""}
+            {cauSoChang(keo.stops.length)}
+          </Text>
         </View>
-      </View>
+      </TheVe>
     </Pressable>
   );
 }
 
+/** A later outing as a smaller ticket; a past one as the stub that is left of it. */
 function HangKeo({ keo, today, mo = false, voi, onOpen }: { keo: BuoiDi; today: string; mo?: boolean; voi?: string; onOpen: () => void }) {
   const { colors } = useRudiTheme();
   const nhan = nhanNhip(nhipKeo(keo.starts_on, keo.ends_on, today));
+  const chu = (
+    <View style={styles.hangChu}>
+      <Text numberOfLines={2} style={[typography.title, { color: mo ? colors.inkSoft : colors.ink }]}>{keo.title}</Text>
+      <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
+        {voi ? `với ${voi} · ` : ""}{nhanKhoangNgay(keo.starts_on, keo.ends_on)} · {voi ? "" : `${keo.headcount} người · `}{cauSoChang(keo.stops.length)}
+        {nhan ? ` · ${nhan}` : ""}
+      </Text>
+    </View>
+  );
   return (
-    <Pressable
-      accessibilityLabel={`Mở kèo ${keo.title}`}
-      accessibilityRole="button"
-      onPress={onOpen}
-      style={({ pressed }) => [styles.hang, { borderBottomColor: colors.line }, pressed && styles.bam]}
-    >
-      <DauLich iso={keo.starts_on} mo={mo} />
-      <View style={styles.hangChu}>
-        <Text numberOfLines={2} style={[typography.title, { color: mo ? colors.inkSoft : colors.ink }]}>{keo.title}</Text>
-        <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
-          {voi ? `với ${voi} · ` : ""}{nhanKhoangNgay(keo.starts_on, keo.ends_on)} · {voi ? "" : `${keo.headcount} người · `}{cauSoChang(keo.stops.length)}
-          {nhan ? ` · ${nhan}` : ""}
-        </Text>
-      </View>
+    <Pressable accessibilityLabel={`Mở kèo ${keo.title}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.hangVe, pressed && styles.bam]}>
+      {mo ? (
+        <CuongPhieu>
+          <View style={styles.hang}>
+            <DauLich iso={keo.starts_on} mo />
+            {chu}
+          </View>
+        </CuongPhieu>
+      ) : (
+        <TheVe cuong={<DauLich iso={keo.starts_on} />} tiLeCat={0.78}>
+          {chu}
+        </TheVe>
+      )}
     </Pressable>
   );
 }
@@ -253,14 +270,13 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   dau: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   khung: { gap: 12 },
-  dan: { flexDirection: "row", alignItems: "flex-start", gap: 14, padding: 16 },
-  danChu: { flex: 1, gap: 6 },
   tienRow: { flexDirection: "row", alignItems: "baseline", gap: 8, flexWrap: "wrap" },
   dauLich: { width: 52, alignItems: "center", paddingTop: 2 },
   dauLichLon: { width: 64 },
   ngay: { fontFamily: displayFace.extraBold, fontSize: 24, lineHeight: 28, fontVariant: ["tabular-nums"] },
   ngayLon: { fontFamily: displayFace.extraBold, fontSize: 36, lineHeight: 40, letterSpacing: -1, fontVariant: ["tabular-nums"] },
-  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hangVe: { marginBottom: 10 },
+  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
   hangChu: { flex: 1, gap: 3 },
   bam: { opacity: 0.7 },
 });

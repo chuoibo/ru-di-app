@@ -89,3 +89,9 @@ Corpus sinh: `generated/w10-422/get-people-me-contexts.yaml` (5 bước).
 - Pair có người kia đã xoá tài khoản báo `unavailable: false` (xem thẻ `DELETE /people/me`).
 - Tên hiển thị của pair khi người kia rời là `Thành viên`, trong khi `author_display_name` của tin cuối vẫn là `Người dùng đã rời`: một hàng hai tên cho cùng một người.
 - Một truy vấn đếm chưa đọc cho mỗi hàng (N+1).
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `GET /people/me/contexts`: đổi thật: `SqlAlchemyApiRepository.list_person_context_summaries` — tin mới nhất bằng LATERAL thay vì quét — cùng kết quả; Go repo/conversations.go.

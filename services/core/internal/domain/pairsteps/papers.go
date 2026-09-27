@@ -2,10 +2,13 @@ package pairsteps
 
 import (
 	"errors"
+	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"mobile/services/core/internal/domain/pairnotebook"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -126,7 +129,8 @@ func ListPapers(s Store, actor Actor, contextID string, now time.Time) ([]PaperS
 // DraftPaper is draft_pair_paper: the notebook locked (and created), the door,
 // one open sheet at a time, then Nep's template for this week.
 func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command, error) {
-	if _, err := pairContextOr404(s, actor, contextID); err != nil {
+	roster, err := pairRosterOr404(s, actor, contextID)
+	if err != nil {
 		return Command{}, err
 	}
 	notebook, err := lockedNotebook(s, contextID, now)
@@ -147,6 +151,17 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 		if pairpaper.IsOpen(pairpaper.HieuLuc(PaperDict(&papers[i]), now)) {
 			return Command{}, refusal(409, "paper_wrong_state", "Đang có một tờ mở. Xong tờ này đã.")
 		}
+	}
+	// ADR-0034 §2.5: a ceiling per person per week.
+	tuanNay := pairpaper.TuanCua(now)
+	mine := 0
+	for i := range papers {
+		if papers[i].DraftOwnerID == actor.ID && papers[i].Tuan.Compare(tuanNay) == 0 {
+			mine++
+		}
+	}
+	if mine >= pairpaper.ToMoiNguoiMoiTuan {
+		return Command{}, refusal(409, "paper_week_quota", fmt.Sprintf("Tuần này bạn đã phác %d tờ rồi. Tuần sau phác tiếp nhé.", pairpaper.ToMoiNguoiMoiTuan))
 	}
 	// What this cycle already agreed, and the catalogue around the place it
 	// chose -- read before the write, in Python's order.
@@ -186,6 +201,34 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 		boxes[i] = c.Content
 	}
 	phac = pairpaper.LamGiauPhac(phac, lichSu, choCuRow, ungVien, boxes)
+	// ADR-0034 §2.2: the tastes of whoever shared theirs, and nobody else's.
+	gu, err := guChoNep(s, notebook, roster, now)
+	if err != nil {
+		return Command{}, err
+	}
+	if len(gu) > 0 {
+		loai := pairpaper.LoaiTheoGu(gu)
+		dau := phac.Content.Chang[0]
+		var ungVienGu []pairpaper.PlaceRow
+		if loai != "" && choCu != nil && (dau.PlaceID == nil || *dau.PlaceID == "") {
+			rows, err := s.ListPlaces(choCu.DestinationID, loai)
+			if err != nil {
+				return Command{}, err
+			}
+			for _, row := range rows {
+				ungVienGu = append(ungVienGu, row.row())
+			}
+		}
+		daDi := []string{}
+		for _, nd := range lichSu {
+			for _, c := range nd.Chang {
+				if c.PlaceID != nil && *c.PlaceID != "" {
+					daDi = append(daDi, *c.PlaceID)
+				}
+			}
+		}
+		phac = pairpaper.LamGiauTheoGu(phac, gu, ungVienGu, daDi, boxes)
+	}
 	var lyDo *string
 	if phac.LyDo != "" {
 		lyDo = &phac.LyDo
@@ -728,4 +771,38 @@ func KeepLine(s Store, actor Actor, paperID, line string, now time.Time) (Keep, 
 		return Keep{}, err
 	}
 	return keep, nil
+}
+
+// guChoNep is _gu_cho_nep: nothing outside «Một đôi», nothing for a person
+// who has not shared, and interests read only for those who have.
+func guChoNep(s Store, notebook *Notebook, roster []Member, now time.Time) ([]pairpaper.GuMuc, error) {
+	members := []string{}
+	names := map[string]string{}
+	for _, row := range roster {
+		members = append(members, row.PersonID)
+		names[row.PersonID] = row.DisplayName
+	}
+	participants := Participants(notebook, members)
+	consents := ConsentsOf(notebook)
+	if !pairnotebook.CanBatDoi(consents, participants, &now) {
+		return nil, nil
+	}
+	chia := []string{}
+	for _, person := range participants {
+		if slices.Contains(pairnotebook.GrantedBy(consents, person, &now), "chia_gu") {
+			chia = append(chia, person)
+		}
+	}
+	if len(chia) == 0 {
+		return nil, nil
+	}
+	tags, err := s.InterestsByPerson(append([]string{}, chia...))
+	if err != nil {
+		return nil, err
+	}
+	distinct := map[string]bool{}
+	for _, person := range participants {
+		distinct[person] = true
+	}
+	return pairpaper.GuChoNep(chia, tags, names, len(chia) == len(distinct) && len(distinct) == 2), nil
 }

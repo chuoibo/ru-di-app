@@ -78,6 +78,32 @@ export function moneyCountUpMs(domainStateValid: boolean, reduceMotion: boolean)
 }
 
 /**
+ * Composite budgets of the paper stage (ADR-0037 D3). Not a fifth step:
+ * `MOTION_MS` stays exactly four. A pop-up is `shared` plus a 40 ms stagger per
+ * layer, capped at four staggered layers; a Nếp performance never runs past
+ * `dien` and never holds input; a page turn is `shared`.
+ */
+export const NGAN_SACH_SAN_KHAU: Readonly<{ batTang: number; batToiDa: number; dien: number; lat: number }> = Object.freeze({
+  batTang: spec.sanKhau.batTang,
+  batToiDa: spec.sanKhau.batToiDa,
+  dien: spec.sanKhau.dien,
+  lat: spec.sanKhau.lat,
+});
+
+/** How far apart layer `i` starts, in ms; layers past the fourth start with the fourth. */
+export function treTang(i: number, reduceMotion: boolean): number {
+  if (reduceMotion) return 0;
+  return NGAN_SACH_SAN_KHAU.batTang * Math.max(0, Math.min(3, Math.floor(i)));
+}
+
+/** The whole pop-up for `soTang` layers, never past `batToiDa`; zero under Reduce Motion. */
+export function batToiDa(soTang: number, reduceMotion: boolean): number {
+  if (reduceMotion) return 0;
+  const tong = MOTION_MS.shared + treTang(Math.max(1, soTang) - 1, false);
+  return Math.min(NGAN_SACH_SAN_KHAU.batToiDa, tong);
+}
+
+/**
  * `celebrate` is a budget of one per event, not a style. The first call for a
  * key wins; every later call for the same key is an ordinary `standard`
  * transition. Callers keep the `seen` set for the lifetime of the screen.

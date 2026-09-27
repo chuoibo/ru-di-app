@@ -19,6 +19,8 @@ type UngVienTrung struct {
 	DiemDen string
 	Lat     float64
 	Lng     float64
+	// CoToaDo false: no coordinates, never merged by distance.
+	CoToaDo bool
 	Nguon   string
 	// Giau is how much the place says (runes of its profile and reviews):
 	// the richer row wins among equals.
@@ -72,7 +74,7 @@ func TimTrung(ds []UngVienTrung, cosMin, metMax float64) map[string]string {
 		for a := 0; a < len(idx); a++ {
 			for b := a + 1; b < len(idx); b++ {
 				x, y := ds[idx[a]], ds[idx[b]]
-				if HaversineM(x.Lat, x.Lng, y.Lat, y.Lng) > metMax {
+				if !x.CoToaDo || !y.CoToaDo || HaversineM(x.Lat, x.Lng, y.Lat, y.Lng) > metMax {
 					continue
 				}
 				if len(x.Dense) == 0 || len(x.Dense) != len(y.Dense) || cosine(x.Dense, y.Dense) < cosMin {

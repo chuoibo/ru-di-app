@@ -52,7 +52,8 @@ func floatOrNull(value *float64) pyjson.Value {
 }
 
 // GroupTaste is ApiService.group_taste: a pair whose chat consent is not active
-// has no readable taste; otherwise the active members' own answers, summed.
+// has no readable taste; a pair counts only members with `chia_gu` on;
+// otherwise the active members' own answers, summed.
 func GroupTaste(ctx context.Context, store repo.Repository, contextID string, now time.Time) (taste.Profile, error) {
 	consent, err := PairChatConsent(ctx, store, contextID, now)
 	if err != nil {
@@ -70,6 +71,24 @@ func GroupTaste(ctx context.Context, store repo.Repository, contextID string, no
 		if membership.State == "active" {
 			people = append(people, membership.PersonID)
 		}
+	}
+	// ADR-0034 §2.1–2.2: in a pair, only the taste of those who turned
+	// `chia_gu` on is summed; nobody sharing is unknown, not an empty sum.
+	sharers, err := PairTasteSharers(ctx, store, contextID, now)
+	if err != nil {
+		return taste.Profile{}, err
+	}
+	if sharers != nil {
+		shared := people[:0:0]
+		for _, person := range people {
+			if sharers[person] {
+				shared = append(shared, person)
+			}
+		}
+		if len(shared) == 0 {
+			return taste.Unknown(), nil
+		}
+		people = shared
 	}
 	interestRows, err := store.InterestsByPerson(ctx, people)
 	if err != nil {
@@ -146,8 +165,9 @@ func PlaceRow(row repo.Place) *pyjson.OrderedMap {
 	out.Set("group_fit", wireGroupFit(row.GroupFit))
 	out.Set("activities", JSONListOrEmpty(row.Activities))
 	out.Set("flag", textOrNull(row.Flag))
-	out.Set("lat", pyjson.Float(row.Lat))
-	out.Set("lng", pyjson.Float(row.Lng))
+	out.Set("lat", floatOrNull(row.Lat))
+	out.Set("lng", floatOrNull(row.Lng))
+	out.Set("geo_precision", textOrNull(row.GeoPrecision))
 	out.Set("description", textOrNull(row.Description))
 	out.Set("reviews", WireReviews(row.Reviews))
 	out.Set("source", pyjson.String(row.Source))
@@ -315,7 +335,9 @@ func ModelPlaceRows(ctx context.Context, store repo.Repository, group taste.Prof
 	if diemDen != nil {
 		filter.DestinationID = &diemDen.ID
 	}
-	rows, err := store.ListPlaces(ctx, filter)
+	// Slim rows: what reaches the model is ClientPlaces' nine fields, and
+	// scoring and promptsafety read none of the three columns left out.
+	rows, err := store.ListPlaceCards(ctx, filter)
 	if err != nil {
 		return nil, err
 	}

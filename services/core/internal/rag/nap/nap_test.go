@@ -232,7 +232,7 @@ func TestNhungHangTuChoiVectorSaiDoDai(t *testing.T) {
 func placeMau(id, desc string, reviews ...string) repo.Place {
 	d := desc
 	p := repo.Place{ID: id, DestinationID: "d-da-lat", Name: "Quán Nấm Đồi", Category: "quan-an-local", Kinds: []string{"lẩu"},
-		Lat: 11.94, Lng: 108.45, Traits: []string{}, Description: &d, Source: "osm"}
+		Lat: new(11.94), Lng: new(108.45), Traits: []string{}, Description: &d, Source: "osm"}
 	if len(reviews) > 0 {
 		type r struct {
 			Author string `json:"author"`
@@ -349,12 +349,15 @@ func TestTimTrung(t *testing.T) {
 	v2 := StubDense{N: 64}.vec("Tiệm Bánh Mây Xanh bánh ngọt")
 	lat, lng := 11.94, 108.45
 	ds := []UngVienTrung{
-		{ID: "a", DiemDen: "d", Lat: lat, Lng: lng, Nguon: "osm", Giau: 100, Dense: v1},
-		{ID: "b", DiemDen: "d", Lat: lat + 0.0004, Lng: lng, Nguon: "seed", Giau: 10, Dense: v1},   // ~44 m
-		{ID: "c", DiemDen: "d", Lat: lat + 0.0010, Lng: lng, Nguon: "curated", Giau: 1, Dense: v1}, // ~111 m from a, 67 m from b
-		{ID: "e", DiemDen: "d", Lat: lat, Lng: lng + 0.0001, Nguon: "osm", Giau: 5, Dense: v2},     // near, different
-		{ID: "f", DiemDen: "x", Lat: lat, Lng: lng, Nguon: "osm", Giau: 5, Dense: v1},              // other destination
-		{ID: "g", DiemDen: "d", Lat: lat + 0.0050, Lng: lng, Nguon: "osm", Giau: 5, Dense: v1},     // same text, ~550 m away
+		{ID: "a", DiemDen: "d", Lat: lat, Lng: lng, CoToaDo: true, Nguon: "osm", Giau: 100, Dense: v1},
+		{ID: "b", DiemDen: "d", Lat: lat + 0.0004, Lng: lng, CoToaDo: true, Nguon: "seed", Giau: 10, Dense: v1},   // ~44 m
+		{ID: "c", DiemDen: "d", Lat: lat + 0.0010, Lng: lng, CoToaDo: true, Nguon: "curated", Giau: 1, Dense: v1}, // ~111 m from a, 67 m from b
+		{ID: "e", DiemDen: "d", Lat: lat, Lng: lng + 0.0001, CoToaDo: true, Nguon: "osm", Giau: 5, Dense: v2},     // near, different
+		{ID: "f", DiemDen: "x", Lat: lat, Lng: lng, CoToaDo: true, Nguon: "osm", Giau: 5, Dense: v1},              // other destination
+		{ID: "g", DiemDen: "d", Lat: lat + 0.0050, Lng: lng, CoToaDo: true, Nguon: "osm", Giau: 5, Dense: v1},     // same text, ~550 m away
+		// Same text as a, no coordinates (Lat/Lng zero, not a location): never merged by distance.
+		{ID: "h", DiemDen: "d", Nguon: "seed", Giau: 5, Dense: v1},
+		{ID: "i", DiemDen: "d", Nguon: "curated", Giau: 5, Dense: v1},
 	}
 	got := TimTrung(ds, cfg.Trung.CosineToiThieu, cfg.Trung.KhoangCachM)
 	if fmt.Sprint(got) != "map[a:c b:c]" {

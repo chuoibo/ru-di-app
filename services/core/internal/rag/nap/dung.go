@@ -206,7 +206,7 @@ func (n Nap) LocTrung(docs []TaiLieuQuan) ([]TaiLieuQuan, map[string]string) {
 				dense = r.Dense
 			}
 		}
-		cands = append(cands, UngVienTrung{ID: d.HoSo.ID, DiemDen: d.HoSo.DiemDen, Lat: d.HoSo.Lat, Lng: d.HoSo.Lng,
+		cands = append(cands, UngVienTrung{ID: d.HoSo.ID, DiemDen: d.HoSo.DiemDen, Lat: d.HoSo.Lat, Lng: d.HoSo.Lng, CoToaDo: d.HoSo.CoToaDo,
 			Nguon: d.HoSo.Nguon, Giau: giau(d.HoSo), Dense: dense})
 	}
 	dup := TimTrung(cands, n.Cfg.Trung.CosineToiThieu, n.Cfg.Trung.KhoangCachM)

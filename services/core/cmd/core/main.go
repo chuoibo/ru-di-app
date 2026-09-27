@@ -22,9 +22,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"log/slog"
+	"mobile/services/core/internal/gzipjson"
+	"mobile/services/core/internal/janitor"
+	"mobile/services/core/internal/media/storage"
 	"net"
 	"net/http"
 	"os"
@@ -107,6 +111,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return migrateRagVector(getenv, stdout, stderr)
 	case "rag-indexer":
 		return ragIndexer(getenv, stderr)
+	case "purge-expired":
+		return purgeExpired(args[1:], getenv, stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -411,7 +417,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 
 	public := &http.Server{
 		Addr:              cfg.Listen,
-		Handler:           front,
+		Handler:           gzipjson.Middleware(front),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    1 << 20,
@@ -1144,4 +1150,59 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintln(stdout, "Đã áp dụng migration chat: feed thay đổi, hàng đợi job, engine AI nhóm và bảng số đo engine AI. Ownership route giữ nguyên.")
 	return 0
+}
+
+// purgeExpired removes expired OTP challenges, sessions and idempotency keys
+// (internal/janitor). `--every 6h` keeps running; SIGTERM stops it between
+// passes.
+func purgeExpired(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
+	set := flag.NewFlagSet("purge-expired", flag.ContinueOnError)
+	every := set.Duration("every", 0, "run repeatedly at this interval (0 = once)")
+	if err := set.Parse(args); err != nil {
+		return 2
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "purge-expired: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	// Files queued for deletion live under MOBILE_MEDIA_ROOT; without it the
+	// row purge still runs and the file reaper waits for a configured root.
+	var store janitor.ObjectStore
+	if getenv(storage.MediaRootEnv) != "" {
+		if s, err := storage.New(); err == nil {
+			store = s
+		}
+	}
+	for {
+		report, err := janitor.Purge(ctx, pool, time.Now().UTC())
+		if err == nil && store != nil {
+			var reaped janitor.ReapReport
+			reaped, err = janitor.ReapObjects(ctx, pool, store)
+			if err == nil && !reaped.Disabled {
+				fmt.Fprintf(stdout, "purge-expired: files deleted %d · already gone %d · still referenced %d · failed %d\n",
+					reaped.Deleted, reaped.Missing, reaped.Kept, reaped.Failed)
+			}
+		}
+		if err != nil && ctx.Err() == nil {
+			fmt.Fprintln(stderr, "purge-expired:", err)
+			if *every == 0 {
+				return 1
+			}
+		} else {
+			fmt.Fprintf(stdout, "purge-expired: otp %d · sessions %d · idempotency %d\n",
+				report.OTPChallenges, report.Sessions, report.IdempotencyKeys)
+		}
+		if *every == 0 {
+			return 0
+		}
+		select {
+		case <-ctx.Done():
+			return 0
+		case <-time.After(*every):
+		}
+	}
 }

@@ -7,10 +7,13 @@
 import type { ImageSource } from "expo-image";
 
 export interface Attribution {
-  /** Photographer or uploader, as the licence requires it to be named. */
-  author: string;
-  /** Licence short name, e.g. «CC BY-SA 4.0», or «Ảnh của nhóm». */
-  license: string;
+  /** Photographer or uploader, as the licence requires it to be named. Null
+   *  when the source cannot say: frames from the place feed are posts people
+   *  published, with no recorded author, and inventing one is a false credit. */
+  author: string | null;
+  /** Licence short name, e.g. «CC BY-SA 4.0», or «Ảnh của nhóm». Null for the
+   *  same reason: there is none, and saying there is would be a lie. */
+  license: string | null;
   /** Where the file came from; shown as text, opened by the screen if it wants. */
   source?: string;
   /**
@@ -35,8 +38,14 @@ export const TIEN_TO_MINH_HOA = "Ảnh minh hoạ: ";
  * that shows a credited picture prints this and nothing else, so the words
  * beside a 44dp thumbnail are the words under a full-width slot.
  */
-export function cauGhiCong(a: Attribution): string {
-  return `${a.prefix ?? ""}${a.author} · ${a.license}${a.source ? ` · ${a.source}` : ""}`;
+export function cauGhiCong(a: Attribution): string | null {
+  const parts = [a.author, a.license, a.source].filter(
+    (part): part is string => typeof part === "string" && part.trim() !== "",
+  );
+  // Nothing to credit is not the same as an empty credit. A frame that prints
+  // «Ảnh quanh đây: · » tells the reader there is an author it forgot to name.
+  if (parts.length === 0) return null;
+  return `${a.prefix ?? ""}${parts.join(" · ")}`;
 }
 
 /** What a frame prints when the address it was given did not load. */
@@ -61,7 +70,7 @@ export const CAU_ANH_HONG = "Chưa tải được ảnh";
 export type AnhCoGhiCong = { readonly ve: () => AnhDaMo };
 
 /** The address and the sentence, handed over together or not at all. */
-export type AnhDaMo = { readonly source: ImageSource; readonly ghiCong: string };
+export type AnhDaMo = { readonly source: ImageSource; readonly ghiCong: string | null };
 
 /** Mint a catalogue photograph. The only door into `AnhCoGhiCong`. */
 export function anhDanhMuc(source: ImageSource, nguon: Attribution): AnhCoGhiCong {

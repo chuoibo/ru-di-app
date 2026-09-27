@@ -447,10 +447,10 @@ async function sendRequest<T>(
   // real server: two identical `POST /expenses` with no header left two rows in
   // `expenses`, and the same two with a header left one.
   //
-  // Keys are scoped by `X-Actor-ID` server-side, falling back to a shared
-  // anonymous scope when the app does not send one (`/expenses` today). UUIDs
-  // do not collide across that shared scope, so this is safe, but it is the
-  // reason a key must stay a UUID rather than becoming anything readable.
+  // Keys are scoped by the actor server-side, falling back to a shared
+  // anonymous scope for the few routes this app calls as nobody (sign-in).
+  // UUIDs do not collide across that shared scope, so this is safe, but it is
+  // the reason a key must stay a UUID rather than becoming anything readable.
   if (attempt) headers["Idempotency-Key"] = attempt.key;
 
   let response: Response;
@@ -717,14 +717,15 @@ export async function previewSplit(
     items: input.items,
     occurredAt: attempt.at,
   });
-  // No `contexts`, and no `actorId` to hang one on: `POST /expenses` is the
-  // one write this client sends anonymously, on purpose (see `callAnonymous`,
-  // on the shared idempotency scope). The group travels in the body, which is
-  // where the allocator reads it. `confirm` is where the server starts
-  // checking it.
-  const result = await translatedAnonymous<ExpenseResponse>(ALLOCATOR_REFUSALS, "/expenses", {
+  // As the payer, claiming the group: `POST /expenses` writes a row into that
+  // group, so the server requires a signed-in member of it (it used to take
+  // anyone, anonymous included). In `prod` the bearer session decides who
+  // this is; the headers only matter in `dev`.
+  const result = await translatedAsActor<ExpenseResponse>(ALLOCATOR_REFUSALS, "/expenses", {
     body,
     attempt,
+    actorId: input.payerId,
+    contexts: input.contextId,
   });
   return {
     allocations: result.allocation.allocations,
@@ -749,10 +750,12 @@ export async function proposeSplit(
     items,
     occurredAt: attempt.at,
   });
-  // Anonymous like `previewSplit`, and for the reason spelled out there.
-  const result = await translatedAnonymous<ExpenseResponse>(ALLOCATOR_REFUSALS, "/expenses", {
+  // As the advancer, like `previewSplit`, and for the reason spelled out there.
+  const result = await translatedAsActor<ExpenseResponse>(ALLOCATOR_REFUSALS, "/expenses", {
     body,
     attempt,
+    actorId: draft.advancerId,
+    contexts: contextId,
   });
 
   return {

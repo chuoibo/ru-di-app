@@ -45,11 +45,12 @@ import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
 import { CUA_FIXTURE_DEV } from "../../cua-fixture";
 import { datOtpDangCho } from "../../otp-dang-cho";
 import { typography, useRudiTheme } from "../../theme";
-import { DemoBadge, Field, Logo, RudiButton, RudiScreen } from "../../ui";
+import { DemoBadge, Logo, RudiButton, RudiScreen } from "../../ui";
 import { CoverBand } from "../../ui/CoverBand";
 import { StampButton } from "../../ui/StampButton";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { useKeyboardOpen } from "../../ui/useKeyboardOpen";
+import { ONhapMuc } from "../../ui/ONhapMuc";
 
 type Trang = { pha: "nhap" } | { pha: "dang-gui" } | { pha: "hong"; loi: string };
 
@@ -148,12 +149,13 @@ export function LoginScreen() {
           buttons below it used to sit on two different grids. */}
       <View style={styles.column}>
       <View style={styles.form}>
-        <Field
+        {/* The number written on one pen line, large, as on an envelope (ADR-0037 D1, plan S7). */}
+        <ONhapMuc
           accessibilityLabel="Ô số điện thoại"
           autoCapitalize="none"
           autoComplete="tel"
+          co="lon"
           editable={!dangGui}
-          icon="call-outline"
           keyboardType="phone-pad"
           label="Số điện thoại"
           onChangeText={(text) => {

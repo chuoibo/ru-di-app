@@ -115,10 +115,16 @@ func Chen(t *testing.T, pool *pgxpool.Pool, p repo.Place) {
 	if p.Reviews != nil {
 		reviews = string(p.Reviews)
 	}
-	_, err := pool.Exec(context.Background(), `INSERT INTO places(id,destination_id,name,category,kinds,address,lat,lng,price_min_vnd,price_max_vnd,open_hours,traits,activities,description,reviews,source,source_ref,license)
-		VALUES($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12::jsonb,$13::jsonb,$14,$15::jsonb,$16,$17,$18)`,
+	// A point must state its precision (migration b3f19c7d2a04); a fixture
+	// row with coordinates is a specific point, as every pre-feed row was.
+	geo := p.GeoPrecision
+	if geo == nil && p.Lat != nil {
+		geo = new("rooftop")
+	}
+	_, err := pool.Exec(context.Background(), `INSERT INTO places(id,destination_id,name,category,kinds,address,lat,lng,price_min_vnd,price_max_vnd,open_hours,traits,activities,description,reviews,source,source_ref,license,geo_precision)
+		VALUES($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12::jsonb,$13::jsonb,$14,$15::jsonb,$16,$17,$18,$19)`,
 		p.ID, p.DestinationID, p.Name, p.Category, string(kinds), p.Address, p.Lat, p.Lng, p.PriceMinVND, p.PriceMaxVND,
-		p.OpenHours, string(traits), activities, p.Description, reviews, p.Source, p.SourceRef, p.License)
+		p.OpenHours, string(traits), activities, p.Description, reviews, p.Source, p.SourceRef, p.License, geo)
 	if err != nil {
 		t.Fatalf("%s: %v", p.ID, err)
 	}

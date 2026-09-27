@@ -185,88 +185,88 @@ steps:
     request:
       method: GET
       path: '/papers/{{paper}}'
-  - id: seen_owner_drafts
-    as: owner
+  - id: seen_mate_drafts
+    as: mate
     request:
       method: POST
       path: '/contexts/{{pair}}/papers/draft'
     bind:
       paper_2: {from: body, pointer: /id, class: uuid}
-  - id: seen_owner_sends
-    as: owner
+  - id: seen_mate_sends
+    as: mate
     request:
       method: POST
       path: '/papers/{{paper_2}}/send'
       headers:
         content-type: 'application/json'
       body_raw: '{"version":1}'
-  - id: mate_views_second
-    as: mate
+  - id: owner_views_second
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_2}}/versions/1/viewed'
-  - id: owner_withdraws_seen
-    as: owner
+  - id: mate_withdraws_seen
+    as: mate
     request:
       method: POST
       path: '/papers/{{paper_2}}/withdraw'
       headers:
         content-type: 'application/json'
       body_raw: '{"version":1}'
-  - id: mate_skips_second
-    as: mate
+  - id: owner_skips_second
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_2}}/skip'
-  - id: countered_owner_drafts
-    as: owner
+  - id: countered_mate_drafts
+    as: mate
     request:
       method: POST
       path: '/contexts/{{pair}}/papers/draft'
     bind:
       paper_3: {from: body, pointer: /id, class: uuid}
-  - id: countered_owner_sends
-    as: owner
+  - id: countered_mate_sends
+    as: mate
     request:
       method: POST
       path: '/papers/{{paper_3}}/send'
       headers:
         content-type: 'application/json'
       body_raw: '{"version":1}'
-  - id: mate_counter_proposes
-    as: mate
+  - id: owner_counter_proposes
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_3}}/versions/1/responses'
       headers:
         content-type: 'application/json'
       body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
-  - id: owner_withdraws_countered
-    as: owner
+  - id: mate_withdraws_countered
+    as: mate
     request:
       method: POST
       path: '/papers/{{paper_3}}/withdraw'
       headers:
         content-type: 'application/json'
       body_raw: '{"version":2}'
-  - id: mate_withdraws_counter_stale
-    as: mate
+  - id: owner_withdraws_counter_stale
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_3}}/withdraw'
       headers:
         content-type: 'application/json'
       body_raw: '{"version":1}'
-  - id: mate_withdraws_counter
-    as: mate
+  - id: owner_withdraws_counter
+    as: owner
     request:
       method: POST
       path: '/papers/{{paper_3}}/withdraw'
       headers:
         content-type: 'application/json'
       body_raw: '{"version":2}'
-  - id: owner_reads_withdrawn_counter
-    as: owner
+  - id: mate_reads_withdrawn_counter
+    as: mate
     request:
       method: GET
       path: '/papers/{{paper_3}}'

@@ -61,9 +61,9 @@ func TestRagCLILifecycle(t *testing.T) {
 	}
 	for _, stmt := range []string{
 		`INSERT INTO destinations(id,name,lat,lng,bbox_south,bbox_west,bbox_north,bbox_east,sort_order) VALUES ('d-hoi-an','Hội An',15.88,108.33,15.84,108.28,15.92,108.38,10)`,
-		`INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,price_min_vnd,price_max_vnd,open_hours,source) VALUES
-		 ('ha-cli-mot','d-hoi-an','Quán Thử Một','cafe','["cà phê"]',15.88,108.33,20000,40000,'07:00 – 22:00','seed'),
-		 ('ha-cli-hai','d-hoi-an','Quán Thử Hai','quan-an-local','["cơm gà"]',15.88,108.33,40000,80000,'10:00 – 21:00','seed')`,
+		`INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,price_min_vnd,price_max_vnd,open_hours,source) VALUES
+		 ('ha-cli-mot','d-hoi-an','Quán Thử Một','cafe','["cà phê"]',15.88,108.33,'rooftop',20000,40000,'07:00 – 22:00','seed'),
+		 ('ha-cli-hai','d-hoi-an','Quán Thử Hai','quan-an-local','["cơm gà"]',15.88,108.33,'rooftop',40000,80000,'10:00 – 21:00','seed')`,
 	} {
 		if _, err := pool.Exec(ctx, stmt); err != nil {
 			t.Fatal(err)

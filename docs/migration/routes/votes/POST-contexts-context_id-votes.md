@@ -111,3 +111,9 @@ Thứ tự từ ngoài vào (đo trên stack tham chiếu):
 - `outing_not_in_context` cho biết một id chuyến đi có tồn tại ở nhóm khác (khác 404 `outing_not_found`); là hành vi đo được, không phải lựa chọn của bản Go.
 - `created_at` là đồng hồ Python; phiếu tạo trong cùng một microsecond sẽ xếp theo `id` ngẫu nhiên ở route list. Harness không tạo được hai request cùng microsecond.
 - Microsecond bằng 0: pydantic ghi `...:SSZ` không phần lẻ; normaliser coi đó là shape `f0`, bản Go phải làm giống (xác suất gặp trong kịch bản xấp xỉ 10^-6 mỗi mốc, không cố ý phủ).
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `POST /contexts/{context_id}/votes`: đổi thật: `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor.

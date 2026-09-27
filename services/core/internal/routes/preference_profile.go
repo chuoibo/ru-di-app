@@ -43,7 +43,7 @@ func preferenceProfile() Route {
 			return endpoint.Reply{}, &endpoint.Refusal{Problem: *refused}
 		}
 
-		places, err := store.ListPlaces(ctx, repo.PlaceFilter{})
+		places, err := store.ListPlaceCards(ctx, repo.PlaceFilter{})
 		if err != nil {
 			return endpoint.Reply{}, err
 		}

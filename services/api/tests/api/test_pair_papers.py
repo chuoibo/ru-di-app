@@ -29,6 +29,7 @@ from .pair_helpers import (
     TOI,
     TUAN,
     TUAN_SAU,
+    dong_thuan,
     head,
     lap_so,
     noi_dung,
@@ -436,6 +437,54 @@ def test_the_very_first_invitation_happens_before_any_notebook(client, repositor
     assert stored["cycle_id"] is None, "tờ tạm: chưa thuộc chu kỳ nào"
 
 
+def test_opening_the_notebook_files_the_open_invitation_as_its_first_page(
+    client, clock, repository
+):
+    """ADR-0038 §2.1 (B1 of the 24/09 QC). The invitation being written before
+    the notebook existed becomes the notebook's first page when both agree.
+
+    Left temporary, only its owner could read it while it still held the one
+    open sheet: the other person was refused a sheet they could not see until
+    the week ran out. Filed under the cycle, it is an ordinary sheet of the
+    week -- still its owner's draft, and theirs to send.
+    """
+    import uuid
+
+    paper_id = _draft(client)
+    clock(timedelta(hours=1))
+    lap_so(client)
+    stored = repository.pair_papers[uuid.UUID(paper_id)]
+    cycle_id = repository.get_pair_notebook(CAP).cycle_id
+    assert cycle_id is not None
+    assert stored["cycle_id"] == cycle_id, "lời rủ tạm không được nhận vào sổ vừa mở"
+    assert repository.get_pair_paper(uuid.UUID(paper_id)).is_temporary is False
+    # Still one open sheet, now one the notebook knows about.
+    refused = client.post(f"/contexts/{CAP}/papers/draft", headers=head(NGUOI_KIA))
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["code"] == "paper_wrong_state"
+    # Its owner sends it and it reaches the other person like any sheet.
+    assert _patch(client, paper_id).status_code == 200
+    assert _send(client, paper_id).status_code == 200
+    read = _read(client, paper_id, actor=NGUOI_KIA)
+    assert read.status_code == 200, read.text
+    assert read.json()["state"] == "da_gui"
+
+
+def test_an_expired_invitation_is_not_filed_when_the_notebook_opens(
+    client, clock, repository
+):
+    """Only an open sheet is adopted: last week's unsent invitation is history
+    and stays temporary; the notebook starts with nothing open."""
+    import uuid
+
+    paper_id = _draft(client)
+    clock(TUAN_SAU)
+    lap_so(client)
+    assert repository.pair_papers[uuid.UUID(paper_id)]["cycle_id"] is None
+    fresh = client.post(f"/contexts/{CAP}/papers/draft", headers=head(NGUOI_KIA))
+    assert fresh.status_code == 201, fresh.text
+
+
 def test_a_notebook_half_open_takes_no_sheet(client):
     """One person has asked and the other has not answered: not «temporary»,
     and not open either. A sheet here would be a notebook opened by one."""
@@ -658,6 +707,7 @@ _THAN = {
     ("POST", "/papers/{paper_id}/withdraw"): {"version": 1},
     ("POST", "/papers/{paper_id}/versions/{version}/responses"): {"kind": "dong_y"},
     ("POST", "/papers/{paper_id}/keeps"): {"line": "Một dòng."},
+    ("PUT", "/contexts/{context_id}/notebook/week-role"): {"lo": "toi"},
 }
 
 
@@ -707,7 +757,7 @@ def test_every_pair_route_refuses_a_stranger(client):
                 "paper_not_found",
             ), f"{method} {path}: {answer.text}"
             swept += 1
-    assert swept == 19, f"quét được {swept} cửa, phải là 19"
+    assert swept == 20, f"quét được {swept} cửa, phải là 20"
 
 
 def test_the_list_carries_the_one_line_a_closed_row_shows(client, clock):
@@ -858,3 +908,73 @@ def test_a_sheet_that_was_sent_stays_readable_to_both_after_it_closes(client):
     assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 200
     theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
     assert paper_id in [p["id"] for p in theirs]
+
+
+# ADR-0034 §2.2: Nếp uses the tastes of whoever shared them, and nobody else's.
+
+
+def _doi_co_gu(client, repository):
+    repository.person_interests[TOI] = {"cafe", "game"}
+    repository.person_interests[NGUOI_KIA] = {"cafe", "nightlife"}
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+
+
+def test_a_taste_nobody_shared_changes_nothing_in_the_draft(client, repository):
+    _doi_co_gu(client, repository)
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["viec"] == "Ăn tối"
+    assert first["ly_do"] is None
+
+
+def test_the_other_persons_shared_taste_names_the_stop_and_the_reason(client, repository):
+    _doi_co_gu(client, repository)
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    first = _read(client, _draft(client)).json()["versions"][0]
+    stop = first["content"]["chang"][0]
+    assert stop["viec"] == "Cà phê", "gu người kia đã chia: Cafe"
+    assert stop.get("place_id") is None, "chưa có buổi nào để biết thành phố, nên không bịa chỗ"
+    assert first["ly_do"] == "Người Ấy thích Cafe, nên Nếp phác theo đó."
+
+
+def test_both_shared_uses_what_they_have_in_common_first(client, repository):
+    _doi_co_gu(client, repository)
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(TOI))
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["viec"] == "Cà phê"
+    assert first["ly_do"].startswith("Hai bạn cùng thích Cafe")
+
+
+# ADR-0034 §2.5: a ceiling per person per week.
+
+
+def test_a_fourth_sheet_in_one_week_is_refused_and_the_next_week_is_open(client, clock):
+    lap_so(client)
+    for _ in range(3):
+        paper_id = _draft(client)
+        skipped = client.post(f"/papers/{paper_id}/skip", headers=head(TOI))
+        assert skipped.status_code == 200, skipped.text
+    fourth = client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI))
+    assert fourth.status_code == 409, fourth.text
+    assert fourth.json()["code"] == "paper_week_quota"
+    theirs = client.post(f"/contexts/{CAP}/papers/draft", headers=head(NGUOI_KIA))
+    assert theirs.status_code == 201, "hạn mức là của từng người"
+    clock(TUAN_SAU)
+    client.post(f"/papers/{theirs.json()['id']}/skip", headers=head(NGUOI_KIA))
+    assert client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI)).status_code == 201
+
+
+# ADR-0034 §2.4: the baton passes when the usual lead opened two weeks running.
+
+
+def test_the_week_passes_to_the_other_after_two_weeks_opened_by_the_same_person(client, clock):
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    for _ in range(2):
+        paper_id = _draft(client)
+        assert _send(client, paper_id).status_code == 200
+        clock(timedelta(days=7))
+    role = client.get(f"/contexts/{CAP}/notebook", headers=head(TOI)).json()["week_role"]
+    assert role["cach"] == "luot", role
+    assert role["nguoi_lo"] == [str(NGUOI_KIA)]

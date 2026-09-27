@@ -17,11 +17,14 @@ import (
 )
 
 // proposeExpense is POST /expenses (routes/expenses.py propose_expense,
-// ApiService.propose_expense). The route declares no get_actor, so it serves
-// anyone, anonymous callers included and in prod too, and reads no permission
-// table. The allocator runs before the context is looked up: a bad split for
-// a group that does not exist is the allocator's 422. The context is proven
-// only by the expenses row's foreign key (404). Nothing reaches the ledger.
+// ApiService.propose_expense). The route declares get_actor, so the caller is
+// signed in before the handler runs; then the allocator (422), then
+// confirm_expense_proposal with is_group_member for the named group (403),
+// then the write. It used to serve anyone, anonymous included, which let a
+// stranger write rows into any group and learn from 201-versus-404 whether a
+// group id exists; a missing group now answers like one the caller is not in.
+// The foreign key's 404 stays for a group deleted between the check and the
+// write. Nothing reaches the ledger.
 func proposeExpense() Route {
 	return Route{ID: "POST /expenses", Status: 201, Serve: func(ctx context.Context, call *endpoint.Call) (endpoint.Reply, error) {
 		body, err := bodyModel(call, "request")
@@ -41,6 +44,9 @@ func proposeExpense() Route {
 		}
 		store, err := groupStore(ctx, call)
 		if err != nil {
+			return endpoint.Reply{}, err
+		}
+		if err := requireGroupMember(ctx, call, store, "confirm_expense_proposal", proposal.contextID); err != nil {
 			return endpoint.Reply{}, err
 		}
 		identity, err := store.CreateExpense(ctx, proposal.contextID)

@@ -43,9 +43,12 @@ type HoSoQuan struct {
 	// Lich is nil when the hours are missing or unreadable (unknown, which is
 	// not closed). giomo reads a structured opening-hours format; it is a
 	// format parser, not a reading of meaning.
-	Lich    *giomo.Lich
-	Lat     float64
-	Lng     float64
+	Lich *giomo.Lich
+	Lat  float64
+	Lng  float64
+	// CoToaDo is false when the place has no coordinates; dedupe then never
+	// merges it by distance.
+	CoToaDo bool
 	Nguon   string // seed | osm | curated: dedupe precedence
 	License string
 	// HoSo and DanhGia are the two facets' safe text, NFC.
@@ -72,8 +75,11 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 	}
 	h = HoSoQuan{
 		ID: p.ID, DiemDen: p.DestinationID, LoaiCho: p.Category,
-		GiaMin: p.PriceMinVND, GiaMax: p.PriceMaxVND, Lat: p.Lat, Lng: p.Lng,
+		GiaMin: p.PriceMinVND, GiaMax: p.PriceMaxVND,
 		Nguon: p.Source, CachLy: len(report.CachLy),
+	}
+	if p.Lat != nil && p.Lng != nil {
+		h.Lat, h.Lng, h.CoToaDo = *p.Lat, *p.Lng, true
 	}
 	h.Ten = nfc(catRune(chu(safe, "name"), maxTen))
 	h.License = chu(safe, "license")
@@ -115,7 +121,8 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 		GiaMin, GiaMax                               *int64
 		Gio                                          string
 		Lat, Lng                                     float64
-	}{h.ID, h.DiemDen, h.LoaiCho, h.HoSo, h.DanhGia, h.License, h.GiaMin, h.GiaMax, chu(safe, "open_hours"), h.Lat, h.Lng})
+		CoToaDo                                      bool
+	}{h.ID, h.DiemDen, h.LoaiCho, h.HoSo, h.DanhGia, h.License, h.GiaMin, h.GiaMax, chu(safe, "open_hours"), h.Lat, h.Lng, h.CoToaDo})
 	h.NguonHash = sha256.Sum256(canon)
 	return h, false
 }

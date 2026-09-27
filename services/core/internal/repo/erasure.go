@@ -236,7 +236,8 @@ func (r Repository) ErasePerson(ctx context.Context, personID string, now time.T
 	}
 
 	images, err := r.Q.Query(ctx,
-		`SELECT uploaded_images.id, uploaded_images.storage_key, uploaded_images.context_id,
+		`SELECT uploaded_images.id, uploaded_images.storage_key, uploaded_images.content_sha256,
+		        uploaded_images.context_id,
 		        uploaded_images.owner_person_id, uploaded_images.uploaded_by_id, uploaded_images.purpose,
 		        uploaded_images.content_type, uploaded_images.byte_size, uploaded_images.width, uploaded_images.height,
 		        uploaded_images.created_at
@@ -247,7 +248,7 @@ func (r Repository) ErasePerson(ctx context.Context, personID string, now time.T
 	}
 	for images.Next() {
 		var m UploadedImage
-		if err := images.Scan(&m.ID, &m.StorageKey, &m.ContextID, &m.OwnerPersonID, &m.UploadedByID, &m.Purpose,
+		if err := images.Scan(&m.ID, &m.StorageKey, new(*string), &m.ContextID, &m.OwnerPersonID, &m.UploadedByID, &m.Purpose,
 			&m.ContentType, &m.ByteSize, &m.Width, &m.Height, &m.CreatedAt); err != nil {
 			images.Close()
 			return ErasureReport{}, err

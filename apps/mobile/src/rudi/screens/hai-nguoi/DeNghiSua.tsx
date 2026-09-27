@@ -9,9 +9,23 @@ import { ngayDocDuoc } from "../../to-giay/ngay";
 import { chuanGio, loiGio, loiThuTu, loiViec, ngayChonDuoc, ngayNgan, viecTheoLoai } from "../../to-giay/sua-to";
 import { type NoiDungTo, type ToGiay, khacGi, phienBan } from "../../to-giay/to-giay";
 import { useTenCho } from "../../to-giay/useTenCho";
-import { Chip, Heading, ListRow, RudiButton } from "../../ui";
-import { Field } from "../../ui/Field";
+import { Heading, ListRow, RudiButton } from "../../ui";
+import { KyHoa } from "../../ui/art/KyHoa";
+import { BanXoay } from "../../ui/BanXoay";
+import { LaLich } from "../../ui/LaLich";
+import { ONhapMuc } from "../../ui/ONhapMuc";
 import { Sheet } from "../../ui/Sheet";
+
+/** «19:30» → minutes from midnight; anything else is no hour yet. */
+function phutCua(gio: string): number | null {
+  const khop = /^(\d{2}):(\d{2})$/.exec(chuanGio(gio));
+  return khop ? Number(khop[1]) * 60 + Number(khop[2]) : null;
+}
+
+/** Minutes from midnight → «19:30», as the wire spells an hour. */
+function gioCua(phut: number): string {
+  return `${String(Math.floor(phut / 60)).padStart(2, "0")}:${String(phut % 60).padStart(2, "0")}`;
+}
 
 /**
  * «Đề nghị sửa»: a new version, not an edit (spec §3.3 rule 3). The sheet
@@ -28,6 +42,11 @@ import { Sheet } from "../../ui/Sheet";
  * the hours are checked as the server will check them (`to-giay/sua-to.ts`);
  * and the place a stop points at is kept, shown, and can be changed from the
  * catalogue -- it used to be dropped silently whenever the line was edited.
+ *
+ * UI v3 (ADR-0037, plan S2): written on the sheet rather than into boxes. The
+ * days are a row of calendar leaves; the main stop's hour is the dial (tap its
+ * middle to type it); every line is written on a ruled line; a chosen place
+ * is its small sketch card; «Vì sao đổi» is a note in the margin.
  */
 export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: ToGiay; open: boolean; onClose: () => void; onGui: (content: NoiDungTo, lyDo: string | null) => void; /** A catalogue place to start the main stop at («Rủ … tới đây»). */ choGoiY?: string; testID?: string }) {
   const { colors, space } = useRudiTheme();
@@ -112,9 +131,13 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
   const oCho = (i: 0 | 1, id: string | null, dat: (v: string | null) => void) => (
     <View style={styles.cho}>
       {id ? (
-        <Text numberOfLines={1} style={[typography.caption, styles.tenCho, { color: colors.inkSoft }]}>
-          Ở {tenCua(id) ?? "một chỗ trong danh mục"}
-        </Text>
+        // The place a stop points at, as its small sketch card: a place, not a string.
+        <View style={styles.theCho}>
+          <KyHoa gon style={styles.kyHoaNho} />
+          <Text numberOfLines={1} style={[typography.caption, styles.tenCho, { color: colors.inkSoft }]}>
+            Ở {tenCua(id) ?? "một chỗ trong danh mục"}
+          </Text>
+        </View>
       ) : null}
       <RudiButton
         compact
@@ -143,34 +166,22 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
           <Text style={[typography.label, { color: colors.ink }]}>Ngày</Text>
           <ScrollView contentContainerStyle={styles.hangChip} horizontal showsHorizontalScrollIndicator={false} testID="de-nghi-sua-ngay">
             {ngayDuoc.map((d) => (
-              <Chip accessibilityLabel={ngayDocDuoc(d)} key={d} label={ngayNgan(d)} onPress={() => setNgay(d)} selected={d === ngay} />
+              <LaLich chon={d === ngay} key={d} ngan={ngayNgan(d)} nhan={ngayDocDuoc(d)} onPress={() => setNgay(d)} />
             ))}
           </ScrollView>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>{ngayDocDuoc(ngay)}</Text>
         </View>
-        <View style={styles.hang}>
-          <View style={styles.gio}>
-            <Field
-              accessibilityLabel="Giờ chỗ chính"
-              error={gio1.trim() ? loi1 : null}
-              keyboardType="numbers-and-punctuation"
-              label="Giờ"
-              maxLength={5}
-              onBlur={() => setGio1(chuanGio(gio1))}
-              onChangeText={setGio1}
-              placeholder="hh:mm"
-              testID="de-nghi-sua-gio"
-              value={gio1}
-            />
-          </View>
+        {/* The main stop: its hour on the dial, its line written beside it. */}
+        <View style={styles.hangChinh}>
+          <BanXoay co={148} nhan="Giờ chỗ chính" oLabel="Giờ chỗ chính" onChange={(p) => setGio1(gioCua(p))} phut={phutCua(gio1)} testID="de-nghi-sua-gio" />
           <View style={styles.viec}>
-            <Field error={loiViec1} label="Chỗ chính" onChangeText={setViec1} placeholder="Ăn tối, một quán chưa đi" testID="de-nghi-sua-viec" value={viec1} />
+            <ONhapMuc error={loiViec1 ?? (gio1.trim() ? loi1 : null)} label="Chỗ chính" onChangeText={setViec1} placeholder="Ăn tối, một quán chưa đi" testID="de-nghi-sua-viec" value={viec1} />
           </View>
         </View>
         {oCho(0, cho1, setCho1)}
         <View style={styles.hang}>
           <View style={styles.gio}>
-            <Field
+            <ONhapMuc
               accessibilityLabel="Giờ đi tiếp"
               error={gio2.trim() ? loi2 : null}
               keyboardType="numbers-and-punctuation"
@@ -183,7 +194,7 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
             />
           </View>
           <View style={styles.viec}>
-            <Field error={loiViec2} label="Đi tiếp (tuỳ chọn)" onChangeText={setViec2} placeholder="Đi bộ, rồi chè" testID="de-nghi-sua-viec-2" value={viec2} />
+            <ONhapMuc error={loiViec2} label="Đi tiếp (tuỳ chọn)" onChangeText={setViec2} placeholder="Đi bộ, rồi chè" testID="de-nghi-sua-viec-2" value={viec2} />
           </View>
         </View>
         {viec2.trim() || cho2 ? oCho(1, cho2, setCho2) : null}
@@ -206,7 +217,10 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
             ))}
           </View>
         ) : null}
-        <Field label="Vì sao đổi (tuỳ chọn)" multiline onChangeText={setLyDo} placeholder="Tối thứ Bảy mưa." value={lyDo} />
+        {/* Why it changed: a note in the margin, on its own ruled lines. */}
+        <View style={[styles.le, { borderLeftColor: colors.lineStrong }]}>
+          <ONhapMuc label="Vì sao đổi (tuỳ chọn)" multiline numberOfLines={2} onChangeText={setLyDo} placeholder="Tối thứ Bảy mưa." value={lyDo} />
+        </View>
         {doi.length > 0 ? (
           <View style={[styles.doi, { borderLeftColor: colors.lineStrong }]} testID="de-nghi-sua-khac-gi">
             <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhap ? "Bản phác sẽ đổi:" : "Người ấy sẽ thấy:"}</Text>
@@ -231,7 +245,11 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
 const styles = StyleSheet.create({
   noiDung: { paddingBottom: 8 },
   khoi: { gap: 7 },
-  hangChip: { gap: 8, paddingVertical: 2 },
+  hangChip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
+  hangChinh: { flexDirection: "row", gap: 14, alignItems: "center" },
+  theCho: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 },
+  kyHoaNho: { width: 64 },
+  le: { borderLeftWidth: 2, paddingLeft: 12 },
   hang: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
   gio: { width: 104 },
   viec: { flex: 1 },

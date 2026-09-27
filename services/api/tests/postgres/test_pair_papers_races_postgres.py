@@ -526,9 +526,10 @@ def test_chot_ghi_chang_da_dong_y_vao_keo_va_dat_ten_theo_cho(
     )
     first.execute(
         text(
-            "INSERT INTO places (id, destination_id, name, category, lat, lng, source,"
-            " created_at, updated_at) VALUES ('p-lau-ga-mau', 'd-mau-cap',"
-            " 'Lẩu gà lá é (dữ liệu mẫu)', 'food', 10.77, 106.7, 'seed', :t, :t)"
+            "INSERT INTO places (id, destination_id, name, category, lat, lng,"
+            " geo_precision, source, created_at, updated_at) VALUES ('p-lau-ga-mau',"
+            " 'd-mau-cap', 'Lẩu gà lá é (dữ liệu mẫu)', 'food', 10.77, 106.7,"
+            " 'rooftop', 'seed', :t, :t)"
         ),
         {"t": NOW},
     )
@@ -544,13 +545,17 @@ def test_chot_ghi_chang_da_dong_y_vao_keo_va_dat_ten_theo_cho(
                 ngay=(NOW + timedelta(days=3)).date(),
                 chang=[
                     PaperStopInput(gio="19:00", viec="Ăn lẩu", place_id="p-lau-ga-mau"),
-                    PaperStopInput(gio="21:30", viec="Đi bộ hồ", place_id="p-da-dong-cua"),
+                    PaperStopInput(
+                        gio="21:30", viec="Đi bộ hồ", place_id="p-da-dong-cua"
+                    ),
                 ],
             )
         ),
         _actor(a, context_id),
     )
-    service.send_pair_paper(drafted.id, PaperSendRequest(version=1), _actor(a, context_id))
+    service.send_pair_paper(
+        drafted.id, PaperSendRequest(version=1), _actor(a, context_id)
+    )
     chot = service.respond_pair_paper(
         drafted.id, 1, PaperAgreeRequest(kind="dong_y"), _actor(b, context_id)
     )

@@ -69,6 +69,7 @@ test("tường rỗng không khẳng định người ấy chưa đăng gì", ()
 test("quan hệ nói bằng ngôi thứ hai, không lộ cách máy chủ suy ra", () => {
   assert.equal(cauQuanHe("self"), "Hồ sơ của bạn");
   assert.equal(cauQuanHe("friend"), "Bạn bè");
+  assert.equal(cauQuanHe("couple"), "Một đôi", "ADR-0034: chỉ hai người trong đôi thấy");
   assert.equal(cauQuanHe("groupmate"), "Cùng nhóm");
 });
 

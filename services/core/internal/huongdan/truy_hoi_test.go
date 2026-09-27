@@ -269,24 +269,35 @@ func TestBoVangKhongSua(t *testing.T) {
 // lại được không» and «xem lại các buổi đã đi» are the price of pinning by
 // share (tyLeGhim). On duongManKhac four miss.
 //
+// Re-pinned at the merge of origin/main into the AI v2 branch (2026-09-27):
+// the ranker did not change, the manual did. Main redrew «Kèo mới», «Nhóm
+// mới» and the itinerary modes («Hành trình» is now «Bản đồ», «Giờ» is the
+// dial «Giờ chặng»), so keo.md, tao-keo.md and tin-nhan.md were rewritten to
+// the labels the app now shows and every section's terms moved. duongVang:
+// recall@5 unchanged on every group, MRR 0.9136 → 0.9127 (co_dau 0.8883 →
+// 0.8859, teen 0.7354 → 0.7369); «checkin o dau» now hits and «ko bik bo
+// fieu o dau» misses, still five misses. duongManKhac: recall@5 0.9130 →
+// 0.9348 (co_dau 0.8000 → 0.8667), MRR 0.7672 → 0.7658 (co_dau 0.7444 →
+// 0.7556, teen 0.6458 → 0.6293); three miss. duongTruyVan did not move.
+//
 // The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
 // duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
 // 0.3526 (teen 0.8214 / 0.2905).
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9136"},
-		"co_dau":    {"0.9405", "0.8883"},
+		"":          {"0.9505", "0.9127"},
+		"co_dau":    {"0.9405", "0.8859"},
 		"khong_dau": {"1.0000", "1.0000"},
-		"teen":      {"0.8333", "0.7354"},
+		"teen":      {"0.8333", "0.7369"},
 	},
 	duongTruyVan: {
 		"": {"1.0000", "0.8942"},
 	},
 	duongManKhac: {
-		"":          {"0.9130", "0.7672"},
-		"co_dau":    {"0.8000", "0.7444"},
+		"":          {"0.9348", "0.7658"},
+		"co_dau":    {"0.8667", "0.7556"},
 		"khong_dau": {"1.0000", "0.8873"},
-		"teen":      {"0.9286", "0.6458"},
+		"teen":      {"0.9286", "0.6293"},
 	},
 }
 

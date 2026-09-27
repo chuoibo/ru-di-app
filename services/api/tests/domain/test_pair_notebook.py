@@ -29,7 +29,8 @@ def cho_phep(person: str, purpose: str, **over) -> dict:
 
 def test_tu_vung_dong():
     assert pair_notebook.CYCLE_STATES == ("pending", "active", "closed")
-    assert pair_notebook.CONSENT_PURPOSES == ("lap_so", "bat_doi", "doc_chat")
+    assert pair_notebook.CONSENT_PURPOSES == ("lap_so", "bat_doi", "doc_chat", "chia_gu")
+    assert pair_notebook.PER_PERSON_PURPOSES == ("chia_gu",)
     assert pair_notebook.CONSTRAINT_KINDS == ("khong_an_duoc", "dung")
 
 
@@ -201,3 +202,107 @@ def test_de_nghi_da_hoan_tat_khong_het_han():
     chua_xong = [cho_phep(p, "bat_doi", proposal_id="PR-1", proposal_expires_at=qua_han) for p in HAI_NGUOI]
     assert pair_notebook.granted_purposes(xong, HAI_NGUOI, now=NOW) == {"bat_doi"}
     assert pair_notebook.granted_purposes(chua_xong, HAI_NGUOI, now=NOW) == frozenset()
+
+
+# ADR-0034 §2.1–2.2: taste in a couple's notebook, per person.
+
+DOI = [cho_phep(A, "bat_doi", proposal_id="p-doi"), cho_phep(B, "bat_doi", proposal_id="p-doi")]
+GU = {A: ["cafe", "an-uong"], B: ["cafe", "outdoor", "khong-co-trong-tu-vung"]}
+
+
+def gu(consents, toi=A, gu_theo_nguoi=GU):
+    return pair_notebook.gu_hai_nguoi(consents, HAI_NGUOI, toi, gu_theo_nguoi, now=NOW)
+
+
+def test_gu_ngoai_mot_doi_la_none():
+    ban_be = [cho_phep(A, "chia_gu", proposal_id="pa"), cho_phep(B, "chia_gu", proposal_id="pb")]
+    assert gu(ban_be) is None
+
+
+def test_chua_ai_bat_thi_khong_thay_gu_ai():
+    assert gu(DOI) == {"mine_shared": False, "theirs_shared": False, "theirs": [], "common": []}
+
+
+def test_chi_minh_bat_thi_van_khong_thay_gu_nguoi_kia():
+    r = gu(DOI + [cho_phep(A, "chia_gu", proposal_id="pa")])
+    assert r == {"mine_shared": True, "theirs_shared": False, "theirs": [], "common": []}
+
+
+def test_nguoi_kia_bat_thi_thay_gu_ho_nhung_chua_co_gu_chung():
+    r = gu(DOI + [cho_phep(B, "chia_gu", proposal_id="pb")])
+    assert r["theirs_shared"] is True
+    assert r["theirs"] == ["cafe", "outdoor"], "thứ tự từ vựng, bỏ tag không còn trong từ vựng"
+    assert r["common"] == [], "gu chung cần cả hai bật"
+
+
+def test_ca_hai_bat_thi_co_gu_chung():
+    r = gu(DOI + [cho_phep(A, "chia_gu", proposal_id="pa"), cho_phep(B, "chia_gu", proposal_id="pb")])
+    assert r["common"] == ["cafe"]
+
+
+def test_thu_hoi_chia_gu_la_thoi_ngay():
+    thu_hoi = cho_phep(B, "chia_gu", proposal_id="pb", revoked_at=NOW - timedelta(minutes=1))
+    assert gu(DOI + [cho_phep(A, "chia_gu", proposal_id="pa"), thu_hoi])["theirs"] == []
+
+
+def test_chia_gu_khong_bao_gio_la_dong_y_cua_ca_hai():
+    ca_hai = [cho_phep(A, "chia_gu", proposal_id="pa"), cho_phep(B, "chia_gu", proposal_id="pb")]
+    assert "chia_gu" not in pair_notebook.granted_purposes(ca_hai, HAI_NGUOI, now=NOW)
+
+
+# ADR-0034 §2.3–2.4: «Người lo», from what the two did in this cycle only.
+
+
+def _to(cycle="CY", sent_by=None, author="human", responses=()):
+    return {
+        "cycle_id": cycle,
+        "versions": [{"version": 1, "author_type": author, "sent_by": sent_by}],
+        "responses": [{"person_id": p, "kind": k} for p, k in responses],
+    }
+
+
+def test_chua_co_gi_thi_nguoi_lap_so_lo():
+    r = pair_notebook.nguoi_lo_suy([A, B], [], cycle_id="CY", nguoi_lap_so=B)
+    assert r == {"nguoi_lo": [B], "diem": [[A, 0], [B, 0]]}
+
+
+def test_ai_hay_gui_truoc_thi_lo():
+    to = [_to(sent_by=A), _to(sent_by=A), _to(sent_by=B, responses=[(A, "de_nghi_sua")])]
+    r = pair_notebook.nguoi_lo_suy([A, B], to, cycle_id="CY", nguoi_lap_so=B)
+    assert r["nguoi_lo"] == [A]
+    assert r["diem"] == [[A, 5], [B, 2]]
+
+
+def test_chu_ky_khac_va_to_cua_nep_khong_tinh():
+    to = [_to(cycle="CU", sent_by=A), _to(sent_by=None, author="nep"), _to(author="nep", sent_by=A)]
+    assert pair_notebook.nguoi_lo_suy([A, B], to, cycle_id="CY", nguoi_lap_so=B)["nguoi_lo"] == [B]
+
+
+def test_hoa_ma_khong_co_nguoi_lap_so_thi_nguoi_dau():
+    assert pair_notebook.nguoi_lo_suy([A, B], [_to(sent_by=A), _to(sent_by=B)], cycle_id="CY", nguoi_lap_so=None)["nguoi_lo"] == [A]
+
+
+def test_tuan_da_chon_thang_suy_luan():
+    suy = {"nguoi_lo": [A], "diem": [[A, 2], [B, 0]]}
+    assert pair_notebook.vai_tuan(suy, None, [A, B])["cach"] == "suy"
+    assert pair_notebook.vai_tuan(suy, {"nguoi_lo_id": B}, [A, B]) == {"nguoi_lo": [B], "cach": "chon", "diem": [[A, 2], [B, 0]]}
+    assert pair_notebook.vai_tuan(suy, {"nguoi_lo_id": None}, [A, B])["nguoi_lo"] == [A, B], "hôm nay mình share"
+
+
+def _gui(tuan, ai, luc, cycle="CY"):
+    return {"cycle_id": cycle, "tuan": tuan, "versions": [{"version": 1, "author_type": "human", "sent_by": ai, "sent_at": luc}], "responses": []}
+
+
+def test_nguoi_mo_loi_la_nguoi_gui_to_dau_tien_cua_tuan():
+    to = [_gui("2026-09-14", B, NOW - timedelta(days=5)), _gui("2026-09-14", A, NOW - timedelta(days=6)), _gui("2026-09-07", B, NOW - timedelta(days=12))]
+    assert pair_notebook.nguoi_mo_loi(to, cycle_id="CY", tuan="2026-09-14") == A
+    assert pair_notebook.nguoi_mo_loi(to, cycle_id="CY", tuan="2026-08-31") is None
+    assert pair_notebook.nguoi_mo_loi(to, cycle_id="CU", tuan="2026-09-14") is None
+
+
+def test_gay_sang_nguoi_kia_khi_nguoi_lo_da_mo_loi_hai_tuan_lien():
+    suy = {"nguoi_lo": [A], "diem": [[A, 4], [B, 0]]}
+    assert pair_notebook.vai_tuan(suy, None, [A, B], mo_loi_truoc=[A, A]) == {"nguoi_lo": [B], "cach": "luot", "diem": suy["diem"]}
+    assert pair_notebook.vai_tuan(suy, None, [A, B], mo_loi_truoc=[A, B])["cach"] == "suy"
+    assert pair_notebook.vai_tuan(suy, None, [A, B], mo_loi_truoc=[A, None])["cach"] == "suy"
+    assert pair_notebook.vai_tuan(suy, {"nguoi_lo_id": A}, [A, B], mo_loi_truoc=[A, A])["cach"] == "chon", "đã chọn thì thắng gậy"

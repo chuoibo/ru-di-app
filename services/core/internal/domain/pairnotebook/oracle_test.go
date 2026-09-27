@@ -46,6 +46,11 @@ var goNames = map[string]string{
 	"CONSTRAINT_KINDS":    "ConstraintKinds",
 	"CYCLE_STATES":        "CycleStates",
 	"NotebookError":       "NotebookError",
+	"PER_PERSON_PURPOSES": "PerPersonPurposes",
+	"gu_hai_nguoi":        "GuHaiNguoi",
+	"nguoi_lo_suy":        "NguoiLoSuy",
+	"vai_tuan":            "VaiTuan",
+	"nguoi_mo_loi":        "NguoiMoLoi",
 	"can_bat_doi":         "CanBatDoi",
 	"chat_consent_active": "ChatConsentActive",
 	"dang_cho":            "DangCho",
@@ -118,6 +123,7 @@ type tally struct {
 	cases, checks, mismatches int
 	kinds                     map[string]int
 	chat                      map[bool]int
+	gu                        map[string]int
 }
 
 func (tl *tally) check(t *testing.T, c map[string]any, what string, got, want any) {
@@ -167,7 +173,42 @@ func replayConsents(t *testing.T, tl *tally, c map[string]any) {
 		got := ChatConsentActive(consents, participants, *now)
 		tl.chat[got]++
 		tl.check(t, c, "chat_consent_active", got, want)
+		wantGu, ok := result["gu"].([]any)
+		if !ok {
+			t.Fatalf("%s: no gu with now set", c["name"])
+		}
+		for _, item := range wantGu {
+			pair := item.([]any)
+			person := pair[0].(string)
+			var got any
+			if taste := GuHaiNguoi(consents, participants, person, oracleGu, *now); taste != nil {
+				got = map[string]any{"mine_shared": taste.MineShared, "theirs_shared": taste.TheirsShared,
+					"theirs": anyList(taste.Theirs), "common": anyList(taste.Common)}
+				if len(taste.Theirs) > 0 {
+					tl.gu["theirs"]++
+				}
+				if len(taste.Common) > 0 {
+					tl.gu["common"]++
+				}
+			}
+			tl.check(t, c, "gu_hai_nguoi "+person, got, pair[1])
+		}
 	}
+}
+
+// oracleGu is the script's GU.
+var oracleGu = map[string][]string{
+	"a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1": {"cafe", "an-uong", "game"},
+	"a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2": {"game", "outdoor", "cafe", "tag-da-bo"},
+	"a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3": {"karaoke"},
+}
+
+func anyList(values []string) []any {
+	out := make([]any, len(values))
+	for i, value := range values {
+		out[i] = value
+	}
+	return out
 }
 
 func ladderOrdered(values []string) []string {
@@ -227,7 +268,7 @@ func replayHan(t *testing.T, tl *tally, c map[string]any) {
 }
 
 func TestPairNotebookMatchesPython(t *testing.T) {
-	tl := &tally{kinds: map[string]int{}, chat: map[bool]int{}}
+	tl := &tally{kinds: map[string]int{}, chat: map[bool]int{}, gu: map[string]int{}}
 	fuzzShards, fuzzCases, fuzzTotal := 0, 0, 0
 	sawConstants := false
 	for _, file := range loadGoldens(t) {
@@ -265,6 +306,8 @@ func TestPairNotebookMatchesPython(t *testing.T) {
 				replayPreview(t, tl, c)
 			case "han_de_nghi":
 				replayHan(t, tl, c)
+			case "nguoi_lo":
+				replayNguoiLo(t, tl, c)
 			default:
 				t.Fatalf("unknown case kind %q", fn)
 			}
@@ -276,15 +319,79 @@ func TestPairNotebookMatchesPython(t *testing.T) {
 	if fuzzTotal < 2000 || fuzzCases != fuzzTotal {
 		t.Fatalf("fuzz: %d shards carry %d of %d cases", fuzzShards, fuzzCases, fuzzTotal)
 	}
-	for _, fn := range []string{"consents", "preview", "han_de_nghi"} {
+	for _, fn := range []string{"consents", "preview", "han_de_nghi", "nguoi_lo"} {
 		for _, fuzz := range []bool{false, true} {
 			if tl.kinds[fmt.Sprintf("%s/%v", fn, fuzz)] == 0 {
 				t.Fatalf("no %s case with fuzz=%v", fn, fuzz)
 			}
 		}
 	}
+	if tl.gu["theirs"] < 10 || tl.gu["common"] < 5 {
+		t.Fatalf("gu_hai_nguoi outcomes too few to tell apart: %v", tl.gu)
+	}
 	if tl.chat[true] < 20 || tl.chat[false] < 20 {
 		t.Fatalf("chat_consent_active outcomes too lopsided to tell apart: %v", tl.chat)
 	}
 	t.Logf("pair_notebook oracle: %d cases (%v), %d checks, %d mismatches", tl.cases, tl.kinds, tl.checks, tl.mismatches)
+}
+
+func optText(value any) *string {
+	if value == nil {
+		return nil
+	}
+	text := value.(string)
+	return &text
+}
+
+func nguoiLoView(v NguoiLo, withCach bool) map[string]any {
+	diem := []any{}
+	for _, d := range v.Diem {
+		diem = append(diem, []any{d.PersonID, float64(d.Score)})
+	}
+	out := map[string]any{"nguoi_lo": anyList(v.NguoiLo), "diem": diem}
+	if withCach {
+		out["cach"] = v.Cach
+	}
+	return out
+}
+
+func replayNguoiLo(t *testing.T, tl *tally, c map[string]any) {
+	var toGiay []ToTinHieu
+	for _, item := range c["to_giay"].([]any) {
+		row := item.(map[string]any)
+		to := ToTinHieu{CycleID: optText(row["cycle_id"]), Tuan: row["tuan"].(string)}
+		for _, v := range row["versions"].([]any) {
+			vm := v.(map[string]any)
+			to.Versions = append(to.Versions, PhienBanTinHieu{Version: int(vm["version"].(float64)), AuthorType: vm["author_type"].(string),
+				SentBy: optText(vm["sent_by"]), SentAt: instant(vm["sent_at"])})
+		}
+		for _, r := range row["responses"].([]any) {
+			rm := r.(map[string]any)
+			to.Responses = append(to.Responses, TraLoiTinHieu{PersonID: rm["person_id"].(string), Kind: rm["kind"].(string)})
+		}
+		toGiay = append(toGiay, to)
+	}
+	participants := stringsOf(c["participants"])
+	suy := NguoiLoSuy(participants, toGiay, c["cycle"].(string), optText(c["lap_so"]))
+	result := c["result"].(map[string]any)
+	tl.check(t, c, "nguoi_lo_suy", nguoiLoView(suy, false), result["suy"])
+	for i, tuan := range []string{"2026-08-31", "2026-09-07", "2026-09-14"} {
+		var got any
+		if who := NguoiMoLoi(toGiay, c["cycle"].(string), tuan); who != nil {
+			got = *who
+		}
+		tl.check(t, c, "nguoi_mo_loi "+tuan, got, result["mo_loi"].([]any)[i])
+	}
+	var moLoi []*string
+	for _, raw := range c["mo_loi"].([]any) {
+		moLoi = append(moLoi, optText(raw))
+	}
+	for i, raw := range c["chon"].([]any) {
+		var chon **string
+		if raw != nil {
+			id := optText(raw.(map[string]any)["nguoi_lo_id"])
+			chon = &id
+		}
+		tl.check(t, c, fmt.Sprintf("vai_tuan %d", i), nguoiLoView(VaiTuan(suy, chon, participants, moLoi), true), result["vai"].([]any)[i])
+	}
 }

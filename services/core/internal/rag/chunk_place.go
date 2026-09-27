@@ -61,6 +61,9 @@ type HoSo struct {
 	TenGap  string
 	Lat     float64
 	Lng     float64
+	// CoToaDo is false when the place has no coordinates (repo.Place.Lat/Lng
+	// nil); Lat/Lng are then 0 and must not be read as a location.
+	CoToaDo bool
 	License *string
 	Doan    []Doan
 }
@@ -79,7 +82,10 @@ func DungHoSo(p repo.Place) (HoSo, promptsafety.KetQuaSau) {
 	h := HoSo{
 		ID: p.ID, DiemDen: p.DestinationID, LoaiCho: p.Category,
 		GiaMin: p.PriceMinVND, GiaMax: p.PriceMaxVND,
-		TenGap: promptsafety.Fold(p.Name), Lat: p.Lat, Lng: p.Lng,
+		TenGap: promptsafety.Fold(p.Name),
+	}
+	if p.Lat != nil && p.Lng != nil {
+		h.Lat, h.Lng, h.CoToaDo = *p.Lat, *p.Lng, true
 	}
 	if lic := chu(safe, "license"); lic != "" {
 		h.License = &lic

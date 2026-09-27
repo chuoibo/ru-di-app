@@ -45,7 +45,7 @@ import {
   duongChiDuong,
   luuDiaDiem,
   nguonAnhDiaDiem,
-  CAU_NGUON_ANH,
+  cauNguonAnh,
   TIEN_TO_ANH,
   type AnhDiaDiem,
   type AnhNhom,
@@ -60,6 +60,9 @@ import { SkeletonCard, SkeletonGroup, SkeletonLines } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
 import { PlaceGlyph } from "./HangDiaDiem";
 import { KyHoa } from "../../ui/art/KyHoa";
+import { SanKhau } from "../../ui/SanKhau";
+import { StampButton } from "../../ui/StampButton";
+import { sanKhauKyHoa } from "../../art/san-khau";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; place: PlaceDetail } | { pha: "hong"; loi: string };
@@ -245,6 +248,7 @@ function ThanChiTiet({
   onRu: (contextId: string) => void;
 }) {
   const { colors } = useRudiTheme();
+  const [rongSan, setRongSan] = useState(0);
   const hop = matchLabel(place.match);
   const coMatch = place.match !== null && place.match.source === "ai";
   const facts = chiTietNgan(place).filter((muc) => muc.icon !== "time-outline" && muc.icon !== "location-outline");
@@ -252,6 +256,7 @@ function ThanChiTiet({
   // strip carries the other licensed photographs, each with its own line.
   const bia = anhBiaThe(place);
   const conLai = bia === null ? anh : anh.filter((a) => nguonAnhDiaDiem(a).uri !== place.photoUrl);
+  const cauAnh = cauNguonAnh(anh);
   const viec = cauHoatDong(place.activities);
   return (
     <>
@@ -263,7 +268,11 @@ function ThanChiTiet({
         <View style={styles.dauGon}>
           {/* The sketch of the kind of place (category only: live carries no
               tags), then the seal on its own row (review 11/09 A1). */}
-          <KyHoa loai={place.category} tags={[]} />
+          {/* The same sketch, lifted into its three depths as a pop-up stage
+              that stands up once (ADR-0037 D1, plan S4). */}
+          <View onLayout={(e) => setRongSan(Math.round(e.nativeEvent.layout.width))} style={styles.sanCho}>
+            {rongSan > 0 ? <SanKhau coMoTa san={sanKhauKyHoa(place.category, [])} width={Math.min(rongSan, 520)} /> : <KyHoa loai={place.category} tags={[]} />}
+          </View>
           {hop !== null && hop.real ? <Stamp label={hop.text} style={styles.dauGonDau} tone="ai" /> : null}
         </View>
       ) : (
@@ -277,11 +286,12 @@ function ThanChiTiet({
       )}
       {loiAnh !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiAnh}</Text> : null}
       {conLai.length > 0 ? <DaiAnh anh={conLai} /> : null}
-      {/* The sentence the pictures are shown on: found by geosearch around the
-          venue, licensed, not supplied by the place. Said once under the
-          photographs whenever there is at least one (M12, ADR-0017 §2.5). */}
-      {bia !== null || conLai.length > 0 ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{CAU_NGUON_ANH}</Text>
+      {/* The sentence the pictures are shown on, said once under them: where
+          they came from and that the place did not supply them (M12, ADR-0017
+          §2.5). Built from the gallery itself, which may hold licensed
+          photographs, frames of people's posts, or both. */}
+      {cauAnh !== null && (bia !== null || conLai.length > 0) ? (
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauAnh}</Text>
       ) : null}
       <View style={styles.dau}>
         <Text style={[typography.h1, { color: colors.ink }]}>{place.name}</Text>
@@ -316,7 +326,13 @@ function ThanChiTiet({
           them opens with this place as the main stop (QA 23/09: a place page
           had no way to become an evening for a couple). */}
       {doi.map((d) => (
-        <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="outline" />
+        // One notebook: its invitation is the stamp. Several: three coral
+        // stamps shouted over each other on the live capture, so they are lines.
+        doi.length === 1 ? (
+          <StampButton key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} size="vua" tilt={-1} />
+        ) : (
+          <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="outline" />
+        )
       ))}
       {place.description ? <Text style={[typography.body, { color: colors.ink }]}>{place.description}</Text> : null}
       <View style={styles.suKien}>
@@ -411,7 +427,9 @@ function DaiAnh({ anh }: { anh: AnhDiaDiem[] }) {
     () =>
       anh.map((a) => ({
         id: a.id,
-        alt: a.title ?? "Ảnh có giấy phép chụp quanh đây",
+        // «có giấy phép» only when there is one. The feed's frames have none,
+        // and an alt text is still a statement a screen reader makes aloud.
+        alt: a.title ?? (a.license !== null ? "Ảnh có giấy phép chụp quanh đây" : "Ảnh chụp quanh đây"),
         anh: anhDanhMuc(nguonAnhDiaDiem(a), { author: a.author, license: a.license, prefix: TIEN_TO_ANH }),
       })),
     [anh],
@@ -463,6 +481,7 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
 }
 
 const styles = StyleSheet.create({
+  sanCho: { alignSelf: "stretch", alignItems: "center" },
   dai: { gap: 12, paddingRight: 8 },
   oAnh: { width: 280, gap: 6 },
   flex: { flex: 1 },

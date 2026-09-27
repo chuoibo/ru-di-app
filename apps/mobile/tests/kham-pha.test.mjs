@@ -184,6 +184,12 @@ test("trường thiếu được gọi tên, không im lặng thành undefined",
   assert.equal(parsePlace(row({ rating: null }), "places[3]").rating, null);
   assert.throws(() => parsePlace(row({ rating: "4.7" }), "places[3]"), /places\[3\]\.rating/);
   assert.throws(() => parsePlace(row({ lat: null }), "places[3]"), /places\[3\]\.lat/);
+  assert.throws(() => parsePlace(row({ lng: null }), "places[3]"), /places\[3\]\.lng/);
+  // Both absent is a place not yet on the map, not a broken row (lô 0006: a
+  // quarter of the catalogue).
+  const chuaCoCho = parsePlace(row({ lat: null, lng: null }), "places[3]");
+  assert.equal(chuaCoCho.lat, null);
+  assert.equal(chuaCoCho.lng, null);
 });
 
 test("source lạ bị từ chối — không có đường nào cho nhãn tự chế", () => {

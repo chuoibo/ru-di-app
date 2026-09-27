@@ -269,6 +269,8 @@
     "src/rudi/to-giay/moc-hen.ts",
     "src/rudi/ky-niem/ti-le.ts",
     "src/rudi/chat/khay-cong-cu.ts",
+    "src/rudi/to-giay/gu-doi.ts",
+    "src/rudi/to-giay/vai-tuan.ts",
     // Sổ hai người trên fixture: chuyển trạng thái thuần thay máy chủ tới Phase 4; tests/to-giay-fixture.test.mjs
     "src/rudi/to-giay/so-fixture.ts",
     // Dây nối duy nhất giữa wire và mười ba màn đã đọc mù; tests/so-doi-map.test.mjs
@@ -377,6 +379,8 @@
     // really emits: the claim is that the input carries NO native hint and the
     // sentence is a text node of its own, which only the rendered output shows.
     "src/rudi/ui/Field.tsx",
+    // UI v3 S0.5: the field written on a ruled line instead of a box.
+    "src/rudi/ui/ONhapMuc.tsx",
     // L2 (ADR-0021 §2.5): the direct-message door and how a pair is named.
     "src/rudi/nhan-rieng/nhan-rieng.ts",
     // L3 (ADR-0022): a post's comments and reactions, personal photos, and the
@@ -440,6 +444,36 @@
     // exactly what goes, a money-screen slip is NOT asked, and every refusal
     // code the Go handlers emit has a sentence (tests/cau-chu-goi-ai.test.mjs).
     "src/rudi/nep/hoi.ts",
-    "src/screens/quan-tri/quan-tri.ts"
+    "src/screens/quan-tri/quan-tri.ts",
+    // ADR-0037 «Sân khấu giấy»: person inks and paper-stage tokens, pure.
+    "src/rudi/nguoi/muc-nguoi.ts",
+    "src/rudi/san-khau/token.ts",
+    // The pop-up stage (S0.3): stages built from the existing art, the paper
+    // objects (receipt teeth, ticket notches, stamp perforation) and the fold
+    // maths the renderers run as worklets. Compiled so the gates run the real
+    // builders over every scene and sketch; see tests/san-khau.test.mjs and
+    // tests/giay-vat-the.test.mjs.
+    "src/rudi/art/san-khau.ts",
+    "src/rudi/art/giay.ts",
+    "src/rudi/art/vat-ban.ts",
+    "src/rudi/art/thanh-pho.ts",
+    "src/rudi/san-khau/dong-hoc.ts",
+    "src/rudi/san-khau/kich-thuoc.ts",
+    // The paper puppet (S0.4): the still figure's sheet and face on a rig of
+    // rigid bones, and the nine performances. Compiled so the gates sweep every
+    // frame of every performance through the same fold and path rules as the
+    // still figure; see tests/nep-roi.test.mjs.
+    "src/rudi/art/nep-roi.ts",
+    "src/rudi/art/nep-dien.ts",
+    "src/rudi/khoanh-khac.ts",
+    // S0.5 primitives' arithmetic: the month grid a tear-off calendar leafs
+    // through, the dial's quarter hours, the sentence with blanks, and the
+    // avatars that failed this session.
+    "src/rudi/ui/lich/lich-thang.ts",
+    "src/rudi/ui/ban-xoay.ts",
+    "src/rudi/ui/cau-ru.ts",
+    // S1, the money screens: who sits where at the bill table, the
+    // collection's tape and the settlement's arrows; see tests/hinh-tien.test.mjs.
+    "src/rudi/ui/hinh-tien.ts"
   ]
 }

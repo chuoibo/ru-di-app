@@ -302,6 +302,7 @@ class TestPairNotebookDoors(unittest.TestCase):
         "edit_pair_constraint",
         "preview_close_pair_notebook",
         "close_pair_notebook",
+        "set_pair_week_role",
     )
 
     def facts(self, *proven: str) -> permissions.AuthorizationFacts:
@@ -343,12 +344,13 @@ class TestPairNotebookDoors(unittest.TestCase):
         "edit_pair_constraint": {"is_self"},
         "preview_close_pair_notebook": {"is_group_member"},
         "close_pair_notebook": {"is_group_member"},
+        "set_pair_week_role": {"is_group_member"},
     }
 
-    def test_muoi_tam_cua_deu_co_trong_bang(self):
+    def test_muoi_chin_cua_deu_co_trong_bang(self):
         for action in self.CUA:
             self.assertIn(action, permissions.ACTIONS, action)
-        self.assertEqual(len(set(self.CUA)), 18)
+        self.assertEqual(len(set(self.CUA)), 19)  # 18, cộng set_pair_week_role (ADR-0034)
 
     def test_danh_sach_nay_khong_the_thieu_mot_cua_moi(self):
         """Chiều ngược lại: một cửa `pair` thêm sau mà không ai ghi vào đây.

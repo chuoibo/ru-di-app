@@ -2,7 +2,7 @@
 {
   "man": "messages",
   "tieu_de": "Tin nhắn",
-  "nhanUI": ["Tin nhắn", "Mở nhóm …", "Mở cuộc trò chuyện với …", "Tạo nhóm", "Tôi có lời mời", "Thêm bạn bằng số điện thoại", "Đồng ý vào nhóm", "Tên nhóm", "Mở nhóm", "Mã lời mời", "Nhận lời mời", "Lên plan", "Số điện thoại", "Gửi lời mời", "Chưa có nhóm nào"],
+  "nhanUI": ["Tin nhắn", "Mở nhóm …", "Mở cuộc trò chuyện với …", "Tạo nhóm", "Tôi có lời mời", "Thêm bạn bằng số điện thoại", "Đồng ý vào nhóm", "Nhóm mới", "Đặt tên cho hội", "Mở nhóm", "Mã lời mời", "Nhận lời mời", "Lên plan", "Số điện thoại", "Gửi lời mời", "Chưa có nhóm nào"],
   "di_toi": [
     {"nhan": "Mở nhóm …", "man": "groups/[id]/chat"},
     {"nhan": "Mở cuộc trò chuyện với …", "man": "groups/[id]/chat"},
@@ -23,7 +23,7 @@ Tab «Tin nhắn» liệt kê các nhóm và các cuộc trò chuyện hai ngư�
 ## Tạo nhóm mới
 
 1. Bấm «Tạo nhóm».
-2. Điền «Tên nhóm» rồi bấm «Mở nhóm». Bạn là quản trị của nhóm này.
+2. Ở màn «Nhóm mới», viết tên nhóm lên nhãn trên bìa sổ ngay dưới «Đặt tên cho hội», rồi bấm «Mở nhóm». Bạn là quản trị của nhóm này.
 3. Mời bạn bè sau, từ màn thành viên của nhóm.
 
 ## Vào nhóm bằng lời mời

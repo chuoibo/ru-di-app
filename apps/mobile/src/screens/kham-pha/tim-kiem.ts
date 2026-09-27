@@ -183,8 +183,12 @@ export function parseSearch(body: unknown, query: string): TimKiemState {
   };
 }
 
-export function searchUrl(base: string): string {
-  return `${base.replace(/\/$/, "")}/places/search`;
+/** `destination` narrows the search to the place the person is looking at.
+ *  Without it the server searches the whole catalogue, which on the fed data
+ *  is thousands of rows it then has to cut down before asking a model. */
+export function searchUrl(base: string, destination?: string | null): string {
+  const url = `${base.replace(/\/$/, "")}/places/search`;
+  return destination ? `${url}?destination=${encodeURIComponent(destination)}` : url;
 }
 
 /**
@@ -199,10 +203,10 @@ export function searchUrl(base: string): string {
  */
 export async function askSearch(
   query: string,
-  opts: { base?: string; fetchImpl?: typeof fetch; actorId?: string } = {},
+  opts: { base?: string; fetchImpl?: typeof fetch; actorId?: string; destination?: string | null } = {},
 ): Promise<TimKiemState> {
   const base = opts.base ?? PLACES_BASE_URL;
-  const url = searchUrl(base);
+  const url = searchUrl(base, opts.destination);
   const doFetch = opts.fetchImpl ?? fetch;
 
   const trimmed = query.trim();

@@ -120,6 +120,8 @@ func DocVang(raw []byte) (TapVang, error) {
 
 func strp(s string) *string { return &s }
 
+func f64p(f float64) *float64 { return &f }
+
 var (
 	nenTen  = []string{"Sỏi", "Lam", "Mộc", "Cỏ", "Khói", "Đá", "Lúa", "Bèo", "Vân", "Trúc", "Khế", "Rạ", "Nứa", "Sậy", "Bấc", "Sim"}
 	nenLoai = []string{"quan-an-local", "cafe", "vui-choi", "di-choi-dem"}
@@ -198,7 +200,7 @@ func (v TapVang) Hang(i int, q QuanVang) repo.Place {
 	}
 	p := repo.Place{
 		ID: q.ID, DestinationID: q.DiemDen, Name: q.Ten, Category: q.Loai, Kinds: nn(q.Kinds),
-		Lat: d.Lat + float64(i%7-3)*0.004, Lng: d.Lng + float64(i%5-2)*0.004,
+		Lat: f64p(d.Lat + float64(i%7-3)*0.004), Lng: f64p(d.Lng + float64(i%5-2)*0.004),
 		OpenHours: q.Gio, Traits: nn(q.Traits), Description: q.MoTa, Source: "seed",
 	}
 	if q.DiaChi != "" {

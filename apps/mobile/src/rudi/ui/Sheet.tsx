@@ -20,6 +20,8 @@ export interface SheetProps {
   style?: StyleProp<ViewStyle>;
   /** Tallest the panel may grow (dp) before its content scrolls; default 82% of the window. */
   maxHeight?: number;
+  /** A head for the page above its scrolling content: a small stage, a stamp (ADR-0037). */
+  dauTrang?: ReactNode;
   testID?: string;
 }
 
@@ -40,10 +42,12 @@ const KEO_DONG_TOC = 900;
  * hosts it in a transparent route. Under Reduce Motion the spring resolves
  * instantly.
  */
-export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, style, maxHeight, testID }: SheetProps) {
+export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, style, maxHeight, dauTrang, testID }: SheetProps) {
   const { colors, radius, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  // A page torn off a pad: the punched holes along its top edge (ADR-0037 D1).
+  const soLo = Math.max(6, Math.min(40, Math.floor(windowWidth / 18)));
   const tran = maxHeight ?? Math.round(windowHeight * 0.82);
   const motion = useMotion();
   // Starts closed even when mounted open, so a sheet that arrives with its
@@ -195,6 +199,11 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
           style,
         ]}
       >
+        <View importantForAccessibility="no-hide-descendants" pointerEvents="none" style={[styles.loGiay, { paddingHorizontal: radius.base }]}>
+          {Array.from({ length: soLo }, (_, i) => (
+            <View key={i} style={[styles.lo, { backgroundColor: colors.paperShade }]} />
+          ))}
+        </View>
         <View style={styles.handleRow}>
           <View style={styles.closeSpace} />
           <GestureDetector gesture={keoXuong}>
@@ -206,6 +215,7 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
             <Ionicons name="close" size={22} color={colors.ink} />
           </Pressable>
         </View>
+        {dauTrang}
         <ScrollView bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ maxHeight: tran }}>
           {children}
         </ScrollView>
@@ -221,4 +231,6 @@ const styles = StyleSheet.create({
   closeSpace: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   vungKeo: { flex: 1, alignItems: "center", justifyContent: "center", minHeight: 36, marginBottom: 4 },
   handle: { width: 40, height: 4, borderRadius: 2 },
+  loGiay: { position: "absolute", left: 0, right: 0, top: 6, flexDirection: "row", justifyContent: "space-between" },
+  lo: { width: 5, height: 5, borderRadius: 2.5 },
 });

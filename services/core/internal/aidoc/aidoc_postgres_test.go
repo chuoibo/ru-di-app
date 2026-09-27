@@ -64,8 +64,8 @@ func kho(t *testing.T) *pgxpool.Pool {
 		{"q-kem", "da-lat", "Kem Bơ Đậu Phộng", "quan_an", "Kem bơ rắc đậu phộng rang"},
 		{"q-hai-san", "vung-tau", "Hải Sản Vũng Tàu", "quan_an", "Hải sản tươi ở Vũng Tàu"},
 	} {
-		if _, err := pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,traits,description,source,price_min_vnd)
-			VALUES($1,$2,$3,$4,'[]'::jsonb,11.9,108.4,'[]'::jsonb,$5,'curated',50000)`, p.id, p.dd, p.ten, p.loai, p.moTa); err != nil {
+		if _, err := pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,traits,description,source,price_min_vnd)
+			VALUES($1,$2,$3,$4,'[]'::jsonb,11.9,108.4,'rooftop','[]'::jsonb,$5,'curated',50000)`, p.id, p.dd, p.ten, p.loai, p.moTa); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -167,8 +167,8 @@ func TestLexicalKhongDocChu(t *testing.T) {
 func TestKhungMoTrenDuLieuThat(t *testing.T) {
 	pool := kho(t)
 	ctx := context.Background()
-	if _, err := pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,traits,description,source,price_min_vnd,open_hours)
-		VALUES('q-toi','da-lat','Quán Mở Tối','quan_an','[]'::jsonb,11.9,108.4,'[]'::jsonb,'Quán chay mở buổi tối','curated',50000,'19:00 – 23:00')`); err != nil {
+	if _, err := pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,traits,description,source,price_min_vnd,open_hours)
+		VALUES('q-toi','da-lat','Quán Mở Tối','quan_an','[]'::jsonb,11.9,108.4,'rooftop','[]'::jsonb,'Quán chay mở buổi tối','curated',50000,'19:00 – 23:00')`); err != nil {
 		t.Fatal(err)
 	}
 	l := Lexical{C: Moi(pool, 2)}

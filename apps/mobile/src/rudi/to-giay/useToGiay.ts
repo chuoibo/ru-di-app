@@ -35,6 +35,7 @@ import { AppState } from "react-native";
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt, quenLuot } from "../../api";
 import type { NoiDungTo, ToGiay } from "./to-giay";
 import {
+  type ChonLo,
   type LoaiRangBuoc,
   type MucDich,
   type SoHaiNguoi,
@@ -42,6 +43,7 @@ import {
   type XemTruocDongSo,
   danhDauDaXem,
   datRangBuoc,
+  datVaiTuan,
   deNghiDongY,
   deNghiSua,
   docDanhSachTo,
@@ -79,6 +81,12 @@ export type TrangThaiSo = {
   dangLam: string | null;
   /** Why the last command was refused. Cleared when the next one starts. */
   loiLenh: string | null;
+  /**
+   * The last refused command and the server's code for it (`paper_wrong_state`),
+   * when there was one: what the refusal MEANS can depend on it (B1), and the
+   * sentence alone cannot be read back into a code. Cleared with `loiLenh`.
+   */
+  lenhBiChan: { ten: string; ma: string | null } | null;
 };
 
 const DAU: TrangThaiSo = {
@@ -89,6 +97,7 @@ const DAU: TrangThaiSo = {
   loi: null,
   dangLam: null,
   loiLenh: null,
+  lenhBiChan: null,
 };
 
 function loiRaChu(error: unknown): string {
@@ -198,7 +207,7 @@ export function useToGiay(contextId: string, personId: string, { nhip = NHIP_SO_
       if (dangLamRef.current !== null) return false;
       const theHe = theHeRef.current;
       dangLamRef.current = ten;
-      setTrang((cu) => ({ ...cu, dangLam: ten, loiLenh: null }));
+      setTrang((cu) => ({ ...cu, dangLam: ten, loiLenh: null, lenhBiChan: null }));
       try {
         await chay({ actorId: personId, attempt: attemptFor(luotRef.current, ten) });
         if (theHe !== theHeRef.current) return false;
@@ -211,7 +220,7 @@ export function useToGiay(contextId: string, personId: string, { nhip = NHIP_SO_
       } catch (error) {
         if (theHe !== theHeRef.current) return false;
         dangLamRef.current = null;
-        setTrang((cu) => ({ ...cu, dangLam: null, loiLenh: loiRaChu(error) }));
+        setTrang((cu) => ({ ...cu, dangLam: null, loiLenh: loiRaChu(error), lenhBiChan: { ten, ma: error instanceof ApiError ? error.code : null } }));
         // A refusal is usually news about what the other person did, so the
         // screen re-reads before the person decides what to do about it.
         await doc(false);
@@ -234,6 +243,7 @@ export function useToGiay(contextId: string, personId: string, { nhip = NHIP_SO_
     dongYDeNghiNay: (proposalId: string) =>
       lam(`dong-y-de-nghi:${proposalId}`, (goi) => dongYDeNghi(contextId, proposalId, goi)),
     thuHoi: (purpose: MucDich) => lam(`thu-hoi:${purpose}`, (goi) => thuHoiDongY(contextId, purpose, goi)),
+    chonVai: (lo: ChonLo) => lam(`vai:${lo}`, (goi) => datVaiTuan(contextId, lo, goi)),
     datRangBuocNay: (kind: LoaiRangBuoc, content: string) =>
       lam(`rang-buoc:${kind}`, (goi) => datRangBuoc(contextId, kind, content, goi)),
     xoaRangBuocNay: (kind: LoaiRangBuoc) => lam(`xoa-rang-buoc:${kind}`, (goi) => xoaRangBuoc(contextId, kind, goi)),

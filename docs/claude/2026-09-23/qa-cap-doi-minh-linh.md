@@ -535,3 +535,61 @@ chuẩn (một input thật, `sms-otp`, focus màu).
 
 Không đo: phía Minh bấm «Rủ Linh tới đây» trên tờ Linh gửi (chỉ có ca thuần `goiYChoLam`, máy thứ hai
 không bật vì RAM); trình đọc màn hình.
+
+## ADR-0034 lát 1 (25/09) — `chia_gu`: gu của hai bạn, mỗi người tự bật
+
+Lead ký ADR-0034 ngày 25/09. Lát này làm §2.1–2.2; phần Nếp dùng gu, người lo, câu hỏi tuần là lát sau.
+
+- Máy chủ (Go + Python oracle): mục đích đồng ý `chia_gu` theo người: chỉ trong «Một đôi»; tạo là
+  người đề nghị đồng ý và hoàn tất luôn, không bao giờ nằm chờ người kia; người kia không «đồng ý hộ»
+  được. `GET …/notebook` có `taste`: null ngoài «Một đôi»; gu người kia chỉ khi HỌ bật; gu chung chỉ khi
+  CẢ HAI bật; chỉ khi đó máy chủ mới đọc `person_interests`. Migration `e3b7c1d9a4f2` mở CHECK.
+- App: «Cài đặt sổ» → «Gu của hai bạn» (chỉ hiện khi là một đôi). Đo trên máy thật (Linh, stack
+  cô lập dựng lại với core mới + migration): Minh đã bật → «Minh thích Ăn uống, Cafe, Outdoor và Game.»;
+  Linh bấm «Cho Minh thấy gu của mình» → «Hai bạn cùng thích Cafe và Outdoor.» hiện trong sheet và dưới
+  tờ giấy; «Thôi cho Minh thấy…» → dòng chung biến mất, lần đọc sau. Ảnh `gu-01…03` (ngoài repo).
+- Không hứa điều chưa làm: câu «Nếp dùng gu khi phác tờ» bị bỏ khỏi màn cho tới lát (a).
+
+### Lát (a) — Nếp dùng gu khi phác tờ (25/09)
+
+- `draft_pair_paper` (Go + Python): sau bản phác theo lịch sử, nếu là «Một đôi» và có người đã bật
+  `chia_gu`, Nếp đọc gu CHỈ của những người đó (`gu_cho_nep`: gu chung trước, rồi gu từng người). Lịch sử
+  thắng: đã đề xuất được chỗ cùng kiểu lần trước thì giữ. Không thì gu chọn kiểu chỗ (an-uong →
+  quán local, cafe → cafe, nightlife → đi chơi đêm, game → vui chơi; outdoor/món local/shopping/karaoke
+  không có «kiểu» trong danh mục nên bỏ qua) và đề xuất chỗ chưa đi, điểm cao nhất, cùng thành phố với
+  buổi trước, tránh chữ trong hai ô. Chưa có buổi nào (không biết thành phố) thì chỉ đặt tên chặng —
+  không bịa chỗ. `nguon.dung` ghi `gu:<id>` của người có gu được dùng; lý do nói gu của ai.
+- Màn «Gu của hai bạn» giờ nói thật «Nếp dùng nó khi phác tờ».
+- Chưa đo trên máy: tuần này của cặp thử đã có tờ chốt, nên không phác được tờ mới mà không dời đồng hồ;
+  phần phác theo gu được chứng minh bằng golden (Go↔Python) và parity (bước `owner_drafts_with_common_taste`).
+
+## ADR-0034 lát (b) — «Người lo» của tuần, suy từ tương tác, không giới tính (25/09)
+
+- Máy chủ (Go + Python): `GET …/notebook` có `week_role` trong «Một đôi» đang mở. Không ai chọn thì suy
+  mỗi lần đọc (`nguoi_lo_suy`): trong chu kỳ này, gửi tờ trước tính 2, đề nghị sửa tính 1; hoà hoặc chưa
+  có gì → người lập sổ. Không thu, không suy giới tính; không đọc chat. Route mới `PUT …/notebook/week-role`
+  («toi» / «nguoi_kia» / «ca_hai»), ai trong hai người cũng chọn được, chỉ quyết tuần đó lượt ai, không cấp
+  quyền. Bảng `pair_cycle_rhythms` (migration `f4a8d2c6b1e9`) chỉ lưu lựa chọn; mặc định không lưu.
+- App: dòng «Tuần này Minh lo · <vì sao> · Đổi» trên tờ giấy; sheet «Ai lo tuần này?» với «Để tôi lo» /
+  «Để Minh lo» / «Hôm nay mình share». `luotCuaToi` giờ theo người lo (trước là luôn đúng: QA 🟠 «cả hai
+  cùng được bảo Tuần này bạn mở lời»). Chữ trống «Tuần này người ấy mở lời» → gọi tên.
+- Đo trên máy (Linh, stack dựng lại với core mới + migration): mặc định «Tuần này Minh lo · Hai bạn chủ động
+  như nhau, nên người lập sổ lo trước.»; chọn → «Tuần này bạn lo · Đã chọn cho tuần này.»; share → «Tuần này
+  hai bạn cùng lo»; máy chủ trả cùng lựa chọn cho Minh. Ảnh `vai-01…03` (ngoài repo).
+- **Lỗi thấy trên máy, sửa luôn:** nút «Mình lo» và «Minh lo» gần như cùng một chữ với người yêu tên Minh →
+  «Để tôi lo» / «Để Minh lo».
+- Chưa làm (ghi ở hàng đợi): gậy luân phiên tuần riêng với người lo — bản này coi người lo là người mở lời
+  tuần đó; hạn mức `nep-nhip.json`; câu hỏi tuần (c).
+
+## ADR-0034 lượt 2 (25/09) — gậy, hạn mức tuần, 4 sticker đôi, hồ sơ «Một đôi»
+
+- **Gậy (cân tải):** người lo quen mở lời hai tuần liền → tuần này sang người kia («Bạn đã mở lời hai tuần liền,
+  tuần này để Minh.»). Lựa chọn tuần thắng. Đo bằng golden (Go↔Python) và test api có đồng hồ; chưa đo trên máy
+  (cần hai tuần dữ liệu).
+- **Hạn mức:** tờ thứ tư trong một tuần của một người → 409 «Tuần này bạn đã phác 3 tờ rồi. Tuần sau phác tiếp nhé.»
+  Con số ở `packages/shared/nep-nhip.json`.
+- **4 sticker đôi** «Hẹn nhé!», «Nhớ nhau», «Về tới chưa?», «Ôm cái» — cùng ngữ pháp hình với tám cái cũ (một tư thế
+  Nếp, tối đa một vật, vật đặt từ điểm tiếp xúc của tư thế). Trên máy: khay nhắn riêng có nhóm «Cho hai người»,
+  gửi được, hiện đúng ở cỡ lớn (ảnh `st-01…05`). Chỉnh sau khi nhìn: tim của «Ôm cái» kéo vào tay, tim «Hẹn nhé!» to hơn.
+- **Hồ sơ «Một đôi»:** Linh mở hồ sơ Minh → chip «♥ Một đôi», «Nhắn tin», «Tờ giấy của hai mình» (mở thẳng tờ giấy).
+  Ảnh `hs-01`.

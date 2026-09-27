@@ -26,7 +26,7 @@ func Kho(t *testing.T) *pgxpool.Pool { t.Helper(); return naptest.Pool(t) }
 func ThemNoi(t *testing.T, pool *pgxpool.Pool, id, diemDen, moTa string, giaMin *int64, gio *string) {
 	t.Helper()
 	p := repo.Place{ID: id, DestinationID: diemDen, Name: "Quán " + id, Category: "quan-an-local", Kinds: []string{},
-		Traits: []string{}, Lat: 11.94, Lng: 108.44, PriceMinVND: giaMin, OpenHours: gio, Description: &moTa, Source: "seed"}
+		Traits: []string{}, Lat: new(11.94), Lng: new(108.44), PriceMinVND: giaMin, OpenHours: gio, Description: &moTa, Source: "seed"}
 	naptest.Chen(t, pool, p)
 }
 

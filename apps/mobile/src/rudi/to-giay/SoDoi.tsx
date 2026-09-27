@@ -19,6 +19,8 @@ import {
   suaNhap,
   toiDongY,
 } from "./so-fixture";
+import type { GuSo } from "./gu-doi";
+import type { ChonLo, VaiTuan } from "./to-giay-song";
 import { type NoiDungTo, type ToGiay, demHauQuaDongSo, toUuTien } from "./to-giay";
 
 /**
@@ -53,6 +55,18 @@ export interface TrangThaiSoDoi {
   docChat: boolean;
   /** Whose turn to open the week. Slice 1 alternates by who sent last. */
   luotCuaToi: boolean;
+  /**
+   * Whether `luotCuaToi` means anything here. The fixture keeps a turn; the
+   * live notebook has none on the wire (ADR-0027 §6.3), so the screen must not
+   * tell a person «Tuần này bạn mở lời» on a guess (QC 24/09, B1).
+   */
+  coLuot: boolean;
+  /**
+   * The last «Rủ đi chơi» was refused because this week already has a sheet
+   * this person cannot see (the other person's private draft): the surface
+   * waits for it instead of offering the same failing button (B1).
+   */
+  xinToBiChan: boolean;
   rangBuoc: { toi: RangBuoc; nguoiKia: RangBuoc };
   toGiay: readonly ToGiay[];
   /** Consent proposals still waiting for the other person. */
@@ -66,6 +80,10 @@ export interface TrangThaiSoDoi {
    */
   deNghiCho: readonly { id: string; purpose: "lap_so" | "bat_doi" | "doc_chat"; cuaToi: boolean }[];
   daDong: boolean;
+  /** Taste in «Một đôi», per person (ADR-0034); null outside it. */
+  gu: GuSo | null;
+  /** «Người lo» of this week (ADR-0034 §2.4); null outside an open «Một đôi». */
+  vai: VaiTuan | null;
   /**
    * The first read of the notebook has landed. Until then `toMo` being
    * `undefined` says nothing about whether a sheet is open. The fixture is
@@ -105,6 +123,11 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   deNghiLapSo: () => void;
   deNghiBatDoi: () => void;
   thuHoiBatDoi: () => void;
+  /** My own `chia_gu` switch: on, and off again. */
+  chiaGu: () => void;
+  thoiChiaGu: () => void;
+  /** «Anh lo / Em lo / Hôm nay mình share» for this week. */
+  chonLo: (lo: ChonLo) => void;
   /** Resolves true once every changed box has landed; false if any did not. */
   datRangBuoc: (rb: Partial<RangBuoc>) => Promise<boolean>;
   /** `revision` is the one the person just read. The fixture ignores it. */
@@ -115,6 +138,8 @@ export interface SoDoiApi extends TrangThaiSoDoi {
 
   /** «Rủ đi chơi»: Nếp drafts a sheet for me. */
   ruDiChoi: () => void;
+  /** Read the notebook again now (a wait on the other person is news only they can make). */
+  lamMoi: () => void;
   suaNhap: (id: string, content: NoiDungTo, lyDo: string | null) => void;
   gui: (id: string) => void;
   boNhap: (id: string) => void;
@@ -150,10 +175,14 @@ function seed(): TrangThaiSoDoi {
     batDoi: false,
     docChat: false,
     luotCuaToi: true,
+    coLuot: true,
+    xinToBiChan: false,
     rangBuoc: RANG_BUOC_MAU,
     toGiay: TO_GIAY_CU,
     deNghiCho: [],
     daDong: false,
+    gu: null,
+    vai: null,
     daNap: true,
     dangLam: null,
     loiLenh: null,
@@ -177,6 +206,8 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
     const daCoToMo = s.toGiay.some((t) => ["nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(t.state));
     return {
       ...s,
+      // Taste exists only in «Một đôi»; the fixture's other person never shares.
+      gu: s.batDoi ? (s.gu ?? { mine_shared: false, theirs_shared: false, theirs: [], common: [] }) : null,
       capId: CAP_DEMO.id,
       toiId: toi,
       nguoiKiaId: kia,
@@ -190,6 +221,10 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
       deNghiLapSo: () => setS((c) => (c.lapSo || c.deNghiCho.some((d) => d.purpose === "lap_so") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-lap-so-${c.deNghiCho.length + 1}`, purpose: "lap_so", cuaToi: true }] })),
       deNghiBatDoi: () => setS((c) => (!c.lapSo || c.batDoi || c.deNghiCho.some((d) => d.purpose === "bat_doi") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-bat-doi-${c.deNghiCho.length + 1}`, purpose: "bat_doi", cuaToi: true }] })),
       thuHoiBatDoi: () => setS((c) => ({ ...c, batDoi: false, deNghiCho: c.deNghiCho.filter((d) => d.purpose !== "bat_doi") })),
+      chiaGu: () => setS((c) => (c.batDoi ? { ...c, gu: { mine_shared: true, theirs_shared: false, theirs: [], common: [] } } : c)),
+      thoiChiaGu: () => setS((c) => ({ ...c, gu: c.gu ? { ...c.gu, mine_shared: false } : c.gu })),
+      // The fixture has no week role: nothing to choose.
+      chonLo: () => undefined,
       datRangBuoc: async (rb) => {
         setS((c) => ({ ...c, rangBuoc: { ...c.rangBuoc, toi: { ...c.rangBuoc.toi, ...rb } } }));
         return true;
@@ -209,6 +244,8 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
         doi((ds) => [...ds, phacToGiay(id, NEP_PHAC_MAU)]);
         return id;
       },
+      // The fixture has no other writer: there is nothing new to read.
+      lamMoi: () => undefined,
       suaNhap: (id, content, lyDo) => doi((ds) => suaNhap(ds, id, content, lyDo)),
       gui: (id) => {
         const now = bayGio();

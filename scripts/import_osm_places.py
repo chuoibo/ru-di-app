@@ -56,6 +56,37 @@ def _database_url() -> str:
     return url
 
 
+# Largest hand-drawn destination box is 0.032 square degrees (Phu Quoc);
+# smallest province box is 0.600 (Ha Noi). The gap between them is wide, and
+# this sits in it.
+MAX_BBOX_DEGREES_SQUARED = 0.25
+
+
+def _refuse_a_box_too_big_to_ask_for(destination: dict[str, Any]) -> None:
+    """Stop before asking Overpass for a whole province.
+
+    Province destinations exist so that a fed place has somewhere to belong,
+    and their boxes are real geography: Ho Chi Minh City reaches Con Dao, Khanh
+    Hoa reaches Truong Sa at twenty-seven square degrees. Handing one of those
+    to Overpass is a request nobody should send to a shared public service, and
+    the answer would be useless anyway -- a catalogue is not built by asking
+    for every cafe in a province at once.
+
+    Checked here rather than written in a README because the person who runs
+    `--all` next will not have read the README.
+    """
+    area = (destination["bbox_north"] - destination["bbox_south"]) * (
+        destination["bbox_east"] - destination["bbox_west"]
+    )
+    if area <= MAX_BBOX_DEGREES_SQUARED:
+        return
+    raise SystemExit(
+        f"{destination['id']}: hộp bao {area:.2f} độ² vượt ngưỡng "
+        f"{MAX_BBOX_DEGREES_SQUARED} — đây là hộp cỡ tỉnh, không phải điểm đến "
+        f"để quét Overpass. Dùng --destination với một điểm đến biên soạn."
+    )
+
+
 def fetch_overpass(query: str, *, timeout_s: int = 180) -> dict[str, Any]:
     """One POST to Overpass. Raises on anything that is not a JSON answer."""
     data = urllib.parse.urlencode({"data": query}).encode("utf-8")
@@ -132,6 +163,7 @@ def import_destination(
     if offline is not None:
         payload = json.loads(offline.read_text(encoding="utf-8"))
     else:
+        _refuse_a_box_too_big_to_ask_for(destination)
         payload = fetch_overpass(
             overpass_query(
                 south=destination["bbox_south"],

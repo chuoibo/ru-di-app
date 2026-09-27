@@ -1,5 +1,6 @@
 /** Project a timeline day (fixture or live stops) onto the shared journey model. */
 
+import { veDuocLenBanDo } from "../../screens/kham-pha/places";
 import { geodesic } from "./duong";
 import { giayTuMet, haversineMet } from "./khoang";
 import type {
@@ -17,8 +18,8 @@ export function idSlot(slot: SlotChieu, _index: number): string {
   return slot.placeId ?? `gio:${slot.time}:${slot.title}`;
 }
 
-function choHopLe(place: ChoChieu | undefined): place is ChoChieu {
-  return place !== undefined && Number.isFinite(place.lat) && Number.isFinite(place.lng);
+function choHopLe(place: ChoChieu | undefined): place is ChoChieu & { lat: number; lng: number } {
+  return place !== undefined && veDuocLenBanDo(place);
 }
 
 function doanGiua(from: HoatDongHanhTrinh, to: HoatDongHanhTrinh): DoanDuongHanhTrinh | null {
@@ -59,15 +60,17 @@ export function chieuTuNgay(ngay: NgayChieu, places: readonly ChoChieu[]): HanhT
   const theoId = new Map(places.map((p) => [p.id, p]));
   const activities: HoatDongHanhTrinh[] = ngay.items.map((item, index) => {
     const place = item.placeId ? theoId.get(item.placeId) : undefined;
+    // Knowing the place and being able to pin it are separate: a province
+    // centroid still has a name and an address worth reading in the plan.
     const hop = choHopLe(place);
     return {
       id: idSlot(item, index),
       so: null,
       gio: item.time,
       tieuDe: item.title,
-      tenDiaDiem: hop ? place.name : null,
-      diaChi: hop ? (place.address ?? null) : null,
-      category: hop ? place.category : undefined,
+      tenDiaDiem: place ? place.name : null,
+      diaChi: place ? (place.address ?? null) : null,
+      category: place ? place.category : undefined,
       placeId: item.placeId ?? null,
       lat: hop ? place.lat : null,
       lng: hop ? place.lng : null,
@@ -86,9 +89,9 @@ export function chieuTuChang(stops: readonly ChangChieu[], places: readonly ChoC
       so: null,
       gio: stop.at,
       tieuDe: stop.label,
-      tenDiaDiem: hop ? place.name : stop.place_name,
-      diaChi: hop ? (place.address ?? null) : null,
-      category: hop ? place.category : undefined,
+      tenDiaDiem: place ? place.name : stop.place_name,
+      diaChi: place ? (place.address ?? null) : null,
+      category: place ? place.category : undefined,
       placeId: stop.place_id,
       lat: hop ? place.lat : stop.meeting_point?.lat ?? null,
       lng: hop ? place.lng : stop.meeting_point?.lng ?? null,

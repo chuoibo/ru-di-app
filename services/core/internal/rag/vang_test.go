@@ -168,7 +168,7 @@ func (v tapVang) hang(i int, q quanMau) repo.Place {
 	}
 	p := repo.Place{
 		ID: q.ID, DestinationID: q.DiemDen, Name: q.Ten, Category: q.Loai, Kinds: nonNil(q.Kinds),
-		Lat: d.Lat + float64(i%7-3)*0.004, Lng: d.Lng + float64(i%5-2)*0.004,
+		Lat: new(d.Lat + float64(i%7-3)*0.004), Lng: new(d.Lng + float64(i%5-2)*0.004),
 		OpenHours: q.Gio, Traits: nonNil(q.Traits), Description: q.MoTa, Source: "seed",
 	}
 	if q.DiaChi != "" {

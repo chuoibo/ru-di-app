@@ -64,9 +64,9 @@ func TestWorkerXepCatalogueTheoGuNhomVaDapRosterThanhVienConO(t *testing.T) {
 	// No prices, no distance, no capacity: the taste term is the only one
 	// that can order these two, so the order measures the taste and nothing
 	// else.
-	exec(`INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,source) VALUES
-		('place-a-quan-com','dest-mot','Quán cơm tổng hợp','quan-an-local','{}',10.77,106.7,'seed'),
-		('place-z-ca-phe','dest-mot','Cà phê tổng hợp','cafe','{}',10.77,106.7,'seed')`)
+	exec(`INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,source) VALUES
+		('place-a-quan-com','dest-mot','Quán cơm tổng hợp','quan-an-local','{}',10.77,106.7,'rooftop','seed'),
+		('place-z-ca-phe','dest-mot','Cà phê tổng hợp','cafe','{}',10.77,106.7,'rooftop','seed')`)
 
 	loiBan := f.tinTrongPhong(t, f.context, "Tối nay mình rảnh")
 	var loiCu string

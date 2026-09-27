@@ -743,6 +743,9 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 		{"POST proposals: bat_doi in a pending notebook", "409:consent_missing", onCtx("propose_pair_consent", w.an, w.ae, "body", body("purpose", "bat_doi"))},
 		{"POST proposals: the other person only invited", "409:cycle_not_active", onCtx("propose_pair_consent", w.an, w.ag, "body", body("purpose", "lap_so"))},
 		{"POST proposals: a stranger", "404:notebook_not_found", onCtx("propose_pair_consent", w.la, w.ab, "body", body("purpose", "lap_so"))},
+		// ADR-0034: chia_gu, one person's own switch inside «Một đôi».
+		{"POST proposals: chia_gu in a couple", "", onCtx("propose_pair_consent", w.dung, w.cd, "body", body("purpose", "chia_gu"))},
+		{"POST proposals: chia_gu outside a couple", "409:consent_missing", onCtx("propose_pair_consent", w.binh, w.ab, "body", body("purpose", "chia_gu"))},
 		{"POST grant: the second lap_so opens the notebook", "", onCtx("grant_pair_consent", w.em, w.ae, "proposal_id", w.prLapSoAE)},
 		{"POST grant: the second bat_doi makes a couple", "", onCtx("grant_pair_consent", w.binh, w.ab, "proposal_id", w.prBatDoiAB)},
 		{"POST grant: bat_doi with one of the two a couple elsewhere", "409:couple_slot_taken", onCtx("grant_pair_consent", w.chi, w.cg, "proposal_id", w.prBatDoiCG)},
@@ -756,6 +759,12 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 		{"DELETE consents: doc_chat drops a Nếp draft", "", onCtx("revoke_pair_consent", w.an, w.ae, "purpose", "doc_chat")},
 		{"DELETE consents: doc_chat with sheets but no Nếp draft", "", onCtx("revoke_pair_consent", w.an, w.ab, "purpose", "doc_chat")},
 		{"DELETE consents: no notebook yet", "", onCtx("revoke_pair_consent", w.em, w.be, "purpose", "lap_so")},
+		{"DELETE consents: chia_gu is one's own", "", onCtx("revoke_pair_consent", w.chi, w.cd, "purpose", "chia_gu")},
+		// ADR-0034 §2.4: «Người lo» of the week, in a couple and outside one.
+		{"PUT week-role: me, in a couple", "", onCtx("set_pair_week_role", w.chi, w.cd, "body", body("lo", "toi"))},
+		{"PUT week-role: both, in a couple", "", onCtx("set_pair_week_role", w.dung, w.cd, "body", body("lo", "ca_hai"))},
+		{"PUT week-role: outside a couple", "409:consent_missing", onCtx("set_pair_week_role", w.binh, w.ab, "body", body("lo", "nguoi_kia"))},
+		{"PUT week-role: a stranger", "404:notebook_not_found", onCtx("set_pair_week_role", w.la, w.cd, "body", body("lo", "toi"))},
 		{"DELETE consents: an unknown purpose", "404:consent_purpose_unknown", onCtx("revoke_pair_consent", w.an, w.ab, "purpose", "Lap_So")},
 		{"DELETE consents: a stranger", "404:notebook_not_found", onCtx("revoke_pair_consent", w.la, w.ab, "purpose", "doc_chat")},
 		{"PUT constraints: a first line of hostile text", "", onCtx("put_pair_constraint", w.an, w.ab, "kind", "dung", "body", body("content", "  "+hostile+"\x1f "))},
@@ -843,20 +852,20 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 	add("route POST responses: a catalogue place names the outing and its stop", "", base,
 		tweak(`INSERT INTO destinations (id, name, lat, lng, bbox_south, bbox_west, bbox_north, bbox_east, created_at, updated_at)
 		       VALUES ('d-cap', 'Nơi (dữ liệu mẫu)', 12, 109, 11, 108, 13, 110, '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
-			tweak(`INSERT INTO places (id, destination_id, name, category, lat, lng, source, created_at, updated_at)
+			tweak(`INSERT INTO places (id, destination_id, name, category, lat, lng, geo_precision, source, created_at, updated_at)
 			       VALUES ('e0000099-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'd-cap', 'Lẩu gà lá é (dữ liệu mẫu)', 'food', 10.77,
-			               106.7, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
+			               106.7, 'rooftop', 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
 				onPaper("respond_pair_paper", w.an, w.pAB1, "version", 2, "body", body("kind", "dong_y")))))
 	// draft_pair_paper reads the cycle's agreed sheets and the catalogue
 	// around their place: a plan at a catalogue place, newest in fa.
 	add("route POST papers/draft: an agreed place and new places of its kind", "", base,
 		tweak(`INSERT INTO destinations (id, name, lat, lng, bbox_south, bbox_west, bbox_north, bbox_east, created_at, updated_at)
 		       VALUES ('d-nhip', 'Nơi (dữ liệu mẫu)', 12, 109, 11, 108, 13, 110, '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
-			tweak(`INSERT INTO places (id, destination_id, name, category, kinds, traits, lat, lng, rating, rating_count, source, created_at, updated_at)
-			       VALUES ('p-cu', 'd-nhip', 'Chỗ cũ (dữ liệu mẫu)', 'food', '[]', '[]', 10.77, 106.7, 4.6, 12, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
-			              ('p-moi-a', 'd-nhip', 'Chỗ mới A (dữ liệu mẫu)', 'food', '["muộn"]', '[]', 10.77, 106.7, 4.9, 3, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
-			              ('p-moi-b', 'd-nhip', 'Chỗ mới B (dữ liệu mẫu)', 'food', '[]', '["yên tĩnh"]', 10.77, 106.7, 4.8, 40, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
-			              ('p-cafe', 'd-nhip', 'Cà phê (dữ liệu mẫu)', 'cafe', '[]', '[]', 10.77, 106.7, 5.0, 1, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
+			tweak(`INSERT INTO places (id, destination_id, name, category, kinds, traits, lat, lng, geo_precision, rating, rating_count, source, created_at, updated_at)
+			       VALUES ('p-cu', 'd-nhip', 'Chỗ cũ (dữ liệu mẫu)', 'food', '[]', '[]', 10.77, 106.7, 'rooftop', 4.6, 12, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
+			              ('p-moi-a', 'd-nhip', 'Chỗ mới A (dữ liệu mẫu)', 'food', '["muộn"]', '[]', 10.77, 106.7, 'rooftop', 4.9, 3, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
+			              ('p-moi-b', 'd-nhip', 'Chỗ mới B (dữ liệu mẫu)', 'food', '[]', '["yên tĩnh"]', 10.77, 106.7, 'rooftop', 4.8, 40, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z'),
+			              ('p-cafe', 'd-nhip', 'Cà phê (dữ liệu mẫu)', 'cafe', '[]', '[]', 10.77, 106.7, 'rooftop', 5.0, 1, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
 				tweak(`INSERT INTO pair_papers (id, context_id, context_kind, cycle_id, is_temporary, draft_owner_id, state, current_version,
 				                           tuan, created_at, expires_at)
 				       VALUES ('`+fid(kindPaper, 0x85)+`', '`+w.fa+`', 'pair', '`+w.cyFA+`', false, '`+w.phuong+`', 'chot', 1,
@@ -866,6 +875,21 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 					               '{"ngay": "2030-09-14", "chang": [{"gio": "19:45", "viec": "Ăn tối (dữ liệu mẫu)", "place_id": "p-cu", "can_kiem": false}]}',
 					               NULL, '{}', 'human', '2030-09-10T00:00:00Z', '`+w.phuong+`', '2030-09-10T00:00:00Z')`,
 						onCtx("draft_pair_paper", w.an, w.fa))))))
+	// ADR-0038 §2.1: An's invitation, written before the notebook existed, is
+	// filed under the cycle when Em's yes opens it.
+	add("route POST grant: the second lap_so files the open invitation", "", base,
+		// ae already holds an open sheet; the invitation takes its place, since
+		// a conversation has one open sheet at most.
+		tweak(`UPDATE pair_papers SET state = CASE WHEN state = 'nhap' THEN 'bo' ELSE 'huy' END WHERE context_id = '`+w.ae+`' AND state IN ('nhap', 'da_gui', 'da_xem', 'de_nghi_sua', 'dong_y')`,
+			tweak(`INSERT INTO pair_papers (id, context_id, context_kind, cycle_id, is_temporary, draft_owner_id, state, current_version,
+		                           tuan, created_at, expires_at)
+		       VALUES ('`+fid(kindPaper, 0x86)+`', '`+w.ae+`', 'pair', NULL, true, '`+w.an+`', 'nhap', 1,
+		               '2030-09-16', '2030-09-16T00:00:00Z', '2030-09-22T17:00:00Z')`,
+				tweak(`INSERT INTO pair_paper_versions (paper_id, version, content, ly_do, nguon, author_type, sent_at, sent_by, created_at)
+			       VALUES ('`+fid(kindPaper, 0x86)+`', 1,
+			               '{"ngay": "2030-09-21", "chang": [{"gio": "18:30", "viec": "Ăn tối (dữ liệu mẫu)", "place_id": null, "can_kiem": true}]}',
+			               NULL, '{}', 'human', NULL, NULL, '2030-09-16T00:00:00Z')`,
+					onCtx("grant_pair_consent", w.em, w.ae, "proposal_id", w.prLapSoAE)))))
 	add("route POST send: a draft whose week ended at this instant", "409:paper_expired", base,
 		tweak("UPDATE pair_papers SET expires_at = '"+now+"' WHERE id = '"+w.pCD1+"'",
 			onPaper("send_pair_paper", w.chi, w.pCD1, "body", body("version", 1))))
@@ -893,7 +917,7 @@ var pairMethods = []string{
 	"mark_version_sent", "set_paper_state", "mark_paper_viewed", "add_paper_response", "link_paper_outing",
 	"get_paper_outing", "add_paper_keep", "close_open_pair_papers", "create_outing",
 	"route.pair_notebook", "route.propose_pair_consent", "route.grant_pair_consent", "route.revoke_pair_consent",
-	"route.put_pair_constraint", "route.delete_pair_constraint", "route.preview_close_pair_notebook",
+	"route.put_pair_constraint", "route.delete_pair_constraint", "route.preview_close_pair_notebook", "route.set_pair_week_role",
 	"route.close_pair_notebook", "route.list_pair_papers", "route.draft_pair_paper", "route.pair_paper",
 	"route.edit_pair_draft", "route.send_pair_paper", "route.mark_pair_paper_viewed", "route.respond_pair_paper",
 	"route.withdraw_pair_paper", "route.skip_pair_week", "route.record_pair_outing_done", "route.keep_pair_paper_line",

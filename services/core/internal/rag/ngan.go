@@ -37,11 +37,24 @@ type Ngan struct {
 // dropped by SafeDeep. It never falls back to the whole catalogue: an empty
 // shortlist is an empty shortlist.
 func (k Kho) DanhSachNgan(ctx context.Context, cau string, group taste.Profile) (Ngan, error) {
+	return k.DanhSachNganTai(ctx, cau, group, "")
+}
+
+// DanhSachNganTai is DanhSachNgan held to one destination the caller already
+// knows (a destination id; "" lets the words decide, as DanhSachNgan does).
+// The caller checks the id exists: an unknown one shortlists nothing.
+func (k Kho) DanhSachNganTai(ctx context.Context, cau string, group taste.Profile, diemDen string) (Ngan, error) {
 	dests, err := repo.Repository{Q: k.Q}.ListDestinations(ctx)
 	if err != nil {
 		return Ngan{}, err
 	}
 	y, dd := DocCau(cau, DiemDenTuRepo(dests))
+	if diemDen != "" {
+		// The spans the words spent naming a place stay dropped from the
+		// lexical query either way; only which destination is searched moves.
+		y.DiemDen = diemDen
+		dd = DiemDenGiai{ID: diemDen, Nguon: NguonThamSo, Cum: dd.Cum}
+	}
 	y.K = ToiDaNgan
 	installed, err := Installed(ctx, k.Q)
 	if err != nil {

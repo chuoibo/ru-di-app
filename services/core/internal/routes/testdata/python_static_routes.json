@@ -7,14 +7,14 @@
    "headers": [
     [
      "content-length",
-     "534"
+     "620"
     ],
     [
      "content-type",
      "application/json"
     ]
    ],
-   "body": "{\"interests\":[{\"id\":\"an-uong\",\"label\":\"Ăn uống\"},{\"id\":\"cafe\",\"label\":\"Cafe\"},{\"id\":\"nightlife\",\"label\":\"Nightlife\"},{\"id\":\"mon-local\",\"label\":\"Món local\"},{\"id\":\"outdoor\",\"label\":\"Outdoor\"},{\"id\":\"shopping\",\"label\":\"Shopping\"},{\"id\":\"karaoke\",\"label\":\"Karaoke\"},{\"id\":\"game\",\"label\":\"Game\"}],\"budget_bands\":[{\"id\":\"tiet-kiem\",\"label\":\"Dưới 100K\",\"min_vnd\":0,\"max_vnd\":100000},{\"id\":\"vua-phai\",\"label\":\"100K–250K\",\"min_vnd\":100000,\"max_vnd\":250000},{\"id\":\"thoai-mai\",\"label\":\"250K–500K\",\"min_vnd\":250000,\"max_vnd\":500000}]}"
+   "body": "{\"interests\":[{\"id\":\"an-uong\",\"label\":\"Ăn uống\"},{\"id\":\"cafe\",\"label\":\"Cafe\"},{\"id\":\"nightlife\",\"label\":\"Chơi đêm\"},{\"id\":\"mon-local\",\"label\":\"Món local\"},{\"id\":\"outdoor\",\"label\":\"Ngoài trời\"},{\"id\":\"shopping\",\"label\":\"Mua sắm\"},{\"id\":\"karaoke\",\"label\":\"Karaoke\"},{\"id\":\"game\",\"label\":\"Chơi game\"}],\"budget_bands\":[{\"id\":\"tiet-kiem\",\"label\":\"Dưới 100K\",\"min_vnd\":0,\"max_vnd\":100000},{\"id\":\"vua-phai\",\"label\":\"100K–250K\",\"min_vnd\":100000,\"max_vnd\":250000},{\"id\":\"thoai-mai\",\"label\":\"250K–500K\",\"min_vnd\":250000,\"max_vnd\":500000},{\"id\":\"rong-tay\",\"label\":\"Trên 500K\",\"min_vnd\":500000,\"max_vnd\":null}]}"
   },
   {
    "method": "GET",

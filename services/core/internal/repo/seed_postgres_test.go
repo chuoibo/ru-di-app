@@ -225,7 +225,7 @@ func (w *world) catalogue() {
 	}
 	place := func(id, destination, category string, extra ...any) {
 		w.insert("places", append([]any{"id", id, "destination_id", destination, "name", "Quán " + id + " (dữ liệu mẫu)",
-			"category", category, "lat", 10.7702, "lng", 106.7, "source", "seed",
+			"category", category, "lat", 10.7702, "lng", 106.7, "geo_precision", "rooftop", "source", "seed",
 			"created_at", stdCreated, "updated_at", stdCreated}, extra...)...)
 	}
 	place("p-b", "d-bien", "cafe", "kinds", `["cà phê", "yên tĩnh"]`, "traits", `[]`, "rating", 4.5,

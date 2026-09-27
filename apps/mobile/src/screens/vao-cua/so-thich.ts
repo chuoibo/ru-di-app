@@ -40,7 +40,8 @@
  *  it and never carries meaning on its own. */
 export type SoThichMuc = { id: string; nhan: string; hinh: string };
 
-/** The eight the mockup draws, in its reading order.
+/** The eight the mockup draws, in its reading order. Labels in Vietnamese
+ * since ADR-0038 §2.4; the ids are the stored values and never change.
  *
  * A fixed local vocabulary rather than the place catalogue's categories, and
  * that is a decision rather than a shortcut: this question is about the person,
@@ -51,17 +52,17 @@ export type SoThichMuc = { id: string; nhan: string; hinh: string };
 export const SO_THICH: readonly SoThichMuc[] = [
   { id: "an-uong", nhan: "Ăn uống", hinh: "🍜" },
   { id: "cafe", nhan: "Cafe", hinh: "☕" },
-  { id: "nightlife", nhan: "Nightlife", hinh: "🍸" },
+  { id: "nightlife", nhan: "Chơi đêm", hinh: "🍸" },
   { id: "mon-local", nhan: "Món local", hinh: "🍲" },
-  { id: "outdoor", nhan: "Outdoor", hinh: "🥾" },
-  { id: "shopping", nhan: "Shopping", hinh: "🛍️" },
+  { id: "outdoor", nhan: "Ngoài trời", hinh: "🥾" },
+  { id: "shopping", nhan: "Mua sắm", hinh: "🛍️" },
   { id: "karaoke", nhan: "Karaoke", hinh: "🎤" },
-  { id: "game", nhan: "Game", hinh: "🎮" },
+  { id: "game", nhan: "Chơi game", hinh: "🎮" },
 ];
 
 /** A budget band, per person, per outing, in đồng.
  *
- * `tu` is inclusive and `den` is exclusive, so the three bands below tile
+ * `tu` is inclusive and `den` is exclusive, so the four bands below tile
  * without overlapping and no amount belongs to two of them. `den: null` is the
  * open top end; `tu: 0` is the open bottom.
  */
@@ -82,6 +83,8 @@ export const NGAN_SACH: readonly NganSachKhoang[] = [
   { id: "tiet-kiem", tu: 0, den: 100_000, nhan: "Dưới 100K", phu: "Tiết kiệm" },
   { id: "vua-phai", tu: 100_000, den: 250_000, nhan: "100K–250K", phu: "Vừa phải" },
   { id: "thoai-mai", tu: 250_000, den: 500_000, nhan: "250K–500K", phu: "Thoải mái" },
+  // ADR-0038 §2.5: the band the top one used to force people out of.
+  { id: "rong-tay", tu: 500_000, den: null, nhan: "Trên 500K", phu: "Rộng tay" },
 ];
 
 /** What the address book toggle actually resolved to.

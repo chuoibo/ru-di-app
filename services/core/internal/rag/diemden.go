@@ -56,6 +56,9 @@ const (
 	NguonTen    = "ten"
 	NguonPhieu  = "phieu"
 	NguonChang  = "lich_su"
+	// NguonThamSo: the caller named the destination outright (the public
+	// search's `?destination=`), so the words were not asked.
+	NguonThamSo = "tham_so"
 )
 
 // DiemDenGiai is ResolveDestination's answer.

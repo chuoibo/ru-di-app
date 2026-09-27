@@ -338,6 +338,69 @@ phẩm đúng».
 
 ## Overview
 
+## v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24, làm xong 2026-09-25)
+
+Mục này là hợp đồng hiện hành và **thắng mọi câu cũ bên dưới** ở chỗ hai bên nói khác nhau.
+Phần còn lại của file vẫn đúng ở chỗ mục này không nói tới: màu, chữ, tương phản, washi,
+con dấu. Kế hoạch và nhật ký: `docs/architecture/04-ui-v3-san-khau-giay.md`,
+`docs/claude/2026-09-25/san-khau-giay/README.md`.
+
+**Mỗi việc là một vật giấy, không phải một tờ điền chữ.** Bảng dưới là primitive cho mỗi việc;
+màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-song-man-tao.test.mjs` gác):
+
+| Việc | Vật | Primitive |
+|---|---|---|
+| Khay «Tạo mới», khay công cụ chat | vật ký hoạ trên bàn | `art/vat-ban.ts` + `ui/art/VeLop` |
+| Kèo | thiệp dán washi, xem trước là vé | `ChonNgayLich`, `TheVe`, `StampButton` |
+| Chia bill | hoá đơn nhiệt, bàn pop-up, cuống phiếu | `HoaDonGiay`, `BanGanMon`, `CuongPhieu` |
+| Sổ, đợt thu, tài chính | trang sổ kẻ dòng | `TrangSo` / `DongSo`, `DaiTienDo` |
+| Quyết toán | mũi tên mực tự vẽ, không mang số | `SoDoChuyen` |
+| Sổ hai người | bìa sổ, giao kèo có chữ ký, tờ bút chì | `SoBia`, `ChuKy`, `ToGiay`, `LaLich`, `BanXoay` |
+| Nhóm mới, nhóm trên kệ | bìa sổ, gáy sổ theo màu chat | `SoBia` (`nhan`), `bangMauChat` |
+| Mời, lời mời | phong bì | `PhongBi` |
+| Kết bạn | danh thiếp, người là hình nhân | `HinhNhan` |
+| Khám phá, Đi đâu | sân khấu thành phố, bưu thiếp | `art/thanh-pho.ts`, `SanKhau` |
+| Lên plan | vé; kèo đã qua là cuống | `TheVe`, `CuongPhieu` |
+| Tường, khoảnh khắc | ảnh in nghiêng có washi, instax | `KhungAnh` + `nghiengAnh`, `Washi` |
+| Thành tích | tờ tem | `Tem` |
+| Hồ sơ của mình và của người khác | trang hộ chiếu; tên người khác in bằng mực của họ | `DauLon co="nho"`, `mucNguoi` |
+| Hành trình bản đồ | trang ngày xé khỏi sổ, đặt đè lên bản đồ, mép xé và lỗ gáy quay về phía bản đồ | `NenGiay` + `hinhTrangXe` |
+| Cài đặt nhóm | góc trang chat xem trước màu bong bóng; «Rời nhóm» tách xa dưới nét kẻ | `bangMauChat` |
+| Thành viên | vai quản trị là con dấu mực | `Stamp tone="ink"` |
+
+Sau lượt đọc mù 26/09 (ADR-0038):
+
+- **Nút chưa dùng được phải nói vì sao, hoặc không hiện.** Không mờ bằng opacity nữa: `RudiButton` và
+  `StampButton` tắt là viền đứt `lineStrong` trên `card`, chữ `inkSoft` (≥ 4,5:1, `test_contrast_floor.py`),
+  và prop `lyDo` in lý do ngay dưới nút. Nút mà việc chưa có nghĩa thì không vẽ («Lưu tên» khi tên chưa đổi).
+- **Mép Nếp là dải ruy băng đánh dấu trang** màu `accent`, đuôi chữ V (`hinhRuyBang`), trong đúng 10dp của
+  ADR-0035. Kéo Nếp ra thì ruy băng mờ đi, mặt Nếp hiện.
+- Câu chữ: tab «Lịch trình / Bản đồ»; «Người lập nhóm»; nhãn gu tiếng Việt; mức chi thứ tư «Trên 500K».
+| Sở thích | bảng sticker (chọn là dán), mức chi là phong bì | `GuGlyph`, `StampButton` |
+| Đăng bài, story | trang thư và bốn phong bì người đọc; polaroid 24 giờ | `ONhapMuc`, `NapGiay` |
+| Bình chọn trong chat | giấy nhớ, mỗi phiếu là một dấu vân tay mực | — |
+| Ô nhập | dòng mực, không hộp | `ONhapMuc` (`Field` chỉ còn ở màn chưa làm lại) |
+
+**Luật đã thay luật v2:**
+- «Nếp Đứng Xa Tiền» → **«Nếp Không Chạm Số»**. Nếp diễn đúng tám khoảnh khắc (M1 khay tạo, M2
+  chụp bill, M3 ghi sổ, M4 tiền về, M5 tạo kèo, M6 sổ đôi mở, M7 gửi tờ, M8 huy hiệu mới), mỗi khoá
+  sự kiện một lần, trong vùng riêng của bố cục (`NepDien` giữ chỗ 128/112/88/0dp). Nếp cách số
+  tiền ≥ 16dp, không bao giờ ở lỗi hay xung đột; dock nhường chỗ khi Nếp trong trang hiện. Khung cuối
+  của mọi tiết mục nằm trong hộp (`nep-roi.test.mjs`, kể cả `buoc-di`).
+- «Trong / Trên Trang» → **Độ Cao Giấy 0–3** (`tokens.json` → `sanKhau.cao`, `bongGiay(level)`).
+- Avatar mang **mực người** (`mucNguoi`, tám màu, FNV-1a theo person id). `AvatarNguoi` chuyền
+  `personId` xuống, nên mọi avatar sống và tên người (chat, thành viên, bạn bè) cùng một mực.
+- Chuyển động: bật dựng ≤ 420ms, tiết mục ≤ 1400ms, lật trang 300ms. Giảm chuyển động thì khung
+  cuối tĩnh, cắt thẳng, không 3D. Control không xoay 3D.
+- **Nền `paper` ở theme tối không phải mặt chữ** cho accent/warn/faint (khoảng 4:1). Vật mang chữ
+  lỗi hay nút ghost dùng nền `card` (`chu-tren-giay.test.mjs`, nợ còn 2 ở ManHinhHanhTrinh).
+- Ô nhập trên web tắt viền trình duyệt (`ui/khong-vien-web.ts`, `khong-vien-web.test.mjs`).
+- Cảnh ký hoạ: mỗi cảnh đúng **một lớp cam** làm nguồn sáng; mặt giấy vẽ trước viền mực
+  (`thanh-pho.test.mjs`, `giay-vat-the.test.mjs`).
+
+**Vẫn cấm:** confetti và hạt bay, toast, modal lỗi, hero metric, thẻ lồng thẻ, nút lồng nút, animation
+lặp vô hạn ngoài Skeleton. Chỉ một vật bay một lần (thư M7).
+
 **Creative North Star: "Nhật ký chuyến đi sau giờ làm"**
 
 Một cuốn sổ chuyến đi cả hội cùng viết trong một buổi tối. *Bìa* vải indigo
@@ -2443,6 +2506,21 @@ python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo tr�
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/art-duong.test.mjs   # thêm 12/09: bản trang trùng sha256 fixtures/nep-trang-baseline.json; manh đúng một dải coral (laDaiGap), không mực lên dải, dày ≥ 2.5/5.5; lấp đầy ≥ 0.87, tỉ lệ ≥ 0.94; ba pose mới một coral; thuGapBa 0 coral, 5 đỉnh, hai vết ở 1/3, 2/3
 cd apps/mobile && node --test tests/so-ban-tinh-mot-cho.test.mjs   # ngoài so/ban-tinh.ts và ba chỗ có sẵn không file nào so loại sổ; ba chỗ ấy vẫn còn; ban-tinh.ts là lá
 cd apps/mobile && node --test tests/dau-gach-dai.test.mjs          # tuVung của BAN_TINH và mọi chuỗi app không có gạch dài
+```
+
+Cổng riêng của v3 «Sân khấu giấy» (đều nằm trong `npm test`, chạy lẻ được như sau từ
+`apps/mobile`, sau `npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs`):
+
+```bash
+node --test tests/chu-tren-giay.test.mjs          # D14: không chữ cam/cảnh báo/mờ trên nền paper; danh sách nợ đã về rỗng (S9)
+node --test tests/giay-vat-the.test.mjs           # vật giấy (hoá đơn, vé, tem, cuống, phong bì, trang xé) đúng ngữ pháp Java, trong hộp, tất định
+node --test tests/thanh-pho.test.mjs              # 15 sân khấu thành phố + bưu thiếp chung, id đọc từ destinations_vn.py, câu mô tả «Ký hoạ …»
+node --test tests/ky-niem-giay.test.mjs           # ảnh in nghiêng tất định theo id, album rỗng tách «chưa có kèo» khỏi «kèo chưa tới ngày», huy hiệu mới
+node --test tests/loi-qc-nguoi-chat.test.mjs      # ghim bản sửa B2/B3/B8, mực người qua AvatarNguoi, bong bóng xem trước dùng đúng bangMauChat
+node --test tests/route-fixture-co-phien.test.mjs # B5: ba route fixture chuyển về màn live khi có phiên
+node --test tests/khong-vien-web.test.mjs         # B7: mọi TextInput mang KHONG_VIEN_WEB, không còn khung focus của trình duyệt
+node --test tests/suc-song-man-tao.test.mjs       # màn tạo, màn tiền, sổ đôi và các màn trong phạm vi phải render ít nhất một vật sân khấu
+node --test tests/san-khau.test.mjs tests/nep-roi.test.mjs tests/muc-nguoi.test.mjs tests/token-san-khau.test.mjs tests/skia-ranh-gioi.test.mjs tests/chuoi-maestro-con-song.test.mjs
 ```
 
 Màn native thì cổng là **emulator**, không phải web export (dòng FINISH của

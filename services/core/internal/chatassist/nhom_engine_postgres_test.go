@@ -234,7 +234,7 @@ func TestNhomQuaEngineGoQuanTuDanhMuc(t *testing.T) {
 	if _, err := n.f.pool.Exec(ctx, `INSERT INTO destinations(id,name,lat,lng,bbox_south,bbox_west,bbox_north,bbox_east,sort_order) VALUES($1,'Đà Lạt',11.94,108.44,11.8,108.3,12.1,108.6,0)`, dd); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := n.f.pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,traits,description,source,price_min_vnd) VALUES($1,$2,'Quán Gió Đồi','quan_an','[]'::jsonb,11.9,108.4,'[]'::jsonb,'Quán yên tĩnh','curated',50000)`, quan, dd); err != nil {
+	if _, err := n.f.pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,traits,description,source,price_min_vnd) VALUES($1,$2,'Quán Gió Đồi','quan_an','[]'::jsonb,11.9,108.4,'rooftop','[]'::jsonb,'Quán yên tĩnh','curated',50000)`, quan, dd); err != nil {
 		t.Fatal(err)
 	}
 	id, _ := n.hoi(t, "hoi", "@Rủ Đi quán nào ở Đà Lạt", goiThu())
