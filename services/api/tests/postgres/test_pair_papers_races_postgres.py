@@ -526,9 +526,10 @@ def test_chot_ghi_chang_da_dong_y_vao_keo_va_dat_ten_theo_cho(
     )
     first.execute(
         text(
-            "INSERT INTO places (id, destination_id, name, category, lat, lng, source,"
-            " created_at, updated_at) VALUES ('p-lau-ga-mau', 'd-mau-cap',"
-            " 'Lẩu gà lá é (dữ liệu mẫu)', 'food', 10.77, 106.7, 'seed', :t, :t)"
+            "INSERT INTO places (id, destination_id, name, category, lat, lng,"
+            " geo_precision, source, created_at, updated_at) VALUES ('p-lau-ga-mau',"
+            " 'd-mau-cap', 'Lẩu gà lá é (dữ liệu mẫu)', 'food', 10.77, 106.7,"
+            " 'rooftop', 'seed', :t, :t)"
         ),
         {"t": NOW},
     )
