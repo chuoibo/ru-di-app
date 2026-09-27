@@ -358,6 +358,34 @@ services:
       start_period: 5s
       retries: 20
 
+  # Sidecar suy luận (services/ai-infer, ADR-0031): chỉ gọi model, không có
+  # luật nghiệp vụ. Bật bằng
+  #   docker compose --profile ai up -d ai-infer
+  # Mặc định ở đây: sparse = stub (băm tất định, không trọng số), trí nhớ TẮT
+  # (compose chưa có Milvus; bật bằng AI_INFER_GEMINI_MODE=stub|real cùng
+  # AI_INFER_MILVUS_URI). MILCO thật không bật được ở đây: cần duyệt license
+  # (AI_INFER_MILCO_LICENSE_REVIEW) và trọng số ghim commit — xem
+  # services/ai-infer/ai_infer/config.py. Chỉ publish ra 127.0.0.1; token nội bộ bắt
+  # buộc, giá trị dưới đây chỉ dành cho máy dev.
+  ai-infer:
+    build:
+      context: services/ai-infer
+    image: mobile-local/ai-infer:dev
+    profiles: ["ai"]
+    environment:
+      AI_INFER_TOKEN: ${AI_INFER_TOKEN:-ai-infer-dev-only-token-not-a-secret-0000}
+      AI_INFER_SPARSE_MODE: ${AI_INFER_SPARSE_MODE:-stub}
+      AI_INFER_GEMINI_MODE: ${AI_INFER_GEMINI_MODE:-off}
+      AI_INFER_MILVUS_URI: ${AI_INFER_MILVUS_URI:-}
+      AI_INFER_MILVUS_TOKEN: ${AI_INFER_MILVUS_TOKEN:-}
+      MEM0_TELEMETRY: "false"
+      MEM0_DIR: /tmp/mem0
+    read_only: true
+    tmpfs:
+      - /tmp
+    ports:
+      - "127.0.0.1:${AI_INFER_PORT:-18090}:8090"
+
   # Không nằm trong `docker compose up`: seed là thao tác có chủ đích, không
   # phải thứ chạy lén mỗi lần ai đó khởi động lại hệ. `make seed` gọi nó.
   seed: &seed-service

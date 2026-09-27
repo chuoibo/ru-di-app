@@ -68,6 +68,15 @@ class TheGateOnThisTree(unittest.TestCase):
             f"services/api/Dockerfile is not digest-pinned:\n{result.stdout}\n{result.stderr}",
         )
 
+    def test_the_ai_infer_dockerfile_is_digest_pinned(self):
+        """The inference sidecar's image (services/ai-infer). It is not built
+        on a machine without Docker, so this text check is the only gate that
+        runs everywhere."""
+        dockerfile = REPO_ROOT / "services" / "ai-infer" / "Dockerfile"
+        self.assertTrue(dockerfile.is_file(), f"{dockerfile} is missing")
+        result = _run(str(dockerfile.relative_to(REPO_ROOT)))
+        self.assertEqual(result.returncode, 0, f"{result.stdout}\n{result.stderr}")
+
     def test_the_default_argument_points_at_the_real_dockerfile(self):
         """Called with no arguments -- the form the workflow used for a year --
         it must still check the API image rather than silently checking nothing."""
@@ -232,9 +241,7 @@ class TheDigestHasToBeTheArgValue(unittest.TestCase):
         blank it. Rejecting this shape would break the one legal way to use a
         build arg across stages, and an unusable gate gets deleted."""
         result = self._check(
-            f"ARG PY=python:3.12-slim@{DIGEST}\n"
-            "FROM ${PY} AS build\n"
-            "ARG PY\n"
+            f"ARG PY=python:3.12-slim@{DIGEST}\nFROM ${{PY}} AS build\nARG PY\n"
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 

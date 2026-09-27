@@ -288,6 +288,25 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="4649fc37ad4aaf30",
         why="",
     ),
+    # --- test.yml: ai-infer (ADR-0031 inference sidecar) -----------------
+    "test.yml::ai-infer::Install the pinned sidecar tree": Covered(
+        kind=SETUP_KIND,
+        stages=(),
+        body_sha="06762f186d7c5b64",
+        why="pip install of services/ai-infer/requirements-dev.txt; asserts nothing about the tree",
+    ),
+    "test.yml::ai-infer::Offline tier -- fakes only, no skip, sentinels pass": Covered(
+        kind=GATE_KIND,
+        stages=("ai-infer",),
+        body_sha="6352e194146dc597",
+        why="",
+    ),
+    "test.yml::ai-infer::Live tier on a disposable pinned Milvus -- a skip is a failure": Covered(
+        kind=GATE_KIND,
+        stages=("ai-infer-milvus",),
+        body_sha="492a6f49b6973156",
+        why="",
+    ),
     "test.yml::core::Route manifest matches the app and the binary": Covered(
         kind=GATE_KIND,
         stages=("ownership",),

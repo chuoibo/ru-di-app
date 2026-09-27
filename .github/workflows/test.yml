@@ -296,6 +296,32 @@ jobs:
       - name: Invariants on every request, canary red, identity green
         run: scripts/eval_kich_ban.sh
 
+  # The inference sidecar (services/ai-infer, ADR-0031): Python for model
+  # calls only. Its own job because it needs its own pinned Python tree and
+  # none of the Go or API setup; the same two commands as the `ai-infer` and
+  # `ai-infer-milvus` stages of scripts/gate.sh.
+  ai-infer:
+    name: ai-infer sidecar (offline, then a real Milvus)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the pinned sidecar tree
+        run: python -m pip install --no-cache-dir -r services/ai-infer/requirements-dev.txt
+
+      - name: Offline tier -- fakes only, no skip, sentinels pass
+        run: AI_INFER_PYTHON=python scripts/ai_infer_tier.sh
+
+      - name: Live tier on a disposable pinned Milvus -- a skip is a failure
+        # No AI_INFER_TEST_MILVUS_URI here, so the script starts the
+        # digest-pinned v3.0.2 image itself, auth on, loopback only.
+        run: AI_INFER_PYTHON=python scripts/ai_infer_tier.sh --milvus
+
   # ADR-0029: the parity harness. Same commands as the `parity` stage of
   # scripts/gate.sh, but split across jobs that run at the same time.
   #

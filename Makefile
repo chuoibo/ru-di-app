@@ -40,7 +40,7 @@ DC = $(COMPOSE) -p $(PROJECT)
 WAIT_TIMEOUT ?= 300
 
 .DEFAULT_GOAL := help
-.PHONY: help gate gate-merge ruff-fix test-db e2e up down clean logs ps migrate db-check seed demo demo-reset demo-check demo-data-check demo-persona-check demo-key-check demo-watch demo-watch-status demo-watch-install hero-walk hero-walk-status smoke bundle-check bundle android-doctor android-up android-check android-down android-adb parity parity-up parity-down go-postgres go-broker eval-kich-ban
+.PHONY: help gate gate-merge ruff-fix test-db e2e up down clean logs ps migrate db-check seed demo demo-reset demo-check demo-data-check demo-persona-check demo-key-check demo-watch demo-watch-status demo-watch-install hero-walk hero-walk-status smoke bundle-check bundle android-doctor android-up android-check android-down android-adb parity parity-up parity-down go-postgres go-broker eval-kich-ban ai-infer ai-infer-milvus
 
 # `demo` phải gọi đúng bộ container mà `up` vừa dựng. Trên nhánh này biến đó là
 # $(COMPOSE); PR #60 (đang mở, cùng lane) đổi nó thành $(DC) = compose kèm
@@ -144,6 +144,12 @@ go-broker: ## Test Redis + RabbitMQ thật của services/core (container dùng 
 
 eval-kich-ban: ## Eval T1: Nếp qua Engine.Run trên stub kịch bản — bất biến, canary đỏ đúng chỗ, đồng nhất xanh, bỏ qua là hỏng
 	@scripts/eval_kich_ban.sh
+
+ai-infer: ## Sidecar suy luận (services/ai-infer) offline: fake thuần + fake Gemini loopback; bỏ qua là hỏng, sentinel phải PASS
+	@scripts/ai_infer_tier.sh
+
+ai-infer-milvus: ## Sidecar suy luận trên Milvus thật (AI_INFER_TEST_MILVUS_URI hoặc container ghim digest); bỏ qua là hỏng
+	@scripts/ai_infer_tier.sh --milvus
 
 up: ## Dựng ảnh, chạy migration, bật API, seed dữ liệu mẫu, rồi tự kiểm
 	@# Trước `docker build`, không phải sau: build mất vài phút, và một cảnh
