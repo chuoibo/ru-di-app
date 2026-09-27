@@ -16,6 +16,7 @@
  * are `Money` at their own size and wrap when the window is narrow; nothing
  * shrinks a sum to fit a row.
  */
+import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -52,9 +53,15 @@ import {
 import { homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { typography, useRudiTheme } from "../../theme";
-import { Chip, Field, IconButton, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../ui";
+import { Chip, IconButton, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
 import { Money } from "../../ui/Money";
+import { BanXoay } from "../../ui/BanXoay";
+import { HoaDonGiay } from "../../ui/HoaDonGiay";
+import { NepDien } from "../../ui/NepDien";
+import { PressScale } from "../../ui/PressScale";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { StampButton } from "../../ui/StampButton";
 import { ReorderList } from "../../ui/ReorderList";
 import { Sheet } from "../../ui/Sheet";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
@@ -98,9 +105,23 @@ function dongDiaDiem(stop: ChangDung): { chu: string; tone: "accent" | "inkFaint
   return { chu: stop.place_name, tone: "accent" };
 }
 
+/** «19:30» → minutes from midnight; anything else is no hour yet. */
+function phutTuGio(gio: string): number | null {
+  const khop = /^(\d{1,2}):(\d{2})$/.exec(gio.trim());
+  if (!khop) return null;
+  const h = Number(khop[1]);
+  const m = Number(khop[2]);
+  return h < 24 && m < 60 ? h * 60 + m : null;
+}
+
+/** Minutes from midnight → «19:30», as the stop's hour is spelled. */
+function gioTuPhut(phut: number): string {
+  return `${String(Math.floor(phut / 60)).padStart(2, "0")}:${String(phut % 60).padStart(2, "0")}`;
+}
+
 export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; vua?: string }>();
   const { colors } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
   const outingId = thamSoChuoi(params.id);
@@ -290,12 +311,12 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
         <Sheet accessibilityLabel="Chặng mới" onClose={() => setMoThem(false)} open={moThem}>
           <View style={styles.khay}>
             <Text style={[typography.h2, { color: colors.ink }]}>Chặng mới</Text>
-            <View style={styles.hang}>
-              <View style={styles.oGio}>
-                <Field accessibilityLabel="Ô giờ chặng" icon="time-outline" keyboardType="numbers-and-punctuation" label="Giờ" onChangeText={setGio} value={gio} />
-              </View>
+            {/* The hour on a dial (typing stays behind «Ô giờ chặng»), the stop
+                written beside it on a pen line (ADR-0037 D1, plan S3). */}
+            <View style={styles.hangChang}>
+              <BanXoay co={140} nhan="Giờ chặng" oLabel="Ô giờ chặng" onChange={(p) => setGio(gioTuPhut(p))} phut={phutTuGio(gio)} testID="gio-chang" />
               <View style={styles.flex}>
-                <Field accessibilityLabel="Ô tên chặng" icon="flag-outline" label="Chặng" onChangeText={setNhan} placeholder="Ví dụ: Ăn tối" value={nhan} />
+                <ONhapMuc accessibilityLabel="Ô tên chặng" label="Chặng" onChangeText={setNhan} placeholder="Ăn tối" value={nhan} />
               </View>
             </View>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Địa điểm trong danh mục (tuỳ chọn)</Text>
@@ -313,7 +334,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             </ScrollView>
             {khongKhop}
             {thongBao !== null && moThem ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
-            <RudiButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} />
+            <StampButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} size="vua" tilt={-1} />
           </View>
         </Sheet>
         <Sheet accessibilityLabel="Gắn địa điểm" onClose={() => setGanChoChang(null)} open={ganChoChang !== null}>
@@ -383,7 +404,16 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" && !hanhTrinh ? (
         <ScrollView scrollEnabled={!dragging} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 20 }}>
           <View style={styles.dau}>
-            <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
+            {/* M5: the outing just made from «Kèo mới» (`?vua=tao`): Nếp sets
+                off beside its title, once. Opened any other way, it is not news. */}
+            {params.vua === "tao" ? (
+              <View style={styles.dauVuaTao}>
+                <Text style={[typography.h1, styles.flex1, { color: colors.ink }]}>{trang.keo.title}</Text>
+                <NepDien khoanhKhac="M5" suKien={`keo-tao:${trang.keo.id}`} />
+              </View>
+            ) : (
+              <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
+            )}
             <Text style={[typography.body, { color: colors.inkSoft }]}>
               {nhanKhoangNgay(trang.keo.starts_on, trang.keo.ends_on)} · {trang.keo.headcount} người
               {nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay())) ? ` · ${nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()))}` : ""}
@@ -410,15 +440,21 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             {/* The bill of this outing belongs to the outing's own context --
                 a pair's plan is split in the pair, never in whichever group
                 happens to be current (QA 23/09). */}
-            <RudiButton
-              compact
-              full={false}
-              icon="receipt-outline"
-              label="Chia bill buổi này"
+            {/* A blank receipt to tear off: the bill of this evening starts here
+                (ADR-0037 D1, plan S4). */}
+            <PressScale
+              accessibilityLabel="Chia bill buổi này"
+              accessibilityRole="button"
               onPress={() => router.push(`/smart-split/${trang.keo.id}/review?ctx=${trang.keo.context_id}&dip=${encodeURIComponent(trang.keo.title)}` as never)}
-              tone="split"
-              variant="outline"
-            />
+              style={styles.nutHoaDon}
+            >
+              <HoaDonGiay>
+                <View style={styles.hoaDonChu}>
+                  <Ionicons color={colors.split} name="receipt-outline" size={20} />
+                  <Text style={[typography.label, { color: colors.ink }]}>Chia bill buổi này</Text>
+                </View>
+              </HoaDonGiay>
+            </PressScale>
           </View>
           <SectionHeader
             action={draft ? undefined : moThem ? "Đóng" : "Thêm chặng"}
@@ -499,6 +535,11 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
 }
 
 const styles = StyleSheet.create({
+  nutHoaDon: { alignSelf: "flex-start", transform: [{ rotate: "-1deg" }] },
+  hoaDonChu: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10 },
+  hangChang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
+  dauVuaTao: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  flex1: { flex: 1 },
   hangChip: { flexDirection: "row", gap: 6, paddingRight: 8 },
   flex: { flex: 1 },
   // The map is the page here: it runs to the bottom edge and the journey
@@ -511,7 +552,5 @@ const styles = StyleSheet.create({
   oTien: { gap: 2, minWidth: 140 },
   khay: { gap: 12, paddingBottom: 4 },
   form: { gap: 12 },
-  hang: { flexDirection: "row", gap: 10 },
-  oGio: { width: 118 },
   danhSach: { paddingVertical: 4, gap: 10 },
 });

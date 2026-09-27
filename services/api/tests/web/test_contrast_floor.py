@@ -130,6 +130,7 @@ def interactive_boundaries() -> list[tuple[str, str, str]]:
     # The RuDi shell's primitives (App B's Kit.tsx left with App B, 2026-09-04).
     button = kit_component("RudiButton")
     field = kit_component("Field")
+    o_nhap_muc = kit_component("ONhapMuc")
     chip = kit_component("Chip")
     cover_button = kit_component("CoverButton")
     return [
@@ -167,6 +168,18 @@ def interactive_boundaries() -> list[tuple[str, str, str]]:
             kit_border_token(r"const mauVien = [^;]*:\s*colors\.(\w+);", field),
             "card",
         ),
+        # UI v3 (ADR-0037): the field written on the page has no box; its ink
+        # rule is the whole boundary, on a paper object (card) or on the page.
+        (
+            "app: ô nhập ONhapMuc, gạch mực trên thẻ",
+            kit_border_token(r"const mauGach = [^;]*:\s*colors\.(\w+);", o_nhap_muc),
+            "card",
+        ),
+        (
+            "app: ô nhập ONhapMuc, gạch mực trên nền trang",
+            kit_border_token(r"const mauGach = [^;]*:\s*colors\.(\w+);", o_nhap_muc),
+            "ground",
+        ),
         (
             "app: chip Chip chưa chọn, viền trên thẻ",
             kit_border_token(
@@ -182,6 +195,18 @@ def interactive_boundaries() -> list[tuple[str, str, str]]:
                 chip,
             ),
             "ground",
+        ),
+        # ADR-0038 §2.2: a button not yet usable is a dashed outline on card,
+        # not a faded fill; its edge is the whole affordance left.
+        (
+            "app: nút RudiButton chưa dùng được, viền đứt trên nền trang",
+            kit_border_token(r"const vienTat = colors\.(\w+);", button),
+            "ground",
+        ),
+        (
+            "app: nút RudiButton chưa dùng được, viền đứt trên thẻ",
+            kit_border_token(r"const vienTat = colors\.(\w+);", button),
+            "card",
         ),
         # Guest page. All three live inside <section class="card">.
         (
@@ -360,6 +385,26 @@ class TextContrastStillHolds(unittest.TestCase):
                     TEXT_FLOOR,
                     f"phụ đề Heading `{match.group(1)}` trên `ground` ở {mode}",
                 )
+
+    def test_a_disabled_button_keeps_readable_words(self):
+        """ADR-0038 §2.2: the blind read of 26/09 could not read five greyed-out
+        primary buttons. Not yet usable keeps its words at the text floor."""
+        button = kit_component("RudiButton")
+        rudi = re.search(r"const chuTat = colors\.(\w+);", button)
+        self.assertIsNotNone(rudi, "RudiButton không còn khai `chuTat`")
+        stamp = kit_component("StampButton")
+        dau = re.search(r"const mucChu = tat \? colors\.(\w+) : muc;", stamp)
+        self.assertIsNotNone(dau, "StampButton không còn khai mực của dấu chưa bấm được")
+        self.assertNotRegex(button + stamp, r"opacity:\s*disabled", "nút tắt lại được làm mờ bằng opacity")
+        for mode in ("light", "dark"):
+            colours = palette(mode)
+            for ten, token in (("RudiButton", rudi.group(1)), ("StampButton", dau.group(1))):
+                with self.subTest(mode=mode, nut=ten):
+                    self.assertGreaterEqual(
+                        round(contrast(colours[token], colours["card"]), 2),
+                        TEXT_FLOOR,
+                        f"chữ nút {ten} chưa dùng được `{token}` trên `card` ở {mode}",
+                    )
 
     def test_placeholder_tone_clears_the_text_floor(self):
         for mode in ("light", "dark"):

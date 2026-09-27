@@ -190,9 +190,28 @@ export function coTheDeNghiSua(to: ToGiay, toiId: string): boolean {
  * show as «Tờ giấy không ở trạng thái làm được việc này.» over a sheet the
  * person could see was fine.
  */
-export function nenXinTo(daNap: boolean, to: ToGiay | undefined): "cho" | "xin" | "thoi" {
+export function nenXinTo(daNap: boolean, to: ToGiay | undefined, lapSo = true): "cho" | "xin" | "thoi" {
   if (!daNap) return "cho";
+  // No notebook yet: a draft asked for now has no week to belong to. The
+  // server kept it anyway (a paper with no cycle, seen by its owner only), and
+  // once the notebook opened it blocked the other person's own «Rủ đi chơi»
+  // for the rest of the week (QC 24/09, B1). Nothing is drafted before both
+  // have agreed; the screen offers «Đề nghị lập sổ» instead.
+  if (!lapSo) return "thoi";
   return to !== undefined && TRANG_THAI_MO.includes(to.state) ? "thoi" : "xin";
+}
+
+/**
+ * What a refused «Rủ đi chơi» means for the screen (QC 24/09, B1).
+ *
+ * `paper_wrong_state` while no open sheet is in view: this week already has a
+ * sheet, and it is one this person cannot see -- the other person's draft,
+ * private until sent. The honest state is «waiting on them», with a way to
+ * look again; not an error sentence over a button that fails the same way on
+ * every press. Any other refusal is just a refusal.
+ */
+export function sauKhiXinTo(ma: string | null, coToMo: boolean): "cho-nguoi-kia" | null {
+  return ma === "paper_wrong_state" && !coToMo ? "cho-nguoi-kia" : null;
 }
 
 /**

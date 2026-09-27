@@ -423,6 +423,20 @@ func GrantConsent(s Store, actor Actor, contextID, proposalID string, now time.T
 			if err := s.ActivatePairCycle(*notebook.CycleID, now); err != nil {
 				return ProposalView{}, err
 			}
+			// ADR-0038 §2.1: the invitation being written before the notebook
+			// existed becomes its first page. Left temporary it stays readable
+			// by its owner only and still holds the one open sheet.
+			papers, err := s.ListPairPapers(contextID)
+			if err != nil {
+				return ProposalView{}, err
+			}
+			for i := range papers {
+				if papers[i].IsTemporary && pairpaper.IsOpen(pairpaper.HieuLuc(PaperDict(&papers[i]), now)) {
+					if err := s.AdoptTemporaryPaper(papers[i].ID, *notebook.CycleID); err != nil {
+						return ProposalView{}, err
+					}
+				}
+			}
 		case "bat_doi":
 			for _, person := range participants {
 				if err := s.SetCoupleMember(person, *notebook.CycleID, now); err != nil {

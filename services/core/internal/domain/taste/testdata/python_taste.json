@@ -21856,6 +21856,17 @@
    }
   },
   {
+   "name": "midpoint/'rong-tay'",
+   "in": {
+    "band_id": "rong-tay"
+   },
+   "calls": {
+    "_midpoint_vnd": {
+     "ok": 500000
+    }
+   }
+  },
+  {
    "name": "midpoint/'sang-chanh'",
    "in": {
     "band_id": "sang-chanh"
@@ -22364,6 +22375,36 @@
    }
   },
   {
+   "name": "person/none/'rong-tay'",
+   "in": {
+    "band_id": "rong-tay",
+    "interests": []
+   },
+   "calls": {
+    "profile_for_person": {
+     "ok": {
+      "$profile": {
+       "basis": "ca-nhan",
+       "interests": {
+        "$tuple": []
+       },
+       "budget_per_person_vnd": 500000,
+       "size": null,
+       "people": 1,
+       "people_answered": 1,
+       "cache_key": {
+        "$cat": [
+         "ca-nhan||5000",
+         "00|None"
+        ]
+       },
+       "known": true
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "person/none/'sang-chanh'",
    "in": {
     "band_id": "sang-chanh",
@@ -22535,6 +22576,40 @@
        "cache_key": {
         "$cat": [
          "ca-nhan|cafe|3750",
+         "00|None"
+        ]
+       },
+       "known": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "person/cafe/'rong-tay'",
+   "in": {
+    "band_id": "rong-tay",
+    "interests": [
+     "cafe"
+    ]
+   },
+   "calls": {
+    "profile_for_person": {
+     "ok": {
+      "$profile": {
+       "basis": "ca-nhan",
+       "interests": {
+        "$tuple": [
+         "cafe"
+        ]
+       },
+       "budget_per_person_vnd": 500000,
+       "size": null,
+       "people": 1,
+       "people_answered": 1,
+       "cache_key": {
+        "$cat": [
+         "ca-nhan|cafe|5000",
          "00|None"
         ]
        },
@@ -22726,6 +22801,38 @@
    }
   },
   {
+   "name": "person/unknown_only/'rong-tay'",
+   "in": {
+    "band_id": "rong-tay",
+    "interests": [
+     "du-thuyen"
+    ]
+   },
+   "calls": {
+    "profile_for_person": {
+     "ok": {
+      "$profile": {
+       "basis": "ca-nhan",
+       "interests": {
+        "$tuple": []
+       },
+       "budget_per_person_vnd": 500000,
+       "size": null,
+       "people": 1,
+       "people_answered": 1,
+       "cache_key": {
+        "$cat": [
+         "ca-nhan||5000",
+         "00|None"
+        ]
+       },
+       "known": true
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "person/unknown_only/'sang-chanh'",
    "in": {
     "band_id": "sang-chanh",
@@ -22893,6 +23000,38 @@
        "cache_key": {
         "$cat": [
          "ca-nhan||3750",
+         "00|None"
+        ]
+       },
+       "known": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "person/empty_word/'rong-tay'",
+   "in": {
+    "band_id": "rong-tay",
+    "interests": [
+     ""
+    ]
+   },
+   "calls": {
+    "profile_for_person": {
+     "ok": {
+      "$profile": {
+       "basis": "ca-nhan",
+       "interests": {
+        "$tuple": []
+       },
+       "budget_per_person_vnd": 500000,
+       "size": null,
+       "people": 1,
+       "people_answered": 1,
+       "cache_key": {
+        "$cat": [
+         "ca-nhan||5000",
          "00|None"
         ]
        },
@@ -23098,6 +23237,45 @@
        "cache_key": {
         "$cat": [
          "ca-nhan|an-uong,cafe,game|3750",
+         "00|None"
+        ]
+       },
+       "known": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "person/duplicates_reversed/'rong-tay'",
+   "in": {
+    "band_id": "rong-tay",
+    "interests": [
+     "game",
+     "cafe",
+     "cafe",
+     "an-uong"
+    ]
+   },
+   "calls": {
+    "profile_for_person": {
+     "ok": {
+      "$profile": {
+       "basis": "ca-nhan",
+       "interests": {
+        "$tuple": [
+         "an-uong",
+         "cafe",
+         "game"
+        ]
+       },
+       "budget_per_person_vnd": 500000,
+       "size": null,
+       "people": 1,
+       "people_answered": 1,
+       "cache_key": {
+        "$cat": [
+         "ca-nhan|an-uong,cafe,game|5000",
          "00|None"
         ]
        },
@@ -23353,6 +23531,54 @@
        "cache_key": {
         "$cat": [
          "ca-nhan|an-uong,cafe,nightlife,mon-local,outdoor,shopping,karaoke,game|3750",
+         "00|None"
+        ]
+       },
+       "known": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "person/all/'rong-tay'",
+   "in": {
+    "band_id": "rong-tay",
+    "interests": [
+     "an-uong",
+     "cafe",
+     "nightlife",
+     "mon-local",
+     "outdoor",
+     "shopping",
+     "karaoke",
+     "game"
+    ]
+   },
+   "calls": {
+    "profile_for_person": {
+     "ok": {
+      "$profile": {
+       "basis": "ca-nhan",
+       "interests": {
+        "$tuple": [
+         "an-uong",
+         "cafe",
+         "nightlife",
+         "mon-local",
+         "outdoor",
+         "shopping",
+         "karaoke",
+         "game"
+        ]
+       },
+       "budget_per_person_vnd": 500000,
+       "size": null,
+       "people": 1,
+       "people_answered": 1,
+       "cache_key": {
+        "$cat": [
+         "ca-nhan|an-uong,cafe,nightlife,mon-local,outdoor,shopping,karaoke,game|5000",
          "00|None"
         ]
        },

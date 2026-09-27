@@ -4,8 +4,9 @@ import { Image, ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { Children, createContext, useContext, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { Children, createContext, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
+import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DemoPerson } from "./fixtures";
@@ -16,7 +17,9 @@ import { Grain } from "./ui/Grain";
 import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
+import { CuonContext } from "./ui/cuon";
 import { gridFor, tabBarHeight } from "./adaptive";
+import { KHONG_VIEN_WEB } from "./ui/khong-vien-web";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -44,6 +47,19 @@ type ScreenProps = {
   keepEnd?: boolean;
   /** Stays above the scroll box: a chat's top bar and pinned outing, which `keepEnd` would otherwise scroll away. */
   header?: ReactNode;
+  /**
+   * A paper stage heading the screen (ADR-0037, `ui/CanhGap`): first in the
+   * list, folding flat as the list scrolls. The screen publishes its scroll
+   * offset to the stage and to the header's compact title (`ui/cuon`), and the
+   * header drops its fixed keyline for the one `ThanhCanh` fades in.
+   */
+  canh?: ReactNode;
+  /**
+   * A stepped flow's step: whenever it changes the list goes back to its top,
+   * so a new page starts at its head and its title, not wherever the reader
+   * had scrolled the last one to (a plain list only; a staged one folds).
+   */
+  cuonVeDau?: string | number;
 };
 
 export function RudiScreen({
@@ -63,12 +79,22 @@ export function RudiScreen({
   keepEnd = false,
   header,
   onRefresh,
+  canh,
+  cuonVeDau,
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
   const { fontScale } = useWindowDimensions();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const cuon = useRef<ScrollView>(null);
+  // The scroll a stage folds with; published only when the screen has one.
+  const coCanh = canh !== undefined && canh !== null && canh !== false;
+  const cuonY = useSharedValue(0);
+  const nguongTieuDe = useSharedValue(1e6);
+  const theoCuon = useAnimatedScrollHandler((e) => {
+    cuonY.value = e.contentOffset.y;
+  });
+  const cuonMan = useMemo(() => (coCanh ? { cuonY, nguongTieuDe } : null), [coCanh, cuonY, nguongTieuDe]);
   // Pull-to-refresh runs the screen's own read; the spinner is the only state
   // the shell adds, and it ends whether the read succeeded or threw.
   const [dangKeo, setDangKeo] = useState(false);
@@ -82,6 +108,10 @@ export function RudiScreen({
         }
       }
     : undefined;
+  useEffect(() => {
+    if (cuonVeDau === undefined) return;
+    cuon.current?.scrollTo({ y: 0, animated: false });
+  }, [cuonVeDau]);
   useEffect(() => {
     if (!avoidKeyboard) return;
     const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
@@ -117,13 +147,33 @@ export function RudiScreen({
             drawn sheet sits on it in the `paper` tone (review 11/09, A3). */}
         {dark ? <Grain material="vaiBia" opacity={0.3} /> : <Grain material="giayTrang" opacity={0.45} />}
       </View>
+      <CuonContext.Provider value={cuonMan}>
       <KeyboardAvoidingView style={styles.flex} enabled={avoidKeyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {header ? (
         // A keyline under the fixed header: content scrolling beneath it reads
-        // as paper under a rule, not as a rendering fault.
-        <View style={[styles.screenHeader, { paddingHorizontal: tablet ? space.lg : space.md, borderBottomColor: colors.line }, tablet && styles.tabletInner]}>{header}</View>
+        // as paper under a rule, not as a rendering fault. A staged screen's
+        // bar draws its own, only once the stage has folded under it.
+        <View style={[styles.screenHeader, { paddingHorizontal: tablet ? space.lg : space.md, borderBottomColor: colors.line }, coCanh && styles.screenHeaderTrong, tablet && styles.tabletInner]}>{header}</View>
       ) : null}
-      {scroll ? (
+      {scroll && coCanh ? (
+        <Animated.ScrollView
+          scrollEnabled={scrollEnabled}
+          contentContainerStyle={inner}
+          keyboardShouldPersistTaps="handled"
+          onScroll={theoCuon}
+          scrollEventThrottle={16}
+          refreshControl={
+            keoLamMoi ? (
+              <RefreshControl colors={[colors.accent]} onRefresh={() => void keoLamMoi()} progressBackgroundColor={colors.card} refreshing={dangKeo} tintColor={colors.accent} />
+            ) : undefined
+          }
+          showsVerticalScrollIndicator={false}
+          style={styles.flex}
+        >
+          {canh}
+          {children}
+        </Animated.ScrollView>
+      ) : scroll ? (
         <ScrollView
           ref={cuon}
           scrollEnabled={scrollEnabled}
@@ -141,7 +191,7 @@ export function RudiScreen({
           {children}
         </ScrollView>
       ) : (
-        <View style={[inner, styles.flex]}>{children}</View>
+        <View style={[inner, styles.flex]}>{canh}{children}</View>
       )}
       {footer ? (
         <View
@@ -155,6 +205,7 @@ export function RudiScreen({
         </View>
       ) : null}
       </KeyboardAvoidingView>
+      </CuonContext.Provider>
       {overlay}
     </SafeAreaView>
   );
@@ -407,6 +458,12 @@ type ButtonProps = {
   /** When the visible label is not enough on its own («Nhắn tin» on a row
    *  that names somebody): the sentence a screen reader, and Maestro, get. */
   accessibilityLabel?: string;
+  /**
+   * ADR-0038 §2.2: why a disabled button cannot be used yet («Chọn một tấm
+   * ảnh trước đã.»), printed under it and given to a screen reader as the
+   * hint. A disabled button without a reason should usually not be shown.
+   */
+  lyDo?: string;
 };
 
 export function RudiButton({
@@ -421,10 +478,17 @@ export function RudiButton({
   full = true,
   style,
   accessibilityLabel,
+  lyDo,
 }: ButtonProps) {
   const { colors, radius } = useRudiTheme();
-  const solid = variant === "solid";
-  const foreground = solid ? colors[`${tone}Ink` as const] : toneColor(colors, tone);
+  // ADR-0038 §2.2: not yet usable is not faded. The button keeps a readable
+  // label and a dashed edge, both measured (`test_contrast_floor.py`); while
+  // it loads it keeps its own face.
+  const tat = disabled && !loading;
+  const vienTat = colors.lineStrong;
+  const chuTat = colors.inkSoft;
+  const solid = variant === "solid" && !tat;
+  const foreground = tat ? chuTat : solid ? colors[`${tone}Ink` as const] : toneColor(colors, tone);
   const base = [
     styles.button,
     compact && styles.buttonCompact,
@@ -435,7 +499,7 @@ export function RudiButton({
     // (a warm neutral) only on accent, where it is the brand world's line.
     variant === "outline" && { backgroundColor: colors.card, borderColor: tone === "accent" ? colors.lineStrong : toneColor(colors, tone) },
     variant === "ghost" && { backgroundColor: "transparent", borderColor: "transparent" },
-    disabled && styles.disabled,
+    tat && { backgroundColor: colors.card, borderColor: vienTat, borderStyle: "dashed" as const, borderWidth: 1.5 },
     style,
   ];
   const body = (
@@ -448,13 +512,15 @@ export function RudiButton({
     </>
   );
 
-  return (
+  const nut = (
     // Press feedback is a spring on the UI thread (scale 1 -> 0.98), the
     // `instant` step of the motion vocabulary; the old opacity dim ran on the
     // JS thread and could not honour Reduce Motion.
     <PressScale
+      accessibilityHint={tat && lyDo ? lyDo : undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
       disabled={disabled || loading}
       onPress={onPress}
       pressedScale={0.98}
@@ -474,6 +540,16 @@ export function RudiButton({
       ) : null}
       {body}
     </PressScale>
+  );
+  if (!tat || !lyDo) return nut;
+  return (
+    <View style={[styles.nutCoLyDo, full ? styles.nutCoLyDoFull : null]}>
+      {nut}
+      <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
+        <Ionicons color={chuTat} name="information-circle-outline" size={16} />
+        <Text style={[typography.caption, styles.lyDoChu, { color: chuTat }]}>{lyDo}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -503,14 +579,22 @@ export function IconButton({
   tone?: RudiTone;
 }) {
   const { colors } = useRudiTheme();
-  const background = solid
+  // ADR-0038 §2.2: a primary icon with nothing to act on yet (send, with the
+  // box empty) is not a full coral disc. It is the same outline every button
+  // takes when it cannot be used yet: dashed edge, soft ink glyph.
+  const tatSolid = solid && disabled && !loading;
+  const background = tatSolid
+    ? colors.card
+    : solid
     ? toneColor(colors, tone)
     : selected
       ? toneSoftColor(colors, tone)
       : quiet || dim
         ? "transparent"
         : colors.card;
-  const glyph = solid
+  const glyph = tatSolid
+    ? colors.inkSoft
+    : solid
     ? colors[`${tone}Ink` as const]
     : selected
       ? toneColor(colors, tone)
@@ -524,6 +608,7 @@ export function IconButton({
       aria-busy={loading}
       aria-disabled={disabled || loading}
       aria-pressed={selected}
+      accessibilityState={{ disabled: disabled || loading, busy: loading, selected }}
       disabled={disabled || loading}
       hitSlop={4}
       onPress={onPress}
@@ -531,6 +616,7 @@ export function IconButton({
       style={[
         styles.iconButton,
         { backgroundColor: background, borderColor: quiet || dim || solid ? "transparent" : colors.line },
+        tatSolid && { borderColor: colors.lineStrong, borderStyle: "dashed" as const, borderWidth: 1.5 },
       ]}
     >
       {loading ? <ActivityIndicator color={glyph} size="small" /> : <Ionicons color={glyph} name={icon} size={22} />}
@@ -611,7 +697,7 @@ export function OtpBoxes({
         keyboardType="number-pad"
         maxLength={length}
         onChangeText={(text) => onChange(text.replace(/\D/g, "").slice(0, length))}
-        style={styles.otpInput}
+        style={[styles.otpInput, KHONG_VIEN_WEB]}
         testID="otp-input"
         textContentType="oneTimeCode"
         value={value}
@@ -1030,6 +1116,7 @@ const styles = StyleSheet.create({
   paper: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
   screenInner: { width: "100%", gap: 18, paddingTop: 8 },
   screenHeader: { borderBottomWidth: StyleSheet.hairlineWidth },
+  screenHeaderTrong: { borderBottomWidth: 0 },
   screenFooter: { width: "100%", paddingTop: 8, zIndex: 2 },
   tabletInner: { alignSelf: "center", maxWidth: 960, paddingTop: 22 },
   topBar: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
@@ -1067,7 +1154,10 @@ const styles = StyleSheet.create({
   buttonCompact: { minHeight: 48, paddingHorizontal: 14 },
   buttonLabel: { zIndex: 1 },
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
-  disabled: { opacity: 0.45 },
+  nutCoLyDo: { gap: 6, alignSelf: "flex-start" },
+  nutCoLyDoFull: { alignSelf: "stretch" },
+  lyDo: { flexDirection: "row", alignItems: "flex-start", gap: 6, paddingHorizontal: 4 },
+  lyDoChu: { flexShrink: 1 },
   iconButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   chipTinh: { minHeight: 30, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5 },
   chip: { minHeight: 48, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 10 },

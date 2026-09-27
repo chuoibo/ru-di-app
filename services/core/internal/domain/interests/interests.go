@@ -55,12 +55,12 @@ type InterestTag struct {
 var interestTags = [...]InterestTag{
 	{ID: "an-uong", Label: "Ăn uống"},
 	{ID: "cafe", Label: "Cafe"},
-	{ID: "nightlife", Label: "Nightlife"},
+	{ID: "nightlife", Label: "Chơi đêm"},
 	{ID: "mon-local", Label: "Món local"},
-	{ID: "outdoor", Label: "Outdoor"},
-	{ID: "shopping", Label: "Shopping"},
+	{ID: "outdoor", Label: "Ngoài trời"},
+	{ID: "shopping", Label: "Mua sắm"},
 	{ID: "karaoke", Label: "Karaoke"},
-	{ID: "game", Label: "Game"},
+	{ID: "game", Label: "Chơi game"},
 }
 
 // MaxInterests is MAX_INTERESTS: the size of the vocabulary itself.
@@ -99,6 +99,8 @@ var budgetBands = [...]bandRow{
 	{id: "tiet-kiem", label: "Dưới 100K", minVND: 0, maxVND: 100_000},
 	{id: "vua-phai", label: "100K–250K", minVND: 100_000, maxVND: 250_000},
 	{id: "thoai-mai", label: "250K–500K", minVND: 250_000, maxVND: 500_000},
+	// ADR-0038 §2.5: no ceiling.
+	{id: "rong-tay", label: "Trên 500K", minVND: 500_000, openTopEnd: true},
 }
 
 func (row bandRow) band() BudgetBand {

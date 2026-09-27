@@ -68,12 +68,12 @@ class InterestTag:
 INTEREST_TAGS: tuple[InterestTag, ...] = (
     InterestTag("an-uong", "Ăn uống"),
     InterestTag("cafe", "Cafe"),
-    InterestTag("nightlife", "Nightlife"),
+    InterestTag("nightlife", "Chơi đêm"),
     InterestTag("mon-local", "Món local"),
-    InterestTag("outdoor", "Outdoor"),
-    InterestTag("shopping", "Shopping"),
+    InterestTag("outdoor", "Ngoài trời"),
+    InterestTag("shopping", "Mua sắm"),
     InterestTag("karaoke", "Karaoke"),
-    InterestTag("game", "Game"),
+    InterestTag("game", "Chơi game"),
 )
 
 #: Ids in vocabulary order. Built from the tuple above so the two can never
@@ -100,13 +100,15 @@ class BudgetBand:
     max_vnd: int | None
 
 
-#: The three bands the personalization screen offers, same ids as the client's
+#: The four bands the personalization screen offers (the fourth, open at the
+#: top, since ADR-0038 §2.5), same ids as the client's
 #: `so-thich.ts`. `tests/test_interest_vocabulary_matches_client.py` (repo root)
 #: fails when the two lists drift apart.
 BUDGET_BANDS: tuple[BudgetBand, ...] = (
     BudgetBand("tiet-kiem", "Dưới 100K", 0, 100_000),
     BudgetBand("vua-phai", "100K–250K", 100_000, 250_000),
     BudgetBand("thoai-mai", "250K–500K", 250_000, 500_000),
+    BudgetBand("rong-tay", "Trên 500K", 500_000, None),
 )
 
 BUDGET_BAND_IDS: tuple[str, ...] = tuple(band.id for band in BUDGET_BANDS)

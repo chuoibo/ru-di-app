@@ -15,10 +15,11 @@
  *   closing, and opening another is a new agreement (§7.6).
  * - `luotCuaToi` is always true. The turn decides whose name Nếp drafts a sheet
  *   FOR, not who may ask, and slice 1 has no turn on the wire (ADR-0027 §6.3).
+ *   `coLuot` is false so no screen reads it as «Tuần này bạn mở lời» (B1).
  */
 import { type ReactNode, useMemo } from "react";
 
-import { type NoiDungTo } from "./to-giay";
+import { type NoiDungTo, sauKhiXinTo } from "./to-giay";
 import { SoDoiContext, type SoDoiApi } from "./SoDoi";
 import { caHaiDongY, ghiRangBuocTuanTu, rangBuocCua, toTomTatThanhTo } from "./so-doi-map";
 import { useToGiay } from "./useToGiay";
@@ -48,6 +49,12 @@ export function SoDoiSongProvider({
       // Whose turn the week is: this week's «Người lo» (ADR-0034 §2.4), and
       // everybody's turn where there is none (outside «Một đôi»).
       luotCuaToi: so?.week_role ? so.week_role.nguoi_lo.includes(toiId) : true,
+      // A turn exists only where the week has a «Người lo»; elsewhere either
+      // person may open, and the screen must not claim otherwise.
+      coLuot: Boolean(so?.week_role),
+      // «Rủ đi chơi» refused because the week holds the other person's
+      // private draft: wait for it, do not offer the same failing press (B1).
+      xinToBiChan: sauKhiXinTo(song.lenhBiChan?.ten === "xin-to" ? song.lenhBiChan.ma : null, toMo !== undefined) === "cho-nguoi-kia",
       rangBuoc: { toi: rangBuocCua(so, toiId), nguoiKia: rangBuocCua(so, nguoiKiaId) },
       toGiay: toMo ? [toMo, ...toKhac] : toKhac,
       deNghiCho: (so?.pending_proposals ?? []).map((d) => ({
@@ -97,6 +104,7 @@ export function SoDoiSongProvider({
       dongYDeNghi: (id: string) => song.dongYDeNghiNay(id),
 
       ruDiChoi: () => void song.xinTo(),
+      lamMoi: () => void song.lamMoi(),
       suaNhap: (_id: string, content: NoiDungTo, lyDo: string | null) => void song.suaNhap(content, lyDo),
       gui: () => void song.gui(),
       // «Bỏ» a draft and «nghỉ tuần» are one command on the wire: §3.3's table

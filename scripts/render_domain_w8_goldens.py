@@ -1469,6 +1469,9 @@ class Stub:
         self.rec("list_pair_papers", context_id)
         return tuple(paper_record(p) for p in self.world["papers"])
 
+    def adopt_temporary_paper(self, paper_id, *, cycle_id):
+        self.rec("adopt_temporary_paper", paper_id, cycle_id)
+
     def update_pair_draft(self, paper_id, *, content, ly_do):
         self.rec("update_pair_draft", paper_id, content, ly_do)
 
@@ -2230,6 +2233,23 @@ def pair_steps_edges() -> list[dict]:
     )
     for name, locks, proposal, after, conflicts, actor, extra in (
         ("second_yes_opens", [NB_PENDING], lap_offer, after_lap, {}, "TOI", {}),
+        # ADR-0038 §2.1: the open temporary invitation is filed under the cycle
+        # just opened; the expired one and the filed one are left as they are.
+        (
+            "second_yes_files_the_open_invitation",
+            [NB_PENDING],
+            lap_offer,
+            after_lap,
+            {},
+            "TOI",
+            {
+                "papers": [
+                    paper("PP1", owner="KIA", state="nhap"),
+                    paper("PP2", owner="TOI", state="nhap", expires=T - HOUR),
+                    paper("PP3", owner="TOI", state="da_gui", cycle="CY1"),
+                ]
+            },
+        ),
         (
             "second_yes_not_yet_both",
             [NB_PENDING],

@@ -280,6 +280,8 @@ type Store interface {
 	GetPairPaper(paperID string) (*Paper, error)
 	LockPairPaper(paperID string) (*Paper, error)
 	ListPairPapers(contextID string) ([]Paper, error)
+	// AdoptTemporaryPaper is adopt_temporary_paper (ADR-0038 §2.1).
+	AdoptTemporaryPaper(paperID, cycleID string) error
 	UpdatePairDraft(paperID string, content pairpaper.Content, lyDo *string) error
 	AddPaperVersion(draft VersionDraft) error
 	MarkVersionSent(paperID string, version int, sentBy *string, now time.Time) error

@@ -57,6 +57,8 @@ import {
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField, SectionHeader } from "../../ui";
 import { Wordmark } from "../../ui/Wordmark";
+import { SanKhau } from "../../ui/SanKhau";
+import { sanKhauThanhPho } from "../../art/thanh-pho";
 import { Canh } from "../../ui/art/Canh";
 import { GuGlyph } from "../../ui/art/Gu";
 import { EmptyState } from "../../ui/EmptyState";
@@ -134,6 +136,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   // When, and for which destination, the catalogue was last read.
   const lanDoc = useRef<{ diemDen: string | null; luc: number } | null>(null);
   const [soHang, setSoHang] = useState(HANG_MOI_LUOT);
+  const [rongSan, setRongSan] = useState(0);
   // Whose taste the badges are relative to. Starts as «chưa biết» because that
   // is true until the server has answered, and it is what the screen says.
   const [gu, setGu] = useState<Gu | null>(null);
@@ -258,6 +261,15 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
           <Ionicons color={colors.inkFaint} name="chevron-down" size={14} />
         </Pressable>
       </View>
+      {/* The city itself, as a pop-up stage (ADR-0037 D1, plan S4): drawn from
+          what the server says about the place. It stands up once per city and
+          folds away while a search or filter is under way, so the results
+          keep the top of the screen. */}
+      {diemDen !== null && !dangLoc && query === "" ? (
+        <View onLayout={(e) => setRongSan(Math.round(e.nativeEvent.layout.width))} style={styles.sanThanhPho} testID="san-thanh-pho">
+          {rongSan > 0 ? <SanKhau coMoTa key={diemDen.id} san={sanKhauThanhPho(diemDen.id, diemDen.name)} width={Math.min(rongSan, 480)} /> : null}
+        </View>
+      ) : null}
       {/* One row at every font size: the field's own hint ellipsizes, so the
           assistant no longer drops to a line of its own at 1.3 (QA 23/09). */}
       <View style={styles.timRow}>
@@ -422,6 +434,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
 }
 
 const styles = StyleSheet.create({
+  sanThanhPho: { alignItems: "center", alignSelf: "stretch" },
   flex: { flex: 1 },
   dau: { gap: 6 },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },

@@ -131,6 +131,11 @@ function doanCung(cx: number, cy: number, r: number, tu: number, den: number): s
   return ra;
 }
 
+/** The `C` segments of an arc, for a closed outline that runs along a circle (a notch, a scallop). */
+export function doanCungTron(cx: number, cy: number, r: number, tu: number, den: number): string[] {
+  return doanCung(cx, cy, r, tu, den);
+}
+
 /** An open circular arc (a stroke). Angles in radians, y down. */
 export function cungTron(cx: number, cy: number, r: number, tu: number, den: number): string {
   return [duong("M", cx + r * Math.cos(tu), cy + r * Math.sin(tu)), ...doanCung(cx, cy, r, tu, den)].join(" ");
@@ -202,6 +207,60 @@ export function giot(cx: number, cy: number, r: number): string {
     ...doanCung(cx, cy, r, -Math.PI / 6, (7 * Math.PI) / 6),
     "Z",
   ].join(" ");
+}
+
+/**
+ * An affine map of the plane, `[a, b, c, d, e, f]`: x' = a·x + c·y + e,
+ * y' = b·x + d·y + f -- the layout canvas APIs use. The paper puppet
+ * (`nep-roi.ts`) moves each of its parts with one of these.
+ */
+export type MaTran = readonly [number, number, number, number, number, number];
+
+export const MA_TRAN_DON_VI: MaTran = [1, 0, 0, 1, 0, 0];
+
+/** `m` after `n`: the map that applies `n` first, then `m`. */
+export function nhanMaTran(m: MaTran, n: MaTran): MaTran {
+  "worklet";
+  return [
+    m[0] * n[0] + m[2] * n[1],
+    m[1] * n[0] + m[3] * n[1],
+    m[0] * n[2] + m[2] * n[3],
+    m[1] * n[2] + m[3] * n[3],
+    m[0] * n[4] + m[2] * n[5] + m[4],
+    m[1] * n[4] + m[3] * n[5] + m[5],
+  ];
+}
+
+export function apMaTran(m: MaTran, p: Diem): Diem {
+  "worklet";
+  return [m[0] * p[0] + m[2] * p[1] + m[4], m[1] * p[0] + m[3] * p[1] + m[5]];
+}
+
+/**
+ * A path moved by an affine map, in the same grammar: every point of every
+ * `M` / `L` / `C` goes through `m`, `Z` stays, numbers are formatted by `so`.
+ * Stroke widths are the caller's: a rigid move keeps them as they are.
+ */
+export function bienDoiDuong(d: string, m: MaTran): string {
+  const t = d.trim().split(/\s+/);
+  const ra: (string | number)[] = [];
+  let i = 0;
+  while (i < t.length) {
+    const c = t[i++];
+    ra.push(c);
+    const soDiem = c === "M" || c === "L" ? 1 : c === "C" ? 3 : 0;
+    for (let k = 0; k < soDiem; k += 1) {
+      const [x, y] = apMaTran(m, [Number(t[i]), Number(t[i + 1])]);
+      i += 2;
+      ra.push(x, y);
+    }
+  }
+  return duong(...ra);
+}
+
+/** Every layer moved by `m` (colour roles and stroke widths unchanged). */
+export function bienDoiLop(lop: readonly LopVe[], m: MaTran): LopVe[] {
+  return lop.map((l) => ({ ...l, d: bienDoiDuong(l.d, m) }));
 }
 
 /**

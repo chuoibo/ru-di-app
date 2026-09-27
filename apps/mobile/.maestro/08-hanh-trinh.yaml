@@ -12,7 +12,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Lịch trình"
     timeout: 60000
-- tapOn: "Hành trình"
+- tapOn: "Bản đồ"
 - extendedWaitUntil:
     visible: "Khớp hành trình"
     timeout: 30000
@@ -32,13 +32,14 @@ appId: com.lakiet.rudi
 # leaving an empty map as a dead end.
 #
 # The sentence moved in 6966a07e, from "Ngày này chưa có điểm nào trên bản đồ"
-# to the card below. This flow kept waiting twenty seconds for the old wording
+# to the card below, and ADR-0038 §2.4 (26/09) moved the card's title back to
+# it: «Mở một trang đường mới» invited an action the card had no button for. This flow kept waiting twenty seconds for the old wording
 # and could never have passed since -- invisible until now, because every run
 # before today died earlier, at "Chưa vẽ được bản đồ native": the APK on the
 # emulator predated the MapLibre dependency. One blocker was hiding another.
 - tapOn: "Ngày 3"
 - extendedWaitUntil:
-    visible: "Mở một trang đường mới"
+    visible: "Ngày này chưa có điểm nào trên bản đồ"
     timeout: 20000
 - assertNotVisible: "Khớp hành trình"
 - takeScreenshot: 08c-ngay-khong-toa-do

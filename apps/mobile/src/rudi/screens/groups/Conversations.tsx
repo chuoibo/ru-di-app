@@ -29,7 +29,7 @@ import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { useRudiSession } from "../../session";
 import { StoryRail } from "../story/StoryRail";
-import { typography, useRudiTheme } from "../../theme";
+import { bangMauChat, bongGiay, phuMau, typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { Canh } from "../../ui/art/Canh";
@@ -179,9 +179,16 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                   {laPair(nhom) ? (
                     <AvatarNguoi name={tenCuocTroChuyen(nhom)} personId={nhom.counterpart?.id} size={44} />
                   ) : (
-                    <View style={[styles.hinh, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
-                      <Ionicons color={colors.accent} name={duocMoi ? "mail-open-outline" : "people-outline"} size={22} />
-                    </View>
+                    duocMoi ? (
+                      // An invitation is a letter not yet opened.
+                      <View style={[styles.hinh, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
+                        <Ionicons color={colors.accent} name="mail-open-outline" size={22} />
+                      </View>
+                    ) : (
+                      // A group is its notebook seen from the shelf (ADR-0037 D1): the
+                      // spine in the group's own chat colour, its initial on it.
+                      <GaySo ten={tenCuocTroChuyen(nhom)} theme={nhom.theme} />
+                    )
                   )}
                   <View style={styles.hangChu}>
                     <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
@@ -224,7 +231,27 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   );
 }
 
+/** A notebook's spine on the shelf: cloth in the group's chat colour, a darker hinge, the initial. */
+function GaySo({ ten, theme }: { ten: string; theme?: string }) {
+  const { colors, dark } = useRudiTheme();
+  const mau = bangMauChat(theme, dark);
+  const chu = ten.trim().charAt(0).toLocaleUpperCase("vi") || "?";
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.gayKhung}>
+      <View style={[styles.gay, { backgroundColor: mau.bubble, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
+        <View style={[styles.gayBanLe, { backgroundColor: phuMau(colors.ink, dark ? 0.3 : 0.22) }]} />
+        <Text style={[typography.title, { color: mau.bubbleInk }]}>{chu}</Text>
+        <View style={[styles.gayNhan, { backgroundColor: colors.card }]} />
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  gayKhung: { width: 44, height: 48, alignItems: "center", justifyContent: "center" },
+  gay: { width: 34, height: 48, borderRadius: 3, borderWidth: StyleSheet.hairlineWidth, alignItems: "center", justifyContent: "center", overflow: "hidden", paddingLeft: 4 },
+  gayBanLe: { position: "absolute", left: 0, top: 0, bottom: 0, width: 5 },
+  gayNhan: { position: "absolute", bottom: 7, left: 10, right: 5, height: 4, borderRadius: 1 },
   flex: { flex: 1 },
   dau: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },

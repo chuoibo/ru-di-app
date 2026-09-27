@@ -171,6 +171,13 @@
         1,
         1
       ]
+    },
+    "sanKhau": {
+      "_": "Ngân sách ghép của sân khấu giấy (ADR-0037 D3), KHÔNG phải bậc mới: MOTION_MS vẫn đúng bốn bậc. batTang = so le mỗi tầng khi sân khấu bật dựng (tối đa 4 tầng so le); batToiDa = trần của cả cú bật dựng (shared + so le); dien = trần một tiết mục của Nếp, không bao giờ khoá input và chạm là bỏ qua; lat = lật trang giữa các bước, bằng shared. Chuyển động gắn với cuộn, kéo hay nghiêng máy không có thời lượng và dừng khi tay dừng.",
+      "batTang": 40,
+      "batToiDa": 420,
+      "dien": 1400,
+      "lat": 300
     }
   },
   "contrast": {

@@ -40,3 +40,7 @@ yarn-error.*
 /ios
 /android
 dist-test/
+
+# CanvasKit for Skia on the web (ADR-0037 D10): 8 MB of binary, copied from
+# node_modules by tools/chep-canvaskit.mjs, never committed.
+public/canvaskit.wasm
