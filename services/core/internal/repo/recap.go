@@ -58,7 +58,7 @@ type RecapOuting struct {
 // `today` is the calendar day the service computed from its own clock
 // (WallClockDate); only its year, month and day are used. Statement order is
 // Python's: outings, the money pass, the memory pass, then one outing_stops
-// read per outing while the records are built. The money pass keeps only the
+// read for every outing. The money pass keeps only the
 // newest version of each expense and folds occurred_at into Vietnam's day in
 // PostgreSQL; SUM of a bigint is numeric (a Decimal in Python), converted to
 // an integer exactly like `int(...)` and refused if it would not fit int64.
@@ -178,9 +178,15 @@ func (r Repository) GroupRecap(ctx context.Context, contextID string, today time
 		return nil, err
 	}
 
+	// Every trip's stops in one statement, instead of one per trip.
+	stopsByOuting, err := r.outingStopsFor(ctx, outingIDsOf(outings))
+	if err != nil {
+		return nil, err
+	}
 	for _, o := range outings {
-		if o.Stops, err = r.outingStops(ctx, o.ID); err != nil {
-			return nil, err
+		o.Stops = stopsByOuting[o.ID]
+		if o.Stops == nil {
+			o.Stops = []OutingStop{}
 		}
 		out = append(out, RecapOuting{
 			Outing:        o,
@@ -191,6 +197,46 @@ func (r Repository) GroupRecap(ctx context.Context, contextID string, today time
 		})
 	}
 	return out, nil
+}
+
+func outingIDsOf(outings []Outing) []string {
+	ids := make([]string, len(outings))
+	for i, o := range outings {
+		ids[i] = o.ID
+	}
+	return ids
+}
+
+// outingStopsFor is group_recap's one read of every listed trip's stops,
+// grouped by trip, each in position order.
+func (r Repository) outingStopsFor(ctx context.Context, outingIDs []string) (map[string][]OutingStop, error) {
+	out := map[string][]OutingStop{}
+	if len(outingIDs) == 0 {
+		return out, nil
+	}
+	rows, err := r.Q.Query(ctx,
+		`SELECT outing_stops.id, outing_stops.outing_id, outing_stops.position, outing_stops.minute_of_day,
+		        outing_stops.label, outing_stops.place_name, outing_stops.place_id, outing_stops.day,
+		        outing_stops.duration_minutes, outing_stops.time_locked, outing_stops.meeting_lat,
+		        outing_stops.meeting_lng, outing_stops.meeting_label
+		   FROM outing_stops
+		  WHERE outing_stops.outing_id IN (`+uuidPlaceholders(1, len(outingIDs))+`)
+		  ORDER BY outing_stops.outing_id, outing_stops.position`, uuidArgs(outingIDs)...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var s OutingStop
+		var outing string
+		if err := rows.Scan(&s.ID, &outing, &s.Position, &s.MinuteOfDay, &s.Label, &s.PlaceName,
+			&s.PlaceID, &s.Day, &s.DurationMinutes, &s.TimeLocked, &s.MeetingLat,
+			&s.MeetingLng, &s.MeetingLabel); err != nil {
+			return nil, err
+		}
+		out[outing] = append(out[outing], s)
+	}
+	return out, rows.Err()
 }
 
 // outingStops is the stops half of _outing_record.

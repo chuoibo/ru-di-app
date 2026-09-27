@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
 
-from sqlalchemy import Date, and_, case, cast, delete, desc, func, or_, select, tuple_
+from sqlalchemy import Date, and_, case, cast, delete, desc, func, or_, select, true, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
@@ -2355,12 +2355,18 @@ class SqlAlchemyApiRepository:
             meeting_label=stop.meeting_label,
         )
 
-    def _outing_record(self, outing: Outing) -> OutingRecord:
-        stops = self.session.scalars(
-            select(OutingStop)
-            .where(OutingStop.outing_id == outing.id)
-            .order_by(OutingStop.position)
-        )
+    def _outing_record(
+        self, outing: Outing, stops: list[OutingStop] | None = None
+    ) -> OutingRecord:
+        """`stops`, when given, are this outing's stops already read in
+        position order (a caller building many records reads them in one
+        statement); otherwise they are read here."""
+        if stops is None:
+            stops = self.session.scalars(
+                select(OutingStop)
+                .where(OutingStop.outing_id == outing.id)
+                .order_by(OutingStop.position)
+            )
         return OutingRecord(
             id=outing.id,
             context_id=outing.context_id,
@@ -3011,9 +3017,18 @@ class SqlAlchemyApiRepository:
                 .group_by(Outing.id)
             )
         }
+        # Every trip's stops in one statement, instead of one per trip while
+        # the records are built.
+        stops_by_outing: dict[uuid.UUID, list[OutingStop]] = {}
+        for stop in self.session.scalars(
+            select(OutingStop)
+            .where(OutingStop.outing_id.in_([outing.id for outing in outings]))
+            .order_by(OutingStop.outing_id, OutingStop.position)
+        ):
+            stops_by_outing.setdefault(stop.outing_id, []).append(stop)
         return tuple(
             RecapOutingRecord(
-                outing=self._outing_record(outing),
+                outing=self._outing_record(outing, stops_by_outing.get(outing.id, [])),
                 in_progress=outing.ends_on >= today,
                 split_total_vnd=money.get(outing.id, (0, 0))[0],
                 expense_count=money.get(outing.id, (0, 0))[1],
@@ -3711,14 +3726,25 @@ class SqlAlchemyApiRepository:
                 .group_by(Membership.context_id)
             ).all()
         )
+        # One row per group through `ix_messages_context_feed`: a LATERAL
+        # `LIMIT 1` per context. `DISTINCT ON` over `context_id IN (...)`
+        # read every message of every group the person is in to keep one
+        # each, so this screen slowed down with the age of every chat.
+        latest = (
+            select(Message)
+            .where(Message.context_id == Context.id)
+            .order_by(Message.created_at.desc(), Message.id.desc())
+            .limit(1)
+            .lateral()
+        )
+        latest_message = aliased(Message, latest)
         newest = list(
             self.session.scalars(
-                select(Message)
-                .where(Message.context_id.in_(context_ids))
-                .distinct(Message.context_id)
-                .order_by(
-                    Message.context_id, Message.created_at.desc(), Message.id.desc()
-                )
+                select(latest_message)
+                .select_from(Context)
+                .join(latest, true())
+                .where(Context.id.in_(context_ids))
+                .order_by(latest_message.context_id)
             )
         )
         author_ids = {m.author_id for m in newest if m.author_id is not None}

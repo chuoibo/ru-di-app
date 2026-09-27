@@ -655,8 +655,9 @@ func TestGroupRecapClaimsMoneyAndMemoriesOnVietnamsDays(t *testing.T) {
 			if got[0].Outing.Stops == nil || len(got[0].Outing.ItineraryDays) != 0 {
 				t.Fatalf("a trip with no stops and no itinerary: %+v", got[0].Outing)
 			}
-			// Statements: outings, money, memories, one stops read per outing.
-			if len(rec.log) != 3+6 {
+			// Statements: outings, money, memories, then ONE stops read for all
+			// six outings (it was one per outing: N+1 in the number of trips).
+			if len(rec.log) != 3+1 {
 				t.Fatalf("%d statements", len(rec.log))
 			}
 
