@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -97,18 +98,70 @@ func ImportPhotos(ctx context.Context, pool *pgxpool.Pool, store *storage.PhotoS
 	}
 	rows.Close()
 
+	return importRecords(ctx, pool, store, opt, records, result)
+}
+
+// photoWorkers bounds how many frames are fetched and re-encoded at once. The
+// work is a network read from object storage plus a decode/encode, so it
+// overlaps well; the database side is two short statements per frame and
+// shares the process's small pool.
+const photoWorkers = 8
+
+type photoJob struct {
+	placeID string
+	frame   Frame
+	order   int
+}
+
+// importRecords writes the frames each place still lacks.
+//
+// Two reads cover the whole batch -- which places exist, which (place, source)
+// photos are already stored -- instead of two statements per place and one per
+// frame. A place whose chosen frames are all stored costs nothing further,
+// which is most rows of an update batch: the feed re-sends a place whenever
+// anything about it changes.
+func importRecords(ctx context.Context, pool *pgxpool.Pool, store *storage.PhotoStorage,
+	opt PhotoOptions, records []*Record, result PhotoResult) (PhotoResult, error) {
+	ids := make([]string, 0, len(records))
 	for _, rec := range records {
-		placeID := PlaceID(rec.PlaceID)
-		var exists bool
-		if err := pool.QueryRow(ctx,
-			`SELECT EXISTS (SELECT 1 FROM places WHERE id = $1)`, placeID).Scan(&exists); err != nil {
+		ids = append(ids, PlaceID(rec.PlaceID))
+	}
+	existing := map[string]bool{}
+	rows, err := pool.Query(ctx, `SELECT id FROM places WHERE id = ANY($1)`, ids)
+	if err != nil {
+		return result, err
+	}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			rows.Close()
 			return result, err
 		}
-		if !exists {
+		existing[id] = true
+	}
+	rows.Close()
+	have := map[string]bool{}
+	rows, err = pool.Query(ctx, `SELECT place_id, source_url FROM place_photos WHERE place_id = ANY($1)`, ids)
+	if err != nil {
+		return result, err
+	}
+	for rows.Next() {
+		var placeID, source string
+		if err := rows.Scan(&placeID, &source); err != nil {
+			rows.Close()
+			return result, err
+		}
+		have[placeID+"\x00"+source] = true
+	}
+	rows.Close()
+
+	var jobs []photoJob
+	for _, rec := range records {
+		placeID := PlaceID(rec.PlaceID)
+		if !existing[placeID] {
 			result.Skipped["dia_diem_chua_chieu"]++
 			continue
 		}
-
 		frames := usableFrames(rec.Frames)
 		// The feed scores each frame for how well it shows the place; the best
 		// ones become the cover.
@@ -119,25 +172,74 @@ func ImportPhotos(ctx context.Context, pool *pgxpool.Pool, store *storage.PhotoS
 			frames = frames[:opt.PerPlace]
 		}
 		result.Places++
-
 		for order, frame := range frames {
-			written, reason, err := importFrame(ctx, pool, store, opt.Source, placeID, frame, order)
-			if err != nil {
-				return result, err
-			}
-			switch {
-			case reason != "":
-				result.Skipped[reason]++
-			case written:
-				result.Written++
-			default:
+			if have[placeID+"\x00"+frameURL(frame)] {
 				result.Existing++
+				continue
 			}
+			jobs = append(jobs, photoJob{placeID: placeID, frame: frame, order: order})
+		}
+	}
+
+	var (
+		mu       sync.Mutex
+		firstErr error
+		touched  = map[string]bool{}
+		wg       sync.WaitGroup
+		queue    = make(chan photoJob)
+	)
+	for w := 0; w < photoWorkers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for job := range queue {
+				written, reason, err := importFrame(ctx, pool, store, opt.Source, job.placeID, job.frame, job.order)
+				mu.Lock()
+				switch {
+				case err != nil:
+					if firstErr == nil {
+						firstErr = err
+					}
+				case reason != "":
+					result.Skipped[reason]++
+				case written:
+					result.Written++
+					touched[job.placeID] = true
+				default:
+					result.Existing++
+				}
+				mu.Unlock()
+			}
+		}()
+	}
+	for _, job := range jobs {
+		mu.Lock()
+		failed := firstErr != nil
+		mu.Unlock()
+		if failed || ctx.Err() != nil {
+			break
+		}
+		queue <- job
+	}
+	close(queue)
+	wg.Wait()
+	if firstErr != nil {
+		return result, firstErr
+	}
+	if err := ctx.Err(); err != nil {
+		return result, err
+	}
+
+	// photo_count only for the places that gained a photo, in one statement.
+	if len(touched) > 0 {
+		changed := make([]string, 0, len(touched))
+		for id := range touched {
+			changed = append(changed, id)
 		}
 		if _, err := pool.Exec(ctx, `
 			UPDATE places SET photo_count =
-			  (SELECT count(*) FROM place_photos WHERE place_id = $1)
-			WHERE id = $1`, placeID); err != nil {
+			  (SELECT count(*) FROM place_photos WHERE place_photos.place_id = places.id)
+			WHERE id = ANY($1)`, changed); err != nil {
 			return result, err
 		}
 	}
@@ -165,16 +267,6 @@ func score(frame Frame) float64 {
 func importFrame(ctx context.Context, pool *pgxpool.Pool, store *storage.PhotoStorage,
 	source FrameSource, placeID string, frame Frame, order int) (bool, string, error) {
 	sourceURL := frameURL(frame)
-	var already bool
-	if err := pool.QueryRow(ctx, `
-		SELECT EXISTS (SELECT 1 FROM place_photos
-		  WHERE place_id = $1 AND source_url = $2)`, placeID, sourceURL).Scan(&already); err != nil {
-		return false, "", err
-	}
-	if already {
-		return false, "", nil
-	}
-
 	raw, err := source.Read(ctx, frame.StorageKey)
 	switch {
 	case errors.Is(err, ErrFrameRefused):
