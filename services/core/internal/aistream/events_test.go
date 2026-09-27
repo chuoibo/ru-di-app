@@ -91,3 +91,28 @@ func TestResumeFrom(t *testing.T) {
 		t.Fatal("an invalid position must be ignored, not passed to XRANGE")
 	}
 }
+
+// A reader more than 64 entries behind gets each run of deltas of one part
+// merged into one event under the run's last id; other events, and deltas
+// of another part or invocation, break the run.
+func TestGopDelta(t *testing.T) {
+	d := func(id string, p int, text, inv string) Event {
+		raw, _ := json.Marshal(DeltaData{P: p, Text: text})
+		return Event{ID: id, Kind: Delta, Data: raw, Inv: inv}
+	}
+	in := []Event{
+		{ID: "1-0", Kind: TrangThai, Data: json.RawMessage(`{"cau":"dang_nghi"}`)},
+		d("2-0", 0, "Tối ", ""), d("3-0", 0, "nay ", ""), d("4-0", 0, "đi ", ""),
+		d("5-0", 1, "x", ""), d("6-0", 1, "y", "a"),
+		{ID: "7-0", Kind: Xong, Data: json.RawMessage(`{}`)},
+	}
+	got := gopDelta(in)
+	var b strings.Builder
+	for _, e := range got {
+		b.WriteString(e.ID + " " + string(e.Kind) + " " + string(e.Data) + "\n")
+	}
+	want := "1-0 trang_thai {\"cau\":\"dang_nghi\"}\n4-0 delta {\"p\":0,\"text\":\"Tối nay đi \"}\n5-0 delta {\"p\":1,\"text\":\"x\"}\n6-0 delta {\"p\":1,\"text\":\"y\"}\n7-0 xong {}\n"
+	if b.String() != want {
+		t.Fatalf("got\n%s\nwant\n%s", b.String(), want)
+	}
+}

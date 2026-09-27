@@ -13,7 +13,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aiharness/cau"
+	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/llm"
+	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
@@ -43,6 +46,13 @@ type work struct {
 	seq int64
 	// Model calls earlier attempts of this job already spent (model_calls).
 	modelCalls int
+	// The room's transport the server found at create (`legacy` or `v2`);
+	// khoa reads it to choose the stream key.
+	lane string
+	// When the sharing window closes: the stream's expiry.
+	shareExpires time.Time
+	// This claim's stream (phat.go); nil when streaming is off.
+	luong *luongViec
 }
 
 // WorkerConfig sizes the inference workers. The defaults are what the engine
@@ -65,6 +75,18 @@ type WorkerConfig struct {
 	Heartbeat time.Duration
 	// SweepEvery runs the retention and lease sweeps.
 	SweepEvery time.Duration
+	// AnHanDung is how long a job whose content already reached its stream
+	// may still run once the worker is stopping (design 02 §4 step 9: 60 s;
+	// compose gives `core work` 75 s). Zero means 60 s.
+	AnHanDung time.Duration
+}
+
+// anHanDung is AnHanDung, or 60 s when unset.
+func (c WorkerConfig) anHanDung() time.Duration {
+	if c.AnHanDung > 0 {
+		return c.AnHanDung
+	}
+	return 60 * time.Second
 }
 
 // Environment variables WorkerConfigFromEnv reads.
@@ -309,7 +331,17 @@ func (h *Handler) DinhKy() jobs.DinhKy {
 	return jobs.DinhKy{Ten: "chatassist.sweep", Nhip: h.worker.SweepEvery, Chay: func(ctx context.Context, tx pgx.Tx) error {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		return sweepIn(ctx, tx)
+		ngat, err := sweepIn(ctx, tx)
+		if err != nil {
+			return err
+		}
+		// The registry commits after this returns; the endings go out just
+		// before. Should that commit fail, the next pass fails the same jobs
+		// again and writes their ending again: a reader stops at the first,
+		// and the row reads failed either way (its re-authorization then
+		// agrees).
+		h.baoNgat(ngat)
+		return nil
 	}}
 }
 
@@ -326,10 +358,34 @@ func (h *Handler) Sweep(ctx context.Context) error {
 		return err
 	}
 	defer tx.Rollback(ctx)
-	if err = sweepIn(ctx, tx); err != nil {
+	ngat, err := sweepIn(ctx, tx)
+	if err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+	h.baoNgat(ngat)
+	return nil
+}
+
+// baoNgat ends the stream of each job the sweep failed after its content
+// left (a worker that died mid-answer): that_bai{worker_interrupted}, on the
+// key the job wrote (design 02 §4 step 7, §7; review of slice 11, finding 1).
+// Best effort: without a stream nothing is written, and a reader whose stream
+// never gets it ends from the row (Follow's Ending).
+func (h *Handler) baoNgat(ngat []work) {
+	if h.stream == nil {
+		return
+	}
+	for _, j := range ngat {
+		key, maxLen, inv, err := khoa(h.stream.Keys, j)
+		if err != nil {
+			continue
+		}
+		l := &luongViec{phong: inv != "", w: h.stream.NewWriter(aistream.WriterOptions{Key: key, MaxLen: maxLen, Inv: inv, ExpireAt: j.shareExpires})}
+		l.thatBai(maNgat)
+	}
 }
 
 // sweepIn is one sweep inside tx. One sweep runs at a time: it takes
@@ -337,30 +393,46 @@ func (h *Handler) Sweep(ctx context.Context) error {
 // skips, since the holder does the same idempotent work. Both ways in take
 // this same lock, so a claim's sweep and the periodic one never interleave
 // their multi-row UPDATEs.
-func sweepIn(ctx context.Context, tx pgx.Tx) error {
+//
+// It returns the jobs it failed after their content left, for their streams
+// to be ended (baoNgat).
+func sweepIn(ctx context.Context, tx pgx.Tx) ([]work, error) {
 	var mine bool
 	if err := tx.QueryRow(ctx, `SELECT pg_try_advisory_xact_lock(hashtextextended('chatassist:sweep',0))`).Scan(&mine); err != nil {
-		return err
+		return nil, err
 	}
 	if !mine {
-		return nil
+		return nil, nil
 	}
 	// Bound plaintext retention to the explicit sharing window, including failed jobs.
-	_, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,boi_canh=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`)
-	if err != nil {
-		return err
+	if _, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,boi_canh=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`); err != nil {
+		return nil, err
 	}
 	// A sealed personal answer is delivered, not kept: it goes when the sharing
 	// window it was produced under closes (ADR-0036 §2.8).
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET result=NULL,updated_at=clock_timestamp() WHERE scope='me' AND result IS NOT NULL AND share_expires_at<=clock_timestamp()`)
-	if err != nil {
-		return err
+	if _, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET result=NULL,updated_at=clock_timestamp() WHERE scope='me' AND result IS NOT NULL AND share_expires_at<=clock_timestamp()`); err != nil {
+		return nil, err
 	}
 	// Lease after first content (design 02 §4 step 7): a worker that died
 	// after its first part or delta left is not replaced; the job fails, what
 	// was shown stays, and the reader is told it was cut off.
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code='worker_interrupted',lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE status='running' AND lease_until<clock_timestamp() AND (attempts>=3 OR first_token_at IS NOT NULL)`)
-	return err
+	rows, err := tx.Query(ctx, `UPDATE chat_ai_invocations SET status='failed',code='worker_interrupted',lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE status='running' AND lease_until<clock_timestamp() AND (attempts>=3 OR first_token_at IS NOT NULL) RETURNING id,scope,COALESCE(context_id::text,''),lane,share_expires_at,first_token_at IS NOT NULL`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var ngat []work
+	for rows.Next() {
+		var j work
+		var coNoiDung bool
+		if err := rows.Scan(&j.id, &j.scope, &j.conversation, &j.lane, &j.shareExpires, &coNoiDung); err != nil {
+			return nil, err
+		}
+		if coNoiDung {
+			ngat = append(ngat, j)
+		}
+	}
+	return ngat, rows.Err()
 }
 
 // claim is Sweep then claimNext: the deterministic entry the PostgreSQL gates
@@ -388,7 +460,7 @@ func (h *Handler) ClaimByID(ctx context.Context, id string, seq int64) (bool, er
 const claimable = `(status='queued' OR (status='running' AND lease_until<clock_timestamp() AND first_token_at IS NULL)) AND attempts<3 AND share_expires_at>clock_timestamp()`
 
 // The one UPDATE every claim runs; only the choice of candidate differs.
-const claimSet = `UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,''),COALESCE(j.so_tin_doc,0),j.created_at,j.attempts,j.enqueue_seq,j.model_calls`
+const claimSet = `UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,''),COALESCE(j.so_tin_doc,0),j.created_at,j.attempts,j.enqueue_seq,j.model_calls,j.lane,j.share_expires_at`
 
 // claimPoll takes the oldest claimable job due at least $3 seconds ago, of the
 // scopes in $4.
@@ -420,7 +492,7 @@ func (h *Handler) claimWith(ctx context.Context, sql string, args ...any) (work,
 	defer tx.Rollback(ctx)
 	var j work
 	j.lease = newID()
-	err = tx.QueryRow(ctx, sql, append([]any{j.lease, h.worker.Lease.Seconds()}, args...)...).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command, &j.trigger, &j.soTin, &j.createdAt, &j.attempt, &j.seq, &j.modelCalls)
+	err = tx.QueryRow(ctx, sql, append([]any{j.lease, h.worker.Lease.Seconds()}, args...)...).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command, &j.trigger, &j.soTin, &j.createdAt, &j.attempt, &j.seq, &j.modelCalls, &j.lane, &j.shareExpires)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return work{}, false, tx.Commit(ctx)
 	}
@@ -481,28 +553,72 @@ var (
 	errDungTho = errors.New("chatassist: the worker is stopping")
 	// errMatLease: the heartbeat found the job no longer this worker's.
 	errMatLease = errors.New("chatassist: the job's lease is gone")
+	// errHetAnHan: the worker is stopping and a job with content out did not
+	// finish within its grace (WorkerConfig.AnHanDung). It cannot go back to
+	// the queue -- readers saw its text -- so it fails worker_interrupted.
+	errHetAnHan = errors.New("chatassist: the worker stopped and the job's grace ran out")
 )
 
 // dangDung reports whether ctx was cancelled because the worker is stopping.
 func dangDung(ctx context.Context) bool { return errors.Is(context.Cause(ctx), errDungTho) }
 
 // runJob runs one claimed job under its time budget and heartbeat. The job's
-// context is its own: stopping the worker (ctx ending) cancels it with
-// errDungTho, and whatever the job was doing then, it is released back to the
-// queue instead of failed (design 02 §4 step 9). The release matches nothing
-// when the job had already ended, or had content out.
+// context is its own. When the worker stops (ctx ending), a job whose stream
+// carries no content is cancelled with errDungTho and released back to the
+// queue instead of failed; no content can follow once that is settled
+// (Writer.ChanNoiDung). A job whose content already reached its readers must
+// not run again, so it keeps running for up to WorkerConfig.AnHanDung; past
+// that it is cancelled with errHetAnHan and fails worker_interrupted, and its
+// stream ends with that_bai (design 02 §4 steps 7 and 9; review of slice 11,
+// finding 1).
 func (h *Handler) runJob(ctx context.Context, j work) error {
 	jobCtx, cancel := context.WithCancelCause(context.WithoutCancel(ctx))
 	defer cancel(nil)
-	stopWatch := context.AfterFunc(ctx, func() { cancel(errDungTho) })
-	defer stopWatch()
 	jobCtx, cancelTime := context.WithTimeout(jobCtx, 70*time.Second)
 	defer cancelTime()
+	// The job's stream: its first event is the claim (design 02 §5.1).
+	// Whatever still waits is written when the job returns.
+	j.luong = h.moLuong(jobCtx, j)
+	defer j.luong.dong()
+	var anHanMu sync.Mutex
+	var anHan *time.Timer
+	daXong := false
+	stopWatch := context.AfterFunc(ctx, func() {
+		anHanMu.Lock()
+		defer anHanMu.Unlock()
+		if daXong {
+			return
+		}
+		if !j.luong.chotNoiDung() {
+			cancel(errDungTho)
+			return
+		}
+		anHan = time.AfterFunc(h.worker.anHanDung(), func() { cancel(errHetAnHan) })
+	})
+	defer func() {
+		stopWatch()
+		anHanMu.Lock()
+		daXong = true
+		if anHan != nil {
+			anHan.Stop()
+		}
+		anHanMu.Unlock()
+	}()
 	stop := sync.OnceFunc(h.heartbeat(jobCtx, j, func() { cancel(errMatLease) }))
 	defer stop()
+	j.luong.trangThai(string(cau.DangDoc))
 	err := h.process(jobCtx, j)
 	if dangDung(jobCtx) {
 		return h.release(jobCtx, j)
+	}
+	if errors.Is(context.Cause(jobCtx), errHetAnHan) {
+		stop()
+		return h.ngatSauNoiDung(jobCtx, j)
+	}
+	if errors.Is(context.Cause(jobCtx), errMatLease) {
+		// Cancelled or revoked under the job, or failed by the sweep: the
+		// stream hears how, from the row.
+		h.baoMatLease(j)
 	}
 	if err != nil && !errors.Is(err, aiharness.ErrHuy) {
 		// The job's terminal write failed: the database, not the job. Its
@@ -516,6 +632,23 @@ func (h *Handler) runJob(ctx context.Context, j work) error {
 	}
 	return err
 }
+
+// ngatSauNoiDung fails a job that had content out and could not finish
+// before the worker stopped: worker_interrupted, what readers saw stays, and
+// the stream ends with that_bai (design 02 §7). It matches nothing when the
+// job already ended or is no longer this worker's.
+func (h *Handler) ngatSauNoiDung(ctx context.Context, j work) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	defer cancel()
+	tag, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code='worker_interrupted',prompt=CASE WHEN scope='me' THEN NULL ELSE prompt END,boi_canh=CASE WHEN scope='me' THEN NULL ELSE boi_canh END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease)
+	if err == nil && tag.RowsAffected() == 1 {
+		j.luong.thatBai(maNgat)
+	}
+	return err
+}
+
+// maNgat is the code of a job cut off after its content left (design 02 §7).
+const maNgat = "worker_interrupted"
 
 // traLaiSQL puts a job whose terminal write failed back in the queue: due
 // now, a new enqueue_seq (so a broker message for it goes out at once), and
@@ -534,6 +667,10 @@ func (h *Handler) traLai(ctx context.Context, j work) error {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
 	tag, err := h.pool.Exec(ctx, traLaiSQL, j.id, j.lease)
+	if err == nil && tag.RowsAffected() == 1 {
+		// Back in the queue before any content: readers start over.
+		j.luong.LamLai()
+	}
 	if err != nil || tag.RowsAffected() == 1 {
 		return err
 	}
@@ -550,7 +687,10 @@ func (h *Handler) traLai(ctx context.Context, j work) error {
 func (h *Handler) release(ctx context.Context, j work) error {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
-	_, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='queued',attempts=attempts-1,lease_id=NULL,lease_until=NULL,available_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND first_token_at IS NULL`, j.id, j.lease)
+	tag, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='queued',attempts=attempts-1,lease_id=NULL,lease_until=NULL,available_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND first_token_at IS NULL`, j.id, j.lease)
+	if err == nil && tag.RowsAffected() == 1 {
+		j.luong.LamLai()
+	}
 	return err
 }
 
@@ -567,7 +707,13 @@ func (h *Handler) retryLater(ctx context.Context, j work) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return tag.RowsAffected() == 1, nil
+	if tag.RowsAffected() != 1 {
+		return false, nil
+	}
+	// Back in the queue before any content (first_token_at IS NULL above):
+	// the stream says start over, and the next attempt's events follow.
+	j.luong.LamLai()
+	return true, nil
 }
 
 // choLai is the wait before the next attempt: one second after the first,
@@ -646,6 +792,14 @@ func (h *Handler) process(ctx context.Context, j work) error {
 	card, err := theCuaViec(j, treejson.To(raw), treejson.MapsTo(dap.places))
 	if err != nil {
 		return h.finishFailure(ctx, j, "invalid_ai_result")
+	}
+	// With a stream, the finished text will reach it (after the commit,
+	// publish), so it must pass the output guard's window first: a card the
+	// guard stops is not posted, and the room and the job row learn only the
+	// generic code. Without a stream nothing is released and the brain's card
+	// posts as it did before slice 11 (review of slice 11, finding 7).
+	if j.luong != nil && !theQuaGuard(card) {
+		return h.finishFailure(ctx, j, maChanChung)
 	}
 	return h.publish(ctx, j, card, nil)
 }
@@ -743,7 +897,10 @@ func (h *Handler) finishFailure(ctx context.Context, j work, code string) error 
 	}
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
-	_, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code=$3,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease, code)
+	tag, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code=$3,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease, code)
+	if err == nil && tag.RowsAffected() == 1 {
+		j.luong.thatBai(code)
+	}
 	return err
 }
 
@@ -751,6 +908,9 @@ func (h *Handler) finishFailure(ctx context.Context, j work, code string) error 
 // structured outcome kept on the invocation row (chia_bill's drafts); nil
 // leaves the column NULL, which is what a plan job has always stored.
 func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, result json.RawMessage) error {
+	if h.truocChot != nil {
+		h.truocChot(ctx)
+	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
@@ -800,5 +960,81 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, res
 	if err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+	// Only now, with the card in the room: its text reaches the stream (a
+	// card that fails to post leaves no text behind for readers; review of
+	// slice 11, finding 8), and the stream ends with its id.
+	j.luong.nhaThe(card, h.nhipSauChot())
+	j.luong.xongNhom(message.ID)
+	return nil
+}
+
+// chuTheNhom passes the text parts of a group card through the output
+// guard's window, paced nhip apart (design 02 §5.1: an engine that does not
+// stream -- the brain path -- still reaches the stream only through the
+// window). Every part is read before any is released, so a card
+// the guard stops leaves nothing in the stream. It reports false when the
+// guard stopped the card.
+func chuTheNhom(ctx context.Context, sink guard.NhanDelta, card []byte, nhip time.Duration) bool {
+	if !theQuaGuard(card) {
+		return false
+	}
+	for _, p := range chuCuaThe(card) {
+		if kq, err := guard.PhatTheoNhip(ctx, sink, p.i, guard.DauRa{}, 0, "", p.text, nhip); err != nil || kq.Chan != guard.RaSach {
+			return false
+		}
+	}
+	return true
+}
+
+// theQuaGuard reports whether every text part of a card passes the output
+// guard window's scan.
+func theQuaGuard(card []byte) bool {
+	for _, p := range chuCuaThe(card) {
+		if guard.KiemCuaSo(guard.DauRa{}, p.text) != guard.RaSach {
+			return false
+		}
+	}
+	return true
+}
+
+type phanTheChu struct {
+	i    int
+	text string
+}
+
+// chuCuaThe is the prose of a grounded card: a `text` card's text, or the text
+// parts of a `tra_loi` card by their index. Places and itineraries carry no
+// prose of the model's.
+func chuCuaThe(card []byte) []phanTheChu {
+	var c struct {
+		Kind    string `json:"kind"`
+		Payload struct {
+			Text string `json:"text"`
+			Phan []struct {
+				Kind    string `json:"kind"`
+				Payload struct {
+					Text string `json:"text"`
+				} `json:"payload"`
+			} `json:"phan"`
+		} `json:"payload"`
+	}
+	if json.Unmarshal(card, &c) != nil {
+		return nil
+	}
+	switch c.Kind {
+	case "text":
+		return []phanTheChu{{0, c.Payload.Text}}
+	case "tra_loi":
+		var out []phanTheChu
+		for i, p := range c.Payload.Phan {
+			if p.Kind == "text" {
+				out = append(out, phanTheChu{i, p.Payload.Text})
+			}
+		}
+		return out
+	}
+	return nil
 }

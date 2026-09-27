@@ -19,6 +19,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
@@ -45,6 +46,23 @@ type Handler struct {
 	// slots bound the jobs this process runs at once, however claimed.
 	slotsOnce sync.Once
 	slots     chan struct{}
+	// stream, when set, carries answers to their readers as they are
+	// written (MOBILE_REDIS_URL; phat.go, sse.go); hub wakes this process's
+	// SSE readers; dungSSE closes when the process stops.
+	stream  *aistream.Stream
+	hub     *aistream.Hub
+	dungSSE <-chan struct{}
+	// sucChua bounds the open SSE connections (sse.go).
+	sucChua sucChuaSSE
+	// sseXacThucMoi, when set, replaces the 10 s between a stream's
+	// authorization checks (tests).
+	sseXacThucMoi time.Duration
+	// truocChot, when set, runs just before a job's terminal transaction
+	// (tests: a job held after its content left, while the worker stops).
+	truocChot func(context.Context)
+	// nhipPhat paces text released after a commit (phat.go); WithStream
+	// sets aiharness.NhipPhat.
+	nhipPhat time.Duration
 }
 
 // Invocation excludes inputs and session digests from every public response.
@@ -72,6 +90,8 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations", h.create)
 	h.mux.HandleFunc("GET /contexts/{context}/ai-invocations", h.list)
 	h.mux.HandleFunc("GET /contexts/{context}/ai-invocations/{id}", h.get)
+	// The requester's stream of one invocation (slice 11, sse.go).
+	h.mux.HandleFunc(routeSuKienNhom, h.suKienNhom)
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations/{id}/retry", h.retry)
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations/{id}/cancel", h.cancel)
 	h.mux.HandleFunc("POST /contexts/{context}/plan-promotions", h.promote)
@@ -83,6 +103,7 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 	// Nếp's own questions (ADR-0036 §2.7, §2.8): same queue, sealed result.
 	h.mux.HandleFunc("POST /me/nep/ai-invocations", h.nepCreate)
 	h.mux.HandleFunc("GET /me/nep/ai-invocations/{id}", h.nepGet)
+	h.mux.HandleFunc(routeSuKienNep, h.nepEvents)
 	return h
 }
 
@@ -108,13 +129,36 @@ func Matches(path string) bool {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
-	defer cancel()
+	ctx := r.Context()
+	if han, ok := h.hanYeuCau(r); ok {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, han)
+		defer cancel()
+	}
 	if strings.HasSuffix(r.URL.Path, "/expense-draft") {
 		refuse(w, 403, "explicit_invocation_required")
 		return
 	}
 	h.mux.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// The two stream routes (sse.go), the only ones without the 8 s bound.
+const (
+	routeSuKienNhom = "GET /contexts/{context}/ai-invocations/{id}/events"
+	routeSuKienNep  = "GET /me/nep/ai-invocations/{id}/events"
+)
+
+// hanYeuCau is how long a request of this engine may take: 8 s, except a
+// stream, which lives up to its own 180 s bound and ends on the client's
+// leaving or the process stopping (sse.go). Its authorization runs under a
+// short deadline of its own. The stream is told by the route the mux
+// matches, not by the path's suffix: another GET that merely ends in
+// «/events» keeps its bound (review of slice 11, finding 12).
+func (h *Handler) hanYeuCau(r *http.Request) (time.Duration, bool) {
+	if _, pattern := h.mux.Handler(r); pattern == routeSuKienNhom || pattern == routeSuKienNep {
+		return 0, false
+	}
+	return 8 * time.Second, true
 }
 
 func reply(w http.ResponseWriter, status int, v any) {
@@ -330,7 +374,29 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	// `mention` says this server takes `trigger_message_id` and answers inside
 	// the thread. A client that does not see it sends no trigger, so an older
 	// server never meets a field its DisallowUnknownFields would refuse.
-	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached", "mention": true}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
+	//
+	// `stream` says who can watch an answer being written (contract §3):
+	// `nguoi_goi` when the requester can open …/events on a live stream,
+	// `khong` when this host has no stream or its Redis is unreachable. The
+	// room lane's onlookers (`phong`) come with the WebSocket frame of slice
+	// 12; until then no room says `phong`. A client that sees no field reads
+	// `khong`.
+	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
+}
+
+// The values of chat-capabilities' ai.stream (contract §3).
+const (
+	aiStreamPhong    = "phong"
+	aiStreamNguoiGoi = "nguoi_goi"
+	aiStreamKhong    = "khong"
+)
+
+// aiStream is ai.stream for the room g names.
+func (h *Handler) aiStream(g grant) string {
+	if h.stream == nil || !h.stream.Song() || g.kind != "group" {
+		return aiStreamKhong
+	}
+	return aiStreamNguoiGoi
 }
 
 func scan(row pgx.Row) (Invocation, error) {

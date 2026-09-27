@@ -32,8 +32,9 @@ cd "$(dirname "$0")/.."
 PG_IMAGE="${MOBILE_TEST_POSTGRES_IMAGE:-postgres:16-alpine}"
 REDIS_IMAGE="${MOBILE_TEST_REDIS_IMAGE:-redis:7-alpine}"
 RABBIT_IMAGE="${MOBILE_TEST_RABBITMQ_IMAGE:-rabbitmq:3.13-alpine}"
-# One per service family, and the queue end to end through the AI engine.
-SENTINELS=(TestBrokerTierReachesRedis TestBrokerTierReachesRabbitAndPostgres TestHangDoiDauCuoiQuaBroker)
+# One per service family, the queue end to end through the AI engine, and
+# the answer stream end to end to a real SSE client (slice 11).
+SENTINELS=(TestBrokerTierReachesRedis TestBrokerTierReachesRabbitAndPostgres TestHangDoiDauCuoiQuaBroker TestStreamNepDauCuoiQuaSSE)
 
 image=""
 while [ $# -gt 0 ]; do

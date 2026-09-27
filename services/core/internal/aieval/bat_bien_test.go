@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"mobile/services/core/internal/aiharness/cau"
+	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/obs"
 )
 
@@ -58,6 +59,18 @@ func ten(ts []Truot) string {
 }
 
 func delta(s string) SuKien { return SuKien{Loai: LoaiDelta, P: intp(0), Chu: s} }
+
+// chiTrangThai keeps a turn's statuses and drops what streamed: the identity
+// turn streams its answer, and a breakage below lays its own Deltas instead.
+func chiTrangThai(ds []SuKien) []SuKien {
+	var out []SuKien
+	for _, s := range ds {
+		if s.Loai == LoaiTrangThai {
+			out = append(out, s)
+		}
+	}
+	return out
+}
 func trangThai(ma cau.TrangThai) SuKien {
 	return SuKien{Loai: LoaiTrangThai, Ma: string(ma), N: intp(0)}
 }
@@ -100,16 +113,35 @@ var caBatBien = []caBatBienT{
 	{"bản ghi không đếm lần thử lại", func(l *LuotDaCham) { l.BanGhi.SoGoiMoHinh = 0 }, "bat_bien_7_so_goi"},
 	{"quá trần", func(l *LuotDaCham) { l.Turn.DaGoiTruoc = 8 }, "bat_bien_7_so_goi"},
 	{"không sự kiện", func(l *LuotDaCham) { l.SuKien = nil }, "bat_bien_8_sink"},
-	{"delta trước trạng thái", func(l *LuotDaCham) { l.SuKien = append([]SuKien{delta(l.Chu)}, l.SuKien...) }, "bat_bien_8_sink"},
-	{"lam_lai sau delta", func(l *LuotDaCham) { l.SuKien = append(l.SuKien, delta(l.Chu), SuKien{Loai: LoaiLamLai}) }, "bat_bien_8_sink"},
+	{"delta trước trạng thái", func(l *LuotDaCham) { l.SuKien = append([]SuKien{delta(l.Chu)}, chiTrangThai(l.SuKien)...) }, "bat_bien_8_sink"},
+	{"lam_lai sau delta", func(l *LuotDaCham) { l.SuKien = append(l.SuKien, SuKien{Loai: LoaiLamLai}) }, "bat_bien_8_sink"},
 	{"rút lại chữ", func(l *LuotDaCham) {
-		l.SuKien = append(l.SuKien, delta("Tối nay"), delta(strings.TrimPrefix(l.Chu, "Tối mai")))
+		l.SuKien = append(chiTrangThai(l.SuKien), delta("Tối nay"), delta(strings.TrimPrefix(l.Chu, "Tối mai")))
 	}, "bat_bien_8_sink"},
-	{"delta chưa đủ khi xong", func(l *LuotDaCham) { l.SuKien = append(l.SuKien, delta("Tối mai")) }, "bat_bien_8_sink"},
+	{"delta chưa đủ khi xong", func(l *LuotDaCham) { l.SuKien = append(chiTrangThai(l.SuKien), delta("Tối mai")) }, "bat_bien_8_sink"},
+	// Slice 11: an answer that never reached the stream is red.
+	{"câu trả lời không qua stream", func(l *LuotDaCham) { l.SuKien = chiTrangThai(l.SuKien) }, "bat_bien_8_sink"},
 	{"trạng thái lạ", func(l *LuotDaCham) { l.SuKien = append(l.SuKien, trangThai("dang_mo")) }, "bat_bien_8_sink"},
 	{"câu bị chặn để lại delta", func(l *LuotDaCham) {
 		l.Ma, l.KetThuc = cau.TraLoiBiChan, obs.KetThucThatBai
-		l.SuKien = append(l.SuKien, delta("Mình đã"))
+		l.SuKien = append(chiTrangThai(l.SuKien), delta("Mình đã"))
+	}, "bat_bien_8_sink"},
+	// Slice 11: nothing leaves before the guard. A Delta that carries what
+	// the window's scan stops (a phone, split in the source) is red, even
+	// when it is the whole final text.
+	{"delta lộ số điện thoại", func(l *LuotDaCham) {
+		l.Chu = "Gọi 0912 " + "345 678 để giữ bàn nhé."
+		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
+	}, "bat_bien_8_sink"},
+	// Draft, verify, stream: a Delta in a turn the verifier withheld is red.
+	{"delta trước verifier", func(l *LuotDaCham) {
+		l.BanGhi.KetKiem = obs.KiemKhongDat
+		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
+	}, "bat_bien_8_sink"},
+	{"chặn giữa chừng không có câu cố định", func(l *LuotDaCham) {
+		l.BanGhi.OutGuard = obs.OutChan
+		l.Chu = "Tối mai "
+		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
 	}, "bat_bien_8_sink"},
 }
 
@@ -123,18 +155,27 @@ func TestBatBienDoDungCho(t *testing.T) {
 			t.Errorf("%s: đỏ ở %q, muốn %q", tc.ten, got, tc.muon)
 		}
 	}
-	// Identity for the streaming shape S1 does not have yet: statuses, then
-	// deltas that join into the final text, is green.
+	// Identity: statuses, then Deltas that join into the final text, in
+	// any number of pieces, is green.
 	l := saoChep(goc)
-	l.SuKien = append(l.SuKien, delta("Tối mai "), delta(strings.TrimPrefix(l.Chu, "Tối mai ")))
+	l.SuKien = append(chiTrangThai(l.SuKien), delta("Tối mai "), delta(strings.TrimPrefix(l.Chu, "Tối mai ")))
 	if tr := KiemBatBien(l.LuotDaChay); len(tr) != 0 {
 		t.Fatalf("luồng delta hợp lệ bị đỏ: %+v", tr)
 	}
 	// A restart before the first delta is allowed.
 	l = saoChep(goc)
-	l.SuKien = append(l.SuKien, SuKien{Loai: LoaiLamLai}, delta(l.Chu))
+	l.SuKien = append(chiTrangThai(l.SuKien), SuKien{Loai: LoaiLamLai}, delta(l.Chu))
 	if tr := KiemBatBien(l.LuotDaChay); len(tr) != 0 {
 		t.Fatalf("lam_lai trước delta bị đỏ: %+v", tr)
+	}
+	// An answer stopped part-way: what left, then the fixed sentence, is
+	// green.
+	l = saoChep(goc)
+	l.BanGhi.OutGuard = obs.OutChan
+	l.Chu = "Tối mai " + guard.NoiChan + cau.Cau(cau.TraLoiBiChan)
+	l.SuKien = append(chiTrangThai(l.SuKien), delta("Tối mai "), delta(guard.NoiChan+cau.Cau(cau.TraLoiBiChan)))
+	if tr := KiemBatBien(l.LuotDaChay); len(tr) != 0 {
+		t.Fatalf("câu chặn giữa chừng đúng dạng bị đỏ: %+v", tr)
 	}
 }
 

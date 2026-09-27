@@ -13,6 +13,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aiharness/cau"
+	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/metrics"
 	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/auth"
@@ -451,7 +453,22 @@ func (h *Handler) processNep(ctx context.Context, j work) error {
 	if !ok {
 		return h.nepThatBai(ctx, j, "invalid_ai_result")
 	}
-	return h.nepXong(ctx, j, text)
+	// The brain does not stream. With a stream, its answer will reach it --
+	// one final delta through the output guard's window, then xong{text},
+	// both after the commit -- so it must pass the window's scan first: an
+	// answer the guard stops is refused with the code the app already reads,
+	// and one past the cap or not UTF-8 as invalid (review of slice 11,
+	// finding 11). Without a stream nothing is released and the answer
+	// stores as it did before slice 11 (finding 7).
+	if j.luong != nil {
+		switch kq := guard.QuaCuaSo(aiharness.BoQua{}, 0, guard.DauRa{}, maxTraLoiNep, "", text); {
+		case kq.Chan != guard.RaSach:
+			return h.nepThatBai(ctx, j, string(cau.TraLoiBiChan))
+		case kq.KhongHopLe || kq.Chu == "":
+			return h.nepThatBai(ctx, j, "invalid_ai_result")
+		}
+	}
+	return h.nepXong(ctx, j, text, true)
 }
 
 // luotEngine is the engine's turn, built from the stored job alone: the slip,
@@ -501,13 +518,15 @@ func (h *Handler) nepQuaEngine(ctx context.Context, j work) error {
 	}
 	turn.DaGoiTruoc = j.modelCalls
 	turn.GiuLuot = h.giuLuot(j)
-	res, runErr := h.nepEngine.Run(ctx, turn, aiharness.BoQua{})
+	// The job's stream is the engine's Sink: statuses as they happen, and
+	// the answer as the output guard window releases it.
+	res, runErr := h.nepEngine.Run(ctx, turn, j.luong.sink())
 	if errors.Is(runErr, aiharness.ErrHuy) {
 		return runErr
 	}
 	switch {
 	case runErr == nil:
-		err = h.nepXong(ctx, j, res.Text)
+		err = h.nepXong(ctx, j, res.Text, false)
 	case aiharness.TamThoi(runErr) && !dangDung(ctx):
 		var later bool
 		if later, err = h.retryLater(ctx, j); err == nil && !later {
@@ -557,7 +576,13 @@ func (h *Handler) nepConSong(ctx context.Context, j work) error {
 
 // nepXong closes the job with the sealed answer. The question and the session
 // go in the same statement that stores the answer; nothing is published.
-func (h *Handler) nepXong(ctx context.Context, j work, text string) error {
+// nhaSauChot releases the answer to the stream after the commit, as one
+// final delta through the output guard's window (the brain, which did not
+// stream); the engine's answer already streamed through it.
+func (h *Handler) nepXong(ctx context.Context, j work, text string, nhaSauChot bool) error {
+	if h.truocChot != nil {
+		h.truocChot(ctx)
+	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
@@ -574,11 +599,22 @@ func (h *Handler) nepXong(ctx context.Context, j work, text string) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',result=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND scope='me' AND share_expires_at>clock_timestamp()`, j.id, j.lease, json.RawMessage(result))
+	tag, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',result=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND scope='me' AND share_expires_at>clock_timestamp()`, j.id, j.lease, json.RawMessage(result))
 	if err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 1 {
+		// Only now, with the answer sealed: the stream ends with it, on the
+		// invocation key alone.
+		if nhaSauChot {
+			j.luong.nhaChu(text, h.nhipSauChot())
+		}
+		j.luong.xongNep(text)
+	}
+	return nil
 }
 
 // nepThatBai fails a personal job and scrubs what it was given at once. The
@@ -591,6 +627,9 @@ func (h *Handler) nepThatBai(ctx context.Context, j work, code string) error {
 	}
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
-	_, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease, code)
+	tag, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease, code)
+	if err == nil && tag.RowsAffected() == 1 {
+		j.luong.thatBai(code)
+	}
 	return err
 }

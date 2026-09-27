@@ -44,6 +44,7 @@ import (
 	"mobile/services/core/internal/aiharness/nhung"
 	"mobile/services/core/internal/aiharness/tools"
 	"mobile/services/core/internal/aiharness/truyhoi"
+	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
@@ -301,6 +302,21 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				assistant.WithNepGo()
 			}
 		}
+		// The answer streams (slice 11): this process serves the SSE routes
+		// and, with its in-process workers, writes the streams too. Empty
+		// MOBILE_REDIS_URL: no stream at all, and the routes say 503.
+		stream, err := moStream(getenv)
+		if err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+		if stream != nil {
+			defer stream.Close()
+			hub := aistream.NewHub()
+			background.Add(1)
+			go func() { defer background.Done(); stream.Listen(chatCtx, hub, nil) }()
+			assistant.WithStream(stream, hub, chatCtx.Done())
+		}
 		go changes.Listen()
 		go avatars.Listen()
 		periodic := append(servePeriodic(assistant, inproc), mem.periodic()...)
@@ -474,7 +490,8 @@ const (
 	// heartbeat and the model-call counter, and the relay's LISTEN.
 	EnvWorkerDBConns = "MOBILE_WORKER_DB_CONNS"
 	// EnvRedisURL and EnvRedisNamespace name the Redis the model-call rate
-	// limiter shares (MOBILE_MODEL_RPM); a Redis that is down lets calls go.
+	// limiter shares (MOBILE_MODEL_RPM; a Redis that is down lets calls go)
+	// and the answer streams live in (internal/aistream; empty: no stream).
 	EnvRedisURL       = "MOBILE_REDIS_URL"
 	EnvRedisNamespace = "MOBILE_REDIS_NAMESPACE"
 )
@@ -628,6 +645,16 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 		return refuse(err)
 	}
 	defer mem.close()
+	// The worker writes the answer streams; it serves no route, so it reads
+	// none (no hub).
+	stream, err := moStream(getenv)
+	if err != nil {
+		return refuse(err)
+	}
+	if stream != nil {
+		defer stream.Close()
+		assistant.WithStream(stream, nil, nil)
+	}
 	if nepGo {
 		if err := aiSchemaReady(ctx, pool); err != nil {
 			return refuse(err)
@@ -759,6 +786,10 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 		logger.Info("nep reranker not configured: retrieval keeps the RRF order (no_rerank)")
 	}
 	opts = append(opts, mem.engineOptions()...)
+	// A verified answer is released to its stream a chunk at a time, so the
+	// panel shows it progressively (slice 11); a job with no stream (its
+	// Sink is BoQua) is not paced.
+	opts = append(opts, aiharness.WithNhipPhat(aiharness.NhipPhat))
 	engine, err := aiharness.FromEnv(ctx, getenv, logger, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
@@ -836,6 +867,22 @@ func modelLimiter(getenv func(string) string) (llm.GioiHan, error) {
 		namespace = "main"
 	}
 	return llm.NewGioiHanRedis(redis.NewClient(options), namespace, rpm)
+}
+
+// moStream opens the answer streams' Redis from MOBILE_REDIS_URL and
+// MOBILE_REDIS_NAMESPACE (default "main"), or returns nil when no URL is set:
+// then nothing streams and the SSE routes refuse with 503. It opens no
+// connection; a Redis that is down later only sends readers back to polling.
+func moStream(getenv func(string) string) (*aistream.Stream, error) {
+	url := getenv(EnvRedisURL)
+	if url == "" {
+		return nil, nil
+	}
+	namespace := getenv(EnvRedisNamespace)
+	if namespace == "" {
+		namespace = "main"
+	}
+	return aistream.Open(url, namespace)
 }
 
 // aiSchemaReady refuses a database without the engine's metrics schema.

@@ -2131,6 +2131,14 @@
       "evidence": "services/core/internal/chatassist/postgres_test.go"
     },
     {
+      "id": "GET /contexts/{context}/ai-invocations/{id}/events",
+      "method": "GET",
+      "path": "/contexts/{context}/ai-invocations/{id}/events",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/stream_broker_test.go"
+    },
+    {
       "id": "POST /contexts/{context}/ai-invocations/{id}/retry",
       "method": "POST",
       "path": "/contexts/{context}/ai-invocations/{id}/retry",
@@ -2209,6 +2217,14 @@
       "package": "chatassist",
       "state": "GO-ONLY",
       "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "GET /me/nep/ai-invocations/{id}/events",
+      "method": "GET",
+      "path": "/me/nep/ai-invocations/{id}/events",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/stream_broker_test.go"
     },
     {
       "id": "GET /contexts/{room}/changes",

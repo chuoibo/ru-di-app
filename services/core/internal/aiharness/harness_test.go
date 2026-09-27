@@ -130,7 +130,9 @@ func dung(usage bool, text string) llm.Buoc {
 }
 
 // The identity case: the router, one answer call, the verifier, the answer
-// returned by Run; the sink hears two statuses and nothing else.
+// returned by Run; the sink hears two statuses, then -- once the verifier
+// has passed it -- the answer through the output guard's window (slice 11):
+// the Deltas joined are exactly the answer.
 func TestNepTraLoiMotLuot(t *testing.T) {
 	m := chayLuot(t, luotCoBan(), ruThang(), dung(true, "  Thứ Bảy này bạn thử đi dạo hồ Xuân Hương buổi tối nhé.  "), kiemDat())
 	if m.err != nil {
@@ -139,13 +141,14 @@ func TestNepTraLoiMotLuot(t *testing.T) {
 	if m.res.Text != "Thứ Bảy này bạn thử đi dạo hồ Xuân Hương buổi tối nhé." {
 		t.Fatalf("chữ: %q", m.res.Text)
 	}
-	if !m.sink.chiTrangThai() || len(m.sink.status) != 2 || m.sink.status[0] != cau.DangDoc || m.sink.status[1] != cau.DangNghi ||
-		m.sink.n[0] != 0 || m.sink.n[1] != 0 {
+	if len(m.sink.status) != 2 || m.sink.status[0] != cau.DangDoc || m.sink.status[1] != cau.DangNghi ||
+		m.sink.n[0] != 0 || m.sink.n[1] != 0 || len(m.sink.phan) != 0 || m.sink.lamLai != 0 {
 		t.Fatalf("sink: %+v", m.sink)
 	}
-	// The answer is Run's to return: not one word of it reached the sink.
-	if strings.Contains(m.sink.bytes(), "Xuân Hương") {
-		t.Fatalf("sink nghe thấy câu trả lời: %s", m.sink.bytes())
+	// 54 runes: «Thứ » leaves once 48 runes follow the white space after it,
+	// the rest when the answer ends.
+	if len(m.sink.delta) != 2 || m.sink.delta[0] != "Thứ " || strings.Join(m.sink.delta, "") != m.res.Text {
+		t.Fatalf("delta: %q", m.sink.delta)
 	}
 	r := m.res.Record
 	if err := r.Valid(); err != nil {
@@ -554,5 +557,47 @@ func TestNhomChuaChayQuaEngine(t *testing.T) {
 	m := chayLuot(t, turn, ruThang())
 	if m.err == nil || m.stub.SoGoi() != 0 {
 		t.Fatalf("%v %d", m.err, m.stub.SoGoi())
+	}
+}
+
+// Slice 11, draft then verify then stream: a long verified answer leaves in
+// several Deltas, each ending at white space, and the Deltas joined are the
+// answer.
+func TestNepStreamSauKiemChung(t *testing.T) {
+	chu := strings.TrimSpace(strings.Repeat("Tối nay bạn thử ra bờ hồ đi dạo một vòng rồi ghé quán chè ấm bụng nhé. ", 4))
+	m := chayLuot(t, luotCoBan(), ruThang(), dung(false, chu), kiemDatN(4))
+	if m.err != nil || m.res.Text != chu {
+		t.Fatalf("%v %q", m.err, m.res.Text)
+	}
+	if len(m.sink.delta) < 3 || strings.Join(m.sink.delta, "") != chu {
+		t.Fatalf("delta: %q", m.sink.delta)
+	}
+	for _, d := range m.sink.delta[:len(m.sink.delta)-1] {
+		if !strings.HasSuffix(d, " ") {
+			t.Fatalf("a Delta ends inside a word: %q", d)
+		}
+	}
+}
+
+// Nothing leaves before the verifier: an answer it withholds -- a claimed
+// money act, whatever its length -- puts not one Delta on the sink, and an
+// answer the structural guard stops (a phone number in the middle of a long
+// answer, canary 3 of design 01 §7) none either, not even its clean head.
+func TestNepKhongNhaTruocKiemChung(t *testing.T) {
+	dau := "Quán nướng đó mở tới 22 giờ, hợp cho nhóm đông người đi tối nay, bạn cứ yên tâm nhé. "
+	for _, c := range []struct {
+		ten, chu string
+		kiem     llm.Buoc
+	}{
+		{"verifier", dau + "Mình đã chuyển 200k cho Nam để giữ bàn rồi.", kiemCo(false, true)},
+		{"so_dien_thoai", dau + "Gọi 0912 345 678 để giữ bàn trước nhé.", kiemDat()}, // repo-guard: allow=vn-phone reason=synthetic-output-guard-fixture
+	} {
+		m := chayLuot(t, luotCoBan(), ruThang(), dung(false, c.chu), c.kiem)
+		if MaCua(m.err) != cau.TraLoiBiChan || m.res.Text != "" || m.res.Record.OutGuard != obs.OutChan {
+			t.Fatalf("%s: %v %q %+v", c.ten, m.err, m.res.Text, m.res.Record)
+		}
+		if len(m.sink.delta) != 0 || strings.Contains(m.sink.bytes(), "Quán nướng") {
+			t.Fatalf("%s: text left before the checks: %q", c.ten, m.sink.delta)
+		}
 	}
 }

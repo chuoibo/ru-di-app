@@ -5,6 +5,7 @@ package aistream
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -132,7 +133,7 @@ func TestFollowDeliversInOrderAcrossProcesses(t *testing.T) {
 	opt.MaxDuration = 5 * time.Second
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
-		_ = Follow(r.Context(), w, reader, hub, key, ResumeFrom(r), opt, nil)
+		_ = Follow(r.Context(), w, reader, hub, key, ResumeFrom(r), opt)
 	}))
 	defer server.Close()
 	resp, err := http.Get(server.URL)
@@ -183,7 +184,7 @@ func TestFollowDeliversInOrderAcrossProcesses(t *testing.T) {
 	if took := time.Since(start); took > 2*time.Second {
 		t.Fatalf("resuming after the ending waited %v instead of closing", took)
 	}
-	if strings.Contains(string(body), "data: ") {
+	if strings.Contains(string(body), "event: delta") || strings.Contains(string(body), "event: xong") || !strings.Contains(string(body), "event: hello") {
 		t.Fatalf("resuming after the ending replayed events: %q", body)
 	}
 	// Resuming in the middle returns exactly the rest.
@@ -204,17 +205,87 @@ func TestFollowRevokesWhenAuthorizationEnds(t *testing.T) {
 	hub := NewHub()
 	key, _ := s.Keys.Invocation("0b8f1c9e-aaaa-4bbb-8ccc-dddddddddd05")
 	opt := DefaultFollow()
-	opt.Reconcile = 50 * time.Millisecond
+	opt.AuthorizeEvery = 50 * time.Millisecond
 	var allowed atomic.Bool
 	allowed.Store(true)
+	opt.Authorize = func(context.Context) (bool, []Event, error) { return allowed.Load(), nil, nil }
 	rec := httptest.NewRecorder()
 	go func() { time.Sleep(200 * time.Millisecond); allowed.Store(false) }()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	if err := Follow(ctx, rec, s, hub, key, "", opt, func(context.Context) bool { return allowed.Load() }); err != nil {
+	if err := Follow(ctx, rec, s, hub, key, "", opt); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(rec.Body.String(), "event: thu_hoi") {
 		t.Fatalf("revoked reader was not told: %q", rec.Body.String())
+	}
+}
+
+// The row is the truth (review of slice 11, finding 2): a job whose row
+// ended while its stream holds no terminal event -- the writer gave up, the
+// worker died after content, a queued job was cancelled -- ends the reader's
+// connection with the row's ending, without an id, a whole reconcile tick
+// after the re-authorization saw it; and a reader that resumes onto such a
+// stream gets it the same way from the row read at open. A terminal event
+// that does reach the stream within the tick wins, with its id.
+func TestFollowKetThucTuHang(t *testing.T) {
+	s := open(t)
+	hub := NewHub()
+	ctx := context.Background()
+	thatBai := []Event{{Kind: ThatBai, Data: json.RawMessage(`{"code":"worker_interrupted"}`)}}
+	nhanh := func() FollowOptions {
+		opt := DefaultFollow()
+		opt.Reconcile, opt.AuthorizeEvery, opt.MaxDuration = 100*time.Millisecond, 100*time.Millisecond, 5*time.Second
+		return opt
+	}
+	key, _ := s.Keys.Invocation("0b8f1c9e-aaaa-4bbb-8ccc-dddddddddd07")
+	id, err := s.Append(ctx, key, 64, Delta, DeltaData{Text: "Tối nay "}, time.Now().Add(time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.client.Del(ctx, key)
+	// Mid-stream: the row ends 300 ms in.
+	var ended atomic.Bool
+	go func() { time.Sleep(300 * time.Millisecond); ended.Store(true) }()
+	opt := nhanh()
+	opt.Authorize = func(context.Context) (bool, []Event, error) {
+		if ended.Load() {
+			return true, thatBai, nil
+		}
+		return true, nil, nil
+	}
+	rec := httptest.NewRecorder()
+	start := time.Now()
+	if err := Follow(ctx, rec, s, hub, key, "", opt); err != nil {
+		t.Fatal(err)
+	}
+	body := rec.Body.String()
+	if took := time.Since(start); took > 2*time.Second || !strings.HasSuffix(body, "event: that_bai\ndata: {\"code\":\"worker_interrupted\"}\n\n") || strings.Count(body, "id: ") != 1 {
+		t.Fatalf("after %v: %q", took, body)
+	}
+	// On resume, from the row read at open.
+	opt = nhanh()
+	opt.Authorize = func(context.Context) (bool, []Event, error) { return true, nil, nil }
+	opt.Ending = thatBai
+	rec = httptest.NewRecorder()
+	start = time.Now()
+	if err := Follow(ctx, rec, s, hub, key, id, opt); err != nil {
+		t.Fatal(err)
+	}
+	if took := time.Since(start); took > time.Second || !strings.Contains(rec.Body.String(), "event: that_bai") {
+		t.Fatalf("resume after %v: %q", took, rec.Body.String())
+	}
+	// Identity: the stream's own ending, arriving within the tick, is the
+	// one the reader gets, with its id; the row's is not added.
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		_, _ = s.Append(ctx, key, 64, Xong, map[string]string{"message_id": "m"}, time.Now().Add(time.Minute))
+	}()
+	rec = httptest.NewRecorder()
+	if err := Follow(ctx, rec, s, hub, key, id, opt); err != nil {
+		t.Fatal(err)
+	}
+	if b := rec.Body.String(); !strings.Contains(b, "event: xong") || strings.Contains(b, "that_bai") {
+		t.Fatalf("the stream's own ending lost to the row's: %q", b)
 	}
 }

@@ -20,8 +20,11 @@
 //     email, account or card number formats). Run returns the Result, or an
 //     error whose code (MaCua) has a sentence fixed in aiharness/cau.
 //
-// The Sink hears status events only, never a Phan, a Delta or a LamLai
-// (streaming is built elsewhere). How the turn ended is Run's return value,
+// The Sink hears the statuses, then -- only once the answer has passed the
+// verifier and every structural check (draft, then verify, then stream:
+// slice 11) -- the verified text in Deltas through the output guard's
+// 48-rune window (phatRa). No unverified byte ever reaches it, and never a
+// Phan or a LamLai. How the turn ended is Run's return value,
 // never a Sink event (design 01 §2): the transport emits `xong` after the
 // worker's transaction commits, and `that_bai` after the worker fails the
 // job. The engine reads and writes no database: its data comes through the
@@ -150,13 +153,14 @@ type Sink interface {
 	// calls it.
 	Phan(i int, kind PhanKind, v json.RawMessage)
 	// Delta -> delta{p,text}; only the output guard's streaming window calls
-	// it. S1 never calls it.
+	// it, and only on an answer the verifier already passed (phatRa).
 	Delta(p int, text string)
 	// LamLai -> lam_lai, only before the first Delta. S1 never calls it.
 	LamLai()
 }
 
-// BoQua is a Sink that discards everything: the worker's, until streaming.
+// BoQua is a Sink that discards everything: the worker's when no stream is
+// configured.
 type BoQua struct{}
 
 func (BoQua) TrangThai(cau.TrangThai, int)        {}
@@ -241,6 +245,9 @@ type Engine struct {
 	// nganHan buffers a Nếp turn's device session for the tool part (nil:
 	// the turns stay in this process's memory, phienThietBi).
 	nganHan NganHanLuot
+	// nhipPhat paces the release of a verified answer (phatRa); 0 releases
+	// it at once.
+	nhipPhat time.Duration
 }
 
 // HoSo is personalization for one Nếp turn (production: nepnho.Kho). It
@@ -312,6 +319,16 @@ func WithHoSo(h HoSo) Option { return func(e *Engine) { e.hoSo = h } }
 // aictx.Kho).
 func WithNganHan(n NganHanLuot) Option { return func(e *Engine) { e.nganHan = n } }
 
+// NhipPhat is the production pause between chunks of a verified answer
+// (WithNhipPhat): 16 runes every 25 ms, the whole answer within
+// guard.TranNhip.
+const NhipPhat = 25 * time.Millisecond
+
+// WithNhipPhat paces the release of a verified answer to the Sink, so a
+// client that renders each Delta shows it progressively (slice 11). Unset,
+// the answer leaves at once (tests, the eval).
+func WithNhipPhat(d time.Duration) Option { return func(e *Engine) { e.nhipPhat = d } }
+
 // withHanLuot shortens the turn deadline (tests).
 func withHanLuot(d time.Duration) Option { return func(e *Engine) { e.han = d } }
 
@@ -377,6 +394,9 @@ func (e *Engine) Run(ctx context.Context, t Turn, s Sink) (Result, error) {
 	var err error
 	if t.Bot == obs.BotNep {
 		res, err = e.nep(ctx, t, s, &rec, batDau)
+		if err == nil {
+			res, err = e.phatRa(ctx, res, s, &rec)
+		}
 	} else {
 		// The group bot moves onto the engine in slice 9; until then a group
 		// turn here is a wiring mistake, answered without a model call.
@@ -413,11 +433,47 @@ func (e *Engine) kiemDauRa(text string, rec *obs.TurnRecord) (Result, error) {
 	if !utf8.ValidString(text) || utf8.RuneCountInString(text) > nepMaxChu {
 		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	}
-	if (guard.DauRa{MaKiem: e.maKiem, LoiNhac: prompts.LoiNhacNep()}).Kiem(text) != guard.RaSach {
+	// The streaming window's scan (the whole-answer checks, and the head of
+	// every prompt clause), so a text that passes here also passes the
+	// window it streams through (phatRa) and nothing is written for an
+	// answer the window would then withhold.
+	if guard.KiemCuaSo(guard.DauRa{MaKiem: e.maKiem, LoiNhac: prompts.LoiNhacNep()}, text) != guard.RaSach {
 		rec.OutGuard = obs.OutChan
 		return Result{}, &Loi{Ma: cau.TraLoiBiChan}
 	}
 	return Result{Text: text}, nil
+}
+
+// phatRa streams an answer that has passed the verifier and the structural
+// checks to the Sink, through the output guard's 48-rune window (slice 11),
+// a chunk at a time and e.nhipPhat apart so the panel shows it progressively
+// (guard.PhatTheoNhip). Nothing reaches the Sink before this point: the draft
+// is verified whole and only then released (design: draft, verify, stream).
+// The window's scan reads the text whole once more first (it also stops on
+// the head of a prompt clause, which kiemDauRa already ran), so a text it
+// would stop leaves nothing; if the window ever stopped one part-way, the
+// part that left stays and the fixed sentence ends it, and Result.Text is
+// what the Deltas carried, joined.
+func (e *Engine) phatRa(ctx context.Context, res Result, s Sink, rec *obs.TurnRecord) (Result, error) {
+	nhip := e.nhipPhat
+	if _, ok := s.(BoQua); ok {
+		// Nobody reads a discarding Sink: no pause is worth its latency.
+		nhip = 0
+	}
+	kq, err := guard.PhatTheoNhip(ctx, s, 0, guard.DauRa{MaKiem: e.maKiem, LoiNhac: prompts.LoiNhacNep()}, nepMaxChu, cau.Cau(cau.TraLoiBiChan), res.Text, nhip)
+	switch {
+	case err != nil:
+		return Result{}, ErrHuy
+	case kq.Chan != guard.RaSach:
+		rec.OutGuard = obs.OutChan
+		if kq.DaNha == "" {
+			return Result{}, &Loi{Ma: cau.TraLoiBiChan}
+		}
+	case kq.KhongHopLe || kq.Chu == "":
+		return Result{}, &Loi{Ma: cau.InvalidAIResult}
+	}
+	res.Text = kq.Chu
+	return res, nil
 }
 
 // loiMoHinh is how a failed model stage ends the turn: stopped from

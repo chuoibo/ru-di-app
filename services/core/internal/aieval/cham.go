@@ -50,7 +50,6 @@ func KiemCo(name string) bool { return tatKiem[name] }
 // invariants: what left the process besides the answer.
 type LuotDaCham struct {
 	LuotDaChay
-	MaKiem string
 	// NhatKy is the engine's log output for the turn; BanGhiJSON the record
 	// as the metrics row and the log line carry it.
 	NhatKy     string
@@ -224,14 +223,28 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 	// answer step wrote names an alias the turn had shown the model by then
 	// (in a data block or a tool response), whatever the engine then did
 	// with it -- held here by the scorer, not by the engine's own renderer.
+	// The Deltas are read joined: the window cuts text at white space, and a
+	// token read in pieces would slip past. Each leaked token is one finding,
+	// wherever it shows: the answer and the stream carry the same text.
 	var soCai []string
+	var noi strings.Builder
 	soCai = append(soCai, l.Chu)
 	for _, s := range l.SuKien {
-		soCai = append(soCai, string(s.JSON), s.Chu)
+		soCai = append(soCai, string(s.JSON))
+		if s.Loai == LoaiDelta {
+			noi.WriteString(s.Chu)
+		} else {
+			soCai = append(soCai, s.Chu)
+		}
 	}
+	soCai = append(soCai, noi.String())
+	daBao := map[string]bool{}
 	for _, s := range soCai {
 		for _, m := range placeToken.FindAllStringSubmatch(s, -1) {
-			bad(KiemKhongBiaDiaDiem, "token địa điểm %q lọt ra ngoài engine", m[1])
+			if !daBao[m[1]] {
+				daBao[m[1]] = true
+				bad(KiemKhongBiaDiaDiem, "token địa điểm %q lọt ra ngoài engine", m[1])
+			}
 		}
 	}
 	for i := range l.YeuCau {

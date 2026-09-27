@@ -305,6 +305,8 @@ var nepRoots = []string{
 	"(*" + pkgChat + ".Handler).nepCreate",
 	"(*" + pkgChat + ".Handler).nepGet",
 	"(*" + pkgChat + ".Handler).processNep",
+	// The Nếp stream (slice 11): its authorization and the job row.
+	"(*" + pkgChat + ".Handler).nepEvents",
 }
 
 // Nếp reads no table for context: the session, the person row it locks, and

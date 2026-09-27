@@ -9,8 +9,10 @@ import (
 
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/cau"
+	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/prompts"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -137,6 +139,9 @@ type LuotDaChay struct {
 	Ma      cau.Ma
 	Chu     string
 	BanGhi  obs.TurnRecord
+	// MaKiem is the canary marker the engine ran with: the output guard's
+	// scan, which invariant 8 holds every Delta to, needs it.
+	MaKiem string
 }
 
 // KiemBatBien holds a turn to every invariant that applies at S1.
@@ -284,14 +289,23 @@ func batBien7(l LuotDaChay) []Truot {
 	return out
 }
 
-// Invariant 8, on the Sink: a status comes first, before any part or text; a
-// restart never follows the first Delta; the Deltas joined are a prefix of
-// the final text, and all of it once the turn is done -- nothing is ever
-// taken back. S1 does not stream, so its Sink hears statuses only and the
-// answer is Run's to return; the prefix rule then has nothing to hold. An
-// answer the output guard stopped leaves no byte in the Sink: at S1 the guard
-// reads the whole answer, so that is no Delta and no Phan at all (slice 11's
-// 48-rune window narrows it to no byte of the offending window).
+// Invariant 8, on the Sink (slice 11: the answer streams): a status comes
+// first, before any part or text; a restart never follows the first Delta;
+// the Deltas joined are a prefix of the final text, and all of it once the
+// turn is done -- nothing is ever taken back, and an answer that never
+// reached the stream is red too. Nothing leaves before the output guard: the
+// model's own text in the Deltas passes the scan of the 48-rune window
+// (guard.KiemCuaSo). When the guard stopped an answer part-way, the fixed
+// sentence of ai_tra_loi_bi_chan is the last Delta and is not the model's
+// text; when it stopped one before anything left, the turn ends with that
+// code and the Sink holds no Delta and no Phan. Nothing leaves before the
+// verifier either (draft, then verify, then stream): a turn the verifier did
+// not pass (khong_dat, hong) holds no Delta at all.
+//
+// The scan reads the released text on its own. A cut inside a look-alike the
+// guard clears only with what follows it (a sum, then its currency) would read
+// as flagged here although the window was right to release it: a script that
+// trips this must be read, not muted.
 func batBien8(l LuotDaChay) []Truot {
 	var out []Truot
 	if len(l.SuKien) == 0 {
@@ -317,13 +331,15 @@ func batBien8(l LuotDaChay) []Truot {
 			noi.WriteString(s.Chu)
 		}
 	}
-	if daDelta && l.KetThuc == obs.KetThucXong {
-		if n := noi.String(); n != l.Chu {
-			if strings.HasPrefix(l.Chu, n) {
-				out = append(out, Truot{KiemBatBien8, "các delta chưa đủ chữ cuối khi lượt đã xong"})
-			} else {
-				out = append(out, Truot{KiemBatBien8, "các delta không phải tiền tố của chữ cuối: có chữ bị rút lại"})
-			}
+	n := noi.String()
+	if l.KetThuc == obs.KetThucXong && n != l.Chu {
+		switch {
+		case !daDelta:
+			out = append(out, Truot{KiemBatBien8, "lượt xong mà câu trả lời không qua stream"})
+		case strings.HasPrefix(l.Chu, n):
+			out = append(out, Truot{KiemBatBien8, "các delta chưa đủ chữ cuối khi lượt đã xong"})
+		default:
+			out = append(out, Truot{KiemBatBien8, "các delta không phải tiền tố của chữ cuối: có chữ bị rút lại"})
 		}
 	}
 	if l.Ma == cau.TraLoiBiChan {
@@ -332,6 +348,20 @@ func batBien8(l LuotDaChay) []Truot {
 				out = append(out, Truot{KiemBatBien8, fmt.Sprintf("sự kiện %d: câu bị output guard chặn vẫn để %s trong sink", i+1, s.Loai)})
 			}
 		}
+	}
+	if daDelta && (l.BanGhi.KetKiem == obs.KiemKhongDat || l.BanGhi.KetKiem == obs.KiemHong) {
+		out = append(out, Truot{KiemBatBien8, "delta trong lượt verifier không duyệt: chữ rời engine trước verifier"})
+	}
+	daNha := n
+	if l.BanGhi.OutGuard == obs.OutChan && daDelta && l.Ma != cau.TraLoiBiChan {
+		cuoi := guard.NoiChan + cau.Cau(cau.TraLoiBiChan)
+		if !strings.HasSuffix(n, cuoi) {
+			out = append(out, Truot{KiemBatBien8, "câu bị chặn giữa chừng không kết bằng câu cố định của ai_tra_loi_bi_chan"})
+		}
+		daNha = strings.TrimSuffix(n, cuoi)
+	}
+	if daNha != "" && guard.KiemCuaSo(guard.DauRa{MaKiem: l.MaKiem, LoiNhac: prompts.LoiNhacNep()}, daNha) != guard.RaSach {
+		out = append(out, Truot{KiemBatBien8, "delta mang chữ mà output guard chặn: chữ rời engine trước khi guard đọc"})
 	}
 	return out
 }

@@ -47,11 +47,13 @@ func (k Kind) Valid() bool { return kinds[k] }
 func (k Kind) Terminal() bool { return k == Xong || k == ThatBai || k == Huy || k == ThuHoi }
 
 // Event is one stream entry. ID is the Redis entry id, which is also the SSE id
-// a client resumes from.
+// a client resumes from. Inv is the invocation an entry of a room key belongs
+// to; it never goes on the wire (the reader already knows which it follows).
 type Event struct {
 	ID   string
 	Kind Kind
 	Data json.RawMessage
+	Inv  string
 }
 
 var (

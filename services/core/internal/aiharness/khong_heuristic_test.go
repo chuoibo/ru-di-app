@@ -151,6 +151,8 @@ var (
 		"unicode/utf8.ValidString":                                             "validity",
 		"mobile/services/core/internal/aiharness/guard.DinhDang":               "privacy data-format check",
 		"(mobile/services/core/internal/aiharness/guard.DauRa).Kiem":           "output guard: canary marker, quoted instruction, privacy formats",
+		"mobile/services/core/internal/aiharness/guard.KiemCuaSo":              "output guard's window scan: DauRa.Kiem and the prompt clauses' heads",
+		"mobile/services/core/internal/aiharness/guard.PhatTheoNhip":           "streaming window: releases verified text at white space, paced (slice 11)",
 		"(*mobile/services/core/internal/rag/xephang.ChiMuc).Tim":              "BM25 ranking",
 		"(mobile/services/core/internal/aiharness/nhung.Nhung).Nhung":          "embedding",
 		"(mobile/services/core/internal/aiharness/trinho.TriNho).Nho":          "memory ranking",

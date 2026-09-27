@@ -33,6 +33,12 @@ const (
 	TraLoiBiChan Ma = "ai_tra_loi_bi_chan"
 	// HetNganSach: the turn ran out of model calls, steps or time.
 	HetNganSach Ma = "ai_het_ngan_sach"
+	// TuChoiNhom: a group job whose answer the output guard stopped ends with
+	// this one code, in the job row and the room's stream alike, so the room
+	// never learns why (design 01 §3.3, design 02 §3.6). It is the group
+	// transport's, never a turn's: Tat and Valid do not list it, and no
+	// metrics row carries it.
+	TuChoiNhom Ma = "ai_tu_choi"
 )
 
 type dong struct {
@@ -49,6 +55,24 @@ var bang = []dong{
 	{NepKhongChamTien, "Nếp không làm việc tiền nong: không chuyển, không ghi nợ, không chia hay nhắc ai trả. Bạn tự xem ở màn tiền nhé."},
 	{TraLoiBiChan, "Nếp vừa viết ra một câu không nên gửi nên đã dừng lại. Bạn hỏi lại theo cách khác nhé."},
 	{HetNganSach, "Câu này cần nghĩ lâu hơn sức Nếp cho một lượt. Bạn hỏi gọn lại từng ý nhé."},
+}
+
+// bangNhom is every code the group path ends with that is not a turn's, and
+// its sentence. The app's LOI_KET_QUA_AI must hold each word for word
+// (apps/mobile/tests/cau-chu-goi-ai.test.mjs reads this table too, in the
+// same one-row-per-line shape).
+var bangNhom = []dong{
+	{TuChoiNhom, "Rủ Đi AI vừa viết ra một câu không nên gửi nên đã dừng lại. Bạn nhờ lại theo cách khác nhé."},
+}
+
+// CauNhom is the sentence for a group-only code (bangNhom), or "".
+func CauNhom(m Ma) string {
+	for _, d := range bangNhom {
+		if d.ma == m {
+			return d.chu
+		}
+	}
+	return ""
 }
 
 // Valid says whether m is one of the codes above.

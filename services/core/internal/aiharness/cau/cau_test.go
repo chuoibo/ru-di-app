@@ -33,6 +33,15 @@ func TestMoiMaCoMotCauGiongNguoi(t *testing.T) {
 			}
 		}
 	}
+	// The group's own codes: the same voice, and never a turn's.
+	for _, d := range bangNhom {
+		if d.ma.Valid() || CauNhom(d.ma) != d.chu || len([]rune(d.chu)) <= 20 || strings.Contains(strings.ToLower(d.chu), "lỗi") {
+			t.Errorf("mã nhóm %s: %q", d.ma, d.chu)
+		}
+		if other, ok := byText[d.chu]; ok {
+			t.Errorf("%s và %s dùng chung một câu", d.ma, other)
+		}
+	}
 	if len(seen) < 6 {
 		t.Fatalf("chỉ %d mã", len(seen))
 	}

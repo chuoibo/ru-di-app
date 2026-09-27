@@ -57,7 +57,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { LOI_GOI_AI } from "../dist-test/rudi/chat/ai-invocations.js";
+import { LOI_GOI_AI, LOI_KET_QUA_AI } from "../dist-test/rudi/chat/ai-invocations.js";
 import { LOI_KET_QUA_NEP, LOI_NEP } from "../dist-test/rudi/nep/hoi.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -308,6 +308,37 @@ function bangCauEngine() {
   assert.ok(bang.size >= 6, `chỉ đọc được ${bang.size} câu trong cau.go, bộ đọc đang hỏng`);
   return bang;
 }
+
+/**
+ * Mã chỉ đường nhóm kết thúc bằng (bảng `bangNhom` của cau.go), ví dụ
+ * `ai_tu_choi` khi output guard chặn câu trả lời của nhóm (lát 11): app đọc
+ * câu ở `LOI_KET_QUA_AI`, và câu đó phải đúng từng chữ bảng trong cau.go.
+ */
+function bangCauNhom() {
+  const nguon = readFileSync(CAU_ENGINE, "utf8");
+  const ten = new Map();
+  for (const m of nguon.matchAll(/^\s*(\w+)\s+Ma\s*=\s*"([a-z_]+)"/gm)) ten.set(m[1], m[2]);
+  const khoi = /var bangNhom = \[\]dong\{([\s\S]*?)\n\}/.exec(nguon);
+  assert.ok(khoi, "không thấy bảng câu `bangNhom` trong aiharness/cau/cau.go");
+  const bang = new Map();
+  for (const dong of khoi[1].split("\n").map((d) => d.trim()).filter((d) => d.startsWith("{"))) {
+    const m = /^\{(\w+),\s*"([^"]+)"\},$/.exec(dong);
+    assert.ok(m, `dòng bảng nhóm trong cau.go không đúng dạng {TenHang, "câu"},: ${dong}`);
+    assert.ok(ten.has(m[1]), `cau.go dùng ${m[1]} mà không khai hằng`);
+    bang.set(ten.get(m[1]), m[2]);
+  }
+  assert.ok(bang.has("ai_tu_choi"), "bảng nhóm của cau.go thiếu ai_tu_choi, bộ đọc đang hỏng");
+  return bang;
+}
+
+test("Nhóm: mã nhóm của cau.go có câu trong LOI_KET_QUA_AI, đúng từng chữ, và worker thật sự phát ra", () => {
+  const worker = readFileSync(join(CHATASSIST, "phat.go"), "utf8");
+  assert.match(worker, /maChanChung = string\(cau\.TuChoiNhom\)/, "chatassist không còn kết thúc nhóm bằng cau.TuChoiNhom");
+  for (const [ma, cau] of bangCauNhom()) {
+    assert.equal(LOI_KET_QUA_AI[ma], cau, `${ma}: app nói «${LOI_KET_QUA_AI[ma]}», cau.go nói «${cau}»`);
+    assert.doesNotMatch(cau, /lỗi/i);
+  }
+});
 
 function maKetQuaNep() {
   const ma = new Set();

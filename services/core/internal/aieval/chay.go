@@ -165,9 +165,8 @@ func chayLuot(ctx context.Context, c Ca, lap int, cc cachChay) (LuotDaCham, KetQ
 		return LuotDaCham{}, KetQuaChay{}, runErr
 	}
 	l := LuotDaCham{
-		LuotDaChay:  LuotDaChay{Turn: g.Turn, SuKien: sink.SuKien(), KetThuc: res.Record.KetThuc, Chu: res.Text, BanGhi: res.Record},
+		LuotDaChay:  LuotDaChay{Turn: g.Turn, SuKien: sink.SuKien(), KetThuc: res.Record.KetThuc, Chu: res.Text, BanGhi: res.Record, MaKiem: g.MaKiem},
 		BuocKichBan: cc.buoc,
-		MaKiem:      g.MaKiem,
 		NhatKy:      nhatKy.String(),
 		// How many replies the script holds: a turn that asked for more ran
 		// off its script.
