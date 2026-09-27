@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/sync/singleflight"
 
+	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
 )
 
@@ -27,14 +28,58 @@ type catalogueSnapshot struct {
 }
 
 type catalogueCache struct {
-	once   sync.Once
-	ttl    time.Duration
-	mu     sync.RWMutex
-	byDest map[string]*catalogueSnapshot
-	flight singleflight.Group
+	once    sync.Once
+	ttl     time.Duration
+	mu      sync.RWMutex
+	byDest  map[string]*catalogueSnapshot
+	replies map[string]cachedReply
+	flight  singleflight.Group
 }
 
-var catalogue = &catalogueCache{byDest: map[string]*catalogueSnapshot{}}
+// cachedReply is a whole GET /places body for a caller with no known taste:
+// the same bytes for everybody asking the same destination, category and q.
+type cachedReply struct {
+	body *pyjson.OrderedMap
+	at   time.Time
+}
+
+var catalogue = &catalogueCache{
+	byDest:  map[string]*catalogueSnapshot{},
+	replies: map[string]cachedReply{},
+}
+
+// reply returns a cached body for key, or nil. Only while the cache is on.
+func (c *catalogueCache) reply(key string) *pyjson.OrderedMap {
+	ttl := c.configuredTTL()
+	if ttl == 0 {
+		return nil
+	}
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if hit, ok := c.replies[key]; ok && time.Since(hit.at) < ttl {
+		return hit.body
+	}
+	return nil
+}
+
+// keepReply stores body under key, stamped with the snapshot it was built
+// from so it can never outlive the rows it shows.
+func (c *catalogueCache) keepReply(key string, body *pyjson.OrderedMap, snap *catalogueSnapshot) {
+	if c.configuredTTL() == 0 {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.replies) > maxCachedReplies {
+		// Free-text q makes keys unbounded; a full map starts over rather
+		// than growing with whatever strangers type.
+		c.replies = map[string]cachedReply{}
+	}
+	c.replies[key] = cachedReply{body: body, at: snap.at}
+}
+
+// maxCachedReplies bounds the reply cache (bodies are ~MB for big cities).
+const maxCachedReplies = 256
 
 func (c *catalogueCache) configuredTTL() time.Duration {
 	c.once.Do(func() {

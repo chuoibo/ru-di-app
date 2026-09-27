@@ -137,6 +137,15 @@ func listPlacesWAI() Route {
 		if diemDen == nil {
 			return endpoint.Reply{}, endpoint.Refuse(404, "destination_not_found", "Không có điểm đến nào với mã này.")
 		}
+		// No known taste means no personal ranking and no reasons: the body is
+		// the same for every such caller, so a cached one is served as is.
+		replyKey := ""
+		if !group.Known() {
+			replyKey = diemDen.ID + "\x00" + deref(category) + "\x00" + deref(query)
+			if body := catalogue.reply(replyKey); body != nil {
+				return endpoint.Reply{Body: body}, nil
+			}
+		}
 		snap, err := catalogue.load(ctx, store, diemDen.ID)
 		if err != nil {
 			return endpoint.Reply{}, err
@@ -201,8 +210,18 @@ func listPlacesWAI() Route {
 		body.Set("categories", wireCategories())
 		body.Set("group", wireGroupSummary(group))
 		body.Set("destination", wireDestination(*diemDen, nil))
+		if replyKey != "" {
+			catalogue.keepReply(replyKey, body, snap)
+		}
 		return endpoint.Reply{Body: body}, nil
 	}}
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return "\x01" // absent, distinct from an empty value
+	}
+	return *s
 }
 
 func listPlacePhotos() Route {

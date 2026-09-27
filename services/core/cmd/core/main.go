@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"mobile/services/core/internal/gzipjson"
 	"net"
 	"net/http"
 	"os"
@@ -268,7 +269,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 
 	public := &http.Server{
 		Addr:              cfg.Listen,
-		Handler:           front,
+		Handler:           gzipjson.Middleware(front),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    1 << 20,
