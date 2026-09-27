@@ -21,8 +21,10 @@ appId: com.lakiet.rudi
 - tapOn: "Ô soạn tin"
 - inputText: "/chia-bill"
 - tapOn: "Gửi tin nhắn"
-- extendedWaitUntil:
-    visible: "Chia bill từ chat chưa sẵn sàng trên máy chủ này."
-    timeout: 60000
 - hideKeyboard
+# /chia-bill opens the same request tray; without a key it says so up front
+# and points to the manual ledger instead of a send button.
+- extendedWaitUntil:
+    visible: "AI chưa gom khoản chi được lúc này. Bạn vẫn có thể thêm khoản chi ở mục Chia bill."
+    timeout: 60000
 - takeScreenshot: 30-chia-bill-that

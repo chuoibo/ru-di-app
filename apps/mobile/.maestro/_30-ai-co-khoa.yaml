@@ -12,7 +12,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Rủ Đi AI.*"
     timeout: 120000
-- assertNotVisible: "Rủ Đi AI chưa nối được mô hình trên máy chủ này."
+- assertNotVisible: "AI chưa (sẵn sàng|gom khoản chi được).*"
 - assertNotVisible: ".*đang im lặng.*"
 - takeScreenshot: 30-ai-tra-loi
 - tapOn: "Ô soạn tin"
@@ -20,7 +20,14 @@ appId: com.lakiet.rudi
 - tapOn: "Gửi tin nhắn"
 - hideKeyboard
 - assertVisible: "AI chỉ đề xuất ai đã trả bao nhiêu, không ghi gì vào sổ. Cả hội xem lại và xác nhận ở mục Chia bill."
-- tapOn: "Chỉ gửi lời nhờ"
+# The tray keeps the choice made for /plan above, so the toggle may already
+# read «Gửi kèm tin gần nhất». Either way the request must leave with no chat.
+- runFlow:
+    when:
+      visible: "Chỉ gửi lời nhờ"
+    commands:
+      - tapOn: "Chỉ gửi lời nhờ"
+- assertVisible: ".*Không tin nhắn nào đi kèm.*"
 - tapOn: "Gửi lời nhờ cho AI"
 - extendedWaitUntil:
     visible: "Rủ Đi AI chưa thấy khoản chi nào có số tiền trong đoạn chat gửi kèm. Bạn gửi kèm tin có số tiền, hoặc thêm khoản chi ở mục Chia bill."

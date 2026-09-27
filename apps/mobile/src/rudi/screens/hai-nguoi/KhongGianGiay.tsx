@@ -83,6 +83,15 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   const daMoGoiY = useRef(false);
   useEffect(() => {
     if (!goiYCho || daMoGoiY.current) return;
+    // A pair that is not a couple plans like any group: no sheet to put the
+    // place on, so say so instead of dropping the place without a word.
+    if (so.daNap && so.lapSo && !so.batDoi) {
+      daMoGoiY.current = true;
+      setGoiYCho(undefined);
+      setCauGoiY("Hai bạn đang hẹn như một hội bạn. Bấm «Rủ hội mình đi chơi» rồi thêm chỗ này làm một chặng.");
+      return;
+    }
+    if (!so.batDoi) return;
     const lam = goiYChoLam(toMo, so.toiId, so.tenNguoiKia, goiYCho);
     if (lam.lam === "cho") return;
     daMoGoiY.current = true;
@@ -91,7 +100,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       setGoiYCho(undefined);
       setCauGoiY(lam.cau);
     }
-  }, [goiYCho, toMo, so.toiId, so.tenNguoiKia]);
+  }, [goiYCho, toMo, so.toiId, so.tenNguoiKia, so.daNap, so.lapSo, so.batDoi]);
   const dangCoToMo = toMo !== undefined && ["nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(toMo.state);
   const deNghiLapSo = so.deNghiCho.find((d) => d.purpose === "lap_so");
   const deNghiBatDoi = so.deNghiCho.find((d) => d.purpose === "bat_doi");
@@ -181,7 +190,9 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         <StampButton label={deNghiLapSo ? "Xem lời đề nghị" : "Đề nghị lập sổ"} onPress={() => setMo("lap-so")} size="vua" tilt={-1} />
       </View>
     );
-  } else if (!so.batDoi) {
+  } else if (!so.batDoi && !dangCoToMo) {
+    // A sheet still in play (sent before the pair became a group, or by an
+    // older client) keeps its actions below; only settled sheets turn read-only.
     than = <View style={{ gap: space.md }}>
       <Heading title="Hai người cũng thành một hội" subtitle="Hẹn nhau như mọi hội bạn. Những tờ giấy cũ vẫn nằm ở đây." />
       <RudiButton label="Rủ hội mình đi chơi" onPress={() => router.push(`/outings/new?contextId=${contextId}` as never)} />
@@ -189,7 +200,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       {so.toGiay.map((t) => {
         const version = phienBan(t);
         return <View key={t.id} style={{ gap: 8 }}>
-          <Text style={[typography.h2, { color: colors.ink }]}>{ngayDocDuoc(version?.content.ngay ?? "")}</Text>
+          <Text style={[typography.h2, { color: colors.ink }]}>{ngayDocDuoc(version?.content.ngay ?? "") || "Tờ chưa có ngày"}</Text>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Tờ giấy cũ · chỉ đọc</Text>
           {version?.content.chang.map((c, i) => <Text key={i} style={[typography.body, { color: colors.ink }]}>{c.gio} · {c.viec}</Text>)}
           {t.outing_id ? <RudiButton label="Mở cuộc đi này" variant="ghost" onPress={() => router.push(`/outings/${t.outing_id}?ctx=${contextId}` as never)} /> : null}

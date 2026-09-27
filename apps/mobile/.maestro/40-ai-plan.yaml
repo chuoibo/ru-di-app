@@ -61,6 +61,6 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Rủ Đi AI|Rủ Đi AI gợi ý|Rủ Đi AI phác lịch trình"
     timeout: 120000
-- assertNotVisible: "Rủ Đi AI chưa nối được mô hình trên máy chủ này."
+- assertNotVisible: "AI chưa sẵn sàng.*"
 - assertNotVisible: ".*đang im lặng.*"
 - takeScreenshot: 40-ai-tra-loi
