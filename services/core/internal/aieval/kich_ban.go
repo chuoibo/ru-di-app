@@ -90,9 +90,11 @@ const (
 	// ChangChiaBill is the group's one structured reading of the shared
 	// messages for a split draft (aiharness/chiabill).
 	ChangChiaBill = "chia_bill"
+	// ChangKiemChiaBill is the split draft's verifier (chiabill.Kiem).
+	ChangKiemChiaBill = "kiem_chia_bill"
 )
 
-var cacChang = map[string]bool{ChangHieu: true, ChangTraLoi: true, ChangCham: true, ChangTraLoiCauTruc: true, ChangKiem: true, ChangChiaBill: true}
+var cacChang = map[string]bool{ChangHieu: true, ChangTraLoi: true, ChangCham: true, ChangTraLoiCauTruc: true, ChangKiem: true, ChangChiaBill: true, ChangKiemChiaBill: true}
 
 var finishHopLe = map[string]bool{
 	"": true, string(genai.FinishReasonStop): true, string(genai.FinishReasonMaxTokens): true,

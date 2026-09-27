@@ -170,6 +170,17 @@ var caBatBien = []caBatBienT{
 		l.BanGhi.KetKiem = obs.KiemKhongDat
 		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
 	}, "bat_bien_8_sink"},
+	// Review of slices 9/11, finding 2.1: a released text the verifier never
+	// ran on is red too, unless it is a fixed sentence of ours.
+	{"delta khi verifier không chạy", func(l *LuotDaCham) {
+		l.BanGhi.KetKiem = obs.KiemKhongChay
+		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
+	}, "bat_bien_8_sink"},
+	{"câu cố định của nhóm dưới tên Nếp", func(l *LuotDaCham) {
+		l.BanGhi.KetKiem = obs.KiemKhongChay
+		l.Chu = cau.NhomChuaChacSoTien
+		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
+	}, "bat_bien_8_sink"},
 	{"chặn giữa chừng không có câu cố định", func(l *LuotDaCham) {
 		l.BanGhi.OutGuard = obs.OutChan
 		l.Chu = "Tối mai "
@@ -208,6 +219,25 @@ func TestBatBienDoDungCho(t *testing.T) {
 	l.SuKien = append(chiTrangThai(l.SuKien), delta("Tối mai "), delta(guard.NoiChan+cau.Cau(cau.TraLoiBiChan)))
 	if tr := KiemBatBien(l.LuotDaChay); len(tr) != 0 {
 		t.Fatalf("câu chặn giữa chừng đúng dạng bị đỏ: %+v", tr)
+	}
+	// A group's fixed sentence, released whole with no verifier (it carries
+	// no model-derived field), is green; the same turn with one word of the
+	// model's appended is red.
+	for _, cd := range cau.CoDinhNhom() {
+		l = saoChep(goc)
+		l.Chu = cd
+		theNhomChu(&l)
+		l.BanGhi.KetKiem = obs.KiemKhongChay
+		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
+		if tr := KiemBatBien(l.LuotDaChay); len(tr) != 0 {
+			t.Fatalf("câu cố định của nhóm bị đỏ: %+v", tr)
+		}
+		l.Chu = cd + " Tú trả 9.990.000đ."
+		theNhomChu(&l)
+		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
+		if got := ten(KiemBatBien(l.LuotDaChay)); got != KiemBatBien8 {
+			t.Fatalf("câu cố định kèm chữ khác vẫn qua khi verifier không chạy: %q", got)
+		}
 	}
 }
 

@@ -213,7 +213,12 @@ export interface TuyChonTheoDoi {
   hoi(): Promise<DocLoiGoi | null>;
   /** Delay before poll n (0-based). */
   nhipHoi(n: number): number;
-  /** After this long without an end, give up reading (the screen says so). */
+  /**
+   * After this long without an end, give up reading (the screen says so):
+   * one deadline for the whole follow, streaming or polling, so a stream that
+   * stays «working» on a dead connection still ends in the screen's
+   * «thinking too long» state.
+   */
   choToiDaMs: number;
   khiDoi(s: TraLoiSong): void;
   /** Polling ran out of time without an end. */
@@ -242,6 +247,7 @@ export function theoDoiTraLoi(o: TuyChonTheoDoi): { dong(): void; trangThai(): T
   let daDong = false;
   let luong: { dong(): void } | null = null;
   let cho: unknown = null;
+  let han: unknown = null;
   let dangHoi = false;
 
   const doi = (moi: TraLoiSong) => {
@@ -254,6 +260,8 @@ export function theoDoiTraLoi(o: TuyChonTheoDoi): { dong(): void; trangThai(): T
     daDong = true;
     if (cho !== null) boHen(cho);
     cho = null;
+    if (han !== null) boHen(han);
+    han = null;
     luong?.dong();
     luong = null;
   };
@@ -289,6 +297,14 @@ export function theoDoiTraLoi(o: TuyChonTheoDoi): { dong(): void; trangThai(): T
     doi({ ...s, hoiThay: lyDo });
     hoiLan(0);
   };
+
+  const hetGio = () => {
+    han = null;
+    if (daDong || daKetThuc(s)) return;
+    dung();
+    o.khiHetGio?.();
+  };
+  han = hen(hetGio, Math.max(0, o.choToiDaMs));
 
   if (o.url === null) {
     sangHoi("khong-ho-tro");

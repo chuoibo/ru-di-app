@@ -638,7 +638,8 @@ nhất qua `Engine.Run`: số lời gọi bằng đúng kế hoạch), `TestCatT
 
 Sau cờ `MOBILE_AI_ENGINE_GROUP=go` (mặc định `brain`; một engine phục vụ cả hai bot, mỗi đường chỉ với tới cổng
 của mình). Worker (`chatassist.processNhomEngine`) dựng lượt từ đúng job và phòng: gói người gọi chia sẻ (tin gần
-đây, chuỗi trả lời vào thẻ AI), tác giả từng tin theo `messages.author_id` (không đọc `body`), thành viên đang ở
+đây, chuỗi trả lời vào thẻ AI), tác giả từng tin theo `messages.author_id` (`body` chỉ đọc cho đúng các tin được chia sẻ, lane cũ, để nháp chia
+bill — xem `chia_bill` dưới), thành viên đang ở
 dưới nhãn roster; lệnh cú pháp (`/plan`, `/chia-bill`, `@Rủ Đi` đầu tin) bỏ qua `chatintent.Parse`. Engine
 (`Engine.RunNhom`, `aiharness/nhom.go`):
 
@@ -663,7 +664,16 @@ là đoạn nguyên từ của chính tin đó (so đồng nhất, lấy từ ti
 `[1, allocator.MaxAmountVND]` — số lẻ/số mũ/chuỗi bị từ chối, không làm tròn. `chiaBillParts` thuần: tổng
 int64 có chặn trần, xem trước chia đều do `allocator.Allocate` (phần dư lớn nhất), Σ phải bằng tổng không thì không
 dựng gì; thẻ là mẫu cố định + phần `expense_draft{so_khoan, da_ghi:[]}`; nháp (v1 `expense_draft` + `chia_deu`)
-ở cột `result`. Không verifier trên đường này (`llm.KhongKiem`): không có văn xuôi model nào được nhả.
+ở cột `result`. Sửa review lát 9/11 (luật chủ sản phẩm: không gì chưa kiểm rời máy chủ): mẫu thẻ là của ta
+nhưng số tiền và tiêu đề là lời đọc của model, nên (a) mỗi khoản phải trích `so_tien_goc` là chuỗi con của chính
+tin nó nêu (không cắt giữa một số) và chữ số của đoạn trích phải ra đúng số tiền nhân luỹ thừa 10 (kiểm cấu trúc,
+không đọc chữ); lệch → không nháp, câu hỏi lại cố định `cau.NhomChuaChacSoTien`; (b) rồi verifier riêng của nháp
+(`chiabill.Kiem`, bước `kiem_chia_bill`, ngữ cảnh mới, mỗi khoản cạnh đúng tin nó nêu) phải duyệt mọi khoản —
+một khoản `khong_ho_tro` → câu hỏi lại, đầu ra hỏng/thiếu lời gọi → không nháp (fail closed). `llm.KhongKiem`
+giờ rỗng; bất biến 8 của T1 đòi `KiemDat` cho mọi chữ đã nhả trừ câu cố định (`cau.CoDinhNhom`). Chữ model đọc
+cho một tin là **chữ máy chủ lưu** của tin đó (`chatassist.chuDaLuu`, câu SQL duy nhất đọc `body`, ghim nguyên văn,
+chỉ id người gọi chia sẻ, chỉ lane cũ); tin máy chủ không đọc được (v2, đã xoá) không được gán người trả. Công cụ
+nhóm chỉ nhận cổng `Quan`, `Cho`, `Nhom` (`nguonNhom`); worker chạy brain từ chối `hoi` bằng `provider_unavailable`.
 Lệnh `hoi` của nhóm: `chatassist` version 6 nới `chat_ai_command_scope`; handler chỉ nhận khi cờ bật và có tin
 tag; `chat-capabilities` có `ai.hoi`. `ai_turn_metrics` version 5 thêm đường `nhap_chia_bill`.
 Cổng: `aigate` thêm gốc `processNhomEngine` (15 gốc), canary với tới `RunNhom`, tool nhóm, `chiabill.Goi`, khoá

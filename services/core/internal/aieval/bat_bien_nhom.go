@@ -25,6 +25,22 @@ func cauChanCua(bot obs.Bot) string {
 	return cau.Cau(cau.TraLoiBiChan)
 }
 
+// laCauCoDinh says whether chu is, whole, one of bot's fixed sentences: text
+// of ours with no model-derived field, the only text invariant 8 lets reach
+// the stream without the verifier's pass. Nếp releases no fixed sentence as
+// an answer (its refusals end with a code), so it has none.
+func laCauCoDinh(bot obs.Bot, chu string) bool {
+	if bot != obs.BotNhom || chu == "" {
+		return false
+	}
+	for _, c := range cau.CoDinhNhom() {
+		if chu == c {
+			return true
+		}
+	}
+	return false
+}
+
 // loiNhacCua is the instruction clauses an answer must never quote, per bot.
 func loiNhacCua(bot obs.Bot) []string {
 	if bot == obs.BotNhom {

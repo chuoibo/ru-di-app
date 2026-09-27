@@ -289,3 +289,80 @@ func TestFollowKetThucTuHang(t *testing.T) {
 		t.Fatalf("the stream's own ending lost to the row's: %q", b)
 	}
 }
+
+// A reader more than gopTren entries behind gets the waiting deltas merged
+// through Follow itself (design 02 §5.2; review of slices 9/11, finding
+// 1.4): fewer events than entries, the same joined text, and the merged
+// event's id is the last merged entry's, so resuming from it gives exactly
+// what came after (the ending) and nothing twice.
+func TestFollowGopDeltaKhiTutLai(t *testing.T) {
+	s := open(t)
+	hub := NewHub()
+	ctx := context.Background()
+	key, _ := s.Keys.Invocation("0b8f1c9e-aaaa-4bbb-8ccc-dddddddddd08")
+	defer s.client.Del(ctx, key)
+	const n = gopTren + 36
+	var want strings.Builder
+	var lastDelta string
+	for i := 0; i < n; i++ {
+		txt := fmt.Sprintf("t%03d ", i)
+		want.WriteString(txt)
+		id, err := s.Append(ctx, key, MaxLenInvocation, Delta, DeltaData{Text: txt}, time.Now().Add(time.Minute))
+		if err != nil {
+			t.Fatal(err)
+		}
+		lastDelta = id
+	}
+	if _, err := s.Append(ctx, key, MaxLenInvocation, Xong, map[string]string{"message_id": "m"}, time.Now().Add(time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+	opt := DefaultFollow()
+	opt.MaxDuration = 3 * time.Second
+	rec := httptest.NewRecorder()
+	if err := Follow(ctx, rec, s, hub, key, "", opt); err != nil {
+		t.Fatal(err)
+	}
+	type ev struct{ id, kind, data string }
+	var evs []ev
+	var cur ev
+	for _, line := range strings.Split(rec.Body.String(), "\n") {
+		switch {
+		case strings.HasPrefix(line, "id: "):
+			cur.id = strings.TrimPrefix(line, "id: ")
+		case strings.HasPrefix(line, "event: "):
+			cur.kind = strings.TrimPrefix(line, "event: ")
+		case strings.HasPrefix(line, "data: "):
+			cur.data = strings.TrimPrefix(line, "data: ")
+		case line == "" && cur.kind != "":
+			evs = append(evs, cur)
+			cur = ev{}
+		}
+	}
+	var got strings.Builder
+	deltas, mergedID := 0, ""
+	for _, e := range evs {
+		if e.kind != "delta" {
+			continue
+		}
+		deltas++
+		var d DeltaData
+		if err := json.Unmarshal([]byte(e.data), &d); err != nil {
+			t.Fatal(err)
+		}
+		got.WriteString(d.Text)
+		mergedID = e.id
+	}
+	if deltas == 0 || deltas >= n || got.String() != want.String() {
+		t.Fatalf("%d delta events for %d entries, text %q", deltas, n, got.String())
+	}
+	if mergedID != lastDelta || evs[len(evs)-1].kind != "xong" {
+		t.Fatalf("merged id %q, last delta entry %q, events %+v", mergedID, lastDelta, evs)
+	}
+	rec = httptest.NewRecorder()
+	if err := Follow(ctx, rec, s, hub, key, mergedID, opt); err != nil {
+		t.Fatal(err)
+	}
+	if b := rec.Body.String(); strings.Contains(b, "event: delta") || !strings.Contains(b, "event: xong") {
+		t.Fatalf("resume from the merged id: %q", b)
+	}
+}

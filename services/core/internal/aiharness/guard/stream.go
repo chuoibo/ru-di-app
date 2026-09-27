@@ -262,19 +262,48 @@ const ManhPhat = 16
 
 // TranNhip bounds the whole pacing of one text: however long the text, its
 // release is spread over at most this long, so pacing never costs a long
-// answer more than this before its xong.
+// answer more than this before its xong. It is a bound on the waiting, laid
+// out as deadlines from the start (chunk i is due at start + i·nhip, never
+// later than start + TranNhip), so a timer that fires late or a slow window
+// scan on one chunk is absorbed by the next wait instead of adding up.
 const TranNhip = 800 * time.Millisecond
+
+// DongHo is the clock PhatTheoNhip paces by: the real one in production, a
+// virtual one in tests, so the pacing bound is checked on the schedule it
+// lays out rather than on a loaded machine's wall time.
+type DongHo interface {
+	Now() time.Time
+	// Sau fires once d has passed.
+	Sau(d time.Duration) (<-chan time.Time, func())
+}
+
+type dongHoThat struct{}
+
+func (dongHoThat) Now() time.Time { return time.Now() }
+
+func (dongHoThat) Sau(d time.Duration) (<-chan time.Time, func()) {
+	t := time.NewTimer(d)
+	return t.C, func() { t.Stop() }
+}
 
 // PhatTheoNhip releases a text that is already whole -- verified by the
 // engine, or finished by the brain -- through a window, a ManhPhat-rune chunk
-// at a time and nhip apart (0: no pause; the pauses are shortened so the
-// whole text takes at most TranNhip), so a client that renders each Delta as
+// at a time and nhip apart (0: no pause; the spacing is shortened so the
+// whole text is due within TranNhip), so a client that renders each Delta as
 // it comes shows the answer progressively. The window's scan reads the whole
 // text first: a text it would stop releases nothing at all (Chan is set and
 // Chu is ""), so the window never has to stop a text it has already released
 // part of. A cancelled ctx stops the release between chunks with ctx's error;
 // what left stays.
 func PhatTheoNhip(ctx context.Context, ra NhanDelta, p int, d DauRa, tran int, cauChan, text string, nhip time.Duration) (KetQuaCuaSo, error) {
+	return PhatTheoNhipVoi(ctx, dongHoThat{}, ra, p, d, tran, cauChan, text, nhip)
+}
+
+// PhatTheoNhipVoi is PhatTheoNhip on clock dh. Chunk i (0-based) is due at
+// start + i·nhip, and no due time is past start + TranNhip: each wait is
+// measured from the clock's now to the chunk's due time, so lateness never
+// accumulates.
+func PhatTheoNhipVoi(ctx context.Context, dh DongHo, ra NhanDelta, p int, d DauRa, tran int, cauChan, text string, nhip time.Duration) (KetQuaCuaSo, error) {
 	c := MoCuaSo(ra, p, d, tran, cauChan)
 	if l := c.kiem(text); l != RaSach {
 		return KetQuaCuaSo{Chan: l}, nil
@@ -284,14 +313,20 @@ func PhatTheoNhip(ctx context.Context, ra NhanDelta, p int, d DauRa, tran int, c
 	if n > 1 && nhip > 0 && nhip*time.Duration(n-1) > TranNhip {
 		nhip = TranNhip / time.Duration(n-1)
 	}
-	for i := 0; i < len(r); i += ManhPhat {
-		if i > 0 && nhip > 0 {
-			t := time.NewTimer(nhip)
-			select {
-			case <-ctx.Done():
-				t.Stop()
-				return KetQuaCuaSo{}, ctx.Err()
-			case <-t.C:
+	batDau := dh.Now()
+	for k, i := 0, 0; i < len(r); k, i = k+1, i+ManhPhat {
+		if k > 0 && nhip > 0 {
+			den := min(time.Duration(k)*nhip, TranNhip)
+			if cho := den - dh.Now().Sub(batDau); cho > 0 {
+				ch, dung := dh.Sau(cho)
+				select {
+				case <-ctx.Done():
+					dung()
+					return KetQuaCuaSo{}, ctx.Err()
+				case <-ch:
+				}
+			} else if err := ctx.Err(); err != nil {
+				return KetQuaCuaSo{}, err
 			}
 		}
 		if !c.Viet(string(r[i:min(i+ManhPhat, len(r))])) {

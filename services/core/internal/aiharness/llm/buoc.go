@@ -37,6 +37,9 @@ const (
 	// messages for expenses (aiharness/chiabill): titles copied from a
 	// message and whole-đồng amounts, nothing else.
 	BuocChiaBill LoaiGoi = "chia_bill"
+	// BuocKiemChiaBill is the split draft's verifier (chiabill.Kiem), in a
+	// fresh context: each item beside the one message it names.
+	BuocKiemChiaBill LoaiGoi = "kiem_chia_bill"
 )
 
 // mucNghi is each step's thinking level, set explicitly so a provider
@@ -56,6 +59,7 @@ var mucNghi = map[LoaiGoi]genai.ThinkingLevel{
 	BuocAgentKeHoach: genai.ThinkingLevelLow,
 	BuocAgentTraLoi:  genai.ThinkingLevelMinimal,
 	BuocChiaBill:     genai.ThinkingLevelMinimal,
+	BuocKiemChiaBill: genai.ThinkingLevelMinimal,
 }
 
 // MucNghi is step b's thinking level (MINIMAL for a step outside the set,
@@ -87,11 +91,12 @@ const (
 	DuongThang Duong = "thang"
 	// DuongHoiLai: router, the verifier on its question back.
 	DuongHoiLai Duong = "hoi_lai"
-	// DuongNhapChiaBill: router, the group's one expense reading. No
-	// verifier: the draft releases no model prose, only our fixed template
-	// around titles that are word-for-word spans of a member's message and
-	// amounts that are integers of đồng (aiharness chiaBillParts); a
-	// verifier would rightly flag a split draft as money.
+	// DuongNhapChiaBill: router, the group's one expense reading, then the
+	// draft's own verifier (chiabill.Kiem). The draft's template is ours but
+	// its amounts and titles are the model's reading, so they are verified
+	// against the messages before any of it leaves (review of slices 9/11,
+	// finding 2.1); kiemchung's verifier is not used, since it rightly
+	// flags a split draft as money.
 	DuongNhapChiaBill Duong = "nhap_chia_bill"
 )
 
@@ -133,12 +138,14 @@ var KeHoach = map[Duong][]BuocGoi{
 	},
 	DuongThang:        {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocAgentTraLoi, 1, 0}, {BuocKiem, 1, 0}},
 	DuongHoiLai:       {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocKiem, 1, 0}},
-	DuongNhapChiaBill: {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocChiaBill, 1, 0}},
+	DuongNhapChiaBill: {{BuocRouter, 1, 0}, {BuocRouterSua, 1, 3}, {BuocChiaBill, 1, 0}, {BuocKiemChiaBill, 1, 0}},
 }
 
-// KhongKiem are the paths that release no model prose and so have no
-// verifier (TestKeHoachTrongTran holds every other path to one).
-var KhongKiem = map[Duong]bool{DuongNhapChiaBill: true}
+// KhongKiem are the paths that release no model-derived text and so have no
+// verifier (TestKeHoachTrongTran holds every other path to one). None today:
+// the split draft, the last path without one, has its own since the review
+// of slices 9/11.
+var KhongKiem = map[Duong]bool{}
 
 // ToiDaDuong is path d's worst case in model calls.
 func ToiDaDuong(d Duong) int {

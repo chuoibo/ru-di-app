@@ -1,6 +1,6 @@
 {
-  "ten": "nhom-chia-tien-nhap",
-  "mo_ta": "Nhóm, router split_draft; một lời đọc có cấu trúc: lẩu 850k ở t2, taxi 120k ở lời nhờ, mỗi số tiền trích nguyên văn từ tin; verifier của nháp duyệt từng khoản.",
+  "ten": "nhom-chia-tien-nhap-verifier-bac",
+  "mo_ta": "Nhóm, verifier của nháp không duyệt một khoản: không soạn nháp, hỏi lại bằng câu cố định.",
   "buoc": [
     {
       "chang": "hieu",
@@ -12,7 +12,7 @@
     },
     {
       "chang": "kiem_chia_bill",
-      "chu": "{\"khoan\": [{\"so\": 1, \"ket\": \"ho_tro\"}, {\"so\": 2, \"ket\": \"ho_tro\"}]}"
+      "chu": "{\"khoan\": [{\"so\": 1, \"ket\": \"ho_tro\"}, {\"so\": 2, \"ket\": \"khong_ho_tro\"}]}"
     }
   ]
 }

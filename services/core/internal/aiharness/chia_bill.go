@@ -26,11 +26,19 @@ import (
 // to confirm in the app, where the confirm flow and the allocator decide;
 // the card only shows the proposal.
 
-// nhapChiaBill runs the reading and builds the card. Only messages whose
-// author the server confirmed are offered (a payer is never a name the
-// model wrote), and the caller's own request, paid by the caller.
+// nhapChiaBill runs the reading, checks it, verifies it and builds the
+// card. Only messages whose author the server confirmed AND whose text the
+// server itself stores are offered (a payer is never a name the model
+// wrote, and the words that bill an author are the stored message's, never
+// the client's copy of it), and the caller's own request, paid by the
+// caller. Every amount must be supported by the message it names, first
+// structurally (chiabill.Doc) and then by the draft's verifier in a fresh
+// context (chiabill.Kiem); an amount either does not support ends the turn
+// with the fixed question back, and a verifier that cannot be read ends it
+// with no draft: nothing the verifier did not pass leaves the server.
 func (e *Engine) nhapChiaBill(ctx context.Context, t Turn, rec *obs.TurnRecord, dem *llm.Dem, hoi string, chung []luotNhomSach, kq hieu.KetQua) (Result, error) {
-	if dem.ConLai() < 1 {
+	// The reading and its verifier.
+	if dem.ConLai() < 2 {
 		return Result{}, &Loi{Ma: cau.HetNganSach}
 	}
 	v := chiabill.Vao{LoiNho: hoi}
@@ -40,17 +48,27 @@ func (e *Engine) nhapChiaBill(ctx context.Context, t Turn, rec *obs.TurnRecord, 
 		if c.tacGia == "" || c.luot.Vai == trinho.TroLy {
 			continue
 		}
+		if c.chuMayChu == "" {
+			// The server cannot read this message's text (a v2 room, a
+			// message since removed): no payer attribution from it.
+			continue
+		}
 		bi := chiabill.BiDanhTin(len(v.Tin))
 		ten := c.ten
 		if c.tacGia == t.NguoiHoi {
 			ten = tenThanhVien(t.ThanhVien, t.NguoiHoi)
 		}
-		v.Tin = append(v.Tin, chiabill.Tin{BiDanh: bi, Ten: ten, Chu: c.chu})
+		v.Tin = append(v.Tin, chiabill.Tin{BiDanh: bi, Ten: ten, Chu: c.chuMayChu})
 		tacGia[bi], nguonID[bi] = c.tacGia, c.id
 	}
 	ks, err := chiabill.Goi(ctx, dem, v)
 	if err != nil {
-		if errors.Is(err, chiabill.ErrCauTruc) || errors.Is(err, chiabill.ErrVao) {
+		switch {
+		case errors.Is(err, chiabill.ErrSoTienKhongKhop):
+			// The model named an amount its message does not state: ask back,
+			// build nothing.
+			return theMotChu(cau.NhomChuaChacSoTien), nil
+		case errors.Is(err, chiabill.ErrCauTruc) || errors.Is(err, chiabill.ErrVao):
 			rec.LoiMoHinh = obs.LoiBadResp
 			return Result{}, &Loi{Ma: cau.InvalidAIResult}
 		}
@@ -69,6 +87,21 @@ func (e *Engine) nhapChiaBill(ctx context.Context, t Turn, rec *obs.TurnRecord, 
 		rec.LoiMoHinh = obs.LoiBadResp
 		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	}
+	// The verifier, in a fresh context, on every item before any of it
+	// leaves. It fails closed: an unreadable output releases nothing, an
+	// unsupported item withholds the whole draft.
+	dat, err := chiabill.Kiem(ctx, dem, v, ks, tenThanhVien(t.ThanhVien, t.NguoiHoi))
+	switch {
+	case errors.Is(err, chiabill.ErrCauTruc):
+		rec.KetKiem, rec.LoiMoHinh = obs.KiemHong, obs.LoiBadResp
+		return Result{}, &Loi{Ma: cau.InvalidAIResult}
+	case err != nil:
+		return Result{}, err
+	case !dat:
+		rec.KetKiem = obs.KiemKhongDat
+		return theMotChu(cau.NhomChuaChacSoTien), nil
+	}
+	rec.KetKiem = obs.KiemDat
 	// Our template around verbatim spans and integers: the structural
 	// output checks still run (no contact detail, no marker, the length).
 	if _, err := e.kiemDauRaK(khuonNhom(), n.chu, rec); err != nil {

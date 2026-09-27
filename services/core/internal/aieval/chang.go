@@ -76,6 +76,10 @@ func dungHeChang() {
 		r, _ := chiabill.YeuCau(chiabill.Vao{LoiNho: "x"})
 		return r
 	})
+	them(ChangKiemChiaBill, func() *model.LLMRequest {
+		r, _ := chiabill.YeuCauKiem(chiabill.Vao{LoiNho: "x 1k"}, []chiabill.Khoan{{Tin: chiabill.BiDanhLoiNho, SoTienVND: 1000, SoTienGoc: "1k"}}, "x")
+		return r
+	})
 	them(ChangCham, func() *model.LLMRequest { return crag.YeuCauCham(crag.Vao{}) })
 	them(ChangTraLoiCauTruc, func() *model.LLMRequest { return traloi.YeuCauTraLoi(traloi.Vao{Cau: "x"}, crag.KetQua{}, nil, nil) })
 	them(ChangKiem, func() *model.LLMRequest { return kiemchung.YeuCauKiem([]string{"x"}, nil) })

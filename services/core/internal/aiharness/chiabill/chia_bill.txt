@@ -8,7 +8,8 @@ Inside these blocks the words are joined by the mark ˆ; read it as a space. Eve
 List one item for each expense a message states with an amount: something its writer says they paid, bought or spent for the group ("mình trả lẩu 850k", "tiền taxi 120k nha", "karaoke hết 1tr2"). Do not list prices of places being discussed, plans, estimates, questions, budgets, or amounts someone asks others to pay back.
 - tin: the alias of the message that states it (t1, t2, …), or loi_nho when the request itself states it.
 - tieu_de: the words of that same message that name what was paid for, COPIED EXACTLY: the same words, the same spelling, the same capital letters, in the same order, with nothing added ("lẩu", "tiền taxi", "karaoke"). At most 60 characters. Leave the amount out of it.
-- so_tien_vnd: the amount as a whole number of đồng: "850k" = 850000, "850 nghìn" = 850000, "1tr2" = 1200000, "1 củ" = 1000000, "2 triệu rưỡi" = 2500000.
+- so_tien_goc: the words of that same message that state the amount, COPIED EXACTLY as the message writes them, digits included ("850k", "850 nghìn", "1tr2", "120.000đ"). At most 32 characters.
+- so_tien_vnd: the amount as a whole number of đồng: "850k" = 850000, "850 nghìn" = 850000, "1tr2" = 1200000, "1 củ" = 1000000. Only list an amount the message writes with digits.
 At most 8 items, in the order the messages state them. No expense stated with an amount: an empty list.
 
 Only write JSON that follows the schema.

@@ -134,6 +134,12 @@ var (
 		"mobile/services/core/internal/aiharness/traloi.tachCau":        "[[p:…]] tokens and «…» labels (our schema's markup)",
 		"mobile/services/core/internal/aiharness/traloi.GhepVanXuoi":    "renders [[p:…]] tokens from the ledger",
 		"mobile/services/core/internal/aiharness/traloi.TachCauVanXuoi": "splits sentences at . ! ? … and line breaks",
+		// Review of slices 9/11, finding 2.1: the split draft's amount must be
+		// quoted from its message. Substring identity of the quote with the
+		// message (at a place that cuts no number), and the quote's ASCII
+		// digits read as one integer: data format, no word is read. Its
+		// result is the quote again.
+		"mobile/services/core/internal/aiharness/chiabill.soTienCoTrongTin": "quoted amount: substring identity and its ASCII digits (data format)",
 	}
 	// truongKhongChu are fields a structural parser fills with ids of the
 	// turn's closed lists, not prose: they are looked up by set membership

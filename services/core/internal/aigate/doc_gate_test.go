@@ -550,17 +550,27 @@ func TestGroupEngineNeverReadsMessageTextAcrossPackages(t *testing.T) {
 			t.Fatalf("the group closure never reaches %s; a read of messages is outside the gate", must)
 		}
 	}
-	reads := 0
+	reads, chuDaLuu := 0, 0
 	for _, s := range c.strings {
 		for _, q := range readsMessages.FindAllString(s, -1) {
 			reads++
 			if messageText.MatchString(q) {
+				// The one named read (review of slices 9/11, finding 2.3): the
+				// split draft's stored text of the messages the caller shared,
+				// by their ids, in this room, word for word.
+				if s == chuDaLuuGhim {
+					chuDaLuu++
+					continue
+				}
 				t.Errorf("the AI engine can reach a read of message text: %q", q)
 			}
 		}
 	}
 	if reads == 0 {
 		t.Fatal("no read of messages found; the ownership check reads one, so the pattern slipped")
+	}
+	if chuDaLuu != 1 || !c.funcs[pkgChat+".chuDaLuu"] {
+		t.Errorf("the split draft's pinned read of stored text: seen %d times, reached through chuDaLuu %v", chuDaLuu, c.funcs[pkgChat+".chuDaLuu"])
 	}
 	t.Logf("group closure: %d functions, %d reads of messages", len(c.funcs), reads)
 }
@@ -728,3 +738,8 @@ func nepnhoTrong(g *graph, c closure, nepnho string) []string {
 	}
 	return bad
 }
+
+// chuDaLuuGhim is the one read of message text the group closure may reach,
+// pinned word for word (chatassist.cauDocChuDaLuu): only this room, only the
+// ids the caller shared, only a live text message with a confirmed author.
+const chuDaLuuGhim = `SELECT id::text, body FROM messages WHERE context_id=$1 AND id = ANY($2::uuid[]) AND author_id IS NOT NULL AND deleted_at IS NULL AND kind='text' AND body IS NOT NULL`

@@ -346,16 +346,9 @@ func TestPhatTheoNhip(t *testing.T) {
 			t.Fatalf("a Delta ends inside a word: %q", d)
 		}
 	}
-	// The longest answer still ends within TranNhip.
+	// The bound on the longest answer is checked on a virtual clock
+	// (TestPhatTheoNhipTheoHan), not on this machine's wall time.
 	dai := strings.TrimSpace(strings.Repeat("Đi dạo hồ Tây nhé. ", 105))
-	g = &ghiLuc{}
-	start := time.Now()
-	if kq, err := PhatTheoNhip(context.Background(), g, 0, dauRaThu, 2000, cauChanThu, dai, 25*time.Millisecond); err != nil || kq.Chu != dai {
-		t.Fatalf("%v %+v", err, kq)
-	}
-	if took := time.Since(start); took > TranNhip+300*time.Millisecond {
-		t.Fatalf("pacing took %v, bound %v", took, TranNhip)
-	}
 	// Stopped by the scan before anything leaves.
 	g = &ghiLuc{}
 	kq, err = PhatTheoNhip(context.Background(), g, 0, dauRaThu, 2000, cauChanThu, dauSach+viPham[0].chu+duoiSach, 0)
@@ -368,5 +361,72 @@ func TestPhatTheoNhip(t *testing.T) {
 	time.AfterFunc(50*time.Millisecond, cancel)
 	if _, err := PhatTheoNhip(ctx, g, 0, dauRaThu, 2000, cauChanThu, dai, 25*time.Millisecond); err == nil || strings.Join(g.ds, "") == dai {
 		t.Fatalf("a cancelled release ran to the end: %v", err)
+	}
+}
+
+// dongHoAo is a virtual clock: Sau advances it by the wait plus a chosen
+// lateness (a timer firing late, a slow window scan), and records each wait.
+type dongHoAo struct {
+	now   time.Time
+	tre   func(k int) time.Duration
+	waits []time.Duration
+}
+
+func (d *dongHoAo) Now() time.Time { return d.now }
+
+func (d *dongHoAo) Sau(x time.Duration) (<-chan time.Time, func()) {
+	d.waits = append(d.waits, x)
+	d.now = d.now.Add(x + d.tre(len(d.waits)))
+	ch := make(chan time.Time, 1)
+	ch <- d.now
+	return ch, func() {}
+}
+
+// The pacing bound is a schedule, checked on a virtual clock (review of
+// slices 9/11, finding 1.3: the wall-time bound was flaky under load and
+// was not a bound): the longest answer's chunks are due evenly spaced and
+// all within TranNhip, and lateness on any wait is absorbed by the next
+// one instead of adding up -- the release ends within TranNhip plus the
+// last lateness, however late the timers were before it.
+func TestPhatTheoNhipTheoHan(t *testing.T) {
+	dai := strings.TrimSpace(strings.Repeat("Đi dạo hồ Tây nhé. ", 105))
+	n := (len([]rune(dai)) + ManhPhat - 1) / ManhPhat
+	nhip := TranNhip / time.Duration(n-1)
+	for _, c := range []struct {
+		ten string
+		tre func(k int) time.Duration
+		max time.Duration
+	}{
+		{"dung_gio", func(int) time.Duration { return 0 }, 0},
+		{"moi_lan_tre_2ms", func(int) time.Duration { return 2 * time.Millisecond }, 2 * time.Millisecond},
+		{"thinh_thoang_tre_40ms", func(k int) time.Duration {
+			if k%10 == 0 {
+				return 40 * time.Millisecond
+			}
+			return time.Millisecond
+		}, 40 * time.Millisecond},
+	} {
+		t.Run(c.ten, func(t *testing.T) {
+			dh := &dongHoAo{now: time.Unix(1_800_000_000, 0), tre: c.tre}
+			batDau := dh.now
+			g := &ghiLuc{}
+			kq, err := PhatTheoNhipVoi(context.Background(), dh, g, 0, dauRaThu, 2000, cauChanThu, dai, 25*time.Millisecond)
+			if err != nil || kq.Chu != dai || strings.Join(g.ds, "") != dai {
+				t.Fatalf("%v %+v", err, kq)
+			}
+			if took := dh.now.Sub(batDau); took > TranNhip+c.max {
+				t.Fatalf("the release took %v on its own clock, bound %v + %v", took, TranNhip, c.max)
+			}
+			for _, w := range dh.waits {
+				if w <= 0 || w > nhip {
+					t.Fatalf("a wait of %v, spacing %v", w, nhip)
+				}
+			}
+			// On time, every chunk after the first waits its share: evenly
+			// spaced, never a burst at the end.
+			if c.ten == "dung_gio" && len(dh.waits) != n-1 {
+				t.Fatalf("%d waits for %d chunks", len(dh.waits), n)
+			}
+		})
 	}
 }

@@ -26,8 +26,15 @@ import (
 // inference step differs. The engine gets what the caller explicitly shared
 // (the bundle's turns, the reply chain in it) and what the server owns and
 // never encrypted (who is in the room under the roster's labels, who wrote
-// each shared turn), never a word of the conversation read from the
-// database; it reads the catalogue through its own tool ports.
+// each shared turn); it reads the catalogue through its own tool ports.
+//
+// One read of message text, named and pinned (chuDaLuu): the stored text of
+// the messages the caller explicitly shared, by their ids, in a legacy-lane
+// room only. A split draft bills the author of a message, so the words it
+// reads for that message must be the author's own as stored, never the
+// client's copy of them (review of slices 9/11, finding 2.3). Nothing else
+// of the conversation is read, and a v2 room has no text for the server to
+// read: its shared messages then bill nobody.
 
 // WithNhomEngine runs the group's jobs on the Go engine.
 func (h *Handler) WithNhomEngine(e *aiharness.Engine) *Handler {
@@ -68,9 +75,10 @@ func loiNhoNhom(prompt string) string {
 }
 
 // luotNhom is the bundle's turns for the engine, each with its author as
-// messages.author_id has it (tacGia) and a friend's label read through the
-// same test the roster applies (tenDoc).
-func luotNhom(goi []byte, authors map[string]string) ([]aiharness.LuotNhom, error) {
+// messages.author_id has it (tacGia), its stored text when the server has
+// it (chuDaLuu), and a friend's label read through the same test the roster
+// applies (tenDoc).
+func luotNhom(goi []byte, authors, texts map[string]string) ([]aiharness.LuotNhom, error) {
 	if len(goi) == 0 {
 		return nil, nil
 	}
@@ -83,13 +91,13 @@ func luotNhom(goi []byte, authors map[string]string) ([]aiharness.LuotNhom, erro
 		if l.Loai != "chu" {
 			continue
 		}
-		x := aiharness.LuotNhom{ID: l.ID, Vai: l.Vai, Chu: l.Chu, TacGia: authors[l.ID]}
+		x := aiharness.LuotNhom{ID: l.ID, Vai: l.Vai, Chu: l.Chu, TacGia: authors[l.ID], ChuMayChu: texts[l.ID]}
 		if l.Vai == "ban" {
 			x.Ten = tenDoc(l.BiDanh)
 		}
 		if l.Vai == "ai" {
 			// An earlier answer has no author: nothing of it is ever billed.
-			x.TacGia = ""
+			x.TacGia, x.ChuMayChu = "", ""
 		}
 		out = append(out, x)
 	}
@@ -115,45 +123,86 @@ func thanhVienNhom(ms []repo.Membership, caller string) []aiharness.ThanhVienNho
 }
 
 // chuanBiNhom confirms the job is still the caller's in a room they are in,
-// and reads what the server lays on top of the bundle: the members and the
-// author of each shared turn. Never `body`.
-func (h *Handler) chuanBiNhom(ctx context.Context, j work) ([]repo.Membership, map[string]string, error) {
+// and reads what the server lays on top of the bundle: the members, the
+// author of each shared turn, and, in a legacy-lane room, the stored text of
+// each shared turn (chuDaLuu).
+func (h *Handler) chuanBiNhom(ctx context.Context, j work) ([]repo.Membership, map[string]string, map[string]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	defer tx.Rollback(ctx)
 	g, err := authority(ctx, tx, j.conversation, j.digest)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if g.member != j.member || g.person != j.person || g.kind != "group" {
-		return nil, nil, &denied{403, "sharing_unavailable"}
+		return nil, nil, nil, &denied{403, "sharing_unavailable"}
 	}
 	var live bool
 	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_ai_invocations WHERE id=$1 AND status='running' AND lease_id=$2 AND lease_until>clock_timestamp() AND share_expires_at>clock_timestamp())`, j.id, j.lease).Scan(&live); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if !live {
-		return nil, nil, &denied{409, "invocation_cancelled"}
+		return nil, nil, nil, &denied{409, "invocation_cancelled"}
 	}
 	ms, err := repo.Repository{Q: tx}.ListMembers(ctx, j.conversation)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	authors := map[string]string{}
+	authors, texts := map[string]string{}, map[string]string{}
 	if len(j.goi) > 0 {
 		var bc bundle
 		if err = json.Unmarshal(j.goi, &bc); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		if authors, err = tacGia(ctx, tx, j.conversation, &bc); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
+		}
+		if g.lane == laneLegacy && (j.lane == "" || j.lane == laneLegacy) {
+			if texts, err = chuDaLuu(ctx, tx, j.conversation, &bc); err != nil {
+				return nil, nil, nil, err
+			}
 		}
 	}
-	return ms, authors, tx.Commit(ctx)
+	return ms, authors, texts, tx.Commit(ctx)
+}
+
+// cauDocChuDaLuu is this package's one read of message text, pinned by
+// TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan: only messages of this room,
+// only the ids the caller shared ($2, the bundle's), only a live text
+// message with a confirmed author.
+const cauDocChuDaLuu = `SELECT id::text, body FROM messages WHERE context_id=$1 AND id = ANY($2::uuid[]) AND author_id IS NOT NULL AND deleted_at IS NULL AND kind='text' AND body IS NOT NULL`
+
+// chuDaLuu maps each shared turn of a legacy-lane room to its stored text.
+// The caller chose to share exactly these messages; the stored text is read
+// so that a split draft bills an author for the words the author wrote, not
+// for the client's copy of them. A turn with no stored text maps to nothing
+// and bills nobody.
+func chuDaLuu(ctx context.Context, tx pgx.Tx, room string, bc *bundle) (map[string]string, error) {
+	out := map[string]string{}
+	if len(bc.Luot) == 0 {
+		return out, nil
+	}
+	ids := make([]string, 0, len(bc.Luot))
+	for _, l := range bc.Luot {
+		ids = append(ids, l.ID)
+	}
+	rows, err := tx.Query(ctx, cauDocChuDaLuu, room, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id, chu string
+		if err = rows.Scan(&id, &chu); err != nil {
+			return nil, err
+		}
+		out[id] = chu
+	}
+	return out, rows.Err()
 }
 
 // processNhomEngine runs one group job on the Go engine: the turn from the
@@ -168,11 +217,11 @@ func (h *Handler) processNhomEngine(ctx context.Context, j work) error {
 	if !ok {
 		return h.finishFailure(ctx, j, "invalid_ai_result")
 	}
-	ms, authors, err := h.chuanBiNhom(ctx, j)
+	ms, authors, texts, err := h.chuanBiNhom(ctx, j)
 	if err != nil {
 		return h.finishFailure(ctx, j, "sharing_unavailable")
 	}
-	luot, err := luotNhom(j.goi, authors)
+	luot, err := luotNhom(j.goi, authors, texts)
 	if err != nil {
 		return h.finishFailure(ctx, j, "invalid_ai_result")
 	}

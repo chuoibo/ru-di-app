@@ -13,7 +13,7 @@ import (
 // and the grader (the sufficiency judgement) is the first cut wherever it
 // runs. Red if a constant or a table row grows a path past the ceiling.
 func TestKeHoachTrongTran(t *testing.T) {
-	if len(KeHoach) != 6 || len(KhongKiem) != 1 {
+	if len(KeHoach) != 6 || len(KhongKiem) != 0 {
 		t.Fatalf("%d paths, %d without a verifier", len(KeHoach), len(KhongKiem))
 	}
 	for d, buocs := range KeHoach {
@@ -29,7 +29,7 @@ func TestKeHoachTrongTran(t *testing.T) {
 				t.Errorf("%s: step %s has no thinking level", d, b.Loai)
 			}
 			switch b.Loai {
-			case BuocKiem, BuocKiemLai, BuocRouter, BuocTraLoi, BuocAgentTraLoi:
+			case BuocKiem, BuocKiemLai, BuocKiemChiaBill, BuocRouter, BuocTraLoi, BuocAgentTraLoi, BuocChiaBill:
 				if b.Loai != BuocKiemLai && b.Cat != 0 {
 					t.Errorf("%s: %s is cut (rank %d); a released text is never unverified", d, b.Loai, b.Cat)
 				}
@@ -38,7 +38,7 @@ func TestKeHoachTrongTran(t *testing.T) {
 					t.Errorf("%s: the grader is cut at rank %d, not first", d, b.Cat)
 				}
 			}
-			coKiem = coKiem || b.Loai == BuocKiem
+			coKiem = coKiem || b.Loai == BuocKiem || (b.Loai == BuocKiemChiaBill && d == DuongNhapChiaBill)
 			coRouter = coRouter || (b.Loai == BuocRouter && i == 0)
 		}
 		if KhongKiem[d] {

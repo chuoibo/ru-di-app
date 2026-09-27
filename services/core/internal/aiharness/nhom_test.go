@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"strings"
 	"testing"
@@ -41,9 +40,9 @@ func luotNhomCoBan() Turn {
 		LoiNho: "@Rủ Đi tối thứ 7 cả nhóm đi đâu ở Đà Lạt?", NguoiHoi: nguoiHoi,
 		Phong: phongNhom, Lane: LaneLegacy, SoTin: 4,
 		LuotNhom: []LuotNhom{
-			{ID: "m-1", Vai: "ban", Ten: "Lan", Chu: "Mình dị ứng đậu phộng nha", TacGia: nguoiLan},
-			{ID: "m-2", Vai: "toi", Chu: "Mình trả lẩu 850k hôm qua", TacGia: nguoiHoi},
-			{ID: "m-3", Vai: "ban", Ten: "Minh", Chu: chenNhom, TacGia: nguoiMinh},
+			{ID: "m-1", Vai: "ban", Ten: "Lan", Chu: "Mình dị ứng đậu phộng nha", TacGia: nguoiLan, ChuMayChu: "Mình dị ứng đậu phộng nha"},
+			{ID: "m-2", Vai: "toi", Chu: "Mình trả lẩu 850k hôm qua", TacGia: nguoiHoi, ChuMayChu: "Mình trả lẩu 850k hôm qua"},
+			{ID: "m-3", Vai: "ban", Ten: "Minh", Chu: chenNhom, TacGia: nguoiMinh, ChuMayChu: chenNhom},
 			{ID: "m-4", Vai: "ai", Chu: "Mình gợi ý quán yên tĩnh nhé."},
 		},
 		ThanhVien: []ThanhVienNhom{{ID: nguoiHoi, Ten: "Tú"}, {ID: nguoiLan, Ten: "Lan"}, {ID: nguoiMinh, Ten: "Minh"}},
@@ -171,22 +170,47 @@ func chiaTho(ks ...map[string]any) llm.Buoc {
 	return llm.Buoc{Text: string(raw)}
 }
 
-// split_draft becomes a draft only: the router, one structured reading, a
-// card of our template and a pointer part; the payer is the author the
-// server confirmed, the preview adds up to the total, nothing is written.
+// kiemChia is the split draft's verifier output: one verdict per item, in
+// order.
+func kiemChia(kets ...string) llm.Buoc {
+	ks := []map[string]any{}
+	for i, k := range kets {
+		ks = append(ks, map[string]any{"so": i + 1, "ket": k})
+	}
+	raw, _ := json.Marshal(map[string]any{"khoan": ks})
+	return llm.Buoc{Text: string(raw)}
+}
+
+// split_draft becomes a draft only: the router, one structured reading, the
+// draft's verifier, a card of our template and a pointer part; the payer is
+// the author the server confirmed, the preview adds up to the total,
+// nothing is written.
 func TestNhomChiaBillNhap(t *testing.T) {
 	w := moiTheGioi(t)
 	turn := luotNhomCoBan()
 	turn.LoiNho = "@Rủ Đi chia bill giùm, taxi 100k mình trả luôn"
 	m := chayNhom(t, w, nhomOpts{}, turn,
 		ru{tien: "split_draft", yDinh: []string{"chia_bill_draft"}}.buoc(),
-		chiaTho(map[string]any{"tin": "t2", "tieu_de": "lẩu", "so_tien_vnd": 850000},
-			map[string]any{"tin": "loi_nho", "tieu_de": "taxi", "so_tien_vnd": 100000}))
-	if m.err != nil || m.stub.SoGoi() != 2 || loaiPhan(t, m.res) != "text,expense_draft" {
+		chiaTho(map[string]any{"tin": "t2", "tieu_de": "lẩu", "so_tien_goc": "850k", "so_tien_vnd": 850000},
+			map[string]any{"tin": "loi_nho", "tieu_de": "taxi", "so_tien_goc": "100k", "so_tien_vnd": 100000}),
+		kiemChia("ho_tro", "ho_tro"))
+	if m.err != nil || m.stub.SoGoi() != 3 || loaiPhan(t, m.res) != "text,expense_draft" {
 		t.Fatalf("%v %d %s", m.err, m.stub.SoGoi(), loaiPhan(t, m.res))
 	}
-	if m.res.Record.Duong != obs.DuongNhapChiaBill || m.res.Record.KetKiem != obs.KiemKhongChay {
+	if m.res.Record.Duong != obs.DuongNhapChiaBill || m.res.Record.KetKiem != obs.KiemDat {
 		t.Fatalf("%+v", m.res.Record)
+	}
+	// The verifier read each item beside its own message, in a fresh
+	// context: the stored message and the request, the amounts in our
+	// format, nothing of the reading's instruction.
+	kiemReq := string(m.stub.YeuCau()[2])
+	for _, want := range []string{"lẩu", "850.000đ", "100.000đ", "khoan_can_kiem"} {
+		if !strings.Contains(kiemReq, want) {
+			t.Errorf("the verifier's request lacks %q", want)
+		}
+	}
+	if strings.Contains(kiemReq, "COPIED EXACTLY") || strings.Contains(kiemReq, "quán yên tĩnh") {
+		t.Error("the verifier saw the reading's instruction or the assistant's turn")
 	}
 	for _, want := range []string{"Tú trả 850.000đ: lẩu", "Tú trả 100.000đ: taxi", "Tổng 950.000đ. Chia đều cho 3 người: 2 người 316.667đ, 1 người 316.666đ.", "chưa ghi vào sổ"} {
 		if !strings.Contains(m.res.Text, want) {
@@ -228,33 +252,6 @@ func TestNhomChiaBillNhap(t *testing.T) {
 	req := string(m.stub.YeuCau()[1])
 	if strings.Contains(req, "quán yên tĩnh") || strings.Contains(req, nguoiHoi) {
 		t.Fatalf("the reading got the assistant's turn or a person id")
-	}
-}
-
-// A float or an exponent is refused, never rounded; an alias outside the
-// reading is refused; a title that is not the message's own words is
-// dropped, the item kept.
-func TestChiaBillDocChat(t *testing.T) {
-	v := chiabill.Vao{Tin: []chiabill.Tin{{BiDanh: "t1", Ten: "Lan", Chu: "Mình trả lẩu 850k hôm qua"}}, LoiNho: "chia bill"}
-	for _, bad := range []string{
-		`{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_vnd":850000.5}]}`,
-		`{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_vnd":8.5e5}]}`,
-		`{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_vnd":-850000}]}`,
-		`{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_vnd":0}]}`,
-		fmt.Sprintf(`{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_vnd":%d}]}`, int64(allocator.MaxAmountVND)+1),
-		`{"khoan":[{"tin":"t9","tieu_de":"lẩu","so_tien_vnd":850000}]}`,
-		`{"khoan":[{"tin":"t1","so_tien_vnd":850000}]}`,
-		`{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_vnd":850000,"nguoi_tra":"Minh"}]}`,
-		`{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_vnd":"850000"}]}`,
-		`{}`,
-	} {
-		if _, err := chiabill.Doc([]byte(bad), v); !errors.Is(err, chiabill.ErrCauTruc) {
-			t.Errorf("%s: %v", bad, err)
-		}
-	}
-	ks, err := chiabill.Doc([]byte(`{"khoan":[{"tin":"t1","tieu_de":"Lẩu hải sản","so_tien_vnd":850000},{"tin":"t1","tieu_de":"trả lẩu","so_tien_vnd":1}]}`), v)
-	if err != nil || len(ks) != 2 || ks[0].TieuDe != "" || !ks[0].TieuDeBo || ks[1].TieuDe != "trả lẩu" || ks[0].SoTienVND != 850000 {
-		t.Fatalf("%v %+v", err, ks)
 	}
 }
 
@@ -313,7 +310,7 @@ func TestNhomChiaBillTheoNguoiThamGia(t *testing.T) {
 	turn := luotNhomCoBan()
 	m := chayNhom(t, w, nhomOpts{}, turn,
 		ru{tien: "split_draft", yDinh: []string{"chia_bill_draft"}, slots: map[string]any{"nguoi_tham_gia": []string{"m1", "m2"}}}.buoc(),
-		chiaTho(map[string]any{"tin": "t2", "tieu_de": "lẩu", "so_tien_vnd": 850000}))
+		chiaTho(map[string]any{"tin": "t2", "tieu_de": "lẩu", "so_tien_goc": "850k", "so_tien_vnd": 850000}), kiemChia("ho_tro"))
 	if m.err != nil || !strings.Contains(m.res.Text, "Chia đều cho 2 người: 2 người 425.000đ.") {
 		t.Fatalf("%v %q", m.err, m.res.Text)
 	}

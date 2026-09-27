@@ -358,8 +358,16 @@ func batBien8(l LuotDaChay) []Truot {
 			}
 		}
 	}
-	if daDelta && (l.BanGhi.KetKiem == obs.KiemKhongDat || l.BanGhi.KetKiem == obs.KiemHong) {
+	// Every released text needs the verifier's pass, except a fixed sentence
+	// of ours released whole (review of slices 9/11, finding 2.1: a turn
+	// where the verifier never ran was green here, and the split draft's
+	// model-read amounts reached the room that way).
+	coDinh := laCauCoDinh(l.Turn.Bot, n)
+	switch {
+	case daDelta && !coDinh && (l.BanGhi.KetKiem == obs.KiemKhongDat || l.BanGhi.KetKiem == obs.KiemHong):
 		out = append(out, Truot{KiemBatBien8, "delta trong lượt verifier không duyệt: chữ rời engine trước verifier"})
+	case daDelta && !coDinh && l.BanGhi.KetKiem != obs.KiemDat:
+		out = append(out, Truot{KiemBatBien8, fmt.Sprintf("delta trong lượt verifier không chạy (%s): chữ không phải câu cố định rời engine khi chưa qua verifier", l.BanGhi.KetKiem)})
 	}
 	daNha := n
 	if l.BanGhi.OutGuard == obs.OutChan && daDelta && l.Ma != cau.TraLoiBiChan {

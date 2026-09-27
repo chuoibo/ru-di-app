@@ -165,6 +165,12 @@ type LuotNhom struct {
 	// the server could not confirm one: a split draft bills only a
 	// confirmed author, never a name the model wrote.
 	TacGia string
+	// ChuMayChu is the message's text as the server stores it (legacy lane
+	// only; "" when the server has none to read, as in a v2 room). A split
+	// draft reads an expense only from this text, never from the client's
+	// copy in Chu, so the words that bill an author are the author's own
+	// (review of slices 9/11, finding 2.3). "" means no payer attribution.
+	ChuMayChu string
 }
 
 // ThanhVienNhom is one active member of the room.

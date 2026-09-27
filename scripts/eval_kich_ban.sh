@@ -154,6 +154,6 @@ if bad:
     sys.exit("HỎNG: " + "; ".join(bad))
 print(f"T1 {tk['bo']}: {tk['so_ca']} ca, {tk['so_luot']} lượt chạy, {tk['dat']} đạt; kịch bản sai {tk['sai_dat']}/{tk['so_sai']} trượt đúng chỗ; "
       f"canary đỏ đúng ở {canary_check}; đồng nhất xanh; không SKIP; hai lần chạy trùng byte; "
-      f"prompt {tk['prompt_version_nep']}, corpus {tk['sha_bo'][:12]}")
+      f"prompt {tk['prompt_version']}, corpus {tk['sha_bo'][:12]}")
 PY
 done

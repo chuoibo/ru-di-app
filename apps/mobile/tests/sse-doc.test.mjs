@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { KET_THUC, SO_LAN_HONG_TOI_DA, moLuong, nhipNoiLai, taoBoDoc } from "../dist-test/rudi/ai/sse.js";
+import { HE_SO_IM_LANG, KET_THUC, SO_LAN_HONG_TOI_DA, moLuong, nhipNoiLai, taoBoDoc } from "../dist-test/rudi/ai/sse.js";
 
 const enc = new TextEncoder();
 
@@ -153,4 +153,50 @@ test("nhịp nối lại tăng dần, có trần 15 giây", () => {
 
 test("bốn sự kiện kết thúc đúng hợp đồng", () => {
   assert.deepEqual([...KET_THUC].sort(), ["huy", "that_bai", "thu_hoi", "xong"]);
+});
+
+test("hello rồi đóng không tính là nhận được gì: lặp lại thì nhường cho polling", async () => {
+  // A server that answers 200, says hello and closes (an authorization or a
+  // read error right after hello) must not reset the failure count, or the
+  // client reopens it forever (review of slices 9/11, mobile minor 3.1).
+  const hello = 'retry: 2000\n\nevent: hello\ndata: {"nhip_ms":15000}\n\n';
+  const r = chayLuong(Array.from({ length: SO_LAN_HONG_TOI_DA }, () => traLoi(200, [hello])));
+  for (let i = 0; i < SO_LAN_HONG_TOI_DA - 1; i++) {
+    await r.nghi();
+    const cuoi = r.timers[r.timers.length - 1];
+    assert.equal(cuoi.ms, nhipNoiLai(i + 1, () => 0.5), "nhịp nối lại phải tăng, không đứng ở nấc đầu");
+    cuoi.fn();
+  }
+  await r.nghi();
+  assert.equal(r.fallback, "loi-lap-lai");
+  assert.equal(r.calls.length, SO_LAN_HONG_TOI_DA);
+  // Identity: a real event after hello still counts as progress.
+  const r2 = chayLuong([traLoi(200, [hello + 'id: 1-0\nevent: delta\ndata: {"p":0,"text":"a"}\n\n'])]);
+  await r2.nghi();
+  assert.equal(r2.timers[r2.timers.length - 1].ms, 500, "có delta thì nối lại ở nấc đầu");
+  assert.equal(r2.fallback, null);
+});
+
+test("im lặng quá hai nhịp sau hello thì bỏ kết nối, tính là hỏng", async () => {
+  // hello says the server pings every 15 s; the link then goes dark with no
+  // FIN. After HE_SO_IM_LANG periods of nothing the connection is dropped and
+  // the client reconnects (and in the end gives way to polling).
+  let dong = null;
+  const body = new ReadableStream({
+    start(c) {
+      c.enqueue(enc.encode('event: hello\ndata: {"nhip_ms":15000}\n\n'));
+      dong = c;
+    },
+  });
+  const r = chayLuong([{ status: 200, ok: true, body }]);
+  await r.nghi();
+  const canh = r.timers.find((t) => t.ms === HE_SO_IM_LANG * 15000);
+  assert.ok(canh, `không có hẹn canh im lặng: ${JSON.stringify(r.timers.map((t) => t.ms))}`);
+  canh.fn();
+  await r.nghi();
+  assert.equal(r.calls.length, 1);
+  const noiLai = r.timers[r.timers.length - 1];
+  assert.equal(noiLai.ms, nhipNoiLai(1, () => 0.5), "kết nối chết tính là một lần hỏng");
+  assert.equal(r.closed, 0);
+  void dong;
 });

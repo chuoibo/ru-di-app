@@ -10,7 +10,12 @@
  *   - an event outside the closed vocabulary is dropped, never guessed at;
  *   - a stream that keeps failing gives up and says so (`khiChuyenSangHoi`),
  *     so the screen falls back to polling the invocation, which is the truth
- *     anyway: the stream only shows the answer early;
+ *     anyway: the stream only shows the answer early. `hello` is the
+ *     server's greeting, not progress: a connection that says hello and
+ *     closes still counts as a failure, or a server that fails right after
+ *     hello would be reopened forever. A connection silent (not even a
+ *     ping) for `HE_SO_IM_LANG` periods of `hello.nhip_ms` is dead and is
+ *     dropped;
  *   - a refused stream (401, 403, 404) is not retried: asking again cannot
  *     change who may read it.
  *
@@ -141,6 +146,14 @@ export interface TuyChonLuong {
 /** Consecutive failures after which the stream gives way to polling. */
 export const SO_LAN_HONG_TOI_DA = 3;
 
+/**
+ * A connection that has said hello and then stays silent this many ping
+ * periods (`hello.nhip_ms`; the server pings every period, even with nothing
+ * to say) is taken for dead, dropped and counted as a failure: a black-holed
+ * mobile link sends no FIN and would otherwise read forever.
+ */
+export const HE_SO_IM_LANG = 2;
+
 /** The URL of one attempt: `?after=` carries the position when asked to. */
 export function urlNoiLai(url: string, sauId: string | null, viTriQua: "header" | "query"): string {
   if (viTriQua !== "query" || !sauId) return url;
@@ -180,13 +193,33 @@ export function moLuong(o: TuyChonLuong): { dong(): void } {
 
   const chay = async (): Promise<void> => {
     if (daDong) return;
-    dieuKhien = new AbortController();
+    const dk = new AbortController();
+    dieuKhien = dk;
     let nhanDuoc = false;
     let noiLaiSau: number | null = null;
+    // The silence watchdog: armed by hello's period, re-armed by every chunk.
+    let imLangMs: number | null = null;
+    let canh: unknown = null;
+    let docGiua: { cancel(): Promise<void> } | null = null;
+    const boCanh = () => {
+      if (canh !== null) boHen(canh);
+      canh = null;
+    };
+    const canhLai = () => {
+      boCanh();
+      if (imLangMs !== null && !daDong) {
+        canh = hen(() => {
+          // Abort the request and end the pending read: a dead link would
+          // otherwise never settle it.
+          dk.abort();
+          void docGiua?.cancel().catch(() => undefined);
+        }, imLangMs);
+      }
+    };
     try {
       const headers: Record<string, string> = { ...o.headers, Accept: "text/event-stream" };
       if (sauId && viTriQua === "header") headers["Last-Event-ID"] = sauId;
-      const res = await fetcher(urlNoiLai(o.url, sauId, viTriQua), { headers, signal: dieuKhien.signal });
+      const res = await fetcher(urlNoiLai(o.url, sauId, viTriQua), { headers, signal: dk.signal });
       if (res.status === 401 || res.status === 403 || res.status === 404) {
         ketThuc();
         return;
@@ -200,6 +233,7 @@ export function moLuong(o: TuyChonLuong): { dong(): void } {
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const reader = res.body?.getReader?.();
+      docGiua = reader ?? null;
       if (!reader) {
         chuyenSangHoi("khong-ho-tro");
         return;
@@ -214,7 +248,12 @@ export function moLuong(o: TuyChonLuong): { dong(): void } {
         }
         const chu = done ? giaiMa.decode() : giaiMa.decode(value, { stream: true });
         for (const e of boDoc.doc(chu)) {
-          nhanDuoc = true;
+          if (e.loai === "hello") {
+            const nhip = (e.data as { nhip_ms?: unknown } | null)?.nhip_ms;
+            if (typeof nhip === "number" && Number.isFinite(nhip) && nhip > 0) imLangMs = HE_SO_IM_LANG * nhip;
+          } else {
+            nhanDuoc = true;
+          }
           if (e.id) sauId = e.id;
           if (e.loai === "ket_noi_lai") {
             const sau = (e.data as { sau_ms?: unknown } | null)?.sau_ms;
@@ -233,9 +272,12 @@ export function moLuong(o: TuyChonLuong): { dong(): void } {
           await reader.cancel().catch(() => undefined);
           break;
         }
+        canhLai();
       }
     } catch {
       if (daDong) return;
+    } finally {
+      boCanh();
     }
     if (daDong) return;
     if (noiLaiSau !== null) {

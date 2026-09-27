@@ -764,6 +764,16 @@ func (h *Handler) process(ctx context.Context, j work) error {
 	if h.nhomEngine != nil {
 		return h.processNhomEngine(ctx, j)
 	}
+	// `hoi` is the Go group engine's alone. The route takes it when the
+	// serving process says the group runs on the Go engine (WithNhomGo), but
+	// the job runs wherever `core work` runs, and the two read their flag
+	// apart. A worker whose group engine is the brain refuses it here, fail
+	// closed and before any read, with the reason chat-capabilities gives
+	// for `hoi` on a brain host, instead of handing the brain a command it
+	// has no path for (review of slices 9/11, finding 2.6).
+	if j.command == lenhHoi {
+		return h.finishFailure(ctx, j, "provider_unavailable")
+	}
 	dap, err := h.prepare(ctx, j)
 	if err != nil {
 		return h.finishFailure(ctx, j, "sharing_unavailable")

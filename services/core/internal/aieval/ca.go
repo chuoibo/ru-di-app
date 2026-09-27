@@ -90,6 +90,12 @@ type LuotNhomCa struct {
 	Ten    string `json:"ten,omitempty"`
 	Chu    string `json:"chu"`
 	TacGia string `json:"tac_gia,omitempty"`
+	// ChuMayChu is the message's text as the server stores it
+	// (aiharness.LuotNhom.ChuMayChu). Absent: what chatassist reads for
+	// such a turn -- the same text as Chu in a legacy-lane room for a turn
+	// with a confirmed author, nothing otherwise. A case sets it to play a
+	// client whose copy differs from the stored message.
+	ChuMayChu *string `json:"chu_may_chu,omitempty"`
 }
 
 // ThanhVienCa is one active member (aiharness.ThanhVienNhom).

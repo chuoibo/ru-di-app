@@ -8,7 +8,11 @@
     },
     {
       "chang": "chia_bill",
-      "chu": "{\"khoan\": [{\"tin\": \"t2\", \"tieu_de\": \"lẩu hải sản thượng hạng\", \"so_tien_vnd\": 850000}, {\"tin\": \"loi_nho\", \"tieu_de\": \"taxi\", \"so_tien_vnd\": 120000}]}"
+      "chu": "{\"khoan\": [{\"tin\": \"t2\", \"tieu_de\": \"lẩu hải sản thượng hạng\", \"so_tien_goc\": \"850k\", \"so_tien_vnd\": 850000}, {\"tin\": \"loi_nho\", \"tieu_de\": \"taxi\", \"so_tien_goc\": \"120k\", \"so_tien_vnd\": 120000}]}"
+    },
+    {
+      "chang": "kiem_chia_bill",
+      "chu": "{\"khoan\": [{\"so\": 1, \"ket\": \"ho_tro\"}, {\"so\": 2, \"ket\": \"ho_tro\"}]}"
     }
   ]
 }

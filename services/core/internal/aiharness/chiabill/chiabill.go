@@ -9,10 +9,23 @@
 //     for that message, never a name the model wrote;
 //   - the amount is a JSON integer of đồng within the ledger's bounds: a
 //     fraction or an exponent is refused, never rounded (money law 1);
+//   - the amount is SUPPORTED by the message it names, structurally: the
+//     model quotes the words that state it (so_tien_goc), the quote must be
+//     a substring of that message, and the integer the quote's digits spell
+//     must be the item's amount up to a power of ten (850k, 850.000đ and
+//     850000 all spell 850 → 850000; 1tr2 spells 12 → 1200000). An amount
+//     the message does not support (a number the model invented, or read off
+//     another message) refuses the whole reading with ErrSoTienKhongKhop,
+//     and no draft is built: nothing unverified leaves the server;
 //   - the title is kept only when it is a run of whole words of that same
 //     message, found by exact identity and taken from the message (the way
 //     tools.kiemGhiNho takes a fact): a title the model invented or
 //     paraphrased never reaches the room.
+//
+// Then the LLM verifier (Kiem, kiem.go), in a fresh context, reads each
+// item against the one message it names and must find that the message's
+// writer paid that amount for that thing; any item it does not support, or
+// an output it cannot read, withholds the whole draft (fail closed).
 //
 // Nothing here splits anything: the engine's chiaBillParts builds the draft
 // and its equal-split preview with the domain allocator, and people confirm
@@ -53,6 +66,8 @@ const (
 	MaxKhoan = 8
 	// MaxChuTieuDe bounds a title in runes.
 	MaxChuTieuDe = 60
+	// MaxChuSoTienGoc bounds the quoted amount in runes.
+	MaxChuSoTienGoc = 32
 	// maxTokensRa bounds the output: eight short objects.
 	maxTokensRa = 1024
 	// KhoiTin names the shared messages' block. Ours, never data.
@@ -90,6 +105,9 @@ type Khoan struct {
 	// message.
 	TieuDeBo  bool
 	SoTienVND int64
+	// SoTienGoc is the message's own words for the amount, as the message
+	// has them (a checked substring of it).
+	SoTienGoc string
 }
 
 var (
@@ -97,6 +115,11 @@ var (
 	ErrCauTruc = errors.New("chiabill: output refused")
 	// ErrVao: nothing to read.
 	ErrVao = errors.New("chiabill: no message and no request")
+	// ErrSoTienKhongKhop: an item's amount is not supported by the message it
+	// names (its quote is not in the message, or does not spell the amount).
+	// The engine asks back instead of drafting; it is not a malformed
+	// output, so it does not wrap ErrCauTruc.
+	ErrSoTienKhongKhop = errors.New("chiabill: an amount the message does not state")
 )
 
 func loi(format string, a ...any) error {
@@ -120,10 +143,11 @@ func LuocDo(v Vao) *genai.Schema {
 		Properties: map[string]*genai.Schema{
 			"tin":         {Type: genai.TypeString, Enum: v.biDanh()},
 			"tieu_de":     {Type: genai.TypeString, MaxLength: i64(MaxChuTieuDe), Description: "copied exactly from the message"},
+			"so_tien_goc": {Type: genai.TypeString, MaxLength: i64(MaxChuSoTienGoc), Description: "the words of the message that state the amount, copied exactly"},
 			"so_tien_vnd": {Type: genai.TypeInteger, Minimum: f64(1), Maximum: f64(float64(allocator.MaxAmountVND)), Description: "whole đồng"},
 		},
-		PropertyOrdering: []string{"tin", "tieu_de", "so_tien_vnd"},
-		Required:         []string{"tin", "tieu_de", "so_tien_vnd"},
+		PropertyOrdering: []string{"tin", "tieu_de", "so_tien_goc", "so_tien_vnd"},
+		Required:         []string{"tin", "tieu_de", "so_tien_goc", "so_tien_vnd"},
 	}
 	return &genai.Schema{Type: genai.TypeObject,
 		Properties:       map[string]*genai.Schema{"khoan": {Type: genai.TypeArray, Items: khoan, MaxItems: i64(MaxKhoan)}},
@@ -177,11 +201,12 @@ func Goi(ctx context.Context, dem *llm.Dem, v Vao) ([]Khoan, error) {
 type khoanTho struct {
 	Tin       string      `json:"tin"`
 	TieuDe    string      `json:"tieu_de"`
+	SoTienGoc string      `json:"so_tien_goc"`
 	SoTienVND json.Number `json:"so_tien_vnd"`
 }
 
 // truongKhoan are an item's fields, every one required.
-var truongKhoan = []string{"tin", "tieu_de", "so_tien_vnd"}
+var truongKhoan = []string{"tin", "tieu_de", "so_tien_goc", "so_tien_vnd"}
 
 // chuCua is the text of the message alias bi names in this reading (the
 // request for BiDanhLoiNho); false for an alias the reading did not offer.
@@ -211,9 +236,11 @@ func giaiMaChat(raw []byte, out any) error {
 }
 
 // Doc reads the model's JSON strictly: unknown fields, a missing field, an
-// alias outside the reading, more than MaxKhoan items, a title too long, or
-// an amount that is not a JSON integer in [1, allocator.MaxAmountVND] refuse
-// the WHOLE output. A title that is not a run of words of its message is
+// alias outside the reading, more than MaxKhoan items, a title or a quote
+// too long, or an amount that is not a JSON integer in
+// [1, allocator.MaxAmountVND] refuse the WHOLE output (ErrCauTruc); an
+// amount its message does not support (soTienCoTrongTin) refuses it with
+// ErrSoTienKhongKhop. A title that is not a run of words of its message is
 // dropped from that item, never repaired.
 func Doc(raw []byte, v Vao) ([]Khoan, error) {
 	var tho struct {
@@ -260,7 +287,14 @@ func Doc(raw []byte, v Vao) ([]Khoan, error) {
 		if !utf8.ValidString(k.TieuDe) || utf8.RuneCountInString(k.TieuDe) > MaxChuTieuDe {
 			return nil, loi("a title is too long")
 		}
-		kq := Khoan{Tin: k.Tin, SoTienVND: n}
+		if !utf8.ValidString(k.SoTienGoc) || utf8.RuneCountInString(k.SoTienGoc) > MaxChuSoTienGoc {
+			return nil, loi("a quoted amount is too long")
+		}
+		goc, ok := soTienCoTrongTin(nguon, prompts.BoDanhDau(k.SoTienGoc), n)
+		if !ok {
+			return nil, fmt.Errorf("%w: tin %s", ErrSoTienKhongKhop, k.Tin)
+		}
+		kq := Khoan{Tin: k.Tin, SoTienVND: n, SoTienGoc: goc}
 		if doan, ok := doanCuaTin(nguon, prompts.BoDanhDau(k.TieuDe)); ok {
 			kq.TieuDe = doan
 		} else {
@@ -283,6 +317,65 @@ func soNguyenDong(n json.Number) (int64, error) {
 		return 0, loi("so_tien_vnd %q is outside [1, %d]", s, int64(allocator.MaxAmountVND))
 	}
 	return v, nil
+}
+
+// soTienCoTrongTin is the structural support of an amount by its message:
+// the quote, its runs of white space as one space, is a substring of the
+// message read the same way, and the ASCII digits of the quote, read in
+// order as one integer d, spell the amount: n = d·10^k for some k ≥ 0.
+// Nothing else is read: no unit word, no language. A quote whose digits do
+// not spell the amount («2 triệu rưỡi» for 2500000, where the words carry
+// the half) is not supported, and the reading is refused rather than
+// guessed at. It returns the quote as the message has it.
+func soTienCoTrongTin(tin, goc string, n int64) (string, bool) {
+	g := strings.Join(strings.Fields(goc), " ")
+	if g == "" || !chuoiConKhongCatSo(strings.Join(strings.Fields(tin), " "), g) {
+		return "", false
+	}
+	var d int64
+	coSo := false
+	for i := 0; i < len(g); i++ {
+		c := g[i]
+		if c < '0' || c > '9' {
+			continue
+		}
+		if d > (int64(allocator.MaxAmountVND))/10 {
+			return "", false
+		}
+		d = d*10 + int64(c-'0')
+		coSo = true
+	}
+	if !coSo || d < 1 {
+		return "", false
+	}
+	for x := d; x <= n; x *= 10 {
+		if x == n {
+			return g, true
+		}
+		if x > int64(allocator.MaxAmountVND)/10 {
+			break
+		}
+	}
+	return "", false
+}
+
+// chuoiConKhongCatSo reports whether g occurs in tin at a place where it
+// cuts no number: the byte before it and the byte after it are not ASCII
+// digits, so «850k» is not read out of «2850k».
+func chuoiConKhongCatSo(tin, g string) bool {
+	laSo := func(c byte) bool { return c >= '0' && c <= '9' }
+	for i := 0; i+len(g) <= len(tin); {
+		j := strings.Index(tin[i:], g)
+		if j < 0 {
+			return false
+		}
+		a, b := i+j, i+j+len(g)
+		if (a == 0 || !laSo(tin[a-1])) && (b == len(tin) || !laSo(tin[b])) {
+			return true
+		}
+		i = a + 1
+	}
+	return false
 }
 
 // doanCuaTin finds doan in tin as a run of whole words (runs of white space

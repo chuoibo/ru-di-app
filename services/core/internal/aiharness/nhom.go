@@ -104,6 +104,9 @@ type luotNhomSach struct {
 	luot trinho.Luot
 	// chu is the message's own words, without the speaker's label.
 	id, chu, ten, tacGia string
+	// chuMayChu is the server's stored text of the message, cleaned the same
+	// way; "" when the server has none (LuotNhom.ChuMayChu).
+	chuMayChu string
 }
 
 // nganHanNhom cleans the shared turns structurally (NFC, invisible
@@ -124,7 +127,7 @@ func nganHanNhom(t Turn, rec *obs.TurnRecord) []luotNhomSach {
 			rec.LuotBo++
 			continue
 		}
-		s := luotNhomSach{id: l.ID, chu: c.Chu, tacGia: l.TacGia}
+		s := luotNhomSach{id: l.ID, chu: c.Chu, tacGia: l.TacGia, chuMayChu: preprocess.LamSach(l.ChuMayChu).Chu}
 		switch l.Vai {
 		case "toi":
 			s.luot = trinho.Luot{Vai: trinho.Toi, Chu: c.Chu, Luc: t.Luc}
@@ -319,7 +322,7 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 	bc := &tools.BoiCanh{
 		Bot: obs.BotNhom, NguoiHoi: t.NguoiHoi, NhomID: t.Phong, LoiNguoiHoi: hoi.Chu, Luc: t.Luc, HanChe: q.HanChe, YDinh: kq.YDinh,
 		Cung: cung, Mem: mem, DiUngNgoaiDanhMuc: kq.Slots.DiUngNgoaiDanhMuc, DiemDen: idsDiemDen(dsDiemDen),
-		Nguon: e.nguon, Quyen: e.quyen, SoCai: sc, Che: []tools.Ten{tools.DraftPoll},
+		Nguon: nguonNhom(e.nguon), Quyen: e.quyen, SoCai: sc, Che: []tools.Ten{tools.DraftPoll},
 	}
 	bc.ChoNhom()
 	khoi := []string{prompts.BocDuLieu(prompts.MayChu, strings.Join(dongMayChuHieu(t.Luc, kq.Slots), "\n"))}
@@ -500,4 +503,13 @@ func coChuoi(xs []string, x string) bool {
 		}
 	}
 	return false
+}
+
+// nguonNhom is the group's read ports: the catalogue, the destinations and
+// the room, and nothing of a person's own (no CaNhan, no TriNho). One engine
+// serves both bots, so the group's tool context is built from a copy that
+// never holds Nếp's ports: a tool mis-registered for the group still finds
+// no memory to read or write (review of slices 9/11, finding 2.5).
+func nguonNhom(n tools.NguonDuLieu) tools.NguonDuLieu {
+	return tools.NguonDuLieu{Quan: n.Quan, Cho: n.Cho, Nhom: n.Nhom}
 }

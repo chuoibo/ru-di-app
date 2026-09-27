@@ -294,17 +294,21 @@ type TongKet struct {
 	Bo       string `json:"bo"`
 	PhienBan int    `json:"phien_ban"`
 	// ShaBo is the sha256 of the corpus file as read.
-	ShaBo            string  `json:"sha_bo"`
-	MoHinh           string  `json:"mo_hinh"`
-	PromptVersionNep string  `json:"prompt_version_nep"`
-	SoCa             int     `json:"so_ca"`
-	SoLuot           int     `json:"so_luot"`
-	Dat              int     `json:"dat"`
-	KhongDat         int     `json:"khong_dat"`
-	SoSai            int     `json:"so_sai"`
-	SaiDat           int     `json:"sai_dat"`
-	Canary           CanhGac `json:"canary"`
-	DongNhat         CanhGac `json:"dong_nhat"`
+	ShaBo            string `json:"sha_bo"`
+	MoHinh           string `json:"mo_hinh"`
+	PromptVersionNep string `json:"prompt_version_nep"`
+	// PromptVersion is the prompt version of each surface the corpus's
+	// cases run, "nep:<v>" and/or "nhom:<v>", so a report names the prompt
+	// its turns actually read (review of slices 9/11, nit 1.5).
+	PromptVersion string  `json:"prompt_version"`
+	SoCa          int     `json:"so_ca"`
+	SoLuot        int     `json:"so_luot"`
+	Dat           int     `json:"dat"`
+	KhongDat      int     `json:"khong_dat"`
+	SoSai         int     `json:"so_sai"`
+	SaiDat        int     `json:"sai_dat"`
+	Canary        CanhGac `json:"canary"`
+	DongNhat      CanhGac `json:"dong_nhat"`
 	// Xanh: every run did what its role asks, and both sentinels are present
 	// and did theirs. There is no skip to count: a case that cannot run stops
 	// the whole corpus with an error (ChayBo), which the binary exits 2 on.
@@ -315,7 +319,7 @@ type TongKet struct {
 // wrong script once. emit hears each run as it finishes.
 func ChayBo(ctx context.Context, b Bo, shaBo string, kbs map[string]KichBan, lap int, emit func(KetQuaChay) error) (TongKet, error) {
 	h := DocHang()
-	tk := TongKet{Bo: b.Bo, PhienBan: b.PhienBan, ShaBo: shaBo, MoHinh: h.MoHinh, PromptVersionNep: h.PromptVersionNep, SoCa: len(b.Ca)}
+	tk := TongKet{Bo: b.Bo, PhienBan: b.PhienBan, ShaBo: shaBo, MoHinh: h.MoHinh, PromptVersionNep: h.PromptVersionNep, PromptVersion: phienBanPrompt(b, h), SoCa: len(b.Ca)}
 	tk.Canary = CanhGac{CaID: CaCanary, Truot: []string{}}
 	tk.DongNhat = CanhGac{CaID: CaDongNhat, Truot: []string{}}
 	for _, c := range b.Ca {
@@ -402,4 +406,21 @@ func nguonCua(g *TheGioi, luc time.Time) tools.NguonDuLieu {
 	}
 	nhom := &testkit.Nhom{ChuyenDis: bang(g.ChuyenDi, truyhoi.GroupHistory), SoNguoi: g.SoThanhVien}
 	return tools.NguonDuLieu{Quan: quan, Cho: cho, Nhom: nhom, TriNho: tn}
+}
+
+// phienBanPrompt names the prompt version of every surface b's cases run,
+// in a fixed order.
+func phienBanPrompt(b Bo, h Hang) string {
+	co := map[string]bool{}
+	for _, c := range b.Ca {
+		co[c.BeMat] = true
+	}
+	var out []string
+	if co[string(obs.BotNep)] {
+		out = append(out, "nep:"+h.PromptVersionNep)
+	}
+	if co[string(obs.BotNhom)] {
+		out = append(out, "nhom:"+h.PromptVersionNhom)
+	}
+	return strings.Join(out, " ")
 }

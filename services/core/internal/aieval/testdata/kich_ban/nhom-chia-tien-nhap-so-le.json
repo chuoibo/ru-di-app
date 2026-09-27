@@ -8,7 +8,7 @@
     },
     {
       "chang": "chia_bill",
-      "chu": "{\"khoan\": [{\"tin\": \"t2\", \"tieu_de\": \"lẩu\", \"so_tien_vnd\": 850000.5}]}"
+      "chu": "{\"khoan\": [{\"tin\": \"t2\", \"tieu_de\": \"lẩu\", \"so_tien_goc\": \"850k\", \"so_tien_vnd\": 850000.5}]}"
     }
   ]
 }

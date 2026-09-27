@@ -57,11 +57,18 @@ func GieoCa(c Ca, lap int) (Gieo, error) {
 	}
 	// A group case's room, as chatassist.processNhomEngine builds the turn:
 	// the room, its lane, the confirmed count, the shared turns with their
-	// authors, the active members.
+	// authors and stored text, the active members.
 	if n := c.DauVao.Nhom; n != nil {
 		t.Phong, t.Lane, t.SoTin = phongCua(c.CaID), n.Lane, n.SoTin
 		for _, l := range n.Luot {
-			t.LuotNhom = append(t.LuotNhom, aiharness.LuotNhom{ID: l.ID, Vai: l.Vai, Ten: l.Ten, Chu: l.Chu, TacGia: l.TacGia})
+			x := aiharness.LuotNhom{ID: l.ID, Vai: l.Vai, Ten: l.Ten, Chu: l.Chu, TacGia: l.TacGia}
+			switch {
+			case l.ChuMayChu != nil:
+				x.ChuMayChu = *l.ChuMayChu
+			case n.Lane == string(aiharness.LaneLegacy) && l.TacGia != "" && l.Vai != "ai":
+				x.ChuMayChu = l.Chu
+			}
+			t.LuotNhom = append(t.LuotNhom, x)
 		}
 		for _, m := range n.ThanhVien {
 			t.ThanhVien = append(t.ThanhVien, aiharness.ThanhVienNhom{ID: m.ID, Ten: m.Ten})

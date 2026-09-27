@@ -167,11 +167,12 @@ func TestNhomHoiChiTrenEngineGo(t *testing.T) {
 func TestNhomQuaEngineGoChiaBill(t *testing.T) {
 	n := setupNhomGo(t, tools.NguonDuLieu{},
 		ruNhom(map[string]any{"tien": "split_draft", "y_dinh": []string{"chia_bill_draft"}}),
-		llm.Buoc{Text: `{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_vnd":850000}]}`})
+		llm.Buoc{Text: `{"khoan":[{"tin":"t1","tieu_de":"lẩu","so_tien_goc":"850k","so_tien_vnd":850000}]}`},
+		llm.Buoc{Text: `{"khoan":[{"so":1,"ket":"ho_tro"}]}`})
 	a := n.f.tinTrongPhong(t, n.f.context, "Mình trả lẩu 850k")
 	id, _ := n.hoi(t, "chia_bill", "/chia-bill", goiThu(luotThu(a, "Mình trả lẩu 850k")))
 	k := n.ket(t, id)
-	if k.status != "succeeded" || k.duong != "nhap_chia_bill" || k.soGoi != 2 {
+	if k.status != "succeeded" || k.duong != "nhap_chia_bill" || k.soGoi != 3 {
 		t.Fatalf("%s %v %+v", k.status, k.code, k)
 	}
 	var kq struct {

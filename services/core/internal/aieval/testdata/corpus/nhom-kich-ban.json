@@ -899,7 +899,7 @@
         "ket_thuc": "xong",
         "guard": "proceed",
         "out_guard": "none",
-        "so_goi_model": 2,
+        "so_goi_model": 3,
         "su_kien": [
           "trang_thai:dang_doc:4",
           "trang_thai:dang_nghi:4",
@@ -942,6 +942,14 @@
           },
           {
             "kich_ban": "nhom-chia-tien-nhap-bia-tieu-de",
+            "phai_truot": "chu"
+          },
+          {
+            "kich_ban": "nhom-chia-tien-nhap-bia-so-tien",
+            "phai_truot": "chu"
+          },
+          {
+            "kich_ban": "nhom-chia-tien-nhap-verifier-bac",
             "phai_truot": "chu"
           }
         ]

@@ -136,11 +136,12 @@ test("hàng đọc được (polling) chỉ đổi gì khi lời gọi đã kế
 
 /* ------------------------------------------------ theo dõi + lùi về polling */
 
-function traLoiSSE(status, chunks = []) {
+function traLoiSSE(status, chunks = [], { moMai = false } = {}) {
   const body = new ReadableStream({
     start(c) {
       for (const ch of chunks) c.enqueue(enc.encode(ch));
-      c.close();
+      // moMai: the connection stays open and silent (a black-holed link).
+      if (!moMai) c.close();
     },
   });
   return { status, ok: status >= 200 && status < 300, body };
@@ -151,6 +152,9 @@ function chay({ url = "http://x/events", answers = [], hang = [], viTriQua } = {
   const goi = [];
   const hoi = [];
   const timers = [];
+  // The follow's one overall deadline (choToiDaMs) is kept apart from the
+  // reconnect and poll timers these tests step through one by one.
+  const hanChung = [];
   const trangThai = [];
   let hetGio = 0;
   const theo = theoDoiTraLoi({
@@ -174,8 +178,10 @@ function chay({ url = "http://x/events", answers = [], hang = [], viTriQua } = {
       if (!a) return new Promise(() => {});
       return a;
     },
-    hen: (fn, ms) => (timers.push({ fn, ms }), timers.length),
-    boHen: () => {},
+    hen: (fn, ms) => (ms === 90_000 ? (hanChung.push({ fn, ms, song: true }), -hanChung.length) : (timers.push({ fn, ms }), timers.length)),
+    boHen: (h) => {
+      if (typeof h === "number" && h < 0) hanChung[-h - 1].song = false;
+    },
     ngauNhien: () => 0.5,
   });
   const nghi = () => new Promise((r) => setTimeout(r, 5));
@@ -185,7 +191,7 @@ function chay({ url = "http://x/events", answers = [], hang = [], viTriQua } = {
     await nghi();
     return t;
   };
-  return { theo, goi, hoi, timers, trangThai, nghi, chayHen, hetGio: () => hetGio };
+  return { theo, goi, hoi, timers, hanChung, trangThai, nghi, chayHen, hetGio: () => hetGio };
 }
 
 test("stream hỏng hai lần liền thì nhường cho polling, và polling đưa câu trả lời về", async () => {
@@ -327,4 +333,31 @@ test("Reduce Motion: chữ tới theo từng câu trọn, cả câu khi xong; kh
   assert.equal(chuHienThi(xuongDong, true), "Dòng một");
   const xong = buocTraLoi(chuaCau, { id: "2-1", loai: "xong", data: { text: "Chưa hết câu mà đã xong" } });
   assert.equal(chuHienThi(xong, true), "Chưa hết câu mà đã xong");
+});
+
+/* ------------------------------------------------ hạn chung ------------- */
+
+test("stream còn «đang làm» trên kết nối chết vẫn hết hạn chung và báo nghĩ lâu quá", async () => {
+  // The connection answers and then never sends another byte: no FIN, no
+  // ping. The follow's deadline is armed while streaming, not only once
+  // polling took over (review of slices 9/11, mobile minor 3.2).
+  const r = chay({ answers: [traLoiSSE(200, [su("1-0", "trang_thai", { cau: "dang_nghi" })], { moMai: true })] });
+  await r.nghi();
+  assert.equal(r.theo.trangThai().pha, "dang_nghi");
+  assert.equal(r.hoi.length, 0, "vẫn đang đọc stream, chưa polling");
+  assert.equal(r.hanChung.length, 1);
+  assert.equal(r.hanChung[0].ms, 90_000);
+  r.hanChung[0].fn();
+  await r.nghi();
+  assert.equal(r.hetGio(), 1, "hết hạn thì màn nói nghĩ lâu quá");
+  assert.equal(r.theo.trangThai().pha, "dang_nghi");
+});
+
+test("xong trước hạn thì hạn chung được huỷ, không báo hết giờ", async () => {
+  const r = chay({ answers: [traLoiSSE(200, [su("1-0", "xong", { text: "A.", chips: [], nguon: [] })])] });
+  await r.nghi();
+  assert.equal(r.theo.trangThai().pha, "xong");
+  assert.equal(r.hanChung[0].song, false, "hạn chung phải được gỡ khi đã xong");
+  r.hanChung[0].fn();
+  assert.equal(r.hetGio(), 0);
 });

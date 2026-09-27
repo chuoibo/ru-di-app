@@ -92,8 +92,18 @@ test("mỗi câu kết quả là một mã worker Go thật sự ghi, và viết
   // publish step, not by the bill reader.
   const goc = join(GOC_REPO, "services", "core", "internal", "chatassist");
   const go = readdirSync(goc).filter((ten) => ten.endsWith(".go") && !ten.endsWith("_test.go")).map((ten) => readFileSync(join(goc, ten), "utf8")).join("\n");
+  // A code the engine owns is declared once in aiharness/cau (`TenHang Ma =
+  // "ma"`) and the worker writes it by that name (`cau.TenHang`), as the
+  // group's ai_tu_choi is since 713f960. It counts only when the worker
+  // really names the constant: a declaration nobody in chatassist uses is not
+  // a code the worker writes.
+  const cauGo = readFileSync(join(GOC_REPO, "services", "core", "internal", "aiharness", "cau", "cau.go"), "utf8");
+  const hangCau = new Map([...cauGo.matchAll(/^\s*([A-Z]\w*)\s+Ma\s*=\s*"([a-z_]+)"/gm)].map((m) => [m[2], m[1]]));
+  assert.ok(hangCau.size >= 6, `chỉ đọc được ${hangCau.size} hằng mã trong cau.go, bộ đọc đang hỏng`);
+  const workerGhi = (ma) => go.includes(`"${ma}"`) || (hangCau.has(ma) && new RegExp(`\\bcau\\.${hangCau.get(ma)}\\b`).test(go));
+  assert.equal(workerGhi("khong_co_ma_nay"), false, "bộ đọc coi một mã bịa là mã worker ghi");
   for (const [ma, cau] of Object.entries(LOI_KET_QUA_AI)) {
-    assert.ok(go.includes(`"${ma}"`), `câu cho ${ma} nhưng worker không ghi mã đó`);
+    assert.ok(workerGhi(ma), `câu cho ${ma} nhưng worker không ghi mã đó`);
     assert.doesNotMatch(cau, /[a-z]+_[a-z_]+/, `câu chữ chứa một mã máy: ${cau}`);
     assert.doesNotMatch(cau, /lỗi|HTTP|[—–]/i, `câu viết như báo lỗi: ${cau}`);
     assert.ok(cau.length > 20);

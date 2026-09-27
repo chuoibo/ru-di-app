@@ -532,7 +532,7 @@ func TestStreamSongQuaTamGiay(t *testing.T) {
 	start := time.Now()
 	_, events, _ := d.nghe(t, "/me/nep/ai-invocations/"+id+"/events", d.token, "", 20*time.Second)
 	took := time.Since(start)
-	if took < 8*time.Second || len(events) == 0 || events[len(events)-1].loai != "xong" {
+	if took < 8*time.Second || len(events) == 0 || events[len(events)-1].loai != "xong" || events[len(events)-1].id == "" {
 		t.Fatalf("after %v the stream ended with %+v", took, events[len(events)-1:])
 	}
 }
@@ -729,9 +729,17 @@ func TestStreamSigtermHetAnHanThatBai(t *testing.T) {
 	if status != "failed" || code != "worker_interrupted" {
 		t.Fatalf("row %s/%s", status, code)
 	}
+	// The ending must be IN the stream, written by the worker when the grace
+	// ran out: read the key itself. A reader alone cannot tell, since Follow
+	// builds the same ending from the row (without an id) after a reconcile
+	// tick when the stream holds none (review of slices 9/11, finding 1.1).
+	k := d.loaiCua(t, d.khoaMoi(id))
+	if len(k) == 0 || k[len(k)-1] != `that_bai:{"code":"worker_interrupted"}` {
+		t.Fatalf("stream key after the grace %v", k)
+	}
 	_, events, _ := d.nghe(t, "/me/nep/ai-invocations/"+id+"/events", d.token, "", 3*time.Second)
-	if len(events) == 0 || events[len(events)-1].loai != "that_bai" || events[len(events)-1].data != `{"code":"worker_interrupted"}` {
-		t.Fatalf("reader heard %+v", events)
+	if len(events) == 0 || events[len(events)-1].loai != "that_bai" || events[len(events)-1].data != `{"code":"worker_interrupted"}` || events[len(events)-1].id == "" {
+		t.Fatalf("reader heard %+v (the ending must carry its stream id)", events)
 	}
 }
 

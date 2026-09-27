@@ -41,6 +41,7 @@ func TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan(t *testing.T) {
 	// Each must be among what the gate examined, or a later edit to either is
 	// a read nobody checks.
 	thayTinTag, thayGiuTag := false, false
+	thayChuDaLuu := 0
 	for _, f := range duong {
 		if strings.HasSuffix(f, "_test.go") {
 			continue
@@ -60,11 +61,26 @@ func TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan(t *testing.T) {
 			}
 			// `body` is the message text. Naming it in a read of `messages` is
 			// the server reading the conversation, which is the thing this
-			// package exists to not do.
+			// package exists to not do. One read is named and pinned: the
+			// split draft's chuDaLuu, the stored text of the messages the
+			// caller explicitly shared, by their ids, in a legacy-lane room
+			// (review of slices 9/11, finding 2.3). It must be that exact
+			// query, in nhom_engine.go, once; any other read of `body`, or
+			// any edit to that one, is red here.
 			if regexp.MustCompile(`(?i)\bbody\b`).MatchString(cau) {
+				if f == "nhom_engine.go" && strings.HasPrefix(cauDocChuDaLuuGhim, cau) && strings.Count(string(raw), cauDocChuDaLuuGhim) == 1 {
+					thayChuDaLuu++
+					continue
+				}
 				t.Errorf("%s đọc nội dung tin nhắn:\n%s", f, cau)
 			}
 		}
+	}
+	if thayChuDaLuu != 1 {
+		t.Errorf("câu đọc chữ đã lưu của chia bill xuất hiện %d lần, phải đúng 1 (và đúng nguyên văn đã ghim)", thayChuDaLuu)
+	}
+	if cauDocChuDaLuu != cauDocChuDaLuuGhim {
+		t.Errorf("cauDocChuDaLuu đã đổi khỏi bản ghim:\n%s", cauDocChuDaLuu)
 	}
 	if daDoc < 5 {
 		t.Fatalf("chỉ quét được %d file nguồn; cổng đang nhìn vào chỗ trống", daDoc)
@@ -94,3 +110,9 @@ func TestCongNayThucSuDoDuoc(t *testing.T) {
 		t.Fatal("câu chỉ đọc id và tác giả bị coi là đọc nội dung")
 	}
 }
+
+// cauDocChuDaLuuGhim is the one read of message text this package may make,
+// word for word: only this room, only the ids the caller shared, only a live
+// text message with a confirmed author. Widening it (another room, every
+// message, deleted ones) changes this text and turns the gate red.
+const cauDocChuDaLuuGhim = `SELECT id::text, body FROM messages WHERE context_id=$1 AND id = ANY($2::uuid[]) AND author_id IS NOT NULL AND deleted_at IS NULL AND kind='text' AND body IS NOT NULL`
