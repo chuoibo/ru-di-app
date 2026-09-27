@@ -875,6 +875,21 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 					               '{"ngay": "2030-09-14", "chang": [{"gio": "19:45", "viec": "Ăn tối (dữ liệu mẫu)", "place_id": "p-cu", "can_kiem": false}]}',
 					               NULL, '{}', 'human', '2030-09-10T00:00:00Z', '`+w.phuong+`', '2030-09-10T00:00:00Z')`,
 						onCtx("draft_pair_paper", w.an, w.fa))))))
+	// ADR-0038 §2.1: An's invitation, written before the notebook existed, is
+	// filed under the cycle when Em's yes opens it.
+	add("route POST grant: the second lap_so files the open invitation", "", base,
+		// ae already holds an open sheet; the invitation takes its place, since
+		// a conversation has one open sheet at most.
+		tweak(`UPDATE pair_papers SET state = CASE WHEN state = 'nhap' THEN 'bo' ELSE 'huy' END WHERE context_id = '`+w.ae+`' AND state IN ('nhap', 'da_gui', 'da_xem', 'de_nghi_sua', 'dong_y')`,
+		tweak(`INSERT INTO pair_papers (id, context_id, context_kind, cycle_id, is_temporary, draft_owner_id, state, current_version,
+		                           tuan, created_at, expires_at)
+		       VALUES ('`+fid(kindPaper, 0x86)+`', '`+w.ae+`', 'pair', NULL, true, '`+w.an+`', 'nhap', 1,
+		               '2030-09-16', '2030-09-16T00:00:00Z', '2030-09-22T17:00:00Z')`,
+			tweak(`INSERT INTO pair_paper_versions (paper_id, version, content, ly_do, nguon, author_type, sent_at, sent_by, created_at)
+			       VALUES ('`+fid(kindPaper, 0x86)+`', 1,
+			               '{"ngay": "2030-09-21", "chang": [{"gio": "18:30", "viec": "Ăn tối (dữ liệu mẫu)", "place_id": null, "can_kiem": true}]}',
+			               NULL, '{}', 'human', NULL, NULL, '2030-09-16T00:00:00Z')`,
+				onCtx("grant_pair_consent", w.em, w.ae, "proposal_id", w.prLapSoAE)))))
 	add("route POST send: a draft whose week ended at this instant", "409:paper_expired", base,
 		tweak("UPDATE pair_papers SET expires_at = '"+now+"' WHERE id = '"+w.pCD1+"'",
 			onPaper("send_pair_paper", w.chi, w.pCD1, "body", body("version", 1))))

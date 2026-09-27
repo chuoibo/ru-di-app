@@ -29,7 +29,6 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt, type ChiaBill } from "../../../api";
@@ -54,8 +53,9 @@ import {
   type BillReading,
 } from "../../../receipt";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
-import { celebrateOnce } from "../../motion";
+import { TIET_MUC } from "../../art/nep-dien";
 import {
+  cauCanhBaoChia,
   cauNguonBill,
   cauSauKhiScanHong,
   cauTongMon,
@@ -73,16 +73,28 @@ import {
 } from "../../chia-bill/hoa-don";
 import { aiCoGi } from "../../chia-bill/ai-co-gi";
 import { cauSoPhan, goiYTien, hienO, loiO, type KieuO } from "../../chia-bill/o-so";
-import { typography, useRudiTheme } from "../../theme";
-import { AiNote, Chip, Field, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { mucNguoi, typography, useRudiTheme } from "../../theme";
+import { AiNote, Chip, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { AiCoGi } from "../../ui/AiCoGi";
-import { DongTien } from "../../ui/DongTien";
+import { Avatar } from "../../ui/Avatar";
+import { BanAn } from "../../ui/BanAn";
+import { BanGanMon } from "../../ui/BanGanMon";
+import { ChuThichLe } from "../../ui/ChuThichLe";
+import { CuongPhieu } from "../../ui/CuongPhieu";
+import { DauLon } from "../../ui/DauLon";
 import { HaiCot } from "../../ui/HaiCot";
+import { DongHoaDon, HoaDonGiay, TieuDeHoaDon, VachCat } from "../../ui/HoaDonGiay";
+import { KhungAnh } from "../../ui/KhungAnh";
+import { LatTrang } from "../../ui/LatTrang";
 import { Money } from "../../ui/Money";
+import { NapGiay } from "../../ui/NapGiay";
+import { NepDien } from "../../ui/NepDien";
+import { NepTinh } from "../../ui/NepRoi";
+import { ONhapMuc } from "../../ui/ONhapMuc";
 import { RosterPicker } from "../../ui/RosterPicker";
-import { Stamp } from "../../ui/Stamp";
+import { StampButton } from "../../ui/StampButton";
 import { Stepper } from "../../ui/Stepper";
-import { useMotion } from "../../ui/useMotion";
+import { DongSo, TrangSo } from "../../ui/TrangSo";
 
 type Buoc =
   | { ten: "bat-dau" }
@@ -90,7 +102,15 @@ type Buoc =
   | { ten: "xem-lai" }
   | { ten: "gan-mon"; bill: BillWire }
   | { ten: "ket-qua"; bill: BillWire; chia: ChiaBill }
-  | { ten: "da-ghi"; expenseVersionId: string; tenKhoan: string; tongVnd: number; nguoiTraId: string };
+  | {
+      ten: "da-ghi";
+      expenseVersionId: string;
+      tenKhoan: string;
+      tongVnd: number;
+      nguoiTraId: string;
+      /** The server's shares as they were recorded: copied onto the ledger page. */
+      hang: ReturnType<typeof hangKetQua>;
+    };
 
 const CAC_BUOC = ["Bill", "Xem lại", "Gán món", "Kết quả", "Ghi sổ"];
 /** A bill this short opens every line at once; longer bills open one at a time. */
@@ -154,29 +174,9 @@ function datNguoi(a: Assignment, lineId: string, ids: readonly string[], roster:
   return ra;
 }
 
-/** The stamp that lands once when the ledger has taken the expense. */
-function DauDaGhi({ khoa }: { khoa: string }) {
-  const motion = useMotion();
-  const daThay = useRef(new Set<string>());
-  const tien = useSharedValue(0);
-  useEffect(() => {
-    tien.value = 0;
-    tien.value = withTiming(1, { duration: celebrateOnce(daThay.current, khoa, motion.reduced) });
-  }, [khoa, motion.reduced, tien]);
-  const style = useAnimatedStyle(() => ({
-    opacity: tien.value,
-    transform: [{ scale: 1.18 - tien.value * 0.18 }, { rotate: "-3deg" }],
-  }));
-  return (
-    <Animated.View style={style}>
-      <Stamp label="Đã ghi sổ" tone="split" variant="ink" />
-    </Animated.View>
-  );
-}
-
 export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string }) {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   // The step CTA is the last thing in the scroll; at font 1.3 it met the gesture pill.
   const insets = useSafeAreaInsets();
   const contextId = phien.context_id;
@@ -192,6 +192,8 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
   const [nhapSo, setNhapSo] = useState<Record<string, string>>({});
   const [thongBao, setThongBao] = useState<string | null>(null);
   const [ban, setBan] = useState(false);
+  // The dish on the bill table at the assign step; the first line until another is tapped.
+  const [monTrenBan, setMonTrenBan] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
 
   useEffect(() => {
@@ -327,7 +329,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
     chay(async () => {
       const ten = occasion.trim() === "" ? "Hóa đơn của nhóm" : occasion.trim();
       const kq = await ghiVaoSo({ reading, assignment, roster, contextId: ctx, payerId, occasion: ten, attempts: attempts.current });
-      setBuoc({ ten: "da-ghi", expenseVersionId: kq.expenseVersionId, tenKhoan: ten, tongVnd: chia.totalAmountVnd, nguoiTraId: payerId });
+      setBuoc({ ten: "da-ghi", expenseVersionId: kq.expenseVersionId, tenKhoan: ten, tongVnd: chia.totalAmountVnd, nguoiTraId: payerId, hang: hangKetQua(chia, roster) });
     });
 
   // One step back inside the flow. On the middle steps this is what the top
@@ -343,38 +345,95 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
   const lyDoKhoa =
     buoc.ten === "xem-lai" ? loiHoaDon(reading) : buoc.ten === "gan-mon" ? loiGanMon(reading, rosterIds, assignment) : null;
 
-  const phanCuaToi = buoc.ten === "ket-qua" ? hangKetQua(buoc.chia, roster).find((h) => h.id === phien.person_id) : undefined;
-
   // The step's one decision stays above the gesture bar however long the
   // line editor grows: on the review step the open editor pushed «Tiếp» below
-  // the fold and the live board could not reach it (2026-09-06).
+  // the fold and the live board could not reach it (2026-09-06). Recording the
+  // expense is a decision about money: the teal seal (ADR-0037 D14).
   const nutChinh =
     buoc.ten === "xem-lai" ? (
       <RudiButton disabled={ban} label="Tiếp: ai dùng món nào?" loading={ban} onPress={() => void sangGanMon()} tone="split" />
     ) : buoc.ten === "gan-mon" ? (
       <RudiButton disabled={ban} label="Xem kết quả" loading={ban} onPress={() => void xemKetQua(buoc.bill)} tone="split" />
     ) : buoc.ten === "ket-qua" ? (
-      <RudiButton disabled={ban} icon="book-outline" label="Ghi vào sổ" loading={ban} onPress={() => void ghi(buoc.chia)} tone="split" />
+      <StampButton disabled={ban} label="Ghi vào sổ" loading={ban} onPress={() => void ghi(buoc.chia)} size="vua" tilt={-1} tone="split" />
     ) : null;
 
+  const monBan = buoc.ten === "gan-mon" ? (reading.lines.find((l) => l.id === monTrenBan) ?? reading.lines[0] ?? null) : null;
+
   return (
-    <RudiScreen bottomInset={Math.max(insets.bottom, 16) + 40} footer={nutChinh} footerInset={Math.max(insets.bottom, 12) + 4} tone="split" testID="receipt-review-screen">
+    <RudiScreen
+      bottomInset={Math.max(insets.bottom, 16) + 40}
+      cuonVeDau={buoc.ten}
+      footer={nutChinh}
+      footerInset={Math.max(insets.bottom, 12) + 4}
+      tone="split"
+      testID="receipt-review-screen"
+    >
       <TopBar onBack={luiTrongLuong ? quayLai : undefined} title={tieuDeBuoc(buoc)} />
       <Stepper current={soBuoc(buoc) - 1} lockedReason={lyDoKhoa} steps={CAC_BUOC} tone="split" />
       {thongBao !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
 
+      {/* One page per step, turned over the spine (ADR-0037 D1): the next page
+          is already lying there, only the finished one turns away. */}
+      <LatTrang khoa={buoc.ten} thuTu={soBuoc(buoc) * 2 + (buoc.ten === "xem-anh" ? 1 : 0)}>
+      <View style={styles.trang}>
+
       {buoc.ten === "bat-dau" ? (
         <>
-          <Heading title="Bill hôm nay" subtitle="Chụp hoặc chọn ảnh hoá đơn để Rủ Đi đọc từng món, hoặc gõ tay. Ai dùng món nào thì hỏi ở bước sau." />
-          <RudiButton disabled={ban} icon="images-outline" label="Chọn ảnh bill" loading={ban} onPress={() => void chonAnh()} tone="split" />
-          <RudiButton disabled={ban} icon="create-outline" label="Nhập tay" onPress={nhapTay} tone="split" variant="outline" />
+          <Text style={[typography.body, { color: colors.inkSoft }]}>Chụp hoặc chọn ảnh hoá đơn để Rủ Đi đọc từng món, hoặc gõ tay.</Text>
+          {/* The table seen from above: an empty receipt waiting on it is the
+              button, and Nếp stands by with the camera (a still, not a moment). */}
+          <BanAn>
+          <View style={styles.banTrong}>
+            <Pressable
+              accessibilityLabel="Chọn ảnh bill"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: ban, busy: ban }}
+              disabled={ban}
+              onPress={() => void chonAnh()}
+              style={({ pressed }) => [styles.billTrong, { opacity: ban ? 0.6 : pressed ? 0.85 : 1 }]}
+              testID="bill-trong"
+            >
+              <HoaDonGiay rangTren>
+                <TieuDeHoaDon phu="Chưa có món nào" ten="Bill hôm nay" />
+                <VachCat />
+                {[0.8, 0.55, 0.7].map((r, i) => (
+                  <View importantForAccessibility="no-hide-descendants" key={i} style={styles.dongMo}>
+                    <View style={[styles.vachMo, { width: `${r * 60}%`, backgroundColor: colors.line }]} />
+                    <View style={[styles.vachMo, { width: "18%", backgroundColor: colors.line }]} />
+                  </View>
+                ))}
+                <VachCat />
+                <View style={styles.hangNut}>
+                  <Ionicons color={colors.split} name="camera-outline" size={22} />
+                  <Text style={[typography.title, { color: colors.split }]}>Chọn ảnh bill</Text>
+                </View>
+              </HoaDonGiay>
+            </Pressable>
+            <NepTinh style={styles.nepCam} tm={TIET_MUC["cam-may"]} width={96} />
+          </View>
+          </BanAn>
+          {/* Typing is a pencil line on the same page, not a second button. */}
+          <Pressable accessibilityRole="button" disabled={ban} onPress={nhapTay} style={({ pressed }) => [styles.butChi, { borderBottomColor: colors.lineStrong, opacity: pressed ? 0.7 : 1 }]}>
+            <Ionicons color={colors.inkSoft} name="pencil" size={18} />
+            <Text style={[typography.title, { color: colors.ink }]}>Nhập tay</Text>
+          </Pressable>
+          <NapGiay tieuDe="Cách chia">
+            <Text style={[typography.body, { color: colors.ink }]}>Rủ Đi đọc từng món trên hoá đơn. Bước sau, cả nhóm chọn ai dùng món nào; máy chủ chia mỗi món cho đúng những người đó, lẻ đồng dồn về một người, và tổng luôn khớp hoá đơn.</Text>
+          </NapGiay>
         </>
       ) : null}
 
       {buoc.ten === "xem-anh" ? (
         <>
-          <Heading title="Ảnh này đúng bill chứ?" subtitle="Rủ Đi sẽ đọc từng món từ ảnh này. Chưa gửi gì cho tới khi bạn bấm dùng." />
-          <Image accessibilityLabel="Ảnh bill đã chọn" contentFit="cover" source={{ uri: buoc.uri }} style={[styles.anh, { borderRadius: radius.small, backgroundColor: colors.line }]} />
+          <View style={styles.hangDau}>
+            <Heading title="Ảnh này đúng bill chứ?" subtitle="Rủ Đi sẽ đọc từng món từ ảnh này." />
+            <NepDien khoanhKhac="M2" suKien={buoc.uri} />
+          </View>
+          <KhungAnh tilt={-1}>
+            <Image accessibilityLabel="Ảnh bill đã chọn" contentFit="cover" source={{ uri: buoc.uri }} style={[styles.anh, { backgroundColor: colors.line }]} />
+          </KhungAnh>
+          <ChuThichLe icon="lock-closed-outline">Chưa gửi gì cho tới khi bạn bấm dùng.</ChuThichLe>
           <RudiButton disabled={ban} icon="scan-outline" label="Dùng ảnh này" loading={ban} onPress={() => void docAnh(buoc.uri, buoc.bytes)} tone="split" />
           <RudiButton disabled={ban} icon="images-outline" label="Chọn ảnh khác" onPress={() => void chonAnh()} tone="split" variant="outline" />
         </>
@@ -382,25 +441,26 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
 
       {buoc.ten === "xem-lai" ? (
         <>
-          <Heading title={cauTongMon(reading)} subtitle={cauNguonBill(reading)} />
           {reading.warnings.map((w) => (
             <AiNote key={w}>{w}</AiNote>
           ))}
-          {/* A bill, not a stack of forms (QA 23/09: «đơn giản như một AI làm»):
-              the occasion heads the sheet, every dish is one printed line with
-              a leader to its sum, and the total closes it at the bottom. A line
-              opens to its fields in place. */}
-          <View style={[styles.toHoaDon, { backgroundColor: colors.paper, borderColor: colors.lineStrong, borderRadius: radius.small }]} testID="to-hoa-don">
-            <View style={[styles.dauHoaDon, { borderBottomColor: colors.lineStrong }]}>
-              <Text style={[typography.caption, { color: colors.inkSoft }]}>HOÁ ĐƠN</Text>
-              <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{occasion.trim() || "Buổi hôm nay"}</Text>
+          {/* The bill IS a thermal receipt: the occasion and the count head the
+              paper, each dish is a printed line that opens to its fields in
+              place, and the total closes it. On `card`, never on dark `paper`
+              (the «cần kiểm» warning read 4.00:1 there). */}
+          <HoaDonGiay rangTren testID="to-hoa-don">
+            <View style={styles.dauHoaDon}>
+              <Text style={[typography.stamp, { color: colors.inkSoft }]}>{occasion.trim() || "Buổi hôm nay"}</Text>
+              <Text style={[typography.h2, { color: colors.ink }]}>{cauTongMon(reading)}</Text>
+              <Text style={[typography.note, { color: colors.inkSoft }]}>{cauNguonBill(reading)}</Text>
             </View>
+            <VachCat />
             {reading.lines.map((line, i) => {
               const nhan = nhanDongMon(reading, line);
               const mo = moRong.has(line.id);
               const ten = line.name.trim() === "" ? `Món ${i + 1}` : line.name;
               return (
-                <View key={line.id} style={[styles.dong, { borderBottomColor: colors.line }]}>
+                <View key={line.id} style={styles.dong}>
                   <Pressable
                     accessibilityLabel={`${mo ? "Gấp" : "Sửa"} ${ten}`}
                     accessibilityRole="button"
@@ -424,7 +484,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                   </Pressable>
                   {mo ? (
                     <View style={styles.sua}>
-                      <Field
+                      <ONhapMuc
                         accessibilityLabel={`Ô tên món ${i + 1}`}
                         label="Món"
                         onChangeText={(t) => setReading((r) => renameLine(r, line.id, t))}
@@ -433,7 +493,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                       />
                       <View style={styles.hang}>
                         <View style={styles.oNho}>
-                          <Field
+                          <ONhapMuc
                             accessibilityLabel={`Ô số lượng món ${i + 1}`}
                             error={oNhap(line.id, "so-luong") === undefined ? null : loiO("so-luong", oNhap(line.id, "so-luong") ?? "")}
                             keyboardType="number-pad"
@@ -449,7 +509,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                           />
                         </View>
                         <View style={styles.flex}>
-                          <Field
+                          <ONhapMuc
                             accessibilityLabel={`Ô tiền món ${i + 1}`}
                             error={oNhap(line.id, "tien") === undefined ? null : loiO("tien", oNhap(line.id, "tien") ?? "")}
                             helper={goiYTien(line.quantity, line.lineTotalVnd)}
@@ -461,6 +521,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                               const kq = setLineTotal(reading, line.id, t === "" ? "0" : t);
                               if (kq.ok) setReading(kq.reading);
                             }}
+                            style={styles.soTien}
                             value={oNhap(line.id, "tien") ?? hienO("tien", line.lineTotalVnd)}
                           />
                         </View>
@@ -471,44 +532,67 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                 </View>
               );
             })}
-            <View style={styles.tongHoaDon}>
-              <Text style={[typography.label, { color: colors.ink }]}>Tổng</Text>
-              <Money vnd={itemsTotalVnd(reading)} />
-            </View>
-          </View>
-          <RudiButton icon="add" label="Thêm món" onPress={themMonMoi} tone="split" variant="soft" />
+            {/* A new line is torn onto the bottom of the receipt. */}
+            <Pressable accessibilityRole="button" onPress={themMonMoi} style={({ pressed }) => [styles.themDong, { borderColor: colors.lineStrong, opacity: pressed ? 0.7 : 1 }]}>
+              <Ionicons color={colors.split} name="add" size={20} />
+              <Text style={[typography.label, { color: colors.split }]}>Thêm món</Text>
+            </Pressable>
+            <VachCat />
+            <DongHoaDon dam phai={<Money vnd={itemsTotalVnd(reading)} />} trai="Tổng" />
+          </HoaDonGiay>
         </>
       ) : null}
 
       {buoc.ten === "gan-mon" ? (
-        // Wide window: the dish list on the left, «Ai có gì» beside it -- the
-        // same assignment read per person, plus the dishes still waiting. On
-        // a phone the per-line names already say it, so the pane is dropped.
+        // Wide window: the table and the dish list on the left page, «Ai có gì»
+        // on the right -- the same assignment read per person. On a phone the
+        // per-line names already say it, so the pane is dropped.
         <HaiCot
           phaiChiKhiRong
           phai={<AiCoGi bang={aiCoGi(reading.lines, roster, assignment)} />}
           trai={
             <>
-          <Heading title={cauTongMon(reading)} subtitle="Chạm một món để sửa ai dùng. Bản gán được lưu lại; tổng bill không đổi khi bạn sửa người." />
+          <Heading title={cauTongMon(reading)} />
+          <BanGanMon
+            dangDung={monBan ? roster.filter((p) => isOn(assignment, monBan.id, p.id)).map((p) => p.id) : []}
+            disabled={ban}
+            mon={monBan ? { id: monBan.id, ten: monBan.name, tienVnd: monBan.lineTotalVnd } : null}
+            nguoi={roster}
+            onToggle={(id) => {
+              if (monBan) setAssignment((current) => toggle(current, monBan.id, id));
+            }}
+            testID="ban-gan-mon"
+          />
+          <ChuThichLe>Chạm ghế hoặc kéo món tới ghế. Tổng không đổi.</ChuThichLe>
           <View>
             {reading.lines.map((line, i) => {
               const mo = moRong.has(line.id);
               const dangDung = roster.filter((person) => isOn(assignment, line.id, person.id));
               const truoc = i > 0 ? whoOn(assignment, reading.lines[i - 1].id) : null;
+              const trenBan = monBan?.id === line.id;
               return (
-                <View key={line.id} style={[styles.dong, { borderBottomColor: colors.line }]}>
+                <View key={line.id} style={[styles.dongGan, { borderBottomColor: colors.line, backgroundColor: trenBan ? colors.splitSoft : "transparent" }]}>
                   <Pressable
                     accessibilityLabel={`Sửa người dùng ${line.name}`}
                     accessibilityRole="button"
                     accessibilityState={{ expanded: mo }}
-                    onPress={() => doiMo(line.id)}
+                    onPress={() => {
+                      // A dish off the table goes onto it (and opens); the one
+                      // already there folds or opens like any row.
+                      if (trenBan) doiMo(line.id);
+                      else {
+                        setMonTrenBan(line.id);
+                        if (!mo) doiMo(line.id);
+                      }
+                    }}
                     style={({ pressed }) => [styles.dongDau, pressed && styles.bam]}
                   >
                     <View style={styles.flex}>
                       <Text style={[typography.label, { color: colors.ink }]}>{line.name}</Text>
                       <Text style={[typography.caption, { color: dangDung.length === 0 ? colors.warn : colors.inkSoft }]}>
                         {dangDung.length === 0 ? "Chưa chọn người" : `${dangDung.length} người`}
-                        {dangDung.length > 0 ? ` · ${dangDung.map((p) => p.name).join(", ")}` : ""}
+                        {/* Open, the figures below say who; folded, the names do. */}
+                        {dangDung.length > 0 && !mo ? ` · ${dangDung.map((p) => p.name).join(", ")}` : ""}
                       </Text>
                     </View>
                     <Money size="label" vnd={line.lineTotalVnd} />
@@ -516,29 +600,30 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                   </Pressable>
                   {mo ? (
                     <View style={styles.sua}>
+                      {/* Two people: the two figures ARE the choice; three shortcut
+                          buttons outnumbered them, and «Cả nhóm» was the wrong word for
+                          a couple (QA 23/09). One «Cả hai» stays, in the same row. */}
                       <RosterPicker
                         disabled={ban}
+                        kieu="nhan"
                         nhanCho={(ten) => `${ten} · ${line.name}`}
                         onToggle={(id) => setAssignment((current) => toggle(current, line.id, id))}
                         people={roster}
                         selected={dangDung.map((person) => person.id)}
+                        them={
+                          roster.length <= 2 ? (
+                            <Chip label="Cả hai" onPress={() => setAssignment((a) => datNguoi(a, line.id, rosterIds, rosterIds))} tone="split" />
+                          ) : (
+                            <>
+                              <Chip label="Cả nhóm" onPress={() => setAssignment((a) => datNguoi(a, line.id, rosterIds, rosterIds))} tone="split" />
+                              <Chip label="Bỏ hết" onPress={() => setAssignment((a) => datNguoi(a, line.id, [], rosterIds))} tone="split" />
+                              {truoc !== null ? (
+                                <Chip label="Như món trên" onPress={() => setAssignment((a) => datNguoi(a, line.id, truoc, rosterIds))} tone="split" />
+                              ) : null}
+                            </>
+                          )
+                        }
                       />
-                      {/* Two people: the two chips above ARE the choice; three shortcut
-                          buttons outnumbered them, and «Cả nhóm» was the wrong word for
-                          a couple (QA 23/09). One «Cả hai» stays. */}
-                      {roster.length <= 2 ? (
-                        <Inline gap={6} wrap>
-                          <Chip label="Cả hai" onPress={() => setAssignment((a) => datNguoi(a, line.id, rosterIds, rosterIds))} tone="split" />
-                        </Inline>
-                      ) : (
-                        <Inline gap={6} wrap>
-                          <Chip label="Cả nhóm" onPress={() => setAssignment((a) => datNguoi(a, line.id, rosterIds, rosterIds))} tone="split" />
-                          <Chip label="Bỏ hết" onPress={() => setAssignment((a) => datNguoi(a, line.id, [], rosterIds))} tone="split" />
-                          {truoc !== null ? (
-                            <Chip label="Như món trên" onPress={() => setAssignment((a) => datNguoi(a, line.id, truoc, rosterIds))} tone="split" />
-                          ) : null}
-                        </Inline>
-                      )}
                     </View>
                   ) : null}
                 </View>
@@ -551,7 +636,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
       ) : null}
 
       {buoc.ten === "ket-qua" ? (
-        // Wide window: the ledger on the left, the two things still to decide
+        // Wide window: the stubs on the left, the two things still to decide
         // (who paid, what to call it) on the right, in view beside the numbers.
         <HaiCot
           phai={
@@ -562,49 +647,49 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
               <Chip accessibilityLabel={`Người trả ${tv.name}`} key={tv.id} label={tv.name} onPress={() => setPayerId(tv.id)} selected={payerId === tv.id} tone="split" />
             ))}
           </Inline>
-          <Field accessibilityLabel="Ô tên khoản chi" label="Gọi khoản này là" onChangeText={setOccasion} placeholder="Ví dụ: Tối nay Xóm Lào" value={occasion} />
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            Ghi vào sổ là tạo khoản chi với đúng các số ở trên; tổng được kiểm cho khớp trước khi ghi.
-          </Text>
+          <ONhapMuc accessibilityLabel="Ô tên khoản chi" label="Gọi khoản này là" onChangeText={setOccasion} placeholder="Ví dụ: Tối nay Xóm Lào" value={occasion} />
+          <ChuThichLe icon="book-outline">Ghi vào sổ là tạo khoản chi với đúng các số ở trên; tổng được kiểm cho khớp trước khi ghi.</ChuThichLe>
             </>
           }
           trai={
             <>
-          {phanCuaToi !== undefined ? (
-            // The person's own share is the first line of the ledger, not a
-            // tinted block with a label over a big number (the hero-metric
-            // template the report and the finish review both refused).
-            <View>
-              <DongTien
-                dam
-                nhan="Phần của bạn"
-                phu={`Rủ Đi chia ${cauTongMon(reading)} theo bản gán ${buoc.chia.assignmentState === "confirmed" ? "đã chốt" : "đang gợi ý"}${phanCuaToi.lamTron ? "; lẻ đồng dồn về bạn" : ""}.`}
-                tone="split"
-                vnd={Number(phanCuaToi.tien.replace(/\D/g, ""))}
-              />
-            </View>
-          ) : (
-            <Heading title={cauTongMon(reading)} subtitle={buoc.chia.assignmentState === "confirmed" ? "Chia theo bản gán đã chốt." : "Chia theo bản gán đang gợi ý."} />
-          )}
+          <Text style={[typography.body, { color: colors.inkSoft }]}>
+            {`Rủ Đi chia ${cauTongMon(reading)} theo bản gán ${buoc.chia.assignmentState === "confirmed" ? "đã chốt" : "đang gợi ý"}.`}
+          </Text>
           <SectionHeader title="Phần của mỗi người" />
-          <View>
-            {hangKetQua(buoc.chia, roster).map((h) => (
-              <View key={h.id} style={[styles.hangKetQua, { borderBottomColor: colors.line }]}>
-                <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{h.ten}</Text>
-                {h.id === payerId ? <Chip label="Đã trả bill" tone="split" selected /> : null}
-                {h.lamTron ? <Chip label="+lẻ đồng" tone="split" /> : null}
-                <Text style={[typography.money, { color: colors.ink }]}>{h.tien}</Text>
-              </View>
-            ))}
+          {/* Each share is a stub torn off the bill, in its person's ink; yours
+              comes first and stands a paper height higher. */}
+          <View style={styles.cuong}>
+            {[...hangKetQua(buoc.chia, roster)]
+              .sort((a, b) => (a.id === phien.person_id ? -1 : b.id === phien.person_id ? 1 : 0))
+              .map((h) => {
+                const laToi = h.id === phien.person_id;
+                return (
+                  <CuongPhieu key={h.id} mau={mucNguoi(h.id, dark)} noi={laToi}>
+                    <View style={styles.hangCuong}>
+                      <Avatar name={h.ten} personId={h.id} size={32} />
+                      <View style={styles.flex}>
+                        <Text style={[laToi ? typography.title : typography.body, { color: colors.ink }]}>{laToi ? "Phần của bạn" : h.ten}</Text>
+                        {laToi ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{h.ten}</Text> : null}
+                      </View>
+                      <Text style={[typography.money, { color: colors.split }]}>{h.tien}</Text>
+                    </View>
+                    {h.id === payerId || h.lamTron ? (
+                      <Inline gap={6} wrap>
+                        {h.id === payerId ? <Chip label="Đã trả bill" tone="split" selected /> : null}
+                        {h.lamTron ? <Chip label="+lẻ đồng" tone="split" /> : null}
+                      </Inline>
+                    ) : null}
+                  </CuongPhieu>
+                );
+              })}
           </View>
           {buoc.chia.roundingGainers.length > 0 ? (
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              Lẻ đồng dồn về: {buoc.chia.roundingGainers.map((id) => tenCua(roster, id)).join(", ")} (chia lẻ tự động, tổng vẫn khớp).
-            </Text>
+            <ChuThichLe>{`Lẻ đồng dồn về: ${buoc.chia.roundingGainers.map((id) => tenCua(roster, id)).join(", ")} (chia lẻ tự động, tổng vẫn khớp).`}</ChuThichLe>
           ) : null}
           {buoc.chia.warnings.map((w) => (
             <Text key={w} style={[typography.caption, { color: colors.warn }]}>
-              {w}
+              {cauCanhBaoChia(w)}
             </Text>
           ))}
             </>
@@ -614,8 +699,18 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
 
       {buoc.ten === "da-ghi" ? (
         <>
-          <View style={styles.dauGhi}>
-            <DauDaGhi khoa={buoc.expenseVersionId} />
+          {/* The bill goes into the book: every share is copied onto a ledger
+              page, and Nếp brings the stamp down on it; the seal lands on the
+              same beat (300 + 130 ms, `NHIP_DAU`). */}
+          <View style={styles.hangSo}>
+            <NepDien khoanhKhac="M3" suKien={buoc.expenseVersionId} />
+            <TrangSo style={styles.flex} testID="trang-so-da-ghi">
+              <DongSo dau trai={`Sổ chi · ${buoc.tenKhoan}`} />
+              {buoc.hang.map((h) => (
+                <DongSo key={h.id} mau={mucNguoi(h.id, dark)} phai={h.tien} trai={h.id === buoc.nguoiTraId ? `${h.ten} (trả)` : h.ten} />
+              ))}
+              <DauLon co="vua" dong key={buoc.expenseVersionId} nhan="Đã ghi sổ" style={styles.dauGhi} tre={300} />
+            </TrangSo>
           </View>
           <Heading
             title={`Đã ghi: ${buoc.tenKhoan}`}
@@ -625,9 +720,12 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
           <RudiButton label="Về Tin nhắn" onPress={() => router.replace("/(tabs)/messages" as never)} tone="split" variant="outline" />
         </>
       ) : null}
+      </View>
+      </LatTrang>
     </RudiScreen>
   );
 }
+
 
 /** The one formatter, for a sentence that also carries words. */
 function dinhDangTien(vnd: number): string {
@@ -636,21 +734,32 @@ function dinhDangTien(vnd: number): string {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  hang: { flexDirection: "row", gap: 10 },
-  oNho: { width: 120 },
+  trang: { gap: 18 },
+  hang: { flexDirection: "row", gap: 12 },
+  oNho: { width: 110 },
   anh: { width: "100%", aspectRatio: 3 / 4 },
-  dong: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 4 },
-  dongDau: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 56, paddingVertical: 6 },
+  banTrong: { flexDirection: "row", alignItems: "flex-end", gap: 4 },
+  billTrong: { flex: 1 },
+  nepCam: { marginBottom: -4 },
+  dongMo: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 5 },
+  vachMo: { height: 8, borderRadius: 4 },
+  hangNut: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 44 },
+  butChi: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, alignSelf: "flex-start", borderBottomWidth: 1, borderStyle: "dashed", paddingRight: 12 },
+  hangDau: { flexDirection: "row", alignItems: "center", gap: 12 },
+  dauHoaDon: { gap: 2, alignItems: "center" },
+  dong: { paddingVertical: 2 },
+  dongGan: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 4, paddingHorizontal: 6, borderRadius: 8 },
+  dongDau: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 52, paddingVertical: 4 },
   // A dotted leader that takes the room between the dish and its sum, and
   // gives it up first when the name is long.
   tenMon: { flexShrink: 1 },
-  toHoaDon: { borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingBottom: 8 },
-  dauHoaDon: { paddingVertical: 12, gap: 2, borderBottomWidth: 1, borderStyle: "dashed" },
-  tongHoaDon: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 12, paddingBottom: 4 },
-  chamDan: { flexGrow: 1, flexShrink: 1, minWidth: 12, maxWidth: 120, alignSelf: "flex-end", marginBottom: 18, borderBottomWidth: 1.5, borderStyle: "dotted" },
-  sua: { gap: 10, paddingBottom: 12 },
+  chamDan: { flexGrow: 1, flexShrink: 1, minWidth: 12, maxWidth: 120, alignSelf: "flex-end", marginBottom: 16, borderBottomWidth: 1.5, borderStyle: "dotted" },
+  sua: { gap: 12, paddingBottom: 12 },
+  soTien: { fontVariant: ["tabular-nums"] },
+  themDong: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, minHeight: 48, borderWidth: 1, borderStyle: "dashed", borderRadius: 6 },
   bam: { opacity: 0.75 },
-  phanToi: { gap: 4, padding: 16 },
-  hangKetQua: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 52, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
-  dauGhi: { alignItems: "flex-start", marginTop: 4 },
+  cuong: { gap: 10 },
+  hangCuong: { flexDirection: "row", alignItems: "center", gap: 10 },
+  hangSo: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  dauGhi: { marginTop: 10 },
 });

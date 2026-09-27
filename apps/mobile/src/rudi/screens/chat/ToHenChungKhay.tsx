@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { ngayKieuViet, ngayVeISO, type ToHenChung } from "../../chat/to-hen-chung";
 import { typography, useRudiTheme } from "../../theme";
-import { Field, IconButton, RudiButton } from "../../ui";
+import { IconButton, RudiButton } from "../../ui";
+import { ONhapMuc } from "../../ui/ONhapMuc";
 
 /**
  * The tray where the group edits its shared sheet.
@@ -114,8 +115,10 @@ export function KhayToHenChung({
       ) : null}
 
       <ScrollView keyboardShouldPersistTaps="handled" style={styles.cuon}>
-        <View style={styles.form}>
-          <Field
+        {/* The group's shared sheet is written on ruled paper, a pen line per
+            field, the stops in pencil order (ADR-0037 D1, plan S5). */}
+        <View style={[styles.form, styles.giayKe, { backgroundColor: colors.card, borderColor: colors.lineStrong }]}>
+          <ONhapMuc
             accessibilityLabel="Tên tờ hẹn"
             editable={open && !busy}
             label="Tên tờ hẹn"
@@ -125,7 +128,7 @@ export function KhayToHenChung({
           />
           <View style={styles.hang}>
             <View style={styles.flex}>
-              <Field
+              <ONhapMuc
                 accessibilityLabel="Ô ngày đi của tờ hẹn"
                 editable={open && !busy}
                 keyboardType="numbers-and-punctuation"
@@ -136,7 +139,7 @@ export function KhayToHenChung({
               />
             </View>
             <View style={styles.flex}>
-              <Field
+              <ONhapMuc
                 accessibilityLabel="Ô ngày về của tờ hẹn"
                 editable={open && !busy}
                 keyboardType="numbers-and-punctuation"
@@ -149,7 +152,7 @@ export function KhayToHenChung({
           </View>
           <View style={styles.hang}>
             <View style={styles.flex}>
-              <Field
+              <ONhapMuc
                 accessibilityLabel="Ô số người của tờ hẹn"
                 editable={open && !busy}
                 keyboardType="number-pad"
@@ -159,7 +162,7 @@ export function KhayToHenChung({
               />
             </View>
             <View style={styles.flex}>
-              <Field
+              <ONhapMuc
                 accessibilityLabel="Ô ngân sách một người của tờ hẹn"
                 editable={open && !busy}
                 keyboardType="number-pad"
@@ -174,7 +177,7 @@ export function KhayToHenChung({
           {stops.map((stop, index) => (
             <View key={index} style={styles.hang}>
               <View style={styles.gio}>
-                <Field
+                <ONhapMuc
                   accessibilityLabel={`Giờ chặng ${index + 1}`}
                   editable={open && !busy}
                   keyboardType="numbers-and-punctuation"
@@ -187,7 +190,7 @@ export function KhayToHenChung({
                 />
               </View>
               <View style={styles.flex}>
-                <Field
+                <ONhapMuc
                   accessibilityLabel={`Tên chặng ${index + 1}`}
                   editable={open && !busy}
                   label={`Chặng ${index + 1}`}
@@ -255,6 +258,7 @@ export function KhayToHenChung({
 }
 
 const styles = StyleSheet.create({
+  giayKe: { borderWidth: 1, borderRadius: 4, padding: 12 },
   khay: { borderTopWidth: StyleSheet.hairlineWidth, gap: 10, paddingHorizontal: 16, paddingVertical: 10 },
   hangTieuDe: { flexDirection: "row", alignItems: "center", gap: 8 },
   hangTrangThai: { flexDirection: "row", alignItems: "center", gap: 8 },

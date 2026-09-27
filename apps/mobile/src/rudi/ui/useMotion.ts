@@ -9,7 +9,7 @@ import {
   type WithTimingConfig,
 } from "react-native-reanimated";
 
-import { EASING, durationFor, type EasingName, type MotionStep } from "../motion";
+import { EASING, NGAN_SACH_SAN_KHAU, batToiDa, durationFor, treTang, type EasingName, type MotionStep } from "../motion";
 
 /**
  * The shell's motion tokens, bound to Reanimated and to the system Reduce
@@ -29,6 +29,17 @@ export interface MotionKit {
    * reads once at startup and so misses a setting changed mid-session.
    */
   reanimated: ReduceMotion;
+  /**
+   * The paper-stage budgets (ADR-0037 D3): a pop-up's per-layer delay and total,
+   * both zero under Reduce Motion, and the raw numbers for a performance or a page
+   * turn. Composite budgets, not a fifth step.
+   */
+  sanKhau: {
+    treTang(i: number): number;
+    batToiDa(soTang: number): number;
+    dien: number;
+    lat: number;
+  };
 }
 
 export function useMotion(): MotionKit {
@@ -65,6 +76,12 @@ export function useMotion(): MotionKit {
         press: { damping: 18, stiffness: 260, mass: 0.6, reduceMotion: giam },
         // Settle: a sheet or a card coming to rest.
         settle: { damping: 20, stiffness: 180, mass: 0.8, reduceMotion: giam },
+      },
+      sanKhau: {
+        treTang: (i: number) => treTang(i, reduced),
+        batToiDa: (soTang: number) => batToiDa(soTang, reduced),
+        dien: reduced ? 0 : NGAN_SACH_SAN_KHAU.dien,
+        lat: reduced ? 0 : NGAN_SACH_SAN_KHAU.lat,
       },
       haptic: {
         select: () => void Haptics.selectionAsync(),

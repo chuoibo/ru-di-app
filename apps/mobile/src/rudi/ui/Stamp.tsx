@@ -1,9 +1,8 @@
-import { useEffect } from "react";
 import { StyleSheet, Text, type StyleProp, type ViewStyle } from "react-native";
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 import { typography, useRudiTheme, type RudiTone } from "../theme";
-import { useMotion } from "./useMotion";
+import { useNhipDau } from "./useNhipDau";
 
 export interface StampProps {
   /** Short, factual: «ĐÃ TỚI», «ĐÃ TRẢ», «ĐANG MỞ», «AI GỢI Ý». */
@@ -48,30 +47,13 @@ export interface StampProps {
  */
 export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, dong = false, nen = false, style, testID }: StampProps) {
   const { colors } = useRudiTheme();
-  const motion = useMotion();
   const ink = tone === "ink" ? colors.ink : colors[tone];
   const filled = variant === "ink";
   const onInk = tone === "ink" ? colors.paper : tone === "accent" ? colors.accentInk : tone === "split" ? colors.splitInk : colors.aiInk;
   // `roi` is the drop (0 -> 1 maps scale 1.35 -> 1), `muc` the ink
   // (0.25 -> 1), `lun` the sink after contact (1 -> 0.97 -> 1), each its own
-  // value so no phase is read through another's curve.
-  const roi = useSharedValue(dong ? 0 : 1);
-  const muc = useSharedValue(dong ? 0 : 1);
-  const lun = useSharedValue(1);
-  useEffect(() => {
-    if (!dong) return;
-    const lao = motion.reduced ? 0 : 130;
-    const cham = motion.reduced ? 0 : 60;
-    const chamXong = () => motion.haptic.success();
-    roi.value = 0;
-    muc.value = 0;
-    lun.value = 1;
-    roi.value = withTiming(1, { duration: lao, easing: Easing.in(Easing.quad) }, (finished) => {
-      if (finished) runOnJS(chamXong)();
-    });
-    muc.value = withDelay(lao, withTiming(1, { duration: cham }));
-    lun.value = withDelay(lao, withSequence(withTiming(0.97, { duration: cham }), withSpring(1, motion.spring.press)));
-  }, [dong, motion, roi, muc, lun]);
+  // value so no phase is read through another's curve (`useNhipDau`).
+  const { roi, muc, lun } = useNhipDau(dong);
   const dongXuong = useAnimatedStyle(() => ({
     opacity: 0.25 + 0.75 * muc.value,
     transform: [{ rotate: `${tilt}deg` }, { scale: (1.35 - 0.35 * roi.value) * lun.value }],

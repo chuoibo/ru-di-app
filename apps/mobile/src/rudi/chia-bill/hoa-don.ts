@@ -130,6 +130,25 @@ export function cauSauKhiScanHong(message: string): string {
   return `${message} Bạn có thể nhập món bằng tay.`;
 }
 
+/**
+ * The allocator's warning codes (`WARNINGS` in the domain contract) as the
+ * sentence a person reads: the screen printed the bare code
+ * («zero_share_participants») under the shares. An unknown code still says
+ * something, never nothing and never the code.
+ */
+export function cauCanhBaoChia(code: string): string {
+  switch (code) {
+    case "zero_share_participants":
+      return "Có người trong nhóm không dùng món nào, nên phần của họ là 0đ.";
+    case "advancer_not_participant":
+      return "Người trả bill không dùng món nào: họ chỉ ứng tiền, phần của họ là 0đ.";
+    case "proportional_fallback_to_even":
+      return "Phụ phí được chia đều, vì không chia theo tỉ lệ món được.";
+    default:
+      return "Máy chủ có một ghi chú về cách chia này.";
+  }
+}
+
 /** True when nobody but the user produced these lines: no machine read any of them. */
 function nhapTayHoanToan(reading: BillReading): boolean {
   return reading.lines.every((line) => line.read === null);

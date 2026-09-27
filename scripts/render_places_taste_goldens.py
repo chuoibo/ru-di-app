@@ -1203,6 +1203,11 @@ def random_scoring_place(rng: random.Random, who: taste.TasteProfile) -> dict:
         low_people, high_people = rng.choice(
             ((edge, edge + 5), (edge - 5, edge), (edge, edge))
         )
+        # A size at the int64 edge must not push the band past it: the inputs
+        # stay inside int64, the range the Go types hold. Clamped, not redrawn,
+        # so the random stream -- and every other case -- is unchanged.
+        low_people = max(INT64_MIN, min(INT64_MAX, low_people))
+        high_people = max(INT64_MIN, min(INT64_MAX, high_people))
         place["group_fit"] = {"min_people": low_people, "max_people": high_people}
     elif roll < 0.95:
         low_people = rng.randrange(1, 11)

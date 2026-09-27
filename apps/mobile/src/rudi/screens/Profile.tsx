@@ -21,14 +21,14 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, formatVnd } from "../fixtures";
 import { docSoThich, tomTat, type SoThichSong } from "../nguoi/so-thich-song";
-import { layTaiChinh, tinhTrangNo, type Finance } from "../../screens/ca-nhan/tai-chinh";
+import { ghiChuGioiHan, layTaiChinh, moTaGiaoDich, ngayNgan, tienCoDau, tinhTrangNo, type Finance } from "../../screens/ca-nhan/tai-chinh";
 import { docLoiMoi } from "../../screens/ca-nhan/ban-be";
 import { docDaLuu } from "../kham-pha/dia-diem";
 import { nhanKhoangNgay } from "../../screens/len-plan/buoi-di";
 import { dauLich, homNay, nhanNhip, nhipKeo } from "../keo/nhip-keo";
 import { noiLuu, noiLuuNgan } from "../luu-tru";
 import { useRudiSession } from "../session";
-import { displayFace, typography, useRudiTheme } from "../theme";
+import { displayFace, mucNguoi, typography, useRudiTheme } from "../theme";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { HoSoSong } from "./profile/HoSoSong";
 import {
@@ -47,6 +47,7 @@ import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { Stamp } from "../ui/Stamp";
+import { TrangSo } from "../ui/TrangSo";
 import { useNepNguCanh } from "../nep/NepProvider";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
@@ -348,7 +349,7 @@ export function FinanceScreen() {
  */
 function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: string | null }) {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark, radius } = useRudiTheme();
   const [du, setDu] = useState<Finance | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [lan, setLan] = useState(0);
@@ -388,15 +389,17 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
       </RudiScreen>
     );
   }
+  const gioiHan = ghiChuGioiHan(du.movements);
   return (
     <RudiScreen tone="split" testID="finance-screen">
       <TopBar title="Tài chính của tôi" />
-      {/* The one answer first, as the first line of a ledger: what this person's share of everything has come to. */}
-      <View>
+      {/* The one answer first, as the first line of a ledger: what this
+          person's share of everything has come to, written on the ledger page. */}
+      <TrangSo ke={false} testID="trang-so-tai-chinh">
         <DongTien dam nhan="Phần chi của bạn" phu={`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Tính lại từ sổ mỗi lần mở.`} tone="split" vnd={du.spend_vnd} />
         <DongTien nhan="Còn phải trả" phu={`Đã trả ${formatVnd(du.settled_vnd)}`} tone={du.outstanding_vnd > 0 ? "warn" : "ink"} vnd={du.outstanding_vnd} />
-        <DongTien nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
-      </View>
+        <DongTien cuoi nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
+      </TrangSo>
       <SectionHeader
         action={contextId !== null ? "Xem quyết toán" : undefined}
         onAction={contextId !== null ? () => router.push(("/settlements/" + contextId) as never) : undefined}
@@ -408,6 +411,33 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
           {tinhTrangNo(du).cau} Số này đọc từ sổ cái, không phải số dư ngân hàng.
         </Text>
       </View>
+      {/* What has actually arrived, newest first: the movements the server
+          always sent and the screen never showed. Each one a line on the
+          timeline, dotted in the other person's ink. */}
+      <SectionHeader title="Tiền đã về" />
+      {du.movements.length === 0 ? (
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Chưa có khoản chuyển nào được xác nhận là đã về.</Text>
+      ) : (
+        <View testID="dong-thoi-gian">
+          {du.movements.map((m, i) => (
+            <View key={m.obligation_id} style={styles.mocTien}>
+              <View style={styles.cotMoc}>
+                <View style={[styles.chamMoc, { backgroundColor: mucNguoi(m.counterparty_id, dark), borderColor: colors.card }]} />
+                {i < du.movements.length - 1 ? <View style={[styles.dayMoc, { backgroundColor: colors.line }]} /> : null}
+              </View>
+              <View style={[styles.flex, styles.thanMoc]}>
+                <Text style={[typography.stamp, styles.ngayMoc, { color: colors.inkSoft }]}>{ngayNgan(m.occurred_at)}</Text>
+                <Text style={[typography.body, { color: colors.ink }]}>{moTaGiaoDich(m)}</Text>
+                {m.context_name || m.occasion ? (
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>{[m.occasion, m.context_name].filter(Boolean).join(" · ")}</Text>
+                ) : null}
+              </View>
+              <Text style={[typography.label, styles.soMoc, { color: m.direction === "in" ? colors.split : colors.ink }]}>{tienCoDau(m)}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+      {gioiHan !== null ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{gioiHan}</Text> : null}
     </RudiScreen>
   );
 }
@@ -565,6 +595,13 @@ export function AchievementsScreen() {
 }
 
 const styles = StyleSheet.create({
+  mocTien: { flexDirection: "row", gap: 12, minHeight: 64 },
+  cotMoc: { width: 14, alignItems: "center", paddingTop: 6 },
+  chamMoc: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },
+  dayMoc: { width: 2, flex: 1, marginTop: 4 },
+  thanMoc: { gap: 2, paddingBottom: 16 },
+  ngayMoc: { lineHeight: 18 },
+  soMoc: { fontVariant: ["tabular-nums"], paddingTop: 16 },
   flex: { flex: 1 },
   dem: { minWidth: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", paddingHorizontal: 7 },
   form: { maxWidth: 560 },

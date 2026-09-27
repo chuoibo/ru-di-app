@@ -1770,6 +1770,10 @@ class ApiRepository(Protocol):
         self, context_id: uuid.UUID
     ) -> tuple[PairPaperRecord, ...]: ...
 
+    def adopt_temporary_paper(
+        self, paper_id: uuid.UUID, *, cycle_id: uuid.UUID
+    ) -> None: ...
+
     def update_pair_draft(
         self, paper_id: uuid.UUID, *, content: dict, ly_do: str | None
     ) -> None: ...
@@ -8185,6 +8189,18 @@ class SqlAlchemyApiRepository:
             .order_by(desc(PairPaper.created_at), PairPaper.id)
         ).all()
         return tuple(self._pair_paper_record(paper) for paper in papers)
+
+    def adopt_temporary_paper(
+        self, paper_id: uuid.UUID, *, cycle_id: uuid.UUID
+    ) -> None:
+        """ADR-0038 §2.1: file a temporary sheet under the cycle just opened.
+        Both columns at once, so `paper_temporary_has_no_cycle` holds."""
+        paper = self.session.get(PairPaper, paper_id)
+        if paper is None or not paper.is_temporary:
+            return
+        paper.cycle_id = cycle_id
+        paper.is_temporary = False
+        self.session.flush()
 
     def update_pair_draft(
         self, paper_id: uuid.UUID, *, content: dict, ly_do: str | None

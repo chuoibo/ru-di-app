@@ -58,7 +58,7 @@ test("dòng tóm tắt ở Cá nhân: tên chứ không phải id, và cắt có
   assert.equal(tomTat({ muc: [], khoang: null }), "Chưa chọn");
   assert.equal(tomTat({ muc: ["cafe"], khoang: "vua-phai" }), "Cafe · 100K–250K");
   const nhieu = tomTat({ muc: ["an-uong", "cafe", "nightlife", "outdoor"], khoang: null });
-  assert.equal(nhieu, "Ăn uống, Cafe, Nightlife +1");
+  assert.equal(nhieu, "Ăn uống, Cafe, Chơi đêm +1");
 });
 
 test("chỉ chọn mức chi mà không chọn sở thích vẫn nói được", () => {

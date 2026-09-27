@@ -2716,6 +2716,13 @@ class FakeRepository(SeedCatalogueReads):
             if paper["context_id"] == context_id
         )
 
+    def adopt_temporary_paper(self, paper_id, *, cycle_id):
+        # `is_temporary` is read off `cycle_id` in this fake (`_pair_paper_record`).
+        paper = self.pair_papers.get(paper_id)
+        if paper is None or paper["cycle_id"] is not None:
+            return
+        paper["cycle_id"] = cycle_id
+
     def update_pair_draft(self, paper_id, *, content, ly_do):
         row = self.pair_paper_versions.get((paper_id, 1))
         if row is None:

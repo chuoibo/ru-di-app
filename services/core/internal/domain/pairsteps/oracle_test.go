@@ -900,6 +900,11 @@ func (s *fakeStore) ListPairPapers(contextID string) ([]Paper, error) {
 	return append([]Paper(nil), s.papers...), nil
 }
 
+func (s *fakeStore) AdoptTemporaryPaper(paperID, cycleID string) error {
+	s.rec("adopt_temporary_paper", s.h.name(paperID), s.h.name(cycleID))
+	return nil
+}
+
 func (s *fakeStore) UpdatePairDraft(paperID string, content pairpaper.Content, lyDo *string) error {
 	s.rec("update_pair_draft", s.h.name(paperID), s.h.content(content), optionalText(lyDo))
 	return nil

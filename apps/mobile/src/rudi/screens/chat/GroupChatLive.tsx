@@ -54,7 +54,7 @@ import { chuHangLoiGoi, docLenhAi, lenhSanSang, thuLaiDuoc, type LenhAi } from "
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
-import { bangMauChat, typography, useRudiTheme } from "../../theme";
+import { bangMauChat, mucNguoi, typography, useRudiTheme } from "../../theme";
 import { IconButton, RudiButton } from "../../ui";
 import { useMotion } from "../../ui/useMotion";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -73,6 +73,7 @@ import { useToHenChung } from "../../chat/useToHenChung";
 import { docKhoiNhap } from "../../chat/to-hen-chung";
 import { Nep } from "../../ui/art/Nep";
 import { useNepNguCanh } from "../../nep/NepProvider";
+import { KHONG_VIEN_WEB } from "../../ui/khong-vien-web";
 
 const LENH = [
   { nhan: "/plan", goiY: "/plan tối nay đi đâu?", moTa: "Rủ Đi AI phác lịch trình" },
@@ -594,7 +595,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         ) : null}
         <View style={[styles.khoi, cuaToi && !laAi && styles.khoiToi, laAi && styles.khoiAi]}>
           {!cuaToi && !laAi && dauChuoi ? (
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
+            // The sender in their own ink (ADR-0037 D6): the same colour as their avatar ring.
+            <Text style={[typography.caption, { color: tin.author_id ? mucNguoi(tin.author_id, dark) : colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
           ) : null}
           {/* The quote sits ABOVE the bubble, in the block, never in the
               flex-wrapped row under it: a lone Text at the end of a wrapping
@@ -723,10 +725,18 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           {changes.connection === "recovering" ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>· Đang nối lại</Text> : null}
         </View>
       </View>
-      {toHen ? <ToHen tin={toHen} onOpen={moToHen} onVote={(tin) => {
-        const index = hang.findIndex((row) => row.loai === "tin" && row.tin.id === tin.id);
-        if (index >= 0) danhSachRef.current?.scrollToIndex({ index, animated: !reduced, viewPosition: 0.5 });
-      }} /> : null}
+      {/* B2 (QC 24/09): the pinned sheet sits on its own solid band with a rule
+          under it, so the thread visibly starts below it. On the bare ground
+          with margins round it, a bubble clipped at the list's top edge read as
+          a bubble cut by the bar. */}
+      {toHen ? (
+        <View style={[styles.dayGhim, { backgroundColor: colors.ground, borderBottomColor: colors.line }]} testID="day-ghim">
+          <ToHen tin={toHen} onOpen={moToHen} onVote={(tin) => {
+            const index = hang.findIndex((row) => row.loai === "tin" && row.tin.id === tin.id);
+            if (index >= 0) danhSachRef.current?.scrollToIndex({ index, animated: !reduced, viewPosition: 0.5 });
+          }} />
+        </View>
+      ) : null}
       {/* Drawn outside the inverted list: the list flips its own children
           back upright, and an extra flip here once mirrored this copy. */}
       {!chat.dangNap && chat.tin.length === 0 && dangGuiThan === null && chat.hangCho.length === 0 ? (
@@ -961,7 +971,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             placeholder={nhanRieng ? `Nhắn cho ${tenNhom}` : "Nhắn cho hội…"}
             placeholderTextColor={colors.inkSoft}
             selectionColor={colors.accentSoft}
-            style={[typography.body, styles.oNhap, { color: colors.ink }]}
+            style={[typography.body, styles.oNhap, { color: colors.ink }, KHONG_VIEN_WEB]}
             value={nhap}
           />
           <IconButton
@@ -1018,6 +1028,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
 }
 
 const styles = StyleSheet.create({
+  dayGhim: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 4, zIndex: 1 },
   chatHeader: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 64 },
   headerIdentity: { flex: 1, minHeight: 48, justifyContent: "center", gap: 3, paddingHorizontal: 4 },
   moLoi: { alignItems: "center", gap: 6 },

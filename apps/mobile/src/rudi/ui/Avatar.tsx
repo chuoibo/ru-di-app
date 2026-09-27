@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-na
 
 import { chuDau } from "../../screens/ca-nhan/ban-be";
 import { MOTION_MS } from "../motion";
-import { typography, useRudiTheme, type RudiTone } from "../theme";
+import { mucNguoi, typography, useRudiTheme, type RudiTone } from "../theme";
 
 export interface AvatarProps {
   name: string;
@@ -15,6 +15,12 @@ export interface AvatarProps {
   tone?: RudiTone;
   /** The frame could not load its photograph; the caller drops back to initials. */
   onError?: () => void;
+  /**
+   * Who this is (ADR-0037 D6): the ring and the initial take the person's own
+   * ink, the same on every screen. Without it the avatar keeps the screen's
+   * tone, as before.
+   */
+  personId?: string | null;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -22,29 +28,33 @@ export interface AvatarProps {
 /**
  * A person, at any size. Photo when the person uploaded one (M8), initials
  * otherwise -- never a stock face, never a photo of a real person that did not
- * come from them. Colour is deliberately *not* per person: in this product a
- * colour names a part of the app (orange = action, teal = money, violet = AI),
- * so an avatar palette keyed to people would give each friend a meaning they
- * do not have. The tint is the screen's tone; identity is the letter or the
- * photo.
+ * come from them. With `personId` (ADR-0037 D6, which replaced the old «colour
+ * is not per person» rule) the ring and the initial are the person's own ink:
+ * eight inks, each 30 degrees of hue away from the three meaning tones, so a
+ * group of eight stops reading as eight identical coral circles. Without it,
+ * the tint is still the screen's tone.
  */
-export function Avatar({ name, source = null, size = 44, ring = false, tone = "accent", onError, style, testID }: AvatarProps) {
-  const { colors } = useRudiTheme();
-  const soft = tone === "accent" ? colors.accentSoft : tone === "split" ? colors.splitSoft : colors.aiSoft;
-  const ink = colors[tone];
+export function Avatar({ name, source = null, size = 44, ring = false, tone = "accent", onError, personId, style, testID }: AvatarProps) {
+  const { colors, dark } = useRudiTheme();
+  const mucRieng = personId ? mucNguoi(personId, dark) : null;
+  const soft = mucRieng ? colors.card : tone === "accent" ? colors.accentSoft : tone === "split" ? colors.splitSoft : colors.aiSoft;
+  const ink = mucRieng ?? colors[tone];
+  // The photograph comes from `AvatarNguoi` (the one live photo path, with its
+  // refusal memory); this frame only draws what it is handed.
+  const nguon = source;
   const frame: ViewStyle = {
     width: size,
     height: size,
     borderRadius: size / 2,
     backgroundColor: soft,
-    borderWidth: 2,
-    borderColor: ring ? ink : colors.card,
+    borderWidth: mucRieng ? (ring ? 3 : 2) : 2,
+    borderColor: mucRieng ? ink : ring ? ink : colors.card,
   };
   return (
     <View accessibilityLabel={name} testID={testID} style={[styles.center, frame, style]}>
-      {source ? (
+      {nguon ? (
         <Image
-          source={source}
+          source={nguon}
           onError={onError}
           contentFit="cover"
           transition={MOTION_MS.standard}
@@ -55,6 +65,23 @@ export function Avatar({ name, source = null, size = 44, ring = false, tone = "a
           {chuDau(name)}
         </Text>
       )}
+    </View>
+  );
+}
+
+/**
+ * A person as a paper standee (ADR-0037 D1, D6): the avatar as a head on a
+ * cut-paper body in the person's ink, standing on a small base -- how people
+ * appear around the bill table and in scenes. The name is the label.
+ */
+export function HinhNhan({ name, personId, size = 44, ring = false, style, testID }: { name: string; personId: string; size?: number; ring?: boolean; style?: StyleProp<ViewStyle>; testID?: string }) {
+  const { colors, dark } = useRudiTheme();
+  const muc = mucNguoi(personId, dark);
+  return (
+    <View accessibilityLabel={name} accessible style={[styles.nhan, { width: size * 1.3 }, style]} testID={testID}>
+      <Avatar name={name} personId={personId} ring={ring} size={size} style={styles.dauNhan} />
+      <View style={[styles.than, { width: size * 0.9, height: size * 0.55, borderTopLeftRadius: size * 0.45, borderTopRightRadius: size * 0.45, borderColor: muc, backgroundColor: colors.card, marginTop: -size * 0.12 }]} />
+      <View style={[styles.de, { width: size * 1.2, backgroundColor: colors.paperShade }]} />
     </View>
   );
 }
@@ -94,4 +121,8 @@ export function AvatarStack({ people, size = 32, max = 4, tone = "accent", style
 const styles = StyleSheet.create({
   center: { alignItems: "center", justifyContent: "center", overflow: "hidden" },
   row: { flexDirection: "row", alignItems: "center" },
+  nhan: { alignItems: "center" },
+  dauNhan: { zIndex: 1 },
+  than: { borderWidth: 2, borderBottomWidth: 0 },
+  de: { height: 4, borderRadius: 2 },
 });

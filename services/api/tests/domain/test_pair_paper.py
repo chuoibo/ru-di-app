@@ -290,7 +290,7 @@ def test_gu_mot_nguoi_khong_co_cho_thi_chi_dat_ten_chang():
     dau = ra["content"]["chang"][0]
     assert dau.get("place_id") is None
     assert dau["viec"] == "Đi chơi tối", "outdoor không có loại chỗ, nên dùng nightlife"
-    assert "Minh thích Nightlife, nên Nếp phác theo đó." in ra["ly_do"]
+    assert "Minh thích Chơi đêm, nên Nếp phác theo đó." in ra["ly_do"]
     assert ra["nguon"]["dung"][-1] == f"gu:{B}"
 
 

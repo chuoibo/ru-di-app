@@ -615,6 +615,23 @@ func (r Repository) AddPaperKeep(ctx context.Context, paperID, personID, line st
 	return PairKeep{ID: id, PersonID: personID, Line: line, CreatedAt: created.UTC()}, nil
 }
 
+// AdoptTemporaryPaper is adopt_temporary_paper (ADR-0038 §2.1): the paper by
+// id, the bare row as session.get reads it (no versions, views or responses);
+// nothing for a missing paper or one already filed under a cycle; otherwise
+// cycle_id and is_temporary=false in one UPDATE, so
+// paper_temporary_has_no_cycle holds.
+func (r Repository) AdoptTemporaryPaper(ctx context.Context, paperID, cycleID string) error {
+	paper, err := scanPairPaper(r.Q.QueryRow(ctx, `SELECT `+pairPaperLabelled+`
+		   FROM pair_papers
+		  WHERE pair_papers.id = $1::UUID`, paperID))
+	if err != nil || paper == nil || !paper.IsTemporary {
+		return err
+	}
+	return r.updateRow(ctx, "pair_papers",
+		[]column{{"cycle_id", "::UUID", cycleID}, {"is_temporary", "", false}},
+		[]column{{"id", "::UUID", paperID}})
+}
+
 // PairPaperCloseCounts is close_open_pair_papers' dict, keys "bo" then "huy".
 type PairPaperCloseCounts struct {
 	Bo, Huy int64

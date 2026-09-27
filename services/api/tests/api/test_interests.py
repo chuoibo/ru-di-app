@@ -44,7 +44,24 @@ def test_the_vocabulary_is_public(client):
         "tiet-kiem",
         "vua-phai",
         "thoai-mai",
+        "rong-tay",
     ]
+
+
+def test_the_top_band_has_no_ceiling_and_round_trips(client, repository):
+    """ADR-0038 §2.5: «Trên 500K» starts where the old top band ended and has
+    no ceiling, so nobody who spends more is made to pick a wrong band."""
+    bands = {b["id"]: b for b in client.get("/interests").json()["budget_bands"]}
+    assert bands["rong-tay"]["min_vnd"] == bands["thoai-mai"]["max_vnd"] == 500_000
+    assert bands["rong-tay"]["max_vnd"] is None
+    _seed(repository)
+    written = client.put(
+        "/people/me/interests",
+        json={"interests": [], "budget_band": "rong-tay"},
+        headers=_as(ME),
+    )
+    assert written.status_code == 200, written.text
+    assert client.get("/people/me", headers=_as(ME)).json()["budget_band"] == "rong-tay"
 
 
 def test_budget_bands_travel_as_two_integers(client):
