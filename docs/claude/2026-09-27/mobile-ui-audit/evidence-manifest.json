@@ -1,0 +1,132 @@
+{
+ "EV-F00-CREATE-LANH-C1": {
+  "bytes": 145881,
+  "sha8": "3614f29d",
+  "moTa": "UI-010: mở lạnh /create trên web, rơi về Khám phá không có khay (C1)"
+ },
+ "EV-F00-DT-dalat-0-la": {
+  "bytes": 202697,
+  "sha8": "749785cd",
+  "moTa": "UI-002: người đã đăng nhập mở URL lạ thấy bìa Welcome (C1)"
+ },
+ "EV-F00-DT-la-cta-C1": {
+  "bytes": 135092,
+  "sha8": "3397acf4",
+  "moTa": "UI-002: bấm «Rủ Đi thôi!» dẫn tới Đăng nhập dù phiên còn (C1)"
+ },
+ "EV-F00-KT-back-aria-C1": {
+  "bytes": 161634,
+  "sha8": "2c21522f",
+  "moTa": "UI-005: sau khi đóng khay tạo bằng Back, phần tử bọc cả màn Khám phá và thanh tab còn aria-hidden=true (C1)"
+ },
+ "EV-F00-KT-cham-dup-C1": {
+  "bytes": 123609,
+  "sha8": "1b22e4ab",
+  "moTa": "UI-006: chạm «+» hai lần cách 60 ms, chạm thứ hai mở nhầm «Rủ một người đi chơi» (C1)"
+ },
+ "EV-F00-KT-mo-C1": {
+  "bytes": 93119,
+  "sha8": "02cc5efb",
+  "moTa": "Khay tạo mở ở C1 (baseline; UI-008 thứ tự Tab)"
+ },
+ "EV-F00-KT-mo-C2": {
+  "bytes": 64825,
+  "sha8": "afa6176c",
+  "moTa": "UI-007: khay tạo ở 320×640 cao 92% (C2)"
+ },
+ "EV-F00-KT-mo-C7": {
+  "bytes": 319227,
+  "sha8": "7323ada2",
+  "moTa": "Khay tạo trên tablet 1024×1366 tối (C7)"
+ },
+ "EV-F00-KT-mo-C8": {
+  "bytes": 48576,
+  "sha8": "90f561bc",
+  "moTa": "UI-007: khay tạo ở cửa sổ 390×460 cao 96% (C8)"
+ },
+ "EV-F00-M1-lan1-C1": {
+  "bytes": 219360,
+  "sha8": "105f1c89",
+  "moTa": "L04: M1 trong khay tạo, lần mở đầu trong phiên (chưa kết luận được)"
+ },
+ "EV-F00-M1-lan2-C1": {
+  "bytes": 276284,
+  "sha8": "695e3dd3",
+  "moTa": "L04: M1 trong khay tạo, lần mở thứ hai trong phiên (chưa kết luận được)"
+ },
+ "EV-F00-MO01-push-C1": {
+  "bytes": 150936,
+  "sha8": "b647ec00",
+  "moTa": "UI-015 và MO01: khung hình Cá nhân → Cài đặt; web cắt thẳng; Cài đặt nháy «Bạn/B» và công tắc lật (C1)"
+ },
+ "EV-F00-MO04-dong-khay-C1": {
+  "bytes": 167885,
+  "sha8": "d59c357c",
+  "moTa": "UI-013: khung hình đóng khay tạo, panel còn lộ ở khung cuối rồi biến mất (C1)"
+ },
+ "EV-F00-MO04-mo-khay-C1": {
+  "bytes": 307867,
+  "sha8": "ad9c30ea",
+  "moTa": "MO03/MO04: khung hình mở khay tạo (C1)"
+ },
+ "EV-F00-NEP-BANG-C1": {
+  "bytes": 102425,
+  "sha8": "b522849c",
+  "moTa": "UI-012: bảng Nếp, chip gợi ý cao 36dp (C1)"
+ },
+ "EV-F00-NEP-BANG-C8": {
+  "bytes": 59850,
+  "sha8": "c3b27a24",
+  "moTa": "Bảng Nếp ở cửa sổ thấp, ô hỏi vẫn trong màn (C8)"
+ },
+ "EV-F00-NEP-CHE-CHIP-C2": {
+  "bytes": 94441,
+  "sha8": "3ff283c2",
+  "moTa": "UI-014: mép Nếp đè chữ chip ở 320×640 (C2)"
+ },
+ "EV-F00-NEP-VE-C1": {
+  "bytes": 103552,
+  "sha8": "2d348a28",
+  "moTa": "UI-011: bảng Nếp sau khi bấm «Vẽ» trên web, không có phản hồi (C1)"
+ },
+ "EV-F00-NEP-mep-C1": {
+  "bytes": 145881,
+  "sha8": "3614f29d",
+  "moTa": "Mép Nếp khi nghỉ ở Khám phá, lộ 10dp (C1)"
+ },
+ "EV-F00-RAIL-chibao-cat": {
+  "bytes": 48302,
+  "sha8": "c5fd10a9",
+  "moTa": "UI-004: rail ở 768dp, vạch chỉ báo lệch khỏi tab Lên plan / Tin nhắn / Cá nhân"
+ },
+ "EV-F00-RESUME-CHAM-1800ms-C1": {
+  "bytes": 19726,
+  "sha8": "a5dae17a",
+  "moTa": "UI-009: /plan lúc 1,8 s khi khôi phục phiên bị trễ 5 s: vùng nội dung trống (C1)"
+ },
+ "EV-F00-TAB-ghep-a": {
+  "bytes": 221550,
+  "sha8": "e89d7318",
+  "moTa": "Baseline thanh tab ở C1, C2, C3, biên 599, biên 600 (Khám phá)"
+ },
+ "EV-F00-TAB-ghep-b": {
+  "bytes": 223331,
+  "sha8": "9d888e93",
+  "moTa": "Baseline rail ở C6, biên 839, biên 840, C7 (Khám phá)"
+ },
+ "EV-F00.S01-BASE-ghep": {
+  "bytes": 165496,
+  "sha8": "73046663",
+  "moTa": "Baseline Welcome khi chưa đăng nhập ở C1, C2, C3"
+ },
+ "EV-F01-O-NHAP-44-C1": {
+  "bytes": 143787,
+  "sha8": "f614a1ec",
+  "moTa": "UI-001: ô số điện thoại cao 44dp ở Đăng nhập (C1)"
+ },
+ "EV-F01.S02-BASE-ghep": {
+  "bytes": 142565,
+  "sha8": "ce3fe306",
+  "moTa": "Baseline Đăng nhập ở C1, C2, C3"
+ }
+}
