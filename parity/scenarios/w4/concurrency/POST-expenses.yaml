@@ -58,7 +58,7 @@ steps:
         idempotency-key: 'c-exp-same'
         content-type: 'application/json'
       body_raw: '{"context_id":"{{ctx}}","description":"Cùng lúc (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"],"total_amount_vnd":10002}'
-  # the anonymous scope, keyed by this run's group id
+  # anonymous: every one of the burst is 401 (keyed by this run's group id)
   - id: anonymous_same_key_burst
     as: anonymous
     concurrent: 3

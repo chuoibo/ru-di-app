@@ -187,10 +187,16 @@ def test_a_second_member_may_not_rename_somebody_who_already_has_a_name(
     service = _service(postgres_session)
     service.register_person(friend, "Quyên", _actor(uuid.uuid4()))
 
-    with pytest.raises(ApiProblem) as raised:
-        service.register_person(friend, "Kẻ giả danh", _actor(uuid.uuid4()))
+    # The second member is a stranger to this person (no friend edge, no
+    # shared group). A stranger is not told whether their words match the
+    # stored name -- a phone-derived id must not confirm a guessed name -- so
+    # the answer is their own words back. What the guest page reads is what
+    # must not move, and it does not.
+    record, created = service.register_person(friend, "Kẻ giả danh", _actor(uuid.uuid4()))
 
-    assert raised.value.status_code == 403
+    assert created is False
+    assert record.display_name == "Kẻ giả danh"
+    postgres_session.expire_all()
     assert postgres_session.get(Person, friend).display_name == "Quyên"
 
 

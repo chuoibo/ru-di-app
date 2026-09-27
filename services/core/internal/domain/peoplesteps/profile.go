@@ -204,8 +204,10 @@ func GetPersonProfile(s Store, actor Actor, personID string) (PublicPerson, erro
 
 // RegisterPerson is register_person (PUT /people/{person_id}): the record, and
 // whether it was created. An ended account is 404; an id with no row is
-// created by any member; the same name again is the existing row with no
-// permission asked; a different name is a rename only the person may make.
+// created by any member; a caller who is not the person, a friend or a
+// groupmate gets their own words back and nothing written (no confirming a
+// guessed name); otherwise the same name again is the existing row with no
+// permission asked, and a different name is a rename only the person may make.
 // The name is compared exactly, as `==` compares str.
 func RegisterPerson(s Store, actor Actor, personID, displayName string) (Person, bool, error) {
 	existing, err := s.GetPerson(personID)
@@ -227,6 +229,25 @@ func RegisterPerson(s Store, actor Actor, personID, displayName string) (Person,
 			return Person{}, false, err
 		}
 		return record, true, nil
+	}
+	knows := actor.ID == personID
+	if !knows {
+		if knows, err = s.AreFriends(actor.ID, personID); err != nil {
+			return Person{}, false, err
+		}
+	}
+	if !knows {
+		if knows, err = s.ShareActiveContext(actor.ID, personID); err != nil {
+			return Person{}, false, err
+		}
+	}
+	if !knows {
+		// A stranger gets one answer however a guessed name compares: their
+		// own words back, nothing written. «same: 200 / other: 403» confirmed
+		// the real name behind a phone-derived id.
+		echo := *existing
+		echo.DisplayName = displayName
+		return echo, false, nil
 	}
 	if existing.DisplayName == displayName {
 		return *existing, false, nil

@@ -9,6 +9,7 @@ import secrets
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -166,12 +167,12 @@ from app.api.schemas import (
     PairConstraintPutRequest,
     PairConstraintResponse,
     PairNotebookResponse,
+    PairProposalCreateRequest,
+    PairProposalResponse,
     PairRoleScoreResponse,
     PairTasteResponse,
     PairWeekRoleRequest,
     PairWeekRoleResponse,
-    PairProposalCreateRequest,
-    PairProposalResponse,
     PaperCommandResponse,
     PaperContent,
     PaperContentInput,
@@ -1346,6 +1347,19 @@ class ApiService:
                 raise ApiProblem(
                     409, exc.code.lower(), "Person identity conflicted"
                 ) from exc
+        knows = (
+            actor.id == person_id
+            or self.repository.are_friends(actor.id, person_id)
+            or self.repository.share_active_context(actor.id, person_id)
+        )
+        if not knows:
+            # A person id is derivable from a phone number by anyone. For a
+            # stranger, «same name: 200 / other name: 403» confirmed a guessed
+            # real name behind a number. So a stranger gets one answer however
+            # the guess compares: their own words back, and nothing written.
+            # That is also what the inviter who first named a not-yet-signed-up
+            # friend gets when retrying, which is why it is 200 and not 403.
+            return replace(existing, display_name=display_name), False
         if existing.display_name == display_name:
             # A retry is not an attempt to change anything, and answering 403
             # to a client's own retry makes a dropped response look like an
@@ -4606,15 +4620,38 @@ class ApiService:
             len(report.storage_keys),
         )
 
+    def _reachable_person(self, actor_id: uuid.UUID, person_id: uuid.UUID):
+        """Whether `person_id` is somebody this actor may act on, and the edge.
+
+        A person id is derivable from a phone number by anyone
+        (`POST /identity/person-id`). If block and friend-request answered 404
+        for «no such person» and something else for everybody else, any
+        signed-in caller could learn whether a number has an account -- and,
+        through the friend request's echo, whose name it carries -- straight
+        past `discoverable_by_phone`, the one switch a person has for exactly
+        this. So a person is reachable only when they said they may be found
+        by number, or the two already have a friend edge in any state (a
+        pending request is how a stranger reaches you, and is what blocking
+        must still work on), or they share an active group. Anyone else
+        answers exactly like an id nobody holds.
+        """
+        person = self.repository.get_person(person_id)
+        if person is None or person.deleted_at is not None:
+            return False, None
+        edge = self.repository.get_friend_edge(actor_id, person_id)
+        if person.discoverable_by_phone or edge is not None:
+            return True, edge
+        return self.repository.share_active_context(actor_id, person_id), edge
+
     def block_person(self, person_id: uuid.UUID, actor: Actor) -> BlockResponse:
         """Block somebody (ADR-0023 §2.3). Idempotent: blocking twice is the
         same wall, answered 200, not an error."""
         _require_permission(
             "block_person", actor, {"is_not_self": actor.id != person_id}
         )
-        if self.repository.get_person(person_id) is None:
+        reachable, edge = self._reachable_person(actor.id, person_id)
+        if not reachable:
             raise ApiProblem(404, "person_not_found", "Chưa có ai mang danh tính này.")
-        edge = self.repository.get_friend_edge(actor.id, person_id)
         try:
             open_block(
                 blocker_id=str(actor.id),
@@ -6113,11 +6150,24 @@ class ApiService:
             excluded_member_ids=excluded_member_ids,
         )
 
-    def propose_expense(self, proposal: ExpenseInput) -> ExpenseProposalResponse:
+    def propose_expense(
+        self, proposal: ExpenseInput, actor: Actor
+    ) -> ExpenseProposalResponse:
         try:
             allocation_result = allocate(_allocator_input(proposal))
         except AllocationError as exc:
             raise ApiProblem(422, exc.code, "Expense cannot be allocated") from exc
+        # A proposal writes an `expenses` row into the named group, so the
+        # caller must be signed in and a member of it -- the same gate the
+        # confirmation and bill creation already use. Before this, any caller,
+        # anonymous included, could write rows into any group and learn from
+        # 201-versus-404 whether a group id exists; a group that does not exist
+        # now answers like one the caller is not in.
+        _require_permission(
+            "confirm_expense_proposal",
+            actor,
+            {"is_group_member": self.repository.is_member(proposal.context_id, actor.id)},
+        )
         try:
             identity = self.repository.create_expense(proposal.context_id)
         except RepositoryConflict as exc:
@@ -6814,10 +6864,10 @@ class ApiService:
             actor,
             {"is_not_self": actor.id != addressee_id},
         )
-        if self.repository.get_person(addressee_id) is None:
+        reachable, existing = self._reachable_person(actor.id, addressee_id)
+        if not reachable:
             raise ApiProblem(404, "person_not_found", "Chưa có ai mang danh tính này.")
 
-        existing = self.repository.get_friend_edge(actor.id, addressee_id)
         try:
             open_friendship_request(
                 requester_id=str(actor.id),

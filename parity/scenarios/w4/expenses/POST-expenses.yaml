@@ -1,8 +1,9 @@
 # W4 · POST /expenses — allocate a proposal and create the expense identity.
-# No actor dependency: anyone, anonymous included, may propose. Order: the
-# idempotency key, JSON and body validation, the allocator (422 with the domain
-# code in capitals), then the expenses row (404 when the context does not
-# exist). Nothing reaches the ledger: one expenses row per 201.
+# The actor is required and must be a member of the named group. Order: the
+# idempotency key, JSON and body validation with the actor (401 without one),
+# the allocator (422 with the domain code in capitals), confirm_expense_proposal
+# membership (403, also for a group that does not exist), then the expenses row
+# (404 only if the group vanishes between the check and the write). Nothing reaches the ledger: one expenses row per 201.
 # Amounts are integer VND; texts are sample data (dữ liệu mẫu).
 id: w4/expenses/post-expenses
 routes: ['POST /expenses']
@@ -29,7 +30,7 @@ steps:
       body_raw: '{"display_name":"Nhóm đề xuất chi (dữ liệu mẫu)"}'
     bind:
       ctx: {from: body, pointer: /id, class: uuid}
-  # no actor at all, and still 201: the route has no get_actor
+  # no actor at all: 401 -- a proposal writes into the group
   - id: anonymous_even_split_remainder
     as: anonymous
     request:
@@ -438,7 +439,8 @@ steps:
         idempotency-key: 'w4-exp-c'
         content-type: 'application/json'
       body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
-  # anonymous callers share one key scope, so the key carries this run's group id
+  # anonymous callers are 401 now; a refused request releases its key, so the
+  # «replay» is refused afresh (the key carries this run's group id)
   - id: anonymous_key_first
     as: anonymous
     request:

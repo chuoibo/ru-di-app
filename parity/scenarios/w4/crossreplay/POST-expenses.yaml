@@ -158,7 +158,8 @@ steps:
         idempotency-key: 'x-exp-d'
         content-type: 'application/json'
       body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":2000}'
-  # the anonymous scope crosses implementations too
+  # an anonymous proposal is 401 on both sides, and a refusal stores no key
+  # to cross implementations: the replay is refused afresh, not replayed
   - id: python_stores_anonymous_key
     as: anonymous
     via: python

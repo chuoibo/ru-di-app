@@ -32,16 +32,30 @@ func sendFriendRequest() Route {
 			return endpoint.Reply{}, err
 		}
 		store := repo.Repository{Q: tx}
+		// peoplesteps.ReachablePerson's rule, in its statement order: an
+		// addressee who is hidden from being found by number and has no edge
+		// or shared group with the caller answers exactly like an id nobody
+		// holds, so a phone-derived id cannot tell whether a number has an
+		// account, nor (through the 201's echo) whose name it carries.
 		person, err := store.GetPerson(ctx, addresseeID)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		if person == nil {
+		if person == nil || person.DeletedAt != nil {
 			return endpoint.Reply{}, endpoint.Refuse(404, "person_not_found", "Chưa có ai mang danh tính này.")
 		}
 		existing, err := store.GetFriendEdge(ctx, call.Actor.ID, addresseeID)
 		if err != nil {
 			return endpoint.Reply{}, err
+		}
+		if !person.DiscoverableByPhone && existing == nil {
+			shared, err := store.ShareActiveContext(ctx, call.Actor.ID, addresseeID)
+			if err != nil {
+				return endpoint.Reply{}, err
+			}
+			if !shared {
+				return endpoint.Reply{}, endpoint.Refuse(404, "person_not_found", "Chưa có ai mang danh tính này.")
+			}
 		}
 		var existingEdge *friendship.Edge
 		if existing != nil {

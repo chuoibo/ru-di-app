@@ -34,7 +34,7 @@ STRANGER_ID = uuid.UUID("9ee00000-eeee-4eee-8eee-0000e0000009")
 
 def _propose_and_confirm(client, participants):
     proposed = client.post(
-        "/expenses", json=expense_payload(participants=participants)
+        "/expenses", headers=actor_headers(), json=expense_payload(participants=participants)
     ).json()
     return client.post(
         f"/expenses/{proposed['expense_id']}/confirm",

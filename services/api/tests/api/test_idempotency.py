@@ -38,7 +38,7 @@ from app.api.idempotency import (
 from app.api.main import create_app
 
 from .conftest import ASGITestClient
-from .helpers import actor_headers, expense_payload
+from .helpers import actor_headers, expense_payload, join_group
 
 KEY = "1de11111-aaaa-4aaa-8aaa-0000a0000001"
 
@@ -105,7 +105,9 @@ def client(repository, store, monkeypatch):
 
 
 def _key_headers(key=KEY, **extra):
-    return {IDEMPOTENCY_HEADER: key, **extra}
+    # POST /expenses needs a signed-in member; the actor comes first so a
+    # test that passes its own actor headers still overrides it.
+    return {**actor_headers(), IDEMPOTENCY_HEADER: key, **extra}
 
 
 def test_the_same_key_replays_the_first_response_and_writes_once(client, repository):
@@ -142,8 +144,8 @@ def test_the_same_key_with_a_different_payload_is_refused(client, repository):
 def test_a_request_without_the_header_is_left_alone(client, repository):
     payload = expense_payload()
 
-    first = client.post("/expenses", json=payload)
-    second = client.post("/expenses", json=payload)
+    first = client.post("/expenses", headers=actor_headers(), json=payload)
+    second = client.post("/expenses", headers=actor_headers(), json=payload)
 
     assert first.status_code == 201, first.text
     assert second.status_code == 201, second.text
@@ -185,7 +187,11 @@ def test_a_rejected_request_releases_the_key_so_a_real_retry_can_run(client, sto
 def test_the_key_is_scoped_to_the_actor(client, repository):
     payload = expense_payload()
     mine = actor_headers()
-    theirs = actor_headers(actor_id=uuid.UUID("5ee00000-eeee-4eee-8eee-0000e0000001"))
+    other = uuid.UUID("5ee00000-eeee-4eee-8eee-0000e0000001")
+    theirs = actor_headers(actor_id=other)
+    # Both are members: POST /expenses now requires it, and the point here is
+    # that two permitted people never share a key's answer.
+    join_group(repository, other)
 
     first = client.post("/expenses", json=payload, headers=_key_headers(**mine))
     second = client.post("/expenses", json=payload, headers=_key_headers(**theirs))
@@ -279,8 +285,11 @@ def test_every_write_route_consults_the_store(client, store):
         # reached the store at all.
         path = placeholder.sub(str(uuid.uuid4()), template)
         store.reservations.clear()
+        # Anonymous on purpose: the store must be consulted before any
+        # handler (or its auth) runs, and an actor would lead some handlers
+        # into repository methods the fake does not implement.
         client.request(
-            method, path, json={}, headers=_key_headers(key=str(uuid.uuid4()))
+            method, path, json={}, headers={IDEMPOTENCY_HEADER: str(uuid.uuid4())}
         )
         assert store.reservations, f"{method} {template} bypassed the idempotency store"
 

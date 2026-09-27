@@ -364,7 +364,7 @@ def test_posting_the_same_expense_twice_with_one_key_writes_one_row(live_client)
     context_id = uuid.uuid4()
     live_client.seed_group(context_id)
     payload = _expense_payload() | {"context_id": str(context_id)}
-    headers = {IDEMPOTENCY_HEADER: str(uuid.uuid4())}
+    headers = _actor_headers(context_id) | {IDEMPOTENCY_HEADER: str(uuid.uuid4())}
 
     first = live_client.post("/expenses", json=payload, headers=headers)
     second = live_client.post("/expenses", json=payload, headers=headers)
@@ -544,7 +544,7 @@ def test_two_presses_racing_on_real_postgres_both_receive_the_one_answer(
 def test_reusing_a_key_with_another_payload_writes_nothing(live_client):
     context_id = uuid.uuid4()
     live_client.seed_group(context_id)
-    headers = {IDEMPOTENCY_HEADER: str(uuid.uuid4())}
+    headers = _actor_headers(context_id) | {IDEMPOTENCY_HEADER: str(uuid.uuid4())}
 
     first = live_client.post(
         "/expenses",
@@ -581,7 +581,9 @@ def _confirm_body(proposed: dict) -> dict:
 
 def _propose(live_client, context_id: uuid.UUID) -> dict:
     response = live_client.post(
-        "/expenses", json=_expense_payload() | {"context_id": str(context_id)}
+        "/expenses",
+        json=_expense_payload() | {"context_id": str(context_id)},
+        headers=_actor_headers(context_id),
     )
     assert response.status_code == 201, response.text
     return response.json()

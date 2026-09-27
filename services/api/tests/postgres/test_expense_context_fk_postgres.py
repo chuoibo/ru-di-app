@@ -45,6 +45,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.deps import Actor
 from app.api.errors import ApiProblem, RepositoryConflict
 from app.api.repository import SqlAlchemyApiRepository
 from app.api.schemas import ExpenseInput
@@ -235,25 +236,25 @@ def test_deleting_a_group_that_still_holds_money_is_refused(
         postgres_session.flush()
 
 
-def test_naming_a_group_that_does_not_exist_is_refused_in_words(
+def test_naming_a_group_that_does_not_exist_is_refused_like_a_group_one_is_not_in(
     postgres_session: Session,
 ) -> None:
-    """A foreign key answers correctly, but it answers in the wrong voice.
+    """A group nobody created answers exactly like a group the caller is not in.
 
-    `propose_expense` takes `context_id` straight from the request body and
-    writes it. Before the key, a group nobody created was accepted in silence.
-    With the key and nothing else, the same request becomes a
-    `ForeignKeyViolation` escaping the service as a 500 -- the client is told
-    the server broke, when what happened is that they named something that is
-    not there.
+    `propose_expense` takes `context_id` from the request body. It used to take
+    anyone, anonymous included, and answer 404 `context_not_found` when the
+    group was missing -- which told a stranger which group ids exist, and let
+    them write rows into any group that did. It now requires a signed-in member
+    of the named group before anything is written, so a missing group is a 403
+    `permission_denied` and nothing reaches `expenses`.
 
-    So the service asks first. The database keeps the constraint, because the
-    check and the write are not one transaction and a group can be deleted
-    between them; this only decides which of the two speaks to the caller.
+    The foreign key and its 404 translation stay: the membership check and the
+    write are not one transaction, and a group can be deleted between them.
     """
 
     service = ApiService(SqlAlchemyApiRepository(postgres_session))
     payer = _person(postgres_session, "Trang")
+    actor = Actor(id=payer.id, roles=frozenset({"member"}), context_ids=frozenset())
 
     with pytest.raises(ApiProblem) as caught:
         service.propose_expense(
@@ -265,11 +266,19 @@ def test_naming_a_group_that_does_not_exist_is_refused_in_words(
                 occurred_at=NOW,
                 participants=[payer.id],
                 total_amount_vnd=90_000,
-            )
+            ),
+            actor,
         )
 
-    assert caught.value.status_code == 404
-    assert caught.value.code == "context_not_found"
+    assert caught.value.status_code == 403
+    assert caught.value.code == "permission_denied"
+    assert (
+        postgres_session.scalar(
+            text("SELECT count(*) FROM expenses WHERE context_id = :c"),
+            {"c": DEMO_ORPHAN_CONTEXT_ID},
+        )
+        == 0
+    )
 
 
 def test_an_expense_for_a_real_group_is_still_written(
