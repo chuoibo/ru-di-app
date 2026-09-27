@@ -31,6 +31,8 @@ import {
   cauNguonDuLieu,
   cauTimKiem,
   CHIP_TOI_DA,
+  canDocLaiDanhMuc,
+  TUOI_DANH_MUC_MS,
   choDeChon,
   chiTietNgan,
   daoLuu,
@@ -524,4 +526,14 @@ test("OutingLive: chip chỉ vẽ từ choDeChon, danh mục đọc theo điểm
   assert.doesNotMatch(src, /danhMuc\.map\(\(p\) => \(\s*<Chip/, "render cả danh mục thành chip là lỗi lowmemorykiller lặp lại");
   assert.match(src, /docDanhMucCoLui\(await docDiemDenDaChon\(\)\)/);
   assert.doesNotMatch(src, /\bdocDanhMuc\(\)/, "đọc danh mục mặc định thì không gắn được địa điểm thật");
+});
+
+test("quay lại màn Khám phá: không đọc lại cả danh mục nếu vừa đọc cùng điểm đến", () => {
+  const luc = 1_000_000;
+  assert.equal(canDocLaiDanhMuc(null, "d-tinh-79", luc), true, "chưa đọc lần nào");
+  const vua = { diemDen: "d-tinh-79", luc };
+  assert.equal(canDocLaiDanhMuc(vua, "d-tinh-79", luc + 5_000), false, "vừa đọc, cùng nơi");
+  assert.equal(canDocLaiDanhMuc(vua, null, luc + 5_000), false, "chưa chọn gì: vẫn là nơi vừa đọc");
+  assert.equal(canDocLaiDanhMuc(vua, "d-tinh-1", luc + 5_000), true, "đổi điểm đến");
+  assert.equal(canDocLaiDanhMuc(vua, "d-tinh-79", luc + TUOI_DANH_MUC_MS), true, "quá hạn");
 });

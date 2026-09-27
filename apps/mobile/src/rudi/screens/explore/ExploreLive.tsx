@@ -35,6 +35,7 @@ import { askSearch, hieuDuocGi, type TimKiemState } from "../../../screens/kham-
 import { SO_THICH } from "../../../screens/vao-cua/so-thich";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
+  canDocLaiDanhMuc,
   anhBiaThe,
   cauXemThem,
   HANG_MOI_LUOT,
@@ -130,6 +131,8 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   // The destination the list on screen was read for, readable inside `nap`
   // without making the read depend on it (it would re-run on its own answer).
   const dangHien = useRef<string | null>(null);
+  // When, and for which destination, the catalogue was last read.
+  const lanDoc = useRef<{ diemDen: string | null; luc: number } | null>(null);
   const [soHang, setSoHang] = useState(HANG_MOI_LUOT);
   // Whose taste the badges are relative to. Starts as «chưa biết» because that
   // is true until the server has answered, and it is what the screen says.
@@ -142,6 +145,12 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const nap = useCallback(async () => {
     try {
       const daChon = await docDiemDenDaChon();
+      if (!canDocLaiDanhMuc(lanDoc.current, daChon, Date.now())) {
+        // Only the bookmarks can have changed on the way back (a save on the
+        // detail screen), and they are a small read.
+        setDaLuu(await docDaLuu(phien.person_id));
+        return;
+      }
       // A different city was chosen: the old list must not stand under the
       // new name while a large catalogue loads (seconds, on real data).
       if (daChon !== null && dangHien.current !== null && daChon !== dangHien.current) {
@@ -159,6 +168,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
       // a fallback the two differ for good, and comparing against the answer
       // would blank the list to a skeleton on every return to this tab.
       dangHien.current = daChon ?? danhMuc.destination?.id ?? null;
+      lanDoc.current = { diemDen: dangHien.current, luc: Date.now() };
       setDiemDen(danhMuc.destination);
       setGu(danhMuc.gu);
       setTrang({ pha: "xong", places: danhMuc.places, categories: danhMuc.categories });

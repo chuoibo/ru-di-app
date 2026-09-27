@@ -574,6 +574,27 @@ export function locTheoTen(places: Place[], q: string): Place[] {
   });
 }
 
+/** How long a read catalogue is good for when the screen regains focus. The
+ *  server changes it only when a sync applies a batch (~every 10 minutes). */
+export const TUOI_DANH_MUC_MS = 60_000;
+
+/**
+ * Whether regaining focus should read the catalogue again.
+ *
+ * Coming back from a place's detail used to re-read the whole destination
+ * (3.3 MB for TP.HCM) every time. Same destination, read less than a minute
+ * ago: keep it. A different destination, or never read: read.
+ */
+export function canDocLaiDanhMuc(
+  lanDoc: { diemDen: string | null; luc: number } | null,
+  daChon: string | null,
+  bayGio: number,
+): boolean {
+  if (lanDoc === null) return true;
+  if (daChon !== null && daChon !== lanDoc.diemDen) return true;
+  return bayGio - lanDoc.luc >= TUOI_DANH_MUC_MS;
+}
+
 /** How many places a picker shows at once. */
 export const CHIP_TOI_DA = 12;
 
