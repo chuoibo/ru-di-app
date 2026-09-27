@@ -43,6 +43,7 @@ import (
 	aimetrics "mobile/services/core/internal/aiharness/metrics"
 	"mobile/services/core/internal/aiharness/nhung"
 	"mobile/services/core/internal/aiharness/tools"
+	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
@@ -55,6 +56,7 @@ import (
 	"mobile/services/core/internal/httpapi/mw/cors"
 	"mobile/services/core/internal/httpapi/mw/servererror"
 	"mobile/services/core/internal/httpapi/router"
+	"mobile/services/core/internal/hybrid"
 	"mobile/services/core/internal/idem"
 	"mobile/services/core/internal/identity"
 	"mobile/services/core/internal/jobs"
@@ -63,8 +65,11 @@ import (
 	"mobile/services/core/internal/proxy"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/rag"
+	"mobile/services/core/internal/rag/nap"
 	"mobile/services/core/internal/routes"
 	"mobile/services/core/internal/sms"
+	"mobile/services/core/internal/vectordb"
+	"mobile/services/core/internal/vectordb/napkho"
 	"mobile/services/core/internal/websession"
 	"mobile/services/core/ownership"
 )
@@ -75,7 +80,7 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: core serve | work | healthcheck | routes --json | features --json | migrate-chat | migrate-rag | rag")
+		fmt.Fprintln(stderr, "usage: core serve | work | healthcheck | routes --json | features --json | migrate-chat | migrate-rag | migrate-rag-vector | rag | rag-indexer")
 		return 2
 	}
 	switch args[0] {
@@ -95,6 +100,10 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return migrateRag(getenv, stdout, stderr)
 	case "rag":
 		return runRag(args[1:], getenv, stdout, stderr)
+	case "migrate-rag-vector":
+		return migrateRagVector(getenv, stdout, stderr)
+	case "rag-indexer":
+		return ragIndexer(getenv, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -723,7 +732,11 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 	opts = append(opts, aiharness.WithHieu(hieu.Moi(hieu.WithViDuLuoi(hieu.MoiKhoViDuLuoi(embedder, hieu.ViDuMacDinh)))))
 	if db != nil {
 		doc := aidoc.Moi(db, 0)
-		nguon := tools.NguonDuLieu{Quan: aidoc.Lexical{C: doc}, Cho: aidoc.Doc{C: doc}, CaNhan: aidoc.Doc{C: doc}}
+		quan, err := quanRetriever(ctx, getenv, doc, embedder)
+		if err != nil {
+			return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+		}
+		nguon := tools.NguonDuLieu{Quan: quan, Cho: aidoc.Doc{C: doc}, CaNhan: aidoc.Doc{C: doc}}
 		if mem.kho != nil {
 			nguon.TriNho = mem.kho
 		}
@@ -735,6 +748,51 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
 	}
 	return engine, nil
+}
+
+// quanRetriever is the places retriever the engine's tools and retrieval
+// path use. With MOBILE_MILVUS_ADDR set it is the hybrid adapter over the
+// index the ingest (rag/nap) builds -- gemini-embedding-2 dense + Milvus's
+// BM25 on both text fields (MILCO is shelved) fused with the
+// ingest's committed weights, every hit re-checked against the live rows in
+// a READ ONLY transaction (thuoctinh over aidoc.ChiDoc) -- falling back to
+// the lexical index only when neither leg can run. Unset, it is the lexical
+// index alone (aidoc.Lexical, flagged lexical_only). A Milvus named but not
+// configured completely, or an ingestion configuration that disagrees with
+// vectordb's schema, is refused at start rather than at every turn.
+func quanRetriever(ctx context.Context, getenv func(string) string, doc *aidoc.ChiDoc, embedder nhung.Nhung) (truyhoi.Retriever, error) {
+	lexical := aidoc.Lexical{C: doc}
+	if strings.TrimSpace(getenv(vectordb.EnvAddr)) == "" {
+		return lexical, nil
+	}
+	c, err := vectordb.FromEnv(getenv)
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := nap.MacDinh()
+	if err != nil {
+		return nil, err
+	}
+	if err := napkho.KiemKhop(cfg); err != nil {
+		return nil, err
+	}
+	m, err := vectordb.Ket(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+	w := cfg.Hop.TrongSo
+	alias := m.Alias(vectordb.KhoDiaDiem)
+	k := &hybrid.Kho{
+		// The sparse leg is Milvus's BM25 function (both fields): MILCO is
+		// shelved pending its licence (owner, 2026-09-27) and never wired here.
+		Nhung: nhung.TheoLuot{Inner: embedder}, Index: m, Thua: vectordb.BM25{}, TenDiaDiem: alias,
+		TrongSo: &vectordb.TrongSo{Dense: w.Dense, BM25: w.BM25, BM25KhongDau: w.BM25KhongDau, MILCO: w.MILCO},
+		DocSong: aidoc.ThuocTinhSong{C: doc},
+		BiLoai: func(ctx context.Context, l vectordb.LocCung) (map[truyhoi.RangBuoc]int, error) {
+			return m.DemBiLoai(ctx, alias, l)
+		},
+	}
+	return hybrid.DuPhong{Chinh: k, Phu: lexical}, nil
 }
 
 // modelLimiter builds the per-model call rate limiter from MOBILE_MODEL_RPM

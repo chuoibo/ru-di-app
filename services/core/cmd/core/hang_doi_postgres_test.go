@@ -37,12 +37,12 @@ func (s *safeBuffer) String() string {
 
 // `serve` and `work` both refuse a database below the versions this binary
 // needs of either schema: the job table's (chatassist version 5) and the
-// outbox's (jobs version 1). The two binaries share the database, so either
+// outbox's (jobs version 2, the lane 'rag'). The two binaries share the database, so either
 // gap would turn every question into an error behind a healthy process.
 func TestServeAndWorkRefuseBelowBothSchemaVersions(t *testing.T) {
 	for _, c := range []struct{ name, drop string }{
 		{"chatassist version 5", `DELETE FROM chat_ai_schema_migrations WHERE version=5`},
-		{"job outbox version 1", `DELETE FROM job_schema_migrations WHERE version=1`},
+		{"job outbox version 2", `DELETE FROM job_schema_migrations WHERE version=2`},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			databaseURL := chatSchemaURL(t)

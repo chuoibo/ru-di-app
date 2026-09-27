@@ -282,6 +282,12 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="d047409862b0e7ef",
         why="",
     ),
+    "test.yml::milvus::Milvus retrieval, ingestion and reranker tests on real services": Covered(
+        kind=GATE_KIND,
+        stages=("go-milvus",),
+        body_sha="9a6903d5a488e7de",
+        why="",
+    ),
     "test.yml::eval-kich-ban::Invariants on every request, canary red, identity green": Covered(
         kind=GATE_KIND,
         stages=("eval-kich-ban",),

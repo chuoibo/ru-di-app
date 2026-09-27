@@ -10,7 +10,7 @@ import (
 
 // Queues are the lanes of work. Priority comes from separate queues with their
 // own consumer concurrency, not from message priority.
-var Queues = []string{"ai.group", "ai.nep", "memory", "notify"}
+var Queues = []string{"ai.group", "ai.nep", "memory", "notify", "rag"}
 
 // Message is the whole body a job message carries: which row, which enqueue.
 type Message struct {

@@ -275,6 +275,34 @@ jobs:
           python3 scripts/check_go_owned_python_touch.py --selftest
           python3 scripts/check_go_owned_python_touch.py --base origin/main
 
+  # The Milvus tier: the one retrieval + ingestion system on real services --
+  # the vector index and its schema, the ingestion pipeline writing it, the
+  # hybrid retriever over Milvus and the PostgreSQL rows the ingest writes,
+  # the Qwen reranker's golden check. A job of its own, not a step of `core`:
+  # it needs a Milvus (the script starts the pinned v3.0.2 image) AND a
+  # Qwen3-Reranker served at MOBILE_TEST_RERANK_URL, and no hosted runner has
+  # the reranker (its weights are not an image the script may pull). So it
+  # runs only on a self-hosted runner that declares both; where none is
+  # registered the job waits for one -- it is never reported green without
+  # having run. Inside the job a missing service, a skip or a missing
+  # sentinel is red.
+  milvus:
+    name: Milvus retrieval and ingestion tier (needs Milvus and a reranker)
+    runs-on: [self-hosted, milvus, reranker]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - name: Milvus retrieval, ingestion and reranker tests on real services
+        # Milvus from MOBILE_TEST_MILVUS_ADDR or the pinned image, PostgreSQL
+        # from CORE_TEST_DATABASE_URL or a disposable one migrated by
+        # Alembic, the reranker from MOBILE_TEST_RERANK_URL (required).
+        run: scripts/go_milvus_tier.sh
+
   # Tier T1 of the AI eval (design 06 §6): the engine run through its own seam,
   # aiharness.Engine.Run, on the scripted stub over the hand-written Nếp
   # corpus. A job of its own, not a step of `core`, so a red T1 is named for

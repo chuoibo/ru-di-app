@@ -121,6 +121,11 @@ func Tim(ctx context.Context, h Hoi) []Doan { return soTay.tim(ctx, h) }
 // sign-in screens (manVao) are never passed through.
 func DuongToi(tu, den string) ([]Buoc, bool) { return soTay.duongToi(tu, den) }
 
+// TatCa returns every section of every manual, file by file, in file order:
+// what the vector index ingests (rag/nap). A copy: the manual stays
+// immutable.
+func TatCa() []Doan { return append([]Doan(nil), soTay.doan...) }
+
 // BanDung is the first 12 hex characters of the sha256 of the embedded
 // _rut.json: which build of the app map this binary answers from. The app
 // carries the same constant in src/rudi/nep/huong-dan-ban.ts, written by the

@@ -28,10 +28,24 @@ const pkgRag = "mobile/services/core/internal/rag"
 // not `person_interests` or any per-person taste, not `saved_places`,
 // `posts`, `pair_shared_constraints` or any `nep_*` table. A group's taste
 // reaches a retrieval only as an argument the caller computed.
+//
+// The vector ingestion pipeline (rag/nap) adds its own tables, each written
+// only by it: rag_nap_schema_migrations (its version table),
+// rag_vector_versions (one row per Milvus collection: ids, states, model
+// names, counts), rag_dirty (which place changed: corpus, id, counters),
+// place_enrichments (a place's closed-id enrichment and its review verdict),
+// rag_embedding_cache and rag_sparse_cache (vectors by content hash) and
+// rag_ingest_dlq (which place failed at which stage, as enums). None names a
+// person (nap_postgres_test.go lists their columns). And one read outside
+// rag: job_schema_migrations, whose version its migration checks before
+// installing a trigger that enqueues on the outbox's lane 'rag' -- a version
+// number, never a job.
 var ragAllowed = map[string]bool{
 	"rag_schema_migrations": true, "rag_index_versions": true, "rag_docs": true, "rag_chunks": true,
 	"rag_tombstones": true, "rag_query_log": true,
 	"places": true, "destinations": true,
+	"rag_nap_schema_migrations": true, "rag_vector_versions": true, "rag_dirty": true, "place_enrichments": true,
+	"rag_embedding_cache": true, "rag_sparse_cache": true, "rag_ingest_dlq": true, "job_schema_migrations": true,
 }
 
 // ragViolations lists the tables SQL-looking strings name outside the
@@ -140,6 +154,13 @@ func TestRagReadsOnlyTheCatalogueAcrossPackages(t *testing.T) {
 		t.Errorf("rag's path reaches table %s: %q", name, used[name][0])
 	}
 	for name := range c.funcs {
+		// An error's Error method only formats: the walk resolves every
+		// err.Error() inside aiharness/llm (the counted model door rag/nap
+		// calls) to every Error method of the module, brain's and
+		// chatassist's included. Those are not a way into their packages.
+		if strings.HasSuffix(name, ").Error") {
+			continue
+		}
 		for _, forbidden := range []string{"service.GroupTaste", "internal/chatassist.", "internal/aiharness.", "internal/brain."} {
 			if strings.Contains(name, forbidden) {
 				t.Errorf("rag's path reaches %s", name)

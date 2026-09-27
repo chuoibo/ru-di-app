@@ -31,6 +31,7 @@ import (
 	"mobile/services/core/internal/domain/giomo"
 	"mobile/services/core/internal/rag"
 	"mobile/services/core/internal/repo"
+	"mobile/services/core/internal/thuoctinh"
 )
 
 // Beginner opens a transaction with options: a pool.
@@ -127,8 +128,44 @@ func YeuCauRag(y truyhoi.YeuCau) rag.YeuCau {
 	return r
 }
 
+// GiuChuaRo applies the engine's rule for unknown attributes
+// (docs/architecture/03 §8.4) to a lexical hit's flags: under a hard
+// budget a place with an unknown price is out, under a hard open instant or
+// window a place with unknown hours is out. rag.Retrieve keeps them flagged
+// (design 04 §4a, what POST /places/search still serves); every constraint
+// the engine passes is hard, so the engine's path drops them -- the same
+// answer the hybrid index gives.
+func GiuChuaRo(y truyhoi.YeuCau, co []string) bool {
+	for _, c := range co {
+		switch {
+		case c == rag.CoGiaChuaRo && y.Cung.NganSachVND != nil:
+			return false
+		case c == rag.CoGioChuaRo && (y.Cung.MoLuc != nil || y.Cung.MoTrong != nil):
+			return false
+		}
+	}
+	return true
+}
+
+// ChuaRo are the evidence flags of a live place's unknown attributes:
+// "gio_chua_ro" when its hours are missing or unreadable, "gia_chua_ro"
+// when its price is. Kept and said when no hard constraint asks about them.
+func ChuaRo(p repo.Place) []string {
+	var out []string
+	if p.OpenHours == nil {
+		out = append(out, rag.CoGioChuaRo)
+	} else if _, ok := giomo.Doc(*p.OpenHours); !ok {
+		out = append(out, rag.CoGioChuaRo)
+	}
+	if p.PriceMinVND == nil {
+		out = append(out, rag.CoGiaChuaRo)
+	}
+	return out
+}
+
 // Tim answers a places request. Hard constraints are rag's filters, never
-// relaxed; fewer results is the answer. Every result is flagged
+// relaxed; fewer results is the answer, and an unknown price or hours under
+// a hard constraint on it is out (GiuChuaRo). Every result is flagged
 // lexical_only: this adapter has no dense or sparse vectors.
 func (l Lexical) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi, error) {
 	if err := y.Kiem(); err != nil {
@@ -161,14 +198,14 @@ func (l Lexical) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyH
 		}
 		for _, h := range kq.Quan {
 			p, ok := byID[h.ID]
-			if !ok {
+			if !ok || !GiuChuaRo(y, h.Co) {
 				continue
 			}
 			b := BangChungQuan(p)
 			b.Diem = float64(h.Diem)
 			b.PhienBanChiMuc = ban
-			if len(h.Co) > 0 {
-				b.Truong["chua_ro"] = strings.Join(h.Co, ",")
+			if co := ChuaRo(p); len(co) > 0 {
+				b.Truong["chua_ro"] = strings.Join(co, ",")
 			}
 			out.BangChung = append(out.BangChung, b)
 		}
@@ -179,6 +216,23 @@ func (l Lexical) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyH
 	}
 	out.Degraded = []truyhoi.CoSuyGiam{truyhoi.LexicalOnly}
 	return out, nil
+}
+
+// ThuocTinhSong is the hybrid retriever's re-check read (hybrid.DocSong):
+// the live rows of hit ids and the attributes the ingest derives for them
+// (thuoctinh.Doc: places, place_enrichments, rag_tombstones), in a READ
+// ONLY transaction under the tools' semaphore.
+type ThuocTinhSong struct{ C *ChiDoc }
+
+// DocSong reads the live rows of ids.
+func (s ThuocTinhSong) DocSong(ctx context.Context, ids []string) (map[string]thuoctinh.Hang, error) {
+	var out map[string]thuoctinh.Hang
+	err := s.C.Doc(ctx, func(tx pgx.Tx) error {
+		var err error
+		out, err = thuoctinh.Doc(ctx, tx, ids)
+		return err
+	})
+	return out, err
 }
 
 // Doc implements the tools' read ports.

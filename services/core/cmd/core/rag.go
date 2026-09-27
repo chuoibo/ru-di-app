@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"mobile/services/core/internal/db"
@@ -68,6 +69,9 @@ func parseRag(args []string) (ragCommand, error) {
 // never by a request (design 04 §2.4). Every command prints one JSON object
 // of ids, states and counts; none prints a word of the catalogue.
 func runRag(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
+	if len(args) > 0 && strings.HasPrefix(args[0], "v-") {
+		return runRagVector(args, getenv, stdout, stderr)
+	}
 	c, err := parseRag(args)
 	if err != nil {
 		fmt.Fprintln(stderr, err)

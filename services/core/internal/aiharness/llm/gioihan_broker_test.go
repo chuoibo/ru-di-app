@@ -58,7 +58,7 @@ func TestGioiHanRedisGCRA(t *testing.T) {
 	if ok, err := g.Xin(ctx, Model); ok || err != nil {
 		t.Fatalf("a second limiter on the same key did not see the count: %v %v", ok, err)
 	}
-	if ok, err := g.Xin(ctx, "gemini-embedding-001"); !ok || err != nil {
+	if ok, err := g.Xin(ctx, "gemini-embedding-2"); !ok || err != nil {
 		t.Fatalf("another model shares the budget: %v %v", ok, err)
 	}
 	time.Sleep(1100 * time.Millisecond)

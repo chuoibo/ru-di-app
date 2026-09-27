@@ -72,6 +72,11 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	}
 	runCtx, cancel := context.WithTimeout(ctx, e.han)
 	defer cancel()
+	// One embedding budget for the whole turn: the router's example choice
+	// and every retrieval (an embedder shared across turns reads it from the
+	// context, nhung.TheoLuot).
+	demNhung := nhung.MoiDemLuot()
+	runCtx = nhung.VoiDemLuot(runCtx, demNhung)
 	loi := func(err error) error {
 		return loiMoHinh(err, errors.Is(ctx.Err(), context.Canceled), errors.Is(runCtx.Err(), context.DeadlineExceeded), rec)
 	}
@@ -84,7 +89,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		NganHan:         luot,
 		PhieuNep:        phieuJSON(t.PhieuNep),
 		DanhSachDiemDen: dsDiemDen,
-		DemNhung:        nhung.MoiDemLuot(),
+		DemNhung:        demNhung,
 	}
 	rec.MsTienXuLy = ms(e.now().Sub(batDau))
 	s.TrangThai(cau.DangNghi, soTinNep)

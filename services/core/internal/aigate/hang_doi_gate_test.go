@@ -21,6 +21,7 @@ import (
 	"mobile/services/core/internal/chatv2"
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/nepnho"
+	"mobile/services/core/internal/rag/nap"
 )
 
 // Slice 10 puts a database trigger on the job table: every write that makes
@@ -121,6 +122,7 @@ func triggerWrites(sqls []string, table string) map[string][]string {
 
 func schemaSQL() []string {
 	out := append(chatassist.SchemaFiles(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(), aimetrics.SchemaSQL(), nepnho.SchemaSQL())
+	out = append(out, nap.SchemaFiles()...)
 	return append(out, avatarfeed.SchemaFiles()...)
 }
 

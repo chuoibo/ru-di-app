@@ -245,9 +245,15 @@ type BangChung struct {
 	// id, an outing id). Grounding checks answers by membership of this id.
 	ID    string
 	Nguon Nguon
-	// Diem is the adapter's score. The slice order is the ranking; Diem is
-	// informational and never compared across adapters.
+	// Diem is the adapter's retrieval score (a fused RRF value, a BM25
+	// score). The slice order is the ranking; Diem is informational and
+	// never compared across adapters.
 	Diem float64
+	// DiemXepLai is the reranker's relevance score when a reranker ordered
+	// the item (0 otherwise). It only explains the order: nothing may
+	// threshold on it (a small reranker scores relevant documents and
+	// lexical traps alike near 1), so it never replaces Diem.
+	DiemXepLai float64
 	// Truong are the evidence fields an answer may quote: ten, gia, gio,
 	// nhan_nut, dia_chi, … Numbers and hours an answer states are checked
 	// against these (kiemchung.KiemTra).

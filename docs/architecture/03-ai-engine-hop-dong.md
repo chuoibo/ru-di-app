@@ -44,7 +44,7 @@ worker: aiharness.Engine.Run(turn, sink)
 |---|---|
 | Số ADR | 0037 engine · 0038 hàng đợi và stream · 0039 nhóm trong luồng · 0040 RAG và nạp dữ liệu · 0041 Nếp (phiếu v2, trí nhớ, nhắc) · 0042 bộ đo chất lượng. Nếu main đã dùng số nào thì lấy số trống kế tiếp, lúc vào main |
 | Số migration | **Không đặt trước.** Cấp theo thứ tự lên main. `serve`/`work` từ chối chạy khi version < N. Gói mới (`aiharness`, `jobs`, `rag`, `nepnho`, `nepnhac`, `push`) có bảng version riêng theo mẫu `services/core/internal/chatassist/migrate.go`, nên không giành số của `chatassist` |
-| Model | `gemini-3.5-flash-lite` cho mọi bước sinh chữ, gọi từ Go qua `google.golang.org/genai`. Embedding: `gemini-embedding-001`, 768 chiều |
+| Model | `gemini-3.5-flash-lite` cho mọi bước sinh chữ, gọi từ Go qua `google.golang.org/genai`. Embedding: **chỉ** `gemini-embedding-2`, 1536 chiều cho mọi collection (quyết định chủ sản phẩm 2026-09-27); trên Developer API tác vụ viết vào văn bản bằng tiền tố, và tiền tố chỉ được thêm **một lần, trong `aiharness/nhung`** (nạp, truy hồi và kho ví dụ của router đều đi qua cửa đó) |
 | Trần lời gọi model | Hằng `MaxModelCallsPerTurn` = 8 (trần cứng) trong `aiharness/llm`, đếm cả retry (retry riêng của genai tắt, chỉ `aiharness/llm` tự thử). Mục tiêu p95 ≤4 lời gọi mỗi lượt. Từ lát 10 bộ đếm nằm nguyên tử trên hàng job (`model_calls`), đúng qua mọi lần thử. Embedding đếm riêng: `MaxEmbedCallsPerTurn` = 2. Eval đọc hai hằng này để dự toán. Hạn 8 lời gọi/phút/người vẫn đếm theo invocation, và có thêm limiter theo từng lời gọi model |
 | Sự kiện stream (enum đóng, gói `aistream`) | `hello`, `trang_thai{cau}`, `phan{kind,json}`, `delta{p,text}`, `lam_lai`, `xong{message_id \| text,chips,nguon}`, `that_bai{code}`, `huy`, `thu_hoi`, `ket_noi_lai`, cộng dòng `: ping`. Không có sự kiện «rút lại»: guard chặn trước khi phát |
 | Đường stream | SSE `GET /contexts/{c}/ai-invocations/{id}/events` và `GET /me/nep/ai-invocations/{id}/events` cho người gọi. Người xem khác trong phòng lane cũ nhận frame `ai` trên WS `chatlegacychange` sẵn có. Frame này bật bằng một trường trong frame authenticate, để client cũ không vỡ. Phong bì frame mang `tin` (id lời gọi) và `so_tin` (số tin đã đọc), vì `trang_thai{cau}` không có chỗ cho con số. Capability: một trường `ai.stream` ∈ {`phong`, `nguoi_goi`, `khong`}. Phòng v2: key phòng **không bao giờ** được ghi; `lane` do máy chủ tự suy |
@@ -75,7 +75,7 @@ worker: aiharness.Engine.Run(turn, sink)
 | 13 | Nếp tại chỗ: phiếu v2, sổ tay app, chip, tool phía máy chủ | một phần: dữ liệu sổ tay 13 màn + cổng lệch `e69012b`, sửa theo lát 7 `603515f`; gói thuần `internal/huongdan` (`TheoMan`, `Tim` qua `rag/xephang`, `DuongToi` BFS ≤5 bước, `BanDung` + hằng `nep/huong-dan-ban.ts`) `5c3a3c1`; review phản biện REQUEST_CHANGES (10 phát hiện) đã sửa ở `c7a3cde`: luật màn tiền không còn lách bằng `di_toi` về chính màn hay khai nút trả tiền làm lối ra (cửa phải là cạnh có nhãn của mã, `_rut.json` `canh`), tiêu đề mục màn tiền cố định; bộ vàng thứ hai 46 câu hỏi từ màn khác (viết và băm trước khi đổi xếp hạng); luật ghim theo tỷ lệ điểm 1/2, bảng teencode, cắt 2000 rune. Số đo: bộ 91 câu recall@5 0.9505 MRR 0.9211, bộ màn khác 0.9130 / 0.7880; **nhóm teencode của bộ 91 câu recall@5 0.8333, dưới ngưỡng 0.90** (hai câu tiếng Anh «checkin», «log out», không dịch là chủ ý). Review lại bản sửa đó APPROVE với 8 phát hiện nhỏ, sửa ở `79c5ed8` (review lại vòng 2: APPROVE, 3 nit, sửa ở `658c909` (cherry-pick của `1dff602`, con trực tiếp của `be0f7a0`): quy tắc «ít màn tiền nhất» có test đếm trên cả đường — đồ thị màn tiền cách hai bước của review, và đường qua một màn tiền ngay bước kế thắng đường qua hai màn tiền phía sau; tiêu đề của chính màn tiền không phải cửa, có ca fixture ở Go và mobile, in trên màn hay không; « và » phải thành cặp trên từng dòng theo thứ tự, dấu đảo ngược, lẻ, lồng hay vắt dòng bị từ chối ở Go và mobile, probe Q1 của review thành canary trên dữ liệu thật; review lại bản sửa vòng 3 (review lát 13 vòng 4): APPROVE, 1 nit NF4 — luật « » theo dòng chưa có ca ở dòng tiêu đề mục ở cả hai phía, phía Go chưa có ca ở dòng văn trong mục — sửa ở commit `fix(huongdan)` vòng 4 là con trực tiếp của `591cce5`: ca «## Đi sang »Nút B«» và «Xem »Nút Z«.» trên fixture Go, ở Go và cổng mobile): bộ rút chỉ ghép mỗi cú bấm với nhãn gọi tên nó (`onAction` ↔ `action`, `onPress`/`href` ↔ `label`/`accessibilityLabel`/`title`), nên tiêu đề mục «Chi theo nhóm» không còn là cạnh có nhãn (`_rut.json` 129 cạnh có nhãn, băm `27a579cd74f3`); bước màn tiền chỉ được trích cửa; khoá front matter trùng hay sai hoa thường bị từ chối (Go và mobile); cổng mobile soi lại fixture Go của luật màn tiền; số đo bộ vàng không đổi. Chưa: phiếu v2 (`buoc`, `hanhDong`, `banBuild`; cách `buoc` đi qua `buocMuc` ở thiết kế 05 §3), tool `search_app_manual`/`explain_screen` (lát 9), chip, `useNepMoc`, sửa câu gợi ý; tổng quan của màn tiền chưa theo luật chỉ trích cửa (probe Q3; hiện không vào `Doan` và không ra API nào — phải có luật cửa trước khi API nào đưa nó ra); văn xuôi dạy trả tiền không «…» trên dòng có cửa (P8) luật không thấy, kể cả tên nút đặt trong dấu na ná « » như ‹…›, "…" (hay “…”) và 《…》 — luật nhãn và luật cặp chỉ đọc « và », nên ‹Đánh dấu đã trả› cạnh một cửa trên `tai-chinh.md` nạp được ở cả Go và mobile (probe Y2 của review vòng 4); người review văn giữ **Tích hợp lõi agent**: `search_app_manual`/`explain_screen` chạy phía máy chủ trong engine (đường truy hồi đọc sổ tay qua `tools.SoTay`, đường nhanh `explain_screen`); nút «…» trong câu trả lời phải trùng nhãn nút sổ tay trả về trong lượt. Chip chưa. |
 | 14 | Chia bill từ thẻ, dấu «Đã ghi vào sổ» suy từ dòng chi tiêu thật | chưa |
 | 15 | Trí nhớ Nếp | **một phần — lát `infra/memory-policy`, chờ Lead ký ADR-0043 (đề xuất)**: `internal/nepnho` là writer duy nhất của `nep_*` (bảng version riêng; biên nhận không chữ; tombstone HMAC; sự kiện kiểu đóng 30 ngày); client HTTP của sidecar `services/ai-infer` (sidecar là writer duy nhất của Milvus trí nhớ); nhớ lại chỉ khi cờ bật; «quên» là saga sidecar xoá → `remaining` 0 → Go liệt kê lại → biên nhận, thử lại trên làn `memory` của outbox; tắt cờ xoá hết; xoá tài khoản qua trigger `people.deleted_at` + `purge_user` tới 0, biên nhận chỉ giữ HMAC; 4 route GO-ONLY `/me/nep/tri-nho*`, `/me/nep/su-kien`; `internal/aictx` bộ đệm theo lượt trên `redis-ai` (TTL nguyên tử, AES-GCM, UNLINK, nhóm legacy EX 900, không gì cho v2, kiểm `save`/`appendonly` lúc khởi động); cá nhân hoá ≤5 ký ức vào khối dữ liệu của Nếp khi cờ bật, bot nhóm không có (canary `aigate`). Chưa: bộ eval trí nhớ tiếng Việt, model trích thật, reranker, UI công bố/cài đặt, các quyết định mở của ADR-0043 §5 |
-| 16 | RAG vector, làm giàu, độ tươi | chưa |
+| 16 | RAG vector, làm giàu, độ tươi | **một phần (nhánh `infra/rag-unified`, gộp `infra/retrieval-core` và `infra/ingest-sdlc`, chưa vào main)**: một hệ truy hồi + nạp trên **Milvus v3.0.2** — **một schema, một writer** (§8.4): `internal/vectordb` khai schema duy nhất (`rd.v2`: chunk id, `doc_id`, dense 1536, MILCO, `text` giữ dấu + `text_khong_dau` gấp dấu với hai hàm BM25, thuộc tính lọc cứng), tên `rd_places__vN`/`rd_manual__vN` sau alias `rd_places`/`rd_manual`, một hàm dựng client (telemetry tắt); `rag/nap` (pipeline nạp: làm giàu LLM enum đóng + dòng ngữ cảnh mỗi chunk, hàng duyệt, phiên bản collection, cổng eval, promote/rollback bằng alias) ghi qua `vectordb/napkho`, adapter duy nhất; `internal/hybrid` (dense `gemini-embedding-2` + BM25 có dấu + BM25 không dấu — nhánh thưa **chỉ là hàm BM25 của Milvus**, MILCO gác lại chờ xác nhận license (chủ sản phẩm 2026-09-27), mã adapter MILCO tắt mặc định và không nối vào đường truy hồi; RRF có trọng số cấu hình ở `rag/nap/cauhinh.json` «hop», gấp chunk về quán, kiểm lại mọi hit) đọc đúng bảng nạp ghi (`thuoctinh` đọc `places` + `place_enrichments` qua `nap.ApDung` + `rag_tombstones`), nối vào `truyhoi.Retriever` của tool khi có `MOBILE_MILVUS_ADDR`, không có thì `aidoc.Lexical`; `internal/rerank` (Qwen3 qua `/rerank`, lọc token cấu trúc NFKC, điểm riêng `DiemXepLai`, timeout `MOBILE_RERANK_TIMEOUT`); embedding **chỉ** `gemini-embedding-2` 1536, tiền tố thêm một lần trong `aiharness/nhung`; `scripts/go_milvus_tier.sh` (skip là đỏ, 16 sentinel) chạy ở job CI `milvus` riêng (runner tự host có Milvus + reranker). **Chưa**: gọi Gemini thật (không khoá), đo bằng encoder thật (trọng số hợp nhất và số vàng hiện đo trên stub), bộ eval tiếng Việt §C4, reranker chưa gắn vào engine (`WithXepLai`), hai bảng cache nhúng (`rag_embedding_cache` của nạp, `nhung_cache` của truy hồi) chưa gộp. |
 | 17 | Nhắc chủ động: trong app, rồi push | chưa |
 | 18 | Eval M3 và tín hiệu phản hồi | chưa |
 | 19 | Gỡ action Python `companion-reply`/`nep-reply` (một commit cùng manifest) | chưa |
@@ -133,6 +133,10 @@ Mọi thứ đọc **nghĩa** của chữ bằng danh sách từ hay regex phả
 injection thành **cấu trúc**: mọi chữ không tin cậy chỉ nằm trong khối `<du_lieu>` có datamarking;
 system instruction nói dữ liệu không bao giờ là lệnh; tool chỉ có tác dụng phụ trong danh sách cho
 phép; nháp cần người bấm. Thêm vào đó là nhãn guard do router (LLM) gán.
+
+**Không HyDE** (chủ sản phẩm, 2026-09-27): không có bước sinh «tài liệu giả định» nào để nhúng thay câu hỏi,
+ở bất kỳ đường nào. Viết lại truy vấn chỉ là các trường structured output của chính router (câu hỏi tự đủ
+nghĩa, câu đã khôi phục dấu) trong cùng một lời gọi `hieu`; truy hồi nhúng đúng chữ đó.
 
 **Rời đường quyết định** (việc của các builder sau hợp đồng này; commit hợp đồng chưa xoá mã nào):
 
@@ -391,3 +395,60 @@ Còn mở: T3 thật (khoá + Lead duyệt số lời gọi); độ trễ nháp-
 verifier chưa biết tool ghi nào đã xếp hàng trong lượt nên câu «mình sẽ nhớ» bị giữ (hướng an toàn) —
 cần đưa danh sách hành động đã làm vào verifier khi adapter trí nhớ bật; ADR-0033 §4 cho
 `my_upcoming_outings`; bot nhóm vẫn đi brain.
+
+### 8.4 Truy hồi vector: một schema, một writer, và luật «chưa rõ» (nhánh `infra/rag-unified`)
+
+**Một schema, một writer.** Chỉ mục vector là bản sao dựng lại được của PostgreSQL. Schema collection
+khai **một lần**, trong `internal/vectordb` (`PhienBanLuocDo = "rd.v2"`); cấu hình nạp (`rag/nap/cauhinh.json`)
+chỉ ghi tên bản schema nó viết cho, và `vectordb/napkho` từ chối dựng collection khi hai bên lệch (bản schema,
+số chiều, hằng RRF, độ rộng ô giờ, tên alias). Nạp là writer duy nhất của mọi collection `rd_*` (qua `napkho`,
+trên hàm dựng client duy nhất `vectordb.Ket`) và của `place_enrichments`; truy hồi (`hybrid`) chỉ đọc. Bước kiểm
+lại của truy hồi đọc **đúng bảng nạp ghi**: `thuoctinh.Doc` đọc hàng `places` sống, áp `nap.ApDung` lên
+`place_enrichments` theo mã băm nguồn hiện tại, và `rag_tombstones` — cùng một luật với lúc nạp, nên chỉ mục cũ
+chỉ làm mất kết quả, không bao giờ làm hiện một quán vi phạm ràng buộc cứng.
+
+**Luật «chưa rõ»** (một luật cho mọi đường truy hồi của engine — hybrid, fallback lexical, bộ lọc Go của nạp,
+biểu thức Milvus):
+
+| Thuộc tính | Ràng buộc đó là **cứng** (model trích vào `truyhoi.Cung`) | Không có ràng buộc đó |
+|---|---|---|
+| Dị ứng chưa xác lập (`khong_ro`, hoặc làm giàu chưa có người duyệt) | **Loại** với mọi dị ứng | Giữ |
+| Giá chưa rõ | **Loại** khi có ngân sách | Giữ, bằng chứng mang `chua_ro: gia_chua_ro` |
+| Giờ mở chưa rõ | **Loại** khi có thời điểm hay khung giờ | Giữ, bằng chứng mang `chua_ro: gio_chua_ro` |
+
+Đây là lựa chọn chặt hơn thiết kế 04 §4a (ở đó quán «chưa rõ» được giữ, gắn cờ, xếp cuối và vào khi còn dưới
+3 quán biết chắc): mọi ràng buộc engine chuyển xuống đều là ràng buộc cứng và luật «không bao giờ nới» thắng —
+ít kết quả hơn là câu trả lời đúng, và câu trả lời nói rõ chỗ chưa biết thay vì đoán. Cờ «chưa rõ» dùng khi
+ràng buộc đó không được hỏi, để câu trả lời nói «chưa có giờ mở cửa/giá». `POST /places/search` (route parity)
+vẫn giữ hành vi §4a của `rag.Retrieve`; đường engine lọc lại (`aidoc.GiuChuaRo`).
+
+**Dị ứng chắc chắn chỉ khi có người duyệt.** Làm giàu tự động nói «không có chất dị ứng» (`di_ung: []`,
+`tin_cay: cao`) **không** làm quán qua bộ lọc dị ứng: `ApDung` chỉ tính chắc chắn khi `review = reviewed`,
+và mọi khẳng định chắc chắn về dị ứng đều vào hàng duyệt. Phán quyết gắn với phiên bản đã xem
+(`MucDuyet.Ban` = 16 hex sha256 của mã băm nguồn, phiên bản prompt và output): output bị thay giữa lúc liệt kê
+và lúc duyệt thì phán quyết bị từ chối.
+
+**Nhánh thưa = BM25.** Tìm kiếm lai là dense `gemini-embedding-2` hợp với hàm BM25 dựng sẵn của Milvus trên
+hai trường văn bản. MILCO (sparse học được) **gác lại** chờ xác nhận license (chủ sản phẩm 2026-09-27): mã
+adapter còn đó nhưng tắt mặc định (`MOBILE_MILCO_ENABLED`, `milco_bat: false` trong cấu hình nạp), không nối vào
+đường truy hồi của engine, và không tầng/test nào cần nó.
+
+**Hai trường BM25.** `text` giữ dấu (analyzer chỉ lowercase: «bún» khác «bùn»), `text_khong_dau` gấp dấu
+(thêm `asciifolding`). Gấp dấu là **chuẩn hoá cấu trúc ký tự** — dấu thanh và đ bị bỏ như khi người gõ không bộ
+gõ — không đọc nghĩa và không quyết định gì về câu hỏi; nó chỉ để nhánh BM25 thứ hai khớp được truy vấn không
+dấu. Trọng số hợp nhất (dense 1, BM25 có dấu 0,1, BM25 không dấu 1) nằm ở `cauhinh.json` «hop», truy hồi phục vụ
+với đúng trọng số cổng eval đo. Đo trên tập vàng với encoder stub (KhoNho, ghim ở `rag/nap/vang_test.go`): tổng
+recall@10 0,9333 · nDCG@10 0,8439 · violation@10 0 · khoảng cách không dấu 0,0369; lát «bỏ dấu» (mọi câu vàng
+gấp dấu) recall@10 0,9133 với nhánh gấp dấu, 0,7733 khi tắt nhánh đó. Trọng số chỉnh trên stub, phải đo lại khi
+có encoder thật.
+
+**Truy hồi theo ngữ cảnh.** Lời gọi làm giàu (offline, `core rag v-enrich --tran-goi N` hay indexer, không bao
+giờ trong lượt) viết thêm một câu ngữ cảnh ngắn (≤160 ký tự, qua `TextSafe`) cho mỗi chunk (hồ sơ, đánh giá);
+câu đó đứng đầu văn bản chunk nên cả nhánh dense lẫn hai nhánh BM25 đều đọc, và mã băm nội dung phủ nó. Làm giàu
+cũ, bị từ chối hay mang nhãn chèn lệnh thì không có câu ngữ cảnh.
+
+**Thuộc tính tới bản đang phục vụ.** Khi cấu hình đổi mà bản mới chưa promote, collection đang phục vụ được dựng
+với cấu hình khác: indexer ghi lại thuộc tính lọc cứng của quán thay đổi vào mọi collection sống khác cấu hình
+(upsert từng phần), ghi không được thì xoá quán khỏi đó (fail closed). Promote kiểm lại vân tay cấu hình và
+sha256 tập vàng của phán quyết đang dùng.
+

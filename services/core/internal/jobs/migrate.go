@@ -17,11 +17,27 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
+// schema2SQL opens the lane 'rag' (the vector index's change capture).
+//
+//go:embed schema_2.sql
+var schema2SQL string
+
+// migrations are the outbox schema's versions, in order. An applied version
+// is never edited: its checksum is stored and compared.
+var migrations = []struct {
+	version int
+	sql     string
+}{
+	{1, schemaSQL},
+	{2, schema2SQL},
+}
+
 // SchemaVersion is the outbox schema this binary reads and writes. `serve`
 // and `work` refuse to start below it, as they do below chatassist's: the
 // job table's trigger calls jobs_them, so a database without it fails every
-// question at INSERT instead of once, loudly, at startup.
-const SchemaVersion = 1
+// question at INSERT instead of once, loudly, at startup. Version 2 admits
+// the lane 'rag' this binary's topology declares.
+const SchemaVersion = 2
 
 // SchemaSQL is the embedded version 1, for the gates that read it.
 func SchemaSQL() string { return schemaSQL }
@@ -53,22 +69,24 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	if _, err = tx.Exec(ctx, `CREATE TABLE IF NOT EXISTS job_schema_migrations(version integer PRIMARY KEY,digest text NOT NULL)`); err != nil {
 		return err
 	}
-	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(schemaSQL)))
-	var old string
-	if err = tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM job_schema_migrations WHERE version=1),'')`).Scan(&old); err != nil {
-		return err
-	}
-	if old != "" {
-		if old != digest {
-			return fmt.Errorf("job outbox migration checksum mismatch")
+	for _, m := range migrations {
+		digest := fmt.Sprintf("%x", sha256.Sum256([]byte(m.sql)))
+		var old string
+		if err = tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM job_schema_migrations WHERE version=$1),'')`, m.version).Scan(&old); err != nil {
+			return err
 		}
-		return tx.Commit(ctx)
-	}
-	if _, err = tx.Exec(ctx, schemaSQL); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, `INSERT INTO job_schema_migrations VALUES(1,$1)`, digest); err != nil {
-		return err
+		if old != "" {
+			if old != digest {
+				return fmt.Errorf("job outbox migration %d checksum mismatch", m.version)
+			}
+			continue
+		}
+		if _, err = tx.Exec(ctx, m.sql); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, `INSERT INTO job_schema_migrations VALUES($1,$2)`, m.version, digest); err != nil {
+			return err
+		}
 	}
 	return tx.Commit(ctx)
 }

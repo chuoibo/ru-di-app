@@ -408,6 +408,9 @@ var nepCongCuDoc = map[string]string{
 	"rag_index_versions":    "catalogue index: which version is active",
 	"rag_tombstones":        "catalogue index: removed places are never shown",
 	"rag_schema_migrations": "catalogue index: whether the index is installed",
+	// The hybrid retriever's re-check (aidoc.ThuocTinhSong → thuoctinh.Doc)
+	// reads a place's enrichment the way the ingest applies it.
+	"place_enrichments": "catalogue enrichment: a place's closed-id allergens, diets and review verdict, the same for every person; the hybrid re-check's truth",
 	// list_destinations, nearest_area, the router's closed destination list.
 	"destinations": "the destinations the app covers, the same for every person",
 	// my_upcoming_outings: the ASKING person's own upcoming outings, scoped by
