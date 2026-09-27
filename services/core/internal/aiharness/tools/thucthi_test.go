@@ -65,8 +65,9 @@ func boiCanhNep() (*BoiCanh, *testkit.Retriever, *testkit.TriNho) {
 	r := quanKichBan()
 	tn := testkit.MoiTriNho()
 	bc := &BoiCanh{Bot: obs.BotNep, NguoiHoi: "nguoi-a", Man: "plan", Luc: lucThu, DiemDen: []string{"da-lat", "vung-tau"},
-		Cung:  truyhoi.Cung{DiemDenID: "da-lat", DiUng: []string{"dau_phong"}, NganSachVND: i64p(200000)},
-		Nguon: NguonDuLieu{Quan: r, Cho: choGia{quan: map[string]truyhoi.BangChung{"plc-7": {ID: "plc-7", Truong: map[string]string{"ten": "Quán C"}}}}, TriNho: tn}}
+		LoiNguoiHoi: "nhớ giúp mình là mình thích cà phê yên tĩnh và thích trà nhé",
+		Cung:        truyhoi.Cung{DiemDenID: "da-lat", DiUng: []string{"dau_phong"}, NganSachVND: i64p(200000)},
+		Nguon:       NguonDuLieu{Quan: r, Cho: choGia{quan: map[string]truyhoi.BangChung{"plc-7": {ID: "plc-7", Truong: map[string]string{"ten": "Quán C"}}}}, TriNho: tn}}
 	return bc, r, tn
 }
 

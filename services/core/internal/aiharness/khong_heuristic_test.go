@@ -66,6 +66,24 @@ var (
 		"mobile/services/core/internal/aiharness/tools.thamSoNho.TruyVan",
 		"mobile/services/core/internal/aiharness/tools.thamSoGhiNho.NoiDung",
 		"mobile/services/core/internal/aiharness/tools.thamSoQuen.MoTa",
+		// Text from outside that comes back into the turn as data (re-review
+		// finding 3): the slip's free texts the device sent (a trip title
+		// another member wrote, the suggested questions, the counts' string
+		// values), every field of the evidence a tool or a retrieval
+		// returned (a place's name, a manual section, a remembered fact),
+		// and the person's remembered facts, however they are read.
+		"mobile/services/core/internal/aiharness.PhieuNep.TieuDe",
+		"mobile/services/core/internal/aiharness.PhieuNep.GoiY",
+		"mobile/services/core/internal/aiharness.PhieuNep.SoLieu",
+		"mobile/services/core/internal/aiharness/truyhoi.BangChung.Truong",
+		"mobile/services/core/internal/aiharness/trinho.SuThat.NoiDung",
+		"mobile/services/core/internal/aiharness/trinho.SuThatMoi.NoiDung",
+		// What the answer claims, as the grounding check reads it: the
+		// value it states for an evidence field and the button labels it
+		// names. Grounding may only compare them with the evidence by
+		// identity.
+		"mobile/services/core/internal/aiharness/kiemchung.TrichSo.GiaTri",
+		"mobile/services/core/internal/aiharness/kiemchung.TuyenBo.NhanNut",
 		// The model's own prose: the answer, its draft sentences, the
 		// question back and its options. The phrase rules that once
 		// guessed from it whether an answer claims an action or moves
@@ -79,6 +97,8 @@ var (
 	// ketQuaChu are the calls whose result is the model's prose.
 	ketQuaChu = []string{
 		"mobile/services/core/internal/aiharness/agent.Chay#r0",
+		// The personalization port's result: the person's recalled facts.
+		"(mobile/services/core/internal/aiharness.HoSo).HoSoNep#r0",
 	}
 	// hamBien are the calls whose result is the text again, cleaned or cut.
 	hamBien = map[string]bool{
@@ -87,8 +107,10 @@ var (
 		"strings.TrimSpace": true,
 		"strings.Fields":    true,
 		"strings.Join":      true,
-		"mobile/services/core/internal/huongdan.catCau":    true,
-		"mobile/services/core/internal/rag/xephang.AmTiet": true,
+		"mobile/services/core/internal/huongdan.catCau": true,
+		// Our own datamark back to the space it stands for.
+		"mobile/services/core/internal/aiharness/prompts.BoDanhDau": true,
+		"mobile/services/core/internal/rag/xephang.AmTiet":          true,
 	}
 	// hamCauTruc are the engine's own parsers of STRUCTURE in the model's
 	// prose, each reviewed by hand and named here with what it reads: the
@@ -105,9 +127,19 @@ var (
 	// turn's closed lists, not prose: they are looked up by set membership
 	// (grounding), which the rule allows, and carry no taint.
 	truongKhongChu = map[string]string{
-		"mobile/services/core/internal/aiharness/traloi.phanTich.biDanh":    "aliases, checked against the turn's closed enum",
-		"mobile/services/core/internal/aiharness/traloi.phanTich.nhan":      "«…» labels, checked against the manual's label set",
-		"mobile/services/core/internal/aiharness/kiemchung.TuyenBo.NhanNut": "«…» labels, checked against the manual's label set",
+		"mobile/services/core/internal/aiharness/traloi.phanTich.biDanh": "aliases, checked against the turn's closed enum",
+		"mobile/services/core/internal/aiharness/traloi.phanTich.nhan":   "«…» labels, checked against the manual's label set",
+		// The ids and closed enums that travel beside the text in the same
+		// values: keys of the ledger and the catalogue, never prose.
+		"mobile/services/core/internal/aiharness/truyhoi.BangChung.ID":     "evidence id (ledger, catalogue key)",
+		"mobile/services/core/internal/aiharness/truyhoi.BangChung.Nguon":  "closed source enum",
+		"mobile/services/core/internal/aiharness/trinho.SuThat.ID":         "fact id (ledger key)",
+		"mobile/services/core/internal/aiharness/trinho.SuThat.Loai":       "closed kind enum",
+		"mobile/services/core/internal/aiharness/trinho.SuThat.Nguon":      "closed source enum",
+		"mobile/services/core/internal/aiharness/trinho.SuThatMoi.Loai":    "closed kind enum",
+		"mobile/services/core/internal/aiharness/trinho.SuThatMoi.Nguon":   "closed source enum",
+		"mobile/services/core/internal/aiharness/trinho.Luot.Vai":          "closed speaker enum",
+		"mobile/services/core/internal/aiharness/trinho.Luot.BangChungIDs": "evidence ids of an earlier turn (ledger keys)",
 	}
 	// hamNhan are the calls that may consume the text and decide nothing:
 	// a datamarked block, a length or validity check, the privacy format
@@ -144,6 +176,7 @@ var (
 		"mobile/services/core/internal/aiharness/cautruc.Goi":                  "model call",
 		"(mobile/services/core/internal/aiharness/llm.Model).GenerateContent":  "model call",
 		"(*mobile/services/core/internal/aiharness/llm.Dem).GenerateContent":   "model call",
+		"google.golang.org/genai.NewContentFromText":                           "a model request's user turn",
 	}
 )
 
@@ -400,6 +433,10 @@ func (d *dongChu) lanTruyen() bool {
 									d.danhLhs(p, l)
 								}
 							}
+						} else if d.nhiem(p, x.Rhs[0]) {
+							// The comma-ok forms (v, ok := m[k]; v, ok :=
+							// x.(T); v, ok := <-ch): v carries the text.
+							d.danhLhs(p, x.Lhs[0])
 						}
 						return true
 					}
@@ -664,7 +701,10 @@ func TestKhongDocNghiaTrenDuongEngine(t *testing.T) {
 	}
 	for _, h := range []string{"khongheuristic.OChay", "khongheuristic.ChonToolTheoTu", "khongheuristic.RegexpQuaBien",
 		"khongheuristic.SwitchTheoTu", "khongheuristic.DocTuVung", "khongheuristic.TraBangTheoTu",
-		"khongheuristic.CumTuTraLoi", "khongheuristic.CumTuHoiLai", "khongheuristic.CumTuVongLap"} {
+		"khongheuristic.CumTuTraLoi", "khongheuristic.CumTuHoiLai", "khongheuristic.CumTuVongLap",
+		// One per source of text from outside that comes back as data.
+		"khongheuristic.PhieuTheoTu", "khongheuristic.GoiYTheoTu", "khongheuristic.SoLieuTheoTu",
+		"khongheuristic.BangChungTheoTu", "khongheuristic.HoSoTheoTu", "khongheuristic.SuThatTheoTu"} {
 		if !theoHam[h] {
 			t.Errorf("canary %s is green: the walk cannot see it", h)
 		}

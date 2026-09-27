@@ -766,3 +766,144 @@ func TestRouteQuaPhienThat(t *testing.T) {
 }
 
 func hexSum(s string) string { return fmt.Sprintf("%x", sha256.Sum256([]byte(s))) }
+
+// A fact past its end is deleted at consolidation, not only hidden
+// (re-review memory minor 3): the hourly pass hides it and opens its
+// one-fact deletion on the memory lane, without a tombstone, and the saga
+// deletes it from the sidecar and writes the receipt. A fact still in force
+// is left alone.
+func TestHetHanXoaKhiCungCo(t *testing.T) {
+	b := moiBo(t)
+	ctx := context.Background()
+	p := moiNguoi(t, b.pool)
+	if err := b.kho.Bat(ctx, p, CongBoBan); err != nil {
+		t.Fatal(err)
+	}
+	den := b.now.Add(time.Hour)
+	moi := suThatMoi("Đi xe buýt tới cuối tuần")
+	moi.DenLuc = &den
+	het, err := b.kho.Ghi(ctx, p, moi)
+	if err != nil {
+		t.Fatal(err)
+	}
+	con, err := b.kho.Ghi(ctx, p, suThatMoi("Thích cà phê yên tĩnh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b.now = b.now.Add(2 * time.Hour)
+	tx, _ := b.pool.Begin(ctx)
+	if err := b.kho.DinhKyDon().Chay(ctx, tx); err != nil {
+		t.Fatal(err)
+	}
+	_ = tx.Commit(ctx)
+	var viec string
+	if err := b.pool.QueryRow(ctx, `SELECT id::text FROM nep_xoa WHERE person_id=$1 AND pham_vi='mot' AND su_that_id=$2 AND buoc='cho'`, p, het.ID).Scan(&viec); err != nil {
+		t.Fatalf("no deletion opened for the expired fact: %v", err)
+	}
+	if n := b.so(t, `SELECT count(*) FROM job_outbox WHERE queue='memory' AND ref_id=$1`, viec); n != 1 {
+		t.Fatal("the expired fact's deletion is not on the memory lane")
+	}
+	if n := b.so(t, `SELECT count(*) FROM nep_su_that WHERE id=$1 AND dang_xoa_at IS NOT NULL`, het.ID); n != 1 {
+		t.Fatal("the expired fact is not hidden")
+	}
+	if n := b.so(t, `SELECT count(*) FROM nep_quen WHERE person_id=$1`, p); n != 0 {
+		t.Fatal("an expired fact was tombstoned")
+	}
+	if n := b.so(t, `SELECT count(*) FROM nep_xoa WHERE su_that_id=$1`, con.ID); n != 0 {
+		t.Fatal("a fact in force was handed to deletion")
+	}
+	// Twice is the same deletion.
+	tx, _ = b.pool.Begin(ctx)
+	if n, err := b.kho.XoaHetHan(ctx, tx); err != nil || n != 0 {
+		t.Fatalf("second consolidation = %d %v", n, err)
+	}
+	_ = tx.Commit(ctx)
+	if xong, err := b.kho.ChayNgay(ctx, viec); err != nil || !xong {
+		t.Fatalf("the saga did not finish: %v %v", xong, err)
+	}
+	if n := b.so(t, `SELECT count(*) FROM nep_su_that WHERE id=$1 AND deleted_at IS NOT NULL`, het.ID); n != 1 {
+		t.Fatal("no receipt for the expired fact")
+	}
+	left, _ := b.gia.LietKe(ctx, p)
+	if len(left) != 1 || left[0].ID != con.ID {
+		t.Fatalf("the sidecar still holds %+v", left)
+	}
+}
+
+// The sidecar is called with no row of nep_xoa locked and, on the request
+// and lane path, outside any transaction (re-review memory minor 5): while
+// the fake sidecar answers a delete, another connection locks the deletion's
+// row at once (NOWAIT), and a second attempt at the same deletion is turned
+// away by the attempt's advisory lock. The periodic pass holds no row lock
+// through its calls either.
+func TestSidecarNgoaiGiaoDich(t *testing.T) {
+	b := moiBo(t)
+	ctx := context.Background()
+	p := moiNguoi(t, b.pool)
+	_ = b.kho.Bat(ctx, p, CongBoBan)
+	f, err := b.kho.Ghi(ctx, p, suThatMoi("Thích cà phê yên tĩnh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var viec string
+	var thuKhoa, thuLai []string
+	khoaNgay := func() {
+		tx, err := b.pool.Begin(ctx)
+		if err != nil {
+			thuKhoa = append(thuKhoa, err.Error())
+			return
+		}
+		defer tx.Rollback(ctx)
+		var id string
+		if err := tx.QueryRow(ctx, `SELECT id::text FROM nep_xoa WHERE id=$1 FOR UPDATE NOWAIT`, viec).Scan(&id); err != nil {
+			thuKhoa = append(thuKhoa, err.Error())
+		}
+	}
+	lan := 0
+	b.gia.trongXoa = func() {
+		lan++
+		if lan > 1 {
+			return // the second attempt's own call, if it got that far
+		}
+		khoaNgay()
+		if xong, err := b.kho.ChayNgay(ctx, viec); xong || err != nil {
+			thuLai = append(thuLai, fmt.Sprint(xong, err))
+		}
+	}
+	viec, ok, err := b.kho.anQuen(ctx, p, f.ID, "")
+	if err != nil || !ok {
+		t.Fatalf("anQuen %v %v", ok, err)
+	}
+	if xong, err := b.kho.ChayNgay(ctx, viec); err != nil || !xong {
+		t.Fatalf("ChayNgay %v %v", xong, err)
+	}
+	if len(thuKhoa) != 0 || len(thuLai) != 0 || b.gia.goi["xoa"] != 1 {
+		t.Fatalf("row locked during the call: %v; second attempt ran: %v; %d deletes", thuKhoa, thuLai, b.gia.goi["xoa"])
+	}
+	// The periodic pass: a failing attempt, then the pass once due.
+	f2, _ := b.kho.Ghi(ctx, p, suThatMoi("Hay đi xe máy"))
+	b.gia.trongXoa = nil
+	b.gia.conSot = 1
+	if _, err := b.kho.Quen(ctx, p, trinho.QuenGi{ID: f2.ID}); !errors.Is(err, ErrDangXoa) {
+		t.Fatalf("Quen with rows left: %v", err)
+	}
+	if err := b.pool.QueryRow(ctx, `SELECT id::text FROM nep_xoa WHERE su_that_id=$1`, f2.ID).Scan(&viec); err != nil {
+		t.Fatal(err)
+	}
+	b.now = b.now.Add(time.Hour)
+	thuKhoa = nil
+	b.gia.trongXoa = khoaNgay
+	pass, _ := b.pool.Begin(ctx)
+	defer pass.Rollback(ctx)
+	// Other tests' deletions due by now may share the pass.
+	if n, err := b.kho.LuotXoa(ctx, pass); err != nil || n < 1 {
+		t.Fatalf("pass %d %v", n, err)
+	}
+	_ = pass.Commit(ctx)
+	if len(thuKhoa) != 0 {
+		t.Fatalf("the pass held the row during the call: %v", thuKhoa)
+	}
+	if n := b.so(t, `SELECT count(*) FROM nep_xoa WHERE id=$1 AND buoc='xong'`, viec); n != 1 {
+		t.Fatal("the pass did not finish the deletion")
+	}
+}

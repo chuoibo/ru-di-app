@@ -51,7 +51,7 @@ worker: aiharness.Engine.Run(turn, sink)
 | Thẻ nhóm | `ai_card` kind `tra_loi` `{ban, tac_gia:"rudi-ai", invocation_id, lenh, doc{so_tin, chi_loi_nho}, phan[≤3: text/places/itinerary/expense_draft], outing_id?}`. Author trong DB là NULL (sống qua E2EE). `reply_to_id` là tin tag. Kiểm bằng `GroundReply` mới; `GroundCard` giữ nguyên cho oracle |
 | Registry tool (một nơi: `aiharness/tools`) | `search_places`, `get_place`, `list_destinations`, `nearest_area`, `group_snapshot`, `list_group_outings`, `search_app_manual`, `explain_screen`, `propose_places`, `propose_itinerary`, `draft_poll`, `suggest_screen`, `my_upcoming_outings`, `recall_memory`, `remember_fact`, `forget_fact`, `what_you_remember`, `set_reminder`. Bot nào gọi được tool nào do `quyen.golden.json` quyết (mục 8) |
 | Quyền tool | Tool đọc chạy trong tx ReadOnly. Tool nháp không chạm DB. Không tool nào ghi tiền, nghĩa vụ, hay chốt kèo. `recall_memory`/`remember_fact`/`forget_fact`/`set_reminder` chỉ tới được từ gốc scope=me |
-| Trí nhớ Nếp | Gói `nepnho` là writer duy nhất. «Quên» là **xoá cứng** kèm tombstone băm. Fact bị thay hoặc hết hạn xoá ngay khi củng cố. Chỉ trích từ lời của chính người dùng; từ chối fact về người khác. Xoá qua **một trigger Go trên `people.deleted_at`** phủ mọi bảng Go có `person_id` |
+| Trí nhớ Nếp | Gói `nepnho` là writer duy nhất. «Quên» là **xoá cứng** kèm tombstone băm. Fact bị thay hoặc hết hạn xoá ngay khi củng cố (`DinhKyDon` mở xoá `mot` cho fact quá `den_luc`). Chỉ trích từ lời của chính người dùng (đoạn nguyên từ của tin nhắn lượt này); từ chối fact về người khác. Xoá qua **một trigger Go trên `people.deleted_at`** phủ mọi bảng Go có `person_id` |
 | Quan sát | Chỉ id, enum, số đếm, thời gian. Không nội dung, không tham số tool, không nhãn nhạy cảm gắn với người. Không cài OTel provider toàn cục |
 | Latency | Sự kiện trạng thái đầu tiên (animation) p95 ≤300ms. Token chữ đầu p50 ≤2.5s, p95 ≤5s. Plan tổng p95 ≤8s |
 
@@ -316,11 +316,14 @@ Còn mở: xem cuối §8.3.
 - Cờ dị ứng ngoài danh mục đi vào yêu cầu mà bộ chấm và bước trả lời đọc (`cung.di_ung_ngoai_danh_muc`),
   và mọi câu trả lời của lượt mở đầu bằng câu lưu ý cố định `cau.DiUngNgoaiDanhMuc`, bất kể đường nào.
 
-**Nhãn của router.** `nhay_cam` và `ngoai_pham_vi` đưa lượt ra khỏi tool và truy hồi (trả lời thẳng
-dưới lời dặn `prompts.LoiDanNhan`, vẫn qua verifier). Nhãn `nhay_cam` **không bao giờ được lưu**: bản
-ghi và dòng log ghi `""`; metrics schema v3 (`aiharness_schema_migrations` phiên bản 3, v1/v2 không
-sửa) xoá mọi hàng cũ mang nhãn đó và CHECK không nhận nó nữa — hàng metrics trỏ tới lời gọi, lời gọi
-trỏ tới người.
+**Nhãn của router.** `nhay_cam` và `ngoai_pham_vi` đưa lượt ra khỏi tool và truy hồi (trả lời thẳng,
+vẫn qua verifier). Lượt `nhay_cam` **không phân biệt được với một lượt sạch** qua bất cứ gì được lưu hay
+gửi đi: bản ghi và dòng log ghi `nhan_guard = sach` và, trên đường thẳng mà nhãn ép, các nhãn chuẩn của
+một lượt chào hỏi sạch (`huong = tra_loi_thang`, `y_dinh = smalltalk`, `so_y_dinh = 1`); lời dặn khi tin
+nhắn chạm chuyện nhạy cảm (`prompts.LoiDanThang`) nằm trong **mọi** câu trả lời thẳng, nên yêu cầu gửi
+provider — và số token — giống từng byte. Chỉ `ngoai_pham_vi` (được lưu) nối thêm lời dặn riêng. Metrics
+schema v3 bỏ nhãn khỏi CHECK; v4 viết lại hàng cũ (nhãn rỗng mà còn cột router) theo cùng cách và CHECK
+không nhận hàng như thế nữa — hàng metrics trỏ tới lời gọi, lời gọi trỏ tới người.
 
 **Tool và chèn lệnh (cấu trúc, không đọc chữ).**
 
@@ -334,9 +337,20 @@ trỏ tới người.
     hàng danh mục, sổ tay) không tool có tác dụng phụ nào (lớp `tri_nho`, `nhac`) chạy nữa. Sau trí nhớ
     của chính người hỏi thì không ghi điều mới; chỉ `forget_fact` còn chạy (người hỏi đã nhờ quên, và
     cần bí danh `recall_memory` vừa cho; xoá chỉ thu hẹp cái được giữ).
+  - **Chỉ lời của chính người hỏi.** `noi_dung` của `remember_fact` phải là một đoạn nguyên từ của tin
+    nhắn lượt này (so từng từ bằng đồng nhất, bỏ dấu datamark), và đoạn được lưu lấy từ tin nhắn chứ
+    không từ chữ model viết (`tools.kiemGhiNho`). Chữ từ lịch sử thiết bị, phiếu màn hình, dữ liệu tool,
+    hay lời model diễn giải thì không thành ký ức được, dù model bị bảo gì. `nepnho.Ghi` chỉ gửi sang
+    trích xuất của sidecar (vai `user`) fact nguồn `noi_ro`. Theo quyết định sản phẩm «lặng lẽ, có công
+    bố»: ghi không cần chạm xác nhận, câu trả lời công bố việc sẽ nhớ.
+  - **Cá nhân hoá là bằng chứng.** ≤5 ký ức nhớ lại vào sổ cái của lượt như bằng chứng nguồn `memory`
+    (bí danh f1…), verifier nhận chúng, khối `tri_nho` render qua `cautruc.DongBangChung` (datamark), và
+    sau đó không ghi điều mới (`BoiCanh.NapTriNho`). Lượt router đọc là nhờ nhớ thì không cá nhân hoá.
 - `remember_fact`/`forget_fact` chỉ **xếp hàng**; `BoiCanh.CamKet` ghi sau khi câu trả lời qua verifier
   và mọi kiểm đầu ra (kể cả lần kiểm cấu trúc cuối khi mở đầu bằng câu lưu ý dị ứng) — lượt không phát
-  gì thì không ghi gì.
+  gì thì không ghi gì. Mỗi lượt tối đa một điều mới, ghi **sau** mọi lệnh quên: lỗi giữa chừng không để
+  lại điều mới nào của lượt bị giữ lại (quên đã chạy thì chỉ thu hẹp). Verifier nhận các việc đã xếp
+  (`BoiCanh.ViecCho`): «mình sẽ nhớ …» chỉ không bị tính là hứa suông khi thật sự có việc ghi đó.
 - Lời gọi tool trả về ở bước `NONE` (hay sau `tra_loi_ngay`) bị từ chối, không chạy (`agent.CauHinh.BuocCuoi`).
 - Dữ liệu tool trên đường `tactu` được datamark từng trường, cắt 300 rune, JSON không escape `<>` để khối
   tự đổi chúng sang toàn khổ.
@@ -392,8 +406,8 @@ kết quả của `agent.Chay`) đỏ; cổng cũ xanh trên đột biến «ch�
 
 Còn mở: T3 thật (khoá + Lead duyệt số lời gọi); độ trễ nháp-rồi-kiểm (chưa stream, `crag-kiem-chung.md`
 §3 cần Lead chọn); `set_reminder`, gu nhóm, adapter trí nhớ sản xuất; bước giữa `AUTO` hay `VALIDATED` (đã chọn `VALIDATED`, §8.6);
-verifier chưa biết tool ghi nào đã xếp hàng trong lượt nên câu «mình sẽ nhớ» bị giữ (hướng an toàn) —
-cần đưa danh sách hành động đã làm vào verifier khi adapter trí nhớ bật; ADR-0033 §4 cho
+verifier nay nhận các việc ghi/quên đã xếp (`BoiCanh.ViecCho`), nhưng việc model verifier thật cho qua
+«mình sẽ nhớ …» đúng khi có việc và giữ khi không có mới chỉ đo trên stub — cần đo ở T3; ADR-0033 §4 cho
 `my_upcoming_outings`; bot nhóm vẫn đi brain.
 
 ### 8.4 Truy hồi vector: một schema, một writer, và luật «chưa rõ» (nhánh `infra/rag-unified`)
@@ -524,8 +538,9 @@ gọi viết lại riêng. Vòng sửa viết lại truy vấn thì bỏ dạng 
 
 **Bố cục cho cache ngầm của Gemini (gap #5).**
 - System instruction tĩnh theo bot và theo bước (router, chấm, trả lời, verifier: file nhúng; agent:
-  `NepAgent` + `CongCu`, đường trả lời thẳng dùng `NepAgent` là tiền tố byte của nó). Ngoại lệ có chủ ý:
-  lượt `nhay_cam`/`ngoai_pham_vi` nối mệnh đề an toàn vào system — an toàn thắng cache.
+  `NepAgent` + `CongCu`, đường trả lời thẳng dùng `NepAgent` là tiền tố byte của nó, rồi `LoiDanThang`
+  cố định). Ngoại lệ có chủ ý: lượt `ngoai_pham_vi` nối lời dặn của nhãn vào system — an toàn thắng cache;
+  `nhay_cam` không nối gì (không để yêu cầu lộ nhãn).
 - **Khai báo tool cố định theo bot**: mọi bước, mọi lượt khai đúng tập bảng quyền cấp cho bot, theo thứ tự
   sổ đăng ký (`tools.BoiCanh.BoCongCu`). Cái bước được gọi thu hẹp bằng
   `FunctionCallingConfig{Mode: VALIDATED, AllowedFunctionNames}` (`tools.BoiCanh.TenChoPhep`: bỏ tool

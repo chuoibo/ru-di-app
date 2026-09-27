@@ -232,6 +232,64 @@ func TestV3KhongNhanNhayCam(t *testing.T) {
 	}
 }
 
+// Version 4 in the live table: rows a version-3 binary wrote for a
+// nhay_cam turn (no label, the router's other columns kept) are rewritten
+// to the clean turn they cannot be told from, the direct path's to the
+// canonical small-talk labels; a router failure's row is left as it is; and
+// the table refuses such a row from then on.
+func TestV4ViVetNhayCamCu(t *testing.T) {
+	pool := setup(t)
+	ctx := context.Background()
+	thang, tien, hong := invocation(t, pool), invocation(t, pool), invocation(t, pool)
+	for _, id := range []string{thang, tien, hong} {
+		if err := metrics.Ghi(ctx, pool, record(id)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Back to what version 3 allowed, then the old rows.
+	if _, err := pool.Exec(ctx, `ALTER TABLE ai_turn_metrics DROP CONSTRAINT ai_turn_metrics_nhan_nhay_cam_check`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE ai_turn_metrics SET nhan_guard='', huong='tac_tu', y_dinh='find_places', so_y_dinh=2, tien='none', duong='thang', cong_cu='{}' WHERE invocation_id=$1`, thang); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE ai_turn_metrics SET nhan_guard='', huong='tac_tu', y_dinh='find_places', so_y_dinh=1, tien='money_action', duong='tu_choi_tien', cong_cu='{}' WHERE invocation_id=$1`, tien); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE ai_turn_metrics SET nhan_guard='', huong='', y_dinh='', so_y_dinh=0, tien='', duong='', cong_cu='{}' WHERE invocation_id=$1`, hong); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM aiharness_schema_migrations WHERE version=4`); err != nil {
+		t.Fatal(err)
+	}
+	if err := metrics.Migrate(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	doc := func(id string) string {
+		var s string
+		if err := pool.QueryRow(ctx, `SELECT concat_ws('|', nhan_guard, huong, y_dinh, so_y_dinh, tien, duong) FROM ai_turn_metrics WHERE invocation_id=$1`, id).Scan(&s); err != nil {
+			t.Fatal(err)
+		}
+		return s
+	}
+	for id, want := range map[string]string{
+		thang: "sach|tra_loi_thang|smalltalk|1|none|thang",
+		tien:  "sach|tac_tu|find_places|1|money_action|tu_choi_tien",
+		hong:  "|||0||",
+	} {
+		if got := doc(id); got != want {
+			t.Errorf("row %s = %s, want %s", id, got, want)
+		}
+	}
+	var n int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM ai_turn_metrics WHERE nhan_guard='' AND huong<>''`).Scan(&n); err != nil || n != 0 {
+		t.Fatalf("%d rows still tell a nhay_cam turn: %v", n, err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE ai_turn_metrics SET nhan_guard='' WHERE invocation_id=$1`, thang); err == nil {
+		t.Fatal("the table took router columns without a label")
+	}
+}
+
 // A changed version 1 is refused, never reapplied.
 func TestChecksumLech(t *testing.T) {
 	pool := setup(t)

@@ -14,6 +14,7 @@ import (
 	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/prompts"
 	"mobile/services/core/internal/aiharness/trinho"
 	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/domain/areas"
@@ -655,8 +656,16 @@ type thamSoGhiNho struct {
 }
 
 // kiemGhiNho enforces the MODEL's own classification (only ca_nhan is
-// stored) and the data-format privacy check, then the fact's structure.
-// Neither reads the fact's meaning.
+// stored) and the data-format privacy check, then that the fact is the
+// person's own words of this turn, then the fact's structure. None reads
+// the fact's meaning.
+//
+// The words stored are the person's (re-review MAJOR 2): noi_dung must be a
+// whole span of their message (BoiCanh.LoiNguoiHoi), found by exact
+// identity of words, and the span is taken from the message itself, not
+// from what the model wrote. Text that reached the model any other way (the
+// panel history, the slip, a tool's data) can therefore never become a
+// fact, whatever the model was told; neither can its paraphrase.
 func kiemGhiNho(bc *BoiCanh, a *thamSoGhiNho) *loiTS {
 	if PhanLoaiSuThat(a.PhanLoai) != CaNhan {
 		return &loiTS{loi: KhongDuocPhep, truong: "phan_loai"}
@@ -664,6 +673,11 @@ func kiemGhiNho(bc *BoiCanh, a *thamSoGhiNho) *loiTS {
 	if guard.DinhDang(a.NoiDung) != guard.RaSach {
 		return &loiTS{loi: KhongDuocPhep, truong: "noi_dung"}
 	}
+	doan, ok := doanCuaLoi(bc.LoiNguoiHoi, prompts.BoDanhDau(a.NoiDung))
+	if !ok {
+		return thamSoSai("noi_dung", "must be copied word for word from the person's message in the cau_hoi block")
+	}
+	a.NoiDung = doan
 	tu := bc.ngay()
 	if a.TuNgay != "" {
 		if !hieu.NgayHopLe(a.TuNgay) {
@@ -685,6 +699,27 @@ func kiemGhiNho(bc *BoiCanh, a *thamSoGhiNho) *loiTS {
 	return nil
 }
 
+// doanCuaLoi finds doan in loi as a run of whole words (runs of white
+// space are one space in both) and returns that run as loi has it. Exact
+// identity of words, compared one by one; no word is read. false when doan
+// has no word or is not such a run.
+func doanCuaLoi(loi, doan string) (string, bool) {
+	lw, dw := strings.Fields(loi), strings.Fields(doan)
+	if len(dw) == 0 {
+		return "", false
+	}
+	for i := 0; i+len(dw) <= len(lw); i++ {
+		khop := true
+		for j := range dw {
+			khop = khop && lw[i+j] == dw[j]
+		}
+		if khop {
+			return strings.Join(lw[i:i+len(dw)], " "), true
+		}
+	}
+	return "", false
+}
+
 func chayGhiNho(ctx context.Context, bc *BoiCanh, a *thamSoGhiNho) (ketQuaTho, error) {
 	if l := bc.laNep(); l != nil {
 		return ketQuaTho{}, l
@@ -695,7 +730,9 @@ func chayGhiNho(ctx context.Context, bc *BoiCanh, a *thamSoGhiNho) (ketQuaTho, e
 	// Queued, not written: the fact reaches the store only when the answer
 	// is released (BoiCanh.CamKet). A turn that fails writes nothing.
 	moi := a.moi
-	bc.xepNho(thaoTacNho{ghi: &moi})
+	if l := bc.xepNho(thaoTacNho{ghi: &moi}); l != nil {
+		return ketQuaTho{}, l
+	}
 	return ketQuaTho{them: map[string]any{"da_nhan": true, "ghi_khi_tra_loi": true}}, ctx.Err()
 }
 
@@ -729,7 +766,7 @@ func chayQuen(ctx context.Context, bc *BoiCanh, a *thamSoQuen) (ketQuaTho, error
 	}
 	// Queued like remember_fact: deleted only when the answer is released.
 	q := a.q
-	bc.xepNho(thaoTacNho{quen: &q})
+	_ = bc.xepNho(thaoTacNho{quen: &q})
 	return ketQuaTho{them: map[string]any{"da_nhan": true, "ghi_khi_tra_loi": true}}, ctx.Err()
 }
 

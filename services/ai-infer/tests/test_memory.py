@@ -186,6 +186,35 @@ def test_owner_leak_fails_closed(settings, auth, fake_store):
     assert r.status_code == 500 and "Người dùng" not in r.text
 
 
+def test_owner_leak_fails_closed_on_search(settings, auth, fake_store):
+    # The same corruption on the search path: the owner check after the
+    # store's answer (MemoryService.search -> _own) must fail closed too.
+    svc = build_service(ScriptedLlm([own("Người dùng thích ăn cay")]))
+    c = app_with(settings, svc)
+    seed(c, auth, "alice", "x")
+    fake = fake_store.instances[0]
+    orig = fake._match
+
+    def leaky(flt, params):
+        if flt == OWNER_FILTER:
+            return lambda r: True
+        return orig(flt, params)
+
+    fake._match = leaky
+    r = c.post(
+        "/v1/memory/search",
+        json={"user_id": "bob", "query": "ăn cay", "threshold": 0.0},
+        headers=auth,
+    )
+    assert r.status_code == 500 and "Người dùng" not in r.text
+    # Canary: the corrupted store does hand alice's row to bob's filter.
+    assert any(
+        "ăn cay" in (row.get("text") or "")
+        for row in fake.collections[next(iter(fake.collections))].values()
+        if leaky(OWNER_FILTER, {"owner": "bob"})(row)
+    )
+
+
 def test_delete_one_counts_zero(settings, auth, fake_store):
     svc = build_service(ScriptedLlm([own("Người dùng thích đi bộ buổi sáng")]))
     c = app_with(settings, svc)

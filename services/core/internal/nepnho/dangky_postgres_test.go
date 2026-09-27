@@ -27,7 +27,7 @@ import (
 // migrate-chat` and `migrate-rag` run).
 func sqlGo() []string {
 	sqls := append(chatassist.SchemaFiles(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(),
-		metrics.SchemaSQL(), metrics.SchemaV2SQL(), metrics.SchemaV3SQL(), SchemaSQL())
+		metrics.SchemaSQL(), metrics.SchemaV2SQL(), metrics.SchemaV3SQL(), metrics.SchemaV4SQL(), SchemaSQL())
 	sqls = append(sqls, avatarfeed.SchemaFiles()...)
 	return append(sqls, rag.SchemaFiles()...)
 }

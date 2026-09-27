@@ -17,6 +17,7 @@ import (
 	"mobile/services/core/internal/aiharness/prompts"
 	"mobile/services/core/internal/aiharness/tactu"
 	"mobile/services/core/internal/aiharness/traloi"
+	"mobile/services/core/internal/aiharness/trinho"
 	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/domain/tuvung"
 )
@@ -100,6 +101,58 @@ func CumTuHoiLai(kq hieu.KetQua) bool {
 func CumTuVongLap(ctx context.Context, cfg agent.CauHinh) bool {
 	text, _ := agent.Chay(ctx, nil, cfg, nil, "", nil)
 	return regexp.MustCompile(`đặt bàn`).MatchString(text)
+}
+
+// PhieuTheoTu refuses a turn from a word of the slip's trip title, text
+// another member wrote (re-review mutant H2).
+func PhieuTheoTu(t aiharness.Turn) bool {
+	return t.PhieuNep != nil && strings.Contains(t.PhieuNep.TieuDe, "chia tiền")
+}
+
+// GoiYTheoTu reads the slip's suggested questions for a word.
+func GoiYTheoTu(p aiharness.PhieuNep) bool {
+	for _, g := range p.GoiY {
+		if strings.HasPrefix(g, "Chia") {
+			return true
+		}
+	}
+	return false
+}
+
+// SoLieuTheoTu reads a string count of the slip for a word.
+func SoLieuTheoTu(p aiharness.PhieuNep) bool {
+	s, _ := p.SoLieu["trangThai"].(string)
+	return s == "huỷ"
+}
+
+// BangChungTheoTu filters evidence by a word of a place's name before the
+// verifier (re-review mutant H3).
+func BangChungTheoTu(bcs []truyhoi.BangChung) []truyhoi.BangChung {
+	var out []truyhoi.BangChung
+	for _, b := range bcs {
+		if v, ok := b.Truong["ten"]; ok && strings.Contains(v, "quảng cáo") {
+			continue
+		}
+		out = append(out, b)
+	}
+	return out
+}
+
+// HoSoTheoTu drops the personalization when a recalled fact names a word
+// (re-review mutant H4).
+func HoSoTheoTu(ctx context.Context, h aiharness.HoSo) bool {
+	ds, _ := h.HoSoNep(ctx, "", "")
+	for _, s := range ds {
+		if strings.Contains(s.NoiDung, "dị ứng") {
+			return true
+		}
+	}
+	return false
+}
+
+// SuThatTheoTu reads a remembered fact for a word.
+func SuThatTheoTu(s trinho.SuThat) bool {
+	return regexp.MustCompile(`dị ứng`).MatchString(s.NoiDung)
 }
 
 // HopLe uses the text only the ways the rule allows.

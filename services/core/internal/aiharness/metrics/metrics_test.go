@@ -126,8 +126,16 @@ func TestNhanNhayCamKhongLuu(t *testing.T) {
 	if obs.NhanGuard("nhay_cam").Valid() {
 		t.Fatal("a record may hold nhay_cam")
 	}
-	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV3SQL {
+	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV4SQL {
 		t.Fatal("PhienBan is not the last version")
+	}
+	// Version 4 keeps the table from holding router columns without a label
+	// (the row a nhay_cam turn wrote under version 3), and rewrites them.
+	for _, s := range []string{"CHECK (nhan_guard <> '' OR (huong = '' AND tien = '' AND y_dinh = '' AND so_y_dinh = 0))",
+		"SET nhan_guard = 'sach'", "WHERE nhan_guard = '' AND (huong <> '' OR tien <> '' OR y_dinh <> '' OR so_y_dinh <> 0)"} {
+		if !strings.Contains(schemaV4SQL, s) {
+			t.Fatalf("version 4 lacks %q", s)
+		}
 	}
 }
 

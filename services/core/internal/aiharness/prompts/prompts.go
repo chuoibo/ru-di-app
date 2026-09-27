@@ -43,21 +43,29 @@ func NepAgent(maKiem string) string {
 	return strings.Replace(strings.TrimSpace(nepAgent), MaKiemCho, maKiem, 1)
 }
 
-// The instruction clauses of the router's two labels that take the turn off
-// the tools (hieu.QuyetDinh.KhongCongCu). They are ours, appended to the
-// system instruction; the label itself is never stored against the person.
-const (
-	loiDanNhayCam     = "Tin nhắn này chạm tới chuyện nhạy cảm (tự làm hại mình, bị bạo hành, khủng hoảng). Không gọi công cụ, không gợi ý quán. Trả lời ngắn, ân cần, không phán xét; khuyên người dùng nói ngay với người thân tin cậy hoặc gọi dịch vụ cấp cứu nếu đang nguy hiểm. Không hứa làm gì thay họ."
-	loiDanNgoaiPhamVi = "Tin nhắn này nằm ngoài việc của Nếp (tìm chỗ đi chơi, dùng app, lên kèo với nhóm). Không gọi công cụ. Nói ngắn gọn là Nếp không giúp được việc này và gợi ý một việc Nếp làm được."
-)
+// loiDanThang is the clause every direct answer carries, whatever the
+// router's label: how to answer a message that touches something sensitive.
+// It is not the router's nhay_cam label turned into words: the label only
+// takes the turn off the tools (hieu.QuyetDinh.KhongCongCu), and the direct
+// answer's request is the same byte for byte whether the label was nhay_cam
+// or sach, so nothing the provider bills or the metrics row counts (the
+// prompt's tokens) can tell the label (privacy review 2, metrics v4).
+const loiDanThang = "Nếu tin nhắn chạm tới chuyện nhạy cảm (tự làm hại mình, bị bạo hành, khủng hoảng): không gợi ý quán; trả lời ngắn, ân cần, không phán xét; khuyên người dùng nói ngay với người thân tin cậy hoặc gọi dịch vụ cấp cứu nếu đang nguy hiểm; không hứa làm gì thay họ."
 
-// LoiDanNhan is the clause for the router's label nhan ("" for any other
-// label).
+// LoiDanThang is the clause of every direct answer.
+func LoiDanThang() string { return loiDanThang }
+
+// loiDanNgoaiPhamVi is the instruction clause of the router's ngoai_pham_vi
+// label, which takes the turn off the tools. It is ours, appended to the
+// system instruction after LoiDanThang; that label is not sensitive and is
+// recorded as it is.
+const loiDanNgoaiPhamVi = "Tin nhắn này nằm ngoài việc của Nếp (tìm chỗ đi chơi, dùng app, lên kèo với nhóm). Không gọi công cụ. Nói ngắn gọn là Nếp không giúp được việc này và gợi ý một việc Nếp làm được."
+
+// LoiDanNhan is the clause for the router's label nhan: ngoai_pham_vi's,
+// and "" for any other label, nhay_cam included (its turn must not be told
+// from a clean one by its request).
 func LoiDanNhan(nhan string) string {
-	switch nhan {
-	case "nhay_cam":
-		return loiDanNhayCam
-	case "ngoai_pham_vi":
+	if nhan == "ngoai_pham_vi" {
 		return loiDanNgoaiPhamVi
 	}
 	return ""
@@ -147,6 +155,13 @@ func DanhDau(body string) string {
 		lines[i] = strings.Join(strings.Fields(l), DauDanhDau)
 	}
 	return strings.Join(lines, "\n")
+}
+
+// BoDanhDau undoes DanhDau on a text a model copied out of a marked block:
+// each mark becomes the space it stands for. Structural: our own character,
+// no word read.
+func BoDanhDau(s string) string {
+	return strings.ReplaceAll(s, DauDanhDau, " ")
 }
 
 // BocDuLieuDanhDau lays body into a block named n, datamarked: the way every

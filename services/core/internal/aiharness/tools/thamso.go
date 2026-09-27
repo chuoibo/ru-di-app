@@ -120,7 +120,7 @@ var thamSo = map[Ten]*genai.Schema{
 		"k":        soK(),
 	}, []string{"truy_van", "k"}, "truy_van"),
 	RememberFact: doiTuong(map[string]*genai.Schema{
-		"noi_dung":  chuoi(trinho.MaxNoiDung, "the fact, as the person stated it about themself"),
+		"noi_dung":  chuoi(trinho.MaxNoiDung, "the fact: a span of the person's message, copied word for word"),
 		"loai":      enum(trinho.LoaiSuThats.Values()),
 		"phan_loai": enum(PhanLoaiSuThats.Values()),
 		"tu_ngay":   ngay(),

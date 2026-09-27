@@ -28,6 +28,9 @@ type khoGia struct {
 	tach    bool   // Them keeps the sentence as two memories
 	loaiRut string // Them records this kind
 	timN    int    // the k of the last Tim
+	// trongXoa runs inside every delete call, while the caller waits on
+	// the sidecar.
+	trongXoa func()
 }
 
 func moiKhoGia() *khoGia {
@@ -109,6 +112,9 @@ func (k *khoGia) LietKe(_ context.Context, owner string) ([]MucNho, error) {
 
 // xoa removes owner's rows (all when id is ""), honouring the knobs.
 func (k *khoGia) xoa(method, owner, id string) (int, error) {
+	if k.trongXoa != nil {
+		k.trongXoa()
+	}
 	k.mu.Lock()
 	defer k.mu.Unlock()
 	if err := k.dem(method); err != nil {

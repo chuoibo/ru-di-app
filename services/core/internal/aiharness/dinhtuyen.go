@@ -162,22 +162,31 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	}
 	bc := &tools.BoiCanh{
-		Bot: obs.BotNep, NguoiHoi: t.NguoiHoi, Man: manCua(t.PhieuNep), Luc: t.Luc, HanChe: q.HanChe, YDinh: kq.YDinh,
+		Bot: obs.BotNep, NguoiHoi: t.NguoiHoi, LoiNguoiHoi: hoi.Chu, Man: manCua(t.PhieuNep), Luc: t.Luc, HanChe: q.HanChe, YDinh: kq.YDinh,
 		Cung: cung, Mem: mem, DiUngNgoaiDanhMuc: kq.Slots.DiUngNgoaiDanhMuc, DiemDen: idsDiemDen(dsDiemDen),
 		Nguon: e.nguon, Quyen: e.quyen, SoCai: sc,
 	}
 	khoi := e.khoiThem(t, rec, kq)
-	if b := e.hoSoNep(runCtx, t, hoi.Chu); b != "" {
-		// Before the server's block, whose «now» line changes on every
-		// call: the most volatile data goes last (implicit caching).
-		khoi = append(khoi[:len(khoi)-1:len(khoi)-1], b, khoi[len(khoi)-1])
-	}
 	if ten, _, ok := tactu.Nhanh(kq, bc); ok && !q.KhongCongCu && (ten == tools.SearchPlaces || ten == tools.SearchAppManual) {
 		if res, chay, err := e.nepTruyHoi(runCtx, rec, dem, kq, bc, hoi.Chu, ten); chay {
 			if err != nil {
 				return Result{}, loi(err)
 			}
 			return e.luuYDiUng(res, kq, rec)
+		}
+	}
+	// Personalization, on the paths whose answer reads it: the recalled
+	// facts become memory evidence of the ledger (the verifier judges a
+	// sentence built on one against it) and a datamarked block under their
+	// aliases, and no memory write runs after them (BoiCanh.NapTriNho). A
+	// turn the router read as asking to remember something is not
+	// personalized, so what it writes is never written after reading
+	// remembered facts.
+	if !coYDinh(kq.YDinh, hieu.Remember) {
+		if b := bc.NapTriNho(e.hoSoNep(runCtx, t, hoi.Chu)); b != "" {
+			// Before the server's block, whose «now» line changes on every
+			// call: the most volatile data goes last (implicit caching).
+			khoi = append(khoi[:len(khoi)-1:len(khoi)-1], b, khoi[len(khoi)-1])
 		}
 	}
 	if dem.ConLai() < 1+duTruKiem {
@@ -194,9 +203,11 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 			blocks = append([]string{s}, blocks...)
 		}
 		blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.CauHoi, hoi.Chu))
-		instruction := prompts.NepAgent(e.maKiem)
-		if q.KhongCongCu {
-			instruction += "\n\n" + prompts.LoiDanNhan(string(kq.NhanGuard))
+		// The same instruction for a nhay_cam turn as for a clean one:
+		// only ngoai_pham_vi, a label that is recorded, adds its clause.
+		instruction := prompts.NepAgent(e.maKiem) + "\n\n" + prompts.LoiDanThang()
+		if c := prompts.LoiDanNhan(string(kq.NhanGuard)); q.KhongCongCu && c != "" {
+			instruction += "\n\n" + c
 		}
 		cfg := agent.CauHinh{
 			Ten:             nepTen,
@@ -229,7 +240,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		rec.LoiMoHinh = obs.LoiSafety
 		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	}
-	res, err := e.xacMinh(runCtx, rec, dem, text, sc)
+	res, err := e.xacMinh(runCtx, rec, dem, text, sc, bc.ViecCho())
 	if err != nil && !isLoi(err) {
 		return Result{}, loi(err)
 	}
@@ -379,8 +390,12 @@ func (e *Engine) nepTruyHoi(ctx context.Context, rec *obs.TurnRecord, dem *llm.D
 // xacMinh releases a prose answer only after the verifier, in a fresh
 // context, judged it: its place tokens rendered from the ledger, its
 // sentences numbered by punctuation, the turn's evidence under local
-// aliases. The output guard's structural checks run before it.
-func (e *Engine) xacMinh(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem, text string, sc *tools.SoCai) (Result, error) {
+// aliases (the recalled facts of personalization among them), and the
+// memory changes the turn queued (viec, tools.BoiCanh.ViecCho), so a
+// sentence saying it will remember exactly what was queued is not read as
+// a promise of an action no tool performed. The output guard's structural
+// checks run before it.
+func (e *Engine) xacMinh(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem, text string, sc *tools.SoCai, viec []truyhoi.BangChung) (Result, error) {
 	chu, _, _ := traloi.GhepVanXuoi(strings.TrimSpace(text), sc)
 	// The structural checks first: they cost no call, and a leaked marker,
 	// a quoted instruction or a phone number is never sent on to another
@@ -395,6 +410,7 @@ func (e *Engine) xacMinh(ctx context.Context, rec *obs.TurnRecord, dem *llm.Dem,
 			bcs = append(bcs, b)
 		}
 	}
+	bcs = append(bcs, viec...)
 	if err := e.phanXu(ctx, rec, dem, traloi.TachCauVanXuoi(res.Text), bcs); err != nil {
 		return Result{}, err
 	}
@@ -472,17 +488,28 @@ func manCua(p *PhieuNep) string {
 }
 
 // ghiNhanRouter records the router's labels, enums and a count only.
+//
+// A nhay_cam turn is recorded as the clean turn it cannot be told from:
+// the row names the invocation and the invocation names the person
+// (chat_ai_invocations.person_id), so neither the label nor any column the
+// label shaped may differ from a clean turn's. Nếp refuses any money class
+// before the label is read (the money refusal's columns are the same for a
+// clean turn), and otherwise the label forces the direct path, so the turn
+// takes the labels a clean small-talk turn records on that path; the
+// direct path's instruction does not depend on the label either (nep), so
+// even its token counts are a clean turn's.
 func ghiNhanRouter(rec *obs.TurnRecord, kq hieu.KetQua) {
 	rec.NhanGuard, rec.Tien, rec.Huong = obs.NhanGuard(kq.NhanGuard), obs.Tien(kq.Tien), obs.Huong(kq.Huong)
-	if kq.NhanGuard == hieu.NhayCam {
-		// A sensitive label is never stored against the person, not even
-		// as a closed value: the row names the invocation, and the
-		// invocation names the person (chat_ai_invocations.person_id).
-		rec.NhanGuard = ""
-	}
 	rec.SoYDinh = len(kq.YDinh)
 	if len(kq.YDinh) > 0 {
 		rec.YDinh = obs.YDinh(kq.YDinh[0])
+	}
+	if kq.NhanGuard != hieu.NhayCam {
+		return
+	}
+	rec.NhanGuard = obs.NhanGuard(hieu.Sach)
+	if kq.Tien == hieu.TienNone {
+		rec.Huong, rec.YDinh, rec.SoYDinh = obs.Huong(hieu.TraLoiThang), obs.YDinh(hieu.Smalltalk), 1
 	}
 }
 
@@ -543,19 +570,36 @@ func nganHanNep(ls []LuotNep, rec *obs.TurnRecord) []trinho.Luot {
 // phienNep names the device's session inside one turn.
 const phienNep = "panel"
 
-// hoSoNep is the personalization block of a Nếp turn: the person's own
-// recalled facts, at most five, only while their memory toggle is on (the
-// adapter returns "" otherwise). A failed recall answers without it: memory
-// is an aid, never a reason to fail the turn.
-func (e *Engine) hoSoNep(ctx context.Context, t Turn, cau string) string {
+// hoSoNep is the personalization of a Nếp turn: the person's own recalled
+// facts, at most five, only while their memory toggle is on (the adapter
+// returns none otherwise). A failed recall answers without them: memory is
+// an aid, never a reason to fail the turn.
+func (e *Engine) hoSoNep(ctx context.Context, t Turn, cau string) []trinho.SuThat {
 	if e.hoSo == nil || t.Bot != obs.BotNep || t.NguoiHoi == "" {
-		return ""
+		return nil
 	}
-	b, err := e.hoSo.HoSoNep(ctx, t.NguoiHoi, cau)
+	ds, err := e.hoSo.HoSoNep(ctx, t.NguoiHoi, cau)
 	if err != nil {
-		return ""
+		return nil
 	}
-	return b
+	if len(ds) > nepnhoMaxHoSo {
+		ds = ds[:nepnhoMaxHoSo]
+	}
+	return ds
+}
+
+// nepnhoMaxHoSo bounds the facts one turn lays into its prompt, whatever
+// the adapter returns (nepnho.MaxSuThatHoSo; research stm-personalization
+// §3.8: over-personalization).
+const nepnhoMaxHoSo = 5
+
+func coYDinh(ys []hieu.YDinh, y hieu.YDinh) bool {
+	for _, x := range ys {
+		if x == y {
+			return true
+		}
+	}
+	return false
 }
 
 // bamPhien buffers the device's session of this turn in the short-term

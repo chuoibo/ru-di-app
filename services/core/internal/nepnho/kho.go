@@ -59,6 +59,9 @@ var (
 	// ErrKhongGhi: the extraction stored nothing from the sentence (the
 	// model classified it as not the person's own outing preference).
 	ErrKhongGhi = errors.New("nepnho: nothing in the sentence was kept")
+	// ErrKhongLoiNguoi: the fact is not the person's own words (noi_ro);
+	// the extraction is never given anything else as theirs.
+	ErrKhongLoiNguoi = errors.New("nepnho: only the person's own words are written")
 )
 
 const (
@@ -240,6 +243,15 @@ func (k *Kho) Ghi(ctx context.Context, nguoi string, moi trinho.SuThatMoi) (trin
 	}
 	if err := moi.Kiem(); err != nil {
 		return trinho.SuThat{}, err
+	}
+	// The sidecar's extraction reads its input as the person's own words
+	// (role user; docs/architecture/03-ai-engine-hop-dong.md). Only a fact
+	// the person said (noi_ro) is: the engine's remember_fact stores a span
+	// of the person's message taken from the message itself
+	// (tools.kiemGhiNho). A fact learnt any other way has no writer yet,
+	// and is never sent under the person's name.
+	if moi.Nguon != trinho.NoiRo {
+		return trinho.SuThat{}, ErrKhongLoiNguoi
 	}
 	if k.kho == nil {
 		return trinho.SuThat{}, ErrKhongCauHinh

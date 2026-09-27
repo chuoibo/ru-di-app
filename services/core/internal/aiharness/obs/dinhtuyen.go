@@ -7,10 +7,13 @@ package obs
 // of those packages hold them equal (obs cannot import them: they import
 // obs).
 
-// NhanGuard is the router's safety label; "" when no router result exists
-// (the money screen refused first, or the router failed) and when the label
-// was nhay_cam: a sensitive label is never recorded, since the row names
-// the invocation and the invocation names the person (metrics schema v3).
+// NhanGuard is the router's safety label; "" when, and only when, no
+// router result exists (the money screen refused first, or the router
+// failed). A nhay_cam turn is recorded as the clean turn it cannot be told
+// from ("sach", with the canonical small-talk labels on the direct path the
+// label forces; aiharness.ghiNhanRouter): the row names the invocation and
+// the invocation names the person, so neither the label nor any column
+// shaped by it may be stored (metrics schema v3, v4).
 type NhanGuard string
 
 // NhanGuards are the router's labels a record may hold: every label but

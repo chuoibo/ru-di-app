@@ -46,6 +46,12 @@ type BoiCanh struct {
 	NguoiHoi string
 	// NhomID is the group the question was asked in (group bot only).
 	NhomID string
+	// LoiNguoiHoi is the person's own message of this turn, cleaned
+	// structurally (preprocess.LamSach). A fact remember_fact stores is a
+	// span of it, found by exact identity and taken from it (kiemGhiNho):
+	// never the model's paraphrase, never text from the history, the slip
+	// or a tool's data.
+	LoiNguoiHoi string
 	// Man is the screen Nếp's panel reports (already checked by the
 	// handler); "" for the group.
 	Man string
@@ -143,11 +149,16 @@ func (bc *BoiCanh) SoChoNho() int {
 	return len(bc.choNho)
 }
 
-// CamKet commits the queued memory writes, in the order the model asked for
-// them, through the memory port. The engine calls it once, after the answer
-// was verified and passed the output checks; a turn that releases nothing
-// never calls it, so nothing it queued is ever written. The queue is
-// emptied either way.
+// CamKet commits the queued memory changes through the memory port. The
+// engine calls it once, after the answer was verified and passed the output
+// checks; a turn that releases nothing never calls it, so nothing it queued
+// is ever written. The queue is emptied either way.
+//
+// A turn queues at most one new fact (xepNho), and it is written LAST,
+// after every forget: a failure withholds the answer, and it can never
+// leave a fact written by a turn whose answer was withheld (re-review
+// minor 5). What a failure can leave is a forget already done, which only
+// ever narrows what is kept.
 func (bc *BoiCanh) CamKet(ctx context.Context) error {
 	bc.mu.Lock()
 	ops := bc.choNho
@@ -162,25 +173,111 @@ func (bc *BoiCanh) CamKet(ctx context.Context) error {
 	if bc.Nguon.TriNho == nil {
 		return &loiTS{loi: LoiNguon}
 	}
+	var ghi *trinho.SuThatMoi
 	for _, op := range ops {
-		var err error
-		switch {
-		case op.ghi != nil:
-			_, err = bc.Nguon.TriNho.Ghi(ctx, bc.NguoiHoi, *op.ghi)
-		case op.quen != nil:
-			_, err = bc.Nguon.TriNho.Quen(ctx, bc.NguoiHoi, *op.quen)
+		if op.ghi != nil {
+			ghi = op.ghi
+			continue
 		}
-		if err != nil {
+		if _, err := bc.Nguon.TriNho.Quen(ctx, bc.NguoiHoi, *op.quen); err != nil {
+			return err
+		}
+	}
+	if ghi != nil {
+		if _, err := bc.Nguon.TriNho.Ghi(ctx, bc.NguoiHoi, *ghi); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (bc *BoiCanh) xepNho(op thaoTacNho) {
+// NguonViec is the source of the verifier's items that describe a memory
+// change queued this turn (ViecCho): the server's own record, never
+// evidence of the ledger.
+const NguonViec truyhoi.Nguon = "viec_da_xep"
+
+// ViecCho describes the memory changes queued this turn for the verifier,
+// one item each: what will be done once the answer is released (closed
+// values of ours) and what it concerns (the person's own words, or the
+// alias of the fact to forget). With them the verifier can tell an answer
+// that says it will remember or forget exactly that from a promise of an
+// action no tool performed, which it still withholds when nothing is
+// queued (re-review minor 6).
+func (bc *BoiCanh) ViecCho() []truyhoi.BangChung {
+	bc.mu.Lock()
+	ops := append([]thaoTacNho(nil), bc.choNho...)
+	bc.mu.Unlock()
+	var out []truyhoi.BangChung
+	for i, op := range ops {
+		b := truyhoi.BangChung{ID: "viec-" + strconv.Itoa(i+1), Nguon: NguonViec, Truong: map[string]string{}}
+		switch {
+		case op.ghi != nil:
+			b.Truong["viec"] = "se_ghi_nho_khi_tra_loi"
+			b.Truong["noi_dung"] = op.ghi.NoiDung
+		case op.quen.ID != "":
+			b.Truong["viec"] = "se_quen_khi_tra_loi"
+			if bi, ok := bc.SoCai.BiDanh(op.quen.ID); ok {
+				b.Truong["su_that"] = bi
+			}
+		default:
+			b.Truong["viec"] = "se_quen_khi_tra_loi"
+			b.Truong["mo_ta"] = op.quen.MoTa
+		}
+		out = append(out, b)
+	}
+	return out
+}
+
+// NapTriNho lays the person's recalled facts (personalization) into the
+// turn the way a recall tool's result would be: each fact becomes memory
+// evidence of the ledger under its alias (f1, f2, …), so the verifier
+// judges a sentence built on it against it, and the block the answer reads
+// renders them under those aliases with every value datamarked. A
+// remembered fact is data: from now on no memory write runs this turn
+// (nho; forget_fact alone survives, as after a recall). "" when there is
+// no fact.
+func (bc *BoiCanh) NapTriNho(ss []trinho.SuThat) string {
+	if len(ss) == 0 {
+		return ""
+	}
+	bc.mu.Lock()
+	bc.khoiTao()
+	bc.nho = true
+	bc.mu.Unlock()
+	bcs := make([]truyhoi.BangChung, 0, len(ss))
+	for _, s := range ss {
+		bcs = append(bcs, bangChungSuThat(s))
+	}
+	bc.SoCai.Ghi(RecallMemory, bcs)
+	var ghi []truyhoi.BangChung
+	var bis []string
+	for _, b := range bcs {
+		if bi, ok := bc.SoCai.BiDanh(b.ID); ok {
+			ghi, bis = append(ghi, b), append(bis, bi)
+		}
+	}
+	if len(ghi) == 0 {
+		return ""
+	}
+	return cautruc.KhoiBangChung(prompts.TriNho, ghi, func(i int, _ truyhoi.BangChung) string { return bis[i] })
+}
+
+// xepNho queues one memory change. A second new fact in the same turn is
+// refused (the person's message gives one span; CamKet writes it last so a
+// failure never leaves half a turn's writes). Checked under the lock: two
+// calls of one agent step run concurrently.
+func (bc *BoiCanh) xepNho(op thaoTacNho) *loiTS {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
+	if op.ghi != nil {
+		for _, c := range bc.choNho {
+			if c.ghi != nil {
+				return &loiTS{loi: KhongDuocPhep, truong: "noi_dung", yeuCau: "one fact per turn, and one is already queued"}
+			}
+		}
+	}
 	bc.choNho = append(bc.choNho, op)
+	return nil
 }
 
 // LoiGoi is one refused or failed tool call, for the turn's record: the

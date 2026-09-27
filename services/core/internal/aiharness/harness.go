@@ -244,11 +244,13 @@ type Engine struct {
 }
 
 // HoSo is personalization for one Nếp turn (production: nepnho.Kho). It
-// returns the <du_lieu nguon="tri_nho"> block of at most five of the
-// person's own facts, or "" when the person's memory toggle is off or
-// nothing is recalled. The engine never asks it for the group.
+// returns at most five of the person's own facts, none when the person's
+// memory toggle is off or nothing is recalled. The engine lays them into
+// the turn as memory evidence (tools.BoiCanh.NapTriNho): in the ledger
+// under aliases, before the verifier, datamarked in the answer's prompt.
+// The engine never asks it for the group.
 type HoSo interface {
-	HoSoNep(ctx context.Context, nguoi, cau string) (string, error)
+	HoSoNep(ctx context.Context, nguoi, cau string) ([]trinho.SuThat, error)
 }
 
 // NganHanLuot is the short-term memory a Nếp turn buffers its device

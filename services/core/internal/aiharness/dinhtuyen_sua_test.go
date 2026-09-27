@@ -3,6 +3,7 @@ package aiharness
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"reflect"
@@ -125,7 +126,7 @@ func TestNhanNhayCamVaNgoaiPhamVi(t *testing.T) {
 	for _, c := range []struct {
 		nhan, loiDan, ghi string
 	}{
-		{"nhay_cam", "chạm tới chuyện nhạy cảm", ""},
+		{"nhay_cam", "chạm tới chuyện nhạy cảm", "sach"},
 		{"ngoai_pham_vi", "nằm ngoài việc của Nếp", "ngoai_pham_vi"},
 	} {
 		r := ru{nhan: c.nhan, huong: "truy_hoi_mot_buoc", yDinh: []string{"find_places"}, canTruyHoi: []string{"places"},
@@ -151,6 +152,78 @@ func TestNhanNhayCamVaNgoaiPhamVi(t *testing.T) {
 	if m.err != nil || strings.Contains(string(m.stub.YeuCau()[1]), "functionDeclarations") {
 		t.Fatalf("tools offered on a nhay_cam turn: %v", m.err)
 	}
+}
+
+// A nhay_cam turn cannot be told from a clean one by anything the engine
+// stores or logs, nor by what it sends the provider (privacy review 2,
+// re-review BLOCKER 1): the whole TurnRecord, the ai_turn log line and
+// every request of a nhay_cam turn whose router chose the tools equal a
+// clean small-talk turn's, byte for byte (the fixed clock zeroes every
+// duration), and with a money class the refusal's record equals a clean
+// turn's with the same class.
+func TestNhayCamKhongPhanBietDuoc(t *testing.T) {
+	chay := func(r ru) moTa {
+		turn := luotCoBan()
+		turn.NguoiHoi = nguoiHoi
+		return chayVoi(t, moiTheGioi(t), turn, r.buoc(), dung(true, "Mình ở đây nghe bạn."), kiemDat())
+	}
+	cungNhau := func(ten string, a, b moTa) {
+		t.Helper()
+		if !reflect.DeepEqual(a.res.Record, b.res.Record) {
+			t.Errorf("%s: records differ:\n%+v\n%+v", ten, a.res.Record, b.res.Record)
+		}
+		if la, lb := dongLog(a), dongLog(b); la != lb || la == "" {
+			t.Errorf("%s: log lines differ:\n%s\n%s", ten, la, lb)
+		}
+		ya, yb := a.stub.YeuCau(), b.stub.YeuCau()
+		if len(ya) != len(yb) {
+			t.Fatalf("%s: %d vs %d requests", ten, len(ya), len(yb))
+		}
+		for i := range ya {
+			if !bytes.Equal(ya[i], yb[i]) {
+				t.Errorf("%s: request %d differs", ten, i)
+			}
+		}
+	}
+	sach := chay(ru{})
+	if sach.err != nil || sach.res.Record.NhanGuard != "sach" || sach.res.Record.Duong != obs.DuongThang {
+		t.Fatalf("clean turn: %v %+v", sach.err, sach.res.Record)
+	}
+	for _, r := range []ru{
+		{nhan: "nhay_cam"},
+		{nhan: "nhay_cam", huong: "tac_tu", yDinh: []string{"find_places", "remember"}},
+		{nhan: "nhay_cam", huong: "truy_hoi_mot_buoc", yDinh: []string{"find_places"}, canTruyHoi: []string{"places"},
+			truyVan: []map[string]string{{"nguon": "places", "cau": "quán Đà Lạt"}}, slots: map[string]any{"diem_den_id": ddDaLat}},
+	} {
+		m := chay(r)
+		if m.err != nil {
+			t.Fatalf("%s/%s: %v", r.nhan, r.huong, m.err)
+		}
+		cungNhau(r.nhan+"/"+r.huong, m, sach)
+	}
+	for _, tien := range []string{"split_draft", "money_action"} {
+		a := chayLuot(t, luotCoBan(), ru{nhan: "nhay_cam", tien: tien, huong: "tac_tu", yDinh: []string{"find_places"}}.buoc())
+		b := chayLuot(t, luotCoBan(), ru{tien: tien, huong: "tac_tu", yDinh: []string{"find_places"}}.buoc())
+		if a.res.Record.Duong != obs.DuongTuChoiTien || !reflect.DeepEqual(a.res.Record, b.res.Record) || dongLog(a) != dongLog(b) {
+			t.Errorf("money %s: records differ:\n%+v\n%+v", tien, a.res.Record, b.res.Record)
+		}
+	}
+}
+
+// dongLog is every log line of a turn without the handler's own wall-clock
+// timestamp (slog's "time", not a field of the record).
+func dongLog(m moTa) string {
+	var out []string
+	for _, l := range strings.Split(strings.TrimSpace(m.log.String()), "\n") {
+		var o map[string]any
+		if json.Unmarshal([]byte(l), &o) != nil {
+			return "unparsable: " + l
+		}
+		delete(o, "time")
+		raw, _ := json.Marshal(o)
+		out = append(out, string(raw))
+	}
+	return strings.Join(out, "\n")
 }
 
 // Text inside a place's data cannot change the person's memory on the tool
@@ -201,9 +274,10 @@ func TestChenLenhTrongDuLieuQuanTacTu(t *testing.T) {
 // returned on the step with function calling off is refused, never run
 // (correctness review 5, privacy review 1).
 func TestGhiNhoChiSauKhiPhat(t *testing.T) {
-	ghiNho := goiCC("remember_fact", map[string]any{"noi_dung": "Thích trà sữa", "loai": "thich_danh_muc", "phan_loai": "ca_nhan"})
+	ghiNho := goiCC("remember_fact", map[string]any{"noi_dung": "thích trà sữa", "loai": "thich_danh_muc", "phan_loai": "ca_nhan"})
 	turn := luotCoBan()
 	turn.NguoiHoi = nguoiHoi
+	turn.LoiNho = loiNhoTraSua
 	r := ru{huong: "tac_tu", yDinh: []string{"remember"}}.buoc()
 	dem := func(w theGioi) int {
 		tc, _ := w.triNho.LietKe(context.Background(), nguoiHoi)

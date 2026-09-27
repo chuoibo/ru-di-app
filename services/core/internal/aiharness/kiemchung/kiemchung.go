@@ -97,14 +97,21 @@ func Kiem(tb TuyenBo, sc *tools.SoCai) KiemTra {
 		}
 	}
 	if len(tb.NhanNut) > 0 {
-		nhan := map[string]bool{}
+		// Exact identity of two texts, the label the answer names and one a
+		// manual section carries: set membership by equality, never a map
+		// keyed by evidence text.
+		var nhan []string
 		for _, id := range sc.IDs() {
 			if bc, _, _ := sc.Lay(id); bc.Truong[TruongNhanNut] != "" {
-				nhan[bc.Truong[TruongNhanNut]] = true
+				nhan = append(nhan, bc.Truong[TruongNhanNut])
 			}
 		}
 		for _, n := range tb.NhanNut {
-			if !nhan[n] {
+			co := false
+			for _, l := range nhan {
+				co = co || l == n
+			}
+			if !co {
 				k.NhanNutKhongCo = append(k.NhanNutKhongCo, n)
 			}
 		}

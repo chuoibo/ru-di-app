@@ -33,6 +33,9 @@ var schemaV2SQL string
 //go:embed schema_v3.sql
 var schemaV3SQL string
 
+//go:embed schema_v4.sql
+var schemaV4SQL string
+
 // SchemaSQL is version 1, for the gates that read what the table can hold.
 func SchemaSQL() string { return schemaSQL }
 
@@ -42,12 +45,16 @@ func SchemaV2SQL() string { return schemaV2SQL }
 // SchemaV3SQL is version 3 (the sensitive label is never stored).
 func SchemaV3SQL() string { return schemaV3SQL }
 
+// SchemaV4SQL is version 4 (a nhay_cam turn is recorded as the clean turn
+// it cannot be told from; rows of earlier binaries rewritten).
+func SchemaV4SQL() string { return schemaV4SQL }
+
 // PhienBan is the schema version this binary writes rows for.
-const PhienBan = 3
+const PhienBan = 4
 
 // cacPhienBan are the versions in order. An applied version is never
 // edited: its checksum is recorded and a changed file is refused.
-func cacPhienBan() []string { return []string{schemaSQL, schemaV2SQL, schemaV3SQL} }
+func cacPhienBan() []string { return []string{schemaSQL, schemaV2SQL, schemaV3SQL, schemaV4SQL} }
 
 // Execer is a pool or a transaction.
 type Execer interface {
@@ -97,8 +104,8 @@ type Reader interface {
 
 // Installed says whether the version this binary writes (PhienBan) is in
 // place: what `serve` and `work` require before running Nếp on the Go
-// engine, since the row names version 2's columns and version 3 is what
-// keeps the sensitive label out of the table.
+// engine, since the row names version 2's columns and versions 3 and 4
+// are what keep the sensitive label, and any trace of it, out of the table.
 func Installed(ctx context.Context, q Reader) (bool, error) {
 	var ok bool
 	err := q.QueryRow(ctx, `SELECT to_regclass('aiharness_schema_migrations') IS NOT NULL AND to_regclass('ai_turn_metrics') IS NOT NULL`).Scan(&ok)
