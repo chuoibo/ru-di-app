@@ -440,13 +440,14 @@ export function HoSoNguoiScreen() {
               </View>
             ) : null}
           </View>
+          {/* The diary pages come first, so the wall heading sits on the posts it names. */}
+          {phien && !daChan ? <DiaryWall person={phien.person_id} owner={personId} /> : null}
           <Heading title={hoSo.hoSo.relation === "self" ? "Trang viết của bạn" : "Trang viết được chia sẻ"} />
           {tuong.pha === "dang-doc" ? (
             <SkeletonGroup>
               <SkeletonLines lines={2} />
             </SkeletonGroup>
           ) : null}
-          {phien && !daChan ? <DiaryWall person={phien.person_id} owner={personId} /> : null}
           {tuong.pha === "hong" ? <ErrorState body={tuong.loi} onRetry={() => void napTuong()} title="Chưa đọc được tường" /> : null}
           {tuong.pha === "xong" && tuong.bai.length === 0 ? (
             <EmptyState illustration={<Canh id="chua-co-ky-niem" width={150} />} kind="first-use" layout="inline" title={cauTuongRong(hoSo.hoSo.relation)} />

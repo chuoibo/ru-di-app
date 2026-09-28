@@ -1,6 +1,93 @@
 # Handoff · Hồ sơ, huy hiệu nhiều ngã rẽ và tường cá nhân
 
-Cập nhật: 2026-09-28. Người nhận: agent tiếp tục vertical slice hồ sơ.
+Cập nhật: 2026-09-28 (lượt tích hợp main). Người nhận: agent tiếp tục vertical slice hồ sơ.
+
+## 0. Lượt tích hợp với `main` (2026-09-28)
+
+Nhánh `integ/profile-story-routes-main` gộp `main` ba lượt: `0f902b72`
+(main `95388021`, 22 xung đột giải tay), `9d02ae67` (main `04a086f9`, AI v2
+#654, 3 xung đột), `3eb79500` (main `b2dc599d`, #659, gộp sạch), cộng hai
+commit sửa `26e05829`, `475da4d5`.
+
+**Gate 22 chặng strict tại checkout sạch `3eb79500`: ĐẠT 22, HỎNG 0, BỎ QUA 0.**
+API 3857 pass / 804 skip · mobile 1350/1350 · PostgreSQL 723 + QA 88 ·
+Go PostgreSQL 3208 PASS có sentinel · chat E2E 43 PASS · client/server E2E
+11 pass, **4 skip** (media service chưa cấu hình, không tính là đạt).
+
+### Ranh giới tường ↔ Cộng đồng đã chốt (thay cho mục 5.2)
+
+| Câu hỏi | Quyết định | Bằng chứng |
+| --- | --- | --- |
+| Một bài, một writer | `socialv2` không INSERT `post_comments`/`post_reactions`; gọi `community.WriteComment`/`WriteLike` (`internal/community/wall.go`) | `TestPostgresWallAndCommunityShareOneCommentParent` |
+| Bình luận public | Cộng đồng bật → 202 + nháp chỉ tác giả thấy, vào hàng duyệt. Tắt → bài từng qua Cộng đồng trả 409 `community_unavailable`; bài public legacy đăng như route legacy | `TestPostgresPublicWallCommentWaitsForReview`, `TestPostgresReviewedPostRefusesWallCommentWithoutModerator` |
+| Hai nguồn `parent_id` | Bỏ cột `post_comments.parent_id`; nguồn duy nhất `community_comment_meta.parent_id`; `socialv2.Migrate` chạy `community.Migrate` trước | ca cha/con đọc chéo hai phía |
+| Like | Nút «Thích» ghi kind `heart` như Cộng đồng (trước là `like` = 👍 «Đồng ý», hai nơi đếm lệch) | `TestPostgresWallLikeIsTheCommunityLike` |
+| ACL / bài chờ duyệt | Mọi route `/social/v2` thêm `community.Readable`; bài chờ duyệt 404 với người khác ở detail/comment/like/repost | `TestPostgresPendingCommunityPostStaysOffEveryWallRoute` |
+| Đăng lại công khai | Cộng đồng bật → 422 `public_repost_needs_review`; nút «Mọi người» bỏ khỏi khay chia sẻ; trích đoạn gốc mất khi hết quan hệ bạn | `TestPostgresPublicRepostNeedsReviewAndOriginFollowsFriendship` |
+| Manifest | Theo quy ước native của main (`native: true`, `python: absent`, `LIVE-GO`); bỏ state `GO-NATIVE` | `check_route_ownership.py` OK 227 hàng |
+
+Ba đột biến cùng harness, dự đoán ghi trước: bỏ kiểm duyệt → đỏ «public wall
+comment skipped review»; đếm lại kind `like` → đỏ «wall still counts a like
+removed in Cộng đồng»; cho repost public → đỏ «public repost skipped review».
+Identity xanh. Log ở `~/.cache/rudi-bang-chung/` (máy QA).
+
+### Lỗi Git gộp «sạch» nhưng sai, hoặc chỉ lộ ở gate trên kết quả gộp
+
+- `MAN_NEP_LUI` bị nhánh thêm màn hồ sơ; trả về danh sách màn tiền (main ghi
+  rõ danh sách này không được phình). Test Go đối chiếu TS bắt được.
+- Trigger sự kiện tường của `socialv2` chưa nằm trong cổng `aigate` của AI v2.
+- `cmd/core` treo 30 phút khi từ chối khởi động (schema Cộng đồng thiếu):
+  `socialv2.Run` giữ kết nối LISTEN, `pool.Close` chạy trước `stopChat`
+  (defer LIFO). Run nay có context riêng huỷ trước pool.
+- Upload native dùng `phanTepAnh` của main thay `new File(uri)` của nhánh.
+- Mobile: chữ cam trên giấy, nút tắt không nói lý do, `_rut.json` rút lại,
+  nhãn cũ trong flow Maestro 32/33/41/45/canary và test no-WebGL.
+- Một lần `TestPostgresCommunityStableRankingReusesReaderSnapshot` trả 401
+  khi cả tier chạy song song; không tái hiện ở hai lượt sau. Chập chờn, chưa
+  rõ nguyên nhân — không ghi là đã sửa.
+
+### QA native sau tích hợp (Android, 2026-09-28)
+
+APK debug build lại từ worktree tích hợp (main thêm module native Skia /
+expo-video), hai emulator (`rudi_profile_qa` sáng, `rudi_profile_qa_b` tối),
+stack `chat_e2e_stack.sh` tại `3eb79500`, hai tài khoản tổng hợp đăng nhập
+bằng OTP. Đã thao tác và đối chiếu từng bước với hàng PostgreSQL:
+
+- Kết bạn bằng số điện thoại → `friend_requests.state=accepted`.
+- A đăng bài có ảnh (multipart qua `phanTepAnh` của main) → một hàng `posts`.
+- B mở hồ sơ A (hộ chiếu main + tường v2), mở ảnh + khay bình luận, bình
+  luận → `post_comments` + `community_comment_meta` + nháp `approved`: đi qua
+  writer Cộng đồng. Thích → kind `heart`.
+- A trả lời bình luận của B → parent nằm ở `community_comment_meta`; trang
+  bài đang mở trên máy B tự đổi «2 bình luận» và hiện trả lời, không tải lại.
+- Sổ ngã rẽ: A đạt «Lời kể đầu tiên», Nếp M8 giơ tem; mở lại không lặp.
+- Story đăng được ở lần đầu; khay chia sẻ không còn «Mọi người»; đăng lại
+  cho bạn bè → `social_reposts` có bài gốc.
+
+Hai lỗi UI chỉ thấy trên máy, đã sửa trong cùng lượt: chạm «Gửi» đầu tiên
+khi bàn phím mở chỉ đóng bàn phím (thiếu `keyboardShouldPersistTaps`);
+tiêu đề tường bị kẹp trên mục diary rỗng (đổi thứ tự). Kiểm lại trên máy:
+một chạm là gửi, thứ tự đúng. Ảnh chụp ở `~/.cache/rudi-qa-couple/shots/
+integ-*` trên máy QA, chưa đưa vào Git.
+
+Chưa làm ở lượt này: Cộng đồng bật trên máy (bình luận chờ duyệt, bài chờ
+duyệt) — chỉ có bằng chứng PostgreSQL; mất mạng giữa upload và tạo story;
+iOS; Maestro; chữ lớn / Reduce Motion.
+
+### Cần chủ sản phẩm quyết
+
+- Màn Thành tích cũ (cấp độ, **thử thách tuần**, bảng tem) được thay bằng sổ
+  ngã rẽ; khoảnh khắc Nếp M8 đã cấy lại, thử thách tuần không còn.
+- Tường cá nhân dùng long poll `social_wall_changes`, Cộng đồng dùng
+  WebSocket (ADR-0040). Hợp nhất hay giữ hai đường cần ADR.
+
+### Còn mở sau tích hợp
+
+- Hàng trên tường chưa hiện media của bài Cộng đồng (`community_media`); bài
+  Cộng đồng vẫn mở bằng `PostDetail` của main nên không mất ảnh ở trang bài.
+- DB dev đã cài schema socialv2 cũ sẽ lệch checksum; dựng stack mới.
+- Flow Maestro đã sửa nhãn nhưng chưa chạy trên máy ở SHA này.
+- Mục P1/P2 bên dưới giữ nguyên.
 
 ## 1. Trạng thái cần biết ngay
 
@@ -10,7 +97,7 @@ Cập nhật: 2026-09-28. Người nhận: agent tiếp tục vertical slice h�
 | Commit sản phẩm cuối | `343185a2` |
 | `main` đã đối chiếu | `95388021` |
 | PR | Mở dạng draft để review phần đã triển khai; chưa merge |
-| Tích hợp với `main` hiện tại | Chưa thực hiện; thử gộp tại hai SHA trên báo 22 xung đột, `main` đã thêm 128 commit |
+| Tích hợp với `main` hiện tại | **Đã gộp** tới `main=b2dc599d` trên nhánh `integ/profile-story-routes-main`; xem mục 0 |
 | Giao diện hồ sơ / huy hiệu / tường | Đã triển khai; đã mở ảnh và thao tác Android bằng dữ liệu tổng hợp |
 | Cổng phát hành | Chưa hoàn tất; xem mục 6 và 7 |
 

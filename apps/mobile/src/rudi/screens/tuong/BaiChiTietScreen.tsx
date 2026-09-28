@@ -272,6 +272,9 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
       <TopBar title="Trang viết" />
       <FlatList
         contentContainerStyle={{ gap: space.lg, paddingBottom: space.xl }}
+        // The composer lives in this list: without it the first tap on «Gửi»
+        // only closes the keyboard and the comment stays unsent.
+        keyboardShouldPersistTaps="handled"
         data={[] as string[]}
         renderItem={() => null}
         ListHeaderComponent={
