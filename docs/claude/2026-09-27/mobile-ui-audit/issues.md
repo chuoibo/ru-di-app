@@ -19,9 +19,9 @@
 
 | Mức | Issue |
 |---|---|
-| P1 | UI-005, UI-049 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081 |
+| P1 | UI-005, UI-049, UI-082 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081, UI-086, UI-087, UI-088, UI-089, UI-090, UI-091, UI-092, UI-093 |
 
 ---
 
@@ -72,7 +72,7 @@
 | Tái hiện | Mở bất kỳ tab nào, đọc thuộc tính ARIA của 4 phần tử `role="tab"` |
 | Expected | Tab đang chọn có `aria-selected="true"`, và các tab nằm trong một `role="tablist"` |
 | Actual | Cả 4 tab đều không có `aria-selected`, và không có `tablist`. Nhìn bằng mắt vẫn phân biệt được tab đang chọn (màu, icon đặc, dải washi), nhưng trình đọc màn hình thì không |
-| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`); nút gập/mở dòng món của chia bill ở bước 2 và 3 không có `aria-expanded` (F04, `ChiaBillLive.tsx:467` và `:578`, hàng `TC-F04-ARIA-GAP`; bước 2 có đổi nhãn «Sửa/Gấp», bước 3 không); F05: lựa chọn của thẻ bình chọn, `role=radio` không có `aria-checked` kể cả lựa chọn của mình (`chat/TheAi.tsx:288–290`, `TC-F05-BINH-CHON-PHIEU`), và 5 ô «Màu bong bóng» của Cài đặt nhóm, `role=radio` không trạng thái dù mắt thấy dấu tích (`chat/CaiDatNhom.tsx:152–154`, `TC-L17-VONGDOI`). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) |
+| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`); nút gập/mở dòng món của chia bill ở bước 2 và 3 không có `aria-expanded` (F04, `ChiaBillLive.tsx:467` và `:578`, hàng `TC-F04-ARIA-GAP`; bước 2 có đổi nhãn «Sửa/Gấp», bước 3 không); F05: lựa chọn của thẻ bình chọn, `role=radio` không có `aria-checked` kể cả lựa chọn của mình (`chat/TheAi.tsx:288–290`, `TC-F05-BINH-CHON-PHIEU`), và 5 ô «Màu bong bóng» của Cài đặt nhóm, `role=radio` không trạng thái dù mắt thấy dấu tích (`chat/CaiDatNhom.tsx:152–154`, `TC-L17-VONGDOI`). F07: sheet «Loại sổ» có hai `role=tab` («Hai người bạn», «Một đôi») mang `aria-selected` đúng nhưng không nằm trong `tablist` (axe `aria-required-parent` ×2, `TC-L23-SHEET-CON`); lá ngày của sheet sửa tờ có `aria-checked` (đạt). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) |
 | Hậu quả | Trên web, người dùng trình đọc màn hình không biết tab nào, ngày nào, chip gu nào, màu nào đang được chọn, và mục nào đang mở/gập |
 | Đề xuất | Truyền thêm prop `aria-*` mà RNW đọc được, đúng với role: `aria-checked` cho radio/checkbox/switch, `aria-expanded` cho nút gập mở, `aria-busy`, `aria-selected` **chỉ** cho tab/option/row. Sửa ở checkpoint 3: `HangChang` từng được nêu ở đây làm ví dụ đúng, nhưng nó đặt `aria-selected` trên `role=button`, là thuộc tính không hợp lệ (axe critical, UI-042); nút nên dùng `aria-pressed` hoặc `aria-current`. Gom lại trong một helper ở kit; thêm `role="tablist"` cho thanh tab |
 | Tiêu chí gỡ | Quét DOM: mỗi control có trạng thái đều mang thuộc tính ARIA tương ứng; tab đang chọn có `aria-selected=true` |
@@ -147,11 +147,11 @@
 |---|---|
 | Category / Severity | BUG (motion) · **P3** |
 | Feature / Screen / Layer | F00 · mọi sheet cao hơn 480dp · `ui/Sheet.tsx` |
-| Nền tảng, cấu hình | web, C1 (khay tạo cao 637). C9 (giảm chuyển động): không bị, cắt thẳng đúng |
+| Nền tảng, cấu hình | web, C1 (khay tạo cao 637). C9 (giảm chuyển động): khay tạo cắt thẳng; nhưng F07 cho thấy C9 cũng lộ khi sheet cao và luồng chính bận (xem Actual) |
 | Tái hiện | Mở khay tạo, bấm X, quay khung hình |
 | Expected | Panel trượt khỏi mép dưới rồi mới gỡ |
-| Actual | Panel dịch cố định 480dp: khung cuối trước khi gỡ, panel ở y=667, còn lộ 177px, độ mờ 1. Khung sau thì biến mất (bật mất). Khi mở, khung đầu cũng đã lộ 157px đỉnh panel |
-| Evidence | ![khung đóng](evidence/EV-F00-MO04-dong-khay-C1.jpg) · lấy mẫu mỗi rAF: `y 565 → 632 → 667 → (mất)` |
+| Actual | Panel dịch cố định 480dp: khung cuối trước khi gỡ, panel ở y=667, còn lộ 177px, độ mờ 1. Khung sau thì biến mất (bật mất). Khi mở, khung đầu cũng đã lộ 157px đỉnh panel. F07, C9: sheet «Lập sổ hai người» (đỉnh 133) sau «Đồng ý» nhảy thẳng tới y=613 (133 + 480), còn lộ 231px, và đứng đó tới khi gỡ, ở mẫu rAF 162 → 568 ms sau chạm, lúc M6 dựng (luồng chính bận nên thời lượng không đại diện; trình tự thì có). Sheet thấp hơn («Cài đặt sổ», đỉnh 405: 405 + 480 > 844) cắt sạch ở C9 (`TC-MO04-C9-SO`) |
+| Evidence | ![khung đóng](evidence/EV-F00-MO04-dong-khay-C1.jpg) · lấy mẫu mỗi rAF: `y 565 → 632 → 667 → (mất)` · F07: ![C9, khung 526 ms](evidence/EV-F07-M6-KHUNG-C9.jpg) (hàng `TC-F07-DONG-Y-NHAY-C9`: đỉnh sheet `93 → 133 → 613`) |
 | Source | `src/rudi/ui/Sheet.tsx:167-170` (`translateY: (1 - progress) * 480 + keo`) |
 | Hậu quả | Cú bật mất nhìn thấy được mỗi lần đóng sheet cao; trông như giật |
 | Đề xuất | Dịch theo chiều cao đo được của panel (hoặc theo chiều cao cửa sổ), hoặc mờ panel ở phần cuối pha đóng |
@@ -237,10 +237,10 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (vùng bấm, lệch spec hệ thống) · **P3** |
-| Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã). Thêm F03, F04, F05, F06 (xem Actual) |
+| Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã). Thêm F03, F04, F05, F06, F07 (xem Actual) |
 | Nền tảng, cấu hình | web, C1, C2, C3 (đo runtime). Native: cùng `minHeight: 44` (STATIC) |
 | Expected | DESIGN.md §Mục tiêu chạm: «Mọi node bấm được ≥48×48dp, kể cả `TextInput`» |
-| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`). F05 (chat): 6 nút cảm xúc của menu tin 44×44 (`chat/MenuTin.tsx:97`, `TC-F05-MENU-PHAN-UNG`); bong bóng một dòng cao 46, và bong bóng là chỗ duy nhất mở menu tin (`TC-F05-BO-CUC-TIN` G20). F06 (`TC-F06-VUNG-BAM`): «Ô tên nhóm» 230×44 và ghi chú-link «Chỉ hai người?… Thêm bạn» 358×40 (dưới cả ngưỡng 44) ở Lập nhóm; hai ô của Mời 300×44; ô số của Thêm bạn 324×44; mỗi hàng «Xem hồ sơ …» ở Bạn bè 236×44 |
+| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`). F05 (chat): 6 nút cảm xúc của menu tin 44×44 (`chat/MenuTin.tsx:97`, `TC-F05-MENU-PHAN-UNG`); bong bóng một dòng cao 46, và bong bóng là chỗ duy nhất mở menu tin (`TC-F05-BO-CUC-TIN` G20). F06 (`TC-F06-VUNG-BAM`): «Ô tên nhóm» 230×44 và ghi chú-link «Chỉ hai người?… Thêm bạn» 358×40 (dưới cả ngưỡng 44) ở Lập nhóm; hai ô của Mời 300×44; ô số của Thêm bạn 324×44; mỗi hàng «Xem hồ sơ …» ở Bạn bè 236×44. F07 (`TC-F07-SUA-NHAP`): sheet sửa tờ có ba ô một dòng cao 44 («Chỗ chính», «Giờ đi tiếp», «Đi tiếp (tuỳ chọn)»); ô «Không ăn được» của Hai ô ràng buộc cao 48 (đạt) |
 | Evidence | ![ô nhập 44](evidence/EV-F01-O-NHAP-44-C1.jpg) ![menu tin: hàng cảm xúc 44dp, C1](evidence/EV-F05-MENU-C1.jpg) |
 | Source | `src/rudi/ui/ONhapMuc.tsx:60` (`minHeight: 44`) |
 | Đề xuất | `minHeight: 48` (vẫn không hộp, dòng kẻ giữ nguyên) |
@@ -295,7 +295,7 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (điều hướng) · **P2**. Checkpoint 2 ghi P3; nâng ở checkpoint 3 vì phạm vi không còn là một màn: đo lại ở `/places/[id]`, và nút back của `TopBar` trong kit cũng gọi `router.back()` không kiểm `canGoBack()` |
-| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. F05 · `/groups/[id]/chat` mở lạnh: chạm «Quay lại» của đầu chat, URL giữ nguyên (`TC-F05.S02-BACK-LANH`); màn chat không có thanh tab. F06 · năm màn mở lạnh đều đứng yên: `/groups/[id]/members`, `/groups/[id]/invite`, `/friends`, `/friends/add`, `/people/[id]` (`TC-F06.S0x-BACK-LANH`). Cùng cơ chế: «Về danh sách bạn» và «Xem thành viên» (`router.back()`) không làm gì khi màn trước không nằm trong stack. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
+| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. F05 · `/groups/[id]/chat` mở lạnh: chạm «Quay lại» của đầu chat, URL giữ nguyên (`TC-F05.S02-BACK-LANH`); màn chat không có thanh tab. F06 · năm màn mở lạnh đều đứng yên: `/groups/[id]/members`, `/groups/[id]/invite`, `/friends`, `/friends/add`, `/people/[id]` (`TC-F06.S0x-BACK-LANH`). Cùng cơ chế: «Về danh sách bạn» và «Xem thành viên» (`router.back()`) không làm gì khi màn trước không nằm trong stack. F07 · `/groups/[id]/to-giay` mở lạnh: chạm «Quay lại», URL giữ nguyên (`TC-F07.S02-BACK-LANH`); màn không có thanh tab. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
 | Nền tảng, cấu hình | web, C1 |
 | Tái hiện | Mở thẳng `/login` (không có lịch sử), chạm «Quay lại» |
 | Expected | Đưa về màn hợp lý (Welcome), hoặc không vẽ nút khi không có nơi để về |
@@ -596,12 +596,12 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE · **P3** |
-| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn). F06 · `/people/[id]` · L06 hành động hồ sơ |
+| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn). F06 · `/people/[id]` · L06 hành động hồ sơ. F07 · `/groups/[id]/to-giay` · L23 «Cài đặt sổ» |
 | Nền tảng, cấu hình | web, C1 (trên Android Chrome, cử chỉ back hệ thống cũng là Back trình duyệt). Native Android: `Sheet` nghe `BackHandler` nên đóng sheet (STATIC) |
 | Tái hiện | Từ Lên plan mở kèo, mở sheet «Chặng mới», gõ dở tên chặng, bấm Back |
 | Expected | Back đóng sheet, ở lại màn kèo |
 | Actual | Sheet đóng vì màn bị gỡ: URL về `/plan`, 12/12 ô của lưới chạm đổi, chữ đang gõ mất |
-| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn. F06: sheet «Thêm hành động» của hồ sơ, Back rời hồ sơ về Bạn bè; Esc, nền, kéo xuống ở lại hồ sơ (`TC-L06-VONGDOI`) |
+| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn. F06: sheet «Thêm hành động» của hồ sơ, Back rời hồ sơ về Bạn bè; Esc, nền, kéo xuống ở lại hồ sơ (`TC-L06-VONGDOI`). F07: tới tờ giấy từ Tin nhắn, mở «Cài đặt sổ», Back rời tờ giấy về `/messages` (`TC-L23-BACK`); X, nền, Esc, kéo dài, vuốt nhanh đóng mà ở lại, kéo ngắn bật về (`TC-L23-VONGDOI`) |
 | Source | `src/rudi/ui/Sheet.tsx:145` chỉ nghe `hardwareBackPress` (react-native-web không phát). Khay công cụ: `chat/SoHen.tsx:111` (`BackHandler`, chỉ Android). Khay tờ hẹn chung: không nghe gì, nên trên Android Back cũng rời chat (STATIC) |
 | Đề xuất sửa | Trên web, đẩy một mục lịch sử khi mở sheet và đóng sheet ở `popstate` (như khay `/create`) |
 | Tiêu chí gỡ | Back khi sheet mở: sheet đóng, URL giữ nguyên |
@@ -626,11 +626,11 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | VISUAL POLISH · **P3** |
-| Feature / Screen / Layer | F03 · L08 · `ui/Sheet.tsx` |
-| Nền tảng, cấu hình | web, C8 (390×460). C2 67%, C6 42% (đạt) |
+| Feature / Screen / Layer | F03 · L08 · `ui/Sheet.tsx`. F07 · L23 «Sửa bản phác», «Hai ô ràng buộc» |
+| Nền tảng, cấu hình | web, C8 (390×460). C2 67%, C6 42% (đạt). F07: cả ở C1 |
 | Expected | Sheet ≤ 82% chiều cao (DESIGN.md) |
-| Actual | Sheet cao 427px, 93% màn; chỉ còn 33px nền mờ phía trên để chạm đóng. Nút gửi vẫn thấy được |
-| Evidence | ![C8](evidence/EV-F03-THEM-C8.jpg) (hàng `TC-L08-KICH-THUOC`) |
+| Actual | Sheet cao 427px, 93% màn; chỉ còn 33px nền mờ phía trên để chạm đóng. Nút gửi vẫn thấy được. F07: sheet «Sửa bản phác» cao 756px = 90% ở **C1** (`TC-F07-SUA-NHAP`); ở C8 cả «Sửa bản phác» lẫn «Hai ô ràng buộc» cao 96% (đỉnh y 19), nút chính («Lưu bản phác», «Lưu hai ô của tôi») nằm dưới mép cửa sổ (đáy 833 và 556 trên cửa sổ 460), chỉ tới được sau khi cuộn trong sheet (`TC-F07-C8`) |
+| Evidence | ![C8](evidence/EV-F03-THEM-C8.jpg) (hàng `TC-L08-KICH-THUOC`) ![F07, sheet sửa tờ ở C8](evidence/EV-F07-C8-SUA-C8.jpg) |
 | Source | `Sheet.tsx`: trần 82% chỉ áp cho `ScrollView` bên trong; tay cầm và lề cộng thêm ngoài trần |
 | Đề xuất sửa | Áp trần cho cả khung sheet |
 | Tiêu chí gỡ | C8: sheet ≤ 82% |
@@ -1273,6 +1273,192 @@ pipeline; phần «bỏ qua Sở thích» không liên quan tới commit đó.
 | Source | `screens/friends/Friends.tsx` và `screens/groups/Members.tsx` không đặt `maxWidth` cho nội dung (`New.tsx`, `AddFriend.tsx` có `maxWidth: 560`) |
 | Đề xuất sửa | Cùng trần bề ngang cho danh sách, hoặc bố cục hai cột ở expanded |
 | Tiêu chí gỡ | C6/C7: nút hành động cách tên ≤ 160px |
+
+## F07 Sổ hai người
+
+Cặp đo chính: chat-0 (A) và chat-1 (B), bạn của nhau, có chat đôi. M6 và trạng thái chờ đo trên các cặp mới lập qua API
+(chat-2/3, chat-4/5, chat-6/7, chat-8/9, chat-10/11, chat-12/13), vì khoảnh khắc chỉ diễn khi sổ mở lúc màn đang mở.
+Con dấu «01 GỬI» và avatar «0» là do tên giả «Chat Test 0N»: mã lấy chữ cuối làm tên gọi (`to-giay.ts:280`), không
+phải lỗi.
+
+### UI-082 · Không có phiên: link tờ giấy của một cặp thật mở sổ demo không nhãn; «Gửi cho người ấy» báo đã gửi mà không gửi gì
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (xác nhận giả, dữ liệu sai nguồn) · **P1** trên web |
+| Feature / Screen | F07 · `/groups/[id]/to-giay` (giao với F11 chế độ demo) |
+| Nền tảng, cấu hình | web, C1, bản export production. Native: cùng route, cùng nhánh «không phiên thì dùng store demo», nên deep link tới tờ giấy khi đã đăng xuất đi cùng đường (STATIC) |
+| Điều kiện | Không có phiên (đăng xuất, hết phiên, trình duyệt khác). Link là tờ giấy của cặp chat-0/chat-1 có thật trên máy chủ |
+| Tái hiện | 1. Mở thẳng `/groups/<id của cặp>/to-giay`. 2. Chạm «Rủ đi chơi». 3. Chạm «Gửi cho người ấy» |
+| Expected | Tới cửa vào (Welcome, đăng nhập) rồi quay lại đúng tờ giấy; nếu cho xem bản trải nghiệm thì có nhãn «Dữ liệu demo» và không nói «đã gửi» khi không có gì được gửi |
+| Actual | Trang hiện một sổ với nội dung bịa: «Bún chả, quán góc phố · Thứ Bảy 06/09 · KÝ ỨC», «Tờ đã khép: Hết khung · Chủ nhật 14/09», tiêu đề «Hai người bạn · Người ấy». Không nhãn demo, không lối đăng nhập. «Rủ đi chơi» phác một tờ «Thứ Bảy 20/09» (ngày đã qua); «Gửi cho người ấy» đổi tờ thành «ĐÃ GỬI · Đã gửi, chờ trả lời. Người ấy chưa xem.». Suốt lúc đó trang gửi **0** lệnh ghi tới API |
+| Evidence | ![đã gửi mà không gửi gì, C1](evidence/EV-F07-LANH-KHONG-PHIEN-GUI-C1.jpg) (hàng `TC-F07.S02-LANH-KHONG-PHIEN`, `TC-F07-KHONG-PHIEN-GUI`) |
+| Source | `app/groups/[id]/to-giay.tsx`: có phiên thì bọc `SoDoiSongProvider`; không phiên thì dựng `KhongGianGiayScreen` trên store fixture gắn ở `_layout`. Chú thích nói nhánh này dành cho bản fixture, nhưng mã áp cho mọi bản dựng. Màn không dùng `DemoBadge` |
+| Hậu quả | Người mở link từ thông báo hay tin nhắn khi đã rơi phiên thấy một sổ trông như của mình, gửi lời rủ và được báo đã gửi. Người kia không nhận được gì; người gửi không có lý do để đăng nhập lại |
+| Đề xuất sửa | Route có `id` thật mà không có phiên: đưa về cửa vào, giữ đường dẫn để quay lại sau đăng nhập. Store demo chỉ cho route demo, và luôn kèm `DemoBadge` |
+| Tiêu chí gỡ | Không phiên, mở link: tới cửa vào; sau đăng nhập về đúng tờ giấy. Không màn nào hiện «Đã gửi» khi chưa có lệnh ghi thành công |
+
+### UI-083 · Đọc sổ lỗi thì màn vẽ «Chưa có sổ hai người» và mời lập sổ lại
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (lỗi hiện như trạng thái rỗng) · **P2** |
+| Feature / Screen | F07 · `/groups/[id]/to-giay` |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Sổ của chat-0/chat-1 đã mở, tuần này có tờ. `GET /contexts/{id}/notebook` và `/papers` trả 503 |
+| Tái hiện | Mở tờ giấy khi hai lệnh đọc trên trả 503; rồi cho máy chủ ổn lại |
+| Expected | Một câu nói chưa đọc được sổ, có «Thử lại» (như `ChonNguoi.tsx:89` làm với danh sách bạn); không vẽ như sổ chưa lập |
+| Actual | Bìa sổ đóng, «Chưa có sổ hai người … Cả hai cùng đồng ý thì sổ mở.» và con dấu «Đề nghị lập sổ». Không câu lỗi, không «Thử lại». Khi máy chủ ổn lại, lượt đọc 4 s tự đưa sổ về sau khoảng 4 s (4068 ms), vì màn đang được focus |
+| Evidence | ![503 hiện như chưa có sổ, C1](evidence/EV-F07.S02-503-C1.jpg) (hàng `TC-F07.S02-503`) |
+| Source | `to-giay/useToGiay.ts:169` đặt `pha: "loi"` kèm `loi` khi lần đọc đầu hỏng, nhưng `SoDoiSong.tsx` không đưa `loi` ra `SoDoiApi`. `daNap` (`:70`) thành `true`, `lapSo` (`:46`) thành `false` vì `so` rỗng, nên `KhongGianGiay.tsx` vẽ nhánh chưa lập sổ; màn không có nhánh lỗi đọc |
+| Hậu quả | Lúc mạng hay máy chủ trục trặc, người dùng tưởng sổ đã mất hoặc chưa từng lập, và được mời «Đề nghị lập sổ». Theo mã máy chủ (`services/core/internal/domain/pairsteps/notebook.go:261–318`), lệnh đó nếu tới nơi sẽ nộp một lời đề nghị lap_so mới trên sổ đã mở (không đo, vì là lệnh ghi) |
+| Đề xuất sửa | Đưa `loi` qua `SoDoiApi`; màn có nhánh lỗi dùng `ErrorState` với «Thử lại» |
+| Tiêu chí gỡ | 503 khi đọc sổ: màn nói chưa đọc được, có «Thử lại»; không hiện «Chưa có sổ hai người» |
+
+### UI-084 · Sheet «Lập sổ hai người» quay về trạng thái mời ngay khi lời đề nghị được đồng ý
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (overlay hiện trạng thái sai) · **P2** |
+| Feature / Screen / Layer | F07 · `/groups/[id]/to-giay` · L23, sheet `LapSo` (`hai-nguoi/DongYBac.tsx`) |
+| Nền tảng, cấu hình | web, C1 và C9. Native: cùng mã (STATIC) |
+| Điều kiện | Hai người, một người đã đề nghị lập sổ |
+| Tái hiện | (a) Người đề nghị để sheet chờ mở («Đã đề nghị. Chờ … đồng ý…»), người kia đồng ý trên máy họ. (b) Người được đề nghị chạm «Đồng ý» |
+| Expected | (a) Sheet chờ đóng, hoặc nói sổ đã mở. (b) Sheet đóng với đúng nội dung lúc bấm |
+| Actual | (a) Thân màn đổi sang sổ đã mở, nhưng sheet ở lại và đổi về «Bạn ký khi bấm đề nghị · Chờ Chat Test 02 ký», con dấu «Đề nghị lập sổ» và «Để sau», che bìa sổ vừa mở (M6). (b) Trong lúc đóng, sheet hiện đúng trạng thái mời đó: 4 khung rAF từ 97 tới 395 ms sau chạm ở C1; 2 và 3 khung ở hai lượt C9. Thân màn cũng qua 1–2 khung «Tuần này» thường trước khi bìa mở |
+| Evidence | ![phía người đề nghị: sheet ở lại và mời đề nghị lần nữa, C1](evidence/EV-F07-SO-MO-A-C1.jpg) ![C9: khung 388 ms là trạng thái mời, khung 526 ms là sheet đang gỡ](evidence/EV-F07-M6-KHUNG-C9.jpg) (hàng `TC-F07-SO-MO-BEN-KIA`, `TC-F07-DONG-Y-NHAY-C1`, `TC-F07-DONG-Y-NHAY-C9`) |
+| Source | `DongYBac.tsx:75–127`: nội dung suy từ `dangCho` (còn lời đề nghị đang chờ). Khi máy chủ báo đã đồng ý, lời đề nghị biến mất khỏi `pending_proposals`, `dangCho` thành `false`, và nhánh cuối vẽ con dấu `nhanDeNghi` (`:127`). Phía đồng ý, `KhongGianGiay.tsx:324` chỉ đóng sheet ở `.then((ok) => ok && dong())`, sau lần đọc lại; phía người đề nghị không có gì đóng sheet. Khung thân «thường» có vì `vuaMoSo` được đặt trong effect, sau render đầu đã có `lapSo` |
+| Hậu quả | Người đề nghị được mời lập sổ lần nữa trên một sổ đã mở, và không thấy khoảnh khắc sổ mở. Theo mã máy chủ, chạm con dấu đó nộp một lời đề nghị lap_so mới trên sổ đã mở (STATIC; không bấm vì là lệnh ghi). Phía đồng ý thấy sheet nháy như vừa bị huỷ |
+| Đề xuất sửa | Khi `lapSo` chuyển sang `true`, đóng sheet `lap-so` ở cả hai phía; sheet đang đóng giữ nội dung lúc còn mở. Đặt `vuaMoSo` cùng lúc với `lapSo` để không có khung thân thường |
+| Tiêu chí gỡ | (a) sheet chờ tự đóng khi sổ mở. (b) 0 khung trạng thái mời sau «Đồng ý», 0 khung thân thường trước bìa |
+
+### UI-085 · «Rủ <tên> tới đây» khi tuần đã có tờ chốt: phác thêm một tờ cùng tuần, bỏ chỗ vừa chọn, và câu trên đầu nói ngược lại
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (luồng) · **P2** |
+| Feature / Screen | F02 · `/places/[id]` → F07 · `/groups/[id]/to-giay?ru=1&cho=…` |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Sổ đã mở; tuần này có một tờ đã chốt («Thứ Bảy 03/10»), không có tờ nào đang mở |
+| Tái hiện | Ở chi tiết Tiệm Nướng Xóm Lào chạm «Rủ Chat Test 02 tới đây» |
+| Expected | Chỗ vừa chọn nằm trên một bản phác; hoặc màn nói vì sao không, và không tạo gì |
+| Actual | Máy chủ có thêm một tờ nháp cho chính tuần đó: số tờ của cặp 1 → 2, cùng tuần bắt đầu 28/09 (SQL chỉ đọc). Đầu trang: «Tuần này hai bạn đã có tờ rồi. Chỗ bạn chọn chưa được thêm, để dành cho tuần sau nhé.»; ngay dưới là bản phác mới «18:30 Ăn tối · Thứ Bảy 03/10», trùng tối với tờ đã chốt, không có Tiệm Nướng Xóm Lào. Khi bản phác đã có, chạm lại nút thì đúng: sheet sửa mở với «Ở Tiệm Nướng Xóm Lào» và không thêm tờ (`TC-F02-CHI-TIET-RU-NHAP`) |
+| Evidence | ![câu nói ngược với bản phác mới ngay dưới, C1](evidence/EV-F07-RU-TOI-DAY-SAU-C1.jpg) (hàng `TC-F02-CHI-TIET-RU`) |
+| Source | `KhongGianGiay.tsx:62–70`: `?ru=1` gọi `so.ruDiChoi()` khi `nenXinTo` trả «xin», và `to-giay.ts:201` coi tờ `chot` là không mở (`TRANG_THAI_MO`, `:43`). Cùng lúc, effect `goiYCho` (`KhongGianGiay.tsx:83–93`) đọc `toMo` là tờ `chot` trước khi bản phác về, rơi xuống câu cuối của `goiYChoLam` (`to-giay.ts:235`) và xoá `goiYCho`. Màn thường thì không mời «Rủ đi chơi» khi tờ tuần này đã chốt (`KhongGianGiay.tsx:273`) |
+| Hậu quả | Chỗ người dùng vừa chọn mất; một bản phác trùng tối với buổi đã hẹn hiện ra dù họ không yêu cầu, chiếm một trong ba tờ của tuần; câu hướng dẫn nói ngược với thứ họ đang nhìn |
+| Đề xuất sửa | Một quyết định cho cả `ru` lẫn `cho`: không phác được thì không gọi `ruDiChoi`; có phác thì đợi bản phác về rồi mở sheet với chỗ đã chọn |
+| Tiêu chí gỡ | Tuần đã có tờ chốt: số tờ không đổi và câu giải thích khớp với màn; hoặc bản phác mới mang chỗ vừa chọn |
+
+### UI-086 · Người vừa đề nghị lập sổ đóng sheet thì màn không còn nói đang chờ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F07 · `/groups/[id]/to-giay` |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | «Đề nghị lập sổ» → sheet → «Đề nghị lập sổ», rồi «Để sau» |
+| Expected | Màn nói mình đã đề nghị và đang chờ người kia |
+| Actual | Trong sheet có câu chờ (đạt, `TC-F07-DE-NGHI`). Đóng sheet thì màn vẫn «Chưa có sổ hai người … Cả hai cùng đồng ý thì sổ mở.», con dấu đổi thành «Xem lời đề nghị», đúng chữ người kia thấy khi họ được đề nghị. Không câu nào trên màn nói đang chờ |
+| Evidence | ![sau «Để sau», C1](evidence/EV-F07-DANG-CHO-DONG-C1.jpg) (hàng `TC-F07-CHO-SAU-KHI-DONG`) |
+| Source | `KhongGianGiay.tsx:181` (`label={deNghiLapSo ? "Xem lời đề nghị" : "Đề nghị lập sổ"}`, không xét `cuaToi`) |
+| Hậu quả | Đọc như người kia vừa đề nghị, hoặc như chưa có gì xảy ra |
+| Đề xuất sửa | Khi lời đề nghị là của mình: một dòng «Đã đề nghị. Chờ … đồng ý» ngay trên màn; nút gọi đúng việc («Xem lời đề nghị của bạn») |
+| Tiêu chí gỡ | Sau «Để sau», câu chờ nằm trên màn |
+
+### UI-087 · «Cài đặt sổ» vẫn mở khi quay lại từ «Tin nhắn» hay «Kỷ niệm của hai bạn»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F07 · `/groups/[id]/to-giay` · L23 sheet «Cài đặt sổ» |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | ⚙ → «Tin nhắn» → Back (trình duyệt, hoặc «Quay lại» của chat) |
+| Expected | Rời màn qua một hàng của sheet thì sheet đóng; quay lại thấy tờ giấy |
+| Actual | Quay lại thấy sheet «Sổ hai người» còn mở như trước khi đi, bằng Back trình duyệt và bằng «Quay lại» của chat. Lúc ở chat, sheet ẩn cùng màn tờ giấy (0 hộp thoại hiện), không chặn gì: ô soạn nhận chạm |
+| Evidence | ![quay lại từ chat, C1](evidence/EV-F07-CAI-DAT-VE-C1.jpg) (hàng `TC-L23-CAI-DAT-DAY`) |
+| Source | `KhongGianGiay.tsx:290–291` push thẳng. Cùng file, «Sửa gu của tôi» đóng sheet trước khi push (`:352`); Cài đặt nhóm của chat cũng vậy (`chat/CaiDatNhom.tsx:200`, `:211`) |
+| Đề xuất sửa | `dong()` trước `router.push` ở hai hàng này |
+| Tiêu chí gỡ | Back về tờ giấy: 0 hộp thoại |
+
+### UI-088 · Nền của sheet nhận chạm ngay lúc mở: chạm đúp nút ⚙ mở rồi đóng «Cài đặt sổ»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** (cùng họ UI-006, UI-039; khác cơ chế) |
+| Feature / Screen / Layer | F07 · L23 · `ui/Sheet.tsx`: mọi sheet mở từ một nút nằm trong vùng nền |
+| Nền tảng, cấu hình | web, C1 |
+| Tái hiện | Chạm ⚙ hai lần cách 60 ms |
+| Expected | Đúng một sheet mở |
+| Actual | 0 sheet sau 1,3 s. 60 ms sau chạm đầu, ở toạ độ nút ⚙ đã là nền «Đóng» của sheet, nên chạm thứ hai đóng sheet vừa mở. Nút ⚙ không phải công tắc (`setMo("cai-dat")`), khác UI-039 |
+| Evidence | Hàng `TC-L23-CHAM-DUP` (phần tử dưới ngón tay đo bằng `elementFromPoint`) |
+| Source | `Sheet.tsx:180` (`Pressable` «Đóng» phủ cả màn, nhận chạm ngay khi mount) |
+| Đề xuất sửa | Bỏ qua chạm lên nền trong pha mở (ví dụ tới khi `progress` gần 1) |
+| Tiêu chí gỡ | Chạm đúp: 1 sheet |
+
+### UI-089 · Tay cầm của mọi sheet là `div` mang `aria-label` mà không có role
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (accessibility) · **P3** |
+| Feature / Screen / Layer | F07 (đo), mọi sheet · `ui/Sheet.tsx:210` |
+| Nền tảng, cấu hình | web, C1. Native: `View` có `accessibilityLabel` mà không `accessible` thì cũng không được đọc (STATIC) |
+| Actual | axe `aria-prohibited-attr` (serious) ×1 trong mỗi sheet đã quét: Cài đặt sổ, Loại sổ, Hai ô ràng buộc, Đóng sổ. Phần tử: `<div aria-label="Tay cầm">`. Sheet báo cáo của F05 (UI-067) cũng ghi ×1; cùng component nên nhiều khả năng là cùng phần tử, nhưng lượt F05 không in phần tử ra. Nhãn và gợi ý «Kéo xuống để đóng» không tới trình đọc màn hình |
+| Evidence | Hàng `TC-L23-SHEET-CON` (axe trên từng sheet, phần tử in ra bằng `AxeBuilder`) |
+| Hậu quả | Nhẹ: «Đóng bảng» vẫn có tên và đóng được. Nhưng mọi sheet mang một lỗi axe serious, làm nhiễu số đếm a11y |
+| Đề xuất sửa | Hoặc cho tay cầm vai trò có hành động đóng, hoặc bỏ nhãn và ẩn khỏi cây truy cập, vì «Đóng bảng» đã làm việc đó |
+| Tiêu chí gỡ | axe `aria-prohibited-attr` = 0 trong sheet |
+
+### UI-090 · Hai tên trên bìa sổ bị cắt «Chat Tes…» ở mọi cỡ màn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen | F07.S02 · `ui/SoBia.tsx` (bìa sổ khi chưa lập, và bìa M6) |
+| Nền tảng, cấu hình | web, C1–C7 |
+| Actual | Nhãn tên rộng 66px cho chữ cần 79px: «Chat Test 01» và «Chat Test 02» đều thành «Chat Tes…», nhìn không phân biệt được hai người. Tên mới 12 ký tự; tên thật như «Nguyễn Minh Anh» dài hơn |
+| Evidence | ![C1, C2, C3](evidence/EV-F07.S02-BASE-ghep.jpg) (hàng `TC-F07-BIA-TEN`, `TC-F07.S02-BASE`) |
+| Source | `SoBia.tsx:103` (`numberOfLines={1}`) trong nhãn có lề 22 mỗi bên (`:133`) trên bìa rộng 128 và 140 |
+| Đề xuất sửa | Dùng tên gọi (chữ cuối, như `tenNgan` của con dấu) trên bìa, hoặc cho nhãn xuống hai dòng |
+| Tiêu chí gỡ | Hai tên đọc được, hoặc ít nhất khác nhau, ở 320–1024 |
+
+### UI-091 · «Lưu hai ô của tôi» tắt mà không nói lý do (ADR-0038 §2.2)
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F07 · L23 sheet «Hai ô ràng buộc». «Giữ lại» của sheet «Giữ lại một điều» cùng kiểu (STATIC, `GiuMotDieu.tsx:40`, chưa tới được trạng thái đó ở runtime) |
+| Nền tảng, cấu hình | web, C1 |
+| Expected | ADR-0038 §2.2: nút mà việc của nó chưa có nghĩa thì không hiện («Lưu tên» chỉ hiện khi tên đã khác); nếu còn hiện thì nói lý do ngay dưới |
+| Actual | Mở sheet khi chưa gõ gì: «Lưu hai ô của tôi» viền đứt, ngay dưới là «Đóng», không có dòng lý do |
+| Evidence | ![C1](evidence/EV-F07-RANG-BUOC-C1.jpg) (hàng `TC-F07-RANG-BUOC-NUT-TAT`) |
+| Source | `RangBuoc.tsx:40` `disabled={!doi \|\| dangLuu}` không truyền `lyDo`; kit chỉ in lý do khi có `lyDo` (`ui.tsx:544`) |
+| Đề xuất sửa | Ẩn nút tới khi hai ô khác bản đã lưu, đúng ví dụ «Lưu tên» của ADR |
+| Tiêu chí gỡ | Sheet mở khi chưa gõ: không có nút tắt không lý do |
+
+### UI-092 · Sheet sửa tờ: lá ngày đang chọn nằm lưng chừng mép phải
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen / Layer | F07 · L23 sheet «Sửa bản phác» và «Đề nghị sửa» (`DeNghiSua.tsx:167`) |
+| Nền tảng, cấu hình | web, C1, C8 |
+| Actual | Dải 14 lá (28/09 → 11/10) cuộn ngang, mở ở đầu dải. Tờ hẹn Thứ Bảy 03/10, là lá thứ sáu: chỉ thấy 36/56px. Ngày vẫn đọc được bằng chữ «Thứ Bảy 03/10» dưới dải. Cả ba sheet sửa tờ đã chụp cắt ở cùng chỗ. Các lá có `aria-checked` (đạt) |
+| Evidence | ![C1](evidence/EV-F07-RU-TOI-DAY-NHAP-C1.jpg) (hàng `TC-F07-DAI-NGAY`, số đo ở `TC-F02-CHI-TIET-RU-NHAP`) |
+| Đề xuất sửa | Cuộn tới lá đang chọn khi sheet mở |
+| Tiêu chí gỡ | Lá đang chọn nằm trọn trong dải khi mở |
+
+### UI-093 · Tablet: tờ giấy và sheet «Cài đặt sổ» trải hết bề ngang
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** (cùng họ UI-031, UI-047, UI-081) |
+| Feature / Screen / Layer | F07.S02 · L23 |
+| Nền tảng, cấu hình | web, C6, C7 |
+| Expected | Như thanh đầu của chính màn và trạng thái chưa có sổ (gom cột ở giữa), và như khay tạo (nội dung `maxWidth` 560, DESIGN.md) |
+| Actual | Tờ giấy rộng 720px ở C6 và 912px ở C7; hai nút «Gửi cho người ấy», «Sửa trước khi gửi» chia đôi bề ngang đó. Sheet «Cài đặt sổ» rộng đúng bằng cửa sổ (768, 1024px): mũi tên của mỗi hàng dạt về mép phải, xa chữ |
+| Evidence | ![C6](evidence/EV-F07-TABLET-CAI-DAT-C6.jpg) (hàng `TC-F07-TABLET`, `TC-L23-TABLET` C6/C7) |
+| Source | `KhongGianGiay.tsx:485` (`than: { paddingTop: 8 }`, không `maxWidth`); `Sheet.tsx` không có trần bề ngang |
+| Tiêu chí gỡ | C6/C7: tờ giấy và nội dung sheet ≤ 640px |
 
 ## F09 Hồ sơ · Cài đặt
 

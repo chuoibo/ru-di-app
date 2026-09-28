@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (115 ảnh, tổng 14.21 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (127 ảnh, tổng 15.40 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -119,3 +119,15 @@
 | [EV-F06-TU-BO-SAU-C1](evidence/EV-F06-TU-BO-SAU-C1.jpg) | UI-074, UI-075: sau một chạm, người lập nhóm chỉ còn «Thành viên»; người được đặt làm quản trị mang nhãn «Người lập nhóm» (C1) | 142581 | `63fdd884` |
 | [EV-F06-TU-BO-TRUOC-C1-ct](evidence/EV-F06-TU-BO-TRUOC-C1-ct.jpg) | UI-074: Thành viên, hai quản trị; nút «Bỏ quyền quản trị» của chính mình đứng đầu, cùng tên với nút của người khác (C1, khung đỏ) | 152003 | `118c692e` |
 | [EV-F06.S05-rong-BASE-ghep](evidence/EV-F06.S05-rong-BASE-ghep.jpg) | F06.S05 Bạn bè C4–C7; UI-081: ở tablet nút «Nhắn tin» dạt mép phải, cách tên 487–679px | 114434 | `ff9666e9` |
+| [EV-F07-C8-SUA-C8](evidence/EV-F07-C8-SUA-C8.jpg) | UI-040: cửa sổ 390×460: sheet «Sửa bản phác» cao 96%, đỉnh y 19; «Lưu bản phác» chỉ tới được sau khi cuộn trong sheet (C8) | 57926 | `090d479c` |
+| [EV-F07-CAI-DAT-VE-C1](evidence/EV-F07-CAI-DAT-VE-C1.jpg) | UI-087: từ «Cài đặt sổ» chạm «Tin nhắn», rồi Back: sheet «Sổ hai người» vẫn mở trên tờ giấy (C1) | 95446 | `81757c8a` |
+| [EV-F07-DANG-CHO-DONG-C1](evidence/EV-F07-DANG-CHO-DONG-C1.jpg) | UI-086: người vừa đề nghị lập sổ đóng sheet: màn vẫn «Chưa có sổ hai người», nút «Xem lời đề nghị», không câu nào nói đang chờ (C1) | 102741 | `6778169b` |
+| [EV-F07-LANH-KHONG-PHIEN-GUI-C1](evidence/EV-F07-LANH-KHONG-PHIEN-GUI-C1.jpg) | UI-082: không có phiên, mở link tờ giấy của một cặp thật: sổ demo không nhãn; «Rủ đi chơi» rồi «Gửi cho người ấy» hiện «ĐÃ GỬI · Đã gửi, chờ trả lời» mà 0 lệnh ghi tới máy chủ (C1) | 106041 | `554d1962` |
+| [EV-F07-M6-KHUNG-C9](evidence/EV-F07-M6-KHUNG-C9.jpg) | UI-084, UI-013, TC-MO16-C9: khung compositor sau «Đồng ý» ở C9: 388 ms sheet nháy trạng thái mời «Đề nghị lập sổ» trên nền «Tuần này» thường; 526 ms sheet còn lộ ở nửa dưới; từ 603 ms bìa đứng ở tư thế cuối | 111082 | `04ac22f9` |
+| [EV-F07-RANG-BUOC-C1](evidence/EV-F07-RANG-BUOC-C1.jpg) | UI-091: sheet «Hai ô ràng buộc»: «Lưu hai ô của tôi» tắt (viền đứt) mà không có dòng lý do (C1) | 84368 | `0e820db2` |
+| [EV-F07-RU-TOI-DAY-NHAP-C1](evidence/EV-F07-RU-TOI-DAY-NHAP-C1.jpg) | UI-092: sheet «Sửa bản phác» mở với «Ở Tiệm Nướng Xóm Lào»; lá ngày đang chọn T7 03/10 chỉ thấy 36/56px ở mép phải (C1) | 90699 | `59eec6f6` |
+| [EV-F07-RU-TOI-DAY-SAU-C1](evidence/EV-F07-RU-TOI-DAY-SAU-C1.jpg) | UI-085: «Rủ Chat Test 02 tới đây» khi tuần đã có tờ chốt: câu «Tuần này hai bạn đã có tờ rồi… để dành cho tuần sau» nằm ngay trên một bản phác MỚI của tuần đó, không có chỗ vừa chọn (C1) | 132603 | `e72fd072` |
+| [EV-F07-SO-MO-A-C1](evidence/EV-F07-SO-MO-A-C1.jpg) | UI-084: phía người đề nghị, sheet chờ còn mở; người kia vừa đồng ý thì sheet quay về trạng thái mời «Đề nghị lập sổ» và ở lại, che bìa sổ vừa mở (C1) | 114717 | `d14397d4` |
+| [EV-F07-TABLET-CAI-DAT-C6](evidence/EV-F07-TABLET-CAI-DAT-C6.jpg) | UI-093: tablet 768: tờ giấy rộng 720px và sheet «Cài đặt sổ» rộng 768px, trong khi thanh đầu gom cột ở giữa (C6) | 132693 | `be8e8cfc` |
+| [EV-F07.S02-503-C1](evidence/EV-F07.S02-503-C1.jpg) | UI-083: đọc sổ và tờ trả 503, màn vẽ «Chưa có sổ hai người» và mời «Đề nghị lập sổ» dù sổ đã mở; không câu lỗi, không «Thử lại» (C1) | 102837 | `f4becd8c` |
+| [EV-F07.S02-BASE-ghep](evidence/EV-F07.S02-BASE-ghep.jpg) | F07.S02 chưa có sổ ở C1, C2, C3: bìa sổ, Nếp, «Đề nghị lập sổ»; hai nhãn tên trên bìa đều thành «Chat Tes…» (UI-090) | 114938 | `79921da7` |

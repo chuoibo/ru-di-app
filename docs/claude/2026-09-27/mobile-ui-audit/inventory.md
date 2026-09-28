@@ -102,7 +102,7 @@
 | ID | Route | Màn / file | Section / component chính | Trạng thái | Hành động |
 |---|---|---|---|---|---|
 | F07.S01 | `/hai-nguoi/chon-nguoi` | `hai-nguoi/ChonNguoi.tsx` | danh sách bạn | 0 bạn, nhiều | chọn → `to-giay` |
-| F07.S02 | `/groups/[id]/to-giay` | `hai-nguoi/KhongGianGiay.tsx` | bìa sổ (lật), giao kèo, tờ chì, tờ tuần, «Chi tiêu chung» | chưa lập sổ, đã lập, bị từ chối | đề nghị, đồng ý, sửa, giữ một điều |
+| F07.S02 | `/groups/[id]/to-giay` | `hai-nguoi/KhongGianGiay.tsx` | bìa sổ (lật), giao kèo, tờ chì, tờ tuần, «Chi tiêu chung» | chưa lập sổ, đang chờ (mình hay người kia đề nghị), đã lập, bị từ chối. Đo ở checkpoint 8: lỗi đọc hiện như chưa lập sổ (UI-083); không phiên thì hiện sổ demo không nhãn (UI-082); `?ru=1&cho=` từ «Rủ … tới đây» | đề nghị, đồng ý, sửa, giữ một điều |
 
 ### F08 Kỷ niệm · Media
 
@@ -177,7 +177,7 @@ Mặc định không né bàn phím.
 | L20 | Khay công cụ | `chat/SoHen.tsx` `CongCuChat` | F05.S02 | có | X, Esc | inline |
 | L21 | Khay tờ hẹn chung | `chat/ToHenChungKhay.tsx` | F05.S02 | — | chỉ X | inline. Đo ở checkpoint 6: Esc không đóng (UI-066), Back rời chat (UI-038) |
 | L22 | Thẻ thông báo chat «Đã hiểu» | `chat/GroupChatLive.tsx` | F05.S02 | — | «Đã hiểu» | nhận lỗi cảm xúc, lỗi gửi ảnh, lỗi xoá, câu ý định sau khi gửi. Luôn thêm ở cuối chat (UI-069) |
-| L23 | ~12 sheet sổ đôi | `hai-nguoi/*.tsx`, `KhongGianGiay.tsx` | F07.S02 | DeNghiSua 5 ô, RangBuoc 2, GiuMotDieu 1 | Sheet | sheet cài đặt điều hướng mà không đóng |
+| L23 | ~12 sheet sổ đôi | `hai-nguoi/*.tsx`, `KhongGianGiay.tsx` | F07.S02 | DeNghiSua 5 ô, RangBuoc 2, GiuMotDieu 1 | Sheet | Đo ở checkpoint 8: Cài đặt sổ (vòng đời đủ 7 cách đóng, C9, tablet), Loại sổ, Hai ô ràng buộc, Đóng sổ (mở rồi thôi, không đóng sổ), Lập sổ (hai phía), Sửa bản phác, Đề nghị sửa. Chưa tới: Bật «Một đôi», Giữ lại một điều, Ai lo tuần này, Gu hai bạn, xác nhận bỏ/rút/nghỉ/huỷ. Hàng điều hướng không đóng sheet (UI-087, đã xác nhận) |
 | L24 | Check-in | `ky-niem/GroupWallLive.tsx` | F08.S01 | tìm + ô | Sheet | |
 | L25 | Xem ảnh | `ui/PhotoViewer.tsx` (RN `Modal` duy nhất) | F08.S02, F08.S03 | — | «Đóng», Android back | pinch, pan, chạm đúp; không vuốt xuống để đóng |
 | L26 | Xem story + xác nhận xoá | `story/XemStoryScreen.tsx` | F08.S06 | — | đóng modal | tự chuyển 5 s |
@@ -220,7 +220,7 @@ Không có trong app (N/A, đã rà mã):
 | MO13 | Nếp diễn M1–M8 | `NepDien.tsx`, `NepRoi` | sự kiện |
 | MO14 | Đóng dấu (rơi 130 ms + chạm 60 ms) | `Stamp`, `DauLon`, `useNhipDau` | xác nhận |
 | MO15 | Mực tự vẽ (chữ ký, sơ đồ chuyển) | `ChuKy`, `SoDoChuyen` | hiện màn |
-| MO16 | Bìa sổ đôi mở | `SoBia`, `KhongGianGiay.tsx` | mở sổ |
+| MO16 | Bìa sổ đôi mở | `SoBia`, `KhongGianGiay.tsx` | mở sổ; đo góc từng khung ở C1/C9 (checkpoint 8) |
 | MO17 | Kéo món vào ghế | `BanGanMon` | kéo |
 | MO18 | Kéo mặt quay giờ | `BanXoay` | kéo |
 | MO19 | Nhấn giữ 250 ms rồi kéo đổi thứ tự | `ReorderList` | nhấn giữ |

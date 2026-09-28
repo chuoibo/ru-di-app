@@ -573,5 +573,65 @@
   "bytes": 114434,
   "sha8": "ff9666e9",
   "moTa": "F06.S05 Bạn bè C4–C7; UI-081: ở tablet nút «Nhắn tin» dạt mép phải, cách tên 487–679px"
+ },
+ "EV-F07-C8-SUA-C8": {
+  "bytes": 57926,
+  "sha8": "090d479c",
+  "moTa": "UI-040: cửa sổ 390×460: sheet «Sửa bản phác» cao 96%, đỉnh y 19; «Lưu bản phác» chỉ tới được sau khi cuộn trong sheet (C8)"
+ },
+ "EV-F07-CAI-DAT-VE-C1": {
+  "bytes": 95446,
+  "sha8": "81757c8a",
+  "moTa": "UI-087: từ «Cài đặt sổ» chạm «Tin nhắn», rồi Back: sheet «Sổ hai người» vẫn mở trên tờ giấy (C1)"
+ },
+ "EV-F07-DANG-CHO-DONG-C1": {
+  "bytes": 102741,
+  "sha8": "6778169b",
+  "moTa": "UI-086: người vừa đề nghị lập sổ đóng sheet: màn vẫn «Chưa có sổ hai người», nút «Xem lời đề nghị», không câu nào nói đang chờ (C1)"
+ },
+ "EV-F07-LANH-KHONG-PHIEN-GUI-C1": {
+  "bytes": 106041,
+  "sha8": "554d1962",
+  "moTa": "UI-082: không có phiên, mở link tờ giấy của một cặp thật: sổ demo không nhãn; «Rủ đi chơi» rồi «Gửi cho người ấy» hiện «ĐÃ GỬI · Đã gửi, chờ trả lời» mà 0 lệnh ghi tới máy chủ (C1)"
+ },
+ "EV-F07-M6-KHUNG-C9": {
+  "bytes": 111082,
+  "sha8": "04ac22f9",
+  "moTa": "UI-084, UI-013, TC-MO16-C9: khung compositor sau «Đồng ý» ở C9: 388 ms sheet nháy trạng thái mời «Đề nghị lập sổ» trên nền «Tuần này» thường; 526 ms sheet còn lộ ở nửa dưới; từ 603 ms bìa đứng ở tư thế cuối"
+ },
+ "EV-F07-RANG-BUOC-C1": {
+  "bytes": 84368,
+  "sha8": "0e820db2",
+  "moTa": "UI-091: sheet «Hai ô ràng buộc»: «Lưu hai ô của tôi» tắt (viền đứt) mà không có dòng lý do (C1)"
+ },
+ "EV-F07-RU-TOI-DAY-NHAP-C1": {
+  "bytes": 90699,
+  "sha8": "59eec6f6",
+  "moTa": "UI-092: sheet «Sửa bản phác» mở với «Ở Tiệm Nướng Xóm Lào»; lá ngày đang chọn T7 03/10 chỉ thấy 36/56px ở mép phải (C1)"
+ },
+ "EV-F07-RU-TOI-DAY-SAU-C1": {
+  "bytes": 132603,
+  "sha8": "e72fd072",
+  "moTa": "UI-085: «Rủ Chat Test 02 tới đây» khi tuần đã có tờ chốt: câu «Tuần này hai bạn đã có tờ rồi… để dành cho tuần sau» nằm ngay trên một bản phác MỚI của tuần đó, không có chỗ vừa chọn (C1)"
+ },
+ "EV-F07-SO-MO-A-C1": {
+  "bytes": 114717,
+  "sha8": "d14397d4",
+  "moTa": "UI-084: phía người đề nghị, sheet chờ còn mở; người kia vừa đồng ý thì sheet quay về trạng thái mời «Đề nghị lập sổ» và ở lại, che bìa sổ vừa mở (C1)"
+ },
+ "EV-F07-TABLET-CAI-DAT-C6": {
+  "bytes": 132693,
+  "sha8": "be8e8cfc",
+  "moTa": "UI-093: tablet 768: tờ giấy rộng 720px và sheet «Cài đặt sổ» rộng 768px, trong khi thanh đầu gom cột ở giữa (C6)"
+ },
+ "EV-F07.S02-503-C1": {
+  "bytes": 102837,
+  "sha8": "f4becd8c",
+  "moTa": "UI-083: đọc sổ và tờ trả 503, màn vẽ «Chưa có sổ hai người» và mời «Đề nghị lập sổ» dù sổ đã mở; không câu lỗi, không «Thử lại» (C1)"
+ },
+ "EV-F07.S02-BASE-ghep": {
+  "bytes": 114938,
+  "sha8": "79921da7",
+  "moTa": "F07.S02 chưa có sổ ở C1, C2, C3: bìa sổ, Nếp, «Đề nghị lập sổ»; hai nhãn tên trên bìa đều thành «Chat Tes…» (UI-090)"
  }
 }
