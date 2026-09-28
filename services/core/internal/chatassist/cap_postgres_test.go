@@ -8,7 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/llm"
+	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/prompts"
 	"mobile/services/core/internal/aiharness/tools"
 	"mobile/services/core/internal/auth"
 )
@@ -463,5 +466,78 @@ func TestCapNhomKhongDoi(t *testing.T) {
 	n.chayViec(t)
 	if status, c, cards := n.trangThai(t, job.ID); status != "succeeded" || cards != 1 {
 		t.Fatalf("%s %s %d", status, c, cards)
+	}
+}
+
+// heThongStub reads the system instruction of every request the stub saw.
+func heThongStub(t *testing.T, stub *llm.Stub) []string {
+	t.Helper()
+	var out []string
+	for _, y := range stub.YeuCau() {
+		var r struct {
+			Config struct {
+				SystemInstruction struct{ Parts []struct{ Text string } } `json:"systemInstruction"`
+			} `json:"config"`
+		}
+		if err := json.Unmarshal(y, &r); err != nil {
+			t.Fatal(err)
+		}
+		var b strings.Builder
+		for _, p := range r.Config.SystemInstruction.Parts {
+			b.WriteString(p.Text)
+		}
+		out = append(out, b.String())
+	}
+	return out
+}
+
+// The two classes end to end (2026-09-28, metrics v6): the worker reads the
+// room's class from the database (laDoi) in the transaction that reads the
+// room. A pair whose two people both said yes to «Một đôi» is a couple: its
+// router and its answer read the couple's instructions, and its metrics row
+// says bot doi with the couple's prompt version. A pair with one yes, or
+// none, is a room of friends: the group's instructions, bot nhom, the
+// group's version -- exactly a group's row. The card is the same either way.
+func TestCapDoiGhiBotDoi(t *testing.T) {
+	routerNhom, _ := hieu.LoiNhac(obs.BotNhom)
+	for _, c := range []struct {
+		ten     string
+		dongY   int
+		bot     obs.Bot
+		version string
+		router  string
+		agent   string
+	}{
+		{"đám bạn, chưa sổ đôi", 0, obs.BotNhom, prompts.VersionNhom(), routerNhom, prompts.NhomAgent("pg9nhom7x2kq")},
+		{"đám bạn, một người đồng ý", 1, obs.BotNhom, prompts.VersionNhom(), routerNhom, prompts.NhomAgent("pg9nhom7x2kq")},
+		{"cặp đôi", 2, obs.BotDoi, prompts.VersionDoi(), hieu.LoiNhacDoi(), prompts.DoiAgent("pg9nhom7x2kq")},
+	} {
+		n := setupCap(t, kichCap()...)
+		if c.dongY > 0 {
+			n.f.batDoi(t, []string{n.f.person, n.f.peer}[:c.dongY]...)
+		}
+		if caps := n.f.khaNang(t, n.f.token); *caps.CapDoi != (c.bot == obs.BotDoi) {
+			t.Fatalf("%s: cap_doi=%v", c.ten, *caps.CapDoi)
+		}
+		job, code, ma := n.goiCap(t, "hoi")
+		if job == nil {
+			t.Fatalf("%s: %d %s", c.ten, code, ma)
+		}
+		n.chayViec(t)
+		k := n.ket(t, job.ID)
+		if k.status != "succeeded" || k.reply == nil || *k.reply != *job.TriggerMessageID {
+			t.Fatalf("%s: %s %v %v", c.ten, k.status, k.code, k.reply)
+		}
+		if k.bot != string(c.bot) || k.version != c.version || k.duong != string(obs.DuongThang) {
+			t.Fatalf("%s: metrics row bot %q version %q duong %q, want %q %q", c.ten, k.bot, k.version, k.duong, c.bot, c.version)
+		}
+		he := heThongStub(t, n.stub)
+		if len(he) != 3 || he[0] != c.router || !strings.HasPrefix(he[1], c.agent) {
+			t.Fatalf("%s: the router or the answer read another class's instruction (%d requests)", c.ten, len(he))
+		}
+		var the theTraLoi
+		if err := json.Unmarshal(k.card, &the); err != nil || the.Kind != "tra_loi" || !strings.Contains(string(the.Payload.Phan[0]), "Chào hai bạn") {
+			t.Fatalf("%s: thẻ %s", c.ten, k.card)
+		}
 	}
 }

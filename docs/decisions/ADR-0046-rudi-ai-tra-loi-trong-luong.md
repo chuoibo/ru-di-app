@@ -281,5 +281,8 @@ chủ sản phẩm, không phải chữ ký Lead.
   phòng là `pair` và `CanBatDoi` đúng ở lúc đọc (người tham gia của chu kỳ sổ đôi đang sống, hoặc các
   thành viên đang hoạt động khi chưa có chu kỳ); không có sổ đôi là `false`; nhóm luôn `false`. Hỏi
   lại mỗi lần đọc, không cache. Các trường cũ không đổi.
-- Worker đọc cùng cờ đó khi đọc phòng và mang nó vào lượt (`aiharness.Turn.Doi`); lát này chưa có gì
-  dùng nó. Luật §2.9 (AI không chạm tiền) áp cho mọi phòng đám bạn, nhóm cũng như chat hai người.
+- Worker đọc cùng cờ đó khi đọc phòng và mang nó vào lượt (`aiharness.Turn.Doi`). Lát P3 dùng nó cho
+  chữ và bản ghi, không cho quyền: lượt cặp đôi đi nguyên đường nhóm (`Bot nhom`), router đọc tệp bot
+  cặp đôi, câu trả lời đọc lời nhắc cặp đôi (`prompts/doi_agent.txt`, «hai bạn»), bản ghi số đo ghi
+  `bot=doi` (`ai_turn_metrics` v6). Chat hai người của đám bạn giữ lời nhắc nhóm và `bot=nhom`. Gu đã
+  chia (P5) chưa đọc. Luật §2.9 (AI không chạm tiền) áp cho mọi phòng đám bạn, nhóm cũng như chat hai người.

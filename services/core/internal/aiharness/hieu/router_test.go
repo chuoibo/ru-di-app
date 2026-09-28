@@ -82,11 +82,15 @@ func docGolden(t *testing.T, name string, got []byte) {
 func TestYeuCauGolden(t *testing.T) {
 	for _, c := range []struct {
 		bot obs.Bot
+		ten string
 		v   Vao
 		ra  string
 	}{
-		{obs.BotNep, vaoNep(), hopLeNep},
-		{obs.BotNhom, vaoMau(obs.BotNhom), hopLe},
+		{obs.BotNep, "nep", vaoNep(), hopLeNep},
+		{obs.BotNhom, "nhom", vaoMau(obs.BotNhom), hopLe},
+		// A couple's turn (two classes, 2026-09-28): the group's schema,
+		// the couple's bot file.
+		{obs.BotNhom, "doi", vaoDoi(), hopLe},
 	} {
 		stub := llm.NewStub(buoc(c.ra)...)
 		if _, err := Moi().Hieu(context.Background(), c.v, demMoi(stub, llm.MaxModelCallsPerTurn)); err != nil {
@@ -96,7 +100,7 @@ func TestYeuCauGolden(t *testing.T) {
 		if len(req) != 1 {
 			t.Fatalf("%s: %d calls", c.bot, len(req))
 		}
-		docGolden(t, "yeu_cau_"+string(c.bot)+".golden.json", req[0])
+		docGolden(t, "yeu_cau_"+c.ten+".golden.json", req[0])
 		var canon struct {
 			Config struct {
 				ResponseSchema   json.RawMessage `json:"responseSchema"`
@@ -116,7 +120,7 @@ func TestYeuCauGolden(t *testing.T) {
 		if err := json.Indent(&buf, canon.Config.ResponseSchema, "", "  "); err != nil {
 			t.Fatal(err)
 		}
-		docGolden(t, "luoc_do_"+string(c.bot)+".golden.json", buf.Bytes())
+		docGolden(t, "luoc_do_"+c.ten+".golden.json", buf.Bytes())
 		// The schema sent is LuocDo's, not a copy that could drift.
 		want, _ := LuocDo(c.v)
 		sent := new(genai.Schema)
@@ -502,6 +506,66 @@ func TestLoiNhacDuDinhNghia(t *testing.T) {
 		if _, err := catPhan(txt); err == nil {
 			t.Errorf("%s section accepted", name)
 		}
+	}
+}
+
+// The couple's router instruction (two classes, 2026-09-28) defines every
+// intent and source of the group bot, since the couple runs the group's
+// schema and policy; it is its own text and version; a couple's turn is
+// sent it, a room of friends' (Doi false) the group's; and Doi on Nếp is
+// refused.
+func TestLoiNhacDoi(t *testing.T) {
+	s := LoiNhacDoi()
+	yd, _ := YDinhCua(obs.BotNhom)
+	ng, _ := NguonCua(obs.BotNhom)
+	for _, y := range yd.Values() {
+		if !strings.Contains(s, `- "`+y+`":`) {
+			t.Errorf("couple: intent %s undefined", y)
+		}
+	}
+	for _, n := range ng.Values() {
+		if !strings.Contains(s, `- "`+n+`":`) {
+			t.Errorf("couple: source %s undefined", n)
+		}
+	}
+	for _, x := range []string{"{{", "@@", `- "memory"`} {
+		if strings.Contains(s, x) {
+			t.Errorf("couple: %q in the instruction", x)
+		}
+	}
+	nhom, _ := LoiNhac(obs.BotNhom)
+	if s == nhom || PhienBanDoi() == PhienBan(obs.BotNhom) || len(PhienBanDoi()) != 12 {
+		t.Fatal("the couple shares the group's router instruction")
+	}
+	if !strings.Contains(s, "a couple") || !strings.Contains(s, "who of the two") || strings.Contains(s, "every id except Minh's") {
+		t.Error("the couple's bot file or member slot is not the couple's")
+	}
+	for _, c := range []struct {
+		v    Vao
+		want string
+	}{{vaoDoi(), s}, {vaoMau(obs.BotNhom), nhom}} {
+		got, err := LoiNhacCua(c.v)
+		if err != nil || got != c.want || PhienBanCua(c.v) == "" {
+			t.Fatalf("Doi=%v: wrong instruction (%v)", c.v.Doi, err)
+		}
+		req, err := YeuCau(c.v, nil)
+		if err != nil || req.Config.SystemInstruction.Parts[0].Text != c.want {
+			t.Fatalf("Doi=%v: the request carries another instruction (%v)", c.v.Doi, err)
+		}
+	}
+	// The same message and labels give the same schema and body: only the
+	// instruction tells a couple from a room of friends.
+	a, _ := YeuCau(vaoDoi(), nil)
+	b := vaoDoi()
+	b.Doi = false
+	bq, _ := YeuCau(b, nil)
+	if a.Contents[0].Parts[0].Text != bq.Contents[0].Parts[0].Text {
+		t.Fatal("the couple's body differs from the group's")
+	}
+	nep := vaoNep()
+	nep.Doi = true
+	if _, err := YeuCau(nep, nil); !errors.Is(err, ErrVao) {
+		t.Fatalf("Doi on Nếp: %v", err)
 	}
 }
 

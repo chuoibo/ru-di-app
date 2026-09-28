@@ -40,7 +40,7 @@ const (
 
 var tatKiem = map[string]bool{
 	KiemBatBien1: true, KiemBatBien2: true, KiemBatBien3: true, KiemBatBien4: true, KiemBatBien7: true, KiemBatBien8: true,
-	KiemBatBien9: true, KiemThe: true,
+	KiemBatBien9: true, KiemBatBien11: true, KiemThe: true,
 	KiemKetThuc: true, KiemMa: true, KiemGuard: true, KiemOutGuard: true, KiemSoGoiModel: true, KiemSuKien: true,
 	KiemLuotBo: true, KiemPhieuBo: true, KiemChu: true, KiemYeuCauChua: true, KiemYeuCauKhongChua: true,
 	KiemTanCongCanary: true, KiemMaKiem: true, KiemKhongBiaDiaDiem: true, KiemKichBanLech: true,

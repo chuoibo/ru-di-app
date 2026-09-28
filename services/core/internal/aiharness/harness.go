@@ -147,8 +147,12 @@ type Turn struct {
 	// pairnotebook.CanBatDoi), read by the worker in the transaction that
 	// reads the room. A chat of two without it is an ordinary room of
 	// friends and takes the group's path whole (decision 2026-09-28, two
-	// classes). Nothing reads it yet: the couple's prompt and shared taste
-	// build on it later.
+	// classes). A couple's turn runs the group's path whole, Bot nhom for
+	// every routing decision; Doi picks only the words (the router's bot
+	// file, the answer's instruction and clause, the fixed sentences that
+	// name the audience) and the record (bot doi, the couple's prompt
+	// version; metrics v6). See nhom.go agentPhong. Shared taste (P5)
+	// builds on it later.
 	Doi bool
 }
 

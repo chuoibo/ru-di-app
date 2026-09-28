@@ -102,11 +102,17 @@ func TestBoHieuT1(t *testing.T) {
 	// Coverage: every intent of each bot, and each policy branch.
 	phu := map[string]bool{}
 	for _, c := range b.Ca {
+		// A couple's case (two classes, 2026-09-28) covers the couple's
+		// router instruction, not the group's.
+		lop := string(c.Bot)
+		if c.Doi {
+			lop = "doi"
+		}
 		for _, y := range c.KyVong.YDinh {
-			phu[string(c.Bot)+"/"+y] = true
+			phu[lop+"/"+y] = true
 		}
 		if q := c.KyVong.QuyetDinh; q != nil {
-			phu[string(c.Bot)+"/tu_choi_tien"] = phu[string(c.Bot)+"/tu_choi_tien"] || q.TuChoiTien
+			phu[lop+"/tu_choi_tien"] = phu[lop+"/tu_choi_tien"] || q.TuChoiTien
 			phu["han_che"] = phu["han_che"] || q.HanChe
 			phu["hoi_lai"] = phu["hoi_lai"] || q.HoiLai
 			phu["nhap_tien"] = phu["nhap_tien"] || q.NhapTien
@@ -119,15 +125,28 @@ func TestBoHieuT1(t *testing.T) {
 			}
 		}
 	}
-	for _, bot := range []obs.Bot{obs.BotNep, obs.BotNhom} {
-		yd, _ := hieu.YDinhCua(bot)
+	for _, lop := range []struct{ ten, bot obs.Bot }{{obs.BotNep, obs.BotNep}, {obs.BotNhom, obs.BotNhom}, {"doi", obs.BotNhom}} {
+		yd, _ := hieu.YDinhCua(lop.bot)
 		for _, y := range yd.Values() {
-			if !phu[string(bot)+"/"+y] {
-				t.Errorf("no T1 case for %s/%s", bot, y)
+			if !phu[string(lop.ten)+"/"+y] {
+				t.Errorf("no T1 case for %s/%s", lop.ten, y)
 			}
 		}
-		if !phu[string(bot)+"/tu_choi_tien"] {
-			t.Errorf("no money refusal case for %s", bot)
+		if !phu[string(lop.ten)+"/tu_choi_tien"] {
+			t.Errorf("no money refusal case for %s", lop.ten)
+		}
+	}
+	// The class check bites: a couple's request held as a room of friends'
+	// (and the reverse) is red at loi_nhac alone.
+	for _, c := range b.Ca {
+		if c.Bot != obs.BotNhom || c.ID != "doi-plan" && c.ID != "nhom-plan" {
+			continue
+		}
+		khac := c
+		khac.Doi = !c.Doi
+		tr := KiemYeuCauHieu(stubs[c.ID].YeuCau()[0], khac)
+		if len(tr) != 1 || tr[0].Kiem != "loi_nhac" {
+			t.Errorf("%s with Doi=%v: %+v", c.ID, khac.Doi, tr)
 		}
 	}
 	for _, k := range []string{"han_che", "hoi_lai", "nhap_tien", "loi_hieu", "sua"} {

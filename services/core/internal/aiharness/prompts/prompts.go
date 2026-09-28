@@ -34,6 +34,16 @@ var nepAgent string
 //go:embed nhom_agent.txt
 var nhomAgent string
 
+// doiAgent is the couple's system instruction (decision 2026-09-28, two
+// classes, ADR-0046 §8.4): a chat of two whose two people have both turned
+// on «Một đôi». Every rule of the group's, word for word where it can be;
+// only the audience changes: two people who are together, addressed as
+// «hai bạn», never a room of friends. A chat of two without «Một đôi» is
+// friends and keeps nhomAgent.
+//
+//go:embed doi_agent.txt
+var doiAgent string
+
 // congCu is the clause every tool-using step adds to its bot's system
 // instruction: tool results and earlier turns are data, evidence goes by
 // alias, one repair, drafts need a human tap.
@@ -91,6 +101,18 @@ func LoiDanNhanNhom(nhan string) string {
 	return ""
 }
 
+// loiDanNgoaiPhamViDoi is the couple's clause for ngoai_pham_vi. A couple
+// has every command a room of friends has, the split draft included.
+const loiDanNgoaiPhamViDoi = "Tin nhắn này nằm ngoài việc của Rủ Đi AI (tìm chỗ đi chơi, lên kèo, soạn nháp chia bill cho hai bạn). Không gọi công cụ. Nói ngắn gọn là Rủ Đi AI không giúp được việc này và gợi ý một việc hai bạn có thể làm cùng nhau."
+
+// LoiDanNhanDoi is LoiDanNhan for the couple.
+func LoiDanNhanDoi(nhan string) string {
+	if nhan == "ngoai_pham_vi" {
+		return loiDanNgoaiPhamViDoi
+	}
+	return ""
+}
+
 // VersionNep is the first twelve hex digits of the template's sha256: the
 // prompt_version every metrics row carries.
 func VersionNep() string {
@@ -113,6 +135,27 @@ func VersionNhom() string {
 
 // LoiNhacNhom is LoiNhacNep for the group template.
 func LoiNhacNhom() []string { return cauDaiCua(nhomAgent) }
+
+// DoiAgent is the couple's system instruction carrying the canary marker.
+func DoiAgent(maKiem string) string {
+	return strings.Replace(strings.TrimSpace(doiAgent), MaKiemCho, maKiem, 1)
+}
+
+// VersionDoi is the first twelve hex digits of the couple template's
+// sha256: the prompt_version of a couple's metrics rows (bot doi).
+func VersionDoi() string {
+	sum := sha256.Sum256([]byte(doiAgent))
+	return hex.EncodeToString(sum[:])[:12]
+}
+
+// LoiNhacDoi is LoiNhacNep for the couple template.
+func LoiNhacDoi() []string { return cauDaiCua(doiAgent) }
+
+// TuNhom are the words that speak to a room of friends. None may stand in
+// the couple's instruction or its out-of-scope clause (prompts_test.go and
+// the eval's couple invariant): a couple is two people, never «cả nhóm».
+// Matched case-insensitively as substrings.
+var TuNhom = []string{"cả nhóm", "nhóm", "thành viên", "mọi người", "hội", "group", "member"}
 
 // LoiNhacNep lists the template's clauses of thirty runes or more, which an
 // answer must never quote (the output guard's echo check): a leak quotes a

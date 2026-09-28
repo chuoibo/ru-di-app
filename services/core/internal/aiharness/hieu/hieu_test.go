@@ -33,6 +33,14 @@ func vaoMau(bot obs.Bot) Vao {
 	}
 }
 
+// vaoDoi is a couple's turn: the group bot, two people, Doi set.
+func vaoDoi() Vao {
+	v := vaoMau(obs.BotNhom)
+	v.Doi = true
+	v.Cau = "tối mai hai đứa mình đi đâu"
+	return v
+}
+
 // hopLe is a valid group router output; every refusal case below edits it
 // in exactly one place.
 const hopLe = `{"nhan_guard":"sach","tien":"none","y_dinh":["find_places","smalltalk"],"mo_ho_voi":["plan"],

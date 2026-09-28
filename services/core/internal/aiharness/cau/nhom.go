@@ -27,9 +27,21 @@ const (
 	NhomLoiNhoChiaBill = "Chia bill các khoản chi trong các tin được chia sẻ."
 )
 
+// The couple's fixed sentences (two classes, 2026-09-28): a chat of two
+// whose two people have both turned on «Một đôi» takes the group's path
+// whole, and reads these in place of the group's where the group's speak
+// to a room of friends. NhomChuaChacSoTien and NhomLoiNhoChiaBill name no
+// audience and serve both.
+const (
+	DoiKhongChamTien = "Rủ Đi AI không làm việc tiền nong giữa hai bạn: không chuyển tiền, không ghi nợ, không nhắc ai trả. Nếu cần chia một hoá đơn, hai bạn nhờ mình «chia bill» để mình soạn nháp cho hai bạn xem rồi tự xác nhận ở mục Chia bill nhé."
+	DoiChuaThayKhoan = "Mình chưa thấy khoản chi nào có số tiền trong các tin được chia sẻ. Hai bạn gửi kèm tin có số tiền (ví dụ «lẩu 850k») rồi nhờ mình chia bill lại nhé."
+	DoiLoiNhoPlan    = "Lên kế hoạch đi chơi cho hai bạn từ các tin được chia sẻ."
+)
+
 // CoDinhNhom is every fixed sentence the group path may release as a whole
 // answer, with no model-derived field: the only texts that may reach a
-// stream without a verifier's pass (the eval's invariant 8 reads it).
+// stream without a verifier's pass (the eval's invariant 8 reads it). The
+// couple's are the group path's too.
 func CoDinhNhom() []string {
-	return []string{NhomKhongChamTien, NhomChuaThayKhoan, NhomChuaChacSoTien}
+	return []string{NhomKhongChamTien, NhomChuaThayKhoan, NhomChuaChacSoTien, DoiKhongChamTien, DoiChuaThayKhoan}
 }

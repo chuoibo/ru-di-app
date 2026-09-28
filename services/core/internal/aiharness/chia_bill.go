@@ -79,9 +79,9 @@ func (e *Engine) nhapChiaBill(ctx context.Context, t Turn, rec *obs.TurnRecord, 
 		khoan = append(khoan, khoanNhap{tieuDe: k.TieuDe, soTien: k.SoTienVND, nguoiTra: tacGia[k.Tin], nguonTin: nguonID[k.Tin]})
 	}
 	nguoi := nguoiChia(t.ThanhVien, kq.Slots.NguoiThamGia)
-	n, err := chiaBillParts(khoan, nguoi, t.ThanhVien)
+	n, err := chiaBillPartsCuoi(khoan, nguoi, t.ThanhVien, cauPhong(t, cuoiNhapNhom, cuoiNhapDoi))
 	if errors.Is(err, errKhongKhoan) {
-		return theMotChu(cau.NhomChuaThayKhoan), nil
+		return theMotChu(cauPhong(t, cau.NhomChuaThayKhoan, cau.DoiChuaThayKhoan)), nil
 	}
 	if err != nil {
 		rec.LoiMoHinh = obs.LoiBadResp
@@ -104,7 +104,7 @@ func (e *Engine) nhapChiaBill(ctx context.Context, t Turn, rec *obs.TurnRecord, 
 	rec.KetKiem = obs.KiemDat
 	// Our template around verbatim spans and integers: the structural
 	// output checks still run (no contact detail, no marker, the length).
-	if _, err := e.kiemDauRaK(khuonNhom(), n.chu, rec); err != nil {
+	if _, err := e.kiemDauRaK(khuonNhom(t.Doi), n.chu, rec); err != nil {
 		return Result{}, err
 	}
 	res := theMotChu(n.chu)
@@ -164,6 +164,12 @@ var (
 
 const nguoiKhongTen = "Một người trong nhóm"
 
+// The draft's closing line: a room of friends', and a couple's.
+const (
+	cuoiNhapNhom = "Mọi người xem lại rồi xác nhận ở mục Chia bill. Rủ Đi AI không tự ghi khoản nào."
+	cuoiNhapDoi  = "Hai bạn xem lại rồi xác nhận ở mục Chia bill. Rủ Đi AI không tự ghi khoản nào."
+)
+
 // chiaBillParts builds the split draft from the checked items, a pure
 // function of its arguments (money law 3). Every amount is whole đồng in an
 // int64 (law 1: no float, no Decimal, even in between); the total is their
@@ -174,6 +180,13 @@ const nguoiKhongTen = "Một người trong nhóm"
 // the amount and the verbatim title; the result keeps v1's expense_draft
 // shape, every draft needs_review, plus the preview.
 func chiaBillParts(ks []khoanNhap, nguoi []string, ts []ThanhVienNhom) (nhapChia, error) {
+	return chiaBillPartsCuoi(ks, nguoi, ts, cuoiNhapNhom)
+}
+
+// chiaBillPartsCuoi is chiaBillParts with the template's closing line, ours,
+// chosen by the room's class: who confirms is «mọi người» in a room of
+// friends and «hai bạn» for a couple. Nothing else of the draft changes.
+func chiaBillPartsCuoi(ks []khoanNhap, nguoi []string, ts []ThanhVienNhom, cuoi string) (nhapChia, error) {
 	if len(ks) == 0 {
 		return nhapChia{}, errKhongKhoan
 	}
@@ -217,7 +230,7 @@ func chiaBillParts(ks []khoanNhap, nguoi []string, ts []ThanhVienNhom) (nhapChia
 		dong = append(dong, d)
 	}
 	dong = append(dong, "Tổng "+dinhDangDong(tong)+". Chia đều cho "+strconv.Itoa(len(nguoi))+" người: "+moTaChiaDeu(r.Allocations)+".")
-	dong = append(dong, "Mọi người xem lại rồi xác nhận ở mục Chia bill. Rủ Đi AI không tự ghi khoản nào.")
+	dong = append(dong, cuoi)
 	kq, err := ketQuaNhapJSON(ks, nguoi, r.Allocations)
 	if err != nil {
 		return nhapChia{}, err
