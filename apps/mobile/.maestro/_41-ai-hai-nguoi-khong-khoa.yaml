@@ -1,9 +1,11 @@
 # Nhánh của flow 41 khi máy chủ KHÔNG có khoá mô hình (AI=0): chat hai người.
 #
-# Lát M1 (thiết kế ở ai-chat-hai-nguoi.md): cặp nhờ được Rủ Đi AI, chỉ bằng lệnh `hoi`
-# (gõ @Rủ Đi). Không có khoá thì chip trên nút gửi nói thật TRƯỚC khi gửi, tin
-# vẫn vào luồng như tin thường và không có lời gọi nào. Khay của cặp giữ «Tờ
-# giấy» và nói thẳng Rủ Đi AI chưa trả lời được ở đây. Soi theo _30-ai-khong-khoa.
+# Hai class (chủ sản phẩm chốt, thay «cặp chỉ hoi»): chat hai người thường là
+# ĐÁM BẠN, nhờ Rủ Đi AI y hệt nhóm (gõ @Rủ Đi, /plan, /chia-bill). Không có
+# khoá thì chip trên nút gửi nói thật TRƯỚC khi gửi, tin vẫn vào luồng như tin
+# thường và không có lời gọi nào. Khay có «Tờ hẹn» như nhóm, không «Tờ giấy»
+# (chỉ cặp đôi mới có), và panel tờ hẹn nói thật AI chưa sẵn sàng. Soi theo
+# _30-ai-khong-khoa.
 #
 # Flow 41 đang ở màn chat của cặp, ô soạn trống.
 appId: com.lakiet.rudi
@@ -21,13 +23,17 @@ appId: com.lakiet.rudi
     visible: "Tin nhắn: @Ru Di goi y cho hai minh"
     timeout: 60000
 - assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
-# Khay của cặp: «Tờ giấy» thay cho «Tờ hẹn», và lối vào AI nói thật.
+# Khay của đám bạn hai người: «Tờ hẹn» như nhóm, và panel nói thật.
 - tapOn: "Thêm vào cuộc trò chuyện"
 - extendedWaitUntil:
-    visible: "Tờ giấy"
+    visible: "Tờ hẹn"
     timeout: 15000
-- assertNotVisible: "Tờ hẹn"
-- assertVisible: "Rủ Đi AI chưa trả lời được ở đây. Hai bạn vẫn nhắn tin như thường."
+- assertNotVisible: "Tờ giấy"
+- tapOn: "Tờ hẹn"
+- extendedWaitUntil:
+    visible: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."
+    timeout: 15000
 - assertNotVisible: "Hỏi Rủ Đi AI"
+- assertVisible: "Tự tạo kèo"
 - takeScreenshot: 41-khay-ai-chua-san-sang
 - tapOn: "Đóng khay công cụ"

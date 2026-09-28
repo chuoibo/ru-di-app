@@ -18,8 +18,7 @@ export type ChatCapabilities = {
     chia_bill?: { available: boolean; reason: string | null };
     /**
      * `hoi`: the engine's router decides what is asked, and the answer goes
-     * under the `@Rủ Đi` message. The one command a two-person conversation
-     * has (design 2026-09-28 §2.1). Absent on an older server: unavailable.
+     * under the `@Rủ Đi` message. Absent on an older server: unavailable.
      */
     hoi?: { available: boolean; reason: string | null };
     share_scope: "invocation_only" | "caller_attached";
@@ -32,11 +31,26 @@ export type ChatCapabilities = {
     mention?: boolean;
   };
   media: { image: boolean; sticker: boolean; voice: boolean };
+  /**
+   * The room is a couple: a two-person conversation where both people have
+   * turned «Một đôi» on (owner decision 2026-09-28). Only then does the chat
+   * show the couple's extras -- the pinned «Tờ giấy» row, the tray's «Tờ
+   * giấy» and the couple stickers. Every other two-person conversation is a
+   * friends' chat, with exactly a group's AI and tools. Absent on an older
+   * server: not a couple.
+   */
+  cap_doi?: boolean;
 };
+
+/** Whether the server says this room is a couple (`cap_doi`). Fails closed. */
+export function laCapDoi(capabilities: ChatCapabilities | null): boolean {
+  return capabilities?.cap_doi === true;
+}
+
 /**
  * What a person can ask the room's AI for, on one queue (ADR-0036 §2.9).
- * A group has all three; a two-person conversation has `hoi` only, and the
- * server's capabilities say so (plan and chia_bill `group_plan_only`).
+ * Every room -- a group, a friends' two-person chat, a couple -- has all
+ * three; the server's capabilities say which can run now.
  */
 export type LenhAi = "plan" | "chia_bill" | "hoi";
 

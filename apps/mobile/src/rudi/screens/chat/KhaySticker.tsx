@@ -23,13 +23,17 @@ export function KhaySticker({
   open,
   onClose,
   onChon,
-  haiNguoi = false,
+  capDoi = false,
 }: {
   open: boolean;
   onClose: () => void;
   onChon: (id: string) => void;
-  /** A two-person conversation: the four for two follow under their own heading (ADR-0034). */
-  haiNguoi?: boolean;
+  /**
+   * A couple (`cap_doi`: both turned «Một đôi» on): the four for two follow
+   * under their own heading (ADR-0034). A friends' two-person chat gets a
+   * group's eight (owner decision 2026-09-28).
+   */
+  capDoi?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
@@ -42,13 +46,13 @@ export function KhaySticker({
   return (
     <Sheet accessibilityLabel="Khay sticker" onClose={onClose} open={open} testID="khay-sticker">
       <Heading size="h2" subtitle="Một hình thay cho một câu." title="Sticker" />
-      {nhom(stickerChoKhay(haiNguoi).chung)}
-      {haiNguoi ? (
+      {nhom(stickerChoKhay(capDoi).chung)}
+      {capDoi ? (
         <>
           <Text accessibilityRole="header" style={[typography.label, { color: colors.ink }]}>
             Cho hai người
           </Text>
-          {nhom(stickerChoKhay(haiNguoi).doi)}
+          {nhom(stickerChoKhay(capDoi).doi)}
         </>
       ) : null}
     </Sheet>
