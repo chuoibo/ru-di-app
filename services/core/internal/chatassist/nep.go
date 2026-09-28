@@ -94,7 +94,7 @@ var (
 	manNepLui   = nepphieu.ManLui
 	khoaSoLieu  = map[string]bool{"soNguoi": true, "soChang": true, "soAnh": true, "soNgay": true, "soMuc": true, "soViec": true}
 	kieuNhip    = map[string]bool{"sap-toi": true, "hom-nay": true, "dang-dien-ra": true, "da-qua": true, "khong-ro": true}
-	loaiSoHopLe = map[string]bool{"hoi": true, "hai-nguoi": true, "doi": true}
+	loaiSoHopLe = map[string]bool{"hoi": true, "doi": true}
 	vaiNep      = map[string]bool{"toi": true, "nep": true}
 )
 
@@ -112,6 +112,10 @@ func chuTrongHan(s string, han int) bool {
 // have dropped is not the shipped app, and quietly forwarding the rest would
 // make «Mình đang thấy» a claim nobody checked.
 func kiemPhieu(p *phieuNep) error {
+	// Older clients still send the retired friend-pair label.
+	if p.LoaiSo == "hai-nguoi" {
+		p.LoaiSo = "hoi"
+	}
 	sai := &denied{400, "boi_canh_sai_dang"}
 	if strings.TrimSpace(p.Man) == "" || !chuTrongHan(p.Man, 120) || !chuTrongHan(p.TieuDe, 80) {
 		return sai

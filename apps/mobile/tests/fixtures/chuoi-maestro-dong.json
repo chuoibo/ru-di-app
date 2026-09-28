@@ -3,7 +3,6 @@
   "dong": [
     ".* QA: Ngon that",
     ".* · 1 tim · 1 bình luận",
-    ".*${TREE_FINGERPRINT}.*",
     ".*1 nhóm.*",
     ".*1 phiếu.*",
     ".*1.check-in.*",
@@ -71,19 +70,15 @@
     "Hoàng hôn. Cả nhóm thấy cùng một màu.",
     "Hội An · đổi nơi khác",
     "KHONG_BAO_GIO_CO_CHUOI_NAY_TREN_MAN",
-    "Lựa chọn này ở trên máy này, không gửi lên máy chủ.",
     "Minh Anh · Bò nướng",
     "Mã chưa đúng. Còn 4 lần thử.",
     "Mốc 1, 12:30, Ăn trưa - Bánh căn Lệ",
     "Mở Tiệm Nướng Xóm Lào",
     "Mở bài: Bai co anh QA",
     "Mở kèo Keo QA",
-    "Mức người đọc: Bạn bè",
-    "Mức người đọc: Chỉ mình tôi",
     "Người trả Ban QA",
     "Nhom minh tung o day",
     "Nhóm còn phải duyệt",
-    "Rủ Đi AI chưa nối được mô hình trên máy chủ này.",
     "Sticker: Đi thôi!",
     "Story QA",
     "Theme Hoàng hôn",
@@ -97,7 +92,6 @@
     "Tiền đã về từ An QA",
     "Trích: Dep qua",
     "Trả lời Bạn: @Ru Di goi y quan an",
-    "Tài khoản vừa được tạo bằng số điện thoại của bạn. Tên hiển thị sửa được ở mục Cá nhân.",
     "Uncaught Error",
     "Ut QA",
     "Xem hồ sơ Ut QA",
@@ -112,15 +106,9 @@
     "Đã mời Ban QA",
     "Đăng nhập bằng số điện thoại",
     "Ảnh: Anh tu QA",
-    "3 / 40 ảnh đã chọn",
-    "Chọn ảnh ${PHOTO_DAY}",
     "Cùng 1 người bạn",
-    "Hai ngày gom nắng",
-    "Một chiều có nhau",
-    "Mở Hai ngày gom nắng",
     "Photo taken.*",
-    "Video taken.*",
-    "Đưa trang 2 lên trước"
+    "Video taken.*"
   ],
   "id": [],
   "anh": [
@@ -314,15 +302,9 @@
   "congDongMoi": {
     "lyDo": "Flow mới cho cộng đồng và nhật ký thêm chuỗi dựng động/fixture tổng hợp/picker Android. Không đổi hay bỏ selector, không nới bộ quét, không thêm chuỗi thiếu của flow cũ.",
     "nguon": {
-      "3 / 40 ảnh đã chọn": "EndingScreen: selected.length / 40",
-      "Chọn ảnh ${PHOTO_DAY}": "EndingScreen: caption || day; PHOTO_DAY do fixture cấp",
       "Cùng 1 người bạn": "MentionPicker: selected.length",
-      "Hai ngày gom nắng": "Tên chuyến tổng hợp do lượt E2E cấp",
-      "Một chiều có nhau": "Tên cuộc hẹn tổng hợp do lượt E2E cấp",
-      "Mở Hai ngày gom nắng": "Wall: tên nhật ký từ fixture",
       "Photo taken.*": "Nhãn trợ năng Android Photo Picker, không phải nhãn app",
-      "Video taken.*": "Nhãn trợ năng Android Photo Picker, không phải nhãn app",
-      "Đưa trang 2 lên trước": "EndingScreen: chỉ số trang i + 1"
+      "Video taken.*": "Nhãn trợ năng Android Photo Picker, không phải nhãn app"
     }
   }
 }

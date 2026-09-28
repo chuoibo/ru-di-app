@@ -9,6 +9,11 @@ appId: com.lakiet.rudi
 - stopApp
 - launchApp
 - runFlow: _bo-qua-dev-menu.yaml
+# A dev-client launcher is not the app: wait for its JS route tree before
+# delivering a warm link. Cold links are checked separately on the release APK.
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!"
+    timeout: 60000
 - openLink: rudi://settlements/team-da-lat
 - extendedWaitUntil:
     visible: "Quyết toán chuyến đi"

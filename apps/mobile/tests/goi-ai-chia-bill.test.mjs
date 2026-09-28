@@ -4,8 +4,8 @@
  * `command: "chia_bill"` cùng gói bối cảnh y như plan; máy chủ cũ không khai
  * chia_bill thì client coi là chưa sẵn sàng; hàng lời gọi hỏng nói đúng việc và
  * không mời thử lại khi thử lại cũng ra đúng câu trả lời cũ; chip xem trước
- * trên nút gửi (thay khối «Mình đang thấy» của khay, ADR-0046) giữ «Chỉ gửi
- * lời nhờ» cho cả hai lệnh.
+ * trên nút gửi (thay khối «Mình đang thấy», sau đổi tên «Phần sẽ gửi cùng
+ * lời nhờ», của khay cũ — ADR-0046) giữ «Chỉ gửi lời nhờ» cho cả hai lệnh.
  *
  * KHÔNG đo: màn thật render ra sao (ảnh chụp là cổng riêng), hay mô hình đọc
  * đúng số tiền (máy chủ gọi skill chat-expense có sẵn; tầng này không gọi mô

@@ -38,7 +38,7 @@ const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
   {
     tieuDe: "Ai đọc được gì",
     cau: [
-      "Tin nhắn và ảnh trong một nhóm: chỉ thành viên nhóm ấy.",
+      "Tin nhắn và ảnh gốc trong nhóm dành cho thành viên. Ảnh được chọn có thể xuất hiện trong sổ công khai của một thành viên; chủ sổ gỡ hoặc thay ảnh khi được yêu cầu.",
       "Bài trên tường: theo mức bạn chọn khi đăng, và bạn đặt được ai bình luận.",
       "Story: chỉ bạn bè, và tự biến mất sau 24 giờ.",
       "Ảnh cá nhân: chỉ mở được khi có một bài hoặc một story bạn cho phép người ấy đọc.",
@@ -55,7 +55,7 @@ const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
   {
     tieuDe: "Khi bạn xoá tài khoản",
     cau: [
-      "Tên, giới thiệu, ảnh, bài đăng, story, bình luận và phản ứng của bạn bị xoá.",
+      "Tên, giới thiệu, ảnh, bài đăng, story, bình luận và phản ứng của bạn bị xoá. Sổ kỷ niệm của bạn cùng các bản cũ và phần nguồn gửi AI cũng bị xoá.",
       "Bạn rời mọi nhóm. Tin nhắn cũ ở lại với tên «Người dùng đã rời», vì chúng là một phần cuộc trò chuyện của người khác.",
       "Sổ tiền của các nhóm giữ nguyên: xoá tài khoản không xoá một khoản nợ.",
       "Đăng nhập lại bằng cùng số điện thoại sẽ tạo một tài khoản mới, trắng.",

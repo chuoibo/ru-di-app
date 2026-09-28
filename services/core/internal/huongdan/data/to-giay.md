@@ -2,7 +2,7 @@
 {
   "man": "groups/[id]/to-giay",
   "tieu_de": "Tờ giấy của hai mình",
-  "nhanUI": ["Tờ giấy của hai mình", "Tờ giấy", "Tạo mới", "Rủ một người đi chơi", "Đề nghị lập sổ", "Xem lời đề nghị", "Lập sổ mới", "Rủ đi chơi", "Sửa trước khi gửi", "Gửi cho người ấy", "Bỏ bản phác này", "Tuần này nghỉ", "Ừ, hẹn …", "Đề nghị sửa", "Gửi phiên bản …", "Rút lại", "Xem kèo", "Huỷ buổi này", "Đã đi rồi", "Để đấy", "Giữ lại một điều", "Giữ lại", "Giữ một tấm ảnh của buổi này", "Cài đặt sổ", "Loại sổ", "Hai ô ràng buộc", "Tin nhắn", "Kỷ niệm của hai bạn", "Đóng sổ", "Giữ sổ"],
+  "nhanUI": ["Tờ giấy của hai mình", "Tờ giấy", "Tạo mới", "Hẹn người thương", "Đề nghị lập sổ", "Xem lời đề nghị", "Lập sổ mới", "Rủ đi chơi", "Sửa trước khi gửi", "Gửi cho người ấy", "Bỏ bản phác này", "Tuần này nghỉ", "Ừ, hẹn …", "Đề nghị sửa", "Gửi phiên bản …", "Rút lại", "Xem kèo", "Huỷ buổi này", "Đã đi rồi", "Để đấy", "Giữ lại một điều", "Giữ lại", "Giữ một tấm ảnh của buổi này", "Cài đặt sổ", "Loại sổ", "Những điều cần tránh", "Tin nhắn", "Kỷ niệm của hai bạn", "Đóng sổ", "Giữ sổ"],
   "di_toi": [
     {"nhan": "Xem kèo", "man": "outings/[id]"},
     {"nhan": "Tin nhắn", "man": "groups/[id]/chat"},
@@ -18,7 +18,7 @@
 
 1. Trong chat hai người, chạm dòng «Tờ giấy của hai mình» ghim dưới tên người ấy.
 2. Hoặc mở khay dấu cộng trong chat hai người và bấm «Tờ giấy».
-3. Hoặc bấm «Tạo mới» giữa thanh tab, chọn «Rủ một người đi chơi», rồi chọn người.
+3. Hoặc bấm «Tạo mới» giữa thanh tab, chọn «Hẹn người thương» (rủ một người đi chơi), rồi chọn người.
 
 ## Khi hai bạn chưa có sổ
 
@@ -54,6 +54,6 @@
 ## Cài đặt sổ
 
 1. Bấm biểu tượng «Cài đặt sổ» ở góc trên.
-2. Chọn «Loại sổ» hoặc «Hai ô ràng buộc» (những gì không ăn được, những điều đừng).
+2. Chọn «Loại sổ» hoặc «Những điều cần tránh» (hai ô ràng buộc: những gì không ăn được, những điều đừng).
 3. «Tin nhắn» về cuộc trò chuyện; «Kỷ niệm của hai bạn» mở ảnh và những buổi đã giữ.
 4. «Đóng sổ» cho xem trước rồi mới đóng; bấm «Giữ sổ» nếu đổi ý. Đóng rồi thì không mở lại được.

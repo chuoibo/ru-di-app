@@ -280,6 +280,16 @@ func TestBoVangKhongSua(t *testing.T) {
 // 0.9348 (co_dau 0.8000 → 0.8667), MRR 0.7672 → 0.7658 (co_dau 0.7444 →
 // 0.7556, teen 0.6458 → 0.6293); three miss. duongTruyVan did not move.
 //
+// Re-pinned at the merge of main's memory book (2026-09-28): the ranker did
+// not change, three labels the manual quotes did. Main renamed «Rủ một người
+// đi chơi» to «Hẹn người thương», «Hai ô ràng buộc» to «Những điều cần
+// tránh» and the Explore placeholder to «Một món thèm, một nơi muốn ghé…», so
+// tao-moi.md, to-giay.md and kham-pha.md quote the new labels and keep the old
+// words beside them in plain text (what a person still types). duongVang and
+// duongTruyVan did not move. duongManKhac: recall@5 0.9348 → 0.9565 (co_dau
+// 0.8667 → 0.9333), MRR 0.7658 → 0.7665 (co_dau 0.7556 → 0.7578); «moi nguoi
+// ay di choi rieng» now hits, two miss.
+//
 // The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
 // duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
 // 0.3526 (teen 0.8214 / 0.2905).
@@ -294,8 +304,8 @@ var vangGhim = map[string]map[string][2]string{
 		"": {"1.0000", "0.8942"},
 	},
 	duongManKhac: {
-		"":          {"0.9348", "0.7658"},
-		"co_dau":    {"0.8667", "0.7556"},
+		"":          {"0.9565", "0.7665"},
+		"co_dau":    {"0.9333", "0.7578"},
 		"khong_dau": {"1.0000", "0.8873"},
 		"teen":      {"0.9286", "0.6293"},
 	},

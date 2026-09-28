@@ -95,6 +95,11 @@ appId: com.lakiet.rudi
       text: "Nên làm gì ở đây"
     direction: DOWN
     timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "Ăn nướng"
+    direction: DOWN
+    timeout: 20000
 - assertVisible: "Ăn nướng"
 - takeScreenshot: 26-nen-lam-gi
 # Cuộn tới cuối: nhận xét phải lên khỏi footer ghim, và footer vẫn bấm được.

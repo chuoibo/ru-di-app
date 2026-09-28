@@ -159,6 +159,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
+      {panel === "tools" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Ảnh gửi vào đây có thể được bạn đồng hành chọn vào sổ chuyến đi công khai. Nếu muốn gỡ, hãy nhắn người giữ sổ nhé.</Text> : null}
       {panel === "poll" && undo?.panel === panel ? <View style={styles.draftRow}>
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Đã bỏ bản nháp.</Text>
         <RudiButton label="Hoàn tác" variant="ghost" compact full={false} disabled={busy} onPress={undoDiscard} />

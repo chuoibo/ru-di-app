@@ -35,10 +35,13 @@ const (
 // shows them, each with the reason. A manual's di_toi must be an edge of the
 // code (_rut.json di_toi), a tab-bar edge, or one of these; a test holds every
 // entry to the manuals that use it and to the source that makes it real.
-var canhNgoaiRut = map[[2]string]string{
-	{"plan", "create"}: "nút tròn «Tạo mới» của thanh tab (src/rudi/ui/RudiTabBar.tsx, router.push(\"/create\")) " +
-		"do app/(tabs)/_layout.tsx vẽ; _layout không phải route nên bộ rút không gán cạnh này cho màn nào",
-}
+//
+// Empty since main's memory-book merge (2026-09-28): the one entry, plan ->
+// create (the tab bar's «Tạo mới», drawn by app/(tabs)/_layout.tsx, which is
+// not a route), became an edge of the code when PlanLive.tsx gained its own
+// «Tạo mới» button pushing /create. TestCanhNgoaiRut holds that edge to the
+// code now.
+var canhNgoaiRut = map[[2]string]string{}
 
 // SoTay is a parsed and validated manual. Immutable once built, so safe for
 // concurrent use.

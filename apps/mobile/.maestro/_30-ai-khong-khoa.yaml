@@ -17,12 +17,13 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Chỉ gửi lời nhờ"
 - takeScreenshot: 30-ai-chip-chua-san-sang
 - tapOn: "Gửi tin nhắn"
+# Hạ bàn phím ngay sau khi gửi, trước khi chờ tin vào luồng.
+- hideKeyboard
 - extendedWaitUntil:
     visible: "Tin nhắn: @Ru Di goi y quan an"
     timeout: 60000
 - assertNotVisible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
 - assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
-- hideKeyboard
 - takeScreenshot: 30-ai-im-lang-that
 # Khay «Tờ hẹn» vẫn nói thẳng khi không có khoá, và vẫn chừa đường tự làm.
 - tapOn: "Thêm vào cuộc trò chuyện"
@@ -47,9 +48,9 @@ appId: com.lakiet.rudi
     visible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
     timeout: 20000
 - tapOn: "Gửi tin nhắn"
+- hideKeyboard
 - extendedWaitUntil:
     visible: "Tin nhắn: /chia-bill minh tra 300k tien nuoc"
     timeout: 60000
 - assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
-- hideKeyboard
 - takeScreenshot: 30-chia-bill-that

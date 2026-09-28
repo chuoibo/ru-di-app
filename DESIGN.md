@@ -417,6 +417,13 @@ màu đổ sau khi có dữ liệu. Lưới 4pt, snap ô nguyên. Hợp đồng 
 nguyên văn trong `apps/mobile/app/_layout.tsx` (seed `c8e88116`, hướng số 6);
 ADR-0020 là thẩm quyền.
 
+**Cập nhật 27/09/2026, ADR-0037:** chất liệu giấy, mực, coral và Bricolage
+được giữ nguyên trong lát sổ kỷ niệm. Ẩn dụ «cả hội cùng viết» không có nghĩa
+sổ trên tường thuộc chung: mỗi thành viên giữ bản riêng. Nếp là bạn đồng hành
+kể chuyện trong Rủ Đi, không đổi tên ứng dụng. Hội bạn từ hai người và Cặp đôi
+có đồng thuận dùng cùng hệ; các nhắc tới «sổ hai người» ở mốc 12/09 bên dưới
+là lịch sử triển khai, không phải chế độ thứ ba hiện hành.
+
 Thế giới này **từ chối mặc định của thể loại**: ảnh hoàng hôn + thẻ trắng +
 pill cam, và dashboard số to + thanh tiến độ. Hai vòng review đã gọt nó: pill
 coral thành con dấu (vòng 1); con dấu **rộng bằng chữ** với **một** vành mực
@@ -1932,15 +1939,17 @@ Chỗ **duy nhất** trong `src/` khai các loại sổ khác nhau ở đâu (sp
 §17). Không có «mode»; có nhiều sổ, mỗi sổ một loại, người mở sổ này hay sổ
 kia.
 
-- **Ba loại** `LOAI_SO = hoi | hai-nguoi | doi`. **Sáu trường** của
+- **Hiện hành 27/09:** `LOAI_SO = hoi | doi`; `pair` chưa bật đồng thuận đôi
+  trở về `hoi`. **Lịch sử 12/09:** từng có `hoi | hai-nguoi | doi`, nay không
+  còn chế độ `hai-nguoi` riêng. **Sáu trường** của
   `BanTinhSo`: `quyetDinh` (`phieu` | `to-giay`), `coVai` (hai vai Người lo /
   Người chấm hay không), `nhip` (`toMoiTuan`, `lanLaMoiThang`, `nhacMoiThang`;
   0 là không bao giờ), `nepDuocLam` (danh sách `ViecNep`, rỗng là im lặng),
   `tuVung` (`goiTapThe`, `cauMo`, `nutMoLoi`, `tenKhongGian`; tiếng Việt,
   không gạch dài, cổng `dau-gach-dai`), `tienHien` (`chia-bill` |
   `chi-tieu-chung`). `hoi` là bản đang ship, không đổi: Nếp giữ ghế và không
-  tự nói (`nhip` 0, `nepDuocLam` rỗng). `hai-nguoi` chỉ thêm tờ giấy và
-  `phac-to`; `doi` thêm hai vai, bốn việc còn lại và sổ riêng.
+  tự nói (`nhip` 0, `nepDuocLam` rỗng). Nhánh `hai-nguoi` cũ từng thêm tờ
+  giấy và `phac-to`; hiện chỉ `doi` giữ tờ giấy, hai vai và danh sách việc riêng.
 - **`loaiSoCua(nhom, doi)`** suy loại từ hai sự thật máy chủ nói: `kind`
   (`group` | `pair`, ADR-0021) và cờ đôi đang bật; `pair` **không tự là đôi**
   (ADR-0027). **`banTinhCua(loai)`** trả bản tính.
@@ -1958,8 +1967,54 @@ kia.
   file trong danh sách mà **không còn** so → cũng đỏ, để danh sách không hoá
   di tích. Thêm: module là **lá** (không import tương đối) để chính sách
   không kéo màn hình vào.
-- Chuỗi `tuVung` của `hai-nguoi` và `doi` ở head này **chưa lên màn nào**;
+- **Lịch sử 12/09:** chuỗi `tuVung` của `hai-nguoi` và `doi` **chưa lên màn nào**;
   là dữ liệu, không phải câu chữ đã đọc mù.
+
+### Khoảnh khắc và Sổ chuyến đi (27/09/2026)
+
+Đọc từ `diary/BookView.tsx`, `Wall.tsx`, `EndingScreen.tsx` và
+`DiaryScreen.tsx`; đây là phần mở rộng UI v3 «Sân khấu giấy», kế thừa seed
+`c8e88116` trong DESIGN.md, `theme.ts` và kit hiện hành, không có bộ token mới.
+
+- Sổ chuyến đi dùng bìa vải `SoBia`, nhãn nền `card` chứa ảnh trên, lời dưới.
+  Bìa căn giữa, rộng tối đa (420dp), cao theo nhãn đo được cộng (48dp).
+  Tiêu đề `h1` (bản gọn `h2`), lời mở `body`; ảnh bìa tỉ lệ 4:3, bản gọn 16:9.
+  Trang đọc dùng `TrangSo tone="accent" ke={false}`: giấy có lề, không kẻ ngang,
+  tiêu đề `h2`, số trang `caption`; collage hai cột theo bề rộng đo được.
+  Lời kể dùng `body` với line-height (28), không đổi thang chữ chung.
+- Khoảnh khắc dùng ảnh dán `KhungAnh` nghiêng (-1°), ảnh tỉ lệ 3:2 và
+  `Washi` nghiêng (-2°); tiêu đề `h2`, lời phụ `note`. Tường xếp một cột
+  ảnh/bìa qua `BookView compact`, ẩn các trang bên trong; khoảnh khắc có
+  nhãn tháng khi bắt đầu hoặc đổi tháng so với mục trước.
+- Cột nội dung đọc `BookView` và các khối chọn/sửa `EndingScreen` rộng
+  100%, tối đa (560dp), căn giữa; tường dùng cùng giới hạn cho mỗi ảnh/bìa.
+  Khoảng cách giữa bìa và trang (28dp), trong trang (16dp), giữa mục tường
+  (24dp). Nhãn quyền xem và các nút ngoài `BookView` ở trình đọc/tường
+  không có giới hạn (560dp) riêng.
+- Khi sửa, ẩn bản xem trước và hiện lời dẫn «Viết lại theo cách mình nhớ»;
+  nút «Xem như người đọc» đổi về bản xem trước. Khóa `RudiScreen` theo
+  `phase` và `edit` khởi tạo lại màn cuộn khi đổi bước/chế độ. Lựa chọn
+  «Chỉ mình tôi»/«Công khai» và nút «Lưu riêng tư»/«Đăng sổ công khai» nằm
+  trước các trường nhập khi sửa, sau bản xem trước khi đọc. Ô nhập dùng
+  `ONhapMuc`, hành động lưu dùng `StampButton` của kit.
+- Bộ chọn bìa ghi «Bìa hiện tại», dùng vai trợ năng `radio` cùng trạng thái
+  `selected`; chọn một ảnh thì đóng bộ chọn. Bộ chọn ảnh trang dùng
+  `checkbox`/`checked`, nhãn «Đã chọn», tối đa bốn ảnh mỗi trang.
+- Tường ghi rõ loại và «Chỉ mình tôi»/«Công khai» bằng chữ. Nút «Cất về riêng
+  tư», «Sửa theo cách mình nhớ», «Tự xếp trang, không gửi AI» gọi đúng hành động.
+  Nhãn «Có Nếp giúp viết» nói nguồn hỗ trợ, không bảo đảm lời AI đúng.
+  Sau dựng/lưu, khối sổ dịch nhẹ và trở về vị trí qua `useMotion`, theo
+  thiết lập giảm chuyển động; không suy thành hiệu ứng lật bìa.
+- Giữ luật không kicker/eyebrow trên tiêu đề. Nếu còn trong lát đang sửa,
+  đó là lỗi cần dọn ở mã bởi phiên chính, không phải mẫu của hệ.
+
+**Giới hạn bằng chứng của cập nhật này:** chỉ đối chiếu mã nguồn và tài liệu,
+không chạy lại native hay mở lại ảnh. Theo bàn giao của người dùng, ma trận
+emulator trước đó gồm điện thoại, tối/chữ 1.3, giảm chuyển động, màn nhỏ/chữ
+200% và tablet đã được xem; thiết bị thật được người dùng hoãn. Ma trận đó
+không xác nhận các sửa mới nhất về cột đọc/sửa, ẩn bản xem trước, vị trí quyền
+xem/lưu, đặt lại cuộn và trạng thái chọn bìa. Chưa có kết quả native cho các
+sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứng iOS.
 
 ### Cards / Containers
 - **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*
@@ -2364,6 +2419,15 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   `so/ban-tinh.ts`; đừng đọc `BanTinhSo` thành quyền.
 
 ## Những gì bản ship KHÔNG phong thánh
+
+**Giới hạn lượt 27/09:** theo
+[biên bản native](docs/testing/so-ky-niem-native.md), Pixel 6 Android đã build
+và kiểm sáng/tối, font scale 1.3, giảm chuyển động; ảnh được mở xem trong lượt
+triển khai. Lượt ghi tài liệu này đối chiếu mã và biên bản, không tự kiểm lại
+ảnh. Gemini thật đã chạy nhưng sửa chất lượng lời kể bám nguồn vẫn tiếp tục.
+Chưa có native iOS, audit copy toàn ứng dụng hay full gate clean-tree tại SHA
+cuối. Không suy rộng bằng chứng này sang các màn hoặc cấu hình chưa kiểm.
+Sidecar không cập nhật vì phạm vi được giao chỉ gồm PRODUCT.md và DESIGN.md.
 
 Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 

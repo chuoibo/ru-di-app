@@ -37,7 +37,13 @@ func TestDuongToiTrenDuLieuThat(t *testing.T) {
 		// through the settlement screen, so the unlabelled one wins (review 13).
 		{"finance", "messages", true, []string{"explore[]", "messages[Tin nhắn]"}},
 		{"explore", "smart-split/[id]/review", true, []string{"plan[Lên plan]", "create[Tạo mới]", "smart-split/[id]/review[Chia hóa đơn]"}},
-		{"places/[id]", "outings/new", true, []string{"outings/chon[Thêm vào kèo]", "outings/new[Tạo kèo]"}},
+		// Two ways of two steps since main's memory-book merge (2026-09-28): the
+		// pair notebook of two people who are not «Một đôi» gained «Rủ hội mình
+		// đi chơi» to outings/new (KhongGianGiay.tsx), so «Rủ … tới đây» ties
+		// with «Thêm vào kèo»; both first steps are labelled, and the smaller
+		// route id wins. The second step has no label because to-giay.md does
+		// not declare that button yet.
+		{"places/[id]", "outings/new", true, []string{"groups/[id]/to-giay[Rủ … tới đây]", "outings/new[]"}},
 		{"groups/[id]/to-giay", "places/[id]", true, []string{"outings/[id][Xem kèo]", "places/[id][Chặng …]"}},
 		// Only the code knows the second edge: no label, and TieuDe empty too
 		// because settings/phien has no manual.

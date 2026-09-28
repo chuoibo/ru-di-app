@@ -25,15 +25,16 @@ appId: com.lakiet.rudi
     visible: "Gửi tin nhắn"
     timeout: 15000
 - tapOn: "Gửi tin nhắn"
+# Hạ bàn phím ngay sau khi gửi, trước khi chờ câu trả lời.
+- hideKeyboard
 - extendedWaitUntil:
     visible: "Rủ Đi AI · (đọc [0-9]+ tin|chỉ đọc lời nhờ)"
     timeout: 120000
 # Câu trả lời trả lời vào đúng tin tag, không phải một thẻ trôi nổi.
 - assertVisible: "Trả lời Bạn: @Ru Di goi y quan an"
 - assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
-- assertNotVisible: "Rủ Đi AI chưa nối được mô hình trên máy chủ này."
+- assertNotVisible: "AI chưa (sẵn sàng|gom khoản chi được).*"
 - assertNotVisible: ".*đang im lặng.*"
-- hideKeyboard
 - takeScreenshot: 30-ai-tra-loi
 # /chia-bill: cũng là một tin thường; khi lệnh sẵn sàng thì câu trả lời là tin
 # trả lời vào tin /chia-bill (nháp khoản chi ở lại máy chủ, không vào tin), hoặc
@@ -50,6 +51,7 @@ appId: com.lakiet.rudi
       notVisible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
     commands:
       - tapOn: "Gửi tin nhắn"
+      - hideKeyboard
       - extendedWaitUntil:
           visible: "Trả lời Bạn: /chia-bill minh tra 300k tien nuoc|Chưa gom được khoản chi"
           timeout: 120000
@@ -59,8 +61,8 @@ appId: com.lakiet.rudi
       visible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
     commands:
       - tapOn: "Gửi tin nhắn"
+      - hideKeyboard
       - extendedWaitUntil:
           visible: "Tin nhắn: /chia-bill minh tra 300k tien nuoc"
           timeout: 60000
-- hideKeyboard
 - takeScreenshot: 30-chia-bill-that

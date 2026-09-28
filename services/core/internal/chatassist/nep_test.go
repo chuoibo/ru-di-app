@@ -104,6 +104,18 @@ func TestNepKiemGioiHan(t *testing.T) {
 	}
 }
 
+// Clients from before pairs became groups still send «hai-nguoi»; it is read as
+// «hoi» rather than refused, and what reaches the model is the new label.
+func TestNepLoaiSoHaiNguoiCuDocThanhHoi(t *testing.T) {
+	g := goiNep{Phieu: &phieuNep{Man: "groups/[id]/to-giay", LoaiSo: "hai-nguoi"}}
+	if got := maLoi(kiemNep("Tuần này đi đâu?", &g)); got != "" {
+		t.Fatalf("hai-nguoi bị từ chối với mã %q", got)
+	}
+	if g.Phieu.LoaiSo != "hoi" {
+		t.Fatalf("loại sổ sau kiểm là %q, muốn hoi", g.Phieu.LoaiSo)
+	}
+}
+
 // The request body is closed at the top level and inside the slip: a field the
 // shipped client never sends is refused, not forwarded to the model.
 func TestNepThanDongKhoa(t *testing.T) {

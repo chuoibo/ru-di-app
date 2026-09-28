@@ -1358,16 +1358,6 @@ chuan_bi_cho_45() {
   curl -sS -o /dev/null -X PATCH "$goc/people/me" -H "Authorization: Bearer $tok_f" \
       -H 'Content-Type: application/json' -H "Idempotency-Key: qa45-ten-$$-$RANDOM" \
       -d '{"display_name":"Ut QA"}'
-  # Kết bạn: F xin, người lái đồng ý. Hai cú, đúng đường của sản phẩm.
-  loi_id="$(curl -sS -X POST "$goc/friends/requests" -H "Authorization: Bearer $tok_f" \
-      -H 'Content-Type: application/json' -H "Idempotency-Key: qa45-ban-$$-$RANDOM" \
-      -d "{\"addressee_id\":\"$id_lai\"}" \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin).get("id",""))')"
-  [ -n "$loi_id" ] || hong "trước flow 45: F không gửi được lời mời kết bạn tới người lái."
-  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/friends/requests/$loi_id/respond" \
-      -H "Authorization: Bearer $tok_lai" -H 'Content-Type: application/json' \
-      -H "Idempotency-Key: qa45-nhan-$$-$RANDOM" -d '{"decision":"accept"}')"
-  [ "$rc" = "200" ] || hong "trước flow 45: người lái đồng ý kết bạn nhận HTTP $rc, mong 200."
   # Nhóm chung: người lái mở, mời F, F đồng ý.
   CTX_CHAN_QA="$(curl -sS -X POST "$goc/contexts" -H "Authorization: Bearer $tok_lai" \
       -H 'Content-Type: application/json' -H "Idempotency-Key: qa45-ctx-$$-$RANDOM" \
@@ -1383,6 +1373,18 @@ chuan_bi_cho_45() {
       -H "Authorization: Bearer $tok_f" -H 'Content-Type: application/json' \
       -H "Idempotency-Key: qa45-vao-$$-$RANDOM" -d '{}')"
   [ "$rc" = "200" ] || hong "trước flow 45: F vào nhóm nhận HTTP $rc, mong 200."
+  # Kết bạn: F xin, người lái đồng ý. Hai cú, đúng đường của sản phẩm. Đi SAU
+  # nhóm chung: từ dd75752b, người không bật «tìm theo số» chỉ nhận lời mời
+  # kết bạn từ người đã chung nhóm (404 như người không tồn tại).
+  loi_id="$(curl -sS -X POST "$goc/friends/requests" -H "Authorization: Bearer $tok_f" \
+      -H 'Content-Type: application/json' -H "Idempotency-Key: qa45-ban-$$-$RANDOM" \
+      -d "{\"addressee_id\":\"$id_lai\"}" \
+    | python3 -c 'import json,sys;print(json.load(sys.stdin).get("id",""))')"
+  [ -n "$loi_id" ] || hong "trước flow 45: F không gửi được lời mời kết bạn tới người lái."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/friends/requests/$loi_id/respond" \
+      -H "Authorization: Bearer $tok_lai" -H 'Content-Type: application/json' \
+      -H "Idempotency-Key: qa45-nhan-$$-$RANDOM" -d '{"decision":"accept"}')"
+  [ "$rc" = "200" ] || hong "trước flow 45: người lái đồng ý kết bạn nhận HTTP $rc, mong 200."
   echo "trước flow 45: F «Ut QA» đã là bạn của người lái và cùng ở «Nhom Chan QA»"
 }
 

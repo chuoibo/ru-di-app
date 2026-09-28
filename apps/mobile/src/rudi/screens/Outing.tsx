@@ -186,12 +186,15 @@ export function TripTimelineScreen() {
         title={DEMO_GROUP.name}
         subtitle={nhanKhoangNgay(isoTu(session.startDate), isoTu(session.endDate))}
         right={
-          <IconButton
-            accessibilityLabel="Tùy chọn"
-            icon="ellipsis-horizontal"
-            onPress={() => setMenuOpen(true)}
-            quiet
-          />
+          <Inline>
+            <IconButton accessibilityLabel="Tạo mới" icon="add" onPress={() => router.push("/create")} quiet />
+            <IconButton
+              accessibilityLabel="Tùy chọn"
+              icon="ellipsis-horizontal"
+              onPress={() => setMenuOpen(true)}
+              quiet
+            />
+          </Inline>
         }
       />
       {hanhTrinh ? null : <Inline gap={8} wrap>

@@ -2,7 +2,7 @@
 {
   "man": "explore",
   "tieu_de": "Khám phá",
-  "nhanUI": ["Khám phá", "Tìm quán, món… hoặc hỏi Rủ Đi AI", "Hỏi Rủ Đi AI", "Rủ Đi AI", "Xóa lọc", "Đổi điểm đến", "Chưa thấy nơi phù hợp", "Thêm vào kèo", "Mở …"],
+  "nhanUI": ["Khám phá", "Một món thèm, một nơi muốn ghé…", "Hỏi Rủ Đi AI", "Rủ Đi AI", "Xóa lọc", "Đổi điểm đến", "Chưa thấy nơi phù hợp", "Thêm vào kèo", "Mở …"],
   "di_toi": [
     {"nhan": "Mở …", "man": "places/[id]"},
     {"nhan": "Đổi điểm đến", "man": "destinations"}
@@ -14,7 +14,7 @@ Tab «Khám phá» là danh mục quán và chỗ chơi ở điểm đến bạn
 
 ## Tìm một quán
 
-1. Gõ vào ô «Tìm quán, món… hoặc hỏi Rủ Đi AI» rồi bấm gửi trên bàn phím.
+1. Gõ tìm quán, món vào ô «Một món thèm, một nơi muốn ghé…», hoặc hỏi Rủ Đi AI, rồi bấm gửi trên bàn phím.
 2. Hoặc chạm một loại ở dòng chip ngay dưới ô tìm.
 3. Chạm vào một thẻ để mở trang địa điểm.
 4. Muốn thấy lại cả danh mục thì bấm «Xóa lọc».

@@ -29,7 +29,7 @@ appId: com.lakiet.rudi
 - inputText: "${OTP_CODE}"
 # Tài khoản mới đi thẳng vào bước cá nhân hoá — KHÔNG bấm gì để tới đây.
 - extendedWaitUntil:
-    visible: "Cho Rủ Đi biết gu của bạn"
+    visible: "Điều gì khiến bạn muốn ra ngoài?"
     timeout: 30000
 - takeScreenshot: 36-ca-nhan-hoa
 - tapOn: "Ăn uống"
@@ -57,8 +57,10 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 30000
 - tapOn: "Cá nhân"
-- extendedWaitUntil:
-    visible: "Sở thích"
+- scrollUntilVisible:
+    element:
+      text: "Sở thích"
+    direction: DOWN
     timeout: 20000
 # Dòng phụ của hàng là những gì máy chủ vừa trả về, không phải state trên máy.
 - assertVisible: ".*Ăn uống, Cafe, Món local.*"
@@ -66,7 +68,7 @@ appId: com.lakiet.rudi
 - takeScreenshot: 36-hang-so-thich
 - tapOn: "Sở thích"
 - extendedWaitUntil:
-    visible: "Cho Rủ Đi biết gu của bạn"
+    visible: "Điều gì khiến bạn muốn ra ngoài?"
     timeout: 20000
 # Mở lại phải thấy đúng lựa chọn cũ: màn đọc từ máy chủ chứ không bắt đầu trắng.
 - assertVisible: "Bỏ qua"

@@ -62,7 +62,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   // `?ru=1` from «Rủ một người đi chơi»: draft straight away, once, and only
   // when nothing is already on the table (the notebook refuses a second one).
   useEffect(() => {
-    if (!ruNgay || daRu.current) return;
+    if (!ruNgay || daRu.current || !so.batDoi) return;
     const lam = nenXinTo(so.daNap, so.toMo, so.lapSo);
     if (lam === "cho") return;
     daRu.current = true;
@@ -83,6 +83,15 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   const daMoGoiY = useRef(false);
   useEffect(() => {
     if (!goiYCho || daMoGoiY.current) return;
+    // A pair that is not a couple plans like any group: no sheet to put the
+    // place on, so say so instead of dropping the place without a word.
+    if (so.daNap && so.lapSo && !so.batDoi) {
+      daMoGoiY.current = true;
+      setGoiYCho(undefined);
+      setCauGoiY("Hai bạn đang hẹn như một hội bạn. Bấm «Rủ hội mình đi chơi» rồi thêm chỗ này làm một chặng.");
+      return;
+    }
+    if (!so.batDoi) return;
     const lam = goiYChoLam(toMo, so.toiId, so.tenNguoiKia, goiYCho);
     if (lam.lam === "cho") return;
     daMoGoiY.current = true;
@@ -91,7 +100,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       setGoiYCho(undefined);
       setCauGoiY(lam.cau);
     }
-  }, [goiYCho, toMo, so.toiId, so.tenNguoiKia]);
+  }, [goiYCho, toMo, so.toiId, so.tenNguoiKia, so.daNap, so.lapSo, so.batDoi]);
   const dangCoToMo = toMo !== undefined && ["nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(toMo.state);
   const deNghiLapSo = so.deNghiCho.find((d) => d.purpose === "lap_so");
   const deNghiBatDoi = so.deNghiCho.find((d) => d.purpose === "bat_doi");
@@ -101,7 +110,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   useNepNguCanh({
     man: "groups/[id]/to-giay",
     tieuDe: "Tờ giấy của hai mình",
-    loaiSo: so.batDoi ? "doi" : "hai-nguoi",
+    loaiSo: so.batDoi ? "doi" : "hoi",
     nhip: pbMo?.content.ngay ? nhipKeo(pbMo.content.ngay, pbMo.content.ngay, homNay()) : undefined,
     soLieu: pbMo ? { soChang: pbMo.content.chang.length } : undefined,
     goiY: ["Tuần này đi đâu cho mới?", "Nhắc mình trước buổi hẹn"],
@@ -177,10 +186,27 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           <SoBia rong={128} ten={[tenToi, so.tenNguoiKia || "Người ấy"]} />
           <NepTrongTrang pose="gap-lai" size={112} />
         </View>
-        <Heading subtitle="Một chỗ để hai bạn truyền giấy cho nhau mỗi tuần. Cả hai cùng đồng ý thì sổ mở." title="Chưa có sổ hai người" />
+        <Heading subtitle="Mở sổ để gửi lời hẹn cho người thương. Cả hai đồng ý mở sổ, rồi cùng xác nhận là cặp đôi." title="Một chỗ cho chuyện hai mình" />
         <StampButton label={deNghiLapSo ? "Xem lời đề nghị" : "Đề nghị lập sổ"} onPress={() => setMo("lap-so")} size="vua" tilt={-1} />
       </View>
     );
+  } else if (!so.batDoi && !dangCoToMo) {
+    // A sheet still in play (sent before the pair became a group, or by an
+    // older client) keeps its actions below; only settled sheets turn read-only.
+    than = <View style={{ gap: space.md }}>
+      <Heading title="Hai người cũng thành một hội" subtitle="Hẹn nhau như mọi hội bạn. Những tờ giấy cũ vẫn nằm ở đây." />
+      <RudiButton label="Rủ hội mình đi chơi" onPress={() => router.push(`/outings/new?contextId=${contextId}` as never)} />
+      <RudiButton label="Mở sổ cặp đôi" variant="outline" onPress={() => setMo("loai-so")} />
+      {so.toGiay.map((t) => {
+        const version = phienBan(t);
+        return <View key={t.id} style={{ gap: 8 }}>
+          <Text style={[typography.h2, { color: colors.ink }]}>{ngayDocDuoc(version?.content.ngay ?? "") || "Tờ chưa có ngày"}</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>Tờ giấy cũ · chỉ đọc</Text>
+          {version?.content.chang.map((c, i) => <Text key={i} style={[typography.body, { color: colors.ink }]}>{c.gio} · {c.viec}</Text>)}
+          {t.outing_id ? <RudiButton label="Mở cuộc đi này" variant="ghost" onPress={() => router.push(`/outings/${t.outing_id}?ctx=${contextId}` as never)} /> : null}
+        </View>;
+      })}
+    </View>;
   } else if (toMo) {
     than = (
       <ToLoiRu
@@ -270,7 +296,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         // word: with no sheet at all, «Rủ đi chơi» rendered twice in coral,
         // 1300px apart, and the second one reads as a different action somebody
         // then hunts for the difference between (finish review 14/09).
-        !so.daDong && so.lapSo && toMo !== undefined && !dangCoToMo && !(toMo.state === "chot" || toMo.state === "da_di") ? (
+        so.batDoi && !so.daDong && so.lapSo && toMo !== undefined && !dangCoToMo && !(toMo.state === "chot" || toMo.state === "da_di") ? (
           <View style={styles.footer}>
             <RudiButton label="Rủ đi chơi" onPress={() => void so.ruDiChoi()} />
           </View>
@@ -283,9 +309,9 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         <>
       <Sheet accessibilityLabel="Cài đặt sổ" onClose={dong} open={mo === "cai-dat"} testID="cai-dat-so">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>
-          <Heading size="h2" title="Sổ hai người" />
-          <ListRow icon="people-outline" onPress={() => setMo("loai-so")} subtitle={so.batDoi ? "Một đôi" : "Hai người bạn"} title="Loại sổ" />
-          <ListRow icon="hand-left-outline" onPress={() => setMo("rang-buoc")} subtitle="Không ăn được · Đừng" title="Hai ô ràng buộc" />
+          <Heading size="h2" title="Chuyện của hai mình" />
+          <ListRow icon="people-outline" onPress={() => setMo("loai-so")} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title="Loại sổ" />
+          <ListRow icon="hand-left-outline" onPress={() => setMo("rang-buoc")} subtitle="Không ăn được · Đừng" title="Những điều cần tránh" />
           {so.gu ? <ListRow icon="heart-outline" onPress={() => setMo("gu")} subtitle={cauGuSo?.chung ?? (so.gu.mine_shared ? "Bạn đang chia gu" : "Mỗi người tự bật")} title="Gu của hai bạn" /> : null}
           <ListRow icon="book-outline" onPress={() => router.push(`/groups/${contextId}/chat` as never)} subtitle="Về cuộc trò chuyện" title="Tin nhắn" />
           <ListRow icon="images-outline" onPress={() => router.push(`/groups/${contextId}/wall` as never)} subtitle="Ảnh và những buổi hai bạn đã giữ" title="Kỷ niệm của hai bạn" />
@@ -382,7 +408,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         <TopBar
           back
           right={<IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => setMo("cai-dat")} quiet />}
-          subtitle={so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hai người bạn · ${so.tenNguoiKia}`}
+          subtitle={so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hội bạn · ${so.tenNguoiKia}`}
           title="Tờ giấy của hai mình"
         />
       }

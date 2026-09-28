@@ -474,7 +474,7 @@ func TestDiToiQuaThanhTab(t *testing.T) {
 
 // Every entry of canhNgoaiRut is used, is not already an edge the code shows,
 // starts on a tab (the reason is the tab bar), and the source it cites still
-// makes it real. Without it the embedded manual does not load.
+// makes it real. The map is empty now; plan -> create is held to the code.
 func TestCanhNgoaiRut(t *testing.T) {
 	doc := func(p ...string) string {
 		raw, err := os.ReadFile(filepath.Join(append([]string{"..", "..", "..", "..", "apps", "mobile"}, p...)...))
@@ -488,9 +488,6 @@ func TestCanhNgoaiRut(t *testing.T) {
 	}
 	if !strings.Contains(doc("app", "(tabs)", "_layout.tsx"), "<RudiTabBar") {
 		t.Fatal("the tab layout no longer renders RudiTabBar")
-	}
-	if len(canhNgoaiRut) == 0 {
-		t.Fatal("empty: the embedded plan -> create would not load")
 	}
 	for cap, lyDo := range canhNgoaiRut {
 		if strings.TrimSpace(lyDo) == "" {
@@ -512,11 +509,26 @@ func TestCanhNgoaiRut(t *testing.T) {
 			t.Errorf("%v is used by no manual", cap)
 		}
 	}
+	// plan -> create, the edge the map used to carry, is an edge of the code
+	// itself now (PlanLive.tsx «Tạo mới»), and the manual still uses it.
+	if !soTay.banDo.laCanhMa("plan", "create") {
+		t.Fatal("plan -> create is no longer an edge of the code: the tab-bar entry is needed again")
+	}
+	dungPlanCreate := false
+	for _, tr := range soTay.trang {
+		for _, d := range tr.diToi {
+			dungPlanCreate = dungPlanCreate || (tr.man == "plan" && d.Man == "create" && d.Nhan == "Tạo mới")
+		}
+	}
+	if !dungPlanCreate {
+		t.Fatal("len-plan.md no longer goes to create by «Tạo mới»")
+	}
+	// The embedded manual loads with no entry at all.
 	cu := canhNgoaiRut
 	canhNgoaiRut = map[[2]string]string{}
 	defer func() { canhNgoaiRut = cu }()
-	if _, err := nap(duLieu); err == nil || !strings.Contains(err.Error(), "len-plan.md: di_toi «Tạo mới» từ «plan» tới «create» không phải cạnh nào của mã") {
-		t.Fatalf("without the entry: %v", err)
+	if _, err := nap(duLieu); err != nil {
+		t.Fatalf("without any entry: %v", err)
 	}
 }
 

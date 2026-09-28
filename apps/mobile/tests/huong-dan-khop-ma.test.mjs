@@ -63,14 +63,14 @@ const TIEU_DE_MAN_TIEN = "Tới màn này và đi tiếp";
 /**
  * Manual edges that are real although no route's code shows them. The server
  * keeps the same list (`canhNgoaiRut` in huongdan/nap.go) with the same reason.
+ *
+ * Empty since main's memory-book merge (2026-09-28): the one entry, plan ->
+ * create (the tab bar's «Tạo mới», drawn by app/(tabs)/_layout.tsx, which is
+ * not a route), became a labelled edge of the code when PlanLive.tsx gained its
+ * own «Tạo mới» button pushing /create. The test below holds that edge to the
+ * code now instead of to this list.
  */
-const CANH_NGOAI_RUT = [
-  {
-    tu: "plan",
-    den: "create",
-    viSao: "the «Tạo mới» button of the tab bar (src/rudi/ui/RudiTabBar.tsx pushes /create), drawn by app/(tabs)/_layout.tsx, which is not a route",
-  },
-];
+const CANH_NGOAI_RUT = [];
 const KHOA_DAU = ["di_toi", "man", "nhanUI", "tien", "tieu_de"];
 /**
  * An amount of money: «200k», «1 triệu», «50.000đ», «300 nghìn». The separator
@@ -448,8 +448,14 @@ test("(b) mỗi ngoại lệ CANH_NGOAI_RUT có sổ tay dùng, chưa phải c�
     });
     assert.ok(dung, `không sổ tay nào dùng ${c.tu} -> ${c.den}`);
   }
-  // Load-bearing: without it the committed manual is refused at exactly that edge.
-  assert.deepEqual(kiemTatCa(SO_TAY, khongNgoaiLe), ["len-plan.md: di_toi «Tạo mới» từ «plan» tới «create» không phải cạnh nào của mã"]);
+  // The committed manual loads with no exception at all, and plan -> create,
+  // the edge the list used to carry, is a labelled edge of the code itself.
+  assert.deepEqual(kiemTatCa(SO_TAY, khongNgoaiLe), []);
+  assert.ok(laCanhMa("plan", "create", khongNgoaiLe), "plan -> create không còn là cạnh của mã: cần lại ngoại lệ thanh tab");
+  assert.ok(SO_TAY.some(({ noiDung }) => {
+    const { dau } = tachSoTay(noiDung);
+    return dau.man === "plan" && dau.di_toi.some((d) => d.man === "create" && d.nhan === "Tạo mới");
+  }), "len-plan.md không còn lối «Tạo mới» tới create");
 });
 
 test("sổ tay phủ mọi màn bắt buộc, mỗi màn đúng một file", () => {

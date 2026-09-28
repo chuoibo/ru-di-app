@@ -78,7 +78,7 @@
         "Mở chuyến …",
         "Sắp tới",
         "Số này đọc từ sổ cái, không phải số dư ngân hàng.",
-        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa confirm sổ cái. Đây không phải số dư ngân hàng.",
+        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa ghi vào sổ. Đây không phải số dư ngân hàng.",
         "Sở thích",
         "Team Đà Lạt",
         "Thành tích",
@@ -226,6 +226,10 @@
           "nhan": "Đến nơi rồi?"
         },
         {
+          "den": "create",
+          "nhan": "Tạo mới"
+        },
+        {
           "den": "groups/[id]/wall",
           "nhan": "Tôi đã tới"
         },
@@ -236,6 +240,7 @@
       ],
       "di_toi": [
         "check-ins/new",
+        "create",
         "groups/[id]/wall",
         "places/[id]",
         "plan"
@@ -268,6 +273,7 @@
         "Tùy chọn chuyến đi",
         "Tường nhóm",
         "Tạo cuộc hẹn",
+        "Tạo mới",
         "Ví dụ: Đà Lạt cuối tuần",
         "chưa check-in.",
         "dự kiến một người",
@@ -373,7 +379,7 @@
       "canh": [
         {
           "den": "hai-nguoi/chon-nguoi",
-          "nhan": "Rủ một người đi chơi"
+          "nhan": "Hẹn người thương"
         },
         {
           "den": "moments/new",
@@ -404,8 +410,8 @@
       "man": "create",
       "nhan": [
         "Chia hóa đơn",
+        "Hẹn người thương",
         "Mình làm gì tiếp?",
-        "Rủ một người đi chơi",
         "Tạo cuộc hẹn",
         "Tạo mới",
         "Đăng kỷ niệm",
@@ -468,7 +474,6 @@
         "Chưa có gợi ý",
         "Chưa rút được ngân sách, số người hay khu vực; xếp theo gu chung.",
         "Chưa thấy nơi phù hợp",
-        "Chưa đọc được danh mục",
         "Gần bạn, đúng gu",
         "Gợi ý mẫu cho",
         "Gợi ý mẫu cho …: khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
@@ -477,8 +482,10 @@
         "Match gu cả nhóm",
         "Match gu cả nhóm bằng AI",
         "Mẫu minh hoạ",
+        "Một món thèm, một nơi muốn ghé…",
         "Mở bộ lọc",
         "Nhóm 8 người ngồi được một bàn, món nướng chia nhau dễ.",
+        "Những chỗ hay chưa hiện lên",
         "Quay lại",
         "Rủ Đi AI",
         "Rủ Đi AI hiểu câu «",
@@ -486,7 +493,6 @@
         "Thêm vào …",
         "Thông báo",
         "Trong 2 km",
-        "Tìm quán, món… hoặc hỏi Rủ Đi AI",
         "Tối nay cả hội đi đâu?",
         "Từ 90% hợp gu",
         "Vì sao hợp …?",
@@ -580,7 +586,7 @@
         "Mở chuyến …",
         "Sắp tới",
         "Số này đọc từ sổ cái, không phải số dư ngân hàng.",
-        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa confirm sổ cái. Đây không phải số dư ngân hàng.",
+        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa ghi vào sổ. Đây không phải số dư ngân hàng.",
         "Sở thích",
         "Team Đà Lạt",
         "Thành tích",
@@ -910,6 +916,14 @@
         {
           "den": "moments/new",
           "nhan": "Giữ một tấm ảnh của buổi này"
+        },
+        {
+          "den": "outings/[id]",
+          "nhan": "Mở cuộc đi này"
+        },
+        {
+          "den": "outings/new",
+          "nhan": "Rủ hội mình đi chơi"
         }
       ],
       "di_toi": [
@@ -918,6 +932,7 @@
         "messages",
         "moments/new",
         "outings/[id]",
+        "outings/new",
         "personalization"
       ],
       "man": "groups/[id]/to-giay",
@@ -926,21 +941,26 @@
         "(Bản trải nghiệm) Người kia đề nghị sửa giờ",
         "(Bản trải nghiệm) Người kia đồng ý",
         "Bản trải nghiệm: đóng vai người ấy",
-        "Chưa có sổ hai người",
+        "Chuyện của hai mình",
         "Chưa có tờ nào tuần này",
         "Cài đặt sổ",
         "Giữ một tấm ảnh của buổi này",
         "Gu của hai bạn",
-        "Hai ô ràng buộc",
+        "Hai người cũng thành một hội",
         "Kỷ niệm của hai bạn",
         "Loại sổ",
         "Làm mới",
+        "Một chỗ cho chuyện hai mình",
+        "Mở cuộc đi này",
+        "Mở sổ cặp đôi",
+        "Những điều cần tránh",
+        "Rủ hội mình đi chơi",
         "Rủ đi chơi",
-        "Sổ hai người",
         "Sổ này đã đóng",
         "Thôi",
         "Tin nhắn",
         "Tuần này",
+        "Tờ giấy cũ · chỉ đọc",
         "Tờ giấy của hai mình",
         "Tờ tuần này ở phía …",
         "Tờ đã khép",
@@ -1078,7 +1098,7 @@
       ],
       "man": "groups/new",
       "nhan": [
-        "Chỉ hai người? Không cần nhóm: kết bạn bằng số điện thoại rồi nhắn riêng, sổ hai người nằm ở đó.",
+        "Hai người đã thành một hội. Nếu là cặp đôi, hai bạn có thể mở sổ riêng từ cuộc trò chuyện.",
         "Hội cafe cuối tuần",
         "Mở nhóm",
         "Nhóm mới",
@@ -1110,8 +1130,8 @@
       "nhan": [
         "Chưa có bạn nào để rủ",
         "Chưa đọc được danh sách bạn",
+        "Hẹn người thương",
         "Rủ ai?",
-        "Rủ một người đi chơi",
         "Thêm bạn bằng số điện thoại",
         "Thêm bạn khác"
       ],
@@ -1550,6 +1570,10 @@
           "nhan": "Đến nơi rồi?"
         },
         {
+          "den": "create",
+          "nhan": "Tạo mới"
+        },
+        {
           "den": "groups/[id]/wall",
           "nhan": "Tôi đã tới"
         },
@@ -1568,6 +1592,7 @@
       ],
       "di_toi": [
         "check-ins/new",
+        "create",
         "groups/[id]/wall",
         "outings/[id]",
         "outings/new",
@@ -1615,6 +1640,7 @@
         "Tường nhóm",
         "Tạo cuộc hẹn",
         "Tạo kèo",
+        "Tạo mới",
         "Tờ hẹn này đã thành kèo. Mọi người tiếp tục sửa trên cùng một lịch trình.",
         "Từ nét chì, thành lời hẹn.",
         "Viết kèo mới",
@@ -1721,11 +1747,11 @@
       "nhan": [
         "Bạn tên gì?",
         "Bỏ qua",
-        "Cho Rủ Đi biết gu của bạn",
         "Không bắt buộc · K là nghìn đồng",
         "Mỗi lần đi chơi, bạn thường tiêu khoảng",
         "Tên bạn bè hay gọi bạn",
-        "Ô tên của bạn"
+        "Ô tên của bạn",
+        "Điều gì khiến bạn muốn ra ngoài?"
       ],
       "tep": [
         "app/personalization.tsx",
@@ -1811,6 +1837,10 @@
           "nhan": "Đến nơi rồi?"
         },
         {
+          "den": "create",
+          "nhan": "Tạo mới"
+        },
+        {
           "den": "groups/[id]/wall",
           "nhan": "Tôi đã tới"
         },
@@ -1829,6 +1859,7 @@
       ],
       "di_toi": [
         "check-ins/new",
+        "create",
         "groups/[id]/wall",
         "messages",
         "outings/[id]",
@@ -1870,6 +1901,7 @@
         "Tường nhóm",
         "Tạo cuộc hẹn",
         "Tạo kèo",
+        "Tạo mới",
         "Tới Tin nhắn",
         "Ví dụ: Đà Lạt cuối tuần",
         "chưa check-in.",
@@ -1949,8 +1981,8 @@
         "Bạn chưa ở nhóm nào đang hoạt động, nên chưa đăng cho nhóm được.",
         "Bạn muốn kể gì?",
         "Bỏ ảnh",
-        "Bốn mức không xếp từ hẹp tới rộng: bạn bè và nhóm là hai tập khác nhau.",
         "Chuyến vừa rồi, quán mới, hay chỉ một câu.",
+        "Chọn Bạn bè không tự chia sẻ với cả nhóm; chọn Nhóm không tự chia sẻ với mọi bạn bè.",
         "Chọn ảnh",
         "Chọn ảnh khác",
         "Một tấm ảnh, nếu muốn. Ai đọc được bài thì xem được ảnh.",
@@ -2038,7 +2070,7 @@
         "Mở chuyến …",
         "Sắp tới",
         "Số này đọc từ sổ cái, không phải số dư ngân hàng.",
-        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa confirm sổ cái. Đây không phải số dư ngân hàng.",
+        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa ghi vào sổ. Đây không phải số dư ngân hàng.",
         "Sở thích",
         "Team Đà Lạt",
         "Thành tích",
@@ -2737,6 +2769,10 @@
           "nhan": "Đến nơi rồi?"
         },
         {
+          "den": "create",
+          "nhan": "Tạo mới"
+        },
+        {
           "den": "groups/[id]/wall",
           "nhan": "Tôi đã tới"
         },
@@ -2747,6 +2783,7 @@
       ],
       "di_toi": [
         "check-ins/new",
+        "create",
         "groups/[id]/wall",
         "places/[id]"
       ],
@@ -2778,6 +2815,7 @@
         "Tùy chọn chuyến đi",
         "Tường nhóm",
         "Tạo cuộc hẹn",
+        "Tạo mới",
         "Ví dụ: Đà Lạt cuối tuần",
         "chưa check-in.",
         "dự kiến một người",
@@ -2891,12 +2929,12 @@
       ],
       "man": "welcome",
       "nhan": [
-        "AI đi chơi, chia bill thông minh",
         "Bản trải nghiệm",
         "Chặng … trên …",
         "Rủ Đi thôi!",
         "Trang … trên …",
         "Tìm hiểu thêm",
+        "Từ lời rủ đến trang kỷ niệm",
         "Xem lại từ đầu",
         "dau-van-cay"
       ],

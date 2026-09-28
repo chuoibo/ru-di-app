@@ -615,6 +615,38 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh UI trên source sạch f496af16, dữ liệu tổng hợp từ community-fixture; không người thật, token hay tài chính. Parent và Impeccable finish reviewer đã mở cả ba ảnh phone/desktop/composer-focus và chấp nhận đúng phạm vi tích hợp UI. Ghim đúng digest, không mở rộng quy tắc."
+    },
+    {
+      "path": "docs/assets/diary-handoff-20260928/phone-light-reader.png",
+      "sha256": "d4d3f768af7c1912410ce0fafa489564d1705729beda3adcf803b760198d75b5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
+    },
+    {
+      "path": "docs/assets/diary-handoff-20260928/phone-small-200-editor.png",
+      "sha256": "5240560a772f7b6dfcbdf8f81a982498dc66f308795416f2ae97823a13ae54d2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
+    },
+    {
+      "path": "docs/assets/diary-handoff-20260928/plan-create-door.png",
+      "sha256": "3653bdfd98165ca85415964511e62e214c8c37015da4ddb19e762411fc071b90",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
+    },
+    {
+      "path": "docs/assets/diary-handoff-20260928/plan-create-sheet.png",
+      "sha256": "01475002466233b64bae355854225392ede98cffc46f796835e033dbd0495058",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
     }
   ]
 }
