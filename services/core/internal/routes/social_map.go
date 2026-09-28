@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"slices"
 	"strings"
@@ -114,12 +113,14 @@ func socialMap() Route {
 		}
 		trendingInput := make([]socialmap.Place, 0, len(catalogue))
 		for _, place := range catalogue {
-			// A map layer: a place with nowhere to put a pin is not on it.
-			if place.Lat == nil || place.Lng == nil {
+			// A map layer: a place with nowhere to put a pin is not on it, and
+			// a centroid is not where the place is (Place.MappablePoint).
+			lat, lng := place.MappablePoint()
+			if lat == nil {
 				continue
 			}
 			trendingInput = append(trendingInput, socialmap.Place{
-				ID: place.ID, Name: place.Name, Lat: *place.Lat, Lng: *place.Lng,
+				ID: place.ID, Name: place.Name, Lat: *lat, Lng: *lng,
 				Rating: place.Rating, RatingCount: place.RatingCount, Flag: place.Flag,
 			})
 		}
@@ -137,12 +138,13 @@ func socialMap() Route {
 				break
 			}
 			// Counted by pins placed rather than by position in the ranking:
-			// skipping a place with no coordinates must not also shorten the
-			// layer by one.
-			if entry.place.Lat == nil || entry.place.Lng == nil {
+			// skipping a place with no drawable point must not also shorten
+			// the layer by one.
+			lat, lng := entry.place.MappablePoint()
+			if lat == nil {
 				continue
 			}
-			item, err := mapPlace(entry.place.ID, entry.place.Name, *entry.place.Lat, *entry.place.Lng, entry.place.Rating, entry.place.RatingCount)
+			item, err := mapPlace(entry.place.ID, entry.place.Name, *lat, *lng, entry.place.Rating, entry.place.RatingCount)
 			if err != nil {
 				return endpoint.Reply{}, err
 			}
@@ -167,15 +169,14 @@ func socialMap() Route {
 // mapPlace is MapPlace. rating and rating_count are required there, so a place
 // without them fails pydantic while the service builds the response: a 500.
 func mapPlace(id, name string, lat, lng float64, rating *float64, ratingCount *int64) (*pyjson.OrderedMap, error) {
-	if rating == nil || ratingCount == nil {
-		return nil, fmt.Errorf("routes: place %s has no rating for MapPlace", id)
-	}
+	// Null for a place nobody has rated (every fed place): MapPlace's rating
+	// fields are Optional, as a required rating made the whole map a 500.
 	item := pyjson.NewOrderedMap()
 	item.Set("place_id", pyjson.String(id))
 	item.Set("place_name", pyjson.String(name))
 	item.Set("lat", pyjson.Float(lat))
 	item.Set("lng", pyjson.Float(lng))
-	item.Set("rating", pyjson.Float(*rating))
-	item.Set("rating_count", pyjson.NewInt(*ratingCount))
+	item.Set("rating", floatOrNull(rating))
+	item.Set("rating_count", intOrNull(ratingCount))
 	return item, nil
 }

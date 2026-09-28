@@ -30,6 +30,7 @@ import {
   fetchDiemHen,
   fetchNhietDo,
   parseBanDoNhom,
+  parseDiemHen,
   parseNhietDo,
   soKm,
   soLan,
@@ -225,4 +226,26 @@ test("số lần luôn kèm đơn vị: một con số trần cạnh tên quán 
 test("km giữ một chữ số thập phân: làm tròn tới km biến 400m thành ngang nhau", () => {
   assert.equal(soKm(3.44), "3.4 km");
   assert.notEqual(soKm(3.4), soKm(3.8));
+});
+test("ghim chưa ai đánh giá: rating null giữ nguyên là null, không thành 0; sai kiểu vẫn đỏ", () => {
+  const ghim = { place_id: "vnl-1", place_name: "Quán Thử", lat: 10.77, lng: 106.7, rating: null, rating_count: null };
+  const d = parseBanDoNhom({ ...BAN_DO_DU, trending: [ghim], recommended: [{ ...ghim, rating: 4.5, rating_count: 12 }] });
+  assert.equal(d.dangHot[0].rating, null);
+  assert.equal(d.dangHot[0].ratingCount, null);
+  assert.equal(d.nenThu[0].rating, 4.5);
+  assert.equal(d.nenThu[0].ratingCount, 12);
+  assert.throws(() => parseBanDoNhom({ ...BAN_DO_DU, trending: [{ ...ghim, rating: "4" }] }), /rating/);
+  assert.throws(() => parseBanDoNhom({ ...BAN_DO_DU, trending: [{ ...ghim, rating_count: -1 }] }), /rating_count/);
+});
+
+test("ứng viên điểm hẹn không có địa chỉ: address null, không làm hỏng cả câu trả lời", () => {
+  const ungVien = {
+    place_id: "vnl-1", place_name: "Quán Thử", category: "cafe", address: null, lat: 10.75, lng: 106.71,
+    fairness: { worst_km: 2.5, total_km: 5, spread_km: 0.1 },
+    travel: [{ id: "hcm-quan-1", label: "Quận 1, TP.HCM", lat: 10.7769, lng: 106.7009, km: 2.5 }],
+  };
+  const d = parseDiemHen({ context_id: "c", origins: [], candidates: [ungVien, { ...ungVien, address: "12 Lê Lợi" }], two_origin_inversion: false });
+  assert.equal(d.ungVien[0].address, null);
+  assert.equal(d.ungVien[1].address, "12 Lê Lợi");
+  assert.throws(() => parseDiemHen({ context_id: "c", origins: [], candidates: [{ ...ungVien, address: "" }], two_origin_inversion: false }), /address/);
 });

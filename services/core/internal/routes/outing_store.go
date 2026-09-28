@@ -162,7 +162,11 @@ func (o outingStore) GetPlace(placeID string) (*outingsteps.Place, error) {
 	if err != nil || record == nil {
 		return nil, err
 	}
-	return &outingsteps.Place{Lat: record.Lat, Lng: record.Lng}, nil
+	// Routing reads this point before a stop's own meeting point; a centroid
+	// here would route to the middle of a province. No drawable point leaves
+	// the stop unlocated, which the planner says out loud (missing_location).
+	lat, lng := record.MappablePoint()
+	return &outingsteps.Place{Lat: lat, Lng: lng}, nil
 }
 
 func (o outingStore) CreateOuting(draft outingsteps.OutingDraft) (outingsteps.Outing, error) {

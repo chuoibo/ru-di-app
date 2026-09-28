@@ -51,14 +51,16 @@ export type ChoDaDi = {
   visitCount: number;
 };
 
-/** A pin with no visit attached: trending and recommended both use it. */
+/** A pin with no visit attached: trending and recommended both use it.
+ *  `rating`/`ratingCount` are null for a place nobody has rated (every fed
+ *  place): «chưa có đánh giá», never a zero. */
 export type ChoTrenBanDo = {
   placeId: string;
   placeName: string;
   lat: number;
   lng: number;
-  rating: number;
-  ratingCount: number;
+  rating: number | null;
+  ratingCount: number | null;
 };
 
 /** A layer the map does not have, named rather than silently empty. */
@@ -101,7 +103,8 @@ export type UngVienDiemHen = {
   placeId: string;
   placeName: string;
   category: string;
-  address: string;
+  /** Null for a place with no address to stand in front of. */
+  address: string | null;
   lat: number;
   lng: number;
   canBang: CanBang;
@@ -218,8 +221,8 @@ function parseChoTrenBanDo(raw: unknown, field: string): ChoTrenBanDo {
     placeName: str(o.place_name, `${field}.place_name`),
     lat: num(o.lat, `${field}.lat`),
     lng: num(o.lng, `${field}.lng`),
-    rating: num(o.rating, `${field}.rating`),
-    ratingCount: dem(o.rating_count, `${field}.rating_count`),
+    rating: o.rating === null ? null : num(o.rating, `${field}.rating`),
+    ratingCount: o.rating_count === null ? null : dem(o.rating_count, `${field}.rating_count`),
   };
 }
 
@@ -289,7 +292,7 @@ export function parseDiemHen(body: unknown): DiemHenData {
         placeId: str(o.place_id, `candidates[${i}].place_id`),
         placeName: str(o.place_name, `candidates[${i}].place_name`),
         category: str(o.category, `candidates[${i}].category`),
-        address: str(o.address, `candidates[${i}].address`),
+        address: o.address === null ? null : str(o.address, `candidates[${i}].address`),
         lat: num(o.lat, `candidates[${i}].lat`),
         lng: num(o.lng, `candidates[${i}].lng`),
         canBang: {

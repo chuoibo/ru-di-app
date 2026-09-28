@@ -43,6 +43,7 @@ from app.db.models import (
     Memory,
     MemoryKind,
     Person,
+    Place,
 )
 from app.places.catalog import PLACES
 
@@ -654,3 +655,90 @@ def test_a_member_sending_no_role_is_refused_for_the_other_reason(
         assert response.json()["detail"] == "role_not_permitted", (
             f"{method} {path}: {response.json()}"
         )
+
+
+# ---------------------------------------------------------------------------
+# M7: a pin, a distance or a meeting point only where the place is
+# ---------------------------------------------------------------------------
+
+# Halfway between Quận 1 and Quận 7: a centroid here would be the «fairest»
+# meeting point of all, which is exactly why it must not be one.
+_HALFWAY = (10.75545, 106.71145)
+_CENTROIDS = {
+    "vnl-tam-tinh": "province_centroid",
+    "vnl-tam-phuong": "ward_centroid",
+    "vnl-doan": "suy_luan",
+}
+
+
+def _fed_places(session: Session) -> None:
+    """Fed rows as vnlocal sends them: no rating, flagged hot so the trending
+    layer would take every one, three centroids at the fairest spot and one
+    unrated rooftop place that must still be pinned."""
+
+    destination_id = session.get(Place, SAIGON["id"]).destination_id
+    rows = [(place_id, precision) for place_id, precision in _CENTROIDS.items()]
+    rows.append(("vnl-that", "rooftop"))
+    for place_id, precision in rows:
+        session.add(
+            Place(
+                id=place_id,
+                destination_id=destination_id,
+                name=f"Quán {place_id}",
+                category="cafe",
+                kinds=[],
+                lat=_HALFWAY[0],
+                lng=_HALFWAY[1],
+                geo_precision=precision,
+                traits=[],
+                flag="hot",
+                source="vnlocal",
+                source_ref=place_id,
+            )
+        )
+    session.flush()
+
+
+def test_the_map_pins_only_places_whose_point_says_where_they_are(
+    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
+):
+    context, owner = _group(postgres_session)
+    _fed_places(postgres_session)
+    app = _http(postgres_session, monkeypatch)
+
+    response = _get(app, f"/contexts/{context.id}/map", owner.id)
+
+    # An unrated place used to make the whole map a 500.
+    assert response.status_code == 200, response.text
+    body = response.json()
+    pinned = {
+        pin["place_id"]: pin
+        for layer in ("trending", "recommended")
+        for pin in body[layer]
+    }
+    assert not set(_CENTROIDS) & set(pinned), pinned.keys()
+    assert pinned["vnl-that"]["rating"] is None
+    assert pinned["vnl-that"]["rating_count"] is None
+
+
+def test_a_meeting_point_is_never_a_centroid(
+    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
+):
+    context, owner = _group(postgres_session)
+    _fed_places(postgres_session)
+    app = _http(postgres_session, monkeypatch)
+
+    response = _post(
+        app,
+        f"/contexts/{context.id}/meet",
+        owner.id,
+        {"from_areas": ["hcm-quan-1", "hcm-quan-7"]},
+    )
+
+    assert response.status_code == 200, response.text
+    candidates = [row["place_id"] for row in response.json()["candidates"]]
+    # The real place at the same spot is the fairest; the centroids never are.
+    assert candidates[0] == "vnl-that", candidates
+    # A fed place with no address used to make the whole answer a 500.
+    assert response.json()["candidates"][0]["address"] is None
+    assert not set(_CENTROIDS) & set(candidates), candidates

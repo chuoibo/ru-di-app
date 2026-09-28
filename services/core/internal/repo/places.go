@@ -53,6 +53,27 @@ type Place struct {
 	GeoPrecision *string
 }
 
+// mappablePrecisions are the precisions that say where a place is. A ward or
+// province centroid is the middle of an area and `suy_luan` a model's guess:
+// the source contract (vnlocal HANDOFF-GEO §2) allows them for area filters
+// only, never a pin, a distance, a route or a stored point.
+var mappablePrecisions = map[string]bool{"rooftop": true, "street": true}
+
+// MappablePoint is app.places.geo_precision.mappable_point: the place's point
+// when it may be drawn, measured or stored, else nil, nil. Same line as the
+// ingest's Record.MappablePoint and the phone's veDuocLenBanDo. A nil
+// precision is a row from before the column (seed, OSM): the schema refuses a
+// new point without one, so a point with no precision is a trusted old point.
+func (p Place) MappablePoint() (lat, lng *float64) {
+	if p.Lat == nil || p.Lng == nil {
+		return nil, nil
+	}
+	if p.GeoPrecision != nil && !mappablePrecisions[*p.GeoPrecision] {
+		return nil, nil
+	}
+	return p.Lat, p.Lng
+}
+
 // PlaceFilter is list_places' keyword arguments; nil is "not passed".
 type PlaceFilter struct {
 	DestinationID *string

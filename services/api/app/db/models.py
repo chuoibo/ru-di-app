@@ -1853,6 +1853,11 @@ class Memory(Base):
         # coordinates on a check-in come from the `places` table, not the
         # phone; reading the phone's GPS is F47 and is not built, and a photo
         # row carrying coordinates would make it look like it had been.
+        #
+        # A check-in carries the place's point only when that point says where
+        # the place is (rooftop/street, `app.places.geo_precision`); a fed
+        # place with a centroid or no point at all checks in with both NULL.
+        # Half a point is still refused.
         CheckConstraint(
             "(kind = 'photo' AND image_url IS NOT NULL AND image_url <> '' "
             "AND ((place_id IS NULL AND place_name IS NULL) "
@@ -1862,7 +1867,8 @@ class Memory(Base):
             "(kind = 'checkin' AND image_url IS NULL "
             "AND place_id IS NOT NULL AND place_id <> '' "
             "AND place_name IS NOT NULL AND place_name <> '' "
-            "AND lat IS NOT NULL AND lng IS NOT NULL)",
+            "AND ((lat IS NULL AND lng IS NULL) "
+            "OR (lat IS NOT NULL AND lng IS NOT NULL)))",
             name="payload_matches_kind",
         ),
         # A coordinate outside these ranges is not a place on Earth, and the

@@ -2125,14 +2125,19 @@ class PersonMatchResponse(ApiModel):
 
 
 class MapPlace(ApiModel):
-    """A pin. A place and where it is, with no visit attached."""
+    """A pin. A place and where it is, with no visit attached.
+
+    `rating`/`rating_count` are null for a place nobody has rated -- every fed
+    place, whose LLM score is not a rating. Requiring them turned the whole
+    map into a 500 as soon as one such place ranked.
+    """
 
     place_id: StrictStr
     place_name: StrictStr
     lat: float
     lng: float
-    rating: float
-    rating_count: int
+    rating: float | None
+    rating_count: int | None
 
 
 class VisitedPlace(ApiModel):
@@ -2251,7 +2256,9 @@ class MeetingCandidate(ApiModel):
     place_id: StrictStr
     place_name: StrictStr
     category: StrictStr
-    address: StrictStr
+    # Null for a place with no address a person can stand in front of (many
+    # fed places). Required, it made the whole answer a 500.
+    address: StrictStr | None
     lat: float
     lng: float
     fairness: MeetingFairness

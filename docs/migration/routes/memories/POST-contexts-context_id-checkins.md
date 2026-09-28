@@ -137,3 +137,12 @@ Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở l
 Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
 
 - `POST /contexts/{context_id}/checkins`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+
+## Đổi 2026-09-29 — check-in chỉ giữ toạ độ vẽ được (M7, HANDOFF-GEO §2 của vnlocal)
+
+Trước đây check-in chép nguyên `places.lat/lng`: quán không có toạ độ chết ở `payload_matches_kind` (500 ở cả hai nửa), quán chỉ có tâm phường/tâm tỉnh/điểm model đoán lưu vĩnh viễn điểm tâm lên tường nhóm. Giờ cả hai nửa lưu điểm chỉ khi `geo_precision` ∈ {`rooftop`, `street`} (hoặc NULL của dòng seed cũ); ngoài ra lưu `lat`/`lng` NULL. Wire không đổi (`MemoryResponse.lat: float | None`).
+
+- Python: `ApiService.post_context_checkin` dùng `app.places.geo_precision.mappable_point`; `create_checkin` (Protocol + SQLAlchemy) nhận `lat`/`lng` Optional.
+- Go: `routes/memories.go` dùng `repo.Place.MappablePoint()` (cùng luật).
+- Alembic `f4b8d1c6e2a7`: `payload_matches_kind` cho check-in được lat/lng cùng NULL (nửa điểm vẫn bị từ chối); backfill gỡ toạ độ tâm của check-in cũ; downgrade điền lại từ `places`.
+- Bằng chứng: Go `routes/place_geo_postgres_test.go` (7 quán × 7 mức, wire + hàng DB); Python `tests/postgres/test_group_checkins_postgres.py` (tâm tỉnh, tâm phường, không toạ độ → 201, lat NULL), `test_checkin_point_backfill_postgres.py` (upgrade gỡ đúng 3/5 hàng, ảnh không đụng, nửa điểm bị từ chối, downgrade điền lại). Parity: seed toàn `rooftop` nên kịch bản hiện có không đổi byte.

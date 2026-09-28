@@ -195,6 +195,22 @@ test("chỉ đường không dẫn tới tâm tỉnh hay điểm model đoán: �
   assert.equal(duongChiDuong({ lat: null, lng: null, name: "Xóm Lào", geoPrecision: null }), "geo:0,0?q=X%C3%B3m%20L%C3%A0o");
 });
 
+test("chỉ đường tìm theo tên kèm địa chỉ: toạ độ chỉ để định hướng, địa chỉ mới là cửa quán", () => {
+  const cho = { lat: 10.7769, lng: 106.7009, name: "Xóm Lào", address: "12 Lê Lợi, Bến Thành" };
+  const q = encodeURIComponent("Xóm Lào, 12 Lê Lợi, Bến Thành");
+  for (const geoPrecision of ["rooftop", "street"]) {
+    assert.equal(duongChiDuong({ ...cho, geoPrecision }), `geo:10.7769,106.7009?q=${q}`, geoPrecision);
+  }
+  for (const geoPrecision of ["ward_centroid", "province_centroid", "suy_luan", "none"]) {
+    assert.equal(duongChiDuong({ ...cho, geoPrecision }), `geo:0,0?q=${q}`, geoPrecision);
+  }
+  assert.equal(duongChiDuong({ ...cho, lat: null, lng: null, geoPrecision: null }), `geo:0,0?q=${q}`);
+  // No address, or only blanks: the name alone, never a dangling ", ".
+  for (const address of [null, undefined, "", "   "]) {
+    assert.equal(duongChiDuong({ ...cho, address, geoPrecision: "rooftop" }), "geo:10.7769,106.7009?q=X%C3%B3m%20L%C3%A0o", String(address));
+  }
+});
+
 test("cauTimKiem: có kết quả thì im, mỗi kiểu thất bại một câu thật", () => {
   assert.equal(cauTimKiem({ kind: "chua-tim" }), null);
   assert.equal(cauTimKiem({ kind: "co-ket-qua", query: "x", understood: {}, places: [] }), null);

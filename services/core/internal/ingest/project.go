@@ -85,7 +85,9 @@ var displayAddresses = map[string]bool{"so_nha": true, "ten_duong": true, "moc":
 // displayAddress is the address a screen may show, or nil for "no address".
 //
 // None of these strings is a verified address -- `dia_chi_xac_nhan` holds on
-// under two hundred rows -- so this column is for reading, never for routing.
+// under two hundred rows -- so this column is for reading and for the search
+// text a map app is handed (with the name, beside the point when the point is
+// drawable), never for turning into a point of its own.
 //
 // `dia_chi_day_du` is never used, despite being called "full address": on the
 // rows that were read it holds an area, and reading the name of a field
