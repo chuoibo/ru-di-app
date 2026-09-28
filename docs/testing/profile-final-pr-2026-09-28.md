@@ -7,6 +7,10 @@ tách nhánh. Bản thử gộp có xung đột ở hồ sơ, story, Nếp, cont
 đặc biệt phải đối chiếu writer và ACL với Cộng đồng mới trước khi gộp. Không
 ghi đè các thay đổi đó để mở PR.
 
+Agent tiếp tục công việc đọc [handoff chi tiết](../handoff/profile-story-routes.md):
+trạng thái từng lát cắt, địa chỉ mã, 22 file xung đột, thứ tự P0/P1/P2 và lệnh
+kiểm chứng.
+
 ## Phần được bàn giao
 
 - 13 huy hiệu được thiết kế bằng trình sinh ảnh, có tài liệu nguồn và prompt.
