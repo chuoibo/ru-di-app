@@ -214,9 +214,65 @@ func chunkFields(s *entity.Schema) {
 		WithField(entity.NewField().WithName(FEmbedModel).WithDataType(entity.FieldTypeVarChar).WithMaxLength(64))
 }
 
+// ChiMucDense is the dense vector index a deployment builds. HNSW runs on any
+// Milvus and is what the CPU image in CI carries; GPU_CAGRA needs the -gpu
+// image and a GPU (ADR-0049 §2.6). It is a deployment choice, not a schema
+// revision: fields, analyzers and BM25 legs are identical under both, and a
+// process searches with the parameters of the kind it builds.
+type ChiMucDense string
+
+const (
+	DenseHNSW     ChiMucDense = "HNSW"
+	DenseGPUCagra ChiMucDense = "GPU_CAGRA"
+)
+
+// CAGRA build and search parameters: graph degree 32 over an intermediate
+// graph of 64 (Milvus defaults), and an internal top-k wide enough for the
+// widest candidate list a hybrid leg asks for (truyhoi.MaxK × 3, at least 30).
+const (
+	cagraInterDegree = 64
+	cagraDegree      = 32
+	cagraITopK       = 256
+)
+
+// DocChiMucDense reads EnvDenseIndex: empty means HNSW.
+func DocChiMucDense(raw string) (ChiMucDense, error) {
+	switch k := ChiMucDense(strings.ToUpper(strings.TrimSpace(raw))); k {
+	case "", DenseHNSW:
+		return DenseHNSW, nil
+	case DenseGPUCagra:
+		return k, nil
+	}
+	return "", fmt.Errorf("vectordb: %s must be HNSW or GPU_CAGRA, got %q", EnvDenseIndex, raw)
+}
+
+// chiMuc is the index built on FDense.
+func (k ChiMucDense) chiMuc() index.Index {
+	if k == DenseGPUCagra {
+		return index.NewGPUCagraIndex(entity.COSINE, cagraInterDegree, cagraDegree)
+	}
+	return index.NewHNSWIndex(entity.COSINE, hnswM, hnswEfBuild)
+}
+
+// thamSoTim is the ANN parameter a dense search sends for this index.
+func (k ChiMucDense) thamSoTim() index.AnnParam {
+	if k == DenseGPUCagra {
+		p := index.NewCustomAnnParam()
+		p.WithExtraParam("itopk_size", cagraITopK)
+		return p
+	}
+	return index.NewHNSWAnnParam(HNSWEfTimKiem)
+}
+
+// denseIndex is the index option on FDense of collection name.
+func (k ChiMucDense) denseIndex(name string) milvusclient.CreateIndexOption {
+	return milvusclient.NewCreateIndexOption(name, FDense, k.chiMuc())
+}
+
+// vectorIndexes are the sparse indexes of a collection. The dense index is
+// the deployment's (ChiMucDense), added where the collection is created.
 func vectorIndexes(name string, bm25 bool) []milvusclient.CreateIndexOption {
 	out := []milvusclient.CreateIndexOption{
-		milvusclient.NewCreateIndexOption(name, FDense, index.NewHNSWIndex(entity.COSINE, hnswM, hnswEfBuild)),
 		milvusclient.NewCreateIndexOption(name, FSparse, index.NewGenericIndex("sparse_idx", map[string]string{
 			"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "IP"})),
 	}

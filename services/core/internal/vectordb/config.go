@@ -43,6 +43,8 @@ const (
 	// read when EnvPassword is empty.
 	EnvPasswordFile = "MOBILE_MILVUS_PASSWORD_FILE"
 	EnvDB           = "MOBILE_MILVUS_DB"
+	// EnvDenseIndex picks the dense index: HNSW (default) or GPU_CAGRA.
+	EnvDenseIndex = "MOBILE_MILVUS_DENSE_INDEX"
 )
 
 // Config is a Milvus connection. Auth is always on in every deployment
@@ -53,6 +55,7 @@ type Config struct {
 	User     string
 	Password string
 	DB       string
+	Dense    ChiMucDense
 }
 
 // ErrChuaCauHinh: no address, or no credentials.
@@ -77,6 +80,11 @@ func FromEnv(getenv func(string) string) (Config, error) {
 	if c.Addr == "" || c.User == "" || c.Password == "" {
 		return Config{}, ErrChuaCauHinh
 	}
+	dense, err := DocChiMucDense(getenv(EnvDenseIndex))
+	if err != nil {
+		return Config{}, err
+	}
+	c.Dense = dense
 	return c, nil
 }
 
@@ -102,5 +110,5 @@ func Ket(ctx context.Context, c Config) (*Milvus, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Milvus{cli: cli}, nil
+	return &Milvus{cli: cli, dense: c.Dense}, nil
 }

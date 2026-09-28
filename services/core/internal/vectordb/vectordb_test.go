@@ -379,3 +379,37 @@ func TestBM25IsTheDefaultAndNeedsNoModel(t *testing.T) {
 		t.Fatal("BM25 must leave the MILCO field empty")
 	}
 }
+
+// The dense index is a deployment choice: empty is HNSW, GPU_CAGRA is
+// accepted in any case, anything else stops the process at start; each kind
+// builds its own index and searches with its own parameter.
+func TestChiMucDenseTheoMoiTruong(t *testing.T) {
+	for raw, want := range map[string]ChiMucDense{"": DenseHNSW, "hnsw": DenseHNSW, " gpu_cagra ": DenseGPUCagra} {
+		got, err := DocChiMucDense(raw)
+		if err != nil || got != want {
+			t.Errorf("%q: %q %v", raw, got, err)
+		}
+	}
+	if _, err := DocChiMucDense("IVF_FLAT"); err == nil {
+		t.Fatal("an unknown index kind was accepted")
+	}
+	cagra := DenseGPUCagra.chiMuc().Params()
+	if cagra["index_type"] != "GPU_CAGRA" || cagra["metric_type"] != "COSINE" {
+		t.Fatalf("GPU index params %v", cagra)
+	}
+	if p := DenseGPUCagra.thamSoTim().Params(); p["itopk_size"] != cagraITopK || p["ef"] != nil {
+		t.Fatalf("GPU search params %v", p)
+	}
+	if DenseHNSW.chiMuc().Params()["index_type"] != "HNSW" || DenseHNSW.thamSoTim().Params()["ef"] != HNSWEfTimKiem {
+		t.Fatal("HNSW index or search parameter changed")
+	}
+	env := map[string]string{EnvAddr: "127.0.0.1:1", EnvUser: "u", EnvPassword: "p", EnvDenseIndex: "GPU_CAGRA"}
+	c, err := FromEnv(func(k string) string { return env[k] })
+	if err != nil || c.Dense != DenseGPUCagra {
+		t.Fatalf("FromEnv dense %q %v", c.Dense, err)
+	}
+	env[EnvDenseIndex] = "bogus"
+	if _, err := FromEnv(func(k string) string { return env[k] }); err == nil {
+		t.Fatal("FromEnv accepted a bogus dense index")
+	}
+}

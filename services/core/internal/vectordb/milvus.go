@@ -36,6 +36,16 @@ type Milvus struct {
 	cli      *milvusclient.Client
 	TienTo   string
 	NhatQuan entity.ConsistencyLevel
+	dense    ChiMucDense
+}
+
+// chiMucDense is the dense index this connection builds and searches; the
+// zero value is HNSW.
+func (m *Milvus) chiMucDense() ChiMucDense {
+	if m.dense == "" {
+		return DenseHNSW
+	}
+	return m.dense
 }
 
 // Dong closes the connection.
@@ -123,7 +133,7 @@ func (m *Milvus) tao(ctx context.Context, ld LuocDo, phanVung bool, name string)
 	// Every index is asked for first and then each is awaited, its error
 	// checked: the server builds them together, and none is taken on trust.
 	var tasks []*milvusclient.CreateIndexTask
-	for _, io := range ld.Index {
+	for _, io := range append([]milvusclient.CreateIndexOption{m.chiMucDense().denseIndex(name)}, ld.Index...) {
 		task, err := m.cli.CreateIndex(ctx, io)
 		if err != nil {
 			return err
@@ -598,7 +608,8 @@ func HopRRF(legs [][]Trung, w []float64, k, K int) []Trung {
 	return out
 }
 
-// Tim runs the hybrid search: every leg (dense HNSW COSINE, BM25 on the
+// Tim runs the hybrid search: every leg (dense COSINE under the deployment's
+// index, BM25 on the
 // marked text, BM25 on the folded text, or MILCO), each under the same
 // hard-constraint filter, searched in parallel, then fused by weighted RRF
 // with k=RRFK in Go (Milvus's own RRF ranker takes no weights). With a leg
@@ -624,7 +635,9 @@ func (m *Milvus) Tim(ctx context.Context, y YeuCauTim) ([]Trung, error) {
 			defer wg.Done()
 			opt := milvusclient.NewSearchOption(y.Ten, y.ungVien(), []entity.Vector{l.vec}).WithANNSField(l.Truong).
 				WithConsistencyLevel(m.nhatQuan()).WithOutputFields(FIndexVersion, FDocID).WithFilter(expr)
-			if l.ann != nil {
+			if l.Truong == FDense {
+				opt = opt.WithAnnParam(m.chiMucDense().thamSoTim())
+			} else if l.ann != nil {
 				opt = opt.WithAnnParam(l.ann)
 			}
 			for k, v := range params {

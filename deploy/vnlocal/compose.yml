@@ -16,6 +16,14 @@
 #   ~/.config/rudi/vnlocal.env  MOBILE_DATABASE_URL, VNLOCAL_PG_DSN, VNLOCAL_S3_*
 #   ~/.config/rudi/stack.env    MOBILE_INTERNAL_TOKEN, MOBILE_PERSON_ID_KEY,
 #                               MOBILE_OTP_DEBUG_CODE (chỉ khi chưa có cổng SMS)
+#   ~/.config/rudi/milvus.env   MOBILE_MILVUS_USER/_PASSWORD — sinh bằng
+#                               deploy/vnlocal/milvus-khoi-tao.sh (chạy một lần)
+#   .env ở gốc repo             GEMINI_API_KEY, AGY_PROXY_*, OPEN_ROUTER_API_KEY
+#                               — chỉ cấp cho dịch vụ AI (ADR-0049)
+#
+# Milvus GPU (ADR-0049): `milvus` chạy trên GPU 0; index dense HNSW mặc định,
+# RUDI_MILVUS_DENSE_INDEX=GPU_CAGRA bật index GPU (chủ sản phẩm 2026-09-28). Nạp danh mục:
+#   docker compose -f deploy/vnlocal/compose.yml run --rm rag v-build place --auto
 name: rudi-vnlocal
 
 x-api-image: &api-image
@@ -32,6 +40,22 @@ x-secrets: &secrets
   env_file:
     - ${HOME}/.config/rudi/vnlocal.env
     - ${HOME}/.config/rudi/stack.env
+
+# Milvus and the AI keys go only to the services that use them: Milvus
+# credentials from ~/.config/rudi/milvus.env (deploy/vnlocal/milvus-khoi-tao.sh),
+# the AI keys (GEMINI_API_KEY for embeddings, AGY_PROXY_URL/KEY, OPEN_ROUTER_API_KEY)
+# from the repo root .env, which is gitignored (ADR-0049).
+x-ai-secrets: &ai-secrets
+  env_file:
+    - ${HOME}/.config/rudi/vnlocal.env
+    - ${HOME}/.config/rudi/stack.env
+    - ${HOME}/.config/rudi/milvus.env
+    - path: ../../.env
+      required: false
+
+x-milvus-env: &milvus-env
+  MOBILE_MILVUS_ADDR: milvus:19530
+  MOBILE_MILVUS_DENSE_INDEX: ${RUDI_MILVUS_DENSE_INDEX:-HNSW}
 
 x-env: &env
   MOBILE_AUTH_MODE: ${MOBILE_AUTH_MODE:-prod}
@@ -62,6 +86,91 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    restart: "no"
+
+  migrate-rag:
+    <<: [*core-image, *secrets]
+    command: ["migrate-rag"]
+    environment: *env
+    depends_on:
+      migrate-chat:
+        condition: service_completed_successfully
+    restart: "no"
+
+  migrate-rag-vector:
+    <<: [*core-image, *secrets]
+    command: ["migrate-rag-vector"]
+    environment: *env
+    depends_on:
+      migrate-rag:
+        condition: service_completed_successfully
+    restart: "no"
+
+  # Milvus standalone on the GPU (ADR-0049 §2.6): same server layout as the
+  # Milvus tier (embedded etcd, local storage, woodpecker, auth on), config
+  # and root password from deploy/vnlocal/milvus-khoi-tao.sh. Loopback only.
+  milvus:
+    image: milvusdb/milvus:v3.0.2-gpu
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_USE_EMBED: "true"
+      ETCD_DATA_DIR: /var/lib/milvus/etcd
+      ETCD_CONFIG_PATH: /milvus/configs/embedEtcd.yaml
+      COMMON_STORAGETYPE: local
+      DEPLOY_MODE: STANDALONE
+    volumes:
+      - ${HOME}/.config/rudi/milvus/user.yaml:/milvus/configs/user.yaml:ro
+      - ${HOME}/.config/rudi/milvus/embedEtcd.yaml:/milvus/configs/embedEtcd.yaml:ro
+      - rudi-milvus-data:/var/lib/milvus
+    ports:
+      - "127.0.0.1:${RUDI_MILVUS_PORT:-19530}:19530"
+      - "127.0.0.1:${RUDI_MILVUS_HTTP_PORT:-9091}:9091"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: ["gpu"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9091/healthz"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 30
+    restart: unless-stopped
+
+  # The vector index's only long-running writer: drains rag_dirty every
+  # minute (no broker on this stack) and reconciles the aliases.
+  rag-indexer:
+    <<: [*core-image, *ai-secrets]
+    command: ["rag-indexer"]
+    environment:
+      <<: [*env, *milvus-env]
+      MOBILE_DB_MAX_CONNS: "2"
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate-rag-vector:
+        condition: service_completed_successfully
+      milvus:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # `core rag …` one-shots (v-build, v-embed-batch, v-eval, v-promote, v-status):
+  #   docker compose -f deploy/vnlocal/compose.yml run --rm rag v-status
+  rag:
+    <<: [*core-image, *ai-secrets]
+    profiles: ["cli"]
+    entrypoint: ["/core", "rag"]
+    environment:
+      <<: [*env, *milvus-env]
+      MOBILE_DB_MAX_CONNS: "4"
+    healthcheck:
+      disable: true
+    depends_on:
+      milvus:
+        condition: service_healthy
     restart: "no"
 
   api:
@@ -164,3 +273,4 @@ services:
 
 volumes:
   rudi-media-data:
+  rudi-milvus-data:

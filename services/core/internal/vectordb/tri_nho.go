@@ -9,7 +9,6 @@ import (
 
 	"github.com/milvus-io/milvus/client/v3/column"
 	"github.com/milvus-io/milvus/client/v3/entity"
-	"github.com/milvus-io/milvus/client/v3/index"
 	"github.com/milvus-io/milvus/client/v3/milvusclient"
 
 	"mobile/services/core/internal/aiharness/nhung"
@@ -115,7 +114,7 @@ func (k *SoTriNho) Tim(ctx context.Context, o ChuSoHuu, q []float32, n int) ([]T
 		return nil, err
 	}
 	rs, err := k.m.cli.Search(ctx, milvusclient.NewSearchOption(k.ten(), n, []entity.Vector{entity.FloatVector(q)}).
-		WithANNSField(FDense).WithAnnParam(index.NewHNSWAnnParam(HNSWEfTimKiem)).
+		WithANNSField(FDense).WithAnnParam(k.m.chiMucDense().thamSoTim()).
 		WithFilter(locChu).WithTemplateParam("o", o.id).
 		WithConsistencyLevel(entity.ClStrong).WithOutputFields(FIndexVersion))
 	if err != nil {

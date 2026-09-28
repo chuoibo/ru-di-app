@@ -26,6 +26,9 @@ const (
 	EnvUser     = "MOBILE_TEST_MILVUS_USER"
 	EnvPassword = "MOBILE_TEST_MILVUS_PASSWORD"
 	EnvRequire  = "CORE_REQUIRE_MILVUS_TESTS"
+	// EnvDenseIndex runs the tier under a dense index other than HNSW, e.g.
+	// GPU_CAGRA against a -gpu server (ADR-0049 §2.6).
+	EnvDenseIndex = "MOBILE_TEST_MILVUS_DENSE_INDEX"
 )
 
 // Config is the test server's connection.
@@ -42,7 +45,11 @@ func Config(t *testing.T) vectordb.Config {
 	if user == "" {
 		user = "root"
 	}
-	return vectordb.Config{Addr: addr, User: user, Password: os.Getenv(EnvPassword)}
+	dense, err := vectordb.DocChiMucDense(os.Getenv(EnvDenseIndex))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return vectordb.Config{Addr: addr, User: user, Password: os.Getenv(EnvPassword), Dense: dense}
 }
 
 // TienTo is a fresh collection prefix: a letter and eight hex digits.
