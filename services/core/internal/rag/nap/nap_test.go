@@ -690,3 +690,34 @@ func TestKiemCongTuChoiViPhamThamDo(t *testing.T) {
 		t.Fatalf("a probe violation passed the gate: dat=%v %v", k.Dat, k.LyDo)
 	}
 }
+
+// One place breaking a rule the schema cannot enforce (measured on the real
+// catalogue: too many atmospheres, khong_ro beside an allergen) is refused
+// alone; the batch stands. A batch-level fault still refuses everything.
+func TestMotQuanSaiKhongKeoCaLo(t *testing.T) {
+	bad := strings.Replace(mucTot, `"p1"`, `"p2"`, 1)
+	bad = strings.Replace(bad, `"di_ung":["tom","hai_san"]`, `"di_ung":["khong_ro","tom"]`, 1)
+	out, loi, err := DocTraLoiTungQuan([]byte(traLoi(mucTot, bad)), 2)
+	if err != nil || loi[0] != nil || loi[1] == nil || len(out[0].DiUng) != 2 {
+		t.Fatalf("per place: %v %v", loi, err)
+	}
+	if _, err := DocTraLoi([]byte(traLoi(mucTot, bad)), 2); err == nil {
+		t.Fatal("DocTraLoi accepted a batch with a broken item")
+	}
+	if _, _, err := DocTraLoiTungQuan([]byte(traLoi(mucTot)), 2); err == nil {
+		t.Fatal("a missing item did not refuse the batch")
+	}
+
+	cfg := cfgMacDinh(t)
+	cfg.LamGiau.Lo, cfg.LamGiau.SongSong = 2, 1
+	var places []HoSoQuan
+	for i := 0; i < 2; i++ {
+		h, _ := DungHoSo(placeMau(fmt.Sprintf("q%d", i), "Lẩu tôm ngon."))
+		places = append(places, h)
+	}
+	stub := llm.NewStub(llm.Buoc{Text: traLoi(mucTot, bad)})
+	done, hong, b := ChayLamGiau(context.Background(), stub, cfg, 1, places)
+	if b.Xong != 1 || b.Hong != 1 || len(done) != 1 || done[0].PlaceID != places[0].ID || hong[places[1].ID] == nil {
+		t.Fatalf("runner: %+v, %d done, hong %v", b, len(done), hong)
+	}
+}

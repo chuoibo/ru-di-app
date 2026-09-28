@@ -228,28 +228,33 @@ type thoMuc struct {
 	NguCanhM *string  `json:"ngu_canh_mon_an"`
 }
 
-// DocTraLoi reads a batch answer strictly: unknown keys, a missing field,
-// an alias missing, repeated or unknown, a value outside its enum, a repeat
-// inside a list, or khong_ro beside another id refuse the whole answer. Dish
-// names failing TextSafe or the length bound are dropped and counted.
-func DocTraLoi(raw []byte, n int) ([]KetQuaLamGiau, error) {
+// DocTraLoiTungQuan reads a batch answer strictly, place by place: unknown
+// keys, a missing field, an alias missing, repeated or unknown, or a count
+// that is not the batch's refuse the whole answer (err); a place whose own
+// item breaks a rule (a value outside its enum, a repeat inside a list,
+// khong_ro beside another id, too many atmospheres or dishes) is refused
+// alone (loi[i]), and the rest of the batch stands. Measured 2026-09-29 on
+// the real catalogue: refusing the whole batch for one item lost 90 of 503
+// batches (1,800 places).
+func DocTraLoiTungQuan(raw []byte, n int) ([]KetQuaLamGiau, []error, error) {
 	var t struct {
 		Quan []thoMuc `json:"quan"`
 	}
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&t); err != nil || dec.More() {
-		return nil, fmt.Errorf("%w: json: %v", ErrCauTrucLamGiau, err)
+		return nil, nil, fmt.Errorf("%w: json: %v", ErrCauTrucLamGiau, err)
 	}
 	if len(t.Quan) != n {
-		return nil, fmt.Errorf("%w: %d items for %d places", ErrCauTrucLamGiau, len(t.Quan), n)
+		return nil, nil, fmt.Errorf("%w: %d items for %d places", ErrCauTrucLamGiau, len(t.Quan), n)
 	}
 	out := make([]KetQuaLamGiau, n)
+	loi := make([]error, n)
 	seen := make([]bool, n)
 	for _, m := range t.Quan {
 		if m.BiDanh == nil || m.DiUng == nil || m.AnKieng == nil || m.KhiChat == nil || m.MonChinh == nil || m.ChenLenh == nil || m.TinCay == nil ||
 			m.NguCanhH == nil || m.NguCanhT == nil || m.NguCanhM == nil {
-			return nil, fmt.Errorf("%w: a required field is missing", ErrCauTrucLamGiau)
+			return nil, nil, fmt.Errorf("%w: a required field is missing", ErrCauTrucLamGiau)
 		}
 		i := -1
 		for j := 0; j < n; j++ {
@@ -258,57 +263,79 @@ func DocTraLoi(raw []byte, n int) ([]KetQuaLamGiau, error) {
 			}
 		}
 		if i < 0 || seen[i] {
-			return nil, fmt.Errorf("%w: alias %q unknown or repeated", ErrCauTrucLamGiau, *m.BiDanh)
+			return nil, nil, fmt.Errorf("%w: alias %q unknown or repeated", ErrCauTrucLamGiau, *m.BiDanh)
 		}
 		seen[i] = true
-		var k KetQuaLamGiau
-		var err error
-		if k.DiUng, k.DiUngRo, err = docDanhSachRo(m.DiUng, tuvung.DiUng); err != nil {
-			return nil, err
+		out[i], loi[i] = docMuc(m)
+	}
+	return out, loi, nil
+}
+
+// DocTraLoi reads a batch answer strictly: unknown keys, a missing field,
+// an alias missing, repeated or unknown, a value outside its enum, a repeat
+// inside a list, or khong_ro beside another id refuse the whole answer. Dish
+// names failing TextSafe or the length bound are dropped and counted.
+func DocTraLoi(raw []byte, n int) ([]KetQuaLamGiau, error) {
+	out, loi, err := DocTraLoiTungQuan(raw, n)
+	if err != nil {
+		return nil, err
+	}
+	for _, e := range loi {
+		if e != nil {
+			return nil, e
 		}
-		if k.AnKieng, k.AnKiengRo, err = docDanhSachRo(m.AnKieng, tuvung.AnKieng); err != nil {
-			return nil, err
-		}
-		if len(m.KhiChat) > MaxKhiChatQuan {
-			return nil, fmt.Errorf("%w: too many khi_chat", ErrCauTrucLamGiau)
-		}
-		if k.KhiChat, err = docDanhSach(m.KhiChat, tuvung.KhiChat); err != nil {
-			return nil, err
-		}
-		if len(m.MonChinh) > MaxMonChinh {
-			return nil, fmt.Errorf("%w: too many mon_chinh", ErrCauTrucLamGiau)
-		}
-		for _, s := range m.MonChinh {
-			s = nfc(strings.TrimSpace(s))
-			if s == "" || utf8.RuneCountInString(s) > MaxRuneMon || !promptsafety.TextSafe(s, MaxRuneMon) {
-				k.MonBo++
-				continue
-			}
-			k.MonChinh = append(k.MonChinh, s)
-		}
-		for _, x := range []struct {
-			in  string
-			out *string
-		}{{*m.NguCanhH, &k.NguCanhHoSo}, {*m.NguCanhT, &k.NguCanhTraiNghiem}, {*m.NguCanhM, &k.NguCanhMonAn}} {
-			line := nfc(strings.Join(strings.Fields(x.in), " "))
-			switch {
-			case line == "":
-			case utf8.RuneCountInString(line) > MaxRuneNguCanh || !promptsafety.TextSafe(line, MaxRuneNguCanh):
-				k.NguCanhBo++
-			default:
-				*x.out = line
-			}
-		}
-		k.ChenLenh = *m.ChenLenh
-		switch TinCay(*m.TinCay) {
-		case TinCayCao, TinCayVua, TinCayThap:
-			k.TinCay = TinCay(*m.TinCay)
-		default:
-			return nil, fmt.Errorf("%w: tin_cay %q", ErrCauTrucLamGiau, *m.TinCay)
-		}
-		out[i] = k
 	}
 	return out, nil
+}
+
+// docMuc checks one place's item.
+func docMuc(m thoMuc) (KetQuaLamGiau, error) {
+	var k KetQuaLamGiau
+	var err error
+	if k.DiUng, k.DiUngRo, err = docDanhSachRo(m.DiUng, tuvung.DiUng); err != nil {
+		return KetQuaLamGiau{}, err
+	}
+	if k.AnKieng, k.AnKiengRo, err = docDanhSachRo(m.AnKieng, tuvung.AnKieng); err != nil {
+		return KetQuaLamGiau{}, err
+	}
+	if len(m.KhiChat) > MaxKhiChatQuan {
+		return KetQuaLamGiau{}, fmt.Errorf("%w: too many khi_chat", ErrCauTrucLamGiau)
+	}
+	if k.KhiChat, err = docDanhSach(m.KhiChat, tuvung.KhiChat); err != nil {
+		return KetQuaLamGiau{}, err
+	}
+	if len(m.MonChinh) > MaxMonChinh {
+		return KetQuaLamGiau{}, fmt.Errorf("%w: too many mon_chinh", ErrCauTrucLamGiau)
+	}
+	for _, s := range m.MonChinh {
+		s = nfc(strings.TrimSpace(s))
+		if s == "" || utf8.RuneCountInString(s) > MaxRuneMon || !promptsafety.TextSafe(s, MaxRuneMon) {
+			k.MonBo++
+			continue
+		}
+		k.MonChinh = append(k.MonChinh, s)
+	}
+	for _, x := range []struct {
+		in  string
+		out *string
+	}{{*m.NguCanhH, &k.NguCanhHoSo}, {*m.NguCanhT, &k.NguCanhTraiNghiem}, {*m.NguCanhM, &k.NguCanhMonAn}} {
+		line := nfc(strings.Join(strings.Fields(x.in), " "))
+		switch {
+		case line == "":
+		case utf8.RuneCountInString(line) > MaxRuneNguCanh || !promptsafety.TextSafe(line, MaxRuneNguCanh):
+			k.NguCanhBo++
+		default:
+			*x.out = line
+		}
+	}
+	k.ChenLenh = *m.ChenLenh
+	switch TinCay(*m.TinCay) {
+	case TinCayCao, TinCayVua, TinCayThap:
+		k.TinCay = TinCay(*m.TinCay)
+	default:
+		return KetQuaLamGiau{}, fmt.Errorf("%w: tin_cay %q", ErrCauTrucLamGiau, *m.TinCay)
+	}
+	return k, nil
 }
 
 func docDanhSach(xs []string, v *tuvung.TuVung) ([]string, error) {
@@ -464,7 +491,7 @@ func ChayLamGiau(ctx context.Context, m model.LLM, cfg CauHinh, tranGoi int, pla
 		go func() {
 			defer wg.Done()
 			for batch := range jobs {
-				res, err := motLo(ctx, dem, time.Duration(cfg.LamGiau.HanGiay)*time.Second, batch)
+				res, loi, err := motLo(ctx, dem, time.Duration(cfg.LamGiau.HanGiay)*time.Second, batch)
 				mu.Lock()
 				if err != nil {
 					for _, h := range batch {
@@ -479,6 +506,12 @@ func ChayLamGiau(ctx context.Context, m model.LLM, cfg CauHinh, tranGoi int, pla
 					continue
 				}
 				for i, h := range batch {
+					if loi[i] != nil {
+						// This place alone: the rest of the batch stands.
+						hong[h.ID] = loi[i]
+						rep.Hong++
+						continue
+					}
 					k := res[i]
 					lg := LamGiau{PlaceID: h.ID, NguonHash: h.NguonHash, Model: m.Name(), PromptVersion: version, KetQua: k,
 						CanDuyet: CanDuyet(h.Nguon, h.NguonHash, h.ID, k), Review: ReviewAuto}
@@ -506,13 +539,13 @@ func ChayLamGiau(ctx context.Context, m model.LLM, cfg CauHinh, tranGoi int, pla
 	return out, hong, rep
 }
 
-func motLo(ctx context.Context, m model.LLM, han time.Duration, batch []HoSoQuan) ([]KetQuaLamGiau, error) {
+func motLo(ctx context.Context, m model.LLM, han time.Duration, batch []HoSoQuan) ([]KetQuaLamGiau, []error, error) {
 	ctx, cancel := context.WithTimeout(ctx, han)
 	defer cancel()
 	var text strings.Builder
 	for resp, err := range m.GenerateContent(ctx, YeuCauLamGiau(batch), false) {
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if resp != nil && resp.Content != nil {
 			for _, p := range resp.Content.Parts {
@@ -522,5 +555,5 @@ func motLo(ctx context.Context, m model.LLM, han time.Duration, batch []HoSoQuan
 			}
 		}
 	}
-	return DocTraLoi([]byte(text.String()), len(batch))
+	return DocTraLoiTungQuan([]byte(text.String()), len(batch))
 }
