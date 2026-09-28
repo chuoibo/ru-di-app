@@ -26,16 +26,22 @@ const (
 )
 
 func TestLenhNhomChiNhanHaiLenh(t *testing.T) {
+	h := &Handler{}
 	for _, ok := range []string{"plan", "chia_bill"} {
-		if !lenhNhom(ok) {
+		if !h.lenhNhom(ok, false) || !h.lenhNhom(ok, true) {
 			t.Errorf("%q phải là lệnh nhóm hợp lệ", ok)
 		}
 	}
-	// `hoi` is the personal scope's command; the table refuses it for a group.
+	// `hoi` is the personal scope's command on the brain; the group takes it
+	// only on the Go engine, and only with a trigger.
 	for _, sai := range []string{"", "hoi", "Plan", "chia-bill", "chiabill", "chia_bill "} {
-		if lenhNhom(sai) {
+		if h.lenhNhom(sai, true) {
 			t.Errorf("%q không được là lệnh nhóm", sai)
 		}
+	}
+	h.WithNhomGo()
+	if !h.lenhNhom("hoi", true) || h.lenhNhom("hoi", false) {
+		t.Error("trên engine Go, hoi của nhóm cần đúng một tin tag")
 	}
 }
 

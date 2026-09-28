@@ -94,9 +94,12 @@ func kiemBoiCanh(bc *bundle, prompt string) error {
 // It deliberately reads only `id`, never `body`. "The server does not read the
 // conversation" is then a property of the SQL rather than a promise in a
 // comment, and it stays true after the cutover, when there is no body to read.
-func thuocPhong(ctx context.Context, tx pgx.Tx, room string, bc *bundle) error {
+//
+// The count it returns is the number of distinct messages it confirmed: the
+// N a reply in the thread says it read (`so_tin_doc`).
+func thuocPhong(ctx context.Context, tx pgx.Tx, room string, bc *bundle) (int, error) {
 	if len(bc.Luot) == 0 {
-		return nil
+		return 0, nil
 	}
 	ids := make([]string, 0, len(bc.Luot))
 	rieng := make(map[string]bool, len(bc.Luot))
@@ -108,14 +111,14 @@ func thuocPhong(ctx context.Context, tx pgx.Tx, room string, bc *bundle) error {
 	}
 	var thay int
 	if err := tx.QueryRow(ctx, `SELECT count(*) FROM messages WHERE context_id=$1 AND id = ANY($2::uuid[])`, room, ids).Scan(&thay); err != nil {
-		return err
+		return 0, err
 	}
 	if thay != len(ids) {
 		// One code for "not this room" and for "no such message": telling them
 		// apart would answer "does message X exist" for anybody who can post here.
-		return &denied{422, "boi_canh_mismatch"}
+		return 0, &denied{422, "boi_canh_mismatch"}
 	}
-	return nil
+	return thay, nil
 }
 
 // canonical is what goes into the input digest and into the stored column.

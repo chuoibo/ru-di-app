@@ -1,0 +1,14 @@
+{
+  "ten": "nhom-tu-choi-tien",
+  "mo_ta": "Nhóm, router xếp money_action: câu cố định, không lời gọi thứ hai.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"money_action\", \"y_dinh\": [\"hoi\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Không bao giờ tới lời gọi này."
+    }
+  ]
+}

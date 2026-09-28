@@ -8,18 +8,21 @@ import (
 	"golang.org/x/text/unicode/norm"
 
 	"mobile/services/core/internal/domain/taste"
+	"mobile/services/core/internal/rag"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/service"
 )
 
-// maxSearchCandidates is how many places a search prompt may list.
+// maxSearchCandidates is how many places a search prompt may list:
+// rag.ToiDaNgan, the one bound on what any search hands a model (design 04
+// §7). origin/main capped it at 120; the AI v2 branch holds it to 30.
 //
 // The prompt carries one line per catalogue row before the person's sentence.
 // That was harmless at twelve seed rows; on the fed catalogue (~9,300 rows and
 // growing) it is a prompt of millions of tokens per search -- slow, costly,
 // and past what a model reads. Retrieval narrows first, the model chooses
 // among what is left.
-const maxSearchCandidates = 120
+const maxSearchCandidates = rag.ToiDaNgan
 
 // foldVietnamese lowers, strips combining marks and maps đ to d, so «pho»
 // matches «Phở» the way the Explore filter on the phone already does.

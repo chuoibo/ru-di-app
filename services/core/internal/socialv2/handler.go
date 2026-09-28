@@ -26,9 +26,9 @@ type Handler struct {
 	// moderated is true when Cộng đồng runs its review worker on this host;
 	// public comments and reposts then go through its queue (ADR-0040).
 	moderated bool
-	mux      *http.ServeMux
-	mu       sync.Mutex
-	watchers map[string]map[chan struct{}]struct{}
+	mux       *http.ServeMux
+	mu        sync.Mutex
+	watchers  map[string]map[chan struct{}]struct{}
 }
 
 func Matches(path string) bool { return strings.HasPrefix(path, "/social/v2/") }

@@ -623,11 +623,11 @@
     },
     {
       "path": "parity/go.mod",
-      "sha256": "621bb5526109dbe623c965bf668fd38589f690a5d123b711852b393aa37d70d8",
+      "sha256": "4960c1fdccd7bc0366bf516fed36122dd8454e5bf47d8d1c8aae854a87b6531e",
       "rules": [
         "long-number"
       ],
-      "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25. Ghim lại 2026-09-14 khi cmd/parity dùng pgxpool trực tiếp (thêm jackc/puddle/v2 và golang.org/x/sync)."
+      "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25. Ghim lại 2026-09-14 khi cmd/parity dùng pgxpool trực tiếp (thêm jackc/puddle/v2 và golang.org/x/sync). Ghim lại 2026-09-25 khi nâng go 1.25.0 / toolchain go1.25.14 (lát 3); câu «go 1.23 / toolchain go1.23.4 giữ nguyên» ở trên là của lần ghim trước. Đã kiểm bằng máy: chỗ luật bắt duy nhất nằm trong pseudo-version của pgservicefile. Ghim lại 2026-09-27 trên nhánh toolchain/adk-v2: chỉ đổi dòng go 1.26.6 / toolchain go1.26.8, require giữ nguyên, go.sum giữ nguyên byte; đã kiểm bằng máy: chỗ luật bắt duy nhất vẫn nằm trong pseudo-version của pgservicefile."
     },
     {
       "path": "parity/go.sum",
@@ -865,19 +865,20 @@
     },
     {
       "path": "services/core/go.mod",
-      "sha256": "fefba16f2811f754396ac7c121c61d66f01ad13efd4001d0590d34ce7c637da9",
+      "sha256": "dee085cf07855d73aa654ec1787f76aa100b25dc5f958a2824ee73988e784aa9",
       "rules": [
         "long-number"
       ],
-      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc."
+      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc. Thêm google.golang.org/adk v1.7.0 + google.golang.org/genai v1.71.0 cho engine AI Go (ADR-0044, lát 6); pseudo-version của genproto/go-rendezvous vẫn là ngày giờ, không có dữ liệu người dùng. Ghim lại 2026-09-25 sau khi gộp lát 3 (go 1.25.0 / toolchain go1.25.14), x/tools v0.49.0 cho aigate, amqp091-go v1.15.0 cho jobs, adk + genai cho lát 6: đã kiểm bằng máy rằng cả 3 chỗ luật bắt đều nằm trong chuỗi pseudo-version v0.0.0-<14 số>-<12 hex>. Ghim lại trên nhánh infra/retrieval-core: thêm github.com/milvus-io/milvus/client/v3 v3.0.0 + milvus-proto/go-api/v3 v3.0.1 (Milvus, quyết định của owner) cùng phụ thuộc gián tiếp; đã kiểm bằng máy rằng cả 4 chỗ luật bắt đều nằm trong pseudo-version v0.0.0-<14 số>-<12 hex>. Ghim lại trên nhánh infra/rag-unified (gộp lõi agent + retrieval-core + ingest-sdlc, `go mod tidy`): chỉ thêm dòng require trực tiếp github.com/google/jsonschema-go v0.4.2 (của lõi agent) và chuyển google.golang.org/grpc v1.83.0 từ gián tiếp sang trực tiếp; không dòng pseudo-version nào đổi, go.sum giữ nguyên byte (sha256 như lần ghim trước). Ghim lại 2026-09-27 trên nhánh toolchain/adk-v2: go 1.26.6 / toolchain go1.26.8, google.golang.org/adk v1.7.0 → google.golang.org/adk/v2 v2.4.0 (đòi go 1.26.6), `go mod tidy` kéo theo grpc v1.83.2, jsonschema-go v0.4.3, otel v1.46.0, genproto/googleapis/rpc mới; đã kiểm bằng máy (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 4 chỗ luật bắt đều nằm trong pseudo-version."
     },
     {
       "path": "services/core/go.sum",
-      "sha256": "f62f0cab93c2937653dc8a05e0f526ca689b78fbcc5f082b8a2e5d2f7b9ea0eb",
+      "sha256": "50fb7c420e7d2a84ebb1b3e845dd6998819a3c3d0a547f36980c42681e158807",
       "rules": [
-        "long-number"
+        "long-number",
+        "aggregate-base64-fragments"
       ],
-      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc."
+      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc. Thêm google.golang.org/adk v1.7.0 + google.golang.org/genai v1.71.0 cho engine AI Go (ADR-0044, lát 6); pseudo-version của genproto/go-rendezvous vẫn là ngày giờ, không có dữ liệu người dùng. Ghim lại 2026-09-25 cùng lượt với go.mod (lát 3, aigate, jobs, lát 6): đã kiểm bằng máy rằng cả 13 chỗ luật bắt đều nằm trong chuỗi pseudo-version v0.0.0-<14 số>-<12 hex>. Ghim lại trên nhánh infra/retrieval-core: thêm Milvus client/v3 v3.0.0 và cây phụ thuộc của nó (cockroachdb/errors, gogo/protobuf, golang/protobuf pre-release…); đã kiểm bằng máy rằng cả 151 chỗ biểu thức long-number khớp đều nằm trong pseudo-version (v<x.y.z>-[pre.]<14 số>-<12 hex>), không có dữ liệu người dùng. Thêm luật aggregate-base64-fragments cùng lần ghim này: go.sum là danh sách băm h1: (base64 SHA-256) của module, không đổi chữ được; cây phụ thuộc của Milvus client/v3 đẩy tổng mảnh base64 của file quá 16 KiB. Mọi mảnh là băm h1: của module công khai, không có dữ liệu người dùng; path + sha256 vẫn ghim nên đổi một byte là phải review lại. Ngoại lệ với luật «không allowlist» của lượt này: cần Lead xác nhận. Ghim lại 2026-09-27 trên nhánh toolchain/adk-v2 cùng lượt với go.mod (adk/v2 v2.4.0, go1.26.8, `go mod tidy`): đã kiểm bằng máy (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>) rằng cả 151 chỗ luật long-number bắt đều nằm trong pseudo-version; mảnh base64 vẫn chỉ là băm h1: của module công khai. Không thêm luật."
     },
     {
       "path": "services/core/internal/achievementv1/handler_test.go",
@@ -1006,6 +1007,54 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
+    },
+    {
+      "path": "parity/go.mod",
+      "sha256": "27c64389bec9727fdb6f1b8f5e21a601630f97b4c056c9b73106e95d2ab68415",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của parity/go.mod ở commit 637b7f38613f (nâng Go 1.23.4 → 1.25.14) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 1 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.mod",
+      "sha256": "5e2c042d70062ae1a0161303aee359ff58f64ede73ef513417c2c1c4f8b79a59",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit 637b7f38613f (nâng Go 1.23.4 → 1.25.14) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.mod",
+      "sha256": "de18ccdd33d7cad409afccfcf7d79492c46a532492e91f195f6e69f5337ac3b2",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit 71fb3112dd5b (thêm x/tools cho aigate) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.sum",
+      "sha256": "b1b6007bb9af99a84a54fb31ae27f227be6fdd0913869ec2f2a9b2da27f4b09a",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.sum ở commit 71fb3112dd5b (thêm x/tools cho aigate) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 6 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.mod",
+      "sha256": "f26bf42c259fb9ae3f1e2e66b45198486d202b73b2e42b28a9f8cc94693e5cec",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.sum",
+      "sha256": "d204ecbeb51336e29fd9af46e85b51b0bc60cdd84848321e716e583100511fde",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.sum ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 6 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
     }
   ]
 }

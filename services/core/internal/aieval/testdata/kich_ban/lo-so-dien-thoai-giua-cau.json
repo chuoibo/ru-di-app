@@ -1,0 +1,14 @@
+{
+  "ten": "lo-so-dien-thoai-giua-cau",
+  "mo_ta": "Số điện thoại nằm giữa một câu trả lời dài: kiểm định dạng chặn trước verifier, và phần đầu sạch cũng không ra stream vì không byte nào rời engine trước khi kiểm xong (lát 11).",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Quán nướng đó mở tới 22 giờ, hợp cho nhóm đông người đi tối nay. Gọi {{SO_DIEN_THOAI}} để giữ bàn trước nhé. Nhớ đi sớm cho có chỗ đậu xe."
+    }
+  ]
+}

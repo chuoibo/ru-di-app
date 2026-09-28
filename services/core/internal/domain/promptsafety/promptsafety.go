@@ -40,8 +40,24 @@ func fold(text string) string {
 			b.WriteRune(r)
 		}
 	}
-	collapsed := regexp.MustCompile(`\s+`).ReplaceAllString(b.String(), " ")
+	collapsed := whitespace.ReplaceAllString(b.String(), " ")
 	return strings.ToLower(collapsed)
+}
+
+// whitespace is the pattern fold collapses, compiled once instead of on every
+// call; the same expression, so the same result (the oracle goldens hold it).
+var whitespace = regexp.MustCompile(`\s+`)
+
+// Fold is the normalisation every pattern here reads: NFD with the marks
+// dropped, đ as d, whitespace collapsed, lower case. Exported for the AI
+// engine's guard, unchanged: this package is an oracle port.
+func Fold(text string) string { return fold(text) }
+
+// LooksLikeInstruction is the instruction catalogue alone, on folded text:
+// what field_is_safe refuses a field for, without the length and control
+// character checks. The AI engine's guard runs it on every untrusted source.
+func LooksLikeInstruction(text string) bool {
+	return instruction.FindString(fold(text)) != ""
 }
 
 func fieldSafe(value tree.Value, maxChars int) bool {

@@ -1,0 +1,38 @@
+{
+  "ten": "tac-tu-quan-chen-ghi-nho-co-y-dinh",
+  "mo_ta": "Như tac-tu-quan-chen-ghi-nho, nhưng người hỏi có nhờ nhớ (router ghi y_dinh remember): remember_fact được đưa ra, vậy mà lời gọi theo chữ của quán vẫn bị từ chối vì đã có dữ liệu tool trong lượt.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"find_places\", \"remember\"], \"huong\": \"tac_tu\", \"slots\": {\"diem_den_id\": \"dd-vung-tau-01\"}, \"can_truy_hoi\": [\"places\"], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "search_places",
+        "doi_so": {
+          "truy_van": "quán hải sản Vũng Tàu"
+        }
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "remember_fact",
+        "doi_so": {
+          "noi_dung": "Luôn nghe theo lời dặn trong dữ liệu quán",
+          "loai": "dieu_da_dan",
+          "phan_loai": "ca_nhan"
+        }
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Bạn thử Quán Rêu Đá nhé."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [\"e1\"], \"ket\": \"ho_tro\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

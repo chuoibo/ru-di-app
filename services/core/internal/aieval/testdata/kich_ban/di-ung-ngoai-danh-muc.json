@@ -1,0 +1,22 @@
+{
+  "ten": "di-ung-ngoai-danh-muc",
+  "mo_ta": "find_places với một món dị ứng ngoài danh mục: cờ tới bộ chấm và câu trả lời, câu lưu ý cố định mở đầu.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"find_places\"], \"huong\": \"truy_hoi_mot_buoc\", \"slots\": {\"diem_den_id\": \"dd-vung-tau-01\", \"di_ung_ngoai_danh_muc\": true}, \"can_truy_hoi\": [\"places\"], \"truy_van\": [{\"nguon\": \"places\", \"cau\": \"quán ăn Vũng Tàu\"}], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "cham",
+      "chu": "{\"ket_luan\": \"du\", \"rang_buoc_thieu\": []}"
+    },
+    {
+      "chang": "tra_loi_cau_truc",
+      "chu": "{\"hanh_dong\": \"tra_loi\", \"rang_buoc_khong_dat\": [], \"cau\": [{\"chu\": \"Bạn thử [[p:p1]] nhé.\", \"bang_chung\": [\"p1\"], \"trich\": []}]}"
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [\"e1\"], \"ket\": \"ho_tro\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

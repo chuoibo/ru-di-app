@@ -12,6 +12,10 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
+// SchemaSQL is the embedded migration, for the gates that read what its
+// triggers write (aigate).
+func SchemaSQL() string { return schemaSQL }
+
 // Migrate adds the isolated chat-v2 tables after the legacy schema migration.
 // Call explicitly from a deployment migration command, never a request handler.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {

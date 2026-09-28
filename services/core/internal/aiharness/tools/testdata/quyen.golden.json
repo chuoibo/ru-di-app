@@ -1,0 +1,23 @@
+{
+  "phien_ban": 1,
+  "cong_cu": [
+    {"ten": "search_places", "lop": "doc", "pham": "chung", "bot": ["nep", "nhom"]},
+    {"ten": "get_place", "lop": "doc", "pham": "chung", "bot": ["nep", "nhom"]},
+    {"ten": "list_destinations", "lop": "doc", "pham": "chung", "bot": ["nep", "nhom"]},
+    {"ten": "nearest_area", "lop": "doc", "pham": "chung", "bot": ["nep", "nhom"]},
+    {"ten": "search_app_manual", "lop": "doc", "pham": "chung", "bot": ["nep", "nhom"]},
+    {"ten": "explain_screen", "lop": "doc", "pham": "me", "bot": ["nep"]},
+    {"ten": "suggest_screen", "lop": "nhap", "pham": "me", "bot": ["nep"]},
+    {"ten": "propose_places", "lop": "nhap", "pham": "chung", "bot": ["nep", "nhom"]},
+    {"ten": "propose_itinerary", "lop": "nhap", "pham": "chung", "bot": ["nep", "nhom"]},
+    {"ten": "draft_poll", "lop": "nhap", "pham": "nhom", "bot": ["nhom"]},
+    {"ten": "group_snapshot", "lop": "doc", "pham": "nhom", "bot": ["nhom"]},
+    {"ten": "list_group_outings", "lop": "doc", "pham": "nhom", "bot": ["nhom"]},
+    {"ten": "my_upcoming_outings", "lop": "doc", "pham": "me", "bot": ["nep"]},
+    {"ten": "recall_memory", "lop": "doc", "pham": "me", "bot": ["nep"]},
+    {"ten": "remember_fact", "lop": "tri_nho", "pham": "me", "bot": ["nep"]},
+    {"ten": "forget_fact", "lop": "tri_nho", "pham": "me", "bot": ["nep"]},
+    {"ten": "what_you_remember", "lop": "doc", "pham": "me", "bot": ["nep"]},
+    {"ten": "set_reminder", "lop": "nhac", "pham": "me", "bot": []}
+  ]
+}

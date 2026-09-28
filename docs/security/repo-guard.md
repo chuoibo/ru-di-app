@@ -162,6 +162,24 @@ Chỉ allowlist asset công khai hoặc fixture tổng hợp đã được ngư�
 
 Digest trong ví dụ là placeholder; entry thật phải lấy từ đúng staged blob. Một CSV tổng hợp có tên giống export có thể cần cả `controlled-artifact`, `export-filename` và content rule liên quan. Đổi path hoặc một byte làm allowlist mất hiệu lực.
 
+### Blob lịch sử lọt vào dưới một pin đã cũ
+
+Allowlist được đọc từ cây của **chính commit đang quét**. Nếu một commit đổi file
+đã ghim (ví dụ `go.mod` khi nâng phụ thuộc) mà không ghim lại trong cùng commit,
+`range` sẽ đỏ ở commit đó mãi mãi: pin cũ trong cây commit ấy không sửa được nếu
+không viết lại lịch sử, và **không viết lại lịch sử đã push** (không rebase, không
+force-push).
+
+Cách gỡ được chấp nhận: ở `range` và `history`, scanner đọc **thêm** allowlist ở
+đầu dải (tip) và cộng các entry đó vào allowlist của từng commit. Muốn duyệt blob
+lịch sử thì thêm vào allowlist ở tip một entry cùng `path`, **sha256 đúng byte của
+blob lịch sử đó** (`git cat-file blob <commit>:<path> | sha256sum`), đúng luật đã
+bắt, và `reason` nêu commit, lý do pin bị lỡ và kết quả kiểm bằng máy rằng mọi chỗ
+bị bắt đều vô hại. Nhiều entry cùng một path là hợp lệ. Vì pin vẫn là path +
+digest, entry chỉ duyệt đúng các byte đó ở bất kỳ commit nào mang chúng; nó không
+duyệt phiên bản khác của file, và không có tác dụng ở mode `tree`/`staged` của cây
+hiện tại (blob đó không còn ở đó). Không thêm loại rule mới cho việc này.
+
 Binary là opaque đối với scanner. Reviewer phải kiểm tra nguồn tạo, xác nhận không dùng dữ liệu người tham gia, kiểm tra metadata/EXIF nếu có, rồi mới allowlist. **Không bao giờ allowlist binary thật chỉ vì scanner không đọc được nó.**
 
 ## 7. Khi guard đỏ

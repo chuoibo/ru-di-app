@@ -1,14 +1,16 @@
 # Go front door (ADR-0029). Both stages are pinned by digest, like
 # services/api/Dockerfile: the parity harness records which binary answered,
 # and a floating tag lets two builds of one commit differ.
-ARG GO_IMAGE=golang:1.23.4-bookworm@sha256:95db116434e3f21a2a15600ffc7169bf380c6bfd021b154d106fcb346721c277
+ARG GO_IMAGE=golang:1.26.8-bookworm@sha256:a688600ca24f8a4d3ca77f95b0dd40704a9fc787c826660eb7ba0b641b8b175d
 ARG RUNTIME_IMAGE=gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
 
 FROM ${GO_IMAGE} AS build
 WORKDIR /src
 # The image already carries the toolchain go.mod names; never fetch another.
 ENV GOTOOLCHAIN=local CGO_ENABLED=0
-COPY go.mod ./
+# go.sum comes in with go.mod so the download is checked against the hashes
+# the repository recorded, not only against the public checksum database.
+COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 RUN go vet ./... \

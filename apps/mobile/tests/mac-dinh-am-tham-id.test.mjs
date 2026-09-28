@@ -205,6 +205,20 @@ const CHO_PHEP = new Map([
     // Which group the tab shell is showing. An argument to navigation.
     "nhom?.id ?? nhomId",
   ]],
+  // Slice 11, the streamed AI answer. All three are ids used as ids: which
+  // published card the requester's pending row hands over to (compared with
+  // the thread's message ids, never printed), and which group's SSE route
+  // and `X-Actor-Contexts` a stream is opened with (`null` is Nếp's scope,
+  // which has no group). No branch reaches a person's eyes.
+  ["rudi/ai/tra-loi-song.ts", [
+    "laChuoi(data.message_id) ? data.message_id : null",
+  ]],
+  ["rudi/ai/useAiStream.ts", [
+    'o.phamVi.kieu === "nhom" ? o.phamVi.contextId : null',
+  ]],
+  ["rudi/chat/ai-invocations.ts", [
+    "traLoi.ketThuc?.messageId ?? request.message_id",
+  ]],
   ["rudi/nep/NepBang.tsx", [
     // Ai đang hỏi Nếp. Đi thẳng vào `useNepAnh` làm khoá xác thực của request
     // và không bao giờ tới mắt người đọc: bảng Nếp không in id của ai cả.

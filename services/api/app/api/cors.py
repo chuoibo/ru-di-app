@@ -53,6 +53,13 @@ ALLOWED_HEADERS = [
     "x-actor-id",
     "x-actor-roles",
     "x-actor-contexts",
+    # The SSE resume position (contract §4.1). The Go front door reads it in
+    # `aistream.ResumeFrom`; a web build is told to use `?after=` instead, but
+    # the stream client defaults to the header, and a browser that took the
+    # default would be cancelled at the preflight rather than resume. Listed
+    # here, not only in Go, because this list is what the client-contract gate
+    # reads and what the Go port's goldens are rendered from.
+    "last-event-id",
 ]
 
 # The methods the routers expose, plus the preflight itself. Kept in sync with

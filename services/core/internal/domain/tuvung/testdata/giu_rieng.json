@@ -1,0 +1,3661 @@
+{
+ "ten": "di_ung_heldout",
+ "phien_ban": 1,
+ "ngay": "2026-09-25",
+ "nguon_goc": "Corpus giữ lại (held-out) cho lọc cứng dị ứng/ăn kiêng. Người viết KHÔNG đọc services/core/internal/domain/tuvung/, services/core/internal/rag/ hay bất kỳ từ vựng/regex nhận dạng dị ứng nào; nhãn là cách một người đọc cẩn thận gán. Nghĩa bộ lọc lấy từ thiết kế 04 §2.2, §4, §5: dị ứng = loại quán mà chữ của chính quán cho thấy dị nguyên; ăn kiêng = chỉ giữ quán thật sự phục vụ chế độ đó. Tên quán, tên người, địa danh nhỏ đều bịa.",
+ "quy_uoc": {
+  "di_ung_chuan": {
+   "tôm": "tôm, tép, ruốc, tôm hùm, mắm tôm",
+   "cua": "cua, ghẹ, cua đồng",
+   "cá": "mọi loại cá, gồm nước mắm",
+   "mực": "mực và nhóm chân đầu (bạch tuộc)",
+   "động vật có vỏ": "động vật có vỏ thân mềm: sò, hàu, nghêu, ốc, hến, sò điệp",
+   "hải sản": "hải sản nói chung, khi chữ không nói rõ loài",
+   "đậu phộng": "đậu phộng/lạc/đậu phọng/đậu phụng, gồm dầu phộng",
+   "các loại hạt": "hạt cây: điều, hạnh nhân, óc chó, hạt dẻ",
+   "sữa": "sữa động vật và chế phẩm (bơ sữa, phô mai, kem sữa, sữa chua); KHÔNG gồm sữa đậu nành, sữa hạt",
+   "trứng": "trứng (gà, vịt, cút), gồm trứng muối",
+   "mè": "mè/vừng, gồm dầu mè, muối mè",
+   "gluten": "gluten/lúa mì/bột mì (bánh mì, mì sợi lúa mì, bánh quy)",
+   "đậu nành": "đậu nành: đậu hũ, tàu hũ, nước tương, chao, sữa đậu nành"
+  },
+  "an_kieng_chuan": {
+   "chay": "ăn chay (có thể vẫn ăn trứng sữa)",
+   "thuần chay": "thuần chay, không sản phẩm động vật",
+   "halal": "halal"
+  },
+  "phan_cap": {
+   "hai_san": "hải sản ⊇ {tôm, cua, cá, mực, động vật có vỏ}. Người dị ứng «hải sản» loại quán có bất kỳ loài con nào; quán chỉ ghi «hải sản» chung bị loại với người dị ứng bất kỳ loài con nào. Cá nước ngọt (cá lóc, cá tầm) có tính là hải sản không là câu hỏi chính sách, corpus không phán.",
+   "shellfish": "tiếng Anh «shellfish» = tôm + cua + động vật có vỏ, không gồm cá.",
+   "thuan_chay": "quán thuần chay thì phuc_vu ghi cả «thuần chay» và «chay»; người hỏi thuần chay chỉ ghi «thuần chay»."
+  },
+  "nguoi_hoi": "di_ung/an_kieng là của CHÍNH người hỏi (kể cả «tụi mình», «hai đứa mình»). Của người khác ghi ở di_ung_nguoi_khac/an_kieng_nguoi_khac và đánh mo_ho. Sở thích («không thích») không phải ràng buộc. «kiêng» vì sức khoẻ đánh mo_ho với nhãn là thứ phải tránh.",
+  "quan": "chua = dị nguyên chữ của quán cho thấy có mặc định: qua tên món, «có thể bỏ X» (X có), «có thể lẫn/may contain» (có), «có lựa chọn không X» (X vẫn có mặc định). Không tính: phủ định, dị ứng của người viết review, chữ chỉ nằm trong tên riêng/địa danh. phuc_vu = chế độ quán đang phục vụ; không tính mong ước, quá khứ, tương lai, «chay» giả nấu bằng nước xương/nước mắm, nguyên liệu halal trong bếp chung.",
+  "mo_ho": "true = nhãn là đoán tốt nhất; ca kiểm nên báo cáo lệch thay vì khẳng định cứng. ly_do nói vì sao."
+ },
+ "nguoi_hoi": [
+  {
+   "cau": "Mình dị ứng cua, gợi ý quán ăn tối gần hồ giúp mình",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h001"
+  },
+  {
+   "cau": "dị ứng trứng nha, tìm chỗ ăn sáng",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h002"
+  },
+  {
+   "cau": "Mình dị ứng mè, quán chè nào ổn?",
+   "di_ung": [
+    "mè"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h003"
+  },
+  {
+   "cau": "em dị ứng tôm, tối nay ăn gì ở trung tâm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "ghi_chu": "«trung tâm» trong cùng câu không phải trứng",
+   "id": "h004"
+  },
+  {
+   "cau": "Tui dị ứng cá, đi ăn trưa chỗ nào",
+   "di_ung": [
+    "cá"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h005"
+  },
+  {
+   "cau": "mình dị ứng mực, chỉ giúp quán nướng nào ngon",
+   "di_ung": [
+    "mực"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h006"
+  },
+  {
+   "cau": "Mình dị ứng sò, tối nay đi ăn ở đâu?",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h007"
+  },
+  {
+   "cau": "dị ứng hàu nha mọi người",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h008"
+  },
+  {
+   "cau": "Em dị ứng ốc, chiều nay đi ăn vặt đâu",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h009"
+  },
+  {
+   "cau": "Mình dị ứng lạc, quán bún nào không rắc lạc?",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "ghi_chu": "lạc = đậu phộng (giọng Bắc)",
+   "id": "h010"
+  },
+  {
+   "cau": "Mình dị ứng vừng, gợi ý quán xôi",
+   "di_ung": [
+    "mè"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "ghi_chu": "vừng = mè",
+   "id": "h011"
+  },
+  {
+   "cau": "dị ứng sữa, tìm quán cà phê có đồ uống không sữa",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h012"
+  },
+  {
+   "cau": "Mình dị ứng ghẹ, tối đi ăn đâu",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "ghi_chu": "ghẹ thuộc họ cua",
+   "id": "h013"
+  },
+  {
+   "cau": "Em dị ứng nghêu, có quán lẩu nào ổn không",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h014"
+  },
+  {
+   "cau": "Mình dị ứng hến, trưa ăn cơm ở đâu",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h015"
+  },
+  {
+   "cau": "dị ứng tép, quán bún nào ok",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "ghi_chu": "tép = tôm nhỏ",
+   "id": "h016"
+  },
+  {
+   "cau": "Mình dị ứng tôm, kiếm quán lẩu",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "id": "h017"
+  },
+  {
+   "cau": "dị ứng ruốc nha, tìm quán cơm tấm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "ghi_chu": "ruốc = tôm/moi nhỏ làm mắm hoặc chà bông ruốc",
+   "id": "h018"
+  },
+  {
+   "cau": "Em dị ứng mắm, quán nào nêm muối thôi",
+   "di_ung": [
+    "cá",
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "mo_ho": true,
+   "ly_do": "«mắm» có thể là nước mắm (cá) hoặc mắm tôm/mắm ruốc (tôm); nhãn thận trọng gồm cả hai",
+   "id": "h019"
+  },
+  {
+   "cau": "dị ứng trứng, tìm quán ở trung tâm",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger_mot_am",
+   "ghi_chu": "trứng và trung tâm cùng câu, cùng dạng bỏ dấu",
+   "id": "h020"
+  },
+  {
+   "cau": "Mình dị ứng hải sản, tối nay ăn gì?",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h021"
+  },
+  {
+   "cau": "Mình dị ứng đậu phộng, gợi ý quán chè",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h022"
+  },
+  {
+   "cau": "Em dị ứng đậu phọng nha",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "chính tả miền Nam",
+   "id": "h023"
+  },
+  {
+   "cau": "Mình dị ứng đậu phụng, ăn tối ở đâu",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "biến thể chính tả",
+   "id": "h024"
+  },
+  {
+   "cau": "Mình dị ứng đậu nành, quán chay nào ít đậu hũ",
+   "di_ung": [
+    "đậu nành"
+   ],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "ket_hop",
+   "ghi_chu": "hỏi quán chay nên nhận là ràng buộc chay",
+   "id": "h025"
+  },
+  {
+   "cau": "Mình dị ứng hạt điều với hạnh nhân",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h026"
+  },
+  {
+   "cau": "Dị ứng các loại hạt, cần chỗ uống cà phê không có bánh hạt",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h027"
+  },
+  {
+   "cau": "Mình dị ứng bột mì, có quán nào không dùng gluten không",
+   "di_ung": [
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h028"
+  },
+  {
+   "cau": "Mình dị ứng gluten, ăn sáng ở đâu",
+   "di_ung": [
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h029"
+  },
+  {
+   "cau": "Mình dị ứng lúa mì",
+   "di_ung": [
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h030"
+  },
+  {
+   "cau": "Mình dị ứng sữa bò, quán nào có sữa yến mạch",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h031"
+  },
+  {
+   "cau": "Em dị ứng lòng trắng trứng",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h032"
+  },
+  {
+   "cau": "Mình dị ứng đồ biển",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h033"
+  },
+  {
+   "cau": "Mình dị ứng thủy hải sản",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h034"
+  },
+  {
+   "cau": "Mình dị ứng tôm hùm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h035"
+  },
+  {
+   "cau": "Mình dị ứng bạch tuộc",
+   "di_ung": [
+    "mực"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "nhãn «mực» phủ nhóm chân đầu (mực, bạch tuộc)",
+   "id": "h036"
+  },
+  {
+   "cau": "dị ứng sò điệp",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h037"
+  },
+  {
+   "cau": "Mình dị ứng cá biển",
+   "di_ung": [
+    "cá"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h038"
+  },
+  {
+   "cau": "Dị ứng nước mắm, quán nào nấu không mắm",
+   "di_ung": [
+    "cá"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "nước mắm làm từ cá",
+   "id": "h039"
+  },
+  {
+   "cau": "Mình dị ứng mắm tôm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h040"
+  },
+  {
+   "cau": "Mình dị ứng nước tương",
+   "di_ung": [
+    "đậu nành"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "nước tương làm từ đậu nành",
+   "id": "h041"
+  },
+  {
+   "cau": "dị ứng đậu hũ",
+   "di_ung": [
+    "đậu nành"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "đậu hũ làm từ đậu nành",
+   "id": "h042"
+  },
+  {
+   "cau": "Mình dị ứng hạt óc chó",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h043"
+  },
+  {
+   "cau": "Mình dị ứng giáp xác",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "giáp xác = tôm, cua, ghẹ",
+   "id": "h044"
+  },
+  {
+   "cau": "Mình dị ứng nhuyễn thể",
+   "di_ung": [
+    "mực",
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "nhuyễn thể = mực, bạch tuộc, sò, ốc, nghêu",
+   "id": "h045"
+  },
+  {
+   "cau": "Tôi dị ứng hạt điều, quán bánh nào an toàn",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "id": "h046"
+  },
+  {
+   "cau": "dị ứng vs tôm, tìm quán trưa",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "vs = với",
+   "id": "h047"
+  },
+  {
+   "cau": "mình di úng tôm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "gõ sai dấu",
+   "id": "h048"
+  },
+  {
+   "cau": "Cá nhân mình dị ứng tôm, mọi người chọn giúp quán",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "«cá nhân» không phải cá",
+   "id": "h049"
+  },
+  {
+   "cau": "Mình dị ứng tôm, còn cá thì ăn thoải mái",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "sau_trigger",
+   "ghi_chu": "cá được nhắc nhưng người hỏi ăn được",
+   "id": "h050"
+  },
+  {
+   "cau": "Mình bị dị ứng với tôm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h051"
+  },
+  {
+   "cau": "Tôi bị dị ứng với hải sản, đặc biệt là cua",
+   "di_ung": [
+    "hải sản",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h052"
+  },
+  {
+   "cau": "Em bị dị ứng với đậu phộng nặng lắm",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h053"
+  },
+  {
+   "cau": "Mình bị dị ứng với trứng gà",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h054"
+  },
+  {
+   "cau": "Bị dị ứng với mè nên quán nào có món trộn mè thì bỏ qua",
+   "di_ung": [
+    "mè"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h055"
+  },
+  {
+   "cau": "Mình có tiền sử dị ứng với sữa",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h056"
+  },
+  {
+   "cau": "Mình có cơ địa dị ứng với hải sản",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h057"
+  },
+  {
+   "cau": "Tôi bị dị ứng nặng với các loại hạt",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h058"
+  },
+  {
+   "cau": "Mình từng bị sốc phản vệ với đậu phộng",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h059"
+  },
+  {
+   "cau": "Mình bị dị ứng với cua đồng",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "bi_di_ung_voi",
+   "id": "h060"
+  },
+  {
+   "cau": "Tôm thì mình dị ứng, còn lại ăn gì cũng được",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h061"
+  },
+  {
+   "cau": "Hải sản là mình dị ứng nha",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h062"
+  },
+  {
+   "cau": "Cua ghẹ là em dị ứng",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h063"
+  },
+  {
+   "cau": "Đậu phộng mình bị dị ứng nặng lắm, nhớ né",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h064"
+  },
+  {
+   "cau": "Trứng là em dị ứng đó",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h065"
+  },
+  {
+   "cau": "Riêng mè thì em dị ứng",
+   "di_ung": [
+    "mè"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h066"
+  },
+  {
+   "cau": "Sữa thì tui dị ứng, cà phê đen thì ok",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h067"
+  },
+  {
+   "cau": "Mực với tôm thì tôi không ăn được",
+   "di_ung": [
+    "mực",
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h068"
+  },
+  {
+   "cau": "Cá thì mình dị ứng, món khác ok hết",
+   "di_ung": [
+    "cá"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h069"
+  },
+  {
+   "cau": "Đồ biển là em chịu, dị ứng",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h070"
+  },
+  {
+   "cau": "Mấy món có hạt điều, hạnh nhân á, mình dị ứng",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h071"
+  },
+  {
+   "cau": "Gluten thì mình phải tránh vì dị ứng",
+   "di_ung": [
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h072"
+  },
+  {
+   "cau": "Ốc với sò mình dị ứng hết",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h073"
+  },
+  {
+   "cau": "Lạc với vừng là tớ dị ứng",
+   "di_ung": [
+    "đậu phộng",
+    "mè"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h074"
+  },
+  {
+   "cau": "Đậu nành á, mình dị ứng",
+   "di_ung": [
+    "đậu nành"
+   ],
+   "an_kieng": [],
+   "loai": "chu_de_truoc",
+   "id": "h075"
+  },
+  {
+   "cau": "Mình dị ứng tôm cua",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h076"
+  },
+  {
+   "cau": "Mình dị ứng cả tôm lẫn cua",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "ghi_chu": "«cả» không phải cá",
+   "id": "h077"
+  },
+  {
+   "cau": "Dị ứng tôm, cua, mực",
+   "di_ung": [
+    "tôm",
+    "cua",
+    "mực"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h078"
+  },
+  {
+   "cau": "Mình dị ứng tôm và đậu phộng",
+   "di_ung": [
+    "tôm",
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h079"
+  },
+  {
+   "cau": "Em dị ứng trứng với sữa",
+   "di_ung": [
+    "trứng",
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h080"
+  },
+  {
+   "cau": "Dị ứng tôm cua cá mực, hải sản gì cũng dị ứng",
+   "di_ung": [
+    "tôm",
+    "cua",
+    "cá",
+    "mực",
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h081"
+  },
+  {
+   "cau": "Mình dị ứng mè, đậu nành và gluten",
+   "di_ung": [
+    "mè",
+    "đậu nành",
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h082"
+  },
+  {
+   "cau": "Dị ứng đậu phộng lẫn các loại hạt",
+   "di_ung": [
+    "đậu phộng",
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h083"
+  },
+  {
+   "cau": "Mình dị ứng nghêu sò ốc hến",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h084"
+  },
+  {
+   "cau": "Tôi dị ứng tôm, cua, ghẹ, tôm hùm",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h085"
+  },
+  {
+   "cau": "dị ứng tôm hoặc cua gì đó, không nhớ rõ, né cả hai",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h086"
+  },
+  {
+   "cau": "Mình dị ứng trứng, sữa, lúa mì",
+   "di_ung": [
+    "trứng",
+    "sữa",
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h087"
+  },
+  {
+   "cau": "Dị ứng tôm với mực, thêm đậu phộng nữa",
+   "di_ung": [
+    "tôm",
+    "mực",
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "id": "h088"
+  },
+  {
+   "cau": "di ung hai san",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h089"
+  },
+  {
+   "cau": "minh di ung tom, tim quan an toi",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h090"
+  },
+  {
+   "cau": "di ung cua nhe",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h091"
+  },
+  {
+   "cau": "bi di ung dau phong",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h092"
+  },
+  {
+   "cau": "em di ung trung",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h093"
+  },
+  {
+   "cau": "minh di ung ca",
+   "di_ung": [
+    "cá"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "ghi_chu": "bỏ dấu «ca» trùng cả/cà; đọc tự nhiên là cá",
+   "id": "h094"
+  },
+  {
+   "cau": "di ung muc voi tom",
+   "di_ung": [
+    "mực",
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h095"
+  },
+  {
+   "cau": "toi bi di ung sua",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h096"
+  },
+  {
+   "cau": "di ung me, dung chon quan che",
+   "di_ung": [
+    "mè"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "ghi_chu": "bỏ dấu «me» trùng me (quả me)/mẹ; đọc tự nhiên là mè",
+   "id": "h097"
+  },
+  {
+   "cau": "di ung dau nanh",
+   "di_ung": [
+    "đậu nành"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h098"
+  },
+  {
+   "cau": "minh di ung cac loai hat",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h099"
+  },
+  {
+   "cau": "di ung gluten nha",
+   "di_ung": [
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h100"
+  },
+  {
+   "cau": "minh an chay",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "khong_dau",
+   "id": "h101"
+  },
+  {
+   "cau": "toi an chay truong",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "khong_dau",
+   "id": "h102"
+  },
+  {
+   "cau": "minh an thuan chay",
+   "di_ung": [],
+   "an_kieng": [
+    "thuần chay"
+   ],
+   "loai": "khong_dau",
+   "id": "h103"
+  },
+  {
+   "cau": "can quan halal gan day",
+   "di_ung": [],
+   "an_kieng": [
+    "halal"
+   ],
+   "loai": "khong_dau",
+   "id": "h104"
+  },
+  {
+   "cau": "khong an duoc hai san",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h105"
+  },
+  {
+   "cau": "hai san thi minh di ung",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h106"
+  },
+  {
+   "cau": "di ung ca tom lan cua",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "ghi_chu": "«ca» ở đây là «cả» (cả tôm lẫn cua), KHÔNG phải cá",
+   "id": "h107"
+  },
+  {
+   "cau": "di ung oc",
+   "di_ung": [
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h108"
+  },
+  {
+   "cau": "minh di ung hat dieu",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "khong_dau",
+   "id": "h109"
+  },
+  {
+   "cau": "k an dc tom",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h110"
+  },
+  {
+   "cau": "ko ăn đc hải sản đâu",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h111"
+  },
+  {
+   "cau": "hem ăn đc đậu fộng",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h112"
+  },
+  {
+   "cau": "mk dị ứg tôm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h113"
+  },
+  {
+   "cau": "e bị dị ứn hải sản",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h114"
+  },
+  {
+   "cau": "zị ứng trứng nha",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "ghi_chu": "z thay d kiểu giọng Nam",
+   "id": "h115"
+  },
+  {
+   "cau": "t k ăn đc cua",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h116"
+  },
+  {
+   "cau": "hok ăn đc mè",
+   "di_ung": [
+    "mè"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h117"
+  },
+  {
+   "cau": "ko uống đc sữa, bụng yếu",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h118"
+  },
+  {
+   "cau": "mik ăn chay nhoa",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "teencode",
+   "id": "h119"
+  },
+  {
+   "cau": "tui ăn thuần chay á",
+   "di_ung": [],
+   "an_kieng": [
+    "thuần chay"
+   ],
+   "loai": "teencode",
+   "id": "h120"
+  },
+  {
+   "cau": "dị ứng hs",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "mo_ho": true,
+   "ly_do": "«hs» có thể là hải sản hoặc học sinh; cạnh «dị ứng» nghiêng về hải sản",
+   "id": "h121"
+  },
+  {
+   "cau": "kh ăn dc tôm cua j hết",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h122"
+  },
+  {
+   "cau": "mk ăn chay trường nhe",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "teencode",
+   "id": "h123"
+  },
+  {
+   "cau": "ăn đồ biển là nổi mẩn lun á",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "teencode",
+   "id": "h124"
+  },
+  {
+   "cau": "Mình không ăn được tôm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h125"
+  },
+  {
+   "cau": "Em không ăn được hải sản",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h126"
+  },
+  {
+   "cau": "Tôi không ăn được đậu phộng",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h127"
+  },
+  {
+   "cau": "Không ăn được trứng đâu nha",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h128"
+  },
+  {
+   "cau": "Mình không ăn được mè, ăn là ngứa",
+   "di_ung": [
+    "mè"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h129"
+  },
+  {
+   "cau": "Mình không uống được sữa",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h130"
+  },
+  {
+   "cau": "Mình không ăn được đồ có gluten",
+   "di_ung": [
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h131"
+  },
+  {
+   "cau": "Không ăn được cua với ghẹ",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h132"
+  },
+  {
+   "cau": "Mình không ăn được đồ biển",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "khong_an_duoc",
+   "id": "h133"
+  },
+  {
+   "cau": "Ăn tôm vào là ngứa khắp người, nên tránh giùm mình",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "trieu_chung",
+   "id": "h134"
+  },
+  {
+   "cau": "Cứ đụng đậu phộng là mình khó thở",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "trieu_chung",
+   "id": "h135"
+  },
+  {
+   "cau": "Ăn cua xong là sưng môi",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "trieu_chung",
+   "id": "h136"
+  },
+  {
+   "cau": "Tôm cua mình ăn vào là nổi mề đay",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "trieu_chung",
+   "id": "h137"
+  },
+  {
+   "cau": "Uống sữa là mình đau bụng, bất dung nạp lactose",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "trieu_chung",
+   "ghi_chu": "bất dung nạp, không phải dị ứng miễn dịch, nhưng cùng bộ lọc",
+   "id": "h138"
+  },
+  {
+   "cau": "Mình bị celiac",
+   "di_ung": [
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "trieu_chung",
+   "id": "h139"
+  },
+  {
+   "cau": "I'm allergic to peanuts, any café nearby?",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h140"
+  },
+  {
+   "cau": "No shellfish please",
+   "di_ung": [
+    "tôm",
+    "cua",
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "ghi_chu": "shellfish = giáp xác + động vật có vỏ; không gồm cá",
+   "id": "h141"
+  },
+  {
+   "cau": "allergic to shrimp",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h142"
+  },
+  {
+   "cau": "I have a severe nut allergy",
+   "di_ung": [
+    "các loại hạt",
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "mo_ho": true,
+   "ly_do": "«nut allergy» thường dùng lẫn cho cả hạt cây và đậu phộng; nhãn thận trọng gồm cả hai",
+   "id": "h143"
+  },
+  {
+   "cau": "Tree nut allergy here",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h144"
+  },
+  {
+   "cau": "I'm lactose intolerant",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h145"
+  },
+  {
+   "cau": "Gluten-free please",
+   "di_ung": [
+    "gluten"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h146"
+  },
+  {
+   "cau": "I'm vegan",
+   "di_ung": [],
+   "an_kieng": [
+    "thuần chay"
+   ],
+   "loai": "tieng_anh",
+   "id": "h147"
+  },
+  {
+   "cau": "vegetarian here, where to eat dinner?",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "tieng_anh",
+   "id": "h148"
+  },
+  {
+   "cau": "Need halal food near the lake",
+   "di_ung": [],
+   "an_kieng": [
+    "halal"
+   ],
+   "loai": "tieng_anh",
+   "id": "h149"
+  },
+  {
+   "cau": "Egg allergy, looking for breakfast",
+   "di_ung": [
+    "trứng"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h150"
+  },
+  {
+   "cau": "allergic to sesame and soy",
+   "di_ung": [
+    "mè",
+    "đậu nành"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h151"
+  },
+  {
+   "cau": "Fish allergy",
+   "di_ung": [
+    "cá"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h152"
+  },
+  {
+   "cau": "mình bị allergy hải sản",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h153"
+  },
+  {
+   "cau": "mình allergic với tôm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h154"
+  },
+  {
+   "cau": "mình ăn vegan",
+   "di_ung": [],
+   "an_kieng": [
+    "thuần chay"
+   ],
+   "loai": "tieng_anh",
+   "id": "h155"
+  },
+  {
+   "cau": "I can't eat crab",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h156"
+  },
+  {
+   "cau": "no seafood for me, allergic",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h157"
+  },
+  {
+   "cau": "shellfish allergy but fish is fine",
+   "di_ung": [
+    "tôm",
+    "cua",
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h158"
+  },
+  {
+   "cau": "dairy-free please, I'm allergic to milk",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "tieng_anh",
+   "id": "h159"
+  },
+  {
+   "cau": "Mình ăn chay, tìm quán tối nay",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "id": "h160"
+  },
+  {
+   "cau": "Hôm nay rằm, mình ăn chay",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "id": "h161"
+  },
+  {
+   "cau": "Nhà mình ăn chay trường",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "id": "h162"
+  },
+  {
+   "cau": "Mình ăn thuần chay, không trứng sữa gì hết",
+   "di_ung": [],
+   "an_kieng": [
+    "thuần chay"
+   ],
+   "loai": "an_kieng",
+   "ghi_chu": "không trứng sữa là hệ quả của thuần chay, không phải dị ứng",
+   "id": "h163"
+  },
+  {
+   "cau": "Mình ăn chay nhưng vẫn ăn trứng sữa",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "id": "h164"
+  },
+  {
+   "cau": "Mình theo đạo Hồi, cần đồ ăn halal",
+   "di_ung": [],
+   "an_kieng": [
+    "halal"
+   ],
+   "loai": "an_kieng",
+   "id": "h165"
+  },
+  {
+   "cau": "Mình cần quán halal",
+   "di_ung": [],
+   "an_kieng": [
+    "halal"
+   ],
+   "loai": "an_kieng",
+   "id": "h166"
+  },
+  {
+   "cau": "Không ăn thịt heo, cần halal nha",
+   "di_ung": [],
+   "an_kieng": [
+    "halal"
+   ],
+   "loai": "an_kieng",
+   "id": "h167"
+  },
+  {
+   "cau": "Mình ăn chay kỳ, hôm nay mùng một",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "id": "h168"
+  },
+  {
+   "cau": "Mai mình ăn chay, gợi ý quán trưa mai",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "id": "h169"
+  },
+  {
+   "cau": "Tìm quán chay yên tĩnh",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "ghi_chu": "không nói mình ăn chay nhưng đòi quán chay: ràng buộc chay",
+   "id": "h170"
+  },
+  {
+   "cau": "Có quán nào thuần chay không",
+   "di_ung": [],
+   "an_kieng": [
+    "thuần chay"
+   ],
+   "loai": "an_kieng",
+   "id": "h171"
+  },
+  {
+   "cau": "Mình ăn chay không ngũ vị tân",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "ghi_chu": "tập đóng không biểu diễn được «không ngũ vị tân»",
+   "id": "h172"
+  },
+  {
+   "cau": "Ăn chay, dị ứng đậu nành",
+   "di_ung": [
+    "đậu nành"
+   ],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "ket_hop",
+   "id": "h173"
+  },
+  {
+   "cau": "Mình ăn thuần chay và dị ứng đậu phộng",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [
+    "thuần chay"
+   ],
+   "loai": "ket_hop",
+   "id": "h174"
+  },
+  {
+   "cau": "Cần quán halal, mình dị ứng tôm nữa",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [
+    "halal"
+   ],
+   "loai": "ket_hop",
+   "id": "h175"
+  },
+  {
+   "cau": "Cả nhóm mình ăn chay",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "ghi_chu": "nhóm có người hỏi",
+   "id": "h176"
+  },
+  {
+   "cau": "Hai đứa mình đều dị ứng tôm",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "ghi_chu": "nhóm có người hỏi",
+   "id": "h177"
+  },
+  {
+   "cau": "Mình với bạn đều dị ứng hải sản",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "danh_sach",
+   "ghi_chu": "nhóm có người hỏi",
+   "id": "h178"
+  },
+  {
+   "cau": "Mình và Khoa đều ăn chay",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "id": "h179"
+  },
+  {
+   "cau": "Mình ăn chay, bạn mình chạy bộ xong mới tới",
+   "di_ung": [],
+   "an_kieng": [
+    "chay"
+   ],
+   "loai": "an_kieng",
+   "ghi_chu": "«chạy bộ» không phải chay",
+   "id": "h180"
+  },
+  {
+   "cau": "Mình không ăn thịt",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "an_kieng",
+   "mo_ho": true,
+   "ly_do": "có thể là ăn chay, cũng có thể vẫn ăn cá/hải sản; nên hỏi lại",
+   "id": "h181"
+  },
+  {
+   "cau": "Mình không ăn thịt heo",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "an_kieng",
+   "mo_ho": true,
+   "ly_do": "kiêng thịt heo không đồng nghĩa halal; có thể là người Hồi giáo nói tắt",
+   "id": "h182"
+  },
+  {
+   "cau": "Mình ăn chay nhưng vẫn ăn hải sản",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "an_kieng",
+   "mo_ho": true,
+   "ly_do": "ăn cá/hải sản thì không phải chay theo nghĩa của tập đóng",
+   "id": "h183"
+  },
+  {
+   "cau": "Mình ăn kiêng giảm cân, quán nào có salad",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "ngoai_tap",
+   "ghi_chu": "«ăn kiêng» giảm cân không thuộc tập đóng chay/thuần chay/halal",
+   "id": "h184"
+  },
+  {
+   "cau": "Mình đang ăn keto",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "ngoai_tap",
+   "ghi_chu": "keto ngoài tập đóng",
+   "id": "h185"
+  },
+  {
+   "cau": "Mình kiêng đồ tanh",
+   "di_ung": [
+    "hải sản",
+    "cá"
+   ],
+   "an_kieng": [],
+   "loai": "kieng_suc_khoe",
+   "mo_ho": true,
+   "ly_do": "«đồ tanh» thường là cá và hải sản, có người gộp cả trứng, thịt bò",
+   "id": "h186"
+  },
+  {
+   "cau": "Mới xăm xong nên kiêng hải sản",
+   "di_ung": [
+    "hải sản"
+   ],
+   "an_kieng": [],
+   "loai": "kieng_suc_khoe",
+   "mo_ho": true,
+   "ly_do": "kiêng tạm thời, không phải dị ứng; người hỏi vẫn đòi tránh",
+   "id": "h187"
+  },
+  {
+   "cau": "Bác sĩ dặn kiêng tôm cua",
+   "di_ung": [
+    "tôm",
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "kieng_suc_khoe",
+   "mo_ho": true,
+   "ly_do": "kiêng theo y lệnh, không nói dị ứng; về mặt lọc quán nên xử như dị ứng",
+   "id": "h188"
+  },
+  {
+   "cau": "Mình không ăn được tôm vì đang ở cữ",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "kieng_suc_khoe",
+   "mo_ho": true,
+   "ly_do": "kiêng sau sinh, không phải dị ứng; người hỏi vẫn đòi tránh",
+   "id": "h189"
+  },
+  {
+   "cau": "Dị ứng tôm nhưng cua thì ok",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "loai_tru",
+   "id": "h190"
+  },
+  {
+   "cau": "Mình dị ứng hải sản trừ cá",
+   "di_ung": [
+    "tôm",
+    "cua",
+    "mực",
+    "động vật có vỏ"
+   ],
+   "an_kieng": [],
+   "loai": "loai_tru",
+   "ghi_chu": "hải sản bỏ cá = tôm, cua, mực, động vật có vỏ",
+   "id": "h191"
+  },
+  {
+   "cau": "Dị ứng các loại hạt nhưng đậu phộng thì không sao",
+   "di_ung": [
+    "các loại hạt"
+   ],
+   "an_kieng": [],
+   "loai": "loai_tru",
+   "id": "h192"
+  },
+  {
+   "cau": "Dị ứng đậu phộng, còn hạt điều thì ăn được",
+   "di_ung": [
+    "đậu phộng"
+   ],
+   "an_kieng": [],
+   "loai": "loai_tru",
+   "id": "h193"
+  },
+  {
+   "cau": "Mình dị ứng mực chứ không phải tôm",
+   "di_ung": [
+    "mực"
+   ],
+   "an_kieng": [],
+   "loai": "loai_tru",
+   "id": "h194"
+  },
+  {
+   "cau": "Chỉ dị ứng tôm thôi, không phải hải sản nói chung",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "loai_tru",
+   "id": "h195"
+  },
+  {
+   "cau": "Dị ứng sữa bò, sữa đậu nành thì uống được",
+   "di_ung": [
+    "sữa"
+   ],
+   "an_kieng": [],
+   "loai": "loai_tru",
+   "id": "h196"
+  },
+  {
+   "cau": "Mình không dị ứng gì hết, quán nào cũng được",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "id": "h197"
+  },
+  {
+   "cau": "Hồi nhỏ mình dị ứng tôm, giờ hết rồi",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "id": "h198"
+  },
+  {
+   "cau": "Tưởng dị ứng tôm, đi khám hóa ra không phải",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "id": "h199"
+  },
+  {
+   "cau": "Mình không bị dị ứng hải sản đâu, cứ chọn quán hải sản",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "id": "h200"
+  },
+  {
+   "cau": "Mình không ăn chay đâu nhé",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "id": "h201"
+  },
+  {
+   "cau": "Hôm qua ăn chay rồi, nay ăn mặn",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "id": "h202"
+  },
+  {
+   "cau": "Mình ăn mặn, đừng dẫn đi quán chay",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "id": "h203"
+  },
+  {
+   "cau": "Không phải dị ứng, chỉ là không thích tôm lắm",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "ghi_chu": "sở thích, không phải ràng buộc cứng",
+   "id": "h204"
+  },
+  {
+   "cau": "Mình không thích ăn cá",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "ghi_chu": "sở thích, không phải dị ứng",
+   "id": "h205"
+  },
+  {
+   "cau": "Mình ghét mùi sầu riêng",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "phu_dinh",
+   "id": "h206"
+  },
+  {
+   "cau": "Quán cua ngon ở đâu?",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h207"
+  },
+  {
+   "cau": "Tìm quán ăn gần trung tâm",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h208"
+  },
+  {
+   "cau": "Quán của bạn mình mở ở dốc Mây, ghé được không",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h209"
+  },
+  {
+   "cau": "Mình cần góc yên tĩnh, không gian cá nhân",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h210"
+  },
+  {
+   "cau": "Mực nước hồ Sương Mai mùa này có cao không, quán nào view hồ",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h211"
+  },
+  {
+   "cau": "Trứng vịt lộn ngon không, chỉ mình quán",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h212"
+  },
+  {
+   "cau": "Có quán hải sản nào tươi không",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h213"
+  },
+  {
+   "cau": "Thèm tôm hùm nướng quá",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h214"
+  },
+  {
+   "cau": "Chỗ nào đậu xe dễ",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h215"
+  },
+  {
+   "cau": "Mình bị lạc đường rồi, quán gần nhất ở đâu",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h216"
+  },
+  {
+   "cau": "Đi thôn Lạc Mây chơi có quán gì ngon",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h217"
+  },
+  {
+   "cau": "Cần tiệm sửa xe gấp, gần đó có quán cà phê không",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h218"
+  },
+  {
+   "cau": "Mình thích quán decor cá tính",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h219"
+  },
+  {
+   "cau": "Ăn gì cũng được, không kiêng gì",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h220"
+  },
+  {
+   "cau": "Có quán cà phê nào cho dân chạy bộ không",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h221"
+  },
+  {
+   "cau": "Tụi mình chạy xe máy lên đồi, quán nào dọc đường",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h222"
+  },
+  {
+   "cau": "Mè nheo mãi mới được đi chơi, gợi ý chỗ vui đi",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h223"
+  },
+  {
+   "cau": "Hầu hết quán đóng cửa lúc mấy giờ",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h224"
+  },
+  {
+   "cau": "Số người là 4, đặt bàn giúp mình",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h225"
+  },
+  {
+   "cau": "Mức giá tầm trung, quán nào ổn",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h226"
+  },
+  {
+   "cau": "Trúng số rồi, đi ăn chỗ sang thôi",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h227"
+  },
+  {
+   "cau": "Tóm lại là đi quán nào",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h228"
+  },
+  {
+   "cau": "Anh Tôm rủ đi cà phê, chỗ nào gần hồ",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "Tôm là biệt danh",
+   "id": "h229"
+  },
+  {
+   "cau": "Mình vừa thi đậu, đi ăn mừng ở đâu",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h230"
+  },
+  {
+   "cau": "Cơm cháy chà bông ở đâu bán",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h231"
+  },
+  {
+   "cau": "Cà phê trứng ở đâu ngon",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h232"
+  },
+  {
+   "cau": "Bún riêu cua gần đây",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h233"
+  },
+  {
+   "cau": "Sữa chua ở đâu ngon",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h234"
+  },
+  {
+   "cau": "Quán gần cửa hàng tiện lợi",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h235"
+  },
+  {
+   "cau": "Mình dị ứng với chỗ ồn ào, tìm quán yên tĩnh",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "«dị ứng» nghĩa bóng",
+   "id": "h236"
+  },
+  {
+   "cau": "Dị ứng lông mèo nên đừng chọn cà phê mèo",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "dị ứng thật nhưng không phải thực phẩm; thuộc loại chỗ, không phải lọc dị ứng món",
+   "id": "h237"
+  },
+  {
+   "cau": "Dị ứng phấn hoa, né vườn hoa giùm",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "không phải thực phẩm",
+   "id": "h238"
+  },
+  {
+   "cau": "Dị ứng thời tiết lạnh, quán nào kín gió",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h239"
+  },
+  {
+   "cau": "Có ai trong nhóm dị ứng tôm không?",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "hỏi người khác, người hỏi không khai dị ứng",
+   "id": "h240"
+  },
+  {
+   "cau": "Sò điệp nướng mỡ hành ở đâu bán",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h241"
+  },
+  {
+   "cau": "Mình mê đậu phộng rang",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h242"
+  },
+  {
+   "cau": "Sữa đậu nành nóng ở đâu có",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h243"
+  },
+  {
+   "cau": "Trung thu này đi đâu chơi",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h244"
+  },
+  {
+   "cau": "Không ăn được cay, quán nào nấu nhạt",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "«không ăn được» + thứ không phải dị nguyên",
+   "id": "h245"
+  },
+  {
+   "cau": "Không ăn được hành",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "hành ngoài danh sách dị nguyên",
+   "id": "h246"
+  },
+  {
+   "cau": "Không uống được cà phê, quán nào có trà",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h247"
+  },
+  {
+   "cau": "Mình không ăn được đồ sống",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h248"
+  },
+  {
+   "cau": "Mình không ăn được hải sản sống, chín thì được",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "tránh đồ sống, không phải dị ứng hải sản",
+   "id": "h249"
+  },
+  {
+   "cau": "Hát nghêu ngao ở quán nào có nhạc sống",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h250"
+  },
+  {
+   "cau": "Liên lạc với quán giúp mình",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h251"
+  },
+  {
+   "cau": "Hạt mưa rơi rồi, quán nào có mái che",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h252"
+  },
+  {
+   "cau": "Cà phê Cá Voi Xanh còn mở không",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h253"
+  },
+  {
+   "cau": "Mình thích ăn mè xửng",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h254"
+  },
+  {
+   "cau": "Trung bình mỗi người 200k",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h255"
+  },
+  {
+   "cau": "Cả nhóm 6 người, quán nào rộng",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h256"
+  },
+  {
+   "cau": "Hạt dẻ nướng ở đâu bán",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h257"
+  },
+  {
+   "cau": "Mình sửa soạn xong rồi, đi đâu giờ",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h258"
+  },
+  {
+   "cau": "Hậu cần chuyến đi mình lo, chỉ cần gợi ý quán",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h259"
+  },
+  {
+   "cau": "Chè đậu xanh ở đâu ngon",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h260"
+  },
+  {
+   "cau": "Mình chạy deadline xong rồi, đi ăn đâu",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h261"
+  },
+  {
+   "cau": "Ghé quán cá kho làng Sương ăn trưa được không",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h262"
+  },
+  {
+   "cau": "Ẩm thực thuần Việt ở đâu ngon",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "ghi_chu": "«thuần» không phải thuần chay",
+   "id": "h263"
+  },
+  {
+   "cau": "Da mình dị ứng mỹ phẩm, mà thôi, đi ăn đâu",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h264"
+  },
+  {
+   "cau": "Cà phê sữa đá ở đâu ngon",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h265"
+  },
+  {
+   "cau": "Quán ốc nào đông vui",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "gia_mao",
+   "id": "h266"
+  },
+  {
+   "cau": "Bạn mình dị ứng tôm nhưng mình thì không",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "di_ung_nguoi_khac": [
+    "tôm"
+   ],
+   "ly_do": "người hỏi không dị ứng; nếu bạn đi cùng thì nhóm cần lọc tôm. Thiết kế §5.1 quét lời người gọi không phân biệt ngôi, nên bộ lọc có thể đưa tôm vào — đây là chỗ cần chốt",
+   "id": "h267"
+  },
+  {
+   "cau": "Em gái mình dị ứng đậu phộng, đi chung đó",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "di_ung_nguoi_khac": [
+    "đậu phộng"
+   ],
+   "ly_do": "không phải của người hỏi nhưng người đi cùng cần lọc cứng",
+   "id": "h268"
+  },
+  {
+   "cau": "Con mình dị ứng trứng",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "di_ung_nguoi_khac": [
+    "trứng"
+   ],
+   "ly_do": "của con, thường đi cùng",
+   "id": "h269"
+  },
+  {
+   "cau": "Có đứa trong nhóm ăn chay",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "an_kieng_nguoi_khac": [
+    "chay"
+   ],
+   "ly_do": "ăn kiêng của thành viên khác",
+   "id": "h270"
+  },
+  {
+   "cau": "Nhóm có người ăn chay người ăn mặn, tìm quán có cả hai",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "an_kieng_nguoi_khac": [
+    "chay"
+   ],
+   "ly_do": "quán phải phục vụ chay cho một phần nhóm",
+   "id": "h271"
+  },
+  {
+   "cau": "Nếu mình dị ứng tôm thì nên ăn gì ở đây?",
+   "di_ung": [
+    "tôm"
+   ],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "ly_do": "giả định; nhiều người nói «nếu» cho chính mình",
+   "id": "h272"
+  },
+  {
+   "cau": "Người dị ứng hải sản nên ăn gì ở đây?",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "di_ung_nguoi_khac": [
+    "hải sản"
+   ],
+   "ly_do": "câu hỏi chung, không rõ ai dị ứng",
+   "id": "h273"
+  },
+  {
+   "cau": "Chồng mình ăn chay, mình thì không",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "an_kieng_nguoi_khac": [
+    "chay"
+   ],
+   "ly_do": "người hỏi không ăn chay; người đi cùng có",
+   "id": "h274"
+  },
+  {
+   "cau": "Mình dị ứng cua, bạn mình dị ứng tôm",
+   "di_ung": [
+    "cua"
+   ],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "di_ung_nguoi_khac": [
+    "tôm"
+   ],
+   "ly_do": "cua chắc chắn của người hỏi; tôm của bạn",
+   "id": "h275"
+  },
+  {
+   "cau": "Nhóm mình có Vy dị ứng mè",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "di_ung_nguoi_khac": [
+    "mè"
+   ],
+   "ly_do": "thành viên nhóm khác người hỏi",
+   "id": "h276"
+  },
+  {
+   "cau": "Quán chay cho bạn mình, còn mình ăn gì cũng được",
+   "di_ung": [],
+   "an_kieng": [],
+   "loai": "nguoi_khac",
+   "mo_ho": true,
+   "an_kieng_nguoi_khac": [
+    "chay"
+   ],
+   "ly_do": "đòi quán chay nhưng vì người khác",
+   "id": "h277"
+  }
+ ],
+ "quan": [
+  {
+   "chu": "Nhà hàng Sóng Bạc: tôm hùm nướng bơ tỏi, cua hoàng đế hấp, hàu nướng mỡ hành.",
+   "chua": [
+    "tôm",
+    "cua",
+    "động vật có vỏ",
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "bơ tỏi = bơ sữa",
+   "id": "q001"
+  },
+  {
+   "chu": "Bún riêu cua đồng, chả lá lốt, rau sống.",
+   "chua": [
+    "cua"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "cua chỉ nằm trong tên món; mắm tôm thường kèm nhưng chữ không nói",
+   "id": "q002"
+  },
+  {
+   "chu": "Gỏi cuốn tôm thịt chấm tương đậu phộng; có thể bỏ mè theo yêu cầu.",
+   "chua": [
+    "tôm",
+    "đậu phộng",
+    "mè"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "«có thể bỏ mè» nghĩa là mặc định có mè",
+   "id": "q003"
+  },
+  {
+   "chu": "Bún đậu mắm tôm, chả cốm, đậu hũ chiên.",
+   "chua": [
+    "tôm",
+    "đậu nành"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "mắm tôm = tôm; đậu hũ = đậu nành",
+   "id": "q004"
+  },
+  {
+   "chu": "Ốc len xào dừa, sò điệp nướng mỡ hành.",
+   "chua": [
+    "động vật có vỏ"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q005"
+  },
+  {
+   "chu": "Mì xào hải sản, cơm chiên hải sản.",
+   "chua": [
+    "gluten",
+    "hải sản"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "mì sợi lúa mì",
+   "id": "q006"
+  },
+  {
+   "chu": "Mực nướng sa tế, bạch tuộc nướng muối ớt.",
+   "chua": [
+    "mực"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q007"
+  },
+  {
+   "chu": "Cá hồi nướng giấy bạc, lẩu cá tầm.",
+   "chua": [
+    "cá"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "cá nước ngọt nuôi; có thuộc «hải sản» hay không là câu hỏi chính sách",
+   "id": "q008"
+  },
+  {
+   "chu": "Ghẹ rang me, cua lột chiên giòn.",
+   "chua": [
+    "cua"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "me (quả me) không phải mè",
+   "id": "q009"
+  },
+  {
+   "chu": "Hàu nướng phô mai, nghêu hấp sả.",
+   "chua": [
+    "động vật có vỏ",
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "phô mai = sữa",
+   "id": "q010"
+  },
+  {
+   "chu": "Shellfish platter for two: prawns, crab claws and oysters.",
+   "chua": [
+    "tôm",
+    "cua",
+    "động vật có vỏ"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q011"
+  },
+  {
+   "chu": "Seafood restaurant with a lake view.",
+   "chua": [
+    "hải sản"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q012"
+  },
+  {
+   "chu": "Gỏi ngó sen tôm thịt.",
+   "chua": [
+    "tôm"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q013"
+  },
+  {
+   "chu": "Nước lèo không có hải sản, nhưng topping có tôm khô.",
+   "chua": [
+    "tôm"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "phủ định hải sản ở nước lèo nhưng tôm khô có thật",
+   "id": "q014"
+  },
+  {
+   "chu": "Bánh căn trứng cút, bánh căn mực, bánh căn tôm.",
+   "chua": [
+    "trứng",
+    "mực",
+    "tôm"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "bánh căn bột gạo, không gluten",
+   "id": "q015"
+  },
+  {
+   "chu": "Bánh xèo tôm mực.",
+   "chua": [
+    "tôm",
+    "mực"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q016"
+  },
+  {
+   "chu": "Bún chả cá, chả cá chiên nghệ.",
+   "chua": [
+    "cá"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q017"
+  },
+  {
+   "chu": "Canh chua cá lóc, cá kho tộ.",
+   "chua": [
+    "cá"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q018"
+  },
+  {
+   "chu": "Sò huyết xào me, ốc hương nướng muối ớt.",
+   "chua": [
+    "động vật có vỏ"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "me ≠ mè",
+   "id": "q019"
+  },
+  {
+   "chu": "Menu có hàu sữa nướng mỡ hành.",
+   "chua": [
+    "động vật có vỏ"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "«hàu sữa» là tên một loại hàu, không phải sữa",
+   "id": "q020"
+  },
+  {
+   "chu": "Bánh tráng nướng trứng gà, tép khô, hành phi.",
+   "chua": [
+    "trứng",
+    "tôm"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "tép = tôm nhỏ",
+   "id": "q021"
+  },
+  {
+   "chu": "Mì Quảng tôm thịt, rắc đậu phộng và bánh tráng mè.",
+   "chua": [
+    "tôm",
+    "đậu phộng",
+    "mè"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "sợi mì Quảng làm từ gạo; không gán gluten",
+   "id": "q022"
+  },
+  {
+   "chu": "Kitchen handles peanuts, shellfish and gluten.",
+   "chua": [
+    "đậu phộng",
+    "tôm",
+    "cua",
+    "động vật có vỏ",
+    "gluten"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "shellfish = tôm + cua + động vật có vỏ",
+   "id": "q023"
+  },
+  {
+   "chu": "Hải Sản Phố — tên cũ, nay chỉ còn bán lẩu bò và bò nướng.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "hải sản chỉ còn trong tên",
+   "mo_ho": true,
+   "ly_do": "chữ nói hiện chỉ bán bò; bộ lọc thận trọng có thể vẫn loại vì tên",
+   "id": "q024"
+  },
+  {
+   "chu": "Tiệm Tôm Tít (đặt theo tên con mèo của chủ) chỉ bán trà thảo mộc.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "tôm chỉ nằm trong tên riêng",
+   "id": "q025"
+  },
+  {
+   "chu": "Quán cà phê view thung lũng, tên cũ là Cua Đá, chỉ bán đồ uống pha máy.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "cua chỉ nằm trong tên cũ",
+   "id": "q026"
+  },
+  {
+   "chu": "Cơm gà Hải Nam, canh rong biển.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "«Hải Nam» không phải hải sản; rong biển không nằm trong danh sách dị nguyên",
+   "id": "q027"
+  },
+  {
+   "chu": "Thực đơn không có hải sản.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q028"
+  },
+  {
+   "chu": "Không dùng tôm, cua hay bất kỳ loại giáp xác nào.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q029"
+  },
+  {
+   "chu": "Quán không có món nào có tôm, ai dị ứng thì yên tâm.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "review phủ định",
+   "id": "q030"
+  },
+  {
+   "chu": "Mình dị ứng tôm nên chỉ gọi cơm gà, quán vẫn chu đáo.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "tôm là dị ứng của người viết review",
+   "mo_ho": true,
+   "ly_do": "chữ không nói quán bán tôm; nhưng người viết né tôm gợi ý thực đơn có tôm",
+   "id": "q031"
+  },
+  {
+   "chu": "Món 'tôm chay' làm từ bột konjac, không có tôm thật.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "tôm chay là món giả",
+   "id": "q032"
+  },
+  {
+   "chu": "Chả cá chay, sườn non chay.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "món giả; đạm giả thường từ đậu nành nhưng chữ không nói",
+   "id": "q033"
+  },
+  {
+   "chu": "Quán cam kết không dùng đậu phộng trong mọi món, kể cả nước chấm.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q034"
+  },
+  {
+   "chu": "Chè đậu đỏ nước cốt dừa, rắc đậu phộng rang.",
+   "chua": [
+    "đậu phộng"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q035"
+  },
+  {
+   "chu": "Chè không có đậu phộng, chỉ rắc mè rang.",
+   "chua": [
+    "mè"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q036"
+  },
+  {
+   "chu": "Sữa đậu nành nóng, bánh bò.",
+   "chua": [
+    "đậu nành"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "sữa đậu nành không phải sữa động vật",
+   "id": "q037"
+  },
+  {
+   "chu": "Sữa hạt óc chó và hạnh nhân nhà làm, không dùng sữa bò.",
+   "chua": [
+    "các loại hạt"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "sữa hạt không phải sữa",
+   "id": "q038"
+  },
+  {
+   "chu": "Hạt dẻ nướng, hạt điều rang muối, hạnh nhân sấy.",
+   "chua": [
+    "các loại hạt"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q039"
+  },
+  {
+   "chu": "Cà Phê Hạt Mưa — menu chỉ có cà phê đen, trà nóng và nước ép.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "«hạt» trong tên",
+   "id": "q040"
+  },
+  {
+   "chu": "Không có món nào chứa đậu phộng, nhưng bếp chiên bằng dầu phộng.",
+   "chua": [
+    "đậu phộng"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "dầu phộng = đậu phộng; người dị ứng nặng cần tránh",
+   "id": "q041"
+  },
+  {
+   "chu": "Salad trộn dầu mè, rắc vừng rang.",
+   "chua": [
+    "mè"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q042"
+  },
+  {
+   "chu": "Bếp dùng chung nên không đảm bảo không lẫn đậu phộng.",
+   "chua": [
+    "đậu phộng"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "có thể lẫn tính là có",
+   "id": "q043"
+  },
+  {
+   "chu": "May contain traces of tree nuts.",
+   "chua": [
+    "các loại hạt"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "may contain tính là có",
+   "id": "q044"
+  },
+  {
+   "chu": "Allergen-free kitchen: no peanuts, no tree nuts.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q045"
+  },
+  {
+   "chu": "Soy-free and dairy-free menu.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q046"
+  },
+  {
+   "chu": "Nem nướng cuốn bánh tráng, nước chấm có đậu phộng giã.",
+   "chua": [
+    "đậu phộng"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q047"
+  },
+  {
+   "chu": "Bánh quy bơ đậu phộng nướng tại tiệm.",
+   "chua": [
+    "đậu phộng",
+    "gluten"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "bơ đậu phộng không phải bơ sữa; bánh quy dùng bột mì",
+   "id": "q048"
+  },
+  {
+   "chu": "Đậu hũ non sốt cà chua.",
+   "chua": [
+    "đậu nành"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q049"
+  },
+  {
+   "chu": "Tàu hũ nước đường gừng.",
+   "chua": [
+    "đậu nành"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "tàu hũ = đậu hũ",
+   "id": "q050"
+  },
+  {
+   "chu": "Cháo đậu xanh, chè đậu đen.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "đậu xanh/đậu đen không phải đậu phộng hay đậu nành",
+   "id": "q051"
+  },
+  {
+   "chu": "Có bãi đậu xe rộng cho ô tô.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "đậu xe",
+   "id": "q052"
+  },
+  {
+   "chu": "Xôi vừng, kẹo lạc.",
+   "chua": [
+    "mè",
+    "đậu phộng"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q053"
+  },
+  {
+   "chu": "Quán nằm trên đường vào thôn Lạc Mây, view đồi thông.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "«Lạc» trong địa danh",
+   "id": "q054"
+  },
+  {
+   "chu": "Nước chấm làm từ nước tương, không dùng nước mắm.",
+   "chua": [
+    "đậu nành"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q055"
+  },
+  {
+   "chu": "Vịt nấu chao, bánh mì chấm.",
+   "chua": [
+    "đậu nành",
+    "gluten"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "chao = đậu hũ lên men",
+   "id": "q056"
+  },
+  {
+   "chu": "Nhân viên hỏi kỹ về dị ứng và bỏ mè khỏi món gỏi giúp mình.",
+   "chua": [
+    "mè"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "bỏ mè theo yêu cầu nghĩa là mặc định có mè",
+   "id": "q057"
+  },
+  {
+   "chu": "Tưởng gỏi không có đậu phộng, ai ngờ vẫn rắc đầy, người dị ứng cẩn thận.",
+   "chua": [
+    "đậu phộng"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "review phủ định rồi cải chính",
+   "id": "q058"
+  },
+  {
+   "chu": "Thực dưỡng: cơm gạo lứt muối mè, có món cá nhỏ kho.",
+   "chua": [
+    "mè",
+    "cá"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "thực dưỡng có cá nên không phải chay; «cá nhỏ» không phải cá nhân",
+   "id": "q059"
+  },
+  {
+   "chu": "Cà phê trứng và bánh flan nhà làm.",
+   "chua": [
+    "trứng",
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "flan và cà phê trứng có sữa",
+   "id": "q060"
+  },
+  {
+   "chu": "Mì Ý sốt kem nấm; có lựa chọn mì không gluten.",
+   "chua": [
+    "gluten",
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "mặc định có gluten; lựa chọn không gluten không xoá dị nguyên mặc định",
+   "id": "q061"
+  },
+  {
+   "chu": "Toàn bộ thực đơn không chứa gluten.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q062"
+  },
+  {
+   "chu": "Bánh mì và bánh sừng bò nướng tại chỗ mỗi sáng.",
+   "chua": [
+    "gluten",
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "bánh sừng bò có bơ sữa; thường quét trứng nhưng chữ không nói",
+   "id": "q063"
+  },
+  {
+   "chu": "Sữa chua mít, sữa chua nếp cẩm.",
+   "chua": [
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q064"
+  },
+  {
+   "chu": "Trà sữa trân châu đường đen.",
+   "chua": [
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q065"
+  },
+  {
+   "chu": "Trà sữa dùng sữa hạnh nhân thay sữa bò.",
+   "chua": [
+    "các loại hạt"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q066"
+  },
+  {
+   "chu": "Kem dừa làm từ nước cốt dừa, không dùng sữa bò.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q067"
+  },
+  {
+   "chu": "Contains: milk, egg, wheat.",
+   "chua": [
+    "sữa",
+    "trứng",
+    "gluten"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q068"
+  },
+  {
+   "chu": "Trứng vịt lộn, cút lộn xào me.",
+   "chua": [
+    "trứng"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "me (quả me) không phải mè",
+   "id": "q069"
+  },
+  {
+   "chu": "Bánh mì bơ tỏi.",
+   "chua": [
+    "gluten",
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q070"
+  },
+  {
+   "chu": "Bánh bông lan trứng muối.",
+   "chua": [
+    "trứng",
+    "gluten"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q071"
+  },
+  {
+   "chu": "Tất cả bánh ở tiệm đều không trứng, làm từ bột gạo.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q072"
+  },
+  {
+   "chu": "Quán không bán đồ ăn, chỉ có cà phê sữa và bạc xỉu.",
+   "chua": [
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q073"
+  },
+  {
+   "chu": "Đồ uống pha bằng sữa đặc, có thể đổi sang sữa yến mạch.",
+   "chua": [
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "mặc định có sữa",
+   "id": "q074"
+  },
+  {
+   "chu": "Cà phê muối: cà phê phủ lớp kem sữa mặn.",
+   "chua": [
+    "sữa"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q075"
+  },
+  {
+   "chu": "Bò kho, bánh mì chấm.",
+   "chua": [
+    "gluten"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q076"
+  },
+  {
+   "chu": "Mở từ 6h sáng: trứng ốp la, xúc xích, bánh mì.",
+   "chua": [
+    "trứng",
+    "gluten"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q077"
+  },
+  {
+   "chu": "Bò sữa Phù Mây — trang trại tham quan, cho bê bú, không bán đồ ăn.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "«bò sữa» là vật nuôi, không có món",
+   "id": "q078"
+  },
+  {
+   "chu": "Quán nằm ngay trung tâm, cách chợ 5 phút đi bộ.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "trung ≠ trứng",
+   "id": "q079"
+  },
+  {
+   "chu": "Ngồi sát mép hồ, mùa mưa mực nước lên gần sát bàn.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "mực nước",
+   "id": "q080"
+  },
+  {
+   "chu": "Tiệm nhỏ của hai vợ chồng trẻ, cửa gỗ sơn xanh.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "của/cửa ≠ cua",
+   "id": "q081"
+  },
+  {
+   "chu": "Có phòng riêng cho khách cần không gian cá nhân.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "cá nhân",
+   "id": "q082"
+  },
+  {
+   "chu": "Bò bít tết sốt tiêu đen, khoai tây chiên.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q083"
+  },
+  {
+   "chu": "Phở gà ta, bánh phở làm từ gạo.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q084"
+  },
+  {
+   "chu": "Lẩu gà lá é, gà ta thả vườn.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q085"
+  },
+  {
+   "chu": "Gà xào sả ớt, rau muống xào tỏi.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q086"
+  },
+  {
+   "chu": "Cơm cháy chà bông giòn rụm, trà đá miễn phí.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "cháy ≠ chay",
+   "id": "q087"
+  },
+  {
+   "chu": "Quán chay Tịnh Duyên — 100% thuần chay, không dùng trứng, sữa hay mật ong.",
+   "chua": [],
+   "phuc_vu": [
+    "thuần chay",
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q088"
+  },
+  {
+   "chu": "No vegan options, sorry!",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q089"
+  },
+  {
+   "chu": "Không phục vụ đồ chay.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q090"
+  },
+  {
+   "chu": "Hiện không còn bán món chay.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q091"
+  },
+  {
+   "chu": "Món chay: không có.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q092"
+  },
+  {
+   "chu": "Đồ ăn ngon, chỉ ước gì có món chay để lần sau dẫn bạn tới.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "mong ước, không phải có",
+   "id": "q093"
+  },
+  {
+   "chu": "Có món chay riêng, nấu bằng nồi và chảo riêng.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q094"
+  },
+  {
+   "chu": "Bếp chay tách biệt hoàn toàn với bếp mặn.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q095"
+  },
+  {
+   "chu": "Lẩu nấm chay, nước dùng ninh từ rau củ.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "không nói thuần chay",
+   "id": "q096"
+  },
+  {
+   "chu": "Chúng tôi từng có thực đơn chay nhưng đã ngừng từ đầu năm.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "quá khứ",
+   "id": "q097"
+  },
+  {
+   "chu": "Thực đơn chay sẽ ra mắt vào tháng sau.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "tương lai",
+   "id": "q098"
+  },
+  {
+   "chu": "Chỉ bán chay vào thứ Hai hàng tuần.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "chỉ một ngày trong tuần",
+   "mo_ho": true,
+   "ly_do": "phục vụ chay có điều kiện theo ngày; phụ thuộc ngày hỏi",
+   "id": "q099"
+  },
+  {
+   "chu": "Có món chay vào ngày rằm và mùng một âm lịch.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "chỉ ngày rằm, mùng một",
+   "mo_ho": true,
+   "ly_do": "phục vụ chay có điều kiện theo lịch âm",
+   "id": "q100"
+  },
+  {
+   "chu": "Vegetarian-friendly, several meat-free dishes.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q101"
+  },
+  {
+   "chu": "Vegan options available on request.",
+   "chua": [],
+   "phuc_vu": [
+    "thuần chay",
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q102"
+  },
+  {
+   "chu": "Món chay duy nhất là salad rau củ.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "chỉ một món nhưng có",
+   "id": "q103"
+  },
+  {
+   "chu": "Món 'chay' ở đây vẫn nấu bằng nước lèo hầm xương.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "chay giả, không thật sự chay",
+   "id": "q104"
+  },
+  {
+   "chu": "Các món chay có nêm nước mắm, khách ăn chay trường lưu ý.",
+   "chua": [
+    "cá"
+   ],
+   "phuc_vu": [],
+   "ghi_chu": "nước mắm làm món không còn chay",
+   "id": "q105"
+  },
+  {
+   "chu": "Bánh flan thuần chay, không trứng không sữa.",
+   "chua": [],
+   "phuc_vu": [
+    "thuần chay",
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q106"
+  },
+  {
+   "chu": "Buffet chay cuối tuần; ngày thường chỉ bán món mặn.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "chỉ cuối tuần",
+   "mo_ho": true,
+   "ly_do": "phục vụ chay có điều kiện theo ngày",
+   "id": "q107"
+  },
+  {
+   "chu": "Món nào cũng có thể làm chay theo yêu cầu.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q108"
+  },
+  {
+   "chu": "Quán không nhận làm món chay theo yêu cầu.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q109"
+  },
+  {
+   "chu": "Review: Món chay ở đây còn ngon hơn món mặn.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q110"
+  },
+  {
+   "chu": "Review: Dẫn bạn ăn chay tới mà chẳng có món nào cho bạn ấy.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q111"
+  },
+  {
+   "chu": "Nhà hàng chay nhưng có bán thêm món cá kho cho khách ăn mặn.",
+   "chua": [
+    "cá"
+   ],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q112"
+  },
+  {
+   "chu": "Cơm chay Sen Trắng, món xào có dùng trứng.",
+   "chua": [
+    "trứng"
+   ],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "chay có trứng, không thuần chay",
+   "id": "q113"
+  },
+  {
+   "chu": "Chay tịnh, không dùng hành tỏi (ngũ vị tân).",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q114"
+  },
+  {
+   "chu": "Plant-based menu, everything is vegan.",
+   "chua": [],
+   "phuc_vu": [
+    "thuần chay",
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q115"
+  },
+  {
+   "chu": "Món chay có sẵn: cơm chiên rau củ, đậu que xào.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "đậu que không phải đậu nành",
+   "id": "q116"
+  },
+  {
+   "chu": "Không có lựa chọn chay nào, toàn món nướng thịt.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q117"
+  },
+  {
+   "chu": "Ăn chay được không? Được, quán có đậu hũ sốt nấm.",
+   "chua": [
+    "đậu nành"
+   ],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q118"
+  },
+  {
+   "chu": "Chay hay mặn đều có, bếp chay riêng.",
+   "chua": [],
+   "phuc_vu": [
+    "chay"
+   ],
+   "ghi_chu": "",
+   "id": "q119"
+  },
+  {
+   "chu": "Trung tâm dạy nấu ăn chay — chỉ mở lớp, không phục vụ bữa ăn.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "dạy nấu chay nhưng không bán",
+   "id": "q120"
+  },
+  {
+   "chu": "Cà Phê Chạy Bộ Đồi Thông: điểm dừng cho dân chạy bộ quanh hồ, có nước ép và cà phê đen.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "chạy ≠ chay",
+   "id": "q121"
+  },
+  {
+   "chu": "Ẩm thực thuần Việt: bún bò, cơm tấm sườn.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "thuần Việt ≠ thuần chay",
+   "id": "q122"
+  },
+  {
+   "chu": "Non-halal kitchen. Pork and alcohol served.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q123"
+  },
+  {
+   "chu": "Không đạt chuẩn halal; bếp dùng chung thịt heo.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q124"
+  },
+  {
+   "chu": "Halal certified. No pork, no alcohol.",
+   "chua": [],
+   "phuc_vu": [
+    "halal"
+   ],
+   "ghi_chu": "",
+   "id": "q125"
+  },
+  {
+   "chu": "Nhà hàng đạt chứng nhận halal, thịt nhập từ lò mổ halal.",
+   "chua": [],
+   "phuc_vu": [
+    "halal"
+   ],
+   "ghi_chu": "",
+   "id": "q126"
+  },
+  {
+   "chu": "Gà nướng dùng gà halal, nhưng bếp chung với các món thịt heo.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "nguyên liệu halal nhưng bếp không",
+   "mo_ho": true,
+   "ly_do": "người ăn halal khắt khe không chấp nhận bếp chung",
+   "id": "q127"
+  },
+  {
+   "chu": "Không phải quán halal, nhưng có vài món không thịt heo.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "không thịt heo ≠ halal",
+   "id": "q128"
+  },
+  {
+   "chu": "Rượu vang và bia thủ công, không có đồ ăn.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q129"
+  },
+  {
+   "chu": "Thịt heo quay, bia tươi.",
+   "chua": [],
+   "phuc_vu": [],
+   "ghi_chu": "",
+   "id": "q130"
+  }
+ ]
+}

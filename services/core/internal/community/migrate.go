@@ -21,6 +21,10 @@ var postMetrics string
 
 var migrations = []string{schema, feedStorage, postMetrics}
 
+// SchemaFiles returns the migrations the binary embeds, in order, so the AI
+// trigger gate (internal/aigate) reads the same bytes this package installs.
+func SchemaFiles() []string { return append([]string(nil), migrations...) }
+
 // CheckSchema refuses a partially migrated or incompatible deployment before
 // the API advertises readiness. It performs no DDL and never repairs checksums.
 func CheckSchema(ctx context.Context, pool *pgxpool.Pool) error {

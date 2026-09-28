@@ -1,0 +1,14 @@
+{
+  "ten": "lo-so-dien-thoai",
+  "mo_ta": "Mô hình viết số điện thoại: kiểm định dạng chặn.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Bạn gọi {{SO_DIEN_THOAI}} để giữ bàn trước nhé."
+    }
+  ]
+}

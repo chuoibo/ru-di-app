@@ -149,3 +149,44 @@ def test_token_proxy_khong_bao_gio_ra_khoi_may_chu(client, monkeypatch) -> None:
     )
     assert "token-proxy-bi-mat" not in r.text
     assert "token-proxy-bi-mat" not in str(dict(r.headers))
+
+
+def test_ve_tu_man_tien_bi_tu_choi_truoc_khi_goi_proxy(client, monkeypatch) -> None:
+    # ADR-0036 §2.9: the silence on money screens covers drawing too, and it
+    # must cost nothing -- no proxy call, no quota seat.
+    daGoi = _bat_goi(monkeypatch, TraLoiGia(202, {}))
+    for man in ("finance", "/settlements/7", "batches/x", "smart-split/moi/review"):
+        r = client.post(
+            "/me/nep/media",
+            json={"loai": "anh", "mo_ta": "gấu", "man": man},
+            headers=_headers(),
+        )
+        assert r.status_code == 403, man
+        assert r.json()["detail"] == "nep_lui_man_tien"
+    assert daGoi == []
+
+
+def test_man_tien_la_ca_doan_dau_khong_phai_tien_to(client, monkeypatch) -> None:
+    daGoi = _bat_goi(monkeypatch, TraLoiGia(202, {}))
+    for man in ("financial-report", "explore", "/outings/7"):
+        r = client.post(
+            "/me/nep/media",
+            json={"loai": "anh", "mo_ta": "gấu", "man": man},
+            headers=_headers(),
+        )
+        assert r.status_code == 202, man
+    assert len(daGoi) == 3
+    # The screen is a check, never a field forwarded to the proxy.
+    assert all("man" not in kw["json"] for _, _, kw in daGoi)
+
+
+def test_danh_sach_man_tien_khop_phieu_ts() -> None:
+    import pathlib
+    import re
+
+    goc = pathlib.Path(__file__).resolve().parents[4]
+    ts = (goc / "apps/mobile/src/rudi/nep/phieu.ts").read_text(encoding="utf-8")
+    khop = re.search(r"export const MAN_NEP_LUI = \[([^\]]*)\]", ts)
+    assert khop, "phieu.ts không còn MAN_NEP_LUI"
+    tu_ts = tuple(re.findall(r'"([^"]+)"', khop.group(1)))
+    assert tu_ts == nep_route.MAN_NEP_LUI

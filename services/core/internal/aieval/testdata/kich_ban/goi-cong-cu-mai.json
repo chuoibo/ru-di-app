@@ -1,0 +1,38 @@
+{
+  "ten": "goi-cong-cu-mai",
+  "mo_ta": "Mô hình gọi công cụ mãi: bước cuối vẫn gọi, hết ngân sách bước.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"find_places\"], \"huong\": \"tac_tu\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "list_destinations",
+        "doi_so": {}
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "list_destinations",
+        "doi_so": {}
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "list_destinations",
+        "doi_so": {}
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "list_destinations",
+        "doi_so": {}
+      }
+    }
+  ]
+}

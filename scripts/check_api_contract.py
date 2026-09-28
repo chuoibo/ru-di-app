@@ -431,6 +431,7 @@ GO_CHAT_HANDLERS = (
     "services/core/internal/chatlegacychange/handler.go",
     "services/core/internal/avatarfeed/handler.go",
     "services/core/internal/websession/websession.go",
+    "services/core/internal/nepnho/handler.go",
 )
 GO_PROFILE_HANDLERS = (
     "services/core/internal/achievementv1/handler.go",

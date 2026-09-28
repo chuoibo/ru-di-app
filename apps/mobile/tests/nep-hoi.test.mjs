@@ -118,7 +118,7 @@ test("phiên Nếp không bao giờ xuống đĩa: hook và bảng không chạm
 test("Nếp không vẽ lên thẻ của nhóm: thẻ AI nhóm và đường gọi nhóm không import Nếp", () => {
   // ADR-0036 §2.6: two roles, two faces. The group answer card is «Rủ Đi AI».
   const rudi = join(HERE, "..", "src", "rudi");
-  for (const tep of ["screens/chat/TheAi.tsx", "chat/useChatAi.ts", "chat/ai-invocations.ts"]) {
+  for (const tep of ["screens/chat/TheAi.tsx", "screens/chat/TraLoiAi.tsx", "screens/chat/ChipBoiCanh.tsx", "chat/useChatAi.ts", "chat/ai-invocations.ts", "chat/nhac-ai.ts"]) {
     assert.doesNotMatch(readFileSync(join(rudi, tep), "utf8"), /art\/Nep"|\/nep\//, tep);
   }
 });

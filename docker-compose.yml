@@ -242,6 +242,23 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  # Lược đồ chỉ mục truy hồi quán (internal/rag, thiết kế 04 §2.4), với bảng
+  # phiên bản riêng `rag_schema_migrations`. Chạy SAU `migrate-chat`. `serve`
+  # không đòi lược đồ này — thiếu nó, hay đang cài dở, thì /places/search xếp
+  # trên hàng sống — nên `core` chỉ đợi nó KHỞI ĐỘNG, không đợi nó THÀNH CÔNG:
+  # một lần migrate-rag hỏng (ví dụ checksum lệch) hiện ở `docker compose ps`
+  # với mã thoát khác 0 chứ không giữ cả cửa trước ở ngoài. Có sẵn lược đồ thì
+  # `core rag build` chạy được ngay. Dựng, đánh giá, đưa lên một phiên bản vẫn
+  # là việc tay của người vận hành.
+  migrate-rag:
+    <<: *core-image
+    command: ["migrate-rag"]
+    environment: *api-env
+    depends_on:
+      migrate-chat:
+        condition: service_completed_successfully
+    restart: "no"
+
   # Cửa trước Go (ADR-0029). Route manifest cho Go thì Go trả lời, còn lại proxy
   # nguyên vẹn sang `api`. Giữ cổng 8099 để mobile, README và script không đổi.
   core:
@@ -267,6 +284,15 @@ services:
       # Legacy route rollback without a rebuild. Go-only profile routes have
       # no Python implementation and remain owned by Go.
       MOBILE_FORCE_PYTHON: ${MOBILE_FORCE_PYTHON:-}
+      # What answers Nếp's questions (ADR-0044, slice 6): always the Python
+      # brain's nep-reply here, whatever the host's .env says. `core` is the
+      # public front door, so it gets no Gemini key by default: the Go engine
+      # (`go`, which calls Gemini from this process) is switched on only by
+      # layering docker-compose.nep-go.yml on top, which also hands over the
+      # key. Not before eval T1 is green in CI, ADR-0044 is signed and the key
+      # in core has had its security review (design 01 §9 q4).
+      MOBILE_AI_ENGINE_NEP: brain
+      MOBILE_AI_ENGINE_GROUP: brain
     ports:
       - "${MOBILE_API_PORT:-8099}:8000"
     depends_on:
@@ -276,6 +302,10 @@ services:
         condition: service_completed_successfully
       profile-migrate:
         condition: service_completed_successfully
+      # Ordering only (see migrate-rag above): serve reads the retrieval
+      # schema through rag.Installed and falls back to live rows without it.
+      migrate-rag:
+        condition: service_started
     healthcheck:
       # Liveness of core itself, on its loopback port — not a proxied /healthz,
       # which would report Python's health under core's name.
@@ -284,6 +314,100 @@ services:
       timeout: 3s
       start_period: 2s
       retries: 30
+
+  # Hàng đợi job AI (lát 10, ADR-0045 đề xuất): RabbitMQ, Redis và `core work`.
+  # Nằm sau profile `hang-doi`, không nằm trong `make up`: stack dev chạy
+  # MOBILE_AUTH_MODE=dev nên core tắt engine AI, và ba service này CHƯA được
+  # dựng thử trên máy có Docker (lát 10 làm ở máy không có daemon; ảnh chỉ được
+  # ghim digest qua registry). Bật bằng
+  #   docker compose --profile hang-doi up -d
+  # Postgres vẫn là nguồn sự thật: tắt cả ba thì worker trong core poll như cũ.
+  # Không publish cổng nào; vẫn một mạng (xem đầu file).
+  rabbitmq:
+    # 4.1-alpine, multi-arch index digest lấy ngày 2026-09-25.
+    image: rabbitmq:4.1-alpine@sha256:8146e69328150e9162c7ca5bfc4b29de4df2d92179ad84d0cc29e55eb27953b5
+    profiles: ["hang-doi"]
+    environment:
+      RABBITMQ_DEFAULT_USER: rudi
+      RABBITMQ_DEFAULT_PASS: rudi-dev-only
+    healthcheck:
+      # `ping` trả lời trước khi listener AMQP mở; hỏi đúng cổng.
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      start_period: 20s
+      retries: 20
+
+  redis:
+    # 7.4-alpine, multi-arch index digest lấy ngày 2026-09-25. Chữ stream và
+    # bộ đếm limiter không bao giờ xuống đĩa; đầy thì bỏ khoá sắp hết hạn trước.
+    image: redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    profiles: ["hang-doi"]
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-ttl"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # `core work`: relay outbox + consumer ai.group/ai.nep + poller dự phòng +
+  # tác vụ định kỳ. Nhân bản bằng `--scale worker=N`. SIGTERM thì job chưa có
+  # nội dung được nhả về hàng ngay; 75 s là trần job 70 s cộng biên.
+  worker:
+    <<: *core-image
+    profiles: ["hang-doi"]
+    command: ["work"]
+    environment:
+      <<: *api-env
+      MOBILE_BRAIN_URL: http://api:8000
+      MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
+      MOBILE_AI_ENGINE_NEP: brain
+      MOBILE_AI_ENGINE_GROUP: brain
+      MOBILE_AMQP_URL: amqp://rudi:rudi-dev-only@rabbitmq:5672/
+      MOBILE_REDIS_URL: redis://redis:6379/0
+      MOBILE_CORE_LIVENESS_LISTEN: 127.0.0.1:8001
+    stop_grace_period: 75s
+    depends_on:
+      migrate-chat:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/core", "healthcheck"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 20
+
+  # Sidecar suy luận (services/ai-infer, ADR-0031): chỉ gọi model, không có
+  # luật nghiệp vụ. Bật bằng
+  #   docker compose --profile ai up -d ai-infer
+  # Mặc định ở đây: sparse = stub (băm tất định, không trọng số), trí nhớ TẮT
+  # (compose chưa có Milvus; bật bằng AI_INFER_GEMINI_MODE=stub|real cùng
+  # AI_INFER_MILVUS_URI). MILCO thật không bật được ở đây: cần duyệt license
+  # (AI_INFER_MILCO_LICENSE_REVIEW) và trọng số ghim commit — xem
+  # services/ai-infer/ai_infer/config.py. Chỉ publish ra 127.0.0.1; token nội bộ bắt
+  # buộc, giá trị dưới đây chỉ dành cho máy dev.
+  ai-infer:
+    build:
+      context: services/ai-infer
+    image: mobile-local/ai-infer:dev
+    profiles: ["ai"]
+    environment:
+      AI_INFER_TOKEN: ${AI_INFER_TOKEN:-ai-infer-dev-only-token-not-a-secret-0000}
+      AI_INFER_SPARSE_MODE: ${AI_INFER_SPARSE_MODE:-stub}
+      AI_INFER_GEMINI_MODE: ${AI_INFER_GEMINI_MODE:-off}
+      AI_INFER_MILVUS_URI: ${AI_INFER_MILVUS_URI:-}
+      AI_INFER_MILVUS_TOKEN: ${AI_INFER_MILVUS_TOKEN:-}
+      MEM0_TELEMETRY: "false"
+      MEM0_DIR: /tmp/mem0
+    read_only: true
+    tmpfs:
+      - /tmp
+    ports:
+      - "127.0.0.1:${AI_INFER_PORT:-18090}:8090"
 
   # Không nằm trong `docker compose up`: seed là thao tác có chủ đích, không
   # phải thứ chạy lén mỗi lần ai đó khởi động lại hệ. `make seed` gọi nó.

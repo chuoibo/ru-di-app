@@ -26,7 +26,12 @@ type Change struct {
 	Revision int64  `json:"revision"`
 }
 type Page struct {
-	ActorID      string   `json:"-"`
+	ActorID string `json:"-"`
+	// Lane is the room's transport in the same snapshot as the page: LaneV2
+	// once the room has an end-to-end encrypted conversation, LaneLegacy
+	// otherwise. It never goes on the wire; the WebSocket reads it to decide
+	// whether the room's `ai` frames may flow at all (design 02 §5.3).
+	Lane         string   `json:"-"`
 	ContextID    string   `json:"context_id"`
 	Changes      []Change `json:"changes"`
 	NextSequence int64    `json:"next_sequence"`
@@ -144,6 +149,35 @@ func commitRead(ctx context.Context, tx pgx.Tx, headers http.Header) error {
 	}
 	return tx.Commit(ctx)
 }
+
+// The two lanes a room can be in (chatassist's `chat_ai_invocations.lane`).
+const (
+	LaneLegacy = "legacy"
+	LaneV2     = "v2"
+)
+
+// lane is the room's transport as the database has it in tx's snapshot: v2
+// once chat_v2_conversations names the room, legacy otherwise, including on
+// a host that never installed chat v2. The same rule as chatassist's
+// authority, read here so the feed never needs chatassist's package.
+func lane(ctx context.Context, tx pgx.Tx, room string) (string, error) {
+	var table *string
+	if err := tx.QueryRow(ctx, `SELECT to_regclass('chat_v2_conversations')::text`).Scan(&table); err != nil {
+		return "", err
+	}
+	if table == nil {
+		return LaneLegacy, nil
+	}
+	var v2 bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_v2_conversations WHERE context_id=$1::uuid)`, room).Scan(&v2); err != nil {
+		return "", err
+	}
+	if v2 {
+		return LaneV2, nil
+	}
+	return LaneLegacy, nil
+}
+
 func watermark(ctx context.Context, tx pgx.Tx, room string) (int64, error) {
 	var n int64
 	err := tx.QueryRow(ctx, `SELECT coalesce((SELECT sequence FROM chat_legacy_change_heads WHERE context_id=$1::uuid),0)`, room).Scan(&n)
@@ -159,6 +193,9 @@ func (s Store) Changes(ctx context.Context, h http.Header, room string, after in
 	out.ActorID = actor
 	out.Watermark, err = watermark(ctx, tx, room)
 	if err != nil {
+		return out, err
+	}
+	if out.Lane, err = lane(ctx, tx, room); err != nil {
 		return out, err
 	}
 	if after < 0 || after > out.Watermark || limit < 1 || limit > 100 {

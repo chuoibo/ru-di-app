@@ -49,3 +49,7 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	return tx.Commit(ctx)
 }
+
+// SchemaFiles returns the embedded SQL, so gates that read every Go trigger
+// (internal/aigate) see this package's capture triggers.
+func SchemaFiles() []string { return []string{schemaSQL} }

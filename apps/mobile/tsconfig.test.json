@@ -358,8 +358,23 @@
     "src/rudi/chat/ban-nhap-cong-cu.ts",
     "src/rudi/chat/chat-route.ts",
     "src/rudi/ai/boi-canh.ts",
+    // The SSE reader for a streamed AI answer: chunking, resume and the
+    // three ways it gives up are all behaviour, so the function is run.
+    // See `tests/sse-doc.test.mjs`.
+    "src/rudi/ai/sse.ts",
+    // Slice 11: one streamed answer as the screen draws it (dedupe by id,
+    // parts, the end replacing the words, Reduce Motion by sentence) and the
+    // follower that falls back to polling. See `tests/tra-loi-song.test.mjs`.
+    "src/rudi/ai/tra-loi-song.ts",
     "src/rudi/chat/boi-canh-chat.ts",
     "src/rudi/chat/ai-invocations.ts",
+    // ADR-0046: whether a typed message also asks Rủ Đi AI (NFC/NFD, never an
+    // email), and the chip whose count is read from the bundle that is sent.
+    // Compiled because both rules are negative -- an email address is NOT a
+    // mention, and the chip does NOT count the screen -- and only running the
+    // functions settles a negative. See `nhac-ai.test.mjs`, `chip-boi-canh.test.mjs`.
+    "src/rudi/chat/nhac-ai.ts",
+    "src/rudi/chat/chip-boi-canh.ts",
     "src/rudi/chat/to-hen-chung.ts",
     "src/rudi/chat/useBanNhap.ts",
     "src/rudi/chat/viewability.ts",

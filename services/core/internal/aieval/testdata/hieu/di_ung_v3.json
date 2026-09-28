@@ -1,0 +1,4288 @@
+{
+ "bo": "di-ung-v3",
+ "phien_ban": 1,
+ "mo_ta": "Router Nếp: slot di_ung/an_kieng chuyển từ nửa người hỏi của corpus dị ứng đã lộ (T3, đo hồi quy, không phải cổng). Thiếu một dị nguyên bắt buộc là lỗi không an toàn; đọc thừa được đếm riêng. Nửa quán thuộc tầng nạp dữ liệu, không chuyển.",
+ "nguon": {
+  "tep": "nguon/di_ung_niem_phong_v3.json",
+  "sha256": "c3f87d8b9c0b47553356ab410686f61621dd5beee2a4629337ae6cad7d519f4e"
+ },
+ "luc": "2026-09-25T14:05:00+07:00",
+ "bao_trum": {
+  "hai_san": [
+   "tom",
+   "cua",
+   "ca",
+   "muc",
+   "oc_so"
+  ]
+ },
+ "ca": [
+  {
+   "id": "di-ung-v3-nh001",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng tôm, tìm giúp quán ăn tối gần hồ cho 3 người nhé",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh002",
+   "bot": "nep",
+   "cau": "Cho mình vài quán lẩu ngon quanh chợ đêm, mình dị ứng đậu phộng nặng lắm",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh003",
+   "bot": "nep",
+   "cau": "Tôi dị ứng với trứng, có quán ăn sáng nào ở trung tâm không?",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh004",
+   "bot": "nep",
+   "cau": "Em bị dị ứng mè, gợi ý chỗ ăn trưa gần bến xe giúp em",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh005",
+   "bot": "nep",
+   "cau": "Mình dị ứng gluten nên muốn tìm quán bún hoặc cơm quanh phố cổ",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh006",
+   "bot": "nep",
+   "cau": "Tụi mình đi 5 người, riêng mình dị ứng sữa bò, quán cafe nào có đồ uống không sữa?",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh007",
+   "bot": "nep",
+   "cau": "Mình có cơ địa dị ứng đậu nành, tối nay ăn ở đâu gần đồi thông?",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh008",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng cá, tìm quán nướng ổn áp ở khu trung tâm",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh009",
+   "bot": "nep",
+   "cau": "Dị ứng mực nha, kiếm giùm mình quán ăn vặt ở chợ",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh010",
+   "bot": "nep",
+   "cau": "Tìm quán ăn khuya, lưu ý mình dị ứng cua",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh011",
+   "bot": "nep",
+   "cau": "Mình dị ứng hạt điều với hạnh nhân, quán bánh nào an toàn gần hồ không?",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh012",
+   "bot": "nep",
+   "cau": "Tôi bị dị ứng hải sản, cần chỗ ăn tối lãng mạn cho hai người",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh013",
+   "bot": "nep",
+   "cau": "Mình dị ứng hàu, muốn tìm quán nhậu nhẹ ven sông",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh014",
+   "bot": "nep",
+   "cau": "Vợ chồng mình đều dị ứng lạc, gợi ý quán ăn gia đình với",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh015",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng vừng, có quán bánh mì nào không rắc vừng không?",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh016",
+   "bot": "nep",
+   "cau": "Cho mình hỏi quán nào phục vụ bữa sáng muộn, mình bị dị ứng lúa mì",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh017",
+   "bot": "nep",
+   "cau": "Con mình với mình đều dị ứng trứng gà, chỗ nào ăn trưa ổn?",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh018",
+   "bot": "nep",
+   "cau": "Mình không ăn được tôm vì dị ứng, tìm quán phở gần đây",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh019",
+   "bot": "nep",
+   "cau": "Bị dị ứng phô mai nên né pizza, gợi ý quán Việt ở trung tâm",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh020",
+   "bot": "nep",
+   "cau": "Mình dị ứng nghêu, cuối tuần muốn đi ăn hải sản mà né nghêu ra",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh021",
+   "bot": "nep",
+   "cau": "Mình dị ứng động vật có vỏ, tìm quán ăn tối gần bờ kè",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_chap_nhan": [
+     "tom",
+     "cua",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh022",
+   "bot": "nep",
+   "cau": "Mình dị ứng hải sản có vỏ, gợi ý quán nướng ngoài trời",
+   "nhom": "truc_tiep",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_chap_nhan": [
+     "tom",
+     "cua",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh023",
+   "bot": "nep",
+   "cau": "Tôm thì mình dị ứng, còn cua thì ăn được, tìm quán hải sản gần biển nhé",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "cua",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh024",
+   "bot": "nep",
+   "cau": "Cua thì ăn thoải mái, nhưng tôm thì mình dị ứng, gợi ý quán lẩu với",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh025",
+   "bot": "nep",
+   "cau": "Đậu phộng thì mình dị ứng, còn hạt điều thì không sao, tìm quán bún ở phố cổ",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ],
+    "doc_thua_chap_nhan": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh026",
+   "bot": "nep",
+   "cau": "Sữa bò thì mình dị ứng nhưng sữa đậu nành thì uống được, quán cafe nào hợp?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_chap_nhan": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh027",
+   "bot": "nep",
+   "cau": "Trứng gà thì dị ứng, trứng cút thì ăn được, tìm quán ăn sáng gần chợ",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh028",
+   "bot": "nep",
+   "cau": "Mực thì mình dị ứng, còn cá thì ăn được bình thường, kiếm quán nướng giúp mình",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ],
+    "doc_thua_chap_nhan": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh029",
+   "bot": "nep",
+   "cau": "Cá thì ok, tôm cũng ok, riêng cua là dị ứng, tối nay đi đâu ăn?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "ca",
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh030",
+   "bot": "nep",
+   "cau": "Mè thì mình dị ứng, còn đậu phộng thì vẫn ăn được, có quán chè nào gần hồ không?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "doc_thua_chap_nhan": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh031",
+   "bot": "nep",
+   "cau": "Gluten thì mình dị ứng, còn sữa thì uống được, tìm tiệm bánh phù hợp",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ],
+    "doc_thua_chap_nhan": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh032",
+   "bot": "nep",
+   "cau": "Hàu thì mình dị ứng, nhưng tôm cua thì ăn được hết, gợi ý quán nhậu ven biển",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_chap_nhan": [
+     "tom",
+     "cua",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh033",
+   "bot": "nep",
+   "cau": "Shrimp I'm allergic to, but crab is fine. Any seafood place near the lake?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "cua",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh034",
+   "bot": "nep",
+   "cau": "Peanuts I'm allergic to, but tree nuts are fine, looking for a Vietnamese lunch spot downtown",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ],
+    "doc_thua_chap_nhan": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh035",
+   "bot": "nep",
+   "cau": "Eggs I can't have, allergic, but dairy is totally fine. Brunch recommendations?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ],
+    "doc_thua_chap_nhan": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh036",
+   "bot": "nep",
+   "cau": "Milk I'm allergic to, but soy is fine, where can I get coffee near the market?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_chap_nhan": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh037",
+   "bot": "nep",
+   "cau": "Squid I'm allergic to but fish is fine, can you find a grill place for 4?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ],
+    "doc_thua_chap_nhan": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh038",
+   "bot": "nep",
+   "cau": "Cua ghẹ thì mình ăn được, tôm hùm cũng được, nhưng sò điệp thì dị ứng, tìm quán ven biển",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_chap_nhan": [
+     "cua",
+     "tom",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh039",
+   "bot": "nep",
+   "cau": "Đậu nành thì mình dị ứng, đậu phộng thì không, quán chay nào gần đây dùng ít đậu hũ?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ],
+    "doc_thua_chap_nhan": [
+     "dau_phong",
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh040",
+   "bot": "nep",
+   "cau": "Tôm với mực thì dị ứng, còn cá với cua thì vẫn ăn được, gợi ý quán lẩu cho nhóm 6 người",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "muc"
+    ],
+    "doc_thua_chap_nhan": [
+     "ca",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh041",
+   "bot": "nep",
+   "cau": "Sữa thì dị ứng nhẹ thôi, trứng thì ăn được, tìm chỗ ăn sáng view đẹp",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_chap_nhan": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh042",
+   "bot": "nep",
+   "cau": "Hải sản nói chung mình ăn được, trừ mỗi tôm là dị ứng, tìm quán nướng hải sản",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh043",
+   "bot": "nep",
+   "cau": "Óc chó thì dị ứng, còn lạc thì ăn vô tư, có tiệm bánh nào ngon không?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "dau_phong",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh044",
+   "bot": "nep",
+   "cau": "Cá hồi thì mình dị ứng, cá lóc thì ăn được, tìm quán cơm gia đình",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh045",
+   "bot": "nep",
+   "cau": "Tôm thì bị dị ứng, cua thì chưa ăn bao giờ nên không rõ, tìm quán không có tôm giúp mình",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh046",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm, còn cua thì ăn được, tìm quán nhé",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh047",
+   "bot": "nep",
+   "cau": "Mình dị ứng trứng, nhưng sữa thì bình thường, gợi ý quán bánh ngọt với",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ],
+    "doc_thua_chap_nhan": [
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh048",
+   "bot": "nep",
+   "cau": "The crab I'm allergic to, shrimp is okay though, where to eat tonight around the old town?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh049",
+   "bot": "nep",
+   "cau": "Dairy I react to, eggs no problem, any cafe with oat milk?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_chap_nhan": [
+     "trung",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh050",
+   "bot": "nep",
+   "cau": "Mè thì dị ứng, còn gluten thì không vấn đề gì, tìm quán mì Nhật",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh051",
+   "bot": "nep",
+   "cau": "Đồ biển thì mình dị ứng, còn thịt thì ăn thoải mái, kiếm quán nướng thịt gần đồi",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh052",
+   "bot": "nep",
+   "cau": "Tôm cua thì mình dị ứng, còn cá thì ăn được, có quán lẩu cá nào ngon không?",
+   "nhom": "tuong_phan",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh053",
+   "bot": "nep",
+   "cau": "Hải sản mình bị dị ứng từ bé, tìm quán ăn tối gần hồ giúp mình",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh054",
+   "bot": "nep",
+   "cau": "Đậu phộng á, mình bị dị ứng từ hồi cấp một, quán bún nào không rắc đậu phộng?",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh055",
+   "bot": "nep",
+   "cau": "Tôm là thứ mình dị ứng nặng nhất, gợi ý quán lẩu cho nhóm nhé",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh056",
+   "bot": "nep",
+   "cau": "Trứng thì hồi nhỏ ăn vào là nổi mẩn, giờ vẫn dị ứng, tìm quán ăn sáng",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh057",
+   "bot": "nep",
+   "cau": "Sữa bò uống vào là đau bụng với nổi mề đay, tìm cafe có sữa hạt giúp mình",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_chap_nhan": [
+     "me",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh058",
+   "bot": "nep",
+   "cau": "Cua biển mình ăn một miếng là sưng môi, quán hải sản nào có món khác không?",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh059",
+   "bot": "nep",
+   "cau": "Mè đen mè trắng gì mình cũng dị ứng, có quán chè nào không dùng mè?",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh060",
+   "bot": "nep",
+   "cau": "Gluten thì bác sĩ bảo mình dị ứng, tìm quán ăn trưa có món không bột mì",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh061",
+   "bot": "nep",
+   "cau": "Đậu nành với các món từ đậu nành mình đều bị dị ứng, gợi ý quán ăn gần chợ",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh062",
+   "bot": "nep",
+   "cau": "Mực khô mực tươi gì cũng làm mình ngứa, tìm quán nhậu ven sông",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh063",
+   "bot": "nep",
+   "cau": "Cá mình dị ứng từ năm ngoái mới phát hiện, quán nướng nào ổn gần trung tâm?",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh064",
+   "bot": "nep",
+   "cau": "Sò điệp hồi đi biển ăn xong phải đi cấp cứu, giờ tìm quán hải sản thì né giúp mình",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh065",
+   "bot": "nep",
+   "cau": "Hạt điều, hạnh nhân, macca, mấy loại hạt đó mình dị ứng hết, tiệm bánh nào an toàn?",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh066",
+   "bot": "nep",
+   "cau": "Tôm khô cũng không được luôn vì mình dị ứng tôm, tìm quán bánh canh nhé",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh067",
+   "bot": "nep",
+   "cau": "Lạc rang lạc luộc mình đều dị ứng, gợi ý quán ăn tối ở phố cổ",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh068",
+   "bot": "nep",
+   "cau": "Mấy món có phô mai mình bị dị ứng, tìm chỗ ăn không phải đồ Tây",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh069",
+   "bot": "nep",
+   "cau": "Ốc là mình dị ứng, hôm trước ăn ốc hương xong nổi đỏ cả người, tìm quán ăn vặt",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh070",
+   "bot": "nep",
+   "cau": "Trứng vịt lộn thì khỏi, dị ứng trứng mà, quán ăn khuya nào gần bến xe?",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh071",
+   "bot": "nep",
+   "cau": "Hải sản của vùng này ngon nhưng mình dị ứng hết, có quán thịt nướng nào không?",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "doc_thua_chap_nhan": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh072",
+   "bot": "nep",
+   "cau": "Đồ biển nói chung là mình bị dị ứng, bạn mình thì không, tìm quán hai đứa cùng ăn được",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh073",
+   "bot": "nep",
+   "cau": "Vừng thì mình kỵ lắm, dị ứng đó, quán bánh mì nào không có vừng?",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh074",
+   "bot": "nep",
+   "cau": "Nước tương, đậu hũ, mấy thứ làm từ đậu nành mình dị ứng, tìm quán ăn trưa",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh075",
+   "bot": "nep",
+   "cau": "Cá cơm, cá hồi, cá gì mình cũng bị ngứa, kiếm quán không bán cá",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh076",
+   "bot": "nep",
+   "cau": "Tôm hùm mình từng ăn rồi bị khó thở, lần này tìm quán nướng không có tôm",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh077",
+   "bot": "nep",
+   "cau": "Bột mì với lúa mạch mình không dung nạp được, tìm quán phở hoặc bún",
+   "nhom": "chu_de_truoc",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh078",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm mực, tìm quán lẩu giúp",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh079",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm cua, quán nào ăn tối ngon gần hồ?",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh080",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng cua ghẹ, gợi ý quán hải sản mà có món khác",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh081",
+   "bot": "nep",
+   "cau": "Mình dị ứng sò điệp với hàu, tìm quán nướng ven biển",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh082",
+   "bot": "nep",
+   "cau": "Dị ứng ốc, óc chó, tìm quán ăn vặt gần chợ",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh083",
+   "bot": "nep",
+   "cau": "Mình dị ứng ốc chó nên tiệm bánh nào không dùng hạt thì chỉ mình",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "oc_so",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh084",
+   "bot": "nep",
+   "cau": "Mình dị ứng sữa trứng, quán ăn sáng nào hợp?",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh085",
+   "bot": "nep",
+   "cau": "Dị ứng đậu phộng mè, tìm quán bún trộn giúp mình",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh086",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm cua mực ghẹ sò ốc, nói chung là đồ biển, tìm quán thịt nướng",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "muc",
+     "oc_so",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh087",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng tôm, cua, cá, tìm quán ăn gia đình ở trung tâm",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh088",
+   "bot": "nep",
+   "cau": "Dị ứng sữa, trứng, đậu nành, lúa mì, có quán nào ăn được không?",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "trung",
+     "dau_nanh",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh089",
+   "bot": "nep",
+   "cau": "Mình dị ứng nghêu sò hến, cuối tuần tìm quán ăn gần biển",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh090",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm tép, gợi ý quán bún với",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh091",
+   "bot": "nep",
+   "cau": "Dị ứng hàu hến vẹm, tìm quán nhậu nhẹ",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh092",
+   "bot": "nep",
+   "cau": "Mình dị ứng đậu phộng hạt điều, quán chè nào ổn?",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh093",
+   "bot": "nep",
+   "cau": "Mình dị ứng mè đậu nành, tìm quán cơm chay gần chùa",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me",
+     "dau_nanh"
+    ],
+    "doc_thua_chap_nhan": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh094",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm lẫn cua, tìm quán ăn khuya",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh095",
+   "bot": "nep",
+   "cau": "Mình dị ứng cả tôm và mực và bạch tuộc, tìm quán nướng ở phố cổ",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "muc"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh096",
+   "bot": "nep",
+   "cau": "Dị ứng cá tôm, kiếm quán lẩu nấm giúp mình",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh097",
+   "bot": "nep",
+   "cau": "Mình dị ứng cua với ghẹ với cù kỳ, gợi ý quán ven biển có món thịt",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh098",
+   "bot": "nep",
+   "cau": "Dị ứng mực/tôm/sò, tìm quán ăn tối",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "tom",
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh099",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm + cua + mực, quán lẩu nào có nước dùng không hải sản?",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "muc"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh100",
+   "bot": "nep",
+   "cau": "Mình dị ứng sữa bơ phô mai, tìm quán bánh mì",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh101",
+   "bot": "nep",
+   "cau": "Mình dị ứng trứng gà trứng vịt trứng cút, quán ăn sáng nào có món không trứng?",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh102",
+   "bot": "nep",
+   "cau": "Dị ứng hạnh nhân óc chó hạt dẻ, tìm quán cafe có bánh",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh103",
+   "bot": "nep",
+   "cau": "Mình dị ứng lạc vừng, quán xôi nào không rắc lạc vừng?",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh104",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm; cua; mực nha, tìm quán cơm",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh105",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm cua cá mực, tìm quán chay",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "ca",
+     "muc"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san",
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh106",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng sò huyết, ốc len, tìm quán ăn vặt ở chợ đêm",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh107",
+   "bot": "nep",
+   "cau": "Dị ứng đậu nành đậu phộng, gợi ý quán ăn trưa",
+   "nhom": "ghep_liet_ke",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh108",
+   "bot": "nep",
+   "cau": "Mình không dị ứng gì ngoài tôm, tìm quán hải sản nhé",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh109",
+   "bot": "nep",
+   "cau": "Mình không bị dị ứng gì trừ đậu phộng ra, gợi ý quán bún",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh110",
+   "bot": "nep",
+   "cau": "Không dị ứng gì hết, ngoại trừ trứng, tìm chỗ ăn sáng",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh111",
+   "bot": "nep",
+   "cau": "Mình ăn gì cũng được, không dị ứng gì trừ mè, tìm quán chè",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh112",
+   "bot": "nep",
+   "cau": "Không dị ứng món nào ngoài mực ra, tối nay đi đâu ăn?",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh113",
+   "bot": "nep",
+   "cau": "Tụi mình không ai dị ứng gì, trừ mình dị ứng cua, tìm quán lẩu",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh114",
+   "bot": "nep",
+   "cau": "Mình không có dị ứng gì đặc biệt, chỉ trừ sữa bò, quán cafe nào có sữa yến mạch?",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh115",
+   "bot": "nep",
+   "cau": "Không dị ứng gì ngoài hải sản ra, kiếm quán nướng",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh116",
+   "bot": "nep",
+   "cau": "Mình không dị ứng gì ngoài gluten, tìm quán ăn trưa",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh117",
+   "bot": "nep",
+   "cau": "Không dị ứng thứ gì trừ hạt điều với óc chó, tìm tiệm bánh",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh118",
+   "bot": "nep",
+   "cau": "Mình chẳng dị ứng gì ngoài đậu nành, gợi ý quán ăn tối",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh119",
+   "bot": "nep",
+   "cau": "Ngoài cá ra thì mình không dị ứng gì, tìm quán cơm",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh120",
+   "bot": "nep",
+   "cau": "Trừ tôm với cua ra thì mình không dị ứng gì cả, quán hải sản nào có món khác?",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh121",
+   "bot": "nep",
+   "cau": "I'm not allergic to anything except shellfish, dinner spot by the beach?",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so",
+     "tom",
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh122",
+   "bot": "nep",
+   "cau": "Khong di ung gi ngoai trung ra, tim quan an sang",
+   "nhom": "ngoai_tru",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh123",
+   "bot": "nep",
+   "cau": "Đồ biển gì mình cũng dị ứng, tìm quán ăn tối",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh124",
+   "bot": "nep",
+   "cau": "Cái gì dưới biển mình cũng dị ứng hết, gợi ý quán thịt nướng",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh125",
+   "bot": "nep",
+   "cau": "Hải sản nào mình cũng bị dị ứng, tìm quán ven biển mà có món thịt",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh126",
+   "bot": "nep",
+   "cau": "Mình dị ứng tất cả các loại hải sản, quán lẩu nào ổn?",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "doc_thua_chap_nhan": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh127",
+   "bot": "nep",
+   "cau": "Đồ tanh là mình dị ứng hết, gợi ý chỗ ăn trưa",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh128",
+   "bot": "nep",
+   "cau": "Mình dị ứng mọi thứ từ biển, tìm quán ăn gia đình",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh129",
+   "bot": "nep",
+   "cau": "Seafood gì cũng dị ứng, tìm quán ăn khuya",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh130",
+   "bot": "nep",
+   "cau": "Anything from the sea I'm allergic to, where should I eat tonight?",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh131",
+   "bot": "nep",
+   "cau": "Mình dị ứng hải sản toàn bộ, tôm cua cá mực gì cũng không được, tìm quán",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san",
+     "tom",
+     "cua",
+     "ca",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh132",
+   "bot": "nep",
+   "cau": "Đồ biển là mình dị ứng hết trơn, kiếm quán cơm tấm giúp",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh133",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng đồ biển, loại nào cũng vậy, tìm quán nướng",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh134",
+   "bot": "nep",
+   "cau": "Hải sản vỏ cứng hay không vỏ mình đều dị ứng, gợi ý quán ăn tối",
+   "nhom": "tat_ca_do_bien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "doc_thua_chap_nhan": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh135",
+   "bot": "nep",
+   "cau": "Mình dị ứng mựt, tìm quán nướng",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh136",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng đậu nàng, gợi ý quán ăn trưa",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh137",
+   "bot": "nep",
+   "cau": "Dị ứng trứn nha, tìm quán ăn sáng",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh138",
+   "bot": "nep",
+   "cau": "Mình dị ứng sửa bò, quán cafe nào có đồ uống khác?",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh139",
+   "bot": "nep",
+   "cau": "Mình dị ừng tôm, tìm quán lẩu",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh140",
+   "bot": "nep",
+   "cau": "Mình di ứng đậu phọng, quán bún nào ổn",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh141",
+   "bot": "nep",
+   "cau": "Mình dị ứn hải sãn, tìm quán thịt nướng",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh142",
+   "bot": "nep",
+   "cau": "Mình dị ứng cá hồi và tôm hùn, tìm quán ăn tối",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh143",
+   "bot": "nep",
+   "cau": "Dị ứng đâu phộng, tìm quán chè",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh144",
+   "bot": "nep",
+   "cau": "Mình dị ứng mè và gluteen, tiệm bánh nào ok?",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh145",
+   "bot": "nep",
+   "cau": "Mình bị dị ưng cua, tìm quán hải sản có món khác",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh146",
+   "bot": "nep",
+   "cau": "Mình dị ứng đậu nạnh, quán chay nào không dùng đậu hũ?",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ],
+    "doc_thua_chap_nhan": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh147",
+   "bot": "nep",
+   "cau": "Mình dị ứng trừng gà, gợi ý quán ăn sáng",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh148",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôn với cua, tìm quán lẩu",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh149",
+   "bot": "nep",
+   "cau": "Minh di ung muc, tim quan an vat",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh150",
+   "bot": "nep",
+   "cau": "Mình dị ứng hạt đìu, tìm tiệm bánh",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh151",
+   "bot": "nep",
+   "cau": "Mình dị ứng sữ, tìm cafe",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh152",
+   "bot": "nep",
+   "cau": "Mình dị ứng hài sản, tìm quán ăn tối",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh153",
+   "bot": "nep",
+   "cau": "Mình dị ứng vưng, tìm quán bánh mì",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh154",
+   "bot": "nep",
+   "cau": "Mình dị ứng dau nanh voi trung, tìm quán ăn trưa",
+   "nhom": "loi_go",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh155",
+   "bot": "nep",
+   "cau": "Mình dị ứng... ừm... tôm, tìm quán lẩu nhé",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh156",
+   "bot": "nep",
+   "cau": "Dị ứng thì... để coi... đậu phộng với mè, gợi ý quán bún",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh157",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng, à, cái gì nhỉ, à trứng, tìm quán ăn sáng",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh158",
+   "bot": "nep",
+   "cau": "Dị ứng... ờ... hải sản, tối nay ăn ở đâu?",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh159",
+   "bot": "nep",
+   "cau": "Mình dị ứng, ừm, sữa, với lại, ờ, gluten, tìm tiệm bánh",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh160",
+   "bot": "nep",
+   "cau": "Mình có dị ứng... hmm... cua ghẹ gì đó, tìm quán nướng",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh161",
+   "bot": "nep",
+   "cau": "Dị ứng... ơ... mực, gợi ý quán nhậu",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh162",
+   "bot": "nep",
+   "cau": "Mình dị ứng — à mà — đậu nành, tìm quán cơm",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh163",
+   "bot": "nep",
+   "cau": "Dị ứng... thì là... tôm... với cả... cua nữa, tìm quán lẩu",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh164",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng ừm ừm cá, kiếm quán ăn tối",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh165",
+   "bot": "nep",
+   "cau": "Mình dị ứng, để nhớ coi, óc chó hả, đúng rồi óc chó, tìm quán cafe",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh166",
+   "bot": "nep",
+   "cau": "Dị ứng ờm... sò... sò điệp á, tìm quán hải sản",
+   "nhom": "ngap_ngung",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh167",
+   "bot": "nep",
+   "cau": "Món nào có tôm là mình chịu, tìm quán bún giúp",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh168",
+   "bot": "nep",
+   "cau": "Cái gì có đậu phộng là mình chịu thua, gợi ý quán ăn trưa",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh169",
+   "bot": "nep",
+   "cau": "Món nào có trứng là mình không ăn được vì dị ứng, tìm quán ăn sáng",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh170",
+   "bot": "nep",
+   "cau": "Có mè là mình ngứa liền, tìm quán chè",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh171",
+   "bot": "nep",
+   "cau": "Đụng tới sữa là mình nổi mẩn, quán cafe nào có trà?",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh172",
+   "bot": "nep",
+   "cau": "Ăn cua vào là sưng mặt, tìm quán lẩu",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh173",
+   "bot": "nep",
+   "cau": "Món gì có mực là mình khó thở, gợi ý quán nướng",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh174",
+   "bot": "nep",
+   "cau": "Hễ có hải sản là mình chịu, kiếm quán ăn tối",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh175",
+   "bot": "nep",
+   "cau": "Món nào dính gluten là mình đau bụng cả ngày, tìm quán ăn trưa",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh176",
+   "bot": "nep",
+   "cau": "Món nào có đậu nành là mình chịu, tìm quán ăn gần chợ",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh177",
+   "bot": "nep",
+   "cau": "Chỉ cần có chút hạt điều là mình nổi mề đay, tiệm bánh nào an toàn?",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "me",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh178",
+   "bot": "nep",
+   "cau": "Món nào có cá là mình không đụng được, dị ứng mà, tìm quán cơm",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh179",
+   "bot": "nep",
+   "cau": "Món nào có ốc hay nghêu là mình chịu, tìm quán ăn vặt",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh180",
+   "bot": "nep",
+   "cau": "Món nào có tôm có cua là mình chịu hết, gợi ý quán thịt nướng",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh181",
+   "bot": "nep",
+   "cau": "Anything with sesame and I'm done, need a noodle place",
+   "nhom": "mon_nao_co",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh182",
+   "bot": "nep",
+   "cau": "Mình dị ứng nhẹ với sữa, nặng với trứng, tìm quán ăn sáng",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh183",
+   "bot": "nep",
+   "cau": "Dị ứng tôm nhẹ thôi nhưng cua thì nặng, gợi ý quán lẩu",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh184",
+   "bot": "nep",
+   "cau": "Mình dị ứng mè hơi hơi, đậu phộng thì sốc phản vệ, tìm quán bún",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh185",
+   "bot": "nep",
+   "cau": "Sữa thì dị ứng nhẹ, gluten thì nặng hơn, tìm tiệm bánh",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh186",
+   "bot": "nep",
+   "cau": "Mình dị ứng nhẹ với cá, nặng với mực, tìm quán nướng",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh187",
+   "bot": "nep",
+   "cau": "Trứng chỉ hơi ngứa, còn hải sản là phải đi viện, tìm quán ăn tối",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung",
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh188",
+   "bot": "nep",
+   "cau": "Mình dị ứng đậu nành mức nhẹ, óc chó mức nặng, gợi ý quán cafe",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh",
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh189",
+   "bot": "nep",
+   "cau": "Mild allergy to milk, severe to peanuts, where to eat lunch?",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh190",
+   "bot": "nep",
+   "cau": "Tôm thì dị ứng nhẹ, ăn ít không sao, nhưng vẫn muốn né, tìm quán",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh191",
+   "bot": "nep",
+   "cau": "Mình dị ứng nhẹ nhẹ với sò, nặng nặng với cua, tìm quán ven biển",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh192",
+   "bot": "nep",
+   "cau": "Hơi dị ứng trứng, rất dị ứng mè, tìm quán ăn trưa",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh193",
+   "bot": "nep",
+   "cau": "Dị ứng sữa không nặng lắm, nhưng dị ứng tôm thì nặng lắm, tìm quán ăn khuya",
+   "nhom": "nhe_nang",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua",
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh194",
+   "bot": "nep",
+   "cau": "mik di ung tom, tim quan lau di",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh195",
+   "bot": "nep",
+   "cau": "mk bi di ung dau phong nha, goi y quan bun",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh196",
+   "bot": "nep",
+   "cau": "t dị ứng hải sản á, kiếm quán nướng ik",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh197",
+   "bot": "nep",
+   "cau": "mik bị dị ứng trứng á, hem ăn được, tìm quán ăn sáng",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh198",
+   "bot": "nep",
+   "cau": "e di ung sua bo, cafe nao ok k",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh199",
+   "bot": "nep",
+   "cau": "mik dị ứg mè, tìm quán chè",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh200",
+   "bot": "nep",
+   "cau": "di ung cua ghe nha mn, tim quan an toi",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh201",
+   "bot": "nep",
+   "cau": "mik dj ung muc, quán nướng nào ok",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh202",
+   "bot": "nep",
+   "cau": "t bj dị ứng đậu nành, qán ăn trưa nào ổn",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh203",
+   "bot": "nep",
+   "cau": "di ung gluten + trung, tim tiem banh",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh204",
+   "bot": "nep",
+   "cau": "mk dị ứng hạt điều vs óc chó, tìm cafe",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh205",
+   "bot": "nep",
+   "cau": "DI UNG TOM CUA, TIM QUAN LAU",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh206",
+   "bot": "nep",
+   "cau": "bn oi mik di ung ca, tim quan com",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh207",
+   "bot": "nep",
+   "cau": "mik di ung hai san hic, co quan thit nuong nao k",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh208",
+   "bot": "nep",
+   "cau": "dị ứng sò hến nha, hok ăn đc, tìm quán ăn vặt",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh209",
+   "bot": "nep",
+   "cau": "mik di ung vung vs lac, tim quan xoi",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh210",
+   "bot": "nep",
+   "cau": "mik dị ứng tôm hẻm có ăn được, kiếm quán lẩu",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh211",
+   "bot": "nep",
+   "cau": "t dị ứng sữa 2 năm nay r, tìm quán cafe",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh212",
+   "bot": "nep",
+   "cau": "mik di ung tom 100% k dua dau, tim quan lau",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "dau_nanh",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh213",
+   "bot": "nep",
+   "cau": "e dị ứng dau nanh nhe, tim quan an khuya gan cho",
+   "nhom": "teencode_khong_dau",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh214",
+   "bot": "nep",
+   "cau": "I'm allergic to shrimp, can you find a dinner place near the lake?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh215",
+   "bot": "nep",
+   "cau": "Allergic to peanuts, looking for a noodle spot in the old town",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh216",
+   "bot": "nep",
+   "cau": "I have a shellfish allergy, any grill restaurants nearby?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so",
+     "tom",
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh217",
+   "bot": "nep",
+   "cau": "Severe tree nut allergy here, which bakery is safe?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "doc_thua_chap_nhan": [
+     "lua_mi",
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh218",
+   "bot": "nep",
+   "cau": "I'm allergic to eggs and dairy, brunch ideas?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung",
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh219",
+   "bot": "nep",
+   "cau": "Gluten allergy, need a lunch place for 3",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh220",
+   "bot": "nep",
+   "cau": "Soy allergy, where can we eat tonight?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh221",
+   "bot": "nep",
+   "cau": "I'm allergic to sesame, recommend a street food stall",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh222",
+   "bot": "nep",
+   "cau": "Allergic to fish and squid, find me a hotpot place",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca",
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh223",
+   "bot": "nep",
+   "cau": "Crab allergy, but I still want to eat by the sea, any place?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh224",
+   "bot": "nep",
+   "cau": "Mình allergic với shrimp nha, tìm quán lẩu",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh225",
+   "bot": "nep",
+   "cau": "Mình bị allergy với peanut, gợi ý quán bún",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh226",
+   "bot": "nep",
+   "cau": "Seafood allergy ở đây, kiếm quán nướng thịt giúp",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh227",
+   "bot": "nep",
+   "cau": "Mình lactose intolerant, cafe nào có non-dairy milk?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh228",
+   "bot": "nep",
+   "cau": "I react badly to oysters and clams, any dinner spot?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh229",
+   "bot": "nep",
+   "cau": "Allergic to walnuts, cashews, almonds, need a cafe",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh230",
+   "bot": "nep",
+   "cau": "Allergies: shrimp, crab, egg. Find a family restaurant please",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom",
+     "cua",
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh231",
+   "bot": "nep",
+   "cau": "I'm allergic to lobster and prawns, dinner recommendations?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh232",
+   "bot": "nep",
+   "cau": "Wheat allergy, where to get rice dishes?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh233",
+   "bot": "nep",
+   "cau": "My allergy is milk, cheese too obviously, where to eat pho?",
+   "nhom": "tieng_anh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh234",
+   "bot": "nep",
+   "cau": "Mình ăn chay và dị ứng đậu phộng, tìm quán chay gần chùa",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ],
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh235",
+   "bot": "nep",
+   "cau": "Mình ăn thuần chay, dị ứng đậu nành, có quán nào hợp không?",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ],
+    "an_kieng": [
+     "thuan_chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh236",
+   "bot": "nep",
+   "cau": "Mình theo đạo Hồi, ăn halal, dị ứng tôm, tìm quán ăn tối",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "an_kieng": [
+     "halal"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh237",
+   "bot": "nep",
+   "cau": "Vegan here, allergic to sesame, lunch spot?",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "an_kieng": [
+     "thuan_chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh238",
+   "bot": "nep",
+   "cau": "Mình ăn chay trường, dị ứng mè, gợi ý quán cơm chay",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ],
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh239",
+   "bot": "nep",
+   "cau": "Halal only, and I'm allergic to eggs, any restaurant?",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ],
+    "an_kieng": [
+     "halal"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh240",
+   "bot": "nep",
+   "cau": "Mình ăn chay nhưng vẫn ăn trứng sữa, chỉ dị ứng gluten, tìm quán",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "lua_mi"
+    ],
+    "an_kieng": [
+     "chay"
+    ],
+    "doc_thua_chap_nhan": [
+     "trung",
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh241",
+   "bot": "nep",
+   "cau": "Mình ăn thuần chay, không trứng không sữa, và dị ứng óc chó, tìm quán cafe",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hat_cay"
+    ],
+    "an_kieng": [
+     "thuan_chay"
+    ],
+    "doc_thua_chap_nhan": [
+     "trung",
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh242",
+   "bot": "nep",
+   "cau": "Hôm nay mùng một mình ăn chay, mà mình dị ứng nấm... à không, dị ứng đậu hũ, tìm quán chay",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ],
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh243",
+   "bot": "nep",
+   "cau": "Mình ăn halal, dị ứng hải sản, tìm quán ăn gia đình",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ],
+    "an_kieng": [
+     "halal"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh244",
+   "bot": "nep",
+   "cau": "Mình ăn chay, bị dị ứng sữa, quán chay nào có món không sữa?",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ],
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh245",
+   "bot": "nep",
+   "cau": "Mình ăn kiêng halal, dị ứng mè và đậu phộng, gợi ý quán ăn trưa",
+   "nhom": "an_kieng_kem",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me",
+     "dau_phong"
+    ],
+    "an_kieng": [
+     "halal"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh246",
+   "bot": "nep",
+   "cau": "Mình ăn chay trường, tìm quán cơm chay gần chùa",
+   "nhom": "chi_an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh247",
+   "bot": "nep",
+   "cau": "Mình ăn thuần chay, gợi ý quán ăn tối",
+   "nhom": "chi_an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "thuan_chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh248",
+   "bot": "nep",
+   "cau": "Mình chỉ ăn đồ halal, tìm quán ăn trưa",
+   "nhom": "chi_an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "halal"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh249",
+   "bot": "nep",
+   "cau": "I'm vegetarian, where to eat near the lake?",
+   "nhom": "chi_an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh250",
+   "bot": "nep",
+   "cau": "mik an chay nha, tim quan lau nam",
+   "nhom": "chi_an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "chay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh251",
+   "bot": "nep",
+   "cau": "Mình ăn vegan, có quán nào không dùng mật ong, trứng, sữa?",
+   "nhom": "chi_an_kieng",
+   "ky_vong": {
+    "co_di_ung": true,
+    "an_kieng": [
+     "thuan_chay"
+    ],
+    "doc_thua_chap_nhan": [
+     "trung",
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh252",
+   "bot": "nep",
+   "cau": "Mình dị ứng cá sống, cá chín thì ăn được, tìm quán cơm",
+   "nhom": "dieu_kien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "ca"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh253",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm tái, nấu chín kỹ thì được, tìm quán lẩu",
+   "nhom": "dieu_kien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh254",
+   "bot": "nep",
+   "cau": "Dị ứng trứng lòng đào, trứng chín kỹ thì ok, tìm quán ăn sáng",
+   "nhom": "dieu_kien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh255",
+   "bot": "nep",
+   "cau": "Mình dị ứng hàu sống, hàu nướng thì được, tìm quán hải sản",
+   "nhom": "dieu_kien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "oc_so"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh256",
+   "bot": "nep",
+   "cau": "Mình dị ứng sữa tươi, sữa chua thì được, tìm cafe",
+   "nhom": "dieu_kien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh257",
+   "bot": "nep",
+   "cau": "Mình dị ứng mực, mực khô thì ok, tìm quán nhậu",
+   "nhom": "dieu_kien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh258",
+   "bot": "nep",
+   "cau": "Mình dị ứng đậu phộng rang, đậu phộng luộc thì ổn, tìm quán xôi",
+   "nhom": "dieu_kien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh259",
+   "bot": "nep",
+   "cau": "Mình dị ứng cua, nước lẩu cua thì được, tìm quán lẩu",
+   "nhom": "dieu_kien",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh260",
+   "bot": "nep",
+   "cau": "Mình dị ứng tôm, còn con trai mình dị ứng đậu phộng, tìm quán ăn gia đình",
+   "nhom": "kem_nguoi_khac",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh261",
+   "bot": "nep",
+   "cau": "Cả mình và chồng đều dị ứng cua, tìm quán lẩu",
+   "nhom": "kem_nguoi_khac",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh262",
+   "bot": "nep",
+   "cau": "Mình dị ứng trứng, bạn gái mình thì dị ứng sữa, gợi ý quán ăn sáng cho hai đứa",
+   "nhom": "kem_nguoi_khac",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ],
+    "doc_thua_chap_nhan": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh263",
+   "bot": "nep",
+   "cau": "Mình với mẹ đều dị ứng mè, tìm quán chè",
+   "nhom": "kem_nguoi_khac",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh264",
+   "bot": "nep",
+   "cau": "Mình dị ứng mực, nhóm mình có một bạn dị ứng hải sản luôn, kiếm quán nướng",
+   "nhom": "kem_nguoi_khac",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh265",
+   "bot": "nep",
+   "cau": "Mình với ba mình dị ứng đậu nành, tìm quán ăn trưa",
+   "nhom": "kem_nguoi_khac",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_nanh"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh266",
+   "bot": "nep",
+   "cau": "Mình dị ứng ở mức nặng với tôm, tìm quán lẩu",
+   "nhom": "sau_tu_mo",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "tom"
+    ],
+    "doc_thua_chap_nhan": [
+     "muc"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh267",
+   "bot": "nep",
+   "cau": "Mình bị dị ứng, đi đâu cũng phải né cua, tìm quán hải sản có món khác",
+   "nhom": "sau_tu_mo",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "cua"
+    ],
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh268",
+   "bot": "nep",
+   "cau": "Dị ứng muốn chết với đậu phộng, gợi ý quán bún",
+   "nhom": "sau_tu_mo",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh269",
+   "bot": "nep",
+   "cau": "Mình dị ứng, cho mình né trứng nhé, tìm quán ăn sáng",
+   "nhom": "sau_tu_mo",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh270",
+   "bot": "nep",
+   "cau": "Tìm quán ăn tối, mình dị ứng nặng, đi ăn ở đâu cũng phải tránh mè",
+   "nhom": "sau_tu_mo",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh271",
+   "bot": "nep",
+   "cau": "Mình dị ứng, tìm quán nào không có mực với tôm giúp mình",
+   "nhom": "sau_tu_mo",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "muc",
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh272",
+   "bot": "nep",
+   "cau": "Dị ứng, ở nhà thì tự nấu được, ra ngoài thì sợ hải sản, tìm quán",
+   "nhom": "sau_tu_mo",
+   "ky_vong": {
+    "co_di_ung": true,
+    "di_ung": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh273",
+   "bot": "nep",
+   "cau": "Mình không bị dị ứng gì đâu, tìm quán hải sản ngon nhé",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh274",
+   "bot": "nep",
+   "cau": "Tưởng dị ứng tôm hóa ra không phải, giờ muốn đi ăn tôm hùm, tìm quán",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh275",
+   "bot": "nep",
+   "cau": "Mình không dị ứng đậu phộng, bạn cứ gợi ý quán bún bình thường",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh276",
+   "bot": "nep",
+   "cau": "Mình hết dị ứng sữa rồi, tìm cafe có sữa tươi",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "sua"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh277",
+   "bot": "nep",
+   "cau": "Không ai trong nhóm dị ứng gì cả, tìm quán lẩu hải sản cho 8 người",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh278",
+   "bot": "nep",
+   "cau": "Mình chưa từng bị dị ứng trứng, cứ tìm quán ăn sáng có trứng",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "trung"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh279",
+   "bot": "nep",
+   "cau": "I'm not allergic to anything, find me a seafood place",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh280",
+   "bot": "nep",
+   "cau": "Mình không có dị ứng với cua nha, tìm quán cua rang me",
+   "nhom": "phu_dinh",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "cua",
+     "me"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh281",
+   "bot": "nep",
+   "cau": "Tìm tiệm bánh không gluten gần hồ",
+   "nhom": "tranh_khong_noi_ly_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh282",
+   "bot": "nep",
+   "cau": "Có quán nào không dùng đậu phộng không?",
+   "nhom": "tranh_khong_noi_ly_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "dau_phong"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh283",
+   "bot": "nep",
+   "cau": "Quán cafe nào có sữa hạt thay sữa bò?",
+   "nhom": "tranh_khong_noi_ly_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "sua",
+     "hat_cay"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh284",
+   "bot": "nep",
+   "cau": "Tìm quán lẩu không có hải sản cho nhóm",
+   "nhom": "tranh_khong_noi_ly_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "hai_san"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh285",
+   "bot": "nep",
+   "cau": "Gợi ý quán bún không bỏ mắm tôm",
+   "nhom": "tranh_khong_noi_ly_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "tom"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh286",
+   "bot": "nep",
+   "cau": "Tìm quán bánh mì không trứng",
+   "nhom": "tranh_khong_noi_ly_do",
+   "ky_vong": {
+    "co_di_ung": true,
+    "doc_thua_chap_nhan": [
+     "trung",
+     "lua_mi"
+    ]
+   }
+  },
+  {
+   "id": "di-ung-v3-nh287",
+   "bot": "nep",
+   "cau": "Tìm quán hải sản tươi ngon gần biển cho nhóm 6 người",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh288",
+   "bot": "nep",
+   "cau": "Nhóm mình mê tôm hùm lắm, quán nào nướng ngon?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh289",
+   "bot": "nep",
+   "cau": "Gợi ý quán cua rang me ngon ở phố cổ",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh290",
+   "bot": "nep",
+   "cau": "Tối nay muốn ăn lẩu cá, chỉ mình vài chỗ",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh291",
+   "bot": "nep",
+   "cau": "Quán nào bán mực nướng sa tế ngon gần chợ đêm?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh292",
+   "bot": "nep",
+   "cau": "Cho mình vài quán ốc ngon quanh hồ",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh293",
+   "bot": "nep",
+   "cau": "Tìm chỗ uống sữa đậu nành nóng buổi sáng",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh294",
+   "bot": "nep",
+   "cau": "Quán chè đậu phộng nào ngon ở trung tâm?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh295",
+   "bot": "nep",
+   "cau": "Có tiệm bánh mì trứng nào mở sớm không?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh296",
+   "bot": "nep",
+   "cau": "Tìm quán có chỗ đậu xe ô tô rộng",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh297",
+   "bot": "nep",
+   "cau": "Đi với mẹ, tìm quán ăn nhẹ nhàng ít dầu mỡ",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh298",
+   "bot": "nep",
+   "cau": "Nhà mình đi 3 người, tìm quán của người địa phương",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh299",
+   "bot": "nep",
+   "cau": "Tìm quán có không gian cá nhân yên tĩnh để làm việc",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh300",
+   "bot": "nep",
+   "cau": "Quán nào giá ở mức vừa phải, tầm 150 nghìn một người?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh301",
+   "bot": "nep",
+   "cau": "Xe mình bị hư, gần đây có chỗ sửa xe với quán ăn không?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh302",
+   "bot": "nep",
+   "cau": "Gợi ý quán cơm cháy chà bông ngon",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh303",
+   "bot": "nep",
+   "cau": "Sáng mai chạy bộ quanh hồ xong muốn ăn sáng, quán nào gần?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh304",
+   "bot": "nep",
+   "cau": "Tìm quán có trứng vịt lộn ngon gần bến xe",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh305",
+   "bot": "nep",
+   "cau": "Mình mê mè xửng lắm, quán nào bán?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh306",
+   "bot": "nep",
+   "cau": "Quán phở nào nước dùng trong, thịt mềm?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh307",
+   "bot": "nep",
+   "cau": "Tìm chỗ uống cafe muối view đồi",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh308",
+   "bot": "nep",
+   "cau": "Cho mình hỏi quán nào có món cá kho tộ ngon như ở nhà",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh309",
+   "bot": "nep",
+   "cau": "Mình thích ăn bánh mì kẹp phô mai, quán nào ngon?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh310",
+   "bot": "nep",
+   "cau": "Tìm quán lẩu gà lá é cho 4 người",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh311",
+   "bot": "nep",
+   "cau": "Gợi ý chỗ ăn tối có nhạc sống, không cần sang",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh312",
+   "bot": "nep",
+   "cau": "Tối nay đi ăn hải sản, ưu tiên quán bình dân",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh313",
+   "bot": "nep",
+   "cau": "Có quán bún riêu cua nào gần phố cổ không?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh314",
+   "bot": "nep",
+   "cau": "Quán nào làm gỏi cuốn tôm thịt ngon?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh315",
+   "bot": "nep",
+   "cau": "Tìm quán ăn gần chỗ gửi xe để tiện đi bộ ra hồ",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh316",
+   "bot": "nep",
+   "cau": "Quán nào có món sò điệp nướng mỡ hành ngon?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh317",
+   "bot": "nep",
+   "cau": "Tìm chỗ ăn vặt có bánh tráng nướng trứng",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh318",
+   "bot": "nep",
+   "cau": "Mình ở gần chợ, quán ăn trưa nào đi bộ được?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh319",
+   "bot": "nep",
+   "cau": "Cuối tuần cả nhà đi chơi, tìm quán có sân cho trẻ con",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh320",
+   "bot": "nep",
+   "cau": "Tìm quán cafe có bánh hạt dẻ cười ngon",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh321",
+   "bot": "nep",
+   "cau": "Quán kem nào có vị sữa dừa?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh322",
+   "bot": "nep",
+   "cau": "Gợi ý quán mì Quảng ngon",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh323",
+   "bot": "nep",
+   "cau": "Tìm quán nào mở cửa trễ, mình đói quá",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh324",
+   "bot": "nep",
+   "cau": "Chỗ nào có tàu hũ nước đường ngon?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh325",
+   "bot": "nep",
+   "cau": "I'm craving seafood tonight, where should I go?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh326",
+   "bot": "nep",
+   "cau": "Best place for crab and beer near the beach?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh327",
+   "bot": "nep",
+   "cau": "Looking for a bakery with good almond croissants",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh328",
+   "bot": "nep",
+   "cau": "Tìm quán có hồ cá koi để chụp ảnh",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh329",
+   "bot": "nep",
+   "cau": "Quán nào có món đậu hũ chiên giòn ngon?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh330",
+   "bot": "nep",
+   "cau": "Tìm quán nướng có nhân viên dễ thương, đừng quá ồn",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh331",
+   "bot": "nep",
+   "cau": "Mê hải sản, tìm quán ngon",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh332",
+   "bot": "nep",
+   "cau": "Mình mê mấy quán có view hồ, gợi ý đi",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh333",
+   "bot": "nep",
+   "cau": "Có quán nào bán sữa chua mít gần đây không?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh334",
+   "bot": "nep",
+   "cau": "Tìm quán có bãi đậu xe máy miễn phí",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh335",
+   "bot": "nep",
+   "cau": "Nghe nói quán Tôm Càng Xanh Gió Chiều ngon, còn quán nào tương tự?",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh336",
+   "bot": "nep",
+   "cau": "Chỗ nào ăn ốc len xào dừa ngon, đi với mẹ",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh337",
+   "bot": "nep",
+   "cau": "Mình dùng ứng dụng mà không thấy quán tôm nướng nào, gợi ý giúp",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh338",
+   "bot": "nep",
+   "cau": "Tìm quán decor hơi dị dị, ứng với gu tụi mình, có hải sản càng tốt",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  },
+  {
+   "id": "di-ung-v3-nh339",
+   "bot": "nep",
+   "cau": "Quán nào phản ứng nhanh với order đông, tụi mình 10 người, thích cua",
+   "nhom": "giong_chu",
+   "ky_vong": {
+    "co_di_ung": true
+   }
+  }
+ ]
+}

@@ -127,24 +127,13 @@ func (h *Handler) promote(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	var source struct {
-		Kind    string `json:"kind"`
-		Payload struct {
-			Stops []struct {
-				At    string `json:"time_text"`
-				Place struct {
-					ID   string `json:"id"`
-					Name string `json:"name"`
-				} `json:"place"`
-			} `json:"stops"`
-		} `json:"payload"`
-	}
-	if json.Unmarshal(card, &source) != nil || source.Kind != "itinerary" || len(source.Payload.Stops) == 0 {
+	sourceStops, ok := lichTrinhCuaThe(card)
+	if !ok {
 		refuse(w, 422, "plan_source_invalid")
 		return
 	}
 	if in.Stops == nil {
-		for _, s := range source.Payload.Stops {
+		for _, s := range sourceStops {
 			id, name := s.Place.ID, s.Place.Name
 			stop := planStop{At: s.At, Label: name, PlaceName: &name}
 			// A stop somebody typed on a group sheet has no catalogue place.
@@ -235,6 +224,47 @@ func (h *Handler) promote(w http.ResponseWriter, r *http.Request) {
 	out.OutingID = outing.ID
 	out.Revision = outing.TimelineRevision
 	reply(w, 201, out)
+}
+
+type theStop struct {
+	At    string `json:"time_text"`
+	Place struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"place"`
+}
+
+type theLichTrinh struct {
+	Kind    string `json:"kind"`
+	Payload struct {
+		Stops []theStop `json:"stops"`
+		// A reply in the thread (`tra_loi`) carries its itinerary as a part.
+		Phan []json.RawMessage `json:"phan"`
+	} `json:"payload"`
+}
+
+// lichTrinhCuaThe reads the stops a card proposes: an itinerary card, or the
+// itinerary part of a reply in the thread. The promotion then stamps
+// `payload.outing_id` on the message either way, which for a reply is the
+// envelope's own field (`outing_id?` in the reply contract), so one jsonb_set
+// serves both.
+func lichTrinhCuaThe(card []byte) ([]theStop, bool) {
+	var the theLichTrinh
+	if json.Unmarshal(card, &the) != nil {
+		return nil, false
+	}
+	switch the.Kind {
+	case "itinerary":
+		return the.Payload.Stops, len(the.Payload.Stops) > 0
+	case "tra_loi":
+		for _, raw := range the.Payload.Phan {
+			var phan theLichTrinh
+			if json.Unmarshal(raw, &phan) == nil && phan.Kind == "itinerary" {
+				return phan.Payload.Stops, len(phan.Payload.Stops) > 0
+			}
+		}
+	}
+	return nil, false
 }
 
 // lockFeed follows the candidate writer order when the optional feed is

@@ -13,6 +13,9 @@ serves this route". Four things can make that answer wrong, and each is checked:
 3. Routes sharing an in-memory limiter or cache have different owners. Two
    processes would each count, and the limit would silently double.
 4. A Go-owned row points at evidence that is not in the tree.
+5. The `features` block (Go-only routes served ahead of the manifest router:
+   chat feed, group AI and Nếp, avatar feed, web session) and the routes the
+   binary's feature handlers register disagree (`core features --json`).
 
     python3 scripts/check_route_ownership.py             # the gate
     python3 scripts/check_route_ownership.py --selftest  # prove it can go red
@@ -88,6 +91,24 @@ def missing_evidence(rows: list[dict], root: Path) -> list[str]:
     return errors
 
 
+def feature_mismatch(features: list[dict], go_features: list[dict]) -> list[str]:
+    """The manifest's feature rows versus what the feature handlers register."""
+    manifest = [(row["id"], row["package"]) for row in features]
+    binary = [(view["id"], view["package"]) for view in go_features]
+    errors = []
+    for route_id, package in sorted(set(binary) - set(manifest)):
+        errors.append(
+            f"{package} registers {route_id!r} but the manifest has no features row for it"
+        )
+    for route_id, package in sorted(set(manifest) - set(binary)):
+        errors.append(
+            f"manifest features row {route_id!r} ({package}) has no registered handler"
+        )
+    if not errors and manifest != binary:
+        errors.append("manifest features are not in the binary's registration order")
+    return errors
+
+
 def _manifest_is_current() -> tuple[int, str]:
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "render_route_manifest.py"), "--check"],
@@ -115,6 +136,19 @@ def _go_route_ids() -> tuple[int, list[str], str]:
     return 0, [view["id"] for view in json.loads(result.stdout)], ""
 
 
+def _go_features() -> tuple[int, list[dict], str]:
+    result = subprocess.run(
+        ["go", "run", "./cmd/core", "features", "--json"],
+        cwd=CORE,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return 2, [], result.stderr.strip()
+    return 0, json.loads(result.stdout), ""
+
+
 def gate() -> int:
     code, message = _manifest_is_current()
     if code == 2:
@@ -122,7 +156,9 @@ def gate() -> int:
         return 2
     errors = [] if code == 0 else [message]
 
-    rows = json.loads(MANIFEST.read_text(encoding="utf-8"))["routes"]
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    rows = manifest["routes"]
+    features = manifest.get("features", [])
     go_code, go_ids, go_message = _go_route_ids()
     if go_code == 2:
         print(f"::error::cannot ask the Go binary which routes it serves: {go_message}")
@@ -130,13 +166,24 @@ def gate() -> int:
     errors += go_owned_mismatch(rows, go_ids)
     errors += shared_state_split(rows)
     errors += missing_evidence(rows, ROOT)
+    feature_code, go_features, feature_message = _go_features()
+    if feature_code == 2:
+        print(
+            f"::error::cannot ask the Go binary for its feature routes: {feature_message}"
+        )
+        return 2
+    errors += feature_mismatch(features, go_features)
+    errors += missing_evidence([{**row, "owner": "go"} for row in features], ROOT)
 
     if errors:
         for error in errors:
             print(f"::error::{error}")
         return 1
     go_count = sum(1 for row in rows if row["owner"] == "go")
-    print(f"route ownership OK: {len(rows)} rows, {go_count} served by Go")
+    print(
+        f"route ownership OK: {len(rows)} rows, {go_count} served by Go,"
+        f" {len(features)} Go-only feature routes"
+    )
     return 0
 
 
@@ -198,6 +245,20 @@ def selftest() -> int:
         ),
         red=True,
     )
+
+    feat = [
+        {"id": "GET /f", "package": "chatassist"},
+        {"id": "POST /g", "package": "websession"},
+    ]
+    expect("features agree", feature_mismatch(feat, feat), red=False)
+    expect("feature route without row", feature_mismatch(feat[:1], feat), red=True)
+    expect("feature row without route", feature_mismatch(feat, feat[:1]), red=True)
+    expect(
+        "feature package differs",
+        feature_mismatch([feat[0], {**feat[1], "package": "avatarfeed"}], feat),
+        red=True,
+    )
+    expect("feature order differs", feature_mismatch(feat, feat[::-1]), red=True)
 
     if failures:
         for failure in failures:

@@ -24,8 +24,10 @@ const OriginsEnvVar = "MOBILE_CORS_ALLOW_ORIGINS"
 var loopback = regexp.MustCompile(`^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$`)
 
 var (
+	// Same list as ALLOWED_HEADERS in app/api/cors.py, which the goldens are
+	// rendered from. last-event-id is the SSE resume position aistream reads.
 	allowedHeaders = []string{"authorization", "content-type", "idempotency-key",
-		"x-actor-id", "x-actor-roles", "x-actor-contexts"}
+		"x-actor-id", "x-actor-roles", "x-actor-contexts", "last-event-id"}
 	allowedMethods    = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	safelistedHeaders = []string{"Accept", "Accept-Language", "Content-Language", "Content-Type"}
 )

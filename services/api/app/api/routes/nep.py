@@ -57,6 +57,19 @@ class NepMediaTinhHinh(ApiModel):
     loi: str | None = None
 
 
+# Route segments Nếp stands away from. The same closed list as `MAN_NEP_LUI` in
+# apps/mobile/src/rudi/nep/phieu.ts and `manNepLui` in chatassist/nep.go;
+# `test_nep_media_route.py` reads phieu.ts and fails when they drift.
+MAN_NEP_LUI = ("finance", "settlements", "batches", "smart-split")
+
+
+def nep_phai_lui(man: object) -> bool:
+    """Whole first segment, never a prefix: `financial-report` still talks."""
+    if not isinstance(man, str):
+        return False
+    return man.lstrip("/").split("/")[0] in MAN_NEP_LUI
+
+
 URL_ENV = "NEP_PROXY_URL"
 TOKEN_ENV = "NEP_PROXY_TOKEN"
 KHOA_ENV = "MOBILE_PERSON_ID_KEY"
@@ -106,6 +119,13 @@ def tao_media(
     actor: Annotated[Actor, Depends(get_actor)],
     than: Annotated[dict[str, Any], Body()],
 ) -> NepMediaDaNhan:
+    # The money law comes first, before configuration and before the proxy:
+    # a drawing asked for from a money screen is refused as such and never
+    # spends a quota seat (ADR-0033 §2.2, ADR-0036 §2.9 — the silence covers
+    # drawing as well as text). Named security exception to the legacy-Python
+    # freeze, recorded in docs/claude/2026-09-25/ai-chat-v2-ghi-chu.md.
+    if nep_phai_lui(than.get("man")):
+        raise HTTPException(status_code=403, detail="nep_lui_man_tien")
     _, _, khoa = _cau_hinh()
     loai = str(than.get("loai") or "anh")
     if loai not in ("anh", "video"):

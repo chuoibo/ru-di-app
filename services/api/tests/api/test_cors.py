@@ -142,6 +142,30 @@ def test_preflight_carrying_the_idempotency_key_is_allowed(client_factory):
     assert "idempotency-key" in allowed
 
 
+def test_preflight_carrying_the_sse_resume_header_is_allowed(client_factory):
+    """``Last-Event-ID`` is how the stream client resumes (contract §4.1).
+
+    The web build is told to resume with ``?after=`` instead, but the client's
+    default is the header, and ``scripts/check_cors_contract.py`` reads the
+    header from ``sse.ts``. Refusing it here would cancel that request at the
+    preflight. The Go front door answers the same list; its goldens are
+    rendered from this module.
+    """
+    response = preflight(
+        client_factory(),
+        WEB_BUILD_ORIGIN,
+        method="GET",
+        headers="authorization,last-event-id",
+    )
+
+    assert response.status_code == 204
+    allowed = {
+        value.strip().lower()
+        for value in response.headers["access-control-allow-headers"].split(",")
+    }
+    assert "last-event-id" in allowed
+
+
 def test_allowed_headers_covers_every_header_the_server_itself_demands():
     """The allowlist is derived from the server, not remembered by hand.
 

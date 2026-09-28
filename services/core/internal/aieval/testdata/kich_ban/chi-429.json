@@ -1,0 +1,12 @@
+{
+  "ten": "chi-429",
+  "mo_ta": "Chỉ một 429: engine thử lại vượt kịch bản, phải trượt kich_ban_lech.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "loi": {
+        "code": 429
+      }
+    }
+  ]
+}
