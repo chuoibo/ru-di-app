@@ -224,9 +224,15 @@ func (s *Stream) phatLai(ctx context.Context, key string, batch int64) ([]Event,
 			break
 		}
 	}
+	// Only an ending that is itself a room frame ends an invocation: the live
+	// reads drop an entry outside the room vocabulary, and the replay must
+	// agree, or a malformed ending hides what follows from a joining member.
 	ended := map[string]bool{}
 	for _, e := range all {
-		if e.Kind.Terminal() {
+		if !e.Kind.Terminal() {
+			continue
+		}
+		if _, ok := khungPhong(e); ok {
 			ended[e.Inv] = true
 		}
 	}

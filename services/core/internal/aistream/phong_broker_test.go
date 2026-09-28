@@ -157,6 +157,35 @@ func TestTheoPhongBoQuaEntryNgoaiEnum(t *testing.T) {
 	}
 }
 
+// The same entries already on the room key when the member joins go through
+// the replay, not the live reads: a malformed ending (outside the room
+// vocabulary, so never a frame) must not end the invocation there either,
+// or the valid delta after it is dropped for a joining member only.
+func TestPhatLaiBoQuaXongNgoaiEnum(t *testing.T) {
+	s := open(t)
+	hub := langNghe(t, s)
+	ctx := context.Background()
+	phong := "0b8f1c9e-aaaa-4bbb-8ccc-ddddddddddc3"
+	room, _ := s.Keys.Room(phong)
+	inv := "0b8f1c9e-aaaa-4bbb-8ccc-0000000000a3"
+	for _, v := range [][]any{
+		{"e", "xong", "j", `{"text":"câu Nếp","chips":[]}`, "inv", inv},
+		{"e", "delta", "j", `{"p":0,"text":"hợp lệ"}`, "inv", inv},
+	} {
+		if err := s.client.XAdd(ctx, &redis.XAddArgs{Stream: room, Values: v}).Err(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	frames, _ := thuKhung(t, s, hub, phong, TheoPhongOptions{Reconcile: 20 * time.Millisecond})
+	k, ok := cho(t, frames, 3*time.Second)
+	if !ok || k.E != Delta || string(k.D) != `{"p":0,"text":"hợp lệ"}` {
+		t.Fatalf("replay gave %+v %s, want the valid delta", k, k.D)
+	}
+	if k, ok := cho(t, frames, 200*time.Millisecond); ok {
+		t.Fatalf("more frames: %+v %s", k, k.D)
+	}
+}
+
 // A room key's writer holds every piece of text back until the job's ending
 // committed (SauChot): before it a delta is refused and changes nothing
 // (SauChot still opens the stream), statuses go at once, and every entry
