@@ -712,9 +712,18 @@ export function cauDuongDi(place: Pick<Place, "distanceKm" | "travelMinutes">): 
  *
  *  A point that is not drawable (province centroid, model guess) is treated
  *  the same as no point: routing to the middle of a province is worse than
- *  letting the map app search the name. */
-export function duongChiDuong(place: Pick<Place, "lat" | "lng" | "name" | "geoPrecision">): string {
-  const q = encodeURIComponent(place.name);
+ *  letting the map app search the name.
+ *
+ *  The search text carries the address when there is one. Even a rooftop
+ *  point can sit tens of metres off the door (HANDOFF-GEO §2), so a drawable
+ *  point only biases the search -- the map app still lands on the listing the
+ *  name and address describe -- and a place without one is not confused with a
+ *  namesake in another province. `address` is only ever a house number, street
+ *  or landmark (the server drops area-only strings), so it is always something
+ *  a person can stand in front of. */
+export function duongChiDuong(place: Pick<Place, "lat" | "lng" | "name" | "geoPrecision" | "address">): string {
+  const address = place.address?.trim();
+  const q = encodeURIComponent(address ? `${place.name}, ${address}` : place.name);
   if (!veDuocLenBanDo(place)) return `geo:0,0?q=${q}`;
   return `geo:${place.lat},${place.lng}?q=${q}`;
 }
