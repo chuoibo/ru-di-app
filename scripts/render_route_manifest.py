@@ -201,7 +201,11 @@ def build(previous: dict | None, prune: bool) -> dict:
     rows = _app_rows()
     old = {r["id"]: r for r in (previous or {}).get("routes", [])}
     native = [r for r in old.values() if r.get("native")]
-    gone = sorted(set(old) - {row["id"] for row in rows} - {r["id"] for r in native})
+    app_ids = {row["id"] for row in rows}
+    overlapping = sorted(r["id"] for r in native if r["id"] in app_ids)
+    if overlapping:
+        raise SystemExit(f"Go-only routes now appear in Python: {overlapping}")
+    gone = sorted(set(old) - app_ids - {r["id"] for r in native})
     if gone and not prune:
         raise SystemExit(f"routes left the app, rerun with --prune if intended: {gone}")
     for row in rows:

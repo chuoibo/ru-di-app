@@ -120,13 +120,8 @@ func (h *Handler) comment(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback(r.Context())
 	ctx := r.Context()
 	id := r.PathValue("post")
-	p, err := readPost(ctx, tx, person, id)
-	if err != nil {
+	if _, err = readPost(ctx, tx, person, id); err != nil {
 		fail(w, err)
-		return
-	}
-	if !p.CanComment {
-		fail(w, no(403, "comments_closed"))
 		return
 	}
 	digest := hash(struct {
@@ -142,59 +137,7 @@ func (h *Handler) comment(w http.ResponseWriter, r *http.Request) {
 		commit(w, r, tx, 200, map[string]string{"id": cid, "status": "received"})
 		return
 	}
-	if in.ParentID != nil {
-		if !validID(*in.ParentID) {
-			fail(w, no(422, "invalid_parent"))
-			return
-		}
-		var yes bool
-		err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM post_comments c LEFT JOIN community_comment_meta m ON m.comment_id=c.id WHERE c.id=$1 AND c.post_id=$2 AND m.parent_id IS NULL)`, *in.ParentID, id).Scan(&yes)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		if !yes {
-			fail(w, no(422, "invalid_parent"))
-			return
-		}
-	}
-	check := PostInput{Body: in.Body, Audience: "only_me", Mentions: in.Mentions}
-	if in.MediaID != nil {
-		check.MediaIDs = []string{*in.MediaID}
-	}
-	if err = validateInput(ctx, tx, person, &check); err != nil {
-		fail(w, err)
-		return
-	}
-	in.Mentions = check.Mentions
-	if in.MediaID != nil {
-		var mime string
-		err = tx.QueryRow(ctx, `SELECT content_type FROM community_media WHERE id=$1`, *in.MediaID).Scan(&mime)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		if !strings.HasPrefix(mime, "image/") {
-			fail(w, no(422, "comment_image_only"))
-			return
-		}
-	}
-	if err = rate(ctx, tx, person); err != nil {
-		fail(w, err)
-		return
-	}
-	cid = uuid()
-	status := "approved"
-	if p.Audience == "public" {
-		status = "pending"
-	}
-	_, err = tx.Exec(ctx, `INSERT INTO community_comment_drafts(id,post_id,author_id,body,parent_id,mentions,media_id,status) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, cid, id, person, in.Body, in.ParentID, in.Mentions, in.MediaID, status)
-	if err == nil && status == "pending" {
-		_, err = tx.Exec(ctx, `INSERT INTO community_jobs(comment_id) VALUES($1)`, cid)
-	}
-	if err == nil && status == "approved" {
-		err = publishComment(ctx, tx, cid)
-	}
+	cid, status, err := writeComment(ctx, tx, person, id, in, true)
 	if err == nil {
 		err = remember(ctx, tx, person, in.LogicalID, digest, cid)
 	}
@@ -251,20 +194,7 @@ func (h *Handler) like(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback(r.Context())
 	ctx := r.Context()
 	id := r.PathValue("post")
-	if _, err = readable(ctx, tx, person, id); err != nil {
-		fail(w, err)
-		return
-	}
-	if err = rate(ctx, tx, person); err != nil {
-		fail(w, err)
-		return
-	}
-	if r.Method == "PUT" {
-		_, err = tx.Exec(ctx, `INSERT INTO post_reactions(id,post_id,person_id,kind,created_at) VALUES($1,$2,$3,'heart',clock_timestamp()) ON CONFLICT(post_id,person_id,kind) DO NOTHING`, uuid(), id, person)
-	} else {
-		_, err = tx.Exec(ctx, `DELETE FROM post_reactions WHERE post_id=$1 AND person_id=$2 AND kind='heart'`, id, person)
-	}
-	if err != nil {
+	if err = WriteLike(ctx, tx, person, id, r.Method == "PUT"); err != nil {
 		fail(w, err)
 		return
 	}

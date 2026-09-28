@@ -19,11 +19,12 @@ Measured on 2026-08-29 by putting that exact path back into `api.ts`:
 ## What it checks
 
 One thing. Path literals in `apps/mobile/src` are normalised (`${x}` and
-`{param}` both become the same hole) and matched against the paths FastAPI
-itself reports. An unmatched path is a call that can only ever answer 404.
+`{param}` both become the same hole) and matched against FastAPI OpenAPI and
+the Go-only handler registrations. An unmatched path can only answer 404.
 
-The server side is the *rendered* OpenAPI document, not a list kept by hand. A
-list kept by hand is a third copy to drift.
+The Python server side is the *rendered* OpenAPI document. Go-only extensions
+are read from handler registration or RouteIDs declarations, which the route
+ownership gate checks against the manifest.
 
 ## What it deliberately does not check
 
@@ -432,9 +433,18 @@ GO_CHAT_HANDLERS = (
     "services/core/internal/websession/websession.go",
     "services/core/internal/nepnho/handler.go",
 )
+GO_PROFILE_HANDLERS = (
+    "services/core/internal/achievementv1/handler.go",
+    "services/core/internal/socialv2/handler.go",
+    "services/core/internal/profilemedia/handler.go",
+)
 
 #: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`
 GO_ROUTE = re.compile(r'HandleFunc\(\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"')
+GO_ROUTE_IDS = re.compile(
+    r"func RouteIDs\(\) \[\]string \{\s*return \[\]string\{(.*?)\n\s*\}\s*\}", re.S
+)
+GO_ROUTE_LITERAL = re.compile(r'"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"')
 
 
 def read_go_routes() -> dict[str, set[str]]:
@@ -446,11 +456,15 @@ def read_go_routes() -> dict[str, set[str]]:
     and the client call goes red again, as it should.
     """
     found: dict[str, set[str]] = {}
-    for relative in GO_CHAT_HANDLERS:
+    for relative in (*GO_CHAT_HANDLERS, *GO_PROFILE_HANDLERS):
         source = REPO_ROOT / relative
         if not source.exists():
             continue
-        for method, raw in GO_ROUTE.findall(source.read_text(encoding="utf-8")):
+        code = source.read_text(encoding="utf-8")
+        declared = GO_ROUTE.findall(code)
+        for body in GO_ROUTE_IDS.findall(code):
+            declared.extend(GO_ROUTE_LITERAL.findall(body))
+        for method, raw in declared:
             found.setdefault(normalise(raw), set()).add(method.upper())
     return found
 

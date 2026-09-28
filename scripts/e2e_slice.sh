@@ -298,6 +298,13 @@ start_core() {
     echo "go build ./cmd/core thất bại" >&2
     return 2
   }
+  # Profile routes have Go-owned tables and require an explicit migration.
+  # Keep the disposable slice database aligned with the core being tested.
+  if ! MOBILE_DATABASE_URL="$DATABASE_URL" "$core_bin" migrate-profile >>"$core_log" 2>&1; then
+    echo 'không migrate được lược đồ hồ sơ Go:' >&2
+    tail -3 "$core_log" >&2
+    return 2
+  fi
   port="$(python3 -c "import socket
 s = socket.socket()
 s.bind(('127.0.0.1', 0))

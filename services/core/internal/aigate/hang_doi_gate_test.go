@@ -24,6 +24,7 @@ import (
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/nepnho"
 	"mobile/services/core/internal/rag/nap"
+	"mobile/services/core/internal/socialv2"
 )
 
 // Slice 10 puts a database trigger on the job table: every write that makes
@@ -127,6 +128,7 @@ func schemaSQL() []string {
 	out = append(out, nap.SchemaFiles()...)
 	out = append(out, community.SchemaFiles()...)
 	out = append(out, diary.SchemaFiles()...)
+	out = append(out, socialv2.SchemaFiles()...)
 	return append(out, avatarfeed.SchemaFiles()...)
 }
 

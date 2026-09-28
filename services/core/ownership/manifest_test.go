@@ -126,6 +126,31 @@ func TestForceRefusesFrozen(t *testing.T) {
 	}
 }
 
+func TestNativeGoRoutesStayInManifestWithoutPythonFallback(t *testing.T) {
+	native := goOwned(row(0, "GET", "/me/profile-videos/credits", "profile-media"))
+	native.Python, native.Native = "absent", true
+	m, err := Parse(encode(t, []Route{native}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	force, err := m.ParseForce("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := ids(m.GoServed(force)); got != "" {
+		t.Fatalf("native extension was sent to legacy dispatch: %s", got)
+	}
+	for _, token := range []string{native.ID, native.Group} {
+		if _, err := m.ParseForce(token); err == nil {
+			t.Fatalf("Python fallback accepted for Go-only route through %q", token)
+		}
+	}
+	all, err := m.ParseForce("all")
+	if err != nil || !all.All {
+		t.Fatalf("legacy rollback should leave Go-only route in place: force=%+v err=%v", all, err)
+	}
+}
+
 func ids(routes []Route) string {
 	parts := make([]string, len(routes))
 	for i, r := range routes {

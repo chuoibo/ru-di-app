@@ -16,6 +16,7 @@ import { useNepHoi } from "./useNepHoi";
 import { NepPhien } from "./NepPhien";
 import { useMotion } from "../ui/useMotion";
 import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
+import { NepPhim } from "./NepPhim";
 
 /**
  * The panel Nếp talks in.
@@ -173,6 +174,8 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           />
         </Pressable>
       ) : null}
+
+      <NepPhim actorId={nguon.kieu === "live" ? nguon.actorId : null} imageJobIds={buc.anhDaVe} />
 
       <View style={[styles.soan, { borderColor: colors.line }]}>
         <TextInput

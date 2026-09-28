@@ -16,6 +16,8 @@
 // MOBILE_AI_ENGINE_NEP=go runs Nếp on the Go engine (internal/aiharness) in
 // whichever process runs the AI workers; MOBILE_AI_ENGINE_GROUP=go does the
 // same for the group assistant «Rủ Đi AI». The default of both is the brain.
+//
+//	core migrate-profile install the Go-only profile schemas (after migrate-community)
 package main
 
 import (
@@ -41,6 +43,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	"mobile/services/core/internal/achievementv1"
 	"mobile/services/core/internal/aidoc"
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/hieu"
@@ -70,6 +73,7 @@ import (
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/limit"
 	"mobile/services/core/internal/nepnho"
+	"mobile/services/core/internal/profilemedia"
 	"mobile/services/core/internal/proxy"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/rag"
@@ -77,6 +81,7 @@ import (
 	"mobile/services/core/internal/rerank"
 	"mobile/services/core/internal/routes"
 	"mobile/services/core/internal/sms"
+	"mobile/services/core/internal/socialv2"
 	"mobile/services/core/internal/vectordb"
 	"mobile/services/core/internal/vectordb/napkho"
 	"mobile/services/core/internal/websession"
@@ -89,7 +94,7 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: core serve | work | healthcheck | routes --json | features --json | migrate-chat | migrate-rag | migrate-rag-vector | rag | rag-indexer")
+		fmt.Fprintln(stderr, "usage: core serve | work | healthcheck | routes --json | features --json | migrate-chat | migrate-profile | migrate-rag | migrate-rag-vector | rag | rag-indexer")
 		return 2
 	}
 	switch args[0] {
@@ -121,6 +126,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return ragIndexer(getenv, stderr)
 	case "purge-expired":
 		return purgeExpired(args[1:], getenv, stdout, stderr)
+	case "migrate-profile":
+		return migrateProfile(getenv, stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -210,8 +217,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	}
 
 	// Go routes authenticate in the auth mode Python resolved and query the
-	// same database. Nothing is opened while Go serves nothing, so a binary
-	// with every route forced back to Python needs no database settings.
+	// same database. Go-only profile routes always require the database.
 	sender, debug, err := sms.FromEnv(getenv)
 	if err != nil {
 		logger.Error("refusing to start", "error", err.Error())
@@ -229,7 +235,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	}
 	var idempotency func(http.Handler) http.Handler
 	var pool *pgxpool.Pool
-	if len(served) > 0 || chat.on {
+	if len(served) > 0 || chat.on || len(nativeRouteIDs()) > 0 {
 		pool, err = db.Open(context.Background(), getenv(db.EnvDatabaseURL))
 		if err != nil {
 			logger.Error("refusing to start", "error", err.Error())
@@ -393,8 +399,40 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			fallback.ServeHTTP(w, r)
 		})
 	}
+	// Cộng đồng (ADR-0040) owns moderation of public posts and comments; the
+	// profile social routes hand those writes to it only when it is served.
+	communityOn := pool != nil && cfg.AuthMode == "prod" && getenv("MOBILE_COMMUNITY_ENABLED") == "1"
+	achievements := achievementv1.New(pool, cfg.AuthMode)
+	profileSocial := socialv2.New(pool, cfg.AuthMode, communityOn)
+	media := profilemedia.New(pool, cfg.AuthMode, profilemedia.Proxy{
+		URL: getenv("NEP_PROXY_URL"), Token: getenv("NEP_PROXY_TOKEN"), PersonKey: getenv(identity.KeyEnvVar),
+	})
+	// Its own context, cancelled by a defer registered after the pool's: an
+	// early refusal below must end the LISTEN connection before pool.Close
+	// waits for every connection to come back.
+	socialCtx, stopSocial := context.WithCancel(chatCtx)
+	defer stopSocial()
+	go profileSocial.Run(socialCtx)
+	fallback := front
+	native := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case achievementv1.Matches(r.URL.Path):
+			achievements.ServeHTTP(w, r)
+		case socialv2.Matches(r.URL.Path):
+			profileSocial.ServeHTTP(w, r)
+		default:
+			media.ServeHTTP(w, r)
+		}
+	}))
+	front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if achievementv1.Matches(r.URL.Path) || socialv2.Matches(r.URL.Path) || profilemedia.Matches(r.URL.Path) {
+			native.ServeHTTP(w, r)
+			return
+		}
+		fallback.ServeHTTP(w, r)
+	})
 	if pool != nil && cfg.AuthMode == "prod" {
-		if getenv("MOBILE_COMMUNITY_ENABLED") == "1" {
+		if communityOn {
 			check, cancel := context.WithTimeout(ctx, 10*time.Second)
 			err := community.CheckSchema(check, pool)
 			cancel()
@@ -1038,6 +1076,9 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 	for _, id := range routes.ImplementedIDs() {
 		implemented[id] = true
 	}
+	for _, id := range nativeRouteIDs() {
+		implemented[id] = true
+	}
 	for _, pattern := range diary.Patterns {
 		implemented[pattern] = true
 	}
@@ -1056,6 +1097,35 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
+	return 0
+}
+
+func nativeRouteIDs() []string {
+	ids := append([]string{}, achievementv1.RouteIDs()...)
+	ids = append(ids, socialv2.RouteIDs()...)
+	return append(ids, profilemedia.RouteIDs()...)
+}
+
+func migrateProfile(getenv func(string) string, stdout, stderr io.Writer) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "profile migration: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = achievementv1.Migrate(ctx, pool); err == nil {
+		err = socialv2.Migrate(ctx, pool)
+	}
+	if err == nil {
+		err = profilemedia.Migrate(ctx, pool)
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, "profile migration failed:", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Đã áp dụng migration hồ sơ Go.")
 	return 0
 }
 

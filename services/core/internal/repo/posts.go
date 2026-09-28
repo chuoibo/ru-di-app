@@ -160,6 +160,29 @@ func (r Repository) ListPersonPostsVisibleTo(ctx context.Context, personID, read
 		ORDER BY posts.created_at DESC, posts.id DESC LIMIT `+bind(limit)+`::INTEGER`, args)
 }
 
+// ListPersonPostsPageVisibleTo is the keyset-paginated Go social wall. It uses
+// the same SQL audience predicate as the legacy list, so cursor pages cannot
+// widen a reader's audience during pagination.
+func (r Repository) ListPersonPostsPageVisibleTo(ctx context.Context, personID, readerID string, limit int, before *time.Time, beforeID *string) ([]Post, error) {
+	var args []any
+	bind := bindArgs(&args)
+	author := bind(personID)
+	where := readableBy(bind, readerID)
+	sql := `SELECT ` + postColumns + ` FROM posts WHERE posts.author_id = ` + author + `::UUID AND (` + where + `)`
+	if before != nil && beforeID != nil {
+		sql += ` AND (posts.created_at, posts.id) < (` + bind(*before) + `::TIMESTAMP WITH TIME ZONE, ` + bind(*beforeID) + `::UUID)`
+	}
+	sql += ` ORDER BY posts.created_at DESC, posts.id DESC LIMIT ` + bind(limit) + `::INTEGER`
+	return r.posts(ctx, sql, args)
+}
+
+// ReadablePostsWhere exposes the single post ACL SQL predicate for Go-only
+// social change feeds. Callers provide their own binder and still recheck
+// domain visibility before returning post content.
+func ReadablePostsWhere(bind func(any) string, readerID string) string {
+	return readableBy(bind, readerID)
+}
+
 // PostKindCount is one entry of a post's reactions-per-kind dict.
 type PostKindCount struct {
 	Kind  string

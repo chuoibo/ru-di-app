@@ -6,19 +6,18 @@
  * drawn as four rows, each carrying the sentence that names who it reaches --
  * not a slider, not a narrow-to-wide chip row, not a lock that opens in steps.
  *
- * Text only for now. A post's `image_url` has to point at a group photo, which
- * only members of that group may read, so an image on a `friends` or `public`
- * post would be an address most readers cannot open.
+ * A personal photo is uploaded before its post is written; the server decides
+ * who can read both through the post audience.
  */
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { newAttempt } from "../../../api";
+import { attemptFor, type Attempt } from "../../../api";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
-import { taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
+import { nguonAnhBai, taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
 import {
   AUDIENCES,
   MAC_DINH_NGUOI_DOC,
@@ -50,6 +49,8 @@ export function DangBaiScreen() {
   // ADR-0022 §2.1: a picture of one's own goes up first, as a personal
   // photograph nobody may read yet; the post that shows it comes second.
   const [anh, setAnh] = useState<TempPhoto | null>(null);
+  const [anhDaTai, setAnhDaTai] = useState<string | null>(null);
+  const attempts = useRef<Record<string, Attempt>>({});
   const [giaiDoan, setGiaiDoan] = useState<GiaiDoanTaiAnh | null>(null);
 
   const chonAnhMoi = async () => {
@@ -59,6 +60,7 @@ export function DangBaiScreen() {
       const daChon = await chonAnh();
       if (daChon === null) return;
       if (anh !== null) await boAnh(anh);
+      setAnhDaTai(null);
       setAnh(daChon);
     } catch (error) {
       setLoi(loiRaChu(error));
@@ -66,9 +68,10 @@ export function DangBaiScreen() {
   };
 
   const boAnhDaChon = async () => {
-    if (anh === null || dangGui) return;
-    await boAnh(anh);
+    if (dangGui) return;
+    if (anh !== null) await boAnh(anh);
     setAnh(null);
+    setAnhDaTai(null);
   };
 
   useEffect(() => {
@@ -108,17 +111,26 @@ export function DangBaiScreen() {
     if (phien === null) return;
     setDangGui(true);
     setLoi(null);
+    let uploadFinished = false;
     try {
-      let imageUrl: string | null = null;
+      let imageUrl = anhDaTai;
       if (anh !== null) {
-        const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
-        imageUrl = daTai.url;
-        setAnh(null);
+        try {
+          const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
+          imageUrl = daTai.url;
+          setAnhDaTai(daTai.url);
+          uploadFinished = true;
+        } finally {
+          // `nenVaDung` deletes the picked file even when upload fails.
+          setAnh(null);
+        }
       }
-      await guiBai(phien.person_id, { ...form, imageUrl }, newAttempt());
+      const key = JSON.stringify({ body: form.body.trim(), audience: form.audience, contextId: form.contextId, imageUrl });
+      await guiBai(phien.person_id, { ...form, imageUrl }, attemptFor(attempts.current, key));
       router.replace(`/people/${phien.person_id}`);
     } catch (error) {
-      setLoi(loiRaChu(error));
+      const repickHint = anh !== null && !uploadFinished ? " Chọn lại ảnh rồi thử lần nữa." : "";
+      setLoi(loiRaChu(error) + repickHint);
     } finally {
       setGiaiDoan(null);
       setDangGui(false);
@@ -144,14 +156,16 @@ export function DangBaiScreen() {
       {/* ADR-0022 §2.1: one photograph of one's own, optional; it goes up first
           as a personal picture and the post that shows it comes second. */}
       <View style={styles.khungAnh}>
-        {anh === null ? (
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Một tấm ảnh, nếu muốn. Ai đọc được bài thì xem được ảnh.</Text>
-        ) : (
+        {anh !== null ? (
           <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={[styles.anhXem, { borderRadius: radius.small }]} />
+        ) : anhDaTai !== null && phien !== null ? (
+          <Image accessibilityLabel="Ảnh đã tải lên, đang chờ đăng bài" contentFit="cover" source={nguonAnhBai(anhDaTai, phien.person_id) ?? undefined} style={[styles.anhXem, { borderRadius: radius.small }]} />
+        ) : (
+          <Text style={[typography.caption, { color: colors.inkFaint }]}>Một tấm ảnh, nếu muốn. Ai đọc được bài thì xem được ảnh.</Text>
         )}
         <View style={styles.chips}>
-          <RudiButton compact disabled={dangGui} full={false} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chonAnhMoi()} variant="outline" />
-          {anh !== null ? <RudiButton compact disabled={dangGui} full={false} label="Bỏ ảnh" onPress={() => void boAnhDaChon()} variant="ghost" /> : null}
+          <RudiButton compact disabled={dangGui} full={false} icon="images-outline" label={anh === null && anhDaTai === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chonAnhMoi()} variant="outline" />
+          {anh !== null || anhDaTai !== null ? <RudiButton compact disabled={dangGui} full={false} label="Bỏ ảnh" onPress={() => void boAnhDaChon()} variant="ghost" /> : null}
         </View>
         {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
       </View>

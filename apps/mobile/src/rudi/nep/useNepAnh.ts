@@ -26,6 +26,7 @@ export interface LuotVeAnh {
   nguonAnh: { uri: string; headers: Record<string, string> } | null;
   loi: string | null;
   dangCho: boolean;
+  anhDaVe: string[];
   /** `man` is the open screen, so the server can refuse a money screen. */
   nhoVe(moTa: string, man?: string): Promise<void>;
   dep(): void;
@@ -36,6 +37,7 @@ export function useNepAnh(actorId: string | null): LuotVeAnh {
   const [jobId, datJobId] = useState<string | null>(null);
   const [duongAnh, datDuongAnh] = useState<string | null>(null);
   const [loi, datLoi] = useState<string | null>(null);
+  const [anhDaVe, datAnhDaVe] = useState<string[]>([]);
 
   // Số thứ tự lượt: mọi kết quả về muộn của lượt cũ đều bị bỏ.
   const doi = useRef(0);
@@ -98,6 +100,7 @@ export function useNepAnh(actorId: string | null): LuotVeAnh {
           datTrangThai(tin.trang_thai);
           if (tin.trang_thai === "xong") {
             datDuongAnh(duongFile(BASE_URL, job));
+            datAnhDaVe((before) => before.includes(job) ? before : [...before, job]);
             return;
           }
           if (tin.trang_thai === "hong") {
@@ -131,6 +134,7 @@ export function useNepAnh(actorId: string | null): LuotVeAnh {
     nguonAnh,
     loi,
     dangCho: trangThai === "dang-cho" || trangThai === "dang-chay",
+    anhDaVe,
     nhoVe,
     dep,
   };

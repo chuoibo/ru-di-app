@@ -234,6 +234,14 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 			if r.Python == PythonFrozen {
 				return Force{}, fmt.Errorf("MOBILE_FORCE_PYTHON: %q is frozen in Python and cannot be forced back", r.ID)
 			}
+			if r.Native {
+				// A Go-native route has no Python twin; a rollback of everything
+				// leaves it in place instead of pretending to move it.
+				if token == "all" {
+					continue
+				}
+				return Force{}, fmt.Errorf("MOBILE_FORCE_PYTHON: %q has no Python fallback", r.ID)
+			}
 			force.Routes[r.ID] = true
 		}
 	}

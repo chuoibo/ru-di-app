@@ -317,6 +317,8 @@
     "src/rudi/loi-moi-den.ts",
     "src/rudi/dot-thu/dot-thu.ts",
     "src/rudi/ky-niem/ky-niem.ts",
+    "src/rudi/ky-niem/achievement-routes.ts",
+    "src/rudi/ky-niem/journey-view.ts",
     "src/rudi/vote.ts",
     // Điểm đến (M10): compile để test chứng minh toạ độ chỉ đi trong MỘT lời
     // gọi và không nằm lại đâu cả, và câu «gần tôi» có đủ bốn trạng thái —
@@ -388,6 +390,7 @@
     // L3 (ADR-0022): a post's comments and reactions, personal photos, and the
     // wall owner's comment policy -- pure copy and the six routes.
     "src/rudi/tuong/bai-chi-tiet.ts",
+    "src/rudi/tuong/social-v2.ts",
     "src/rudi/nguoi/anh-ca-nhan.ts",
     // Which avatar each frame shows: the server's version in the address, one
     // batched ask for the unknown, a push beats an older answer, another account
@@ -441,6 +444,7 @@
     // giây là sáu chục lần gõ cửa), và một job id lạ KHÔNG được dựng thành
     // đường đi ra ngoài.
     "src/rudi/nep/media.ts",
+    "src/rudi/nep/profile-video.ts",
     // Nếp's words (ADR-0036 §2.7). Compiled because its laws are negative: the
     // session sent is never more than the server accepts, the preview counts
     // exactly what goes, a money-screen slip is NOT asked, and every refusal

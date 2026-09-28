@@ -27,7 +27,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - openLink: rudi://people/${ID_NGUOI_LAI}
 - extendedWaitUntil:
-    visible: "Tường cá nhân"
+    visible: "Trang viết được chia sẻ"
     timeout: 60000
 - assertVisible: "Nhắn tin"
 - tapOn: "Nhắn tin"

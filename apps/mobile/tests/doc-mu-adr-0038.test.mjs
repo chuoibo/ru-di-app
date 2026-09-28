@@ -44,7 +44,7 @@ test("§2.2: nút tắt không mờ đi mà nói vì sao; lý do tới trình đ
   assert.match(dau, /accessibilityHint=\{tat && lyDo \? lyDo : undefined\}/);
   for (const [tep, mau] of [
     ["rudi/screens/nguoi/DangBaiScreen.tsx", /lyDo=\{lyDoChuaDang\(form\) \?\? undefined\}/],
-    ["rudi/screens/story/DangStoryScreen.tsx", /lyDo=\{anh === null \? "Chọn một tấm ảnh trước đã\."/],
+    ["rudi/screens/story/DangStoryScreen.tsx", /lyDo=\{anh === null && anhDaTai === null \? "Chọn một tấm ảnh trước đã\."/],
     ["rudi/screens/Onboarding.tsx", /lyDo=\{duDieuKien \? undefined : `Chọn thêm \$\{TOI_THIEU - muc\.length\} mục nữa\.`\}/],
   ]) {
     assert.match(doc(tep), mau, `${tep}: nút chính tắt mà không nói vì sao`);

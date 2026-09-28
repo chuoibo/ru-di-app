@@ -133,7 +133,7 @@ func TestMatchesStarletteGoldens(t *testing.T) {
 			// Go-native routes have no Python oracle. Exercise the actual
 			// matcher for every manifest entry instead of forging goldens.
 			path := row.Path
-			for _, name := range []string{"outing", "diary", "job", "person", "photo"} {
+			for _, name := range []string{"outing", "diary", "job", "person", "photo", "person_id", "post_id", "comment_id", "job_id", "run_id"} {
 				path = strings.ReplaceAll(path, "{"+name+"}", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
 			}
 			match, ok := r.FirstFull(row.Method, path)

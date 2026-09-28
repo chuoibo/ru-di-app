@@ -37,7 +37,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Xem hồ sơ .*"
 - extendedWaitUntil:
-    visible: "Tường cá nhân"
+    visible: "Trang viết được chia sẻ"
     timeout: 60000
 - assertVisible: "Tham gia từ tháng .*"
 - takeScreenshot: 33-ho-so-ban

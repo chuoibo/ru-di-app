@@ -134,6 +134,10 @@ services:
       # `seed` and `demo` share that anchor and none of them read a bill. A
       # credential belongs in exactly the processes that use it.
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # Nếp image generation remains in the legacy AI/media seam; Go uses the
+      # same proxy for earned, credit-backed MP4 jobs.
+      NEP_PROXY_URL: ${NEP_PROXY_URL:-}
+      NEP_PROXY_TOKEN: ${NEP_PROXY_TOKEN:-}
       # The key `people.id` is derived under (bug-140342). Same rule as the
       # line above: Compose forwards nothing by itself, so a key sitting in the
       # host's `.env` reaches the API only because it is named here. Unset, the
@@ -226,6 +230,18 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  # Lược đồ hồ sơ Go (thành tích, tường v2, lượt video) cùng lược đồ Cộng đồng
+  # và diary mà tường v2 ghi qua (ADR-0040: một bài, một writer). Chạy sau
+  # `migrate-chat` để hai lệnh DDL không chạy song song trên cùng bảng.
+  profile-migrate:
+    <<: *core-image
+    command: ["migrate-profile"]
+    environment: *api-env
+    depends_on:
+      migrate-chat:
+        condition: service_completed_successfully
+    restart: "no"
+
   # Lược đồ chỉ mục truy hồi quán (internal/rag, thiết kế 04 §2.4), với bảng
   # phiên bản riêng `rag_schema_migrations`. Chạy SAU `migrate-chat`. `serve`
   # không đòi lược đồ này — thiếu nó, hay đang cài dở, thì /places/search xếp
@@ -260,10 +276,13 @@ services:
       # served from Go; same key as `api`, or the two would name one number
       # differently. Unset, those routes answer 503 as Python does.
       MOBILE_PERSON_ID_KEY: ${MOBILE_PERSON_ID_KEY:-}
+      NEP_PROXY_URL: ${NEP_PROXY_URL:-}
+      NEP_PROXY_TOKEN: ${NEP_PROXY_TOKEN:-}
       # Go code merged but not yet owned by Go (manifest PORTED or later) is
       # served from Go only when named here, e.g. `ported`. Empty keeps Python.
       MOBILE_CORE_CANDIDATE_ROUTES: ${MOBILE_CORE_CANDIDATE_ROUTES:-}
-      # Rollback without a rebuild: `MOBILE_FORCE_PYTHON=all make up`.
+      # Legacy route rollback without a rebuild. Go-only profile routes have
+      # no Python implementation and remain owned by Go.
       MOBILE_FORCE_PYTHON: ${MOBILE_FORCE_PYTHON:-}
       # What answers Nếp's questions (ADR-0044, slice 6): always the Python
       # brain's nep-reply here, whatever the host's .env says. `core` is the
@@ -280,6 +299,8 @@ services:
       api:
         condition: service_healthy
       migrate-chat:
+        condition: service_completed_successfully
+      profile-migrate:
         condition: service_completed_successfully
       # Ordering only (see migrate-rag above): serve reads the retrieval
       # schema through rag.Installed and falls back to live rows without it.
