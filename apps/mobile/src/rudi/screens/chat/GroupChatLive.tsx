@@ -77,7 +77,7 @@ import { MenuTin } from "./MenuTin";
 import { TheAiView } from "./TheAi";
 import { TraLoiAi } from "./TraLoiAi";
 import { HangTraLoiAiDangViet, TraLoiAiDangViet } from "./TraLoiAiDangViet";
-import { ChipBoiCanh } from "./ChipBoiCanh";
+import { ChipBoiCanh, TamXemBoiCanh } from "./ChipBoiCanh";
 import { CongCuChat, ToHen, type KhayChat } from "./SoHen";
 import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
 import { KhayToHenChung } from "./ToHenChungKhay";
@@ -155,6 +155,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // Social v1.1 (ADR-0021): the sticker tray, the long-press menu of one
   // message, the message being replied to, and the group settings sheet.
   const [khaySticker, setKhaySticker] = useState(false);
+  // The chip's «Xem» sheet, mounted at this screen's root like the others.
+  const [xemBoiCanh, setXemBoiCanh] = useState(false);
   const [khay, setKhay] = useState<KhayChat>(null);
   const toHenChung = useToHenChung(contextId, personId);
   const [xacNhanBoToHen, setXacNhanBoToHen] = useState(false);
@@ -796,7 +798,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           a bubble cut by the bar. */}
       {toHen ? (
         <View style={[styles.dayGhim, { backgroundColor: colors.ground, borderBottomColor: colors.line }]} testID="day-ghim">
-          <ToHen tin={toHen} onOpen={moToHen} onVote={(tin) => {
+          <ToHen haiNguoi={nhanRieng} tin={toHen} onOpen={moToHen} onVote={(tin) => {
             const index = hang.findIndex((row) => row.loai === "tin" && row.tin.id === tin.id);
             if (index >= 0) danhSachRef.current?.scrollToIndex({ index, animated: !reduced, viewPosition: 0.5 });
           }} />
@@ -1052,7 +1054,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
       {!khongNhanTin && nhacDangGo !== null ? (
         <View style={{ marginHorizontal: space.md }}>
-          <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
+          <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} onXem={() => setXemBoiCanh(true)} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
         </View>
       ) : null}
       {khongNhanTin ? (
@@ -1104,6 +1106,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         </View>
       )}
       <KhaySticker capDoi={capDoi} onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
+      <TamXemBoiCanh goi={goiChip} haiNguoi={nhanRieng} onClose={() => setXemBoiCanh(false)} open={xemBoiCanh && !khongNhanTin && nhacDangGo !== null} />
       <MenuTin
         cuaToi={menuTin !== null && menuTin.author_id === personId}
         onClose={() => setMenuTin(null)}

@@ -8,7 +8,7 @@ import type { SuKienSSE } from "../../src/rudi/ai/sse";
 import type { AiInvocation, ChatCapabilities } from "../../src/rudi/chat/ai-invocations";
 import type { Tin } from "../../src/rudi/chat/tin-song";
 import { CUA_FIXTURE_DEV } from "../../src/rudi/cua-fixture";
-import { ChipBoiCanh } from "../../src/rudi/screens/chat/ChipBoiCanh";
+import { ChipBoiCanh, TamXemBoiCanh } from "../../src/rudi/screens/chat/ChipBoiCanh";
 import { KhaySticker } from "../../src/rudi/screens/chat/KhaySticker";
 import { CongCuChat, type KhayChat } from "../../src/rudi/screens/chat/SoHen";
 import { HangTraLoiAiDangViet } from "../../src/rudi/screens/chat/TraLoiAiDangViet";
@@ -97,6 +97,7 @@ export default function HaiLopChatLab() {
   const [kemTin, datKemTin] = useState(true);
   const [sticker, datSticker] = useState<LopKhay>(null);
   const [giam, datGiam] = useState(false);
+  const [xem, datXem] = useState(false);
   if (!CUA_FIXTURE_DEV) return <Redirect href="/welcome" />;
 
   const khung = { borderRadius: 14, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, overflow: "hidden" as const };
@@ -137,9 +138,9 @@ export default function HaiLopChatLab() {
         <SectionHeader title="Chip trên nút gửi · hai người" />
         {ghiChu("Sẵn sàng (bấm «Xem» mở bảng), rồi AI chưa sẵn sàng.")}
         <View style={{ gap: 8 }} testID="lab-chip">
-          <ChipBoiCanh goi={GOI} haiNguoi kemTin={kemTin} onDoi={datKemTin} sanSang />
-          <ChipBoiCanh goi={GOI} haiNguoi kemTin onDoi={() => {}} sanSang={false} />
-          <ChipBoiCanh goi={{ ...GOI, luot: [], tongLuot: 0 }} haiNguoi kemTin onDoi={() => {}} sanSang />
+          <ChipBoiCanh goi={GOI} haiNguoi kemTin={kemTin} onDoi={datKemTin} onXem={() => datXem(true)} sanSang />
+          <ChipBoiCanh goi={GOI} haiNguoi kemTin onDoi={() => {}} onXem={() => {}} sanSang={false} />
+          <ChipBoiCanh goi={{ ...GOI, luot: [], tongLuot: 0 }} haiNguoi kemTin onDoi={() => {}} onXem={() => {}} sanSang />
         </View>
 
         <SectionHeader title="Câu trả lời đang tới" />
@@ -182,6 +183,8 @@ export default function HaiLopChatLab() {
           />
         </View>
       ) : null}
+      {/* At the board's root, as the chat screen mounts it: the sheet covers the window. */}
+      <TamXemBoiCanh goi={GOI} haiNguoi onClose={() => datXem(false)} open={xem} />
       <KhaySticker capDoi={sticker === "doi"} onChon={() => datSticker(null)} onClose={() => datSticker(null)} open={sticker !== null} />
     </View>
   );

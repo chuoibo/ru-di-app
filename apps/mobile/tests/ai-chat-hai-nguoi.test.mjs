@@ -130,7 +130,7 @@ test("khay: «Hỏi Rủ Đi AI» điền /plan ở mọi phòng; chữ khay c�
   assert.equal(timNhacAi(MO_DAU_HOI_AI)?.lenh, "plan");
   assert.equal(CONG_CU_TO_GIAY, "Tờ giấy");
   const k = chuKhay(true);
-  assert.deepEqual(Object.keys(k).sort(), ["goiYPoll", "loiHoiAi", "nhanPlan", "tieuDePoll"], "khay không còn khe cặp riêng (congCuHen/lenhAi/hoiAiTrenKhay)");
+  assert.deepEqual(Object.keys(k).sort(), ["ghiChuAnh", "goiYPoll", "loiHoiAi", "nhanPlan", "suaChung", "tieuDePoll"], "khay không còn khe cặp riêng (congCuHen/lenhAi/hoiAiTrenKhay)");
   for (const cau of Object.values(k)) assert.doesNotMatch(cau, NHOM, cau);
   assert.match(k.loiHoiAi, /cả hai bạn/);
   assert.match(chuKhay(false).loiHoiAi, /cả nhóm/);
@@ -195,6 +195,14 @@ test("màn chat: không cổng nhanRieng nào chặn AI hay tờ hẹn; phần c
   assert.match(soHen, /lenhSanSang\(capabilities, "plan"\)/, "khay đọc độ sẵn sàng của plan ở mọi phòng");
   assert.match(soHen, /\{ vat: "lich", label: "Tờ hẹn", action: \(\) => onPanel\("plan"\) \}/, "«Tờ hẹn» có ở mọi khay, không bị «Tờ giấy» thay chỗ");
   assert.match(soHen, /\.\.\.\(onToGiay \? \[/, "«Tờ giấy» là công cụ THÊM của cặp đôi");
+  // Lab 28/09: the tray's grid and every pair-dependent word come from `khay-cong-cu`.
+  assert.match(soHen, /boCucKhay\(rongHang \?\? Math\.min\(width, 820\) - 32, tools\.length, fontScale\)/, "lưới khay phải tính từ số công cụ và cỡ chữ");
+  assert.match(soHen, /\{ width: boCuc\.oRong \}/, "mỗi ô rộng đúng theo boCucKhay");
+  assert.doesNotMatch(soHen, /minWidth: 62/, "ô tối thiểu 62 cố định làm năm ô xuống hàng 4 + 1 ở 360");
+  assert.match(soHen, /maxHeight: tranKhay\(height, panel === "tools" \? boCuc\.caoNoiDung : null\)/, "trần khay không được cắt lưới công cụ");
+  assert.match(soHen, /\{chu\.ghiChuAnh\}/, "dòng chú thích ảnh đọc theo hai người / nhóm");
+  assert.match(soHen, /nhapDangMo \? chuKhay\(haiNguoi\)\.suaChung/, "«Sửa cùng hội» có bản cho hai người");
+  assert.match(live, /<ToHen haiNguoi=\{nhanRieng\} /);
 
   // The settings row stays for every pair: it is how a friends' pair reaches «Một đôi».
   const caiDat = readFileSync(join(SRC, "screens", "chat", "CaiDatNhom.tsx"), "utf8");

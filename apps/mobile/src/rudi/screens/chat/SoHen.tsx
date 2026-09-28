@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { lenhSanSang, type ChatCapabilities } from "../../chat/ai-invocations";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
-import { CONG_CU_TO_GIAY, chuKhay } from "../../chat/khay-cong-cu";
+import { CONG_CU_TO_GIAY, KHOANG_CONG_CU, boCucKhay, chuKhay, tranKhay } from "../../chat/khay-cong-cu";
 import { docTheAi, lichTrinhTrongThe, type Tin } from "../../chat/tin-song";
 import { KHUNG_VAT, hinhVat, type VatBan } from "../../art/vat-ban";
 import { typography, useRudiTheme } from "../../theme";
@@ -15,7 +15,11 @@ import { Field, IconButton, RudiButton } from "../../ui";
 export type KhayChat = "tools" | "poll" | "plan" | null;
 
 /** The folded margin names the next action; the full text lives in the thread. */
-export function ToHen({ tin, onOpen, onVote }: { tin: Tin; onOpen: (tin: Tin) => void; onVote: (tin: Tin) => void }) {
+export function ToHen({ tin, onOpen, onVote, haiNguoi = false }: {
+  tin: Tin; onOpen: (tin: Tin) => void; onVote: (tin: Tin) => void;
+  /** A two-person conversation: the open shared plan is edited «cùng nhau», not «cùng hội». */
+  haiNguoi?: boolean;
+}) {
   const { colors } = useRudiTheme();
   // A poll, an itinerary card, or the itinerary part of an answer in the thread.
   const doc = docTheAi(tin.card);
@@ -37,7 +41,7 @@ export function ToHen({ tin, onOpen, onVote }: { tin: Tin; onOpen: (tin: Tin) =>
       : nhapDangMo
         ? `Tờ hẹn chung · bản ${nhap.revision}`
         : "Tờ hẹn đang phác";
-  const action = poll ? "Xem phiếu" : daThanhKeo ? "Mở lịch trình" : nhapDangMo ? "Sửa cùng hội" : "Sửa tờ hẹn";
+  const action = poll ? "Xem phiếu" : daThanhKeo ? "Mở lịch trình" : nhapDangMo ? chuKhay(haiNguoi).suaChung : "Sửa tờ hẹn";
   const icon = poll
     ? "stats-chart-outline"
     : daThanhKeo
@@ -84,7 +88,10 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   const sanSang = lenhSanSang(capabilities, "plan");
   // The tray is a sheet laid over the conversation; Nếp makes room for it.
   useNhuongChoNep(panel !== null);
-  const { height } = useWindowDimensions();
+  const { height, width, fontScale } = useWindowDimensions();
+  // The tool row's real width once laid out; before that, the window's less
+  // the tray's side padding (the chat column is at most 820 wide).
+  const [rongHang, setRongHang] = useState<number | null>(null);
   const [draft, setDraft] = useState(() => docBanNhapCongCu(personId, contextId));
   const held = useRef(draft);
   const [restored, setRestored] = useState(() => ({ poll: !!draft.question || draft.choices.some(Boolean) }));
@@ -158,6 +165,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
     ...(onToGiay ? [{ vat: "thu-gap" as VatBan, label: CONG_CU_TO_GIAY, action: () => { onPanel(null); onToGiay(); } }] : []),
   ];
   const hasDraft = panel === "poll" && (!!draft.question || draft.choices.some(Boolean));
+  const boCuc = boCucKhay(rongHang ?? Math.min(width, 820) - 32, tools.length, fontScale);
   return (
     <View style={[styles.tools, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <View style={styles.titleRow}>
@@ -166,7 +174,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
-      {panel === "tools" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Ảnh gửi vào đây có thể được bạn đồng hành chọn vào sổ chuyến đi công khai. Nếu muốn gỡ, hãy nhắn người giữ sổ nhé.</Text> : null}
+      {panel === "tools" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{chu.ghiChuAnh}</Text> : null}
       {panel === "poll" && undo?.panel === panel ? <View style={styles.draftRow}>
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Đã bỏ bản nháp.</Text>
         <RudiButton label="Hoàn tác" variant="ghost" compact full={false} disabled={busy} onPress={undoDiscard} />
@@ -174,12 +182,14 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>{restored.poll ? "Đã khôi phục bản nháp" : ""}</Text>
         <RudiButton label="Bỏ bản nháp" variant="ghost" compact full={false} disabled={busy} onPress={discard} />
       </View> : null}
-      <ScrollView keyboardShouldPersistTaps="handled" style={[styles.scroll, { maxHeight: Math.max(130, Math.min(260, height * 0.25)) }]}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={[styles.scroll, { maxHeight: tranKhay(height, panel === "tools" ? boCuc.caoNoiDung : null) }]}>
         {panel === "tools" ? (
-          <View style={styles.toolRow}>{tools.map((tool) => (
+          // One row while every tool still holds its widest word, else balanced
+          // rows of equal tools (`boCucKhay`): five never wrap 4 + 1 (lab 28/09).
+          <View onLayout={(e) => { const w = Math.floor(e.nativeEvent.layout.width); if (w > 0 && w !== rongHang) setRongHang(w); }} style={styles.toolRow} testID="khay-hang-cong-cu">{tools.map((tool) => (
             <Pressable key={tool.label} accessibilityRole="button" accessibilityLabel={tool.label} disabled={busy} onPress={tool.action}
-              style={({ pressed }) => [styles.tool, pressed && styles.pressed]}>
-              <View style={[styles.toolIcon, { backgroundColor: colors.ground, borderColor: colors.line }]}><VeLop height={44} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(tool.vat)} width={44} /></View>
+              style={({ pressed }) => [styles.tool, { width: boCuc.oRong }, pressed && styles.pressed]}>
+              <View style={[styles.toolIcon, { width: boCuc.icon, height: boCuc.icon, backgroundColor: colors.ground, borderColor: colors.line }]}><VeLop height={boCuc.icon - 12} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(tool.vat)} width={boCuc.icon - 12} /></View>
               {/* Stretched to the column: measured at its own width, Android wrapped
                   «Tờ giấy» after «Tờ» and the second line never showed (24/09). */}
               <Text numberOfLines={2} style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
@@ -230,10 +240,11 @@ const styles = StyleSheet.create({
   draftRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   // A box and the sentence about it are one thing, so they move together.
   o: { gap: 4 },
-  toolRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" },
-  tool: { alignItems: "center", justifyContent: "center", minWidth: 62, flex: 1, gap: 7, paddingVertical: 10 },
+  toolRow: { flexDirection: "row", flexWrap: "wrap", gap: KHOANG_CONG_CU, justifyContent: "center" },
+  // Squares on one line: a two-line label («Bình / chọn» at 360) hangs below its square.
+  tool: { alignItems: "center", justifyContent: "flex-start", gap: 7, paddingVertical: 10 },
   toolNhan: { alignSelf: "stretch", textAlign: "center" },
-  toolIcon: { width: 56, height: 56, borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  toolIcon: { borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   giayNho: { borderWidth: 1, borderRadius: 4, padding: 12, marginTop: 4 },
   form: { gap: 12, paddingBottom: 4 },
   scroll: { flexGrow: 0 },

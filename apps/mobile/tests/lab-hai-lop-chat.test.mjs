@@ -36,6 +36,7 @@ test("every surface is the shipped component, not a local copy", () => {
   const nguon = {
     CongCuChat: "../../src/rudi/screens/chat/SoHen",
     ChipBoiCanh: "../../src/rudi/screens/chat/ChipBoiCanh",
+    TamXemBoiCanh: "../../src/rudi/screens/chat/ChipBoiCanh",
     KhaySticker: "../../src/rudi/screens/chat/KhaySticker",
     HangTraLoiAiDangViet: "../../src/rudi/screens/chat/TraLoiAiDangViet",
     HangLoiDeNghi: "../../src/rudi/screens/hai-nguoi/HangToGiay",
