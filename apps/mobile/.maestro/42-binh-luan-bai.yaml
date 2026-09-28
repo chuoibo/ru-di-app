@@ -35,8 +35,11 @@ appId: com.lakiet.rudi
     visible: "Bài bạn đã đăng và ai đọc được"
     timeout: 30000
 - tapOn: "Bài bạn đã đăng và ai đọc được"
-- extendedWaitUntil:
-    visible: "Mở bài: Bai co anh QA"
+# Posts sit below the owner's diary shelf, under the fold on a phone.
+- scrollUntilVisible:
+    element:
+      text: "Mở bài: Bai co anh QA"
+    direction: DOWN
     timeout: 60000
 - tapOn: "Mở bài: Bai co anh QA"
 - extendedWaitUntil:
@@ -58,10 +61,17 @@ appId: com.lakiet.rudi
 - assertVisible: "1 tim · 1 bình luận"
 - takeScreenshot: 42-chi-tiet-bai
 - pressKey: Back
-- extendedWaitUntil:
-    visible: "Hồ sơ của bạn"
+# The wall reloads on focus and starts from the top again.
+- scrollUntilVisible:
+    element:
+      text: ".* · 1 tim · 1 bình luận"
+    direction: DOWN
     timeout: 30000
-- assertVisible: ".* · 1 tim · 1 bình luận"
+- scrollUntilVisible:
+    element:
+      text: "Bình luận: Không ai"
+    direction: UP
+    timeout: 30000
 # Chính sách bình luận của tường mình: đổi rồi trả lại (canary curl đo phần máy chủ).
 - tapOn: "Bình luận: Không ai"
 - extendedWaitUntil:
@@ -72,9 +82,15 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Ai đọc được bài thì bình luận được."
     timeout: 30000
-- tapOn: "Đăng bài mới"
-- extendedWaitUntil:
-    visible: "Ai đọc được?"
+- scrollUntilVisible:
+    element:
+      text: "Đăng bài mới"
+    direction: UP
     timeout: 30000
-- assertVisible: "Chọn ảnh"
+- tapOn: "Đăng bài mới"
+# The community composer (wall mode) is the composer while the rollout is on.
+- extendedWaitUntil:
+    visible: "Hôm nay có gì đáng nhớ?"
+    timeout: 30000
+- assertVisible: "Thêm ảnh hoặc video"
 - takeScreenshot: 42-dang-bai-co-anh

@@ -34,8 +34,9 @@ def test_go_native_route_survives_python_manifest_regeneration(monkeypatch):
         "class": "core",
         "owner": "go",
         "python": "absent",
-        "state": "GO-NATIVE",
+        "state": "LIVE-GO",
         "evidence": "docs/migration/go-native-profile.md",
+        "native": True,
     }
     monkeypatch.setattr(generator, "_app_rows", lambda: [python_route.copy()])
     output = generator.build({"schema": 1, "routes": [native]}, prune=False)

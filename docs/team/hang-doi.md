@@ -9,6 +9,78 @@ Xếp theo mức độ nghiêm trọng, không theo thứ tự nghĩ ra.
 
 ---
 
+## MỚI 2026-09-25: UI v3 «Sân khấu giấy», việc phía máy chủ và máy thật mà client không tự làm được
+
+Nhánh `claude/practical-faraday-mswgmv`, kế hoạch `docs/architecture/04-ui-v3-san-khau-giay.md`.
+Client đã khoanh vùng các lỗi dưới đây. Phần gốc nằm ở máy chủ hoặc cần máy thật, nên ghi lại để
+không lạc.
+
+1. **B1, phía máy chủ: ĐÃ XONG 26/09 (ADR-0038 §2.1, commit `6ff0013`, `2050c8d`).**
+   - Luật đã chọn: khi cả hai đồng ý `lap_so`, mọi tờ tạm còn mở của cuộc trò chuyện thành trang đầu của sổ
+     (gắn `cycle_id`, `is_temporary = false`). Tờ tạm đã hết hạn giữ nguyên. Không bỏ tính năng lời rủ tạm của
+     ADR-0027, không huỷ chữ người ta đang viết.
+   - Python và Go cùng commit; golden `python_pair_steps.json` render lại từ dịch vụ Python; oracle câu lệnh
+     Postgres pair: 226 ca, 0 mismatch.
+   - Hàng mồ côi còn sót trên máy đang chạy (tạo trước 26/09) tự hết hạn cuối tuần của nó; không cần migration.
+2. **Flow Maestro chạy lại trên máy thật.** Container không có Android SDK/KVM.
+   - Flow 28 (bàn gán món mới, cuộn-về-đầu khi đổi bước).
+   - Flow 29 (đợt thu, trang sổ).
+   - Flow 47 (sổ đôi: bìa sổ, giao kèo có chữ ký, tờ bút chì).
+   - Flow 21, 22, 24, 27 (S3: lời mời là phong bì, nhóm mới là bìa sổ, kèo mới là câu rủ có lá
+     lịch và đĩa giờ chặng). Chữ và nhãn flow bấm giữ nguyên; «Ô ngày đi»/«Ô ngày về» của Kèo
+     mới nay là lá lịch, không flow nào gõ vào hai ô này.
+   - Flow 26 và 35 (S4: Khám phá có sân khấu thành phố ở đầu, gập đi khi đang lọc/tìm; Đi đâu
+     là lưới bưu thiếp). Flow 26 cuộn tới «Tiệm Nướng Xóm Lào» bằng scrollUntilVisible nên vẫn
+     tới; cần xem «1 kết quả» còn trong màn khi lọc (sân khấu đã gập lúc đó).
+   - Flow 24, 25, 30, 34, 37, 45, 48 (S5: nhóm là gáy sổ, avatar mang vòng mực người, thanh
+     ghim nằm trên dải nền, khay công cụ là vật ký hoạ, bình chọn trên giấy nhớ, tờ hẹn chung
+     trên giấy kẻ, hồ sơ người cùng nhóm có «Kết bạn»). Nhãn và chữ flow bấm giữ nguyên.
+   - Flow 11, 24, 32, 33 (S6: tường là ảnh in nghiêng có băng dính, thả khoảnh khắc là tấm
+     instax, hồ sơ là trang hộ chiếu, thành tích là tờ tem). Nhãn giữ nguyên.
+   - Flow 01, 21, 22, 23 (S7: bìa Welcome mở quanh gáy, Login viết số trên dòng mực, OTP là vé).
+     «Ô số điện thoại», «Gửi mã», «Ô nhập mã», «Rủ Đi thôi!» giữ nguyên.
+4. **Cỡ chữ lớn** (1.3 và 2.0) chỉ đo được trên máy thật: web headless luôn ra 1.0.
+   - Vị trí các chữ flow bấm đã đo trên web 412×915, nhưng «thấy được» của Maestro trên máy mới là
+     bằng chứng.
+3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&
+   npx expo run:android`.
+5. **Đọc mù 26/09 (lát S9): ĐÃ QUYẾT VÀ ĐÃ LÀM ở S10 (ADR-0038).** Nút tắt nói vì sao hoặc không hiện; mép
+   Nếp là ruy băng; câu chữ («Bản đồ», «Người lập nhóm», nhãn gu tiếng Việt ở cả client, Python, Go); mức chi
+   thứ tư «Trên 500K». Hai mục nhỏ cuối cũng đã sửa (S11): phiếu bầu là vân tay có vân (phiếu của bạn mang
+   mực của bạn), nút gửi bình luận khi ô trống là viền đứt chứ không còn đĩa cam. Còn mở, không chặn: «0 tim»
+   cạnh sáu loại cảm xúc.
+6. **Hai test tầng Go Postgres đỏ vì môi trường container, không vì mã** (đo 26/09): `TestPhotoStorageOracle`
+   và `TestPeopleRepositoryOracle` (route `delete_own_account`). Ảnh parity chạy dưới user `app`, còn test chạy
+   dưới root nên `t.TempDir()` tạo thư mục 0700 của root; Python trong container bị PermissionError errno 13.
+   Cần chạy lại trên máy dev không phải root. Tương tự, 20 test Python đỏ ở container này vì gói `cryptography`
+   của hệ thống hỏng (`pyo3_runtime.PanicException`) và vì các target make/docker.
+
+---
+
+## MỚI 2026-09-24 — sổ đôi sau QA cặp đôi: chờ Lead ký ADR-0034
+
+Đợt 1–6 của kế hoạch sửa QA cặp đôi (23/09) đã lên `main` (`71e50a9f` … `764bbf64`), cộng bít lỗ rò
+«bản phác chưa gửi hiện cho người kia sau khi nghỉ tuần» (Đợt 7A). Ghi chép từng mục đóng/mở:
+[`docs/claude/2026-09-23/qa-cap-doi-minh-linh.md`](../claude/2026-09-23/qa-cap-doi-minh-linh.md).
+
+Còn mở, theo thứ tự:
+
+1. **[ADR-0034](../decisions/ADR-0034-gay-vai-nhip-chia-gu-va-cau-hoi-tuan-cua-so-doi.md) đã ký 25/09.**
+   Xong 25/09: lát 1 `chia_gu`; (a) Nếp dùng gu người đã bật khi phác tờ; (b) người lo suy từ tương tác +
+   «Để tôi lo / Để <tên> lo / Hôm nay mình share» (`pair_cycle_rhythms`, không giới tính; nghỉ tuần dùng
+   «Tuần này nghỉ» sẵn có). Lượt 2 xong 25/09: gậy cân tải, hạn mức 3 tờ/người/tuần, 4 sticker đôi, hồ sơ «Một đôi». Còn: «Nếp bước ra»
+   khi cả hai tự lo (chờ Lead, xem ADR-0034 §5); (c) câu
+   hỏi tuần bằng brain stub (`pair_week_insights`, 0 lời gọi), rồi lượt đo thật tối đa 30 lời gọi
+   `gemini-3.1-flash-lite` — báo Lead trước khi chạy; (d) 4 sticker đôi, hồ sơ «Một đôi».
+2. Xoá tài khoản: hàng `pair_consents` (kể cả `chia_gu`) đang được GIỮ như mọi hàng đồng ý; gu của người
+   bị xoá mất theo `person_interests`, nên không còn gì để hiện. Xem lại khi thêm hai bảng mới ở (b)/(c).
+3. Không cần ADR — đã xong 24/09 (lượt «còn nợ» 1): khoảnh khắc hẹn, kỷ niệm của hai bạn, ảnh dọc
+   trên tường, «Thêm vào kèo» cho sổ đôi, Khám phá chữ 1.3, câu chữ «máy chủ». Còn: chất giấy chế
+   độ tối (hợp đồng màu spec §16 — cần lượt thiết kế có đọc mù). «Rủ … tới đây» từ trang quán: xong
+   lượt «còn nợ» 2 (24/09).
+
+---
+
 ## MỚI 2026-09-18 — `APPROVE` vòng 2 + rebase lên chiến dịch
 
 Claude: [`docs/archive/claude/2026-09-18/verdict-phan-con-lai-go.md`](../claude/2026-09-18/verdict-phan-con-lai-go.md) @ `aa556e43`, verdict `APPROVE`. Cây `/home/lakiet/wt-go-con-lai`, nhánh `go/p0-w-con-lai`, đã rebase `--merge` (3-way; git cũ không có `--3way`) lên `claude/p0-w-go0-nen-mong-cong-truoc`. **Không đụng** `claude/wip-go-*`. Không LIVE-GO. Không `gate.sh parity` (T5, người gộp).

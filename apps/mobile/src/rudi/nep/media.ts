@@ -34,8 +34,8 @@ export interface TinhHinhMedia {
 
 /** Mã máy chủ thành câu người đọc. Thiếu một mã là câu mặc định của `api.ts`. */
 export const MEDIA_REFUSALS: Record<string, string> = {
-  nep_media_chua_cau_hinh: "Máy chủ này chưa bật phần vẽ ảnh của Nếp.",
-  nep_media_thieu_khoa: "Máy chủ này chưa bật phần vẽ ảnh của Nếp.",
+  nep_media_chua_cau_hinh: "Rủ Đi chưa bật phần vẽ ảnh của Nếp.",
+  nep_media_thieu_khoa: "Rủ Đi chưa bật phần vẽ ảnh của Nếp.",
   nep_media_khong_goi_duoc: "Nếp chưa nối được tới chỗ vẽ ảnh. Thử lại sau nhé.",
   nep_media_proxy_tu_choi: "Chỗ vẽ ảnh đang trục trặc. Thử lại sau nhé.",
   khong_thay_job: "Không tìm thấy bức này.",

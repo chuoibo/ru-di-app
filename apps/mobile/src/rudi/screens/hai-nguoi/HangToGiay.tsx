@@ -2,7 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
-import { TRANG_THAI_MO, type ToGiay, cauTrangThai } from "../../to-giay/to-giay";
+import { homNay } from "../../keo/nhip-keo";
+import { cauHenTrongChat } from "../../to-giay/moc-hen";
+import { TRANG_THAI_MO, type ToGiay, cauTrangThai, phienBan } from "../../to-giay/to-giay";
+import { useTenCho } from "../../to-giay/useTenCho";
 import { ThuGapBa } from "../../ui/art/Motif";
 
 /**
@@ -22,6 +25,8 @@ export function HangToGiay({
   onPress,
   tieuDe = "Tờ giấy của hai mình",
   cauMo = "Đi đâu không?",
+  deNghiDenToi,
+  tenNguoiKia,
   testID,
 }: {
   toMo: ToGiay | undefined;
@@ -31,6 +36,16 @@ export function HangToGiay({
   tieuDe?: string;
   /** The notebook kind's opening line, shown when no sheet is on the table. */
   cauMo?: string;
+  /**
+   * A consent proposal the OTHER person filed and only I can answer.
+   *
+   * Nothing said so before 23/09: after Minh proposed opening the notebook,
+   * Linh's pinned line still read «Chưa có tờ nào tuần này», and the only way
+   * to learn of it was to open the notebook for no stated reason (QA 23/09).
+   */
+  deNghiDenToi?: { purpose: "lap_so" | "bat_doi" | "doc_chat"; ten: string };
+  /** The other person's name, so the row says «Minh chưa xem» like the sheet does. */
+  tenNguoiKia?: string;
   testID?: string;
 }) {
   const { colors, radius } = useRudiTheme();
@@ -38,7 +53,18 @@ export function HangToGiay({
   // sheet still in play (a proposal, or a plan not yet gone on). A memory on
   // the paper surface is the surface's business; here it reads as a quiet week.
   const dangChoi = toMo && (TRANG_THAI_MO.includes(toMo.state) || toMo.state === "chot" || toMo.state === "da_di");
-  const phu = dangChoi ? cauTrangThai(toMo, toiId) : `Chưa có tờ nào tuần này. ${cauMo}`;
+  // While a plan stands the line is the date itself, with its place and how
+  // far away it is: the conversation's own milestone, drawn here from the
+  // notebook because nothing may be written into an encrypted chat for them.
+  const pbMo = toMo === undefined ? undefined : phienBan(toMo);
+  const choChinh = pbMo?.content.chang[0]?.place_id ?? null;
+  const tenCho = useTenCho([choChinh]);
+  const hen = toMo ? cauHenTrongChat(toMo, homNay(), choChinh ? tenCho[choChinh] : undefined) : null;
+  const phu = deNghiDenToi
+    ? CAU_DE_NGHI[deNghiDenToi.purpose](deNghiDenToi.ten)
+    : hen ?? (dangChoi && toMo
+      ? cauTrangThai(toMo, toiId, tenNguoiKia)
+      : `Chưa có tờ nào tuần này. ${cauMo}`);
   return (
     <Pressable
       accessibilityLabel={`${tieuDe}. ${phu}`}
@@ -58,6 +84,12 @@ export function HangToGiay({
     </Pressable>
   );
 }
+
+const CAU_DE_NGHI: Record<"lap_so" | "bat_doi" | "doc_chat", (ten: string) => string> = {
+  lap_so: (ten) => `${ten} đề nghị lập sổ lời hẹn. Mở để xem và trả lời.`,
+  bat_doi: (ten) => `${ten} đề nghị hai bạn là «Một đôi». Mở để xem và trả lời.`,
+  doc_chat: () => "Lời đề nghị đọc chat cũ không còn được hỗ trợ. Nếp chỉ nhận phần bạn chọn và xác nhận gửi.",
+};
 
 const styles = StyleSheet.create({
   hang: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth },

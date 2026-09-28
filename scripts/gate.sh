@@ -668,12 +668,16 @@ do_docker() {
   fi
   echo "--- core: the container reports healthy"
   docker rm -f "$core_container" >/dev/null 2>&1 || true
-  # The pool opens lazily. A loopback URL lets this test measure core's own
-  # liveness without making a PostgreSQL server part of the Docker smoke test.
-  # The healthcheck also never goes through Python.
+  # Any upstream will do: core's healthcheck asks whether core itself serves
+  # and deliberately never goes through Python. Same env as test.yml: an
+  # unreachable database (the pool is lazy), and the chat feed and group AI
+  # turned off by the documented flag, because with them on (the prod
+  # default) core checks the chat schema at startup and rightly refuses to
+  # start without a database.
   docker run -d --name "$core_container" --health-interval 2s \
     -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 \
-    -e MOBILE_DATABASE_URL=postgresql://gate@127.0.0.1:9/gate \
+    -e MOBILE_DATABASE_URL=postgresql://none@127.0.0.1:9/none \
+    -e MOBILE_CHAT_CHANGES_CANDIDATE=0 \
     "$core_image" >/dev/null || return 1
   wait_container_healthy "$core_container"
 }

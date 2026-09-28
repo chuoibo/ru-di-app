@@ -112,7 +112,7 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "Tối"
 - extendedWaitUntil:
-    visible: "Lựa chọn này ở trên máy này, không gửi lên máy chủ."
+    visible: "Lựa chọn này chỉ ở trên máy này, không gửi đi đâu."
     timeout: 20000
 - takeScreenshot: 44-giao-dien-toi
 - tapOn: "Theo hệ thống"

@@ -416,3 +416,57 @@ def test_sua_nhap_ghi_tai_cho_va_khong_them_phien_ban(kho, postgres_session):
     assert len(doc.versions) == 1, "nháp không có lịch sử"
     assert doc.versions[0].content["chang"][0]["gio"] == "19:00"
     assert doc.versions[0].ly_do == "Đổi giờ."
+
+
+def test_vai_tuan_ghi_roi_doi_roi_share_qua_kho_that(kho, postgres_session):
+    """ADR-0034 §2.4: one row per cycle and week; choosing again changes the
+    row; «Hôm nay mình share» is NULL; the read finds exactly what was written."""
+    context_id, a, b, cycle_id = _so_mo(kho, postgres_session)
+    tuan = date(2030, 9, 16)
+    assert kho.get_pair_rhythm(cycle_id, tuan) is None
+    kho.set_pair_rhythm(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=b, chon_boi_id=a, now=NOW)
+    ghi = kho.get_pair_rhythm(cycle_id, tuan)
+    assert (ghi.nguoi_lo_id, ghi.chon_boi_id) == (b, a)
+    kho.set_pair_rhythm(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=None, chon_boi_id=b, now=NOW + timedelta(minutes=1))
+    share = kho.get_pair_rhythm(cycle_id, tuan)
+    assert share.nguoi_lo_id is None and share.chon_boi_id == b
+    assert kho.get_pair_rhythm(cycle_id, tuan + timedelta(days=7)) is None, "tuần khác, hàng khác"
+
+
+def test_to_tam_duoc_nhan_vao_chu_ky_vua_mo_qua_kho_that(kho, postgres_session):
+    """ADR-0038 §2.1: lập sổ thì lời rủ tạm đang mở thành trang đầu của sổ.
+
+    Trên DB thật: hai cột đổi cùng một lúc nên CHECK `paper_temporary_has_no_cycle`
+    giữ; khoá ngoại tới chu kỳ nhận; gọi lại lần hai không đổi gì.
+    """
+    context_id, a, b = _cap(postgres_session)
+    notebook = kho.create_pair_notebook(context_id, now=NOW)
+    tam = kho.create_pair_paper(
+        context_id=context_id,
+        cycle_id=None,
+        draft_owner_id=a,
+        tuan=TUAN,
+        expires_at=KHUNG,
+        content=NOI_DUNG,
+        ly_do=None,
+        nguon={"scope": "chung"},
+        author_type="human",
+        now=NOW,
+    )
+    assert tam.is_temporary is True and tam.cycle_id is None
+    cycle_id = kho.open_pair_cycle(
+        notebook.id, participants=(a, b), terms_version=1, now=NOW
+    )
+    kho.activate_pair_cycle(cycle_id, now=NOW)
+
+    kho.adopt_temporary_paper(tam.id, cycle_id=cycle_id)
+    postgres_session.expire_all()
+    doc = kho.get_pair_paper(tam.id)
+    assert doc.cycle_id == cycle_id
+    assert doc.is_temporary is False
+    assert doc.state == "nhap" and doc.current_version == 1
+    assert doc.versions[0].content == NOI_DUNG, "nhận vào sổ không đổi chữ đang viết"
+
+    kho.adopt_temporary_paper(tam.id, cycle_id=uuid.uuid4())
+    postgres_session.expire_all()
+    assert kho.get_pair_paper(tam.id).cycle_id == cycle_id, "tờ đã thuộc sổ thì không bị gắn lại"

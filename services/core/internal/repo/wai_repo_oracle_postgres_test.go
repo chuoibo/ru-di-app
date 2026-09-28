@@ -44,7 +44,7 @@ func tPlacePhoto(p PlacePhoto) any {
 	return tRecord("PlacePhotoRecord", "id", tUUID(p.ID), "place_id", tStr(p.PlaceID),
 		"storage_key", tStr(p.StorageKey), "content_type", tStr(p.ContentType),
 		"byte_size", tInt(p.ByteSize), "width", tInt(p.Width), "height", tInt(p.Height),
-		"author", tStr(p.Author), "license", tStr(p.License), "source_url", tStr(p.SourceURL),
+		"author", optional(p.Author, tStr), "license", optional(p.License, tStr), "source_url", tStr(p.SourceURL),
 		"title", optional(p.Title, tStr), "sort_order", tInt(p.SortOrder))
 }
 

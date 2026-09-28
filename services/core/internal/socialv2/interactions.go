@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"mobile/services/core/internal/domain/postaudience"
+	"mobile/services/core/internal/community"
 	"mobile/services/core/internal/repo"
 )
 
@@ -39,13 +39,20 @@ func scanComment(row pgx.Row) (*comment, error) {
 	return &c, nil
 }
 
-const commentColumns = `c.id,c.post_id,c.parent_id,c.author_id,p.display_name,c.body,c.created_at,
+// commentFrom reads the one parent a comment has: community_comment_meta, the
+// row Cộng đồng's writer fills when a comment is published. Comments by
+// erased people, or by someone in a block with the reader, are left out the
+// same way the community thread leaves them out.
+const commentFrom = ` FROM post_comments c JOIN people p ON p.id=c.author_id LEFT JOIN community_comment_meta m ON m.comment_id=c.id
+ WHERE p.deleted_at IS NULL AND NOT EXISTS(SELECT 1 FROM friend_requests f WHERE f.state='blocked' AND ((f.requester_id=$2::uuid AND f.addressee_id=c.author_id) OR (f.addressee_id=$2::uuid AND f.requester_id=c.author_id)))`
+
+const commentColumns = `c.id,c.post_id,m.parent_id,c.author_id,p.display_name,c.body,c.created_at,
  (SELECT count(*) FROM social_comment_likes l WHERE l.comment_id=c.id),
  EXISTS(SELECT 1 FROM social_comment_likes l WHERE l.comment_id=c.id AND l.person_id=$2::uuid)`
 
 func listReplies(ctx context.Context, tx pgx.Tx, parentID, actor string) ([]comment, error) {
-	rows, err := tx.Query(ctx, `SELECT `+commentColumns+` FROM post_comments c JOIN people p ON p.id=c.author_id
- WHERE c.parent_id=$1::uuid ORDER BY c.created_at,c.id`, parentID, actor)
+	rows, err := tx.Query(ctx, `SELECT `+commentColumns+commentFrom+`
+ AND m.parent_id=$1::uuid ORDER BY c.created_at,c.id`, parentID, actor)
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +92,8 @@ func (h *Handler) comments(w http.ResponseWriter, r *http.Request) {
 		if _, err := visiblePost(ctx, tx, postID, actor); err != nil {
 			return 0, nil, err
 		}
-		query := `SELECT ` + commentColumns + ` FROM post_comments c JOIN people p ON p.id=c.author_id
- WHERE c.post_id=$1::uuid AND c.parent_id IS NULL`
+		query := `SELECT ` + commentColumns + commentFrom + `
+ AND c.post_id=$1::uuid AND m.parent_id IS NULL`
 		args := []any{postID, actor}
 		if cursor != nil {
 			query += ` AND (c.created_at,c.id)>($3::timestamptz,$4::uuid)`
@@ -131,20 +138,64 @@ func (h *Handler) comments(w http.ResponseWriter, r *http.Request) {
 			last := out[len(out)-1]
 			next = encodeWallCursor(last.CreatedAt, last.ID)
 		}
-		return 200, map[string]any{"post_id": postID, "comments": out, "next_cursor": next, "has_more": hasMore}, nil
+		pending, err := pendingComments(ctx, tx, postID, actor)
+		if err != nil {
+			return 0, nil, err
+		}
+		return 200, map[string]any{"post_id": postID, "comments": out, "pending": pending, "next_cursor": next, "has_more": hasMore}, nil
 	})
 }
 
-func commentAllowed(ctx context.Context, tx pgx.Tx, post *postAccess, actor string) (bool, error) {
-	person, err := (repo.Repository{Q: tx}).GetPerson(ctx, post.post.AuthorID)
+// pendingComment is the reader's own comment still waiting for review. Only
+// its author sees it; nobody else learns it exists.
+type pendingComment struct {
+	ID        string    `json:"id"`
+	PostID    string    `json:"post_id"`
+	ParentID  *string   `json:"parent_id"`
+	Body      string    `json:"body"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func pendingComments(ctx context.Context, tx pgx.Tx, postID, actor string) ([]pendingComment, error) {
+	rows, err := tx.Query(ctx, `SELECT id,post_id,parent_id,body,status,created_at FROM community_comment_drafts
+ WHERE post_id=$1::uuid AND author_id=$2::uuid AND status IN ('pending','review','rejected') ORDER BY created_at,id LIMIT 20`, postID, actor)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	policy := "nobody"
-	if person != nil {
-		policy = person.WallCommentPolicy
+	defer rows.Close()
+	out := []pendingComment{}
+	for rows.Next() {
+		var c pendingComment
+		if err = rows.Scan(&c.ID, &c.PostID, &c.ParentID, &c.Body, &c.Status, &c.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
 	}
-	return postaudience.CanComment(postaudience.Post{AuthorID: post.post.AuthorID, Audience: post.post.Audience, ContextID: post.post.ContextID}, policy, actor, post.friend, post.member), nil
+	return out, rows.Err()
+}
+
+// writtenComment answers a create or its replay: the published comment, or,
+// while it waits for review, the draft with 202.
+func writtenComment(ctx context.Context, tx pgx.Tx, id, actor string) (int, any, error) {
+	row := tx.QueryRow(ctx, `SELECT `+commentColumns+commentFrom+` AND c.id=$1::uuid`, id, actor)
+	created, err := scanComment(row)
+	if err != nil {
+		return 0, nil, err
+	}
+	if created != nil {
+		return 201, created, nil
+	}
+	var draft pendingComment
+	err = tx.QueryRow(ctx, `SELECT id,post_id,parent_id,body,status,created_at FROM community_comment_drafts WHERE id=$1::uuid AND author_id=$2::uuid`, id, actor).
+		Scan(&draft.ID, &draft.PostID, &draft.ParentID, &draft.Body, &draft.Status, &draft.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, nil, bad(404, "comment_not_found")
+	}
+	if err != nil {
+		return 0, nil, err
+	}
+	return 202, draft, nil
 }
 
 func (h *Handler) createComment(w http.ResponseWriter, r *http.Request) {
@@ -175,29 +226,8 @@ func (h *Handler) createComment(w http.ResponseWriter, r *http.Request) {
 		input.ParentID = &id
 	}
 	h.run(w, r, func(ctx context.Context, tx pgx.Tx, actor string) (int, any, error) {
-		post, err := visiblePost(ctx, tx, postID, actor)
-		if err != nil {
+		if _, err := visiblePost(ctx, tx, postID, actor); err != nil {
 			return 0, nil, err
-		}
-		allowed, err := commentAllowed(ctx, tx, post, actor)
-		if err != nil {
-			return 0, nil, err
-		}
-		if !allowed {
-			return 0, nil, bad(403, "comments_closed")
-		}
-		if input.ParentID != nil {
-			var parent commentParent
-			err = tx.QueryRow(ctx, `SELECT post_id,coalesce(parent_id::text,'') FROM post_comments WHERE id=$1::uuid`, *input.ParentID).Scan(&parent.PostID, &parent.ParentID)
-			if errors.Is(err, pgx.ErrNoRows) {
-				return 0, nil, bad(404, "comment_not_found")
-			}
-			if err != nil {
-				return 0, nil, err
-			}
-			if !replyParentAllowed(postID, parent) {
-				return 0, nil, bad(422, "reply_depth_exceeded")
-			}
 		}
 		request, err := json.Marshal(struct {
 			PostID   string
@@ -212,33 +242,17 @@ func (h *Handler) createComment(w http.ResponseWriter, r *http.Request) {
 			return 0, nil, err
 		}
 		if previous != nil {
-			row := tx.QueryRow(ctx, `SELECT `+commentColumns+` FROM post_comments c JOIN people p ON p.id=c.author_id WHERE c.id=$1::uuid`, *previous, actor)
-			existing, err := scanComment(row)
-			if err != nil {
-				return 0, nil, err
-			}
-			if existing == nil {
-				return 0, nil, bad(404, "comment_not_found")
-			}
-			return 201, existing, nil
+			return writtenComment(ctx, tx, *previous, actor)
 		}
-		id, err := repo.NewUUID()
-		if err != nil {
-			return 0, nil, err
-		}
-		_, err = tx.Exec(ctx, `INSERT INTO post_comments(id,post_id,parent_id,author_id,body) VALUES($1::uuid,$2::uuid,$3::uuid,$4::uuid,$5)`, id, postID, input.ParentID, actor, input.Body)
+		// Cộng đồng owns the comment row, its parent and its review (ADR-0040).
+		id, _, err := community.WriteComment(ctx, tx, actor, postID, community.WallComment{Body: input.Body, ParentID: input.ParentID}, h.moderated)
 		if err != nil {
 			return 0, nil, err
 		}
 		if err = finishAttempt(ctx, tx, r.Header, actor, id); err != nil {
 			return 0, nil, err
 		}
-		row := tx.QueryRow(ctx, `SELECT `+commentColumns+` FROM post_comments c JOIN people p ON p.id=c.author_id WHERE c.id=$1::uuid`, id, actor)
-		created, err := scanComment(row)
-		if err != nil {
-			return 0, nil, err
-		}
-		return 201, created, nil
+		return writtenComment(ctx, tx, id, actor)
 	})
 }
 
@@ -254,20 +268,11 @@ func (h *Handler) postLike(w http.ResponseWriter, r *http.Request, like bool) {
 		if _, err := visiblePost(ctx, tx, postID, actor); err != nil {
 			return 0, nil, err
 		}
-		if like {
-			id, e := repo.NewUUID()
-			if e != nil {
-				return 0, nil, e
-			}
-			_, err = tx.Exec(ctx, `INSERT INTO post_reactions(id,post_id,person_id,kind) VALUES($1::uuid,$2::uuid,$3::uuid,'like') ON CONFLICT (post_id,person_id,kind) DO NOTHING`, id, postID, actor)
-		} else {
-			_, err = tx.Exec(ctx, `DELETE FROM post_reactions WHERE post_id=$1::uuid AND person_id=$2::uuid AND kind='like'`, postID, actor)
-		}
-		if err != nil {
+		if err = community.WriteLike(ctx, tx, actor, postID, like); err != nil {
 			return 0, nil, err
 		}
 		var count int64
-		err = tx.QueryRow(ctx, `SELECT count(*) FROM post_reactions WHERE post_id=$1::uuid AND kind='like'`, postID).Scan(&count)
+		err = tx.QueryRow(ctx, `SELECT count(*) FROM post_reactions WHERE post_id=$1::uuid AND kind=$2`, postID, community.LikeKind).Scan(&count)
 		if err != nil {
 			return 0, nil, err
 		}
@@ -328,6 +333,13 @@ func (h *Handler) repost(w http.ResponseWriter, r *http.Request) {
 	}
 	if input.Audience != "only_me" && input.Audience != "friends" && input.Audience != "public" && input.Audience != "group" {
 		fail(w, bad(422, "invalid_audience"))
+		return
+	}
+	if input.Audience == "public" && h.moderated {
+		// ADR-0040: public now means submitted to Cộng đồng and reviewed. A
+		// repost has no revision to review, so it stays among people who know
+		// the author.
+		fail(w, bad(422, "public_repost_needs_review"))
 		return
 	}
 	if input.Audience == "group" && input.ContextID == nil {

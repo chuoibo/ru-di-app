@@ -9,7 +9,8 @@ import { ApiError, attemptFor, type Attempt, type PostAudience } from "../../../
 import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
 import { cauLucNao, loiRaChu, nhanMuc } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
-import { bongDen, mucTrenAnh, typography, useRudiTheme } from "../../theme";
+import { bongDen, bongGiay, mucNguoi, mucTrenAnh, typography, useRudiTheme } from "../../theme";
+import { nghiengAnh } from "../../ky-niem/ky-niem";
 import {
   dangLaiBai,
   docBaiTuong,
@@ -17,11 +18,16 @@ import {
   docDoiTuong,
   guiTraLoi,
   thichBaiTuong,
+  dangChoDuyet,
   thichBinhLuan,
   type BaiTuong,
+  type BinhLuanChoDuyet,
   type BinhLuanTuong,
 } from "../../tuong/social-v2";
-import { Card, Field, IconButton, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { IconButton, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
+import { KhungAnh } from "../../ui/KhungAnh";
+import { ONhapMuc } from "../../ui/ONhapMuc";
 import { Sheet } from "../../ui/Sheet";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
@@ -29,11 +35,11 @@ import { SkeletonCard, SkeletonRow } from "../../ui/Skeleton";
 import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 
 type PostState = { phase: "loading" } | { phase: "ready"; post: BaiTuong } | { phase: "error"; message: string };
-type CommentState = { phase: "loading" } | { phase: "ready"; items: BinhLuanTuong[]; next: string | null; more: boolean } | { phase: "error"; message: string };
+type CommentState = { phase: "loading" } | { phase: "ready"; items: BinhLuanTuong[]; pending: BinhLuanChoDuyet[]; next: string | null; more: boolean } | { phase: "error"; message: string };
 
-export function BaiChiTietScreen() {
+export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () => Promise<void> } = {}) {
   const router = useRouter();
-  const { colors, radius, space } = useRudiTheme();
+  const { colors, dark, radius, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const { phien, phienDaDoc } = useRudiSession();
@@ -57,6 +63,10 @@ export function BaiChiTietScreen() {
   const photoOpenedOnArrival = useRef(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  // An old public text post can be sent to Cộng đồng for review (ADR-0040).
+  const [communityOpen, setCommunityOpen] = useState(false);
+  const [communityBusy, setCommunityBusy] = useState(false);
+  const [communityError, setCommunityError] = useState<string | null>(null);
 
   useEffect(() => { photoOpenedOnArrival.current = false; }, [postId]);
   useEffect(() => {
@@ -86,7 +96,7 @@ export function BaiChiTietScreen() {
     try {
       const page = await docBinhLuanTuong(postId, actor);
       if (read !== commentRead.current) return;
-      setComments({ phase: "ready", items: page.comments, next: page.next_cursor, more: page.has_more });
+      setComments({ phase: "ready", items: page.comments, pending: page.pending ?? [], next: page.next_cursor, more: page.has_more });
     } catch (cause) {
       if (read !== commentRead.current) return;
       if (!silent || (cause instanceof ApiError && (cause.status === 403 || cause.status === 404))) {
@@ -154,8 +164,9 @@ export function BaiChiTietScreen() {
     if (post.phase !== "ready" || !post.post.can_comment || !draft.trim() || busy) return;
     setBusy(true); setError(null);
     try {
-      await guiTraLoi(postId, replyTo?.id ?? null, draft, actor, attemptFor(attempts.current, `comment:${postId}:${draft.trim()}:${replyTo?.id ?? "root"}`));
+      const sent = await guiTraLoi(postId, replyTo?.id ?? null, draft, actor, attemptFor(attempts.current, `comment:${postId}:${draft.trim()}:${replyTo?.id ?? "root"}`));
       setDraft(""); setReplyTo(null);
+      if (dangChoDuyet(sent)) setNotice("Bình luận đang chờ duyệt. Khi được duyệt, mọi người mới thấy.");
       await Promise.all([loadPost(true), loadComments(true)]);
     } catch (cause) { setError(loiRaChu(cause)); }
     finally { setBusy(false); }
@@ -171,7 +182,7 @@ export function BaiChiTietScreen() {
       setComments((current) => {
         if (current.phase !== "ready") return current;
         const known = new Set(current.items.map((item) => item.id));
-        return { phase: "ready", items: [...current.items, ...page.comments.filter((item) => !known.has(item.id))], next: page.next_cursor, more: page.has_more };
+        return { ...current, items: [...current.items, ...page.comments.filter((item) => !known.has(item.id))], next: page.next_cursor, more: page.has_more };
       });
     } catch (cause) {
       if (read === commentRead.current) setError(loiRaChu(cause));
@@ -190,10 +201,12 @@ export function BaiChiTietScreen() {
     finally { setBusy(false); }
   };
 
+  // A comment is a note in the margin, ruled in its writer's ink (ADR-0037):
+  // no card inside the page, no box round every line.
   const commentRow = (item: BinhLuanTuong, nested = false) => (
-    <View key={item.id} style={[styles.comment, nested && styles.reply, { borderColor: colors.line }]}>
+    <View key={item.id} style={[styles.comment, nested && styles.reply, { borderLeftColor: item.author_id === actor ? colors.lineStrong : mucNguoi(item.author_id, dark) }]}>
       <View style={styles.commentHeading}>
-        <Text numberOfLines={1} style={[typography.label, { color: colors.ink, flex: 1 }]}>{item.author_id === actor ? "Bạn" : item.author_display_name}</Text>
+        <Text numberOfLines={1} style={[typography.label, { color: item.author_id === actor ? colors.ink : mucNguoi(item.author_id, dark), flex: 1 }]}>{item.author_id === actor ? "Bạn" : item.author_display_name}</Text>
         <Text style={[typography.note, { color: colors.inkFaint }]}>{cauLucNao(item.created_at)}</Text>
       </View>
       <Text style={[typography.body, { color: colors.ink }]}>{item.body}</Text>
@@ -224,7 +237,7 @@ export function BaiChiTietScreen() {
         </Pressable>
       ) : null}
       <View style={styles.composeRow}>
-        <View style={{ flex: 1 }}><Field accessibilityLabel="Viết bình luận" onChangeText={setDraft} placeholder={replyTo ? "Viết lời đáp…" : "Viết điều bạn muốn nói…"} value={draft} /></View>
+        <View style={{ flex: 1 }}><ONhapMuc accessibilityLabel="Viết bình luận" onChangeText={setDraft} placeholder={replyTo ? "Viết lời đáp…" : "Viết điều bạn muốn nói…"} value={draft} /></View>
         <IconButton accessibilityLabel="Gửi bình luận" disabled={busy || !draft.trim()} icon="arrow-up" onPress={() => void sendComment()} solid />
       </View>
     </View>
@@ -239,6 +252,15 @@ export function BaiChiTietScreen() {
         <View key={item.id} style={{ gap: space.xs }}>
           {commentRow(item)}
           {item.replies.map((reply) => commentRow(reply, true))}
+        </View>
+      )) : null}
+      {comments.phase === "ready" ? comments.pending.map((item) => (
+        <View key={item.id} style={[styles.comment, item.parent_id !== null && styles.reply, { borderLeftColor: colors.lineStrong }]} testID="binh-luan-cho-duyet">
+          <View style={styles.commentHeading}>
+            <Text style={[typography.label, { color: colors.ink, flex: 1 }]}>Bạn</Text>
+            <Text style={[typography.note, { color: item.status === "rejected" ? colors.warn : colors.inkSoft }]}>{item.status === "rejected" ? "Chưa được duyệt" : "Đang chờ duyệt"}</Text>
+          </View>
+          <Text style={[typography.body, { color: colors.inkSoft }]}>{item.body}</Text>
         </View>
       )) : null}
       {comments.phase === "ready" && comments.more ? <RudiButton label="Đọc thêm bình luận" loading={busy} onPress={() => void loadMore()} variant="ghost" /> : null}
@@ -257,18 +279,20 @@ export function BaiChiTietScreen() {
             {post.phase === "loading" ? <SkeletonCard lines={3} media={0} /> : null}
             {post.phase === "error" ? <ErrorState body={post.message} onRetry={() => void loadPost()} title="Chưa mở được bài" /> : null}
             {post.phase === "ready" ? (
-              <Card style={styles.postCard}>
+              // The post as a page pinned to the wall (ADR-0037 D1): the author
+              // in their ink, the photograph as a print leaning on its angle.
+              <View style={[styles.postCard, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
                 <Pressable accessibilityLabel={`Xem hồ sơ ${post.post.author_display_name}`} accessibilityRole="button" onPress={() => router.push(`/people/${post.post.author_id}` as never)} style={styles.author}>
-                  <View style={[styles.authorMark, { backgroundColor: colors.accentSoft }]}><Ionicons color={colors.accent} name="book-outline" size={23} /></View>
+                  <AvatarNguoi name={post.post.author_display_name || "Thành viên"} personId={post.post.author_id} size={36} />
                   <View style={{ flex: 1 }}>
-                    <Text style={[typography.title, { color: colors.ink }]}>{post.post.author_display_name}</Text>
+                    <Text numberOfLines={1} style={[typography.title, { color: mucNguoi(post.post.author_id, dark) }]}>{post.post.author_display_name || "Thành viên"}</Text>
                     <Text style={[typography.note, { color: colors.inkFaint }]}>{cauLucNao(post.post.created_at)} · {nhanMuc(post.post.audience)}</Text>
                   </View>
                 </Pressable>
                 <Text style={[typography.body, { color: colors.ink }]}>{post.post.body}</Text>
                 {post.post.image_url ? (
-                  <Pressable accessibilityLabel="Mở ảnh toàn màn hình và bình luận" accessibilityRole="button" onPress={() => { setViewerOpen(true); setViewerCommentsOpen(true); }} style={{ borderRadius: radius.base, overflow: "hidden" }}>
-                    {photoError ? <View style={[styles.image, styles.imageError, { backgroundColor: colors.line }]}><Text style={[typography.note, { color: colors.inkFaint }]}>Chưa tải được ảnh</Text></View> : <Image accessibilityLabel="Ảnh bài đăng" contentFit="cover" onError={() => setPhotoError(true)} source={nguonAnhBai(post.post.image_url, actor)} style={styles.image} />}
+                  <Pressable accessibilityLabel="Mở ảnh toàn màn hình và bình luận" accessibilityRole="button" onPress={() => { setViewerOpen(true); setViewerCommentsOpen(true); }} >
+                    {photoError ? <View style={[styles.image, styles.imageError, { backgroundColor: colors.line, borderRadius: radius.small }]}><Text style={[typography.note, { color: colors.inkFaint }]}>Chưa tải được ảnh</Text></View> : <KhungAnh tilt={nghiengAnh(post.post.id)}><Image accessibilityLabel="Ảnh bài đăng" contentFit="cover" onError={() => setPhotoError(true)} source={nguonAnhBai(post.post.image_url, actor)} style={styles.image} /></KhungAnh>}
                   </Pressable>
                 ) : null}
                 {post.post.is_repost ? (
@@ -288,7 +312,10 @@ export function BaiChiTietScreen() {
                     <Text style={[typography.label, { color: colors.inkSoft }]}>Chia sẻ</Text>
                   </Pressable>
                 </View>
-              </Card>
+                {onShareCommunity && post.post.author_id === actor && post.post.audience === "public" && !post.post.image_url && !post.post.is_repost ? (
+                  <RudiButton accessibilityLabel="Chia sẻ lên cộng đồng" icon="people-outline" label="Chia sẻ lên cộng đồng" onPress={() => { setCommunityError(null); setCommunityOpen(true); }} variant="outline" />
+                ) : null}
+              </View>
             ) : null}
             <Text style={[typography.h2, { color: colors.ink }]}>Lời nhắn dưới trang</Text>
             {commentsBlock}
@@ -305,10 +332,22 @@ export function BaiChiTietScreen() {
           <Text style={[typography.note, { color: colors.inkSoft }]}>Chọn ai được thấy bài đăng lại trên tường của bạn.</Text>
           <Text style={[typography.note, { color: colors.inkSoft }]}>Nội dung bài gốc chỉ hiện cho người đã có quyền xem bài đó.</Text>
           <RudiButton label="Bạn bè của tôi" onPress={() => void repost("friends")} />
-          <RudiButton label="Mọi người" onPress={() => void repost("public")} variant="outline" />
           <RudiButton label="Chỉ mình tôi" onPress={() => void repost("only_me")} variant="outline" />
           <RudiButton disabled label="Gửi vào chat" onPress={() => undefined} variant="ghost" />
           <Text style={[typography.note, { color: colors.inkFaint }]}>Gửi bài vào chat sẽ mở khi chat mã hoá đầu cuối sẵn sàng.</Text>
+        </View>
+      </Sheet>
+      <Sheet accessibilityLabel="Gửi bài cũ lên cộng đồng" onClose={() => { if (!communityBusy) setCommunityOpen(false); }} open={communityOpen}>
+        <View style={{ gap: space.md }}>
+          <Text style={[typography.h2, { color: colors.ink }]}>Gửi bài lên cộng đồng</Text>
+          <Text style={[typography.body, { color: colors.inkSoft }]}>Trong lúc chờ duyệt, chỉ bạn thấy bài này. Khi được duyệt, mọi người có thể xem và bình luận.</Text>
+          {communityError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.warn }]}>{communityError}</Text> : null}
+          <RudiButton disabled={communityBusy} label="Xác nhận gửi duyệt" loading={communityBusy} onPress={() => {
+            if (!onShareCommunity || communityBusy) return;
+            setCommunityBusy(true); setCommunityError(null);
+            void onShareCommunity().catch((cause: unknown) => { setCommunityError(loiRaChu(cause)); }).finally(() => setCommunityBusy(false));
+          }} />
+          <RudiButton disabled={communityBusy} label="Để sau" onPress={() => setCommunityOpen(false)} variant="ghost" />
         </View>
       </Sheet>
       <Sheet accessibilityLabel="Báo cáo bài" onClose={() => setReportOpen(false)} open={reportOpen}>
@@ -329,16 +368,15 @@ export function BaiChiTietScreen() {
 }
 
 const styles = StyleSheet.create({
-  postCard: { gap: 16 },
+  postCard: { gap: 16, padding: 14, borderWidth: 1, borderRadius: 4 },
   author: { flexDirection: "row", alignItems: "center", gap: 11, minHeight: 48 },
-  authorMark: { width: 44, height: 44, borderRadius: 13, alignItems: "center", justifyContent: "center" },
   image: { width: "100%", aspectRatio: 4 / 3 },
   imageError: { alignItems: "center", justifyContent: "center" },
   origin: { borderWidth: 1, borderRadius: 12, padding: 13, gap: 6 },
   postActions: { flexDirection: "row", borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8 },
   postAction: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  comment: { gap: 6, borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 11 },
-  reply: { marginLeft: 28, paddingLeft: 13, borderLeftWidth: 1 },
+  comment: { gap: 4, borderLeftWidth: 3, paddingLeft: 12, paddingVertical: 6 },
+  reply: { marginLeft: 24 },
   commentHeading: { flexDirection: "row", alignItems: "center", gap: 8 },
   commentActions: { flexDirection: "row", gap: 16 },
   touchAction: { flexDirection: "row", gap: 6, minHeight: 44, alignItems: "center", minWidth: 68 },

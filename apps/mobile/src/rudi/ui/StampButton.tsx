@@ -2,7 +2,9 @@ import { useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
-import { displayFace, mauSang, phuMau, useRudiTheme } from "../theme";
+import { Ionicons } from "@expo/vector-icons";
+
+import { displayFace, mauSang, phuMau, typography, useRudiTheme } from "../theme";
 import { duongVienDau } from "./duong-svg";
 import { Grain } from "./Grain";
 import { PressScale } from "./PressScale";
@@ -16,8 +18,17 @@ export interface StampButtonProps {
   tilt?: -3 | -2 | -1.5 | -1 | 0 | 1 | 1.5 | 2 | 3;
   /** `lon` is the cover's ask; `vua` is the same seal on a form. */
   size?: "lon" | "vua";
+  /**
+   * The seal's ink: coral for the ask (default), teal for a decision about
+   * money (ADR-0037 D14: «Ghi vào sổ», «Phát đợt thu»). The lettering stays
+   * the static dark ink on both: 5.41:1 on coral, 5.33:1 on teal. There is no
+   * violet seal -- the dark ink reads 3.34:1 on it.
+   */
+  tone?: "accent" | "split";
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /** ADR-0038 §2.2: why the seal cannot be pressed yet, printed under it. */
+  lyDo?: string;
 }
 
 const CO = {
@@ -38,16 +49,24 @@ const CO = {
  * (`mauSang.ink`, 5.41:1 on coral in either scheme). The same seal, one size
  * down, is the primary action on Login, so the ask has one language.
  */
-export function StampButton({ label, onPress, disabled, loading, tilt = 0, size = "lon", style, testID }: StampButtonProps) {
-  const { brand } = useRudiTheme();
+export function StampButton({ label, onPress, disabled, loading, tilt = 0, size = "lon", tone = "accent", style, testID, lyDo }: StampButtonProps) {
+  const { brand, colors } = useRudiTheme();
+  const busy = !!loading;
+  // ADR-0038 §2.2: a seal that cannot be pressed yet is an outline of one --
+  // card paper, a dashed rim, lettering in the scheme's soft ink -- never a
+  // faded coral whose words drop under 3:1.
+  const tat = !!disabled && !busy;
+  const mauDau = tat ? colors.card : tone === "split" ? brand.teal : brand.coral;
   // Static dark ink: the seal is coral in both schemes, so its lettering never
   // follows the scheme (the dark scheme's light ink on coral read 2.4:1).
   const muc = mauSang.ink;
-  const busy = !!loading;
+  const mucChu = tat ? colors.inkSoft : muc;
+  const vien = tat ? colors.lineStrong : phuMau(muc, 0.88);
   const co = CO[size];
   const [box, setBox] = useState({ w: 0, h: 0 });
-  return (
+  const dau = (
     <PressScale
+      accessibilityHint={tat && lyDo ? lyDo : undefined}
       accessibilityLabel={label}
       accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled, busy }}
@@ -58,7 +77,7 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
       testID={testID}
       style={[
         styles.seal,
-        { opacity: disabled ? 0.55 : 1, ...(tilt === 0 ? {} : { transform: [{ rotate: `${tilt}deg` }] }) },
+        tilt === 0 ? null : { transform: [{ rotate: `${tilt}deg` }] },
         style,
       ]}
     >
@@ -68,24 +87,36 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
           styles.body,
           { minHeight: co.minHeight, paddingHorizontal: co.paddingHorizontal, borderRadius: co.radius },
           // Until the first layout the rim has no size; plain coral for that one frame, never a hole.
-          box.w === 0 && { backgroundColor: brand.coral },
+          box.w === 0 && { backgroundColor: mauDau },
         ]}
       >
         {box.w > 0 ? (
           <Svg height={box.h} pointerEvents="none" style={StyleSheet.absoluteFill} viewBox={`0 0 ${box.w} ${box.h}`} width={box.w}>
-            <Path d={duongVienDau(box.w, box.h, co.radius)} fill={brand.coral} stroke={phuMau(muc, 0.88)} strokeWidth={2} />
+            <Path d={duongVienDau(box.w, box.h, co.radius)} fill={mauDau} stroke={vien} strokeDasharray={tat ? [5, 4] : undefined} strokeWidth={2} />
           </Svg>
         ) : null}
         {/* Ink, not paper: the sparse paper tile measured flat on coral (stddev 2); this one lands at ~8 levels at 1x, like the cloth. Clipped a hair inside the rim so it never shows past a broken edge. */}
-        <View pointerEvents="none" style={[styles.muc, { borderRadius: co.radius - 2 }]}>
-          <Grain material="mucIn" opacity={0.26} />
-        </View>
+        {tat ? null : (
+          <View pointerEvents="none" style={[styles.muc, { borderRadius: co.radius - 2 }]}>
+            <Grain material="mucIn" opacity={0.26} />
+          </View>
+        )}
         <View style={styles.row}>
           {busy ? <ActivityIndicator color={muc} /> : null}
-          <Text style={[styles.label, { color: muc, fontSize: co.fontSize, lineHeight: co.lineHeight }]}>{label}</Text>
+          <Text style={[styles.label, { color: mucChu, fontSize: co.fontSize, lineHeight: co.lineHeight }]}>{label}</Text>
         </View>
       </View>
     </PressScale>
+  );
+  if (!tat || !lyDo) return dau;
+  return (
+    <View style={styles.coLyDo}>
+      {dau}
+      <View importantForAccessibility="no-hide-descendants" style={styles.lyDo}>
+        <Ionicons color={colors.inkSoft} name="information-circle-outline" size={16} />
+        <Text style={[typography.caption, styles.lyDoChu, { color: colors.inkSoft }]}>{lyDo}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -95,4 +126,7 @@ const styles = StyleSheet.create({
   muc: { position: "absolute", left: 3, right: 3, top: 3, bottom: 3, overflow: "hidden" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
   label: { fontFamily: displayFace.bold, letterSpacing: 0.4 },
+  coLyDo: { alignSelf: "center", alignItems: "center", gap: 8 },
+  lyDo: { flexDirection: "row", alignItems: "flex-start", gap: 6, paddingHorizontal: 8 },
+  lyDoChu: { flexShrink: 1, textAlign: "center" },
 });

@@ -1,10 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNhuongChoNep } from "../../nep/NepProvider";
 import { useEffect, useRef, useState } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import type { ChatCapabilities } from "../../chat/ai-invocations";
+import { lenhSanSang, type ChatCapabilities, type LenhAi } from "../../chat/ai-invocations";
+import { cauBoiCanh, nhanVai, type BoiCanh } from "../../ai/boi-canh";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
+import { chuKhay } from "../../chat/khay-cong-cu";
 import { docTheAi, type Tin } from "../../chat/tin-song";
+import { KHUNG_VAT, hinhVat, type VatBan } from "../../art/vat-ban";
 import { typography, useRudiTheme } from "../../theme";
+import { VeLop } from "../../ui/art/VeLop";
+import { ONhapMuc } from "../../ui/ONhapMuc";
 import { Field, IconButton, RudiButton } from "../../ui";
 
 export type KhayChat = "tools" | "poll" | "plan" | null;
@@ -51,13 +57,30 @@ export function ToHen({ tin, onOpen, onVote }: { tin: Tin; onOpen: (tin: Tin) =>
   );
 }
 
-export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onPlan, onManual, capabilities, busy, error, initialPrompt }: {
+export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onPlan, onManual, capabilities, busy, error, initialPrompt, boiCanh, haiNguoi = false, onToGiay, lenh = "plan" }: {
   personId: string; contextId: string;
+  /** A two-person conversation: the tray's plan slot opens the pair's paper. */
+  haiNguoi?: boolean; onToGiay?: () => void;
   panel: KhayChat; onPanel: (panel: KhayChat) => void; onImage: () => void; onSticker: () => void;
-  onPoll: (command: string) => Promise<boolean>; onPlan: (prompt: string) => Promise<boolean>; onManual: () => void;
+  onPoll: (command: string) => Promise<boolean>; onPlan: (prompt: string, boiCanh?: BoiCanh) => Promise<boolean>; onManual: () => void;
+  /** What the screen is showing, already reduced to what would go on the wire. */
+  boiCanh: BoiCanh | null;
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null; initialPrompt: string;
+  /**
+   * What the AI panel asks for. `chia_bill` keeps everything that protects the
+   * person (the «Phần sẽ gửi cùng lời nhờ» preview, «Chỉ gửi lời nhờ», the queue) and
+   * changes only the words and the manual fallback.
+   */
+  lenh?: LenhAi;
 }) {
+  const chiaBill = lenh === "chia_bill";
+  const sanSang = lenhSanSang(capabilities, lenh);
   const { colors } = useRudiTheme();
+  const chu = chuKhay(haiNguoi && onToGiay !== undefined);
+  const [dinhKem, setDinhKem] = useState(true);
+  const [moRong, setMoRong] = useState(false);
+  // The tray is a sheet laid over the conversation; Nếp makes room for it.
+  useNhuongChoNep(panel !== null);
   const { height } = useWindowDimensions();
   const [draft, setDraft] = useState(() => docBanNhapCongCu(personId, contextId));
   const held = useRef(draft);
@@ -134,27 +157,31 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   };
   const sendPlan = async () => {
     const submitted = held.current.prompt;
-    if (await onPlan(submitted.trim())) {
+    if (await onPlan(submitted.trim(), dinhKem ? boiCanh ?? undefined : undefined)) {
       if (held.current.prompt === submitted) update({ prompt: "" });
       setRestored((old) => ({ ...old, plan: false }));
       onPanel(null);
     }
   };
-  const tools: { icon: keyof typeof Ionicons.glyphMap; label: string; action: () => void }[] = [
-    { icon: "image-outline", label: "Ảnh", action: onImage },
-    { icon: "happy-outline", label: "Sticker", action: onSticker },
-    { icon: "stats-chart-outline", label: "Bình chọn", action: () => onPanel("poll") },
-    { icon: "trail-sign-outline", label: "Tờ hẹn", action: () => onPanel("plan") },
+  // Each tool is the paper thing it puts into the conversation (ADR-0037 D1).
+  const tools: { vat: VatBan; label: string; action: () => void }[] = [
+    { vat: "anh-in", label: "Ảnh", action: onImage },
+    { vat: "sticker", label: "Sticker", action: onSticker },
+    { vat: "phieu-bau", label: "Bình chọn", action: () => onPanel("poll") },
+    chu.congCuHen.dich === "to-giay"
+      ? { vat: "thu-gap", label: chu.congCuHen.label, action: () => { onPanel(null); onToGiay?.(); } }
+      : { vat: "lich", label: chu.congCuHen.label, action: () => onPanel("plan") },
   ];
   const hasDraft = panel === "poll" ? !!draft.question || draft.choices.some(Boolean) : panel === "plan" && !!draft.prompt;
   return (
     <View style={[styles.tools, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <View style={styles.titleRow}>
         <Text accessibilityRole="header" style={[typography.title, styles.flex, { color: colors.ink }]}>
-          {panel === "tools" ? "Thêm vào cuộc trò chuyện" : panel === "poll" ? "Hội mình chọn gì?" : "Phác một tờ hẹn"}
+          {panel === "tools" ? "Thêm vào cuộc trò chuyện" : panel === "poll" ? chu.tieuDePoll : chiaBill ? "Nhờ AI gom khoản chi" : "Phác một tờ hẹn"}
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
+      {panel === "tools" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Ảnh gửi vào đây có thể được bạn đồng hành chọn vào sổ chuyến đi công khai. Nếu muốn gỡ, hãy nhắn người giữ sổ nhé.</Text> : null}
       {panel !== "tools" && undo?.panel === panel ? <View style={styles.draftRow}>
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Đã bỏ bản nháp.</Text>
         <RudiButton label="Hoàn tác" variant="ghost" compact full={false} disabled={busy} onPress={undoDiscard} />
@@ -167,37 +194,82 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
           <View style={styles.toolRow}>{tools.map((tool) => (
             <Pressable key={tool.label} accessibilityRole="button" accessibilityLabel={tool.label} disabled={busy} onPress={tool.action}
               style={({ pressed }) => [styles.tool, pressed && styles.pressed]}>
-              <View style={[styles.toolIcon, { backgroundColor: colors.ground, borderColor: colors.line }]}><Ionicons name={tool.icon} size={25} color={colors.ink} /></View>
-              <Text style={[typography.caption, { color: colors.ink }]}>{tool.label}</Text>
+              <View style={[styles.toolIcon, { backgroundColor: colors.ground, borderColor: colors.line }]}><VeLop height={44} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(tool.vat)} width={44} /></View>
+              {/* Stretched to the column: measured at its own width, Android wrapped
+                  «Tờ giấy» after «Tờ» and the second line never showed (24/09). */}
+              <Text numberOfLines={2} style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
             </Pressable>
           ))}</View>
         ) : panel === "poll" ? (
-          <View style={styles.form}>
-            <Field label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder="Tối nay hội mình ăn gì?" />
+          // Written on a sticky note, one pen line per choice (plan S5).
+          <View style={[styles.form, styles.giayNho, { backgroundColor: colors.card, borderColor: colors.lineStrong }]}>
+            <ONhapMuc label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder={chu.goiYPoll} />
             {/* The message sits under the box it belongs to. One sentence under
                 the whole form said something was wrong but not where, so fixing
                 it meant re-reading every box (reviewer C4, heuristic 9). */}
             {fieldErrors?.question ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.question}</Text> : null}
             {draft.choices.map((choice, index) => <View key={index} style={styles.o}>
-              <Field label={`Lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100} />
+              <ONhapMuc label={`Lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100} />
               {fieldErrors?.choices[index] ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.choices[index]}</Text> : null}
             </View>)}
             {draft.choices.length < 6 ? <RudiButton label="Thêm lựa chọn" variant="ghost" compact disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
           </View>
-        ) : <Field label="Bạn muốn rủ hội đi đâu?" accessibilityLabel="Lời nhờ lập kế hoạch" value={draft.prompt} onChangeText={(prompt) => update({ prompt })} editable={!busy} multiline maxLength={2000} placeholder="Ví dụ: tối thứ Sáu, ăn rồi đi dạo quanh hồ" />}
+        ) : chiaBill ? <Field label="Lời nhờ gom khoản chi" accessibilityLabel="Lời nhờ gom khoản chi" value={draft.prompt} onChangeText={(prompt) => update({ prompt })} editable={!busy} multiline maxLength={2000} placeholder="Ví dụ: mình trả 300k tiền nước" />
+          : <Field label={chu.nhanPlan} accessibilityLabel="Lời nhờ lập kế hoạch" value={draft.prompt} onChangeText={(prompt) => update({ prompt })} editable={!busy} multiline maxLength={2000} placeholder="Ví dụ: tối thứ Sáu, ăn rồi đi dạo quanh hồ" />}
       </ScrollView>
       {panel === "poll" ? <View style={styles.footer}>
         {pollError ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
         <RudiButton label="Gửi bình chọn" loading={busy} disabled={busy} onPress={() => void sendPoll()} />
       </View> : panel === "plan" ? <View style={styles.footer}>
-        <View style={styles.scope}>
-          <Ionicons name="hand-left-outline" size={18} color={colors.inkSoft} />
-          <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Chỉ lời nhờ trong ô này được gửi cho AI. Lịch sử chat không được chia sẻ.</Text>
-        </View>
+        {capabilities?.ai.share_scope === "caller_attached" ? (
+          /* The same block Nếp already uses, and the same promise, so it reads
+             as one app rather than two. It renders from the bundle itself, not
+             from the message list: a preview rebuilt from the screen would be a
+             picture OF the payload instead of the payload. */
+          <View style={[styles.thay, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
+            <Text style={[typography.label, { color: colors.ai }]}>Phần sẽ gửi cùng lời nhờ</Text>
+            <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]} testID="chat-boi-canh">
+              {cauBoiCanh(dinhKem ? boiCanh : null)}
+            </Text>
+            {dinhKem && boiCanh !== null && boiCanh.luot.length > 0 ? (
+              <>
+                <Pressable accessibilityRole="button" accessibilityState={{ expanded: moRong }} onPress={() => setMoRong((cu) => !cu)} testID="chat-boi-canh-mo">
+                  <Text style={[typography.caption, { color: colors.ai }]}>{moRong ? "Thu lại" : "Xem đúng thứ sắp gửi"}</Text>
+                </Pressable>
+                {moRong ? (
+                  <View style={styles.luot} testID="chat-boi-canh-luot">
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                      Ảnh đi bằng chú thích, sticker đi bằng chữ «Sticker», tin đã xoá đi bằng một dòng nói là đã xoá. Tên hiển thị của các thành viên đi kèm để AI biết ai nói gì, còn chữ trong tin nhắn thì đi nguyên văn.
+                    </Text>
+                    {boiCanh.luot.map((l) => (
+                      <Text key={l.id} style={[typography.caption, { color: colors.ink }]} testID="chat-boi-canh-muc">{`${nhanVai(l)}: ${l.chu}`}</Text>
+                    ))}
+                  </View>
+                ) : null}
+              </>
+            ) : null}
+            {/* The old contract promised the history was never shared. Ship without
+                a way back to exactly that and the promise is withdrawn by one
+                side, which is not a thing to do quietly. */}
+            <RudiButton label={dinhKem ? "Chỉ gửi lời nhờ" : "Gửi kèm tin gần nhất"} variant="outline" compact disabled={busy} onPress={() => setDinhKem((cu) => !cu)} />
+          </View>
+        ) : (
+          <View style={styles.scope}>
+            <Ionicons name="hand-left-outline" size={18} color={colors.inkSoft} />
+            <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Chỉ lời nhờ trong ô này được gửi cho AI. Lịch sử chat không được chia sẻ.</Text>
+          </View>
+        )}
+        {chiaBill ? (
+          /* AI does not touch money (ADR-0036 §2.9): say so before sending,
+             not only on the card that comes back. */
+          <Text style={[typography.caption, { color: colors.inkSoft }]} testID="chat-chia-bill-luu-y">
+            AI chỉ đề xuất ai đã trả bao nhiêu, không ghi gì vào sổ. Cả hội xem lại và xác nhận ở mục Chia bill.
+          </Text>
+        ) : null}
         {error ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{error}</Text> : null}
-        {capabilities?.ai.plan.available ? <RudiButton label="Gửi lời nhờ cho AI" loading={busy} disabled={busy || !draft.prompt.trim()} onPress={() => void sendPlan()} />
-          : <Text style={[typography.caption, { color: colors.inkSoft }]}>AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.</Text>}
-        <RudiButton label="Tự tạo kèo" variant="outline" disabled={busy} onPress={onManual} />
+        {sanSang ? <RudiButton label="Gửi lời nhờ cho AI" loading={busy} disabled={busy || !draft.prompt.trim()} onPress={() => void sendPlan()} />
+          : <Text style={[typography.caption, { color: colors.inkSoft }]}>{chiaBill ? "AI chưa gom khoản chi được lúc này. Bạn vẫn có thể thêm khoản chi ở mục Chia bill." : "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."}</Text>}
+        {chiaBill ? null : <RudiButton label="Tự tạo kèo" variant="outline" disabled={busy} onPress={onManual} />}
       </View> : null}
     </View>
   );
@@ -214,10 +286,14 @@ const styles = StyleSheet.create({
   o: { gap: 4 },
   toolRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" },
   tool: { alignItems: "center", justifyContent: "center", minWidth: 62, flex: 1, gap: 7, paddingVertical: 10 },
-  toolIcon: { width: 48, height: 48, borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  toolNhan: { alignSelf: "stretch", textAlign: "center" },
+  toolIcon: { width: 56, height: 56, borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  giayNho: { borderWidth: 1, borderRadius: 4, padding: 12, marginTop: 4 },
   form: { gap: 12, paddingBottom: 4 },
   scroll: { flexGrow: 0 },
   footer: { flexShrink: 0, gap: 8, paddingTop: 10 },
   scope: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  thay: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 8 },
+  luot: { gap: 6 },
   pressed: { opacity: 0.65 },
 });

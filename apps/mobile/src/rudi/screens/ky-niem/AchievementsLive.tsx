@@ -9,6 +9,9 @@ import {
   type JourneySnapshot, type RouteChoice, type RouteID,
 } from "../../ky-niem/achievement-routes";
 import { choicesForRoute, toggleDisplayedBadge } from "../../ky-niem/journey-view";
+import { huyHieuMoi } from "../../ky-niem/ky-niem";
+import { docGiaoDienAsync, ghiGiaoDienAsync } from "../../kho";
+import { NepDien } from "../../ui/NepDien";
 import { displayFace, typography, useRudiTheme } from "../../theme";
 import { RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { BadgeArt } from "../../ui/BadgeArt";
@@ -28,6 +31,9 @@ function progressText(choice: RouteChoice): string {
   return choice.requirements.map((r) => `${r.label}: ${Math.min(r.have, r.need)}/${r.need}`).join(" · ");
 }
 
+/** Where this phone remembers which journey badges it has already shown earned. */
+const KHOA_DA_THAY = "rudi.huy-hieu-hanh-trinh-da-thay";
+
 export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
   const { colors, radius } = useRudiTheme();
   const [page, setPage] = useState<Page>({ phase: "loading" });
@@ -39,6 +45,19 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
   const [suggestionSource, setSuggestionSource] = useState<"ai" | "go" | null>(null);
   const [suggestionLine, setSuggestionLine] = useState<string | null>(null);
   const [mapWidth, setMapWidth] = useState(320);
+  // M8: a badge earned since the last look gets its moment, once.
+  const [moi, setMoi] = useState<string | null>(null);
+  useEffect(() => {
+    if (page.phase !== "ready") return;
+    const earned = page.book.earned_badges.map((badge) => badge.id);
+    let live = true;
+    void docGiaoDienAsync(`${KHOA_DA_THAY}:${phien.person_id}`).then((stored) => {
+      if (!live) return;
+      setMoi(huyHieuMoi(earned, stored));
+      void ghiGiaoDienAsync(`${KHOA_DA_THAY}:${phien.person_id}`, JSON.stringify(earned));
+    });
+    return () => { live = false; };
+  }, [page, phien.person_id]);
 
   const reload = async () => {
     const book = await docHanhTrinh(phien.person_id);
@@ -95,6 +114,18 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
           <Text style={[typography.note, { color: colors.coverInkSoft }]}>{endingBadges.length} kết đã mở · {book.mp4_credits.available} lượt dựng MP4 còn dùng được</Text>
         </View>
       </View>
+
+      {moi ? (
+        // The badge earned since the last look, as its stamp; Nếp lifts it (M8).
+        <View style={[styles.fresh, { backgroundColor: colors.accentSoft, borderRadius: radius.base }]}>
+          <BadgeArt badgeId={moi} label={BADGE_TITLES[moi] ?? "Huy hiệu hành trình"} size={72} state="unlocked" />
+          <View style={styles.flex}>
+            <Text style={[typography.caption, { color: colors.accent }]}>MỚI MỞ</Text>
+            <Text style={[typography.h2, { color: colors.ink }]}>{BADGE_TITLES[moi] ?? "Huy hiệu hành trình"}</Text>
+          </View>
+          <NepDien khoanhKhac="M8" suKien={`huy-hieu:${moi}`} />
+        </View>
+      ) : null}
 
       <View style={styles.sectionTop}>
         <Text style={[typography.h2, { color: colors.ink }]}>Chọn lối đi</Text>
@@ -224,6 +255,7 @@ const styles = StyleSheet.create({
   coverTitle: { fontFamily: displayFace.extraBold, fontSize: 30, lineHeight: 35, letterSpacing: -0.7 },
   coverBottom: { flexDirection: "row", alignItems: "center", gap: 9, marginTop: 9 },
   sectionTop: { gap: 3 },
+  fresh: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16 },
   routeMap: { height: 184, alignSelf: "center", width: "100%", maxWidth: 560, justifyContent: "space-between" },
   mapTop: { flexDirection: "row", justifyContent: "space-between" },
   mapNode: { minHeight: 64, width: "30%", borderWidth: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 6, paddingVertical: 6 },

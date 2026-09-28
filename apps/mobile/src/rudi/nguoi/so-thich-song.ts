@@ -34,9 +34,9 @@ export type SoThichSong = {
 };
 
 export const LOI_SO_THICH: Record<string, string> = {
-  interest_unknown: "Máy chủ chưa biết một trong những lựa chọn này. Thử cập nhật app.",
-  budget_band_unknown: "Mức chi này máy chủ không còn dùng. Chọn lại giúp mình nhé.",
-  person_not_found: "Máy chủ chưa có hồ sơ cho tài khoản này.",
+  interest_unknown: "Rủ Đi chưa biết một trong những lựa chọn này. Thử cập nhật app.",
+  budget_band_unknown: "Mức chi này không còn dùng nữa. Chọn lại giúp mình nhé.",
+  person_not_found: "Chưa có hồ sơ cho tài khoản này. Đăng nhập lại giúp mình.",
 };
 
 type HoSoWire = { interests?: unknown; budget_band?: unknown };

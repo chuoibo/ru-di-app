@@ -67,6 +67,16 @@ export function coTheDang(form: FormDang): boolean {
 }
 
 /**
+ * ADR-0038 §2.2: why Đăng cannot fire yet, in the words printed under it, or
+ * null when it can. Same two rules as `coTheDang`, same order.
+ */
+export function lyDoChuaDang(form: FormDang): string | null {
+  if (!form.body.trim()) return "Viết vài chữ trước đã. Ảnh là phần thêm, không đăng một mình.";
+  if (form.audience === "group" && !form.contextId) return "Chọn nhóm sẽ đọc bài này.";
+  return null;
+}
+
+/**
  * The POST /posts body. No `author_id`. `context_id` only when `group`.
  *
  * A second copy of the same omit-rule lives in `api.ts` (`thanDangBaiApi`),
@@ -113,8 +123,8 @@ export class TuongError extends Error {
 export function loiTuong(status: number, code: string, _detail = ""): string {
   const known = LOI_TUONG[code.toLowerCase()];
   if (known) return known;
-  if (status === 0) return "Không gọi được máy chủ.";
-  if (status === 401) return "Chưa đăng nhập nên chưa hỏi được máy chủ.";
+  if (status === 0) return "Không kết nối được Rủ Đi.";
+  if (status === 401) return "Chưa đăng nhập nên chưa đọc được.";
   return cauMayChuLoi(status);
 }
 

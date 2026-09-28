@@ -79,10 +79,8 @@ _KNOWN_DOORS = frozenset(
         "receipt_scan_limiter",
         "chat_expense_limiter",
         "screenshot_scan_limiter",
-        "companion_turn_limiter",
-        # M3: `/plan`, `@Rủ Đi` and `/chia-bill` inside `POST /messages` reach the
-        # companion through this window, distinct from the ai-turn route's own.
-        "message_intent_limiter",
+        # `companion_turn_limiter` and `message_intent_limiter` left with the
+        # automatic companion (ADR-0036 §2.1): neither door exists any more.
         "suggestion_limiter",
         "reason_writer",
         "contextual_suggestion_limiter",

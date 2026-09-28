@@ -18,9 +18,14 @@ import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../
 import { guiLoiMoi, timBanTheoSo, type NguoiTimDuoc } from "../../../screens/ca-nhan/ban-be";
 import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
-import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { HangNguoi } from "./HangNguoi";
+import { tenThat } from "../../ten-giu-cho";
+import { bongGiay, mucNguoi, typography, useRudiTheme } from "../../theme";
+import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { HinhNhan } from "../../ui/Avatar";
+import { DauLon } from "../../ui/DauLon";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { StampButton } from "../../ui/StampButton";
+import { Washi } from "../../ui/Washi";
 
 type Trang =
   | { pha: "nhap" }
@@ -32,7 +37,7 @@ type Trang =
 
 export function AddFriendScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const [phone, setPhone] = useState("");
   const [trang, setTrang] = useState<Trang>({ pha: "nhap" });
@@ -84,9 +89,13 @@ export function AddFriendScreen() {
       <RudiScreen testID="add-friend-screen">
         <TopBar title="Thêm bạn" />
         <Heading
-          title={`Đã gửi lời mời tới ${trang.nguoi.display_name}`}
-          subtitle="Khi người ấy đồng ý, hai bạn là bạn bè và thấy tường của nhau."
+          title={`Đã gửi lời mời tới ${tenThat(trang.nguoi.display_name) ?? `số đuôi ${duoiSo(phone)}`}`}
+          subtitle="Khi người ấy đồng ý, hai bạn có thể nhắn riêng và xem những bài chia sẻ với bạn bè."
         />
+        <View style={[styles.danhThiep, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
+          <HinhNhan name={tenThat(trang.nguoi.display_name) ?? "?"} personId={trang.nguoi.person_id} size={56} />
+          <DauLon co="vua" dong nhan="Đã gửi" tilt={-4} tone="ink" />
+        </View>
         <RudiButton label="Về danh sách bạn" onPress={() => router.back()} />
       </RudiScreen>
     );
@@ -100,12 +109,31 @@ export function AddFriendScreen() {
         title="Thêm bạn bằng số điện thoại"
         subtitle="Chỉ tìm được người đã dùng Rủ Đi hoặc đã được ai đó đặt tên bằng số này. Số không được lưu."
       />
-      <View style={styles.form}>
-        <Field
+      {/* A calling card: the number written on it, and, once found, the
+          person standing on it in their own ink (ADR-0037 D1, D6). */}
+      <View style={[styles.danhThiep, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]} testID="danh-thiep">
+        <Washi style={styles.washi} tilt={-2} />
+        {trang.pha === "tim-thay" || trang.pha === "dang-gui" ? (
+          <View style={styles.nguoi}>
+            <HinhNhan name={tenThat(trang.nguoi.display_name) ?? "?"} personId={trang.nguoi.person_id} size={56} />
+            <View style={styles.flex}>
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>Tìm thấy theo số điện thoại</Text>
+              <Text style={[typography.title, { color: tenThat(trang.nguoi.display_name) === null ? colors.ink : mucNguoi(trang.nguoi.person_id, dark) }]}>
+                {tenThat(trang.nguoi.display_name) ?? "Người chưa đặt tên"}
+              </Text>
+              {/* Somebody who has not chosen a name yet only has the server's
+                  placeholder; the tail of the number the searcher typed is what
+                  tells them they found the right person (QA 23/09). */}
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                Số đuôi {duoiSo(phone)} · {tenThat(trang.nguoi.display_name) === null ? "chưa đặt tên trên Rủ Đi" : "đã dùng Rủ Đi"}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+        <ONhapMuc
           accessibilityLabel="Ô số điện thoại bạn"
           autoComplete="tel"
           editable={!ban}
-          icon="call-outline"
           keyboardType="phone-pad"
           label="Số điện thoại"
           onChangeText={(t) => {
@@ -116,29 +144,29 @@ export function AddFriendScreen() {
           textContentType="telephoneNumber"
           value={phone}
         />
-        {trang.pha === "tim-thay" || trang.pha === "dang-gui" ? (
-          <>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>Tìm thấy theo số điện thoại</Text>
-            <HangNguoi phu="Đã dùng Rủ Đi hoặc đã được đặt tên bằng số này" ten={trang.nguoi.display_name} />
-            <RudiButton
-              disabled={ban}
-              label="Gửi lời mời"
-              loading={trang.pha === "dang-gui"}
-              onPress={() => void gui(trang.nguoi)}
-            />
-          </>
-        ) : (
-          <RudiButton disabled={ban} label="Tìm" loading={trang.pha === "dang-tim"} onPress={() => void tim()} />
-        )}
-        {trang.pha === "hong" ? (
-          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-        ) : null}
       </View>
+      {trang.pha === "tim-thay" || trang.pha === "dang-gui" ? (
+        <StampButton disabled={ban} label="Gửi lời mời" loading={trang.pha === "dang-gui"} onPress={() => void gui(trang.nguoi)} size="vua" tilt={-1} />
+      ) : (
+        <RudiButton disabled={ban} label="Tìm" loading={trang.pha === "dang-tim"} onPress={() => void tim()} />
+      )}
+      {trang.pha === "hong" ? (
+        <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
+      ) : null}
     </RudiScreen>
   );
 }
 
+/** The last three digits of what the searcher typed; the number itself is not stored. */
+function duoiSo(so: string): string {
+  const chuSo = so.replace(/\D/g, "");
+  return chuSo.length >= 3 ? `•••${chuSo.slice(-3)}` : "này";
+}
+
 const styles = StyleSheet.create({
   screen: { gap: 20, maxWidth: 560 },
-  form: { gap: 14 },
+  flex: { flex: 1 },
+  danhThiep: { borderWidth: 1, borderRadius: 6, padding: 16, paddingTop: 22, gap: 14, alignItems: "stretch" },
+  washi: { position: "absolute", top: -10, left: 20, width: 72 },
+  nguoi: { flexDirection: "row", alignItems: "center", gap: 14 },
 });

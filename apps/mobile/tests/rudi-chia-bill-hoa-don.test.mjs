@@ -13,6 +13,7 @@ import test from "node:test";
 
 import { datTokenPhien } from "../dist-test/api.js";
 import {
+  cauCanhBaoChia,
   cauNguonBill,
   cauSauKhiScanHong,
   cauTongMon,
@@ -108,8 +109,20 @@ test("cauSauKhiScanHong nối câu máy chủ với lối ra nhập tay", () => 
   assert.equal(cauSauKhiScanHong("Máy chủ chưa cấu hình trình đọc bill."), "Máy chủ chưa cấu hình trình đọc bill. Bạn có thể nhập món bằng tay.");
 });
 
+test("cauCanhBaoChia: mỗi mã cảnh báo của bộ chia thành một câu riêng, không bao giờ in mã", () => {
+  const ma = ["zero_share_participants", "advancer_not_participant", "proportional_fallback_to_even"];
+  const cau = ma.map(cauCanhBaoChia);
+  assert.equal(new Set(cau).size, 3, "ba mã, ba câu khác nhau");
+  for (const [i, c] of cau.entries()) {
+    assert.ok(!c.includes(ma[i]) && !/[a-z]+_[a-z_]+/.test(c), `câu cho ${ma[i]} còn mang mã máy: ${c}`);
+  }
+  assert.match(cauCanhBaoChia("zero_share_participants"), /0đ/);
+  const la = cauCanhBaoChia("ma_moi_chua_biet");
+  assert.ok(la.length > 0 && !la.includes("ma_moi_chua_biet"), "mã lạ vẫn ra một câu, không ra mã");
+});
+
 test("cauNguonBill: bill gõ tay nói là gõ tay, không nói «chưa nhận diện»", () => {
-  assert.equal(cauNguonBill(hoaDonHaiMon()), "Bạn nhập tay 2 món. Máy chủ chưa đọc ảnh nào.");
+  assert.equal(cauNguonBill(hoaDonHaiMon()), "Bạn nhập tay 2 món, chưa đọc từ ảnh nào.");
   assert.equal(cauNguonBill(hoaDonTrong()), "Chưa có món nào. Thêm món bên dưới.");
   const docTuAnh = { ...hoaDonHaiMon(), lines: hoaDonHaiMon().lines.map((l) => ({ ...l, read: { name: l.name, quantity: 1, lineTotalVnd: l.lineTotalVnd } })) };
   assert.equal(cauNguonBill(docTuAnh), "Đã nhận diện 2 món");
@@ -120,7 +133,7 @@ test("nhanDongMon: không nhãn trên bill gõ tay; trên bill đọc từ ảnh
   const tay = hoaDonHaiMon();
   assert.equal(nhanDongMon(tay, tay.lines[0]), null);
   const doc = { ...tay, lines: [{ ...tay.lines[0], read: { name: "Bun bo", quantity: 1, lineTotalVnd: 150000 } }, tay.lines[1]] };
-  assert.deepEqual(nhanDongMon(doc, doc.lines[0]), { chu: "Máy chủ đọc từ ảnh", canKiem: false });
+  assert.deepEqual(nhanDongMon(doc, doc.lines[0]), { chu: "Rủ Đi đọc từ ảnh", canKiem: false });
   assert.deepEqual(nhanDongMon(doc, doc.lines[1]), { chu: "Bạn thêm tay", canKiem: false });
-  assert.deepEqual(nhanDongMon({ ...doc, needsReview: true }, doc.lines[0]), { chu: "Máy chủ đọc từ ảnh, cần bạn kiểm lại", canKiem: true });
+  assert.deepEqual(nhanDongMon({ ...doc, needsReview: true }, doc.lines[0]), { chu: "Rủ Đi đọc từ ảnh, cần bạn kiểm lại", canKiem: true });
 });

@@ -167,7 +167,7 @@ async function goiRoute<T>(
     return {
       kind: "khong-noi-duoc",
       url,
-      detail: chiTietLoi(problem) || "Không kết nối được tới máy chủ.",
+      detail: chiTietLoi(problem) || "Không kết nối được Rủ Đi.",
     };
   }
 
@@ -251,7 +251,7 @@ export function nhanLyDo(reason: string): string {
     unavailable: "Gợi ý đang tạm thời không dùng được.",
     ungrounded: "Gợi ý chưa có đủ căn cứ từ dữ liệu của nhóm.",
   };
-  return labels[reason] ?? `Máy chủ trả về lý do chưa biết: ${reason}.`;
+  return labels[reason] ?? `Rủ Đi trả về một lý do chưa biết (${reason}).`;
 }
 
 export function nhanTietMuc(section: string): string {

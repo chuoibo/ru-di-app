@@ -29,6 +29,7 @@ from .pair_helpers import (
     TOI,
     TUAN,
     TUAN_SAU,
+    dong_thuan,
     head,
     lap_so,
     noi_dung,
@@ -220,7 +221,11 @@ def test_two_yeses_make_one_outing_in_the_same_request(client, repository):
     outing = repository.get_outing(__import__("uuid").UUID(body["outing_id"]))
     assert outing is not None
     assert outing.context_id == CAP
-    assert outing.title == f"Tờ lời rủ {THU_BAY[8:]}/{THU_BAY[5:7]}"
+    # Named after what was agreed, and the agreed stop is the outing's timeline
+    # (QA 23/09: the outing used to hold a date and nothing else).
+    assert outing.title == f"Ăn tối, quán mới · {THU_BAY[8:]}/{THU_BAY[5:7]}"
+    assert [(s.minute_of_day, s.label, s.place_id) for s in outing.stops] == [(19 * 60, "Ăn tối, quán mới", None)]
+    assert outing.timeline_revision == 1
     assert outing.starts_on.isoformat() == THU_BAY == outing.ends_on.isoformat()
     assert outing.headcount == 2
     assert outing.budget_per_person_vnd == 0, "không cột tiền nào nhận số không ai gõ"
@@ -430,6 +435,54 @@ def test_the_very_first_invitation_happens_before_any_notebook(client, repositor
     assert _read(client, paper_id).json()["state"] == "nhap"
     stored = repository.pair_papers[__import__("uuid").UUID(paper_id)]
     assert stored["cycle_id"] is None, "tờ tạm: chưa thuộc chu kỳ nào"
+
+
+def test_opening_the_notebook_files_the_open_invitation_as_its_first_page(
+    client, clock, repository
+):
+    """ADR-0038 §2.1 (B1 of the 24/09 QC). The invitation being written before
+    the notebook existed becomes the notebook's first page when both agree.
+
+    Left temporary, only its owner could read it while it still held the one
+    open sheet: the other person was refused a sheet they could not see until
+    the week ran out. Filed under the cycle, it is an ordinary sheet of the
+    week -- still its owner's draft, and theirs to send.
+    """
+    import uuid
+
+    paper_id = _draft(client)
+    clock(timedelta(hours=1))
+    lap_so(client)
+    stored = repository.pair_papers[uuid.UUID(paper_id)]
+    cycle_id = repository.get_pair_notebook(CAP).cycle_id
+    assert cycle_id is not None
+    assert stored["cycle_id"] == cycle_id, "lời rủ tạm không được nhận vào sổ vừa mở"
+    assert repository.get_pair_paper(uuid.UUID(paper_id)).is_temporary is False
+    # Still one open sheet, now one the notebook knows about.
+    refused = client.post(f"/contexts/{CAP}/papers/draft", headers=head(NGUOI_KIA))
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["code"] == "paper_wrong_state"
+    # Its owner sends it and it reaches the other person like any sheet.
+    assert _patch(client, paper_id).status_code == 200
+    assert _send(client, paper_id).status_code == 200
+    read = _read(client, paper_id, actor=NGUOI_KIA)
+    assert read.status_code == 200, read.text
+    assert read.json()["state"] == "da_gui"
+
+
+def test_an_expired_invitation_is_not_filed_when_the_notebook_opens(
+    client, clock, repository
+):
+    """Only an open sheet is adopted: last week's unsent invitation is history
+    and stays temporary; the notebook starts with nothing open."""
+    import uuid
+
+    paper_id = _draft(client)
+    clock(TUAN_SAU)
+    lap_so(client)
+    assert repository.pair_papers[uuid.UUID(paper_id)]["cycle_id"] is None
+    fresh = client.post(f"/contexts/{CAP}/papers/draft", headers=head(NGUOI_KIA))
+    assert fresh.status_code == 201, fresh.text
 
 
 def test_a_notebook_half_open_takes_no_sheet(client):
@@ -654,6 +707,7 @@ _THAN = {
     ("POST", "/papers/{paper_id}/withdraw"): {"version": 1},
     ("POST", "/papers/{paper_id}/versions/{version}/responses"): {"kind": "dong_y"},
     ("POST", "/papers/{paper_id}/keeps"): {"line": "Một dòng."},
+    ("PUT", "/contexts/{context_id}/notebook/week-role"): {"lo": "toi"},
 }
 
 
@@ -703,7 +757,7 @@ def test_every_pair_route_refuses_a_stranger(client):
                 "paper_not_found",
             ), f"{method} {path}: {answer.text}"
             swept += 1
-    assert swept == 19, f"quét được {swept} cửa, phải là 19"
+    assert swept == 20, f"quét được {swept} cửa, phải là 20"
 
 
 def test_the_list_carries_the_one_line_a_closed_row_shows(client, clock):
@@ -751,3 +805,176 @@ def test_a_sheet_the_list_cannot_read_does_not_take_the_list_down(client, reposi
     assert len(rows) == 1
     assert rows[0]["chang_dau"] is None
     assert rows[0]["ngay"] is None
+
+
+
+def test_a_catalogue_place_on_the_sheet_names_the_outing_and_its_stop(client, repository):
+    lap_so(client)
+    place = next(iter(repository.list_places()))
+    paper_id = _draft(client)
+    content = {"ngay": THU_BAY, "chang": [{"gio": "19:00", "viec": "Ăn tối", "place_id": place.id}, {"gio": "21:00", "viec": "Dạo hồ", "place_id": "p-khong-con-trong-danh-muc"}]}
+    assert client.patch(f"/papers/{paper_id}/draft", json={"content": content}, headers=head(TOI)).status_code == 200
+    assert _send(client, paper_id).status_code == 200
+    body = _agree(client, paper_id).json()
+    outing = repository.get_outing(__import__("uuid").UUID(body["outing_id"]))
+    assert outing.title == f"{place.name} · {THU_BAY[8:]}/{THU_BAY[5:7]}"
+    # A place the catalogue no longer knows keeps its line and drops its id, so
+    # the timeline stays editable (its route refuses unknown places).
+    assert [(s.label, s.place_id, s.place_name) for s in outing.stops] == [("Ăn tối", place.id, place.name), ("Dạo hồ", None, None)]
+
+
+def _mot_tuan_da_chot(client, repository, clock, *, gio="19:30"):
+    """A notebook with one agreed sheet at a catalogue place, a week ago.
+
+    The place is one whose kind has other places in its city, so the next
+    draft has somewhere new to propose."""
+    lap_so(client)
+    rows = repository.list_places()
+    place = next(
+        r
+        for r in rows
+        if sum(1 for o in rows if (o.destination_id, o.category) == (r.destination_id, r.category)) >= 3
+    )
+    paper_id = _draft(client)
+    content = {"ngay": THU_BAY, "chang": [{"gio": gio, "viec": "Ăn lẩu", "place_id": place.id}]}
+    assert client.patch(f"/papers/{paper_id}/draft", json={"content": content}, headers=head(TOI)).status_code == 200
+    assert _send(client, paper_id).status_code == 200
+    assert _agree(client, paper_id).json()["state"] == "chot"
+    clock(TUAN_SAU)
+    return place, [r for r in rows if (r.destination_id, r.category) == (place.destination_id, place.category) and r.id != place.id]
+
+
+def test_next_weeks_draft_keeps_their_hour_and_proposes_a_new_place_of_the_same_kind(client, repository, clock):
+    place, same_kind = _mot_tuan_da_chot(client, repository, clock)
+    body = _read(client, _draft(client, actor=NGUOI_KIA), actor=NGUOI_KIA).json()
+    first = body["versions"][0]
+    stop = first["content"]["chang"][0]
+    assert stop["gio"] == "19:30", "giờ quen của hai người, không phải 18:30 cố định"
+    best = max(same_kind, key=lambda r: (-1.0 if r.rating is None else r.rating, -1 if r.rating_count is None else r.rating_count))
+    assert stop["place_id"] == best.id, "chỗ mới cùng kiểu, cùng thành phố, điểm cao nhất"
+    assert stop["can_kiem"] is True, "danh mục không chứng minh món ăn (ADR-0027 §7)"
+    assert place.name in first["ly_do"] and best.name in first["ly_do"]
+    assert len(first["ly_do"]) <= 200
+
+
+def test_the_draft_avoids_a_place_whose_words_meet_a_constraint(client, repository, clock):
+    place, same_kind = _mot_tuan_da_chot(client, repository, clock)
+    ranked = sorted(same_kind, key=lambda r: (-1.0 if r.rating is None else r.rating, -1 if r.rating_count is None else r.rating_count), reverse=True)
+    blocked = ranked[0]
+    put = client.put(
+        f"/contexts/{CAP}/notebook/constraints/khong_an_duoc",
+        json={"content": f"x, {blocked.name.upper()}"},
+        headers=head(NGUOI_KIA),
+    )
+    assert put.status_code == 200, put.text
+    first = _read(client, _draft(client, actor=NGUOI_KIA), actor=NGUOI_KIA).json()["versions"][0]
+    assert first["content"]["chang"][0]["place_id"] not in (blocked.id, place.id)
+    assert "hai ô ràng buộc" in first["ly_do"]
+
+
+def test_a_sheet_that_was_never_agreed_teaches_the_draft_nothing(client, clock):
+    lap_so(client)
+    paper_id = _draft(client)
+    assert _patch(client, paper_id, gio="21:00").status_code == 200
+    assert _send(client, paper_id).status_code == 200
+    clock(TUAN_SAU)
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["gio"] == "18:30"
+    assert first["ly_do"] is None
+
+
+def test_a_draft_never_sent_stays_its_owners_after_the_week_is_skipped(client):
+    """QA 24/09: skipping the week on a draft handed it to the other person,
+    content and private reason included. A sheet nobody sent is its owner's
+    draft whatever its state."""
+    lap_so(client)
+    paper_id = _draft(client)
+    assert _patch(client, paper_id, viec="Quà sinh nhật, bí mật", ly_do="chưa muốn nói").status_code == 200
+    skipped = client.post(f"/papers/{paper_id}/skip", headers=head(TOI))
+    assert skipped.status_code == 200, skipped.text
+    assert skipped.json()["state"] == "nghi_tuan"
+    theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
+    assert paper_id not in [p["id"] for p in theirs]
+    assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 404
+    mine = client.get(f"/contexts/{CAP}/papers", headers=head(TOI)).json()["papers"]
+    assert paper_id in [p["id"] for p in mine], "chủ bản phác vẫn thấy tờ của mình"
+    assert _read(client, paper_id).status_code == 200
+
+
+def test_a_sheet_that_was_sent_stays_readable_to_both_after_it_closes(client):
+    lap_so(client)
+    paper_id = _da_gui(client)
+    assert client.post(f"/papers/{paper_id}/skip", headers=head(NGUOI_KIA)).status_code == 200
+    assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 200
+    theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
+    assert paper_id in [p["id"] for p in theirs]
+
+
+# ADR-0034 §2.2: Nếp uses the tastes of whoever shared them, and nobody else's.
+
+
+def _doi_co_gu(client, repository):
+    repository.person_interests[TOI] = {"cafe", "game"}
+    repository.person_interests[NGUOI_KIA] = {"cafe", "nightlife"}
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+
+
+def test_a_taste_nobody_shared_changes_nothing_in_the_draft(client, repository):
+    _doi_co_gu(client, repository)
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["viec"] == "Ăn tối"
+    assert first["ly_do"] is None
+
+
+def test_the_other_persons_shared_taste_names_the_stop_and_the_reason(client, repository):
+    _doi_co_gu(client, repository)
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    first = _read(client, _draft(client)).json()["versions"][0]
+    stop = first["content"]["chang"][0]
+    assert stop["viec"] == "Cà phê", "gu người kia đã chia: Cafe"
+    assert stop.get("place_id") is None, "chưa có buổi nào để biết thành phố, nên không bịa chỗ"
+    assert first["ly_do"] == "Người Ấy thích Cafe, nên Nếp phác theo đó."
+
+
+def test_both_shared_uses_what_they_have_in_common_first(client, repository):
+    _doi_co_gu(client, repository)
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(TOI))
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["viec"] == "Cà phê"
+    assert first["ly_do"].startswith("Hai bạn cùng thích Cafe")
+
+
+# ADR-0034 §2.5: a ceiling per person per week.
+
+
+def test_a_fourth_sheet_in_one_week_is_refused_and_the_next_week_is_open(client, clock):
+    lap_so(client)
+    for _ in range(3):
+        paper_id = _draft(client)
+        skipped = client.post(f"/papers/{paper_id}/skip", headers=head(TOI))
+        assert skipped.status_code == 200, skipped.text
+    fourth = client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI))
+    assert fourth.status_code == 409, fourth.text
+    assert fourth.json()["code"] == "paper_week_quota"
+    theirs = client.post(f"/contexts/{CAP}/papers/draft", headers=head(NGUOI_KIA))
+    assert theirs.status_code == 201, "hạn mức là của từng người"
+    clock(TUAN_SAU)
+    client.post(f"/papers/{theirs.json()['id']}/skip", headers=head(NGUOI_KIA))
+    assert client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI)).status_code == 201
+
+
+# ADR-0034 §2.4: the baton passes when the usual lead opened two weeks running.
+
+
+def test_the_week_passes_to_the_other_after_two_weeks_opened_by_the_same_person(client, clock):
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    for _ in range(2):
+        paper_id = _draft(client)
+        assert _send(client, paper_id).status_code == 200
+        clock(timedelta(days=7))
+    role = client.get(f"/contexts/{CAP}/notebook", headers=head(TOI)).json()["week_role"]
+    assert role["cach"] == "luot", role
+    assert role["nguoi_lo"] == [str(NGUOI_KIA)]

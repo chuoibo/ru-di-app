@@ -125,3 +125,12 @@ test("tra-tien-ne: tờ trên có ô bầu dục tô màu giấy — dấu tờ 
     assert.ok(!lop.some((l) => l.mau === "split"), "sticker tiền không dùng màu teal của sổ");
   }
 });
+
+test("khay: nhóm giữ tám hình; hai người có thêm bốn hình đôi (ADR-0034)", async () => {
+  const { stickerChoKhay, STICKER_DOI, STICKER_IDS } = await import("../dist-test/rudi/chat/sticker.js");
+  assert.deepEqual(stickerChoKhay(false).doi, []);
+  assert.equal(stickerChoKhay(false).chung.length, 8);
+  assert.deepEqual([...stickerChoKhay(true).doi], ["hen-nhe", "nho-nhau", "ve-toi-chua", "om-cai"]);
+  assert.equal(STICKER_IDS.length, 12);
+  for (const id of STICKER_DOI) assert.ok(!stickerChoKhay(true).chung.includes(id), id);
+});

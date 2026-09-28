@@ -36,6 +36,7 @@ import {
 import { Avatar } from "../ui/Avatar";
 import { Money } from "../ui/Money";
 import { HangChang } from "./keo/HangChang";
+import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
 
 function ChatBubble({
   person,
@@ -136,7 +137,7 @@ export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embedde
           placeholder={laCapDemo ? `Nhắn ${so.tenNguoiKia}...` : "Nhắn Team Đà Lạt..."}
           placeholderTextColor={colors.inkFaint}
           returnKeyType="send"
-          style={[typography.body, styles.oNhap, { color: colors.ink }]}
+          style={[typography.body, styles.oNhap, { color: colors.ink }, KHONG_VIEN_WEB]}
           value={draft}
         />
         <IconButton
@@ -163,7 +164,7 @@ export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embedde
       header={
         laCapDemo ? (
           <>
-            <TopBar back={!embeddedInTabs} subtitle={so.batDoi ? "Một đôi" : "Hai người bạn"} title={so.tenNguoiKia} />
+            <TopBar back={!embeddedInTabs} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title={so.tenNguoiKia} />
             <HangToGiay cauMo={tuVung.cauMo} onPress={() => router.push(`/groups/${contextId}/to-giay` as never)} tieuDe={tuVung.tenKhongGian} toMo={so.toMo} toiId={so.toiId} />
           </>
         ) : (
@@ -457,7 +458,7 @@ export function VotingScreen() {
           <View style={styles.flex}>
             <Text style={[typography.label, { color: colors.ink }]}>Bạn đã chọn {VOTE_OPTIONS[session.voteChoice].name}</Text>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              Phiếu {noiLuu(session.luuTruSong)}. Chưa gửi lên máy chủ.
+              Phiếu {noiLuu(session.luuTruSong)}. Chưa gửi đi đâu.
             </Text>
           </View>
         </View>

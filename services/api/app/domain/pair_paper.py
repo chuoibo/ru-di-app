@@ -30,8 +30,11 @@ Pure functions over dicts. No I/O, no ORM, no framework.
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
+
+from app.domain import interests
 
 __all__ = [
     "AUTHOR_TYPES",
@@ -47,10 +50,20 @@ __all__ = [
     "da_du_dong_y",
     "han_tuan",
     "hieu_luc",
+    "TO_MOI_NGUOI_MOI_TUAN",
+    "lam_giau_phac",
+    "lam_giau_theo_gu",
+    "gu_cho_nep",
+    "loai_theo_gu",
     "ngay_de_xuat",
     "phac_to_giay",
     "tuan_cua",
 ]
+
+#: ADR-0034 §2.5: how many sheets one person may start in one week of one
+#: notebook. The same number is `to_moi_nguoi_moi_tuan` in
+#: packages/shared/nep-nhip.json, and a test holds the two equal.
+TO_MOI_NGUOI_MOI_TUAN = 3
 
 #: The week is the one the two of them live in, not the one the server's
 #: machine is in. Vietnam has kept a single offset since 1975, but the zone is
@@ -349,4 +362,272 @@ def phac_to_giay(
             "dung": ["routine", *(["rang_buoc"] if rang_buoc else [])],
             "luc": now.isoformat(),
         },
+    }
+
+
+#: The longest reason line a person may write (`PaperDraftEditRequest.ly_do`);
+#: Nếp's draft keeps to it too, so editing it never starts over the limit.
+_DAI_LY_DO = 200
+
+#: What a draft calls the stop at a place of this catalogue kind. Anything not
+#: listed keeps the routine's own line («Ăn tối»).
+_VIEC_THEO_LOAI = {"cafe": "Cà phê", "vui-choi": "Đi chơi", "di-choi-dem": "Đi chơi tối"}
+
+#: The catalogue kind a taste points at (ADR-0034 §2.2), for the tastes the
+#: catalogue has a kind for: `mon-local` and `outdoor` are read off words and
+#: traits, not a kind, and shopping/karaoke have nothing to read at all.
+_LOAI_THEO_GU = {"an-uong": "quan-an-local", "cafe": "cafe", "nightlife": "di-choi-dem", "game": "vui-choi"}
+
+#: Which of a constraint's characters are folded to lower case: ASCII and the
+#: Latin blocks Vietnamese is written in. Folding stops there on purpose, so
+#: the Go port can fold the same code points the same way; U+0130 is the one
+#: letter in these blocks whose lower case is two code points, and it is kept.
+_KHOI_GAP = ((0x41, 0x5A), (0xC0, 0x24F), (0x1E00, 0x1EFF))
+
+
+def _gap(chu: str) -> str:
+    return "".join(
+        c.lower()
+        if any(dau <= ord(c) <= cuoi for dau, cuoi in _KHOI_GAP) and len(c.lower()) == 1
+        else c
+        for c in chu
+    )
+
+
+def _cum_tu_cam(rang_buoc) -> list[str]:
+    """The phrases of the two boxes, one per comma, semicolon, slash or line."""
+    out = []
+    for rb in rang_buoc:
+        for manh in re.split(r"[,;/\n]", str(rb.get("content") or "")):
+            cum = _gap(manh).strip(" \t\r")
+            if len(cum) >= 2:
+                out.append(cum)
+    return out
+
+
+def _pham(row: dict, cam: list[str]) -> bool:
+    chu = [str(row.get("name") or ""), str(row.get("category") or "")]
+    chu += [k for k in row.get("kinds") or [] if isinstance(k, str)]
+    chu += [t for t in row.get("traits") or [] if isinstance(t, str)]
+    gap = [_gap(c) for c in chu]
+    return any(c in g for c in cam for g in gap)
+
+
+def _cau_vua(lua_chon: list[list[str]]) -> str | None:
+    """The first of these sentence lists that fits the reason line, joined."""
+    for cau in lua_chon:
+        noi = " ".join(c for c in cau if c)
+        if noi and len(noi) <= _DAI_LY_DO:
+            return noi
+    return None
+
+
+def gu_cho_nep(
+    nguoi_chia: list[str],
+    gu_theo_nguoi: dict[str, list[str]],
+    ten_theo_nguoi: dict[str, str],
+    *,
+    ca_hai: bool,
+) -> list[dict]:
+    """The tastes Nếp may use, most shared first (ADR-0034 §2.2).
+
+    `nguoi_chia` are the people who turned `chia_gu` on, in participant order;
+    nobody else's taste is in `gu_theo_nguoi` for this to read. What both have
+    and both shared (`ca_hai`) comes first, as one taste of both; then each
+    sharer's own, in turn. Vocabulary order inside each group, and a tag the
+    vocabulary no longer has is dropped.
+    """
+    theo = {p: [t for t in interests.INTEREST_IDS if t in set(gu_theo_nguoi.get(p, []))] for p in nguoi_chia}
+    out: list[dict] = []
+    chung: list[str] = []
+    if ca_hai and len(nguoi_chia) == 2:
+        a, b = nguoi_chia
+        chung = [t for t in theo[a] if t in theo[b]]
+        out += [{"tag": t, "chung": True, "ten": None, "nguoi": list(nguoi_chia)} for t in chung]
+    for p in nguoi_chia:
+        out += [
+            {"tag": t, "chung": False, "ten": ten_theo_nguoi.get(p) or "Người ấy", "nguoi": [p]}
+            for t in theo[p]
+            if t not in chung
+        ]
+    return out
+
+
+def loai_theo_gu(gu: list[dict]) -> str | None:
+    """The catalogue kind of the first usable taste in `gu`, or None."""
+    for muc in gu:
+        loai = _LOAI_THEO_GU.get(str(muc["tag"]))
+        if loai is not None:
+            return loai
+    return None
+
+
+def lam_giau_theo_gu(
+    phac: dict,
+    *,
+    gu: list[dict],
+    ung_vien: list[dict],
+    da_di: list[str],
+    rang_buoc,
+) -> dict:
+    """Nếp's draft, told what the two like -- only what they chose to share.
+
+    `gu` is the service's list, most shared first: each `{"tag", "chung",
+    "ten", "nguoi"}` is one taste, `chung` when both have it and shared it,
+    otherwise one sharer's (`ten` names them); `nguoi` are the ids whose taste
+    it is. A taste nobody shared is never in it (ADR-0034 §2.1), so this reads
+    nothing it was not given.
+
+    The history comes first: a draft that already proposes a place (from the
+    kind the two chose last time) is returned unchanged. Otherwise the first
+    taste the catalogue has a kind for picks the kind: a place of it in
+    `ung_vien` they have not been to, the best rated, not meeting a phrase of
+    the two boxes, becomes the main stop; with no such place the stop is only
+    named after the kind. The reason line says whose taste it was.
+    """
+    dau = phac["content"]["chang"][0]
+    if dau.get("place_id"):
+        return phac
+    muc = next((m for m in gu if str(m["tag"]) in _LOAI_THEO_GU), None)
+    if muc is None:
+        return phac
+    loai = _LOAI_THEO_GU[str(muc["tag"])]
+    nhan = next(t.label for t in interests.INTEREST_TAGS if t.id == muc["tag"])
+    ai = "Hai bạn cùng thích" if muc["chung"] else f"{muc['ten']} thích"
+    cam = _cum_tu_cam(rang_buoc)
+    chon, hang = None, None
+    for row in ung_vien:
+        if row.get("category") != loai or row["id"] in da_di or _pham(row, cam):
+            continue
+        khoa = (
+            -1.0 if row.get("rating") is None else float(row["rating"]),
+            -1 if row.get("rating_count") is None else int(row["rating_count"]),
+        )
+        if chon is None or khoa > hang:
+            chon, hang = row, khoa
+    truoc = str(phac["ly_do"])
+    moi = {**dau, "viec": _VIEC_THEO_LOAI.get(loai, dau["viec"])}
+    ly_do = None
+    if chon is not None:
+        kiem = (
+            "Đã tránh chỗ trùng chữ trong hai ô ràng buộc; món thì hai bạn kiểm lại."
+            if cam
+            else "Chỗ này chưa ai kiểm, hai bạn xem lại."
+        )
+        thu = f"{ai} {nhan}: thử {chon['name']}, hai bạn chưa đi."
+        thu_ngan = f"Thử {chon['name']}, hai bạn chưa đi."
+        ly_do = _cau_vua([[truoc, thu, kiem], [thu, kiem], [thu_ngan, kiem]])
+        if ly_do is not None:
+            moi["place_id"] = str(chon["id"])
+    if ly_do is None:
+        moi = {**dau, "viec": _VIEC_THEO_LOAI.get(loai, dau["viec"])}
+        cau = f"{ai} {nhan}, nên Nếp phác theo đó."
+        ly_do = _cau_vua([[truoc, cau], [cau]]) or truoc
+    dung = list(phac["nguon"]["dung"])
+    them = [f"gu:{nguoi}" for nguoi in muc["nguoi"]]
+    if dung and dung[-1] == "rang_buoc":
+        dung = [*dung[:-1], *them, "rang_buoc"]
+    else:
+        dung = [*dung, *them]
+    return {
+        "content": {**phac["content"], "chang": [moi, *phac["content"]["chang"][1:]]},
+        "ly_do": ly_do,
+        "nguon": {**phac["nguon"], "dung": dung},
+    }
+
+
+def lam_giau_phac(
+    phac: dict,
+    *,
+    lich_su: list[dict],
+    cho_cu: dict | None,
+    ung_vien: list[dict],
+    rang_buoc,
+) -> dict:
+    """Nếp's template, told what this notebook already knows.
+
+    The template alone said «18:30 · Ăn tối» every week (QA 23/09): it read
+    none of what the two had shared. What it may read here is only what both
+    of them already hold (ADR-0027 §4: agreeing to keep a notebook is agreeing
+    to keep its cycle's history):
+
+    - `lich_su`, the contents of this cycle's agreed sheets, newest first. The
+      newest one's hour is the hour they keep; its place, if the catalogue
+      still has it (`cho_cu`), is the kind of place they chose.
+    - `ung_vien`, the catalogue's places of that same kind in that same city.
+      One they have not been to is proposed -- the best rated, the earlier row
+      on a tie -- unless its words meet a phrase of the two boxes.
+
+    The boxes are matched on words only. The catalogue does not prove what a
+    dish contains (ADR-0027 §7), so the stop stays `can_kiem` and the reason
+    says what was and was not checked. Nothing here is a model call, and a
+    notebook with no agreed sheet gets the template back unchanged.
+    """
+    lich_su = [nd for nd in lich_su if nd.get("chang")]
+    if not lich_su:
+        return phac
+    chinh = lich_su[0]["chang"][0]
+    gio = str(chinh["gio"])
+    goc = str(phac["ly_do"])
+    noi_cu = cho_cu is not None and cho_cu["id"] == chinh.get("place_id")
+    if noi_cu:
+        truoc = f"Lần trước hai bạn hẹn {gio} ở {cho_cu['name']}; Nếp giữ giờ đó."
+    else:
+        truoc = f"Lần trước hai bạn hẹn {gio}, «{chinh['viec']}»; Nếp giữ giờ đó."
+    truoc_ngan = f"Lần trước hai bạn hẹn {gio}; Nếp giữ giờ đó."
+    dau = {**phac["content"]["chang"][0], "gio": gio}
+    them = ["lich_su"]
+    chon = None
+    if cho_cu is not None:
+        da_di = {
+            c["place_id"] for nd in lich_su for c in nd["chang"] if c.get("place_id")
+        }
+        cam = _cum_tu_cam(rang_buoc)
+        hang = None
+        for row in ung_vien:
+            if row["id"] in da_di or _pham(row, cam):
+                continue
+            khoa = (
+                -1.0 if row.get("rating") is None else float(row["rating"]),
+                -1 if row.get("rating_count") is None else int(row["rating_count"]),
+            )
+            if chon is None or khoa > hang:
+                chon, hang = row, khoa
+    # A proposed place is never said without what was and was not checked:
+    # the history sentence gives way first, and a place whose name leaves no
+    # room for the check is not proposed at all.
+    ly_do = None
+    if chon is not None:
+        kiem = (
+            "Đã tránh chỗ trùng chữ trong hai ô ràng buộc; món thì hai bạn kiểm lại."
+            if cam
+            else "Chỗ này chưa ai kiểm, hai bạn xem lại."
+        )
+        # The kind is named after the place it came from; when the newest
+        # sheet already named that place, «chỗ đó» points back at it.
+        thu = (
+            f"Thử {chon['name']}, cùng kiểu chỗ đó mà hai bạn chưa đi."
+            if noi_cu
+            else f"Thử {chon['name']}: cùng kiểu {cho_cu['name']}, hai bạn chưa đi."
+        )
+        thu_ngan = f"Thử {chon['name']}, chỗ hai bạn chưa đi."
+        ly_do = _cau_vua(
+            [
+                [goc, truoc, thu, kiem],
+                [truoc, thu, kiem],
+                [truoc_ngan, thu_ngan, kiem],
+                [thu_ngan, kiem],
+            ]
+        )
+        if ly_do is not None:
+            dau["place_id"] = str(chon["id"])
+            dau["viec"] = _VIEC_THEO_LOAI.get(str(chon.get("category")), dau["viec"])
+            them.append("danh_muc")
+    if ly_do is None:
+        ly_do = _cau_vua([[goc, truoc], [truoc], [truoc_ngan]]) or ""
+    dung = list(phac["nguon"]["dung"])
+    return {
+        "content": {**phac["content"], "chang": [dau, *phac["content"]["chang"][1:]]},
+        "ly_do": ly_do,
+        "nguon": {**phac["nguon"], "dung": [dung[0], *them, *dung[1:]]},
     }

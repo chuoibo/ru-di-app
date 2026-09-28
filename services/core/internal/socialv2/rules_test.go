@@ -20,24 +20,8 @@ func TestWallCursorRoundTripAndRejectsTampering(t *testing.T) {
 	}
 }
 
-func TestReplyMustAttachOnlyToTopLevelCommentOnSamePost(t *testing.T) {
-	post := "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
-	parent := commentParent{PostID: post}
-	if !replyParentAllowed(post, parent) {
-		t.Fatal("top-level comment in the post should accept a reply")
-	}
-	parent.ParentID = "ffffffff-bbbb-4ccc-8ddd-eeeeeeeeeeee"
-	if replyParentAllowed(post, parent) {
-		t.Fatal("reply to a reply created a second nesting level")
-	}
-	parent.ParentID = ""
-	if replyParentAllowed("bbbbbbbb-bbbb-4ccc-8ddd-eeeeeeeeeeee", parent) {
-		t.Fatal("cross-post reply was accepted")
-	}
-}
-
 func TestWallWakeHintTargetsOnlyMatchingOwner(t *testing.T) {
-	h := New(nil, "dev")
+	h := New(nil, "dev", false)
 	a, leaveA := h.subscribe("aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee")
 	defer leaveA()
 	b, leaveB := h.subscribe("bbbbbbbb-bbbb-4ccc-8ddd-eeeeeeeeeeee")

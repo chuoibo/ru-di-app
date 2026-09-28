@@ -251,12 +251,12 @@
     },
     {
       "path": "apps/mobile/package-lock.json",
-      "sha256": "2f33308ca81c1e3f987a5d5b7d79bf1e3c0e6dd4cd108ec1600ed014b937260f",
+      "sha256": "e6b36ca1d2b6480700c2d649eba23a11b4a802c6985ba6239c49f7bb9715d320",
       "rules": [
         "aggregate-base64-fragments",
         "long-number"
       ],
-      "reason": "Lockfile npm của ứng dụng mobile. Các chuỗi base64 là integrity digest của npm và số dài là metadata phiên bản; cả hai thuộc cấu trúc lockfile. Ghim lại 2026-09-03 khi gộp hai nhánh cùng thêm phụ thuộc: `expo-secure-store` cho phiên đăng nhập (ADR-0014, PR #514) và `@react-native-async-storage/async-storage@2.2.0` cho lớp lưu trữ phiên nháp của RuDi, kéo theo is-plain-obj@2.1.0 và merge-options@3.0.4. Sau khi gộp đã chạy `npm install --package-lock-only` để lockfile khớp package.json, rồi mới tính digest — ghim một digest của cây gộp chưa chuẩn hoá là ghim một file không ai từng cài. Toàn bộ dòng thêm là version/resolved/integrity/license/engines từ registry.npmjs.org; không dòng nào mang dữ liệu người tham gia. Ghim lại 2026-09-03 sau khi thêm expo-dev-client + @react-native-google-signin/google-signin (kéo theo react-native-reanimated 4.6.0, react-native-worklets 0.12.1); các số dài vẫn chỉ là version của devtools-protocol và hermes-compiler. Ghim lại 2026-09-05 (UI v2, PR UI-0) sau khi `npx expo install react-native-svg expo-font` (react-native-svg 15.15.4 cho wordmark và minh hoạ vector, expo-font 57.0.3 khai tường minh để nạp display face); mọi dòng thêm là version/resolved/integrity từ registry.npmjs.org. Ghim lại 2026-09-12 (ADR-0026, Hành trình trên bản đồ) sau khi `npx expo install @maplibre/maplibre-react-native maplibre-gl` cho bản đồ hành trình — native dùng module MapLibre, web dùng maplibre-gl; kéo theo @maplibre/maplibre-gl-style-spec, @mapbox/point-geometry, kdbush, pbf, quickselect, tinyqueue và vài gói @turf. Mọi dòng thêm là version/resolved/integrity/bin/engines từ registry.npmjs.org; đã soát toàn bộ 369 dòng thêm, không dòng nào mang dữ liệu người tham gia. Lockfile đã chạy `npm install --package-lock-only` (không đổi byte nào) trước khi tính digest. Cập nhật 2026-09-23: thêm đúng gói expo-video@57.0.4 cho trình phát video hồ sơ; 12 dòng diff chỉ gồm tên gói, phiên bản, registry.npmjs.org, integrity, MIT và peerDependencies, không có dữ liệu người tham gia."
+      "reason": "Lockfile npm của ứng dụng mobile. Các chuỗi base64 là integrity digest của npm và số dài là metadata phiên bản; cả hai thuộc cấu trúc lockfile. Ghim lại 2026-09-03 khi gộp hai nhánh cùng thêm phụ thuộc: `expo-secure-store` cho phiên đăng nhập (ADR-0014, PR #514) và `@react-native-async-storage/async-storage@2.2.0` cho lớp lưu trữ phiên nháp của RuDi, kéo theo is-plain-obj@2.1.0 và merge-options@3.0.4. Sau khi gộp đã chạy `npm install --package-lock-only` để lockfile khớp package.json, rồi mới tính digest — ghim một digest của cây gộp chưa chuẩn hoá là ghim một file không ai từng cài. Toàn bộ dòng thêm là version/resolved/integrity/license/engines từ registry.npmjs.org; không dòng nào mang dữ liệu người tham gia. Ghim lại 2026-09-03 sau khi thêm expo-dev-client + @react-native-google-signin/google-signin (kéo theo react-native-reanimated 4.6.0, react-native-worklets 0.12.1); các số dài vẫn chỉ là version của devtools-protocol và hermes-compiler. Ghim lại 2026-09-05 (UI v2, PR UI-0) sau khi `npx expo install react-native-svg expo-font` (react-native-svg 15.15.4 cho wordmark và minh hoạ vector, expo-font 57.0.3 khai tường minh để nạp display face); mọi dòng thêm là version/resolved/integrity từ registry.npmjs.org. Ghim lại 2026-09-12 (ADR-0026, Hành trình trên bản đồ) sau khi `npx expo install @maplibre/maplibre-react-native maplibre-gl` cho bản đồ hành trình — native dùng module MapLibre, web dùng maplibre-gl; kéo theo @maplibre/maplibre-gl-style-spec, @mapbox/point-geometry, kdbush, pbf, quickselect, tinyqueue và vài gói @turf. Mọi dòng thêm là version/resolved/integrity/bin/engines từ registry.npmjs.org; đã soát toàn bộ 369 dòng thêm, không dòng nào mang dữ liệu người tham gia. Lockfile đã chạy `npm install --package-lock-only` (không đổi byte nào) trước khi tính digest. Ghim lại 2026-09-24 (ADR-0037, UI v3 «Sân khấu giấy», lát S0.2) sau khi `npm install @shopify/react-native-skia@2.6.2 --save-exact` (đúng bản bundledNativeModules của Expo SDK 57 khuyến nghị; `npx expo install` bị proxy chặn khi gọi API của Expo) rồi `npm install --package-lock-only`: thêm @shopify/react-native-skia 2.6.2, canvaskit-wasm 0.41.0, react-reconciler 0.31.0 và các gói prebuilt react-native-skia-android/-apple-ios/-apple-macos/-apple-tvos 147.1.0; mọi dòng thêm là version/resolved/integrity/license/engines từ registry.npmjs.org, không dòng nào mang dữ liệu người tham gia. Ghim lại 2026-09-27 (Cộng đồng): giữ phụ thuộc Skia mới trên main, thêm đúng 12 dòng dependency và metadata npm công khai của expo-video 57.0.5. Không có dữ liệu người tham gia; không mở rộng rule."
     },
     {
       "path": "apps/mobile/public/anh-nhom-dung-san.svg",
@@ -942,6 +942,70 @@
         "long-number"
       ],
       "reason": "npm lock file for the QA evidence harnesses under tests/qa/. The long numbers are package version and size fields whose numeric parts run past the guard's threshold; they are structural to the format. Only `long-number` is listed, not `aggregate-base64-fragments` as on the apps/mobile entry -- this file tripped exactly three long-number findings and nothing else, and an allowlist should exempt what the file actually does rather than what a file of its kind might do.\n\nPinned by exact digest rather than exempted by filename, for the reason spelled out on the apps/mobile entry: a name-based exemption is the smuggling route this guard's own tests reject.\n\nIt arrives with the commit that removed 23 absolute home-directory paths from 17 QA scripts. Those scripts imported puppeteer-core and playwright-core by absolute path into one developer's node_modules, so nothing declared them and nothing could install them elsewhere; tests/qa/package.json now does, and this lock file is what makes `npm ci` there reproduce the same tree. Five direct dependencies, pinned to the versions the sibling harnesses rd-qa-02/ and rd-qa-06/ already use."
+    },
+    {
+      "path": "docs/assets/community/feed-phone.png",
+      "sha256": "008a6afc252dff3ccc812b7327863d9939b4cf7e438d6fb3bbe3996f2fa56de7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh UI trên source sạch f496af16, dữ liệu tổng hợp từ community-fixture; không người thật, token hay tài chính. Parent và Impeccable finish reviewer đã mở cả ba ảnh phone/desktop/composer-focus và chấp nhận đúng phạm vi tích hợp UI. Ghim đúng digest, không mở rộng quy tắc."
+    },
+    {
+      "path": "docs/assets/community/feed-desktop.png",
+      "sha256": "a43d1591a3eb4229296f76fc0282368aa442cce5bff12145ab32edcc1e449a6a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh UI trên source sạch f496af16, dữ liệu tổng hợp từ community-fixture; không người thật, token hay tài chính. Parent và Impeccable finish reviewer đã mở cả ba ảnh phone/desktop/composer-focus và chấp nhận đúng phạm vi tích hợp UI. Ghim đúng digest, không mở rộng quy tắc."
+    },
+    {
+      "path": "docs/assets/community/legacy-pending.png",
+      "sha256": "951e8eeb159792888d218689cb1649fe0bf60ae632ef56cb1ea15ff58acfe56d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp UI cộng đồng từ browser chạy mã đã gộp main 0ec19fa9, dữ liệu tổng hợp do community-fixture tạo; tên Synthetic community actor và nội dung kiểm thử, không có người thật, token hay dữ liệu tài chính. Đã mở và kiểm tra từng ảnh; ghim đúng digest, không mở rộng quy tắc."
+    },
+    {
+      "path": "docs/assets/community/composer-focus.png",
+      "sha256": "5f1976e3edb1cef9c135a1a4fc088763f944310665aa58a5452387dd6d454ec2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh UI trên source sạch f496af16, dữ liệu tổng hợp từ community-fixture; không người thật, token hay tài chính. Parent và Impeccable finish reviewer đã mở cả ba ảnh phone/desktop/composer-focus và chấp nhận đúng phạm vi tích hợp UI. Ghim đúng digest, không mở rộng quy tắc."
+    },
+    {
+      "path": "docs/assets/diary-handoff-20260928/phone-light-reader.png",
+      "sha256": "d4d3f768af7c1912410ce0fafa489564d1705729beda3adcf803b760198d75b5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
+    },
+    {
+      "path": "docs/assets/diary-handoff-20260928/phone-small-200-editor.png",
+      "sha256": "5240560a772f7b6dfcbdf8f81a982498dc66f308795416f2ae97823a13ae54d2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
+    },
+    {
+      "path": "docs/assets/diary-handoff-20260928/plan-create-door.png",
+      "sha256": "3653bdfd98165ca85415964511e62e214c8c37015da4ddb19e762411fc071b90",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
+    },
+    {
+      "path": "docs/assets/diary-handoff-20260928/plan-create-sheet.png",
+      "sha256": "01475002466233b64bae355854225392ede98cffc46f796835e033dbd0495058",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
     }
   ]
 }

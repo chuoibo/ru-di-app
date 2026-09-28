@@ -338,6 +338,69 @@ phẩm đúng».
 
 ## Overview
 
+## v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24, làm xong 2026-09-25)
+
+Mục này là hợp đồng hiện hành và **thắng mọi câu cũ bên dưới** ở chỗ hai bên nói khác nhau.
+Phần còn lại của file vẫn đúng ở chỗ mục này không nói tới: màu, chữ, tương phản, washi,
+con dấu. Kế hoạch và nhật ký: `docs/architecture/04-ui-v3-san-khau-giay.md`,
+`docs/claude/2026-09-25/san-khau-giay/README.md`.
+
+**Mỗi việc là một vật giấy, không phải một tờ điền chữ.** Bảng dưới là primitive cho mỗi việc;
+màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-song-man-tao.test.mjs` gác):
+
+| Việc | Vật | Primitive |
+|---|---|---|
+| Khay «Tạo mới», khay công cụ chat | vật ký hoạ trên bàn | `art/vat-ban.ts` + `ui/art/VeLop` |
+| Kèo | thiệp dán washi, xem trước là vé | `ChonNgayLich`, `TheVe`, `StampButton` |
+| Chia bill | hoá đơn nhiệt, bàn pop-up, cuống phiếu | `HoaDonGiay`, `BanGanMon`, `CuongPhieu` |
+| Sổ, đợt thu, tài chính | trang sổ kẻ dòng | `TrangSo` / `DongSo`, `DaiTienDo` |
+| Quyết toán | mũi tên mực tự vẽ, không mang số | `SoDoChuyen` |
+| Sổ hai người | bìa sổ, giao kèo có chữ ký, tờ bút chì | `SoBia`, `ChuKy`, `ToGiay`, `LaLich`, `BanXoay` |
+| Nhóm mới, nhóm trên kệ | bìa sổ, gáy sổ theo màu chat | `SoBia` (`nhan`), `bangMauChat` |
+| Mời, lời mời | phong bì | `PhongBi` |
+| Kết bạn | danh thiếp, người là hình nhân | `HinhNhan` |
+| Khám phá, Đi đâu | sân khấu thành phố, bưu thiếp | `art/thanh-pho.ts`, `SanKhau` |
+| Lên plan | vé; kèo đã qua là cuống | `TheVe`, `CuongPhieu` |
+| Tường, khoảnh khắc | ảnh in nghiêng có washi, instax | `KhungAnh` + `nghiengAnh`, `Washi` |
+| Thành tích | tờ tem | `Tem` |
+| Hồ sơ của mình và của người khác | trang hộ chiếu; tên người khác in bằng mực của họ | `DauLon co="nho"`, `mucNguoi` |
+| Hành trình bản đồ | trang ngày xé khỏi sổ, đặt đè lên bản đồ, mép xé và lỗ gáy quay về phía bản đồ | `NenGiay` + `hinhTrangXe` |
+| Cài đặt nhóm | góc trang chat xem trước màu bong bóng; «Rời nhóm» tách xa dưới nét kẻ | `bangMauChat` |
+| Thành viên | vai quản trị là con dấu mực | `Stamp tone="ink"` |
+
+Sau lượt đọc mù 26/09 (ADR-0038):
+
+- **Nút chưa dùng được phải nói vì sao, hoặc không hiện.** Không mờ bằng opacity nữa: `RudiButton` và
+  `StampButton` tắt là viền đứt `lineStrong` trên `card`, chữ `inkSoft` (≥ 4,5:1, `test_contrast_floor.py`),
+  và prop `lyDo` in lý do ngay dưới nút. Nút mà việc chưa có nghĩa thì không vẽ («Lưu tên» khi tên chưa đổi).
+- **Mép Nếp là dải ruy băng đánh dấu trang** màu `accent`, đuôi chữ V (`hinhRuyBang`), trong đúng 10dp của
+  ADR-0035. Kéo Nếp ra thì ruy băng mờ đi, mặt Nếp hiện.
+- Câu chữ: tab «Lịch trình / Bản đồ»; «Người lập nhóm»; nhãn gu tiếng Việt; mức chi thứ tư «Trên 500K».
+| Sở thích | bảng sticker (chọn là dán), mức chi là phong bì | `GuGlyph`, `StampButton` |
+| Đăng bài, story | trang thư và bốn phong bì người đọc; polaroid 24 giờ | `ONhapMuc`, `NapGiay` |
+| Bình chọn trong chat | giấy nhớ, mỗi phiếu là một dấu vân tay mực | — |
+| Ô nhập | dòng mực, không hộp | `ONhapMuc` (`Field` chỉ còn ở màn chưa làm lại) |
+
+**Luật đã thay luật v2:**
+- «Nếp Đứng Xa Tiền» → **«Nếp Không Chạm Số»**. Nếp diễn đúng tám khoảnh khắc (M1 khay tạo, M2
+  chụp bill, M3 ghi sổ, M4 tiền về, M5 tạo kèo, M6 sổ đôi mở, M7 gửi tờ, M8 huy hiệu mới), mỗi khoá
+  sự kiện một lần, trong vùng riêng của bố cục (`NepDien` giữ chỗ 128/112/88/0dp). Nếp cách số
+  tiền ≥ 16dp, không bao giờ ở lỗi hay xung đột; dock nhường chỗ khi Nếp trong trang hiện. Khung cuối
+  của mọi tiết mục nằm trong hộp (`nep-roi.test.mjs`, kể cả `buoc-di`).
+- «Trong / Trên Trang» → **Độ Cao Giấy 0–3** (`tokens.json` → `sanKhau.cao`, `bongGiay(level)`).
+- Avatar mang **mực người** (`mucNguoi`, tám màu, FNV-1a theo person id). `AvatarNguoi` chuyền
+  `personId` xuống, nên mọi avatar sống và tên người (chat, thành viên, bạn bè) cùng một mực.
+- Chuyển động: bật dựng ≤ 420ms, tiết mục ≤ 1400ms, lật trang 300ms. Giảm chuyển động thì khung
+  cuối tĩnh, cắt thẳng, không 3D. Control không xoay 3D.
+- **Nền `paper` ở theme tối không phải mặt chữ** cho accent/warn/faint (khoảng 4:1). Vật mang chữ
+  lỗi hay nút ghost dùng nền `card` (`chu-tren-giay.test.mjs`, nợ còn 2 ở ManHinhHanhTrinh).
+- Ô nhập trên web tắt viền trình duyệt (`ui/khong-vien-web.ts`, `khong-vien-web.test.mjs`).
+- Cảnh ký hoạ: mỗi cảnh đúng **một lớp cam** làm nguồn sáng; mặt giấy vẽ trước viền mực
+  (`thanh-pho.test.mjs`, `giay-vat-the.test.mjs`).
+
+**Vẫn cấm:** confetti và hạt bay, toast, modal lỗi, hero metric, thẻ lồng thẻ, nút lồng nút, animation
+lặp vô hạn ngoài Skeleton. Chỉ một vật bay một lần (thư M7).
+
 **Creative North Star: "Nhật ký chuyến đi sau giờ làm"**
 
 Một cuốn sổ chuyến đi cả hội cùng viết trong một buổi tối. *Bìa* vải indigo
@@ -353,6 +416,13 @@ thứ máy sinh ra là *tờ giấy ký ở chân* «Rủ Đi AI gợi ý». Khu
 màu đổ sau khi có dữ liệu. Lưới 4pt, snap ô nguyên. Hợp đồng hướng đi nằm
 nguyên văn trong `apps/mobile/app/_layout.tsx` (seed `c8e88116`, hướng số 6);
 ADR-0020 là thẩm quyền.
+
+**Cập nhật 27/09/2026, ADR-0037:** chất liệu giấy, mực, coral và Bricolage
+được giữ nguyên trong lát sổ kỷ niệm. Ẩn dụ «cả hội cùng viết» không có nghĩa
+sổ trên tường thuộc chung: mỗi thành viên giữ bản riêng. Nếp là bạn đồng hành
+kể chuyện trong Rủ Đi, không đổi tên ứng dụng. Hội bạn từ hai người và Cặp đôi
+có đồng thuận dùng cùng hệ; các nhắc tới «sổ hai người» ở mốc 12/09 bên dưới
+là lịch sử triển khai, không phải chế độ thứ ba hiện hành.
 
 Thế giới này **từ chối mặc định của thể loại**: ảnh hoàng hôn + thẻ trắng +
 pill cam, và dashboard số to + thanh tiến độ. Hai vòng review đã gọt nó: pill
@@ -1103,6 +1173,8 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh,ky-hoa}.ts` chỉ trả mản
 đó bằng `react-native-svg`, nét tròn đầu tròn góc, tô phẳng, không bóng.
 `KyHoa` (11/09) là tờ ký hoạ của nơi chưa có ảnh: sân khấu theo loại + ≤ 2
 đạo cụ theo tag, một điểm coral, hai khung cắt — xem «Luật Ký Hoạ Trong Sổ».
+Nếp ngoài trạng thái rỗng còn một chỗ đứng thường trực: tờ cài trong lề phải,
+xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy gấp ba».
 - **Ngữ pháp đường**: mọi `d` chỉ gồm lệnh tuyệt đối `M`/`L`/`C`/`Z`, số thập
   phân trơn (không mũ, không `-0`), dựng từ số lúc chạy qua `net.ts`
   (`daGiac`, `netGay`, `cong`, `qCong`, `tron`, `bau`, `cungTron`, `quat`,
@@ -1283,6 +1355,9 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh,ky-hoa}.ts` chỉ trả mản
   bằng chứng khay/bubble sáng-tối ở `docs/archive/claude/2026-09-08/tra-loi-sticker-cho-ti.md`.
 - **Luật Nếp Đứng Xa Tiền.** Nếp chỉ xuất hiện ở trạng thái rỗng và cửa vào;
   **không bao giờ** cạnh số tiền, lỗi, hay xung đột (báo cáo 07/09 §6.4).
+  Dock Nếp là cửa vào thường trực nên cũng theo luật: trên màn tiền chỉ còn
+  mép giấy trơn 10dp, không mặt, không tờ thứ hai, chạm không đưa Nếp ra
+  (ADR-0035 §2.4).
   Không dấu chuyển động, không mặt hào hứng trên mọi tư thế: tay giơ đã nói.
 - **Luật Vòng Hở Không Tiến Độ.** Vòng hở không bao giờ là progress ring:
   không animate, không đi cùng phần trăm, khe luôn rộng. Đường chuyền khi
@@ -1750,20 +1825,110 @@ cuối). Ở head này chỉ bảng `ui-lab` dựng nó; chưa màn người dù
   lại là ngữ pháp góc gấp ở tờ dẫn. Ghi để người sau không «sửa» bằng cách
   thêm bóng hay đổi bo.
 
+### Dock Nếp: tờ giấy cài trong lề sổ (`nep/NepDock.tsx`)
+*Extension build trong thế giới đã có (ngữ pháp ToGiay): không roll concept mới;
+dock kế thừa vật liệu, nếp gấp và lề của ToGiay.* Nếp là «mẩu lời hẹn gấp
+giấy», tờ giữ chỗ cho mình (mục «Lớp vẽ» ở trên). Nên dock **không phải nút nổi
+trên trang**: nó là một tờ giấy **cài vào lề phải** của trang, như mẩu giấy
+đánh dấu chỗ đang đọc trong một cuốn sổ thật, và mọi trạng thái là cùng tờ ấy
+cài sâu hay nông. Câu chuyện gốc là «Chừa một chỗ cho nhau»: khi trang đặt một
+tờ khác lên mình, tờ của Nếp rút vào sổ và nhường chỗ. ADR-0033 (dock bám mép)
+và ADR-0035 (cài trong lề) là nguồn; reducer ở `nep/trang-thai.ts`, hình học ở
+`nep/dock-vi-tri.ts`.
+
+- **Lề trang là ngân sách đo được, không phải phong cách.** Đo trên bản chạy
+  (23/09): giờ tin nhắn trong hội thoại kết thúc đúng **16dp** từ mép phải
+  (`LE_TRANG` = `space.md`). Nên mọi thứ nằm nghỉ phải nằm gọn trong 16dp:
+  mép cài lộ **10dp** (`NEP_MEP_HEP`), có việc thì thêm tờ thứ hai lộ **4dp**
+  (`TO_SAU_LO`), tổng **14dp** (`NEP_MEP_DAY`). Vùng chạm mượn phần lề còn
+  lại và dừng đúng ở lề: `slopTrai` = 16 − 10 = 6dp khi cài, **0** khi đã kéo
+  ra. Kéo ra, tờ rộng **56dp** (`NEP_DIA`, bằng con dấu tạo của thanh tab) ×
+  cao **64dp** (`NEP_TO_CAO`: tờ, không phải đồng xu), Nếp tư thế `doi` cỡ 44
+  đứng trên tờ. Ray dọc bên phải, cách đỉnh 16 và cách thanh tab 24 (thanh tab
+  là control, header thì không); vị trí lưu là **tỷ lệ 0..1** trên ray
+  (`rudi.nep.dock.v3`, chỉ `tyLe`), nên xoay máy hay đổi máy vẫn về đúng chỗ.
+  *Lịch sử:* bản đầu nghỉ dạng đĩa 57dp và cắt «20|0», «22:|» trên Khám phá,
+  vùng chạm nuốt «Đồng ý» của lời mời (flow 25).
+- **Ba trạng thái, một chỗ nghỉ.** `an` (mặc định, chỗ nghỉ duy nhất) chỉ lộ
+  mép, **không vẽ Nếp**. `nghi` (đã kéo ra) là **lối đi tới bảng, không phải
+  chỗ đứng**: đóng bảng, đổi màn, một tờ khác đóng lại, hoặc **6 giây** không
+  chạm lần hai (`TU_CAT_MS`) đều đưa về mép; đang kéo dọc thì đồng hồ dừng;
+  trên Android/iOS khi bật trình đọc màn hình thì không tự cất (web không biết
+  được, vẫn tự cất); **không bao giờ lưu xuống đĩa**, mỗi lần mở app bắt đầu
+  cài. `mo` là bảng đang mở, dock không vẽ. **Không có trạng thái `he`**: dòng
+  hé bốn giây từng rộng 234dp và nằm đè giá, giờ mở cửa của thẻ; việc **không
+  bao giờ làm Nếp nở rộng**, không trạng thái nào rộng hơn 56dp đến được mà
+  người dùng không chạm.
+- **Vật liệu là giấy của `ToGiay`.** Mặt `paper`, viền hairline `lineStrong`,
+  **không bóng**: theo «Luật Trong Trang / Trên Trang», bóng thuộc về bản in
+  *dán lên* trang, còn tờ này nằm *trong* mép trang. Góc trên trái **gấp**
+  theo ngữ pháp `ToGiay` (góc mất khỏi đường viền, viền rẽ theo đường chéo,
+  vạt `paperShade` nằm trên mặt, hai cạnh tự do của vạt bằng `ink` 1dp; ô góc
+  8dp, nhỏ hơn mép 10dp để dưới nếp còn một dải giấy thẳng). Bo `radius.small`
+  ở góc dưới trái; **cạnh chạy vào mép màn không viền, không bo**, vì nó chạy
+  tiếp vào trong sổ. Vẽ bằng SVG chứ không View có viền: nếp gấp là góc bị
+  thiếu, và tờ này trôi trên thẻ, ảnh, chat nên không có màu nền nào để «xoá».
+  Đang nhấn thì mặt thành `paperShade`. **Không coral**: theo «Luật Góc Cắt,
+  Không Badge», góc coral thuộc Nếp và `dan`, và góc coral của chính Nếp đã
+  nằm trên tờ khi kéo ra.
+- **Có việc là tờ thứ hai, không phải chấm đỏ.** Một tờ giấy ấm hơn một nấc
+  trượt ra từ sau tờ Nếp, một nhịp `standard`/decelerate rồi đứng yên; hết
+  việc thì cắt, không chào. Màu: `accentSoft` (#fff0ea) ở sáng, **`line`
+  (#363b5e) ở tối**, vì `accentSoft` tối (#3d1a10) cạnh giấy xanh đậm đọc ra
+  vệt gỉ sét (cùng lý do `AlbumAnh` đã loại). Không chữ, không số đếm. Không
+  bao giờ hiện trên màn tiền, cạnh một tờ đang mở, hay sau bảng đang mở: bản
+  ghi (`coViec`) và tín hiệu là hai sự thật, chỉ `hienToSau` nối chúng.
+  *Hiện chưa gì trong app gửi việc cho dock; trạng thái này chỉ tới được qua
+  bản build QA `EXPO_PUBLIC_QA_NEP_VIEC`.*
+- **Màn tiền: chỉ mép trơn** (Luật Nếp Đứng Xa Tiền). Mép 10dp, không mặt,
+  không tờ thứ hai, và **chạm hay kéo cũng không đưa mặt Nếp ra**: mép ở đây là
+  cánh cửa về Nếp từ chỗ khác, không phải khuôn mặt cạnh con số. Luật nằm trong
+  reducer (`luiLai`) chứ không trong component, để màn sau không thừa kế một
+  Nếp đã bật ra cạnh quyết toán.
+- **Nhường chỗ thì không vẽ gì.** Khi bất kỳ tờ nào nằm trên trang (khay,
+  bottom sheet qua `ui/Sheet.tsx`, story, bản đồ; `useNhuongChoNep(true)`, có
+  đếm lồng nhau), dock không vẽ gì, **kể cả mép**: mép còn vẽ đè góc khay cạnh
+  nút ✕ là lỗi xếp lớp, không phải chiều sâu. Không báo gì; tờ cuối đóng thì
+  Nếp về đúng chỗ người dùng để. Bảng của chính Nếp không bắt Nếp nhường.
+- **Cử chỉ.** Chạm mép để kéo ra; chạm lần hai mở bảng (một chạm lỡ không mở
+  cả một tờ đè lên trang). Cất: vuốt **ra ngoài** (> 56dp hoặc > 700dp/s),
+  hoặc thao tác trợ năng **«Cất Nếp vào mép»**. Kéo dọc để dời trên ray.
+  **Không bao giờ vuốt ngang vào trong**: dưới điều hướng cử chỉ, dải Back của
+  Android đo được **29.7dp** và chỉ nuốt cú vuốt ngang vào trong (chạm trong dải
+  vẫn tới app), nên nửa kéo vào trong bị kẹp bỏ chứ không giành; **không khai
+  `setSystemGestureExclusionRects`**, cú vuốt ấy là nút Back của người dùng.
+- **Web: `overflowX: "clip"` trên lớp dock.** Tờ cài rộng 56dp, 46dp nằm ngoài
+  mép phải; bấm vào là focus, và trình duyệt cuộn ngang cả trang để lộ phần
+  bị giấu (đo 24/09 trên `/finance`: trang trượt 46px). `clip` cắt tràn mà
+  không biến lớp thành vùng cuộn; trục dọc để nguyên cho mép trên tờ thứ hai.
+- **Cổng đo: `apps/mobile/tools/xem-dock-nep.mjs`** (puppeteer trên bản web,
+  sáng và tối). Lúc nghỉ, trên tab đầu và trong hội thoại cuộn hết từng nấc:
+  **0 chữ bị che** (153 và 363–414 hộp chữ đã quét ở lượt `dock-1225`); khay
+  mở thì dock không vẽ; đóng bảng thì về mép; kéo ra rồi để yên thì 6 giây sau
+  về mép; màn tiền chỉ còn mép 10dp, chạm không ra mặt; có việc thì không gì
+  rộng hơn 56dp. **Canary:** kéo Nếp ra thì phép đo **phải** thấy chữ bị che
+  (ảnh `thuong-dark-4-keo-ra`: tờ 56dp nằm trên «200…» và «22:…»); canary
+  không đỏ thì cổng mù. Bằng chứng ở ngoài checkout
+  (`~/.cache/rudi-bang-chung/dock-1225/`). *Chưa chứng minh:* ảnh story và bản
+  đồ lúc nhường chỗ (mới là bằng chứng trên mã + test reducer), và bản native
+  thật.
+
 ### Bản tính của sổ (`so/ban-tinh.ts`)
 Chỗ **duy nhất** trong `src/` khai các loại sổ khác nhau ở đâu (spec §13.3,
 §17). Không có «mode»; có nhiều sổ, mỗi sổ một loại, người mở sổ này hay sổ
 kia.
 
-- **Ba loại** `LOAI_SO = hoi | hai-nguoi | doi`. **Sáu trường** của
+- **Hiện hành 27/09:** `LOAI_SO = hoi | doi`; `pair` chưa bật đồng thuận đôi
+  trở về `hoi`. **Lịch sử 12/09:** từng có `hoi | hai-nguoi | doi`, nay không
+  còn chế độ `hai-nguoi` riêng. **Sáu trường** của
   `BanTinhSo`: `quyetDinh` (`phieu` | `to-giay`), `coVai` (hai vai Người lo /
   Người chấm hay không), `nhip` (`toMoiTuan`, `lanLaMoiThang`, `nhacMoiThang`;
   0 là không bao giờ), `nepDuocLam` (danh sách `ViecNep`, rỗng là im lặng),
   `tuVung` (`goiTapThe`, `cauMo`, `nutMoLoi`, `tenKhongGian`; tiếng Việt,
   không gạch dài, cổng `dau-gach-dai`), `tienHien` (`chia-bill` |
   `chi-tieu-chung`). `hoi` là bản đang ship, không đổi: Nếp giữ ghế và không
-  tự nói (`nhip` 0, `nepDuocLam` rỗng). `hai-nguoi` chỉ thêm tờ giấy và
-  `phac-to`; `doi` thêm hai vai, bốn việc còn lại và sổ riêng.
+  tự nói (`nhip` 0, `nepDuocLam` rỗng). Nhánh `hai-nguoi` cũ từng thêm tờ
+  giấy và `phac-to`; hiện chỉ `doi` giữ tờ giấy, hai vai và danh sách việc riêng.
 - **`loaiSoCua(nhom, doi)`** suy loại từ hai sự thật máy chủ nói: `kind`
   (`group` | `pair`, ADR-0021) và cờ đôi đang bật; `pair` **không tự là đôi**
   (ADR-0027). **`banTinhCua(loai)`** trả bản tính.
@@ -1781,8 +1946,54 @@ kia.
   file trong danh sách mà **không còn** so → cũng đỏ, để danh sách không hoá
   di tích. Thêm: module là **lá** (không import tương đối) để chính sách
   không kéo màn hình vào.
-- Chuỗi `tuVung` của `hai-nguoi` và `doi` ở head này **chưa lên màn nào**;
+- **Lịch sử 12/09:** chuỗi `tuVung` của `hai-nguoi` và `doi` **chưa lên màn nào**;
   là dữ liệu, không phải câu chữ đã đọc mù.
+
+### Khoảnh khắc và Sổ chuyến đi (27/09/2026)
+
+Đọc từ `diary/BookView.tsx`, `Wall.tsx`, `EndingScreen.tsx` và
+`DiaryScreen.tsx`; đây là phần mở rộng UI v3 «Sân khấu giấy», kế thừa seed
+`c8e88116` trong DESIGN.md, `theme.ts` và kit hiện hành, không có bộ token mới.
+
+- Sổ chuyến đi dùng bìa vải `SoBia`, nhãn nền `card` chứa ảnh trên, lời dưới.
+  Bìa căn giữa, rộng tối đa (420dp), cao theo nhãn đo được cộng (48dp).
+  Tiêu đề `h1` (bản gọn `h2`), lời mở `body`; ảnh bìa tỉ lệ 4:3, bản gọn 16:9.
+  Trang đọc dùng `TrangSo tone="accent" ke={false}`: giấy có lề, không kẻ ngang,
+  tiêu đề `h2`, số trang `caption`; collage hai cột theo bề rộng đo được.
+  Lời kể dùng `body` với line-height (28), không đổi thang chữ chung.
+- Khoảnh khắc dùng ảnh dán `KhungAnh` nghiêng (-1°), ảnh tỉ lệ 3:2 và
+  `Washi` nghiêng (-2°); tiêu đề `h2`, lời phụ `note`. Tường xếp một cột
+  ảnh/bìa qua `BookView compact`, ẩn các trang bên trong; khoảnh khắc có
+  nhãn tháng khi bắt đầu hoặc đổi tháng so với mục trước.
+- Cột nội dung đọc `BookView` và các khối chọn/sửa `EndingScreen` rộng
+  100%, tối đa (560dp), căn giữa; tường dùng cùng giới hạn cho mỗi ảnh/bìa.
+  Khoảng cách giữa bìa và trang (28dp), trong trang (16dp), giữa mục tường
+  (24dp). Nhãn quyền xem và các nút ngoài `BookView` ở trình đọc/tường
+  không có giới hạn (560dp) riêng.
+- Khi sửa, ẩn bản xem trước và hiện lời dẫn «Viết lại theo cách mình nhớ»;
+  nút «Xem như người đọc» đổi về bản xem trước. Khóa `RudiScreen` theo
+  `phase` và `edit` khởi tạo lại màn cuộn khi đổi bước/chế độ. Lựa chọn
+  «Chỉ mình tôi»/«Công khai» và nút «Lưu riêng tư»/«Đăng sổ công khai» nằm
+  trước các trường nhập khi sửa, sau bản xem trước khi đọc. Ô nhập dùng
+  `ONhapMuc`, hành động lưu dùng `StampButton` của kit.
+- Bộ chọn bìa ghi «Bìa hiện tại», dùng vai trợ năng `radio` cùng trạng thái
+  `selected`; chọn một ảnh thì đóng bộ chọn. Bộ chọn ảnh trang dùng
+  `checkbox`/`checked`, nhãn «Đã chọn», tối đa bốn ảnh mỗi trang.
+- Tường ghi rõ loại và «Chỉ mình tôi»/«Công khai» bằng chữ. Nút «Cất về riêng
+  tư», «Sửa theo cách mình nhớ», «Tự xếp trang, không gửi AI» gọi đúng hành động.
+  Nhãn «Có Nếp giúp viết» nói nguồn hỗ trợ, không bảo đảm lời AI đúng.
+  Sau dựng/lưu, khối sổ dịch nhẹ và trở về vị trí qua `useMotion`, theo
+  thiết lập giảm chuyển động; không suy thành hiệu ứng lật bìa.
+- Giữ luật không kicker/eyebrow trên tiêu đề. Nếu còn trong lát đang sửa,
+  đó là lỗi cần dọn ở mã bởi phiên chính, không phải mẫu của hệ.
+
+**Giới hạn bằng chứng của cập nhật này:** chỉ đối chiếu mã nguồn và tài liệu,
+không chạy lại native hay mở lại ảnh. Theo bàn giao của người dùng, ma trận
+emulator trước đó gồm điện thoại, tối/chữ 1.3, giảm chuyển động, màn nhỏ/chữ
+200% và tablet đã được xem; thiết bị thật được người dùng hoãn. Ma trận đó
+không xác nhận các sửa mới nhất về cột đọc/sửa, ẩn bản xem trước, vị trí quyền
+xem/lưu, đặt lại cuộn và trạng thái chọn bìa. Chưa có kết quả native cho các
+sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứng iOS.
 
 ### Cards / Containers
 - **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*
@@ -2188,6 +2399,15 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
 
 ## Những gì bản ship KHÔNG phong thánh
 
+**Giới hạn lượt 27/09:** theo
+[biên bản native](docs/testing/so-ky-niem-native.md), Pixel 6 Android đã build
+và kiểm sáng/tối, font scale 1.3, giảm chuyển động; ảnh được mở xem trong lượt
+triển khai. Lượt ghi tài liệu này đối chiếu mã và biên bản, không tự kiểm lại
+ảnh. Gemini thật đã chạy nhưng sửa chất lượng lời kể bám nguồn vẫn tiếp tục.
+Chưa có native iOS, audit copy toàn ứng dụng hay full gate clean-tree tại SHA
+cuối. Không suy rộng bằng chứng này sang các màn hoặc cấu hình chưa kiểm.
+Sidecar không cập nhật vì phạm vi được giao chỉ gồm PRODUCT.md và DESIGN.md.
+
 Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 
 - `Eyebrow` và `SurfaceLabel` **vẫn còn export trong `ui.tsx`** (dòng 237 và
@@ -2329,6 +2549,21 @@ python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo tr�
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/art-duong.test.mjs   # thêm 12/09: bản trang trùng sha256 fixtures/nep-trang-baseline.json; manh đúng một dải coral (laDaiGap), không mực lên dải, dày ≥ 2.5/5.5; lấp đầy ≥ 0.87, tỉ lệ ≥ 0.94; ba pose mới một coral; thuGapBa 0 coral, 5 đỉnh, hai vết ở 1/3, 2/3
 cd apps/mobile && node --test tests/so-ban-tinh-mot-cho.test.mjs   # ngoài so/ban-tinh.ts và ba chỗ có sẵn không file nào so loại sổ; ba chỗ ấy vẫn còn; ban-tinh.ts là lá
 cd apps/mobile && node --test tests/dau-gach-dai.test.mjs          # tuVung của BAN_TINH và mọi chuỗi app không có gạch dài
+```
+
+Cổng riêng của v3 «Sân khấu giấy» (đều nằm trong `npm test`, chạy lẻ được như sau từ
+`apps/mobile`, sau `npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs`):
+
+```bash
+node --test tests/chu-tren-giay.test.mjs          # D14: không chữ cam/cảnh báo/mờ trên nền paper; danh sách nợ đã về rỗng (S9)
+node --test tests/giay-vat-the.test.mjs           # vật giấy (hoá đơn, vé, tem, cuống, phong bì, trang xé) đúng ngữ pháp Java, trong hộp, tất định
+node --test tests/thanh-pho.test.mjs              # 15 sân khấu thành phố + bưu thiếp chung, id đọc từ destinations_vn.py, câu mô tả «Ký hoạ …»
+node --test tests/ky-niem-giay.test.mjs           # ảnh in nghiêng tất định theo id, album rỗng tách «chưa có kèo» khỏi «kèo chưa tới ngày», huy hiệu mới
+node --test tests/loi-qc-nguoi-chat.test.mjs      # ghim bản sửa B2/B3/B8, mực người qua AvatarNguoi, bong bóng xem trước dùng đúng bangMauChat
+node --test tests/route-fixture-co-phien.test.mjs # B5: ba route fixture chuyển về màn live khi có phiên
+node --test tests/khong-vien-web.test.mjs         # B7: mọi TextInput mang KHONG_VIEN_WEB, không còn khung focus của trình duyệt
+node --test tests/suc-song-man-tao.test.mjs       # màn tạo, màn tiền, sổ đôi và các màn trong phạm vi phải render ít nhất một vật sân khấu
+node --test tests/san-khau.test.mjs tests/nep-roi.test.mjs tests/muc-nguoi.test.mjs tests/token-san-khau.test.mjs tests/skia-ranh-gioi.test.mjs tests/chuoi-maestro-con-song.test.mjs
 ```
 
 Màn native thì cổng là **emulator**, không phải web export (dòng FINISH của

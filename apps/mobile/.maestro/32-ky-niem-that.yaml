@@ -143,9 +143,21 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Cá nhân"
     timeout: 30000
+# Four pops in a row: tapping the tab while the last one still animates let the
+# profile scroll back to the top between «scroll» and «tap» (1 of 3 runs).
+- waitForAnimationToEnd:
+    timeout: 5000
 - tapOn: "Cá nhân"
 - extendedWaitUntil:
-    visible: "Thành tích"
+    visible: "Không gian của riêng bạn"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+- scrollUntilVisible:
+    element:
+      text: "Thành tích"
+    direction: DOWN
+    centerElement: true
     timeout: 60000
 - tapOn: "Thành tích"
 - extendedWaitUntil:

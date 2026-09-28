@@ -14,7 +14,7 @@ import { Sheet } from "../../ui/Sheet";
  * in the shared area of the notebook so Nếp's draft can honour them without
  * reading anything private.
  */
-export function RangBuoc({ open, onClose, toi, nguoiKia, tenNguoiKia, onLuu, testID }: { open: boolean; onClose: () => void; toi: RangBuocKieu; nguoiKia: RangBuocKieu; tenNguoiKia: string; onLuu: (rb: RangBuocKieu) => void; testID?: string }) {
+export function RangBuoc({ open, onClose, toi, nguoiKia, tenNguoiKia, onLuu, dangLuu = false, loi = null, testID }: { open: boolean; onClose: () => void; toi: RangBuocKieu; nguoiKia: RangBuocKieu; tenNguoiKia: string; onLuu: (rb: RangBuocKieu) => void; dangLuu?: boolean; loi?: string | null; testID?: string }) {
   const { colors, space } = useRudiTheme();
   const [khongAn, setKhongAn] = useState(toi.khong_an_duoc);
   const [dung, setDung] = useState(toi.dung);
@@ -26,9 +26,9 @@ export function RangBuoc({ open, onClose, toi, nguoiKia, tenNguoiKia, onLuu, tes
   }, [open, toi.khong_an_duoc, toi.dung]);
   const doi = khongAn.trim() !== toi.khong_an_duoc || dung.trim() !== toi.dung;
   return (
-    <Sheet accessibilityLabel="Hai ô ràng buộc" onClose={onClose} open={open} testID={testID ?? "rang-buoc"}>
+    <Sheet accessibilityLabel="Những điều cần tránh" onClose={onClose} open={open} testID={testID ?? "rang-buoc"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
-        <Heading size="h2" subtitle="Nếp đọc hai ô này trước khi phác. Không cần lý do." title="Hai ô ràng buộc" />
+        <Heading size="h2" subtitle="Ghi món bạn không ăn được và điều bạn muốn tránh. Người kia đọc được; bạn không cần giải thích lý do." title="Những điều cần tránh" />
         <Field label="Không ăn được" onChangeText={setKhongAn} placeholder="Hải sản" testID="rang-buoc-khong-an" value={khongAn} />
         <Field label="Đừng" multiline onChangeText={setDung} placeholder="Đừng rủ sau 21:00 ngày thường." testID="rang-buoc-dung" value={dung} />
         <View style={[styles.cuaNguoiKia, { borderTopColor: colors.line }]}>
@@ -36,7 +36,8 @@ export function RangBuoc({ open, onClose, toi, nguoiKia, tenNguoiKia, onLuu, tes
           <Text style={[typography.body, { color: colors.inkSoft }]}>Không ăn được: {nguoiKia.khong_an_duoc || "chưa ghi"}</Text>
           <Text style={[typography.body, { color: colors.inkSoft }]}>Đừng: {nguoiKia.dung || "chưa ghi"}</Text>
         </View>
-        <RudiButton disabled={!doi} label="Lưu hai ô của tôi" onPress={() => onLuu({ khong_an_duoc: khongAn.trim(), dung: dung.trim() })} />
+        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+        <RudiButton disabled={!doi || dangLuu} label="Lưu điều cần tránh" loading={dangLuu} onPress={() => onLuu({ khong_an_duoc: khongAn.trim(), dung: dung.trim() })} />
         <RudiButton label="Đóng" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>

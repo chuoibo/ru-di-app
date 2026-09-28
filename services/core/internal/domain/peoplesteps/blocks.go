@@ -116,16 +116,12 @@ func BlockPerson(s Store, actor Actor, personID string, now time.Time) (BlockSta
 	if err := requirePermission("block_person", actor, nil, fact{"is_not_self", actor.ID != personID}); err != nil {
 		return BlockState{}, err
 	}
-	person, err := s.GetPerson(personID)
+	reachable, edge, err := ReachablePerson(s, actor.ID, personID)
 	if err != nil {
 		return BlockState{}, err
 	}
-	if person == nil {
+	if !reachable {
 		return BlockState{}, refusal(404, "person_not_found", "Chưa có ai mang danh tính này.")
-	}
-	edge, err := s.GetFriendEdge(actor.ID, personID)
-	if err != nil {
-		return BlockState{}, err
 	}
 	var existing *friendship.Edge
 	if edge != nil {

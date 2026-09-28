@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/repo"
@@ -19,10 +18,11 @@ import (
 )
 
 type socialWorld struct {
-	pool   *pgxpool.Pool
-	people [3]string
-	tokens [3]string
-	post   string
+	pool      *pgxpool.Pool
+	people    [4]string
+	tokens    [4]string
+	post      string
+	moderated bool
 }
 
 func socialID(t *testing.T) string {
@@ -40,25 +40,17 @@ func socialExec(t *testing.T, pool *pgxpool.Pool, query string, args ...any) {
 	}
 }
 
+// newSocialWorld migrates the real test database (community first, as the
+// operator command does) and adds synthetic people: 0 writes, 1 is 0's friend,
+// 2 is a stranger and 3 moderates Cộng đồng.
 func newSocialWorld(t *testing.T) socialWorld {
 	t.Helper()
 	ctx := context.Background()
-	base := testdb.Pool(t)
-	schema := "social_v2_" + strings.ReplaceAll(socialID(t), "-", "")
-	socialExec(t, base, "CREATE SCHEMA "+pgx.Identifier{schema}.Sanitize())
-	t.Cleanup(func() { socialExec(t, base, "DROP SCHEMA "+pgx.Identifier{schema}.Sanitize()+" CASCADE") })
-	cfg := base.Config().Copy()
-	cfg.ConnConfig.RuntimeParams["search_path"] = schema + ",public"
-	pool, err := pgxpool.NewWithConfig(ctx, cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
-	for _, table := range []string{"people", "contexts", "memberships", "friend_requests", "account_sessions", "posts", "post_comments", "post_reactions"} {
-		socialExec(t, pool, "CREATE TABLE "+table+" (LIKE public."+table+" INCLUDING ALL)")
-	}
-	if err := Migrate(ctx, pool); err != nil {
-		t.Fatal(err)
+	pool := testdb.Pool(t)
+	for range 2 {
+		if err := Migrate(ctx, pool); err != nil {
+			t.Fatal(err)
+		}
 	}
 	w := socialWorld{pool: pool}
 	for i := range w.people {
@@ -67,9 +59,13 @@ func newSocialWorld(t *testing.T) socialWorld {
 		socialExec(t, pool, `INSERT INTO people(id,display_name) VALUES($1,$2)`, w.people[i], "Synthetic person")
 		socialExec(t, pool, `INSERT INTO account_sessions(id,person_id,token_digest,issued_via,expires_at) VALUES($1,$2,$3,'genesis',now()+interval '1 day')`, socialID(t), w.people[i], auth.TokenDigest(w.tokens[i]))
 	}
+	socialExec(t, pool, `INSERT INTO community_moderators VALUES($1)`, w.people[3])
 	socialExec(t, pool, `INSERT INTO friend_requests(id,requester_id,addressee_id,state,decided_by_id,decided_at) VALUES($1,$2,$3,'accepted',$3,now())`, socialID(t), w.people[0], w.people[1])
 	w.post = socialID(t)
 	socialExec(t, pool, `INSERT INTO posts(id,author_id,audience,body,created_at) VALUES($1,$2,'friends','Synthetic outing',now())`, w.post, w.people[0])
+	t.Cleanup(func() {
+		socialExec(t, pool, `DELETE FROM community_jobs WHERE post_id IN (SELECT id FROM posts WHERE author_id=ANY($1::uuid[])) OR comment_id IN (SELECT id FROM community_comment_drafts WHERE author_id=ANY($1::uuid[]))`, w.people[:])
+	})
 	return w
 }
 
@@ -88,7 +84,7 @@ func (w socialWorld) requestWithKey(t *testing.T, who int, method, path string, 
 		req.Header.Set("Content-Type", "application/json")
 	}
 	res := httptest.NewRecorder()
-	New(w.pool, "prod").ServeHTTP(res, req)
+	New(w.pool, "prod", w.moderated).ServeHTTP(res, req)
 	var value map[string]any
 	if err := json.Unmarshal(res.Body.Bytes(), &value); err != nil {
 		t.Fatalf("response %d %s: %v", res.Code, res.Body.String(), err)
@@ -147,20 +143,24 @@ func TestPostgresWallVisibilityPagingAndChangeCursor(t *testing.T) {
 	}
 }
 
+// The legacy «Thích» reaction (heart) is the row the wall button toggles; the
+// 👍 «Đồng ý» reaction stays a separate message-style reaction.
 func TestPostgresLegacyLikeAndSocialButtonShareOneReaction(t *testing.T) {
 	w := newSocialWorld(t)
 	tx, err := w.pool.Begin(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = (repo.Repository{Q: tx}).AddPostReaction(context.Background(), w.post, w.people[1], "like", time.Now()); err != nil {
-		_ = tx.Rollback(context.Background())
-		t.Fatal(err)
+	store := repo.Repository{Q: tx}
+	for _, kind := range []string{"heart", "like"} {
+		if _, err = store.AddPostReaction(context.Background(), w.post, w.people[1], kind, time.Now()); err != nil {
+			_ = tx.Rollback(context.Background())
+			t.Fatal(err)
+		}
 	}
 	if err = tx.Commit(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	socialExec(t, w.pool, `INSERT INTO post_reactions(id,post_id,person_id,kind) VALUES($1,$2,$3,'heart')`, socialID(t), w.post, w.people[1])
 	path := "/social/v2/posts/" + w.post
 	status, detail := w.request(t, 1, http.MethodGet, path, "")
 	if status != 200 || detail["liked"] != true || detail["like_count"] != float64(1) {
@@ -178,16 +178,16 @@ func TestPostgresLegacyLikeAndSocialButtonShareOneReaction(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var oldCount int64
+	counts := map[string]int64{}
 	for _, reaction := range legacy.Reactions {
 		for _, kind := range reaction.Kinds {
-			if reaction.PostID == w.post && kind.Kind == "like" {
-				oldCount = kind.Count
+			if reaction.PostID == w.post {
+				counts[kind.Kind] = kind.Count
 			}
 		}
 	}
-	if oldCount != 1 {
-		t.Fatalf("old endpoint repository sees %d likes, want 1: %+v", oldCount, legacy)
+	if counts["heart"] != 1 || counts["like"] != 1 {
+		t.Fatalf("old endpoint repository sees %+v, want one heart and the untouched 👍: %+v", counts, legacy)
 	}
 }
 
@@ -222,7 +222,7 @@ func TestPostgresOneLevelRepliesLikesAndRepostACL(t *testing.T) {
 		t.Fatalf("child: %d %+v", status, child)
 	}
 	status, nested := w.request(t, 1, http.MethodPost, "/social/v2/posts/"+w.post+"/comments", `{"body":"Too deep","parent_id":"`+child["id"].(string)+`"}`)
-	if status != 422 || nested["code"] != "reply_depth_exceeded" {
+	if status != 422 || nested["code"] != "invalid_parent" {
 		t.Fatalf("nested: %d %+v", status, nested)
 	}
 	status, liked := w.request(t, 0, http.MethodPut, "/social/v2/comments/"+parentID+"/like", "")
@@ -316,7 +316,7 @@ func TestPostgresManyFriendsReceiveOnePostAndReconnectFromCursor(t *testing.T) {
 		socialExec(t, w.pool, `INSERT INTO account_sessions(id,person_id,token_digest,issued_via,expires_at) VALUES($1,$2,$3,'genesis',now()+interval '1 day')`, socialID(t), person, auth.TokenDigest(tokens[i]))
 		socialExec(t, w.pool, `INSERT INTO friend_requests(id,requester_id,addressee_id,state,decided_by_id,decided_at) VALUES($1,$2,$3,'accepted',$3,now())`, socialID(t), w.people[0], person)
 	}
-	h := New(w.pool, "prod")
+	h := New(w.pool, "prod", false)
 	runCtx, stop := context.WithCancel(context.Background())
 	defer stop()
 	go h.Run(runCtx)

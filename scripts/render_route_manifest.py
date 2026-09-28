@@ -39,7 +39,6 @@ MANIFEST = ROOT / "services" / "core" / "ownership" / "routes.json"
 # Routes whose primary purpose is a model call (ADR-0029 §2.1).
 AI_ROUTES = {
     "POST /contexts/{context_id}/messages/{message_id}/expense-draft",
-    "POST /contexts/{context_id}/ai-turn",
     "POST /places/search",
     "POST /receipts/scan",
     "POST /screenshots/scan",
@@ -187,6 +186,7 @@ def _ordered(row: dict) -> dict:
         "in_memory",
         "state",
         "evidence",
+        "native",
     )
     optional = {"in_memory", "evidence"}
     return {
@@ -199,11 +199,7 @@ def _ordered(row: dict) -> dict:
 def build(previous: dict | None, prune: bool) -> dict:
     rows = _app_rows()
     old = {r["id"]: r for r in (previous or {}).get("routes", [])}
-    native = [
-        r
-        for r in (previous or {}).get("routes", [])
-        if r.get("python") == "absent" and r.get("state") == "GO-NATIVE"
-    ]
+    native = [r for r in old.values() if r.get("native")]
     app_ids = {row["id"] for row in rows}
     overlapping = sorted(r["id"] for r in native if r["id"] in app_ids)
     if overlapping:
@@ -217,8 +213,9 @@ def build(previous: dict | None, prune: bool) -> dict:
         for field in CARRIED_FIELDS:
             if field in carried:
                 row[field] = carried[field]
-    for route in native:
-        rows.append({**route, "order": len(rows)})
+    for row in native:
+        row["order"] = len(rows)
+        rows.append(row)
     return {"schema": 1, "routes": [_ordered(row) for row in rows]}
 
 

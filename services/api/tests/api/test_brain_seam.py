@@ -148,15 +148,18 @@ def test_achievement_brain_returns_only_offered_candidate_ids(
     ]
 
 
-def test_companion_plan_refuses_a_malformed_body(brain_client):
+def test_diary_brain_requires_internal_authority(brain_client, monkeypatch):
     client, _app = brain_client
+    path = "/internal/brain/v1/diary"
+    assert client.post(path, json={}).status_code == 401
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     response = client.post(
-        "/internal/brain/v1/companion-plan",
+        path,
         headers={INTERNAL_TOKEN_HEADER: TEST_TOKEN},
-        json={"conversation": "not-a-dict"},
+        json={"source": {}, "images": []},
     )
-    assert response.status_code == 422
-    assert response.json() == {"code": "brain_request_invalid"}
+    assert response.status_code == 502
+    assert response.json() == {"code": "diary_ai_unavailable"}
 
 
 def test_capabilities_require_internal_token_and_never_return_key(
@@ -184,12 +187,12 @@ def test_idempotency_key_does_not_reserve_a_brain_call(brain_client):
 
     client, _app = brain_client
     response = client.post(
-        "/internal/brain/v1/companion-plan",
+        "/internal/brain/v1/place-search",
         headers={
             INTERNAL_TOKEN_HEADER: TEST_TOKEN,
             "Idempotency-Key": "brain-must-not-touch-the-store",
         },
-        json={"conversation": {}},
+        json={"query": "x"},
     )
     assert response.status_code == 422
     assert response.json() == {"code": "brain_request_invalid"}

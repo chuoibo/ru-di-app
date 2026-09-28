@@ -93,7 +93,7 @@ from rd_qa_40_api_fixtures.helpers import (  # noqa: E402
 
 
 def _propose(client, payload):
-    response = client.post("/expenses", json=payload)
+    response = client.post("/expenses", json=payload, headers=actor_headers())
     assert response.status_code == 201, response.text
     return response.json()
 
@@ -148,7 +148,7 @@ def test_shared_by_is_refused_by_the_allocator_not_by_a_membership_check(client)
             "shared_by": [str(STRANGER)],
         }
     ]
-    response = client.post("/expenses", json=payload)
+    response = client.post("/expenses", json=payload, headers=actor_headers())
 
     assert response.status_code == 422
     assert response.json()["code"] == "UNKNOWN_PARTICIPANT"

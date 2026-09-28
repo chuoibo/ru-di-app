@@ -1,0 +1,44 @@
+# Run with an authenticated synthetic owner and an open same-day MOMENT_ID.
+appId: com.lakiet.rudi
+env:
+  PHOTO_COUNT: "3"
+  PAGE_NUMBER: "2"
+  TRIP_TITLE: "Hai ngày gom nắng"
+---
+- openLink: "rudi://outings/${MOMENT_ID}/ending"
+- extendedWaitUntil:
+    visible: "Cuộc đi khép lại. Câu chuyện còn đây."
+    timeout: 30000
+- takeScreenshot: diary-06-moment-ending
+- scrollUntilVisible:
+    element:
+      text: "Khép cuộc đi"
+    direction: DOWN
+- tapOn: "Khép cuộc đi"
+- extendedWaitUntil:
+    visible: "Mang theo điều gì vào sổ?"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Tự xếp trang, không gửi AI"
+    direction: DOWN
+- tapOn: "Tự xếp trang, không gửi AI"
+- assertVisible: "Một chiều có nhau"
+- takeScreenshot: diary-07-moment
+- scrollUntilVisible:
+    element:
+      text: "Sửa theo cách mình nhớ"
+    direction: DOWN
+- tapOn: "Sửa theo cách mình nhớ"
+- scrollUntilVisible:
+    element:
+      text: "Thêm một trang viết"
+    direction: DOWN
+- tapOn: "Thêm một trang viết"
+- scrollUntilVisible:
+    element:
+      text: "Lưu riêng tư"
+    direction: UP
+- tapOn: "Lưu riêng tư"
+- assertVisible: "Đã giữ lại một cuộc đi."
+- takeScreenshot: diary-08-moment-saved

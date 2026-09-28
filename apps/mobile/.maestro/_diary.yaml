@@ -1,0 +1,76 @@
+# Real native session with synthetic data; OUTING_ID is an open trip with three photos.
+# Run after sign-in, independently of the fixture-based smoke suite.
+appId: com.lakiet.rudi
+env:
+  PHOTO_COUNT: "3"
+  PAGE_NUMBER: "2"
+  TRIP_TITLE: "Hai ngày gom nắng"
+---
+- openLink: "rudi://outings/${OUTING_ID}"
+- extendedWaitUntil:
+    visible: "Giữ lại cuộc đi"
+    timeout: 30000
+- tapOn: "Giữ lại cuộc đi"
+- extendedWaitUntil:
+    visible: "Cuộc đi khép lại. Câu chuyện còn đây."
+    timeout: 30000
+- takeScreenshot: diary-01-ending
+- scrollUntilVisible:
+    element:
+      text: "Khép cuộc đi"
+    direction: DOWN
+- tapOn: "Khép cuộc đi"
+- extendedWaitUntil:
+    visible: "Mang theo điều gì vào sổ?"
+    timeout: 30000
+- assertVisible: "${PHOTO_COUNT} / 40 ảnh đã chọn"
+- takeScreenshot: diary-02-sources
+- scrollUntilVisible:
+    element:
+      text: "Tự xếp trang, không gửi AI"
+    direction: DOWN
+- tapOn: "Tự xếp trang, không gửi AI"
+- extendedWaitUntil:
+    visible: "Hai ngày gom nắng"
+    timeout: 30000
+- takeScreenshot: diary-03-book
+- scrollUntilVisible:
+    element:
+      text: "Lưu riêng tư"
+    direction: DOWN
+- assertVisible: "Chỉ mình tôi"
+- tapOn: "Lưu riêng tư"
+- scrollUntilVisible:
+    element:
+      text: "Về tường nhà mình"
+    direction: DOWN
+- tapOn: "Về tường nhà mình"
+- scrollUntilVisible:
+    element:
+      text: "Mở ${TRIP_TITLE}"
+    direction: DOWN
+- takeScreenshot: diary-04-wall
+- tapOn: "Mở ${TRIP_TITLE}"
+- extendedWaitUntil:
+    visible:
+      id: "diary-reader-screen"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "Hai ngày gom nắng"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Sửa cuốn sổ"
+    direction: DOWN
+- tapOn: "Sửa cuốn sổ"
+- scrollUntilVisible:
+    element:
+      text: "Công khai"
+    direction: DOWN
+- tapOn: "Công khai"
+- scrollUntilVisible:
+    element:
+      text: "Đăng sổ công khai"
+    direction: DOWN
+- tapOn: "Đăng sổ công khai"
+- takeScreenshot: diary-05-published

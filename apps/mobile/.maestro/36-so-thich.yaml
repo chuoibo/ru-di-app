@@ -29,7 +29,7 @@ appId: com.lakiet.rudi
 - inputText: "${OTP_CODE}"
 # Tài khoản mới đi thẳng vào bước cá nhân hoá — KHÔNG bấm gì để tới đây.
 - extendedWaitUntil:
-    visible: "Cho Rủ Đi biết gu của bạn"
+    visible: "Điều gì khiến bạn muốn ra ngoài?"
     timeout: 30000
 - takeScreenshot: 36-ca-nhan-hoa
 - tapOn: "Ăn uống"
@@ -39,13 +39,12 @@ appId: com.lakiet.rudi
 - takeScreenshot: 36-da-chon
 # Nút gọi đúng việc nó làm (đợt chuyển mình UI 06/09): có phiên thì «Lưu sở thích».
 - tapOn: "Lưu sở thích"
-# Tài khoản mới chưa có nhóm nào, nên đích sau khi lưu là màn nhóm rỗng.
+# Tài khoản mới chưa có nhóm nào, nên đích sau khi lưu là tab Tin nhắn rỗng.
 - extendedWaitUntil:
     visible: "Chưa có nhóm nào"
     timeout: 30000
-# Màn nhóm rỗng KHÔNG có thanh tab — muốn tới Cá nhân thì phải có một nhóm
-# trước. Đo được ở lượt mini đầu tiên: bước «tapOn Cá nhân» ngay tại đây đỏ, và
-# nó đỏ vì flow viết sai chứ không vì màn sai.
+# Từ 23/09 tab Tin nhắn rỗng CÓ thanh tab. Flow vẫn tạo nhóm trước vì phần sau
+# đo dòng Sở thích trong nhóm; đi thẳng Cá nhân cũng được.
 - tapOn: "Tạo nhóm"
 - extendedWaitUntil:
     visible: "Đặt tên cho hội"
@@ -58,8 +57,10 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 30000
 - tapOn: "Cá nhân"
-- extendedWaitUntil:
-    visible: "Sở thích"
+- scrollUntilVisible:
+    element:
+      text: "Sở thích"
+    direction: DOWN
     timeout: 20000
 # Dòng phụ của hàng là những gì máy chủ vừa trả về, không phải state trên máy.
 - assertVisible: ".*Ăn uống, Cafe, Món local.*"
@@ -67,7 +68,7 @@ appId: com.lakiet.rudi
 - takeScreenshot: 36-hang-so-thich
 - tapOn: "Sở thích"
 - extendedWaitUntil:
-    visible: "Cho Rủ Đi biết gu của bạn"
+    visible: "Điều gì khiến bạn muốn ra ngoài?"
     timeout: 20000
 # Mở lại phải thấy đúng lựa chọn cũ: màn đọc từ máy chủ chứ không bắt đầu trắng.
 - assertVisible: "Bỏ qua"

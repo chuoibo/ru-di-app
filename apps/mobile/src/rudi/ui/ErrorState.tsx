@@ -26,8 +26,8 @@ export interface ErrorStateProps {
  * sentence about the form they were about to keep or discard.
  */
 export function ErrorState({
-  title = "Chưa đọc được từ máy chủ",
-  body = "Kiểm tra mạng rồi thử lại. Những gì bạn đã nhập vẫn còn nguyên.",
+  title = "Chưa tải được",
+  body = "Chưa tải được nội dung. Bạn thử lại nhé.",
   onRetry,
   retrying,
   secondary,

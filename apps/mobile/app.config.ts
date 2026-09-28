@@ -11,7 +11,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: config.name ?? "RuDi",
     slug: config.slug ?? "rudi-mobile",
-    plugins: (config.plugins ?? []).map((plugin) => plugin === googlePlugin && iosUrlScheme
+    plugins: [...(config.plugins ?? []), "expo-video"].map((plugin) => plugin === googlePlugin && iosUrlScheme
       ? [googlePlugin, { iosUrlScheme }]
       : plugin),
   };

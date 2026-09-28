@@ -480,7 +480,7 @@ test("chonNhom chỉ nhận nhóm máy chủ đã liệt kê và đã active, r�
   assert.equal(JSON.parse(await kho.doc("rudi.phien")).context_id, NHOM_B);
 
   await assert.rejects(chonNhom(phien, NHOM, kho), /chưa đồng ý/);
-  await assert.rejects(chonNhom(phien, "5ee00000-eeee-4eee-8eee-eeeeeeeeeeee", kho), /không có trong danh sách/);
+  await assert.rejects(chonNhom(phien, "5ee00000-eeee-4eee-8eee-eeeeeeeeeeee", kho), /không còn trong danh sách/);
 });
 
 test("docHoSoToi: GET /people/me mang Bearer; suaHoSoToi: PATCH chỉ gửi trường được đổi, có Idempotency-Key", async () => {

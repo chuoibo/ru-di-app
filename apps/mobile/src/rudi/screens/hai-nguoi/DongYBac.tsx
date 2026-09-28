@@ -1,8 +1,14 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton } from "../../ui";
+import { ChuKy } from "../../ui/ChuKy";
 import { Sheet } from "../../ui/Sheet";
+import { StampButton } from "../../ui/StampButton";
+import { DongSo, TrangSo } from "../../ui/TrangSo";
 
 /**
  * The consent ladder's two rungs a person can climb here (spec §6.1): tier 2
@@ -15,6 +21,12 @@ import { Sheet } from "../../ui/Sheet";
  * own phone. The fixture build offers «(Bản trải nghiệm) Người kia đồng ý» so
  * one phone can play both sides; it exists only when `nguoiKia` is not null,
  * which is only a development build with the fixture door open.
+ *
+ * UI v3 (ADR-0037, plan S2): each rung is a pact written by hand on a page of
+ * the notebook -- what it allows beside what it does not pull along, both in
+ * full (D8: said before the press) -- and two signature lines. Proposing is
+ * signing your line; agreeing is signing the other. A signature that appears
+ * while the sheet is up draws itself; one already there is simply there.
  */
 function BacDongY({
   open,
@@ -28,6 +40,7 @@ function BacDongY({
   onDongY,
   nhanDeNghi,
   nguoiKiaDongY,
+  tenNguoiKia,
   testID,
 }: {
   open: boolean;
@@ -50,40 +63,68 @@ function BacDongY({
   onDongY: () => void;
   nhanDeNghi: string;
   nguoiKiaDongY: (() => void) | null;
+  /** Who is waiting on this, by name; the app knows it, so it says it. */
+  tenNguoiKia?: string;
   testID: string;
 }) {
   const { colors, space } = useRudiTheme();
+  const { phien } = useRudiSession();
+  const tenToi = phien?.profile?.display_name?.trim() || "Bạn";
+  const ho = tenNguoiKia?.trim() || "Người ấy";
+  // Whoever proposed has signed; the other line waits for the other person.
+  const toiKy = dangCho && deNghiCuaToi;
+  const hoKy = dangCho && !deNghiCuaToi;
+  // My signature appearing while the sheet is up (the proposal just landed) draws itself.
+  const truoc = useRef<boolean | null>(null);
+  const vuaKy = open && truoc.current === false && toiKy;
+  useEffect(() => {
+    truoc.current = open ? toiKy : null;
+  }, [open, toiKy]);
   return (
     <Sheet accessibilityLabel={tieuDe} onClose={onClose} open={open} testID={testID}>
       <View style={[styles.noiDung, { gap: space.md }]}>
         <Heading size="h2" title={tieuDe} />
-        <View style={styles.khoi}>
-          <Text style={[typography.label, { color: colors.ink }]}>Cho phép</Text>
-          {choPhep.map((d) => (
-            <Text key={d} style={[typography.body, { color: colors.ink }]}>· {d}</Text>
-          ))}
-        </View>
-        <View style={styles.khoi}>
-          <Text style={[typography.label, { color: colors.ink }]}>Không kéo theo</Text>
-          {khongKeoTheo.map((d) => (
-            <Text key={d} style={[typography.body, { color: colors.inkSoft }]}>· {d}</Text>
-          ))}
-        </View>
+        <TrangSo ke={false} tone="accent" testID={`${testID}-giao-keo`}>
+          <View style={styles.haiCot}>
+            <View style={styles.cot}>
+              <DongSo dau trai="Cho phép" />
+              {choPhep.map((d) => (
+                <View key={d} style={styles.dieu}>
+                  <Ionicons color={colors.ink} name="checkmark" size={16} style={styles.dauDieu} />
+                  <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{d}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.cot}>
+              <DongSo dau trai="Không kéo theo" />
+              {khongKeoTheo.map((d) => (
+                <View key={d} style={styles.dieu}>
+                  <Ionicons color={colors.inkSoft} name="close" size={16} style={styles.dauDieu} />
+                  <Text style={[typography.body, styles.flex, { color: colors.inkSoft }]}>{d}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+          <View style={styles.chuKy}>
+            <ChuKy choChu={hoKy ? "Chờ bạn ký: bấm Đồng ý" : "Bạn ký khi bấm đề nghị"} dong={vuaKy} ten={toiKy ? tenToi : null} vaiTro={hoKy ? "Người đồng ý" : "Người đề nghị"} />
+            <ChuKy choChu={`Chờ ${ho} ký`} ten={hoKy ? ho : null} vaiTro={hoKy ? "Người đề nghị" : "Người đồng ý"} />
+          </View>
+        </TrangSo>
         {dangCho && !deNghiCuaToi ? (
           // Người ấy đề nghị: việc của màn này là một nút, không phải một câu
           // nói rằng đang chờ chính mình.
           <>
             <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
-              Người ấy đã đề nghị. Bạn đồng ý thì sổ mở.
+              {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì sổ này trở thành sổ cặp đôi."}
             </Text>
-            <RudiButton label="Đồng ý" onPress={onDongY} />
+            <StampButton label="Đồng ý" onPress={onDongY} size="vua" tilt={-1} />
           </>
         ) : dangCho ? (
           <Text style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-dang-cho`}>
-            Đã đề nghị. Chờ người ấy đồng ý trên máy của người ấy; im lặng không phải đồng ý.
+            Đã đề nghị. Chờ {tenNguoiKia ?? "người ấy"} đồng ý trên máy của họ; im lặng không phải đồng ý.
           </Text>
         ) : (
-          <RudiButton label={nhanDeNghi} onPress={onDeNghi} />
+          <StampButton label={nhanDeNghi} onPress={onDeNghi} size="vua" tilt={-1} />
         )}
         {dangCho && nguoiKiaDongY ? (
           <RudiButton label="(Bản trải nghiệm) Người kia đồng ý" onPress={nguoiKiaDongY} variant="outline" />
@@ -94,25 +135,31 @@ function BacDongY({
   );
 }
 
-export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null }) {
+export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null; tenNguoiKia?: string }) {
   return (
     <BacDongY
       {...props}
-      choPhep={["Một chỗ hai bạn truyền giấy cho nhau mỗi tuần.", "Hai ô ràng buộc: «Không ăn được» và «Đừng».", "Nếp phác một tờ khi tới lượt, bạn sửa rồi gửi."]}
-      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Không ai ngoài hai bạn thấy sổ này."]}
+      choPhep={["Một chỗ hai bạn truyền giấy cho nhau mỗi tuần.", "Những điều cần tránh: «Không ăn được» và «Đừng».", "Nếp phác một tờ khi tới lượt, bạn sửa rồi gửi."]}
+      // Said as far as it is true: only the two of them can open the notebook
+      // in the app, but the chat is not end to end encrypted yet (its lock
+      // label says so), and «nobody but you two sees this» beside an open lock
+      // promised more than the product keeps (QA 23/09).
+      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Chỉ hai bạn mở được sổ này trong app; tin nhắn thì chưa mã hoá đầu cuối."]}
       nhanDeNghi="Đề nghị lập sổ"
       testID="lap-so"
-      tieuDe="Lập sổ hai người"
+      tieuDe="Lập sổ lời hẹn"
     />
   );
 }
 
-export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null }) {
+export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null; tenNguoiKia?: string }) {
   return (
     <BacDongY
       {...props}
-      choPhep={["Sổ này là sổ đôi: mỗi người chỉ có một.", "Nếp nói chuyện với hai bạn như với một đôi.", "Mở đường cho vai «Người lo» và «Người chấm»."]}
-      khongKeoTheo={["Nếp vẫn không đọc tin nhắn; đó là một công tắc khác.", "Không đăng gì, không ai được báo.", "Tắt được bất cứ lúc nào, sổ vẫn còn."]}
+      // Only what switching it on does today. The roles («Người lo», «Người
+      // chấm») are not built yet, so the sheet no longer promises them.
+      choPhep={["Sổ này là sổ đôi: mỗi người chỉ có một.", "Nếp biết đây là sổ của một đôi."]}
+      khongKeoTheo={["Đồng ý là cặp đôi không cấp quyền đọc chat cho Nếp. AI chỉ nhận phần bạn chọn và xác nhận gửi.", "Không đăng gì, không ai được báo.", "Tắt được bất cứ lúc nào, sổ vẫn còn."]}
       nhanDeNghi="Đề nghị bật «Một đôi»"
       testID="bat-mot-doi"
       tieuDe="Bật «Một đôi»"
@@ -120,4 +167,13 @@ export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: 
   );
 }
 
-const styles = StyleSheet.create({ noiDung: { paddingBottom: 8 }, khoi: { gap: 4 } });
+const styles = StyleSheet.create({
+  noiDung: { paddingBottom: 8 },
+  flex: { flex: 1 },
+  // Two columns when there is room for both at reading width, one under the other otherwise.
+  haiCot: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  cot: { flexGrow: 1, flexBasis: 200, gap: 4 },
+  dieu: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
+  dauDieu: { marginTop: 3 },
+  chuKy: { flexDirection: "row", flexWrap: "wrap", gap: 16, marginTop: 14 },
+});

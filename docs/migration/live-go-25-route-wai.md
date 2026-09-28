@@ -151,3 +151,103 @@ Ghi ở đầu mỗi file kịch bản, để một bảng toàn xanh không ng�
 3. **Xoá Python** — khoảng 48.800 dòng trên tổng 50.421 của `services/api/app`,
    giữ lại ~1.600 dòng AI. Rồi tới 509 file / 129.513 dòng test Python, phần
    đắt nhất và dễ tự lừa nhất.
+
+## Đổi 2026-09-23 — đồng ý theo cùng một lời đề nghị (QA cặp đôi)
+
+Diff này đổi `pair_notebook.granted_purposes`/`_live` (và Go `pairnotebook.GrantedPurposes`/`live`): «cả hai đồng ý» một bậc của sổ đôi tính theo CÙNG MỘT lời đề nghị, lời đề nghị đã hoàn tất không hết hạn; `_consents_as_dicts` mang thêm `proposal_id`, `proposal_completed_at`. Route này đọc đồng ý của sổ đôi (qua `_pair_chat_consent`/gu nhóm hoặc trực tiếp): kết quả chỉ đổi khi một pair mang hai lời đề nghị cùng bậc song song, khi đó bậc KHÔNG còn được tính là đã bật (trước là bật nhầm) (với `live-go-25-route-wai.md`: áp cho các route AI/gợi ý đọc gu nhóm của pair; các route khác trong tệp chỉ bị chạm theo tên). Byte trả lời không đổi với mọi dữ liệu có một lời đề nghị mỗi bậc (mọi kịch bản parity hiện có), và từ 23/09 không còn tạo được hai lời đề nghị cùng bậc song song (`POST …/notebook/proposals` trả 409).
+
+## Đổi 2026-09-23 (b) — `place_id` của tờ giấy là id danh mục; chốt ghi chặng vào kèo (QA cặp đôi)
+
+Diff này đổi `PaperStopInput.place_id`/`PaperStop.place_id` từ `uuid.UUID` sang `StrictStr` 1..80 (đúng kiểu `OutingStopInput.place_id`: danh mục dùng slug như `p-lau-ga`, trước đây mọi chỗ có thật đều bị 422), `_noi_dung_wire` đọc `str(place_id)` thay vì `uuid.UUID(...)`, và `ApiService._chot` (Go `pairsteps.chot`) đọc `get_place` cho từng chặng có id, đặt tên kèo «<tên quán hoặc việc chặng đầu, ≤190 ký tự> · dd/mm» thay vì «Tờ lời rủ dd/mm», rồi sau `link_paper_outing` gọi `replace_outing_stops(expected_revision=None)` cùng transaction: chặng đã đồng ý thành timeline của kèo; id danh mục không còn thì giữ nhãn, bỏ id. Go: `routes/pair_papers.go` (`optionalStringField`), `pairsteps/wire.go`, `pairsteps/papers.go`, `service/pair_store.go` (`GetPlace`, `ReplaceOutingStops`); golden `python_pair_steps.json` tái sinh (+4 ca `agreed_place_*`), repo oracle thêm ca «a catalogue place names the outing and its stop» và dump `outing_stops`.
+
+- `GET /contexts/{context_id}/contextual-suggestion`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /contexts/{context_id}/suggestion`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places/{place_id}`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places/{place_id}/photos`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/ai-turn`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/messages`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /places/search`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-24 — tờ chưa từng gửi chỉ chủ bản phác thấy, ở mọi trạng thái (lỗ rò riêng tư, QA cặp đôi)
+
+Diff này thêm `_chi_chu_thay` (Go `pairsteps.chiChuThay`): người không phải chủ bản phác chỉ thấy một tờ khi tờ không ở `nhap` **và** có ít nhất một phiên bản đã gửi (`sent_at` khác null). Trước đây luật là «không phải `nhap`», nên bản phác chưa gửi mà chủ bấm «Tuần này nghỉ» (`nghi_tuan`), bỏ (`bo`) hay để hết tuần (`het_han`) hiện ra trong danh sách và chi tiết của người kia, kèm nội dung và lý do riêng — tái hiện trên stack cô lập 24/09 bằng hai phiên thật. Áp ở `list_pair_papers` (lọc) và `_readable_paper_or_404` (`may_view_paper`, 404 `paper_not_found`), nên mọi lệnh đọc/ghi tờ đi qua cửa này. Golden `python_pair_steps.json` thêm `unsent_*`/`sent_then_skipped_as_kia`; bản sao route trong repo oracle Postgres đổi theo.
+
+- `GET /contexts/{context_id}/contextual-suggestion`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /contexts/{context_id}/suggestion`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places/{place_id}`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places/{place_id}/photos`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/ai-turn`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/messages`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /places/search`: Route này không đọc tờ giấy; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-24 (c) — xoá `ai-turn` và các nhánh AI tự kích hoạt của `POST /messages` (ADR-0036 §2.1, §3b)
+
+Một đường gọi AI duy nhất là hàng đợi lời gọi (`POST /contexts/{id}/ai-invocations`). Diff này xoá, trong cùng một commit ở cả Go lẫn Python cùng manifest: route `POST /contexts/{context_id}/ai-turn` (Go `takeCompanionTurnRoute`/`takeCompanionTurn`, Python `take_companion_turn`), nhánh `/plan`·`@Rủ Đi` (companion) và nhánh `/chia-bill` của `actOnMessageIntent`/`act_on_message_intent`, nhịp `PlanTurn`/`plan_turn` cùng route brain `companion-plan`, hai cửa sổ `companion_turn_limiter`/`message_intent_limiter`. Từ đây hàng `ai-turn` không còn trong manifest; cửa trước Go không có route nên proxy sang Python và Python trả 404.
+
+- `POST /contexts/{context_id}/messages`: hành vi ĐỔI có chủ ý. Chữ «/plan …», «@Rủ Đi …», «/chia-bill …» là tin nhắn thường: `intent` null, `intent_error` null, không gọi mô hình, không ghi thẻ. Thân trả lời bỏ hai trường `companion` và `expense_card`; `intent` chỉ còn `"vote"`, `intent_error` chỉ còn `"vote_malformed"`. Nhánh `/vote` không đổi một byte (kịch bản `wai/messages-flow.yaml`). Hai bên đổi cùng lúc, `PostedMessageResponse` và `clonePosted` cùng thứ tự trường `intent, vote, intent_error`.
+- `POST /contexts/{context_id}/messages/{message_id}/expense-draft`: không đổi. Kịch bản `wai/ai-turn-and-expense-draft.yaml` giữ nửa này, bỏ sáu bước `ai-turn`.
+
+## Đổi 2026-09-25 — `chia_gu`: gu trong sổ đôi, mỗi người tự bật (ADR-0034 §2.1–2.2)
+
+Diff này thêm mục đích đồng ý `chia_gu` (CONSENT_PURPOSES, PER_PERSON_PURPOSES; CHECK `ck_pair_consent_proposals_consent_purpose_known` mở rộng ở migration `e3b7c1d9a4f2`), hàm thuần `pair_notebook.gu_hai_nguoi` (Go `pairnotebook.GuHaiNguoi`) và trường `taste` của `PairNotebookResponse` (`_pair_taste`, Go `pairsteps.pairTaste`). Golden: `python_pair_notebook*.json` (ca `taste: *`, fuzz có `chia_gu`), `python_pair_steps*.json` (ca `taste_*`); Go replay 0 lệch; tầng Postgres Python 720 xanh.
+
+- `GET /contexts/{context_id}/contextual-suggestion`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /contexts/{context_id}/suggestion`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places/{place_id}`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `GET /places/{place_id}/photos`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/messages`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+- `POST /places/search`: Route này không đọc sổ đôi hay gu; cổng `check_go_owned_python_touch.py` nối theo tên hàm nên bị kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 — Nếp dùng gu của người đã bật `chia_gu` khi phác tờ (ADR-0034 §2.2)
+
+Diff này tách `_pair_context_or_404` thành `_pair_roster_or_404` (cùng ba lệnh đọc, cùng thứ tự, cùng câu trả lời; chỉ giữ thêm tên hiển thị của hàng thành viên — Go `pairRosterOr404`, `Member.DisplayName`) và thêm vào `draft_pair_paper` bước gu: `_gu_cho_nep` + hàm thuần `pair_paper.gu_cho_nep` / `loai_theo_gu` / `lam_giau_theo_gu` (Go `pairpaper.GuChoNep` / `LoaiTheoGu` / `LamGiauTheoGu`). Golden: `python_pair_paper*.json` (ca `gu_cho_nep`, `lam_giau_theo_gu`, fuzz riêng), `python_pair_steps.json` (7 ca `taste_*` của draft); Go replay 0 lệch.
+
+- `GET /contexts/{context_id}/contextual-suggestion`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `GET /contexts/{context_id}/suggestion`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `GET /places`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `GET /places/{place_id}`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `GET /places/{place_id}/photos`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/messages`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `POST /places/search`: Chỉ đi qua `_pair_roster_or_404` (cùng lệnh đọc, cùng câu trả lời) hoặc bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 — «Người lo» của tuần trong sổ đôi (ADR-0034 §2.3–2.4)
+
+Diff này thêm `week_role` vào `PairNotebookResponse` (`_week_role`, Go `pairsteps.weekRole`): chỉ trong «Một đôi» đang mở; lựa chọn của tuần (`get_pair_rhythm`, bảng mới `pair_cycle_rhythms`, migration `f4a8d2c6b1e9`) nếu có, không thì suy bằng hàm thuần `pair_notebook.nguoi_lo_suy` (gửi tờ trước ×2, đề nghị sửa ×1, trong chu kỳ này; hoà → người lập sổ) và `vai_tuan`. Không có giới tính. `pair_notebook` giờ đọc tờ một lần cho cả tờ mở lẫn người lo (`_open_paper_id(papers=…)`). Route mới `PUT …/notebook/week-role` (Go phục vụ, evidence riêng). Golden `python_pair_notebook*.json` (ca `lo:*`), `python_pair_steps*.json` (`role_*`, `set_pair_week_role`), permissions; repo oracle Postgres Go có 4 ca week-role.
+
+- `GET /contexts/{context_id}/contextual-suggestion`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+- `GET /contexts/{context_id}/suggestion`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+- `GET /places`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+- `GET /places/{place_id}`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+- `GET /places/{place_id}/photos`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/messages`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+- `POST /places/search`: Chỉ bị cổng nối theo tên hàm (`_open_paper_id`, `pair_notebook`, repository) kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-25 (lượt 2) — gậy luân phiên, hạn mức tuần, «Một đôi» trên hồ sơ, 4 sticker đôi (ADR-0034 §2.4–2.5)
+
+Diff này: (1) `vai_tuan` nhận `mo_loi_truoc` — người lo quen đã mở lời (tờ đầu tiên gửi trong tuần, `nguoi_mo_loi`) hai tuần liền thì tuần này sang người kia, `cach` = `luot`; tín hiệu tờ thêm `tuan`, `sent_at`. (2) `draft_pair_paper` từ chối 409 `paper_week_quota` khi người gọi đã phác `TO_MOI_NGUOI_MOI_TUAN` (3, cùng số với `packages/shared/nep-nhip.json`) tờ trong tuần. (3) `get_person_profile` trả `relation` = `couple` khi hai người là một «Một đôi» (`same_couple`, hỏi SAU cửa quyền, không phải oracle cho người lạ). (4) Từ vựng sticker thêm `hen-nhe`, `nho-nhau`, `ve-toi-chua`, `om-cai`. Golden pair_notebook (ca baton, 10 shard), pair_steps (`quota_*`, `role_baton_*`), people_steps (`couple_*`), stickers; Go 0 lệch.
+
+- `GET /contexts/{context_id}/contextual-suggestion`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `GET /contexts/{context_id}/suggestion`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `GET /places`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `GET /places/{place_id}`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `GET /places/{place_id}/photos`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `POST /contexts/{context_id}/messages`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+- `POST /places/search`: Chỉ bị cổng nối theo tên hàm kéo vào — hành vi không đổi.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `GET /contexts/{context_id}/albums/{outing_id}/reel`: đổi thật: `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository.group_recap` — như trên, một câu cho mọi kèo.
+- `GET /contexts/{context_id}/albums/{outing_id}`: đổi thật: `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository.group_recap` — như trên, một câu cho mọi kèo.
+- `GET /contexts/{context_id}/albums`: đổi thật: `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository.group_recap` — như trên, một câu cho mọi kèo.
+- `GET /contexts/{context_id}/contextual-suggestion`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+- `GET /contexts/{context_id}/suggestion`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository._place_record` — như trên; `SqlAlchemyApiRepository.group_recap` — như trên, một câu cho mọi kèo; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+- `GET /places/{place_id}/photos`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+- `GET /places/{place_id}`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+- `GET /places`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+- `POST /contexts/{context_id}/messages`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+- `POST /places/search`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.

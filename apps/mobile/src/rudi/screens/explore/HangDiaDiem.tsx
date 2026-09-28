@@ -237,7 +237,9 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
           {dauFacts ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
-          {cuoiFact ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
+          {/* The price band may take a second line at a large font: cut to one
+              it read «200.000đ – 250.000đ mỗi n…» at 1.3 (QA 23/09). */}
+          {cuoiFact ? <Text numberOfLines={chuLonHon ? 2 : 1} style={[typography.caption, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
           {dauCon(dd) && chuLonHon ? <Stamp label={dauCon(dd) as string} style={styles.rowBadgeDuoi} tone="ai" /> : null}
           {/* The thumbnail is a licensed photograph, so its credit is a line
               of this row (ADR-0017 §2.5) -- two lines, since a long author
@@ -316,7 +318,7 @@ export function PlaceCompare({
             {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
             {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
             {dauFacts ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
-            {cuoiFact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
+            {cuoiFact ? <Text numberOfLines={chuLon(fontScale) ? 2 : 1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
           </>
         );
         if (khongAnhNao) {

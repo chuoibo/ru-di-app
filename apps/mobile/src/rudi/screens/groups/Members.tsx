@@ -24,9 +24,11 @@ import {
 import { danhSachThanhVien, type ThanhVien } from "../../../screens/vao-cua/cong-api";
 import { tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
+import { mucNguoi, typography, useRudiTheme } from "../../theme";
+import { ChuThichLe } from "../../ui/ChuThichLe";
+import { StampButton } from "../../ui/StampButton";
 import { Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
@@ -38,7 +40,7 @@ type Trang =
 
 export function GroupMembersScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { phien, phienDaDoc } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
@@ -97,7 +99,7 @@ export function GroupMembersScreen() {
         subtitle={
           trang.pha === "xong"
             ? `${conSong.filter((tv) => tv.state === "active").length} đang ở trong nhóm, ${conSong.filter((tv) => tv.state === "invited").length} đang được mời.`
-            : "Đang đọc danh sách từ máy chủ..."
+            : "Đang đọc danh sách thành viên…"
         }
       />
       <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
@@ -119,14 +121,15 @@ export function GroupMembersScreen() {
             const duocMoi = tv.state === "invited";
             return (
               <View key={tv.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
-                <Avatar name={ten} ring={laToi} size={40} />
+                <AvatarNguoi name={ten} personId={tv.person_id} ring={laToi} size={40} />
                 <View style={styles.hangChu}>
-                  <Text style={[typography.body, { color: duocMoi ? colors.inkSoft : colors.ink }]}>
+                  {/* Each member in their own ink (ADR-0037 D6); somebody still only invited is pencil. */}
+                  <Text style={[typography.body, { color: duocMoi ? colors.inkSoft : mucNguoi(tv.person_id, dark) }]}>
                     {ten}
                     {laToi ? " (bạn)" : ""}
                   </Text>
                   <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                    {duocMoi ? "Đã mời, chưa đồng ý" : tv.role === "admin" && tv.state === "active" ? "Mở nhóm này" : "Thành viên"}
+                    {duocMoi ? "Đã mời, chưa đồng ý" : tv.role === "admin" && tv.state === "active" ? "Người lập nhóm" : "Thành viên"}
                   </Text>
                 </View>
                 {coTheDoiVaiTro(conSong, phien.person_id, tv) ? (
@@ -139,7 +142,7 @@ export function GroupMembersScreen() {
                     variant="soft"
                   />
                 ) : tv.role === "admin" && tv.state === "active" ? (
-                  <Stamp label="Quản trị" />
+                  <Stamp label="Quản trị" tilt={-3} tone="ink" />
                 ) : null}
               </View>
             );
@@ -148,15 +151,11 @@ export function GroupMembersScreen() {
           {loiVaiTro ? <Text style={[typography.caption, { color: colors.warn }]}>{loiVaiTro}</Text> : null}
         </View>
       ) : null}
-      <RudiButton
-        icon="person-add-outline"
-        label="Mời bằng số điện thoại"
-        onPress={() => router.push(`/groups/${id}/invite` as never)}
-      />
-      <Text style={[typography.caption, { color: colors.inkFaint }]}>
-        Người được mời thấy lời mời ở tab Tin nhắn ngay khi đăng nhập bằng số đó, và chính họ bấm «Đồng
-        ý». Không ai bị đưa vào nhóm mà chưa gật đầu.
-      </Text>
+      <StampButton label="Mời bằng số điện thoại" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} />
+      {/* Consent, said where the invitation starts: a margin note, still read. */}
+      <ChuThichLe icon="mail-open-outline">
+        Người được mời thấy lời mời ở tab Tin nhắn ngay khi đăng nhập bằng số đó, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.
+      </ChuThichLe>
     </RudiScreen>
   );
 }

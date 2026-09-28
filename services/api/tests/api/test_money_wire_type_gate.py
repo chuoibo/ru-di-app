@@ -205,9 +205,11 @@ def test_a_bool_total_would_have_become_a_one_dong_bill(client, repository):
     is handed `True` in the docstring above and splits one dong without
     complaint; this asserts nobody can get it there.
     """
-    from .helpers import expense_payload
+    from .helpers import actor_headers, expense_payload
 
-    response = client.post("/expenses", json=expense_payload(total=True))
+    response = client.post(
+        "/expenses", headers=actor_headers(), json=expense_payload(total=True)
+    )
 
     assert response.status_code == 422
     assert repository.expenses == {}
@@ -216,9 +218,11 @@ def test_a_bool_total_would_have_become_a_one_dong_bill(client, repository):
 
 def test_a_float_total_never_reaches_the_domain_or_storage(client, repository):
     """The shape `schemas.py` names in its own docstring and nothing tested."""
-    from .helpers import expense_payload
+    from .helpers import actor_headers, expense_payload
 
-    response = client.post("/expenses", json=expense_payload(total=82000.0))
+    response = client.post(
+        "/expenses", headers=actor_headers(), json=expense_payload(total=82000.0)
+    )
 
     assert response.status_code == 422
     assert repository.expenses == {}

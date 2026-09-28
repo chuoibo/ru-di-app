@@ -97,7 +97,7 @@
     {
       "route": "/contexts/{context_id}/contextual-suggestion",
       "loai": "cong-mu",
-      "reason": "F36 gợi ý theo ngữ cảnh. ĐÃ CÓ NGƯỜI GỌI THẬT từ #382: ai-hieu-nhom.ts:221 gọi `${prefix}/contextual-suggestion`. Cùng cơ chế mù và cùng đường bấm với /budget ở trên. Lý do cũ ('chưa màn nào gọi, AI đi qua /ai-turn') đã hết hiệu lực: /ai-turn vẫn là đường của khung chat, nhưng route này giờ có màn riêng đọc nó."
+      "reason": "F36 gợi ý theo ngữ cảnh. ĐÃ CÓ NGƯỜI GỌI THẬT từ #382: ai-hieu-nhom.ts:221 gọi `${prefix}/contextual-suggestion`. Cùng cơ chế mù và cùng đường bấm với /budget ở trên. Lý do cũ ('chưa màn nào gọi, AI đi qua /ai-turn') đã hết hiệu lực: route này giờ có màn riêng đọc nó, còn /ai-turn đã bị xoá (ADR-0036 §2.1)."
     },
     {
       "route": "/contexts/{context_id}/photos/{photo_id}",

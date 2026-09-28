@@ -28,12 +28,15 @@ from app.api.deps import (
     Companion,
     ContextualSuggester,
     FaceDetector,
+    NepReplyNotConfigured,
+    NepResponder,
     Reeler,
     Suggester,
     get_chat_expense_reader,
     get_companion,
     get_contextual_suggester,
     get_face_detector,
+    get_nep_responder,
     get_receipt_reader,
     get_reeler,
     get_screenshot_reader,
@@ -44,7 +47,6 @@ from app.api.receipt_skill import ReceiptReader, run_receipt_skill
 from app.api.screenshot_skill import ScreenshotReader, run_screenshot_skill
 from app.domain import money
 from app.domain.chat_expense import ChatExpenseError
-from app.domain.companion import CompanionError, plan_turn
 from app.domain.place_search import PlaceSearchError, ground_search
 from app.domain.receipt import ReceiptError
 from app.domain.screenshot import ScreenshotError
@@ -196,30 +198,6 @@ def chat_expense(
         raise _code_error(502, "chat_reader_unavailable") from None
 
 
-@router.post("/companion-plan")
-def companion_plan(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    """Pure cadence decision. No model call."""
-
-    conversation = body.get("conversation")
-    if not isinstance(conversation, dict):
-        raise _code_error(422, "brain_request_invalid")
-    requested = bool(body.get("requested"))
-    limits = body.get("limits")
-    try:
-        return plan_turn(
-            conversation,
-            limits if isinstance(limits, dict) else None,
-            requested=requested,
-        )
-    except CompanionError as exc:
-        raise _code_error(422, exc.code) from None
-    except (KeyError, TypeError):
-        raise _code_error(422, "brain_request_invalid") from None
-
-
 @router.post("/companion-reply")
 def companion_reply(
     body: dict,
@@ -236,6 +214,80 @@ def companion_reply(
     except Exception:
         _LOGGER.warning("brain companion failed")
         raise _code_error(502, "companion_unavailable") from None
+
+
+@router.post("/diary")
+def diary_compose(
+    body: dict,
+    _: Annotated[None, Depends(require_internal_token)],
+) -> dict:
+    """Compose a diary from caller-approved sources; inference only."""
+    from app.api.diary_gemini import compose_diary
+
+    try:
+        return compose_diary(body)
+    except ValueError:
+        raise _code_error(422, "invalid_diary_source") from None
+    except Exception:
+        raise _code_error(502, "diary_ai_unavailable") from None
+
+
+@router.post("/community-moderate")
+def community_moderate(
+    body: dict,
+    _: Annotated[None, Depends(require_internal_token)],
+) -> dict:
+    """Infer relevance and safety; Go retains all publication authority."""
+    from app.api.community_inference import infer_community
+
+    try:
+        return infer_community("moderate", body)
+    except Exception:
+        raise _code_error(502, "community_ai_unavailable") from None
+
+
+@router.post("/community-nep")
+def community_nep(
+    body: dict,
+    _: Annotated[None, Depends(require_internal_token)],
+) -> dict:
+    """Return a draft from the explicitly confirmed excerpt only."""
+    from app.api.community_inference import infer_community
+
+    try:
+        return infer_community("nep", body)
+    except Exception:
+        raise _code_error(502, "community_ai_unavailable") from None
+
+
+@router.post("/nep-reply")
+def nep_reply(
+    body: dict,
+    _: Annotated[None, Depends(require_internal_token)],
+    responder: Annotated[NepResponder, Depends(get_nep_responder)],
+) -> dict:
+    """Nếp's answer: the model step only (ADR-0036 §2.10).
+
+    Go has already authenticated the caller, applied the money law and the
+    bounds, and will store the answer; this checks shapes and calls the model.
+    """
+
+    prompt = body.get("prompt")
+    slip = body.get("slip")
+    if not isinstance(prompt, str) or not (slip is None or isinstance(slip, dict)):
+        raise _code_error(422, "brain_request_invalid")
+    turns = _list_of_dict(body, "turns")
+    try:
+        answer = responder.reply(slip=slip, turns=turns, prompt=prompt)
+    except NepReplyNotConfigured:
+        raise _code_error(503, "nep_reply_not_configured") from None
+    except Exception:
+        _LOGGER.warning("brain nep reply failed")
+        raise _code_error(502, "nep_reply_unavailable") from None
+    text = answer.get("text") if isinstance(answer, dict) else None
+    if not isinstance(text, str):
+        raise _code_error(502, "nep_reply_unavailable")
+    return {"text": text}
 
 
 @router.post("/capabilities")

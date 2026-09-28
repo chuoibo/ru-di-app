@@ -1,0 +1,37 @@
+# Dedicated negative case: run only on a local brain without provider credentials.
+# The saved edition must survive an unsuccessful regeneration.
+appId: com.lakiet.rudi
+env:
+  PHOTO_COUNT: "3"
+  PAGE_NUMBER: "2"
+  TRIP_TITLE: "Hai ngày gom nắng"
+---
+- openLink: "rudi://diaries/${DIARY_ID}"
+- extendedWaitUntil:
+    visible:
+      id: "diary-reader-screen"
+    timeout: 30000
+- openLink: "rudi://outings/${OUTING_ID}/ending"
+- extendedWaitUntil:
+    visible: "Hai ngày gom nắng"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Chọn lại chất liệu"
+    direction: DOWN
+- tapOn: "Chọn lại chất liệu"
+- scrollUntilVisible:
+    element:
+      text: "Dựng sổ cùng Nếp"
+    direction: DOWN
+- tapOn: "Dựng sổ cùng Nếp"
+- extendedWaitUntil:
+    visible: "Mình thử lại nhé"
+    timeout: 60000
+- takeScreenshot: diary-11-ai-unavailable
+- scrollUntilVisible:
+    element:
+      text: "Về bản đang sửa"
+    direction: DOWN
+- tapOn: "Về bản đang sửa"
+- assertVisible: "Hai ngày gom nắng"

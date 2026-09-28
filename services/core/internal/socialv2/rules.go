@@ -41,12 +41,3 @@ func decodeWallCursor(value string) (wallCursor, error) {
 	out.ID = id
 	return out, nil
 }
-
-type commentParent struct {
-	PostID   string
-	ParentID string
-}
-
-func replyParentAllowed(postID string, parent commentParent) bool {
-	return parent.PostID == postID && parent.ParentID == ""
-}

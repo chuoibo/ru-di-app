@@ -88,6 +88,14 @@ appId: com.lakiet.rudi
     timeout: 60000
 # Bấm chặng có địa điểm → chi tiết địa điểm; từ đó «Thêm vào kèo».
 - tapOn: "Chặng An toi"
+- scrollUntilVisible:
+    element:
+      text: "Chặng An toi"
+      selected: true
+    direction: DOWN
+- tapOn:
+    text: "Chặng An toi"
+    selected: true
 - extendedWaitUntil:
     visible: "Chỉ đường"
     timeout: 60000

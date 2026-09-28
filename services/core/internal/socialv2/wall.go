@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"mobile/services/core/internal/community"
 	"mobile/services/core/internal/domain/postaudience"
 	"mobile/services/core/internal/repo"
 )
@@ -99,9 +100,9 @@ func wireWallPost(ctx context.Context, tx pgx.Tx, post repo.Post, actor string, 
 	}
 	var likes, comments int64
 	var liked bool
-	err = tx.QueryRow(ctx, `SELECT (SELECT count(*) FROM post_reactions WHERE post_id=$1::uuid AND kind='like'),
+	err = tx.QueryRow(ctx, `SELECT (SELECT count(*) FROM post_reactions WHERE post_id=$1::uuid AND kind=$3),
 	  (SELECT count(*) FROM post_comments WHERE post_id=$1::uuid),
-	  EXISTS(SELECT 1 FROM post_reactions WHERE post_id=$1::uuid AND person_id=$2::uuid AND kind='like')`, post.ID, actor).Scan(&likes, &comments, &liked)
+	  EXISTS(SELECT 1 FROM post_reactions WHERE post_id=$1::uuid AND person_id=$2::uuid AND kind=$3)`, post.ID, actor, community.LikeKind).Scan(&likes, &comments, &liked)
 	if err != nil {
 		return nil, err
 	}

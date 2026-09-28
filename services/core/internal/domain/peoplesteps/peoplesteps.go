@@ -203,6 +203,8 @@ type Store interface {
 	ListPersonInterests(personID string) ([]string, error)
 	AreFriends(a, b string) (bool, error)
 	ShareActiveContext(a, b string) (bool, error)
+	// SameCouple is same_couple: both in active_couple_members, same cycle.
+	SameCouple(a, b string) (bool, error)
 	GetPlace(placeID string) (*Place, error)
 	ListSavedPlaces(personID string) ([]SavedPlace, error)
 	SavePlace(personID, placeID string, now time.Time) (SavedPlace, bool, error)
@@ -311,4 +313,40 @@ func asRefusal(err error) bool {
 // deleted is `record is None or record.deleted_at is not None`.
 func deleted(person *Person) bool {
 	return person == nil || person.DeletedAt != nil
+}
+
+// ReachableStore is what ReachablePerson reads.
+type ReachableStore interface {
+	GetPerson(personID string) (*Person, error)
+	GetFriendEdge(a, b string) (*FriendEdge, error)
+	ShareActiveContext(a, b string) (bool, error)
+}
+
+// ReachablePerson is ApiService._reachable_person: whether personID is
+// somebody this actor may act on (block, ask to be friends), and their edge.
+//
+// A person id is derivable from a phone number by anyone, so answering «no
+// such person» only for ids nobody holds would tell any caller whether a
+// number has an account, straight past discoverable_by_phone. Reachable means
+// found-by-number allowed, or a friend edge in any state (a pending request is
+// how a stranger reaches you), or a shared active group; anyone else answers
+// like an id nobody holds. Statement order is Python's: the person, the edge,
+// then (only if still undecided) the shared group.
+func ReachablePerson(s ReachableStore, actorID, personID string) (bool, *FriendEdge, error) {
+	person, err := s.GetPerson(personID)
+	if err != nil {
+		return false, nil, err
+	}
+	if person == nil || person.DeletedAt != nil {
+		return false, nil, nil
+	}
+	edge, err := s.GetFriendEdge(actorID, personID)
+	if err != nil {
+		return false, nil, err
+	}
+	if person.DiscoverableByPhone || edge != nil {
+		return true, edge, nil
+	}
+	shared, err := s.ShareActiveContext(actorID, personID)
+	return shared, edge, err
 }

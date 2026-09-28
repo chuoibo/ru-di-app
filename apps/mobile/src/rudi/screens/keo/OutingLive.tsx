@@ -16,6 +16,7 @@
  * are `Money` at their own size and wrap when the window is narrow; nothing
  * shrinks a sum to fit a row.
  */
+import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -33,7 +34,8 @@ import {
   type CheckIn,
 } from "../../../screens/len-plan/buoi-di";
 import { tabBarHeight } from "../../adaptive";
-import { docDanhMuc } from "../../kham-pha/dia-diem";
+import { choDeChon, docDanhMucCoLui } from "../../kham-pha/dia-diem";
+import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
   cauDaToi,
   changGuiTu,
@@ -51,9 +53,15 @@ import {
 import { homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { typography, useRudiTheme } from "../../theme";
-import { Chip, Field, IconButton, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { Chip, IconButton, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
 import { Money } from "../../ui/Money";
+import { BanXoay } from "../../ui/BanXoay";
+import { HoaDonGiay } from "../../ui/HoaDonGiay";
+import { NepDien } from "../../ui/NepDien";
+import { PressScale } from "../../ui/PressScale";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { StampButton } from "../../ui/StampButton";
 import { ReorderList } from "../../ui/ReorderList";
 import { Sheet } from "../../ui/Sheet";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
@@ -97,9 +105,23 @@ function dongDiaDiem(stop: ChangDung): { chu: string; tone: "accent" | "inkFaint
   return { chu: stop.place_name, tone: "accent" };
 }
 
+/** «19:30» → minutes from midnight; anything else is no hour yet. */
+function phutTuGio(gio: string): number | null {
+  const khop = /^(\d{1,2}):(\d{2})$/.exec(gio.trim());
+  if (!khop) return null;
+  const h = Number(khop[1]);
+  const m = Number(khop[2]);
+  return h < 24 && m < 60 ? h * 60 + m : null;
+}
+
+/** Minutes from midnight → «19:30», as the stop's hour is spelled. */
+function gioTuPhut(phut: number): string {
+  return `${String(Math.floor(phut / 60)).padStart(2, "0")}:${String(phut % 60).padStart(2, "0")}`;
+}
+
 export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; vua?: string }>();
   const { colors } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
   const outingId = thamSoChuoi(params.id);
@@ -110,6 +132,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const [gio, setGio] = useState(gioTiepTheo());
   const [nhan, setNhan] = useState("");
   const [danhMuc, setDanhMuc] = useState<Place[]>([]);
+  const [timCho, setTimCho] = useState("");
   const [choDiaDiem, setChoDiaDiem] = useState<Place | null>(null);
   const [ganChoChang, setGanChoChang] = useState<ChangDung | null>(null);
   const [draft, setDraft] = useState<{ stops: ChangDung[]; revision: number } | null>(null);
@@ -151,7 +174,10 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const napDanhMuc = useCallback(async () => {
     if (danhMuc.length > 0) return;
     try {
-      setDanhMuc((await docDanhMuc()).places);
+      // The destination the person picked on Khám phá, not the default one:
+      // the default is a curated town, so reading it here meant no real place
+      // could ever be attached to a stop.
+      setDanhMuc((await docDanhMucCoLui(await docDiemDenDaChon())).places);
     } catch (error) {
       setThongBao(loiRaChu(error));
     }
@@ -167,9 +193,17 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   }, [hanhTrinh, napDanhMuc]);
 
   const cho = useMemo(
-    () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, address: p.address, category: p.category })),
+    () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, geoPrecision: p.geoPrecision, address: p.address, category: p.category })),
     [danhMuc],
   );
+  const choHienRa = useMemo(() => choDeChon(danhMuc, timCho), [danhMuc, timCho]);
+  const oTimCho = (
+    <SearchField accessibilityLabel="Ô tìm địa điểm" onChangeText={setTimCho} placeholder="Tìm theo tên, món, địa chỉ" value={timCho} />
+  );
+  const khongKhop =
+    danhMuc.length > 0 && choHienRa.length === 0 ? (
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>Không có chỗ nào khớp «{timCho}». Thử tên ngắn hơn nhé.</Text>
+    ) : null;
   const stopsHien = trang.pha === "xong" ? (draft?.stops ?? trang.keo.stops) : [];
 
   // The context slip. Declared here rather than in the route adapter because
@@ -277,18 +311,19 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
         <Sheet accessibilityLabel="Chặng mới" onClose={() => setMoThem(false)} open={moThem}>
           <View style={styles.khay}>
             <Text style={[typography.h2, { color: colors.ink }]}>Chặng mới</Text>
-            <View style={styles.hang}>
-              <View style={styles.oGio}>
-                <Field accessibilityLabel="Ô giờ chặng" icon="time-outline" keyboardType="numbers-and-punctuation" label="Giờ" onChangeText={setGio} value={gio} />
-              </View>
+            {/* The hour on a dial (typing stays behind «Ô giờ chặng»), the stop
+                written beside it on a pen line (ADR-0037 D1, plan S3). */}
+            <View style={styles.hangChang}>
+              <BanXoay co={140} nhan="Giờ chặng" oLabel="Ô giờ chặng" onChange={(p) => setGio(gioTuPhut(p))} phut={phutTuGio(gio)} testID="gio-chang" />
               <View style={styles.flex}>
-                <Field accessibilityLabel="Ô tên chặng" icon="flag-outline" label="Chặng" onChangeText={setNhan} placeholder="Ví dụ: Ăn tối" value={nhan} />
+                <ONhapMuc accessibilityLabel="Ô tên chặng" label="Chặng" onChangeText={setNhan} placeholder="Ăn tối" value={nhan} />
               </View>
             </View>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Địa điểm trong danh mục (tuỳ chọn)</Text>
             {/* One scrolling row: at font 1.3 the catalogue wrapped into eight rows and pushed the submit off-screen. */}
+            {oTimCho}
             <ScrollView contentContainerStyle={styles.hangChip} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false}>
-              {danhMuc.map((p) => (
+              {choHienRa.map((p) => (
                 <Chip
                   key={p.id}
                   label={p.name}
@@ -297,18 +332,21 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                 />
               ))}
             </ScrollView>
+            {khongKhop}
             {thongBao !== null && moThem ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
-            <RudiButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} />
+            <StampButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} size="vua" tilt={-1} />
           </View>
         </Sheet>
         <Sheet accessibilityLabel="Gắn địa điểm" onClose={() => setGanChoChang(null)} open={ganChoChang !== null}>
           <View style={styles.khay}>
             <Text style={[typography.h2, { color: colors.ink }]}>Gắn địa điểm cho «{ganChoChang?.label ?? ""}»</Text>
+            {oTimCho}
             <ScrollView contentContainerStyle={styles.hangChip} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false}>
-              {danhMuc.map((p) => (
+              {choHienRa.map((p) => (
                 <Chip key={p.id} label={p.name} onPress={() => { if (ganChoChang !== null) void ganChang(trang.keo, ganChoChang, p); }} />
               ))}
             </ScrollView>
+            {khongKhop}
             <RudiButton label="Để sau" onPress={() => setGanChoChang(null)} variant="ghost" />
           </View>
         </Sheet>
@@ -339,6 +377,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
               {trang.keo.title}
             </Text>
           ) : null}
+          {trang.pha === "xong" && nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()).kieu !== "sap-toi" ? <RudiButton compact variant="outline" icon="book-outline" label="Giữ lại cuộc đi" onPress={() => router.push(`/outings/${trang.keo.id}/ending` as never)} /> : null}
           {trang.pha === "xong" ? <ThanhCheDo cheDo={che.cheDo} onDoi={che.doiCheDo} /> : null}
           {hanhTrinh && thongBao ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{thongBao}</Text> : null}
         </View>
@@ -366,23 +405,57 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" && !hanhTrinh ? (
         <ScrollView scrollEnabled={!dragging} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 20 }}>
           <View style={styles.dau}>
-            <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
+            {/* M5: the outing just made from «Kèo mới» (`?vua=tao`): Nếp sets
+                off beside its title, once. Opened any other way, it is not news. */}
+            {params.vua === "tao" ? (
+              <View style={styles.dauVuaTao}>
+                <Text style={[typography.h1, styles.flex1, { color: colors.ink }]}>{trang.keo.title}</Text>
+                <NepDien khoanhKhac="M5" suKien={`keo-tao:${trang.keo.id}`} />
+              </View>
+            ) : (
+              <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
+            )}
             <Text style={[typography.body, { color: colors.inkSoft }]}>
               {nhanKhoangNgay(trang.keo.starts_on, trang.keo.ends_on)} · {trang.keo.headcount} người
               {nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay())) ? ` · ${nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()))}` : ""}
             </Text>
             {/* Two sums, side by side while the window allows, one under the other
                 when it does not. Neither is ever shrunk to fit. */}
-            <View style={styles.tien}>
-              <View style={styles.oTien}>
-                <Money vnd={trang.keo.budget_per_person_vnd} />
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>một người</Text>
+            {/* A plan made from a two-person sheet has no budget, and «0đ · 0đ»
+                read as «this evening costs nothing» (QA 23/09). No budget is
+                said as such; the two sums appear only when there is one. */}
+            {trang.keo.budget_per_person_vnd > 0 ? (
+              <View style={styles.tien}>
+                <View style={styles.oTien}>
+                  <Money vnd={trang.keo.budget_per_person_vnd} />
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>một người</Text>
+                </View>
+                <View style={styles.oTien}>
+                  <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>cả kèo, {trang.keo.headcount} người</Text>
+                </View>
               </View>
-              <View style={styles.oTien}>
-                <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>cả kèo, {trang.keo.headcount} người</Text>
-              </View>
-            </View>
+            ) : (
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa đặt ngân sách cho buổi này.</Text>
+            )}
+            {/* The bill of this outing belongs to the outing's own context --
+                a pair's plan is split in the pair, never in whichever group
+                happens to be current (QA 23/09). */}
+            {/* A blank receipt to tear off: the bill of this evening starts here
+                (ADR-0037 D1, plan S4). */}
+            <PressScale
+              accessibilityLabel="Chia bill buổi này"
+              accessibilityRole="button"
+              onPress={() => router.push(`/smart-split/${trang.keo.id}/review?ctx=${trang.keo.context_id}&dip=${encodeURIComponent(trang.keo.title)}` as never)}
+              style={styles.nutHoaDon}
+            >
+              <HoaDonGiay>
+                <View style={styles.hoaDonChu}>
+                  <Ionicons color={colors.split} name="receipt-outline" size={20} />
+                  <Text style={[typography.label, { color: colors.ink }]}>Chia bill buổi này</Text>
+                </View>
+              </HoaDonGiay>
+            </PressScale>
           </View>
           <SectionHeader
             action={draft ? undefined : moThem ? "Đóng" : "Thêm chặng"}
@@ -463,6 +536,11 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
 }
 
 const styles = StyleSheet.create({
+  nutHoaDon: { alignSelf: "flex-start", transform: [{ rotate: "-1deg" }] },
+  hoaDonChu: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10 },
+  hangChang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
+  dauVuaTao: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  flex1: { flex: 1 },
   hangChip: { flexDirection: "row", gap: 6, paddingRight: 8 },
   flex: { flex: 1 },
   // The map is the page here: it runs to the bottom edge and the journey
@@ -475,7 +553,5 @@ const styles = StyleSheet.create({
   oTien: { gap: 2, minWidth: 140 },
   khay: { gap: 12, paddingBottom: 4 },
   form: { gap: 12 },
-  hang: { flexDirection: "row", gap: 10 },
-  oGio: { width: 118 },
   danhSach: { paddingVertical: 4, gap: 10 },
 });

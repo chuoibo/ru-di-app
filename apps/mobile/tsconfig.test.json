@@ -8,6 +8,12 @@
     "target": "es2022"
   },
   "include": [
+    "src/rudi/community/api.ts",
+    "src/rudi/diary/api.ts",
+    // QA 23/09: the placeholder-name check (held equal to both server spellings)
+    // and the invite-by-number steps (a 403 rename no longer aborts the invite).
+    "src/rudi/ten-giu-cho.ts",
+    "src/rudi/moi-bang-so.ts",
     "src/rudi/photo-viewer.ts",
     "src/api.ts",
     "src/assignment.ts",
@@ -92,7 +98,6 @@
     // the failure it guards is the app casting the deciding vote. See
     // `tests/ket-qua-binh-chon.test.mjs`.
     "src/screens/binh-chon/ket-qua.ts",
-    "src/screens/chat/ai.ts",
     "src/screens/chat/nhom.ts",
     "src/screens/chat/nhap-tu-chat.ts",
     // F31/F33/F34/F36. Compile both the four-route client and the markup the
@@ -262,6 +267,12 @@
     "src/rudi/so/ban-tinh.ts",
     // Tờ giấy của sổ hai người: bảy luật §3.3 + hai luật ADR-0027; tests/to-giay-luat.test.mjs
     "src/rudi/to-giay/to-giay.ts",
+    "src/rudi/to-giay/sua-to.ts",
+    "src/rudi/to-giay/moc-hen.ts",
+    "src/rudi/ky-niem/ti-le.ts",
+    "src/rudi/chat/khay-cong-cu.ts",
+    "src/rudi/to-giay/gu-doi.ts",
+    "src/rudi/to-giay/vai-tuan.ts",
     // Sổ hai người trên fixture: chuyển trạng thái thuần thay máy chủ tới Phase 4; tests/to-giay-fixture.test.mjs
     "src/rudi/to-giay/so-fixture.ts",
     // Dây nối duy nhất giữa wire và mười ba màn đã đọc mù; tests/so-doi-map.test.mjs
@@ -284,6 +295,8 @@
     // cách chia sắp tới/đã qua trên tab Lên plan. Compile vì luật nó mang là
     // số học theo ngày lịch: một ngày không đọc được KHÔNG thành con số bịa.
     "src/rudi/keo/nhip-keo.ts",
+    "src/rudi/keo/hen-hai-ban.ts",
+    "src/rudi/ngu-canh-mo.ts",
     // Hành trình (ADR-0026): chiếu lịch trình lên địa lý. Compile vì luật
     // phủ định — chặng không toạ độ không thành marker, hiệu suất không bịa,
     // OSRM fail thì geodesic — chỉ đo được khi chạy hàm.
@@ -299,6 +312,7 @@
     // mỗi lời gọi một Attempt, và không phép chia nào ở phía client.
     "src/rudi/chia-bill/ai-co-gi.ts",
     "src/rudi/chia-bill/hoa-don.ts",
+    "src/rudi/chia-bill/o-so.ts",
     "src/screens/kham-pha/ban-do-nhom.ts",
     "src/rudi/loi-moi-den.ts",
     "src/rudi/dot-thu/dot-thu.ts",
@@ -343,6 +357,8 @@
     "src/rudi/chat/useChatChanges.ts",
     "src/rudi/chat/ban-nhap-cong-cu.ts",
     "src/rudi/chat/chat-route.ts",
+    "src/rudi/ai/boi-canh.ts",
+    "src/rudi/chat/boi-canh-chat.ts",
     "src/rudi/chat/ai-invocations.ts",
     "src/rudi/chat/to-hen-chung.ts",
     "src/rudi/chat/useBanNhap.ts",
@@ -352,6 +368,8 @@
     // really emits: the claim is that the input carries NO native hint and the
     // sentence is a text node of its own, which only the rendered output shows.
     "src/rudi/ui/Field.tsx",
+    // UI v3 S0.5: the field written on a ruled line instead of a box.
+    "src/rudi/ui/ONhapMuc.tsx",
     // L2 (ADR-0021 §2.5): the direct-message door and how a pair is named.
     "src/rudi/nhan-rieng/nhan-rieng.ts",
     // L3 (ADR-0022): a post's comments and reactions, personal photos, and the
@@ -359,6 +377,17 @@
     "src/rudi/tuong/bai-chi-tiet.ts",
     "src/rudi/tuong/social-v2.ts",
     "src/rudi/nguoi/anh-ca-nhan.ts",
+    // Which avatar each frame shows: the server's version in the address, one
+    // batched ask for the unknown, a push beats an older answer, another account
+    // forgets everything. See `tests/anh-dai-dien.test.mjs`.
+    "src/rudi/nguoi/anh-dai-dien.ts",
+    // The avatar stream's handshake, backoff and pause rules, driven with a
+    // fake socket and hand-run timers. See `tests/luong-anh-dai-dien.test.mjs`.
+    "src/rudi/nguoi/luong-anh-dai-dien.ts",
+    // The web session store: resume from the HttpOnly cookie, set it once per
+    // token, clear it on sign-out, and never touch Web Storage. See
+    // `tests/phien-web.test.mjs`.
+    "src/phien-web.ts",
     "src/rudi/nguoi/chinh-sach-tuong.ts",
     // L4 (ADR-0022 §2.3): stories -- the four routes, the ring's label, and a
     // deadline check that must be strict at the exact second like the server.
@@ -401,6 +430,41 @@
     // đường đi ra ngoài.
     "src/rudi/nep/media.ts",
     "src/rudi/nep/profile-video.ts",
-    "src/screens/quan-tri/quan-tri.ts"
+    // Nếp's words (ADR-0036 §2.7). Compiled because its laws are negative: the
+    // session sent is never more than the server accepts, the preview counts
+    // exactly what goes, a money-screen slip is NOT asked, and every refusal
+    // code the Go handlers emit has a sentence (tests/cau-chu-goi-ai.test.mjs).
+    "src/rudi/nep/hoi.ts",
+    "src/screens/quan-tri/quan-tri.ts",
+    // ADR-0037 «Sân khấu giấy»: person inks and paper-stage tokens, pure.
+    "src/rudi/nguoi/muc-nguoi.ts",
+    "src/rudi/san-khau/token.ts",
+    // The pop-up stage (S0.3): stages built from the existing art, the paper
+    // objects (receipt teeth, ticket notches, stamp perforation) and the fold
+    // maths the renderers run as worklets. Compiled so the gates run the real
+    // builders over every scene and sketch; see tests/san-khau.test.mjs and
+    // tests/giay-vat-the.test.mjs.
+    "src/rudi/art/san-khau.ts",
+    "src/rudi/art/giay.ts",
+    "src/rudi/art/vat-ban.ts",
+    "src/rudi/art/thanh-pho.ts",
+    "src/rudi/san-khau/dong-hoc.ts",
+    "src/rudi/san-khau/kich-thuoc.ts",
+    // The paper puppet (S0.4): the still figure's sheet and face on a rig of
+    // rigid bones, and the nine performances. Compiled so the gates sweep every
+    // frame of every performance through the same fold and path rules as the
+    // still figure; see tests/nep-roi.test.mjs.
+    "src/rudi/art/nep-roi.ts",
+    "src/rudi/art/nep-dien.ts",
+    "src/rudi/khoanh-khac.ts",
+    // S0.5 primitives' arithmetic: the month grid a tear-off calendar leafs
+    // through, the dial's quarter hours, the sentence with blanks, and the
+    // avatars that failed this session.
+    "src/rudi/ui/lich/lich-thang.ts",
+    "src/rudi/ui/ban-xoay.ts",
+    "src/rudi/ui/cau-ru.ts",
+    // S1, the money screens: who sits where at the bill table, the
+    // collection's tape and the settlement's arrows; see tests/hinh-tien.test.mjs.
+    "src/rudi/ui/hinh-tien.ts"
   ]
 }

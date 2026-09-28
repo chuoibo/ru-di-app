@@ -11,18 +11,14 @@ from fastapi import APIRouter, Depends, Query, Request, Response, status
 from app.api.chat_expense_skill import ChatExpenseReader
 from app.api.deps import (
     Actor,
-    Companion,
     get_actor,
     get_chat_expense_reader,
-    get_companion,
     get_repository,
 )
 from app.api.errors import ApiProblem
 from app.api.repository import ApiRepository
 from app.api.schemas import (
     ChatExpenseDraftResponse,
-    CompanionTurnRequest,
-    CompanionTurnResponse,
     ErrorResponse,
     MemberRoleRequest,
     MembershipResponse,
@@ -71,32 +67,6 @@ def get_chat_expense_limiter(request: Request) -> FixedWindowLimiter:
     return request.app.state.chat_expense_limiter
 
 
-def get_companion_turn_limiter(request: Request) -> FixedWindowLimiter:
-    """Resolve the one companion-turn limiter owned by this application.
-
-    Read off the application rather than constructed here: a limiter built per
-    request counts to one and forgets, which is a limiter-shaped object that
-    limits nothing.
-    """
-
-    return request.app.state.companion_turn_limiter
-
-
-# The post-message route has its OWN window (M3): a slash command or mention
-# charges it before the companion is reached. Same size as the companion's,
-# never the same object -- a route wired to another route's window is what
-# `test_every_route_that_depends_on_a_limiter_has_one_of_its_own` refuses.
-def get_message_intent_limiter(request: Request) -> FixedWindowLimiter:
-    """Resolve the one companion-turn limiter owned by this application.
-
-    Read off the application rather than constructed here: a limiter built per
-    request counts to one and forgets, which is a limiter-shaped object that
-    limits nothing.
-    """
-
-    return request.app.state.message_intent_limiter
-
-
 @router.post(
     "/contexts/{context_id}/messages",
     response_model=PostedMessageResponse,
@@ -109,29 +79,17 @@ def post_context_message(
     request: MessageCreateRequest,
     actor: Annotated[Actor, Depends(get_actor)],
     repository: Annotated[ApiRepository, Depends(get_repository)],
-    companion: Annotated[Companion, Depends(get_companion)],
-    limiter: Annotated[FixedWindowLimiter, Depends(get_message_intent_limiter)],
-    reader: Annotated[ChatExpenseReader, Depends(get_chat_expense_reader)],
 ) -> PostedMessageResponse:
-    """Store the message, then act on a slash command or mention in it.
+    """Store the message, then act on a `/vote` command in it.
 
-    The companion window is charged only when the text asks for a turn
-    (`/plan`, `@Rủ Đi`), and a refusal by the window is reported in the body
-    rather than as 429: the message is already stored, and a 429 would make the
-    client retry it into a duplicate.
+    No other command reaches a model from here: `/plan`, `@Rủ Đi` and
+    `/chia-bill` are stored as ordinary text (ADR-0036 §2.1).
     """
     if replay := _authorized_chat_replay(http, repository, context_id, actor, None):
         return replay
     service = ApiService(repository)
     posted = service.post_context_message(context_id, request, actor)
-    return service.act_on_message_intent(
-        context_id,
-        posted,
-        actor,
-        companion=companion,
-        companion_limiter=limiter,
-        expense_reader=reader,
-    )
+    return service.act_on_message_intent(context_id, posted, actor)
 
 
 @router.get(
@@ -293,53 +251,6 @@ def create_chat_expense_draft(
             "chat_reader_unavailable",
             _CHAT_READER_UNAVAILABLE_DETAIL,
         ) from None
-
-
-@router.post(
-    "/contexts/{context_id}/ai-turn",
-    response_model=CompanionTurnResponse,
-    responses=ERRORS | {429: {"model": ErrorResponse}},
-)
-def take_companion_turn(
-    http: Request,
-    context_id: UUID,
-    actor: Annotated[Actor, Depends(get_actor)],
-    companion: Annotated[Companion, Depends(get_companion)],
-    repository: Annotated[ApiRepository, Depends(get_repository)],
-    limiter: Annotated[FixedWindowLimiter, Depends(get_companion_turn_limiter)],
-    request: CompanionTurnRequest | None = None,
-) -> CompanionTurnResponse:
-    """One companion turn, capped per caller before the model is reached.
-
-    `plan_turn` already refuses to speak while the companion spoke last, and
-    that is a conversation cadence rather than a ceiling: the caller lifts it
-    by posting one more message, so an unmetered loop costs two cheap requests
-    per model call instead of one. The window is what makes the cost bounded.
-
-    Charged before the cadence is consulted, so a poll that would have been
-    answered `already_spoke_last` still spends a slot. That is deliberate: the
-    order that spares those calls is the order that lets a loop drive the
-    expensive path for free, because which one a request becomes is decided by
-    the caller. Thirty a minute is far above anyone typing and far below a loop.
-
-    That ordering is also why `requested` is safe to accept from the client. It
-    lifts the cadence, never the window: a caller that sets it on every request
-    buys the same thirty turns a minute as one that never sets it.
-
-    The body is optional because the shipped client sends none -- it posts this
-    route with a JSON content type over zero bytes, so a required model would
-    turn every AI turn in the product into a 422.
-    """
-    if replay := _authorized_chat_replay(http, repository, context_id, actor, None):
-        return replay
-
-    limiter.check(actor.id)
-    return ApiService(repository).take_companion_turn(
-        context_id,
-        actor,
-        companion,
-        requested=request.requested if request is not None else False,
-    )
 
 
 @router.put(

@@ -8,12 +8,9 @@
  *
  * ## Why every refusal gets its own sentence
  *
- * `thongDiepNguoiDoc`'s generic 403 sentence says «bạn không có quyền». For
- * this feature that is wrong twice over. `pair_chat_consent_required` is not a
- * missing permission, it is a consent neither of them has given yet -- the
- * person reading it has every right they need and nothing to fix in settings.
- * And `paper_version_stale` is not a refusal at all from the reader's side; it
- * is news, that the other person wrote something while this screen was open.
+ * `thongDiepNguoiDoc`'s generic sentences are written for refusals in general.
+ * `paper_version_stale` is not a refusal at all from the reader's side; it is
+ * news, that the other person wrote something while this screen was open.
  *
  * ## Why commands do not carry content back
  *
@@ -23,10 +20,14 @@
  * `useToGiay` is what does that, once, in one place.
  */
 import { type Attempt, translatedAsActor } from "../../api";
+import nepNhip from "../../../../../packages/shared/nep-nhip.json";
+import type { GuSo } from "./gu-doi";
 import type { NoiDungTo, ToGiay } from "./to-giay";
 
-/** Four rungs of the consent ladder, of which slice 1 uses three. */
-export type MucDich = "lap_so" | "bat_doi" | "doc_chat";
+/** The rungs both climb: only these are ever pending for the other person. */
+export type MucDichBac = "lap_so" | "bat_doi" | "doc_chat";
+/** The ladder, plus `chia_gu`: each person's own taste switch (ADR-0034). */
+export type MucDich = MucDichBac | "chia_gu";
 export type LoaiRangBuoc = "khong_an_duoc" | "dung";
 
 export interface DongYCuaToi {
@@ -36,7 +37,8 @@ export interface DongYCuaToi {
 
 export interface DeNghiCho {
   id: string;
-  purpose: MucDich;
+  /** A `chia_gu` proposal completes as it is filed, so it is never pending. */
+  purpose: MucDichBac;
   expires_at: string;
   proposed_by_id: string;
   my_granted: boolean;
@@ -60,7 +62,27 @@ export interface SoHaiNguoi {
   constraints: readonly RangBuocSong[];
   nep_gui_ho: boolean;
   open_paper_id: string | null;
+  /**
+   * What BOTH agreed to on one proposal, in ladder order. Absent on a server
+   * older than 23/09, where the client falls back to the per-person maps.
+   */
+  granted_purposes?: readonly MucDich[];
+  /** Null outside «Một đôi»; absent on a server older than 25/09 (ADR-0034). */
+  taste?: GuSo | null;
+  /** «Người lo» of this week; null outside an open «Một đôi» (ADR-0034 §2.4). */
+  week_role?: VaiTuan | null;
 }
+
+/** `PairWeekRoleResponse`: inferred from the notebook (`suy`) or chosen (`chon`). */
+export interface VaiTuan {
+  tuan: string;
+  nguoi_lo: readonly string[];
+  /** `luot`: the usual lead opened two weeks running, so this week is the other's. */
+  cach: "suy" | "chon" | "luot";
+  diem: readonly { person_id: string; score: number }[];
+}
+
+export type ChonLo = "toi" | "nguoi_kia" | "ca_hai";
 
 /**
  * One row of `GET /contexts/{id}/papers`; no versions, no responses.
@@ -100,20 +122,19 @@ export interface XemTruocDongSo {
 
 /**
  * Every refusal this feature can answer, in the language the person reading it
- * speaks. A code missing from here falls through to the generic sentence, which
- * is why the two that generic sentence describes wrongly are first.
+ * speaks. A code missing from here falls through to the generic sentence.
+ * `pair_chat_consent_required` used to be first here; its only raise site was
+ * the automatic companion turn, deleted by ADR-0036 §2.1.
  */
 export const LOI_TO_GIAY: Record<string, string> = {
-  // 403, and NOT a permission. Both of them have to say yes before Nếp opens
-  // the conversation; «bạn không có quyền» would send somebody looking through
-  // settings for a switch that is not theirs alone to flip.
-  pair_chat_consent_required: "Cả hai cùng đồng ý cho Nếp đọc tin nhắn thì Nếp mới nói được.",
   // 409, and news rather than a refusal: the other person wrote while this
   // screen was open. The screen re-reads; the sentence says why.
   paper_version_stale: "Người kia vừa gửi bản mới. Mở lại để xem đã.",
   paper_expired: "Tuần này hết rồi. Tuần sau mình rủ lại nhé.",
   paper_frozen: "Hai bạn chốt rồi, không sửa nữa.",
   paper_wrong_state: "Tờ giấy không ở trạng thái làm được việc này.",
+  // ADR-0034 §2.5: the number is packages/shared/nep-nhip.json's.
+  paper_week_quota: `Tuần này bạn đã phác ${nepNhip.to_moi_nguoi_moi_tuan} tờ rồi. Tuần sau phác tiếp nhé.`,
   paper_not_withdrawable: "Người kia đã mở tờ này rồi, không rút lại được.",
   paper_self_response: "Đây là tờ bạn gửi, chờ người kia trả lời.",
   paper_needs_recorder: "Cần biết ai ghi là hai bạn đã đi.",
@@ -125,6 +146,9 @@ export const LOI_TO_GIAY: Record<string, string> = {
   consent_missing: "Cả hai cùng đồng ý lập sổ trước đã.",
   consent_proposal_expired: "Lời đề nghị này đã hết hạn.",
   consent_proposal_not_found: "Không có lời đề nghị này.",
+  // The other person already proposed the same thing: answer theirs, do not
+  // file a second one (a second one used to light the rung with no agreement).
+  consent_proposal_pending: "Người ấy vừa đề nghị đúng việc này. Mở lại để đồng ý lời đề nghị của họ.",
   consent_purpose_unknown: "Không có mục đích này.",
   couple_slot_taken: "Một trong hai người đang là một đôi ở sổ khác.",
   constraint_kind_unknown: "Không có ô này.",
@@ -169,6 +193,10 @@ export function dongYDeNghi(contextId: string, proposalId: string, goi: Goi): Pr
 
 export function thuHoiDongY(contextId: string, purpose: MucDich, goi: Goi): Promise<void> {
   return translatedAsActor<void>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/consents/${purpose}`, { actorId: goi.actorId, method: "DELETE", attempt: goi.attempt });
+}
+
+export function datVaiTuan(contextId: string, lo: ChonLo, goi: Goi): Promise<VaiTuan> {
+  return translatedAsActor<VaiTuan>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/week-role`, { actorId: goi.actorId, method: "PUT", attempt: goi.attempt, body: { lo } });
 }
 
 export function datRangBuoc(contextId: string, kind: LoaiRangBuoc, content: string, goi: Goi): Promise<RangBuocSong> {

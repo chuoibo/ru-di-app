@@ -333,3 +333,37 @@ test("BanDo.native không import MapLibre ở top-level — APK cũ không đư�
   assert.equal(src.includes("NativeModules"), true);
   assert.equal(src.includes("BanDoThieu"), true);
 });
+
+test("chỗ ở tâm tỉnh giữ tên và địa chỉ trong lịch trình nhưng không thành marker, không nối đường", () => {
+  const cho = [
+    ...CHO,
+    { id: "tam-tinh", name: "Bánh mì Tâm", lat: 10.7769, lng: 106.7009, geoPrecision: "province_centroid", address: "Chợ Bến Thành" },
+    { id: "doan", name: "Quán đoán", lat: 11.95, lng: 108.44, geoPrecision: "suy_luan", address: null },
+    { id: "pho", name: "Quán phố", lat: C.lat, lng: C.lng, geoPrecision: "street", address: "2 Bạch Đằng" },
+  ];
+  const ngay = chieuTuNgay(
+    {
+      day: "Ngày 1",
+      items: [
+        { time: "08:00", title: "Sáng", placeId: "tam-tinh" },
+        { time: "10:00", title: "Giữa", placeId: "doan" },
+        { time: "12:00", title: "Trưa", placeId: "pho" },
+      ],
+    },
+    cho,
+  );
+  assert.deepEqual(
+    ngay.activities.map((a) => [a.tenDiaDiem, a.diaChi, a.lat]),
+    [["Bánh mì Tâm", "Chợ Bến Thành", null], ["Quán đoán", null, null], ["Quán phố", "2 Bạch Đằng", C.lat]],
+  );
+  assert.equal(ngay.routeSegments.length, 0, "một chặng vẽ được thì không có đoạn nào để nối");
+
+  const chang = chieuTuChang(
+    [
+      { id: "s1", at: "08:00", label: "Sáng", place_id: "tam-tinh", place_name: "tên cũ", meeting_point: null },
+      { id: "s2", at: "12:00", label: "Trưa", place_id: "pho", place_name: "tên cũ", meeting_point: null },
+    ],
+    cho,
+  );
+  assert.deepEqual(chang.activities.map((a) => [a.tenDiaDiem, a.lat]), [["Bánh mì Tâm", null], ["Quán phố", C.lat]]);
+});

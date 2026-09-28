@@ -1,3 +1,4 @@
+import { DiaryWall } from "../diary/Wall";
 /**
  * Cá nhân, Tài chính and Thành tích: the person's own pages.
  *
@@ -21,12 +22,14 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, formatVnd } from "../fixtures";
 import { docSoThich, tomTat, type SoThichSong } from "../nguoi/so-thich-song";
-import { layTaiChinh, tinhTrangNo, type Finance } from "../../screens/ca-nhan/tai-chinh";
+import { ghiChuGioiHan, layTaiChinh, moTaGiaoDich, ngayNgan, tienCoDau, tinhTrangNo, type Finance } from "../../screens/ca-nhan/tai-chinh";
+import { docLoiMoi } from "../../screens/ca-nhan/ban-be";
+import { docDaLuu } from "../kham-pha/dia-diem";
 import { nhanKhoangNgay } from "../../screens/len-plan/buoi-di";
 import { dauLich, homNay, nhanNhip, nhipKeo } from "../keo/nhip-keo";
 import { noiLuu, noiLuuNgan } from "../luu-tru";
 import { useRudiSession } from "../session";
-import { displayFace, typography, useRudiTheme } from "../theme";
+import { displayFace, mucNguoi, typography, useRudiTheme } from "../theme";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { HoSoSong } from "./profile/HoSoSong";
 import { HanhTrinhTeaser } from "./profile/HanhTrinhTeaser";
@@ -46,6 +49,8 @@ import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { Stamp } from "../ui/Stamp";
+import { TrangSo } from "../ui/TrangSo";
+import { useNepNguCanh } from "../nep/NepProvider";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
 function isoTu(ddmmyyyy: string): string {
@@ -59,12 +64,19 @@ export function ProfileScreen() {
   const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "account" | "edit" | "saved">("home");
+  useNepNguCanh({ man: "profile", tieuDe: "Trang cá nhân", goiY: ["Gu của mình đang thế nào?", "Mình đã đi những đâu?"] });
   // Read once so the row below keeps the narrowing inside its own callback.
   const duongTuongToi = session.phien === null ? null : `/people/${session.phien.person_id}`;
   const personId = session.phien?.person_id ?? null;
   // The row's subtitle is what this person told the server (M11), read on
   // focus rather than once: they may have just changed it on the step itself.
   const [soThich, setSoThich] = useState<SoThichSong>({ muc: [], khoang: null });
+  // A real session counts what the SERVER saved and who is waiting on it. The
+  // local draft's `savedPlaceIds` is the fixture's list (seeded with one cafe),
+  // which a fresh install read as «1 địa điểm» it never saved (QA 23/09); and a
+  // friend request nobody can see is a request that never arrives.
+  const [soDaLuu, setSoDaLuu] = useState<number | null>(null);
+  const [loiMoiCho, setLoiMoiCho] = useState(0);
   useFocusEffect(
     useCallback(() => {
       if (personId === null) return;
@@ -72,11 +84,18 @@ export function ProfileScreen() {
       void docSoThich(personId)
         .then((da) => con && setSoThich(da))
         .catch(() => undefined);
+      void docDaLuu(personId)
+        .then((ids) => con && setSoDaLuu(ids.length))
+        .catch(() => undefined);
+      void docLoiMoi(personId, personId, "incoming")
+        .then((ds) => con && setLoiMoiCho(ds.filter((loi) => loi.state === "pending").length))
+        .catch(() => undefined);
       return () => {
         con = false;
       };
     }, [personId]),
   );
+  const soLuuHien = personId !== null ? soDaLuu : session.savedPlaceIds.length;
 
   if (panel === "account") {
     return (
@@ -87,8 +106,8 @@ export function ProfileScreen() {
         </Text>
         <Text style={[typography.caption, { color: colors.inkFaint }]}>
           {session.phien !== null
-            ? "Đăng xuất kết thúc phiên trên máy chủ, xoá lựa chọn trên máy này rồi đưa về màn chào."
-            : "Đăng xuất xoá mọi lựa chọn của lần mở app này rồi đưa về welcome. Phiên này không ký máy chủ."}
+            ? "Đăng xuất kết thúc phiên đăng nhập, xoá lựa chọn trên máy này rồi đưa về màn chào."
+            : "Đăng xuất xoá mọi lựa chọn của lần mở app này rồi đưa về màn chào. Bản trải nghiệm không có phiên đăng nhập."}
         </Text>
         {DAU_VAN_CAY ? (
           <Text accessibilityLabel="dau-van-cay" style={[typography.caption, { color: colors.inkFaint }]}>
@@ -120,8 +139,8 @@ export function ProfileScreen() {
       <RudiScreen bottomInset="tab" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Đã lưu" />
         <Heading
-          title={`${session.savedPlaceIds.length} địa điểm`}
-          subtitle={`Danh sách ${noiLuu(session.luuTruSong)}. Mở Khám phá để thêm.`}
+          title={soLuuHien === null ? "Đã lưu" : `${soLuuHien} địa điểm`}
+          subtitle={personId !== null ? "Danh sách lưu trong tài khoản của bạn. Mở Khám phá để thêm." : `Danh sách ${noiLuu(session.luuTruSong)}. Mở Khám phá để thêm.`}
         />
         <RudiButton label="Mở Khám phá" onPress={() => router.push("/explore")} />
       </RudiScreen>
@@ -149,7 +168,7 @@ export function ProfileScreen() {
         // A real session: the server's profile and counts. The fixture hero
         // below is Team Đà Lạt's story and must never be shown to a signed-in
         // person as if it were theirs.
-        <HoSoSong phien={session.phien} />
+        <><HoSoSong phien={session.phien} /><DiaryWall person={session.phien.person_id} owner={session.phien.person_id} /></>
       ) : (
         <View style={styles.hero}>
           <View style={styles.heroDau}>
@@ -207,9 +226,16 @@ export function ProfileScreen() {
             <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
               <ListRow
                 icon="people-outline"
-                onPress={() => router.push("/friends")}
-                subtitle="Bạn bè, lời mời đã nhận và đã gửi"
+                onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)}
+                subtitle={loiMoiCho > 0 ? `${loiMoiCho} lời mời kết bạn đang chờ bạn` : "Bạn bè, lời mời đã nhận và đã gửi"}
                 title="Bạn bè"
+                trailing={
+                  loiMoiCho > 0 ? (
+                    <View accessibilityLabel={`${loiMoiCho} lời mời đang chờ`} style={[styles.dem, { backgroundColor: colors.accent }]}>
+                      <Text style={[typography.caption, { color: colors.accentInk }]}>{loiMoiCho}</Text>
+                    </View>
+                  ) : undefined
+                }
               />
             </View>
             <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
@@ -260,7 +286,13 @@ export function ProfileScreen() {
           <ListRow
             icon="bookmark-outline"
             onPress={() => setPanel("saved")}
-            subtitle={`${session.savedPlaceIds.length} địa điểm ${noiLuuNgan(session.luuTruSong)}`}
+            subtitle={
+              personId !== null
+                ? soLuuHien === null
+                  ? "Địa điểm bạn đã lưu"
+                  : `${soLuuHien} địa điểm trong tài khoản`
+                : `${session.savedPlaceIds.length} địa điểm ${noiLuuNgan(session.luuTruSong)}`
+            }
             title="Đã lưu"
           />
         </View>
@@ -280,7 +312,7 @@ export function ProfileScreen() {
           <ListRow
             icon="shield-checkmark-outline"
             onPress={() => setPanel("account")}
-            subtitle="Quyền riêng tư và đăng xuất bản trải nghiệm"
+            subtitle={session.phien !== null ? "Quyền riêng tư và đăng xuất" : "Quyền riêng tư và đăng xuất bản trải nghiệm"}
             title="Tài khoản"
           />
         </View>
@@ -303,6 +335,11 @@ export function FinanceScreen() {
   if (session.nguon.kieu === "live") {
     return <TaiChinhLive actorId={session.nguon.actorId} contextId={session.nguon.contextId} />;
   }
+  // Signed in, in no group yet: the finance route is per PERSON, so it reads
+  // the real (empty) ledger instead of falling back to Team Đà Lạt's numbers.
+  if (session.phien !== null) {
+    return <TaiChinhLive actorId={session.phien.person_id} contextId={null} />;
+  }
   return <TaiChinhNhap />;
 }
 
@@ -313,9 +350,9 @@ export function FinanceScreen() {
  * is guaranteed by the ledger query that answers it, and deriving even one of
  * the three here would be a second implementation of the same sum.
  */
-function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: string }) {
+function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: string | null }) {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark, radius } = useRudiTheme();
   const [du, setDu] = useState<Finance | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [lan, setLan] = useState(0);
@@ -355,18 +392,20 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
       </RudiScreen>
     );
   }
+  const gioiHan = ghiChuGioiHan(du.movements);
   return (
     <RudiScreen tone="split" testID="finance-screen">
       <TopBar title="Tài chính của tôi" />
-      {/* The one answer first, as the first line of a ledger: what this person's share of everything has come to. */}
-      <View>
-        <DongTien dam nhan="Phần chi của bạn" phu={`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Máy chủ tính lại từ sổ mỗi lần hỏi.`} tone="split" vnd={du.spend_vnd} />
+      {/* The one answer first, as the first line of a ledger: what this
+          person's share of everything has come to, written on the ledger page. */}
+      <TrangSo ke={false} testID="trang-so-tai-chinh">
+        <DongTien dam nhan="Phần chi của bạn" phu={`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Tính lại từ sổ mỗi lần mở.`} tone="split" vnd={du.spend_vnd} />
         <DongTien nhan="Còn phải trả" phu={`Đã trả ${formatVnd(du.settled_vnd)}`} tone={du.outstanding_vnd > 0 ? "warn" : "ink"} vnd={du.outstanding_vnd} />
-        <DongTien nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
-      </View>
+        <DongTien cuoi nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
+      </TrangSo>
       <SectionHeader
-        action="Xem quyết toán"
-        onAction={() => router.push(("/settlements/" + contextId) as never)}
+        action={contextId !== null ? "Xem quyết toán" : undefined}
+        onAction={contextId !== null ? () => router.push(("/settlements/" + contextId) as never) : undefined}
         title="Chi theo nhóm"
       />
       <View style={styles.ghiChu}>
@@ -375,6 +414,33 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
           {tinhTrangNo(du).cau} Số này đọc từ sổ cái, không phải số dư ngân hàng.
         </Text>
       </View>
+      {/* What has actually arrived, newest first: the movements the server
+          always sent and the screen never showed. Each one a line on the
+          timeline, dotted in the other person's ink. */}
+      <SectionHeader title="Tiền đã về" />
+      {du.movements.length === 0 ? (
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Chưa có khoản chuyển nào được xác nhận là đã về.</Text>
+      ) : (
+        <View testID="dong-thoi-gian">
+          {du.movements.map((m, i) => (
+            <View key={m.obligation_id} style={styles.mocTien}>
+              <View style={styles.cotMoc}>
+                <View style={[styles.chamMoc, { backgroundColor: mucNguoi(m.counterparty_id, dark), borderColor: colors.card }]} />
+                {i < du.movements.length - 1 ? <View style={[styles.dayMoc, { backgroundColor: colors.line }]} /> : null}
+              </View>
+              <View style={[styles.flex, styles.thanMoc]}>
+                <Text style={[typography.stamp, styles.ngayMoc, { color: colors.inkSoft }]}>{ngayNgan(m.occurred_at)}</Text>
+                <Text style={[typography.body, { color: colors.ink }]}>{moTaGiaoDich(m)}</Text>
+                {m.context_name || m.occasion ? (
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>{[m.occasion, m.context_name].filter(Boolean).join(" · ")}</Text>
+                ) : null}
+              </View>
+              <Text style={[typography.label, styles.soMoc, { color: m.direction === "in" ? colors.split : colors.ink }]}>{tienCoDau(m)}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+      {gioiHan !== null ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{gioiHan}</Text> : null}
     </RudiScreen>
   );
 }
@@ -456,7 +522,7 @@ function TaiChinhNhap() {
       <View style={styles.ghiChu}>
         <Ionicons color={colors.split} name="calculator-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
-          Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa confirm sổ cái. Đây không phải số dư ngân hàng.
+          Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa ghi vào sổ. Đây không phải số dư ngân hàng.
         </Text>
       </View>
     </RudiScreen>
@@ -532,7 +598,15 @@ export function AchievementsScreen() {
 }
 
 const styles = StyleSheet.create({
+  mocTien: { flexDirection: "row", gap: 12, minHeight: 64 },
+  cotMoc: { width: 14, alignItems: "center", paddingTop: 6 },
+  chamMoc: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },
+  dayMoc: { width: 2, flex: 1, marginTop: 4 },
+  thanMoc: { gap: 2, paddingBottom: 16 },
+  ngayMoc: { lineHeight: 18 },
+  soMoc: { fontVariant: ["tabular-nums"], paddingTop: 16 },
   flex: { flex: 1 },
+  dem: { minWidth: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", paddingHorizontal: 7 },
   form: { maxWidth: 560 },
   khung: { gap: 14 },
   profileTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },

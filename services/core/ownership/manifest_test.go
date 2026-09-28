@@ -128,7 +128,7 @@ func TestForceRefusesFrozen(t *testing.T) {
 
 func TestNativeGoRoutesStayInManifestWithoutPythonFallback(t *testing.T) {
 	native := goOwned(row(0, "GET", "/me/profile-videos/credits", "profile-media"))
-	native.Python, native.State = "absent", "GO-NATIVE"
+	native.Python, native.Native = "absent", true
 	m, err := Parse(encode(t, []Route{native}))
 	if err != nil {
 		t.Fatal(err)

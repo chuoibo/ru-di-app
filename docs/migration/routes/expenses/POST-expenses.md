@@ -12,7 +12,7 @@ Thứ tự (theo mã; stack tham chiếu là mốc):
 
 1. `IdempotencyMiddleware` nếu có `Idempotency-Key` (`services/api/app/api/idempotency.py:404-553`): rỗng hoặc dài hơn 255 → 422 trước mọi thứ khác (`owner_empty_idempotency_key`).
 2. JSON hỏng / body sai → 422 framework.
-3. **Không có `get_actor`**: route không khai báo actor (`services/api/app/api/routes/expenses.py:30-40`). Ẩn danh được 201 ở dev (`anonymous_even_split_remainder`) và ở prod không cần bearer (`anonymous_proposes_without_bearer`), bearer rác cũng 201 (`junk_bearer_proposes`). `X-Actor-*` không được đọc, nên `X-Actor-ID` sai định dạng không gây 422. Không có bảng quyền nào được hỏi.
+3. **`get_actor` bắt buộc (từ 2026-09-27)**: trước đây route không khai báo actor, nên người ẩn danh ghi được dòng `expenses` vào nhóm bất kỳ và dò được id nhóm (404 so với 201). Nay: actor (401 nếu thiếu — `anonymous_even_split_remainder`, `anonymous_proposes_without_bearer`, `junk_bearer_proposes`), rồi allocator (422), rồi `confirm_expense_proposal` với `is_group_member` của nhóm trong body (403, kể cả nhóm không tồn tại), rồi mới ghi. 404 `context_not_found` chỉ còn cho nhóm bị xoá giữa lúc kiểm và lúc ghi.
 4. `allocate(_allocator_input(proposal))` → `AllocationError` → 422 với `code` là mã miền **viết hoa nguyên văn**, detail `Expense cannot be allocated` (`service.py:6318-6321`). Chạy **trước** khi tra context: nhóm không tồn tại + phân bổ lỗi → 422 (`owner_unknown_context_bad_split`).
 5. `create_expense(context_id)` (`services/api/app/api/repository.py:6022-6041`): vi phạm `fk_expenses_context_id` → `RepositoryConflict("EXPENSE_CONTEXT_NOT_FOUND")` → 404 `context_not_found` (`service.py:6322-6329`, `owner_unknown_context_valid_split`). IntegrityError khác bị ném lại (500, không tới được).
 
@@ -106,7 +106,7 @@ Lỗi của middleware có khoảng trắng sau `:` và `,` (`json.dumps` mặc 
 
 `parity/scenarios/w4/expenses/POST-expenses.yaml`, id `w4/expenses/post-expenses` (55 bước), lane DB bật:
 
-- Không actor: `anonymous_even_split_remainder` (201).
+- Không actor: `anonymous_even_split_remainder` (401).
 - Phân bổ 201: `owner_minimal_body_defaults`, `owner_advancer_outside_participants`, `owner_zero_total`, `owner_items_zero_share`, `owner_items_surcharges_discounts`, `owner_proportional_fallback_to_even`, `owner_sixteen_participants`, `owner_uneven_remainders`, `owner_total_at_ceiling` (dòng `body_raw` mang `# repo-guard: allow=long-number reason=allocator-ceiling-probe`).
 - Allocator 422: các bước trong bảng ở mục Đầu vào; ba bước vượt int64 mang `reason=int64-overflow-probe`.
 - Context: `owner_unknown_context_valid_split` (404), `owner_unknown_context_bad_split` (422 thắng 404).
@@ -114,7 +114,7 @@ Lỗi của middleware có khoảng trắng sau `:` và `,` (`json.dumps` mặc 
 - Idempotency: `owner_key_first`, `owner_key_replay_reordered`, `owner_key_reused_participants_reversed`, `owner_key_allocation_refused` + `owner_key_after_allocation_refusal`, `owner_key_unknown_context_refused` + `owner_key_after_unknown_context_refusal`, `anonymous_key_first` + `anonymous_key_replay`, `owner_uses_anonymous_key`, `owner_empty_idempotency_key`.
 - Framework: `get_not_allowed` (405), `trailing_slash_redirects` (307). Chuẩn bị: `register_owner`, `owner_creates_group`.
 
-`prod` (`w4/expenses/prod-auth`, 21 bước, chung với confirm): `anonymous_proposes_without_bearer`, `junk_bearer_proposes` (201 không cần phiên), `anonymous_key_first` + `anonymous_key_replay` (scope `anonymous`), khoá theo digest bearer (`owner_key_first`, `owner_key_replay`, `stranger_same_key`, `owner_same_key_bearer_scope`).
+`prod` (`w4/expenses/prod-auth`, 21 bước, chung với confirm): `anonymous_proposes_without_bearer`, `junk_bearer_proposes` (401), `owner_proposes` (201, khoản chi các bước confirm dùng), `anonymous_key_first` + `anonymous_key_replay` (scope `anonymous`), khoá theo digest bearer (`owner_key_first`, `owner_key_replay`, `stranger_same_key`, `owner_same_key_bearer_scope`).
 
 Replay chéo (`w4/crossreplay/post-expenses`, 17 bước): Python lưu → core replay, cả khi đổi thứ tự khoá; core từ chối khi đảo mảng `participants`; core lưu → Python replay/từ chối (thêm một trường mặc định viết tường minh là request khác); từ chối của phía này nhả khoá cho phía kia; khoá của scope ẩn danh replay chéo.
 
@@ -127,6 +127,6 @@ Corpus 422 sinh: route bị hoãn trong wave `w4` của `scripts/render_parity_4
 - **Số tiền không có trần ở biên**: JSON integer vượt int64 phải qua được bước parse và trả `AMOUNT_TOO_LARGE`/`NEGATIVE_AMOUNT` như Python, không phải 422 lỗi JSON (`owner_total_past_int64`, `owner_total_below_int64`, `owner_item_past_int64`). Đối soát `Σ item + Σ phụ phí − Σ giảm giá` chạy sau kiểm trần nên các tổng đó luôn nhỏ; bản Go vẫn nên dùng `big.Rat`/`big.Int` như ADR-0029 §2.5.
 - Thứ tự mã lỗi là thứ tự của ADR-0004, duyệt phần tử theo **byte của id**, không theo thứ tự gửi.
 - `proposal` là bản pydantic ghi lại, không phải echo byte: định dạng `occurred_at` (Z, offset, 6 chữ số lẻ), UUID thường, mặc định được điền.
-- Route không có actor ở cả hai chế độ: bất kỳ ai biết id nhóm đều tạo được dòng `expenses` trong nhóm đó, và 404 so với 201/422 cho biết id nhóm có tồn tại. Parity giữ nguyên (xem lỗi nghi vấn).
+- ~~Route không có actor ở cả hai chế độ: bất kỳ ai biết id nhóm đều tạo được dòng `expenses` trong nhóm đó, và 404 so với 201/422 cho biết id nhóm có tồn tại.~~ Đã sửa 2026-09-27 ở cả Go lẫn Python (PR #645): actor + thành viên nhóm bắt buộc.
 - Scope idempotency `anonymous` dùng chung giữa mọi người gọi không danh tính; khoá cố định sẽ va giữa các lượt chạy, nên kịch bản gắn id nhóm vào khoá.
 - 409 in-flight và tiến trình chết giữa chừng không phủ.

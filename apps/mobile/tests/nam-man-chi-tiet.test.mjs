@@ -153,7 +153,7 @@ test("chi tiết địa điểm: mọi cách hỏng đều ra một câu, không
     },
   });
   assert.equal(chet.kind, "khong-noi-duoc");
-  assert.match(loiChiTiet(chet), /Không nối được/);
+  assert.match(loiChiTiet(chet), /Không kết nối được/);
 
   // A server WITHOUT the route answers FastAPI's own 404; the route's own 404
   // carries a `code`. Two different afternoons, so two different states.

@@ -80,6 +80,7 @@ def propose_and_confirm(
 ):
     proposal = client.post(
         "/expenses",
+        headers=actor_headers(),
         json=expense_payload(
             total=total, description=description, participants=participants
         ),

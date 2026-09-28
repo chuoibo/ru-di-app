@@ -99,10 +99,14 @@ type Context struct {
 type Member struct {
 	PersonID string
 	State    string
+	// DisplayName is MembershipRecord.display_name: the draft names whose
+	// taste it used (ADR-0034).
+	DisplayName string
 }
 
 // Consent is PairConsentRecord, the keys `_consents_as_dicts` reads.
 type Consent struct {
+	ProposalID        string
 	PersonID          string
 	Purpose           string
 	GrantedAt         *time.Time
@@ -176,6 +180,8 @@ type Keep struct {
 type Paper struct {
 	ID             string
 	ContextID      string
+	CycleID        *string
+	IsTemporary    bool
 	DraftOwnerID   string
 	State          string
 	CurrentVersion int
@@ -274,6 +280,8 @@ type Store interface {
 	GetPairPaper(paperID string) (*Paper, error)
 	LockPairPaper(paperID string) (*Paper, error)
 	ListPairPapers(contextID string) ([]Paper, error)
+	// AdoptTemporaryPaper is adopt_temporary_paper (ADR-0038 §2.1).
+	AdoptTemporaryPaper(paperID, cycleID string) error
 	UpdatePairDraft(paperID string, content pairpaper.Content, lyDo *string) error
 	AddPaperVersion(draft VersionDraft) error
 	MarkVersionSent(paperID string, version int, sentBy *string, now time.Time) error
@@ -285,6 +293,59 @@ type Store interface {
 	AddPaperKeep(paperID, personID, line string, now time.Time) (Keep, error)
 	CloseOpenPairPapers(contextID string, now time.Time) error
 	CreateOuting(draft OutingDraft) (string, error)
+	// GetPlace is get_place: one catalogue row, nil when the id is unknown.
+	GetPlace(placeID string) (*PlaceRef, error)
+	// ListPlaces is list_places(destination_id=..., category=...), in id order.
+	ListPlaces(destinationID, category string) ([]PlaceRef, error)
+	// ReplaceOutingStops is replace_outing_stops with expected_revision=None.
+	ReplaceOutingStops(outingID string, stops []OutingStopDraft) error
+	// InterestsByPerson is interests_by_person: people with no tags are absent.
+	InterestsByPerson(personIDs []string) (map[string][]string, error)
+	// GetPairRhythm is get_pair_rhythm: the week's stored choice, nil if none.
+	GetPairRhythm(cycleID string, tuan pairpaper.Date) (*Rhythm, error)
+	// SetPairRhythm is set_pair_rhythm; NguoiLoID nil is «cả hai».
+	SetPairRhythm(draft RhythmDraft) error
+}
+
+// Rhythm is PairRhythmRecord, the part the service reads.
+type Rhythm struct {
+	NguoiLoID *string
+}
+
+// RhythmDraft is set_pair_rhythm's arguments.
+type RhythmDraft struct {
+	CycleID   string
+	Tuan      pairpaper.Date
+	NguoiLoID *string
+	ChonBoiID string
+	Now       time.Time
+}
+
+// PlaceRef is the part of a catalogue row _chot and draft_pair_paper read
+// (`PlaceRecord.to_row()`): Kinds and Traits hold only the str items.
+type PlaceRef struct {
+	ID            string
+	Name          string
+	DestinationID string
+	Category      string
+	Kinds         []string
+	Traits        []string
+	Rating        *float64
+	RatingCount   *int64
+}
+
+// row is the PlaceRef as lam_giau_phac reads it.
+func (p PlaceRef) row() pairpaper.PlaceRow {
+	return pairpaper.PlaceRow{ID: p.ID, Name: p.Name, Category: p.Category, Kinds: p.Kinds, Traits: p.Traits,
+		Rating: p.Rating, RatingCount: p.RatingCount}
+}
+
+// OutingStopDraft is one element of replace_outing_stops' `stops`.
+type OutingStopDraft struct {
+	MinuteOfDay int64
+	Label       string
+	PlaceName   *string
+	PlaceID     *string
 }
 
 // permissionRefusals is _TU_CHOI_TO_GIAY: the failed predicates that answer
@@ -369,6 +430,20 @@ func requirePairPermission(action string, actor Actor, facts ...fact) error {
 // pairContextOr404 is _pair_context_or_404: the active members of the pair
 // the actor is in, or one 404 for no context, a group, and a stranger.
 func pairContextOr404(s Store, actor Actor, contextID string) ([]string, error) {
+	roster, err := pairRosterOr404(s, actor, contextID)
+	if err != nil {
+		return nil, err
+	}
+	members := []string{}
+	for _, row := range roster {
+		members = append(members, row.PersonID)
+	}
+	return members, nil
+}
+
+// pairRosterOr404 is _pair_roster_or_404: the same reads, the active rows
+// whole.
+func pairRosterOr404(s Store, actor Actor, contextID string) ([]Member, error) {
 	record, err := s.GetContext(contextID)
 	if err != nil {
 		return nil, err
@@ -387,13 +462,13 @@ func pairContextOr404(s Store, actor Actor, contextID string) ([]string, error) 
 	if err != nil {
 		return nil, err
 	}
-	members := []string{}
+	roster := []Member{}
 	for _, row := range rows {
 		if row.State == "active" {
-			members = append(members, row.PersonID)
+			roster = append(roster, row)
 		}
 	}
-	return members, nil
+	return roster, nil
 }
 
 // Participants is _participants: the live cycle's own list, or the
@@ -410,15 +485,23 @@ func ConsentsOf(notebook *Notebook) []pairnotebook.Consent {
 	if notebook == nil {
 		return []pairnotebook.Consent{}
 	}
+	// Which proposal each answer belongs to, and whether it was completed:
+	// «both agreed» is per proposal, and an agreed proposal no longer lapses.
+	completed := map[string]*time.Time{}
+	for _, row := range notebook.Proposals {
+		completed[row.ID] = row.CompletedAt
+	}
 	out := make([]pairnotebook.Consent, len(notebook.Consents))
 	for i, row := range notebook.Consents {
 		expires := row.ProposalExpiresAt
 		out[i] = pairnotebook.Consent{
-			PersonID:          row.PersonID,
-			Purpose:           row.Purpose,
-			GrantedAt:         row.GrantedAt,
-			RevokedAt:         row.RevokedAt,
-			ProposalExpiresAt: &expires,
+			PersonID:            row.PersonID,
+			Purpose:             row.Purpose,
+			GrantedAt:           row.GrantedAt,
+			RevokedAt:           row.RevokedAt,
+			ProposalExpiresAt:   &expires,
+			ProposalID:          row.ProposalID,
+			ProposalCompletedAt: completed[row.ProposalID],
 		}
 	}
 	return out

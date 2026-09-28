@@ -1,20 +1,3 @@
-ALTER TABLE post_comments ADD COLUMN parent_id uuid REFERENCES post_comments(id) ON DELETE CASCADE;
-ALTER TABLE post_comments ADD CONSTRAINT social_post_comment_not_self CHECK (parent_id IS NULL OR parent_id <> id);
-CREATE INDEX social_post_comments_parent ON post_comments(parent_id,created_at,id) WHERE parent_id IS NOT NULL;
-
-CREATE FUNCTION social_validate_comment_parent() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE p_post uuid; p_parent uuid;
-BEGIN
- IF NEW.parent_id IS NULL THEN RETURN NEW; END IF;
- SELECT post_id,parent_id INTO p_post,p_parent FROM post_comments WHERE id=NEW.parent_id;
- IF p_post IS NULL OR p_post<>NEW.post_id OR p_parent IS NOT NULL THEN
-  RAISE EXCEPTION 'invalid social comment parent' USING ERRCODE='23514';
- END IF;
- RETURN NEW;
-END $$;
-CREATE TRIGGER social_comment_parent BEFORE INSERT OR UPDATE OF parent_id,post_id ON post_comments
- FOR EACH ROW EXECUTE FUNCTION social_validate_comment_parent();
-
 CREATE TABLE social_comment_likes (
  comment_id uuid NOT NULL REFERENCES post_comments(id) ON DELETE CASCADE,
  person_id uuid NOT NULL REFERENCES people(id) ON DELETE CASCADE,

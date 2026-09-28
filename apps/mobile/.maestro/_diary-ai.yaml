@@ -1,0 +1,54 @@
+# Requires a local brain with provider credentials and an existing private trip diary.
+appId: com.lakiet.rudi
+env:
+  PHOTO_COUNT: "3"
+  PAGE_NUMBER: "2"
+  TRIP_TITLE: "Hai ngày gom nắng"
+---
+- openLink: "rudi://diaries/${DIARY_ID}"
+- extendedWaitUntil:
+    visible:
+      id: "diary-reader-screen"
+    timeout: 30000
+- openLink: "rudi://outings/${OUTING_ID}/ending"
+- extendedWaitUntil:
+    visible:
+      id: "diary-ending-screen"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Chọn lại chất liệu"
+    direction: DOWN
+    timeout: 60000
+- tapOn: "Chọn lại chất liệu"
+- scrollUntilVisible:
+    element:
+      id: "diary-excerpt-input"
+    direction: DOWN
+- tapOn:
+    id: "diary-excerpt-input"
+- inputText: "These three images are colour pattern cards made for a synthetic app test. We did not visit any places. Keep the cards together without inventing a journey or emotions."
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      text: "Dựng sổ cùng Nếp"
+    direction: DOWN
+- tapOn: "Dựng sổ cùng Nếp"
+- extendedWaitUntil:
+    notVisible: "Những mẩu chuyện đang thành trang…"
+    timeout: 120000
+- scrollUntilVisible:
+    element:
+      text: "Nếp giúp xếp ảnh và viết lời từ phần bạn chia sẻ. Bạn là người giữ lời cuối."
+    direction: DOWN
+    timeout: 60000
+- takeScreenshot: diary-ai-draft
+- scrollUntilVisible:
+    element:
+      text: "Lưu riêng tư"
+    direction: DOWN
+- tapOn: "Lưu riêng tư"
+- extendedWaitUntil:
+    visible: "Đã giữ lại một cuộc đi."
+    timeout: 30000
+- takeScreenshot: diary-ai-saved

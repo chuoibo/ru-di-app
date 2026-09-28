@@ -26,20 +26,26 @@ var goNames = map[string]string{
 	"PLAN_STATES":    "PlanStates",
 	"RESPONSE_KINDS": "ResponseKinds",
 	"TERMINAL":       "Terminal",
-	"PaperError":     "PaperError",
-	"chuyen":         "Chuyen",
-	"co_the_rut":     "CoTheRut",
-	"da_du_dong_y":   "DaDuDongY",
-	"han_tuan":       "HanTuan",
-	"hieu_luc":       "HieuLuc",
-	"ngay_de_xuat":   "NgayDeXuat",
-	"phac_to_giay":   "PhacToGiay",
-	"tuan_cua":       "TuanCua",
+	// ADR-0034 §2.5, exported by Python since c8f092c; this map missed it.
+	"TO_MOI_NGUOI_MOI_TUAN": "ToMoiNguoiMoiTuan",
+	"PaperError":            "PaperError",
+	"chuyen":                "Chuyen",
+	"co_the_rut":            "CoTheRut",
+	"da_du_dong_y":          "DaDuDongY",
+	"han_tuan":              "HanTuan",
+	"hieu_luc":              "HieuLuc",
+	"lam_giau_phac":         "LamGiauPhac",
+	"lam_giau_theo_gu":      "LamGiauTheoGu",
+	"gu_cho_nep":            "GuChoNep",
+	"loai_theo_gu":          "LoaiTheoGu",
+	"ngay_de_xuat":          "NgayDeXuat",
+	"phac_to_giay":          "PhacToGiay",
+	"tuan_cua":              "TuanCua",
 }
 
 // functions is every case kind; codes is every refusal the corpus must hold.
 var (
-	functions = []string{"tuan_cua", "han_tuan", "ngay_de_xuat", "astimezone", "hieu_luc", "da_du_dong_y", "co_the_rut", "chuyen", "phac_to_giay"}
+	functions = []string{"tuan_cua", "han_tuan", "ngay_de_xuat", "astimezone", "hieu_luc", "da_du_dong_y", "co_the_rut", "chuyen", "phac_to_giay", "lam_giau_phac", "gu_cho_nep", "lam_giau_theo_gu"}
 	codes     = []string{"paper_event_unknown", "paper_expired", "paper_frozen", "paper_wrong_state", "paper_not_withdrawable", "paper_needs_recorder", "paper_draft_needs_date"}
 )
 
@@ -315,8 +321,224 @@ func replay(c oracletest.Case, args map[string]any) (any, error) {
 			return nil, err
 		}
 		return renderDraft(draft), nil
+	case "lam_giau_phac", "lam_giau_theo_gu":
+		routine, err := routineOf(args["routine"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		boxes, err := oracletest.Strings(args["rang_buoc"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		now, err := oracletest.Instant(args["now"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		lichSu, err := lichSuOf(args["lich_su"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		choCu, err := placeRowOf(args["cho_cu"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		rawRows, err := oracletest.List(args["ung_vien"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		var ungVien []PlaceRow
+		for _, raw := range rawRows {
+			row, err := placeRowOf(raw)
+			if err != nil || row == nil {
+				return decodeFailed(fmt.Errorf("ung_vien %v: %v", raw, err))
+			}
+			ungVien = append(ungVien, *row)
+		}
+		draft, err := PhacToGiay(routine, len(boxes) > 0, now)
+		if err != nil {
+			return nil, err
+		}
+		draft = LamGiauPhac(draft, lichSu, choCu, ungVien, boxes)
+		if c.Fn == "lam_giau_phac" {
+			return renderDraft(draft), nil
+		}
+		gu, err := guSpecOf(args["gu"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		rawGu, err := oracletest.List(args["ung_vien_gu"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		var ungVienGu []PlaceRow
+		for _, raw := range rawGu {
+			row, err := placeRowOf(raw)
+			if err != nil || row == nil {
+				return decodeFailed(fmt.Errorf("ung_vien_gu %v: %v", raw, err))
+			}
+			ungVienGu = append(ungVienGu, *row)
+		}
+		daDi, err := oracletest.Strings(args["da_di"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		return renderDraft(LamGiauTheoGu(draft, gu, ungVienGu, daDi, boxes)), nil
+	case "gu_cho_nep":
+		chia, err := oracletest.Strings(args["nguoi_chia"])
+		if err != nil {
+			return decodeFailed(err)
+		}
+		gu := map[string][]string{}
+		for person, raw := range args["gu"].(map[string]any) {
+			if gu[person], err = oracletest.Strings(raw); err != nil {
+				return decodeFailed(err)
+			}
+		}
+		ten := map[string]string{}
+		for person, raw := range args["ten"].(map[string]any) {
+			if ten[person], err = oracletest.Str(raw); err != nil {
+				return decodeFailed(err)
+			}
+		}
+		out := []any{}
+		for _, muc := range GuChoNep(chia, gu, ten, args["ca_hai"].(bool)) {
+			var name any
+			if muc.Ten != nil {
+				name = *muc.Ten
+			}
+			out = append(out, map[string]any{"tag": muc.Tag, "chung": muc.Chung, "ten": name, "nguoi": oracletest.AnyStrings(muc.Nguoi)})
+		}
+		return out, nil
 	}
 	return decodeFailed(fmt.Errorf("unknown function %q", c.Fn))
+}
+
+// guSpecOf reads gu_of's spec: [[tag, chung, ten|null, [nguoi, ...]], ...].
+func guSpecOf(value any) ([]GuMuc, error) {
+	items, err := oracletest.List(value)
+	if err != nil {
+		return nil, err
+	}
+	out := []GuMuc{}
+	for _, item := range items {
+		spec, err := oracletest.List(item)
+		if err != nil || len(spec) != 4 {
+			return nil, fmt.Errorf("gu %v", item)
+		}
+		var muc GuMuc
+		if muc.Tag, err = oracletest.Str(spec[0]); err != nil {
+			return nil, err
+		}
+		muc.Chung, _ = spec[1].(bool)
+		if spec[2] != nil {
+			name, err := oracletest.Str(spec[2])
+			if err != nil {
+				return nil, err
+			}
+			muc.Ten = &name
+		}
+		if muc.Nguoi, err = oracletest.Strings(spec[3]); err != nil {
+			return nil, err
+		}
+		out = append(out, muc)
+	}
+	return out, nil
+}
+
+// placeRowOf reads row_of's spec: [id, name, category, kinds, traits,
+// rating*10, count]; nil for None. Only the str items of kinds and traits
+// reach the function, as `isinstance(k, str)` keeps them.
+func placeRowOf(value any) (*PlaceRow, error) {
+	if value == nil {
+		return nil, nil
+	}
+	spec, err := oracletest.List(value)
+	if err != nil || len(spec) != 7 {
+		return nil, fmt.Errorf("row %v", value)
+	}
+	var row PlaceRow
+	if row.ID, err = oracletest.Str(spec[0]); err != nil {
+		return nil, err
+	}
+	if row.Name, err = oracletest.Str(spec[1]); err != nil {
+		return nil, err
+	}
+	if row.Category, err = oracletest.Str(spec[2]); err != nil {
+		return nil, err
+	}
+	for _, into := range []struct {
+		raw any
+		out *[]string
+	}{{spec[3], &row.Kinds}, {spec[4], &row.Traits}} {
+		items, err := oracletest.List(into.raw)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range items {
+			if text, ok := item.(string); ok {
+				*into.out = append(*into.out, text)
+			}
+		}
+	}
+	if spec[5] != nil {
+		tenths, err := oracletest.Int64(spec[5])
+		if err != nil {
+			return nil, err
+		}
+		rating := float64(tenths) / 10
+		row.Rating = &rating
+	}
+	if spec[6] != nil {
+		count, err := oracletest.Int64(spec[6])
+		if err != nil {
+			return nil, err
+		}
+		row.RatingCount = &count
+	}
+	return &row, nil
+}
+
+// lichSuOf reads [[ngay, [[gio, viec, place_id], ...]], ...].
+func lichSuOf(value any) ([]Content, error) {
+	entries, err := oracletest.List(value)
+	if err != nil {
+		return nil, err
+	}
+	var out []Content
+	for _, raw := range entries {
+		entry, err := oracletest.List(raw)
+		if err != nil || len(entry) != 2 {
+			return nil, fmt.Errorf("lich_su %v", raw)
+		}
+		ngay, err := oracletest.Str(entry[0])
+		if err != nil {
+			return nil, err
+		}
+		stops, err := oracletest.List(entry[1])
+		if err != nil {
+			return nil, err
+		}
+		content := Content{Ngay: ngay}
+		for _, rawStop := range stops {
+			stop, err := oracletest.List(rawStop)
+			if err != nil || len(stop) != 3 {
+				return nil, fmt.Errorf("stop %v", rawStop)
+			}
+			var s Stop
+			if s.Gio, err = oracletest.Str(stop[0]); err != nil {
+				return nil, err
+			}
+			if s.Viec, err = oracletest.Str(stop[1]); err != nil {
+				return nil, err
+			}
+			if s.PlaceID, err = oracletest.OptionalString(stop[2]); err != nil {
+				return nil, err
+			}
+			content.Chang = append(content.Chang, s)
+		}
+		out = append(out, content)
+	}
+	return out, nil
 }
 
 func refusal(err error) (string, string, bool) {

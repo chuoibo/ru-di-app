@@ -61,9 +61,9 @@ const QUYEN_ADMIN = "group_admin,member,advancer,recipient,batch_owner";
 
 const DANH_TINH_REFUSALS: Record<string, string> = {
   identity_key_missing:
-    "Máy chủ chưa cấu hình khoá danh tính nên chưa đăng nhập được. Báo người dựng máy chủ đặt MOBILE_PERSON_ID_KEY.",
+    "Rủ Đi chưa sẵn sàng cho đăng nhập lúc này. Đây là lỗi phía Rủ Đi; thử lại sau ít phút.",
   rate_limited:
-    "Thử lại sau một phút. Máy chủ đang giới hạn số lần tra danh tính.",
+    "Thử lại sau một phút. Rủ Đi đang giới hạn số lần tra số điện thoại.",
   phone_not_mobile: "Chưa đúng dạng số di động Việt Nam.",
   phone_required: "Chưa gửi được số. Nhập lại rồi thử lần nữa.",
 };
@@ -143,7 +143,7 @@ export async function taoNhom(
 
 const MOI_REFUSALS: Record<string, string> = {
   person_not_registered:
-    "Người này chưa có tên trên máy chủ, nên chưa mời được. Thêm lại bạn đó bằng ô phía trên.",
+    "Người này chưa có tài khoản Rủ Đi, nên chưa mời được. Thêm lại bạn đó bằng ô phía trên.",
   membership_conflict: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
   duplicate_membership: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
   permission_denied:

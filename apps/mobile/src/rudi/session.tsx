@@ -181,7 +181,11 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
   // One decision, derived once. `cheDo` used to be its own piece of state,
   // which is how a badge and a data loader end up disagreeing.
   const nguon = useMemo(() => nguonHienTai(phien), [phien]);
-  const cheDo = nguon.kieu === "live" ? "live" : "trai-nghiem";
+  // A signed-in person is never "the experience build", group or not: `nguon`
+  // answers where GROUP data comes from, `cheDo` answers whether the fixture
+  // story is on screen. Folding the two made a real OTP account with no group
+  // read «Chế độ trải nghiệm» in Nếp and «Dữ liệu demo» on Cá nhân (QA 23/09).
+  const cheDo = nguon.kieu === "live" || phien !== null ? "live" : "trai-nghiem";
   const [luuTruSong, setLuuTruSong] = useState(false);
   const hen = useRef<ReturnType<typeof setTimeout> | null>(null);
 

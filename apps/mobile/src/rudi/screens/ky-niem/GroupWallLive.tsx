@@ -23,7 +23,10 @@ import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../
 import type { Phien } from "../../../phien";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import { tenCua, type ThanhVien } from "../../chia-bill/hoa-don";
-import { docDanhMuc } from "../../kham-pha/dia-diem";
+import { docDanhMucCoLui } from "../../kham-pha/dia-diem";
+import { docDiemDenDaChon } from "../../kham-pha/diem-den";
+import { tiLeKhung } from "../../ky-niem/ti-le";
+import { laPair } from "../../nhan-rieng/nhan-rieng";
 import {
   cauKyNiem,
   cauTuongTac,
@@ -35,10 +38,12 @@ import {
   nguonAnh,
   type BinhLuan,
   type KyNiem,
+  nghiengAnh,
 } from "../../ky-niem/ky-niem";
-import { typography, useRudiTheme } from "../../theme";
+import { mucNguoi, typography, useRudiTheme } from "../../theme";
+import { Washi } from "../../ui/Washi";
 import { Chip, Field, Inline, RudiButton, RudiScreen, SearchField, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { Sheet } from "../../ui/Sheet";
@@ -68,11 +73,13 @@ function gioViet(iso: string): string {
 
 export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contextId: string }) {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark, radius } = useRudiTheme();
   const me = phien.person_id;
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [roster, setRoster] = useState<ThanhVien[]>([]);
   const [thongBao, setThongBao] = useState<string | null>(null);
+  // Each memory's photo ratio, learned from the image as it loads (the wire has no size).
+  const [tiLe, setTiLe] = useState<Record<string, number>>({});
   const [ban, setBan] = useState(false);
   const [moBinhLuan, setMoBinhLuan] = useState<string | null>(null);
   const [binhLuan, setBinhLuan] = useState<Record<string, BinhLuan[]>>({});
@@ -83,7 +90,11 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
   const [choChon, setChoChon] = useState<Cho | null>(null);
   const [cauCheckIn, setCauCheckIn] = useState("");
   const attempts = useRef<Record<string, Attempt>>({});
-  const tenNhom = phien.contexts?.find((n) => n.id === contextId)?.display_name ?? "Nhóm";
+  const nhom = phien.contexts?.find((n) => n.id === contextId);
+  // A pair's wall is the two of them keeping their evenings, not a group's
+  // board: it is named for them and says who sees it.
+  const laDoi = laPair(nhom);
+  const tenNhom = laDoi ? `Bạn và ${nhom?.display_name || "người ấy"}` : nhom?.display_name ?? "Nhóm";
 
   const docTrangDau = useCallback(async () => {
     const t = await docTuongNhom(contextId, me);
@@ -165,7 +176,9 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
     chay(async () => {
       setMoCheckIn(true);
       if (danhMuc === null) {
-        const dm = await docDanhMuc();
+        // The destination picked on Khám phá; the default is a curated town
+        // where nobody in the group is checking in.
+        const dm = await docDanhMucCoLui(await docDiemDenDaChon());
         setDanhMuc(dm.places.map((p) => ({ id: p.id, name: p.name })));
       }
     });
@@ -229,11 +242,11 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
 
   return (
     <RudiScreen overlay={khayCheckIn} testID="group-wall-screen">
-      <TopBar subtitle="Chỉ thành viên nhóm thấy" title="Tường nhóm" />
+      <TopBar subtitle={laDoi ? "Chỉ hai bạn thấy" : "Chỉ thành viên nhóm thấy"} title={laDoi ? "Kỷ niệm của hai bạn" : "Tường nhóm"} />
       <Text style={[typography.h1, { color: colors.ink }]}>{tenNhom}</Text>
       {thongBao !== null && !moCheckIn ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
       <Inline gap={8} wrap>
-        <RudiButton compact full={false} icon="camera-outline" label="Thả khoảnh khắc" onPress={() => router.push("/moments/new" as never)} />
+        <RudiButton compact full={false} icon="camera-outline" label="Thả khoảnh khắc" onPress={() => router.push(`/moments/new?ctx=${contextId}` as never)} />
         <RudiButton compact disabled={ban} full={false} icon="location-outline" label="Check-in" onPress={() => void moCheckInForm()} variant="outline" />
       </Inline>
 
@@ -257,16 +270,32 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
             return (
               <View key={k.id} style={[styles.bai, { borderBottomColor: colors.line }]}>
                 <View style={styles.dong}>
-                  <Avatar name={tacGia} size={36} />
+                  <AvatarNguoi name={tacGia} personId={k.authorId} size={36} />
                   <View style={styles.flex}>
-                    <Text style={[typography.label, { color: colors.ink }]}>{tacGia}</Text>
+                    <Text style={[typography.label, { color: k.authorId ? mucNguoi(k.authorId, dark) : colors.ink }]}>{tacGia}</Text>
                     <Text style={[typography.caption, { color: colors.inkFaint }]}>{gioViet(k.createdAt)}</Text>
                   </View>
                 </View>
                 {anh !== null ? (
-                  <KhungAnh xuatXu={`${tacGia} · ${gioViet(k.createdAt)}`}>
-                    <Image accessibilityLabel={cauKyNiem(k)} contentFit="cover" source={anh} style={[styles.anh, { backgroundColor: colors.line }]} />
+                  // A print pinned to the wall: a slight lean of its own and a
+                  // strip of washi over the top edge (ADR-0037 D1, plan S6).
+                  <View style={styles.khungDan}>
+                  <KhungAnh tilt={nghiengAnh(k.id)} xuatXu={`${tacGia} · ${gioViet(k.createdAt)}`}>
+                    <Image
+                      accessibilityLabel={cauKyNiem(k)}
+                      contentFit="cover"
+                      // The frame takes the photo's shape once it is known: a
+                      // portrait memory was cut to a 4:3 strip (QA 23/09).
+                      onLoad={(e) => {
+                        const r = tiLeKhung(e.source);
+                        setTiLe((cu) => (cu[k.id] === r ? cu : { ...cu, [k.id]: r }));
+                      }}
+                      source={anh}
+                      style={[styles.anh, { aspectRatio: tiLe[k.id] ?? 4 / 3, backgroundColor: colors.line }]}
+                    />
                   </KhungAnh>
+                  <Washi style={styles.bangDinh} tilt={nghiengAnh(k.id) > 0 ? -2 : 2} />
+                  </View>
                 ) : null}
                 {k.kind === "checkin" ? (
                   <View style={styles.checkin}>
@@ -315,7 +344,10 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                       </Text>
                     ))}
                     <Field accessibilityLabel="Ô viết bình luận" onChangeText={setNhap} placeholder="Viết bình luận…" value={nhap} />
-                    <RudiButton compact disabled={ban || nhap.trim() === ""} full={false} label="Gửi bình luận" loading={ban} onPress={() => void guiBinhLuan(k)} variant="soft" />
+                    {/* ADR-0038 §2.2: the send appears with something to send. */}
+                    {nhap.trim() !== "" || ban ? (
+                      <RudiButton compact disabled={ban} full={false} label="Gửi bình luận" loading={ban} onPress={() => void guiBinhLuan(k)} variant="soft" />
+                    ) : null}
                   </View>
                 ) : null}
               </View>
@@ -329,12 +361,14 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
 }
 
 const styles = StyleSheet.create({
+  khungDan: { paddingTop: 6 },
+  bangDinh: { position: "absolute", top: -4, alignSelf: "center", width: 84, height: 22 },
   flex: { flex: 1 },
   khung: { gap: 16 },
   form: { gap: 10, paddingBottom: 4 },
   bai: { gap: 10, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   dong: { flexDirection: "row", alignItems: "center", gap: 10 },
-  anh: { width: "100%", aspectRatio: 4 / 3 },
+  anh: { width: "100%" },
   checkin: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   hanhDong: { flexDirection: "row", alignItems: "center", gap: 4 },
   nutHanhDong: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 6, paddingRight: 12 },

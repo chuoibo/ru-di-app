@@ -35,9 +35,10 @@ ERRORS = {
 )
 def propose_expense(
     request: ExpenseInput,
+    actor: Annotated[Actor, Depends(get_actor)],
     repository: Annotated[ApiRepository, Depends(get_repository)],
 ) -> ExpenseProposalResponse:
-    return ApiService(repository).propose_expense(request)
+    return ApiService(repository).propose_expense(request, actor)
 
 
 @router.post(

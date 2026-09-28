@@ -30,7 +30,7 @@ export function nhanChinhSach(id: string | undefined): string {
 }
 
 export const LOI_CHINH_SACH: Record<string, string> = {
-  person_not_found: "Máy chủ chưa có hồ sơ cho tài khoản này.",
+  person_not_found: "Chưa có hồ sơ cho tài khoản này. Đăng nhập lại giúp mình.",
   permission_denied: "Chỉ bạn mới đổi được cài đặt của tường mình.",
 };
 

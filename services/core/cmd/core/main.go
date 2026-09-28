@@ -4,16 +4,22 @@
 //	core serve         run the front door
 //	core healthcheck   exit 0 if this process answers on its liveness port
 //	core routes --json list the routes this binary serves itself
-//	core migrate-profile install the Go-only profile schemas
+//	core migrate-chat  install the chat change feed and AI engine schema
+//	                   (alias: migrate-chat-candidate, the name older scripts use)
+//	core migrate-profile install the Go-only profile schemas (after migrate-community)
 package main
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"log/slog"
+	"mobile/services/core/internal/gzipjson"
+	"mobile/services/core/internal/janitor"
+	"mobile/services/core/internal/media/storage"
 	"net"
 	"net/http"
 	"os"
@@ -24,11 +30,14 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/achievementv1"
+	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
 	"mobile/services/core/internal/chatlegacychange"
+	"mobile/services/core/internal/community"
 	"mobile/services/core/internal/config"
 	"mobile/services/core/internal/db"
+	"mobile/services/core/internal/diary"
 	"mobile/services/core/internal/googleid"
 	"mobile/services/core/internal/httpapi/dispatch"
 	"mobile/services/core/internal/httpapi/endpoint"
@@ -44,6 +53,7 @@ import (
 	"mobile/services/core/internal/routes"
 	"mobile/services/core/internal/sms"
 	"mobile/services/core/internal/socialv2"
+	"mobile/services/core/internal/websession"
 	"mobile/services/core/ownership"
 )
 
@@ -53,7 +63,7 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: core serve | healthcheck | routes --json | migrate-profile")
+		fmt.Fprintln(stderr, "usage: core serve | healthcheck | routes --json | migrate-chat | migrate-profile")
 		return 2
 	}
 	switch args[0] {
@@ -63,8 +73,16 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return healthcheck(getenv, stderr)
 	case "routes":
 		return listRoutes(args[1:], stdout, stderr)
-	case "migrate-chat-candidate":
-		return migrateChatCandidate(getenv, stdout, stderr)
+	case "migrate-diaries":
+		return migrateDiaries(getenv, stdout, stderr)
+	case "migrate-community":
+		return migrateCommunity(getenv, stdout, stderr)
+	case "community-media-worker":
+		return communityMediaWorker(getenv, stderr)
+	case "migrate-chat", "migrate-chat-candidate":
+		return migrateChat(getenv, stdout, stderr)
+	case "purge-expired":
+		return purgeExpired(args[1:], getenv, stdout, stderr)
 	case "migrate-profile":
 		return migrateProfile(getenv, stdout, stderr)
 	default:
@@ -74,6 +92,14 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 }
 
 func serve(getenv func(string) string, stderr io.Writer) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return serveUntil(ctx, getenv, stderr)
+}
+
+// serveUntil runs the front door until ctx ends. It is serve without the
+// signal handling, so a test can start and stop the real startup path.
+func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Writer) int {
 	logger := slog.New(slog.NewJSONHandler(stderr, nil))
 	cfg, err := config.Load(getenv)
 	if err != nil {
@@ -96,19 +122,23 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		return 1
 	}
 	served := append(manifest.GoServed(force), candidates...)
-	chatCandidate := getenv(chatlegacychange.CandidateEnv) == "1"
-	if raw := getenv(chatlegacychange.CandidateEnv); raw != "" && raw != "0" && raw != "1" {
-		logger.Error("refusing to start", "error", "MOBILE_CHAT_CHANGES_CANDIDATE must be 0 or 1")
+	chat, err := resolveChatFeatures(getenv(chatlegacychange.CandidateEnv), cfg.AuthMode)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
-	if chatCandidate {
-		if err := validateChatCandidate(cfg.AuthMode, manifest.Routes, served); err != nil {
-			logger.Error("refusing to start", "error", err.Error())
+	if chat.on {
+		// On by default, so a host that pulls a chat route back to Python gets
+		// a refusal it can read, never a front door that quietly lost the AI.
+		if err := validateChatFeatures(cfg.AuthMode, manifest.Routes, served); err != nil {
+			logger.Error("refusing to start", "error", err.Error()+"; "+chatOffHint)
 			return 1
 		}
+	} else {
+		logger.Warn("group AI and the realtime chat feed are off", "reason", chat.off)
 	}
-	candidateCtx, stopCandidate := context.WithCancel(context.Background())
-	defer stopCandidate()
+	chatCtx, stopChat := context.WithCancel(context.Background())
+	defer stopChat()
 	// Every route, Python's included: registration order decides which route a
 	// request belongs to, and a Python route declared first must still win.
 	table, err := router.New(manifest.Routes)
@@ -136,7 +166,7 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 	}
 	var idempotency func(http.Handler) http.Handler
 	var pool *pgxpool.Pool
-	if len(served) > 0 || chatCandidate || len(nativeRouteIDs()) > 0 {
+	if len(served) > 0 || chat.on || len(nativeRouteIDs()) > 0 {
 		pool, err = db.Open(context.Background(), getenv(db.EnvDatabaseURL))
 		if err != nil {
 			logger.Error("refusing to start", "error", err.Error())
@@ -149,13 +179,22 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		idempotency = idem.New(idem.NewPostgresStore(pool), idem.WithErrorHandler(
 			func(w http.ResponseWriter, r *http.Request, err error) { servererror.Raise(err) }))
 	}
-	if chatCandidate {
-		ctx, cancel := context.WithTimeout(candidateCtx, 5*time.Second)
+	if chat.on {
+		// Serving never runs DDL. A missing schema is a loud refusal, not a
+		// front door that 404s the feed and the AI while /healthz says 200.
+		check, cancel := context.WithTimeout(chatCtx, 5*time.Second)
 		var installed bool
-		err := pool.QueryRow(ctx, `SELECT to_regclass('chat_legacy_changes') IS NOT NULL AND to_regclass('chat_ai_invocations') IS NOT NULL`).Scan(&installed)
+		err := pool.QueryRow(check, `SELECT to_regclass('chat_legacy_changes') IS NOT NULL AND to_regclass('chat_ai_invocations') IS NOT NULL`).Scan(&installed)
+		if err == nil && installed {
+			installed, err = avatarfeed.Installed(check, pool)
+		}
 		cancel()
-		if err != nil || !installed {
-			logger.Error("refusing to start", "error", "chat candidate migration is required")
+		if err != nil {
+			logger.Error("refusing to start", "error", "cannot check the chat schema; is the database reachable? "+chatOffHint)
+			return 1
+		}
+		if !installed {
+			logger.Error("refusing to start", "error", "the chat schema is missing: run `core migrate-chat` (compose: service migrate-chat) first; "+chatOffHint)
 			return 1
 		}
 		env.BeforeServe = chatlegacychange.BeforeWrite
@@ -185,44 +224,53 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
-	if chatCandidate {
+	if chat.on {
 		var allowedOrigins []string
 		if origins != "" {
 			allowedOrigins = strings.Split(origins, ",")
 		}
-		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, candidateCtx, allowedOrigins)
+		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, chatCtx, allowedOrigins)
 		assistant := chatassist.New(pool, brain.Configured())
+		avatars := avatarfeed.New(avatarfeed.Store{Pool: pool}, pool, chatCtx, allowedOrigins)
 		go changes.Listen()
-		go assistant.Run(candidateCtx)
+		go avatars.Listen()
+		go assistant.Run(chatCtx)
 		fallback := front
 		feature := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if chatlegacychange.Matches(r.URL.Path) {
 				changes.ServeHTTP(w, r)
 				return
 			}
+			if avatarfeed.Matches(r.URL.Path) {
+				avatars.ServeHTTP(w, r)
+				return
+			}
 			assistant.ServeHTTP(w, r)
 		}))
 		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if chatlegacychange.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
+			if chatlegacychange.Matches(r.URL.Path) || avatarfeed.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
 				feature.ServeHTTP(w, r)
 				return
 			}
 			fallback.ServeHTTP(w, r)
 		})
 	}
+	// Cộng đồng (ADR-0040) owns moderation of public posts and comments; the
+	// profile social routes hand those writes to it only when it is served.
+	communityOn := pool != nil && cfg.AuthMode == "prod" && getenv("MOBILE_COMMUNITY_ENABLED") == "1"
 	achievements := achievementv1.New(pool, cfg.AuthMode)
-	social := socialv2.New(pool, cfg.AuthMode)
+	profileSocial := socialv2.New(pool, cfg.AuthMode, communityOn)
 	media := profilemedia.New(pool, cfg.AuthMode, profilemedia.Proxy{
 		URL: getenv("NEP_PROXY_URL"), Token: getenv("NEP_PROXY_TOKEN"), PersonKey: getenv(identity.KeyEnvVar),
 	})
-	go social.Run(candidateCtx)
+	go profileSocial.Run(chatCtx)
 	fallback := front
 	native := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case achievementv1.Matches(r.URL.Path):
 			achievements.ServeHTTP(w, r)
 		case socialv2.Matches(r.URL.Path):
-			social.ServeHTTP(w, r)
+			profileSocial.ServeHTTP(w, r)
 		default:
 			media.ServeHTTP(w, r)
 		}
@@ -234,13 +282,67 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		}
 		fallback.ServeHTTP(w, r)
 	})
+	if pool != nil && cfg.AuthMode == "prod" {
+		if communityOn {
+			check, cancel := context.WithTimeout(ctx, 10*time.Second)
+			err := community.CheckSchema(check, pool)
+			cancel()
+			if err != nil {
+				logger.Error("refusing to start", "error", err.Error())
+				return 1
+			}
+			social := community.New(pool, brain.Configured(), strings.Split(origins, ","))
+			go social.Run(chatCtx)
+			inner := front
+			feature := cors.New(origins, origins != "").Middleware(social)
+			front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if community.Matches(r.URL.Path) {
+					feature.ServeHTTP(w, r)
+					return
+				}
+				if social.GuardLegacy(w, r) {
+					return
+				}
+				inner.ServeHTTP(w, r)
+			})
+		}
+		books := diary.New(pool, brain.Configured())
+		go books.Run(chatCtx)
+		inner := front
+		feature := cors.New(origins, origins != "").Middleware(books)
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if diary.Matches(r.URL.Path) {
+				feature.ServeHTTP(w, r)
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
+	if pool != nil {
+		// Keeps a browser signed in across a reload (internal/websession). It
+		// answers its own credentialed CORS, so it sits outside the shared
+		// middleware, which never allows credentials.
+		var webOrigins []string
+		if origins != "" {
+			webOrigins = strings.Split(origins, ",")
+		}
+		webSessions := websession.New(websession.Store{Pool: pool}, webOrigins)
+		inner := front
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if websession.Matches(r.URL.Path) {
+				webSessions.ServeHTTP(w, r)
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
 	logger.Info("core starting",
 		"listen", cfg.Listen,
 		"liveness", cfg.LivenessListen,
 		"python_upstream", cfg.PythonUpstream.String(),
 		"go_served", len(served),
 		"candidates", len(candidates),
-		"chat_candidate", chatCandidate,
+		"chat_features", chat.on,
 		"auth_mode", cfg.AuthMode,
 		"manifest_routes", len(manifest.Routes),
 		"force_python", force.Tokens,
@@ -248,7 +350,7 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 
 	public := &http.Server{
 		Addr:              cfg.Listen,
-		Handler:           front,
+		Handler:           gzipjson.Middleware(front),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    1 << 20,
@@ -260,8 +362,6 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 	errs := make(chan error, 2)
 	for _, srv := range []*http.Server{public, liveness} {
 		srv := srv
@@ -280,7 +380,7 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		logger.Error("listener failed", "error", err.Error())
 		exit = 1
 	}
-	stopCandidate()
+	stopChat()
 	shutdown, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 	_ = public.Shutdown(shutdown)
@@ -350,6 +450,12 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 	for _, id := range nativeRouteIDs() {
 		implemented[id] = true
 	}
+	for _, pattern := range diary.Patterns {
+		implemented[pattern] = true
+	}
+	for _, pattern := range community.Patterns {
+		implemented[pattern] = true
+	}
 	views := []routeView{}
 	for _, r := range manifest.Routes {
 		if implemented[r.ID] {
@@ -394,11 +500,51 @@ func migrateProfile(getenv func(string) string, stdout, stderr io.Writer) int {
 	return 0
 }
 
-// validateChatCandidate prevents the privacy and lock-order hooks from being
-// bypassed through Python while the opt-in extension is enabled.
-func validateChatCandidate(mode string, all, served []ownership.Route) error {
+// chatOffHint is the way out that every chat refusal names. Refusing loudly
+// is the point; a host that must run without the features says so in one
+// variable instead of getting them switched off behind its back.
+const chatOffHint = "set " + chatlegacychange.CandidateEnv + "=0 to run without the realtime chat feed and group AI"
+
+// chatFeatures says whether core serves the durable change feed
+// (internal/chatlegacychange) and the group AI engine (internal/chatassist).
+type chatFeatures struct {
+	on bool
+	// off is why they are off, for the startup warning; empty when on.
+	off string
+}
+
+// resolveChatFeatures decides from MOBILE_CHAT_CHANGES_CANDIDATE and the auth
+// mode. The feed and the engine are on unless somebody turns them off: a prod
+// host that sets nothing serves them, and "0" is the one way to opt out.
+//
+// Unset in dev stays off, because both features authenticate by bearer session
+// alone and in dev a bearer proves nothing. X-Actor-* impersonates any member,
+// who can create a named outing invitation for any registered person and
+// exchange it at POST /sessions for that person's session. The feed's
+// revocation and the engine's per-person consent would rest on an identity
+// anybody can mint. "1" in dev is refused by validateChatFeatures, not obeyed.
+func resolveChatFeatures(raw, authMode string) (chatFeatures, error) {
+	switch raw {
+	case "1":
+		return chatFeatures{on: true}, nil
+	case "0":
+		return chatFeatures{off: chatlegacychange.CandidateEnv + "=0 is set on this host"}, nil
+	case "":
+		if authMode == "prod" {
+			return chatFeatures{on: true}, nil
+		}
+		return chatFeatures{off: "MOBILE_AUTH_MODE=" + authMode + ": X-Actor-* headers can mint a bearer session for any person, and the feed and the AI engine trust a bearer alone"}, nil
+	}
+	return chatFeatures{}, fmt.Errorf("%s must be 0 or 1", chatlegacychange.CandidateEnv)
+}
+
+// validateChatFeatures refuses a configuration in which the feed and the
+// engine would trust a forgeable identity (dev auth), or in which their
+// guards would be bypassed: a messages, votes or outings route answered by
+// Python runs neither the explicit-invocation guard nor the feed's lock order.
+func validateChatFeatures(mode string, all, served []ownership.Route) error {
 	if mode != "prod" {
-		return errors.New("chat candidate requires real bearer sessions (MOBILE_AUTH_MODE=prod)")
+		return errors.New("the realtime chat feed and group AI require real bearer sessions (MOBILE_AUTH_MODE=prod)")
 	}
 	inGo := map[string]bool{}
 	for _, route := range served {
@@ -406,17 +552,18 @@ func validateChatCandidate(mode string, all, served []ownership.Route) error {
 	}
 	for _, route := range all {
 		if (route.Group == "messages" || route.Group == "votes" || route.Group == "outings") && !inGo[route.ID] {
-			return fmt.Errorf("chat candidate requires the complete Go messages, votes and outings candidates; missing %s", route.ID)
+			return fmt.Errorf("the realtime chat feed and group AI require every messages, votes and outings route in Go; %s is not", route.ID)
 		}
 	}
 	return nil
 }
 
-func migrateChatCandidate(getenv func(string) string, stdout, stderr io.Writer) int {
-	if getenv(chatlegacychange.CandidateEnv) != "1" {
-		fmt.Fprintln(stderr, "migration requires MOBILE_CHAT_CHANGES_CANDIDATE=1")
-		return 1
-	}
+// migrateChat installs the change feed and AI engine schema. It is a command
+// of its own because serving never runs DDL; compose runs it as the one-shot
+// service migrate-chat, after alembic and before core. It asks for no flag:
+// the capture triggers record writes whether or not serve turns the features
+// on, so a host that turns them on later has lost nothing.
+func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
@@ -428,10 +575,122 @@ func migrateChatCandidate(getenv func(string) string, stdout, stderr io.Writer) 
 	if err = chatlegacychange.Migrate(ctx, pool); err == nil {
 		err = chatassist.Migrate(ctx, pool)
 	}
+	if err == nil {
+		err = avatarfeed.Migrate(ctx, pool)
+	}
 	if err != nil {
 		fmt.Fprintln(stderr, "chat migration failed:", err)
 		return 1
 	}
-	fmt.Fprintln(stdout, "Đã áp dụng migration chat candidate; ownership production giữ nguyên.")
+	fmt.Fprintln(stdout, "Đã áp dụng migration chat: feed thay đổi và engine AI nhóm. Ownership route giữ nguyên.")
+	return 0
+}
+
+// purgeExpired removes expired OTP challenges, sessions and idempotency keys
+// (internal/janitor). `--every 6h` keeps running; SIGTERM stops it between
+// passes.
+func purgeExpired(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
+	set := flag.NewFlagSet("purge-expired", flag.ContinueOnError)
+	every := set.Duration("every", 0, "run repeatedly at this interval (0 = once)")
+	if err := set.Parse(args); err != nil {
+		return 2
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "purge-expired: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	// Files queued for deletion live under MOBILE_MEDIA_ROOT; without it the
+	// row purge still runs and the file reaper waits for a configured root.
+	var store janitor.ObjectStore
+	if getenv(storage.MediaRootEnv) != "" {
+		if s, err := storage.New(); err == nil {
+			store = s
+		}
+	}
+	for {
+		report, err := janitor.Purge(ctx, pool, time.Now().UTC())
+		if err == nil && store != nil {
+			var reaped janitor.ReapReport
+			reaped, err = janitor.ReapObjects(ctx, pool, store)
+			if err == nil && !reaped.Disabled {
+				fmt.Fprintf(stdout, "purge-expired: files deleted %d · already gone %d · still referenced %d · failed %d\n",
+					reaped.Deleted, reaped.Missing, reaped.Kept, reaped.Failed)
+			}
+		}
+		if err != nil && ctx.Err() == nil {
+			fmt.Fprintln(stderr, "purge-expired:", err)
+			if *every == 0 {
+				return 1
+			}
+		} else {
+			fmt.Fprintf(stdout, "purge-expired: otp %d · sessions %d · idempotency %d\n",
+				report.OTPChallenges, report.Sessions, report.IdempotencyKeys)
+		}
+		if *every == 0 {
+			return 0
+		}
+		select {
+		case <-ctx.Done():
+			return 0
+		case <-time.After(*every):
+		}
+	}
+}
+
+func migrateCommunity(getenv func(string) string, stdout, stderr io.Writer) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "community migration: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = community.Migrate(ctx, pool); err != nil {
+		fmt.Fprintln(stderr, "community migration failed:", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Đã áp dụng migration cộng đồng. Bật MOBILE_COMMUNITY_ENABLED sau các cổng kiểm chứng.")
+	return 0
+}
+
+func communityMediaWorker(getenv func(string) string, stderr io.Writer) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "community media: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = community.CheckSchema(ctx, pool); err != nil {
+		fmt.Fprintln(stderr, "community media worker:", err)
+		return 1
+	}
+	if err = community.New(pool, nil, nil).RunMedia(ctx); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	return 0
+}
+
+func migrateDiaries(getenv func(string) string, stdout, stderr io.Writer) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "diary migration: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = diary.Migrate(ctx, pool); err != nil {
+		fmt.Fprintln(stderr, "diary migration failed:", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Đã áp dụng migration ending và sổ kỷ niệm.")
 	return 0
 }

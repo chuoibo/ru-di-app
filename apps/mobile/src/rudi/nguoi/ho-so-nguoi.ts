@@ -27,7 +27,8 @@ export type HoSoNguoi = {
   relation: QuanHe;
 };
 
-export type QuanHe = "self" | "friend" | "groupmate";
+/** `couple`: the reader and this person are one «Một đôi» (ADR-0034); only the two ever see it. */
+export type QuanHe = "self" | "friend" | "groupmate" | "couple";
 
 /** A post on a wall; the L3 keys (reactions, comment_count, can_comment) are absent on an older server. */
 export type Bai = BaiWire;
@@ -43,7 +44,7 @@ export type Bai = BaiWire;
 export const LOI_NGUOI: Record<string, string> = {
   person_not_visible:
     "Hồ sơ này chỉ bạn bè hoặc người cùng nhóm mới xem được. Gửi lời mời kết bạn trước nhé.",
-  person_not_found: "Máy chủ chưa có hồ sơ cho tài khoản này.",
+  person_not_found: "Chưa có hồ sơ cho tài khoản này. Đăng nhập lại giúp mình.",
 };
 
 /** One person's public profile, as this reader is allowed to see it. */
@@ -62,6 +63,7 @@ export async function docTuongCua(personId: string, actorId: string): Promise<Ba
 /** The relation, said in the second person. Drives the header chip. */
 export function cauQuanHe(quanHe: QuanHe): string {
   if (quanHe === "self") return "Hồ sơ của bạn";
+  if (quanHe === "couple") return "Một đôi";
   if (quanHe === "friend") return "Bạn bè";
   return "Cùng nhóm";
 }
@@ -116,5 +118,5 @@ export function cauLucNao(iso: string, bayGio: Date = new Date()): string {
 /** Server refusals to a sentence, for the two reads this module makes. */
 export function loiRaChu(error: unknown): string {
   if (error instanceof ApiError) return error.message;
-  return "Không gọi được máy chủ. Kiểm tra mạng rồi thử lại.";
+  return "Không kết nối được Rủ Đi. Kiểm tra mạng rồi thử lại.";
 }

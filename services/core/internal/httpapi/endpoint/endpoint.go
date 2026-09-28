@@ -74,9 +74,7 @@ const (
 	CallGetPlaceSearcher               = "app.api.routes.places.get_place_searcher"
 	CallGetReasonWriter                = "app.api.routes.places.get_reason_writer"
 	CallGetSearchRateLimiter           = "app.api.routes.places.get_search_rate_limiter"
-	CallGetMessageIntentLimiter        = "app.api.routes.messages.get_message_intent_limiter"
 	CallGetChatExpenseLimiter          = "app.api.routes.messages.get_chat_expense_limiter"
-	CallGetCompanionTurnLimiter        = "app.api.routes.messages.get_companion_turn_limiter"
 	CallGetReceiptScanLimiter          = "app.api.routes.receipts.get_receipt_scan_limiter"
 	CallGetScreenshotScanLimiter       = "app.api.routes.screenshots.get_screenshot_scan_limiter"
 	CallGetSuggestionLimiter           = "app.api.routes.suggestions.get_suggestion_limiter"
@@ -99,10 +97,9 @@ var SupportedDependencies = map[string]bool{
 	CallGetReeler: true, CallGetFaceDetector: true,
 	CallGetReceiptReader: true, CallGetScreenshotReader: true,
 	CallGetPlaceSearcher: true, CallGetReasonWriter: true,
-	CallGetSearchRateLimiter:    true,
-	CallGetMessageIntentLimiter: true, CallGetChatExpenseLimiter: true,
-	CallGetCompanionTurnLimiter: true,
-	CallGetReceiptScanLimiter:   true, CallGetScreenshotScanLimiter: true,
+	CallGetSearchRateLimiter:  true,
+	CallGetChatExpenseLimiter: true,
+	CallGetReceiptScanLimiter: true, CallGetScreenshotScanLimiter: true,
 	CallGetSuggestionLimiter: true, CallGetContextualSuggestionLimiter: true,
 	CallGetReelLimiter: true, CallGetFaceDetectionLimiter: true,
 	CallGetSmsSender: true, CallGetOtpDebugCode: true, CallGetGoogleVerifier: true,
@@ -129,8 +126,6 @@ func Refuse(status int, code, detail string) error {
 
 // Call is what a route's Go implementation receives.
 type Call struct {
-	// ExplicitChatInvocation disables implicit history sharing in the candidate chat.
-	ExplicitChatInvocation bool
 	// Photos is the PhotoStorage get_photo_storage built for this request; nil
 	// for a route that does not depend on it.
 	Photos  *storage.PhotoStorage
@@ -291,8 +286,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case CallGetItineraryLimiter, CallGetCompanion, CallGetChatExpenseReader,
 			CallGetSuggester, CallGetContextualSuggester, CallGetReeler, CallGetFaceDetector,
 			CallGetReceiptReader, CallGetScreenshotReader, CallGetPlaceSearcher, CallGetReasonWriter,
-			CallGetSearchRateLimiter, CallGetMessageIntentLimiter, CallGetChatExpenseLimiter,
-			CallGetCompanionTurnLimiter, CallGetReceiptScanLimiter, CallGetScreenshotScanLimiter,
+			CallGetSearchRateLimiter, CallGetChatExpenseLimiter,
+			CallGetReceiptScanLimiter, CallGetScreenshotScanLimiter,
 			CallGetSuggestionLimiter, CallGetContextualSuggestionLimiter, CallGetReelLimiter,
 			CallGetFaceDetectionLimiter:
 			return nil

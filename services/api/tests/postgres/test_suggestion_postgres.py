@@ -8,8 +8,7 @@ it: that the trips, the money and the check-ins all came from *this* group,
 that they were recomputed from the ledger rather than read off a stored total,
 and that an INVITED link holder gets none of it.
 
-The Gemini backend IS faked here, deliberately -- the same split
-`test_companion_postgres.py` makes. What this file proves holds whichever model
+The Gemini backend IS faked here, deliberately. What this file proves holds whichever model
 is plugged in: that a refused card serves nothing, that no field the contract
 did not name survives to the wire, that no coordinate does, and that a private
 group's own words never reach a log line. Whether a real model stays inside the

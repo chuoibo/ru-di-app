@@ -95,6 +95,33 @@ func (r Repository) ShareActiveContext(ctx context.Context, a, b string) (bool, 
 		[]any{b, "active", a, "active", 1})
 }
 
+// SameCouple is same_couple (ADR-0034): both people have an
+// active_couple_members row and the rows name the same cycle. One statement.
+func (r Repository) SameCouple(ctx context.Context, a, b string) (bool, error) {
+	rows, err := r.Q.Query(ctx,
+		`SELECT active_couple_members.person_id, active_couple_members.cycle_id
+		   FROM active_couple_members
+		  WHERE active_couple_members.person_id IN (`+uuidPlaceholders(1, 2)+`)`, a, b)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	cycles := map[string]string{}
+	for rows.Next() {
+		var person, cycle string
+		if err := rows.Scan(&person, &cycle); err != nil {
+			return false, err
+		}
+		cycles[person] = cycle
+	}
+	if err := rows.Err(); err != nil {
+		return false, err
+	}
+	ca, okA := cycles[a]
+	cb, okB := cycles[b]
+	return a != b && okA && okB && ca == cb, nil
+}
+
 // ProfileCounts is ProfileCounts: what GET /people/me shows as numbers.
 type ProfileCounts struct {
 	Friends         int64

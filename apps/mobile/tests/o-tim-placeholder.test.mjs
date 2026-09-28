@@ -47,3 +47,45 @@ test("ô tìm: có chữ đã gõ thì placeholder biến mất", () => {
   assert.equal(html.includes(`>${CAU}<`), false, `placeholder còn đè lên chữ đã gõ:\n${html}`);
   assert.match(html, /value="phở"/);
 });
+
+// QA 23/09: every multiline box started its text in the middle of the box.
+test("ô nhiều dòng: chữ bắt đầu ở góc trên, padding trên dưới bằng nhau", async () => {
+  const { kieuO } = await import("../dist-test/rudi/ui/Field.js");
+  const k = kieuO({ multiline: true });
+  assert.equal(k.nhap.textAlignVertical, "top");
+  assert.equal(k.boc.justifyContent, "flex-start");
+  assert.equal(k.boc.alignSelf, "stretch");
+  assert.equal(k.khung.alignItems, "flex-start");
+  assert.equal(k.khung.paddingTop, undefined, "không còn padding chỉ ở trên");
+  assert.equal(typeof k.khung.paddingVertical, "number");
+});
+
+test("ô nhiều dòng: cao theo số dòng, có trần rồi cuộn", async () => {
+  const { kieuO } = await import("../dist-test/rudi/ui/Field.js");
+  const ba = kieuO({ multiline: true }).nhap;
+  const nam = kieuO({ multiline: true, numberOfLines: 5 }).nhap;
+  const hai_muoi = kieuO({ multiline: true, numberOfLines: 20 }).nhap;
+  assert.ok(nam.minHeight > ba.minHeight);
+  assert.equal(hai_muoi.minHeight, hai_muoi.maxHeight, "quá trần thì dừng ở trần");
+  assert.ok(ba.maxHeight > ba.minHeight);
+});
+
+test("viền đang nhập dày 2dp mà chữ không xê dịch", async () => {
+  const { kieuO } = await import("../dist-test/rudi/ui/Field.js");
+  for (const multiline of [false, true]) {
+    const thuong = kieuO({ multiline, vien: 1 }).khung;
+    const dang = kieuO({ multiline, vien: 2 }).khung;
+    assert.equal(dang.borderWidth, 2);
+    assert.equal(thuong.paddingHorizontal + thuong.borderWidth, dang.paddingHorizontal + dang.borderWidth);
+    if (multiline) assert.equal(thuong.paddingVertical + thuong.borderWidth, dang.paddingVertical + dang.borderWidth);
+  }
+});
+
+test("lỗi thay dòng gợi ý và được đọc lên", () => {
+  const html = renderToStaticMarkup(
+    React.createElement(Field, { label: "Giờ", helper: "Dạng hh:mm", error: "Giờ phải dạng hh:mm", value: "25:00", onChangeText: () => undefined }),
+  );
+  assert.match(html, /Giờ phải dạng hh:mm/);
+  assert.equal(html.includes("Dạng hh:mm<"), false, "gợi ý không hiện cùng lỗi");
+  assert.match(html, /aria-live="polite"/);
+});

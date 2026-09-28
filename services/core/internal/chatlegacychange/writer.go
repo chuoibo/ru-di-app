@@ -15,7 +15,6 @@ import (
 // context sequence head before any message, reaction, vote or ballot lock.
 // Capture triggers remain writer-neutral while ownership is unchanged.
 func BeforeWrite(ctx context.Context, call *endpoint.Call) error {
-	call.ExplicitChatInvocation = true
 	if call.Request.Method == http.MethodGet || call.Request.Method == http.MethodHead || call.Actor == nil {
 		return nil
 	}

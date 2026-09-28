@@ -236,7 +236,9 @@ def _live_go_route_ids(rows: list[dict]) -> set[str]:
     return {
         row["id"]
         for row in rows
-        if row["kind"] == "route" and row["owner"] == "go" and row["python"] == "live"
+        if row.get("kind", "route") == "route"
+        and row["owner"] == "go"
+        and row["python"] == "live"
     }
 
 

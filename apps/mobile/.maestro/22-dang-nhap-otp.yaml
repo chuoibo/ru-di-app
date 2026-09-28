@@ -54,8 +54,10 @@ appId: com.lakiet.rudi
     visible: "Chưa có nhóm nào"
     timeout: 60000
 - assertNotVisible: "Dữ liệu demo"
-- assertNotVisible: "Khám phá"
-- assertVisible: "Tài khoản vừa được tạo bằng số điện thoại của bạn. Tên hiển thị sửa được ở mục Cá nhân."
+# The empty live account has the same tabs as every signed-in account.
+- assertVisible: "Khám phá"
+- assertVisible: "Tôi có lời mời"
+- assertVisible: "Thêm bạn bằng số điện thoại"
 - takeScreenshot: 22-chua-co-nhom
 # Và dùng được thật: mở một nhóm, vào tới tab.
 - tapOn: "Tạo nhóm"

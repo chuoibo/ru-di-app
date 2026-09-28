@@ -161,6 +161,9 @@ func peopleGoCall(repo Repository, rec *recorder, method string, a map[string]an
 	case "share_active_context":
 		ok, err := repo.ShareActiveContext(bg, s("a"), s("b"))
 		return tBool(ok), err
+	case "same_couple":
+		ok, err := repo.SameCouple(bg, s("a"), s("b"))
+		return tBool(ok), err
 	case "profile_counts":
 		c, err := repo.ProfileCounts(bg, s("person_id"))
 		return tRecord("ProfileCounts", "friends", tInt(c.Friends), "contexts", tInt(c.Contexts),
@@ -549,6 +552,9 @@ func peopleRepoOracleCases(tables []string) ([]peopleCase, oracleSpec) {
 		{w.binh, w.erased}, {w.hang, w.ban}, {w.hang, w.an}, {w.an, w.an}, {w.moi, w.moi}, {w.an, missing}} {
 		relations = append(relations, read("share_active_context", "a", pair[0], "b", pair[1]))
 	}
+	for _, pair := range [][2]string{{w.an, w.binh}, {w.binh, w.an}, {w.an, w.an}, {w.an, missing}, {w.an, w.stranger}} {
+		relations = append(relations, read("same_couple", "a", pair[0], "b", pair[1]))
+	}
 	add("are_friends and share_active_context: every relation", "", base, none, relations...)
 	var counts []oracleCall
 	for _, person := range []string{w.an, w.binh, w.chi, w.erased, w.stranger, missing} {
@@ -756,7 +762,7 @@ func peopleRepoOracleCases(tables []string) ([]peopleCase, oracleSpec) {
 	add("route POST /people/{id}/block: a declined edge the other way", "", base, none,
 		onPerson(edges, "block_person", w.chi, w.ban))
 	add("route POST /people/{id}/block: a person with nothing", "", base, none, onPerson(edges, "block_person", w.an, w.moi))
-	add("route POST /people/{id}/block: an ended account", "", base, none, onPerson(edges, "block_person", w.an, w.erased))
+	add("route POST /people/{id}/block: an ended account", "404:person_not_found", base, none, onPerson(edges, "block_person", w.an, w.erased))
 	add("route POST /people/{id}/block: a pending request, under a Vietnam session TimeZone", "", vietnam, none,
 		onPerson(edges, "block_person", w.ban, w.dung))
 	add("route POST /people/{id}/block: nobody", "404:person_not_found", base, none, onPerson(edges, "block_person", w.an, missing))
@@ -804,6 +810,10 @@ func peopleRepoOracleCases(tables []string) ([]peopleCase, oracleSpec) {
 	add("route PUT /people/{id}: a rename by oneself", "", base, none, register(w.ban, w.ban, "Tên do mình đặt (dữ liệu mẫu)"))
 	add("route PUT /people/{id}: a rename by somebody else", "403:permission_denied", base, none,
 		register(w.an, w.ban, "Tên người khác đặt (dữ liệu mẫu)"))
+	// A stranger's guess, right or wrong, is answered alike and writes nothing:
+	// a phone-derived id must not confirm the name behind it.
+	add("route PUT /people/{id}: a stranger's right guess and wrong guess", "", base, none,
+		register(w.moi, w.ban, "Bạn thân (dữ liệu mẫu)"), register(w.moi, w.ban, "Đoán sai (dữ liệu mẫu)"))
 	add("route PUT /people/{id}: an ended account", "404:person_not_found", base, none,
 		register(w.an, w.erased, "Hồi sinh (dữ liệu mẫu)"))
 

@@ -96,3 +96,16 @@ test("thiếu mẩu nào thì để trống, không đoán", () => {
   assert.deepEqual(to.keeps, [], "không có dòng giữ giả");
   assert.equal(to.versions[0].content.ngay, "");
 });
+
+// QA 23/09: two per-person yeses on two different proposals are not an
+// agreement. When the server names what both agreed to, that is the answer,
+// even if each person's own map says «granted».
+test("caHaiDongY tin granted_purposes của máy chủ khi có", () => {
+  const lech = so({
+    my_consents: [{ purpose: "lap_so", granted: true }, { purpose: "bat_doi", granted: true }, { purpose: "doc_chat", granted: false }],
+    their_consents_granted: { lap_so: true, bat_doi: true, doc_chat: false },
+    granted_purposes: ["lap_so"],
+  });
+  assert.equal(caHaiDongY(lech, "bat_doi"), false);
+  assert.equal(caHaiDongY(lech, "lap_so"), true);
+});

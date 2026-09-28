@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { datTokenPhien, newAttempt } from "../dist-test/api.js";
-import { docTrangTuong, docDoiTuong, ghepTrangTuong, guiTraLoi, thichBinhLuan, dangLaiBai, nhanBaiChoChatV2 } from "../dist-test/rudi/tuong/social-v2.js";
+import { dangChoDuyet, docTrangTuong, docDoiTuong, ghepTrangTuong, guiTraLoi, thichBinhLuan, dangLaiBai, nhanBaiChoChatV2 } from "../dist-test/rudi/tuong/social-v2.js";
 
 const actor = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const post = "bbbbbbbb-bbbb-4ccc-8ddd-eeeeeeeeeeee";
@@ -43,4 +43,9 @@ test("social v2 sends bearer, cursor, parent and idempotency without plaintext c
 
 test("chat v2 adapter creates an opaque post reference and never a plaintext message", () => {
   assert.deepEqual(nhanBaiChoChatV2(post), { kind: "post_reference", post_id: post });
+});
+
+test("a comment held for review is told apart from a published one", () => {
+  assert.equal(dangChoDuyet({ id: "c", post_id: post, parent_id: null, body: "x", status: "pending", created_at: "2026-09-28T00:00:00Z" }), true);
+  assert.equal(dangChoDuyet({ id: "c", post_id: post, parent_id: null, author_id: actor, author_display_name: "A", body: "x", created_at: "2026-09-28T00:00:00Z", like_count: 0, liked: false, replies: [] }), false);
 });

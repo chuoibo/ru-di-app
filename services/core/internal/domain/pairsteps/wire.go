@@ -10,7 +10,6 @@ import (
 	"unicode"
 
 	"mobile/services/core/internal/domain/pairpaper"
-	"mobile/services/core/internal/domain/pyuuid"
 )
 
 // Object is a JSON object as json.loads builds a dict: keys in document order,
@@ -125,10 +124,9 @@ func NoiDungWire(content any) (WireContent, error) {
 		}
 		var placeID *string
 		if place, found := stop.Get("place_id"); found && place != nil && place != "" {
-			id, ok := pyuuid.Parse(pyStr(place))
-			if !ok {
-				return WireContent{}, unreadable()
-			}
+			// PaperStop.place_id is a catalogue id (StrictStr): str() of
+			// whatever was stored, no longer parsed as a UUID.
+			id := pyStr(place)
 			placeID = &id
 		}
 		canKiem := true

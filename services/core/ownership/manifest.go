@@ -23,20 +23,20 @@ const (
 
 	PythonLive   = "live"
 	PythonFrozen = "frozen"
-	PythonAbsent = "absent"
 )
 
 var (
 	classes = set("core", "ai", "mixed", "framework")
 	kinds   = set("route", "mount")
 	states  = set("PY", "CARDED", "PORTED-UNPROVEN", "PORTED", "PARITY-LOCAL", "AGY-PASS", "RERUN-PASS",
-		"LIVE-GO", "FROZEN", "PY-DELETED", "DEFERRED", "GO-NATIVE")
-	goServedStates     = set("LIVE-GO", "FROZEN", "PY-DELETED", "GO-NATIVE")
+		"LIVE-GO", "FROZEN", "PY-DELETED", "DEFERRED")
+	goServedStates     = set("LIVE-GO", "FROZEN", "PY-DELETED")
 	pythonFrozenStates = set("FROZEN", "PY-DELETED")
 )
 
 // Route is one manifest row.
 type Route struct {
+	Native   bool     `json:"native,omitempty"`
 	ID       string   `json:"id"`
 	Order    int      `json:"order"`
 	Kind     string   `json:"kind"`
@@ -104,16 +104,13 @@ func (m *Manifest) validate() error {
 		if r.Owner != OwnerPython && r.Owner != OwnerGo {
 			return fmt.Errorf("%s: owner = %q", where, r.Owner)
 		}
-		if r.Python != PythonLive && r.Python != PythonFrozen && r.Python != PythonAbsent {
+		if r.Python != PythonLive && r.Python != PythonFrozen && !(r.Native && r.Python == "absent") {
 			return fmt.Errorf("%s: python = %q", where, r.Python)
 		}
 		if (r.Owner == OwnerGo) != goServedStates[r.State] {
 			return fmt.Errorf("%s: owner %q does not match state %q", where, r.Owner, r.State)
 		}
-		if (r.Python == PythonFrozen) != pythonFrozenStates[r.State] {
-			return fmt.Errorf("%s: python %q does not match state %q", where, r.Python, r.State)
-		}
-		if (r.Python == PythonAbsent) != (r.State == "GO-NATIVE") {
+		if !r.Native && (r.Python == PythonFrozen) != pythonFrozenStates[r.State] {
 			return fmt.Errorf("%s: python %q does not match state %q", where, r.Python, r.State)
 		}
 		if r.Owner == OwnerGo && r.Evidence == "" {
@@ -189,7 +186,9 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 			if r.Python == PythonFrozen {
 				return Force{}, fmt.Errorf("MOBILE_FORCE_PYTHON: %q is frozen in Python and cannot be forced back", r.ID)
 			}
-			if r.Python == PythonAbsent {
+			if r.Native {
+				// A Go-native route has no Python twin; a rollback of everything
+				// leaves it in place instead of pretending to move it.
 				if token == "all" {
 					continue
 				}
@@ -205,7 +204,7 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 func (m *Manifest) GoServed(force Force) []Route {
 	var served []Route
 	for _, r := range m.Routes {
-		if r.Owner == OwnerGo && r.Python != PythonAbsent && !force.All && !force.Routes[r.ID] {
+		if !r.Native && r.Owner == OwnerGo && !force.All && !force.Routes[r.ID] {
 			served = append(served, r)
 		}
 	}

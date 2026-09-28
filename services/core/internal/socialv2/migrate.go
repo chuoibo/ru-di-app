@@ -8,13 +8,18 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/community"
 )
 
 //go:embed schema.sql
 var schemaSQL string
 
-// Migrate runs explicitly before social/v2 traffic is enabled.
+// Migrate runs explicitly before social/v2 traffic is enabled. The profile
+// wall writes comments and likes through Cộng đồng, so its schema comes first.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
+	if err := community.Migrate(ctx, pool); err != nil {
+		return err
+	}
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return err

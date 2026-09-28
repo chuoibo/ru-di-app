@@ -21,6 +21,10 @@ var All = []Sticker{
 	{"ket-xe", "Kẹt xe"},
 	{"tra-tien-ne", "Trả tiền nè"},
 	{"tuyet-voi", "Tuyệt vời"},
+	{"hen-nhe", "Hẹn nhé!"},
+	{"nho-nhau", "Nhớ nhau"},
+	{"ve-toi-chua", "Về tới chưa?"},
+	{"om-cai", "Ôm cái"},
 }
 
 var ids = func() map[string]bool {

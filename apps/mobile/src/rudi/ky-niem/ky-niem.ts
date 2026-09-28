@@ -318,3 +318,56 @@ export function demHuyHieuMo(huyHieu: HuyHieu[]): string {
   const mo = huyHieu.filter((h) => h.trangThai === "mo").length;
   return `${mo}/${huyHieu.length} đã mở`;
 }
+
+/**
+ * What the album shelf says when it has no album yet (B4, QC 24/09).
+ *
+ * The shelf lists outings that have STARTED (`GroupRecap(ctx, today)`), so a
+ * group with an outing next month read «Chưa có kèo nào» over a plan list
+ * that had one. No outing and «not yet» are two different sentences: the
+ * second names the nearest outing and when its album opens.
+ */
+export function cauKeAlbumRong(keo: readonly { title: string; starts_on: string }[], homNay: string): { tieuDe: string; than: string } {
+  const sapToi = keo.filter((k) => k.starts_on > homNay).sort((a, b) => (a.starts_on < b.starts_on ? -1 : a.starts_on > b.starts_on ? 1 : 0));
+  const gan = sapToi[0];
+  if (gan === undefined) {
+    return { tieuDe: "Chưa có kèo nào", than: "Tạo một kèo ở Lên plan; ảnh và check-in trong những ngày đó sẽ về đây." };
+  }
+  const [, thang, ngay] = gan.starts_on.split("-");
+  return {
+    tieuDe: "Chưa tới ngày đi",
+    than: `«${gan.title}» bắt đầu ${Number(ngay)}/${Number(thang)}. Từ hôm đó, ảnh và check-in của chuyến sẽ về album này.`,
+  };
+}
+
+/**
+ * How far a print leans on the wall (ADR-0037 D1, plan S6): one or two
+ * degrees either way (the tilts the print frame takes), the same for the same
+ * memory every time (a hash of its id), never zero, so a wall of photographs
+ * reads as prints pinned by hand.
+ */
+export function nghiengAnh(id: string): -2 | -1 | 1 | 2 {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i += 1) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const muc = [-1, 1, -2, 2] as const;
+  return muc[h % muc.length];
+}
+
+/**
+ * The first badge opened since this phone last looked (M8, plan S6), or null.
+ * `daThay` is what was stored last time; anything unreadable counts as
+ * nothing seen, so the worst a broken store does is play the moment once more.
+ */
+export function huyHieuMoi(moIds: readonly string[], daThayTho: string | null): string | null {
+  let daThay: unknown = [];
+  try {
+    daThay = daThayTho === null ? [] : JSON.parse(daThayTho);
+  } catch {
+    daThay = [];
+  }
+  const cu = new Set(Array.isArray(daThay) ? daThay.filter((x): x is string => typeof x === "string") : []);
+  return moIds.find((id) => !cu.has(id)) ?? null;
+}

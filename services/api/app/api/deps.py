@@ -54,6 +54,20 @@ class Companion(Protocol):
     ) -> dict: ...
 
 
+class NepReplyNotConfigured(RuntimeError):
+    """Nếp's responder has no provider credential in this process."""
+
+
+class NepResponder(Protocol):
+    """A model backend for Nếp's own questions: returns an untrusted `{text}`.
+
+    Takes only what the device sent (ADR-0036 §2.7): the screen's context
+    slip, the open panel session's turns, and the question.
+    """
+
+    def reply(self, *, slip: dict | None, turns: list[dict], prompt: str) -> dict: ...
+
+
 class Suggester(Protocol):
     """A model backend that returns an untrusted, raw F32 suggestion card.
 
@@ -243,6 +257,14 @@ def get_companion() -> Companion:
     from app.api.companion_gemini import GeminiCompanion
 
     return GeminiCompanion()
+
+
+def get_nep_responder() -> NepResponder:
+    """Build Nếp's responder lazily so importing the app needs no key."""
+
+    from app.api.nep_gemini import GeminiNepResponder
+
+    return GeminiNepResponder()
 
 
 def get_suggester() -> Suggester:

@@ -102,3 +102,9 @@ Corpus sinh: **loại trừ** (`excluded`): bước hợp lệ của bộ sinh �
 - NUL trong tên là 500 thay vì 422.
 - Lặp cùng tên trả 200 kèm `id`, `display_name`, `created_at` cho bất kỳ ai, không cần vai trò: một oracle xác nhận id nào đang mang tên nào.
 - Câu 404 cho tài khoản đã kết thúc nói về số điện thoại («Chưa có ai dùng số này trong Rủ Đi.») trên một route không nhận số.
+
+## Đổi 2026-09-27 — nạp danh mục thật vnlocal (PR #645)
+
+Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
+
+- `PUT /people/{person_id}`: đổi thật: `ApiService.register_person` — C2: người lạ nhận bản vọng lại, không phải hồ sơ thật; Go profile.go RegisterPerson.

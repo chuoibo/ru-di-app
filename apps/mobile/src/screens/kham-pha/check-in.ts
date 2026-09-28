@@ -45,7 +45,7 @@ export type KyNiem = {
 
 const CHECK_IN_REFUSALS: Record<string, string> = {
   place_not_found:
-    "Máy chủ không có chỗ này trong danh mục, nên chưa check-in được. Mở lại màn Khám phá để lấy danh sách mới.",
+    "Chỗ này không còn trong danh mục, nên chưa check-in được. Mở lại màn Khám phá để lấy danh sách mới.",
   permission_denied:
     "Chỉ thành viên của nhóm mới check-in được. Nhận lời mời vào nhóm trước đã.",
   context_not_found: "Nhóm này không còn nữa.",

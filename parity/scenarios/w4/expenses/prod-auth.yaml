@@ -1,6 +1,7 @@
 # W4 · expenses in prod auth mode (ADR-0014): identity is a bearer session read
-# by digest; X-Actor-* headers are ignored. POST /expenses declares no actor at
-# all, so it answers 201 with no bearer and with a junk one. Confirm needs a live
+# by digest; X-Actor-* headers are ignored. POST /expenses needs a live session
+# of a member of the named group: no bearer and a junk one are both 401, and the
+# owner proposes the expense the confirm steps use. Confirm needs a live
 # session; every session holder carries advancer, so acknowledging turns on
 # is_named_advancer alone. Idempotency keys are scoped by the bearer digest.
 # The harness seeds a people row and a live session per persona before step one.
@@ -38,8 +39,17 @@ steps:
     request:
       method: POST
       path: '/memberships/{{m_mate}}/accept'
+  # 401: proposing writes into the group, so it needs a session
   - id: anonymous_proposes_without_bearer
     as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000}'
+  - id: owner_proposes
+    as: owner
     request:
       method: POST
       path: '/expenses'

@@ -9,6 +9,10 @@
 appId: com.lakiet.rudi
 ---
 - runFlow: _vao-app-sach.yaml
+- tapOn: "Lên plan"
+- extendedWaitUntil:
+    visible: "Tạo mới"
+    timeout: 30000
 - tapOn: "Tạo mới"
 - extendedWaitUntil:
     visible: "Chia hóa đơn"

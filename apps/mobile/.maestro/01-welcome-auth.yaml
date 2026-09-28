@@ -13,10 +13,10 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!"
     timeout: 120000
-- assertVisible: "Hẹn hội bạn. Rủ Đi lo phần còn lại."
+- assertVisible: "Một lời rủ. Nhiều ngày đáng nhớ."
 - tapOn: "Tìm hiểu thêm"
 - extendedWaitUntil:
-    visible: "Tìm nơi hợp cả hội"
+    visible: "Hẹn ở nơi ai cũng muốn tới"
     timeout: 15000
 # "Tìm hiểu thêm" must page the carousel, NOT enter the app.
 - assertNotVisible: "Khám phá"
@@ -32,6 +32,6 @@ appId: com.lakiet.rudi
 - takeScreenshot: 01-login-google-honest
 - tapOn: "Vào bản trải nghiệm Team Đà Lạt"
 - extendedWaitUntil:
-    visible: "Cho Rủ Đi biết gu của bạn"
+    visible: "Điều gì khiến bạn muốn ra ngoài?"
     timeout: 30000
 - takeScreenshot: 01-personalization

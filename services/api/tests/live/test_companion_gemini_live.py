@@ -54,10 +54,13 @@ pytestmark = pytest.mark.skipif(
     reason="live Gemini tier: needs GEMINI_API_KEY and MOBILE_REQUIRE_GEMINI_TESTS=1",
 )
 
+# The shape the Go worker sends since ADR-0036 §5 (2026-09-24): the roster is
+# display names only, never account ids, and each turn names its speaker the
+# same way (chatassist.hoiThoai; pinned by chatassist/testdata/hoi_thoai_golden.json).
 MEMBERS = [
-    {"id": "person-nam", "display_name": "Nam"},
-    {"id": "person-linh", "display_name": "Linh"},
-    {"id": "person-huy", "display_name": "Huy"},
+    {"display_name": "Nam"},
+    {"display_name": "Linh"},
+    {"display_name": "Huy"},
 ]
 
 # An id shaped exactly like a real catalogue id, and belonging to nothing. If it
@@ -71,17 +74,14 @@ def _catalogue() -> list[dict]:
     return places
 
 
-def _turn(body: str, *, author: str = "person-nam") -> list[dict]:
+def _turn(body: str, *, speaker: str = "Nam") -> list[dict]:
     return [
         {
-            "id": "m-1",
-            "author_id": author,
             "author_kind": "human",
             "kind": "text",
+            "speaker": speaker,
             "body": body,
-            "image_url": None,
-            "card": None,
-            "created_at": "2026-08-29T19:40:00+07:00",
+            "created_at": "2026-08-29T12:40:00Z",
         }
     ]
 
@@ -142,7 +142,7 @@ def test_every_place_the_model_names_exists_in_the_catalogue(known_ids: set[str]
 def test_the_model_answers_the_constraint_the_group_actually_typed(
     known_ids: set[str],
 ):
-    """"Ngữ cảnh nhóm thật" is only observable when the answer could differ.
+    """ "Ngữ cảnh nhóm thật" is only observable when the answer could differ.
 
     The group rules out one whole category in its own words. A canned reply, or
     a reply that ignored the conversation, has no reason to respect that.

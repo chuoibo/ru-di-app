@@ -4,7 +4,12 @@ const LOI_XA_HOI: Record<string, string> = {
   post_not_found: "Bài này không còn hoặc không dành cho bạn.",
   comment_not_found: "Bình luận này không còn.",
   comments_closed: "Chủ tường không cho bình luận bài này.",
-  reply_depth_exceeded: "Chỉ trả lời trực tiếp một bình luận gốc.",
+  invalid_parent: "Chỉ trả lời trực tiếp một bình luận gốc.",
+  invalid_comment: "Bình luận cần có chữ và dưới 2.000 ký tự.",
+  invalid_body: "Bình luận cần có chữ và dưới 2.000 ký tự.",
+  community_unavailable: "Bài đã qua cộng đồng đang tạm không nhận bình luận. Thử lại sau nhé.",
+  public_repost_needs_review: "Chia sẻ cho mọi người cần qua duyệt cộng đồng. Chọn bạn bè hoặc chỉ mình bạn.",
+  rate_limited: "Bạn đang gửi hơi nhanh. Đợi một chút rồi thử lại.",
   invalid_cursor: "Không đọc tiếp được. Tải lại tường nhé.",
   social_temporarily_unavailable: "Tường đang tạm gián đoạn. Kéo xuống để thử lại.",
 };
@@ -40,7 +45,27 @@ export type BinhLuanTuong = {
   liked: boolean;
   replies: BinhLuanTuong[];
 };
-export type TrangBinhLuanTuong = { post_id: string; comments: BinhLuanTuong[]; next_cursor: string | null; has_more: boolean };
+/** The reader's own comment waiting for review; nobody else sees it (ADR-0040). */
+export type BinhLuanChoDuyet = {
+  id: string;
+  post_id: string;
+  parent_id: string | null;
+  body: string;
+  status: "pending" | "review" | "rejected";
+  created_at: string;
+};
+export type TrangBinhLuanTuong = {
+  post_id: string;
+  comments: BinhLuanTuong[];
+  pending?: BinhLuanChoDuyet[];
+  next_cursor: string | null;
+  has_more: boolean;
+};
+
+/** A comment on a public post comes back as a draft with 202 until reviewed. */
+export function dangChoDuyet(value: BinhLuanTuong | BinhLuanChoDuyet): value is BinhLuanChoDuyet {
+  return "status" in value && value.status !== undefined;
+}
 
 export function ghepTrangTuong<T extends { id: string }>(oldPosts: T[], newPosts: T[]): T[] {
   const known = new Set(oldPosts.map((post) => post.id));
@@ -66,9 +91,9 @@ export async function docBinhLuanTuong(postId: string, actorId: string, cursor: 
   return translatedAsActor<TrangBinhLuanTuong>(LOI_XA_HOI, `/social/v2/posts/${postId}/comments?${query}`, { method: "GET", actorId });
 }
 
-export async function guiTraLoi(postId: string, parentId: string | null, body: string, actorId: string, attempt: Attempt): Promise<BinhLuanTuong> {
+export async function guiTraLoi(postId: string, parentId: string | null, body: string, actorId: string, attempt: Attempt): Promise<BinhLuanTuong | BinhLuanChoDuyet> {
   const content = parentId ? { body: body.trim(), parent_id: parentId } : { body: body.trim() };
-  return translatedAsActor<BinhLuanTuong>(LOI_XA_HOI, `/social/v2/posts/${postId}/comments`, { method: "POST", actorId, attempt, body: content });
+  return translatedAsActor<BinhLuanTuong | BinhLuanChoDuyet>(LOI_XA_HOI, `/social/v2/posts/${postId}/comments`, { method: "POST", actorId, attempt, body: content });
 }
 
 export async function thichBaiTuong(postId: string, actorId: string, shouldLike: boolean): Promise<{ post_id: string; liked: boolean; like_count: number }> {

@@ -14,14 +14,18 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/auth"
+	"mobile/services/core/internal/community"
 	"mobile/services/core/internal/domain/blocking"
 	"mobile/services/core/internal/domain/postaudience"
 	"mobile/services/core/internal/repo"
 )
 
 type Handler struct {
-	pool     *pgxpool.Pool
-	mode     string
+	pool *pgxpool.Pool
+	mode string
+	// moderated is true when Cộng đồng runs its review worker on this host;
+	// public comments and reposts then go through its queue (ADR-0040).
+	moderated bool
 	mux      *http.ServeMux
 	mu       sync.Mutex
 	watchers map[string]map[chan struct{}]struct{}
@@ -44,8 +48,8 @@ func RouteIDs() []string {
 	}
 }
 
-func New(pool *pgxpool.Pool, mode string) *Handler {
-	h := &Handler{pool: pool, mode: mode, mux: http.NewServeMux(), watchers: map[string]map[chan struct{}]struct{}{}}
+func New(pool *pgxpool.Pool, mode string, moderated bool) *Handler {
+	h := &Handler{pool: pool, mode: mode, moderated: moderated, mux: http.NewServeMux(), watchers: map[string]map[chan struct{}]struct{}{}}
 	h.mux.HandleFunc("GET /social/v2/people/{person_id}/posts", h.wall)
 	h.mux.HandleFunc("GET /social/v2/people/{person_id}/changes", h.changes)
 	h.mux.HandleFunc("GET /social/v2/posts/{post_id}", h.detail)
@@ -81,6 +85,10 @@ func fail(w http.ResponseWriter, err error) {
 	var refused refusal
 	if errors.As(err, &refused) {
 		respond(w, refused.status, map[string]string{"code": refused.code, "detail": refused.code})
+		return
+	}
+	if status, code, ok := community.Refusal(err); ok {
+		respond(w, status, map[string]string{"code": code, "detail": code})
 		return
 	}
 	respond(w, 503, map[string]string{"code": "social_temporarily_unavailable", "detail": "social_temporarily_unavailable"})
@@ -178,6 +186,14 @@ func visiblePost(ctx context.Context, tx pgx.Tx, postID, actor string) (*postAcc
 	}
 	if post == nil {
 		return nil, bad(404, "post_not_found")
+	}
+	// The community rule decides removal, erasure and blocks for every reader
+	// of a shared post; the wall rule below adds the legacy audience checks.
+	if _, err = community.Readable(ctx, tx, actor, postID); err != nil {
+		if _, _, refused := community.Refusal(err); refused {
+			return nil, bad(404, "post_not_found")
+		}
+		return nil, err
 	}
 	access, err := postFacts(ctx, tx, *post, actor)
 	if err != nil {

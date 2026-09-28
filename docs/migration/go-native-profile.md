@@ -3,7 +3,8 @@
 Ngày 2026-09-23, tính năng hồ sơ mở các route mới cho hành trình thành tựu,
 tường nhà v2 và video dùng lượt thưởng. Đây là API nghiệp vụ mới nên Go/SQL là
 writer duy nhất theo ADR-0031. Python không có route đối ứng: `python: absent`,
-`state: GO-NATIVE` trong `services/core/ownership/routes.json` nói rõ điều đó.
+`native: true`, `state: LIVE-GO` trong `services/core/ownership/routes.json`
+nói rõ điều đó, cùng quy ước với route diary/Cộng đồng trên `main`.
 
 Các route này đi qua Go extension mux trước bộ định tuyến legacy. Bảng ownership
 vẫn là nguồn sự thật: `core routes --json` phải liệt kê mọi ID extension; bộ

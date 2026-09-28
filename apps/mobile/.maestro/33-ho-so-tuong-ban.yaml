@@ -26,10 +26,12 @@ appId: com.lakiet.rudi
     timeout: 60000
 # --- hồ sơ của bạn mình -------------------------------------------------------
 - tapOn: "Cá nhân"
-- extendedWaitUntil:
-    visible: "Bạn bè, lời mời đã nhận và đã gửi"
+- scrollUntilVisible:
+    element:
+      text: "Bạn bè"
+    direction: DOWN
     timeout: 60000
-- tapOn: "Bạn bè, lời mời đã nhận và đã gửi"
+- tapOn: "Bạn bè"
 - extendedWaitUntil:
     visible: "Xem hồ sơ .*"
     timeout: 60000
@@ -49,35 +51,94 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Hồ sơ của bạn"
     timeout: 60000
-- assertVisible: "Bạn chưa đăng bài nào.*"
-- takeScreenshot: 33-tuong-rong
-- tapOn: "Đăng bài mới"
-- extendedWaitUntil:
-    visible: "Ai đọc được?"
+# The owner's diary shelf («Những ngày muốn giữ») sits above the posts, so the
+# empty-wall line starts below the fold on a phone.
+- scrollUntilVisible:
+    element:
+      text: "Bạn chưa đăng bài nào.*"
+    direction: DOWN
     timeout: 30000
-- tapOn: "Bạn muốn kể gì?"
+- takeScreenshot: 33-tuong-rong
+- scrollUntilVisible:
+    element:
+      text: "Đăng bài mới"
+    direction: UP
+    timeout: 30000
+- tapOn: "Đăng bài mới"
+# With the community rollout on, «Đăng bài mới» opens the community composer
+# in wall mode: «Riêng tư · Bạn bè» is preselected and the post skips review.
+- extendedWaitUntil:
+    visible: "Hôm nay có gì đáng nhớ?"
+    timeout: 30000
+- tapOn:
+    id: "community-body"
 - inputText: "Chuyen QA cho ban be"
 - hideKeyboard
-- tapOn: "Mức người đọc: Bạn bè"
+- scrollUntilVisible:
+    element:
+      text: "Riêng tư · Bạn bè.*Đã chọn"
+    direction: DOWN
+    timeout: 20000
 - takeScreenshot: 33-chon-muc-doc
-- tapOn: "Đăng"
+- tapOn: "Đăng lên tường"
+# Sending lands on the post itself; back returns to the wall, which reloads.
 - extendedWaitUntil:
     visible: "Chuyen QA cho ban be"
+    timeout: 60000
+- back
+- extendedWaitUntil:
+    visible: "Hồ sơ của bạn"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Chuyen QA cho ban be"
+    direction: DOWN
     timeout: 60000
 - assertNotVisible: "Bạn chưa đăng bài nào.*"
 - takeScreenshot: 33-tuong-cua-toi
 # --- bài chỉ mình tôi: cùng màn, khác mức người đọc ---------------------------
+- scrollUntilVisible:
+    element:
+      text: "Đăng bài mới"
+    direction: UP
+    timeout: 30000
 - tapOn: "Đăng bài mới"
 - extendedWaitUntil:
-    visible: "Ai đọc được?"
+    visible: "Hôm nay có gì đáng nhớ?"
     timeout: 30000
-- tapOn: "Bạn muốn kể gì?"
+- tapOn:
+    id: "community-body"
 - inputText: "Chi minh toi QA"
 - hideKeyboard
-- tapOn: "Mức người đọc: Chỉ mình tôi"
-- tapOn: "Đăng"
+- scrollUntilVisible:
+    element:
+      text: "Lựa chọn khác"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Lựa chọn khác"
+- scrollUntilVisible:
+    element:
+      text: "Chỉ mình tôi"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Chỉ mình tôi"
+- assertVisible: "Chỉ mình tôi.*Đã chọn"
+- tapOn: "Đăng lên tường"
 - extendedWaitUntil:
     visible: "Chi minh toi QA"
     timeout: 60000
-- assertVisible: "Chuyen QA cho ban be"
+- back
+- extendedWaitUntil:
+    visible: "Hồ sơ của bạn"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Chi minh toi QA"
+    direction: DOWN
+    timeout: 60000
+- scrollUntilVisible:
+    element:
+      text: "Chuyen QA cho ban be"
+    direction: DOWN
+    timeout: 30000
 - takeScreenshot: 33-hai-muc-nguoi-doc

@@ -3,9 +3,9 @@
 Hai cách đánh vần một hợp đồng: máy chủ ném `ApiProblem(409, "paper_expired", …)`,
 client tra `LOI_TO_GIAY["paper_expired"]`. Không có gì bắt hai danh sách khớp
 nhau, và hậu quả của lệch không phải một lỗi — nó là **một câu sai** đặt trước
-mặt người đang đứng giữa tuần của họ: `thongDiepNguoiDoc` trả câu 403 chung
-«bạn không có quyền» cho `pair_chat_consent_required`, trong khi thứ còn thiếu
-là một lời đồng ý chưa ai nói, và người đọc sẽ đi tìm một công tắc không tồn tại.
+mặt người đang đứng giữa tuần của họ: `thongDiepNguoiDoc` trả câu chung cho
+một mã nó không biết, trong khi thứ còn thiếu thường là một bước cụ thể của sổ,
+và người đọc sẽ đi tìm một công tắc không tồn tại.
 
 Ca này đọc **nguồn Python bằng AST** và **nguồn TypeScript bằng regex**, nên nó
 chạy trong cổng backend mà không cần node. Nó nằm ở đây chứ không ở tầng mobile
@@ -51,9 +51,13 @@ _PHUONG_THUC = {
     "skip_pair_week",
     "record_pair_outing_done",
     "keep_pair_paper_line",
-    "take_companion_turn",
     "_require_pair_permission",
     "_pair_chat_consent",
+    "_pair_taste_sharers",
+    "_propose_per_person",
+    "_pair_taste",
+    "_pair_roster_or_404",
+    "set_pair_week_role",
 }
 
 #: Cùng mang chữ `pair` trong tên nhưng thuộc tính năng khác: `_require_pair_is_alive`
@@ -164,8 +168,7 @@ def test_moi_ma_loi_may_chu_nem_deu_co_cau_o_client():
     thieu = may_chu - _cau_cua_client()
     assert thieu == set(), (
         f"máy chủ ném {sorted(thieu)} nhưng client không có câu nào cho chúng — "
-        "người đọc sẽ nhận câu 403 chung, và với `pair_chat_consent_required` "
-        "câu ấy nói sai nghĩa"
+        "người đọc sẽ nhận câu chung, và câu ấy nói sai nghĩa"
     )
 
 
@@ -254,6 +257,7 @@ def test_moi_duong_client_goi_deu_la_mot_route_that():
     assert la == [], f"client gọi những đường máy chủ không có: {la}"
 
 
-def test_client_goi_du_muoi_chin_cua():
-    """Và đủ cả mười chín, để «gọi đúng» không đọc thành «gọi hết»."""
-    assert len(_duong_cua_client()) == 19, sorted(_duong_cua_client())
+def test_client_goi_du_hai_muoi_cua():
+    """Và đủ cả hai mươi (mười chín, cộng «Ai lo tuần này?» của ADR-0034), để
+    «gọi đúng» không đọc thành «gọi hết»."""
+    assert len(_duong_cua_client()) == 20, sorted(_duong_cua_client())

@@ -164,11 +164,33 @@ class Place(BaseModel):
     traits: list[str]
     group_fit: GroupFit | None
     flag: Literal["new", "hot"] | None
-    lat: float
-    lng: float
+    #: Null together, or not at all. Roughly a quarter of the fed catalogue has
+    #: no coordinates and never will -- pavement stalls and carts have no
+    #: address anywhere to find -- and a place is still a place without a pin.
+    #: What a screen must not do is draw one anyway, which is what
+    #: `geo_precision` is for.
+    lat: float | None = None
+    lng: float | None = None
+    #: How the point was arrived at. A rooftop match and a province centroid
+    #: are both "has coordinates" and only one of them belongs on a map.
+    geo_precision: (
+        Literal[
+            "rooftop",
+            "street",
+            "ward_centroid",
+            "province_centroid",
+            "suy_luan",
+            "none",
+        ]
+        | None
+    ) = None
     #: Where the row came from, so a screen can name its source. ODbL requires
     #: attribution for `osm`, and a reader deserves it for anything else.
-    source: Literal["seed", "osm", "curated"] = "seed"
+    # Kept in step with the CHECK on `places.source`. The two drifted once: the
+    # database learned `vnlocal` and this did not, so every read of a fed row
+    # answered 500 while every test stayed green -- no test had a fed row
+    # travelling the read path.
+    source: Literal["seed", "osm", "curated", "vnlocal"] = "seed"
     license: str | None = None
     #: Null when nothing is known about who is asking (M11). A match is a
     #: statement about particular people; an anonymous reader is nobody, and

@@ -25,8 +25,11 @@ type Place struct {
 	Category      string
 	Kinds         []string
 	Address       *string
-	Lat           float64
-	Lng           float64
+	// Nil together or not at all. A quarter of the fed catalogue has no
+	// coordinates and never will; scanning NULL into a float64 is what
+	// turned every read of such a row into a 500.
+	Lat           *float64
+	Lng           *float64
 	Rating        *float64
 	RatingCount   *int64
 	PriceMinVND   *int64
@@ -45,6 +48,9 @@ type Place struct {
 	SourceRef     *string
 	License       *string
 	Activities    json.RawMessage
+	// How the point was arrived at. A rooftop match and a province centroid
+	// are both "has coordinates"; only one of them may be drawn.
+	GeoPrecision *string
 }
 
 // PlaceFilter is list_places' keyword arguments; nil is "not passed".
@@ -61,6 +67,63 @@ var ErrUnrepresentable = errors.New("repo: stored value has no representation in
 // under the column's collation. `select(Place)` loads every mapped column,
 // created_at and updated_at included, although PlaceRecord drops them.
 func (r Repository) ListPlaces(ctx context.Context, filter PlaceFilter) ([]Place, error) {
+	return r.listPlaces(ctx, filter, false)
+}
+
+// ListPlaceCards is ListPlaces without the three columns no list card carries:
+// `description`, `reviews` and `activities` come back nil.
+//
+// Those three are most of a fed row's bytes -- on TP.HCM's 5,235 rows they are
+// ~14 MB of the ~15 MB a full read pulls -- while the query itself runs in
+// ~35 ms. Reading them for a list is what made GET /places take 12 s. A caller
+// that needs them for a few rows reads those rows with PlacesByIDs.
+func (r Repository) ListPlaceCards(ctx context.Context, filter PlaceFilter) ([]Place, error) {
+	return r.listPlaces(ctx, filter, true)
+}
+
+// PlacesByIDs reads every mapped column of the given places, in no particular
+// order; ids that do not exist are absent.
+func (r Repository) PlacesByIDs(ctx context.Context, ids []string) ([]Place, error) {
+	out := []Place{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := r.Q.Query(ctx, placeSelect(false)+` WHERE places.id = ANY($1::VARCHAR[])`, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		p, err := scanPlace(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+// placeSelect is the column list scanPlace reads, in its order. slim swaps the
+// three heavy columns for typed NULLs so the scan is unchanged.
+func placeSelect(slim bool) string {
+	activities, description, reviews := "places.activities", "places.description", "places.reviews"
+	if slim {
+		activities, description, reviews = "NULL::jsonb", "NULL::text", "NULL::jsonb"
+	}
+	return `SELECT places.id, places.destination_id, places.name, places.category, places.kinds,
+	               places.address, places.lat, places.lng, places.rating, places.rating_count,
+	               places.price_min_vnd, places.price_max_vnd, places.open_hours, places.open_now,
+	               places.travel_minutes, places.distance_km, places.photo_count, places.traits,
+	               places.group_fit, ` + activities + `, places.flag, ` + description + `,
+	               ` + reviews + `, places.source, places.source_ref, places.license,
+	               places.province_code, places.geo_precision, places.geo_evidence,
+	               places.source_updated_at, places.source_kind, places.confidence,
+	               places.evidence_posts, places.status, places.superseded_by,
+	               places.created_at, places.updated_at
+	          FROM places`
+}
+
+func (r Repository) listPlaces(ctx context.Context, filter PlaceFilter, slim bool) ([]Place, error) {
 	var where []string
 	var args []any
 	if filter.DestinationID != nil {
@@ -71,14 +134,7 @@ func (r Repository) ListPlaces(ctx context.Context, filter PlaceFilter) ([]Place
 		args = append(args, *filter.Category)
 		where = append(where, "places.category = $"+strconv.Itoa(len(args))+"::VARCHAR")
 	}
-	sql := `SELECT places.id, places.destination_id, places.name, places.category, places.kinds,
-	               places.address, places.lat, places.lng, places.rating, places.rating_count,
-	               places.price_min_vnd, places.price_max_vnd, places.open_hours, places.open_now,
-	               places.travel_minutes, places.distance_km, places.photo_count, places.traits,
-	               places.group_fit, places.activities, places.flag, places.description,
-	               places.reviews, places.source, places.source_ref, places.license,
-	               places.created_at, places.updated_at
-	          FROM places`
+	sql := placeSelect(slim)
 	if len(where) > 0 {
 		sql += " WHERE " + strings.Join(where, " AND ")
 	}
@@ -108,12 +164,17 @@ func scanPlace(row pgx.Row) (Place, error) {
 	var p Place
 	var kinds, traits, groupFit, activities, reviews []byte
 	var created, updated any
+	// Mapped columns the record does not carry: read because select(Place)
+	// reads every mapped column, and the oracle compares the statement.
+	var provinceCode, geoEvidence, sourceUpdated, sourceKind, confidence, evidencePosts, status, supersededBy any
 	if err := row.Scan(&p.ID, &p.DestinationID, &p.Name, &p.Category, &kinds,
 		&p.Address, &p.Lat, &p.Lng, &p.Rating, &p.RatingCount,
 		&p.PriceMinVND, &p.PriceMaxVND, &p.OpenHours, &p.OpenNow,
 		&p.TravelMinutes, &p.DistanceKM, &p.PhotoCount, &traits,
 		&groupFit, &activities, &p.Flag, &p.Description,
 		&reviews, &p.Source, &p.SourceRef, &p.License,
+		&provinceCode, &p.GeoPrecision, &geoEvidence, &sourceUpdated, &sourceKind,
+		&confidence, &evidencePosts, &status, &supersededBy,
 		&created, &updated); err != nil {
 		return Place{}, err
 	}
@@ -151,7 +212,12 @@ func (r Repository) GetPlace(ctx context.Context, placeID string) (*Place, error
 		        places.activities AS places_activities, places.flag AS places_flag,
 		        places.description AS places_description, places.reviews AS places_reviews,
 		        places.source AS places_source, places.source_ref AS places_source_ref,
-		        places.license AS places_license, places.created_at AS places_created_at,
+		        places.license AS places_license, places.province_code AS places_province_code,
+		        places.geo_precision AS places_geo_precision, places.geo_evidence AS places_geo_evidence,
+		        places.source_updated_at AS places_source_updated_at, places.source_kind AS places_source_kind,
+		        places.confidence AS places_confidence, places.evidence_posts AS places_evidence_posts,
+		        places.status AS places_status, places.superseded_by AS places_superseded_by,
+		        places.created_at AS places_created_at,
 		        places.updated_at AS places_updated_at
 		   FROM places
 		  WHERE places.id = $1::VARCHAR`, placeID))
