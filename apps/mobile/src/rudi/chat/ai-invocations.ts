@@ -16,6 +16,12 @@ export type ChatCapabilities = {
     plan: { available: boolean; reason: string | null };
     /** Absent on a server from before `command=chia_bill` existed: read as unavailable. */
     chia_bill?: { available: boolean; reason: string | null };
+    /**
+     * `hoi`: the engine's router decides what is asked, and the answer goes
+     * under the `@Rủ Đi` message. The one command a two-person conversation
+     * has (design 2026-09-28 §2.1). Absent on an older server: unavailable.
+     */
+    hoi?: { available: boolean; reason: string | null };
     share_scope: "invocation_only" | "caller_attached";
     /**
      * The server takes `trigger_message_id` and answers inside the thread, as a
@@ -27,11 +33,20 @@ export type ChatCapabilities = {
   };
   media: { image: boolean; sticker: boolean; voice: boolean };
 };
-/** The two things a person can ask the group AI for, on one queue (ADR-0036 §2.9). */
-export type LenhAi = "plan" | "chia_bill";
+/**
+ * What a person can ask the room's AI for, on one queue (ADR-0036 §2.9).
+ * A group has all three; a two-person conversation has `hoi` only, and the
+ * server's capabilities say so (plan and chia_bill `group_plan_only`).
+ */
+export type LenhAi = "plan" | "chia_bill" | "hoi";
 
-/** Whether the server says this command can run now. Fails closed. */
+/**
+ * Whether the server says this command can run now. Fails closed. `hoi`
+ * must name the message it answers, so it also needs a server that takes
+ * `trigger_message_id` (`mention`); without it the call would be refused.
+ */
 export function lenhSanSang(capabilities: ChatCapabilities | null, lenh: LenhAi): boolean {
+  if (lenh === "hoi") return capabilities?.ai.hoi?.available === true && capabilities.ai.mention === true;
   return (lenh === "plan" ? capabilities?.ai.plan : capabilities?.ai.chia_bill)?.available === true;
 }
 
@@ -78,7 +93,9 @@ export function docAiInvocations(contextId: string, personId: string) {
 export const LOI_GOI_AI: Record<string, string> = {
   boi_canh_qua_lon: "Đoạn chat gửi kèm dài quá. Bạn chọn «Chỉ gửi lời nhờ», hoặc thử lại để mình gửi ít tin hơn.",
   boi_canh_sai_dang: "Bản app này đã cũ nên Rủ Đi chưa đọc được yêu cầu. Cập nhật app rồi thử lại.",
-  boi_canh_mismatch: "Có tin trong đoạn gửi kèm không thuộc nhóm này. Bạn thử lại nhé.",
+  // The room-scoped sentences say «cuộc trò chuyện»: the same refusal reaches
+  // a group and a two-person conversation (design 2026-09-28 §2.1).
+  boi_canh_mismatch: "Có tin trong đoạn gửi kèm không thuộc cuộc trò chuyện này. Bạn thử lại nhé.",
   invocation_conflict: "Lời nhờ này đã gửi rồi với nội dung khác. Đợi kết quả cũ xong rồi gửi lại nhé.",
   invocation_rate_limited: "Bạn hỏi hơi nhanh. Chờ một chút rồi nhờ tiếp nhé.",
   invocation_not_retryable: "Lời nhờ này hết hạn chia sẻ rồi. Bạn viết lại một lời nhờ mới nhé.",
@@ -87,15 +104,15 @@ export const LOI_GOI_AI: Record<string, string> = {
   group_plan_only: "Chỗ này chưa nhờ AI phác kèo được.",
   invalid_invocation: "Lời nhờ đang trống hoặc dài quá. Bạn viết gọn lại rồi gửi nhé.",
   authentication_required: "Phiên đăng nhập đã hết. Bạn đăng nhập lại rồi nhờ AI tiếp nhé.",
-  membership_required: "Bạn không còn ở trong nhóm này nên chưa nhờ AI ở đây được.",
-  encrypted_invocation_required: "Nhóm này đã chuyển sang chat mã hoá, nên cách nhờ AI này chưa dùng được ở đây.",
+  membership_required: "Bạn không còn ở trong cuộc trò chuyện này nên chưa nhờ AI ở đây được.",
+  encrypted_invocation_required: "Cuộc trò chuyện này đã chuyển sang chat mã hoá, nên cách nhờ AI này chưa dùng được ở đây.",
   invocation_not_found: "Không còn thấy lời nhờ này nữa. Bạn gửi một lời nhờ mới nhé.",
   // ADR-0046: the answer is a reply to the `@Rủ Đi` message, so the message
   // itself can be the reason a request is refused.
-  trigger_khong_hop_le: "Rủ Đi AI chỉ trả lời tin nhờ của chính bạn trong nhóm này, gửi trong một ngày qua và chưa xoá. Bạn gửi một tin mới có @Rủ Đi nhé.",
+  trigger_khong_hop_le: "Rủ Đi AI chỉ trả lời tin nhờ của chính bạn trong cuộc trò chuyện này, gửi trong một ngày qua và chưa xoá. Bạn gửi một tin mới có @Rủ Đi nhé.",
   invocation_trigger_taken: "Tin này đã được nhờ Rủ Đi AI trả lời rồi. Câu trả lời sẽ hiện ngay dưới tin.",
-  invocation_room_busy: "Rủ Đi AI đang trả lời ba lời nhờ trong nhóm. Đợi một câu xong rồi nhờ tiếp nhé.",
-  invocation_room_rate_limited: "Nhóm đã nhờ Rủ Đi AI nhiều trong một giờ qua. Nghỉ tay một chút rồi nhờ tiếp nhé.",
+  invocation_room_busy: "Rủ Đi AI đang trả lời ba lời nhờ ở đây. Đợi một câu xong rồi nhờ tiếp nhé.",
+  invocation_room_rate_limited: "Ở đây đã nhờ Rủ Đi AI nhiều trong một giờ qua. Nghỉ tay một chút rồi nhờ tiếp nhé.",
 };
 
 /**
@@ -144,6 +161,14 @@ export function chuHangLoiGoi(request: AiInvocation, nguoiXem: NguoiXem = "nguoi
     return {
       tieuDe: n > 0 ? `Rủ Đi AI đang đọc ${n} tin…` : "Rủ Đi AI đang đọc lời nhờ…",
       cau: CAU_CHO_TRA_LOI[nguoiXem],
+    };
+  }
+  if (request.status === "failed" && request.command === "hoi") {
+    // A question, not a plan: no «tờ hẹn» and no «tự tạo kèo» in its words,
+    // since the one command a pair has is this one.
+    return {
+      tieuDe: "Rủ Đi AI chưa trả lời được",
+      cau: (request.code ? LOI_KET_QUA_AI[request.code] : undefined) ?? "Lời nhờ vẫn được giữ. Bạn có thể thử lại.",
     };
   }
   if (request.status === "failed") {

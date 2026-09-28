@@ -21,6 +21,13 @@ import { LOI_NHO_CHIA_BILL, type LenhAi } from "./ai-invocations";
 /** What a bare `@Rủ Đi` or `/plan` asks for when nothing else was typed. */
 export const LOI_NHO_PLAN = "Phác giúp nhóm một kèo đi chơi";
 
+/**
+ * What a bare `@Rủ Đi` asks for in a two-person conversation. The group's
+ * default speaks of «nhóm» and asks for a plan, which a pair cannot run
+ * (design 2026-09-28 §2.1: a pair has `hoi` only), so a pair gets its own.
+ */
+export const LOI_NHO_HOI_HAI_NGUOI = "Gợi ý giúp hai mình nên đi đâu";
+
 export type NhacAi = {
   lenh: LenhAi;
   /** The request without the mention or the command: what the model reads as the ask. */
@@ -66,7 +73,7 @@ function viTriNhac(s: string): Array<[number, number]> {
  * An empty request gets the command's plain default, because the server
  * refuses an empty prompt and a bare `@Rủ Đi` still means «help us».
  */
-export function tachLoiNho(body: string): string {
+export function tachLoiNho(body: string, haiNguoi = false): string {
   let s = body.normalize("NFC");
   const lenh = MAU_LENH.exec(s);
   const chiaBill = lenh !== null && /^chia/i.test(lenh[1]);
@@ -75,6 +82,7 @@ export function tachLoiNho(body: string): string {
   for (let i = cat.length - 1; i >= 0; i--) s = s.slice(0, cat[i][0]) + " " + s.slice(cat[i][1]);
   const gon = s.replace(/\s+/g, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/^[\s,:;.!?-]+/, "").trim();
   if (gon !== "") return gon;
+  if (haiNguoi) return LOI_NHO_HOI_HAI_NGUOI;
   return chiaBill ? LOI_NHO_CHIA_BILL : LOI_NHO_PLAN;
 }
 
@@ -82,11 +90,18 @@ export function tachLoiNho(body: string): string {
  * Whether a message also asks the AI, and for what. Null for an ordinary
  * message, which is sent and nothing else.
  *
- * `/chia-bill` is the only command that asks for something other than a
- * plan; a mention and `/plan` are both `plan` until the engine gains `hoi`.
+ * In a group, `/chia-bill` is the only command that asks for something other
+ * than a plan; a mention and `/plan` are both `plan`.
+ *
+ * In a two-person conversation (`haiNguoi`) the server runs `hoi` only: the
+ * plan, the expense sheet and «thành kèo» belong to groups (design
+ * 2026-09-28 §2.1). So there a mention anywhere is `hoi`, and a slash
+ * command without a mention is an ordinary message: offering a command the
+ * server refuses would only turn a send into a refusal.
  */
-export function timNhacAi(text: string): NhacAi | null {
+export function timNhacAi(text: string, haiNguoi = false): NhacAi | null {
   const s = text.normalize("NFC");
+  if (haiNguoi) return viTriNhac(s).length > 0 ? { lenh: "hoi", loiNho: tachLoiNho(s, true) } : null;
   const lenh = MAU_LENH.exec(s);
   if (lenh) return { lenh: /^chia/i.test(lenh[1]) ? "chia_bill" : "plan", loiNho: tachLoiNho(s) };
   if (viTriNhac(s).length > 0) return { lenh: "plan", loiNho: tachLoiNho(s) };
