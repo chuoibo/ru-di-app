@@ -389,16 +389,41 @@ func enrichWith(ctx context.Context, pool nap.CSDL, m model.LLM, cfg nap.CauHinh
 			need = append(need, d.HoSo)
 		}
 	}
-	done, hong, b := nap.ChayLamGiau(ctx, m, cfg, tranGoi, need)
-	if err := nap.GhiLamGiau(ctx, pool, done); err != nil {
-		return err
-	}
-	for id, e := range hong {
-		if err := nap.GhiDLQ(ctx, pool, nap.CorpusQuan, id, nap.ChangLamGiau, e); err != nil {
+	// Checkpointed: the places go in rounds (every worker a few batches),
+	// and each round's results and failures are written before the next
+	// starts. A run cut short keeps what it finished; the next run selects
+	// only places still lacking a current enrichment, so it resumes. The
+	// ceiling counts across rounds.
+	round := cfg.LamGiau.Lo * cfg.LamGiau.SongSong * 4
+	var tong nap.BaoCaoLamGiau
+	tong.Quan = len(need)
+	con := tranGoi
+	for start := 0; start < len(need) && con > 0; start += round {
+		if err := ctx.Err(); err != nil {
+			break
+		}
+		part := need[start:min(start+round, len(need))]
+		done, hong, b := nap.ChayLamGiau(ctx, m, cfg, con, part)
+		if err := nap.GhiLamGiau(ctx, pool, done); err != nil {
 			return err
 		}
+		for id, e := range hong {
+			if err := nap.GhiDLQ(ctx, pool, nap.CorpusQuan, id, nap.ChangLamGiau, e); err != nil {
+				return err
+			}
+		}
+		con -= b.SoGoi
+		tong.SoGoi += b.SoGoi
+		tong.Xong += b.Xong
+		tong.Hong += b.Hong
+		tong.HetTran += b.HetTran
+		tong.CanDuyet += b.CanDuyet
+		tong.ChenLenh += b.ChenLenh
+		tong.MonBo += b.MonBo
+		fmt.Fprintf(stdout, "{\"dot\":%d,\"da_xu_ly\":%d,\"tong\":%d,\"xong\":%d,\"hong\":%d,\"so_goi\":%d}\n",
+			start/round+1, min(start+round, len(need)), len(need), tong.Xong, tong.Hong, tong.SoGoi)
 	}
-	printJSON(stdout, b)
+	printJSON(stdout, tong)
 	return nil
 }
 
