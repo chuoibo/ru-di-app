@@ -178,8 +178,14 @@ function doHopBam(kieu, khoa) {
  * `--headless=new` is the mode that renders like the real browser; the old
  * headless had its own layout quirks, which would make every number below a
  * measurement of the wrong thing.
+ *
+ * `webgl2: false` switches WebGL2 off outright. `--disable-gpu` alone does
+ * not: GitHub's ubuntu runner Chrome still hands out a WebGL2 context through
+ * its software fallback (2026-09-28, the no-WebGL2 test went red on main
+ * 16f24d5e and on every branch), so a test that needs "a browser without
+ * WebGL2" has to ask for one rather than assume the machine is that browser.
  */
-export async function launch(bin, { webgl = false } = {}) {
+export async function launch(bin, { webgl = false, webgl2 = true } = {}) {
   // Named here rather than inline in the args so `close()` can delete it. A
   // profile dir is ~4 MB and every test file makes one; left behind they had
   // reached 2421 dirs / 9.9 GB of /tmp on this machine, which is a slow way to
@@ -195,6 +201,7 @@ export async function launch(bin, { webgl = false } = {}) {
       ...(webgl
         ? ["--enable-unsafe-swiftshader", "--use-gl=angle", "--use-angle=swiftshader"]
         : ["--disable-gpu"]),
+      ...(webgl2 ? [] : ["--disable-webgl2"]),
       "--force-device-scale-factor=1",
       "--no-first-run",
       "--no-default-browser-check",

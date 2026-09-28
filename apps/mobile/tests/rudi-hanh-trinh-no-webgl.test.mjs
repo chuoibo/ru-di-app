@@ -13,7 +13,9 @@ const required = process.env.MOBILE_REQUIRE_HANH_TRINH_WEB === "1";
 
 test("/plan stays usable without WebGL2", { skip: !existsSync(join(EXPORT_DIR, "index.html")) || (!findChrome() && !required) }, async () => {
   const server = await serve(EXPORT_DIR);
-  const page = await launch(findChrome());
+  // Ask for a browser without WebGL2 instead of assuming this machine's Chrome
+  // is one: the CI runner's software fallback provides it (see launch).
+  const page = await launch(findChrome(), { webgl2: false });
   try {
     await page.viewport(390, 844);
     await page.goto(`${server.url}plan`, () => document.body != null);
