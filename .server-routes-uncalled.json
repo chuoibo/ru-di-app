@@ -41,9 +41,10 @@
     "             Ca hai deu doi 'reason' phai CHI RA file:dong cua cho goi, de",
     "             nguoi sau kiem duoc loi khai thay vi phai tin no.",
     "",
-    "Con so hom nay: 0 tinh-nang, 1 ha-tang, 5 cong-mu, 0 chua phan loai.",
+    "Con so hom nay (2026-09-28): 3 tinh-nang, 1 ha-tang, 5 cong-mu, 0 chua phan loai.",
     "",
-    "SO 'CON PHAI LAM' LA 0. Sau nhieu luot doc thanh 4, va con so 4 do sai --",
+    "SO 'CON PHAI LAM' LA 3 -- ba route tri nho Nep (ADR-0041), cho man the cong bo + cong tac.",
+    "Truoc 2026-09-28 so nay la 0. Sau nhieu luot doc thanh 4, va con so 4 do sai --",
     "khong phai vi ai dem nham, ma vi khong ai hoi lai. Xem muc duoi.",
     "",
     "## Bon dong tra muon -- va vi sao khong cong nao doi duoc no",
@@ -118,6 +119,21 @@
       "route": "/places/{place_id}/photos/{photo_id}",
       "loai": "cong-mu",
       "reason": "M12 (ADR-0017). Đường ảnh do MÁY CHỦ trả về trong `photo_url`/`photos[].url`, nên client không bao giờ viết nó thành literal — cùng dạng với /contexts/{id}/photos/{id}. Người gọi thật là thẻ Khám phá (đã có từ PR này) qua giá trị máy chủ gửi."
+    },
+    {
+      "route": "/me/nep/su-kien",
+      "loai": "tinh-nang",
+      "reason": "Trí nhớ Nếp (ADR-0041 «Nếp thấy rõ màn, nhớ lặng lẽ có nói trước, nhắc khi được cho phép»). Go phục vụ (services/core/internal/nepnho/handler.go), nhưng CHƯA có màn nào: thẻ công bố trí nhớ và công tắc bật/tắt trong cài đặt chưa dựng — đang chờ thiết kế (/impeccable). Nợ thật, loại tinh-nang: gỡ dòng này trong commit dựng màn đó. POST ghi một sự kiện trí nhớ Nếp; màn gọi nó là luồng ghi nhớ sau khi người dùng đã bật công tắc."
+    },
+    {
+      "route": "/me/nep/tri-nho",
+      "loai": "tinh-nang",
+      "reason": "Trí nhớ Nếp (ADR-0041 «Nếp thấy rõ màn, nhớ lặng lẽ có nói trước, nhắc khi được cho phép»). Go phục vụ (services/core/internal/nepnho/handler.go), nhưng CHƯA có màn nào: thẻ công bố trí nhớ và công tắc bật/tắt trong cài đặt chưa dựng — đang chờ thiết kế (/impeccable). Nợ thật, loại tinh-nang: gỡ dòng này trong commit dựng màn đó. DELETE «quên hết» — nút xoá toàn bộ trí nhớ trong thẻ công bố."
+    },
+    {
+      "route": "/me/nep/tri-nho/cai-dat",
+      "loai": "tinh-nang",
+      "reason": "Trí nhớ Nếp (ADR-0041 «Nếp thấy rõ màn, nhớ lặng lẽ có nói trước, nhắc khi được cho phép»). Go phục vụ (services/core/internal/nepnho/handler.go), nhưng CHƯA có màn nào: thẻ công bố trí nhớ và công tắc bật/tắt trong cài đặt chưa dựng — đang chờ thiết kế (/impeccable). Nợ thật, loại tinh-nang: gỡ dòng này trong commit dựng màn đó. GET/PUT công tắc bật/tắt trí nhớ trong cài đặt."
     }
   ]
 }
