@@ -40,11 +40,14 @@ type BaoCaoLo struct {
 	// Can: distinct content hashes of the rows; DaCo: of them already in the
 	// cache; Gui: submitted in a new job (0 when an open job was resumed).
 	Can, DaCo, Gui int
-	Job            string  `json:"job,omitempty"`
-	TrangThai      string  `json:"trang_thai"`
-	Ghi            int     `json:"ghi"`
-	LoiDong        int     `json:"loi_dong"`
-	Giay           float64 `json:"giay"`
+	Job            string `json:"job,omitempty"`
+	// SoJob: batch jobs polled to their end in this run (a run sends the
+	// missing documents in jobs of at most toiDa each).
+	SoJob     int     `json:"so_job"`
+	TrangThai string  `json:"trang_thai"`
+	Ghi       int     `json:"ghi"`
+	LoiDong   int     `json:"loi_dong"`
+	Giay      float64 `json:"giay"`
 }
 
 // ErrLoHong: the provider failed the job; nothing was written.
@@ -57,7 +60,38 @@ var ErrLoHong = errors.New("nap: the batch embedding job failed")
 // job already running for this model, dims and task is polled instead of a
 // new one submitted, so a run cut short costs nothing twice. The build that
 // follows (Vector / NhungHang) then finds every vector in the cache.
-func (n Nap) NhungQuaLo(ctx context.Context, db CSDL, lo NhungLo, rows []Hang, cho time.Duration) (BaoCaoLo, error) {
+func (n Nap) NhungQuaLo(ctx context.Context, db CSDL, lo NhungLo, rows []Hang, cho time.Duration, toiDa int) (BaoCaoLo, error) {
+	started := time.Now()
+	var tong BaoCaoLo
+	for lan := 0; ; lan++ {
+		r, err := n.motLuotLo(ctx, db, lo, rows, cho, toiDa)
+		if lan == 0 {
+			tong.Can, tong.DaCo = r.Can, r.DaCo
+		}
+		tong.Gui += r.Gui
+		tong.Ghi += r.Ghi
+		tong.LoiDong += r.LoiDong
+		if r.Job != "" {
+			tong.Job = r.Job
+			tong.SoJob++
+		}
+		tong.TrangThai = r.TrangThai
+		tong.Giay = time.Since(started).Seconds()
+		// A finished job may leave documents for the next one (toiDa);
+		// anything else (nothing left, still running at the deadline, an
+		// error) ends the run.
+		if err != nil || r.TrangThai != "xong" {
+			if lan > 0 && r.TrangThai == "khong_can" {
+				tong.TrangThai = "xong"
+			}
+			return tong, err
+		}
+	}
+}
+
+// motLuotLo polls the open job, or submits one of at most toiDa documents
+// (0: all) the cache lacks, and waits for it (or the deadline).
+func (n Nap) motLuotLo(ctx context.Context, db CSDL, lo NhungLo, rows []Hang, cho time.Duration, toiDa int) (BaoCaoLo, error) {
 	started := time.Now()
 	var rep BaoCaoLo
 	if lo.Model() != n.Cfg.Dense.Model || lo.Dims() != n.Cfg.Dense.Dims {
@@ -99,6 +133,9 @@ func (n Nap) NhungQuaLo(ctx context.Context, db CSDL, lo NhungLo, rows []Hang, c
 				rep.TrangThai = "khong_can"
 				rep.Giay = time.Since(started).Seconds()
 				return rep, nil
+			}
+			if toiDa > 0 && len(docs) > toiDa {
+				docs = docs[:toiDa]
 			}
 			ten := fmt.Sprintf("rudi-%s-%s", n.Cfg.VanTay(), time.Now().UTC().Format("20060102T150405"))
 			if job, err = lo.GuiLo(ctx, ten, docs); err != nil {

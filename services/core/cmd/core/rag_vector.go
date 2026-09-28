@@ -542,6 +542,9 @@ func ragEmbedBatch(ctx context.Context, getenv func(string) string, pool nap.CSD
 	for _, d := range docs {
 		rows = append(rows, d.Rows...)
 	}
-	kq, err := n.NhungQuaLo(ctx, pool, napLo{l: lo}, rows, 30*time.Second)
+	// At most 4,000 documents per job: a job of the whole catalogue (~25k
+	// chunks) was refused 429 RESOURCE_EXHAUSTED at creation (enqueued-token
+	// quota), 5,000 was accepted (probe 2026-09-29).
+	kq, err := n.NhungQuaLo(ctx, pool, napLo{l: lo}, rows, 30*time.Second, 4000)
 	return ragOut(stdout, stderr, map[string]any{"quan": len(docs), "qua_dai": rep.QuaDai, "lo": kq}, err)
 }

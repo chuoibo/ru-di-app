@@ -4,6 +4,7 @@ package nap_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func (l *loGia) GuiLo(_ context.Context, _ string, docs []nap.LoVao) (string, er
 	if l.jobs == nil {
 		l.jobs = map[string][]nap.LoVao{}
 	}
-	job := "batches/gia" + string(rune('a'+l.gui))
+	job := fmt.Sprintf("batches/gia%d", l.gui)
 	l.jobs[job] = docs
 	return job, nil
 }
@@ -92,14 +93,14 @@ func TestNhungQuaLoChiGuiPhanThieuVaKhongGuiHaiLan(t *testing.T) {
 	}
 	lo := &loGia{model: n.Cfg.Dense.Model, enc: enc, chay: 1000}
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
-	rep, err := n.NhungQuaLo(ctx, pool, lo, rows, 20*time.Millisecond)
+	rep, err := n.NhungQuaLo(ctx, pool, lo, rows, 20*time.Millisecond, 0)
 	cancel()
 	if err != nil || rep.TrangThai != "dang_chay" || lo.gui != 1 || rep.Gui != rep.Can-rep.DaCo || rep.DaCo == 0 {
 		t.Fatalf("first run: %+v, %d submits, %v", rep, lo.gui, err)
 	}
 	// Second run: the job finishes; nothing is submitted again.
 	lo.chay = lo.xem
-	rep2, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond)
+	rep2, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond, 0)
 	if err != nil || rep2.TrangThai != "xong" || lo.gui != 1 || rep2.Gui != 0 || rep2.Ghi != rep.Gui {
 		t.Fatalf("second run: %+v, %d submits, %v", rep2, lo.gui, err)
 	}
@@ -108,7 +109,7 @@ func TestNhungQuaLoChiGuiPhanThieuVaKhongGuiHaiLan(t *testing.T) {
 	if miss, err := nap.NhungHang(context.Background(), named, nap.BoNhoPG{Q: pool}, n.Cfg, append([]nap.Hang(nil), rows...)); err != nil || miss != 0 {
 		t.Fatalf("after the batch %d rows still needed the encoder (%v)", miss, err)
 	}
-	rep3, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond)
+	rep3, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond, 0)
 	if err != nil || rep3.TrangThai != "khong_can" || lo.gui != 1 {
 		t.Fatalf("third run: %+v %v", rep3, err)
 	}
@@ -126,7 +127,7 @@ func TestNhungQuaLoHongKhongGhi(t *testing.T) {
 		t.Fatal(err)
 	}
 	lo := &loGia{model: n.Cfg.Dense.Model, enc: enc, hong: true}
-	if _, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond); err == nil {
+	if _, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond, 0); err == nil {
 		t.Fatal("a failed job reported success")
 	}
 	if miss, _ := nap.NhungHang(context.Background(), nap.StubDense{N: enc.N}, nil, n.Cfg, append([]nap.Hang(nil), rows...)); miss == 0 {
@@ -137,7 +138,7 @@ func TestNhungQuaLoHongKhongGhi(t *testing.T) {
 		t.Fatalf("a failed job stayed open: %d %v", open, err)
 	}
 	lo.hong = false
-	if _, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond); err != nil || lo.gui != 2 {
+	if _, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond, 0); err != nil || lo.gui != 2 {
 		t.Fatalf("after a failure the next run must submit afresh: %d submits, %v", lo.gui, err)
 	}
 }
@@ -161,5 +162,33 @@ func TestCanLamGiauKhopCong(t *testing.T) {
 	}
 	if len(can) != rep.ThieuLamGiau || len(can) == 0 {
 		t.Fatalf("enrichment selects %d, the gate counts %d", len(can), rep.ThieuLamGiau)
+	}
+}
+
+// TestNhungQuaLoChiaJob: with a per-job cap the missing documents go out in
+// consecutive jobs (the provider refused one job of the whole catalogue),
+// each written before the next is sent, and the cache ends complete.
+func TestNhungQuaLoChiaJob(t *testing.T) {
+	pool := naptest.Pool(t)
+	n, enc := naptest.Nap(t, nap.NewKhoNho())
+	v := naptest.Vang(t)
+	var rows []nap.Hang
+	for i, q := range v.Quan[:30] {
+		h, _ := nap.DungHoSo(v.Hang(i, q))
+		hs, err := nap.DoanQuan(context.Background(), h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan], nap.ChiaNguyen{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		rows = append(rows, hs...)
+	}
+	lo := &loGia{model: n.Cfg.Dense.Model, enc: enc}
+	rep, err := n.NhungQuaLo(context.Background(), pool, lo, rows, time.Millisecond, 10)
+	want := (rep.Can + 9) / 10
+	if err != nil || rep.TrangThai != "xong" || rep.Gui != rep.Can || lo.gui != want || rep.SoJob != want || rep.Ghi != rep.Can {
+		t.Fatalf("%+v, %d submits (want %d), %v", rep, lo.gui, want, err)
+	}
+	named := stubTen{enc, n.Cfg.Dense.Model}
+	if miss, err := nap.NhungHang(context.Background(), named, nap.BoNhoPG{Q: pool}, n.Cfg, append([]nap.Hang(nil), rows...)); err != nil || miss != 0 {
+		t.Fatalf("%d rows still missing (%v)", miss, err)
 	}
 }
