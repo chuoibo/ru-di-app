@@ -85,15 +85,26 @@ need_docker() {
 
 # wait_for NAME TRIES CMD... retries CMD once a second; a service that never
 # answers fails the tier with its own log, not a timeout inside go test.
+#
+# The containers are started WITHOUT --rm (the EXIT trap removes them). With
+# --rm a container that crashed on boot was gone before this could read its
+# log: CI printed «không lên sau 90s» and then «No such container», which says
+# nothing about why. A container that has exited is also reported at once,
+# with its exit code, instead of after the full wait.
 wait_for() {
   local name="$1" tries="$2"
   shift 2
   for _ in $(seq 1 "$tries"); do
     "$@" >/dev/null 2>&1 && return 0
+    if [ "$(docker inspect -f '{{.State.Running}}' "$name" 2>/dev/null)" != "true" ]; then
+      echo "HỎNG: $name đã dừng trước khi lên ($(docker inspect -f 'exit={{.State.ExitCode}} oom={{.State.OOMKilled}} error={{.State.Error}}' "$name" 2>&1))" >&2
+      docker logs --tail 80 "$name" >&2 2>&1 || true
+      exit 1
+    fi
     sleep 1
   done
   echo "HỎNG: $name không lên sau ${tries}s" >&2
-  docker logs --tail 30 "$name" >&2 2>&1 || true
+  docker logs --tail 80 "$name" >&2 2>&1 || true
   exit 1
 }
 
@@ -101,7 +112,7 @@ if [ -z "${CORE_TEST_DATABASE_URL:-}" ]; then
   need_docker CORE_TEST_DATABASE_URL
   name="go-broker-pg-$$" port="$(free_port)" password="$(secret)"
   echo "--- PostgreSQL dùng một lần trên 127.0.0.1:$port"
-  docker run -d --rm --name "$name" \
+  docker run -d --name "$name" \
     -e POSTGRES_DB=mobile -e POSTGRES_USER=mobile -e POSTGRES_PASSWORD="$password" \
     -p "127.0.0.1:$port:5432" "$PG_IMAGE" -c timezone=UTC -c fsync=off >/dev/null
   containers+=("$name")
@@ -125,7 +136,7 @@ if [ -z "${CORE_TEST_REDIS_URL:-}" ]; then
   need_docker CORE_TEST_REDIS_URL
   name="go-broker-redis-$$" port="$(free_port)"
   echo "--- Redis dùng một lần trên 127.0.0.1:$port"
-  docker run -d --rm --name "$name" -p "127.0.0.1:$port:6379" "$REDIS_IMAGE" \
+  docker run -d --name "$name" -p "127.0.0.1:$port:6379" "$REDIS_IMAGE" \
     redis-server --save "" --appendonly no >/dev/null
   containers+=("$name")
   wait_for "$name" 30 docker exec "$name" redis-cli ping
@@ -138,7 +149,15 @@ if [ -z "${CORE_TEST_AMQP_URL:-}" ]; then
   need_docker CORE_TEST_AMQP_URL
   name="go-broker-rabbit-$$" port="$(free_port)" password="$(secret)"
   echo "--- RabbitMQ dùng một lần trên 127.0.0.1:$port"
-  docker run -d --rm --name "$name" \
+  # --ulimit nofile: the Erlang VM sizes its port table from the open-file
+  # limit, and a Docker whose containers inherit LimitNOFILE=infinity hands
+  # them a limit around 2^30; the node then asks for a table it cannot
+  # allocate and dies on boot. That is the leading explanation for 2 of 2
+  # GitHub runs (2026-09-28: image pulled, container gone before 90 s), not a
+  # proven one -- the runner's log was lost to --rm. If it is something else,
+  # wait_for below now prints the exit code and the node's own log. 65536 is
+  # the value RabbitMQ's production checklist gives.
+  docker run -d --name "$name" --ulimit nofile=65536:65536 \
     -e RABBITMQ_DEFAULT_USER=tier -e RABBITMQ_DEFAULT_PASS="$password" \
     -p "127.0.0.1:$port:5672" "$RABBIT_IMAGE" >/dev/null
   containers+=("$name")
