@@ -25,8 +25,23 @@ host="${RUDI_VNLOCAL_HOST:-lakiet-Surface-Laptop-3.local}"
 # in ~/.config/rudi/vnlocal.env, or RUDI_VNLOCAL_TAILSCALE.
 tailscale_ip="${RUDI_VNLOCAL_TAILSCALE:-$(sed -n 's/^VNLOCAL_TAILSCALE_IP=//p' "$HOME/.config/rudi/vnlocal.env" 2>/dev/null | tail -1)}"
 song() { curl -s -m 3 -o /dev/null -w '%{http_code}' "http://$1:20131/health" 2>/dev/null | grep -q '^200$'; }
+# LAN first, by name (mDNS); if the name does not resolve here, by the LAN
+# address the machine itself publishes in its handoff ("Địa chỉ hiện tại",
+# rewritten and pushed by serve/doi-mang.sh on every network change); Tailscale
+# only when neither answers (owner, 2026-09-29: prefer the LAN).
+vnlocal_repo="${RUDI_VNLOCAL_REPO:-$(cd "$(dirname "$0")/../../.." && pwd)/vnlocal}"
+ip_handoff() {
+  [ -d "$vnlocal_repo/.git" ] || return 0
+  git -C "$vnlocal_repo" fetch -q origin main 2>/dev/null || true
+  git -C "$vnlocal_repo" show origin/main:HANDOFF-KET-NOI.md 2>/dev/null |
+    sed -n 's/.*Địa chỉ hiện tại của máy vnlocal: `\([0-9.]*\)`.*/\1/p' | head -1
+}
 duong=lan
 ip="$(getent ahostsv4 "$host" | awk 'NR==1 {print $1}' || true)"
+if [ -z "$ip" ] || ! song "$ip"; then
+  duong="lan (địa chỉ trong handoff)"
+  ip="$(ip_handoff)"
+fi
 if [ -z "$ip" ] || ! song "$ip"; then
   duong=tailscale
   ip="$tailscale_ip"
