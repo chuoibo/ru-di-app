@@ -222,7 +222,7 @@ class NothingElseFlipsTheFlagTests(unittest.TestCase):
             "MOBILE_AI_ENGINE_NEP := brain",
             "MOBILE_AI_ENGINE_NEP ?= $(NEP_ENGINE)",
             "      MOBILE_AI_ENGINE_NEP: ${A:-${B:-brain}}",
-            "      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-\"google\"}",
+            '      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-"google"}',
             # Comparisons read the flag; they do not set it.
             'if [ "$MOBILE_AI_ENGINE_NEP" != go ]; then exit 1; fi',
             'if [ "$MOBILE_AI_ENGINE_NEP" == go ]; then echo on; fi',
