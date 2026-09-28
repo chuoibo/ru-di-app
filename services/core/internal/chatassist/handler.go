@@ -23,8 +23,12 @@ import (
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
+	"mobile/services/core/internal/domain/pairnotebook"
+	"mobile/services/core/internal/domain/pairsteps"
 	"mobile/services/core/internal/featureroute"
 	"mobile/services/core/internal/pyjson"
+	"mobile/services/core/internal/repo"
+	"mobile/services/core/internal/service"
 )
 
 type Handler struct {
@@ -273,12 +277,21 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 }
 
 // The two room kinds the assistant answers in (contexts.kind). A pair is a
-// chat of two; it takes `hoi` only (design 2026-09-28 §2.1): plan, chia_bill,
-// shared drafts and plan promotion stay the group's.
+// chat of two. Both are rooms of friends and take the same assistant
+// (decision 2026-09-28, two classes): `hoi`, plan, chia_bill, shared drafts
+// and plan promotion alike. A pair whose two people both said yes to «Một
+// đôi» is a couple as well (laDoi), which adds to that and removes nothing.
+// A pair runs only on the Go engine: the brain has no path for it
+// (chat-capabilities says provider_unavailable, the route refuses with it,
+// and a brain worker fails such a job with it, errCapKhongCoBrain).
 const (
 	kindGroup = "group"
 	kindPair  = "pair"
 )
+
+// errCapKhongCoBrain is a pair's job reaching a worker whose group engine is
+// the brain.
+var errCapKhongCoBrain = &denied{503, "provider_unavailable"}
 
 // phongAi is the room check every step of an invocation makes after
 // authority: at preflight, at create, on the stream, and again in the
@@ -329,12 +342,32 @@ func capConMo(ctx context.Context, tx pgx.Tx, room, person string) error {
 	return nil
 }
 
-// lenhChoPhong refuses, in a pair, every command but `hoi`.
-func lenhChoPhong(kind, command string) error {
-	if kind == kindPair && command != lenhHoi {
-		return &denied{409, "group_plan_only"}
+// laDoi reports whether the room is a couple: a pair whose two people have
+// both said yes to «Một đôi» (bat_doi) at now, by the notebook's own rule
+// (pairnotebook.CanBatDoi over the live cycle's participants, or the
+// room's active members before any cycle). A group, or a pair with no
+// notebook, is not. Read in the caller's transaction; never cached.
+func laDoi(ctx context.Context, tx pgx.Tx, g grant, now time.Time) (bool, error) {
+	if g.kind != kindPair {
+		return false, nil
 	}
-	return nil
+	store := repo.Repository{Q: tx}
+	notebook, err := store.GetPairNotebook(ctx, g.room)
+	if err != nil || notebook == nil {
+		return false, err
+	}
+	rows, err := store.ListMembers(ctx, g.room)
+	if err != nil {
+		return false, err
+	}
+	members := []string{}
+	for _, row := range rows {
+		if row.State == "active" {
+			members = append(members, row.PersonID)
+		}
+	}
+	pair := service.PairNotebookOf(notebook)
+	return pairnotebook.CanBatDoi(pairsteps.ConsentsOf(pair), pairsteps.Participants(pair, members), &now), nil
 }
 
 // phien resolves a bearer session to the person behind it, locking person then
@@ -416,8 +449,9 @@ func (h *Handler) available(ctx context.Context) bool {
 
 // preflight authenticates before contacting the internal inference service.
 // Mutation handlers authorize again afterwards without holding locks over I/O.
-// command is the new invocation's, "" for a retry of a stored one.
-func (h *Handler) preflight(r *http.Request, command string) error {
+// A pair is refused provider_unavailable unless the group runs on the Go
+// engine: the brain has no path for a chat of two.
+func (h *Handler) preflight(r *http.Request) error {
 	tx, g, err := h.begin(r)
 	if err != nil {
 		return err
@@ -426,10 +460,8 @@ func (h *Handler) preflight(r *http.Request, command string) error {
 	if err = phongAi(r.Context(), tx, g); err != nil {
 		return err
 	}
-	if command != "" {
-		if err = lenhChoPhong(g.kind, command); err != nil {
-			return err
-		}
+	if g.kind == kindPair && !h.nhomGo {
+		return errCapKhongCoBrain
 	}
 	return tx.Commit(r.Context())
 }
@@ -449,30 +481,35 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	// A pair answers only while it is open between its two people: a
 	// blocked pair, or one whose other person is gone, is refused here as on
 	// every other route of the room.
-	if g.kind == kindPair {
-		if err = capConMo(r.Context(), tx, g.room, g.person); err != nil {
-			failure(w, err)
-			return
-		}
+	if err = phongAi(r.Context(), tx, g); err != nil {
+		failure(w, err)
+		return
+	}
+	// `cap_doi`: the room is a couple (laDoi), asked at every read. The app
+	// gates the couple's own features on it; a chat of two without it is a
+	// room of friends and gets everything a group gets.
+	capDoi, err := laDoi(r.Context(), tx, g, time.Now().UTC())
+	if err != nil {
+		failure(w, err)
+		return
 	}
 	if err = tx.Commit(r.Context()); err != nil {
 		failure(w, err)
 		return
 	}
 	// On the Go engine (MOBILE_AI_ENGINE_GROUP=go) the brain is not asked:
-	// the engine was built at startup or `serve` refused to start.
-	enabled := g.kind == kindGroup && (h.nhomGo || h.available(r.Context()))
+	// the engine was built at startup or `serve` refused to start. A pair
+	// runs only there (the brain has no path for a chat of two), so on a
+	// brain host a pair is told provider_unavailable without a probe.
+	enabled := h.nhomGo || (g.kind == kindGroup && h.available(r.Context()))
 	// `hoi` (the router decides what is asked) runs only on the Go engine,
-	// in a group and in a pair alike; plan and chia_bill stay the group's.
-	hoiCo := (enabled || g.kind == kindPair) && h.nhomGo
+	// in a group and in a pair alike.
+	hoiCo := h.nhomGo
 	var hoiVi any = "provider_unavailable"
 	if hoiCo {
 		hoiVi = nil
 	}
 	var reason any = "provider_unavailable"
-	if g.kind != kindGroup {
-		reason = "group_plan_only"
-	}
 	if enabled {
 		reason = nil
 	}
@@ -488,7 +525,7 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	// `phong` when every member of the room watches it too, through the
 	// change feed's WebSocket `ai` frame (slice 12). A client that sees no
 	// field reads `khong`.
-	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
+	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}, "cap_doi": capDoi})
 }
 
 // The values of chat-capabilities' ai.stream (contract §3).
@@ -588,7 +625,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := h.preflight(r, in.Command); err != nil {
+	if err := h.preflight(r); err != nil {
 		failure(w, err)
 		return
 	}
@@ -601,10 +638,6 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback(r.Context())
 	if err = phongAi(r.Context(), tx, g); err != nil {
-		failure(w, err)
-		return
-	}
-	if err = lenhChoPhong(g.kind, in.Command); err != nil {
 		failure(w, err)
 		return
 	}
@@ -764,7 +797,7 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 		return
 	}
 	if action == "retry" {
-		if err := h.preflight(r, ""); err != nil {
+		if err := h.preflight(r); err != nil {
 			failure(w, err)
 			return
 		}

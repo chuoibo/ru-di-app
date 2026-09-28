@@ -775,6 +775,9 @@ func (h *Handler) process(ctx context.Context, j work) error {
 		return h.finishFailure(ctx, j, "provider_unavailable")
 	}
 	dap, err := h.prepare(ctx, j)
+	if errors.Is(err, errCapKhongCoBrain) {
+		return h.finishFailure(ctx, j, "provider_unavailable")
+	}
 	if err != nil {
 		return h.finishFailure(ctx, j, "sharing_unavailable")
 	}
@@ -851,8 +854,14 @@ func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
 	if err != nil {
 		return dapThem{}, err
 	}
-	if g.member != j.member || g.person != j.person || kiemPhongViec(ctx, tx, g, j) != nil {
+	if g.member != j.member || g.person != j.person || phongAi(ctx, tx, g) != nil {
 		return dapThem{}, &denied{403, "sharing_unavailable"}
+	}
+	// The brain has no path for a chat of two: a pair's job that reaches a
+	// worker whose group engine is the brain fails closed here, before any
+	// read, with the reason chat-capabilities gives a pair on a brain host.
+	if g.kind == kindPair {
+		return dapThem{}, errCapKhongCoBrain
 	}
 	var live bool
 	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_ai_invocations WHERE id=$1 AND status='running' AND lease_id=$2 AND lease_until>clock_timestamp() AND share_expires_at>clock_timestamp())`, j.id, j.lease).Scan(&live); err != nil {
@@ -903,17 +912,6 @@ func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
 	return dapThem{places: places, members: members, toi: toi, budget: group.BudgetPerPersonVND}, tx.Commit(ctx)
 }
 
-// kiemPhongViec is the worker's room check of a claimed room job, at each
-// of its reads and at its publish: the room still takes the assistant
-// (phongAi: a group, or a pair still open between its two people) and still
-// takes this job's command (a pair: `hoi` only).
-func kiemPhongViec(ctx context.Context, tx pgx.Tx, g grant, j work) error {
-	if err := phongAi(ctx, tx, g); err != nil {
-		return err
-	}
-	return lenhChoPhong(g.kind, j.command)
-}
-
 // finishFailure fails a group job with code -- unless the worker is stopping,
 // in which case whatever failed failed because of the stop, and the job is
 // released instead.
@@ -950,7 +948,7 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, res
 	// The room is asked again here, not only at prepare: a pair blocked, or
 	// whose other person deleted their account, while the model was writing
 	// gets no card.
-	if err != nil || g.member != j.member || g.person != j.person || kiemPhongViec(ctx, tx, g, j) != nil {
+	if err != nil || g.member != j.member || g.person != j.person || phongAi(ctx, tx, g) != nil {
 		_ = tx.Rollback(ctx)
 		return h.finishFailure(ctx, j, "sharing_unavailable")
 	}

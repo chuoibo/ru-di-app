@@ -70,7 +70,10 @@ func taoSchema(t *testing.T) *pgxpool.Pool {
 		t.Fatal(err)
 	}
 	t.Cleanup(pool.Close)
-	for _, table := range []string{"people", "contexts", "memberships", "account_sessions", "messages", "places", "destinations", "outings", "outing_stops", "person_interests", "friend_requests"} {
+	for _, table := range []string{"people", "contexts", "memberships", "account_sessions", "messages", "places", "destinations", "outings", "outing_stops", "person_interests", "friend_requests",
+		// The pair notebook laDoi reads («Một đôi»), copied without its
+		// foreign keys and triggers like every table here.
+		"pair_notebooks", "pair_notebook_cycles", "pair_cycle_participants", "pair_consent_proposals", "pair_consents", "pair_shared_constraints"} {
 		if _, err = pool.Exec(ctx, fmt.Sprintf("CREATE TABLE %s (LIKE public.%s INCLUDING ALL)", table, table)); err != nil {
 			t.Fatal(err)
 		}

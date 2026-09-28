@@ -30,7 +30,8 @@ import (
 //
 // One read of message text, named and pinned (chuDaLuu): the stored text of
 // the messages the caller explicitly shared, by their ids, in a legacy-lane
-// room only. A split draft bills the author of a message, so the words it
+// room only (a group or a chat of two: both are rooms of friends, ADR-0046
+// §8.3). A split draft bills the author of a message, so the words it
 // reads for that message must be the author's own as stored, never the
 // client's copy of them (review of slices 9/11, finding 2.3). Nothing else
 // of the conversation is read, and a v2 room has no text for the server to
@@ -127,17 +128,16 @@ type phongDoc struct {
 	ms      []repo.Membership
 	authors map[string]string
 	texts   map[string]string
-	// cap: the room is a pair (contexts.kind, read in this transaction).
-	cap bool
+	// doi: the room is a couple (laDoi, read in this transaction).
+	doi bool
 }
 
 // chuanBiNhom confirms the job is still the caller's in a room they are in
-// (a pair: still open between its two people, kiemPhongViec), and reads
-// what the server lays on top of the bundle: the members, the author of
-// each shared turn, and, in a legacy-lane group room, the stored text of
-// each shared turn (chuDaLuu). A pair's stored text is never read: that
-// read exists for a split draft's billing (ADR-0046 §8.3), and a pair has
-// no split draft.
+// (a pair: still open between its two people, phongAi), and reads what the
+// server lays on top of the bundle: the members, whether the room is a
+// couple (laDoi), the author of each shared turn, and, in a legacy-lane
+// room (a group or a chat of two alike, ADR-0046 §8.3), the stored text of
+// each shared turn (chuDaLuu), which a split draft bills by.
 func (h *Handler) chuanBiNhom(ctx context.Context, j work) (phongDoc, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -150,7 +150,7 @@ func (h *Handler) chuanBiNhom(ctx context.Context, j work) (phongDoc, error) {
 	if err != nil {
 		return phongDoc{}, err
 	}
-	if g.member != j.member || g.person != j.person || kiemPhongViec(ctx, tx, g, j) != nil {
+	if g.member != j.member || g.person != j.person || phongAi(ctx, tx, g) != nil {
 		return phongDoc{}, &denied{403, "sharing_unavailable"}
 	}
 	var live bool
@@ -160,8 +160,11 @@ func (h *Handler) chuanBiNhom(ctx context.Context, j work) (phongDoc, error) {
 	if !live {
 		return phongDoc{}, &denied{409, "invocation_cancelled"}
 	}
-	out := phongDoc{authors: map[string]string{}, texts: map[string]string{}, cap: g.kind == kindPair}
+	out := phongDoc{authors: map[string]string{}, texts: map[string]string{}}
 	if out.ms, err = (repo.Repository{Q: tx}).ListMembers(ctx, j.conversation); err != nil {
+		return phongDoc{}, err
+	}
+	if out.doi, err = laDoi(ctx, tx, g, time.Now().UTC()); err != nil {
 		return phongDoc{}, err
 	}
 	if len(j.goi) > 0 {
@@ -172,7 +175,7 @@ func (h *Handler) chuanBiNhom(ctx context.Context, j work) (phongDoc, error) {
 		if out.authors, err = tacGia(ctx, tx, j.conversation, &bc); err != nil {
 			return phongDoc{}, err
 		}
-		if g.kind == kindGroup && g.lane == laneLegacy && (j.lane == "" || j.lane == laneLegacy) {
+		if g.lane == laneLegacy && (j.lane == "" || j.lane == laneLegacy) {
 			if out.texts, err = chuDaLuu(ctx, tx, j.conversation, &bc); err != nil {
 				return phongDoc{}, err
 			}
@@ -244,7 +247,7 @@ func (h *Handler) processNhomEngine(ctx context.Context, j work) error {
 		Bot: obs.BotNhom, InvocationID: j.id, LanThu: j.attempt, Lenh: lenh, Luc: j.createdAt,
 		LoiNho: loiNhoNhom(j.prompt), NguoiHoi: j.person, DaGoiTruoc: j.modelCalls, GiuLuot: h.giuLuot(j),
 		Phong: j.conversation, Lane: lane, SoTin: j.soTin, LuotNhom: luot, ThanhVien: thanhVienNhom(doc.ms, j.person),
-		Cap: doc.cap,
+		Doi: doc.doi,
 	}
 	// The turn's statuses reach the stream as they happen; its text does not:
 	// the card's text goes out after the card is posted (publish), the only

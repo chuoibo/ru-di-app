@@ -21,11 +21,10 @@ func (bc *BoiCanh) BoCongCu() ([]tool.Tool, error) {
 	bc.khoiTao()
 	bc.mu.Unlock()
 	var out []tool.Tool
-	bot := bc.botQuyen()
-	for _, t := range bc.quyen().DuocPhep(bot, false) {
+	for _, t := range bc.quyen().DuocPhep(bc.Bot, false) {
 		cc, ok := bc.congCu(t)
 		if !ok {
-			return nil, fmt.Errorf("tools: %s is granted to %s but this turn has no implementation of it (ChoNep, ChoNhom, ChoCap)", t, bot)
+			return nil, fmt.Errorf("tools: %s is granted to %s but this turn has no implementation of it (ChoNep, ChoNhom)", t, bc.Bot)
 		}
 		tt, err := cc.moi(bc)
 		if err != nil {
