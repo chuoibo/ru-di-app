@@ -157,9 +157,20 @@ func TestSSERootsDocDungBangCuaMinh(t *testing.T) {
 	if !nhom.funcs[pkgChat+".authority"] {
 		t.Fatal("the group stream never reaches authority; the walk is broken")
 	}
+	// The room's authorization is authority plus the room check (phongAi:
+	// a pair still open between its two people reads memberships, people
+	// and friend_requests, never a message), and the job row.
 	groupAllowed := map[string]bool{"chat_ai_invocations": true}
-	for name := range tables(g.reach(g.root(t, pkgChat+".authority")).strings) {
-		groupAllowed[name] = true
+	if !nhom.funcs[pkgChat+".phongAi"] {
+		t.Fatal("the group stream never reaches the room check; the walk is broken")
+	}
+	for _, root := range []string{pkgChat + ".authority", pkgChat + ".phongAi"} {
+		for name := range tables(g.reach(g.root(t, root)).strings) {
+			groupAllowed[name] = true
+		}
+	}
+	if groupAllowed["messages"] {
+		t.Fatal("the room's authorization reads messages")
 	}
 	nhomUsed := tables(nhom.strings)
 	for _, name := range sortedKeys(nhomUsed) {
