@@ -9,8 +9,9 @@
 #   - thêm dịch vụ `ingest`: kéo danh mục mỗi 10 phút, ghi ảnh vào cùng volume
 #     mà API đọc
 #
-# Chạy từ gốc repo:
-#   docker compose -f deploy/vnlocal/compose.yml up -d --build
+# Chạy từ gốc repo, QUA up.sh (nó phân giải tên máy vnlocal
+# lakiet-Surface-Laptop-3.local — máy đó đổi mạng/IP — và truyền IP vào container):
+#   deploy/vnlocal/up.sh up -d --build
 #
 # Bí mật (không commit, mode 600):
 #   ~/.config/rudi/vnlocal.env  MOBILE_DATABASE_URL, VNLOCAL_PG_DSN, VNLOCAL_S3_*
@@ -23,7 +24,7 @@
 #
 # Milvus GPU (ADR-0049): `milvus` chạy trên GPU 0; index dense HNSW mặc định,
 # RUDI_MILVUS_DENSE_INDEX=GPU_CAGRA bật index GPU (chủ sản phẩm 2026-09-28). Nạp danh mục:
-#   docker compose -f deploy/vnlocal/compose.yml run --rm rag v-build place --auto
+#   deploy/vnlocal/up.sh run --rm rag v-build place --auto
 name: rudi-vnlocal
 
 x-api-image: &api-image
@@ -40,6 +41,10 @@ x-secrets: &secrets
   env_file:
     - ${HOME}/.config/rudi/vnlocal.env
     - ${HOME}/.config/rudi/stack.env
+  # The vnlocal machine by name (mDNS). A container cannot resolve .local:
+  # deploy/vnlocal/up.sh resolves it on the host and passes the IP here.
+  extra_hosts:
+    - "${RUDI_VNLOCAL_HOST:-lakiet-Surface-Laptop-3.local}:${RUDI_VNLOCAL_IP:?chạy qua deploy/vnlocal/up.sh (phân giải tên máy vnlocal)}"
 
 # Milvus and the AI keys go only to the services that use them: Milvus
 # credentials from ~/.config/rudi/milvus.env (deploy/vnlocal/milvus-khoi-tao.sh),
@@ -52,6 +57,10 @@ x-ai-secrets: &ai-secrets
     - ${HOME}/.config/rudi/milvus.env
     - path: ../../.env
       required: false
+  # The vnlocal machine by name (mDNS). A container cannot resolve .local:
+  # deploy/vnlocal/up.sh resolves it on the host and passes the IP here.
+  extra_hosts:
+    - "${RUDI_VNLOCAL_HOST:-lakiet-Surface-Laptop-3.local}:${RUDI_VNLOCAL_IP:?chạy qua deploy/vnlocal/up.sh (phân giải tên máy vnlocal)}"
 
 x-milvus-env: &milvus-env
   MOBILE_MILVUS_ADDR: milvus:19530
@@ -158,7 +167,7 @@ services:
     restart: unless-stopped
 
   # `core rag …` one-shots (v-build, v-embed-batch, v-eval, v-promote, v-status):
-  #   docker compose -f deploy/vnlocal/compose.yml run --rm rag v-status
+  #   deploy/vnlocal/up.sh run --rm rag v-status
   rag:
     <<: [*core-image, *ai-secrets]
     profiles: ["cli"]
