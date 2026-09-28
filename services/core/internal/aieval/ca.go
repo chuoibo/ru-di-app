@@ -81,6 +81,11 @@ type DauVaoNhom struct {
 	SoTin     int           `json:"so_tin"`
 	Luot      []LuotNhomCa  `json:"luot,omitempty"`
 	ThanhVien []ThanhVienCa `json:"thanh_vien"`
+	// Doi says the room is a couple (aiharness.Turn.Doi, what chatassist's
+	// laDoi reads): a chat of two whose two people both turned on «Một
+	// đôi». A chat of two without it is a room of friends and leaves it
+	// false (two classes, 2026-09-28).
+	Doi bool `json:"doi,omitempty"`
 }
 
 // LuotNhomCa is one shared turn (aiharness.LuotNhom).
@@ -117,6 +122,9 @@ func (n *DauVaoNhom) kiem() error {
 	if len(n.ThanhVien) == 0 {
 		return errors.New("phòng không có thành viên nào")
 	}
+	if n.Doi && len(n.ThanhVien) != 2 {
+		return fmt.Errorf("cặp đôi có đúng hai người, phòng có %d", len(n.ThanhVien))
+	}
 	for _, m := range n.ThanhVien {
 		if !dangUUID.MatchString(m.ID) {
 			return fmt.Errorf("thành viên %q không có dạng UUID", m.ID)
@@ -150,6 +158,17 @@ type TheGioi struct {
 	// group's tools, group_snapshot and list_group_outings).
 	ChuyenDi    []MucTheGioi `json:"chuyen_di,omitempty"`
 	SoThanhVien int          `json:"so_thanh_vien,omitempty"`
+	// GuDoi is what a couple's taste port returns (ADR-0048): the people
+	// whose `chia_gu` covers the chat, each with closed-vocabulary tags.
+	// Who is eligible is aidoc's and gudoi's decision, tested there; a case
+	// plays its outcome.
+	GuDoi []GuDoiTheGioi `json:"gu_doi,omitempty"`
+}
+
+// GuDoiTheGioi is one person's shared taste in a couple's world.
+type GuDoiTheGioi struct {
+	NguoiID string   `json:"nguoi_id"`
+	The     []string `json:"the"`
 }
 
 // MucTheGioi is one catalogue item: an id and its evidence fields.
@@ -222,6 +241,9 @@ type KyVong struct {
 type KyVongThe struct {
 	Phan    []string `json:"phan"`
 	SoKhoan *int     `json:"so_khoan,omitempty"`
+	// Gu are the roster labels the card's doc.gu must name, in order: whose
+	// shared taste a couple's answer read (ADR-0048). Absent: none.
+	Gu *[]string `json:"gu,omitempty"`
 }
 
 // MayCham is the rule checks on the request and the answer.
@@ -549,6 +571,11 @@ func (g *TheGioi) kiem() error {
 	for _, f := range g.TriNho {
 		if !trinho.LoaiSuThats.Co(trinho.LoaiSuThat(f.Loai)) || f.NoiDung == "" {
 			return fmt.Errorf("sự thật %q loại %q", f.NoiDung, f.Loai)
+		}
+	}
+	for _, gu := range g.GuDoi {
+		if !dangUUID.MatchString(gu.NguoiID) || len(gu.The) == 0 {
+			return fmt.Errorf("gu_doi của %q sai dạng", gu.NguoiID)
 		}
 	}
 	return nil

@@ -237,8 +237,10 @@ func (h *Handler) draftCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
-	if g.kind != "group" {
-		refuse(w, 409, "group_plan_only")
+	// A group or a chat of two (still open between its two people): both
+	// are rooms of friends and keep a shared plan alike.
+	if err = phongAi(r.Context(), tx, g); err != nil {
+		failure(w, err)
 		return
 	}
 	room := r.PathValue("context")
@@ -367,6 +369,12 @@ func (h *Handler) draftPatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
+	// A chat of two blocked, or whose other person is gone, takes no more
+	// edits to its sheet (phongAi); a group passes as before.
+	if err = phongAi(r.Context(), tx, g); err != nil {
+		failure(w, err)
+		return
+	}
 	room := r.PathValue("context")
 	if err = lockFeed(r.Context(), tx, room); err != nil {
 		failure(w, err)
@@ -470,6 +478,12 @@ func (h *Handler) draftDiscard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
+	// A chat of two blocked, or whose other person is gone, takes no more
+	// edits to its sheet (phongAi); a group passes as before.
+	if err = phongAi(r.Context(), tx, g); err != nil {
+		failure(w, err)
+		return
+	}
 	room := r.PathValue("context")
 	if err = lockFeed(r.Context(), tx, room); err != nil {
 		failure(w, err)

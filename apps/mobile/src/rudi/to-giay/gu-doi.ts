@@ -49,6 +49,48 @@ export function cauGu(gu: GuSo | null | undefined, tenNguoiKia: string): CauGu |
   return {
     chung: chung === null ? null : chung.length > 0 ? `Hai bạn cùng thích ${noiDanhSach(chung)}.` : "Hai bạn chưa trùng gu nào. Một dịp để rủ nhau thử cái mới.",
     cuaHo: cuaHo === null ? null : cuaHo.length > 0 ? `${ten} thích ${noiDanhSach(cuaHo)}.` : `${ten} chưa chọn gu nào.`,
-    cuaToi: gu.mine_shared ? `${ten} thấy gu của bạn, và Nếp dùng nó khi phác tờ cho hai bạn.` : "Gu của bạn đang để riêng.",
+    cuaToi: gu.mine_shared ? `${ten} thấy gu của bạn; Nếp dùng nó khi phác tờ, và Rủ Đi AI dùng nó trong chat của hai bạn.` : "Gu của bạn đang để riêng.",
   };
+}
+
+/**
+ * What turning my switch on promises (ADR-0048 §3.5): the other person sees my
+ * taste, and Nếp and Rủ Đi AI in the two's chat use it. The chat is named in
+ * the promise itself, because a consent given before it was named does not
+ * cover the chat.
+ */
+export function cauBatGu(gu: GuSo | null | undefined, tenNguoiKia: string): string {
+  const ten = tenNguoiKia.trim() || "Người ấy";
+  return gu?.theirs_shared
+    ? `Bật thì ${ten} thấy gu của bạn, hai bạn thấy mình cùng thích gì, và Nếp cùng Rủ Đi AI trong chat của hai bạn dùng gu đó.`
+    : `Bật thì ${ten} thấy gu của bạn, Nếp và Rủ Đi AI trong chat của hai bạn dùng nó. Gu của ${ten} chỉ hiện khi chính họ bật.`;
+}
+
+/** `gu_chat` of chat-capabilities (ADR-0048 §3.2); null outside a couple. */
+export interface GuChat {
+  cua_toi: "tat" | "bat" | "can_bat_lai";
+  nguoi_kia: boolean;
+}
+
+/**
+ * Whether to offer «Bật lại cho chat»: my switch is on, but under the older
+ * wording that promised only «Nếp dùng khi phác tờ», so the chat may not use
+ * my taste until I turn it on again. Fails closed: no answer from the server,
+ * no button.
+ */
+export function canBatLaiChoChat(gu: GuSo | null | undefined, guChat: GuChat | null | undefined): boolean {
+  return gu?.mine_shared === true && guChat?.cua_toi === "can_bat_lai";
+}
+
+/** Why the button is there, in one line. */
+export const CAU_BAT_LAI_CHO_CHAT = "Bạn bật từ trước, khi lời hứa chỉ là Nếp dùng gu khi phác tờ. Muốn Rủ Đi AI dùng gu của bạn trong chat thì bật lại.";
+
+/**
+ * Re-consent for the chat: off, then on again through the notebook's own two
+ * commands; the second runs only if the first landed. If the second fails the
+ * switch is left off -- closed, never on under words the person did not see.
+ */
+export async function batLaiChoChat(thuHoi: () => Promise<boolean>, bat: () => Promise<boolean>): Promise<boolean> {
+  if (!(await thuHoi())) return false;
+  return bat();
 }

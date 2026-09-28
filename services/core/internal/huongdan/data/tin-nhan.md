@@ -18,7 +18,7 @@ Tab «Tin nhắn» liệt kê các nhóm và các cuộc trò chuyện hai ngư�
 ## Mở một cuộc trò chuyện
 
 1. Chạm vào tên nhóm («Mở nhóm …») hoặc tên người («Mở cuộc trò chuyện với …»).
-2. Màn chat mở ra; khay dấu cộng ở đó có bình chọn và tờ hẹn, còn Rủ Đi AI được gọi bằng cách gõ @Rủ Đi trong tin nhắn, kể cả chat hai người.
+2. Màn chat mở ra. Chat hai người có Rủ Đi AI và công cụ y như nhóm: khay dấu cộng có bình chọn và tờ hẹn, gõ @Rủ Đi trong tin nhắn để gọi Rủ Đi AI. Tờ giấy chỉ có khi hai bạn đã cùng bật trong sổ.
 
 ## Tạo nhóm mới
 

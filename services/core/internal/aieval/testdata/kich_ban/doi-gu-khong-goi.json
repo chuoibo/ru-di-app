@@ -1,0 +1,18 @@
+{
+  "ten": "doi-gu-khong-goi",
+  "mo_ta": "Kịch bản sai: cặp đôi nói về gu mà mô hình không gọi gu_hai_ban (không có bằng chứng gu, thẻ không nêu gu ai); phải trượt ở cong_cu.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"find_places\"], \"huong\": \"tac_tu\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Hai bạn cùng thích cafe, tối nay ghé một quán cafe yên tĩnh nhé."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

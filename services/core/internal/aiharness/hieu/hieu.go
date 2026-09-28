@@ -169,6 +169,11 @@ type ThanhVien struct {
 // Vao is the router's input.
 type Vao struct {
 	Bot obs.Bot
+	// Doi says the room is a couple (aiharness.Turn.Doi; group bot only):
+	// the router reads the couple's bot file (loi_nhac/doi.txt), which
+	// speaks of two people; the intents, sources, schema and policy are the
+	// group's, unchanged. A Nếp turn with Doi is refused (ErrVao).
+	Doi bool
 	// Cau is the person's message after the structural preprocessing only:
 	// NFC, the @mention of the assistant removed, invisible characters out.
 	// It goes to the model inside a datamarked <du_lieu> block.

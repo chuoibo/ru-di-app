@@ -44,7 +44,7 @@ func TestHang(t *testing.T) {
 	if !chay || !strings.Contains(s, "group_snapshot") || strings.Contains(s, "recall_memory") || strings.Contains(s, "explain_screen") {
 		t.Fatalf("công cụ nhóm: %v", nhom)
 	}
-	if h.NhomMaxChu != aiharness.NhomMaxChu || h.PromptVersionNhom != prompts.VersionNhom() {
+	if h.NhomMaxChu != aiharness.NhomMaxChu || h.PromptVersionNhom != prompts.VersionNhom() || h.PromptVersionDoi != prompts.VersionDoi() || h.PromptVersionDoi == h.PromptVersionNhom {
 		t.Fatalf("hằng nhóm: %+v", h)
 	}
 }

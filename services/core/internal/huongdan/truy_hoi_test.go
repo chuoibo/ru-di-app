@@ -36,16 +36,28 @@ import (
 //     engine path is the MODEL's query; a person stood in for the router
 //     here, wrote them before measuring, and a T3 run with the real router
 //     replaces this set.
+//
+//   - duongHaiNguoi (P4, 13 questions, 2026-09-28): the owner's two classes
+//     of chat. Every group and every ordinary two-person chat has Rủ Đi AI
+//     and the same tools; only a two-person chat where both turned on «Một
+//     đôi» adds «Tờ giấy». Questions about the AI and the tools in a
+//     two-person chat and about Tờ giấy / Một đôi, asked from the chat or the
+//     Messages screen; the right sections are those of the two-class manual.
+//     Written, hashed and measured on the old one-class text before it was
+//     rewritten.
 const (
 	duongVang    = "testdata/truy-hoi-so-tay.json"
 	duongManKhac = "testdata/truy-hoi-man-khac.json"
 	duongTruyVan = "testdata/truy-hoi-truy-van-model.json"
+	// duongHaiNguoi is the P4 set of two-person chat questions.
+	duongHaiNguoi = "testdata/truy-hoi-hai-nguoi.json"
 )
 
 var bamBoVang = map[string]string{
-	duongVang:    "1f4768f93fd533b238052e5c1325e79f707449b4dcc5ddc8b9f2cc4338788f4e",
-	duongManKhac: "f3287aedd0498261459133db8a2ba182b0d356257e0f032c4d0656d6c241dfc2",
-	duongTruyVan: "2b90cdaa1c4574fbf7110967a73df15cd5b7bbae08cea0f4b30b08c4b7620119",
+	duongVang:     "1f4768f93fd533b238052e5c1325e79f707449b4dcc5ddc8b9f2cc4338788f4e",
+	duongManKhac:  "f3287aedd0498261459133db8a2ba182b0d356257e0f032c4d0656d6c241dfc2",
+	duongTruyVan:  "2b90cdaa1c4574fbf7110967a73df15cd5b7bbae08cea0f4b30b08c4b7620119",
+	duongHaiNguoi: "b8ccd398bf8183415d36c58ce01110685c7792b53a4b72c08d9f93690c428f87",
 }
 
 // docTruyVan reads duongTruyVan as golden questions (go "co_dau").
@@ -226,8 +238,13 @@ func TestBoVangHopLe(t *testing.T) {
 			}
 		}
 	}
+	haiNguoi := docBoVang(t, duongHaiNguoi)
+	if len(haiNguoi) < 12 {
+		t.Fatalf("bộ hai người có %d câu, cần ít nhất 12", len(haiNguoi))
+	}
+	kiemBoVang(t, duongHaiNguoi, haiNguoi)
 	seen := map[string]bool{}
-	for _, c := range append(append([]cauVang{}, cau...), khac...) {
+	for _, c := range append(append(append([]cauVang{}, cau...), khac...), haiNguoi...) {
 		if seen[c.Hoi] {
 			t.Errorf("câu trùng: %q", c.Hoi)
 		}
@@ -290,24 +307,64 @@ func TestBoVangKhongSua(t *testing.T) {
 // 0.8667 → 0.9333), MRR 0.7658 → 0.7665 (co_dau 0.7556 → 0.7578); «moi nguoi
 // ay di choi rieng» now hits, two miss.
 //
+// duongHaiNguoi added (P4, 2026-09-28), pinned on the manual as it was when
+// the set was written, the one-class text that says a two-person chat only
+// asks and has «Tờ giấy» in its tray: recall@5 0.7692, MRR 0.4635 (co_dau
+// 0.8333 / 0.5333, khong_dau 0.5000 / 0.4062, teen 1.0000 / 0.4000); three
+// miss. It is the baseline the two-class rewrite is graded against.
+//
+// Re-pinned at the two-class rewrite (P4, 2026-09-28): the ranker did not
+// change, the manual did. chat-nhom.md, tin-nhan.md and to-giay.md now say a
+// two-person chat has Rủ Đi AI and every tool a group has, and that «Tờ
+// giấy» (pinned row, tray button) is there only when both turned on «Một
+// đôi», reached otherwise from the settings row. Folding makes «đôi» the
+// same term as «đổi», so every section that gains «Một đôi» lowers the
+// weight of «đổi» everywhere; it is quoted in one indexed section
+// (to-giay/cai-dat-so, which already held «đổi») and in the overviews.
+// Before → after (recall@5 / MRR):
+//
+//	duongHaiNguoi   0.7692 / 0.4635 → 1.0000 / 0.6859
+//	  co_dau        0.8333 / 0.5333 → 1.0000 / 0.6806
+//	  khong_dau     0.5000 / 0.4062 → 1.0000 / 0.8750
+//	  teen          1.0000 / 0.4000 → 1.0000 / 0.4444
+//	duongVang       0.9505 / 0.9127 → 0.9505 / 0.9179
+//	  co_dau        0.9405 / 0.8859 → 0.9405 / 0.8978
+//	  khong_dau     1.0000 / 1.0000 → 1.0000 / 1.0000
+//	  teen          0.8333 / 0.7369 → 0.8333 / 0.7354
+//	duongManKhac    0.9565 / 0.7665 → 0.9565 / 0.7661
+//	  co_dau        0.9333 / 0.7578 → 0.9333 / 0.7578
+//	  khong_dau     1.0000 / 0.8873 → 1.0000 / 0.8873
+//	  teen          0.9286 / 0.6293 → 0.9286 / 0.6280
+//	duongTruyVan    1.0000 / 0.8942 → 1.0000 / 0.8942
+//
+// Recall@5 did not fall on any group; every MRR is within 0.01 of before
+// (ADR-0047 §9). duongHaiNguoi has no miss left; «ko bik bo fieu o dau» and
+// «bo fieu o dau v» went from rank 7 to 8, «đóng sổ hai người» from 2 to 1.
+//
 // The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
 // duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
 // 0.3526 (teen 0.8214 / 0.2905).
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9127"},
-		"co_dau":    {"0.9405", "0.8859"},
+		"":          {"0.9505", "0.9179"},
+		"co_dau":    {"0.9405", "0.8978"},
 		"khong_dau": {"1.0000", "1.0000"},
-		"teen":      {"0.8333", "0.7369"},
+		"teen":      {"0.8333", "0.7354"},
 	},
 	duongTruyVan: {
 		"": {"1.0000", "0.8942"},
 	},
 	duongManKhac: {
-		"":          {"0.9565", "0.7665"},
+		"":          {"0.9565", "0.7661"},
 		"co_dau":    {"0.9333", "0.7578"},
 		"khong_dau": {"1.0000", "0.8873"},
-		"teen":      {"0.9286", "0.6293"},
+		"teen":      {"0.9286", "0.6280"},
+	},
+	duongHaiNguoi: {
+		"":          {"1.0000", "0.6859"},
+		"co_dau":    {"1.0000", "0.6806"},
+		"khong_dau": {"1.0000", "0.8750"},
+		"teen":      {"1.0000", "0.4444"},
 	},
 }
 

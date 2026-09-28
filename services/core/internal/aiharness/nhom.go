@@ -64,15 +64,66 @@ const (
 	maxLuotNhom = trinho.MaxLuotNhom
 )
 
-func khuonNhom() khuon {
-	return khuon{maxChu: NhomMaxChu, loiNhac: prompts.LoiNhacNhom(), cauChan: cau.CauNhom(cau.TuChoiNhom)}
+// khuonNhom is the output shape of a room's answer; a couple's (doi) never
+// quotes the couple's instruction, a room of friends' never the group's.
+func khuonNhom(doi bool) khuon {
+	loiNhac := prompts.LoiNhacNhom()
+	if doi {
+		loiNhac = prompts.LoiNhacDoi()
+	}
+	return khuon{maxChu: NhomMaxChu, loiNhac: loiNhac, cauChan: cau.CauNhom(cau.TuChoiNhom)}
+}
+
+// The two classes of a room (decision 2026-09-28, ADR-0046 §8.4). Every
+// room runs the group's path whole: the same router schema, tools, policy,
+// split draft and card. What a couple (Turn.Doi: a chat of two whose two
+// people both turned on «Một đôi») changes is only who the words speak to:
+// its system instruction, its out-of-scope clause, the fixed sentences that
+// name the audience, and the record (bot doi, the couple's prompt version);
+// and one tool, the couple's shared taste (gu_hai_ban, ADR-0048), declared on
+// a couple's turn only (tools.BoiCanh.Doi). A chat of two among friends is
+// not a couple: it reads the group's words and never sees that tool.
+
+// agentPhong is the room's system instruction carrying the canary marker.
+func agentPhong(t Turn, maKiem string) string {
+	if t.Doi {
+		return prompts.DoiAgent(maKiem)
+	}
+	return prompts.NhomAgent(maKiem)
+}
+
+// loiDanNhanPhong is the room's clause for the router's label nhan.
+func loiDanNhanPhong(t Turn, nhan string) string {
+	if t.Doi {
+		return prompts.LoiDanNhanDoi(nhan)
+	}
+	return prompts.LoiDanNhanNhom(nhan)
+}
+
+// phienBanPhong is the prompt version the room's record carries.
+func phienBanPhong(t Turn) obs.PromptVersion {
+	if t.Doi {
+		return obs.PromptVersion(prompts.VersionDoi())
+	}
+	return obs.PromptVersion(prompts.VersionNhom())
+}
+
+// cauPhong picks the room's fixed sentence: the couple's when t is a
+// couple's turn.
+func cauPhong(t Turn, nhom, doi string) string {
+	if t.Doi {
+		return doi
+	}
+	return nhom
 }
 
 // RunNhom runs one group turn to its end (Run sends Bot nhom here). The
 // worker's group path calls it directly, so what it can reach holds
-// nothing of Nếp's path.
+// nothing of Nếp's path. A couple's turn (t.Doi) runs the same path; its
+// record names bot doi and the couple's prompt version, while the turn
+// itself stays Bot nhom for every routing decision.
 func (e *Engine) RunNhom(ctx context.Context, t Turn, s Sink) (Result, error) {
-	return e.boc(ctx, t, s, obs.PromptVersion(prompts.VersionNhom()), t.SoTin, e.nhomVaPhat)
+	return e.boc(ctx, t, s, phienBanPhong(t), t.SoTin, e.nhomVaPhat)
 }
 
 // nhomVaPhat is the group's turn, then the release of its card's text the
@@ -80,11 +131,15 @@ func (e *Engine) RunNhom(ctx context.Context, t Turn, s Sink) (Result, error) {
 // output guard's window, paced), and the text part set to exactly what the
 // Deltas carried.
 func (e *Engine) nhomVaPhat(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, batDau time.Time) (Result, error) {
+	if t.Doi && t.Bot == obs.BotNhom {
+		// The record only: nothing downstream routes on rec.Bot.
+		rec.Bot = obs.BotDoi
+	}
 	res, err := e.nhom(ctx, t, s, rec, batDau)
 	if err != nil {
 		return res, err
 	}
-	phat, err := e.phatRa(ctx, res, s, rec, khuonNhom())
+	phat, err := e.phatRa(ctx, res, s, rec, khuonNhom(t.Doi))
 	if err != nil {
 		return Result{}, err
 	}
@@ -200,7 +255,7 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 		// request of the command stands in for the words.
 		switch t.Lenh {
 		case obs.LenhPlan:
-			hoi.Chu = cau.NhomLoiNhoPlan
+			hoi.Chu = cauPhong(t, cau.NhomLoiNhoPlan, cau.DoiLoiNhoPlan)
 		case obs.LenhChiaBill:
 			hoi.Chu = cau.NhomLoiNhoChiaBill
 		default:
@@ -240,6 +295,7 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 		NganHan:           luot,
 		DanhSachDiemDen:   dsDiemDen,
 		DanhSachThanhVien: thanhVienRouter(t.ThanhVien),
+		Doi:               t.Doi,
 		DemNhung:          demNhung,
 	}
 	rec.MsTienXuLy = ms(e.now().Sub(batDau))
@@ -276,18 +332,12 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 	ghiNhanRouter(rec, kq)
 	kq = epLenh(t.Lenh, kq)
 	q := hieu.QuyetDinhCho(obs.BotNhom, kq)
-	if t.Cap && (q.TuChoiTien || q.NhapTien || coYDinh(kq.YDinh, hieu.ChiaBillDraft)) {
-		// A chat of two has no split draft: a money action or a split
-		// request gets the pair's fixed sentence, no further call.
-		rec.Guard, rec.Duong = obs.GuardRefused, obs.DuongTuChoiTien
-		return theMotChu(cau.CapKhongChamTien), nil
-	}
 	if q.TuChoiTien {
 		// The model classed a money action: the fixed refusal, no further
 		// call, no tool, no draft. It is an answer the room reads, not a
 		// failure.
 		rec.Guard, rec.Duong = obs.GuardRefused, obs.DuongTuChoiTien
-		return theMotChu(cau.NhomKhongChamTien), nil
+		return theMotChu(cauPhong(t, cau.NhomKhongChamTien, cau.DoiKhongChamTien)), nil
 	}
 	if q.NhapTien || coYDinh(kq.YDinh, hieu.ChiaBillDraft) {
 		if q.HanChe {
@@ -305,7 +355,7 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 	}
 	if q.HoiLai {
 		rec.Duong = obs.DuongHoiLai
-		res, err := e.hoiLai(runCtx, rec, dem, kq, khuonNhom())
+		res, err := e.hoiLai(runCtx, rec, dem, kq, khuonNhom(t.Doi))
 		if err != nil {
 			if !isLoi(err) {
 				return Result{}, loi(err)
@@ -329,16 +379,11 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 		Bot: obs.BotNhom, NguoiHoi: t.NguoiHoi, NhomID: t.Phong, LoiNguoiHoi: hoi.Chu, Luc: t.Luc, HanChe: q.HanChe, YDinh: kq.YDinh,
 		Cung: cung, Mem: mem, DiUngNgoaiDanhMuc: kq.Slots.DiUngNgoaiDanhMuc, DiemDen: idsDiemDen(dsDiemDen),
 		Nguon: nguonNhom(e.nguon), Quyen: e.quyen, SoCai: sc, Che: []tools.Ten{tools.DraftPoll},
+		Doi: t.Doi, NhanDoi: nhanThanhVien(t.ThanhVien),
 	}
-	if t.Cap {
-		// A chat of two: the common tools only, and no group read port.
-		bc.Nguon.Nhom = nil
-		bc.ChoCap()
-	} else {
-		bc.ChoNhom()
-	}
+	bc.ChoNhom()
 	khoi := []string{prompts.BocDuLieu(prompts.MayChu, strings.Join(dongMayChuHieu(t.Luc, kq.Slots), "\n"))}
-	k := khuonNhom()
+	k := khuonNhom(t.Doi)
 	if ten, _, ok := tactu.Nhanh(kq, bc); ok && !q.KhongCongCu && ten == tools.SearchPlaces && t.Lenh != obs.LenhPlan {
 		if res, chay, err := e.nepTruyHoi(runCtx, rec, dem, kq, bc, hoi.Chu, ten, k); chay {
 			if err != nil {
@@ -351,7 +396,9 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 			if err != nil {
 				return Result{}, err
 			}
-			return phanNhom(res.Text, res.QuanIDs, nil), nil
+			out := phanNhom(res.Text, res.QuanIDs, nil)
+			out.GuDung = guDaDung(sc, t)
+			return out, nil
 		}
 	}
 	if dem.ConLai() < 1+duTruKiem {
@@ -372,8 +419,8 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 			blocks = append([]string{s}, blocks...)
 		}
 		blocks = append(blocks, prompts.BocDuLieuDanhDau(prompts.CauHoi, hoi.Chu))
-		instruction := prompts.NhomAgent(e.maKiem) + "\n\n" + prompts.LoiDanThang()
-		if c := prompts.LoiDanNhanNhom(string(kq.NhanGuard)); q.KhongCongCu && c != "" {
+		instruction := agentPhong(t, e.maKiem) + "\n\n" + prompts.LoiDanThang()
+		if c := loiDanNhanPhong(t, string(kq.NhanGuard)); q.KhongCongCu && c != "" {
 			instruction += "\n\n" + c
 		}
 		cfg := agent.CauHinh{
@@ -388,7 +435,7 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 	} else {
 		var ra tactu.Ra
 		ra, err = tactu.Chay(runCtx, dem, tactu.Vao{
-			Ten: nhomTen, Instruction: prompts.NhomAgent(e.maKiem), NhietDo: nhomNhietDo, MaxTokens: nhomMaxTokens,
+			Ten: nhomTen, Instruction: agentPhong(t, e.maKiem), NhietDo: nhomNhietDo, MaxTokens: nhomMaxTokens,
 			Router: kq, Cau: hoi.Chu, KhoiThem: khoi, NganHan: ngan, Phien: phien, BoiCanh: bc,
 			DuTru: duTruKiem,
 		}, &td)
@@ -418,7 +465,31 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 	if err != nil {
 		return Result{}, err
 	}
-	return phanNhom(res.Text, nhap.Quan, nhap.LichTrinh), nil
+	out := phanNhom(res.Text, nhap.Quan, nhap.LichTrinh)
+	out.GuDung = guDaDung(sc, t)
+	return out, nil
+}
+
+// nhanThanhVien is each member's label as the router reads it
+// (thanhVienRouter: the roster's label, or «Bạn n»), by person id.
+func nhanThanhVien(ts []ThanhVienNhom) map[string]string {
+	out := map[string]string{}
+	for i, v := range thanhVienRouter(ts) {
+		out[ts[i].ID] = v.Ten
+	}
+	return out
+}
+
+// guDaDung are the people whose shared taste the ledger holds, with the
+// label the model read beside it. Only a couple's turn can have any: the
+// tool is declared and run nowhere else (tools.BoiCanh.Doi).
+func guDaDung(sc *tools.SoCai, t Turn) []NguoiGu {
+	nhan := nhanThanhVien(t.ThanhVien)
+	var out []NguoiGu
+	for _, id := range sc.GuDaDung() {
+		out = append(out, NguoiGu{ID: id, Nhan: nhan[id]})
+	}
+	return out
 }
 
 // bamPhienNhom buffers a legacy-lane group turn's shared messages in the
@@ -517,11 +588,13 @@ func coChuoi(xs []string, x string) bool {
 	return false
 }
 
-// nguonNhom is the group's read ports: the catalogue, the destinations and
-// the room, and nothing of a person's own (no CaNhan, no TriNho). One engine
+// nguonNhom is the group's read ports: the catalogue, the destinations, the
+// room and a couple's shared taste (read only on a couple's turn, only for
+// people who shared it with the chat: ADR-0048), and nothing of a person's
+// own (no CaNhan, no TriNho). One engine
 // serves both bots, so the group's tool context is built from a copy that
 // never holds Nếp's ports: a tool mis-registered for the group still finds
 // no memory to read or write (review of slices 9/11, finding 2.5).
 func nguonNhom(n tools.NguonDuLieu) tools.NguonDuLieu {
-	return tools.NguonDuLieu{Quan: n.Quan, Cho: n.Cho, Nhom: n.Nhom}
+	return tools.NguonDuLieu{Quan: n.Quan, Cho: n.Cho, Nhom: n.Nhom, Doi: n.Doi}
 }

@@ -1,7 +1,7 @@
 // Package aidoc implements the engine's read ports over PostgreSQL: the
 // lexical places retriever (truyhoi.Retriever over rag.Retrieve) and the
-// tools' catalogue, group and own-outing readers (tools.DocCho, DocNhom,
-// DocCaNhan).
+// tools' catalogue, group, own-outing and couple's-taste readers
+// (tools.DocCho, DocNhom, DocCaNhan, DocDoi).
 //
 // Every read runs in its own READ ONLY transaction (the database refuses a
 // write, SQLSTATE 25006) and under a semaphore that bounds how many
@@ -29,6 +29,8 @@ import (
 	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/domain/areas"
 	"mobile/services/core/internal/domain/giomo"
+	"mobile/services/core/internal/domain/pairnotebook"
+	"mobile/services/core/internal/gudoi"
 	"mobile/services/core/internal/rag"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/thuoctinh"
@@ -425,6 +427,95 @@ func (d Doc) SoThanhVien(ctx context.Context, nhomID string) (int, error) {
 		return tx.QueryRow(ctx, `SELECT count(*) FROM memberships WHERE context_id = $1::uuid AND state = 'active' AND left_at IS NULL`, nhomID).Scan(&n)
 	})
 	return n, err
+}
+
+var _ tools.DocDoi = Doc{}
+
+// The couple's taste reads (ADR-0048), in one READ ONLY transaction: the
+// room's live notebook cycle, its two participants, their `bat_doi` and
+// `chia_gu` consent rows, and -- only for the people gudoi.NguoiDuocDung
+// keeps -- their closed-vocabulary tags. No read names a person's name, a
+// budget, a message or the notebook's shared constraints; aigate's gate on
+// Nếp's path pins that (TestGuDoiDocDungCot).
+const (
+	cauChuKyDoi = `SELECT c.id::text FROM pair_notebooks n JOIN pair_notebook_cycles c ON c.notebook_id = n.id WHERE n.context_id = $1::uuid AND c.state <> 'closed' ORDER BY c.created_at DESC LIMIT 1`
+	cauNguoiDoi = `SELECT person_id::text FROM pair_cycle_participants WHERE cycle_id = $1::uuid ORDER BY created_at, person_id`
+	cauDongYDoi = `SELECT k.person_id::text, k.proposal_id::text, p.purpose, k.granted_at, k.revoked_at, p.expires_at, p.completed_at FROM pair_consents k JOIN pair_consent_proposals p ON p.id = k.proposal_id WHERE p.cycle_id = $1::uuid AND p.purpose IN ('bat_doi', 'chia_gu')`
+	cauGuDoi    = `SELECT person_id::text, tag FROM person_interests WHERE person_id = ANY($1::uuid[]) ORDER BY person_id, tag`
+)
+
+// GuDoi returns the shared taste of room phong's couple (DocDoi): nothing
+// when the room has no live notebook cycle or its two are not a couple;
+// otherwise the tags of each participant whose `chia_gu` covers the chat
+// (granted at or after gudoi.MocChat, still live), asked at every call,
+// never cached. A revoked consent or a broken «Một đôi» is seen at the
+// next call.
+func (d Doc) GuDoi(ctx context.Context, phong string) ([]gudoi.Gu, error) {
+	if !laUUID(phong) {
+		return nil, ErrID
+	}
+	out := []gudoi.Gu{}
+	err := d.C.Doc(ctx, func(tx pgx.Tx) error {
+		var chuKy string
+		err := tx.QueryRow(ctx, cauChuKyDoi, phong).Scan(&chuKy)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		rows, err := tx.Query(ctx, cauNguoiDoi, chuKy)
+		if err != nil {
+			return err
+		}
+		nguoi, err := pgx.CollectRows(rows, pgx.RowTo[string])
+		if err != nil {
+			return err
+		}
+		rows, err = tx.Query(ctx, cauDongYDoi, chuKy)
+		if err != nil {
+			return err
+		}
+		var dongY []pairnotebook.Consent
+		for rows.Next() {
+			var c pairnotebook.Consent
+			var het time.Time
+			if err := rows.Scan(&c.PersonID, &c.ProposalID, &c.Purpose, &c.GrantedAt, &c.RevokedAt, &het, &c.ProposalCompletedAt); err != nil {
+				rows.Close()
+				return err
+			}
+			c.ProposalExpiresAt = &het
+			dongY = append(dongY, c)
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		duocDung := gudoi.NguoiDuocDung(dongY, nguoi, time.Now().UTC())
+		if len(duocDung) == 0 {
+			return nil
+		}
+		rows, err = tx.Query(ctx, cauGuDoi, duocDung)
+		if err != nil {
+			return err
+		}
+		the := map[string][]string{}
+		for rows.Next() {
+			var ai, tag string
+			if err := rows.Scan(&ai, &tag); err != nil {
+				rows.Close()
+				return err
+			}
+			the[ai] = append(the[ai], tag)
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		out = gudoi.GuChoChat(duocDung, the)
+		return nil
+	})
+	return out, err
 }
 
 // ChuyenDiSapToi returns the person's upcoming outings across the groups

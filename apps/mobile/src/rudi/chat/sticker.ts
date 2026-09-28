@@ -36,18 +36,19 @@ export const STICKER_IDS = [
 export type StickerId = (typeof STICKER_IDS)[number];
 
 /**
- * The four a two-person conversation adds (ADR-0034, «4 sticker đôi»). They
- * are in the same closed vocabulary -- the server accepts them anywhere -- but
- * the tray offers them only where there are two people, under their own
- * heading, so a group's tray stays the eight it had.
+ * The four a couple adds (ADR-0034, «4 sticker đôi»). They are in the same
+ * closed vocabulary -- the server accepts them anywhere -- but the tray offers
+ * them only to a couple (both turned «Một đôi» on, `cap_doi`), under their own
+ * heading. A group and a friends' two-person chat keep the eight (owner
+ * decision 2026-09-28).
  */
 export const STICKER_DOI: readonly StickerId[] = ["hen-nhe", "nho-nhau", "ve-toi-chua", "om-cai"];
 
-/** The tray's list for a conversation: the eight, plus the four for two. */
-export function stickerChoKhay(haiNguoi: boolean): { chung: readonly StickerId[]; doi: readonly StickerId[] } {
+/** The tray's list for a conversation: the eight, plus the four for a couple. */
+export function stickerChoKhay(capDoi: boolean): { chung: readonly StickerId[]; doi: readonly StickerId[] } {
   return {
     chung: STICKER_IDS.filter((id) => !STICKER_DOI.includes(id)),
-    doi: haiNguoi ? STICKER_DOI : [],
+    doi: capDoi ? STICKER_DOI : [],
   };
 }
 

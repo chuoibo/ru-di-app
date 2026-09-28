@@ -22,6 +22,9 @@ type Hang struct {
 	// NhomMaxChu and PromptVersionNhom are the group's (slice 9).
 	NhomMaxChu        int    `json:"nhom_max_chu"`
 	PromptVersionNhom string `json:"prompt_version_nhom"`
+	// PromptVersionDoi is a couple's (two classes, 2026-09-28): the group
+	// bot's turn in a chat of two with «Một đôi» on both sides.
+	PromptVersionDoi string `json:"prompt_version_doi"`
 	// Ma is every code a turn can end with instead of an answer.
 	Ma []string `json:"ma"`
 	// TrangThai is every status a turn can emit.
@@ -56,6 +59,7 @@ func DocHang() Hang {
 		PromptVersionNep:     prompts.VersionNep(),
 		NhomMaxChu:           aiharness.NhomMaxChu,
 		PromptVersionNhom:    prompts.VersionNhom(),
+		PromptVersionDoi:     prompts.VersionDoi(),
 		CongCu:               map[string][]string{},
 	}
 	for _, m := range cau.Tat() {

@@ -13,9 +13,14 @@
   aiStream), `sse.go` (events), `worker.go` (prepare, publish), `nhom_engine.go` (chuanBiNhom).
 - App chặn ở 2 chỗ: `GroupChatLive.tsx` (`nhanRieng ? null : timNhacAi`), cộng chữ viết cho «cả nhóm».
 
+> **Bị thay một phần (2026-09-28, sau):** chủ sản phẩm chốt hai class «đám bạn» / «cặp đôi» — xem
+> mục cuối «Quyết định 2026-09-28 (sau): hai class» và ADR-0046 §8.4. Các điểm 2.1, 2.5 và hàng S1
+> «`plan`/`chia_bill` → 409» dưới đây **không còn đúng**; giữ nguyên để đọc lịch sử. Điểm 2.2, 2.3,
+> 2.4 (phần «không đọc gu»), 2.7 vẫn đúng; 2.6 được thay bằng «cặp chỉ chạy trên engine Go».
+
 ## 2. Quyết định
 
-1. **Cặp chỉ có lệnh `hoi`** (gắn `@Rủ Đi` hỏi trong luồng). `plan`, `chia_bill`, bản nháp chung và
+1. **[Đã thay] Cặp chỉ có lệnh `hoi`** (gắn `@Rủ Đi` hỏi trong luồng). `plan`, `chia_bill`, bản nháp chung và
    «thành kèo» vẫn chỉ cho nhóm: ADR-0046 §9 buộc `chia_bill` vào nhóm, ngoại lệ đọc `body` (§8.3) không
    mở rộng sang cặp. Capabilities của cặp báo `hoi`+`mention` bật, `plan`/`chia_bill` tắt với lý do
    `group_plan_only`.
@@ -28,7 +33,7 @@
 4. **AI chỉ đọc gói người gọi kèm** (chip «Kèm {n} tin gần đây · Xem · Chỉ gửi lời nhờ»), không tự đọc
    lịch sử, không đọc gu. `chia_gu` (ADR-0034) **chưa** dùng ở lát này — khi cần gợi ý theo gu chung thì
    làm lát riêng, gác theo công tắc của từng người.
-5. **Công cụ**: bot cặp có bảng quyền riêng `ChoCap` = công cụ chung, **không** có `draft_poll`,
+5. **[Đã thay] Công cụ**: bot cặp có bảng quyền riêng `ChoCap` = công cụ chung, **không** có `draft_poll`,
    `group_snapshot`, `list_group_outings`. Golden `quyen.golden.json` thêm bot `cap`.
 6. **Engine**: dùng đường nhóm (`MOBILE_AI_ENGINE_GROUP`) với roster 2 người; cờ vẫn mặc định `brain`.
    Đường brain Python cũ: cặp gửi `hoi` như nhóm (không sửa Python — kiểm xem brain có chặn kind không;
@@ -47,3 +52,71 @@
 - Cặp chuyển sang v2 (E2EE) sau này: endpoint sẽ từ chối `encrypted_invocation_required` như nhóm v2.
 - Gợi ý theo gu chung (`chia_gu`) — lát riêng.
 - Maestro trên máy thật, ảnh chụp.
+
+## Quyết định 2026-09-28 (sau): hai class
+
+Chủ sản phẩm chốt cùng ngày, thay điểm 2.1 và 2.5 (quyết định của chủ sản phẩm, không phải chữ ký
+Lead; ghi ở ADR-0046 §8.4):
+
+- **Đám bạn** = mọi chat nhóm **và** mọi chat hai người thường (`kind='pair'`): Rủ Đi AI y hệt nhóm —
+  `hoi`, `/plan`, `/chia-bill`, tờ hẹn chung, «thành kèo». Khảo sát: không tính năng nhóm nào đòi ≥3
+  người; không cần migration.
+- **Cặp đôi** = chat hai người mà cả hai đã bật «Một đôi» (`bat_doi`, `pairnotebook.CanBatDoi`): như
+  đám bạn, cộng phần riêng làm sau (gu đã chia xin đồng ý lại theo ADR-0048, prompt xưng hô cặp đôi).
+- Hợp đồng: `chat-capabilities` thêm trường gốc `cap_doi` (true chỉ khi `pair` và `CanBatDoi`).
+
+Lát P1 (máy chủ) làm:
+
+- Gỡ `lenhChoPhong` (preflight, create, worker); capabilities của cặp như nhóm; tờ hẹn và «thành kèo»
+  nhận cặp qua `phongAi` (sửa, bỏ tờ hẹn cũng kiểm chặn/xoá/rời); `chuDaLuu` đọc cho cặp lane legacy
+  (ngoại lệ ADR-0046 §8.3 nay nói rõ gồm chat hai người của đám bạn).
+- Gỡ `tools.BotCap`/`ChoCap`, khoá `cap` trong `quyen.golden.json`, `cau.CapKhongChamTien` và nhánh tiền
+  riêng của cặp: lượt của cặp đi `ChoNhom` và đường `nhapChiaBill` như nhóm.
+- `Turn.Cap` đổi thành `Turn.Doi` (tính bằng `laDoi` khi worker đọc phòng; chưa gì dùng).
+- Giữ `capConMo`. Cặp chỉ chạy trên engine Go: brain không có đường cho cặp, nên capabilities báo
+  `provider_unavailable`, route từ chối `503`, worker brain làm thất bại cùng mã mà không hỏi brain.
+
+Lát P3 (prompt cặp đôi, số đo v6, eval) làm:
+
+- `Turn.Doi` chỉ chọn **chữ và bản ghi**, không chọn quyền: lượt cặp đôi vẫn `Bot nhom` cho mọi quyết
+  định (lược đồ router, `ChoNhom`, chính sách, nháp chia bill). Router đọc `hieu/loi_nhac/doi.txt`
+  (`Vao.Doi`, cùng tập ý định/nguồn; golden nhóm giữ nguyên byte, thêm `yeu_cau_doi`/`luoc_do_doi`);
+  câu trả lời đọc `prompts/doi_agent.txt` (mọi luật của nhóm, xưng «hai bạn», «người kia»; không
+  «cả nhóm», «thành viên», «mọi người», «hội» — `prompts.TuNhom`), mệnh đề ngoài phạm vi riêng, câu cố
+  định `cau.DoiKhongChamTien`/`DoiChuaThayKhoan`/`DoiLoiNhoPlan`, dòng cuối nháp chia bill «Hai bạn xem
+  lại…»; lời nhắc chống lộ (`khuonNhom(doi)`) đọc câu của lời nhắc cặp đôi.
+- Bản ghi: `ai_turn_metrics` version 6 (`bot IN ('nep','nhom','doi')`), lượt cặp đôi ghi `bot=doi` và
+  `prompt_version=VersionDoi`. Chat hai người của đám bạn (chưa đủ hai đồng ý) giữ lời nhắc nhóm và
+  `bot=nhom` — «dù có 2 người vẫn là logic đám bạn». Triển khai: `core migrate-chat` lên v6 trước
+  `serve`/`work` bản mới.
+- Eval T1: `DauVaoNhom.doi` (đúng hai người), bất biến 11 `bat_bien_11_lop_phong` (router, lời nhắc,
+  bản ghi, câu cố định đúng lớp phòng; lời nhắc cặp đôi không có chữ của nhóm); corpus nhóm thêm 4 ca
+  cặp đôi (tìm quán, plan, nháp chia bill, từ chối tiền) và 2 ca chat hai người của đám bạn; router T1
+  thêm 6 ca cặp đôi (mọi ý định nhóm + từ chối tiền).
+- Còn mở: gu đã chia (P5); `nguoiKhongTen` («Một người trong nhóm») của nháp chia bill chưa có bản cặp
+  đôi (chỉ hiện khi danh bạ phòng thiếu tên); `chung.txt` của router vẫn nói «(group only)» cho khối
+  thành viên — lời nhắc router, không phải lời người dùng đọc; lời nhắc cặp đôi chưa đo với model thật (T3).
+
+Lát P5 (gu cặp đôi trong chat, ADR-0048) làm:
+
+- Bước 0: `chia_gu` cấp qua `POST …/notebook/proposals` (đề nghị tự hoàn tất), thu hồi qua
+  `DELETE …/notebook/consents/chia_gu`; hai route `LIVE-GO`, Python `live`. Bật lại sau thu hồi tạo
+  dòng `pair_consents` mới với `granted_at` mới. Chọn mốc hiệu lực `gudoi.MocChat` (0 giờ ngày
+  29/9/2026 giờ VN): đồng ý còn sống và `granted_at ≥ mốc` mới phủ chat. Không đổi schema Alembic, không đổi wire
+  route LIVE. Xin đồng ý lại = tắt rồi bật bằng hai lệnh sẵn có (nút «Bật lại cho chat»).
+- Máy chủ: công cụ `gu_hai_ban` (không đối số, lớp `doc`, phạm vi mới `doi`, bảng quyền cấp cho `nhom`,
+  chỉ khai khi `Turn.Doi` qua `Quyen.DuocPhepDoi`); nguồn `aidoc.Doc.GuDoi` trong một giao dịch READ
+  ONLY (chu kỳ sổ đôi → hai người → `bat_doi`/`chia_gu` → `gudoi.NguoiDuocDung` → `person_interests`
+  chỉ của người đủ điều kiện); bằng chứng nguồn `gu_doi` (bí danh `d1…`) theo nhãn danh bạ của lượt;
+  `Result.GuDung`; worker khoá chia sẻ `pair_notebooks` và kiểm lại trong giao dịch đăng, sai thì
+  `sharing_unavailable`, không thẻ; thẻ `doc.gu` = nhãn; `chat-capabilities.gu_chat`;
+  `ai_turn_metrics` v7 (CHECK `cong_cu` có tên công cụ, không ghi gì nó trả).
+- Cổng: `nepCongCuDoc` thêm sáu bảng có lý do; `TestGuDoiDocDungCot` + canary `TestGuDoiGateCanRed`
+  (nêu `pair_shared_constraints`, `display_name`, `messages` hay bảng ngoài sáu bảng là đỏ).
+- T1: ca `15-doi-gu-hai-ban` (mô hình tự gọi, dẫn bằng chứng, thẻ nêu gu hai người; kịch bản sai không gọi
+  công cụ trượt ở `cong_cu`), `16-hai-ban-khong-co-gu` (đám bạn gọi thử bị từ chối); bất biến 3/9/11 mở
+  rộng (đám bạn không khai `gu_hai_ban`, không đọc gu; `doc.gu` đúng nhãn danh bạ).
+- App: lời sheet «Gu của hai bạn» nói Nếp và Rủ Đi AI trong chat của hai bạn; «Bật lại cho chat» khi
+  `gu_chat.cua_toi = can_bat_lai`; chân thẻ «· dùng gu của Linh».
+- Còn mở: khoảng hở bản app cũ bật `chia_gu` sau mốc (ADR-0048 §3.1); chưa đo mô hình thật (T3); chưa
+  ảnh chụp sheet và chân thẻ trên máy thật; Lead chưa ký.

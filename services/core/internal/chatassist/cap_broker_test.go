@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// A pair's `hoi` on the Go engine streams like a group's (slice S1 of
-// docs/claude/2026-09-28/ai-chat-hai-nguoi.md): the room key carries the
+// A pair's `hoi` on the Go engine streams like a group's (a chat of two is
+// a room of friends, decision 2026-09-28): the room key carries the
 // card's text after the card commits, the requester reads it through
 // …/events, chat-capabilities says who can watch; once the pair is blocked,
 // the stream route refuses.
@@ -22,7 +22,8 @@ func TestStreamCapSauKhiTheDang(t *testing.T) {
 		t.Fatal(err)
 	}
 	w := f.request("GET", "/contexts/"+f.context+"/chat-capabilities", f.token, nil)
-	if !strings.Contains(w.Body.String(), `"stream":"nguoi_goi"`) || !strings.Contains(w.Body.String(), `"hoi":{"available":true,"reason":null}`) {
+	if !strings.Contains(w.Body.String(), `"stream":"nguoi_goi"`) || !strings.Contains(w.Body.String(), `"hoi":{"available":true,"reason":null}`) ||
+		!strings.Contains(w.Body.String(), `"plan":{"available":true,"reason":null}`) || !strings.Contains(w.Body.String(), `"cap_doi":false`) {
 		t.Fatalf("khả năng của cặp: %s", w.Body.String())
 	}
 	job, _ := f.taoLoiGoi(t)

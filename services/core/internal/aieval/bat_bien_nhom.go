@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/cau"
+	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/aiharness/prompts"
 	"mobile/services/core/internal/domain/companion"
@@ -41,13 +43,114 @@ func laCauCoDinh(bot obs.Bot, chu string) bool {
 	return false
 }
 
-// loiNhacCua is the instruction clauses an answer must never quote, per bot.
-func loiNhacCua(bot obs.Bot) []string {
-	if bot == obs.BotNhom {
+// loiNhacCua is the instruction clauses an answer must never quote, per
+// turn: Nếp's, a room of friends' (the group's) or a couple's.
+func loiNhacCua(t aiharness.Turn) []string {
+	switch {
+	case t.Bot == obs.BotNhom && t.Doi:
+		return prompts.LoiNhacDoi()
+	case t.Bot == obs.BotNhom:
 		return prompts.LoiNhacNhom()
 	}
 	return prompts.LoiNhacNep()
 }
+
+// Invariant 11: the room's class (two classes, 2026-09-28). A group-bot turn
+// is either a room of friends (a group, or a chat of two without «Một
+// đôi») or a couple (Turn.Doi), and every trace of it says which, the same
+// way: the router read that class's instruction (hieu.LoiNhacCua), the
+// answer read that class's instruction and never the other's, the record
+// names bot doi and the couple's prompt version for a couple and bot nhom
+// and the group's for friends, and a fixed sentence that names its audience
+// is the class's own. A couple's answer instruction (the couple's text, its
+// clauses, without the shared tool clause) holds no word of a room of
+// friends (prompts.TuNhom). A couple's shared taste (ADR-0048) is the
+// couple's class alone: a room of friends declares no gu_hai_ban and reads
+// no taste, and a couple reads only its own members'.
+func batBien11(l LuotDaChay) []Truot {
+	if l.Turn.Bot != obs.BotNhom {
+		if l.Turn.Doi {
+			return []Truot{{KiemBatBien11, fmt.Sprintf("lượt %s mang cờ cặp đôi", l.Turn.Bot)}}
+		}
+		return nil
+	}
+	var out []Truot
+	bad := func(f string, a ...any) { out = append(out, Truot{KiemBatBien11, fmt.Sprintf(f, a...)}) }
+	doi := l.Turn.Doi
+	botGhi, pv := obs.BotNhom, obs.PromptVersion(prompts.VersionNhom())
+	routerDung, _ := hieu.LoiNhac(obs.BotNhom)
+	routerSai := hieu.LoiNhacDoi()
+	dung, sai := prompts.NhomAgent, prompts.DoiAgent
+	if doi {
+		botGhi, pv = obs.BotDoi, obs.PromptVersion(prompts.VersionDoi())
+		routerDung, routerSai = routerSai, routerDung
+		dung, sai = sai, dung
+	}
+	if l.BanGhi.Bot != botGhi || l.BanGhi.PromptVersion != pv {
+		bad("bản ghi bot %q phiên bản %q, lớp phòng cần %q %q", l.BanGhi.Bot, l.BanGhi.PromptVersion, botGhi, pv)
+	}
+	dungTruoc, _, _ := strings.Cut(dung(moc11), moc11)
+	saiTruoc, _, _ := strings.Cut(sai(moc11), moc11)
+	for i, y := range l.YeuCau {
+		he := y.SystemInstruction
+		switch {
+		case he == routerSai:
+			bad("yêu cầu %d: router đọc lời nhắc của lớp kia", i+1)
+		case strings.HasPrefix(he, saiTruoc):
+			bad("yêu cầu %d: câu trả lời đọc lời nhắc của lớp kia", i+1)
+		case doi && strings.HasPrefix(he, dungTruoc):
+			// The couple's own part: what the engine wrote before the shared
+			// tool clause (and before what the agent framework appends).
+			rieng, _, _ := strings.Cut(he, prompts.CongCu())
+			rieng = strings.ToLower(rieng)
+			for _, w := range prompts.TuNhom {
+				if strings.Contains(rieng, w) {
+					bad("yêu cầu %d: lời nhắc cặp đôi có chữ của nhóm %q", i+1, w)
+				}
+			}
+		}
+	}
+	if len(l.YeuCau) > 0 && l.YeuCau[0].SystemInstruction != routerDung {
+		bad("yêu cầu 1 không phải router của lớp phòng")
+	}
+	for _, c := range [][2]string{{cau.NhomKhongChamTien, cau.DoiKhongChamTien}, {cau.NhomChuaThayKhoan, cau.DoiChuaThayKhoan}} {
+		if l.Chu == c[0] && doi || l.Chu == c[1] && !doi {
+			bad("câu cố định của lớp kia: %q", l.Chu)
+		}
+	}
+	// A couple's shared taste (ADR-0048) belongs to the couple's class only:
+	// a room of friends never declares gu_hai_ban and never reads a taste;
+	// a couple reads only its own members'.
+	if !doi {
+		for i, y := range l.YeuCau {
+			for _, t := range y.CongCu {
+				if t == congCuGuDoi {
+					bad("yêu cầu %d: phòng đám bạn khai %s", i+1, t)
+				}
+			}
+		}
+		if len(l.GuDung) > 0 {
+			bad("phòng đám bạn đọc gu của %d người", len(l.GuDung))
+		}
+	}
+	for _, n := range l.GuDung {
+		thanhVien := false
+		for _, m := range l.Turn.ThanhVien {
+			thanhVien = thanhVien || m.ID == n.ID
+		}
+		if !thanhVien {
+			bad("gu của một người không ở trong phòng")
+		}
+	}
+	return out
+}
+
+// congCuGuDoi is the couple's taste tool (tools.GuHaiBan).
+const congCuGuDoi = "gu_hai_ban"
+
+// moc11 stands in for the canary marker when invariant 11 cuts an
+// instruction at it.
+const moc11 = "\x00"
 
 // congCuTriNho are the tools only Nếp's scope reaches (contract §8's table,
 // scope me): the group declares none of them.
@@ -120,6 +223,28 @@ func batBien9(l LuotDaChay) []Truot {
 	if v, _ := dm.Get("chi_loi_nho"); v != tree.Bool(l.Turn.SoTin == 0) {
 		bad("doc.chi_loi_nho %v với so_tin %d", v, l.Turn.SoTin)
 	}
+	// doc.gu (ADR-0048 §5): exactly the labels of the people whose taste
+	// the turn read, each a label of the turn's roster; absent otherwise.
+	v, coGu := dm.Get("gu")
+	switch {
+	case len(l.GuDung) == 0 && coGu:
+		bad("thẻ nêu gu của %v mà lượt không đọc gu nào", v)
+	case len(l.GuDung) > 0:
+		nhan := map[string]bool{}
+		for i, m := range l.Turn.ThanhVien {
+			nhan[m.Ten] = true
+			nhan["Bạn "+fmt.Sprint(i+1)] = true
+		}
+		g, _ := v.(tree.List)
+		if len(g) != len(l.GuDung) {
+			bad("doc.gu %v, lượt đọc gu của %d người", v, len(l.GuDung))
+		}
+		for i, x := range g {
+			if i < len(l.GuDung) && (x != tree.String(l.GuDung[i].Nhan) || !nhan[l.GuDung[i].Nhan]) {
+				bad("doc.gu[%d] %v không phải nhãn danh bạ của người có gu được đọc", i, x)
+			}
+		}
+	}
 	phan, _ := pm.Get("phan")
 	list := phan.(tree.List)
 	if len(list) != len(l.Phan) {
@@ -181,7 +306,11 @@ func theCua(l LuotDaChay) (*tree.OrderedMap, error) {
 		}
 		parts = append(parts, treejson.To(v))
 	}
-	card, err := companion.GroundReply(companion.ReplyMeta{InvocationID: l.Turn.InvocationID, Command: string(l.Turn.Lenh), Read: l.Turn.SoTin}, parts, places)
+	var gu []string
+	for _, n := range l.GuDung {
+		gu = append(gu, n.Nhan)
+	}
+	card, err := companion.GroundReply(companion.ReplyMeta{InvocationID: l.Turn.InvocationID, Command: string(l.Turn.Lenh), Read: l.Turn.SoTin, Gu: gu}, parts, places)
 	if err != nil {
 		return nil, fmt.Errorf("GroundReply từ chối thẻ: %v", err)
 	}

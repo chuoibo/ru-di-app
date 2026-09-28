@@ -6,7 +6,8 @@ import { Easing, useSharedValue, withDelay, withTiming } from "react-native-rean
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { useSoDoi } from "../../to-giay/SoDoi";
-import { cauGu } from "../../to-giay/gu-doi";
+import { type GuChat, cauGu } from "../../to-giay/gu-doi";
+import { docChatCapabilities } from "../../chat/ai-invocations";
 import { cauVaiTuan } from "../../to-giay/vai-tuan";
 import { type ToGiay, goiYChoLam, nenXinTo, phienBan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
@@ -58,6 +59,18 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   const so = useSoDoi();
   const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat" | "nguoi-kia" | "gu" | "vai">(null);
   const daRu = useRef(false);
+  // Where my taste switch stands for the chat (ADR-0048 §3.2), asked when the
+  // taste sheet opens and again after each change of it; unknown reads as
+  // null and offers no «Bật lại cho chat».
+  const [guChat, setGuChat] = useState<GuChat | null>(null);
+  useEffect(() => {
+    if (mo !== "gu" || !so.capId || !so.toiId || so.dangLam !== null) return;
+    let bo = false;
+    docChatCapabilities(so.capId, so.toiId)
+      .then((caps) => { if (!bo) setGuChat(caps.gu_chat ?? null); })
+      .catch(() => { if (!bo) setGuChat(null); });
+    return () => { bo = true; };
+  }, [mo, so.capId, so.toiId, so.dangLam, so.gu?.mine_shared]);
 
   // `?ru=1` from «Rủ một người đi chơi»: draft straight away, once, and only
   // when nothing is already on the table (the notebook refuses a second one).
@@ -375,7 +388,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         />
       ) : null}
       <AiLoTuanNay dangLam={so.dangLam?.startsWith("vai:") ?? false} onChon={(lo) => so.chonLo(lo)} onClose={dong} open={mo === "vai"} tenNguoiKia={so.tenNguoiKia} toiId={so.toiId} vai={so.vai} />
-      <GuHaiBan dangLam={so.dangLam?.includes("chia_gu") ?? false} gu={so.gu} onBat={so.chiaGu} onClose={dong} onSuaGuCuaToi={() => { dong(); router.push("/personalization" as never); }} onTat={so.thoiChiaGu} open={mo === "gu"} tenNguoiKia={so.tenNguoiKia} />
+      <GuHaiBan dangLam={so.dangLam?.includes("chia_gu") ?? false} gu={so.gu} onBat={so.chiaGu} onClose={dong} onSuaGuCuaToi={() => { dong(); router.push("/personalization" as never); }} onTat={so.thoiChiaGu} open={mo === "gu"} tenNguoiKia={so.tenNguoiKia} guChat={guChat} onBatLai={so.batLaiChiaGu} />
       <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
       <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>

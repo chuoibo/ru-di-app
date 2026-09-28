@@ -64,6 +64,9 @@ type CaHieu struct {
 	Cau    string  `json:"cau"`
 	Nhom   string  `json:"nhom"`
 	GhiChu string  `json:"ghi_chu,omitempty"`
+	// Doi is a couple's turn (hieu.Vao.Doi; group bot only): the router
+	// reads the couple's instruction, with the group's schema and policy.
+	Doi bool `json:"doi,omitempty"`
 	// Ra is the scripted router output(s), in call order: T1 only.
 	Ra     []json.RawMessage `json:"ra,omitempty"`
 	KyVong KyVongHieu        `json:"ky_vong"`
@@ -120,6 +123,9 @@ func DocBoHieu(raw []byte) (BoHieu, error) {
 		yd, ok := hieu.YDinhCua(c.Bot)
 		if !ok {
 			return BoHieu{}, fmt.Errorf("ca %s: bot %q", c.ID, c.Bot)
+		}
+		if c.Doi && c.Bot != obs.BotNhom {
+			return BoHieu{}, fmt.Errorf("ca %s: cặp đôi chỉ ở bot nhom", c.ID)
 		}
 		k := c.KyVong
 		for _, x := range k.Tien {
@@ -310,7 +316,7 @@ func ChayBoHieu(ctx context.Context, h hieu.Hieu, b BoHieu, moHinh func(CaHieu) 
 	for _, c := range b.Ca {
 		tk.PhienBan = hieu.PhienBan(c.Bot)
 		dem := llm.NewDem(moHinh(c), llm.MaxModelCallsPerTurn, nil).WithWait(func(int) time.Duration { return 0 })
-		kq, err := h.Hieu(ctx, hieu.Vao{Bot: c.Bot, Cau: c.Cau, Luc: b.Luc}, dem)
+		kq, err := h.Hieu(ctx, VaoHieu(c, b.Luc), dem)
 		r := KetQuaHieu{ID: c.ID, Nhom: c.Nhom, SoGoi: dem.SoGoi()}
 		tk.TongGoi += r.SoGoi
 		tk.MaxGoi = max(tk.MaxGoi, r.SoGoi)
@@ -370,6 +376,12 @@ func ChayBoHieu(ctx context.Context, h hieu.Hieu, b BoHieu, moHinh func(CaHieu) 
 	return tk
 }
 
+// VaoHieu is the router input of a case: its bot, its class (a couple's
+// turn is Doi) and its message, at the set's instant.
+func VaoHieu(c CaHieu, luc time.Time) hieu.Vao {
+	return hieu.Vao{Bot: c.Bot, Doi: c.Doi, Cau: c.Cau, Luc: luc}
+}
+
 // StubHieu is the scripted model of a T1 case: its Ra, in order. A case
 // with no Ra (a T3 case) gets an empty script, so running it on the stub is
 // red rather than silently answered.
@@ -393,8 +405,13 @@ func KiemYeuCauHieu(canon []byte, c CaHieu) []TruotHieu {
 			} `json:"parts"`
 		} `json:"contents"`
 		Config struct {
-			ResponseSchema   json.RawMessage `json:"responseSchema"`
-			ResponseMIMEType string          `json:"responseMimeType"`
+			ResponseSchema    json.RawMessage `json:"responseSchema"`
+			ResponseMIMEType  string          `json:"responseMimeType"`
+			SystemInstruction struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"systemInstruction"`
 		} `json:"config"`
 	}
 	if err := json.Unmarshal(canon, &r); err != nil || len(r.Contents) == 0 || len(r.Contents[0].Parts) == 0 {
@@ -409,6 +426,15 @@ func KiemYeuCauHieu(canon []byte, c CaHieu) []TruotHieu {
 	}
 	if r.Config.ResponseMIMEType != "application/json" || len(r.Config.ResponseSchema) == 0 {
 		out = append(out, TruotHieu{"luoc_do", "thiếu structured output"})
+	}
+	// The router reads its class's instruction: a couple's turn the
+	// couple's, any other its bot's (two classes, 2026-09-28).
+	var he strings.Builder
+	for _, p := range r.Config.SystemInstruction.Parts {
+		he.WriteString(p.Text)
+	}
+	if want, err := hieu.LoiNhacCua(VaoHieu(c, time.Time{})); err != nil || he.String() != want {
+		out = append(out, TruotHieu{"loi_nhac", "router không đọc lời nhắc của lớp phòng"})
 	}
 	return out
 }

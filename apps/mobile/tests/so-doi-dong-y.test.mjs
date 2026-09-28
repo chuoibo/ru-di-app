@@ -29,6 +29,7 @@ test("sheet ràng buộc và đồng ý đóng theo kết quả", () => {
 });
 
 test("hàng ghim báo lời đề nghị của người kia", () => {
-  const song = doc("screens/hai-nguoi/HangToGiaySong.tsx");
-  assert.match(song, /pending_proposals\.find\(\(d\) => d\.proposed_by_id !== toiId\)/);
+  // The decision moved into `hangGhimChat` (driven in tests/hang-ghim-chat.test.mjs).
+  const map = doc("to-giay/so-doi-map.ts");
+  assert.match(map, /pending_proposals\.find\(\(d\) => d\.proposed_by_id !== toiId\)/);
 });

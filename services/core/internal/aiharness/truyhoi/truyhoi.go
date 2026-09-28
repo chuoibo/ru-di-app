@@ -43,10 +43,14 @@ const (
 	Memory Nguon = "memory"
 	// GroupHistory: the group's outings and snapshot, group assistant only.
 	GroupHistory Nguon = "group_history"
+	// GuDoi: the taste a couple's two people shared with Rủ Đi AI in their
+	// chat (ADR-0048), from the model-called tool gu_hai_ban only. No
+	// router's source list offers it: nothing retrieves it by a query.
+	GuDoi Nguon = "gu_doi"
 )
 
 // Nguons is the closed set of Nguon.
-var Nguons = dong.Moi("nguon_truy_hoi", Places, Manual, Memory, GroupHistory)
+var Nguons = dong.Moi("nguon_truy_hoi", Places, Manual, Memory, GroupHistory, GuDoi)
 
 // RangBuoc names one constraint of a retrieval, hard or soft. The CRAG
 // grader reports missing constraints and proposes relaxations with these

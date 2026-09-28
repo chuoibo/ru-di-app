@@ -36,6 +36,7 @@ const (
 	DraftPoll         Ten = "draft_poll"
 	GroupSnapshot     Ten = "group_snapshot"
 	ListGroupOutings  Ten = "list_group_outings"
+	GuHaiBan          Ten = "gu_hai_ban"
 	MyUpcomingOutings Ten = "my_upcoming_outings"
 	RecallMemory      Ten = "recall_memory"
 	RememberFact      Ten = "remember_fact"
@@ -48,7 +49,7 @@ const (
 var Tens = dong.Moi("cong_cu",
 	SearchPlaces, GetPlace, ListDestinations, NearestArea, SearchAppManual,
 	ExplainScreen, SuggestScreen, ProposePlaces, ProposeItinerary, DraftPoll,
-	GroupSnapshot, ListGroupOutings, MyUpcomingOutings, RecallMemory,
+	GroupSnapshot, ListGroupOutings, GuHaiBan, MyUpcomingOutings, RecallMemory,
 	RememberFact, ForgetFact, WhatYouRemember, SetReminder)
 
 // Lop is a tool's side-effect class. The set is closed and has no class
@@ -84,10 +85,15 @@ const (
 	Me Pham = "me"
 	// Nhom: the group the question was asked in; the group assistant only.
 	Nhom Pham = "nhom"
+	// Doi: the couple's room the question was asked in (a chat of two whose
+	// two people both said yes to «Một đôi»); the group assistant, and only
+	// on a couple's turn (BoiCanh.Doi). A room of friends -- a group or an
+	// ordinary chat of two -- never declares it (ADR-0048).
+	Doi Pham = "doi"
 )
 
 // Phams is the closed set of Pham.
-var Phams = dong.Moi("pham_cong_cu", Chung, Me, Nhom)
+var Phams = dong.Moi("pham_cong_cu", Chung, Me, Nhom, Doi)
 
 // Muc is one registry entry.
 type Muc struct {
@@ -115,6 +121,7 @@ var DangKy = []Muc{
 	{DraftPoll, "Draft a poll for the group; nothing is posted until a member taps it.", Nhap, Nhom},
 	{GroupSnapshot, "Read the group's shared context: members' shared tastes and the current plan.", Doc, Nhom},
 	{ListGroupOutings, "List the group's outings, upcoming or past.", Doc, Nhom},
+	{GuHaiBan, "Read the taste each of the two chose to share with Rủ Đi AI in this chat, and what they both like.", Doc, Doi},
 	{MyUpcomingOutings, "List the asking person's own upcoming outings.", Doc, Me},
 	{RecallMemory, "Recall facts the person asked Nếp to remember, relevant to a query you write.", Doc, Me},
 	{RememberFact, "Remember one fact the person stated about themself, with its kind and valid time.", TriNho, Me},

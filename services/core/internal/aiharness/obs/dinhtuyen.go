@@ -104,7 +104,7 @@ type CongCu string
 // CongCus are the registry's tool names (tools.Tens, held equal by a test
 // in tools).
 var CongCus = []CongCu{"search_places", "get_place", "list_destinations", "nearest_area", "group_snapshot",
-	"list_group_outings", "search_app_manual", "explain_screen", "propose_places", "propose_itinerary", "draft_poll",
+	"list_group_outings", "gu_hai_ban", "search_app_manual", "explain_screen", "propose_places", "propose_itinerary", "draft_poll",
 	"suggest_screen", "my_upcoming_outings", "recall_memory", "remember_fact", "forget_fact", "what_you_remember",
 	"set_reminder"}
 

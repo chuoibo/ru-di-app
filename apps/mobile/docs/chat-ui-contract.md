@@ -27,7 +27,8 @@ thế giới của toàn app để trang trí riêng màn chat.
   tin) cùng đúng gói hiện trên chip ngay trên nút gửi: «Kèm {n} tin gần đây ·
   Xem · Chỉ gửi lời nhờ». Tin đi như mọi tin, cả nhóm thấy; chỉ khi tin đã
   lưu thì client mới gọi AI, nêu đúng tin đó (`trigger_message_id`). Rủ Đi AI
-  trả lời vào chính tin tag, ký ở chân «Rủ Đi AI · đọc {n} tin». Danh sách
+  trả lời vào chính tin tag, ký ở chân «Rủ Đi AI · đọc {n} tin» (cặp đôi: thêm
+  «· dùng gu của {tên}» khi câu trả lời đã đọc gu đã chia, ADR-0048). Danh sách
   invocation và lỗi lấy từ server; gửi tin mới không làm mất lỗi trước đó; lời
   gọi hỏng sau khi tin đã lưu có hàng riêng người gọi với «Thử lại» (cùng
   khoá, cùng gói đã đóng băng). Khi provider chưa sẵn sàng, chip nói «Rủ Đi AI

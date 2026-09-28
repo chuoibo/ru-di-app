@@ -59,7 +59,7 @@ func GieoCa(c Ca, lap int) (Gieo, error) {
 	// the room, its lane, the confirmed count, the shared turns with their
 	// authors and stored text, the active members.
 	if n := c.DauVao.Nhom; n != nil {
-		t.Phong, t.Lane, t.SoTin = phongCua(c.CaID), n.Lane, n.SoTin
+		t.Phong, t.Lane, t.SoTin, t.Doi = phongCua(c.CaID), n.Lane, n.SoTin, n.Doi
 		for _, l := range n.Luot {
 			x := aiharness.LuotNhom{ID: l.ID, Vai: l.Vai, Ten: l.Ten, Chu: l.Chu, TacGia: l.TacGia}
 			switch {

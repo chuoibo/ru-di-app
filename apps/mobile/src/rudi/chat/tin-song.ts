@@ -428,6 +428,12 @@ export type TheAi =
       soTin: number;
       chiLoiNho: boolean;
       phan: PhanTraLoi[];
+      /**
+       * Whose shared taste the answer used (ADR-0048 §5): the room's labels the
+       * server wrote under `doc.gu`, only in a couple's chat and only for people
+       * who shared their taste with the chat. Absent or empty: none was used.
+       */
+      guCua?: readonly string[];
     }
   | { loai: "khac" };
 
@@ -462,7 +468,26 @@ export function lichTrinhTrongThe(the: TheAi): Extract<TheAi, { loai: "itinerary
  * it read, from the count the server confirmed.
  */
 export function chuKyTraLoi(the: Extract<TheAi, { loai: "tra_loi" }>): string {
-  return the.chiLoiNho ? "Rủ Đi AI · chỉ đọc lời nhờ" : `Rủ Đi AI · đọc ${the.soTin} tin`;
+  const doc = the.chiLoiNho ? "Rủ Đi AI · chỉ đọc lời nhờ" : `Rủ Đi AI · đọc ${the.soTin} tin`;
+  const gu = the.guCua ?? [];
+  if (gu.length === 0) return doc;
+  // «· dùng gu của Linh», «· dùng gu của Linh và Tú»: whose taste, said on
+  // the answer itself (ADR-0048 §5).
+  const ai = gu.length === 1 ? gu[0] : `${gu.slice(0, -1).join(", ")} và ${gu[gu.length - 1]}`;
+  return `${doc} · dùng gu của ${ai}`;
+}
+
+/** `doc.gu` as the card may carry it: at most two non-blank labels, each bounded. */
+function docGu(v: unknown): string[] {
+  if (!Array.isArray(v) || v.length > 2) return [];
+  const out: string[] = [];
+  for (const x of v) {
+    if (typeof x !== "string") return [];
+    const nhan = x.trim();
+    if (nhan === "" || nhan.length > 60) return [];
+    out.push(nhan);
+  }
+  return out;
 }
 
 /** One line for an answer in the thread: its words, or the name of what it proposes. */
@@ -563,7 +588,8 @@ export function docTheAi(card: unknown): TheAi {
       }
       const soTin = typeof doc.so_tin === "number" && Number.isInteger(doc.so_tin) && doc.so_tin >= 0 ? doc.so_tin : 0;
       if (p.tac_gia !== "rudi-ai" || typeof p.invocation_id !== "string" || phan.length === 0) return { loai: "khac" };
-      return { loai: "tra_loi", invocationId: p.invocation_id, lenh: String(p.lenh ?? "plan"), soTin, chiLoiNho: doc.chi_loi_nho === true || soTin === 0, phan };
+      const guCua = docGu(doc.gu);
+      return { loai: "tra_loi", invocationId: p.invocation_id, lenh: String(p.lenh ?? "plan"), soTin, chiLoiNho: doc.chi_loi_nho === true || soTin === 0, phan, ...(guCua.length > 0 ? { guCua } : {}) };
     }
     default:
       return { loai: "khac" };

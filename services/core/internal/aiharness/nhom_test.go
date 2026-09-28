@@ -53,6 +53,8 @@ type nhomOpts struct {
 	nganHan *testkit.NganHanNhom
 	hoSo    HoSo
 	nepNH   NganHanLuot
+	// gu is a couple's taste port (ADR-0048); nil leaves the port unset.
+	gu *testkit.GuDoi
 }
 
 func chayNhom(t *testing.T, w theGioi, o nhomOpts, turn Turn, kich ...llm.Buoc) moTa {
@@ -61,6 +63,9 @@ func chayNhom(t *testing.T, w theGioi, o nhomOpts, turn Turn, kich ...llm.Buoc) 
 	var buf bytes.Buffer
 	nguon := w.nguon()
 	nguon.Nhom = &testkit.Nhom{SoNguoi: 3, ChuyenDis: []truyhoi.BangChung{{ID: "o-1", Truong: map[string]string{"tieu_de": "Đà Lạt cuối tháng", "ngay": "2026-09-26"}}}}
+	if o.gu != nil {
+		nguon.Doi = o.gu
+	}
 	opts := []Option{WithModel(stub), WithLogger(slog.New(slog.NewJSONHandler(&buf, nil))), WithMaKiem(maKiem),
 		WithRetryWait(func(int) time.Duration { return 0 }), WithClock(func() time.Time { return luc }), WithNguon(nguon)}
 	if o.nganHan != nil {

@@ -12,6 +12,7 @@ import (
 	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/tools"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -27,6 +28,9 @@ const (
 	KiemBatBien7 = "bat_bien_7_so_goi"
 	KiemBatBien8 = "bat_bien_8_sink"
 	KiemBatBien9 = "bat_bien_9_the_tra_loi"
+	// KiemBatBien11 is the room's class (two classes, 2026-09-28): a
+	// couple's turn and a room of friends' each read and record their own.
+	KiemBatBien11 = "bat_bien_11_lop_phong"
 )
 
 // Truot is one failed check.
@@ -149,6 +153,10 @@ type LuotDaChay struct {
 	QuanIDs    []string
 	KetQuaNhap json.RawMessage
 	TheGioi    *TheGioi
+	// GuDung are the people whose shared taste a couple's turn read
+	// (aiharness.Result.GuDung, ADR-0048): the card's doc.gu (invariant 9)
+	// and only ever a couple's (invariant 11).
+	GuDung []aiharness.NguoiGu
 }
 
 // KiemBatBien holds a turn to every invariant that applies at S1.
@@ -161,6 +169,7 @@ func KiemBatBien(l LuotDaChay) []Truot {
 	out = append(out, batBien7(l)...)
 	out = append(out, batBien8(l)...)
 	out = append(out, batBien9(l)...)
+	out = append(out, batBien11(l)...)
 	return out
 }
 
@@ -268,6 +277,12 @@ func batBien3(l LuotDaChay) []Truot {
 	cho := map[string]bool{}
 	for _, t := range duoc {
 		cho[t] = true
+	}
+	if l.Turn.Bot == obs.BotNhom && l.Turn.Doi {
+		// A couple's turn also declares the couple's own tools (ADR-0048).
+		for _, t := range tools.MacDinh.DuocPhepDoi(obs.BotNhom, false) {
+			cho[string(t)] = true
+		}
 	}
 	var out []Truot
 	for i, y := range l.YeuCau {
@@ -377,7 +392,7 @@ func batBien8(l LuotDaChay) []Truot {
 		}
 		daNha = strings.TrimSuffix(n, cuoi)
 	}
-	if daNha != "" && guard.KiemCuaSo(guard.DauRa{MaKiem: l.MaKiem, LoiNhac: loiNhacCua(l.Turn.Bot)}, daNha) != guard.RaSach {
+	if daNha != "" && guard.KiemCuaSo(guard.DauRa{MaKiem: l.MaKiem, LoiNhac: loiNhacCua(l.Turn)}, daNha) != guard.RaSach {
 		out = append(out, Truot{KiemBatBien8, "delta mang chữ mà output guard chặn: chữ rời engine trước khi guard đọc"})
 	}
 	return out

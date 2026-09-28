@@ -19,6 +19,7 @@ import (
 	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/domain/areas"
 	"mobile/services/core/internal/domain/nepphieu"
+	"mobile/services/core/internal/gudoi"
 	"mobile/services/core/internal/huongdan"
 )
 
@@ -515,11 +516,10 @@ func chayBinhChon(_ context.Context, bc *BoiCanh, a *thamSoBinhChon) (ketQuaTho,
 
 // ---- group and own outings ------------------------------------------------
 
-// laNhom holds a group tool to the group bot with a group from the job, and
-// never a pair's turn (ChoCap): defence in depth behind the permission
-// table.
+// laNhom holds a group tool to the group bot with a group from the job:
+// defence in depth behind the permission table.
 func (bc *BoiCanh) laNhom() *loiTS {
-	if bc.Bot != obs.BotNhom || bc.NhomID == "" || bc.botQuyen() == BotCap {
+	if bc.Bot != obs.BotNhom || bc.NhomID == "" {
 		return &loiTS{loi: KhongDuocPhep}
 	}
 	return nil
@@ -586,6 +586,69 @@ func chayChuyenNhom(ctx context.Context, bc *BoiCanh, a *thamSoChuyenNhom) (ketQ
 		return ketQuaTho{}, err
 	}
 	return ketQuaTho{bangChung: voiNguon(cs, truyhoi.GroupHistory), coDuLieu: true}, nil
+}
+
+// ---- a couple's shared taste (ADR-0048) -------------------------------------
+
+// IDGuDoi prefixes the ledger ids of a couple's taste: IDGuDoi+<person id>
+// for one person's, IDGuDoi+"chung" for what both like. The id never reaches
+// a prompt (evidence is shown under aliases d1, d2, …).
+const IDGuDoi = "gu_doi:"
+
+const idGuChung = "chung"
+
+// laDoi holds the couple's tool to a couple's turn of the group assistant,
+// with a room from the job: defence in depth behind the permission table
+// and the toolset (quyenPhong).
+func (bc *BoiCanh) laDoi() *loiTS {
+	if bc.Bot != obs.BotNhom || !bc.Doi || bc.NhomID == "" {
+		return &loiTS{loi: KhongDuocPhep}
+	}
+	return nil
+}
+
+// nhanGu is a taste's tags as the vocabulary's labels, comma separated.
+func nhanGu(ids []string) string {
+	out := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if n := gudoi.Nhan(id); n != "" {
+			out = append(out, n)
+		}
+	}
+	return strings.Join(out, ", ")
+}
+
+// chayGuHaiBan returns the taste each person of the couple shared with the
+// chat, under the roster's label of this turn (NhanDoi), and what both like
+// when both did. A person the turn's roster has no label for is left out:
+// the tool never names somebody by a name it read itself. Nobody sharing is
+// an empty list the model reads as «unknown».
+func chayGuHaiBan(ctx context.Context, bc *BoiCanh, _ *khongThamSo) (ketQuaTho, error) {
+	if l := bc.laDoi(); l != nil {
+		return ketQuaTho{}, l
+	}
+	if bc.Nguon.Doi == nil {
+		return ketQuaTho{}, &loiTS{loi: LoiNguon}
+	}
+	gs, err := bc.Nguon.Doi.GuDoi(ctx, bc.NhomID)
+	if err != nil {
+		return ketQuaTho{}, err
+	}
+	var bcs []truyhoi.BangChung
+	var dung []gudoi.Gu
+	for _, g := range gs {
+		nhan := bc.NhanDoi[g.NguoiID]
+		thich := nhanGu(g.The)
+		if nhan == "" || thich == "" {
+			continue
+		}
+		dung = append(dung, g)
+		bcs = append(bcs, truyhoi.BangChung{ID: IDGuDoi + g.NguoiID, Nguon: truyhoi.GuDoi, Truong: map[string]string{"nguoi": nhan, "thich": thich}})
+	}
+	if chung := nhanGu(gudoi.Chung(dung)); chung != "" {
+		bcs = append(bcs, truyhoi.BangChung{ID: IDGuDoi + idGuChung, Nguon: truyhoi.GuDoi, Truong: map[string]string{"nguoi": "cả hai", "cung_thich": chung}})
+	}
+	return ketQuaTho{bangChung: bcs, them: map[string]any{"so_nguoi_chia": len(dung)}, coDuLieu: true}, nil
 }
 
 type thamSoK struct {
@@ -822,6 +885,25 @@ var congCusNhom = map[Ten]congCu{
 	ListGroupOutings: dk[thamSoChuyenNhom](ListGroupOutings, nil, chayChuyenNhom),
 }
 
+// congCusCapDoi are the couple's own tools (scope Doi): the shared taste of
+// ADR-0048.
+var congCusCapDoi = map[Ten]congCu{
+	GuHaiBan: dk[khongThamSo](GuHaiBan, nil, chayGuHaiBan),
+}
+
+// congCusDoi is a couple's table: the group's own tools and the couple's.
+// Only a couple's turn (BoiCanh.Doi) holds it.
+var congCusDoi = func() map[Ten]congCu {
+	out := map[Ten]congCu{}
+	for t, cc := range congCusCapDoi {
+		out[t] = cc
+	}
+	for t, cc := range congCusNhom {
+		out[t] = cc
+	}
+	return out
+}()
+
 var congCusNep = map[Ten]congCu{
 	ExplainScreen:     dk[khongThamSo](ExplainScreen, nil, chayGiaiThich),
 	SuggestScreen:     dk(SuggestScreen, kiemMan, chayMan),
@@ -842,36 +924,22 @@ func (bc *BoiCanh) ChoNep() *BoiCanh {
 	return bc
 }
 
-// ChoNhom gives the turn the group's own tools beside the common ones. The
-// engine calls it on every group turn's context.
+// ChoNhom gives the turn the group's own tools beside the common ones, and
+// on a couple's turn (Doi) the couple's as well. The engine calls it on
+// every group turn's context, after Doi is set.
 func (bc *BoiCanh) ChoNhom() *BoiCanh {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 	bc.rieng = congCusNhom
-	return bc
-}
-
-// congCusCap is the pair's own table: empty. A chat of two gets the common
-// tools and nothing of the group's (no poll draft, no group snapshot, no
-// group outings) or of Nếp's.
-var congCusCap = map[Ten]congCu{}
-
-// ChoCap gives a pair's turn (the room assistant in a chat of two) the
-// common tools only, and reads the permission table under BotCap, so a
-// group tool is neither declared nor callable. The engine calls it instead
-// of ChoNhom on every pair turn's context.
-func (bc *BoiCanh) ChoCap() *BoiCanh {
-	bc.mu.Lock()
-	defer bc.mu.Unlock()
-	bc.rieng = congCusCap
-	bc.bang = BotCap
+	if bc.Doi {
+		bc.rieng = congCusDoi
+	}
 	return bc
 }
 
 // congCu is tool t's implementation for this turn: a common tool, or one of
 // the bot's own table; false for a tool this turn has no table for (a
-// context built without ChoNep, ChoNhom or ChoCap offers the common tools
-// only).
+// context built without ChoNep or ChoNhom offers the common tools only).
 func (bc *BoiCanh) congCu(t Ten) (congCu, bool) {
 	if cc, ok := congCusChung[t]; ok {
 		return cc, true

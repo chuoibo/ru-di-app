@@ -893,8 +893,10 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 			return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
 		}
 		// Nhom is the group's port (its outings and member count, scoped by
-		// the job's room); the group's path reaches no other person's data.
-		nguon := tools.NguonDuLieu{Quan: quan, Cho: aidoc.Doc{C: doc}, Nhom: aidoc.Doc{C: doc}, CaNhan: aidoc.Doc{C: doc}}
+		// the job's room); Doi is a couple's shared taste (ADR-0048: only on
+		// a couple's turn, only people whose `chia_gu` covers the chat). The
+		// group's path reaches no other person's data beyond that consent.
+		nguon := tools.NguonDuLieu{Quan: quan, Cho: aidoc.Doc{C: doc}, Nhom: aidoc.Doc{C: doc}, CaNhan: aidoc.Doc{C: doc}, Doi: aidoc.Doc{C: doc}}
 		if mem.kho != nil {
 			nguon.TriNho = mem.kho
 		}

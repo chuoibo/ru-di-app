@@ -1783,8 +1783,10 @@ chữ chạy) là lát 12, làm ở nơi có `/impeccable`.
   (`TheAiView`), **không thẻ lồng thẻ**.
 - **Ký ở chân**: `sparkles` 15 + `caption` tông `ai`, «Rủ Đi AI · đọc {n}
   tin» hoặc «Rủ Đi AI · chỉ đọc lời nhờ». `n` là số máy chủ đã kiểm
-  (`doc.so_tin`), không phải số client khai. **Không mặt Nếp** (ADR-0036
-  §2.6), không màu mới: token có sẵn.
+  (`doc.so_tin`), không phải số client khai. Trong chat cặp đôi, câu trả lời
+  đã đọc gu đã chia nói thêm «· dùng gu của Linh» (hoặc «của Linh và Tú») từ
+  nhãn máy chủ ghi ở `doc.gu` (ADR-0048 §3.5); không đọc gu thì không nói gì
+  về gu. **Không mặt Nếp** (ADR-0036 §2.6), không màu mới: token có sẵn.
 - **Chip xem trước trên nút gửi** thay khối «Mình đang thấy» của khay: một
   dòng nền `aiSoft`, chữ `ink`, hai chữ bấm được tông `ai` (cặp `ai` trên
   `aiSoft` qua 4.5:1, `mau-tren-nen-ai`), «Kèm {n} tin gần đây · Xem · Chỉ

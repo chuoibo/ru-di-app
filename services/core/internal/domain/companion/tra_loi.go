@@ -54,7 +54,19 @@ type ReplyMeta struct {
 	// Read is how many shared turns the server confirmed belong to the room
 	// (the invocation's so_tin_doc), never the caller's own count.
 	Read int
+	// Gu are the roster labels of the people whose shared taste the answer
+	// used (a couple's gu_hai_ban, ADR-0048 §5), re-checked by the worker in
+	// the publishing transaction: the card says whose taste it read. Empty
+	// on every other answer, and then the card carries no `gu` at all.
+	Gu []string
 }
+
+// MaxReplyGu bounds the people a card names as whose taste it used: a
+// couple is two.
+const MaxReplyGu = 2
+
+// MaxReplyGuRune bounds one label (the roster's label, chatassist maxTenDoc).
+const MaxReplyGuRune = 60
 
 // GroundReply grounds each raw part against the catalogue and wraps the
 // survivors in the reply envelope. A part that fails grounding, has a kind a
@@ -62,8 +74,13 @@ type ReplyMeta struct {
 // MaxReplyParts is dropped rather than failing the answer; an answer with
 // nothing left is refused, which the worker records as invalid_ai_result.
 func GroundReply(meta ReplyMeta, parts []tree.Value, places []*tree.OrderedMap) (*tree.OrderedMap, error) {
-	if meta.InvocationID == "" || !replyCommands[meta.Command] || meta.Read < 0 || meta.Read > MaxReplyRead {
+	if meta.InvocationID == "" || !replyCommands[meta.Command] || meta.Read < 0 || meta.Read > MaxReplyRead || len(meta.Gu) > MaxReplyGu {
 		return nil, refuse("companion_reply_malformed")
+	}
+	for _, nhan := range meta.Gu {
+		if strings.TrimSpace(nhan) == "" || !utf8.ValidString(nhan) || utf8.RuneCountInString(nhan) > MaxReplyGuRune {
+			return nil, refuse("companion_reply_malformed")
+		}
 	}
 	catalogue := catalogueByID(places)
 	kept := tree.List{}
@@ -85,6 +102,13 @@ func GroundReply(meta ReplyMeta, parts []tree.Value, places []*tree.OrderedMap) 
 	doc := tree.NewOrderedMap()
 	doc.Set("so_tin", tree.NewInt(int64(meta.Read)))
 	doc.Set("chi_loi_nho", tree.Bool(meta.Read == 0))
+	if len(meta.Gu) > 0 {
+		gu := tree.List{}
+		for _, nhan := range meta.Gu {
+			gu = append(gu, tree.String(nhan))
+		}
+		doc.Set("gu", gu)
+	}
 	payload := tree.NewOrderedMap()
 	payload.Set("ban", tree.NewInt(1))
 	payload.Set("tac_gia", tree.String("rudi-ai"))

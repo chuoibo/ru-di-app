@@ -159,7 +159,17 @@ function doHopBam(kieu, khoa) {
   const r = el.getBoundingClientRect();
   const x = r.left + r.width / 2;
   const y = r.top + r.height / 2;
-  return { x, y, trongMan: x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight };
+  // What a press at the centre would actually land on. A control that is
+  // still sliding in (a sheet, a rail under a map) or sits under an overlay
+  // measures fine and is pressed "successfully" while the event goes to
+  // whatever is on top -- measured on /plan: the journey rail's centre was
+  // at y 776 over the «Khám phá» tab for the first few hundred ms, then 551.
+  const top = document.elementFromPoint(x, y);
+  const trungDich = top !== null && (top === el || el.contains(top));
+  const tren = trungDich || top === null
+    ? null
+    : top.getAttribute("aria-label") || top.textContent.replace(/\s+/g, " ").trim().slice(0, 40) || top.tagName;
+  return { x, y, trongMan: x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight, trungDich, tren };
 }
 
 /**
@@ -168,8 +178,14 @@ function doHopBam(kieu, khoa) {
  * `--headless=new` is the mode that renders like the real browser; the old
  * headless had its own layout quirks, which would make every number below a
  * measurement of the wrong thing.
+ *
+ * `webgl2: false` switches WebGL2 off outright. `--disable-gpu` alone does
+ * not: GitHub's ubuntu runner Chrome still hands out a WebGL2 context through
+ * its software fallback (2026-09-28, the no-WebGL2 test went red on main
+ * 16f24d5e and on every branch), so a test that needs "a browser without
+ * WebGL2" has to ask for one rather than assume the machine is that browser.
  */
-export async function launch(bin, { webgl = false } = {}) {
+export async function launch(bin, { webgl = false, webgl2 = true } = {}) {
   // Named here rather than inline in the args so `close()` can delete it. A
   // profile dir is ~4 MB and every test file makes one; left behind they had
   // reached 2421 dirs / 9.9 GB of /tmp on this machine, which is a slow way to
@@ -185,6 +201,7 @@ export async function launch(bin, { webgl = false } = {}) {
       ...(webgl
         ? ["--enable-unsafe-swiftshader", "--use-gl=angle", "--use-angle=swiftshader"]
         : ["--disable-gpu"]),
+      ...(webgl2 ? [] : ["--disable-webgl2"]),
       "--force-device-scale-factor=1",
       "--no-first-run",
       "--no-default-browser-check",
@@ -323,7 +340,7 @@ export async function launch(bin, { webgl = false } = {}) {
      *  the gate would report a menu that never opened as a menu with nothing
      *  in it. */
     async clickLabel(label) {
-      await this.bamVaoHop(await this.evaluate(doHopBam, "nhan", label), `aria-label ${JSON.stringify(label)}`);
+      await this.bamKhiDung("nhan", label, `aria-label ${JSON.stringify(label)}`);
     },
 
     /** The same real press, on the control whose visible words are `chu`.
@@ -338,7 +355,34 @@ export async function launch(bin, { webgl = false } = {}) {
      *  rather than "take the first". A test that silently pressed a different
      *  control with the same words would report on a screen nobody asked for. */
     async clickChu(chu) {
-      await this.bamVaoHop(await this.evaluate(doHopBam, "chu", chu), `chữ ${JSON.stringify(chu)}`);
+      await this.bamKhiDung("chu", chu, `chữ ${JSON.stringify(chu)}`);
+    },
+
+    /** Press only once the control is the thing under its own centre and has
+     *  stopped moving: two measurements 60 ms apart at the same point, both
+     *  hitting it. A person taps what they see; pressing mid-animation sends
+     *  the event to whatever the control is passing over, and the test fails
+     *  later somewhere unrelated. Nothing matched, ambiguous, or off screen
+     *  still fail at once (`bamVaoHop`); a control that stays covered fails
+     *  after 3 s naming what covers it. */
+    async bamKhiDung(kieu, khoa, moTa) {
+      const deadline = Date.now() + 3000;
+      let truoc = null;
+      for (;;) {
+        const box = await this.evaluate(doHopBam, kieu, khoa);
+        if (!box || box.trung !== undefined || !box.trongMan) return this.bamVaoHop(box, moTa);
+        const yen = truoc !== null && truoc.x === box.x && truoc.y === box.y;
+        if (box.trungDich && yen) return this.bamVaoHop(box, moTa);
+        if (Date.now() > deadline) {
+          throw new Error(
+            box.trungDich
+              ? `element with ${moTa} never stopped moving (centre ${Math.round(box.x)},${Math.round(box.y)})`
+              : `element with ${moTa} is covered at its centre by ${JSON.stringify(box.tren)}; a press there goes to that instead`,
+          );
+        }
+        truoc = box.trungDich ? box : null;
+        await new Promise((r) => setTimeout(r, 60));
+      }
     },
 
     /** Dispatch at a box `doHopBam` measured, or say why it refused to.

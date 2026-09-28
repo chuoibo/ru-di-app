@@ -98,3 +98,33 @@ test("màn đưa cho chip đúng gói sẽ gửi, và «Xem» liệt kê đúng 
   // The bundle frozen at the press is the one the chip showed.
   assert.match(live, /goi: goiSeGui\(goiChip, kemTin\)/);
 });
+
+// Bug 2026-09-28 (lab screenshot 08): the «Xem» sheet was a child of the chip,
+// and a Sheet fills its nearest parent, so it filled the 356x40 chip instead
+// of the screen. The sheet is now its own component the screen mounts at its
+// root, beside KhaySticker and MenuTin. No render harness here, so this reads
+// the source: the chip draws no Sheet, and both hosts mount the sheet at the
+// same depth as KhaySticker, never inside the chip's wrapper.
+test("tấm «Xem» không nằm trong chip: màn gắn nó ở gốc, cạnh các tấm khác", () => {
+  const chip = readFileSync(join(SRC, "screens", "chat", "ChipBoiCanh.tsx"), "utf8");
+  const thanChip = chip.slice(chip.indexOf("export function ChipBoiCanh("), chip.indexOf("export function TamXemBoiCanh("));
+  assert.ok(thanChip.length > 0, "không tìm thấy thân ChipBoiCanh");
+  assert.doesNotMatch(thanChip, /<Sheet\b/, "chip không được tự vẽ Sheet");
+  assert.match(thanChip, /onPress=\{onXem\}/, "«Xem» của chip chỉ báo cho màn");
+  assert.match(chip.slice(chip.indexOf("export function TamXemBoiCanh(")), /<Sheet accessibilityLabel="Những tin sẽ gửi kèm lời nhờ"/);
+
+  const thut = (d) => d.length - d.trimStart().length;
+  const live = readFileSync(join(SRC, "screens", "chat", "GroupChatLive.tsx"), "utf8");
+  assert.match(live, /<ChipBoiCanh [^\n]*onXem=\{\(\) => setXemBoiCanh\(true\)\}/);
+  const dong = live.split("\n");
+  const tam = dong.findIndex((d) => d.includes("<TamXemBoiCanh "));
+  const sticker = dong.findIndex((d) => d.includes("<KhaySticker "));
+  assert.ok(tam > 0 && sticker > 0, "thiếu TamXemBoiCanh hoặc KhaySticker");
+  assert.equal(thut(dong[tam]), thut(dong[sticker]), "TamXemBoiCanh phải cùng tầng với KhaySticker (gốc màn)");
+  assert.match(dong[tam], /goi=\{goiChip\}/, "tấm phải liệt kê đúng gói chip đếm");
+
+  const lab = readFileSync(join(HERE, "..", "app", "dev", "hai-lop-chat.tsx"), "utf8").split("\n");
+  const tamLab = lab.findIndex((d) => d.includes("<TamXemBoiCanh "));
+  const stickerLab = lab.findIndex((d) => d.includes("<KhaySticker "));
+  assert.ok(tamLab > 0 && thut(lab[tamLab]) === thut(lab[stickerLab]), "trang lab phải gắn tấm ở gốc như màn chat");
+});

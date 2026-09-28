@@ -5,10 +5,16 @@
 # cũng an toàn: 46 chỉ xoá F.
 #
 # Cả thang đồng ý lẫn vòng tờ giấy, qua HAI tài khoản thật trên một máy:
-#   C: hàng ghim «Tờ giấy của hai mình» → không gian giấy → đề nghị lập sổ.
-#   D: cùng chỗ ấy → «Người ấy đã đề nghị» → Đồng ý → sổ mở.
-#   D: «Rủ đi chơi» → bản phác → Gửi.
-#   C: mở tờ → «Ừ» → «Đã chốt».
+#   C: chat hai người thường là đám bạn, KHÔNG có hàng ghim «Tờ giấy»; vào
+#      qua «Cài đặt nhóm» → dòng «Tờ giấy của hai mình» → đề nghị lập sổ.
+#   D: vẫn đám bạn, nhưng thấy trong chat một hàng mỏng «… đề nghị lập sổ lời
+#      hẹn» (lời đề nghị của C chờ D) → «Xem lời đề nghị» → Đồng ý → sổ mở →
+#      đề nghị bật «Một đôi».
+#   C: hàng mỏng «… đề nghị hai bạn là «Một đôi»» → «Đồng ý là một đôi» →
+#      thành cặp đôi.
+#   D: giờ là cặp đôi, hàng ghim «Tờ giấy của hai mình» hiện trong chat →
+#      «Rủ đi chơi» → bản phác → Gửi.
+#   C: hàng ghim → mở tờ → «Ừ» → «Đã chốt».
 #
 # Vì sao phải hai tài khoản: một bậc đồng ý cần HAI người khác nhau, và «đồng ý»
 # một tờ giấy cũng thế (§3.4). Một máy đóng cả hai vai chỉ có ở bản trải nghiệm,
@@ -38,8 +44,10 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Ô soạn tin"
     timeout: 60000
-# Hàng ghim của cặp, dưới tiêu đề. Chỉ cặp mới có; hội bạn không.
-- assertVisible: "Tờ giấy của hai mình"
+# Chưa là cặp đôi: không có hàng ghim «Tờ giấy», chat như đám bạn. Lối vào
+# không gian giấy (và «Một đôi») là dòng trong cài đặt, có ở mọi chat hai người.
+- assertNotVisible: "Tờ giấy của hai mình"
+- tapOn: "Cài đặt nhóm"
 - tapOn: "Tờ giấy của hai mình"
 - extendedWaitUntil:
     visible: "Một chỗ cho chuyện hai mình"
@@ -81,7 +89,13 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Ô soạn tin"
     timeout: 60000
-- tapOn: "Tờ giấy của hai mình"
+# Vẫn là đám bạn, nhưng lời đề nghị của C đang chờ D trả lời: một hàng mỏng
+# ngay trong chat (không có nó thì D chỉ biết khi tự mò vào «Cài đặt nhóm»).
+- extendedWaitUntil:
+    visible: '.*đề nghị lập sổ lời hẹn\. Mở để xem và trả lời\.'
+    timeout: 60000
+- takeScreenshot: 47b2-hang-loi-moi
+- tapOn: '.*đề nghị lập sổ lời hẹn\. Mở để xem và trả lời\.'
 - extendedWaitUntil:
     visible: "Xem lời đề nghị"
     timeout: 60000
@@ -119,10 +133,16 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Tin nhắn"
 - tapOn: "Nhắn riêng"
+# Chưa là cặp đôi (mới D đề nghị), nên không có hàng ghim «Tờ giấy»; nhưng lời
+# đề nghị của D chờ C trả lời, nên hàng mỏng hiện và dẫn thẳng vào không gian giấy.
 - extendedWaitUntil:
-    visible: "Tờ giấy của hai mình"
+    visible: "Ô soạn tin"
     timeout: 60000
-- tapOn: "Tờ giấy của hai mình"
+- extendedWaitUntil:
+    visible: '.*đề nghị hai bạn là «Một đôi»\. Mở để xem và trả lời\.'
+    timeout: 60000
+- assertNotVisible: "Tờ giấy của hai mình"
+- tapOn: '.*đề nghị hai bạn là «Một đôi»\. Mở để xem và trả lời\.'
 - tapOn: "Mở sổ cặp đôi"
 - tapOn: "Đồng ý là một đôi"
 # Agreeing closes the sheet by itself; the header now names the couple.
@@ -144,6 +164,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Tin nhắn"
 - tapOn: "Nhắn riêng"
+# Cả hai đã bật «Một đôi»: giờ là cặp đôi, hàng ghim hiện dưới tiêu đề.
 - extendedWaitUntil:
     visible: "Tờ giấy của hai mình"
     timeout: 60000

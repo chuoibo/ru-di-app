@@ -86,8 +86,10 @@ func (h *Handler) promote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
-	if g.kind != "group" {
-		refuse(w, 409, "group_plan_only")
+	// A group or a chat of two (still open between its two people): both
+	// are rooms of friends and keep a shared plan alike.
+	if err = phongAi(r.Context(), tx, g); err != nil {
+		failure(w, err)
 		return
 	}
 	if _, err = tx.Exec(r.Context(), `SELECT pg_advisory_xact_lock(hashtextextended('chat_plan:'||$1||':'||$2,0))`, r.PathValue("context"), in.Source); err != nil {

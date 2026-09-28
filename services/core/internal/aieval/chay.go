@@ -21,6 +21,7 @@ import (
 	"mobile/services/core/internal/aiharness/tools"
 	"mobile/services/core/internal/aiharness/trinho"
 	"mobile/services/core/internal/aiharness/truyhoi"
+	"mobile/services/core/internal/gudoi"
 )
 
 // Roles a run plays in a corpus.
@@ -168,7 +169,7 @@ func chayLuot(ctx context.Context, c Ca, lap int, cc cachChay) (LuotDaCham, KetQ
 	}
 	l := LuotDaCham{
 		LuotDaChay: LuotDaChay{Turn: g.Turn, SuKien: sink.SuKien(), KetThuc: res.Record.KetThuc, Chu: res.Text, BanGhi: res.Record, MaKiem: g.MaKiem,
-			Phan: res.Phan, QuanIDs: res.QuanIDs, KetQuaNhap: res.KetQuaNhap, TheGioi: c.DauVao.TheGioi},
+			Phan: res.Phan, QuanIDs: res.QuanIDs, KetQuaNhap: res.KetQuaNhap, TheGioi: c.DauVao.TheGioi, GuDung: res.GuDung},
 		BuocKichBan: cc.buoc,
 		NhatKy:      nhatKy.String(),
 		// How many replies the script holds: a turn that asked for more ran
@@ -405,7 +406,11 @@ func nguonCua(g *TheGioi, luc time.Time) tools.NguonDuLieu {
 		_, _ = tn.Ghi(context.Background(), g.NguoiHoi, trinho.SuThatMoi{NoiDung: f.NoiDung, Loai: trinho.LoaiSuThat(f.Loai), TuLuc: luc, Nguon: trinho.NoiRo})
 	}
 	nhom := &testkit.Nhom{ChuyenDis: bang(g.ChuyenDi, truyhoi.GroupHistory), SoNguoi: g.SoThanhVien}
-	return tools.NguonDuLieu{Quan: quan, Cho: cho, Nhom: nhom, TriNho: tn}
+	doi := &testkit.GuDoi{}
+	for _, gu := range g.GuDoi {
+		doi.Gu = append(doi.Gu, gudoi.Gu{NguoiID: gu.NguoiID, The: append([]string(nil), gu.The...)})
+	}
+	return tools.NguonDuLieu{Quan: quan, Cho: cho, Nhom: nhom, TriNho: tn, Doi: doi}
 }
 
 // phienBanPrompt names the prompt version of every surface b's cases run,
@@ -414,6 +419,9 @@ func phienBanPrompt(b Bo, h Hang) string {
 	co := map[string]bool{}
 	for _, c := range b.Ca {
 		co[c.BeMat] = true
+		if c.DauVao.Nhom != nil && c.DauVao.Nhom.Doi {
+			co[string(obs.BotDoi)] = true
+		}
 	}
 	var out []string
 	if co[string(obs.BotNep)] {
@@ -421,6 +429,9 @@ func phienBanPrompt(b Bo, h Hang) string {
 	}
 	if co[string(obs.BotNhom)] {
 		out = append(out, "nhom:"+h.PromptVersionNhom)
+	}
+	if co[string(obs.BotDoi)] {
+		out = append(out, "doi:"+h.PromptVersionDoi)
 	}
 	return strings.Join(out, " ")
 }

@@ -52,14 +52,15 @@ import { useBanNhap } from "../../chat/useBanNhap";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { useChatChanges } from "../../chat/useChatChanges";
 import { useChatAi } from "../../chat/useChatAi";
-import { chuHangLoiGoi, laTraLoiDangCho, lenhSanSang, loiGoiCuaPhong, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
+import { chuHangLoiGoi, laCapDoi, laTraLoiDangCho, lenhSanSang, loiGoiCuaPhong, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
 import { luotChoNguoiXem } from "../../ai/phong-ai";
 import { useRoomAi } from "../../ai/useRoomAi";
 import { timNhacAi } from "../../chat/nhac-ai";
 import { goiSeGui } from "../../chat/chip-boi-canh";
-import { chuKhay, lenhGoiY } from "../../chat/khay-cong-cu";
+import { MO_DAU_HOI_AI, lenhGoiY } from "../../chat/khay-cong-cu";
 import type { BoiCanh } from "../../ai/boi-canh";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
+import { loaiSoCua } from "../../so/ban-tinh";
 import { useRudiSession } from "../../session";
 import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
 import { bangMauChat, mucNguoi, typography, useRudiTheme } from "../../theme";
@@ -76,7 +77,7 @@ import { MenuTin } from "./MenuTin";
 import { TheAiView } from "./TheAi";
 import { TraLoiAi } from "./TraLoiAi";
 import { HangTraLoiAiDangViet, TraLoiAiDangViet } from "./TraLoiAiDangViet";
-import { ChipBoiCanh } from "./ChipBoiCanh";
+import { ChipBoiCanh, TamXemBoiCanh } from "./ChipBoiCanh";
 import { CongCuChat, ToHen, type KhayChat } from "./SoHen";
 import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
 import { KhayToHenChung } from "./ToHenChungKhay";
@@ -154,6 +155,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // Social v1.1 (ADR-0021): the sticker tray, the long-press menu of one
   // message, the message being replied to, and the group settings sheet.
   const [khaySticker, setKhaySticker] = useState(false);
+  // The chip's «Xem» sheet, mounted at this screen's root like the others.
+  const [xemBoiCanh, setXemBoiCanh] = useState(false);
   const [khay, setKhay] = useState<KhayChat>(null);
   const toHenChung = useToHenChung(contextId, personId);
   const [xacNhanBoToHen, setXacNhanBoToHen] = useState(false);
@@ -206,17 +209,24 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // that place opens the other person's profile instead.
   const nhanRieng = laPair(nhom);
   const nguoiKiaId = nhom?.counterpart?.id;
-  // What Nếp may know here: the kind of conversation and, for a group, how many
-  // are in it. Never a name and never a message -- chat v2 is end to end
-  // encrypted, and Nếp does not read chat on its own (ADR-0033 §2.5). Before
-  // this, Nếp opened in a couple's conversation said it had no idea where the
-  // person was (QA 23/09).
+  // Owner decision 2026-09-28: two classes. A group and an ordinary
+  // two-person chat are friends, with the same AI and tools; a two-person chat
+  // where both turned «Một đôi» on is a couple, which adds the pair's paper
+  // and the couple stickers. Only the server knows the second fact
+  // (`cap_doi`); an older server, or capabilities not read yet, is friends.
+  const capDoi = nhanRieng && laCapDoi(ai.capabilities);
+  // What Nếp may know here: the kind of notebook (friends `hoi`, or a
+  // couple's `doi`, decided in one place by `loaiSoCua`) and how many are in
+  // the room. Never a name and never a message -- chat v2 is end to end
+  // encrypted, and Nếp does not read chat on its own (ADR-0033 §2.5).
   useNepNguCanh({
     man: "groups/[id]/chat",
     tieuDe: nhanRieng ? "cuộc trò chuyện của hai bạn" : "chat nhóm",
-    loaiSo: !nhanRieng ? "hoi" : undefined,
-    soLieu: !nhanRieng ? { soNguoi: nhom?.member_count ?? 0 } : undefined,
-    goiY: nhanRieng ? ["Tuần này rủ nhau đi đâu?", "Mở tờ giấy của hai mình"] : ["Gợi ý chỗ cho cả nhóm", "Tóm tắt kèo sắp tới"],
+    loaiSo: nhom ? loaiSoCua(nhom, { bat: capDoi }) : undefined,
+    soLieu: nhom ? { soNguoi: nhom.member_count ?? 0 } : undefined,
+    goiY: capDoi
+      ? ["Tuần này rủ nhau đi đâu?", "Mở tờ giấy của hai mình"]
+      : nhanRieng ? ["Tuần này rủ nhau đi đâu?", "Tóm tắt kèo sắp tới"] : ["Gợi ý chỗ cho cả nhóm", "Tóm tắt kèo sắp tới"],
   });
   // The group's theme colours only the sender's bubble and the reader's own
   // reaction chip; the screen's leading tone stays the brand accent.
@@ -307,8 +317,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     () => gomBoiCanhChat({ tin: tinHien, personId, tenCua: (id) => tenTheoId[id] }),
     [tinHien, personId, tenTheoId],
   );
+  // Every room pins its open tờ hẹn: a friends' two-person chat plans like a group.
   const toHen = useMemo(() => {
-    if (nhanRieng) return null;
     const dangMo = (tin: Tin) => {
       const card = docTheAi(tin.card);
       if (card.loai === "itinerary") return !!card.nhapChung && card.nhapChung.status === "open" && !card.outingId;
@@ -323,12 +333,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     // edit outranks a finished one even when the finished one is newer. Without
     // this the strip says "Đã thành kèo" over an open sheet in the same screen.
     return chat.tin.find(dangMo) ?? chat.tin.find(bat) ?? null;
-  }, [chat.tin, changes.votes, nhanRieng]);
+  }, [chat.tin, changes.votes]);
   const coChu = nhap.trim().length > 0;
-  // The message being typed also asks the AI (ADR-0046). In a pair only a
-  // mention does, as `hoi` (design 2026-09-28): the chip reads that command's
-  // readiness from the server, so it never promises what the server refuses.
-  const nhacDangGo = timNhacAi(nhap, nhanRieng);
+  // The message being typed also asks the AI (ADR-0046), the same way in
+  // every room: the chip reads that command's readiness from the server, so
+  // it never promises what the server refuses.
+  const nhacDangGo = timNhacAi(nhap);
   // What would go with it: nothing at all when this server takes no bundle.
   const goiChip = ai.capabilities?.ai.share_scope === "caller_attached" ? boiCanhAi : null;
   const moLenh = (nhap.startsWith("/") && !nhap.includes(" ")) || nhap === "@";
@@ -397,9 +407,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     // (ADR-0046): it is sent exactly like any other, and only once the server
     // has stored it is the AI asked, naming it. The key is the send's own, so
     // retrying either half can never double the other; the bundle is frozen
-    // here, at the press, before the question joins the list it reads. In a
-    // pair the same holds for `@Rủ Đi`, which asks `hoi` (design 2026-09-28).
-    const nhac = command === undefined ? timNhacAi(body, nhanRieng) : null;
+    // here, at the press, before the question joins the list it reads.
+    const nhac = command === undefined ? timNhacAi(body) : null;
     const attempt = newAttempt();
     if (nhac !== null && lenhSanSang(ai.capabilities, nhac.lenh)) {
       capChoTin.current.set(attempt.key, { lenh: nhac.lenh, loiNho: nhac.loiNho, goi: goiSeGui(goiChip, kemTin) });
@@ -772,7 +781,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           </Pressable>
           <IconButton accessibilityLabel="Cài đặt nhóm" icon="ellipsis-horizontal" quiet onPress={() => setCaiDatMo(true)} />
         </View>
-        {nhanRieng && phien !== null ? <HangToGiaySong contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
+        {/* The pinned paper is a couple's; a friends' pair reaches the paper
+            (and «Một đôi») from the settings row «Tờ giấy của hai mình», and
+            sees a slim line here only while the other's proposal waits for
+            an answer (`hangGhimChat`). Pairs only: a group has no notebook. */}
+        {nhanRieng && phien !== null ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
         <View style={styles.baoMat}>
           <Ionicons name="lock-open-outline" size={13} color={colors.inkSoft} />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text>
@@ -785,7 +798,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           a bubble cut by the bar. */}
       {toHen ? (
         <View style={[styles.dayGhim, { backgroundColor: colors.ground, borderBottomColor: colors.line }]} testID="day-ghim">
-          <ToHen tin={toHen} onOpen={moToHen} onVote={(tin) => {
+          <ToHen haiNguoi={nhanRieng} tin={toHen} onOpen={moToHen} onVote={(tin) => {
             const index = hang.findIndex((row) => row.loai === "tin" && row.tin.id === tin.id);
             if (index >= 0) danhSachRef.current?.scrollToIndex({ index, animated: !reduced, viewPosition: 0.5 });
           }} />
@@ -799,7 +812,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             <Nep pose="moi" size={96} />
             <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : "Có hội rồi. Mở lời thôi."}</Text>
             <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
-            {!nhanRieng ? <RudiButton label="Rủ hội một buổi" variant="outline" full={false} onPress={() => setKhay("plan")} /> : null}
+            {/* Every room, a friends' pair included, can start a plan from here. */}
+            <RudiButton label="Rủ hội một buổi" variant="outline" full={false} onPress={() => setKhay("plan")} />
           </View>
         </View>
       ) : null}
@@ -899,7 +913,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             </View>
           ) : dangGuiThan !== null ? (
             <View style={styles.choGui}>
-              {timNhacAi(dangGuiThan, nhanRieng) !== null ? (
+              {timNhacAi(dangGuiThan) !== null ? (
                 <View style={styles.hang}>
                   <View style={[styles.khoi, styles.khoiAi]}>
                     <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
@@ -1034,13 +1048,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
         onPoll={gui}
         // The tray no longer asks the AI itself: it starts the message.
-        onHoiAi={() => { setKhay(null); if (timNhacAi(nhapRef.current.text, nhanRieng) === null) doiNhap((chuKhay(nhanRieng).moDauHoiAi + nhapRef.current.text).trimEnd() + " "); }}
+        onHoiAi={() => { setKhay(null); if (timNhacAi(nhapRef.current.text) === null) doiNhap((MO_DAU_HOI_AI + nhapRef.current.text).trimEnd() + " "); }}
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
-        onToGiay={nhanRieng ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
+        onToGiay={capDoi ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
       {!khongNhanTin && nhacDangGo !== null ? (
         <View style={{ marginHorizontal: space.md }}>
-          <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
+          <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} onXem={() => setXemBoiCanh(true)} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
         </View>
       ) : null}
       {khongNhanTin ? (
@@ -1091,7 +1105,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           />
         </View>
       )}
-      <KhaySticker haiNguoi={nhanRieng} onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
+      <KhaySticker capDoi={capDoi} onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
+      <TamXemBoiCanh goi={goiChip} haiNguoi={nhanRieng} onClose={() => setXemBoiCanh(false)} open={xemBoiCanh && !khongNhanTin && nhacDangGo !== null} />
       <MenuTin
         cuaToi={menuTin !== null && menuTin.author_id === personId}
         onClose={() => setMenuTin(null)}

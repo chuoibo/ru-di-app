@@ -32,9 +32,14 @@ type Bot string
 const (
 	BotNep  Bot = "nep"
 	BotNhom Bot = "nhom"
+	// BotDoi names a couple's turn in the record only (metrics v6): a chat
+	// of two whose two people both turned on «Một đôi». The turn itself runs
+	// as BotNhom (the same router schema, tools and policy); no router, tool
+	// table or engine switch takes BotDoi.
+	BotDoi Bot = "doi"
 )
 
-func (v Bot) Valid() bool { return v == BotNep || v == BotNhom }
+func (v Bot) Valid() bool { return v == BotNep || v == BotNhom || v == BotDoi }
 
 // Lenh is the command the job carried.
 type Lenh string

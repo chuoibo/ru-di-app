@@ -40,7 +40,7 @@ const (
 
 var tatKiem = map[string]bool{
 	KiemBatBien1: true, KiemBatBien2: true, KiemBatBien3: true, KiemBatBien4: true, KiemBatBien7: true, KiemBatBien8: true,
-	KiemBatBien9: true, KiemThe: true,
+	KiemBatBien9: true, KiemBatBien11: true, KiemThe: true,
 	KiemKetThuc: true, KiemMa: true, KiemGuard: true, KiemOutGuard: true, KiemSoGoiModel: true, KiemSuKien: true,
 	KiemLuotBo: true, KiemPhieuBo: true, KiemChu: true, KiemYeuCauChua: true, KiemYeuCauKhongChua: true,
 	KiemTanCongCanary: true, KiemMaKiem: true, KiemKhongBiaDiaDiem: true, KiemKichBanLech: true,
@@ -290,6 +290,19 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 		}
 		if k.The.SoKhoan != nil && soKhoan(l.Phan) != *k.The.SoKhoan {
 			bad(KiemThe, "so_khoan %d, kỳ vọng %d", soKhoan(l.Phan), *k.The.SoKhoan)
+		}
+		// doc.gu: whose shared taste the answer read (ADR-0048 §5); a case
+		// that names none expects none.
+		var gu []string
+		for _, n := range l.GuDung {
+			gu = append(gu, n.Nhan)
+		}
+		muon := []string{}
+		if k.The.Gu != nil {
+			muon = *k.The.Gu
+		}
+		if strings.Join(gu, ",") != strings.Join(muon, ",") {
+			bad(KiemThe, "doc.gu %v, kỳ vọng %v", gu, muon)
 		}
 	}
 	if len(l.YeuCau) > l.SoBuocKichBan {

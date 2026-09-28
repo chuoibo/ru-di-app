@@ -46,6 +46,14 @@ type BoiCanh struct {
 	NguoiHoi string
 	// NhomID is the group the question was asked in (group bot only).
 	NhomID string
+	// Doi says the room is a couple (aiharness.Turn.Doi, read by the worker
+	// from the database): only then is a couple's tool (scope Doi, the
+	// shared taste of ADR-0048) declared, offered or run.
+	Doi bool
+	// NhanDoi is each member's label as the turn's roster gives it (never a
+	// name a tool reads from the database), by person id: what a couple's
+	// tool shows the model beside a person's taste.
+	NhanDoi map[string]string
 	// LoiNguoiHoi is the person's own message of this turn, cleaned
 	// structurally (preprocess.LamSach). A fact remember_fact stores is a
 	// span of it, found by exact identity and taken from it (kiemGhiNho):
@@ -98,12 +106,9 @@ type BoiCanh struct {
 	HanGoi time.Duration
 
 	mu sync.Mutex
-	// rieng is the bot's own tool table (ChoNep, ChoNhom, ChoCap); nil
-	// offers the common tools only.
-	rieng map[Ten]congCu
-	// bang, when set, is the permission table's key for this turn in place
-	// of Bot (ChoCap: BotCap).
-	bang   obs.Bot
+	// rieng is the bot's own tool table (ChoNep, ChoNhom); nil offers the
+	// common tools only.
+	rieng  map[Ten]congCu
 	sai    int
 	epCuoi bool
 	// buoc is the agent step whose tool calls run now (DatBuoc; 0 for the
@@ -308,17 +313,6 @@ func (bc *BoiCanh) quyen() *Quyen {
 	return bc.Quyen
 }
 
-// botQuyen is the key this turn reads the permission table under: Bot,
-// or the one its tool table set (ChoCap).
-func (bc *BoiCanh) botQuyen() obs.Bot {
-	bc.mu.Lock()
-	defer bc.mu.Unlock()
-	if bc.bang != "" {
-		return bc.bang
-	}
-	return bc.Bot
-}
-
 func (bc *BoiCanh) khoiTao() {
 	if bc.cho == nil {
 		bc.cho = map[string]choGhi{}
@@ -334,7 +328,7 @@ func (bc *BoiCanh) khoiTao() {
 // router read the person asking for it (BoiCanh.YDinh).
 func (bc *BoiCanh) DuocPhep() []Ten {
 	var out []Ten
-	for _, t := range bc.quyen().DuocPhep(bc.botQuyen(), bc.HanChe) {
+	for _, t := range bc.quyenPhong(bc.HanChe) {
 		if y, ghi := yDinhGhi[t]; ghi && !coYDinh(bc.YDinh, y) {
 			continue
 		}
@@ -344,6 +338,15 @@ func (bc *BoiCanh) DuocPhep() []Ten {
 		out = append(out, t)
 	}
 	return out
+}
+
+// quyenPhong is the bot's granted toolset for this room: a couple's turn
+// (Doi) adds the couple's own tools, every other room never has them.
+func (bc *BoiCanh) quyenPhong(hanChe bool) []Ten {
+	if bc.Doi {
+		return bc.quyen().DuocPhepDoi(bc.Bot, hanChe)
+	}
+	return bc.quyen().DuocPhep(bc.Bot, hanChe)
 }
 
 func coTen(ts []Ten, t Ten) bool {

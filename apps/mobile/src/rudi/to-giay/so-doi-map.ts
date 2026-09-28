@@ -7,7 +7,44 @@
  * losing the line somebody kept.
  */
 import type { ToGiay } from "./to-giay";
-import type { MucDich, SoHaiNguoi, ToTomTat } from "./to-giay-song";
+import type { DeNghiCho, MucDich, SoHaiNguoi, ToTomTat } from "./to-giay-song";
+
+/**
+ * What a two-person chat pins under its title, decided from the notebook.
+ *
+ * - A couple (`cap_doi`) keeps the full «Tờ giấy» row, naming any proposal the
+ *   other person filed.
+ * - A friends' pair pins nothing of the paper (owner decision 2026-09-28) --
+ *   EXCEPT a question only I can answer: the other person proposed opening the
+ *   notebook (`lap_so`) or «Một đôi» (`bat_doi`) and I have not said yes. Without
+ *   it the proposal was invisible from the chat, reachable only through
+ *   «Cài đặt nhóm» (regression of slice P2). My own proposal is no question for
+ *   me, and answering it removes the row on the next read.
+ * - A group pins nothing, and must never read a notebook (it has none: 404).
+ */
+export type HangGhimChat =
+  | { loai: "to-giay"; deNghi: DeNghiCho | undefined }
+  | { loai: "loi-moi"; deNghi: DeNghiCho }
+  | null;
+
+export function hangGhimChat({
+  haiNguoi,
+  capDoi,
+  so,
+  toiId,
+}: {
+  haiNguoi: boolean;
+  capDoi: boolean;
+  so: SoHaiNguoi | null;
+  toiId: string;
+}): HangGhimChat {
+  if (!haiNguoi) return null;
+  if (capDoi) return { loai: "to-giay", deNghi: so?.pending_proposals.find((d) => d.proposed_by_id !== toiId) };
+  const deNghi = so?.pending_proposals.find(
+    (d) => d.proposed_by_id !== toiId && !d.my_granted && (d.purpose === "lap_so" || d.purpose === "bat_doi"),
+  );
+  return deNghi ? { loai: "loi-moi", deNghi } : null;
+}
 
 /**
  * Write the two constraint boxes: in order, one at a time, and only the box
