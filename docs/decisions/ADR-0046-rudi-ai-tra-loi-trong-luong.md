@@ -302,4 +302,6 @@ chủ sản phẩm, không phải chữ ký Lead.
   chữ và bản ghi, không cho quyền: lượt cặp đôi đi nguyên đường nhóm (`Bot nhom`), router đọc tệp bot
   cặp đôi, câu trả lời đọc lời nhắc cặp đôi (`prompts/doi_agent.txt`, «hai bạn»), bản ghi số đo ghi
   `bot=doi` (`ai_turn_metrics` v6). Chat hai người của đám bạn giữ lời nhắc nhóm và `bot=nhom`. Gu đã
-  chia (P5) chưa đọc. Luật §2.9 (AI không chạm tiền) áp cho mọi phòng đám bạn, nhóm cũng như chat hai người.
+  chia (P5) đọc theo ADR-0048: chỉ lượt cặp đôi được khai công cụ `gu_hai_ban` (đây là chỗ duy nhất
+  `Turn.Doi` quyết quyền), chỉ gu của người đã bật `chia_gu` từ mốc ADR-0048, kiểm lại lúc đăng. Luật
+  §2.9 (AI không chạm tiền) áp cho mọi phòng đám bạn, nhóm cũng như chat hai người.

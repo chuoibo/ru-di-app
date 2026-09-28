@@ -10,8 +10,10 @@ import (
 // BoCongCu builds the turn's ADK tools: one functiontool per tool the
 // permission table grants the bot (Quyen.DuocPhep(bot, false)), in registry
 // order, each declared with the contract's argument schema and the long
-// description. The declarations are the same for every turn and every step
-// of the bot, so the request keeps one prefix for Gemini's implicit cache;
+// description; a couple's turn (Doi) adds the couple's own tools
+// (Quyen.DuocPhepDoi, ADR-0048). The declarations are the same for every
+// turn and every step of the bot in one class of room, so the request keeps
+// one prefix per class for Gemini's implicit cache;
 // what this turn and this step may call is narrowed by TenChoPhep
 // (FunctionCallingConfig.AllowedFunctionNames) and enforced again by
 // TruocTool. A tool the table does not grant the bot is never declared:
@@ -21,7 +23,7 @@ func (bc *BoiCanh) BoCongCu() ([]tool.Tool, error) {
 	bc.khoiTao()
 	bc.mu.Unlock()
 	var out []tool.Tool
-	for _, t := range bc.quyen().DuocPhep(bc.Bot, false) {
+	for _, t := range bc.quyenPhong(false) {
 		cc, ok := bc.congCu(t)
 		if !ok {
 			return nil, fmt.Errorf("tools: %s is granted to %s but this turn has no implementation of it (ChoNep, ChoNhom)", t, bc.Bot)

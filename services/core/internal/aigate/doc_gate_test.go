@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"go/types"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -432,6 +433,97 @@ var nepCongCuDoc = map[string]string{
 	"nep_quen":    "keyed hashes of facts the asker forgot: a forgotten fact is not written again",
 	"nep_su_kien": "counts by kind of the asker's own typed app events for what_you_remember: kinds and ids, no words",
 	"nep_xoa":     "the asker's deletion ledger: forget_fact runs its saga (ids, closed codes, counts)",
+	// A couple's shared taste (ADR-0048), aidoc.Doc.GuDoi behind the tool
+	// gu_hai_ban. The walk reaches it from Nếp's roots because one engine
+	// serves both bots; no Nếp turn can call it: the permission table grants
+	// it to the group assistant only (scope doi, refused to Nếp at load,
+	// TestGuHaiBanNepBiTuChoi) and the run refuses any turn that is not a
+	// couple's (tools.laDoi). What the reads may name is pinned column by
+	// column in TestGuDoiDocDungCot: ids, consent times and closed tags,
+	// never a name, a budget, a message or the notebook's shared constraints.
+	"pair_notebooks":          "gu_hai_ban: the room's notebook id, to find its live cycle (ids only)",
+	"pair_notebook_cycles":    "gu_hai_ban: the room's live cycle (id, state, created_at)",
+	"pair_cycle_participants": "gu_hai_ban: the cycle's two people (ids), whom «Một đôi» and chia_gu are asked of",
+	"pair_consents":           "gu_hai_ban: bat_doi and chia_gu rows (person, proposal, granted/revoked times): is the room a couple, whose chia_gu covers the chat (ADR-0048 cutoff)",
+	"pair_consent_proposals":  "gu_hai_ban: the purpose, deadline and completion of those consents' proposals (closed values and times)",
+	"person_interests":        "gu_hai_ban: closed-vocabulary taste tags, only of the people whose chia_gu covers the chat, only in a couple's turn",
+}
+
+// guDoiGoc is the couple's taste source: every read the tool gu_hai_ban
+// can cause.
+const guDoiGoc = "(mobile/services/core/internal/aidoc.Doc).GuDoi"
+
+// guDoiBang are the tables the couple's taste source reads, and all of them
+// (a table no read needs is a stale entry).
+var guDoiBang = []string{"pair_notebooks", "pair_notebook_cycles", "pair_cycle_participants", "pair_consents", "pair_consent_proposals", "person_interests"}
+
+// guDoiCam is what a read of the couple's taste may never name (ADR-0048
+// §6, data minimisation): the notebook's shared constraints, a person's
+// name, a budget, a message's words, any free-text content.
+var guDoiCam = regexp.MustCompile(`(?i)\b(pair_shared_constraints|display_name|budget\w*|body|content|messages)\b`)
+
+// viPhamGuDoi is every SQL statement of qs that names something the taste
+// source may not, or a table outside guDoiBang.
+func viPhamGuDoi(qs []string) []string {
+	var out []string
+	for _, q := range qs {
+		if !sqlLike.MatchString(q) {
+			continue
+		}
+		if guDoiCam.MatchString(q) {
+			out = append(out, q)
+			continue
+		}
+		for _, m := range sqlTable.FindAllStringSubmatch(q, -1) {
+			if !slices.Contains(guDoiBang, strings.ToLower(m[1])) {
+				out = append(out, q)
+				break
+			}
+		}
+	}
+	return out
+}
+
+// The couple's taste source reads exactly its six tables and names nothing
+// of a person but ids, consent times and closed tags -- followed into every
+// package it reaches.
+func TestGuDoiDocDungCot(t *testing.T) {
+	g := load(t)
+	c := g.reach(g.root(t, guDoiGoc))
+	used := ragTables(c.strings)
+	for _, name := range guDoiBang {
+		if _, ok := used[name]; !ok {
+			t.Errorf("the taste source never reads %s: the walk slipped or the entry is stale", name)
+		}
+	}
+	for _, v := range viPhamGuDoi(c.strings) {
+		t.Errorf("the taste source reads beyond its reach: %q", v)
+	}
+	if !c.funcs["mobile/services/core/internal/gudoi.NguoiDuocDung"] {
+		t.Fatal("the taste source does not decide eligibility through gudoi.NguoiDuocDung")
+	}
+	t.Logf("taste source closure: %d functions, tables %v", len(c.funcs), sortedKeys(used))
+}
+
+// Canaries: a taste read that names the shared constraints, a display name
+// or a message is a violation; one reading a table outside the six is too;
+// the source's own statements are not.
+func TestGuDoiGateCanRed(t *testing.T) {
+	for _, q := range []string{
+		"SELECT content FROM pair_shared_constraints WHERE cycle_id = $1::uuid",
+		"SELECT p.display_name, i.tag FROM person_interests i JOIN people p ON p.id = i.person_id WHERE i.person_id = ANY($1::uuid[])",
+		"SELECT tag FROM person_interests JOIN messages m ON m.author_id = person_id",
+		"SELECT person_id FROM memberships WHERE context_id = $1",
+	} {
+		if len(viPhamGuDoi([]string{q})) != 1 {
+			t.Errorf("the gate let through %q", q)
+		}
+	}
+	g := load(t)
+	c := g.reach(g.root(t, guDoiGoc))
+	if v := viPhamGuDoi(c.strings); len(v) != 0 {
+		t.Fatalf("identity: the source's own reads are flagged: %v", v)
+	}
 }
 
 // nepWriteOnly are the tables Nếp's path may write and never read, each named

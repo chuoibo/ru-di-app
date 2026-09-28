@@ -13,6 +13,7 @@
     {"ten": "draft_poll", "lop": "nhap", "pham": "nhom", "bot": ["nhom"]},
     {"ten": "group_snapshot", "lop": "doc", "pham": "nhom", "bot": ["nhom"]},
     {"ten": "list_group_outings", "lop": "doc", "pham": "nhom", "bot": ["nhom"]},
+    {"ten": "gu_hai_ban", "lop": "doc", "pham": "doi", "bot": ["nhom"]},
     {"ten": "my_upcoming_outings", "lop": "doc", "pham": "me", "bot": ["nep"]},
     {"ten": "recall_memory", "lop": "doc", "pham": "me", "bot": ["nep"]},
     {"ten": "remember_fact", "lop": "tri_nho", "pham": "me", "bot": ["nep"]},

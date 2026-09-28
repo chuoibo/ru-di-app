@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/hieu"
@@ -168,6 +169,31 @@ var caBatBien = []caBatBienT{
 		l.BanGhi.Bot = obs.BotDoi
 	}, "bat_bien_11_lop_phong"},
 	{"Nếp mang cờ cặp đôi", func(l *LuotDaCham) { l.Turn.Doi = true }, "bat_bien_11_lop_phong"},
+	// A couple's shared taste (ADR-0048): a room of friends never declares
+	// gu_hai_ban nor reads a taste; a couple reads only its members', and
+	// its card names exactly whose taste it read, by the roster's label.
+	{"đám bạn khai gu_hai_ban", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.YeuCau[1].CongCu = []string{"gu_hai_ban"}
+	}, "bat_bien_11_lop_phong,bat_bien_3_cong_cu"},
+	{"Nếp khai gu_hai_ban", func(l *LuotDaCham) { l.YeuCau[1].CongCu = []string{"gu_hai_ban"} }, "bat_bien_3_cong_cu"},
+	{"đám bạn đọc gu", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.Turn.ThanhVien = []aiharness.ThanhVienNhom{{ID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Ten: "Tú"}, {ID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", Ten: "Lan"}}
+		l.GuDung = []aiharness.NguoiGu{{ID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", Nhan: "Lan"}}
+	}, "bat_bien_11_lop_phong"},
+	{"cặp đôi đọc gu người ngoài phòng", func(l *LuotDaCham) {
+		theNhomChu(l)
+		thanhNhom(l, true)
+		l.Turn.ThanhVien = []aiharness.ThanhVienNhom{{ID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Ten: "Tú"}, {ID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", Ten: "Lan"}}
+		l.GuDung = []aiharness.NguoiGu{{ID: "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa", Nhan: "Lan"}}
+	}, "bat_bien_11_lop_phong"},
+	{"cặp đôi thẻ nêu nhãn ngoài danh bạ", func(l *LuotDaCham) {
+		theNhomChu(l)
+		thanhNhom(l, true)
+		l.Turn.ThanhVien = []aiharness.ThanhVienNhom{{ID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Ten: "Tú"}, {ID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", Ten: "Lan"}}
+		l.GuDung = []aiharness.NguoiGu{{ID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", Nhan: "Linh Trang"}}
+	}, "bat_bien_9_the_tra_loi"},
 	{"nhóm khai recall_memory", func(l *LuotDaCham) {
 		theNhomChu(l)
 		l.YeuCau[1].CongCu = []string{"recall_memory"}

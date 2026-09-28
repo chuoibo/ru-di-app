@@ -55,6 +55,22 @@ test("thẻ tra_loi được đọc từng phần, bằng đúng hàm đọc th�
   assert.equal(chuKyTraLoi(chiLoiNho), "Rủ Đi AI · chỉ đọc lời nhờ");
 });
 
+// ADR-0048 §5: an answer that used a couple's shared taste says whose, from
+// the labels the server wrote under doc.gu; a malformed doc.gu says nothing.
+test("chân thẻ nói dùng gu của ai", () => {
+  const mot = docTheAi(traLoi({ doc: { so_tin: 3, chi_loi_nho: false, gu: ["Linh"] } }));
+  assert.deepEqual(mot.guCua, ["Linh"]);
+  assert.equal(chuKyTraLoi(mot), "Rủ Đi AI · đọc 3 tin · dùng gu của Linh");
+  const hai = docTheAi(traLoi({ doc: { so_tin: 0, chi_loi_nho: true, gu: ["Linh", "Tú"] } }));
+  assert.equal(chuKyTraLoi(hai), "Rủ Đi AI · chỉ đọc lời nhờ · dùng gu của Linh và Tú");
+  for (const sai of [["A", "B", "C"], [7], [" "], "Linh", ["x".repeat(61)]]) {
+    const the = docTheAi(traLoi({ doc: { so_tin: 3, gu: sai } }));
+    assert.equal(the.guCua, undefined, JSON.stringify(sai));
+    assert.equal(chuKyTraLoi(the), "Rủ Đi AI · đọc 3 tin");
+  }
+  assert.equal(chuKyTraLoi(docTheAi(traLoi())), "Rủ Đi AI · đọc 20 tin", "không dùng gu thì không nói gì về gu");
+});
+
 test("phần lạ bị bỏ; thẻ không ký rudi-ai hay không còn phần nào là khac", () => {
   const lan = docTheAi(traLoi({}, [{ kind: "poll", payload: { vote_id: "v", question: "?", options: [] } }, { kind: "text", payload: { text: "Còn lại" } }, { kind: "tra_loi", payload: {} }]));
   assert.equal(lan.loai, "tra_loi");

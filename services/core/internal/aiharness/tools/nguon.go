@@ -6,6 +6,7 @@ import (
 
 	"mobile/services/core/internal/aiharness/trinho"
 	"mobile/services/core/internal/aiharness/truyhoi"
+	"mobile/services/core/internal/gudoi"
 )
 
 // The data ports the tools read through. Each read port is implemented over
@@ -41,6 +42,17 @@ type DocCaNhan interface {
 	ChuyenDiSapToi(ctx context.Context, nguoi string, ngay time.Time, k int) ([]truyhoi.BangChung, error)
 }
 
+// DocDoi reads a couple's shared taste (ADR-0048).
+type DocDoi interface {
+	// GuDoi returns the taste of the people of room phong whose taste the
+	// chat may use now: nothing unless the room is a couple (both said yes
+	// to «Một đôi»); then only people whose `chia_gu` consent was granted
+	// under the wording that names the chat (gudoi.NguoiDuocDung), each
+	// with the closed vocabulary's ids only -- no name, no budget, none of
+	// the notebook's shared constraints.
+	GuDoi(ctx context.Context, phong string) ([]gudoi.Gu, error)
+}
+
 // NguonDuLieu is every port a turn's tools may use. A nil port makes its
 // tools answer loi_nguon; nothing falls back to another source.
 type NguonDuLieu struct {
@@ -49,4 +61,6 @@ type NguonDuLieu struct {
 	Nhom   DocNhom
 	CaNhan DocCaNhan
 	TriNho trinho.TriNho
+	// Doi is the couple's taste port; only a couple's turn reaches it.
+	Doi DocDoi
 }

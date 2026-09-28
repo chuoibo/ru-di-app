@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { type GuSo, cauGu } from "../../to-giay/gu-doi";
+import { CAU_BAT_LAI_CHO_CHAT, type GuChat, type GuSo, canBatLaiChoChat, cauBatGu, cauGu } from "../../to-giay/gu-doi";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, ListRow, RudiButton } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
@@ -9,8 +9,10 @@ import { Sheet } from "../../ui/Sheet";
  * «Gu của hai bạn» (ADR-0034 §2.1–2.2): each person's own switch.
  *
  * Turning it on lets the other person see MY taste and lets Nếp use it in this
- * notebook; it never pulls the other person's taste along, and nobody has to
- * agree to it. What the two have in common shows only once both have shared.
+ * notebook and Rủ Đi AI use it in the two's chat (ADR-0048); it never pulls the
+ * other person's taste along, and nobody has to agree to it. What the two have
+ * in common shows only once both have shared. A switch turned on before the
+ * chat was named covers the notebook only: the sheet offers «Bật lại cho chat».
  * The server decides what is visible; this sheet only words it.
  */
 export function GuHaiBan({
@@ -22,6 +24,8 @@ export function GuHaiBan({
   onBat,
   onTat,
   onSuaGuCuaToi,
+  guChat = null,
+  onBatLai,
 }: {
   open: boolean;
   onClose: () => void;
@@ -31,6 +35,10 @@ export function GuHaiBan({
   onBat: () => void;
   onTat: () => void;
   onSuaGuCuaToi: () => void;
+  /** `gu_chat` of chat-capabilities; null when unknown or outside a couple. */
+  guChat?: GuChat | null;
+  /** Re-consent for the chat: off, then on again (ADR-0048 §3.2). */
+  onBatLai?: () => void;
 }) {
   const { colors, space } = useRudiTheme();
   const cau = cauGu(gu, tenNguoiKia);
@@ -53,15 +61,19 @@ export function GuHaiBan({
         <Text style={[typography.caption, { color: colors.inkSoft }]} testID="gu-cua-toi">
           {cau?.cuaToi ?? "Gu của bạn đang để riêng."}
         </Text>
+        {onBatLai && canBatLaiChoChat(gu, guChat) ? (
+          <>
+            <Text style={[typography.caption, { color: colors.inkSoft }]} testID="gu-bat-lai-cau">
+              {CAU_BAT_LAI_CHO_CHAT}
+            </Text>
+            <RudiButton disabled={dangLam} label="Bật lại cho chat" loading={dangLam} onPress={onBatLai} />
+          </>
+        ) : null}
         {gu?.mine_shared ? (
           <RudiButton disabled={dangLam} label={`Thôi cho ${tenNguoiKia} thấy gu của mình`} loading={dangLam} onPress={onTat} variant="outline" />
         ) : (
           <>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              {gu?.theirs_shared
-                ? `Bật thì ${tenNguoiKia} thấy gu của bạn, hai bạn thấy mình cùng thích gì, và Nếp phác tờ theo đó.`
-                : `Bật thì ${tenNguoiKia} thấy gu của bạn và Nếp dùng nó khi phác tờ. Gu của ${tenNguoiKia} chỉ hiện khi chính họ bật.`}
-            </Text>
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauBatGu(gu, tenNguoiKia)}</Text>
             <RudiButton disabled={dangLam} label={`Cho ${tenNguoiKia} thấy gu của mình`} loading={dangLam} onPress={onBat} />
           </>
         )}

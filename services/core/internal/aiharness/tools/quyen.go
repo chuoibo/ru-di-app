@@ -78,7 +78,12 @@ func NapQuyen(raw []byte) (*Quyen, error) {
 				return nil, loiQuyen("%s: bot %q unknown or repeated", ten, b)
 			}
 			botSeen[bot] = true
-			if (m.Pham == Me && bot != obs.BotNep) || (m.Pham == Nhom && bot != obs.BotNhom) {
+			if _, co := q.bot[bot]; !co {
+				// A couple's turn is Bot nhom for every permission; bot doi
+				// names only its record (ADR-0046 §8.4).
+				return nil, loiQuyen("%s: bot %q has no table of its own", ten, b)
+			}
+			if (m.Pham == Me && bot != obs.BotNep) || ((m.Pham == Nhom || m.Pham == Doi) && bot != obs.BotNhom) {
 				return nil, loiQuyen("%s: %s scope granted to %s", ten, m.Pham, bot)
 			}
 			if (m.Lop == TriNho || m.Lop == Nhac) && bot != obs.BotNep {
@@ -106,12 +111,26 @@ var MacDinh = func() *Quyen {
 // ChoPhep reports whether bot may call t.
 func (q *Quyen) ChoPhep(bot obs.Bot, t Ten) bool { return q.bot[bot][t] }
 
-// DuocPhep is bot's toolset in registry order. hanChe (the policy's
+// DuocPhep is bot's toolset in registry order for a room of friends (and
+// for Nếp): never a couple's tool (scope Doi). hanChe (the policy's
 // proceed_restricted) keeps the read tools only: no draft, no memory write,
 // no reminder.
 func (q *Quyen) DuocPhep(bot obs.Bot, hanChe bool) []Ten {
+	return q.duocPhep(bot, hanChe, false)
+}
+
+// DuocPhepDoi is DuocPhep for a couple's turn (ADR-0048): the same toolset
+// plus the couple's own tools the table grants the bot.
+func (q *Quyen) DuocPhepDoi(bot obs.Bot, hanChe bool) []Ten {
+	return q.duocPhep(bot, hanChe, true)
+}
+
+func (q *Quyen) duocPhep(bot obs.Bot, hanChe, doi bool) []Ten {
 	var out []Ten
 	for _, m := range DangKy {
+		if m.Pham == Doi && !doi {
+			continue
+		}
 		if q.bot[bot][m.Ten] && (!hanChe || m.Lop == Doc) {
 			out = append(out, m.Ten)
 		}

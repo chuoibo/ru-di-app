@@ -934,6 +934,17 @@ func (h *Handler) finishFailure(ctx context.Context, j work, code string) error 
 // Every group card, the brain's and the Go engine's alike, reaches its
 // stream only after this commit (contract §4.1).
 func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, result json.RawMessage) error {
+	return h.publishGu(ctx, j, card, result, nil)
+}
+
+// publishGu is publish for an answer that used a couple's shared taste: gu
+// are the people whose taste the model read (aiharness.Result.GuDung). In
+// the transaction that posts the card, each of them must still be someone
+// whose taste the chat may use (the room still a couple, their `chia_gu`
+// still on under ADR-0048's wording: guConDung); otherwise the card is not
+// posted and the job fails sharing_unavailable. A revocation that lands
+// while the model writes therefore never reaches the room.
+func (h *Handler) publishGu(ctx context.Context, j work, card json.RawMessage, result json.RawMessage, gu []string) error {
 	if h.truocChot != nil {
 		h.truocChot(ctx)
 	}
@@ -951,6 +962,16 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, res
 	if err != nil || g.member != j.member || g.person != j.person || phongAi(ctx, tx, g) != nil {
 		_ = tx.Rollback(ctx)
 		return h.finishFailure(ctx, j, "sharing_unavailable")
+	}
+	if len(gu) > 0 {
+		con, err := guConDung(ctx, tx, g, gu, time.Now().UTC())
+		if err != nil {
+			return err
+		}
+		if !con {
+			_ = tx.Rollback(ctx)
+			return h.finishFailure(ctx, j, "sharing_unavailable")
+		}
 	}
 	// The feed head first, then the trigger, then the job: the order every Go
 	// chat write takes (chatlegacychange.BeforeWrite). See giuTrigger.
