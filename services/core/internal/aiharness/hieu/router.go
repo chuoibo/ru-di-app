@@ -176,7 +176,7 @@ func goi(ctx context.Context, dem *llm.Dem, req *model.LLMRequest, vet *DauVet) 
 // one user turn of data blocks, and the response schema of LuocDo(v). The
 // same v and examples give the same request, byte for byte.
 func YeuCau(v Vao, viDu []ViDu) (*model.LLMRequest, error) {
-	instr, err := LoiNhac(v.Bot)
+	instr, err := LoiNhacCua(v)
 	if err != nil {
 		return nil, err
 	}

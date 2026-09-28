@@ -33,6 +33,7 @@ var heChang struct {
 	// marker; nhomTruoc and nhomSau the group's.
 	agentTruoc, agentSau string
 	nhomTruoc, nhomSau   string
+	doiTruoc, doiSau     string
 }
 
 func heCua(req *model.LLMRequest) (s string) {
@@ -72,6 +73,10 @@ func dungHeChang() {
 		r, _ := hieu.YeuCau(hieu.Vao{Bot: obs.BotNhom, Cau: "x", Luc: LucBoHieu}, nil)
 		return r
 	})
+	them(ChangHieu, func() *model.LLMRequest {
+		r, _ := hieu.YeuCau(hieu.Vao{Bot: obs.BotNhom, Doi: true, Cau: "x", Luc: LucBoHieu}, nil)
+		return r
+	})
 	them(ChangChiaBill, func() *model.LLMRequest {
 		r, _ := chiabill.YeuCau(chiabill.Vao{LoiNho: "x"})
 		return r
@@ -92,6 +97,10 @@ func dungHeChang() {
 	if i := strings.Index(mau, moc); i >= 0 {
 		h.nhomTruoc, h.nhomSau = mau[:i], mau[i+len(moc):]
 	}
+	mau = prompts.DoiAgent(moc)
+	if i := strings.Index(mau, moc); i >= 0 {
+		h.doiTruoc, h.doiSau = mau[:i], mau[i+len(moc):]
+	}
 }
 
 // ChangTuYeuCau is the stage whose builder wrote sys, or "" for none known.
@@ -104,7 +113,7 @@ func ChangTuYeuCau(sys string) string {
 	if c, ok := h.bang[sys]; ok {
 		return c
 	}
-	for _, m := range [][2]string{{h.agentTruoc, h.agentSau}, {h.nhomTruoc, h.nhomSau}} {
+	for _, m := range [][2]string{{h.agentTruoc, h.agentSau}, {h.nhomTruoc, h.nhomSau}, {h.doiTruoc, h.doiSau}} {
 		if m[0] == "" || !strings.HasPrefix(sys, m[0]) {
 			continue
 		}

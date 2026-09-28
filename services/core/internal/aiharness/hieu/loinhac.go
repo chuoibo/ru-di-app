@@ -23,6 +23,10 @@ var (
 	nepTxt string
 	//go:embed loi_nhac/nhom.txt
 	nhomTxt string
+	// doiTxt is the couple's bot file: the group's intents, money classes
+	// and sources, worded for two people who are together.
+	//go:embed loi_nhac/doi.txt
+	doiTxt string
 )
 
 // The per-bot sections, in file order.
@@ -30,6 +34,11 @@ var phanBot = []string{"BOT", "TIEN", "Y_DINH", "NGUON"}
 
 // slotNhom is the member slot's rule, the group's only.
 const slotNhom = `- nguoi_tham_gia: the members the plan or the split is about, as ids from danh_sach_thanh_vien ("cả nhóm trừ Minh" = every id except Minh's). Leave it out when the whole group is meant or nobody is named.
+`
+
+// slotDoi is the member slot's rule for a couple: the same slot and ids,
+// for two people.
+const slotDoi = `- nguoi_tham_gia: who of the two the plan or the split is about, as ids from danh_sach_thanh_vien ("chỉ mình Minh" = Minh's id only). Leave it out when both are meant or nobody is named.
 `
 
 // catPhan reads the @@NAME sections of a bot file.
@@ -84,6 +93,11 @@ func ghepLoiNhac(bot obs.Bot) (string, error) {
 	default:
 		return "", fmt.Errorf("%w: %q", ErrBot, bot)
 	}
+	return ghep(string(bot), txt, nhom)
+}
+
+// ghep fills the common template with one bot file and its member slot.
+func ghep(ten, txt, nhom string) (string, error) {
 	p, err := catPhan(txt)
 	if err != nil {
 		return "", err
@@ -101,7 +115,7 @@ func ghepLoiNhac(bot obs.Bot) (string, error) {
 	)
 	out := strings.TrimSpace(r.Replace(chungTxt))
 	if strings.Contains(out, "{{") {
-		return "", fmt.Errorf("hieu: instruction for %s has an unfilled placeholder", bot)
+		return "", fmt.Errorf("hieu: instruction for %s has an unfilled placeholder", ten)
 	}
 	return out, nil
 }
@@ -132,4 +146,43 @@ func LoiNhac(bot obs.Bot) (string, error) {
 func PhienBan(bot obs.Bot) string {
 	sum := sha256.Sum256([]byte(loiNhac[bot]))
 	return hex.EncodeToString(sum[:])[:12]
+}
+
+// loiNhacDoi is the couple's router instruction: the common template with
+// the couple's bot file and member slot.
+var loiNhacDoi = func() string {
+	s, err := ghep("doi", doiTxt, slotDoi)
+	if err != nil {
+		panic(err)
+	}
+	return s
+}()
+
+// LoiNhacDoi is the couple's router system instruction.
+func LoiNhacDoi() string { return loiNhacDoi }
+
+// PhienBanDoi is PhienBan for the couple's router instruction.
+func PhienBanDoi() string {
+	sum := sha256.Sum256([]byte(loiNhacDoi))
+	return hex.EncodeToString(sum[:])[:12]
+}
+
+// LoiNhacCua is v's router instruction: the couple's for a couple's group
+// turn, else its bot's. Doi on any bot but the group's is refused.
+func LoiNhacCua(v Vao) (string, error) {
+	if !v.Doi {
+		return LoiNhac(v.Bot)
+	}
+	if v.Bot != obs.BotNhom {
+		return "", fmt.Errorf("%w: couple on bot %q", ErrVao, v.Bot)
+	}
+	return loiNhacDoi, nil
+}
+
+// PhienBanCua is the version of LoiNhacCua(v).
+func PhienBanCua(v Vao) string {
+	if v.Doi && v.Bot == obs.BotNhom {
+		return PhienBanDoi()
+	}
+	return PhienBan(v.Bot)
 }

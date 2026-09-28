@@ -414,6 +414,9 @@ func phienBanPrompt(b Bo, h Hang) string {
 	co := map[string]bool{}
 	for _, c := range b.Ca {
 		co[c.BeMat] = true
+		if c.DauVao.Nhom != nil && c.DauVao.Nhom.Doi {
+			co[string(obs.BotDoi)] = true
+		}
 	}
 	var out []string
 	if co[string(obs.BotNep)] {
@@ -421,6 +424,9 @@ func phienBanPrompt(b Bo, h Hang) string {
 	}
 	if co[string(obs.BotNhom)] {
 		out = append(out, "nhom:"+h.PromptVersionNhom)
+	}
+	if co[string(obs.BotDoi)] {
+		out = append(out, "doi:"+h.PromptVersionDoi)
 	}
 	return strings.Join(out, " ")
 }

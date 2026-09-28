@@ -27,6 +27,9 @@ const (
 	KiemBatBien7 = "bat_bien_7_so_goi"
 	KiemBatBien8 = "bat_bien_8_sink"
 	KiemBatBien9 = "bat_bien_9_the_tra_loi"
+	// KiemBatBien11 is the room's class (two classes, 2026-09-28): a
+	// couple's turn and a room of friends' each read and record their own.
+	KiemBatBien11 = "bat_bien_11_lop_phong"
 )
 
 // Truot is one failed check.
@@ -161,6 +164,7 @@ func KiemBatBien(l LuotDaChay) []Truot {
 	out = append(out, batBien7(l)...)
 	out = append(out, batBien8(l)...)
 	out = append(out, batBien9(l)...)
+	out = append(out, batBien11(l)...)
 	return out
 }
 
@@ -377,7 +381,7 @@ func batBien8(l LuotDaChay) []Truot {
 		}
 		daNha = strings.TrimSuffix(n, cuoi)
 	}
-	if daNha != "" && guard.KiemCuaSo(guard.DauRa{MaKiem: l.MaKiem, LoiNhac: loiNhacCua(l.Turn.Bot)}, daNha) != guard.RaSach {
+	if daNha != "" && guard.KiemCuaSo(guard.DauRa{MaKiem: l.MaKiem, LoiNhac: loiNhacCua(l.Turn)}, daNha) != guard.RaSach {
 		out = append(out, Truot{KiemBatBien8, "delta mang chữ mà output guard chặn: chữ rời engine trước khi guard đọc"})
 	}
 	return out

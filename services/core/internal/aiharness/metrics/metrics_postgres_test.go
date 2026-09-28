@@ -290,6 +290,74 @@ func TestV4ViVetNhayCamCu(t *testing.T) {
 	}
 }
 
+// Version 6 in the live table (two classes, 2026-09-28): a couple's turn is
+// recorded as bot doi next to nhom and nep, and still no free text; a
+// database left at version 5 refuses doi and `migrate-chat` moves it on,
+// rows kept; the binary's version is 6 and a changed version 6 is refused.
+func TestV6BotDoi(t *testing.T) {
+	pool := setup(t)
+	ctx := context.Background()
+	var n int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM aiharness_schema_migrations WHERE version BETWEEN 1 AND 6`).Scan(&n); err != nil || n != 6 || metrics.PhienBan != 6 {
+		t.Fatalf("%d versions installed, PhienBan %d: %v", n, metrics.PhienBan, err)
+	}
+	for _, bot := range []obs.Bot{obs.BotNep, obs.BotNhom, obs.BotDoi} {
+		id := invocation(t, pool)
+		r := record(id)
+		r.Bot = bot
+		if err := metrics.Ghi(ctx, pool, r); err != nil {
+			t.Fatalf("bot %s: %v", bot, err)
+		}
+		var got string
+		if err := pool.QueryRow(ctx, `SELECT bot FROM ai_turn_metrics WHERE invocation_id=$1`, id).Scan(&got); err != nil || got != string(bot) {
+			t.Fatalf("bot %s read back %q: %v", bot, got, err)
+		}
+		if _, err := pool.Exec(ctx, `UPDATE ai_turn_metrics SET bot='cap' WHERE invocation_id=$1`, id); err == nil {
+			t.Fatal("the table took bot 'cap'")
+		}
+	}
+	// Back to version 5: doi is refused, then the migration applies 6.
+	giu := invocation(t, pool)
+	if err := metrics.Ghi(ctx, pool, record(giu)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM ai_turn_metrics WHERE bot='doi'`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `ALTER TABLE ai_turn_metrics DROP CONSTRAINT ai_turn_metrics_bot_check, ADD CONSTRAINT ai_turn_metrics_bot_check CHECK (bot IN ('nep','nhom'))`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM aiharness_schema_migrations WHERE version=6`); err != nil {
+		t.Fatal(err)
+	}
+	if ok, err := metrics.Installed(ctx, pool); err != nil || ok {
+		t.Fatalf("a version-5 table reads as installed: %v %v", ok, err)
+	}
+	doi := record(invocation(t, pool))
+	doi.Bot = obs.BotDoi
+	if err := metrics.Ghi(ctx, pool, doi); err == nil {
+		t.Fatal("version 5 took bot doi")
+	}
+	if err := metrics.Migrate(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	if err := metrics.Ghi(ctx, pool, doi); err != nil {
+		t.Fatalf("version 6 refused bot doi: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM ai_turn_metrics WHERE invocation_id=$1`, giu).Scan(&n); err != nil || n != 1 {
+		t.Fatalf("the migration lost a row: %d %v", n, err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM pg_constraint WHERE conrelid=to_regclass('ai_turn_metrics') AND conname LIKE '%bot%'`).Scan(&n); err != nil || n != 1 {
+		t.Fatalf("%d bot constraints: %v", n, err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE aiharness_schema_migrations SET digest='khac' WHERE version=6`); err != nil {
+		t.Fatal(err)
+	}
+	if err := metrics.Migrate(ctx, pool); err == nil || !strings.Contains(err.Error(), "checksum") {
+		t.Fatalf("checksum v6 lệch không bị từ chối: %v", err)
+	}
+}
+
 // A changed version 1 is refused, never reapplied.
 func TestChecksumLech(t *testing.T) {
 	pool := setup(t)

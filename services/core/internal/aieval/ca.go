@@ -81,6 +81,11 @@ type DauVaoNhom struct {
 	SoTin     int           `json:"so_tin"`
 	Luot      []LuotNhomCa  `json:"luot,omitempty"`
 	ThanhVien []ThanhVienCa `json:"thanh_vien"`
+	// Doi says the room is a couple (aiharness.Turn.Doi, what chatassist's
+	// laDoi reads): a chat of two whose two people both turned on «Một
+	// đôi». A chat of two without it is a room of friends and leaves it
+	// false (two classes, 2026-09-28).
+	Doi bool `json:"doi,omitempty"`
 }
 
 // LuotNhomCa is one shared turn (aiharness.LuotNhom).
@@ -116,6 +121,9 @@ func (n *DauVaoNhom) kiem() error {
 	}
 	if len(n.ThanhVien) == 0 {
 		return errors.New("phòng không có thành viên nào")
+	}
+	if n.Doi && len(n.ThanhVien) != 2 {
+		return fmt.Errorf("cặp đôi có đúng hai người, phòng có %d", len(n.ThanhVien))
 	}
 	for _, m := range n.ThanhVien {
 		if !dangUUID.MatchString(m.ID) {

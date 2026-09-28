@@ -75,3 +75,24 @@ Lát P1 (máy chủ) làm:
 - `Turn.Cap` đổi thành `Turn.Doi` (tính bằng `laDoi` khi worker đọc phòng; chưa gì dùng).
 - Giữ `capConMo`. Cặp chỉ chạy trên engine Go: brain không có đường cho cặp, nên capabilities báo
   `provider_unavailable`, route từ chối `503`, worker brain làm thất bại cùng mã mà không hỏi brain.
+
+Lát P3 (prompt cặp đôi, số đo v6, eval) làm:
+
+- `Turn.Doi` chỉ chọn **chữ và bản ghi**, không chọn quyền: lượt cặp đôi vẫn `Bot nhom` cho mọi quyết
+  định (lược đồ router, `ChoNhom`, chính sách, nháp chia bill). Router đọc `hieu/loi_nhac/doi.txt`
+  (`Vao.Doi`, cùng tập ý định/nguồn; golden nhóm giữ nguyên byte, thêm `yeu_cau_doi`/`luoc_do_doi`);
+  câu trả lời đọc `prompts/doi_agent.txt` (mọi luật của nhóm, xưng «hai bạn», «người kia»; không
+  «cả nhóm», «thành viên», «mọi người», «hội» — `prompts.TuNhom`), mệnh đề ngoài phạm vi riêng, câu cố
+  định `cau.DoiKhongChamTien`/`DoiChuaThayKhoan`/`DoiLoiNhoPlan`, dòng cuối nháp chia bill «Hai bạn xem
+  lại…»; lời nhắc chống lộ (`khuonNhom(doi)`) đọc câu của lời nhắc cặp đôi.
+- Bản ghi: `ai_turn_metrics` version 6 (`bot IN ('nep','nhom','doi')`), lượt cặp đôi ghi `bot=doi` và
+  `prompt_version=VersionDoi`. Chat hai người của đám bạn (chưa đủ hai đồng ý) giữ lời nhắc nhóm và
+  `bot=nhom` — «dù có 2 người vẫn là logic đám bạn». Triển khai: `core migrate-chat` lên v6 trước
+  `serve`/`work` bản mới.
+- Eval T1: `DauVaoNhom.doi` (đúng hai người), bất biến 11 `bat_bien_11_lop_phong` (router, lời nhắc,
+  bản ghi, câu cố định đúng lớp phòng; lời nhắc cặp đôi không có chữ của nhóm); corpus nhóm thêm 4 ca
+  cặp đôi (tìm quán, plan, nháp chia bill, từ chối tiền) và 2 ca chat hai người của đám bạn; router T1
+  thêm 6 ca cặp đôi (mọi ý định nhóm + từ chối tiền).
+- Còn mở: gu đã chia (P5); `nguoiKhongTen` («Một người trong nhóm») của nháp chia bill chưa có bản cặp
+  đôi (chỉ hiện khi danh bạ phòng thiếu tên); `chung.txt` của router vẫn nói «(group only)» cho khối
+  thành viên — lời nhắc router, không phải lời người dùng đọc; lời nhắc cặp đôi chưa đo với model thật (T3).

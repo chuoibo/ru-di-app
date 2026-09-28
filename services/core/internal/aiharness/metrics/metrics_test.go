@@ -63,7 +63,7 @@ func TestBangKhongChuaChuTuDo(t *testing.T) {
 			t.Errorf("cột %s có thể chứa chữ tự do: %s", name, def)
 		}
 	}
-	sql := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(schemaSQL+schemaV2SQL+schemaV3SQL, "")
+	sql := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(schemaSQL+schemaV2SQL+schemaV3SQL+schemaV4SQL+schemaV5SQL+schemaV6SQL, "")
 	if regexp.MustCompile(`(?i)\b(jsonb?|bytea|varchar|character varying)\b`).MatchString(sql) {
 		t.Error("schema có kiểu chứa được chữ tự do")
 	}
@@ -126,7 +126,7 @@ func TestNhanNhayCamKhongLuu(t *testing.T) {
 	if obs.NhanGuard("nhay_cam").Valid() {
 		t.Fatal("a record may hold nhay_cam")
 	}
-	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV5SQL {
+	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV6SQL {
 		t.Fatal("PhienBan is not the last version")
 	}
 	// Version 5's path list is exactly obs.Duongs.
@@ -144,6 +144,37 @@ func TestNhanNhayCamKhongLuu(t *testing.T) {
 		if !strings.Contains(schemaV4SQL, s) {
 			t.Fatalf("version 4 lacks %q", s)
 		}
+	}
+}
+
+// Version 6 is the last word on bot: its CHECK admits exactly the bots a
+// record may name (nep, nhom and the couple's doi), replacing version 1's
+// column CHECK by its generated name, and nothing else of the table.
+func TestV6BotDoi(t *testing.T) {
+	m := regexp.MustCompile(`DROP CONSTRAINT IF EXISTS ai_turn_metrics_bot_check,\s*ADD CONSTRAINT ai_turn_metrics_bot_check\s*CHECK \(bot IN \(([^)]*)\)\);`).FindStringSubmatch(schemaV6SQL)
+	if m == nil {
+		t.Fatal("version 6 does not replace the bot CHECK")
+	}
+	var bots []string
+	for _, b := range []obs.Bot{obs.BotNep, obs.BotNhom, obs.BotDoi} {
+		if !b.Valid() {
+			t.Fatalf("a record may not hold bot %q", b)
+		}
+		bots = append(bots, "'"+string(b)+"'")
+	}
+	if m[1] != strings.Join(bots, ",") || obs.Bot("khac").Valid() {
+		t.Fatalf("CHECK bot %s, want %s", m[1], strings.Join(bots, ","))
+	}
+	// Version 1's column CHECK is the one version 6 names.
+	if !strings.Contains(columnLines(t)["bot"], "CHECK (bot IN ('nep','nhom'))") {
+		t.Fatalf("version 1's bot column: %s", columnLines(t)["bot"])
+	}
+	body := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(schemaV6SQL, "")
+	if n := strings.Count(body, ";"); n != 1 || strings.Count(body, "ADD CONSTRAINT") != 1 {
+		t.Fatalf("version 6 does more than the bot CHECK: %d statements", n)
+	}
+	if SchemaV6SQL() != schemaV6SQL || PhienBan != 6 {
+		t.Fatal("PhienBan / SchemaV6SQL")
 	}
 }
 

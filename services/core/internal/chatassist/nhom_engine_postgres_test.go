@@ -94,6 +94,9 @@ type ketNhom struct {
 	version string
 	soGoi   int
 	duong   string
+	// bot is the metrics row's bot: nhom for a room of friends, doi for a
+	// couple (metrics v6, two classes).
+	bot string
 }
 
 func (n nhomGo) ket(t *testing.T, id string) ketNhom {
@@ -104,7 +107,7 @@ func (n nhomGo) ket(t *testing.T, id string) ketNhom {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := n.f.pool.QueryRow(context.Background(), `SELECT prompt_version,so_goi_model,duong FROM ai_turn_metrics WHERE invocation_id=$1 AND bot='nhom'`, id).Scan(&k.version, &k.soGoi, &k.duong); err != nil {
+	if err := n.f.pool.QueryRow(context.Background(), `SELECT prompt_version,so_goi_model,duong,bot FROM ai_turn_metrics WHERE invocation_id=$1 AND bot IN ('nhom','doi')`, id).Scan(&k.version, &k.soGoi, &k.duong, &k.bot); err != nil {
 		t.Fatalf("hàng số đo nhóm: %v", err)
 	}
 	return k

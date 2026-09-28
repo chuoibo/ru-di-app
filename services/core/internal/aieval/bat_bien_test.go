@@ -10,7 +10,9 @@ import (
 
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/guard"
+	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/prompts"
 )
 
 // coBan runs the identity case and returns its case and its unscored turn:
@@ -39,9 +41,24 @@ func coBan(t *testing.T) (Ca, LuotDaCham) {
 // theNhomChu makes the identity turn a group turn with a valid card: one
 // text part that is the streamed answer, read by no member (so_tin 0).
 func theNhomChu(l *LuotDaCham) {
-	l.Turn.Bot, l.Turn.Lenh, l.Turn.SoTin = obs.BotNhom, obs.LenhHoi, 0
+	thanhNhom(l, false)
 	raw, _ := json.Marshal(map[string]any{"kind": "text", "payload": map[string]string{"text": l.Chu}})
 	l.Phan = []json.RawMessage{raw}
+}
+
+// thanhNhom makes the identity turn a group-bot turn of a room's class
+// (invariant 11): a room of friends' or, with doi, a couple's -- the turn,
+// its record's bot and prompt version, and the router's instruction on its
+// first request. The prose requests keep Nếp's instruction, which is
+// neither class's.
+func thanhNhom(l *LuotDaCham, doi bool) {
+	l.Turn.Bot, l.Turn.Lenh, l.Turn.SoTin, l.Turn.Doi = obs.BotNhom, obs.LenhHoi, 0, doi
+	l.BanGhi.Bot, l.BanGhi.PromptVersion = obs.BotNhom, obs.PromptVersion(prompts.VersionNhom())
+	l.YeuCau[0].SystemInstruction, _ = hieu.LoiNhac(obs.BotNhom)
+	if doi {
+		l.BanGhi.Bot, l.BanGhi.PromptVersion = obs.BotDoi, obs.PromptVersion(prompts.VersionDoi())
+		l.YeuCau[0].SystemInstruction = hieu.LoiNhacDoi()
+	}
 }
 
 func saoChep(l LuotDaCham) LuotDaCham {
@@ -119,7 +136,38 @@ var caBatBien = []caBatBienT{
 	{"khai công cụ ghi nợ", func(l *LuotDaCham) { l.YeuCau[0].CongCu = []string{"ghi_no"} }, "bat_bien_3_cong_cu,bat_bien_3_cong_cu"},
 	// The group (slice 9): a turn that answered carries its card; its
 	// requests carry nothing Nếp remembers and declare no tool of scope me.
-	{"nhóm không có thẻ", func(l *LuotDaCham) { l.Turn.Bot = obs.BotNhom }, "bat_bien_9_the_tra_loi"},
+	{"nhóm không có thẻ", func(l *LuotDaCham) { thanhNhom(l, false) }, "bat_bien_9_the_tra_loi"},
+	// The two classes (2026-09-28): a couple's turn reads and records the
+	// couple's, a room of friends' the group's -- each trace on its own.
+	{"cặp đôi ghi bot nhom", func(l *LuotDaCham) {
+		theNhomChu(l)
+		thanhNhom(l, true)
+		l.BanGhi.Bot = obs.BotNhom
+	}, "bat_bien_11_lop_phong"},
+	{"cặp đôi ghi phiên bản nhóm", func(l *LuotDaCham) {
+		theNhomChu(l)
+		thanhNhom(l, true)
+		l.BanGhi.PromptVersion = obs.PromptVersion(prompts.VersionNhom())
+	}, "bat_bien_11_lop_phong"},
+	{"cặp đôi qua router của nhóm", func(l *LuotDaCham) {
+		theNhomChu(l)
+		thanhNhom(l, true)
+		l.YeuCau[0].SystemInstruction, _ = hieu.LoiNhac(obs.BotNhom)
+	}, "bat_bien_11_lop_phong,bat_bien_11_lop_phong"},
+	{"cặp đôi đọc lời nhắc nhóm", func(l *LuotDaCham) {
+		theNhomChu(l)
+		thanhNhom(l, true)
+		l.YeuCau[1].SystemInstruction = prompts.NhomAgent(l.MaKiem)
+	}, "bat_bien_11_lop_phong"},
+	{"đám bạn hai người đọc lời nhắc cặp đôi", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.YeuCau[1].SystemInstruction = prompts.DoiAgent(l.MaKiem)
+	}, "bat_bien_11_lop_phong"},
+	{"đám bạn ghi bot doi", func(l *LuotDaCham) {
+		theNhomChu(l)
+		l.BanGhi.Bot = obs.BotDoi
+	}, "bat_bien_11_lop_phong"},
+	{"Nếp mang cờ cặp đôi", func(l *LuotDaCham) { l.Turn.Doi = true }, "bat_bien_11_lop_phong"},
 	{"nhóm khai recall_memory", func(l *LuotDaCham) {
 		theNhomChu(l)
 		l.YeuCau[1].CongCu = []string{"recall_memory"}
@@ -224,9 +272,11 @@ func TestBatBienDoDungCho(t *testing.T) {
 	// no model-derived field), is green; the same turn with one word of the
 	// model's appended is red.
 	for _, cd := range cau.CoDinhNhom() {
+		doi := cd == cau.DoiKhongChamTien || cd == cau.DoiChuaThayKhoan
 		l = saoChep(goc)
 		l.Chu = cd
 		theNhomChu(&l)
+		thanhNhom(&l, doi)
 		l.BanGhi.KetKiem = obs.KiemKhongChay
 		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
 		if tr := KiemBatBien(l.LuotDaChay); len(tr) != 0 {
@@ -234,9 +284,20 @@ func TestBatBienDoDungCho(t *testing.T) {
 		}
 		l.Chu = cd + " Tú trả 9.990.000đ."
 		theNhomChu(&l)
+		thanhNhom(&l, doi)
 		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
 		if got := ten(KiemBatBien(l.LuotDaChay)); got != KiemBatBien8 {
 			t.Fatalf("câu cố định kèm chữ khác vẫn qua khi verifier không chạy: %q", got)
+		}
+		// The other class's sentence is red at invariant 11 alone.
+		l.Chu = cd
+		theNhomChu(&l)
+		thanhNhom(&l, !doi)
+		l.SuKien = append(chiTrangThai(l.SuKien), delta(l.Chu))
+		if cd != cau.NhomChuaChacSoTien {
+			if got := ten(KiemBatBien(l.LuotDaChay)); got != KiemBatBien11 {
+				t.Fatalf("câu cố định của lớp kia: %q", got)
+			}
 		}
 	}
 }
