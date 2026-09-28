@@ -1,25 +1,30 @@
 # Nhánh của flow 41 khi máy chủ CÓ khoá mô hình (--ai, AI=1): chat hai người.
 #
-# Lát M1 (thiết kế ở ai-chat-hai-nguoi.md): cặp nhờ Rủ Đi AI bằng lệnh `hoi` (gõ @Rủ Đi,
-# hoặc nút «Hỏi Rủ Đi AI» dưới các công cụ của khay, điền sẵn «@Rủ Đi»). Câu
-# trả lời là một TIN TRẢ LỜI vào đúng tin nhờ, ký «Rủ Đi AI · đọc N tin»
-# (hoặc «· chỉ đọc lời nhờ»). Tấm «Xem» nói lời nhờ và câu trả lời hiện cho
-# cả hai bạn, không «cả nhóm». Soi theo _30-ai-co-khoa. Cần máy chủ đã mở
-# `hoi` cho cặp (lát S1) và engine nhóm `go`; thiếu thì chip nói «chưa sẵn
-# sàng» và nhánh này đỏ ở bước chờ chip, đúng chỗ.
+# Hai class (chủ sản phẩm chốt, thay «cặp chỉ hoi»): chat hai người thường là
+# ĐÁM BẠN, có Rủ Đi AI y hệt nhóm. Khay có «Tờ hẹn» như nhóm, không có «Tờ
+# giấy» (chỉ cặp đôi, khi cả hai đã bật «Một đôi», mới có). «Tờ hẹn» → «Hỏi Rủ
+# Đi AI» điền sẵn «/plan». Câu trả lời là một TIN TRẢ LỜI vào đúng tin nhờ, ký
+# «Rủ Đi AI · đọc N tin» (hoặc «· chỉ đọc lời nhờ»). Tấm «Xem» nói lời nhờ và
+# câu trả lời hiện cho cả hai bạn, không «cả nhóm». Soi theo _30-ai-co-khoa.
+# Cần máy chủ đã mở plan cho chat hai người (lát P1) và engine nhóm `go`;
+# thiếu thì panel nói «AI chưa sẵn sàng» và nhánh này đỏ ở bước chờ nút.
 #
 # Flow 41 đang ở màn chat của cặp, ô soạn trống.
 appId: com.lakiet.rudi
 ---
 - tapOn: "Thêm vào cuộc trò chuyện"
 - extendedWaitUntil:
+    visible: "Tờ hẹn"
+    timeout: 20000
+- assertNotVisible: "Tờ giấy"
+- takeScreenshot: 41-khay-hoi-ai
+- tapOn: "Tờ hẹn"
+- extendedWaitUntil:
     visible: "Hỏi Rủ Đi AI"
     timeout: 20000
-- assertVisible: "Tờ giấy"
-- assertNotVisible: "Tờ hẹn"
-- takeScreenshot: 41-khay-hoi-ai
+- assertVisible: ".*hiện cho cả hai bạn.*"
 - tapOn: "Hỏi Rủ Đi AI"
-# Khay đóng, ô soạn đã có «@Rủ Đi »: gõ tiếp lời nhờ.
+# Khay đóng, ô soạn đã có «/plan »: gõ tiếp lời nhờ.
 - tapOn: "Ô soạn tin"
 - inputText: "goi y cho hai minh"
 - extendedWaitUntil:
@@ -42,7 +47,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Rủ Đi AI · (đọc [0-9]+ tin|chỉ đọc lời nhờ)"
     timeout: 120000
-- assertVisible: "Trả lời Bạn: @Rủ Đi goi y cho hai minh"
+# Khối trích là tin nhờ, tức «/plan » khay điền sẵn cộng chữ đã gõ.
+- assertVisible: "Trả lời Bạn: /plan goi y cho hai minh"
 - assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
-- assertNotVisible: "Chưa phác được tờ hẹn"
 - takeScreenshot: 41-ai-tra-loi

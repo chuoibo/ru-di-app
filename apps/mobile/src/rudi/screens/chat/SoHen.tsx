@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { lenhSanSang, type ChatCapabilities } from "../../chat/ai-invocations";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
-import { chuKhay } from "../../chat/khay-cong-cu";
+import { CONG_CU_TO_GIAY, chuKhay } from "../../chat/khay-cong-cu";
 import { docTheAi, lichTrinhTrongThe, type Tin } from "../../chat/tin-song";
 import { KHUNG_VAT, hinhVat, type VatBan } from "../../art/vat-ban";
 import { typography, useRudiTheme } from "../../theme";
@@ -60,23 +60,28 @@ export function ToHen({ tin, onOpen, onVote }: { tin: Tin; onOpen: (tin: Tin) =>
 
 export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onHoiAi, onManual, capabilities, busy, error, haiNguoi = false, onToGiay }: {
   personId: string; contextId: string;
-  /** A two-person conversation: the tray's plan slot opens the pair's paper. */
-  haiNguoi?: boolean; onToGiay?: () => void;
+  /** A two-person conversation: the same tools, worded for two. */
+  haiNguoi?: boolean;
+  /**
+   * A couple only (`cap_doi`): the tray adds «Tờ giấy», the pair's paper,
+   * beside «Tờ hẹn». Absent in a group and in a friends' two-person chat.
+   */
+  onToGiay?: () => void;
   panel: KhayChat; onPanel: (panel: KhayChat) => void; onImage: () => void; onSticker: () => void;
   onPoll: (command: string) => Promise<boolean>; onManual: () => void;
   /**
    * «Hỏi Rủ Đi AI»: the tray no longer sends to the AI itself. Since ADR-0046
    * an AI request is an ordinary `@Rủ Đi` message, written in the composer
    * with the preview chip above its send button, so this puts `/plan ` there
-   * in a group and `@Rủ Đi ` in a pair (`chuKhay().moDauHoiAi`).
+   * (`MO_DAU_HOI_AI`), in every room.
    */
   onHoiAi: () => void;
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null;
 }) {
   const { colors } = useRudiTheme();
-  const chu = chuKhay(haiNguoi && onToGiay !== undefined);
-  // A pair asks `hoi` and a group `plan`: the tray reads the one it offers.
-  const sanSang = lenhSanSang(capabilities, chu.lenhAi);
+  const chu = chuKhay(haiNguoi);
+  // Every room's tray offers a plan, so it reads the plan's readiness.
+  const sanSang = lenhSanSang(capabilities, "plan");
   // The tray is a sheet laid over the conversation; Nếp makes room for it.
   useNhuongChoNep(panel !== null);
   const { height } = useWindowDimensions();
@@ -148,9 +153,9 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
     { vat: "anh-in", label: "Ảnh", action: onImage },
     { vat: "sticker", label: "Sticker", action: onSticker },
     { vat: "phieu-bau", label: "Bình chọn", action: () => onPanel("poll") },
-    chu.congCuHen.dich === "to-giay"
-      ? { vat: "thu-gap", label: chu.congCuHen.label, action: () => { onPanel(null); onToGiay?.(); } }
-      : { vat: "lich", label: chu.congCuHen.label, action: () => onPanel("plan") },
+    { vat: "lich", label: "Tờ hẹn", action: () => onPanel("plan") },
+    // A couple keeps every friends' tool and adds its paper (owner decision 2026-09-28).
+    ...(onToGiay ? [{ vat: "thu-gap" as VatBan, label: CONG_CU_TO_GIAY, action: () => { onPanel(null); onToGiay(); } }] : []),
   ];
   const hasDraft = panel === "poll" && (!!draft.question || draft.choices.some(Boolean));
   return (
@@ -199,16 +204,10 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
              AI request is a message in the thread now, so the tray points at
              the composer instead of sending on the person's behalf. */
           <Text style={[typography.body, { color: colors.ink }]} testID="chat-khay-hoi-ai">
-            Gõ @Rủ Đi hoặc /plan cùng lời nhờ ngay trong ô soạn. Tin của bạn hiện cho cả nhóm như mọi tin khác, và Rủ Đi AI trả lời ngay dưới tin đó. Chip trên nút gửi cho bạn xem trước những tin đi kèm.
+            {chu.loiHoiAi}
           </Text>
         )}
       </ScrollView>
-      {/* A pair's plan slot is its paper, so its way to Rủ Đi AI sits under
-          the tools: it starts an `@Rủ Đi` message, like the group's panel. */}
-      {panel === "tools" && chu.hoiAiTrenKhay ? <View style={styles.footer}>
-        {sanSang ? <RudiButton label={chu.hoiAiTrenKhay.label} variant="outline" disabled={busy} onPress={onHoiAi} />
-          : <Text style={[typography.caption, { color: colors.inkSoft }]}>{chu.hoiAiTrenKhay.chuaSanSang}</Text>}
-      </View> : null}
       {panel === "poll" ? <View style={styles.footer}>
         {pollError ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
         <RudiButton label="Gửi bình chọn" loading={busy} disabled={busy} onPress={() => void sendPoll()} />

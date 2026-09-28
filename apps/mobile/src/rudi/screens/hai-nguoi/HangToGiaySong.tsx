@@ -4,12 +4,16 @@ import { useToGiay } from "../../to-giay/useToGiay";
 import { HangToGiay } from "./HangToGiay";
 
 /**
- * The pinned line in a pair's chat, reading the real notebook.
+ * The pinned line in a couple's chat, reading the real notebook.
+ *
+ * Only a couple (`cap_doi`: both turned «Một đôi» on) gets it (owner decision
+ * 2026-09-28); a friends' two-person chat plans with «Tờ hẹn» like a group,
+ * and reaches the paper from the settings row «Tờ giấy của hai mình».
  *
  * A component rather than a hook call in `GroupChatLive`, and that is the whole
  * reason it exists: hooks cannot be called conditionally, so reading the
  * notebook up there would fire a request for every GROUP conversation too --
- * a 404 per chat open, to render nothing. Mounting this only for a pair puts
+ * a 404 per chat open, to render nothing. Mounting this only for a couple puts
  * the condition where React can honour it.
  *
  * `nhip: 0`: read on focus, never on a timer. The row says one sentence about

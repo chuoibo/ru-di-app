@@ -1,27 +1,23 @@
-// The chat tray's words for a pair versus a group (QA couple 23/09, §11;
-// design 2026-09-28: a pair asks Rủ Đi AI with `hoi` only).
+// The chat tray's words for a pair versus a group (QA couple 23/09, §11).
+// Owner decision 2026-09-28: a two-person chat has a group's tools, «Tờ hẹn»
+// included; what still differs is wording, and a room of two is never «hội».
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { chuKhay } from "../dist-test/rudi/chat/khay-cong-cu.js";
+import { MO_DAU_HOI_AI, chuKhay } from "../dist-test/rudi/chat/khay-cong-cu.js";
 
-test("nhắn riêng hai người: khay mở tờ giấy, không nói «hội»", () => {
+test("nhắn riêng hai người: khay không nói «hội» hay «nhóm»", () => {
   const c = chuKhay(true);
-  assert.deepEqual(c.congCuHen, { label: "Tờ giấy", dich: "to-giay" });
-  // Every word the pair's tray can show, the AI entry included.
-  const cacCau = [c.tieuDePoll, c.goiYPoll, c.nhanPlan, c.congCuHen.label, ...Object.values(c.hoiAiTrenKhay ?? {})];
-  assert.ok(cacCau.length >= 6, "khay cặp phải có lối vào Rủ Đi AI");
+  // Every word the pair's tray can show.
+  const cacCau = Object.values(c);
+  assert.ok(cacCau.length >= 4, "khay cặp phải có đủ chữ");
   for (const cau of cacCau) assert.doesNotMatch(cau, /hội|nhóm/i, cau);
-  // Its AI entry asks the one command a pair has, never a plan.
-  assert.equal(c.lenhAi, "hoi");
-  assert.doesNotMatch(c.moDauHoiAi, /\/plan|\/chia-bill/);
+  // Its AI entry asks for a plan, like a group's.
+  assert.equal(MO_DAU_HOI_AI, "/plan ");
 });
 
-test("nhóm: giữ tờ hẹn AI và chữ của hội", () => {
+test("nhóm: giữ chữ của hội", () => {
   const c = chuKhay(false);
-  assert.deepEqual(c.congCuHen, { label: "Tờ hẹn", dich: "plan" });
   assert.match(c.nhanPlan, /hội/);
-  assert.equal(c.lenhAi, "plan");
-  assert.equal(c.moDauHoiAi, "/plan ");
-  assert.equal(c.hoiAiTrenKhay, null);
+  assert.match(c.tieuDePoll, /Hội/);
 });

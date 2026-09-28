@@ -85,15 +85,17 @@ appId: com.lakiet.rudi
     timeout: 60000
 - assertVisible: "Ô soạn tin"
 - takeScreenshot: 41-tu-ho-so
-# Rủ Đi AI trong chat hai người (lát M1, thiết kế ở ai-chat-hai-nguoi.md). Ở CUỐI flow vì
+# Rủ Đi AI trong chat hai người (đám bạn: như nhóm). Ở CUỐI flow vì
 # tin @Rủ Đi và câu trả lời đổi dòng xem trước «Bạn: Chao rieng» ở trên.
-# Ô soạn của cặp không gợi ý /plan hay /chia-bill: máy chủ chỉ mở `hoi` cho cặp.
+# Chat hai người thường là đám bạn: ô soạn gợi ý /plan và /chia-bill như nhóm,
+# chỉ chữ viết cho hai người (không «cả hội»).
 - tapOn: "Ô soạn tin"
 - inputText: "/"
 - extendedWaitUntil:
     visible: "Viết câu hỏi và lựa chọn"
     timeout: 15000
-- assertNotVisible: "Rủ Đi AI phác lịch trình"
+- assertVisible: "Rủ Đi AI phác lịch trình"
+- assertVisible: "Rủ Đi AI gom khoản chi để hai bạn xác nhận"
 - assertNotVisible: "Rủ Đi AI gom khoản chi để cả hội xác nhận"
 - eraseText: 1
 - hideKeyboard

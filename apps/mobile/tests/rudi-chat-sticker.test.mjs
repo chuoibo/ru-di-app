@@ -126,7 +126,7 @@ test("tra-tien-ne: tờ trên có ô bầu dục tô màu giấy — dấu tờ 
   }
 });
 
-test("khay: nhóm giữ tám hình; hai người có thêm bốn hình đôi (ADR-0034)", async () => {
+test("khay: nhóm và đám bạn giữ tám hình; cặp đôi có thêm bốn hình đôi (ADR-0034)", async () => {
   const { stickerChoKhay, STICKER_DOI, STICKER_IDS } = await import("../dist-test/rudi/chat/sticker.js");
   assert.deepEqual(stickerChoKhay(false).doi, []);
   assert.equal(stickerChoKhay(false).chung.length, 8);

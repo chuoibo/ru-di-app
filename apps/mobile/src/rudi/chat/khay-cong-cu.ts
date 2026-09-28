@@ -1,34 +1,33 @@
 /**
  * The words of the chat's «+» tray, which depend on who is in the room.
  *
- * QA 23/09 (couple, §11): in a two-person conversation the tray offered «Tờ
- * hẹn» (an AI-drafted plan) beside the pinned «Tờ giấy của hai mình» -- two
- * names for one job -- and asked «Bạn muốn rủ hội đi đâu?» of two people. In
- * a pair the paper is the plan: the tray's plan slot opens it instead.
+ * Owner decision 2026-09-28 (two classes): every group and every ordinary
+ * two-person conversation is a friends' chat, with exactly a group's tools and
+ * Rủ Đi AI -- «Tờ hẹn», `/plan`, `/chia-bill`, `@Rủ Đi`. A two-person
+ * conversation where both people turned «Một đôi» on is a couple: the same
+ * tools, plus the pair's paper («Tờ giấy»), which the tray adds and never
+ * swaps in for «Tờ hẹn». That replaces the earlier rule (pull request 659) that a pair
+ * could only ask `hoi` and had «Tờ giấy» in the plan slot.
  *
- * Design 2026-09-28 (Rủ Đi AI in a two-person chat): a pair can ask Rủ Đi AI
- * too, with `hoi` only (the plan, the expense sheet and «thành kèo» stay with
- * groups). Since the plan slot is the paper there, the pair's tray carries its
- * own way to the AI, which starts an `@Rủ Đi` message rather than a `/plan`.
+ * What still differs for two people is wording only: a room of two is never
+ * called «hội» or «nhóm» (QA couple 23/09, §11).
  */
-import type { LenhAi } from "./ai-invocations";
+
+/**
+ * What the tray's «Hỏi Rủ Đi AI» puts at the start of the composer: the same
+ * in every room, since every room can ask for a plan.
+ */
+export const MO_DAU_HOI_AI = "/plan ";
+
+/** The tray's extra tool for a couple: the pair's paper. */
+export const CONG_CU_TO_GIAY = "Tờ giấy";
 
 export interface ChuKhay {
   tieuDePoll: string;
   goiYPoll: string;
   nhanPlan: string;
-  /** The tray's fourth tool: the pair's paper, or the AI plan panel. */
-  congCuHen: { label: string; dich: "to-giay" | "plan" };
-  /** The command the tray's AI path asks for: what its readiness is read from. */
-  lenhAi: LenhAi;
-  /** What the tray's «Hỏi Rủ Đi AI» puts at the start of the composer. */
-  moDauHoiAi: string;
-  /**
-   * The pair's own way to the AI on the tools panel (its plan slot is the
-   * paper), with the words shown when the server cannot answer here; null in
-   * a group, whose AI path is the «Tờ hẹn» panel.
-   */
-  hoiAiTrenKhay: { label: string; chuaSanSang: string } | null;
+  /** The «Tờ hẹn» panel's words pointing at the composer. */
+  loiHoiAi: string;
 }
 
 export function chuKhay(haiNguoi: boolean): ChuKhay {
@@ -37,19 +36,15 @@ export function chuKhay(haiNguoi: boolean): ChuKhay {
         tieuDePoll: "Hai mình chọn gì?",
         goiYPoll: "Tối nay mình ăn gì?",
         nhanPlan: "Hai bạn muốn đi đâu?",
-        congCuHen: { label: "Tờ giấy", dich: "to-giay" },
-        lenhAi: "hoi",
-        moDauHoiAi: "@Rủ Đi ",
-        hoiAiTrenKhay: { label: "Hỏi Rủ Đi AI", chuaSanSang: "Rủ Đi AI chưa trả lời được ở đây. Hai bạn vẫn nhắn tin như thường." },
+        loiHoiAi:
+          "Gõ @Rủ Đi hoặc /plan cùng lời nhờ ngay trong ô soạn. Tin của bạn hiện cho cả hai bạn như mọi tin khác, và Rủ Đi AI trả lời ngay dưới tin đó. Chip trên nút gửi cho bạn xem trước những tin đi kèm.",
       }
     : {
         tieuDePoll: "Hội mình chọn gì?",
         goiYPoll: "Tối nay hội mình ăn gì?",
         nhanPlan: "Bạn muốn rủ hội đi đâu?",
-        congCuHen: { label: "Tờ hẹn", dich: "plan" },
-        lenhAi: "plan",
-        moDauHoiAi: "/plan ",
-        hoiAiTrenKhay: null,
+        loiHoiAi:
+          "Gõ @Rủ Đi hoặc /plan cùng lời nhờ ngay trong ô soạn. Tin của bạn hiện cho cả nhóm như mọi tin khác, và Rủ Đi AI trả lời ngay dưới tin đó. Chip trên nút gửi cho bạn xem trước những tin đi kèm.",
       };
 }
 
@@ -66,19 +61,21 @@ export interface LenhGoiY {
  * the person finishes writing, with the preview chip above the send button
  * (ADR-0046). Only `/vote` opens a form, because a poll is not a message.
  *
- * A pair is never offered `/plan` or `/chia-bill`: the server refuses them
- * there, and a suggestion that ends in a refusal is worse than none.
+ * The same four commands in every room; a room of two only words them for two.
  */
 export function lenhGoiY(haiNguoi: boolean): readonly LenhGoiY[] {
-  return haiNguoi
-    ? [
-        { nhan: "/vote", goiY: "/vote", moTa: "Viết câu hỏi và lựa chọn" },
-        { nhan: "@Rủ Đi", goiY: "@Rủ Đi ", moTa: "Hỏi Rủ Đi AI ngay trong cuộc trò chuyện của hai bạn" },
-      ]
-    : [
-        { nhan: "/plan", goiY: "/plan ", moTa: "Rủ Đi AI phác lịch trình" },
-        { nhan: "/vote", goiY: "/vote", moTa: "Viết câu hỏi và lựa chọn" },
-        { nhan: "/chia-bill", goiY: "/chia-bill ", moTa: "Rủ Đi AI gom khoản chi để cả hội xác nhận" },
-        { nhan: "@Rủ Đi", goiY: "@Rủ Đi ", moTa: "Hỏi Rủ Đi AI ngay trong nhóm" },
-      ];
+  return [
+    { nhan: "/plan", goiY: "/plan ", moTa: "Rủ Đi AI phác lịch trình" },
+    { nhan: "/vote", goiY: "/vote", moTa: "Viết câu hỏi và lựa chọn" },
+    {
+      nhan: "/chia-bill",
+      goiY: "/chia-bill ",
+      moTa: haiNguoi ? "Rủ Đi AI gom khoản chi để hai bạn xác nhận" : "Rủ Đi AI gom khoản chi để cả hội xác nhận",
+    },
+    {
+      nhan: "@Rủ Đi",
+      goiY: "@Rủ Đi ",
+      moTa: haiNguoi ? "Hỏi Rủ Đi AI ngay trong cuộc trò chuyện của hai bạn" : "Hỏi Rủ Đi AI ngay trong nhóm",
+    },
+  ];
 }
