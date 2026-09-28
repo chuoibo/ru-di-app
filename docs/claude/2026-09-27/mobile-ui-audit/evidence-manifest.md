@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (146 ảnh, tổng 17.14 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (150 ảnh, tổng 17.58 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -150,3 +150,7 @@
 | [EV-F09-TAI-KHOAN-C1](evidence/EV-F09-TAI-KHOAN-C1.jpg) | UI-108: panel «Tài khoản» của Cá nhân có «Quay lại» như màn con; Back của trình duyệt thì rời Cá nhân (C1) | 81784 | `1b317629` |
 | [EV-F09-XOA-ghep](evidence/EV-F09-XOA-ghep.jpg) | UI-110: xoá tài khoản, bước 1 và bước 2 với «XOÁ» đã gõ: «Xoá vĩnh viễn» vẫn tắt, không câu lý do; câu nhắc đòi «XOA» (C1) | 64135 | `7749b899` |
 | [EV-F09.S01-BASE-ghep](evidence/EV-F09.S01-BASE-ghep.jpg) | F09.S01 tab Cá nhân của chat-0 ở C1–C7: thẻ hộ chiếu, 8 hàng lối vào; ở C7 thẻ và hàng trải 872/842px (UI-105) | 197934 | `4c7b8c1b` |
+| [EV-F10-CHAY-LAI-C9](evidence/EV-F10-CHAY-LAI-C9.jpg) | UI-027: bảng dev, «Chạy lại» ở C9: Nếp và đường mực đứng yên đúng, sân khấu ghế trống ở 603–704 ms rồi hiện lại ở 1098 ms | 126545 | `85541f20` |
+| [EV-F10-SO-SANH-C2](evidence/EV-F10-SO-SANH-C2.jpg) | UI-113: bảng dev, renderer Khám phá thật, cặp so sánh không ảnh ở 320dp: tim «Lưu Still Cafe» bị đẩy qua mép phải, còn thấy 26/48dp (C2) | 104831 | `d23bc085` |
+| [EV-F10-TIM-LONG-C1](evidence/EV-F10-TIM-LONG-C1.jpg) | UI-114: bảng dev, cặp so sánh có ảnh: tim trên góc ảnh nằm trong nút «Mở …»; bản dev hiện cảnh báo React «<button> cannot contain a nested <button>» (C1) | 193614 | `d6923a82` |
+| [EV-F10-XEM-ANH-C1](evidence/EV-F10-XEM-ANH-C1.jpg) | UI-094: bảng dev, trình xem ảnh với ảnh đóng gói sẵn: tiêu đề, «1 / 2», gợi ý, chú thích, nhưng không có ảnh (390×0) (C1) | 33085 | `740267ee` |

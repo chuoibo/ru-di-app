@@ -4,11 +4,12 @@
 - MODE = **AUDIT_ONLY**: không sửa mã app; chỉ thêm tài liệu, ảnh bằng chứng và harness đo.
 - protocol_version: không áp dụng (không đụng giao thức v1 hay trang khách).
 - Verdict: không có (chưa có reviewer thật; đây là báo cáo phát hiện).
-- Trạng thái: **đang làm, checkpoint 10** (xong F00–F09). Mục «Checkpoint» ở cuối là nguồn sự thật về
+- Trạng thái: **đang làm, checkpoint 11** (xong F00–F10). Mục «Checkpoint» ở cuối là nguồn sự thật về
   phần đã và chưa đo.
-- `main` đã đi tiếp tới `33d29fe` trong lúc audit: 49 commit, có hai feature mới (Cộng đồng, Nhật ký chuyến) và
-  sửa ở Khám phá, Kèo, Hồ sơ. Đợt này **giữ mốc `7ea1a7c`** tới hết pipeline, để số đo giữa các checkpoint so được
-  với nhau. Feature mới nằm trong hàng đợi sau pipeline (mục «Checkpoint»).
+- Trong lúc audit, `main` đã đi tiếp tới `33d29fe` (49 commit: Cộng đồng, Nhật ký chuyến, sửa ở Khám phá, Kèo, Hồ sơ),
+  rồi tới `16f24d5` (thêm 4 PR: AI v2, Rủ Đi AI trong chat hai người, sổ kỷ niệm Nếp v3, hồ sơ kể chuyện và sổ huy
+  hiệu). Đợt này **giữ mốc `7ea1a7c`** tới hết pipeline, để số đo giữa các checkpoint so được với nhau. Feature mới
+  nằm trong hàng đợi sau pipeline (mục «Checkpoint»).
 
 Tài liệu đi kèm:
 - `inventory.md`: danh mục feature → screen → lớp UI → motion.
@@ -38,6 +39,7 @@ Tài liệu đi kèm:
 | Ghi sổ đôi (F07) | Team Đà Lạt không bị đụng. Cặp chat-0/chat-1: lập sổ qua UI (đề nghị ở phía A, đồng ý ở phía B), một tờ đi đủ vòng nháp → sửa → gửi → B đề nghị sửa (phiên bản 2, có lý do) → A đồng ý → chốt, thành một kèo «Thứ Bảy 03/10»; thêm một bản phác cùng tuần mà «Rủ … tới đây» tự tạo (UI-085). Sáu cặp mới kết bạn, mở chat đôi và được đề nghị lập sổ qua API, rồi đồng ý qua UI để đo M6 và trạng thái chờ: chat-2/3 (đề nghị qua UI, đồng ý ở C9; một bản phác do ca C8), chat-4/5, chat-6/7, chat-8/9, chat-10/11, chat-12/13. Không đóng sổ nào (sheet «Đóng sổ» chỉ mở rồi thôi), không bật «Một đôi», không gửi tờ nào ngoài cặp chat-0/chat-1. Lệnh «Gửi» ở trang không phiên không tới máy chủ (UI-082). Tổng trên DB cục bộ: 36 người, 4 nhóm, 8 chat đôi, 7 sổ, 3 tờ (1 chốt, 2 nháp) |
 | Ghi kỷ niệm (F08) | Team Đà Lạt chỉ được đọc (tường 2 ảnh, 3 check-in như lúc seed). Mọi lần ghi vào nhóm chat-test và hai người chat-0/chat-1: một kèo «Kèo album F08» (28–29/09, để kệ album có album «đang đi»); 3 ảnh tổng hợp trên tường nhóm (360×640 chú thích 213 ký tự, 640×360 «Hoàng hôn trên hồ», 480×640 không chú thích; byte sinh bằng `pngThuBytes`, không phải ảnh chụp) và 1 check-in «Sống Màu Workshop»; 1 tim và 1 bình luận của chat-1 trên tường. chat-0 đăng story qua UI và xoá qua ca xoá; còn 1 story, tự hết hạn sau 24 giờ (story đã xoá không còn hàng trên DB nên số đã đăng không kiểm lại được bằng SQL). chat-0 có 2 bài: «Chỉ mình tôi» (mức mặc định) và «Bạn bè»; chat-1 bình luận 2 lần trên bài «Bạn bè», 1 bị xoá ở ca xoá. Không gửi báo cáo nào (sheet báo cáo chỉ mở rồi đóng). Ca nháp (L34) không gửi gì |
 | Ghi hồ sơ và cài đặt (F09) | Hai tài khoản mới qua OTP của API: `moi-54` nhận mọi lần sửa (tên 102 ký tự có emoji, giới thiệu, thành phố; ảnh đại diện tổng hợp đổi hai lần; công tắc «Tìm theo số điện thoại» tắt rồi bật lại; chính sách bình luận đổi rồi trả về; 2 địa điểm lưu qua API; một phiên thêm qua OTP rồi đăng xuất từ màn phiên). Giao diện Sáng/Tối lưu trên máy (`rudi.giao-dien.v1`, trong context test đã đóng), không lên máy chủ. `moi-55` được tạo chỉ để xoá, và đã bị xoá qua trang hai bước. `chat-20` bỏ chặn `chat-21` (khối chặn từ F06); sau đó hai người không còn là bạn, đúng như trang «Về Rủ Đi» nói. `chat-0` và `dalat-0` chỉ được đọc; Team Đà Lạt không bị đụng |
+| Bảng dev (F10) | Server dev E2: `npx expo start --web` với `EXPO_PUBLIC_RUDI_FIXTURE=1`, `EXPO_OFFLINE=1`, `CI=1`; bundle dev khoảng 13 MB, dựng trong 30 s. Hai bảng `/dev/ui-lab` và `/dev/san-khau` chỉ mở khi có cả `__DEV__` lẫn cờ fixture; trên bản export production (E1) cả hai chuyển về `/welcome` (đã đo). Bảng không cần phiên và không ghi gì vào DB. Lớp báo lỗi của bản dev (LogBox) có hiện trong vài ảnh; nó chỉ có ở bản dev, và cảnh báo nó hiện được ghi thành bằng chứng khi đúng là lỗi của app (UI-114) |
 
 ### Ma trận cấu hình
 
@@ -79,17 +81,17 @@ Cách lấy mẫu:
 | Trình đọc màn hình thật, haptics, BackHandler, vuốt back iOS | BLOCKED | Chỉ đo cây ARIA trên web |
 | Độ mượt / FPS | Không đo | SwiftShader headless không đại diện cho máy; motion chỉ kết luận về hình dạng (đi đâu, dừng đâu, có bị ngắt, giảm chuyển động) |
 
-## B. Coverage thực tế (checkpoint 10)
+## B. Coverage thực tế (checkpoint 11)
 
 Đếm lấy từ `coverage-matrix.md` (sinh máy). Mọi hàng BLOCKED và NOT_TESTED đều được đếm.
 
 | Phạm vi | PASS | FAIL | BLOCKED | NOT_TESTED | N/A |
 |---|---|---|---|---|---|
-| Tất cả (761 hàng) | 313 | 254 | 181 | 9 | 4 |
-| Web | 313 | 254 | 61 | 9 | 4 |
+| Tất cả (818 hàng) | 362 | 263 | 181 | 7 | 5 |
+| Web | 362 | 263 | 61 | 7 | 5 |
 | Android native | 0 | 0 | 60 | 0 | 0 |
 | iOS native | 0 | 0 | 60 | 0 | 0 |
-| Method RUNTIME-WEB | 313 | 252 | 1 | 9 | 3 |
+| Method RUNTIME-WEB | 362 | 261 | 1 | 7 | 4 |
 | Method STATIC | 0 | 2 | 180 | 0 | 1 |
 
 Theo feature đã đo:
@@ -106,6 +108,7 @@ Theo feature đã đo:
 | F07 Sổ hai người | 16 | 23 | 6 | 0 | 0 |
 | F08 Kỷ niệm · Media | 43 | 39 | 27 | 0 | 0 |
 | F09 Hồ sơ · Cài đặt | 22 | 17 | 18 | 0 | 0 |
+| F10 Bảng QA dev | 49 | 9 | 6 | 0 | 1 |
 
 Một hàng BLOCKED trên web là thật sự không chạy được trong giả lập: giữ ngón tay trên bản đồ (`TC-L11-GIU`). Giả lập
 cảm ứng CDP không sinh `contextmenu` từ cú giữ như Chrome Android thật.
@@ -114,7 +117,7 @@ Hai hàng STATIC có kết quả FAIL ở F04 là phép tính trên chính hàm 
 `dist-test`), cùng vị từ với test của repo, cho số người vượt phạm vi test. Chúng đỡ cho hàng runtime cùng issue,
 không thay thế nó.
 
-Hàng rút: `coverage-matrix.md` có mục «Hàng đã rút» cho 50 test case có phán quyết sinh từ lỗi của harness.
+Hàng rút: `coverage-matrix.md` có mục «Hàng đã rút» cho 68 test case có phán quyết sinh từ lỗi của harness.
 Sổ gốc giữ nguyên các dòng đó; ma trận chỉ bỏ chúng khỏi bảng và ghi lý do.
 
 Inventory:
@@ -123,13 +126,13 @@ Inventory:
 
 ## C. Issues
 
-112 issue sau checkpoint 10, chi tiết và ảnh ở `issues.md`.
+115 issue sau checkpoint 11, chi tiết và ảnh ở `issues.md`.
 
 | Mức | BUG | UX ISSUE | VISUAL POLISH |
 |---|---|---|---|
-| P1 | UI-005, UI-049, UI-082 | | |
-| P2 | UI-003, UI-004, UI-006, UI-011, UI-016, UI-022, UI-032, UI-035, UI-036, UI-048, UI-062, UI-063, UI-073, UI-083, UI-084, UI-085, UI-094 | UI-002, UI-018, UI-019, UI-021, UI-023, UI-024, UI-033, UI-034, UI-050, UI-051, UI-052, UI-074, UI-095, UI-096, UI-097, UI-107 | |
-| P3 | UI-010, UI-013, UI-027, UI-042, UI-046, UI-053, UI-072, UI-075, UI-089 | UI-001, UI-007, UI-008, UI-009, UI-012, UI-015, UI-017, UI-020, UI-028, UI-029, UI-030, UI-037, UI-038, UI-039, UI-041, UI-043, UI-044, UI-056, UI-057, UI-058, UI-059, UI-060, UI-066, UI-067, UI-068, UI-069, UI-071, UI-076, UI-077, UI-078, UI-079, UI-080, UI-086, UI-087, UI-088, UI-091, UI-099, UI-100, UI-101, UI-102, UI-103, UI-106, UI-108, UI-109, UI-110, UI-111, UI-112 | UI-014, UI-025, UI-026, UI-031, UI-040, UI-045, UI-047, UI-054, UI-055, UI-061, UI-064, UI-065, UI-070, UI-081, UI-090, UI-092, UI-093, UI-098, UI-104, UI-105 |
+| P1 | UI-005, UI-049, UI-082 |  |  |
+| P2 | UI-003, UI-004, UI-006, UI-011, UI-016, UI-022, UI-032, UI-035, UI-036, UI-048, UI-062, UI-063, UI-073, UI-083, UI-084, UI-085, UI-094 | UI-002, UI-018, UI-019, UI-021, UI-023, UI-024, UI-033, UI-034, UI-050, UI-051, UI-052, UI-074, UI-095, UI-096, UI-097, UI-107, UI-113 |  |
+| P3 | UI-010, UI-013, UI-027, UI-042, UI-046, UI-053, UI-072, UI-075, UI-089, UI-114, UI-115 | UI-001, UI-007, UI-008, UI-009, UI-012, UI-015, UI-017, UI-020, UI-028, UI-029, UI-030, UI-037, UI-038, UI-039, UI-041, UI-043, UI-044, UI-056, UI-057, UI-058, UI-059, UI-060, UI-066, UI-067, UI-068, UI-069, UI-071, UI-076, UI-077, UI-078, UI-079, UI-080, UI-086, UI-087, UI-088, UI-091, UI-099, UI-100, UI-101, UI-102, UI-103, UI-106, UI-108, UI-109, UI-110, UI-111, UI-112 | UI-014, UI-025, UI-026, UI-031, UI-040, UI-045, UI-047, UI-054, UI-055, UI-061, UI-064, UI-065, UI-070, UI-081, UI-090, UI-092, UI-093, UI-098, UI-104, UI-105 |
 
 Đổi mức: UI-018 từ P3 lên P2 ở checkpoint 3. Nút back của `TopBar` trong kit (37 file màn) cũng không kiểm
 `canGoBack()`, và F02 đo lại được ở `/places/[id]`, một màn không có thanh tab nên mở thẳng bằng link thì
@@ -170,6 +173,8 @@ trong app không còn lối ra.
   Toàn app không có chỗ nào chặn rời màn.
 - **UI-107 (P2, Cài đặt):** lưu công tắc quyền riêng tư lỗi thì câu lỗi nằm ở cuối trang (y 1124 trong cửa sổ 844); quanh
   công tắc không có gì đổi.
+- **UI-113 (P2, Khám phá, đo trên bảng dev):** ở 320dp, trong cặp so sánh không ảnh có dấu, tim «Lưu» bị đẩy ra ngoài mép
+  phải, còn thấy 26/48dp. Khám phá sống trên stack này không vào được trạng thái đó (dấu cần AI khớp).
 - **UI-095, UI-096 (P2, tường, bài):** tim lỗi ở cuối tường báo lỗi ở đầu tường (y −1535); xoá bình luận của bài chỉ
   cần một chạm vào thùng rác 18×20, không hỏi, trong khi xoá tin và xoá story đều có bước hỏi.
 - **UI-048 (P2, chia bill):** số tiền của món bị ellipsis còn «12.3…» ở mọi bề rộng điện thoại khi tên món dài.
@@ -341,14 +346,37 @@ Phát hiện bị loại vì là lỗi của harness, không phải của app:
   - Dấu «BẢN NHÁP» ở «Về Rủ Đi» là chủ ý (chú thích mã: chưa người làm luật nào đọc). Nội dung pháp lý không thuộc
     phạm vi audit UI.
 
+Ở F10:
+- **Trùng ID giữa hai feature.** Lượt F10 đầu ghi hàng kéo nghiêng dưới `TC-MO12-KEO`, trùng hàng N/A của F02 (Khám phá
+  không nối nghiêng). Sổ khoá hàng theo `tc|nền tảng|cấu hình`, nên hàng F10 đè hàng F02.
+  - `f10-phan-xu.mjs` rút ID cũ và ghi lại nguyên văn hai hàng F02.
+  - Hàng F10 nay mang tiền tố `TC-F10-`, và tách hai ý (nghiêng theo tay; kéo dọc vẫn cuộn).
+  - `TC-MO12-GAP` cũng đổi thành `TC-F10-MO12-GAP`.
+- «Bảy trạng thái album đều không mở được»: bộ định vị khối album leo tới cha có ba con rồi lấy phần tử kế, không trúng
+  album. Chip vẫn bấm được (trình xem mở với «1 / 4»). Đo lại bằng vị trí, giữa hàng chip và tiêu đề mục kế: đạt cả bảy,
+  ở C1 và C2.
+- ID của sáu hàng Khám phá lặp «PHA» do cắt chuỗi lệch; số đo đúng, đo lại dưới ID đúng.
+- Khay sticker có hai lần rút:
+  - lượt đầu so lưới chạm qua một lần tải lại trang (ca Back rời trang mở lạnh), ở chỗ cuộn khác;
+  - một lượt khác chạy song song với baseline dài (hai Chromium SwiftShader cùng lúc), nên hoạt ảnh đóng quá 2,5 s.
+  - Hai lượt chạy riêng đều đạt. Ca Back khi khay mở thuộc họ UI-038, không ghi lại.
+- «Ô tìm: placeholder 0px»: app vẽ placeholder bằng một `Text` đè lên ô (F44), không dùng thuộc tính `placeholder`. Đo
+  lại bằng chữ vẽ: ở C2 câu dài kết bằng «…» đúng thiết kế.
+- «Tên sticker trong khay bị cắt»: bộ lọc so chữ mà không so vị trí, nên gán «…» của bảng chú thích (nằm dưới lớp nền)
+  cho khay. Trong khay thật, «Cà phê không?» và «Trả tiền nè» xuống hai dòng, không bị cắt.
+- Không thành issue:
+  - «−/+» 33×48 thuộc `CauRu`, mà ở mốc này chỉ bảng dev dùng component đó.
+  - Tên trong bảng chú thích sticker bị «…» ở C2: bảng chú thích là của trang dev (N/A).
+  - `scrollable-region-focusable` ở `/dev/san-khau`: danh sách thử toàn chữ, chỉ có ở bảng dev.
+
 Mỗi trường hợp đã sửa trong harness, và giữ ghi chú ở đây để người đọc biết đã được loại trừ.
 
 ## D. Thay đổi
 
 Không sửa file nào trong `apps/`, `services/`, `packages/`. Thêm:
-- `docs/claude/2026-09-27/mobile-ui-audit/`: tài liệu và ảnh (146 ảnh, 17,14 MiB, ngân sách 20 MiB);
+- `docs/claude/2026-09-27/mobile-ui-audit/`: tài liệu và ảnh (150 ảnh, 17,58 MiB, ngân sách 20 MiB);
 - `tests/qa/mobile-ui-audit/`: harness. Thư viện dùng chung ở `thu-vien/` (trước là `lib/`, xem sự cố 2);
-  `kich-ban/f01-phan-xu.mjs` tới `f09-phan-xu.mjs` ghi các phán quyết bằng mắt kèm ảnh đã xem (`f01-phan-xu.mjs` chỉ gắn
+  `kich-ban/f01-phan-xu.mjs` tới `f10-phan-xu.mjs` ghi các phán quyết bằng mắt kèm ảnh đã xem (`f01-phan-xu.mjs` chỉ gắn
   lại bằng chứng, xem sự cố 3); `kiem-tai-lieu.mjs` kiểm ghim ảnh, link ảnh và bảng issue trước mỗi commit;
   `seed-bien-the.mjs` tạo dữ liệu biến thể qua API (thêm `--chat`: 40 tin tổng hợp cho nhóm chat-test);
 - các mục ghim ảnh trong `.repo-guard-allowlist.json`.
@@ -362,9 +390,9 @@ Không sửa file nào trong `apps/`, `services/`, `packages/`. Thêm:
 | `npm test` (gồm `build:check`), `CHROME_BIN` trỏ Chromium | 1220 test: 1219 pass, **1 fail có sẵn** trước mọi thay đổi |
 | `node tu-kiem.mjs --dot-bien` (harness) | 16/16 xanh; đột biến M1 (bỏ ngưỡng tràn ngang) và M2 (coi mọi nền trong suốt) đỏ **đúng dòng dự đoán**. Chạy lại sau khi đổi `lib/` thành `thu-vien/`: vẫn 16/16, M1 và M2 đỏ đúng chỗ |
 | `node tu-kiem.mjs` sau khi vá `tamCua` (F04) | 16/16 xanh |
-| `node tu-kiem.mjs --dot-bien` ở checkpoint 6, 7, 8, 9 và 10 | 16/16 xanh; M1 đỏ ở «tràn ngang: phần tử 500px», M2 đỏ ở «chữ bị che bởi lớp đục», đúng dự đoán (cả năm lần) |
+| `node tu-kiem.mjs --dot-bien` ở checkpoint 6 tới 11 | 16/16 xanh; M1 đỏ ở «tràn ngang: phần tử 500px», M2 đỏ ở «chữ bị che bởi lớp đục», đúng dự đoán (cả sáu lần) |
 | Chặn file bị `.gitignore` bỏ qua (bước mới của script commit) | canary: một file trong thư mục `lib/` giả bị liệt kê; identity: 0 file bị bỏ qua ngoài `node_modules/` |
-| `node kiem-tai-lieu.mjs <docs>` (mới ở checkpoint 10) | Lượt đầu trên cây thật: đỏ đúng 3 ảnh của sự cố 3. Sau khi sửa: 146 ảnh, 146 ghim khớp sha256; 146/146 ảnh được dẫn tới ngoài manifest; hai bảng issue khớp 112 mục |
+| `node kiem-tai-lieu.mjs <docs>` (mới ở checkpoint 10) | Lượt đầu trên cây thật: đỏ đúng 3 ảnh của sự cố 3. Checkpoint 11: 150 ảnh, 150 ghim khớp sha256; 150/150 ảnh được dẫn tới ngoài manifest; hai bảng issue khớp 115 mục. Trước khi chép ảnh F10, nó đỏ đúng 4 link ảnh chưa có |
 | `node kiem-tai-lieu.mjs <docs> --canary` | identity xanh; 5/5 canary đỏ đúng thông báo dự đoán: `sha` (lệch một ký tự), `bang` (bỏ UI-107 khỏi bảng loại), `muc` (bỏ UI-002 khỏi bảng mức), `link` (thêm link tới ảnh không có), `thua` (bỏ mọi link tới một ảnh, trừ manifest) |
 
 Test fail có sẵn:
@@ -474,11 +502,21 @@ Test fail có sẵn:
   - Hàng lối vào ở Cá nhân chỉ được đo về cỡ (≥ 48dp). Màn mà chúng mở ra (Bạn bè, Tường, Tài chính, Sở thích) thuộc
     F06, F08, F04 và F01, đã đo ở đó.
   - «Về Rủ Đi» là bản nháp theo chú thích mã; audit chỉ xem bố cục và độ đọc được, không xem nội dung điều khoản.
+- Bảng QA dev (F10):
+  - Bảng chạy trên bản dev (React dev, `__DEV__`, LogBox), không phải bản production, nên hiệu năng và cảnh báo khác bản
+    thật. Kết luận về component dựa trên việc bảng dựng đúng component của app. Mỗi issue mới đều ghi app thật có vào
+    được trạng thái đó không.
+  - Hai trạng thái chỉ dựng được trên bảng: cặp so sánh có dấu «Hợp gu» (cần AI khớp) và cặp có ảnh quán (catalog cục bộ
+    không có ảnh). Trên stack có AI và ảnh thật, UI-113 và UI-114 cần đo lại ngay trên Khám phá.
+  - Kéo nghiêng chỉ đo trên web với cảm ứng giả lập bằng CDP; native (RNGH) chưa chạy.
+  - Chưa tới: bấm từng tiết mục của «Nếp con rối giấy» (chín tiết mục, tám khoảnh khắc), «Kéo để mở thư», các primitive
+    của «Bộ giấy». Ba mục này chỉ được xem trong ảnh baseline.
 
 ## Checkpoint
 
 - **Đã xong:** F00 (vỏ toàn cục), F01 (vào cửa), F02 (Khám phá), F03 (Plan · Kèo · Hành trình), F04 (Tiền),
-  F05 (Tin nhắn · Chat), F06 (Nhóm · Người), F07 (Sổ hai người), F08 (Kỷ niệm · Media), F09 (Hồ sơ · Cài đặt).
+  F05 (Tin nhắn · Chat), F06 (Nhóm · Người), F07 (Sổ hai người), F08 (Kỷ niệm · Media), F09 (Hồ sơ · Cài đặt),
+  F10 (Bảng QA dev).
   - F00:
     - định tuyến theo phiên, URL lạ;
     - thanh tab và rail ở 9 cấu hình;
@@ -571,14 +609,29 @@ Test fail có sẵn:
     - «Đăng nhập & phiên»: đăng xuất một phiên khác, token của phiên đó nhận 401; «Người đã chặn»: bỏ chặn chat-21;
     - xoá tài khoản hai bước trên moi-55 (chữ xác nhận, Back ở bước 2, xoá thật);
     - focus khi đổi màn; ngày ở hai màn; back lạnh 5 màn; không phiên 2 màn; 503 ba màn; C8; tablet.
-- **Tiếp theo:** F10 bảng QA dev → F11 demo → E1–E6 → verify cuối.
-- **Hàng đợi sau pipeline** (người yêu cầu nhắc 27/09): các feature mới trên `main` (`7ea1a7c` → `33d29fe`) được
-  audit trên bản dựng mới, sau khi xong mọi bước trên:
-  - Cộng đồng: tab mới và 7 route `/community/*`, bảng tin có kiểm duyệt, realtime;
-  - Nhật ký chuyến: `/diaries/[id]`, `/outings/[id]/ending`;
-  - retest các màn cũ mà `main` đã sửa: thanh tab và rail (F00), Khám phá và địa điểm (F02), picker của kèo (F03),
-    Hồ sơ, bài và tường (F06, F08, F09).
+  - F10:
+    - baseline `/dev/ui-lab` ở C1–C3 (23, 30 và 24 cửa sổ, đã xem hết); `/dev/san-khau` ở C1–C3 và `?canh=1`;
+    - sân khấu: kéo nghiêng và kéo dọc trên tranh (C1, C9), gập theo cuộn (C1, C9), tiêu đề nhỏ trên thanh, «Chạy lại»
+      (C1, C9);
+    - album bảy trạng thái ở C1 và C2, trình xem của album; renderer Khám phá bốn trạng thái ảnh, có và không có tên
+      dài, ở C1 và C2; tim của cặp so sánh ở C1, C4, C2; nút lồng; chặng ba trạng thái;
+    - khay sticker: ba cách đóng, chọn hình, tên trong khay ở C2; hàng chờ gửi ba trạng thái; ô tìm; kéo đổi thứ tự;
+      trình xem ảnh C1, C9; mặt quay giờ;
+    - đối chứng: bản production chuyển `/dev/*` về `/welcome`.
+- **Tiếp theo:** F11 demo → E1–E6 → verify cuối.
+- **Hàng đợi sau pipeline** (người yêu cầu nhắc 27/09 và 28/09). Các feature mới trên `main` được audit trên bản dựng
+  từ `main` mới nhất (ít nhất `16f24d5`), sau khi xong mọi bước trên:
+  - Cộng đồng: tab mới và 7 route `/community/*`, bảng tin có kiểm duyệt, realtime; bình luận và like của tường v2 nay
+    đi qua writer của Cộng đồng;
+  - sổ kỷ niệm Nếp v3 và Nhật ký chuyến: `/diaries/[id]`, `/outings/[id]/ending`, mở bằng link lạnh, xoá, quyền riêng tư;
+  - hồ sơ kể chuyện, sổ huy hiệu nhiều ngã rẽ, tường cá nhân v2: thành tích viết lại, ba huy hiệu trưng bày, bình luận
+    hai tầng, đăng lại;
+  - Rủ Đi AI trong chat: câu trả lời chạy dần, chip bối cảnh, @Rủ Đi trong chat hai người, bảng dev
+    `/dev/tra-loi-song`. Chưa có model thật, nên chỉ đo được nhánh không có khoá;
+  - retest các màn cũ mà `main` đã sửa: thanh tab và rail (F00), Khám phá và địa điểm (F02), picker của kèo (F03), Hồ sơ,
+    bài và tường (F06, F08, F09), và các màn đổi chữ trong đợt sổ kỷ niệm v3. Chạy lại cách tái hiện của từng issue,
+    ghi còn, hết hay đổi.
 - **Còn NOT_TESTED:**
-  - mọi hàng của F10 và F11 trong `coverage-matrix.md` (5 hàng NOT_TESTED, cộng các hàng BLOCKED native và cỡ chữ);
-  - các sheet F07 và các nhánh F08, F09 chưa tới (mục F ở trên);
+  - mọi hàng của F11 trong `coverage-matrix.md` (3 hàng NOT_TESTED, cộng các hàng BLOCKED native và cỡ chữ);
+  - các sheet F07 và các nhánh F08, F09, F10 chưa tới (mục F ở trên);
   - 4 hàng F00 đã ghi ở checkpoint trước.

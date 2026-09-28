@@ -728,5 +728,25 @@
   "bytes": 197934,
   "sha8": "4c7b8c1b",
   "moTa": "F09.S01 tab Cá nhân của chat-0 ở C1–C7: thẻ hộ chiếu, 8 hàng lối vào; ở C7 thẻ và hàng trải 872/842px (UI-105)"
+ },
+ "EV-F10-CHAY-LAI-C9": {
+  "bytes": 126545,
+  "sha8": "85541f20",
+  "moTa": "UI-027: bảng dev, «Chạy lại» ở C9: Nếp và đường mực đứng yên đúng, sân khấu ghế trống ở 603–704 ms rồi hiện lại ở 1098 ms"
+ },
+ "EV-F10-SO-SANH-C2": {
+  "bytes": 104831,
+  "sha8": "d23bc085",
+  "moTa": "UI-113: bảng dev, renderer Khám phá thật, cặp so sánh không ảnh ở 320dp: tim «Lưu Still Cafe» bị đẩy qua mép phải, còn thấy 26/48dp (C2)"
+ },
+ "EV-F10-TIM-LONG-C1": {
+  "bytes": 193614,
+  "sha8": "d6923a82",
+  "moTa": "UI-114: bảng dev, cặp so sánh có ảnh: tim trên góc ảnh nằm trong nút «Mở …»; bản dev hiện cảnh báo React «<button> cannot contain a nested <button>» (C1)"
+ },
+ "EV-F10-XEM-ANH-C1": {
+  "bytes": 33085,
+  "sha8": "740267ee",
+  "moTa": "UI-094: bảng dev, trình xem ảnh với ảnh đóng gói sẵn: tiêu đề, «1 / 2», gợi ý, chú thích, nhưng không có ảnh (390×0) (C1)"
  }
 }

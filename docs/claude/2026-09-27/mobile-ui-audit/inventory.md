@@ -136,6 +136,14 @@
 | F10.S01 | `/dev/ui-lab` | renderer, sân khấu, Nếp, primitive giấy, album 7 trạng thái, ảnh hỏng/tên dài, sticker, hàng đợi gửi, ô tìm dài, kéo đổi thứ tự, PhotoViewer | không có lối vào trong app |
 | F10.S02 | `/dev/san-khau` | đầu màn sân khấu gập khi cuộn, 18 dòng dài | chỉ vào từ ui-lab |
 
+Ghi chú checkpoint 11:
+- Hai bảng chỉ mở khi có cả `__DEV__` lẫn `EXPO_PUBLIC_RUDI_FIXTURE=1` (`src/rudi/cua-fixture.ts:20`); bản export
+  production chuyển cả hai về `/welcome` (đã đo).
+- Bảng dựng component thật của app: `AlbumAnh`, `PlaceLead`, `PlaceCompare`, `PlaceRow`, `HangChang`, `KhaySticker`,
+  `Sticker`, `HangChoGui`, `SearchField`, `ReorderList`, `PhotoViewer`, `BanXoay`, `CanhGap`. `CauRu` (câu rủ có bộ
+  tăng giảm) ở mốc này chỉ bảng dev dùng.
+- Kéo nghiêng của sân khấu (`CanhGap keo`) chỉ bật ở `/dev/san-khau`; không màn sản phẩm nào bật (UI-115).
+
 ### F11 Chế độ demo (chưa đăng nhập)
 
 | ID | Route | Nội dung |

@@ -60,6 +60,10 @@ node kich-ban/f09-ho-so.mjs [--chi du-lieu,ho-so,tab-back,da-luu,sua,cai-dat,cha
                                     # F09 Hồ sơ · Cài đặt: ghi vào moi-54 và chat-20 (bỏ chặn), chat-0 chỉ đọc; `xoa` XOÁ HẲN moi-55, chạy một lần
 node kich-ban/f09-phan-xu.mjs        # phán quyết bằng mắt của F09
 node kich-ban/f01-phan-xu.mjs        # gắn lại bằng chứng cho baseline F00/F01 (checkpoint 10, sự cố 3)
+AUDIT_BASE=http://127.0.0.1:8081 node kich-ban/f10-bang-dev.mjs [--chi lab-base,san-base,nghieng,gap,album,kham-pha,so-sanh,long-nut,chang,sticker,hang-cho,o-tim,reorder,xem-anh,renderer]
+                                    # F10 bảng dev; cần server dev: EXPO_PUBLIC_RUDI_FIXTURE=1 EXPO_OFFLINE=1 CI=1 npx expo start --web
+node kich-ban/f10-bang-dev.mjs --chi prod   # không đặt AUDIT_BASE: bản export production phải chuyển /dev/* về /welcome
+node kich-ban/f10-phan-xu.mjs        # phán quyết bằng mắt của F10, kèm sửa trùng ID TC-MO12-KEO với F02
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
                                     # ghim ảnh, link ảnh, bảng issue theo mức/loại; --canary đòi 5 canary đỏ
@@ -106,6 +110,13 @@ chỉ `SkeletonGroup` có role progressbar «Đang tải», nên «đang chờ»
 câu lỗi. Tràn và chữ bị cắt thì đọc số của bộ đo harness (`chup()` trả `tomTat.tranNgang` và `chuBiCat`, có canary),
 đừng tự đếm mép phần tử: các lớp ẩn cũng có mép. Kiểm một nút có với tới được không thì kéo từng cú nhỏ về phía nút và
 đọc sau mỗi cú; kéo tới cuối rồi mới đọc thì nút ở đầu trang đã trôi mất.
+
+ID test case phải duy nhất giữa các feature: sổ khoá hàng theo `tc|nền tảng|cấu hình`, nên hàng của feature sau dùng
+lại ID của feature trước sẽ đè hàng đó (F10 từng đè hàng N/A của F02 vì dùng chung `TC-MO12-KEO`). Hàng mới mang tiền tố
+`TC-Fxx-` của feature đang đo. Đừng chạy hai kịch bản có trình duyệt cùng lúc khi ca có chờ hoạt ảnh: SwiftShader chia
+CPU và hoạt ảnh vượt ngưỡng chờ. Lọc tín hiệu của bộ đo theo vị trí (hộp của vùng hay của hộp thoại), không theo chữ:
+cùng một chữ có thể nằm dưới lớp nền. Bộ đo vùng bấm quét cả tài liệu, nên một nút ngoài màn lặp lại ở mọi cửa sổ:
+đọc toạ độ trước khi kết luận. Placeholder của ô nhập là chữ vẽ đè lên ô (F44), không phải thuộc tính `placeholder`.
 
 Chạy `kiem-tai-lieu.mjs` sau `tong-hop.mjs` và trước mỗi commit. Nó không đếm `evidence-manifest.md`: file đó liệt kê
 mọi ảnh trong thư mục, nên đếm nó thì «ảnh không ai dùng» không bao giờ đỏ (sự cố 3 trong report). Ảnh chỉ được tính

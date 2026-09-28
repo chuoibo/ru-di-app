@@ -20,8 +20,8 @@
 | Mức | Issue |
 |---|---|
 | P1 | UI-005, UI-049, UI-082 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085, UI-094, UI-095, UI-096, UI-097, UI-107 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081, UI-086, UI-087, UI-088, UI-089, UI-090, UI-091, UI-092, UI-093, UI-098, UI-099, UI-100, UI-101, UI-102, UI-103, UI-104, UI-105, UI-106, UI-108, UI-109, UI-110, UI-111, UI-112 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085, UI-094, UI-095, UI-096, UI-097, UI-107, UI-113 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081, UI-086, UI-087, UI-088, UI-089, UI-090, UI-091, UI-092, UI-093, UI-098, UI-099, UI-100, UI-101, UI-102, UI-103, UI-104, UI-105, UI-106, UI-108, UI-109, UI-110, UI-111, UI-112, UI-114, UI-115 |
 
 ---
 
@@ -427,8 +427,8 @@
 | Nền tảng, cấu hình | web, C9 (`prefers-reduced-motion: reduce`). C1 không thấy trống: ở đó SVG được giữ trong 400 ms của cú fade |
 | Tái hiện | Như UI-026, ở C9 |
 | Expected | Chú thích `KhungSkia` hứa không bao giờ trống: SVG ở lại tới khi canvas Skia đã vẽ |
-| Actual | Dòng thời gian `data-renderer` trên cùng đồng hồ với screencast: 71 ms SVG và Skia cùng mount, Skia opacity 0; 145 ms SVG bị gỡ, Skia opacity 1. Khung 176 ms vùng sân khấu trống; khung 609 ms tranh Skia mới hiện. Trống khoảng 430–460 ms |
-| Evidence | ![bỏ lọc ở C9](evidence/EV-F02-MO12-bo-loc-C9.jpg) |
+| Actual | Dòng thời gian `data-renderer` trên cùng đồng hồ với screencast: 71 ms SVG và Skia cùng mount, Skia opacity 0; 145 ms SVG bị gỡ, Skia opacity 1. Khung 176 ms vùng sân khấu trống; khung 609 ms tranh Skia mới hiện. Trống khoảng 430–460 ms F10: trên bảng dev, «Chạy lại» ở C9 làm sân khấu ghế trống ở 603 và 704 ms rồi hiện đứng sẵn ở 1098 ms, trong khi Nếp và đường mực ngay trên đứng yên đúng ở tư thế cuối (`TC-F10-CHAY-LAI` C9) |
+| Evidence | ![bỏ lọc ở C9](evidence/EV-F02-MO12-bo-loc-C9.jpg) ![F10: «Chạy lại» ở C9](evidence/EV-F10-CHAY-LAI-C9.jpg) |
 | Source | `src/rudi/ui/KhungSkia.tsx:65-93` (`HienSauKhiVe` đợi đúng hai `requestAnimationFrame`, rồi fade; giảm chuyển động nên thời lượng 0), `:130-134` (gỡ SVG khi fade xong) |
 | Root cause | Hai rAF không phải tín hiệu «canvas đã vẽ»; dựng surface CanvasKit mất lâu hơn |
 | Giới hạn | Độ dài khoảng trống phụ thuộc GPU, SwiftShader chậm hơn máy thật. Cơ chế gỡ SVG trước khi canvas có khung đầu thì không phụ thuộc máy |
@@ -657,8 +657,8 @@
 | Category / Severity | BUG (accessibility) · **P3** |
 | Feature / Screen | F03 · `/outings/[id]` |
 | Nền tảng, cấu hình | web, C1 và C3 (axe WCAG 2 A/AA) |
-| Actual | axe critical: `aria-allowed-attr` ×3 (×12 ở kèo 12 chặng): nút chặng `role=button` mang `aria-selected`. `aria-required-parent` ×2: «Lịch trình» và «Bản đồ» là `role=tab` mà không có `tablist` (công tắc vẫn báo `aria-selected` đúng khi đổi). `aria-required-attr`: slider «Thứ tự …» thiếu `aria-valuenow` (UI-036), mặt quay giờ cũng là slider không có giá trị. F09 «Cài đặt»: ba mục «Giao diện» («Sáng», «Tối», «Theo hệ thống») là `role=tab` có `aria-selected` đúng nhưng không nằm trong `tablist` (axe `aria-required-parent` ×3; `Segmented` của kit, `ui.tsx:951`); nhóm «Ai được bình luận tường tôi» là `radiogroup` chứa ba `button` mang `aria-pressed` thay vì `radio` (`CaiDatScreen.tsx:177`). `TC-F09-CAI-DAT-ARIA` |
-| Evidence | Báo cáo axe của ảnh baseline S03 (ở C1 và C3); hàng `TC-F03-CHE-DO`, `TC-L15-KEO` |
+| Actual | axe critical: `aria-allowed-attr` ×3 (×12 ở kèo 12 chặng): nút chặng `role=button` mang `aria-selected`. `aria-required-parent` ×2: «Lịch trình» và «Bản đồ» là `role=tab` mà không có `tablist` (công tắc vẫn báo `aria-selected` đúng khi đổi). `aria-required-attr`: slider «Thứ tự …» thiếu `aria-valuenow` (UI-036), mặt quay giờ cũng là slider không có giá trị. F09 «Cài đặt»: ba mục «Giao diện» («Sáng», «Tối», «Theo hệ thống») là `role=tab` có `aria-selected` đúng nhưng không nằm trong `tablist` (axe `aria-required-parent` ×3; `Segmented` của kit, `ui.tsx:951`); nhóm «Ai được bình luận tường tôi» là `radiogroup` chứa ba `button` mang `aria-pressed` thay vì `radio` (`CaiDatScreen.tsx:177`). `TC-F09-CAI-DAT-ARIA` F10: mặt quay giờ (`BanXoay`, `role=slider`, không `aria-valuenow`) chứa nút «Gõ giờ: Giờ chặng», nên axe báo thêm `nested-interactive` (serious). Đo trên bảng dev, cùng component với sheet chặng của màn kèo (`TC-F10-BAN-XOAY-LONG`) |
+| Evidence | Báo cáo axe của ảnh baseline S03 (ở C1 và C3); hàng `TC-F03-CHE-DO`, `TC-L15-KEO`; F10: hàng `TC-F10-BAN-XOAY-LONG` |
 | Source | `keo/HangChang.tsx:129` (`aria-selected` trên button); `hanh-trinh/ThanhCheDo.tsx` (tab không có tablist); `ui/ReorderList.tsx:78`, `ui/BanXoay.tsx:85-88` (`adjustable` + `accessibilityValue`) |
 | Đề xuất sửa | `aria-pressed` hoặc `aria-current` cho chặng đang chọn; bọc công tắc bằng `role=tablist`; truyền `aria-valuenow`/`aria-valuetext` trực tiếp |
 | Tiêu chí gỡ | axe 0 vi phạm critical trên màn kèo |
@@ -1402,7 +1402,7 @@ phải lỗi.
 | Category / Severity | BUG (accessibility) · **P3** |
 | Feature / Screen / Layer | F07 (đo), mọi sheet · `ui/Sheet.tsx:210`. Cùng kiểu ở F08 «Thành tích» |
 | Nền tảng, cấu hình | web, C1. Native: `View` có `accessibilityLabel` mà không `accessible` thì cũng không được đọc (STATIC) |
-| Actual | axe `aria-prohibited-attr` (serious) ×1 trong mỗi sheet đã quét: Cài đặt sổ, Loại sổ, Hai ô ràng buộc, Đóng sổ. Phần tử: `<div aria-label="Tay cầm">`. Sheet báo cáo của F05 (UI-067) cũng ghi ×1; cùng component nên nhiều khả năng là cùng phần tử, nhưng lượt F05 không in phần tử ra. Nhãn và gợi ý «Kéo xuống để đóng» không tới trình đọc màn hình. F08: cùng kiểu lỗi ở «Thành tích»: thanh tiến độ «Tiến độ … phần trăm tới cấp sau» và con dấu «Huy hiệu Mở hàng» là `div` mang `aria-label` không role, axe ×2 (baseline `TC-F08.S09-BASE`, `ky-niem/AchievementsLive.tsx:135`, `:144`). Hai vùng chạm của story cũng ra lỗi axe này, nhưng là nút thiếu role: UI-101. F09 «Cài đặt», sau khi đổi ảnh đại diện: khung ảnh là `div` mang `aria-label` không role, và `img` bên trong không có `alt` (axe `aria-prohibited-attr` ×1, `image-alt` ×1; `ui/Avatar.tsx:54–62`, `TC-F09-CAI-DAT-ARIA`) |
+| Actual | axe `aria-prohibited-attr` (serious) ×1 trong mỗi sheet đã quét: Cài đặt sổ, Loại sổ, Hai ô ràng buộc, Đóng sổ. Phần tử: `<div aria-label="Tay cầm">`. Sheet báo cáo của F05 (UI-067) cũng ghi ×1; cùng component nên nhiều khả năng là cùng phần tử, nhưng lượt F05 không in phần tử ra. Nhãn và gợi ý «Kéo xuống để đóng» không tới trình đọc màn hình. F08: cùng kiểu lỗi ở «Thành tích»: thanh tiến độ «Tiến độ … phần trăm tới cấp sau» và con dấu «Huy hiệu Mở hàng» là `div` mang `aria-label` không role, axe ×2 (baseline `TC-F08.S09-BASE`, `ky-niem/AchievementsLive.tsx:135`, `:144`). Hai vùng chạm của story cũng ra lỗi axe này, nhưng là nút thiếu role: UI-101. F09 «Cài đặt», sau khi đổi ảnh đại diện: khung ảnh là `div` mang `aria-label` không role, và `img` bên trong không có `alt` (axe `aria-prohibited-attr` ×1, `image-alt` ×1; `ui/Avatar.tsx:54–62`, `TC-F09-CAI-DAT-ARIA`) F10: component `Sticker` (bong bóng chat và ô trong khay sticker) cũng là `div` mang `aria-label="Sticker: …"` mà không có role: axe ×29 trên bảng dev (`TC-F10.S01-BASE`, `AxeBuilder` in phần tử) |
 | Evidence | Hàng `TC-L23-SHEET-CON` (axe trên từng sheet, phần tử in ra bằng `AxeBuilder`) |
 | Hậu quả | Nhẹ: «Đóng bảng» vẫn có tên và đóng được. Nhưng mọi sheet mang một lỗi axe serious, làm nhiễu số đếm a11y |
 | Đề xuất sửa | Hoặc cho tay cầm vai trò có hành động đóng, hoặc bỏ nhãn và ẩn khỏi cây truy cập, vì «Đóng bảng» đã làm việc đó |
@@ -1471,8 +1471,8 @@ phải lỗi.
 | Nền tảng, cấu hình | web, C1 (đo); C9 chụp cùng vùng trống. Native: HYPOTHESIS, ô của FlatList ngang trên native được kéo cao theo danh sách nên có thể không bị; chưa chạy được |
 | Tái hiện | Album của kèo có 3 ảnh → chạm ảnh dẫn. Vuốt trái giữa khung. Chạm đúp. Chụm hai ngón (ngón thứ hai xuống sau 40 ms, dang ra, nhấc lần lượt) |
 | Expected | Ảnh hiện trọn giữa đầu và chú thích; vuốt sang ảnh sau, bộ đếm và chú thích đổi theo; chạm đúp và chụm phóng to ảnh, đúng như dòng gợi ý dưới đáy |
-| Actual | (1) Hộp thoại mở đúng (role dialog, aria-modal, focus vào «Đóng ảnh», bộ đếm «1 / 3», gợi ý, chú thích), nhưng ảnh cao **0px** (390×0, ảnh gốc 480×640): vùng giữa là nền chàm trống, ở cả ba ảnh. (2) Một cú vuốt cuộn khung lật trang 0 → 780px, bỏ qua ảnh thứ hai; bộ đếm vẫn «1 / 3», chú thích vẫn của ảnh đầu. (3) Chạm đúp: transform của ảnh giữ `scale(1)`. (4) Chụm: ảnh vẫn `scale(1)` nhưng **cả trang** phóng ×4,12 (`visualViewport.scale`; một lượt khác ×4,98). «Đóng» ra ngoài màn (toạ độ trên màn 1046, −754), vuốt sau đó chỉ kéo khung nhìn của trang. Muốn đóng phải chụm lại cho trang về cỡ cũ, hoặc Back (rời album). Trình xem chưa ai chụm thì Esc và «Đóng» đóng ngay, focus về ảnh đã mở (`TC-L25-VONGDOI` đạt) |
-| Evidence | ![mở ảnh; sau cú chụm](evidence/EV-F08-XEM-ANH-ghep.jpg) (hàng `TC-L25-ANH`, `TC-L25-CU-CHI`) |
+| Actual | (1) Hộp thoại mở đúng (role dialog, aria-modal, focus vào «Đóng ảnh», bộ đếm «1 / 3», gợi ý, chú thích), nhưng ảnh cao **0px** (390×0, ảnh gốc 480×640): vùng giữa là nền chàm trống, ở cả ba ảnh. (2) Một cú vuốt cuộn khung lật trang 0 → 780px, bỏ qua ảnh thứ hai; bộ đếm vẫn «1 / 3», chú thích vẫn của ảnh đầu. (3) Chạm đúp: transform của ảnh giữ `scale(1)`. (4) Chụm: ảnh vẫn `scale(1)` nhưng **cả trang** phóng ×4,12 (`visualViewport.scale`; một lượt khác ×4,98). «Đóng» ra ngoài màn (toạ độ trên màn 1046, −754), vuốt sau đó chỉ kéo khung nhìn của trang. Muốn đóng phải chụm lại cho trang về cỡ cũ, hoặc Back (rời album). Trình xem chưa ai chụm thì Esc và «Đóng» đóng ngay, focus về ảnh đã mở (`TC-L25-VONGDOI` đạt) F10: cùng component trên bảng dev, với ảnh đóng gói sẵn trong app (không qua mạng): ảnh 390×0 ở C1 và C9, cả ở trình xem của album tổng hợp («1 / 4») lẫn ở nút «Mở bộ ảnh tổng hợp». Như vậy nguyên nhân không nằm ở việc tải ảnh. Vòng đời thì đạt: focus vào «Đóng ảnh», Esc đóng, focus về nút mở (`TC-F10-ALBUM-XEM`, `TC-F10-XEM-ANH`) |
+| Evidence | ![mở ảnh; sau cú chụm](evidence/EV-F08-XEM-ANH-ghep.jpg) (hàng `TC-L25-ANH`, `TC-L25-CU-CHI`) ![F10: bảng dev, ảnh đóng gói, C1](evidence/EV-F10-XEM-ANH-C1.jpg) |
 | Source | `ui/PhotoViewer.tsx:96`: ô mỗi ảnh `{ width, flex: 1 }` nằm trong FlatList ngang; trên web ô không nhận chiều cao của danh sách nên cao 0, ảnh `absoluteFill` (dòng 99) cao 0 theo, và `GestureDetector` của chạm đúp và chụm (dòng 97) không có diện tích nhận chạm: hai ngón rơi cho trình duyệt (cả hai con trỏ nhận `pointercancel`). Dòng 49: chỉ số ảnh chỉ đổi ở `onMomentumScrollEnd`, sự kiện ScrollView web không phát, nên bộ đếm và chú thích đứng yên. `index.html` để trang phóng được (`initial-scale=1`, không `maximum-scale`) |
 | Hậu quả | Trên web, trình xem ảnh không cho xem ảnh nào; ai thử phóng to thì mất luôn nút «Đóng» |
 | Đề xuất sửa | Cho ô chiều cao tường minh (chiều cao đo được của vùng, như đã làm với `width`); đổi chỉ số theo `onScroll` hoặc `onViewableItemsChanged`; chặn phóng trang trên vùng ảnh (`touch-action: none`) |
@@ -1759,3 +1759,59 @@ phải lỗi.
 | Hậu quả | Trên web, người dùng trình đọc màn hình không được báo đã sang màn mới; người dùng bàn phím bắt đầu Tab lại từ đầu trang |
 | Đề xuất sửa | Khi màn nhận focus điều hướng, đưa focus vào tiêu đề của `TopBar` (`accessibilityRole="header"`, focus được bằng lập trình), hoặc một vùng live nói tên màn |
 | Tiêu chí gỡ | Sau khi mở mỗi màn trên, `document.activeElement` nằm trong màn mới |
+
+## F10 Bảng QA dev
+
+Các issue dưới đây đo trên `/dev/ui-lab` và `/dev/san-khau`, trên server dev bật cờ fixture. Hai bảng dựng **đúng
+component mà app dùng** với dữ liệu tổng hợp, để thấy những trạng thái mà dữ liệu sống trên stack cục bộ không có.
+Mỗi issue ghi rõ app thật có vào được trạng thái đó hay không.
+
+### UI-113 · Khám phá, cặp so sánh không ảnh: ở màn 320dp, tim «Lưu» của ô có dấu bị đẩy ra ngoài mép phải
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (layout, mất nội dung) · **P2** |
+| Feature / Screen | F02 · `(tabs)/explore`, component `PlaceCompare` (`explore/HangDiaDiem.tsx`); đo trên bảng dev F10.S01 |
+| Nền tảng, cấu hình | web, C2 (320×640). C1 (390), C4 (375) và C3 (360) thì vừa. Đo trên `/dev/ui-lab`, nơi bảng dùng đúng renderer của Khám phá sống với dữ liệu tổng hợp. Khám phá sống trên stack cục bộ không vào được trạng thái này: dấu «Hợp gu» lấy từ kết quả khớp của AI (`place.match` có `real`), mà stack không có khoá AI. Đã kiểm dalat-0, chat-0, moi-51 ở C2: 0 dấu, 0 tim bị cắt. Native: cùng một hàng flex, HYPOTHESIS |
+| Điều kiện ban đầu | Cặp so sánh mà cả hai quán không có ảnh, và một quán mang dấu. Trên app thật, dấu là «Hợp gu» khi AI khớp mà không kèm câu lý do |
+| Tái hiện | `/dev/ui-lab` ở 320dp → mục «Khám phá · renderer live» → chip «Không ảnh» → nhìn cặp «Lẩu gà lá é» / «Still Cafe» |
+| Expected | Hai nút «Lưu …» nằm trọn trong ô của mình, như ở 360dp trở lên |
+| Actual | Hàng đầu ô «Still Cafe» gồm biểu tượng, dấu «HỢP GU», khoảng trống và tim, rộng hơn nửa màn. Nút «Lưu Still Cafe» 48dp nằm ở x 294–342 trong cửa sổ 320, chỉ còn thấy 26dp; icon tim bị cắt 9px, còn nửa trái. Chạm vào phần còn thấy vẫn trúng nút. Ô «Lẩu gà lá é» (không dấu) vừa: x 104–152 |
+| Evidence | ![C2, tim của «Still Cafe» ở mép phải](evidence/EV-F10-SO-SANH-C2.jpg) (hàng `TC-F10-SO-SANH-TIM` C1/C4/C2; cửa sổ 21 của `TC-F10.S01-BASE` C2) |
+| Source | `HangDiaDiem.tsx:328–341`: nhánh `khongAnhNao`, hàng `ungVienDau` là `PlaceGlyph` + `Stamp` + `flex1` + `IconButton`, không co giãn và không xuống dòng |
+| Hậu quả | Trên máy hẹp chỉ thấy nửa icon tim, vùng chạm còn 26dp: dễ không nhận ra nút lưu, dễ chạm trượt. Vẫn lưu được từ màn chi tiết quán |
+| Đề xuất sửa | Khi thiếu chỗ, cho dấu xuống dưới biểu tượng hoặc thu dấu lại; hoặc xếp dọc cặp so sánh ở bề rộng hẹp |
+| Tiêu chí gỡ | Ở 320dp, cả hai nút «Lưu …» của cặp so sánh không ảnh nằm trọn trong ô và trong màn |
+
+### UI-114 · Khám phá, cặp so sánh có ảnh: nút «Lưu …» nằm lồng trong nút «Mở …»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (accessibility, web) · **P3** |
+| Feature / Screen | F02 · `(tabs)/explore`, component `PlaceCompare` (`explore/HangDiaDiem.tsx`); đo trên bảng dev F10.S01 |
+| Nền tảng, cấu hình | web, C1. Chỉ khi ít nhất một quán trong cặp có ảnh (các chip «Có ảnh», «Ảnh hỏng», «Cặp lệch»); «Không ảnh» thì không lồng. Khám phá sống trên stack cục bộ không có ảnh quán nên không vào nhánh này (0 nút lồng). Native: chưa đo |
+| Tái hiện | `/dev/ui-lab` → «Khám phá · renderer live» → chip «Có ảnh» → đọc cây DOM, hoặc chạy axe |
+| Expected | «Mở …» và «Lưu …» là hai control tách nhau, không cái nào nằm trong cái kia |
+| Actual | `button «Mở Lẩu gà lá é»` chứa `button «Lưu Lẩu gà lá é»`, và tương tự với «Still Cafe». axe báo `nested-interactive` (serious) trỏ đúng hai nút «Mở …». Bản dev còn hiện cảnh báo của React: «`<button>` cannot contain a nested `<button>`». Trên Chromium, chạm tim vẫn lưu («Lưu» → «Bỏ lưu»), và focus vào tim rồi Enter cũng đổi lại được |
+| Evidence | ![C1, tim trên góc ảnh và cảnh báo của bản dev](evidence/EV-F10-TIM-LONG-C1.jpg) (hàng `TC-F10-TIM-LONG`) |
+| Source | `HangDiaDiem.tsx:350–375`: `IconButton` lưu nằm trong `overlay` của `MediaSlot`, bên trong `Pressable` «Mở …». Nhánh không ảnh (`:328–345`) đặt tim bên ngoài `Pressable` |
+| Hậu quả | Nút trong nút là HTML không hợp lệ; trình đọc màn hình có thể đọc gộp hoặc bỏ qua nút bên trong. Trình duyệt và trình đọc màn hình khác chưa đo |
+| Đề xuất sửa | Đưa tim ra khỏi `Pressable` «Mở …» (vẫn đặt đè lên góc ảnh bằng vị trí tuyệt đối), như nhánh không ảnh đang làm |
+| Tiêu chí gỡ | axe không còn `nested-interactive` ở cặp so sánh có ảnh; tim vẫn nằm trên góc ảnh và vẫn lưu được |
+
+### UI-115 · Sân khấu có kéo nghiêng: trên web, cú kéo dọc bắt đầu trên tranh không cuộn trang
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (web) · **P3**. Chưa chạm tới người dùng: ở mốc `7ea1a7c`, chỉ bảng dev bật kéo nghiêng |
+| Feature / Screen | F10 · `/dev/san-khau`; component `CanhGap` khi `keo` bật (`ui/CanhGap.tsx`, `ui/useThiSai.ts`), dùng làm đầu màn sân khấu |
+| Nền tảng, cấu hình | web, C1. C9 (giảm chuyển động) không bị, vì cử chỉ tắt. Native: RNGH phân xử bằng `failOffsetY`, HYPOTHESIS là không bị |
+| Tái hiện | `/dev/san-khau` → kéo dọc 160dp, bắt đầu trên tranh «Phố đêm» (cao 119dp) |
+| Expected | Danh sách cuộn theo tay. Chú thích trong mã cũng hứa vậy: cử chỉ chỉ nhận cú kéo rõ ràng sang ngang, «the list under the stage keeps every vertical scroll» |
+| Actual | C1: danh sách đứng yên (0 → 0). Cùng cú kéo nhưng bắt đầu dưới tranh thì cuộn 175dp. C9: cuộn 175dp cả khi bắt đầu trên tranh. Lớp bọc của `GestureDetector` mang `touch-action: none`, nên trình duyệt không bắt đầu cuộn được. Phần kéo ngang thì đạt: tranh nghiêng theo tay (6,5% điểm ảnh đổi khi giữ), thả ra về đúng chỗ, trang không cuộn ngang |
+| Evidence | hàng `TC-F10-KEO-DOC-TREN-TRANH` (C1/C9) và `TC-F10-MO12-KEO` (C1/C9) |
+| Source | `CanhGap.tsx:107` (`GestureDetector` bọc sân khấu khi `keo`); `useThiSai.ts:28–31` (`activeOffsetX`, `failOffsetY`) |
+| Hậu quả | Màn nào bật `keo` trên web sẽ có vùng tranh (khoảng 120–200dp đầu màn) không cuộn được bằng tay |
+| Đề xuất sửa | Trên web cho lớp bọc `touch-action: pan-y`, hoặc không bật `keo` ở web |
+| Tiêu chí gỡ | Ở C1, kéo dọc bắt đầu trên tranh cuộn danh sách như bắt đầu ở chỗ khác |
+
