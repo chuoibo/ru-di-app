@@ -633,5 +633,65 @@
   "bytes": 114938,
   "sha8": "79921da7",
   "moTa": "F07.S02 chưa có sổ ở C1, C2, C3: bìa sổ, Nếp, «Đề nghị lập sổ»; hai nhãn tên trên bìa đều thành «Chat Tes…» (UI-090)"
+ },
+ "EV-F08-BAI-RIENG-C1": {
+  "bytes": 94434,
+  "sha8": "175d4603",
+  "moTa": "UI-100: chat-1 mở bài «Chỉ mình tôi» của Chat Test 01: hai khối lỗi cùng thân, hai «Thử lại» (C1)"
+ },
+ "EV-F08-CHECKIN-CHIP-C1": {
+  "bytes": 106470,
+  "sha8": "77a22b11",
+  "moTa": "UI-099 và UI-091: sheet «Check-in ở đâu?»: hai chip tên quán dài bị mép sheet cắt; «Đăng check-in» tắt, dưới là «Thôi», không lý do (C1)"
+ },
+ "EV-F08-L34-ghep": {
+  "bytes": 82767,
+  "sha8": "0dca6442",
+  "moTa": "UI-097: «Thả khoảnh khắc» có ảnh và câu «Nháp thử quay lại»; Back rồi mở lại: khung trống, «300 ký tự còn lại» (C1)"
+ },
+ "EV-F08-STORY-ghep": {
+  "bytes": 42502,
+  "sha8": "2a9a7174",
+  "moTa": "UI-101: trình xem story của chat-1; chat-0 chạm «Xoá story»: câu hỏi ở chân màn, không phải hộp thoại, focus không vào câu (C1)"
+ },
+ "EV-F08-TEM-HEP-ghep": {
+  "bytes": 92178,
+  "sha8": "8d10965b",
+  "moTa": "UI-106: «Thành tích» ở 320px, lần đầu thấy huy hiệu mới: cột chữ 36px, «Mở hà / ng», «Chia kho / ản…»; lần hai (không còn Nếp M8): cột chữ 162px (C2)"
+ },
+ "EV-F08-THA-9-16-ghep": {
+  "bytes": 79460,
+  "sha8": "e0abace0",
+  "moTa": "UI-102: ảnh 9:16 ở xem trước vẽ trọn (contain, hai dải nền), trên tường phủ khung 3:4 (cover) nên mất đầu và đuôi (C1)"
+ },
+ "EV-F08-TIM-503-C1": {
+  "bytes": 96018,
+  "sha8": "74dd6357",
+  "moTa": "UI-095: chạm «Thích» ở kỷ niệm thứ tư lúc máy chủ trả 503: quanh nút không có gì đổi, câu lỗi nằm ở đầu tường, y −1535 (C1)"
+ },
+ "EV-F08-TUONG-C6": {
+  "bytes": 140707,
+  "sha8": "9dfd74c2",
+  "moTa": "UI-105: tablet 768: ảnh in trên tường rộng 702px, ảnh dọc cao 936px trên cửa sổ 1024 (C6)"
+ },
+ "EV-F08-XEM-ANH-ghep": {
+  "bytes": 34763,
+  "sha8": "91df81d2",
+  "moTa": "UI-094: trình xem ảnh trên web: đầu, bộ đếm «1 / 3», gợi ý và chú thích có, ảnh cao 0px; sau cú chụm hai ngón cả trang phóng ×4,12, «Đóng» ra ngoài màn (C1)"
+ },
+ "EV-F08-XOA-BL-C1": {
+  "bytes": 110650,
+  "sha8": "756d2c41",
+  "moTa": "UI-096: bài có hai bình luận của chat-1, mỗi bình luận một thùng rác 18×20; một chạm là xoá, không hỏi (C1)"
+ },
+ "EV-F08.S01-BASE-ghep": {
+  "bytes": 121106,
+  "sha8": "b7a56663",
+  "moTa": "F08.S01 tường nhóm chat-test ở C1, C2, C3: «Thả khoảnh khắc», «Check-in», thẻ check-in, ảnh in nghiêng; giờ viết «10:07 28-09» (UI-104)"
+ },
+ "EV-F08.S02-BASE-ghep": {
+  "bytes": 69580,
+  "sha8": "1991240c",
+  "moTa": "F08.S02 kệ album ở C1, C2, C3: «Kèo album F08 · 2026 · đang đi · …», chỉ ghi năm, không ngày của chuyến (UI-103)"
  }
 }

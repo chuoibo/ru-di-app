@@ -20,8 +20,8 @@
 | Mức | Issue |
 |---|---|
 | P1 | UI-005, UI-049, UI-082 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081, UI-086, UI-087, UI-088, UI-089, UI-090, UI-091, UI-092, UI-093 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085, UI-094, UI-095, UI-096, UI-097 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081, UI-086, UI-087, UI-088, UI-089, UI-090, UI-091, UI-092, UI-093, UI-098, UI-099, UI-100, UI-101, UI-102, UI-103, UI-104, UI-105, UI-106 |
 
 ---
 
@@ -72,7 +72,7 @@
 | Tái hiện | Mở bất kỳ tab nào, đọc thuộc tính ARIA của 4 phần tử `role="tab"` |
 | Expected | Tab đang chọn có `aria-selected="true"`, và các tab nằm trong một `role="tablist"` |
 | Actual | Cả 4 tab đều không có `aria-selected`, và không có `tablist`. Nhìn bằng mắt vẫn phân biệt được tab đang chọn (màu, icon đặc, dải washi), nhưng trình đọc màn hình thì không |
-| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`); nút gập/mở dòng món của chia bill ở bước 2 và 3 không có `aria-expanded` (F04, `ChiaBillLive.tsx:467` và `:578`, hàng `TC-F04-ARIA-GAP`; bước 2 có đổi nhãn «Sửa/Gấp», bước 3 không); F05: lựa chọn của thẻ bình chọn, `role=radio` không có `aria-checked` kể cả lựa chọn của mình (`chat/TheAi.tsx:288–290`, `TC-F05-BINH-CHON-PHIEU`), và 5 ô «Màu bong bóng» của Cài đặt nhóm, `role=radio` không trạng thái dù mắt thấy dấu tích (`chat/CaiDatNhom.tsx:152–154`, `TC-L17-VONGDOI`). F07: sheet «Loại sổ» có hai `role=tab` («Hai người bạn», «Một đôi») mang `aria-selected` đúng nhưng không nằm trong `tablist` (axe `aria-required-parent` ×2, `TC-L23-SHEET-CON`); lá ngày của sheet sửa tờ có `aria-checked` (đạt). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) |
+| Evidence | Số đo runtime ở 5 cấu hình: `chon: null` ở mọi tab. Mã `react-native-web` 0.21 (`dist/modules/createDOMProps`) nhận `aria-selected`/`accessibilitySelected` mà **không** đọc object `accessibilityState`. Quét tĩnh: 35 chỗ dùng `accessibilityState`, trong đó 20 chỗ không truyền kèm thuộc tính `aria-*` tương ứng (danh sách ở `report.md` §C). Đối chứng runtime cho thấy chỗ nào có truyền kèm `aria-*` thì đạt: chip gu ở Sở thích (`role=checkbox`, `aria-checked`) và thẻ mức chi (`role=radio`, `aria-checked`). Vì vậy mỗi dòng trong danh sách 20 cần xác nhận runtime. Đã xác nhận: thanh tab (F00); chip ngân sách ở form kèo mới, `role=radio` không có `aria-checked`, axe critical ×4 (F03, `CreateOutingLive.tsx:235`); nút «Các chặng trong ngày» của trang ngày không có `aria-expanded` (F03, `ManHinhHanhTrinh.tsx:175`); nút gập/mở dòng món của chia bill ở bước 2 và 3 không có `aria-expanded` (F04, `ChiaBillLive.tsx:467` và `:578`, hàng `TC-F04-ARIA-GAP`; bước 2 có đổi nhãn «Sửa/Gấp», bước 3 không); F05: lựa chọn của thẻ bình chọn, `role=radio` không có `aria-checked` kể cả lựa chọn của mình (`chat/TheAi.tsx:288–290`, `TC-F05-BINH-CHON-PHIEU`), và 5 ô «Màu bong bóng» của Cài đặt nhóm, `role=radio` không trạng thái dù mắt thấy dấu tích (`chat/CaiDatNhom.tsx:152–154`, `TC-L17-VONGDOI`). F07: sheet «Loại sổ» có hai `role=tab` («Hai người bạn», «Một đôi») mang `aria-selected` đúng nhưng không nằm trong `tablist` (axe `aria-required-parent` ×2, `TC-L23-SHEET-CON`); lá ngày của sheet sửa tờ có `aria-checked` (đạt). Cùng cơ chế với object `accessibilityValue`: tay nắm đổi thứ tự và mặt quay giờ thành `role=slider` không có `aria-valuenow` (UI-036, UI-042) F08: bốn thẻ «Ai đọc được?» của «Đăng bài» là `radio` không `aria-checked`, axe aria-required-attr ×4 (`nguoi/DangBaiScreen.tsx:169–170`, `TC-F08-DANG-BAI`); nút cảm xúc của bài dùng `accessibilityState={{ selected }}` không kèm `aria-*` (`tuong/BaiChiTietScreen.tsx:222`, STATIC, chưa đo trạng thái runtime) |
 | Hậu quả | Trên web, người dùng trình đọc màn hình không biết tab nào, ngày nào, chip gu nào, màu nào đang được chọn, và mục nào đang mở/gập |
 | Đề xuất | Truyền thêm prop `aria-*` mà RNW đọc được, đúng với role: `aria-checked` cho radio/checkbox/switch, `aria-expanded` cho nút gập mở, `aria-busy`, `aria-selected` **chỉ** cho tab/option/row. Sửa ở checkpoint 3: `HangChang` từng được nêu ở đây làm ví dụ đúng, nhưng nó đặt `aria-selected` trên `role=button`, là thuộc tính không hợp lệ (axe critical, UI-042); nút nên dùng `aria-pressed` hoặc `aria-current`. Gom lại trong một helper ở kit; thêm `role="tablist"` cho thanh tab |
 | Tiêu chí gỡ | Quét DOM: mỗi control có trạng thái đều mang thuộc tính ARIA tương ứng; tab đang chọn có `aria-selected=true` |
@@ -167,7 +167,7 @@
 | Tái hiện | Mở khay, nhấn Tab |
 | Expected | Mọi điểm dừng focus có tên và vai trò |
 | Actual | Điểm dừng đầu: `div` 112×112, `tabindex=0`, không role, không tên (Nếp M1). Sau đó mới đến 5 thẻ và «Đóng bảng». Focus ban đầu khi mở vào «Đóng bảng», và vòng Tab giữ trong khay: đạt |
-| Evidence | danh sách phần tử nhận focus (runtime) trong `report.md` §C; ![khay](evidence/EV-F00-KT-mo-C1.jpg) |
+| Evidence | danh sách phần tử nhận focus (runtime) trong `report.md` §C; ![khay](evidence/EV-F00-KT-mo-C1.jpg) · F08: Nếp M8 ở «Thành tích» cũng là `div` 112×112 `tabindex=0` không tên (baseline `TC-F08.S09-BASE`, `ky-niem/AchievementsLive.tsx:152`) |
 | Source | `src/rudi/ui/NepDien.tsx:52` (`Pressable accessible={false}` vẫn nhận `tabindex=0` trên web) |
 | Đề xuất | `focusable={false}` (hoặc `tabIndex={-1}`) trên web khi không có việc để bấm |
 | Tiêu chí gỡ | Không điểm dừng Tab nào không có tên |
@@ -237,10 +237,10 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (vùng bấm, lệch spec hệ thống) · **P3** |
-| Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã). Thêm F03, F04, F05, F06, F07 (xem Actual) |
+| Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã). Thêm F03, F04, F05, F06, F07, F08 (xem Actual) |
 | Nền tảng, cấu hình | web, C1, C2, C3 (đo runtime). Native: cùng `minHeight: 44` (STATIC) |
 | Expected | DESIGN.md §Mục tiêu chạm: «Mọi node bấm được ≥48×48dp, kể cả `TextInput`» |
-| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`). F05 (chat): 6 nút cảm xúc của menu tin 44×44 (`chat/MenuTin.tsx:97`, `TC-F05-MENU-PHAN-UNG`); bong bóng một dòng cao 46, và bong bóng là chỗ duy nhất mở menu tin (`TC-F05-BO-CUC-TIN` G20). F06 (`TC-F06-VUNG-BAM`): «Ô tên nhóm» 230×44 và ghi chú-link «Chỉ hai người?… Thêm bạn» 358×40 (dưới cả ngưỡng 44) ở Lập nhóm; hai ô của Mời 300×44; ô số của Thêm bạn 324×44; mỗi hàng «Xem hồ sơ …» ở Bạn bè 236×44. F07 (`TC-F07-SUA-NHAP`): sheet sửa tờ có ba ô một dòng cao 44 («Chỗ chính», «Giờ đi tiếp», «Đi tiếp (tuỳ chọn)»); ô «Không ăn được» của Hai ô ràng buộc cao 48 (đạt) |
+| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`). F05 (chat): 6 nút cảm xúc của menu tin 44×44 (`chat/MenuTin.tsx:97`, `TC-F05-MENU-PHAN-UNG`); bong bóng một dòng cao 46, và bong bóng là chỗ duy nhất mở menu tin (`TC-F05-BO-CUC-TIN` G20). F06 (`TC-F06-VUNG-BAM`): «Ô tên nhóm» 230×44 và ghi chú-link «Chỉ hai người?… Thêm bạn» 358×40 (dưới cả ngưỡng 44) ở Lập nhóm; hai ô của Mời 300×44; ô số của Thêm bạn 324×44; mỗi hàng «Xem hồ sơ …» ở Bạn bè 236×44. F07 (`TC-F07-SUA-NHAP`): sheet sửa tờ có ba ô một dòng cao 44 («Chỗ chính», «Giờ đi tiếp», «Đi tiếp (tuỳ chọn)»); ô «Không ăn được» của Hai ô ràng buộc cao 48 (đạt) F08: 6 nút cảm xúc của bài 38×32 (`tuong/BaiChiTietScreen.tsx:325`, `TC-F08-CAM-XUC-BAI`); trình xem story: «Đóng story», «Xoá story» 44×44, «Giữ lại» và «Xoá» 88×44 (`story/XemStoryScreen.tsx:279`, `:288`; `TC-F08-STORY-VUNG-CHAM`, `TC-L26-XOA`); thùng rác của bình luận bài 18×20 (UI-096) |
 | Evidence | ![ô nhập 44](evidence/EV-F01-O-NHAP-44-C1.jpg) ![menu tin: hàng cảm xúc 44dp, C1](evidence/EV-F05-MENU-C1.jpg) |
 | Source | `src/rudi/ui/ONhapMuc.tsx:60` (`minHeight: 44`) |
 | Đề xuất | `minHeight: 48` (vẫn không hộp, dòng kẻ giữ nguyên) |
@@ -295,7 +295,7 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (điều hướng) · **P2**. Checkpoint 2 ghi P3; nâng ở checkpoint 3 vì phạm vi không còn là một màn: đo lại ở `/places/[id]`, và nút back của `TopBar` trong kit cũng gọi `router.back()` không kiểm `canGoBack()` |
-| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. F05 · `/groups/[id]/chat` mở lạnh: chạm «Quay lại» của đầu chat, URL giữ nguyên (`TC-F05.S02-BACK-LANH`); màn chat không có thanh tab. F06 · năm màn mở lạnh đều đứng yên: `/groups/[id]/members`, `/groups/[id]/invite`, `/friends`, `/friends/add`, `/people/[id]` (`TC-F06.S0x-BACK-LANH`). Cùng cơ chế: «Về danh sách bạn» và «Xem thành viên» (`router.back()`) không làm gì khi màn trước không nằm trong stack. F07 · `/groups/[id]/to-giay` mở lạnh: chạm «Quay lại», URL giữ nguyên (`TC-F07.S02-BACK-LANH`); màn không có thanh tab. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
+| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. F05 · `/groups/[id]/chat` mở lạnh: chạm «Quay lại» của đầu chat, URL giữ nguyên (`TC-F05.S02-BACK-LANH`); màn chat không có thanh tab. F06 · năm màn mở lạnh đều đứng yên: `/groups/[id]/members`, `/groups/[id]/invite`, `/friends`, `/friends/add`, `/people/[id]` (`TC-F06.S0x-BACK-LANH`). Cùng cơ chế: «Về danh sách bạn» và «Xem thành viên» (`router.back()`) không làm gì khi màn trước không nằm trong stack. F07 · `/groups/[id]/to-giay` mở lạnh: chạm «Quay lại», URL giữ nguyên (`TC-F07.S02-BACK-LANH`); màn không có thanh tab. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng F08 · tám màn mở lạnh đều đứng yên sau khi chạm «Quay lại»: `/groups/[id]/wall`, `/groups/[id]/album`, `/trips/[id]/album`, `/moments/new`, `/stories/new`, `/posts/new`, `/posts/[id]`, `/achievements` (`TC-F08-BACK-LANH-*`); «Đóng story» của `/stories/[id]` mở lạnh cũng vậy (`TC-F08-STORY-DONG-LANH`), còn mở từ dải story thì «Đóng story» và Back đều về Tin nhắn (`TC-L26-VONGDOI`) |
 | Nền tảng, cấu hình | web, C1 |
 | Tái hiện | Mở thẳng `/login` (không có lịch sử), chạm «Quay lại» |
 | Expected | Đưa về màn hợp lý (Welcome), hoặc không vẽ nút khi không có nơi để về |
@@ -596,12 +596,12 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE · **P3** |
-| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn). F06 · `/people/[id]` · L06 hành động hồ sơ. F07 · `/groups/[id]/to-giay` · L23 «Cài đặt sổ» |
+| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn). F06 · `/people/[id]` · L06 hành động hồ sơ. F07 · `/groups/[id]/to-giay` · L23 «Cài đặt sổ» F08 · `/groups/[id]/wall` · L24 sheet Check-in; `/posts/[id]` · L07 sheet báo cáo bài |
 | Nền tảng, cấu hình | web, C1 (trên Android Chrome, cử chỉ back hệ thống cũng là Back trình duyệt). Native Android: `Sheet` nghe `BackHandler` nên đóng sheet (STATIC) |
 | Tái hiện | Từ Lên plan mở kèo, mở sheet «Chặng mới», gõ dở tên chặng, bấm Back |
 | Expected | Back đóng sheet, ở lại màn kèo |
 | Actual | Sheet đóng vì màn bị gỡ: URL về `/plan`, 12/12 ô của lưới chạm đổi, chữ đang gõ mất |
-| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn. F06: sheet «Thêm hành động» của hồ sơ, Back rời hồ sơ về Bạn bè; Esc, nền, kéo xuống ở lại hồ sơ (`TC-L06-VONGDOI`). F07: tới tờ giấy từ Tin nhắn, mở «Cài đặt sổ», Back rời tờ giấy về `/messages` (`TC-L23-BACK`); X, nền, Esc, kéo dài, vuốt nhanh đóng mà ở lại, kéo ngắn bật về (`TC-L23-VONGDOI`) |
+| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn. F06: sheet «Thêm hành động» của hồ sơ, Back rời hồ sơ về Bạn bè; Esc, nền, kéo xuống ở lại hồ sơ (`TC-L06-VONGDOI`). F07: tới tờ giấy từ Tin nhắn, mở «Cài đặt sổ», Back rời tờ giấy về `/messages` (`TC-L23-BACK`); X, nền, Esc, kéo dài, vuốt nhanh đóng mà ở lại, kéo ngắn bật về (`TC-L23-VONGDOI`). F08: tới tường từ Tin nhắn, mở sheet Check-in, Back rời tường về `/messages`; X, nền, Esc đóng mà ở lại tường, focus vào sheet (`TC-L24-VONGDOI`). Sheet báo cáo bài: Back rời bài về `/messages`; X, Esc, nền ở lại bài (`TC-L07-VONGDOI`) |
 | Source | `src/rudi/ui/Sheet.tsx:145` chỉ nghe `hardwareBackPress` (react-native-web không phát). Khay công cụ: `chat/SoHen.tsx:111` (`BackHandler`, chỉ Android). Khay tờ hẹn chung: không nghe gì, nên trên Android Back cũng rời chat (STATIC) |
 | Đề xuất sửa | Trên web, đẩy một mục lịch sử khi mở sheet và đóng sheet ở `popstate` (như khay `/create`) |
 | Tiêu chí gỡ | Back khi sheet mở: sheet đóng, URL giữ nguyên |
@@ -626,10 +626,10 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | VISUAL POLISH · **P3** |
-| Feature / Screen / Layer | F03 · L08 · `ui/Sheet.tsx`. F07 · L23 «Sửa bản phác», «Hai ô ràng buộc» |
+| Feature / Screen / Layer | F03 · L08 · `ui/Sheet.tsx`. F07 · L23 «Sửa bản phác», «Hai ô ràng buộc» F08 · L24 sheet Check-in |
 | Nền tảng, cấu hình | web, C8 (390×460). C2 67%, C6 42% (đạt). F07: cả ở C1 |
 | Expected | Sheet ≤ 82% chiều cao (DESIGN.md) |
-| Actual | Sheet cao 427px, 93% màn; chỉ còn 33px nền mờ phía trên để chạm đóng. Nút gửi vẫn thấy được. F07: sheet «Sửa bản phác» cao 756px = 90% ở **C1** (`TC-F07-SUA-NHAP`); ở C8 cả «Sửa bản phác» lẫn «Hai ô ràng buộc» cao 96% (đỉnh y 19), nút chính («Lưu bản phác», «Lưu hai ô của tôi») nằm dưới mép cửa sổ (đáy 833 và 556 trên cửa sổ 460), chỉ tới được sau khi cuộn trong sheet (`TC-F07-C8`) |
+| Actual | Sheet cao 427px, 93% màn; chỉ còn 33px nền mờ phía trên để chạm đóng. Nút gửi vẫn thấy được. F07: sheet «Sửa bản phác» cao 756px = 90% ở **C1** (`TC-F07-SUA-NHAP`); ở C8 cả «Sửa bản phác» lẫn «Hai ô ràng buộc» cao 96% (đỉnh y 19), nút chính («Lưu bản phác», «Lưu hai ô của tôi») nằm dưới mép cửa sổ (đáy 833 và 556 trên cửa sổ 460), chỉ tới được sau khi cuộn trong sheet (`TC-F07-C8`). F08: sheet Check-in cao 96% ở C8, đỉnh y 19 (`TC-F08-C8`). Ba form đăng của F08 đạt ở C8: «Chia sẻ ngay vào nhóm» ở chân trang cố định; «Đăng story» và «Đăng» cuộn tới được, trọn trong cửa sổ cùng dòng lý do (`TC-F08-VOI-TOI`, `TC-F08-THA-CUON`) |
 | Evidence | ![C8](evidence/EV-F03-THEM-C8.jpg) (hàng `TC-L08-KICH-THUOC`) ![F07, sheet sửa tờ ở C8](evidence/EV-F07-C8-SUA-C8.jpg) |
 | Source | `Sheet.tsx`: trần 82% chỉ áp cho `ScrollView` bên trong; tay cầm và lề cộng thêm ngoài trần |
 | Đề xuất sửa | Áp trần cho cả khung sheet |
@@ -1043,7 +1043,7 @@ Nhận xét thẩm mỹ của người yêu cầu được ghi nguyên văn là 
 | Tái hiện | Menu một tin của người khác → «Báo cáo» → chọn «Làm phiền, quấy rối» |
 | Expected | Năm lý do là nhóm chọn một: mỗi lý do là `radio` có `aria-checked`, và nhìn cũng ra là lựa chọn (vòng chọn hoặc dấu tích) |
 | Actual | `radiogroup` chứa 5 `button`. Lý do đang chọn chỉ đổi nền (biến thể `soft` và `ghost`), không có trạng thái nào trong DOM. Bốn lý do còn lại trông như link chữ đỏ. axe: `aria-prohibited-attr` ×1 trong sheet. Gửi báo cáo và «Xong» hoạt động đúng |
-| Evidence | ![sheet báo cáo, đã chọn một lý do, C1](evidence/EV-F05-BAO-CAO-C1.jpg) (hàng `TC-L16-VONGDOI`) |
+| Evidence | ![sheet báo cáo, đã chọn một lý do, C1](evidence/EV-F05-BAO-CAO-C1.jpg) (hàng `TC-L16-VONGDOI`) · F08: sheet báo cáo bài mở và đóng ở runtime (`TC-L07-VONGDOI`); không gửi báo cáo nào, nên trạng thái lý do đang chọn chưa đo ở F08 |
 | Source | `screens/nguoi/NoiDungBaoCao.tsx:76–86` (`RudiButton` với `variant={lyDo === muc.ma ? "soft" : "ghost"}`) |
 | Đề xuất sửa | Mỗi lý do là `accessibilityRole="radio"` kèm `aria-checked` trên web (xem UI-003) và dấu tích; hoặc dùng component chọn một của kit |
 | Tiêu chí gỡ | Quét DOM: 5 phần tử `role=radio`, đúng một cái `aria-checked=true`; axe sạch |
@@ -1291,7 +1291,7 @@ phải lỗi.
 | Điều kiện | Không có phiên (đăng xuất, hết phiên, trình duyệt khác). Link là tờ giấy của cặp chat-0/chat-1 có thật trên máy chủ |
 | Tái hiện | 1. Mở thẳng `/groups/<id của cặp>/to-giay`. 2. Chạm «Rủ đi chơi». 3. Chạm «Gửi cho người ấy» |
 | Expected | Tới cửa vào (Welcome, đăng nhập) rồi quay lại đúng tờ giấy; nếu cho xem bản trải nghiệm thì có nhãn «Dữ liệu demo» và không nói «đã gửi» khi không có gì được gửi |
-| Actual | Trang hiện một sổ với nội dung bịa: «Bún chả, quán góc phố · Thứ Bảy 06/09 · KÝ ỨC», «Tờ đã khép: Hết khung · Chủ nhật 14/09», tiêu đề «Hai người bạn · Người ấy». Không nhãn demo, không lối đăng nhập. «Rủ đi chơi» phác một tờ «Thứ Bảy 20/09» (ngày đã qua); «Gửi cho người ấy» đổi tờ thành «ĐÃ GỬI · Đã gửi, chờ trả lời. Người ấy chưa xem.». Suốt lúc đó trang gửi **0** lệnh ghi tới API |
+| Actual | Trang hiện một sổ với nội dung bịa: «Bún chả, quán góc phố · Thứ Bảy 06/09 · KÝ ỨC», «Tờ đã khép: Hết khung · Chủ nhật 14/09», tiêu đề «Hai người bạn · Người ấy». Không nhãn demo, không lối đăng nhập. «Rủ đi chơi» phác một tờ «Thứ Bảy 20/09» (ngày đã qua); «Gửi cho người ấy» đổi tờ thành «ĐÃ GỬI · Đã gửi, chờ trả lời. Người ấy chưa xem.». Suốt lúc đó trang gửi **0** lệnh ghi tới API. F08 (`TC-F08-KHONG-PHIEN`): không phiên, link album của một kèo thật mở album demo «Album Đà Lạt · Team Đà Lạt · 17 - 19/10/2026 · 4 ảnh» **không** nhãn; `/stories/new` và `/posts/new` hiện form thật, không lối đăng nhập. Đạt: `/groups/[id]/album` về Welcome; tường, «Thả khoảnh khắc» và «Thành tích» hiện bản demo có nhãn, «Đăng vào tường nhóm» của bản demo về tường demo có nhãn (`TC-F08-KHONG-PHIEN-THA`) |
 | Evidence | ![đã gửi mà không gửi gì, C1](evidence/EV-F07-LANH-KHONG-PHIEN-GUI-C1.jpg) (hàng `TC-F07.S02-LANH-KHONG-PHIEN`, `TC-F07-KHONG-PHIEN-GUI`) |
 | Source | `app/groups/[id]/to-giay.tsx`: có phiên thì bọc `SoDoiSongProvider`; không phiên thì dựng `KhongGianGiayScreen` trên store fixture gắn ở `_layout`. Chú thích nói nhánh này dành cho bản fixture, nhưng mã áp cho mọi bản dựng. Màn không dùng `DemoBadge` |
 | Hậu quả | Người mở link từ thông báo hay tin nhắn khi đã rơi phiên thấy một sổ trông như của mình, gửi lời rủ và được báo đã gửi. Người kia không nhận được gì; người gửi không có lý do để đăng nhập lại |
@@ -1400,9 +1400,9 @@ phải lỗi.
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | BUG (accessibility) · **P3** |
-| Feature / Screen / Layer | F07 (đo), mọi sheet · `ui/Sheet.tsx:210` |
+| Feature / Screen / Layer | F07 (đo), mọi sheet · `ui/Sheet.tsx:210`. Cùng kiểu ở F08 «Thành tích» |
 | Nền tảng, cấu hình | web, C1. Native: `View` có `accessibilityLabel` mà không `accessible` thì cũng không được đọc (STATIC) |
-| Actual | axe `aria-prohibited-attr` (serious) ×1 trong mỗi sheet đã quét: Cài đặt sổ, Loại sổ, Hai ô ràng buộc, Đóng sổ. Phần tử: `<div aria-label="Tay cầm">`. Sheet báo cáo của F05 (UI-067) cũng ghi ×1; cùng component nên nhiều khả năng là cùng phần tử, nhưng lượt F05 không in phần tử ra. Nhãn và gợi ý «Kéo xuống để đóng» không tới trình đọc màn hình |
+| Actual | axe `aria-prohibited-attr` (serious) ×1 trong mỗi sheet đã quét: Cài đặt sổ, Loại sổ, Hai ô ràng buộc, Đóng sổ. Phần tử: `<div aria-label="Tay cầm">`. Sheet báo cáo của F05 (UI-067) cũng ghi ×1; cùng component nên nhiều khả năng là cùng phần tử, nhưng lượt F05 không in phần tử ra. Nhãn và gợi ý «Kéo xuống để đóng» không tới trình đọc màn hình. F08: cùng kiểu lỗi ở «Thành tích»: thanh tiến độ «Tiến độ … phần trăm tới cấp sau» và con dấu «Huy hiệu Mở hàng» là `div` mang `aria-label` không role, axe ×2 (baseline `TC-F08.S09-BASE`, `ky-niem/AchievementsLive.tsx:135`, `:144`). Hai vùng chạm của story cũng ra lỗi axe này, nhưng là nút thiếu role: UI-101 |
 | Evidence | Hàng `TC-L23-SHEET-CON` (axe trên từng sheet, phần tử in ra bằng `AxeBuilder`) |
 | Hậu quả | Nhẹ: «Đóng bảng» vẫn có tên và đóng được. Nhưng mọi sheet mang một lỗi axe serious, làm nhiễu số đếm a11y |
 | Đề xuất sửa | Hoặc cho tay cầm vai trò có hành động đóng, hoặc bỏ nhãn và ẩn khỏi cây truy cập, vì «Đóng bảng» đã làm việc đó |
@@ -1426,11 +1426,11 @@ phải lỗi.
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE · **P3** |
-| Feature / Screen / Layer | F07 · L23 sheet «Hai ô ràng buộc». «Giữ lại» của sheet «Giữ lại một điều» cùng kiểu (STATIC, `GiuMotDieu.tsx:40`, chưa tới được trạng thái đó ở runtime) |
+| Feature / Screen / Layer | F07 · L23 sheet «Hai ô ràng buộc». «Giữ lại» của sheet «Giữ lại một điều» cùng kiểu (STATIC, `GiuMotDieu.tsx:40`, chưa tới được trạng thái đó ở runtime). F08: «Chia sẻ ngay vào nhóm» (`/moments/new`), «Đăng check-in» (L24), «Gửi bình luận» của bài (`/posts/[id]`) |
 | Nền tảng, cấu hình | web, C1 |
 | Expected | ADR-0038 §2.2: nút mà việc của nó chưa có nghĩa thì không hiện («Lưu tên» chỉ hiện khi tên đã khác); nếu còn hiện thì nói lý do ngay dưới |
-| Actual | Mở sheet khi chưa gõ gì: «Lưu hai ô của tôi» viền đứt, ngay dưới là «Đóng», không có dòng lý do |
-| Evidence | ![C1](evidence/EV-F07-RANG-BUOC-C1.jpg) (hàng `TC-F07-RANG-BUOC-NUT-TAT`) |
+| Actual | Mở sheet khi chưa gõ gì: «Lưu hai ô của tôi» viền đứt, ngay dưới là «Đóng», không có dòng lý do. F08: «Chia sẻ ngay vào nhóm» 326×52 viền đứt khi chưa chọn ảnh, không dòng lý do (`TC-F08.S04-NUT-TAT`); «Đăng check-in» 358×52 viền đứt khi chưa chọn chỗ, ngay dưới là «Thôi» (`TC-L24-NUT-TAT`); «Gửi bình luận» 48×48 viền đứt khi ô trống, ngay dưới là nút «Báo cáo bài này» (`TC-F08-BINH-LUAN-BAI`). Đối chứng trong cùng feature: «Đăng story» và «Đăng» của bài có lý do ngay dưới («Chọn một tấm ảnh trước đã.», «Viết vài chữ trước đã…»), đạt |
+| Evidence | ![C1](evidence/EV-F07-RANG-BUOC-C1.jpg) (hàng `TC-F07-RANG-BUOC-NUT-TAT`) ![F08, sheet Check-in: «Đăng check-in» tắt, dưới là «Thôi»](evidence/EV-F08-CHECKIN-CHIP-C1.jpg) |
 | Source | `RangBuoc.tsx:40` `disabled={!doi \|\| dangLuu}` không truyền `lyDo`; kit chỉ in lý do khi có `lyDo` (`ui.tsx:544`) |
 | Đề xuất sửa | Ẩn nút tới khi hai ô khác bản đã lưu, đúng ví dụ «Lưu tên» của ADR |
 | Tiêu chí gỡ | Sheet mở khi chưa gõ: không có nút tắt không lý do |
@@ -1459,6 +1459,198 @@ phải lỗi.
 | Evidence | ![C6](evidence/EV-F07-TABLET-CAI-DAT-C6.jpg) (hàng `TC-F07-TABLET`, `TC-L23-TABLET` C6/C7) |
 | Source | `KhongGianGiay.tsx:485` (`than: { paddingTop: 8 }`, không `maxWidth`); `Sheet.tsx` không có trần bề ngang |
 | Tiêu chí gỡ | C6/C7: tờ giấy và nội dung sheet ≤ 640px |
+
+## F08 Kỷ niệm · Media
+
+### UI-094 · Web: trình xem ảnh không hiện ảnh nào; vuốt nhảy hai ảnh mà bộ đếm đứng yên; chụm hai ngón phóng cả trang
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (web) · **P2** |
+| Feature / Screen / Layer | F08 · `/trips/[id]/album` · L25 `ui/PhotoViewer.tsx` (RN `Modal` duy nhất của app) |
+| Nền tảng, cấu hình | web, C1 (đo); C9 chụp cùng vùng trống. Native: HYPOTHESIS, ô của FlatList ngang trên native được kéo cao theo danh sách nên có thể không bị; chưa chạy được |
+| Tái hiện | Album của kèo có 3 ảnh → chạm ảnh dẫn. Vuốt trái giữa khung. Chạm đúp. Chụm hai ngón (ngón thứ hai xuống sau 40 ms, dang ra, nhấc lần lượt) |
+| Expected | Ảnh hiện trọn giữa đầu và chú thích; vuốt sang ảnh sau, bộ đếm và chú thích đổi theo; chạm đúp và chụm phóng to ảnh, đúng như dòng gợi ý dưới đáy |
+| Actual | (1) Hộp thoại mở đúng (role dialog, aria-modal, focus vào «Đóng ảnh», bộ đếm «1 / 3», gợi ý, chú thích), nhưng ảnh cao **0px** (390×0, ảnh gốc 480×640): vùng giữa là nền chàm trống, ở cả ba ảnh. (2) Một cú vuốt cuộn khung lật trang 0 → 780px, bỏ qua ảnh thứ hai; bộ đếm vẫn «1 / 3», chú thích vẫn của ảnh đầu. (3) Chạm đúp: transform của ảnh giữ `scale(1)`. (4) Chụm: ảnh vẫn `scale(1)` nhưng **cả trang** phóng ×4,12 (`visualViewport.scale`; một lượt khác ×4,98). «Đóng» ra ngoài màn (toạ độ trên màn 1046, −754), vuốt sau đó chỉ kéo khung nhìn của trang. Muốn đóng phải chụm lại cho trang về cỡ cũ, hoặc Back (rời album). Trình xem chưa ai chụm thì Esc và «Đóng» đóng ngay, focus về ảnh đã mở (`TC-L25-VONGDOI` đạt) |
+| Evidence | ![mở ảnh; sau cú chụm](evidence/EV-F08-XEM-ANH-ghep.jpg) (hàng `TC-L25-ANH`, `TC-L25-CU-CHI`) |
+| Source | `ui/PhotoViewer.tsx:96`: ô mỗi ảnh `{ width, flex: 1 }` nằm trong FlatList ngang; trên web ô không nhận chiều cao của danh sách nên cao 0, ảnh `absoluteFill` (dòng 99) cao 0 theo, và `GestureDetector` của chạm đúp và chụm (dòng 97) không có diện tích nhận chạm: hai ngón rơi cho trình duyệt (cả hai con trỏ nhận `pointercancel`). Dòng 49: chỉ số ảnh chỉ đổi ở `onMomentumScrollEnd`, sự kiện ScrollView web không phát, nên bộ đếm và chú thích đứng yên. `index.html` để trang phóng được (`initial-scale=1`, không `maximum-scale`) |
+| Hậu quả | Trên web, trình xem ảnh không cho xem ảnh nào; ai thử phóng to thì mất luôn nút «Đóng» |
+| Đề xuất sửa | Cho ô chiều cao tường minh (chiều cao đo được của vùng, như đã làm với `width`); đổi chỉ số theo `onScroll` hoặc `onViewableItemsChanged`; chặn phóng trang trên vùng ảnh (`touch-action: none`) |
+| Tiêu chí gỡ | Web C1: ảnh cao > 0, trọn trong vùng; một cú vuốt sang đúng ảnh sau và bộ đếm «2 / 3»; chạm đúp ra `scale(2)`; chụm không đổi `visualViewport.scale` |
+
+### UI-095 · Thả tim lỗi khi đang ở cuối tường: câu lỗi nằm ở đầu tường, ngoài khung nhìn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P2** (cùng họ UI-051) |
+| Feature / Screen | F08 · `/groups/[id]/wall` |
+| Nền tảng, cấu hình | web, C1; máy chủ trả 503 cho `/memories/{id}/reactions` (giả lập bằng `route()`). Native: cùng mã (STATIC) |
+| Tái hiện | chat-1 cuộn tới kỷ niệm thứ tư (ảnh có chú thích dài), chạm «Thích» trong lúc máy chủ trả 503 |
+| Expected | Câu lỗi hiện gần nút vừa chạm, hoặc màn cuộn tới câu |
+| Actual | Quanh nút không có gì đổi: vẫn «Thích», «0 tim». Câu «Rủ Đi đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.» có trên trang nhưng ở y −1535, trên đầu tường. Câu có `aria-live="polite"` nên trình đọc màn hình có thể đọc; người nhìn thì không thấy |
+| Evidence | ![sau khi chạm tim lúc 503](evidence/EV-F08-TIM-503-C1.jpg) (hàng `TC-F08-TIM-503`) |
+| Source | `ky-niem/GroupWallLive.tsx:244`: `thongBao` của mọi thao tác trên tường vẽ ở một chỗ, trên đầu danh sách |
+| Hậu quả | Người dùng thấy tim không ăn mà không biết vì sao, chạm lại nhiều lần |
+| Đề xuất sửa | Câu lỗi ngay dưới kỷ niệm vừa thao tác, hoặc cuộn tới câu và đưa focus vào đó (như đề xuất của UI-051) |
+| Tiêu chí gỡ | Tim lỗi ở bất kỳ kỷ niệm nào: câu lỗi nằm trong khung nhìn ngay sau khi chạm |
+
+### UI-096 · Xoá bình luận của bài: một chạm là xoá, không hỏi; thùng rác 18×20
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (thao tác không tự hoàn tác được) · **P2** |
+| Feature / Screen | F08 · `/posts/[id]` (`tuong/BaiChiTietScreen.tsx`) |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Tái hiện | chat-1 mở bài «Bạn bè» của Chat Test 01, nơi có hai bình luận của mình; chạm biểu tượng thùng rác cạnh «Vừa xong» |
+| Expected | Hỏi trước khi xoá, như xoá tin trong chat và xoá story («Xoá story này? …» · «Giữ lại» · «Xoá»); đích chạm ≥ 48dp |
+| Actual | Không hỏi, không có «Hoàn tác»: bình luận trên máy chủ 2 → 1 ngay sau một chạm. Thùng rác 18×20, sát dòng giờ (`hitSlop` 8 không áp trên react-native-web) |
+| Evidence | ![trước khi xoá: hai thùng rác 18×20](evidence/EV-F08-XOA-BL-C1.jpg) (hàng `TC-F08-XOA-BINH-LUAN`) |
+| Source | `tuong/BaiChiTietScreen.tsx:294–295` (`Pressable` bọc icon cỡ 18, `onPress={() => void xoaBl(c)}`); `xoaBl` (dòng 156) gọi thẳng API |
+| Hậu quả | Chạm nhầm là mất bình luận, không lấy lại được |
+| Đề xuất sửa | Câu hỏi ngay tại bình luận («Xoá bình luận này?» · «Giữ lại» · «Xoá») như trình xem story; vùng chạm 48dp |
+| Tiêu chí gỡ | Một chạm vào thùng rác không xoá; vùng chạm ≥ 48dp |
+
+### UI-097 · «Thả khoảnh khắc» và «Đăng story»: rời màn là mất ảnh và câu đã soạn, không hỏi
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (mất dữ liệu người dùng vừa nhập, chưa ghi) · **P2** (cùng họ UI-052) |
+| Feature / Screen / Layer | F08 · `/moments/new`, `/stories/new` · L34 route modal trượt từ dưới |
+| Nền tảng, cấu hình | web, C1. Native: vuốt xuống của modal iOS và Back phần cứng Android rời route theo cùng đường; toàn app không có `usePreventRemove` hay `beforeRemove` (STATIC) |
+| Tái hiện | Mở «Thả khoảnh khắc» từ tường nhóm (hoặc «Đăng story mới» từ Tin nhắn), chọn một ảnh, gõ «Nháp thử quay lại». Rời bằng Back của trình duyệt (rồi Forward), hoặc «Quay lại» ở đầu màn. Mở lại bằng cùng nút |
+| Expected | Hỏi trước khi bỏ, hoặc mở lại vẫn còn ảnh và câu |
+| Actual | Cả bốn đường (2 màn × 2 cách rời): rời ngay, 0 hộp thoại trong trang, 0 hộp hỏi của trình duyệt. Forward và mở lại đều ra khung trống «Chưa có ảnh. Chạm để chọn một tấm.» và «300 ký tự còn lại» (story: «Còn 200 ký tự»). Rời xong không sót lớp chặn |
+| Evidence | ![trước khi rời; Back rồi mở lại](evidence/EV-F08-L34-ghep.jpg) (hàng `TC-L34-VONGDOI`) |
+| Source | `ky-niem/ShareMomentLive.tsx:58–68`: ảnh đã chọn bị bỏ khi màn gỡ (`boAnh` trong cleanup), câu nằm ở `useState`; `story/DangStoryScreen.tsx` cùng kiểu. Không màn nào chặn rời |
+| Hậu quả | Một cú Back quen tay (hay vuốt xuống trên iOS) bỏ ảnh vừa chọn và câu vừa gõ |
+| Đề xuất sửa | Hỏi trước khi rời khi đã có ảnh hoặc câu (`usePreventRemove`), hoặc giữ nháp trong bộ nhớ phiên theo nhóm |
+| Tiêu chí gỡ | Bốn đường trên: có câu hỏi, hoặc mở lại còn ảnh và câu |
+
+### UI-098 · Trình xem ảnh mờ dần khi mở nhưng biến mất ngay khi đóng
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen / Layer | F08 · `/trips/[id]/album` · L25, MO24 |
+| Nền tảng, cấu hình | web, C1. C9 đạt: hiện và mất ngay (`TC-MO24-C9`) |
+| Expected | `animationType="fade"`: mờ dần cả hai chiều |
+| Actual | Mở: độ mờ 0 → 1 trong 242 ms. Đóng bằng «Đóng»: 4 mẫu rAF đầu còn thấy ở độ mờ 1 rồi mất hẳn; mẫu đầu tiên không còn trình xem ở 64 ms kể từ lúc bắt đầu lấy mẫu (tính cả cú chạm). Không có độ mờ trung gian |
+| Evidence | Số đo khung rAF ở hàng `TC-MO24-DONG`; không kèm ảnh (trạng thái đầu và cuối đều bình thường) |
+| Source | `ky-niem/AlbumLive.tsx:207`: `viewer ? <PhotoViewer …/> : null`. Đóng là gỡ `Modal` khỏi cây, nên hiệu ứng ra của `Modal` không có dịp chạy |
+| Đề xuất sửa | Giữ `PhotoViewer` trong cây và điều khiển bằng `visible`, gỡ sau `onDismiss` |
+| Tiêu chí gỡ | C1: lúc đóng có ít nhất một mẫu độ mờ giữa 0 và 1; C9 vẫn mất ngay |
+
+### UI-099 · Sheet Check-in: chip tên quán dài tràn ra ngoài mép sheet
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (layout) · **P3** |
+| Feature / Screen / Layer | F08 · `/groups/[id]/wall` · L24 sheet «Check-in ở đâu?» |
+| Nền tảng, cấu hình | web, C1; danh mục có tên quán 72 ký tự và tên liền 57 ký tự (dữ liệu biến thể của F02) |
+| Expected | Chip xuống dòng hoặc có dấu lược, nằm trọn trong sheet |
+| Actual | 10 chip; hai chip rộng 521 và 448px, tới x 537 và 464 trong sheet rộng 390: «Quán Bún Chả Hà Nội Truyền Thống Của Bà Cụ Đầu Hẻm Số…» và «SiêuQuánCàPhêKhôngCóKhoảngTrắngNàoĐểThửNgắtDòng…» bị mép sheet cắt, không dấu lược, mất viền phải. Chip cao 48 (đạt); tìm không ra có câu (đạt, `TC-L24-DANG`) |
+| Evidence | ![C1](evidence/EV-F08-CHECKIN-CHIP-C1.jpg) (hàng `TC-L24-CHIP-DAI`) |
+| Source | `ui.tsx:709` `Chip`: chữ có `numberOfLines={1}` nhưng chip không có `maxWidth`, nên chip nở theo chữ và dấu lược không bao giờ chạy; `ky-niem/GroupWallLive.tsx:224` |
+| Hậu quả | Tên quán bị cắt giữa chừng ở mép màn; người chọn không đọc được đuôi tên |
+| Đề xuất sửa | `maxWidth: "100%"` cho chip (dấu lược sẽ chạy), hoặc cho chữ xuống hai dòng |
+| Tiêu chí gỡ | Mọi chip nằm trọn trong sheet ở C1, C2 |
+
+### UI-100 · Bài «Chỉ mình tôi» mở bởi người khác: hai khối lỗi giống nhau, hai «Thử lại» vô ích
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F08 · `/posts/[id]` |
+| Nền tảng, cấu hình | web, C1; chat-1 mở link bài «Chỉ mình tôi» của Chat Test 01 |
+| Expected | Một câu nói bài không dành cho mình, một lối ra; không «Thử lại» cho điều thử lại không đổi được |
+| Actual | Hai khối lỗi xếp chồng: «Chưa mở được bài» và «Chưa đọc được bình luận», cùng thân «Bài này không có, hoặc không dành cho bạn.», mỗi khối một «Thử lại». Không lộ nội dung bài (đạt) |
+| Evidence | ![C1](evidence/EV-F08-BAI-RIENG-C1.jpg) (hàng `TC-F08-BAI-KHONG-DANH-CHO`) |
+| Source | `tuong/BaiChiTietScreen.tsx:174` và `:243`: bài và bình luận đọc riêng, mỗi cái vẽ `ErrorState` của mình |
+| Đề xuất sửa | Bài không đọc được thì không đọc, không vẽ phần bình luận; lỗi «không có / không dành cho bạn» không kèm «Thử lại» |
+| Tiêu chí gỡ | Mở bài không dành cho mình: một khối, không «Thử lại» |
+
+### UI-101 · Trình xem story: hai vùng chạm không có vai trò; câu hỏi xoá không nhận focus
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (accessibility) · **P3** |
+| Feature / Screen / Layer | F08 · `/stories/[personId]` · L26 |
+| Nền tảng, cấu hình | web, C1. Native: `Pressable` không `accessibilityRole` thì TalkBack và VoiceOver không đọc là nút (STATIC) |
+| Actual | «Story trước» (137×677) và «Story tiếp theo» (254×677) là `div` có `aria-label`, `tabindex=0`, không role: axe `aria-prohibited-attr` (serious) ×2. Bàn phím: focus vào «Story tiếp theo» được, Enter ở story cuối về Tin nhắn (đạt). Chạm «Xoá story»: câu «Xoá story này? Bạn bè sẽ không thấy nó nữa.» hiện ở chân màn (y 651), không phải hộp thoại, focus ở lại «Xoá story». «Giữ lại» đóng câu hỏi; «Xoá» xoá đúng một story (2 → 1) rồi về Tin nhắn (đạt). Nút 44dp: UI-001 |
+| Evidence | ![xem story; câu hỏi xoá](evidence/EV-F08-STORY-ghep.jpg) (hàng `TC-F08-STORY-VUNG-CHAM`, `TC-L26-XOA`) |
+| Source | `story/XemStoryScreen.tsx:245–246` (hai `Pressable` không `accessibilityRole`); câu hỏi ở dòng 251–263 là một `View` thường |
+| Đề xuất sửa | `accessibilityRole="button"` cho hai vùng; câu hỏi hiện thì đưa focus vào nó (hoặc vào «Giữ lại») |
+| Tiêu chí gỡ | axe 0 lỗi `aria-prohibited-attr` trên trình xem; focus vào câu hỏi khi nó hiện |
+
+### UI-102 · Ảnh dọc 9:16: xem trước hiện trọn ảnh, lên tường bị cắt đầu và đuôi
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F08 · `/moments/new` → `/groups/[id]/wall` |
+| Nền tảng, cấu hình | web, C1; ảnh tổng hợp 360×640 |
+| Expected | Khung xem trước cho thấy đúng phần ảnh sẽ hiện trên tường |
+| Actual | Hai khung cùng kẹp về 3:4 (332×443 xem trước, 340×453 trên tường). Xem trước vẽ trọn ảnh (`contain`) với hai dải nền hai bên; tường phủ kín khung (`cover`), mất khoảng 25% chiều cao ở đầu và đuôi. Ảnh ngang 16:9 và ảnh 3:4 nằm trong khoảng kẹp nên hai nơi giống nhau (`TC-F08-THA-NGANG`, `TC-F08-THA-DOC-3-4`) |
+| Evidence | ![xem trước; trên tường](evidence/EV-F08-THA-9-16-ghep.jpg) (hàng `TC-F08-THA-XEM-TRUOC`) |
+| Source | `ky-niem/ShareMomentLive.tsx:152` (`contentFit="contain"`, `aspectRatio: tiLeKhung(anh)`); `ky-niem/GroupWallLive.tsx:283–291` (`contentFit="cover"`, cùng `tiLeKhung`); `ky-niem/ti-le.ts:8` kẹp tỉ lệ trong 0,75…1,91 |
+| Đề xuất sửa | Vẽ cùng một cách ở hai nơi (cùng `cover` và cho thấy phần sẽ bị cắt, hoặc cùng `contain`) |
+| Tiêu chí gỡ | Ảnh 9:16: phần hiện ở xem trước và trên tường trùng nhau |
+
+### UI-103 · Kệ album và đầu album chỉ ghi năm, không ghi ngày của chuyến
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F08 · `/groups/[id]/album`, `/trips/[id]/album` |
+| Nền tảng, cấu hình | web, C1–C3 (bản có phiên, máy chủ Go) |
+| Expected | Chú thích mã của `AlbumLive.tsx` (dòng 20): «The dates and the group are written once, in the heading» |
+| Actual | Kèo đi 28–29/09 mà kệ và đầu album đều ghi «2026 · đang đi · 20 người · 3 ảnh · 1 chỗ đã tới · 1 check-in»: không có ngày nào, nhiều chuyến trong cùng năm không phân biệt được bằng thời gian. Bản demo của cùng màn ghi «17 - 19/10/2026» (`TC-F08-KHONG-PHIEN`) |
+| Evidence | ![kệ ở C1–C3](evidence/EV-F08.S02-BASE-ghep.jpg) (hàng `TC-F08-ALBUM-NGAY`) |
+| Source | `ky-niem/AlbumLive.tsx:61–62` (`cauKhoang` chỉ dùng `period_label`); Go `internal/domain/album/album.go:103–104` (`PeriodLabel` trả `2026` hoặc `2025–2026`), dù miền đã có `StartsOn`, `EndsOn` (dòng 179) |
+| Đề xuất sửa | Ghi khoảng ngày của chuyến («28–29/09»), thêm năm khi khác năm nay |
+| Tiêu chí gỡ | Kệ và đầu album có ngày của chuyến |
+
+### UI-104 · Giờ trên tường viết «10:07 28-09», khác «28/09» ở mọi chỗ khác
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH (nhất quán) · **P3** |
+| Feature / Screen | F08 · `/groups/[id]/wall` |
+| Nền tảng, cấu hình | web, C1–C7. Native: định dạng do Intl của Hermes quyết định, có thể khác (HYPOTHESIS) |
+| Actual | Dưới tên người đăng và trên mép ảnh in: «10:07 28-09», «Chat Test 01 · 10:04 28-09», ngày và tháng nối bằng gạch nối. Chat, bài, story và album viết «vừa xong», «3 giờ trước», «28/09» |
+| Evidence | ![tường ở C1–C3](evidence/EV-F08.S01-BASE-ghep.jpg) (hàng `TC-F08-GIO-TUONG`) |
+| Source | `ky-niem/GroupWallLive.tsx:70`: `toLocaleString("vi-VN", { day, month, hour, minute: "2-digit" })`; ICU vi-VN nối ngày tháng bằng «-» |
+| Đề xuất sửa | Dùng chung hàm ghi thời gian của app (tương đối, hoặc «28/09») |
+| Tiêu chí gỡ | Tường ghi ngày như các màn khác |
+
+### UI-105 · Tablet: ảnh trên tường, ảnh dẫn album, bài và hàng kệ trải hết bề ngang
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** (cùng họ UI-031, UI-047, UI-081, UI-093) |
+| Feature / Screen | F08.S01, F08.S02, F08.S03, F08.S08 |
+| Nền tảng, cấu hình | web, C6, C7 |
+| Expected | Cột nội dung có trần, như chính «Thả khoảnh khắc» (640px) và khay tạo (560px); một ảnh dọc không cao hơn một màn |
+| Actual | Tường: ảnh in dọc 702×936 ở C6 (cửa sổ cao 1024) và 894×1192 ở C7 (cao 1366); ảnh ngang 702×395 và 894×503. Album: ảnh dẫn 720×383 và 912×465, lưới giữ 2 ô 175 và 223px, nửa phải trống. Kệ: hàng trải hết bề ngang, mũi tên ở mép phải xa chữ. Bài: thẻ bài và ảnh trải hết bề ngang |
+| Evidence | ![tường ở C6](evidence/EV-F08-TUONG-C6.jpg) (hàng `TC-F08-TABLET` C6/C7; baseline `TC-F08.S01/S02/S03/S08-BASE` C4–C7) |
+| Source | `ky-niem/GroupWallLive.tsx`, `ky-niem/AlbumLive.tsx`, `tuong/BaiChiTietScreen.tsx` không đặt `maxWidth`; `ky-niem/ShareMomentLive.tsx:172` có `maxWidth: 640`, cách làm đã có trong cùng feature |
+| Tiêu chí gỡ | C6/C7: cột nội dung ≤ 640px; ảnh dọc trên tường không cao hơn cửa sổ |
+
+### UI-106 · Thành tích ở 320px: thẻ huy hiệu vừa mở bẻ đôi chữ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (layout) · **P3** (cùng họ UI-055: `NepDien` chen trong một hàng) |
+| Feature / Screen | F08 · `/achievements` (khoảnh khắc M8) |
+| Nền tảng, cấu hình | web, C2 (320×640). C1, C3, C4, C5, C9 không bẻ chữ (cột chữ 106, 76, 91, 146, 106px) |
+| Điều kiện | Lần đầu mở «Thành tích» trên máy này sau khi một huy hiệu vừa mở («Mới mở», Nếp M8). Lần sau (tải lại) Nếp không còn, cột chữ 162px |
+| Expected | Tên huy hiệu và điều kiện xuống dòng giữa hai từ |
+| Actual | Hàng nổi bật chia 80 (con dấu) + 36 (chữ) + 112 (Nếp M8) trong thẻ 288px: «Mở hà / ng» 3 dòng, «Chia kho / ản chi đầu tiên» 6 dòng, «Mới / mở» 2 dòng |
+| Evidence | ![lần đầu; lần hai](evidence/EV-F08-TEM-HEP-ghep.jpg) (hàng `TC-F08-TEM-HEP` C2; baseline `TC-F08.S09-BASE`) |
+| Source | `ky-niem/AchievementsLive.tsx:142–152` (`noiBat`: `Tem` 80, cột chữ `flex: 1`, `NepDien` 112 trong một hàng; style dòng 222) |
+| Hậu quả | Lúc ăn mừng huy hiệu mới là lúc chữ khó đọc nhất, trên máy nhỏ |
+| Đề xuất sửa | Ở cỡ compact đặt Nếp M8 xuống dưới hoặc thu nhỏ, hoặc cho cột chữ `minWidth` |
+| Tiêu chí gỡ | C2 lần đầu: không từ nào bị bẻ; cột chữ ≥ 120px |
 
 ## F09 Hồ sơ · Cài đặt
 

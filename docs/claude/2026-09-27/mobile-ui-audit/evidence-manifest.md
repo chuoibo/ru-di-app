@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (127 ảnh, tổng 15.40 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (139 ảnh, tổng 16.42 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -131,3 +131,15 @@
 | [EV-F07-TABLET-CAI-DAT-C6](evidence/EV-F07-TABLET-CAI-DAT-C6.jpg) | UI-093: tablet 768: tờ giấy rộng 720px và sheet «Cài đặt sổ» rộng 768px, trong khi thanh đầu gom cột ở giữa (C6) | 132693 | `be8e8cfc` |
 | [EV-F07.S02-503-C1](evidence/EV-F07.S02-503-C1.jpg) | UI-083: đọc sổ và tờ trả 503, màn vẽ «Chưa có sổ hai người» và mời «Đề nghị lập sổ» dù sổ đã mở; không câu lỗi, không «Thử lại» (C1) | 102837 | `f4becd8c` |
 | [EV-F07.S02-BASE-ghep](evidence/EV-F07.S02-BASE-ghep.jpg) | F07.S02 chưa có sổ ở C1, C2, C3: bìa sổ, Nếp, «Đề nghị lập sổ»; hai nhãn tên trên bìa đều thành «Chat Tes…» (UI-090) | 114938 | `79921da7` |
+| [EV-F08-BAI-RIENG-C1](evidence/EV-F08-BAI-RIENG-C1.jpg) | UI-100: chat-1 mở bài «Chỉ mình tôi» của Chat Test 01: hai khối lỗi cùng thân, hai «Thử lại» (C1) | 94434 | `175d4603` |
+| [EV-F08-CHECKIN-CHIP-C1](evidence/EV-F08-CHECKIN-CHIP-C1.jpg) | UI-099 và UI-091: sheet «Check-in ở đâu?»: hai chip tên quán dài bị mép sheet cắt; «Đăng check-in» tắt, dưới là «Thôi», không lý do (C1) | 106470 | `77a22b11` |
+| [EV-F08-L34-ghep](evidence/EV-F08-L34-ghep.jpg) | UI-097: «Thả khoảnh khắc» có ảnh và câu «Nháp thử quay lại»; Back rồi mở lại: khung trống, «300 ký tự còn lại» (C1) | 82767 | `0dca6442` |
+| [EV-F08-STORY-ghep](evidence/EV-F08-STORY-ghep.jpg) | UI-101: trình xem story của chat-1; chat-0 chạm «Xoá story»: câu hỏi ở chân màn, không phải hộp thoại, focus không vào câu (C1) | 42502 | `2a9a7174` |
+| [EV-F08-TEM-HEP-ghep](evidence/EV-F08-TEM-HEP-ghep.jpg) | UI-106: «Thành tích» ở 320px, lần đầu thấy huy hiệu mới: cột chữ 36px, «Mở hà / ng», «Chia kho / ản…»; lần hai (không còn Nếp M8): cột chữ 162px (C2) | 92178 | `8d10965b` |
+| [EV-F08-THA-9-16-ghep](evidence/EV-F08-THA-9-16-ghep.jpg) | UI-102: ảnh 9:16 ở xem trước vẽ trọn (contain, hai dải nền), trên tường phủ khung 3:4 (cover) nên mất đầu và đuôi (C1) | 79460 | `e0abace0` |
+| [EV-F08-TIM-503-C1](evidence/EV-F08-TIM-503-C1.jpg) | UI-095: chạm «Thích» ở kỷ niệm thứ tư lúc máy chủ trả 503: quanh nút không có gì đổi, câu lỗi nằm ở đầu tường, y −1535 (C1) | 96018 | `74dd6357` |
+| [EV-F08-TUONG-C6](evidence/EV-F08-TUONG-C6.jpg) | UI-105: tablet 768: ảnh in trên tường rộng 702px, ảnh dọc cao 936px trên cửa sổ 1024 (C6) | 140707 | `9dfd74c2` |
+| [EV-F08-XEM-ANH-ghep](evidence/EV-F08-XEM-ANH-ghep.jpg) | UI-094: trình xem ảnh trên web: đầu, bộ đếm «1 / 3», gợi ý và chú thích có, ảnh cao 0px; sau cú chụm hai ngón cả trang phóng ×4,12, «Đóng» ra ngoài màn (C1) | 34763 | `91df81d2` |
+| [EV-F08-XOA-BL-C1](evidence/EV-F08-XOA-BL-C1.jpg) | UI-096: bài có hai bình luận của chat-1, mỗi bình luận một thùng rác 18×20; một chạm là xoá, không hỏi (C1) | 110650 | `756d2c41` |
+| [EV-F08.S01-BASE-ghep](evidence/EV-F08.S01-BASE-ghep.jpg) | F08.S01 tường nhóm chat-test ở C1, C2, C3: «Thả khoảnh khắc», «Check-in», thẻ check-in, ảnh in nghiêng; giờ viết «10:07 28-09» (UI-104) | 121106 | `b7a56663` |
+| [EV-F08.S02-BASE-ghep](evidence/EV-F08.S02-BASE-ghep.jpg) | F08.S02 kệ album ở C1, C2, C3: «Kèo album F08 · 2026 · đang đi · …», chỉ ghi năm, không ngày của chuyến (UI-103) | 69580 | `1991240c` |

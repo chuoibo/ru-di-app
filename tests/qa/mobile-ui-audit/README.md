@@ -53,6 +53,9 @@ node kich-ban/f06-phan-xu.mjs        # phán quyết bằng mắt của F06
 node kich-ban/f07-so-doi.mjs [--chi chon-nguoi,lap-so,ru,cai-dat,vong-doi,ru-toi-day,m6-c9,m6-khung,c8,lanh,loi,tablet]
                                     # F07 Sổ hai người: ghi vào chat-0/1 và các cặp chat-2…13 lập qua API; Team Đà Lạt không đụng
 node kich-ban/f07-phan-xu.mjs        # phán quyết bằng mắt của F07
+node kich-ban/f08-ky-niem.mjs [--chi du-lieu,tha,chon-huy,nhap,checkin,tuong,album,xem-anh,story,story-dong,bai,thanh-tich,tem-hep,khong-phien,lanh,loi,c8,voi-toi,tablet]
+                                    # F08 Kỷ niệm · Media: ghi vào nhóm chat-test và chat-0/1; Team Đà Lạt chỉ đọc
+node kich-ban/f08-phan-xu.mjs        # phán quyết bằng mắt của F08
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node chot-anh.mjs <docs-dir> <danh-sach.json>   # chép ảnh được chọn, ghim sha256 vào allowlist
 ```
@@ -78,6 +81,16 @@ Nếp diễn và SVG nhường Skia. Khi đọc transform, chọn đúng phần 
 180 − 108·m). Khoảnh khắc chỉ diễn một lần cho mỗi sự kiện, nên mỗi lượt đo M6 cần một cặp chưa lập sổ; cặp mới lập qua
 API (`lapCap` trong `f07-so-doi.mjs`). Một khoảng dài không có khung rAF nghĩa là luồng chính bận: trình tự đọc được,
 thời lượng thì không.
+
+Ảnh của expo-image trên web là `<img alt=…>`, không có `aria-label`: tìm ảnh theo `alt`. Ảnh in trên tường nghiêng nên
+hộp bao lớn hơn khung; đo khung bằng `offsetWidth/offsetHeight`. Cử chỉ trong trình xem ảnh phải chạm vào giữa khung lật
+trang, không vào «ảnh cuối trong DOM» (thường là ảnh kế bên, ngoài khung). Một cú chụm mà ảnh không nhận thì trình duyệt
+phóng **cả trang**: sau mọi cú chụm, đọc `visualViewport.scale`, và đừng chạm tiếp theo toạ độ bố cục (F08 đã đọc nhầm
+«Đóng không đóng» vì thế). Đo vòng đời của một lớp trên bản chưa bị cử chỉ nào làm lệch.
+
+Dữ liệu mặc định có thể làm ca vô nghĩa: bài mới đăng ở mức «Chỉ mình tôi», nên ca của người đọc cần một bài «Bạn bè».
+Dòng ngay sau một nút không mặc nhiên là lý do của nút: kiểm cả vai trò của nó (F08 lấy nhầm nút «Báo cáo bài này»).
+`innerText` có thể mang xuống dòng và ký tự icon; chuẩn hoá khoảng trắng và bỏ vùng Private Use trước khi ghi vào sổ.
 
 Sổ `results.jsonl` chỉ được ghi thêm. Hàng sinh từ lỗi của harness được rút bằng `soGhi(out).rut(tc, lyDo)`:
 dòng gốc ở lại trong sổ, ma trận bỏ nó khỏi bảng và liệt kê trong mục «Hàng đã rút» kèm lý do.

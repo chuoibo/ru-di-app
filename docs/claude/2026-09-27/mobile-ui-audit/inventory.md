@@ -161,7 +161,7 @@ Mặc định không né bàn phím.
 | L04 | Nếp diễn (M1–M8) | `ui/NepDien.tsx` | nhiều màn | — | chạm để bỏ qua | chiếm chỗ riêng |
 | L05 | Thanh tab / rail | `ui/RudiTabBar.tsx` | F00.S03 | — | — | cao theo cỡ chữ |
 | L06 | Hành động hồ sơ (chặn, báo cáo, lý do) | `nguoi/HanhDongHoSo.tsx` | F06.S07 | có | Sheet | |
-| L07 | Báo cáo bài | `tuong/BaiChiTietScreen.tsx` | F08.S08 | có | Sheet | |
+| L07 | Báo cáo bài | `tuong/BaiChiTietScreen.tsx` | F08.S08 | có | Sheet | đo ở checkpoint 9: X, nền, Esc ở lại bài, Back rời bài (UI-038); không gửi báo cáo nào |
 | L08 | Chặng mới | `keo/OutingLive.tsx` | F03.S03 | có + `BanXoay` | Sheet | |
 | L09 | Gắn quán | `keo/OutingLive.tsx` | F03.S03 | tìm | Sheet | |
 | L10 | Sửa ngày | `hanh-trinh/SoHanhTrinh.tsx` | F03.S04 | 6 ô + 2 công tắc | Sheet | không nằm trong khe overlay: đã đo ở checkpoint 4, nền không phủ đầu màn (UI-041); tiêu đề sheet «Những hẹn quan trọng» |
@@ -178,17 +178,17 @@ Mặc định không né bàn phím.
 | L21 | Khay tờ hẹn chung | `chat/ToHenChungKhay.tsx` | F05.S02 | — | chỉ X | inline. Đo ở checkpoint 6: Esc không đóng (UI-066), Back rời chat (UI-038) |
 | L22 | Thẻ thông báo chat «Đã hiểu» | `chat/GroupChatLive.tsx` | F05.S02 | — | «Đã hiểu» | nhận lỗi cảm xúc, lỗi gửi ảnh, lỗi xoá, câu ý định sau khi gửi. Luôn thêm ở cuối chat (UI-069) |
 | L23 | ~12 sheet sổ đôi | `hai-nguoi/*.tsx`, `KhongGianGiay.tsx` | F07.S02 | DeNghiSua 5 ô, RangBuoc 2, GiuMotDieu 1 | Sheet | Đo ở checkpoint 8: Cài đặt sổ (vòng đời đủ 7 cách đóng, C9, tablet), Loại sổ, Hai ô ràng buộc, Đóng sổ (mở rồi thôi, không đóng sổ), Lập sổ (hai phía), Sửa bản phác, Đề nghị sửa. Chưa tới: Bật «Một đôi», Giữ lại một điều, Ai lo tuần này, Gu hai bạn, xác nhận bỏ/rút/nghỉ/huỷ. Hàng điều hướng không đóng sheet (UI-087, đã xác nhận) |
-| L24 | Check-in | `ky-niem/GroupWallLive.tsx` | F08.S01 | tìm + ô | Sheet | |
-| L25 | Xem ảnh | `ui/PhotoViewer.tsx` (RN `Modal` duy nhất) | F08.S02, F08.S03 | — | «Đóng», Android back | pinch, pan, chạm đúp; không vuốt xuống để đóng |
-| L26 | Xem story + xác nhận xoá | `story/XemStoryScreen.tsx` | F08.S06 | — | đóng modal | tự chuyển 5 s |
+| L24 | Check-in | `ky-niem/GroupWallLive.tsx` | F08.S01 | tìm + ô | Sheet | đo ở checkpoint 9: X, nền, Esc ở lại tường, Back rời tường (UI-038); chip tên dài tràn mép (UI-099); nút tắt không lý do (UI-091); 96% ở C8 (UI-040) |
+| L25 | Xem ảnh | `ui/PhotoViewer.tsx` (RN `Modal` duy nhất) | F08.S02, F08.S03 | — | «Đóng», Android back | pinch, pan, chạm đúp; không vuốt xuống để đóng; đo ở checkpoint 9: vòng đời trên web đạt khi chưa ai chụm; ảnh cao 0, vuốt nhảy hai ảnh, chụm phóng cả trang (UI-094); đóng không mờ dần (UI-098) |
+| L26 | Xem story + xác nhận xoá | `story/XemStoryScreen.tsx` | F08.S06 | — | đóng modal | tự chuyển 5 s; đo ở checkpoint 9: «Đóng story», Back, Enter đạt; vùng chạm không role, câu hỏi xoá không nhận focus (UI-101) |
 | L27 | Xác nhận xoá tài khoản | `XoaTaiKhoan.tsx` | F09.S06 | — | huỷ | hai bước |
 | L28 | Tuỳ chọn chuyến (demo) | `Outing.tsx` | F11 | — | Sheet | |
 | L29 | Nắp gấp `NapGiay` | `ui/NapGiay.tsx` | nhiều màn | — | gập | |
 | L30 | Pager Welcome | `screens/Welcome.tsx` | F01.S01 | — | vuốt, chấm | carousel |
-| L31 | Bộ chọn ảnh (file chooser trên web) | `ky-niem/chon-anh.ts`, `ChiaBillLive.tsx` | F04, F05, F08, F09 | — | huỷ | trên native là picker hệ thống |
+| L31 | Bộ chọn ảnh (file chooser trên web) | `ky-niem/chon-anh.ts`, `ChiaBillLive.tsx` | F04, F05, F08, F09 | — | huỷ | trên native là picker hệ thống; F08: đóng bộ chọn không chọn gì thì màn giữ nguyên (đạt, checkpoint 9) |
 | L32 | Chia sẻ (`Share`) | `dot-thu/DotThuLive.tsx` | F04.S04 | — | — | web: `navigator.share` nếu có. Đo ở checkpoint 5: trên web cả ba trường hợp (không có, chia sẻ xong, đóng khay) đều báo lỗi mạng (UI-049) |
 | L33 | Link ngoài (chỉ đường) | `explore/PlaceDetailLive.tsx` | F02.S03 | — | — | |
-| L34 | 3 route modal trượt từ dưới | `check-ins/new`, `moments/new`, `stories/new` | F03, F08 | có | vuốt xuống (iOS), back | không chặn mất bản nháp |
+| L34 | 3 route modal trượt từ dưới | `check-ins/new`, `moments/new`, `stories/new` | F03, F08 | có | vuốt xuống (iOS), back | không chặn mất bản nháp; đo ở checkpoint 9 trên `moments/new` và `stories/new`: Back, Forward, «Quay lại» đều bỏ ảnh và câu, không hỏi (UI-097); `check-ins/new` có phiên thì về Kèo |
 | L35 | Kit trạng thái: Skeleton, ErrorState, EmptyState | `ui/Skeleton.tsx`, `ErrorState`, `EmptyState` | mọi màn | — | — | lỗi là câu chữ có `aria-live` |
 | L36 | Panel trong màn Hồ sơ (tài khoản, sửa, đã lưu) | `Profile.tsx` | F09.S01 | có | nút back trên màn | không phải route |
 
@@ -210,7 +210,7 @@ Không có trong app (N/A, đã rà mã):
 | MO03 | Khay tạo: route fade + sheet lò xo + M1 | `Create.tsx` | «+» |
 | MO04 | Sheet: nền mờ dần, panel lò xo, kéo, fling | `Sheet.tsx` | mở/đóng sheet |
 | MO05 | Route modal `slide_from_bottom` | `app/_layout.tsx` | check-in, kỷ niệm, story |
-| MO06 | Story: fade + tiến độ 5 s | `XemStoryScreen.tsx` | mở story |
+| MO06 | Story: fade + tiến độ 5 s | `XemStoryScreen.tsx` | mở story; đo ở checkpoint 9: C1 đoạn đầu đầy trong 5 s rồi sang story sau, story cuối dừng ở vạch đầy; C9 không tự chuyển |
 | MO07 | Phản hồi nhấn (chỉ co giãn) | `ui/PressScale.tsx` | nhấn |
 | MO08 | Skeleton lấp lánh (vòng lặp được phép) | `ui/Skeleton.tsx` | đang tải |
 | MO09 | Lật bìa Welcome 84° + đường hiện dần | `Welcome.tsx` | CTA |
@@ -228,7 +228,7 @@ Không có trong app (N/A, đã rà mã):
 | MO21 | FadeIn khi xuất hiện | `ChonNgayLich`, `NapGiay`, `ExploreLive` | mở |
 | MO22 | Đếm số tiền 200 ms | `Money.tsx` (`countUp`) | hiện số; grep ở checkpoint 5: không màn nào bật `countUp` (N/A) |
 | MO23 | Camera bản đồ `fitBounds`/`easeTo` 200 ms | `BanDo.tsx` | chọn chặng |
-| MO24 | Zoom ảnh: pinch, pan, chạm đúp | `PhotoViewer.tsx` | xem ảnh |
+| MO24 | Zoom ảnh: pinch, pan, chạm đúp | `PhotoViewer.tsx` | xem ảnh; đo ở checkpoint 9: web không phóng được ảnh (UI-094); mở mờ dần 242 ms, đóng mất ngay (UI-098); C9 hiện và mất ngay |
 | MO25 | Pager Welcome | `Welcome.tsx` | vuốt |
 
 Không dùng RN `Animated` hay `LayoutAnimation`; không có hàng vuốt (swipeable) và không có slider.
