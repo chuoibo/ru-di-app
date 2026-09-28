@@ -40,7 +40,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Xem hồ sơ Ut QA"
 - extendedWaitUntil:
-    visible: "Tường cá nhân"
+    visible: "Trang viết được chia sẻ"
     timeout: 60000
 # Đối chứng dương: còn là bạn thì cửa nhắn riêng MỞ. Sau khi chặn, hai người
 # vẫn chung nhóm; từ ADR-0038 §2.2 màn không còn vẽ nút «Nhắn tin» khoá, chỉ

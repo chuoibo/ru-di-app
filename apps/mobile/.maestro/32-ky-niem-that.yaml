@@ -160,18 +160,19 @@ appId: com.lakiet.rudi
     centerElement: true
     timeout: 60000
 - tapOn: "Thành tích"
+# The journey book replaced the level/weekly-challenge page (profile routes):
+# the cover, the route choice, then the badges kept, below.
 - extendedWaitUntil:
-    visible: "Cấp .*"
+    visible: "Cuốn sổ có nhiều ngã rẽ"
     timeout: 60000
-- assertVisible: "Huy hiệu"
+- assertVisible: "Chọn lối đi"
 - assertNotVisible: "12/18 đã mở"
 - assertNotVisible: "12 huy hiệu đã mở khóa"
 - takeScreenshot: 32-thanh-tich
-# Thử thách tuần nằm dưới danh sách huy hiệu; cuộn tới rồi mới khẳng định.
 - scrollUntilVisible:
     element:
-      text: "Thử thách tuần này"
+      text: "Dấu ấn đã giữ"
     direction: DOWN
     timeout: 30000
-- assertVisible: "Thử thách tuần này"
+- assertVisible: "Dấu ấn đã giữ"
 - takeScreenshot: 32-thanh-tich-cuoi

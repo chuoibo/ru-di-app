@@ -77,7 +77,7 @@ appId: com.lakiet.rudi
 # Cửa thứ hai vào cùng một cặp: từ hồ sơ người kia.
 - tapOn: "Xem hồ sơ"
 - extendedWaitUntil:
-    visible: "Tường cá nhân"
+    visible: "Trang viết được chia sẻ"
     timeout: 30000
 - tapOn: "Nhắn tin"
 - extendedWaitUntil:
