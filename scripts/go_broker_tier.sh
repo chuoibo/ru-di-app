@@ -151,18 +151,19 @@ if [ -z "${CORE_TEST_AMQP_URL:-}" ]; then
   echo "--- RabbitMQ dùng một lần trên 127.0.0.1:$port"
   # --ulimit nofile: the Erlang VM sizes its port table from the open-file
   # limit, and a Docker whose containers inherit LimitNOFILE=infinity hands
-  # them a limit around 2^30; the node then asks for a table it cannot
-  # allocate and dies on boot. That is the leading explanation for 2 of 2
-  # GitHub runs (2026-09-28: image pulled, container gone before 90 s), not a
-  # proven one -- the runner's log was lost to --rm. If it is something else,
-  # wait_for below now prints the exit code and the node's own log. 65536 is
-  # the value RabbitMQ's production checklist gives.
+  # it a limit around 2^30. A precaution; 65536 is the value RabbitMQ's
+  # production checklist gives.
   docker run -d --name "$name" --ulimit nofile=65536:65536 \
     -e RABBITMQ_DEFAULT_USER=tier -e RABBITMQ_DEFAULT_PASS="$password" \
     -p "127.0.0.1:$port:5672" "$RABBIT_IMAGE" >/dev/null
   containers+=("$name")
   # The node answers `ping` before its listener is up; ask for the port.
-  wait_for "$name" 90 docker exec "$name" rabbitmq-diagnostics -q check_port_connectivity
+  # -u rabbitmq: root's ~/.erlang.cookie in this image is a symlink to the
+  # node's own cookie. A probe run as root that reaches Erlang before the
+  # node does creates that file root-owned with mode 0400, and the node then
+  # dies on boot with "Error when reading .erlang.cookie: eacces" -- the log
+  # GitHub printed on 2026-09-28 once the container was no longer --rm.
+  wait_for "$name" 90 docker exec -u rabbitmq "$name" rabbitmq-diagnostics -q check_port_connectivity
   export CORE_TEST_AMQP_URL="amqp://tier:$password@127.0.0.1:$port/"
 else
   echo "--- RabbitMQ có sẵn từ CORE_TEST_AMQP_URL"
