@@ -174,6 +174,12 @@ func TestPlaceSchemaCarriesTheHardConstraintFields(t *testing.T) {
 			t.Errorf("field %s missing or not %v", name, typ)
 		}
 	}
+	if fs[FFacet] == nil || fs[FFacet].DataType != entity.FieldTypeVarChar || fs[FChunkSo] == nil || fs[FChunkSo].DataType != entity.FieldTypeInt16 {
+		t.Fatal("rd.v3: facet or chunk_so missing")
+	}
+	if fs[FMoRong] == nil || fs[FMoRong].DataType != entity.FieldTypeJSON || !fs[FMoRong].Nullable {
+		t.Fatal("rd.v3: mo_rong must be a nullable JSON dict")
+	}
 	if fs[FDense].TypeParams["dim"] != "1536" {
 		t.Fatalf("dense dim %q", fs[FDense].TypeParams["dim"])
 	}

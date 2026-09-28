@@ -13,9 +13,9 @@
     "milco_rev": "",
     "prune_k": 128
   },
-  "luoc_do": "rd.v2",
+  "luoc_do": "rd.v3",
   "chunker": {
-    "place": "place.milvus.v1",
+    "place": "place.milvus.v2",
     "manual": "manual.milvus.v1"
   },
   "lam_giau": {

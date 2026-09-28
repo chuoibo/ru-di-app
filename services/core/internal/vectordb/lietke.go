@@ -2,6 +2,7 @@ package vectordb
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -207,4 +208,28 @@ func (m *Milvus) DocThuocTinh(ctx context.Context, name, docID string) (map[stri
 		out[id] = t
 	}
 	return out, nil
+}
+
+// CapNhatMoRong replaces the FMoRong dict of the given rows of place
+// collection name, touching no other field (partial update): the way a
+// field that arrives after the schema is added without a new revision.
+func (m *Milvus) CapNhatMoRong(ctx context.Context, name string, ids []string, moRong []byte) (int, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	if !json.Valid(moRong) || len(moRong) == 0 || moRong[0] != '{' {
+		return 0, fmt.Errorf("vectordb: %s must be a JSON object", FMoRong)
+	}
+	vals := make([][]byte, len(ids))
+	for i := range vals {
+		vals[i] = moRong
+	}
+	_, err := m.cli.Upsert(ctx, milvusclient.NewColumnBasedInsertOption(name).
+		WithVarcharColumn(FID, ids).
+		WithColumns(column.NewColumnJSONBytes(FMoRong, vals)).
+		WithPartialUpdate(true))
+	if err != nil {
+		return 0, err
+	}
+	return len(ids), nil
 }

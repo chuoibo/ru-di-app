@@ -1,20 +1,16 @@
 package nap
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"mobile/services/core/internal/domain/giomo"
 	"mobile/services/core/internal/domain/tuvung"
 	"mobile/services/core/internal/huongdan"
-)
-
-// Facets of a document.
-const (
-	FacetHoSo    = "ho_so"
-	FacetDanhGia = "danh_gia"
-	FacetMuc     = "muc"
 )
 
 // PhutMoiO is the width of one opening slot: vectordb's half-hour slot
@@ -35,12 +31,35 @@ func ChunkID(docID, facet, chunker string) string {
 	return hex.EncodeToString(sum[:])[:32]
 }
 
+// ChunkIDManh is the id of piece n of a split facet: piece 0 keeps
+// ChunkID, so a facet that fits in one chunk keeps the id it always had.
+func ChunkIDManh(docID, facet string, n int, chunker string) string {
+	if n == 0 {
+		return ChunkID(docID, facet, chunker)
+	}
+	return ChunkID(docID, facet+"#"+strconv.Itoa(n), chunker)
+}
+
+// MoiIDQuan is every chunk id a place can have under chunker: each facet
+// times MaxManh pieces. The indexer deletes a document by these ids.
+func MoiIDQuan(docID, chunker string) []string {
+	out := make([]string, 0, len(FacetsQuan)*MaxManh)
+	for _, f := range FacetsQuan {
+		for n := 0; n < MaxManh; n++ {
+			out = append(out, ChunkIDManh(docID, f, n, chunker))
+		}
+	}
+	return out
+}
+
 // Hang is one row of a collection: a chunk and the fields its hard filters
 // and staleness checks read. The manual uses only the common fields and Man.
 type Hang struct {
 	ChunkID string
 	DocID   string
 	Facet   string
+	// ChunkSo is the piece of a split facet (0 when the facet is whole).
+	ChunkSo int16
 	TieuDe  string // embedded as the document title, not stored
 	// Text is NFC; the dense leg embeds it and both BM25 functions read
 	// it. A context line the enrichment wrote leads it (contextual
@@ -86,11 +105,13 @@ func MoO(l giomo.Lich) []int16 {
 }
 
 // DoanQuan builds a place's chunks from its safe profile and its enrichment
-// attributes. The main dishes the enrichment named join the profile text, so
-// they are embedded and matched; the closed ids are fields, not text. A
-// context line of the facet (contextual retrieval) leads the chunk's text,
-// so the dense and both BM25 legs read it, and the content hash covers it.
-func DoanQuan(h HoSoQuan, t ThuocTinh, chunker string) []Hang {
+// attributes: one chunk per facet (ho_so, trai_nghiem, mon_an), or several
+// when chia splits a long facet by meaning; nothing is cut. The main dishes
+// the enrichment named join the food facet, so they are embedded and
+// matched; the closed ids are fields, not text. The facet's context line
+// (contextual retrieval) leads every piece of it, so the dense and both BM25
+// legs read it, and the content hash covers it.
+func DoanQuan(ctx context.Context, h HoSoQuan, t ThuocTinh, chunker string, chia ChiaDoan) ([]Hang, error) {
 	base := Hang{
 		DocID: h.ID, DiemDen: h.DiemDen, LoaiCho: h.LoaiCho, TieuDe: h.Ten,
 		DiUng: tuvung.DiUng.LocHopLe(t.DiUng), DiUngRo: t.DiUngRo,
@@ -107,39 +128,43 @@ func DoanQuan(h HoSoQuan, t ThuocTinh, chunker string) []Hang {
 	if h.Lich != nil {
 		base.GioRo, base.MoO = true, MoO(*h.Lich)
 	}
-	profile := h.HoSo
+	monAn := h.MonAn
 	if len(t.MonChinh) > 0 {
-		profile = catRune(profile+"\nMón chính: "+strings.Join(t.MonChinh, ", "), maxChunk)
+		monAn = strings.TrimSpace(monAn + "\nMón chính: " + strings.Join(t.MonChinh, ", "))
 	}
 	var out []Hang
-	add := func(facet, text string) {
-		if strings.TrimSpace(text) == "" {
-			return
+	for _, f := range []struct{ facet, text string }{{FacetHoSo, h.HoSo}, {FacetTraiNghiem, h.TraiNghiem}, {FacetMonAn, monAn}} {
+		if strings.TrimSpace(f.text) == "" {
+			continue
 		}
-		if line := t.NguCanh[facet]; line != "" {
-			text = line + "\n" + text
+		manh, err := chia.Chia(ctx, f.text)
+		if err != nil {
+			return nil, fmt.Errorf("%s/%s: %w", h.ID, f.facet, err)
 		}
-		r := base
-		r.Facet, r.Text = facet, nfc(text)
-		r.ChunkID = ChunkID(h.ID, facet, chunker)
-		r.ContentHash = hashNoiDung(chunker, facet, r.TieuDe, r.Text)
-		out = append(out, r)
+		for n, text := range manh {
+			if line := t.NguCanh[f.facet]; line != "" {
+				text = line + "\n" + text
+			}
+			r := base
+			r.Facet, r.ChunkSo, r.Text = f.facet, int16(n), nfc(text)
+			r.ChunkID = ChunkIDManh(h.ID, f.facet, n, chunker)
+			key := f.facet
+			if n > 0 {
+				key += "#" + strconv.Itoa(n)
+			}
+			r.ContentHash = hashNoiDung(chunker, key, r.TieuDe, r.Text)
+			out = append(out, r)
+		}
 	}
-	add(FacetHoSo, profile)
-	add(FacetDanhGia, h.DanhGia)
-	return out
+	return out, nil
 }
-
-// FacetsQuan are every facet a place may have: an indexer deletes the ids of
-// the ones a place no longer has.
-var FacetsQuan = []string{FacetHoSo, FacetDanhGia}
 
 // DoanSoTay builds one chunk per manual section.
 func DoanSoTay(ds []huongdan.Doan, chunker string) []Hang {
 	out := make([]Hang, 0, len(ds))
 	for _, d := range ds {
 		text := d.TieuDe + "\n" + d.Chu
-		r := Hang{DocID: d.ID, Facet: FacetMuc, TieuDe: nfc(d.TieuDeMan + " — " + d.TieuDe), Text: nfc(catRune(text, maxChunk)),
+		r := Hang{DocID: d.ID, Facet: FacetMuc, TieuDe: nfc(d.TieuDeMan + " — " + d.TieuDe), Text: nfc(catRune(text, NguongDoan)),
 			Chunker: chunker}
 		r.ChunkID = ChunkID(d.ID, FacetMuc, chunker)
 		r.ContentHash = hashNoiDung(chunker, FacetMuc, r.TieuDe, r.Text)

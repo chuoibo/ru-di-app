@@ -195,7 +195,13 @@ func (c ChiMuc) MotLuot(ctx context.Context, tx pgx.Tx) (BaoCaoChiMuc, error) {
 				return b, err
 			}
 		}
-		rows := DoanQuan(h, ApDung(enr[d.id], h.NguonHash), chunker)
+		rows, err := DoanQuan(ctx, h, ApDung(enr[d.id], h.NguonHash), chunker, ChiaNghia{Nhung: c.Nap.Dense})
+		if err != nil {
+			if e := c.hong(ctx, tx, d, ChangNhung, err, &b); e != nil {
+				return b, e
+			}
+			continue
+		}
 		if _, err := c.Nap.Vector(ctx, tx, rows); err != nil {
 			if e := c.hong(ctx, tx, d, ChangNhung, err, &b); e != nil {
 				return b, e
@@ -273,11 +279,7 @@ func (c ChiMuc) thuocTinhNoiKhac(ctx context.Context, ps []PhienBan, docID strin
 				continue
 			}
 		}
-		var ids []string
-		for _, f := range FacetsQuan {
-			ids = append(ids, ChunkID(docID, f, p.Chunker))
-		}
-		if err := c.Nap.Kho.XoaID(ctx, p.Collection, ids); err != nil {
+		if err := c.Nap.Kho.XoaID(ctx, p.Collection, MoiIDQuan(docID, p.Chunker)); err != nil {
 			return fmt.Errorf("%w: %v", errMilvus, err)
 		}
 		b.XoaKhacCauHinh++
@@ -285,14 +287,10 @@ func (c ChiMuc) thuocTinhNoiKhac(ctx context.Context, ps []PhienBan, docID strin
 	return nil
 }
 
-// xoaMoiNoi deletes every facet of a document from every live collection.
+// xoaMoiNoi deletes every chunk a document can have from every live collection.
 func (c ChiMuc) xoaMoiNoi(ctx context.Context, song []PhienBan, docID string) error {
 	for _, p := range song {
-		var ids []string
-		for _, f := range FacetsQuan {
-			ids = append(ids, ChunkID(docID, f, p.Chunker))
-		}
-		if err := c.Nap.Kho.XoaID(ctx, p.Collection, ids); err != nil {
+		if err := c.Nap.Kho.XoaID(ctx, p.Collection, MoiIDQuan(docID, p.Chunker)); err != nil {
 			return fmt.Errorf("%w: %v", errMilvus, err)
 		}
 	}
@@ -300,19 +298,19 @@ func (c ChiMuc) xoaMoiNoi(ctx context.Context, song []PhienBan, docID string) er
 }
 
 // ghiMoiNoi upserts a document's rows into every live collection of this
-// configuration and deletes the facets it no longer has. wrote is false when
+// configuration and deletes the chunks it no longer has. wrote is false when
 // every collection already held exactly these rows.
 func (c ChiMuc) ghiMoiNoi(ctx context.Context, ps []PhienBan, docID string, rows []Hang) (bool, error) {
 	have := map[string]bool{}
 	for _, r := range rows {
-		have[r.Facet] = true
+		have[r.ChunkID] = true
 	}
 	wrote := false
 	for _, p := range ps {
 		var stale []string
-		for _, f := range FacetsQuan {
-			if !have[f] {
-				stale = append(stale, ChunkID(docID, f, p.Chunker))
+		for _, id := range MoiIDQuan(docID, p.Chunker) {
+			if !have[id] {
+				stale = append(stale, id)
 			}
 		}
 		if len(stale) > 0 {

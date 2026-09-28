@@ -143,7 +143,11 @@ func (n Nap) DanhGiaVang(ctx context.Context, q NhungCauHoi, v TapVang, ten stri
 		if bo {
 			continue
 		}
-		rows = append(rows, DoanQuan(h, qv.NhanTay(), chunker)...)
+		hs, err := DoanQuan(ctx, h, qv.NhanTay(), chunker, ChiaNghia{Nhung: n.Dense})
+		if err != nil {
+			return KetQuaVang{}, err
+		}
+		rows = append(rows, hs...)
 	}
 	if _, err := n.Vector(ctx, nil, rows); err != nil {
 		return KetQuaVang{}, err

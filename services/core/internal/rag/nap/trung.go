@@ -113,4 +113,6 @@ func TimTrung(ds []UngVienTrung, cosMin, metMax float64) map[string]string {
 	return out
 }
 
-func giau(h HoSoQuan) int { return utf8.RuneCountInString(h.HoSo) + utf8.RuneCountInString(h.DanhGia) }
+func giau(h HoSoQuan) int {
+	return utf8.RuneCountInString(h.HoSo) + utf8.RuneCountInString(h.TraiNghiem) + utf8.RuneCountInString(h.MonAn)
+}

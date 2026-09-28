@@ -162,7 +162,7 @@ func (k *Kho) Upsert(ctx context.Context, ten string, rows []nap.Hang) error {
 	case vectordb.KhoDiaDiem:
 		out := make([]vectordb.HangDiaDiem, len(rows))
 		for i, r := range rows {
-			out[i] = vectordb.HangDiaDiem{ID: r.ChunkID, DocID: r.DocID, Dense: r.Dense,
+			out[i] = vectordb.HangDiaDiem{ID: r.ChunkID, DocID: r.DocID, Facet: r.Facet, ChunkSo: r.ChunkSo, Dense: r.Dense,
 				Sparse: vectordb.ThuaVec{Chi: r.SparseIdx, GiaTri: r.SparseVal}, Text: r.Text,
 				ContentHash: r.ContentHash, EmbedModel: r.DenseModel, ThuocTinh: ThuocTinh(r), GiaMaxVND: giaMax(r), PhienBan: v}
 		}

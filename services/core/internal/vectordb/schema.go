@@ -113,7 +113,15 @@ const (
 	// chunk, the section id for a manual chunk. FID is the chunk's own
 	// deterministic id. Retrieval answers documents (one evidence item per
 	// place), never chunks.
-	FDocID     = "doc_id"
+	FDocID = "doc_id"
+	// FFacet is the part of the place a chunk carries (ho_so, trai_nghiem,
+	// mon_an); FChunkSo its position when a long facet is split (0 when it
+	// is not). rd.v3, owner 2026-09-28.
+	FFacet   = "facet"
+	FChunkSo = "chunk_so"
+	// FMoRong is a JSON dict for fields that arrive later, upserted on its
+	// own (CapNhatMoRong) without a schema revision. Nullable; written {}.
+	FMoRong    = "mo_rong"
 	FOwner     = "owner_id"
 	FKind      = "kind"
 	FCreatedAt = "created_at"
@@ -123,7 +131,7 @@ const (
 // analyzers, index parameters). The ingest's committed configuration names
 // the revision it was built for, and the ingest adapter refuses to create a
 // collection when the two differ: one schema, declared once, here.
-const PhienBanLuocDo = "rd.v2"
+const PhienBanLuocDo = "rd.v3"
 
 // Bounds of the scalar fields.
 const (
@@ -307,6 +315,9 @@ func LuocDoDiaDiem(name string) LuocDo {
 		WithField(pk()).WithField(denseField()).WithField(sparseField())
 	textFields(s)
 	chunkFields(s)
+	s.WithField(entity.NewField().WithName(FFacet).WithDataType(entity.FieldTypeVarChar).WithMaxLength(MaxTagLen)).
+		WithField(entity.NewField().WithName(FChunkSo).WithDataType(entity.FieldTypeInt16)).
+		WithField(entity.NewField().WithName(FMoRong).WithDataType(entity.FieldTypeJSON).WithNullable(true))
 	s.WithField(entity.NewField().WithName(FDestination).WithDataType(entity.FieldTypeVarChar).WithMaxLength(64)).
 		WithField(entity.NewField().WithName(FOpenSlots).WithDataType(entity.FieldTypeArray).
 			WithElementType(entity.FieldTypeInt16).WithMaxCapacity(SoSlotTuan)).

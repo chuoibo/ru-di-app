@@ -85,7 +85,7 @@ func TestLocMilvusKhopGo(t *testing.T) {
 	for i, q := range v.Quan {
 		h, bo := nap.DungHoSo(v.Hang(i, q))
 		if !bo {
-			for _, r := range nap.DoanQuan(h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan]) {
+			for _, r := range doanThu(t, h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan]) {
 				if !r.DiUngRo || !r.GiaRo || !r.GioRo {
 					unknown++
 				}

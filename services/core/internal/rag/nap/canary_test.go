@@ -65,7 +65,7 @@ func TestThamDoCanary(t *testing.T) {
 	var rows []Hang
 	for i, qv := range v.Quan[:60] {
 		h, _ := DungHoSo(v.Hang(i, qv))
-		rows = append(rows, DoanQuan(h, qv.NhanTay(), n.Cfg.Chunker[CorpusQuan])...)
+		rows = append(rows, doanThu(t, h, qv.NhanTay(), n.Cfg.Chunker[CorpusQuan])...)
 	}
 	if _, err := n.Vector(ctx, nil, rows); err != nil {
 		t.Fatal(err)

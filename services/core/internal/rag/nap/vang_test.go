@@ -52,19 +52,19 @@ func napNho(t testing.TB) (Nap, StubDense) {
 // diacritics-folding field buys.
 var vangGhim = map[string]string{
 	"bay_injection":       "n=7 co_lien_quan=2 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
-	"di_ung":              "n=86 co_lien_quan=24 recall@10=0.8333 ndcg@10=0.6530 mrr@10=0.6396 violation@10=0.0000 so_vi_pham=0",
+	"di_ung":              "n=86 co_lien_quan=24 recall@10=0.8333 ndcg@10=0.6763 mrr@10=0.6691 violation@10=0.0000 so_vi_pham=0",
 	"khi_chat":            "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9109 mrr@10=0.9143 violation@10=0.0000 so_vi_pham=0",
-	"khong_dau":           "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9581 mrr@10=0.9500 violation@10=0.0000 so_vi_pham=0",
+	"khong_dau":           "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9450 mrr@10=0.9333 violation@10=0.0000 so_vi_pham=0",
 	"lien_diem_den":       "n=8 co_lien_quan=8 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"rang_buoc":           "n=10 co_lien_quan=9 recall@10=0.8889 ndcg@10=0.8113 mrr@10=0.7500 violation@10=0.0000 so_vi_pham=0",
 	"ten_rieng":           "n=12 co_lien_quan=12 recall@10=1.0000 ndcg@10=0.9692 mrr@10=0.9583 violation@10=0.0000 so_vi_pham=0",
-	"tong":                "n=143 co_lien_quan=75 recall@10=0.9333 ndcg@10=0.8439 mrr@10=0.8299 violation@10=0.0000 so_vi_pham=0",
-	"khong_dau_gap":       "0.0369",
+	"tong":                "n=143 co_lien_quan=75 recall@10=0.9333 ndcg@10=0.8496 mrr@10=0.8371 violation@10=0.0000 so_vi_pham=0",
+	"khong_dau_gap":       "0.0500",
 	"chi_dense":           "n=143 co_lien_quan=75 recall@10=0.8133 ndcg@10=0.7330 mrr@10=0.7144 violation@10=0.0000 so_vi_pham=0",
-	"chi_thua":            "n=143 co_lien_quan=75 recall@10=0.9667 ndcg@10=0.8898 mrr@10=0.8671 violation@10=0.0000 so_vi_pham=0",
+	"chi_thua":            "n=143 co_lien_quan=75 recall@10=0.9667 ndcg@10=0.8902 mrr@10=0.8671 violation@10=0.0000 so_vi_pham=0",
 	"khong_dau_khong_gap": "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9388 mrr@10=0.9333 violation@10=0.0000 so_vi_pham=0",
-	"bo_dau":              "n=143 co_lien_quan=75 recall@10=0.9133 ndcg@10=0.8037 mrr@10=0.7805 violation@10=0.0000 so_vi_pham=0",
-	"bo_dau_khong_gap":    "n=143 co_lien_quan=75 recall@10=0.7733 ndcg@10=0.6663 mrr@10=0.6364 violation@10=0.0000 so_vi_pham=0",
+	"bo_dau":              "n=143 co_lien_quan=75 recall@10=0.9267 ndcg@10=0.8059 mrr@10=0.7799 violation@10=0.0000 so_vi_pham=0",
+	"bo_dau_khong_gap":    "n=143 co_lien_quan=75 recall@10=0.7867 ndcg@10=0.6740 mrr@10=0.6444 violation@10=0.0000 so_vi_pham=0",
 }
 
 func TestVangGhimVaCong(t *testing.T) {

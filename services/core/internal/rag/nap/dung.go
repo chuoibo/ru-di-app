@@ -30,8 +30,11 @@ type BaoCaoDung struct {
 	// BoKhongAnToan: rows SafeDeep dropped (tombstoned unsafe). CachLy:
 	// fields it quarantined. Bia: tombstoned places left out.
 	BoKhongAnToan int `json:"bo_khong_an_toan"`
-	CachLy        int `json:"cach_ly"`
-	Bia           int `json:"bia"`
+	// QuaDai: places left out because a facet needs more than MaxManh
+	// chunks (nothing is ever cut).
+	QuaDai int `json:"qua_dai,omitempty"`
+	CachLy int `json:"cach_ly"`
+	Bia    int `json:"bia"`
 	// Trung: duplicates dedupe left out.
 	Trung int `json:"trung"`
 	// ThieuLamGiau: places with no current usable enrichment; LamGiauCu:
@@ -57,7 +60,8 @@ type TaiLieuQuan struct {
 
 // ChuanBiQuan runs S1-S5 and S7 over the live catalogue: every place through
 // SafeDeep, tombstoned ones left out, its stored enrichment applied, its
-// chunks built. No model and no vector yet.
+// chunks built. No model and no vector yet, except the sentence vectors
+// semantic chunking asks for on a facet longer than NguongDoan.
 func (n Nap) ChuanBiQuan(ctx context.Context, q Querier, rep *BaoCaoDung) (docs []TaiLieuQuan, unsafe []string, err error) {
 	places, err := repo.Repository{Q: q}.ListPlaces(ctx, repo.PlaceFilter{})
 	if err != nil {
@@ -97,7 +101,16 @@ func (n Nap) ChuanBiQuan(ctx context.Context, q Querier, rep *BaoCaoDung) (docs 
 		if t.CachLy {
 			rep.ChenLenh++
 		}
-		docs = append(docs, TaiLieuQuan{HoSo: h, TT: t, Rows: DoanQuan(h, t, chunker)})
+		rows, err := DoanQuan(ctx, h, t, chunker, ChiaNghia{Nhung: n.Dense})
+		if errors.Is(err, ErrQuaDai) {
+			// Never cut to fit: the place stays out of this version, counted.
+			rep.QuaDai++
+			continue
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		docs = append(docs, TaiLieuQuan{HoSo: h, TT: t, Rows: rows})
 	}
 	rep.BoKhongAnToan = len(unsafe)
 	return docs, unsafe, nil

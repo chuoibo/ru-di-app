@@ -99,7 +99,7 @@ func TestKhopVaDatDongY(t *testing.T) {
 		if bo {
 			continue
 		}
-		for _, r := range nap.DoanQuan(h, q.NhanTay(), c.Chunker[nap.CorpusQuan]) {
+		for _, r := range doanThu(t, h, q.NhanTay(), c.Chunker[nap.CorpusQuan]) {
 			rows = append(rows, r)
 			if !r.DiUngRo {
 				unknown["di_ung"]++

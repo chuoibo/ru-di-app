@@ -20,14 +20,15 @@ import (
 
 // Bounds of the place.v1 source contract (design 04 §6.1 step 1), applied to
 // what reaches a chunk or a prompt.
+//
+// The description and the feed's review block are never cut (owner,
+// 2026-09-28): a facet longer than a chunk is split by meaning (chia.go).
 const (
 	maxTen      = 120
 	maxDiaChi   = 200
-	maxMoTa     = 1500
 	maxDanhGia  = 5
 	maxRuneDG   = 600
 	maxHoatDong = 20
-	maxChunk    = 2000
 )
 
 // HoSoQuan is one place as the pipeline sees it after S1-S2: the structural
@@ -51,9 +52,11 @@ type HoSoQuan struct {
 	CoToaDo bool
 	Nguon   string // seed | osm | curated: dedupe precedence
 	License string
-	// HoSo and DanhGia are the two facets' safe text, NFC.
-	HoSo    string
-	DanhGia string
+	// HoSo, TraiNghiem and MonAn are the three facets' safe text, NFC,
+	// never cut.
+	HoSo       string
+	TraiNghiem string
+	MonAn      string
 	// NguonHash is sha256 of the canonical JSON of the safe row: what the
 	// enrichment model saw and what a chunk is built from. Unchanged hash =
 	// no-op (S1).
@@ -97,17 +100,35 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 			lines = append(lines, s)
 		}
 	}
+	block, cachLy := dongReview(p.Reviews)
+	h.CachLy += cachLy
+
+	// ho_so: what the place is and why it is worth it.
 	add(h.Ten)
 	head := nhanLoai(p.Category)
 	if len(kinds) > 0 {
 		head += " · " + strings.Join(kinds, ", ")
 	}
 	add(head)
+	add(tenTinh(p.DestinationID))
 	add(catRune(chu(safe, "address"), maxDiaChi))
 	add(strings.Join(traits, ", "))
 	add(strings.Join(activities, ", "))
-	add(catRune(chu(safe, "description"), maxMoTa))
-	h.HoSo = nfc(catRune(strings.Join(lines, "\n"), maxChunk))
+	if p.Description != nil {
+		if d := strings.TrimSpace(*p.Description); d != "" && promptsafety.TextSafe(d, maxRuneMuc) {
+			add(d)
+		} else if d != "" {
+			h.CachLy++
+		}
+	}
+	for _, l := range block[FacetHoSo] {
+		add(l)
+	}
+	h.HoSo = nfc(strings.Join(lines, "\n"))
+
+	// trai_nghiem: what being there is like; the seed catalogue's review
+	// bodies land here too.
+	tn := block[FacetTraiNghiem]
 	var reviews []string
 	for _, r := range danhGia(safe) {
 		if len(reviews) == maxDanhGia {
@@ -115,14 +136,20 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 		}
 		reviews = append(reviews, catRune(r, maxRuneDG))
 	}
-	h.DanhGia = nfc(catRune(strings.Join(reviews, "\n"), maxChunk))
+	if len(reviews) > 0 {
+		tn = append(tn, "Đánh giá: "+strings.Join(reviews, "\n"))
+	}
+	h.TraiNghiem = nfc(strings.Join(tn, "\n"))
+	// mon_an: what to eat there.
+	h.MonAn = nfc(strings.Join(block[FacetMonAn], "\n"))
+
 	canon, _ := json.Marshal(struct {
-		ID, DiemDen, LoaiCho, HoSo, DanhGia, License string
-		GiaMin, GiaMax                               *int64
-		Gio                                          string
-		Lat, Lng                                     float64
-		CoToaDo                                      bool
-	}{h.ID, h.DiemDen, h.LoaiCho, h.HoSo, h.DanhGia, h.License, h.GiaMin, h.GiaMax, chu(safe, "open_hours"), h.Lat, h.Lng, h.CoToaDo})
+		ID, DiemDen, LoaiCho, HoSo, TraiNghiem, MonAn, License string
+		GiaMin, GiaMax                                         *int64
+		Gio                                                    string
+		Lat, Lng                                               float64
+		CoToaDo                                                bool
+	}{h.ID, h.DiemDen, h.LoaiCho, h.HoSo, h.TraiNghiem, h.MonAn, h.License, h.GiaMin, h.GiaMax, chu(safe, "open_hours"), h.Lat, h.Lng, h.CoToaDo})
 	h.NguonHash = sha256.Sum256(canon)
 	return h, false
 }

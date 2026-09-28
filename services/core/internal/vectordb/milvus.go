@@ -2,6 +2,7 @@ package vectordb
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -290,8 +291,12 @@ func (m *Milvus) XoaAlias(ctx context.Context, k Kho) error {
 // HangDiaDiem is one place chunk as indexed. DocID is the place; a place
 // indexed as a single chunk may leave it empty, and then ID is the place.
 type HangDiaDiem struct {
-	ID          string
-	DocID       string
+	ID      string
+	DocID   string
+	Facet   string
+	ChunkSo int16
+	// MoRong is the row's JSON dict of later fields; nil is written {}.
+	MoRong      []byte
 	Dense       []float32
 	Sparse      ThuaVec
 	Text        string
@@ -347,7 +352,15 @@ func (m *Milvus) GhiDiaDiem(ctx context.Context, name string, rows []HangDiaDiem
 	pmin, pmax, ver := make([]int64, n), make([]int64, n), make([]int64, n)
 	alg, diet := make([][]string, n), make([][]string, n)
 	tomb := make([]bool, n)
+	facets, chunkSo, moRong := make([]string, n), make([]int16, n), make([][]byte, n)
 	for i, r := range rows {
+		facets[i], chunkSo[i], moRong[i] = r.Facet, r.ChunkSo, r.MoRong
+		if len(moRong[i]) == 0 {
+			moRong[i] = []byte("{}")
+		}
+		if !json.Valid(moRong[i]) {
+			return fmt.Errorf("vectordb: %s of %s is not JSON", FMoRong, r.ID)
+		}
 		if err := kiemDense(r.Dense); err != nil {
 			return err
 		}
@@ -373,6 +386,8 @@ func (m *Milvus) GhiDiaDiem(ctx context.Context, name string, rows []HangDiaDiem
 		WithVarcharColumn(FTextKhongDau, texts).
 		WithVarcharColumn(FContentHash, hashes).
 		WithVarcharColumn(FEmbedModel, models).
+		WithVarcharColumn(FFacet, facets).
+		WithColumns(column.NewColumnInt16(FChunkSo, chunkSo), column.NewColumnJSONBytes(FMoRong, moRong)).
 		WithVarcharColumn(FDestination, dests).
 		WithColumns(column.NewColumnInt16Array(FOpenSlots, slots)).
 		WithInt64Column(FPriceMin, pmin).

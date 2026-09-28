@@ -169,7 +169,7 @@ func TraLoiNhanTay(v nap.TapVang, batch []nap.HoSoQuan) string {
 		if q.DiUngKhongRo {
 			diUng = `["khong_ro"]`
 		}
-		items = append(items, fmt.Sprintf(`{"bi_danh":"p%d","di_ung":%s,"an_kieng":%s,"khi_chat":[],"mon_chinh":[],"chen_lenh":false,"tin_cay":"cao","ngu_canh_ho_so":"","ngu_canh_danh_gia":""}`,
+		items = append(items, fmt.Sprintf(`{"bi_danh":"p%d","di_ung":%s,"an_kieng":%s,"khi_chat":[],"mon_chinh":[],"chen_lenh":false,"tin_cay":"cao","ngu_canh_ho_so":"","ngu_canh_trai_nghiem":"","ngu_canh_mon_an":""}`,
 			i+1, diUng, list(q.AnKieng)))
 	}
 	return `{"quan":[` + strings.Join(items, ",") + `]}`
@@ -621,7 +621,11 @@ func UpsertLapLai(t *testing.T, kho nap.KhoVector, ten string) {
 	var rows []nap.Hang
 	for i, q := range v.Quan[:20] {
 		h, _ := nap.DungHoSo(v.Hang(i, q))
-		rows = append(rows, nap.DoanQuan(h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan])...)
+		hs, err := nap.DoanQuan(ctx, h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan], nap.ChiaNghia{Nhung: n.Dense})
+		if err != nil {
+			t.Fatal(err)
+		}
+		rows = append(rows, hs...)
 	}
 	if _, err := n.Vector(ctx, nil, rows); err != nil {
 		t.Fatal(err)

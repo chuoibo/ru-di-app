@@ -47,6 +47,7 @@ SENTINELS=(
   TestXoaVaNenBienMat
   TestTelemetryTatTrenMayChu
   TestTriNhoChiCuaChuSoHuu
+  TestMoRongCapNhatRieng
   # hybrid: fusion beats one leg, end to end with the re-check, the real reranker.
   TestHybridHonDenseChiMot
   TestHybridDauCuoiKhongViPham

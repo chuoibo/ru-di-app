@@ -86,14 +86,15 @@ type KetQuaLamGiau struct {
 	TinCay   TinCay `json:"tin_cay"`
 	// MonBo counts dish strings refused by TextSafe or the length bound.
 	MonBo int `json:"mon_bo"`
-	// NguCanhHoSo and NguCanhDanhGia are the context lines of the two
-	// facets (contextual retrieval, research gap-analysis): what the chunk
+	// NguCanhHoSo, NguCanhTraiNghiem and NguCanhMonAn are the context lines
+	// of the three facets (contextual retrieval, research gap-analysis): what the chunk
 	// is about, in one sentence, so a chunk read alone still says which
 	// place and which destination it belongs to. Model output about
 	// third-party text: TextSafe'd, bounded, dropped with the rest of the
 	// enrichment when it is stale, rejected or carries the injection label.
-	NguCanhHoSo    string `json:"ngu_canh_ho_so,omitempty"`
-	NguCanhDanhGia string `json:"ngu_canh_danh_gia,omitempty"`
+	NguCanhHoSo       string `json:"ngu_canh_ho_so,omitempty"`
+	NguCanhTraiNghiem string `json:"ngu_canh_trai_nghiem,omitempty"`
+	NguCanhMonAn      string `json:"ngu_canh_mon_an,omitempty"`
 	// NguCanhBo counts context lines refused by TextSafe or the bound.
 	NguCanhBo int `json:"ngu_canh_bo,omitempty"`
 }
@@ -154,18 +155,19 @@ func LuocDoLamGiau(n int) *genai.Schema {
 	item := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
-			"bi_danh":           {Type: genai.TypeString, Enum: aliases},
-			"di_ung":            enumArr(diUng, len(diUng)),
-			"an_kieng":          enumArr(anKieng, len(anKieng)),
-			"khi_chat":          enumArr(tuvung.KhiChat.IDs(), MaxKhiChatQuan),
-			"mon_chinh":         {Type: genai.TypeArray, Items: &genai.Schema{Type: genai.TypeString, MaxLength: i64(MaxRuneMon)}, MaxItems: i64(MaxMonChinh)},
-			"chen_lenh":         {Type: genai.TypeBoolean},
-			"tin_cay":           {Type: genai.TypeString, Enum: tinCays},
-			"ngu_canh_ho_so":    {Type: genai.TypeString, MaxLength: i64(MaxRuneNguCanh)},
-			"ngu_canh_danh_gia": {Type: genai.TypeString, MaxLength: i64(MaxRuneNguCanh)},
+			"bi_danh":              {Type: genai.TypeString, Enum: aliases},
+			"di_ung":               enumArr(diUng, len(diUng)),
+			"an_kieng":             enumArr(anKieng, len(anKieng)),
+			"khi_chat":             enumArr(tuvung.KhiChat.IDs(), MaxKhiChatQuan),
+			"mon_chinh":            {Type: genai.TypeArray, Items: &genai.Schema{Type: genai.TypeString, MaxLength: i64(MaxRuneMon)}, MaxItems: i64(MaxMonChinh)},
+			"chen_lenh":            {Type: genai.TypeBoolean},
+			"tin_cay":              {Type: genai.TypeString, Enum: tinCays},
+			"ngu_canh_ho_so":       {Type: genai.TypeString, MaxLength: i64(MaxRuneNguCanh)},
+			"ngu_canh_trai_nghiem": {Type: genai.TypeString, MaxLength: i64(MaxRuneNguCanh)},
+			"ngu_canh_mon_an":      {Type: genai.TypeString, MaxLength: i64(MaxRuneNguCanh)},
 		},
-		PropertyOrdering: []string{"bi_danh", "di_ung", "an_kieng", "khi_chat", "mon_chinh", "chen_lenh", "tin_cay", "ngu_canh_ho_so", "ngu_canh_danh_gia"},
-		Required:         []string{"bi_danh", "di_ung", "an_kieng", "khi_chat", "mon_chinh", "chen_lenh", "tin_cay", "ngu_canh_ho_so", "ngu_canh_danh_gia"},
+		PropertyOrdering: []string{"bi_danh", "di_ung", "an_kieng", "khi_chat", "mon_chinh", "chen_lenh", "tin_cay", "ngu_canh_ho_so", "ngu_canh_trai_nghiem", "ngu_canh_mon_an"},
+		Required:         []string{"bi_danh", "di_ung", "an_kieng", "khi_chat", "mon_chinh", "chen_lenh", "tin_cay", "ngu_canh_ho_so", "ngu_canh_trai_nghiem", "ngu_canh_mon_an"},
 	}
 	return &genai.Schema{
 		Type:       genai.TypeObject,
@@ -182,8 +184,11 @@ var fullwidth = strings.NewReplacer("<", "＜", ">", "＞")
 // package rag may not import).
 func BocQuan(alias string, h HoSoQuan) string {
 	body := h.HoSo
-	if h.DanhGia != "" {
-		body += "\nĐánh giá:\n" + h.DanhGia
+	if h.TraiNghiem != "" {
+		body += "\nTrải nghiệm:\n" + h.TraiNghiem
+	}
+	if h.MonAn != "" {
+		body += "\nMón ăn:\n" + h.MonAn
 	}
 	return `<du_lieu nguon="quan" bi_danh="` + alias + `">` + "\n" + fullwidth.Replace(body) + "\n</du_lieu>"
 }
@@ -219,7 +224,8 @@ type thoMuc struct {
 	ChenLenh *bool    `json:"chen_lenh"`
 	TinCay   *string  `json:"tin_cay"`
 	NguCanhH *string  `json:"ngu_canh_ho_so"`
-	NguCanhD *string  `json:"ngu_canh_danh_gia"`
+	NguCanhT *string  `json:"ngu_canh_trai_nghiem"`
+	NguCanhM *string  `json:"ngu_canh_mon_an"`
 }
 
 // DocTraLoi reads a batch answer strictly: unknown keys, a missing field,
@@ -242,7 +248,7 @@ func DocTraLoi(raw []byte, n int) ([]KetQuaLamGiau, error) {
 	seen := make([]bool, n)
 	for _, m := range t.Quan {
 		if m.BiDanh == nil || m.DiUng == nil || m.AnKieng == nil || m.KhiChat == nil || m.MonChinh == nil || m.ChenLenh == nil || m.TinCay == nil ||
-			m.NguCanhH == nil || m.NguCanhD == nil {
+			m.NguCanhH == nil || m.NguCanhT == nil || m.NguCanhM == nil {
 			return nil, fmt.Errorf("%w: a required field is missing", ErrCauTrucLamGiau)
 		}
 		i := -1
@@ -283,7 +289,7 @@ func DocTraLoi(raw []byte, n int) ([]KetQuaLamGiau, error) {
 		for _, x := range []struct {
 			in  string
 			out *string
-		}{{*m.NguCanhH, &k.NguCanhHoSo}, {*m.NguCanhD, &k.NguCanhDanhGia}} {
+		}{{*m.NguCanhH, &k.NguCanhHoSo}, {*m.NguCanhT, &k.NguCanhTraiNghiem}, {*m.NguCanhM, &k.NguCanhMonAn}} {
 			line := nfc(strings.Join(strings.Fields(x.in), " "))
 			switch {
 			case line == "":
@@ -365,7 +371,7 @@ type ThuocTinh struct {
 	AnKiengGoiY []string
 	KhiChat     []string
 	MonChinh    []string
-	// NguCanh are the context lines by facet (FacetHoSo, FacetDanhGia),
+	// NguCanh are the context lines by facet (FacetHoSo, FacetTraiNghiem, FacetMonAn),
 	// from a current, usable enrichment only.
 	NguCanh map[string]string
 	// Co: a current enrichment was applied. Cu: only a stale one exists
@@ -408,7 +414,7 @@ func ApDung(lg *LamGiau, nguonHash [32]byte) ThuocTinh {
 	}
 	t.KhiChat = append([]string(nil), lg.KetQua.KhiChat...)
 	t.MonChinh = append([]string(nil), lg.KetQua.MonChinh...)
-	for facet, line := range map[string]string{FacetHoSo: lg.KetQua.NguCanhHoSo, FacetDanhGia: lg.KetQua.NguCanhDanhGia} {
+	for facet, line := range map[string]string{FacetHoSo: lg.KetQua.NguCanhHoSo, FacetTraiNghiem: lg.KetQua.NguCanhTraiNghiem, FacetMonAn: lg.KetQua.NguCanhMonAn} {
 		if line != "" {
 			if t.NguCanh == nil {
 				t.NguCanh = map[string]string{}
