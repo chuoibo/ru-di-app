@@ -407,7 +407,12 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	media := profilemedia.New(pool, cfg.AuthMode, profilemedia.Proxy{
 		URL: getenv("NEP_PROXY_URL"), Token: getenv("NEP_PROXY_TOKEN"), PersonKey: getenv(identity.KeyEnvVar),
 	})
-	go profileSocial.Run(chatCtx)
+	// Its own context, cancelled by a defer registered after the pool's: an
+	// early refusal below must end the LISTEN connection before pool.Close
+	// waits for every connection to come back.
+	socialCtx, stopSocial := context.WithCancel(chatCtx)
+	defer stopSocial()
+	go profileSocial.Run(socialCtx)
 	fallback := front
 	native := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {

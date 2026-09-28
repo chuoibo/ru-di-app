@@ -150,7 +150,7 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
       </View>
       {nextChapter && chapterTarget ? <ToGiay dan style={styles.chapter}>
         <View style={styles.chapterHeading}>
-          <Text style={[typography.caption, { color: colors.accent }]}>TRANG VỪA MỞ TỪ LỐI BẠN CHỌN</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>TRANG VỪA MỞ TỪ LỐI BẠN CHỌN</Text>
           <Ionicons color={colors.accent} name="git-branch-outline" size={20} />
         </View>
         <Text style={[typography.h2, { color: colors.ink }]}>{nextChapter.title}</Text>
@@ -192,7 +192,7 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
             </View>
             <View style={styles.rewardRow}><Ionicons color={colors.ai} name="sparkles-outline" size={18} /><Text style={[typography.label, { color: colors.ink }]}>Mẫu sáng tạo sắp dùng được: {choice.reward}</Text></View>
             {suggested.includes(choice.id) ? <Text style={[typography.caption, { color: colors.ai }]}>{suggestionSource === "ai" ? "Nếp gợi ý hướng này" : "Sổ gợi ý hướng này"}</Text> : null}
-            <RudiButton label={actionLabel} compact full={false} variant={choice.eligible && active ? "solid" : "soft"} disabled={choice.earned || (active && !choice.eligible) || busy !== null} loading={busy === choice.id} onPress={() => void perform(choice.id, active && book.active_run ? () => nhanKet(phien.person_id, book.active_run!.id) : () => chonKet(phien.person_id, choice.route_id, choice.id))} />
+            <RudiButton label={actionLabel} compact full={false} variant="solid" disabled={choice.earned || (active && !choice.eligible) || busy !== null} lyDo={choice.earned ? "Kết này đã ghi vào sổ." : active && !choice.eligible ? `Còn thiếu dấu mốc: ${progressText(choice)}.` : undefined} loading={busy === choice.id} onPress={() => void perform(choice.id, active && book.active_run ? () => nhanKet(phien.person_id, book.active_run!.id) : () => chonKet(phien.person_id, choice.route_id, choice.id))} />
           </ToGiay>;
         })}
       </View>

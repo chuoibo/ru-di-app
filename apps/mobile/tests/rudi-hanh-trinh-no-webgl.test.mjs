@@ -19,7 +19,7 @@ test("/plan stays usable without WebGL2", { skip: !existsSync(join(EXPORT_DIR, "
     await page.goto(`${server.url}plan`, () => document.body != null);
     assert.equal(await page.evaluate(() => !!document.createElement("canvas").getContext("webgl2")), false);
     await page.waitFor(() => document.body?.innerText?.includes("Lịch trình"), { timeout: 25000, label: "Lịch trình trên /plan" });
-    await page.clickLabel("Hành trình");
+    await page.clickLabel("Bản đồ");
     await page.waitFor(() => document.body?.innerText?.includes("Trang ngày của hội"), { label: "trang ngày không bị trắng" });
     assert.equal(await page.evaluate(() => !!document.querySelector('[aria-label="Bản đồ không khả dụng"]')), true);
     assert.equal(await page.evaluate(() => document.body?.innerText?.includes("Ăn trưa - Bánh căn Lệ")), true);
