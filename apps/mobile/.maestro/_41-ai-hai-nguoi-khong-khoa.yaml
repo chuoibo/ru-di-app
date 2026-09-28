@@ -1,0 +1,33 @@
+# Nhánh của flow 41 khi máy chủ KHÔNG có khoá mô hình (AI=0): chat hai người.
+#
+# Lát M1 (thiết kế ở ai-chat-hai-nguoi.md): cặp nhờ được Rủ Đi AI, chỉ bằng lệnh `hoi`
+# (gõ @Rủ Đi). Không có khoá thì chip trên nút gửi nói thật TRƯỚC khi gửi, tin
+# vẫn vào luồng như tin thường và không có lời gọi nào. Khay của cặp giữ «Tờ
+# giấy» và nói thẳng Rủ Đi AI chưa trả lời được ở đây. Soi theo _30-ai-khong-khoa.
+#
+# Flow 41 đang ở màn chat của cặp, ô soạn trống.
+appId: com.lakiet.rudi
+---
+- tapOn: "Ô soạn tin"
+- inputText: "@Ru Di goi y cho hai minh"
+- extendedWaitUntil:
+    visible: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường"
+    timeout: 60000
+- assertNotVisible: "Chỉ gửi lời nhờ"
+- takeScreenshot: 41-ai-chip-chua-san-sang
+- tapOn: "Gửi tin nhắn"
+- hideKeyboard
+- extendedWaitUntil:
+    visible: "Tin nhắn: @Ru Di goi y cho hai minh"
+    timeout: 60000
+- assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
+# Khay của cặp: «Tờ giấy» thay cho «Tờ hẹn», và lối vào AI nói thật.
+- tapOn: "Thêm vào cuộc trò chuyện"
+- extendedWaitUntil:
+    visible: "Tờ giấy"
+    timeout: 15000
+- assertNotVisible: "Tờ hẹn"
+- assertVisible: "Rủ Đi AI chưa trả lời được ở đây. Hai bạn vẫn nhắn tin như thường."
+- assertNotVisible: "Hỏi Rủ Đi AI"
+- takeScreenshot: 41-khay-ai-chua-san-sang
+- tapOn: "Đóng khay công cụ"

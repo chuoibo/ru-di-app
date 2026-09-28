@@ -13,7 +13,7 @@
   "tien": false
 }
 ---
-Màn chat của một nhóm hay của hai người. Ngoài nhắn tin, đây là chỗ cả hội cùng quyết: tạo bình chọn, sửa chung một tờ hẹn, và nhờ Rủ Đi AI ngay trong cuộc trò chuyện. Rủ Đi AI trả lời như một thành viên, bằng một tin trả lời vào đúng tin nhờ. Mọi công cụ nằm trong khay mở từ nút «Thêm vào cuộc trò chuyện» (dấu cộng cạnh «Ô soạn tin»).
+Màn chat của một nhóm hay của hai người. Ngoài nhắn tin, đây là chỗ cả hội cùng quyết: tạo bình chọn, sửa chung một tờ hẹn, và nhờ Rủ Đi AI ngay trong cuộc trò chuyện. Rủ Đi AI trả lời như một thành viên, bằng một tin trả lời vào đúng tin nhờ. Mọi công cụ nằm trong khay mở từ nút «Thêm vào cuộc trò chuyện» (dấu cộng cạnh «Ô soạn tin»). Chat hai người cũng nhờ được Rủ Đi AI bằng «@Rủ Đi» hoặc nút «Hỏi Rủ Đi AI» trong khay, nhưng chỉ để hỏi: «/plan» và «/chia-bill» chỉ có trong nhóm.
 
 ## Mở khay công cụ
 

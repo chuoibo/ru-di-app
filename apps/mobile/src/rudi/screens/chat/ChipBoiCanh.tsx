@@ -13,20 +13,22 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { nhanVai, type BoiCanh } from "../../ai/boi-canh";
-import { XEM, cauXem, chuChip } from "../../chat/chip-boi-canh";
+import { XEM, cauXem, cauXemCach, chuChip } from "../../chat/chip-boi-canh";
 import { typography, useRudiTheme } from "../../theme";
 import { Sheet } from "../../ui/Sheet";
 
-export function ChipBoiCanh({ goi, kemTin, sanSang, onDoi }: {
+export function ChipBoiCanh({ goi, kemTin, sanSang, onDoi, haiNguoi = false }: {
   /** The bundle that would go now, or null when this server takes none. */
   goi: BoiCanh | null;
   kemTin: boolean;
   sanSang: boolean;
   onDoi: (kemTin: boolean) => void;
+  /** A two-person conversation: the words speak of two people, not a group. */
+  haiNguoi?: boolean;
 }) {
   const { colors } = useRudiTheme();
   const [xem, setXem] = useState(false);
-  const chu = chuChip(goi, kemTin, sanSang);
+  const chu = chuChip(goi, kemTin, sanSang, haiNguoi);
   return (
     <View style={[styles.chip, { backgroundColor: colors.aiSoft, borderColor: colors.line }]} testID="chat-chip-boi-canh">
       <Ionicons color={colors.ai} name="sparkles" size={15} />
@@ -44,10 +46,8 @@ export function ChipBoiCanh({ goi, kemTin, sanSang, onDoi }: {
       <Sheet accessibilityLabel="Những tin sẽ gửi kèm lời nhờ" onClose={() => setXem(false)} open={xem && goi !== null}>
         {goi === null ? null : (
           <ScrollView style={styles.xem} testID="chat-boi-canh-luot">
-            <Text style={[typography.body, { color: colors.ink }]}>{cauXem(goi)}</Text>
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              Ảnh đi bằng chú thích, sticker đi bằng chữ «Sticker», tin đã xoá đi bằng một dòng nói là đã xoá. Tên hiển thị của các thành viên đi kèm để AI biết ai nói gì, còn chữ trong tin nhắn thì đi nguyên văn.
-            </Text>
+            <Text style={[typography.body, { color: colors.ink }]}>{cauXem(goi, haiNguoi)}</Text>
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauXemCach(haiNguoi)}</Text>
             {goi.luot.map((l) => (
               <Text key={l.id} style={[typography.caption, { color: colors.ink }]} testID="chat-boi-canh-muc">{`${nhanVai(l)}: ${l.chu}`}</Text>
             ))}

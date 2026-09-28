@@ -276,6 +276,12 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 	ghiNhanRouter(rec, kq)
 	kq = epLenh(t.Lenh, kq)
 	q := hieu.QuyetDinhCho(obs.BotNhom, kq)
+	if t.Cap && (q.TuChoiTien || q.NhapTien || coYDinh(kq.YDinh, hieu.ChiaBillDraft)) {
+		// A chat of two has no split draft: a money action or a split
+		// request gets the pair's fixed sentence, no further call.
+		rec.Guard, rec.Duong = obs.GuardRefused, obs.DuongTuChoiTien
+		return theMotChu(cau.CapKhongChamTien), nil
+	}
 	if q.TuChoiTien {
 		// The model classed a money action: the fixed refusal, no further
 		// call, no tool, no draft. It is an answer the room reads, not a
@@ -324,7 +330,13 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 		Cung: cung, Mem: mem, DiUngNgoaiDanhMuc: kq.Slots.DiUngNgoaiDanhMuc, DiemDen: idsDiemDen(dsDiemDen),
 		Nguon: nguonNhom(e.nguon), Quyen: e.quyen, SoCai: sc, Che: []tools.Ten{tools.DraftPoll},
 	}
-	bc.ChoNhom()
+	if t.Cap {
+		// A chat of two: the common tools only, and no group read port.
+		bc.Nguon.Nhom = nil
+		bc.ChoCap()
+	} else {
+		bc.ChoNhom()
+	}
 	khoi := []string{prompts.BocDuLieu(prompts.MayChu, strings.Join(dongMayChuHieu(t.Luc, kq.Slots), "\n"))}
 	k := khuonNhom()
 	if ten, _, ok := tactu.Nhanh(kq, bc); ok && !q.KhongCongCu && ten == tools.SearchPlaces && t.Lenh != obs.LenhPlan {

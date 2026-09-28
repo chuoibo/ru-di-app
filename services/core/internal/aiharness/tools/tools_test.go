@@ -62,14 +62,21 @@ func TestQuyenGolden(t *testing.T) {
 	if !reflect.DeepEqual(nhom, wantNhom) {
 		t.Errorf("group: %v", nhom)
 	}
-	for _, b := range []obs.Bot{obs.BotNep, obs.BotNhom} {
+	// A chat of two: the common tools, nothing of the group's or Nếp's.
+	cap := q.DuocPhep(BotCap, false)
+	wantCap := []Ten{SearchPlaces, GetPlace, ListDestinations, NearestArea, SearchAppManual, ProposePlaces, ProposeItinerary}
+	if !reflect.DeepEqual(cap, wantCap) {
+		t.Errorf("pair: %v", cap)
+	}
+	for _, b := range []obs.Bot{obs.BotNep, obs.BotNhom, BotCap} {
 		for _, ten := range q.DuocPhep(b, true) {
 			if m, _ := Tra(ten); m.Lop != Doc {
 				t.Errorf("%s restricted still has %s (%s)", b, ten, m.Lop)
 			}
 		}
 	}
-	if q.ChoPhep(obs.BotNep, SetReminder) || q.ChoPhep(obs.BotNhom, RecallMemory) || q.ChoPhep("khach", SearchPlaces) {
+	if q.ChoPhep(obs.BotNep, SetReminder) || q.ChoPhep(obs.BotNhom, RecallMemory) || q.ChoPhep("khach", SearchPlaces) ||
+		q.ChoPhep(BotCap, DraftPoll) || q.ChoPhep(BotCap, GroupSnapshot) || q.ChoPhep(BotCap, ListGroupOutings) || q.ChoPhep(BotCap, RecallMemory) {
 		t.Error("a grant the table does not make")
 	}
 }
@@ -77,16 +84,20 @@ func TestQuyenGolden(t *testing.T) {
 // Each case edits the golden table in one place; every one must refuse.
 func TestNapQuyenTuChoi(t *testing.T) {
 	cases := map[string][2]string{
-		"memory to the group": {`{"ten": "recall_memory", "lop": "doc", "pham": "me", "bot": ["nep"]}`, `{"ten": "recall_memory", "lop": "doc", "pham": "me", "bot": ["nep", "nhom"]}`},
-		"poll to Nếp":         {`{"ten": "draft_poll", "lop": "nhap", "pham": "nhom", "bot": ["nhom"]}`, `{"ten": "draft_poll", "lop": "nhap", "pham": "nhom", "bot": ["nhom", "nep"]}`},
-		"class changed":       {`{"ten": "get_place", "lop": "doc"`, `{"ten": "get_place", "lop": "nhap"`},
-		"scope changed":       {`{"ten": "remember_fact", "lop": "tri_nho", "pham": "me"`, `{"ten": "remember_fact", "lop": "tri_nho", "pham": "chung"`},
-		"invented tool":       {`{"ten": "set_reminder"`, `{"ten": "transfer_money"`},
+		"memory to the group":  {`{"ten": "recall_memory", "lop": "doc", "pham": "me", "bot": ["nep"]}`, `{"ten": "recall_memory", "lop": "doc", "pham": "me", "bot": ["nep", "nhom"]}`},
+		"poll to Nếp":          {`{"ten": "draft_poll", "lop": "nhap", "pham": "nhom", "bot": ["nhom"]}`, `{"ten": "draft_poll", "lop": "nhap", "pham": "nhom", "bot": ["nhom", "nep"]}`},
+		"poll to the pair":     {`{"ten": "draft_poll", "lop": "nhap", "pham": "nhom", "bot": ["nhom"]}`, `{"ten": "draft_poll", "lop": "nhap", "pham": "nhom", "bot": ["nhom", "cap"]}`},
+		"snapshot to the pair": {`{"ten": "group_snapshot", "lop": "doc", "pham": "nhom", "bot": ["nhom"]}`, `{"ten": "group_snapshot", "lop": "doc", "pham": "nhom", "bot": ["nhom", "cap"]}`},
+		"memory to the pair":   {`{"ten": "recall_memory", "lop": "doc", "pham": "me", "bot": ["nep"]}`, `{"ten": "recall_memory", "lop": "doc", "pham": "me", "bot": ["nep", "cap"]}`},
+		"class changed":        {`{"ten": "get_place", "lop": "doc"`, `{"ten": "get_place", "lop": "nhap"`},
+		"scope changed":        {`{"ten": "remember_fact", "lop": "tri_nho", "pham": "me"`, `{"ten": "remember_fact", "lop": "tri_nho", "pham": "chung"`},
+		"invented tool":        {`{"ten": "set_reminder"`, `{"ten": "transfer_money"`},
 		"tool missing": {`,
     {"ten": "set_reminder", "lop": "nhac", "pham": "me", "bot": []}`, ``},
 		"tool twice":    {`{"ten": "set_reminder"`, `{"ten": "get_place"`},
-		"unknown bot":   {`"bot": ["nep", "nhom"]}`, `"bot": ["nep", "khach"]}`},
-		"repeated bot":  {`"bot": ["nep", "nhom"]}`, `"bot": ["nep", "nep"]}`},
+		"unknown bot":   {`"bot": ["nep", "nhom", "cap"]}`, `"bot": ["nep", "nhom", "khach"]}`},
+		"repeated bot":  {`"bot": ["nep", "nhom", "cap"]}`, `"bot": ["nep", "nhom", "nhom"]}`},
+		"repeated pair": {`"bot": ["nep", "nhom", "cap"]}`, `"bot": ["nep", "cap", "cap"]}`},
 		"unknown field": {`"phien_ban": 1,`, `"phien_ban": 1, "ghi_chu": "",`},
 		"other version": {`"phien_ban": 1,`, `"phien_ban": 2,`},
 	}

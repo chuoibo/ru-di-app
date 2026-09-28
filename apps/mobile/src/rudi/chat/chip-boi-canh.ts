@@ -31,12 +31,14 @@ export const CHI_GUI_LOI_NHO = "Chỉ gửi lời nhờ";
  *   server takes no bundle at all.
  * @param kemTin false once the person tapped «Chỉ gửi lời nhờ».
  * @param sanSang whether the server can run the command now.
+ * @param haiNguoi a two-person conversation: the words speak of two people,
+ *   never of «nhóm» (design 2026-09-28).
  */
-export function chuChip(goi: BoiCanh | null, kemTin: boolean, sanSang: boolean): ChuChip {
+export function chuChip(goi: BoiCanh | null, kemTin: boolean, sanSang: boolean, haiNguoi = false): ChuChip {
   if (!sanSang) return { cau: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường", xem: false, doi: null };
   if (goi === null) return { cau: "Chỉ gửi lời nhờ, không kèm tin nào", xem: false, doi: null };
   const n = goi.luot.length;
-  if (n === 0) return { cau: "Nhóm chưa có tin nào, chỉ gửi lời nhờ", xem: false, doi: null };
+  if (n === 0) return { cau: haiNguoi ? "Hai bạn chưa có tin nào, chỉ gửi lời nhờ" : "Nhóm chưa có tin nào, chỉ gửi lời nhờ", xem: false, doi: null };
   if (!kemTin) return { cau: "Chỉ gửi lời nhờ, không kèm tin nào", xem: false, doi: `Kèm lại ${n} tin` };
   return { cau: `Kèm ${n} tin gần đây`, xem: true, doi: CHI_GUI_LOI_NHO };
 }
@@ -47,6 +49,13 @@ export function goiSeGui(goi: BoiCanh | null, kemTin: boolean): BoiCanh | undefi
 }
 
 /** The head of the «Xem» sheet: the same count, and who else will read what. */
-export function cauXem(goi: BoiCanh): string {
-  return `Rủ Đi AI sẽ đọc đúng ${goi.luot.length} tin dưới đây cùng lời nhờ trong tin của bạn. Lời nhờ và câu trả lời hiện cho cả nhóm.`;
+export function cauXem(goi: BoiCanh, haiNguoi = false): string {
+  const ai = haiNguoi ? "cả hai bạn" : "cả nhóm";
+  return `Rủ Đi AI sẽ đọc đúng ${goi.luot.length} tin dưới đây cùng lời nhờ trong tin của bạn. Lời nhờ và câu trả lời hiện cho ${ai}.`;
+}
+
+/** The sheet's second line: what goes along with each message, and whose names. */
+export function cauXemCach(haiNguoi = false): string {
+  const ten = haiNguoi ? "Tên hiển thị của hai bạn" : "Tên hiển thị của các thành viên";
+  return `Ảnh đi bằng chú thích, sticker đi bằng chữ «Sticker», tin đã xoá đi bằng một dòng nói là đã xoá. ${ten} đi kèm để AI biết ai nói gì, còn chữ trong tin nhắn thì đi nguyên văn.`;
 }

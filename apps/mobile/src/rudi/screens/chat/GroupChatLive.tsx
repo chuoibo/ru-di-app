@@ -57,6 +57,7 @@ import { luotChoNguoiXem } from "../../ai/phong-ai";
 import { useRoomAi } from "../../ai/useRoomAi";
 import { timNhacAi } from "../../chat/nhac-ai";
 import { goiSeGui } from "../../chat/chip-boi-canh";
+import { chuKhay, lenhGoiY } from "../../chat/khay-cong-cu";
 import type { BoiCanh } from "../../ai/boi-canh";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
@@ -84,19 +85,6 @@ import { docKhoiNhap } from "../../chat/to-hen-chung";
 import { Nep } from "../../ui/art/Nep";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { KHONG_VIEN_WEB } from "../../ui/khong-vien-web";
-
-/**
- * The commands the composer suggests. Choosing one fills the composer and
- * sends nothing (chat-ui-contract.md): an AI request is an ordinary message
- * the person finishes writing, with the preview chip above the send button
- * (ADR-0046). Only `/vote` opens a form, because a poll is not a message.
- */
-const LENH = [
-  { nhan: "/plan", goiY: "/plan ", moTa: "Rủ Đi AI phác lịch trình" },
-  { nhan: "/vote", goiY: "/vote", moTa: "Viết câu hỏi và lựa chọn" },
-  { nhan: "/chia-bill", goiY: "/chia-bill ", moTa: "Rủ Đi AI gom khoản chi để cả hội xác nhận" },
-  { nhan: "@Rủ Đi", goiY: "@Rủ Đi ", moTa: "Hỏi Rủ Đi AI ngay trong nhóm" },
-] as const;
 
 /**
  * One send that has not landed yet, drawn where the message will be.
@@ -337,13 +325,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     return chat.tin.find(dangMo) ?? chat.tin.find(bat) ?? null;
   }, [chat.tin, changes.votes, nhanRieng]);
   const coChu = nhap.trim().length > 0;
-  // The message being typed also asks the AI (ADR-0046). Not in a pair: the
-  // AI engine serves groups only, and there it would say «chưa sẵn sàng».
-  const nhacDangGo = nhanRieng ? null : timNhacAi(nhap);
+  // The message being typed also asks the AI (ADR-0046). In a pair only a
+  // mention does, as `hoi` (design 2026-09-28): the chip reads that command's
+  // readiness from the server, so it never promises what the server refuses.
+  const nhacDangGo = timNhacAi(nhap, nhanRieng);
   // What would go with it: nothing at all when this server takes no bundle.
   const goiChip = ai.capabilities?.ai.share_scope === "caller_attached" ? boiCanhAi : null;
   const moLenh = (nhap.startsWith("/") && !nhap.includes(" ")) || nhap === "@";
-  const lenhPhuHop = LENH.filter((lenh) => lenh.nhan.toLocaleLowerCase().startsWith(nhap.toLocaleLowerCase()));
+  const lenhPhuHop = lenhGoiY(nhanRieng).filter((lenh) => lenh.nhan.toLocaleLowerCase().startsWith(nhap.toLocaleLowerCase()));
   const viewabilityConfig = useRef(CHAT_VIEWABILITY).current;
   const baoTinHienThi = useCallback(({ viewableItems }: { viewableItems: ViewToken<HangHienThi>[] }) => {
     chat.danhDauHienThi(viewableItems.flatMap(({ item, isViewable }) => isViewable && item.loai === "tin" ? [item.tin.id] : []));
@@ -408,8 +397,9 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     // (ADR-0046): it is sent exactly like any other, and only once the server
     // has stored it is the AI asked, naming it. The key is the send's own, so
     // retrying either half can never double the other; the bundle is frozen
-    // here, at the press, before the question joins the list it reads.
-    const nhac = command === undefined && !nhanRieng ? timNhacAi(body) : null;
+    // here, at the press, before the question joins the list it reads. In a
+    // pair the same holds for `@Rủ Đi`, which asks `hoi` (design 2026-09-28).
+    const nhac = command === undefined ? timNhacAi(body, nhanRieng) : null;
     const attempt = newAttempt();
     if (nhac !== null && lenhSanSang(ai.capabilities, nhac.lenh)) {
       capChoTin.current.set(attempt.key, { lenh: nhac.lenh, loiNho: nhac.loiNho, goi: goiSeGui(goiChip, kemTin) });
@@ -885,7 +875,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>{chuHangLoiGoi(request).cau}</Text>
                 {request.status === "failed" ? <View style={styles.requestActions}>
                   {thuLaiDuoc(request) ? <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !lenhSanSang(ai.capabilities, request.command ?? "plan")} onPress={() => void ai.retry(request.id)} /> : null}
-                  {request.command !== "chia_bill" ? <RudiButton label="Tự tạo kèo" compact full={false} variant="ghost" onPress={() => moToHen()} /> : null}
+                  {(request.command ?? "plan") === "plan" ? <RudiButton label="Tự tạo kèo" compact full={false} variant="ghost" onPress={() => moToHen()} /> : null}
                 </View> : null}
               </View>
             ))}
@@ -909,7 +899,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             </View>
           ) : dangGuiThan !== null ? (
             <View style={styles.choGui}>
-              {timNhacAi(dangGuiThan) !== null ? (
+              {timNhacAi(dangGuiThan, nhanRieng) !== null ? (
                 <View style={styles.hang}>
                   <View style={[styles.khoi, styles.khoiAi]}>
                     <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
@@ -1044,13 +1034,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
         onPoll={gui}
         // The tray no longer asks the AI itself: it starts the message.
-        onHoiAi={() => { setKhay(null); if (timNhacAi(nhapRef.current.text) === null) doiNhap((LENH[0].goiY + nhapRef.current.text).trimEnd() + " "); }}
+        onHoiAi={() => { setKhay(null); if (timNhacAi(nhapRef.current.text, nhanRieng) === null) doiNhap((chuKhay(nhanRieng).moDauHoiAi + nhapRef.current.text).trimEnd() + " "); }}
         onManual={() => { setKhay(null); moToHen(); }}
         haiNguoi={nhanRieng}
         onToGiay={nhanRieng ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
       {!khongNhanTin && nhacDangGo !== null ? (
         <View style={{ marginHorizontal: space.md }}>
-          <ChipBoiCanh goi={goiChip} kemTin={kemTin} onDoi={setKemTin} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
+          <ChipBoiCanh goi={goiChip} haiNguoi={nhanRieng} kemTin={kemTin} onDoi={setKemTin} sanSang={lenhSanSang(ai.capabilities, nhacDangGo.lenh)} />
         </View>
       ) : null}
       {khongNhanTin ? (

@@ -851,7 +851,7 @@ func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
 	if err != nil {
 		return dapThem{}, err
 	}
-	if g.member != j.member || g.person != j.person || g.kind != "group" {
+	if g.member != j.member || g.person != j.person || kiemPhongViec(ctx, tx, g, j) != nil {
 		return dapThem{}, &denied{403, "sharing_unavailable"}
 	}
 	var live bool
@@ -903,6 +903,17 @@ func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
 	return dapThem{places: places, members: members, toi: toi, budget: group.BudgetPerPersonVND}, tx.Commit(ctx)
 }
 
+// kiemPhongViec is the worker's room check of a claimed room job, at each
+// of its reads and at its publish: the room still takes the assistant
+// (phongAi: a group, or a pair still open between its two people) and still
+// takes this job's command (a pair: `hoi` only).
+func kiemPhongViec(ctx context.Context, tx pgx.Tx, g grant, j work) error {
+	if err := phongAi(ctx, tx, g); err != nil {
+		return err
+	}
+	return lenhChoPhong(g.kind, j.command)
+}
+
 // finishFailure fails a group job with code -- unless the worker is stopping,
 // in which case whatever failed failed because of the stop, and the job is
 // released instead.
@@ -936,7 +947,10 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, res
 	}
 	defer tx.Rollback(ctx)
 	g, err := authority(ctx, tx, j.conversation, j.digest)
-	if err != nil || g.member != j.member || g.person != j.person || g.kind != "group" {
+	// The room is asked again here, not only at prepare: a pair blocked, or
+	// whose other person deleted their account, while the model was writing
+	// gets no card.
+	if err != nil || g.member != j.member || g.person != j.person || kiemPhongViec(ctx, tx, g, j) != nil {
 		_ = tx.Rollback(ctx)
 		return h.finishFailure(ctx, j, "sharing_unavailable")
 	}

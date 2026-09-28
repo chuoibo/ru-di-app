@@ -122,52 +122,63 @@ func thanhVienNhom(ms []repo.Membership, caller string) []aiharness.ThanhVienNho
 	return out
 }
 
-// chuanBiNhom confirms the job is still the caller's in a room they are in,
-// and reads what the server lays on top of the bundle: the members, the
-// author of each shared turn, and, in a legacy-lane room, the stored text of
-// each shared turn (chuDaLuu).
-func (h *Handler) chuanBiNhom(ctx context.Context, j work) ([]repo.Membership, map[string]string, map[string]string, error) {
+// phongDoc is what chuanBiNhom read for a room job.
+type phongDoc struct {
+	ms      []repo.Membership
+	authors map[string]string
+	texts   map[string]string
+	// cap: the room is a pair (contexts.kind, read in this transaction).
+	cap bool
+}
+
+// chuanBiNhom confirms the job is still the caller's in a room they are in
+// (a pair: still open between its two people, kiemPhongViec), and reads
+// what the server lays on top of the bundle: the members, the author of
+// each shared turn, and, in a legacy-lane group room, the stored text of
+// each shared turn (chuDaLuu). A pair's stored text is never read: that
+// read exists for a split draft's billing (ADR-0046 §8.3), and a pair has
+// no split draft.
+func (h *Handler) chuanBiNhom(ctx context.Context, j work) (phongDoc, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return phongDoc{}, err
 	}
 	defer tx.Rollback(ctx)
 	g, err := authority(ctx, tx, j.conversation, j.digest)
 	if err != nil {
-		return nil, nil, nil, err
+		return phongDoc{}, err
 	}
-	if g.member != j.member || g.person != j.person || g.kind != "group" {
-		return nil, nil, nil, &denied{403, "sharing_unavailable"}
+	if g.member != j.member || g.person != j.person || kiemPhongViec(ctx, tx, g, j) != nil {
+		return phongDoc{}, &denied{403, "sharing_unavailable"}
 	}
 	var live bool
 	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_ai_invocations WHERE id=$1 AND status='running' AND lease_id=$2 AND lease_until>clock_timestamp() AND share_expires_at>clock_timestamp())`, j.id, j.lease).Scan(&live); err != nil {
-		return nil, nil, nil, err
+		return phongDoc{}, err
 	}
 	if !live {
-		return nil, nil, nil, &denied{409, "invocation_cancelled"}
+		return phongDoc{}, &denied{409, "invocation_cancelled"}
 	}
-	ms, err := repo.Repository{Q: tx}.ListMembers(ctx, j.conversation)
-	if err != nil {
-		return nil, nil, nil, err
+	out := phongDoc{authors: map[string]string{}, texts: map[string]string{}, cap: g.kind == kindPair}
+	if out.ms, err = (repo.Repository{Q: tx}).ListMembers(ctx, j.conversation); err != nil {
+		return phongDoc{}, err
 	}
-	authors, texts := map[string]string{}, map[string]string{}
 	if len(j.goi) > 0 {
 		var bc bundle
 		if err = json.Unmarshal(j.goi, &bc); err != nil {
-			return nil, nil, nil, err
+			return phongDoc{}, err
 		}
-		if authors, err = tacGia(ctx, tx, j.conversation, &bc); err != nil {
-			return nil, nil, nil, err
+		if out.authors, err = tacGia(ctx, tx, j.conversation, &bc); err != nil {
+			return phongDoc{}, err
 		}
-		if g.lane == laneLegacy && (j.lane == "" || j.lane == laneLegacy) {
-			if texts, err = chuDaLuu(ctx, tx, j.conversation, &bc); err != nil {
-				return nil, nil, nil, err
+		if g.kind == kindGroup && g.lane == laneLegacy && (j.lane == "" || j.lane == laneLegacy) {
+			if out.texts, err = chuDaLuu(ctx, tx, j.conversation, &bc); err != nil {
+				return phongDoc{}, err
 			}
 		}
 	}
-	return ms, authors, texts, tx.Commit(ctx)
+	return out, tx.Commit(ctx)
 }
 
 // cauDocChuDaLuu is this package's one read of message text, pinned by
@@ -217,11 +228,11 @@ func (h *Handler) processNhomEngine(ctx context.Context, j work) error {
 	if !ok {
 		return h.finishFailure(ctx, j, "invalid_ai_result")
 	}
-	ms, authors, texts, err := h.chuanBiNhom(ctx, j)
+	doc, err := h.chuanBiNhom(ctx, j)
 	if err != nil {
 		return h.finishFailure(ctx, j, "sharing_unavailable")
 	}
-	luot, err := luotNhom(j.goi, authors, texts)
+	luot, err := luotNhom(j.goi, doc.authors, doc.texts)
 	if err != nil {
 		return h.finishFailure(ctx, j, "invalid_ai_result")
 	}
@@ -232,7 +243,8 @@ func (h *Handler) processNhomEngine(ctx context.Context, j work) error {
 	turn := aiharness.Turn{
 		Bot: obs.BotNhom, InvocationID: j.id, LanThu: j.attempt, Lenh: lenh, Luc: j.createdAt,
 		LoiNho: loiNhoNhom(j.prompt), NguoiHoi: j.person, DaGoiTruoc: j.modelCalls, GiuLuot: h.giuLuot(j),
-		Phong: j.conversation, Lane: lane, SoTin: j.soTin, LuotNhom: luot, ThanhVien: thanhVienNhom(ms, j.person),
+		Phong: j.conversation, Lane: lane, SoTin: j.soTin, LuotNhom: luot, ThanhVien: thanhVienNhom(doc.ms, j.person),
+		Cap: doc.cap,
 	}
 	// The turn's statuses reach the stream as they happen; its text does not:
 	// the card's text goes out after the card is posted (publish), the only

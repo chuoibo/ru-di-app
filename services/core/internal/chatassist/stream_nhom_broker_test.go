@@ -128,7 +128,8 @@ func TestStreamNhomEngineGoSauKhiTheDang(t *testing.T) {
 func caiFeed(t *testing.T, f fixture) {
 	t.Helper()
 	ctx := context.Background()
-	for _, table := range []string{"friend_requests", "message_reactions", "votes", "vote_options", "vote_ballots"} {
+	// friend_requests is already one of taoSchema's copies (the pair rule).
+	for _, table := range []string{"message_reactions", "votes", "vote_options", "vote_ballots"} {
 		if _, err := f.pool.Exec(ctx, fmt.Sprintf("CREATE TABLE %s (LIKE public.%s INCLUDING ALL)", table, table)); err != nil {
 			t.Fatal(err)
 		}

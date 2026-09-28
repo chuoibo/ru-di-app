@@ -515,10 +515,11 @@ func chayBinhChon(_ context.Context, bc *BoiCanh, a *thamSoBinhChon) (ketQuaTho,
 
 // ---- group and own outings ------------------------------------------------
 
-// laNhom holds a group tool to the group bot with a group from the job:
-// defence in depth behind the permission table.
+// laNhom holds a group tool to the group bot with a group from the job, and
+// never a pair's turn (ChoCap): defence in depth behind the permission
+// table.
 func (bc *BoiCanh) laNhom() *loiTS {
-	if bc.Bot != obs.BotNhom || bc.NhomID == "" {
+	if bc.Bot != obs.BotNhom || bc.NhomID == "" || bc.botQuyen() == BotCap {
 		return &loiTS{loi: KhongDuocPhep}
 	}
 	return nil
@@ -850,9 +851,27 @@ func (bc *BoiCanh) ChoNhom() *BoiCanh {
 	return bc
 }
 
+// congCusCap is the pair's own table: empty. A chat of two gets the common
+// tools and nothing of the group's (no poll draft, no group snapshot, no
+// group outings) or of Nếp's.
+var congCusCap = map[Ten]congCu{}
+
+// ChoCap gives a pair's turn (the room assistant in a chat of two) the
+// common tools only, and reads the permission table under BotCap, so a
+// group tool is neither declared nor callable. The engine calls it instead
+// of ChoNhom on every pair turn's context.
+func (bc *BoiCanh) ChoCap() *BoiCanh {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+	bc.rieng = congCusCap
+	bc.bang = BotCap
+	return bc
+}
+
 // congCu is tool t's implementation for this turn: a common tool, or one of
 // the bot's own table; false for a tool this turn has no table for (a
-// context built without ChoNep or ChoNhom offers the common tools only).
+// context built without ChoNep, ChoNhom or ChoCap offers the common tools
+// only).
 func (bc *BoiCanh) congCu(t Ten) (congCu, bool) {
 	if cc, ok := congCusChung[t]; ok {
 		return cc, true

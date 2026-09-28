@@ -88,7 +88,9 @@ test("chip nói thật khi AI chưa sẵn sàng, khi nhóm chưa có tin, và kh
 
 test("màn đưa cho chip đúng gói sẽ gửi, và «Xem» liệt kê đúng gói đó", () => {
   const chip = readFileSync(join(SRC, "screens", "chat", "ChipBoiCanh.tsx"), "utf8");
-  assert.match(chip, /chuChip\(goi, kemTin, sanSang\)/, "câu của chip phải đọc từ gói");
+  // The pair flag only picks words for two people; the count still comes
+  // from the bundle (design 2026-09-28).
+  assert.match(chip, /chuChip\(goi, kemTin, sanSang(, haiNguoi)?\)/, "câu của chip phải đọc từ gói");
   assert.match(chip, /goi\.luot\.map\(/, "«Xem» phải liệt kê đúng các lượt của gói");
   const live = readFileSync(join(SRC, "screens", "chat", "GroupChatLive.tsx"), "utf8");
   assert.match(live, /const goiChip = [^;]*boiCanhAi/, "gói trên chip phải là gói gomBoiCanhChat dựng");
