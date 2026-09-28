@@ -3531,13 +3531,17 @@ class ApiService:
                 raise ApiProblem(
                     422, "stop_place_unknown", "Địa điểm không còn trong danh mục."
                 )
+            # Routing reads the place's point before the stop's meeting point;
+            # a centroid would route to the middle of a province, so a place
+            # with no drawable point leaves the stop unlocated.
+            point = mappable_point(place) if place else None
             row["lat"] = (
-                place.get("lat")
+                (point[0] if point else None)
                 if place
                 else (stop.meeting_point.lat if stop.meeting_point else None)
             )
             row["lng"] = (
-                place.get("lng")
+                (point[1] if point else None)
                 if place
                 else (stop.meeting_point.lng if stop.meeting_point else None)
             )
@@ -5091,24 +5095,38 @@ class ApiService:
             (place for place in self.place_rows() if place["id"] not in seen),
             key=lambda place: (-(score_place(place, gu)[0] or 0), place["id"]),
         )
+        # A pin goes where the place is: no point, or only a centroid, is not
+        # on either layer (`mappable_point`). The recommended layer is counted
+        # by pins placed, so skipping one does not shorten it.
+        drawable = [
+            {**place, "lat": point[0], "lng": point[1]}
+            for place in self.place_rows()
+            if (point := mappable_point(place)) is not None
+        ]
+        recommended = []
+        for place in scored:
+            if len(recommended) == _MAP_RECOMMENDED:
+                break
+            point = mappable_point(place)
+            if point is None:
+                continue
+            recommended.append(
+                MapPlace(
+                    place_id=place["id"],
+                    place_name=place["name"],
+                    lat=point[0],
+                    lng=point[1],
+                    rating=place["rating"],
+                    rating_count=place["rating_count"],
+                )
+            )
         return SocialMapResponse(
             context_id=context_id,
             visited=[VisitedPlace(**entry) for entry in visited],
             trending=[
-                MapPlace(**entry)
-                for entry in social_map.trending_layer(self.place_rows())
+                MapPlace(**entry) for entry in social_map.trending_layer(drawable)
             ],
-            recommended=[
-                MapPlace(
-                    place_id=place["id"],
-                    place_name=place["name"],
-                    lat=place["lat"],
-                    lng=place["lng"],
-                    rating=place["rating"],
-                    rating_count=place["rating_count"],
-                )
-                for place in scored[:_MAP_RECOMMENDED]
-            ],
+            recommended=recommended,
             unavailable=[
                 UnavailableLayer(
                     layer="saved",
@@ -5185,8 +5203,16 @@ class ApiService:
                 )
             origins.append(area)
 
+        # Distance from a centroid is fiction: the middle of a province sits
+        # "between" any two districts and would rank as the fairest spot.
         candidates = rank_meeting_points(
-            origins, self.place_rows(), limit=_MEET_CANDIDATES
+            origins,
+            [
+                {**place, "lat": point[0], "lng": point[1]}
+                for place in self.place_rows()
+                if (point := mappable_point(place)) is not None
+            ],
+            limit=_MEET_CANDIDATES,
         )
         return MeetingPointResponse(
             context_id=context_id,

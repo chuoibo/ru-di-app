@@ -13,7 +13,7 @@ from app.api.deps import get_repository
 from app.api.idempotency import SqlAlchemyIdempotencyStore
 from app.api.main import create_app
 from app.api.repository import SqlAlchemyApiRepository
-from app.db.models import Membership, MembershipState, OutingStop
+from app.db.models import Membership, MembershipState, OutingStop, Place
 
 from .test_outings_postgres import _client, _group, _headers, _make_outing
 
@@ -284,3 +284,59 @@ def test_database_rejects_invalid_schedule_or_pin(
             )
         )
         postgres_session.flush()
+
+
+def test_a_stop_at_a_centroid_reaches_the_router_with_no_point(
+    itinerary_http, postgres_session, monkeypatch
+):
+    """M7: the router reads a stop's place point before anything else, so a
+    province centroid would route to the middle of the province. A place with
+    no drawable point leaves the stop unlocated instead."""
+
+    app, owner, _outsider, outing = itinerary_http
+    known = postgres_session.scalars(select(Place)).first()
+    for place_id, precision in (
+        ("vnl-that", "rooftop"),
+        ("vnl-tam-tinh", "province_centroid"),
+    ):
+        postgres_session.add(
+            Place(
+                id=place_id,
+                destination_id=known.destination_id,
+                name=f"Quán {place_id}",
+                category="cafe",
+                kinds=[],
+                lat=11.95,
+                lng=108.44,
+                geo_precision=precision,
+                traits=[],
+                source="vnlocal",
+                source_ref=place_id,
+            )
+        )
+    postgres_session.flush()
+    captured = []
+
+    def preview(body):
+        captured.append(body)
+        return {"status": "unavailable", "revision": body["expected_revision"]}
+
+    monkeypatch.setattr("app.journey.preview.preview_itinerary", preview)
+    body = {**draft(outing), "day": outing["starts_on"], "include_suggestion": True}
+    for stop, place_id in zip(
+        body["stops"], ("vnl-that", "vnl-tam-tinh"), strict=False
+    ):
+        stop.update(
+            place_id=place_id, place_name=f"Quán {place_id}", meeting_point=None
+        )
+
+    async def exchange():
+        async with _client(app) as client:
+            url = f"/outings/{outing['id']}/itinerary/preview"
+            response = await client.post(url, json=body, headers=_headers(owner.id))
+            assert response.status_code == 200, response.text
+
+    anyio.run(exchange)
+    stops = captured[0]["stops"]
+    assert (stops[0]["lat"], stops[0]["lng"]) == (11.95, 108.44)
+    assert (stops[1]["lat"], stops[1]["lng"]) == (None, None)

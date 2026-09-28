@@ -70,10 +70,13 @@ func postMeetingPoint() Route {
 		for _, row := range rows {
 			// A place with no coordinates cannot be a meeting point: the whole
 			// computation is a distance, and there is nothing to measure from.
-			if row.Lat == nil || row.Lng == nil {
+			// A centroid is worse than nothing -- the middle of a province sits
+			// "between" any two districts and would rank as the fairest spot.
+			lat, lng := row.MappablePoint()
+			if lat == nil {
 				continue
 			}
-			places = append(places, meeting.Place{ID: row.ID, Name: row.Name, Category: row.Category, Address: row.Address, Lat: *row.Lat, Lng: *row.Lng})
+			places = append(places, meeting.Place{ID: row.ID, Name: row.Name, Category: row.Category, Address: row.Address, Lat: *lat, Lng: *lng})
 		}
 		candidates, err := meeting.RankMeetingPoints(origins, places, meetCandidates)
 		if err != nil {
@@ -86,11 +89,6 @@ func postMeetingPoint() Route {
 		}
 		candidateList := pyjson.List{}
 		for _, candidate := range candidates {
-			// MeetingCandidate.address is a StrictStr: a place without one fails
-			// pydantic while the service builds the response, which is a 500.
-			if candidate.Address == nil {
-				return endpoint.Reply{}, fmt.Errorf("routes: meeting candidate %s has no address", candidate.PlaceID)
-			}
 			fairness := pyjson.NewOrderedMap()
 			fairness.Set("worst_km", pyjson.Float(candidate.Fairness.WorstKm))
 			fairness.Set("total_km", pyjson.Float(candidate.Fairness.TotalKm))
@@ -105,7 +103,9 @@ func postMeetingPoint() Route {
 			entry.Set("place_id", pyjson.String(candidate.PlaceID))
 			entry.Set("place_name", pyjson.String(candidate.PlaceName))
 			entry.Set("category", pyjson.String(candidate.Category))
-			entry.Set("address", pyjson.String(*candidate.Address))
+			// MeetingCandidate.address is Optional: null for a place with no
+			// address a person can stand in front of (many fed places).
+			entry.Set("address", textOrNull(candidate.Address))
 			entry.Set("lat", pyjson.Float(candidate.Lat))
 			entry.Set("lng", pyjson.Float(candidate.Lng))
 			entry.Set("fairness", fairness)

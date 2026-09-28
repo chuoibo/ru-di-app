@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/testdb"
 )
 
@@ -79,12 +80,12 @@ func geoSchema(t *testing.T) *pgxpool.Pool {
 			lat, lng = "NULL", "NULL"
 		}
 		rows = append(rows, fmt.Sprintf(
-			"('%s','d-tphcm','Quán %s','cafe','[\"cà phê\"]',%s,%s,%s,'[]','seed')", p.id, p.id, lat, lng, precision))
+			"('%s','d-tphcm','Quán %s','cafe','[\"cà phê\"]',%s,%s,%s,'[]','seed','hot')", p.id, p.id, lat, lng, precision))
 	}
 	for _, stmt := range []string{
 		`INSERT INTO destinations(id,name,province,lat,lng,bbox_south,bbox_west,bbox_north,bbox_east,sort_order) VALUES
 		 ('d-tphcm','TP. Hồ Chí Minh','TP. Hồ Chí Minh',10.77,106.7,10.68,106.6,10.88,106.82,20)`,
-		`INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,traits,source) VALUES ` +
+		`INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,geo_precision,traits,source,flag) VALUES ` +
 			strings.Join(rows, ","),
 		`INSERT INTO people(id,display_name) VALUES ('` + geoMember + `','Minh Anh')`,
 		`INSERT INTO contexts(id,display_name,created_by_id) VALUES ('` + geoContext + `','Team Sài Gòn','` + geoMember + `')`,
@@ -142,6 +143,76 @@ func TestACheckinStoresOnlyAPointThatSaysWhereThePlaceIs(t *testing.T) {
 		}
 		if (lat != nil) != keeps || (lng != nil) != keeps {
 			t.Errorf("%s (%q): stored a point = %v, want %v", p.id, p.precision, lat != nil || lng != nil, keeps)
+		}
+	}
+}
+
+// drawable is the ids a map, a meeting point or a route may use.
+var drawable = map[string]bool{"geo-rooftop": true, "geo-street": true}
+
+func placeIDs(t *testing.T, layer any, key string) []string {
+	t.Helper()
+	var ids []string
+	for _, item := range layer.([]any) {
+		ids = append(ids, item.(map[string]any)[key].(string))
+	}
+	return ids
+}
+
+// Every place is flagged hot and every one is new to the group, so the
+// trending and recommended layers would carry all six if a centroid counted.
+func TestTheGroupMapPinsOnlyPlacesWhosePointSaysWhereTheyAre(t *testing.T) {
+	pool := geoSchema(t)
+	h := handlerOn(t, pool)
+	code, out := geoCall(t, h, http.MethodGet, "/contexts/"+geoContext+"/map", nil)
+	if code != 200 {
+		t.Fatalf("%d %v", code, out)
+	}
+	for _, layer := range []string{"trending", "recommended"} {
+		ids := placeIDs(t, out[layer], "place_id")
+		if len(ids) != len(drawable) {
+			t.Errorf("%s = %v, want exactly the %d drawable places", layer, ids, len(drawable))
+		}
+		for _, id := range ids {
+			if !drawable[id] {
+				t.Errorf("%s pins %s, whose point is not where it is", layer, id)
+			}
+		}
+	}
+}
+
+// Quận 1 and Quận 7: a centroid between them would be the «fairest» spot.
+func TestAMeetingPointIsNeverACentroid(t *testing.T) {
+	pool := geoSchema(t)
+	h := handlerOn(t, pool)
+	code, out := geoCall(t, h, http.MethodPost, "/contexts/"+geoContext+"/meet",
+		map[string]any{"from_areas": []string{"hcm-quan-1", "hcm-quan-7"}})
+	if code != 200 {
+		t.Fatalf("%d %v", code, out)
+	}
+	ids := placeIDs(t, out["candidates"], "place_id")
+	if len(ids) != len(drawable) {
+		t.Errorf("candidates = %v, want exactly the %d drawable places", ids, len(drawable))
+	}
+	for _, id := range ids {
+		if !drawable[id] {
+			t.Errorf("candidate %s is measured from a point that is not where it is", id)
+		}
+	}
+}
+
+// The planner reads a stop's place through outingStore.GetPlace: the place is
+// always found (a known id is never «unknown»), its point only when drawable.
+func TestARouteNeverStartsFromACentroid(t *testing.T) {
+	pool := geoSchema(t)
+	store := outingStore{ctx: context.Background(), store: repo.Repository{Q: pool}}
+	for _, p := range geoPlaces {
+		place, err := store.GetPlace(p.id)
+		if err != nil || place == nil {
+			t.Fatalf("%s: %v, %v", p.id, place, err)
+		}
+		if got := place.Lat != nil && place.Lng != nil; got != drawable[p.id] {
+			t.Errorf("%s (%q): routable point = %v, want %v", p.id, p.precision, got, drawable[p.id])
 		}
 	}
 }
