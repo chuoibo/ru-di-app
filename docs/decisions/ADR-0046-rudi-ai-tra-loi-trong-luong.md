@@ -241,10 +241,27 @@ Chủ sản phẩm chốt ngày 2026-09-27. Đây là quyết định của ch�
 
 - Chủ sản phẩm gỡ §7.1 như một điều kiện chặn merge. Thứ tự: PR #654 vào `main` ngay; chat 1:1 đi
   PR mới (§8.1).
-- Maestro `49-rudi-ai-trong-luong.yaml` chạy trên **máy thật**, flow 30/40 chạy trên máy, và ảnh chụp
-  (sáng, tối, Reduce Motion) được mở ra nhìn trở thành **việc tiếp theo**. Chúng **vẫn bắt buộc** trước
-  khi dựa vào các cờ (`MOBILE_AI_ENGINE_GROUP`, capability `ai.mention`/`ai.hoi`) ở production. Gỡ
-  điều kiện merge không phải bằng chứng hình ảnh hay bằng chứng máy thật.
+- Các flow Maestro của luồng AI trong chat chạy trên **máy thật**, và ảnh chụp (sáng, tối, Reduce
+  Motion) được mở ra nhìn, trở thành **việc tiếp theo**. Chúng **vẫn bắt buộc** trước khi dựa vào các
+  cờ (`MOBILE_AI_ENGINE_GROUP`, capability `ai.mention`/`ai.hoi`) ở production. Gỡ điều kiện merge
+  không phải bằng chứng hình ảnh hay bằng chứng máy thật.
+- **Sửa sự thật (2026-09-28):** bản trước của gạch đầu dòng trên gọi tên flow
+  `49-rudi-ai-trong-luong.yaml`. File đó **không có** trong `apps/mobile/.maestro/` và không được viết;
+  §6 và §7.1 gọi cùng tên đó và được giữ nguyên để đọc lịch sử. Luồng AI trong chat được phủ bằng các
+  flow có thật sau:
+  - `30-chat-that.yaml` (nhóm), rẽ theo máy chủ có khoá mô hình hay không vào `_30-ai-co-khoa.yaml` /
+    `_30-ai-khong-khoa.yaml`: chip trên nút gửi, «Xem», tin `@Rủ Đi` là tin thường, câu trả lời là tin
+    trả lời ký «Rủ Đi AI · đọc N tin», hoặc câu nói thật khi không có khoá;
+  - `40-ai-plan.yaml` (chỉ ở `--otp --ai`): `/plan` trong nhóm ra câu trả lời grounded, harness kiểm
+    sau flow bằng `scripts/kiem_the_ai_sau_40.py`;
+  - `41-nhan-rieng.yaml` (chat hai người, đám bạn), rẽ vào `_41-ai-hai-nguoi-co-khoa.yaml` /
+    `_41-ai-hai-nguoi-khong-khoa.yaml`: như nhóm, chữ viết cho hai người, khay có «Tờ hẹn» mà không
+    có «Tờ giấy»;
+  - `47-to-giay-hai-nguoi.yaml`: thang đồng ý tới cặp đôi (§8.4), hàng mời trong chat của đám bạn,
+    hàng ghim «Tờ giấy» chỉ khi cả hai đã bật «Một đôi».
+  - Canary «bỏ chip thì flow 49 đỏ» của §6 đọc thành: bỏ chip thì `_30-ai-*` và `_41-ai-hai-nguoi-*`
+    đỏ ở bước chờ chữ của chip. Chưa flow nào ở trên chạy trên máy thật; cách chạy ở
+    `docs/claude/2026-09-28/chay-may-that.md`.
 - §7.3 (giá cuốn chiếu cho app cũ) và §7.4 (tin @ có thể không được trả lời mà không có dấu hiệu) vẫn
   nguyên là giá và khoảng hở đã biết.
 
