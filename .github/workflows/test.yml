@@ -282,12 +282,22 @@ jobs:
   # it needs a Milvus (the script starts the pinned v3.0.2 image) AND a
   # Qwen3-Reranker served at MOBILE_TEST_RERANK_URL, and no hosted runner has
   # the reranker (its weights are not an image the script may pull). So it
-  # runs only on a self-hosted runner that declares both; where none is
-  # registered the job waits for one -- it is never reported green without
-  # having run. Inside the job a missing service, a skip or a missing
-  # sentinel is red.
+  # runs only on a self-hosted runner that declares both. Inside the job a
+  # missing service, a skip or a missing sentinel is red.
+  #
+  # And it is only SCHEDULED when the repository says such a runner exists:
+  # repository variable MILVUS_RUNNER set to `true` (Settings -> Secrets and
+  # variables -> Actions -> Variables). Without that gate the job sat
+  # «Queued» forever on every PR (PR #654, 2026-09-28): this repository has no
+  # runner with these labels, so nothing ever picked it up and the check never
+  # finished. With the variable unset GitHub reports the job SKIPPED -- a
+  # visible grey, never a green -- and the tier runs by hand with
+  # scripts/go_milvus_tier.sh (gate.sh stage `go-milvus`). Registering the
+  # runner and setting the variable is the whole switch back on; see
+  # docs/claude/2026-09-25/con-thieu-ban-tu-lam.md.
   milvus:
     name: Milvus retrieval and ingestion tier (needs Milvus and a reranker)
+    if: vars.MILVUS_RUNNER == 'true'
     runs-on: [self-hosted, milvus, reranker]
     timeout-minutes: 60
     steps:

@@ -42,7 +42,7 @@ Hai cờ engine vẫn mặc định `brain` (Python cũ): người dùng chưa t
 | Sidecar | Build image `services/ai-infer` (Dockerfile đã ghim digest, chưa build lần nào); `AI_INFER_TOKEN`; phía Go `MOBILE_AI_INFER_URL`, `MOBILE_NEP_MEMORY_KEY`. |
 | Redis riêng cho AI | `save ""`, `appendonly no`, `volatile-ttl`, ACL; `MOBILE_AICTX_REDIS_URL`, `MOBILE_AICTX_KEY`. Stream dùng `MOBILE_REDIS_URL` (compose chưa đặt cho `core`). |
 | RabbitMQ | host production; `MOBILE_AMQP_URL`. |
-| CI | job `milvus` cần runner tự host có Milvus + reranker. |
+| CI | job `milvus` cần runner tự host có nhãn `self-hosted, milvus, reranker` (có Milvus + reranker) **và** biến repo `MILVUS_RUNNER=true` (Settings → Secrets and variables → Actions → Variables). Thiếu biến thì job hiện **Skipped** (xám, không phải xanh) thay vì kẹt «Queued» mãi như trên PR #654 ngày 2026-09-28; khi đó chạy tay `scripts/go_milvus_tier.sh`. Đăng ký runner rồi đặt biến là bật lại. |
 
 ### 2.3 Máy thật và giao diện
 - Kiểm trên iOS/Android: `fetch` có stream thật không; Reduce Motion hệ thống; VoiceOver/TalkBack với chữ
