@@ -303,3 +303,85 @@ func TestPostgresSecondUserReceivesWallChangeWhileThirdCannot(t *testing.T) {
 		t.Fatalf("outsider saw friend-only new post: %d %+v", status, privateWall)
 	}
 }
+
+func TestPostgresManyFriendsReceiveOnePostAndReconnectFromCursor(t *testing.T) {
+	w := newSocialWorld(t)
+	const readers = 8
+	tokens := make([]string, readers)
+	tokens[0] = w.tokens[1]
+	for i := 1; i < readers; i++ {
+		person := socialID(t)
+		tokens[i] = "synthetic-social-" + socialID(t)
+		socialExec(t, w.pool, `INSERT INTO people(id,display_name) VALUES($1,'Synthetic reader')`, person)
+		socialExec(t, w.pool, `INSERT INTO account_sessions(id,person_id,token_digest,issued_via,expires_at) VALUES($1,$2,$3,'genesis',now()+interval '1 day')`, socialID(t), person, auth.TokenDigest(tokens[i]))
+		socialExec(t, w.pool, `INSERT INTO friend_requests(id,requester_id,addressee_id,state,decided_by_id,decided_at) VALUES($1,$2,$3,'accepted',$3,now())`, socialID(t), w.people[0], person)
+	}
+	h := New(w.pool, "prod")
+	runCtx, stop := context.WithCancel(context.Background())
+	defer stop()
+	go h.Run(runCtx)
+	do := func(token, path string) (int, map[string]any) {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		var body map[string]any
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			return rec.Code, map[string]any{"decode_error": err.Error()}
+		}
+		return rec.Code, body
+	}
+	path := "/social/v2/people/" + w.people[0] + "/changes"
+	status, initial := do(tokens[0], path)
+	if status != 200 || initial["next_cursor"] == nil {
+		t.Fatalf("initial cursor: %d %+v", status, initial)
+	}
+	cursor := initial["next_cursor"].(string)
+	type result struct {
+		status int
+		body   map[string]any
+	}
+	received := make(chan result, readers)
+	for _, token := range tokens {
+		go func(token string) {
+			status, body := do(token, path+"?after="+cursor+"&wait=6")
+			received <- result{status, body}
+		}(token)
+	}
+	time.Sleep(250 * time.Millisecond)
+	newPost := socialID(t)
+	start := time.Now()
+	socialExec(t, w.pool, `INSERT INTO posts(id,author_id,audience,body,created_at) VALUES($1,$2,'friends','Shared synthetic outing',now())`, newPost, w.people[0])
+	var nextCursor string
+	for i := 0; i < readers; i++ {
+		select {
+		case got := <-received:
+			events, ok := got.body["events"].([]any)
+			if got.status != 200 || !ok || len(events) != 1 || events[0].(map[string]any)["post_id"] != newPost {
+				t.Fatalf("reader %d missed or duplicated update: %d %+v", i, got.status, got.body)
+			}
+			nextCursor = got.body["next_cursor"].(string)
+		case <-time.After(5 * time.Second):
+			t.Fatalf("reader %d did not receive update", i)
+		}
+	}
+	if elapsed := time.Since(start); elapsed > 3*time.Second {
+		t.Fatalf("eight readers updated after %s, want under three seconds", elapsed)
+	}
+	status, outsider := do(w.tokens[2], path)
+	if status != 200 || len(outsider["events"].([]any)) != 0 {
+		t.Fatalf("outsider saw private activity: %d %+v", status, outsider)
+	}
+	status, empty := do(tokens[0], path+"?after="+nextCursor)
+	if status != 200 || len(empty["events"].([]any)) != 0 {
+		t.Fatalf("reconnect replayed consumed event: %d %+v", status, empty)
+	}
+	status, _ = w.request(t, 1, http.MethodPost, "/social/v2/posts/"+newPost+"/comments", `{"body":"Seen after reconnect"}`)
+	if status != 201 {
+		t.Fatal("comment after reconnect", status)
+	}
+	status, continued := do(tokens[0], path+"?after="+nextCursor)
+	if status != 200 || len(continued["events"].([]any)) != 1 || continued["events"].([]any)[0].(map[string]any)["kind"] != "comment" {
+		t.Fatalf("reconnect lost the next event: %d %+v", status, continued)
+	}
+}

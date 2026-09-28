@@ -12,7 +12,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Canh } from "../../ui/art/Canh";
 import { useCallback, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Image } from "expo-image";
 
@@ -52,6 +52,22 @@ type TrangTuong =
   | { pha: "xong"; bai: BaiTuong[]; conTro: string | null; conNua: boolean }
   | { pha: "hong"; loi: string };
 
+const DAU_AN_KE_CHUYEN: Record<string, string> = {
+  first_checkin: "Một nơi đã thành trang đầu của cuốn sổ.",
+  first_photo: "Tấm ảnh đầu tiên giữ lại điều lời kể dễ bỏ quên.",
+  first_story: "Một khoảnh khắc ngắn đã có người được nghe kể.",
+  first_together: "Con đường này bắt đầu có thêm bước chân.",
+  many_turns: "Một ngày, nhiều lối rẽ, một câu chuyện riêng.",
+  open_map: "Những điểm đến bắt đầu nối thành bản đồ.",
+  photos_remain: "Những tấm ảnh ở lại sau khi chuyến đi khép lại.",
+  storyteller: "Những lời kể ngắn dần thành một hành trình.",
+  again_together: "Một cuộc hẹn nữa đã nối vào cuộc hẹn đầu.",
+  full_house: "Có những ngày vui vì mọi người đều có mặt.",
+  map_becomes_page: "Bản đồ và kỷ niệm cùng kể về một nơi.",
+  shared_memory: "Một kỷ niệm được nhiều người cùng giữ.",
+  whole_journey: "Các lối đi khác nhau gặp nhau ở cuốn sổ này.",
+};
+
 export function HoSoNguoiScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
@@ -75,7 +91,9 @@ export function HoSoNguoiScreen() {
   const [loiChat, setLoiChat] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
   const doiTuongCursor = useRef<string | null>(null);
+  const tuongLanDoc = useRef(0);
   const [dangTaiThem, setDangTaiThem] = useState(false);
+  const [loiTaiThem, setLoiTaiThem] = useState<string | null>(null);
   // ADR-0022 §2.2: on one's own wall, who may comment. Read from `/people/me`
   // (the public profile never carries it) and written with one PATCH.
   const [chinhSach, setChinhSach] = useState<ChinhSachBinhLuan | null>(null);
@@ -146,11 +164,14 @@ export function HoSoNguoiScreen() {
 
   const napTuong = useCallback(async (quiet = false) => {
     if (phien === null || personId === "") return;
+    const lanDoc = ++tuongLanDoc.current;
     if (!quiet) setTuong({ pha: "dang-doc" });
     try {
       const page = await docTrangTuong(personId, phien.person_id);
+      if (lanDoc !== tuongLanDoc.current) return;
       setTuong({ pha: "xong", bai: page.posts, conTro: page.next_cursor, conNua: page.has_more });
     } catch (error) {
+      if (lanDoc !== tuongLanDoc.current) return;
       if (!quiet || (error instanceof ApiError && (error.status === 403 || error.status === 404))) {
         setTuong({ pha: "hong", loi: loiRaChu(error) });
       }
@@ -159,12 +180,17 @@ export function HoSoNguoiScreen() {
 
   const taiThem = async () => {
     if (phien === null || tuong.pha !== "xong" || !tuong.conNua || tuong.conTro === null || dangTaiThem) return;
+    const lanDoc = tuongLanDoc.current;
     setDangTaiThem(true);
+    setLoiTaiThem(null);
     try {
       const page = await docTrangTuong(personId, phien.person_id, tuong.conTro);
-      setTuong({ pha: "xong", bai: ghepTrangTuong(tuong.bai, page.posts), conTro: page.next_cursor, conNua: page.has_more });
+      if (lanDoc !== tuongLanDoc.current) return;
+      setTuong((current) => current.pha === "xong"
+        ? { pha: "xong", bai: ghepTrangTuong(current.bai, page.posts), conTro: page.next_cursor, conNua: page.has_more }
+        : current);
     } catch (error) {
-      setTuong({ pha: "hong", loi: loiRaChu(error) });
+      if (lanDoc === tuongLanDoc.current) setLoiTaiThem(loiRaChu(error));
     } finally {
       setDangTaiThem(false);
     }
@@ -192,7 +218,12 @@ export function HoSoNguoiScreen() {
         }
       };
       void watch();
-      return () => { active = false; };
+      const foreground = AppState.addEventListener("change", (state) => {
+        if (state !== "active") return;
+        doiTuongCursor.current = null;
+        void Promise.all([napHoSo(true), napHuyHieu(true), napTuong(true), napChinhSach()]);
+      });
+      return () => { active = false; foreground.remove(); };
     }, [napHoSo, napHuyHieu, napTuong, napChinhSach, personId, phien]),
   );
 
@@ -263,15 +294,22 @@ export function HoSoNguoiScreen() {
             )}
             {huyHieu.length > 0 ? (
               <View style={[styles.huyHieu, { borderTopColor: colors.lineStrong }]}>
-                <Text style={[typography.label, { color: colors.inkSoft }]}>Dấu ấn mang theo</Text>
-                <View style={styles.huyHieuHang}>
-                  {huyHieu.map((badge) => (
+                <Text style={[typography.label, { color: colors.inkSoft }]}>Dấu ấn chọn giữ trên bìa sổ</Text>
+                <View style={styles.huyHieuDau}>
+                  <BadgeArt badgeId={huyHieu[0].id} label={BADGE_TITLES[huyHieu[0].id] ?? "Huy hiệu hành trình"} size={72} state="unlocked" />
+                  <View style={styles.huyHieuLoi}>
+                    <Text style={[typography.title, { color: colors.ink }]}>{BADGE_TITLES[huyHieu[0].id] ?? "Huy hiệu hành trình"}</Text>
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>{DAU_AN_KE_CHUYEN[huyHieu[0].id] ?? "Một dấu mốc được chọn để kể cùng bạn."}</Text>
+                  </View>
+                </View>
+                {huyHieu.length > 1 ? <View style={styles.huyHieuHang}>
+                  {huyHieu.slice(1).map((badge) => (
                     <View key={badge.id} style={styles.huyHieuMot}>
                       <BadgeArt badgeId={badge.id} label={BADGE_TITLES[badge.id] ?? "Huy hiệu hành trình"} size={54} state="unlocked" />
                       <Text numberOfLines={2} style={[typography.caption, { color: colors.ink, textAlign: "center" }]}>{BADGE_TITLES[badge.id] ?? "Huy hiệu hành trình"}</Text>
                     </View>
                   ))}
-                </View>
+                </View> : null}
               </View>
             ) : null}
             {hoSo.hoSo.relation === "self" ? <RudiButton compact full={false} icon="map-outline" label="Xem hành trình" onPress={() => router.push("/achievements")} variant="ghost" /> : null}
@@ -393,6 +431,7 @@ export function HoSoNguoiScreen() {
                 </View>
               ))}
               {tuong.conNua ? <RudiButton label="Xem những trang trước" loading={dangTaiThem} onPress={() => void taiThem()} variant="outline" /> : null}
+              {loiTaiThem ? <Text style={[typography.caption, { color: colors.warn }]}>{loiTaiThem}</Text> : null}
             </View>
           ) : null}
         </>
@@ -413,6 +452,8 @@ const styles = StyleSheet.create({
   dauMoc: { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 5 },
   trichDan: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 4 },
   huyHieu: { gap: 10, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 14 },
+  huyHieuDau: { flexDirection: "row", alignItems: "center", gap: 14 },
+  huyHieuLoi: { flex: 1, gap: 4 },
   huyHieuHang: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   huyHieuMot: { width: 72, alignItems: "center", gap: 5 },
   khoiChat: { gap: 6, marginTop: 4 },

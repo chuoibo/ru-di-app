@@ -3,6 +3,7 @@ package profilemedia
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,10 @@ import (
 
 func TestProfileVideoUsesOneCreditAndKeepsFilePrivate(t *testing.T) {
 	pool, person := mediaFixture(t)
+	playable, err := base64.StdEncoding.DecodeString(playableMP4Base64)
+	if err != nil {
+		t.Fatal(err)
+	}
 	imageID, err := NewJobID(person, testKey)
 	if err != nil {
 		t.Fatal(err)
@@ -25,10 +30,10 @@ func TestProfileVideoUsesOneCreditAndKeepsFilePrivate(t *testing.T) {
 		}
 		if strings.HasPrefix(r.URL.Path, "/v1/media/") && strings.HasSuffix(r.URL.Path, "/file") {
 			w.Header().Set("Content-Type", "video/mp4")
-			_, _ = w.Write([]byte("\x00\x00\x00\x18ftypisom\x00\x00\x00\x00isom"))
+			_, _ = w.Write(playable)
 			return
 		}
-		_, _ = w.Write([]byte(`{"trang_thai":"xong","so_byte":20}`))
+		_, _ = w.Write([]byte(`{"trang_thai":"xong","so_byte":1547}`))
 	}))
 	defer server.Close()
 	h := New(pool, "dev", Proxy{URL: server.URL, Token: "proxy-secret", PersonKey: testKey, Client: server.Client()})

@@ -3,6 +3,7 @@ package profilemedia
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"io"
@@ -281,8 +282,126 @@ func (h *Handler) status(w http.ResponseWriter, r *http.Request) {
 	respond(w, http.StatusOK, map[string]any{"job_id": job.ID, "status": job.Status, "kind": job.Kind})
 }
 
+// validMP4 checks a complete, non-fragmented H.264/H.265 container, not codec decoding.
 func validMP4(content []byte, mediaType string) bool {
-	return len(content) >= 12 && mediaType == "video/mp4" && string(content[4:8]) == "ftyp"
+	if mediaType != "video/mp4" {
+		return false
+	}
+	boxes, ok := mp4Boxes(content)
+	if !ok || len(boxes) < 3 || boxes[0].kind != "ftyp" || len(boxes[0].data) < 8 {
+		return false
+	}
+	var video, samples bool
+	for _, box := range boxes {
+		switch box.kind {
+		case "moov":
+			video = video || mp4VideoTrack(box.data)
+		case "mdat":
+			samples = samples || len(box.data) > 0
+		}
+	}
+	return video && samples
+}
+
+type mp4Box struct {
+	kind string
+	data []byte
+}
+
+func mp4Boxes(content []byte) ([]mp4Box, bool) {
+	var boxes []mp4Box
+	for len(content) > 0 {
+		if len(content) < 8 {
+			return nil, false
+		}
+		size := uint64(binary.BigEndian.Uint32(content[:4]))
+		header := uint64(8)
+		if size == 1 {
+			if len(content) < 16 {
+				return nil, false
+			}
+			size = binary.BigEndian.Uint64(content[8:16])
+			header = 16
+		} else if size == 0 {
+			size = uint64(len(content))
+		}
+		if size < header || size > uint64(len(content)) {
+			return nil, false
+		}
+		boxes = append(boxes, mp4Box{kind: string(content[4:8]), data: content[header:size]})
+		content = content[size:]
+	}
+	return boxes, true
+}
+
+func mp4VideoTrack(content []byte) bool {
+	children, ok := mp4Boxes(content)
+	if !ok {
+		return false
+	}
+	for _, track := range children {
+		if track.kind != "trak" {
+			continue
+		}
+		trackChildren, ok := mp4Boxes(track.data)
+		if !ok {
+			continue
+		}
+		for _, media := range trackChildren {
+			if media.kind != "mdia" {
+				continue
+			}
+			mediaChildren, ok := mp4Boxes(media.data)
+			if !ok {
+				continue
+			}
+			var isVideo, hasSamples bool
+			for _, child := range mediaChildren {
+				switch child.kind {
+				case "hdlr":
+					isVideo = len(child.data) >= 12 && string(child.data[8:12]) == "vide"
+				case "minf":
+					hasSamples = mp4HasVideoSamples(child.data)
+				}
+			}
+			if isVideo && hasSamples {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func mp4HasVideoSamples(content []byte) bool {
+	children, ok := mp4Boxes(content)
+	if !ok {
+		return false
+	}
+	for _, child := range children {
+		if child.kind != "stbl" {
+			continue
+		}
+		table, ok := mp4Boxes(child.data)
+		if !ok {
+			return false
+		}
+		var codec, samples bool
+		for _, box := range table {
+			switch box.kind {
+			case "stsd":
+				if len(box.data) >= 16 && binary.BigEndian.Uint32(box.data[4:8]) > 0 {
+					switch string(box.data[12:16]) {
+					case "avc1", "avc3", "hvc1", "hev1":
+						codec = true
+					}
+				}
+			case "stsz":
+				samples = len(box.data) >= 12 && binary.BigEndian.Uint32(box.data[8:12]) > 0
+			}
+		}
+		return codec && samples
+	}
+	return false
 }
 
 func (h *Handler) file(w http.ResponseWriter, r *http.Request) {

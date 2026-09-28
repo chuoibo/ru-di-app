@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AppState, FlatList, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, attemptFor, type Attempt, type PostAudience } from "../../../api";
@@ -43,6 +43,7 @@ export function BaiChiTietScreen() {
   const actor = phien?.person_id ?? "";
   const attempts = useRef<Record<string, Attempt>>({});
   const changeCursor = useRef<string | null>(null);
+  const commentRead = useRef(0);
   const [post, setPost] = useState<PostState>({ phase: "loading" });
   const [comments, setComments] = useState<CommentState>({ phase: "loading" });
   const [draft, setDraft] = useState("");
@@ -80,18 +81,30 @@ export function BaiChiTietScreen() {
 
   const loadComments = useCallback(async (silent = false) => {
     if (!actor || !postId) return;
+    const read = ++commentRead.current;
     if (!silent) setComments({ phase: "loading" });
     try {
       const page = await docBinhLuanTuong(postId, actor);
+      if (read !== commentRead.current) return;
       setComments({ phase: "ready", items: page.comments, next: page.next_cursor, more: page.has_more });
     } catch (cause) {
+      if (read !== commentRead.current) return;
       if (!silent || (cause instanceof ApiError && (cause.status === 403 || cause.status === 404))) {
         setComments({ phase: "error", message: loiRaChu(cause) });
       }
     }
   }, [actor, postId]);
 
-  useFocusEffect(useCallback(() => { void loadPost(); void loadComments(); }, [loadPost, loadComments]));
+  useFocusEffect(useCallback(() => {
+    void loadPost();
+    void loadComments();
+    const foreground = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      changeCursor.current = null;
+      void Promise.all([loadPost(true), loadComments(true)]);
+    });
+    return () => foreground.remove();
+  }, [loadPost, loadComments]));
 
   const wallOwner = (post.phase === "ready" && post.post.author_id) || "";
   useFocusEffect(useCallback(() => {
@@ -150,12 +163,19 @@ export function BaiChiTietScreen() {
 
   const loadMore = async () => {
     if (comments.phase !== "ready" || !comments.more || !comments.next || busy) return;
+    const read = commentRead.current;
     setBusy(true);
     try {
       const page = await docBinhLuanTuong(postId, actor, comments.next);
-      const known = new Set(comments.items.map((item) => item.id));
-      setComments({ phase: "ready", items: [...comments.items, ...page.comments.filter((item) => !known.has(item.id))], next: page.next_cursor, more: page.has_more });
-    } catch (cause) { setError(loiRaChu(cause)); }
+      if (read !== commentRead.current) return;
+      setComments((current) => {
+        if (current.phase !== "ready") return current;
+        const known = new Set(current.items.map((item) => item.id));
+        return { phase: "ready", items: [...current.items, ...page.comments.filter((item) => !known.has(item.id))], next: page.next_cursor, more: page.has_more };
+      });
+    } catch (cause) {
+      if (read === commentRead.current) setError(loiRaChu(cause));
+    }
     finally { setBusy(false); }
   };
 

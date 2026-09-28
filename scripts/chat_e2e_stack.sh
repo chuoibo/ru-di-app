@@ -65,6 +65,7 @@ docker run -d --rm --name "$run-api" --health-cmd "python -c \"import urllib.req
 printf '%s\n' "$run-api" >> "$work/containers"
 (cd "$ROOT/services/core" && go build -o "$work/core" ./cmd/core)
 MOBILE_CHAT_CHANGES_CANDIDATE=1 MOBILE_DATABASE_URL="$dsn" "$work/core" migrate-chat-candidate >>"$work/migrate.log" 2>&1
+MOBILE_DATABASE_URL="$dsn" "$work/core" migrate-profile >>"$work/migrate.log" 2>&1
 docker run -d --rm --name "$run-core" --health-cmd "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:$core_port/healthz', timeout=2)\"" --network host --user "$(id -u):$(id -g)" -v "$work:$work" -e MOBILE_CORE_LISTEN="127.0.0.1:$core_port" -e MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$live_port" -e MOBILE_PYTHON_UPSTREAM="http://127.0.0.1:$api_port" -e MOBILE_AUTH_MODE=prod -e MOBILE_DATABASE_URL="$dsn" -e MOBILE_PERSON_ID_KEY="$identity" -e MOBILE_INTERNAL_TOKEN="$internal" -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 -e MOBILE_MEDIA_ROOT="$work/media" -e MOBILE_CORE_CANDIDATE_ROUTES=ported -e MOBILE_CHAT_CHANGES_CANDIDATE=1 ${brain_env:+-e MOBILE_BRAIN_URL="$CHAT_E2E_BRAIN_URL"} "$image" "$work/core" serve >/dev/null
 printf '%s\n' "$run-core" >> "$work/containers"
 for _ in $(seq 1 60); do curl -fsS "http://127.0.0.1:$core_port/healthz" >/dev/null 2>&1 && break; sleep 1; done

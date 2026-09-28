@@ -566,6 +566,30 @@
       "reason": "Hình huy hiệu hành trình tổng hợp bằng Codex image_gen, chỉ dùng mô tả giả lập; không chứa ảnh hoặc dữ liệu người tham gia. Nguồn và prompt ở docs/design/huy-hieu-ho-so.md và docs/assets/profile-badges/prompts.json. Ghim digest để mọi thay đổi binary được xem lại."
     },
     {
+      "path": "docs/assets/profile-native-qa/profile-dark.png",
+      "sha256": "911fa4579f196bad4277d5846c694a60d36441d0c5ace6b85a02b6c26a212d58",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp Android của nhánh hồ sơ, đã mở và xem trực tiếp. Chỉ chứa tài khoản Minh Anh và nội dung tổng hợp từ roster seed của repo; không chứa dữ liệu người tham gia thật. Ghim digest để mọi thay đổi byte được review lại. Bối cảnh ở docs/testing/profile-final-pr-2026-09-28.md."
+    },
+    {
+      "path": "docs/assets/profile-native-qa/profile-light.png",
+      "sha256": "3f037cd84d914afb7bb46f7088a11b947c3e057e5ef9b1484e347c6055fb6d22",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp Android của nhánh hồ sơ, đã mở và xem trực tiếp. Chỉ chứa tài khoản Minh Anh và nội dung tổng hợp từ roster seed của repo; không chứa dữ liệu người tham gia thật. Ghim digest để mọi thay đổi byte được review lại. Bối cảnh ở docs/testing/profile-final-pr-2026-09-28.md."
+    },
+    {
+      "path": "docs/assets/profile-native-qa/wall-resume.png",
+      "sha256": "4c6899d0fae6002a82d77f2f2ea6427ab942530aa56b71873ade94b2af917224",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp Android của nhánh hồ sơ, đã mở và xem trực tiếp. Chỉ chứa tài khoản Minh Anh và nội dung tổng hợp từ roster seed của repo; không chứa dữ liệu người tham gia thật. Ghim digest để mọi thay đổi byte được review lại. Bối cảnh ở docs/testing/profile-final-pr-2026-09-28.md."
+    },
+    {
       "path": "docs/assets/so-do-1-vong-lap.svg",
       "sha256": "c88c3d3e83bc77c8da561a53cbb42805bbe18d0aa37d12bc4c3d325625aad909",
       "rules": [
@@ -873,11 +897,11 @@
     },
     {
       "path": "services/core/internal/profilemedia/handler_postgres_test.go",
-      "sha256": "e2782da143a1d4d88144f9a32d65d6a1f7741c01e589c1153f4cd76f18806d5d",
+      "sha256": "2cea79e6bd2c0e2c50d508feedc8c70370b56a33acce9c4253fbdc3755659ee4",
       "rules": [
         "long-number"
       ],
-      "reason": "Test chỉ dùng UUID và attempt ID tổng hợp để chứng minh hành vi nhiều tài khoản, phân quyền và idempotency; không có dữ liệu người tham gia. Ghim digest toàn file để mọi lần sửa đều buộc review lại phép miễn long-number."
+      "reason": "Test chỉ dùng UUID và attempt ID tổng hợp để chứng minh hành vi nhiều tài khoản, phân quyền và idempotency; không có dữ liệu người tham gia. Ghim digest toàn file để mọi lần sửa đều buộc review lại phép miễn long-number. Ghim lại khi thay fixture header bằng MP4 H.264 màu tổng hợp; không có dữ liệu người tham gia."
     },
     {
       "path": "services/core/internal/profilemedia/identity_test.go",
@@ -894,6 +918,14 @@
         "long-number"
       ],
       "reason": "Test chỉ dùng UUID và attempt ID tổng hợp để chứng minh hành vi nhiều tài khoản, phân quyền và idempotency; không có dữ liệu người tham gia. Ghim digest toàn file để mọi lần sửa đều buộc review lại phép miễn long-number."
+    },
+    {
+      "path": "services/core/internal/profilemedia/mp4_test.go",
+      "sha256": "a4b651959fc09ef9055bfc76ed2a7b6e11f8e451496fbe8c9acac0d1a1ae7920",
+      "rules": [
+        "long-base64-token"
+      ],
+      "reason": "Fixture MP4 H.264 một frame màu tổng hợp 64 x 64, dựng bằng ffmpeg và đã giải mã lại thành công. Base64 là nội dung media tổng hợp của test, không phải credential hay dữ liệu người tham gia. Ghim digest để mọi lần thay fixture phải review lại."
     },
     {
       "path": "services/core/internal/profilemedia/proxy_test.go",
