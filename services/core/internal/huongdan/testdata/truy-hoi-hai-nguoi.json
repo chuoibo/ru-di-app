@@ -1,0 +1,18 @@
+{
+  "ghi_chu": "Bộ vàng thứ tư (P4, quyết định chủ sản phẩm 2026-09-28): chat hai người thường là «đám bạn», có Rủ Đi AI và công cụ y như nhóm («@Rủ Đi», «/plan», «/chia-bill», «Tờ hẹn», chốt thành kèo); chỉ khi cả hai đã bật «Một đôi» trong sổ đôi thì chat mới là «cặp đôi», có thêm «Tờ giấy» (dòng ghim, nút trong khay) và sticker đôi. Câu hỏi về AI và công cụ trong chat hai người, và về Tờ giấy / Một đôi, hỏi từ màn chat hoặc màn Tin nhắn. Viết và băm sha256 TRƯỚC khi sửa chữ sổ tay theo mô hình hai lớp, đo trên chữ cũ ngay sau đó; không câu nào được sửa để khớp kết quả. Cùng định dạng với truy-hoi-so-tay.json: man là màn đang đứng; dung là id mục trả lời đúng theo mô hình mới; go là co_dau, khong_dau hoặc teen.",
+  "cau": [
+    {"hoi": "chat hai người có gọi được Rủ Đi AI không", "man": "groups/[id]/chat", "dung": ["chat-nhom/nho-ru-di-ai-ngay-trong-nhom"], "go": "co_dau"},
+    {"hoi": "dùng /plan trong chat riêng với một người bạn", "man": "groups/[id]/chat", "dung": ["chat-nhom/nho-ru-di-ai-ngay-trong-nhom"], "go": "co_dau"},
+    {"hoi": "chia bill voi 1 dua ban trong chat rieng dc ko", "man": "messages", "dung": ["chat-nhom/nho-ru-di-ai-ngay-trong-nhom"], "go": "teen"},
+    {"hoi": "tao to hen khi chat hai nguoi", "man": "groups/[id]/chat", "dung": ["chat-nhom/mo-khay-cong-cu"], "go": "khong_dau"},
+    {"hoi": "khay dấu cộng trong chat hai người có những gì", "man": "groups/[id]/chat", "dung": ["chat-nhom/mo-khay-cong-cu"], "go": "co_dau"},
+    {"hoi": "sao chat voi ny ko thay to giay", "man": "groups/[id]/chat", "dung": ["to-giay/mo-to-giay"], "go": "teen"},
+    {"hoi": "bat mot doi o dau", "man": "messages", "dung": ["to-giay/cai-dat-so"], "go": "khong_dau"},
+    {"hoi": "mở tờ giấy từ cài đặt cuộc trò chuyện", "man": "groups/[id]/chat", "dung": ["to-giay/mo-to-giay"], "go": "co_dau"},
+    {"hoi": "sticker cap doi o dau z", "man": "groups/[id]/chat", "dung": ["chat-nhom/mo-khay-cong-cu"], "go": "teen"},
+    {"hoi": "nhờ AI lên kèo trong chat với một người bạn", "man": "messages", "dung": ["chat-nhom/nho-ru-di-ai-ngay-trong-nhom"], "go": "co_dau"},
+    {"hoi": "goi ru di trong tin nhan rieng", "man": "messages", "dung": ["chat-nhom/nho-ru-di-ai-ngay-trong-nhom"], "go": "khong_dau"},
+    {"hoi": "chot keo trong chat hai nguoi", "man": "groups/[id]/chat", "dung": ["chat-nhom/sua-to-hen-chung-cung-ca-hoi"], "go": "khong_dau"},
+    {"hoi": "ghim tờ giấy lên đầu chat hai người", "man": "groups/[id]/chat", "dung": ["to-giay/mo-to-giay"], "go": "co_dau"}
+  ]
+}

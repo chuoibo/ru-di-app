@@ -36,16 +36,28 @@ import (
 //     engine path is the MODEL's query; a person stood in for the router
 //     here, wrote them before measuring, and a T3 run with the real router
 //     replaces this set.
+//
+//   - duongHaiNguoi (P4, 13 questions, 2026-09-28): the owner's two classes
+//     of chat. Every group and every ordinary two-person chat has Rủ Đi AI
+//     and the same tools; only a two-person chat where both turned on «Một
+//     đôi» adds «Tờ giấy». Questions about the AI and the tools in a
+//     two-person chat and about Tờ giấy / Một đôi, asked from the chat or the
+//     Messages screen; the right sections are those of the two-class manual.
+//     Written, hashed and measured on the old one-class text before it was
+//     rewritten.
 const (
 	duongVang    = "testdata/truy-hoi-so-tay.json"
 	duongManKhac = "testdata/truy-hoi-man-khac.json"
 	duongTruyVan = "testdata/truy-hoi-truy-van-model.json"
+	// duongHaiNguoi is the P4 set of two-person chat questions.
+	duongHaiNguoi = "testdata/truy-hoi-hai-nguoi.json"
 )
 
 var bamBoVang = map[string]string{
-	duongVang:    "1f4768f93fd533b238052e5c1325e79f707449b4dcc5ddc8b9f2cc4338788f4e",
-	duongManKhac: "f3287aedd0498261459133db8a2ba182b0d356257e0f032c4d0656d6c241dfc2",
-	duongTruyVan: "2b90cdaa1c4574fbf7110967a73df15cd5b7bbae08cea0f4b30b08c4b7620119",
+	duongVang:     "1f4768f93fd533b238052e5c1325e79f707449b4dcc5ddc8b9f2cc4338788f4e",
+	duongManKhac:  "f3287aedd0498261459133db8a2ba182b0d356257e0f032c4d0656d6c241dfc2",
+	duongTruyVan:  "2b90cdaa1c4574fbf7110967a73df15cd5b7bbae08cea0f4b30b08c4b7620119",
+	duongHaiNguoi: "b8ccd398bf8183415d36c58ce01110685c7792b53a4b72c08d9f93690c428f87",
 }
 
 // docTruyVan reads duongTruyVan as golden questions (go "co_dau").
@@ -226,8 +238,13 @@ func TestBoVangHopLe(t *testing.T) {
 			}
 		}
 	}
+	haiNguoi := docBoVang(t, duongHaiNguoi)
+	if len(haiNguoi) < 12 {
+		t.Fatalf("bộ hai người có %d câu, cần ít nhất 12", len(haiNguoi))
+	}
+	kiemBoVang(t, duongHaiNguoi, haiNguoi)
 	seen := map[string]bool{}
-	for _, c := range append(append([]cauVang{}, cau...), khac...) {
+	for _, c := range append(append(append([]cauVang{}, cau...), khac...), haiNguoi...) {
 		if seen[c.Hoi] {
 			t.Errorf("câu trùng: %q", c.Hoi)
 		}
@@ -290,6 +307,13 @@ func TestBoVangKhongSua(t *testing.T) {
 // 0.8667 → 0.9333), MRR 0.7658 → 0.7665 (co_dau 0.7556 → 0.7578); «moi nguoi
 // ay di choi rieng» now hits, two miss.
 //
+// duongHaiNguoi added (P4, 2026-09-28), pinned on the manual as it was when
+// the set was written, the one-class text that says a two-person chat only
+// asks and has «Tờ giấy» in its tray: recall@5 0.7692, MRR 0.4635 (co_dau
+// 0.8333 / 0.5333, khong_dau 0.5000 / 0.4062, teen 1.0000 / 0.4000); three
+// miss. It is the baseline the two-class rewrite is graded against, so it is
+// held below the bar until that rewrite (chuaDatNguong).
+//
 // The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
 // duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
 // 0.3526 (teen 0.8214 / 0.2905).
@@ -309,9 +333,19 @@ var vangGhim = map[string]map[string][2]string{
 		"khong_dau": {"1.0000", "0.8873"},
 		"teen":      {"0.9286", "0.6293"},
 	},
+	duongHaiNguoi: {
+		"":          {"0.7692", "0.4635"},
+		"co_dau":    {"0.8333", "0.5333"},
+		"khong_dau": {"0.5000", "0.4062"},
+		"teen":      {"1.0000", "0.4000"},
+	},
 }
 
 const nguongRecall = 0.90
+
+// chuaDatNguong names the sets pinned as a baseline on a text they were
+// written to grade: pinned, but not yet held to nguongRecall.
+var chuaDatNguong = map[string]bool{duongHaiNguoi: true}
 
 func TestTruyHoiVang(t *testing.T) {
 	for duong, theoNhom := range vangGhim {
@@ -322,7 +356,7 @@ func TestTruyHoiVang(t *testing.T) {
 				for _, x := range r.truot {
 					t.Logf("%s miss: %s", duong, x)
 				}
-				if r.recall5 < nguongRecall {
+				if r.recall5 < nguongRecall && !chuaDatNguong[duong] {
 					t.Errorf("%s: recall@5 %.4f is under the bar %.2f", duong, r.recall5, nguongRecall)
 				}
 			}
