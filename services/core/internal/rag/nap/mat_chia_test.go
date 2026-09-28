@@ -161,3 +161,18 @@ func TestDoanNhieuManhIDVaNguCanh(t *testing.T) {
 		t.Fatalf("MoiIDQuan has %d ids", len(all))
 	}
 }
+
+// M7: a centroid is not a point; two places sharing a ward centroid are
+// never merged by distance, while a street-level point still counts.
+func TestTamPhuongKhongLaToaDo(t *testing.T) {
+	lat, lng := 10.78, 106.69
+	for prec, want := range map[string]bool{"ward_centroid": false, "province_centroid": false, "street": true, "rooftop": true} {
+		p := placeFeed(t, "Quán.", map[string]any{})
+		pr := prec
+		p.Lat, p.Lng, p.GeoPrecision = &lat, &lng, &pr
+		h, _ := DungHoSo(p)
+		if h.CoToaDo != want {
+			t.Errorf("%s: CoToaDo %v, want %v", prec, h.CoToaDo, want)
+		}
+	}
+}

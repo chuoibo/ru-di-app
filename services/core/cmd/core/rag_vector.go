@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -349,10 +350,23 @@ func ragReview(ctx context.Context, pool nap.CSDL, c ragVectorCommand, stdout, s
 // missing or stale, through the real model (GEMINI_API_KEY), at most
 // tranGoi calls, counted by llm.Dem. No key: it refuses; there is no stub
 // for a command that writes production rows.
+// EnvRagEnrichSongSong overrides, for one enrichment run, how many batches
+// go to the model at once (the committed lam_giau.song_song otherwise).
+// agy-proxy runs at most 8 per client (vnlocal HANDOFF-KET-NOI.md §5.6); a
+// 9th would only queue there.
+const EnvRagEnrichSongSong = "MOBILE_RAG_ENRICH_SONG_SONG"
+
 func ragEnrich(ctx context.Context, getenv func(string) string, pool nap.CSDL, tranGoi int, stdout, stderr io.Writer) int {
 	cfg, err := nap.MacDinh()
 	if err != nil {
 		return ragOut(stdout, stderr, nil, err)
+	}
+	if raw := strings.TrimSpace(getenv(EnvRagEnrichSongSong)); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 1 || n > 8 {
+			return ragOut(stdout, stderr, nil, fmt.Errorf("%s must be 1..8", EnvRagEnrichSongSong))
+		}
+		cfg.LamGiau.SongSong = n
 	}
 	m, err := llm.GeminiFromEnv(ctx, getenv)
 	if err != nil {

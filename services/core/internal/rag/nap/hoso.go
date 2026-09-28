@@ -81,8 +81,11 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 		GiaMin: p.PriceMinVND, GiaMax: p.PriceMaxVND,
 		Nguon: p.Source, CachLy: len(report.CachLy),
 	}
-	if p.Lat != nil && p.Lng != nil {
-		h.Lat, h.Lng, h.CoToaDo = *p.Lat, *p.Lng, true
+	// Only a point that is the place (rooftop, street) counts (M7,
+	// repo.Place.MappablePoint): two cafés of one ward share the ward's
+	// centroid, sit 0 m apart, and dedupe would merge them into one.
+	if lat, lng := p.MappablePoint(); lat != nil && lng != nil {
+		h.Lat, h.Lng, h.CoToaDo = *lat, *lng, true
 	}
 	h.Ten = nfc(catRune(chu(safe, "name"), maxTen))
 	h.License = chu(safe, "license")
