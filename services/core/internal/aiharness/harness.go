@@ -142,6 +142,11 @@ type Turn struct {
 	// ThanhVien are the room's active members, the caller among them, under
 	// the roster's labels.
 	ThanhVien []ThanhVienNhom
+	// Cap says the room is a chat of two (contexts.kind='pair', read by the
+	// worker): the turn gets the common tools only (tools.ChoCap), no
+	// group read port, and no split draft (a pair's money request gets
+	// cau.CapKhongChamTien).
+	Cap bool
 }
 
 // Lanes of a room (chat_ai_invocations.lane).

@@ -114,8 +114,10 @@ func (h *Handler) suKienNhom(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return dongSSE{}, "", err
 		}
-		if g.kind != "group" {
-			return dongSSE{}, "", &denied{409, "group_plan_only"}
+		// Asked again at every re-check of an open stream: a pair blocked
+		// while its answer is being written stops being streamed.
+		if err = phongAi(ctx, tx, g); err != nil {
+			return dongSSE{}, "", err
 		}
 		d := dongSSE{j: work{id: id, conversation: room}}
 		err = tx.QueryRow(ctx, `SELECT scope,lane,status,code,message_id::text FROM chat_ai_invocations WHERE id=$1 AND context_id=$2 AND person_id=$3 AND membership_id=$4`, id, room, g.person, g.member).Scan(&d.j.scope, &d.j.lane, &d.status, &d.code, &d.message)

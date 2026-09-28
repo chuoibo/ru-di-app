@@ -224,7 +224,7 @@ func readBody(w http.ResponseWriter, r *http.Request, v any, tran int64) error {
 }
 
 type grant struct {
-	person, member, kind string
+	room, person, member, kind string
 	// lane is the room's transport as the server finds it, never as a client
 	// says it: "legacy" for every room this endpoint serves today, because a
 	// v2 room is refused below before anything is written.
@@ -235,7 +235,7 @@ type grant struct {
 // authority locks in person -> session -> membership -> context order. The same
 // rows are held through publication, never through the external inference call.
 func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byte) (grant, error) {
-	g := grant{digest: digest, lane: laneLegacy}
+	g := grant{room: conversation, digest: digest, lane: laneLegacy}
 	if !chatv2.ValidID(conversation) {
 		return g, invalid("invalid_context")
 	}
@@ -270,6 +270,71 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 		}
 	}
 	return g, nil
+}
+
+// The two room kinds the assistant answers in (contexts.kind). A pair is a
+// chat of two; it takes `hoi` only (design 2026-09-28 §2.1): plan, chia_bill,
+// shared drafts and plan promotion stay the group's.
+const (
+	kindGroup = "group"
+	kindPair  = "pair"
+)
+
+// phongAi is the room check every step of an invocation makes after
+// authority: at preflight, at create, on the stream, and again in the
+// worker before it reads and before it publishes. A group passes; a pair
+// passes only while it is still open between its two people (capConMo);
+// any other room kind is refused as before.
+func phongAi(ctx context.Context, tx pgx.Tx, g grant) error {
+	switch g.kind {
+	case kindGroup:
+		return nil
+	case kindPair:
+		return capConMo(ctx, tx, g.room, g.person)
+	}
+	return &denied{409, "group_plan_only"}
+}
+
+// capConMo is chatlegacychange's pair rule (store.go authorize), the same
+// three reads: the other active member exists, their account is not
+// deleted, and the latest friend request between the two that was not
+// declined is not a block. A block can land while a turn runs, so the
+// worker asks again before it reads and before it publishes. It refuses
+// with the code a missing membership gets: a pair closed this way is not a
+// room the caller may call the assistant into.
+func capConMo(ctx context.Context, tx pgx.Tx, room, person string) error {
+	var other, exists string
+	err := tx.QueryRow(ctx, `SELECT person_id FROM memberships WHERE context_id=$1 AND person_id<>$2 AND state='active' AND left_at IS NULL ORDER BY person_id LIMIT 1`, room, person).Scan(&other)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return &denied{403, "membership_required"}
+	}
+	if err != nil {
+		return err
+	}
+	err = tx.QueryRow(ctx, `SELECT id FROM people WHERE id=$1 AND deleted_at IS NULL`, other).Scan(&exists)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return &denied{403, "membership_required"}
+	}
+	if err != nil {
+		return err
+	}
+	var state string
+	err = tx.QueryRow(ctx, `SELECT state FROM friend_requests WHERE ((requester_id=$1 AND addressee_id=$2) OR (requester_id=$2 AND addressee_id=$1)) AND state<>'declined' ORDER BY created_at DESC LIMIT 1`, person, other).Scan(&state)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	if state == "blocked" {
+		return &denied{403, "membership_required"}
+	}
+	return nil
+}
+
+// lenhChoPhong refuses, in a pair, every command but `hoi`.
+func lenhChoPhong(kind, command string) error {
+	if kind == kindPair && command != lenhHoi {
+		return &denied{409, "group_plan_only"}
+	}
+	return nil
 }
 
 // phien resolves a bearer session to the person behind it, locking person then
@@ -351,14 +416,20 @@ func (h *Handler) available(ctx context.Context) bool {
 
 // preflight authenticates before contacting the internal inference service.
 // Mutation handlers authorize again afterwards without holding locks over I/O.
-func (h *Handler) preflight(r *http.Request) error {
+// command is the new invocation's, "" for a retry of a stored one.
+func (h *Handler) preflight(r *http.Request, command string) error {
 	tx, g, err := h.begin(r)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback(r.Context())
-	if g.kind != "group" {
-		return &denied{409, "group_plan_only"}
+	if err = phongAi(r.Context(), tx, g); err != nil {
+		return err
+	}
+	if command != "" {
+		if err = lenhChoPhong(g.kind, command); err != nil {
+			return err
+		}
 	}
 	return tx.Commit(r.Context())
 }
@@ -375,21 +446,31 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
+	// A pair answers only while it is open between its two people: a
+	// blocked pair, or one whose other person is gone, is refused here as on
+	// every other route of the room.
+	if g.kind == kindPair {
+		if err = capConMo(r.Context(), tx, g.room, g.person); err != nil {
+			failure(w, err)
+			return
+		}
+	}
 	if err = tx.Commit(r.Context()); err != nil {
 		failure(w, err)
 		return
 	}
 	// On the Go engine (MOBILE_AI_ENGINE_GROUP=go) the brain is not asked:
 	// the engine was built at startup or `serve` refused to start.
-	enabled := g.kind == "group" && (h.nhomGo || h.available(r.Context()))
-	// `hoi` (the router decides what is asked) runs only on the Go engine.
-	hoiCo := enabled && h.nhomGo
+	enabled := g.kind == kindGroup && (h.nhomGo || h.available(r.Context()))
+	// `hoi` (the router decides what is asked) runs only on the Go engine,
+	// in a group and in a pair alike; plan and chia_bill stay the group's.
+	hoiCo := (enabled || g.kind == kindPair) && h.nhomGo
 	var hoiVi any = "provider_unavailable"
 	if hoiCo {
 		hoiVi = nil
 	}
 	var reason any = "provider_unavailable"
-	if g.kind != "group" {
+	if g.kind != kindGroup {
 		reason = "group_plan_only"
 	}
 	if enabled {
@@ -419,7 +500,7 @@ const (
 
 // aiStream is ai.stream for the room g names.
 func (h *Handler) aiStream(g grant) string {
-	if h.stream == nil || !h.stream.Song() || g.kind != "group" {
+	if h.stream == nil || !h.stream.Song() || (g.kind != kindGroup && g.kind != kindPair) {
 		return aiStreamKhong
 	}
 	// The grant reached here is always the legacy lane (a v2 room is
@@ -507,7 +588,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := h.preflight(r); err != nil {
+	if err := h.preflight(r, in.Command); err != nil {
 		failure(w, err)
 		return
 	}
@@ -519,8 +600,12 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
-	if g.kind != "group" {
-		refuse(w, 409, "group_plan_only")
+	if err = phongAi(r.Context(), tx, g); err != nil {
+		failure(w, err)
+		return
+	}
+	if err = lenhChoPhong(g.kind, in.Command); err != nil {
+		failure(w, err)
 		return
 	}
 	if _, err = tx.Exec(r.Context(), `SELECT pg_advisory_xact_lock(hashtextextended('chat_ai:'||$1,0))`, g.person); err != nil {
@@ -679,7 +764,7 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 		return
 	}
 	if action == "retry" {
-		if err := h.preflight(r); err != nil {
+		if err := h.preflight(r, ""); err != nil {
 			failure(w, err)
 			return
 		}

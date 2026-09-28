@@ -225,10 +225,13 @@ Chủ sản phẩm chốt ngày 2026-09-27. Đây là quyết định của ch�
   người tham gia: câu trả lời là tin trả lời vào tin `@Rủ Đi` (§2).
 - AI không tự đọc gì ngoài phần người gọi kèm (giữ ADR-0036 §2.5 và luật toàn repo): không tự kéo lịch
   sử, gu hay tin chưa được chia sẻ.
-- **1:1 chưa làm.** Ngữ cảnh kind `pair` hiện bị `chatassist` từ chối bằng `409 group_plan_only`, và
-  client không gửi lời nhờ trong cặp. Đó là **lát tiếp theo**, làm trong một PR mới sau khi PR #654
-  vào `main`. Lát đó phải tự chứng minh phần riêng của cặp (sổ đôi, ADR-0027; `chia_gu` chỉ theo
-  ADR-0034) chứ không thừa hưởng bằng chứng của nhóm.
+- **1:1: máy chủ đã mở cho `hoi`, app chưa** (cập nhật 2026-09-28, lát S1 của
+  `docs/claude/2026-09-28/ai-chat-hai-nguoi.md`). Ngữ cảnh kind `pair` nhận lệnh `hoi`; `plan`,
+  `chia_bill`, bản nháp chung và «thành kèo» vẫn chỉ cho nhóm (`409 group_plan_only`). Cặp mà người
+  kia đã xoá tài khoản, đã rời, hoặc một trong hai đã chặn bị từ chối `403` ở route, và worker kiểm lại
+  trước khi đọc và trước khi đăng. Client chưa gửi lời nhờ trong cặp (lát M1). Lát S1 không đọc sổ đôi
+  hay gu; phần riêng của cặp (sổ đôi, ADR-0027; `chia_gu` chỉ theo ADR-0034) khi làm vẫn phải tự chứng
+  minh chứ không thừa hưởng bằng chứng của nhóm.
 
 ### 8.2 Gỡ §7.1 khỏi điều kiện vào main
 
