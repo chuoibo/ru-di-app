@@ -85,6 +85,38 @@ export function HangToGiay({
   );
 }
 
+/**
+ * The slim line a friends' pair gets instead of the pinned paper: only while
+ * the other person's proposal waits for my answer (`hangGhimChat` decides).
+ *
+ * It says the same sentence the couple's row says for the same proposal, and
+ * leads to the same place as the settings row «Tờ giấy của hai mình». There is
+ * no close button on purpose: answering is what dismisses it, on the next read.
+ */
+export function HangLoiDeNghi({
+  deNghi,
+  onPress,
+}: {
+  deNghi: { purpose: "lap_so" | "bat_doi" | "doc_chat"; ten: string };
+  onPress: () => void;
+}) {
+  const { colors } = useRudiTheme();
+  const cau = CAU_DE_NGHI[deNghi.purpose](deNghi.ten);
+  return (
+    <Pressable
+      accessibilityLabel={cau}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.hangGon, { borderColor: colors.line }, pressed && styles.mo]}
+      testID="hang-loi-de-nghi"
+    >
+      <ThuGapBa height={14} width={18} />
+      <Text numberOfLines={2} style={[typography.caption, styles.chu, { color: colors.ink }]}>{cau}</Text>
+      <Ionicons color={colors.inkFaint} name="chevron-forward" size={16} />
+    </Pressable>
+  );
+}
+
 const CAU_DE_NGHI: Record<"lap_so" | "bat_doi" | "doc_chat", (ten: string) => string> = {
   lap_so: (ten) => `${ten} đề nghị lập sổ lời hẹn. Mở để xem và trả lời.`,
   bat_doi: (ten) => `${ten} đề nghị hai bạn là «Một đôi». Mở để xem và trả lời.`,
@@ -93,6 +125,7 @@ const CAU_DE_NGHI: Record<"lap_so" | "bat_doi" | "doc_chat", (ten: string) => st
 
 const styles = StyleSheet.create({
   hang: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  hangGon: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6, paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   mo: { opacity: 0.8 },
   icon: { width: 40, height: 40, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth },
   chu: { flex: 1, gap: 2 },

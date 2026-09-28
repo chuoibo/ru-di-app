@@ -780,8 +780,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           <IconButton accessibilityLabel="Cài đặt nhóm" icon="ellipsis-horizontal" quiet onPress={() => setCaiDatMo(true)} />
         </View>
         {/* The pinned paper is a couple's; a friends' pair reaches the paper
-            (and «Một đôi») from the settings row «Tờ giấy của hai mình». */}
-        {capDoi && phien !== null ? <HangToGiaySong contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
+            (and «Một đôi») from the settings row «Tờ giấy của hai mình», and
+            sees a slim line here only while the other's proposal waits for
+            an answer (`hangGhimChat`). Pairs only: a group has no notebook. */}
+        {nhanRieng && phien !== null ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
         <View style={styles.baoMat}>
           <Ionicons name="lock-open-outline" size={13} color={colors.inkSoft} />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text>

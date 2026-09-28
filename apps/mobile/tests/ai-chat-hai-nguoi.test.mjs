@@ -173,8 +173,13 @@ test("màn chat: không cổng nhanRieng nào chặn AI hay tờ hẹn; phần c
   assert.match(live, /MO_DAU_HOI_AI \+ nhapRef\.current\.text/);
   // The couple's extras read the server's `cap_doi`, and only in a pair.
   assert.match(live, /const capDoi = nhanRieng && laCapDoi\(ai\.capabilities\);/);
-  assert.match(live, /\{capDoi && phien !== null \? <HangToGiaySong /, "hàng ghim «Tờ giấy» chỉ cho cặp đôi");
-  assert.doesNotMatch(live, /nhanRieng && phien !== null \? <HangToGiaySong/);
+  // The notebook read mounts for pairs only (a group 404s); WHICH row it shows
+  // is `hangGhimChat`'s call, so the couple gate travels as a prop.
+  assert.match(live, /\{nhanRieng && phien !== null \? <HangToGiaySong capDoi=\{capDoi\} /, "hàng ghim đọc sổ chỉ ở chat hai người, cặp đôi quyết qua capDoi");
+  assert.doesNotMatch(live, /<HangToGiaySong(?![^>]*capDoi=\{capDoi\})/);
+  const song = readFileSync(join(SRC, "screens", "hai-nguoi", "HangToGiaySong.tsx"), "utf8");
+  assert.match(song, /hangGhimChat\(\{ haiNguoi: true, capDoi, so: so\.so, toiId \}\)/);
+  assert.match(song, /if \(hang === null\) return null;/, "cặp đám bạn không có đề nghị thì không có hàng nào");
   assert.match(live, /onToGiay=\{capDoi \? /, "công cụ «Tờ giấy» trong khay chỉ cho cặp đôi");
   assert.match(live, /<KhaySticker capDoi=\{capDoi\} /, "sticker đôi chỉ cho cặp đôi");
   // Nếp's notebook kind goes through the one module that decides it.
