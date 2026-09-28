@@ -109,15 +109,19 @@ nhìn.
 | `05-khay-dam-ban-390-sang/toi` | Khay đám bạn bốn công cụ một hàng, không có «Tờ giấy». |
 | `06-khay-to-hen-hai-nguoi-sang/toi` | Bảng «Phác một tờ hẹn»: «… hiện cho cả hai bạn …», «Hỏi Rủ Đi AI», «Tự tạo kèo». |
 | `07-khay-cap-doi-390-sang/toi` | Khay cặp đôi năm công cụ **vừa một hàng** ở 390 (mỗi ô 65 px, sát mép). |
-| `08-chip-xem-sang/toi` | Tấm «Xem» nói «cả hai bạn», liệt kê đúng 3 tin — nhưng **neo sai chỗ** (lỗi 1 dưới). |
+| `08-chip-xem-sang/toi` | Tấm «Xem» nói «cả hai bạn», liệt kê đúng 3 tin — nhưng **neo sai chỗ** (lỗi 1 dưới, đã sửa ở `762d5c59`). |
 | `09-sticker-dam-ban-sang/toi` | Tám sticker, không có mục «Cho hai người». |
 | `10-sticker-cap-doi-sang/toi` | Tám sticker cộng mục «Cho hai người» bốn sticker; nhãn hai dòng không bị cắt. |
-| `11-khay-cap-doi-360-sang/toi` | Ở 360 khay cặp đôi **xuống hàng 4 + 1**, «Tờ giấy» nằm một mình và nhãn bị cắt đáy (lỗi 2). |
+| `11-khay-cap-doi-360-sang/toi` | Ở 360 khay cặp đôi **xuống hàng 4 + 1**, «Tờ giấy» nằm một mình và nhãn bị cắt đáy (lỗi 2, đã sửa ở `762d5c59`). |
 | `12-khay-dam-ban-360-sang/toi` | Khay đám bạn bốn công cụ vẫn một hàng ở 360. |
 | `13-tra-loi-giam-chuyen-dong` | Reduce Motion: hàng đang viết chỉ hiện câu trọn «… một vòng hồ.». |
 | `14-khay-cap-doi-giam-chuyen-dong` | Reduce Motion (390): khay cặp đôi giống `07`, không có gì phụ thuộc chuyển động. |
 
-## 6. Lỗi tìm thấy ở thành phần sản phẩm (chưa sửa; lát này không sửa thành phần)
+## 6. Lỗi tìm thấy ở thành phần sản phẩm (đã sửa ở `762d5c59`)
+
+Mô tả gốc của từng lỗi giữ nguyên bên dưới; phần «Đã sửa» sau mỗi lỗi là số đo chụp lại trên bản web
+dựng từ `762d5c59` (cùng cách ở mục 5, thêm 320x640 cho khay). Ảnh mới nằm ngoài repo, cạnh ảnh cũ, và
+đã mở từng ảnh so với ảnh cũ. Chưa kiểm trên máy thật.
 
 1. **Tấm «Xem» của chip bị neo vào chính chip, không vào màn.** `ChipBoiCanh.tsx:46` đặt `<Sheet>`
    bên trong `View` của chip (`styles.chip`, dòng 62); `Sheet` là `StyleSheet.absoluteFill` của cha gần
@@ -126,12 +130,26 @@ nhìn.
    nằm ngay trên ô soạn nên tấm sẽ che luồng tin chứ không trượt lên từ đáy màn. Chưa kiểm trên máy thật.
    Maestro `_41-ai-hai-nguoi-co-khoa` chỉ chờ chữ, nên vẫn xanh với lỗi này. Tiêu chí gỡ: tấm phủ cả màn
    (ví dụ nâng `Sheet` ra gốc màn như `KhaySticker`), ảnh `08` chụp lại.
+   **Đã sửa ở `762d5c59`.** Tấm tách thành `TamXemBoiCanh`; chip chỉ gọi `onXem`; `GroupChatLive` và
+   trang lab gắn tấm ở gốc màn, cùng tầng `KhaySticker`. Ảnh `08` mới (sáng/tối): cả màn tối, tấm trượt
+   lên từ đáy cửa sổ, rộng hết màn. Đo: lớp phủ 390x844 từ (0,0), tấm y 582–844, không nằm trong chip;
+   điểm giữa màn ở y 60 thuộc lớp «Đóng» (chặn chạm); tiêu điểm vào «Đóng bảng», Tab ở lại trong tấm,
+   phần ngoài `inert`; Escape đóng và trả tiêu điểm về «Xem»; chạm lớp tối cũng đóng.
 2. **Khay cặp đôi ở màn 360 dp xuống hàng 4 + 1, «Tờ giấy» bị cắt.** `SoHen.tsx:233-234`: `flexWrap:
    "wrap"` với ô `minWidth: 62, flex: 1`; năm ô cần 5×62 + 4×8 = 342 px, màn 360 trừ lề 32 còn 328. Ô
    thứ năm giãn ra cả hàng (đo: «Tờ giấy» rộng 328 ở y 682, bốn ô kia ở y 573), và `ScrollView` của
    khay bị trần `min(260, 25% chiều cao)` (`SoHen.tsx:177`, 195 px ở 780) nên nhãn «Tờ giấy» bị cắt
    đáy, phải cuộn trong khay mới thấy. Ở 390 vừa đúng một hàng (chưa đo ở cỡ chữ lớn hơn; ô có `minWidth` cố định nên nhiều khả năng cũng xuống hàng).
    Tiêu chí gỡ: năm công cụ đọc trọn ở 360 và ở cỡ chữ 1.3, ảnh `11` chụp lại.
+   **Đã sửa ở `762d5c59`.** Bố cục khay tính bằng hàm thuần `boCucKhay` (`chat/khay-cong-cu.ts`): một
+   hàng khi mỗi ô còn rộng bằng chữ dài nhất (50 dp × cỡ chữ; «Sticker» đo 43.4 ở caption 13 px), không
+   thì chia hàng cân (năm ô: 3 + 2, không bao giờ 4 + 1), ô bằng nhau; trần cuộn của khay công cụ
+   (`tranKhay`) nâng lên bằng chiều cao lưới, tối đa 60% cửa sổ. Ảnh `11-khay-cap-doi-360` mới: năm ô
+   một hàng, mỗi ô 59.2, ô vuông 56, «Bình chọn» xuống hai dòng dưới ô vuông, không nhãn nào bị cắt.
+   `11-khay-cap-doi-320-sang` (mới): năm ô 51.2, ô vuông 51, đọc trọn. 390: năm ô 65.2 như trước. Khay
+   đám bạn không đổi: 83.5 ở 390, 76 ở 360 (ảnh `05`, `12`). Cỡ chữ 1.3: web không đổi được
+   `fontScale`, nên chỉ tính và giữ bằng test — 360 cho 3 + 2 ô rộng 104, lưới cao 268, trần mới 268
+   (trần cũ 195 sẽ cắt). Chưa chụp ở 1.3.
 3. Chữ đọc sai cho hai người (gợi ý, không chặn):
    - `SoHen.tsx:169`, dòng chú thích khay: «… bạn đồng hành chọn vào sổ chuyến đi công khai … nhắn
      người giữ sổ» — câu của nhóm/chuyến đi, hiện nguyên cho cả chat hai người (ảnh `05`, `07`, `11`).
@@ -140,8 +158,17 @@ nhìn.
    - `GroupChatLive.tsx:780`, nhãn trợ năng nút cài đặt «Cài đặt nhóm» cũng dùng cho chat hai người
      (Maestro 47 bấm đúng nhãn này, nên đổi nhãn phải đổi flow cùng lúc).
 
+   **Đã sửa ở `762d5c59`** (hai ý đầu). Câu chú thích áp cho cả hai người — sổ chuyến đi của một kèo
+   trong phòng đọc ảnh của phòng đó, kể cả phòng hai người — nên không ẩn mà đổi chữ: hai người đọc «Ảnh
+   gửi vào đây có thể được người kia chọn vào một sổ chuyến đi công khai. Nếu muốn gỡ, hãy nhắn người
+   ấy nhé.» (ảnh `05`, `07`, `11` mới). `ToHen` nhận `haiNguoi`; hai người đọc «Sửa cùng nhau», nhóm
+   giữ «Sửa cùng hội» (Maestro 48 và `chat-nhom.md` trích). Cả hai câu nằm trong `chuKhay`, test sẵn có
+   cấm «hội»/«nhóm» trong mọi chữ khay của cặp. Ý thứ ba **cố ý không đổi**: nhãn «Cài đặt nhóm» do
+   hướng dẫn và Maestro 47 trích.
+
 ## 7. Còn mở
 
 - Chạy mục 3 trên máy thật, cả hai dạng (có và không `--ai`), và mở ảnh Maestro của 41/47.
 - Hàm kiểm máy chủ sau flow 47 (cờ `cap_doi` thật sự `true` sau khi cả hai bật «Một đôi»).
-- Hai lỗi ở mục 6.
+- Hai lỗi ở mục 6 đã sửa ở `762d5c59` trên web; còn chụp khay ở cỡ chữ 1.3 và mở tấm «Xem» trên máy
+  thật (Android Back, TalkBack).
