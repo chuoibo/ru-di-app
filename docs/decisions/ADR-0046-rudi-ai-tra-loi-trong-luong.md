@@ -82,7 +82,8 @@
    succeeded`. Tin tag bị xoá thì một trigger Go huỷ job và xoá chữ. Hạn phòng: 3 lời gọi đang chạy,
    30 mỗi giờ. Hạn 8/phút/người giữ nguyên. Số lời gọi model mỗi lượt theo `MaxModelCallsPerTurn`
    (ADR-0044).
-9. **AI nhóm không chạm tiền.**
+9. **AI nhóm không chạm tiền.** «Nhóm» ở đây là mọi phòng đám bạn: chat nhóm và chat hai người
+   (§8.4, 2026-09-28).
    - `chia_bill` giữ nháp ở cột `result`. Phần `expense_draft` trên thẻ chỉ là con trỏ: không số tiền,
      không id người.
    - «Ghi khoản này» mở luồng xác nhận chi tiêu sẵn có, đã điền trước.
@@ -225,14 +226,16 @@ Chủ sản phẩm chốt ngày 2026-09-27. Đây là quyết định của ch�
   người tham gia: câu trả lời là tin trả lời vào tin `@Rủ Đi` (§2).
 - AI không tự đọc gì ngoài phần người gọi kèm (giữ ADR-0036 §2.5 và luật toàn repo): không tự kéo lịch
   sử, gu hay tin chưa được chia sẻ.
-- **1:1: đã mở cho `hoi` ở cả máy chủ và app** (cập nhật 2026-09-28, lát S1 và M1 của
-  `docs/claude/2026-09-28/ai-chat-hai-nguoi.md`). Ngữ cảnh kind `pair` nhận lệnh `hoi`; `plan`,
-  `chia_bill`, bản nháp chung và «thành kèo» vẫn chỉ cho nhóm (`409 group_plan_only`). Cặp mà người
-  kia đã xoá tài khoản, đã rời, hoặc một trong hai đã chặn bị từ chối `403` ở route, và worker kiểm lại
-  trước khi đọc và trước khi đăng. App gửi lời nhờ `hoi` trong cặp (lát M1), chỉ khi capabilities báo
-  `hoi` sẵn sàng — tức engine nhóm chạy `go`. Lát S1 không đọc sổ đôi
-  hay gu; phần riêng của cặp (sổ đôi, ADR-0027; `chia_gu` chỉ theo ADR-0034) khi làm vẫn phải tự chứng
-  minh chứ không thừa hưởng bằng chứng của nhóm.
+- **1:1: chat hai người là một phòng «đám bạn», nhận đủ như nhóm** (cập nhật 2026-09-28, theo §8.4;
+  thay bản «cặp chỉ `hoi`» của lát S1/M1, PR #659). Ngữ cảnh kind `pair` nhận `hoi`, `plan`,
+  `chia_bill`, bản nháp chung và «thành kèo» như nhóm; không còn `409 group_plan_only` cho cặp. Cặp mà
+  người kia đã xoá tài khoản, đã rời, hoặc một trong hai đã chặn bị từ chối `403` ở route (gồm cả tạo,
+  sửa, bỏ tờ hẹn và «thành kèo»), và worker kiểm lại trước khi đọc và trước khi đăng. Cặp chỉ chạy trên
+  engine Go: brain Python không có đường cho cặp, nên khi engine nhóm là brain thì capabilities báo
+  `provider_unavailable` cho cả ba lệnh, route từ chối `503 provider_unavailable`, và worker brain làm
+  việc của cặp thất bại cùng mã mà không hỏi brain. Máy chủ đọc sổ đôi **chỉ để trả lời** cờ `cap_doi`
+  (§8.4); không đọc gu. Phần riêng của cặp đôi (gu đã chia theo ADR-0034, prompt riêng) khi làm vẫn
+  phải tự chứng minh chứ không thừa hưởng bằng chứng của nhóm.
 
 ### 8.2 Gỡ §7.1 khỏi điều kiện vào main
 
@@ -256,4 +259,27 @@ Chủ sản phẩm chốt ngày 2026-09-27. Đây là quyết định của ch�
 - Phòng E2EE v2 không có chữ nào máy chủ đọc được, và máy chủ không giữ khoá giải mã chat (luật toàn
   repo): tin v2 hay tin đã xoá không bao giờ được gán người trả. Mở rộng ra ngoài ba điều trên là quyết
   định mới, cần ADR mới.
+- **Chat hai người của đám bạn nằm trong ngoại lệ này** (quyết định 2026-09-28, §8.4): «phòng này» là
+  một nhóm **hoặc** một chat hai người (kind `pair`), cùng ba điều trên — chỉ phòng của lời gọi, chỉ id
+  người gọi đã chia sẻ, chỉ lane legacy. Đây không phải mở rộng ra ngoài ba điều: chat hai người giờ có
+  `chia_bill` như nhóm, và nháp chia bill của nó cũng phải tính tiền trên chữ tác giả đã viết, không
+  trên bản sao của máy khách.
 - Chi tiết kỹ thuật: `docs/architecture/03-ai-engine-hop-dong.md` §8.7.
+
+### 8.4 Quyết định 2026-09-28 (sau): hai class «đám bạn» và «cặp đôi»
+
+Chủ sản phẩm chốt ngày 2026-09-28, thay quyết định «cặp chỉ `hoi`» của PR #659. Đây là quyết định của
+chủ sản phẩm, không phải chữ ký Lead.
+
+- **Đám bạn** = mọi chat nhóm **và** mọi chat hai người thường (`contexts.kind='pair'`). Rủ Đi AI y
+  hệt nhóm: `hoi`, `/plan`, `/chia-bill`, bản nháp chung (tờ hẹn), «thành kèo». Không có tính năng
+  nhóm nào đòi từ ba người trở lên; không cần migration (CHECK không dính `kind`).
+- **Cặp đôi** = chat hai người mà **cả hai** đã bật «Một đôi» (đồng ý `bat_doi` trong sổ đôi,
+  `pairnotebook.CanBatDoi`). Như đám bạn, cộng phần riêng làm sau (gu đã chia xin đồng ý lại theo
+  ADR-0048, prompt xưng hô cho cặp đôi). Không bớt gì của đám bạn.
+- Hợp đồng: `GET /contexts/{id}/chat-capabilities` thêm trường gốc `"cap_doi": bool` — `true` chỉ khi
+  phòng là `pair` và `CanBatDoi` đúng ở lúc đọc (người tham gia của chu kỳ sổ đôi đang sống, hoặc các
+  thành viên đang hoạt động khi chưa có chu kỳ); không có sổ đôi là `false`; nhóm luôn `false`. Hỏi
+  lại mỗi lần đọc, không cache. Các trường cũ không đổi.
+- Worker đọc cùng cờ đó khi đọc phòng và mang nó vào lượt (`aiharness.Turn.Doi`); lát này chưa có gì
+  dùng nó. Luật §2.9 (AI không chạm tiền) áp cho mọi phòng đám bạn, nhóm cũng như chat hai người.

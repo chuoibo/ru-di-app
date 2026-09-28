@@ -20,10 +20,6 @@ const (
 	// verifier): no draft is built, and the room is asked for a clear
 	// message instead.
 	NhomChuaChacSoTien = "Mình chưa chắc được số tiền của các khoản trong tin được chia sẻ nên chưa soạn nháp. Người đã trả gửi lại một tin ghi rõ khoản và số tiền (ví dụ «mình trả lẩu 850k») rồi nhờ mình chia bill lại nhé."
-	// CapKhongChamTien answers, in a chat of two, a request the router
-	// classed as a money action or as a split draft: a pair has no split
-	// draft (ADR-0046 §9 keeps chia bill in a group).
-	CapKhongChamTien = "Rủ Đi AI không làm việc tiền nong giữa hai bạn: không chuyển tiền, không ghi nợ, không nhắc ai trả. Soạn nháp chia bill chỉ có trong nhóm chat: hai bạn lập một nhóm rồi nhờ mình «chia bill» ở đó nhé."
 	// NhomLoiNhoPlan and NhomLoiNhoChiaBill stand in for an empty request:
 	// a bare «@Rủ Đi» or «/plan» still asks for something, and the router
 	// and the answer read these words as the request.
@@ -35,5 +31,5 @@ const (
 // answer, with no model-derived field: the only texts that may reach a
 // stream without a verifier's pass (the eval's invariant 8 reads it).
 func CoDinhNhom() []string {
-	return []string{NhomKhongChamTien, NhomChuaThayKhoan, NhomChuaChacSoTien, CapKhongChamTien}
+	return []string{NhomKhongChamTien, NhomChuaThayKhoan, NhomChuaChacSoTien}
 }

@@ -19,17 +19,6 @@ var quyenGolden []byte
 // PhienBanQuyen is the table's format version this code reads.
 const PhienBanQuyen = 1
 
-// BotCap is the permission table's key for the room assistant in a chat of
-// two (a pair, contexts.kind='pair'): the common tools only, none of the
-// group's (no poll draft, no group snapshot, no group outings), none of
-// Nếp's. It is a key of this table and nothing more: the turn itself is
-// still the room assistant's (obs.BotNhom) in its metrics row, its prompt
-// and its router, so no closed set outside this package grows.
-const BotCap obs.Bot = "cap"
-
-// botQuyen reports whether b is a key of the permission table.
-func botQuyen(b obs.Bot) bool { return b.Valid() || b == BotCap }
-
 // Quyen is a loaded permission table.
 type Quyen struct {
 	bot map[obs.Bot]map[Ten]bool
@@ -56,8 +45,7 @@ func loiQuyen(format string, a ...any) error {
 // a tool outside the registry, missing from the table, or listed twice; a
 // class or scope that differs from the registry's; an unknown or repeated
 // bot; a me-scoped tool (memory, reminders, own outings, the screen card)
-// granted to the group or the pair; a group-scoped tool granted to Nếp or
-// the pair.
+// granted to the group; a group-scoped tool granted to Nếp.
 func NapQuyen(raw []byte) (*Quyen, error) {
 	var t quyenTho
 	dec := json.NewDecoder(bytes.NewReader(raw))
@@ -68,7 +56,7 @@ func NapQuyen(raw []byte) (*Quyen, error) {
 	if t.PhienBan == nil || *t.PhienBan != PhienBanQuyen {
 		return nil, loiQuyen("version")
 	}
-	q := &Quyen{bot: map[obs.Bot]map[Ten]bool{obs.BotNep: {}, obs.BotNhom: {}, BotCap: {}}}
+	q := &Quyen{bot: map[obs.Bot]map[Ten]bool{obs.BotNep: {}, obs.BotNhom: {}}}
 	seen := map[Ten]bool{}
 	for _, c := range t.CongCu {
 		ten, err := Tens.Parse(c.Ten)
@@ -86,7 +74,7 @@ func NapQuyen(raw []byte) (*Quyen, error) {
 		botSeen := map[obs.Bot]bool{}
 		for _, b := range c.Bot {
 			bot := obs.Bot(b)
-			if !botQuyen(bot) || botSeen[bot] {
+			if !bot.Valid() || botSeen[bot] {
 				return nil, loiQuyen("%s: bot %q unknown or repeated", ten, b)
 			}
 			botSeen[bot] = true

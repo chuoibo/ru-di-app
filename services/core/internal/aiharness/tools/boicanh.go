@@ -98,12 +98,9 @@ type BoiCanh struct {
 	HanGoi time.Duration
 
 	mu sync.Mutex
-	// rieng is the bot's own tool table (ChoNep, ChoNhom, ChoCap); nil
-	// offers the common tools only.
-	rieng map[Ten]congCu
-	// bang, when set, is the permission table's key for this turn in place
-	// of Bot (ChoCap: BotCap).
-	bang   obs.Bot
+	// rieng is the bot's own tool table (ChoNep, ChoNhom); nil offers the
+	// common tools only.
+	rieng  map[Ten]congCu
 	sai    int
 	epCuoi bool
 	// buoc is the agent step whose tool calls run now (DatBuoc; 0 for the
@@ -308,17 +305,6 @@ func (bc *BoiCanh) quyen() *Quyen {
 	return bc.Quyen
 }
 
-// botQuyen is the key this turn reads the permission table under: Bot,
-// or the one its tool table set (ChoCap).
-func (bc *BoiCanh) botQuyen() obs.Bot {
-	bc.mu.Lock()
-	defer bc.mu.Unlock()
-	if bc.bang != "" {
-		return bc.bang
-	}
-	return bc.Bot
-}
-
 func (bc *BoiCanh) khoiTao() {
 	if bc.cho == nil {
 		bc.cho = map[string]choGhi{}
@@ -334,7 +320,7 @@ func (bc *BoiCanh) khoiTao() {
 // router read the person asking for it (BoiCanh.YDinh).
 func (bc *BoiCanh) DuocPhep() []Ten {
 	var out []Ten
-	for _, t := range bc.quyen().DuocPhep(bc.botQuyen(), bc.HanChe) {
+	for _, t := range bc.quyen().DuocPhep(bc.Bot, bc.HanChe) {
 		if y, ghi := yDinhGhi[t]; ghi && !coYDinh(bc.YDinh, y) {
 			continue
 		}

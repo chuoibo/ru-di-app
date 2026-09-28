@@ -58,50 +58,6 @@ func TestBangTheoBot(t *testing.T) {
 	}
 }
 
-// A chat of two (ChoCap) declares and runs the common tools only: no poll
-// draft, no group snapshot, no group outings -- not declared, not allowed
-// on a step, refused if called, even with a group read port wired in.
-func TestBangCap(t *testing.T) {
-	n := &nhomGia{}
-	bc := (&BoiCanh{Bot: obs.BotNhom, NhomID: "cap-cua-job", Luc: lucThu, Nguon: NguonDuLieu{Nhom: n}}).ChoCap()
-	ts, err := bc.BoCongCu()
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := MacDinh.DuocPhep(BotCap, false)
-	if len(ts) != len(want) || len(want) != len(congCusChung) {
-		t.Fatalf("pair declares %d tools, table %v", len(ts), want)
-	}
-	for i, tt := range ts {
-		if tt.Name() != string(want[i]) {
-			t.Errorf("tool %d: %s", i, tt.Name())
-		}
-		if _, chung := congCusChung[Ten(tt.Name())]; !chung {
-			t.Errorf("pair declares %s, not a common tool", tt.Name())
-		}
-	}
-	for _, ten := range []Ten{DraftPoll, GroupSnapshot, ListGroupOutings} {
-		for _, d := range bc.TenChoPhep() {
-			if d == string(ten) {
-				t.Errorf("%s allowed on a pair's step", ten)
-			}
-		}
-		args := map[string]any{}
-		if ten == DraftPoll {
-			args = map[string]any{"cau_hoi": "a", "lua_chon": []any{"x", "y"}}
-		}
-		if r := bc.Goi(context.Background(), ten, args); r["loi"] != string(KhongDuocPhep) {
-			t.Errorf("pair called %s: %v", ten, r)
-		}
-		if _, ok := bc.congCu(ten); ok {
-			t.Errorf("pair's context has %s", ten)
-		}
-	}
-	if len(n.hoi) != 0 {
-		t.Fatalf("a pair's turn read a group: %v", n.hoi)
-	}
-}
-
 // The group masks draft_poll: declared, never allowed on a step, refused if
 // called.
 func TestCheCongCu(t *testing.T) {
