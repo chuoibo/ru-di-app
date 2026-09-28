@@ -20,7 +20,7 @@
 | Mức | Issue |
 |---|---|
 | P1 | UI-005, UI-049, UI-082 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085, UI-094, UI-095, UI-096, UI-097, UI-107, UI-113 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085, UI-094, UI-095, UI-096, UI-097, UI-107, UI-113, UI-116, UI-117 |
 | P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081, UI-086, UI-087, UI-088, UI-089, UI-090, UI-091, UI-092, UI-093, UI-098, UI-099, UI-100, UI-101, UI-102, UI-103, UI-104, UI-105, UI-106, UI-108, UI-109, UI-110, UI-111, UI-112, UI-114, UI-115 |
 
 ---
@@ -360,15 +360,15 @@
 |---|---|
 | Category / Severity | UX ISSUE (layout, mất nội dung) · **P2** |
 | Feature / Screen | F02 · `/places/[id]` · chân trang hai nút |
-| Nền tảng, cấu hình | web. Bị cắt: C1 (thiếu 5px), C2 (34px), C3 (17px), C4 (11px). Đọc trọn: C5, C6, C7 |
+| Nền tảng, cấu hình | web. Bị cắt: C1 (thiếu 5px), C2 (34px), C3 (17px), C4 (11px). Đọc trọn: C5, C6, C7. F11, bản demo không phiên: nút ở «Lịch trình AI» và «Check-in nhóm» bị cắt ở C2 và C3, đọc trọn ở C1 |
 | Tái hiện | Mở chi tiết bất kỳ quán nào, nhìn chân trang |
 | Expected | Nhãn nút đọc trọn |
-| Actual | «Lưu địa đi…» ở 390, «Lưu đ…» ở 320. Ở 320 không còn đoán được nút làm gì nếu không nhìn icon |
-| Evidence | ![nhãn Lưu theo bề rộng](evidence/EV-F02-CAT-LUU-ghep.jpg) (hàng `TC-F02-NHAN-LUU`) |
-| Source | `PlaceDetailLive.tsx:166-183` và `:483-497`: nút trái `flex: 1`, nút phải `flex: 1.4`, chia theo tỉ lệ chứ không theo nhãn; nhãn `RudiButton` kẹp một dòng (`src/rudi/ui.tsx:509`) |
+| Actual | «Lưu địa đi…» ở 390, «Lưu đ…» ở 320. Ở 320 không còn đoán được nút làm gì nếu không nhìn icon F11 (`TC-F11-CAT-ITINERARY`, `TC-F11-CAT-CHECKIN`): «Chỉnh lịch trình» và «Dùng plan này» ở `/trips/[id]/itinerary` thành «Chỉnh lịc…», «Dùng pla…» ở C2 (thiếu 23 và 17px) và «Chỉnh lịch trì…» ở C3 (3px); «Nhắc thành viên» ở `/check-ins/new` thành «Nhắc thà…» ở C2 (29px) và «Nhắc thành …» ở C3 (9px) |
+| Evidence | ![nhãn Lưu theo bề rộng](evidence/EV-F02-CAT-LUU-ghep.jpg) (hàng `TC-F02-NHAN-LUU`) ![F11: route demo ở 320dp, ô 2 và 3](evidence/EV-F11-CAT-C2-ghep.jpg) |
+| Source | `PlaceDetailLive.tsx:166-183` và `:483-497`: nút trái `flex: 1`, nút phải `flex: 1.4`, chia theo tỉ lệ chứ không theo nhãn; nhãn `RudiButton` kẹp một dòng (`src/rudi/ui.tsx:509`); F11: hai `RudiButton` `full={false}` chia đôi hàng bằng `style={styles.flex}` (`screens/Group.tsx:313–335`, `screens/Outing.tsx:406–425`) |
 | Hậu quả | Mất chữ trên một hành động chính của màn, ở mọi điện thoại dưới 430dp |
 | Đề xuất sửa | Để nhãn quyết định bề rộng nút trái; hoặc rút nhãn thành «Lưu»; hoặc xếp dọc hai nút dưới khoảng 400dp |
-| Tiêu chí gỡ | Nhãn đọc trọn ở C2 |
+| Tiêu chí gỡ | Nhãn đọc trọn ở C2; F11: ba nút trên đọc trọn ở C2 |
 
 ### UI-024 · Nút ✦ «Hỏi Rủ Đi AI» không hỏi; danh sách báo «0 kết quả» trước khi có câu hỏi
 
@@ -553,9 +553,9 @@
 | Điều kiện | Đã đăng nhập (phiên thật); id là kèo «Đà Lạt cuối tuần» của nhóm |
 | Tái hiện | Mở `/trips/<id kèo>/timeline` |
 | Expected | Như hai route demo anh em (sửa B5, QC 24/09): có phiên thì chuyển về màn sống (`/outings/[id]`) |
-| Actual | Hiện lịch trình demo: «07:00 Khởi hành từ TP.HCM», «11:00 Check-in homestay», «12:30 Ăn trưa - Bánh căn Lệ», ảnh bìa, «2.500.000đ dự kiến một người». Không có nhãn demo, không có nút Quay lại. Hai route anh em đạt: `/trips/[id]/itinerary` → `/outings/[id]`, `/check-ins/new` → `/plan` |
-| Evidence | ![timeline demo khi đã đăng nhập](evidence/EV-F03-DEMO-TIMELINE-C1.jpg) |
-| Source | `app/trips/[id]/timeline.tsx` export thẳng `TripTimelineScreen`, thiếu khối `if (phien !== null) return <Redirect …/>` mà `app/trips/[id]/itinerary.tsx` và `app/check-ins/new.tsx` có |
+| Actual | Hiện lịch trình demo: «07:00 Khởi hành từ TP.HCM», «11:00 Check-in homestay», «12:30 Ăn trưa - Bánh căn Lệ», ảnh bìa, «2.500.000đ dự kiến một người». Không có nhãn demo, không có nút Quay lại. Hai route anh em đạt: `/trips/[id]/itinerary` → `/outings/[id]`, `/check-ins/new` → `/plan` F11 đo lại (`TC-F11-CO-PHIEN-TIMELINE`): vẫn vậy, và có phiên thì nhãn «Dữ liệu demo» trên ảnh bìa cũng biến mất (không phiên thì có, `TC-F11-ROUTE-TIMELINE`), nên lịch trình bịa càng giống thật. Bảy route demo kia có phiên đều chuyển về màn sống (`TC-F11-CO-PHIEN-*`) |
+| Evidence | ![timeline demo khi đã đăng nhập](evidence/EV-F03-DEMO-TIMELINE-C1.jpg) (F11: `EV-F11-CO-PHIEN-timeline-C1`, ngoài git) |
+| Source | `app/trips/[id]/timeline.tsx` export thẳng `TripTimelineScreen`, thiếu khối `if (phien !== null) return <Redirect …/>` mà `app/trips/[id]/itinerary.tsx` và `app/check-ins/new.tsx` có; `ui.tsx:330`: `DemoBadge` trả `null` khi `cheDo === "live"` |
 | Hậu quả | Link cũ hoặc gõ tay đưa người dùng thật tới một lịch trình bịa mang tên nhóm của họ |
 | Đề xuất sửa | Chép khối chặn B5 sang `timeline.tsx` |
 | Tiêu chí gỡ | Có phiên: `/trips/<id>/timeline` về `/outings/<id>` |
@@ -596,12 +596,12 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE · **P3** |
-| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn). F06 · `/people/[id]` · L06 hành động hồ sơ. F07 · `/groups/[id]/to-giay` · L23 «Cài đặt sổ» F08 · `/groups/[id]/wall` · L24 sheet Check-in; `/posts/[id]` · L07 sheet báo cáo bài |
+| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn). F06 · `/people/[id]` · L06 hành động hồ sơ. F07 · `/groups/[id]/to-giay` · L23 «Cài đặt sổ» F08 · `/groups/[id]/wall` · L24 sheet Check-in; `/posts/[id]` · L07 sheet báo cáo bài F11 · tab «Lên plan» demo · L28 «Tùy chọn chuyến đi»: màn tab không bị gỡ nên sheet không đóng theo; hậu quả ở UI-117 |
 | Nền tảng, cấu hình | web, C1 (trên Android Chrome, cử chỉ back hệ thống cũng là Back trình duyệt). Native Android: `Sheet` nghe `BackHandler` nên đóng sheet (STATIC) |
 | Tái hiện | Từ Lên plan mở kèo, mở sheet «Chặng mới», gõ dở tên chặng, bấm Back |
 | Expected | Back đóng sheet, ở lại màn kèo |
 | Actual | Sheet đóng vì màn bị gỡ: URL về `/plan`, 12/12 ô của lưới chạm đổi, chữ đang gõ mất |
-| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn. F06: sheet «Thêm hành động» của hồ sơ, Back rời hồ sơ về Bạn bè; Esc, nền, kéo xuống ở lại hồ sơ (`TC-L06-VONGDOI`). F07: tới tờ giấy từ Tin nhắn, mở «Cài đặt sổ», Back rời tờ giấy về `/messages` (`TC-L23-BACK`); X, nền, Esc, kéo dài, vuốt nhanh đóng mà ở lại, kéo ngắn bật về (`TC-L23-VONGDOI`). F08: tới tường từ Tin nhắn, mở sheet Check-in, Back rời tường về `/messages`; X, nền, Esc đóng mà ở lại tường, focus vào sheet (`TC-L24-VONGDOI`). Sheet báo cáo bài: Back rời bài về `/messages`; X, Esc, nền ở lại bài (`TC-L07-VONGDOI`) |
+| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn. F06: sheet «Thêm hành động» của hồ sơ, Back rời hồ sơ về Bạn bè; Esc, nền, kéo xuống ở lại hồ sơ (`TC-L06-VONGDOI`). F07: tới tờ giấy từ Tin nhắn, mở «Cài đặt sổ», Back rời tờ giấy về `/messages` (`TC-L23-BACK`); X, nền, Esc, kéo dài, vuốt nhanh đóng mà ở lại, kéo ngắn bật về (`TC-L23-VONGDOI`). F08: tới tường từ Tin nhắn, mở sheet Check-in, Back rời tường về `/messages`; X, nền, Esc đóng mà ở lại tường, focus vào sheet (`TC-L24-VONGDOI`). Sheet báo cáo bài: Back rời bài về `/messages`; X, Esc, nền ở lại bài (`TC-L07-VONGDOI`) F11: `TC-L28-VONGDOI` (X, nền, Esc, kéo dài, vuốt nhanh đóng mà ở lại tab; kéo ngắn bật về); Back ở `TC-L28-BACK` (UI-117) |
 | Source | `src/rudi/ui/Sheet.tsx:145` chỉ nghe `hardwareBackPress` (react-native-web không phát). Khay công cụ: `chat/SoHen.tsx:111` (`BackHandler`, chỉ Android). Khay tờ hẹn chung: không nghe gì, nên trên Android Back cũng rời chat (STATIC) |
 | Đề xuất sửa | Trên web, đẩy một mục lịch sử khi mở sheet và đóng sheet ở `popstate` (như khay `/create`) |
 | Tiêu chí gỡ | Back khi sheet mở: sheet đóng, URL giữ nguyên |
@@ -734,17 +734,17 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | BUG (hiển thị tiền) · **P2** |
-| Feature / Screen | F04 · `/smart-split/[id]/review`, bước 2 «Xem lại hóa đơn» (dòng món) và bước 3 «Ai dùng món nào?» (thẻ món trên bàn) |
-| Nền tảng, cấu hình | web, C1–C5 (bước 2), C2 (bước 3). Native: cùng bố cục flex (STATIC) |
+| Feature / Screen | F04 · `/smart-split/[id]/review`, bước 2 «Xem lại hóa đơn» (dòng món) và bước 3 «Ai dùng món nào?» (thẻ món trên bàn); F11 · `/settlements/[id]` bản demo (thẻ người thu) |
+| Nền tảng, cấu hình | web, C1–C5 (bước 2), C2 (bước 3). Native: cùng bố cục flex (STATIC). F11, quyết toán demo: C2 (C1, C3 đọc trọn) |
 | Điều kiện | Bill nhập tay 3 món: tên 70 ký tự có dấu cách, «Bia», tên liền 41 ký tự; tiền 12.345.678đ, 960.000đ, 400.000đ |
 | Tái hiện | Nhập tay 3 món như trên; xem dòng món ở bước 2 (mở hay gập đều vậy); sang bước 3 ở 320dp |
 | Expected | Số tiền không bao giờ bị cắt; tên món xuống dòng hoặc nhường chỗ trước |
-| Actual | Bước 2: số tiền của hai món có tên dài chỉ còn 30–48px và bị ellipsis, «12.3…» và «400.…», ở mọi bề rộng điện thoại (C1 41px, C2 30px, C3 37px, C4 39px, C5 47px). «Bia» 960.000đ đọc trọn. Bill trên 3 dòng thì các dòng gập lại, nên dòng này là chỗ duy nhất hiện số tiền của món. Bước 3 ở C2: thẻ món giữa bàn hiện «12.345.6…» (68px) |
-| Evidence | ![bước 2, C1](evidence/EV-F04-TIEN-CAT-B2-C1-ct.jpg) ![bước 3, C2](evidence/EV-F04-TIEN-CAT-B3-C2-ct.jpg) (hàng `TC-F04-MON-DAI`, đo `scrollWidth > clientWidth` trên phần tử có tên là số tiền) |
-| Source | `chia-bill/ChiaBillLive.tsx:482` (`Money` trong hàng `dongDau`, cạnh `tenMon: { flexShrink: 1 }` và vạch chấm `chamDan`, dòng 755–756); `ui/Money.tsx` mặc định `numberOfLines={1}`; thẻ món `ui/BanGanMon.tsx:156`, rộng `theMon(rx).w` ≤ 128 |
+| Actual | Bước 2: số tiền của hai món có tên dài chỉ còn 30–48px và bị ellipsis, «12.3…» và «400.…», ở mọi bề rộng điện thoại (C1 41px, C2 30px, C3 37px, C4 39px, C5 47px). «Bia» 960.000đ đọc trọn. Bill trên 3 dòng thì các dòng gập lại, nên dòng này là chỗ duy nhất hiện số tiền của món. Bước 3 ở C2: thẻ món giữa bàn hiện «12.345.6…» (68px) F11 (`TC-F11-CAT-SETTLEMENTS`): quyết toán demo ở C2, số tiền người thu «1.106.250đ» hiện «1.106.25…» (cần 116px, có 114px) trong hàng avatar 44, cột chữ và con dấu «Người thu bill»; tiêu đề «Quyết toán chuyến đi» cạnh nhãn «Demo» cũng thành «Quyết toán chuyế…» |
+| Evidence | ![bước 2, C1](evidence/EV-F04-TIEN-CAT-B2-C1-ct.jpg) ![bước 3, C2](evidence/EV-F04-TIEN-CAT-B3-C2-ct.jpg) (hàng `TC-F04-MON-DAI`, đo `scrollWidth > clientWidth` trên phần tử có tên là số tiền) ![F11: quyết toán demo ở C2, ô đầu](evidence/EV-F11-CAT-C2-ghep.jpg) |
+| Source | `chia-bill/ChiaBillLive.tsx:482` (`Money` trong hàng `dongDau`, cạnh `tenMon: { flexShrink: 1 }` và vạch chấm `chamDan`, dòng 755–756); `ui/Money.tsx` mặc định `numberOfLines={1}`; thẻ món `ui/BanGanMon.tsx:156`, rộng `theMon(rx).w` ≤ 128; F11: `screens/Bill.tsx:598–605` (`Money` một dòng trong cột `flex: 1`, cạnh `Stamp`) |
 | Hậu quả | Người chia bill không đọc được số tiền của chính món vừa gõ; với bill dài chỉ còn cách mở từng dòng |
 | Đề xuất sửa | Số tiền `flexShrink: 0` (không bao giờ co); tên món co và xuống dòng; trên thẻ món cho số tiền xuống dòng hoặc thu cỡ chữ thay vì ellipsis |
-| Tiêu chí gỡ | Bill trên, bước 2 ở C1–C5 và bước 3 ở C2: 0 phần tử số tiền có `scrollWidth > clientWidth` |
+| Tiêu chí gỡ | Bill trên, bước 2 ở C1–C5 và bước 3 ở C2: 0 phần tử số tiền có `scrollWidth > clientWidth`; quyết toán demo ở C2 cũng vậy |
 
 ### UI-049 · Web: «Gửi cho <tên>» ở đợt thu không gửi được link, và báo nhầm «Kiểm tra mạng»
 
@@ -1286,17 +1286,17 @@ phải lỗi.
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | BUG (xác nhận giả, dữ liệu sai nguồn) · **P1** trên web |
-| Feature / Screen | F07 · `/groups/[id]/to-giay` (giao với F11 chế độ demo) |
+| Feature / Screen | F07 · `/groups/[id]/to-giay` (giao với F11 chế độ demo); F11 · tab Tin nhắn, «Lịch trình AI», «Ai dùng món nào?», lối đăng nhập từ bản demo |
 | Nền tảng, cấu hình | web, C1, bản export production. Native: cùng route, cùng nhánh «không phiên thì dùng store demo», nên deep link tới tờ giấy khi đã đăng xuất đi cùng đường (STATIC) |
 | Điều kiện | Không có phiên (đăng xuất, hết phiên, trình duyệt khác). Link là tờ giấy của cặp chat-0/chat-1 có thật trên máy chủ |
 | Tái hiện | 1. Mở thẳng `/groups/<id của cặp>/to-giay`. 2. Chạm «Rủ đi chơi». 3. Chạm «Gửi cho người ấy» |
 | Expected | Tới cửa vào (Welcome, đăng nhập) rồi quay lại đúng tờ giấy; nếu cho xem bản trải nghiệm thì có nhãn «Dữ liệu demo» và không nói «đã gửi» khi không có gì được gửi |
-| Actual | Trang hiện một sổ với nội dung bịa: «Bún chả, quán góc phố · Thứ Bảy 06/09 · KÝ ỨC», «Tờ đã khép: Hết khung · Chủ nhật 14/09», tiêu đề «Hai người bạn · Người ấy». Không nhãn demo, không lối đăng nhập. «Rủ đi chơi» phác một tờ «Thứ Bảy 20/09» (ngày đã qua); «Gửi cho người ấy» đổi tờ thành «ĐÃ GỬI · Đã gửi, chờ trả lời. Người ấy chưa xem.». Suốt lúc đó trang gửi **0** lệnh ghi tới API. F08 (`TC-F08-KHONG-PHIEN`): không phiên, link album của một kèo thật mở album demo «Album Đà Lạt · Team Đà Lạt · 17 - 19/10/2026 · 4 ảnh» **không** nhãn; `/stories/new` và `/posts/new` hiện form thật, không lối đăng nhập. Đạt: `/groups/[id]/album` về Welcome; tường, «Thả khoảnh khắc» và «Thành tích» hiện bản demo có nhãn, «Đăng vào tường nhóm» của bản demo về tường demo có nhãn (`TC-F08-KHONG-PHIEN-THA`). F09 (`TC-F09-KHONG-PHIEN`): không phiên, `/settings` hiện trang cài đặt của «Bạn» (avatar «B», công tắc, ba chip) mà mọi thao tác không có tác dụng; `/settings/phien` và `/settings/da-chan` sau 8 s vẫn là khung chờ xám, không hàng, không trạng thái rỗng, không câu lỗi (lượt đọc dừng khi không có người, `PhienScreen.tsx:38`, `DaChanScreen.tsx:37`); `/settings/xoa-tai-khoan` hiện bước 1 như có tài khoản. Không màn nào có nhãn demo hay lối đăng nhập |
-| Evidence | ![đã gửi mà không gửi gì, C1](evidence/EV-F07-LANH-KHONG-PHIEN-GUI-C1.jpg) (hàng `TC-F07.S02-LANH-KHONG-PHIEN`, `TC-F07-KHONG-PHIEN-GUI`) ![F09: Cài đặt và phiên khi không có phiên](evidence/EV-F09-KHONG-PHIEN-ghep.jpg) |
+| Actual | Trang hiện một sổ với nội dung bịa: «Bún chả, quán góc phố · Thứ Bảy 06/09 · KÝ ỨC», «Tờ đã khép: Hết khung · Chủ nhật 14/09», tiêu đề «Hai người bạn · Người ấy». Không nhãn demo, không lối đăng nhập. «Rủ đi chơi» phác một tờ «Thứ Bảy 20/09» (ngày đã qua); «Gửi cho người ấy» đổi tờ thành «ĐÃ GỬI · Đã gửi, chờ trả lời. Người ấy chưa xem.». Suốt lúc đó trang gửi **0** lệnh ghi tới API. F08 (`TC-F08-KHONG-PHIEN`): không phiên, link album của một kèo thật mở album demo «Album Đà Lạt · Team Đà Lạt · 17 - 19/10/2026 · 4 ảnh» **không** nhãn; `/stories/new` và `/posts/new` hiện form thật, không lối đăng nhập. Đạt: `/groups/[id]/album` về Welcome; tường, «Thả khoảnh khắc» và «Thành tích» hiện bản demo có nhãn, «Đăng vào tường nhóm» của bản demo về tường demo có nhãn (`TC-F08-KHONG-PHIEN-THA`). F09 (`TC-F09-KHONG-PHIEN`): không phiên, `/settings` hiện trang cài đặt của «Bạn» (avatar «B», công tắc, ba chip) mà mọi thao tác không có tác dụng; `/settings/phien` và `/settings/da-chan` sau 8 s vẫn là khung chờ xám, không hàng, không trạng thái rỗng, không câu lỗi (lượt đọc dừng khi không có người, `PhienScreen.tsx:38`, `DaChanScreen.tsx:37`); `/settings/xoa-tai-khoan` hiện bước 1 như có tài khoản. Không màn nào có nhãn demo hay lối đăng nhập F11 (`TC-F11-TAB-MESSAGES`, `TC-F11-ROUTE-ITINERARY`, `TC-F11-ROUTE-ASSIGNMENT`, `TC-F11-LOI-DANG-NHAP`): mở thẳng bốn tab khi chưa đăng nhập, Khám phá, Lên plan và Cá nhân có nhãn «Dữ liệu demo», còn Tin nhắn là một chat nhóm «Team Đà Lạt» 8 thành viên trông như thật, không nhãn, ô soạn vẫn mời gõ. Trong tám route demo, sáu mang nhãn «Demo»; «Lịch trình AI» và «Ai dùng món nào?» chỉ mang nhãn «Nháp», nói về bản nháp của AI chứ không nói dữ liệu là mẫu. Không màn demo nào có nút «Đăng nhập»: lối duy nhất là tab Cá nhân → «Tài khoản» → «Đăng xuất bản trải nghiệm» (về màn chào, `TC-F11-THOAT`), nhãn «Đăng xuất» cho một việc thực chất là đi vào |
+| Evidence | ![đã gửi mà không gửi gì, C1](evidence/EV-F07-LANH-KHONG-PHIEN-GUI-C1.jpg) (hàng `TC-F07.S02-LANH-KHONG-PHIEN`, `TC-F07-KHONG-PHIEN-GUI`) ![F09: Cài đặt và phiên khi không có phiên](evidence/EV-F09-KHONG-PHIEN-ghep.jpg) ![F11: bốn tab khi chưa đăng nhập, C1](evidence/EV-F11.S01-BASE-C1-ghep.jpg) |
 | Source | `app/groups/[id]/to-giay.tsx`: có phiên thì bọc `SoDoiSongProvider`; không phiên thì dựng `KhongGianGiayScreen` trên store fixture gắn ở `_layout`. Chú thích nói nhánh này dành cho bản fixture, nhưng mã áp cho mọi bản dựng. Màn không dùng `DemoBadge` |
 | Hậu quả | Người mở link từ thông báo hay tin nhắn khi đã rơi phiên thấy một sổ trông như của mình, gửi lời rủ và được báo đã gửi. Người kia không nhận được gì; người gửi không có lý do để đăng nhập lại |
 | Đề xuất sửa | Route có `id` thật mà không có phiên: đưa về cửa vào, giữ đường dẫn để quay lại sau đăng nhập. Store demo chỉ cho route demo, và luôn kèm `DemoBadge` |
-| Tiêu chí gỡ | Không phiên, mở link: tới cửa vào; sau đăng nhập về đúng tờ giấy. Không màn nào hiện «Đã gửi» khi chưa có lệnh ghi thành công |
+| Tiêu chí gỡ | Không phiên, mở link: tới cửa vào; sau đăng nhập về đúng tờ giấy. Không màn nào hiện «Đã gửi» khi chưa có lệnh ghi thành công; F11: mọi màn demo có nhãn «Dữ liệu demo» và một lối «Đăng nhập» nhìn thấy được |
 
 ### UI-083 · Đọc sổ lỗi thì màn vẽ «Chưa có sổ hai người» và mời lập sổ lại
 
@@ -1452,11 +1452,11 @@ phải lỗi.
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | VISUAL POLISH · **P3** (cùng họ UI-031, UI-047, UI-081) |
-| Feature / Screen / Layer | F07.S02 · L23 |
+| Feature / Screen / Layer | F07.S02 · L23; F11 · tab «Lên plan» demo · L28 «Tùy chọn chuyến đi» |
 | Nền tảng, cấu hình | web, C6, C7 |
 | Expected | Như thanh đầu của chính màn và trạng thái chưa có sổ (gom cột ở giữa), và như khay tạo (nội dung `maxWidth` 560, DESIGN.md) |
-| Actual | Tờ giấy rộng 720px ở C6 và 912px ở C7; hai nút «Gửi cho người ấy», «Sửa trước khi gửi» chia đôi bề ngang đó. Sheet «Cài đặt sổ» rộng đúng bằng cửa sổ (768, 1024px): mũi tên của mỗi hàng dạt về mép phải, xa chữ |
-| Evidence | ![C6](evidence/EV-F07-TABLET-CAI-DAT-C6.jpg) (hàng `TC-F07-TABLET`, `TC-L23-TABLET` C6/C7) |
+| Actual | Tờ giấy rộng 720px ở C6 và 912px ở C7; hai nút «Gửi cho người ấy», «Sửa trước khi gửi» chia đôi bề ngang đó. Sheet «Cài đặt sổ» rộng đúng bằng cửa sổ (768, 1024px): mũi tên của mỗi hàng dạt về mép phải, xa chữ F11 (`TC-L28-KICH-THUOC` C6/C7): sheet «Tùy chọn chuyến đi» rộng 664px ở C6 (hết phần bên phải rail 104px, vượt trần 640 24px) và 920px ở C7; tiêu đề ở mép trái, X ở mép phải, ba lối bấm ngắn canh giữa một dải trống |
+| Evidence | ![C6](evidence/EV-F07-TABLET-CAI-DAT-C6.jpg) (hàng `TC-F07-TABLET`, `TC-L23-TABLET` C6/C7) (F11: `EV-F11-L28-C6`, `EV-F11-L28-C7`, ngoài git) |
 | Source | `KhongGianGiay.tsx:485` (`than: { paddingTop: 8 }`, không `maxWidth`); `Sheet.tsx` không có trần bề ngang |
 | Tiêu chí gỡ | C6/C7: tờ giấy và nội dung sheet ≤ 640px |
 
@@ -1815,3 +1815,46 @@ Mỗi issue ghi rõ app thật có vào được trạng thái đó hay không.
 | Đề xuất sửa | Trên web cho lớp bọc `touch-action: pan-y`, hoặc không bật `keo` ở web |
 | Tiêu chí gỡ | Ở C1, kéo dọc bắt đầu trên tranh cuộn danh sách như bắt đầu ở chỗ khác |
 
+## F11 Chế độ demo
+
+Bản demo là thứ người chưa đăng nhập thấy khi một link đưa họ qua màn chào: `/` về `/welcome`, nhưng bốn tab và tám
+route demo dựng fixture «Team Đà Lạt» thay cho cửa đăng nhập. Đo trên bản export production, chưa đăng nhập; các hàng
+«có phiên» dùng chat-0 và chỉ đọc. Bản demo giữ trạng thái trong trang, nên F11 không ghi gì lên stack. Đạt: nhãn demo ở
+Khám phá, Lên plan, Cá nhân và sáu route; có phiên thì bảy trong tám route chuyển về màn sống (hồi quy B5 đạt; timeline
+là UI-035); «Đăng xuất bản trải nghiệm» về màn chào; vòng đời sheet L28 «Tùy chọn chuyến đi»: X, nền, Esc, kéo dài,
+vuốt nhanh đóng mà ở lại tab, kéo ngắn bật về, focus vào trong rồi trả về «Tùy chọn», ở C8 cao 58% và mọi nút với tới.
+F11 cũng mở rộng UI-023, UI-035, UI-038, UI-048, UI-082, UI-093.
+
+### UI-116 · Chat demo: bong bóng tin không xuống dòng, chữ tràn qua mép phải màn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (layout, mất nội dung) · **P2** |
+| Feature / Screen | F11.S01 · tab Tin nhắn khi chưa đăng nhập (`/messages`, `GroupChatScreen` bản demo) |
+| Nền tảng, cấu hình | web, C1–C3. Native: cùng style (khối tin không co trong hàng có `maxWidth`), khả năng cao cũng tràn (STATIC, chưa chạy) |
+| Điều kiện | Chưa đăng nhập, mở thẳng `/messages` |
+| Tái hiện | Mở `/messages`, nhìn tin của Quang Huy «Plan xịn đó, mình bình chọn chỗ BBQ trước đi.» |
+| Expected | Bong bóng không rộng quá 88% hàng; chữ xuống dòng trong bong bóng |
+| Actual | Chữ nằm trên một dòng, bong bóng nở theo chữ và tràn qua mép phải màn: thiếu 22px ở C1, 92px ở C2 (chỉ còn «…mình bình chọn chỗ B»), 52px ở C3. Ở C3 tin «Đi chứ! Tớ vote săn mây với BBQ nha» cũng thiếu 9px. Chat sống dùng bong bóng riêng: đoạn dài xuống dòng đúng (`TC-F05.S02-DAI-BASE`), chỉ URL liền mới tràn (UI-063) |
+| Evidence | ![C2](evidence/EV-F11-TAB-messages-C2.jpg) (hàng `TC-F11-TAB-MESSAGES` C1–C3; `chuBiCat` của doDac: hộp chữ 344px bắt đầu ở x 68) |
+| Source | `screens/Group.tsx:41–79` (`ChatBubble`); `:513` `messageRow: { …, maxWidth: "88%" }`; `:515` `messageBlock: { alignItems: "flex-start", gap: 3 }` không có `flexShrink`, nên khối tin giữ bề rộng một dòng của chữ và vượt trần 88% của hàng |
+| Hậu quả | Người chưa có tài khoản xem bản demo thấy chat vỡ bố cục và mất nửa câu ở máy 320dp, ngay ấn tượng đầu về chat |
+| Đề xuất sửa | `messageBlock: { flexShrink: 1 }`, hoặc `maxWidth` trên bong bóng |
+| Tiêu chí gỡ | `/messages` không phiên ở C1–C3: 0 chữ bị cắt trong bong bóng, câu dài xuống dòng |
+
+### UI-117 · Tab «Lên plan» demo: Back khi sheet «Tùy chọn chuyến đi» mở làm Khám phá bị khoá; chạm rơi xuống sheet vô hình
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (web, tương tác) · **P2** |
+| Feature / Screen / Layer | F11.S01 · tab «Lên plan» khi chưa đăng nhập (`TripTimelineScreen` bản demo) · L28 «Tùy chọn chuyến đi» |
+| Nền tảng, cấu hình | web, C1. Trên Android Chrome, cử chỉ back hệ thống cũng là Back trình duyệt. Native: `Sheet` nghe `hardwareBackPress` và đóng sheet trước, nên không vào trạng thái này (STATIC) |
+| Điều kiện | Chưa đăng nhập; tới «Lên plan» bằng thanh tab từ Khám phá, để Back có chỗ lùi |
+| Tái hiện | 1. Mở `/explore`, chạm tab «Lên plan». 2. Chạm «Tùy chọn», sheet «Tùy chọn chuyến đi» mở. 3. Bấm Back trình duyệt. 4. Trên Khám phá hiện ra, chạm: tim của quán đầu, ô tìm, tab «Lên plan», «Tạo mới», thẻ «Bánh căn Lệ». Mỗi cú chạm đo trên một lượt mới từ bước 1 |
+| Expected | Back đóng sheet và ở lại tab (như đề xuất của UI-038); hoặc, nếu rời tab, màn hiện ra dùng được bình thường |
+| Actual | URL về `/explore`, Khám phá trông bình thường. Nhưng màn «Lên plan» vẫn nằm bên dưới với sheet còn mở (1 hộp thoại), và `Sheet` vẫn giữ `inert` + `aria-hidden` trên mọi nhánh anh em, gồm Khám phá và thanh tab (6 vùng lớn). Hit-test bỏ qua phần tử inert, nên mỗi cú chạm lên Khám phá rơi xuống sheet vô hình: tim «Lưu Tiệm Nướng Xóm Lèo» trúng nút «Đóng bảng» (tim không đổi, sheet đóng ngầm); ô tìm trúng nền «Đóng» (lần 1 ô không nhận focus, lần 2 mới nhận); thẻ «Bánh căn Lệ» trúng nút «Tường nhóm» và đưa tới `/groups/team-da-lat/wall`. Tab «Lên plan» và «Tạo mới» không phản hồi: cú chạm rơi vào một `div` trơn. Trình đọc màn hình: cả Khám phá `aria-hidden`. Thoát được bằng Esc (bàn phím) hoặc Forward; trên điện thoại thì chỉ có cú chạm đầu vô tình đóng sheet |
+| Evidence | ![Back rồi chạm tim](evidence/EV-F11-L28-BACK-C1.jpg) ![chạm thẻ quán, tới tường nhóm](evidence/EV-F11-L28-THOAT-C1.jpg) (hàng `TC-L28-BACK`, `TC-L28-BACK-LOI-RA`, `TC-L28-BACK-CHAM-XUYEN`; trước mỗi cú chạm, `elementFromPoint`, vốn cũng bỏ qua phần tử inert, cho biết cú chạm sẽ rơi vào đâu. L28 đo hai lượt, cùng kết quả) |
+| Source | `ui/Sheet.tsx:76–121`: trên web, khi mở, đặt `inert` và `aria-hidden` cho mọi anh em trên chuỗi tổ tiên tới `body`, chỉ gỡ khi `open`/`hien` đổi hoặc khi sheet bị gỡ. Màn tab không bị gỡ khi rời tab và còn bố cục bên dưới màn đang hiện, nên Back rời tab mà sheet vẫn mở. `screens/Outing.tsx:190` (nút «Tùy chọn»), `:227` (`Sheet`). Ở mốc này đây là màn tab duy nhất chứa `Sheet` (grep `<Sheet` trong các màn của bốn tab), nên chỉ bản demo gặp; `Sheet` nào sau này đặt trong màn tab sẽ gặp cùng lỗi |
+| Hậu quả | Sau một thao tác rất thường (vuốt back trên Android), màn chính trông bình thường nhưng cú chạm đầu bị nuốt hoặc mở một màn không liên quan, và thanh tab chết cho tới khi có cú chạm «trúng» |
+| Đề xuất sửa | Đóng sheet khi màn chứa nó mất focus (`useIsFocused` hoặc sự kiện `blur` của navigation); hoặc để Back đóng sheet trước (UI-038) |
+| Tiêu chí gỡ | Làm lại các bước trên: sau Back không còn vùng inert nào ngoài hộp thoại; chạm tim lần đầu đổi thành «Bỏ lưu»; chạm thẻ quán mở đúng quán; thanh tab phản hồi |

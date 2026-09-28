@@ -64,6 +64,9 @@ AUDIT_BASE=http://127.0.0.1:8081 node kich-ban/f10-bang-dev.mjs [--chi lab-base,
                                     # F10 bảng dev; cần server dev: EXPO_PUBLIC_RUDI_FIXTURE=1 EXPO_OFFLINE=1 CI=1 npx expo start --web
 node kich-ban/f10-bang-dev.mjs --chi prod   # không đặt AUDIT_BASE: bản export production phải chuyển /dev/* về /welcome
 node kich-ban/f10-phan-xu.mjs        # phán quyết bằng mắt của F10, kèm sửa trùng ID TC-MO12-KEO với F02
+node kich-ban/f11-demo.mjs [--chi tab,route,co-phien,l28,l28-thoat,cat-chu,thoat]
+                                    # F11 chế độ demo trên bản export, chưa đăng nhập; co-phien dùng phiên chat-0, chỉ đọc
+node kich-ban/f11-phan-xu.mjs        # phán quyết bằng mắt của F11; `lat` lật hàng tự động mà ảnh bác bỏ, chạy lại thì bỏ qua
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
                                     # ghim ảnh, link ảnh, bảng issue theo mức/loại; --canary đòi 5 canary đỏ
@@ -117,6 +120,15 @@ lại ID của feature trước sẽ đè hàng đó (F10 từng đè hàng N/A 
 CPU và hoạt ảnh vượt ngưỡng chờ. Lọc tín hiệu của bộ đo theo vị trí (hộp của vùng hay của hộp thoại), không theo chữ:
 cùng một chữ có thể nằm dưới lớp nền. Bộ đo vùng bấm quét cả tài liệu, nên một nút ngoài màn lặp lại ở mọi cửa sổ:
 đọc toạ độ trước khi kết luận. Placeholder của ô nhập là chữ vẽ đè lên ô (F44), không phải thuộc tính `placeholder`.
+
+`elementFromPoint` và cú chạm theo toạ độ đều bỏ qua phần tử `inert`: hit-test coi chúng như `pointer-events: none`. Khi
+màn đang hiện bị inert, cả hai rơi xuống lớp nằm dưới, nên đừng dùng hit-test để kết luận một lớp «thấy được»: nhìn ảnh
+(F11 từng báo «sheet hiện lại» trong khi ảnh vẫn là Khám phá). Ngược lại, hit-test là cách đúng để biết cú chạm sẽ rơi
+vào đâu. Màn tab không bị gỡ khi rời tab: màn cũ vẫn có bố cục bên dưới, và lớp của nó vẫn có kích thước, độ mờ khác 0.
+
+Bộ đo xếp chữ kết bằng «…» vào `ellipsis`, tách khỏi `chuBiCat`. Tiêu chí «không cắt» chỉ đọc `chuBiCat` sẽ PASS trong
+khi số tiền hay nhãn nút đang bị «…» (F11: «1.106.25…»). Mỗi màn đọc cả danh sách `ellipsis`, và tách chữ cắt có chủ
+đích (mô tả một dòng) khỏi số tiền, tiêu đề và nhãn nút.
 
 Chạy `kiem-tai-lieu.mjs` sau `tong-hop.mjs` và trước mỗi commit. Nó không đếm `evidence-manifest.md`: file đó liệt kê
 mọi ảnh trong thư mục, nên đếm nó thì «ảnh không ai dùng» không bao giờ đỏ (sự cố 3 trong report). Ảnh chỉ được tính

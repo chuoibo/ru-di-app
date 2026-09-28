@@ -151,6 +151,15 @@ Ghi chú checkpoint 11:
 | F11.S01 | 4 tab khi chưa đăng nhập | Discovery, TripTimeline, GroupChat demo, Profile demo |
 | F11.S02 | route demo | `/finance`, `/settlements/[id]`, `/trips/[id]/timeline`, `/trips/[id]/itinerary`, `/votes/[id]`, `/check-ins/new`, `/ai-match`, `/smart-split/[id]/assignment` |
 
+Ghi chú F11 (checkpoint 12):
+- `/` về `/welcome`, nhưng bốn tab mở thẳng khi chưa đăng nhập dựng bản demo thay cho cửa đăng nhập.
+- Nhãn demo là `DemoBadge`, trả `null` khi `cheDo === "live"` (`ui.tsx:330`): màn demo nào còn mở được khi có phiên
+  (timeline, UI-035) thì mất nhãn.
+- Lối ra khỏi bản demo: tab Cá nhân → «Tài khoản» → «Đăng xuất bản trải nghiệm», về `/welcome`. Không màn demo nào có
+  «Đăng nhập» (UI-082).
+- `TripTimelineScreen` (tab «Lên plan» demo) là màn tab duy nhất có `Sheet` (L28) ở mốc này. Màn tab không bị gỡ khi
+  rời tab, nên sheet mở ở đó sống sót qua Back (UI-117).
+
 ## 2. Lớp UI (overlay, sheet, tray, panel, bộ chọn)
 
 `Sheet` là `src/rudi/ui/Sheet.tsx`, dùng chung cho các sheet bên dưới. Trên web nó có:
@@ -190,7 +199,7 @@ Mặc định không né bàn phím.
 | L25 | Xem ảnh | `ui/PhotoViewer.tsx` (RN `Modal` duy nhất) | F08.S02, F08.S03 | — | «Đóng», Android back | pinch, pan, chạm đúp; không vuốt xuống để đóng; đo ở checkpoint 9: vòng đời trên web đạt khi chưa ai chụm; ảnh cao 0, vuốt nhảy hai ảnh, chụm phóng cả trang (UI-094); đóng không mờ dần (UI-098) |
 | L26 | Xem story + xác nhận xoá | `story/XemStoryScreen.tsx` | F08.S06 | — | đóng modal | tự chuyển 5 s; đo ở checkpoint 9: «Đóng story», Back, Enter đạt; vùng chạm không role, câu hỏi xoá không nhận focus (UI-101) |
 | L27 | Xác nhận xoá tài khoản | `XoaTaiKhoan.tsx` | F09.S06 | — | huỷ | hai bước; đo ở checkpoint 10 trên tài khoản dùng một lần: bước 1 rõ; «XOA» không dấu, «XOÁ» để nút tắt không lý do, Back ở bước 2 rời trang (UI-110); xoá thật, token cũ 401 |
-| L28 | Tuỳ chọn chuyến (demo) | `Outing.tsx` | F11 | — | Sheet | |
+| L28 | Tuỳ chọn chuyến (demo) | `screens/Outing.tsx:227` | F11.S01 | — | Sheet | đo ở checkpoint 12: 7 cách đóng ở C1 đạt (kéo ngắn bật về), focus vào trong rồi trả về «Tùy chọn», C8 cao 58%; C6 rộng 664px, C7 920px (UI-093); Back rời tab mà sheet vẫn mở, Khám phá bị inert, cú chạm rơi xuống sheet vô hình (UI-117). Màn tab duy nhất có `Sheet` ở mốc này |
 | L29 | Nắp gấp `NapGiay` | `ui/NapGiay.tsx` | nhiều màn | — | gập | |
 | L30 | Pager Welcome | `screens/Welcome.tsx` | F01.S01 | — | vuốt, chấm | carousel |
 | L31 | Bộ chọn ảnh (file chooser trên web) | `ky-niem/chon-anh.ts`, `ChiaBillLive.tsx` | F04, F05, F08, F09 | — | huỷ | trên native là picker hệ thống; F08: đóng bộ chọn không chọn gì thì màn giữ nguyên (đạt, checkpoint 9) |

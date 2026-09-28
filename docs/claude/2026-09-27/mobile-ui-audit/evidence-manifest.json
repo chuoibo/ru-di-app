@@ -748,5 +748,30 @@
   "bytes": 33085,
   "sha8": "740267ee",
   "moTa": "UI-094: bảng dev, trình xem ảnh với ảnh đóng gói sẵn: tiêu đề, «1 / 2», gợi ý, chú thích, nhưng không có ảnh (390×0) (C1)"
+ },
+ "EV-F11-CAT-C2-ghep": {
+  "bytes": 176230,
+  "sha8": "88616ae8",
+  "moTa": "UI-048, UI-023: ba route demo ở 320dp: «1.106.25…» ở quyết toán, «Chỉnh lịc…», «Dùng pla…» ở lịch trình AI, «Nhắc thà…» ở check-in (C2)"
+ },
+ "EV-F11-L28-BACK-C1": {
+  "bytes": 114643,
+  "sha8": "b727058e",
+  "moTa": "UI-117: sheet «Tùy chọn chuyến đi» mở ở /plan; Back về /explore, chạm tim của quán đầu: không đổi (cú chạm rơi xuống nút «Đóng bảng» của sheet vô hình) (C1)"
+ },
+ "EV-F11-L28-THOAT-C1": {
+  "bytes": 138571,
+  "sha8": "65d26c26",
+  "moTa": "UI-117: sau Back, chạm thẻ «Bánh căn Lệ» trên Khám phá đưa tới tường nhóm /groups/team-da-lat/wall (trúng nút «Tường nhóm» của sheet vô hình) (C1)"
+ },
+ "EV-F11-TAB-messages-C2": {
+  "bytes": 77644,
+  "sha8": "d44fab18",
+  "moTa": "UI-116, UI-082: tab Tin nhắn demo ở 320dp: không nhãn demo; bong bóng «Plan xịn đó, mình bình chọn chỗ B…» tràn qua mép phải (C2)"
+ },
+ "EV-F11.S01-BASE-C1-ghep": {
+  "bytes": 212828,
+  "sha8": "69ff8504",
+  "moTa": "UI-082: bốn tab khi chưa đăng nhập ở C1: Khám phá, Lên plan, Cá nhân có nhãn «Dữ liệu demo», Tin nhắn không có"
  }
 }

@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (150 ảnh, tổng 17.58 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (155 ảnh, tổng 18.27 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -154,3 +154,8 @@
 | [EV-F10-SO-SANH-C2](evidence/EV-F10-SO-SANH-C2.jpg) | UI-113: bảng dev, renderer Khám phá thật, cặp so sánh không ảnh ở 320dp: tim «Lưu Still Cafe» bị đẩy qua mép phải, còn thấy 26/48dp (C2) | 104831 | `d23bc085` |
 | [EV-F10-TIM-LONG-C1](evidence/EV-F10-TIM-LONG-C1.jpg) | UI-114: bảng dev, cặp so sánh có ảnh: tim trên góc ảnh nằm trong nút «Mở …»; bản dev hiện cảnh báo React «<button> cannot contain a nested <button>» (C1) | 193614 | `d6923a82` |
 | [EV-F10-XEM-ANH-C1](evidence/EV-F10-XEM-ANH-C1.jpg) | UI-094: bảng dev, trình xem ảnh với ảnh đóng gói sẵn: tiêu đề, «1 / 2», gợi ý, chú thích, nhưng không có ảnh (390×0) (C1) | 33085 | `740267ee` |
+| [EV-F11-CAT-C2-ghep](evidence/EV-F11-CAT-C2-ghep.jpg) | UI-048, UI-023: ba route demo ở 320dp: «1.106.25…» ở quyết toán, «Chỉnh lịc…», «Dùng pla…» ở lịch trình AI, «Nhắc thà…» ở check-in (C2) | 176230 | `88616ae8` |
+| [EV-F11-L28-BACK-C1](evidence/EV-F11-L28-BACK-C1.jpg) | UI-117: sheet «Tùy chọn chuyến đi» mở ở /plan; Back về /explore, chạm tim của quán đầu: không đổi (cú chạm rơi xuống nút «Đóng bảng» của sheet vô hình) (C1) | 114643 | `b727058e` |
+| [EV-F11-L28-THOAT-C1](evidence/EV-F11-L28-THOAT-C1.jpg) | UI-117: sau Back, chạm thẻ «Bánh căn Lệ» trên Khám phá đưa tới tường nhóm /groups/team-da-lat/wall (trúng nút «Tường nhóm» của sheet vô hình) (C1) | 138571 | `65d26c26` |
+| [EV-F11-TAB-messages-C2](evidence/EV-F11-TAB-messages-C2.jpg) | UI-116, UI-082: tab Tin nhắn demo ở 320dp: không nhãn demo; bong bóng «Plan xịn đó, mình bình chọn chỗ B…» tràn qua mép phải (C2) | 77644 | `d44fab18` |
+| [EV-F11.S01-BASE-C1-ghep](evidence/EV-F11.S01-BASE-C1-ghep.jpg) | UI-082: bốn tab khi chưa đăng nhập ở C1: Khám phá, Lên plan, Cá nhân có nhãn «Dữ liệu demo», Tin nhắn không có | 212828 | `69ff8504` |
