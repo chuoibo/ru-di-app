@@ -1,0 +1,48 @@
+# Nhánh của flow 41 khi máy chủ CÓ khoá mô hình (--ai, AI=1): chat hai người.
+#
+# Thiết kế 2026-09-28 (lát M1): cặp nhờ Rủ Đi AI bằng lệnh `hoi` (gõ @Rủ Đi,
+# hoặc nút «Hỏi Rủ Đi AI» dưới các công cụ của khay, điền sẵn «@Rủ Đi»). Câu
+# trả lời là một TIN TRẢ LỜI vào đúng tin nhờ, ký «Rủ Đi AI · đọc N tin»
+# (hoặc «· chỉ đọc lời nhờ»). Tấm «Xem» nói lời nhờ và câu trả lời hiện cho
+# cả hai bạn, không «cả nhóm». Soi theo _30-ai-co-khoa. Cần máy chủ đã mở
+# `hoi` cho cặp (lát S1) và engine nhóm `go`; thiếu thì chip nói «chưa sẵn
+# sàng» và nhánh này đỏ ở bước chờ chip, đúng chỗ.
+#
+# Flow 41 đang ở màn chat của cặp, ô soạn trống.
+appId: com.lakiet.rudi
+---
+- tapOn: "Thêm vào cuộc trò chuyện"
+- extendedWaitUntil:
+    visible: "Hỏi Rủ Đi AI"
+    timeout: 20000
+- assertVisible: "Tờ giấy"
+- assertNotVisible: "Tờ hẹn"
+- takeScreenshot: 41-khay-hoi-ai
+- tapOn: "Hỏi Rủ Đi AI"
+# Khay đóng, ô soạn đã có «@Rủ Đi »: gõ tiếp lời nhờ.
+- tapOn: "Ô soạn tin"
+- inputText: "goi y cho hai minh"
+- extendedWaitUntil:
+    visible: "Kèm [0-9]+ tin gần đây"
+    timeout: 60000
+- assertVisible: "Chỉ gửi lời nhờ"
+- hideKeyboard
+- tapOn: "Xem những tin sẽ gửi kèm"
+- extendedWaitUntil:
+    visible: "Rủ Đi AI sẽ đọc đúng [0-9]+ tin dưới đây.*cả hai bạn.*"
+    timeout: 15000
+- assertNotVisible: ".*cả nhóm.*"
+- takeScreenshot: 41-ai-chip-xem
+- back
+- extendedWaitUntil:
+    visible: "Gửi tin nhắn"
+    timeout: 15000
+- tapOn: "Gửi tin nhắn"
+- hideKeyboard
+- extendedWaitUntil:
+    visible: "Rủ Đi AI · (đọc [0-9]+ tin|chỉ đọc lời nhờ)"
+    timeout: 120000
+- assertVisible: "Trả lời Bạn: @Rủ Đi goi y cho hai minh"
+- assertNotVisible: "Rủ Đi AI chưa nhận lời nhờ"
+- assertNotVisible: "Chưa phác được tờ hẹn"
+- takeScreenshot: 41-ai-tra-loi

@@ -67,14 +67,16 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   /**
    * «Hỏi Rủ Đi AI»: the tray no longer sends to the AI itself. Since ADR-0046
    * an AI request is an ordinary `@Rủ Đi` message, written in the composer
-   * with the preview chip above its send button, so this puts `/plan ` there.
+   * with the preview chip above its send button, so this puts `/plan ` there
+   * in a group and `@Rủ Đi ` in a pair (`chuKhay().moDauHoiAi`).
    */
   onHoiAi: () => void;
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null;
 }) {
-  const sanSang = lenhSanSang(capabilities, "plan");
   const { colors } = useRudiTheme();
   const chu = chuKhay(haiNguoi && onToGiay !== undefined);
+  // A pair asks `hoi` and a group `plan`: the tray reads the one it offers.
+  const sanSang = lenhSanSang(capabilities, chu.lenhAi);
   // The tray is a sheet laid over the conversation; Nếp makes room for it.
   useNhuongChoNep(panel !== null);
   const { height } = useWindowDimensions();
@@ -201,6 +203,12 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
           </Text>
         )}
       </ScrollView>
+      {/* A pair's plan slot is its paper, so its way to Rủ Đi AI sits under
+          the tools: it starts an `@Rủ Đi` message, like the group's panel. */}
+      {panel === "tools" && chu.hoiAiTrenKhay ? <View style={styles.footer}>
+        {sanSang ? <RudiButton label={chu.hoiAiTrenKhay.label} variant="outline" disabled={busy} onPress={onHoiAi} />
+          : <Text style={[typography.caption, { color: colors.inkSoft }]}>{chu.hoiAiTrenKhay.chuaSanSang}</Text>}
+      </View> : null}
       {panel === "poll" ? <View style={styles.footer}>
         {pollError ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
         <RudiButton label="Gửi bình chọn" loading={busy} disabled={busy} onPress={() => void sendPoll()} />
