@@ -34,13 +34,13 @@ export function BanDo(props: BanDoProps) {
   return <BanDoThieu {...props} />;
 }
 
-function BanDoThieu({ mauNen, mocs, onNen }: BanDoProps) {
+function BanDoThieu({ mau, mocs, onNen }: BanDoProps) {
   const { colors } = useRudiTheme();
   return (
     <Pressable
       accessibilityLabel="Bản đồ hành trình: cần bản native có MapLibre"
       onPress={onNen}
-      style={[styles.fill, { backgroundColor: mauNen }]}
+      style={[styles.fill, { backgroundColor: mau.nen }]}
     >
       <View style={styles.giua}>
         <Text style={[typography.label, { color: colors.ink }]}>Chưa vẽ được bản đồ native</Text>

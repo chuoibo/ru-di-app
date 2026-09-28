@@ -5,6 +5,11 @@
  * FIRST VIEWPORT: Geography above a compact, collapsible day page; wide screens
  * keep the page beside the map. Important times remain with their stops.
  * FORM: Approved itinerary extension, code-led; no replacement visual world.
+ * FINISH (M7 bản đồ): stops are paper stamps that say their state by shape and
+ * word (reached = pencil + tick, next = coral, lifted); the plan is one ink
+ * line with its minutes on it, a draft is a broken pencil line; the page head
+ * names the day and stamps what the line is -- a real road, a draft, or «chưa
+ * tính được» -- so a straight line is never read as a road.
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
@@ -12,11 +17,18 @@ import { useRouter } from "expo-router";
 
 import { typography, useRudiTheme, mauMocHanhTrinh } from "../theme";
 import { RudiButton } from "../ui";
+import { Stamp } from "../ui/Stamp";
+import { ganTrangThai } from "./chieu";
 import { BanDo } from "./BanDo";
 import { gioTru } from "./duong";
 import type { DoanDuongHanhTrinh, HanhTrinh, HoatDongHanhTrinh } from "./mo-hinh";
 import { chuKhoangCach, chuThoiGian, tomTatHanhTrinh } from "./tom-tat";
-import { kieuBanDo, type MocBanDo } from "./kieu-ban-do";
+import { kieuBanDo, nhanDoan, nhanMoc, type MocBanDo, type NeoMoc } from "./kieu-ban-do";
+
+import type { TrangThaiTuyen } from "./ke-hoach";
+
+/** The day's anchors, from its settings (start / end / return to start). */
+export type NeoNgay = { xuatPhat: string | null; ketThuc: string | null; veDiemDau: boolean };
 
 import { useMotion } from "../ui/useMotion";
 import { useNhuongChoNep } from "../nep/NepProvider";
@@ -48,6 +60,12 @@ export function ManHinhHanhTrinh({
   onVeLichTrinh,
   chanDuoi = 0,
   dangToiUu = false,
+  tuyen = "uocLuong",
+  phuongTien,
+  tieuDeTrang,
+  daToiIds = [],
+  dangDi = false,
+  neo,
 }: {
   hanh: HanhTrinh;
   actions?: ReactNode;
@@ -69,10 +87,21 @@ export function ManHinhHanhTrinh({
   /** Clearance under the panel: the host's tab bar, when it has one. */
   chanDuoi?: number;
   dangToiUu?: boolean;
+  tuyen?: TrangThaiTuyen;
+  /** «XE MÁY», «Ô TÔ», «ĐI BỘ»: printed on the real-road stamp. */
+  phuongTien?: string;
+  /** «Ngày 1 · T7 12/10»; absent on a single-day fixture. */
+  tieuDeTrang?: string;
+  /** Stops somebody in the group has checked in at. */
+  daToiIds?: readonly string[];
+  /** The outing is happening today, so one stop is "next". */
+  dangDi?: boolean;
+  neo?: NeoNgay;
 }) {
   const router = useRouter();
   const { colors, dark, radius } = useRudiTheme();
-  const mau = mauMocHanhTrinh(colors);
+  const mau = useMemo(() => mauMocHanhTrinh(colors, dark), [colors, dark]);
+  const kieu = useMemo(() => kieuBanDo(dark), [dark]);
   const doan = hanh.routeSegments;
   const { width, height, fontScale } = useWindowDimensions();
   const [collapsed, setCollapsed] = useState(false);
@@ -82,23 +111,34 @@ export function ManHinhHanhTrinh({
   // The map runs edge to edge and pans under a finger at the right edge too,
   // and its attribution sits 8dp in: there is no margin here, so Nếp makes room.
   useNhuongChoNep(true);
-  const padding = useMemo(() => ({ top: 72, left: 40, right: 40, bottom: 40 }), []);
+  // Room for half a stamp (24) above the web attribution strip (≈26) at the
+  // bottom, and below «Khớp hành trình» at the top: a fitted stop is never
+  // under a control or the credit line.
+  const padding = useMemo(() => ({ top: 72, left: 40, right: 40, bottom: 64 }), []);
 
-  const mocs: MocBanDo[] = useMemo(
-    () =>
-      hanh.activities
-        .filter((a): a is HoatDongHanhTrinh & { lat: number; lng: number; so: number } => a.lat !== null && a.lng !== null && a.so !== null)
-        .map((a) => ({
-          id: a.id,
-          so: a.so,
-          lat: a.lat,
-          lng: a.lng,
-          tieuDe: a.tieuDe,
-          gio: a.gio,
-          chon: a.id === selectedActivityId,
-        })),
-    [hanh.activities, selectedActivityId],
-  );
+  const mocs: MocBanDo[] = useMemo(() => {
+    const coViTri = hanh.activities.filter(
+      (a): a is HoatDongHanhTrinh & { lat: number; lng: number; so: number } => a.lat !== null && a.lng !== null && a.so !== null,
+    );
+    const trangThai = daToiIds.length > 0 || dangDi ? ganTrangThai(coViTri.map((a) => a.id), daToiIds, dangDi) : null;
+    const neoCua = (id: string): NeoMoc => {
+      if (!neo) return null;
+      if (neo.xuatPhat === id) return neo.veDiemDau ? "ve" : "xuat-phat";
+      if (neo.ketThuc === id) return "ket-thuc";
+      return null;
+    };
+    return coViTri.map((a, i) => ({
+      id: a.id,
+      so: a.so,
+      lat: a.lat,
+      lng: a.lng,
+      tieuDe: a.tieuDe,
+      gio: a.gio,
+      chon: a.id === selectedActivityId,
+      trangThai: trangThai ? trangThai[i] : null,
+      neo: neoCua(a.id),
+    }));
+  }, [hanh.activities, selectedActivityId, daToiIds.join("|"), dangDi, neo?.xuatPhat, neo?.ketThuc, neo?.veDiemDau]);
 
   const doanHien = doan.length > 0 ? doan : hanh.routeSegments;
   const tom = tomTatHanhTrinh(hanh.activities, doanHien);
@@ -122,29 +162,25 @@ export function ManHinhHanhTrinh({
     .filter((s): s is string => s !== null)
     .join(" · ");
 
-  const mauMoc = [colors.accent];
-  const mauCuaMoc = () => colors.accent;
+  const dauTuyen =
+    tuyen === "that" ? `ĐƯỜNG THẬT${phuongTien ? ` · ${phuongTien}` : ""}`
+    : tuyen === "dangTinh" ? "ĐANG TÍNH ĐƯỜNG"
+    : tuyen === "khongTinhDuoc" ? "CHƯA TÍNH ĐƯỜNG"
+    : "NÉT NHÁP";
 
   return (
     <View onLayout={(e) => setAvailableHeight(e.nativeEvent.layout.height)} style={[styles.khung, wide && { flexDirection: "row" }]}>
       <View style={{ flex: 1, minHeight: 0 }}>
       <BanDo
-        doan={doanHien.map((d) => ({ id: d.id, polyline: d.polyline, uocLuong: d.nguon === "geodesic", chon: d.id === selectedSegmentId }))}
+        doan={doanHien.map((d) => ({ id: d.id, polyline: d.polyline, uocLuong: d.nguon === "geodesic", chon: d.id === selectedSegmentId, nhan: nhanDoan(d) }))}
         fitDem={fitDem}
         cameraKey={cameraKey ?? hanh.activities.map((a) => a.id).join("|")}
         padding={padding}
         fitPoints={fitPoints}
         duration={motion.ms("standard")}
         onGhim={onGhim}
-        kieu={kieuBanDo(dark)}
-        mauDuong={mau.duong}
-        mauDuongMo={mau.duongMo}
-        mauMoc={mauMoc}
-        mauMocChon={colors.accent}
-        mauMocInk={mau.mocInk}
-        mauNen={mau.the}
-        mauVien={mau.vien}
-        mauVienDuong={mau.vienDuong}
+        kieu={kieu}
+        mau={mau}
         mocs={mocs}
         onChonDoan={onChonDoan}
         onChonMoc={onChonMoc}
@@ -172,16 +208,23 @@ export function ManHinhHanhTrinh({
           }}
           style={[styles.the, wide ? styles.theRong : styles.theHep, { paddingBottom: 12 + chanDuoi, maxHeight: wide ? undefined : availableHeight * (fontScale >= 1.8 ? 0.65 : 0.56), width: wide ? 360 : undefined }]}
         >
-          <Pressable accessibilityRole="button" accessibilityState={{ expanded: !collapsed }} onPress={() => setCollapsed(!collapsed)} style={{ minHeight: 48, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          {/* The page head: which day, what the line on the map is, and the
+              day's numbers. The stamp is the answer to «is that a road?». */}
+          <View style={styles.dauTrang}>
+            <View style={styles.dauChu}>
+              {tieuDeTrang ? <Text accessibilityRole="header" style={[typography.h2, { color: colors.ink }]}>{tieuDeTrang}</Text> : null}
+              {coMoc ? <Text style={[typography.label, styles.so, { color: colors.inkSoft }]}>{tomChu}</Text> : null}
+            </View>
+            {coMoc ? <Stamp label={dauTuyen} tone={tuyen === "that" ? "accent" : "ink"} tilt={tuyen === "that" ? -2 : 0} testID="hanh-trinh-dau-tuyen" /> : null}
+          </View>
+          <Pressable accessibilityRole="button" accessibilityState={{ expanded: !collapsed }} onPress={() => setCollapsed(!collapsed)} style={styles.hangGap}>
             <Text style={[typography.label, { color: colors.ink }]}>Các chặng trong ngày</Text>
             <Text style={[typography.caption, { color: colors.accent }]}>{collapsed ? "Mở trang" : "Thu gọn"}</Text>
           </Pressable>
-          {collapsed ? <Text style={[typography.note, { color: colors.inkSoft }]}>{tomChu}</Text> : <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>
+          {collapsed ? null : <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>
 
           {coMoc ? (
             <ThanhChang
-              mauCuaMoc={mauCuaMoc}
-              mauInk={mau.mocInk}
               mocs={mocs}
               onChon={(id) => (id === selectedActivityId ? onNen() : onChonMoc(id))}
             />
@@ -197,8 +240,13 @@ export function ManHinhHanhTrinh({
             <TheDoan activities={hanh.activities} doan={doanChon} />
           ) : coMoc ? (
             <View style={styles.khoiThe}>
-              <Text style={[typography.label, { color: colors.ink }]}>{tomChu}</Text>
-              {uocLuong ? (
+              {tuyen === "khongTinhDuoc" ? (
+                <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.ink }]}>
+                  Chưa tính được đường đi lúc này. Thứ tự các điểm vẫn ở đây; thử «Tính lại đường» sau ít phút.
+                </Text>
+              ) : tuyen === "dangTinh" ? (
+                <Text style={[typography.note, { color: colors.inkSoft }]}>Đang tính đường đi thật cho cả ngày…</Text>
+              ) : uocLuong ? (
                 <Text style={[typography.note, { color: colors.inkSoft }]}>Chưa có tuyến đường bộ. Nét nối chỉ thể hiện thứ tự điểm hẹn.</Text>
               ) : null}
               {thieu > 0 ? (
@@ -236,13 +284,9 @@ export function ManHinhHanhTrinh({
 function ThanhChang({
   mocs,
   onChon,
-  mauCuaMoc,
-  mauInk,
 }: {
   mocs: readonly MocBanDo[];
   onChon: (id: string) => void;
-  mauCuaMoc: (so: number) => string;
-  mauInk: string;
 }) {
   const { colors, radius } = useRudiTheme();
   const rail = useRef<ScrollView>(null);
@@ -259,7 +303,7 @@ function ThanhChang({
     >
       {mocs.map((moc) => (
         <Pressable
-          accessibilityLabel={`Mốc ${moc.so}, ${moc.gio}, ${moc.tieuDe}`}
+          accessibilityLabel={nhanMoc(moc)}
           accessibilityRole="button"
           accessibilityState={{ selected: moc.chon }}
           key={moc.id}
@@ -274,8 +318,23 @@ function ThanhChang({
             },
           ]}
         >
-          <View style={[styles.changSo, { backgroundColor: mauCuaMoc(moc.so) }]}>
-            <Text style={[styles.changSoChu, { color: mauInk }]}>{moc.so}</Text>
+          {/* The rail repeats the pin's stamp in small: same number, same state. */}
+          <View
+            style={[
+              styles.changSo,
+              moc.trangThai === "hien-tai"
+                ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                : { backgroundColor: colors.card, borderColor: moc.trangThai === "xong" ? colors.lineStrong : colors.accent },
+            ]}
+          >
+            <Text
+              style={[
+                styles.changSoChu,
+                { color: moc.trangThai === "hien-tai" ? colors.accentInk : moc.trangThai === "xong" ? colors.inkFaint : colors.accent },
+              ]}
+            >
+              {moc.so}
+            </Text>
           </View>
           <View style={styles.changChu}>
       <Text style={[typography.caption, { color: colors.inkFaint }]}>{moc.gio}</Text>
@@ -367,7 +426,11 @@ const styles = StyleSheet.create({
   thanh: { marginHorizontal: -14, marginTop: -2 },
   thanhTrong: { paddingHorizontal: 14, gap: 8 },
   chang: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 8, paddingHorizontal: 10, borderWidth: 1, maxWidth: 210 },
-  changSo: { width: 24, height: 24, borderRadius: 999, alignItems: "center", justifyContent: "center" },
-  changSoChu: { fontSize: 12, fontWeight: "700", lineHeight: 15 },
+  changSo: { minWidth: 26, height: 26, borderRadius: 6, borderWidth: 1.5, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 },
+  changSoChu: { fontSize: 13, fontWeight: "800", lineHeight: 16, fontVariant: ["tabular-nums"] },
+  dauTrang: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" },
+  dauChu: { flexShrink: 1, gap: 2, minWidth: 160 },
+  so: { fontVariant: ["tabular-nums"] },
+  hangGap: { minHeight: 48, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   changChu: { flexShrink: 1 },
 });

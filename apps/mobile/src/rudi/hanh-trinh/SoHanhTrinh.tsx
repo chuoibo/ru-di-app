@@ -11,11 +11,18 @@ import { ManHinhHanhTrinh } from "./ManHinhHanhTrinh";
 import { useCheDoLichTrinh } from "./che-do";
 import { chieuTuChang } from "./chieu";
 import type { ChoChieu, ToaDo } from "./mo-hinh";
-import { apDungTuyen, doiViTri, ngayMacDinh, nhapTuKeo, suaChang, xoaChang, type BanNhap, type ChangDi, type NgayDi, type XemTruoc } from "./ke-hoach";
+import { apDungTuyen, chuNgay, doiViTri, ngayMacDinh, nhapTuKeo, suaChang, trangThaiTuyen, xoaChang, type BanNhap, type ChangDi, type NgayDi, type XemTruoc } from "./ke-hoach";
 import { chuKhoangCach, chuThoiGian } from "./tom-tat";
 
-type Props = { outing: BuoiDi; places: ChoChieu[]; actorId?: string; onSaved: (outing: BuoiDi) => void; onReload?: () => Promise<void>; onTimeline: () => void; bottom?: number; fixture?: boolean; controller?: ReturnType<typeof useCheDoLichTrinh>; initialDay?: string; onDay?: (day: string) => void };
-export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTimeline, bottom = 0, fixture = false, controller, initialDay, onDay }: Props) {
+const PHUONG_TIEN = { motorbike: "XE MÁY", car: "Ô TÔ", walk: "ĐI BỘ" } as const;
+/** Local calendar date, the one a person means by «hôm nay». */
+function homNay(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+type Props = { outing: BuoiDi; places: ChoChieu[]; actorId?: string; onSaved: (outing: BuoiDi) => void; onReload?: () => Promise<void>; onTimeline: () => void; bottom?: number; fixture?: boolean; controller?: ReturnType<typeof useCheDoLichTrinh>; initialDay?: string; onDay?: (day: string) => void; daToiIds?: readonly string[] };
+export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTimeline, bottom = 0, fixture = false, controller, initialDay, onDay, daToiIds = [] }: Props) {
   const { colors } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState(() => nhapTuKeo(outing));
@@ -135,7 +142,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
       {preview.savings ? <Text style={[typography.label, { color: colors.ink }]}>{preview.savings.duration_seconds === 0 ? "Thời gian di chuyển không đổi" : `${chuThoiGian(Math.abs(preview.savings.duration_seconds))} ${preview.savings.duration_seconds > 0 ? "ít di chuyển hơn" : "di chuyển thêm"}`} · {chuKhoangCach(Math.abs(preview.savings.distance_meters))} {preview.savings.distance_meters >= 0 ? "ngắn hơn" : "dài hơn"}</Text> : null}
       {suggestion ? preview.suggestion.stops.filter((s) => s.at !== draft.stops.find((d) => d.id === s.id)?.at).map((s) => <Text key={s.id} style={[typography.note, { color: colors.inkSoft }]}>{draft.stops.find((d) => d.id === s.id)?.label}: {draft.stops.find((d) => d.id === s.id)?.at} → {s.at}</Text>) : null}
     </> : null}
-    {preview ? [...preview.issues, ...(route?.issues ?? [])].filter((v, i, all) => all.findIndex((a) => a.code === v.code && a.stop_id === v.stop_id) === i).map((issue, i) => <Text key={i} style={[typography.note, { color: colors.inkSoft }]}>{issue.message}</Text>) : null}
+    {preview ? [...preview.issues, ...(route?.issues ?? [])].filter((v, i, all) => !v.code.startsWith("routing_") && all.findIndex((a) => a.code === v.code && a.stop_id === v.stop_id) === i).map((issue, i) => <Text key={i} style={[typography.note, { color: colors.inkSoft }]}>{issue.message}</Text>) : null}
     {route ? <Text style={[typography.caption, { color: colors.inkSoft }]}>Thời gian ước tính · chưa tính giao thông trực tiếp</Text> : null}
     {message ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>{message}</Text> : null}
     {conflict ? <View style={styles.stack}>
@@ -150,9 +157,12 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
     {undo ? <RudiButton label="Hoàn tác lần lưu vừa rồi" variant="ghost" disabled={busy} onPress={() => void save(undo, true)} /> : null}
     <Text style={[typography.caption, { color: colors.inkSoft }]}>{Platform.OS === "web" ? "Nhấp chuột phải trên bản đồ để thêm điểm hẹn." : "Giữ trên bản đồ để thêm điểm hẹn."}</Text>
   </View>;
+  const tuyen = trangThaiTuyen({ fixture, dangTinh: busy, coTuyen: Boolean(route), preview });
+  const thuTuNgay = days.indexOf(day);
+  const tieuDeTrang = days.length > 1 && thuTuNgay >= 0 ? `Ngày ${thuTuNgay + 1} · ${chuNgay(day)}` : chuNgay(day);
   return <View style={{ flex: 1 }}>
     <ScrollView horizontal style={{ flexGrow: 0 }} contentContainerStyle={[styles.row, { paddingHorizontal: 16, paddingVertical: 8 }]} showsHorizontalScrollIndicator={false}>{days.map((date, i) => <Chip key={date} label={`Ngày ${i + 1}`} selected={day === date} onPress={() => chooseDay(date)} />)}</ScrollView>
-    <ManHinhHanhTrinh hanh={visible} fitDem={che.fitDem + 1} cameraKey={`${day}:${preview ? "routed" : "draft"}`} fitPoints={fitPoints} toiDem={che.toiDem} selectedActivityId={che.selectedActivityId} selectedSegmentId={che.selectedSegmentId} onChonMoc={che.chonHoatDong} onChonDoan={che.chonDoan} onNen={() => { che.chonHoatDong(null); che.chonDoan(null); }} onKhop={che.khopHanhTrinh} onUserMove={che.userMove} onVeLichTrinh={onTimeline} onGhim={(point) => { if (saving.current) return; if (draft.stops.length >= 50) { setMessage("Lịch trình đã đủ 50 chặng. Bỏ một chặng trước khi thêm điểm hẹn."); return; } setPin(point); setPinName(""); }} chanDuoi={Math.max(bottom, insets.bottom)} actions={actions} primaryAction={suggestion && preview?.suggestion ? <RudiButton disabled={busy || !preview.suggestion.feasible} label="Giữ phương án này" onPress={() => void save(apDungTuyen(draft, day, preview.suggestion!))} /> : <RudiButton label="Xem cách đi gọn hơn" loading={busy} disabled={busy || !visible.activities.length} onPress={() => void inspect(true)} />} />
+    <ManHinhHanhTrinh hanh={visible} fitDem={che.fitDem + 1} cameraKey={`${day}:${route ? "routed" : "draft"}`} fitPoints={fitPoints} toiDem={che.toiDem} selectedActivityId={che.selectedActivityId} selectedSegmentId={che.selectedSegmentId} onChonMoc={che.chonHoatDong} onChonDoan={che.chonDoan} onNen={() => { che.chonHoatDong(null); che.chonDoan(null); }} onKhop={che.khopHanhTrinh} onUserMove={che.userMove} onVeLichTrinh={onTimeline} onGhim={(point) => { if (saving.current) return; if (draft.stops.length >= 50) { setMessage("Lịch trình đã đủ 50 chặng. Bỏ một chặng trước khi thêm điểm hẹn."); return; } setPin(point); setPinName(""); }} chanDuoi={Math.max(bottom, insets.bottom)} tuyen={tuyen} phuongTien={PHUONG_TIEN[settings.transport_mode]} tieuDeTrang={tieuDeTrang} daToiIds={daToiIds} dangDi={!fixture && day === homNay()} neo={{ xuatPhat: settings.start_stop_id, ketThuc: settings.end_stop_id, veDiemDau: settings.return_to_start }} actions={actions} primaryAction={suggestion && preview?.suggestion ? <RudiButton disabled={busy || !preview.suggestion.feasible} label="Giữ phương án này" onPress={() => void save(apDungTuyen(draft, day, preview.suggestion!))} /> : <RudiButton label="Xem cách đi gọn hơn" loading={busy} disabled={busy || !visible.activities.length} onPress={() => void inspect(true)} />} />
     <Sheet open={editing} onClose={() => setEditing(false)} accessibilityLabel="Sửa trang ngày"><View style={styles.editor}>
       <Text style={[typography.h2, { color: colors.ink }]}>Những hẹn quan trọng</Text>
       <Field label="Giờ xuất phát" value={settings.start_at} onChangeText={(start_at) => changeDay({ start_at })} />

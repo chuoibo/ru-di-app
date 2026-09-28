@@ -18,6 +18,8 @@ export type HoatDongHanhTrinh = {
   placeId: string | null;
   lat: number | null;
   lng: number | null;
+  /** Where the day stands at this stop. Absent before the outing starts. */
+  trangThai?: TrangThaiChang;
 };
 
 export type DoanDuongHanhTrinh = {
@@ -28,7 +30,7 @@ export type DoanDuongHanhTrinh = {
   durationSeconds: number;
   transportMode: PhuongTien;
   polyline: ToaDo[];
-  nguon: "osrm" | "geodesic" | "valhalla";
+  nguon: "geodesic" | "valhalla";
 };
 
 export type HanhTrinh = {

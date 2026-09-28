@@ -188,6 +188,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     [trang],
   );
 
+  // A stop somebody in the group has checked in at: the map fades its stamp.
+  const daToiIds = useMemo(() => Object.keys(theoChang).filter((id) => (theoChang[id]?.length ?? 0) > 0), [theoChang]);
+
   useEffect(() => {
     if (hanhTrinh) void napDanhMuc();
   }, [hanhTrinh, napDanhMuc]);
@@ -399,7 +402,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       ) : null}
       {trang.pha === "xong" ? (
         <View style={{ flex: 1, display: hanhTrinh ? "flex" : "none" }}>
-        <SoHanhTrinh controller={che} outing={trang.keo} places={cho} actorId={phien.person_id} onReload={nap} onSaved={(keo) => setTrang({ ...trang, keo })} onTimeline={() => che.doiCheDo("lich-trinh")} />
+        <SoHanhTrinh controller={che} outing={trang.keo} places={cho} actorId={phien.person_id} daToiIds={daToiIds} onReload={nap} onSaved={(keo) => setTrang({ ...trang, keo })} onTimeline={() => che.doiCheDo("lich-trinh")} />
         </View>
       ) : null}
       {trang.pha === "xong" && !hanhTrinh ? (

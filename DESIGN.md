@@ -364,7 +364,7 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 | Tường, khoảnh khắc | ảnh in nghiêng có washi, instax | `KhungAnh` + `nghiengAnh`, `Washi` |
 | Thành tích | tờ tem | `Tem` |
 | Hồ sơ của mình và của người khác | trang hộ chiếu; tên người khác in bằng mực của họ | `DauLon co="nho"`, `mucNguoi` |
-| Hành trình bản đồ | trang ngày xé khỏi sổ, đặt đè lên bản đồ, mép xé và lỗ gáy quay về phía bản đồ | `NenGiay` + `hinhTrangXe` |
+| Hành trình bản đồ | trang ngày xé khỏi sổ, đặt đè lên bản đồ, mép xé và lỗ gáy quay về phía bản đồ; đầu trang đóng dấu loại nét («ĐƯỜNG THẬT · XE MÁY» / «NÉT NHÁP» / «CHƯA TÍNH ĐƯỜNG»); ghim là con tem giấy đánh số, nghiêng xen kẽ (đã tới: số bút chì + tick vẽ; điểm tiếp theo: tem coral nổi); kế hoạch là một nét mực coral có số phút giữa đoạn, nháp là nét chì đứt không số; nền bản đồ là giấy, đường ba bậc, không POI bên thứ ba | `NenGiay` + `hinhTrangXe`, `hinhTem`, `lopDuong`, `kieuBanDo` |
 | Cài đặt nhóm | góc trang chat xem trước màu bong bóng; «Rời nhóm» tách xa dưới nét kẻ | `bangMauChat` |
 | Thành viên | vai quản trị là con dấu mực | `Stamp tone="ink"` |
 
@@ -393,7 +393,7 @@ Sau lượt đọc mù 26/09 (ADR-0038):
 - Chuyển động: bật dựng ≤ 420ms, tiết mục ≤ 1400ms, lật trang 300ms. Giảm chuyển động thì khung
   cuối tĩnh, cắt thẳng, không 3D. Control không xoay 3D.
 - **Nền `paper` ở theme tối không phải mặt chữ** cho accent/warn/faint (khoảng 4:1). Vật mang chữ
-  lỗi hay nút ghost dùng nền `card` (`chu-tren-giay.test.mjs`, nợ còn 2 ở ManHinhHanhTrinh).
+  lỗi hay nút ghost dùng nền `card` (`chu-tren-giay.test.mjs`, không còn nợ).
 - Ô nhập trên web tắt viền trình duyệt (`ui/khong-vien-web.ts`, `khong-vien-web.test.mjs`).
 - Cảnh ký hoạ: mỗi cảnh đúng **một lớp cam** làm nguồn sáng; mặt giấy vẽ trước viền mực
   (`thanh-pho.test.mjs`, `giay-vat-the.test.mjs`).

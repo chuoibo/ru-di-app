@@ -6,20 +6,13 @@ import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef, type MapRef 
 
 import Svg, { Path } from "react-native-svg";
 import { TAM_DA_LAT } from "./toa-do-mau";
-import { DEM_KHOP, hopGioi, hopHanhTrinh, muiTenDoan, tapHop, type BanDoProps } from "./kieu-ban-do";
+import { chuNeo, DEM_KHOP, DUONG_TICK, hinhTem, hopGioi, hopHanhTrinh, lopDuong, muiTenDoan, nhanMoc, tapHop, type BanDoProps } from "./kieu-ban-do";
 
 
 export function BanDo({
   mocs,
   doan,
-  mauMoc,
-  mauMocInk,
-  mauMocChon,
-  mauDuong,
-  mauDuongMo,
-  mauVien,
-  mauVienDuong,
-  mauNen,
+  mau,
   kieu,
   fitDem,
   cameraKey,
@@ -58,6 +51,8 @@ export function BanDo({
   useEffect(() => { setChoosing([]); void updateGroups(); return () => { projection.current++; }; }, [cameraKey, mocs.map((m) => `${m.id}:${m.lat}:${m.lng}`).join("|")]);
   const vuaMoc = useRef(0);
   const duLieu = useMemo(() => tapHop(doan) as never, [doan]);
+  const lop = useMemo(() => lopDuong(mau), [mau]);
+  const mauNen = mau.nen;
   const hopBanDau = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
 
   useEffect(() => {
@@ -150,43 +145,27 @@ export function BanDo({
           onChonDoan(id);
         }}
       >
-        <Layer
-          id="hanh-trinh-duong-vien"
-          filter={["!=", ["get", "uocLuong"], 1]}
-          layout={{ "line-cap": "round", "line-join": "round" }}
-          paint={{
-            "line-color": mauVienDuong,
-            "line-opacity": 0.9,
-            "line-width": ["case", ["==", ["get", "chon"], 1], 11, 8],
-          }}
-          type="line"
-        />
+        <Layer id="hanh-trinh-duong-vien" type="line" filter={lop.vien.filter as never} layout={lop.vien.layout as never} paint={lop.vien.paint as never} />
         <Layer
           id="hanh-trinh-duong-line"
-          filter={["!=", ["get", "uocLuong"], 1]}
-          layout={{ "line-cap": "round", "line-join": "round" }}
-          paint={{
-            "line-color": ["case", ["==", ["get", "chon"], 1], mauDuong, mauDuongMo],
-            "line-width": ["case", ["==", ["get", "chon"], 1], 6, 4],
-            "line-offset": ["*", ["%", ["get", "thuTu"], 2], 3],
-          }}
           type="line"
+          filter={lop.duong.filter as never}
+          layout={lop.duong.layout as never}
+          // Two legs that retrace the same street sit side by side instead
+          // of one hiding the other: every other leg shifts 3dp.
+          paint={{ ...lop.duong.paint, "line-offset": ["*", ["%", ["get", "thuTu"], 2], 3] } as never}
         />
-        <Layer
-          id="hanh-trinh-net-noi"
-          filter={["==", ["get", "uocLuong"], 1]}
-          paint={{ "line-color": mauDuongMo, "line-width": 2, "line-dasharray": [2, 3] }}
-          type="line"
-        />
+        <Layer id="hanh-trinh-net-noi" type="line" filter={lop.nhap.filter as never} layout={lop.nhap.layout as never} paint={lop.nhap.paint as never} />
+        <Layer id="hanh-trinh-nhan" type="symbol" minzoom={lop.nhan.minzoom} filter={lop.nhan.filter as never} layout={lop.nhan.layout as never} paint={lop.nhan.paint as never} />
       </GeoJSONSource>
       {muiTenDoan(doan).map((arrow) => <Marker id={`direction-${arrow.id}`} key={`direction-${arrow.id}`} lngLat={[arrow.lng, arrow.lat]} anchor="center" onPress={() => onChonDoan(arrow.id)}>
-        <View pointerEvents="none" style={{ transform: [{ rotate: `${arrow.heading}deg` }] }}><Svg width={18} height={20} viewBox="0 0 18 20"><Path d="M3 14 L9 5 L15 14" fill="none" stroke={mauVienDuong} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" /><Path d="M3 14 L9 5 L15 14" fill="none" stroke={mauDuong} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></Svg></View>
+        <View pointerEvents="none" style={{ transform: [{ rotate: `${arrow.heading}deg` }] }}><Svg width={18} height={20} viewBox="0 0 18 20"><Path d="M3 14 L9 5 L15 14" fill="none" stroke={mau.giay} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" /><Path d="M3 14 L9 5 L15 14" fill="none" stroke={mau.muc} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></Svg></View>
       </Marker>)}
       {thuTuVe(mocs).filter((m) => !groups.some((g) => g.length > 1 && g.includes(m.id) && g[0] !== m.id)).map((moc) => {
         const group = groups.find((g) => g[0] === moc.id) ?? [moc.id];
-        const chon = moc.chon;
-        const nen = chon ? mauMocChon : (mauMoc[(moc.so - 1) % mauMoc.length] ?? mauMocChon);
-        const co = chon ? 52 : 48;
+        const chum = group.length > 1;
+        const tem = hinhTem(chum ? { ...moc, trangThai: null } : moc, mau);
+        const neo = chum ? null : chuNeo(moc.neo);
         return (
           <Marker
             anchor="center"
@@ -195,35 +174,54 @@ export function BanDo({
             lngLat={[moc.lng, moc.lat]}
             // Two stops can share a pixel; the chosen one must be the one on
             // top. Child order alone does not decide that for native markers.
-            style={{ zIndex: chon ? 2 : 1 }}
+            style={{ zIndex: moc.chon ? 2 : 1 }}
             onPress={() => {
               vuaMoc.current = Date.now();
-              if (group.length > 1) setChoosing(group);
+              if (chum) setChoosing(group);
               else { setChoosing([]); onChonMoc(moc.id); }
             }}
           >
             <View
-              accessibilityLabel={group.length > 1 ? `${group.length} điểm hẹn gần nhau. Chạm để chọn.` : `Mốc ${moc.so}, ${moc.gio}, ${moc.tieuDe}`}
+              accessibilityLabel={chum ? `${group.length} điểm hẹn gần nhau. Chạm để chọn.` : nhanMoc(moc)}
               accessibilityRole="button"
-              style={[
-                styles.moc,
-                {
-                  minWidth: co,
-                  height: co,
-                  backgroundColor: nen,
-                  borderColor: mauVien,
-                },
-              ]}
+              // The stamp is 44dp; the slop makes the finger target 48dp+.
+              hitSlop={4}
+              style={styles.hopTem}
             >
-              <Text maxFontSizeMultiplier={1.3} style={[styles.so, { color: mauMocInk }]}>{group.map((id) => mocs.find((m) => m.id === id)?.so).join(" · ")}</Text>
+              <View
+                style={[
+                  styles.tem,
+                  {
+                    minWidth: tem.co,
+                    height: tem.co,
+                    backgroundColor: tem.nen,
+                    borderColor: tem.vien,
+                    borderWidth: tem.doVien,
+                    boxShadow: tem.bong,
+                    transform: [{ rotate: `${tem.nghieng}deg` }],
+                  },
+                ]}
+              >
+                <Text maxFontSizeMultiplier={1.3} style={[styles.so, { color: tem.so }]}>{group.map((id) => mocs.find((m) => m.id === id)?.so).join(" · ")}</Text>
+              </View>
+              {tem.dauTick ? (
+                <View style={[styles.tick, { backgroundColor: mau.giay, borderColor: mau.vien }]}>
+                  <Svg width={14} height={14} viewBox="0 0 20 20"><Path d={DUONG_TICK} fill="none" stroke={mau.chu} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" /></Svg>
+                </View>
+              ) : null}
+              {neo ? (
+                <View pointerEvents="none" style={[styles.neo, { backgroundColor: mau.giay, borderColor: mau.muc }]}>
+                  <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={[styles.neoChu, { color: mau.muc }]}>{neo}</Text>
+                </View>
+              ) : null}
             </View>
           </Marker>
         );
       })}
     </Map>
-    {choosing.length > 1 ? <View accessibilityViewIsModal style={[styles.chooser, { backgroundColor: mauNen, borderColor: mauVien }]}>
-      {choosing.map((id) => mocs.find((m) => m.id === id)).filter((m) => m !== undefined).map((m) => <Pressable key={m.id} accessibilityRole="button" onPress={() => { setChoosing([]); onChonMoc(m.id); }} style={styles.choice}><Text style={{ color: mauDuong }}>{m.so} · {m.gio} · {m.tieuDe}</Text></Pressable>)}
-      <Pressable accessibilityRole="button" onPress={() => setChoosing([])} style={styles.choice}><Text style={{ color: mauDuong }}>Đóng</Text></Pressable>
+    {choosing.length > 1 ? <View accessibilityViewIsModal style={[styles.chooser, { backgroundColor: mauNen, borderColor: mau.vien }]}>
+      {choosing.map((id) => mocs.find((m) => m.id === id)).filter((m) => m !== undefined).map((m) => <Pressable key={m.id} accessibilityRole="button" onPress={() => { setChoosing([]); onChonMoc(m.id); }} style={styles.choice}><Text style={{ color: mau.chu }}>{m.so} · {m.gio} · {m.tieuDe}</Text></Pressable>)}
+      <Pressable accessibilityRole="button" onPress={() => setChoosing([])} style={styles.choice}><Text style={{ color: mau.chu }}>Đóng</Text></Pressable>
     </View> : null}
     </View>
   );
@@ -238,13 +236,34 @@ const styles = StyleSheet.create({
   fill: { flex: 1, minHeight: 0 },
   chooser: { position: "absolute", top: 60, left: 16, right: 16, borderWidth: 1, borderRadius: 12, padding: 8 },
   choice: { minHeight: 48, justifyContent: "center", padding: 8 },
-  moc: {
-    borderRadius: 999,
-    borderWidth: 2,
+  hopTem: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
+  tem: {
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
   },
-  so: { fontSize: 13, fontWeight: "700", lineHeight: 14 },
-  gio: { fontSize: 9, fontWeight: "600", lineHeight: 11 },
+  so: { fontSize: 15, fontWeight: "800", lineHeight: 18, fontVariant: ["tabular-nums"] },
+  tick: {
+    position: "absolute",
+    right: -1,
+    bottom: -1,
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  neo: {
+    position: "absolute",
+    top: "100%",
+    marginTop: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    transform: [{ rotate: "-2deg" }],
+  },
+  neoChu: { fontSize: 12, lineHeight: 14, fontWeight: "800", letterSpacing: 0.6 },
 });

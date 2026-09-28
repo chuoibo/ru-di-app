@@ -2,54 +2,91 @@
 
 import { createElement, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { GeoJSONSource, Map, Marker, NavigationControl, Popup, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
+import { GeoJSONSource, Map, Marker, NavigationControl, Popup, setWorkerUrl, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { TAM_DA_LAT } from "./toa-do-mau";
-import { DEM_KHOP, hopGioi, hopHanhTrinh, muiTenDoan, tapHop, type BanDoProps, type MocBanDo } from "./kieu-ban-do";
+import { chuNeo, DEM_KHOP, DUONG_TICK, hinhTem, hopGioi, hopHanhTrinh, lopDuong, muiTenDoan, tapHop, type BanDoProps, type MauBanDo, type MocBanDo } from "./kieu-ban-do";
 import { typography, useRudiTheme } from "../theme";
 
-function veMoc(moc: MocBanDo, mauMoc: readonly string[], mauInk: string, mauChon: string, mauVien: string): HTMLElement {
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/**
+ * maplibre-gl 6 derives its worker URL from `import.meta.url`, which inside
+ * Metro's bundle is not an http URL: no worker starts and not one tile loads.
+ * `tools/chep-maplibre-worker.mjs` puts the worker in `public/maplibre/`.
+ */
+export const MAPLIBRE_WORKER_URL = "/maplibre/maplibre-gl-worker.mjs";
+setWorkerUrl(MAPLIBRE_WORKER_URL);
+
+/**
+ * One stamp pin as DOM: a paper stamp leaning a few degrees, its face and
+ * edge from `hinhTem`, a drawn tick when the stop is reached and a small
+ * stamp naming the day's anchor. The button itself is at least 48px square
+ * and transparent, so the target is larger than the stamp it holds.
+ */
+function veMoc(moc: MocBanDo, mau: MauBanDo): HTMLElement {
+  const tem = hinhTem(moc, mau);
+  const hop = Math.max(48, tem.co);
   const el = document.createElement("button");
   el.type = "button";
-  // Named chips in ManHinhHanhTrinh carry the stop title; pins are numbered so
-  // clickLabel is not ambiguous and VoiceOver does not hear each stop twice.
-  el.setAttribute("aria-label", `Mốc ${moc.so}`);
+  // Named chips in the day page carry the stop title; the pin says its number
+  // and state, so a screen reader does not hear each stop name twice.
+  el.setAttribute("aria-label", [`Mốc ${moc.so}`, moc.trangThai === "xong" ? "đã tới" : moc.trangThai === "hien-tai" ? "điểm tiếp theo" : null].filter(Boolean).join(", "));
   el.setAttribute("role", "button");
-  const mau = moc.chon ? mauChon : (mauMoc[(moc.so - 1) % mauMoc.length] ?? mauChon);
-  const co = moc.chon ? 52 : 48;
   el.style.cssText = [
-    `width:${co}px`,
-    `height:${co}px`,
-    "border-radius:999px",
-    `background:${mau}`,
-    `color:${mauInk}`,
-    `border:2px solid ${mauVien}`,
-    "display:flex",
-    "flex-direction:column",
-    "align-items:center",
-    "justify-content:center",
-    "font:700 13px/1 system-ui,sans-serif",
-    "padding:0",
-    "cursor:pointer",
+    `width:${hop}px`, `height:${hop}px`, "padding:0", "border:0", "background:transparent",
+    // No `position` here: `.maplibregl-marker` is absolute, and an inline
+    // `relative` put every pin in document flow -- the second pin sat 48px
+    // below its point (412px, 2026-09-29). Absolute still anchors the tick.
+    "display:flex", "align-items:center", "justify-content:center", "cursor:pointer",
   ].join(";");
-  const so = document.createElement("span");
-  so.textContent = String(moc.so);
-  el.appendChild(so);
+  const mat = document.createElement("span");
+  mat.dataset.tem = "1";
+  mat.style.cssText = [
+    `min-width:${tem.co}px`, `height:${tem.co}px`, "box-sizing:border-box", "padding:0 6px",
+    "border-radius:8px", `background:${tem.nen}`, `border:${tem.doVien}px solid ${tem.vien}`,
+    `box-shadow:${tem.bong}`, `transform:rotate(${tem.nghieng}deg)`,
+    "display:flex", "align-items:center", "justify-content:center",
+    `color:${tem.so}`, "font:800 15px/1 system-ui,sans-serif", "font-variant-numeric:tabular-nums",
+  ].join(";");
+  mat.textContent = String(moc.so);
+  el.appendChild(mat);
+  if (tem.dauTick) {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 20 20");
+    svg.setAttribute("aria-hidden", "true");
+    svg.style.cssText = `position:absolute;right:${(hop - tem.co) / 2 - 5}px;bottom:${(hop - tem.co) / 2 - 5}px;width:20px;height:20px;border-radius:999px;background:${mau.giay};border:1.5px solid ${mau.vien};box-sizing:border-box`;
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", DUONG_TICK);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", mau.chu);
+    path.setAttribute("stroke-width", "2.4");
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(path);
+    el.appendChild(svg);
+  }
+  const neo = chuNeo(moc.neo);
+  if (neo) {
+    const nhan = document.createElement("span");
+    nhan.setAttribute("aria-hidden", "true");
+    nhan.textContent = neo;
+    nhan.style.cssText = [
+      "position:absolute", "top:100%", "left:50%", "transform:translate(-50%,2px) rotate(-2deg)",
+      "white-space:nowrap", "padding:1px 6px", "border-radius:4px", `background:${mau.giay}`,
+      `border:1.5px solid ${mau.muc}`, `color:${mau.muc}`, "font:800 12px/14px system-ui,sans-serif",
+      "letter-spacing:0.6px", "pointer-events:none",
+    ].join(";");
+    el.appendChild(nhan);
+  }
   return el;
 }
 
 export function BanDo({
   mocs,
   doan,
-  mauMoc,
-  mauMocInk,
-  mauMocChon,
-  mauDuong,
-  mauDuongMo,
-  mauVien,
-  mauVienDuong,
-  mauNen,
+  mau,
   kieu,
   fitDem,
   cameraKey,
@@ -64,8 +101,9 @@ export function BanDo({
   onNen,
 }: BanDoProps) {
   const { colors } = useRudiTheme();
-  const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo });
-  cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo };
+  const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mau });
+  cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mau };
+  const mauNen = mau.nen;
   const mapRef = useRef<Map | null>(null);
   const markers = useRef<Marker[]>([]);
   const arrows = useRef<Marker[]>([]);
@@ -74,6 +112,10 @@ export function BanDo({
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [san, setSan] = useState(false);
   const [webgl2, setWebgl2] = useState<boolean | null>(null);
+  // The map's measured frame. The day page settles after the map mounts, so
+  // the first fit ran on a taller frame and left the last stop under the page
+  // (412px, 2026-09-29). Native refits on its measured viewport; so does this.
+  const [khung, setKhung] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
     try {
@@ -102,45 +144,20 @@ export function BanDo({
     map.addControl(new NavigationControl({ showCompass: true, showZoom: false, visualizePitch: true }), "top-right");
     map.on("load", () => {
       loaded.current = true;
-      const mau = cbs.current;
+      const lop = lopDuong(cbs.current.mau);
       if (!map.getSource("hanh-trinh-duong")) {
         map.addSource("hanh-trinh-duong", { type: "geojson", data: tapHop([]) });
-        // Casing first, then the line: an ink route on paper, not a road.
-        map.addLayer({
-          id: "hanh-trinh-duong-vien",
-          type: "line",
-          filter: ["!=", ["get", "uocLuong"], 1],
-          source: "hanh-trinh-duong",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: {
-            "line-color": mau.mauVienDuong,
-            "line-width": ["case", ["==", ["get", "chon"], 1], 11, 8],
-            "line-opacity": 0.9,
-          },
-        });
-        map.addLayer({
-          id: "hanh-trinh-duong",
-          type: "line",
-          filter: ["!=", ["get", "uocLuong"], 1],
-          source: "hanh-trinh-duong",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: {
-            "line-color": ["case", ["==", ["get", "chon"], 1], mau.mauDuong, mau.mauDuongMo],
-            "line-width": ["case", ["==", ["get", "chon"], 1], 6, 4],
-          },
-        });
-        map.addLayer({
-          id: "hanh-trinh-net-noi",
-          type: "line",
-          source: "hanh-trinh-duong",
-          filter: ["==", ["get", "uocLuong"], 1],
-          paint: { "line-color": mau.mauDuongMo, "line-width": 2, "line-dasharray": [2, 3] },
-        });
+        // Paper casing, then the ink line, then the pencil draft and the time
+        // labels: an ink route drawn on the page, not one more road.
+        map.addLayer({ id: "hanh-trinh-duong-vien", type: "line", source: "hanh-trinh-duong", ...lop.vien } as never);
+        map.addLayer({ id: "hanh-trinh-duong", type: "line", source: "hanh-trinh-duong", ...lop.duong } as never);
+        map.addLayer({ id: "hanh-trinh-net-noi", type: "line", source: "hanh-trinh-duong", ...lop.nhap } as never);
+        map.addLayer({ id: "hanh-trinh-nhan", type: "symbol", source: "hanh-trinh-duong", ...lop.nhan } as never);
         map.addLayer({
           id: "hanh-trinh-duong-hit",
           type: "line",
           source: "hanh-trinh-duong",
-          paint: { "line-color": mau.mauDuong, "line-width": 28, "line-opacity": 0 },
+          paint: { "line-color": cbs.current.mau.muc, "line-width": 28, "line-opacity": 0 },
         });
       }
       map.resize();
@@ -171,7 +188,11 @@ export function BanDo({
     });
     mapRef.current = map;
     setSan(true);
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => map.resize()) : null;
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => {
+      map.resize();
+      const w = Math.round(el.clientWidth); const h = Math.round(el.clientHeight);
+      setKhung((truoc) => (truoc.w === w && truoc.h === h ? truoc : { w, h }));
+    }) : null;
     ro?.observe(el);
     requestAnimationFrame(() => map.resize());
     return () => {
@@ -197,7 +218,7 @@ export function BanDo({
     arrows.current = muiTenDoan(doan).map((arrow) => {
       const el = document.createElement("div"); el.style.cssText = "width:18px;height:20px";
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("viewBox", "0 0 18 20");
-      for (const [color, width] of [[mauVienDuong, "6"], [mauDuong, "3"]]) { const path = document.createElementNS("http://www.w3.org/2000/svg", "path"); path.setAttribute("d", "M3 14 L9 5 L15 14"); path.setAttribute("fill", "none"); path.setAttribute("stroke", color); path.setAttribute("stroke-width", width); svg.appendChild(path); }
+      for (const [color, width] of [[mau.giay, "6"], [mau.muc, "3"]]) { const path = document.createElementNS("http://www.w3.org/2000/svg", "path"); path.setAttribute("d", "M3 14 L9 5 L15 14"); path.setAttribute("fill", "none"); path.setAttribute("stroke", color); path.setAttribute("stroke-width", width); svg.appendChild(path); }
       el.appendChild(svg); return new Marker({ element: el, rotation: arrow.heading }).setLngLat([arrow.lng, arrow.lat]).addTo(map);
     });
     const ve = () => {
@@ -227,12 +248,11 @@ export function BanDo({
     }
     markers.current = groups.map((group) => {
       const moc = group[0];
-      const el = veMoc(moc, cbs.current.mauMoc, cbs.current.mauMocInk, cbs.current.mauMocChon, cbs.current.mauVien);
+      const el = veMoc(group.length > 1 ? { ...moc, trangThai: null, neo: null } : moc, cbs.current.mau);
       if (group.length > 1) {
-        el.textContent = group.length <= 3 ? group.map((m) => m.so).join(" · ") : `${group.length} điểm`;
-        el.style.minWidth = "52px";
+        const mat = el.querySelector<HTMLElement>("[data-tem]");
+        if (mat) mat.textContent = group.length <= 3 ? group.map((m) => m.so).join(" · ") : `${group.length} điểm`;
         el.style.width = "auto";
-        el.style.padding = "0 8px";
         el.setAttribute("aria-label", `${group.length} điểm gần nhau: ${group.map((m) => m.so).join(", ")}`);
       }
       el.addEventListener("click", (ev) => {
@@ -253,7 +273,7 @@ export function BanDo({
           const button = document.createElement("button");
           button.type = "button";
           button.textContent = `${stop.so} · ${stop.gio} · ${stop.tieuDe}`;
-          button.style.cssText = `min-height:48px;text-align:left;padding:8px;background:${mauNen};color:${cbs.current.mauDuong};border:0;font:inherit;cursor:pointer`;
+          button.style.cssText = `min-height:48px;text-align:left;padding:8px;background:${mauNen};color:${cbs.current.mau.chu};border:0;font:inherit;cursor:pointer`;
           button.addEventListener("click", (event) => { event.stopPropagation(); chooser.current?.remove(); cbs.current.onChonMoc(stop.id); });
           list.appendChild(button);
         }
@@ -292,7 +312,7 @@ export function BanDo({
           controls.forEach((el, k) => { el.style.pointerEvents = truoc[k]; });
         });
         const content = chooser.current.getElement().querySelector<HTMLElement>(".maplibregl-popup-content");
-        if (content) { content.style.background = mauNen; content.style.color = cbs.current.mauDuong; }
+        if (content) { content.style.background = mauNen; content.style.color = cbs.current.mau.chu; }
       });
       // A round chip marks its point at its centre; native does the same.
       return new Marker({ element: el, anchor: "center" }).setLngLat([moc.lng, moc.lat]).addTo(map);
@@ -301,7 +321,7 @@ export function BanDo({
     draw();
     map.on("moveend", draw);
     return () => { map.off("moveend", draw); chooser.current?.remove(); };
-  }, [mocs, san, mauNen]);
+  }, [mocs, san, mau]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -320,7 +340,7 @@ export function BanDo({
     );
     // Fit Journey is the only yank; selection uses easeTo, pan stays free.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mocs is read at the tick of fitDem
-  }, [fitDem, cameraKey, padding, san]);
+  }, [fitDem, cameraKey, padding, san, khung.w, khung.h]);
 
   useEffect(() => {
     const map = mapRef.current;

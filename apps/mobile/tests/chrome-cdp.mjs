@@ -88,6 +88,8 @@ function buildNumber(dir) {
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  // Module workers (MapLibre GL 6) refuse any other type.
+  ".mjs": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".wasm": "application/wasm",
   ".css": "text/css; charset=utf-8",
