@@ -358,6 +358,19 @@ class ClientFacts:
     files_read: int = 0
 
 
+def _top_level_brace(stmt: str) -> int:
+    """Index of the first `{` outside any `(...)` in `stmt`, or -1."""
+    depth = 0
+    for i, c in enumerate(stmt):
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth = max(0, depth - 1)
+        elif c == "{" and depth == 0:
+            return i
+    return -1
+
+
 def _line_of(src: str, idx: int) -> int:
     return src.count("\n", 0, idx) + 1
 
@@ -497,6 +510,15 @@ def read_client(root: Path) -> ClientFacts:
                 continue
             if _enclosing_bracket(blank, m.start()) == "(":
                 continue
+            # The third shape: a member of an interface or an object TYPE
+            # (`interface X { headers: Record<string, string>; }`, a return
+            # type `{ uri: string; headers: Record<...> }`). `Record<` is a type
+            # and never a runtime value in this tree, so it carries no header
+            # names either. These read as blind spots once in tra-loi-song.ts,
+            # nep/media.ts and nep/useNepAnh.ts; a gate that cries on a type
+            # teaches people to rename things until it stops.
+            if re.match(r"\s*Record\s*<", blank[m.end() :]):
+                continue
 
             rest = blank[m.end() :]
             offset = len(rest) - len(rest.lstrip())
@@ -568,7 +590,12 @@ def read_client(root: Path) -> ClientFacts:
                 # still require the whole thing to trace back to something
                 # that builds headers.
                 stmt = blank[open_idx : open_idx + 400].split(";")[0]
-                brace = stmt.find("{")
+                # Only a literal at the statement's own level is the value
+                # being bound. One inside a call's parentheses is an ARGUMENT:
+                # `const res = await fetch(url, { headers, signal })` binds a
+                # Response, and reading that options object as headers
+                # reported `signal` as a header the client sends (sse.ts:222).
+                brace = _top_level_brace(stmt)
                 resolved = bool(set(_IDENT.findall(stmt)) & (producers | bound))
                 if brace != -1:
                     lit = open_idx + brace
@@ -899,6 +926,64 @@ CANARIES: list[tuple[str, str, int]] = [
         }
         """,
         EXIT_CANNOT_RUN,
+    ),
+    (
+        "tuy-chon-fetch-khong-phai-header",
+        # sse.ts:222. `res` is bound from a line that mentions `headers`, but
+        # the object literal there is fetch's OPTIONS: `signal` is not a
+        # header. The real header built above still has to be read, and it
+        # is a foreign one, so the verdict is red for the right reason only.
+        """
+        export async function go(o: { headers: Record<string, string> }) {
+          const dk = new AbortController();
+          const headers: Record<string, string> = { ...o.headers, Accept: "text/event-stream" };
+          headers["X-Resume"] = "1";
+          const res = await fetch("/x", { headers, signal: dk.signal });
+          return res;
+        }
+        """,
+        EXIT_MISMATCH,
+    ),
+    (
+        "tuy-chon-fetch-sach",
+        # Same shape with only allowed headers: `signal` must not turn it red.
+        """
+        export async function go(o: { headers: Record<string, string> }) {
+          const dk = new AbortController();
+          const headers: Record<string, string> = { ...o.headers, Accept: "text/event-stream" };
+          const res = await fetch("/x", { headers, signal: dk.signal });
+          return res;
+        }
+        """,
+        EXIT_OK,
+    ),
+    (
+        "header-la-trong-nhanh-ternary",
+        # The top-level literal of a ternary IS the bound value (api.ts:280
+        # shape) and must still be read after the argument rule above.
+        """
+        function actorHeaders(a: string): Record<string, string> {
+          return { "X-Actor-ID": a };
+        }
+        export async function go(a: string | null) {
+          const headers = a ? actorHeaders(a) : { "X-Trace-Id": "1" };
+          return fetch("/x", { headers });
+        }
+        """,
+        EXIT_MISMATCH,
+    ),
+    (
+        "kieu-record-khong-phai-cho-mu",
+        # An interface member and a return type that only NAME the shape.
+        """
+        export interface TuyChon {
+          headers: Record<string, string>;
+        }
+        export function nguon(u: string): { uri: string; headers: Record<string, string> } {
+          return { uri: u, headers: { "X-Actor-ID": u } };
+        }
+        """,
+        EXIT_OK,
     ),
     (
         "accept-duoc-safelist",
