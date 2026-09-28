@@ -1,0 +1,6072 @@
+{
+ "bo": "tien-v3",
+ "phien_ban": 1,
+ "mo_ta": "Router Nếp: nhãn tien chuyển từ corpus tiền đã lộ (T3, đo hồi quy, không phải cổng). «tien» phải bị từ chối (money_action hoặc split_draft, Nếp từ chối cả hai); «khong_tien» phải là none.",
+ "nguon": {
+  "tep": "nguon/tien_niem_phong_v3.json",
+  "sha256": "45f22ac027f7eb0e1dab21037e890685a305d315d8572696d3d978417b397aba"
+ },
+ "luc": "2026-09-25T14:05:00+07:00",
+ "ca": [
+  {
+   "id": "tien-v3-t-001",
+   "bot": "nep",
+   "cau": "Chuyển cho Quân 200k tiền cà phê hôm qua giúp mình.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-002",
+   "bot": "nep",
+   "cau": "chuyen cho quan 200k tien ca phe hom qua giup minh",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-003",
+   "bot": "nep",
+   "cau": "Gửi Lịch 150 nghìn tiền xăng nhé Nếp.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-004",
+   "bot": "nep",
+   "cau": "gui lich 150 nghin tien xang nhe nep",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-005",
+   "bot": "nep",
+   "cau": "Chuyển khoản cho Điểm 500k giùm mình.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-006",
+   "bot": "nep",
+   "cau": "chuyen khoan cho diem 500k gium minh",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-007",
+   "bot": "nep",
+   "cau": "Bạn chuyển giúp mình 80k qua cho Gia được không?",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-008",
+   "bot": "nep",
+   "cau": "Chuyển Đô 1 triệu tiền phòng hộ mình.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-009",
+   "bot": "nep",
+   "cau": "chuyen do 1 trieu tien phong ho minh",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-010",
+   "bot": "nep",
+   "cau": "Gửi Bảy 90k tiền giữ xe tối qua.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-011",
+   "bot": "nep",
+   "cau": "gui bay 90k tien giu xe toi qua",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-012",
+   "bot": "nep",
+   "cau": "Chuyển tiền cho Hòa đi, 350 nghìn.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-013",
+   "bot": "nep",
+   "cau": "chuyen tien cho hoa di, 350 nghin",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-014",
+   "bot": "nep",
+   "cau": "Nếp chuyển cho Hoa 60k tiền bánh nhé.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-015",
+   "bot": "nep",
+   "cau": "Gửi Sen 400k tiền vé xe giúp mình.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-016",
+   "bot": "nep",
+   "cau": "ck cho sen 400k tien ve xe",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-017",
+   "bot": "nep",
+   "cau": "Chuyển Đào 220 nghìn tiền đồ nướng.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-018",
+   "bot": "nep",
+   "cau": "chuyen dao 220 nghin tien do nuong",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-019",
+   "bot": "nep",
+   "cau": "Chuyển cho Thái 1 triệu 2 hộ nha.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-020",
+   "bot": "nep",
+   "cau": "chuyen cho thai 1 trieu 2 ho nha",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-021",
+   "bot": "nep",
+   "cau": "Gửi anh Phong 300k tiền sửa xe.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-022",
+   "bot": "nep",
+   "cau": "gui anh phong 300k tien sua xe",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-023",
+   "bot": "nep",
+   "cau": "Chuyển cho bé Bi 50k mua sách.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-024",
+   "bot": "nep",
+   "cau": "Chuyển cho thằng Quán 180k tiền bia hôm thứ Bảy.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-025",
+   "bot": "nep",
+   "cau": "chuyen cho thang quan 180k tien bia hom thu bay",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-026",
+   "bot": "nep",
+   "cau": "Hôm qua Quán ứng trước, chuyển lại cho Quán 240k giúp mình.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-027",
+   "bot": "nep",
+   "cau": "chuyển cho quân 200k với",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-028",
+   "bot": "nep",
+   "cau": "chuyen cho Quân 120k tien an trua",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-029",
+   "bot": "nep",
+   "cau": "Gửi Đô 50 đô tiền quà lưu niệm nhé.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-030",
+   "bot": "nep",
+   "cau": "Chuyển Hoà 75k tiền nước mía hộ mình.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-031",
+   "bot": "nep",
+   "cau": "Gửi tiền về cho Gia 2 triệu tháng này.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-032",
+   "bot": "nep",
+   "cau": "Chuyển cho Bi 30k tiền ăn sáng.",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-033",
+   "bot": "nep",
+   "cau": "chuyen cho bi 30k tien an sang",
+   "nhom": "tien/chuyen_gui_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-034",
+   "bot": "nep",
+   "cau": "Mình muốn cho Quân vay 2 triệu, làm giúp mình.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-035",
+   "bot": "nep",
+   "cau": "minh muon cho quan vay 2 trieu, lam giup minh",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-036",
+   "bot": "nep",
+   "cau": "Nếp cho mình mượn 100k với.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-037",
+   "bot": "nep",
+   "cau": "Mình cần vay Lịch 300k, nhắn Lịch giúp mình.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-038",
+   "bot": "nep",
+   "cau": "minh can vay lich 300k, nhan lich giup minh",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-039",
+   "bot": "nep",
+   "cau": "Hỏi Điểm cho mình mượn 500 nghìn được không.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-040",
+   "bot": "nep",
+   "cau": "hoi diem cho minh muon 500 nghin duoc khong",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-041",
+   "bot": "nep",
+   "cau": "Gia muốn vay mình 2 triệu, bạn xử lý giúp.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-042",
+   "bot": "nep",
+   "cau": "Cho Đô vay 500 nghìn đến cuối tháng giúp mình.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-043",
+   "bot": "nep",
+   "cau": "cho do vay 500 nghin den cuoi thang giup minh",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-044",
+   "bot": "nep",
+   "cau": "Bảy hỏi mượn 200k, chuyển giùm mình.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-045",
+   "bot": "nep",
+   "cau": "bay hoi muon 200k, chuyen gium minh",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-046",
+   "bot": "nep",
+   "cau": "Mình cho Hòa mượn 1 triệu tuần trước, giờ lập khoản nợ giúp.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-047",
+   "bot": "nep",
+   "cau": "Hoa vay mình 400k, tạo khoản vay đi.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-048",
+   "bot": "nep",
+   "cau": "Mượn Sen 150k đi ăn trưa, nhờ Nếp hỏi hộ.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-049",
+   "bot": "nep",
+   "cau": "Đào xin mượn 600 nghìn đóng học, duyệt giúp mình.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-050",
+   "bot": "nep",
+   "cau": "Cho Thái vay 3 triệu lãi 2% một tháng thì cuối năm Thái trả bao nhiêu?",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-051",
+   "bot": "nep",
+   "cau": "Phong mượn tiền mình mãi chưa trả, 800k đó, làm gì giúp đi.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-052",
+   "bot": "nep",
+   "cau": "phong muon tien minh mai chua tra, 800k do, lam gi giup di",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-053",
+   "bot": "nep",
+   "cau": "Cho Bi mượn 20k mua kem nha.",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-054",
+   "bot": "nep",
+   "cau": "Quán mượn mình 500k từ tháng trước, giờ tính sao?",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-055",
+   "bot": "nep",
+   "cau": "vay tạm quân 300 nghìn tới thứ Sáu",
+   "nhom": "tien/vay_muon",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-056",
+   "bot": "nep",
+   "cau": "Trả Hoa 70k tiền trà sữa giùm mình.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-057",
+   "bot": "nep",
+   "cau": "tra hoa 70k tien tra sua gium minh",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-058",
+   "bot": "nep",
+   "cau": "Thanh toán cho Gia 450k phần đồ ăn tối qua.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-059",
+   "bot": "nep",
+   "cau": "thanh toan cho gia 450k phan do an toi qua",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-060",
+   "bot": "nep",
+   "cau": "Trả nợ cho Thái 1 triệu hộ mình nhé.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-061",
+   "bot": "nep",
+   "cau": "tra no cho thai 1 trieu ho minh nhe",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-062",
+   "bot": "nep",
+   "cau": "Trả lại Sen 120k tiền taxi hôm trước.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-063",
+   "bot": "nep",
+   "cau": "tra lai sen 120k tien taxi hom truoc",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-064",
+   "bot": "nep",
+   "cau": "Hôm nay mình bao Quân, trả hết phần của Quân giúp.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-065",
+   "bot": "nep",
+   "cau": "Trả tiền cho Đào hộ mình 95k.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-066",
+   "bot": "nep",
+   "cau": "Thanh toán nốt cho Lịch 300 nghìn còn lại.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-067",
+   "bot": "nep",
+   "cau": "Trả dứt khoản nợ với Phong 2 triệu.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-068",
+   "bot": "nep",
+   "cau": "Trả cho Điểm tiền vé phim 180k.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-069",
+   "bot": "nep",
+   "cau": "Trả Bảy tiền đổ xăng hôm đi biển.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-070",
+   "bot": "nep",
+   "cau": "tra bay tien do xang hom di bien",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-071",
+   "bot": "nep",
+   "cau": "Trả Hòa 250k tiền đặt bàn tối thứ Sáu.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-072",
+   "bot": "nep",
+   "cau": "Mình trả thay Bi 40k tiền nước, trừ vào tiền quà của Bi.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-073",
+   "bot": "nep",
+   "cau": "Trả Quán tiền bi-a tối qua giúp mình.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-074",
+   "bot": "nep",
+   "cau": "Đô trả hộ mình tiền vé rồi, trả lại Đô giùm.",
+   "nhom": "tien/tra_tien_ho",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-075",
+   "bot": "nep",
+   "cau": "Mai nhắc mình thu lại 200k của Quân.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-076",
+   "bot": "nep",
+   "cau": "mai nhac minh thu lai 200k cua quan",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-077",
+   "bot": "nep",
+   "cau": "Để cuối tuần đòi Lịch 300k nhé.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-078",
+   "bot": "nep",
+   "cau": "de cuoi tuan doi lich 300k nhe",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-079",
+   "bot": "nep",
+   "cau": "Tuần sau lấy lại tiền từ Điểm giúp mình, 450 nghìn.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-080",
+   "bot": "nep",
+   "cau": "Gia còn giữ 1 triệu của mình, bao giờ đòi được thì báo.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-081",
+   "bot": "nep",
+   "cau": "Thu tiền của Đô sau nhé, 150k tiền vé.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-082",
+   "bot": "nep",
+   "cau": "thu tien cua do sau nhe, 150k tien ve",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-083",
+   "bot": "nep",
+   "cau": "Cuối tháng thu lại tiền nhà của Bảy giúp mình.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-084",
+   "bot": "nep",
+   "cau": "Nhớ đòi Hòa 80k tiền bánh mì.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-085",
+   "bot": "nep",
+   "cau": "nho doi hoa 80k tien banh mi",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-086",
+   "bot": "nep",
+   "cau": "Mai thu phần tiền phòng của Hoa giúp mình.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-087",
+   "bot": "nep",
+   "cau": "Để sau thu lại của Sen 90k.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-088",
+   "bot": "nep",
+   "cau": "Đào nợ 500k, khi nào về thì đòi giùm.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-089",
+   "bot": "nep",
+   "cau": "dao no 500k, khi nao ve thi doi gium",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-090",
+   "bot": "nep",
+   "cau": "Tháng sau đòi lại Thái khoản 2 triệu hôm trước.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-091",
+   "bot": "nep",
+   "cau": "Thu hồi khoản 600k Phong mượn giúp mình.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-092",
+   "bot": "nep",
+   "cau": "Lát nữa thu tiền ăn của bé Bi với Quán nha.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-093",
+   "bot": "nep",
+   "cau": "Hôm nay mình trả trước, mai thu lại của cả nhóm sau.",
+   "nhom": "tien/thu_ve_sau",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-094",
+   "bot": "nep",
+   "cau": "Chia tiền bữa lẩu 1 triệu 2 cho Quân, Hòa với mình.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-095",
+   "bot": "nep",
+   "cau": "chia tien bua lau 1 trieu 2 cho quan, hoa voi minh",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-096",
+   "bot": "nep",
+   "cau": "Tối qua hết 900k, chia đều cho Sen, Đào, Thái giúp.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-097",
+   "bot": "nep",
+   "cau": "toi qua het 900k, chia deu cho sen, dao, thai giup",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-098",
+   "bot": "nep",
+   "cau": "Chia bill 750k cho Gia và Phong.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-099",
+   "bot": "nep",
+   "cau": "chia bill 750k cho gia va phong",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-100",
+   "bot": "nep",
+   "cau": "Chia tiền phòng homestay 2 triệu 4 cho 4 người.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-101",
+   "bot": "nep",
+   "cau": "Ai nợ ai bao nhiêu sau chuyến đi biển?",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-102",
+   "bot": "nep",
+   "cau": "ai no ai bao nhieu sau chuyen di bien",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-103",
+   "bot": "nep",
+   "cau": "Tính giúp Lịch phải trả mình bao nhiêu sau khi chia.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-104",
+   "bot": "nep",
+   "cau": "Chia hóa đơn karaoke 600k, Bảy về sớm nên trả ít hơn.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-105",
+   "bot": "nep",
+   "cau": "Chia đôi tiền taxi 180k với Hoa.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-106",
+   "bot": "nep",
+   "cau": "chia doi tien taxi 180k voi hoa",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-107",
+   "bot": "nep",
+   "cau": "Chia tiền xăng cho Điểm và Đô, tổng 320k.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-108",
+   "bot": "nep",
+   "cau": "Chia theo món ai ăn nấy trả: Bi ăn 60k, Quán ăn 85k, còn lại mình.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-109",
+   "bot": "nep",
+   "cau": "Xem giúp ai còn nợ ai sau vụ đi núi.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-110",
+   "bot": "nep",
+   "cau": "Chốt ai nấy tự trả, ghi lại Hòa trả 120k, Sen trả 95k.",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-111",
+   "bot": "nep",
+   "cau": "Quân trả hết 1 triệu rồi, mỗi người phải góp lại cho Quân bao nhiêu?",
+   "nhom": "tien/chia_tien_ai_no_ai",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-112",
+   "bot": "nep",
+   "cau": "Ai chịu phần tiền của Quân hôm nay?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-113",
+   "bot": "nep",
+   "cau": "ai chiu phan tien cua quan hom nay",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-114",
+   "bot": "nep",
+   "cau": "Lịch không đi, ai chịu phần tiền của Lịch?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-115",
+   "bot": "nep",
+   "cau": "lich khong di, ai chiu phan tien cua lich",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-116",
+   "bot": "nep",
+   "cau": "Phần tiền của Điểm ai gánh?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-117",
+   "bot": "nep",
+   "cau": "phan tien cua diem ai ganh",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-118",
+   "bot": "nep",
+   "cau": "Gia về sớm thì ai chịu phần tiền ăn của Gia?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-119",
+   "bot": "nep",
+   "cau": "Ai trả phần tiền của Đô trong bill tối qua?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-120",
+   "bot": "nep",
+   "cau": "Bảy quên ví, ai chịu phần tiền của Bảy?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-121",
+   "bot": "nep",
+   "cau": "bay quen vi, ai chiu phan tien cua bay",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-122",
+   "bot": "nep",
+   "cau": "Tính xem ai phải bù phần tiền của Hòa.",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-123",
+   "bot": "nep",
+   "cau": "Phần tiền vé của Sen để ai trả?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-124",
+   "bot": "nep",
+   "cau": "Ai chịu phần tiền của Đào?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-125",
+   "bot": "nep",
+   "cau": "ai chiu phan tien cua dao",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-126",
+   "bot": "nep",
+   "cau": "Ai chịu phần tiền của bé Bi?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-127",
+   "bot": "nep",
+   "cau": "Quán say rồi, ai chịu phần tiền của Quán?",
+   "nhom": "tien/ai_chiu_phan_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-128",
+   "bot": "nep",
+   "cau": "Tính xem mình còn thiếu Quân bao nhiêu.",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-129",
+   "bot": "nep",
+   "cau": "tinh xem minh con thieu quan bao nhieu",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-130",
+   "bot": "nep",
+   "cau": "Tính xem mình còn thiếu Lịch bao nhiêu.",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-131",
+   "bot": "nep",
+   "cau": "tinh xem minh con thieu lich bao nhieu",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-132",
+   "bot": "nep",
+   "cau": "Tính xem mình còn thiếu Hoa bao nhiêu tiền.",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-133",
+   "bot": "nep",
+   "cau": "Mình còn nợ Thái bao nhiêu sau khi trả 300k?",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-134",
+   "bot": "nep",
+   "cau": "Tính giúp mình còn thiếu Phong mấy trăm.",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-135",
+   "bot": "nep",
+   "cau": "Tính xem Bảy còn thiếu mình bao nhiêu.",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-136",
+   "bot": "nep",
+   "cau": "tinh xem bay con thieu minh bao nhieu",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-137",
+   "bot": "nep",
+   "cau": "Cộng hết lại xem mình còn thiếu Gia bao nhiêu.",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-138",
+   "bot": "nep",
+   "cau": "Đã trả Đô 200 rồi, còn thiếu Đô bao nhiêu nữa?",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-139",
+   "bot": "nep",
+   "cau": "Mình còn nợ Đào bao nhiêu?",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-140",
+   "bot": "nep",
+   "cau": "minh con no dao bao nhieu",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-141",
+   "bot": "nep",
+   "cau": "tính xem mình còn thiếu điểm bao nhiêu tiền",
+   "nhom": "tien/tinh_con_thieu",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-142",
+   "bot": "nep",
+   "cau": "Nhớ giúp mình đã đưa Quân 200.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-143",
+   "bot": "nep",
+   "cau": "nho giup minh da dua quan 200",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-144",
+   "bot": "nep",
+   "cau": "Nhớ giúp mình đã đưa Đào 200.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-145",
+   "bot": "nep",
+   "cau": "nho giup minh da dua dao 200",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-146",
+   "bot": "nep",
+   "cau": "Nhớ giúp mình đã đưa Lịch 200 hôm thứ Ba.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-147",
+   "bot": "nep",
+   "cau": "Ghi lại là Điểm đã trả mình 150k.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-148",
+   "bot": "nep",
+   "cau": "ghi lai la diem da tra minh 150k",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-149",
+   "bot": "nep",
+   "cau": "Ghi sổ: Gia nợ 300k tiền vé.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-150",
+   "bot": "nep",
+   "cau": "ghi so: gia no 300k tien ve",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-151",
+   "bot": "nep",
+   "cau": "Lưu lại mình đã chuyển Đô 500k rồi.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-152",
+   "bot": "nep",
+   "cau": "luu lai minh da chuyen do 500k roi",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-153",
+   "bot": "nep",
+   "cau": "Nhớ là Bảy đưa mình 100 hôm qua nhé.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-154",
+   "bot": "nep",
+   "cau": "nho la bay dua minh 100 hom qua nhe",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-155",
+   "bot": "nep",
+   "cau": "Ghi giúp Hòa còn nợ 2 lít.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-156",
+   "bot": "nep",
+   "cau": "Theo dõi giúp mình các khoản Hoa mượn.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-157",
+   "bot": "nep",
+   "cau": "Nhớ giúp mình đã trả Sen tiền phòng.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-158",
+   "bot": "nep",
+   "cau": "Ghi nhận Đào đã đặt cọc hộ mình 500k.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-159",
+   "bot": "nep",
+   "cau": "Lập sổ theo dõi tiền ăn chung với Thái.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-160",
+   "bot": "nep",
+   "cau": "Nhớ hộ mình đã đưa Phong 1 củ.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-161",
+   "bot": "nep",
+   "cau": "Ghi lại Quán đã góp 300k vào quỹ nhóm.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-162",
+   "bot": "nep",
+   "cau": "nhớ giúp đã đưa sen 200",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-163",
+   "bot": "nep",
+   "cau": "Thái mượn 1 củ chưa trả, ghi lại giúp.",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-164",
+   "bot": "nep",
+   "cau": "thai muon 1 cu chua tra, ghi lai giup",
+   "nhom": "tien/ghi_nho_theo_doi",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-165",
+   "bot": "nep",
+   "cau": "Nhắc mình trả Quân 200k vào thứ Sáu.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-166",
+   "bot": "nep",
+   "cau": "nhac minh tra quan 200k vao thu sau",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-167",
+   "bot": "nep",
+   "cau": "Mai 8 giờ nhắc mình chuyển tiền cho Lịch.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-168",
+   "bot": "nep",
+   "cau": "mai 8 gio nhac minh chuyen tien cho lich",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-169",
+   "bot": "nep",
+   "cau": "Nhắc Điểm trả mình 300k nhé.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-170",
+   "bot": "nep",
+   "cau": "nhac diem tra minh 300k nhe",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-171",
+   "bot": "nep",
+   "cau": "Đặt lời nhắc đòi tiền Gia cuối tháng.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-172",
+   "bot": "nep",
+   "cau": "Nhắc mình gửi Hòa tiền điện 250k.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-173",
+   "bot": "nep",
+   "cau": "Nhắc Sen góp tiền quỹ đi chơi.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-174",
+   "bot": "nep",
+   "cau": "nhac sen gop tien quy di choi",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-175",
+   "bot": "nep",
+   "cau": "Chiều nay nhắc mình trả nốt tiền cho Thái.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-176",
+   "bot": "nep",
+   "cau": "Nhắc Phong chuyển khoản phần tiền phòng.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-177",
+   "bot": "nep",
+   "cau": "Hẹn nhắc thu tiền của Đào thứ Hai tuần sau.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-178",
+   "bot": "nep",
+   "cau": "Nhắc mình đưa Đô 100k trước khi đi.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-179",
+   "bot": "nep",
+   "cau": "Gia còn nợ mình 400k, nhắc Gia trả.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-180",
+   "bot": "nep",
+   "cau": "gia con no minh 400k, nhac gia tra",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-181",
+   "bot": "nep",
+   "cau": "Nhắc mình trả Phong 150k tiền vé.",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-182",
+   "bot": "nep",
+   "cau": "nhac minh tra phong 150k tien ve",
+   "nhom": "tien/nhac_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-183",
+   "bot": "nep",
+   "cau": "Ứng trước lương cho Quân 2 triệu giúp mình.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-184",
+   "bot": "nep",
+   "cau": "ung truoc luong cho quan 2 trieu giup minh",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-185",
+   "bot": "nep",
+   "cau": "Chuyển phụ cấp xăng xe tháng này cho Bảy.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-186",
+   "bot": "nep",
+   "cau": "chuyen phu cap xang xe thang nay cho bay",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-187",
+   "bot": "nep",
+   "cau": "Trả lương tháng 9 cho chị Đào giúp mình.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-188",
+   "bot": "nep",
+   "cau": "tra luong thang 9 cho chi dao giup minh",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-189",
+   "bot": "nep",
+   "cau": "Nhắc mình gửi tiền tiêu vặt cho Bi mỗi thứ Hai.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-190",
+   "bot": "nep",
+   "cau": "nhac minh gui tien tieu vat cho bi moi thu hai",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-191",
+   "bot": "nep",
+   "cau": "Tính lương cho Sen theo giờ, làm 30 giờ, mỗi giờ 25k.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-192",
+   "bot": "nep",
+   "cau": "Ghi lại đã phát phụ cấp ăn trưa cho Thái.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-193",
+   "bot": "nep",
+   "cau": "Phát tiền tiêu vặt tuần này cho bé Bi 100k.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-194",
+   "bot": "nep",
+   "cau": "Lương về rồi, chuyển cho Hoa 3 triệu như đã hứa.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-195",
+   "bot": "nep",
+   "cau": "Chuyển tiền lương part-time cho Gia hộ mình.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-196",
+   "bot": "nep",
+   "cau": "Cắt 200k lương của Phong vì đi trễ, ghi giúp.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-197",
+   "bot": "nep",
+   "cau": "Hòa chưa nhận phụ cấp đi lại, trả giúp 400k.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-198",
+   "bot": "nep",
+   "cau": "Trích lương mình gửi Lịch 1 triệu mỗi tháng.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-199",
+   "bot": "nep",
+   "cau": "Tháng này Điểm được thưởng 500k, chuyển cho Điểm giúp.",
+   "nhom": "tien/luong_phu_cap",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-200",
+   "bot": "nep",
+   "cau": "Cho mình xin số tài khoản của Quân để chuyển tiền.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-201",
+   "bot": "nep",
+   "cau": "cho minh xin so tai khoan cua quan de chuyen tien",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-202",
+   "bot": "nep",
+   "cau": "Gửi mã QR của Hòa để mình chuyển khoản.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-203",
+   "bot": "nep",
+   "cau": "gui ma qr cua hoa de minh chuyen khoan",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-204",
+   "bot": "nep",
+   "cau": "Tạo mã QR nhận tiền để Sen trả mình.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-205",
+   "bot": "nep",
+   "cau": "tao ma qr nhan tien de sen tra minh",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-206",
+   "bot": "nep",
+   "cau": "STK của Đào là gì vậy?",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-207",
+   "bot": "nep",
+   "cau": "stk cua dao la gi vay",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-208",
+   "bot": "nep",
+   "cau": "Lưu số tài khoản của Phong giúp mình.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-209",
+   "bot": "nep",
+   "cau": "Làm cái QR chuyển khoản 250k cho Lịch.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-210",
+   "bot": "nep",
+   "cau": "lam cai qr chuyen khoan 250k cho lich",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-211",
+   "bot": "nep",
+   "cau": "Quét QR trả tiền cho Gia giúp mình.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-212",
+   "bot": "nep",
+   "cau": "Cho mình mã VietQR của Thái.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-213",
+   "bot": "nep",
+   "cau": "Nếp đọc số tài khoản của Điểm cho mình.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-214",
+   "bot": "nep",
+   "cau": "Tạo QR để Bảy chuyển mình 180k.",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-215",
+   "bot": "nep",
+   "cau": "xin stk bé Bi để gửi tiền quà",
+   "nhom": "tien/qr_tai_khoan",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-216",
+   "bot": "nep",
+   "cau": "Bắn 50 cành cho Quân đi.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-217",
+   "bot": "nep",
+   "cau": "ban 50 canh cho quan di",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-218",
+   "bot": "nep",
+   "cau": "Bắn qua Lịch 2 lít tiền nhậu.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-219",
+   "bot": "nep",
+   "cau": "ban qua lich 2 lit tien nhau",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-220",
+   "bot": "nep",
+   "cau": "Đưa Điểm 1 củ giùm mình.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-221",
+   "bot": "nep",
+   "cau": "dua diem 1 cu gium minh",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-222",
+   "bot": "nep",
+   "cau": "Chuyển cho Gia 5 xị tiền cà phê.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-223",
+   "bot": "nep",
+   "cau": "Bơm cho Đô 3 lít, mai nó trả.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-224",
+   "bot": "nep",
+   "cau": "bom cho do 3 lit, mai no tra",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-225",
+   "bot": "nep",
+   "cau": "Bảy xin 2 củ, bắn qua giùm.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-226",
+   "bot": "nep",
+   "cau": "Mượn Hòa 1 củ xài tạm.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-227",
+   "bot": "nep",
+   "cau": "muon hoa 1 cu xai tam",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-228",
+   "bot": "nep",
+   "cau": "Hoa còn nợ 3 lít, đòi giúp.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-229",
+   "bot": "nep",
+   "cau": "Lì xì cho bé Bi 2 lít nhé.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-230",
+   "bot": "nep",
+   "cau": "Ting ting cho Thái 150 cành nha.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-231",
+   "bot": "nep",
+   "cau": "ting ting cho thai 150 canh nha",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-232",
+   "bot": "nep",
+   "cau": "Đã bắn Phong 1 củ, ghi lại giùm.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-233",
+   "bot": "nep",
+   "cau": "Sen bắn lại mình 5 lít chưa?",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-234",
+   "bot": "nep",
+   "cau": "Quán nợ mình nửa củ, đòi giùm.",
+   "nhom": "tien/tieng_long_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-235",
+   "bot": "nep",
+   "cau": "Lend me 200k for dinner.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-236",
+   "bot": "nep",
+   "cau": "Can I borrow 500k from Quan until Friday?",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-237",
+   "bot": "nep",
+   "cau": "Put it on Hoa's tab.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-238",
+   "bot": "nep",
+   "cau": "Put tonight's drinks on Thai's tab.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-239",
+   "bot": "nep",
+   "cau": "Send Sen 250k.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-240",
+   "bot": "nep",
+   "cau": "Send Lich 250k for the tickets.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-241",
+   "bot": "nep",
+   "cau": "Transfer 300k to Dao please.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-242",
+   "bot": "nep",
+   "cau": "Remind me to pay Phong back 400k on Monday.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-243",
+   "bot": "nep",
+   "cau": "How much do I still owe Gia?",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-244",
+   "bot": "nep",
+   "cau": "Split the 900k bill between me, Bi and Quan.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-245",
+   "bot": "nep",
+   "cau": "Who owes who after the trip?",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-246",
+   "bot": "nep",
+   "cau": "Collect the 150k from Bay later.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-247",
+   "bot": "nep",
+   "cau": "Pay Hoa back for the taxi.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-248",
+   "bot": "nep",
+   "cau": "Can you lend Diem 1 million?",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-249",
+   "bot": "nep",
+   "cau": "Keep track of what Do owes me.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-250",
+   "bot": "nep",
+   "cau": "Remember that I gave Hoa 200.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-251",
+   "bot": "nep",
+   "cau": "Wire Dao 2 million for rent.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-252",
+   "bot": "nep",
+   "cau": "Put the karaoke on Quan's tab, he'll settle later.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-253",
+   "bot": "nep",
+   "cau": "Can I borrow 50k? I'll pay you back tomorrow.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-254",
+   "bot": "nep",
+   "cau": "Send Phong his share of the rent.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-255",
+   "bot": "nep",
+   "cau": "Who covers Diem's share of the bill?",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-256",
+   "bot": "nep",
+   "cau": "Log that Bi paid me 60k.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-257",
+   "bot": "nep",
+   "cau": "Nếp, send Quân 250k nha.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-258",
+   "bot": "nep",
+   "cau": "lend Hòa 300k giúp mình",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-259",
+   "bot": "nep",
+   "cau": "Give Sen her allowance for this week.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-t-260",
+   "bot": "nep",
+   "cau": "Advance Thai 1 million from his salary.",
+   "nhom": "tien/tieng_anh_tien",
+   "ky_vong": {
+    "tien": [
+     "money_action",
+     "split_draft"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-001",
+   "bot": "nep",
+   "cau": "Quán nướng Bảy Món giá một set bao nhiêu?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-002",
+   "bot": "nep",
+   "cau": "quan nuong bay mon gia mot set bao nhieu",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-003",
+   "bot": "nep",
+   "cau": "Quán Sen giá có đắt không?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-004",
+   "bot": "nep",
+   "cau": "quan sen gia co dat khong",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-005",
+   "bot": "nep",
+   "cau": "Quán chay Hòa An ăn khoảng bao nhiêu một người?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-006",
+   "bot": "nep",
+   "cau": "Tiệm Đào Tiên giá cả thế nào?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-007",
+   "bot": "nep",
+   "cau": "tiem dao tien gia ca the nao",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-008",
+   "bot": "nep",
+   "cau": "Nhà hàng Gia Phong giá mỗi người khoảng bao nhiêu?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-009",
+   "bot": "nep",
+   "cau": "Quán lẩu Thái ở phố Hoa giá sao?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-010",
+   "bot": "nep",
+   "cau": "quan lau thai o pho hoa gia sao",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-011",
+   "bot": "nep",
+   "cau": "Tiệm Quán Quân có đắt không?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-012",
+   "bot": "nep",
+   "cau": "Cà phê Điểm Hẹn giá nước bao nhiêu?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-013",
+   "bot": "nep",
+   "cau": "ca phe diem hen gia nuoc bao nhieu",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-014",
+   "bot": "nep",
+   "cau": "Cà phê Lịch Cũ giá một ly bao nhiêu?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-015",
+   "bot": "nep",
+   "cau": "Quán ốc Bi ở chợ Thái có rẻ không?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-016",
+   "bot": "nep",
+   "cau": "Quán Phong Lan giá mềm không?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-017",
+   "bot": "nep",
+   "cau": "Buffet Hoa Sen giá trưa khác giá tối không?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-018",
+   "bot": "nep",
+   "cau": "Ở khu Đô Thành có quán phở nào tầm 50k không?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-019",
+   "bot": "nep",
+   "cau": "Menu quán Quán Ơi đắt hay rẻ?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-020",
+   "bot": "nep",
+   "cau": "How pricey is the Sen lotus restaurant?",
+   "nhom": "khong_tien/gia_dia_diem",
+   "ghi_chu": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-021",
+   "bot": "nep",
+   "cau": "Tìm quán ăn dưới 200k một người gần phố Hoa.",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-022",
+   "bot": "nep",
+   "cau": "tim quan an duoi 200k mot nguoi gan pho hoa",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-023",
+   "bot": "nep",
+   "cau": "Ngân sách 1 củ cho 4 người, đi đâu ăn tối?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-024",
+   "bot": "nep",
+   "cau": "ngan sach 1 cu cho 4 nguoi, di dau an toi",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-025",
+   "bot": "nep",
+   "cau": "Có 2 lít thì cafe nào ngồi được cả buổi?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-026",
+   "bot": "nep",
+   "cau": "co 2 lit thi cafe nao ngoi duoc ca buoi",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-027",
+   "bot": "nep",
+   "cau": "Tìm chỗ hẹn hò với Quân tầm 500k cho hai người.",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-028",
+   "bot": "nep",
+   "cau": "Đi với Hòa và Sen, mỗi người tầm 150k, gợi ý quán lẩu.",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-029",
+   "bot": "nep",
+   "cau": "Tối nay ngân sách 300k, quán nào gần Điểm Hẹn?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-030",
+   "bot": "nep",
+   "cau": "Gợi ý quán nhậu tầm 5 lít cho nhóm 6 người.",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-031",
+   "bot": "nep",
+   "cau": "Chỗ nào ăn sáng dưới 30k quanh chợ Đào?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-032",
+   "bot": "nep",
+   "cau": "Có 50 cành, đi đâu chơi cuối tuần?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-033",
+   "bot": "nep",
+   "cau": "co 50 canh, di dau choi cuoi tuan",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-034",
+   "bot": "nep",
+   "cau": "Đi chơi với Bi, túi tiền eo hẹp, quán nào rẻ mà ngon?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-035",
+   "bot": "nep",
+   "cau": "Tầm 100k thì ăn gì ở ngõ Gia?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-036",
+   "bot": "nep",
+   "cau": "Budget 500k for two, where should Quan and I eat?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-037",
+   "bot": "nep",
+   "cau": "Dưới 1 triệu 2 cho cả nhóm, chọn giúp quán nướng.",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-038",
+   "bot": "nep",
+   "cau": "Muốn đi ăn với Phong mà chỉ có 200 nghìn, gợi ý chỗ nào?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-039",
+   "bot": "nep",
+   "cau": "Trong khoảng 80k đến 120k, quán bún nào gần Lịch Sơn?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-040",
+   "bot": "nep",
+   "cau": "Có 3 xị một người, đi đâu nhậu nhẹ gần bến Bảy?",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-041",
+   "bot": "nep",
+   "cau": "Send me places under 250k near Dao street.",
+   "nhom": "khong_tien/ngan_sach_chon_cho",
+   "ghi_chu": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-042",
+   "bot": "nep",
+   "cau": "Quán nào đồng giá 20k gần đây?",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-043",
+   "bot": "nep",
+   "cau": "quan nao dong gia 20k gan day",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-044",
+   "bot": "nep",
+   "cau": "Tìm tiệm trà sữa đồng giá ở phố Hoa.",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-045",
+   "bot": "nep",
+   "cau": "Buffet đồng giá 199k ở khu Đô Thành còn mở không?",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-046",
+   "bot": "nep",
+   "cau": "Có chợ đêm nào bán đồ đồng giá không?",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-047",
+   "bot": "nep",
+   "cau": "Quán ốc đồng giá 25k của chú Bảy còn bán không?",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-048",
+   "bot": "nep",
+   "cau": "Tiệm Sen có món nào đồng giá không?",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-049",
+   "bot": "nep",
+   "cau": "tiem sen co mon nao dong gia khong",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-050",
+   "bot": "nep",
+   "cau": "Gợi ý quán nướng đồng giá cho nhóm 8 người.",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-051",
+   "bot": "nep",
+   "cau": "Xiên que đồng giá ở ngõ Đào còn không?",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-052",
+   "bot": "nep",
+   "cau": "Có quán lẩu đồng giá nào nhận đặt bàn tối nay không?",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-053",
+   "bot": "nep",
+   "cau": "tiem banh dong gia 15k o pho thai",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-054",
+   "bot": "nep",
+   "cau": "Is there a flat-price buffet near Hoa street?",
+   "nhom": "khong_tien/dong_gia",
+   "ghi_chu": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-055",
+   "bot": "nep",
+   "cau": "Vé vào khu vui chơi Sen Hồng bao nhiêu?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-056",
+   "bot": "nep",
+   "cau": "ve vao khu vui choi sen hong bao nhieu",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-057",
+   "bot": "nep",
+   "cau": "Giá vé xem phim ở rạp Đô Thành tối nay?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-058",
+   "bot": "nep",
+   "cau": "gia ve xem phim o rap do thanh toi nay",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-059",
+   "bot": "nep",
+   "cau": "Vé tham quan vườn Đào mùa xuân mấy tiền?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-060",
+   "bot": "nep",
+   "cau": "Vé cáp treo núi Bảy Tầng bao nhiêu một người?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-061",
+   "bot": "nep",
+   "cau": "Vé vào bảo tàng Lịch sử có giảm cho sinh viên không?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-062",
+   "bot": "nep",
+   "cau": "Giá vé đêm nhạc của nhóm Phong Vũ?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-063",
+   "bot": "nep",
+   "cau": "Trẻ em như bé Bi vào công viên nước có mất vé không?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-064",
+   "bot": "nep",
+   "cau": "Vé thuyền ra đảo Hoa bao nhiêu?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-065",
+   "bot": "nep",
+   "cau": "ve thuyen ra dao hoa bao nhieu",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-066",
+   "bot": "nep",
+   "cau": "How much are tickets to the Sen lotus festival?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-067",
+   "bot": "nep",
+   "cau": "Vé đêm nhạc ở Điểm Hẹn Xanh cuối tuần giá sao?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-068",
+   "bot": "nep",
+   "cau": "Giá vé vào hội hoa Đào năm nay?",
+   "nhom": "khong_tien/gia_ve",
+   "ghi_chu": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-069",
+   "bot": "nep",
+   "cau": "Taxi từ đây ra bến Bảy tốn khoảng bao nhiêu?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-070",
+   "bot": "nep",
+   "cau": "taxi tu day ra ben bay ton khoang bao nhieu",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-071",
+   "bot": "nep",
+   "cau": "Một ly cà phê muối ở quán Hòa tầm bao nhiêu?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-072",
+   "bot": "nep",
+   "cau": "Gửi xe máy ở chợ Hoa mất bao nhiêu tiền?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-073",
+   "bot": "nep",
+   "cau": "gui xe may o cho hoa mat bao nhieu tien",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-074",
+   "bot": "nep",
+   "cau": "Thuê xe đạp đôi quanh hồ Sen một giờ bao nhiêu?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-075",
+   "bot": "nep",
+   "cau": "Đi xe ôm từ phố Đào tới quán Thái hết bao nhiêu?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-076",
+   "bot": "nep",
+   "cau": "Một nồi lẩu cho 4 người thường tốn bao nhiêu?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-077",
+   "bot": "nep",
+   "cau": "Gửi đồ ở bảo tàng có mất phí không?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-078",
+   "bot": "nep",
+   "cau": "Chụp ảnh ở vườn hoa có mất phí không?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-079",
+   "bot": "nep",
+   "cau": "How much does a bowl of pho cost around Quan street?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-080",
+   "bot": "nep",
+   "cau": "Thuê thuyền kayak ở đầm Sen tốn bao nhiêu?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-081",
+   "bot": "nep",
+   "cau": "Phí vào cổng khu cắm trại Phong Lan là bao nhiêu?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-082",
+   "bot": "nep",
+   "cau": "Đổ đầy bình xăng xe máy đi đồi Gia hết khoảng bao nhiêu?",
+   "nhom": "khong_tien/chi_phi",
+   "ghi_chu": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-083",
+   "bot": "nep",
+   "cau": "Quán Sen có nhận thanh toán thẻ không?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-084",
+   "bot": "nep",
+   "cau": "quan sen co nhan thanh toan the khong",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-085",
+   "bot": "nep",
+   "cau": "Tiệm Đào nhận ví điện tử không?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-086",
+   "bot": "nep",
+   "cau": "tiem dao nhan vi dien tu khong",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-087",
+   "bot": "nep",
+   "cau": "Quán nào quanh phố Hoa cho quẹt thẻ?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-088",
+   "bot": "nep",
+   "cau": "Cà phê Điểm Hẹn có trả bằng ví điện tử được không?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-089",
+   "bot": "nep",
+   "cau": "Quán Bảy Món có nhận chuyển khoản không hay chỉ tiền mặt?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-090",
+   "bot": "nep",
+   "cau": "quan bay mon co nhan chuyen khoan khong hay chi tien mat",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-091",
+   "bot": "nep",
+   "cau": "Nhà hàng Gia Phong có máy quẹt thẻ không?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-092",
+   "bot": "nep",
+   "cau": "Chợ đêm Đô Thành có chỗ nào nhận QR không?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-093",
+   "bot": "nep",
+   "cau": "Quán nào gần đây chỉ nhận tiền mặt để mình biết mà tránh?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-094",
+   "bot": "nep",
+   "cau": "Does Hoa cafe take cards?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-095",
+   "bot": "nep",
+   "cau": "Which bars near Thai street accept e-wallets?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-096",
+   "bot": "nep",
+   "cau": "Quán Quân Nhà có cho quét mã thanh toán không?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-097",
+   "bot": "nep",
+   "cau": "Tìm quán lẩu nhận thẻ tín dụng gần Lịch Sơn.",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-098",
+   "bot": "nep",
+   "cau": "Quán Phong Lan có nhận thẻ không?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-099",
+   "bot": "nep",
+   "cau": "quan phong lan co nhan the khong",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-100",
+   "bot": "nep",
+   "cau": "Which pubs around here let you run a tab?",
+   "nhom": "khong_tien/the_vi_chuyen_khoan_cua_quan",
+   "ghi_chu": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-101",
+   "bot": "nep",
+   "cau": "Quán Hòa có cần đặt cọc không?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-102",
+   "bot": "nep",
+   "cau": "quan hoa co can dat coc khong",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-103",
+   "bot": "nep",
+   "cau": "Đặt bàn 10 người ở nhà hàng Sen có phải cọc trước không?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-104",
+   "bot": "nep",
+   "cau": "dat ban 10 nguoi o nha hang sen co phai coc truoc khong",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-105",
+   "bot": "nep",
+   "cau": "Homestay Đào Viên cọc bao nhiêu phần trăm?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-106",
+   "bot": "nep",
+   "cau": "Thuê thuyền ở bến Bảy có cần cọc không?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-107",
+   "bot": "nep",
+   "cau": "Karaoke Phong Vân đặt phòng có phải cọc không?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-108",
+   "bot": "nep",
+   "cau": "Do I need a deposit to book a table at Dao garden?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-109",
+   "bot": "nep",
+   "cau": "Tiệc sinh nhật cho bé Bi ở quán Gia có cần đặt cọc không?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-110",
+   "bot": "nep",
+   "cau": "Hủy bàn ở quán Thái thì có được hoàn cọc không?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-111",
+   "bot": "nep",
+   "cau": "Quán nào gần đây đặt bàn không cần cọc?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-112",
+   "bot": "nep",
+   "cau": "Thuê xe máy ở phố Đô có phải cọc giấy tờ không?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-113",
+   "bot": "nep",
+   "cau": "Đặt tour ngắm hoa Đào có phải cọc trước không?",
+   "nhom": "khong_tien/dat_coc",
+   "ghi_chu": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-114",
+   "bot": "nep",
+   "cau": "«Cho vay» tiếng Anh là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-115",
+   "bot": "nep",
+   "cau": "«cho vay» tieng anh la gi",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-116",
+   "bot": "nep",
+   "cau": "«Lend» nghĩa tiếng Việt là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-117",
+   "bot": "nep",
+   "cau": "«Put it on my tab» nghĩa là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-118",
+   "bot": "nep",
+   "cau": "«Chia tiền» tiếng Hàn nói thế nào?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-119",
+   "bot": "nep",
+   "cau": "«Tiền boa» tiếng Anh là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-120",
+   "bot": "nep",
+   "cau": "«tien boa» tieng anh la gi",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-121",
+   "bot": "nep",
+   "cau": "«Split the bill» dịch sang tiếng Việt thế nào?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-122",
+   "bot": "nep",
+   "cau": "«Đặt cọc» tiếng Nhật là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-123",
+   "bot": "nep",
+   "cau": "What does «chuyển khoản» mean in English?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-124",
+   "bot": "nep",
+   "cau": "«Borrow» và «lend» trong tiếng Anh khác nhau thế nào?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-125",
+   "bot": "nep",
+   "cau": "Tiếng Thái nói «bao nhiêu tiền» thế nào?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-126",
+   "bot": "nep",
+   "cau": "«Hóa đơn» tiếng Pháp là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-127",
+   "bot": "nep",
+   "cau": "«IOU» trong tiếng Anh nghĩa là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-128",
+   "bot": "nep",
+   "cau": "«Going Dutch» nghĩa là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-129",
+   "bot": "nep",
+   "cau": "«Tip» ở nhà hàng Mỹ nghĩa là gì trong tiếng Việt?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-130",
+   "bot": "nep",
+   "cau": "«Lương» tiếng Anh là gì?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-131",
+   "bot": "nep",
+   "cau": "How do you say «ai nợ ai» in English?",
+   "nhom": "khong_tien/nghia_tu_ngoai_ngu",
+   "ghi_chu": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-132",
+   "bot": "nep",
+   "cau": "Chia chuyến đi 5 ngày thành các chặng giúp mình.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-133",
+   "bot": "nep",
+   "cau": "chia chuyen di 5 ngay thanh cac chang giup minh",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-134",
+   "bot": "nep",
+   "cau": "Chia lịch trình cho Quân và Hòa mỗi người phụ trách một ngày.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-135",
+   "bot": "nep",
+   "cau": "Chia nhóm 8 người thành 2 xe đi phố Hoa.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-136",
+   "bot": "nep",
+   "cau": "chia nhom 8 nguoi thanh 2 xe di pho hoa",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-137",
+   "bot": "nep",
+   "cau": "Chia đôi quãng đường tới đảo Sen, nghỉ ở đâu?",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-138",
+   "bot": "nep",
+   "cau": "Chia ngày: sáng đi chợ Đào, chiều ra biển.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-139",
+   "bot": "nep",
+   "cau": "Chia ra 3 ngày để thăm hết các điểm quanh hồ.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-140",
+   "bot": "nep",
+   "cau": "Chia lịch đi cà phê thứ Bảy và Chủ nhật sao cho hợp lý?",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-141",
+   "bot": "nep",
+   "cau": "Split the trip into two days, first Sen lake then Dao hill.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-142",
+   "bot": "nep",
+   "cau": "Chia phần việc: Gia đặt bàn, Phong chọn quán.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-143",
+   "bot": "nep",
+   "cau": "Chia tuyến đi bộ ở phố cổ thành 2 buổi.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-144",
+   "bot": "nep",
+   "cau": "Chia thời gian ở vườn Hoa và bảo tàng thế nào cho vừa?",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-145",
+   "bot": "nep",
+   "cau": "Chia phòng: Bi ngủ với Quán, mình ngủ với Thái.",
+   "nhom": "khong_tien/chia_ngay_chia_nhom",
+   "ghi_chu": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-146",
+   "bot": "nep",
+   "cau": "Tìm quán kiểu ai nấy tự trả, gọi món riêng được, gần phố Hoa.",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-147",
+   "bot": "nep",
+   "cau": "tim quan kieu ai nay tu tra, goi mon rieng duoc, gan pho hoa",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-148",
+   "bot": "nep",
+   "cau": "Nhóm mình ai nấy tự trả, gợi ý quán có món lẻ.",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-149",
+   "bot": "nep",
+   "cau": "Đi với Quân và Sen, ai nấy tự trả, quán nào tiện?",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-150",
+   "bot": "nep",
+   "cau": "ai nay tu tra, tim quan an toi gan day",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-151",
+   "bot": "nep",
+   "cau": "Chỗ nào gọi món theo suất để ai nấy tự trả cho dễ?",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-152",
+   "bot": "nep",
+   "cau": "Quán nào cho tính tiền riêng từng người?",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-153",
+   "bot": "nep",
+   "cau": "Which restaurants near Lich street do separate checks?",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-154",
+   "bot": "nep",
+   "cau": "Tụi mình đi kiểu ai trả phần nấy, tìm quán buffet gọi lẻ.",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-155",
+   "bot": "nep",
+   "cau": "Hẹn Đào, Bảy đi ăn, ai nấy tự trả, chọn quán yên tĩnh giúp.",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-156",
+   "bot": "nep",
+   "cau": "Tìm quán cơm phần để ai nấy tự trả, gần Điểm Hẹn.",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-157",
+   "bot": "nep",
+   "cau": "Going Dutch tonight, any quiet place near Hoa street?",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-158",
+   "bot": "nep",
+   "cau": "Mình với Gia ai nấy tự trả, quán nào có combo một người?",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-159",
+   "bot": "nep",
+   "cau": "Nhóm hay ai nấy tự trả, quán nào tách hóa đơn được?",
+   "nhom": "khong_tien/ai_nay_tu_tra_tim_cho",
+   "ghi_chu": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-160",
+   "bot": "nep",
+   "cau": "Lịch tuần này có ngày nào rảnh để đi Điểm Hẹn không?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-161",
+   "bot": "nep",
+   "cau": "lich tuan nay co ngay nao ranh de di diem hen khong",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-162",
+   "bot": "nep",
+   "cau": "Điểm đến tối nay nên là quán nào?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-163",
+   "bot": "nep",
+   "cau": "diem den toi nay nen la quan nao",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-164",
+   "bot": "nep",
+   "cau": "Gia đình mình 4 người, tìm quán có phòng riêng.",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-165",
+   "bot": "nep",
+   "cau": "Khu đô thị mới có quán cà phê nào đẹp?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-166",
+   "bot": "nep",
+   "cau": "Thứ Bảy này đi đâu?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-167",
+   "bot": "nep",
+   "cau": "thu bay nay di dau",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-168",
+   "bot": "nep",
+   "cau": "Hòa nhạc ngoài trời cuối tuần ở đâu?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-169",
+   "bot": "nep",
+   "cau": "Hoa sen nở rộ ở hồ nào gần đây?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-170",
+   "bot": "nep",
+   "cau": "Sen đá bán ở chợ nào?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-171",
+   "bot": "nep",
+   "cau": "Lẩu Thái chỗ nào ngon?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-172",
+   "bot": "nep",
+   "cau": "lau thai cho nao ngon",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-173",
+   "bot": "nep",
+   "cau": "Phong cảnh đẹp để chụp ảnh gần đây?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-174",
+   "bot": "nep",
+   "cau": "Bi-a ở đâu mở khuya?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-175",
+   "bot": "nep",
+   "cau": "Quán Quán Ơi có chỗ ngồi ngoài trời không?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-176",
+   "bot": "nep",
+   "cau": "Quân khu cũ có còn bảo tàng mở cửa không?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-177",
+   "bot": "nep",
+   "cau": "Mùa hoa đào ở đồi Thái nở vào tháng mấy?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-178",
+   "bot": "nep",
+   "cau": "Hoà mình vào lễ hội đèn lồng thì nên đến lúc mấy giờ?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-179",
+   "bot": "nep",
+   "cau": "Đưa bé Bi đi chơi cuối tuần ở đâu?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-180",
+   "bot": "nep",
+   "cau": "dua be bi di choi cuoi tuan o dau",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-181",
+   "bot": "nep",
+   "cau": "Lịch chiếu phim ở rạp Điểm Hẹn tối nay?",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-182",
+   "bot": "nep",
+   "cau": "lich chieu phim o rap diem hen toi nay",
+   "nhom": "khong_tien/ten_trung_tu_thuong",
+   "ghi_chu": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-183",
+   "bot": "nep",
+   "cau": "Gửi Quân địa chỉ quán Sen giúp mình.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-184",
+   "bot": "nep",
+   "cau": "gui quan dia chi quan sen giup minh",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-185",
+   "bot": "nep",
+   "cau": "Nhắc Hòa mang áo mưa khi đi phố Hoa.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-186",
+   "bot": "nep",
+   "cau": "nhac hoa mang ao mua khi di pho hoa",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-187",
+   "bot": "nep",
+   "cau": "Nhớ giúp mình đã hẹn Đào 7 giờ ở quán Thái.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-188",
+   "bot": "nep",
+   "cau": "Tính xem đi từ nhà Sen tới quán Bảy mất bao lâu.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-189",
+   "bot": "nep",
+   "cau": "tinh xem di tu nha sen toi quan bay mat bao lau",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-190",
+   "bot": "nep",
+   "cau": "Tính xem còn thiếu bao nhiêu km nữa là tới đồi Đào.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-191",
+   "bot": "nep",
+   "cau": "Nhắc mình trả Quân cái sạc dự phòng.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-192",
+   "bot": "nep",
+   "cau": "nhac minh tra quan cai sac du phong",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-193",
+   "bot": "nep",
+   "cau": "Nhắc mình trả sách cho Lịch thứ Sáu.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-194",
+   "bot": "nep",
+   "cau": "Cho Điểm mượn xe máy đi chợ, nhắc mình lấy lại tối nay.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-195",
+   "bot": "nep",
+   "cau": "Mai lấy lại áo khoác để quên ở nhà Gia.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-196",
+   "bot": "nep",
+   "cau": "Gửi Đô lịch trình chuyến đi.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-197",
+   "bot": "nep",
+   "cau": "gui do lich trinh chuyen di",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-198",
+   "bot": "nep",
+   "cau": "Gửi Bảy vị trí quán nướng.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-199",
+   "bot": "nep",
+   "cau": "Send Quan the address of the cafe.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-200",
+   "bot": "nep",
+   "cau": "Can I borrow an umbrella at Sen cafe?",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-201",
+   "bot": "nep",
+   "cau": "Which cafe near Hoa street lends board games?",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-202",
+   "bot": "nep",
+   "cau": "Put Dao hill on the map for Sunday.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-203",
+   "bot": "nep",
+   "cau": "Share the plan with Thai and Phong.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-204",
+   "bot": "nep",
+   "cau": "Thu gọn danh sách quán giúp mình.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-205",
+   "bot": "nep",
+   "cau": "Mùa thu đi phố Hoa có đẹp không?",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-206",
+   "bot": "nep",
+   "cau": "Ghi lại quán Hòa vào danh sách muốn đi.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-207",
+   "bot": "nep",
+   "cau": "Nhớ giúp mình quán Gia ở số 200 đường Hoa.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-208",
+   "bot": "nep",
+   "cau": "nho giup minh quan gia o so 200 duong hoa",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-209",
+   "bot": "nep",
+   "cau": "Theo dõi giờ mở cửa của quán Thái giúp mình.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-210",
+   "bot": "nep",
+   "cau": "Ai chịu phần đặt bàn cho nhóm tối nay?",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-211",
+   "bot": "nep",
+   "cau": "Ai lo phần chọn quán, Quân hay Hòa?",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-212",
+   "bot": "nep",
+   "cau": "Nhớ giúp mình đã đưa Phong về tới nhà rồi.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-213",
+   "bot": "nep",
+   "cau": "Tính xem mình còn thiếu mấy chỗ chưa ghé trong danh sách.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-214",
+   "bot": "nep",
+   "cau": "Remind me to give Bi his jacket back.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-215",
+   "bot": "nep",
+   "cau": "Nhắc Sen gửi ảnh chụp hôm đi vườn Đào.",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-216",
+   "bot": "nep",
+   "cau": "Phòng 250 ở khách sạn Đô Thành có view hồ không?",
+   "nhom": "khong_tien/dong_tu_tien_viec_khac",
+   "ghi_chu": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-217",
+   "bot": "nep",
+   "cau": "Mang 2 lít nước đi dã ngoại ở đồi Sen có đủ không?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-218",
+   "bot": "nep",
+   "cau": "Chợ nào bán 50 cành hoa hồng cho tiệc?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-219",
+   "bot": "nep",
+   "cau": "cho nao ban 50 canh hoa hong cho tiec",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-220",
+   "bot": "nep",
+   "cau": "Củ khoai nướng ở đâu ngon gần phố Đào?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-221",
+   "bot": "nep",
+   "cau": "Chỗ nào bắn pháo hoa đêm giao thừa xem đẹp?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-222",
+   "bot": "nep",
+   "cau": "cho nao ban phao hoa dem giao thua xem dep",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-223",
+   "bot": "nep",
+   "cau": "Trường bắn cung ở đâu gần đây?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-224",
+   "bot": "nep",
+   "cau": "Quán nào bán bia tươi theo lít quanh hồ Sen?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-225",
+   "bot": "nep",
+   "cau": "Cành đào Tết mua ở chợ hoa nào?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-226",
+   "bot": "nep",
+   "cau": "Quán rượu nào bán theo xị mà ngồi yên tĩnh?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-227",
+   "bot": "nep",
+   "cau": "Is there a bar that sells beer by the liter near Sen lake?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-228",
+   "bot": "nep",
+   "cau": "Chỗ nào bán củ sen tươi ở chợ Bảy?",
+   "nhom": "khong_tien/tieng_long_nghia_khac",
+   "ghi_chu": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-229",
+   "bot": "nep",
+   "cau": "Quán nào có menu quét QR gần đây?",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-230",
+   "bot": "nep",
+   "cau": "quan nao co menu quet qr gan day",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-231",
+   "bot": "nep",
+   "cau": "Quét QR ở bảo tàng để nghe thuyết minh ở đâu?",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-232",
+   "bot": "nep",
+   "cau": "Làm sao đổi tên tài khoản của mình trong app?",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-233",
+   "bot": "nep",
+   "cau": "Quán Điểm Hẹn có wifi quét mã QR không?",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-234",
+   "bot": "nep",
+   "cau": "Vào hội hoa Đào có phải quét QR check-in không?",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-235",
+   "bot": "nep",
+   "cau": "Mình quên mật khẩu tài khoản app, làm sao lấy lại?",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-236",
+   "bot": "nep",
+   "cau": "Nút tạo mã QR mời bạn vào nhóm ở đâu?",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-237",
+   "bot": "nep",
+   "cau": "How do I scan the QR code to see Hoa cafe's menu?",
+   "nhom": "khong_tien/qr_tai_khoan_app",
+   "ghi_chu": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-238",
+   "bot": "nep",
+   "cau": "Ngày lương về đi đâu ăn mừng?",
+   "nhom": "khong_tien/luong_chi_la_boi_canh",
+   "ghi_chu": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-239",
+   "bot": "nep",
+   "cau": "ngay luong ve di dau an mung",
+   "nhom": "khong_tien/luong_chi_la_boi_canh",
+   "ghi_chu": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-240",
+   "bot": "nep",
+   "cau": "Cuối tháng chưa có lương, quán nào hợp túi tiền?",
+   "nhom": "khong_tien/luong_chi_la_boi_canh",
+   "ghi_chu": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-241",
+   "bot": "nep",
+   "cau": "cuoi thang chua co luong, quan nao hop tui tien",
+   "nhom": "khong_tien/luong_chi_la_boi_canh",
+   "ghi_chu": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-242",
+   "bot": "nep",
+   "cau": "Mới nhận lương, gợi ý nhà hàng sang một chút cho mình với Hoa.",
+   "nhom": "khong_tien/luong_chi_la_boi_canh",
+   "ghi_chu": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-243",
+   "bot": "nep",
+   "cau": "Quán nào hay giảm giá cho dân văn phòng ngày lương?",
+   "nhom": "khong_tien/luong_chi_la_boi_canh",
+   "ghi_chu": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-244",
+   "bot": "nep",
+   "cau": "Tối thứ Sáu nhận lương, rủ Quân đi đâu nghe nhạc?",
+   "nhom": "khong_tien/luong_chi_la_boi_canh",
+   "ghi_chu": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  },
+  {
+   "id": "tien-v3-k-245",
+   "bot": "nep",
+   "cau": "Payday dinner ideas near Dao street?",
+   "nhom": "khong_tien/luong_chi_la_boi_canh",
+   "ghi_chu": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người.",
+   "ky_vong": {
+    "tien": [
+     "none"
+    ]
+   }
+  }
+ ]
+}

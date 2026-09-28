@@ -256,6 +256,12 @@ jobs:
         # `go test -tags postgres`; a skip or a missing sentinel fails.
         run: scripts/go_postgres_tier.sh
 
+      - name: Redis and RabbitMQ tests on disposable brokers
+        # The AI stream (Redis Streams) and the job outbox relay (RabbitMQ with
+        # publisher confirms) against real services; a skip or a missing
+        # sentinel fails.
+        run: scripts/go_broker_tier.sh
+
       - name: Route manifest matches the app and the binary
         # Selftest first: the gate must be seen red on each failure it exists for.
         run: |
@@ -268,6 +274,91 @@ jobs:
           git fetch --no-tags --depth=200 origin main:refs/remotes/origin/main
           python3 scripts/check_go_owned_python_touch.py --selftest
           python3 scripts/check_go_owned_python_touch.py --base origin/main
+
+  # The Milvus tier: the one retrieval + ingestion system on real services --
+  # the vector index and its schema, the ingestion pipeline writing it, the
+  # hybrid retriever over Milvus and the PostgreSQL rows the ingest writes,
+  # the Qwen reranker's golden check. A job of its own, not a step of `core`:
+  # it needs a Milvus (the script starts the pinned v3.0.2 image) AND a
+  # Qwen3-Reranker served at MOBILE_TEST_RERANK_URL, and no hosted runner has
+  # the reranker (its weights are not an image the script may pull). So it
+  # runs only on a self-hosted runner that declares both. Inside the job a
+  # missing service, a skip or a missing sentinel is red.
+  #
+  # And it is only SCHEDULED when the repository says such a runner exists:
+  # repository variable MILVUS_RUNNER set to `true` (Settings -> Secrets and
+  # variables -> Actions -> Variables). Without that gate the job sat
+  # «Queued» forever on every PR (PR #654, 2026-09-28): this repository has no
+  # runner with these labels, so nothing ever picked it up and the check never
+  # finished. With the variable unset GitHub reports the job SKIPPED -- a
+  # visible grey, never a green -- and the tier runs by hand with
+  # scripts/go_milvus_tier.sh (gate.sh stage `go-milvus`). Registering the
+  # runner and setting the variable is the whole switch back on; see
+  # docs/claude/2026-09-25/con-thieu-ban-tu-lam.md.
+  milvus:
+    name: Milvus retrieval and ingestion tier (needs Milvus and a reranker)
+    if: vars.MILVUS_RUNNER == 'true'
+    runs-on: [self-hosted, milvus, reranker]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - name: Milvus retrieval, ingestion and reranker tests on real services
+        # Milvus from MOBILE_TEST_MILVUS_ADDR or the pinned image, PostgreSQL
+        # from CORE_TEST_DATABASE_URL or a disposable one migrated by
+        # Alembic, the reranker from MOBILE_TEST_RERANK_URL (required).
+        run: scripts/go_milvus_tier.sh
+
+  # Tier T1 of the AI eval (design 06 §6): the engine run through its own seam,
+  # aiharness.Engine.Run, on the scripted stub over the hand-written Nếp
+  # corpus. A job of its own, not a step of `core`, so a red T1 is named for
+  # what it is. It needs Go and nothing else -- no database, no Docker, no
+  # network, no key. The script refuses a SKIP, a missing sentinel, a canary
+  # that is not red where predicted, an identity case that is not green, two
+  # runs that differ, and cmd/core linking internal/aieval.
+  eval-kich-ban:
+    name: scripted Nếp eval (T1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - name: Invariants on every request, canary red, identity green
+        run: scripts/eval_kich_ban.sh
+
+  # The inference sidecar (services/ai-infer, ADR-0031): Python for model
+  # calls only. Its own job because it needs its own pinned Python tree and
+  # none of the Go or API setup; the same two commands as the `ai-infer` and
+  # `ai-infer-milvus` stages of scripts/gate.sh.
+  ai-infer:
+    name: ai-infer sidecar (offline, then a real Milvus)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the pinned sidecar tree
+        run: python -m pip install --no-cache-dir -r services/ai-infer/requirements-dev.txt
+
+      - name: Offline tier -- fakes only, no skip, sentinels pass
+        run: AI_INFER_PYTHON=python scripts/ai_infer_tier.sh
+
+      - name: Live tier on a disposable pinned Milvus -- a skip is a failure
+        # No AI_INFER_TEST_MILVUS_URI here, so the script starts the
+        # digest-pinned v3.0.2 image itself, auth on, loopback only.
+        run: AI_INFER_PYTHON=python scripts/ai_infer_tier.sh --milvus
 
   # ADR-0029: the parity harness. Same commands as the `parity` stage of
   # scripts/gate.sh, but split across jobs that run at the same time.

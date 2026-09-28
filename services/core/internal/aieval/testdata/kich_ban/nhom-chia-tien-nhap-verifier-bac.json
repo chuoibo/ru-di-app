@@ -1,0 +1,18 @@
+{
+  "ten": "nhom-chia-tien-nhap-verifier-bac",
+  "mo_ta": "Nhóm, verifier của nháp không duyệt một khoản: không soạn nháp, hỏi lại bằng câu cố định.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"split_draft\", \"y_dinh\": [\"chia_bill_draft\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "chia_bill",
+      "chu": "{\"khoan\": [{\"tin\": \"t2\", \"tieu_de\": \"lẩu\", \"so_tien_goc\": \"850k\", \"so_tien_vnd\": 850000}, {\"tin\": \"loi_nho\", \"tieu_de\": \"taxi\", \"so_tien_goc\": \"120k\", \"so_tien_vnd\": 120000}]}"
+    },
+    {
+      "chang": "kiem_chia_bill",
+      "chu": "{\"khoan\": [{\"so\": 1, \"ket\": \"ho_tro\"}, {\"so\": 2, \"ket\": \"khong_ho_tro\"}]}"
+    }
+  ]
+}

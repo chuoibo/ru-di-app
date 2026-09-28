@@ -1,0 +1,18 @@
+{
+  "ten": "tra-loi-khoang-trang",
+  "mo_ta": "Câu trả lời có khoảng trắng hai đầu: engine cắt.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "   Mình gợi ý bạn đi dạo công viên gần nhà nhé.  \n"
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "ten": "429-mai",
+  "mo_ta": "Router nhận 429 ba lần: provider_unavailable, tạm thời.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "loi": {
+        "code": 429
+      }
+    },
+    {
+      "chang": "hieu",
+      "loi": {
+        "code": 429
+      }
+    },
+    {
+      "chang": "hieu",
+      "loi": {
+        "code": 429
+      }
+    }
+  ]
+}

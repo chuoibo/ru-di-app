@@ -424,6 +424,12 @@ func searchPlacesWAI() Route {
 				filter.DestinationID = &diemDen.ID
 			}
 		}
+		// Light rows for the whole (or the held) catalogue, then full rows
+		// only for the few searchCandidates keeps: at most rag.ToiDaNgan, the
+		// most any search hands the model (design 04 §7). A Go-only deviation
+		// on the brain payload: parity runs keyless, so both stacks answer
+		// `unavailable` whatever the payload, and
+		// places_search_shortlist_postgres_test.go is the evidence instead.
 		slim, err := store.ListPlaceCards(ctx, filter)
 		if err != nil {
 			return endpoint.Reply{}, err
@@ -436,14 +442,9 @@ func searchPlacesWAI() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		safe := treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(cards)))
 		payload := pyjson.NewOrderedMap()
 		payload.Set("query", pyjson.String(query))
-		list := pyjson.List{}
-		for _, card := range safe {
-			list = append(list, card)
-		}
-		payload.Set("catalogue", list)
+		payload.Set("catalogue", modelShortlist(cards))
 		payload.Set("group", wireTaste(group))
 		client := brain.Configured()
 		raw, err := client.PostJSON("place-search", payload)
@@ -513,6 +514,22 @@ func searchPlacesWAI() Route {
 }
 
 type reasonPair struct{ reason, verdict *string }
+
+// modelShortlist is what the search model may read of the shortlist: the
+// rows promptsafety.Filter keeps (the oracle's rule), each then cut by
+// promptsafety.SafeDeep -- a row it drops is gone, a quarantined review,
+// activity or description is emptied -- in the shortlist's order.
+func modelShortlist(cards []*pyjson.OrderedMap) pyjson.List {
+	list := pyjson.List{}
+	for _, card := range promptsafety.Filter(treejson.MapsTo(cards)) {
+		deep, report := promptsafety.SafeDeep(card)
+		if report.Bo {
+			continue
+		}
+		list = append(list, treejson.MapFrom(deep))
+	}
+	return list
+}
 
 func wireDestination(row repo.Destination, km *float64) *pyjson.OrderedMap {
 	out := pyjson.NewOrderedMap()

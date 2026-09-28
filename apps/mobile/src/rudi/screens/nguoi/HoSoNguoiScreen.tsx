@@ -130,7 +130,9 @@ export function HoSoNguoiScreen() {
     try {
       const cap = await moNhanRieng(personId, phien.person_id, attemptFor(attempts.current, `dm:${personId}`));
       datPhien(await ganDanhSachNhom(phien, ghepVaoDanhSach(phien.contexts, cap)));
-      router.push(`/groups/${cap.id}/${den}` as never);
+      // Both targets spelled out: the manual extractor (tools/rut-huong-dan.mjs)
+      // maps each to its route, where `/groups/${id}/${den}` names none.
+      router.push((den === "to-giay" ? `/groups/${cap.id}/to-giay` : `/groups/${cap.id}/chat`) as never);
     } catch (error) {
       setLoiChat(loiRaChu(error));
     } finally {

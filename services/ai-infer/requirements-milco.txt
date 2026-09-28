@@ -1,0 +1,8 @@
+# Real MILCO runtime (AI_INFER_SPARSE_MODE=milco). NOT installed by default,
+# not in the image, not in CI: the weights' licence is unconfirmed (research
+# milco.md §Kiểm chứng 11) and no weights may be downloaded here. Versions are
+# the ones the MILCO repository pins (thongnt99/milco requirements.txt): its
+# remote code was written for transformers 4.57, not 5.x. CPU wheels.
+-r requirements.txt
+torch==2.10.0
+transformers==4.57.6

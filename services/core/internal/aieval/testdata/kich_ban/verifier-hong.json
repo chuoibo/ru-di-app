@@ -1,0 +1,18 @@
+{
+  "ten": "verifier-hong",
+  "mo_ta": "Verifier trả đầu ra sai schema: không phát gì.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Tối nay bạn thử một món nước nóng cho ấm bụng nhé."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": \"x\"}"
+    }
+  ]
+}

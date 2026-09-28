@@ -1,0 +1,9 @@
+# Test tooling on top of the runtime tree. The tests are offline: no model
+# weights, no network (in-process and loopback fakes). torch/transformers are
+# deliberately absent (tests/test_config.py checks the MILCO mode says so).
+-r requirements.txt
+iniconfig==2.3.0
+packaging==26.3
+pluggy==1.6.0
+Pygments==2.21.0
+pytest==9.1.1

@@ -548,7 +548,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -593,7 +593,52 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-sse-resume",
+  "method": "OPTIONS",
+  "path": "/me/ai/invocations/x/stream",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "GET"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,last-event-id"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -638,7 +683,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -691,7 +736,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -744,7 +789,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -797,7 +842,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -838,7 +883,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -887,7 +932,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -940,7 +985,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -985,7 +1030,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1034,7 +1079,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -1552,7 +1597,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1601,7 +1646,56 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-sse-resume",
+  "method": "OPTIONS",
+  "path": "/me/ai/invocations/x/stream",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "GET"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,last-event-id"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1650,7 +1744,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1699,7 +1793,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1748,7 +1842,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1797,7 +1891,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1842,7 +1936,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1887,7 +1981,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1936,7 +2030,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -1981,7 +2075,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "access-control-allow-origin",
@@ -2026,7 +2120,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -2608,7 +2702,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ]
   ],
   "body": ""
@@ -2649,7 +2743,48 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-sse-resume",
+  "method": "OPTIONS",
+  "path": "/me/ai/invocations/x/stream",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "GET"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,last-event-id"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ]
   ],
   "body": ""
@@ -2690,7 +2825,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -2739,7 +2874,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -2788,7 +2923,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -2837,7 +2972,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ]
   ],
   "body": ""
@@ -2874,7 +3009,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -2919,7 +3054,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -2968,7 +3103,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ],
    [
     "content-length",
@@ -3013,7 +3148,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ]
   ],
   "body": ""
@@ -3054,7 +3189,7 @@
    ],
    [
     "access-control-allow-headers",
-    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, last-event-id, x-actor-contexts, x-actor-id, x-actor-roles"
    ]
   ],
   "body": ""

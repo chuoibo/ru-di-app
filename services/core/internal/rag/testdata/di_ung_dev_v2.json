@@ -1,0 +1,3641 @@
+{
+  "quy_uoc": {
+    "phien_ban": "di_ung_heldout_v2",
+    "ngay_tao": "2026-09-25",
+    "nguon": "viết tay + mẫu có seed; người viết không mở từ vựng sản phẩm, gói rag, hay corpus held-out trước",
+    "di_ung": [
+      "tôm",
+      "cua",
+      "cá",
+      "mực",
+      "động vật có vỏ",
+      "hải sản",
+      "đậu phộng",
+      "các loại hạt",
+      "sữa",
+      "trứng",
+      "mè",
+      "gluten",
+      "đậu nành"
+    ],
+    "an_kieng": [
+      "chay",
+      "thuần chay",
+      "halal"
+    ],
+    "bao_ham": {
+      "hải sản": [
+        "tôm",
+        "cua",
+        "cá",
+        "mực",
+        "động vật có vỏ"
+      ],
+      "thuần chay ⇒ chay": "chỉ ở phía quán: quán thuần chay phục vụ được người ăn chay, nên phuc_vu ghi cả hai"
+    },
+    "gan_nhan_nguoi_hoi": [
+      "di_ung = mọi chất gây dị ứng mà CÂU nêu trong ngữ cảnh dị ứng/tránh/không ăn được, kể cả của người khác trong câu, câu hỏi, sống/tái/chín, đuôi «thì được/ok»; nhãn là mức cụ thể nhất câu gọi tên",
+      "ghẹ → cua; tép, mắm tôm → tôm; nghêu/sò/ốc/hến/hàu/vẹm/sò điệp/hải sản có vỏ/shellfish → động vật có vỏ; lạc → đậu phộng; vừng, dầu mè → mè; đậu hũ, tàu hũ, nước tương, sữa đậu nành → đậu nành; lactose, casein, phô mai, đạm sữa bò → sữa; bột mì, lúa mì, celiac, wheat → gluten; nước mắm → cá; hạt điều/hạnh nhân/óc chó/macca/tree nuts/nuts → các loại hạt (đậu phộng tách riêng)",
+      "câu chỉ giống chữ, không có ngữ cảnh dị ứng («quán cua ngon», «trung tâm», «của mình», «mực nước») → []",
+      "«dị ứng» không phải thức ăn (phấn hoa, thời tiết, nghĩa bóng) → []",
+      "an_kieng chỉ nhận chay, thuần chay, halal; keto/giảm cân → []"
+    ],
+    "gan_nhan_quan": [
+      "chua = chất gây dị ứng mà chữ của quán nêu là có (kể cả «có thể chứa», nấu chung bếp, kinds trần); phủ định («không bán hải sản», «seafood: no») → [] kèm an_toan_neu_doc_thua",
+      "phuc_vu = chế độ ăn quán phục vụ được; giá trị có cấu trúc false/N/A/null/tạm ngưng/chờ chứng nhận/chỉ vài ngày → []",
+      "không suy thành phần từ tên món mơ hồ (Chè, Kem, Lẩu); chỉ suy khi nguyên liệu gần như chắc (mì Ý/pizza → gluten, phô mai → sữa)"
+    ],
+    "an_toan_neu_doc_thua": "true = dòng có phần mà đọc thành dị ứng/chứa là đọc thừa chấp nhận được (người khác, câu hỏi, một số loại, sống/chín, phủ định, quá khứ, từ đa nghĩa). Nhãn gốc đã gồm phần theo luật vòng này; riêng câu phủ định/quá khứ/sở thích giữ []. Cờ này KHÔNG áp cho phuc_vu của quán và không miễn đọc thiếu",
+    "cach_cham_de_nghi": {
+      "nguoi_hoi.di_ung": "thiếu một nhãn = KHÔNG AN TOÀN (luôn tính, không cờ nào miễn); nhãn cha đoán ra phủ được nhãn con theo bao_ham; nhãn dư chỉ là lỗi chính xác, không tính khi cờ true",
+      "nguoi_hoi.an_kieng": "thiếu = sai; dư = siết thêm, không tính khi cờ true",
+      "quan.chua": "thiếu = KHÔNG AN TOÀN; dư = giấu bớt quán (an toàn), không tính khi cờ true",
+      "quan.phuc_vu": "dư = KHÔNG AN TOÀN (đưa người ăn kiêng tới quán không phục vụ); thiếu = mất độ gợi nhớ"
+    },
+    "truong_quan": [
+      "ten",
+      "kinds",
+      "traits",
+      "mo_ta",
+      "review"
+    ],
+    "cau_chuyen_chia": "một pool, xáo bằng random.Random(20260925), chia theo tầng (loai, an_toan_neu_doc_thua); các cặp biến thể (cùng chữ khi bỏ dấu/hoa thường, ví dụ «Hải sản»/«Hai san») luôn tách về hai tập khác nhau",
+    "du_lieu": "tên quán/người là bịa; không email, không dãy số từ 9 chữ số",
+    "tap": "dev",
+    "so_luong": {
+      "nguoi_hoi": 205,
+      "quan": 114
+    },
+    "phan_bo_loai_nguoi_hoi": {
+      "an_kieng": 8,
+      "cau_hoi": 6,
+      "chen_tu": 12,
+      "dam_sua_che_pham": 6,
+      "danh_sach": 31,
+      "gan_giong": 14,
+      "hem_k_ok": 8,
+      "khong_dau": 16,
+      "mon_co": 8,
+      "mot_di_ung": 13,
+      "muc_do": 5,
+      "nhieu_nguoi": 7,
+      "phu_dinh": 4,
+      "sai_dau": 13,
+      "so_thich": 1,
+      "song_chin": 5,
+      "tat_ca_mot_so": 8,
+      "teencode": 17,
+      "thi_duoc": 6,
+      "tieng_anh": 16,
+      "tim_quan": 1
+    },
+    "phan_bo_loai_quan": {
+      "gan_giong": 12,
+      "gia_tri_co_cau": 17,
+      "kinds_ghep": 7,
+      "kinds_mot_tu": 17,
+      "kinds_tran": 5,
+      "mo_ta": 17,
+      "review": 15,
+      "ten": 13,
+      "traits": 11
+    }
+  },
+  "nguoi_hoi": [
+    {
+      "id": "dv2-nh-001",
+      "cau": "Mình ăn tôm không được.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "mon_co",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-002",
+      "cau": "minh di ung ngheu so oc",
+      "di_ung": [
+        "động vật có vỏ"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-003",
+      "cau": "Không nêm nước tương thì ok nha.",
+      "di_ung": [
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "thi_duoc",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nước tương → đậu nành"
+    },
+    {
+      "id": "dv2-nh-004",
+      "cau": "Tụi mình 4 người, 300k/người, 1 bạn dị ứng mực.",
+      "di_ung": [
+        "mực"
+      ],
+      "an_kieng": [],
+      "loai": "hem_k_ok",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-005",
+      "cau": "tui di ung do bien voi dau me nha",
+      "di_ung": [
+        "hải sản",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-006",
+      "cau": "mk dịứng tôm",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-007",
+      "cau": "Mình đang sửa xe gần đó, xong ghé ăn.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sửa = sửa chữa"
+    },
+    {
+      "id": "dv2-nh-008",
+      "cau": "Anh dị ứng đậu nành rồi lòng trắng trứng, đặt bàn nhớ dặn quán.",
+      "di_ung": [
+        "trứng",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-009",
+      "cau": "Dị ứng ghẹ rồi phô mai, quán nào tránh được thì tốt.",
+      "di_ung": [
+        "cua",
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-010",
+      "cau": "Tụi mình có một bạn ăn chay, một bạn ăn halal.",
+      "di_ung": [],
+      "an_kieng": [
+        "chay",
+        "halal"
+      ],
+      "loai": "an_kieng",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-011",
+      "cau": "Mình dị ứng tôm, quán này có món nào không có tôm không?",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "cau_hoi",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-012",
+      "cau": "Mình dị ứng hải sãn.",
+      "di_ung": [
+        "hải sản"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-013",
+      "cau": "Em dị ứng hạnh nhân.",
+      "di_ung": [
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-014",
+      "cau": "Mình bị dị ứng đậu phộng, cái này quan trọng nha, với hạt điều.",
+      "di_ung": [
+        "đậu phộng",
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-015",
+      "cau": "Em dị ứng hãi sản nha.",
+      "di_ung": [
+        "hải sản"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-016",
+      "cau": "Cua, ghẹ, rồi tôm nữa, mấy con đó mình dị ứng hết á.",
+      "di_ung": [
+        "tôm",
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-017",
+      "cau": "mik dị ứng lòng trắng trứng, mắm tôm, đạm sữa bò, cua đồng.",
+      "di_ung": [
+        "tôm",
+        "cua",
+        "sữa",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-018",
+      "cau": "Mình bị dị ửng sửa bò với lại bột mì từ nhỏ tới giờ.",
+      "di_ung": [
+        "sữa",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-019",
+      "cau": "Mình đang ăn kiêng giảm cân.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "an_kieng",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chế độ ngoài từ vựng đóng"
+    },
+    {
+      "id": "dv2-nh-020",
+      "cau": "Dị ứng sữa và trứng thì ok không?",
+      "di_ung": [
+        "sữa",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "cau_hoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-021",
+      "cau": "mk hk ăn đc mè nha mn",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-022",
+      "cau": "minh di ung trung ga voi trung vit",
+      "di_ung": [
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-023",
+      "cau": "Mình kiêng mực lá, cá biển và sữa bò vì bị dị ứng.",
+      "di_ung": [
+        "cá",
+        "mực",
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-024",
+      "cau": "Tui dị ứng trứng, nhớ giùm tui.",
+      "di_ung": [
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-025",
+      "cau": "Xe của mình để ở đâu?",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-026",
+      "cau": "mk ăn chay nha mn",
+      "di_ung": [],
+      "an_kieng": [
+        "chay"
+      ],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-027",
+      "cau": "Mình ăn chay trường mười năm rồi.",
+      "di_ung": [],
+      "an_kieng": [
+        "chay"
+      ],
+      "loai": "an_kieng",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-028",
+      "cau": "Tree nut allergy, peanuts are ok.",
+      "di_ung": [
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-029",
+      "cau": "Mình bị di ưng tôm.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-030",
+      "cau": "Bác sĩ test rồi, mình không dị ứng đậu phộng.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "phu_dinh",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-031",
+      "cau": "toi di ung sua bo",
+      "di_ung": [
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-032",
+      "cau": "Nhớ giùm mình: dị ứng mực ống rồi lạc rồi trứng gà.",
+      "di_ung": [
+        "mực",
+        "đậu phộng",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-033",
+      "cau": "Mọi người có ai dị ứng gì không? Mình dị ứng gluten.",
+      "di_ung": [
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "nhieu_nguoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-034",
+      "cau": "Tránh giúp mình vừng, hạt dẻ cười và mực lá nha, mình bị dị ứng.",
+      "di_ung": [
+        "mực",
+        "các loại hạt",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-035",
+      "cau": "Mình dị ứng dầu mè, mè rang cũng không được.",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "dam_sua_che_pham",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-036",
+      "cau": "Ca nha minh deu di ung ca hai san lan long trang trung.",
+      "di_ung": [
+        "hải sản",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "sinh từ mẫu danh sách; «ca» không dấu ở đây là «cả», đọc thêm cá là đọc thừa an toàn"
+    },
+    {
+      "id": "dv2-nh-037",
+      "cau": "Dị ứng mọi thể loại hạt, đậu phộng cũng tính.",
+      "di_ung": [
+        "đậu phộng",
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "tat_ca_mot_so",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-038",
+      "cau": "Nhớ giùm mình: dị ứng hến, mực, cua biển nữa.",
+      "di_ung": [
+        "cua",
+        "mực",
+        "động vật có vỏ"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-039",
+      "cau": "I'm lactose intolerant.",
+      "di_ung": [
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-040",
+      "cau": "Mình thích ăn tôm lắm, kiếm quán tôm nướng đi.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-041",
+      "cau": "Mình dị ứng, để coi, tôm nè, mực nè, rồi còn trứng nữa.",
+      "di_ung": [
+        "tôm",
+        "mực",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-042",
+      "cau": "Người dị ứng gluten ăn quán này được không?",
+      "di_ung": [
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "cau_hoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-043",
+      "cau": "Dị ứng tinh bột lúa mì.",
+      "di_ung": [
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "dam_sua_che_pham",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-044",
+      "cau": "Cá hồi, trứng gà rồi vẹm là mình dị ứng hết.",
+      "di_ung": [
+        "cá",
+        "động vật có vỏ",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-045",
+      "cau": "Tôm tái là mình ngứa liền.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "song_chin",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-046",
+      "cau": "Mình không ăn được món nào có sữa.",
+      "di_ung": [
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "mon_co",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-047",
+      "cau": "I can't eat milk plus wheat.",
+      "di_ung": [
+        "sữa",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-048",
+      "cau": "Mình dị ứng hết mấy loại có vỏ: nghêu, sò, hàu, vẹm.",
+      "di_ung": [
+        "động vật có vỏ"
+      ],
+      "an_kieng": [],
+      "loai": "tat_ca_mot_so",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-049",
+      "cau": "Em bị dị ứng đậu hũ, trứng gà và mực ống ạ.",
+      "di_ung": [
+        "mực",
+        "trứng",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-050",
+      "cau": "Ok hết, trừ đậu phộng thôi.",
+      "di_ung": [
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "hem_k_ok",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-051",
+      "cau": "I can't eat eggs, gluten, and prawns.",
+      "di_ung": [
+        "tôm",
+        "trứng",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-052",
+      "cau": "Mình ăn chay có trứng sữa (lacto-ovo).",
+      "di_ung": [],
+      "an_kieng": [
+        "chay"
+      ],
+      "loai": "an_kieng",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-053",
+      "cau": "Mình dị ứng hàu sống.",
+      "di_ung": [
+        "động vật có vỏ"
+      ],
+      "an_kieng": [],
+      "loai": "song_chin",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-054",
+      "cau": "Đi ăn mè xửng không?",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-055",
+      "cau": "Tôm thì chắc chắn, cua thì hình như, mình dị ứng.",
+      "di_ung": [
+        "tôm",
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-056",
+      "cau": "Dị ứng thời tiết quá, trời trở lạnh là hắt hơi.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "dị ứng không phải thức ăn"
+    },
+    {
+      "id": "dv2-nh-057",
+      "cau": "Mình vegan nha.",
+      "di_ung": [],
+      "an_kieng": [
+        "thuần chay"
+      ],
+      "loai": "an_kieng",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-058",
+      "cau": "Mình dị ứng lúa mỉ.",
+      "di_ung": [
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-059",
+      "cau": "Dị ứng casein trong sữa.",
+      "di_ung": [
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "dam_sua_che_pham",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-060",
+      "cau": "minh bi di ung dau phong voi hat dieu",
+      "di_ung": [
+        "đậu phộng",
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-061",
+      "cau": "Gọi thêm dĩa sò điệp nướng mỡ hành nha.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-062",
+      "cau": "Cả nhóm ăn được hết, riêng bạn Na dị ứng tôm.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "nhieu_nguoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-063",
+      "cau": "Allergic to shellfish and eggs.",
+      "di_ung": [
+        "động vật có vỏ",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "shellfish → động vật có vỏ; đọc thêm tôm, cua là đọc thừa an toàn"
+    },
+    {
+      "id": "dv2-nh-064",
+      "cau": "Anh di ung ca dam sua bo, long trang trung lan hau, dat ban nho dan quan.",
+      "di_ung": [
+        "động vật có vỏ",
+        "sữa",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "sinh từ mẫu danh sách; «ca» không dấu ở đây là «cả», đọc thêm cá là đọc thừa an toàn"
+    },
+    {
+      "id": "dv2-nh-065",
+      "cau": "Quán nào không dùng mè thì ok.",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "thi_duoc",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-066",
+      "cau": "Anh dị ứng bột mì, đạm sữa bò và sò điệp, đặt bàn nhớ dặn quán.",
+      "di_ung": [
+        "động vật có vỏ",
+        "sữa",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-067",
+      "cau": "Mình dị ứng một số loại hải sản.",
+      "di_ung": [
+        "hải sản"
+      ],
+      "an_kieng": [],
+      "loai": "tat_ca_mot_so",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "một số loại: đọc thành cả nhóm hải sản là đọc thừa an toàn"
+    },
+    {
+      "id": "dv2-nh-068",
+      "cau": "Mình bị dị ứng bơ đậu phộng.",
+      "di_ung": [
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "dam_sua_che_pham",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-069",
+      "cau": "Đi coi mực nước biển dâng ở cửa sông đi.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-070",
+      "cau": "Đường vô hẻm hơi khó, cỡ 50k tiền xe là ok.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-071",
+      "cau": "Tưởng dị ứng cua mà hóa ra không phải.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "phu_dinh",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-072",
+      "cau": "Mình dị ứng hải sản có vỏ thôi, cá thì ăn được.",
+      "di_ung": [
+        "động vật có vỏ"
+      ],
+      "an_kieng": [],
+      "loai": "tat_ca_mot_so",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "hải sản có vỏ → động vật có vỏ; đọc thêm hải sản hay cá là đọc thừa"
+    },
+    {
+      "id": "dv2-nh-073",
+      "cau": "Ai dị ứng mè giơ tay, mình trước nè.",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "nhieu_nguoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-074",
+      "cau": "Dị ứng tôm (nặng), cua (nhẹ), mực (nhẹ).",
+      "di_ung": [
+        "tôm",
+        "cua",
+        "mực"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-075",
+      "cau": "Mình kiêng vừng, sữa, sò với lại tôm vì bị dị ứng.",
+      "di_ung": [
+        "tôm",
+        "động vật có vỏ",
+        "sữa",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-076",
+      "cau": "Allergic to eggs, cashews as well as sesame, please keep that in mind.",
+      "di_ung": [
+        "các loại hạt",
+        "trứng",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-077",
+      "cau": "Mình dị ứng tất cả các loại hạt.",
+      "di_ung": [
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "tat_ca_mot_so",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-078",
+      "cau": "No soy plus squid for me, allergies.",
+      "di_ung": [
+        "mực",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-079",
+      "cau": "minh di ung dau nanh, dau hu cung khong duoc",
+      "di_ung": [
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-080",
+      "cau": "Mình dị ửng tôm.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-081",
+      "cau": "Trứng lòng đào thì mình không ăn được, chín kỹ thì ok.",
+      "di_ung": [
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "song_chin",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-082",
+      "cau": "Mực một nắng nướng thì mình bị, mực tươi thì chưa biết.",
+      "di_ung": [
+        "mực"
+      ],
+      "an_kieng": [],
+      "loai": "song_chin",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-083",
+      "cau": "Nặng nhất là mực, còn tôm thì đỡ hơn nhưng vẫn dị ứng.",
+      "di_ung": [
+        "tôm",
+        "mực"
+      ],
+      "an_kieng": [],
+      "loai": "muc_do",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-084",
+      "cau": "Severe sesame allergy here.",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-085",
+      "cau": "Allergic to peanuts, tree nuts and sesame.",
+      "di_ung": [
+        "đậu phộng",
+        "các loại hạt",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-086",
+      "cau": "Dị ứng sữa, ờ, với cả mè, chắc vậy thôi.",
+      "di_ung": [
+        "sữa",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-087",
+      "cau": "mik bị dị ứng tép vs nghêu, vs lại trứng gà từ nhỏ tới giờ.",
+      "di_ung": [
+        "tôm",
+        "động vật có vỏ",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-088",
+      "cau": "Mình dị ứng cá mức độ vừa, đừng chọn quán cá là được.",
+      "di_ung": [
+        "cá"
+      ],
+      "an_kieng": [],
+      "loai": "muc_do",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-089",
+      "cau": "Em bị dị ứng hạt macca với dầu mè ạ.",
+      "di_ung": [
+        "các loại hạt",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-090",
+      "cau": "minh di ung tom nha ban",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-091",
+      "cau": "Con tôm, lòng trắng trứng và sò điệp là mình dị ứng hết.",
+      "di_ung": [
+        "tôm",
+        "động vật có vỏ",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-092",
+      "cau": "Mình ăn óc chó, lòng trắng trứng, bơ đậu phộng, đạm sữa bò không được, dị ứng.",
+      "di_ung": [
+        "đậu phộng",
+        "các loại hạt",
+        "sữa",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-093",
+      "cau": "Mình dị ứng với mấy chỗ ồn ào.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nghĩa bóng"
+    },
+    {
+      "id": "dv2-nh-094",
+      "cau": "minh bi di ung dam sua bo voi long trang trung tu nho toi gio",
+      "di_ung": [
+        "sữa",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-095",
+      "cau": "Tui dị ứng mẻ á.",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "mẻ gõ sai từ mè; «mẻ» cũng là cơm mẻ, đọc thành mè là đọc thừa an toàn"
+    },
+    {
+      "id": "dv2-nh-096",
+      "cau": "Hẻm 51 có quán nào không có mè không?",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "hem_k_ok",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-097",
+      "cau": "Nhớ giùm mình: dị ửng lòng trắng trừng với lại đậu nành.",
+      "di_ung": [
+        "trứng",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-098",
+      "cau": "Dị ứng mực mà ăn chả cá có sao không?",
+      "di_ung": [
+        "mực"
+      ],
+      "an_kieng": [],
+      "loai": "cau_hoi",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "chả cá không ở ngữ cảnh dị ứng; đọc thêm cá là đọc thừa"
+    },
+    {
+      "id": "dv2-nh-099",
+      "cau": "Tui dị ứng cả lạc, bột mì lẫn trứng gà nha.",
+      "di_ung": [
+        "đậu phộng",
+        "trứng",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-100",
+      "cau": "Mình dị ứng tôm cực kỳ nặng, hít mùi mắm tôm cũng khó thở.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "muc_do",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-101",
+      "cau": "cả nhà mk đều dj ứng trứng gà r đậu nành",
+      "di_ung": [
+        "trứng",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-102",
+      "cau": "Mình ăn cả nước tương lẫn đạm sữa bò không được, dị ứng.",
+      "di_ung": [
+        "sữa",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-103",
+      "cau": "Mình dị ứng đậu phọng.",
+      "di_ung": [
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-104",
+      "cau": "t dj ứng hạnh nhân, luôn cả bơ đậu phộng nhe",
+      "di_ung": [
+        "đậu phộng",
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-105",
+      "cau": "Mọi loại hạt với mọi loại hải sản, mình né hết.",
+      "di_ung": [
+        "hải sản",
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "tat_ca_mot_so",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-106",
+      "cau": "Dị ứng đậu phộng thì nên ăn quán nào?",
+      "di_ung": [
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "cau_hoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-107",
+      "cau": "Mình ăn thuần chay, không đụng trứng sữa.",
+      "di_ung": [
+        "sữa",
+        "trứng"
+      ],
+      "an_kieng": [
+        "thuần chay"
+      ],
+      "loai": "an_kieng",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "«không đụng» là ngữ cảnh tránh nên trứng, sữa vào di_ung theo luật vòng này"
+    },
+    {
+      "id": "dv2-nh-108",
+      "cau": "Mình dị ứng cua đồng.",
+      "di_ung": [
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-109",
+      "cau": "Quán này sữa tươi trân châu ngon.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-110",
+      "cau": "Quán trong hẻm cũng được, mình dị ứng cua.",
+      "di_ung": [
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "hem_k_ok",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-111",
+      "cau": "Minh an ca hai san, hat dieu lan vung khong duoc, di ung.",
+      "di_ung": [
+        "hải sản",
+        "các loại hạt",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "sinh từ mẫu danh sách; «ca» không dấu ở đây là «cả», đọc thêm cá là đọc thừa an toàn"
+    },
+    {
+      "id": "dv2-nh-112",
+      "cau": "e dị ứng trứng vs sữa nhe",
+      "di_ung": [
+        "sữa",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-113",
+      "cau": "Mình dị ứng mè hơi nặng, nhờ quán để ý giùm.",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "muc_do",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-114",
+      "cau": "Cả nhà mình đều dị ứng cua đồng, đậu phộng, bột mì với lại trứng gà.",
+      "di_ung": [
+        "cua",
+        "đậu phộng",
+        "trứng",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-115",
+      "cau": "Nhớ giùm mình: dị ứng tôm hùm, hạnh nhân nữa.",
+      "di_ung": [
+        "tôm",
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-116",
+      "cau": "Nhà mình ai cũng dị ứng hải sản.",
+      "di_ung": [
+        "hải sản"
+      ],
+      "an_kieng": [],
+      "loai": "tat_ca_mot_so",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-117",
+      "cau": "Mấy món có tôm là mình né nha.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "mon_co",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-118",
+      "cau": "Mình kiêng mực ống, luôn cả các loại hạt vì bị dị ứng.",
+      "di_ung": [
+        "mực",
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-119",
+      "cau": "Mình dị ứng mực, tôm, sửa chua cũng hk được.",
+      "di_ung": [
+        "tôm",
+        "mực",
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-120",
+      "cau": "mk dị ứng hs, đi đâu cx đc trừ quán hs",
+      "di_ung": [
+        "hải sản"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "hs = hải sản (cũng là «học sinh»)"
+    },
+    {
+      "id": "dv2-nh-121",
+      "cau": "Mình bị dị ứng phấn hoa thôi.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "dị ứng không phải thức ăn"
+    },
+    {
+      "id": "dv2-nh-122",
+      "cau": "Cua đồng giã nhỏ nấu canh là đỉnh.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-123",
+      "cau": "No eggs, peanuts, and fish for me, allergies.",
+      "di_ung": [
+        "cá",
+        "đậu phộng",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-124",
+      "cau": "Mình dị ứng gluten, quán 50k trong hẻm cũng chịu.",
+      "di_ung": [
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "hem_k_ok",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-125",
+      "cau": "Cả nhà mình đều dị ửng óc chó, lòng trắng trứng, nghêu và bơ đậu phọng.",
+      "di_ung": [
+        "động vật có vỏ",
+        "đậu phộng",
+        "các loại hạt",
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-126",
+      "cau": "My allergies: crab, soy and sesame.",
+      "di_ung": [
+        "cua",
+        "mè",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-127",
+      "cau": "Mẹ mình dị ứng cá, ba mình dị ứng mực.",
+      "di_ung": [
+        "cá",
+        "mực"
+      ],
+      "an_kieng": [],
+      "loai": "nhieu_nguoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-128",
+      "cau": "nhà mk có đứa dị ứng trứng",
+      "di_ung": [
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-129",
+      "cau": "di ung me, nho giup minh",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "«me» không dấu có thể là me (trái me); đọc thành mè là đọc thừa an toàn"
+    },
+    {
+      "id": "dv2-nh-130",
+      "cau": "Hai đứa nhỏ dị ứng sữa bò.",
+      "di_ung": [
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "nhieu_nguoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-131",
+      "cau": "Mình dị ứng toàn bộ đồ biển, kể cả rong biển.",
+      "di_ung": [
+        "hải sản"
+      ],
+      "an_kieng": [],
+      "loai": "tat_ca_mot_so",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-132",
+      "cau": "Ghẹ rồi sữa là mình dị ứng hết.",
+      "di_ung": [
+        "cua",
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-133",
+      "cau": "Vegetarian, and allergic to soy.",
+      "di_ung": [
+        "đậu nành"
+      ],
+      "an_kieng": [
+        "chay"
+      ],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-134",
+      "cau": "Tui dị ứng tôm hùm, à mà, dầu mè, hình như cả mực ống nữa nha.",
+      "di_ung": [
+        "tôm",
+        "mực",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-135",
+      "cau": "Mình kiêng mè, phô mai rồi mực lá vì bị dị ứng.",
+      "di_ung": [
+        "mực",
+        "sữa",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-136",
+      "cau": "Cho mình quán nào không có đậu nành, mình bị dị ứng.",
+      "di_ung": [
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-137",
+      "cau": "Dưới 100k, mình k ăn đc sữa.",
+      "di_ung": [
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "hem_k_ok",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-138",
+      "cau": "Mình dị ứng cá sống, sashimi là không được.",
+      "di_ung": [
+        "cá"
+      ],
+      "an_kieng": [],
+      "loai": "song_chin",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-139",
+      "cau": "No seafood please, allergic.",
+      "di_ung": [
+        "hải sản"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-140",
+      "cau": "No seafood, sesame as well as tree nuts for me, allergies.",
+      "di_ung": [
+        "hải sản",
+        "các loại hạt",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-141",
+      "cau": "200k ok, nhưng mình kỵ cá.",
+      "di_ung": [
+        "cá"
+      ],
+      "an_kieng": [],
+      "loai": "hem_k_ok",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-142",
+      "cau": "Món gì có hạt óc chó hay hạnh nhân là mình tránh.",
+      "di_ung": [
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "mon_co",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-143",
+      "cau": "Chỉ cần không có sữa bò thì ok hết.",
+      "di_ung": [
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "thi_duoc",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-144",
+      "cau": "Mình dị ứng tôm, à mà cả cua nữa, với lại hình như đậu phộng.",
+      "di_ung": [
+        "tôm",
+        "cua",
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-145",
+      "cau": "Tránh giùm mình vừng nha, dị ứng đó.",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "vừng = mè"
+    },
+    {
+      "id": "dv2-nh-146",
+      "cau": "t dị ứng mực, đừng kêu mực nha",
+      "di_ung": [
+        "mực"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-147",
+      "cau": "vo minh di ung tom, minh thi di ung cua",
+      "di_ung": [
+        "tôm",
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-148",
+      "cau": "Halal only please.",
+      "di_ung": [],
+      "an_kieng": [
+        "halal"
+      ],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-149",
+      "cau": "Mình dị ứng mực lá với mè, với lại vẹm.",
+      "di_ung": [
+        "mực",
+        "động vật có vỏ",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-150",
+      "cau": "Mình ăn bơ đậu phộng rồi sữa bò rồi gluten không được, dị ứng.",
+      "di_ung": [
+        "đậu phộng",
+        "sữa",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-151",
+      "cau": "Mình dị ứng cá biển.",
+      "di_ung": [
+        "cá"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-152",
+      "cau": "Đậu hũ thì mình ăn cũng được mà không mê lắm.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "so_thich",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-153",
+      "cau": "Mình kiêng cả trừng lẫn nước tương vì bị dị ứng.",
+      "di_ung": [
+        "trứng",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-154",
+      "cau": "b ơi mk dị ứng gluten á",
+      "di_ung": [
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-155",
+      "cau": "Tránh mực ra thì mình ăn gì cũng được.",
+      "di_ung": [
+        "mực"
+      ],
+      "an_kieng": [],
+      "loai": "thi_duoc",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-156",
+      "cau": "Mình dị ứng lòng trắng trứng.",
+      "di_ung": [
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "dam_sua_che_pham",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-157",
+      "cau": "mk bị dị ứg đậu nành, tàu hũ cx ko đc",
+      "di_ung": [
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-158",
+      "cau": "Mình không dị ứng gì hết.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "phu_dinh",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-159",
+      "cau": "Không rắc hạt điều là ok.",
+      "di_ung": [
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "thi_duoc",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-160",
+      "cau": "cả nhà mình đều dj ứng cả mực lá lẫn đậu phộng",
+      "di_ung": [
+        "mực",
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-161",
+      "cau": "Anh dị ứng cá hồi, à quên, lúa mì nữa, đặt bàn nhớ dặn quán.",
+      "di_ung": [
+        "cá",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-162",
+      "cau": "Mình bị dị ứng với các loại hạt.",
+      "di_ung": [
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-163",
+      "cau": "Tránh giúp mình hến, luôn cả cua đồng nha, mình bị dị ứng.",
+      "di_ung": [
+        "cua",
+        "động vật có vỏ"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-164",
+      "cau": "Cá thì mình ăn không được, ăn là ngứa.",
+      "di_ung": [
+        "cá"
+      ],
+      "an_kieng": [],
+      "loai": "mon_co",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-165",
+      "cau": "Tầm 150k một người, mình dị ứng tôm nha.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "hem_k_ok",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-166",
+      "cau": "Anh dị ứng mè, lòng trắng trứng rồi hải sản, đặt bàn nhớ dặn quán.",
+      "di_ung": [
+        "hải sản",
+        "trứng",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-167",
+      "cau": "Em dị ứng ghẹ ạ.",
+      "di_ung": [
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "ghẹ → cua"
+    },
+    {
+      "id": "dv2-nh-168",
+      "cau": "Mình không uống được sữa, bơ với phô mai cũng tránh.",
+      "di_ung": [
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "dam_sua_che_pham",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-169",
+      "cau": "Mình dị ứng cá hồi với cá ngừ.",
+      "di_ung": [
+        "cá"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-170",
+      "cau": "Dị ứng cua thì ăn bún riêu được không?",
+      "di_ung": [
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "cau_hoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-171",
+      "cau": "I have a peanut allergy.",
+      "di_ung": [
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "tieng_anh",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-172",
+      "cau": "Anh dị ứng đậu phộng, hình như cả phô mai nữa, đặt bàn nhớ dặn quán.",
+      "di_ung": [
+        "đậu phộng",
+        "sữa"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-173",
+      "cau": "Mình ăn lúa mì với lại bơ đậu phộng không được, dị ứng.",
+      "di_ung": [
+        "đậu phộng",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-174",
+      "cau": "Minh an muc, lac roi vung khong duoc, di ung.",
+      "di_ung": [
+        "mực",
+        "đậu phộng",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-175",
+      "cau": "Mình dị ứng rất nặng với tôm.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "muc_do",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-176",
+      "cau": "Mình bị dị ứng cua (nặng), bơ đậu phộng (nhẹ) với lại nước tương từ nhỏ tới giờ.",
+      "di_ung": [
+        "cua",
+        "đậu phộng",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-177",
+      "cau": "Tránh giúp mình phô mai, nước tương, đồ biển, gluten nha, mình bị dị ứng.",
+      "di_ung": [
+        "hải sản",
+        "sữa",
+        "gluten",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-178",
+      "cau": "minh di ung lac",
+      "di_ung": [
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "lạc (đậu phộng); «lac» không dấu cũng là «lạc» đường"
+    },
+    {
+      "id": "dv2-nh-179",
+      "cau": "Mình ăn nước tương vô là bị, chắc dị ứng đậu nành.",
+      "di_ung": [
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "mon_co",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-180",
+      "cau": "Anh dị ứng vững, luôn cả đậu phộng, đặt bàn nhớ dặn quán.",
+      "di_ung": [
+        "đậu phộng",
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "sai_dau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-181",
+      "cau": "Chồng em dị ứng đậu nành, em thì ăn chay.",
+      "di_ung": [
+        "đậu nành"
+      ],
+      "an_kieng": [
+        "chay"
+      ],
+      "loai": "nhieu_nguoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-182",
+      "cau": "Mình không ăn được gluten.",
+      "di_ung": [
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-183",
+      "cau": "Quán cua ngon ở đâu vậy mọi người?",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-184",
+      "cau": "minh can quan halal nha",
+      "di_ung": [],
+      "an_kieng": [
+        "halal"
+      ],
+      "loai": "khong_dau",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-185",
+      "cau": "Trước mình dị ứng tôm, giờ hết rồi.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "phu_dinh",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "quá khứ; đọc thành tôm là đọc thừa"
+    },
+    {
+      "id": "dv2-nh-186",
+      "cau": "Mình mà đụng tới con cua là ngứa cả tuần.",
+      "di_ung": [
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "mon_co",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-187",
+      "cau": "Anh bị dị ứng mè, quán nào cũng được trừ món có mè.",
+      "di_ung": [
+        "mè"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-188",
+      "cau": "Ăn trứng vô là mình đau bụng, bác sĩ nói dị ứng.",
+      "di_ung": [
+        "trứng"
+      ],
+      "an_kieng": [],
+      "loai": "mon_co",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-189",
+      "cau": "mk k ăn đc tôm cua j hết",
+      "di_ung": [
+        "tôm",
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-190",
+      "cau": "Mình ăn keto.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "an_kieng",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chế độ ngoài từ vựng đóng"
+    },
+    {
+      "id": "dv2-nh-191",
+      "cau": "Mình dị ứng tôm, tối qua ăn nhầm bị sưng mặt, với lại ghẹ.",
+      "di_ung": [
+        "tôm",
+        "cua"
+      ],
+      "an_kieng": [],
+      "loai": "chen_tu",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-192",
+      "cau": "Cả nhà mình đều dị ứng mực lá, tôm sú rồi đậu hũ.",
+      "di_ung": [
+        "tôm",
+        "mực",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-193",
+      "cau": "Mình kiêng vừng rồi gluten, tôm nữa, cả đậu phộng vì bị dị ứng.",
+      "di_ung": [
+        "tôm",
+        "đậu phộng",
+        "mè",
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-194",
+      "cau": "Em bị dị ứng mắm tôm với lại cá ngừ ạ.",
+      "di_ung": [
+        "tôm",
+        "cá"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-195",
+      "cau": "Mình ăn chay nhưng dị ứng đậu phộng.",
+      "di_ung": [
+        "đậu phộng"
+      ],
+      "an_kieng": [
+        "chay"
+      ],
+      "loai": "an_kieng",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-196",
+      "cau": "Có quán chay nào view đẹp không?",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "tim_quan",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "tìm quán chay: có thể là loai_cho; đọc thành an_kieng chay chấp nhận được"
+    },
+    {
+      "id": "dv2-nh-197",
+      "cau": "Tôi bị celiac nên phải tránh gluten.",
+      "di_ung": [
+        "gluten"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-198",
+      "cau": "Không có đậu hũ thì được nha.",
+      "di_ung": [
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "thi_duoc",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-199",
+      "cau": "cả nhà mik đều di ung hạt điều, nước tương vs trứng gà",
+      "di_ung": [
+        "các loại hạt",
+        "trứng",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-200",
+      "cau": "Tui dị ứng cả bơ đậu phộng lẫn mực nha.",
+      "di_ung": [
+        "mực",
+        "đậu phộng"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-201",
+      "cau": "Con mèo nhà mình tên Tôm.",
+      "di_ung": [],
+      "an_kieng": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-202",
+      "cau": "dj ứng cá wá trời",
+      "di_ung": [
+        "cá"
+      ],
+      "an_kieng": [],
+      "loai": "teencode",
+      "an_toan_neu_doc_thua": false
+    },
+    {
+      "id": "dv2-nh-203",
+      "cau": "Tui dị ứng sò, đậu hũ, mắm tôm nữa nha.",
+      "di_ung": [
+        "tôm",
+        "động vật có vỏ",
+        "đậu nành"
+      ],
+      "an_kieng": [],
+      "loai": "danh_sach",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "sinh từ mẫu danh sách"
+    },
+    {
+      "id": "dv2-nh-204",
+      "cau": "Bé nhà mình dị ứng hạt điều.",
+      "di_ung": [
+        "các loại hạt"
+      ],
+      "an_kieng": [],
+      "loai": "nhieu_nguoi",
+      "an_toan_neu_doc_thua": true
+    },
+    {
+      "id": "dv2-nh-205",
+      "cau": "Mình dị ứng tôm hùm.",
+      "di_ung": [
+        "tôm"
+      ],
+      "an_kieng": [],
+      "loai": "mot_di_ung",
+      "an_toan_neu_doc_thua": false
+    }
+  ],
+  "quan": [
+    {
+      "id": "dv2-q-001",
+      "chu": "Bar",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-002",
+      "chu": "Hải sản: không",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-003",
+      "chu": "Vegan House Đồi Thông",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [
+        "chay",
+        "thuần chay"
+      ],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-004",
+      "chu": "Bún riêu cua đồng, chả cá chiên giòn.",
+      "truong": "mo_ta",
+      "chua": [
+        "cua",
+        "cá"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-005",
+      "chu": "có rượu; không halal",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-006",
+      "chu": "Bạn mình ăn chay mà ở đây chỉ có salad.",
+      "truong": "review",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review; không rõ salad có chay không: phuc_vu giữ []"
+    },
+    {
+      "id": "dv2-q-007",
+      "chu": "Mực Nướng Chú Bảy",
+      "truong": "ten",
+      "chua": [
+        "mực"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-008",
+      "chu": "Halal Kitchen Phố Mới",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [
+        "halal"
+      ],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-009",
+      "chu": "không phục vụ hải sản",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-010",
+      "chu": "Trứng Vịt Lộn Cô Sáu",
+      "truong": "ten",
+      "chua": [
+        "trứng"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-011",
+      "chu": "tôm",
+      "truong": "kinds",
+      "chua": [
+        "tôm"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-012",
+      "chu": "Bánh xèo nhân tôm thịt, chấm nước mắm chua ngọt.",
+      "truong": "mo_ta",
+      "chua": [
+        "tôm",
+        "cá"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi; nước mắm → cá"
+    },
+    {
+      "id": "dv2-q-013",
+      "chu": "Quán Của Mình",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì"
+    },
+    {
+      "id": "dv2-q-014",
+      "chu": "HALAL",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [
+        "halal"
+      ],
+      "loai": "kinds_tran",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds trần kiểu importer; viết hoa"
+    },
+    {
+      "id": "dv2-q-015",
+      "chu": "vegetarian: true",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-016",
+      "chu": "seafood: no",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-017",
+      "chu": "Trà sữa ngọt vừa, trân châu dai.",
+      "truong": "review",
+      "chua": [
+        "sữa"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-018",
+      "chu": "Lẩu Cua Đồng Bến Nước",
+      "truong": "ten",
+      "chua": [
+        "cua"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-019",
+      "chu": "Lẩu dê ổn, chỗ ngồi hơi chật.",
+      "truong": "review",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-020",
+      "chu": "Hải sản (theo mùa)",
+      "truong": "kinds",
+      "chua": [
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-021",
+      "chu": "Chay: chỉ thứ Hai",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc; chay một phần tuần: giữ [] vì đọc thừa an_kieng ở quán là không an toàn"
+    },
+    {
+      "id": "dv2-q-022",
+      "chu": "Tiệm Sách Của Tui",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì"
+    },
+    {
+      "id": "dv2-q-023",
+      "chu": "Lẩu Thái hải sản gồm tôm, mực, nghêu.",
+      "truong": "mo_ta",
+      "chua": [
+        "tôm",
+        "mực",
+        "động vật có vỏ",
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-024",
+      "chu": "Cafe Hạt Mưa",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì"
+    },
+    {
+      "id": "dv2-q-025",
+      "chu": "Sữa chua",
+      "truong": "kinds",
+      "chua": [
+        "sữa"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-026",
+      "chu": "Đồ biển",
+      "truong": "kinds",
+      "chua": [
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-027",
+      "chu": "Ghẹ",
+      "truong": "kinds",
+      "chua": [
+        "cua"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ; ghẹ → cua"
+    },
+    {
+      "id": "dv2-q-028",
+      "chu": "Halal: N/A",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-029",
+      "chu": "Nước sốt có vị đậu phộng hơi ngấy.",
+      "truong": "review",
+      "chua": [
+        "đậu phộng"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-030",
+      "chu": "thân thiện với người ăn chay",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-031",
+      "chu": "Hải sản | Lẩu | Nướng",
+      "truong": "kinds",
+      "chua": [
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_ghep",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nhiều kinds ghép"
+    },
+    {
+      "id": "dv2-q-032",
+      "chu": "k có món chay nha mn, toàn hải sản.",
+      "truong": "review",
+      "chua": [
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-033",
+      "chu": "vegetarian: false",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-034",
+      "chu": "Bún, Phở",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "kinds_ghep",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nhiều kinds ghép"
+    },
+    {
+      "id": "dv2-q-035",
+      "chu": "Cửa hàng tiện lợi",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì"
+    },
+    {
+      "id": "dv2-q-036",
+      "chu": "Cá",
+      "truong": "kinds",
+      "chua": [
+        "cá"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-037",
+      "chu": "halal_certified: false",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-038",
+      "chu": "Muc",
+      "truong": "kinds",
+      "chua": [
+        "mực"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ; không dấu"
+    },
+    {
+      "id": "dv2-q-039",
+      "chu": "Lẩu",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-040",
+      "chu": "phù hợp gia đình; có ghế trẻ em",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-041",
+      "chu": "Hau",
+      "truong": "kinds",
+      "chua": [
+        "động vật có vỏ"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "kinds một từ; không dấu, cũng có thể là «hậu»"
+    },
+    {
+      "id": "dv2-q-042",
+      "chu": "VEGETARIAN",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "kinds_tran",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds trần kiểu importer; viết hoa"
+    },
+    {
+      "id": "dv2-q-043",
+      "chu": "Quán ăn gia đình, món chính là cơm gà, canh chua.",
+      "truong": "mo_ta",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-044",
+      "chu": "Món gà nướng mật ong đỉnh, nước chấm có đậu phộng.",
+      "truong": "review",
+      "chua": [
+        "đậu phộng"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-045",
+      "chu": "wifi mạnh; ngắm mực nước hồ lên xuống",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì"
+    },
+    {
+      "id": "dv2-q-046",
+      "chu": "Oc, Nhau",
+      "truong": "kinds",
+      "chua": [
+        "động vật có vỏ"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_ghep",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nhiều kinds ghép; không dấu: ốc, nhậu"
+    },
+    {
+      "id": "dv2-q-047",
+      "chu": "Lẩu nấm chay, đậu hũ non, rau rừng.",
+      "truong": "mo_ta",
+      "chua": [
+        "đậu nành"
+      ],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-048",
+      "chu": "Chè bưởi, chè đậu xanh, có rắc đậu phộng.",
+      "truong": "mo_ta",
+      "chua": [
+        "đậu phộng"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-049",
+      "chu": "Đậu hũ",
+      "truong": "kinds",
+      "chua": [
+        "đậu nành"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-050",
+      "chu": "cua",
+      "truong": "kinds",
+      "chua": [
+        "cua"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_tran",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds trần kiểu importer; viết thường"
+    },
+    {
+      "id": "dv2-q-051",
+      "chu": "Seafood grill, fresh oysters and prawns daily.",
+      "truong": "mo_ta",
+      "chua": [
+        "tôm",
+        "động vật có vỏ",
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-052",
+      "chu": "Quán chuyên hải sản tươi sống: tôm hùm, cua biển, mực một nắng.",
+      "truong": "mo_ta",
+      "chua": [
+        "tôm",
+        "cua",
+        "mực",
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-053",
+      "chu": "Chợ đêm",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì"
+    },
+    {
+      "id": "dv2-q-054",
+      "chu": "Bánh cuốn chay nhân nấm, nước chấm tương đậu nành.",
+      "truong": "mo_ta",
+      "chua": [
+        "đậu nành"
+      ],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-055",
+      "chu": "Hải sản",
+      "truong": "kinds",
+      "chua": [
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_tran",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds trần kiểu importer; đúng chữ"
+    },
+    {
+      "id": "dv2-q-056",
+      "chu": "Che",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ; không dấu"
+    },
+    {
+      "id": "dv2-q-057",
+      "chu": "có món không gluten",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "traits; có món không gluten ngụ ý món khác có thể có; đọc gluten là đọc thừa an toàn"
+    },
+    {
+      "id": "dv2-q-058",
+      "chu": "Không dùng đậu phộng trong bất kỳ món nào.",
+      "truong": "mo_ta",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-059",
+      "chu": "Cà phê trứng béo ngậy.",
+      "truong": "review",
+      "chua": [
+        "trứng"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-060",
+      "chu": "allergen_info: N/A",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-061",
+      "chu": "cafe,tra sua",
+      "truong": "kinds",
+      "chua": [
+        "sữa"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_ghep",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nhiều kinds ghép"
+    },
+    {
+      "id": "dv2-q-062",
+      "chu": "Thuan chay",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [
+        "chay",
+        "thuần chay"
+      ],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ; không dấu"
+    },
+    {
+      "id": "dv2-q-063",
+      "chu": "không chứa: gluten",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-064",
+      "chu": "Mì quảng tôm thịt, bánh tráng mè.",
+      "truong": "mo_ta",
+      "chua": [
+        "tôm",
+        "mè"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-065",
+      "chu": "Hải Sản Bà Tư Mập",
+      "truong": "ten",
+      "chua": [
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-066",
+      "chu": "Gần cửa biển, view hoàng hôn, món chính là gà nướng.",
+      "truong": "mo_ta",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì"
+    },
+    {
+      "id": "dv2-q-067",
+      "chu": "Quán nhậu, Ốc",
+      "truong": "kinds",
+      "chua": [
+        "động vật có vỏ"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_ghep",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nhiều kinds ghép"
+    },
+    {
+      "id": "dv2-q-068",
+      "chu": "Bếp Chay An Lạc",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán; «an lạc» không phải đậu phộng"
+    },
+    {
+      "id": "dv2-q-069",
+      "chu": "Cháo Sườn Mẹ Nấu",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì; mẹ ~ mè khi bỏ dấu"
+    },
+    {
+      "id": "dv2-q-070",
+      "chu": "Bún Cá Chấm Cô Lài",
+      "truong": "ten",
+      "chua": [
+        "cá"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-071",
+      "chu": "Kem, Cafe",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "kinds_ghep",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nhiều kinds ghép; không suy sữa từ «kem»"
+    },
+    {
+      "id": "dv2-q-072",
+      "chu": "di_ung: đậu phộng; mè",
+      "truong": "traits",
+      "chua": [
+        "đậu phộng",
+        "mè"
+      ],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-073",
+      "chu": "Mì xào giòn, có tôm với mực.",
+      "truong": "review",
+      "chua": [
+        "tôm",
+        "mực"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-074",
+      "chu": "Bánh có thể chứa đậu phộng và mè.",
+      "truong": "mo_ta",
+      "chua": [
+        "đậu phộng",
+        "mè"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-075",
+      "chu": "có thực đơn halal",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "halal"
+      ],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-076",
+      "chu": "quán ok, giá 120k/ng, có nhiều món cua.",
+      "truong": "review",
+      "chua": [
+        "cua"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-077",
+      "chu": "Cua Đồng Quê Nhà",
+      "truong": "ten",
+      "chua": [
+        "cua"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-078",
+      "chu": "Seafood Corner Mũi Gió",
+      "truong": "ten",
+      "chua": [
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-079",
+      "chu": "Ghẹ Rang Me Út Hiền",
+      "truong": "ten",
+      "chua": [
+        "cua"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "tên quán; me = trái me; đọc thêm mè là đọc thừa"
+    },
+    {
+      "id": "dv2-q-080",
+      "chu": "Nghêu",
+      "truong": "kinds",
+      "chua": [
+        "động vật có vỏ"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-081",
+      "chu": "Cafe Mực Tím",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì; mực tím = mực viết"
+    },
+    {
+      "id": "dv2-q-082",
+      "chu": "Nướng",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-083",
+      "chu": "có món chay; view hồ; yên tĩnh",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-084",
+      "chu": "seafood: yes",
+      "truong": "traits",
+      "chua": [
+        "hải sản"
+      ],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-085",
+      "chu": "Ốc",
+      "truong": "kinds",
+      "chua": [
+        "động vật có vỏ"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-086",
+      "chu": "Cà ri chay nước cốt dừa, không dùng sữa bò.",
+      "truong": "mo_ta",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-087",
+      "chu": "Trung Hoa",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì"
+    },
+    {
+      "id": "dv2-q-088",
+      "chu": "vegetarian-friendly",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-089",
+      "chu": "Bột chiên trứng, bánh bột lọc.",
+      "truong": "mo_ta",
+      "chua": [
+        "trứng"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-090",
+      "chu": "Hạt Điều Rang Muối Ông Ký",
+      "truong": "ten",
+      "chua": [
+        "các loại hạt"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-091",
+      "chu": "is_vegetarian=1",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-092",
+      "chu": "Món nào cũng rắc chút mè rang cho thơm.",
+      "truong": "mo_ta",
+      "chua": [
+        "mè"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-093",
+      "chu": "Sữa Chua Trân Châu Cô Ba",
+      "truong": "ten",
+      "chua": [
+        "sữa"
+      ],
+      "phuc_vu": [],
+      "loai": "ten",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "tên quán"
+    },
+    {
+      "id": "dv2-q-094",
+      "chu": "diet: vegetarian, halal",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "chay",
+        "halal"
+      ],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-095",
+      "chu": "Quán không bán hải sản, chỉ có bò và gà.",
+      "truong": "mo_ta",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "mô tả văn xuôi"
+    },
+    {
+      "id": "dv2-q-096",
+      "chu": "Quán ghi là chay mà nước dùng có mùi cá.",
+      "truong": "review",
+      "chua": [
+        "cá"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review; review mâu thuẫn nhãn chay: phuc_vu giữ []"
+    },
+    {
+      "id": "dv2-q-097",
+      "chu": "Vegetarian, Buffet",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "kinds_ghep",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "nhiều kinds ghép"
+    },
+    {
+      "id": "dv2-q-098",
+      "chu": "allergens: sữa, trứng, gluten",
+      "truong": "traits",
+      "chua": [
+        "sữa",
+        "trứng",
+        "gluten"
+      ],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-099",
+      "chu": "Cửa Sổ Nhỏ Cafe",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì; cửa ~ cua khi bỏ dấu"
+    },
+    {
+      "id": "dv2-q-100",
+      "chu": "đậu phộng rang để sẵn trên bàn",
+      "truong": "traits",
+      "chua": [
+        "đậu phộng"
+      ],
+      "phuc_vu": [],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-101",
+      "chu": "vegan",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [
+        "chay",
+        "thuần chay"
+      ],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ"
+    },
+    {
+      "id": "dv2-q-102",
+      "chu": "Tra sua",
+      "truong": "kinds",
+      "chua": [
+        "sữa"
+      ],
+      "phuc_vu": [],
+      "loai": "kinds_mot_tu",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds một từ; không dấu"
+    },
+    {
+      "id": "dv2-q-103",
+      "chu": "Tom Coffee Corner",
+      "truong": "ten",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gan_giong",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "chỉ giống chữ, không chứa gì; Tom ~ tôm khi bỏ dấu"
+    },
+    {
+      "id": "dv2-q-104",
+      "chu": "Tưởng quán hải sản ai dè toàn đồ nướng thịt.",
+      "truong": "review",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-105",
+      "chu": "Chay",
+      "truong": "kinds",
+      "chua": [],
+      "phuc_vu": [
+        "chay"
+      ],
+      "loai": "kinds_tran",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "kinds trần kiểu importer; đúng chữ"
+    },
+    {
+      "id": "dv2-q-106",
+      "chu": "halal_certified: true",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "halal"
+      ],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-107",
+      "chu": "Mình bị dị ứng hải sản, ăn ở đây không sao vì quán không có hải sản.",
+      "truong": "review",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": true,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-108",
+      "chu": "halal-friendly",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [
+        "halal"
+      ],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits; có lựa chọn halal"
+    },
+    {
+      "id": "dv2-q-109",
+      "chu": "thú cưng được vào; có ổ cắm",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "traits",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "traits"
+    },
+    {
+      "id": "dv2-q-110",
+      "chu": "vegetarian: null",
+      "truong": "traits",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "gia_tri_co_cau",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "giá trị có cấu trúc"
+    },
+    {
+      "id": "dv2-q-111",
+      "chu": "Bánh flan béo, nhiều trứng và sữa.",
+      "truong": "review",
+      "chua": [
+        "sữa",
+        "trứng"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-112",
+      "chu": "Ghé vì cái view, đồ uống bình thường.",
+      "truong": "review",
+      "chua": [],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-113",
+      "chu": "Salad có rắc hạt điều, nhớ dặn nếu dị ứng.",
+      "truong": "review",
+      "chua": [
+        "các loại hạt"
+      ],
+      "phuc_vu": [],
+      "loai": "review",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "review"
+    },
+    {
+      "id": "dv2-q-114",
+      "chu": "Đặc sản gỏi cá trích cuốn rong biển.",
+      "truong": "mo_ta",
+      "chua": [
+        "cá"
+      ],
+      "phuc_vu": [],
+      "loai": "mo_ta",
+      "an_toan_neu_doc_thua": false,
+      "ghi_chu": "mô tả văn xuôi"
+    }
+  ]
+}

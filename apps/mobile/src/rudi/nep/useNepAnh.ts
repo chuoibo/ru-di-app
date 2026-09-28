@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 
 import { ApiError, BASE_URL, newAttempt } from "../../api";
-import { conPhaiHoi, docTrangThai, duongFile, nhipHoiMs, xinAnh, type TrangThaiMedia } from "./media";
+import { conPhaiHoi, docTrangThai, duongFile, nguonAnhNep, nhipHoiMs, xinAnh, type TrangThaiMedia } from "./media";
 
 /**
  * Một lượt Nếp vẽ ảnh, từ lúc xin tới lúc có bytes.
@@ -22,9 +22,12 @@ export interface LuotVeAnh {
   trangThai: TrangThaiMedia | "chua-bat-dau";
   jobId: string | null;
   duongAnh: string | null;
+  /** What `MediaSlot` loads: the file route plus the caller's headers. */
+  nguonAnh: { uri: string; headers: Record<string, string> } | null;
   loi: string | null;
   dangCho: boolean;
-  nhoVe(moTa: string): Promise<void>;
+  /** `man` is the open screen, so the server can refuse a money screen. */
+  nhoVe(moTa: string, man?: string): Promise<void>;
   dep(): void;
 }
 
@@ -55,7 +58,7 @@ export function useNepAnh(actorId: string | null): LuotVeAnh {
   }, [dungHoi]);
 
   const nhoVe = useCallback(
-    async (moTa: string) => {
+    async (moTa: string, man?: string) => {
       if (!actorId) {
         datLoi("Bản trải nghiệm chưa vẽ được. Đăng nhập rồi thử lại nhé.");
         return;
@@ -68,7 +71,7 @@ export function useNepAnh(actorId: string | null): LuotVeAnh {
 
       let job: string;
       try {
-        job = (await xinAnh(actorId, newAttempt(), moTa)).job_id;
+        job = (await xinAnh(actorId, newAttempt(), moTa, { man })).job_id;
       } catch (error) {
         if (luot !== doi.current) return;
         datTrangThai("hong");
@@ -114,10 +117,18 @@ export function useNepAnh(actorId: string | null): LuotVeAnh {
     [actorId, dungHoi],
   );
 
+  // Memoised so the image source keeps its identity across renders; a new
+  // object each render could make the image view refetch the file.
+  const nguonAnh = useMemo(
+    () => (duongAnh !== null && jobId !== null && actorId ? nguonAnhNep(BASE_URL, jobId, actorId) : null),
+    [duongAnh, jobId, actorId],
+  );
+
   return {
     trangThai,
     jobId,
     duongAnh,
+    nguonAnh,
     loi,
     dangCho: trangThai === "dang-cho" || trangThai === "dang-chay",
     nhoVe,

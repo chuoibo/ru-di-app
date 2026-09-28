@@ -13,6 +13,8 @@ import { cauNguCanh } from "./phieu";
 import { useNep } from "./NepProvider";
 import { useNepAnh } from "./useNepAnh";
 import { useNepHoi } from "./useNepHoi";
+import { NepPhien } from "./NepPhien";
+import { useMotion } from "../ui/useMotion";
 import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
 
 /**
@@ -48,6 +50,7 @@ function tuTheTheoMan(man: string | undefined): PoseNep {
 export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
   const { phieu } = useNep();
   const { colors } = useRudiTheme();
+  const { reduced } = useMotion();
   const { cheDo, nguon } = useRudiSession();
   const buc = useNepAnh(nguon.kieu === "live" ? nguon.actorId : null);
   const [nhap, datNhap] = useState("");
@@ -108,29 +111,20 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         </ScrollView>
       ) : null}
 
-      {phien.luot.length > 0 ? (
-        <View style={styles.phien} testID="nep-phien">
-          {phien.luot.map((l, i) => (
-            <Text
-              // The session only ever grows at the end, so the index is stable.
-              key={i}
-              style={[
-                typography.body,
-                l.vai === "toi" ? styles.cauHoi : null,
-                { color: l.vai === "toi" ? colors.inkSoft : colors.ink },
-              ]}
-              testID={l.vai === "nep" ? "nep-tra-loi" : undefined}
-            >
-              {l.chu}
-            </Text>
-          ))}
-        </View>
-      ) : null}
-
-      {phien.dangHoi ? (
-        <Text style={[typography.body, styles.loi, { color: colors.inkSoft }]} testID="nep-dang-nghi">
-          Nếp đang nghĩ…
-        </Text>
+      {/* The session and the answer being written. Never beside money: the
+          panel cannot be asked there (`duocHoi`), and an answer still in
+          flight when the screen turns into a money screen stops showing. */}
+      {duocHoi ? (
+        <NepPhien
+          cauDangHoi={phien.cauDangHoi}
+          chips={phien.chips}
+          dangDo={phien.dangDo}
+          dangHoi={phien.dangHoi}
+          giamChuyenDong={reduced}
+          luot={phien.luot}
+          onChip={datNhap}
+          song={phien.song}
+        />
       ) : null}
 
       {phien.loi ? (
@@ -157,7 +151,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         </Text>
       ) : null}
 
-      {buc.duongAnh ? (
+      {buc.nguonAnh ? (
         <Pressable accessibilityRole="button" onPress={buc.dep} style={styles.khungAnh}>
           {/* Qua `MediaSlot` chứ không phải một `<Image>` trần: ADR-0017 §2.5 nói
               một tấm ảnh không bao giờ đi mà thiếu xuất xứ, và ảnh này CÓ xuất
@@ -170,7 +164,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
             nguon={{
               loai: "danh-muc",
               anh: anhDanhMuc(
-                { uri: buc.duongAnh },
+                buc.nguonAnh,
                 { author: "Nếp", license: "AI vẽ, có dấu SynthID" },
               ),
             }}
@@ -196,10 +190,12 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
             the tone (`colors[`${tone}Ink`]`), and `tests/rudi-khong-hex.test.mjs`
             allows no file but `theme.ts` to spell a colour. */}
         {/* Vẽ là tool vòng 2 trong bảng quyền: nó GHI và nó tốn một lượt quota
-            thật, nên hỏi mỗi lần, không nhớ câu trả lời trước. */}
+            thật, nên hỏi mỗi lần, không nhớ câu trả lời trước. Nó câm ở màn
+            tiền y như chữ (ADR-0036 §2.9): `duocHoi` gác cả hai nút, và máy
+            chủ gác lại bằng `man`. */}
         <RudiButton
           compact
-          disabled={!nhap.trim() || buc.dangCho}
+          disabled={!nhap.trim() || buc.dangCho || !duocHoi}
           full={false}
           label="Vẽ"
           loading={buc.dangCho}
@@ -211,7 +207,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
               `Mình sẽ vẽ «${moTa}». Mất tầm hai phút.`,
               [
                 { text: "Thôi", style: "cancel" },
-                { text: "Vẽ đi", onPress: () => void buc.nhoVe(moTa) },
+                { text: "Vẽ đi", onPress: () => void buc.nhoVe(moTa, phieu?.man) },
               ],
             );
           }}
@@ -243,8 +239,6 @@ const styles = StyleSheet.create({
   goiY: { gap: 8, paddingVertical: 12 },
   chip: { borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 12, paddingVertical: 8 },
   loi: { marginTop: 12 },
-  phien: { gap: 8, marginTop: 12 },
-  cauHoi: { alignSelf: "flex-end", textAlign: "right" },
   khungAnh: { marginTop: 12, borderRadius: 14, overflow: "hidden" },
   soan: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 16, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
   // Two compact buttons share this row with the input. Buttons default to

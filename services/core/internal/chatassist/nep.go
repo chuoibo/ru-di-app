@@ -12,9 +12,15 @@ import (
 	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
+	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aiharness/cau"
+	"mobile/services/core/internal/aiharness/guard"
+	"mobile/services/core/internal/aiharness/metrics"
+	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
+	"mobile/services/core/internal/domain/nepphieu"
 	"mobile/services/core/internal/pyjson"
 )
 
@@ -85,7 +91,7 @@ type goiNep struct {
 var (
 	// The same closed lists as phieu.ts. `nep_phieu_test.go` reads phieu.ts and
 	// fails when the two drift.
-	manNepLui   = []string{"finance", "settlements", "batches", "smart-split"}
+	manNepLui   = nepphieu.ManLui
 	khoaSoLieu  = map[string]bool{"soNguoi": true, "soChang": true, "soAnh": true, "soNgay": true, "soMuc": true, "soViec": true}
 	kieuNhip    = map[string]bool{"sap-toi": true, "hom-nay": true, "dang-dien-ra": true, "da-qua": true, "khong-ro": true}
 	loaiSoHopLe = map[string]bool{"hoi": true, "doi": true}
@@ -93,16 +99,9 @@ var (
 )
 
 // nepPhaiLui is `nepPhaiLui` of phieu.ts: whole first segment, never a prefix,
-// so `financial-report` is not a money screen.
-func nepPhaiLui(man string) bool {
-	dau := strings.Split(strings.TrimLeft(man, "/"), "/")[0]
-	for _, m := range manNepLui {
-		if dau == m {
-			return true
-		}
-	}
-	return false
-}
+// so `financial-report` is not a money screen. The rule lives in
+// domain/nepphieu because the Go engine applies it too.
+func nepPhaiLui(man string) bool { return nepphieu.PhaiLui(man) }
 
 func chuTrongHan(s string, han int) bool {
 	return utf8.ValidString(s) && utf8.RuneCountInString(s) <= han
@@ -265,7 +264,7 @@ func (h *Handler) nepCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = tx.Rollback(r.Context())
-	available := h.available(r.Context())
+	available := h.nepSanSang(r.Context())
 	tx, person, digest, err := h.beginNep(r)
 	if err != nil {
 		failure(w, err)
@@ -397,12 +396,52 @@ func docTraLoi(raw pyjson.Value) (string, bool) {
 	return text, true
 }
 
+// WithNepEngine runs Nếp's jobs on the Go engine (MOBILE_AI_ENGINE_NEP=go):
+// the same queue, lease, sealed {text} result and failure codes, with the
+// model called from Go through aiharness instead of the brain's nep-reply.
+func (h *Handler) WithNepEngine(e *aiharness.Engine) *Handler {
+	h.nepEngine, h.nepGo = e, e != nil
+	return h
+}
+
+// WithNepGo marks a process that serves Nếp's routes while the jobs run on
+// the Go engine in `core work`: asking Nếp then never probes the brain.
+func (h *Handler) WithNepGo() *Handler {
+	h.nepGo = true
+	return h
+}
+
+// nepSanSang says whether a question to Nếp can be taken at all. On the brain
+// it is the brain's probe. On the Go engine it answers true without asking
+// anything, and how much that true knows depends on where the worker runs:
+//
+//   - worker in this process (WithNepEngine): exact. The engine was built at
+//     startup, and `serve` refused to start without its key, a loopback-only
+//     base URL and the metrics schema;
+//   - worker in `core work` (WithNepGo): the host's choice only. Nothing here
+//     knows whether any `core work` is up. Design 01 §1 derives this from a
+//     worker heartbeat, and no slice has built one yet: the heartbeat of
+//     slice 4 renews one job's lease, it is not a worker's presence, and the
+//     queue of slice 10 added none either. Until a worker liveness record
+//     exists, a question asked with no worker up waits and ends as
+//     sharing_expired when its fifteen minutes close -- as it does on the
+//     brain path, whose probe asks the brain, not the workers.
+func (h *Handler) nepSanSang(ctx context.Context) bool {
+	if h.nepGo {
+		return true
+	}
+	return h.available(ctx)
+}
+
 // processNep runs one personal job. It never calls prepare: nothing the
 // server owns about a room -- roster, taste, budget, catalogue -- belongs in a
 // question the person asked on their own.
 func (h *Handler) processNep(ctx context.Context, j work) error {
 	if err := h.nepConSong(ctx, j); err != nil {
 		return h.nepThatBai(ctx, j, "sharing_unavailable")
+	}
+	if h.nepEngine != nil {
+		return h.nepQuaEngine(ctx, j)
 	}
 	payload, err := nepPayload(j.goi, j.prompt)
 	if err != nil {
@@ -418,7 +457,98 @@ func (h *Handler) processNep(ctx context.Context, j work) error {
 	if !ok {
 		return h.nepThatBai(ctx, j, "invalid_ai_result")
 	}
-	return h.nepXong(ctx, j, text)
+	// The brain does not stream. With a stream, its answer will reach it --
+	// one final delta through the output guard's window, then xong{text},
+	// both after the commit -- so it must pass the window's scan first: an
+	// answer the guard stops is refused with the code the app already reads,
+	// and one past the cap or not UTF-8 as invalid (review of slice 11,
+	// finding 11). Without a stream nothing is released and the answer
+	// stores as it did before slice 11 (finding 7).
+	if j.luong != nil {
+		switch kq := guard.QuaCuaSo(aiharness.BoQua{}, 0, guard.DauRa{}, maxTraLoiNep, "", text); {
+		case kq.Chan != guard.RaSach:
+			return h.nepThatBai(ctx, j, string(cau.TraLoiBiChan))
+		case kq.KhongHopLe || kq.Chu == "":
+			return h.nepThatBai(ctx, j, "invalid_ai_result")
+		}
+	}
+	return h.nepXong(ctx, j, text, true)
+}
+
+// luotEngine is the engine's turn, built from the stored job alone: the slip,
+// the session and the question the device sent, and the instant the question
+// was stored. Nothing is looked up.
+func luotEngine(j work) (aiharness.Turn, error) {
+	var g goiNep
+	if len(j.goi) > 0 {
+		if err := json.Unmarshal(j.goi, &g); err != nil {
+			return aiharness.Turn{}, err
+		}
+	}
+	t := aiharness.Turn{Bot: obs.BotNep, InvocationID: j.id, LanThu: j.attempt, Lenh: obs.LenhHoi, Luc: j.createdAt, LoiNho: j.prompt, NguoiHoi: j.person}
+	if p := g.Phieu; p != nil {
+		t.PhieuNep = &aiharness.PhieuNep{Man: p.Man, TieuDe: p.TieuDe, LoaiSo: p.LoaiSo, SoLieu: p.SoLieu, GoiY: p.GoiY}
+		if p.Nhip != nil {
+			t.PhieuNep.Nhip = &aiharness.Nhip{Kieu: p.Nhip.Kieu, ConNgay: p.Nhip.ConNgay, TruocNgay: p.Nhip.TruocNgay}
+		}
+	}
+	for _, l := range g.Luot {
+		t.LuotNep = append(t.LuotNep, aiharness.LuotNep{Vai: l.Vai, Chu: l.Chu})
+	}
+	return t, nil
+}
+
+// nepQuaEngine runs the job on the Go engine. The answer is sealed by the same
+// nepXong as the brain's; a turn that ends without one fails the job with the
+// engine's code, whose sentence the app already has (LOI_KET_QUA_NEP). One
+// metrics row follows the terminal transition, and never decides it.
+//
+// A turn stopped from outside (aiharness.ErrHuy: the heartbeat found the
+// lease gone and cancelled the job, or the worker is stopping) touches
+// nothing here: the job is not this turn's to end. A lost lease already
+// belongs to someone else or to a cancellation; a stopping worker releases
+// the job back to the queue in runJob. It writes no metrics row either:
+// nothing about the model or the provider happened.
+//
+// Every model call of the turn is first taken on the job's row (giuLuot), so
+// the ceiling holds across attempts and workers. A transient provider failure
+// (a 429 or 5xx after the model layer's own retries, or the rate limiter's
+// refusal) goes back to the queue after a backoff when retryLater allows it;
+// otherwise it fails the job like any other code.
+func (h *Handler) nepQuaEngine(ctx context.Context, j work) error {
+	turn, err := luotEngine(j)
+	if err != nil {
+		return h.nepThatBai(ctx, j, "invalid_ai_result")
+	}
+	turn.DaGoiTruoc = j.modelCalls
+	turn.GiuLuot = h.giuLuot(j)
+	// The job's stream is the engine's Sink: statuses as they happen, and
+	// the answer as the output guard window releases it.
+	res, runErr := h.nepEngine.Run(ctx, turn, j.luong.sink())
+	if errors.Is(runErr, aiharness.ErrHuy) {
+		return runErr
+	}
+	switch {
+	case runErr == nil:
+		err = h.nepXong(ctx, j, res.Text, false)
+	case aiharness.TamThoi(runErr) && !dangDung(ctx):
+		var later bool
+		if later, err = h.retryLater(ctx, j); err == nil && !later {
+			err = h.nepThatBai(ctx, j, string(aiharness.MaCua(runErr)))
+		}
+	default:
+		err = h.nepThatBai(ctx, j, string(aiharness.MaCua(runErr)))
+	}
+	h.ghiSoDo(ctx, res.Record)
+	return err
+}
+
+// ghiSoDo writes the turn's metrics row: enums and numbers only
+// (aiharness/obs), after the job has ended, on a short clock of its own.
+func (h *Handler) ghiSoDo(ctx context.Context, rec obs.TurnRecord) {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
+	defer cancel()
+	_ = metrics.Ghi(ctx, h.pool, rec)
 }
 
 // nepConSong confirms the session that asked is still live and the job is
@@ -450,7 +580,13 @@ func (h *Handler) nepConSong(ctx context.Context, j work) error {
 
 // nepXong closes the job with the sealed answer. The question and the session
 // go in the same statement that stores the answer; nothing is published.
-func (h *Handler) nepXong(ctx context.Context, j work, text string) error {
+// nhaSauChot releases the answer to the stream after the commit, as one
+// final delta through the output guard's window (the brain, which did not
+// stream); the engine's answer already streamed through it.
+func (h *Handler) nepXong(ctx context.Context, j work, text string, nhaSauChot bool) error {
+	if h.truocChot != nil {
+		h.truocChot(ctx)
+	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
@@ -467,19 +603,37 @@ func (h *Handler) nepXong(ctx context.Context, j work, text string) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',result=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND scope='me' AND share_expires_at>clock_timestamp()`, j.id, j.lease, json.RawMessage(result))
+	tag, err := tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',result=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND scope='me' AND share_expires_at>clock_timestamp()`, j.id, j.lease, json.RawMessage(result))
 	if err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 1 {
+		// Only now, with the answer sealed: the stream ends with it, on the
+		// invocation key alone.
+		if nhaSauChot {
+			j.luong.nhaChu(text, h.nhipSauChot())
+		}
+		j.luong.xongNep(text)
+	}
+	return nil
 }
 
 // nepThatBai fails a personal job and scrubs what it was given at once. The
 // group path keeps a failed prompt for its retry route; Nếp has none, so a
 // question the device will simply ask again has no reason to stay.
 func (h *Handler) nepThatBai(ctx context.Context, j work, code string) error {
+	if dangDung(ctx) {
+		// The worker is stopping; the failure is the stop's, not the job's.
+		return h.release(ctx, j)
+	}
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
-	_, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease, code)
+	tag, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease, code)
+	if err == nil && tag.RowsAffected() == 1 {
+		j.luong.thatBai(code)
+	}
 	return err
 }

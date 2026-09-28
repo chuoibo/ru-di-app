@@ -1,0 +1,18 @@
+{
+  "ten": "tra-loi-nhieu-doan",
+  "mo_ta": "Câu trả lời dài, sạch, verifier đạt: chỉ sau đó mới stream qua cửa sổ 48 ký tự, nhả tại khoảng trắng thành nhiều delta; các delta nối lại đúng bằng câu cuối (lát 11).",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Tối nay bạn thử ra bờ hồ đi dạo một vòng rồi ghé quán chè ấm bụng cho vui nhé. Trời đang mát, đi bộ chậm thôi là vừa đẹp."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}, {\"so\": 2, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

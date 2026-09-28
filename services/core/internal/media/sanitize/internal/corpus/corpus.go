@@ -14,9 +14,10 @@ import (
 	"image"
 	"image/color"
 	"image/gif"
-	"image/jpeg"
 	"math"
 	"math/rand"
+
+	"mobile/services/core/internal/media/sanitize/internal/corpus/stdjpeg125"
 )
 
 // ErrNeedsOracle is returned for a Spec only Pillow can build (kind
@@ -193,7 +194,8 @@ type JPEGParams struct {
 	Truncate       int    `json:"truncate,omitempty"`
 }
 
-// BuildJPEG encodes pixels with image/jpeg and splices APP1 segments.
+// BuildJPEG encodes pixels with the frozen Go 1.25 encoder (stdjpeg125) and
+// splices APP1 segments.
 func BuildJPEG(rng *rand.Rand, w, h int, p JPEGParams) ([]byte, error) {
 	quality := p.Quality
 	if quality == 0 {
@@ -214,7 +216,7 @@ func BuildJPEG(rng *rand.Rand, w, h int, p JPEGParams) ([]byte, error) {
 		img = rgba
 	}
 	var buf bytes.Buffer
-	if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: quality}); err != nil {
+	if err := stdjpeg125.Encode(&buf, img, &stdjpeg125.Options{Quality: quality}); err != nil {
 		return nil, err
 	}
 	data := buf.Bytes()

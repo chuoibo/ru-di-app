@@ -23,6 +23,10 @@ var membershipTrigger string
 // its text must not change.
 var migrations = []string{avatarTrigger, membershipTrigger}
 
+// SchemaFiles are the embedded migrations in order, for the gates that read
+// what their triggers write (aigate).
+func SchemaFiles() []string { return append([]string(nil), migrations...) }
+
 // Migrate installs the notify triggers atomically. `core migrate-chat` runs it
 // next to the chat feed; serving never runs DDL.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {

@@ -1,0 +1,214 @@
+{
+  "ghi_chu": "Bộ thứ ba (sửa review no-heuristics, 2026-09-25): mỗi câu gõ teencode của hai bộ vàng, viết lại như router (hieu) được dặn viết truy_van — chữ đầy đủ, có dấu, đúng chữ của app — vì từ nay KHÔNG bảng Go nào đọc teencode: câu tới Tim là truy_van do MODEL viết. Người viết lại tay đứng thay router; viết trước khi đo, không nhìn tiêu đề mục, không sửa để khớp kết quả. goc là câu người gõ ở bộ gốc. Một lượt T3 với router thật thay bộ này.",
+  "cau": [
+    {
+      "hoi": "tạo bình chọn thế nào",
+      "goc": "tao binh chon sao z",
+      "man": "groups/[id]/chat",
+      "dung": [
+        "chat-nhom/tao-mot-binh-chon"
+      ]
+    },
+    {
+      "hoi": "ai tạo bình chọn mới được chốt",
+      "goc": "ai tao vote moi chot dc a",
+      "man": "groups/[id]/chat",
+      "dung": [
+        "chat-nhom/chot-binh-chon"
+      ]
+    },
+    {
+      "hoi": "không biết bỏ phiếu ở đâu",
+      "goc": "ko bik bo fieu o dau",
+      "man": "groups/[id]/chat",
+      "dung": [
+        "chat-nhom/bo-phieu-hoac-doi-phieu"
+      ]
+    },
+    {
+      "hoi": "không muốn gửi kèm tin nhắn cũ cho AI",
+      "goc": "ko muon gui kem tin nhan cu cho AI",
+      "man": "groups/[id]/chat",
+      "dung": [
+        "chat-nhom/nho-ru-di-ai-ngay-trong-nhom"
+      ]
+    },
+    {
+      "hoi": "AI chưa nhận lời nhờ thì làm gì",
+      "goc": "AI chua nhan loi nho thi lam j",
+      "man": "groups/[id]/chat",
+      "dung": [
+        "chat-nhom/nho-ru-di-ai-ngay-trong-nhom"
+      ]
+    },
+    {
+      "hoi": "tự tạo kèo không cần AI được không",
+      "goc": "tu tao keo ko can AI dc ko",
+      "man": "groups/[id]/chat",
+      "dung": [
+        "chat-nhom/tu-tao-keo-khong-can-ai"
+      ]
+    },
+    {
+      "hoi": "check-in ở đâu",
+      "goc": "checkin o dau",
+      "man": "outings/[id]",
+      "dung": [
+        "keo/check-in-khi-toi-noi"
+      ]
+    },
+    {
+      "hoi": "hẹn riêng của hai đứa ở đâu",
+      "goc": "hen rieng cua 2 dua o dau",
+      "man": "plan",
+      "dung": [
+        "len-plan/xem-hen-rieng-cua-hai-nguoi"
+      ]
+    },
+    {
+      "hoi": "đăng xuất ở đâu",
+      "goc": "log out o dau",
+      "man": "profile",
+      "dung": [
+        "ca-nhan/cai-dat-va-dang-xuat"
+      ]
+    },
+    {
+      "hoi": "thêm bạn bằng số điện thoại",
+      "goc": "them ban bang sdt",
+      "man": "messages",
+      "dung": [
+        "tin-nhan/them-ban"
+      ]
+    },
+    {
+      "hoi": "đề nghị lập sổ với người yêu",
+      "goc": "de nghi lap so voi ny",
+      "man": "groups/[id]/to-giay",
+      "dung": [
+        "to-giay/khi-hai-ban-chua-co-so"
+      ]
+    },
+    {
+      "hoi": "mở tờ giấy của hai mình",
+      "goc": "mo to giay cua 2 minh",
+      "man": "messages",
+      "dung": [
+        "to-giay/mo-to-giay"
+      ]
+    },
+    {
+      "hoi": "tạo bình chọn cho nhóm như thế nào",
+      "goc": "tao vote cho nhom ntn",
+      "man": "profile",
+      "dung": [
+        "chat-nhom/tao-mot-binh-chon"
+      ]
+    },
+    {
+      "hoi": "bỏ phiếu ở đâu vậy",
+      "goc": "bo fieu o dau v",
+      "man": "plan",
+      "dung": [
+        "chat-nhom/bo-phieu-hoac-doi-phieu"
+      ]
+    },
+    {
+      "hoi": "không biết thêm chặng vào kèo",
+      "goc": "k bik them chang vao keo",
+      "man": "messages",
+      "dung": [
+        "keo/them-mot-chang"
+      ]
+    },
+    {
+      "hoi": "tới quán rồi check-in thế nào",
+      "goc": "toi quan r checkin sao",
+      "man": "messages",
+      "dung": [
+        "keo/check-in-khi-toi-noi"
+      ]
+    },
+    {
+      "hoi": "sửa tên và giới thiệu bản thân ở đâu",
+      "goc": "sua ten vs bio o dau",
+      "man": "explore",
+      "dung": [
+        "ca-nhan/sua-ten-va-gioi-thieu"
+      ]
+    },
+    {
+      "hoi": "thêm bạn bằng số điện thoại",
+      "goc": "add ban = sdt",
+      "man": "profile",
+      "dung": [
+        "tin-nhan/them-ban"
+      ]
+    },
+    {
+      "hoi": "tạo nhóm mới",
+      "goc": "tao gr moi",
+      "man": "plan",
+      "dung": [
+        "tin-nhan/tao-nhom-moi"
+      ]
+    },
+    {
+      "hoi": "nhập mã mời vào nhóm",
+      "goc": "nhap ma moi vao gr",
+      "man": "explore",
+      "dung": [
+        "tin-nhan/vao-nhom-bang-loi-moi"
+      ]
+    },
+    {
+      "hoi": "hẹn người yêu đi chơi tuần này",
+      "goc": "hen ny di choi tuan nay",
+      "man": "messages",
+      "dung": [
+        "to-giay/viet-to-cua-tuan-nay"
+      ]
+    },
+    {
+      "hoi": "nhờ AI lên kế hoạch cho cả nhóm được không",
+      "goc": "nho AI len plan cho ca nhom dc ko",
+      "man": "explore",
+      "dung": [
+        "chat-nhom/nho-ru-di-ai-ngay-trong-nhom"
+      ]
+    },
+    {
+      "hoi": "lưu quán này lại",
+      "goc": "luu wan nay lai",
+      "man": "plan",
+      "dung": [
+        "dia-diem/luu-de-xem-lai-sau"
+      ]
+    },
+    {
+      "hoi": "đổi thành phố khác được không",
+      "goc": "doi thanh pho khac dc k",
+      "man": "plan",
+      "dung": [
+        "kham-pha/doi-diem-den"
+      ]
+    },
+    {
+      "hoi": "xem thành viên trong nhóm",
+      "goc": "xem mem trong nhom",
+      "man": "plan",
+      "dung": [
+        "chat-nhom/cai-dat-va-thanh-vien",
+        "keo/mo-phan-chia-bill-hoac-xem-thanh-vien"
+      ]
+    },
+    {
+      "hoi": "hủy buổi hẹn đã chốt với người yêu",
+      "goc": "huy buoi hen da chot vs ny",
+      "man": "messages",
+      "dung": [
+        "to-giay/khi-buoi-da-chot"
+      ]
+    }
+  ]
+}

@@ -33,6 +33,11 @@ var commands = []struct {
 
 var mentions = []string{"@rủ đi", "@rudi", "@ru di"}
 
+// Mentions lists the casefolded mentions that name the assistant, the same
+// list Parse matches. The AI engine strips them from a question wherever they
+// stand; Parse itself is an oracle port and does not change.
+func Mentions() []string { return append([]string(nil), mentions...) }
+
 const (
 	maxQuestion = 300
 	maxOption   = 200

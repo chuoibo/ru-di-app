@@ -36,6 +36,12 @@ func TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan(t *testing.T) {
 	// nothing. Count what was actually examined, and require that the one
 	// legitimate read of `messages` in this package was among it.
 	daDoc, daThay := 0, 0
+	// The reads added for the in-thread answer (ADR-0046): the trigger check
+	// (it is the only one naming deleted_at) and publish's lock on the trigger.
+	// Each must be among what the gate examined, or a later edit to either is
+	// a read nobody checks.
+	thayTinTag, thayGiuTag := false, false
+	thayChuDaLuu := 0
 	for _, f := range duong {
 		if strings.HasSuffix(f, "_test.go") {
 			continue
@@ -47,19 +53,43 @@ func TestGoiBoiCanhKhongBaoGioDocNoiDungTinNhan(t *testing.T) {
 		daDoc++
 		for _, cau := range docBang.FindAllString(string(raw), -1) {
 			daThay++
+			if strings.Contains(cau, "deleted_at") && strings.Contains(cau, "author_id") {
+				thayTinTag = true
+			}
+			if cau == "SELECT id FROM messages" {
+				thayGiuTag = true
+			}
 			// `body` is the message text. Naming it in a read of `messages` is
 			// the server reading the conversation, which is the thing this
-			// package exists to not do.
+			// package exists to not do. One read is named and pinned: the
+			// split draft's chuDaLuu, the stored text of the messages the
+			// caller explicitly shared, by their ids, in a legacy-lane room
+			// (review of slices 9/11, finding 2.3). It must be that exact
+			// query, in nhom_engine.go, once; any other read of `body`, or
+			// any edit to that one, is red here.
 			if regexp.MustCompile(`(?i)\bbody\b`).MatchString(cau) {
+				if f == "nhom_engine.go" && strings.HasPrefix(cauDocChuDaLuuGhim, cau) && strings.Count(string(raw), cauDocChuDaLuuGhim) == 1 {
+					thayChuDaLuu++
+					continue
+				}
 				t.Errorf("%s đọc nội dung tin nhắn:\n%s", f, cau)
 			}
 		}
+	}
+	if thayChuDaLuu != 1 {
+		t.Errorf("câu đọc chữ đã lưu của chia bill xuất hiện %d lần, phải đúng 1 (và đúng nguyên văn đã ghim)", thayChuDaLuu)
+	}
+	if cauDocChuDaLuu != cauDocChuDaLuuGhim {
+		t.Errorf("cauDocChuDaLuu đã đổi khỏi bản ghim:\n%s", cauDocChuDaLuu)
 	}
 	if daDoc < 5 {
 		t.Fatalf("chỉ quét được %d file nguồn; cổng đang nhìn vào chỗ trống", daDoc)
 	}
 	if daThay == 0 {
 		t.Fatal("không thấy câu đọc `messages` nào, mà kiểm quyền sở hữu bối cảnh có đúng một câu như thế; mẫu đã trượt")
+	}
+	if !thayTinTag || !thayGiuTag {
+		t.Fatalf("cổng không thấy câu đọc tin tag (kiemTrigger=%v, giuTrigger=%v); câu đọc mới nhất đang nằm ngoài cổng", thayTinTag, thayGiuTag)
 	}
 }
 
@@ -80,3 +110,9 @@ func TestCongNayThucSuDoDuoc(t *testing.T) {
 		t.Fatal("câu chỉ đọc id và tác giả bị coi là đọc nội dung")
 	}
 }
+
+// cauDocChuDaLuuGhim is the one read of message text this package may make,
+// word for word: only this room, only the ids the caller shared, only a live
+// text message with a confirmed author. Widening it (another room, every
+// message, deleted ones) changes this text and turns the gate red.
+const cauDocChuDaLuuGhim = `SELECT id::text, body FROM messages WHERE context_id=$1 AND id = ANY($2::uuid[]) AND author_id IS NOT NULL AND deleted_at IS NULL AND kind='text' AND body IS NOT NULL`

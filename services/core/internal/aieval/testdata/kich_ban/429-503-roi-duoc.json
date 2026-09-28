@@ -1,0 +1,30 @@
+{
+  "ten": "429-503-roi-duoc",
+  "mo_ta": "Router nhận 429 rồi 503, lần ba được; trả lời; verifier.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "loi": {
+        "code": 429
+      }
+    },
+    {
+      "chang": "hieu",
+      "loi": {
+        "code": 503
+      }
+    },
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Được nhé, bạn thử đi bộ quanh hồ lúc chiều mát."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

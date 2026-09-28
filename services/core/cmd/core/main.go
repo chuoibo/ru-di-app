@@ -2,10 +2,20 @@
 // ownership manifest gives to Go and forwards everything else to Python.
 //
 //	core serve         run the front door
+//	core work          run the AI workers: queue consumers, outbox relay,
+//	                   Postgres poller and periodic tasks (MOBILE_AMQP_URL
+//	                   empty: poll only)
 //	core healthcheck   exit 0 if this process answers on its liveness port
 //	core routes --json list the routes this binary serves itself
 //	core migrate-chat  install the chat change feed and AI engine schema
 //	                   (alias: migrate-chat-candidate, the name older scripts use)
+//	core migrate-rag   install the retrieval index schema (internal/rag)
+//	core rag ...       build | eval | promote | rollback | status | tombstone | untombstone
+//	                   the retrieval index (see cmd/core/rag.go)
+//
+// MOBILE_AI_ENGINE_NEP=go runs Nếp on the Go engine (internal/aiharness) in
+// whichever process runs the AI workers; MOBILE_AI_ENGINE_GROUP=go does the
+// same for the group assistant «Rủ Đi AI». The default of both is the brain.
 package main
 
 import (
@@ -23,11 +33,23 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
+	"mobile/services/core/internal/aidoc"
+	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aiharness/hieu"
+	"mobile/services/core/internal/aiharness/llm"
+	aimetrics "mobile/services/core/internal/aiharness/metrics"
+	"mobile/services/core/internal/aiharness/nhung"
+	"mobile/services/core/internal/aiharness/tools"
+	"mobile/services/core/internal/aiharness/truyhoi"
+	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
@@ -42,13 +64,21 @@ import (
 	"mobile/services/core/internal/httpapi/mw/cors"
 	"mobile/services/core/internal/httpapi/mw/servererror"
 	"mobile/services/core/internal/httpapi/router"
+	"mobile/services/core/internal/hybrid"
 	"mobile/services/core/internal/idem"
 	"mobile/services/core/internal/identity"
+	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/limit"
+	"mobile/services/core/internal/nepnho"
 	"mobile/services/core/internal/proxy"
 	"mobile/services/core/internal/pyval"
+	"mobile/services/core/internal/rag"
+	"mobile/services/core/internal/rag/nap"
+	"mobile/services/core/internal/rerank"
 	"mobile/services/core/internal/routes"
 	"mobile/services/core/internal/sms"
+	"mobile/services/core/internal/vectordb"
+	"mobile/services/core/internal/vectordb/napkho"
 	"mobile/services/core/internal/websession"
 	"mobile/services/core/ownership"
 )
@@ -59,16 +89,20 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: core serve | healthcheck | routes --json | migrate-chat")
+		fmt.Fprintln(stderr, "usage: core serve | work | healthcheck | routes --json | features --json | migrate-chat | migrate-rag | migrate-rag-vector | rag | rag-indexer")
 		return 2
 	}
 	switch args[0] {
 	case "serve":
 		return serve(getenv, stderr)
+	case "work":
+		return work(getenv, stderr)
 	case "healthcheck":
 		return healthcheck(getenv, stderr)
 	case "routes":
 		return listRoutes(args[1:], stdout, stderr)
+	case "features":
+		return listFeatures(args[1:], stdout, stderr)
 	case "migrate-diaries":
 		return migrateDiaries(getenv, stdout, stderr)
 	case "migrate-community":
@@ -77,6 +111,14 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return communityMediaWorker(getenv, stderr)
 	case "migrate-chat", "migrate-chat-candidate":
 		return migrateChat(getenv, stdout, stderr)
+	case "migrate-rag":
+		return migrateRag(getenv, stdout, stderr)
+	case "rag":
+		return runRag(args[1:], getenv, stdout, stderr)
+	case "migrate-rag-vector":
+		return migrateRagVector(getenv, stdout, stderr)
+	case "rag-indexer":
+		return ragIndexer(getenv, stderr)
 	case "purge-expired":
 		return purgeExpired(args[1:], getenv, stdout, stderr)
 	default:
@@ -121,6 +163,28 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
+	inproc, err := inprocWorker(getenv(EnvInprocWorker))
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	workerCfg, err := chatassist.WorkerConfigFromEnv(getenv)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	nepGo, err := nepEngineGo(getenv(EnvAIEngineNep))
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	logger.Info("Nếp engine chosen", "env", EnvAIEngineNep, "engine", nepEngineName(nepGo), "runs_here", chat.on && inproc)
+	nhomGo, err := aiEngineGo(EnvAIEngineGroup, getenv(EnvAIEngineGroup))
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	logger.Info("group engine chosen", "env", EnvAIEngineGroup, "engine", nepEngineName(nhomGo), "runs_here", chat.on && inproc)
 	if chat.on {
 		// On by default, so a host that pulls a chat route back to Python gets
 		// a refusal it can read, never a front door that quietly lost the AI.
@@ -133,6 +197,10 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	}
 	chatCtx, stopChat := context.WithCancel(context.Background())
 	defer stopChat()
+	// The in-process workers and the periodic passes. Waited for before the
+	// pool closes: a stopping worker releases its job with one last
+	// statement, and on a closed pool that job would wait out its lease.
+	var background sync.WaitGroup
 	// Every route, Python's included: registration order decides which route a
 	// request belongs to, and a Python route declared first must still win.
 	table, err := router.New(manifest.Routes)
@@ -183,6 +251,12 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		if err == nil && installed {
 			installed, err = avatarfeed.Installed(check, pool)
 		}
+		if err == nil && installed {
+			installed, err = chatassist.SchemaCurrent(check, pool)
+		}
+		if err == nil && installed {
+			installed, err = jobs.SchemaCurrent(check, pool)
+		}
 		cancel()
 		if err != nil {
 			logger.Error("refusing to start", "error", "cannot check the chat schema; is the database reachable? "+chatOffHint)
@@ -225,11 +299,76 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			allowedOrigins = strings.Split(origins, ",")
 		}
 		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, chatCtx, allowedOrigins)
-		assistant := chatassist.New(pool, brain.Configured())
+		assistant := chatassist.New(pool, brain.Configured()).WithWorker(workerCfg)
+		mem, err := openNepMem(chatCtx, getenv, logger, pool)
+		if err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+		defer mem.close()
+		memory := nepnho.NewHandler(pool, mem.kho)
 		avatars := avatarfeed.New(avatarfeed.Store{Pool: pool}, pool, chatCtx, allowedOrigins)
+		if nepGo || nhomGo {
+			if inproc {
+				engine, err := nepEngine(chatCtx, getenv, logger, pool, mem)
+				if err == nil {
+					err = aiSchemaReady(chatCtx, pool)
+				}
+				if err != nil {
+					logger.Error("refusing to start", "error", err.Error())
+					return 1
+				}
+				if nepGo {
+					assistant.WithNepEngine(engine)
+				}
+				if nhomGo {
+					assistant.WithNhomEngine(engine)
+				}
+			} else {
+				if nepGo {
+					assistant.WithNepGo()
+				}
+				if nhomGo {
+					assistant.WithNhomGo()
+				}
+			}
+		}
+		// The answer streams (slice 11): this process serves the SSE routes
+		// and, with its in-process workers, writes the streams too. Empty
+		// MOBILE_REDIS_URL: no stream at all, and the routes say 503.
+		stream, err := moStream(getenv)
+		if err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+		if stream != nil {
+			defer stream.Close()
+			hub := aistream.NewHub()
+			background.Add(1)
+			go func() { defer background.Done(); stream.Listen(chatCtx, hub, nil) }()
+			assistant.WithStream(stream, hub, chatCtx.Done())
+			// The room's members watch the answer on the change feed's
+			// WebSocket (slice 12): the same stream and hub.
+			changes.WithAi(stream, hub)
+			assistant.WithPhong()
+		}
 		go changes.Listen()
 		go avatars.Listen()
-		go assistant.Run(chatCtx)
+		periodic := append(servePeriodic(assistant, inproc), mem.periodic()...)
+		if err := jobs.KiemDinhKy(periodic); err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+		background.Add(1)
+		go func() { defer background.Done(); _ = jobs.ChayDinhKy(chatCtx, pool, logger, periodic) }()
+		if inproc {
+			// One process, no broker: the poller claims every due job at its
+			// fast pace. The outbox rows the trigger writes expire unpublished.
+			background.Add(1)
+			go func() { defer background.Done(); assistant.RunWorkers(chatCtx, nil) }()
+		} else {
+			logger.Info("AI jobs run in `core work`, not in this process", "env", EnvInprocWorker+"=0")
+		}
 		fallback := front
 		feature := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if chatlegacychange.Matches(r.URL.Path) {
@@ -240,10 +379,14 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				avatars.ServeHTTP(w, r)
 				return
 			}
+			if nepnho.Matches(r.URL.Path) {
+				memory.ServeHTTP(w, r)
+				return
+			}
 			assistant.ServeHTTP(w, r)
 		}))
 		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if chatlegacychange.Matches(r.URL.Path) || avatarfeed.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
+			if chatlegacychange.Matches(r.URL.Path) || avatarfeed.Matches(r.URL.Path) || nepnho.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
 				feature.ServeHTTP(w, r)
 				return
 			}
@@ -353,7 +496,27 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	defer cancel()
 	_ = public.Shutdown(shutdown)
 	_ = liveness.Shutdown(shutdown)
+	// Before the deferred pool.Close: RunWorkers returns once every job it
+	// started has finished or been released.
+	background.Wait()
 	return exit
+}
+
+// servePeriodic is what `serve` runs on its own schedule. The sweep and the
+// outbox cleanup run here whatever runs the jobs, so the fifteen-minute bound
+// on shared plaintext holds with no worker up (MOBILE_INPROC_WORKER=0 and
+// `core work` scaled to zero); the purges run wherever the jobs do.
+func servePeriodic(assistant *chatassist.Handler, inproc bool) []jobs.DinhKy {
+	periodic := []jobs.DinhKy{assistant.DinhKy(), jobs.DinhKyDon()}
+	if inproc {
+		periodic = append(periodic, aimetrics.DinhKy(), rag.DinhKy())
+	}
+	return periodic
+}
+
+// workPeriodic is what `core work` runs on its own schedule.
+func workPeriodic(assistant *chatassist.Handler) []jobs.DinhKy {
+	return []jobs.DinhKy{assistant.DinhKy(), jobs.DinhKyDon(), aimetrics.DinhKy(), rag.DinhKy()}
 }
 
 func livez(w http.ResponseWriter, r *http.Request) {
@@ -363,6 +526,466 @@ func livez(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = io.WriteString(w, "ok\n")
+}
+
+// EnvInprocWorker says whether `core serve` also runs the AI workers. Unset or
+// "1" keeps today's single-process deploy; "0" leaves the jobs to `core work`.
+const EnvInprocWorker = "MOBILE_INPROC_WORKER"
+
+func inprocWorker(raw string) (bool, error) {
+	switch raw {
+	case "", "1":
+		return true, nil
+	case "0":
+		return false, nil
+	}
+	return false, fmt.Errorf("%s must be 0 or 1, got %q", EnvInprocWorker, raw)
+}
+
+func work(getenv func(string) string, stderr io.Writer) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return workUntil(ctx, getenv, stderr)
+}
+
+// Environment variables `core work` reads besides the worker sizes.
+const (
+	// EnvAMQPURL is the job broker. Empty: this worker only polls Postgres.
+	EnvAMQPURL = "MOBILE_AMQP_URL"
+	// EnvWorkerQueues lists the queues this worker takes jobs from (both
+	// ai.group and ai.nep when empty), on the broker and in the poller.
+	EnvWorkerQueues = "MOBILE_WORKER_QUEUES"
+	// EnvWorkerDBConns sizes the worker's own database pool: at most 50, at
+	// least what the worker can use at once (workerDBFloor), by default the
+	// larger of 10 and that floor. Apart from it: two connections for the
+	// heartbeat and the model-call counter, and the relay's LISTEN.
+	EnvWorkerDBConns = "MOBILE_WORKER_DB_CONNS"
+	// EnvRedisURL and EnvRedisNamespace name the Redis the model-call rate
+	// limiter shares (MOBILE_MODEL_RPM; a Redis that is down lets calls go)
+	// and the answer streams live in (internal/aistream; empty: no stream).
+	EnvRedisURL       = "MOBILE_REDIS_URL"
+	EnvRedisNamespace = "MOBILE_REDIS_NAMESPACE"
+)
+
+// amqpNamespace names the broker objects this deployment declares.
+const amqpNamespace = "rudi"
+
+// workerDBFloor is how many connections of the worker's pool can be in use at
+// once: one per job slot (a job holds at most one at a time; the heartbeat and
+// the model-call counter have their own pool), one per periodic task (each
+// pass runs on the connection that holds its lock, and they can all fire
+// together), and one for the relay's flush when there is a broker (its
+// LISTEN is a connection of its own). Below it, claims and job statements
+// wait behind the periodic passes, and the liveness port says nothing.
+func workerDBFloor(workers, tasks int, broker bool) int {
+	floor := workers + tasks
+	if broker {
+		floor++
+	}
+	return floor
+}
+
+// maxWorkerDBConns keeps `serve`, the workers and the API under the
+// database's connection limit (db.go).
+const maxWorkerDBConns = 50
+
+func workerDBConns(raw string, floor int) (int32, error) {
+	why := fmt.Sprintf("this worker can use %d at once (%s job slots, one per periodic task, one for the relay's flush with a broker)", floor, chatassist.EnvWorkers)
+	if floor > maxWorkerDBConns {
+		return 0, fmt.Errorf("%s: %s, more than the %d a worker may open; lower %s and run more workers", EnvWorkerDBConns, why, maxWorkerDBConns, chatassist.EnvWorkers)
+	}
+	if raw == "" {
+		return int32(max(10, floor)), nil
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil || n < 1 || n > maxWorkerDBConns {
+		return 0, fmt.Errorf("%s must be an integer up to %d, got %q", EnvWorkerDBConns, maxWorkerDBConns, raw)
+	}
+	if n < floor {
+		return 0, fmt.Errorf("%s=%d is too small: %s; raise it to at least %d, or lower %s", EnvWorkerDBConns, n, why, floor, chatassist.EnvWorkers)
+	}
+	return int32(n), nil
+}
+
+// openPool opens a pool of at most conns connections.
+func openPool(ctx context.Context, raw string, conns int32) (*pgxpool.Pool, error) {
+	config, err := db.PoolConfig(raw)
+	if err != nil {
+		return nil, err
+	}
+	config.MaxConns = conns
+	return pgxpool.NewWithConfig(ctx, config)
+}
+
+// workUntil runs the AI workers, the broker side and the periodic tasks, and
+// nothing else: no routes (a liveness port only when
+// MOBILE_CORE_LIVENESS_LISTEN names one). It refuses to start on the same
+// conditions a worker inside `serve` would have failed on later, loudly,
+// instead of claiming jobs it can only fail.
+//
+// On SIGTERM the consumers stop taking messages, every running job is
+// released back to the queue (or finishes, if it already had), and only then
+// does the process exit.
+func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer) int {
+	logger := slog.New(slog.NewJSONHandler(stderr, nil))
+	refuse := func(err error) int {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	cfg, err := chatassist.WorkerConfigFromEnv(getenv)
+	if err != nil {
+		return refuse(err)
+	}
+	// The memory lane rides with the AI queues when Nếp's memory is
+	// configured (its deletions retry there); the configuration is checked
+	// now, before any connection opens.
+	if _, err = openNepMem(ctx, getenv, logger, nil); err != nil {
+		return refuse(err)
+	}
+	allowed := chatassist.Queues
+	memOn := getenv(EnvNepMemoryKey) != ""
+	if memOn {
+		allowed = append(append([]string(nil), chatassist.Queues...), nepnho.HangNho)
+	}
+	queues, err := jobs.ParseQueues(getenv(EnvWorkerQueues), allowed)
+	if err != nil {
+		return refuse(err)
+	}
+	var chatQueues []string
+	for _, q := range queues {
+		if q != nepnho.HangNho {
+			chatQueues = append(chatQueues, q)
+		}
+	}
+	amqpURL := getenv(EnvAMQPURL)
+	if amqpURL != "" {
+		if err = jobs.CheckURL(amqpURL); err != nil {
+			return refuse(err)
+		}
+	}
+	// Counted from the list this worker will run, before any connection opens.
+	tasks := len(workPeriodic(chatassist.New(nil, nil)))
+	if memOn {
+		tasks += 2 // nep.xoa, nep.don
+	}
+	conns, err := workerDBConns(getenv(EnvWorkerDBConns), workerDBFloor(cfg.Workers, tasks, amqpURL != ""))
+	if err != nil {
+		return refuse(err)
+	}
+	client := brain.Configured()
+	if client == nil {
+		return refuse(errors.New("no model service configured (MOBILE_BRAIN_URL or MOBILE_PYTHON_UPSTREAM, and MOBILE_INTERNAL_TOKEN): a worker would claim every job only to fail it"))
+	}
+	nepGo, err := nepEngineGo(getenv(EnvAIEngineNep))
+	if err != nil {
+		return refuse(err)
+	}
+	nhomGo, err := aiEngineGo(EnvAIEngineGroup, getenv(EnvAIEngineGroup))
+	if err != nil {
+		return refuse(err)
+	}
+	var engine *aiharness.Engine
+	if nepGo || nhomGo {
+		// Built once here only to refuse before any connection opens: a key
+		// and a loopback base URL, or no worker at all.
+		if _, err = nepEngine(ctx, getenv, logger, nil, nepMem{}); err != nil {
+			return refuse(err)
+		}
+	}
+	pool, err := openPool(ctx, getenv(db.EnvDatabaseURL), conns)
+	if err != nil {
+		return refuse(err)
+	}
+	defer pool.Close()
+	beat, err := openPool(ctx, getenv(db.EnvDatabaseURL), 2)
+	if err != nil {
+		return refuse(err)
+	}
+	defer beat.Close()
+	check, cancel := context.WithTimeout(ctx, 5*time.Second)
+	installed, err := chatassist.SchemaCurrent(check, pool)
+	if err == nil && installed {
+		installed, err = jobs.SchemaCurrent(check, pool)
+	}
+	cancel()
+	if err != nil || !installed {
+		return refuse(errors.New("the chat schema is missing, older than this binary, or unreachable: run `core migrate-chat` (compose: service migrate-chat) first"))
+	}
+	assistant := chatassist.New(pool, client).WithWorker(cfg).WithNhipPool(beat)
+	if _, err = assistant.WithQueues(chatQueues); err != nil {
+		return refuse(err)
+	}
+	mem, err := openNepMem(ctx, getenv, logger, pool)
+	if err != nil {
+		return refuse(err)
+	}
+	defer mem.close()
+	// The worker writes the answer streams; it serves no route, so it reads
+	// none (no hub).
+	stream, err := moStream(getenv)
+	if err != nil {
+		return refuse(err)
+	}
+	if stream != nil {
+		defer stream.Close()
+		assistant.WithStream(stream, nil, nil)
+	}
+	if nepGo || nhomGo {
+		if err := aiSchemaReady(ctx, pool); err != nil {
+			return refuse(err)
+		}
+		// Now with the tools' read ports over the pool. One engine serves
+		// both bots; each path reaches only its own ports.
+		if engine, err = nepEngine(ctx, getenv, logger, pool, mem); err != nil {
+			return refuse(err)
+		}
+		if nepGo {
+			assistant.WithNepEngine(engine)
+		}
+		if nhomGo {
+			assistant.WithNhomEngine(engine)
+		}
+	}
+	periodic := append(workPeriodic(assistant), mem.periodic()...)
+	if err = jobs.KiemDinhKy(periodic); err != nil {
+		return refuse(err)
+	}
+	if address := getenv(config.EnvLivenessListen); address != "" {
+		live := &http.Server{Addr: address, Handler: http.HandlerFunc(livez), ReadHeaderTimeout: 5 * time.Second}
+		go func() {
+			if err := live.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				logger.Warn("liveness listener failed; `core healthcheck` will report this worker down", "listen", address)
+			}
+		}()
+		defer live.Close()
+	}
+	logger.Info("AI worker started", "workers", cfg.Workers, "lease_seconds", int(cfg.Lease.Seconds()), "nep_engine", nepEngineName(nepGo), "group_engine", nepEngineName(nhomGo),
+		"queues", strings.Join(queues, ","), "broker", amqpURL != "", "db_conns", conns)
+	var side sync.WaitGroup
+	side.Add(1)
+	go func() { defer side.Done(); _ = jobs.ChayDinhKy(ctx, pool, logger, periodic) }()
+	var broker chatassist.Broker
+	if amqpURL != "" {
+		topology, _ := jobs.NewTopology(amqpNamespace)
+		handler := assistant.XuLyTin
+		if mem.kho != nil {
+			handler = func(ctx context.Context, queue string, m jobs.Message) error {
+				if queue == nepnho.HangNho {
+					return mem.kho.XuLyTin(ctx, m)
+				}
+				return assistant.XuLyTin(ctx, queue, m)
+			}
+		}
+		ket := &jobs.Ket{URL: amqpURL, Topology: topology, Pool: pool, Queues: queues, Concurrency: cfg.Workers,
+			Handler: handler, Logger: logger}
+		broker = ket
+		side.Add(1)
+		go func() { defer side.Done(); ket.Run(ctx) }()
+	}
+	assistant.RunWorkers(ctx, broker)
+	side.Wait()
+	logger.Info("AI worker stopped")
+	return 0
+}
+
+// EnvAIEngineNep chooses what answers Nếp: unset or "brain" keeps the Python
+// brain's nep-reply; "go" runs the Go engine (internal/aiharness), which calls
+// Gemini from this process with GEMINI_API_KEY. Read once at startup.
+const EnvAIEngineNep = "MOBILE_AI_ENGINE_NEP"
+
+func nepEngineGo(raw string) (bool, error) { return aiEngineGo(EnvAIEngineNep, raw) }
+
+// EnvAIEngineGroup chooses what answers the group assistant «Rủ Đi AI» in the
+// thread: unset or "brain" keeps the brain's companion-reply and chat-expense;
+// "go" runs the Go engine (internal/aiharness, slice 9), which also takes the
+// `hoi` command. Read once at startup.
+const EnvAIEngineGroup = "MOBILE_AI_ENGINE_GROUP"
+
+// aiEngineGo reads one engine choice: brain (the default) or go.
+func aiEngineGo(env, raw string) (bool, error) {
+	switch raw {
+	case "", "brain":
+		return false, nil
+	case "go":
+		return true, nil
+	}
+	return false, fmt.Errorf("%s must be brain or go, got %q", env, raw)
+}
+
+func nepEngineName(goEngine bool) string {
+	if goEngine {
+		return "go"
+	}
+	return "brain"
+}
+
+// nepEngine builds the Go engine for a process that runs Nếp's jobs, and
+// refuses what would only fail every job later: no key, a base URL that is
+// not loopback, or a rate limit with nowhere to keep its count. It opens no
+// connection; the key is never logged.
+//
+// The engine gets the router with its worked examples, embedded through the
+// same key on the first turn that routes (hieu.KhoViDuLuoi: startup makes no
+// embedding call), and, when db is set, the tools' read ports over it
+// (internal/aidoc: the catalogue, destinations, areas and the person's own
+// upcoming outings, each read in a READ ONLY transaction under a semaphore).
+// mem adds Nếp's long-term memory (internal/nepnho: the memory tools' port
+// and personalization, at most five of the person's own facts while their
+// toggle is on) and the per-turn short-term buffer (internal/aictx) when
+// they are configured; unset, the memory tools answer loi_nguon and the
+// device's turns stay in memory.
+func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Logger, db aidoc.Beginner, mem nepMem) (*aiharness.Engine, error) {
+	limiter, err := modelLimiter(getenv)
+	if err != nil {
+		return nil, err
+	}
+	var opts []aiharness.Option
+	if limiter != nil {
+		opts = append(opts, aiharness.WithGioiHan(limiter))
+	}
+	embedder, err := nhung.FromEnv(ctx, getenv)
+	if err != nil {
+		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+	}
+	opts = append(opts, aiharness.WithHieu(hieu.Moi(hieu.WithViDuLuoi(hieu.MoiKhoViDuLuoi(embedder, hieu.ViDuMacDinh)))))
+	if db != nil {
+		doc := aidoc.Moi(db, 0)
+		quan, err := quanRetriever(ctx, getenv, doc, embedder)
+		if err != nil {
+			return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+		}
+		// Nhom is the group's port (its outings and member count, scoped by
+		// the job's room); the group's path reaches no other person's data.
+		nguon := tools.NguonDuLieu{Quan: quan, Cho: aidoc.Doc{C: doc}, Nhom: aidoc.Doc{C: doc}, CaNhan: aidoc.Doc{C: doc}}
+		if mem.kho != nil {
+			nguon.TriNho = mem.kho
+		}
+		opts = append(opts, aiharness.WithNguon(nguon))
+	}
+	// The reranker (MOBILE_RERANK_URL; production Qwen3-Reranker-4B on a
+	// GPU behind vLLM, ADR-0043 §2.6): the engine counts it per turn and
+	// the places retriever reranks with it. Unset, every retrieval keeps
+	// the RRF order and says no_rerank. A URL that is set but refused (plain
+	// http off the host, a short token, a bad timeout) stops the start.
+	xepLai, err := rerank.TuEnv(getenv)
+	if err != nil {
+		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+	}
+	if xepLai != nil {
+		opts = append(opts, aiharness.WithXepLai(xepLai))
+		logger.Info("nep reranker configured", "model", xepLai.Model(), "timeout", xepLai.Timeout().String())
+	} else {
+		logger.Info("nep reranker not configured: retrieval keeps the RRF order (no_rerank)")
+	}
+	opts = append(opts, mem.engineOptions()...)
+	// A verified answer is released to its stream a chunk at a time, so the
+	// panel shows it progressively (slice 11); a job with no stream (its
+	// Sink is BoQua) is not paced.
+	opts = append(opts, aiharness.WithNhipPhat(aiharness.NhipPhat))
+	engine, err := aiharness.FromEnv(ctx, getenv, logger, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+	}
+	return engine, nil
+}
+
+// quanRetriever is the places retriever the engine's tools and retrieval
+// path use. With MOBILE_MILVUS_ADDR set it is the hybrid adapter over the
+// index the ingest (rag/nap) builds -- gemini-embedding-2 dense + Milvus's
+// BM25 on both text fields (MILCO is shelved) fused with the
+// ingest's committed weights, every hit re-checked against the live rows in
+// a READ ONLY transaction (thuoctinh over aidoc.ChiDoc) -- falling back to
+// the lexical index only when neither leg can run. Unset, it is the lexical
+// index alone (aidoc.Lexical, flagged lexical_only). A Milvus named but not
+// configured completely, or an ingestion configuration that disagrees with
+// vectordb's schema, is refused at start rather than at every turn.
+func quanRetriever(ctx context.Context, getenv func(string) string, doc *aidoc.ChiDoc, embedder nhung.Nhung) (truyhoi.Retriever, error) {
+	lexical := aidoc.Lexical{C: doc}
+	if strings.TrimSpace(getenv(vectordb.EnvAddr)) == "" {
+		return lexical, nil
+	}
+	c, err := vectordb.FromEnv(getenv)
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := nap.MacDinh()
+	if err != nil {
+		return nil, err
+	}
+	if err := napkho.KiemKhop(cfg); err != nil {
+		return nil, err
+	}
+	m, err := vectordb.Ket(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+	w := cfg.Hop.TrongSo
+	alias := m.Alias(vectordb.KhoDiaDiem)
+	k := &hybrid.Kho{
+		// The sparse leg is Milvus's BM25 function (both fields): MILCO is
+		// shelved pending its licence (owner, 2026-09-27) and never wired here.
+		Nhung: nhung.TheoLuot{Inner: embedder}, Index: m, Thua: vectordb.BM25{}, TenDiaDiem: alias,
+		TrongSo: &vectordb.TrongSo{Dense: w.Dense, BM25: w.BM25, BM25KhongDau: w.BM25KhongDau, MILCO: w.MILCO},
+		DocSong: aidoc.ThuocTinhSong{C: doc},
+		BiLoai: func(ctx context.Context, l vectordb.LocCung) (map[truyhoi.RangBuoc]int, error) {
+			return m.DemBiLoai(ctx, alias, l)
+		},
+	}
+	return hybrid.DuPhong{Chinh: k, Phu: lexical}, nil
+}
+
+// modelLimiter builds the per-model call rate limiter from MOBILE_MODEL_RPM
+// and MOBILE_REDIS_URL (design 02 §6), or nil when no rate is set. A rate
+// without a Redis is refused: the limit would silently not exist.
+func modelLimiter(getenv func(string) string) (llm.GioiHan, error) {
+	raw := getenv(llm.EnvModelRPM)
+	if raw == "" {
+		return nil, nil
+	}
+	rpm, err := strconv.Atoi(raw)
+	if err != nil {
+		return nil, fmt.Errorf("%s must be an integer, got %q", llm.EnvModelRPM, raw)
+	}
+	url := getenv(EnvRedisURL)
+	if url == "" {
+		return nil, fmt.Errorf("%s needs %s: the limiter keeps its count in Redis", llm.EnvModelRPM, EnvRedisURL)
+	}
+	options, err := llm.RedisOptions(url)
+	if err != nil {
+		return nil, err
+	}
+	namespace := getenv(EnvRedisNamespace)
+	if namespace == "" {
+		namespace = "main"
+	}
+	return llm.NewGioiHanRedis(redis.NewClient(options), namespace, rpm)
+}
+
+// moStream opens the answer streams' Redis from MOBILE_REDIS_URL and
+// MOBILE_REDIS_NAMESPACE (default "main"), or returns nil when no URL is set:
+// then nothing streams and the SSE routes refuse with 503. It opens no
+// connection; a Redis that is down later only sends readers back to polling.
+func moStream(getenv func(string) string) (*aistream.Stream, error) {
+	url := getenv(EnvRedisURL)
+	if url == "" {
+		return nil, nil
+	}
+	namespace := getenv(EnvRedisNamespace)
+	if namespace == "" {
+		namespace = "main"
+	}
+	return aistream.Open(url, namespace)
+}
+
+// aiSchemaReady refuses a database without the engine's metrics schema.
+func aiSchemaReady(ctx context.Context, pool *pgxpool.Pool) error {
+	check, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	installed, err := aimetrics.Installed(check, pool)
+	if err != nil || !installed {
+		return fmt.Errorf("%s=go needs the AI engine schema: run `core migrate-chat` (compose: service migrate-chat) first", EnvAIEngineNep)
+	}
+	return nil
 }
 
 func healthcheck(getenv func(string) string, stderr io.Writer) int {
@@ -430,6 +1053,48 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 	encoder := json.NewEncoder(stdout)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(views); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	return 0
+}
+
+type featureView struct {
+	ID      string `json:"id"`
+	Package string `json:"package"`
+}
+
+// featureRoutes lists every Go-only route the feature handlers register, read
+// from the handlers' own muxes, in the manifest's package order. These routes
+// never appear in `core routes --json`: that list is what the parity harness
+// treats as Go-served manifest routes, and parity runs with the features off.
+func featureRoutes() []featureView {
+	byPackage := map[string][]string{
+		"chatassist":       chatassist.Routes(),
+		"chatlegacychange": chatlegacychange.Routes(),
+		"avatarfeed":       avatarfeed.Routes(),
+		"websession":       websession.Routes(),
+		"nepnho":           nepnho.Routes(),
+	}
+	var out []featureView
+	for _, pkg := range ownership.FeaturePackages {
+		for _, id := range byPackage[pkg] {
+			out = append(out, featureView{ID: id, Package: pkg})
+		}
+	}
+	return out
+}
+
+// listFeatures prints featureRoutes, so scripts/check_route_ownership.py can
+// compare the manifest's `features` block with what the binary registers.
+func listFeatures(args []string, stdout, stderr io.Writer) int {
+	if len(args) != 1 || args[0] != "--json" {
+		fmt.Fprintln(stderr, "usage: core features --json")
+		return 2
+	}
+	encoder := json.NewEncoder(stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(featureRoutes()); err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
@@ -508,17 +1173,32 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	defer pool.Close()
+	// The job outbox before chatassist: version 5's trigger calls jobs_them.
 	if err = chatlegacychange.Migrate(ctx, pool); err == nil {
+		err = jobs.Migrate(ctx, pool)
+	}
+	if err == nil {
 		err = chatassist.Migrate(ctx, pool)
+	}
+	// The AI engine's own table, after chatassist: its rows reference
+	// chat_ai_invocations. Its own version table; no chatassist version.
+	if err == nil {
+		err = aimetrics.Migrate(ctx, pool)
 	}
 	if err == nil {
 		err = avatarfeed.Migrate(ctx, pool)
+	}
+	// Nếp's memory ledger, after the job outbox: its deletions ride the
+	// memory lane (jobs_them), and its trigger on people must exist before
+	// any account can be deleted by a binary that holds memory.
+	if err == nil {
+		err = nepnho.Migrate(ctx, pool)
 	}
 	if err != nil {
 		fmt.Fprintln(stderr, "chat migration failed:", err)
 		return 1
 	}
-	fmt.Fprintln(stdout, "Đã áp dụng migration chat: feed thay đổi và engine AI nhóm. Ownership route giữ nguyên.")
+	fmt.Fprintln(stdout, "Đã áp dụng migration chat: feed thay đổi, hàng đợi job, engine AI nhóm và bảng số đo engine AI. Ownership route giữ nguyên.")
 	return 0
 }
 

@@ -1,0 +1,12 @@
+{
+  "ten": "loi-may-chu",
+  "mo_ta": "Lời gọi router nhận 500: provider_unavailable sau một lời gọi.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "loi": {
+        "code": 500
+      }
+    }
+  ]
+}

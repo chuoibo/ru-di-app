@@ -1,0 +1,27 @@
+{
+  "ten": "nhom-hoi-doc-tri-nho",
+  "mo_ta": "Nhóm, mô hình cố gọi recall_memory: công cụ không có trong bộ của nhóm, bị từ chối.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"hoi\"], \"huong\": \"tac_tu\", \"slots\": {}, \"can_truy_hoi\": [\"group_history\"], \"truy_van\": [{\"nguon\": \"group_history\", \"cau\": \"chuyến đi trước của nhóm\"}], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "goi": {
+        "ten": "recall_memory",
+        "doi_so": {
+          "truy_van": "chuyến đi trước của nhóm"
+        }
+      }
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Lần trước cả nhóm đi Đà Lạt tháng 8."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_ho_tro\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

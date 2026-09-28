@@ -1,0 +1,99 @@
+{
+ "_note": "Reference P(yes) from an independent float32 numpy forward pass of Qwen3-Reranker-0.6B over the BF16 safetensors (infra bring-up 2026-09-25, tests/ref_numpy.py); invented texts, no real place or person. Scores rounded to 6 significant digits (far inside the 0.02 tolerance).",
+ "tolerance": 0.02,
+ "cases": [
+  {
+   "name": "vi_diacritics",
+   "query": "quán cà phê yên tĩnh để làm việc ở Đà Lạt",
+   "docs": [
+    {
+     "label": "relevant",
+     "text": "Quán cà phê nhỏ trên con dốc ở Phường 3, Đà Lạt: không gian yên tĩnh, không mở nhạc to, wifi mạnh, nhiều ổ cắm điện và bàn rộng, rất hợp để ngồi làm việc bằng laptop cả ngày.",
+     "ref": 0.999963
+    },
+    {
+     "label": "partial",
+     "text": "Đà Lạt có rất nhiều quán cà phê view đồi thông đẹp để chụp ảnh, thường đông khách du lịch vào cuối tuần và mở nhạc khá sôi động.",
+     "ref": 0.997799
+    },
+    {
+     "label": "irrelevant_lexical_trap",
+     "text": "Nông dân Lâm Đồng làm việc yên tĩnh trên những đồi cà phê; giá cà phê arabica Đà Lạt vụ này tăng 20% nhờ thời tiết thuận lợi.",
+     "ref": 0.999423
+    },
+    {
+     "label": "irrelevant",
+     "text": "Chợ Bến Thành ở Quận 1, TP.HCM mở cửa từ 6 giờ sáng, nổi tiếng với các món ăn vặt và đồ lưu niệm.",
+     "ref": 1.67826e-05
+    },
+    {
+     "label": "irrelevant_no_diacritics",
+     "text": "Huong dan doi mat khau tai khoan ngan hang tren ung dung dien thoai trong 3 buoc don gian.",
+     "ref": 5.12316e-06
+    }
+   ]
+  },
+  {
+   "name": "vi_no_diacritics_query",
+   "query": "quan ca phe yen tinh de lam viec o Da Lat",
+   "docs": [
+    {
+     "label": "relevant",
+     "text": "Quán cà phê nhỏ trên con dốc ở Phường 3, Đà Lạt: không gian yên tĩnh, không mở nhạc to, wifi mạnh, nhiều ổ cắm điện và bàn rộng, rất hợp để ngồi làm việc bằng laptop cả ngày.",
+     "ref": 0.999775
+    },
+    {
+     "label": "partial",
+     "text": "Đà Lạt có rất nhiều quán cà phê view đồi thông đẹp để chụp ảnh, thường đông khách du lịch vào cuối tuần và mở nhạc khá sôi động.",
+     "ref": 0.018435
+    },
+    {
+     "label": "irrelevant_lexical_trap",
+     "text": "Nông dân Lâm Đồng làm việc yên tĩnh trên những đồi cà phê; giá cà phê arabica Đà Lạt vụ này tăng 20% nhờ thời tiết thuận lợi.",
+     "ref": 0.915857
+    },
+    {
+     "label": "irrelevant",
+     "text": "Chợ Bến Thành ở Quận 1, TP.HCM mở cửa từ 6 giờ sáng, nổi tiếng với các món ăn vặt và đồ lưu niệm.",
+     "ref": 4.01131e-04
+    },
+    {
+     "label": "irrelevant_no_diacritics",
+     "text": "Huong dan doi mat khau tai khoan ngan hang tren ung dung dien thoai trong 3 buoc don gian.",
+     "ref": 2.33587e-05
+    }
+   ]
+  },
+  {
+   "name": "en_query_vi_docs",
+   "query": "quiet coffee shop to work from in Da Lat",
+   "docs": [
+    {
+     "label": "relevant",
+     "text": "Quán cà phê nhỏ trên con dốc ở Phường 3, Đà Lạt: không gian yên tĩnh, không mở nhạc to, wifi mạnh, nhiều ổ cắm điện và bàn rộng, rất hợp để ngồi làm việc bằng laptop cả ngày.",
+     "ref": 0.999945
+    },
+    {
+     "label": "partial",
+     "text": "Đà Lạt có rất nhiều quán cà phê view đồi thông đẹp để chụp ảnh, thường đông khách du lịch vào cuối tuần và mở nhạc khá sôi động.",
+     "ref": 0.975100
+    },
+    {
+     "label": "irrelevant_lexical_trap",
+     "text": "Nông dân Lâm Đồng làm việc yên tĩnh trên những đồi cà phê; giá cà phê arabica Đà Lạt vụ này tăng 20% nhờ thời tiết thuận lợi.",
+     "ref": 0.998647
+    },
+    {
+     "label": "irrelevant",
+     "text": "Chợ Bến Thành ở Quận 1, TP.HCM mở cửa từ 6 giờ sáng, nổi tiếng với các món ăn vặt và đồ lưu niệm.",
+     "ref": 1.86630e-03
+    },
+    {
+     "label": "irrelevant_no_diacritics",
+     "text": "Huong dan doi mat khau tai khoan ngan hang tren ung dung dien thoai trong 3 buoc don gian.",
+     "ref": 1.58340e-05
+    }
+   ]
+  }
+ ]
+}

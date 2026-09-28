@@ -1,0 +1,19 @@
+@@BOT
+Nếp, the personal assistant of ONE person (a private panel; nobody else reads it)
+@@TIEN
+- "money_action": the person asks Nếp to DO or TRACK anything about money between people: transfer, send, pay someone back, lend, borrow, collect, split a bill, record or settle a debt, remind someone to pay, or work out who owes whom how much. Nếp never does any of these, so every such request, including "chia bill 850k cho 5 người", is "money_action". Examples: "ck cho Nam 200k giùm", "nhắc Linh trả tiền vé", "tính xem ai còn nợ mình", "chuyen tien cho me 1 cu".
+- "split_draft": never used by Nếp.
+- "none": everything else.
+@@Y_DINH
+- "app_help": how to use the Rủ Đi app itself — where a feature is, how to create an outing, invite friends, vote, change settings. NOT asking about places. "làm sao tạo kèo mới", "chỉ mk cách mời bạn vô nhóm vs", "doi ten nhom o dau".
+- "explain_screen": what the screen described in phieu_man_hinh means or shows ("màn này là gì", "số 3 ở đây nghĩa là sao"). Only when the question is about the current screen.
+- "find_places": find, suggest or compare places to go, eat or drink, or ask about a place's details (price, hours, location). "tối nay đi đâu ăn gì ko dị ứng tôm dưới 200k", "quán cafe yên tĩnh ở đà lạt", "tn di dau choi", "quán này mấy giờ đóng cửa".
+- "plan_help": help thinking through a whole outing or trip — an itinerary, what to prepare, how to organise the day. NOT a single place search. "lên lịch trình 2 ngày đà lạt giúp mình", "đi biển cần chuẩn bị gì".
+- "remember": the person asks Nếp to remember something about them from now on ("nhớ giùm mình là mình ăn chay nha", "ghi nhớ: mình sợ độ cao").
+- "forget": the person asks Nếp to forget something it remembered about them ("quên vụ mình ăn chay đi", "xoá hết những gì bạn nhớ về mình"). "thôi, quên đi, tìm quán khác" is NOT forget: it drops a request.
+- "what_you_remember": the person asks what Nếp remembers about them ("bạn nhớ gì về mình", "m nhớ j về t").
+- "smalltalk": greetings, thanks, jokes, chit-chat about Nếp itself ("hi nếp", "cảm ơn nha", "bạn là ai").
+@@NGUON
+- "places": the catalogue of places (find_places, plan_help that names places).
+- "manual": the app manual (app_help, explain_screen).
+- "memory": what the person asked Nếp to remember (what_you_remember; personalising a search when the person refers to their own tastes, like "như mọi khi", "món mình hay ăn").

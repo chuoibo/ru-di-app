@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { MEDIA_REFUSALS, conPhaiHoi, duongFile, nhipHoiMs } from "../dist-test/rudi/nep/media.js";
+import { MEDIA_REFUSALS, conPhaiHoi, duongFile, nguonAnhNep, nhipHoiMs } from "../dist-test/rudi/nep/media.js";
 
 test("còn phải hỏi lại khi việc chưa ngã ngũ, và thôi khi đã ngã ngũ", () => {
   assert.equal(conPhaiHoi("dang-cho"), true);
@@ -38,4 +38,15 @@ test("mọi mã từ chối đều có câu người đọc, và không câu nà
 test("hết hạn mức và mô tả hỏng là thứ PHẢI nói ra, nên không nằm trong bảng im lặng", () => {
   assert.equal(MEDIA_REFUSALS.rate_limited, undefined);
   assert.equal(MEDIA_REFUSALS.cooldown, undefined);
+});
+
+test("ảnh Nếp vẽ tải kèm header của người gọi, vì đường file đòi xác thực như mọi route /me", () => {
+  const nguon = nguonAnhNep("http://x/", "abc", "nguoi-1");
+  assert.equal(nguon.uri, "http://x/me/nep/media/abc/file");
+  assert.equal(nguon.headers["X-Actor-ID"], "nguoi-1");
+  assert.equal(nguon.headers["X-Actor-Roles"], "member", "chỉ khai đúng vai cần, không bốn vai mặc định");
+});
+
+test("màn tiền có câu người đọc riêng cho việc vẽ", () => {
+  assert.ok(MEDIA_REFUSALS.nep_lui_man_tien.includes("màn tiền"));
 });

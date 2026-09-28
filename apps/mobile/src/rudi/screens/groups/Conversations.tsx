@@ -24,7 +24,7 @@ import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
-import { xemTruocTinCuoi } from "../../chat/tin-song";
+import { tacGiaTin, xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { useRudiSession } from "../../session";
@@ -49,8 +49,9 @@ function loiRaChu(error: unknown): string {
 /** «Bạn» for the reader's own last message, the roster name for anyone else,
  *  «Rủ Đi AI» for a card with no author -- the way a messenger reads. */
 function tenTacGia(tin: { author_id: string | null; author_display_name: string | null }, toi: string): string {
-  if (tin.author_id === null) return "Rủ Đi AI";
-  if (tin.author_id === toi) return "Bạn";
+  const tacGia = tacGiaTin(tin);
+  if (tacGia.loai === "ai") return "Rủ Đi AI";
+  if (tacGia.id === toi) return "Bạn";
   return tin.author_display_name ?? "Thành viên";
 }
 

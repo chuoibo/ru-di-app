@@ -15,6 +15,7 @@
  * `rate_limited` mới là im lặng cố ý, và media không có hai trạng thái đó.
  */
 import { type Attempt, translatedAsActor } from "../../api";
+import { headerNguoiGoi } from "../../danh-tinh";
 
 export type LoaiMedia = "anh" | "video";
 export type TrangThaiMedia = "dang-cho" | "dang-chay" | "xong" | "hong";
@@ -38,19 +39,26 @@ export const MEDIA_REFUSALS: Record<string, string> = {
   nep_media_thieu_khoa: "Rủ Đi chưa bật phần vẽ ảnh của Nếp.",
   nep_media_khong_goi_duoc: "Nếp chưa nối được tới chỗ vẽ ảnh. Thử lại sau nhé.",
   nep_media_proxy_tu_choi: "Chỗ vẽ ảnh đang trục trặc. Thử lại sau nhé.",
+  nep_lui_man_tien: "Ở màn tiền Nếp không vẽ, để bạn tự xem số liệu cho rõ. Ra màn khác rồi nhờ Nếp nhé.",
   khong_thay_job: "Không tìm thấy bức này.",
   chua_co_media: "Bức này chưa vẽ xong.",
 };
 
+/**
+ * `man` is the open screen's route, so the server can apply the money law to
+ * drawing as it does to text (ADR-0036 §2.9): a request from a money screen is
+ * refused before it reaches the proxy. The device checks too (`NepBang`); the
+ * server check is the one that holds when the device is not the shipped app.
+ */
 export async function xinAnh(
   actorId: string,
   attempt: Attempt,
   moTa: string,
-  tuyChon: { tenAnh?: string; tyLe?: string } = {},
+  tuyChon: { tenAnh?: string; tyLe?: string; man?: string } = {},
 ): Promise<JobMedia> {
   return translatedAsActor<JobMedia>(MEDIA_REFUSALS, "/me/nep/media", {
     method: "POST",
-    body: { loai: "anh", mo_ta: moTa, ten_anh: tuyChon.tenAnh, ty_le: tuyChon.tyLe },
+    body: { loai: "anh", mo_ta: moTa, ten_anh: tuyChon.tenAnh, ty_le: tuyChon.tyLe, man: tuyChon.man },
     actorId,
     attempt,
   });
@@ -83,6 +91,16 @@ export async function docTrangThai(actorId: string, jobId: string): Promise<Tinh
  */
 export function duongFile(baseUrl: string, jobId: string): string {
   return `${baseUrl.replace(/\/+$/, "")}/me/nep/media/${encodeURIComponent(jobId)}/file`;
+}
+
+/**
+ * How the panel loads the finished picture. The file route authenticates like
+ * every other `/me/*` route, so the image source carries the caller's headers
+ * (expo-image sends `source.headers`); a bare `{uri}` got 401 under bearer auth
+ * and the frame stayed empty. Same shape as `nguonAnh` in `ky-niem/ky-niem.ts`.
+ */
+export function nguonAnhNep(baseUrl: string, jobId: string, actorId: string): { uri: string; headers: Record<string, string> } {
+  return { uri: duongFile(baseUrl, jobId), headers: headerNguoiGoi(actorId, { roles: "member" }) };
 }
 
 /** Còn phải hỏi lại nữa không. `xong` và `hong` đều là đã xong việc hỏi. */

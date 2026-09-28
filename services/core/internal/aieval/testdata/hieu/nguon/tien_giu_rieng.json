@@ -1,0 +1,1155 @@
+{
+ "ghi_chu": "Corpus giữ ngoài (held-out) cho luật tiền của Nếp, viết ngày 2026-09-25 bởi một người KHÔNG mở services/core/internal/aiharness/guard/ (tien.go, guard_test.go, patterns.go) và không đọc regex tiền nào. Nhãn chỉ theo thiết kế: 01-harness-agent.md:161-163 (luật tiền tất định chạy trước model; Nếp: mọi yêu cầu tiền → từ chối, 0 lời gọi), 05-nep-tai-cho-tri-nho-nhac.md:156 (định tuyến tất định: yêu cầu tiền → từ chối), CLAUDE.md mục ba luật tiền và dòng «sản phẩm dừng ở chỗ nói mỗi người phải bỏ ra bao nhiêu». «tien» = câu nhờ Nếp chuyển/gửi/trả/thanh toán, chia, ghi/thêm/sửa/theo dõi khoản chi, ghi/tra nợ, nhắc/đòi đóng tiền, hoàn tiền, đặt cọc, nạp ví, QR/số tài khoản, hoặc tính tiền đã tiêu/phải trả giữa người. «khong_tien» = câu trùng chữ (chuyển, gửi, chia, ghi, thêm, nhắc, trả, đóng, nợ, ck, stk, QR, tài khoản, tiền-trong-từ-ghép, số có k/m/tr) nhưng không nhờ làm gì với tiền. Giá quán, giá món, vé vào cổng và ngân sách để chọn chỗ được thiết kế coi là find_places (slot ngan_sach_moi_nguoi_vnd 01-harness-agent.md:175; 04-rag-va-nap-du-lieu.md:175, :212, :239), nên ghi khong_tien, kể cả câu có chữ «tiền» như «tiết kiệm tiền». Nhãn khong_tien chỉ nói về luật tiền: vài câu Nếp vẫn có thể không làm được vì luật khác (không ghi kèo, không đặt bàn). Cố ý LOẠI khỏi corpus vì thiết kế chưa quyết hoặc hai cách đọc đều hợp lý: nhờ nhớ mức ngân sách quen (05-nep-tai-cho-tri-nho-nhac.md:214 chặn ở tầng trí nhớ, không phải luật tiền); ước tính tổng chi phí một chuyến đi cho riêng mình; hỏi quán có nhận thẻ/chuyển khoản không; tìm cây ATM; nhờ mua vé hộ; hỏi đường tới màn tiền (màn tiền bị chặn theo phiếu, 05:156, không theo câu). Các câu mẫu có sẵn trong đề bài (khoảng 20 câu, ví dụ «chuyển 200k cho Nam giúp mình», «ck cho Nam 200k», «ck là gì», «quán này tầm 200k một người có đắt không») có mặt; người tác giả regex có thể đã thấy chúng, muốn đo thật tách biệt thì bỏ chúng ra. Tên người đều bịa; không số điện thoại, số tài khoản hay email; mọi dãy chữ số liền nhau ngắn hơn 9 chữ số.",
+ "tien": [
+  {
+   "cau": "chuyển 200k cho Nam giúp mình",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "Nếp ơi chuyển giúp mình 200 nghìn cho Lan nhé",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển khoản 500.000đ cho Minh hộ mình",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "gửi 200 ngàn cho Hùng giùm mình với",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển cho Mai hai trăm nghìn tiền vé xem phim",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "mình muốn chuyển 1 triệu 2 cho Tuấn",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "trả Nam 150k tiền cà phê hôm qua giúp mình",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "thanh toán giúp mình 350.000 VNĐ cho quán nướng",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển tiền cho Lan đi, 80k thôi",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "gửi tiền cho Minh giúp mình, 1,5 triệu",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển 200,000 VND sang tài khoản của Hoa",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "trả lại Hoa 60 ngàn tiền taxi",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "bắn cho Lan 100 nghìn nha",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển nốt 300k còn lại cho Phong",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "thanh toán hoá đơn 450k cho cả nhóm giúp mình",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "trả tiền quán lẩu hộ mình 1tr",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển 2 triệu rưỡi cho Vy tiền phòng homestay",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "gửi Tâm năm chục tiền gửi xe",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển qua ví điện tử cho Linh 120k",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "Nếp chuyển 1tr cho Quân được không",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "mình cần chuyển cho Thảo 250.000 đồng, làm giúp mình",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "thanh toán tiền vé cho cả nhóm 4 người, mỗi vé 90k",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "giúp mình trả tiền cho Nam qua app",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "cho Nam 200k đi, chuyển liền giúp mình",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "200K cho Lan, chuyển giúp mình cái",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "Minh cần 100 k, chuyển cho Minh đi",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "momo cho Lan 50k giùm",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển 200000đ cho Khoa",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chuyển cho Hạnh 1.200.000 đồng tiền vé máy bay",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "trả hộ mình nửa triệu cho Tuấn",
+   "nhom": "chuyen"
+  },
+  {
+   "cau": "chia đều 600k cho 3 người",
+   "nhom": "chia"
+  },
+  {
+   "cau": "mỗi người bao nhiêu",
+   "nhom": "chia"
+  },
+  {
+   "cau": "bữa tối hết 1tr2, 4 người thì mỗi người bao nhiêu",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia bill giúp mình: tổng 850 nghìn, 5 người",
+   "nhom": "chia"
+  },
+  {
+   "cau": "tính giúp mỗi người phải trả bao nhiêu tiền tối qua",
+   "nhom": "chia"
+  },
+  {
+   "cau": "Nam ăn 120k, Lan ăn 90k, Minh ăn 150k, tiền ship 30k chia đều, mỗi người trả bao nhiêu",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia tiền phòng 2 triệu cho 4 đứa",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia tiền xăng giúp mình với, đi 3 xe hết 400 ngàn",
+   "nhom": "chia"
+  },
+  {
+   "cau": "quán này 200k một người, 4 người thì mỗi người trả bao nhiêu",
+   "nhom": "chia"
+  },
+  {
+   "cau": "tổng hoá đơn 1.350.000đ, chia 6 thì mỗi người mấy",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia 3 phần tiền karaoke 900k",
+   "nhom": "chia"
+  },
+  {
+   "cau": "Lan không uống bia nên chia lại tiền nhậu 1tr cho 5 người còn lại",
+   "nhom": "chia"
+  },
+  {
+   "cau": "tổng chuyến Vũng Tàu 6 triệu, mỗi đứa phải góp bao nhiêu",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia tiền taxi 180k cho Nam và Lan",
+   "nhom": "chia"
+  },
+  {
+   "cau": "cả nhóm ăn hết hai triệu tư, chia sao cho đều",
+   "nhom": "chia"
+  },
+  {
+   "cau": "tính giúp phần của mình trong bill 700k, mình ăn 2 món",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia theo tỉ lệ Nam 40% Lan 60% cho khoản 500k",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia bill",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia tiền giúp mình",
+   "nhom": "chia"
+  },
+  {
+   "cau": "nhóm 5 người mỗi người góp 100k thì đủ trả bill 450k chưa",
+   "nhom": "chia"
+  },
+  {
+   "cau": "chia đôi tiền phòng 800 ngàn với Vy",
+   "nhom": "chia"
+  },
+  {
+   "cau": "ghi lại khoản 300k ăn tối",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "thêm chi phí xăng",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "thêm chi phí xăng 150 nghìn",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "ghi vào sổ: Nam trả 500k tiền phòng",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "thêm khoản chi 90k tiền trà sữa",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "lưu lại giúp mình chi phí vé xe 320.000đ",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "ghi khoản mới: cà phê 45 ngàn, Lan trả",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "ghi chi tiêu hôm nay: ăn sáng 35k, ăn trưa 60k",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "thêm vào danh sách chi: taxi 120k",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "nhập khoản 2tr tiền homestay vào kèo Đà Lạt",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "sửa khoản ăn tối từ 300k thành 350k",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "xoá khoản 80k tiền gửi xe đi",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "ghi giúp mình là Minh đã ứng 1 triệu cho chuyến đi",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "lưu hoá đơn quán nướng 1.150.000 VND giúp mình",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "theo dõi chi tiêu chuyến Phú Quốc giúp mình",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "ghi lại tiền vé tham quan 150k mỗi người",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "cộng giúp tổng chi của kèo hôm qua",
+   "nhom": "ghi_khoan"
+  },
+  {
+   "cau": "Nam còn thiếu mình 100k",
+   "nhom": "no"
+  },
+  {
+   "cau": "Lan nợ mình 200 nghìn tiền vé, ghi lại giúp",
+   "nhom": "no"
+  },
+  {
+   "cau": "mình nợ Minh bao nhiêu nhỉ",
+   "nhom": "no"
+  },
+  {
+   "cau": "ai đang nợ ai trong nhóm",
+   "nhom": "no"
+  },
+  {
+   "cau": "ai nợ ai",
+   "nhom": "no"
+  },
+  {
+   "cau": "Hùng mượn mình 1 triệu tuần trước, nhớ giúp mình",
+   "nhom": "no"
+  },
+  {
+   "cau": "mình còn nợ Lan 50k, trả luôn giùm",
+   "nhom": "no"
+  },
+  {
+   "cau": "kiểm tra xem Tuấn trả nợ 300k cho mình chưa",
+   "nhom": "no"
+  },
+  {
+   "cau": "Vy mượn 2tr chưa trả, ghi nợ giúp mình",
+   "nhom": "no"
+  },
+  {
+   "cau": "tổng cộng mình đang bị nợ bao nhiêu",
+   "nhom": "no"
+  },
+  {
+   "cau": "trả nợ cho Phong 450 ngàn",
+   "nhom": "no"
+  },
+  {
+   "cau": "xoá nợ 100k của Nam đi, nó trả rồi",
+   "nhom": "no"
+  },
+  {
+   "cau": "Nam trả hộ mình vé xem phim, ghi lại để mình trả sau",
+   "nhom": "no"
+  },
+  {
+   "cau": "mình còn thiếu ai tiền không",
+   "nhom": "no"
+  },
+  {
+   "cau": "Minh ứng trước 500k tiền cọc, giờ mỗi người nợ Minh bao nhiêu",
+   "nhom": "no"
+  },
+  {
+   "cau": "ghi nợ: Lan 70k, Hoa 70k",
+   "nhom": "no"
+  },
+  {
+   "cau": "nó còn nợ mình một triệu hai đó",
+   "nhom": "no"
+  },
+  {
+   "cau": "mình cho Khang vay 3 triệu, theo dõi giúp khi nào nó trả",
+   "nhom": "no"
+  },
+  {
+   "cau": "nhắc Nam đóng tiền",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "ai chưa đóng tiền",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "nhắc cả nhóm chuyển tiền cho mình trước thứ 6",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "nhắc Lan trả mình 200k vào tối nay",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "nhắc mình trả Minh 150 nghìn ngày mai",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "hẹn nhắc mình chuyển tiền phòng cho Tuấn lúc 8h",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "ai chưa chuyển khoản tiền kèo Đà Lạt",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "đòi nợ Hùng giúp mình",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "nhắc mọi người đóng quỹ 100k tháng này",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "nhắc Vy thanh toán tiền vé",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "còn ai chưa góp tiền không",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "gửi lời nhắc Nam trả nợ 300k",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "mai nhắc mình đòi tiền Phong nha",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "nhắc cả nhóm góp tiền quà sinh nhật Mai, mỗi người 50k",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "liệt kê giúp mình ai chưa trả tiền buổi nướng",
+   "nhom": "nhac_dong"
+  },
+  {
+   "cau": "send Nam 200k please",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "transfer 500k to Lan",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "split the bill 3 ways, total 900k",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "how much does each person owe",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "remind Minh to pay me back",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "who hasn't paid yet",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "log a 300k dinner expense",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "Nam owes me 100k, track it",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "pay Lan back for the movie tickets",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "refund Hoa's 200k deposit",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "split giúp mình bill 1tr2 cho 4 người",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "transfer cho Nam 200k đi",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "add expense taxi 80k",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "pay lại Minh 150k nha",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "can you venmo Lan 20 bucks",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "settle up with Tuan for last night",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "who owes who",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "I paid 600k for dinner, split it with Lan and Minh",
+   "nhom": "tieng_anh"
+  },
+  {
+   "cau": "ck cho Nam 200k",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "bank cho nó 50k đi",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "chuyen 200k cho Nam giup minh",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "chia deu 600k cho 3 nguoi",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "Nam con thieu minh 100k",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "nhac Nam dong tien",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "ai chua dong tien",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "ghi lai khoan 300k an toi",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "ck e 50k nhe",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "ck hộ t 100k cho Lan vs",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "ckhoan cho Minh 1tr2",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "trả nợ Tuấn 2 lít",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "bn tiền 1 ng",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "cho xin stk của Nam",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "tinh giup moi nguoi tra bao nhieu",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "bank Lan 1m2 giùm",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "ck lai cho Minh 5 xị",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "chuyen khoan 1 cu cho Hoa",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "mn ai chưa ck thì ck cho mình nha",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "stk Lan la gi de ck",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "ck tien phong cho Vy 2tr5 di",
+   "nhom": "viet_tat"
+  },
+  {
+   "cau": "hoàn lại 200k tiền cọc cho Lan",
+   "nhom": "khac"
+  },
+  {
+   "cau": "đặt cọc 500 nghìn cho homestay giúp mình",
+   "nhom": "khac"
+  },
+  {
+   "cau": "tạo mã QR chuyển khoản 300k cho mình",
+   "nhom": "khac"
+  },
+  {
+   "cau": "gửi số tài khoản của mình cho Nam",
+   "nhom": "khac"
+  },
+  {
+   "cau": "cho mình stk của Minh để chuyển tiền",
+   "nhom": "khac"
+  },
+  {
+   "cau": "quét mã QR này trả tiền giúp mình",
+   "nhom": "khac"
+  },
+  {
+   "cau": "nạp 100k vào ví giúp mình",
+   "nhom": "khac"
+  },
+  {
+   "cau": "xuất mã VietQR để cả nhóm chuyển tiền",
+   "nhom": "khac"
+  },
+  {
+   "cau": "Lan huỷ kèo rồi, trả lại tiền cọc 150k cho Lan",
+   "nhom": "khac"
+  },
+  {
+   "cau": "hoàn tiền vé 2 người cho Tuấn",
+   "nhom": "khac"
+  },
+  {
+   "cau": "tối qua cả nhóm ăn hết bao nhiêu tiền nhỉ",
+   "nhom": "khac"
+  },
+  {
+   "cau": "tuần này mình tiêu hết bao nhiêu cho cà phê rồi",
+   "nhom": "khac"
+  },
+  {
+   "cau": "ai trả tiền quán nướng hôm qua vậy",
+   "nhom": "khac"
+  },
+  {
+   "cau": "lưu số tài khoản ngân hàng của Hoa",
+   "nhom": "khac"
+  },
+  {
+   "cau": "Nam gửi tiền cọc chưa",
+   "nhom": "khac"
+  },
+  {
+   "cau": "mình ứng trước 1tr, thu lại từ mọi người giúp mình",
+   "nhom": "khac"
+  },
+  {
+   "cau": "tạo mã QR 1m2 cho Lan quét",
+   "nhom": "khac"
+  }
+ ],
+ "khong_tien": [
+  {
+   "cau": "chuyển sang màn tạo kèo",
+   "nhom": "dieu_huong",
+   "ly_do": "«chuyển» là điều hướng/đổi kèo, không có tiền; ý định app_help/explain_screen/plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chuyển chặng 2 lên trước chặng 1",
+   "nhom": "dieu_huong",
+   "ly_do": "«chuyển» là điều hướng/đổi kèo, không có tiền; ý định app_help/explain_screen/plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chuyển điểm đến sang Đà Nẵng giúp mình",
+   "nhom": "dieu_huong",
+   "ly_do": "«chuyển» là điều hướng/đổi kèo, không có tiền; ý định app_help/explain_screen/plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chuyen sang tab kham pha",
+   "nhom": "dieu_huong",
+   "ly_do": "«chuyển» là điều hướng/đổi kèo, không có tiền; ý định app_help/explain_screen/plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "làm sao chuyển giao diện sang chế độ tối",
+   "nhom": "dieu_huong",
+   "ly_do": "«chuyển» là điều hướng/đổi kèo, không có tiền; ý định app_help/explain_screen/plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chuyển qua xem lịch trình hôm qua",
+   "nhom": "dieu_huong",
+   "ly_do": "«chuyển» là điều hướng/đổi kèo, không có tiền; ý định app_help/explain_screen/plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "switch sang màn khám phá giúp mình",
+   "nhom": "dieu_huong",
+   "ly_do": "«chuyển» là điều hướng/đổi kèo, không có tiền; ý định app_help/explain_screen/plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "đổi ngôn ngữ app sang tiếng Anh ở đâu",
+   "nhom": "dieu_huong",
+   "ly_do": "«chuyển» là điều hướng/đổi kèo, không có tiền; ý định app_help/explain_screen/plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chuyển kèo tối nay sang thứ 7 được không",
+   "nhom": "dieu_huong",
+   "ly_do": "Đổi ngày kèo, không có tiền. Nếp không ghi kèo (01-harness-agent.md:303) nhưng đó là luật khác, không phải 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "gửi mình vài gợi ý quán",
+   "nhom": "gui_goi_y",
+   "ly_do": "«gửi» là gửi gợi ý/lịch trình: find_places hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không có tiền"
+  },
+  {
+   "cau": "gửi mình 3 quán cà phê yên tĩnh ở quận 3",
+   "nhom": "gui_goi_y",
+   "ly_do": "«gửi» là gửi gợi ý/lịch trình: find_places hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không có tiền"
+  },
+  {
+   "cau": "gui minh vai quan an dem",
+   "nhom": "gui_goi_y",
+   "ly_do": "«gửi» là gửi gợi ý/lịch trình: find_places hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không có tiền"
+  },
+  {
+   "cau": "send me a few brunch spots near the river",
+   "nhom": "gui_goi_y",
+   "ly_do": "«gửi» là gửi gợi ý/lịch trình: find_places hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không có tiền"
+  },
+  {
+   "cau": "gửi lại danh sách quán lúc nãy",
+   "nhom": "gui_goi_y",
+   "ly_do": "«gửi» là gửi gợi ý/lịch trình: find_places hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không có tiền"
+  },
+  {
+   "cau": "gửi mình lịch trình đi Hội An 2 ngày",
+   "nhom": "gui_goi_y",
+   "ly_do": "«gửi» là gửi gợi ý/lịch trình: find_places hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không có tiền"
+  },
+  {
+   "cau": "chia sẻ tờ hẹn cho nhóm",
+   "nhom": "chia_se",
+   "ly_do": "«chia» là chia sẻ/chia thời gian/chia nhóm, không chia tiền; không có số tiền nào; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chia nhóm 8 người thành 2 xe",
+   "nhom": "chia_se",
+   "ly_do": "«chia» là chia sẻ/chia thời gian/chia nhóm, không chia tiền; không có số tiền nào; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chia lịch trình Đà Lạt thành 3 ngày",
+   "nhom": "chia_se",
+   "ly_do": "«chia» là chia sẻ/chia thời gian/chia nhóm, không chia tiền; không có số tiền nào; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chia đều 3 tiếng cho 3 quán",
+   "nhom": "chia_se",
+   "ly_do": "«chia» là chia sẻ/chia thời gian/chia nhóm, không chia tiền; không có số tiền nào; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "share tờ hẹn cho Lan xem",
+   "nhom": "chia_se",
+   "ly_do": "«chia» là chia sẻ/chia thời gian/chia nhóm, không chia tiền; không có số tiền nào; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chia đôi thời gian giữa cà phê và đi dạo",
+   "nhom": "chia_se",
+   "ly_do": "«chia» là chia sẻ/chia thời gian/chia nhóm, không chia tiền; không có số tiền nào; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "làm sao chia sẻ kèo qua link",
+   "nhom": "chia_se",
+   "ly_do": "«chia» là chia sẻ/chia thời gian/chia nhóm, không chia tiền; không có số tiền nào; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chia chặng ra cho dễ đi",
+   "nhom": "chia_se",
+   "ly_do": "«chia» là chia sẻ/chia thời gian/chia nhóm, không chia tiền; không có số tiền nào; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán này tầm 200k một người có đắt không",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "menu quán này món rẻ nhất bao nhiêu",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "cà phê muối ở đây giá bao nhiêu một ly",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "buffet 299k ở quán này có đáng không",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "mức giá quán này thuộc loại rẻ hay sang",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quan nay gia bao nhieu 1 nguoi",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "is this place expensive? around 300k per person",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "vé vào cổng bảo tàng này bao nhiêu tiền",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chỗ nào vào cửa miễn phí ở Hà Nội",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán này 1tr2 một set cho 2 người có hợp lý không",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "trà sữa ở đây có món nào dưới 40k không",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Hỏi mức giá/giá món của một nơi: «giá bằng chữ» thuộc hồ sơ quán (04-rag-va-nap-du-lieu.md:175), giá trả lời phải khớp ledger (04-rag-va-nap-du-lieu.md:252); ý định find_places (01-harness-agent.md:191-194); không có hành động chuyển/ghi/chia/đòi tiền giữa người, nên ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "tìm quán lẩu dưới 150k một người ở quận 3",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "ngân sách mỗi người 300 nghìn thì tối nay đi ăn đâu",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "có quán nướng nào tầm 1tr cho cả nhóm 5 người không",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "gợi ý quán ăn sáng dưới 50 ngàn",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán nào bình dân, tầm 100k đổ lại",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "tìm chỗ hẹn hò lãng mạn, mỗi người khoảng 500.000đ",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "cheap eats under 100k near the old quarter",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "cả nhóm 4 người, mỗi người tầm 200k thì nên đi quán nào",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "mình không có nhiều tiền đâu, gợi ý chỗ đi chơi rẻ thôi",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "đi chơi mà tiết kiệm tiền thì nên đi đâu",
+   "nhom": "gia_ngan_sach",
+   "ly_do": "Ngân sách để chọn chỗ là slot ngan_sach_moi_nguoi_vnd của Understand (01-harness-agent.md:175, 04-rag-va-nap-du-lieu.md:212) và «trần ngân sách» là lọc cứng của truy hồi quán (04-rag-va-nap-du-lieu.md:239); ý định find_places, không phải yêu cầu tiền theo 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "ghi lại giúp mình ý tưởng đi Đà Lạt",
+   "nhom": "ghi_nho",
+   "ly_do": "«ghi/thêm/nhớ» là ý định remember hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp); 05-nep-tai-cho-tri-nho-nhac.md:126); fact không chứa tiền (05-nep-tai-cho-tri-nho-nhac.md:214)"
+  },
+  {
+   "cau": "nhớ giúp mình là mình thích ngồi ngoài trời",
+   "nhom": "ghi_nho",
+   "ly_do": "«ghi/thêm/nhớ» là ý định remember hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp); 05-nep-tai-cho-tri-nho-nhac.md:126); fact không chứa tiền (05-nep-tai-cho-tri-nho-nhac.md:214)"
+  },
+  {
+   "cau": "ghi chú: kèo sau thử quán bún chả ở phố cổ",
+   "nhom": "ghi_nho",
+   "ly_do": "«ghi/thêm/nhớ» là ý định remember hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp); 05-nep-tai-cho-tri-nho-nhac.md:126); fact không chứa tiền (05-nep-tai-cho-tri-nho-nhac.md:214)"
+  },
+  {
+   "cau": "ghi nhớ là mình hay đi cà phê buổi sáng",
+   "nhom": "ghi_nho",
+   "ly_do": "«ghi/thêm/nhớ» là ý định remember hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp); 05-nep-tai-cho-tri-nho-nhac.md:126); fact không chứa tiền (05-nep-tai-cho-tri-nho-nhac.md:214)"
+  },
+  {
+   "cau": "note lại giúp mình: cuối tuần đi Hồ Tây",
+   "nhom": "ghi_nho",
+   "ly_do": "«ghi/thêm/nhớ» là ý định remember hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp); 05-nep-tai-cho-tri-nho-nhac.md:126); fact không chứa tiền (05-nep-tai-cho-tri-nho-nhac.md:214)"
+  },
+  {
+   "cau": "thêm quán này vào danh sách muốn đi",
+   "nhom": "ghi_nho",
+   "ly_do": "«ghi/thêm/nhớ» là ý định remember hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp); 05-nep-tai-cho-tri-nho-nhac.md:126); fact không chứa tiền (05-nep-tai-cho-tri-nho-nhac.md:214)"
+  },
+  {
+   "cau": "thêm chặng cà phê sau bữa tối",
+   "nhom": "ghi_nho",
+   "ly_do": "«ghi/thêm/nhớ» là ý định remember hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp); 05-nep-tai-cho-tri-nho-nhac.md:126); fact không chứa tiền (05-nep-tai-cho-tri-nho-nhac.md:214)"
+  },
+  {
+   "cau": "ghi lai giup minh la minh thich quan yen tinh",
+   "nhom": "ghi_nho",
+   "ly_do": "«ghi/thêm/nhớ» là ý định remember hoặc plan_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp); 05-nep-tai-cho-tri-nho-nhac.md:126); fact không chứa tiền (05-nep-tai-cho-tri-nho-nhac.md:214)"
+  },
+  {
+   "cau": "nhắc mình tối nay đi xem phim",
+   "nhom": "nhac_viec",
+   "ly_do": "«nhắc» cho việc của chính người hỏi: ý định remind/set_reminder (05-nep-tai-cho-tri-nho-nhac.md:128), không có tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "nhắc mình 7h mai có kèo cà phê",
+   "nhom": "nhac_viec",
+   "ly_do": "«nhắc» cho việc của chính người hỏi: ý định remind/set_reminder (05-nep-tai-cho-tri-nho-nhac.md:128), không có tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "nhac minh chieu nay di xem trien lam",
+   "nhom": "nhac_viec",
+   "ly_do": "«nhắc» cho việc của chính người hỏi: ý định remind/set_reminder (05-nep-tai-cho-tri-nho-nhac.md:128), không có tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "remind me about the outing on Saturday",
+   "nhom": "nhac_viec",
+   "ly_do": "«nhắc» cho việc của chính người hỏi: ý định remind/set_reminder (05-nep-tai-cho-tri-nho-nhac.md:128), không có tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "nhắc mình mang áo mưa khi đi Đà Lạt",
+   "nhom": "nhac_viec",
+   "ly_do": "«nhắc» cho việc của chính người hỏi: ý định remind/set_reminder (05-nep-tai-cho-tri-nho-nhac.md:128), không có tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "đặt nhắc 30 phút trước giờ hẹn",
+   "nhom": "nhac_viec",
+   "ly_do": "«nhắc» cho việc của chính người hỏi: ý định remind/set_reminder (05-nep-tai-cho-tri-nho-nhac.md:128), không có tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "nhắc mình đóng cửa sổ trước khi đi",
+   "nhom": "nhac_viec",
+   "ly_do": "«nhắc» cho việc của chính người hỏi: ý định remind/set_reminder (05-nep-tai-cho-tri-nho-nhac.md:128), không có tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "nhắc lại giúp mình tên quán lẩu hôm trước",
+   "nhom": "nhac_viec",
+   "ly_do": "«nhắc lại» là hỏi lại thông tin (recall_memory, 05-nep-tai-cho-tri-nho-nhac.md:125), không có tiền"
+  },
+  {
+   "cau": "trả lời giúp mình câu này",
+   "nhom": "tra_loi",
+   "ly_do": "«trả» là trả lời/trả phòng/trả xe, không phải trả tiền; không có số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "trả phòng khách sạn lúc mấy giờ thì hợp lý",
+   "nhom": "tra_loi",
+   "ly_do": "«trả» là trả lời/trả phòng/trả xe, không phải trả tiền; không có số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "trả xe đạp ở đâu gần Hồ Gươm",
+   "nhom": "tra_loi",
+   "ly_do": "«trả» là trả lời/trả phòng/trả xe, không phải trả tiền; không có số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "trả lời ngắn thôi nhé",
+   "nhom": "tra_loi",
+   "ly_do": "«trả» là trả lời/trả phòng/trả xe, không phải trả tiền; không có số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "mình nên trả lời lời mời kèo thế nào",
+   "nhom": "tra_loi",
+   "ly_do": "«trả» là trả lời/trả phòng/trả xe, không phải trả tiền; không có số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "ck là gì",
+   "nhom": "hoi_nghia",
+   "ly_do": "Hỏi nghĩa của một từ: smalltalk/app_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không yêu cầu Nếp làm gì với tiền, đúng mẫu «ck là gì» của đề"
+  },
+  {
+   "cau": "stk là viết tắt của gì",
+   "nhom": "hoi_nghia",
+   "ly_do": "Hỏi nghĩa của một từ: smalltalk/app_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không yêu cầu Nếp làm gì với tiền, đúng mẫu «ck là gì» của đề"
+  },
+  {
+   "cau": "\"bank\" trong tiếng lóng nghĩa là gì",
+   "nhom": "hoi_nghia",
+   "ly_do": "Hỏi nghĩa của một từ: smalltalk/app_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không yêu cầu Nếp làm gì với tiền, đúng mẫu «ck là gì» của đề"
+  },
+  {
+   "cau": "chữ \"kèo\" trong app nghĩa là gì",
+   "nhom": "hoi_nghia",
+   "ly_do": "Hỏi nghĩa của một từ: smalltalk/app_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không yêu cầu Nếp làm gì với tiền, đúng mẫu «ck là gì» của đề"
+  },
+  {
+   "cau": "\"tờ hẹn\" là gì",
+   "nhom": "hoi_nghia",
+   "ly_do": "Hỏi nghĩa của một từ: smalltalk/app_help (01-harness-agent.md:191-194 (tập ý định đóng của Nếp)); không yêu cầu Nếp làm gì với tiền, đúng mẫu «ck là gì» của đề"
+  },
+  {
+   "cau": "vk ck mình muốn đi hẹn hò tối nay, gợi ý chỗ lãng mạn",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền). «ck» ở đây là «chồng» (teencode), không phải chuyển khoản"
+  },
+  {
+   "cau": "ck mình thích ăn cay, có quán lẩu nào ngon không",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền). «ck» ở đây là «chồng» (teencode), không phải chuyển khoản"
+  },
+  {
+   "cau": "mình đang nợ deadline, gợi ý quán cà phê yên tĩnh để làm việc",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền). «nợ» nghĩa bóng, không có số tiền"
+  },
+  {
+   "cau": "mình nợ Lan một buổi xem phim, gợi ý rạp gần quận 1",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền). «nợ» nghĩa bóng, không có số tiền"
+  },
+  {
+   "cau": "cuối tuần đi Tiền Giang chơi có gì hay",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán cà phê nào có tiền sảnh rộng để chụp ảnh",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "đánh giá của quán này ra sao",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "tiêu chí chọn quán của mình là yên tĩnh và có ổ cắm",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán này đóng cửa lúc mấy giờ",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán cà phê triệu view ở Hà Nội",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "đổi tên tài khoản của mình ở đâu",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "mã QR mời vào nhóm nằm ở đâu",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "tính giúp mình đi xe máy từ quận 1 sang quận 7 mất bao lâu",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "thu gọn danh sách quán còn 3 cái thôi",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "góp ý giúp mình lịch trình này",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quỹ thời gian cuối tuần của mình ít, gợi ý kèo ngắn",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "đóng góp ý kiến cho app ở đâu",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "mùa thu Hà Nội nên đi đâu",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "cho mình ví dụ về một kèo cuối tuần",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "nạp năng lượng buổi sáng ở quán nào ngon",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "hoàn thành chặng 1 rồi, chặng tiếp theo đi đâu",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán này có menu QR không",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán này có đặt bàn cho 6 người được không",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "phố này có hàng trăm quán, lọc giúp mình vài quán yên tĩnh",
+   "nhom": "tu_trung",
+   "ly_do": "Trùng chữ với câu tiền nhưng nghĩa khác; không có hành động tiền giữa người; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "tìm quán cách mình dưới 500m",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán nào mở tới 2h sáng ở quận 10",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "đi 5 người lúc 7h30 tối thứ 6, gợi ý chỗ ngồi rộng",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán cà phê có 4.5 sao trở lên gần hồ",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "top 10 quán phở ngon nhất Hà Nội",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "đi Đà Lạt 3 ngày 2 đêm nên đi đâu",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quãng đường 12km đi xe máy mất bao lâu",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "nhóm 20 người thì quán nào đủ chỗ",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "chỉ đi được 2 tiếng thôi, gợi ý 2 quán gần nhau",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  },
+  {
+   "cau": "quán cách đây 1,2km hay 2km thì đi bộ được không",
+   "nhom": "so_khong_tien",
+   "ly_do": "Có số nhưng là khoảng cách/giờ/số người/điểm sao, không phải số tiền; ngoài 01-harness-agent.md:161-163 (luật tiền: hành động tiền cạnh số tiền; Nếp từ chối mọi yêu cầu tiền)"
+  }
+ ]
+}

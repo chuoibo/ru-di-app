@@ -18,6 +18,10 @@ var revocation string
 //go:embed schema_erasure.sql
 var erasure string
 
+// SchemaFiles returns the migrations the binary embeds, in order, so the AI
+// trigger gate (internal/aigate) reads the same bytes this package installs.
+func SchemaFiles() []string { return []string{schema, revocation, erasure} }
+
 // Migrate is an explicit operator action, never a side effect of a request.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	tx, err := pool.Begin(ctx)

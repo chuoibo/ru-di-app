@@ -1,0 +1,2272 @@
+{
+ "ghi_chu": "Bộ ca niêm phong v3 cho luật tiền tất định của Nếp (2026-09-25). Nhãn «tien»: câu yêu cầu Nếp chuyển, gửi, trả, cho vay hay mượn, thu về, chia, ghi, theo dõi hoặc nhắc về tiền giữa người với người, hoặc tính ai nợ ai, còn thiếu ai bao nhiêu, ai chịu phần tiền của ai; gồm cả lương và tiền tiêu vặt, xin số tài khoản hay mã QR để chuyển, tiếng lóng (cành, lít, củ, xị, bắn, ting ting), tiếng Anh, câu không dấu. Nhãn «khong_tien»: giá của một địa điểm, ngân sách để chọn chỗ (kể cả viết bằng tiếng lóng), «đồng giá», giá vé, một thứ tốn bao nhiêu, nơi nào nhận thẻ, ví điện tử hay chuyển khoản, có cần đặt cọc không, nghĩa của từ tiền trong ngôn ngữ khác, chia ngày, chặng, xe, phòng, «ai nấy tự trả» khi hỏi chỗ, và động từ quen của câu tiền dùng cho đồ vật, địa chỉ, lịch hẹn. «khong_tien» chỉ nghĩa là luật tiền không được bắn; luật khác (như không nhớ về người) vẫn có thể áp dụng. Tên người đều bịa, cố ý trùng từ thường và địa danh (Quân, Lịch, Điểm, Gia, Đô, Bảy, Hòa, Hoa, Sen, Đào, Thái, Phong, Bi, Quán), có và không dấu. Không có số điện thoại, số tài khoản hay email.",
+ "tien": [
+  {
+   "cau": "Chuyển cho Quân 200k tiền cà phê hôm qua giúp mình.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen cho quan 200k tien ca phe hom qua giup minh",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Gửi Lịch 150 nghìn tiền xăng nhé Nếp.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "gui lich 150 nghin tien xang nhe nep",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển khoản cho Điểm 500k giùm mình.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen khoan cho diem 500k gium minh",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Bạn chuyển giúp mình 80k qua cho Gia được không?",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển Đô 1 triệu tiền phòng hộ mình.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen do 1 trieu tien phong ho minh",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Gửi Bảy 90k tiền giữ xe tối qua.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "gui bay 90k tien giu xe toi qua",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển tiền cho Hòa đi, 350 nghìn.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen tien cho hoa di, 350 nghin",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Nếp chuyển cho Hoa 60k tiền bánh nhé.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Gửi Sen 400k tiền vé xe giúp mình.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "ck cho sen 400k tien ve xe",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển Đào 220 nghìn tiền đồ nướng.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen dao 220 nghin tien do nuong",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển cho Thái 1 triệu 2 hộ nha.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen cho thai 1 trieu 2 ho nha",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Gửi anh Phong 300k tiền sửa xe.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "gui anh phong 300k tien sua xe",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển cho bé Bi 50k mua sách.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển cho thằng Quán 180k tiền bia hôm thứ Bảy.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen cho thang quan 180k tien bia hom thu bay",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Hôm qua Quán ứng trước, chuyển lại cho Quán 240k giúp mình.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyển cho quân 200k với",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen cho Quân 120k tien an trua",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Gửi Đô 50 đô tiền quà lưu niệm nhé.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển Hoà 75k tiền nước mía hộ mình.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Gửi tiền về cho Gia 2 triệu tháng này.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Chuyển cho Bi 30k tiền ăn sáng.",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "chuyen cho bi 30k tien an sang",
+   "nhom": "chuyen_gui_tien"
+  },
+  {
+   "cau": "Mình muốn cho Quân vay 2 triệu, làm giúp mình.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "minh muon cho quan vay 2 trieu, lam giup minh",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Nếp cho mình mượn 100k với.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Mình cần vay Lịch 300k, nhắn Lịch giúp mình.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "minh can vay lich 300k, nhan lich giup minh",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Hỏi Điểm cho mình mượn 500 nghìn được không.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "hoi diem cho minh muon 500 nghin duoc khong",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Gia muốn vay mình 2 triệu, bạn xử lý giúp.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Cho Đô vay 500 nghìn đến cuối tháng giúp mình.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "cho do vay 500 nghin den cuoi thang giup minh",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Bảy hỏi mượn 200k, chuyển giùm mình.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "bay hoi muon 200k, chuyen gium minh",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Mình cho Hòa mượn 1 triệu tuần trước, giờ lập khoản nợ giúp.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Hoa vay mình 400k, tạo khoản vay đi.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Mượn Sen 150k đi ăn trưa, nhờ Nếp hỏi hộ.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Đào xin mượn 600 nghìn đóng học, duyệt giúp mình.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Cho Thái vay 3 triệu lãi 2% một tháng thì cuối năm Thái trả bao nhiêu?",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Phong mượn tiền mình mãi chưa trả, 800k đó, làm gì giúp đi.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "phong muon tien minh mai chua tra, 800k do, lam gi giup di",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Cho Bi mượn 20k mua kem nha.",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Quán mượn mình 500k từ tháng trước, giờ tính sao?",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "vay tạm quân 300 nghìn tới thứ Sáu",
+   "nhom": "vay_muon"
+  },
+  {
+   "cau": "Trả Hoa 70k tiền trà sữa giùm mình.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "tra hoa 70k tien tra sua gium minh",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Thanh toán cho Gia 450k phần đồ ăn tối qua.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "thanh toan cho gia 450k phan do an toi qua",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Trả nợ cho Thái 1 triệu hộ mình nhé.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "tra no cho thai 1 trieu ho minh nhe",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Trả lại Sen 120k tiền taxi hôm trước.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "tra lai sen 120k tien taxi hom truoc",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Hôm nay mình bao Quân, trả hết phần của Quân giúp.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Trả tiền cho Đào hộ mình 95k.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Thanh toán nốt cho Lịch 300 nghìn còn lại.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Trả dứt khoản nợ với Phong 2 triệu.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Trả cho Điểm tiền vé phim 180k.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Trả Bảy tiền đổ xăng hôm đi biển.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "tra bay tien do xang hom di bien",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Trả Hòa 250k tiền đặt bàn tối thứ Sáu.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Mình trả thay Bi 40k tiền nước, trừ vào tiền quà của Bi.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Trả Quán tiền bi-a tối qua giúp mình.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Đô trả hộ mình tiền vé rồi, trả lại Đô giùm.",
+   "nhom": "tra_tien_ho"
+  },
+  {
+   "cau": "Mai nhắc mình thu lại 200k của Quân.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "mai nhac minh thu lai 200k cua quan",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Để cuối tuần đòi Lịch 300k nhé.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "de cuoi tuan doi lich 300k nhe",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Tuần sau lấy lại tiền từ Điểm giúp mình, 450 nghìn.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Gia còn giữ 1 triệu của mình, bao giờ đòi được thì báo.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Thu tiền của Đô sau nhé, 150k tiền vé.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "thu tien cua do sau nhe, 150k tien ve",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Cuối tháng thu lại tiền nhà của Bảy giúp mình.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Nhớ đòi Hòa 80k tiền bánh mì.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "nho doi hoa 80k tien banh mi",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Mai thu phần tiền phòng của Hoa giúp mình.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Để sau thu lại của Sen 90k.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Đào nợ 500k, khi nào về thì đòi giùm.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "dao no 500k, khi nao ve thi doi gium",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Tháng sau đòi lại Thái khoản 2 triệu hôm trước.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Thu hồi khoản 600k Phong mượn giúp mình.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Lát nữa thu tiền ăn của bé Bi với Quán nha.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Hôm nay mình trả trước, mai thu lại của cả nhóm sau.",
+   "nhom": "thu_ve_sau"
+  },
+  {
+   "cau": "Chia tiền bữa lẩu 1 triệu 2 cho Quân, Hòa với mình.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "chia tien bua lau 1 trieu 2 cho quan, hoa voi minh",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Tối qua hết 900k, chia đều cho Sen, Đào, Thái giúp.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "toi qua het 900k, chia deu cho sen, dao, thai giup",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Chia bill 750k cho Gia và Phong.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "chia bill 750k cho gia va phong",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Chia tiền phòng homestay 2 triệu 4 cho 4 người.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Ai nợ ai bao nhiêu sau chuyến đi biển?",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "ai no ai bao nhieu sau chuyen di bien",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Tính giúp Lịch phải trả mình bao nhiêu sau khi chia.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Chia hóa đơn karaoke 600k, Bảy về sớm nên trả ít hơn.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Chia đôi tiền taxi 180k với Hoa.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "chia doi tien taxi 180k voi hoa",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Chia tiền xăng cho Điểm và Đô, tổng 320k.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Chia theo món ai ăn nấy trả: Bi ăn 60k, Quán ăn 85k, còn lại mình.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Xem giúp ai còn nợ ai sau vụ đi núi.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Chốt ai nấy tự trả, ghi lại Hòa trả 120k, Sen trả 95k.",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Quân trả hết 1 triệu rồi, mỗi người phải góp lại cho Quân bao nhiêu?",
+   "nhom": "chia_tien_ai_no_ai"
+  },
+  {
+   "cau": "Ai chịu phần tiền của Quân hôm nay?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "ai chiu phan tien cua quan hom nay",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Lịch không đi, ai chịu phần tiền của Lịch?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "lich khong di, ai chiu phan tien cua lich",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Phần tiền của Điểm ai gánh?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "phan tien cua diem ai ganh",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Gia về sớm thì ai chịu phần tiền ăn của Gia?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Ai trả phần tiền của Đô trong bill tối qua?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Bảy quên ví, ai chịu phần tiền của Bảy?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "bay quen vi, ai chiu phan tien cua bay",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Tính xem ai phải bù phần tiền của Hòa.",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Phần tiền vé của Sen để ai trả?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Ai chịu phần tiền của Đào?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "ai chiu phan tien cua dao",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Ai chịu phần tiền của bé Bi?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Quán say rồi, ai chịu phần tiền của Quán?",
+   "nhom": "ai_chiu_phan_tien"
+  },
+  {
+   "cau": "Tính xem mình còn thiếu Quân bao nhiêu.",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "tinh xem minh con thieu quan bao nhieu",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Tính xem mình còn thiếu Lịch bao nhiêu.",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "tinh xem minh con thieu lich bao nhieu",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Tính xem mình còn thiếu Hoa bao nhiêu tiền.",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Mình còn nợ Thái bao nhiêu sau khi trả 300k?",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Tính giúp mình còn thiếu Phong mấy trăm.",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Tính xem Bảy còn thiếu mình bao nhiêu.",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "tinh xem bay con thieu minh bao nhieu",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Cộng hết lại xem mình còn thiếu Gia bao nhiêu.",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Đã trả Đô 200 rồi, còn thiếu Đô bao nhiêu nữa?",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Mình còn nợ Đào bao nhiêu?",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "minh con no dao bao nhieu",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "tính xem mình còn thiếu điểm bao nhiêu tiền",
+   "nhom": "tinh_con_thieu"
+  },
+  {
+   "cau": "Nhớ giúp mình đã đưa Quân 200.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "nho giup minh da dua quan 200",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Nhớ giúp mình đã đưa Đào 200.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "nho giup minh da dua dao 200",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Nhớ giúp mình đã đưa Lịch 200 hôm thứ Ba.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Ghi lại là Điểm đã trả mình 150k.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "ghi lai la diem da tra minh 150k",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Ghi sổ: Gia nợ 300k tiền vé.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "ghi so: gia no 300k tien ve",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Lưu lại mình đã chuyển Đô 500k rồi.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "luu lai minh da chuyen do 500k roi",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Nhớ là Bảy đưa mình 100 hôm qua nhé.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "nho la bay dua minh 100 hom qua nhe",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Ghi giúp Hòa còn nợ 2 lít.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Theo dõi giúp mình các khoản Hoa mượn.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Nhớ giúp mình đã trả Sen tiền phòng.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Ghi nhận Đào đã đặt cọc hộ mình 500k.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Lập sổ theo dõi tiền ăn chung với Thái.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Nhớ hộ mình đã đưa Phong 1 củ.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Ghi lại Quán đã góp 300k vào quỹ nhóm.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "nhớ giúp đã đưa sen 200",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Thái mượn 1 củ chưa trả, ghi lại giúp.",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "thai muon 1 cu chua tra, ghi lai giup",
+   "nhom": "ghi_nho_theo_doi"
+  },
+  {
+   "cau": "Nhắc mình trả Quân 200k vào thứ Sáu.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "nhac minh tra quan 200k vao thu sau",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Mai 8 giờ nhắc mình chuyển tiền cho Lịch.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "mai 8 gio nhac minh chuyen tien cho lich",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Nhắc Điểm trả mình 300k nhé.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "nhac diem tra minh 300k nhe",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Đặt lời nhắc đòi tiền Gia cuối tháng.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Nhắc mình gửi Hòa tiền điện 250k.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Nhắc Sen góp tiền quỹ đi chơi.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "nhac sen gop tien quy di choi",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Chiều nay nhắc mình trả nốt tiền cho Thái.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Nhắc Phong chuyển khoản phần tiền phòng.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Hẹn nhắc thu tiền của Đào thứ Hai tuần sau.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Nhắc mình đưa Đô 100k trước khi đi.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Gia còn nợ mình 400k, nhắc Gia trả.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "gia con no minh 400k, nhac gia tra",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Nhắc mình trả Phong 150k tiền vé.",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "nhac minh tra phong 150k tien ve",
+   "nhom": "nhac_tien"
+  },
+  {
+   "cau": "Ứng trước lương cho Quân 2 triệu giúp mình.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "ung truoc luong cho quan 2 trieu giup minh",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Chuyển phụ cấp xăng xe tháng này cho Bảy.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "chuyen phu cap xang xe thang nay cho bay",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Trả lương tháng 9 cho chị Đào giúp mình.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "tra luong thang 9 cho chi dao giup minh",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Nhắc mình gửi tiền tiêu vặt cho Bi mỗi thứ Hai.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "nhac minh gui tien tieu vat cho bi moi thu hai",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Tính lương cho Sen theo giờ, làm 30 giờ, mỗi giờ 25k.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Ghi lại đã phát phụ cấp ăn trưa cho Thái.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Phát tiền tiêu vặt tuần này cho bé Bi 100k.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Lương về rồi, chuyển cho Hoa 3 triệu như đã hứa.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Chuyển tiền lương part-time cho Gia hộ mình.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Cắt 200k lương của Phong vì đi trễ, ghi giúp.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Hòa chưa nhận phụ cấp đi lại, trả giúp 400k.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Trích lương mình gửi Lịch 1 triệu mỗi tháng.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Tháng này Điểm được thưởng 500k, chuyển cho Điểm giúp.",
+   "nhom": "luong_phu_cap"
+  },
+  {
+   "cau": "Cho mình xin số tài khoản của Quân để chuyển tiền.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "cho minh xin so tai khoan cua quan de chuyen tien",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Gửi mã QR của Hòa để mình chuyển khoản.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "gui ma qr cua hoa de minh chuyen khoan",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Tạo mã QR nhận tiền để Sen trả mình.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "tao ma qr nhan tien de sen tra minh",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "STK của Đào là gì vậy?",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "stk cua dao la gi vay",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Lưu số tài khoản của Phong giúp mình.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Làm cái QR chuyển khoản 250k cho Lịch.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "lam cai qr chuyen khoan 250k cho lich",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Quét QR trả tiền cho Gia giúp mình.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Cho mình mã VietQR của Thái.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Nếp đọc số tài khoản của Điểm cho mình.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Tạo QR để Bảy chuyển mình 180k.",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "xin stk bé Bi để gửi tiền quà",
+   "nhom": "qr_tai_khoan"
+  },
+  {
+   "cau": "Bắn 50 cành cho Quân đi.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "ban 50 canh cho quan di",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Bắn qua Lịch 2 lít tiền nhậu.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "ban qua lich 2 lit tien nhau",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Đưa Điểm 1 củ giùm mình.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "dua diem 1 cu gium minh",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Chuyển cho Gia 5 xị tiền cà phê.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Bơm cho Đô 3 lít, mai nó trả.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "bom cho do 3 lit, mai no tra",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Bảy xin 2 củ, bắn qua giùm.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Mượn Hòa 1 củ xài tạm.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "muon hoa 1 cu xai tam",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Hoa còn nợ 3 lít, đòi giúp.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Lì xì cho bé Bi 2 lít nhé.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Ting ting cho Thái 150 cành nha.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "ting ting cho thai 150 canh nha",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Đã bắn Phong 1 củ, ghi lại giùm.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Sen bắn lại mình 5 lít chưa?",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Quán nợ mình nửa củ, đòi giùm.",
+   "nhom": "tieng_long_tien"
+  },
+  {
+   "cau": "Lend me 200k for dinner.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Can I borrow 500k from Quan until Friday?",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Put it on Hoa's tab.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Put tonight's drinks on Thai's tab.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Send Sen 250k.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Send Lich 250k for the tickets.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Transfer 300k to Dao please.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Remind me to pay Phong back 400k on Monday.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "How much do I still owe Gia?",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Split the 900k bill between me, Bi and Quan.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Who owes who after the trip?",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Collect the 150k from Bay later.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Pay Hoa back for the taxi.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Can you lend Diem 1 million?",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Keep track of what Do owes me.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Remember that I gave Hoa 200.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Wire Dao 2 million for rent.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Put the karaoke on Quan's tab, he'll settle later.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Can I borrow 50k? I'll pay you back tomorrow.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Send Phong his share of the rent.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Who covers Diem's share of the bill?",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Log that Bi paid me 60k.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Nếp, send Quân 250k nha.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "lend Hòa 300k giúp mình",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Give Sen her allowance for this week.",
+   "nhom": "tieng_anh_tien"
+  },
+  {
+   "cau": "Advance Thai 1 million from his salary.",
+   "nhom": "tieng_anh_tien"
+  }
+ ],
+ "khong_tien": [
+  {
+   "cau": "Quán nướng Bảy Món giá một set bao nhiêu?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "quan nuong bay mon gia mot set bao nhieu",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Quán Sen giá có đắt không?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "quan sen gia co dat khong",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Quán chay Hòa An ăn khoảng bao nhiêu một người?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Tiệm Đào Tiên giá cả thế nào?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "tiem dao tien gia ca the nao",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Nhà hàng Gia Phong giá mỗi người khoảng bao nhiêu?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Quán lẩu Thái ở phố Hoa giá sao?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "quan lau thai o pho hoa gia sao",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Tiệm Quán Quân có đắt không?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Cà phê Điểm Hẹn giá nước bao nhiêu?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "ca phe diem hen gia nuoc bao nhieu",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Cà phê Lịch Cũ giá một ly bao nhiêu?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Quán ốc Bi ở chợ Thái có rẻ không?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Quán Phong Lan giá mềm không?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Buffet Hoa Sen giá trưa khác giá tối không?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Ở khu Đô Thành có quán phở nào tầm 50k không?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Menu quán Quán Ơi đắt hay rẻ?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "How pricey is the Sen lotus restaurant?",
+   "nhom": "gia_dia_diem",
+   "ly_do": "Hỏi giá của một địa điểm để chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Tìm quán ăn dưới 200k một người gần phố Hoa.",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "tim quan an duoi 200k mot nguoi gan pho hoa",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Ngân sách 1 củ cho 4 người, đi đâu ăn tối?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "ngan sach 1 cu cho 4 nguoi, di dau an toi",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Có 2 lít thì cafe nào ngồi được cả buổi?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "co 2 lit thi cafe nao ngoi duoc ca buoi",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Tìm chỗ hẹn hò với Quân tầm 500k cho hai người.",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Đi với Hòa và Sen, mỗi người tầm 150k, gợi ý quán lẩu.",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Tối nay ngân sách 300k, quán nào gần Điểm Hẹn?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Gợi ý quán nhậu tầm 5 lít cho nhóm 6 người.",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Chỗ nào ăn sáng dưới 30k quanh chợ Đào?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Có 50 cành, đi đâu chơi cuối tuần?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "co 50 canh, di dau choi cuoi tuan",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Đi chơi với Bi, túi tiền eo hẹp, quán nào rẻ mà ngon?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Tầm 100k thì ăn gì ở ngõ Gia?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Budget 500k for two, where should Quan and I eat?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Dưới 1 triệu 2 cho cả nhóm, chọn giúp quán nướng.",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Muốn đi ăn với Phong mà chỉ có 200 nghìn, gợi ý chỗ nào?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Trong khoảng 80k đến 120k, quán bún nào gần Lịch Sơn?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Có 3 xị một người, đi đâu nhậu nhẹ gần bến Bảy?",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Send me places under 250k near Dao street.",
+   "nhom": "ngan_sach_chon_cho",
+   "ly_do": "Ngân sách chỉ dùng để lọc địa điểm; không chuyển, ghi, chia hay nhắc tiền giữa ai với ai."
+  },
+  {
+   "cau": "Quán nào đồng giá 20k gần đây?",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "quan nao dong gia 20k gan day",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Tìm tiệm trà sữa đồng giá ở phố Hoa.",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Buffet đồng giá 199k ở khu Đô Thành còn mở không?",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Có chợ đêm nào bán đồ đồng giá không?",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Quán ốc đồng giá 25k của chú Bảy còn bán không?",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Tiệm Sen có món nào đồng giá không?",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "tiem sen co mon nao dong gia khong",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Gợi ý quán nướng đồng giá cho nhóm 8 người.",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Xiên que đồng giá ở ngõ Đào còn không?",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Có quán lẩu đồng giá nào nhận đặt bàn tối nay không?",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "tiem banh dong gia 15k o pho thai",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Is there a flat-price buffet near Hoa street?",
+   "nhom": "dong_gia",
+   "ly_do": "«Đồng giá» là đặc điểm bảng giá của địa điểm, không phải yêu cầu chuyển hay chia tiền."
+  },
+  {
+   "cau": "Vé vào khu vui chơi Sen Hồng bao nhiêu?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "ve vao khu vui choi sen hong bao nhieu",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Giá vé xem phim ở rạp Đô Thành tối nay?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "gia ve xem phim o rap do thanh toi nay",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Vé tham quan vườn Đào mùa xuân mấy tiền?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Vé cáp treo núi Bảy Tầng bao nhiêu một người?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Vé vào bảo tàng Lịch sử có giảm cho sinh viên không?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Giá vé đêm nhạc của nhóm Phong Vũ?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Trẻ em như bé Bi vào công viên nước có mất vé không?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Vé thuyền ra đảo Hoa bao nhiêu?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "ve thuyen ra dao hoa bao nhieu",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "How much are tickets to the Sen lotus festival?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Vé đêm nhạc ở Điểm Hẹn Xanh cuối tuần giá sao?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Giá vé vào hội hoa Đào năm nay?",
+   "nhom": "gia_ve",
+   "ly_do": "Hỏi giá vé của điểm đến hoặc sự kiện để lên kế hoạch; không có khoản tiền giữa người với người."
+  },
+  {
+   "cau": "Taxi từ đây ra bến Bảy tốn khoảng bao nhiêu?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "taxi tu day ra ben bay ton khoang bao nhieu",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Một ly cà phê muối ở quán Hòa tầm bao nhiêu?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Gửi xe máy ở chợ Hoa mất bao nhiêu tiền?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "gui xe may o cho hoa mat bao nhieu tien",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Thuê xe đạp đôi quanh hồ Sen một giờ bao nhiêu?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Đi xe ôm từ phố Đào tới quán Thái hết bao nhiêu?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Một nồi lẩu cho 4 người thường tốn bao nhiêu?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Gửi đồ ở bảo tàng có mất phí không?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Chụp ảnh ở vườn hoa có mất phí không?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "How much does a bowl of pho cost around Quan street?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Thuê thuyền kayak ở đầm Sen tốn bao nhiêu?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Phí vào cổng khu cắm trại Phong Lan là bao nhiêu?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Đổ đầy bình xăng xe máy đi đồi Gia hết khoảng bao nhiêu?",
+   "nhom": "chi_phi",
+   "ly_do": "Hỏi một thứ tốn bao nhiêu để chuẩn bị đi chơi; không yêu cầu làm gì với tiền giữa người với người."
+  },
+  {
+   "cau": "Quán Sen có nhận thanh toán thẻ không?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "quan sen co nhan thanh toan the khong",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Tiệm Đào nhận ví điện tử không?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "tiem dao nhan vi dien tu khong",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Quán nào quanh phố Hoa cho quẹt thẻ?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Cà phê Điểm Hẹn có trả bằng ví điện tử được không?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Quán Bảy Món có nhận chuyển khoản không hay chỉ tiền mặt?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "quan bay mon co nhan chuyen khoan khong hay chi tien mat",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Nhà hàng Gia Phong có máy quẹt thẻ không?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Chợ đêm Đô Thành có chỗ nào nhận QR không?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Quán nào gần đây chỉ nhận tiền mặt để mình biết mà tránh?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Does Hoa cafe take cards?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Which bars near Thai street accept e-wallets?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Quán Quân Nhà có cho quét mã thanh toán không?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Tìm quán lẩu nhận thẻ tín dụng gần Lịch Sơn.",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Quán Phong Lan có nhận thẻ không?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "quan phong lan co nhan the khong",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Which pubs around here let you run a tab?",
+   "nhom": "the_vi_chuyen_khoan_cua_quan",
+   "ly_do": "Hỏi địa điểm nhận thẻ, ví điện tử hay chuyển khoản là thuộc tính của địa điểm, không phải chuyển tiền."
+  },
+  {
+   "cau": "Quán Hòa có cần đặt cọc không?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "quan hoa co can dat coc khong",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Đặt bàn 10 người ở nhà hàng Sen có phải cọc trước không?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "dat ban 10 nguoi o nha hang sen co phai coc truoc khong",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Homestay Đào Viên cọc bao nhiêu phần trăm?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Thuê thuyền ở bến Bảy có cần cọc không?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Karaoke Phong Vân đặt phòng có phải cọc không?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Do I need a deposit to book a table at Dao garden?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Tiệc sinh nhật cho bé Bi ở quán Gia có cần đặt cọc không?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Hủy bàn ở quán Thái thì có được hoàn cọc không?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Quán nào gần đây đặt bàn không cần cọc?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Thuê xe máy ở phố Đô có phải cọc giấy tờ không?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Đặt tour ngắm hoa Đào có phải cọc trước không?",
+   "nhom": "dat_coc",
+   "ly_do": "Hỏi địa điểm có cần đặt cọc không là thông tin đặt chỗ, không phải chuyển hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "«Cho vay» tiếng Anh là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«cho vay» tieng anh la gi",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Lend» nghĩa tiếng Việt là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Put it on my tab» nghĩa là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Chia tiền» tiếng Hàn nói thế nào?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Tiền boa» tiếng Anh là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«tien boa» tieng anh la gi",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Split the bill» dịch sang tiếng Việt thế nào?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Đặt cọc» tiếng Nhật là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "What does «chuyển khoản» mean in English?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Borrow» và «lend» trong tiếng Anh khác nhau thế nào?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "Tiếng Thái nói «bao nhiêu tiền» thế nào?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Hóa đơn» tiếng Pháp là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«IOU» trong tiếng Anh nghĩa là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Going Dutch» nghĩa là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Tip» ở nhà hàng Mỹ nghĩa là gì trong tiếng Việt?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "«Lương» tiếng Anh là gì?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "How do you say «ai nợ ai» in English?",
+   "nhom": "nghia_tu_ngoai_ngu",
+   "ly_do": "Hỏi nghĩa hoặc cách nói một từ về tiền trong ngôn ngữ khác; không yêu cầu làm gì với tiền."
+  },
+  {
+   "cau": "Chia chuyến đi 5 ngày thành các chặng giúp mình.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "chia chuyen di 5 ngay thanh cac chang giup minh",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia lịch trình cho Quân và Hòa mỗi người phụ trách một ngày.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia nhóm 8 người thành 2 xe đi phố Hoa.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "chia nhom 8 nguoi thanh 2 xe di pho hoa",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia đôi quãng đường tới đảo Sen, nghỉ ở đâu?",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia ngày: sáng đi chợ Đào, chiều ra biển.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia ra 3 ngày để thăm hết các điểm quanh hồ.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia lịch đi cà phê thứ Bảy và Chủ nhật sao cho hợp lý?",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Split the trip into two days, first Sen lake then Dao hill.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia phần việc: Gia đặt bàn, Phong chọn quán.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia tuyến đi bộ ở phố cổ thành 2 buổi.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia thời gian ở vườn Hoa và bảo tàng thế nào cho vừa?",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Chia phòng: Bi ngủ với Quán, mình ngủ với Thái.",
+   "nhom": "chia_ngay_chia_nhom",
+   "ly_do": "«Chia» ở đây là chia ngày, chặng, xe, phòng hay việc cho lịch trình, không phải chia tiền."
+  },
+  {
+   "cau": "Tìm quán kiểu ai nấy tự trả, gọi món riêng được, gần phố Hoa.",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "tim quan kieu ai nay tu tra, goi mon rieng duoc, gan pho hoa",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Nhóm mình ai nấy tự trả, gợi ý quán có món lẻ.",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Đi với Quân và Sen, ai nấy tự trả, quán nào tiện?",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "ai nay tu tra, tim quan an toi gan day",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Chỗ nào gọi món theo suất để ai nấy tự trả cho dễ?",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Quán nào cho tính tiền riêng từng người?",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Which restaurants near Lich street do separate checks?",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Tụi mình đi kiểu ai trả phần nấy, tìm quán buffet gọi lẻ.",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Hẹn Đào, Bảy đi ăn, ai nấy tự trả, chọn quán yên tĩnh giúp.",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Tìm quán cơm phần để ai nấy tự trả, gần Điểm Hẹn.",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Going Dutch tonight, any quiet place near Hoa street?",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Mình với Gia ai nấy tự trả, quán nào có combo một người?",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Nhóm hay ai nấy tự trả, quán nào tách hóa đơn được?",
+   "nhom": "ai_nay_tu_tra_tim_cho",
+   "ly_do": "«Ai nấy tự trả» chỉ là tiêu chí chọn địa điểm; không yêu cầu tính, chia hay ghi tiền giữa người với người."
+  },
+  {
+   "cau": "Lịch tuần này có ngày nào rảnh để đi Điểm Hẹn không?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "lich tuan nay co ngay nao ranh de di diem hen khong",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Điểm đến tối nay nên là quán nào?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "diem den toi nay nen la quan nao",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Gia đình mình 4 người, tìm quán có phòng riêng.",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Khu đô thị mới có quán cà phê nào đẹp?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Thứ Bảy này đi đâu?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "thu bay nay di dau",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Hòa nhạc ngoài trời cuối tuần ở đâu?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Hoa sen nở rộ ở hồ nào gần đây?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Sen đá bán ở chợ nào?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Lẩu Thái chỗ nào ngon?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "lau thai cho nao ngon",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Phong cảnh đẹp để chụp ảnh gần đây?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Bi-a ở đâu mở khuya?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Quán Quán Ơi có chỗ ngồi ngoài trời không?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Quân khu cũ có còn bảo tàng mở cửa không?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Mùa hoa đào ở đồi Thái nở vào tháng mấy?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Hoà mình vào lễ hội đèn lồng thì nên đến lúc mấy giờ?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Đưa bé Bi đi chơi cuối tuần ở đâu?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "dua be bi di choi cuoi tuan o dau",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Lịch chiếu phim ở rạp Điểm Hẹn tối nay?",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "lich chieu phim o rap diem hen toi nay",
+   "nhom": "ten_trung_tu_thuong",
+   "ly_do": "Tên người trùng với từ thường hoặc địa danh, câu hỏi là về chỗ đi hay lịch, không có tiền."
+  },
+  {
+   "cau": "Gửi Quân địa chỉ quán Sen giúp mình.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "gui quan dia chi quan sen giup minh",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Nhắc Hòa mang áo mưa khi đi phố Hoa.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "nhac hoa mang ao mua khi di pho hoa",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Nhớ giúp mình đã hẹn Đào 7 giờ ở quán Thái.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Tính xem đi từ nhà Sen tới quán Bảy mất bao lâu.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "tinh xem di tu nha sen toi quan bay mat bao lau",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Tính xem còn thiếu bao nhiêu km nữa là tới đồi Đào.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Nhắc mình trả Quân cái sạc dự phòng.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "nhac minh tra quan cai sac du phong",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Nhắc mình trả sách cho Lịch thứ Sáu.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Cho Điểm mượn xe máy đi chợ, nhắc mình lấy lại tối nay.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Mai lấy lại áo khoác để quên ở nhà Gia.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Gửi Đô lịch trình chuyến đi.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "gui do lich trinh chuyen di",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Gửi Bảy vị trí quán nướng.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Send Quan the address of the cafe.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Can I borrow an umbrella at Sen cafe?",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Which cafe near Hoa street lends board games?",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Put Dao hill on the map for Sunday.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Share the plan with Thai and Phong.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Thu gọn danh sách quán giúp mình.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Mùa thu đi phố Hoa có đẹp không?",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Ghi lại quán Hòa vào danh sách muốn đi.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Nhớ giúp mình quán Gia ở số 200 đường Hoa.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "nho giup minh quan gia o so 200 duong hoa",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Theo dõi giờ mở cửa của quán Thái giúp mình.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Ai chịu phần đặt bàn cho nhóm tối nay?",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Ai lo phần chọn quán, Quân hay Hòa?",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Nhớ giúp mình đã đưa Phong về tới nhà rồi.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Tính xem mình còn thiếu mấy chỗ chưa ghé trong danh sách.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Remind me to give Bi his jacket back.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Nhắc Sen gửi ảnh chụp hôm đi vườn Đào.",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Phòng 250 ở khách sạn Đô Thành có view hồ không?",
+   "nhom": "dong_tu_tien_viec_khac",
+   "ly_do": "Động từ hay gặp trong câu tiền (gửi, trả, mượn, nhắc, nhớ, tính, thu, ghi, chịu phần) nhưng tân ngữ là đồ vật, địa chỉ, lịch hẹn, quãng đường hay việc; không có tiền."
+  },
+  {
+   "cau": "Mang 2 lít nước đi dã ngoại ở đồi Sen có đủ không?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Chợ nào bán 50 cành hoa hồng cho tiệc?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "cho nao ban 50 canh hoa hong cho tiec",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Củ khoai nướng ở đâu ngon gần phố Đào?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Chỗ nào bắn pháo hoa đêm giao thừa xem đẹp?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "cho nao ban phao hoa dem giao thua xem dep",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Trường bắn cung ở đâu gần đây?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Quán nào bán bia tươi theo lít quanh hồ Sen?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Cành đào Tết mua ở chợ hoa nào?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Quán rượu nào bán theo xị mà ngồi yên tĩnh?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Is there a bar that sells beer by the liter near Sen lake?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Chỗ nào bán củ sen tươi ở chợ Bảy?",
+   "nhom": "tieng_long_nghia_khac",
+   "ly_do": "Từ lóng tiền (cành, lít, củ, bắn, xị) dùng theo nghĩa đen, hoặc chỉ là hỏi chỗ; không có tiền giữa người với người."
+  },
+  {
+   "cau": "Quán nào có menu quét QR gần đây?",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "quan nao co menu quet qr gan day",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "Quét QR ở bảo tàng để nghe thuyết minh ở đâu?",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "Làm sao đổi tên tài khoản của mình trong app?",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "Quán Điểm Hẹn có wifi quét mã QR không?",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "Vào hội hoa Đào có phải quét QR check-in không?",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "Mình quên mật khẩu tài khoản app, làm sao lấy lại?",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "Nút tạo mã QR mời bạn vào nhóm ở đâu?",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "How do I scan the QR code to see Hoa cafe's menu?",
+   "nhom": "qr_tai_khoan_app",
+   "ly_do": "QR hay tài khoản ở đây là menu, check-in hoặc tài khoản app, không phải chuyển tiền."
+  },
+  {
+   "cau": "Ngày lương về đi đâu ăn mừng?",
+   "nhom": "luong_chi_la_boi_canh",
+   "ly_do": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "ngay luong ve di dau an mung",
+   "nhom": "luong_chi_la_boi_canh",
+   "ly_do": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Cuối tháng chưa có lương, quán nào hợp túi tiền?",
+   "nhom": "luong_chi_la_boi_canh",
+   "ly_do": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "cuoi thang chua co luong, quan nao hop tui tien",
+   "nhom": "luong_chi_la_boi_canh",
+   "ly_do": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Mới nhận lương, gợi ý nhà hàng sang một chút cho mình với Hoa.",
+   "nhom": "luong_chi_la_boi_canh",
+   "ly_do": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Quán nào hay giảm giá cho dân văn phòng ngày lương?",
+   "nhom": "luong_chi_la_boi_canh",
+   "ly_do": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Tối thứ Sáu nhận lương, rủ Quân đi đâu nghe nhạc?",
+   "nhom": "luong_chi_la_boi_canh",
+   "ly_do": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người."
+  },
+  {
+   "cau": "Payday dinner ideas near Dao street?",
+   "nhom": "luong_chi_la_boi_canh",
+   "ly_do": "Lương chỉ là bối cảnh thời điểm hay túi tiền khi chọn chỗ; không có tiền đi giữa người với người."
+  }
+ ]
+}

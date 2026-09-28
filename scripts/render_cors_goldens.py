@@ -93,6 +93,18 @@ CASES: list[tuple[str, str, str, list[tuple[str, str]]]] = [
         ],
     ),
     (
+        # The SSE stream's resume header (contract §4.1), as a browser that
+        # kept the stream client's default would ask for it.
+        "preflight-sse-resume",
+        "OPTIONS",
+        "/me/ai/invocations/x/stream",
+        [
+            ("origin", "http://localhost:8081"),
+            ("access-control-request-method", "GET"),
+            ("access-control-request-headers", "authorization,last-event-id"),
+        ],
+    ),
+    (
         "preflight-unknown-header",
         "OPTIONS",
         "/contexts",

@@ -1,0 +1,45 @@
+{
+  "phien_ban": "nap.v1",
+  "dense": {
+    "model": "gemini-embedding-2",
+    "dims": 1536,
+    "co_che": "prefix-v1",
+    "lo": 100
+  },
+  "thua": {
+    "che_do": "bm25",
+    "milco_bat": false,
+    "milco_model": "omai-research/milco-650m",
+    "milco_rev": "",
+    "prune_k": 128
+  },
+  "luoc_do": "rd.v2",
+  "chunker": {
+    "place": "place.milvus.v1",
+    "manual": "manual.milvus.v1"
+  },
+  "lam_giau": {
+    "model": "gemini-3.5-flash-lite",
+    "lo": 20,
+    "song_song": 4,
+    "han_giay": 30
+  },
+  "trung": {
+    "cosine_toi_thieu": 0.92,
+    "khoang_cach_m": 80
+  },
+  "hop": {
+    "rrf_k": 60,
+    "trong_so": {"dense": 1, "bm25": 0.1, "bm25_khong_dau": 1, "milco": 1}
+  },
+  "cong": {
+    "recall_10": 0.90,
+    "ndcg_10": 0.75,
+    "mrr_10": 0.70,
+    "violation_10": 0,
+    "khong_dau_gap": 0.05,
+    "khong_kem_active": 0.01
+  },
+  "tu_dong": {"ty_le_doi_toi_da": 0.05},
+  "giu_ban": {"toi_da": 3, "ngay": 14}
+}

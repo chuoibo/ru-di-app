@@ -52,6 +52,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from app.places.prompt_safety import field_is_safe
+from tests.evals import bang_chung, thong_ke
 
 CORPUS_PATH = Path(__file__).parent / "corpus" / "tra-loi-trong-nhom.json"
 GOLDEN_PATH = (
@@ -62,7 +63,12 @@ GOLDEN_PATH = (
     / "testdata"
     / "hoi_thoai_golden.json"
 )
-DEFAULT_OUT = Path("/tmp/tra-loi-trong-nhom")
+#: The evidence store (tests/evals/bang_chung.py); --out inside a git worktree
+#: is refused, because model output does not go into Git.
+DEFAULT_OUT = None
+REPO_ROOT = Path(__file__).resolve().parents[4]
+#: One brain call per run on this path: `companion-reply` is a single call.
+LOI_GOI_MOI_LUOT = 1
 
 # The fallback speaker labels of chatassist/boicanh.go nhanNguoiNoi, and the
 # caller's fallback label that chatassist/roster.go shares with it.
@@ -571,11 +577,26 @@ def render_markdown(results: list[dict], meta: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=DEFAULT_OUT,
+        help="kho bằng chứng (mặc định ~/.cache/rudi-bang-chung/eval); trong worktree git bị từ chối",
+    )
     parser.add_argument(
         "--ca", action="append", default=[], help="chỉ chạy ca có case_id này"
     )
     parser.add_argument("--lap", type=int, default=1, help="số lượt gọi mỗi ca")
+    parser.add_argument(
+        "--du-toan",
+        action="store_true",
+        help="in trần số lời gọi model của lượt này rồi dừng, không gọi gì",
+    )
+    parser.add_argument(
+        "--tran-goi",
+        type=int,
+        help="số lời gọi Lead đã duyệt; bắt buộc khi có GEMINI_API_KEY, dự toán vượt thì từ chối",
+    )
     parser.add_argument(
         "--cham-lai",
         type=Path,
@@ -590,8 +611,23 @@ def main(argv: list[str] | None = None) -> int:
     if not cases:
         print(f"Không có ca nào khớp {args.ca}", file=sys.stderr)
         return 2
+    du_toan = len(cases) * args.lap * LOI_GOI_MOI_LUOT
+    if args.du_toan:
+        print(
+            f"Dự toán: {len(cases)} ca × {args.lap} lượt × {LOI_GOI_MOI_LUOT} = {du_toan} lời gọi model"
+        )
+        return 0
     stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
-    out = args.out / stamp
+    try:
+        sha = bang_chung.git_sha(REPO_ROOT)
+    except Exception:  # noqa: BLE001 - a tree without git still runs, marked unknown
+        sha = "khong-ro"
+    run_id = f"{stamp}-{sha[:8]}"
+    try:
+        out = bang_chung.thu_muc_ra(args.out, run_id)
+    except bang_chung.NgoaiKho as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
     out.mkdir(parents=True, exist_ok=True)
     payloads = {case["case_id"]: payload_for(corpus, case) for case in cases}
     (out / "payload-gui-brain.json").write_text(
@@ -607,13 +643,30 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
+    if args.tran_goi is None:
+        print(
+            f"Lượt thật cần --tran-goi (số lời gọi Lead đã duyệt). Dự toán lượt này: {du_toan}.",
+            file=sys.stderr,
+        )
+        return 2
+    if du_toan > args.tran_goi:
+        print(
+            f"Dự toán {du_toan} lời gọi vượt trần đã duyệt {args.tran_goi}: không chạy.",
+            file=sys.stderr,
+        )
+        return 2
+
     from app.api.companion_gemini import DEFAULT_MODEL
 
     model = os.environ.get("MOBILE_GEMINI_MODEL") or DEFAULT_MODEL
     results = []
+    da_goi = 0
     for case in cases:
         places = payloads[case["case_id"]]["places"]
         for lap in range(1, args.lap + 1):
+            if da_goi + LOI_GOI_MOI_LUOT > args.tran_goi:
+                raise SystemExit("chạm trần lời gọi giữa chừng: dự toán đã sai")
+            da_goi += LOI_GOI_MOI_LUOT
             status, card = call_brain(payloads[case["case_id"]])
             card = card if status == 200 else None
             checks = grade(corpus, case, card)
@@ -657,7 +710,62 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"{passed}/{len(results)} lượt qua mọi phép máy chấm · bảng điểm: {out / 'bang-diem.md'}"
     )
+    tong = tong_hop(results, args.lap)
+    bang_chung.ghi_manifest(
+        out,
+        bang_chung.manifest(
+            run_id=run_id,
+            git_sha=sha,
+            corpus=CORPUS_PATH.name,
+            corpus_sha256=bang_chung.sha256_file(CORPUS_PATH),
+            model=model,
+            lap=args.lap,
+            loi_goi={
+                "du_toan": du_toan,
+                "tran_duyet": args.tran_goi,
+                "da_dung": da_goi,
+            },
+            chi_so={"nhom_plan": tong},
+            chua_xong=False,
+        ),
+    )
+    for line in bang_chung.trailer_nhom_plan(
+        run_id=run_id,
+        lap=args.lap,
+        goi_da_dung=da_goi,
+        goi_duyet=args.tran_goi,
+        model=model,
+        so_ca=tong["so_ca"],
+        ca_vung=tong["ca_vung"],
+        it_nhat=tong["it_nhat"],
+        pass_at_1=tong["pass_at_1"],
+        ci=(tong["ci95"][0], tong["ci95"][1]),
+    ):
+        print(line)
     return 0
+
+
+def tong_hop(results: list[dict], lap: int) -> dict:
+    """Per-case aggregation: pass@1 with a case-resampled interval, solid cases.
+
+    A run passes when no machine check failed. A case is solid when it passed
+    at least four runs in five (the same fraction for other --lap values).
+    """
+    cases = thong_ke.gop_theo_ca(
+        (row["case_id"], not any(c["ket_qua"] == "truot" for c in row["cham"]))
+        for row in results
+    )
+    it_nhat = max(1, -(-4 * lap // 5))
+    lo, hi = thong_ke.bootstrap_ci([c.ty_le for c in cases])
+    return {
+        "so_ca": len(cases),
+        "so_luot": sum(c.tong for c in cases),
+        "pass_at_1": round(thong_ke.pass_at_1(cases), 4),
+        "ci95": [round(lo, 4), round(hi, 4)],
+        "it_nhat": it_nhat,
+        "ca_vung": thong_ke.ca_vung(cases, it_nhat=it_nhat),
+        "pass_mu_k": thong_ke.pass_mu_k(cases),
+    }
 
 
 def _regrade(corpus: dict, path: Path) -> int:
@@ -681,6 +789,11 @@ def _regrade(corpus: dict, path: Path) -> int:
     out = path.with_name("bang-diem-cham-lai.md")
     out.write_text(render_markdown(results, meta), encoding="utf-8")
     print(f"{passed}/{len(results)} lượt qua mọi phép máy chấm · bảng điểm: {out}")
+    tong = tong_hop(results, int(saved["meta"].get("lap", 1)))
+    print(
+        f"pass@1 {tong['pass_at_1']:.2f} [{tong['ci95'][0]:.2f},{tong['ci95'][1]:.2f}]"
+        f" · ca vững {tong['ca_vung']}/{tong['so_ca']} (>={tong['it_nhat']}/{saved['meta'].get('lap', 1)})"
+    )
     return 0
 
 

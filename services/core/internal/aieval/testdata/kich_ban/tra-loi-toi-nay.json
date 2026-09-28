@@ -1,0 +1,18 @@
+{
+  "ten": "tra-loi-toi-nay",
+  "mo_ta": "Router quy «tối nay» lúc 23:30 ra đúng ngày.",
+  "buoc": [
+    {
+      "chang": "hieu",
+      "chu": "{\"nhan_guard\": \"sach\", \"tien\": \"none\", \"y_dinh\": [\"plan_help\"], \"huong\": \"tra_loi_thang\", \"slots\": {\"ngay_iso\": \"2026-09-25\", \"khung_gio\": {\"tu\": \"18:00\", \"den\": \"23:00\"}}, \"can_truy_hoi\": [], \"truy_van\": [], \"can_hoi_lai\": false, \"tra_loi_cau_cho\": false, \"tu_tin\": \"cao\"}"
+    },
+    {
+      "chang": "tra_loi",
+      "chu": "Tối nay bạn thử ra phố đi bộ cho vui nhé."
+    },
+    {
+      "chang": "kiem",
+      "chu": "{\"menh_de\": [{\"so\": 1, \"bang_chung_ids\": [], \"ket\": \"khong_thong_tin\"}], \"hua_hanh_dong_khong_co\": false, \"tien\": false}"
+    }
+  ]
+}

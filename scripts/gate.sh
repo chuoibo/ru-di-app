@@ -72,7 +72,7 @@ REPO_ROOT="$PWD"
 
 # Every stage, in run order: cheapest and most likely to fail first, so a
 # broken tree is reported in seconds rather than after a docker build.
-STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres e2e chat-e2e crypto)
+STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test eval-kich-ban ai-infer api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres go-broker go-milvus ai-infer-milvus e2e chat-e2e crypto)
 
 stage_help() {
   case "$1" in
@@ -88,6 +88,8 @@ stage_help() {
     python-touch) echo "no Python change on this branch reaches a route Go already serves (ADR-0029 §2.9)" ;;
     go-vet)    echo "gofmt -l and go vet on services/core, the Go front door (ADR-0029)" ;;
     go-test)   echo "go test ./... on services/core: config, transparent proxy, route manifest (ADR-0029)" ;;
+    eval-kich-ban) echo "eval T1: Nếp through Engine.Run on the scripted stub; invariants, canary red where predicted, identity green, no SKIP, core never links aieval; plus offline T2: a cassette recorded from loopback stand-ins replays with identical grades and 0 calls (test.yml: eval-kich-ban)" ;;
+    ai-infer)  echo "inference sidecar offline: sparse contract, mem0 with no PostHog/SQLite/text in logs, owner isolation, deletes counted to zero, Gemini wire body; no SKIP, sentinels (test.yml: ai-infer)" ;;
     api)       echo "pytest services/api/tests tests (test.yml: api)" ;;
     migration) echo "alembic upgrade head --sql, no database (test.yml: api, inline)" ;;
     pinned-import) echo "app imports under the fastapi version pinned in requirements-dev.txt, not the machine's (test.yml: docker, cheap half)" ;;
@@ -100,6 +102,9 @@ stage_help() {
     parity)    echo "harness unit tests; two isolated stacks from the API image; canary catches every exercised damage; W0 scenarios equal through core (ADR-0029)" ;;
     postgres)  echo "every live case -- tests/postgres AND tests/qa -- against a real PostgreSQL it provisions itself (postgres-repository.yml)" ;;
     go-postgres) echo "Go core tests on a disposable PostgreSQL migrated by Alembic; a skip or a missing sentinel is a failure (ADR-0029)" ;;
+    go-broker) echo "Go tests tagged broker -- Redis Streams, RabbitMQ outbox relay -- on real services, disposable or CORE_TEST_*_URL; a skip or a missing sentinel is a failure" ;;
+    ai-infer-milvus) echo "inference sidecar on a real Milvus (AI_INFER_TEST_MILVUS_URI or a disposable pinned container): lifecycle, isolation, purge with compaction to zero; a skip is a failure (test.yml: ai-infer)" ;;
+    go-milvus) echo "Go tests tagged milvus -- the one retrieval + ingestion system: the Milvus index and its schema, the ingestion pipeline (rag/nap over vectordb/napkho), the hybrid retriever over Milvus and PostgreSQL, the reranker's golden check -- on real services, local installs or MOBILE_TEST_*; a skip or a missing sentinel is a failure (test.yml: milvus)" ;;
     e2e)       echo "the vertical slice through src/api.ts against an API and database it provisions itself (test.yml: e2e)" ;;
     chat-e2e)  echo "chat qua HTTP và WebSocket thật vào cửa trước Go, trên stack nó tự dựng (test.yml: chat-e2e)" ;;
     crypto)    echo "crate MLS dựng được, clippy sạch, 21 canary vẫn cắn, và cầu C ABI xuất đủ ký hiệu (test.yml: crypto)" ;;
@@ -445,7 +450,17 @@ do_go-vet() {
 
 do_go-test() { ( cd services/core && go test -count=1 ./... ); }
 
+do_eval-kich-ban() { scripts/eval_kich_ban.sh; }
+
 do_go-postgres() { scripts/go_postgres_tier.sh; }
+
+do_go-broker() { scripts/go_broker_tier.sh; }
+
+do_ai-infer() { scripts/ai_infer_tier.sh; }
+
+do_ai-infer-milvus() { scripts/ai_infer_tier.sh --milvus; }
+
+do_go-milvus() { scripts/go_milvus_tier.sh; }
 
 # One pair of stacks per auth mode: a scenario means something only against
 # stacks started in the mode it was written for. The raw-socket probe runs in
@@ -854,6 +869,58 @@ check_prereq() {
       [ -f services/core/go.mod ] || return 2
       have docker && have go || { echo "cần docker và go"; return 1; }
       docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời"; return 1; } ;;
+    eval-kich-ban)
+      # Go and python3 only: T1 runs on the scripted stub, with no database,
+      # no Docker and no network. Present without the script or the corpus is
+      # a defect: the stage would have nothing to run and read green.
+      [ -d services/core ] || { echo "services/core không có trên nhánh này"; return 1; }
+      [ -f services/core/go.mod ] || return 2
+      [ -x scripts/eval_kich_ban.sh ] || return 2
+      [ -f services/core/internal/aieval/testdata/corpus/nep-kich-ban.json ] || return 2
+      have go || { echo "cần go"; return 1; }
+      have python3 || { echo "cần python3"; return 1; } ;;
+    ai-infer|ai-infer-milvus)
+      # Python with services/ai-infer/requirements-dev.txt installed (named by
+      # AI_INFER_PYTHON, or services/ai-infer/.venv). Present without the tier
+      # script is a defect; absent dependencies are a skip that --strict turns
+      # red. The live half also needs a Milvus: handed over by URI, or Docker.
+      [ -d services/ai-infer ] || { echo "services/ai-infer không có trên nhánh này"; return 1; }
+      [ -x scripts/ai_infer_tier.sh ] && [ -f services/ai-infer/pyproject.toml ] || return 2
+      local aipy="${AI_INFER_PYTHON:-}"
+      [ -n "$aipy" ] || { [ -x services/ai-infer/.venv/bin/python ] && aipy=services/ai-infer/.venv/bin/python; } || aipy=python3
+      "$aipy" -c "import fastapi, mem0, pymilvus, google.genai, pytest" >/dev/null 2>&1 ||
+        { echo "cần python có services/ai-infer/requirements-dev.txt (đặt AI_INFER_PYTHON)"; return 1; }
+      if [ "$1" = ai-infer-milvus ] && [ -z "${AI_INFER_TEST_MILVUS_URI:-}" ]; then
+        have docker || { echo "cần AI_INFER_TEST_MILVUS_URI hoặc docker"; return 1; }
+        docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời, và chưa đặt AI_INFER_TEST_MILVUS_URI"; return 1; }
+      fi ;;
+    go-broker)
+      # Docker is needed only for a service the caller did not hand over as a
+      # URL; with all three set, a Docker-less machine runs this stage too.
+      [ -d services/core ] || { echo "services/core không có trên nhánh này"; return 1; }
+      [ -f services/core/go.mod ] || return 2
+      [ -x scripts/go_broker_tier.sh ] || return 2
+      have go || { echo "cần go"; return 1; }
+      if [ -z "${CORE_TEST_DATABASE_URL:-}" ] || [ -z "${CORE_TEST_REDIS_URL:-}" ] || [ -z "${CORE_TEST_AMQP_URL:-}" ]; then
+        have docker || { echo "cần docker, hoặc đặt sẵn CORE_TEST_DATABASE_URL, CORE_TEST_REDIS_URL, CORE_TEST_AMQP_URL"; return 1; }
+        docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời, và chưa đặt đủ ba CORE_TEST_*_URL"; return 1; }
+      fi ;;
+    go-milvus)
+      # Milvus and PostgreSQL come from the environment, a local install or
+      # Docker; the reranker only from the environment or a local install
+      # (its weights are not an image). Missing any is a skip here, and
+      # --strict makes it a failure.
+      [ -d services/core ] || { echo "services/core không có trên nhánh này"; return 1; }
+      [ -f services/core/go.mod ] || return 2
+      [ -x scripts/go_milvus_tier.sh ] || return 2
+      have go || { echo "cần go"; return 1; }
+      if [ -z "${MOBILE_TEST_RERANK_URL:-}" ] && [ -z "${MOBILE_RERANK_LOCAL_DIR:-}" ]; then
+        echo "cần reranker: MOBILE_TEST_RERANK_URL hoặc MOBILE_RERANK_LOCAL_DIR"; return 1
+      fi
+      if { [ -z "${MOBILE_TEST_MILVUS_ADDR:-}" ] && [ -z "${MOBILE_MILVUS_LOCAL_DIR:-}" ]; } || [ -z "${CORE_TEST_DATABASE_URL:-}" ]; then
+        have docker || { echo "cần docker, hoặc đặt sẵn Milvus (MOBILE_TEST_MILVUS_ADDR / MOBILE_MILVUS_LOCAL_DIR) và CORE_TEST_DATABASE_URL"; return 1; }
+        docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời, và chưa đặt sẵn Milvus và CORE_TEST_DATABASE_URL"; return 1; }
+      fi ;;
     parity)
       # ADR-0029. The harness needs docker for the stacks and go for itself;
       # missing either is a skip, and --strict makes it a failure.
@@ -1058,6 +1125,10 @@ broken_why() {
     python-touch) echo "services/core có mặt nhưng thiếu ownership/routes.json -- từ chối bỏ qua" ;;
     parity) echo "parity/ có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
     go-postgres) echo "services/core có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
+    go-broker) echo "services/core có mặt nhưng thiếu go.mod hoặc scripts/go_broker_tier.sh -- từ chối bỏ qua" ;;
+    go-milvus) echo "services/core có mặt nhưng thiếu go.mod hoặc scripts/go_milvus_tier.sh -- từ chối bỏ qua" ;;
+    eval-kich-ban) echo "services/core có mặt nhưng thiếu go.mod, scripts/eval_kich_ban.sh hoặc corpus Nếp -- từ chối bỏ qua" ;;
+    ai-infer|ai-infer-milvus) echo "services/ai-infer có mặt nhưng thiếu pyproject.toml hoặc scripts/ai_infer_tier.sh -- từ chối bỏ qua" ;;
     demo-watch) echo "thiếu scripts/demo_watch.py -- xoá canh gác không được biến chặng này thành xanh" ;;
     hero-walk) echo "thiếu scripts/hero_walk.sh -- xoá bài đi bộ không được biến chặng này thành xanh" ;;
     *) echo "thiếu file mà chặng này cần -- từ chối bỏ qua" ;;

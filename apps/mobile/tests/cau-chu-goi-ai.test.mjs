@@ -57,13 +57,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { LOI_GOI_AI } from "../dist-test/rudi/chat/ai-invocations.js";
-import { LOI_NEP } from "../dist-test/rudi/nep/hoi.js";
+import { LOI_GOI_AI, LOI_KET_QUA_AI } from "../dist-test/rudi/chat/ai-invocations.js";
+import { LOI_KET_QUA_NEP, LOI_NEP } from "../dist-test/rudi/nep/hoi.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const GOC_APP = join(HERE, "..");
 const GOC_REPO = join(GOC_APP, "..", "..");
 const CHATASSIST = join(GOC_REPO, "services", "core", "internal", "chatassist");
+const CAU_ENGINE = join(GOC_REPO, "services", "core", "internal", "aiharness", "cau", "cau.go");
 
 /**
  * Mã phát ra trên đường client gọi nhưng client không bao giờ thấy. Mỗi dòng
@@ -74,7 +75,7 @@ const MIEN_TRU = {
   json_required:
     "translatedAsActor luôn gửi Content-Type: application/json; chỉ một client khác mới chạm được mã này.",
   invalid_body:
-    "Thân yêu cầu dựng từ đúng các trường máy chủ đọc (logical_id, command, prompt, boi_canh); thân thừa trường hay sai JSON là app hỏng.",
+    "Thân yêu cầu dựng từ đúng các trường máy chủ đọc (logical_id, command, prompt, boi_canh, trigger_message_id khi máy chủ khai mention); thân thừa trường hay sai JSON là app hỏng.",
   invalid_context:
     "contextId lấy từ chính nhóm đang mở, luôn là UUID; không có gì người dùng gõ đi vào đường dẫn.",
   invocation_already_published:
@@ -277,25 +278,183 @@ for (const duong of DUONG) test(`${duong.ten}: không câu nào lộ chữ của
   }
 });
 
-/* ------------------------------------------------ 4. lệnh cũ không đi lên - */
+/* ------------------------------------------------ 3b. mã kết quả của Nếp - */
 
-test("lệnh AI cũ gõ trong khung chat mở khay AI, không đi lên POST /messages", () => {
-  // ADR-0036 §2.1 turned `/plan`, `@Rủ Đi` and `/chia-bill` into ordinary text
-  // on the server. The client must keep catching them locally: sent as text,
-  // the group would read a bare command where the person meant to ask the AI.
-  const nguon = readFileSync(join(GOC_APP, "src", "rudi", "screens", "chat", "GroupChatLive.tsx"), "utf8");
-  const ham = /function goiMoHinh\(body: string\): boolean \{\n([\s\S]*?)\n\}/.exec(nguon);
-  assert.ok(ham, "không thấy goiMoHinh trong GroupChatLive.tsx");
-  const goiMoHinh = new Function("body", ham[1]);
+/**
+ * Một câu hỏi Nếp đã được worker nhận có thể kết thúc bằng một mã thay cho câu
+ * trả lời; app đọc mã ở `LOI_KET_QUA_NEP`. Mã đến từ ba chỗ, đều đọc từ mã Go:
+ * (1) `nepThatBai(ctx, j, "mã")` trong `chatassist/nep.go`, (2) hai mã của lượt
+ * quét trong `chatassist/worker.go`, (3) bảng câu cố định của engine Go
+ * (`aiharness/cau/cau.go`, ADR-0044 §2.9), vì với `MOBILE_AI_ENGINE_NEP=go` mã
+ * của engine đi thẳng vào cột `code`. Câu của engine trong app phải đúng TỪNG
+ * CHỮ câu trong cau.go: một nguồn sự thật, hai bản chép, và cổng này giữ chúng
+ * không lệch.
+ */
+function bangCauEngine() {
+  const nguon = readFileSync(CAU_ENGINE, "utf8");
+  const ten = new Map();
+  for (const m of nguon.matchAll(/^\s*(\w+)\s+Ma\s*=\s*"([a-z_]+)"/gm)) ten.set(m[1], m[2]);
+  const khoi = /var bang = \[\]dong\{([\s\S]*?)\n\}/.exec(nguon);
+  assert.ok(khoi, "không thấy bảng câu `bang` trong aiharness/cau/cau.go");
+  const bang = new Map();
+  // Every row must be in the one shape this reader knows: a row it could not
+  // read would otherwise be a code with no sentence that nobody sees.
+  for (const dong of khoi[1].split("\n").map((d) => d.trim()).filter((d) => d.startsWith("{"))) {
+    const m = /^\{(\w+),\s*"([^"]+)"\},$/.exec(dong);
+    assert.ok(m, `dòng bảng trong cau.go không đúng dạng {TenHang, "câu"},: ${dong}`);
+    assert.ok(ten.has(m[1]), `cau.go dùng ${m[1]} mà không khai hằng`);
+    bang.set(ten.get(m[1]), m[2]);
+  }
+  assert.ok(bang.size >= 6, `chỉ đọc được ${bang.size} câu trong cau.go, bộ đọc đang hỏng`);
+  return bang;
+}
+
+/**
+ * Mã chỉ đường nhóm kết thúc bằng (bảng `bangNhom` của cau.go), ví dụ
+ * `ai_tu_choi` khi output guard chặn câu trả lời của nhóm (lát 11): app đọc
+ * câu ở `LOI_KET_QUA_AI`, và câu đó phải đúng từng chữ bảng trong cau.go.
+ */
+function bangCauNhom() {
+  const nguon = readFileSync(CAU_ENGINE, "utf8");
+  const ten = new Map();
+  for (const m of nguon.matchAll(/^\s*(\w+)\s+Ma\s*=\s*"([a-z_]+)"/gm)) ten.set(m[1], m[2]);
+  const khoi = /var bangNhom = \[\]dong\{([\s\S]*?)\n\}/.exec(nguon);
+  assert.ok(khoi, "không thấy bảng câu `bangNhom` trong aiharness/cau/cau.go");
+  const bang = new Map();
+  for (const dong of khoi[1].split("\n").map((d) => d.trim()).filter((d) => d.startsWith("{"))) {
+    const m = /^\{(\w+),\s*"([^"]+)"\},$/.exec(dong);
+    assert.ok(m, `dòng bảng nhóm trong cau.go không đúng dạng {TenHang, "câu"},: ${dong}`);
+    assert.ok(ten.has(m[1]), `cau.go dùng ${m[1]} mà không khai hằng`);
+    bang.set(ten.get(m[1]), m[2]);
+  }
+  assert.ok(bang.has("ai_tu_choi"), "bảng nhóm của cau.go thiếu ai_tu_choi, bộ đọc đang hỏng");
+  return bang;
+}
+
+test("Nhóm: mã nhóm của cau.go có câu trong LOI_KET_QUA_AI, đúng từng chữ, và worker thật sự phát ra", () => {
+  const worker = readFileSync(join(CHATASSIST, "phat.go"), "utf8");
+  assert.match(worker, /maChanChung = string\(cau\.TuChoiNhom\)/, "chatassist không còn kết thúc nhóm bằng cau.TuChoiNhom");
+  for (const [ma, cau] of bangCauNhom()) {
+    assert.equal(LOI_KET_QUA_AI[ma], cau, `${ma}: app nói «${LOI_KET_QUA_AI[ma]}», cau.go nói «${cau}»`);
+    assert.doesNotMatch(cau, /lỗi/i);
+  }
+});
+
+function maKetQuaNep() {
+  const ma = new Set();
+  const nep = readFileSync(join(CHATASSIST, "nep.go"), "utf8");
+  for (const m of nep.matchAll(/\bnepThatBai\(\s*ctx\s*,\s*j\s*,\s*"([a-z_]+)"\s*\)/g)) ma.add(m[1]);
+  assert.ok(ma.size >= 2, `chỉ thấy ${ma.size} mã nepThatBai trong nep.go`);
+  const worker = readFileSync(join(CHATASSIST, "worker.go"), "utf8");
+  // `code='…'`, or `code=CASE WHEN … THEN '…'`; never `status=CASE … THEN 'failed'`.
+  const quet = [...worker.matchAll(/\bcode\s*=\s*'([a-z_]+)'|\bcode\s*=\s*CASE\b[^;`]*?\bTHEN '([a-z_]+)'/g)].map((m) => m[1] ?? m[2]);
+  assert.ok(quet.includes("sharing_expired") && quet.includes("worker_interrupted"), `mã của lượt quét: ${quet}`);
+  for (const m of quet) ma.add(m);
+  for (const m of bangCauEngine().keys()) ma.add(m);
+  return ma;
+}
+
+test("Nếp: mọi mã một câu hỏi có thể kết thúc đều có câu trong LOI_KET_QUA_NEP, và không câu chết", () => {
+  const ma = maKetQuaNep();
+  const thieu = [...ma].filter((m) => !(m in LOI_KET_QUA_NEP)).sort();
+  assert.deepEqual(thieu, [], `mã kết thúc không có câu: ${thieu.join(", ")}. Thêm vào src/rudi/nep/hoi.ts.`);
+  const thua = Object.keys(LOI_KET_QUA_NEP).filter((m) => !ma.has(m));
+  assert.deepEqual(thua, [], `câu cho mã không còn phát: ${thua.join(", ")}`);
+});
+
+test("Nếp: câu của engine Go trong app đúng từng chữ với aiharness/cau/cau.go", () => {
+  for (const [ma, cau] of bangCauEngine()) {
+    assert.equal(LOI_KET_QUA_NEP[ma], cau, `${ma}: app nói «${LOI_KET_QUA_NEP[ma]}», cau.go nói «${cau}»`);
+  }
+});
+
+test("Nếp: câu kết quả giọng người, không hai mã chung một câu", () => {
+  const theoCau = new Map();
+  for (const [ma, cau] of Object.entries(LOI_KET_QUA_NEP)) {
+    assert.doesNotMatch(cau, /[a-z]+_[a-z_]+/, `${ma}: câu chứa mã máy: ${cau}`);
+    assert.doesNotMatch(cau, /lỗi/i, `${ma}: câu viết như báo lỗi: ${cau}`);
+    assert.doesNotMatch(cau, /\b(4\d\d|5\d\d)\b|HTTP/i, `${ma}: câu nhắc mã HTTP: ${cau}`);
+    assert.doesNotMatch(cau, /[—–]/, `${ma}: câu dùng gạch dài: ${cau}`);
+    assert.ok(cau.trim().length > 20, `${ma}: câu quá ngắn: ${cau}`);
+    theoCau.set(cau, [...(theoCau.get(cau) ?? []), ma]);
+  }
+  const dungChung = [...theoCau.values()].filter((ds) => ds.length > 1);
+  assert.deepEqual(dungChung, [], `những mã này đọc ra cùng một câu: ${JSON.stringify(dungChung)}`);
+});
+
+/* ------------------------------------------------ 4. lệnh AI là tin thường, rồi mới là lời gọi */
+
+test("tin @Rủ Đi đi lên như tin thường, rồi mới có lời gọi AI tường minh nêu đúng tin đó", async () => {
+  // ADR-0046 (proposed) replaced the rule this case used to hold. It said a
+  // typed AI command must be caught before POST /messages, because the server
+  // reads `/plan` and `@Rủ Đi` as ordinary text (ADR-0036 §2.1). The server
+  // still does -- it never starts AI from text -- so the invariant moved, not
+  // vanished: the message is posted FIRST as the ordinary message it is, and
+  // only then does the client call the queue, naming the stored message as
+  // `trigger_message_id`. Moving it here is ADR-0036 §3b: a quality gate is
+  // moved, never dropped in the name of cleanup.
+  const { timNhacAi } = await import("../dist-test/rudi/chat/nhac-ai.js");
   for (const lenh of ["/plan tối nay đi đâu", "/PLAN", "/chia-bill", "/chiabill", "@Rủ Đi gợi ý quán", "@rudi ơi", "@ru di"]) {
-    assert.equal(goiMoHinh(lenh), true, `«${lenh}» sẽ đi lên máy chủ như tin thường`);
+    assert.notEqual(timNhacAi(lenh), null, `«${lenh}» phải kèm một lời gọi AI`);
   }
-  for (const thuong of ["/vote Ăn gì? Phở | Bún", "tối nay ăn gì", "/planning"]) {
-    assert.equal(goiMoHinh(thuong), false, `«${thuong}» bị chặn nhầm như lệnh AI`);
+  // repo-guard: allow=email reason=synthetic-invalid-domain
+  for (const thuong of ["/vote Ăn gì? Phở | Bún", "tối nay ăn gì", "/planning", "gửi lan@rudi.invalid"]) {
+    assert.equal(timNhacAi(thuong), null, `«${thuong}» bị đọc nhầm là lời nhờ AI`);
   }
+  const nguon = readFileSync(join(GOC_APP, "src", "rudi", "screens", "chat", "GroupChatLive.tsx"), "utf8");
+  assert.doesNotMatch(nguon, /goiMoHinh/, "đoạn chặn cũ còn trong GroupChatLive.tsx");
   const gui = nguon.slice(nguon.indexOf("const gui = async (command?: string)"));
-  const chan = gui.indexOf("if (goiMoHinh(body)) {");
-  const diLen = gui.indexOf("chat.gui(body");
-  assert.ok(chan > 0 && diLen > 0 && chan < diLen, "gui() phải chặn lệnh AI trước khi gọi chat.gui");
-  assert.match(gui.slice(chan, diLen), /return false;/, "nhánh lệnh AI phải dừng, không rơi xuống chat.gui");
+  const diLen = gui.indexOf("await chat.gui(body, traLoiCu, attempt)");
+  const goiAi = gui.indexOf("hoiAiVeTin(attempt.key, daGui.id)");
+  assert.ok(diLen > 0 && goiAi > diLen, "gui() phải gửi tin trước, rồi mới gọi AI với id của tin đã lưu");
+  assert.doesNotMatch(gui.slice(0, diLen), /setKhay\("plan"\)/, "lệnh AI không còn được chặn vào khay trước chat.gui");
+  // The AI call reuses the send's key and names the stored message.
+  const hook = readFileSync(join(GOC_APP, "src", "rudi", "chat", "useChatAi.ts"), "utf8");
+  assert.match(hook, /goiAi\(contextId, personId, cap\.loiNho, cap\.khoa, goi, cap\.lenh, trigger\)/);
+});
+
+/* ------------------------------------------------ 5. câu «đang nghĩ» của stream (lát 11) */
+
+test("Nếp: câu trạng thái của stream đúng từng chữ bảng cauTrangThai trong cau.go, và không câu chết", async () => {
+  // trang_thai{cau} carries a code; the panel prints the engine's own words
+  // for it. One source of truth (cau.go), one copy (hoi.ts), held equal here.
+  const { CAU_TRANG_THAI_NEP } = await import("../dist-test/rudi/nep/hoi.js");
+  const nguon = readFileSync(CAU_ENGINE, "utf8");
+  const ten = new Map();
+  for (const m of nguon.matchAll(/^\s*(\w+)\s+TrangThai\s*=\s*"([a-z_]+)"/gm)) ten.set(m[1], m[2]);
+  const khoi = /var cauTrangThai = map\[TrangThai\]string\{([\s\S]*?)\n\}/.exec(nguon);
+  assert.ok(khoi, "không thấy bảng `cauTrangThai` trong aiharness/cau/cau.go");
+  const bang = new Map();
+  for (const dong of khoi[1].split("\n").map((d) => d.trim()).filter(Boolean)) {
+    const m = /^(\w+):\s*"([^"]+)",$/.exec(dong);
+    assert.ok(m, `dòng cauTrangThai không đúng dạng Ten: "câu",: ${dong}`);
+    assert.ok(ten.has(m[1]), `cau.go dùng ${m[1]} mà không khai hằng TrangThai`);
+    bang.set(ten.get(m[1]), m[2]);
+  }
+  assert.ok(bang.size >= 2, `chỉ đọc được ${bang.size} câu trạng thái, bộ đọc đang hỏng`);
+  assert.deepEqual(Object.fromEntries([...bang].sort()), Object.fromEntries(Object.entries(CAU_TRANG_THAI_NEP).sort()));
+  for (const cau of Object.values(CAU_TRANG_THAI_NEP)) {
+    assert.doesNotMatch(cau, /[a-z]+_[a-z_]+|lỗi|[—–]/i, cau);
+  }
+});
+
+/* ------------------------------------------------ 6. hàng chờ của người xem khác (lát 12) */
+
+test("Nhóm: câu dưới hàng «đang đọc» nói đúng tin của ai, cho người hỏi và cho thành viên khác", async () => {
+  // Slice 12: another member watches the same pending answer. The line under
+  // «Rủ Đi AI đang đọc {n} tin…» must not tell them the answer goes under
+  // «tin của bạn» -- it goes under someone else's message, quoted just above.
+  // One module holds both lines (ai-invocations.ts); held here to the same
+  // voice as every sentence of this gate.
+  const { CAU_CHO_TRA_LOI } = await import("../dist-test/rudi/chat/ai-invocations.js");
+  assert.deepEqual(Object.keys(CAU_CHO_TRA_LOI).sort(), ["nguoi_hoi", "thanh_vien"]);
+  assert.notEqual(CAU_CHO_TRA_LOI.nguoi_hoi, CAU_CHO_TRA_LOI.thanh_vien);
+  assert.match(CAU_CHO_TRA_LOI.nguoi_hoi, /của bạn/);
+  assert.doesNotMatch(CAU_CHO_TRA_LOI.thanh_vien, /của bạn/, "thành viên khác không phải người gửi tin nhờ");
+  for (const cau of Object.values(CAU_CHO_TRA_LOI)) {
+    assert.doesNotMatch(cau, /[a-z]+_[a-z_]+/, `câu chứa mã máy: ${cau}`);
+    assert.doesNotMatch(cau, /lỗi|HTTP|\b(4\d\d|5\d\d)\b/i, `câu viết như báo lỗi: ${cau}`);
+    assert.doesNotMatch(cau, /[—–]/, `câu dùng gạch dài: ${cau}`);
+    assert.ok(cau.trim().length > 20, `câu quá ngắn: ${cau}`);
+  }
 });
