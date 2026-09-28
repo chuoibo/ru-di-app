@@ -1,6 +1,6 @@
 # Nhánh của flow 41 khi máy chủ CÓ khoá mô hình (--ai, AI=1): chat hai người.
 #
-# Thiết kế 2026-09-28 (lát M1): cặp nhờ Rủ Đi AI bằng lệnh `hoi` (gõ @Rủ Đi,
+# Lát M1 (thiết kế ở ai-chat-hai-nguoi.md): cặp nhờ Rủ Đi AI bằng lệnh `hoi` (gõ @Rủ Đi,
 # hoặc nút «Hỏi Rủ Đi AI» dưới các công cụ của khay, điền sẵn «@Rủ Đi»). Câu
 # trả lời là một TIN TRẢ LỜI vào đúng tin nhờ, ký «Rủ Đi AI · đọc N tin»
 # (hoặc «· chỉ đọc lời nhờ»). Tấm «Xem» nói lời nhờ và câu trả lời hiện cho
