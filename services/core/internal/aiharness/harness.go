@@ -151,8 +151,9 @@ type Turn struct {
 	// every routing decision; Doi picks only the words (the router's bot
 	// file, the answer's instruction and clause, the fixed sentences that
 	// name the audience) and the record (bot doi, the couple's prompt
-	// version; metrics v6). See nhom.go agentPhong. Shared taste (P5)
-	// builds on it later.
+	// version; metrics v6). See nhom.go agentPhong. It is also the one
+	// gate of the couple's shared taste (ADR-0048): only a couple's turn
+	// declares and may run gu_hai_ban (tools.BoiCanh.Doi).
 	Doi bool
 }
 
@@ -263,6 +264,20 @@ type Result struct {
 	Phan       []json.RawMessage
 	QuanIDs    []string
 	KetQuaNhap json.RawMessage
+	// GuDung are the people whose shared taste the model read this turn (a
+	// couple's gu_hai_ban put it in the ledger; ADR-0048), in the order it
+	// came, each with the roster's label. The worker re-checks every one of
+	// them in the transaction that publishes and names them on the card
+	// (doc.gu); a turn that read no taste has none.
+	GuDung []NguoiGu
+}
+
+// NguoiGu is one person whose taste an answer used.
+type NguoiGu struct {
+	// ID is the person id: for the worker's re-check, never shown.
+	ID string
+	// Nhan is the roster's label the model read beside the taste.
+	Nhan string
 }
 
 // Loi is a turn that ended without an answer.

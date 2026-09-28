@@ -4,6 +4,8 @@
 **Soạn:** Claude, 2026-09-24 · **Sửa bổ sung:** ADR-0019 §2.1, ADR-0027 §4/§7, spec «Nếp truyền giấy» §4.2/§6.1,
 dòng `CLAUDE.md` «AI … không tự đọc chat/gu/lịch sử»
 **Liên quan:** ADR-0021 §2.5 (pair), ADR-0027 (sổ hai người), ADR-0031 (chat E2EE), ADR-0033 (Nếp nổi)
+**Sửa bởi:** ADR-0048 (2026-09-28) — §2.1 và §3 cho việc Rủ Đi AI dùng gu trong chat của cặp đôi: chỉ
+đồng ý `chia_gu` từ mốc ADR-0048 phủ chat, đồng ý cũ phải bật lại
 
 ## 1. Bối cảnh
 

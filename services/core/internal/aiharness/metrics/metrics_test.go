@@ -126,7 +126,7 @@ func TestNhanNhayCamKhongLuu(t *testing.T) {
 	if obs.NhanGuard("nhay_cam").Valid() {
 		t.Fatal("a record may hold nhay_cam")
 	}
-	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV6SQL {
+	if v := cacPhienBan(); len(v) != PhienBan || v[len(v)-1] != schemaV7SQL {
 		t.Fatal("PhienBan is not the last version")
 	}
 	// Version 5's path list is exactly obs.Duongs.
@@ -173,8 +173,41 @@ func TestV6BotDoi(t *testing.T) {
 	if n := strings.Count(body, ";"); n != 1 || strings.Count(body, "ADD CONSTRAINT") != 1 {
 		t.Fatalf("version 6 does more than the bot CHECK: %d statements", n)
 	}
-	if SchemaV6SQL() != schemaV6SQL || PhienBan != 6 {
-		t.Fatal("PhienBan / SchemaV6SQL")
+	if SchemaV6SQL() != schemaV6SQL {
+		t.Fatal("SchemaV6SQL")
+	}
+}
+
+// Version 7 is the last word on cong_cu (ADR-0048): its CHECK admits exactly
+// the registry's tool names (obs.CongCus, held equal to tools.Tens), the
+// couple's gu_hai_ban among them, replacing version 2's column CHECK by its
+// generated name, and nothing else of the table.
+func TestV7CongCuGuHaiBan(t *testing.T) {
+	m := regexp.MustCompile(`DROP CONSTRAINT IF EXISTS ai_turn_metrics_cong_cu_check,\s*ADD CONSTRAINT ai_turn_metrics_cong_cu_check\s*CHECK \(cong_cu <@ ARRAY\[([^\]]*)\]::text\[\]\);`).FindStringSubmatch(schemaV7SQL)
+	if m == nil {
+		t.Fatal("version 7 does not replace the cong_cu CHECK")
+	}
+	var inSQL, inGo []string
+	for _, v := range strings.Split(m[1], ",") {
+		inSQL = append(inSQL, strings.Trim(v, "'"))
+	}
+	for _, c := range obs.CongCus {
+		inGo = append(inGo, string(c))
+	}
+	sort.Strings(inSQL)
+	sort.Strings(inGo)
+	if strings.Join(inSQL, ",") != strings.Join(inGo, ",") || !strings.Contains(m[1], "'gu_hai_ban'") {
+		t.Fatalf("CHECK cong_cu %v, want obs.CongCus %v", inSQL, inGo)
+	}
+	if !strings.Contains(schemaV2SQL, "ADD COLUMN cong_cu text[] NOT NULL DEFAULT '{}' CHECK (cong_cu <@ ARRAY[") || strings.Contains(schemaV2SQL, "gu_hai_ban") {
+		t.Fatal("version 2's cong_cu column is not the one version 7 replaces")
+	}
+	body := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(schemaV7SQL, "")
+	if n := strings.Count(body, ";"); n != 1 || strings.Count(body, "ADD CONSTRAINT") != 1 {
+		t.Fatalf("version 7 does more than the cong_cu CHECK: %d statements", n)
+	}
+	if SchemaV7SQL() != schemaV7SQL || PhienBan != 7 {
+		t.Fatal("PhienBan / SchemaV7SQL")
 	}
 }
 

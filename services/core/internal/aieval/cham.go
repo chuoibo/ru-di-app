@@ -291,6 +291,19 @@ func Cham(k KyVong, l LuotDaCham) []Truot {
 		if k.The.SoKhoan != nil && soKhoan(l.Phan) != *k.The.SoKhoan {
 			bad(KiemThe, "so_khoan %d, kỳ vọng %d", soKhoan(l.Phan), *k.The.SoKhoan)
 		}
+		// doc.gu: whose shared taste the answer read (ADR-0048 §5); a case
+		// that names none expects none.
+		var gu []string
+		for _, n := range l.GuDung {
+			gu = append(gu, n.Nhan)
+		}
+		muon := []string{}
+		if k.The.Gu != nil {
+			muon = *k.The.Gu
+		}
+		if strings.Join(gu, ",") != strings.Join(muon, ",") {
+			bad(KiemThe, "doc.gu %v, kỳ vọng %v", gu, muon)
+		}
 	}
 	if len(l.YeuCau) > l.SoBuocKichBan {
 		bad(KiemKichBanLech, "lượt gọi mô hình %d lần, kịch bản chỉ có %d bước", len(l.YeuCau), l.SoBuocKichBan)

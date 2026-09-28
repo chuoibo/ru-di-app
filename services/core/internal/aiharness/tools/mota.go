@@ -31,6 +31,9 @@ var khiNao = map[Ten]string{
 		"Call it when the answer depends on what the group already plans. Do not call it for questions that do not involve the group's own plans.",
 	ListGroupOutings: "Returns the group's outings, upcoming or past, as aliases (g1…) with title and dates. " +
 		"Call it when the person asks about the group's outings. Do not call it for place suggestions.",
+	GuHaiBan: "Returns, for each of the two who turned on sharing their taste in this chat, their taste as an alias (d1…) under the name the room knows them by, and one more alias with what both like when both did. " +
+		"Somebody who did not turn it on is simply absent: an empty result means you do not know their taste, never that they like nothing. " +
+		"Call it only when the answer should fit what the two like (where to go, what to try together). Do not call it for anything else, and never state a taste it did not return.",
 	MyUpcomingOutings: "Returns the person's own upcoming outings across their groups, as aliases (g1…) with title and dates. " +
 		"Call it when the person asks what they have coming up. Do not call it for anyone else.",
 	RecallMemory: "Returns facts the person asked Nếp to remember that are relevant to your query, as aliases (f1…). " +

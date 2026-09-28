@@ -267,8 +267,15 @@ func (h *Handler) processNhomEngine(ctx context.Context, j work) error {
 			break
 		}
 		// publish posts the card, then releases its text through the output
-		// guard's window, paced, and ends the stream with the card's id.
-		err = h.publish(ctx, j, card, res.KetQuaNhap)
+		// guard's window, paced, and ends the stream with the card's id. An
+		// answer that read a couple's shared taste is posted only if every
+		// person whose taste it read still shares it with the chat
+		// (ADR-0048 §4: checked in the publishing transaction).
+		gu := make([]string, 0, len(res.GuDung))
+		for _, n := range res.GuDung {
+			gu = append(gu, n.ID)
+		}
+		err = h.publishGu(ctx, j, card, res.KetQuaNhap, gu)
 	case aiharness.TamThoi(runErr) && !dangDung(ctx):
 		var later bool
 		if later, err = h.retryLater(ctx, j); err == nil && !later {
@@ -320,7 +327,13 @@ func (h *Handler) theNhomEngine(ctx context.Context, j work, res aiharness.Resul
 		}
 		return nil, errors.New("chatassist: no text part for a client without a trigger")
 	}
-	grounded, err := companion.GroundReply(companion.ReplyMeta{InvocationID: j.id, Command: j.command, Read: j.soTin}, parts, places)
+	// doc.gu: whose shared taste the answer read, under the roster's labels
+	// (ADR-0048 §5). Only a couple's answer can have any.
+	var gu []string
+	for _, n := range res.GuDung {
+		gu = append(gu, n.Nhan)
+	}
+	grounded, err := companion.GroundReply(companion.ReplyMeta{InvocationID: j.id, Command: j.command, Read: j.soTin, Gu: gu}, parts, places)
 	if err != nil {
 		return nil, err
 	}

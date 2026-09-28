@@ -96,3 +96,27 @@ Lát P3 (prompt cặp đôi, số đo v6, eval) làm:
 - Còn mở: gu đã chia (P5); `nguoiKhongTen` («Một người trong nhóm») của nháp chia bill chưa có bản cặp
   đôi (chỉ hiện khi danh bạ phòng thiếu tên); `chung.txt` của router vẫn nói «(group only)» cho khối
   thành viên — lời nhắc router, không phải lời người dùng đọc; lời nhắc cặp đôi chưa đo với model thật (T3).
+
+Lát P5 (gu cặp đôi trong chat, ADR-0048) làm:
+
+- Bước 0: `chia_gu` cấp qua `POST …/notebook/proposals` (đề nghị tự hoàn tất), thu hồi qua
+  `DELETE …/notebook/consents/chia_gu`; hai route `LIVE-GO`, Python `live`. Bật lại sau thu hồi tạo
+  dòng `pair_consents` mới với `granted_at` mới. Chọn mốc hiệu lực `gudoi.MocChat` (0 giờ ngày
+  29/9/2026 giờ VN): đồng ý còn sống và `granted_at ≥ mốc` mới phủ chat. Không đổi schema Alembic, không đổi wire
+  route LIVE. Xin đồng ý lại = tắt rồi bật bằng hai lệnh sẵn có (nút «Bật lại cho chat»).
+- Máy chủ: công cụ `gu_hai_ban` (không đối số, lớp `doc`, phạm vi mới `doi`, bảng quyền cấp cho `nhom`,
+  chỉ khai khi `Turn.Doi` qua `Quyen.DuocPhepDoi`); nguồn `aidoc.Doc.GuDoi` trong một giao dịch READ
+  ONLY (chu kỳ sổ đôi → hai người → `bat_doi`/`chia_gu` → `gudoi.NguoiDuocDung` → `person_interests`
+  chỉ của người đủ điều kiện); bằng chứng nguồn `gu_doi` (bí danh `d1…`) theo nhãn danh bạ của lượt;
+  `Result.GuDung`; worker khoá chia sẻ `pair_notebooks` và kiểm lại trong giao dịch đăng, sai thì
+  `sharing_unavailable`, không thẻ; thẻ `doc.gu` = nhãn; `chat-capabilities.gu_chat`;
+  `ai_turn_metrics` v7 (CHECK `cong_cu` có tên công cụ, không ghi gì nó trả).
+- Cổng: `nepCongCuDoc` thêm sáu bảng có lý do; `TestGuDoiDocDungCot` + canary `TestGuDoiGateCanRed`
+  (nêu `pair_shared_constraints`, `display_name`, `messages` hay bảng ngoài sáu bảng là đỏ).
+- T1: ca `15-doi-gu-hai-ban` (mô hình tự gọi, dẫn bằng chứng, thẻ nêu gu hai người; kịch bản sai không gọi
+  công cụ trượt ở `cong_cu`), `16-hai-ban-khong-co-gu` (đám bạn gọi thử bị từ chối); bất biến 3/9/11 mở
+  rộng (đám bạn không khai `gu_hai_ban`, không đọc gu; `doc.gu` đúng nhãn danh bạ).
+- App: lời sheet «Gu của hai bạn» nói Nếp và Rủ Đi AI trong chat của hai bạn; «Bật lại cho chat» khi
+  `gu_chat.cua_toi = can_bat_lai`; chân thẻ «· dùng gu của Linh».
+- Còn mở: khoảng hở bản app cũ bật `chia_gu` sau mốc (ADR-0048 §3.1); chưa đo mô hình thật (T3); chưa
+  ảnh chụp sheet và chân thẻ trên máy thật; Lead chưa ký.

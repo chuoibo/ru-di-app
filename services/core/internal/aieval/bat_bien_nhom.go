@@ -64,7 +64,9 @@ func loiNhacCua(t aiharness.Turn) []string {
 // and the group's for friends, and a fixed sentence that names its audience
 // is the class's own. A couple's answer instruction (the couple's text, its
 // clauses, without the shared tool clause) holds no word of a room of
-// friends (prompts.TuNhom).
+// friends (prompts.TuNhom). A couple's shared taste (ADR-0048) is the
+// couple's class alone: a room of friends declares no gu_hai_ban and reads
+// no taste, and a couple reads only its own members'.
 func batBien11(l LuotDaChay) []Truot {
 	if l.Turn.Bot != obs.BotNhom {
 		if l.Turn.Doi {
@@ -116,8 +118,35 @@ func batBien11(l LuotDaChay) []Truot {
 			bad("câu cố định của lớp kia: %q", l.Chu)
 		}
 	}
+	// A couple's shared taste (ADR-0048) belongs to the couple's class only:
+	// a room of friends never declares gu_hai_ban and never reads a taste;
+	// a couple reads only its own members'.
+	if !doi {
+		for i, y := range l.YeuCau {
+			for _, t := range y.CongCu {
+				if t == congCuGuDoi {
+					bad("yêu cầu %d: phòng đám bạn khai %s", i+1, t)
+				}
+			}
+		}
+		if len(l.GuDung) > 0 {
+			bad("phòng đám bạn đọc gu của %d người", len(l.GuDung))
+		}
+	}
+	for _, n := range l.GuDung {
+		thanhVien := false
+		for _, m := range l.Turn.ThanhVien {
+			thanhVien = thanhVien || m.ID == n.ID
+		}
+		if !thanhVien {
+			bad("gu của một người không ở trong phòng")
+		}
+	}
 	return out
 }
+
+// congCuGuDoi is the couple's taste tool (tools.GuHaiBan).
+const congCuGuDoi = "gu_hai_ban"
 
 // moc11 stands in for the canary marker when invariant 11 cuts an
 // instruction at it.
@@ -194,6 +223,28 @@ func batBien9(l LuotDaChay) []Truot {
 	if v, _ := dm.Get("chi_loi_nho"); v != tree.Bool(l.Turn.SoTin == 0) {
 		bad("doc.chi_loi_nho %v với so_tin %d", v, l.Turn.SoTin)
 	}
+	// doc.gu (ADR-0048 §5): exactly the labels of the people whose taste
+	// the turn read, each a label of the turn's roster; absent otherwise.
+	v, coGu := dm.Get("gu")
+	switch {
+	case len(l.GuDung) == 0 && coGu:
+		bad("thẻ nêu gu của %v mà lượt không đọc gu nào", v)
+	case len(l.GuDung) > 0:
+		nhan := map[string]bool{}
+		for i, m := range l.Turn.ThanhVien {
+			nhan[m.Ten] = true
+			nhan["Bạn "+fmt.Sprint(i+1)] = true
+		}
+		g, _ := v.(tree.List)
+		if len(g) != len(l.GuDung) {
+			bad("doc.gu %v, lượt đọc gu của %d người", v, len(l.GuDung))
+		}
+		for i, x := range g {
+			if i < len(l.GuDung) && (x != tree.String(l.GuDung[i].Nhan) || !nhan[l.GuDung[i].Nhan]) {
+				bad("doc.gu[%d] %v không phải nhãn danh bạ của người có gu được đọc", i, x)
+			}
+		}
+	}
 	phan, _ := pm.Get("phan")
 	list := phan.(tree.List)
 	if len(list) != len(l.Phan) {
@@ -255,7 +306,11 @@ func theCua(l LuotDaChay) (*tree.OrderedMap, error) {
 		}
 		parts = append(parts, treejson.To(v))
 	}
-	card, err := companion.GroundReply(companion.ReplyMeta{InvocationID: l.Turn.InvocationID, Command: string(l.Turn.Lenh), Read: l.Turn.SoTin}, parts, places)
+	var gu []string
+	for _, n := range l.GuDung {
+		gu = append(gu, n.Nhan)
+	}
+	card, err := companion.GroundReply(companion.ReplyMeta{InvocationID: l.Turn.InvocationID, Command: string(l.Turn.Lenh), Read: l.Turn.SoTin, Gu: gu}, parts, places)
 	if err != nil {
 		return nil, fmt.Errorf("GroundReply từ chối thẻ: %v", err)
 	}

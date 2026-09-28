@@ -8,12 +8,12 @@ import (
 	"mobile/services/core/internal/aiharness/testkit"
 )
 
-// tatCaCongCu is every implementation of the three tables, for the tests
+// tatCaCongCu is every implementation of the four tables, for the tests
 // that walk the whole registry. A name in two tables is red.
 func tatCaCongCu(t *testing.T) map[Ten]congCu {
 	t.Helper()
 	out := map[Ten]congCu{}
-	for _, bang := range []map[Ten]congCu{congCusChung, congCusNhom, congCusNep} {
+	for _, bang := range []map[Ten]congCu{congCusChung, congCusNhom, congCusCapDoi, congCusNep} {
 		for ten, cc := range bang {
 			if _, ok := out[ten]; ok {
 				t.Fatalf("%s is in two tables", ten)

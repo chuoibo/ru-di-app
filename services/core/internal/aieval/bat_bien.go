@@ -12,6 +12,7 @@ import (
 	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/aiharness/tools"
 	"mobile/services/core/internal/domain/pairpaper"
 )
 
@@ -152,6 +153,10 @@ type LuotDaChay struct {
 	QuanIDs    []string
 	KetQuaNhap json.RawMessage
 	TheGioi    *TheGioi
+	// GuDung are the people whose shared taste a couple's turn read
+	// (aiharness.Result.GuDung, ADR-0048): the card's doc.gu (invariant 9)
+	// and only ever a couple's (invariant 11).
+	GuDung []aiharness.NguoiGu
 }
 
 // KiemBatBien holds a turn to every invariant that applies at S1.
@@ -272,6 +277,12 @@ func batBien3(l LuotDaChay) []Truot {
 	cho := map[string]bool{}
 	for _, t := range duoc {
 		cho[t] = true
+	}
+	if l.Turn.Bot == obs.BotNhom && l.Turn.Doi {
+		// A couple's turn also declares the couple's own tools (ADR-0048).
+		for _, t := range tools.MacDinh.DuocPhepDoi(obs.BotNhom, false) {
+			cho[string(t)] = true
+		}
 	}
 	var out []Truot
 	for i, y := range l.YeuCau {

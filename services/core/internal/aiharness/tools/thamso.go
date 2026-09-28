@@ -114,6 +114,7 @@ var thamSo = map[Ten]*genai.Schema{
 		"khi": enum([]string{"sap_toi", "da_qua"}),
 		"k":   soK(),
 	}, []string{"khi", "k"}, "khi"),
+	GuHaiBan:          doiTuong(map[string]*genai.Schema{}, nil),
 	MyUpcomingOutings: doiTuong(map[string]*genai.Schema{"k": soK()}, []string{"k"}),
 	RecallMemory: doiTuong(map[string]*genai.Schema{
 		"truy_van": chuoi(MaxTruyVan, "what to recall"),

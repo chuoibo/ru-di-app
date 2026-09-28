@@ -96,6 +96,29 @@ func TestGroundReplyEnvelope(t *testing.T) {
 	}
 }
 
+// A couple's answer that used shared taste says whose (ADR-0048 §5): the
+// labels under doc.gu, after what doc already held; no taste used, no key.
+// More than a couple, a blank or an overlong label is refused.
+func TestGroundReplyGu(t *testing.T) {
+	text := []tree.Value{parse(t, `{"kind":"text","payload":{"text":"Hai bạn thử cafe nhé"}}`)}
+	m := meta
+	m.Gu = []string{"Linh", "Tú"}
+	got, err := GroundReply(m, text, nil)
+	if err != nil || !strings.Contains(dump(t, got), `"doc": {"so_tin": 20, "chi_loi_nho": false, "gu": ["Linh", "Tú"]}`) {
+		t.Fatalf("%v %s", err, dump(t, got))
+	}
+	got, _ = GroundReply(meta, text, nil)
+	if strings.Contains(dump(t, got), `"gu"`) {
+		t.Fatalf("a card that used no taste names some: %s", dump(t, got))
+	}
+	for _, gu := range [][]string{{"A", "B", "C"}, {" "}, {strings.Repeat("ơ", MaxReplyGuRune+1)}} {
+		m.Gu = gu
+		if _, err := GroundReply(m, text, nil); code(err) != "companion_reply_malformed" {
+			t.Fatalf("%v: %v", gu, err)
+		}
+	}
+}
+
 // A part that fails its check is dropped, not published and not fatal while
 // another part stands; one kind at most once; three parts at most.
 func TestGroundReplyDropsWhatFailsAndBoundsParts(t *testing.T) {

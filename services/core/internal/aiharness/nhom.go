@@ -79,8 +79,10 @@ func khuonNhom(doi bool) khuon {
 // split draft and card. What a couple (Turn.Doi: a chat of two whose two
 // people both turned on «Một đôi») changes is only who the words speak to:
 // its system instruction, its out-of-scope clause, the fixed sentences that
-// name the audience, and the record (bot doi, the couple's prompt version).
-// A chat of two among friends is not a couple and reads the group's words.
+// name the audience, and the record (bot doi, the couple's prompt version);
+// and one tool, the couple's shared taste (gu_hai_ban, ADR-0048), declared on
+// a couple's turn only (tools.BoiCanh.Doi). A chat of two among friends is
+// not a couple: it reads the group's words and never sees that tool.
 
 // agentPhong is the room's system instruction carrying the canary marker.
 func agentPhong(t Turn, maKiem string) string {
@@ -377,6 +379,7 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 		Bot: obs.BotNhom, NguoiHoi: t.NguoiHoi, NhomID: t.Phong, LoiNguoiHoi: hoi.Chu, Luc: t.Luc, HanChe: q.HanChe, YDinh: kq.YDinh,
 		Cung: cung, Mem: mem, DiUngNgoaiDanhMuc: kq.Slots.DiUngNgoaiDanhMuc, DiemDen: idsDiemDen(dsDiemDen),
 		Nguon: nguonNhom(e.nguon), Quyen: e.quyen, SoCai: sc, Che: []tools.Ten{tools.DraftPoll},
+		Doi: t.Doi, NhanDoi: nhanThanhVien(t.ThanhVien),
 	}
 	bc.ChoNhom()
 	khoi := []string{prompts.BocDuLieu(prompts.MayChu, strings.Join(dongMayChuHieu(t.Luc, kq.Slots), "\n"))}
@@ -393,7 +396,9 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 			if err != nil {
 				return Result{}, err
 			}
-			return phanNhom(res.Text, res.QuanIDs, nil), nil
+			out := phanNhom(res.Text, res.QuanIDs, nil)
+			out.GuDung = guDaDung(sc, t)
+			return out, nil
 		}
 	}
 	if dem.ConLai() < 1+duTruKiem {
@@ -460,7 +465,31 @@ func (e *Engine) nhom(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, 
 	if err != nil {
 		return Result{}, err
 	}
-	return phanNhom(res.Text, nhap.Quan, nhap.LichTrinh), nil
+	out := phanNhom(res.Text, nhap.Quan, nhap.LichTrinh)
+	out.GuDung = guDaDung(sc, t)
+	return out, nil
+}
+
+// nhanThanhVien is each member's label as the router reads it
+// (thanhVienRouter: the roster's label, or «Bạn n»), by person id.
+func nhanThanhVien(ts []ThanhVienNhom) map[string]string {
+	out := map[string]string{}
+	for i, v := range thanhVienRouter(ts) {
+		out[ts[i].ID] = v.Ten
+	}
+	return out
+}
+
+// guDaDung are the people whose shared taste the ledger holds, with the
+// label the model read beside it. Only a couple's turn can have any: the
+// tool is declared and run nowhere else (tools.BoiCanh.Doi).
+func guDaDung(sc *tools.SoCai, t Turn) []NguoiGu {
+	nhan := nhanThanhVien(t.ThanhVien)
+	var out []NguoiGu
+	for _, id := range sc.GuDaDung() {
+		out = append(out, NguoiGu{ID: id, Nhan: nhan[id]})
+	}
+	return out
 }
 
 // bamPhienNhom buffers a legacy-lane group turn's shared messages in the
@@ -559,11 +588,13 @@ func coChuoi(xs []string, x string) bool {
 	return false
 }
 
-// nguonNhom is the group's read ports: the catalogue, the destinations and
-// the room, and nothing of a person's own (no CaNhan, no TriNho). One engine
+// nguonNhom is the group's read ports: the catalogue, the destinations, the
+// room and a couple's shared taste (read only on a couple's turn, only for
+// people who shared it with the chat: ADR-0048), and nothing of a person's
+// own (no CaNhan, no TriNho). One engine
 // serves both bots, so the group's tool context is built from a copy that
 // never holds Nếp's ports: a tool mis-registered for the group still finds
 // no memory to read or write (review of slices 9/11, finding 2.5).
 func nguonNhom(n tools.NguonDuLieu) tools.NguonDuLieu {
-	return tools.NguonDuLieu{Quan: n.Quan, Cho: n.Cho, Nhom: n.Nhom}
+	return tools.NguonDuLieu{Quan: n.Quan, Cho: n.Cho, Nhom: n.Nhom, Doi: n.Doi}
 }

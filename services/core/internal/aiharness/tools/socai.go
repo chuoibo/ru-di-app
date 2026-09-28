@@ -3,6 +3,7 @@ package tools
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"sync"
 
 	"mobile/services/core/internal/aiharness/llm"
@@ -32,9 +33,30 @@ type SoCai struct {
 }
 
 // tiepDau is the alias prefix of each source: p1, p2… for places, m1… for
-// manual sections, f1… for facts, g1… for group history, b1… otherwise.
+// manual sections, f1… for facts, g1… for group history, d1… for a couple's
+// shared taste, b1… otherwise.
 var tiepDau = map[truyhoi.Nguon]string{
-	truyhoi.Places: "p", truyhoi.Manual: "m", truyhoi.Memory: "f", truyhoi.GroupHistory: "g",
+	truyhoi.Places: "p", truyhoi.Manual: "m", truyhoi.Memory: "f", truyhoi.GroupHistory: "g", truyhoi.GuDoi: "d",
+}
+
+// GuDaDung are the people whose taste this turn's ledger holds (the couple's
+// tool returned it: the model read it), by person id, in the order it came.
+// Every one of them is re-checked before the answer is published and named
+// on its card (ADR-0048 §5).
+func (s *SoCai) GuDaDung() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var out []string
+	for _, id := range s.thuTu {
+		m := s.muc[id]
+		if m.bc.Nguon != truyhoi.GuDoi {
+			continue
+		}
+		if nguoi, ok := strings.CutPrefix(id, IDGuDoi); ok && nguoi != idGuChung {
+			out = append(out, nguoi)
+		}
+	}
+	return out
 }
 
 type mucSoCai struct {

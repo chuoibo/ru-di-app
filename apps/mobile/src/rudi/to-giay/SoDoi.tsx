@@ -126,6 +126,11 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   /** My own `chia_gu` switch: on, and off again. */
   chiaGu: () => void;
   thoiChiaGu: () => void;
+  /**
+   * «Bật lại cho chat» (ADR-0048 §3.2): my switch off, then on again, so it is
+   * granted under the wording that names the chat.
+   */
+  batLaiChiaGu: () => void;
   /** «Anh lo / Em lo / Hôm nay mình share» for this week. */
   chonLo: (lo: ChonLo) => void;
   /** Resolves true once every changed box has landed; false if any did not. */
@@ -223,6 +228,8 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
       thuHoiBatDoi: () => setS((c) => ({ ...c, batDoi: false, deNghiCho: c.deNghiCho.filter((d) => d.purpose !== "bat_doi") })),
       chiaGu: () => setS((c) => (c.batDoi ? { ...c, gu: { mine_shared: true, theirs_shared: false, theirs: [], common: [] } } : c)),
       thoiChiaGu: () => setS((c) => ({ ...c, gu: c.gu ? { ...c.gu, mine_shared: false } : c.gu })),
+      // The fixture has no consent times: re-consent is the switch left on.
+      batLaiChiaGu: () => undefined,
       // The fixture has no week role: nothing to choose.
       chonLo: () => undefined,
       datRangBuoc: async (rb) => {

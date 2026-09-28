@@ -89,6 +89,11 @@ func TestCongCuDuMoiTen(t *testing.T) {
 			t.Errorf("%s is in the group's table with scope %s", ten, m.Pham)
 		}
 	}
+	for ten := range congCusCapDoi {
+		if m, _ := Tra(ten); m.Pham != Doi {
+			t.Errorf("%s is in the couple's table with scope %s", ten, m.Pham)
+		}
+	}
 	for ten := range congCusNep {
 		if m, _ := Tra(ten); m.Pham != Me {
 			t.Errorf("%s is in Nếp's table with scope %s", ten, m.Pham)

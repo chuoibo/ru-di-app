@@ -40,6 +40,14 @@ export type ChatCapabilities = {
    * server: not a couple.
    */
   cap_doi?: boolean;
+  /**
+   * A couple's shared taste in this chat (ADR-0048): where MY `chia_gu`
+   * switch stands for the chat -- off, on, or on under the older wording
+   * («Nếp dùng khi phác tờ») and to be turned on again -- and whether the
+   * other person's taste may be used here. Null outside a couple; absent on
+   * an older server, read as null.
+   */
+  gu_chat?: { cua_toi: "tat" | "bat" | "can_bat_lai"; nguoi_kia: boolean } | null;
 };
 
 /** Whether the server says this room is a couple (`cap_doi`). Fails closed. */

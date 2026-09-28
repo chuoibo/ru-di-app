@@ -19,6 +19,7 @@
  */
 import { type ReactNode, useMemo } from "react";
 
+import { batLaiChoChat } from "./gu-doi";
 import { type NoiDungTo, sauKhiXinTo } from "./to-giay";
 import { SoDoiContext, type SoDoiApi } from "./SoDoi";
 import { caHaiDongY, ghiRangBuocTuanTu, rangBuocCua, toTomTatThanhTo } from "./so-doi-map";
@@ -84,6 +85,7 @@ export function SoDoiSongProvider({
       thuHoiBatDoi: () => void song.thuHoi("bat_doi"),
       chiaGu: () => void song.xinBac("chia_gu"),
       thoiChiaGu: () => void song.thuHoi("chia_gu"),
+      batLaiChiaGu: () => void batLaiChoChat(() => song.thuHoi("chia_gu"), () => song.xinBac("chia_gu")),
       chonLo: (lo) => void song.chonVai(lo),
       datRangBuoc: async (rb) => {
         // Two fields, two writes, and an empty one is a delete: the route takes
