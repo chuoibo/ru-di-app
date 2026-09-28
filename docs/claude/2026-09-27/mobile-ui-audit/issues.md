@@ -20,8 +20,8 @@
 | Mức | Issue |
 |---|---|
 | P1 | UI-005, UI-049 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081 |
 
 ---
 
@@ -237,10 +237,10 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (vùng bấm, lệch spec hệ thống) · **P3** |
-| Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã). Thêm F03, F04, F05 (xem Actual) |
+| Feature / Screen / Layer | F01 và mọi màn dùng `ONhapMuc` một dòng · Login (ô số điện thoại), Lời mời (ô mã). Thêm F03, F04, F05, F06 (xem Actual) |
 | Nền tảng, cấu hình | web, C1, C2, C3 (đo runtime). Native: cùng `minHeight: 44` (STATIC) |
 | Expected | DESIGN.md §Mục tiêu chạm: «Mọi node bấm được ≥48×48dp, kể cả `TextInput`» |
-| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`). F05 (chat): 6 nút cảm xúc của menu tin 44×44 (`chat/MenuTin.tsx:97`, `TC-F05-MENU-PHAN-UNG`); bong bóng một dòng cao 46, và bong bóng là chỗ duy nhất mở menu tin (`TC-F05-BO-CUC-TIN` G20) |
+| Actual | Ô số điện thoại 358×44; ô mã lời mời 196×44. F03 (form kèo mới): «Ô tên kèo» và «Ô ngân sách một người» 324×44, «Ô số người» 64×44; nút «Bớt/Thêm một người» 44×44 (có `hitSlop` 4, nhưng react-native-web không áp `hitSlop`); ô ngày của lá lịch 44×44. F04 (chia bill): 9 ô nhập của một bill 3 món cao 44 (tên 326×44, số phần 110×44, tiền 204×44) và «Ô tên khoản chi» 358×44 (`TC-F04-VUNG-BAM`). F05 (chat): 6 nút cảm xúc của menu tin 44×44 (`chat/MenuTin.tsx:97`, `TC-F05-MENU-PHAN-UNG`); bong bóng một dòng cao 46, và bong bóng là chỗ duy nhất mở menu tin (`TC-F05-BO-CUC-TIN` G20). F06 (`TC-F06-VUNG-BAM`): «Ô tên nhóm» 230×44 và ghi chú-link «Chỉ hai người?… Thêm bạn» 358×40 (dưới cả ngưỡng 44) ở Lập nhóm; hai ô của Mời 300×44; ô số của Thêm bạn 324×44; mỗi hàng «Xem hồ sơ …» ở Bạn bè 236×44 |
 | Evidence | ![ô nhập 44](evidence/EV-F01-O-NHAP-44-C1.jpg) ![menu tin: hàng cảm xúc 44dp, C1](evidence/EV-F05-MENU-C1.jpg) |
 | Source | `src/rudi/ui/ONhapMuc.tsx:60` (`minHeight: 44`) |
 | Đề xuất | `minHeight: 48` (vẫn không hộp, dòng kẻ giữ nguyên) |
@@ -295,7 +295,7 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE (điều hướng) · **P2**. Checkpoint 2 ghi P3; nâng ở checkpoint 3 vì phạm vi không còn là một màn: đo lại ở `/places/[id]`, và nút back của `TopBar` trong kit cũng gọi `router.back()` không kiểm `canGoBack()` |
-| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. F05 · `/groups/[id]/chat` mở lạnh: chạm «Quay lại» của đầu chat, URL giữ nguyên (`TC-F05.S02-BACK-LANH`); màn chat không có thanh tab. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
+| Feature / Screen | F01 · `/login` (`ui/CoverBand.tsx`: `onBack === true ? router.back()`). F02 · `/places/[id]` (`TopBar`, `src/rudi/ui.tsx:235`). F03 · `/outings/[id]` (đo: URL giữ nguyên sau khi chạm), `/outings/chon`, và ErrorState «Về Lên plan» của màn kèo cũng là `router.back()`. F04 · đo cả bốn màn tiền mở lạnh: `/smart-split/[id]/review`, `/settlements/[id]`, `/batches/[id]`, `/finance` đều đứng yên sau khi chạm (`TC-F04.S0x-BACK-LANH`); ba màn sau không có thanh tab. F05 · `/groups/[id]/chat` mở lạnh: chạm «Quay lại» của đầu chat, URL giữ nguyên (`TC-F05.S02-BACK-LANH`); màn chat không có thanh tab. F06 · năm màn mở lạnh đều đứng yên: `/groups/[id]/members`, `/groups/[id]/invite`, `/friends`, `/friends/add`, `/people/[id]` (`TC-F06.S0x-BACK-LANH`). Cùng cơ chế: «Về danh sách bạn» và «Xem thành viên» (`router.back()`) không làm gì khi màn trước không nằm trong stack. 37 file màn dùng `TopBar` với `back` mặc định; các màn còn lại đo ở feature của chúng |
 | Nền tảng, cấu hình | web, C1 |
 | Tái hiện | Mở thẳng `/login` (không có lịch sử), chạm «Quay lại» |
 | Expected | Đưa về màn hợp lý (Welcome), hoặc không vẽ nút khi không có nơi để về |
@@ -596,12 +596,12 @@
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | UX ISSUE · **P3** |
-| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn) |
+| Feature / Screen / Layer | F03 · `/outings/[id]` · L08 (chung cho mọi `ui/Sheet.tsx`, khoảng 20 sheet). F05 · `/groups/[id]/chat` · L18 menu tin, L19 khay sticker (cùng `Sheet`), L20 khay công cụ và L21 khay tờ hẹn chung (khay trong màn). F06 · `/people/[id]` · L06 hành động hồ sơ |
 | Nền tảng, cấu hình | web, C1 (trên Android Chrome, cử chỉ back hệ thống cũng là Back trình duyệt). Native Android: `Sheet` nghe `BackHandler` nên đóng sheet (STATIC) |
 | Tái hiện | Từ Lên plan mở kèo, mở sheet «Chặng mới», gõ dở tên chặng, bấm Back |
 | Expected | Back đóng sheet, ở lại màn kèo |
 | Actual | Sheet đóng vì màn bị gỡ: URL về `/plan`, 12/12 ô của lưới chạm đổi, chữ đang gõ mất |
-| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn |
+| Evidence | Hàng `TC-L08-DONG-back` (URL và lưới chạm sau Back). Sáu cách đóng khác đạt. F05, vào chat từ Tin nhắn rồi mở từng lớp: Back trình duyệt đóng lớp bằng cách rời chat về `/messages` ở cả bốn lớp (`TC-L18-VONGDOI`, `TC-L19-VONGDOI`, `TC-L20-VONGDOI`, `TC-L21-VONGDOI`); Esc, nền, kéo xuống và X đều đóng mà vẫn ở lại chat, trừ Esc ở L21 (UI-066). Chữ đang gõ trong ô soạn mất theo màn. F06: sheet «Thêm hành động» của hồ sơ, Back rời hồ sơ về Bạn bè; Esc, nền, kéo xuống ở lại hồ sơ (`TC-L06-VONGDOI`) |
 | Source | `src/rudi/ui/Sheet.tsx:145` chỉ nghe `hardwareBackPress` (react-native-web không phát). Khay công cụ: `chat/SoHen.tsx:111` (`BackHandler`, chỉ Android). Khay tờ hẹn chung: không nghe gì, nên trên Android Back cũng rời chat (STATIC) |
 | Đề xuất sửa | Trên web, đẩy một mục lịch sử khi mở sheet và đóng sheet ở `popstate` (như khay `/create`) |
 | Tiêu chí gỡ | Back khi sheet mở: sheet đóng, URL giữ nguyên |
@@ -1094,6 +1094,185 @@ Nhận xét thẩm mỹ của người yêu cầu được ghi nguyên văn là 
 | Source | `screens/chat/GroupChatLive.tsx:1031` (`dayGhim: { …, zIndex: 1 }`); `ui/Sheet.tsx:178–180` (sheet là `absoluteFill` trong cây của màn, không có `zIndex`). Trên web, `z-index: 1` vẽ dải lên trên nền mờ |
 | Đề xuất sửa | Bỏ `zIndex` của dải, hoặc cho lớp sheet `zIndex` cao hơn |
 | Tiêu chí gỡ | Khi sheet mở, dải bị làm mờ như phần còn lại của màn |
+
+## F06 Nhóm · Người
+
+Mọi lần ghi của F06 đi vào tài khoản mới (`moi-51`, `moi-52`, `moi-53`) và hai người của chat seed không có nhóm
+(`chat-20`, `chat-21`). Team Đà Lạt và nhóm chat-test chỉ được đọc; riêng chat-0 gửi một lời mời kết bạn tới chat-5.
+
+### UI-071 · Lập nhóm xong bị đưa về Khám phá: không xác nhận, không thấy nhóm vừa lập, không có lối mời bạn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F06 · `/groups/new` |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã điều hướng (STATIC) |
+| Điều kiện | Tài khoản mới, chưa có nhóm nào |
+| Tái hiện | Tin nhắn → «Tạo nhóm», gõ tên, «Mở nhóm» |
+| Expected | Vào nhóm vừa lập (chat, hoặc bước mời), hoặc ít nhất một câu xác nhận kèm lối mời bạn. Chính màn này hứa «Mời bạn bè sau». Messenger mở thẳng cuộc trò chuyện mới |
+| Actual | Nhóm được tạo (đúng một, kể cả khi chạm đúp), rồi app thay màn bằng Khám phá. Trên màn không có tên nhóm, không câu nào nói đã lập xong, không nút mời. Muốn mời phải tự tìm: Tin nhắn → nhóm → «⋯» → Thành viên → «Mời bằng số điện thoại» |
+| Evidence | ![sau «Mở nhóm», C1](evidence/EV-F06-TAO-SAU-C1.jpg) (hàng `TC-F06-TAO-SAU`) |
+| Source | `screens/groups/New.tsx:62` (`router.replace(manDau(moi))`); `duong-vao.ts:145–151` (`manDau` trả `/explore` khi phiên có nhóm đang hoạt động) |
+| Đề xuất sửa | Sau khi tạo, mở chat của nhóm mới (hoặc màn Mời) thay vì `manDau` |
+| Tiêu chí gỡ | Sau «Mở nhóm», màn tiếp theo hiện tên nhóm vừa lập và có lối mời bạn |
+
+### UI-072 · Mời một người đã ở trong nhóm: máy chủ nói «đã có», app lại báo «Lần bấm trước chưa chạy xong… đừng bấm lại ngay»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (câu lỗi sai lý do) · **P3** |
+| Feature / Screen | F06 · `/groups/[id]/invite` |
+| Nền tảng, cấu hình | web, C1. Native: cùng bảng câu (STATIC) |
+| Tái hiện | Mời số của một người đã là thành viên, dưới một tên khác lần mời trước |
+| Expected | «Người này đã ở trong nhóm hoặc đã được mời rồi.» (câu này có sẵn trong app) |
+| Actual | `POST /contexts/{id}/members` trả 409 `{"code":"membership_already_open"}`. App hiện câu của idempotency: «Lần bấm trước chưa chạy xong nên chưa biết đã ghi hay chưa. Chờ một chút rồi mở lại màn hình để xem, đừng bấm lại ngay.» Mời lại một số đang chờ với đúng tên cũ thì app dùng lại khoá cũ, máy chủ phát lại 201, và màn báo «Đã mời» (đúng) |
+| Evidence | ![mời người đã ở trong nhóm, C1](evidence/EV-F06-MOI-THANH-VIEN-C1.jpg) (hàng `TC-F06-MOI-THANH-VIEN`, mã HTTP ghi trong hàng; gọi thẳng API ra đúng mã và body trên) |
+| Source | App: `screens/vao-cua/cong-api.ts:144–151` (`MOI_REFUSALS` chỉ có `membership_conflict`, `duplicate_membership`), rơi xuống `api.ts:314–316` (mọi 409 thành câu idempotency). Máy chủ: Go `internal/repo/contexts.go:187` (`MEMBERSHIP_ALREADY_OPEN`) và `internal/routes/contexts.go:166` (`strings.ToLower`), Python `app/api/service.py:1643` (`exc.code.lower()`) |
+| Hậu quả | Người mời được dặn chờ và đừng bấm lại, trong khi không có gì đang chạy. Lý do thật (đã có trong nhóm) bị giấu |
+| Đề xuất sửa | Thêm `membership_already_open` vào `MOI_REFUSALS`. Câu idempotency chỉ dùng cho mã `idempotency_request_in_flight`, không cho mọi 409 |
+| Tiêu chí gỡ | Mời số của một thành viên: câu nói người này đã ở trong nhóm |
+
+### UI-073 · Người vào bằng lời mời bỏ qua bước Sở thích; tên người mời đặt thành tên công khai mà chính chủ chưa xác nhận
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (luồng vào cửa, đồng thuận về danh tính) · **P2**. Thuộc loại quyền riêng tư/đồng thuận trong danh sách blocker của repo |
+| Feature / Screen | F06 · `/groups/[id]/invite` → F01 · OTP → F05.S01 |
+| Nền tảng, cấu hình | web, C1. Native: cùng máy chủ và cùng `manSauDangNhap` (STATIC) |
+| Điều kiện | Số chưa từng đăng nhập, được mời vào nhóm dưới tên «Tên do người mời đặt cho số 53» |
+| Tái hiện | Người được mời đăng nhập lần đầu bằng OTP qua UI |
+| Expected | Tài khoản mới đi qua Sở thích («personalized lúc mới tạo acc», `duong-vao.ts:153–165`). Người đó thấy và sửa được tên người khác đặt cho mình trước khi cả nhóm thấy |
+| Actual | Đăng nhập xong vào thẳng `/messages`: không qua Sở thích, không có ô tên, không thấy tên người mời đặt. Sau «Đồng ý», cả nhóm thấy họ là «Tên do người mời đặt cho số 53». Cùng cơ chế với moi-52, được mời dưới tên «Bạn thân từ hồi cấp ba của mình, người hay trễ hẹn nhất hội». Một người lạ (chat-20: không chung nhóm, không là bạn) tra số của moi-52 ở Thêm bạn cũng thấy đúng cái tên đó |
+| Evidence | ![vào cửa lần đầu: thẳng tới Tin nhắn, C1](evidence/EV-F06-DUOC-MOI-VAO-CUA-C1.jpg) ![người lạ tra số thấy tên do người mời đặt, C1](evidence/EV-F06-THEM-DA-GUI-C1.jpg) (hàng `TC-F06-DUOC-MOI-VAO-CUA`, `TC-F06-THEM-GUI`) |
+| Source | Máy chủ coi người đã có hàng `people` là không mới: Python `app/api/service.py:3977` (`is_new = person is None`), Go `internal/domain/authsteps/otpdoor.go:255`. Lời mời tạo trước hàng đó kèm tên (`PUT /people/{id}` trong `groups/Invite.tsx`, «hồ sơ tạm» có chủ đích). App chỉ vào Sở thích khi `is_new_person` (`duong-vao.ts:166–176`) |
+| Hậu quả | Phần lớn người dùng mới (vào qua lời mời) không bao giờ nói gu, nên gợi ý không cá nhân hoá. Họ mang một cái tên người khác đặt (có thể là biệt danh) trước cả nhóm, và trước người lạ tra số, mà không được hỏi |
+| Đề xuất sửa | Máy chủ trả `is_new_person` theo «lần đăng nhập đầu của danh tính này», không theo «đã có hàng người». Hoặc app coi người chưa từng tự đặt tên là mới. Sở thích hiện ô tên điền sẵn tên người mời đặt, ghi rõ «Nhóm đang gọi bạn là …» |
+| Tiêu chí gỡ | Số được mời đăng nhập lần đầu: vào Sở thích, ô tên điền sẵn và sửa được. Tra số: không lộ tên người khác đặt khi chính chủ chưa xác nhận |
+
+Ghi chú: `main` đã đổi luật ai tra được số ở `dd75752` (sau mốc đo). Phần «người lạ thấy tên» cần đo lại ở hàng đợi sau
+pipeline; phần «bỏ qua Sở thích» không liên quan tới commit đó.
+
+### UI-074 · Quản trị tự bỏ quyền của chính mình bằng một chạm, không có bước hỏi
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (thao tác không tự hoàn tác được) · **P2** |
+| Feature / Screen | F06 · `/groups/[id]/members` |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Nhóm có hai quản trị; người xem là người lập nhóm |
+| Tái hiện | Mở Thành viên, chạm «Bỏ quyền quản trị» trên hàng «… (bạn)» |
+| Expected | Bước hỏi trước khi tự bỏ quyền: sau đó không tự lấy lại được, phải nhờ quản trị khác. Nút nói rõ là của chính mình |
+| Actual | Một chạm là xong: vai trò trên máy chủ đổi `admin` → `member`, không câu hỏi nào. Nút của chính mình là nút đầu tiên trong danh sách và mang đúng tên «Bỏ quyền quản trị» như nút của người khác. Lỗi này được phát hiện vì harness chạm «Bỏ quyền quản trị» đầu tiên để hạ quyền một người khác, và trúng hàng của người lập nhóm. Đã đặt lại vai trò qua API |
+| Evidence | ![trước, khung đỏ = hàng của chính mình, C1](evidence/EV-F06-TU-BO-TRUOC-C1-ct.jpg) ![sau một chạm, C1](evidence/EV-F06-TU-BO-SAU-C1.jpg) (hàng `TC-F06-TU-BO-QUAN-TRI`) |
+| Source | `screens/groups/Members.tsx:79` (`doiVaiTro` gọi thẳng `datVaiTro`, không bước hỏi); `screens/quan-tri/quan-tri.ts:306` (`coTheDoiVaiTro` cho tự hạ khi còn quản trị khác), `:366` (`nhanNutVaiTro` không kèm tên) |
+| Đề xuất sửa | Hỏi lại khi hạ quyền của chính mình (một câu nói hậu quả, «Bỏ quyền»/«Thôi»); nhãn và tên truy cập kèm tên người («Bỏ quyền quản trị của bạn») |
+| Tiêu chí gỡ | Chạm nút trên hàng của mình: có bước hỏi; vai trò chỉ đổi sau khi xác nhận |
+
+### UI-075 · Mọi quản trị đều mang nhãn «Người lập nhóm»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (nhãn sai) · **P3** |
+| Feature / Screen | F06 · `/groups/[id]/members` |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Tái hiện | Đặt một thành viên làm quản trị |
+| Expected | Chỉ người lập nhóm mang «Người lập nhóm»; quản trị khác ghi «Quản trị» |
+| Actual | Người vừa được đặt làm quản trị cũng hiện «Người lập nhóm». Sau khi người lập nhóm thật tự bỏ quyền (UI-074), chính người đó chỉ còn «Thành viên», còn nhãn «Người lập nhóm» nằm ở người khác |
+| Evidence | ![sau khi đổi vai trò, C1](evidence/EV-F06-TU-BO-SAU-C1.jpg) (hàng `TC-F06-TU-BO-QUAN-TRI`, `TC-F06-VAI-TRO`) |
+| Source | `screens/groups/Members.tsx:132` (`tv.role === "admin" && tv.state === "active" ? "Người lập nhóm" : "Thành viên"`) |
+| Đề xuất sửa | Ghi «Người lập nhóm» theo người tạo nhóm (nếu wire có), còn lại «Quản trị» |
+| Tiêu chí gỡ | Nhóm có hai quản trị: chỉ người lập nhóm mang nhãn đó |
+
+### UI-076 · Danh sách thành viên: 19 nút cùng tên «Đặt làm quản trị», hàng không mở được hồ sơ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (accessibility, điều hướng) · **P3** |
+| Feature / Screen | F06 · `/groups/[id]/members` |
+| Nền tảng, cấu hình | web, C1 và C6. Native: nhãn là chữ của nút, cùng mã (STATIC) |
+| Điều kiện | Nhóm 20 người, người xem là quản trị |
+| Expected | Mỗi nút có tên riêng kèm tên người («Đặt Chat Test 07 làm quản trị»). Chạm một hàng mở hồ sơ người đó (Messenger mở thông tin thành viên) |
+| Actual | 19 nút, cả 19 tên «Đặt làm quản trị» (cao 48, đạt). 21 hàng không hàng nào chạm mở được. Trong nhóm, lối tới hồ sơ một thành viên chỉ có khi đã là bạn (Bạn bè) hoặc qua bài của họ. Thêm: khi danh sách lỗi 503, phụ đề vẫn ghi «Đang đọc danh sách thành viên…» ngay trên màn lỗi |
+| Evidence | ![nhóm 20 người, C1](evidence/EV-F06-THANH-VIEN-20-C1.jpg) (hàng `TC-F06-THANH-VIEN-20` C1, C6; `TC-F06.S02-503`) |
+| Source | `screens/groups/Members.tsx:118–150` (hàng là `View`, không `Pressable`; `RudiButton label={nhanNutVaiTro(tv)}`), phụ đề `:97–104` (mọi trạng thái khác «xong» ra câu đang đọc) |
+| Đề xuất sửa | `accessibilityLabel` kèm tên người; bọc hàng bằng `Pressable` mở `/people/{id}`; phụ đề theo trạng thái lỗi |
+| Tiêu chí gỡ | Quét DOM: tên các nút vai trò khác nhau; chạm hàng mở hồ sơ |
+
+### UI-077 · Bạn bè: «Đồng ý» lỗi thì cả danh sách thành màn «Chưa đọc được danh sách bạn»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F06 · `/friends`, phân đoạn «Đã nhận» |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Một lời mời kết bạn đang chờ; `POST /friends/requests/{id}/respond` trả 503 |
+| Tái hiện | Chạm «Đồng ý» |
+| Expected | Một câu lỗi cạnh hàng vừa chạm, danh sách giữ nguyên, chạm lại được |
+| Actual | Cả màn thành trạng thái lỗi «Chưa đọc được danh sách bạn» với câu chung. Tiêu đề sai: danh sách đọc được, thứ hỏng là câu trả lời. Hàng lời mời biến mất tới khi «Thử lại». Sau khi máy chủ ổn, «Thử lại» rồi «Đồng ý» thì thành bạn (đúng) |
+| Evidence | ![sau «Đồng ý» lỗi, C1](evidence/EV-F06-DONG-Y-503-C1.jpg) (hàng `TC-F06-DONG-Y-503`) |
+| Source | `screens/friends/Friends.tsx:113–136` (`traLoi` và `nhanTin` bắt lỗi bằng `setTrang({ pha: "hong" })`, cùng trạng thái với lỗi đọc danh sách) |
+| Đề xuất sửa | Lỗi của một thao tác trên một hàng thì giữ danh sách, đặt câu dưới hàng đó |
+| Tiêu chí gỡ | Cùng điều kiện: danh sách còn, câu lỗi nằm cạnh hàng lời mời |
+
+### UI-078 · Sau khi chặn: mở lại hồ sơ thì mất dấu «Đã chặn», hồ sơ ghi «Cùng nhóm», mời «Kết bạn» và mời chặn lần nữa
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | F06 · `/people/[id]` · L06 |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Hai người là bạn, có chat đôi, không chung nhóm nào; một người chặn người kia |
+| Tái hiện | «Thêm hành động» → «Chặn …» → «Chặn»; rồi tải lại hồ sơ |
+| Expected | Hồ sơ vẫn cho biết mình đã chặn người này; sheet mời «Bỏ chặn» |
+| Actual | Ngay sau khi chặn: chip «Đã chặn», nhưng câu «Kết bạn để nhắn riêng.» vẫn còn ngay trên nó. Sau khi tải lại: không còn «Đã chặn»; quan hệ ghi «Cùng nhóm» dù hai người không chung nhóm nào (chỉ chung chat đôi); nút «Kết bạn» mời kết bạn với chính người vừa chặn; sheet lại mời «Chặn Chat Test 22». Bước hỏi trước khi chặn thì đạt, có nói hậu quả |
+| Evidence | ![ngay sau khi chặn, C1](evidence/EV-F06-CHAN-XONG-C1.jpg) ![tải lại hồ sơ, C1](evidence/EV-F06-CHAN-LAI-C1.jpg) (hàng `TC-F06-CHAN`, `TC-F06-CHAN-MO-LAI`) |
+| Source | `screens/nguoi/HoSoNguoiScreen.tsx:70–74` (cờ chặn là state cục bộ, theo ADR-0023 §2.3: đọc hồ sơ không cho biết mình đã chặn); quan hệ `groupmate` từ máy chủ khi hai người chỉ chung chat đôi |
+| Đề xuất sửa | Đọc danh sách chặn của mình (đã có `GET /people/me/blocked`) khi mở hồ sơ, hoặc máy chủ trả cờ trong hồ sơ. Không hiện «Kết bạn» với người mình đã chặn. Không gọi chat đôi là «Cùng nhóm» |
+| Tiêu chí gỡ | Tải lại hồ sơ người đã chặn: thấy «Đã chặn» và «Bỏ chặn», không thấy «Kết bạn» |
+
+### UI-079 · Chat đôi sau khi chặn: «Đang nối lại» không dứt, vẫn mời nhắn và mời hẹn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | F05.S03 · `/groups/[id]/chat` (chat hai người) |
+| Nền tảng, cấu hình | web, C1, cả hai phía. Native: cùng mã (STATIC) |
+| Tái hiện | Chặn người kia (UI-078), mở chat đôi; nhìn ở giây thứ 3 và thứ 20 |
+| Expected | Người chặn đọc được là mình đã chặn và cách bỏ chặn. Không còn lời mời nhắn tin hay hẹn đi chơi. Không báo đang nối lại mãi |
+| Actual | Cả hai phía, cả hai thời điểm: nhãn «Chưa mã hoá đầu cuối · Đang nối lại» không dứt. Trạng thái rỗng «Một lời mở đầu. Một tin nhắn nhỏ cho …» vẫn mời nhắn. Dải «Tờ giấy của hai mình… Đi đâu không?» vẫn mời hẹn. Chỗ ô soạn là câu «Cuộc trò chuyện này không còn nhận tin.», không nói vì sao, không có lối bỏ chặn |
+| Evidence | ![phía người chặn, 20 s, C1](evidence/EV-F06-CHAN-CHAT-NGUOI-CHAN-C1.jpg) (hàng `TC-F06-CHAN-CHAT`, `TC-F06-BI-CHAN-CHAT`) |
+| Source | `screens/chat/GroupChatLive.tsx:940–943` (`khongNhanTin` chỉ thay ô soạn); trạng thái rỗng và `HangToGiaySong` không xét cờ này; `changes.connection === "recovering"` (`:725`) giữ nguyên khi luồng bị từ chối |
+| Đề xuất sửa | Khi chat không còn nhận tin: ẩn lời mời mở đầu và dải tờ giấy; với người chặn, nói «Bạn đã chặn …» kèm lối tới Cài đặt → Đã chặn; dừng thử nối lại khi máy chủ từ chối vì chặn |
+| Tiêu chí gỡ | Cùng điều kiện, 20 s: không «Đang nối lại», không «Một lời mở đầu», không «Đi đâu không?»; phía người chặn có câu nói đã chặn |
+
+### UI-080 · Lời mời vào nhóm không nói ai mời, và không có cách từ chối
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (đồng thuận) · **P3** |
+| Feature / Screen | F05.S01 · `/messages`, hàng nhóm đang mời |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Tái hiện | Được mời vào một nhóm, mở Tin nhắn |
+| Expected | Hàng nói ai mời mình (để biết có nên tin). Có «Đồng ý» và cách từ chối hoặc bỏ qua |
+| Actual | Hàng có tên nhóm, «2 thành viên · bạn được mời», «Chưa có tin nhắn nào.» và một nút «Đồng ý vào nhóm» 358×48. Không có tên người mời, không có nút từ chối. Hàng chính bị tắt nên không xem trước được. Lời mời không muốn nhận nằm mãi trong danh sách |
+| Evidence | ![lời mời ở Tin nhắn, C1](evidence/EV-F06-DUOC-MOI-VAO-CUA-C1.jpg) (hàng `TC-F05.S01-LOI-MOI`, phân xử bằng mắt) |
+| Source | `screens/groups/Conversations.tsx:167–224` (`duocMoi` chỉ thêm « · bạn được mời» và một `RudiButton`) |
+| Đề xuất sửa | Ghi «<tên> mời bạn» (nếu wire có người mời); thêm «Từ chối» |
+| Tiêu chí gỡ | Hàng lời mời có tên người mời và hai lựa chọn |
+
+### UI-081 · Tablet: danh sách Bạn bè và Thành viên trải hết bề ngang, nút hành động cách tên 487–679px
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** (cùng họ UI-031, UI-047) |
+| Feature / Screen | F06 · `/friends`, `/groups/[id]/members` |
+| Nền tảng, cấu hình | web, C6, C7 |
+| Expected | Như các form cùng feature (Lập nhóm, Mời, Thêm bạn gom cột 560 ở giữa): danh sách có trần bề ngang để nút đứng gần tên |
+| Actual | Từ cuối tên «Thu Thảo» tới nút «Nhắn tin»: 487px ở C6, 679px ở C7. Nút «Đặt làm quản trị» cũng dạt mép phải |
+| Evidence | ![Bạn bè và các cỡ màn khác, C4–C7](evidence/EV-F06.S05-rong-BASE-ghep.jpg) (hàng `TC-F06-BAN-TABLET` C6/C7, đo bằng hộp của chính dòng chữ) |
+| Source | `screens/friends/Friends.tsx` và `screens/groups/Members.tsx` không đặt `maxWidth` cho nội dung (`New.tsx`, `AddFriend.tsx` có `maxWidth: 560`) |
+| Đề xuất sửa | Cùng trần bề ngang cho danh sách, hoặc bố cục hai cột ở expanded |
+| Tiêu chí gỡ | C6/C7: nút hành động cách tên ≤ 160px |
 
 ## F09 Hồ sơ · Cài đặt
 

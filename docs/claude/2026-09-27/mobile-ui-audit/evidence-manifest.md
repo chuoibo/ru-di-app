@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (101 ảnh, tổng 12.73 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (115 ảnh, tổng 14.21 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -105,3 +105,17 @@
 | [EV-F05-URL-C2-ct](evidence/EV-F05-URL-C2-ct.jpg) | UI-063: bong bóng có link dài rộng 346px trong cửa sổ 320, mất đầu link ở mép trái (C2, khung đỏ = bong bóng) | 84496 | `9ad013a9` |
 | [EV-F05.S02-BASE-ghep](evidence/EV-F05.S02-BASE-ghep.jpg) | F05.S02 chat Team Đà Lạt C1–C3: UI-062 (ô soạn), UI-064 (avatar và giờ), UI-065 (thẻ bình chọn chiếm gần nửa màn, cả màn ở C2) | 120197 | `f0d143c1` |
 | [EV-F05.S02-dai-BASE-ghep](evidence/EV-F05.S02-dai-BASE-ghep.jpg) | F05.S02 nhóm 20 người, lịch sử 40 tin tổng hợp, C1–C3: đoạn dài, 4 dòng, emoji đọc trọn; bong bóng link dài tràn (UI-063) | 140090 | `0105683b` |
+| [EV-F06-CHAN-CHAT-NGUOI-CHAN-C1](evidence/EV-F06-CHAN-CHAT-NGUOI-CHAN-C1.jpg) | UI-079: chat đôi sau khi chặn, 20 s: «Đang nối lại» không dứt, «Một lời mở đầu» và dải tờ giấy vẫn mời (C1) | 54579 | `d3e6e81d` |
+| [EV-F06-CHAN-HOI-C1](evidence/EV-F06-CHAN-HOI-C1.jpg) | Chặn có bước hỏi nói hậu quả, «Chặn»/«Thôi» (đạt, C1) | 79454 | `a022b3a9` |
+| [EV-F06-CHAN-LAI-C1](evidence/EV-F06-CHAN-LAI-C1.jpg) | UI-078: tải lại hồ sơ người đã chặn: không còn «Đã chặn», mời «Kết bạn», sheet lại mời chặn (C1) | 70502 | `597d9a44` |
+| [EV-F06-CHAN-XONG-C1](evidence/EV-F06-CHAN-XONG-C1.jpg) | UI-078: ngay sau khi chặn: chip «Đã chặn», nhưng «Kết bạn để nhắn riêng.» vẫn còn, quan hệ «Cùng nhóm» (C1) | 115984 | `0552d262` |
+| [EV-F06-DONG-Y-503-C1](evidence/EV-F06-DONG-Y-503-C1.jpg) | UI-077: «Đồng ý» lời mời kết bạn bị 503, cả danh sách thành màn «Chưa đọc được danh sách bạn» (C1) | 94296 | `0b62bde5` |
+| [EV-F06-DUOC-MOI-VAO-CUA-C1](evidence/EV-F06-DUOC-MOI-VAO-CUA-C1.jpg) | UI-073, UI-080: người được mời đăng nhập lần đầu vào thẳng Tin nhắn, không qua Sở thích; hàng lời mời không nói ai mời, không có nút từ chối (C1) | 87289 | `04593d3c` |
+| [EV-F06-MOI-THANH-VIEN-C1](evidence/EV-F06-MOI-THANH-VIEN-C1.jpg) | UI-072: mời một người đã ở trong nhóm (máy chủ 409 membership_already_open), app báo «Lần bấm trước chưa chạy xong…»; số đã che (C1) | 119503 | `93f91a51` |
+| [EV-F06-MOI-XONG-C1](evidence/EV-F06-MOI-XONG-C1.jpg) | Mời bằng số: phong bì «Đã gửi», câu nói người được mời thấy lời mời ở đâu (đạt, C1) | 121881 | `38d151ae` |
+| [EV-F06-TAO-SAU-C1](evidence/EV-F06-TAO-SAU-C1.jpg) | UI-071: vừa «Mở nhóm» thì bị đưa về Khám phá, không có tên nhóm mới, không câu xác nhận, không lối mời (C1) | 145804 | `32c55f11` |
+| [EV-F06-THANH-VIEN-20-C1](evidence/EV-F06-THANH-VIEN-20-C1.jpg) | UI-076: nhóm 20 người, 19 nút cùng tên «Đặt làm quản trị», hàng không mở được hồ sơ (C1) | 143080 | `637d485a` |
+| [EV-F06-THEM-DA-GUI-C1](evidence/EV-F06-THEM-DA-GUI-C1.jpg) | UI-073: một người lạ tra số thấy tên do người mời đặt cho người kia («Bạn thân từ hồi cấp ba…») (C1) | 105413 | `336d46aa` |
+| [EV-F06-TU-BO-SAU-C1](evidence/EV-F06-TU-BO-SAU-C1.jpg) | UI-074, UI-075: sau một chạm, người lập nhóm chỉ còn «Thành viên»; người được đặt làm quản trị mang nhãn «Người lập nhóm» (C1) | 142581 | `63fdd884` |
+| [EV-F06-TU-BO-TRUOC-C1-ct](evidence/EV-F06-TU-BO-TRUOC-C1-ct.jpg) | UI-074: Thành viên, hai quản trị; nút «Bỏ quyền quản trị» của chính mình đứng đầu, cùng tên với nút của người khác (C1, khung đỏ) | 152003 | `118c692e` |
+| [EV-F06.S05-rong-BASE-ghep](evidence/EV-F06.S05-rong-BASE-ghep.jpg) | F06.S05 Bạn bè C4–C7; UI-081: ở tablet nút «Nhắn tin» dạt mép phải, cách tên 487–679px | 114434 | `ff9666e9` |

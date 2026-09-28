@@ -89,7 +89,7 @@
 | ID | Route | Màn / file | Section / component chính | Trạng thái | Hành động |
 |---|---|---|---|---|---|
 | F06.S01 | `/groups/new` | `groups/New.tsx` | bìa nhóm, tên, chọn bạn | tên dài, không bạn | tạo |
-| F06.S02 | `/groups/[id]/members` | `groups/Members.tsx` | danh sách, vai trò, mời, tường, album | 20 người, 1 người | mời, mở hồ sơ |
+| F06.S02 | `/groups/[id]/members` | `groups/Members.tsx` | danh sách, vai trò, mời, tường, album | 20 người, 1 người | mời, đổi vai trò. Đo ở checkpoint 7: hàng không mở được hồ sơ (UI-076) |
 | F06.S03 | `/groups/[id]/invite` | `groups/Invite.tsx` | phong bì, số điện thoại | số sai, đã mời | mời |
 | F06.S04 | `/groups/empty` | redirect `/messages` | | | |
 | F06.S05 | `/friends` | `friends/Friends.tsx` | 3 phân đoạn (bạn, đã nhận, đã gửi) | rỗng, nhiều | chấp nhận, từ chối, nhắn |

@@ -503,5 +503,75 @@
   "bytes": 140090,
   "sha8": "0105683b",
   "moTa": "F05.S02 nhóm 20 người, lịch sử 40 tin tổng hợp, C1–C3: đoạn dài, 4 dòng, emoji đọc trọn; bong bóng link dài tràn (UI-063)"
+ },
+ "EV-F06-CHAN-CHAT-NGUOI-CHAN-C1": {
+  "bytes": 54579,
+  "sha8": "d3e6e81d",
+  "moTa": "UI-079: chat đôi sau khi chặn, 20 s: «Đang nối lại» không dứt, «Một lời mở đầu» và dải tờ giấy vẫn mời (C1)"
+ },
+ "EV-F06-CHAN-HOI-C1": {
+  "bytes": 79454,
+  "sha8": "a022b3a9",
+  "moTa": "Chặn có bước hỏi nói hậu quả, «Chặn»/«Thôi» (đạt, C1)"
+ },
+ "EV-F06-CHAN-LAI-C1": {
+  "bytes": 70502,
+  "sha8": "597d9a44",
+  "moTa": "UI-078: tải lại hồ sơ người đã chặn: không còn «Đã chặn», mời «Kết bạn», sheet lại mời chặn (C1)"
+ },
+ "EV-F06-CHAN-XONG-C1": {
+  "bytes": 115984,
+  "sha8": "0552d262",
+  "moTa": "UI-078: ngay sau khi chặn: chip «Đã chặn», nhưng «Kết bạn để nhắn riêng.» vẫn còn, quan hệ «Cùng nhóm» (C1)"
+ },
+ "EV-F06-DONG-Y-503-C1": {
+  "bytes": 94296,
+  "sha8": "0b62bde5",
+  "moTa": "UI-077: «Đồng ý» lời mời kết bạn bị 503, cả danh sách thành màn «Chưa đọc được danh sách bạn» (C1)"
+ },
+ "EV-F06-DUOC-MOI-VAO-CUA-C1": {
+  "bytes": 87289,
+  "sha8": "04593d3c",
+  "moTa": "UI-073, UI-080: người được mời đăng nhập lần đầu vào thẳng Tin nhắn, không qua Sở thích; hàng lời mời không nói ai mời, không có nút từ chối (C1)"
+ },
+ "EV-F06-MOI-THANH-VIEN-C1": {
+  "bytes": 119503,
+  "sha8": "93f91a51",
+  "moTa": "UI-072: mời một người đã ở trong nhóm (máy chủ 409 membership_already_open), app báo «Lần bấm trước chưa chạy xong…»; số đã che (C1)"
+ },
+ "EV-F06-MOI-XONG-C1": {
+  "bytes": 121881,
+  "sha8": "38d151ae",
+  "moTa": "Mời bằng số: phong bì «Đã gửi», câu nói người được mời thấy lời mời ở đâu (đạt, C1)"
+ },
+ "EV-F06-TAO-SAU-C1": {
+  "bytes": 145804,
+  "sha8": "32c55f11",
+  "moTa": "UI-071: vừa «Mở nhóm» thì bị đưa về Khám phá, không có tên nhóm mới, không câu xác nhận, không lối mời (C1)"
+ },
+ "EV-F06-THANH-VIEN-20-C1": {
+  "bytes": 143080,
+  "sha8": "637d485a",
+  "moTa": "UI-076: nhóm 20 người, 19 nút cùng tên «Đặt làm quản trị», hàng không mở được hồ sơ (C1)"
+ },
+ "EV-F06-THEM-DA-GUI-C1": {
+  "bytes": 105413,
+  "sha8": "336d46aa",
+  "moTa": "UI-073: một người lạ tra số thấy tên do người mời đặt cho người kia («Bạn thân từ hồi cấp ba…») (C1)"
+ },
+ "EV-F06-TU-BO-SAU-C1": {
+  "bytes": 142581,
+  "sha8": "63fdd884",
+  "moTa": "UI-074, UI-075: sau một chạm, người lập nhóm chỉ còn «Thành viên»; người được đặt làm quản trị mang nhãn «Người lập nhóm» (C1)"
+ },
+ "EV-F06-TU-BO-TRUOC-C1-ct": {
+  "bytes": 152003,
+  "sha8": "118c692e",
+  "moTa": "UI-074: Thành viên, hai quản trị; nút «Bỏ quyền quản trị» của chính mình đứng đầu, cùng tên với nút của người khác (C1, khung đỏ)"
+ },
+ "EV-F06.S05-rong-BASE-ghep": {
+  "bytes": 114434,
+  "sha8": "ff9666e9",
+  "moTa": "F06.S05 Bạn bè C4–C7; UI-081: ở tablet nút «Nhắn tin» dạt mép phải, cách tên 487–679px"
  }
 }

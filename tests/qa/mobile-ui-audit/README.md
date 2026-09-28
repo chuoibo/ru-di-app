@@ -47,6 +47,9 @@ node seed-bien-the.mjs --chat        # 40 tin tổng hợp cho luồng chat cũ 
 node kich-ban/f05-chat.mjs [--chi bong-dai,soan,gui,offline,anh,sticker,menu,menu-dong,bao-cao,cong-cu,cai-dat,tin-moi,bo-cuc,phieu,rong,ghim-phu,thong-bao,ghim,lanh,loi,c8,dm,votes]
                                     # F05 Chat: Team Đà Lạt chỉ đọc; mọi lần ghi vào nhóm chat-test
 node kich-ban/f05-phan-xu.mjs        # phán quyết bằng mắt của F05
+node kich-ban/f06-nhom-nguoi.mjs [--chi tao-nhom,moi,loi-moi,moi-lai,duoc-moi,thanh-vien,tu-bo-quan-tri,ban-be,them-ban,them-ban-app,ho-so,chan,chan-chat,vung-bam,lanh,loi,c8,tablet]
+                                    # F06 Nhóm · Người: ghi vào moi-51…53 và chat-20/21; Team Đà Lạt chỉ đọc
+node kich-ban/f06-phan-xu.mjs        # phán quyết bằng mắt của F06
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node chot-anh.mjs <docs-dir> <danh-sach.json>   # chép ảnh được chọn, ghim sha256 vào allowlist
 ```
@@ -60,6 +63,11 @@ không làm được (F04 đo ra một PASS giả vì thế). `tamCua` và các 
 Danh sách tin của chat là FlatList đảo ngược: thứ tự DOM ngược thứ tự trên màn, và danh sách tự nhảy về cuối khi
 nạp thêm. Kịch bản F05 tìm bong bóng theo nhãn và vị trí trên màn, không theo thứ tự DOM, và chạm vào tin mới gửi
 (nằm sẵn ở cuối) thay vì cuộn tới tin cũ.
+
+Mở một màn bằng `pushState` + `popstate` (hàm `moQua`/`diToi`) để lại router chỉ một màn: nút trong app gọi
+`router.back()` sẽ không có chỗ về. Ca nào đo nút «Quay lại»/«Về …» thì phải tới màn bằng nút của chính app. Tên nút
+có ký tự icon (vùng Private Use): hàm tìm nút bỏ các ký tự này trước khi so tên. Câu trên màn chỉ tính phần tử đang hiện:
+stack giữ các màn trước ở trạng thái ẩn.
 
 Sổ `results.jsonl` chỉ được ghi thêm. Hàng sinh từ lỗi của harness được rút bằng `soGhi(out).rut(tc, lyDo)`:
 dòng gốc ở lại trong sổ, ma trận bỏ nó khỏi bảng và liệt kê trong mục «Hàng đã rút» kèm lý do.
