@@ -482,6 +482,19 @@ func (h *Handler) begin(r *http.Request) (pgx.Tx, grant, error) {
 	return tx, g, nil
 }
 
+// nhomSanSang says a group or pair invocation can be taken: on the Go
+// engine (MOBILE_AI_ENGINE_GROUP=go) the engine was built at startup or
+// `serve` refused to start, so the brain is not asked -- as nepSanSang does
+// for Nếp. Before this, create and retry probed the brain even on the Go
+// engine, and a host whose brain had no Gemini key refused every invocation
+// provider_unavailable while chat-capabilities said the bot was on.
+func (h *Handler) nhomSanSang(ctx context.Context) bool {
+	if h.nhomGo {
+		return true
+	}
+	return h.available(ctx)
+}
+
 func (h *Handler) available(ctx context.Context) bool {
 	if h.brain == nil {
 		return false
@@ -705,7 +718,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Probe outside the transaction; a missing provider is an honest refusal.
-	available := h.available(r.Context())
+	available := h.nhomSanSang(r.Context())
 	tx, g, err := h.begin(r)
 	if err != nil {
 		failure(w, err)
@@ -876,7 +889,7 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 			failure(w, err)
 			return
 		}
-		if !h.available(r.Context()) {
+		if !h.nhomSanSang(r.Context()) {
 			refuse(w, 503, "provider_unavailable")
 			return
 		}

@@ -23,6 +23,14 @@ if [ -z "$ip" ]; then
   echo "  Máy vnlocal đang ở mạng nào: khối 'Địa chỉ hiện tại' đầu vnlocal HANDOFF-KET-NOI.md (git pull)." >&2
   exit 1
 fi
+# The sidecar's internal token, shared by core (MOBILE_RERANK_TOKEN) and
+# ai-infer (AI_INFER_TOKEN); made once, mode 600, outside the repository.
+tok="$HOME/.config/rudi/ai-infer.env"
+if [ ! -f "$tok" ]; then
+  t="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+  (umask 077; printf 'AI_INFER_TOKEN=%s\nMOBILE_RERANK_TOKEN=%s\n' "$t" "$t" >"$tok")
+  echo "--- sinh token sidecar vào $tok" >&2
+fi
 export RUDI_VNLOCAL_HOST="$host" RUDI_VNLOCAL_IP="$ip"
 echo "--- $host = $ip" >&2
 cd "$(dirname "$0")/../.."

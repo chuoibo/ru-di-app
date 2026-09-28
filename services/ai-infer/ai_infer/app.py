@@ -84,6 +84,18 @@ class OwnerReq(BaseModel):
     user_id: OwnerId
 
 
+RerankText = Annotated[str, StringConstraints(min_length=1, max_length=4000)]
+
+
+class RerankReq(BaseModel):
+    # The vLLM/Cohere /rerank contract internal/rerank sends (Go).
+    model: Annotated[str, StringConstraints(min_length=1, max_length=128)]
+    query: Annotated[str, StringConstraints(min_length=1, max_length=2000)]
+    documents: list[RerankText] = Field(min_length=1, max_length=64)
+    top_n: int = Field(ge=1, le=64)
+    return_documents: bool = False
+
+
 def _item(r: dict) -> dict:
     meta = r.get("metadata") or {}
     return {
@@ -95,7 +107,11 @@ def _item(r: dict) -> dict:
 
 
 def create_app(
-    settings: config.Settings, *, encoder: Optional[Encoder] = None, memory=None
+    settings: config.Settings,
+    *,
+    encoder: Optional[Encoder] = None,
+    memory=None,
+    openrouter=None,
 ) -> FastAPI:
     app = FastAPI(title="ai-infer", docs_url=None, redoc_url=None, openapi_url=None)
     token = settings.token.encode()
@@ -140,6 +156,21 @@ def create_app(
             "sparse": settings.sparse_mode,
             "memory": settings.gemini_mode,
         }
+
+    @app.post("/rerank", dependencies=[Auth])
+    def rerank(req: RerankReq):
+        # Only the configured model: the sidecar spends the owner's key.
+        from ai_infer.openrouter import RERANK_MODEL, OpenRouterError
+
+        if openrouter is None:
+            raise HTTPException(status_code=503, detail="reranker not configured")
+        if req.model != RERANK_MODEL:
+            raise HTTPException(status_code=400, detail="model not allowed")
+        try:
+            results = openrouter.rerank(req.query, req.documents, min(req.top_n, len(req.documents)))
+        except OpenRouterError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from None
+        return {"model": RERANK_MODEL, "results": results}
 
     @app.post("/v1/sparse", response_model=SparseResp, dependencies=[Auth])
     def sparse(req: SparseReq):
@@ -234,6 +265,11 @@ def from_env() -> FastAPI:
     from ai_infer.sparse.encoders import build as build_encoder
 
     encoder = build_encoder(s)
+    openrouter = None
+    if s.openrouter_api_key:
+        from ai_infer.openrouter import OpenRouter
+
+        openrouter = OpenRouter(s.openrouter_api_key, s.openrouter_base_url, s.openrouter_timeout_s)
     memory = None
     if s.gemini_mode != config.GEMINI_OFF:
         from ai_infer.mem import bootstrap, gemini
@@ -258,4 +294,4 @@ def from_env() -> FastAPI:
                 collection=s.memory_collection,
             )
         )
-    return create_app(s, encoder=encoder, memory=memory)
+    return create_app(s, encoder=encoder, memory=memory, openrouter=openrouter)

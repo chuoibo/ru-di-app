@@ -58,11 +58,17 @@ class Settings:
     milvus_db: str = "nep_memory"
     memory_collection: str = "memories_v1"
     mem0_dir: str = ""
+    # OpenRouter (ADR-0049 §2.3-2.4): the reranker. Empty key: /rerank is 503
+    # and Go keeps the RRF order (no_rerank).
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    openrouter_timeout_s: float = 10.0
 
     def __repr__(self) -> str:  # never print secrets
         return (
             f"Settings(sparse_mode={self.sparse_mode!r}, gemini_mode={self.gemini_mode!r}, "
-            f"milvus_db={self.milvus_db!r}, memory_collection={self.memory_collection!r})"
+            f"milvus_db={self.milvus_db!r}, memory_collection={self.memory_collection!r}, "
+            f"openrouter={'on' if self.openrouter_api_key else 'off'})"
         )
 
 
@@ -76,8 +82,9 @@ def load(env: Mapping[str, str] | None = None) -> Settings:
     g = lambda k, d="": (e.get(k) or d).strip()  # noqa: E731
     try:
         timeout = float(g("AI_INFER_GEMINI_TIMEOUT_S", "20"))
+        or_timeout = float(g("AI_INFER_OPENROUTER_TIMEOUT_S", "10"))
     except ValueError as exc:
-        raise ConfigError("AI_INFER_GEMINI_TIMEOUT_S is not a number") from exc
+        raise ConfigError("a timeout is not a number") from exc
     s = Settings(
         token=g("AI_INFER_TOKEN"),
         sparse_mode=g("AI_INFER_SPARSE_MODE", SPARSE_OFF),
@@ -93,6 +100,9 @@ def load(env: Mapping[str, str] | None = None) -> Settings:
         milvus_db=g("AI_INFER_MILVUS_DB", "nep_memory"),
         memory_collection=g("AI_INFER_MEMORY_COLLECTION", "memories_v1"),
         mem0_dir=g("MEM0_DIR"),
+        openrouter_api_key=g("OPEN_ROUTER_API_KEY"),
+        openrouter_base_url=g("AI_INFER_OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+        openrouter_timeout_s=or_timeout,
     )
     validate(s)
     return s
@@ -135,5 +145,13 @@ def validate(s: Settings) -> None:
             raise ConfigError("AI_INFER_MILVUS_DB is not a valid database name")
         if not _COLLECTION.match(s.memory_collection):
             raise ConfigError("AI_INFER_MEMORY_COLLECTION must look like memories_v<N>")
+    if not (0 < s.openrouter_timeout_s <= 60):
+        raise ConfigError("AI_INFER_OPENROUTER_TIMEOUT_S must be in (0, 60]")
+    u = s.openrouter_base_url
+    loopback = u.startswith(("http://127.0.0.1", "http://localhost", "http://[::1]"))
+    if not (u.startswith("https://") or loopback) or "@" in u:
+        raise ConfigError(
+            "AI_INFER_OPENROUTER_BASE_URL must be https, or http to loopback (a test fake)"
+        )
     if not (0 < s.gemini_timeout_s <= 120):
         raise ConfigError("AI_INFER_GEMINI_TIMEOUT_S must be in (0, 120]")

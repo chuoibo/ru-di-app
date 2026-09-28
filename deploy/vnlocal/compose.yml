@@ -55,6 +55,7 @@ x-ai-secrets: &ai-secrets
     - ${HOME}/.config/rudi/vnlocal.env
     - ${HOME}/.config/rudi/stack.env
     - ${HOME}/.config/rudi/milvus.env
+    - ${HOME}/.config/rudi/ai-infer.env
     - path: ../../.env
       required: false
   # The vnlocal machine by name (mDNS). A container cannot resolve .local:
@@ -209,9 +210,18 @@ services:
     restart: unless-stopped
 
   core:
-    <<: [*core-image, *secrets]
+    <<: [*core-image, *ai-secrets]
     environment:
-      <<: *env
+      <<: [*env, *milvus-env]
+      # The group bot and Nếp on the Go engine (ADR-0044, ADR-0049): text
+      # through agy-proxy (AGY_PROXY_URL from .env), places from Milvus
+      # hybrid, reranked by qwen/qwen3-reranker-8b through the ai-infer
+      # sidecar, which shares this container's network namespace so the call
+      # stays on loopback.
+      MOBILE_AI_ENGINE_GROUP: go
+      MOBILE_AI_ENGINE_NEP: go
+      MOBILE_RERANK_URL: http://127.0.0.1:8090
+      MOBILE_RERANK_MODEL: qwen/qwen3-reranker-8b
       MOBILE_PYTHON_UPSTREAM: http://api:8000
       MOBILE_BRAIN_URL: http://api:8000
       # Connection budget on the shared server (rudi_owner CONNECTION LIMIT
@@ -233,12 +243,41 @@ services:
         condition: service_healthy
       migrate-chat:
         condition: service_completed_successfully
+      milvus:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "/core", "healthcheck"]
       interval: 5s
       timeout: 3s
       start_period: 3s
       retries: 30
+    restart: unless-stopped
+
+  # Python sidecar for the OpenRouter calls (ADR-0049 §2.4): /rerank →
+  # qwen/qwen3-reranker-8b (Fireworks only). It lives in core's network
+  # namespace: core reaches it at 127.0.0.1:8090 (internal/rerank allows plain
+  # http only to loopback); nothing else can. Token: ~/.config/rudi/ai-infer.env
+  # (up.sh makes it), the OpenRouter key from the repo root .env.
+  ai-infer:
+    build:
+      context: ../../services/ai-infer
+    image: rudi-vnlocal/ai-infer:dev
+    network_mode: "service:core"
+    env_file:
+      - ${HOME}/.config/rudi/ai-infer.env
+      - path: ../../.env
+        required: false
+    environment:
+      AI_INFER_SPARSE_MODE: "off"
+      AI_INFER_GEMINI_MODE: "off"
+      MEM0_TELEMETRY: "false"
+      MEM0_DIR: /tmp/mem0
+    read_only: true
+    tmpfs:
+      - /tmp
+    depends_on:
+      core:
+        condition: service_started
     restart: unless-stopped
 
   # Kéo danh mục từ DB `vnlocal` (keyset synced_at, place_id), áp vào `places`,
