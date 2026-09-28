@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { initialPhotos, selectedBundle, movePage, togglePhoto } from '../dist-test/rudi/diary/api.js';
+import { initialPhotos, selectedBundle, movePage, togglePhoto, includeSavedPhotos } from '../dist-test/rudi/diary/api.js';
 import { LOAI_SO, loaiSoCua, banTinhCua, coTuongNhom } from '../dist-test/rudi/so/ban-tinh.js';
 
-test('giữ ba loại sổ hiện hành: pair chưa đồng thuận không tự thành cặp đôi', () => {
-  assert.deepEqual(LOAI_SO, ['hoi', 'hai-nguoi', 'doi']);
-  assert.equal(loaiSoCua({kind:'pair'}, null), 'hai-nguoi');
-  assert.equal(loaiSoCua({kind:'pair'}, {bat:false}), 'hai-nguoi');
+test('hai quan hệ: pair chưa đồng thuận là hội bạn, không tự thành cặp đôi', () => {
+  assert.deepEqual(LOAI_SO, ['hoi', 'doi']);
+  assert.equal(loaiSoCua({kind:'pair'}, null), 'hoi');
+  assert.equal(loaiSoCua({kind:'pair'}, {bat:false}), 'hoi');
   assert.equal(loaiSoCua({kind:'pair'}, {bat:true}), 'doi');
   assert.equal(loaiSoCua({kind:'group'}, {bat:true}), 'hoi');
   assert.equal(banTinhCua('hoi').tienHien, 'chia-bill');
@@ -35,4 +35,14 @@ test('đổi thứ tự trang không thay đổi bản gốc', () => {
   assert.deepEqual(movePage(d,1,0).pages.map(p=>p.heading),['second','first']);
   assert.equal(d.pages[0].heading,'first');
   assert.equal(movePage(d,0,-1),d);
+});
+
+test('mở lại sổ vẫn chọn được ảnh đã nhập, không đọc cả thư viện cá nhân', () => {
+  const saved = { id: 'book', document: { cover_id: 'imported', pages: [{photo_ids:['a','imported']}] } };
+  const restored = includeSavedPhotos(source, saved);
+  assert.deepEqual(restored.photos.map(p => p.id), ['a','b','imported']);
+  assert.equal(restored.photos[2].url, '/diaries/book/photos/imported');
+  assert.equal(source.photos.length, 2);
+  assert.equal(restored.photos[0], source.photos[0]);
+  assert.deepEqual(includeSavedPhotos(restored, saved), restored);
 });

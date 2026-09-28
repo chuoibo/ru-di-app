@@ -17,7 +17,9 @@ export function DiaryScreen({ person, id }: { person: string; id: string }) {
   useFocusEffect(useCallback(() => { void load(); }, [load]));
   async function change(remove: boolean) {
     if (!book) return; setBusy(true); setError(null);
-    try { if (remove) { await removeDiary(person, id); router.back(); } else { setBook(await privatizeDiary(person, book)); } }
+    // Opened from a link there may be nothing behind this screen, and back()
+    // would leave the person on a book that no longer exists.
+    try { if (remove) { await removeDiary(person, id); setDeleting(false); if (router.canGoBack()) router.back(); else router.replace("/(tabs)/profile" as never); } else { setBook(await privatizeDiary(person, book)); } }
     catch (e) { setError(e instanceof Error ? e.message : "Chưa cất được sổ. Bạn thử lại nhé."); } finally { setBusy(false); }
   }
   return <RudiScreen testID="diary-reader-screen" overlay={<Sheet open={deleting} onClose={() => setDeleting(false)} accessibilityLabel="Xóa cuốn sổ">

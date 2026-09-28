@@ -6,10 +6,8 @@ import { Stamp } from "../../ui/Stamp";
 import { Sheet } from "../../ui/Sheet";
 
 /**
- * «Loại sổ»: two choices side by side, no default winner (spec §14.2): «Hai
- * người bạn» and «Một đôi». «Người nhà» waits for its own slice. Choosing
- * «Một đôi» PROPOSES tier 3; it is on only when the other agrees. Choosing
- * «Hai người bạn» while a pair is on withdraws it, on the spot, from my side.
+ * Friendship includes two people. Couple mode still requires both people
+ * to agree; switching back withdraws only this person's couple consent.
  */
 export function LoaiSo({ open, onClose, batDoi, dangCho, deNghiCuaToi = true, tenNguoiKia, onChonDoi, onChonBan, onDongY, nguoiKiaDongY, testID }: { open: boolean; onClose: () => void; batDoi: boolean; dangCho: boolean; deNghiCuaToi?: boolean; tenNguoiKia?: string; onChonDoi: () => void; onChonBan: () => void; onDongY?: () => void; nguoiKiaDongY: (() => void) | null; testID?: string }) {
   const { colors, space } = useRudiTheme();
@@ -19,17 +17,17 @@ export function LoaiSo({ open, onClose, batDoi, dangCho, deNghiCuaToi = true, te
   return (
     <Sheet accessibilityLabel="Loại sổ" onClose={onClose} open={open} testID={testID ?? "loai-so"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
-        <Heading size="h2" subtitle="Đổi được bất cứ lúc nào. Tờ giấy đã gửi không đổi theo." title="Sổ này là sổ gì?" />
-        <Segmented items={["Hai người bạn", "Một đôi"]} onSelect={(i) => (i === 1 ? onChonDoi() : onChonBan())} selected={chon} testIDs={["loai-so-ban", "loai-so-doi"]} />
+        <Heading size="h2" subtitle="Đổi được bất cứ lúc nào. Tờ giấy đã gửi không đổi theo." title="Chuyện của hai mình" />
+        <Segmented items={["Hội bạn", "Cặp đôi"]} onSelect={(i) => (i === 1 ? onChonDoi() : onChonBan())} selected={chon} testIDs={["loai-so-ban", "loai-so-doi"]} />
         {dangCho && !batDoi && deNghiCuaToi ? <Stamp label="Đã đề nghị" tone="ink" /> : null}
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
           {batDoi
-            ? "Đang là một đôi. Nếp biết đây là sổ của một đôi."
+            ? "Một góc dành cho hai mình. Những buổi hẹn nhỏ, những chuyến đi xa."
             : dangCho && !deNghiCuaToi
               ? `${tenNguoiKia ?? "Người ấy"} đề nghị hai bạn là «Một đôi». Bạn đồng ý thì bật cho cả hai.`
               : dangCho
                 ? `Đã đề nghị «Một đôi». Chờ ${tenNguoiKia ?? "người ấy"} đồng ý trên máy của họ.`
-                : "Hai người bạn: truyền giấy, hai ô ràng buộc, không gì hơn."}
+                : "Hội bạn bắt đầu từ hai người. Cùng rủ nhau, chọn chỗ và giữ lại những cuộc đi."}
         </Text>
         {/* The receiver's answer. Before 23/09 the receiver read «Chờ người
             ấy đồng ý» about their own decision and had no button; the only

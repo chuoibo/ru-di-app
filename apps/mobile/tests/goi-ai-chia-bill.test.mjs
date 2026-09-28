@@ -4,7 +4,7 @@
  * `command: "chia_bill"` cùng gói bối cảnh y như plan; máy chủ cũ không khai
  * chia_bill thì client coi là chưa sẵn sàng; hàng lời gọi hỏng nói đúng việc và
  * không mời thử lại khi thử lại cũng ra đúng câu trả lời cũ; khay AI vẫn giữ
- * «Mình đang thấy» và «Chỉ gửi lời nhờ» cho cả hai lệnh.
+ * «Phần sẽ gửi cùng lời nhờ» và «Chỉ gửi lời nhờ» cho cả hai lệnh.
  *
  * KHÔNG đo: màn thật render ra sao (ảnh chụp là cổng riêng), hay mô hình đọc
  * đúng số tiền (máy chủ gọi skill chat-expense có sẵn; tầng này không gọi mô
@@ -96,10 +96,10 @@ test("mỗi câu kết quả là một mã worker Go thật sự ghi, và viết
   }
 });
 
-test("khay AI giữ «Mình đang thấy» và «Chỉ gửi lời nhờ» cho cả chia_bill", () => {
+test("khay AI giữ «Phần sẽ gửi cùng lời nhờ» và «Chỉ gửi lời nhờ» cho cả chia_bill", () => {
   const soHen = readFileSync(join(GOC_APP, "src", "rudi", "screens", "chat", "SoHen.tsx"), "utf8");
   const khoi = soHen.slice(soHen.indexOf('panel === "plan" ? <View style={styles.footer}>'));
-  const truocXemTruoc = khoi.slice(0, khoi.indexOf("Mình đang thấy"));
+  const truocXemTruoc = khoi.slice(0, khoi.indexOf("Phần sẽ gửi cùng lời nhờ"));
   // The preview is gated by the server's share scope only, never by command.
   assert.match(truocXemTruoc, /capabilities\?\.ai\.share_scope === "caller_attached"/);
   assert.doesNotMatch(truocXemTruoc, /chiaBill|lenh/);

@@ -23,7 +23,7 @@ const ACTIONS: { vat: VatBan; title: string; detail?: string; href: string }[] =
   { vat: "polaroid", title: "Đăng story", detail: "Một tấm 24 giờ, chỉ bạn bè thấy", href: "/stories/new" },
   // The one entry the two-person notebook adds here (spec «Nếp truyền giấy»
   // §20.1, Lead): a sheet to ONE person, into the pair's notebook, not the group's.
-  { vat: "thu-gap", title: "Rủ một người đi chơi", detail: "Một tờ giấy cho hai người, mỗi tuần", href: "/hai-nguoi/chon-nguoi" },
+  { vat: "thu-gap", title: "Hẹn người thương", detail: "Một lời hẹn trong sổ cặp đôi", href: "/hai-nguoi/chon-nguoi" },
 ];
 
 /** Objects lie on the desk a little askew, the same way every time. */

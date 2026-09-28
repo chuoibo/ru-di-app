@@ -215,14 +215,13 @@ export function ManHinhHanhTrinh({
               <Text style={[typography.note, { color: colors.inkSoft }]}>
                 Gắn một quán hoặc một địa điểm vào lịch trình, đường đi sẽ hiện ở đây.
               </Text>
-              {onVeLichTrinh ? (
-                <RudiButton accessibilityLabel="Về Lịch trình" compact label="Về Lịch trình" onPress={onVeLichTrinh} variant="outline" />
-              ) : null}
             </View>
           )}
           {actions}
           </ScrollView>}
-          {primaryAction}
+          {!coMoc && onVeLichTrinh ? (
+            <RudiButton accessibilityLabel="Về Lịch trình" compact label="Về Lịch trình" onPress={onVeLichTrinh} variant="outline" />
+          ) : coMoc ? primaryAction : null}
         </NenGiay>
     </View>
   );

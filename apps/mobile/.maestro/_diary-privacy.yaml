@@ -1,0 +1,14 @@
+# Run the same saved private AI edition twice: private must pass, public must fail.
+appId: com.lakiet.rudi
+---
+- openLink: "rudi://diaries/${DIARY_ID}"
+- extendedWaitUntil:
+    visible:
+      id: "diary-reader-screen"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Sửa cuốn sổ"
+    direction: DOWN
+    timeout: 60000
+- assertVisible: "${EXPECTED_AUDIENCE} · Có Nếp giúp viết"

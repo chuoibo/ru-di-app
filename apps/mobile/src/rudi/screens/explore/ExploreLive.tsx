@@ -281,7 +281,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
               if (timKiem.kind !== "chua-tim") setTimKiem({ kind: "chua-tim" });
             }}
             onSubmitEditing={() => void hoi()}
-            placeholder="Tìm quán, món… hoặc hỏi Rủ Đi AI"
+            placeholder="Một món thèm, một nơi muốn ghé…"
             value={query}
           />
         </View>
@@ -297,7 +297,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
           <SkeletonRow leading={56} />
         </SkeletonGroup>
       ) : null}
-      {trang.pha === "hong" ? <ErrorState onRetry={() => void nap()} title="Chưa đọc được danh mục" /> : null}
+      {trang.pha === "hong" ? <ErrorState onRetry={() => void nap()} title="Những chỗ hay chưa hiện lên" /> : null}
       {trang.pha === "xong" ? (
         <>
           <ScrollView contentContainerStyle={styles.hangLoai} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={styles.cuonLoai}>

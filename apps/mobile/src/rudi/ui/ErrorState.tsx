@@ -27,7 +27,7 @@ export interface ErrorStateProps {
  */
 export function ErrorState({
   title = "Chưa tải được",
-  body = "Kiểm tra mạng rồi thử lại. Những gì bạn đã nhập vẫn còn nguyên.",
+  body = "Chưa tải được nội dung. Bạn thử lại nhé.",
   onRetry,
   retrying,
   secondary,

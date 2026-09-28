@@ -86,9 +86,9 @@ export function HangToGiay({
 }
 
 const CAU_DE_NGHI: Record<"lap_so" | "bat_doi" | "doc_chat", (ten: string) => string> = {
-  lap_so: (ten) => `${ten} đề nghị lập sổ hai người. Mở để xem và trả lời.`,
+  lap_so: (ten) => `${ten} đề nghị lập sổ lời hẹn. Mở để xem và trả lời.`,
   bat_doi: (ten) => `${ten} đề nghị hai bạn là «Một đôi». Mở để xem và trả lời.`,
-  doc_chat: (ten) => `${ten} đề nghị cho Nếp đọc tin nhắn của hai bạn. Mở để xem và trả lời.`,
+  doc_chat: () => "Lời đề nghị đọc chat cũ không còn được hỗ trợ. Nếp chỉ nhận phần bạn chọn và xác nhận gửi.",
 };
 
 const styles = StyleSheet.create({

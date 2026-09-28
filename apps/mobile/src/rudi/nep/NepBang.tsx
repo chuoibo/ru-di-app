@@ -83,7 +83,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           <View style={[styles.duoiNoi, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]} />
           {/* `aiInk` is ink ON the solid ai colour (white in light mode); on `aiSoft`
               it vanished. `ai` reads on `aiSoft` in both themes. */}
-          <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
+          <Text style={[typography.label, { color: colors.ai }]}>Phần sẽ gửi cùng lời nhờ</Text>
           <Text style={[typography.body, { color: colors.ink }]} testID="nep-ngu-canh">
             {cauNguCanh(phieu)}
           </Text>

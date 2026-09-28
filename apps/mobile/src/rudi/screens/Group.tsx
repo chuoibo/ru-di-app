@@ -164,7 +164,7 @@ export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embedde
       header={
         laCapDemo ? (
           <>
-            <TopBar back={!embeddedInTabs} subtitle={so.batDoi ? "Một đôi" : "Hai người bạn"} title={so.tenNguoiKia} />
+            <TopBar back={!embeddedInTabs} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title={so.tenNguoiKia} />
             <HangToGiay cauMo={tuVung.cauMo} onPress={() => router.push(`/groups/${contextId}/to-giay` as never)} tieuDe={tuVung.tenKhongGian} toMo={so.toMo} toiId={so.toiId} />
           </>
         ) : (

@@ -46,7 +46,7 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Rủ Đi thôi!"
 - assertNotVisible: "Chào bạn"
 - takeScreenshot: 23-phien-song-qua-lan-tat
-- tapOn: "Đăng xuất"
+- runFlow: _dang-xuat-neu-co.yaml
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!"
     timeout: 30000

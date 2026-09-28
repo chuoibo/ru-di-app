@@ -109,7 +109,7 @@ export function GroupNewScreen() {
           where the two-person notebook lives. */}
       <Pressable accessibilityRole="link" onPress={() => router.push("/friends/add")}>
         <ChuThichLe icon="people-outline">
-          Chỉ hai người? Không cần nhóm: kết bạn bằng số điện thoại rồi nhắn riêng, sổ hai người nằm ở đó.{" "}
+          Hai người đã thành một hội. Nếu là cặp đôi, hai bạn có thể mở sổ riêng từ cuộc trò chuyện.{" "}
           <Text style={{ color: colors.ink, textDecorationLine: "underline" }}>Thêm bạn</Text>
         </ChuThichLe>
       </Pressable>
