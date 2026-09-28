@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (139 ảnh, tổng 16.42 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (146 ảnh, tổng 17.14 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -143,3 +143,10 @@
 | [EV-F08-XOA-BL-C1](evidence/EV-F08-XOA-BL-C1.jpg) | UI-096: bài có hai bình luận của chat-1, mỗi bình luận một thùng rác 18×20; một chạm là xoá, không hỏi (C1) | 110650 | `756d2c41` |
 | [EV-F08.S01-BASE-ghep](evidence/EV-F08.S01-BASE-ghep.jpg) | F08.S01 tường nhóm chat-test ở C1, C2, C3: «Thả khoảnh khắc», «Check-in», thẻ check-in, ảnh in nghiêng; giờ viết «10:07 28-09» (UI-104) | 121106 | `b7a56663` |
 | [EV-F08.S02-BASE-ghep](evidence/EV-F08.S02-BASE-ghep.jpg) | F08.S02 kệ album ở C1, C2, C3: «Kèo album F08 · 2026 · đang đi · …», chỉ ghi năm, không ngày của chuyến (UI-103) | 69580 | `1991240c` |
+| [EV-F09-CHAN-TRANG-C1](evidence/EV-F09-CHAN-TRANG-C1.jpg) | UI-111: câu cuối trang Cài đặt nói tên hiển thị nằm ở mục Tài khoản trên Cá nhân; panel đó không có ô tên (C1) | 132763 | `04628451` |
+| [EV-F09-DA-LUU-C1](evidence/EV-F09-DA-LUU-C1.jpg) | UI-109: panel «Đã lưu»: «2 địa điểm», câu «Danh sách lưu…» và nút «Mở Khám phá», không tên chỗ nào (C1) | 78622 | `9d406f36` |
+| [EV-F09-KHONG-PHIEN-ghep](evidence/EV-F09-KHONG-PHIEN-ghep.jpg) | UI-082: không có phiên, /settings hiện trang của «Bạn» với công tắc và chip không có tác dụng; /settings/phien sau 8 s vẫn là khung chờ (C1) | 71957 | `49f60e1b` |
+| [EV-F09-LOI-CONG-TAC-C1](evidence/EV-F09-LOI-CONG-TAC-C1.jpg) | UI-107: Cài đặt, chạm «Tìm theo số điện thoại» lúc máy chủ trả 503: quanh công tắc không có gì đổi, câu lỗi nằm ở y 1124 cuối trang (C1) | 131433 | `124b5db6` |
+| [EV-F09-TAI-KHOAN-C1](evidence/EV-F09-TAI-KHOAN-C1.jpg) | UI-108: panel «Tài khoản» của Cá nhân có «Quay lại» như màn con; Back của trình duyệt thì rời Cá nhân (C1) | 81784 | `1b317629` |
+| [EV-F09-XOA-ghep](evidence/EV-F09-XOA-ghep.jpg) | UI-110: xoá tài khoản, bước 1 và bước 2 với «XOÁ» đã gõ: «Xoá vĩnh viễn» vẫn tắt, không câu lý do; câu nhắc đòi «XOA» (C1) | 64135 | `7749b899` |
+| [EV-F09.S01-BASE-ghep](evidence/EV-F09.S01-BASE-ghep.jpg) | F09.S01 tab Cá nhân của chat-0 ở C1–C7: thẻ hộ chiếu, 8 hàng lối vào; ở C7 thẻ và hàng trải 872/842px (UI-105) | 197934 | `4c7b8c1b` |

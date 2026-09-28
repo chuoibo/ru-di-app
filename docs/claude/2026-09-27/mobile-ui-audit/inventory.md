@@ -181,7 +181,7 @@ Mặc định không né bàn phím.
 | L24 | Check-in | `ky-niem/GroupWallLive.tsx` | F08.S01 | tìm + ô | Sheet | đo ở checkpoint 9: X, nền, Esc ở lại tường, Back rời tường (UI-038); chip tên dài tràn mép (UI-099); nút tắt không lý do (UI-091); 96% ở C8 (UI-040) |
 | L25 | Xem ảnh | `ui/PhotoViewer.tsx` (RN `Modal` duy nhất) | F08.S02, F08.S03 | — | «Đóng», Android back | pinch, pan, chạm đúp; không vuốt xuống để đóng; đo ở checkpoint 9: vòng đời trên web đạt khi chưa ai chụm; ảnh cao 0, vuốt nhảy hai ảnh, chụm phóng cả trang (UI-094); đóng không mờ dần (UI-098) |
 | L26 | Xem story + xác nhận xoá | `story/XemStoryScreen.tsx` | F08.S06 | — | đóng modal | tự chuyển 5 s; đo ở checkpoint 9: «Đóng story», Back, Enter đạt; vùng chạm không role, câu hỏi xoá không nhận focus (UI-101) |
-| L27 | Xác nhận xoá tài khoản | `XoaTaiKhoan.tsx` | F09.S06 | — | huỷ | hai bước |
+| L27 | Xác nhận xoá tài khoản | `XoaTaiKhoan.tsx` | F09.S06 | — | huỷ | hai bước; đo ở checkpoint 10 trên tài khoản dùng một lần: bước 1 rõ; «XOA» không dấu, «XOÁ» để nút tắt không lý do, Back ở bước 2 rời trang (UI-110); xoá thật, token cũ 401 |
 | L28 | Tuỳ chọn chuyến (demo) | `Outing.tsx` | F11 | — | Sheet | |
 | L29 | Nắp gấp `NapGiay` | `ui/NapGiay.tsx` | nhiều màn | — | gập | |
 | L30 | Pager Welcome | `screens/Welcome.tsx` | F01.S01 | — | vuốt, chấm | carousel |
@@ -190,7 +190,7 @@ Mặc định không né bàn phím.
 | L33 | Link ngoài (chỉ đường) | `explore/PlaceDetailLive.tsx` | F02.S03 | — | — | |
 | L34 | 3 route modal trượt từ dưới | `check-ins/new`, `moments/new`, `stories/new` | F03, F08 | có | vuốt xuống (iOS), back | không chặn mất bản nháp; đo ở checkpoint 9 trên `moments/new` và `stories/new`: Back, Forward, «Quay lại» đều bỏ ảnh và câu, không hỏi (UI-097); `check-ins/new` có phiên thì về Kèo |
 | L35 | Kit trạng thái: Skeleton, ErrorState, EmptyState | `ui/Skeleton.tsx`, `ErrorState`, `EmptyState` | mọi màn | — | — | lỗi là câu chữ có `aria-live` |
-| L36 | Panel trong màn Hồ sơ (tài khoản, sửa, đã lưu) | `Profile.tsx` | F09.S01 | có | nút back trên màn | không phải route |
+| L36 | Panel trong màn Hồ sơ (tài khoản, sửa, đã lưu) | `Profile.tsx` | F09.S01 | có | nút back trên màn | không phải route; đo ở checkpoint 10: «Quay lại» của panel đúng; Back rời Cá nhân (về Khám phá theo thanh tab, về màn trước theo link, mất chữ đang sửa) (UI-108); «Đã lưu» chỉ có số (UI-109) |
 
 Không có trong app (N/A, đã rà mã):
 - toast, snackbar, banner;

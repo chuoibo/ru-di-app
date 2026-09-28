@@ -56,7 +56,13 @@ node kich-ban/f07-phan-xu.mjs        # phán quyết bằng mắt của F07
 node kich-ban/f08-ky-niem.mjs [--chi du-lieu,tha,chon-huy,nhap,checkin,tuong,album,xem-anh,story,story-dong,bai,thanh-tich,tem-hep,khong-phien,lanh,loi,c8,voi-toi,tablet]
                                     # F08 Kỷ niệm · Media: ghi vào nhóm chat-test và chat-0/1; Team Đà Lạt chỉ đọc
 node kich-ban/f08-phan-xu.mjs        # phán quyết bằng mắt của F08
+node kich-ban/f09-ho-so.mjs [--chi du-lieu,ho-so,tab-back,da-luu,sua,cai-dat,chan-trang,loi-cai-dat,phien,da-chan,lanh,khong-phien,loi,c8,tablet,xoa]
+                                    # F09 Hồ sơ · Cài đặt: ghi vào moi-54 và chat-20 (bỏ chặn), chat-0 chỉ đọc; `xoa` XOÁ HẲN moi-55, chạy một lần
+node kich-ban/f09-phan-xu.mjs        # phán quyết bằng mắt của F09
+node kich-ban/f01-phan-xu.mjs        # gắn lại bằng chứng cho baseline F00/F01 (checkpoint 10, sự cố 3)
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
+node kiem-tai-lieu.mjs <docs-dir> [--canary]
+                                    # ghim ảnh, link ảnh, bảng issue theo mức/loại; --canary đòi 5 canary đỏ
 node chot-anh.mjs <docs-dir> <danh-sach.json>   # chép ảnh được chọn, ghim sha256 vào allowlist
 ```
 
@@ -91,6 +97,20 @@ phóng **cả trang**: sau mọi cú chụm, đọc `visualViewport.scale`, và 
 Dữ liệu mặc định có thể làm ca vô nghĩa: bài mới đăng ở mức «Chỉ mình tôi», nên ca của người đọc cần một bài «Bạn bè».
 Dòng ngay sau một nút không mặc nhiên là lý do của nút: kiểm cả vai trò của nó (F08 lấy nhầm nút «Báo cáo bài này»).
 `innerText` có thể mang xuống dòng và ký tự icon; chuẩn hoá khoảng trắng và bỏ vùng Private Use trước khi ghi vào sổ.
+
+Đổi tab bằng thanh tab không phải lúc nào cũng thêm mục lịch sử: từ tab đầu (Khám phá), lần đổi đầu tiên thêm một mục,
+các lần sau thay mục; mở thẳng một tab khác rồi đổi tab thì không thêm gì, và Back rời hẳn app (F09 đo nhầm vì thế). Ca
+nào bấm Back phải ghi `history.length` và nói rõ đường vào. Các tab đã ghé vẫn gắn trên trang: mọi truy vấn DOM phải
+giới hạn trong `data-testid` của màn đang đo (F09 đếm nhầm ô tìm của Khám phá). `SkeletonRow` dùng trần không mang role;
+chỉ `SkeletonGroup` có role progressbar «Đang tải», nên «đang chờ» phải đo bằng việc không có hàng, trạng thái rỗng hay
+câu lỗi. Tràn và chữ bị cắt thì đọc số của bộ đo harness (`chup()` trả `tomTat.tranNgang` và `chuBiCat`, có canary),
+đừng tự đếm mép phần tử: các lớp ẩn cũng có mép. Kiểm một nút có với tới được không thì kéo từng cú nhỏ về phía nút và
+đọc sau mỗi cú; kéo tới cuối rồi mới đọc thì nút ở đầu trang đã trôi mất.
+
+Chạy `kiem-tai-lieu.mjs` sau `tong-hop.mjs` và trước mỗi commit. Nó không đếm `evidence-manifest.md`: file đó liệt kê
+mọi ảnh trong thư mục, nên đếm nó thì «ảnh không ai dùng» không bao giờ đỏ (sự cố 3 trong report). Ảnh chỉ được tính
+là có dùng khi một issue, report, hoặc một hàng phán quyết trong ma trận dẫn tới nó; cột `evidence` của hàng phải ghi
+đúng tên ảnh đã commit.
 
 Sổ `results.jsonl` chỉ được ghi thêm. Hàng sinh từ lỗi của harness được rút bằng `soGhi(out).rut(tc, lyDo)`:
 dòng gốc ở lại trong sổ, ma trận bỏ nó khỏi bảng và liệt kê trong mục «Hàng đã rút» kèm lý do.

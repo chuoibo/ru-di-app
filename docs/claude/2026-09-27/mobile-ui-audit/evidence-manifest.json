@@ -693,5 +693,40 @@
   "bytes": 69580,
   "sha8": "1991240c",
   "moTa": "F08.S02 kệ album ở C1, C2, C3: «Kèo album F08 · 2026 · đang đi · …», chỉ ghi năm, không ngày của chuyến (UI-103)"
+ },
+ "EV-F09-CHAN-TRANG-C1": {
+  "bytes": 132763,
+  "sha8": "04628451",
+  "moTa": "UI-111: câu cuối trang Cài đặt nói tên hiển thị nằm ở mục Tài khoản trên Cá nhân; panel đó không có ô tên (C1)"
+ },
+ "EV-F09-DA-LUU-C1": {
+  "bytes": 78622,
+  "sha8": "9d406f36",
+  "moTa": "UI-109: panel «Đã lưu»: «2 địa điểm», câu «Danh sách lưu…» và nút «Mở Khám phá», không tên chỗ nào (C1)"
+ },
+ "EV-F09-KHONG-PHIEN-ghep": {
+  "bytes": 71957,
+  "sha8": "49f60e1b",
+  "moTa": "UI-082: không có phiên, /settings hiện trang của «Bạn» với công tắc và chip không có tác dụng; /settings/phien sau 8 s vẫn là khung chờ (C1)"
+ },
+ "EV-F09-LOI-CONG-TAC-C1": {
+  "bytes": 131433,
+  "sha8": "124b5db6",
+  "moTa": "UI-107: Cài đặt, chạm «Tìm theo số điện thoại» lúc máy chủ trả 503: quanh công tắc không có gì đổi, câu lỗi nằm ở y 1124 cuối trang (C1)"
+ },
+ "EV-F09-TAI-KHOAN-C1": {
+  "bytes": 81784,
+  "sha8": "1b317629",
+  "moTa": "UI-108: panel «Tài khoản» của Cá nhân có «Quay lại» như màn con; Back của trình duyệt thì rời Cá nhân (C1)"
+ },
+ "EV-F09-XOA-ghep": {
+  "bytes": 64135,
+  "sha8": "7749b899",
+  "moTa": "UI-110: xoá tài khoản, bước 1 và bước 2 với «XOÁ» đã gõ: «Xoá vĩnh viễn» vẫn tắt, không câu lý do; câu nhắc đòi «XOA» (C1)"
+ },
+ "EV-F09.S01-BASE-ghep": {
+  "bytes": 197934,
+  "sha8": "4c7b8c1b",
+  "moTa": "F09.S01 tab Cá nhân của chat-0 ở C1–C7: thẻ hộ chiếu, 8 hàng lối vào; ở C7 thẻ và hàng trải 872/842px (UI-105)"
  }
 }
