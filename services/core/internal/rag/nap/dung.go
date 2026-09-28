@@ -62,6 +62,44 @@ type TaiLieuQuan struct {
 // SafeDeep, tombstoned ones left out, its stored enrichment applied, its
 // chunks built. No model and no vector yet, except the sentence vectors
 // semantic chunking asks for on a facet longer than NguongDoan.
+// CanLamGiau lists the safe, untombstoned places without a current usable
+// enrichment: exactly the ones ChuanBiQuan counts as ThieuLamGiau, which the
+// build gate refuses. It builds no chunk, so no chunking outcome can hide a
+// place from the enrichment (a long facet split under a stub encoder once
+// did, and those places were never enriched while the gate kept counting them).
+func CanLamGiau(ctx context.Context, q Querier) ([]HoSoQuan, error) {
+	places, err := repo.Repository{Q: q}.ListPlaces(ctx, repo.PlaceFilter{})
+	if err != nil {
+		return nil, err
+	}
+	bia, err := biaTheoLyDo(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(places))
+	for i, p := range places {
+		ids[i] = p.ID
+	}
+	enr, err := DocLamGiau(ctx, q, ids)
+	if err != nil {
+		return nil, err
+	}
+	var out []HoSoQuan
+	for _, p := range places {
+		if r, ok := bia[p.ID]; ok && r != "unsafe" && r != "source_deleted" {
+			continue
+		}
+		h, bo := DungHoSo(p)
+		if bo {
+			continue
+		}
+		if !ApDung(enr[p.ID], h.NguonHash).Co {
+			out = append(out, h)
+		}
+	}
+	return out, nil
+}
+
 func (n Nap) ChuanBiQuan(ctx context.Context, q Querier, rep *BaoCaoDung) (docs []TaiLieuQuan, unsafe []string, err error) {
 	places, err := repo.Repository{Q: q}.ListPlaces(ctx, repo.PlaceFilter{})
 	if err != nil {

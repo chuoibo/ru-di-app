@@ -376,18 +376,11 @@ func ragEnrich(ctx context.Context, getenv func(string) string, pool nap.CSDL, t
 }
 
 func enrichWith(ctx context.Context, pool nap.CSDL, m model.LLM, cfg nap.CauHinh, tranGoi int, stdout io.Writer) error {
-	var rep nap.BaoCaoDung
-	// The enrichment reads each place's profile, never its chunks: the stub
-	// encoder only lets a long facet be split without a provider call.
-	docs, _, err := nap.Nap{Cfg: cfg, Dense: nap.StubDense{N: cfg.Dense.Dims}}.ChuanBiQuan(ctx, pool, &rep)
+	// The enrichment reads each place's profile, never its chunks: the
+	// places are exactly those the build gate counts as lacking one.
+	need, err := nap.CanLamGiau(ctx, pool)
 	if err != nil {
 		return err
-	}
-	var need []nap.HoSoQuan
-	for _, d := range docs {
-		if !d.TT.Co {
-			need = append(need, d.HoSo)
-		}
 	}
 	// Checkpointed: the places go in rounds (every worker a few batches),
 	// and each round's results and failures are written before the next

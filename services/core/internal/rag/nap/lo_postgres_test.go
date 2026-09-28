@@ -141,3 +141,25 @@ func TestNhungQuaLoHongKhongGhi(t *testing.T) {
 		t.Fatalf("after a failure the next run must submit afresh: %d submits, %v", lo.gui, err)
 	}
 }
+
+// TestCanLamGiauKhopCong: the places the enrichment selects are exactly the
+// ones the build gate counts as lacking an enrichment, whatever the chunker
+// does to a long facet (a stub-driven split once hid places from the
+// enrichment while the gate kept counting them).
+func TestCanLamGiauKhopCong(t *testing.T) {
+	pool := naptest.Pool(t)
+	v := naptest.Vang(t)
+	naptest.NapVang(t, pool, v)
+	n, _ := naptest.Nap(t, nap.NewKhoNho())
+	var rep nap.BaoCaoDung
+	if _, _, err := n.ChuanBiQuan(context.Background(), pool, &rep); err != nil {
+		t.Fatal(err)
+	}
+	can, err := nap.CanLamGiau(context.Background(), pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(can) != rep.ThieuLamGiau || len(can) == 0 {
+		t.Fatalf("enrichment selects %d, the gate counts %d", len(can), rep.ThieuLamGiau)
+	}
+}
