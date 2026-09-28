@@ -985,16 +985,26 @@ def scan_tree(
     ref: str,
     commit_label: str | None = None,
     only: set[bytes] | None = None,
+    tip_config: GuardConfig | None = None,
 ) -> ScanResult:
     """Scan the tree at `ref`, or only `only` of its paths.
 
     `only` exists for `scan_commits`. The allowlist is still read from the WHOLE
     tree, because an entry that pins a path by sha256 has to be found wherever
     it lives, not only where this commit happened to touch.
+
+    `tip_config` is the allowlist at the tip of the range being scanned. Its
+    entries are honoured in addition to this commit's own: a pin names an exact
+    path AND the sha256 of the exact bytes, so it vouches for that blob in any
+    commit that carries it. This is the only way to review a blob that entered
+    history under a stale pin without rewriting history -- the stale pin in
+    that old commit can never be edited, but the tip can pin the old digest.
     """
 
     entries = parse_tree(repo, ref)
     config = config_from_entries(repo, entries)
+    if tip_config is not None:
+        config = GuardConfig(artifacts=config.artifacts + tip_config.artifacts)
     result = ScanResult(findings=[])
     wanted = sorted(entries) if only is None else sorted(set(entries) & only)
     for file_number, path in enumerate(wanted, start=1):
@@ -1091,7 +1101,9 @@ def changed_paths(repo: Path, commit: str) -> set[bytes]:
     return {line for line in out.split(b"\0") if line}
 
 
-def scan_commits(repo: Path, commits: Sequence[str]) -> ScanResult:
+def scan_commits(
+    repo: Path, commits: Sequence[str], tip: str | None = None
+) -> ScanResult:
     """Scan each commit, but only the paths that commit changed.
 
     Scanning the whole tree at every commit re-reads every unchanged blob once
@@ -1102,10 +1114,17 @@ def scan_commits(repo: Path, commits: Sequence[str]) -> ScanResult:
     the separate `tree HEAD` step covers it.
     """
 
+    tip_config = (
+        config_from_entries(repo, parse_tree(repo, tip)) if tip is not None else None
+    )
     result = ScanResult(findings=[])
     for commit in commits:
         commit_result = scan_tree(
-            repo, commit, commit_label=commit, only=changed_paths(repo, commit)
+            repo,
+            commit,
+            commit_label=commit,
+            only=changed_paths(repo, commit),
+            tip_config=tip_config,
         )
         commit_result.commits_scanned = 1
         result.extend(commit_result)
@@ -1121,7 +1140,7 @@ def scan_range(repo: Path, base: str, head: str) -> ScanResult:
     else:
         base_commit = resolve_commit(repo, base)
         commits = list_commits(repo, f"{base_commit}..{head_commit}")
-    return scan_commits(repo, commits)
+    return scan_commits(repo, commits, tip=head_commit)
 
 
 def emit_result(result: ScanResult, label: str) -> int:
@@ -1188,7 +1207,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "history":
             commit = resolve_commit(repo, args.ref)
             commits = list_commits(repo, commit)
-            return emit_result(scan_commits(repo, commits), "reachable history")
+            return emit_result(
+                scan_commits(repo, commits, tip=commit), "reachable history"
+            )
     except GuardError as error:
         print(f"Repo guard could not complete: {error}", file=sys.stderr)
         return 2

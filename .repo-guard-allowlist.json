@@ -647,6 +647,54 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh Android từ fixture tổng hợp, đã được engineer và reviewer UI mở xem; không có dữ liệu người tham gia thật. Đã kiểm PNG không chứa EXIF/text metadata. Bằng chứng PR bàn giao sổ kỷ niệm 2026-09-28."
+    },
+    {
+      "path": "parity/go.mod",
+      "sha256": "27c64389bec9727fdb6f1b8f5e21a601630f97b4c056c9b73106e95d2ab68415",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của parity/go.mod ở commit 637b7f38613f (nâng Go 1.23.4 → 1.25.14) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 1 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.mod",
+      "sha256": "5e2c042d70062ae1a0161303aee359ff58f64ede73ef513417c2c1c4f8b79a59",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit 637b7f38613f (nâng Go 1.23.4 → 1.25.14) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.mod",
+      "sha256": "de18ccdd33d7cad409afccfcf7d79492c46a532492e91f195f6e69f5337ac3b2",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit 71fb3112dd5b (thêm x/tools cho aigate) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.sum",
+      "sha256": "b1b6007bb9af99a84a54fb31ae27f227be6fdd0913869ec2f2a9b2da27f4b09a",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.sum ở commit 71fb3112dd5b (thêm x/tools cho aigate) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 6 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.mod",
+      "sha256": "f26bf42c259fb9ae3f1e2e66b45198486d202b73b2e42b28a9f8cc94693e5cec",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "services/core/go.sum",
+      "sha256": "d204ecbeb51336e29fd9af46e85b51b0bc60cdd84848321e716e583100511fde",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Bản LỊCH SỬ của services/core/go.sum ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 6 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
     }
   ]
 }

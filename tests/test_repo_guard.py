@@ -721,6 +721,72 @@ class GitIntegrationTests(unittest.TestCase):
         self.assertNotIn(fake_email, output)
         self.assertIn("rule=email", output)
 
+    def _commit_unpinned_then_repin(self, tip_pins_old_digest: str | None):
+        """A blob enters under no pin; a later commit pins only the new bytes.
+
+        Returns (base, head). `tip_pins_old_digest` is what the tip adds for
+        the historical blob, or None for "nothing".
+        """
+
+        base = self.git("rev-parse", "HEAD")
+        # repo-guard: allow=long-number reason=synthetic-pseudo-version-fixture
+        old = "require x v0.0.0-20240101000000-abcdefabcdef\n"
+        # repo-guard: allow=long-number reason=synthetic-pseudo-version-fixture
+        new = "require x v0.0.0-20250101000000-abcdefabcdef\n"
+        (self.repo / "go.mod").write_text(old, encoding="utf-8")
+        self.git("add", "go.mod")
+        self.git("commit", "-m", "synthetic dependency without a pin")
+        artifacts = [
+            {
+                "path": "go.mod",
+                "sha256": hashlib.sha256(new.encode()).hexdigest(),
+                "rules": ["long-number"],
+                "reason": "synthetic pseudo-version fixture",
+            }
+        ]
+        if tip_pins_old_digest is not None:
+            artifacts.append(
+                {
+                    "path": "go.mod",
+                    "sha256": tip_pins_old_digest,
+                    "rules": ["long-number"],
+                    "reason": "synthetic historical pseudo-version",
+                }
+            )
+        (self.repo / "go.mod").write_text(new, encoding="utf-8")
+        (self.repo / ".repo-guard-allowlist.json").write_text(
+            json.dumps({"version": 1, "artifacts": artifacts}), encoding="utf-8"
+        )
+        self.git("add", "go.mod", ".repo-guard-allowlist.json")
+        self.git("commit", "-m", "synthetic re-pin")
+        return base, self.git("rev-parse", "HEAD")
+
+    def test_range_still_blocks_a_historical_blob_the_tip_does_not_pin(self):
+        base, head = self._commit_unpinned_then_repin(None)
+
+        completed = self.run_guard("range", base, head)
+
+        self.assertEqual(completed.returncode, 1, completed.stdout)
+        self.assertIn("rule=long-number", completed.stdout)
+
+    def test_tip_pin_of_the_exact_historical_digest_clears_that_commit(self):
+        # repo-guard: allow=long-number reason=synthetic-pseudo-version-fixture
+        old = "require x v0.0.0-20240101000000-abcdefabcdef\n"
+        base, head = self._commit_unpinned_then_repin(
+            hashlib.sha256(old.encode()).hexdigest()
+        )
+
+        completed = self.run_guard("range", base, head)
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+
+    def test_tip_pin_of_a_different_digest_does_not_clear_the_commit(self):
+        base, head = self._commit_unpinned_then_repin("ab" * 32)
+
+        completed = self.run_guard("range", base, head)
+
+        self.assertEqual(completed.returncode, 1, completed.stdout)
+
 
 class LockfileDigestAllowanceTests(ScanHelper):
     """Neither a lockfile name nor a format marker is evidence.
