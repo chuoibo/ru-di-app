@@ -311,41 +311,64 @@ func TestBoVangKhongSua(t *testing.T) {
 // the set was written, the one-class text that says a two-person chat only
 // asks and has «Tờ giấy» in its tray: recall@5 0.7692, MRR 0.4635 (co_dau
 // 0.8333 / 0.5333, khong_dau 0.5000 / 0.4062, teen 1.0000 / 0.4000); three
-// miss. It is the baseline the two-class rewrite is graded against, so it is
-// held below the bar until that rewrite (chuaDatNguong).
+// miss. It is the baseline the two-class rewrite is graded against.
+//
+// Re-pinned at the two-class rewrite (P4, 2026-09-28): the ranker did not
+// change, the manual did. chat-nhom.md, tin-nhan.md and to-giay.md now say a
+// two-person chat has Rủ Đi AI and every tool a group has, and that «Tờ
+// giấy» (pinned row, tray button) is there only when both turned on «Một
+// đôi», reached otherwise from the settings row. Folding makes «đôi» the
+// same term as «đổi», so every section that gains «Một đôi» lowers the
+// weight of «đổi» everywhere; it is quoted in one indexed section
+// (to-giay/cai-dat-so, which already held «đổi») and in the overviews.
+// Before → after (recall@5 / MRR):
+//
+//	duongHaiNguoi   0.7692 / 0.4635 → 1.0000 / 0.6859
+//	  co_dau        0.8333 / 0.5333 → 1.0000 / 0.6806
+//	  khong_dau     0.5000 / 0.4062 → 1.0000 / 0.8750
+//	  teen          1.0000 / 0.4000 → 1.0000 / 0.4444
+//	duongVang       0.9505 / 0.9127 → 0.9505 / 0.9179
+//	  co_dau        0.9405 / 0.8859 → 0.9405 / 0.8978
+//	  khong_dau     1.0000 / 1.0000 → 1.0000 / 1.0000
+//	  teen          0.8333 / 0.7369 → 0.8333 / 0.7354
+//	duongManKhac    0.9565 / 0.7665 → 0.9565 / 0.7661
+//	  co_dau        0.9333 / 0.7578 → 0.9333 / 0.7578
+//	  khong_dau     1.0000 / 0.8873 → 1.0000 / 0.8873
+//	  teen          0.9286 / 0.6293 → 0.9286 / 0.6280
+//	duongTruyVan    1.0000 / 0.8942 → 1.0000 / 0.8942
+//
+// Recall@5 did not fall on any group; every MRR is within 0.01 of before
+// (ADR-0047 §9). duongHaiNguoi has no miss left; «ko bik bo fieu o dau» and
+// «bo fieu o dau v» went from rank 7 to 8, «đóng sổ hai người» from 2 to 1.
 //
 // The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
 // duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
 // 0.3526 (teen 0.8214 / 0.2905).
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9127"},
-		"co_dau":    {"0.9405", "0.8859"},
+		"":          {"0.9505", "0.9179"},
+		"co_dau":    {"0.9405", "0.8978"},
 		"khong_dau": {"1.0000", "1.0000"},
-		"teen":      {"0.8333", "0.7369"},
+		"teen":      {"0.8333", "0.7354"},
 	},
 	duongTruyVan: {
 		"": {"1.0000", "0.8942"},
 	},
 	duongManKhac: {
-		"":          {"0.9565", "0.7665"},
+		"":          {"0.9565", "0.7661"},
 		"co_dau":    {"0.9333", "0.7578"},
 		"khong_dau": {"1.0000", "0.8873"},
-		"teen":      {"0.9286", "0.6293"},
+		"teen":      {"0.9286", "0.6280"},
 	},
 	duongHaiNguoi: {
-		"":          {"0.7692", "0.4635"},
-		"co_dau":    {"0.8333", "0.5333"},
-		"khong_dau": {"0.5000", "0.4062"},
-		"teen":      {"1.0000", "0.4000"},
+		"":          {"1.0000", "0.6859"},
+		"co_dau":    {"1.0000", "0.6806"},
+		"khong_dau": {"1.0000", "0.8750"},
+		"teen":      {"1.0000", "0.4444"},
 	},
 }
 
 const nguongRecall = 0.90
-
-// chuaDatNguong names the sets pinned as a baseline on a text they were
-// written to grade: pinned, but not yet held to nguongRecall.
-var chuaDatNguong = map[string]bool{duongHaiNguoi: true}
 
 func TestTruyHoiVang(t *testing.T) {
 	for duong, theoNhom := range vangGhim {
@@ -356,7 +379,7 @@ func TestTruyHoiVang(t *testing.T) {
 				for _, x := range r.truot {
 					t.Logf("%s miss: %s", duong, x)
 				}
-				if r.recall5 < nguongRecall && !chuaDatNguong[duong] {
+				if r.recall5 < nguongRecall {
 					t.Errorf("%s: recall@5 %.4f is under the bar %.2f", duong, r.recall5, nguongRecall)
 				}
 			}
