@@ -15,6 +15,9 @@ import (
 //go:embed schema_nap_1.sql
 var schemaNap1SQL string
 
+//go:embed schema_nap_2.sql
+var schemaNap2SQL string
+
 // Querier is a pool, a connection or a transaction.
 type Querier = repo.Querier
 
@@ -38,10 +41,11 @@ var migrations = []struct {
 	sql     string
 }{
 	{1, schemaNap1SQL},
+	{2, schemaNap2SQL},
 }
 
 // SchemaVersion is the ingestion schema this binary reads and writes.
-const SchemaVersion = 1
+const SchemaVersion = 2
 
 // SchemaFiles are the embedded migrations, for the gates that read them.
 func SchemaFiles() []string {

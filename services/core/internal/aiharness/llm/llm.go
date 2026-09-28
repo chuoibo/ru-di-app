@@ -158,7 +158,52 @@ func NewGemini(ctx context.Context, apiKey, baseURL string) (model.LLM, error) {
 	return geminiModel{m}, nil
 }
 
-// GeminiFromEnv reads GEMINI_API_KEY and MOBILE_GEMINI_BASE_URL once.
+// Environment variables of the agy-proxy route (ADR-0049 §2.1): the vnlocal
+// machine's gateway, which speaks the Gemini wire format in front of a
+// shared pool of seats. The same names internal/agyproxy reads.
+const (
+	EnvAgyURL = "AGY_PROXY_URL"
+	EnvAgyKey = "AGY_PROXY_KEY"
+)
+
+// agyTimeout covers the proxy's queue in front of a seat (a long turn is
+// ~10 s; a busy pool adds its wait) and stays under its 180 s ceiling.
+const agyTimeout = 90 * time.Second
+
+// NewGeminiQuaAgy builds the Gemini model through agy-proxy: ADK's gemini
+// model and genai unchanged, the base URL the proxy's, the proxy's client
+// token as the API key (sent as x-goog-api-key, which the proxy accepts).
+// The proxy never serves embeddings: aiharness/nhung keeps its own door.
+// A test binary may only reach a loopback proxy (ADR-0044 §4, ADR-0049 §4).
+func NewGeminiQuaAgy(ctx context.Context, token, baseURL string) (model.LLM, error) {
+	if token == "" {
+		return nil, errors.New("llm: " + EnvAgyKey + " is not set")
+	}
+	u, err := url.Parse(baseURL)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.User != nil || (u.Path != "" && u.Path != "/") {
+		return nil, errors.New("llm: " + EnvAgyURL + " must be an http(s) origin without credentials or path")
+	}
+	if testing.Testing() && !loopback(u.Hostname()) {
+		return nil, errors.New("llm: a test binary may only reach a loopback agy-proxy")
+	}
+	m, err := gemini.NewModel(ctx, Model, &genai.ClientConfig{
+		APIKey:      token,
+		Backend:     genai.BackendGeminiAPI,
+		HTTPOptions: genai.HTTPOptions{BaseURL: strings.TrimRight(baseURL, "/") + "/"},
+		HTTPClient:  &http.Client{Timeout: agyTimeout},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return geminiModel{m}, nil
+}
+
+// GeminiFromEnv builds the one text model: through agy-proxy when
+// AGY_PROXY_URL is set (ADR-0049 §2.1), else Gemini directly from
+// GEMINI_API_KEY and MOBILE_GEMINI_BASE_URL. Read once.
 func GeminiFromEnv(ctx context.Context, getenv func(string) string) (model.LLM, error) {
+	if u := strings.TrimSpace(getenv(EnvAgyURL)); u != "" {
+		return NewGeminiQuaAgy(ctx, getenv(EnvAgyKey), u)
+	}
 	return NewGemini(ctx, getenv(EnvAPIKey), getenv(EnvBaseURL))
 }

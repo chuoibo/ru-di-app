@@ -34,8 +34,10 @@ const pkgRag = "mobile/services/core/internal/rag"
 // rag_vector_versions (one row per Milvus collection: ids, states, model
 // names, counts), rag_dirty (which place changed: corpus, id, counters),
 // place_enrichments (a place's closed-id enrichment and its review verdict),
-// rag_embedding_cache and rag_sparse_cache (vectors by content hash) and
-// rag_ingest_dlq (which place failed at which stage, as enums). None names a
+// rag_embedding_cache and rag_sparse_cache (vectors by content hash),
+// rag_embed_batches (batch embedding jobs: provider job name, model, counts,
+// state; ADR-0049 §2.7) and rag_ingest_dlq (which place failed at which
+// stage, as enums). None names a
 // person (nap_postgres_test.go lists their columns). And one read outside
 // rag: job_schema_migrations, whose version its migration checks before
 // installing a trigger that enqueues on the outbox's lane 'rag' -- a version
@@ -46,6 +48,7 @@ var ragAllowed = map[string]bool{
 	"places": true, "destinations": true,
 	"rag_nap_schema_migrations": true, "rag_vector_versions": true, "rag_dirty": true, "place_enrichments": true,
 	"rag_embedding_cache": true, "rag_sparse_cache": true, "rag_ingest_dlq": true, "job_schema_migrations": true,
+	"rag_embed_batches": true,
 }
 
 // ragViolations lists the tables SQL-looking strings name outside the

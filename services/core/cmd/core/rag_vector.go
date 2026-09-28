@@ -28,7 +28,7 @@ import (
 // ragVectorUsage is the vector index's half of `core rag` (package rag/nap):
 // every command prints one JSON object of ids, states and counts, never a
 // word of the catalogue.
-const ragVectorUsage = "usage: core rag v-build <place|manual> [--auto] | v-eval <id> | v-promote <id> | v-rollback <place|manual> | " +
+const ragVectorUsage = "usage: core rag v-build <place|manual> [--auto] | v-embed-batch place | v-eval <id> | v-promote <id> | v-rollback <place|manual> | " +
 	"v-status | v-enrich --tran-goi N | v-review list [--all] | v-review approve|reject <place_id> <ban> | v-dlq ls|retry | v-index | v-reconcile"
 
 // EnvRagDense chooses the dense encoder of the vector pipeline: unset or
@@ -79,6 +79,12 @@ func parseRagVector(args []string) (ragVectorCommand, error) {
 		if len(args) != 2 || corpus(args[1]) != nil {
 			return c, bad
 		}
+	case "v-embed-batch":
+		// Places only: the manual is a few dozen chunks, online is fine.
+		if len(args) != 2 || args[1] != string(nap.CorpusQuan) {
+			return c, bad
+		}
+		c.corpus = nap.CorpusQuan
 	case "v-status", "v-index", "v-reconcile":
 		if len(args) != 1 {
 			return c, bad
@@ -244,6 +250,8 @@ func runRagVector(args []string, getenv func(string) string, stdout, stderr io.W
 		return ragOut(stdout, stderr, rows, err)
 	case "v-enrich":
 		return ragEnrich(ctx, getenv, pool, c.tranGoi, stdout, stderr)
+	case "v-embed-batch":
+		return ragEmbedBatch(ctx, getenv, pool, stdout, stderr)
 	}
 	needEnc := c.name == "v-build" || c.name == "v-eval" || c.name == "v-index"
 	n, enc, closeFn, err := ragVectorDeps(ctx, getenv, needEnc)
@@ -355,7 +363,9 @@ func ragEnrich(ctx context.Context, getenv func(string) string, pool nap.CSDL, t
 
 func enrichWith(ctx context.Context, pool nap.CSDL, m model.LLM, cfg nap.CauHinh, tranGoi int, stdout io.Writer) error {
 	var rep nap.BaoCaoDung
-	docs, _, err := nap.Nap{Cfg: cfg}.ChuanBiQuan(ctx, pool, &rep)
+	// The enrichment reads each place's profile, never its chunks: the stub
+	// encoder only lets a long facet be split without a provider call.
+	docs, _, err := nap.Nap{Cfg: cfg, Dense: nap.StubDense{N: cfg.Dense.Dims}}.ChuanBiQuan(ctx, pool, &rep)
 	if err != nil {
 		return err
 	}
@@ -440,4 +450,66 @@ func ragIndexer(getenv func(string) string, stderr io.Writer) int {
 	logger.Info("rag indexer started", "lane", getenv(EnvAMQPURL) != "")
 	side.Wait()
 	return 0
+}
+
+// napLo adapts the engine's batch embedding door to the pipeline.
+type napLo struct{ l *nhung.Lo }
+
+func (a napLo) Model() string { return a.l.Model() }
+func (a napLo) Dims() int     { return a.l.Dims() }
+
+func (a napLo) GuiLo(ctx context.Context, ten string, docs []nap.LoVao) (string, error) {
+	in := make([]nhung.TaiLieuLo, len(docs))
+	for i, d := range docs {
+		in[i] = nhung.TaiLieuLo{Khoa: d.Khoa, TieuDe: d.TieuDe, NoiDung: d.Chu}
+	}
+	return a.l.Gui(ctx, ten, in)
+}
+
+func (a napLo) XemLo(ctx context.Context, job string) (nap.KetQuaLo, error) {
+	kq, err := a.l.Xem(ctx, job)
+	if err != nil {
+		return nap.KetQuaLo{}, err
+	}
+	return nap.KetQuaLo{Xong: kq.TrangThai == nhung.LoXong, Hong: kq.TrangThai == nhung.LoHong,
+		Vecs: kq.Vecs, LoiDong: kq.LoiDong, Loi: kq.Loi}, nil
+}
+
+// ragEmbedBatch is `core rag v-embed-batch place`: every place chunk whose
+// vector the cache lacks goes to the Gemini Batch API (half the online
+// price, ADR-0049 §2.7), and the vectors land in rag_embedding_cache, where
+// the next `v-build` finds them. It refuses while a place lacks a current
+// enrichment: the enrichment writes the chunk's context line, so embedding
+// before it would pay for vectors of text that is about to change. The run
+// polls every 30 s until the job ends or the command's hour does; a job left
+// running is polled by the next run, never submitted twice.
+func ragEmbedBatch(ctx context.Context, getenv func(string) string, pool nap.CSDL, stdout, stderr io.Writer) int {
+	cfg, err := nap.MacDinh()
+	if err != nil {
+		return ragOut(stdout, stderr, nil, err)
+	}
+	enc, err := ragDense(ctx, getenv, cfg)
+	if err != nil {
+		return ragOut(stdout, stderr, nil, err)
+	}
+	lo, err := nhung.LoFromEnv(ctx, getenv)
+	if err != nil {
+		return ragOut(stdout, stderr, nil, err)
+	}
+	n := nap.Nap{Cfg: cfg, Dense: enc}
+	var rep nap.BaoCaoDung
+	docs, _, err := n.ChuanBiQuan(ctx, pool, &rep)
+	if err != nil {
+		return ragOut(stdout, stderr, nil, err)
+	}
+	if rep.ThieuLamGiau > 0 {
+		return ragOut(stdout, stderr, map[string]int{"thieu_lam_giau": rep.ThieuLamGiau},
+			errors.New("rag: enrich first (core rag v-enrich): the enrichment writes the text being embedded"))
+	}
+	var rows []nap.Hang
+	for _, d := range docs {
+		rows = append(rows, d.Rows...)
+	}
+	kq, err := n.NhungQuaLo(ctx, pool, napLo{l: lo}, rows, 30*time.Second)
+	return ragOut(stdout, stderr, map[string]any{"quan": len(docs), "qua_dai": rep.QuaDai, "lo": kq}, err)
 }
