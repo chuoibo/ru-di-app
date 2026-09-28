@@ -567,7 +567,7 @@ Nguồn: quyết định reranker của chủ sản phẩm (ADR-0043 §2.6) và 
 (gap #3, #5, #7, #10, rủi ro D.6). Không thêm lời gọi model nào; mọi thứ dưới đây là cấu trúc, tập hợp và đếm.
 
 **Reranker** (chi tiết ở ADR-0043 §2.6). `cmd/core` dựng `rerank.TuEnv` từ `MOBILE_RERANK_URL`,
-`MOBILE_RERANK_MODEL` (mặc định `Qwen3-Reranker-4B`), `MOBILE_RERANK_TIMEOUT` (mặc định 3s),
+`MOBILE_RERANK_MODEL` (mặc định `qwen/qwen3-reranker-8b`, ADR-0049), `MOBILE_RERANK_TIMEOUT` (mặc định 3s),
 `MOBILE_RERANK_TOKEN` (bearer tuỳ chọn) và đưa vào `aiharness.WithXepLai`. Mỗi lượt Nếp bọc reranker trong
 `rerank.Dem` (`MaxRerankCallsPerTurn` = 2) và mang nó trong ngữ cảnh (`truyhoi.VoiXepLai`): retriever hybrid
 dùng chung rerank tối đa 30 ứng viên RRF đầu cho tool `search_places`; vòng sửa của đường truy hồi rerank một

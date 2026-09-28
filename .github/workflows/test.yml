@@ -278,12 +278,11 @@ jobs:
   # The Milvus tier: the one retrieval + ingestion system on real services --
   # the vector index and its schema, the ingestion pipeline writing it, the
   # hybrid retriever over Milvus and the PostgreSQL rows the ingest writes,
-  # the Qwen reranker's golden check. A job of its own, not a step of `core`:
-  # it needs a Milvus (the script starts the pinned v3.0.2 image) AND a
-  # Qwen3-Reranker served at MOBILE_TEST_RERANK_URL, and no hosted runner has
-  # the reranker (its weights are not an image the script may pull). So it
-  # runs only on a self-hosted runner that declares both. Inside the job a
-  # missing service, a skip or a missing sentinel is red.
+  # the reranker wiring against a loopback stand-in (ADR-0049: no model, no
+  # paid call in tests). A job of its own, not a step of `core`: it needs a
+  # Milvus (the script starts the pinned v3.0.2 image), so it runs only on a
+  # self-hosted runner that declares one. Inside the job a missing service, a
+  # skip or a missing sentinel is red.
   #
   # And it is only SCHEDULED when the repository says such a runner exists:
   # repository variable MILVUS_RUNNER set to `true` (Settings -> Secrets and
@@ -296,9 +295,9 @@ jobs:
   # runner and setting the variable is the whole switch back on; see
   # docs/claude/2026-09-25/con-thieu-ban-tu-lam.md.
   milvus:
-    name: Milvus retrieval and ingestion tier (needs Milvus and a reranker)
+    name: Milvus retrieval and ingestion tier (needs Milvus)
     if: vars.MILVUS_RUNNER == 'true'
-    runs-on: [self-hosted, milvus, reranker]
+    runs-on: [self-hosted, milvus]
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -307,10 +306,10 @@ jobs:
         with:
           go-version-file: services/core/go.mod
 
-      - name: Milvus retrieval, ingestion and reranker tests on real services
+      - name: Milvus retrieval and ingestion tests on real services
         # Milvus from MOBILE_TEST_MILVUS_ADDR or the pinned image, PostgreSQL
         # from CORE_TEST_DATABASE_URL or a disposable one migrated by
-        # Alembic, the reranker from MOBILE_TEST_RERANK_URL (required).
+        # Alembic.
         run: scripts/go_milvus_tier.sh
 
   # Tier T1 of the AI eval (design 06 §6): the engine run through its own seam,

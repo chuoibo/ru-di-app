@@ -31,7 +31,7 @@ func TestNepEngineReranker(t *testing.T) {
 	}
 	tok := strings.Repeat("t", 40)
 	log, err = chay(map[string]string{"MOBILE_RERANK_URL": "https://reranker.gpu.internal:8443", "MOBILE_RERANK_TOKEN": tok})
-	if err != nil || !strings.Contains(log, "model=Qwen3-Reranker-4B") || !strings.Contains(log, "timeout=3s") || strings.Contains(log, tok) {
+	if err != nil || !strings.Contains(log, "model=qwen/qwen3-reranker-8b") || !strings.Contains(log, "timeout=3s") || strings.Contains(log, tok) {
 		t.Fatalf("configured: %v\n%s", err, log)
 	}
 	for _, bad := range []map[string]string{

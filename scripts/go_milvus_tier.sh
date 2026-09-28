@@ -5,8 +5,8 @@
 # (internal/rag/nap over internal/vectordb/napkho: filter parity with Go,
 # the golden set, the lifecycle through the alias, attribute propagation),
 # the hybrid retriever end to end over Milvus and the PostgreSQL rows the
-# ingest writes (internal/hybrid), and the Qwen reranker's golden check
-# (internal/rerank).
+# ingest writes (internal/hybrid), with the reranker wiring checked against a
+# loopback stand-in inside the tests (no model, no paid call: ADR-0049 §4).
 #
 #   scripts/go_milvus_tier.sh [--image TAG] [-- go test args...]
 #
@@ -22,11 +22,6 @@
 #               storage, woodpecker on local disk.
 #   PostgreSQL  CORE_TEST_DATABASE_URL (at `alembic head`); or a disposable
 #               postgres:16 migrated by Alembic from the API image.
-#   Reranker    MOBILE_TEST_RERANK_URL (loopback llama-server or vLLM serving
-#               Qwen3-Reranker-0.6B at /rerank); or MOBILE_RERANK_LOCAL_DIR, a
-#               directory holding its start.sh. There is no container default:
-#               the model weights are not an image this script may pull, so
-#               a machine with neither is a failure, never a skip.
 #
 # The ways this tier could read green while measuring nothing, all refused:
 #   * no service: the tests skip. CORE_REQUIRE_MILVUS_TESTS=1 and
@@ -57,7 +52,6 @@ SENTINELS=(
   TestHybridDauCuoiKhongViPham
   TestHybridQuaRerankThat
   TestHybridRerankTheoLuot
-  TestRerankGoldenQuaServer
   # ingestion (rag/nap over napkho): both BM25 fields, filter parity with Go
   # on rows with unknown allergens/price/hours, the golden set with no
   # violation, the lifecycle through the alias, a takedown surviving a
@@ -218,21 +212,6 @@ if [ -z "${CORE_TEST_DATABASE_URL:-}" ]; then
 else
   echo "--- PostgreSQL có sẵn từ CORE_TEST_DATABASE_URL (phải đã ở alembic head)"
 fi
-
-# --- Reranker -------------------------------------------------------------------
-if [ -n "${MOBILE_TEST_RERANK_URL:-}" ]; then
-  echo "--- reranker có sẵn từ MOBILE_TEST_RERANK_URL"
-elif [ -n "${MOBILE_RERANK_LOCAL_DIR:-}" ]; then
-  d="$MOBILE_RERANK_LOCAL_DIR"
-  [ -x "$d/start.sh" ] || { echo "HỎNG: $d/start.sh không chạy được" >&2; exit 2; }
-  echo "--- reranker cài tại chỗ từ $d"
-  "$d/start.sh"
-  export MOBILE_TEST_RERANK_URL="http://127.0.0.1:${PORT:-18081}"
-else
-  echo "HỎNG: cần reranker -- đặt MOBILE_TEST_RERANK_URL hoặc MOBILE_RERANK_LOCAL_DIR; thiếu không phải là bỏ qua" >&2
-  exit 1
-fi
-wait_http reranker 120 "${MOBILE_TEST_RERANK_URL%/}/health"
 
 echo "--- go test -tags milvus ${go_args[*]}"
 set +e

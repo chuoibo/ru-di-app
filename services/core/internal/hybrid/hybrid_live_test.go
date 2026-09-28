@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand/v2"
-	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -223,16 +222,11 @@ func TestHybridDauCuoiKhongViPham(t *testing.T) {
 	t.Logf("60 retrievals, %d items checked against live rows, 0 violations; the re-check dropped %d stale hits", items, k.KiemLaiLoai.Load())
 }
 
-// The full path with the real reranker: one retrieval, reordered by the
-// served model, the result a subset of the candidates, no NoRerank.
+// The full path through a served reranker (the loopback stand-in): one
+// retrieval, reordered by the served scores, the result a subset of the
+// candidates, no NoRerank.
 func TestHybridQuaRerankThat(t *testing.T) {
-	base := strings.TrimSpace(os.Getenv("MOBILE_TEST_RERANK_URL"))
-	if base == "" {
-		if os.Getenv(testmilvus.EnvRequire) == "1" {
-			t.Fatal("CORE_REQUIRE_MILVUS_TESTS=1 but MOBILE_TEST_RERANK_URL is empty")
-		}
-		t.Skip("MOBILE_TEST_RERANK_URL not set")
-	}
+	base, served := rerankGia(t)
 	k, _, _ := dung(t, sinh(6, 40))
 	q, err := rerank.Moi(base, "", 60*time.Second)
 	if err != nil {
@@ -254,7 +248,7 @@ func TestHybridQuaRerankThat(t *testing.T) {
 			t.Fatalf("not in the reranker's order: %+v", kq.BangChung)
 		}
 	}
-	if st := q.ThongKe(); st.Goi != 1 || st.Loi != 0 {
-		t.Fatalf("reranker counters %+v", st)
+	if st := q.ThongKe(); st.Goi != 1 || st.Loi != 0 || served.Load() != 1 {
+		t.Fatalf("reranker counters %+v, served %d", st, served.Load())
 	}
 }

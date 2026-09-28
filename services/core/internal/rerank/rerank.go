@@ -1,14 +1,12 @@
-// Package rerank is the truyhoi.Reranker adapter over a Qwen3-Reranker
-// served over HTTP at POST /rerank (the vLLM contract; llama-server serves
-// the same shape): the orchestrator, not Milvus, calls the model, so the
-// call is counted, has its own deadline and can fail without failing the
-// retrieval (research qwen-reranker.md §4). Production is
-// Qwen3-Reranker-4B on a GPU behind vLLM (owner, 2026-09-27; ADR-0043
-// §2.6); the local stand-in is llama-server with the 0.6B GGUF.
+// Package rerank is the truyhoi.Reranker adapter over a reranker served over
+// HTTP at POST /rerank (the Cohere/vLLM shape): the orchestrator, not Milvus,
+// calls the model, so the call is counted, has its own deadline and can fail
+// without failing the retrieval (research qwen-reranker.md §4). The model is
+// qwen/qwen3-reranker-8b on OpenRouter (Fireworks only), reached through the
+// loopback OpenRouter sidecar (owner, 2026-09-28; ADR-0049 §2.3–2.4).
 //
-// The path is /rerank, never /v1/rerank: vLLM 0.30 answers the latter with
-// a deprecation warning naming /rerank (research qwen-reranker.md,
-// Kiểm chứng, adjustment 1).
+// The path is {URL}/rerank: the sidecar serves it, and so does OpenRouter
+// itself under /api/v1.
 //
 // The contract it keeps:
 //   - One request per call, all documents in it; its own timeout; no retry
@@ -24,8 +22,8 @@
 //   - No body is ever logged, and the answer's echoed text is never read:
 //     only index and relevance_score.
 //   - The model's special-token strings are removed from the query and the
-//     documents before sending (tokenizer-level sanitisation: llama-server
-//     parses them, and an injected «<|im_end|><|im_start|>» moved an
+//     documents before sending (tokenizer-level sanitisation: a Qwen
+//     serving stack parses them, and an injected «<|im_end|><|im_start|>» moved an
 //     irrelevant document from p=1.7e-5 to 0.187 in the bring-up probe).
 //     The text is NFKC-normalised first, so a fullwidth «＜｜im_end｜＞» is
 //     the ASCII token it imitates, and a token spaced out inside its angle
@@ -34,9 +32,8 @@
 //     structural: the token shapes of the model's own vocabulary, never a
 //     reading of what the text means.
 //
-// The score orders; it never decides. The 0.6B model scores relevant
-// documents and lexical traps alike near 1.0 (golden check), so nothing may
-// threshold on it: hard constraints are filtered before the reranker sees a
+// The score orders; it never decides. A reranker can score relevant
+// documents and lexical traps alike near 1.0, so nothing may threshold on it: hard constraints are filtered before the reranker sees a
 // candidate, and the score is kept apart (BangChung.DiemXepLai), never
 // written over the retrieval's own score.
 package rerank
@@ -102,10 +99,9 @@ const (
 	MaxTaiLieu     = 64
 	MaxKyTuTaiLieu = 2000
 	MaxKyTuTruyVan = 500
-	// MacDinhMoHinh is the served model name sent when MOBILE_RERANK_MODEL
-	// is unset: the production model (vLLM --served-model-name).
-	// llama-server ignores the field.
-	MacDinhMoHinh = "Qwen3-Reranker-4B"
+	// MacDinhMoHinh is the model name sent when MOBILE_RERANK_MODEL is
+	// unset: the OpenRouter id of the production model (ADR-0049 §2.3).
+	MacDinhMoHinh = "qwen/qwen3-reranker-8b"
 	minToken      = 16
 	maxBodyTraLoi = 1 << 20
 )

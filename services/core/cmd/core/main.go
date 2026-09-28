@@ -902,8 +902,8 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 		}
 		opts = append(opts, aiharness.WithNguon(nguon))
 	}
-	// The reranker (MOBILE_RERANK_URL; production Qwen3-Reranker-4B on a
-	// GPU behind vLLM, ADR-0043 §2.6): the engine counts it per turn and
+	// The reranker (MOBILE_RERANK_URL; qwen/qwen3-reranker-8b through the
+	// loopback OpenRouter sidecar, ADR-0049 §2.3): the engine counts it per turn and
 	// the places retriever reranks with it. Unset, every retrieval keeps
 	// the RRF order and says no_rerank. A URL that is set but refused (plain
 	// http off the host, a short token, a bad timeout) stops the start.

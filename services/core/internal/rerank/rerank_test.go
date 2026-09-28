@@ -266,7 +266,7 @@ func TestModelAndToken(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 	q, err := TuEnv(env(map[string]string{EnvURL: srv.URL}))
-	if err != nil || q.Model() != "Qwen3-Reranker-4B" {
+	if err != nil || q.Model() != MacDinhMoHinh {
 		t.Fatalf("default model: %v %v", q, err)
 	}
 	if _, err := q.XepLai(context.Background(), "quán", bcs("a", "bb"), 2); err != nil {
@@ -275,12 +275,12 @@ func TestModelAndToken(t *testing.T) {
 	if a := auth.Load().(string); a != "" {
 		t.Fatalf("a token was sent without one configured: %q", a)
 	}
-	if got := f.bodies[0]["model"]; got != "Qwen3-Reranker-4B" {
+	if got := f.bodies[0]["model"]; got != MacDinhMoHinh {
 		t.Fatalf("model sent %v", got)
 	}
 	tok := strings.Repeat("k", 32)
-	q, err = TuEnv(env(map[string]string{EnvURL: srv.URL, EnvModel: "qwen3-reranker-0.6b", EnvToken: tok}))
-	if err != nil || q.Model() != "qwen3-reranker-0.6b" {
+	q, err = TuEnv(env(map[string]string{EnvURL: srv.URL, EnvModel: "cohere/rerank-v3.5", EnvToken: tok}))
+	if err != nil || q.Model() != "cohere/rerank-v3.5" {
 		t.Fatalf("model from env: %v %v", q, err)
 	}
 	if _, err := q.XepLai(context.Background(), "quán", bcs("a", "bb"), 2); err != nil {

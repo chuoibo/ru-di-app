@@ -907,16 +907,12 @@ check_prereq() {
       fi ;;
     go-milvus)
       # Milvus and PostgreSQL come from the environment, a local install or
-      # Docker; the reranker only from the environment or a local install
-      # (its weights are not an image). Missing any is a skip here, and
-      # --strict makes it a failure.
+      # Docker; the reranker is a loopback stand-in inside the tests. Missing
+      # any is a skip here, and --strict makes it a failure.
       [ -d services/core ] || { echo "services/core không có trên nhánh này"; return 1; }
       [ -f services/core/go.mod ] || return 2
       [ -x scripts/go_milvus_tier.sh ] || return 2
       have go || { echo "cần go"; return 1; }
-      if [ -z "${MOBILE_TEST_RERANK_URL:-}" ] && [ -z "${MOBILE_RERANK_LOCAL_DIR:-}" ]; then
-        echo "cần reranker: MOBILE_TEST_RERANK_URL hoặc MOBILE_RERANK_LOCAL_DIR"; return 1
-      fi
       if { [ -z "${MOBILE_TEST_MILVUS_ADDR:-}" ] && [ -z "${MOBILE_MILVUS_LOCAL_DIR:-}" ]; } || [ -z "${CORE_TEST_DATABASE_URL:-}" ]; then
         have docker || { echo "cần docker, hoặc đặt sẵn Milvus (MOBILE_TEST_MILVUS_ADDR / MOBILE_MILVUS_LOCAL_DIR) và CORE_TEST_DATABASE_URL"; return 1; }
         docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời, và chưa đặt sẵn Milvus và CORE_TEST_DATABASE_URL"; return 1; }
