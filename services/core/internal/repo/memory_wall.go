@@ -30,9 +30,11 @@ type CheckinInput struct {
 	AuthorID  string
 	PlaceID   string
 	PlaceName string
-	// Nil when the place has no coordinates. A check-in at such a place still
-	// happened; refusing it would stop people checking in at a quarter of the
-	// catalogue over a field they never see.
+	// Nil when the place has no point that may be drawn (Place.MappablePoint):
+	// no coordinates, or only a centroid. A check-in at such a place still
+	// happened; refusing it would stop people checking in at a large part of
+	// the catalogue over a field they never see, and storing a centroid would
+	// pin the group in the middle of a province for good.
 	Lat     *float64
 	Lng     *float64
 	Caption *string

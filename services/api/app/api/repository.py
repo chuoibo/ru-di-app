@@ -1905,8 +1905,8 @@ class ApiRepository(Protocol):
         author_id: uuid.UUID,
         place_id: str,
         place_name: str,
-        lat: float,
-        lng: float,
+        lat: float | None,
+        lng: float | None,
         caption: str | None,
         now: datetime,
     ) -> MemoryRecord: ...
@@ -5191,8 +5191,8 @@ class SqlAlchemyApiRepository:
         author_id: uuid.UUID,
         place_id: str,
         place_name: str,
-        lat: float,
-        lng: float,
+        lat: float | None,
+        lng: float | None,
         caption: str | None,
         now: datetime,
     ) -> MemoryRecord:

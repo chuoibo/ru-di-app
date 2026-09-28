@@ -344,6 +344,7 @@ from app.media.images import ImageRejected, sanitize_image
 from app.media.storage import PhotoStorage, new_storage_key
 from app.places import social_map
 from app.places.areas import area_summary, find_area
+from app.places.geo_precision import mappable_point
 from app.places.meeting import (
     MAX_ORIGIN_AREAS,
     MIN_ORIGIN_AREAS,
@@ -4870,13 +4871,17 @@ class ApiService:
             raise ApiProblem(
                 422, "place_not_found", "No place in the catalogue has that id"
             )
+        # The wall keeps the place's point only when it says where the place
+        # is. A centroid stored here would be a pin in the middle of a province
+        # forever, and a place with no point at all used to fail the write.
+        point = mappable_point(place)
         record = self.repository.create_checkin(
             context_id=context_id,
             author_id=actor.id,
             place_id=place["id"],
             place_name=place["name"],
-            lat=place["lat"],
-            lng=place["lng"],
+            lat=None if point is None else point[0],
+            lng=None if point is None else point[1],
             caption=request.caption,
             now=_now(),
         )

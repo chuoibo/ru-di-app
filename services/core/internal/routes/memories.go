@@ -96,9 +96,12 @@ func postContextCheckin() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
+		// The wall keeps the place's point only when it says where the place
+		// is (post_context_checkin's mappable_point).
+		lat, lng := place.MappablePoint()
 		record, err := store.CreateCheckin(ctx, repo.CheckinInput{
 			ContextID: contextID, AuthorID: call.Actor.ID, PlaceID: place.ID, PlaceName: place.Name,
-			Lat: place.Lat, Lng: place.Lng, Caption: caption, Now: time.Now().UTC(),
+			Lat: lat, Lng: lng, Caption: caption, Now: time.Now().UTC(),
 		})
 		if err != nil {
 			return endpoint.Reply{}, err

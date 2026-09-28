@@ -45,6 +45,7 @@ from app.db.models import (
     MembershipState,
     Memory,
     Person,
+    Place,
 )
 from app.places.catalog import PLACES
 
@@ -180,6 +181,60 @@ def test_a_member_checks_in_and_the_place_comes_from_the_catalogue(
     page = listed.json()
     assert [item["kind"] for item in page["memories"]] == ["checkin"]
     assert page["memories"][0]["cursor"]
+
+
+def test_a_checkin_keeps_only_a_point_that_says_where_the_place_is(
+    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
+):
+    """M7: a centroid or a missing point checks in with no point at all.
+
+    Before, a fed place with no coordinates failed `payload_matches_kind` (a
+    500 on the wall's own button), and one known only by its province centroid
+    was pinned in the middle of the province on the group's wall for good.
+    """
+
+    context, owner = _group(postgres_session)
+    destination_id = postgres_session.get(Place, PLACE_ID).destination_id
+    for place_id, lat, lng, precision in [
+        ("vnl-tam-tinh", 10.78, 106.70, "province_centroid"),
+        ("vnl-tam-phuong", 10.79, 106.71, "ward_centroid"),
+        ("vnl-khong-toa-do", None, None, None),
+    ]:
+        postgres_session.add(
+            Place(
+                id=place_id,
+                destination_id=destination_id,
+                name=f"Quán {place_id}",
+                category="cafe",
+                kinds=[],
+                lat=lat,
+                lng=lng,
+                geo_precision=precision,
+                traits=[],
+                source="vnlocal",
+                source_ref=place_id,
+            )
+        )
+    postgres_session.flush()
+    app = _http(postgres_session, monkeypatch)
+
+    async def exchange(client):
+        return [
+            await client.post(
+                f"/contexts/{context.id}/checkins",
+                headers=_headers(owner.id),
+                json={"place_id": place_id},
+            )
+            for place_id in ("vnl-tam-tinh", "vnl-tam-phuong", "vnl-khong-toa-do")
+        ]
+
+    for response in _run(app, exchange):
+        assert response.status_code == 201, response.text
+        assert response.json()["lat"] is None
+        assert response.json()["lng"] is None
+    stored = postgres_session.scalars(select(Memory)).all()
+    assert len(stored) == 3
+    assert all(row.lat is None and row.lng is None for row in stored)
 
 
 def test_the_request_body_cannot_move_the_place(
