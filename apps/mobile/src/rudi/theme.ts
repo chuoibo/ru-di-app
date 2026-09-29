@@ -217,31 +217,30 @@ export const bangMauFixture = {
   than: "#1F2230",
 };
 
-/** Marker / polyline colours for the journey map. Tokens only — never a literal in the map files. */
-export function mauMocHanhTrinh(colors: RudiPalette) {
+/**
+ * The journey map's colours (`MauBanDo` in hanh-trinh/kieu-ban-do.ts). Tokens
+ * only -- never a literal in the map files.
+ *
+ * One lead tone (coral) for the whole map: the route ink, the stamp numbers
+ * and the next stop. State is said by the stamp's shape and words, not by a
+ * second hue: a reached stop fades to pencil (`inkFaint`) and carries a tick;
+ * the draft is a broken pencil line (`inkSoft`), never coral, because a draft
+ * is not yet the group's route.
+ */
+export function mauMocHanhTrinh(colors: RudiPalette, dark = false) {
+  const boxShadow = (cao: 1 | 2) => String(bongGiay(cao, dark).boxShadow ?? "none");
   return {
-    moc: colors.accent,
-    mocInk: colors.accentInk,
-    mocChon: colors.split,
-    duong: colors.accent,
-    // Softened accent, not grey line: an unselected leg is still OUR route.
-    // Grey made the journey read as one more road on the basemap.
-    duongMo: phuMau(colors.accent, 0.62),
-    /** Paper casing under the line, the way an ink route sits on the page. */
-    vienDuong: colors.card,
-    the: colors.card,
-    muc: colors.ink,
-    vien: colors.card,
-    xong: colors.split,
-    hienTai: colors.accent,
-    sapToi: colors.ai,
+    giay: colors.card,
+    vien: colors.lineStrong,
+    muc: colors.accent,
+    mucTrenMuc: colors.accentInk,
+    mo: colors.inkFaint,
+    chu: colors.ink,
+    netChi: colors.inkSoft,
+    bong: boxShadow(1),
+    bongCao: boxShadow(2),
+    nen: colors.card,
   };
-}
-
-/** Sequential milestone fill: accent → split → ai, then repeat. */
-export function mauSoMoc(colors: RudiPalette, so: number): string {
-  const ds = [colors.accent, colors.split, colors.ai] as const;
-  return ds[(Math.max(1, so) - 1) % ds.length];
 }
 
 /** `#rrggbb` + alpha -> `rgba()`; the only place a colour is composed at runtime. */

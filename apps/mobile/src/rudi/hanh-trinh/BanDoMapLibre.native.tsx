@@ -1,25 +1,20 @@
 /** MapLibre native implementation. Loaded only when the APK linked the module. */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef, type MapRef } from "@maplibre/maplibre-react-native";
 
 import Svg, { Path } from "react-native-svg";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { useNhipDau } from "../ui/useNhipDau";
 import { TAM_DA_LAT } from "./toa-do-mau";
-import { DEM_KHOP, hopGioi, hopHanhTrinh, muiTenDoan, tapHop, type BanDoProps } from "./kieu-ban-do";
+import { chuNeo, DEM_KHOP, DUONG_TICK, giuaDoan, hinhTem, hopGioi, hopHanhTrinh, lopDuong, mocChum, muiTenDoan, nhanMoc, tapHop, type BanDoProps } from "./kieu-ban-do";
 
 
 export function BanDo({
   mocs,
   doan,
-  mauMoc,
-  mauMocInk,
-  mauMocChon,
-  mauDuong,
-  mauDuongMo,
-  mauVien,
-  mauVienDuong,
-  mauNen,
+  mau,
   kieu,
   fitDem,
   cameraKey,
@@ -32,6 +27,7 @@ export function BanDo({
   onChonMoc,
   onChonDoan,
   onNen,
+  onSan,
 }: BanDoProps) {
   const cam = useRef<CameraRef>(null);
   const map = useRef<MapRef>(null);
@@ -58,6 +54,12 @@ export function BanDo({
   useEffect(() => { setChoosing([]); void updateGroups(); return () => { projection.current++; }; }, [cameraKey, mocs.map((m) => `${m.id}:${m.lat}:${m.lng}`).join("|")]);
   const vuaMoc = useRef(0);
   const duLieu = useMemo(() => tapHop(doan) as never, [doan]);
+  const lop = useMemo(() => lopDuong(mau), [mau]);
+  // While the ink is drawn, chevrons and the leg tag wait for the finished line.
+  const dangVe = mocs.some((m) => m.nhip);
+  const theChon = dangVe ? undefined : doan.find((d) => d.chon && d.the?.length);
+  const giuaTheChon = theChon ? giuaDoan(theChon.polyline) : null;
+  const mauNen = mau.nen;
   const hopBanDau = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
 
   useEffect(() => {
@@ -77,8 +79,12 @@ export function BanDo({
     if (!toi) return;
     // The journey panel covers the bottom of the map, so the geometric centre
     // is behind it: pad the camera by the same amount Fit Journey uses, or a
-    // chosen stop eases to a spot the person cannot see.
-    void cam.current?.easeTo({ center: [toi.lng, toi.lat], duration, padding, zoom: 14 });
+    // chosen stop eases to a spot the person cannot see. The stop is shown
+    // within its day -- the stop before and after it in frame -- not alone at
+    // a fixed zoom with both its legs running off the edge (review, 2026-09-29).
+    const hop = toi.ke?.length ? hopGioi([toi, ...toi.ke]) : null;
+    if (hop) void cam.current?.fitBounds(hop, { padding, duration });
+    else void cam.current?.easeTo({ center: [toi.lng, toi.lat], duration, padding, zoom: 14 });
   }, [toi?.dem, padding]);
 
   return (
@@ -88,16 +94,15 @@ export function BanDo({
     }}>
     <Map
       ref={map}
-      attribution
-      // Top-right: the OSM/OpenFreeMap credit must stay reachable, and the
-      // bottom of the map belongs to the journey panel.
-      attributionPosition={{ top: 8, right: 8 }}
+      // The credit is drawn by us (below) in the page's own ink: the stock
+      // «i» was a system-blue dot over the street names.
+      attribution={false}
       compass
       // Facing north -- which is every state until someone rotates with two
       // fingers -- the compass ornament drew as a blank white rectangle over
       // the tiles (emulator, 2026-09-12). Hide it until it means something.
       compassHiddenFacingNorth
-      compassPosition={{ top: 8, right: 8 }}
+      compassPosition={{ top: 36, right: 8 }}
       logo={false}
       mapStyle={kieu}
       onPress={() => {
@@ -117,7 +122,7 @@ export function BanDo({
         if (e.nativeEvent.userInteraction) onUserMove();
         void updateGroups();
       }}
-      onDidFinishLoadingMap={() => void updateGroups()}
+      onDidFinishLoadingMap={() => { void updateGroups(); onSan?.(); }}
       scaleBar={false}
       style={[styles.fill, { backgroundColor: mauNen }]}
     >
@@ -150,43 +155,37 @@ export function BanDo({
           onChonDoan(id);
         }}
       >
-        <Layer
-          id="hanh-trinh-duong-vien"
-          filter={["!=", ["get", "uocLuong"], 1]}
-          layout={{ "line-cap": "round", "line-join": "round" }}
-          paint={{
-            "line-color": mauVienDuong,
-            "line-opacity": 0.9,
-            "line-width": ["case", ["==", ["get", "chon"], 1], 11, 8],
-          }}
-          type="line"
-        />
+        <Layer id="hanh-trinh-duong-vien" type="line" filter={lop.vien.filter as never} layout={lop.vien.layout as never} paint={lop.vien.paint as never} />
         <Layer
           id="hanh-trinh-duong-line"
-          filter={["!=", ["get", "uocLuong"], 1]}
-          layout={{ "line-cap": "round", "line-join": "round" }}
-          paint={{
-            "line-color": ["case", ["==", ["get", "chon"], 1], mauDuong, mauDuongMo],
-            "line-width": ["case", ["==", ["get", "chon"], 1], 6, 4],
-            "line-offset": ["*", ["%", ["get", "thuTu"], 2], 3],
-          }}
           type="line"
+          filter={lop.duong.filter as never}
+          layout={lop.duong.layout as never}
+          // Two legs that retrace the same street sit side by side instead
+          // of one hiding the other: every other leg shifts 3dp.
+          paint={{ ...lop.duong.paint, "line-offset": ["*", ["%", ["get", "thuTu"], 2], 3] } as never}
         />
-        <Layer
-          id="hanh-trinh-net-noi"
-          filter={["==", ["get", "uocLuong"], 1]}
-          paint={{ "line-color": mauDuongMo, "line-width": 2, "line-dasharray": [2, 3] }}
-          type="line"
-        />
+        <Layer id="hanh-trinh-net-noi" type="line" filter={lop.nhap.filter as never} layout={lop.nhap.layout as never} paint={lop.nhap.paint as never} />
+        <Layer id="hanh-trinh-nhan" type="symbol" minzoom={lop.nhan.minzoom} filter={lop.nhan.filter as never} layout={lop.nhan.layout as never} paint={lop.nhan.paint as never} />
       </GeoJSONSource>
-      {muiTenDoan(doan).map((arrow) => <Marker id={`direction-${arrow.id}`} key={`direction-${arrow.id}`} lngLat={[arrow.lng, arrow.lat]} anchor="center" onPress={() => onChonDoan(arrow.id)}>
-        <View pointerEvents="none" style={{ transform: [{ rotate: `${arrow.heading}deg` }] }}><Svg width={18} height={20} viewBox="0 0 18 20"><Path d="M3 14 L9 5 L15 14" fill="none" stroke={mauVienDuong} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" /><Path d="M3 14 L9 5 L15 14" fill="none" stroke={mauDuong} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></Svg></View>
+      {(dangVe ? [] : muiTenDoan(doan)).map((arrow) => <Marker id={`direction-${arrow.id}`} key={`direction-${arrow.id}`} lngLat={[arrow.lng, arrow.lat]} anchor="center" onPress={() => onChonDoan(arrow.id)}>
+        <View pointerEvents="none" style={{ transform: [{ rotate: `${arrow.heading}deg` }] }}><Svg width={18} height={20} viewBox="0 0 18 20"><Path d="M3 14 L9 5 L15 14" fill="none" stroke={mau.giay} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" /><Path d="M3 14 L9 5 L15 14" fill="none" stroke={mau.muc} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></Svg></View>
       </Marker>)}
+      {theChon && giuaTheChon ? (
+        <Marker id={`the-${theChon.id}`} key={`the-${theChon.id}`} lngLat={[giuaTheChon.lng, giuaTheChon.lat]} anchor="bottom" style={{ zIndex: 3 }}>
+          <View accessibilityRole="text" pointerEvents="none" style={[styles.theDoan, { backgroundColor: mau.giay, borderColor: mau.vien, boxShadow: mau.bongCao }]}>
+            {theChon.the!.map((dong, i) => (
+              <Text key={i} maxFontSizeMultiplier={1.3} style={[i === 0 ? styles.theDong1 : styles.theDong2, { color: i === 0 ? mau.chu : mau.netChi }]}>{dong}</Text>
+            ))}
+          </View>
+        </Marker>
+      ) : null}
       {thuTuVe(mocs).filter((m) => !groups.some((g) => g.length > 1 && g.includes(m.id) && g[0] !== m.id)).map((moc) => {
         const group = groups.find((g) => g[0] === moc.id) ?? [moc.id];
-        const chon = moc.chon;
-        const nen = chon ? mauMocChon : (mauMoc[(moc.so - 1) % mauMoc.length] ?? mauMocChon);
-        const co = chon ? 52 : 48;
+        const chum = group.length > 1;
+        const mat = chum ? mocChum(group.map((id) => mocs.find((m) => m.id === id)!).filter(Boolean)) : moc;
+        const tem = hinhTem(mat, mau);
+        const neo = chuNeo(mat.neo);
         return (
           <Marker
             anchor="center"
@@ -195,39 +194,89 @@ export function BanDo({
             lngLat={[moc.lng, moc.lat]}
             // Two stops can share a pixel; the chosen one must be the one on
             // top. Child order alone does not decide that for native markers.
-            style={{ zIndex: chon ? 2 : 1 }}
+            style={{ zIndex: moc.chon ? 2 : 1 }}
             onPress={() => {
               vuaMoc.current = Date.now();
-              if (group.length > 1) setChoosing(group);
+              if (chum) setChoosing(group);
               else { setChoosing([]); onChonMoc(moc.id); }
             }}
           >
             <View
-              accessibilityLabel={group.length > 1 ? `${group.length} điểm hẹn gần nhau. Chạm để chọn.` : `Mốc ${moc.so}, ${moc.gio}, ${moc.tieuDe}`}
+              accessibilityLabel={chum ? `${group.length} điểm hẹn gần nhau. Chạm để chọn.` : nhanMoc(moc)}
               accessibilityRole="button"
-              style={[
-                styles.moc,
-                {
-                  minWidth: co,
-                  height: co,
-                  backgroundColor: nen,
-                  borderColor: mauVien,
-                },
-              ]}
+              // The stamp is 44dp; the slop makes the finger target 48dp+.
+              hitSlop={4}
+              style={styles.hopTem}
             >
-              <Text maxFontSizeMultiplier={1.3} style={[styles.so, { color: mauMocInk }]}>{group.map((id) => mocs.find((m) => m.id === id)?.so).join(" · ")}</Text>
+              <TemNhip tem={tem} nhip={mat.nhip ?? null} mau={mau}>
+                <Text maxFontSizeMultiplier={1.3} style={[styles.so, { color: tem.so }]}>{group.map((id) => mocs.find((m) => m.id === id)?.so).join(" · ")}</Text>
+              </TemNhip>
+              {tem.dauTick ? (
+                <View style={[styles.tick, { backgroundColor: mau.giay, borderColor: mau.vien }]}>
+                  <Svg width={14} height={14} viewBox="0 0 20 20"><Path d={DUONG_TICK} fill="none" stroke={mau.chu} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" /></Svg>
+                </View>
+              ) : null}
+              {neo ? (
+                // A wide row centred under the 48dp pin: the stamp keeps its
+                // own width instead of being clipped to the pin's («KẾT…»).
+                <View pointerEvents="none" style={styles.hangNeo}>
+                  <View style={[styles.neo, { backgroundColor: mau.giay, borderColor: mau.muc }]}>
+                    <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={[styles.neoChu, { color: mau.muc }]}>{neo}</Text>
+                  </View>
+                </View>
+              ) : null}
             </View>
           </Marker>
         );
       })}
     </Map>
-    {choosing.length > 1 ? <View accessibilityViewIsModal style={[styles.chooser, { backgroundColor: mauNen, borderColor: mauVien }]}>
-      {choosing.map((id) => mocs.find((m) => m.id === id)).filter((m) => m !== undefined).map((m) => <Pressable key={m.id} accessibilityRole="button" onPress={() => { setChoosing([]); onChonMoc(m.id); }} style={styles.choice}><Text style={{ color: mauDuong }}>{m.so} · {m.gio} · {m.tieuDe}</Text></Pressable>)}
-      <Pressable accessibilityRole="button" onPress={() => setChoosing([])} style={styles.choice}><Text style={{ color: mauDuong }}>Đóng</Text></Pressable>
+    {/* OSM and OpenFreeMap credit, always visible, in pencil on a paper slip. */}
+    <Pressable accessibilityLabel="Bản quyền dữ liệu bản đồ: OpenStreetMap, OpenFreeMap" accessibilityRole="link" hitSlop={8} onPress={() => void Linking.openURL("https://www.openstreetmap.org/copyright")} style={[styles.banQuyen, { backgroundColor: mau.giay }]}>
+      <Text maxFontSizeMultiplier={1.3} style={[styles.banQuyenChu, { color: mau.netChi }]}>© OpenStreetMap · OpenFreeMap</Text>
+    </Pressable>
+    {choosing.length > 1 ? <View accessibilityViewIsModal style={[styles.chooser, { backgroundColor: mauNen, borderColor: mau.vien }]}>
+      {choosing.map((id) => mocs.find((m) => m.id === id)).filter((m) => m !== undefined).map((m) => <Pressable key={m.id} accessibilityRole="button" onPress={() => { setChoosing([]); onChonMoc(m.id); }} style={styles.choice}><Text style={{ color: mau.chu }}>{m.so} · {m.gio} · {m.tieuDe}</Text></Pressable>)}
+      <Pressable accessibilityRole="button" onPress={() => setChoosing([])} style={styles.choice}><Text style={{ color: mau.chu }}>Đóng</Text></Pressable>
     </View> : null}
     </View>
   );
 }
+
+/**
+ * One stamp face. `nhip="cho"`: the ink has not reached it yet, so it hovers
+ * 4dp above the page on the tall shadow; `nhip="dong"`: the ink just arrived,
+ * and it drops and squashes like the app's `Stamp` (useNhipDau), without a
+ * haptic per stop. Lift, not scale: at 44dp a scaled stamp read as the same
+ * stamp in every frame (review, 2026-09-29). Reduce Motion lands it at once.
+ */
+function TemNhip({ tem, nhip, mau, children }: { tem: ReturnType<typeof hinhTem>; nhip: "cho" | "dong" | null; mau: BanDoProps["mau"]; children: React.ReactNode }) {
+  const { roi, lun } = useNhipDau(nhip === "dong", { rung: false });
+  const cho = nhip === "cho";
+  const kieuNhip = useAnimatedStyle(() => ({
+    transform: [{ translateY: cho ? -NHAC : -NHAC * (1 - roi.value) }, { rotate: `${tem.nghieng}deg` }, { scale: lun.value }],
+  }), [cho, tem.nghieng]);
+  return (
+    <Animated.View
+      style={[
+        styles.tem,
+        {
+          minWidth: tem.co,
+          height: tem.co,
+          backgroundColor: tem.nen,
+          borderColor: tem.vien,
+          borderWidth: tem.doVien,
+          boxShadow: cho ? mau.bongCao : tem.bong,
+        },
+        kieuNhip,
+      ]}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+/** How high a waiting stamp hovers, in dp. */
+const NHAC = 4;
 
 /** The selected pin draws last so it is never buried by a neighbour. */
 function thuTuVe(mocs: BanDoProps["mocs"]): BanDoProps["mocs"] {
@@ -237,14 +286,46 @@ function thuTuVe(mocs: BanDoProps["mocs"]): BanDoProps["mocs"] {
 const styles = StyleSheet.create({
   fill: { flex: 1, minHeight: 0 },
   chooser: { position: "absolute", top: 60, left: 16, right: 16, borderWidth: 1, borderRadius: 12, padding: 8 },
+  banQuyen: { position: "absolute", top: 8, right: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  banQuyenChu: { fontSize: 11, lineHeight: 14 },
   choice: { minHeight: 48, justifyContent: "center", padding: 8 },
-  moc: {
-    borderRadius: 999,
-    borderWidth: 2,
+  hopTem: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
+  tem: {
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
   },
-  so: { fontSize: 13, fontWeight: "700", lineHeight: 14 },
-  gio: { fontSize: 9, fontWeight: "600", lineHeight: 11 },
+  so: { fontSize: 15, fontWeight: "800", lineHeight: 18, fontVariant: ["tabular-nums"] },
+  tick: {
+    position: "absolute",
+    right: -1,
+    bottom: -1,
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hangNeo: { position: "absolute", top: "100%", left: -72, right: -72, marginTop: 2, alignItems: "center" },
+  neo: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    transform: [{ rotate: "-2deg" }],
+  },
+  neoChu: { fontSize: 12, lineHeight: 14, fontWeight: "800", letterSpacing: 0.6 },
+  theDoan: {
+    marginBottom: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    alignItems: "center",
+    transform: [{ rotate: "-2deg" }],
+  },
+  theDong1: { fontSize: 13, lineHeight: 18, fontWeight: "700", fontVariant: ["tabular-nums"] },
+  theDong2: { fontSize: 13, lineHeight: 18, fontWeight: "600", fontVariant: ["tabular-nums"] },
 });

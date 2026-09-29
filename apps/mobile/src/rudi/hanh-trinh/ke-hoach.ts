@@ -1,4 +1,10 @@
 /** The itinerary wire contract and pure draft transforms. */
+/**
+ * What the line on the map is right now. The page head stamps it, because a
+ * straight pencil line and a road look nothing alike to the engine but can
+ * look alike to a tired person at 11pm.
+ */
+export type TrangThaiTuyen = "that" | "uocLuong" | "dangTinh" | "khongTinhDuoc";
 import type { BuoiDi, ChangDung, DiemHen, NgayDi } from "../../screens/len-plan/buoi-di";
 export type { DiemHen, NgayDi } from "../../screens/len-plan/buoi-di";
 export type ChangDi = ChangDung & { day: string | null; duration_minutes: number | null; time_locked: boolean; meeting_point: DiemHen | null };
@@ -53,3 +59,25 @@ export function doiViTri(draft: BanNhap, id: string, target: "first" | "last" | 
 export function xoaChang(draft: BanNhap, id: string): BanNhap {
   return { ...draft, stops: draft.stops.filter((s) => s.id !== id), days: draft.days.map((d) => ({ ...d, start_stop_id: d.start_stop_id === id ? null : d.start_stop_id, end_stop_id: d.end_stop_id === id ? null : d.end_stop_id })) };
 }
+
+const THU = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"] as const;
+
+/** «T7 12/10» from an ISO date, read at noon UTC so no timezone shifts the day. */
+export function chuNgay(iso: string): string {
+  const d = new Date(`${iso}T12:00:00Z`);
+  return `${THU[d.getUTCDay()]} ${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * What the line on the map is. A route answer is a road; a preview that came
+ * back without one for a routing reason is «chưa tính được», said as such;
+ * anything else (no preview yet, a fixture, stops without a place) is a draft.
+ */
+export function trangThaiTuyen(tuyen: { fixture: boolean; dangTinh: boolean; coTuyen: boolean; preview: Pick<XemTruoc, "status" | "issues"> | null }): TrangThaiTuyen {
+  if (tuyen.fixture) return "uocLuong";
+  if (tuyen.coTuyen) return "that";
+  if (tuyen.dangTinh && !tuyen.preview) return "dangTinh";
+  if (tuyen.preview && (tuyen.preview.status === "unavailable" || tuyen.preview.issues.some((v) => v.code.startsWith("routing_")))) return "khongTinhDuoc";
+  return "uocLuong";
+}
+

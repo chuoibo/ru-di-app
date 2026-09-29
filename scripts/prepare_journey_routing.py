@@ -11,14 +11,26 @@ import subprocess
 import urllib.request
 
 IMAGE = "ghcr.io/valhalla/valhalla-scripted:3.8.3@sha256:24ef7955899dececb94e26c6dfb89d64fabfae875f980432694b0261eb6c251b"
-DEFAULT_URL = "https://download.geofabrik.de/asia/vietnam-260911.osm.pbf"
+# Geofabrik keeps only the last few dated extracts; 260911 is gone upstream
+# (404). The digest below was taken after the download matched Geofabrik's own
+# published .md5, and is what `--expect-sha256` defaults to for this URL.
+DEFAULT_URL = "https://download.geofabrik.de/asia/vietnam-260927.osm.pbf"
+DEFAULT_SHA256 = "3e3ba54b299577873c38d933a99ea0f50b8e29877e638aec015d14a3469ae51a"
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", required=True, type=Path)
     parser.add_argument("--pbf-url", default=DEFAULT_URL)
+    parser.add_argument(
+        "--expect-sha256",
+        default=None,
+        help="sha256 the extract must have; defaults to the pinned digest for the default URL",
+    )
     args = parser.parse_args()
+    expected = args.expect_sha256 or (
+        DEFAULT_SHA256 if args.pbf_url == DEFAULT_URL else None
+    )
     directory = args.data_dir.expanduser().resolve()
     repo = Path(__file__).resolve().parents[1]
     if directory == repo or repo in directory.parents:
@@ -39,6 +51,13 @@ def main() -> None:
                 target.write(chunk)
         temporary.replace(pbf)
     digest = hashlib.file_digest(pbf.open("rb"), "sha256").hexdigest()
+    # A graph is only reproducible from the extract it was built from: a
+    # truncated or replaced download must stop here, not become a new graph.
+    if expected is not None and digest != expected.lower():
+        parser.error(
+            f"sha256 của {pbf.name} là {digest}, không khớp {expected}; "
+            "xoá file đó rồi tải lại."
+        )
     graph_version = f"vietnam-3.8.3-{digest[:16]}"
     manifest_path = directory / "graph-manifest.json"
     manifest = {

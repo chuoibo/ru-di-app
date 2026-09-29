@@ -307,6 +307,7 @@
     "src/rudi/hanh-trinh/duong.ts",
     "src/rudi/hanh-trinh/toi-uu.ts",
     "src/rudi/hanh-trinh/toa-do-mau.ts",
+    "src/rudi/hanh-trinh/kieu-ban-do.ts",
     // Chia hóa đơn trong vỏ RuDi (M5): compile để test chứng minh khoản chi được
     // đề xuất bằng items của bill rồi chốt với expected_allocations của máy chủ,
     // mỗi lời gọi một Attempt, và không phép chia nào ở phía client.

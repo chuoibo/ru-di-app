@@ -52,12 +52,12 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "node tools/chep-canvaskit.mjs && expo start --web",
-    "postinstall": "node tools/chep-canvaskit.mjs",
+    "postinstall": "node tools/chep-canvaskit.mjs && node tools/chep-maplibre-worker.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build:check && tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test $(find tests -path tests/e2e -prune -o -name '*.test.mjs' -print | sort)",
     "seed:rudi": "tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node tools/seed-rudi-world.mjs",
     "test:e2e": "tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test $(find tests/e2e -name '*.test.mjs' | sort)",
-    "build:check": "node tools/chep-canvaskit.mjs && EXPO_PUBLIC_API_URL=http://api.build-check.invalid expo export --platform web --output-dir .expo-build-check --clear"
+    "build:check": "node tools/chep-canvaskit.mjs && node tools/chep-maplibre-worker.mjs && EXPO_PUBLIC_API_URL=http://api.build-check.invalid expo export --platform web --output-dir .expo-build-check --clear"
   },
   "private": true
 }

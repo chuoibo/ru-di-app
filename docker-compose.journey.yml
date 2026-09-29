@@ -35,3 +35,13 @@ services:
     depends_on:
       valhalla:
         condition: service_started
+  # POST /outings/{id}/itinerary/preview is served by Go (routes.json: LIVE-GO),
+  # so core is the half that has to reach the engine; without these the preview
+  # answers `unavailable` however healthy Valhalla is.
+  core:
+    environment:
+      MOBILE_VALHALLA_URL: http://valhalla:8002
+      MOBILE_ROUTING_GRAPH_VERSION: ${MOBILE_ROUTING_GRAPH_VERSION:?Lấy phiên bản từ graph-manifest.json}
+    depends_on:
+      valhalla:
+        condition: service_started

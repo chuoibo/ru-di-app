@@ -16,9 +16,9 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Khớp hành trình"
     timeout: 30000
-# The day's totals. The distance and the duration move with the routing source
-# (road geometry when OSRM answers, straight line when it does not), so the
-# assertion is on the part that is ours.
+# The day's totals. Distance and duration exist only when the server's Valhalla
+# preview returns a road (the fixture never does: its line is the pencil
+# draft), so the assertion is on the part that is ours.
 - assertVisible: "3 điểm trên bản đồ.*"
 - assertVisible: "3 hoạt động khác chưa gắn địa điểm"
 - takeScreenshot: 08a-hanh-trinh-ngay-1
