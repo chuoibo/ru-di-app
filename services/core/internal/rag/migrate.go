@@ -27,6 +27,9 @@ var schemaTuVungSQL string
 //go:embed schema_tu_vung_2.sql
 var schemaTuVung2SQL string
 
+//go:embed schema_tu_vung_3.sql
+var schemaTuVung3SQL string
+
 // migrations are the retrieval schema's versions, in order. An applied
 // version is never edited: its checksum is stored and compared.
 var migrations = []struct {
@@ -35,6 +38,7 @@ var migrations = []struct {
 }{
 	{1, schemaTuVungSQL},
 	{2, schemaTuVung2SQL},
+	{3, schemaTuVung3SQL},
 }
 
 // SchemaFiles are the retrieval schema's versions, in order, for the gates
@@ -48,7 +52,7 @@ func SchemaFiles() []string {
 }
 
 // SchemaVersion is the retrieval schema this binary reads and writes.
-const SchemaVersion = 2
+const SchemaVersion = 3
 
 // NoiCap joins the two syllables of a pair term in the full-text index and
 // in the query (schema_tu_vung_2.sql): a letter to the default parser, so a

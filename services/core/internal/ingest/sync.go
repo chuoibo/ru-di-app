@@ -3,6 +3,7 @@ package ingest
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -15,6 +16,8 @@ type SyncOptions struct {
 	PerPlace   int // photographs kept per place
 	MaxBatches int // pulls per round, so one round cannot run unbounded
 	Photos     bool
+	// Facts is the feed's web facts (place_web_facts); nil skips them.
+	Facts FactFeed
 }
 
 // SyncReport is what one round did.
@@ -28,11 +31,16 @@ type SyncReport struct {
 	Photos    int
 	PhotoSkip map[string]int
 	CaughtUp  bool
+	// Web facts: rows upserted, and what the derivation changed and left.
+	Facts        int
+	FactsApplied FactsApplied
 }
 
 func (r SyncReport) String() string {
-	return fmt.Sprintf("kéo %d dòng / %d đợt · thêm %d · cập nhật %d · cũ %d · từ chối %v · ảnh mới %d · bỏ ảnh %v · bắt kịp %v",
-		r.Pulled, r.Batches, r.Inserted, r.Updated, r.Stale, r.Rejected, r.Photos, r.PhotoSkip, r.CaughtUp)
+	return fmt.Sprintf("kéo %d dòng / %d đợt · thêm %d · cập nhật %d · cũ %d · từ chối %v · ảnh mới %d · bỏ ảnh %v · bắt kịp %v"+
+		" · web facts %d · đổi giờ/giá %d · có giờ %d · có giá %d · hết hạn %d",
+		r.Pulled, r.Batches, r.Inserted, r.Updated, r.Stale, r.Rejected, r.Photos, r.PhotoSkip, r.CaughtUp,
+		r.Facts, r.FactsApplied.Updated, r.FactsApplied.CoGio, r.FactsApplied.CoGia, r.FactsApplied.HetHan)
 }
 
 // SyncOnce brings the catalogue up to date with the feed: pull until caught up,
@@ -82,6 +90,29 @@ func SyncOnce(ctx context.Context, pool *pgxpool.Pool, feed Feed, frames FrameSo
 		for code, n := range applied.Rejected {
 			report.Rejected[code] += n
 		}
+	}
+
+	// Facts after the places: a place applied this round gets its hours
+	// and price in the same round, whichever feed moved first.
+	if opt.Facts != nil {
+		for i := 0; i < opt.MaxBatches; i++ {
+			facts, err := PullFacts(ctx, pool, opt.Facts, opt.Pull)
+			if err != nil {
+				return report, fmt.Errorf("pull web facts: %w", err)
+			}
+			report.Facts += facts.Landed
+			for code, n := range facts.Rejected {
+				report.Rejected[code] += n
+			}
+			if facts.CaughtUp {
+				break
+			}
+		}
+		applied, err := ApplyFacts(ctx, pool, time.Now())
+		if err != nil {
+			return report, fmt.Errorf("apply web facts: %w", err)
+		}
+		report.FactsApplied = applied
 	}
 
 	if !opt.Photos {

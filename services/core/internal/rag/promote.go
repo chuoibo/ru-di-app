@@ -284,10 +284,11 @@ func Rollback(ctx context.Context, db Beginner) (from, to int64, err error) {
 }
 
 // LyDoBia are the reasons a place leaves the index. A build writes and lifts
-// `unsafe` and `source_deleted` itself; LyDoBiaTay are the only ones a person
-// gives, and only a person lifts them.
+// `unsafe` and `source_deleted` itself; rudi-ingest's web-facts pass writes
+// and lifts `web_closed` (schema_tu_vung_3.sql); LyDoBiaTay are the only ones
+// a person gives, and only a person lifts them.
 var (
-	LyDoBia    = []string{"unsafe", "takedown", "closed", "source_deleted"}
+	LyDoBia    = []string{"unsafe", "takedown", "closed", "source_deleted", "web_closed"}
 	LyDoBiaTay = []string{"takedown", "closed"}
 )
 

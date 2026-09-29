@@ -15,10 +15,13 @@ var schemaSQL string
 //go:embed schema_v2.sql
 var schemaV2SQL string
 
+//go:embed schema_v3.sql
+var schemaV3SQL string
+
 // migrations are applied in order, each once, each pinned by its digest. An
 // applied file that changes afterwards is refused rather than re-run: the
 // database already holds what the old text said.
-var migrations = []string{schemaSQL, schemaV2SQL}
+var migrations = []string{schemaSQL, schemaV2SQL, schemaV3SQL}
 
 // Migrate adds the isolated place-ingest tables after the legacy schema
 // migration. Call explicitly from a deployment migration command, never a

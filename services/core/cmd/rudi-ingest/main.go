@@ -18,6 +18,7 @@ import (
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/ingest"
 	"mobile/services/core/internal/media/storage"
+	"mobile/services/core/internal/rag"
 )
 
 func main() {
@@ -186,7 +187,23 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 		}
 		defer src.Close()
 		feed := ingest.PGFeed{Pool: src}
-		opt := ingest.SyncOptions{Pull: ingest.PullOptions{MaxRows: *maxRows}, PerPlace: *perPlace}
+		opt := ingest.SyncOptions{Pull: ingest.PullOptions{MaxRows: *maxRows}, PerPlace: *perPlace,
+			Facts: ingest.PGFactFeed{Pool: src}}
+		// The web says closed -> out of search (rag owns the tombstones;
+		// ingest only lands the facts it reads them from). The daemon runs
+		// it after every round, a failed one too: expiry moves with the
+		// clock, not with the feed.
+		closed := func() string {
+			b, err := rag.DongBoBiaWeb(ctx, pool, time.Now())
+			switch {
+			case err != nil:
+				return "đóng cửa: lỗi " + err.Error()
+			case b.BoQua:
+				return "đóng cửa: bỏ qua (chưa có lược đồ rag v3 / place_facts)"
+			default:
+				return fmt.Sprintf("đóng cửa: ẩn thêm %d · hiện lại %d", b.Them, b.Go)
+			}
+		}
 
 		if args[0] == "pull" {
 			// Pull and apply only; photographs are `sync`'s job.
@@ -195,7 +212,7 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 				fmt.Fprintln(stderr, err)
 				return 1
 			}
-			fmt.Fprintln(stdout, report)
+			fmt.Fprintln(stdout, report, "·", closed())
 			return 0
 		}
 
@@ -224,6 +241,7 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 			} else {
 				fmt.Fprintf(stdout, "%s %s · %s\n", stamp, report, time.Since(started).Round(time.Second))
 			}
+			fmt.Fprintf(stdout, "%s %s\n", stamp, closed())
 			if *every == 0 {
 				return 0
 			}

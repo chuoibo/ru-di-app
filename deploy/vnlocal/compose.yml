@@ -300,6 +300,10 @@ services:
     depends_on:
       migrate-ingest:
         condition: service_completed_successfully
+      # Each round tombstones `web_closed` (rag schema v3); before it, the
+      # round skips that step and says so.
+      migrate-rag:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   # Removes expired OTP challenges, sessions and idempotency keys every 6h,

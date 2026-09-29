@@ -57,9 +57,9 @@ type HoSoQuan struct {
 	HoSo       string
 	TraiNghiem string
 	MonAn      string
-	// NguonHash is sha256 of the canonical JSON of the safe row: what the
-	// enrichment model saw and what a chunk is built from. Unchanged hash =
-	// no-op (S1).
+	// NguonHash is sha256 of the canonical JSON of what the enrichment
+	// model saw: the safe text and the row's identity, not its price or
+	// hours. An enrichment whose hash differs is stale (ApDung).
 	NguonHash [32]byte
 	// CachLy counts fields SafeDeep quarantined.
 	CachLy int
@@ -146,13 +146,20 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 	// mon_an: what to eat there.
 	h.MonAn = nfc(strings.Join(block[FacetMonAn], "\n"))
 
+	// Price and hours are not in the hash: the enrichment model never sees
+	// them (BocQuan lays out HoSo, TraiNghiem and MonAn only), and the chunk
+	// reads them from h.GiaMin/h.GiaMax/h.Lich at build time, so a web-facts
+	// refresh of a place's hours must not throw its enrichment away. The
+	// keys stay, always zero, because every stored hash was written with
+	// them while no fed row had a price or hours (2026-09-29): the bytes of
+	// the canonical JSON, and so those hashes, remain valid.
 	canon, _ := json.Marshal(struct {
 		ID, DiemDen, LoaiCho, HoSo, TraiNghiem, MonAn, License string
 		GiaMin, GiaMax                                         *int64
 		Gio                                                    string
 		Lat, Lng                                               float64
 		CoToaDo                                                bool
-	}{h.ID, h.DiemDen, h.LoaiCho, h.HoSo, h.TraiNghiem, h.MonAn, h.License, h.GiaMin, h.GiaMax, chu(safe, "open_hours"), h.Lat, h.Lng, h.CoToaDo})
+	}{h.ID, h.DiemDen, h.LoaiCho, h.HoSo, h.TraiNghiem, h.MonAn, h.License, nil, nil, "", h.Lat, h.Lng, h.CoToaDo})
 	h.NguonHash = sha256.Sum256(canon)
 	return h, false
 }

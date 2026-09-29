@@ -721,3 +721,27 @@ func TestMotQuanSaiKhongKeoCaLo(t *testing.T) {
 		t.Fatalf("runner: %+v, %d done, hong %v", b, len(done), hong)
 	}
 }
+
+// TestNguonHashBoQuaGiaVaGio: a web-facts refresh writes a place's hours and
+// price band; the enrichment model never saw either, so the enrichment must
+// stay current. The pinned hex is what the hash was before price and hours
+// left it, for a row without them -- every stored enrichment was written for
+// such a row, so a change of the canonical bytes would stale them all.
+func TestNguonHashBoQuaGiaVaGio(t *testing.T) {
+	p := placeMau("q1", "Lẩu nấm.", "Ngon lắm.")
+	h, _ := DungHoSo(p)
+	const ghim = "60af4a877fe1699d79ea1732862180606afadc05a3a9f9428abf5f6326dd46bf"
+	if got := h.NguonHashHex(); got != ghim {
+		t.Fatalf("hash of a row without price or hours moved: %s", got)
+	}
+	gio := "Mo-Sa 06:00-21:30; Su off"
+	lo, hi := int64(35000), int64(60000)
+	p.OpenHours, p.PriceMinVND, p.PriceMaxVND = &gio, &lo, &hi
+	h2, _ := DungHoSo(p)
+	if h2.NguonHash != h.NguonHash {
+		t.Fatal("hours or price moved the enrichment hash")
+	}
+	if h2.Lich == nil || h2.GiaMin == nil || *h2.GiaMax != hi {
+		t.Fatal("hours or price did not reach the profile the chunk is built from")
+	}
+}

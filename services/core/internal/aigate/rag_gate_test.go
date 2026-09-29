@@ -24,7 +24,9 @@ const pkgRag = "mobile/services/core/internal/rag"
 // rag_* tables, the migrations table included), and it indexes the place
 // catalogue, so it reads `places` (the rows it snapshots and the live row it
 // checks every hit against) and `destinations` (ResolveDestination's closed
-// list of names and boxes). Nothing else: not `messages`, not a money table,
+// list of names and boxes), and `place_facts` (the web facts rudi-ingest
+// lands; DongBoBiaWeb reads which fed places the web says are permanently
+// closed, to tombstone them `web_closed` -- no person in it). Nothing else: not `messages`, not a money table,
 // not `person_interests` or any per-person taste, not `saved_places`,
 // `posts`, `pair_shared_constraints` or any `nep_*` table. A group's taste
 // reaches a retrieval only as an argument the caller computed.
@@ -45,7 +47,7 @@ const pkgRag = "mobile/services/core/internal/rag"
 var ragAllowed = map[string]bool{
 	"rag_schema_migrations": true, "rag_index_versions": true, "rag_docs": true, "rag_chunks": true,
 	"rag_tombstones": true, "rag_query_log": true,
-	"places": true, "destinations": true,
+	"places": true, "destinations": true, "place_facts": true,
 	"rag_nap_schema_migrations": true, "rag_vector_versions": true, "rag_dirty": true, "place_enrichments": true,
 	"rag_embedding_cache": true, "rag_sparse_cache": true, "rag_ingest_dlq": true, "job_schema_migrations": true,
 	"rag_embed_batches": true,
