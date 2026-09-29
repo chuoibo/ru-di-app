@@ -91,7 +91,11 @@ function kiem({ goc, rel, anh, ghim, md }) {
     if (muc.has(m[1])) sai.push(`issue trùng: ${m[1]}`);
     muc.set(m[1], { cat, sev });
   }
-  for (let i = 1; i <= muc.size; i++) {
+  // Numbers run without a gap from the lowest one: UI-001 for the audit of
+  // 7ea1a7c, UI-123 for its follow-up on main, which carries only new issues.
+  const so = [...muc.keys()].map((k) => Number(k.slice(3)));
+  const dau = so.length ? Math.min(...so) : 1;
+  for (let i = dau; i < dau + muc.size; i++) {
     const id = `UI-${String(i).padStart(3, "0")}`;
     if (!muc.has(id)) sai.push(`thiếu số: ${id}`);
   }
@@ -139,8 +143,15 @@ function kiem({ goc, rel, anh, ghim, md }) {
 // message it must produce.
 const CANARY = {
   sha: { doan: "sha256 lệch", lam: (v) => { v.ghim[0].sha256 = v.ghim[0].sha256.replace(/^./, (c) => (c === "0" ? "1" : "0")); } },
-  bang: { doan: "report bảng", lam: (v) => { v.md["report.md"] = v.md["report.md"].replace(/(\| P2 \|[^|]*\|[^|]*?), (UI-\d{3}) \|/, "$1 |"); } },
-  muc: { doan: "issues.md bảng mức", lam: (v) => { v.md["issues.md"] = v.md["issues.md"].replace(/(\n\| P2 \| )UI-\d{3}, /, "$1"); } },
+  // Drop the first issue named in the table, whatever the cell holds: one
+  // issue or many (the follow-up on main has a single P2 at first).
+  bang: {
+    doan: "report bảng",
+    lam: (v) => {
+      v.md["report.md"] = v.md["report.md"].replace(/(\| Mức \| BUG \| UX ISSUE \| VISUAL POLISH \|\n\|---\|---\|---\|---\|\n(?:\|[^\n]*\n)*?\|[^\n]*?)(?:, )?UI-\d{3}(, )?/, (m, a, b) => a + (b && !a.endsWith("| ") ? b : ""));
+    },
+  },
+  muc: { doan: "issues.md bảng mức", lam: (v) => { v.md["issues.md"] = v.md["issues.md"].replace(/(\n\| P[0-3] \| )UI-\d{3}(?:, )?/, "$1"); } },
   link: { doan: "link hỏng", lam: (v) => { v.md["issues.md"] += "\n![canary](evidence/EV-KHONG-CO.jpg)\n"; } },
   thua: {
     doan: "ảnh chỉ có manifest dẫn tới",

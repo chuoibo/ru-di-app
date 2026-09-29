@@ -1,7 +1,9 @@
 # mobile-ui-audit
 
 Harness bằng chứng cho audit UI/UX app mobile ngày 27/09/2026
-(`docs/claude/2026-09-27/mobile-ui-audit/`). Không phải mã sản phẩm, app không import.
+(`docs/claude/2026-09-27/mobile-ui-audit/`) và phần sau pipeline của nó trên main
+(`docs/claude/2026-09-29/mobile-ui-audit-main/`: retest từng issue, issue mới từ UI-123). Không phải mã sản
+phẩm, app không import.
 
 ## Cần có
 
@@ -70,6 +72,15 @@ node kich-ban/f11-phan-xu.mjs        # phán quyết bằng mắt của F11; `la
 node kich-ban/e-luong.mjs [--chi e1-vao,e1-nhom,e1-moi,e1-tin,e1-dem,e2-tao,e2-chang,e2-album,e3,e3-sau,e5-ban,e4,e5-chan,e5-chan-so,e5-ghep,e6-thoat,e6-khong-phien,e6-co-phien]
                                     # E1–E6 bằng nút của app; moi-56/57/58 vào cửa qua UI; theo đúng thứ tự trên
 node kich-ban/e-phan-xu.mjs          # phán quyết bằng mắt của E, gắn issue, gắn ảnh ghép cho từng hàng, 12 hàng native
+# Phần sau pipeline, trên main: stack thứ hai và AUDIT_OUT riêng, tài liệu ở docs/claude/2026-09-29/mobile-ui-audit-main
+node kich-ban/retest-main.mjs [--chi r-f00,r-f01,r-f02,r-f03,r-f06,r-f07,r-f08,r-f09,r-f11,r-e,r-moi]
+                                    # đo lại từng issue: một hàng TC-R-UI-xxx (hoặc một hàng mỗi phần, -A/-B); issue mới là TC-M-…
+                                    # chạy riêng một phần của một mục: --chi r-f08:094 (dữ liệu của mục vẫn được dựng, có chốt)
+AUDIT_BASE=http://127.0.0.1:8091 node kich-ban/retest-main.mjs --chi r-f10:113   # bảng dev: cần server dev của main có fixture
+node kich-ban/retest-phan-xu.mjs     # phán quyết bằng mắt; hàng kịch bản gốc thành hàng retest; rút hàng lệch; hàng NOT_TESTED giữ chỗ
+node kich-ban/retest-ghep.mjs        # ảnh ghép retest theo feature, gắn vào mọi hàng có khung trong ảnh
+node kich-ban/tham-do-lich-su-tab.mjs   # chỉ đọc: history.length qua một chuỗi chuyển tab, rồi Back (UI-123); CHUOI=…, PERSONA=…
+node retest-bang.mjs <docs gốc> <docs main>   # sinh retest.md từ issues.md gốc và sổ retest
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
                                     # ghim ảnh, link ảnh, bảng issue theo mức/loại; --canary đòi 5 canary đỏ
@@ -158,6 +169,17 @@ là có dùng khi một issue, report, hoặc một hàng phán quyết trong ma
 
 Sổ `results.jsonl` chỉ được ghi thêm. Hàng sinh từ lỗi của harness được rút bằng `soGhi(out).rut(tc, lyDo)`:
 dòng gốc ở lại trong sổ, ma trận bỏ nó khỏi bảng và liệt kê trong mục «Hàng đã rút» kèm lý do.
+
+Bài học của phần retest trên main (29/09):
+- Tên chip và nút mang ký tự icon (vùng riêng U+E000–U+F8FF): mọi bộ tìm mới phải bỏ chúng trước khi so tên. Quên
+  điều đó, `r-f10` không chạm được chip «Không ảnh» và ghi một hàng sai cách đo (đã rút, đo lại).
+- `pkill -f` và `pgrep -f` khớp luôn dòng lệnh của chính shell đang chạy chúng: viết mẫu dạng `[e]xpo start`.
+- Không đặt tên biến trùng hàm đã import (`keo` là hàm kéo; đặt tên kèo là `keoAlbum`).
+- Chụm hai ngón phóng cả trang trên web: chụp ảnh bằng chứng trước khi chụm.
+- Trên main, chuyển tab không thêm mục lịch sử nào (UI-123). Kịch bản dùng Back sau khi chuyển tab sẽ rời app;
+  `trangMoi` mở trang gắn phiên (`/favicon.ico`) trước, nên Back về đó cũng là rời app.
+- Kịch bản gốc chạy lại trên bản UI mới có thể lệch từng bước: đọc từng hàng trước khi tin, và rút hàng lệch kèm lý do
+  (bốn hàng F06).
 
 ## Những điều harness không đo được
 

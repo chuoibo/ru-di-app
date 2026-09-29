@@ -31,8 +31,13 @@ for (const d of ds) {
 
 const allowFile = join(repo, ".repo-guard-allowlist.json");
 const allow = JSON.parse(readFileSync(allowFile, "utf8"));
+// The base audit keeps its reason word for word (its pins must not churn); a
+// follow-up of the same engagement (the retest of main) names its own folder.
+const thuMuc = relative(repo, resolve(docs)).split("\\").join("/");
 const LY_DO =
-  "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại.";
+  thuMuc === "docs/claude/2026-09-27/mobile-ui-audit"
+    ? "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    : `Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (${thuMuc}): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.`;
 const moTa = new Map(ds.map((d) => [d.id, d.moTa]));
 const cu = existsSync(join(docs, "evidence-manifest.json")) ? JSON.parse(readFileSync(join(docs, "evidence-manifest.json"), "utf8")) : {};
 const manifest = {};

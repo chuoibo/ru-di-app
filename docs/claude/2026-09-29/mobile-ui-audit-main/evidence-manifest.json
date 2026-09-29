@@ -1,0 +1,82 @@
+{
+ "EV-F00-TAB-ghep-a": {
+  "bytes": 197264,
+  "sha8": "556058c7",
+  "moTa": "Thanh tab năm cột của main ở C1, C2, C3, biên 599 và 600: tab đang chọn có màu nhấn, icon đặc, dải washi (phân xử TC-F00-TAB-DOI)"
+ },
+ "EV-F04-CHIA-SE-KHONG-CO-C1": {
+  "bytes": 119750,
+  "sha8": "d22f3128",
+  "moTa": "UI-049 (P1) trên main: đợt thu, «Gửi cho …» khi trình duyệt không có navigator.share; câu lỗi nằm ở đầu trang, ngoài khung nhìn, C1"
+ },
+ "EV-R-E5-ghep": {
+  "bytes": 61763,
+  "sha8": "04fa71ad",
+  "moTa": "Retest E5 trên main: UI-120, người bị chặn gửi và người chặn nhận tờ hẹn"
+ },
+ "EV-R-F00-ghep": {
+  "bytes": 135321,
+  "sha8": "1c5dde51",
+  "moTa": "Retest F00 trên main: UI-004 (C6), UI-005, UI-006, UI-011"
+ },
+ "EV-R-F01-ghep": {
+  "bytes": 106992,
+  "sha8": "12f7202a",
+  "moTa": "Retest F01 trên main: UI-016, UI-018, UI-019"
+ },
+ "EV-R-F02-ghep": {
+  "bytes": 163693,
+  "sha8": "f929a1a4",
+  "moTa": "Retest F02 trên main: UI-021, UI-022, UI-023 (C2), UI-024"
+ },
+ "EV-R-F03-ghep": {
+  "bytes": 181299,
+  "sha8": "4415fade",
+  "moTa": "Retest F03 trên main: UI-032, UI-033 (đổi), UI-034, UI-035, UI-036"
+ },
+ "EV-R-F04-ghep": {
+  "bytes": 191803,
+  "sha8": "47beb309",
+  "moTa": "Retest F04 trên main (f04-tien.mjs chạy lại): UI-048, UI-049, UI-050, UI-051, UI-052"
+ },
+ "EV-R-F05-F06-ghep": {
+  "bytes": 214198,
+  "sha8": "3a524b4f",
+  "moTa": "Retest F05, F06 trên main: UI-062, UI-063, UI-071, UI-073 (hai khung), UI-074"
+ },
+ "EV-R-F07-ghep": {
+  "bytes": 158835,
+  "sha8": "4e3bdcf0",
+  "moTa": "Retest F07 trên main: UI-082, UI-083, UI-084 (a), UI-085"
+ },
+ "EV-R-F08-F09-ghep": {
+  "bytes": 159390,
+  "sha8": "98b21c99",
+  "moTa": "Retest F08, F09 trên main: UI-094, UI-095, UI-096 (đổi), UI-097, UI-107"
+ },
+ "EV-R-F10-F11-E-ghep": {
+  "bytes": 152020,
+  "sha8": "1e4a66ea",
+  "moTa": "Retest bảng dev, demo và E trên main: UI-113 (C2), UI-116 (C2), UI-117 (đường B), UI-082 (Tin nhắn demo), UI-119"
+ },
+ "EV-R-UI-005-C1": {
+  "bytes": 89267,
+  "sha8": "681c9e5f",
+  "moTa": "UI-005 (P1) trên main: Lên plan sau Back khi khay «Tạo mới» mở; trông bình thường, sổ đo còn một vùng inert ≥ 25% màn, C1"
+ },
+ "EV-R-UI-082-A-C1": {
+  "bytes": 136091,
+  "sha8": "e5c21bdb",
+  "moTa": "UI-082 (P1) trên main: không phiên, link tờ giấy của cặp chat-4/chat-5 mở sổ demo «Hội bạn · Người ấy», không nhãn, không lối đăng nhập, C1"
+ },
+ "EV-R-UI-120-A-C1": {
+  "bytes": 91357,
+  "sha8": "96e07441",
+  "moTa": "UI-120 (P1) trên main: chat-8 (người chặn) nhận tờ của chat-9, có «Ừ, hẹn Thứ Bảy 03/10», C1"
+ },
+ "EV-R-UI-120-B-C1": {
+  "bytes": 80648,
+  "sha8": "f3ae25d5",
+  "moTa": "UI-120 (P1) trên main: chat-9 đang bị chat-8 chặn vẫn gửi được tờ hẹn, màn «Đã gửi, chờ trả lời», C1"
+ }
+}
