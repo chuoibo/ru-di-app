@@ -74,6 +74,7 @@ node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoà
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
                                     # ghim ảnh, link ảnh, bảng issue theo mức/loại; --canary đòi 5 canary đỏ
 node chot-anh.mjs <docs-dir> <danh-sach.json>   # chép ảnh được chọn, ghim sha256 vào allowlist
+node so-sanh-so.mjs <sổ chính> <sổ chạy lại>    # so một lượt chạy lại (vd. trong worktree sạch) với sổ chính, theo hàng tự động cuối và đầu
 ```
 
 Thư viện dùng chung nằm ở `thu-vien/`, không phải `lib/`: `.gitignore` gốc bỏ qua mọi thư mục `lib/`

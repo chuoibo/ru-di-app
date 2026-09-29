@@ -4,8 +4,8 @@
 - MODE = **AUDIT_ONLY**: không sửa mã app; chỉ thêm tài liệu, ảnh bằng chứng và harness đo.
 - protocol_version: không áp dụng (không đụng giao thức v1 hay trang khách).
 - Verdict: không có (chưa có reviewer thật; đây là báo cáo phát hiện).
-- Trạng thái: **đang làm, checkpoint 13** (xong F00–F11 và E1–E6; còn verify cuối). Mục «Checkpoint» ở cuối là
-  nguồn sự thật về phần đã và chưa đo.
+- Trạng thái: **xong pipeline**: F00–F11, E1–E6 và verify cuối trong cây sạch (§E). Còn hàng đợi sau pipeline, đo trên
+  bản dựng từ `main` mới. Mục «Checkpoint» ở cuối là nguồn sự thật về phần đã và chưa đo.
 - Trong lúc audit, `main` đã đi tiếp tới `33d29fe` (49 commit: Cộng đồng, Nhật ký chuyến, sửa ở Khám phá, Kèo, Hồ sơ),
   rồi tới `16f24d5` (thêm 4 PR: AI v2, Rủ Đi AI trong chat hai người, sổ kỷ niệm Nếp v3, hồ sơ kể chuyện và sổ huy
   hiệu). Đợt này **giữ mốc `7ea1a7c`** tới hết pipeline, để số đo giữa các checkpoint so được với nhau. Feature mới
@@ -31,7 +31,7 @@ Tài liệu đi kèm:
 | Backend | Postgres 16 cục bộ, API Python, cửa trước Go (`core serve`, 152/159 route phục vụ bằng Go), `MOBILE_AUTH_MODE` vắng nên là `prod`, OTP debug |
 | Dữ liệu | `seed:rudi` (Team Đà Lạt: 8 người, 13 tin, 1 kèo 3 ngày, bill 1.280.000đ, 1 đợt thu, 5 kỷ niệm) + chat seed (22 người tổng hợp, nhóm 20 thành viên, 2 DM). Toàn bộ là dữ liệu giả; số điện thoại bị che trên mọi ảnh |
 | Phiên | OTP qua API một lần cho mỗi persona, rồi gắn vào trang bằng `POST /sessions/web` (cookie HttpOnly, đúng đường app tự dùng sau khi tải lại). Luồng OTP qua UI được audit riêng ở F01 |
-| Gián đoạn | Máy khởi động lại bốn lần: giữa F02, giữa F04, giữa F06 (ba lần này lúc phiên chờ hạn mức) và giữa E1. Mỗi lần Postgres, API và cửa Go được dựng lại trên đúng thư mục dữ liệu cũ, không seed lại; phiên đã lưu vẫn dùng được. Lượt đầu của `TC-E1-VAO-CUA` chạy khi stack chưa dựng lại, nên bị rút (lỗi môi trường) và đo lại |
+| Gián đoạn | Máy khởi động lại năm lần: giữa F02, giữa F04, giữa F06 (ba lần này lúc phiên chờ hạn mức), giữa E1 và giữa verify cuối. Mỗi lần Postgres, API và cửa Go được dựng lại trên đúng thư mục dữ liệu cũ, không seed lại; phiên đã lưu vẫn dùng được. Lượt đầu của `TC-E1-VAO-CUA` chạy khi stack chưa dựng lại, nên bị rút (lỗi môi trường) và đo lại. Ở verify cuối, lượt F00 đầu trong cây sạch dừng ở bước gắn phiên («Failed to fetch») trước khi ghi hàng nào; dựng lại stack rồi chạy lại |
 | Dữ liệu biến thể (F03) | `tests/qa/mobile-ui-audit/seed-bien-the.mjs` tạo qua API của app hai kèo giả: tên 96 ký tự với 12 chặng dài (một nhãn 57 ký tự liền), và kèo 2 ngày không chặng. Ca nào ghi vào hai kèo này thì đặt lại chặng sau đó. Việc dọn dẹp chỉ chạy trên DB cục bộ: xoá kèo «Kèo thử…» do ca tạo kèo sinh ra, xoá check-in của kèo biến thể. Không route nào xoá được hai thứ này, và đã kiểm trước: không bảng hay tin chat nào tham chiếu tới chúng |
 | Ghi tiền (F04) | Sổ tiền là append-only (trigger chặn sửa, xoá nghĩa vụ), nên mọi lần ghi ở lại trên DB cục bộ. Team Đà Lạt **không bị ghi sổ**: 1 khoản chi, 1 đợt, 0 biên nhận như lúc seed; chỉ có thêm 17 bill nháp (`POST /bills` ở bước 2 → 3, không route nào liệt kê, UI không hiện). Mọi lần ghi đi vào nhóm chat-test 20 người: 3 khoản chi (13.705.678đ và hai khoản «Trà đá» 20.000đ), 1 đợt đã phát (19 link, lưu trong localStorage của context test rồi mất khi đóng), 3 biên nhận «Tiền đã về». Ghi tiền không đăng tin chat (đã đọc mã Go), nên ảnh F05 không bị ảnh hưởng |
 | Ghi chat (F05) | Team Đà Lạt chỉ được đọc: vẫn 13 tin như lúc seed. Mọi lần ghi đi vào luồng chat cũ (chưa mã hoá đầu cuối) của nhóm chat-test 20 người: 40 tin tổng hợp do `seed-bien-the.mjs --chat` gửi qua API (đoạn dài, URL 158 ký tự, 4 dòng, emoji), cộng các tin của từng ca. Tổng hiện có 59 tin: 51 chữ, 3 thẻ (2 bình chọn, 1 tờ hẹn chung «Lẩu» bản 1), 3 tin đã xoá, 1 ảnh tổng hợp 480×360, 1 sticker. Có 13 phiếu (1 ở bình chọn đã chốt, 12 ở bình chọn mở, do chat-0 tới chat-11 bỏ qua API) và 1 báo cáo «quấy rối» nhắm vào một tin của Chat Test 02. Chat hai người chat-0/chat-1 chỉ được mở, 0 tin. Thêm một tài khoản mới `moi-50` (không nhóm) cho trạng thái rỗng. Không route nào xoá tin khỏi luồng cũ (xoá chỉ đổi thành «Tin nhắn đã bị xoá»), nên các hàng này ở lại trên DB cục bộ |
@@ -459,6 +459,7 @@ Không sửa file nào trong `apps/`, `services/`, `packages/`. Thêm:
   lại bằng chứng, xem sự cố 3); `kich-ban/e-luong.mjs` đi sáu hành trình E1–E6 bằng chính nút của app, còn
   `e-phan-xu.mjs` ghi phán quyết bằng mắt của E và gắn ảnh ghép cho từng hàng; `kiem-tai-lieu.mjs` kiểm ghim ảnh, link
   ảnh và bảng issue trước mỗi commit; `thu-vien/lam-tron.mjs` quyết định ma trận in số thế nào (sự cố 4);
+  `so-sanh-so.mjs` so sổ của một lượt chạy lại với sổ chính (verify cuối);
   `seed-bien-the.mjs` tạo dữ liệu biến thể qua API (thêm `--chat`: 40 tin tổng hợp cho nhóm chat-test);
 - các mục ghim ảnh trong `.repo-guard-allowlist.json`.
 
@@ -488,6 +489,47 @@ Test fail có sẵn:
   - Bản E1 khi chặn hết API cũng hiện sau 654 ms.
   - Nguyên nhân nằm trong harness `chrome-cdp` của test, chưa khoanh. Giả thuyết cũ (UI-009) không đứng vững
     cho ca này.
+
+### Verify cuối trong cây sạch (`41c5cf4`)
+
+Một worktree tách mới tại SHA đã push, cài lại phụ thuộc từ lockfile. Mọi lệnh dưới đây chạy trong cây đó.
+
+| Lệnh | Kết quả |
+|---|---|
+| `git diff --stat 7ea1a7c HEAD -- apps services packages parity phase0` | 0 dòng (AUDIT_ONLY) |
+| `npm ci` (apps/mobile) | 708 gói |
+| `npm run typecheck` | 0 lỗi |
+| `npm test`, `CHROME_BIN` trỏ Chromium | 1220 test: 1219 pass, 1 fail. Test fail trùng baseline: `rudi-hanh-trinh-web.test.mjs:76`, «timed out waiting for Lịch trình trên /plan» |
+| `npm ci` (harness) | 3 gói, từ `package-lock.json` của harness |
+| `node tu-kiem.mjs --dot-bien` | 20/20 xanh; M1–M4 đỏ đúng hàng dự đoán |
+| `node kiem-tai-lieu.mjs <docs> --canary` | 163 ảnh, 163 ghim khớp sha256; 521 link ảnh; 163/163 ảnh có chỗ dẫn tới ngoài manifest; hai bảng khớp 122 issue; 5/5 canary đỏ đúng chỗ, identity xanh |
+| repo guard `tree HEAD`, `range 7ea1a7c HEAD` | xanh: 4063 file; 13 commit |
+| pytest `test_repo_guard`, `test_qa_evidence_runs_on_another_machine` | 79 xanh |
+
+Chạy lại để so. Kịch bản của cây sạch ghi vào một thư mục kết quả riêng; phiên đã lưu được chép sang, nên không đăng nhập
+OTP thêm. Phần chạy lại: F00 `dinh-tuyen,khay-tao` và F11 `tab,l28,l28-thoat`, 37 hàng, so bằng `so-sanh-so.mjs`.
+- **So với hàng tự động cuối của sổ chính: 34/37 cùng trạng thái.** Ba hàng lệch đều là hàng được phân xử ở checkpoint 1,
+  trước khi có quy ước ghi «phân xử bằng mắt:»:
+  - `TC-L01-NGAT`: hàng tự động là FAIL, là hệ quả của ca chạm đúp chạy trên cùng trang. Đo riêng lại thì PASS. Cây sạch
+    lặp đúng FAIL đó.
+  - `TC-L01-KICH-C2` và `-C8`: hàng tự động là PASS; phân xử thành FAIL theo trần 82% (UI-007). Cây sạch ra cùng số đo,
+    589/640 và 441/460.
+- **So với hàng tự động đầu tiên: 33/37 giống từng chữ** (bỏ số ms). Bốn hàng khác là hàng đã rút hoặc đã sửa vì lỗi
+  harness: `TC-L01-DONG-fling` ở checkpoint 1, ba hàng L28 ở F11. Với bốn hàng này, cây sạch ra như bản đo lại.
+- **Issue tái hiện:**
+  - UI-005: `TC-L01-DONG-back` còn 1 vùng inert sau Back;
+  - UI-002: URL lạ khi đã đăng nhập về `/welcome`;
+  - UI-116: hình học chữ bị cắt trùng từng số với lượt chính (thiếu 22px ở C1, 92px ở C2, 9 và 52px ở C3);
+  - UI-117: ba hàng L28 sau Back;
+  - UI-007: cùng số đo.
+- **Không chạy lại trong cây sạch:** F01–F10, và E1–E6 cùng các ca có ghi dữ liệu. Chạy lại những ca đó sẽ ghi lần hai,
+  hoặc chốt của kịch bản sẽ dừng ngay.
+
+Ảnh:
+- Theo ghi chép của từng checkpoint, mỗi ảnh đã commit được mở ra xem khi nó được thêm. Lượt verify cuối không mở lại cả
+  163 ảnh, chỉ mở tám ảnh ghép của E.
+- Dung lượng 19,40 MiB, tức 20,35 MB thập phân. Kế hoạch ban đầu ghi ngân sách «≤20 MB»; từ checkpoint 2, report áp con số
+  đó là 20 MiB. Tính theo MB thì vượt 0,35 MB.
 
 ### Sự cố quy trình
 
@@ -627,7 +669,7 @@ Test fail có sẵn:
 
 - **Đã xong:** F00 (vỏ toàn cục), F01 (vào cửa), F02 (Khám phá), F03 (Plan · Kèo · Hành trình), F04 (Tiền),
   F05 (Tin nhắn · Chat), F06 (Nhóm · Người), F07 (Sổ hai người), F08 (Kỷ niệm · Media), F09 (Hồ sơ · Cài đặt),
-  F10 (Bảng QA dev), F11 (Chế độ demo), và sáu luồng xuyên feature E1–E6.
+  F10 (Bảng QA dev), F11 (Chế độ demo), sáu luồng xuyên feature E1–E6, và verify cuối trong cây sạch tại `41c5cf4` (§E).
   - F00:
     - định tuyến theo phiên, URL lạ;
     - thanh tab và rail ở 9 cấu hình;
@@ -744,7 +786,7 @@ Test fail có sẵn:
     - E5: kết bạn, nhắn riêng, chặn từ hồ sơ; chat đôi, nhóm chung và sổ hai người sau khi chặn; gửi tờ khi đang bị
       chặn; danh sách chặn; bỏ chặn;
     - E6: tải lại; đăng xuất và Back; bốn link lạnh không phiên; đăng nhập từ link chat; bốn link lạnh có phiên.
-- **Tiếp theo:** verify cuối.
+- **Tiếp theo:** hàng đợi sau pipeline, bắt đầu bằng retest các issue trên bản `main` mới.
 - **Hàng đợi sau pipeline** (người yêu cầu nhắc 27/09 và 28/09). Các feature mới trên `main` được audit trên bản dựng
   từ `main` mới nhất (ít nhất `16f24d5`), sau khi xong mọi bước trên:
   - Cộng đồng: tab mới và 7 route `/community/*`, bảng tin có kiểm duyệt, realtime; bình luận và like của tường v2 nay
