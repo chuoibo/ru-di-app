@@ -55,7 +55,9 @@ export function kieuBanDo(toi: boolean): string {
       ...duongXep,
       { id: "road-names", type: "symbol", ...source, "source-layer": "transportation_name", minzoom: 13, filter: ["in", ["get", "class"], ["literal", ["trunk", "primary", "secondary", "tertiary", "minor"]]], layout: { "symbol-placement": "line", "text-field": name, "text-font": ["Noto Sans Regular"], "text-size": 12, "symbol-spacing": 280 }, paint: { "text-color": c.inkSoft, ...halo } },
       { id: "water-names", type: "symbol", ...source, "source-layer": "water_name", layout: { "text-field": name, "text-font": ["Noto Sans Italic"], "text-size": 13, "text-max-width": 9 }, paint: { "text-color": c.inkFaint, ...halo } },
-      { id: "district-names", type: "symbol", ...source, "source-layer": "place", minzoom: 11, filter: ["in", ["get", "class"], ["literal", ["suburb", "quarter", "neighbourhood"]]], layout: { "text-field": name, "text-font": ["Noto Sans Regular"], "text-size": 13, "text-max-width": 8 }, paint: { "text-color": c.inkFaint, ...halo } },
+      // Wards and districts only: OSM's `neighbourhood` in Vietnamese cities is
+      // «Khu phố 37», «Khu phố 57»… and covered the map at street zoom.
+      { id: "district-names", type: "symbol", ...source, "source-layer": "place", minzoom: 11, filter: ["in", ["get", "class"], ["literal", ["suburb", "quarter"]]], layout: { "text-field": name, "text-font": ["Noto Sans Regular"], "text-size": 13, "text-max-width": 8 }, paint: { "text-color": c.inkFaint, ...halo } },
       { id: "place-names", type: "symbol", ...source, "source-layer": "place", minzoom: 6, filter: ["in", ["get", "class"], ["literal", ["city", "town", "village"]]], layout: { "text-field": name, "text-font": ["Noto Sans Bold"], "text-size": 15, "text-max-width": 10 }, paint: { "text-color": c.ink, ...halo } },
     ],
   });
@@ -78,6 +80,11 @@ export type MocBanDo = {
   /** Null before the outing starts: no stop is "next" on a day not yet begun. */
   trangThai: TrangThaiChang | null;
   neo: NeoMoc;
+  /**
+   * While the ink is being drawn: `cho` = still waiting above the page,
+   * `dong` = the ink just reached it, press it down. Null when nothing plays.
+   */
+  nhip?: "cho" | "dong" | null;
 };
 
 export type DoanBanDo = {
@@ -87,6 +94,8 @@ export type DoanBanDo = {
   uocLuong?: boolean;
   /** Short travel time drawn on the leg («9 phút»); only a routed leg has one. */
   nhan?: string | null;
+  /** Lines of the paper tag pinned on the chosen leg, e.g. «1,9 km · 3 phút». */
+  the?: string[] | null;
 };
 
 /** Every colour the map draws with, resolved from the theme by the host. */
@@ -162,11 +171,14 @@ export type BanDoProps = {
   padding?: { top: number; left: number; right: number; bottom: number };
   duration?: number;
   onGhim?: (point: ToaDo) => void;
-  toi: { lat: number; lng: number; dem: number } | null;
+  /** The chosen stop, and its neighbours in the day so the camera shows it within its day. */
+  toi: { lat: number; lng: number; dem: number; ke?: ToaDo[] } | null;
   onUserMove: () => void;
   onChonMoc: (id: string) => void;
   onChonDoan: (id: string) => void;
   onNen: () => void;
+  /** The basemap has loaded and can be seen: the ink may start. */
+  onSan?: () => void;
 };
 
 export const DEM_KHOP = { top: 56, left: 40, right: 40, bottom: 260 };
@@ -228,8 +240,8 @@ export type TapHopDuong = {
   type: "FeatureCollection";
   features: {
     type: "Feature";
-    properties: { id: string; chon: number; mo: number; uocLuong: number; thuTu: number; nhan: string };
-    geometry: { type: "LineString"; coordinates: [number, number][] };
+    properties: { id: string; chon: number; mo: number; uocLuong: number; thuTu: number; nhan: string; trung?: number };
+    geometry: { type: "LineString"; coordinates: [number, number][] } | { type: "Point"; coordinates: [number, number] };
   }[];
 };
 
@@ -242,10 +254,8 @@ export type TapHopDuong = {
  */
 export function tapHop(doan: readonly DoanBanDo[]): TapHopDuong {
   const coChon = doan.some((d) => d.chon);
-  return {
-    type: "FeatureCollection",
-    features: doan.map((d, i) => ({
-      type: "Feature",
+  const net = doan.flatMap((d, i) => d.polyline.length < 2 ? [] : [{
+      type: "Feature" as const,
       properties: {
         id: d.id,
         chon: d.chon ? 1 : 0,
@@ -253,13 +263,35 @@ export function tapHop(doan: readonly DoanBanDo[]): TapHopDuong {
         uocLuong: d.uocLuong ? 1 : 0,
         thuTu: i,
         nhan: d.uocLuong ? "" : (d.nhan ?? ""),
+        trung: d.uocLuong && quayLai(doan, i) ? 1 : 0,
       },
       geometry: {
-        type: "LineString",
-        coordinates: d.polyline.map((p) => [p.lng, p.lat]),
+        type: "LineString" as const,
+        coordinates: d.polyline.map((p): [number, number] => [p.lng, p.lat]),
       },
-    })),
-  };
+    }]);
+  // Each routed leg's minutes sit on a point halfway along it. A label placed
+  // along the line lost to the basemap's street names and to curves: one leg
+  // in three was labelled on a tablet, none on a phone (review, 2026-09-29).
+  const nhan = net.flatMap((f) => {
+    if (!f.properties.nhan) return [];
+    const giua = giuaDoan(doan[f.properties.thuTu].polyline);
+    return giua ? [{ ...f, geometry: { type: "Point" as const, coordinates: [giua.lng, giua.lat] as [number, number] } }] : [];
+  });
+  return { type: "FeatureCollection", features: [...net, ...nhan] };
+}
+
+/**
+ * A draft leg that walks back along an earlier draft leg (1 → 2, then 2 → 3
+ * with 3 beside 1): two dashed strokes a few px apart read as a railway on a
+ * wide screen (web 1280, 2026-09-29). The pencil draws the way once.
+ */
+function quayLai(doan: readonly DoanBanDo[], i: number): boolean {
+  const gan = (a: ToaDo | undefined, b: ToaDo | undefined) => !!a && !!b && Math.abs(a.lat - b.lat) < 0.002 && Math.abs(a.lng - b.lng) < 0.002;
+  const d = doan[i];
+  const dau = d.polyline[0];
+  const cuoi = d.polyline[d.polyline.length - 1];
+  return doan.slice(0, i).some((t) => t.uocLuong && gan(t.polyline[0], cuoi) && gan(t.polyline[t.polyline.length - 1], dau));
 }
 
 /** Fit the actual travelled geometry, including detours beyond the stops. */
@@ -271,8 +303,9 @@ export function hopHanhTrinh(mocs: BanDoProps["mocs"], doan: BanDoProps["doan"])
 export function muiTenDoan(doan: readonly DoanBanDo[]) {
   return doan.flatMap((leg) => {
     if (leg.uocLuong || leg.polyline.length < 2) return [];
-    const i = Math.max(1, Math.floor(leg.polyline.length / 2));
-    const a = leg.polyline[i - 1]; const b = leg.polyline[i];
+    // A third of the way along: halfway is where the leg's minutes sit.
+    const dau = catDuong(leg.polyline, 0.33);
+    const a = dau[dau.length - 2] ?? leg.polyline[0]; const b = dau[dau.length - 1] ?? leg.polyline[1];
     const heading = Math.atan2((b.lng - a.lng) * Math.cos(a.lat * Math.PI / 180), b.lat - a.lat) * 180 / Math.PI;
     return [{ id: leg.id, lat: b.lat, lng: b.lng, heading }];
   });
@@ -283,16 +316,18 @@ export function muiTenDoan(doan: readonly DoanBanDo[]) {
  * the paper casing, the ink line, the pencil draft and the time labels.
  */
 export function lopDuong(mau: MauBanDo) {
+  // Line layers draw the legs only; the label points are for `nhan`.
+  const DUONG = ["==", ["geometry-type"], "LineString"];
   const chon = ["==", ["get", "chon"], 1];
   const mo = ["==", ["get", "mo"], 1];
   return {
     vien: {
-      filter: ["!=", ["get", "uocLuong"], 1],
+      filter: ["all", DUONG, ["!=", ["get", "uocLuong"], 1]],
       layout: { "line-cap": "round", "line-join": "round" },
       paint: { "line-color": mau.giay, "line-opacity": 0.95, "line-width": ["case", chon, 13, 10] },
     },
     duong: {
-      filter: ["!=", ["get", "uocLuong"], 1],
+      filter: ["all", DUONG, ["!=", ["get", "uocLuong"], 1]],
       layout: { "line-cap": "round", "line-join": "round" },
       paint: {
         "line-color": mau.muc,
@@ -301,22 +336,132 @@ export function lopDuong(mau: MauBanDo) {
       },
     },
     nhap: {
-      filter: ["==", ["get", "uocLuong"], 1],
+      filter: ["all", DUONG, ["==", ["get", "uocLuong"], 1], ["!=", ["get", "trung"], 1]],
       layout: { "line-cap": "round" },
       paint: { "line-color": mau.netChi, "line-width": 2.5, "line-dasharray": [1.2, 2.2], "line-opacity": ["case", mo, 0.45, 0.9] },
     },
     nhan: {
-      filter: ["all", ["!=", ["get", "uocLuong"], 1], ["!=", ["get", "nhan"], ""]],
-      minzoom: 12.5,
+      // The chosen leg carries its paper tag instead of the small label. The
+      // label is ours to keep: it overlaps basemap names, never the reverse.
+      filter: ["all", ["==", ["geometry-type"], "Point"], ["!=", ["get", "nhan"], ""], ["!=", ["get", "chon"], 1]],
+      minzoom: 10,
       layout: {
-        "symbol-placement": "line-center",
+        "symbol-placement": "point",
         "text-field": ["get", "nhan"],
         "text-font": ["Noto Sans Bold"],
         "text-size": 12,
-        "text-allow-overlap": false,
-        "text-padding": 6,
+        "text-offset": [0, -1.3],
+        "text-allow-overlap": true,
+        "text-ignore-placement": false,
       },
       paint: { "text-color": mau.chu, "text-halo-color": mau.giay, "text-halo-width": 2.4 },
     },
   } as const;
+}
+
+/* ---------------------------------------------------------------------------
+ * «Nét mực tự vẽ»: the one authored moment of this screen. When a real route
+ * arrives (or the suggestion replaces the current one) the ink runs along the
+ * actual streets from the first stop to the last, and each stamp presses
+ * down as the ink reaches it. Pure pieces here; the clock lives in net-muc.ts.
+ * ------------------------------------------------------------------------ */
+
+const R_DAT = 6_371_000;
+
+function met(a: ToaDo, b: ToaDo): number {
+  const r = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * r;
+  const dLng = (b.lng - a.lng) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLng / 2) ** 2;
+  return 2 * R_DAT * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** Length of a polyline in metres (float; this is drawing, not a displayed figure). */
+export function doDai(polyline: readonly ToaDo[]): number {
+  let tong = 0;
+  for (let i = 1; i < polyline.length; i++) tong += met(polyline[i - 1], polyline[i]);
+  return tong;
+}
+
+/** The first `phan` (0..1) of a polyline by length, cut mid-vertex when needed. */
+export function catDuong(polyline: readonly ToaDo[], phan: number): ToaDo[] {
+  if (phan >= 1 || polyline.length < 2) return [...polyline];
+  if (phan <= 0) return [];
+  const dich = doDai(polyline) * phan;
+  const ra: ToaDo[] = [polyline[0]];
+  let da = 0;
+  for (let i = 1; i < polyline.length; i++) {
+    const d = met(polyline[i - 1], polyline[i]);
+    if (da + d >= dich) {
+      const f = d === 0 ? 0 : (dich - da) / d;
+      const a = polyline[i - 1];
+      const b = polyline[i];
+      ra.push({ lat: a.lat + (b.lat - a.lat) * f, lng: a.lng + (b.lng - a.lng) * f });
+      return ra;
+    }
+    da += d;
+    ra.push(polyline[i]);
+  }
+  return ra;
+}
+
+/**
+ * The day at drawing progress `t` (0..1): legs in order, the ink cut at the
+ * same share of the whole day's length, and which stops it has reached. A
+ * draft (pencil) day is never drawn this way -- it is not a road.
+ */
+export function veDenDau(
+  doan: readonly (DoanBanDo & { tu: string; den: string })[],
+  t: number,
+): { doan: DoanBanDo[]; daCham: Set<string> } {
+  const daCham = new Set<string>();
+  const dai = doan.map((d) => doDai(d.polyline));
+  const tong = dai.reduce((a, b) => a + b, 0);
+  if (t >= 1 || tong === 0) {
+    for (const d of doan) { daCham.add(d.tu); daCham.add(d.den); }
+    return { doan: doan.map(({ tu: _tu, den: _den, ...d }) => d), daCham };
+  }
+  let conLai = tong * Math.max(0, t);
+  const ra: DoanBanDo[] = [];
+  doan.forEach(({ tu, den, ...d }, i) => {
+    if (conLai > 0 || i === 0) daCham.add(tu);
+    const phan = dai[i] === 0 ? 1 : Math.min(1, conLai / dai[i]);
+    if (phan >= 1) daCham.add(den);
+    ra.push({ ...d, polyline: catDuong(d.polyline, phan), nhan: phan >= 1 ? d.nhan : null });
+    conLai = Math.max(0, conLai - dai[i]);
+  });
+  return { doan: ra, daCham };
+}
+
+/** Where a leg's paper tag sits: halfway along its length, not between its ends. */
+export function giuaDoan(polyline: readonly ToaDo[]): ToaDo | null {
+  if (polyline.length === 0) return null;
+  const nua = catDuong(polyline, 0.5);
+  return nua[nua.length - 1] ?? polyline[0];
+}
+
+/**
+ * A pen's pace: it sets down gently, runs evenly, lifts gently. An ease-out
+ * curve drew four fifths of the line in the first 400ms, so the eye saw a
+ * line appear, not a line being written (emulator, 2026-09-29). No overshoot.
+ */
+export function nhipVe(x: number): number {
+  const t = Math.min(1, Math.max(0, x));
+  return 0.5 - Math.cos(Math.PI * t) / 2;
+}
+
+/**
+ * The face of a stamp that stands for several stops on one spot. It keeps the
+ * most urgent state among them: the next stop stays coral even when a
+ * neighbour shares its pixel, and an anchor keeps its XUẤT PHÁT / KẾT THÚC
+ * tag. Erasing the state made a phone's «1 · 2» read as two plain stops
+ * (review, 2026-09-29). Reached only when every one of them is.
+ */
+export function mocChum(nhom: readonly MocBanDo[]): MocBanDo {
+  const trangThai = nhom.some((m) => m.trangThai === "hien-tai") ? "hien-tai"
+    : nhom.every((m) => m.trangThai === "xong") ? "xong"
+    : null;
+  return { ...nhom[0], chon: false, trangThai, neo: nhom.find((m) => m.neo)?.neo ?? null,
+    // It presses down when the ink reaches the last of them.
+    nhip: nhom.some((m) => m.nhip === "cho") ? "cho" : nhom.some((m) => m.nhip) ? "dong" : null };
 }

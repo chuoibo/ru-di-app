@@ -14,6 +14,12 @@ import type { ChoChieu, ToaDo } from "./mo-hinh";
 import { apDungTuyen, chuNgay, doiViTri, ngayMacDinh, nhapTuKeo, suaChang, trangThaiTuyen, xoaChang, type BanNhap, type ChangDi, type NgayDi, type XemTruoc } from "./ke-hoach";
 import { chuKhoangCach, chuThoiGian } from "./tom-tat";
 
+/**
+ * The gesture bar's height. On the QA emulator (Android 16, gesture nav) the
+ * insets hook reported 0 under this edge-to-edge page, and the home indicator
+ * was drawn across «Xem cách đi gọn hơn» (2026-09-29): never less than this.
+ */
+const CHAN_CU_CHI = Platform.OS === "web" ? 0 : 24;
 const PHUONG_TIEN = { motorbike: "XE MÁY", car: "Ô TÔ", walk: "ĐI BỘ" } as const;
 /** Local calendar date, the one a person means by «hôm nay». */
 function homNay(): string {
@@ -21,8 +27,8 @@ function homNay(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-type Props = { outing: BuoiDi; places: ChoChieu[]; actorId?: string; onSaved: (outing: BuoiDi) => void; onReload?: () => Promise<void>; onTimeline: () => void; bottom?: number; fixture?: boolean; controller?: ReturnType<typeof useCheDoLichTrinh>; initialDay?: string; onDay?: (day: string) => void; daToiIds?: readonly string[] };
-export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTimeline, bottom = 0, fixture = false, controller, initialDay, onDay, daToiIds = [] }: Props) {
+type Props = { outing: BuoiDi; places: ChoChieu[]; actorId?: string; onSaved: (outing: BuoiDi) => void; onReload?: () => Promise<void>; onTimeline: () => void; bottom?: number; fixture?: boolean; controller?: ReturnType<typeof useCheDoLichTrinh>; initialDay?: string; onDay?: (day: string) => void; daToiIds?: readonly string[]; dangTimCho?: boolean };
+export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTimeline, bottom = 0, fixture = false, controller, initialDay, onDay, daToiIds = [], dangTimCho = false }: Props) {
   const { colors } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState(() => nhapTuKeo(outing));
@@ -82,7 +88,10 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
     } catch (error) { if (sequence === request.current) setMessage(error instanceof Error ? error.message : "Chưa lấy được tuyến. Thử lại khi có mạng."); }
     finally { if (sequence === request.current) setBusy(false); }
   };
-  useEffect(() => { void inspect(false); return () => { request.current++; }; }, [day, outing.id, draft.expected_revision]);
+  // A new transport mode is a question («what if we drive?»): answer it,
+  // rather than dropping the map to a pencil draft until someone presses
+  // «Tính lại đường» (emulator, 2026-09-29).
+  useEffect(() => { void inspect(false); return () => { request.current++; }; }, [day, outing.id, draft.expected_revision, settings.transport_mode]);
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => { if (state === "active" && preview?.status !== "ready" && !dirty) void inspect(false); });
     return () => subscription.remove();
@@ -133,10 +142,15 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
     invalidate({ ...draft, days: draft.days.some((d) => d.day === day) ? draft.days : [...draft.days, settings], stops: [...draft.stops, { id, position: draft.stops.length, at: settings.start_at, label: pinName.trim(), place_name: pinName.trim(), place_id: null, day, duration_minutes: null, time_locked: true, meeting_point: { ...pin, label: pinName.trim() } }] });
     setPin(null); setPinName(""); setEditing(true); setStopId(id);
   };
+  // How the group gets around decides the line on the map, so it sits in the
+  // page head, right under the numbers it changes -- not at the bottom of a
+  // scroll the primary button covered (emulator, 2026-09-29).
+  // flexGrow/Shrink 0: inside the day page's capped column a horizontal
+  // ScrollView was squeezed to the top edge of its chips (emulator, 1.0 and 1.3).
+  const phuongTien = <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 0 }} contentContainerStyle={styles.row}>
+    {(["motorbike", "car", "walk"] as const).map((mode) => <Chip key={mode} label={{ motorbike: "Xe máy", car: "Ô tô", walk: "Đi bộ" }[mode]} selected={settings.transport_mode === mode} onPress={() => changeDay({ transport_mode: mode })} />)}
+  </ScrollView>;
   const actions = <View style={styles.stack}>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-      {(["motorbike", "car", "walk"] as const).map((mode) => <Chip key={mode} label={{ motorbike: "Xe máy", car: "Ô tô", walk: "Đi bộ" }[mode]} selected={settings.transport_mode === mode} onPress={() => changeDay({ transport_mode: mode })} />)}
-    </ScrollView>
     {preview?.suggestion ? <>
       <View style={styles.row}><Chip label="Hiện tại" selected={!suggestion} onPress={() => setSuggestion(false)} /><Chip label="Gợi ý" selected={suggestion} onPress={() => setSuggestion(true)} /></View>
       {preview.savings ? <Text style={[typography.label, { color: colors.ink }]}>{preview.savings.duration_seconds === 0 ? "Thời gian di chuyển không đổi" : `${chuThoiGian(Math.abs(preview.savings.duration_seconds))} ${preview.savings.duration_seconds > 0 ? "ít di chuyển hơn" : "di chuyển thêm"}`} · {chuKhoangCach(Math.abs(preview.savings.distance_meters))} {preview.savings.distance_meters >= 0 ? "ngắn hơn" : "dài hơn"}</Text> : null}
@@ -161,8 +175,10 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
   const thuTuNgay = days.indexOf(day);
   const tieuDeTrang = days.length > 1 && thuTuNgay >= 0 ? `Ngày ${thuTuNgay + 1} · ${chuNgay(day)}` : chuNgay(day);
   return <View style={{ flex: 1 }}>
-    <ScrollView horizontal style={{ flexGrow: 0 }} contentContainerStyle={[styles.row, { paddingHorizontal: 16, paddingVertical: 8 }]} showsHorizontalScrollIndicator={false}>{days.map((date, i) => <Chip key={date} label={`Ngày ${i + 1}`} selected={day === date} onPress={() => chooseDay(date)} />)}</ScrollView>
-    <ManHinhHanhTrinh hanh={visible} fitDem={che.fitDem + 1} cameraKey={`${day}:${route ? "routed" : "draft"}`} fitPoints={fitPoints} toiDem={che.toiDem} selectedActivityId={che.selectedActivityId} selectedSegmentId={che.selectedSegmentId} onChonMoc={che.chonHoatDong} onChonDoan={che.chonDoan} onNen={() => { che.chonHoatDong(null); che.chonDoan(null); }} onKhop={che.khopHanhTrinh} onUserMove={che.userMove} onVeLichTrinh={onTimeline} onGhim={(point) => { if (saving.current) return; if (draft.stops.length >= 50) { setMessage("Lịch trình đã đủ 50 chặng. Bỏ một chặng trước khi thêm điểm hẹn."); return; } setPin(point); setPinName(""); }} chanDuoi={Math.max(bottom, insets.bottom)} tuyen={tuyen} phuongTien={PHUONG_TIEN[settings.transport_mode]} tieuDeTrang={tieuDeTrang} daToiIds={daToiIds} dangDi={!fixture && day === homNay()} neo={{ xuatPhat: settings.start_stop_id, ketThuc: settings.end_stop_id, veDiemDau: settings.return_to_start }} actions={actions} primaryAction={suggestion && preview?.suggestion ? <RudiButton disabled={busy || !preview.suggestion.feasible} label="Giữ phương án này" onPress={() => void save(apDungTuyen(draft, day, preview.suggestion!))} /> : <RudiButton label="Xem cách đi gọn hơn" loading={busy} disabled={busy || !visible.activities.length} onPress={() => void inspect(true)} />} />
+    {/* One day needs no picker: the page head already names it, and on a
+        phone the lone «Ngày 1» row cost the map 56dp (review, 2026-09-29). */}
+    {days.length > 1 ? <ScrollView horizontal style={{ flexGrow: 0 }} contentContainerStyle={[styles.row, { paddingHorizontal: 16, paddingVertical: 8 }]} showsHorizontalScrollIndicator={false}>{days.map((date, i) => <Chip key={date} label={`Ngày ${i + 1}`} selected={day === date} onPress={() => chooseDay(date)} />)}</ScrollView> : null}
+    <ManHinhHanhTrinh hanh={visible} fitDem={che.fitDem + 1} cameraKey={`${day}:${route ? "routed" : "draft"}`} fitPoints={fitPoints} toiDem={che.toiDem} selectedActivityId={che.selectedActivityId} selectedSegmentId={che.selectedSegmentId} onChonMoc={che.chonHoatDong} onChonDoan={che.chonDoan} onNen={() => { che.chonHoatDong(null); che.chonDoan(null); }} onKhop={che.khopHanhTrinh} onUserMove={che.userMove} onVeLichTrinh={onTimeline} onGhim={(point) => { if (saving.current) return; if (draft.stops.length >= 50) { setMessage("Lịch trình đã đủ 50 chặng. Bỏ một chặng trước khi thêm điểm hẹn."); return; } setPin(point); setPinName(""); }} chanDuoi={Math.max(bottom, insets.bottom, CHAN_CU_CHI)} tuyen={tuyen} dangTimCho={dangTimCho} chonPhuongTien={phuongTien} phuongTien={PHUONG_TIEN[settings.transport_mode]} tieuDeTrang={tieuDeTrang} daToiIds={daToiIds} dangDi={!fixture && day === homNay()} neo={{ xuatPhat: settings.start_stop_id, ketThuc: settings.end_stop_id, veDiemDau: settings.return_to_start }} actions={actions} primaryAction={suggestion && preview?.suggestion ? <RudiButton disabled={busy || !preview.suggestion.feasible} label="Giữ phương án này" onPress={() => void save(apDungTuyen(draft, day, preview.suggestion!))} /> : <RudiButton label="Xem cách đi gọn hơn" loading={busy} disabled={busy || !visible.activities.length} onPress={() => void inspect(true)} />} />
     <Sheet open={editing} onClose={() => setEditing(false)} accessibilityLabel="Sửa trang ngày"><View style={styles.editor}>
       <Text style={[typography.h2, { color: colors.ink }]}>Những hẹn quan trọng</Text>
       <Field label="Giờ xuất phát" value={settings.start_at} onChangeText={(start_at) => changeDay({ start_at })} />

@@ -34,7 +34,7 @@ import {
   type CheckIn,
 } from "../../../screens/len-plan/buoi-di";
 import { tabBarHeight } from "../../adaptive";
-import { choDeChon, docDanhMucCoLui } from "../../kham-pha/dia-diem";
+import { choDeChon, docChiTiet, docDanhMucCoLui } from "../../kham-pha/dia-diem";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
   cauDaToi,
@@ -195,9 +195,37 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     if (hanhTrinh) void napDanhMuc();
   }, [hanhTrinh, napDanhMuc]);
 
+  // The places this outing's stops name, read by id. The catalogue above is
+  // the destination the VIEWER picked on Khám phá; a group's outing can be in
+  // another province, and then its stops found no coordinates and the map
+  // showed the route with no stamps and «chưa có điểm nào» (emulator,
+  // 2026-09-29: an invited guest on a Sài Gòn outing, destination Đà Lạt).
+  const [choCuaKeo, setChoCuaKeo] = useState<typeof danhMuc>([]);
+  // Ids already asked for, found or not: a place the server no longer has
+  // must end the «đang tìm» line, not keep it on screen forever.
+  const [daHoi, setDaHoi] = useState<string[]>([]);
+  const idCanDoc = trang.pha === "xong"
+    ? [...new Set(trang.keo.stops.map((s) => s.place_id).filter((id): id is string => !!id))]
+        .filter((id) => !danhMuc.some((p) => p.id === id) && !choCuaKeo.some((p) => p.id === id) && !daHoi.includes(id))
+    : [];
+  const khoaCanDoc = idCanDoc.join("|");
+  useEffect(() => {
+    if (!hanhTrinh || idCanDoc.length === 0) return;
+    let conSong = true;
+    void Promise.all(idCanDoc.map((id) => docChiTiet(id).catch(() => null))).then((doc) => {
+      const co = doc.filter((p): p is NonNullable<typeof p> => p !== null);
+      if (!conSong) return;
+      if (co.length) setChoCuaKeo((truoc) => [...truoc, ...co.filter((p) => !truoc.some((q) => q.id === p.id))]);
+      setDaHoi((truoc) => [...truoc, ...idCanDoc.filter((id) => !truoc.includes(id))]);
+    });
+    return () => { conSong = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the ids still missing
+  }, [hanhTrinh, khoaCanDoc]);
+
   const cho = useMemo(
-    () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, geoPrecision: p.geoPrecision, address: p.address, category: p.category })),
-    [danhMuc],
+    () => [...danhMuc, ...choCuaKeo.filter((p) => !danhMuc.some((q) => q.id === p.id))]
+      .map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, geoPrecision: p.geoPrecision, address: p.address, category: p.category })),
+    [danhMuc, choCuaKeo],
   );
   const choHienRa = useMemo(() => choDeChon(danhMuc, timCho), [danhMuc, timCho]);
   const oTimCho = (
@@ -380,7 +408,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
               {trang.keo.title}
             </Text>
           ) : null}
-          {trang.pha === "xong" && nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()).kieu !== "sap-toi" ? <RudiButton compact variant="outline" icon="book-outline" label="Giữ lại cuộc đi" onPress={() => router.push(`/outings/${trang.keo.id}/ending` as never)} /> : null}
+          {/* The diary door belongs to the timeline; on the map it took the
+              phone's map a whole row (review, 2026-09-29). */}
+          {trang.pha === "xong" && !hanhTrinh && nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()).kieu !== "sap-toi" ? <RudiButton compact variant="outline" icon="book-outline" label="Giữ lại cuộc đi" onPress={() => router.push(`/outings/${trang.keo.id}/ending` as never)} /> : null}
           {trang.pha === "xong" ? <ThanhCheDo cheDo={che.cheDo} onDoi={che.doiCheDo} /> : null}
           {hanhTrinh && thongBao ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{thongBao}</Text> : null}
         </View>
@@ -402,7 +432,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       ) : null}
       {trang.pha === "xong" ? (
         <View style={{ flex: 1, display: hanhTrinh ? "flex" : "none" }}>
-        <SoHanhTrinh controller={che} outing={trang.keo} places={cho} actorId={phien.person_id} daToiIds={daToiIds} onReload={nap} onSaved={(keo) => setTrang({ ...trang, keo })} onTimeline={() => che.doiCheDo("lich-trinh")} />
+        <SoHanhTrinh controller={che} outing={trang.keo} places={cho} actorId={phien.person_id} daToiIds={daToiIds} dangTimCho={idCanDoc.length > 0} onReload={nap} onSaved={(keo) => setTrang({ ...trang, keo })} onTimeline={() => che.doiCheDo("lich-trinh")} />
         </View>
       ) : null}
       {trang.pha === "xong" && !hanhTrinh ? (

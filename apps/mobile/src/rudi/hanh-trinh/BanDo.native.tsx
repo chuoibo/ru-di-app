@@ -6,7 +6,7 @@
  * when the native binary actually registered the module.
  */
 
-import { useMemo, type ReactElement } from "react";
+import { useEffect, useMemo, type ReactElement } from "react";
 import { NativeModules, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../theme";
@@ -34,8 +34,10 @@ export function BanDo(props: BanDoProps) {
   return <BanDoThieu {...props} />;
 }
 
-function BanDoThieu({ mau, mocs, onNen }: BanDoProps) {
+function BanDoThieu({ mau, mocs, onNen, onSan }: BanDoProps) {
   const { colors } = useRudiTheme();
+  // No map to watch the ink on: nothing waits for it.
+  useEffect(() => { onSan?.(); }, []);
   return (
     <Pressable
       accessibilityLabel="Bản đồ hành trình: cần bản native có MapLibre"

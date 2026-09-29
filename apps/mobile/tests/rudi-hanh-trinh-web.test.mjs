@@ -84,7 +84,7 @@ if (!existsSync(INDEX)) {
 
       await page.clickLabel("Bản đồ");
       await page.waitFor(
-        () => document.body?.innerText?.includes("Khớp hành trình"),
+        () => !!document.querySelector("[aria-label=\"Khớp hành trình\"]"),
         { timeout: 20000, label: "nút Khớp hành trình" },
       );
       const urlSau = await page.evaluate(() => location.pathname + location.hash);
@@ -115,7 +115,7 @@ if (!existsSync(INDEX)) {
         { timeout: 10000, label: "sheet chặng" },
       );
 
-      const khop = await page.evaluate(() => document.body?.innerText?.includes("Khớp hành trình"));
+      const khop = await page.evaluate(() => !!document.querySelector("[aria-label=\"Khớp hành trình\"]"));
       assert.equal(khop, true);
 
       await page.clickLabel("Lịch trình");

@@ -2,11 +2,11 @@
 
 import { createElement, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { GeoJSONSource, Map, Marker, NavigationControl, Popup, setWorkerUrl, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
+import { GeoJSONSource, Map, Marker, Popup, setWorkerUrl, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { TAM_DA_LAT } from "./toa-do-mau";
-import { chuNeo, DEM_KHOP, DUONG_TICK, hinhTem, hopGioi, hopHanhTrinh, lopDuong, muiTenDoan, tapHop, type BanDoProps, type MauBanDo, type MocBanDo } from "./kieu-ban-do";
+import { chuNeo, DEM_KHOP, DUONG_TICK, giuaDoan, hinhTem, hopGioi, hopHanhTrinh, lopDuong, mocChum, muiTenDoan, tapHop, type BanDoProps, type MauBanDo, type MocBanDo } from "./kieu-ban-do";
 import { typography, useRudiTheme } from "../theme";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -43,10 +43,15 @@ function veMoc(moc: MocBanDo, mau: MauBanDo): HTMLElement {
   ].join(";");
   const mat = document.createElement("span");
   mat.dataset.tem = "1";
+  mat.dataset.nhip = moc.nhip ?? "";
   mat.style.cssText = [
     `min-width:${tem.co}px`, `height:${tem.co}px`, "box-sizing:border-box", "padding:0 6px",
     "border-radius:8px", `background:${tem.nen}`, `border:${tem.doVien}px solid ${tem.vien}`,
-    `box-shadow:${tem.bong}`, `transform:rotate(${tem.nghieng}deg)`,
+    `box-shadow:${moc.nhip === "cho" ? mau.bongCao : tem.bong}`,
+    `transform:${dangNhip(moc.nhip, tem.nghieng)}`,
+    // The press when the ink arrives: the stamp falls the last few px and
+    // lands (ease-in), the paper shadow shrinking under it.
+    "transition:transform 180ms cubic-bezier(0.5,0,0.75,0),box-shadow 180ms ease-in",
     "display:flex", "align-items:center", "justify-content:center",
     `color:${tem.so}`, "font:800 15px/1 system-ui,sans-serif", "font-variant-numeric:tabular-nums",
   ].join(";");
@@ -83,6 +88,11 @@ function veMoc(moc: MocBanDo, mau: MauBanDo): HTMLElement {
   return el;
 }
 
+/** A waiting stamp hovers 4px above the page; landed, it lies on it (native: TemNhip). */
+function dangNhip(nhip: MocBanDo["nhip"], nghieng: number): string {
+  return `translateY(${nhip === "cho" ? -4 : 0}px) rotate(${nghieng}deg)`;
+}
+
 export function BanDo({
   mocs,
   doan,
@@ -99,15 +109,19 @@ export function BanDo({
   onChonMoc,
   onChonDoan,
   onNen,
+  onSan,
 }: BanDoProps) {
   const { colors } = useRudiTheme();
-  const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mau });
-  cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mau };
+  const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, onGhim, onSan, mau });
+  cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, onGhim, onSan, mau };
   const mauNen = mau.nen;
   const mapRef = useRef<Map | null>(null);
   const markers = useRef<Marker[]>([]);
   const arrows = useRef<Marker[]>([]);
   const chooser = useRef<Popup | null>(null);
+  // Pins rebuild when a stop, its place or its state changes -- not when the
+  // ink moves on (that only flips `ve` on the existing element, below).
+  const khoaMoc = mocs.map((m) => [m.id, m.so, m.lat, m.lng, m.chon ? 1 : 0, m.trangThai, m.neo].join(",")).join("|");
   const loaded = useRef(false);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [san, setSan] = useState(false);
@@ -125,6 +139,9 @@ export function BanDo({
     }
   }, []);
 
+  // No map to watch the ink on: nothing waits for it.
+  useEffect(() => { if (webgl2 === false) cbs.current.onSan?.(); }, [webgl2]);
+
   useEffect(() => {
     const el = host;
     if (!el || !webgl2) return;
@@ -136,12 +153,17 @@ export function BanDo({
         center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat],
         zoom: 12,
         attributionControl: { compact: true },
+        // No rotation, so no compass control: the stock white button sat
+        // over the paper like a browser widget (review, 2026-09-29), and a
+        // turned map had no way back but that button.
+        dragRotate: false,
+        pitchWithRotate: false,
       });
+      map.touchZoomRotate.disableRotation();
     } catch {
       setWebgl2(false);
       return;
     }
-    map.addControl(new NavigationControl({ showCompass: true, showZoom: false, visualizePitch: true }), "top-right");
     map.on("load", () => {
       loaded.current = true;
       const lop = lopDuong(cbs.current.mau);
@@ -161,6 +183,7 @@ export function BanDo({
         });
       }
       map.resize();
+      cbs.current.onSan?.();
     });
     map.on("click", "hanh-trinh-duong-hit", (e: MapLayerMouseEvent) => {
       const id = e.features?.[0]?.properties?.id;
@@ -215,7 +238,10 @@ export function BanDo({
     const map = mapRef.current;
     if (!map) return;
     arrows.current.forEach((m) => m.remove());
-    arrows.current = muiTenDoan(doan).map((arrow) => {
+    // Direction chevrons and the chosen leg's paper tag wait for the ink:
+    // mid-drawing they would sit at the tip of a line still being written.
+    const dangVe = mocs.some((m) => m.nhip);
+    arrows.current = (dangVe ? [] : muiTenDoan(doan)).map((arrow) => {
       const el = document.createElement("div"); el.style.cssText = "width:18px;height:20px";
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("viewBox", "0 0 18 20");
       for (const [color, width] of [[mau.giay, "6"], [mau.muc, "3"]]) { const path = document.createElementNS("http://www.w3.org/2000/svg", "path"); path.setAttribute("d", "M3 14 L9 5 L15 14"); path.setAttribute("fill", "none"); path.setAttribute("stroke", color); path.setAttribute("stroke-width", width); svg.appendChild(path); }
@@ -227,7 +253,26 @@ export function BanDo({
     };
     if (loaded.current && map.isStyleLoaded()) ve();
     else map.once("load", ve);
-  }, [doan, san]);
+    const chon = dangVe ? undefined : doan.find((d) => d.chon && d.the?.length);
+    const giua = chon ? giuaDoan(chon.polyline) : null;
+    if (chon && giua) {
+      const the = document.createElement("div");
+      the.setAttribute("role", "note");
+      the.style.cssText = [
+        "pointer-events:none", "padding:6px 10px", "border-radius:8px", `background:${mau.giay}`,
+        `border:1.5px solid ${mau.vien}`, `box-shadow:${mau.bongCao}`, `color:${mau.chu}`,
+        "font:700 13px/18px system-ui,sans-serif", "font-variant-numeric:tabular-nums",
+        "transform:translateY(-34px) rotate(-2deg)", "white-space:nowrap", "text-align:center",
+      ].join(";");
+      chon.the!.forEach((dong, i) => {
+        const hang = document.createElement("div");
+        hang.textContent = dong;
+        if (i > 0) hang.style.cssText = `font-weight:600;color:${mau.netChi}`;
+        the.appendChild(hang);
+      });
+      arrows.current.push(new Marker({ element: the, anchor: "center" }).setLngLat([giua.lng, giua.lat]).addTo(map));
+    }
+  }, [doan, san, mocs.some((m) => m.nhip)]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -248,7 +293,7 @@ export function BanDo({
     }
     markers.current = groups.map((group) => {
       const moc = group[0];
-      const el = veMoc(group.length > 1 ? { ...moc, trangThai: null, neo: null } : moc, cbs.current.mau);
+      const el = veMoc(group.length > 1 ? mocChum(group) : moc, cbs.current.mau);
       if (group.length > 1) {
         const mat = el.querySelector<HTMLElement>("[data-tem]");
         if (mat) mat.textContent = group.length <= 3 ? group.map((m) => m.so).join(" · ") : `${group.length} điểm`;
@@ -315,13 +360,31 @@ export function BanDo({
         if (content) { content.style.background = mauNen; content.style.color = cbs.current.mau.chu; }
       });
       // A round chip marks its point at its centre; native does the same.
+      el.dataset.moc = moc.id;
+      el.dataset.nhom = group.map((m) => m.id).join(",");
       return new Marker({ element: el, anchor: "center" }).setLngLat([moc.lng, moc.lat]).addTo(map);
     });
     };
     draw();
     map.on("moveend", draw);
     return () => { map.off("moveend", draw); chooser.current?.remove(); };
-  }, [mocs, san, mau]);
+  }, [khoaMoc, san, mau]);
+
+  // The ink reaching a stamp only flips its state: the element stays, so the
+  // CSS transition plays instead of a new pin appearing.
+  useEffect(() => {
+    for (const marker of markers.current) {
+      const mat = marker.getElement().querySelector<HTMLElement>("[data-tem]");
+      const nhom = marker.getElement().dataset.nhom?.split(",") ?? [];
+      const trong = mocs.filter((m) => nhom.includes(m.id));
+      const moc = trong.length > 1 ? mocChum(trong) : trong[0];
+      if (!mat || !moc) continue;
+      const tem = hinhTem(moc, mau);
+      mat.dataset.nhip = moc.nhip ?? "";
+      mat.style.transform = dangNhip(moc.nhip, tem.nghieng);
+      mat.style.boxShadow = moc.nhip === "cho" ? mau.bongCao : tem.bong;
+    }
+  }, [mocs, mau]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -345,8 +408,11 @@ export function BanDo({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !toi) return;
-    // Same reason as native: the panel owns the bottom of the map.
-    map.easeTo({ center: [toi.lng, toi.lat], zoom: Math.max(map.getZoom(), 14), duration, padding });
+    // Same reasons as native: the panel owns the bottom of the map, and the
+    // stop is shown with the stops before and after it.
+    const hop = toi.ke?.length ? hopGioi([toi, ...toi.ke]) : null;
+    if (hop) map.fitBounds([[hop[0], hop[1]], [hop[2], hop[3]]], { padding, duration });
+    else map.easeTo({ center: [toi.lng, toi.lat], zoom: Math.max(map.getZoom(), 14), duration, padding });
   }, [toi?.dem, padding, san]);
 
   return (

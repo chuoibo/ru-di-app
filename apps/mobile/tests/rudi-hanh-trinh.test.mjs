@@ -328,7 +328,7 @@ test("chỗ ở tâm tỉnh giữ tên và địa chỉ trong lịch trình như
 /* ---------------------------------------------------------------------------
  * M7 bản đồ: con tem, nét mực, nét chì, trang ngày.
  * ------------------------------------------------------------------------ */
-import { chuNeo, hinhTem, kieuBanDo, nhanDoan, nhanMoc, tapHop } from "../dist-test/rudi/hanh-trinh/kieu-ban-do.js";
+import { catDuong, chuNeo, doDai, giuaDoan, hinhTem, kieuBanDo, lopDuong, mocChum, nhanDoan, nhanMoc, nhipVe, tapHop, veDenDau } from "../dist-test/rudi/hanh-trinh/kieu-ban-do.js";
 import { chuNgay, trangThaiTuyen } from "../dist-test/rudi/hanh-trinh/ke-hoach.js";
 
 const MAU = { giay: "#fff", vien: "#777", muc: "#ba3e20", mucTrenMuc: "#1f2230", mo: "#676e7b", chu: "#1f2230", netChi: "#4e5563", bong: "b1", bongCao: "b2", nen: "#fff" };
@@ -365,7 +365,39 @@ test("phút chỉ in trên tuyến thật; nét nháp không bao giờ mang số
     { id: "a", polyline: [A, B], chon: false, nhan: "9 phút" },
     { id: "b", polyline: [B, C], chon: false, uocLuong: true, nhan: "4 phút" },
   ]);
-  assert.deepEqual(fc.features.map((f) => f.properties.nhan), ["9 phút", ""]);
+  const net = fc.features.filter((f) => f.geometry.type === "LineString");
+  assert.deepEqual(net.map((f) => f.properties.nhan), ["9 phút", ""]);
+  // Each real leg's minutes sit on one point halfway along it -- a label that
+  // cannot lose its place to street names; the draft gets no point at all.
+  const diem = fc.features.filter((f) => f.geometry.type === "Point");
+  assert.deepEqual(diem.map((f) => f.properties.nhan), ["9 phút"]);
+  const lop = lopDuong(MAU);
+  assert.equal(lop.nhan.layout["symbol-placement"], "point");
+  assert.equal(lop.nhan.layout["text-allow-overlap"], true);
+  for (const k of ["vien", "duong", "nhap"]) assert.match(JSON.stringify(lop[k].filter), /LineString/, `${k} chỉ vẽ nét, không vẽ điểm nhãn`);
+});
+
+test("nét nháp đi ngược lại đúng đoạn trước chỉ vẽ một lần, không thành đường ray", () => {
+  const fc = tapHop([
+    { id: "a", polyline: [A, B], chon: false, uocLuong: true },
+    { id: "b", polyline: [B, C], chon: false, uocLuong: true },
+  ]);
+  assert.deepEqual(fc.features.map((f) => f.properties.trung), [0, 1]);
+  assert.match(JSON.stringify(lopDuong(MAU).nhap.filter), /trung/);
+  // A real road that comes back is ink both ways; only the pencil folds.
+  const that = tapHop([{ id: "a", polyline: [A, B], chon: false }, { id: "b", polyline: [B, C], chon: false }]);
+  assert.deepEqual(that.features.filter((f) => f.geometry.type === "LineString").map((f) => f.properties.trung), [0, 0]);
+});
+
+test("con tem gộp giữ trạng thái gấp nhất: điểm tiếp theo vẫn coral, mốc neo giữ nhãn", () => {
+  const m = (id, so, trangThai, neo = null) => ({ id, so, lat: A.lat, lng: A.lng, tieuDe: id, gio: "09:00", chon: false, trangThai, neo });
+  const chum = mocChum([m("a", 1, "xong", "xuat-phat"), m("b", 2, "hien-tai")]);
+  assert.equal(chum.trangThai, "hien-tai");
+  assert.equal(chum.neo, "xuat-phat");
+  assert.equal(hinhTem(chum, MAU).nen, MAU.muc);
+  assert.equal(mocChum([m("a", 1, "xong"), m("b", 2, "xong")]).trangThai, "xong");
+  assert.equal(mocChum([m("a", 1, "xong"), m("b", 2, null)]).trangThai, null);
+  assert.equal(mocChum([{ ...m("a", 1, null), nhip: "dong" }, { ...m("b", 2, null), nhip: "cho" }]).nhip, "cho", "gộp chỉ đóng khi mực tới mốc cuối");
 });
 
 test("không chọn gì thì cả tuyến là một nét mực liền; chọn một đoạn thì đoạn khác mới mờ", () => {
@@ -417,4 +449,70 @@ test("bản đồ web có worker để tải tile: BanDo đặt đúng URL mà t
   assert.match(pkg.scripts.postinstall, /chep-maplibre-worker/);
   // No inline `position` on a pin: it pushed every later pin 48px off its point.
   assert.doesNotMatch(banDo.slice(banDo.indexOf("function veMoc"), banDo.indexOf("export function BanDo")), /"position:relative"/);
+});
+
+test("nét mực tự vẽ: cắt theo chiều dài thật, tem chỉ đóng dấu khi mực tới", () => {
+  const P = { lat: 10.77, lng: 106.70 };
+  const Q = { lat: 10.78, lng: 106.70 };
+  const R2 = { lat: 10.80, lng: 106.70 };
+  const nua = catDuong([P, Q, R2], 0.5);
+  assert.ok(Math.abs(doDai(nua) - doDai([P, Q, R2]) / 2) < 1, "một nửa theo mét, không theo số đỉnh");
+  assert.deepEqual(catDuong([P, Q], 0), []);
+  assert.deepEqual(catDuong([P, Q], 1), [P, Q]);
+  const ngay = [
+    { id: "a", tu: "s1", den: "s2", polyline: [P, Q], chon: false, nhan: "3 phút" },
+    { id: "b", tu: "s2", den: "s3", polyline: [Q, R2], chon: false, nhan: "5 phút" },
+  ];
+  // Leg a is a third of the day: at 20% only s1 has been reached.
+  const dau = veDenDau(ngay, 0.2);
+  assert.deepEqual([...dau.daCham].sort(), ["s1"]);
+  assert.equal(dau.doan[0].nhan, null, "phút chỉ hiện khi đoạn đã vẽ xong");
+  assert.equal(dau.doan[1].polyline.length, 0);
+  const giua = veDenDau(ngay, 0.5);
+  assert.deepEqual([...giua.daCham].sort(), ["s1", "s2"]);
+  assert.equal(giua.doan[0].nhan, "3 phút");
+  const xong = veDenDau(ngay, 1);
+  assert.deepEqual([...xong.daCham].sort(), ["s1", "s2", "s3"]);
+  assert.ok(!("tu" in xong.doan[0]), "trường nội bộ không lọt ra bản đồ");
+});
+
+test("nhãn đoạn nằm giữa đoạn theo chiều dài; nhịp vẽ tới nơi không vượt", () => {
+  const P = { lat: 10.77, lng: 106.70 };
+  const Q = { lat: 10.78, lng: 106.70 };
+  const R2 = { lat: 10.80, lng: 106.70 };
+  const g = giuaDoan([P, Q, R2]);
+  assert.ok(Math.abs(g.lat - 10.785) < 1e-6, `giữa theo mét: ${g.lat}`);
+  assert.equal(giuaDoan([]), null);
+  assert.equal(nhipVe(0), 0);
+  assert.equal(nhipVe(1), 1);
+  assert.ok(nhipVe(0.1) < 0.1 && nhipVe(0.9) > 0.9, "đặt bút và nhấc bút chậm");
+  assert.ok(Math.abs(nhipVe(0.5) - 0.5) < 1e-9, "giữa nét đi đều, không vội: nửa thời gian là nửa nét");
+  for (let x = 0; x <= 1; x += 0.05) assert.ok(nhipVe(x) <= 1 && nhipVe(x) >= 0, "không vượt đích, không nảy");
+  // The chosen leg shows its paper tag, not the small label.
+  const nhan = lopDuong({ giay: "#fff", vien: "#777", muc: "#b00", mucTrenMuc: "#000", mo: "#666", chu: "#111", netChi: "#444", bong: "", bongCao: "", nen: "#fff" }).nhan;
+  assert.ok(JSON.stringify(nhan.filter).includes('["!=",["get","chon"],1]'));
+});
+
+test("GeoJSON luôn hợp lệ trong lúc vẽ: đoạn chưa đủ hai điểm không được gửi đi", () => {
+  // Native MapLibre drops the whole source on a LineString with < 2 positions.
+  const P = { lat: 10.77, lng: 106.70 };
+  const Q = { lat: 10.78, lng: 106.70 };
+  const fc = tapHop([
+    { id: "a", polyline: [P, Q], chon: false },
+    { id: "b", polyline: [], chon: false },
+    { id: "c", polyline: [Q], chon: false },
+  ]);
+  assert.deepEqual(fc.features.map((f) => f.properties.id), ["a"]);
+  assert.ok(fc.features.every((f) => f.geometry.coordinates.length >= 2));
+  const dau = veDenDau([{ id: "a", tu: "s1", den: "s2", polyline: [P, Q], chon: false }], 0);
+  assert.equal(tapHop(dau.doan).features.length, 0, "khung đầu không có đường nào, không phải đường rỗng");
+});
+
+test("nét mực chờ bản đồ hiện rồi mới vẽ: không diễn trên bản đồ trắng", () => {
+  const nguon = (f) => readFileSync(new URL(`../src/rudi/hanh-trinh/${f}`, import.meta.url), "utf8");
+  assert.match(nguon("ManHinhHanhTrinh.tsx"), /useNetMuc\(khoaVe, banDoSan && !dangTimCho\)/);
+  assert.match(nguon("BanDoMapLibre.native.tsx"), /onDidFinishLoadingMap=\{[^}]*onSan\?\.\(\)/);
+  assert.match(nguon("BanDo.tsx"), /map\.on\("load"[\s\S]*?cbs\.current\.onSan\?\.\(\)/);
+  const netMuc = nguon("net-muc.ts");
+  assert.match(netMuc, /if \(!san\) return;\s*daVe\.add\(khoa\)/, "chưa sẵn thì chưa tính là đã vẽ");
 });
