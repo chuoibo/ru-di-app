@@ -282,7 +282,7 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="d047409862b0e7ef",
         why="",
     ),
-    "test.yml::milvus::Milvus retrieval, ingestion and reranker tests on real services": Covered(
+    "test.yml::milvus::Milvus retrieval and ingestion tests on real services": Covered(
         kind=GATE_KIND,
         stages=("go-milvus",),
         body_sha="9a6903d5a488e7de",

@@ -101,7 +101,9 @@ def load(env: Mapping[str, str] | None = None) -> Settings:
         memory_collection=g("AI_INFER_MEMORY_COLLECTION", "memories_v1"),
         mem0_dir=g("MEM0_DIR"),
         openrouter_api_key=g("OPEN_ROUTER_API_KEY"),
-        openrouter_base_url=g("AI_INFER_OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+        openrouter_base_url=g(
+            "AI_INFER_OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+        ),
         openrouter_timeout_s=or_timeout,
     )
     validate(s)

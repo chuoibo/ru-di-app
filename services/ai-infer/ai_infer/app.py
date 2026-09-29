@@ -167,7 +167,9 @@ def create_app(
         if req.model != RERANK_MODEL:
             raise HTTPException(status_code=400, detail="model not allowed")
         try:
-            results = openrouter.rerank(req.query, req.documents, min(req.top_n, len(req.documents)))
+            results = openrouter.rerank(
+                req.query, req.documents, min(req.top_n, len(req.documents))
+            )
         except OpenRouterError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from None
         return {"model": RERANK_MODEL, "results": results}
@@ -269,7 +271,9 @@ def from_env() -> FastAPI:
     if s.openrouter_api_key:
         from ai_infer.openrouter import OpenRouter
 
-        openrouter = OpenRouter(s.openrouter_api_key, s.openrouter_base_url, s.openrouter_timeout_s)
+        openrouter = OpenRouter(
+            s.openrouter_api_key, s.openrouter_base_url, s.openrouter_timeout_s
+        )
     memory = None
     if s.gemini_mode != config.GEMINI_OFF:
         from ai_infer.mem import bootstrap, gemini

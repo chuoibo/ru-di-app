@@ -29,7 +29,14 @@ class Api:
     def __init__(self, base: str) -> None:
         self.base = base.rstrip("/")
 
-    def call(self, method: str, path: str, token: str | None = None, body=None, expect=(200, 201, 202)):
+    def call(
+        self,
+        method: str,
+        path: str,
+        token: str | None = None,
+        body=None,
+        expect=(200, 201, 202),
+    ):
         data = None if body is None else json.dumps(body, ensure_ascii=False).encode()
         for attempt in range(3):
             req = urllib.request.Request(self.base + path, data=data, method=method)
@@ -57,7 +64,11 @@ class Api:
 
 def login(api: Api, phone: str, code: str, name: str) -> tuple[str, str]:
     _, ch = api.call("POST", "/auth/otp/request", body={"phone": phone})
-    _, s = api.call("POST", "/auth/otp/verify", body={"phone": phone, "challenge_id": ch["challenge_id"], "code": code})
+    _, s = api.call(
+        "POST",
+        "/auth/otp/verify",
+        body={"phone": phone, "challenge_id": ch["challenge_id"], "code": code},
+    )
     api.call("PATCH", "/people/me", s["token"], {"display_name": name})
     return s["token"], s["person_id"]
 
@@ -67,16 +78,32 @@ def now() -> str:
 
 
 def post_msg(api: Api, ctx: str, token: str, text: str) -> str:
-    _, m = api.call("POST", f"/contexts/{ctx}/messages", token, {"kind": "text", "body": text})
+    _, m = api.call(
+        "POST", f"/contexts/{ctx}/messages", token, {"kind": "text", "body": text}
+    )
     return m["id"]
 
 
-def invoke(api: Api, ctx: str, token: str, command: str, prompt: str, trigger: str | None, turns: list[dict]) -> dict:
+def invoke(
+    api: Api,
+    ctx: str,
+    token: str,
+    command: str,
+    prompt: str,
+    trigger: str | None,
+    turns: list[dict],
+) -> dict:
     body = {
         "logical_id": str(uuid.uuid4()),
         "command": command,
         "prompt": prompt,
-        "boi_canh": {"ban": 1, "nguon": "chat-nhom", "tongLuot": len(turns), "daCat": False, "luot": turns},
+        "boi_canh": {
+            "ban": 1,
+            "nguon": "chat-nhom",
+            "tongLuot": len(turns),
+            "daCat": False,
+            "luot": turns,
+        },
     }
     if trigger:
         body["trigger_message_id"] = trigger
@@ -86,7 +113,9 @@ def invoke(api: Api, ctx: str, token: str, command: str, prompt: str, trigger: s
         raise SystemExit(f"HỎNG gọi bot: {code} {inv}")
     while inv["status"] not in ("succeeded", "failed", "cancelled"):
         if time.monotonic() - t0 > 120:
-            raise SystemExit(f"HỎNG: lượt {inv['id']} quá 120 s, trạng thái {inv['status']}")
+            raise SystemExit(
+                f"HỎNG: lượt {inv['id']} quá 120 s, trạng thái {inv['status']}"
+            )
         time.sleep(1)
         _, inv = api.call("GET", f"/contexts/{ctx}/ai-invocations/{inv['id']}", token)
     inv["_giay"] = round(time.monotonic() - t0, 1)
@@ -97,16 +126,25 @@ def invoke(api: Api, ctx: str, token: str, command: str, prompt: str, trigger: s
 
 
 def show(title: str, inv: dict) -> None:
-    print(f"\n=== {title}: {inv['status']} sau {inv['_giay']} s (code={inv.get('code')})")
+    print(
+        f"\n=== {title}: {inv['status']} sau {inv['_giay']} s (code={inv.get('code')})"
+    )
     card = inv.get("_card") or {}
-    phan = card.get("payload", {}).get("phan") if card.get("kind") == "tra_loi" else [card]
+    phan = (
+        card.get("payload", {}).get("phan") if card.get("kind") == "tra_loi" else [card]
+    )
     for p in phan or []:
         kind, pay = p.get("kind"), p.get("payload") or {}
         if kind == "text":
             print("  [chữ]", pay.get("text"))
         elif kind == "places":
             for pl in pay.get("places", pay.get("items", [])):
-                print("  [quán]", pl.get("name") or pl.get("ten"), "—", pl.get("reason") or pl.get("ly_do") or "")
+                print(
+                    "  [quán]",
+                    pl.get("name") or pl.get("ten"),
+                    "—",
+                    pl.get("reason") or pl.get("ly_do") or "",
+                )
         else:
             print(f"  [{kind}]", json.dumps(pay, ensure_ascii=False)[:400])
 
@@ -138,9 +176,29 @@ def main() -> None:
     m2 = post_msg(api, ctx, tc, "Mình rảnh, mà muốn chỗ yên tĩnh ngồi làm việc")
     m3 = post_msg(api, ctx, ta, "Q3 cho gần nhé, cà phê ngon ngon")
     turns = [
-        {"id": m1, "vai": "ban", "biDanh": "Bạn 1", "loai": "chu", "luc": now(), "chu": "Chiều nay ai rảnh không?"},
-        {"id": m2, "vai": "ban", "biDanh": "Bạn 2", "loai": "chu", "luc": now(), "chu": "Mình rảnh, mà muốn chỗ yên tĩnh ngồi làm việc"},
-        {"id": m3, "vai": "toi", "loai": "chu", "luc": now(), "chu": "Q3 cho gần nhé, cà phê ngon ngon"},
+        {
+            "id": m1,
+            "vai": "ban",
+            "biDanh": "Bạn 1",
+            "loai": "chu",
+            "luc": now(),
+            "chu": "Chiều nay ai rảnh không?",
+        },
+        {
+            "id": m2,
+            "vai": "ban",
+            "biDanh": "Bạn 2",
+            "loai": "chu",
+            "luc": now(),
+            "chu": "Mình rảnh, mà muốn chỗ yên tĩnh ngồi làm việc",
+        },
+        {
+            "id": m3,
+            "vai": "toi",
+            "loai": "chu",
+            "luc": now(),
+            "chu": "Q3 cho gần nhé, cà phê ngon ngon",
+        },
     ]
 
     q = "@Rủ Đi gợi ý quán cà phê yên tĩnh để làm việc ở quận 3"
@@ -148,8 +206,26 @@ def main() -> None:
     show("Hỏi quán", invoke(api, ctx, ta, "hoi", q, t, turns))
 
     bill = post_msg(api, ctx, tb, "Tao trả 300k tiền nước hôm qua, chia 3 nhé")
-    show("Chia bill", invoke(api, ctx, tb, "chia_bill", "/chia-bill",
-                              None, [{"id": bill, "vai": "toi", "loai": "chu", "luc": now(), "chu": "Tao trả 300k tiền nước hôm qua, chia 3 nhé"}]))
+    show(
+        "Chia bill",
+        invoke(
+            api,
+            ctx,
+            tb,
+            "chia_bill",
+            "/chia-bill",
+            None,
+            [
+                {
+                    "id": bill,
+                    "vai": "toi",
+                    "loai": "chu",
+                    "luc": now(),
+                    "chu": "Tao trả 300k tiền nước hôm qua, chia 3 nhé",
+                }
+            ],
+        ),
+    )
 
     q3 = "@Rủ Đi chuyển 200k cho Lan giúp mình"
     t3 = post_msg(api, ctx, ta, q3)

@@ -19,7 +19,12 @@ def _app(settings, handler):
 
     client = httpx.Client(transport=httpx.MockTransport(handler))
     return TestClient(
-        create_app(settings, openrouter=OpenRouter("or-key", "https://openrouter.test/api/v1", 5, client))
+        create_app(
+            settings,
+            openrouter=OpenRouter(
+                "or-key", "https://openrouter.test/api/v1", 5, client
+            ),
+        )
     )
 
 
@@ -28,13 +33,21 @@ def _ok(seen):
         seen.append(req)
         body = json.loads(req.content)
         n = len(body["documents"])
-        results = [{"index": i, "relevance_score": 1.0 / (i + 1), "document": {"text": "echo"}} for i in reversed(range(n))]
+        results = [
+            {"index": i, "relevance_score": 1.0 / (i + 1), "document": {"text": "echo"}}
+            for i in reversed(range(n))
+        ]
         return httpx.Response(200, json={"results": results[: body["top_n"]]})
 
     return handler
 
 
-REQ = {"model": "qwen/qwen3-reranker-8b", "query": "cà phê yên tĩnh", "documents": ["a", "b", "c"], "top_n": 3}
+REQ = {
+    "model": "qwen/qwen3-reranker-8b",
+    "query": "cà phê yên tĩnh",
+    "documents": ["a", "b", "c"],
+    "top_n": 3,
+}
 AUTH = {"Authorization": "Bearer " + TOKEN}
 
 
@@ -44,7 +57,9 @@ def test_rerank_goi_dung_model_va_provider(settings):
     r = c.post("/rerank", json=REQ, headers=AUTH)
     assert r.status_code == 200
     assert [x["index"] for x in r.json()["results"]] == [2, 1, 0]
-    assert all("document" not in x for x in r.json()["results"])  # the echoed text is never passed on
+    assert all(
+        "document" not in x for x in r.json()["results"]
+    )  # the echoed text is never passed on
     sent = json.loads(seen[0].content)
     assert seen[0].url.path == "/api/v1/rerank"
     assert seen[0].headers["authorization"] == "Bearer or-key"
@@ -63,7 +78,12 @@ def test_rerank_can_token_va_chi_mot_model(settings):
     "answer",
     [
         {"results": [{"index": 5, "relevance_score": 0.3}]},  # out of range
-        {"results": [{"index": 0, "relevance_score": 0.3}, {"index": 0, "relevance_score": 0.2}]},  # repeated
+        {
+            "results": [
+                {"index": 0, "relevance_score": 0.3},
+                {"index": 0, "relevance_score": 0.2},
+            ]
+        },  # repeated
         {"results": [{"index": 0, "relevance_score": "nan"}]},  # not finite
         {"nope": []},
     ],
@@ -85,7 +105,11 @@ def test_cau_hinh_openrouter():
 
     base = {"AI_INFER_TOKEN": TOKEN}
     s = config.load(dict(base, OPEN_ROUTER_API_KEY="k"))
-    assert s.openrouter_base_url == "https://openrouter.ai/api/v1" and "k" not in repr(s)
+    assert s.openrouter_base_url == "https://openrouter.ai/api/v1" and "k" not in repr(
+        s
+    )
     with pytest.raises(config.ConfigError):
         config.load(dict(base, AI_INFER_OPENROUTER_BASE_URL="http://evil.example/api"))
-    assert config.load(dict(base, AI_INFER_OPENROUTER_BASE_URL="http://127.0.0.1:9/api")).openrouter_base_url
+    assert config.load(
+        dict(base, AI_INFER_OPENROUTER_BASE_URL="http://127.0.0.1:9/api")
+    ).openrouter_base_url
