@@ -19,9 +19,9 @@
 
 | Mức | Issue |
 |---|---|
-| P1 | UI-005, UI-049, UI-082 |
-| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085, UI-094, UI-095, UI-096, UI-097, UI-107, UI-113, UI-116, UI-117 |
-| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081, UI-086, UI-087, UI-088, UI-089, UI-090, UI-091, UI-092, UI-093, UI-098, UI-099, UI-100, UI-101, UI-102, UI-103, UI-104, UI-105, UI-106, UI-108, UI-109, UI-110, UI-111, UI-112, UI-114, UI-115 |
+| P1 | UI-005, UI-049, UI-082, UI-120 |
+| P2 | UI-002, UI-003, UI-004, UI-006, UI-011, UI-016, UI-018, UI-019, UI-021, UI-022, UI-023, UI-024, UI-032, UI-033, UI-034, UI-035, UI-036, UI-048, UI-050, UI-051, UI-052, UI-062, UI-063, UI-073, UI-074, UI-083, UI-084, UI-085, UI-094, UI-095, UI-096, UI-097, UI-107, UI-113, UI-116, UI-117, UI-119, UI-121 |
+| P3 | UI-001, UI-007, UI-008, UI-009, UI-010, UI-012, UI-013, UI-014, UI-015, UI-017, UI-020, UI-025, UI-026, UI-027, UI-028, UI-029, UI-030, UI-031, UI-037, UI-038, UI-039, UI-040, UI-041, UI-042, UI-043, UI-044, UI-045, UI-046, UI-047, UI-053, UI-054, UI-055, UI-056, UI-057, UI-058, UI-059, UI-060, UI-061, UI-064, UI-065, UI-066, UI-067, UI-068, UI-069, UI-070, UI-071, UI-072, UI-075, UI-076, UI-077, UI-078, UI-079, UI-080, UI-081, UI-086, UI-087, UI-088, UI-089, UI-090, UI-091, UI-092, UI-093, UI-098, UI-099, UI-100, UI-101, UI-102, UI-103, UI-104, UI-105, UI-106, UI-108, UI-109, UI-110, UI-111, UI-112, UI-114, UI-115, UI-118, UI-122 |
 
 ---
 
@@ -1110,8 +1110,8 @@ Mọi lần ghi của F06 đi vào tài khoản mới (`moi-51`, `moi-52`, `moi-
 | Điều kiện | Tài khoản mới, chưa có nhóm nào |
 | Tái hiện | Tin nhắn → «Tạo nhóm», gõ tên, «Mở nhóm» |
 | Expected | Vào nhóm vừa lập (chat, hoặc bước mời), hoặc ít nhất một câu xác nhận kèm lối mời bạn. Chính màn này hứa «Mời bạn bè sau». Messenger mở thẳng cuộc trò chuyện mới |
-| Actual | Nhóm được tạo (đúng một, kể cả khi chạm đúp), rồi app thay màn bằng Khám phá. Trên màn không có tên nhóm, không câu nào nói đã lập xong, không nút mời. Muốn mời phải tự tìm: Tin nhắn → nhóm → «⋯» → Thành viên → «Mời bằng số điện thoại» |
-| Evidence | ![sau «Mở nhóm», C1](evidence/EV-F06-TAO-SAU-C1.jpg) (hàng `TC-F06-TAO-SAU`) |
+| Actual | Nhóm được tạo (đúng một, kể cả khi chạm đúp), rồi app thay màn bằng Khám phá. Trên màn không có tên nhóm, không câu nào nói đã lập xong, không nút mời. Muốn mời phải tự tìm: Tin nhắn → nhóm → «⋯» → Thành viên → «Mời bằng số điện thoại». E1 (`TC-E1-LAP-NHOM`): lặp lại trên một tài khoản vừa qua Sở thích (moi-56): «Mở nhóm» → `/explore`, không tên nhóm trên màn. Người lập tự tìm lại lối mời: Tin nhắn → «Mở nhóm Nhóm E1 cuối tuần đi dạo» → «Thành viên nhóm» → «Mời bằng số điện thoại», ba chạm tới form mời |
+| Evidence | ![sau «Mở nhóm», C1](evidence/EV-F06-TAO-SAU-C1.jpg) (hàng `TC-F06-TAO-SAU`) ![E1, cột 2: «Mở nhóm» xong về Khám phá, C1](evidence/EV-E1-C1-ghep.jpg) (hàng `TC-E1-LAP-NHOM`) |
 | Source | `screens/groups/New.tsx:62` (`router.replace(manDau(moi))`); `duong-vao.ts:145–151` (`manDau` trả `/explore` khi phiên có nhóm đang hoạt động) |
 | Đề xuất sửa | Sau khi tạo, mở chat của nhóm mới (hoặc màn Mời) thay vì `manDau` |
 | Tiêu chí gỡ | Sau «Mở nhóm», màn tiếp theo hiện tên nhóm vừa lập và có lối mời bạn |
@@ -1142,8 +1142,8 @@ Mọi lần ghi của F06 đi vào tài khoản mới (`moi-51`, `moi-52`, `moi-
 | Điều kiện | Số chưa từng đăng nhập, được mời vào nhóm dưới tên «Tên do người mời đặt cho số 53» |
 | Tái hiện | Người được mời đăng nhập lần đầu bằng OTP qua UI |
 | Expected | Tài khoản mới đi qua Sở thích («personalized lúc mới tạo acc», `duong-vao.ts:153–165`). Người đó thấy và sửa được tên người khác đặt cho mình trước khi cả nhóm thấy |
-| Actual | Đăng nhập xong vào thẳng `/messages`: không qua Sở thích, không có ô tên, không thấy tên người mời đặt. Sau «Đồng ý», cả nhóm thấy họ là «Tên do người mời đặt cho số 53». Cùng cơ chế với moi-52, được mời dưới tên «Bạn thân từ hồi cấp ba của mình, người hay trễ hẹn nhất hội». Một người lạ (chat-20: không chung nhóm, không là bạn) tra số của moi-52 ở Thêm bạn cũng thấy đúng cái tên đó |
-| Evidence | ![vào cửa lần đầu: thẳng tới Tin nhắn, C1](evidence/EV-F06-DUOC-MOI-VAO-CUA-C1.jpg) ![người lạ tra số thấy tên do người mời đặt, C1](evidence/EV-F06-THEM-DA-GUI-C1.jpg) (hàng `TC-F06-DUOC-MOI-VAO-CUA`, `TC-F06-THEM-GUI`) |
+| Actual | Đăng nhập xong vào thẳng `/messages`: không qua Sở thích, không có ô tên, không thấy tên người mời đặt. Sau «Đồng ý», cả nhóm thấy họ là «Tên do người mời đặt cho số 53». Cùng cơ chế với moi-52, được mời dưới tên «Bạn thân từ hồi cấp ba của mình, người hay trễ hẹn nhất hội». Một người lạ (chat-20: không chung nhóm, không là bạn) tra số của moi-52 ở Thêm bạn cũng thấy đúng cái tên đó. E1 (`TC-E1-B-VAO`, `TC-E1-TEN-B`): moi-57 được mời dưới tên «Khôi bạn đi dạo», vào cửa qua UI: màn chào → `/login` → `/otp` → thẳng `/messages`, không Sở thích, không ô tên. Sau «Đồng ý vào nhóm», máy chủ ghi B active dưới đúng tên A đặt. Tên đó đi khắp nơi: trên bong bóng của B trong chat nhóm, «Đã gửi lời mời tới Khôi bạn đi dạo» khi A kết bạn (E5), hồ sơ «Họ tên Khôi bạn đi dạo», chữ cái avatar «D» và con dấu «DẠO GỬI» trên tờ giấy (cả hai lấy chữ cuối «dạo» làm tên gọi). moi-58 (`TC-E1-DEM-THANH-VIEN`) đi cùng đường, tới `/messages` |
+| Evidence | ![vào cửa lần đầu: thẳng tới Tin nhắn, C1](evidence/EV-F06-DUOC-MOI-VAO-CUA-C1.jpg) ![người lạ tra số thấy tên do người mời đặt, C1](evidence/EV-F06-THEM-DA-GUI-C1.jpg) (hàng `TC-F06-DUOC-MOI-VAO-CUA`, `TC-F06-THEM-GUI`) ![E1, cột 4: B vào cửa tới thẳng Tin nhắn, C1](evidence/EV-E1-C1-ghep.jpg) (hàng `TC-E1-B-VAO`, `TC-E1-TEN-B`) |
 | Source | Máy chủ coi người đã có hàng `people` là không mới: Python `app/api/service.py:3977` (`is_new = person is None`), Go `internal/domain/authsteps/otpdoor.go:255`. Lời mời tạo trước hàng đó kèm tên (`PUT /people/{id}` trong `groups/Invite.tsx`, «hồ sơ tạm» có chủ đích). App chỉ vào Sở thích khi `is_new_person` (`duong-vao.ts:166–176`) |
 | Hậu quả | Phần lớn người dùng mới (vào qua lời mời) không bao giờ nói gu, nên gợi ý không cá nhân hoá. Họ mang một cái tên người khác đặt (có thể là biệt danh) trước cả nhóm, và trước người lạ tra số, mà không được hỏi |
 | Đề xuất sửa | Máy chủ trả `is_new_person` theo «lần đăng nhập đầu của danh tính này», không theo «đã có hàng người». Hoặc app coi người chưa từng tự đặt tên là mới. Sở thích hiện ô tên điền sẵn tên người mời đặt, ghi rõ «Nhóm đang gọi bạn là …» |
@@ -1239,8 +1239,8 @@ pipeline; phần «bỏ qua Sở thích» không liên quan tới commit đó.
 | Nền tảng, cấu hình | web, C1, cả hai phía. Native: cùng mã (STATIC) |
 | Tái hiện | Chặn người kia (UI-078), mở chat đôi; nhìn ở giây thứ 3 và thứ 20 |
 | Expected | Người chặn đọc được là mình đã chặn và cách bỏ chặn. Không còn lời mời nhắn tin hay hẹn đi chơi. Không báo đang nối lại mãi |
-| Actual | Cả hai phía, cả hai thời điểm: nhãn «Chưa mã hoá đầu cuối · Đang nối lại» không dứt. Trạng thái rỗng «Một lời mở đầu. Một tin nhắn nhỏ cho …» vẫn mời nhắn. Dải «Tờ giấy của hai mình… Đi đâu không?» vẫn mời hẹn. Chỗ ô soạn là câu «Cuộc trò chuyện này không còn nhận tin.», không nói vì sao, không có lối bỏ chặn |
-| Evidence | ![phía người chặn, 20 s, C1](evidence/EV-F06-CHAN-CHAT-NGUOI-CHAN-C1.jpg) (hàng `TC-F06-CHAN-CHAT`, `TC-F06-BI-CHAN-CHAT`) |
+| Actual | Cả hai phía, cả hai thời điểm: nhãn «Chưa mã hoá đầu cuối · Đang nối lại» không dứt. Trạng thái rỗng «Một lời mở đầu. Một tin nhắn nhỏ cho …» vẫn mời nhắn. Dải «Tờ giấy của hai mình… Đi đâu không?» vẫn mời hẹn. Chỗ ô soạn là câu «Cuộc trò chuyện này không còn nhận tin.», không nói vì sao, không có lối bỏ chặn. E5 (`TC-E5-SAU-CHAN-DM`, hai tài khoản mới, phía người bị chặn): cũng «Chưa mã hoá đầu cuối · Đang nối lại», và dải «Tờ giấy của hai mình · Chưa có tờ nào tuần này. Đi đâu không?» vẫn mời. Khác với chat, dải này dẫn tới một sổ vẫn nhận tờ gửi đi (UI-120) |
+| Evidence | ![phía người chặn, 20 s, C1](evidence/EV-F06-CHAN-CHAT-NGUOI-CHAN-C1.jpg) (hàng `TC-F06-CHAN-CHAT`, `TC-F06-BI-CHAN-CHAT`) ![E5, cột 1: chat đôi của người bị chặn, C1](evidence/EV-E5-CHAN-SO-ghep.jpg) (hàng `TC-E5-SAU-CHAN-DM`) |
 | Source | `screens/chat/GroupChatLive.tsx:940–943` (`khongNhanTin` chỉ thay ô soạn); trạng thái rỗng và `HangToGiaySong` không xét cờ này; `changes.connection === "recovering"` (`:725`) giữ nguyên khi luồng bị từ chối |
 | Đề xuất sửa | Khi chat không còn nhận tin: ẩn lời mời mở đầu và dải tờ giấy; với người chặn, nói «Bạn đã chặn …» kèm lối tới Cài đặt → Đã chặn; dừng thử nối lại khi máy chủ từ chối vì chặn |
 | Tiêu chí gỡ | Cùng điều kiện, 20 s: không «Đang nối lại», không «Một lời mở đầu», không «Đi đâu không?»; phía người chặn có câu nói đã chặn |
@@ -1291,8 +1291,8 @@ phải lỗi.
 | Điều kiện | Không có phiên (đăng xuất, hết phiên, trình duyệt khác). Link là tờ giấy của cặp chat-0/chat-1 có thật trên máy chủ |
 | Tái hiện | 1. Mở thẳng `/groups/<id của cặp>/to-giay`. 2. Chạm «Rủ đi chơi». 3. Chạm «Gửi cho người ấy» |
 | Expected | Tới cửa vào (Welcome, đăng nhập) rồi quay lại đúng tờ giấy; nếu cho xem bản trải nghiệm thì có nhãn «Dữ liệu demo» và không nói «đã gửi» khi không có gì được gửi |
-| Actual | Trang hiện một sổ với nội dung bịa: «Bún chả, quán góc phố · Thứ Bảy 06/09 · KÝ ỨC», «Tờ đã khép: Hết khung · Chủ nhật 14/09», tiêu đề «Hai người bạn · Người ấy». Không nhãn demo, không lối đăng nhập. «Rủ đi chơi» phác một tờ «Thứ Bảy 20/09» (ngày đã qua); «Gửi cho người ấy» đổi tờ thành «ĐÃ GỬI · Đã gửi, chờ trả lời. Người ấy chưa xem.». Suốt lúc đó trang gửi **0** lệnh ghi tới API. F08 (`TC-F08-KHONG-PHIEN`): không phiên, link album của một kèo thật mở album demo «Album Đà Lạt · Team Đà Lạt · 17 - 19/10/2026 · 4 ảnh» **không** nhãn; `/stories/new` và `/posts/new` hiện form thật, không lối đăng nhập. Đạt: `/groups/[id]/album` về Welcome; tường, «Thả khoảnh khắc» và «Thành tích» hiện bản demo có nhãn, «Đăng vào tường nhóm» của bản demo về tường demo có nhãn (`TC-F08-KHONG-PHIEN-THA`). F09 (`TC-F09-KHONG-PHIEN`): không phiên, `/settings` hiện trang cài đặt của «Bạn» (avatar «B», công tắc, ba chip) mà mọi thao tác không có tác dụng; `/settings/phien` và `/settings/da-chan` sau 8 s vẫn là khung chờ xám, không hàng, không trạng thái rỗng, không câu lỗi (lượt đọc dừng khi không có người, `PhienScreen.tsx:38`, `DaChanScreen.tsx:37`); `/settings/xoa-tai-khoan` hiện bước 1 như có tài khoản. Không màn nào có nhãn demo hay lối đăng nhập F11 (`TC-F11-TAB-MESSAGES`, `TC-F11-ROUTE-ITINERARY`, `TC-F11-ROUTE-ASSIGNMENT`, `TC-F11-LOI-DANG-NHAP`): mở thẳng bốn tab khi chưa đăng nhập, Khám phá, Lên plan và Cá nhân có nhãn «Dữ liệu demo», còn Tin nhắn là một chat nhóm «Team Đà Lạt» 8 thành viên trông như thật, không nhãn, ô soạn vẫn mời gõ. Trong tám route demo, sáu mang nhãn «Demo»; «Lịch trình AI» và «Ai dùng món nào?» chỉ mang nhãn «Nháp», nói về bản nháp của AI chứ không nói dữ liệu là mẫu. Không màn demo nào có nút «Đăng nhập»: lối duy nhất là tab Cá nhân → «Tài khoản» → «Đăng xuất bản trải nghiệm» (về màn chào, `TC-F11-THOAT`), nhãn «Đăng xuất» cho một việc thực chất là đi vào |
-| Evidence | ![đã gửi mà không gửi gì, C1](evidence/EV-F07-LANH-KHONG-PHIEN-GUI-C1.jpg) (hàng `TC-F07.S02-LANH-KHONG-PHIEN`, `TC-F07-KHONG-PHIEN-GUI`) ![F09: Cài đặt và phiên khi không có phiên](evidence/EV-F09-KHONG-PHIEN-ghep.jpg) ![F11: bốn tab khi chưa đăng nhập, C1](evidence/EV-F11.S01-BASE-C1-ghep.jpg) |
+| Actual | Trang hiện một sổ với nội dung bịa: «Bún chả, quán góc phố · Thứ Bảy 06/09 · KÝ ỨC», «Tờ đã khép: Hết khung · Chủ nhật 14/09», tiêu đề «Hai người bạn · Người ấy». Không nhãn demo, không lối đăng nhập. «Rủ đi chơi» phác một tờ «Thứ Bảy 20/09» (ngày đã qua); «Gửi cho người ấy» đổi tờ thành «ĐÃ GỬI · Đã gửi, chờ trả lời. Người ấy chưa xem.». Suốt lúc đó trang gửi **0** lệnh ghi tới API. F08 (`TC-F08-KHONG-PHIEN`): không phiên, link album của một kèo thật mở album demo «Album Đà Lạt · Team Đà Lạt · 17 - 19/10/2026 · 4 ảnh» **không** nhãn; `/stories/new` và `/posts/new` hiện form thật, không lối đăng nhập. Đạt: `/groups/[id]/album` về Welcome; tường, «Thả khoảnh khắc» và «Thành tích» hiện bản demo có nhãn, «Đăng vào tường nhóm» của bản demo về tường demo có nhãn (`TC-F08-KHONG-PHIEN-THA`). F09 (`TC-F09-KHONG-PHIEN`): không phiên, `/settings` hiện trang cài đặt của «Bạn» (avatar «B», công tắc, ba chip) mà mọi thao tác không có tác dụng; `/settings/phien` và `/settings/da-chan` sau 8 s vẫn là khung chờ xám, không hàng, không trạng thái rỗng, không câu lỗi (lượt đọc dừng khi không có người, `PhienScreen.tsx:38`, `DaChanScreen.tsx:37`); `/settings/xoa-tai-khoan` hiện bước 1 như có tài khoản. Không màn nào có nhãn demo hay lối đăng nhập F11 (`TC-F11-TAB-MESSAGES`, `TC-F11-ROUTE-ITINERARY`, `TC-F11-ROUTE-ASSIGNMENT`, `TC-F11-LOI-DANG-NHAP`): mở thẳng bốn tab khi chưa đăng nhập, Khám phá, Lên plan và Cá nhân có nhãn «Dữ liệu demo», còn Tin nhắn là một chat nhóm «Team Đà Lạt» 8 thành viên trông như thật, không nhãn, ô soạn vẫn mời gõ. Trong tám route demo, sáu mang nhãn «Demo»; «Lịch trình AI» và «Ai dùng món nào?» chỉ mang nhãn «Nháp», nói về bản nháp của AI chứ không nói dữ liệu là mẫu. Không màn demo nào có nút «Đăng nhập»: lối duy nhất là tab Cá nhân → «Tài khoản» → «Đăng xuất bản trải nghiệm» (về màn chào, `TC-F11-THOAT`), nhãn «Đăng xuất» cho một việc thực chất là đi vào. E6 (`TC-E6-LANH-KHONG-PHIEN-QUYET-TOAN`): không phiên, link quyết toán của một kèo thật (`/settlements/<id kèo E2>`) mở «Quyết toán chuyến đi» bản demo. Lần này có nhãn «Demo», nhưng số là của Team Đà Lạt (3.840.000đ, 8 người), dưới id của một kèo thật. Cùng lượt: link chat về `/login`, link kèo về `/welcome` (đạt); `/finance`, không mang id, ra bản demo có nhãn (đạt) |
+| Evidence | ![đã gửi mà không gửi gì, C1](evidence/EV-F07-LANH-KHONG-PHIEN-GUI-C1.jpg) (hàng `TC-F07.S02-LANH-KHONG-PHIEN`, `TC-F07-KHONG-PHIEN-GUI`) ![F09: Cài đặt và phiên khi không có phiên](evidence/EV-F09-KHONG-PHIEN-ghep.jpg) ![F11: bốn tab khi chưa đăng nhập, C1](evidence/EV-F11.S01-BASE-C1-ghep.jpg) ![E6: link lạnh không phiên, cột 3–4](evidence/EV-E6-C1-ghep.jpg) (hàng `TC-E6-LANH-KHONG-PHIEN-*`) |
 | Source | `app/groups/[id]/to-giay.tsx`: có phiên thì bọc `SoDoiSongProvider`; không phiên thì dựng `KhongGianGiayScreen` trên store fixture gắn ở `_layout`. Chú thích nói nhánh này dành cho bản fixture, nhưng mã áp cho mọi bản dựng. Màn không dùng `DemoBadge` |
 | Hậu quả | Người mở link từ thông báo hay tin nhắn khi đã rơi phiên thấy một sổ trông như của mình, gửi lời rủ và được báo đã gửi. Người kia không nhận được gì; người gửi không có lý do để đăng nhập lại |
 | Đề xuất sửa | Route có `id` thật mà không có phiên: đưa về cửa vào, giữ đường dẫn để quay lại sau đăng nhập. Store demo chỉ cho route demo, và luôn kèm `DemoBadge` |
@@ -1325,8 +1325,8 @@ phải lỗi.
 | Điều kiện | Hai người, một người đã đề nghị lập sổ |
 | Tái hiện | (a) Người đề nghị để sheet chờ mở («Đã đề nghị. Chờ … đồng ý…»), người kia đồng ý trên máy họ. (b) Người được đề nghị chạm «Đồng ý» |
 | Expected | (a) Sheet chờ đóng, hoặc nói sổ đã mở. (b) Sheet đóng với đúng nội dung lúc bấm |
-| Actual | (a) Thân màn đổi sang sổ đã mở, nhưng sheet ở lại và đổi về «Bạn ký khi bấm đề nghị · Chờ Chat Test 02 ký», con dấu «Đề nghị lập sổ» và «Để sau», che bìa sổ vừa mở (M6). (b) Trong lúc đóng, sheet hiện đúng trạng thái mời đó: 4 khung rAF từ 97 tới 395 ms sau chạm ở C1; 2 và 3 khung ở hai lượt C9. Thân màn cũng qua 1–2 khung «Tuần này» thường trước khi bìa mở |
-| Evidence | ![phía người đề nghị: sheet ở lại và mời đề nghị lần nữa, C1](evidence/EV-F07-SO-MO-A-C1.jpg) ![C9: khung 388 ms là trạng thái mời, khung 526 ms là sheet đang gỡ](evidence/EV-F07-M6-KHUNG-C9.jpg) (hàng `TC-F07-SO-MO-BEN-KIA`, `TC-F07-DONG-Y-NHAY-C1`, `TC-F07-DONG-Y-NHAY-C9`) |
+| Actual | (a) Thân màn đổi sang sổ đã mở, nhưng sheet ở lại và đổi về «Bạn ký khi bấm đề nghị · Chờ Chat Test 02 ký», con dấu «Đề nghị lập sổ» và «Để sau», che bìa sổ vừa mở (M6). (b) Trong lúc đóng, sheet hiện đúng trạng thái mời đó: 4 khung rAF từ 97 tới 395 ms sau chạm ở C1; 2 và 3 khung ở hai lượt C9. Thân màn cũng qua 1–2 khung «Tuần này» thường trước khi bìa mở. E4 (`TC-E4-A-THEO`): lặp lại (a) trên hai tài khoản mới, sổ đề nghị từ «Tạo mới» → «Rủ một người đi chơi». 0,5 s sau khi sổ mở ở B, thân màn của A đã là sổ mở, nhưng sheet quay về «Bạn ký khi bấm đề nghị · Chờ Khôi bạn đi dạo ký» với con dấu «Đề nghị lập sổ» và «Để sau» |
+| Evidence | ![phía người đề nghị: sheet ở lại và mời đề nghị lần nữa, C1](evidence/EV-F07-SO-MO-A-C1.jpg) ![C9: khung 388 ms là trạng thái mời, khung 526 ms là sheet đang gỡ](evidence/EV-F07-M6-KHUNG-C9.jpg) (hàng `TC-F07-SO-MO-BEN-KIA`, `TC-F07-DONG-Y-NHAY-C1`, `TC-F07-DONG-Y-NHAY-C9`) ![E4, cột cuối: A 0,5 s sau khi sổ mở](evidence/EV-E4-C1-ghep.jpg) (hàng `TC-E4-A-THEO`) |
 | Source | `DongYBac.tsx:75–127`: nội dung suy từ `dangCho` (còn lời đề nghị đang chờ). Khi máy chủ báo đã đồng ý, lời đề nghị biến mất khỏi `pending_proposals`, `dangCho` thành `false`, và nhánh cuối vẽ con dấu `nhanDeNghi` (`:127`). Phía đồng ý, `KhongGianGiay.tsx:324` chỉ đóng sheet ở `.then((ok) => ok && dong())`, sau lần đọc lại; phía người đề nghị không có gì đóng sheet. Khung thân «thường» có vì `vuaMoSo` được đặt trong effect, sau render đầu đã có `lapSo` |
 | Hậu quả | Người đề nghị được mời lập sổ lần nữa trên một sổ đã mở, và không thấy khoảnh khắc sổ mở. Theo mã máy chủ, chạm con dấu đó nộp một lời đề nghị lap_so mới trên sổ đã mở (STATIC; không bấm vì là lệnh ghi). Phía đồng ý thấy sheet nháy như vừa bị huỷ |
 | Đề xuất sửa | Khi `lapSo` chuyển sang `true`, đóng sheet `lap-so` ở cả hai phía; sheet đang đóng giữ nội dung lúc còn mở. Đặt `vuaMoSo` cùng lúc với `lapSo` để không có khung thân thường |
@@ -1415,8 +1415,8 @@ phải lỗi.
 | Category / Severity | VISUAL POLISH · **P3** |
 | Feature / Screen | F07.S02 · `ui/SoBia.tsx` (bìa sổ khi chưa lập, và bìa M6) |
 | Nền tảng, cấu hình | web, C1–C7 |
-| Actual | Nhãn tên rộng 66px cho chữ cần 79px: «Chat Test 01» và «Chat Test 02» đều thành «Chat Tes…», nhìn không phân biệt được hai người. Tên mới 12 ký tự; tên thật như «Nguyễn Minh Anh» dài hơn |
-| Evidence | ![C1, C2, C3](evidence/EV-F07.S02-BASE-ghep.jpg) (hàng `TC-F07-BIA-TEN`, `TC-F07.S02-BASE`) |
+| Actual | Nhãn tên rộng 66px cho chữ cần 79px: «Chat Test 01» và «Chat Test 02» đều thành «Chat Tes…», nhìn không phân biệt được hai người. Tên mới 12 ký tự; tên thật như «Nguyễn Minh Anh» dài hơn. E4: bìa sổ của cặp mới ghi «Hạ Kiểm…» cho «Hạ Kiểm Thử» (11 ký tự) |
+| Evidence | ![C1, C2, C3](evidence/EV-F07.S02-BASE-ghep.jpg) (hàng `TC-F07-BIA-TEN`, `TC-F07.S02-BASE`) E4: [EV-E4-C1-ghep](evidence/EV-E4-C1-ghep.jpg), cột 1 |
 | Source | `SoBia.tsx:103` (`numberOfLines={1}`) trong nhãn có lề 22 mỗi bên (`:133`) trên bìa rộng 128 và 140 |
 | Đề xuất sửa | Dùng tên gọi (chữ cuối, như `tenNgan` của con dấu) trên bìa, hoặc cho nhãn xuống hai dòng |
 | Tiêu chí gỡ | Hai tên đọc được, hoặc ít nhất khác nhau, ở 320–1024 |
@@ -1858,3 +1858,108 @@ F11 cũng mở rộng UI-023, UI-035, UI-038, UI-048, UI-082, UI-093.
 | Hậu quả | Sau một thao tác rất thường (vuốt back trên Android), màn chính trông bình thường nhưng cú chạm đầu bị nuốt hoặc mở một màn không liên quan, và thanh tab chết cho tới khi có cú chạm «trúng» |
 | Đề xuất sửa | Đóng sheet khi màn chứa nó mất focus (`useIsFocused` hoặc sự kiện `blur` của navigation); hoặc để Back đóng sheet trước (UI-038) |
 | Tiêu chí gỡ | Làm lại các bước trên: sau Back không còn vùng inert nào ngoài hộp thoại; chạm tim lần đầu đổi thành «Bỏ lưu»; chạm thẻ quán mở đúng quán; thanh tab phản hồi |
+
+## E1–E6 Luồng xuyên feature
+
+Sáu hành trình đi bằng chính các nút của app, trên web, C1, với hai tài khoản mới vào cửa qua OTP: A (moi-56, «Hạ Kiểm
+Thử») và B (moi-57, được A mời dưới tên «Khôi bạn đi dạo»). Người thứ ba, C (moi-58, «Lan bạn cùng lớp»), chỉ dùng cho
+`TC-E1-DEM-THANH-VIEN`. Mọi lần ghi nằm trong «Nhóm E1 cuối tuần đi dạo» hoặc giữa A và B, trên stack cục bộ (`report.md`
+§A). Đường dẫn app tính từ `apps/mobile/`, đường dẫn Go từ `services/core/`.
+
+Đạt:
+- vào cửa và Sở thích của người tự đăng ký; mời bằng số từ Thành viên;
+- tin tới máy bên kia trong khoảng 410 ms cả hai chiều, không tải lại;
+- kèo tạo từ chat thuộc đúng nhóm; thêm quán từ Khám phá vào kèo; bản đồ; «Tôi đã tới», và B thấy «1 đã tới»;
+- tiền của E3 khớp ở mọi màn: tổng 150.000đ, 75.000đ mỗi người, đợt 0/1 → 1/1, «Còn phải trả» của B 75.000đ → 0đ, «Sẽ
+  nhận» của B 0đ;
+- sổ hai người: đề nghị từ «Tạo mới», đồng ý ở phía kia;
+- kết bạn, nhắn riêng, chặn: chat đôi đóng cả hai phía, nhóm chung giữ nguyên, danh sách chặn, bỏ chặn không tự nối lại
+  tình bạn;
+- tải lại giữ phiên; đăng xuất thu hồi phiên (token cũ trả 401) và Back không lộ dữ liệu; link lạnh có phiên mở đúng màn.
+
+E1–E6 cũng mở rộng UI-071, UI-073, UI-079, UI-082, UI-084, UI-090.
+
+### UI-118 · Kèo tạo từ chat không để lại dấu gì trong chat: quay về, cả nhóm không thấy có kèo
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen | E2 · F05 `/groups/[id]/chat` → F03 `/outings/new` → `/outings/[id]` |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Nhóm đã có tin nhắn, nên chat không còn nút «Rủ hội một buổi» của trạng thái rỗng |
+| Tái hiện | Trong chat nhóm: «+» → «Tờ hẹn» → «Tự tạo kèo» → tên, chip «300 nghìn» → «Tạo kèo»; rồi Back về chat |
+| Expected | Chat cho cả nhóm thấy có kèo mới (một thẻ, một tin hệ thống, hay dải kèo sắp tới) kèm lối mở nó, như thẻ kế hoạch của AI được ghim ở đầu chat. Messenger báo trong cuộc trò chuyện khi có người tạo lịch hẹn cho nhóm |
+| Actual | Kèo được tạo, thuộc đúng nhóm (`TC-E2-TAO-TU-CHAT` đạt). Back về chat: không thẻ, không tin, không dải; tên kèo không có trên màn. Người khác trong nhóm chỉ biết có kèo khi tự mở tab «Lên plan» (B thấy ở đó, `TC-E2-B-THAY`) |
+| Evidence | ![E2, cột 1–2: kèo vừa tạo, Back về chat](evidence/EV-E2-C1-ghep.jpg) (hàng `TC-E2-CHAT-BIET-KEO`) |
+| Source | `src/rudi/screens/chat/GroupChatLive.tsx:396–404`: `moToHen()` không kèm tin thì mở `/outings/new?contextId=…`. `src/rudi/screens/keo/CreateOutingLive.tsx:139–143`: không có `sourceMessageId` thì gọi `taoKeo` (kèo trần); chỉ lối đi từ một tin (`taoKeoTuChat`) mới gắn kèo vào tin đó. Dải ghim `toHen` (`GroupChatLive.tsx:292`) chỉ đọc thẻ AI (lịch trình, bình chọn) nằm trong tin |
+| Hậu quả | Chat là nơi rủ, nhưng kèo rủ từ chat không hiện ở đó. Người tạo phải tự nhắn cho cả nhóm biết; người khác không có lối một chạm từ chat tới kèo |
+| Đề xuất sửa | Kèo tạo từ chat (có `contextId`) thì đăng một thẻ kèo vào chat, hoặc ghim kèo sắp tới ở dải đầu chat |
+| Tiêu chí gỡ | Tạo kèo từ chat rồi Back: chat có tên kèo và lối mở nó, ở máy của người tạo và của người khác trong nhóm |
+
+### UI-119 · «Tôi đã tới» không thành kỷ niệm: tường mời «check-in ở chỗ đang ngồi», album ghi «0 chỗ đã tới» ngay sau khi đã tới
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (hai việc cùng tên «check-in», số đếm trái nhau) · **P2** |
+| Feature / Screen | E2 · F03 `/outings/[id]` (nút «Tôi đã tới») → F08 `/groups/[id]/wall`, `/groups/[id]/album` |
+| Nền tảng, cấu hình | web, C1. Native: cùng máy chủ, cùng mã (STATIC) |
+| Điều kiện | «Kèo E2 dạo hồ cuối tuần» (29/09) có chặng «Lưng Chừng Cafe». A đã chạm «Tôi đã tới» ở chặng đó: máy chủ có 1 check-in, B thấy «1 đã tới» |
+| Tái hiện | Tin nhắn → nhóm → «Thành viên nhóm» → «Tường kỷ niệm»; rồi «Album chuyến đi» |
+| Expected | Việc đã tới một chặng của kèo để lại dấu trên tường hoặc trong album của nhóm. Hoặc, nếu tách hai việc là có chủ đích, chữ phân biệt được «đã tới» của kèo với «check-in» của tường |
+| Actual | Tường: «Chưa có kỷ niệm nào · Thả khoảnh khắc đầu tiên của nhóm, hoặc check-in ở chỗ đang ngồi.», không tên quán, không tên kèo. Album: kèo có trên kệ nhưng ghi «2026 · đang đi · 2 người · 0 ảnh · 0 chỗ đã tới · 0 check-in». Cùng lúc, màn kèo ghi «1 đã tới» |
+| Evidence | ![E2, cột 4–6: «1 đã tới», tường trống, album «0 chỗ đã tới»](evidence/EV-E2-C1-ghep.jpg) (hàng `TC-E2-KY-NIEM`, `TC-E2-ALBUM`; số check-in trên máy chủ ở `TC-E2-CHECK-IN`) |
+| Source | «Tôi đã tới» gọi `POST /outing-stops/{id}/checkins` (`src/rudi/screens/keo/OutingLive.tsx:267–271` → `src/api.ts:2169–2177`) và ghi vào `outing_stop_checkins` (Go `internal/routes/outings.go:230`, `internal/repo/outing_timeline.go:150–154`). «Check-in» của tường là một kỷ niệm khác, `POST /contexts/{id}/checkins` (`src/rudi/ky-niem/ky-niem.ts:147–155`, Go `internal/routes/memories.go:67–71`). Album chỉ đếm kỷ niệm: `internal/domain/album/album.go:115–153` (`Build` cộng `checkins` và `places` từ kỷ niệm loại `checkin`). Câu trống của tường: `src/rudi/screens/ky-niem/GroupWallLive.tsx:258`; dòng album: `src/rudi/ky-niem/ky-niem.ts:291` |
+| Hậu quả | Người vừa bấm «Tôi đã tới» được tường mời «check-in» lần nữa, và album nói chưa tới chỗ nào. «Đã tới» và «check-in» là hai việc khác nhau mà không màn nào nói ra |
+| Đề xuất sửa | Album đếm cả lượt tới chặng của kèo (chỗ đã tới); hoặc «Tôi đã tới» đề nghị đăng một kỷ niệm check-in lên tường. Nếu giữ tách, đổi chữ để hai việc không cùng tên |
+| Tiêu chí gỡ | Sau «Tôi đã tới» ở một chặng: album của kèo ghi ít nhất «1 chỗ đã tới», hoặc tường có dấu của lần tới đó |
+
+### UI-120 · Chặn không chặn sổ hai người: người bị chặn vẫn gửi được tờ hẹn tới người đã chặn mình
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (quyền riêng tư, đồng thuận; trái ADR-0027) · **P1**. Thuộc loại vi phạm spec và quyền riêng tư/bảo mật/consent trong danh sách blocker của repo |
+| Feature / Screen | E5 · F06 chặn (`/people/[id]`) → F07 `/groups/[id]/to-giay` (sổ hai người) và dải tờ giấy của chat đôi |
+| Nền tảng, cấu hình | web, C1, hai tài khoản mới. Native: phần máy chủ không phụ thuộc nền tảng (STATIC) |
+| Điều kiện | A và B là bạn, có chat đôi và sổ hai người đã mở (E4). A chặn B từ hồ sơ; câu hỏi trước khi chặn nói «Hai người sẽ không đọc được bài và story của nhau. Nhóm chung vẫn giữ nguyên.» |
+| Tái hiện | 1. A mở sổ hai người. 2. B mở chat đôi, chạm dải «Tờ giấy của hai mình», rồi «Rủ đi chơi», rồi «Gửi cho người ấy». 3. A mở lại sổ |
+| Expected | Như app hứa ở «Về Rủ Đi» («Chặn: … không nhắn riêng được nữa») và như ADR-0027 (§3 K3 bước 1: đọc block rồi từ chối; §4: «Chặn/xóa tài khoản vẫn áp quy tắc deny của ADR-0023»): sổ của cặp đóng với cả hai. B không gửi được tờ nào và được báo; A không nhận gì. Phía A, sổ nói đang chặn và không mời phác |
+| Actual | Chat đôi đóng đúng: B không gửi được tin, A không nhận (`TC-E5-SAU-CHAN-DM` đạt). Sổ thì không. Phía A vẫn «Chưa có tờ nào tuần này … Rủ đi chơi» (`TC-E5-SAU-CHAN-SO`). Phía B, «Rủ đi chơi» và «Gửi cho người ấy» đều chạm được; `GET /contexts/{id}/papers` đọc lại thấy tờ «18:30 Ăn tối · Thứ Bảy 03/10» ở trạng thái `da_gui`; màn B «ĐÃ GỬI · Đã gửi, chờ trả lời. Hạ Kiểm Thử chưa xem.». Phía A, tờ tới với con dấu «DẠO GỬI», câu «Khôi bạn đi dạo vừa gửi. Bạn ừ, hay đề nghị sửa?» và hai nút «Ừ, hẹn Thứ Bảy 03/10», «Đề nghị sửa» (`TC-E5-CHAN-SO-GUI`). Không nút trả lời nào được bấm. Sau lượt đo, chặn được gỡ qua API |
+| Evidence | ![B bị chặn gửi được tờ, A nhận và được mời «Ừ», C1](evidence/EV-E5-CHAN-SO-ghep.jpg) ![E5, cột 5: sổ của A sau khi chặn vẫn mời «Rủ đi chơi»](evidence/EV-E5-C1-ghep.jpg) (hàng `TC-E5-SAU-CHAN-SO`, `TC-E5-CHAN-SO-GUI`) |
+| Source | Máy chủ (các route tờ giấy đều `LIVE-GO` trong `ownership/routes.json`): cổng chặn `requirePairAlive` (`internal/routes/wai_support.go:84–123`, gọi `blocking.DMAllowed`) chỉ gác gửi tin (`internal/routes/messages_wai.go:68`) và phát lại chat (`internal/routes/chat_replay.go:31`). Route tờ giấy (`internal/routes/pair_papers.go`: `POST /contexts/{id}/papers/draft` `:42`, `POST /papers/{id}/send` `:95`, `POST /papers/{id}/versions/{v}/responses` `:131`) không gọi nó; `internal/repo/pair_papers.go`, `internal/repo/pair_notebook*.go` và `internal/domain/pairsteps` không đọc cạnh chặn nào (grep `block` chỉ ra dữ liệu test về «ràng buộc»). Oracle Python cũng vậy: `send_pair_paper` (`services/api/app/api/service.py:7796`) qua `_require_pair_permission` (`:8250`) chỉ xét vai trò (STATIC), nên cổng parity sẽ xanh mà cả hai cùng sai. App: `src/rudi/screens/hai-nguoi/KhongGianGiay.tsx` và `HangToGiaySong.tsx` không xét cờ `unavailable` của chat đôi. Lời hứa: `src/rudi/screens/cai-dat/VeRuDiScreen.tsx:50` |
+| Hậu quả | Người bị chặn vẫn nhắn riêng được tới người đã chặn mình, qua một kênh có báo «vừa gửi» và mời trả lời: đúng thứ người chặn muốn dừng. Người chặn tin lời hứa của app nên không có lý do đề phòng. Hai nút trả lời của A là lệnh ghi thật trên sổ (đợt đo không bấm) |
+| Đề xuất sửa | Máy chủ: mọi route ghi của sổ và tờ (`draft`, `send`, `responses`, `notebook/proposals`) đi qua cùng cổng chặn với chat đôi và trả `direct_message_unavailable`; đọc theo ADR-0027 §4. Thêm ca live (`tests/postgres`, `go_postgres_tier.sh`) cho chặn × sổ hai người, vì parity không bắt được. App: khi chat đôi `unavailable`, sổ và dải tờ giấy nói đã đóng, không mời phác |
+| Tiêu chí gỡ | A chặn B: `POST /papers/{id}/send` của B bị từ chối (409); màn B nói không gửi được; sổ của A không nhận tờ mới và không mời «Rủ đi chơi» |
+
+### UI-121 · Đăng nhập từ một deep link không quay về link đó: link chat nhóm → đăng nhập → Khám phá
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (điều hướng) · **P2** |
+| Feature / Screen | E6 · F01 `/login` → `/otp`; route trong (`/groups/[id]/chat`) |
+| Nền tảng, cấu hình | web, C1, bản export production. Native: deep link `rudi://groups/<id>/chat` đi qua cùng `chatRoute` và cùng `manSauDangNhap` (STATIC) |
+| Điều kiện | Không phiên (đăng xuất, hết phiên, máy mới). A có nhóm đang hoạt động |
+| Tái hiện | Mở thẳng link chat nhóm của A; ở `/login` gõ số, rồi mã |
+| Expected | Đăng nhập xong vào đúng chat của link: người dùng mở link từ một thông báo, một tin nhắn hay một lời nhắc là để tới chỗ đó |
+| Actual | Link đưa tới `/login` (đạt: không lộ dữ liệu). Sau mã, app tới `/explore` và ở lại đó. Cùng lượt, link kèo không phiên đưa về `/welcome` chứ không về `/login` (`TC-E6-LANH-KHONG-PHIEN-KEO`): hai cửa khác nhau cho hai link cùng loại |
+| Evidence | ![E6, cột 5: đăng nhập từ link chat → Khám phá](evidence/EV-E6-C1-ghep.jpg) (hàng `TC-E6-VE-LAI-LINK`) |
+| Source | `app/groups/[id]/chat.tsx:16` (`<Redirect href="/login" />`, không mang đường dẫn gốc); `src/rudi/screens/auth/Otp.tsx:85`, `Login.tsx:87` (`router.replace(manSauDangNhap(phien))`); `src/rudi/duong-vao.ts:145–151`, `:166–178` (`manDau` trả `/explore` khi phiên có nhóm đang hoạt động). Không nơi nào giữ tham số quay lại |
+| Hậu quả | Sau khi đăng nhập, người mở link phải tự tìm lại cuộc trò chuyện (Tin nhắn → nhóm). Link tới một kèo hay một đợt thu đi qua cùng `manSauDangNhap`, nên cũng về Khám phá (đọc mã, chưa đo), và Khám phá không gợi lại việc họ định làm |
+| Đề xuất sửa | Cửa chặn không phiên mang đường dẫn gốc (ví dụ `/login?tiep=/groups/<id>/chat`); `manSauDangNhap` ưu tiên nó khi route đó hợp lệ với phiên mới. Mọi route trong dùng chung một cửa. Cùng tiêu chí với phần quay lại của UI-082 |
+| Tiêu chí gỡ | Không phiên, mở link chat nhóm, đăng nhập: tới đúng `/groups/<id>/chat` |
+
+### UI-122 · Chat đang mở: người được mời vào nhóm và nhắn, thanh đầu vẫn giữ số thành viên cũ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (số hiển thị cũ) · **P3** |
+| Feature / Screen | E1 · F05 `/groups/[id]/chat`, thanh đầu «N thành viên · sổ hẹn của hội» |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Người lập mời một số từ Thành viên, rồi quay về chat và để chat mở. Người được mời vào cửa, «Đồng ý vào nhóm», rồi nhắn |
+| Tái hiện | Như E1: A mời, quay về chat; người được mời đồng ý và nhắn. Đo lại có hẹn giờ với C: A mời C (moi-58) từ Thành viên và quay về chat; C vào cửa qua UI, đồng ý, nhắn. Đọc thanh đầu của A khi tin tới, sau 5 s và 15 s; rồi rời chat và mở lại |
+| Expected | Thanh đầu theo kịp số thành viên như nó theo kịp tin nhắn. Chú thích trong mã (QA 23/09) kể đúng triệu chứng này và cách sửa; cách sửa chỉ phủ người chưa có tên trong danh sách |
+| Actual | E1: thanh đầu của A ghi «1 thành viên» ngay trên tin đầu của B. Đo lại: máy chủ 2 → 3 người active; tin của C tới A sau 409 ms, mang tên «Lan bạn cùng lớp»; thanh đầu vẫn «2 thành viên» khi tin tới, ở 5 s và ở 15 s. Rời chat rồi mở lại thì «3 thành viên» |
+| Evidence | ![trái: 15 s sau tin của C; phải: mở lại](evidence/EV-E1-DEM-ghep.jpg) (hàng `TC-E1-DEM-THANH-VIEN`; E1: `EV-E1-C1-ghep`, cột cuối) |
+| Source | `src/rudi/screens/chat/GroupChatLive.tsx:230–262`: danh sách thành viên đọc khi màn được focus, và chỉ đọc lại khi một người mà danh sách **chưa biết** viết (`coNguoiLa`, `:241`). `danhSachThanhVien` trả cả người được mời lẫn người đã vào, kèm tên (`src/screens/vao-cua/cong-api.ts:211–227`), nên người được mời đã «được biết» từ trước. Lúc họ vào và viết, `coNguoiLa` vẫn `false`, và `soDangO` giữ số lúc focus. Thanh đầu: `:716` |
+| Hậu quả | Nhẹ, nhưng rơi đúng lúc nhóm vừa lập: người lập thấy «1 thành viên» trong khi bạn mình đang nói trong nhóm, và dễ nghĩ lời mời chưa tới |
+| Đề xuất sửa | Đọc lại danh sách cả khi người viết đang ở trạng thái `invited` trong danh sách đã đọc, không chỉ khi chưa biết tên; hoặc nghe sự kiện thành viên của luồng chat |
+| Tiêu chí gỡ | Cùng các bước: thanh đầu đổi sang số mới trong vài giây sau tin đầu của người vừa vào, không cần rời chat |

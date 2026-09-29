@@ -1822,6 +1822,70 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-09-27/mobile-ui-audit/evidence/EV-E1-C1-ghep.jpg",
+      "sha256": "1a016b9a94e7b5329fb1d7c7264c3ca58dda90fc9a01729d3862f9c9f45a491c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-09-27/mobile-ui-audit/evidence/EV-E1-DEM-ghep.jpg",
+      "sha256": "f7d19fc1fe88dd8731e36a9d00b1e792de1dc5ebf6534ac2c9649294bb863ed1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-09-27/mobile-ui-audit/evidence/EV-E2-C1-ghep.jpg",
+      "sha256": "a3b8ec28ac63af72137d404b4964c1243439b47905620f40cc40ee060f1457bb",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-09-27/mobile-ui-audit/evidence/EV-E3-C1-ghep.jpg",
+      "sha256": "df4907db86692db70ac688ae9325313a6a68939fb397a102f7df5e47abf6b21e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-09-27/mobile-ui-audit/evidence/EV-E4-C1-ghep.jpg",
+      "sha256": "b7bbec1691cec36220ba14b2ccc63542286e3f253fb0b218a301506cb6170bea",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-09-27/mobile-ui-audit/evidence/EV-E5-C1-ghep.jpg",
+      "sha256": "bf967dcf3ce75cd8213e0aceb90c1ccbbfeb6372efbe11f0f0ea777e05ffee80",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-09-27/mobile-ui-audit/evidence/EV-E5-CHAN-SO-ghep.jpg",
+      "sha256": "c0590422dbce475ae6a7a883a8811e63a29f83d4e44629e3ab762d99c75ad37a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-09-27/mobile-ui-audit/evidence/EV-E6-C1-ghep.jpg",
+      "sha256": "bbabf701cc70528b20d6bdfb710e8e1129472b090500dbbd31a7a9a7cbab5be0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
     }
   ]
 }

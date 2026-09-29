@@ -262,3 +262,25 @@ Không dùng RN `Animated` hay `LayoutAnimation`; không có hàng vuốt (swipe
 - Deep link `rudi://moi/<token>`: lưu mã vào module, rồi thay bằng `/moi`. Trên web, hiệu ứng deep
   link của `_layout` bị bỏ qua; URL trực tiếp vẫn vào được.
 - Thông báo đẩy: chưa có mã trong app → N/A.
+
+## 5. Luồng xuyên feature E1–E6
+
+Đo ở checkpoint 13, C1, web, với ba tài khoản mới vào cửa qua OTP bằng UI (`report.md` §A).
+
+| ID | Hành trình | Màn đi qua |
+|---|---|---|
+| E1 | Người mới → Sở thích → lập nhóm → mời bằng số → người được mời vào cửa, đồng ý, nhắn | F01 welcome/login/otp/personalization → F05.S01 → F06 `groups/new`, members, invite → F05 chat nhóm |
+| E2 | Kèo từ chat → thêm quán từ Khám phá → bản đồ → «Tôi đã tới» → tường, album | F05 chat (khay «Tờ hẹn») → F03 `outings/new`, `outings/[id]` → F02 Khám phá, `places/[id]`, `outings/chon` → F08 tường, album |
+| E3 | Chia bill từ kèo → ghi sổ → quyết toán → đợt thu → tài chính của người nợ → «Tiền đã về» | F03 → F04 smart-split 5 bước, settlements, batches, finance |
+| E4 | Sổ hai người: đề nghị từ «Tạo mới», đồng ý ở phía kia | F00 khay tạo → F07 `hai-nguoi/chon-nguoi`, `to-giay` → F05 chat đôi |
+| E5 | Kết bạn → nhắn riêng → chặn → nhóm chung, chat đôi, sổ sau khi chặn → danh sách chặn → bỏ chặn | F06 friends, `friends/add`, `people/[id]` → F05 chat đôi → F07 → F09 `settings/da-chan` |
+| E6 | Tải lại, đăng xuất và Back, link lạnh có và không phiên, đăng nhập từ link | F09 panel «Tài khoản» → F01 → màn trong (chat, kèo, quyết toán, tài chính) |
+
+Ghi chú từ E1–E6:
+- «Tôi đã tới» ở một chặng và «Check-in» ở tường là hai lệnh ghi khác nhau (`POST /outing-stops/{id}/checkins` và
+  `POST /contexts/{id}/checkins`). Album và tường chỉ đếm cái thứ hai (UI-119).
+- Link lạnh khi không phiên đi tới bốn cửa khác nhau: chat nhóm về `/login`, kèo về `/welcome`, quyết toán ra bản demo
+  có nhãn dưới id thật (UI-082), `/finance` ra bản demo có nhãn. Đăng nhập từ link chat về Khám phá, không về
+  link (UI-121); đường đăng nhập từ ba link kia chưa đo.
+- «Rủ hội một buổi» chỉ có ở chat chưa có tin; khi đã có tin, lối tạo kèo từ chat là «+» → «Tờ hẹn» → «Tự tạo kèo».
+- Chặn đóng chat đôi, không đóng sổ hai người (UI-120).

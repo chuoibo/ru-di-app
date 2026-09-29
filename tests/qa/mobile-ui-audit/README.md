@@ -30,7 +30,7 @@ Harness bằng chứng cho audit UI/UX app mobile ngày 27/09/2026
 ## Chạy
 
 ```bash
-npm run tu-kiem                     # detector: canary đỏ, identity xanh (+ --dot-bien: 2 đột biến)
+npm run tu-kiem                     # detector và hàm làm tròn số: canary đỏ, identity xanh (+ --dot-bien: 4 đột biến)
 node khung-ma-tran.mjs              # hàng khởi tạo của ma trận (NOT_TESTED / BLOCKED)
 node kich-ban/khoi-dong.mjs         # khói: build nạp được, renderer, đăng nhập bằng cookie
 node kich-ban/baseline.mjs --persona dalat-0 --configs C1,C2,C3 --man F02.S01=/explore
@@ -67,6 +67,9 @@ node kich-ban/f10-phan-xu.mjs        # phán quyết bằng mắt của F10, kè
 node kich-ban/f11-demo.mjs [--chi tab,route,co-phien,l28,l28-thoat,cat-chu,thoat]
                                     # F11 chế độ demo trên bản export, chưa đăng nhập; co-phien dùng phiên chat-0, chỉ đọc
 node kich-ban/f11-phan-xu.mjs        # phán quyết bằng mắt của F11; `lat` lật hàng tự động mà ảnh bác bỏ, chạy lại thì bỏ qua
+node kich-ban/e-luong.mjs [--chi e1-vao,e1-nhom,e1-moi,e1-tin,e1-dem,e2-tao,e2-chang,e2-album,e3,e3-sau,e5-ban,e4,e5-chan,e5-chan-so,e5-ghep,e6-thoat,e6-khong-phien,e6-co-phien]
+                                    # E1–E6 bằng nút của app; moi-56/57/58 vào cửa qua UI; theo đúng thứ tự trên
+node kich-ban/e-phan-xu.mjs          # phán quyết bằng mắt của E, gắn issue, gắn ảnh ghép cho từng hàng, 12 hàng native
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
                                     # ghim ảnh, link ảnh, bảng issue theo mức/loại; --canary đòi 5 canary đỏ
@@ -129,6 +132,23 @@ vào đâu. Màn tab không bị gỡ khi rời tab: màn cũ vẫn có bố c�
 Bộ đo xếp chữ kết bằng «…» vào `ellipsis`, tách khỏi `chuBiCat`. Tiêu chí «không cắt» chỉ đọc `chuBiCat` sẽ PASS trong
 khi số tiền hay nhãn nút đang bị «…» (F11: «1.106.25…»). Mỗi màn đọc cả danh sách `ellipsis`, và tách chữ cắt có chủ
 đích (mô tả một dòng) khỏi số tiền, tiêu đề và nhãn nút.
+
+Hành trình E1–E6 chạy theo thứ tự: e1 lập nhóm cho mọi hành trình sau, e5-ban kết bạn cho e4, e5-chan chặn sau e4.
+Mỗi phần có ghi dữ liệu đọc trạng thái trên máy chủ trước và dừng nếu việc đã làm, nên chạy lại không ghi lần hai.
+Những điều E1–E6 đã dạy:
+- Lối của trạng thái rỗng biến mất khi có dữ liệu («Rủ hội một buổi» chỉ có khi chat chưa có tin): thử cả lối thường.
+- Màn stack (chat, kèo) không có thanh tab: muốn sang tab khác thì quay về một màn tab trước.
+- Nhãn của bản demo khác bản sống («Cần trả» và «Còn phải trả»); đọc ô tiền theo DOM (`oTien`), không theo thứ tự
+  `innerText`, vì bố cục hai cột đảo thứ tự.
+- `chuTrang` chỉ giữ 400 ký tự đầu; câu nằm sâu trong sheet phải đọc trên cả thân trang.
+- Độ trễ tin nhắn đo từ lúc bên gửi bắt đầu soạn, với bên đọc đã chờ sẵn.
+- Đăng xuất thu hồi cả bearer harness đã lưu cho persona đó; gặp 401 thì xoá bản lưu ở `phien/`.
+- Hai ảnh có thể trùng từng byte khi cùng màn, cùng dữ liệu: Chromium dựng tất định. Mở ra xem trước khi nghi chép nhầm.
+- Xem ảnh vẫn tìm ra điều không hàng tự động nào đo (thanh đầu «1 thành viên», UI-122): đo lại có hẹn giờ trước khi ghi.
+
+Số trong chữ của sổ được in ra ma trận qua `thu-vien/lam-tron.mjs`: chỉ số một dấu chấm có từ 9 chữ số trở lên được làm
+tròn (đúng phạm vi luật long-number của guard); mọi số khác in nguyên văn. Bản đầu làm tròn mọi số có dấu chấm và in
+tiền kiểu Việt sai («75.000đ» thành «75đ», sự cố 4 trong report). `tu-kiem` giữ bốn hàng và hai đột biến cho hàm này.
 
 Chạy `kiem-tai-lieu.mjs` sau `tong-hop.mjs` và trước mỗi commit. Nó không đếm `evidence-manifest.md`: file đó liệt kê
 mọi ảnh trong thư mục, nên đếm nó thì «ảnh không ai dùng» không bao giờ đỏ (sự cố 3 trong report). Ảnh chỉ được tính

@@ -1,4 +1,5 @@
-/* Self-check of the detectors in thu-vien/do-dac.mjs and thu-vien/lop-phu.mjs.
+/* Self-check of the detectors in thu-vien/do-dac.mjs and thu-vien/lop-phu.mjs,
+ * and of thu-vien/lam-tron.mjs, which decides how the matrix prints numbers.
  *
  * A detector that cannot go red proves nothing when it stays green, so every
  * signal family gets a CANARY page with the defect planted (must fire) and the
@@ -6,9 +7,11 @@
  * all the time and must not report: a pager's off-screen slide and a chip row
  * that scrolls sideways.
  *
- *   node tu-kiem.mjs              run the table against thu-vien/do-dac.mjs
- *   node tu-kiem.mjs --dot-bien   also run two self-chosen mutants of it; each
- *                                 must turn exactly its predicted rows red
+ *   node tu-kiem.mjs              run the tables against thu-vien/do-dac.mjs
+ *                                 and thu-vien/lam-tron.mjs
+ *   node tu-kiem.mjs --dot-bien   also run four self-chosen mutants, two of
+ *                                 each module; each must turn exactly its
+ *                                 predicted rows red
  *
  * Mutants run on a copy written to the OS temp dir; the source is never
  * touched. Equivalence was checked before choosing them: each changes a
@@ -49,6 +52,32 @@ const CA = [
   ["mã lỗi tiếng Anh", khung(`<p>audit_injected_failure</p>`), (t) => t.maLoi === 1],
 ];
 
+// Money and measurements as the ledger writes them, and what the matrix must
+// print for each. The first two rows are the identity: an earlier rounding
+// printed «75.000đ» as «75đ» and «13.705.678đ» as «13.7.678đ» (incident 4).
+const LAM_TRON = [
+  ["làm tròn: tiền kiểu Việt giữ nguyên", "B nợ A 75.000đ, tổng 13.705.678đ, «1.106.25…», 0đ", (r) => r === "B nợ A 75.000đ, tổng 13.705.678đ, «1.106.25…», 0đ"],
+  ["làm tròn: số lẻ ngắn giữ nguyên", "0.75 s, toạ độ 11.9404, 108.4383", (r) => r === "0.75 s, toạ độ 11.9404, 108.4383"],
+  // Deliberate long numbers: the two canaries below must cross the guard's rule.
+  // repo-guard: allow=long-number reason=canary-lam-tron-toa-do
+  ["làm tròn: toạ độ chín chữ số trở lên được làm tròn", "x 106.6789012 y", (r) => r === "x 106.7 y"],
+  // repo-guard: allow=long-number reason=canary-lam-tron-tien-chin-chu-so
+  ["làm tròn: tiền chín chữ số để nguyên cho guard chặn", "123.456.789đ", (r) => r === "123.456.789đ"],
+];
+
+async function chayLamTron(duongModule) {
+  const { lamTron } = await import(pathToFileURL(duongModule).href);
+  return LAM_TRON.map(([ten, vao, dung]) => {
+    let ok = false;
+    try {
+      ok = !!dung(lamTron(vao));
+    } catch {
+      ok = false;
+    }
+    return { ten, ok, t: null };
+  });
+}
+
 async function chayBang(browser, duongModule) {
   const { doDac, tomTat, luoiChamTrang } = await import(pathToFileURL(duongModule).href);
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
@@ -87,15 +116,32 @@ async function chayBang(browser, duongModule) {
 const DOT_BIEN = [
   {
     ten: "M1 bỏ ngưỡng mép phải của tràn ngang",
+    file: "do-dac.mjs",
     tu: "if (r.right <= vw + 1 && r.left >= -1) continue;",
     thanh: "if (r.right <= vw + 1000 && r.left >= -1) continue;",
     duDoanDo: ["tràn ngang: phần tử 500px"],
   },
   {
     ten: "M2 coi mọi nền là trong suốt khi xét che chữ",
+    file: "do-dac.mjs",
     tu: "if (alpha > 0.3 ||",
     thanh: "if (alpha > 1.1 ||",
     duDoanDo: ["chữ bị che bởi lớp đục"],
+  },
+  {
+    // The shape of incident 4: every dotted number rounded.
+    ten: "M3 bỏ ngưỡng chín chữ số khi làm tròn",
+    file: "lam-tron.mjs",
+    tu: "length >= 9",
+    thanh: "length >= 0",
+    duDoanDo: ["làm tròn: tiền kiểu Việt giữ nguyên", "làm tròn: số lẻ ngắn giữ nguyên"],
+  },
+  {
+    ten: "M4 làm tròn cả số có nhiều dấu chấm",
+    file: "lam-tron.mjs",
+    tu: "/^\\d+\\.\\d+$/.test(m)",
+    thanh: "true",
+    duDoanDo: ["làm tròn: tiền chín chữ số để nguyên cho guard chặn"],
   },
 ];
 
@@ -103,21 +149,21 @@ const browser = await moTrinhDuyet();
 let loi = 0;
 try {
   const goc = join(HERE, "thu-vien", "do-dac.mjs");
-  const ket = await chayBang(browser, goc);
+  const ket = [...(await chayBang(browser, goc)), ...(await chayLamTron(join(HERE, "thu-vien", "lam-tron.mjs")))];
   for (const k of ket) {
     console.log(`${k.ok ? "XANH" : "ĐỎ  "}  ${k.ten}`);
     if (!k.ok) loi++;
   }
   console.log(`bảng gốc: ${ket.length - loi}/${ket.length} xanh`);
   if (process.argv.includes("--dot-bien")) {
-    const nguon = readFileSync(goc, "utf8");
     const tam = mkdtempSync(join(tmpdir(), "audit-dot-bien-"));
     for (const db of DOT_BIEN) {
+      const nguon = readFileSync(join(HERE, "thu-vien", db.file), "utf8");
       if (!nguon.includes(db.tu)) throw new Error(`${db.ten}: không thấy đoạn cần đổi`);
-      // The mutant imports nothing relative, so it can live outside the tree.
-      const file = join(tam, `${db.ten.slice(0, 2)}-do-dac.mjs`);
+      // Neither module imports anything relative, so a mutant can live outside the tree.
+      const file = join(tam, `${db.ten.slice(0, 2)}-${db.file}`);
       writeFileSync(file, nguon.replace(db.tu, db.thanh));
-      const kq = await chayBang(browser, file);
+      const kq = db.file === "lam-tron.mjs" ? await chayLamTron(file) : await chayBang(browser, file);
       const do_ = kq.filter((k) => !k.ok).map((k) => k.ten);
       const dung = do_.length === db.duDoanDo.length && db.duDoanDo.every((t) => do_.includes(t));
       console.log(`${dung ? "ĐÚNG DỰ ĐOÁN" : "SAI DỰ ĐOÁN"}  ${db.ten}: đỏ = [${do_.join(" | ")}]`);

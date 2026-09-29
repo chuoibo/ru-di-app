@@ -1,4 +1,44 @@
 {
+ "EV-E1-C1-ghep": {
+  "bytes": 166672,
+  "sha8": "1a016b9a",
+  "moTa": "E1, UI-071, UI-073, UI-122: A vào cửa và qua Sở thích; «Mở nhóm» xong về Khám phá; mời B bằng số từ Thành viên; B vào cửa tới thẳng Tin nhắn (không Sở thích); B đồng ý và nhắn; tin của B tới chat đang mở của A, thanh đầu ghi «1 thành viên» (C1)"
+ },
+ "EV-E1-DEM-ghep": {
+  "bytes": 80734,
+  "sha8": "f7d19fc1",
+  "moTa": "UI-122: A để chat nhóm mở trong lúc C được mời vào và nhắn; 15 s sau tin của C thanh đầu vẫn «2 thành viên» (máy chủ có 3 người); rời chat rồi mở lại thì «3 thành viên» (C1)"
+ },
+ "EV-E2-C1-ghep": {
+  "bytes": 159410,
+  "sha8": "a3b8ec28",
+  "moTa": "E2, UI-118, UI-119: kèo tạo từ chat; Back về chat không thấy kèo; thêm Lưng Chừng Cafe từ Khám phá; B thấy «1 đã tới»; tường «Chưa có kỷ niệm nào»; album «0 chỗ đã tới · 0 check-in» (C1)"
+ },
+ "EV-E3-C1-ghep": {
+  "bytes": 206942,
+  "sha8": "df4907db",
+  "moTa": "E3: chia bill 150.000đ từ kèo, mỗi người 75.000đ; quyết toán; đợt thu 0/1 rồi 1/1 sau «Tiền đã về»; Tài chính của B trước (còn phải trả 75.000đ) và sau (0đ) (C1)"
+ },
+ "EV-E4-C1-ghep": {
+  "bytes": 133848,
+  "sha8": "b7bbec16",
+  "moTa": "E4, UI-084, UI-090: A đề nghị lập sổ từ «Tạo mới», đang chờ (bìa «Hạ Kiểm…»); B thấy lời đề nghị ở chat đôi; B đồng ý, sổ mở; 0,5 s sau ở A sheet quay về trạng thái mời «Đề nghị lập sổ» (C1)"
+ },
+ "EV-E5-C1-ghep": {
+  "bytes": 148728,
+  "sha8": "bf967dcf",
+  "moTa": "E5, UI-120: A gửi lời mời kết bạn; B đồng ý, nhắn riêng; A chặn B từ hồ sơ; chat đôi của B «không còn nhận tin»; sổ hai người của A sau khi chặn vẫn mời «Rủ đi chơi»; Người đã chặn (C1)"
+ },
+ "EV-E5-CHAN-SO-ghep": {
+  "bytes": 78091,
+  "sha8": "c0590422",
+  "moTa": "UI-120, UI-079: khi A đang chặn B: chat đôi của B «Đang nối lại» và dải tờ giấy vẫn mời; B gửi được tờ «Ăn tối Thứ Bảy 03/10»; A nhận tờ «DẠO GỬI» và được mời «Ừ, hẹn Thứ Bảy 03/10» (C1)"
+ },
+ "EV-E6-C1-ghep": {
+  "bytes": 219510,
+  "sha8": "bbabf701",
+  "moTa": "E6, UI-082, UI-121: đăng xuất về màn chào; Back hai lần; không phiên: link chat về /login, link quyết toán mở demo «Demo» dưới id kèo thật; đăng nhập từ link chat tới Khám phá; B có phiên mở link kèo đúng màn (C1)"
+ },
  "EV-F00-CREATE-LANH-C1": {
   "bytes": 145881,
   "sha8": "3614f29d",

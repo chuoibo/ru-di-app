@@ -14,6 +14,7 @@ import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { soGhi } from "./thu-vien/ghi.mjs";
+import { lamTron } from "./thu-vien/lam-tron.mjs";
 
 const out = process.env.AUDIT_OUT;
 const docs = process.argv[2];
@@ -55,8 +56,7 @@ writeFileSync(join(out, "dem.json"), JSON.stringify(tong, null, 1));
 
 // Notes carry measurements; a raw float (a pixel coordinate with seven decimals) reads as a
 // run of ten digits to the repository guard long-number rule (it blocked checkpoint 2).
-// Round every decimal to at most one place before it reaches markdown.
-const lamTron = (s) => String(s ?? "").replace(/\d+\.\d{2,}/g, (m) => String(Math.round(Number(m) * 10) / 10));
+// `lamTron` rounds only such runs and keeps Vietnamese amounts verbatim (thu-vien/lam-tron.mjs).
 const o = (s) => lamTron(s).replace(/\|/g, "\\|").replace(/\n/g, " ");
 // Only committed images get a link; the rest are named and marked as kept
 // outside git, so the matrix never carries a dead link.

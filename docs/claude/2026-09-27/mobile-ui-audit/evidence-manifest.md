@@ -1,9 +1,17 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (155 ảnh, tổng 18.27 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (163 ảnh, tổng 19.40 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
+| [EV-E1-C1-ghep](evidence/EV-E1-C1-ghep.jpg) | E1, UI-071, UI-073, UI-122: A vào cửa và qua Sở thích; «Mở nhóm» xong về Khám phá; mời B bằng số từ Thành viên; B vào cửa tới thẳng Tin nhắn (không Sở thích); B đồng ý và nhắn; tin của B tới chat đang mở của A, thanh đầu ghi «1 thành viên» (C1) | 166672 | `1a016b9a` |
+| [EV-E1-DEM-ghep](evidence/EV-E1-DEM-ghep.jpg) | UI-122: A để chat nhóm mở trong lúc C được mời vào và nhắn; 15 s sau tin của C thanh đầu vẫn «2 thành viên» (máy chủ có 3 người); rời chat rồi mở lại thì «3 thành viên» (C1) | 80734 | `f7d19fc1` |
+| [EV-E2-C1-ghep](evidence/EV-E2-C1-ghep.jpg) | E2, UI-118, UI-119: kèo tạo từ chat; Back về chat không thấy kèo; thêm Lưng Chừng Cafe từ Khám phá; B thấy «1 đã tới»; tường «Chưa có kỷ niệm nào»; album «0 chỗ đã tới · 0 check-in» (C1) | 159410 | `a3b8ec28` |
+| [EV-E3-C1-ghep](evidence/EV-E3-C1-ghep.jpg) | E3: chia bill 150.000đ từ kèo, mỗi người 75.000đ; quyết toán; đợt thu 0/1 rồi 1/1 sau «Tiền đã về»; Tài chính của B trước (còn phải trả 75.000đ) và sau (0đ) (C1) | 206942 | `df4907db` |
+| [EV-E4-C1-ghep](evidence/EV-E4-C1-ghep.jpg) | E4, UI-084, UI-090: A đề nghị lập sổ từ «Tạo mới», đang chờ (bìa «Hạ Kiểm…»); B thấy lời đề nghị ở chat đôi; B đồng ý, sổ mở; 0,5 s sau ở A sheet quay về trạng thái mời «Đề nghị lập sổ» (C1) | 133848 | `b7bbec16` |
+| [EV-E5-C1-ghep](evidence/EV-E5-C1-ghep.jpg) | E5, UI-120: A gửi lời mời kết bạn; B đồng ý, nhắn riêng; A chặn B từ hồ sơ; chat đôi của B «không còn nhận tin»; sổ hai người của A sau khi chặn vẫn mời «Rủ đi chơi»; Người đã chặn (C1) | 148728 | `bf967dcf` |
+| [EV-E5-CHAN-SO-ghep](evidence/EV-E5-CHAN-SO-ghep.jpg) | UI-120, UI-079: khi A đang chặn B: chat đôi của B «Đang nối lại» và dải tờ giấy vẫn mời; B gửi được tờ «Ăn tối Thứ Bảy 03/10»; A nhận tờ «DẠO GỬI» và được mời «Ừ, hẹn Thứ Bảy 03/10» (C1) | 78091 | `c0590422` |
+| [EV-E6-C1-ghep](evidence/EV-E6-C1-ghep.jpg) | E6, UI-082, UI-121: đăng xuất về màn chào; Back hai lần; không phiên: link chat về /login, link quyết toán mở demo «Demo» dưới id kèo thật; đăng nhập từ link chat tới Khám phá; B có phiên mở link kèo đúng màn (C1) | 219510 | `bbabf701` |
 | [EV-F00-CREATE-LANH-C1](evidence/EV-F00-CREATE-LANH-C1.jpg) | UI-010: mở lạnh /create trên web, rơi về Khám phá không có khay (C1) | 145881 | `3614f29d` |
 | [EV-F00-DT-dalat-0-la](evidence/EV-F00-DT-dalat-0-la.jpg) | UI-002: người đã đăng nhập mở URL lạ thấy bìa Welcome (C1) | 202697 | `749785cd` |
 | [EV-F00-DT-la-cta-C1](evidence/EV-F00-DT-la-cta-C1.jpg) | UI-002: bấm «Rủ Đi thôi!» dẫn tới Đăng nhập dù phiên còn (C1) | 135092 | `3397acf4` |
