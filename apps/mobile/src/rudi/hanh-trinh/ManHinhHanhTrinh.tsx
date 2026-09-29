@@ -7,7 +7,7 @@
  * FORM: Approved itinerary extension, code-led; no replacement visual world.
  * Inherits the app's roll, never re-rolled: v3 «Sân khấu giấy» (ADR-0037,
  * app/_layout.tsx) on the v2 seed c8e88116.
- * FINISH (M7 bản đồ): stops are paper stamps that say their state by shape and
+ * FINISH (bản đồ hành trình): stops are paper stamps that say their state by shape and
  * word (reached = pencil + tick, next = coral, lifted); the plan is one ink
  * line with its minutes on it, a draft is a broken pencil line; the page head
  * names the day and stamps what the line is -- a real road, a draft, or «chưa

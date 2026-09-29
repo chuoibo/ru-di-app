@@ -14,8 +14,11 @@ import { useEffect, useRef, useState } from "react";
 import { useMotion } from "../ui/useMotion";
 import { nhipVe } from "./kieu-ban-do";
 
-/** Inside DESIGN.md's performance ceiling (≤ 1400ms) with room for the last stamp. */
-export const THOI_GIAN_VE_MS = 1200;
+/**
+ * The pen's run. With the wait for the camera (TRE_VE_MS) the whole moment is
+ * 1400ms from the map being ready: DESIGN.md's ceiling, counted end to end.
+ */
+export const THOI_GIAN_VE_MS = 1080;
 
 /** Routes already drawn this session, so a remount does not replay the ink. */
 const daVe = new Set<string>();

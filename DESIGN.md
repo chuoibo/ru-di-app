@@ -364,7 +364,7 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 | Tường, khoảnh khắc | ảnh in nghiêng có washi, instax | `KhungAnh` + `nghiengAnh`, `Washi` |
 | Thành tích | tờ tem | `Tem` |
 | Hồ sơ của mình và của người khác | trang hộ chiếu; tên người khác in bằng mực của họ | `DauLon co="nho"`, `mucNguoi` |
-| Hành trình bản đồ | trang ngày xé khỏi sổ, đặt đè lên bản đồ, mép xé và lỗ gáy quay về phía bản đồ; đầu trang đóng dấu loại nét («ĐƯỜNG THẬT · XE MÁY» / «NÉT NHÁP» / «CHƯA TÍNH ĐƯỜNG»); ghim là con tem giấy đánh số, nghiêng xen kẽ (đã tới: số bút chì + tick vẽ; điểm tiếp theo: tem coral nổi); kế hoạch là một nét mực coral có số phút giữa đoạn, nháp là nét chì đứt không số; nền bản đồ là giấy, đường ba bậc, không POI bên thứ ba | `NenGiay` + `hinhTrangXe`, `hinhTem`, `lopDuong`, `kieuBanDo` |
+| Hành trình bản đồ | bản đồ giấy là mặt bàn; trang ngày xé khỏi sổ đặt đè lên, mép xé và lỗ gáy quay về phía bản đồ; ghim là con tem giấy đánh số mang trạng thái; kế hoạch là một nét mực coral, nháp là một nét chì đứt; đầu trang đóng dấu nét ấy là gì (chi tiết: «Hành trình bản đồ» dưới «Luật đã thay luật v2») | `NenGiay` + `hinhTrangXe`, `hinhTem`, `mocChum`, `lopDuong`, `kieuBanDo`, `veDenDau` + `useNetMuc` |
 | Cài đặt nhóm | góc trang chat xem trước màu bong bóng; «Rời nhóm» tách xa dưới nét kẻ | `bangMauChat` |
 | Thành viên | vai quản trị là con dấu mực | `Stamp tone="ink"` |
 
@@ -397,6 +397,60 @@ Sau lượt đọc mù 26/09 (ADR-0038):
 - Ô nhập trên web tắt viền trình duyệt (`ui/khong-vien-web.ts`, `khong-vien-web.test.mjs`).
 - Cảnh ký hoạ: mỗi cảnh đúng **một lớp cam** làm nguồn sáng; mặt giấy vẽ trước viền mực
   (`thanh-pho.test.mjs`, `giay-vat-the.test.mjs`).
+
+**Hành trình bản đồ** (FINISH M7 bản đồ; đọc từ build `3a37be6b` và ảnh `.impeccable/review/*.png`, 29/09;
+hợp đồng hướng đi ở đầu `hanh-trinh/ManHinhHanhTrinh.tsx`):
+- **Nền bản đồ là giấy, im** (`kieuBanDo(toi)`, vector OpenFreeMap, mọi màu từ `tokens.json`): nền `ground`;
+  khu dân cư, cây, công viên, nước là lớp `paperShade` đậm dần (0.22 → 0.4 → 0.6 → đặc); nhà `line` 0.55 từ
+  z14. Đường **ba bậc**, mỗi bậc là dải giấy `card` trên mép bút chì: lớn (motorway/trunk) > chính
+  (primary/secondary) > phố (từ z12.5), bậc trên luôn rộng hơn. Chữ nền chỉ tên đường, nước, phường/quận,
+  thành phố; **không POI bên thứ ba**, không «Khu phố N». Địa điểm duy nhất trên bản đồ là của nhóm.
+- **Con tem là trạng thái điểm hẹn** (`hinhTem`, web và native vẽ cùng một hình): tem vuông 44dp bo 8,
+  nghiêng ±3° xen kẽ theo số, vùng bấm ≥ 48dp. *Sắp tới*: giấy `card`, viền bút chì `lineStrong` 2, số coral.
+  *Điểm tiếp theo*: tô coral, số `accentInk`, nổi (Độ Cao Giấy 2). *Đã tới*: số và nét bút chì `inkFaint`
+  cộng **tick vẽ** bằng mực (đường SVG, không glyph) trên nút giấy tròn 20 ở góc — nhạt bằng màu và dấu,
+  không bằng opacity. *Đang chọn*: 52dp, viền coral 3, đứng thẳng, nổi. Thanh chặng trên trang lặp lại
+  tem ở cỡ 26: cùng số, cùng trạng thái.
+- **Tem gộp giữ trạng thái gấp nhất** (`mocChum`): các điểm trùng một chỗ thành một tem «1 · 3»; còn một điểm
+  tiếp theo trong nhóm thì tem vẫn coral, «đã tới» chỉ khi tất cả đã tới, nhãn neo được giữ; chạm mở danh
+  sách chọn.
+- **Neo ngày**: dưới tem là nhãn giấy viền coral 1.5, chữ coral 12/800 in hoa, nghiêng -2: «XUẤT PHÁT»,
+  «KẾT THÚC», «XUẤT PHÁT · VỀ».
+- **Nét mực, nét chì** (`lopDuong`, một nguồn paint cho hai nền tảng): đường thật là **một nét coral liên
+  tục** 5 (chọn 7) trên vỏ giấy `card` 10 (13), đầu tròn; chỉ khi một chặng khác đang chọn thì các chặng còn
+  lại lùi về 0.42. Mũi tên chiều đi coral trên vỏ giấy ở một phần ba chặng. Nháp (geodesic) là **một nét chì
+  đứt** `inkSoft` 2.5, gạch [1.2, 2.2], không số, không mũi tên; chặng nháp đi ngược đúng chặng nháp trước
+  thì không vẽ lại — bút chì đi mỗi đường một lần.
+- **Số phút là nhãn ở điểm giữa mỗi chặng thật** (giữa theo chiều dài, không theo hai đầu): Noto Sans Bold
+  12 `ink`, quầng giấy 2.4, từ z10, được đè tên đường nền. Chặng nháp không có số. Chặng đang chọn thay
+  nhãn bằng thẻ giấy nghiêng -2 («1,9 km · 3 phút» / «Rời HH:MM để tới lúc HH:MM»).
+- **Đầu trang đóng dấu nét là gì** (`Stamp`): «ĐƯỜNG THẬT · XE MÁY» (phương tiện đang chọn) tông coral nghiêng
+  -2; «NÉT NHÁP», «ĐANG TÍNH ĐƯỜNG», «CHƯA TÍNH ĐƯỜNG» tông mực, thẳng. Nét thẳng không bao giờ được đọc
+  thành đường: khi còn chặng nháp, dòng số chỉ in «n điểm trên bản đồ», không km, không phút.
+- **Một khoảnh khắc chuyển động duy nhất: «nét mực tự vẽ»** (`veDenDau` + `useNetMuc`). Chỉ đường thật; chỉ
+  khi tuyến của ngày tới lần đầu hoặc khi gợi ý thay tuyến; mỗi tuyến một lần mỗi phiên (mở lại không diễn
+  lại). Chờ bản đồ tải xong **và** điểm của kèo đọc xong, trễ 320ms cho camera fit, rồi mực chạy 1080ms (cả khoảnh khắc 1400ms, đúng trần) nhịp
+  bút (cos vào–ra, không vượt) qua 24 bước, cắt theo tỉ lệ chiều dài cả ngày. Tem chưa tới lơ lửng 4dp trên
+  bóng cao; mực tới thì hạ xuống và nén như `Stamp` (`useNhipDau`, không haptic) — nhấc lên, không phóng to.
+  Mũi tên, nhãn phút, thẻ chặng đợi nét xong. Nét chì không bao giờ diễn. Giảm chuyển động: khung cuối ngay.
+  Không ẩn nội dung: tem có mặt từ khung đầu.
+- **Điện thoại**: bản đồ trên, trang ngày dưới; mép xé ở cạnh trên chồng 6dp lên bản đồ, lỗ gáy cách mép 13dp.
+  Trang là `card` Độ Cao Giấy 2 (theme tối vẫn đọc được accent/faint). Đầu trang ba hàng: tên ngày + dấu nét;
+  dòng số + «Thu gọn / Mở trang»; chọn phương tiện. Chỉ phần giữa cuộn, và trên native cao cố định
+  (max(92 × font ≤ 1.3, 20% chiều cao), không bao giờ thấp hơn một hàng thanh chặng) để camera không lệch khi
+  chọn; web giới hạn cả trang 60%. Mép dưới phần cuộn mờ 40dp vào `card`, nút bị cắt đọc thành «còn nữa».
+  Chặng là **thanh cuộn ngang**; ô chặng không phải thẻ, chỉ ô đang chọn có nền `accentSoft` + viền coral.
+- **Màn rộng** (≥ 840dp, font < 1.8): trang 360dp bên phải bản đồ, mép xé và lỗ gáy ở cạnh trái quay vào bản
+  đồ; chặng là **hàng kẻ tóc** `line` của trang sổ, tên hai dòng; không mép mờ.
+- **«Khớp hành trình» là con tem 44dp**, không nhãn chữ, góc trên trái bản đồ: giấy `card`, viền bút chì 2,
+  bo 8, nghiêng -2, icon mực `scan-outline` 22, nổi; bấm thì hạ về Độ Cao 1. Camera fit chừa 64 trên/dưới,
+  40 hai bên để tem không nằm dưới nút hay dòng bản quyền.
+- **Miếng giấy bản quyền** (native): giấy `card` bo 4 góc trên phải, chữ bút chì `inkSoft` 11 «©
+  OpenStreetMap · OpenFreeMap», bấm mở trang bản quyền OSM; không logo, không nút «i» hệ thống. Web tắt xoay
+  nên không có la bàn; native chỉ hiện la bàn khi đã bị xoay.
+- **Còn mở, chưa xong:** bản đồ mới chiếm ≈34% khung đầu trên điện thoại (mục tiêu ≥ 45%); nhãn phút có thể
+  đè tem và nhãn neo trên điện thoại ở zoom fit (`native-412-sang`: «4 phút» dưới tem 3, «phút» dưới tem 2);
+  iOS chưa xem; web còn dùng nút bản quyền thu gọn mặc định của MapLibre (có «i») thay cho miếng giấy.
 
 **Vẫn cấm:** confetti và hạt bay, toast, modal lỗi, hero metric, thẻ lồng thẻ, nút lồng nút, animation
 lặp vô hạn ngoài Skeleton. Chỉ một vật bay một lần (thư M7).
