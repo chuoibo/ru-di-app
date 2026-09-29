@@ -15,6 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/adk/v2/model"
+	"google.golang.org/genai"
 
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/nhung"
@@ -142,8 +143,26 @@ func (d napDense) NhungTaiLieu(ctx context.Context, docs []nap.TaiLieu) ([][]flo
 	for i, t := range docs {
 		in[i] = nhung.TaiLieuVao{TieuDe: t.TieuDe, NoiDung: t.Chu}
 	}
-	return d.e.NhungTaiLieu(ctx, in)
+	// The ingest (not a turn: a turn has its own counted retries) waits
+	// out the provider's rate limit: a 429 is retried with a growing pause,
+	// so one burst of sentence embeddings does not fail a whole build.
+	for lan := 0; ; lan++ {
+		vecs, err := d.e.NhungTaiLieu(ctx, in)
+		var api genai.APIError
+		if err == nil || !errors.As(err, &api) || api.Code != 429 || lan >= len(napChoLai) {
+			return vecs, err
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(napChoLai[lan]):
+		}
+	}
 }
+
+// napChoLai are the pauses before the ingest retries a rate-limited
+// embedding call (then it gives up and the error stands).
+var napChoLai = []time.Duration{5 * time.Second, 15 * time.Second, 45 * time.Second, 90 * time.Second}
 
 func (d napDense) NhungCauHoi(ctx context.Context, qs []string) ([][]float32, error) {
 	return d.e.Nhung(ctx, qs, nhung.CauHoi)

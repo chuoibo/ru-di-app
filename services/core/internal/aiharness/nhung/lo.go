@@ -185,7 +185,9 @@ func (l *Lo) Xem(ctx context.Context, job string) (KetQuaLo, error) {
 	if j.Dest == nil || j.Dest.FileName == "" {
 		return KetQuaLo{}, errors.New("nhung: a finished batch named no result file")
 	}
-	raw, err := l.client.Files.Download(ctx, genai.NewDownloadURIFromFile(&genai.File{Name: j.Dest.FileName}), nil)
+	// The SDK downloads by DownloadURI, not Name (an empty one is «the
+	// resource doesn't support download»).
+	raw, err := l.client.Files.Download(ctx, genai.NewDownloadURIFromFile(&genai.File{Name: j.Dest.FileName, DownloadURI: j.Dest.FileName}), nil)
 	if err != nil {
 		return KetQuaLo{}, fmt.Errorf("nhung: batch download: %w", err)
 	}

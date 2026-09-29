@@ -3,6 +3,9 @@ package nhung
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -59,5 +62,36 @@ func TestLoChiLoopbackKhiTest(t *testing.T) {
 	}
 	if _, err := NewLo(context.Background(), "k", "https://example.com"); err == nil {
 		t.Fatal("a non-loopback base URL was accepted")
+	}
+}
+
+// TestXemTaiKetQuaQuaLoopback drives Xem through the real SDK transport
+// against a loopback server answering with the shapes the Batch API returned
+// on 2026-09-28 (job metadata with the result file, then the JSONL). The
+// first real run failed here: the SDK downloads by DownloadURI, not Name.
+func TestXemTaiKetQuaQuaLoopback(t *testing.T) {
+	vec := make([]float32, Dims)
+	vec[0] = 1
+	line, _ := json.Marshal(map[string]any{"key": "h1", "response": map[string]any{"embedding": map[string]any{"values": vec}}})
+	var downloaded bool
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/batches/j1"):
+			_, _ = io.WriteString(w, `{"name":"batches/j1","metadata":{"@type":"type.googleapis.com/google.ai.generativelanguage.v1main.EmbedContentBatch","model":"models/gemini-embedding-2","output":{"responsesFile":"files/batch-j1"},"state":"BATCH_STATE_SUCCEEDED","name":"batches/j1"},"done":true,"response":{"@type":"type.googleapis.com/google.ai.generativelanguage.v1main.EmbedContentBatchOutput","responsesFile":"files/batch-j1"}}`)
+		case strings.Contains(r.URL.Path, "files/batch-j1:download"):
+			downloaded = true
+			_, _ = w.Write(append(line, '\n'))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+	l, err := NewLo(context.Background(), "k", srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	kq, err := l.Xem(context.Background(), "batches/j1")
+	if err != nil || kq.TrangThai != LoXong || len(kq.Vecs["h1"]) != Dims || !downloaded {
+		t.Fatalf("%+v %v downloaded=%v", kq, err, downloaded)
 	}
 }
