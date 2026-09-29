@@ -16,7 +16,8 @@
 # Bí mật (không commit, mode 600):
 #   ~/.config/rudi/vnlocal.env  MOBILE_DATABASE_URL, VNLOCAL_PG_DSN, VNLOCAL_S3_*
 #   ~/.config/rudi/stack.env    MOBILE_INTERNAL_TOKEN, MOBILE_PERSON_ID_KEY,
-#                               MOBILE_OTP_DEBUG_CODE (chỉ khi chưa có cổng SMS)
+#                               MOBILE_VALHALLA_URL=http://valhalla:8002,
+#                               MOBILE_ROUTING_GRAPH_VERSION (từ graph-manifest.json)
 #   ~/.config/rudi/milvus.env   MOBILE_MILVUS_USER/_PASSWORD — sinh bằng
 #                               deploy/vnlocal/milvus-khoi-tao.sh (chạy một lần)
 #   .env ở gốc repo             GEMINI_API_KEY, AGY_PROXY_*, OPEN_ROUTER_API_KEY
@@ -317,6 +318,41 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Đường đi thật cho Hành trình (ADR-0028): Valhalla tự vận hành, không mở
+  # cổng ra ngoài; chỉ core/api gọi qua mạng compose (MOBILE_VALHALLA_URL trong
+  # stack.env). Dữ liệu build sẵn ngoài repo bằng scripts/prepare_journey_routing.py
+  # (143 s, RAM đỉnh 2,6 GiB, 2,5 GB); `current` là symlink tới thư mục của bản
+  # OSM đang dùng — rollback = trỏ symlink về thư mục cũ và đổi
+  # MOBILE_ROUTING_GRAPH_VERSION theo graph-manifest.json của nó.
+  # Không có depends_on: engine vắng thì preview trả «chưa tính được đường»,
+  # app không chết theo.
+  valhalla:
+    image: ghcr.io/valhalla/valhalla-scripted:3.8.3@sha256:24ef7955899dececb94e26c6dfb89d64fabfae875f980432694b0261eb6c251b
+    environment:
+      server_threads: "2"
+      use_tiles_ignore_pbf: "True"
+      force_rebuild: "False"
+      build_admins: "True"
+      build_time_zones: "False"
+      build_elevation: "False"
+      build_transit: "False"
+      build_tar: "True"
+      use_default_speeds_config: "False"
+      update_existing_config: "False"
+    volumes:
+      - ${RUDI_ROUTING_DATA_DIR:-${HOME}/.local/share/rudi-routing/current}:/custom_files
+    expose: ["8002"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request,json; r=json.load(urllib.request.urlopen('http://127.0.0.1:8002/status',timeout=3)); assert r.get('tileset_last_modified',0)>0 and 'route' in r.get('available_actions',[])"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20m
+      retries: 5
+    # Request bodies carry stop coordinates; they stay out of Docker logs.
+    logging:
+      driver: "none"
     restart: unless-stopped
 
 volumes:
