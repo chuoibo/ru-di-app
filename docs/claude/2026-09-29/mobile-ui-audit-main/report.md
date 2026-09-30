@@ -4,13 +4,15 @@
   Nhánh ghi: `claude/busy-cray-vfmt4r`.
 - MODE = **AUDIT_ONLY**: không sửa mã app. Chỉ thêm tài liệu, ảnh bằng chứng và harness đo.
 - protocol_version: không áp dụng. Verdict: không có (chưa có reviewer thật; đây là báo cáo phát hiện).
-- Trạng thái: **checkpoint N14**.
+- Trạng thái: **checkpoint N15**.
   - Cả 122 issue của audit gốc đã được đo lại trên main (checkpoint retest 1 và 2).
-  - Hai feature mới đã audit:
+  - Ba feature mới đã audit:
     - hai lớp chat hai người «đám bạn» / «cặp đôi» (#660, task #26): 8 issue (UI-124…UI-131);
-    - Cộng đồng, tab đầu của app (task #14, ADR-0040): 17 issue (UI-132…UI-148).
-  - Tổng 26 issue mới trên main (UI-123…UI-148).
-  - **Chưa đo:** ba feature mới còn lại (#15, #21, #22), nằm trong ma trận dưới dạng NOT_TESTED.
+    - Cộng đồng, tab đầu của app (task #14, ADR-0040): 17 issue (UI-132…UI-148);
+    - sổ chuyến đi / Nếp v3: khép cuộc đi, giữ sổ, sửa, công khai, xoá (task #15, ADR-0039): 6 issue (UI-149…UI-154).
+  - Tổng 32 issue mới trên main (UI-123…UI-154).
+  - **Chưa đo:** hai feature mới của `461eabf` (#21, #22), nằm trong ma trận dưới dạng NOT_TESTED; và bản đồ giấy Hành trình
+    của main `79baa1c` (#40), chưa có hàng.
   - Mục «Checkpoint» ở cuối là nguồn sự thật về phần đã và chưa đo.
 
 Tài liệu đi kèm:
@@ -18,7 +20,7 @@ Tài liệu đi kèm:
 - `issues.md`: issue mới (từ UI-123), mở rộng của issue gốc gặp lại ở feature mới, và các quan sát chưa thành issue.
 - `coverage-matrix.md`: mọi hàng đo trên main, có đếm (sinh từ sổ).
 - `evidence-manifest.md`: ảnh đã commit của phần này.
-- Harness: `tests/qa/mobile-ui-audit/` (README ở đó; các script `retest-*`, `n26-*` và `n14-*`).
+- Harness: `tests/qa/mobile-ui-audit/` (README ở đó; các script `retest-*`, `n26-*`, `n14-*` và `n15-*`).
 
 ## A. Phạm vi và môi trường
 
@@ -54,6 +56,13 @@ Tài liệu đi kèm:
     hai chiều. Khung là khung của máy chủ; relay chỉ thêm khả năng đóng socket phía máy chủ để đo lúc nối lại. Chỉ hàng
     `TC-N14-WS-*` đi qua relay.
   - **Log core.** Số dòng `sqlstate=23502` của UI-132 đếm bằng grep trên file log của cửa trước (chỉ đọc).
+- **Checkpoint N15, sổ chuyến đi.**
+  - **Không có khoá AI.** «Dựng sổ cùng Nếp» chỉ đo được nhánh lỗi. Mọi sổ được dựng bằng «Tự xếp trang, không gửi AI».
+  - **Khép không hoàn tác được.** Phần đo trước khi khép (`khep-truoc`) chạy trước phần khép «Kèo album retest» (`khep`).
+  - **Ngày chạy.** Đo ngày 30/09, ngày cuối của «Kèo album retest» (29–30/09), nên album ghi kèo này «đang đi». Vì vậy phần
+    «hero quyết toán sau khi kèo xong» của UI-149 là HYPOTHESIS.
+  - **Gián đoạn.** Container khởi động lại một lần nữa giữa lúc chốt N15. Stack dựng lại bằng `start.sh`, dữ liệu còn
+    nguyên; phần `hep` (sửa sổ và kệ ở C2, C3, chỉ đọc) đo sau đó.
 
 **Dữ liệu đã ghi lên stack thứ hai** (cục bộ, tổng hợp; phần lớn có chốt để không ghi lần hai):
 
@@ -79,11 +88,24 @@ Tài liệu đi kèm:
 | Checkpoint N14, `duyet` và `binh-luan` | chat-15 duyệt qua UI B1, B2, bình luận của chat-1 dưới B1 và trả lời của chat-0; B4 được duyệt qua API trong phần `ws`, để có một bài mới lúc stream đang nối. Mỗi lần duyệt kèm lý do. chat-1 gửi một bình luận thử rồi xoá; chat-0 trả lời bình luận của chat-1 và tag chat-1, nên chat-1 có một thông báo |
 | Checkpoint N14, bảng tin và chi tiết | chat-1 thích B1, lưu một bài, bỏ theo dõi rồi theo dõi lại chat-0 (cuối lượt vẫn theo dõi). chat-2 đổi lượt thích B1 nhiều lần qua API (mỗi lần đo dải cập nhật một lần) và chọn «Không quan tâm» cho B2 (B2 ẩn với chat-2, không bỏ ẩn được qua UI: UI-141). chat-0 sửa B1 thành phiên bản 2 (chờ duyệt), đổi B3 sang «Chỉ mình tôi» rồi trả về «Bạn bè» ba lượt (bảng `community_audit` ghi sáu lần đổi; cuối cùng là «Bạn bè»). chat-0 gọi Nếp vài lần, máy chủ trả 503, không có nháp |
 | Checkpoint N14, không làm | Không gửi báo cáo nào (sheet «Báo cáo bài» mở rồi «Thôi»). Không bấm «Xóa lịch sử đề xuất», không bấm «Xác nhận xóa bài và bình luận». Không bài hay bình luận nào bị từ chối |
+| Checkpoint N15, `khep` | chat-0 khép «Kèo album retest» (loại `trip`). Khép không hoàn tác được: `outing_endings` có đúng một hàng |
+| Checkpoint N15, sổ của chat-0 | Tự xếp trang nhiều lượt (mỗi lượt là một job dựng sổ `succeeded`), lưu riêng tư (phiên bản 1), rồi hai vòng «công khai → gửi Cộng đồng → chat-15 duyệt qua API → cất về riêng tư». Vòng đầu bị rút vì lỗi harness (§E, sự cố 31). Cuối cùng: một sổ riêng tư, phiên bản 5; hai bài cộng đồng dựng từ sổ, cả hai nay ở trạng thái riêng tư. Trong chế độ sửa: đổi tên sổ rồi rời màn không lưu (đo UI-097); đặt tên trang «Trang thử A», «Trang thử B» để đo đổi chỗ trang |
+| Checkpoint N15, ảnh và Nếp | Hai ảnh cá nhân tổng hợp tải lên qua «Thêm ảnh từ máy» (360×640 và 640×480). Đây là ảnh riêng của người tải, không lên tường nhóm: tường nhóm vẫn 3 kỷ niệm. Một lần gọi Nếp: job `failed` với `diary_ai_unavailable` |
+| Checkpoint N15, chat-1 | Tự xếp và lưu một sổ riêng, rồi xoá nó qua UI từ link lạnh |
+| Checkpoint N15, `q4` | chat-0 tạo «Kèo trùng ngày kiểm tổng» (29/09) trong nhóm chat-test qua API: không chặng, không chi, không ảnh |
+| Checkpoint N15, phiên và không làm | chat-0 đăng nhập thêm một lần qua UI bằng mã OTP debug (đo UI-121 trên link sổ). Không xoá sổ của chat-0. «Khép cuộc đi» của kèo 24–25/10 bị máy chủ từ chối (409), không ghi gì |
 
 Đếm bằng SQL chỉ đọc sau checkpoint N14: 4 bài cộng đồng (B1 `pending` phiên bản 2, đã công khai phiên bản 1; B2, B4
 `approved`; B3 «Bạn bè»); `community_audit` có 3 lần duyệt bài, 2 lần duyệt bình luận, 6 lần đổi người đọc của B3, không lần
 từ chối nào; 1 ảnh 640×480; 1 người duyệt; 2 hàng `community_preferences`; 1 lưu và 1 ẩn trong `community_feedback`; 1 lượt
 theo dõi; 1 thông báo; 0 ghi chép riêng.
+
+Đếm bằng SQL chỉ đọc sau checkpoint N15:
+- 1 lần khép cuộc đi (`trip`);
+- 1 sổ (của chat-0, riêng tư, phiên bản 5), với 5 phiên bản và 3 ảnh trong sổ; sổ của chat-1 đã xoá;
+- 10 job dựng sổ của 2 người: 9 `succeeded` (tự xếp), 1 `failed` (`diary_ai_unavailable`);
+- 2 bài cộng đồng dựng từ sổ, đều riêng tư;
+- 2 ảnh cá nhân; nhóm chat-test vẫn 3 kỷ niệm.
 
 **Team Đà Lạt.** Report của checkpoint 1 ghi Team Đà Lạt «chỉ được đọc». Câu đó sai: kịch bản F04 gốc chạy lại ở
 checkpoint 1 đã tạo 10 bill nháp trong nhóm này. Ở checkpoint 2, kịch bản F03 và F04 gốc chạy lại cũng ghi vào nó, đúng
@@ -114,13 +136,16 @@ là `brain` không khoá, nên mọi phòng báo `provider_unavailable`. Vì v�
 - stack không chạy worker xử lý video (ffmpeg): tải video là BLOCKED (`TC-N14-DANG-VIDEO`), không video nào được tải lên;
 - WebSocket của trang bị từ chối vì CORS; realtime đo qua relay (xem trên).
 
-## B. Coverage thực tế (checkpoint N14)
+Ở N15 cũng theo khuôn đó: bảy màn (N15.S01–S07), 14 hàng native BLOCKED. Không có khoá AI, nên Nếp dựng sổ chỉ đo được
+nhánh lỗi (`TC-N15-DUNG-AI`); sổ do Nếp viết là BLOCKED (`TC-N15-DUNG-AI-THAT`).
+
+## B. Coverage thực tế (checkpoint N15)
 
 Sinh bằng `tong-hop.mjs` từ sổ của main:
 
 | Phạm vi | PASS | FAIL | BLOCKED | NOT_TESTED | N/A |
 |---|---|---|---|---|---|
-| Tất cả (507 hàng; 475 web, 32 native) | 205 | 262 | 35 | 3 | 2 |
+| Tất cả (589 hàng; 543 web, 46 native) | 254 | 281 | 50 | 2 | 2 |
 
 | Nguồn hàng | Hàng | Kết quả |
 |---|---|---|
@@ -129,7 +154,8 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
 | Kịch bản gốc chạy lại trên main (F00 5, F02 11, F03 50, F04 44, F05 17, F06 7, F10 7) | 141 | 72 PASS, 66 FAIL, 1 BLOCKED, 2 N/A |
 | Feature mới #26 hai lớp chat, `TC-N26-*` | 98 | 64 PASS, 22 FAIL, 12 BLOCKED (native) |
 | Feature mới #14 Cộng đồng, `TC-N14-*` | 133 | 64 PASS, 48 FAIL, 21 BLOCKED (20 native, 1 tải video) |
-| Giữ chỗ feature mới `TC-N-…` (#15, #21, #22) | 3 | NOT_TESTED |
+| Feature mới #15 sổ chuyến đi, `TC-N15-*` | 83 | 49 PASS, 19 FAIL, 15 BLOCKED (14 native, 1 Nếp thật) |
+| Giữ chỗ feature mới `TC-N-…` (#21, #22) | 2 | NOT_TESTED |
 
 - Năm hàng retest PASS:
   - hai «đổi» đạt tiêu chí của checkpoint 1 (UI-033, UI-096);
@@ -150,8 +176,11 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
     - bốn hàng baseline `TC-N14.S01-BASE`, `.S03`, `.S04`, `.S09` ở C1–C3 (bảng tin, form, chi tiết bài, hàng duyệt);
     - `TC-N14-BANG-THICH`: không có `aria-pressed`, nhưng tên nút nói trạng thái («Bỏ thích bài, 1 lượt thích»), nên PASS;
     - `TC-N14-BL-MO-RONG` ở C8: sheet «Bình luận» dùng được; phần đầu sheet ngoài cửa sổ tính vào UI-040.
+  - Ở checkpoint N15:
+    - bốn hàng baseline `TC-N15.S02-BASE`, `.S03`, `.S04`, `.S06` ở C1–C3 (màn khép, chất liệu, sửa sổ, đọc sổ);
+    - `TC-N15-O-NHAP-44` (UI-001), từ số đo của hai ảnh sửa sổ ở C2, C3.
 
-**Hàng đã rút** (31 test case, lý do ghi trong sổ và ở cuối `coverage-matrix.md`):
+**Hàng đã rút** (35 test case, lý do ghi trong sổ và ở cuối `coverage-matrix.md`):
 - Checkpoint 1:
   - bốn hàng của kịch bản F06 gốc chạy lại trên main: `TC-F06-DUOC-MOI-VAO-CUA`, `TC-F05.S01-DONG-Y`, `TC-F06-TU-BO-QUAN-TRI`,
     `TC-F06-MOI-LAI`;
@@ -169,16 +198,20 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
   - bảy test case vì lỗi harness, đều đã đo lại (§E, sự cố 22–27; sự cố 21 và 28 không rút hàng nào): `TC-N14-DUYET-NUT-TAT`, `TC-N14-BANG-THEO-DOI`,
     `TC-N14-WS-DAI`, `TC-N14-CHI-TIET-BASE`, `TC-N14-SUA` (hai lần), `TC-N14-QUAN-LY`, `TC-N14-XOA-HOI`;
   - hàng giữ chỗ `TC-N-14-CONG-DONG`, thay bằng các hàng `TC-N14-*`.
+- Checkpoint N15:
+  - ba test case vì lỗi harness hay đổi ID, đều đã đo lại (§E, sự cố 30–32): `TC-N15-TRANG-DOI-CHO`, `TC-N15-CAT-RIENG`,
+    `TC-N15-TUONG` (tách thành `TC-N15-TUONG-RONG` và `TC-N15-TUONG-CO-SO`);
+  - hàng giữ chỗ `TC-N-15-NHAT-KY`, thay bằng các hàng `TC-N15-*`.
 
 ## C. Issues
 
-**26 issue sau checkpoint N14** (mới trên main: UI-123 từ checkpoint retest 1, UI-124…UI-131 từ N26, UI-132…UI-148 từ
-N14). Kết quả đo lại 122 issue cũ nằm ở `retest.md`.
+**32 issue sau checkpoint N15** (mới trên main: UI-123 từ checkpoint retest 1, UI-124…UI-131 từ N26, UI-132…UI-148 từ
+N14, UI-149…UI-154 từ N15). Kết quả đo lại 122 issue cũ nằm ở `retest.md`.
 
 | Mức | BUG | UX ISSUE | VISUAL POLISH |
 |---|---|---|---|
-| P2 | UI-123, UI-124, UI-132, UI-133, UI-134, UI-136 | UI-130, UI-135, UI-137, UI-138 | |
-| P3 | UI-131, UI-140 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-139, UI-141, UI-142, UI-144, UI-145, UI-146, UI-147, UI-148 | UI-143 |
+| P2 | UI-123, UI-124, UI-132, UI-133, UI-134, UI-136, UI-149, UI-151 | UI-130, UI-135, UI-137, UI-138, UI-150 | |
+| P3 | UI-131, UI-140 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-139, UI-141, UI-142, UI-144, UI-145, UI-146, UI-147, UI-148, UI-152, UI-153, UI-154 | UI-143 |
 
 ### N26: hai lớp chat hai người (#660)
 
@@ -252,6 +285,41 @@ công khai chờ người duyệt khi không có model, và tín hiệu realtime
 
 ![UI-132: chưa có bài duyệt thì tab đầu báo lỗi; hết lỗi sau bài duyệt đầu tiên](evidence/EV-N14-RONG-ghep.jpg)
 
+### N15: sổ chuyến đi / Nếp v3 (#15, ADR-0039)
+
+Người tổ chức khép cuộc đi; rồi mỗi người giữ một cuốn sổ của riêng mình trên tường. Họ chọn ảnh và trích đoạn, dựng cùng Nếp
+hay tự xếp trang, sửa, giữ riêng hay công khai, gửi Cộng đồng, xoá. Phần đạt nằm ở đầu mục N15 của `issues.md`:
+- lối vào, và màn khép ở năm cấu hình;
+- chất liệu, và ranh giới AI (chỉ đoạn được đặt vào ô mới đi cùng ảnh);
+- tự xếp và sửa sổ;
+- quyền riêng tư của sổ: người ngoài không đọc được sổ riêng; cất về riêng tư thu hồi cả sổ, ảnh bìa lẫn bài cộng đồng;
+- xoá sổ có hỏi; lỗi 503 có câu và «Thử lại».
+
+Issue mới và mở rộng:
+
+- **UI-149 (P2, BUG).** «Đã chia» và số ảnh của album tính theo ngày, không theo kèo: hai kèo trùng ngày cùng ghi
+  13.705.678đ của một khoản chi. Quan sát Q4 đóng ở đây.
+  - Oracle Python tính y hệt Go, nên parity xanh trong khi cả hai cùng cộng trùng. Bản sửa phải đi qua cả hai, và đổi mô
+    hình dữ liệu của tiền thì mở ADR trước.
+  - Hero quyết toán sẽ cộng hai lần sau khi «Kèo album retest» xong: HYPOTHESIS, chưa đo trên màn.
+- **UI-150 (P2).** Lưu sổ lỗi: màn đứng yên, câu lỗi nằm ở đầu màn, trên nút hơn một nghìn điểm ảnh.
+- **UI-151 (P2, BUG).** Kèo chưa tới ngày vẫn có `can_end=true` và nút «Khép cuộc đi»; chạm thì 409 kèm «Thử lại» vô ích.
+- **P3:**
+  - UI-152: thành viên thấy bộ chọn loại; chạm đổi tiêu đề mà không có tác dụng;
+  - UI-153: kệ trống chỉ có một câu, không hành động (DESIGN.md, `EmptyState`);
+  - UI-154: tên trang tự xếp là «2026-09-29» ở ô sửa và trong bài Cộng đồng.
+- **Mở rộng issue gốc:**
+  - UI-001: ô chữ cao 44 ở màn sửa;
+  - UI-003: ô ảnh checkbox và radio không có `aria-checked`;
+  - UI-019: 404 báo «Cập nhật app»;
+  - UI-040: sheet ảnh cao 96% ở C8;
+  - UI-093: sheet ảnh rộng 768 ở C6;
+  - UI-097: rời màn là mất chỗ đang sửa;
+  - UI-100: «Thử lại» vô ích trước sổ riêng của người khác;
+  - UI-121: link sổ khi chưa đăng nhập về Welcome, đăng nhập xong vào Khám phá.
+
+![UI-149: hai kèo trùng ngày cùng ghi «đã chia 13.705.678đ»](evidence/EV-N15-Q4-KE-C1.jpg)
+
 ### Retest: tóm tắt
 
 | Mức | Còn | Hết | Chưa đo lại |
@@ -314,9 +382,12 @@ công khai chờ người duyệt khi không có model, và tín hiệu realtime
 6. **UI-005, UI-049, UI-082** (P1) còn nguyên.
 7. **Không issue P3 nào đã được sửa trên main.** Hai chỗ trông như đạt (UI-092, UI-039 ở C1) là nhờ ngày chạy và bố cục
    mới, không nhờ sửa mã.
-8. **Quan sát Q4** (`issues.md`). «Đã chia» của album kèo cộng mọi khoản chi của nhóm có ngày rơi vào khoảng ngày của
-   kèo, không theo kèo. Ảnh `EV-R-P3-F08-ghep` (kệ album) lại cho thấy con số đó. Chưa thành issue; cần đối chiếu ý đồ ở
-   audit Nhật ký chuyến.
+8. **UI-149** (mới ở N15, P2; quan sát Q4 cũ). «Đã chia» của album tính theo ngày: một khoản chi hiện ở mọi kèo trùng
+   ngày. Đây là con số tiền đọc ra cho người dùng, và oracle Python sai cùng cách nên cổng parity không bắt được. Bản sửa
+   cần ADR (mô hình dữ liệu của tiền) và phải đi qua cả Go lẫn Python. Ảnh `EV-R-P3-F08-ghep` (kệ album, retest) cũng có
+   con số đó.
+9. **UI-151** (mới ở N15, P2). Máy chủ trả `can_end=true` cho kèo chưa bắt đầu rồi tự từ chối khi khép; app mời một việc
+   chắc chắn hỏng.
 
 ![Retest P3 trên main, F08](evidence/EV-R-P3-F08-ghep.jpg)
 
@@ -325,11 +396,12 @@ công khai chờ người duyệt khi không có model, và tín hiệu realtime
 Không file nào trong `apps/`, `services/`, `packages/`, `parity/`, `phase0/`.
 
 - `docs/claude/2026-09-29/mobile-ui-audit-main/`: `report.md`, `retest.md`, `issues.md`, `coverage-matrix.md`,
-  `evidence-manifest.md` và `.json`, `evidence/` (45 ảnh, 6,38 MiB):
+  `evidence-manifest.md` và `.json`, `evidence/` (57 ảnh, 7,96 MiB):
   - checkpoint 1: 10 ảnh ghép retest theo feature, 5 ảnh đơn cho bốn issue P1, ảnh ghép thanh tab;
   - checkpoint 2: 8 ảnh ghép P3 `EV-R-P3-…-ghep`;
   - checkpoint N26: 10 ảnh ghép `EV-N26-…-ghep` và tờ khung `EV-N26-NHAY-tre-800-khung-C1`;
-  - checkpoint N14: 10 ảnh ghép `EV-N14-…-ghep`.
+  - checkpoint N14: 10 ảnh ghép `EV-N14-…-ghep`;
+  - checkpoint N15: 11 ảnh ghép `EV-N15-…-ghep` và ảnh đơn `EV-N15-Q4-KE-C1`.
 - `tests/qa/mobile-ui-audit/`:
   - `kich-ban/retest-main.mjs`: đo lại theo issue.
     - Checkpoint 1: `r-f00`, `r-f01`, `r-f02`, `r-f03`, `r-f06`, `r-f07`, `r-f08`, `r-f09`, `r-f10` (cần `AUDIT_BASE` trỏ
@@ -356,22 +428,29 @@ Không file nào trong `apps/`, `services/`, `packages/`, `parity/`, `phase0/`.
       log của cửa trước (đếm dòng 23502), và chat-15 phải có vai trò duyệt trước phần `duyet`.
     - `kich-ban/n14-phan-xu.mjs`: phân xử bằng mắt, gắn issue, hàng native và hàng video BLOCKED, rút hàng giữ chỗ.
     - `kich-ban/n14-ghep.mjs`: ảnh ghép, và gắn chúng vào hàng.
-- `.repo-guard-allowlist.json`: 8 ghim mới ở checkpoint 2 (259), 11 ghim mới ở N26 (270), 10 ghim mới ở N14, tổng 280. Từ N14,
+  - Checkpoint N15:
+    - `kich-ban/n15-nhat-ky.mjs` đo sổ chuyến đi. Các phần, theo thứ tự chạy: `api`, `vao`, `khep-truoc`, `khep`, `nguon`,
+      `dung-ai`, `dung-tay`, `sua`, `luu`, `doc`, `cong-khai`, `khoanh-khac-xoa`, `khong-phien`, `loi`, `q4`, `hep`. `khep`
+      khép kèo thật và không hoàn tác được, nên `khep-truoc` phải chạy trước nó.
+    - `kich-ban/n15-phan-xu.mjs`: phân xử bằng mắt, gắn issue, hàng native và hàng Nếp thật BLOCKED, rút hàng giữ chỗ.
+    - `kich-ban/n15-ghep.mjs`: ảnh ghép, và gắn chúng vào hàng.
+- `.repo-guard-allowlist.json`: 8 ghim mới ở checkpoint 2 (259), 11 ghim mới ở N26 (270), 10 ghim mới ở N14 (280), 12 ghim mới ở N15, tổng 292. Từ N14,
   ghim mới mang annotation hẹp cho luật `aggregate-base64-fragments` (§E, sự cố 29); `chot-anh.mjs` ghi dạng đó.
 
 ## E. Verification
 
 | Kiểm | Kết quả |
 |---|---|
-| `kiem-tai-lieu` thư mục này, cả `--canary` (checkpoint N14) | identity xanh: 45 ảnh, 45 ghim khớp sha256, 418 link ảnh, 45/45 ảnh có tài liệu dẫn tới ngoài manifest, 26 issue (10 P2, 16 P3) khớp hai bảng. 5/5 canary đỏ đúng dự đoán (`sha`, `bang`, `muc`, `link`, `thua`) |
+| `kiem-tai-lieu` thư mục này, cả `--canary` (checkpoint N15) | identity xanh: 57 ảnh, 57 ghim khớp sha256, 508 link ảnh, 57/57 ảnh có tài liệu dẫn tới ngoài manifest, 32 issue (13 P2, 19 P3) khớp hai bảng. 5/5 canary đỏ đúng dự đoán (`sha`, `bang`, `muc`, `link`, `thua`) |
 | `kiem-tai-lieu` thư mục audit gốc, cả `--canary` | identity xanh: 163 ảnh, 163 ghim, 521 link, 122 issue (4 P1, 38 P2, 80 P3); 5/5 canary đỏ đúng dự đoán. Thư mục gốc không đổi ở checkpoint này |
 | `tu-kiem --dot-bien` | 20/20 xanh; M1–M4 đỏ đúng hàng dự đoán |
 | `retest-phan-xu.mjs` chạy hai lần sau mỗi lần sửa (checkpoint 2) | 411 → 452 → 452; thêm ghi chú UI-092: 452 → 453 → 453; rút giữ chỗ UI-027: 528 → 529 → 529 |
 | `retest-ghep.mjs` chạy hai lần (checkpoint 2) | lượt đầu gắn ảnh ghép vào 75 hàng (453 → 528); lượt hai 0. 10 ảnh ghép của checkpoint 1 dựng lại trùng từng byte với ảnh đã commit |
 | `n26-phan-xu.mjs` và `n26-ghep.mjs` chạy hai lần (checkpoint N26) | phân xử 670 → 706 → 706; ghép gắn 39 hàng (706 → 745), lượt hai 0. Thêm hai hàng phân xử sau khi xem ảnh: 745 → 747 → 747, ghép gắn 2 (747 → 749), lượt sau 0. FAIL thiếu issue: 0 |
 | `n14-phan-xu.mjs` và `n14-ghep.mjs` (checkpoint N14) | Ghép lượt đầu, 9 ảnh: gắn 45 hàng (907 → 952). Phân xử: 952 → 1026 (73 hàng và một dòng rút hàng giữ chỗ), lượt hai 0. Ghép, 10 ảnh (thêm `EV-N14-FORM-ghep`): gắn 11 hàng (1026 → 1037), lượt sau 0. Đo thêm form ở tablet (`dang:C6`, `dang:C7`): 1037 → 1041; phân xử gắn UI-093: 1041 → 1043, lượt hai 0; ghép gắn 2 (1043 → 1045), lượt sau 0. Lúc chốt chạy lại cả hai: 1045 → 1045, 10 ảnh ghép dựng lại trùng từng byte với ảnh đã ghim. Rồi bước che mốc giờ của máy chủ (sự cố 28): 1045 → 1048, lượt hai 0, ghép 0. FAIL thiếu issue: 0 |
+| `n15-phan-xu.mjs` và `n15-ghep.mjs` (checkpoint N15) | Ghép lượt đầu, 10 ảnh: gắn 44 hàng (1130 → 1174). Đo thêm `hep` và kệ ở C2, C3: 1174 → 1178; ghép, 11 ảnh (thêm `EV-N15-HEP-ghep`): gắn 4 hàng (1178 → 1182). Phân xử: 1182 → 1220 (37 hàng và một dòng rút hàng giữ chỗ), lượt hai 0. Đánh số lại (sự cố 33): 1220 → 1230, lượt hai 0; ghép 0. Lúc chốt chạy lại cả hai: 1230 → 1230, 11 ảnh ghép dựng lại trùng từng byte với ảnh đã ghim. Rồi bước đặt ngày trong «» (sự cố 34): 1230 → 1231, lượt hai 0, ghép 0. FAIL thiếu issue: 0 |
 | Tự kiểm bộ đọc lý do (`--chi tu-kiem-ly-do`, checkpoint N14) | trên trang thật, trước mọi phần đo nút tắt: canary là «Đăng story» ở `/stories/new` (nút tắt có lý do), đọc ra đúng «Chọn một tấm ảnh trước đã.»; identity là «Gửi lên cộng đồng» ở `/community/new` (nút tắt không lý do), đọc ra rỗng. Script dừng nếu một trong hai sai |
-| `retest-bang.mjs` và `tong-hop.mjs` sau N14 | `retest.md` trùng từng byte với bản đã commit (N14 không đổi hàng retest); `coverage-matrix.md` và manifest sinh lại trùng từng byte |
+| `retest-bang.mjs` và `tong-hop.mjs` sau N15 | `retest.md` trùng từng byte với bản đã commit (N15 không đổi hàng retest); `coverage-matrix.md` và hai manifest sinh lại lần hai trùng từng byte lần một |
 | Diff app từ `7ea1a7c` | 0 dòng trong `apps services packages parity phase0` |
 
 **Phép đo UI-123 trên hai bản** (checkpoint 1; `tham-do-lich-su-tab.mjs`, dalat-0, C1; số sau «#» là `history.length`):
@@ -477,14 +556,41 @@ Checkpoint N14:
     ghim đó. Ghim cũ giữ nguyên từng chữ; mã guard không đổi; `chot-anh.mjs` ghi dạng này cho mọi ghim mới. Sau khi ghim
     lại 10 ảnh N14 (ảnh trùng từng byte), tổng tính là 15.746 byte, 690 byte được annotation loại ra.
 
+Checkpoint N15:
+30. **`TC-N15-TRANG-DOI-CHO` rỗng nghĩa.** Hai trang của sổ tự xếp cùng tên «2026-09-29» (chính là UI-154). So tên trang
+    trước và sau «Đưa trang 2 lên trước» vì thế không chứng minh gì: một PASS rỗng. Đã rút; đo lại sau khi đặt tên riêng
+    «Trang thử A», «Trang thử B» cho hai trang.
+31. **`TC-N15-CAT-RIENG` FAIL giả.** Bộ kiểm gọi ảnh bìa bằng `cover_id` đọc từ phản hồi của người ngoài. Sau khi cất về
+    riêng tư, phản hồi đó là 404 nên không có `cover_id`, và ảnh bìa không được gọi. Đã rút; `cover_id` nay lấy từ chủ sổ.
+    Đo lại cả vòng công khai → gửi → duyệt → cất, vì vậy sổ có hai vòng (§A).
+32. **Đổi ID `TC-N15-TUONG`.** Kệ trống và kệ có sổ là hai phép đo khác nhau; cùng một ID thì hàng sau đè hàng trước (bài
+    học N26). Tách thành `TC-N15-TUONG-RONG` (chat-2, chưa có sổ) và `TC-N15-TUONG-CO-SO` (chat-0).
+33. **Đánh số lại trước khi commit.**
+    - Bản phân xử đầu đánh số UI-151 cho «link sổ khi chưa đăng nhập về Welcome, đăng nhập xong vào Khám phá». Kiểm trùng
+      với issue gốc thì đó chính là UI-121 (link chat → đăng nhập → Khám phá). Hàng đo nay trỏ UI-121 (mở rộng), và các issue
+      sau lùi một số: 6 issue mới UI-149…UI-154, dãy liền.
+    - Cùng lượt, ba ô chữ cao 44 của màn sửa được ghi vào UI-001. Bản phân xử đầu đã coi 44 là đủ, trong khi UI-001 của
+      audit gốc đặt ngưỡng 48 theo DESIGN.md.
+    - Sổ giữ các dòng cũ (append-only), dòng cuối thắng. Ảnh ghép mang nhãn số cũ được dựng lại và ghim lại trước commit;
+      không ảnh nào mang số cũ được commit.
+34. **Guard chặn lượt commit đầu, đúng.** Ghi chú của `TC-N15-GUI-CONG-DONG` chép nguyên thân bài Cộng đồng, có hai tên
+    trang «2026-09-29» và «2026-09-29» chỉ cách nhau một dấu cách. Luật `vn-phone` đọc đoạn nằm vắt qua hai ngày (tháng và
+    ngày của ngày đầu, rồi năm và tháng của ngày sau) thành một số di động 10 chữ số. Lượt commit thứ hai lại bị chặn vì
+    chính đoạn giải thích này, trong report, README và comment của script, chép nguyên cặp ngày; nay chúng viết từng ngày
+    trong «». Đó là dương tính giả, nhưng guard làm đúng việc của nó. `n15-phan-xu.mjs` chép hàng cuối của hàng đó
+    với mỗi ngày đặt trong «», như tài liệu vẫn trích ngày: chữ số giữ nguyên, không còn dãy số và dấu nối nào cho mẫu bắt.
+    `n15-nhat-ky.mjs` làm vậy cho lượt đo sau. Status và số đo không đổi.
+
 Ngoài sổ, ở N14: khung của relay mang dấu xuống dòng ở cuối. Ghi chú của `TC-N14-WS-NHAY` và `TC-N14-WS-MAT-CHU` giữ
 nguyên trong sổ, và `tong-hop.mjs` thay dấu xuống dòng bằng dấu cách trong ma trận. Bản ghi khung của relay nay cắt khoảng
 trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đo nào đổi.
 
 ## F. Giới hạn và rủi ro còn lại
 
-- **Chưa đo.** Ba feature mới của main: Nhật ký chuyến / sổ kỷ niệm Nếp v3 (#15), hồ sơ kể chuyện và tường v2 (#21), Rủ Đi
-  AI trong chat (#22). Có hàng NOT_TESTED trong ma trận.
+- **Chưa đo.**
+  - Hai feature mới của `461eabf`: hồ sơ kể chuyện và tường v2 (#21), Rủ Đi AI trong chat (#22). Có hàng NOT_TESTED trong
+    ma trận.
+  - Bản đồ giấy Hành trình của main `79baa1c` (#40): chưa có hàng.
 - **Giới hạn riêng của N26:**
   - AI không có khoá nên chip sẵn sàng, tấm «Xem», câu trả lời và chân thẻ «· dùng gu của …» chỉ đo trên trang lab, hoặc
     BLOCKED (§A).
@@ -507,6 +613,21 @@ trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đ
     được mở. Link `rudi://` có bấm được trong app nhắn tin hay không là HYPOTHESIS.
   - «Xóa lịch sử đề xuất» và «Xác nhận xóa bài và bình luận» không được bấm (không xoá dữ liệu để thử UI); phần của chúng
     trong UI-141 là STATIC.
+- **Giới hạn riêng của N15:**
+  - Không có khoá AI. Các phần sau là BLOCKED: sổ do Nếp viết, việc Nếp chỉ dùng chất liệu được chọn, và luật «dựng lại
+    không ghi đè bản đã sửa» (ADR-0039). Tên trang do Nếp đặt chưa đo; UI-154 chỉ nói về sổ tự xếp.
+  - Khép chỉ đo trên một kèo, một lần, vì không hoàn tác được. Loại «Khoảnh khắc» chưa được khép thật.
+  - Hero quyết toán sau khi «Kèo album retest» xong (UI-149) chưa đo, vì ngày đo kèo còn «đang đi».
+  - Cấu hình:
+    - màn khép và màn chất liệu ở C1, C2, C3, C8, C6;
+    - sửa sổ ở C1–C3; sheet ảnh ở C1, C8, C6;
+    - đọc sổ và kệ ở C1–C3;
+    - chuyển động lật sổ ở C1 và C9;
+    - phần còn lại chỉ ở C1.
+  - Ảnh từ máy đo bằng bộ chọn tệp của trình duyệt với một ảnh PNG tổng hợp. Bộ chọn ảnh native và quyền thư viện ảnh
+    chưa đo.
+  - Bài cộng đồng dựng từ sổ chỉ đo tới chờ duyệt, duyệt (qua API của người duyệt) và thu hồi. Thẻ của bài đó trên bảng tin
+    chưa đo.
 - **Chỉ web.** Native Android và iOS vẫn BLOCKED như audit gốc; phần native của từng issue không được đo lại.
 - **Cấu hình.** Phần lớn issue chỉ đo lại ở cấu hình chính (thường là C1). Một số issue nêu nhiều cấu hình mà chỉ đo một:
   - UI-059 chỉ ở C1, trong khi tiêu chí nêu C1–C3;
@@ -520,8 +641,8 @@ trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đ
 - **Phụ thuộc ngày.** Kết luận của UI-092 dựa trên phép đo ngày xa, vì phép đo theo ngày thật đạt hay trượt tuỳ ngày chạy.
 - **Đường tái hiện đã đổi.** Nhiều issue phải đi đường khác vì main đã đổi UI: khay tạo, hai lớp sổ, tab đầu, màn Thành tích
   mới. Kết luận «còn» ở những issue này là về cùng lỗi trên đường mới. Ghi chú từng hàng nói rõ đường nào.
-- **Quan sát Q3 và Q4** chưa thành issue, và chưa được đo như issue. Q1 và Q2 đã thành UI-127 và UI-131; Q5 đã đo ở N14 và
-  không thành issue mới.
+- **Quan sát Q3** chưa thành issue và chưa được đo; nó thuộc #21. Q1 và Q2 đã thành UI-127 và UI-131; Q4 thành UI-149 ở
+  N15; Q5 đã đo ở N14 và không thành issue mới.
 - **Dữ liệu.** Kết quả dựa trên stack cục bộ thứ hai với dữ liệu tổng hợp. Các lệnh ghi ở §A làm trạng thái stack khác
   stack của audit gốc.
 - **Retest không chứng minh app đúng.** Nó chỉ nói tiêu chí gỡ của từng issue đạt hay chưa, trong phạm vi đã đo. Không
@@ -537,7 +658,29 @@ trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đ
     (UI-124…UI-131), ba mở rộng của issue gốc, Q1 và Q2 đã kết luận. Mọi ảnh ghép đã mở ra xem; 11 ảnh mới đã ghim.
   - Checkpoint N14: Cộng đồng (#14). 133 hàng `TC-N14-*` (64 PASS, 48 FAIL, 21 BLOCKED: 20 native, 1 tải video), 17 issue
     mới (UI-132…UI-148), bảy mở rộng của issue gốc, Q5 đã kết luận. Mọi ảnh ghép đã mở ra xem; 10 ảnh mới đã ghim.
-- **Bước kế:** các feature mới còn lại, theo thứ tự #15 → #21 → #22. Mỗi feature đi đủ chuỗi feature → màn → lớp →
-  trạng thái như audit gốc, issue mới đánh số từ UI-149. #15 gồm quan sát Q4; #21 gồm Q3.
-- **Nếu bị ngắt:** ba feature mới còn lại vẫn là NOT_TESTED trong ma trận. Không phần nào ở trên được tuyên bố là xong
+  - Checkpoint N15: sổ chuyến đi / Nếp v3 (#15). 83 hàng `TC-N15-*` (49 PASS, 19 FAIL, 15 BLOCKED: 14 native, 1 Nếp thật),
+    6 issue mới (UI-149…UI-154), tám mở rộng của issue gốc, Q4 đã kết luận thành UI-149. Mọi ảnh ghép đã mở ra xem; 12 ảnh
+    mới đã ghim.
+- **Bước kế:** #21 → #22 → #40. #40 là bản đồ giấy Hành trình trên main `79baa1c`, cần bản web dựng từ commit đó. Mỗi
+  feature đi đủ chuỗi feature → màn → lớp → trạng thái như audit gốc, issue mới đánh số từ UI-155. #21 gồm quan sát Q3.
+- **Nếu bị ngắt:** #21 và #22 vẫn là NOT_TESTED trong ma trận; #40 chưa có hàng. Không phần nào ở trên được tuyên bố là xong
   ngoài những gì liệt kê ở đây.
+
+### Tiến độ
+
+Đếm ngày 30/09, theo hàng test case, gồm cả hàng native BLOCKED. Phần chưa làm là **ước lượng** theo cỡ N26 (98 hàng) và
+N14 (133 hàng).
+
+| Khối | Trạng thái | % |
+|---|---|---|
+| Audit gốc `7ea1a7c`: F00–F11, E1–E6, verify cây sạch (933 hàng, UI-001…UI-122) | xong | 100% |
+| Retest 122 issue gốc trên main | xong | 100% |
+| #26 hai lớp chat (98 hàng) | xong | 100% |
+| #14 Cộng đồng (133 hàng) | xong | 100% |
+| #15 sổ chuyến đi (83 hàng) | xong ở checkpoint này | 100% |
+| #21 hồ sơ kể chuyện, tường v2 | chưa (ước 80–110 hàng) | 0% |
+| #22 Rủ Đi AI trong chat | chưa (ước 40–60 hàng; phần AI thật BLOCKED) | 0% |
+| #40 bản đồ giấy Hành trình (main `79baa1c`) | chưa (ước 50–70 hàng) | 0% |
+
+Đã đo 1516 hàng (929 của audit gốc, 587 trên main) trên tổng ước 1690–1760 hàng, tức khoảng 86–90%. Không con số nào ở
+đây nói app đúng; nó chỉ nói phần nào đã được đo.

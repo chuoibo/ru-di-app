@@ -10,6 +10,9 @@
   thêm UI-124…UI-131. Mục «N26» dưới đây nói phần nào đạt; mục «Mở rộng» ghi ba issue của audit gốc gặp lại ở màn mới.
 - Checkpoint N14 audit Cộng đồng (task #14, ADR-0040), tab đầu của app trên main, và thêm UI-132…UI-148. Mục «N14» nói phần
   nào đạt; mục «Mở rộng (đo ở N14)» ghi bảy issue của audit gốc gặp lại. Quan sát Q5 đóng ở đây.
+- Checkpoint N15 audit sổ chuyến đi / Nếp v3 (task #15, ADR-0039): khép cuộc đi, giữ sổ, sửa, công khai, gửi Cộng đồng, xoá,
+  và thêm UI-149…UI-154. Mục «N15» nói phần nào đạt; mục «Mở rộng (đo ở N15)» ghi tám issue của audit gốc gặp lại, trong đó
+  link sổ khi chưa đăng nhập là UI-121. Quan sát Q4 đóng ở đây (UI-149).
 - MODE = AUDIT_ONLY: không issue nào được sửa. «Trạng thái sửa» của mọi issue là *chưa sửa*; «Retest» là
   *không áp dụng*.
 - Phân loại, mức và phương pháp như audit gốc: BUG · UX ISSUE · VISUAL POLISH; P0–P3; RUNTIME-WEB, STATIC,
@@ -19,8 +22,8 @@
 
 | Mức | Issue |
 |---|---|
-| P2 | UI-123, UI-124, UI-130, UI-132, UI-133, UI-134, UI-135, UI-136, UI-137, UI-138 |
-| P3 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-131, UI-139, UI-140, UI-141, UI-142, UI-143, UI-144, UI-145, UI-146, UI-147, UI-148 |
+| P2 | UI-123, UI-124, UI-130, UI-132, UI-133, UI-134, UI-135, UI-136, UI-137, UI-138, UI-149, UI-150, UI-151 |
+| P3 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-131, UI-139, UI-140, UI-141, UI-142, UI-143, UI-144, UI-145, UI-146, UI-147, UI-148, UI-152, UI-153, UI-154 |
 
 ---
 
@@ -605,10 +608,196 @@ Bảy issue của `docs/claude/2026-09-27/mobile-ui-audit/issues.md` gặp lại
 
 ---
 
+## N15 Sổ chuyến đi / Nếp v3 (khép cuộc đi, sổ kỷ niệm; #15, ADR-0039)
+
+Đo trên bản web export của main với stack thứ hai. Stack không có khoá AI, nên với Nếp chỉ đo được nhánh lỗi; sổ đo ở đây dựng
+bằng «Tự xếp trang, không gửi AI». Persona (seed chat-test, đọc qua API trước mọi lần ghi):
+- chat-0: người tổ chức «Kèo album retest» (29–30/09), giữ một sổ chuyến đi;
+- chat-1: thành viên; giữ một sổ rồi xoá nó từ link lạnh;
+- chat-2: chưa có sổ, dùng cho kệ trống;
+- chat-15: người duyệt Cộng đồng (cấp ở N14), duyệt bài dựng từ sổ;
+- dalat-0: ngoài nhóm chat-test. Được đọc sổ công khai, không bao giờ được đọc sổ riêng tư.
+
+Khép cuộc đi không hoàn tác được, nên phần đo trước khi khép chạy trước phần khép. Mọi lần ghi liệt kê ở `report.md` §A.
+
+Đạt trong phạm vi đã đo (`coverage-matrix.md`, hàng `TC-N15-*`):
+- **Lối vào**: người tổ chức có «Giữ lại cuộc đi» 358×48 trên màn kèo, tới `/outings/[id]/ending`. Màn của kèo chưa tới ngày
+  không có lối này.
+- **Khép cuộc đi** ở C1, C2, C3, C8, C6: lời mời, thẻ kèo, bộ chọn loại và «Khép cuộc đi» thấy đủ. Chạm thì sau 271 ms sang
+  pha chọn chất liệu; thành viên đọc lại thấy cuộc đi đã khép.
+
+  ![Màn khép cuộc đi ở năm cấu hình](evidence/EV-N15-KHEP-ghep.jpg)
+- **Chất liệu**:
+  - ảnh chọn sẵn theo ngày đi («3 / 40 ảnh đã chọn»), tải được, bỏ chọn rồi chọn lại được;
+  - ô trích đoạn gõ được, phần gửi Nếp đổi thành «3 ảnh · 1 trích đoạn»;
+  - câu dưới ô («Chat không được tự đọc. Chỉ đoạn bạn đặt ở đây sẽ đi cùng ảnh.») đúng ranh giới AI của repo: AI chỉ nhận thứ
+    được chia sẻ rõ ràng.
+
+  ![Màn chọn chất liệu ở năm cấu hình](evidence/EV-N15-NGUON-ghep.jpg)
+- **Dựng sổ**:
+  - «Dựng sổ cùng Nếp» khi không có khoá: lúc chờ có «Quay lại»; sau 5,7 s có câu nói Nếp chưa xếp xong, chất liệu còn nguyên,
+    còn lối «Tự xếp trang, không gửi AI»;
+  - tự xếp: sổ nháp sau 270 ms, bốn ảnh tải được; sổ lật vào ở C1, hiện ngay ở C9.
+
+  ![Dựng sổ cùng Nếp khi không có khoá AI, và tự xếp trang ở C1, C9](evidence/EV-N15-DUNG-ghep.jpg)
+- **Sửa sổ**:
+  - tên mới lên bìa;
+  - sheet ảnh bìa có role dialog, tiêu điểm vào trong, Esc đóng, chọn ảnh thì đóng;
+  - thêm rồi bỏ một trang, đổi chỗ hai trang; ảnh từ máy thành ô thứ tư sau 504 ms;
+  - ở C2 và C3 tối không tràn, không cắt chữ.
+
+  ![Chế độ sửa ở C2 và C3 tối; kệ có sổ](evidence/EV-N15-HEP-ghep.jpg)
+- **Lưu và kệ**: lưu riêng tư sau 267 ms («Đã giữ lại một cuộc đi.»). Kệ «Những ngày muốn giữ» có cuốn sổ «Chỉ mình tôi» và nút
+  mở, ở C1, C2, C3.
+- **Đọc sổ** ở C1–C3: bìa, các trang «Ngày 29/09/2026» với ảnh, nút của chủ sổ.
+- **Quyền riêng tư của sổ** (ADR-0039):
+  - người ngoài nhóm mở sổ riêng tư: không lộ chữ hay ảnh nào;
+  - trước khi công khai có câu nói ảnh và lời sẽ ra ngoài hội. Sổ công khai thì người ngoài đọc được sổ và ảnh bìa;
+  - gửi lên Cộng đồng tạo bài chờ duyệt. Duyệt xong rồi «Cất về riêng tư»: người ngoài nhận 404 cho sổ, cho ảnh bìa và cho bài
+    cộng đồng dựng từ sổ.
+
+  ![Đọc sổ ở C1–C3; người ngoài nhóm gặp sổ riêng tư](evidence/EV-N15-DOC-ghep.jpg)
+
+  ![Công khai, gửi Cộng đồng, cất về riêng tư](evidence/EV-N15-CONG-KHAI-ghep.jpg)
+- **Xoá sổ** từ link lạnh:
+  - sheet hỏi «Bỏ cuốn sổ này khỏi tường? Ảnh gốc trong hội vẫn còn…»;
+  - «Giữ sổ lại» đóng mà không xoá;
+  - xác nhận thì về Cá nhân, và sổ trả 404.
+- **Lỗi máy chủ** (503 ở lần đọc đầu) ở màn khép và màn đọc: câu nói Rủ Đi gặp sự cố, «Thử lại» mở được màn.
+
+Chưa đo được: native (14 hàng BLOCKED), và Nếp dựng sổ với khoá AI thật (`TC-N15-DUNG-AI-THAT`, BLOCKED).
+
+### UI-149 · «Đã chia» của album tính theo ngày chứ không theo kèo: một khoản chi hiện ở mọi kèo trùng ngày
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (số tiền hiện sai chỗ) · **P2** |
+| Feature / Screen / Layer | N15 (quan sát Q4) · `/groups/[id]/album`, kệ album · `GET /contexts/{id}/albums`, `GET /contexts/{id}/recap` (LIVE-GO; bản Python còn chạy và là oracle) |
+| Nền tảng, cấu hình | API trên stack thứ hai (RUNTIME); kệ album web C1. Native gọi cùng API (STATIC) |
+| Điều kiện | Nhóm có hai kèo mà khoảng ngày chồng nhau (một kèo một ngày trong một chuyến hai ngày, hay hai kèo cùng ngày), và một khoản chi có ngày rơi vào phần chồng |
+| Tái hiện | 1. Nhóm chat-test có một khoản chi ngày 29/09 (tổng phân bổ 13.705.678đ, ghi ở F04) và «Kèo album retest» 29–30/09. 2. chat-0 tạo «Kèo trùng ngày kiểm tổng» ngày 29/09, không chi gì, không ảnh. 3. Mở kệ album của nhóm; đọc hai API trên |
+| Expected | Mỗi khoản chi thuộc đúng một kèo, hoặc không kèo nào. «Đã chia» của các kèo cộng lại không vượt tổng chi của nhóm |
+| Actual | API: cả hai kèo `split_total_vnd` 13.705.678, `expense_count` 1. Recap: «đã xong» có «Kèo trùng ngày kiểm tổng» 13.705.678đ, «đang đi» có «Kèo album retest» 13.705.678đ. Kệ album: hai hàng cùng ghi «3 ảnh · 0 chỗ đã tới · 0 check-in · đã chia 13.705.678đ», dù kèo vừa tạo không có ảnh hay khoản chi nào của riêng nó. Số ảnh cũng tính theo ngày. Riêng với ảnh, màn chọn chất liệu của sổ nói rõ «Ảnh đã được chọn theo ngày đi. Bạn xem lại nhé, nhất là khi hai cuộc hẹn trùng nhau.»; với tiền thì không có bước xem lại nào. Kệ chỉ ghi năm «2026»: đó là UI-103 |
+| Evidence | ![Kệ album: hai kèo trùng ngày cùng ghi «đã chia 13.705.678đ»](evidence/EV-N15-Q4-KE-C1.jpg) (hàng `TC-N15-Q4-API`, `TC-N15-Q4-KE`) |
+| Source | `services/core/internal/repo/recap.go:127`: khoản chi nối vào kèo bằng `on_date BETWEEN outings.starts_on AND outings.ends_on`, trong cùng nhóm. `:160`: kỷ niệm (ảnh) nối cùng cách. Bảng `expenses` không có cột kèo. Oracle Python làm y hệt: `services/api/app/api/repository.py:3012` (tiền), `:3029` (kỷ niệm). `routes.json`: `/contexts/{context_id}/albums` và `/recap` là LIVE-GO, `python: live`. Parity so Go với Python nên vẫn xanh trong khi cả hai cùng cộng trùng; bản sửa phải đi qua cả hai. App: `src/rudi/doc-live.ts:126` (`tongTuRecap`) lấy tổng của kèo đang đi đầu tiên, không thì tổng các kèo đã xong; `screens/Bill.tsx:464` đưa số đó lên hero quyết toán |
+| Hậu quả | Người trong nhóm đọc album thấy nhiều kèo cùng «đã chia» một khoản, và cộng lại nhiều hơn số cả nhóm đã chi. **UNVERIFIED HYPOTHESIS** (suy từ mã, chưa đo trên màn): sau 30/09, khi «Kèo album retest» thành đã xong, recap cộng hai kèo thành 27.411.356đ, gấp đôi khoản chi thật, và hero quyết toán hiện số đó. Sổ cái và số dư không bị ảnh hưởng; sai nằm ở con số đọc ra. Còn lối đọc đúng (Tài chính, quyết toán theo sổ), nên là P2 |
+| Đề xuất sửa | Gắn khoản chi với kèo lúc ghi (cột kèo trên khoản chi, hoặc bảng nối). Hoặc khi hai kèo chồng ngày thì chỉ tính một lần và nói rõ trên màn. Đây là đổi mô hình dữ liệu của tiền, nên theo quy trình của repo mở ADR trước. Sửa cả Go lẫn oracle Python; thêm ca kèo chồng ngày vào parity và vào tầng PostgreSQL thật |
+| Tiêu chí gỡ | `n15-nhat-ky.mjs --chi q4`: tổng `split_total_vnd` của các kèo trong nhóm không vượt tổng phân bổ của nhóm; kèo không có khoản chi nào của riêng nó ghi 0đ; kệ album không ghi cùng một khoản ở hai kèo |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-150 · Lưu sổ lỗi: nút thôi quay, quanh nút không gì đổi; câu lỗi nằm ở đầu màn, trên hơn một nghìn điểm ảnh
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (câu lỗi ngoài tầm nhìn) · **P2** (cùng họ UI-051, UI-095) |
+| Feature / Screen / Layer | N15 · `/outings/[id]/ending`, sổ nháp · nút «Lưu riêng tư» / «Đăng sổ công khai», `ErrorState` của màn; `PUT /outings/{id}/diary` (LIVE-GO, không có bản Python) |
+| Nền tảng, cấu hình | web, C1; máy chủ trả 503 cho `PUT` (giả lập bằng `route()`). Native: cùng mã (STATIC) |
+| Điều kiện | Lưu sổ khi máy chủ lỗi. Nút lưu nằm dưới cuốn sổ, nên lúc chạm màn đã cuộn xuống |
+| Tái hiện | 1. chat-0 tự xếp trang, cuộn tới «Lưu riêng tư». 2. `PUT` trả 503. 3. Chạm «Lưu riêng tư» |
+| Expected | Câu lỗi hiện gần nút vừa chạm, hoặc màn cuộn tới câu và dời tiêu điểm vào đó |
+| Actual | Lúc chạm, nút ở y 688 và màn đã cuộn 1217. Sau khi chạm, quanh nút không có gì đổi. Câu «Mình thử lại nhé · Rủ Đi đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.» và «Thử lại» nằm ở y −1139 đến −811, trên đầu màn. Bản nháp còn nguyên (đạt) |
+| Evidence | ![Lưu lỗi: câu lỗi ngoài khung nhìn; rời màn là mất chỗ đang sửa; lưu được thì sổ lên tường](evidence/EV-N15-LUU-ghep.jpg) (hàng `TC-N15-LUU-LOI`) |
+| Source | `apps/mobile/src/rudi/diary/EndingScreen.tsx:111`: `error` của mọi thao tác vẽ thành `ErrorState` ngay dưới `TopBar`, đầu phần cuộn. `keep()` (`:67–71`) chỉ gọi `report(e)`: không cuộn, không dời tiêu điểm |
+| Hậu quả | Người giữ sổ chạm «Lưu», thấy nút thôi quay và nghĩ đã lưu. Nháp chưa lưu chỉ nằm trong state của màn (đọc mã), nên rời màn là mất; phần rời màn đã đo với bản sửa ở UI-097 |
+| Đề xuất sửa | Đặt câu lỗi của thao tác lưu ngay dưới nút lưu, hoặc cuộn tới `ErrorState` và dời tiêu điểm vào đó (cùng đề xuất với UI-051, UI-095) |
+| Tiêu chí gỡ | `--chi luu:loi`: câu lỗi nằm trong cửa sổ ngay sau khi chạm «Lưu riêng tư» |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-151 · Kèo chưa tới ngày: máy chủ nói «khép được», màn mời «Khép cuộc đi», chạm thì bị từ chối kèm «Thử lại»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (máy chủ mời một việc chính nó từ chối) · **P2** |
+| Feature / Screen / Layer | N15 · `/outings/[id]/ending`, pha khép · `GET /outings/{id}/ending` (`can_end`), `POST /outings/{id}/ending` (LIVE-GO, không có bản Python) |
+| Nền tảng, cấu hình | API trên stack thứ hai (RUNTIME); web C1. Native: cùng API, cùng màn (STATIC) |
+| Điều kiện | Người tổ chức mở màn khép của một kèo chưa bắt đầu. Màn kèo không có lối vào (`TC-N15-VAO-SAP-TOI` đạt), nên đường tới là link: link cũ, link được gửi, lịch sử trình duyệt |
+| Tái hiện | 1. chat-0 mở `/outings/<id>/ending` của «Kèo retest 2 ngày chưa có chặng» (24–25/10). 2. Chạm «Khép cuộc đi» |
+| Expected | Kèo chưa bắt đầu thì `can_end` là false (hoặc có lý do đi kèm); màn nói «Cuộc đi còn ở phía trước…» thay cho nút, và không có «Thử lại» |
+| Actual | `GET` trả `can_end=true` cho cả kèo 29–30/09 lẫn kèo 24–25/10; `diary-sources` của kèo 24–25/10 trả 409 `outing_not_ended`. Màn vẽ đủ lời mời và nút «Khép cuộc đi». Chạm thì `POST` trả 409 `outing_not_started`; màn hiện «Mình thử lại nhé · Cuộc đi còn ở phía trước. Mình giữ trang cuối cho hôm trở về nhé.» với «Thử lại», lời mời khép vẫn ở bên dưới. «Thử lại» gửi lại đúng yêu cầu đó (`retry.current = close`), nên chỉ có thể ra lại 409 cho tới 24/10 (đọc mã) |
+| Evidence | ![Thành viên thấy bộ chọn loại; kèo chưa tới ngày vẫn mời khép rồi 409; kèo không dành cho mình](evidence/EV-N15-KHEP-LOI-ghep.jpg) (hàng `TC-N15-API`, `TC-N15-KHEP-SAP-TOI`) |
+| Source | `services/core/internal/diary/handler.go:166`: `CanEnd` chỉ xét vai trò (người lập kèo, thành viên cặp đôi, hoặc quản trị khi người lập đã rời). `:242–245`: `POST` từ chối 409 `outing_not_started` khi `starts_on` sau hôm nay (giờ Việt Nam); `GET` (`readEnding`, `:181`) không xét ngày. App: `apps/mobile/src/rudi/diary/EndingScreen.tsx:123` vẽ nút khi `can_end`; `:51` đặt `retry.current = close`; `diary/api.ts:15` có câu riêng cho `outing_not_started`, tức app biết ca này nhưng chỉ biết sau khi đã chạm |
+| Hậu quả | Người tổ chức được mời làm một việc chưa thể làm, rồi nhận câu lỗi trình bày như trục trặc tạm («Mình thử lại nhé») kèm «Thử lại» không bao giờ thành. Máy chủ từ chối nên không có dữ liệu sai |
+| Đề xuất sửa | `can_end` xét cả ngày bắt đầu (hoặc thêm trường lý do); màn hiện câu «Cuộc đi còn ở phía trước…» thay cho nút; với 409 `outing_not_started` thì không có «Thử lại» |
+| Tiêu chí gỡ | Trên một kèo chưa tới ngày, `--chi api,khep-truoc`: `can_end` false hoặc có lý do; màn không có «Khép cuộc đi», không có «Thử lại» |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-152 · Thành viên không khép được cuộc đi nhưng vẫn thấy bộ chọn «Khoảnh khắc | Sổ chuyến đi»; chạm thì đổi tiêu đề mà không có tác dụng
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | N15 · `/outings/[id]/ending`, pha khép, người không có quyền khép · bộ chọn loại |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Thành viên thường (không lập kèo, không phải quản trị thay người lập đã rời) mở màn khép trước khi người tổ chức khép |
+| Tái hiện | 1. chat-1 mở `/outings/<id>/ending` của «Kèo album retest» trước khi khép. 2. Chạm «Khoảnh khắc» |
+| Expected | Không có bộ chọn, hoặc bộ chọn tắt kèm lý do; màn nói người tổ chức sẽ chọn |
+| Actual | Không có nút «Khép cuộc đi»; câu «Người tổ chức sẽ khép cuộc đi. Bạn quay lại đây để giữ kỷ niệm nhé.» nằm dưới một bộ chọn loại vẫn bấm được. Chạm «Khoảnh khắc»: thanh đầu đổi «Sổ chuyến đi» thành «Khoảnh khắc», câu trên thẻ đổi thành «Không cần đi xa mới có một ngày đáng nhớ.»; không gì được gửi đi |
+| Evidence | ![Thành viên thấy bộ chọn loại; kèo chưa tới ngày vẫn mời khép rồi 409; kèo không dành cho mình](evidence/EV-N15-KHEP-LOI-ghep.jpg) (hàng `TC-N15-KHEP-THANH-VIEN`) |
+| Source | `apps/mobile/src/rudi/diary/EndingScreen.tsx:121`: `Segmented` luôn vẽ; `:123`: chỉ có nút phụ thuộc `can_end`; `:110`, `:119`: tiêu đề và câu theo `kind` cục bộ. Loại chỉ đi lên máy chủ trong `POST` của người tổ chức (`:51`) |
+| Hậu quả | Thành viên tưởng mình đã chọn loại sổ. Khi người tổ chức khép bằng loại khác, màn đổi theo mà không giải thích |
+| Đề xuất sửa | Ẩn bộ chọn khi `can_end` false, hoặc hiện loại được gợi ý dưới dạng chữ |
+| Tiêu chí gỡ | Trên một kèo chưa khép, một thành viên thường ở màn khép: không có bộ chọn bấm được, hoặc bộ chọn tắt kèm lý do |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-153 · Kệ «Những ngày muốn giữ» khi chưa có sổ: một câu bảo mở cuộc đi đã qua, không có hành động nào
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | N15 · tab Cá nhân `/profile` (và tường `/people/[id]` của chính mình) · kệ «Những ngày muốn giữ» |
+| Nền tảng, cấu hình | web, C1, C2, C3. Native: cùng mã (STATIC) |
+| Điều kiện | Người chưa giữ cuốn sổ nào (chat-2) |
+| Tái hiện | chat-2 mở tab Cá nhân, cuộn tới kệ |
+| Expected | DESIGN.md, mục «Trạng thái rỗng, tải, lỗi»: `EmptyState` gồm `h2`, một câu, **một** hành động (và một cửa phụ). Ở đây hành động tự nhiên là tới kèo gần nhất đã xong, hoặc tới danh sách kèo |
+| Actual | «Những ngày muốn giữ · Những cuộc đi trở thành chuyện của bạn. · Cuộc đi khép lại, một trang mới sẽ ở đây. Mở cuộc đi đã qua để giữ khoảnh khắc đầu tiên.» Trong kệ không có nút hay link nào, ở cả ba cấu hình. Câu bảo mở một cuộc đi đã qua mà không nói ở đâu; lối đã đo là màn kèo → «Giữ lại cuộc đi» (`TC-N15-VAO-KEO`) |
+| Evidence | ![Lối vào; kệ trống ở C1–C3; kệ có sổ](evidence/EV-N15-VAO-ghep.jpg) (hàng `TC-N15-TUONG-RONG` C1–C3) |
+| Source | `apps/mobile/src/rudi/diary/Wall.tsx:24`: nhánh rỗng chỉ là một `Text` |
+| Hậu quả | Người mới không biết bắt đầu cuốn sổ đầu tiên từ đâu |
+| Đề xuất sửa | Dùng `EmptyState` với một nút tới kèo gần nhất đã xong (hoặc danh sách kèo) |
+| Tiêu chí gỡ | `--chi vao:chat-2:C1` (và C2, C3): kệ trống có đúng một hành động dẫn tới chỗ bắt đầu cuốn sổ |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-154 · Tên trang của sổ tự xếp là ngày dạng máy «2026-09-29», trong ô sửa và trong bài Cộng đồng; màn đọc thì ghi «Ngày 29/09/2026»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** (cùng họ UI-104) |
+| Feature / Screen / Layer | N15 · `/outings/[id]/ending`, chế độ sửa (ô «Tên trang»); bài Cộng đồng dựng từ sổ (`/community/posts/[id]`) |
+| Nền tảng, cấu hình | web, C1 (ô sửa, bài), C2 và C3 (ô sửa). Native: cùng dữ liệu (STATIC) |
+| Điều kiện | Sổ dựng bằng «Tự xếp trang, không gửi AI». Tên trang do Nếp đặt chưa đo được (không có khoá AI) |
+| Tái hiện | 1. Tự xếp trang. 2. «Sửa theo cách mình nhớ», đọc ô «Tên trang». 3. Công khai sổ, gửi lên Cộng đồng, mở bài |
+| Expected | Tên trang là chữ người đọc được, cùng kiểu với màn đọc («Ngày 29/09/2026») |
+| Actual | Ô «Tên trang» của cả hai trang ghi «2026-09-29»; màn đọc hiện «Ngày 29/09/2026». Thân bài Cộng đồng dựng từ sổ có hai dòng «2026-09-29» |
+| Evidence | ![Chế độ sửa, ô «Tên trang»; sheet ảnh bìa](evidence/EV-N15-SUA-ghep.jpg) ![Bài Cộng đồng chờ duyệt](evidence/EV-N15-CONG-KHAI-ghep.jpg) (hàng `TC-N15-TRANG-TEN`; ghi chú của `TC-N15-GUI-CONG-DONG`) |
+| Source | `services/core/internal/domain/diary/diary.go:85`: bố cục tay đặt `Heading: s.Photos[i].Day` (ngày ISO). `apps/mobile/src/rudi/diary/BookView.tsx:35`: màn đọc đổi chuỗi dạng `YYYY-MM-DD` thành «Ngày …» chỉ lúc vẽ; ô sửa hiện giá trị thô. `services/core/internal/community/diary.go:163`: thân bài ghép `page.Heading` thô |
+| Hậu quả | Người giữ sổ gặp một định dạng máy trong đúng ô được mời sửa; người đọc Cộng đồng thấy nó trong bài công khai. Lệch với «29/09» ở mọi chỗ khác của app |
+| Đề xuất sửa | Bố cục tay ghi tên trang bằng chữ («Ngày 29/09/2026») ngay trong tài liệu, hoặc dùng cùng một hàm định dạng cho ô sửa và cho thân bài |
+| Tiêu chí gỡ | `--chi sua:C1`: `TC-N15-TRANG-TEN` không có ô nào ghi dạng `YYYY-MM-DD`; bài Cộng đồng dựng từ sổ không có dòng ngày dạng máy |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+---
+
+## Mở rộng issue của audit gốc (đo ở N15)
+
+Tám issue của `docs/claude/2026-09-27/mobile-ui-audit/issues.md` gặp lại trên màn sổ chuyến đi. Không đánh số mới.
+
+| Issue gốc | Gặp lại ở N15 | Hàng · ảnh |
+|---|---|---|
+| UI-001 (ô nhập một dòng 44dp) | Chế độ sửa sổ: «Tên cuốn sổ» và các ô «Tên trang» cao 44 (288×44 ở C2, 328×44 ở C3). Ngoài ba ô này không vùng chạm nào dưới 48 | `TC-N15-O-NHAP-44` C2, C3 · [EV-N15-HEP-ghep](evidence/EV-N15-HEP-ghep.jpg) |
+| UI-003 (`accessibilityState` không tới DOM) | Ô ảnh ở màn chất liệu là checkbox mà không có `aria-checked`. Ô ảnh ở sheet ảnh bìa là radio mà không có `aria-checked`; ảnh bìa đang dùng chỉ khác bằng dòng «Bìa hiện tại» | `TC-N15-NGUON-ARIA`, `TC-N15-BIA-RADIO` · [EV-N15-NGUON-ghep](evidence/EV-N15-NGUON-ghep.jpg), [EV-N15-SUA-ghep](evidence/EV-N15-SUA-ghep.jpg) |
+| UI-019 (404 báo thành «Cập nhật app») | Màn khép mở cho một kèo không dành cho mình (dalat-0, ngoài nhóm) hay không còn tồn tại (chat-0, id ngẫu nhiên): máy chủ trả 404 `outing_not_found`, màn nói «Phần này chưa mở được trên bản app này. Cập nhật app rồi thử lại.» kèm «Thử lại» | `TC-N15-KHEP-404` · [EV-N15-KHEP-LOI-ghep](evidence/EV-N15-KHEP-LOI-ghep.jpg) |
+| UI-040 (sheet quá cao ở cửa sổ thấp) | Ở C8 (390×460), sheet chọn ảnh («Tấm nào mở đầu câu chuyện?») cao 441, tức 96% cửa sổ, đỉnh ở y 19 | `TC-N15-SUA-CO` C8 · [EV-N15-SUA-ghep](evidence/EV-N15-SUA-ghep.jpg) |
+| UI-093 (tablet: trải hết bề ngang) | Ở C6 (768), sheet chọn ảnh rộng 768, trong khi cột nội dung của màn sửa (ô «Tên cuốn sổ») rộng 560 | `TC-N15-SUA-CO` C6 · [EV-N15-SUA-ghep](evidence/EV-N15-SUA-ghep.jpg) |
+| UI-097 (rời màn là mất phần đang soạn, không hỏi) | Đang sửa tên sổ, chạm «Quay lại»: không hỏi, về màn kèo. Mở lại thì tên đang sửa đã mất; máy chủ vẫn giữ tên cũ | `TC-N15-ROI-MAT-SUA` · [EV-N15-LUU-ghep](evidence/EV-N15-LUU-ghep.jpg) |
+| UI-100 («Thử lại» vô ích với nội dung không dành cho mình) | Người ngoài nhóm mở sổ riêng tư: không lộ gì (đạt), nhưng khối «Sổ chưa mở được» có «Thử lại»; chạm thì ra lại đúng khối đó | `TC-N15-DOC-NGOAI-THU-LAI` · [EV-N15-DOC-ghep](evidence/EV-N15-DOC-ghep.jpg) |
+| UI-121 (đăng nhập từ deep link không quay về link đó) | Không phiên, mở link sổ `/diaries/[id]` hay màn khép `/outings/[id]/ending`: về `/welcome` (link chat thì về `/login`). Đăng nhập bằng UI từ đó thì tới `/explore`, mất cuốn sổ. Nguồn: `app/diaries/[id].tsx:7`, `app/outings/[id]/ending.tsx:7` (`<Redirect href="/welcome" />`, không mang đường dẫn gốc) | `TC-N15-KHONG-PHIEN` · [EV-N15-XOA-ghep](evidence/EV-N15-XOA-ghep.jpg) |
+
+---
+
 ## Quan sát chưa thành issue (chờ audit feature mới)
 
-Q1 và Q2 đã được đo ở checkpoint N26 và thành issue (cột cuối). Q5 đã được đo ở checkpoint N14. Q3 và Q4 còn chờ feature của
-chúng.
+Q1 và Q2 đã được đo ở checkpoint N26 và thành issue (cột cuối). Q5 đã được đo ở checkpoint N14. Q4 đã được đo ở checkpoint N15
+và thành UI-149. Q3 còn chờ #21.
 
 Những điều thấy trong lúc retest, thuộc phần main mới đổi. Chưa đủ căn cứ để gọi là lỗi, vì cần đối chiếu ý đồ
 thiết kế của đúng feature đó. Mỗi điều được giao cho task audit tương ứng, không tính vào số issue.
@@ -618,5 +807,5 @@ thiết kế của đúng feature đó. Mỗi điều được giao cho task aud
 | Q1 | Cặp bạn bè (chưa «Một đôi») vừa lập sổ: thân màn sang «Hai người cũng thành một hội», khoảnh khắc bìa sổ M6 không còn diễn | `KhongGianGiay.tsx`: M6 (`vuaMoSo`) chỉ nằm trong nhánh `giay-trong`, nhánh này chỉ tới được khi `batDoi`; runtime: `TC-R-UI-084-B` C1/C9 không thấy khung M6 nào | **Đã đo ở N26, thành UI-127**: lúc thành «Một đôi» cũng không có khung M6 nào |
 | Q2 | Máy chủ vẫn cho phác và gửi tờ giấy ở cặp chưa «Một đôi»; chỉ UI ẩn nút | `pairsteps/papers.go` `DraftPaper` không kiểm `CanBatDoi` (đọc mã, chưa gọi API trên cặp như vậy) | **Đã đo ở N26, thành UI-131**: phác trả 201 ở cặp chat-6/chat-7 |
 | Q3 | Màn bài `/posts/[id]` không còn lối xoá bình luận nào, cho cả người viết lẫn tác giả bài; nhấn giữ bình luận cũng không mở gì. API `DELETE /posts/{id}/comments/{id}` vẫn còn | `TC-R-UI-096` (đổi); `BaiChiTietScreen.tsx` hàng bình luận chỉ có «Thích», «Trả lời» | #21 tường v2 |
-| Q4 | Album kèo ghi «đã chia» bằng tổng phân bổ của mọi khoản chi trong nhóm có ngày rơi vào khoảng ngày của kèo, không theo kèo: «Kèo album retest» vừa tạo ghi «đã chia 13.705.678đ» của khoản chi lượt F04. Hai kèo trùng ngày sẽ cùng ghi một khoản | `repo/recap.go`: nối `expenses` theo `on_date BETWEEN outings.starts_on AND outings.ends_on`; bảng `expenses` không có cột kèo. Đọc mã Go, chưa đối chiếu oracle Python | #15 nhật ký chuyến |
+| Q4 | Album kèo ghi «đã chia» bằng tổng phân bổ của mọi khoản chi trong nhóm có ngày rơi vào khoảng ngày của kèo, không theo kèo: «Kèo album retest» vừa tạo ghi «đã chia 13.705.678đ» của khoản chi lượt F04. Hai kèo trùng ngày sẽ cùng ghi một khoản | `repo/recap.go`: nối `expenses` theo `on_date BETWEEN outings.starts_on AND outings.ends_on`; bảng `expenses` không có cột kèo. Đọc mã Go, chưa đối chiếu oracle Python | **Đã đo ở N15, thành UI-149**: hai kèo trùng ngày cùng ghi «đã chia 13.705.678đ»; oracle Python tính y hệt Go (`repository.py:3012`) |
 | Q5 | Tab Cộng đồng khi chưa đăng nhập có nút «Đăng nhập», trong khi bốn tab demo kia và hai route demo không có (tính vào `TC-R-UI-082-F11`) | `TC-R-UI-082-F11` | **Đã đo ở N14, không thành issue mới**: tab Cộng đồng đúng (`TC-N14-KHONG-PHIEN`: lời mời, «Đăng nhập» tới `/login`); phần lệch nằm ở các tab demo, đã tính vào UI-082. Màn trong của Cộng đồng mở từ link thì không có lối đăng nhập: UI-137 |

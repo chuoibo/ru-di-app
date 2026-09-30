@@ -100,6 +100,15 @@ node kich-ban/n14-cong-dong.mjs --chi bang:C2,bang:theo-doi,ws:chi-tiet,chi-tiet
 node kich-ban/n14-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native và video BLOCKED, rút TC-N-14-…; chạy lại không thêm dòng
 node kich-ban/n14-ghep.mjs           # ảnh ghép của N14, gắn vào hàng
 # Thứ tự chốt checkpoint N14: n14-phan-xu → n14-ghep → chot-anh → tong-hop → kiem-tai-lieu
+# Feature mới #15, sổ chuyến đi / Nếp v3 (checkpoint N15). Phần, theo thứ tự: api, vao, khep-truoc, khep, nguon, dung-ai,
+# dung-tay, sua, luu, doc, cong-khai, khoanh-khac-xoa, khong-phien, loi, q4, hep. khep KHÉP KÈO THẬT, không hoàn tác được:
+# khep-truoc phải chạy trước nó. vao:keo là màn kèo (chỉ có nghĩa trước khep), vao:<persona>:<cấu hình> là một kệ.
+node kich-ban/n15-nhat-ky.mjs --chi api,vao,khep-truoc   # trước khi khép
+node kich-ban/n15-nhat-ky.mjs --chi hep,vao:chat-0:C2   # chỉ đọc: sửa sổ ở C2/C3, kệ có sổ
+                                    # khep, luu, cong-khai, khoanh-khac-xoa, q4 GHI lên stack (report §A); dung-ai cần không có khoá AI
+node kich-ban/n15-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native và Nếp thật BLOCKED, rút TC-N-15-…; chạy lại không thêm dòng
+node kich-ban/n15-ghep.mjs           # ảnh ghép của N15, gắn vào hàng
+# Thứ tự chốt checkpoint N15: n15-phan-xu → n15-ghep → chot-anh → tong-hop → kiem-tai-lieu
 node retest-bang.mjs <docs gốc> <docs main>   # sinh retest.md từ issues.md gốc và sổ retest
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
@@ -261,6 +270,22 @@ Bài học của checkpoint N14 (Cộng đồng, 30/09):
   từ bộ ghi bắt đầu sau đó.
 - Đừng đặt tên biến trùng hàm đã import: một biến `chup` trong một khối của kịch bản N14 sẽ che hàm `chup` của
   `thu-vien/chup.mjs` trong khối đó. Đã đổi thành `daChup` trước khi chạy; cùng họ với biến `keo` ở checkpoint retest 1.
+
+Bài học của checkpoint N15 (sổ chuyến đi, 30/09):
+- Một việc không hoàn tác được (khép cuộc đi) chia kịch bản làm hai: mọi phép đo cần trạng thái «chưa khép» nằm ở phần chạy
+  trước (`khep-truoc`), và phần nhiều cấu hình không được vô tình chạy lại nó (`vao:keo` tách khỏi các phần kệ).
+- So hai giá trị trước và sau một thao tác chỉ chứng minh được gì khi hai giá trị khác nhau từ đầu: hai trang cùng tên
+  «2026-09-29» làm phép so đổi chỗ trang thành PASS rỗng. Đặt tên riêng cho từng trang trước khi đổi chỗ.
+- Đọc định danh (ở đây `cover_id`) từ phản hồi của chủ dữ liệu, không từ phản hồi của người đang bị kiểm quyền: sau khi
+  thu hồi, phản hồi của người ngoài là 404 và không mang định danh nào.
+- Trước khi đánh số một issue mới, tìm trong issue gốc theo hành vi, không theo màn: «link → đăng nhập → Khám phá» đã là
+  UI-121 (link chat), dù lần này là link sổ. Tương tự, ô chữ cao 44 là UI-001, không phải «đạt».
+- Đánh số lại sau khi đã dựng ảnh ghép thì phải dựng lại và ghim lại mọi ảnh mang nhãn số cũ trước khi commit.
+- Hai ngày ISO chỉ cách nhau một dấu cách trông như một số di động với luật `vn-phone` của repo guard. Đặt mỗi ngày trong
+  «» khi chép chữ của trang vào ghi chú, như `ghi` của `n15-nhat-ky.mjs` đang làm; và đừng chép nguyên cặp ngày đó vào tài
+  liệu hay comment khi giải thích (chính lời giải thích đã bị chặn một lần).
+- Khung đỏ của ảnh chú thích (`-ct`) có thể đè lên chữ đầu dòng («0 check-in» đọc thành «check-in»). Ảnh commit cho một
+  con số thì dùng bản không chú thích.
 
 ## Những điều harness không đo được
 

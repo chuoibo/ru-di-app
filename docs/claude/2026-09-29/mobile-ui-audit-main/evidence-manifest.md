@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (45 ảnh, tổng 6.38 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (57 ảnh, tổng 7.96 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -16,6 +16,18 @@
 | [EV-N14-PHU-ghep](evidence/EV-N14-PHU-ghep.jpg) | UI-137, UI-145, UI-146, UI-147, UI-148, UI-095: màn trong không phiên, tìm không ra và «Điều mình muốn giữ» không trạng thái rỗng, trang chủ đề không «Quay lại», thông báo không nói ai, bình luận lỗi không «Thử lại», thích lỗi câu ngoài tầm nhìn | 165327 | `9a1896d5` |
 | [EV-N14-RONG-ghep](evidence/EV-N14-RONG-ghep.jpg) | UI-132: tab Cộng đồng khi chưa có bài công khai nào được duyệt, câu lỗi và «Thử lại» thay trạng thái rỗng ở «Dành cho bạn» và «Thịnh hành», «Đang theo dõi» đúng, «Để sau» giữ lỗi, hết lỗi sau bài duyệt đầu tiên | 191351 | `e269bfcf` |
 | [EV-N14-THE-ghep](evidence/EV-N14-THE-ghep.jpg) | UI-136, UI-094, UI-140, UI-141: «Chia sẻ» trên web không làm gì, trình xem ảnh trống, nút theo dõi lệch giữa các thẻ, «Không quan tâm» không hoàn tác | 132125 | `9d791d9f` |
+| [EV-N15-CONG-KHAI-ghep](evidence/EV-N15-CONG-KHAI-ghep.jpg) | N15 công khai sổ (có câu cảnh báo), người ngoài nhóm đọc được, gửi cộng đồng chờ duyệt (thân bài ghi «2026-09-29», UI-154), cất về riêng tư | 159370 | `3add027e` |
+| [EV-N15-DOC-ghep](evidence/EV-N15-DOC-ghep.jpg) | N15 màn đọc sổ của chủ sổ ở C1–C3 (đạt); người ngoài nhóm gặp sổ riêng tư: không lộ gì nhưng có «Thử lại» vô ích (UI-100) | 94656 | `7e1c149a` |
+| [EV-N15-DUNG-ghep](evidence/EV-N15-DUNG-ghep.jpg) | N15 dựng sổ: Nếp khi không có khoá AI (có «Quay lại», câu lỗi sau 5,7 s, còn lối tự xếp) và tự xếp trang ở C1, C9 (đạt) | 115462 | `d1e1c3f7` |
+| [EV-N15-HEP-ghep](evidence/EV-N15-HEP-ghep.jpg) | N15 màn hẹp: chế độ sửa sổ ở C2 320 và C3 360 tối (đầu màn, trang đầu; ô chữ cao 44, UI-001), kệ có sổ ở C2, C3 | 167648 | `c54952f7` |
+| [EV-N15-KHEP-LOI-ghep](evidence/EV-N15-KHEP-LOI-ghep.jpg) | UI-152, UI-151, UI-019: thành viên vẫn thấy bộ chọn loại; kèo 24–25/10 chưa tới ngày vẫn mời khép rồi trả 409 kèm «Thử lại»; kèo không dành cho mình báo «Cập nhật app» | 158017 | `56edc849` |
+| [EV-N15-KHEP-ghep](evidence/EV-N15-KHEP-ghep.jpg) | N15 màn khép cuộc đi của người tổ chức ở C1, C2, C3, C8, C6 (đạt) | 121483 | `bcfd1f83` |
+| [EV-N15-LUU-ghep](evidence/EV-N15-LUU-ghep.jpg) | UI-150, UI-097: câu lỗi khi lưu nằm ngoài khung nhìn (y −1139); rời màn là mất chỗ đang sửa; lưu được thì sổ lên tường | 160643 | `7588df36` |
+| [EV-N15-NGUON-ghep](evidence/EV-N15-NGUON-ghep.jpg) | N15 màn «Mang theo điều gì vào sổ?» ở C1, C2, C3, C8, C6 (đạt) | 123124 | `90fdbbe9` |
+| [EV-N15-Q4-KE-C1](evidence/EV-N15-Q4-KE-C1.jpg) | UI-149: kệ album nhóm chat-test, «Kèo album retest» (29–30/09) và «Kèo trùng ngày kiểm tổng» (29/09) cùng ghi «3 ảnh» và «đã chia 13.705.678đ» của một khoản chi duy nhất | 81387 | `a153702c` |
+| [EV-N15-SUA-ghep](evidence/EV-N15-SUA-ghep.jpg) | N15 chế độ sửa; UI-154 ô «Tên trang» ghi «2026-09-29»; sheet chọn ảnh bìa ở C1, C8 cao 96% (UI-040), C6 rộng 768 (UI-093); ảnh từ máy thành ô thứ tư | 129731 | `0b399016` |
+| [EV-N15-VAO-ghep](evidence/EV-N15-VAO-ghep.jpg) | N15 lối vào: «Giữ lại cuộc đi» trên màn kèo; kệ «Những ngày muốn giữ» trống ở C1–C3 chỉ có một câu, không có hành động (UI-153), và kệ có sổ | 173685 | `e503b0bf` |
+| [EV-N15-XOA-ghep](evidence/EV-N15-XOA-ghep.jpg) | N15 thành viên giữ sổ rồi xoá từ link lạnh (có sheet hỏi); UI-121 link sổ khi chưa đăng nhập về Welcome, đăng nhập xong vào Khám phá, mất link | 171943 | `61c5ca2c` |
 | [EV-N26-CHU-NHOM-ghep](evidence/EV-N26-CHU-NHOM-ghep.jpg) | UI-128: chữ của nhóm trong chat hai người, «Cả nhóm thấy cùng một màu.» ở cài đặt, «Rủ hội một buổi» ở phòng cặp đôi | 66675 | `c88f8b53` |
 | [EV-N26-CHUYEN-ghep](evidence/EV-N26-CHUYEN-ghep.jpg) | UI-126, UI-127, UI-125: từ đám bạn thành cặp đôi, hàng mời «Một đôi», màn tới không nhắc lời đề nghị, «Đồng ý là một đôi», không bìa M6, phía người đề nghị vẫn bốn công cụ | 144692 | `9d5a00b7` |
 | [EV-N26-GU-ghep](evidence/EV-N26-GU-ghep.jpg) | N26 «Gu của hai bạn»: lời hứa nói cả chat, «Bật lại cho chat», và UI-129 (dòng nói ngược nhau, câu lỗi dưới lớp phủ khi lệnh hỏng) | 157280 | `6744806d` |

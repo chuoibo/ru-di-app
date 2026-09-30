@@ -2246,6 +2246,102 @@
       "rules": [
         "controlled-artifact"
       ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-CONG-KHAI-ghep.jpg",
+      "sha256": "3add027ef662248a8abf4ea8a5781f95486c1831eb165630eb426ca96b963650",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-DOC-ghep.jpg",
+      "sha256": "7e1c149acc6a3d8bd1cb446a4c32d87eb5e1767db4e459079256102dde1d51c9",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-DUNG-ghep.jpg",
+      "sha256": "d1e1c3f75955ee8e1a5eb93377accfb1c33126ce4e6fba170a6af06eaa8396b3",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-HEP-ghep.jpg",
+      "sha256": "c54952f71bf472a63a94fff28dc4f7e1a0c6e8ca0817ee39bde0b65d1a5b6d72",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-KHEP-LOI-ghep.jpg",
+      "sha256": "56edc849bb1cc0f96ce89c8f845c58c009be7882c9a40bb5c783516c16965774",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-KHEP-ghep.jpg",
+      "sha256": "bcfd1f83b9ff8f991780240775f1cbc7d3f1b8cc6964a71a1dc1bd464c356461",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-LUU-ghep.jpg",
+      "sha256": "7588df362d33dd38bec25656e394ce48742a661e058a5c6427855660afaaec19",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-NGUON-ghep.jpg",
+      "sha256": "90fdbbe9e215ea57f1dc86109e4ddca3e9f242ee519aa5f685539b94d6b9425d",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-Q4-KE-C1.jpg",
+      "sha256": "a153702c389338417d68c987ba49ef59e0ff526b02f8ef5207c031387e56681b",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-SUA-ghep.jpg",
+      "sha256": "0b3990168a829574a9512fa5ea3b5f98c10cd702039985829373dd34f791d978",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-VAO-ghep.jpg",
+      "sha256": "e503b0bfb6ba08067db7b15ea219e8c2629a09f821b984b34c3fcfcc4a1cd9fc",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N15-XOA-ghep.jpg",
+      "sha256": "61c5ca2c1898e6e5e0140e25354ad104237c0c2d686afd08ae4295f668357022",
+      "rules": [
+        "controlled-artifact"
+      ]
     }
   ]
 }
