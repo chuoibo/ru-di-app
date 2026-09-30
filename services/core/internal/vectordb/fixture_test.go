@@ -68,6 +68,10 @@ func fxDiaDiem(seed uint64, n int) []HangDiaDiem {
 			t.GiaMinVND = int64(20+r.IntN(40)) * 5000
 		}
 		t.GoBo = r.IntN(25) == 0
+		// Categories from the index alone, so the seeded stream above (and
+		// every count pinned on it) is unchanged: every eleventh place's
+		// categories are unknown, the rest hold one or two ids.
+		t.DanhMuc = fxDanhMuc(i)
 		dense, _ := nhung.Stub{}.NhungTaiLieu(context.Background(), []nhung.TaiLieuVao{{NoiDung: text}})
 		out[i] = HangDiaDiem{
 			ID: fmt.Sprintf("p%04d", i), Dense: dense[0], Text: text, ThuocTinh: t,
@@ -75,6 +79,21 @@ func fxDiaDiem(seed uint64, n int) []HangDiaDiem {
 		}
 	}
 	return out
+}
+
+// fxDanhMuc are place i's categories.
+func fxDanhMuc(i int) []string {
+	if i%11 == 10 {
+		return []string{KhongRo}
+	}
+	ids := tuvung.DanhMuc.IDs()
+	a := ids[i%len(ids)]
+	if i%3 == 0 {
+		if b := ids[(i/3+1)%len(ids)]; b != a {
+			return []string{a, b}
+		}
+	}
+	return []string{a}
 }
 
 // fxLoc draws a random hard-constraint set: any subset of the five.

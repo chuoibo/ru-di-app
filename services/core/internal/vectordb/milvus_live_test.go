@@ -25,6 +25,7 @@ import (
 
 	"mobile/services/core/internal/aiharness/nhung"
 	"mobile/services/core/internal/aiharness/truyhoi"
+	"mobile/services/core/internal/domain/tuvung"
 )
 
 // cauHinhThu and ketThu are testmilvus's helpers, repeated here because an
@@ -127,7 +128,7 @@ func napDiaDiem(t *testing.T, m *Milvus, rows []HangDiaDiem) string {
 }
 
 // No hard-constraint violation, ever: for 120 random constraint sets (any
-// subset of destination, allergy, diet, open slot, budget) and each of the
+// subset of destination, allergy, diet, open slot, budget, category) and each of the
 // three leg shapes (hybrid, dense only, BM25 only), every hit Milvus returns
 // satisfies the constraints by the Go rule (LocCung.Dat) on the fixture's
 // attributes. And the expression is the same rule, not a stricter one: for
@@ -144,12 +145,21 @@ func TestKhongViPhamRangBuocCung(t *testing.T) {
 	}
 	ctx := ctxThu(t, 10*time.Minute)
 	r := mrand.New(mrand.NewPCG(11, 13))
+	// The category draws come from their own stream, so the sets above stay
+	// the ones every earlier run measured.
+	r2 := mrand.New(mrand.NewPCG(17, 19))
 	hits, sets, nonEmpty := 0, 0, 0
 	for i := 0; i < 120; i++ {
 		c, q := fxLoc(r)
 		l, err := TuCung(c)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if r2.IntN(3) == 0 {
+			ids := tuvung.DanhMuc.IDs()
+			if l.DanhMuc, err = LocDanhMuc([]string{ids[r2.IntN(len(ids))], ids[r2.IntN(len(ids))]}); err != nil {
+				t.Fatal(err)
+			}
 		}
 		sets++
 		want := fxDat(rows, l)
@@ -162,7 +172,7 @@ func TestKhongViPhamRangBuocCung(t *testing.T) {
 			t.Fatalf("set %d %+v: the expression counts %d rows, the Go rule %d", i, l, n, len(want))
 		}
 		dense, _ := nhung.Stub{}.Nhung(ctx, []string{q}, nhung.CauHoi)
-		bm := &ThuaTruyVan{Loai: ThuaBM25, Text: q}
+		bm := &ThuaTruyVan{Text: q}
 		for shape, y := range map[string]YeuCauTim{
 			"hybrid": {Dense: dense[0], Thua: bm},
 			"dense":  {Dense: dense[0]},
@@ -212,6 +222,7 @@ func TestDemBiLoaiKhopLuatGo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	l.DanhMuc = []string{"cafe", "quan_an"}
 	got, err := m.DemBiLoai(ctx, name, l)
 	if err != nil {
 		t.Fatal(err)
@@ -233,6 +244,8 @@ func TestDemBiLoaiKhopLuatGo(t *testing.T) {
 				one.Slot = l.Slot
 			case truyhoi.RBNganSach:
 				one.NganSachVND = l.NganSachVND
+			case truyhoi.RBDanhMuc:
+				one.DanhMuc = l.DanhMuc
 			}
 			if ok, _ := one.Dat(tt); !ok {
 				want++
@@ -242,8 +255,8 @@ func TestDemBiLoaiKhopLuatGo(t *testing.T) {
 			t.Errorf("%s: Milvus counts %d removed, the Go rule %d", rb, n, want)
 		}
 	}
-	if len(got) != 4 {
-		t.Fatalf("counted %d constraints, want 4 (all but the destination)", len(got))
+	if len(got) != 5 {
+		t.Fatalf("counted %d constraints, want 5 (all but the destination)", len(got))
 	}
 }
 
@@ -335,7 +348,7 @@ func TestXoaVaNenBienMat(t *testing.T) {
 		t.Fatalf("after delete count(*) = %d, %v; want 48", n, err)
 	}
 	for _, r := range rows[:12] {
-		got, err := m.Tim(ctx, YeuCauTim{Ten: name, Kho: KhoDiaDiem, Dense: r.Dense, Thua: &ThuaTruyVan{Loai: ThuaBM25, Text: r.Text}, K: 50})
+		got, err := m.Tim(ctx, YeuCauTim{Ten: name, Kho: KhoDiaDiem, Dense: r.Dense, Thua: &ThuaTruyVan{Text: r.Text}, K: 50})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -503,5 +516,75 @@ func TestTriNhoChiCuaChuSoHuu(t *testing.T) {
 	}
 	if err := kho.XoaHet(ctx, ChuSoHuu{}); !errors.Is(err, ErrChuSoHuu) {
 		t.Fatal("the zero owner deleted")
+	}
+}
+
+// The category filter on the live server: a row qualifies when its
+// categories hold ANY asked id; a row whose categories are unknown
+// ([khong_ro]) or hold none of them is out, by the expression and by
+// every leg of a search, and the Go rule counts the same rows. Unknown
+// categories are stored as [khong_ro]; all ten ids fit one row.
+func TestDanhMucLocMilvus(t *testing.T) {
+	m := ketThu(t)
+	ctx := ctxThu(t, 3*time.Minute)
+	base := fxDiaDiem(29, 4)
+	mk := func(i int, id string, dm []string) HangDiaDiem {
+		r := base[i]
+		r.ID, r.Text = id, "quán nhỏ ven hồ yên tĩnh"
+		r.ThuocTinh = ThuocTinh{DiemDen: "da-lat", GiaMinVND: GiaKhongRo, DanhMuc: dm}
+		return r
+	}
+	all10 := tuvung.DanhMuc.IDs()
+	rows := []HangDiaDiem{
+		mk(0, "chi-cafe", []string{"cafe"}),
+		mk(1, "chi-luu-tru-an", []string{"luu_tru", "quan_an"}),
+		mk(2, "chi-khong-ro", nil),
+		mk(3, "chi-vui", []string{"vui_choi", "thien_nhien"}),
+		mk(0, "chi-moi-thu", all10),
+	}
+	name := napDiaDiem(t, m, rows)
+	got, err := m.DocThuocTinh(ctx, name, "chi-khong-ro")
+	if err != nil || !slices.Equal(got["chi-khong-ro"].DanhMuc, []string{KhongRo}) {
+		t.Fatalf("unknown categories stored as %+v (%v)", got["chi-khong-ro"], err)
+	}
+	if got, err := m.DocThuocTinh(ctx, name, "chi-moi-thu"); err != nil || len(got["chi-moi-thu"].DanhMuc) != 10 {
+		t.Fatalf("all ten categories stored as %+v (%v)", got["chi-moi-thu"], err)
+	}
+	l := LocCung{DanhMuc: []string{"cafe", "quan_an"}}
+	want := []string{"chi-cafe", "chi-luu-tru-an", "chi-moi-thu"}
+	if !slices.Equal(fxDat(rows, l), want) {
+		t.Fatalf("the Go rule admits %v", fxDat(rows, l))
+	}
+	e, p := l.BieuThuc()
+	if n, err := m.Dem(ctx, name, e, p); err != nil || n != 3 {
+		t.Fatalf("the expression counts %d rows (%v), want 3", n, err)
+	}
+	for shape, y := range map[string]YeuCauTim{
+		"hybrid": {Dense: rows[2].Dense, Thua: &ThuaTruyVan{Text: rows[2].Text}},
+		"dense":  {Dense: rows[2].Dense},
+		"bm25":   {Thua: &ThuaTruyVan{Text: rows[2].Text}},
+	} {
+		y.Ten, y.Kho, y.Loc, y.K = m.Alias(KhoDiaDiem), KhoDiaDiem, l, 10
+		hits, err := m.Tim(ctx, y)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var ids []string
+		for _, h := range hits {
+			ids = append(ids, h.ID)
+		}
+		slices.Sort(ids)
+		if !slices.Equal(ids, want) {
+			t.Fatalf("%s: hits %v, want %v (the unknown and the other category out)", shape, ids, want)
+		}
+	}
+	// Asking for khong_ro itself is refused before any search.
+	if _, err := LocDanhMuc([]string{KhongRo}); !errors.Is(err, ErrLoc) {
+		t.Fatal("khong_ro accepted as a category to filter on")
+	}
+	// Without the filter every live row stays, the unknown one included.
+	all, _ := LocCung{}.BieuThuc()
+	if n, err := m.Dem(ctx, name, all, map[string]any{"tb": false}); err != nil || n != 5 {
+		t.Fatalf("without the filter %d rows (%v)", n, err)
 	}
 }

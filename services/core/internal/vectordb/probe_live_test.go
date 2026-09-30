@@ -24,7 +24,7 @@ func choThay(t *testing.T, m *Milvus, name string, rows []HangDiaDiem) {
 	for _, r := range probe {
 		for i := 0; ; i++ {
 			got, err := m.Tim(ctx, YeuCauTim{Ten: name, Kho: KhoDiaDiem, Dense: r.Dense, K: 50,
-				Thua: &ThuaTruyVan{Loai: ThuaBM25, Text: r.Text}})
+				Thua: &ThuaTruyVan{Text: r.Text}})
 			if err != nil {
 				t.Fatal(err)
 			}

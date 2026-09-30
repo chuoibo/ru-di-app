@@ -87,11 +87,10 @@ type KetQuaLamGiau struct {
 	// MonBo counts dish strings refused by TextSafe or the length bound.
 	MonBo int `json:"mon_bo"`
 	// NguCanhHoSo, NguCanhTraiNghiem and NguCanhMonAn are the context lines
-	// of the three facets (contextual retrieval, research gap-analysis): what the chunk
-	// is about, in one sentence, so a chunk read alone still says which
-	// place and which destination it belongs to. Model output about
-	// third-party text: TextSafe'd, bounded, dropped with the rest of the
-	// enrichment when it is stale, rejected or carries the injection label.
+	// the prompt still asks for (rd.v3's contextual retrieval). rd.v4 embeds
+	// one row per place with no context line (owner 2026-09-29), so nothing
+	// reads them; they stay in the answer's shape because the stored
+	// enrichments carry them and are not re-run.
 	NguCanhHoSo       string `json:"ngu_canh_ho_so,omitempty"`
 	NguCanhTraiNghiem string `json:"ngu_canh_trai_nghiem,omitempty"`
 	NguCanhMonAn      string `json:"ngu_canh_mon_an,omitempty"`
@@ -108,6 +107,11 @@ type LamGiau struct {
 	KetQua        KetQuaLamGiau
 	CanDuyet      bool
 	Review        string
+	// Ngoai marks an enrichment vnlocal produced (ingest's place_lam_giau,
+	// lam-giau@1): vnlocal re-runs a place whenever its input changes, so
+	// the row is current by construction and carries no RuDi source hash.
+	// Never reviewed here: its allergen-free claim is never certain.
+	Ngoai bool
 }
 
 // HuongDanLamGiau is the rendered system instruction: the committed prompt
@@ -386,6 +390,9 @@ func CanDuyet(nguon string, h [32]byte, placeID string, k KetQuaLamGiau) bool {
 
 // ThuocTinh are the retrieval attributes a place's enrichment yields.
 type ThuocTinh struct {
+	// DanhMuc are the place's categories as vnlocal classified them
+	// (DocDanhMuc), set by the caller beside ApDung; empty until classified.
+	DanhMuc []string
 	// DiUng only ever adds exclusions. DiUngRo is true only when a current
 	// enrichment a PERSON reviewed says what the place serves; otherwise
 	// retrieval treats the place as possibly containing any allergen, and
@@ -398,9 +405,6 @@ type ThuocTinh struct {
 	AnKiengGoiY []string
 	KhiChat     []string
 	MonChinh    []string
-	// NguCanh are the context lines by facet (FacetHoSo, FacetTraiNghiem, FacetMonAn),
-	// from a current, usable enrichment only.
-	NguCanh map[string]string
 	// Co: a current enrichment was applied. Cu: only a stale one exists
 	// (its allergens still exclude). CachLy: the injection label held
 	// everything but its allergens back.
@@ -424,7 +428,7 @@ func ApDung(lg *LamGiau, nguonHash [32]byte) ThuocTinh {
 		return t
 	}
 	t.DiUng = append([]string(nil), lg.KetQua.DiUng...)
-	if lg.NguonHash != nguonHash {
+	if !lg.Ngoai && lg.NguonHash != nguonHash {
 		t.Cu = true
 		return t
 	}
@@ -441,14 +445,6 @@ func ApDung(lg *LamGiau, nguonHash [32]byte) ThuocTinh {
 	}
 	t.KhiChat = append([]string(nil), lg.KetQua.KhiChat...)
 	t.MonChinh = append([]string(nil), lg.KetQua.MonChinh...)
-	for facet, line := range map[string]string{FacetHoSo: lg.KetQua.NguCanhHoSo, FacetTraiNghiem: lg.KetQua.NguCanhTraiNghiem, FacetMonAn: lg.KetQua.NguCanhMonAn} {
-		if line != "" {
-			if t.NguCanh == nil {
-				t.NguCanh = map[string]string{}
-			}
-			t.NguCanh[facet] = line
-		}
-	}
 	return t
 }
 

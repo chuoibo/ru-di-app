@@ -962,10 +962,10 @@ func quanRetriever(ctx context.Context, getenv func(string) string, doc *aidoc.C
 	w := cfg.Hop.TrongSo
 	alias := m.Alias(vectordb.KhoDiaDiem)
 	k := &hybrid.Kho{
-		// The sparse leg is Milvus's BM25 function (both fields): MILCO is
-		// shelved pending its licence (owner, 2026-09-27) and never wired here.
+		// The sparse leg is Milvus's BM25 function over the one folded text
+		// field (rd.v4, owner 2026-09-29; MILCO removed).
 		Nhung: nhung.TheoLuot{Inner: embedder}, Index: m, Thua: vectordb.BM25{}, TenDiaDiem: alias,
-		TrongSo: &vectordb.TrongSo{Dense: w.Dense, BM25: w.BM25, BM25KhongDau: w.BM25KhongDau, MILCO: w.MILCO},
+		TrongSo: &vectordb.TrongSo{Dense: w.Dense, BM25: w.BM25},
 		DocSong: aidoc.ThuocTinhSong{C: doc},
 		BiLoai: func(ctx context.Context, l vectordb.LocCung) (map[truyhoi.RangBuoc]int, error) {
 			return m.DemBiLoai(ctx, alias, l)

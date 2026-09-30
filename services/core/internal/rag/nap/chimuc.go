@@ -50,13 +50,16 @@ type ChiMuc struct {
 
 // BaoCaoChiMuc is one pass, counts only.
 type BaoCaoChiMuc struct {
-	Lay      int `json:"lay"`
-	Ghi      int `json:"ghi"`
-	Xoa      int `json:"xoa"`
-	KhongDoi int `json:"khong_doi"`
-	LamGiau  int `json:"lam_giau"`
-	Hong     int `json:"hong"`
-	VaoDLQ   int `json:"vao_dlq"`
+	Lay int `json:"lay"`
+	Ghi int `json:"ghi"`
+	Xoa int `json:"xoa"`
+	// ChoLamGiau: places kept out of the index until their enrichment
+	// arrives (no current one).
+	ChoLamGiau int `json:"cho_lam_giau"`
+	KhongDoi   int `json:"khong_doi"`
+	LamGiau    int `json:"lam_giau"`
+	Hong       int `json:"hong"`
+	VaoDLQ     int `json:"vao_dlq"`
 	// KhacCauHinh counts rows of other-configuration collections whose
 	// attributes were rewritten; XoaKhacCauHinh the documents deleted from
 	// one because the rewrite could not be made.
@@ -129,13 +132,17 @@ func (c ChiMuc) MotLuot(ctx context.Context, tx pgx.Tx) (BaoCaoChiMuc, error) {
 	if err != nil {
 		return b, err
 	}
+	dm, err := DocDanhMuc(ctx, tx, ids)
+	if err != nil {
+		return b, err
+	}
 	// Enrich what changed, within the pass's ceiling.
 	if c.Model != nil && c.TranGoi > 0 {
 		var need []HoSoQuan
 		for _, d := range ds {
 			if p, ok := byID[d.id]; ok && !d.xoa {
 				if h, bo := DungHoSo(p); !bo {
-					if lg := enr[d.id]; lg == nil || lg.NguonHash != h.NguonHash {
+					if lg := enr[d.id]; lg == nil || (!lg.Ngoai && lg.NguonHash != h.NguonHash) {
 						need = append(need, h)
 					}
 				}
@@ -195,7 +202,23 @@ func (c ChiMuc) MotLuot(ctx context.Context, tx pgx.Tx) (BaoCaoChiMuc, error) {
 				return b, err
 			}
 		}
-		rows, err := DoanQuan(ctx, h, ApDung(enr[d.id], h.NguonHash), chunker, ChiaNghia{Nhung: c.Nap.Dense})
+		t := ApDung(enr[d.id], h.NguonHash)
+		t.DanhMuc = dm[d.id]
+		if !t.Co {
+			// No current enrichment: out of every live collection until
+			// vnlocal's arrives (ingest then marks the place dirty), the
+			// rule a build follows (ChuanBiQuan).
+			if err := c.xoaMoiNoi(ctx, song, d.id); err != nil {
+				if e := c.hong(ctx, tx, d, ChangXoa, err, &b); e != nil {
+					return b, e
+				}
+				continue
+			}
+			b.ChoLamGiau++
+			ok = append(ok, d)
+			continue
+		}
+		rows, err := DoanQuan(h, t, chunker)
 		if err != nil {
 			if e := c.hong(ctx, tx, d, ChangNhung, err, &b); e != nil {
 				return b, e
@@ -279,7 +302,7 @@ func (c ChiMuc) thuocTinhNoiKhac(ctx context.Context, ps []PhienBan, docID strin
 				continue
 			}
 		}
-		if err := c.Nap.Kho.XoaID(ctx, p.Collection, MoiIDQuan(docID, p.Chunker)); err != nil {
+		if err := c.Nap.Kho.XoaID(ctx, p.Collection, MoiIDQuan(docID)); err != nil {
 			return fmt.Errorf("%w: %v", errMilvus, err)
 		}
 		b.XoaKhacCauHinh++
@@ -287,10 +310,10 @@ func (c ChiMuc) thuocTinhNoiKhac(ctx context.Context, ps []PhienBan, docID strin
 	return nil
 }
 
-// xoaMoiNoi deletes every chunk a document can have from every live collection.
+// xoaMoiNoi deletes a document's row from every live collection.
 func (c ChiMuc) xoaMoiNoi(ctx context.Context, song []PhienBan, docID string) error {
 	for _, p := range song {
-		if err := c.Nap.Kho.XoaID(ctx, p.Collection, MoiIDQuan(docID, p.Chunker)); err != nil {
+		if err := c.Nap.Kho.XoaID(ctx, p.Collection, MoiIDQuan(docID)); err != nil {
 			return fmt.Errorf("%w: %v", errMilvus, err)
 		}
 	}
@@ -308,7 +331,7 @@ func (c ChiMuc) ghiMoiNoi(ctx context.Context, ps []PhienBan, docID string, rows
 	wrote := false
 	for _, p := range ps {
 		var stale []string
-		for _, id := range MoiIDQuan(docID, p.Chunker) {
+		for _, id := range MoiIDQuan(docID) {
 			if !have[id] {
 				stale = append(stale, id)
 			}
@@ -378,9 +401,6 @@ func (n Nap) DocTrangThai(ctx context.Context, q Querier) ([]TrangThai, error) {
 	var out []TrangThai
 	for _, c := range Corpora {
 		t := TrangThai{Corpus: c}
-		if n.Cfg.Thua.CheDo == ThuaBM25 {
-			t.NhanhSuyGiam = append(t.NhanhSuyGiam, "milco_tat")
-		}
 		if p, err := PhienBanActive(ctx, q, c); err == nil {
 			t.Active, t.Collection, t.Chunks = p.ID, p.Collection, p.Chunks
 			if got, err := n.Kho.MoTaAlias(ctx, Alias(c)); err != nil {

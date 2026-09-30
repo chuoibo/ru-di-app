@@ -52,11 +52,15 @@ type HoSoQuan struct {
 	CoToaDo bool
 	Nguon   string // seed | osm | curated: dedupe precedence
 	License string
-	// HoSo, TraiNghiem and MonAn are the three facets' safe text, NFC,
-	// never cut.
+	// HoSo, TraiNghiem and MonAn are the three sections' safe text, NFC,
+	// never cut: what the enrichment model reads.
 	HoSo       string
 	TraiNghiem string
 	MonAn      string
+	// VanBan is the one embedded text of the place (rd.v4): the three
+	// sections joined, without the category tag line and «Còn thiếu:»; NFC,
+	// never cut. The enrichment's «Món chính» joins it in DoanQuan.
+	VanBan string
 	// NguonHash is sha256 of the canonical JSON of what the enrichment
 	// model saw: the safe text and the row's identity, not its price or
 	// hours. An enrichment whose hash differs is stale (ApDung).
@@ -97,10 +101,15 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 	kinds := danhSach(safe, "kinds", maxHoatDong)
 	traits := danhSach(safe, "traits", maxHoatDong)
 	activities := danhSach(safe, "activities", maxHoatDong)
-	var lines []string
+	// lines is the enrichment's input, unchanged since every stored
+	// enrichment was written from it (its hash is NguonHash). vanBan is the
+	// embedded text (rd.v4, owner 2026-09-29): the same lines without the
+	// category tag line and without «Còn thiếu:».
+	var lines, vanBan []string
 	add := func(s string) {
 		if s = strings.TrimSpace(s); s != "" {
 			lines = append(lines, s)
+			vanBan = append(vanBan, s)
 		}
 	}
 	block, cachLy := dongReview(p.Reviews)
@@ -112,7 +121,7 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 	if len(kinds) > 0 {
 		head += " · " + strings.Join(kinds, ", ")
 	}
-	add(head)
+	lines = append(lines, head) // the tag line: enrichment input only
 	add(tenTinh(p.DestinationID))
 	add(catRune(chu(safe, "address"), maxDiaChi))
 	add(strings.Join(traits, ", "))
@@ -143,8 +152,15 @@ func DungHoSo(p repo.Place) (h HoSoQuan, bo bool) {
 		tn = append(tn, "Đánh giá: "+strings.Join(reviews, "\n"))
 	}
 	h.TraiNghiem = nfc(strings.Join(tn, "\n"))
+	for _, l := range tn {
+		if !strings.HasPrefix(l, nhanThieuGi+": ") {
+			vanBan = append(vanBan, l)
+		}
+	}
 	// mon_an: what to eat there.
 	h.MonAn = nfc(strings.Join(block[FacetMonAn], "\n"))
+	vanBan = append(vanBan, block[FacetMonAn]...)
+	h.VanBan = nfc(strings.Join(vanBan, "\n"))
 
 	// Price and hours are not in the hash: the enrichment model never sees
 	// them (BocQuan lays out HoSo, TraiNghiem and MonAn only), and the chunk

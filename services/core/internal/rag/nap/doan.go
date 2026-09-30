@@ -1,11 +1,10 @@
 package nap
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"mobile/services/core/internal/domain/giomo"
@@ -22,54 +21,34 @@ const PhutMoiO = 30
 // SoO is the number of slots in a week.
 const SoO = giomo.PhutTuan / PhutMoiO
 
-// ChunkID is hex(sha256(doc_id ‖ facet ‖ chunker))[:32]: the primary key of
-// a chunk in every collection. Deterministic, so an upsert repeated is one
-// row (Milvus with autoID would mint a new key per upsert; research
-// sdlc-production §B1).
-func ChunkID(docID, facet, chunker string) string {
-	sum := sha256.Sum256([]byte(docID + "\x00" + facet + "\x00" + chunker))
-	return hex.EncodeToString(sum[:])[:32]
-}
+// MaxByteVanBan is the longest text a row holds, in BYTES (vectordb's
+// MaxTextLen: Milvus counts VarChar bytes). The feed's longest place is
+// 5,612 runes, well inside it. A longer text is never cut: the place is
+// counted and left out (ErrQuaDai).
+const MaxByteVanBan = 32768
 
-// ChunkIDManh is the id of piece n of a split facet: piece 0 keeps
-// ChunkID, so a facet that fits in one chunk keeps the id it always had.
-func ChunkIDManh(docID, facet string, n int, chunker string) string {
-	if n == 0 {
-		return ChunkID(docID, facet, chunker)
-	}
-	return ChunkID(docID, facet+"#"+strconv.Itoa(n), chunker)
-}
+// maxRuneSoTay bounds one manual section's text.
+const maxRuneSoTay = 2000
 
-// MoiIDQuan is every chunk id a place can have under chunker: each facet
-// times MaxManh pieces. The indexer deletes a document by these ids.
-func MoiIDQuan(docID, chunker string) []string {
-	out := make([]string, 0, len(FacetsQuan)*MaxManh)
-	for _, f := range FacetsQuan {
-		for n := 0; n < MaxManh; n++ {
-			out = append(out, ChunkIDManh(docID, f, n, chunker))
-		}
-	}
-	return out
-}
+// ErrQuaDai: a place's text is longer than MaxByteVanBan.
+var ErrQuaDai = errors.New("nap: place text longer than a row holds")
 
-// Hang is one row of a collection: a chunk and the fields its hard filters
-// and staleness checks read. The manual uses only the common fields and Man.
+// MoiIDQuan is every row id a place has: its own id (rd.v4, one row per
+// place). The indexer deletes a document by these ids.
+func MoiIDQuan(docID string) []string { return []string{docID} }
+
+// Hang is one row of a collection: a whole place (rd.v4, one row and one
+// dense vector per place) or a manual section, and the fields its hard
+// filters and staleness checks read. ChunkID is the row's primary key and
+// equals DocID. The manual uses only the common fields.
 type Hang struct {
 	ChunkID string
 	DocID   string
-	Facet   string
-	// ChunkSo is the piece of a split facet (0 when the facet is whole).
-	ChunkSo int16
 	TieuDe  string // embedded as the document title, not stored
-	// Text is NFC; the dense leg embeds it and both BM25 functions read
-	// it. A context line the enrichment wrote leads it (contextual
-	// retrieval).
+	// Text is NFC; the dense leg embeds it and the BM25 function reads it.
 	Text        string
 	ContentHash string
 	Dense       []float32
-	// SparseIdx/SparseVal are the MILCO vector (MILCO mode only).
-	SparseIdx []uint32
-	SparseVal []float32
 
 	// The hard-filter attributes, stored on every chunk of the place. The
 	// soft ones (LoaiCho, AnKiengGoiY, KhiChat, Lat/Lng) only feed dedupe
@@ -86,7 +65,10 @@ type Hang struct {
 	GiaRo       bool
 	MoO         []int16
 	GioRo       bool
-	Lat, Lng    float64
+	// DanhMuc are the place's categories (tuvung.DanhMuc ids); empty until
+	// the classification lands, which the index stores as [khong_ro].
+	DanhMuc  []string
+	Lat, Lng float64
 
 	DenseModel string
 	SparseRev  string
@@ -104,76 +86,59 @@ func MoO(l giomo.Lich) []int16 {
 	return out
 }
 
-// DoanQuan builds a place's chunks from its safe profile and its enrichment
-// attributes: one chunk per facet (ho_so, trai_nghiem, mon_an), or several
-// when chia splits a long facet by meaning; nothing is cut. The main dishes
-// the enrichment named join the food facet, so they are embedded and
-// matched; the closed ids are fields, not text. The facet's context line
-// (contextual retrieval) leads every piece of it, so the dense and both BM25
-// legs read it, and the content hash covers it.
-func DoanQuan(ctx context.Context, h HoSoQuan, t ThuocTinh, chunker string, chia ChiaDoan) ([]Hang, error) {
-	base := Hang{
-		DocID: h.ID, DiemDen: h.DiemDen, LoaiCho: h.LoaiCho, TieuDe: h.Ten,
+// DoanQuan builds a place's one row (rd.v4, owner 2026-09-29): the place's
+// embedded text (HoSoQuan.VanBan) with the main dishes the enrichment named
+// as a last «Món chính:» line, and the attributes its hard filters read. No
+// chunking, no context line; nothing is cut. A place with no text has no
+// row.
+func DoanQuan(h HoSoQuan, t ThuocTinh, chunker string) ([]Hang, error) {
+	r := Hang{
+		ChunkID: h.ID, DocID: h.ID, DiemDen: h.DiemDen, LoaiCho: h.LoaiCho, TieuDe: h.Ten,
 		DiUng: tuvung.DiUng.LocHopLe(t.DiUng), DiUngRo: t.DiUngRo,
 		AnKieng: t.AnKieng, AnKiengGoiY: t.AnKiengGoiY, KhiChat: t.KhiChat,
-		Lat: h.Lat, Lng: h.Lng, Chunker: chunker,
+		Lat: h.Lat, Lng: h.Lng, Chunker: chunker, DanhMuc: t.DanhMuc,
 	}
 	if h.GiaMin != nil {
-		base.GiaRo, base.GiaMin = true, *h.GiaMin
-		base.GiaMax = *h.GiaMin
+		r.GiaRo, r.GiaMin = true, *h.GiaMin
+		r.GiaMax = *h.GiaMin
 		if h.GiaMax != nil {
-			base.GiaMax = *h.GiaMax
+			r.GiaMax = *h.GiaMax
 		}
 	}
 	if h.Lich != nil {
-		base.GioRo, base.MoO = true, MoO(*h.Lich)
+		r.GioRo, r.MoO = true, MoO(*h.Lich)
 	}
-	monAn := h.MonAn
+	text := h.VanBan
 	if len(t.MonChinh) > 0 {
-		monAn = strings.TrimSpace(monAn + "\nMón chính: " + strings.Join(t.MonChinh, ", "))
+		text = strings.TrimSpace(text + "\nMón chính: " + strings.Join(t.MonChinh, ", "))
 	}
-	var out []Hang
-	for _, f := range []struct{ facet, text string }{{FacetHoSo, h.HoSo}, {FacetTraiNghiem, h.TraiNghiem}, {FacetMonAn, monAn}} {
-		if strings.TrimSpace(f.text) == "" {
-			continue
-		}
-		manh, err := chia.Chia(ctx, f.text)
-		if err != nil {
-			return nil, fmt.Errorf("%s/%s: %w", h.ID, f.facet, err)
-		}
-		for n, text := range manh {
-			if line := t.NguCanh[f.facet]; line != "" {
-				text = line + "\n" + text
-			}
-			r := base
-			r.Facet, r.ChunkSo, r.Text = f.facet, int16(n), nfc(text)
-			r.ChunkID = ChunkIDManh(h.ID, f.facet, n, chunker)
-			key := f.facet
-			if n > 0 {
-				key += "#" + strconv.Itoa(n)
-			}
-			r.ContentHash = hashNoiDung(chunker, key, r.TieuDe, r.Text)
-			out = append(out, r)
-		}
+	if strings.TrimSpace(text) == "" {
+		return nil, nil
 	}
-	return out, nil
+	r.Text = nfc(text)
+	if len(r.Text) > MaxByteVanBan {
+		return nil, fmt.Errorf("%w: %s holds %d bytes", ErrQuaDai, h.ID, len(r.Text))
+	}
+	r.ContentHash = hashNoiDung(chunker, r.TieuDe, r.Text)
+	return []Hang{r}, nil
 }
 
-// DoanSoTay builds one chunk per manual section.
+// DoanSoTay builds one row per manual section.
 func DoanSoTay(ds []huongdan.Doan, chunker string) []Hang {
 	out := make([]Hang, 0, len(ds))
 	for _, d := range ds {
 		text := d.TieuDe + "\n" + d.Chu
-		r := Hang{DocID: d.ID, Facet: FacetMuc, TieuDe: nfc(d.TieuDeMan + " — " + d.TieuDe), Text: nfc(catRune(text, NguongDoan)),
+		r := Hang{ChunkID: d.ID, DocID: d.ID, TieuDe: nfc(d.TieuDeMan + " — " + d.TieuDe), Text: nfc(catRune(text, maxRuneSoTay)),
 			Chunker: chunker}
-		r.ChunkID = ChunkID(d.ID, FacetMuc, chunker)
-		r.ContentHash = hashNoiDung(chunker, FacetMuc, r.TieuDe, r.Text)
+		r.ContentHash = hashNoiDung(chunker, r.TieuDe, r.Text)
 		out = append(out, r)
 	}
 	return out
 }
 
-func hashNoiDung(chunker, facet, title, text string) string {
-	sum := sha256.Sum256([]byte(chunker + "\x00" + facet + "\x00" + title + "\x00" + text))
+// hashNoiDung is a row's content hash: the embedding cache key's text part
+// and the reconciliation's change test.
+func hashNoiDung(chunker, title, text string) string {
+	sum := sha256.Sum256([]byte(chunker + "\x00" + title + "\x00" + text))
 	return hex.EncodeToString(sum[:])
 }

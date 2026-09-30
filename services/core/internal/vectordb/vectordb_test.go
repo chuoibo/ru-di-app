@@ -2,20 +2,14 @@ package vectordb
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io"
-	"math"
 	"math/rand/v2"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -159,26 +153,44 @@ func TestMemorySchemaHasNoText(t *testing.T) {
 	}
 }
 
-func TestPlaceSchemaCarriesTheHardConstraintFields(t *testing.T) {
+// rd.v4 (owner, 2026-09-29) is exactly this: one row per place, one dense
+// vector, one text under the folding analyzer, one sparse field that is
+// Milvus's BM25 over it, the JSON dict of later fields, the hard-constraint
+// fields and the categories. Nothing else, so a field the owner removed
+// cannot come back unnoticed.
+func TestPlaceSchemaIsRdV4(t *testing.T) {
 	ld := LuocDoDiaDiem("rd_places__v1")
 	fs := fieldNames(ld.Schema)
-	for name, typ := range map[string]entity.FieldType{
-		FID: entity.FieldTypeVarChar, FDense: entity.FieldTypeFloatVector, FSparse: entity.FieldTypeSparseVector,
-		FText: entity.FieldTypeVarChar, FBM25: entity.FieldTypeSparseVector, FDestination: entity.FieldTypeVarChar,
-		FOpenSlots: entity.FieldTypeArray, FPriceMin: entity.FieldTypeInt64, FPriceMax: entity.FieldTypeInt64,
-		FAllergens: entity.FieldTypeArray, FDiets: entity.FieldTypeArray, FTombstoned: entity.FieldTypeBool,
-		FIndexVersion: entity.FieldTypeInt64, FTextKhongDau: entity.FieldTypeVarChar, FBM25KhongDau: entity.FieldTypeSparseVector,
+	want := map[string]entity.FieldType{
+		FID: entity.FieldTypeVarChar, FDense: entity.FieldTypeFloatVector,
+		FText: entity.FieldTypeVarChar, FSparse: entity.FieldTypeSparseVector,
 		FDocID: entity.FieldTypeVarChar, FContentHash: entity.FieldTypeVarChar, FEmbedModel: entity.FieldTypeVarChar,
-	} {
+		FMoRong: entity.FieldTypeJSON, FDestination: entity.FieldTypeVarChar,
+		FOpenSlots: entity.FieldTypeArray, FPriceMin: entity.FieldTypeInt64, FPriceMax: entity.FieldTypeInt64,
+		FAllergens: entity.FieldTypeArray, FDiets: entity.FieldTypeArray, FDanhMuc: entity.FieldTypeArray,
+		FTombstoned: entity.FieldTypeBool, FIndexVersion: entity.FieldTypeInt64,
+	}
+	for name, typ := range want {
 		if fs[name] == nil || fs[name].DataType != typ {
 			t.Errorf("field %s missing or not %v", name, typ)
 		}
 	}
-	if fs[FFacet] == nil || fs[FFacet].DataType != entity.FieldTypeVarChar || fs[FChunkSo] == nil || fs[FChunkSo].DataType != entity.FieldTypeInt16 {
-		t.Fatal("rd.v3: facet or chunk_so missing")
+	for name := range fs {
+		if _, ok := want[name]; !ok {
+			t.Errorf("field %s is not in rd.v4", name)
+		}
 	}
-	if fs[FMoRong] == nil || fs[FMoRong].DataType != entity.FieldTypeJSON || !fs[FMoRong].Nullable {
-		t.Fatal("rd.v3: mo_rong must be a nullable JSON dict")
+	if PhienBanLuocDo != "rd.v4" {
+		t.Fatalf("schema revision %q", PhienBanLuocDo)
+	}
+	if !fs[FMoRong].Nullable {
+		t.Fatal("mo_rong must be a nullable JSON dict")
+	}
+	if fs[FText].TypeParams["max_length"] != "32768" {
+		t.Fatalf("text max_length %q, want 32768 bytes", fs[FText].TypeParams["max_length"])
+	}
+	if fs[FDanhMuc].TypeParams["max_capacity"] != "10" {
+		t.Fatalf("danh_muc capacity %q, want 10", fs[FDanhMuc].TypeParams["max_capacity"])
 	}
 	if fs[FDense].TypeParams["dim"] != "1536" {
 		t.Fatalf("dense dim %q", fs[FDense].TypeParams["dim"])
@@ -186,16 +198,17 @@ func TestPlaceSchemaCarriesTheHardConstraintFields(t *testing.T) {
 	if fs[FID].AutoID || !fs[FID].PrimaryKey {
 		t.Fatal("the id must be a deterministic primary key, never autoID (upsert with autoID mints new keys)")
 	}
-	if ld.Schema.EnableDynamicField || len(ld.Schema.Functions) != 2 {
-		t.Fatal("dynamic field on, or a BM25 function missing")
+	if ld.Schema.EnableDynamicField || len(ld.Schema.Functions) != 1 {
+		t.Fatal("dynamic field on, or not exactly one BM25 function")
 	}
-	// The two BM25 legs: the marked text keeps diacritics, the second folds
-	// them (structural normalisation only).
-	if f := fs[FText].TypeParams["analyzer_params"]; strings.Contains(f, "asciifolding") {
-		t.Fatalf("the marked text folds diacritics: %s", f)
+	fn := ld.Schema.Functions[0]
+	if fn.Type != entity.FunctionTypeBM25 || len(fn.InputFieldNames) != 1 || fn.InputFieldNames[0] != FText ||
+		len(fn.OutputFieldNames) != 1 || fn.OutputFieldNames[0] != FSparse {
+		t.Fatalf("the BM25 function is not text -> sparse: %+v", fn)
 	}
-	if f := fs[FTextKhongDau].TypeParams["analyzer_params"]; !strings.Contains(f, "asciifolding") {
-		t.Fatalf("the folded text does not fold: %s", f)
+	// The one BM25 field folds diacritics (structural normalisation only).
+	if f := fs[FText].TypeParams["analyzer_params"]; !strings.Contains(f, "asciifolding") || !strings.Contains(f, "lowercase") {
+		t.Fatalf("the text does not fold: %s", f)
 	}
 }
 
@@ -305,7 +318,7 @@ func TestFakeNeverReturnsAViolation(t *testing.T) {
 			t.Fatal(err)
 		}
 		d, _ := nhung.Stub{}.Nhung(context.Background(), []string{q}, nhung.CauHoi)
-		got, err := f.Tim(context.Background(), YeuCauTim{Kho: KhoDiaDiem, Dense: d[0], Thua: &ThuaTruyVan{Loai: ThuaBM25, Text: q}, Loc: l, K: 20})
+		got, err := f.Tim(context.Background(), YeuCauTim{Kho: KhoDiaDiem, Dense: d[0], Thua: &ThuaTruyVan{Text: q}, Loc: l, K: 20})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -321,68 +334,13 @@ func TestFakeNeverReturnsAViolation(t *testing.T) {
 	}
 }
 
-// The MILCO adapter's wire contract, on a loopback fake of the inference
-// service: the path, the body, and every structural check on the answer.
-func TestMILCOContract(t *testing.T) {
-	var gotPath string
-	var gotBody map[string]any
-	answer := `{"vectors":[{"indices":[3,17,900],"values":[0.5,1.25,0.1]}]}`
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gotPath = r.URL.Path
-		b, _ := io.ReadAll(r.Body)
-		_ = json.Unmarshal(b, &gotBody)
-		_, _ = io.WriteString(w, answer)
-	}))
-	defer srv.Close()
-	m, err := NewMILCO(srv.URL, time.Second)
-	if err != nil {
-		t.Fatal(err)
-	}
-	q, err := m.TruyVan(context.Background(), " Quán lẩu ")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if gotPath != "/v1/milco/encode" || gotBody["kind"] != "query" || gotBody["texts"].([]any)[0] != "Quán lẩu" {
-		t.Fatalf("path %s body %v", gotPath, gotBody)
-	}
-	if q.Loai != ThuaMILCO || q.Truong() != FSparse || len(q.Vec.Chi) != 3 {
-		t.Fatalf("%+v", q)
-	}
-	for name, bad := range map[string]string{
-		"two vectors for one text": `{"vectors":[{"indices":[1],"values":[1]},{"indices":[1],"values":[1]}]}`,
-		"unsorted indices":         `{"vectors":[{"indices":[5,2],"values":[1,1]}]}`,
-		"duplicate index":          `{"vectors":[{"indices":[2,2],"values":[1,1]}]}`,
-		"negative value":           `{"vectors":[{"indices":[2],"values":[-1]}]}`,
-		"length mismatch":          `{"vectors":[{"indices":[2,3],"values":[1]}]}`,
-		"index out of range":       `{"vectors":[{"indices":[` + strconv.FormatUint(uint64(MILCOChiMax), 10) + `],"values":[1]}]}`,
-		"not json":                 `<html>`,
-	} {
-		answer = bad
-		if _, err := m.TruyVan(context.Background(), "x"); !errors.Is(err, ErrThuaSai) {
-			t.Errorf("%s: accepted (%v)", name, err)
-		}
-	}
-	if _, err := NewMILCO("http://10.0.0.1:8000", time.Second); err == nil {
-		t.Fatal("a non-loopback inference service was accepted")
-	}
-	off, err := MILCOTuEnv(func(string) string { return "" })
-	if off != nil || err != nil {
-		t.Fatal("MILCO is on without MOBILE_MILCO_ENABLED=1")
-	}
-	nan := ThuaVec{Chi: []uint32{1}, GiaTri: []float32{float32(math.NaN())}}
-	if nan.Kiem() == nil {
-		t.Fatal("NaN accepted")
-	}
-}
-
-func TestBM25IsTheDefaultAndNeedsNoModel(t *testing.T) {
-	q, err := BM25{}.TruyVan(context.Background(), "Đà Lạt")
-	if err != nil || q.Truong() != FBM25 || q.Text != "Đà Lạt" {
+func TestBM25IsTheOnlySparseLegAndNeedsNoModel(t *testing.T) {
+	q, err := BM25{}.TruyVan(context.Background(), "Đà Lạt")
+	if err != nil || q.Text != "Đà Lạt" {
 		t.Fatalf("%+v %v", q, err)
 	}
-	vs, _ := BM25{}.TaiLieu(context.Background(), []string{"a", "b"})
-	if len(vs) != 2 || len(vs[0].Chi) != 0 {
-		t.Fatal("BM25 must leave the MILCO field empty")
+	if _, err := (BM25{}).TruyVan(context.Background(), "  "); err == nil {
+		t.Fatal("an empty query built a BM25 leg")
 	}
 }
 

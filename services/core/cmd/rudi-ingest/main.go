@@ -188,7 +188,7 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 		defer src.Close()
 		feed := ingest.PGFeed{Pool: src}
 		opt := ingest.SyncOptions{Pull: ingest.PullOptions{MaxRows: *maxRows}, PerPlace: *perPlace,
-			Facts: ingest.PGFactFeed{Pool: src}}
+			Facts: ingest.PGFactFeed{Pool: src}, AI: ingest.PGAIFeed{Pool: src}}
 		// The web says closed -> out of search (rag owns the tombstones;
 		// ingest only lands the facts it reads them from). The daemon runs
 		// it after every round, a failed one too: expiry moves with the

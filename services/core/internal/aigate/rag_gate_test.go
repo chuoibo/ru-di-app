@@ -26,7 +26,10 @@ const pkgRag = "mobile/services/core/internal/rag"
 // checks every hit against) and `destinations` (ResolveDestination's closed
 // list of names and boxes), and `place_facts` (the web facts rudi-ingest
 // lands; DongBoBiaWeb reads which fed places the web says are permanently
-// closed, to tombstone them `web_closed` -- no person in it). Nothing else: not `messages`, not a money table,
+// closed, to tombstone them `web_closed` -- no person in it), and
+// `place_danh_muc` / `place_lam_giau` (vnlocal's categories and search
+// attributes of a place, closed ids and short dish names -- no person in
+// them), which the index stores and the re-check reads. Nothing else: not `messages`, not a money table,
 // not `person_interests` or any per-person taste, not `saved_places`,
 // `posts`, `pair_shared_constraints` or any `nep_*` table. A group's taste
 // reaches a retrieval only as an argument the caller computed.
@@ -36,7 +39,7 @@ const pkgRag = "mobile/services/core/internal/rag"
 // rag_vector_versions (one row per Milvus collection: ids, states, model
 // names, counts), rag_dirty (which place changed: corpus, id, counters),
 // place_enrichments (a place's closed-id enrichment and its review verdict),
-// rag_embedding_cache and rag_sparse_cache (vectors by content hash),
+// rag_embedding_cache (dense vectors by content hash),
 // rag_embed_batches (batch embedding jobs: provider job name, model, counts,
 // state; ADR-0049 §2.7) and rag_ingest_dlq (which place failed at which
 // stage, as enums). None names a
@@ -47,9 +50,9 @@ const pkgRag = "mobile/services/core/internal/rag"
 var ragAllowed = map[string]bool{
 	"rag_schema_migrations": true, "rag_index_versions": true, "rag_docs": true, "rag_chunks": true,
 	"rag_tombstones": true, "rag_query_log": true,
-	"places": true, "destinations": true, "place_facts": true,
+	"places": true, "destinations": true, "place_facts": true, "place_danh_muc": true, "place_lam_giau": true,
 	"rag_nap_schema_migrations": true, "rag_vector_versions": true, "rag_dirty": true, "place_enrichments": true,
-	"rag_embedding_cache": true, "rag_sparse_cache": true, "rag_ingest_dlq": true, "job_schema_migrations": true,
+	"rag_embedding_cache": true, "rag_ingest_dlq": true, "job_schema_migrations": true,
 	"rag_embed_batches": true,
 }
 

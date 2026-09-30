@@ -16,7 +16,7 @@ import (
 // Fake is an in-memory TimKiem for unit tests of the retrieval adapter. It
 // filters with LocCung.Dat (the Go reading of the same rule the Milvus
 // expression states), ranks each leg Milvus would search (cosine; shared
-// marked terms; shared folded terms) and fuses them with the same weighted
+// folded terms) and fuses them with the same weighted
 // RRF (HopRRF). It is evidence about the adapter's orchestration only,
 // never about Milvus: the live tier (-tags milvus) is.
 type Fake struct {
@@ -42,16 +42,8 @@ func (f *Fake) Them(rows ...HangDiaDiem) {
 	}
 }
 
-// TuCoDau are the terms the marked analyzer yields (standard tokenizer,
-// lowercase): NFC text split on anything not a letter or a digit.
-func TuCoDau(text string) []string {
-	return strings.FieldsFunc(strings.ToLower(nhung.ChuanNFC(text)), func(r rune) bool {
-		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
-	})
-}
-
-// TuKhongDau are the terms the folding analyzer yields (plus asciifolding:
-// marks and đ folded).
+// TuKhongDau are the terms FText's analyzer yields (standard tokenizer,
+// lowercase, asciifolding: marks and đ folded).
 func TuKhongDau(text string) []string {
 	return strings.FieldsFunc(promptsafety.Fold(nhung.ChuanNFC(text)), func(r rune) bool {
 		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
@@ -106,10 +98,8 @@ func (f *Fake) Tim(_ context.Context, y YeuCauTim) ([]Trung, error) {
 			switch l.Truong {
 			case FDense:
 				d = nhung.Cosine(y.Dense, r.Dense)
-			case FBM25:
-				d = shared(TuCoDau(y.Thua.TextCua(FBM25)), TuCoDau(r.Text))
-			case FBM25KhongDau:
-				d = shared(TuKhongDau(y.Thua.TextCua(FBM25KhongDau)), TuKhongDau(r.Text))
+			case FSparse:
+				d = shared(TuKhongDau(y.Thua.Text), TuKhongDau(r.Text))
 			default:
 				continue
 			}

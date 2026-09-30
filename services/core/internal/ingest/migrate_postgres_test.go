@@ -69,6 +69,8 @@ func TestMigrateIsIdempotent(t *testing.T) {
 		"admin_province",
 		"pending_object_deletes",
 		"place_facts",
+		"place_danh_muc",
+		"place_lam_giau",
 	} {
 		var present bool
 		if err := pool.QueryRow(ctx,

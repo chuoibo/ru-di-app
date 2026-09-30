@@ -57,18 +57,17 @@ type KhoaHang struct {
 }
 
 // LuocDo is a collection's schema parameters: the corpus, the dense
-// dimensionality, the sparse mode and the revision of vectordb's schema the
-// configuration was written for (napkho refuses a mismatch).
+// dimensionality and the revision of vectordb's schema the configuration
+// was written for (napkho refuses a mismatch).
 type LuocDo struct {
 	Corpus Corpus
 	Dims   int
-	CheDo  CheDoThua
 	Ban    string
 }
 
 // LuocDoTu is the schema a configuration asks for.
 func LuocDoTu(cfg CauHinh, c Corpus) LuocDo {
-	return LuocDo{Corpus: c, Dims: cfg.Dense.Dims, CheDo: cfg.Thua.CheDo, Ban: cfg.LuocDo}
+	return LuocDo{Corpus: c, Dims: cfg.Dense.Dims, Ban: cfg.LuocDo}
 }
 
 // Loc are hard filters, as ids and numbers (truyhoi.Cung's shape; rag may
@@ -159,19 +158,16 @@ func coO(xs []int16, x int16) bool {
 // TrongSo are the fusion weights of the legs (cauhinh.json «hop»): each
 // leg's reciprocal rank is multiplied by its weight; 0 leaves the leg out.
 type TrongSo struct {
-	Dense        float64 `json:"dense"`
-	BM25         float64 `json:"bm25"`
-	BM25KhongDau float64 `json:"bm25_khong_dau"`
-	MILCO        float64 `json:"milco"`
+	Dense float64 `json:"dense"`
+	BM25  float64 `json:"bm25"`
 }
 
-// TruyVan is one hybrid search: a dense leg and the sparse legs (BM25 over
-// Chu with diacritics, BM25 over Chu folded; or a MILCO vector), fused by
-// weighted RRF with k = RRFK, under one filter on every leg.
+// TruyVan is one hybrid search: a dense leg and the BM25 leg over Chu
+// (folded analyzer, rd.v4), fused by weighted RRF with k = RRFK, under one
+// filter on every leg.
 type TruyVan struct {
 	Dense     []float32
 	Chu       string
-	Thua      VectorThua
 	Loc       Loc
 	K         int
 	KMoiNhanh int
@@ -182,14 +178,8 @@ type TruyVan struct {
 // ChiDense keeps only the dense leg of w (ablation).
 func (w TrongSo) ChiDense() TrongSo { return TrongSo{Dense: w.Dense} }
 
-// ChiThua keeps only the sparse legs of w (ablation).
-func (w TrongSo) ChiThua() TrongSo {
-	return TrongSo{BM25: w.BM25, BM25KhongDau: w.BM25KhongDau, MILCO: w.MILCO}
-}
-
-// KhongGap drops the folded BM25 leg (ablation: what the second analyzer
-// adds on questions typed without diacritics).
-func (w TrongSo) KhongGap() TrongSo { w.BM25KhongDau = 0; return w }
+// ChiThua keeps only the BM25 leg of w (ablation).
+func (w TrongSo) ChiThua() TrongSo { return TrongSo{BM25: w.BM25} }
 
 // Trung is one hit.
 type Trung struct {
@@ -408,25 +398,10 @@ func (k *KhoNho) TimLai(_ context.Context, ten string, tv TruyVan) ([]Trung, err
 		legs = append(legs, topK(ids, per, func(id string) float64 { return cosine(c.rows[id].Dense, tv.Dense) }))
 		ws = append(ws, w.Dense)
 	}
-	if c.ld.CheDo == ThuaMILCO {
-		if w.MILCO > 0 {
-			legs = append(legs, topK(ids, per, func(id string) float64 {
-				r := c.rows[id]
-				return dotThua(VectorThua{Idx: r.SparseIdx, Val: r.SparseVal}, tv.Thua)
-			}))
-			ws = append(ws, w.MILCO)
-		}
-	} else if tv.Chu != "" {
-		if w.BM25 > 0 {
-			score := bm25(c, TokensCoDau(tv.Chu), TokensCoDau)
-			legs = append(legs, topK(ids, per, func(id string) float64 { return score[id] }))
-			ws = append(ws, w.BM25)
-		}
-		if w.BM25KhongDau > 0 {
-			score := bm25(c, Tokens(tv.Chu), Tokens)
-			legs = append(legs, topK(ids, per, func(id string) float64 { return score[id] }))
-			ws = append(ws, w.BM25KhongDau)
-		}
+	if tv.Chu != "" && w.BM25 > 0 {
+		score := bm25(c, Tokens(tv.Chu), Tokens)
+		legs = append(legs, topK(ids, per, func(id string) float64 { return score[id] }))
+		ws = append(ws, w.BM25)
 	}
 	rrfK := tv.RRFK
 	if rrfK <= 0 {
@@ -489,24 +464,6 @@ func cosine(a, b []float32) float64 {
 	for i := range a {
 		if i < len(b) {
 			s += float64(a[i]) * float64(b[i])
-		}
-	}
-	return s
-}
-
-func dotThua(a, b VectorThua) float64 {
-	var s float64
-	i, j := 0, 0
-	for i < len(a.Idx) && j < len(b.Idx) {
-		switch {
-		case a.Idx[i] == b.Idx[j]:
-			s += float64(a.Val[i]) * float64(b.Val[j])
-			i++
-			j++
-		case a.Idx[i] < b.Idx[j]:
-			i++
-		default:
-			j++
 		}
 	}
 	return s

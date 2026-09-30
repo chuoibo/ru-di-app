@@ -86,6 +86,10 @@ func Doc(ctx context.Context, q Querier, ids []string) (map[string]Hang, error) 
 	if err != nil {
 		return nil, err
 	}
+	dm, err := nap.DocDanhMuc(ctx, q, ids)
+	if err != nil {
+		return nil, err
+	}
 	bia := map[string]bool{}
 	rows, err := q.Query(ctx, `SELECT doc_id FROM rag_tombstones WHERE corpus = 'place' AND doc_id = ANY($1::text[])`, ids)
 	if err != nil {
@@ -112,6 +116,13 @@ func Doc(ctx context.Context, q Querier, ids []string) (map[string]Hang, error) 
 			tt.DiUng = slices.Clone(t.DiUng)
 		} else {
 			tt.DiUng = []string{vectordb.KhongRo}
+		}
+		// The same rule as the index (napkho.ThuocTinh): unclassified is
+		// exactly [khong_ro], out under a category filter.
+		if d := dm[p.ID]; len(d) > 0 {
+			tt.DanhMuc = slices.Clone(d)
+		} else {
+			tt.DanhMuc = []string{vectordb.KhongRo}
 		}
 		if p.PriceMinVND != nil {
 			tt.GiaMinVND = *p.PriceMinVND

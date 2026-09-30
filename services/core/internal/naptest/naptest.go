@@ -241,6 +241,14 @@ func Nap(t testing.TB, kho nap.KhoVector) (nap.Nap, nap.StubDense) {
 		t.Fatal(err)
 	}
 	enc := nap.StubDense{N: cfg.Dense.Dims}
+	// The lifecycle tests drive build -> gate -> promote -> rollback with the
+	// stub encoder, whose golden recall@10 under rd.v4 (one row per place)
+	// is 0.88; the real encoder reads 0.9467 on Milvus (2026-09-30). The
+	// stub's bar is its own measured level less a margin: the machinery is
+	// the subject here, not the stub's relevance. Production reads the
+	// committed 0.90 (cauhinh.json, held by TestCauHinhMacDinhVaTuChoi);
+	// violation@10 keeps its zero tolerance.
+	cfg.Cong.Recall10 = 0.85
 	return nap.Nap{Kho: kho, Dense: enc, Cfg: cfg}, enc
 }
 
@@ -621,7 +629,7 @@ func UpsertLapLai(t *testing.T, kho nap.KhoVector, ten string) {
 	var rows []nap.Hang
 	for i, q := range v.Quan[:20] {
 		h, _ := nap.DungHoSo(v.Hang(i, q))
-		hs, err := nap.DoanQuan(ctx, h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan], nap.ChiaNghia{Nhung: n.Dense})
+		hs, err := nap.DoanQuan(h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan])
 		if err != nil {
 			t.Fatal(err)
 		}

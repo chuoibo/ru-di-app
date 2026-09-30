@@ -143,6 +143,13 @@ func ThuocTinh(r nap.Hang) vectordb.ThuocTinh {
 	if r.GioRo {
 		t.OSlots = slices.Clone(r.MoO)
 	}
+	// Categories not classified yet are exactly [khong_ro]: out under a
+	// category filter, never guessed.
+	if len(r.DanhMuc) > 0 {
+		t.DanhMuc = slices.Clone(r.DanhMuc)
+	} else {
+		t.DanhMuc = []string{vectordb.KhongRo}
+	}
 	return t
 }
 
@@ -162,8 +169,7 @@ func (k *Kho) Upsert(ctx context.Context, ten string, rows []nap.Hang) error {
 	case vectordb.KhoDiaDiem:
 		out := make([]vectordb.HangDiaDiem, len(rows))
 		for i, r := range rows {
-			out[i] = vectordb.HangDiaDiem{ID: r.ChunkID, DocID: r.DocID, Facet: r.Facet, ChunkSo: r.ChunkSo, Dense: r.Dense,
-				Sparse: vectordb.ThuaVec{Chi: r.SparseIdx, GiaTri: r.SparseVal}, Text: r.Text,
+			out[i] = vectordb.HangDiaDiem{ID: r.ChunkID, DocID: r.DocID, Dense: r.Dense, Text: r.Text,
 				ContentHash: r.ContentHash, EmbedModel: r.DenseModel, ThuocTinh: ThuocTinh(r), GiaMaxVND: giaMax(r), PhienBan: v}
 		}
 		return k.M.GhiDiaDiem(ctx, k.ten(ten), out)
@@ -171,7 +177,7 @@ func (k *Kho) Upsert(ctx context.Context, ten string, rows []nap.Hang) error {
 		out := make([]vectordb.HangHuongDan, len(rows))
 		for i, r := range rows {
 			out[i] = vectordb.HangHuongDan{ID: r.ChunkID, DocID: r.DocID, Text: r.Text, ContentHash: r.ContentHash,
-				EmbedModel: r.DenseModel, Dense: r.Dense, Sparse: vectordb.ThuaVec{Chi: r.SparseIdx, GiaTri: r.SparseVal}, PhienBan: v}
+				EmbedModel: r.DenseModel, Dense: r.Dense, PhienBan: v}
 		}
 		return k.M.GhiHuongDan(ctx, k.ten(ten), out)
 	}
@@ -240,16 +246,13 @@ func (k *Kho) TimLai(ctx context.Context, ten string, tv nap.TruyVan) ([]nap.Tru
 	if kMax <= 0 || kMax > 50 {
 		kMax = 50
 	}
-	w := vectordb.TrongSo{Dense: tv.TrongSo.Dense, BM25: tv.TrongSo.BM25, BM25KhongDau: tv.TrongSo.BM25KhongDau, MILCO: tv.TrongSo.MILCO}
+	w := vectordb.TrongSo{Dense: tv.TrongSo.Dense, BM25: tv.TrongSo.BM25}
 	y := vectordb.YeuCauTim{Ten: k.ten(ten), Kho: kk, Loc: LocCung(tv.Loc), K: kMax, UngVien: tv.KMoiNhanh, TrongSo: &w}
 	if len(tv.Dense) > 0 {
 		y.Dense = tv.Dense
 	}
-	switch {
-	case len(tv.Thua.Idx) > 0:
-		y.Thua = &vectordb.ThuaTruyVan{Loai: vectordb.ThuaMILCO, Vec: vectordb.ThuaVec{Chi: tv.Thua.Idx, GiaTri: tv.Thua.Val}}
-	case len(nap.Tokens(tv.Chu)) > 0:
-		y.Thua = &vectordb.ThuaTruyVan{Loai: vectordb.ThuaBM25, Text: nhung.ChuanNFC(tv.Chu)}
+	if len(nap.Tokens(tv.Chu)) > 0 {
+		y.Thua = &vectordb.ThuaTruyVan{Text: nhung.ChuanNFC(tv.Chu)}
 	}
 	hits, err := k.M.Tim(ctx, y)
 	if errors.Is(err, vectordb.ErrKhongCoNhanh) {

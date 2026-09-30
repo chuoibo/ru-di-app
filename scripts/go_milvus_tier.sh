@@ -53,11 +53,11 @@ SENTINELS=(
   TestHybridDauCuoiKhongViPham
   TestHybridQuaRerankThat
   TestHybridRerankTheoLuot
-  # ingestion (rag/nap over napkho): both BM25 fields, filter parity with Go
+  # ingestion (rag/nap over napkho): the one folded BM25 field, filter parity with Go
   # on rows with unknown allergens/price/hours, the golden set with no
   # violation, the lifecycle through the alias, a takedown surviving a
   # rollback, attributes reaching a collection of another configuration.
-  TestHaiTruongBM25Milvus
+  TestBM25GapDauMilvus
   TestLocMilvusKhopGo
   TestHybridLocCungKhongViPham
   TestBuildDoiSoatPromoteRollbackQuaAlias

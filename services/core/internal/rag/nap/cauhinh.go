@@ -18,19 +18,13 @@ import (
 //go:embed cauhinh.json
 var cauHinhJSON []byte
 
-// CheDoThua is how the sparse leg is produced.
+// CheDoThua is how the sparse leg is produced, as a version records it.
 type CheDoThua string
 
-const (
-	// ThuaBM25 is Milvus's BM25 function over the chunk text, twice: once
-	// with diacritics kept, once folded (vectordb's two analyzers): a
-	// retrieval scoring function computed by Milvus, no client vector.
-	ThuaBM25 CheDoThua = "bm25"
-	// ThuaMILCO is a learned sparse vector from the MILCO encoder. Its
-	// licence is unconfirmed (research milco.md, Kiểm chứng #11): it stays
-	// off until a person has read the model cards and set milco_bat.
-	ThuaMILCO CheDoThua = "milco"
-)
+// ThuaBM25 is the only sparse leg (rd.v4, owner 2026-09-29): Milvus's BM25
+// function over the row's one text field, folded analyzer. No learned
+// sparse model, no client vector.
+const ThuaBM25 CheDoThua = "bm25"
 
 // CauHinh is cauhinh.json.
 type CauHinh struct {
@@ -44,13 +38,6 @@ type CauHinh struct {
 		CoChe string `json:"co_che"`
 		Lo    int    `json:"lo"`
 	} `json:"dense"`
-	Thua struct {
-		CheDo      CheDoThua `json:"che_do"`
-		MilcoBat   bool      `json:"milco_bat"`
-		MilcoModel string    `json:"milco_model"`
-		MilcoRev   string    `json:"milco_rev"`
-		PruneK     int       `json:"prune_k"`
-	} `json:"thua"`
 	// LuocDo names the revision of vectordb's collection schema (fields,
 	// analyzers, index parameters) this configuration was written for; the
 	// schema itself is declared once, in vectordb, and napkho refuses to
@@ -98,9 +85,8 @@ type NguongCong struct {
 // MacDinh returns the committed configuration, checked.
 func MacDinh() (CauHinh, error) { return DocCauHinh(cauHinhJSON) }
 
-// DocCauHinh reads a configuration strictly: unknown keys, a missing number,
-// MILCO chosen without its licence flag, or a violation tolerance above zero
-// are refused.
+// DocCauHinh reads a configuration strictly: unknown keys, a missing number
+// or a violation tolerance above zero are refused.
 func DocCauHinh(raw []byte) (CauHinh, error) {
 	var c CauHinh
 	dec := json.NewDecoder(bytes.NewReader(raw))
@@ -144,18 +130,6 @@ func (c CauHinh) Kiem() error {
 	case c.GiuBan.ToiDa < 2 || c.GiuBan.Ngay <= 0:
 		return bad("giu_ban")
 	}
-	switch c.Thua.CheDo {
-	case ThuaBM25:
-	case ThuaMILCO:
-		if !c.Thua.MilcoBat {
-			return bad("MILCO chosen while milco_bat is false (licence unconfirmed)")
-		}
-		if c.Thua.MilcoModel == "" || c.Thua.MilcoRev == "" || c.Thua.PruneK <= 0 {
-			return bad("MILCO needs a model, a pinned revision and prune_k")
-		}
-	default:
-		return bad("thua che_do")
-	}
 	if math.IsNaN(c.Trung.CosineToiThieu) {
 		return bad("trung")
 	}
@@ -171,18 +145,13 @@ func (c CauHinh) VanTay() string {
 	return hex.EncodeToString(sum[:])[:12]
 }
 
-// SparseRev names the sparse leg as a version records it: the analyzer for
-// BM25, the pinned model revision and prune for MILCO.
-func (c CauHinh) SparseRev() string {
-	if c.Thua.CheDo == ThuaMILCO {
-		return fmt.Sprintf("milco:%s@%s:k%d", c.Thua.MilcoModel, c.Thua.MilcoRev, c.Thua.PruneK)
-	}
-	return "bm25:" + c.LuocDo
-}
+// SparseRev names the sparse leg as a version records it: BM25 under the
+// schema revision's analyzer.
+func (c CauHinh) SparseRev() string { return "bm25:" + c.LuocDo }
 
 func trongSoHopLe(w TrongSo) bool {
 	sum := 0.0
-	for _, x := range []float64{w.Dense, w.BM25, w.BM25KhongDau, w.MILCO} {
+	for _, x := range []float64{w.Dense, w.BM25} {
 		if !(x >= 0) || math.IsInf(x, 0) {
 			return false
 		}

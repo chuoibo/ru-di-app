@@ -46,6 +46,10 @@ type Muc struct {
 	Nhan string
 	// Cum are the phrases that name it, written as people write them.
 	Cum []string
+	// DinhNghia is what the entry covers and where its border lies, in
+	// Vietnamese: a vocabulary a model fills (DanhMuc) is defined, not
+	// matched, so it carries a definition and no phrase.
+	DinhNghia string
 }
 
 // TuVung is one compiled vocabulary. Safe for concurrent use.
@@ -131,7 +135,7 @@ func (v *TuVung) Nhan(id string) string {
 func (v *TuVung) Muc() []Muc {
 	out := make([]Muc, len(v.muc))
 	for i, m := range v.muc {
-		out[i] = Muc{ID: m.ID, Nhan: m.Nhan, Cum: append([]string(nil), m.Cum...)}
+		out[i] = Muc{ID: m.ID, Nhan: m.Nhan, Cum: append([]string(nil), m.Cum...), DinhNghia: m.DinhNghia}
 	}
 	return out
 }

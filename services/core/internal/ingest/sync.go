@@ -18,6 +18,9 @@ type SyncOptions struct {
 	Photos     bool
 	// Facts is the feed's web facts (place_web_facts); nil skips them.
 	Facts FactFeed
+	// AI is the feed's categories and search attributes (place_danh_muc,
+	// place_lam_giau); nil skips them.
+	AI AIFeed
 }
 
 // SyncReport is what one round did.
@@ -34,13 +37,17 @@ type SyncReport struct {
 	// Web facts: rows upserted, and what the derivation changed and left.
 	Facts        int
 	FactsApplied FactsApplied
+	// Categories and search attributes upserted.
+	DanhMuc int
+	LamGiau int
 }
 
 func (r SyncReport) String() string {
 	return fmt.Sprintf("kéo %d dòng / %d đợt · thêm %d · cập nhật %d · cũ %d · từ chối %v · ảnh mới %d · bỏ ảnh %v · bắt kịp %v"+
-		" · web facts %d · đổi giờ/giá %d · có giờ %d · có giá %d · hết hạn %d",
+		" · web facts %d · đổi giờ/giá %d · có giờ %d · có giá %d · hết hạn %d · danh mục %d · thuộc tính %d",
 		r.Pulled, r.Batches, r.Inserted, r.Updated, r.Stale, r.Rejected, r.Photos, r.PhotoSkip, r.CaughtUp,
-		r.Facts, r.FactsApplied.Updated, r.FactsApplied.CoGio, r.FactsApplied.CoGia, r.FactsApplied.HetHan)
+		r.Facts, r.FactsApplied.Updated, r.FactsApplied.CoGio, r.FactsApplied.CoGia, r.FactsApplied.HetHan,
+		r.DanhMuc, r.LamGiau)
 }
 
 // SyncOnce brings the catalogue up to date with the feed: pull until caught up,
@@ -113,6 +120,27 @@ func SyncOnce(ctx context.Context, pool *pgxpool.Pool, feed Feed, frames FrameSo
 			return report, fmt.Errorf("apply web facts: %w", err)
 		}
 		report.FactsApplied = applied
+	}
+	if opt.AI != nil {
+		for _, pass := range []struct {
+			name string
+			pull func(context.Context, *pgxpool.Pool, AIFeed, PullOptions) (AIResult, error)
+			into *int
+		}{{"categories", PullDanhMuc, &report.DanhMuc}, {"search attributes", PullLamGiau, &report.LamGiau}} {
+			for i := 0; i < opt.MaxBatches; i++ {
+				got, err := pass.pull(ctx, pool, opt.AI, opt.Pull)
+				if err != nil {
+					return report, fmt.Errorf("pull %s: %w", pass.name, err)
+				}
+				*pass.into += got.Landed
+				for code, n := range got.Rejected {
+					report.Rejected[code] += n
+				}
+				if got.CaughtUp {
+					break
+				}
+			}
+		}
 	}
 
 	if !opt.Photos {

@@ -64,6 +64,10 @@ const (
 	RBAnKieng  RangBuoc = "an_kieng"
 	RBMoLuc    RangBuoc = "mo_luc"
 	RBNganSach RangBuoc = "ngan_sach"
+	// RBDanhMuc: the place's categories (tuvung.DanhMuc) must include one
+	// of the asked ids. The index filters on it (vectordb.LocCung.DanhMuc);
+	// no router emits it yet, so no model-facing enum lists it.
+	RBDanhMuc RangBuoc = "danh_muc"
 )
 
 // Soft constraints: a corrective round may relax one.
@@ -74,7 +78,7 @@ const (
 )
 
 // RangBuocCungs is the closed set of hard constraint names.
-var RangBuocCungs = dong.Moi("rang_buoc_cung", RBDiemDen, RBDiUng, RBAnKieng, RBMoLuc, RBNganSach)
+var RangBuocCungs = dong.Moi("rang_buoc_cung", RBDiemDen, RBDiUng, RBAnKieng, RBMoLuc, RBNganSach, RBDanhMuc)
 
 // RangBuocMems is the closed set of soft constraint names.
 var RangBuocMems = dong.Moi("rang_buoc_mem", RBKhiChat, RBLoaiCho, RBKhuVuc)

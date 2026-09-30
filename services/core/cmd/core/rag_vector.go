@@ -553,10 +553,9 @@ func ragEmbedBatch(ctx context.Context, getenv func(string) string, pool nap.CSD
 	if err != nil {
 		return ragOut(stdout, stderr, nil, err)
 	}
-	if rep.ThieuLamGiau > 0 {
-		return ragOut(stdout, stderr, map[string]int{"thieu_lam_giau": rep.ThieuLamGiau},
-			errors.New("rag: enrich first (core rag v-enrich): the enrichment writes the text being embedded"))
-	}
+	// Places without a current enrichment are not in docs (ChuanBiQuan
+	// leaves them out): their text is not final, embedding it now would be
+	// paid twice. They are embedded online by the indexer once it arrives.
 	var rows []nap.Hang
 	for _, d := range docs {
 		rows = append(rows, d.Rows...)
@@ -565,5 +564,5 @@ func ragEmbedBatch(ctx context.Context, getenv func(string) string, pool nap.CSD
 	// chunks) was refused 429 RESOURCE_EXHAUSTED at creation (enqueued-token
 	// quota), 5,000 was accepted (probe 2026-09-29).
 	kq, err := n.NhungQuaLo(ctx, pool, napLo{l: lo}, rows, 30*time.Second, 4000)
-	return ragOut(stdout, stderr, map[string]any{"quan": len(docs), "qua_dai": rep.QuaDai, "lo": kq}, err)
+	return ragOut(stdout, stderr, map[string]any{"quan": len(docs), "qua_dai": rep.QuaDai, "cho_lam_giau": rep.ThieuLamGiau, "lo": kq}, err)
 }

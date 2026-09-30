@@ -14,14 +14,13 @@ import (
 
 // TestMoRongCapNhatRieng: a field that arrives after the schema (the feed's
 // menu with prices, owner 2026-09-28) is upserted into FMoRong alone, by
-// partial update: the row keeps its facet, price and vector, and a row that
+// partial update: the row keeps its text, price and vector, and a row that
 // was not touched still holds {}.
 func TestMoRongCapNhatRieng(t *testing.T) {
 	m := ketThu(t)
 	ctx := ctxThu(t, 3*time.Minute)
 	rows := fxDiaDiem(11, 2)
 	rows[0].ID, rows[1].ID = "mr-a", "mr-b"
-	rows[0].Facet, rows[0].ChunkSo = "mon_an", 1
 	rows[0].ThuocTinh.GoBo, rows[1].ThuocTinh.GoBo = false, false
 	name, err := m.TaoPhienBan(ctx, KhoDiaDiem, 1)
 	if err != nil {
@@ -39,7 +38,7 @@ func TestMoRongCapNhatRieng(t *testing.T) {
 		t.Fatal("a JSON array was accepted as the dict")
 	}
 	rs, err := m.cli.Query(ctx, milvusclient.NewQueryOption(name).WithIDs(column.NewColumnVarChar(FID, []string{"mr-a", "mr-b"})).
-		WithOutputFields(FID, FMoRong, FFacet, FChunkSo, FPriceMin).WithConsistencyLevel(entity.ClStrong))
+		WithOutputFields(FID, FMoRong, FText, FPriceMin).WithConsistencyLevel(entity.ClStrong))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,20 +53,19 @@ func TestMoRongCapNhatRieng(t *testing.T) {
 		if err := json.Unmarshal(raw.([]byte), &d); err != nil {
 			t.Fatalf("%s: mo_rong %q", id, raw)
 		}
-		facet, _ := rs.GetColumn(FFacet).GetAsString(i)
-		so, _ := rs.GetColumn(FChunkSo).GetAsInt64(i)
+		text, _ := rs.GetColumn(FText).GetAsString(i)
 		gia, _ := rs.GetColumn(FPriceMin).GetAsInt64(i)
-		d["_facet"], d["_so"], d["_gia"] = facet, so, gia
+		d["_text"], d["_gia"] = text, gia
 		got[id] = d
 	}
 	a, b := got["mr-a"], got["mr-b"]
 	if a == nil || b == nil {
 		t.Fatalf("rows back: %v", got)
 	}
-	if _, ok := a["menu"]; !ok || a["_facet"] != "mon_an" || a["_so"] != int64(1) || a["_gia"] != rows[0].ThuocTinh.GiaMinVND {
+	if _, ok := a["menu"]; !ok || a["_text"] != rows[0].Text || a["_gia"] != rows[0].ThuocTinh.GiaMinVND {
 		t.Fatalf("updated row: %v", a)
 	}
-	if len(b) != 3 {
+	if len(b) != 2 {
 		t.Fatalf("untouched row's mo_rong is not {}: %v", b)
 	}
 }

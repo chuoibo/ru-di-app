@@ -84,7 +84,7 @@ func TestHybridHonDenseChiMot(t *testing.T) {
 				y.Dense = nhungKhaiNiem(qq.text)
 			}
 			if sparse {
-				y.Thua = &ThuaTruyVan{Loai: ThuaBM25, Text: qq.text}
+				y.Thua = &ThuaTruyVan{Text: qq.text}
 			}
 			got, err := m.Tim(ctx, y)
 			if err != nil {

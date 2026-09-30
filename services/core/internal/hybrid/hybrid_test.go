@@ -124,11 +124,9 @@ func TestRecheckErrorFailsClosed(t *testing.T) {
 
 type loiThua struct{}
 
-func (loiThua) Loai() vectordb.LoaiThua { return vectordb.ThuaMILCO }
 func (loiThua) TruyVan(context.Context, string) (vectordb.ThuaTruyVan, error) {
-	return vectordb.ThuaTruyVan{}, errors.New("encoder down")
+	return vectordb.ThuaTruyVan{}, errors.New("sparse leg down")
 }
-func (loiThua) TaiLieu(context.Context, []string) ([]vectordb.ThuaVec, error) { return nil, nil }
 
 func TestDegradedLegsAreReported(t *testing.T) {
 	th, k := moiThu(t)

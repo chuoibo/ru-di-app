@@ -288,17 +288,14 @@ func (m *Milvus) XoaAlias(ctx context.Context, k Kho) error {
 	return m.cli.DropAlias(ctx, milvusclient.NewDropAliasOption(m.Alias(k)))
 }
 
-// HangDiaDiem is one place chunk as indexed. DocID is the place; a place
-// indexed as a single chunk may leave it empty, and then ID is the place.
+// HangDiaDiem is one place row as indexed (rd.v4: one row per place). ID is
+// the place id; DocID repeats it (empty is read as ID).
 type HangDiaDiem struct {
-	ID      string
-	DocID   string
-	Facet   string
-	ChunkSo int16
+	ID    string
+	DocID string
 	// MoRong is the row's JSON dict of later fields; nil is written {}.
 	MoRong      []byte
 	Dense       []float32
-	Sparse      ThuaVec
 	Text        string
 	ContentHash string
 	EmbedModel  string
@@ -307,7 +304,7 @@ type HangDiaDiem struct {
 	PhienBan    int64
 }
 
-// Doc is the place the row is a chunk of.
+// Doc is the place the row belongs to.
 func (r HangDiaDiem) Doc() string {
 	if r.DocID == "" {
 		return r.ID
@@ -315,11 +312,18 @@ func (r HangDiaDiem) Doc() string {
 	return r.DocID
 }
 
-func (s ThuaVec) embedding() (entity.SparseEmbedding, error) {
-	if err := s.Kiem(); err != nil {
-		return nil, err
+// ErrQuaDai: a row's text is longer than MaxTextLen bytes. Never cut: the
+// ingest counts the place and leaves it out.
+var ErrQuaDai = errors.New("vectordb: text longer than the text field holds")
+
+// vanBan is a row's text as stored: NFC (so the analyzer folds it the way
+// it folds a query), refused past MaxTextLen bytes.
+func vanBan(id, text string) (string, error) {
+	t := nhung.ChuanNFC(text)
+	if len(t) > MaxTextLen {
+		return "", fmt.Errorf("%w: %s holds %d bytes", ErrQuaDai, id, len(t))
 	}
-	return entity.NewSliceSparseEmbedding(slices.Clone(s.Chi), slices.Clone(s.GiaTri))
+	return t, nil
 }
 
 func kiemDense(v []float32) error {
@@ -336,9 +340,20 @@ func notNil[T any](xs []T) []T {
 	return slices.Clone(xs)
 }
 
+// danhMucLuu is t's categories as stored: [KhongRo] when none is known.
+// More than MaxDanhMuc is an error.
+func danhMucLuu(t ThuocTinh) ([]string, error) {
+	if len(t.DanhMuc) > MaxDanhMuc {
+		return nil, fmt.Errorf("vectordb: %d categories, at most %d", len(t.DanhMuc), MaxDanhMuc)
+	}
+	if len(t.DanhMuc) == 0 {
+		return []string{KhongRo}, nil
+	}
+	return slices.Clone(t.DanhMuc), nil
+}
+
 // GhiDiaDiem upserts place rows into the collection (or alias) name. Text is
-// stored NFC, once in each analyzer's field, so both fold the way they fold
-// a query.
+// stored NFC, so the analyzer folds it the way it folds a query.
 func (m *Milvus) GhiDiaDiem(ctx context.Context, name string, rows []HangDiaDiem) error {
 	if len(rows) == 0 {
 		return nil
@@ -347,14 +362,13 @@ func (m *Milvus) GhiDiaDiem(ctx context.Context, name string, rows []HangDiaDiem
 	ids, docs, texts, dests := make([]string, n), make([]string, n), make([]string, n), make([]string, n)
 	hashes, models := make([]string, n), make([]string, n)
 	dense := make([][]float32, n)
-	sparse := make([]entity.SparseEmbedding, n)
 	slots := make([][]int16, n)
 	pmin, pmax, ver := make([]int64, n), make([]int64, n), make([]int64, n)
-	alg, diet := make([][]string, n), make([][]string, n)
+	alg, diet, dm := make([][]string, n), make([][]string, n), make([][]string, n)
 	tomb := make([]bool, n)
-	facets, chunkSo, moRong := make([]string, n), make([]int16, n), make([][]byte, n)
+	moRong := make([][]byte, n)
 	for i, r := range rows {
-		facets[i], chunkSo[i], moRong[i] = r.Facet, r.ChunkSo, r.MoRong
+		moRong[i] = r.MoRong
 		if len(moRong[i]) == 0 {
 			moRong[i] = []byte("{}")
 		}
@@ -364,14 +378,17 @@ func (m *Milvus) GhiDiaDiem(ctx context.Context, name string, rows []HangDiaDiem
 		if err := kiemDense(r.Dense); err != nil {
 			return err
 		}
-		se, err := r.Sparse.embedding()
+		text, err := vanBan(r.ID, r.Text)
 		if err != nil {
 			return err
 		}
 		t := r.ThuocTinh
-		ids[i], docs[i], texts[i], dests[i] = r.ID, r.Doc(), nhung.ChuanNFC(r.Text), t.DiemDen
+		if dm[i], err = danhMucLuu(t); err != nil {
+			return err
+		}
+		ids[i], docs[i], texts[i], dests[i] = r.ID, r.Doc(), text, t.DiemDen
 		hashes[i], models[i] = r.ContentHash, r.EmbedModel
-		dense[i], sparse[i] = r.Dense, se
+		dense[i] = r.Dense
 		slots[i] = notNil(t.OSlots)
 		pmin[i], pmax[i], ver[i] = t.GiaMinVND, r.GiaMaxVND, r.PhienBan
 		alg[i], diet[i] = notNil(t.DiUng), notNil(t.AnKieng)
@@ -381,25 +398,23 @@ func (m *Milvus) GhiDiaDiem(ctx context.Context, name string, rows []HangDiaDiem
 		WithVarcharColumn(FID, ids).
 		WithVarcharColumn(FDocID, docs).
 		WithFloatVectorColumn(FDense, nhung.Dims, dense).
-		WithColumns(column.NewColumnSparseVectors(FSparse, sparse)).
 		WithVarcharColumn(FText, texts).
-		WithVarcharColumn(FTextKhongDau, texts).
 		WithVarcharColumn(FContentHash, hashes).
 		WithVarcharColumn(FEmbedModel, models).
-		WithVarcharColumn(FFacet, facets).
-		WithColumns(column.NewColumnInt16(FChunkSo, chunkSo), column.NewColumnJSONBytes(FMoRong, moRong)).
+		WithColumns(column.NewColumnJSONBytes(FMoRong, moRong)).
 		WithVarcharColumn(FDestination, dests).
 		WithColumns(column.NewColumnInt16Array(FOpenSlots, slots)).
 		WithInt64Column(FPriceMin, pmin).
 		WithInt64Column(FPriceMax, pmax).
-		WithColumns(column.NewColumnVarCharArray(FAllergens, alg), column.NewColumnVarCharArray(FDiets, diet)).
+		WithColumns(column.NewColumnVarCharArray(FAllergens, alg), column.NewColumnVarCharArray(FDiets, diet),
+			column.NewColumnVarCharArray(FDanhMuc, dm)).
 		WithBoolColumn(FTombstoned, tomb).
 		WithInt64Column(FIndexVersion, ver)
 	_, err := m.cli.Upsert(ctx, opt)
 	return err
 }
 
-// HangHuongDan is one manual chunk as indexed.
+// HangHuongDan is one manual row (one per section) as indexed.
 type HangHuongDan struct {
 	ID          string
 	DocID       string
@@ -407,12 +422,11 @@ type HangHuongDan struct {
 	ContentHash string
 	EmbedModel  string
 	Dense       []float32
-	Sparse      ThuaVec
 	GoBo        bool
 	PhienBan    int64
 }
 
-// GhiHuongDan upserts manual chunks.
+// GhiHuongDan upserts manual rows.
 func (m *Milvus) GhiHuongDan(ctx context.Context, name string, rows []HangHuongDan) error {
 	if len(rows) == 0 {
 		return nil
@@ -421,26 +435,24 @@ func (m *Milvus) GhiHuongDan(ctx context.Context, name string, rows []HangHuongD
 	ids, docs, texts := make([]string, n), make([]string, n), make([]string, n)
 	hashes, models := make([]string, n), make([]string, n)
 	dense := make([][]float32, n)
-	sparse := make([]entity.SparseEmbedding, n)
 	tomb, ver := make([]bool, n), make([]int64, n)
 	for i, r := range rows {
 		if err := kiemDense(r.Dense); err != nil {
 			return err
 		}
-		se, err := r.Sparse.embedding()
+		text, err := vanBan(r.ID, r.Text)
 		if err != nil {
 			return err
 		}
-		ids[i], docs[i], texts[i] = r.ID, r.DocID, nhung.ChuanNFC(r.Text)
+		ids[i], docs[i], texts[i] = r.ID, r.DocID, text
 		hashes[i], models[i] = r.ContentHash, r.EmbedModel
-		dense[i], sparse[i], tomb[i], ver[i] = r.Dense, se, r.GoBo, r.PhienBan
+		dense[i], tomb[i], ver[i] = r.Dense, r.GoBo, r.PhienBan
 	}
 	_, err := m.cli.Upsert(ctx, milvusclient.NewColumnBasedInsertOption(name).
 		WithVarcharColumn(FID, ids).WithVarcharColumn(FDocID, docs).
-		WithVarcharColumn(FText, texts).WithVarcharColumn(FTextKhongDau, texts).
+		WithVarcharColumn(FText, texts).
 		WithVarcharColumn(FContentHash, hashes).WithVarcharColumn(FEmbedModel, models).
 		WithFloatVectorColumn(FDense, nhung.Dims, dense).
-		WithColumns(column.NewColumnSparseVectors(FSparse, sparse)).
 		WithBoolColumn(FTombstoned, tomb).WithInt64Column(FIndexVersion, ver))
 	return err
 }
@@ -451,19 +463,17 @@ func (m *Milvus) GhiHuongDan(ctx context.Context, name string, rows []HangHuongD
 // configuration holds the served values, rag/nap cauhinh.json «hop»), so the
 // eval gate measures the weights retrieval serves with.
 type TrongSo struct {
-	Dense        float64
-	BM25         float64
-	BM25KhongDau float64
-	MILCO        float64
+	Dense float64
+	BM25  float64
 }
 
-// MacDinhTrongSo weighs every leg alike: plain RRF.
-var MacDinhTrongSo = TrongSo{Dense: 1, BM25: 1, BM25KhongDau: 1, MILCO: 1}
+// MacDinhTrongSo weighs both legs alike: plain RRF.
+var MacDinhTrongSo = TrongSo{Dense: 1, BM25: 1}
 
 // Kiem refuses a negative or non-finite weight, or no leg at all.
 func (w TrongSo) Kiem() error {
 	sum := 0.0
-	for _, x := range []float64{w.Dense, w.BM25, w.BM25KhongDau, w.MILCO} {
+	for _, x := range []float64{w.Dense, w.BM25} {
 		if !(x >= 0) || math.IsInf(x, 0) {
 			return fmt.Errorf("vectordb: fusion weight %v", x)
 		}
@@ -482,8 +492,7 @@ type YeuCauTim struct {
 	Kho Kho
 	// Dense is the query vector; nil when the dense leg is down.
 	Dense []float32
-	// Thua is the sparse leg; nil when it is down. A BM25 leg searches both
-	// BM25 fields (with and without diacritics), each under its weight.
+	// Thua is the BM25 leg (FSparse over FText); nil when it is down.
 	Thua *ThuaTruyVan
 	// Loc: the hard constraints (places only).
 	Loc LocCung
@@ -495,7 +504,7 @@ type YeuCauTim struct {
 	TrongSo *TrongSo
 }
 
-// Trung is one hit: the chunk id, the document (place or manual section)
+// Trung is one hit: the row id, the document (place or manual section)
 // it belongs to, its fused score (weighted RRF) and the index version stored
 // on the row.
 type Trung struct {
@@ -547,8 +556,8 @@ type Nhanh struct {
 	TrongSo float64
 }
 
-// Nhanhs are the legs y searches, in a fixed order (dense, BM25 with
-// diacritics, BM25 folded, MILCO), each with a positive weight.
+// Nhanhs are the legs y searches, in a fixed order (dense, BM25), each
+// with a positive weight.
 func (y YeuCauTim) Nhanhs() ([]Nhanh, error) {
 	w := y.trongSo()
 	if err := w.Kiem(); err != nil {
@@ -561,26 +570,8 @@ func (y YeuCauTim) Nhanhs() ([]Nhanh, error) {
 		}
 		out = append(out, Nhanh{FDense, entity.FloatVector(y.Dense), index.NewHNSWAnnParam(HNSWEfTimKiem), w.Dense})
 	}
-	if y.Thua != nil {
-		switch y.Thua.Loai {
-		case ThuaBM25:
-			if w.BM25 > 0 {
-				out = append(out, Nhanh{FBM25, entity.Text(y.Thua.TextCua(FBM25)), nil, w.BM25})
-			}
-			if w.BM25KhongDau > 0 {
-				out = append(out, Nhanh{FBM25KhongDau, entity.Text(y.Thua.TextCua(FBM25KhongDau)), nil, w.BM25KhongDau})
-			}
-		case ThuaMILCO:
-			se, err := y.Thua.Vec.embedding()
-			if err != nil {
-				return nil, err
-			}
-			if w.MILCO > 0 {
-				out = append(out, Nhanh{FSparse, se, nil, w.MILCO})
-			}
-		default:
-			return nil, fmt.Errorf("vectordb: sparse leg %q", y.Thua.Loai)
-		}
+	if y.Thua != nil && w.BM25 > 0 {
+		out = append(out, Nhanh{FSparse, entity.Text(y.Thua.Text), nil, w.BM25})
 	}
 	if len(out) == 0 {
 		return nil, ErrKhongCoNhanh
@@ -623,10 +614,9 @@ func HopRRF(legs [][]Trung, w []float64, k, K int) []Trung {
 	return out
 }
 
-// Tim runs the hybrid search: every leg (dense COSINE under the deployment's
-// index, BM25 on the
-// marked text, BM25 on the folded text, or MILCO), each under the same
-// hard-constraint filter, searched in parallel, then fused by weighted RRF
+// Tim runs the hybrid search: both legs (dense COSINE under the deployment's
+// index, BM25 on the folded text), each under the same hard-constraint
+// filter, searched in parallel, then fused by weighted RRF
 // with k=RRFK in Go (Milvus's own RRF ranker takes no weights). With a leg
 // down the others answer, with the same filter.
 func (m *Milvus) Tim(ctx context.Context, y YeuCauTim) ([]Trung, error) {

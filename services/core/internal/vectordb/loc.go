@@ -55,6 +55,10 @@ type LocCung struct {
 	// NganSachVND is the ceiling per person; a place qualifies when its
 	// known minimum price is at most this.
 	NganSachVND *int64
+	// DanhMuc are category ids (tuvung.DanhMuc, checked by LocDanhMuc): a
+	// place qualifies when its categories hold ANY of them; a place whose
+	// categories nobody established ([KhongRo]) never does.
+	DanhMuc []string
 }
 
 // ErrLoc: a constraint value outside its vocabulary or range.
@@ -104,6 +108,23 @@ func TuCung(c truyhoi.Cung) (LocCung, error) {
 	return l, nil
 }
 
+// LocDanhMuc checks category ids for LocCung.DanhMuc: each must be a
+// tuvung.DanhMuc id (khong_ro is not one), and the result is sorted and
+// deduplicated. An unknown id is refused, never dropped.
+func LocDanhMuc(ids []string) ([]string, error) {
+	for _, id := range ids {
+		if !tuvung.DanhMuc.Co(id) {
+			return nil, ErrLoc
+		}
+	}
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	out := slices.Clone(ids)
+	slices.Sort(out)
+	return slices.Compact(out), nil
+}
+
 // menhDe is one hard constraint as the index filters it: the expression that
 // holds for a place satisfying it, built from constant text and named
 // template parameters only.
@@ -145,6 +166,13 @@ func (l LocCung) menhDes() []menhDe {
 	if l.NganSachVND != nil {
 		out = append(out, menhDe{truyhoi.RBNganSach, FPriceMin + " >= {g0} and " + FPriceMin + " <= {ns}",
 			map[string]any{"g0": int64(0), "ns": *l.NganSachVND}})
+	}
+	if len(l.DanhMuc) > 0 {
+		// Fail closed: a place whose categories nobody established is
+		// out whatever was asked.
+		out = append(out, menhDe{truyhoi.RBDanhMuc,
+			"ARRAY_CONTAINS_ANY(" + FDanhMuc + ", {dm}) and not ARRAY_CONTAINS(" + FDanhMuc + ", {dk})",
+			map[string]any{"dm": slices.Clone(l.DanhMuc), "dk": KhongRo}})
 	}
 	return out
 }
@@ -233,7 +261,10 @@ type ThuocTinh struct {
 	AnKieng   []string
 	OSlots    []int16
 	GiaMinVND int64 // GiaKhongRo when unknown
-	GoBo      bool
+	// DanhMuc are the place's categories (tuvung.DanhMuc ids); empty or
+	// [KhongRo] when unknown.
+	DanhMuc []string
+	GoBo    bool
 }
 
 // Dat reports whether t satisfies l, and when not the first constraint it
@@ -267,6 +298,10 @@ func (l LocCung) Dat(t ThuocTinh) (bool, truyhoi.RangBuoc) {
 	}
 	if l.NganSachVND != nil && (t.GiaMinVND < 0 || t.GiaMinVND > *l.NganSachVND) {
 		return false, truyhoi.RBNganSach
+	}
+	if len(l.DanhMuc) > 0 && (slices.Contains(t.DanhMuc, KhongRo) ||
+		!slices.ContainsFunc(l.DanhMuc, func(id string) bool { return slices.Contains(t.DanhMuc, id) })) {
+		return false, truyhoi.RBDanhMuc
 	}
 	return true, ""
 }

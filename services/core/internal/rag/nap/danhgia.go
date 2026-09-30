@@ -24,9 +24,10 @@ import (
 //     tolerance;
 //  3. relevance on the golden set, built with the same configuration and
 //     encoders into a transient collection: recall@10, nDCG@10, MRR@10,
-//     violation@10, the no-diacritics gap, each branch alone (ablation),
-//     the no-diacritics questions without the folded BM25 leg (what the
-//     second analyzer adds), and no worse than the active version.
+//     violation@10, the no-diacritics gap, each leg alone (ablation), the
+//     golden questions folded to no diacritics with both legs and with the
+//     dense leg alone (what the folded BM25 leg adds), and no worse than
+//     the active version.
 
 // KetQuaVang is one golden run.
 type KetQuaVang struct {
@@ -36,16 +37,13 @@ type KetQuaVang struct {
 	GapDau   float64         `json:"khong_dau_gap"`
 	ChiDense SoDo            `json:"chi_dense"`
 	ChiThua  SoDo            `json:"chi_thua"`
-	// KhongDauKhongGap is the khong_dau group measured with the folded BM25
-	// leg's weight at 0: set beside Nhom["khong_dau"], it is the recall the
-	// diacritics-folding field buys on questions typed without marks.
-	KhongDauKhongGap SoDo    `json:"khong_dau_khong_gap"`
-	GapDauKhongGap   float64 `json:"khong_dau_gap_khong_gap"`
 	// BoDau is every golden question with its text folded to no diacritics
 	// (a structural transform of the question, test side), fused with the
-	// served weights; BoDauKhongGap the same without the folded BM25 leg.
+	// served weights; BoDauChiDense the same with the dense leg alone: set
+	// side by side, what the folded BM25 leg buys on questions typed
+	// without marks.
 	BoDau         SoDo `json:"bo_dau"`
-	BoDauKhongGap SoDo `json:"bo_dau_khong_gap"`
+	BoDauChiDense SoDo `json:"bo_dau_chi_dense"`
 }
 
 // ChayVang runs every golden question against a collection holding the
@@ -143,7 +141,7 @@ func (n Nap) DanhGiaVang(ctx context.Context, q NhungCauHoi, v TapVang, ten stri
 		if bo {
 			continue
 		}
-		hs, err := DoanQuan(ctx, h, qv.NhanTay(), chunker, ChiaNghia{Nhung: n.Dense})
+		hs, err := DoanQuan(h, qv.NhanTay(), chunker)
 		if err != nil {
 			return KetQuaVang{}, err
 		}
@@ -180,18 +178,11 @@ func (n Nap) DanhGiaVang(ctx context.Context, q NhungCauHoi, v TapVang, ten stri
 		}
 		_, *mode.into, _ = TongHop(s, e, v)
 	}
-	s, e, err := ChayVang(ctx, n.Kho, ten, q, n.Cfg, v, w.KhongGap())
-	if err != nil {
-		return kq, err
-	}
-	var nhom map[string]SoDo
-	nhom, _, kq.GapDauKhongGap = TongHop(s, e, v)
-	kq.KhongDauKhongGap = nhom["khong_dau"]
 	bd := v.BoDau()
 	for _, mode := range []struct {
 		w    TrongSo
 		into *SoDo
-	}{{w, &kq.BoDau}, {w.KhongGap(), &kq.BoDauKhongGap}} {
+	}{{w, &kq.BoDau}, {w.ChiDense(), &kq.BoDauChiDense}} {
 		s, e, err := ChayVang(ctx, n.Kho, ten, q, n.Cfg, bd, mode.w)
 		if err != nil {
 			return kq, err
@@ -205,8 +196,7 @@ func (n Nap) DanhGiaVang(ctx context.Context, q NhungCauHoi, v TapVang, ten stri
 var ErrChuaThay = errors.New("nap: rows just written did not become searchable")
 
 // ChoTimThay waits until the last of rows is found by each leg a search
-// uses -- the dense leg by its own vector, the folded BM25 leg by its own
-// text -- so a measurement never scores an index that is still catching up
+// uses -- the dense leg by its own vector, the BM25 leg by its own text -- so a measurement never scores an index that is still catching up
 // with its writes (Milvus makes a fresh upsert searchable a moment after it
 // counts it, even at Strong consistency). At most about ten seconds.
 func ChoTimThay(ctx context.Context, kho KhoVector, ten string, rows []Hang) error {
@@ -231,11 +221,7 @@ func ChoTimThay(ctx context.Context, kho KhoVector, ten string, rows []Hang) err
 		if err != nil {
 			return err
 		}
-		thua := TruyVan{Chu: last.Text, K: 50, KMoiNhanh: 50, TrongSo: TrongSo{BM25KhongDau: 1}}
-		if len(last.SparseIdx) > 0 {
-			thua = TruyVan{Thua: VectorThua{Idx: last.SparseIdx, Val: last.SparseVal}, K: 50, KMoiNhanh: 50, TrongSo: TrongSo{MILCO: 1}}
-		}
-		b, err := thay(thua)
+		b, err := thay(TruyVan{Chu: last.Text, K: 50, KMoiNhanh: 50, TrongSo: TrongSo{BM25: 1}})
 		if err != nil {
 			return err
 		}
@@ -279,9 +265,8 @@ func KiemCong(k *KetQuaCong, active *KetQuaVang) {
 	if k.DLQ > 0 {
 		why = append(why, "dlq")
 	}
-	if k.Thieu > 0 {
-		why = append(why, "thieu_lam_giau")
-	}
+	// k.Thieu (places waiting for an enrichment) is reported, not refused:
+	// ChuanBiQuan leaves them out of the version, so none is in the index.
 	if k.ThamDo == 0 {
 		why = append(why, "khong_tham_do")
 	}

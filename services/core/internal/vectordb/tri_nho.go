@@ -7,7 +7,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/milvus-io/milvus/client/v3/column"
 	"github.com/milvus-io/milvus/client/v3/entity"
 	"github.com/milvus-io/milvus/client/v3/milvusclient"
 
@@ -46,7 +45,6 @@ type HangTriNho struct {
 	Loai     string
 	TaoLuc   int64
 	Dense    []float32
-	Sparse   ThuaVec
 	PhienBan int64
 }
 
@@ -82,23 +80,17 @@ func (k *SoTriNho) Ghi(ctx context.Context, o ChuSoHuu, rows []HangTriNho) error
 	ids, owners, kinds := make([]string, n), make([]string, n), make([]string, n)
 	at, ver := make([]int64, n), make([]int64, n)
 	dense := make([][]float32, n)
-	sparse := make([]entity.SparseEmbedding, n)
 	for i, r := range rows {
 		if err := kiemDense(r.Dense); err != nil {
 			return err
 		}
-		se, err := r.Sparse.embedding()
-		if err != nil {
-			return err
-		}
 		ids[i], owners[i], kinds[i], at[i], ver[i] = r.ID, o.id, r.Loai, r.TaoLuc, r.PhienBan
-		dense[i], sparse[i] = r.Dense, se
+		dense[i] = r.Dense
 	}
 	_, err := k.m.cli.Upsert(ctx, milvusclient.NewColumnBasedInsertOption(k.ten()).
 		WithVarcharColumn(FID, ids).WithVarcharColumn(FOwner, owners).WithVarcharColumn(FKind, kinds).
 		WithInt64Column(FCreatedAt, at).
 		WithFloatVectorColumn(FDense, nhung.Dims, dense).
-		WithColumns(column.NewColumnSparseVectors(FSparse, sparse)).
 		WithInt64Column(FIndexVersion, ver))
 	return err
 }

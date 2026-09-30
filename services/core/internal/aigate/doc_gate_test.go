@@ -414,6 +414,8 @@ var nepCongCuDoc = map[string]string{
 	// The hybrid retriever's re-check (aidoc.ThuocTinhSong → thuoctinh.Doc)
 	// reads a place's enrichment the way the ingest applies it.
 	"place_enrichments": "catalogue enrichment: a place's closed-id allergens, diets and review verdict, the same for every person; the hybrid re-check's truth",
+	"place_lam_giau":    "catalogue enrichment vnlocal produced (lam-giau@1): a place's closed-id allergens, diets, moods and short dish names, the same for every person; read with place_enrichments by the hybrid re-check",
+	"place_danh_muc":    "catalogue categories vnlocal assigned (danh-muc@1): a place's closed category ids, the same for every person; the hybrid re-check's category truth",
 	// list_destinations, nearest_area, the router's closed destination list.
 	"destinations": "the destinations the app covers, the same for every person",
 	// my_upcoming_outings: the ASKING person's own upcoming outings, scoped by

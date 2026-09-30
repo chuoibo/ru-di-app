@@ -116,7 +116,8 @@ func (m *Milvus) LocDiaDiem(ctx context.Context, name string, l LocCung) ([]Khoa
 	return sapKhoa(out), nil
 }
 
-// IDCuaDoc lists the chunk ids of document docID in name.
+// IDCuaDoc lists the row ids of document docID in name (one for a place
+// since rd.v4; an older collection may hold several chunks of it).
 func (m *Milvus) IDCuaDoc(ctx context.Context, name, docID string) ([]string, error) {
 	rs, err := m.cli.Query(ctx, milvusclient.NewQueryOption(name).WithFilter(FDocID+" == {d}").
 		WithTemplateParam("d", docID).WithOutputFields(FID).WithLimit(1024).WithConsistencyLevel(entity.ClStrong))
@@ -143,24 +144,34 @@ func (m *Milvus) IDCuaDoc(ctx context.Context, name, docID string) ([]string, er
 // docID's rows in name, in place (a partial upsert of those columns only:
 // vectors, text and hashes stay). It is how an attribute change reaches a
 // collection built with another configuration, whose vectors the current
-// pipeline cannot rebuild. It returns how many rows it rewrote; a document
-// with no row in name rewrites none.
+// pipeline cannot rebuild. The categories are rewritten too where the
+// collection has them (rd.v4 on; an rd.v3 collection has none). It returns
+// how many rows it rewrote; a document with no row in name rewrites none.
 func (m *Milvus) CapNhatThuocTinh(ctx context.Context, name, docID string, t ThuocTinh, giaMaxVND int64) (int, error) {
 	ids, err := m.IDCuaDoc(ctx, name, docID)
 	if err != nil || len(ids) == 0 {
 		return 0, err
 	}
+	coDanhMuc, err := m.coTruong(ctx, name, FDanhMuc)
+	if err != nil {
+		return 0, err
+	}
+	dmLuu, err := danhMucLuu(t)
+	if err != nil {
+		return 0, err
+	}
 	n := len(ids)
 	dests, slots := make([]string, n), make([][]int16, n)
 	pmin, pmax := make([]int64, n), make([]int64, n)
-	alg, diet := make([][]string, n), make([][]string, n)
+	alg, diet, dm := make([][]string, n), make([][]string, n), make([][]string, n)
 	tomb := make([]bool, n)
 	for i := range ids {
 		dests[i], slots[i] = t.DiemDen, notNil(t.OSlots)
 		pmin[i], pmax[i] = t.GiaMinVND, giaMaxVND
 		alg[i], diet[i], tomb[i] = notNil(t.DiUng), notNil(t.AnKieng), t.GoBo
+		dm[i] = slices.Clone(dmLuu)
 	}
-	_, err = m.cli.Upsert(ctx, milvusclient.NewColumnBasedInsertOption(name).
+	opt := milvusclient.NewColumnBasedInsertOption(name).
 		WithVarcharColumn(FID, ids).
 		WithVarcharColumn(FDestination, dests).
 		WithColumns(column.NewColumnInt16Array(FOpenSlots, slots)).
@@ -168,19 +179,45 @@ func (m *Milvus) CapNhatThuocTinh(ctx context.Context, name, docID string, t Thu
 		WithInt64Column(FPriceMax, pmax).
 		WithColumns(column.NewColumnVarCharArray(FAllergens, alg), column.NewColumnVarCharArray(FDiets, diet)).
 		WithBoolColumn(FTombstoned, tomb).
-		WithPartialUpdate(true))
-	if err != nil {
+		WithPartialUpdate(true)
+	if coDanhMuc {
+		opt = opt.WithColumns(column.NewColumnVarCharArray(FDanhMuc, dm))
+	}
+	if _, err = m.cli.Upsert(ctx, opt); err != nil {
 		return 0, err
 	}
 	return n, nil
 }
 
+// coTruong reports whether collection name has field f.
+func (m *Milvus) coTruong(ctx context.Context, name, f string) (bool, error) {
+	c, err := m.cli.DescribeCollection(ctx, milvusclient.NewDescribeCollectionOption(name))
+	if err != nil {
+		return false, err
+	}
+	for _, x := range c.Schema.Fields {
+		if x.Name == f {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// XoaDoc deletes every row of document docID from name, whatever ids they
+// carry: how a place leaves a collection built by any configuration (an
+// rd.v3 collection holds it as several chunks, an rd.v4 one as one row).
+func (m *Milvus) XoaDoc(ctx context.Context, name, docID string) error {
+	_, err := m.cli.Delete(ctx, milvusclient.NewDeleteOption(name).WithExpr(FDocID+" == {d}").WithTemplateParam("d", docID))
+	return err
+}
+
 // DocThuocTinh reads back the attributes stored on document docID's rows of
-// name (tests and the ingest's own checks): one ThuocTinh per chunk id.
+// place collection name (rd.v4; tests and the ingest's own checks): one
+// ThuocTinh per row id.
 func (m *Milvus) DocThuocTinh(ctx context.Context, name, docID string) (map[string]ThuocTinh, error) {
 	rs, err := m.cli.Query(ctx, milvusclient.NewQueryOption(name).WithFilter(FDocID+" == {d}").
 		WithTemplateParam("d", docID).
-		WithOutputFields(FID, FDestination, FOpenSlots, FPriceMin, FAllergens, FDiets, FTombstoned).
+		WithOutputFields(FID, FDestination, FOpenSlots, FPriceMin, FAllergens, FDiets, FDanhMuc, FTombstoned).
 		WithLimit(1024).WithConsistencyLevel(entity.ClStrong))
 	if err != nil {
 		return nil, err
@@ -204,6 +241,9 @@ func (m *Milvus) DocThuocTinh(ctx context.Context, name, docID string) (map[stri
 		}
 		if v, err := rs.GetColumn(FDiets).Get(i); err == nil {
 			t.AnKieng, _ = v.([]string)
+		}
+		if v, err := rs.GetColumn(FDanhMuc).Get(i); err == nil {
+			t.DanhMuc, _ = v.([]string)
 		}
 		out[id] = t
 	}

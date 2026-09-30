@@ -27,15 +27,15 @@ func TestUpsertLapLaiMotHangMilvus(t *testing.T) {
 	naptest.UpsertLapLai(t, khoTest(t), "rd_places__v1")
 }
 
-// Each BM25 leg alone: the folded field finds marked text from a query
-// typed without diacritics; the marked field does not (it keeps marks), and
-// finds it from the marked query.
-func TestHaiTruongBM25Milvus(t *testing.T) {
+// The one BM25 field (rd.v4) folds diacritics: marked text is found from a
+// query typed without marks and from the marked query alike; unrelated text
+// is not.
+func TestBM25GapDauMilvus(t *testing.T) {
 	kho := khoTest(t)
 	ctx := context.Background()
 	n, _ := naptest.Nap(t, kho)
-	rows := []nap.Hang{{ChunkID: "a", DocID: "a", Facet: nap.FacetHoSo, Text: "Quán Cà Phê ở Đà Lạt", ContentHash: "h1"},
-		{ChunkID: "b", DocID: "b", Facet: nap.FacetHoSo, Text: "Tiệm sửa xe gần chợ", ContentHash: "h2"}}
+	rows := []nap.Hang{{ChunkID: "a", DocID: "a", Text: "Quán Cà Phê ở Đà Lạt", ContentHash: "h1"},
+		{ChunkID: "b", DocID: "b", Text: "Tiệm sửa xe gần chợ", ContentHash: "h2"}}
 	if _, err := n.Vector(ctx, nil, rows); err != nil {
 		t.Fatal(err)
 	}
@@ -45,30 +45,25 @@ func TestHaiTruongBM25Milvus(t *testing.T) {
 	if err := kho.Upsert(ctx, "rd_places__v1", rows); err != nil {
 		t.Fatal(err)
 	}
-	tim := func(q string, w nap.TrongSo) []nap.Trung {
-		hits, err := kho.TimLai(ctx, "rd_places__v1", nap.TruyVan{Chu: q, TrongSo: w, K: 5})
+	tim := func(q string) []nap.Trung {
+		hits, err := kho.TimLai(ctx, "rd_places__v1", nap.TruyVan{Chu: q, TrongSo: nap.TrongSo{BM25: 1}, K: 5})
 		if err != nil {
 			t.Fatal(err)
 		}
 		return hits
 	}
 	// A fresh upsert becomes searchable a moment later even at Strong
-	// consistency (vectordb's live tests wait the same way): wait for the
-	// marked query on the marked leg, then ask each question once.
-	for i := 0; len(tim("Quán Cà Phê", nap.TrongSo{BM25: 1})) == 0; i++ {
+	// consistency (vectordb's live tests wait the same way).
+	for i := 0; len(tim("Quán Cà Phê")) == 0; i++ {
 		if i == 100 {
 			t.Fatal("the rows never became searchable")
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	if h := tim("quan ca phe o da lat", nap.TrongSo{BM25KhongDau: 1}); len(h) != 1 || h[0].DocID != "a" {
-		t.Fatalf("folded leg, unmarked query: %+v", h)
-	}
-	if h := tim("quan ca phe o da lat", nap.TrongSo{BM25: 1}); len(h) != 0 {
-		t.Fatalf("the marked leg matched an unmarked query: it folds: %+v", h)
-	}
-	if h := tim("Quán Cà Phê", nap.TrongSo{BM25: 1}); len(h) != 1 || h[0].DocID != "a" {
-		t.Fatalf("marked leg, marked query: %+v", h)
+	for _, q := range []string{"quan ca phe o da lat", "Quán Cà Phê", "QUÁN CÀ PHÊ ĐÀ LẠT"} {
+		if h := tim(q); len(h) != 1 || h[0].DocID != "a" {
+			t.Fatalf("%q: %+v", q, h)
+		}
 	}
 }
 
@@ -166,15 +161,15 @@ func TestHybridLocCungKhongViPham(t *testing.T) {
 	k := nap.KetQuaCong{Nguong: n.Cfg.Cong, CanVang: true, Vang: &kq, ThamDo: 1, DoiSoat: nap.DoiSoat{Dat: true}}
 	nap.KiemCong(&k, nil)
 	t.Logf("milvus golden: tong %s; gap %.4f; chi_dense %s; chi_thua %s; %s", kq.Tong, kq.GapDau, kq.ChiDense, kq.ChiThua, time.Since(start).Round(time.Millisecond))
-	t.Logf("milvus no-diacritics slice: bo_dau %s; without the folded leg %s", kq.BoDau, kq.BoDauKhongGap)
+	t.Logf("milvus no-diacritics slice: bo_dau %s; dense alone %s", kq.BoDau, kq.BoDauChiDense)
 	for g, s := range kq.Nhom {
 		t.Logf("  %-14s %s", g, s)
 	}
 	if kq.Tong.ViPham != 0 || !k.Dat {
 		t.Fatalf("gate on Milvus: %v", k.LyDo)
 	}
-	if kq.BoDau.Recall <= kq.BoDauKhongGap.Recall {
-		t.Fatalf("the folded BM25 field adds nothing on Milvus: %s vs %s", kq.BoDau, kq.BoDauKhongGap)
+	if kq.BoDau.Recall <= kq.BoDauChiDense.Recall {
+		t.Fatalf("the folded BM25 field adds nothing on Milvus: %s vs %s", kq.BoDau, kq.BoDauChiDense)
 	}
 }
 

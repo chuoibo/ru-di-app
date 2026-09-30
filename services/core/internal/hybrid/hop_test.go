@@ -126,7 +126,7 @@ func TestOpenWindowReachesTheIndex(t *testing.T) {
 // The fusion weights the adapter was given reach the index.
 func TestFusionWeightsReachTheIndex(t *testing.T) {
 	th, k := moiThu(t)
-	w := vectordb.TrongSo{Dense: 1, BM25: 0.1, BM25KhongDau: 1, MILCO: 1}
+	w := vectordb.TrongSo{Dense: 1, BM25: 0.5}
 	k.TrongSo = &w
 	if _, err := k.Tim(context.Background(), truyhoi.YeuCau{Nguon: truyhoi.Places, Cau: "lẩu"}); err != nil {
 		t.Fatal(err)

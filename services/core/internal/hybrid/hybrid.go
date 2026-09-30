@@ -193,18 +193,18 @@ func (k *Kho) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi,
 	if n == 0 {
 		n = MacDinhK
 	}
-	// The router's two forms of the query (hieu.TruyVan): the
-	// diacritics-restored one for the dense leg, the marked BM25 field and
-	// the reranker; the person's own spelling for the folded BM25 field.
+	// The router's diacritics-restored form of the query (hieu.TruyVan)
+	// feeds the dense leg, the BM25 leg and the reranker. The BM25 field
+	// folds marks (rd.v4), so the person's own unmarked spelling and the
+	// restored one give it the same terms.
 	coDau := y.Cau
 	if y.CauCoDau != "" {
 		coDau = y.CauCoDau
 	}
 	text := cauXepHang(y, coDau)
-	textNguyen := cauXepHang(y, y.Cau)
 
-	// Chunks, not places, come back: ask for more so n places survive the
-	// fold and the re-check.
+	// One row per place (rd.v4); ask for more so n places survive the
+	// re-check.
 	req := vectordb.YeuCauTim{Ten: ten, Kho: kho, Loc: loc, K: truyhoi.MaxK, TrongSo: k.TrongSo}
 	if vs, err := k.Nhung.Nhung(ctx, []string{text}, nhung.CauHoi); err == nil && len(vs) == 1 {
 		req.Dense = vs[0]
@@ -213,9 +213,6 @@ func (k *Kho) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi,
 	}
 	if k.Thua != nil {
 		if q, err := k.Thua.TruyVan(ctx, text); err == nil {
-			if q.Loai == vectordb.ThuaBM25 && textNguyen != text {
-				q.TextKhongDau = nhung.ChuanNFC(textNguyen)
-			}
 			req.Thua = &q
 		} else {
 			kq.Degraded = append(kq.Degraded, truyhoi.NoSparse)

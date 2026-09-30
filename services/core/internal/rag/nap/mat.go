@@ -23,6 +23,11 @@ const (
 // FacetsQuan are every facet a place may have.
 var FacetsQuan = []string{FacetHoSo, FacetTraiNghiem, FacetMonAn}
 
+// nhanThieuGi labels the feed's list of what is missing about the place:
+// metadata about the record, not about the place, so it reaches the
+// enrichment prompt but never the embedded text (rd.v4).
+const nhanThieuGi = "Còn thiếu"
+
 // maxRuneMuc bounds one value of the feed's review block. The feed's longest
 // is ~1,200 runes; a value past this is not prose a person wrote for a card.
 const maxRuneMuc = 4000
@@ -43,7 +48,7 @@ var mucReviews = []mucReview{
 	{"khung_gio_dep_nhat", "Giờ đẹp nhất", FacetTraiNghiem},
 	{"trai_nghiem_phai_thu", "Trải nghiệm phải thử", FacetTraiNghiem},
 	{"luu_y", "Lưu ý", FacetTraiNghiem},
-	{"thieu_gi", "Còn thiếu", FacetTraiNghiem},
+	{"thieu_gi", nhanThieuGi, FacetTraiNghiem},
 	{"mon_phai_thu", "Món phải thử", FacetMonAn},
 	{"huong_vi_chu_dao", "Hương vị chủ đạo", FacetMonAn},
 	{"khau_vi_phu_hop", "Khẩu vị phù hợp", FacetMonAn},

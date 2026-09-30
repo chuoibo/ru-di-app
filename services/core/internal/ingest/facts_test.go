@@ -123,3 +123,44 @@ func TestFactReject(t *testing.T) {
 		}
 	}
 }
+
+func TestDanhMucVaLamGiauChiNhanMaDong(t *testing.T) {
+	ok := DanhMucRow{PlaceID: "plc_a", DanhMuc: []string{"cafe", "luu_tru"}}
+	if r := danhMucReject(ok); r != "" {
+		t.Fatalf("a clean category row was refused: %s", r)
+	}
+	for _, dm := range [][]string{nil, {"khong_ro", "cafe"}, {"cafe", "cafe"}, {"quan_nuoc"}, {"cafe", "khong_ro"}} {
+		row := ok
+		row.DanhMuc = dm
+		if danhMucReject(row) != RejectDanhMuc {
+			t.Errorf("categories %v accepted", dm)
+		}
+	}
+	if danhMucReject(DanhMucRow{PlaceID: "plc_b", DanhMuc: []string{"khong_ro"}}) != "" {
+		t.Fatal("[khong_ro] alone refused")
+	}
+	if danhMucReject(DanhMucRow{PlaceID: "vnl-a", DanhMuc: []string{"cafe"}}) != RejectAIPlaceID {
+		t.Fatal("a non-feed id accepted")
+	}
+
+	lg := LamGiauRow{PlaceID: "plc_a", DiUng: []string{"tom", "sua"}, AnKieng: []string{}, KhiChat: []string{"yen_tinh"},
+		MonChinh: []string{"Lẩu tôm"}, TinCay: "cao"}
+	if r := lamGiauReject(lg); r != "" {
+		t.Fatalf("a clean attribute row was refused: %s", r)
+	}
+	for name, edit := range map[string]func(*LamGiauRow){
+		"unknown allergen":    func(r *LamGiauRow) { r.DiUng = []string{"gluten"} },
+		"khong_ro with an id": func(r *LamGiauRow) { r.DiUng = []string{"khong_ro", "tom"} },
+		"five moods":          func(r *LamGiauRow) { r.KhiChat = []string{"yen_tinh", "soi_dong", "lang_man", "song_ao", "view_dep"} },
+		"khong_ro as a mood":  func(r *LamGiauRow) { r.KhiChat = []string{"khong_ro"} },
+		"six dishes":          func(r *LamGiauRow) { r.MonChinh = []string{"a", "b", "c", "d", "e", "f"} },
+		"unknown confidence":  func(r *LamGiauRow) { r.TinCay = "rat_cao" },
+		"repeated diet":       func(r *LamGiauRow) { r.AnKieng = []string{"chay", "chay"} },
+	} {
+		row := lg
+		edit(&row)
+		if lamGiauReject(row) != RejectLamGiau {
+			t.Errorf("%s accepted", name)
+		}
+	}
+}

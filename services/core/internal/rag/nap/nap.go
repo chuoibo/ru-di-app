@@ -32,7 +32,7 @@
 //
 // Writers: this package is the only writer of its tables (rag_dirty,
 // rag_vector_versions, place_enrichments, rag_embedding_cache,
-// rag_sparse_cache, rag_ingest_dlq) and of every Milvus collection whose
+// rag_ingest_dlq) and of every Milvus collection whose
 // name starts with rd_. It never names a nep_* table or collection
 // (aigate/rag_gate_test.go). It imports no engine package: the dense
 // encoder, the vector store and the model arrive through the interfaces

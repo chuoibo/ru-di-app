@@ -12,11 +12,10 @@ import (
 )
 
 // Nap is the pipeline's dependencies. Kho is the vector store, Dense the
-// document encoder, Thua the MILCO encoder (MILCO mode only; nil otherwise).
+// document encoder.
 type Nap struct {
 	Kho   KhoVector
 	Dense NhungTaiLieu
-	Thua  MaHoaThua
 	Cfg   CauHinh
 }
 
@@ -30,16 +29,19 @@ type BaoCaoDung struct {
 	// BoKhongAnToan: rows SafeDeep dropped (tombstoned unsafe). CachLy:
 	// fields it quarantined. Bia: tombstoned places left out.
 	BoKhongAnToan int `json:"bo_khong_an_toan"`
-	// QuaDai: places left out because a facet needs more than MaxManh
-	// chunks (nothing is ever cut).
+	// QuaDai: places left out because their text is longer than a row
+	// holds (MaxByteVanBan; nothing is ever cut).
 	QuaDai int `json:"qua_dai,omitempty"`
 	CachLy int `json:"cach_ly"`
 	Bia    int `json:"bia"`
 	// Trung: duplicates dedupe left out.
 	Trung int `json:"trung"`
-	// ThieuLamGiau: places with no current usable enrichment; LamGiauCu:
-	// of them, those with only a stale one; ChenLenh: held back by the
-	// injection label. The gate refuses a version with ThieuLamGiau > 0.
+	// ThieuLamGiau: places with no current usable enrichment, LEFT OUT of
+	// the version (owner 2026-09-30: build without waiting; vnlocal writes
+	// the enrichment within minutes and the indexer adds the place then).
+	// LamGiauCu: of them, those with only a stale one; ChenLenh: held back
+	// by the injection label. No place without a current enrichment is ever
+	// in an index.
 	ThieuLamGiau int `json:"thieu_lam_giau"`
 	LamGiauCu    int `json:"lam_giau_cu"`
 	ChenLenh     int `json:"chen_lenh"`
@@ -117,6 +119,10 @@ func (n Nap) ChuanBiQuan(ctx context.Context, q Querier, rep *BaoCaoDung) (docs 
 	if err != nil {
 		return nil, nil, err
 	}
+	dm, err := DocDanhMuc(ctx, q, ids)
+	if err != nil {
+		return nil, nil, err
+	}
 	chunker := n.Cfg.Chunker[CorpusQuan]
 	for _, p := range places {
 		if r, ok := bia[p.ID]; ok && r != "unsafe" && r != "source_deleted" {
@@ -130,16 +136,18 @@ func (n Nap) ChuanBiQuan(ctx context.Context, q Querier, rep *BaoCaoDung) (docs 
 		}
 		rep.CachLy += h.CachLy
 		t := ApDung(enr[p.ID], h.NguonHash)
-		if !t.Co {
-			rep.ThieuLamGiau++
-		}
-		if t.Cu {
-			rep.LamGiauCu++
-		}
+		t.DanhMuc = dm[p.ID]
 		if t.CachLy {
 			rep.ChenLenh++
 		}
-		rows, err := DoanQuan(ctx, h, t, chunker, ChiaNghia{Nhung: n.Dense})
+		if !t.Co {
+			rep.ThieuLamGiau++
+			if t.Cu {
+				rep.LamGiauCu++
+			}
+			continue
+		}
+		rows, err := DoanQuan(h, t, chunker)
 		if errors.Is(err, ErrQuaDai) {
 			// Never cut to fit: the place stays out of this version, counted.
 			rep.QuaDai++
@@ -172,8 +180,9 @@ func biaTheoLyDo(ctx context.Context, q Querier) (map[string]string, error) {
 	return out, rows.Err()
 }
 
-// Vector runs S8 on rows: dense from the cache or the encoder, and the MILCO
-// vector in MILCO mode. It returns how many chunks needed the encoder.
+// Vector runs S8 on rows: dense from the cache or the encoder. It returns
+// how many rows needed the encoder. The sparse leg is Milvus's BM25 over
+// the text: nothing to compute here.
 func (n Nap) Vector(ctx context.Context, cache CSDL, rows []Hang) (int, error) {
 	var bn BoNhoNhung
 	if cache != nil {
@@ -187,63 +196,7 @@ func (n Nap) Vector(ctx context.Context, cache CSDL, rows []Hang) (int, error) {
 	for i := range rows {
 		rows[i].SparseRev = rev
 	}
-	if n.Cfg.Thua.CheDo != ThuaMILCO {
-		return moi, nil
-	}
-	if n.Thua == nil {
-		return 0, fmt.Errorf("%w: MILCO mode without an encoder", ErrCauHinh)
-	}
-	return moi, n.thua(ctx, cache, rows)
-}
-
-func (n Nap) thua(ctx context.Context, cache CSDL, rows []Hang) error {
-	k := n.Cfg.Thua.PruneK
-	have := map[string]VectorThua{}
-	var hashes []string
-	for _, r := range rows {
-		hashes = append(hashes, r.ContentHash)
-	}
-	if cache != nil {
-		got, err := BoNhoPG{Q: cache}.LayThua(ctx, n.Thua.Model(), n.Thua.Rev(), k, hashes)
-		if err != nil {
-			return err
-		}
-		have = got
-	}
-	var need []int
-	for i, r := range rows {
-		if _, ok := have[r.ContentHash]; !ok {
-			need = append(need, i)
-		}
-	}
-	fresh := map[string]VectorThua{}
-	if len(need) > 0 {
-		texts := make([]string, len(need))
-		for j, i := range need {
-			texts[j] = rows[i].Text
-		}
-		vs, err := n.Thua.MaHoa(ctx, texts)
-		if err != nil {
-			return err
-		}
-		if len(vs) != len(need) {
-			return fmt.Errorf("%w: %d sparse vectors for %d texts", ErrVector, len(vs), len(need))
-		}
-		for j, i := range need {
-			v := CatThua(vs[j], k)
-			fresh[rows[i].ContentHash], have[rows[i].ContentHash] = v, v
-		}
-	}
-	if cache != nil && len(fresh) > 0 {
-		if err := (BoNhoPG{Q: cache}).GhiThua(ctx, n.Thua.Model(), n.Thua.Rev(), k, fresh); err != nil {
-			return err
-		}
-	}
-	for i := range rows {
-		v := have[rows[i].ContentHash]
-		rows[i].SparseIdx, rows[i].SparseVal = v.Idx, v.Val
-	}
-	return nil
+	return moi, nil
 }
 
 // LocTrung runs S6 over prepared places whose rows carry vectors, and
@@ -252,10 +205,8 @@ func (n Nap) LocTrung(docs []TaiLieuQuan) ([]TaiLieuQuan, map[string]string) {
 	cands := make([]UngVienTrung, 0, len(docs))
 	for _, d := range docs {
 		var dense []float32
-		for _, r := range d.Rows {
-			if r.Facet == FacetHoSo {
-				dense = r.Dense
-			}
+		if len(d.Rows) > 0 {
+			dense = d.Rows[0].Dense
 		}
 		cands = append(cands, UngVienTrung{ID: d.HoSo.ID, DiemDen: d.HoSo.DiemDen, Lat: d.HoSo.Lat, Lng: d.HoSo.Lng, CoToaDo: d.HoSo.CoToaDo,
 			Nguon: d.HoSo.Nguon, Giau: giau(d.HoSo), Dense: dense})
@@ -420,7 +371,7 @@ func (n Nap) Dung(ctx context.Context, db CSDL, c Corpus) (BaoCaoDung, error) {
 	}
 	if err := db.QueryRow(ctx, `INSERT INTO rag_vector_versions(corpus, state, dense_model, dense_dims, sparse_mode, sparse_rev, chunker,
 		config_fingerprint, prompt_version, parent_id) VALUES($1,'building',$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, milvus_collection`,
-		string(c), n.Dense.Model(), n.Cfg.Dense.Dims, string(n.Cfg.Thua.CheDo), n.Cfg.SparseRev(), n.Cfg.Chunker[c],
+		string(c), n.Dense.Model(), n.Cfg.Dense.Dims, string(ThuaBM25), n.Cfg.SparseRev(), n.Cfg.Chunker[c],
 		n.Cfg.VanTay(), prompt, parent).Scan(&rep.PhienBan, &rep.Collection); err != nil {
 		return rep, err
 	}

@@ -86,39 +86,31 @@ func PhanTichTen(tienTo, ten string) (Kho, int64, error) {
 const (
 	FID    = "id"
 	FDense = "dense"
-	// FSparse is the MILCO learned-sparse field (MILCO mode only; empty
-	// vectors otherwise).
-	FSparse = "sparse"
-	// FText keeps Vietnamese diacritics: its analyzer lowercases only, so
-	// «bún» and «bùn» stay different terms (AnalyzerParams).
-	FText = "text"
-	FBM25 = "bm25"
-	// FTextKhongDau holds the same text under the diacritics-folding
-	// analyzer (AnalyzerKhongDauParams), for a query typed without marks.
-	FTextKhongDau = "text_khong_dau"
-	FBM25KhongDau = "bm25_khong_dau"
-	FDestination  = "destination"
-	FOpenSlots    = "open_slots"
-	FPriceMin     = "price_min"
-	FPriceMax     = "price_max"
-	FAllergens    = "allergens"
-	FDiets        = "diets"
+	// FText is the row's text under the folding analyzer (AnalyzerParams),
+	// and FSparse the output of Milvus's BM25 function over it: the one
+	// sparse leg (rd.v4, owner 2026-09-29). No client ever writes FSparse.
+	FText        = "text"
+	FSparse      = "sparse"
+	FDestination = "destination"
+	FOpenSlots   = "open_slots"
+	FPriceMin    = "price_min"
+	FPriceMax    = "price_max"
+	FAllergens   = "allergens"
+	FDiets       = "diets"
+	// FDanhMuc are the place's categories: every tuvung.DanhMuc id the
+	// ingest's classification pass found the place fits, or exactly
+	// [KhongRo] when it has none.
+	FDanhMuc      = "danh_muc"
 	FTombstoned   = "tombstoned"
 	FIndexVersion = "index_version"
 	FEmbedModel   = "embed_model"
-	// FContentHash is the chunk's content hash (the ingest's
-	// reconciliation reads it back).
+	// FContentHash is the row's content hash (the ingest's reconciliation
+	// reads it back).
 	FContentHash = "content_hash"
-	// FDocID is the document a row is a chunk of: the place id for a place
-	// chunk, the section id for a manual chunk. FID is the chunk's own
-	// deterministic id. Retrieval answers documents (one evidence item per
-	// place), never chunks.
+	// FDocID is the document a row belongs to: for a place it equals FID
+	// (one row per place, rd.v4), for a manual row the section id. Retrieval
+	// answers documents, grouping hits by it.
 	FDocID = "doc_id"
-	// FFacet is the part of the place a chunk carries (ho_so, trai_nghiem,
-	// mon_an); FChunkSo its position when a long facet is split (0 when it
-	// is not). rd.v3, owner 2026-09-28.
-	FFacet   = "facet"
-	FChunkSo = "chunk_so"
 	// FMoRong is a JSON dict for fields that arrive later, upserted on its
 	// own (CapNhatMoRong) without a schema revision. Nullable; written {}.
 	FMoRong    = "mo_rong"
@@ -131,15 +123,24 @@ const (
 // analyzers, index parameters). The ingest's committed configuration names
 // the revision it was built for, and the ingest adapter refuses to create a
 // collection when the two differ: one schema, declared once, here.
-const PhienBanLuocDo = "rd.v3"
+//
+// rd.v4 (owner, 2026-09-29): one row and one dense vector per place, no
+// chunking; one text field under the folding analyzer and one BM25 sparse
+// field over it; no learned-sparse field; the place's categories (FDanhMuc)
+// as a filterable field.
+const PhienBanLuocDo = "rd.v4"
 
-// Bounds of the scalar fields.
+// Bounds of the scalar fields. MaxTextLen is Milvus's VarChar max_length,
+// which counts BYTES: Vietnamese NFC text takes two to three bytes a
+// character, and the longest place text of the feed is 5,612 characters. A
+// longer text is refused by the ingest, never cut.
 const (
 	MaxIDLen       = 128
-	MaxTextLen     = 8192
+	MaxTextLen     = 32768
 	MaxTagLen      = 32
 	MaxAllergens   = 32
 	MaxDiets       = 16
+	MaxDanhMuc     = 10
 	SoSlotTuan     = 7 * 48
 	PhutMoiSlot    = 30
 	MaxOwnerLen    = 64
@@ -150,30 +151,18 @@ const (
 	GiaKhongRo     = int64(-1)
 	KhongRo        = "khong_ro"
 	bm25FuncName   = "text_bm25"
-	bm25KDFuncName = "text_khong_dau_bm25"
 	embedModelDesc = nhung.Model + "@" + "1536/" + nhung.PromptVersion
 )
 
-// AnalyzerParams is the BM25 analyzer of FText: the standard tokenizer and
-// lowercase on NFC text (the writer normalises), nothing else. Diacritics
-// stay: in Vietnamese they separate words («bún» noodles, «bùn» mud), so the
-// exact leg ranks a marked query by marked words. A retrieval scoring
-// function, not a reader of meaning.
+// AnalyzerParams is the BM25 analyzer of FText: the standard tokenizer,
+// lowercase and ASCII folding on NFC text (the writer normalises), so
+// «Quán Cà Phê ở Đà Lạt» and «quan ca phe o da lat» give the same tokens
+// (measured on the local server). This is structural normalisation of the
+// characters -- marks and đ folded, the way a person types without an IME
+// -- not a reading of what the words mean, and it decides nothing about the
+// question. The diacritics-keeping field of rd.v3 served at weight 0.1 of
+// this one's and is gone.
 func AnalyzerParams() map[string]any {
-	return map[string]any{
-		"tokenizer": "standard",
-		"filter":    []any{"lowercase"},
-	}
-}
-
-// AnalyzerKhongDauParams is the analyzer of FTextKhongDau: the same plus
-// ASCII folding, so «Quán Cà Phê ở Đà Lạt» and «quan ca phe o da lat» give
-// the same tokens (measured on the local server). This is structural
-// normalisation of the characters -- marks and đ folded, the way a person
-// types without an IME -- not a reading of what the words mean, and it
-// decides nothing about the question: it only lets the second BM25 leg
-// match a query typed without marks.
-func AnalyzerKhongDauParams() map[string]any {
 	return map[string]any{
 		"tokenizer": "standard",
 		"filter":    []any{"lowercase", "asciifolding"},
@@ -196,27 +185,20 @@ func denseField() *entity.Field {
 	return entity.NewField().WithName(FDense).WithDataType(entity.FieldTypeFloatVector).WithDim(nhung.Dims)
 }
 
-func sparseField() *entity.Field {
-	return entity.NewField().WithName(FSparse).WithDataType(entity.FieldTypeSparseVector)
-}
-
+// textFields are the text under the folding analyzer and the one sparse
+// field, the BM25 function's output over it.
 func textFields(s *entity.Schema) {
 	s.WithField(entity.NewField().WithName(FText).WithDataType(entity.FieldTypeVarChar).
 		WithMaxLength(MaxTextLen).WithEnableAnalyzer(true).WithAnalyzerParams(AnalyzerParams())).
-		WithField(entity.NewField().WithName(FBM25).WithDataType(entity.FieldTypeSparseVector)).
-		WithField(entity.NewField().WithName(FTextKhongDau).WithDataType(entity.FieldTypeVarChar).
-			WithMaxLength(MaxTextLen).WithEnableAnalyzer(true).WithAnalyzerParams(AnalyzerKhongDauParams())).
-		WithField(entity.NewField().WithName(FBM25KhongDau).WithDataType(entity.FieldTypeSparseVector)).
+		WithField(entity.NewField().WithName(FSparse).WithDataType(entity.FieldTypeSparseVector)).
 		WithFunction(entity.NewFunction().WithName(bm25FuncName).WithType(entity.FunctionTypeBM25).
-			WithInputFields(FText).WithOutputFields(FBM25)).
-		WithFunction(entity.NewFunction().WithName(bm25KDFuncName).WithType(entity.FunctionTypeBM25).
-			WithInputFields(FTextKhongDau).WithOutputFields(FBM25KhongDau))
+			WithInputFields(FText).WithOutputFields(FSparse))
 }
 
-// chunkFields are the fields every public row carries beside its vectors:
-// the document it is a chunk of, its content hash and the embedding model
+// docFields are the fields every public row carries beside its vectors:
+// the document it belongs to, its content hash and the embedding model
 // that produced its dense vector (the ingest's reconciliation reads them).
-func chunkFields(s *entity.Schema) {
+func docFields(s *entity.Schema) {
 	s.WithField(entity.NewField().WithName(FDocID).WithDataType(entity.FieldTypeVarChar).WithMaxLength(MaxIDLen)).
 		WithField(entity.NewField().WithName(FContentHash).WithDataType(entity.FieldTypeVarChar).WithMaxLength(64)).
 		WithField(entity.NewField().WithName(FEmbedModel).WithDataType(entity.FieldTypeVarChar).WithMaxLength(64))
@@ -225,7 +207,7 @@ func chunkFields(s *entity.Schema) {
 // ChiMucDense is the dense vector index a deployment builds. HNSW runs on any
 // Milvus and is what the CPU image in CI carries; GPU_CAGRA needs the -gpu
 // image and a GPU (ADR-0049 §2.6). It is a deployment choice, not a schema
-// revision: fields, analyzers and BM25 legs are identical under both, and a
+// revision: fields, analyzers and the BM25 leg are identical under both, and a
 // process searches with the parameters of the kind it builds.
 type ChiMucDense string
 
@@ -277,20 +259,11 @@ func (k ChiMucDense) denseIndex(name string) milvusclient.CreateIndexOption {
 	return milvusclient.NewCreateIndexOption(name, FDense, k.chiMuc())
 }
 
-// vectorIndexes are the sparse indexes of a collection. The dense index is
-// the deployment's (ChiMucDense), added where the collection is created.
-func vectorIndexes(name string, bm25 bool) []milvusclient.CreateIndexOption {
-	out := []milvusclient.CreateIndexOption{
-		milvusclient.NewCreateIndexOption(name, FSparse, index.NewGenericIndex("sparse_idx", map[string]string{
-			"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "IP"})),
-	}
-	if bm25 {
-		out = append(out, milvusclient.NewCreateIndexOption(name, FBM25, index.NewGenericIndex("bm25_idx", map[string]string{
-			"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "BM25"})),
-			milvusclient.NewCreateIndexOption(name, FBM25KhongDau, index.NewGenericIndex("bm25_khong_dau_idx", map[string]string{
-				"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "BM25"})))
-	}
-	return out
+// bm25Index is the index of the BM25 field. The dense index is the
+// deployment's (ChiMucDense), added where the collection is created.
+func bm25Index(name string) milvusclient.CreateIndexOption {
+	return milvusclient.NewCreateIndexOption(name, FSparse, index.NewGenericIndex("bm25_idx", map[string]string{
+		"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "BM25"}))
 }
 
 func inverted(name string, fields ...string) []milvusclient.CreateIndexOption {
@@ -301,23 +274,21 @@ func inverted(name string, fields ...string) []milvusclient.CreateIndexOption {
 	return out
 }
 
-// LuocDoDiaDiem is the place collection, one row per chunk of a place: the
-// chunk id, the place id (doc_id), the dense and MILCO sparse vectors, the
-// text under both analyzers with their BM25 function fields, and the
-// hard-constraint
-// fields the LLM enrichment at ingest filled (destination, open slots of the
-// week, price bounds in whole đồng with GiaKhongRo for unknown, allergens
-// and diets as closed ids with KhongRo for an allergen list nobody could
-// establish), a tombstone and the index version.
+// LuocDoDiaDiem is the place collection, one row per place: the place id
+// (FID, and FDocID equal to it), the dense vector, the text under the
+// folding analyzer with its BM25 field, the free JSON dict of later fields,
+// and the hard-constraint fields the LLM enrichment at ingest filled
+// (destination, open slots of the week, price bounds in whole đồng with
+// GiaKhongRo for unknown, allergens and diets as closed ids with KhongRo for
+// an allergen list nobody could establish, the categories as closed ids
+// with KhongRo for unknown), a tombstone and the index version.
 func LuocDoDiaDiem(name string) LuocDo {
 	s := entity.NewSchema().WithName(name).WithDynamicFieldEnabled(false).
 		WithDescription("rd places " + embedModelDesc).
-		WithField(pk()).WithField(denseField()).WithField(sparseField())
+		WithField(pk()).WithField(denseField())
 	textFields(s)
-	chunkFields(s)
-	s.WithField(entity.NewField().WithName(FFacet).WithDataType(entity.FieldTypeVarChar).WithMaxLength(MaxTagLen)).
-		WithField(entity.NewField().WithName(FChunkSo).WithDataType(entity.FieldTypeInt16)).
-		WithField(entity.NewField().WithName(FMoRong).WithDataType(entity.FieldTypeJSON).WithNullable(true))
+	docFields(s)
+	s.WithField(entity.NewField().WithName(FMoRong).WithDataType(entity.FieldTypeJSON).WithNullable(true))
 	s.WithField(entity.NewField().WithName(FDestination).WithDataType(entity.FieldTypeVarChar).WithMaxLength(64)).
 		WithField(entity.NewField().WithName(FOpenSlots).WithDataType(entity.FieldTypeArray).
 			WithElementType(entity.FieldTypeInt16).WithMaxCapacity(SoSlotTuan)).
@@ -327,33 +298,36 @@ func LuocDoDiaDiem(name string) LuocDo {
 			WithElementType(entity.FieldTypeVarChar).WithMaxCapacity(MaxAllergens).WithMaxLength(MaxTagLen)).
 		WithField(entity.NewField().WithName(FDiets).WithDataType(entity.FieldTypeArray).
 			WithElementType(entity.FieldTypeVarChar).WithMaxCapacity(MaxDiets).WithMaxLength(MaxTagLen)).
+		WithField(entity.NewField().WithName(FDanhMuc).WithDataType(entity.FieldTypeArray).
+			WithElementType(entity.FieldTypeVarChar).WithMaxCapacity(MaxDanhMuc).WithMaxLength(MaxTagLen)).
 		WithField(entity.NewField().WithName(FTombstoned).WithDataType(entity.FieldTypeBool)).
 		WithField(entity.NewField().WithName(FIndexVersion).WithDataType(entity.FieldTypeInt64))
-	idx := vectorIndexes(name, true)
-	idx = append(idx, inverted(name, FDocID, FDestination, FOpenSlots, FAllergens, FDiets, FTombstoned)...)
+	idx := []milvusclient.CreateIndexOption{bm25Index(name)}
+	idx = append(idx, inverted(name, FDocID, FDestination, FOpenSlots, FAllergens, FDiets, FDanhMuc, FTombstoned)...)
 	idx = append(idx, milvusclient.NewCreateIndexOption(name, FPriceMin, index.NewSortedIndex()))
 	return LuocDo{Schema: s, Index: idx}
 }
 
-// LuocDoHuongDan is the app manual: chunks of public text, no constraint
-// fields but the tombstone.
+// LuocDoHuongDan is the app manual: one row per section of public text, no
+// constraint fields but the tombstone.
 func LuocDoHuongDan(name string) LuocDo {
 	s := entity.NewSchema().WithName(name).WithDynamicFieldEnabled(false).
 		WithDescription("rd manual " + embedModelDesc).
-		WithField(pk()).WithField(denseField()).WithField(sparseField())
+		WithField(pk()).WithField(denseField())
 	textFields(s)
-	chunkFields(s)
+	docFields(s)
 	s.WithField(entity.NewField().WithName(FTombstoned).WithDataType(entity.FieldTypeBool)).
 		WithField(entity.NewField().WithName(FIndexVersion).WithDataType(entity.FieldTypeInt64))
-	idx := vectorIndexes(name, true)
+	idx := []milvusclient.CreateIndexOption{bm25Index(name)}
 	idx = append(idx, inverted(name, FDocID, FTombstoned)...)
 	return LuocDo{Schema: s, Index: idx}
 }
 
 // LuocDoTriNho is the memory collection: the fact id, its owner as the
 // partition key (performance; the isolation is the owner filter every call
-// carries, KhoTriNho.go), the closed kind, the time, the vectors. No text,
-// no JSON, no dynamic field: nothing that reads back as the fact.
+// carries, tri_nho.go), the closed kind, the time, the dense vector. No
+// text, no sparse field, no JSON, no dynamic field: nothing that reads back
+// as the fact.
 func LuocDoTriNho(name string) LuocDo {
 	s := entity.NewSchema().WithName(name).WithDynamicFieldEnabled(false).
 		WithDescription("nep memories " + embedModelDesc).
@@ -362,11 +336,9 @@ func LuocDoTriNho(name string) LuocDo {
 			WithMaxLength(MaxOwnerLen).WithIsPartitionKey(true)).
 		WithField(entity.NewField().WithName(FKind).WithDataType(entity.FieldTypeVarChar).WithMaxLength(MaxTagLen)).
 		WithField(entity.NewField().WithName(FCreatedAt).WithDataType(entity.FieldTypeInt64)).
-		WithField(denseField()).WithField(sparseField()).
+		WithField(denseField()).
 		WithField(entity.NewField().WithName(FIndexVersion).WithDataType(entity.FieldTypeInt64))
-	idx := vectorIndexes(name, false)
-	idx = append(idx, inverted(name, FOwner, FKind)...)
-	return LuocDo{Schema: s, Index: idx}
+	return LuocDo{Schema: s, Index: inverted(name, FOwner, FKind)}
 }
 
 // LuocDoCua is the schema of a Kho's physical collection.

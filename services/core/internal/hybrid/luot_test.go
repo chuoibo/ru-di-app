@@ -111,9 +111,10 @@ func TestRerankPoolAndQuery(t *testing.T) {
 	}
 }
 
-// The router's two forms reach the legs: the diacritics-restored one the
-// dense leg and the marked BM25 field, the person's own the folded field.
-func TestTwoQueryFormsReachTheLegs(t *testing.T) {
+// The router's diacritics-restored form reaches both legs: the BM25 field
+// folds marks (rd.v4), so it and the person's own unmarked spelling give the
+// same terms, and the dense leg reads the restored words.
+func TestRestoredQueryFormReachesBothLegs(t *testing.T) {
 	th, k := moiThu(t)
 	g := &ghiNhung{}
 	k.Nhung = g
@@ -121,15 +122,14 @@ func TestTwoQueryFormsReachTheLegs(t *testing.T) {
 		t.Fatal(err)
 	}
 	q := th.fake.Da[0].Thua
-	if q.TextCua(vectordb.FBM25) != "quán lẩu nấm" || q.TextCua(vectordb.FBM25KhongDau) != "quan lau nam" || len(g.texts) != 1 || g.texts[0] != "quán lẩu nấm" {
-		t.Fatalf("marked %q, folded %q, embedded %v", q.TextCua(vectordb.FBM25), q.TextCua(vectordb.FBM25KhongDau), g.texts)
+	if q == nil || q.Text != "quán lẩu nấm" || len(g.texts) != 1 || g.texts[0] != "quán lẩu nấm" {
+		t.Fatalf("bm25 %+v, embedded %v", q, g.texts)
 	}
-	// One form only: every leg reads it.
+	// One form only: both legs read it.
 	if _, err := k.Tim(context.Background(), truyhoi.YeuCau{Nguon: truyhoi.Places, Cau: "quán lẩu"}); err != nil {
 		t.Fatal(err)
 	}
-	q = th.fake.Da[1].Thua
-	if q.TextKhongDau != "" || q.TextCua(vectordb.FBM25KhongDau) != "quán lẩu" || g.texts[1] != "quán lẩu" {
+	if q = th.fake.Da[1].Thua; q == nil || q.Text != "quán lẩu" || g.texts[1] != "quán lẩu" {
 		t.Fatalf("single form: %+v, embedded %v", q, g.texts)
 	}
 }

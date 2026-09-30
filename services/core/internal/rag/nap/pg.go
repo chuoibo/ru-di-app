@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"mobile/services/core/internal/domain/tuvung"
 )
 
 // BoNhoPG is the dense and sparse caches in PostgreSQL.
@@ -44,45 +46,6 @@ func (b BoNhoPG) GhiNhung(ctx context.Context, model string, dims int, task stri
 	return b.Q.SendBatch(ctx, batch).Close()
 }
 
-// LayThua reads cached sparse vectors.
-func (b BoNhoPG) LayThua(ctx context.Context, model, rev string, pruneK int, hashes []string) (map[string]VectorThua, error) {
-	rows, err := b.Q.Query(ctx, `SELECT content_hash, idx, val FROM rag_sparse_cache
-		WHERE model=$1 AND rev=$2 AND prune_k=$3 AND content_hash = ANY($4::text[])`, model, rev, pruneK, hashes)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	out := map[string]VectorThua{}
-	for rows.Next() {
-		var h string
-		var idx []int32
-		var val []float32
-		if err := rows.Scan(&h, &idx, &val); err != nil {
-			return nil, err
-		}
-		v := VectorThua{Val: val}
-		for _, i := range idx {
-			v.Idx = append(v.Idx, uint32(i))
-		}
-		out[h] = v
-	}
-	return out, rows.Err()
-}
-
-// GhiThua stores sparse vectors.
-func (b BoNhoPG) GhiThua(ctx context.Context, model, rev string, pruneK int, vecs map[string]VectorThua) error {
-	batch := &pgx.Batch{}
-	for h, v := range vecs {
-		idx := make([]int32, len(v.Idx))
-		for i, x := range v.Idx {
-			idx[i] = int32(x)
-		}
-		batch.Queue(`INSERT INTO rag_sparse_cache(content_hash, model, rev, prune_k, idx, val) VALUES($1,$2,$3,$4,$5,$6)
-			ON CONFLICT DO NOTHING`, h, model, rev, pruneK, idx, v.Val)
-	}
-	return b.Q.SendBatch(ctx, batch).Close()
-}
-
 // DocLamGiau reads the stored enrichment of each place id.
 func DocLamGiau(ctx context.Context, q Querier, ids []string) (map[string]*LamGiau, error) {
 	rows, err := q.Query(ctx, `SELECT place_id, source_hash, model, prompt_version, output, can_duyet, review
@@ -104,6 +67,109 @@ func DocLamGiau(ctx context.Context, q Querier, ids []string) (map[string]*LamGi
 			return nil, err
 		}
 		out[lg.PlaceID] = &lg
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	ngoai, err := docLamGiauNgoai(ctx, q, ids)
+	if err != nil {
+		return nil, err
+	}
+	for id, lg := range ngoai {
+		out[id] = lg
+	}
+	return out, nil
+}
+
+// docLamGiauNgoai reads vnlocal's search attributes (ingest's
+// place_lam_giau) for ids. vnlocal writes a row only for a place RuDi had no
+// enrichment for or whose text changed since, so a row there wins over
+// place_enrichments. Each row goes through DocTraLoiTungQuan like an answer
+// of RuDi's own model -- closed ids, «khong_ro» alone, dish strings
+// TextSafe'd and bounded -- and a row it refuses is left out (the place
+// keeps what it had). No table (a database without the ingest schema): none.
+func docLamGiauNgoai(ctx context.Context, q Querier, ids []string) (map[string]*LamGiau, error) {
+	out := map[string]*LamGiau{}
+	var co bool
+	if err := q.QueryRow(ctx, `SELECT to_regclass('place_lam_giau') IS NOT NULL`).Scan(&co); err != nil || !co {
+		return out, err
+	}
+	rows, err := q.Query(ctx, `SELECT place_id, di_ung, an_kieng, khi_chat, mon_chinh, chen_lenh, tin_cay,
+		       COALESCE(model, ''), COALESCE(prompt_version, '')
+		FROM place_lam_giau WHERE place_id = ANY($1::text[])`, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id, tinCay, model, prompt string
+		var diUng, anKieng, khiChat, mon []string
+		var chen bool
+		if err := rows.Scan(&id, &diUng, &anKieng, &khiChat, &mon, &chen, &tinCay, &model, &prompt); err != nil {
+			return nil, err
+		}
+		k, ok := TraLoiNgoai(diUng, anKieng, khiChat, mon, chen, tinCay)
+		if !ok {
+			continue
+		}
+		out[id] = &LamGiau{PlaceID: id, Model: "vnlocal:" + model, PromptVersion: prompt, KetQua: k,
+			CanDuyet: CanDuyet("vnlocal", [32]byte{}, id, k), Review: ReviewAuto, Ngoai: true}
+	}
+	return out, rows.Err()
+}
+
+// TraLoiNgoai reads one vnlocal attribute row as a one-place answer of the
+// enrichment model, through the same checks (DocTraLoiTungQuan). ok is false
+// when the checks refuse it.
+func TraLoiNgoai(diUng, anKieng, khiChat, mon []string, chen bool, tinCay string) (KetQuaLamGiau, bool) {
+	nz := func(s []string) []string {
+		if s == nil {
+			return []string{}
+		}
+		return s
+	}
+	raw, err := json.Marshal(map[string]any{"quan": []map[string]any{{
+		"bi_danh": biDanh(0), "di_ung": nz(diUng), "an_kieng": nz(anKieng), "khi_chat": nz(khiChat),
+		"mon_chinh": nz(mon), "chen_lenh": chen, "tin_cay": tinCay,
+		"ngu_canh_ho_so": "", "ngu_canh_trai_nghiem": "", "ngu_canh_mon_an": "",
+	}}})
+	if err != nil {
+		return KetQuaLamGiau{}, false
+	}
+	ks, loi, err := DocTraLoiTungQuan(raw, 1)
+	if err != nil || len(ks) != 1 || (len(loi) > 0 && loi[0] != nil) {
+		return KetQuaLamGiau{}, false
+	}
+	return ks[0], true
+}
+
+// DocDanhMuc reads the categories vnlocal assigned (ingest's
+// place_danh_muc) for ids: DanhMuc ids, or [khong_ro]. A row outside the
+// closed list is left out (the place reads as unclassified). No table: none.
+func DocDanhMuc(ctx context.Context, q Querier, ids []string) (map[string][]string, error) {
+	out := map[string][]string{}
+	var co bool
+	if err := q.QueryRow(ctx, `SELECT to_regclass('place_danh_muc') IS NOT NULL`).Scan(&co); err != nil || !co {
+		return out, err
+	}
+	rows, err := q.Query(ctx, `SELECT place_id, danh_muc FROM place_danh_muc WHERE place_id = ANY($1::text[])`, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		var dm []string
+		if err := rows.Scan(&id, &dm); err != nil {
+			return nil, err
+		}
+		if len(dm) == 1 && dm[0] == KhongRo {
+			out[id] = dm
+			continue
+		}
+		if ok := tuvung.DanhMuc.LocHopLe(dm); len(ok) == len(dm) && len(dm) > 0 {
+			out[id] = ok
+		}
 	}
 	return out, rows.Err()
 }

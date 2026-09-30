@@ -6,17 +6,10 @@
     "co_che": "prefix-v1",
     "lo": 100
   },
-  "thua": {
-    "che_do": "bm25",
-    "milco_bat": false,
-    "milco_model": "omai-research/milco-650m",
-    "milco_rev": "",
-    "prune_k": 128
-  },
-  "luoc_do": "rd.v3",
+  "luoc_do": "rd.v4",
   "chunker": {
-    "place": "place.milvus.v2",
-    "manual": "manual.milvus.v1"
+    "place": "place.milvus.v4",
+    "manual": "manual.milvus.v4"
   },
   "lam_giau": {
     "model": "gemini-3.5-flash-lite",
@@ -30,7 +23,7 @@
   },
   "hop": {
     "rrf_k": 60,
-    "trong_so": {"dense": 1, "bm25": 0.1, "bm25_khong_dau": 1, "milco": 1}
+    "trong_so": {"dense": 1, "bm25": 1}
   },
   "cong": {
     "recall_10": 0.90,

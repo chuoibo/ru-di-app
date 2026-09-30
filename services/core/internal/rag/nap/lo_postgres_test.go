@@ -79,7 +79,7 @@ func TestNhungQuaLoChiGuiPhanThieuVaKhongGuiHaiLan(t *testing.T) {
 	var rows []nap.Hang
 	for i, q := range v.Quan[:30] {
 		h, _ := nap.DungHoSo(v.Hang(i, q))
-		hs, err := nap.DoanQuan(context.Background(), h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan], nap.ChiaNguyen{})
+		hs, err := nap.DoanQuan(h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -122,7 +122,7 @@ func TestNhungQuaLoHongKhongGhi(t *testing.T) {
 	n, enc := naptest.Nap(t, nap.NewKhoNho())
 	v := naptest.Vang(t)
 	h, _ := nap.DungHoSo(v.Hang(0, v.Quan[0]))
-	rows, err := nap.DoanQuan(context.Background(), h, v.Quan[0].NhanTay(), n.Cfg.Chunker[nap.CorpusQuan], nap.ChiaNguyen{})
+	rows, err := nap.DoanQuan(h, v.Quan[0].NhanTay(), n.Cfg.Chunker[nap.CorpusQuan])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,7 +175,7 @@ func TestNhungQuaLoChiaJob(t *testing.T) {
 	var rows []nap.Hang
 	for i, q := range v.Quan[:30] {
 		h, _ := nap.DungHoSo(v.Hang(i, q))
-		hs, err := nap.DoanQuan(context.Background(), h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan], nap.ChiaNguyen{})
+		hs, err := nap.DoanQuan(h, q.NhanTay(), n.Cfg.Chunker[nap.CorpusQuan])
 		if err != nil {
 			t.Fatal(err)
 		}

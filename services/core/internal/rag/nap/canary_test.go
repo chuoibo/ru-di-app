@@ -2,6 +2,7 @@ package nap
 
 import (
 	"context"
+	"slices"
 	"testing"
 )
 
@@ -24,8 +25,10 @@ func (b boLoc) LocHang(ctx context.Context, ten string, l Loc) ([]KhoaHang, erro
 
 // Canary: the same golden run with the allergen filter (or the destination)
 // dropped goes red at violation@10, in the di_ung group for the allergen
-// filter, and the gate refuses it; with nothing dropped (identity) it stays
-// at zero.
+// filter, and the gate refuses it for that violation; with nothing dropped
+// (identity) it stays at zero and no violation is cited. The stub encoder's
+// relevance is not the gate's subject here (rd.v4 with the stub reads
+// recall@10 0.88; the real encoder on Milvus, 0.9467 -- v-eval measures that).
 func TestVangCanaryBoLoc(t *testing.T) {
 	for _, c := range []struct {
 		name string
@@ -46,8 +49,9 @@ func TestVangCanaryBoLoc(t *testing.T) {
 			k := KetQuaCong{Nguong: n.Cfg.Cong, CanVang: true, Vang: &kq, ThamDo: 1, DoiSoat: DoiSoat{Dat: true}}
 			KiemCong(&k, nil)
 			t.Logf("%s: tong %s; gate %v %v", c.name, kq.Tong, k.Dat, k.LyDo)
-			if red := kq.Tong.ViPham > 0; red != c.red || k.Dat == c.red {
-				t.Fatalf("violations %d, gate %v; want red=%v", kq.Tong.ViPham, k.Dat, c.red)
+			citesViolation := slices.Contains(k.LyDo, "violation_10")
+			if red := kq.Tong.ViPham > 0; red != c.red || citesViolation != c.red || (c.red && k.Dat) {
+				t.Fatalf("violations %d, gate %v %v; want red=%v", kq.Tong.ViPham, k.Dat, k.LyDo, c.red)
 			}
 			if c.name == "bo_di_ung" && kq.Nhom["di_ung"].ViPham == 0 {
 				t.Fatal("dropping the allergen filter left the di_ung group clean")
