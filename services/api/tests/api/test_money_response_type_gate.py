@@ -27,7 +27,7 @@ assertions would not help.
 What is upstream today. Every current producer of these figures is guarded
 somewhere: the repository casts its `SUM`s (`tests/qa/rd-qa-39` measures that
 those casts are individually gated), `_integer_dong` guards the model-authored
-budget and history figures, and `normalize_vnd` guards receipt money. So this
+budget and history figures, and Go's receipt.NormalizeVND guards receipt money. So this
 gate does not fix a live wrong number. It removes the wire's dependence on all
 of those guards staying correct, and on the next money field being added by
 someone who knows about them.

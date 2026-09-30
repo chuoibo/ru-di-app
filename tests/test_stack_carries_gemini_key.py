@@ -55,8 +55,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 COMPOSE_FILE = REPO_ROOT / "docker-compose.yml"
 ENV_EXAMPLE = REPO_ROOT / ".env.example"
 
-# The name the code actually reads. `services/api/app/api/vision_gemini.py`
-# does `os.environ["GEMINI_API_KEY"]`; every other spelling is a variable
+# The name the code actually reads: the brain's remaining model steps and
+# core's embeddings do `os.environ["GEMINI_API_KEY"]`; every other spelling is a variable
 # nobody consumes, which is worse than an unset one because it looks configured.
 KEY = "GEMINI_API_KEY"
 

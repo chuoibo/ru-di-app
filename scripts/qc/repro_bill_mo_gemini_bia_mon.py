@@ -62,7 +62,7 @@ from pathlib import Path
 
 _BOUNDARY = "----mobileqcblurboundary"
 
-# Must match MAX_IMAGE_BYTES in services/api/app/api/receipt_skill.py. The
+# Must match maxScanBytes in services/core/internal/routes/scans_ai.go. The
 # server checks the uploaded bytes, not the multipart envelope, so this is the
 # budget for the PNG alone.
 _SERVER_MAX_IMAGE_BYTES = 8 * 1024 * 1024

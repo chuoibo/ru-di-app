@@ -71,7 +71,6 @@ LEGACY_UNFORMATTED = frozenset(
         "tests/qa/pr-57/test_rendered_contrast_pr57.py",
         "tests/qa/pr-67/test_script_bill_mo_phan_loai_status.py",
         "tests/qa/rd-qa-02/run_mutations.py",
-        "tests/qa/rd-qa-03/test_confidence_does_not_certify_correctness.py",
         "tests/qa/rd-qa-07/03-mutation-gate.py",
         "tests/qa/rd-qa-10/do_commit_sau_phan_hoi.py",
         "tests/qa/rd-qa-10/probe_quyen_rieng_tu.py",

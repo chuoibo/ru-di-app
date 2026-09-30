@@ -7,6 +7,8 @@
 //	                      latency per model × prompt kind, models interleaved per round
 //	vnlocal-thu anh [-thu-muc DIR] [-models a,b]
 //	                      inline images + response schema through the Go model door
+//	vnlocal-thu tinh-nang [-thu-muc DIR] [-chi a,b]
+//	                      each ported one-shot AI step, one real request, checked by the Go domain
 //
 // Secrets come from the environment only and are never printed.
 package main
@@ -41,8 +43,11 @@ func run(ctx context.Context, args []string, getenv func(string) string, out io.
 	if len(args) >= 1 && args[0] == "anh" {
 		return anh(ctx, args[1:], getenv, out)
 	}
+	if len(args) >= 1 && args[0] == "tinh-nang" {
+		return tinhNang(ctx, args[1:], getenv, out)
+	}
 	if len(args) != 1 {
-		fmt.Fprintln(out, "dùng: vnlocal-thu ket-noi | agy | bench | anh")
+		fmt.Fprintln(out, "dùng: vnlocal-thu ket-noi | agy | bench | anh | tinh-nang")
 		return 2
 	}
 	var failed int

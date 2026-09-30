@@ -857,11 +857,11 @@
       "group": "messages",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "chat_expense_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1515,11 +1515,11 @@
       "group": "receipts",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "receipt_scan_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1531,11 +1531,11 @@
       "group": "screenshots",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "screenshot_scan_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {

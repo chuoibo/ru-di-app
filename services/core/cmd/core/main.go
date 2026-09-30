@@ -241,6 +241,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		SMS:          sender,
 		OTPDebugCode: debug,
 		Google:       googleid.FromEnv(getenv),
+		AI:           may,
 	}
 	var idempotency func(http.Handler) http.Handler
 	var pool *pgxpool.Pool

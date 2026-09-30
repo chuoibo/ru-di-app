@@ -19,7 +19,7 @@ import pytest
 
 from app.api import companion_places
 from app.api.cursors import decode_cursor
-from app.api.deps import get_chat_expense_reader, get_repository
+from app.api.deps import get_repository
 from app.api.main import create_app
 from app.api.repository import (
     ContextRecord,
@@ -30,7 +30,6 @@ from app.api.repository import (
     VoteOptionRecord,
     VoteRecord,
 )
-from app.domain.chat_expense import ChatExpenseError
 
 from .conftest import ASGITestClient, SeedCatalogueReads
 from .helpers import actor_headers
@@ -200,22 +199,7 @@ def companion():
     return CountingCompanion()
 
 
-class TableReader:
-    """Answers from a table keyed by message text; unknown text is «not an expense»."""
-
-    def __init__(self, table=None, *, fail=None):
-        self.table = table or {}
-        self.fail = fail
-        self.texts: list[str] = []
-
-    def read(self, text: str) -> dict:
-        if self.fail is not None:
-            raise self.fail
-        self.texts.append(text)
-        return self.table.get(text, {"is_expense": False})
-
-
-def _client(repository, companion, monkeypatch, *, reader=None):
+def _client(repository, companion, monkeypatch):
     async def run_sync_inline(function, *args, **kwargs):
         del kwargs
         return function(*args)
@@ -226,9 +210,6 @@ def _client(repository, companion, monkeypatch, *, reader=None):
     )
     app = create_app()
     app.dependency_overrides[get_repository] = lambda: repository
-    app.dependency_overrides[get_chat_expense_reader] = lambda: reader or TableReader(
-        fail=ChatExpenseError("CHAT_READER_NOT_CONFIGURED")
-    )
     return ASGITestClient(app)
 
 
@@ -267,11 +248,11 @@ def test_an_old_ai_command_is_an_ordinary_message_and_reaches_no_model(
 
     The text is kept exactly as typed and nothing else happens: no intent is
     named, no error is reported, no card is written, and neither the companion
-    nor the expense reader is asked anything. The shrunken response carries
-    no `companion` or `expense_card` field at all.
+    nor the expense reader is asked anything (neither is wired to this route
+    any more: ADR-0051 moved every model step to Go). The shrunken response
+    carries no `companion` or `expense_card` field at all.
     """
-    reader = TableReader({"tối qua tôi trả 180k": {"is_expense": True}})
-    client = _client(repository, companion, monkeypatch, reader=reader)
+    client = _client(repository, companion, monkeypatch)
     _post(client, "tối qua tôi trả 180k")
     response = _post(client, text)
     assert response.status_code == 201, response.text
@@ -282,7 +263,6 @@ def test_an_old_ai_command_is_an_ordinary_message_and_reaches_no_model(
     assert "companion" not in body and "expense_card" not in body
     assert [m.kind for m in repository.messages] == ["text", "text"]
     assert companion.calls == 0
-    assert reader.texts == []
 
 
 def test_vote_creates_a_poll_and_a_poll_card_in_the_callers_name(

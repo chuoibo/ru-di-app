@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"mobile/services/core/internal/brain"
+	"mobile/services/core/internal/aiharness/dockhoan"
+	"mobile/services/core/internal/aiharness/motluot"
 	"mobile/services/core/internal/cursors"
+	"mobile/services/core/internal/domain/chatexpense"
 	"mobile/services/core/internal/domain/chatintent"
 	"mobile/services/core/internal/domain/companion"
 	"mobile/services/core/internal/domain/messageedit"
@@ -415,9 +417,9 @@ func createChatExpenseDraft() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		reading, err := readChatExpense(*message.Body)
+		reading, err := readChatExpense(ctx, call.AI, *message.Body)
 		if err != nil {
-			return endpoint.Reply{}, mapChatExpenseErr(err)
+			return endpoint.Reply{}, err
 		}
 		body := pyjson.NewOrderedMap()
 		body.Set("context_id", pyjson.String(contextID))
@@ -612,46 +614,34 @@ type chatReading struct {
 	needsReview bool
 }
 
-func readChatExpense(text string) (chatReading, error) {
-	body := pyjson.NewOrderedMap()
-	body.Set("text", pyjson.String(text))
-	raw, err := brain.Configured().PostJSON("chat-expense", body)
-	if err != nil {
-		return chatReading{}, err
-	}
-	obj, err := brain.AsObject(raw)
-	if err != nil {
-		return chatReading{}, &brain.Error{Status: 502, Code: "chat_reader_unavailable"}
-	}
-	flag, _ := obj.Get("is_expense")
-	on, _ := flag.(pyjson.Bool)
-	if !bool(on) {
-		return chatReading{}, nil
-	}
-	titleValue, _ := obj.Get("title")
-	title, _ := titleValue.(pyjson.String)
-	amountValue, _ := obj.Get("amount_vnd")
-	amount, _ := amountValue.(pyjson.Int)
-	n, _ := amount.Int64()
-	reviewValue, _ := obj.Get("needs_review")
-	review, _ := reviewValue.(pyjson.Bool)
-	return chatReading{isExpense: true, title: string(title), amount: n, needsReview: bool(review)}, nil
-}
+// chatExpenseTimeout bounds the one model call of an expense draft.
+const chatExpenseTimeout = 30 * time.Second
 
-func mapChatExpenseErr(err error) error {
-	if refused := brainErr(err); refused != nil {
-		switch refused.Code {
-		case "chat_reader_not_configured":
-			return endpoint.Refuse(503, "chat_reader_not_configured", chatReaderNotConfigured)
-		case "chat_expense_model_named_a_person":
-			return endpoint.Refuse(422, "chat_expense_model_named_a_person", modelNamedPersonDetail)
-		case "chat_expense_unreadable":
-			return endpoint.Refuse(422, "chat_expense_unreadable", chatUnreadableDetail)
-		case "chat_reader_unavailable", "brain_unavailable":
-			return endpoint.Refuse(502, "chat_reader_unavailable", chatReaderUnavailable)
-		}
+// readChatExpense asks the model whether the message reports an expense its
+// writer paid (aiharness/dockhoan, ADR-0051) and holds the answer to
+// domain/chatexpense: no person, whole đồng, a draft only. Every failure is
+// the closed refusal the app has always read.
+func readChatExpense(ctx context.Context, may *motluot.May, text string) (chatReading, error) {
+	if !may.CoMay() {
+		return chatReading{}, endpoint.Refuse(503, "chat_reader_not_configured", chatReaderNotConfigured)
 	}
-	return err
+	ctx, cancel := context.WithTimeout(ctx, chatExpenseTimeout)
+	defer cancel()
+	raw, err := dockhoan.Doc(ctx, may.Luot(3), text)
+	if err != nil {
+		return chatReading{}, endpoint.Refuse(502, "chat_reader_unavailable", chatReaderUnavailable)
+	}
+	r, err := chatexpense.Read(raw)
+	var refused *chatexpense.Error
+	switch {
+	case err == nil:
+		return chatReading{isExpense: r.IsExpense, title: r.Title, amount: r.AmountVND, needsReview: r.IsExpense}, nil
+	case errors.As(err, &refused) && refused.Code == "MODEL_NAMED_A_PERSON":
+		return chatReading{}, endpoint.Refuse(422, "chat_expense_model_named_a_person", modelNamedPersonDetail)
+	case errors.As(err, &refused):
+		return chatReading{}, endpoint.Refuse(422, "chat_expense_unreadable", chatUnreadableDetail)
+	}
+	return chatReading{}, endpoint.Refuse(502, "chat_reader_unavailable", chatReaderUnavailable)
 }
 
 func messageInContext(ctx context.Context, store repo.Repository, contextID, messageID string) (*repo.Message, error) {

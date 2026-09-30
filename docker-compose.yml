@@ -128,7 +128,9 @@ services:
       # `:-` and not `:?`. An unset key must render an empty string rather
       # than break `docker compose config` for the whole repo -- the money
       # path does not need this key. Empty and absent take the same branch in
-      # `vision_gemini.py`, so there is no third state to reason about.
+      # the brain's model steps, so there is no third state to reason about.
+      # Bill and screenshot reading left this process (ADR-0051: core reads
+      # them through agy-proxy); the steps still here leave one by one.
       #
       # Listed on `api` alone, not in the `x-api-env` anchor: `migrate`,
       # `seed` and `demo` share that anchor and none of them read a bill. A

@@ -22,15 +22,11 @@ func scanReceipt() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		raw, err := brain.Configured().PostJSON("receipt-scan", brain.ImageBody(file.Content, uploadContentType(file)))
+		reading, err := docHoaDon(ctx, call.AI, file.Content, uploadContentType(file))
 		if err != nil {
-			return endpoint.Reply{}, mapReceiptErr(err)
+			return endpoint.Reply{}, err
 		}
-		obj, err := brain.AsObject(raw)
-		if err != nil {
-			return endpoint.Reply{}, endpoint.Refuse(502, "receipt_reader_unavailable", "Không đọc được bill lúc này, thử lại sau.")
-		}
-		return endpoint.Reply{Body: wireReceiptScan(obj)}, nil
+		return endpoint.Reply{Body: wireReceiptScan(reading)}, nil
 	}}
 }
 
@@ -43,15 +39,11 @@ func scanScreenshot() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		raw, err := brain.Configured().PostJSON("screenshot-scan", brain.ImageBody(file.Content, uploadContentType(file)))
+		reading, err := docManHinh(ctx, call.AI, file.Content, uploadContentType(file))
 		if err != nil {
-			return endpoint.Reply{}, mapScreenshotErr(err)
+			return endpoint.Reply{}, err
 		}
-		obj, err := brain.AsObject(raw)
-		if err != nil {
-			return endpoint.Reply{}, endpoint.Refuse(502, "screenshot_reader_unavailable", "Dịch vụ đọc ảnh chụp màn hình đang lỗi phía máy chủ. Vui lòng thử lại sau.")
-		}
-		return endpoint.Reply{Body: wireScreenshotScan(obj)}, nil
+		return endpoint.Reply{Body: wireScreenshotScan(reading)}, nil
 	}}
 }
 
@@ -149,55 +141,6 @@ func intOf(obj *pyjson.OrderedMap, key string) int {
 	return 0
 }
 
-func mapReceiptErr(err error) error {
-	if refused := brainErr(err); refused != nil {
-		switch refused.Code {
-		case "unsupported_image_type":
-			return endpoint.Refuse(415, "unsupported_image_type", "Định dạng ảnh không được hỗ trợ.")
-		case "image_too_large":
-			return endpoint.Refuse(413, "image_too_large", "Ảnh bill vượt quá giới hạn 8 MB.")
-		case "receipt_too_blurry":
-			return endpoint.Refuse(422, "receipt_too_blurry", "Ảnh bill quá mờ. Vui lòng chụp lại ảnh rõ hơn.")
-		case "receipt_reader_not_configured":
-			return endpoint.Refuse(503, "receipt_reader_not_configured", "Máy chủ chưa cấu hình khoá đọc bill nên không gọi được AI. Đây là lỗi cấu hình phía máy chủ, không phải ảnh bạn chụp — chụp lại cũng không giúp được. Người dựng hệ cần đặt biến GEMINI_API_KEY rồi khởi động lại API.")
-		case "not_a_receipt_price_list":
-			return endpoint.Refuse(422, "not_a_receipt", "Đây là thực đơn hoặc bảng giá, không phải hoá đơn. Bảng giá chỉ nói món bao nhiêu tiền, không nói ai đã gọi gì, nên không chia tiền được. Hãy chụp tờ bill có dòng tổng tiền.")
-		case "not_a_receipt":
-			return endpoint.Refuse(422, "not_a_receipt", "Ảnh này không phải hoá đơn. Hãy chụp tờ bill có danh sách món và dòng tổng tiền.")
-		case "receipt_unreadable":
-			return endpoint.Refuse(422, "receipt_unreadable", "Không đọc được bill. Vui lòng kiểm tra ảnh và thử lại.")
-		case "receipt_reader_unavailable", "brain_unavailable":
-			return endpoint.Refuse(502, "receipt_reader_unavailable", "Không đọc được bill lúc này, thử lại sau.")
-		}
-		if refused.Status != 0 {
-			return endpoint.Refuse(refused.Status, refused.Code, "Không đọc được bill lúc này, thử lại sau.")
-		}
-	}
-	return err
-}
-
-func mapScreenshotErr(err error) error {
-	if refused := brainErr(err); refused != nil {
-		switch refused.Code {
-		case "unsupported_image_type":
-			return endpoint.Refuse(415, "unsupported_image_type", "Định dạng ảnh chụp màn hình không được hỗ trợ.")
-		case "image_too_large":
-			return endpoint.Refuse(413, "image_too_large", "Ảnh chụp màn hình vượt quá giới hạn 8 MB.")
-		case "not_a_transaction":
-			return endpoint.Refuse(422, "not_a_transaction", "Ảnh này không thể hiện một giao dịch đã hoàn tất để tạo khoản chi.")
-		case "screenshot_model_named_a_person":
-			return endpoint.Refuse(422, "screenshot_model_named_a_person", "AI đã cố nêu một người; kết quả bị từ chối để định danh chỉ đến từ phiên đăng nhập.")
-		case "screenshot_reader_not_configured":
-			return endpoint.Refuse(503, "screenshot_reader_not_configured", "Máy chủ chưa cấu hình khoá đọc ảnh chụp màn hình. Đây là lỗi cấu hình phía máy chủ, không phải ảnh bạn tải lên.")
-		case "screenshot_unreadable":
-			return endpoint.Refuse(422, "screenshot_unreadable", "Không đọc được giao dịch từ ảnh chụp màn hình. Vui lòng kiểm tra ảnh.")
-		case "screenshot_reader_unavailable", "brain_unavailable":
-			return endpoint.Refuse(502, "screenshot_reader_unavailable", "Dịch vụ đọc ảnh chụp màn hình đang lỗi phía máy chủ. Vui lòng thử lại sau.")
-		}
-	}
-	return err
-}
-
 func mapFaceErr(err error) error {
 	if refused := brainErr(err); refused != nil {
 		switch refused.Code {
@@ -208,32 +151,6 @@ func mapFaceErr(err error) error {
 		}
 	}
 	return err
-}
-
-func wireReceiptScan(obj *pyjson.OrderedMap) *pyjson.OrderedMap {
-	out := pyjson.NewOrderedMap()
-	for _, key := range []string{"items", "items_total_vnd", "total_vnd", "totals_agree", "total_difference_vnd", "needs_review", "warnings"} {
-		if value, ok := obj.Get(key); ok {
-			out.Set(key, value)
-		} else if key == "warnings" {
-			out.Set(key, pyjson.List{})
-		} else {
-			out.Set(key, pyjson.Null{})
-		}
-	}
-	return out
-}
-
-func wireScreenshotScan(obj *pyjson.OrderedMap) *pyjson.OrderedMap {
-	out := pyjson.NewOrderedMap()
-	for _, key := range []string{"source", "merchant", "total_vnd", "occurred_on", "needs_review"} {
-		if value, ok := obj.Get(key); ok {
-			out.Set(key, value)
-		} else {
-			out.Set(key, pyjson.Null{})
-		}
-	}
-	return out
 }
 
 func uploadContentType(file *pyval.UploadFile) string {

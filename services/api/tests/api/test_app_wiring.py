@@ -25,11 +25,10 @@ import anyio
 import pytest
 
 from app.api.cors import PreflightNoContentCORSMiddleware
-from app.api.idempotency import IDEMPOTENCY_HEADER, REPLAY_HEADER, IdempotencyMiddleware
+from app.api.idempotency import IdempotencyMiddleware
 from app.api.main import create_app
 
 from .conftest import ASGITestClient
-from .helpers import ADVANCER_ID, png_bytes
 from .test_idempotency import InMemoryIdempotencyStore
 
 # Every step the PoC demo walks, in order, plus the two reads it needs on the
@@ -53,10 +52,6 @@ DEMO_PATH_ROUTES = {
     ("POST", "/obligations/{obligation_id}/confirm-receipt"),
 }
 
-PNG = png_bytes()
-HEADERS = {"X-Actor-ID": str(ADVANCER_ID)}
-KEY = "5ca11111-bbbb-4bbb-8bbb-0000b0000001"
-
 
 def registered(app) -> set[tuple[str, str]]:
     found = set()
@@ -65,25 +60,6 @@ def registered(app) -> set[tuple[str, str]]:
             if method != "HEAD":
                 found.add((method, route.path))
     return found
-
-
-class StubReader:
-    """Stands in for the vision backend; counts how often it was reached."""
-
-    def __init__(self):
-        self.calls = 0
-
-    def read(self, image: bytes, mime_type: str) -> dict:
-        del image, mime_type
-        self.calls += 1
-        return {
-            "document_type": "receipt",
-            "items": [
-                {"name": "Pepsi", "quantity_text": "2", "line_total_text": "28.000"}
-            ],
-            "total_text": "28.000",
-            "confidence": 0.9,
-        }
 
 
 class TestRoutersAreRegistered:
@@ -144,77 +120,7 @@ def scan_client(monkeypatch, store):
     def factory():
         yield store
 
-    # Imported here rather than at the top on purpose. On a tree where the
-    # receipts branch is missing, this file's job is to say which route is gone
-    # in an assertion; a module-level import of something that branch added
-    # would turn that into a collection error naming a symbol instead.
-    from app.api.deps import get_receipt_reader
-
-    app = create_app(idempotency_store_factory=factory)
-    reader = StubReader()
-    app.dependency_overrides[get_receipt_reader] = lambda: reader
-    client = ASGITestClient(app)
-    client.reader = reader
-    return client
-
-
-def scan(client, *, key=None, content=PNG):
-    headers = dict(HEADERS)
-    if key is not None:
-        headers[IDEMPOTENCY_HEADER] = key
-    return client.post(
-        "/receipts/scan",
-        files={"image": ("bill.png", content, "image/png")},
-        headers=headers,
-    )
-
-
-class TestScanUnderTheIdempotencyLayer:
-    """A multipart upload has to survive the layer that buffers and replays it.
-
-    The middleware drains the request body to fingerprint it, then hands the
-    bytes back to the route. Every other write route it wraps sends JSON; this
-    is the only one that sends an image, and a body that does not survive that
-    round trip fails as "no file uploaded" rather than as anything about
-    idempotency.
-    """
-
-    def test_a_scan_without_a_key_is_untouched(self, scan_client):
-        assert scan(scan_client).status_code == 200
-
-    def test_a_scan_with_a_key_still_reads_the_image(self, scan_client):
-        assert scan(scan_client, key=KEY).status_code == 200
-
-    def test_the_key_is_actually_reserved(self, scan_client, store):
-        scan(scan_client, key=KEY)
-        assert len(store.reservations) == 1
-
-    def test_a_byte_identical_retry_replays_instead_of_calling_the_model(
-        self, scan_client
-    ):
-        """Same key, same bytes: the answer comes back without a second call.
-
-        Built by hand rather than through ``files=``, because httpx picks a
-        fresh random multipart boundary per request -- see the test below.
-        """
-
-        body = (
-            b"--boundary\r\n"
-            b'Content-Disposition: form-data; name="image"; filename="bill.png"\r\n'
-            b"Content-Type: image/png\r\n\r\n" + PNG + b"\r\n--boundary--\r\n"
-        )
-        headers = {
-            **HEADERS,
-            IDEMPOTENCY_HEADER: KEY,
-            "Content-Type": "multipart/form-data; boundary=boundary",
-        }
-        first = scan_client.post("/receipts/scan", content=body, headers=headers)
-        second = scan_client.post("/receipts/scan", content=body, headers=headers)
-
-        assert first.status_code == 200
-        assert second.json() == first.json()
-        assert second.headers[REPLAY_HEADER] == "true"
-        assert scan_client.reader.calls == 1
+    return ASGITestClient(create_app(idempotency_store_factory=factory))
 
 
 class TestTheScanRouteIsReachableFromABrowser:
@@ -242,26 +148,3 @@ class TestTheScanRouteIsReachableFromABrowser:
         assert (
             response.headers["access-control-allow-origin"] == "http://localhost:8080"
         )
-
-
-class TestReencodedRetryIsRefused:
-    """Re-uploading the same photo under the same key is a 422, not a replay.
-
-    Not a defect in the middleware: it fingerprints the body, and a multipart
-    body re-encoded by the client is genuinely different bytes -- httpx and
-    every browser pick a random boundary each time. It is a constraint that
-    lands on whoever wires the camera to this route, and it is pinned here so
-    they meet it as a test rather than as a refusal in front of a person who
-    just took a photograph.
-
-    Two ways out, both on the client: reuse the encoded body verbatim on
-    retry, or mint a fresh key when the photo is genuinely being sent again.
-    """
-
-    def test_same_key_with_a_reencoded_body_is_refused(self, scan_client):
-        first = scan(scan_client, key=KEY)
-        second = scan(scan_client, key=KEY)
-
-        assert first.status_code == 200
-        assert second.status_code == 422
-        assert second.json()["code"] == "idempotency_key_reuse"

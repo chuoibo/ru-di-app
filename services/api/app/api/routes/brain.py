@@ -1,7 +1,7 @@
 """Internal brain HTTP seam (ADR-0029 §2.7).
 
 Go owns auth, the database, and the limiter. Python owns the model step:
-receipt and screenshot readers, the chat-expense reader, the companion,
+the screenshot reader, the chat-expense reader,
 place search and reasons, suggestions, the reel, and on-box face detection.
 Nothing in this module opens a repository session. Errors return a closed
 `code` and never interpolate a prompt, a model string, or image bytes.
@@ -22,27 +22,18 @@ from fastapi import APIRouter, Depends, FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 
 from app.api.achievement_gemini import gemini_achievement_routes
-from app.api.chat_expense_skill import ChatExpenseReader, run_chat_expense_skill
 from app.api.deps import (
     ContextualSuggester,
     FaceDetector,
     Reeler,
     Suggester,
-    get_chat_expense_reader,
     get_contextual_suggester,
     get_face_detector,
-    get_receipt_reader,
     get_reeler,
-    get_screenshot_reader,
     get_suggester,
 )
 from app.api.internal_token import INTERNAL_TOKEN_HEADER, tokens_match
-from app.api.receipt_skill import ReceiptReader, run_receipt_skill
-from app.api.screenshot_skill import ScreenshotReader, run_screenshot_skill
-from app.domain.chat_expense import ChatExpenseError
 from app.domain.place_search import PlaceSearchError, ground_search
-from app.domain.receipt import ReceiptError
-from app.domain.screenshot import ScreenshotError
 from app.media.face_detection import FaceDetectorUnavailable
 from app.places.catalog import CATEGORIES
 from app.places.reasons import ReasonRow, gemini_reasons
@@ -102,93 +93,6 @@ def ready(_: Annotated[None, Depends(require_internal_token)]) -> dict[str, str]
     """The brain process is up. Deliberately does not touch a model or a DB."""
 
     return {"status": "ready"}
-
-
-@router.post("/receipt-scan")
-def receipt_scan(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-    reader: Annotated[ReceiptReader, Depends(get_receipt_reader)],
-) -> dict:
-    image, content_type = _decode_image(body)
-    try:
-        return run_receipt_skill(image, content_type, reader=reader)
-    except ReceiptError as exc:
-        _LOGGER.info("brain receipt refused: %s", exc.code)
-        raise _map_receipt(exc.code) from None
-    except Exception:
-        _LOGGER.warning("brain receipt reader failed")
-        raise _code_error(502, "receipt_reader_unavailable") from None
-
-
-def _map_receipt(code: str) -> BrainProblem:
-    if code == "UNSUPPORTED_IMAGE_TYPE":
-        return _code_error(415, "unsupported_image_type")
-    if code == "IMAGE_TOO_LARGE":
-        return _code_error(413, "image_too_large")
-    if code == "RECEIPT_TOO_BLURRY":
-        return _code_error(422, "receipt_too_blurry")
-    if code == "RECEIPT_READER_NOT_CONFIGURED":
-        return _code_error(503, "receipt_reader_not_configured")
-    if code == "NOT_A_RECEIPT_PRICE_LIST":
-        return _code_error(422, "not_a_receipt_price_list")
-    if code == "NOT_A_RECEIPT":
-        return _code_error(422, "not_a_receipt")
-    return _code_error(422, "receipt_unreadable")
-
-
-@router.post("/screenshot-scan")
-def screenshot_scan(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-    reader: Annotated[ScreenshotReader, Depends(get_screenshot_reader)],
-) -> dict:
-    image, content_type = _decode_image(body)
-    try:
-        return run_screenshot_skill(image, content_type, reader=reader)
-    except ScreenshotError as exc:
-        _LOGGER.info("brain screenshot refused: %s", exc.code)
-        raise _map_screenshot(exc.code) from None
-    except Exception:
-        _LOGGER.warning("brain screenshot reader failed")
-        raise _code_error(502, "screenshot_reader_unavailable") from None
-
-
-def _map_screenshot(code: str) -> BrainProblem:
-    if code == "UNSUPPORTED_IMAGE_TYPE":
-        return _code_error(415, "unsupported_image_type")
-    if code == "IMAGE_TOO_LARGE":
-        return _code_error(413, "image_too_large")
-    if code == "SCREENSHOT_READER_NOT_CONFIGURED":
-        return _code_error(503, "screenshot_reader_not_configured")
-    if code == "NOT_A_TRANSACTION":
-        return _code_error(422, "not_a_transaction")
-    if code == "MODEL_NAMED_A_PERSON":
-        return _code_error(422, "screenshot_model_named_a_person")
-    return _code_error(422, "screenshot_unreadable")
-
-
-@router.post("/chat-expense")
-def chat_expense(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-    reader: Annotated[ChatExpenseReader, Depends(get_chat_expense_reader)],
-) -> dict:
-    text = body.get("text")
-    if not isinstance(text, str):
-        raise _code_error(422, "brain_request_invalid")
-    try:
-        return run_chat_expense_skill(text, reader=reader)
-    except ChatExpenseError as exc:
-        _LOGGER.info("brain chat expense refused: %s", exc.code)
-        if exc.code == "CHAT_READER_NOT_CONFIGURED":
-            raise _code_error(503, "chat_reader_not_configured") from None
-        if exc.code == "MODEL_NAMED_A_PERSON":
-            raise _code_error(422, "chat_expense_model_named_a_person") from None
-        raise _code_error(422, "chat_expense_unreadable") from None
-    except Exception:
-        _LOGGER.warning("brain chat expense reader failed")
-        raise _code_error(502, "chat_reader_unavailable") from None
 
 
 @router.post("/diary")

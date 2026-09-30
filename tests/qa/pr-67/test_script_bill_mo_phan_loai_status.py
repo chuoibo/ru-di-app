@@ -8,7 +8,7 @@ lần nào. Script vẫn in "XANH" và thoát 0. Cùng một dạng: 415 (sai đ
 
 Chỉ 422 mới là bằng chứng cổng đã chạy: `receipt_too_blurry` /
 `receipt_unreadable` / `not_a_receipt` là phán quyết ngữ nghĩa, tức là ảnh đã
-được đọc rồi mới bị từ chối. Xem `services/api/app/api/routes/receipts.py`.
+được đọc rồi mới bị từ chối. Xem `services/core/internal/routes/scans_ai.go`.
 
 Các test ở đây chạy chính script thật qua subprocess, đối diện một server giả
 bằng `http.server` trong tiến trình test: không cần Gemini, không cần API thật,
