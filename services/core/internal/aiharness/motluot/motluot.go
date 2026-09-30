@@ -13,7 +13,9 @@
 package motluot
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -151,4 +153,19 @@ func (l *Luot) Token() llm.Token {
 		return llm.Token{}
 	}
 	return l.dem.Token()
+}
+
+// ErrKhongDocDuoc: the model's answer is not one JSON object.
+var ErrKhongDocDuoc = errors.New("motluot: the answer is not a JSON object")
+
+// DocDoiTuong decodes a structured answer: exactly one JSON object, numbers
+// kept as json.Number so nothing is rounded before the domain reads them.
+func DocDoiTuong(text string) (map[string]any, error) {
+	dec := json.NewDecoder(bytes.NewReader([]byte(text)))
+	dec.UseNumber()
+	var out map[string]any
+	if err := dec.Decode(&out); err != nil || out == nil || dec.More() {
+		return nil, ErrKhongDocDuoc
+	}
+	return out, nil
 }

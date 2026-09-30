@@ -72,7 +72,7 @@ func anh(ctx context.Context, args []string, getenv func(string) string, out io.
 			if err != nil {
 				return nil, err
 			}
-			return docbill.DocTraLoi(text)
+			return motluot.DocDoiTuong(text)
 		}
 		check(m+" · hoá đơn", func() (string, error) {
 			png, err := doc("hoa_don.png")

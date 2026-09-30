@@ -1,0 +1,3237 @@
+{
+ "generator": "scripts/render_domain_ai_goldens.py",
+ "module": "app.domain.receipt",
+ "mode": "hoadon",
+ "python": "3.12.11",
+ "seed": 23,
+ "constants": {
+  "CONFIDENCE_FLOOR": 50,
+  "CONFIDENCE_REVIEW": 90,
+  "names": [
+   "normalize_vnd",
+   "read_chat_expense",
+   "read_scanned_document",
+   "read_screenshot"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/0",
+   "args": {
+    "text": "165.000"
+   },
+   "result": {
+    "ok": 165000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/1",
+   "args": {
+    "text": "165.000 \u0111"
+   },
+   "result": {
+    "ok": 165000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/2",
+   "args": {
+    "text": "165.000\u0111"
+   },
+   "result": {
+    "ok": 165000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/3",
+   "args": {
+    "text": "165,000"
+   },
+   "result": {
+    "ok": 165000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/4",
+   "args": {
+    "text": "165 000"
+   },
+   "result": {
+    "ok": 165000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/5",
+   "args": {
+    "text": "165\u00a0000"
+   },
+   "result": {
+    "ok": 165000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/6",
+   "args": {
+    "text": "165\u202f000"
+   },
+   "result": {
+    "ok": 165000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/7",
+   "args": {
+    "text": "1.234.567"
+   },
+   "result": {
+    "ok": 1234567
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/8",
+   "args": {
+    "text": "1.234.567 VND"
+   },
+   "result": {
+    "ok": 1234567
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/9",
+   "args": {
+    "text": "VND 1.234.567"
+   },
+   "result": {
+    "ok": 1234567
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/10",
+   "args": {
+    "text": "VN\u0110 50.000"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/11",
+   "args": {
+    "text": "\u20ab50.000"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/12",
+   "args": {
+    "text": "50.000\u20ab"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/13",
+   "args": {
+    "text": "50.000 \u0111\u1ed3ng"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/14",
+   "args": {
+    "text": "50000 dong"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/15",
+   "args": {
+    "text": "50000d"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/16",
+   "args": {
+    "text": "d50000"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/17",
+   "args": {
+    "text": "\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/18",
+   "args": {
+    "text": ""
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/19",
+   "args": {
+    "text": "   "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/20",
+   "args": {
+    "text": "0"
+   },
+   "result": {
+    "ok": 0
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/21",
+   "args": {
+    "text": "000"
+   },
+   "result": {
+    "ok": 0
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/22",
+   "args": {
+    "text": "00012"
+   },
+   "result": {
+    "ok": 12
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/23",
+   "args": {
+    "text": "12"
+   },
+   "result": {
+    "ok": 12
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/24",
+   "args": {
+    "text": "180k"
+   },
+   "result": {
+    "ok": 180000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/25",
+   "args": {
+    "text": "180K"
+   },
+   "result": {
+    "ok": 180000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/26",
+   "args": {
+    "text": "180 k"
+   },
+   "result": {
+    "ok": 180000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/27",
+   "args": {
+    "text": "1,5tr"
+   },
+   "result": {
+    "ok": 1500000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/28",
+   "args": {
+    "text": "1.5tr"
+   },
+   "result": {
+    "ok": 1500000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/29",
+   "args": {
+    "text": "1,5 tri\u1ec7u"
+   },
+   "result": {
+    "ok": 1500000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/30",
+   "args": {
+    "text": "1.5 TRI\u1ec6U"
+   },
+   "result": {
+    "ok": 1500000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/31",
+   "args": {
+    "text": "2 tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "ok": 200000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/32",
+   "args": {
+    "text": "2 tr\u0103m ng\u00e0n"
+   },
+   "result": {
+    "ok": 200000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/33",
+   "args": {
+    "text": "2tr\u0103mngh\u00ecn"
+   },
+   "result": {
+    "ok": 200000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/34",
+   "args": {
+    "text": "1,5 tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "ok": 150000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/35",
+   "args": {
+    "text": "2 tr\u0103m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/36",
+   "args": {
+    "text": "5 ngh\u00ecn"
+   },
+   "result": {
+    "ok": 5000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/37",
+   "args": {
+    "text": "5ng\u00e0n"
+   },
+   "result": {
+    "ok": 5000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/38",
+   "args": {
+    "text": "12,5k"
+   },
+   "result": {
+    "ok": 12500
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/39",
+   "args": {
+    "text": "12,50k"
+   },
+   "result": {
+    "ok": 12500
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/40",
+   "args": {
+    "text": "12,55k"
+   },
+   "result": {
+    "ok": 12550
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/41",
+   "args": {
+    "text": "1,500k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/42",
+   "args": {
+    "text": "1.500k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/43",
+   "args": {
+    "text": "1,0005tr"
+   },
+   "result": {
+    "ok": 1000500
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/44",
+   "args": {
+    "text": "1,000000tr"
+   },
+   "result": {
+    "ok": 1000000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/45",
+   "args": {
+    "text": "3tr2"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/46",
+   "args": {
+    "text": "1e3"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/47",
+   "args": {
+    "text": "abc"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/48",
+   "args": {
+    "text": "k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/49",
+   "args": {
+    "text": "tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/50",
+   "args": {
+    "text": "-5000"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/51",
+   "args": {
+    "text": "+5000"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/52",
+   "args": {
+    "text": "12.34"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/53",
+   "args": {
+    "text": "1.23.456"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/54",
+   "args": {
+    "text": "1.234,567"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/55",
+   "args": {
+    "text": "1 234.567"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/56",
+   "args": {
+    "text": "12.3456"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/57",
+   "args": {
+    "text": "$sp:999999|999999"
+   },
+   "result": {
+    "ok": "$i:0xe8_d4a5_0fff"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/58",
+   "args": {
+    "text": "$sp:100000|000000|0"
+   },
+   "result": {
+    "ok": "$i:0xe8_d4a5_1000"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/59",
+   "args": {
+    "text": "$sp:100000|000000|1"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/60",
+   "args": {
+    "text": "$sp:999999|999999|9"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/61",
+   "args": {
+    "text": "$sp:999999|999999|99"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/62",
+   "args": {
+    "text": "$sp:000000|000000|000000|000000|1"
+   },
+   "result": {
+    "ok": 1
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/63",
+   "args": {
+    "text": "999999tr"
+   },
+   "result": {
+    "ok": "$i:0xe8_d495_cdc0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/64",
+   "args": {
+    "text": "1000000tr"
+   },
+   "result": {
+    "ok": "$i:0xe8_d4a5_1000"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/65",
+   "args": {
+    "text": "1000001tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/66",
+   "args": {
+    "text": "9999999999999tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/67",
+   "args": {
+    "text": "1000000000k"
+   },
+   "result": {
+    "ok": "$i:0xe8_d4a5_1000"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/68",
+   "args": {
+    "text": "1000000001k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/69",
+   "args": {
+    "text": "\u0663\u0660\u0660"
+   },
+   "result": {
+    "ok": 300
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/70",
+   "args": {
+    "text": "\u0663\u0660\u0660k"
+   },
+   "result": {
+    "ok": 300000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/71",
+   "args": {
+    "text": "\uff15\uff10\uff10"
+   },
+   "result": {
+    "ok": 500
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/72",
+   "args": {
+    "text": "\u0111\u1ed3ng ph\u1ee5c"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/73",
+   "args": {
+    "text": "50.000 \u0111 \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/74",
+   "args": {
+    "text": "50.000 VND \u0111\u1ed3ng"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/75",
+   "args": {
+    "text": "\t50.000\n"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "amount/76",
+   "args": {
+    "text": "50\u2003000"
+   },
+   "result": {
+    "ok": 50000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "not-str/0",
+   "args": {
+    "text": null
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "not-str/1",
+   "args": {
+    "text": 5000
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "not-str/2",
+   "args": {
+    "text": "$f:h4h0hbh3h8h8h0h0h0h0h0h0h0h0h0h0"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "not-str/3",
+   "args": {
+    "text": true
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "not-str/4",
+   "args": {
+    "text": [
+     "5000"
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/ok",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 45000,
+       "line_total_vnd": 90000
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity": 3,
+       "unit_price_vnd": 5000,
+       "line_total_vnd": 15000
+      }
+     ],
+     "items_total_vnd": 105000,
+     "total_vnd": 105000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/total-null",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": null,
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 45000,
+       "line_total_vnd": 90000
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity": 3,
+       "unit_price_vnd": 5000,
+       "line_total_vnd": 15000
+      }
+     ],
+     "items_total_vnd": 105000,
+     "total_vnd": null,
+     "totals_agree": null,
+     "total_difference_vnd": null,
+     "confidence": 95,
+     "needs_review": true,
+     "warnings": [
+      "Kh\u00f4ng \u0111\u1ecdc th\u1ea5y t\u1ed5ng in tr\u00ean bill \u0111\u1ec3 \u0111\u1ed1i chi\u1ebfu v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/total-mismatch-clear",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 45000,
+       "line_total_vnd": 90000
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity": 3,
+       "unit_price_vnd": 5000,
+       "line_total_vnd": 15000
+      }
+     ],
+     "items_total_vnd": 105000,
+     "total_vnd": 100000,
+     "totals_agree": false,
+     "total_difference_vnd": -5000,
+     "confidence": 95,
+     "needs_review": true,
+     "warnings": [
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh -5000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/total-mismatch-blurry",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh3h3h3h3h3h3h3h3h3h3h3h3h3"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 45000,
+       "line_total_vnd": 90000
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity": 3,
+       "unit_price_vnd": 5000,
+       "line_total_vnd": 15000
+      }
+     ],
+     "items_total_vnd": 105000,
+     "total_vnd": 100000,
+     "totals_agree": false,
+     "total_difference_vnd": -5000,
+     "confidence": 60,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh -5000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng, nh\u01b0ng \u1ea3nh ch\u01b0a \u0111\u1ee7 r\u00f5 n\u00ean ch\u00eanh l\u1ec7ch n\u00e0y c\u00f3 th\u1ec3 do \u0111\u1ecdc sai d\u00f2ng ch\u1ee9 kh\u00f4ng ph\u1ea3i do bill; \u0111\u1ed1i chi\u1ebfu t\u1eebng d\u00f2ng v\u1edbi t\u1edd gi\u1ea5y tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/total-over",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "200.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 45000,
+       "line_total_vnd": 90000
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity": 3,
+       "unit_price_vnd": 5000,
+       "line_total_vnd": 15000
+      }
+     ],
+     "items_total_vnd": 105000,
+     "total_vnd": 200000,
+     "totals_agree": false,
+     "total_difference_vnd": 95000,
+     "confidence": 89,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh +95000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng, nh\u01b0ng \u1ea3nh ch\u01b0a \u0111\u1ee7 r\u00f5 n\u00ean ch\u00eanh l\u1ec7ch n\u00e0y c\u00f3 th\u1ec3 do \u0111\u1ecdc sai d\u00f2ng ch\u1ee9 kh\u00f4ng ph\u1ea3i do bill; \u0111\u1ed1i chi\u1ebfu t\u1eebng d\u00f2ng v\u1edbi t\u1edd gi\u1ea5y tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-review-edge",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfhehchchchchchchchchchchchchd"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 45000,
+       "line_total_vnd": 90000
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity": 3,
+       "unit_price_vnd": 5000,
+       "line_total_vnd": 15000
+      }
+     ],
+     "items_total_vnd": 105000,
+     "total_vnd": 105000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 90,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-0.29",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-0.5",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 45000,
+       "line_total_vnd": 90000
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity": 3,
+       "unit_price_vnd": 5000,
+       "line_total_vnd": 15000
+      }
+     ],
+     "items_total_vnd": 105000,
+     "total_vnd": 105000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 50,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-0.49",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfhdhfh5hch2h8hfh5hch2h8hfh5hc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-0.499999",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfhdhfhfhfhfhbhcheh4h2h1h7hdh3"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-1",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 45000,
+       "line_total_vnd": 90000
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity": 3,
+       "unit_price_vnd": 5000,
+       "line_total_vnd": 15000
+      }
+     ],
+     "items_total_vnd": 105000,
+     "total_vnd": 105000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 100,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-0",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": 0
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-int-2",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": 2
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_CONFIDENCE",
+     "code": "INVALID_CONFIDENCE"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-1.5",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfhfh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_CONFIDENCE",
+     "code": "INVALID_CONFIDENCE"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-neg",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:hbhfhbh9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_CONFIDENCE",
+     "code": "INVALID_CONFIDENCE"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-str",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "0.9"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_CONFIDENCE",
+     "code": "INVALID_CONFIDENCE"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-bool",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": true
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_CONFIDENCE",
+     "code": "INVALID_CONFIDENCE"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-null",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_CONFIDENCE",
+     "code": "INVALID_CONFIDENCE"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/conf-missing",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_CONFIDENCE",
+     "code": "INVALID_CONFIDENCE"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/price-list",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/other",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/type-missing",
+   "args": {
+    "raw": {
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/type-upper",
+   "args": {
+    "raw": {
+     "document_type": "RECEIPT",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/blurry-other",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfhdh3h3h3h3h3h3h3h3h3h3h3h3h3"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/blurry-price-list",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfhbh9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/items-missing",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT",
+     "code": "INVALID_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/items-not-list",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": {
+      "a": 1
+     },
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT",
+     "code": "INVALID_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/items-empty",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/total-missing",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT",
+     "code": "INVALID_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/total-number",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": 105000,
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/total-unreadable",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "C\u01a1m g\u00e0",
+       "quantity_text": "2",
+       "unit_price_text": "45.000",
+       "line_total_text": "90.000"
+      },
+      {
+       "name": "Tr\u00e0 \u0111\u00e1",
+       "quantity_text": "3",
+       "unit_price_text": "5.000",
+       "line_total_text": "15.000"
+      }
+     ],
+     "total_text": "m\u1ed9t tr\u0103m",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/item-not-dict",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      "C\u01a1m"
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/item-name-blank",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "  ",
+       "quantity_text": "1",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/item-name-missing",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "quantity_text": "1",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/item-name-number",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": 5,
+       "quantity_text": "1",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/item-name-kept",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "  Canh  ",
+       "quantity_text": "1",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "  Canh  ",
+       "quantity": 1,
+       "unit_price_vnd": 60000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/item-line-missing",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "1",
+       "unit_price_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/item-line-null",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "1",
+       "unit_price_text": "60.000",
+       "line_total_text": null
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/item-line-number",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "1",
+       "unit_price_text": "60.000",
+       "line_total_text": 60000
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-missing",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 1,
+       "unit_price_vnd": 60000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-null",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": null,
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 1,
+       "unit_price_vnd": 60000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-blank",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "  ",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 1,
+       "unit_price_vnd": 60000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-x4",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "x4",
+       "unit_price_text": "15.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 4,
+       "unit_price_vnd": 15000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-4x",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "4 X",
+       "unit_price_text": "15.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 4,
+       "unit_price_vnd": 15000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-times",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "\u00d74",
+       "unit_price_text": "15.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 4,
+       "unit_price_vnd": 15000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-x4x",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "x4x",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-vai",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-zero",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "0",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-decimal",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "2.5",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-int",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": 4,
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-list",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": [],
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-huge",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "$sp:999999|999999|999999|99",
+       "unit_price_text": null,
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": "$i:0x5_6bc7_5e2d_630f_ffff",
+       "unit_price_vnd": null,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-huge-price",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "x99999999999999999999",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": "$i:0x5_6bc7_5e2d_630f_ffff",
+       "unit_price_vnd": 60000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": true,
+     "warnings": [
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"Canh chua\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/qty-arabic",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "\u0663",
+       "unit_price_text": "20.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 3,
+       "unit_price_vnd": 20000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/unit-mismatch",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "2",
+       "unit_price_text": "25.000",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 2,
+       "unit_price_vnd": 25000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": true,
+     "warnings": [
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"Canh chua\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/unit-derived",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "3",
+       "unit_price_text": null,
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 3,
+       "unit_price_vnd": 20000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/unit-not-derived",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "7",
+       "unit_price_text": null,
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 7,
+       "unit_price_vnd": null,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/unit-missing-key",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "4",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 4,
+       "unit_price_vnd": 15000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/unit-unreadable",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "1",
+       "unit_price_text": "r\u1ebb",
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/unit-number",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "1",
+       "unit_price_text": 60000,
+       "line_total_text": "60.000"
+      }
+     ],
+     "total_text": "105.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/extra-keys",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "1",
+       "unit_price_text": "60.000",
+       "line_total_text": "60.000",
+       "extra": 1
+      }
+     ],
+     "total_text": "60.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6",
+     "extra": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 1,
+       "unit_price_vnd": 60000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 60000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/many-items",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n 1",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n 2",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "20.000"
+      },
+      {
+       "name": "M\u00f3n 3",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "30.000"
+      },
+      {
+       "name": "M\u00f3n 4",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "40.000"
+      },
+      {
+       "name": "M\u00f3n 5",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "50.000"
+      },
+      {
+       "name": "M\u00f3n 6",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "60.000"
+      },
+      {
+       "name": "M\u00f3n 7",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "70.000"
+      },
+      {
+       "name": "M\u00f3n 8",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "80.000"
+      }
+     ],
+     "total_text": "360.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "M\u00f3n 1",
+       "quantity": 1,
+       "unit_price_vnd": 10000,
+       "line_total_vnd": 10000
+      },
+      {
+       "name": "M\u00f3n 2",
+       "quantity": 1,
+       "unit_price_vnd": 20000,
+       "line_total_vnd": 20000
+      },
+      {
+       "name": "M\u00f3n 3",
+       "quantity": 1,
+       "unit_price_vnd": 30000,
+       "line_total_vnd": 30000
+      },
+      {
+       "name": "M\u00f3n 4",
+       "quantity": 1,
+       "unit_price_vnd": 40000,
+       "line_total_vnd": 40000
+      },
+      {
+       "name": "M\u00f3n 5",
+       "quantity": 1,
+       "unit_price_vnd": 50000,
+       "line_total_vnd": 50000
+      },
+      {
+       "name": "M\u00f3n 6",
+       "quantity": 1,
+       "unit_price_vnd": 60000,
+       "line_total_vnd": 60000
+      },
+      {
+       "name": "M\u00f3n 7",
+       "quantity": 1,
+       "unit_price_vnd": 70000,
+       "line_total_vnd": 70000
+      },
+      {
+       "name": "M\u00f3n 8",
+       "quantity": 1,
+       "unit_price_vnd": 80000,
+       "line_total_vnd": 80000
+      }
+     ],
+     "items_total_vnd": 360000,
+     "total_vnd": 360000,
+     "totals_agree": true,
+     "total_difference_vnd": 0,
+     "confidence": 95,
+     "needs_review": false,
+     "warnings": []
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/big-total",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "$sp:999.99|9.999.|999"
+      },
+      {
+       "name": "Canh chua",
+       "quantity_text": "1",
+       "unit_price_text": null,
+       "line_total_text": "$sp:999.99|9.999.|999"
+      }
+     ],
+     "total_text": "$sp:1.000.|000.00|0.000",
+     "confidence": "$f:h3hfheheh6h6h6h6h6h6h6h6h6h6h6h6"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Canh chua",
+       "quantity": 1,
+       "unit_price_vnd": "$i:0xe8_d4a5_0fff",
+       "line_total_vnd": "$i:0xe8_d4a5_0fff"
+      },
+      {
+       "name": "Canh chua",
+       "quantity": 1,
+       "unit_price_vnd": "$i:0xe8_d4a5_0fff",
+       "line_total_vnd": "$i:0xe8_d4a5_0fff"
+      }
+     ],
+     "items_total_vnd": "$i:0x1d1_a94a_1ffe",
+     "total_vnd": "$i:0xe8_d4a5_1000",
+     "totals_agree": false,
+     "total_difference_vnd": "$i:-0xe8_d4a5_0ffe",
+     "confidence": 95,
+     "needs_review": true,
+     "warnings": [
+      "$sp:T\u1ed5ng i|n tr\u00ean| bill |ch\u00eanh |-99999|999999|8 \u0111\u1ed3ng| so v\u1edb|i t\u1ed5ng| c\u00e1c d|\u00f2ng; g|i\u1eef ngu|y\u00ean c\u1ea3| hai s|\u1ed1."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/not-dict",
+   "args": {
+    "raw": [
+     "receipt"
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT",
+     "code": "INVALID_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "doc/string",
+   "args": {
+    "raw": "receipt"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT",
+     "code": "INVALID_RECEIPT"
+    }
+   }
+  }
+ ]
+}

@@ -11,11 +11,8 @@
 package docbill
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
-	"encoding/json"
-	"errors"
 
 	"google.golang.org/adk/v2/model"
 	"google.golang.org/genai"
@@ -37,9 +34,6 @@ const (
 
 // maxRa bounds the answer: a long bill of 40 lines fits in well under it.
 const maxRa = 4096
-
-// ErrKhongDocDuoc: the model's answer is not one JSON object.
-var ErrKhongDocDuoc = errors.New("docbill: the answer is not a JSON object")
 
 // LuocDo is the response schema. document_type is required and closed so
 // the model commits to an answer; "price_list" and "other" are the ways out
@@ -86,16 +80,5 @@ func Doc(ctx context.Context, l *motluot.Luot, mime string, anh []byte) (map[str
 	if err != nil {
 		return nil, err
 	}
-	return DocTraLoi(text)
-}
-
-// DocTraLoi decodes one answer: exactly one JSON object.
-func DocTraLoi(text string) (map[string]any, error) {
-	dec := json.NewDecoder(bytes.NewReader([]byte(text)))
-	dec.UseNumber()
-	var out map[string]any
-	if err := dec.Decode(&out); err != nil || out == nil || dec.More() {
-		return nil, ErrKhongDocDuoc
-	}
-	return out, nil
+	return motluot.DocDoiTuong(text)
 }
