@@ -33,7 +33,6 @@ services/api/app/web/                Trang cho khách, render từ server
   templates/ · static/               Khách KHÔNG cài gì — nên đây là web, không phải RN
 
 apps/mobile/                        Expo + TypeScript
-phase0/                             ĐÓNG BĂNG TẠI CHỖ. Không sửa, không xoá
 docs/protocol/v1/                   ĐÓNG BĂNG TẠI CHỖ
 scripts/repo_guard.py               repo guard — fail closed
 ```

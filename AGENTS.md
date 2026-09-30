@@ -61,8 +61,8 @@ vocabulary drift — plus `tests/qa/` (284 files), a QA evidence archive that
 `scripts/postgres_tier.sh` runs as a second pytest process.
 
 Consult `docs/decisions/` before behavior changes and `docs/architecture/` before
-boundary changes. `docs/README.md` is the index. `phase0/` and
-`docs/protocol/v1/` are frozen.
+boundary changes. `docs/README.md` is the index. `docs/protocol/v1/` is
+frozen.
 
 ## Build, Test, and Development Commands
 
@@ -170,8 +170,10 @@ leaves via an API call.
 **Language convention**: docs and commit messages in Vietnamese; code comments
 and docstrings in English.
 
-**Frozen in place**: `phase0/` and `docs/protocol/v1/`. Do not edit, do not
-delete. `protocol_version` is an immutable snapshot.
+**Frozen in place**: `docs/protocol/v1/`. Do not edit, do not delete.
+`protocol_version` is an immutable snapshot. (`phase0/` was removed on
+2026-09-30 by product-owner decision; its assets had moved to `services/api/`
+under ADR-0006.)
 
 **A green test suite is not behavioural evidence.** ADR-0006 gated Phase 0 by
 leader decision. Read the "proves / does not prove" table in `CLAUDE.md` before

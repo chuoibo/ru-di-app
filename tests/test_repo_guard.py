@@ -361,13 +361,15 @@ class PatternScannerTests(ScanHelper):
             with self.subTest(length=len(value)):
                 self.assertEqual(self.scan_text(value, path="vectors/golden.json"), [])
 
-        golden_dir = MODULE_PATH.parents[1] / "phase0" / "allocator" / "golden"
-        for vector_path in sorted(golden_dir.glob("*.json")):
+        golden_rel = "services/api/tests/domain/golden"
+        golden_paths = sorted((MODULE_PATH.parents[1] / golden_rel).glob("*.json"))
+        self.assertTrue(golden_paths)
+        for vector_path in golden_paths:
             with self.subTest(vector=vector_path.name):
                 self.assertEqual(
                     self.scan_text(
                         vector_path.read_text(encoding="utf-8"),
-                        path=f"phase0/allocator/golden/{vector_path.name}",
+                        path=f"{golden_rel}/{vector_path.name}",
                     ),
                     [],
                 )

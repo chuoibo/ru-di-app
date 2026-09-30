@@ -32,7 +32,7 @@ mới, thì file này sai chứ không phải người đọc — hãy sửa c�
 
 | | |
 |---|---|
-| `protocol/v1/` | Giao thức nghiên cứu v1. `protocol_version` là **ảnh chụp bất biến**: cần đổi thì ADR cho phép tạo `v2`, không sửa `v1`. Cùng luật với `phase0/` ở gốc repo. |
+| `protocol/v1/` | Giao thức nghiên cứu v1. `protocol_version` là **ảnh chụp bất biến**: cần đổi thì ADR cho phép tạo `v2`, không sửa `v1`. |
 
 ## `claude/` và `codex/` — nhật ký ĐANG GHI
 

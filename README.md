@@ -517,7 +517,7 @@ docs/assets/                 ảnh của README, pin sha256 trong repo guard all
 docs/README.md               mục lục docs: đang sống / nhật ký đang ghi / archive
 docs/decisions/              ADR — đọc trước khi đổi hành vi
 docs/migration/             thẻ route cho đợt chuyển Go — MÁY ĐỌC, cổng ownership gác
-phase0/  docs/protocol/v1/   ĐÓNG BĂNG tại chỗ, không sửa, không xoá
+docs/protocol/v1/            ĐÓNG BĂNG tại chỗ, không sửa, không xoá
 ```
 
 ---
