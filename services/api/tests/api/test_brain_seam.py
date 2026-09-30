@@ -112,12 +112,12 @@ def test_idempotency_key_does_not_reserve_a_brain_call(brain_client):
 
     client, _app = brain_client
     response = client.post(
-        "/internal/brain/v1/place-search",
+        "/internal/brain/v1/face-boxes",
         headers={
             INTERNAL_TOKEN_HEADER: TEST_TOKEN,
             "Idempotency-Key": "brain-must-not-touch-the-store",
         },
-        json={"query": "x"},
+        json={"image": 5},
     )
     assert response.status_code == 422
     assert response.json() == {"code": "brain_request_invalid"}

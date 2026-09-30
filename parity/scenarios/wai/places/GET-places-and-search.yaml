@@ -1,25 +1,27 @@
-# WAI · the catalogue, one card off it, and the search that asks the model.
+# WAI · the catalogue and one card off it.
 #
 #   GET  /places              mixed: scored rows, then optional model reasons
 #   GET  /places/{place_id}   mixed: one card, `match` only for a session
-#   POST /places/search       ai: the model reads the question
 #
-# The two GETs share the in-process `reason_writer` cache, which is why the
-# manifest keeps them in one `in_memory` group and why they move together.
+# POST /places/search used to share this file. ADR-0051 moved its model call
+# into the Go core and deleted the Python side, so there is nothing left to
+# compare it with; its steps went with it (the Go evidence:
+# internal/routes/places_search_shortlist_postgres_test.go). The two paths
+# below that only look like the search -- a GET on it, with and without a
+# trailing slash -- stay: they are answered by the GET routes.
 #
 # WHAT THIS FILE PROVES, and what it cannot:
 #
-# The parity stacks run with NO Gemini key, so every model path takes its
-# unavailable branch -- and, measured rather than assumed, that branch is not
-# an error but a shaped answer: `/places/search` comes back 200 with
-# `understood: null`, `places: []`, `source: "none"`, and the two GETs return
-# the full catalogue with the reason fields simply absent. Both sides are
-# deterministic there, so parity compares them exactly.
+# The parity stacks run with NO model, so the reasons take their unavailable
+# branch -- not an error but a shaped answer: the two GETs return the full
+# catalogue with every card in the server's own words. Both sides are
+# deterministic there, so parity compares them exactly. Since ADR-0051 the
+# Python side has no model path at all, so this is also the only branch it
+# has.
 #
-# What no parity run can reach is the branch where a real model answered. That
-# needs a real key and a reply that is not deterministic by nature. Those
-# fields are unproven here and the route card says so; an all-green run on this
-# file must not be read as "the AI path matches".
+# What no parity run can reach is the branch where a real model answered;
+# internal/aiharness/timquan and TestPlacesBrowseAsksTheModelAboutTheTopRowsOnly
+# are its evidence.
 #
 # `match` is the other half worth pinning: signed out it is null, because a
 # match percentage is a statement about particular people and an anonymous
@@ -29,7 +31,6 @@ id: wai/places/get-places-and-search
 routes:
   - 'GET /places'
   - 'GET /places/{place_id}'
-  - 'POST /places/search'
 auth_mode: dev
 personas:
   reader: {}
@@ -157,88 +158,6 @@ steps:
     request:
       method: GET
       path: '/places/p-an-cafe-da-lat/'
-
-  # --- the search that asks the model -------------------------------------
-  - id: search_anonymous
-    as: anonymous
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"query":"quán cà phê yên tĩnh"}'
-
-  - id: search_with_session
-    as: reader
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"query":"quán cà phê yên tĩnh","destination_id":"d-da-lat"}'
-
-  - id: search_empty_query
-    as: reader
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"query":""}'
-
-  - id: search_missing_query
-    as: reader
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{}'
-
-  - id: search_query_is_not_text
-    as: reader
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"query":42}'
-
-  - id: search_unknown_destination
-    as: reader
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"query":"cà phê","destination_id":"khong-co-noi-nay"}'
-
-  - id: search_broken_json
-    as: reader
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"query": '
-
-  - id: search_wrong_content_type
-    as: reader
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'text/plain'
-      body_raw: 'cà phê'
-
-  - id: search_extra_field
-    as: reader
-    request:
-      method: POST
-      path: '/places/search'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"query":"cà phê","khong-co-truong-nay":true}'
 
   # --- framework shapes ---------------------------------------------------
   - id: catalogue_post_not_allowed

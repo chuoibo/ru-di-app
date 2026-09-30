@@ -1,9 +1,8 @@
 """Internal brain HTTP seam (ADR-0029 §2.7).
 
-Go owns auth, the database, the limiter and, since ADR-0051, the model calls
-that have moved so far. Still here until their Go ports land: place search
-and reasons. On-box face detection is OpenCV rather than a model (TODO: redo
-in Go by another mechanism).
+Go owns auth, the database, the limiter and, since ADR-0051, every model
+call. What is left here is on-box face detection, which is OpenCV rather than
+a model (TODO: redo in Go by another mechanism, then delete this seam).
 Nothing in this module opens a repository session. Errors return a closed
 `code` and never interpolate a prompt, a model string, or image bytes.
 
@@ -17,19 +16,14 @@ from __future__ import annotations
 import base64
 import binascii
 import logging
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 
 from app.api.deps import FaceDetector, get_face_detector
 from app.api.internal_token import INTERNAL_TOKEN_HEADER, tokens_match
-from app.domain.place_search import PlaceSearchError, ground_search
 from app.media.face_detection import FaceDetectorUnavailable
-from app.places.catalog import CATEGORIES
-from app.places.reasons import ReasonRow, gemini_reasons
-from app.places.search import gemini_search
-from app.places.taste import UNKNOWN, TasteProfile
 
 router = APIRouter(
     prefix="/internal/brain/v1",
@@ -86,47 +80,6 @@ def ready(_: Annotated[None, Depends(require_internal_token)]) -> dict[str, str]
     return {"status": "ready"}
 
 
-@router.post("/place-search")
-def place_search(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    query = body.get("query")
-    catalogue = body.get("catalogue")
-    if not isinstance(query, str) or not isinstance(catalogue, list):
-        raise _code_error(422, "brain_request_invalid")
-    try:
-        raw = gemini_search(query, catalogue, _taste(body.get("group")))
-        if raw is None:
-            return {"source": "none", "results": []}
-        return ground_search(raw, catalogue, CATEGORIES)
-    except PlaceSearchError:
-        return {"source": "none", "results": []}
-    except Exception:
-        _LOGGER.warning("brain place search failed")
-        return {"source": "none", "results": []}
-
-
-@router.post("/place-reasons")
-def place_reasons(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    rows_in = body.get("rows")
-    if not isinstance(rows_in, list):
-        raise _code_error(422, "brain_request_invalid")
-    rows: list[ReasonRow] = []
-    for item in rows_in:
-        if not isinstance(item, dict) or not isinstance(item.get("place"), dict):
-            continue
-        rows.append(ReasonRow(place=item["place"]))
-    written = gemini_reasons(rows, _taste(body.get("group")))
-    return {
-        place_id: {"reason": value.reason, "verdict": value.verdict}
-        for place_id, value in written.items()
-    }
-
-
 @router.post("/face-boxes")
 def face_boxes(
     body: dict,
@@ -154,23 +107,6 @@ def face_boxes(
             for box in found.boxes
         ],
     }
-
-
-def _taste(raw: Any) -> TasteProfile:
-    if not isinstance(raw, dict):
-        return UNKNOWN
-    try:
-        interests = raw.get("interests") or []
-        return TasteProfile(
-            basis=raw.get("basis") or "chua-biet",
-            interests=tuple(interests) if isinstance(interests, list) else (),
-            budget_per_person_vnd=raw.get("budget_per_person_vnd"),
-            size=raw.get("size"),
-            people=int(raw.get("people") or 0),
-            people_answered=int(raw.get("people_answered") or 0),
-        )
-    except (TypeError, ValueError):
-        return UNKNOWN
 
 
 class BrainDoor:

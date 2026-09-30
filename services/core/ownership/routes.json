@@ -1424,11 +1424,11 @@
       "group": "places",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "search_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {

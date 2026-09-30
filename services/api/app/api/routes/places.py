@@ -16,9 +16,7 @@ group, which the screen has to be able to say.
 from __future__ import annotations
 
 import logging
-import threading
-import time
-from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -37,19 +35,11 @@ from app.api.repository import ApiRepository, DestinationRecord
 from app.api.schemas import MemoryResponse, MoneyVnd
 from app.api.search_rate_limit import FixedWindowLimiter
 from app.api.service import ApiService
-from app.domain.place_search import PlaceSearchError, ground_search
 from app.media.storage import PhotoStorage
 from app.places.areas import haversine_km
 from app.places.catalog import CATEGORIES
 from app.places.prompt_safety import safe_places
-from app.places.reasons import (
-    PlaceReason,
-    ReasonRow,
-    gemini_reasons,
-    ungrounded_numbers,
-)
 from app.places.scoring import score_place
-from app.places.search import MAX_QUERY_CHARS, echoes_the_query, gemini_search
 from app.places.taste import TasteProfile, uncovered
 
 logger = logging.getLogger(__name__)
@@ -67,6 +57,11 @@ NEAR_LIMIT_KM = 60.0
 # anyway. Twelve because the seed catalogue is twelve: every existing test that
 # expects a reason for every seed row still gets one.
 MAX_REASON_ROWS = 12
+
+#: Long enough for "quán nướng ngoài trời cho 6 người dưới 300k, gần trung tâm,
+#: đi được xe máy" and short enough that the prompt cannot be buried under a
+#: wall of text. The request contract the Go core reads from this table.
+MAX_QUERY_CHARS = 300
 
 router = APIRouter(tags=["places"])
 
@@ -353,179 +348,36 @@ class PlaceSearchResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Reason writer: injected, memoised, and allowed to fail
+# Reason writer: injected, and since ADR-0051 silent
 # ---------------------------------------------------------------------------
 
-# How long a row the model would not answer is left alone before asking again.
-# One minute, matching the windows in `app/api/search_rate_limit.py`, and the
-# same trade for the same reason: long enough that a permanently unanswerable
-# row costs a call a minute instead of a call a request, short enough that a
-# model outage clears within a minute of the model coming back.
-REASON_RETRY_COOLDOWN_SECONDS = 60
+Verdict = Literal["hop", "tam", "khong-hop"]
 
 
-class CachedReasonWriter:
-    """Call Gemini once per place, not once per *failed* place per request.
+@dataclass(frozen=True, slots=True)
+class ReasonRow:
+    """One place put to the reason writer: the place and nothing else."""
 
-    The seed catalogue and the group profile are both fixed, so a reason is a
-    pure function of data that does not change while the process lives. Caching
-    it keeps a demo from spending a model call -- and two seconds of someone's
-    attention -- every time a tab is opened.
+    place: dict[str, Any]
 
-    A row that failed is still retried, because the alternative is worse: a
-    Gemini blip during startup must not leave the catalogue permanently
-    unlabelled. What changed is *how often*. Caching successes only made "asked
-    and got nothing" indistinguishable from "never asked", so a row the model
-    will not answer was re-asked on every single request, for the life of the
-    process. Three files had already written the old bound down as a safety
-    property -- "one call per place per process" -- and used it to argue this
-    route needed no ceiling. Measured on `d4bf672`: true when every row
-    answers, and false the moment one does not, at 25 model calls for 25
-    requests.
 
-    That is not an outage-only path. `parse_reasons` drops a reason whose
-    figures are not grounded in the place record, deliberately, and
-    `tests/places/test_reasons_batch_robustness.py` measured roughly one first
-    load in ten arriving with reasons missing. One ungrounded row in a
-    twelve-place catalogue re-armed the whole batch every time.
+@dataclass(frozen=True, slots=True)
+class PlaceReason:
+    verdict: Verdict
+    reason: str
 
-    It matters here more than it would elsewhere because `GET /places` is the
-    only model-spending route in this service with no actor at all: the five
-    metered routes key their window on one and `POST /places/search` has
-    required one since rd-be-13. An unbounded retry behind an anonymous GET is
-    a `while true; do curl; done` pointed at the shared, paid key.
 
-    The ceiling is per place per cooldown, including across threads. The lock
-    is dropped before the model call -- holding it across a network round trip
-    would serialise every browse behind one -- so the first version of this
-    fix bounded requests *in sequence* and nothing else: measured on 78b8148,
-    twenty callers in sequence bought one model call and twenty callers at the
-    same time bought twenty. Sync routes run in a threadpool, so concurrent is
-    what a browser fleet, or `-P 20` on the `while true; do curl; done` this
-    docstring uses as its threat, gets for free. `_asking` is what closes it.
+def no_reasons(rows: list[ReasonRow], group: TasteProfile) -> dict[str, PlaceReason]:
+    """The writer `create_app` installs: no model answers for any row.
 
-    Refusal degrades rather than raising. A suppressed row loses its AI label
-    for a minute; the rows that did answer keep theirs, and the route keeps
-    serving scores -- which is what `list_places` already does when the writer
-    fails outright.
-
-    A caller that arrives while another thread is mid-question degrades the
-    same way, and this is a real cost, not a free win: on a cold catalogue,
-    nineteen of twenty simultaneous first loads render without AI labels
-    rather than waiting on the one call in flight. That is the deliberate
-    trade -- the alternative is every browse request queued behind a two
-    second model round trip, which is the thing the lock is dropped to avoid.
-    The next request after it lands is served from `_answered`.
-
-    Instance state, not module state, and for the reason `build_search_limiter`
-    gives at length in the same codebase: a process-wide dict outlives the app
-    that owns it, so a suite sharing one has a colour that depends on execution
-    order. `create_app` builds one; production builds the app once, so
-    production still has exactly one.
+    The reasons a model writes for these cards are the Go core's since
+    ADR-0051 (internal/aiharness/timquan). These two routes stay the parity
+    oracle for everything else on the page, which is what a keyless core
+    serves, so the writer is kept as a seam that answers for nobody.
     """
 
-    def __init__(
-        self,
-        *,
-        writer: Callable[[list[ReasonRow], TasteProfile], dict[str, PlaceReason]] = (
-            gemini_reasons
-        ),
-        cooldown_seconds: int = REASON_RETRY_COOLDOWN_SECONDS,
-        clock: Callable[[], float] = time.monotonic,
-    ) -> None:
-        self._writer = writer
-        self._cooldown_seconds = cooldown_seconds
-        self._clock = clock
-        # Keyed by (profile, place id): a sentence written for one profile is
-        # not an answer for another. See `__call__`.
-        self._answered: dict[tuple[str, str], PlaceReason] = {}
-        # Place id -> when we last asked and were given nothing. Successes are
-        # never in here; an entry is the record that makes a refusal different
-        # from a question nobody has asked yet.
-        self._refused_at: dict[tuple[str, str], float] = {}
-        # Place ids with a model call in flight right now. The lock is dropped
-        # before that call on purpose, so without this set two threads both
-        # find a row missing and both pay for it: the ceiling would be one
-        # call per place per *serial* request, and `curl -P 20` at the
-        # anonymous GET would buy twenty. Nothing above records an in-flight
-        # question, because a question nobody has finished asking is neither
-        # answered nor refused.
-        self._asking: set[tuple[str, str]] = set()
-        # Sync routes run in a threadpool, so two concurrent browsers are two
-        # real threads reading and writing these dicts.
-        self._lock = threading.Lock()
-
-    def __call__(
-        self, rows: list[ReasonRow], group: TasteProfile
-    ) -> dict[str, PlaceReason]:
-        """Sentences for these rows, written for THIS profile.
-
-        The cache is keyed by `(profile, place)` since M11, and that is not an
-        optimisation detail. A reason is an argument about whether a place
-        suits particular people -- «đủ chỗ cho 6 người, hợp gu đồ nướng» -- so
-        a cache keyed by place alone would hand one group's sentence, and with
-        it one group's taste, to the next caller. Two profiles that are equal
-        share an entry, which is correct: the sentence is a function of exactly
-        what the key holds.
-        """
-
-        now = self._clock()
-        key = group.cache_key
-        with self._lock:
-            missing = [
-                row
-                for row in rows
-                if (key, row.place["id"]) not in self._answered
-                and (key, row.place["id"]) not in self._asking
-                and self._may_ask((key, row.place["id"]), now)
-            ]
-            self._asking.update((key, row.place["id"]) for row in missing)
-
-        if missing:
-            # Outside the lock: this is the network call, and holding a lock
-            # across it would serialise every browse request behind one model
-            # round trip.
-            fresh: dict[str, PlaceReason] = {}
-            try:
-                fresh = self._writer(missing, group)
-            finally:
-                # `finally`, not the success path. A writer that raises has
-                # still spent the call, so its rows go on the cooldown like
-                # any other row the model gave nothing for -- `fresh` is still
-                # empty, so the loop below records them all as refused. And
-                # they must be released from `_asking` either way, or a single
-                # raise makes them unaskable for the life of the process: a
-                # tombstone, which is the failure the cooldown exists to
-                # avoid. `gemini_reasons` documents that it never raises, but
-                # the writer is an injected seam and `list_places` wraps the
-                # call in `except Exception`, so a raising one degrades in
-                # silence.
-                with self._lock:
-                    self._answered.update(
-                        {(key, place_id): reason for place_id, reason in fresh.items()}
-                    )
-                    for row in missing:
-                        place_id = row.place["id"]
-                        if place_id in fresh:
-                            self._refused_at.pop((key, place_id), None)
-                        else:
-                            self._refused_at[(key, place_id)] = now
-                    self._asking.difference_update(
-                        (key, row.place["id"]) for row in missing
-                    )
-
-        with self._lock:
-            return {
-                row.place["id"]: self._answered[(key, row.place["id"])]
-                for row in rows
-                if (key, row.place["id"]) in self._answered
-            }
-
-    def _may_ask(self, key: tuple[str, str], now: float) -> bool:
-        """Caller holds the lock."""
-
-        refused_at = self._refused_at.get(key)
-        return refused_at is None or now - refused_at >= self._cooldown_seconds
+    del rows, group
+    return {}
 
 
 def get_reason_writer(request: Request):
@@ -548,18 +400,6 @@ def get_search_rate_limiter(request: Request) -> FixedWindowLimiter:
     """
 
     return request.app.state.search_limiter
-
-
-def get_place_searcher():
-    """Seam for tests, and deliberately not memoised like the reason writer.
-
-    A reason is a pure function of a fixed catalogue and a fixed group, so
-    caching it is free. A search is a function of what somebody typed, and a
-    cache keyed on that is a cache of other people's sentences sitting in
-    process memory for no gain.
-    """
-
-    return gemini_search
 
 
 # ---------------------------------------------------------------------------
@@ -1061,108 +901,9 @@ def search_places(
     request: PlaceSearchRequest,
     actor: Annotated[Actor, Depends(get_actor)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_search_rate_limiter)],
-    place_searcher: Annotated[Any, Depends(get_place_searcher)],
     repository: Annotated[ApiRepository, Depends(get_repository)],
 ) -> PlaceSearchResponse:
-    """F12 -- "quán nướng ngoài trời cho 6 người dưới 300k" becomes real places.
+    """Declaration only: the Go core serves this route (ADR-0051)."""
 
-    The model reads the sentence and answers with identifiers. Everything a
-    caller ends up looking at is assembled here from the seed catalogue, so a
-    model that was confused, wrong, or doing what an injected instruction told
-    it can still only pick rows that exist -- and if it picks one that does not,
-    `ground_search` refuses the whole answer rather than serving the rest.
-
-    Every failure lands on the same honest empty answer: 200, no places,
-    `source: "none"`. There is deliberately no fallback to the keyword matching
-    `GET /places` does, because a plausible list served while the feature is
-    broken is a broken feature that nobody can see is broken.
-
-    Signed in, and metered (rd-be-13). Unlike every other route here, `actor`
-    authorises nothing: there is no aggregate to own and no row to hide, and
-    QA established structurally at rd-qa-18 that this handler has no path to
-    anybody else's data. What identity buys is a **meter**. The call costs
-    real Gemini quota, and open and uncounted it could be drained by a loop --
-    a failure that surfaces not as an alert but as search silently not working
-    for everyone at once. `get_actor` stops the anonymous caller; the window
-    stops the caller who merely invented a UUID, which in this slice is the
-    same person one header later.
-    """
-
-    limiter.check(actor.id)
-
-    service = ApiService(repository)
-    # The searcher's own profile: this route has no `context_id`, and the
-    # sentence somebody typed is about what THEY want.
-    group = service.taste_profile(actor, None)
-    query = request.query
-    unavailable = PlaceSearchResponse(
-        query=query,
-        understood=None,
-        places=[],
-        source="none",
-        group=_group_summary(group),
-    )
-
-    rows = _with_photos(safe_places(service.place_rows()), repository)
-    try:
-        raw = place_searcher(query, rows, group)
-    except Exception as error:  # noqa: BLE001 - a search box must not 500 on this
-        logger.warning("place search: searcher failed (%s)", type(error).__name__)
-        return unavailable
-    if raw is None:
-        return unavailable
-
-    try:
-        grounded = ground_search(raw, rows, CATEGORIES)
-    except PlaceSearchError as error:
-        # The code, never the answer. What provoked the refusal is model output
-        # shaped by caller text, and neither belongs in a log line.
-        logger.warning("place search: answer refused (%s)", error.code)
-        return unavailable
-
-    # What the sentence is scored against. The caller's own answers when they
-    # have given any; otherwise the query itself -- somebody who typed «cho 6
-    # người dưới 300k» has just stated a budget and a headcount, and scoring
-    # against what they asked for is more honest than scoring against nobody.
-    # `understood` has already been grounded, so these are checked numbers.
-    if not group.known:
-        group = TasteProfile(
-            basis="ca-nhan",
-            budget_per_person_vnd=grounded["understood"].get("budget_per_person_vnd"),
-            size=grounded["understood"].get("group_size"),
-            people=1,
-            people_answered=0,
-        )
-
-    out: list[Place] = []
-    for item in grounded["results"]:
-        place = item["place"]
-        reason = item["reason"]
-        # Two reused gates, different blast radius, both per-row here because a
-        # bad *sentence* about a real place is not a bad answer -- unlike a
-        # place that does not exist, which `ground_search` already refused above.
-        if reason is not None and ungrounded_numbers(reason, place, group):
-            logger.warning(
-                "place search: dropped ungrounded reason for %s", place["id"]
-            )
-            reason = None
-        if echoes_the_query(reason, query):
-            logger.warning("place search: dropped echoed reason for %s", place["id"])
-            reason = None
-        # The model's own conclusion, asked for in the prompt and checked
-        # against the closed set by `ground_search`. Passing `None` here is
-        # what shipped `source: "ai"` beside `verdict: null` and cost the app
-        # the whole response; `_card` now refuses to build that pair at all,
-        # so a gate above that drops the sentence drops the verdict with it.
-        out.append(_card(place, reason, item["verdict"], group))
-
-    # Not re-sorted. `GET /places` orders by open-now and score because it is a
-    # catalogue; this is a search, and relevance to the sentence is the model's
-    # answer, which sorting here would quietly discard.
-    return PlaceSearchResponse(
-        query=query,
-        understood=Understood(**grounded["understood"]),
-        places=out,
-        source="ai",
-        group=_group_summary(group),
-    )
+    del request, actor, limiter, repository
+    raise ApiProblem(410, "served_by_go", "POST /places/search do core Go phục vụ.")

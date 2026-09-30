@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/motluot"
 	"mobile/services/core/internal/aiharness/nhatky"
+	"mobile/services/core/internal/aiharness/timquan"
 	"mobile/services/core/internal/domain/achievement"
 	"mobile/services/core/internal/domain/chatexpense"
 	book "mobile/services/core/internal/domain/diary"
@@ -28,6 +30,7 @@ import (
 	"mobile/services/core/internal/domain/reel"
 	"mobile/services/core/internal/domain/screenshot"
 	"mobile/services/core/internal/domain/suggestion"
+	"mobile/services/core/internal/domain/taste"
 	"mobile/services/core/internal/media/sanitize"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/treejson"
@@ -324,6 +327,59 @@ func tinhNang(ctx context.Context, args []string, getenv func(string) string, ou
 		}
 		return fmt.Sprintf("«%s»", draft), nil
 	})
+	check("tim-quan", func(l *motluot.Luot) (string, error) {
+		query := "quán cà phê yên tĩnh dưới 100k cho 4 người"
+		maps := make([]*pyjson.OrderedMap, 0, len(places))
+		for _, p := range places {
+			maps = append(maps, p.(*pyjson.OrderedMap))
+		}
+		prompt, err := timquan.PromptTimQuan(query, maps, taste.Unknown())
+		if err != nil {
+			return "", err
+		}
+		raw, err := timquan.Tim(ctx, l, prompt)
+		if err != nil {
+			return "", err
+		}
+		understood, results, err := timquan.Ground(raw, maps)
+		if err != nil {
+			return "", fmt.Errorf("không neo được: %w", err)
+		}
+		if len(results) == 0 || string(get1(results[0].Place, "id")) != "p-cafe-thu" {
+			return "", fmt.Errorf("không chọn quán cà phê: %d kết quả", len(results))
+		}
+		budget, _ := understood.Get("budget_per_person_vnd")
+		return fmt.Sprintf("%d kết quả, đầu tiên p-cafe-thu, hiểu ngân sách %v", len(results), budget), nil
+	})
+	check("ly-do-quan", func(l *motluot.Luot) (string, error) {
+		budget, size := int64(150000), int64(4)
+		group := taste.Profile{Basis: "nhom", Interests: []string{"cafe"}, BudgetPerPersonVND: &budget, Size: &size, People: 4}
+		maps := make([]*pyjson.OrderedMap, 0, len(places))
+		for _, p := range places {
+			maps = append(maps, p.(*pyjson.OrderedMap))
+		}
+		prompt, err := timquan.PromptLyDo(maps, group)
+		if err != nil {
+			return "", err
+		}
+		text, err := timquan.VietLyDo(ctx, l, prompt)
+		if err != nil {
+			return "", err
+		}
+		written, err := timquan.ParseReasons(text, maps, group)
+		if err != nil {
+			return "", err
+		}
+		if len(written) == 0 {
+			return "", fmt.Errorf("không lý do nào qua cổng")
+		}
+		var parts []string
+		for id, r := range written {
+			parts = append(parts, id+"="+r.Verdict)
+		}
+		sort.Strings(parts)
+		return fmt.Sprintf("%d/3 lý do qua cổng: %s", len(written), strings.Join(parts, ", ")), nil
+	})
 	if failed > 0 {
 		fmt.Fprintf(out, "%d mục đỏ\n", failed)
 		return 1
@@ -335,12 +391,13 @@ func tinhNang(ctx context.Context, args []string, getenv func(string) string, ou
 func quanGia() pyjson.List {
 	out := pyjson.List{}
 	for _, p := range []struct {
-		id, name, category, hours string
-		lo, hi                    int64
+		id, name, category, hours, kind, trait string
+		lo, hi                                 int64
+		km                                     float64
 	}{
-		{"p-nuong-thu", "Tiệm Nướng Thử", "quan-an-local", "16:00 – 23:00", 150000, 250000},
-		{"p-cafe-thu", "Cà Phê Đồi Thử", "cafe", "07:00 – 22:00", 40000, 80000},
-		{"p-lau-thu", "Lẩu Gà Thử", "quan-an-local", "10:00 – 22:00", 120000, 200000},
+		{"p-nuong-thu", "Tiệm Nướng Thử", "quan-an-local", "16:00 – 23:00", "nướng", "đông vui", 150000, 250000, 1.2},
+		{"p-cafe-thu", "Cà Phê Đồi Thử", "cafe", "07:00 – 22:00", "cà phê", "yên tĩnh", 40000, 80000, 0.8},
+		{"p-lau-thu", "Lẩu Gà Thử", "quan-an-local", "10:00 – 22:00", "lẩu gà", "ngoài trời", 120000, 200000, 3.5},
 	} {
 		m := pyjson.NewOrderedMap()
 		m.Set("id", pyjson.String(p.id))
@@ -349,6 +406,10 @@ func quanGia() pyjson.List {
 		m.Set("open_hours", pyjson.String(p.hours))
 		m.Set("price_min_vnd", pyjson.NewInt(p.lo))
 		m.Set("price_max_vnd", pyjson.NewInt(p.hi))
+		m.Set("kinds", pyjson.List{pyjson.String(p.kind)})
+		m.Set("traits", pyjson.List{pyjson.String(p.trait)})
+		m.Set("distance_km", pyjson.Float(p.km))
+		m.Set("open_now", pyjson.Bool(true))
 		out = append(out, m)
 	}
 	return out
@@ -377,4 +438,10 @@ func theGoiY(ctx context.Context, l *motluot.Luot, prompt string, places pyjson.
 	stops, _ := card2.Get("stops")
 	n, _ := stops.(pyjson.List)
 	return fmt.Sprintf("«%v», %d điểm dừng", title, len(n)), nil
+}
+
+func get1(m *pyjson.OrderedMap, key string) pyjson.String {
+	v, _ := m.Get(key)
+	s, _ := v.(pyjson.String)
+	return s
 }

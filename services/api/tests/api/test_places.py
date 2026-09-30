@@ -22,9 +22,8 @@ from datetime import UTC, datetime
 import pytest
 
 from app.api.repository import PersonRecord
-from app.api.routes.places import get_reason_writer
+from app.api.routes.places import PlaceReason, get_reason_writer
 from app.places.catalog import CATEGORIES, PLACES
-from app.places.reasons import PlaceReason
 from app.places.scoring import score_place
 from app.places.taste import profile_for_person
 
