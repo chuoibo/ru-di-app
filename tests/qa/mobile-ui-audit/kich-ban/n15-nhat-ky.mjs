@@ -1077,14 +1077,16 @@ try {
       ks = (await goi("GET", `/contexts/${G.id}/outings`, undefined, p0)).json?.outings ?? [];
       o3 = ks.find((k) => k.title === KEO_TRUNG) ?? null;
     }
-    const al = await docAlbum();
-    const raw = await goi("GET", `/contexts/${G.id}/albums`, undefined, p0);
-    const tong = raw.json?.split_total_vnd ?? null;
-    const moiKeo = al.map((a) => `«${a.title ?? a.outing?.title}» ${a.starts_on ?? a.outing?.starts_on}→${a.ends_on ?? a.outing?.ends_on}: split_total_vnd ${a.split_total_vnd}, expense_count ${a.expense_count}`);
-    const rc = (await goi("GET", `/contexts/${G.id}/recap`, undefined, p0)).json;
-    const rcTom = rc ? `recap: đã xong ${(rc.outings ?? []).map((o) => `«${o.title}» ${o.split_total_vnd}`).join(", ") || "không"}; đang đi ${(rc.in_progress ?? []).map((o) => `«${o.title}» ${o.split_total_vnd}`).join(", ") || "không"}; tổng các kèo đã xong ${rc.split_total_vnd}` : "recap: không đọc được";
-    const trung = al.length === 2 && al.every((a) => a.split_total_vnd > 0 && a.split_total_vnd === al[0].split_total_vnd);
-    ghi({ tc: "TC-N15-Q4-API", screen: "N15.S07", state: `nhóm chat-test: một khoản chi ngày 29/09 (tổng phân bổ 13.705.678đ); «${KEO}» 29–30/09 và «${KEO_TRUNG}» 29/09`, action: "GET /contexts/{id}/albums", cauHinh: "-", expected: "một khoản chi chỉ tính cho một cuộc đi (hoặc album nói rõ đây là chi tiêu của nhóm trong những ngày đó); tổng các album không cộng một khoản hai lần", status: o3 && trung ? "FAIL" : o3 ? "PASS" : "BLOCKED", method: o3 ? "RUNTIME-WEB" : "STATIC", ghiChu: `${tao ? `tạo «${KEO_TRUNG}»: ${tao.status}${tao.code ? ` ${tao.code}` : ""}; ` : ""}${moiKeo.join(" | ") || "không thấy album"}; tổng của danh sách: ${tong ?? "không có trường tổng"}; ${rcTom}` });
+    if (chayPhan("q4", "api")) {
+      const al = await docAlbum();
+      const raw = await goi("GET", `/contexts/${G.id}/albums`, undefined, p0);
+      const tong = raw.json?.split_total_vnd ?? null;
+      const moiKeo = al.map((a) => `«${a.title ?? a.outing?.title}» ${a.starts_on ?? a.outing?.starts_on}→${a.ends_on ?? a.outing?.ends_on}: split_total_vnd ${a.split_total_vnd}, expense_count ${a.expense_count}`);
+      const rc = (await goi("GET", `/contexts/${G.id}/recap`, undefined, p0)).json;
+      const rcTom = rc ? `recap: đã xong ${(rc.outings ?? []).map((o) => `«${o.title}» ${o.split_total_vnd}`).join(", ") || "không"}; đang đi ${(rc.in_progress ?? []).map((o) => `«${o.title}» ${o.split_total_vnd}`).join(", ") || "không"}; tổng các kèo đã xong ${rc.split_total_vnd}` : "recap: không đọc được";
+      const trung = al.length === 2 && al.every((a) => a.split_total_vnd > 0 && a.split_total_vnd === al[0].split_total_vnd);
+      ghi({ tc: "TC-N15-Q4-API", screen: "N15.S07", state: `nhóm chat-test: một khoản chi ngày 29/09 (tổng phân bổ 13.705.678đ); «${KEO}» 29–30/09 và «${KEO_TRUNG}» 29/09`, action: "GET /contexts/{id}/albums", cauHinh: "-", expected: "một khoản chi chỉ tính cho một cuộc đi (hoặc album nói rõ đây là chi tiêu của nhóm trong những ngày đó); tổng các album không cộng một khoản hai lần", status: o3 && trung ? "FAIL" : o3 ? "PASS" : "BLOCKED", method: o3 ? "RUNTIME-WEB" : "STATIC", ghiChu: `${tao ? `tạo «${KEO_TRUNG}»: ${tao.status}${tao.code ? ` ${tao.code}` : ""}; ` : ""}${moiKeo.join(" | ") || "không thấy album"}; tổng của danh sách: ${tong ?? "không có trường tổng"}; ${rcTom}` });
+    }
     if (o3 && chayPhan("q4", "ke")) {
       const t = await mo("C1", "chat-0", "/messages");
       await t.page.waitForTimeout(1500);
@@ -1102,6 +1104,34 @@ try {
       const coChia = hang.filter((h) => /đã chia/.test(h.chu));
       await anh(t.page, "EV-N15-Q4-KE-C1", t, { chuThich: coChia.map((h) => ({ rect: { x: h.x, y: h.y, w: h.w, h: h.h } })) });
       ghi({ tc: "TC-N15-Q4-KE", screen: "N15.S07", state: `nhóm chat-test, kệ album; «${KEO}» và «${KEO_TRUNG}» cùng chứa ngày 29/09`, action: "mở /groups/[id]/album", cauHinh: "C1", expected: "mỗi khoản chi của nhóm chỉ hiện «đã chia» ở một cuộc đi", status: coChia.length >= 2 && coChia.every((h) => (h.chu.match(/đã chia\s?([\d.]+đ)/) ?? [])[1] === (coChia[0].chu.match(/đã chia\s?([\d.]+đ)/) ?? [])[1]) ? "FAIL" : "PASS", evidence: ["EV-N15-Q4-KE-C1"], ghiChu: hang.map((h) => `«${h.chu}»`).join(" | ") || "không thấy hàng của hai kèo" });
+      await t.context.close();
+    }
+    // Once «Kèo album retest» has ended (Vietnam date after 30/09), both outings are finished: the recap
+    // sums them and the settlement hero prints that sum. Measured only then; before it the part says so.
+    const ngayVN = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
+    if (chayPhan("q4", "hero") && ngayVN <= "2026-09-30") console.log(`q4:hero: hôm nay ${ngayVN} giờ Việt Nam, «${KEO}» chưa xong; đo sau 0 giờ 01/10`);
+    else if (chayPhan("q4", "hero")) {
+      const rc = (await goi("GET", `/contexts/${G.id}/recap`, undefined, p0)).json;
+      const xong = (rc?.outings ?? []).map((o) => `«${o.title}» ${o.split_total_vnd}`);
+      const dangDi = (rc?.in_progress ?? []).map((o) => `«${o.title}» ${o.split_total_vnd}`);
+      const t = await mo("C1", "chat-0", `/settlements/${G.id}`);
+      await t.page.waitForTimeout(3000);
+      await choOn(t.page, { mang: t.mang });
+      const hero = await t.page.evaluate(() => {
+        const man = [...document.querySelectorAll('[data-testid="settlement-screen"]')].filter((e) => e.getClientRects().length).pop();
+        if (!man) return null;
+        const nhan = [...man.querySelectorAll('div[dir="auto"]')].find((e) => /chuyến đã kết thúc|đang đi \(|Chi tiêu theo chuyến/.test(e.innerText ?? "") && (e.innerText ?? "").length < 120);
+        if (!nhan) return { chu: (man.innerText ?? "").replace(/\s+/g, " ").slice(0, 200) };
+        let khoi = nhan.parentElement;
+        for (let i = 0; i < 3 && khoi && !/đ/.test((khoi.innerText ?? "").replace(nhan.innerText, "")); i++) khoi = khoi.parentElement;
+        const r = (khoi ?? nhan).getBoundingClientRect();
+        return { nhan: (nhan.innerText ?? "").trim(), chu: ((khoi ?? nhan).innerText ?? "").replace(/\s+/g, " ").trim().slice(0, 220), rect: { x: r.left, y: r.top, w: r.width, h: r.height } };
+      });
+      await anh(t.page, "EV-N15-Q4-HERO-C1", t, hero?.rect ? { chuThich: [{ rect: hero.rect }] } : {});
+      const so = hero?.chu?.match(/(\d{1,3}(?:\.\d{3})+)đ/)?.[1] ?? null;
+      const tongNhom = 13705678;
+      const soNguyen = so ? Number(so.replace(/\./g, "")) : null;
+      ghi({ tc: "TC-N15-Q4-HERO", screen: "N15.S07", state: `nhóm chat-test sau 30/09: «${KEO}» (29–30/09) và «${KEO_TRUNG}» (29/09) đều đã xong; cả nhóm có một khoản chi 13.705.678đ`, action: "GET /contexts/{id}/recap; mở /settlements/[id] (quyết toán của nhóm)", cauHinh: "C1", expected: "tổng «đã kết thúc» không vượt tổng chi của nhóm: một khoản chi không bị cộng hai lần", status: hero && soNguyen !== null ? (soNguyen <= tongNhom ? "PASS" : "FAIL") : "FAIL", evidence: ["EV-N15-Q4-HERO-C1"], ghiChu: `ngày đo ${ngayVN} (giờ Việt Nam); recap: đã xong ${xong.join(", ") || "không"}; đang đi ${dangDi.join(", ") || "không"}; tổng các kèo đã xong ${rc?.split_total_vnd ?? "-"}; hero «${hero?.chu ?? "không thấy"}»` });
       await t.context.close();
     }
   }
