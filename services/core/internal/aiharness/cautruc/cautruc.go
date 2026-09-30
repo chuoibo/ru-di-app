@@ -61,6 +61,24 @@ func YeuCauPhan(b llm.LoaiGoi, he string, phan []*genai.Part, schema *genai.Sche
 	}
 }
 
+// YeuCauChu is a one-turn request whose only content is noiDung, with no
+// system instruction and no response schema: JSON is asked for by MIME type
+// alone. It is the shape the Python brain's prose steps used (one prompt
+// string, rules and data together), kept so their prompts carry over
+// byte for byte (aiharness/goiy).
+func YeuCauChu(b llm.LoaiGoi, noiDung string, maxRa int32) *model.LLMRequest {
+	return &model.LLMRequest{
+		Model:    llm.Model,
+		Contents: []*genai.Content{{Role: genai.RoleUser, Parts: []*genai.Part{{Text: noiDung}}}},
+		Config: &genai.GenerateContentConfig{
+			ResponseMIMEType: "application/json",
+			MaxOutputTokens:  maxRa,
+			ThinkingConfig:   llm.CauHinhNghi(b),
+			SafetySettings:   agent.AnToan(),
+		},
+	}
+}
+
 // NhietDo is req at temperature t; the request passed in is not modified.
 func NhietDo(req *model.LLMRequest, t float32) *model.LLMRequest {
 	out := *req
