@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -18,8 +19,10 @@ import (
 	"mobile/services/core/internal/aiharness/goiy"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/motluot"
+	"mobile/services/core/internal/aiharness/nhatky"
 	"mobile/services/core/internal/domain/achievement"
 	"mobile/services/core/internal/domain/chatexpense"
+	book "mobile/services/core/internal/domain/diary"
 	"mobile/services/core/internal/domain/receipt"
 	"mobile/services/core/internal/domain/reel"
 	"mobile/services/core/internal/domain/screenshot"
@@ -61,7 +64,7 @@ func tinhNang(ctx context.Context, args []string, getenv func(string) string, ou
 		if len(chon) > 0 && !chon[name] {
 			return
 		}
-		l := may.Luot(3)
+		l := may.Luot(4)
 		started := time.Now()
 		detail, err := f(l)
 		took := time.Since(started).Round(time.Millisecond)
@@ -238,6 +241,49 @@ func tinhNang(ctx context.Context, args []string, getenv func(string) string, ou
 			return "", fmt.Errorf("rơi về câu dự phòng: %v «%s»", ids, line)
 		}
 		return fmt.Sprintf("%s · «%s»", strings.Join(ids, ","), line), nil
+	})
+	check("nhat-ky", func(l *motluot.Luot) (string, error) {
+		source := book.Source{Title: "Đà Lạt cuối tuần (dữ liệu mẫu)", StartsOn: "2026-03-14", EndsOn: "2026-03-15", Kind: "trip",
+			Places: []string{"Hồ Xuân Hương", "Đồi thông"}, Excerpts: []string{"Sáng mai đi dạo hồ nha"}}
+		var anhs []nhatky.Anh
+		allowed := map[string]bool{}
+		for i, name := range []string{"canh_1.jpg", "canh_2.jpg", "canh_3.jpg"} {
+			s, err := anh(name)
+			if err != nil {
+				return "", err
+			}
+			id := fmt.Sprintf("anh-%d", i+1)
+			day := "2026-03-14"
+			if i == 2 {
+				day = "2026-03-15"
+			}
+			source.Photos = append(source.Photos, book.Photo{ID: id, Day: day})
+			anhs = append(anhs, nhatky.Anh{ID: id, MIME: s.ContentType, Data: s.Data})
+			allowed[id] = true
+		}
+		raw, _ := json.Marshal(source)
+		v, err := pyjson.Loads(raw)
+		if err != nil {
+			return "", err
+		}
+		parts, err := nhatky.Phan(v, anhs)
+		if err != nil {
+			return "", err
+		}
+		doc, err := nhatky.Viet(ctx, l, parts)
+		if err != nil {
+			return "", err
+		}
+		out, _ := pyjson.Dumps(doc)
+		var d book.Document
+		if err := json.Unmarshal(out, &d); err != nil {
+			return "", err
+		}
+		d.AIGenerated = true
+		if err := book.Validate(d, allowed); err != nil {
+			return "", fmt.Errorf("sổ không hợp lệ: %w", err)
+		}
+		return fmt.Sprintf("«%s», %d trang", d.Title, len(d.Pages)), nil
 	})
 	if failed > 0 {
 		fmt.Fprintf(out, "%d mục đỏ\n", failed)

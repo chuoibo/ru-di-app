@@ -14,16 +14,18 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/aiharness/motluot"
 	"mobile/services/core/internal/auth"
-	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
 	book "mobile/services/core/internal/domain/diary"
 )
 
 type Handler struct {
-	pool  *pgxpool.Pool
-	brain *brain.Client
-	mux   *http.ServeMux
+	pool *pgxpool.Pool
+	// ai is the process's model door (ADR-0051); nil when no model is
+	// configured, and then every AI job fails diary_ai_unavailable.
+	ai  *motluot.May
+	mux *http.ServeMux
 }
 
 var Patterns = []string{
@@ -40,8 +42,8 @@ var Patterns = []string{
 	"PATCH /diaries/{diary}/audience",
 }
 
-func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
-	h := &Handler{pool: pool, brain: client, mux: http.NewServeMux()}
+func New(pool *pgxpool.Pool, may *motluot.May) *Handler {
+	h := &Handler{pool: pool, ai: may, mux: http.NewServeMux()}
 	h.mux.HandleFunc("GET /outings/{outing}/ending", h.ending)
 	h.mux.HandleFunc("POST /outings/{outing}/ending", h.end)
 	h.mux.HandleFunc("GET /outings/{outing}/diary-sources", h.sources)

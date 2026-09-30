@@ -456,7 +456,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				inner.ServeHTTP(w, r)
 			})
 		}
-		books := diary.New(pool, brain.Configured())
+		books := diary.New(pool, may)
 		go books.Run(chatCtx)
 		inner := front
 		feature := cors.New(origins, origins != "").Middleware(books)

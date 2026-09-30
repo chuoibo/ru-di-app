@@ -1,9 +1,10 @@
 """Internal brain HTTP seam (ADR-0029 §2.7).
 
-Go owns auth, the database, the limiter and, since ADR-0051, every model
-call but two that have not moved yet: place search and reasons. The third
-route here, on-box face detection, is OpenCV rather than a model (TODO: redo
-in Go by another mechanism).
+Go owns auth, the database, the limiter and, since ADR-0051, the model calls
+that have moved so far. Still here until their Go ports land: community
+moderation and Nếp's community draft, place search and reasons. On-box face
+detection is OpenCV rather than a model (TODO: redo in Go by another
+mechanism).
 Nothing in this module opens a repository session. Errors return a closed
 `code` and never interpolate a prompt, a model string, or image bytes.
 
@@ -84,22 +85,6 @@ def ready(_: Annotated[None, Depends(require_internal_token)]) -> dict[str, str]
     """The brain process is up. Deliberately does not touch a model or a DB."""
 
     return {"status": "ready"}
-
-
-@router.post("/diary")
-def diary_compose(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    """Compose a diary from caller-approved sources; inference only."""
-    from app.api.diary_gemini import compose_diary
-
-    try:
-        return compose_diary(body)
-    except ValueError:
-        raise _code_error(422, "invalid_diary_source") from None
-    except Exception:
-        raise _code_error(502, "diary_ai_unavailable") from None
 
 
 @router.post("/community-moderate")

@@ -3,15 +3,18 @@ package diary
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
-	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/aiharness/llm"
+	"mobile/services/core/internal/aiharness/motluot"
+	"mobile/services/core/internal/aiharness/nhatky"
 	"mobile/services/core/internal/auth"
-	"mobile/services/core/internal/brain"
 	book "mobile/services/core/internal/domain/diary"
 	"mobile/services/core/internal/media/storage"
 	"mobile/services/core/internal/testdb"
@@ -170,27 +173,12 @@ func TestPostgresParallelFirstSaveMakesOneBook(t *testing.T) {
 		t.Fatalf("books=%d err=%v", n, err)
 	}
 }
-func TestPostgresExplicitBundleAndModelSourceValidation(t *testing.T) {
-	f := setup(t)
-	f.close(t)
-	called := false
-	stub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-		var v struct {
-			Source book.Source `json:"source"`
-		}
-		json.NewDecoder(r.Body).Decode(&v)
-		if len(v.Source.Excerpts) != 1 || v.Source.Excerpts[0] != "Synthetic explicitly selected excerpt" {
-			t.Error("wrong shared bundle")
-		}
-		d := f.doc()
-		d.CoverID = uuid()
-		reply(w, 200, d)
-	}))
-	defer stub.Close()
-	t.Setenv("MOBILE_BRAIN_URL", stub.URL)
-	t.Setenv("MOBILE_INTERNAL_TOKEN", "synthetic-test-token")
-	f.h = New(f.pool, brain.Configured())
+
+// runAIJob queues one confirmed AI job for f's one photo and runs it with
+// the given model door, returning the finished job.
+func runAIJob(t *testing.T, f fixture, may *motluot.May) Job {
+	t.Helper()
+	f.h = New(f.pool, may)
 	source := book.Source{Title: "Synthetic", StartsOn: "2026-01-01", EndsOn: "2026-01-02", Kind: "trip", Photos: []book.Photo{{ID: f.photo, Day: "2026-01-01"}}, Places: []string{}, Excerpts: []string{"Synthetic explicitly selected excerpt"}}
 	in := map[string]any{"logical_id": uuid(), "confirmed": true, "use_ai": true, "source": source}
 	w := f.request("POST", "/outings/"+f.outing+"/diary-jobs", f.token, in)
@@ -200,22 +188,80 @@ func TestPostgresExplicitBundleAndModelSourceValidation(t *testing.T) {
 	if _, err := f.h.ProcessOne(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if !called {
-		t.Fatal("no inference")
-	}
 	w = f.request("GET", "/diary-jobs/"+j.ID, f.token, nil)
 	require(t, w, 200)
 	json.Unmarshal(w.Body.Bytes(), &j)
-	if j.Status != "failed" || j.Code == nil || *j.Code != "invalid_diary_result" {
-		t.Fatalf("unselected photo accepted: %+v", j)
-	}
 	var cleared bool
 	f.pool.QueryRow(context.Background(), `SELECT source IS NULL FROM outing_diary_jobs WHERE id=$1`, j.ID).Scan(&cleared)
 	if !cleared {
 		t.Fatal("retained shared transcript")
 	}
 	require(t, f.request("GET", "/diary-jobs/"+j.ID, f.peerToken, nil), 404)
+	return j
 }
+
+func failedWith(t *testing.T, j Job, code string) {
+	t.Helper()
+	if j.Status != "failed" || j.Code == nil || *j.Code != code {
+		t.Fatalf("want failed %s: %+v", code, j)
+	}
+}
+
+func TestPostgresExplicitBundleAndModelSourceValidation(t *testing.T) {
+	f := setup(t)
+	f.close(t)
+	d := f.doc()
+	d.CoverID = uuid()
+	draft, _ := json.Marshal(d)
+	stub := llm.NewStub(llm.Buoc{Text: string(draft)}, llm.Buoc{Text: `{"grounded": true}`})
+	j := runAIJob(t, f, motluot.Moi(stub, 1))
+	failedWith(t, j, "invalid_diary_result")
+	req := string(stub.YeuCau()[0])
+	if !strings.Contains(req, "Synthetic explicitly selected excerpt") || !strings.Contains(req, "Photo ID: "+f.photo) || !strings.Contains(req, base64.StdEncoding.EncodeToString([]byte("synthetic-photo-bytes"))) {
+		t.Fatalf("wrong shared bundle: %s", req)
+	}
+}
+
+func TestPostgresAIDiaryDraftCheckedThenSaved(t *testing.T) {
+	f := setup(t)
+	f.close(t)
+	draft, _ := json.Marshal(f.doc())
+	stub := llm.NewStub(
+		llm.Buoc{Text: string(draft)}, llm.Buoc{Text: `{"grounded": false, "reason": "a sunny day nobody wrote"}`},
+		llm.Buoc{Text: "```json\n" + string(draft) + "\n```"}, llm.Buoc{Text: `{"grounded": true}`},
+	)
+	j := runAIJob(t, f, motluot.Moi(stub, 1))
+	if j.Status != "succeeded" || j.Result == nil || !j.Result.AIGenerated || stub.SoGoi() != 4 {
+		t.Fatalf("%+v after %d calls", j, stub.SoGoi())
+	}
+	if !strings.Contains(string(stub.YeuCau()[2]), "a sunny day nobody wrote") {
+		t.Fatal("the second draft did not carry the review")
+	}
+}
+
+func TestPostgresAIDiaryKeylessUngroundedAndTooLarge(t *testing.T) {
+	f := setup(t)
+	f.close(t)
+	failedWith(t, runAIJob(t, f, nil), "diary_ai_unavailable")
+	draft, _ := json.Marshal(f.doc())
+	stub := llm.NewStub(llm.Buoc{Text: string(draft)}, llm.Buoc{Text: `{"grounded": "yes"}`})
+	failedWith(t, runAIJob(t, f, motluot.Moi(stub, 1)), "diary_ai_unavailable")
+	st, err := storage.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var key string
+	f.pool.QueryRow(context.Background(), `SELECT storage_key FROM uploaded_images WHERE id=$1`, f.photo).Scan(&key)
+	if err := st.Write(key, make([]byte, nhatky.MaxByteAnh+1)); err != nil {
+		t.Fatal(err)
+	}
+	unused := llm.NewStub()
+	failedWith(t, runAIJob(t, f, motluot.Moi(unused, 1)), "diary_images_too_large")
+	if unused.SoGoi() != 0 {
+		t.Fatal("an oversize bundle reached the model")
+	}
+}
+
 func TestPostgresSourcesNeverRequireChat(t *testing.T) {
 	f := setup(t)
 	f.close(t)
