@@ -122,6 +122,21 @@ func fxLoc(r *rand.Rand) (truyhoi.Cung, string) {
 		n := int64(20+r.IntN(40)) * 5000
 		c.NganSachVND = &n
 	}
+	// A price floor (below any ceiling drawn above) and categories.
+	if r.IntN(3) == 0 {
+		f := int64(10+r.IntN(30)) * 5000
+		if c.NganSachVND != nil && f > *c.NganSachVND {
+			f = *c.NganSachVND
+		}
+		c.GiaTuVND = &f
+	}
+	if r.IntN(3) == 0 {
+		ids := tuvung.DanhMuc.IDs()
+		c.DanhMuc = []string{ids[r.IntN(len(ids))]}
+		if r.IntN(2) == 0 {
+			c.DanhMuc = append(c.DanhMuc, ids[r.IntN(len(ids))])
+		}
+	}
 	return c, strings.Join(q, " ")
 }
 
@@ -129,7 +144,7 @@ func fxLoc(r *rand.Rand) (truyhoi.Cung, string) {
 func fxDat(rows []HangDiaDiem, l LocCung) []string {
 	var ids []string
 	for _, r := range rows {
-		if ok, _ := l.Dat(r.ThuocTinh); ok {
+		if ok, _ := l.Dat(r.thuocTinh()); ok {
 			ids = append(ids, r.ID)
 		}
 	}

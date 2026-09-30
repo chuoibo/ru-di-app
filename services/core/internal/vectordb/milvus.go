@@ -304,6 +304,14 @@ type HangDiaDiem struct {
 	PhienBan    int64
 }
 
+// thuocTinh is the row's attributes as a filter reads them: the maximum
+// price is stored beside them (GiaMaxVND), so it is copied in.
+func (r HangDiaDiem) thuocTinh() ThuocTinh {
+	t := r.ThuocTinh
+	t.GiaMaxVND = r.GiaMaxVND
+	return t
+}
+
 // Doc is the place the row belongs to.
 func (r HangDiaDiem) Doc() string {
 	if r.DocID == "" {

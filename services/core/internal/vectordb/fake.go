@@ -91,7 +91,7 @@ func (f *Fake) Tim(_ context.Context, y YeuCauTim) ([]Trung, error) {
 	for _, l := range legs {
 		var l2 []fakeDiem
 		for id, r := range f.DiaDiem {
-			if ok, _ := y.Loc.Dat(r.ThuocTinh); !ok {
+			if ok, _ := y.Loc.Dat(r.thuocTinh()); !ok {
 				continue
 			}
 			var d float64

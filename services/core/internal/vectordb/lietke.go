@@ -217,7 +217,7 @@ func (m *Milvus) XoaDoc(ctx context.Context, name, docID string) error {
 func (m *Milvus) DocThuocTinh(ctx context.Context, name, docID string) (map[string]ThuocTinh, error) {
 	rs, err := m.cli.Query(ctx, milvusclient.NewQueryOption(name).WithFilter(FDocID+" == {d}").
 		WithTemplateParam("d", docID).
-		WithOutputFields(FID, FDestination, FOpenSlots, FPriceMin, FAllergens, FDiets, FDanhMuc, FTombstoned).
+		WithOutputFields(FID, FDestination, FOpenSlots, FPriceMin, FPriceMax, FAllergens, FDiets, FDanhMuc, FTombstoned).
 		WithLimit(1024).WithConsistencyLevel(entity.ClStrong))
 	if err != nil {
 		return nil, err
@@ -232,6 +232,7 @@ func (m *Milvus) DocThuocTinh(ctx context.Context, name, docID string) (map[stri
 		var t ThuocTinh
 		t.DiemDen, _ = rs.GetColumn(FDestination).GetAsString(i)
 		t.GiaMinVND, _ = rs.GetColumn(FPriceMin).GetAsInt64(i)
+		t.GiaMaxVND, _ = rs.GetColumn(FPriceMax).GetAsInt64(i)
 		t.GoBo, _ = rs.GetColumn(FTombstoned).GetAsBool(i)
 		if v, err := rs.GetColumn(FOpenSlots).Get(i); err == nil {
 			t.OSlots, _ = v.([]int16)

@@ -131,7 +131,8 @@ func (k *Kho) DanhSachCollection(ctx context.Context) ([]string, error) {
 // unknown price vectordb.GiaKhongRo (out under a budget), unknown hours no
 // open slot (out under a time or a window).
 func ThuocTinh(r nap.Hang) vectordb.ThuocTinh {
-	t := vectordb.ThuocTinh{DiemDen: r.DiemDen, AnKieng: slices.Clone(r.AnKieng), GiaMinVND: vectordb.GiaKhongRo}
+	t := vectordb.ThuocTinh{DiemDen: r.DiemDen, AnKieng: slices.Clone(r.AnKieng), GiaMinVND: vectordb.GiaKhongRo,
+		GiaMaxVND: giaMax(r)}
 	if r.DiUngRo {
 		t.DiUng = slices.Clone(r.DiUng)
 	} else {

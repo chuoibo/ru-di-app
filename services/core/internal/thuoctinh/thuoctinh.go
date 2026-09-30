@@ -124,8 +124,15 @@ func Doc(ctx context.Context, q Querier, ids []string) (map[string]Hang, error) 
 		} else {
 			tt.DanhMuc = []string{vectordb.KhongRo}
 		}
+		// The index's reading (nap.DoanQuan, napkho): the maximum, or the
+		// minimum when only one figure is known; unknown without a minimum.
+		tt.GiaMaxVND = vectordb.GiaKhongRo
 		if p.PriceMinVND != nil {
 			tt.GiaMinVND = *p.PriceMinVND
+			tt.GiaMaxVND = *p.PriceMinVND
+			if p.PriceMaxVND != nil {
+				tt.GiaMaxVND = *p.PriceMaxVND
+			}
 		}
 		if h.Lich != nil {
 			tt.OSlots = nap.MoO(*h.Lich)

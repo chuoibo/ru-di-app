@@ -188,7 +188,7 @@ func TestKhongViPhamRangBuocCung(t *testing.T) {
 			}
 			for _, h := range got {
 				hits++
-				if ok, rb := l.Dat(byID[h.ID].ThuocTinh); !ok {
+				if ok, rb := l.Dat(byID[h.ID].thuocTinh()); !ok {
 					t.Errorf("set %d %s: hit %s breaks %q", i, shape, h.ID, rb)
 				}
 				if !slices.Contains(want, h.ID) {

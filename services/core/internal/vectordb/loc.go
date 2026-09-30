@@ -55,6 +55,10 @@ type LocCung struct {
 	// NganSachVND is the ceiling per person; a place qualifies when its
 	// known minimum price is at most this.
 	NganSachVND *int64
+	// GiaTuVND is the floor per person; a place qualifies when its known
+	// maximum price (FPriceMax: the maximum, or the minimum when the source
+	// gave one figure) is at least this. Unknown price: out.
+	GiaTuVND *int64
 	// DanhMuc are category ids (tuvung.DanhMuc, checked by LocDanhMuc): a
 	// place qualifies when its categories hold ANY of them; a place whose
 	// categories nobody established ([KhongRo]) never does.
@@ -76,7 +80,7 @@ var ErrLoc = errors.New("vectordb: hard constraint outside its vocabulary")
 // no known hours is out under an open instant or window. Without that
 // constraint the same place is kept, and the evidence says «chưa rõ».
 func TuCung(c truyhoi.Cung) (LocCung, error) {
-	l := LocCung{DiemDen: c.DiemDenID, NganSachVND: c.NganSachVND}
+	l := LocCung{DiemDen: c.DiemDenID, NganSachVND: c.NganSachVND, GiaTuVND: c.GiaTuVND}
 	for _, id := range c.DiUng {
 		if !tuvung.DiUng.Co(id) {
 			return LocCung{}, ErrLoc
@@ -105,6 +109,15 @@ func TuCung(c truyhoi.Cung) (LocCung, error) {
 	if c.NganSachVND != nil && *c.NganSachVND < 0 {
 		return LocCung{}, ErrLoc
 	}
+	// A floor above the ceiling asks for nothing: refused, not searched.
+	if c.GiaTuVND != nil && (*c.GiaTuVND < 0 || (c.NganSachVND != nil && *c.GiaTuVND > *c.NganSachVND)) {
+		return LocCung{}, ErrLoc
+	}
+	dm, err := LocDanhMuc(c.DanhMuc)
+	if err != nil {
+		return LocCung{}, err
+	}
+	l.DanhMuc = dm
 	return l, nil
 }
 
@@ -163,9 +176,21 @@ func (l LocCung) menhDes() []menhDe {
 		out = append(out, menhDe{truyhoi.RBMoLuc, "ARRAY_CONTAINS_ANY(" + FOpenSlots + ", {kh})",
 			map[string]any{"kh": ks}})
 	}
-	if l.NganSachVND != nil {
-		out = append(out, menhDe{truyhoi.RBNganSach, FPriceMin + " >= {g0} and " + FPriceMin + " <= {ns}",
-			map[string]any{"g0": int64(0), "ns": *l.NganSachVND}})
+	if l.NganSachVND != nil || l.GiaTuVND != nil {
+		// One constraint (ngan_sach) for the whole price band, so the probes
+		// and the per-constraint counts keyed by it see both bounds. Fail
+		// closed: an unknown price (GiaKhongRo) is out under either bound.
+		expr := FPriceMin + " >= {g0}"
+		ts := map[string]any{"g0": int64(0)}
+		if l.NganSachVND != nil {
+			expr += " and " + FPriceMin + " <= {ns}"
+			ts["ns"] = *l.NganSachVND
+		}
+		if l.GiaTuVND != nil {
+			expr += " and " + FPriceMax + " >= {gt}"
+			ts["gt"] = *l.GiaTuVND
+		}
+		out = append(out, menhDe{truyhoi.RBNganSach, expr, ts})
 	}
 	if len(l.DanhMuc) > 0 {
 		// Fail closed: a place whose categories nobody established is
@@ -261,6 +286,9 @@ type ThuocTinh struct {
 	AnKieng   []string
 	OSlots    []int16
 	GiaMinVND int64 // GiaKhongRo when unknown
+	// GiaMaxVND is the known maximum, or the minimum when the source gave
+	// one figure (FPriceMax); GiaKhongRo when unknown.
+	GiaMaxVND int64
 	// DanhMuc are the place's categories (tuvung.DanhMuc ids); empty or
 	// [KhongRo] when unknown.
 	DanhMuc []string
@@ -296,7 +324,9 @@ func (l LocCung) Dat(t ThuocTinh) (bool, truyhoi.RangBuoc) {
 	if len(l.Slots) > 0 && !slices.ContainsFunc(l.Slots, func(s int16) bool { return slices.Contains(t.OSlots, s) }) {
 		return false, truyhoi.RBMoLuc
 	}
-	if l.NganSachVND != nil && (t.GiaMinVND < 0 || t.GiaMinVND > *l.NganSachVND) {
+	if (l.NganSachVND != nil || l.GiaTuVND != nil) && (t.GiaMinVND < 0 ||
+		(l.NganSachVND != nil && t.GiaMinVND > *l.NganSachVND) ||
+		(l.GiaTuVND != nil && t.GiaMaxVND < *l.GiaTuVND)) {
 		return false, truyhoi.RBNganSach
 	}
 	if len(l.DanhMuc) > 0 && (slices.Contains(t.DanhMuc, KhongRo) ||

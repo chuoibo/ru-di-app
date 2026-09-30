@@ -218,23 +218,26 @@ func TestFilterExpressionsHoldNoValue(t *testing.T) {
 	at := time.Date(2026, 9, 26, 19, 5, 0, 0, ViTri)
 	ns := int64(123457)
 	evil := `x" or 1==1 or destination != "`
-	l := LocCung{DiemDen: evil, DiUng: []string{"tom", evil}, AnKieng: []string{evil}, NganSachVND: &ns}
+	gt := int64(45671)
+	l := LocCung{DiemDen: evil, DiUng: []string{"tom", evil}, AnKieng: []string{evil}, NganSachVND: &ns, GiaTuVND: &gt,
+		DanhMuc: []string{evil}}
 	s := SlotTuan(at)
 	l.Slot = &s
 	e, p := l.BieuThuc()
-	for _, v := range []string{evil, "123457", "khong_ro", "da-lat"} {
+	for _, v := range []string{evil, "123457", "45671", "khong_ro", "da-lat"} {
 		if strings.Contains(e, v) {
 			t.Fatalf("value %q spliced into %q", v, e)
 		}
 	}
 	// The same constraints with other values give the same expression text:
 	// it depends on which constraints are set, never on their values.
-	ns2, s2 := int64(5), int16(300)
-	other := LocCung{DiemDen: "ha-noi", DiUng: []string{"sua"}, AnKieng: []string{"halal"}, NganSachVND: &ns2, Slot: &s2}
+	ns2, s2, gt2 := int64(5), int16(300), int64(1)
+	other := LocCung{DiemDen: "ha-noi", DiUng: []string{"sua"}, AnKieng: []string{"halal"}, NganSachVND: &ns2, Slot: &s2,
+		GiaTuVND: &gt2, DanhMuc: []string{"cafe"}}
 	if e2, _ := other.BieuThuc(); e2 != e {
 		t.Fatalf("the expression changed with the values:\n%s\n%s", e, e2)
 	}
-	if p["dd"] != evil || p["ns"] != ns || p["sl"] != int64(s) || p["kr"] != KhongRo {
+	if p["dd"] != evil || p["ns"] != ns || p["gt"] != gt || p["sl"] != int64(s) || p["kr"] != KhongRo {
 		t.Fatalf("params %v", p)
 	}
 	for rb, q := range l.BieuThucViPham() {
@@ -245,7 +248,9 @@ func TestFilterExpressionsHoldNoValue(t *testing.T) {
 			t.Fatalf("%s: not scoped to the destination: %q", rb, q.BieuThuc)
 		}
 	}
-	if len(l.BieuThucViPham()) != 4 {
+	// allergens, diets, open slot, price band (floor and ceiling are one
+	// constraint), categories.
+	if len(l.BieuThucViPham()) != 5 {
 		t.Fatal("one count per constraint but the destination")
 	}
 }
@@ -324,7 +329,7 @@ func TestFakeNeverReturnsAViolation(t *testing.T) {
 		}
 		for _, h := range got {
 			hits++
-			if ok, rb := l.Dat(byID[h.ID].ThuocTinh); !ok {
+			if ok, rb := l.Dat(byID[h.ID].thuocTinh()); !ok {
 				t.Fatalf("fake hit %s breaks %s", h.ID, rb)
 			}
 		}
@@ -375,5 +380,71 @@ func TestChiMucDenseTheoMoiTruong(t *testing.T) {
 	env[EnvDenseIndex] = "bogus"
 	if _, err := FromEnv(func(k string) string { return env[k] }); err == nil {
 		t.Fatal("FromEnv accepted a bogus dense index")
+	}
+}
+
+// The price band and the categories (TimQuan's filters): a place qualifies
+// when its band overlaps [GiaTuVND, NganSachVND] and it has ANY of the asked
+// categories; unknown price or unclassified is out; a floor above the
+// ceiling and an unknown category are refused, never searched.
+func TestGiaVaDanhMucLoc(t *testing.T) {
+	i64 := func(v int64) *int64 { return &v }
+	place := func(lo, hi int64, dm ...string) ThuocTinh {
+		return ThuocTinh{GiaMinVND: lo, GiaMaxVND: hi, DanhMuc: dm}
+	}
+	cases := []struct {
+		name string
+		c    truyhoi.Cung
+		t    ThuocTinh
+		ok   bool
+	}{
+		{"band inside", truyhoi.Cung{GiaTuVND: i64(40000), NganSachVND: i64(80000)}, place(50000, 70000, "cafe"), true},
+		{"band overlaps the floor", truyhoi.Cung{GiaTuVND: i64(40000)}, place(30000, 45000, "cafe"), true},
+		{"band below the floor", truyhoi.Cung{GiaTuVND: i64(40000)}, place(20000, 35000, "cafe"), false},
+		{"one figure at the floor", truyhoi.Cung{GiaTuVND: i64(40000)}, place(40000, 40000, "cafe"), true},
+		{"cheapest above the ceiling", truyhoi.Cung{NganSachVND: i64(30000)}, place(35000, 60000, "cafe"), false},
+		{"unknown price under a floor", truyhoi.Cung{GiaTuVND: i64(1)}, place(GiaKhongRo, GiaKhongRo, "cafe"), false},
+		{"any of the categories", truyhoi.Cung{DanhMuc: []string{"cafe", "bar_nhau"}}, place(0, 0, "bar_nhau", "quan_an"), true},
+		{"none of the categories", truyhoi.Cung{DanhMuc: []string{"cafe"}}, place(0, 0, "quan_an"), false},
+		{"unclassified under a category", truyhoi.Cung{DanhMuc: []string{"cafe"}}, place(0, 0, KhongRo), false},
+	}
+	for _, c := range cases {
+		l, err := TuCung(c.c)
+		if err != nil {
+			t.Fatalf("%s: %v", c.name, err)
+		}
+		if ok, _ := l.Dat(c.t); ok != c.ok {
+			t.Errorf("%s: %v, want %v", c.name, ok, c.ok)
+		}
+	}
+	for name, c := range map[string]truyhoi.Cung{
+		"floor above the ceiling": {GiaTuVND: i64(90000), NganSachVND: i64(50000)},
+		"negative floor":          {GiaTuVND: i64(-1)},
+		"unknown category":        {DanhMuc: []string{"quan_nuoc"}},
+		"khong_ro as a category":  {DanhMuc: []string{KhongRo}},
+	} {
+		if _, err := TuCung(c); !errors.Is(err, ErrLoc) {
+			t.Errorf("%s accepted: %v", name, err)
+		}
+	}
+}
+
+// A row's maximum price is stored beside its attributes (HangDiaDiem.GiaMaxVND,
+// the FPriceMax column): a price floor reads it there. A row whose
+// attributes carry no maximum of their own is still found above the floor.
+func TestSanGiaDocGiaToiDaCuaHang(t *testing.T) {
+	f := MoiFake()
+	d, _ := nhung.Stub{}.NhungTaiLieu(context.Background(), []nhung.TaiLieuVao{{NoiDung: "quán cà phê"}})
+	f.Them(HangDiaDiem{ID: "p1", Dense: d[0], Text: "quán cà phê", PhienBan: 1, GiaMaxVND: 60000,
+		ThuocTinh: ThuocTinh{DiemDen: "d", GiaMinVND: 30000}})
+	floor := int64(50000)
+	l, err := TuCung(truyhoi.Cung{GiaTuVND: &floor})
+	if err != nil {
+		t.Fatal(err)
+	}
+	q, _ := nhung.Stub{}.Nhung(context.Background(), []string{"cà phê"}, nhung.CauHoi)
+	got, err := f.Tim(context.Background(), YeuCauTim{Kho: KhoDiaDiem, Dense: q[0], Loc: l, K: 5})
+	if err != nil || len(got) != 1 || got[0].ID != "p1" {
+		t.Fatalf("a 30k-60k place under a 50k floor: %+v %v", got, err)
 	}
 }

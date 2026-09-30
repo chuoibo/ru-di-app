@@ -131,6 +131,12 @@ var _ truyhoi.Retriever = DuPhong{}
 func (d DuPhong) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi, error) {
 	kq, err := d.Chinh.Tim(ctx, y)
 	if errors.Is(err, ErrKhongNhanh) && d.Phu != nil {
+		// The lexical index has no categories and no price ceiling on a
+		// place's dearest spend: answering such a request there would drop
+		// the filter and widen the answer. Refused instead (fail closed).
+		if len(y.Cung.DanhMuc) > 0 || y.Cung.GiaTuVND != nil {
+			return kq, fmt.Errorf("%w: the fallback index cannot hold a category or price-floor filter", err)
+		}
 		return d.Phu.Tim(ctx, y)
 	}
 	return kq, err

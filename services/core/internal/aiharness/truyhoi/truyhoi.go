@@ -103,8 +103,18 @@ type Cung struct {
 	// window the model gave is never narrowed to its first instant: «tối
 	// nay» (18:00–22:00) keeps a place that opens at 19:00.
 	MoTrong *KhungMo
-	// NganSachVND is the ceiling per person in whole đồng.
+	// NganSachVND is the ceiling per person in whole đồng: a place
+	// qualifies when its known cheapest spend is at most this.
 	NganSachVND *int64
+	// GiaTuVND is the floor per person in whole đồng: a place qualifies
+	// when its known dearest spend (its only one when the source gave a
+	// single figure) is at least this. With NganSachVND the two keep the
+	// places whose price band overlaps [GiaTuVND, NganSachVND]. A place
+	// with no known price is out under either.
+	GiaTuVND *int64
+	// DanhMuc are category ids (tuvung.DanhMuc): a place qualifies when its
+	// categories hold ANY of them; an unclassified place never does.
+	DanhMuc []string
 }
 
 // KhungMo is a window [Tu, Den) of instants; Den is after Tu, and a window
