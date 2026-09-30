@@ -24,7 +24,6 @@ import (
 	"google.golang.org/adk/v2/model"
 
 	"mobile/services/core/internal/aiharness/llm"
-	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/jobs"
 )
 
@@ -32,7 +31,7 @@ import (
 // §4, §7, §9): create -> trigger -> outbox -> relay with publisher confirms ->
 // consumer -> claim by (id, enqueue_seq) -> the engine on a scripted stub ->
 // the answer committed -> Ack. Zero real model calls (ADR-0034 §2.6): the Go
-// engine runs on llm.Stub, the group path on the fixture's fake brain.
+// engine runs on llm.Stub, the group path on the fixture's mayGia.
 
 func amqpURL(t *testing.T) string {
 	t.Helper()
@@ -243,7 +242,7 @@ func phanVi(ds []time.Duration, p float64) time.Duration {
 }
 
 // Through the real routes, with the poller off: a Nếp question on the Go
-// engine and a group question on the brain path each travel create -> outbox
+// engine and a group question on the same engine each travel create -> outbox
 // -> relay -> consumer -> answer, and the outbox rows end published.
 func TestHangDoiDauCuoiQuaBroker(t *testing.T) {
 	url := amqpURL(t)
@@ -486,7 +485,7 @@ func TestHangDoiNhaKhiDungDuocNhanLaiNgay(t *testing.T) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	other := New(f.pool, brain.Configured()).WithNepEngine(f.handler.nepEngine)
+	other := New(f.pool).WithNepEngine(f.handler.nepEngine)
 	b := moTram(t, f, other, url, top, false)
 	b.choSong(t)
 	stopped := time.Now()
@@ -589,7 +588,7 @@ func TestHangDoiTamDungLuiDanKhiClaimHongNgay(t *testing.T) {
 				t.Fatal(err)
 			}
 			t.Cleanup(ro.Close)
-			return New(ro, brain.Configured()).WithNepEngine(f.handler.nepEngine), nil
+			return New(ro).WithNepEngine(f.handler.nepEngine), nil
 		}},
 	} {
 		t.Run(c.name, func(t *testing.T) {

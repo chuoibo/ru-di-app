@@ -10,18 +10,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/cau"
 	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/jobs"
-	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
-	"mobile/services/core/internal/service"
-	"mobile/services/core/internal/treejson"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type work struct {
@@ -653,8 +651,7 @@ const maNgat = "worker_interrupted"
 // traLaiSQL puts a job whose terminal write failed back in the queue: due
 // now, a new enqueue_seq (so a broker message for it goes out at once), and
 // the attempt stays spent -- a failure that recurs on the job itself stays
-// bounded by attempts<3, including on the brain path, whose model calls
-// model_calls does not count. The broker message of the failed attempt names
+// bounded by attempts<3, whatever model_calls says. The broker message of the failed attempt names
 // the old seq and claims nothing when it runs again.
 const traLaiSQL = `UPDATE chat_ai_invocations SET status='queued',lease_id=NULL,lease_until=NULL,available_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND first_token_at IS NULL AND attempts<3`
 
@@ -754,162 +751,20 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 
 // process runs one claimed job to its terminal transition.
 func (h *Handler) process(ctx context.Context, j work) error {
-	// Before prepare: a personal job has no room, and nothing the server owns
-	// about a room is laid on top of it (ADR-0036 §4).
+	// A personal job has no room, and nothing the server owns about a room
+	// is laid on top of it (ADR-0036 §4).
 	if j.scope == scopeMe {
 		return h.processNep(ctx, j)
 	}
-	// The group on the Go engine (MOBILE_AI_ENGINE_GROUP=go): no prepare,
-	// no taste, no default catalogue; the engine's tools read the catalogue.
-	if h.nhomEngine != nil {
-		return h.processNhomEngine(ctx, j)
-	}
-	// `hoi` is the Go group engine's alone. The route takes it when the
-	// serving process says the group runs on the Go engine (WithNhomGo), but
-	// the job runs wherever `core work` runs, and the two read their flag
-	// apart. A worker whose group engine is the brain refuses it here, fail
-	// closed and before any read, with the reason chat-capabilities gives
-	// for `hoi` on a brain host, instead of handing the brain a command it
-	// has no path for (review of slices 9/11, finding 2.6).
-	if j.command == lenhHoi {
+	// A worker with no engine has no model: `core work` refuses to start
+	// without one and `serve` runs no worker without one, so this is a
+	// fail-closed floor, before any read.
+	if h.nhomEngine == nil {
 		return h.finishFailure(ctx, j, "provider_unavailable")
 	}
-	dap, err := h.prepare(ctx, j)
-	if errors.Is(err, errCapKhongCoBrain) {
-		return h.finishFailure(ctx, j, "provider_unavailable")
-	}
-	if err != nil {
-		return h.finishFailure(ctx, j, "sharing_unavailable")
-	}
-	if j.command == lenhChiaBill {
-		return h.processChiaBill(ctx, j, dap)
-	}
-	conversation, err := hoiThoai(j.goi, j.prompt, dap.toi)
-	if err != nil {
-		return h.finishFailure(ctx, j, "invalid_ai_result")
-	}
-	catalogue := pyjson.List{}
-	for _, place := range dap.places {
-		catalogue = append(catalogue, place)
-	}
-	payload := pyjson.NewOrderedMap()
-	payload.Set("conversation", conversation)
-	payload.Set("members", dap.members)
-	payload.Set("places", catalogue)
-	if dap.budget == nil {
-		payload.Set("budget_per_person_vnd", pyjson.Null{})
-	} else {
-		payload.Set("budget_per_person_vnd", pyjson.NewInt(*dap.budget))
-	}
-	inference, cancel := context.WithTimeout(ctx, 60*time.Second)
-	raw, err := h.brain.PostJSONContext(inference, "companion-reply", payload)
-	cancel()
-	if err != nil {
-		return h.finishFailure(ctx, j, "provider_unavailable")
-	}
-	card, err := theCuaViec(j, treejson.To(raw), treejson.MapsTo(dap.places))
-	if err != nil {
-		return h.finishFailure(ctx, j, "invalid_ai_result")
-	}
-	// With a stream, the finished text will reach it (after the commit,
-	// publish), so it must pass the output guard's window first: a card the
-	// guard stops is not posted, and the room and the job row learn only the
-	// generic code. Without a stream nothing is released and the brain's card
-	// posts as it did before slice 11 (review of slice 11, finding 7).
-	if j.luong != nil && !theQuaGuard(card) {
-		return h.finishFailure(ctx, j, maChanChung)
-	}
-	return h.publish(ctx, j, card, nil)
-}
-
-// dapThem is what the server lays on top of the caller's bundle (ADR-0036
-// §2.3): only things it owns and never encrypted. It never holds a word of the
-// conversation; that arrives from the client or not at all.
-type dapThem struct {
-	// The catalogue the model may choose from, best match for the group first.
-	places []*pyjson.OrderedMap
-	// Who is in the room, by display name where one is safe (see roster).
-	members pyjson.List
-	// The caller's label in that roster, which the transcript uses too.
-	toi string
-	// The group's stated per-person budget, nil when nobody answered.
-	budget *int64
-	// chia_bill only: who wrote each shared turn (message id -> person id),
-	// read from `messages.author_id`, never from the bundle's own claim.
-	authors map[string]string
-	// chia_bill only: the active members, the proposed "shared by" of every
-	// draft, as v1 proposed it.
-	memberships []repo.Membership
-}
-
-func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	tx, err := h.pool.Begin(ctx)
-	if err != nil {
-		return dapThem{}, err
-	}
-	defer tx.Rollback(ctx)
-	g, err := authority(ctx, tx, j.conversation, j.digest)
-	if err != nil {
-		return dapThem{}, err
-	}
-	if g.member != j.member || g.person != j.person || phongAi(ctx, tx, g) != nil {
-		return dapThem{}, &denied{403, "sharing_unavailable"}
-	}
-	// The brain has no path for a chat of two: a pair's job that reaches a
-	// worker whose group engine is the brain fails closed here, before any
-	// read, with the reason chat-capabilities gives a pair on a brain host.
-	if g.kind == kindPair {
-		return dapThem{}, errCapKhongCoBrain
-	}
-	var live bool
-	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_ai_invocations WHERE id=$1 AND status='running' AND lease_id=$2 AND lease_until>clock_timestamp() AND share_expires_at>clock_timestamp())`, j.id, j.lease).Scan(&live); err != nil {
-		return dapThem{}, err
-	}
-	if !live {
-		return dapThem{}, &denied{409, "invocation_cancelled"}
-	}
-	store := repo.Repository{Q: tx}
-	if j.command == lenhChiaBill {
-		// Splitting a bill needs who is in the room and who wrote what; it has
-		// no use for taste, budget or the catalogue, so it never reads them.
-		out := dapThem{authors: map[string]string{}}
-		if out.memberships, err = store.ListMembers(ctx, j.conversation); err != nil {
-			return dapThem{}, err
-		}
-		if len(j.goi) > 0 {
-			var bc bundle
-			if err = json.Unmarshal(j.goi, &bc); err != nil {
-				return dapThem{}, err
-			}
-			if out.authors, err = tacGia(ctx, tx, j.conversation, &bc); err != nil {
-				return dapThem{}, err
-			}
-		}
-		return out, tx.Commit(ctx)
-	}
-	// Roster, taste, budget and the public catalogue: the four things the
-	// server owns and never encrypted. Never the conversation.
-	//
-	// The catalogue is the one v1 handed the model, computed by the same code:
-	// the default destination's places, ranked by the group's own taste, cut
-	// to forty, through promptsafety. The earlier version here took the first
-	// forty rows by id, so a group that only drinks coffee could be handed
-	// forty restaurants and no café, and the model had nothing better to pick.
-	group, err := service.GroupTaste(ctx, store, j.conversation, time.Now().UTC())
-	if err != nil {
-		return dapThem{}, err
-	}
-	places, err := service.ModelPlaceRows(ctx, store, group)
-	if err != nil {
-		return dapThem{}, err
-	}
-	members, toi, err := roster(ctx, tx, store, j.conversation, j.person, j.goi)
-	if err != nil {
-		return dapThem{}, err
-	}
-	return dapThem{places: places, members: members, toi: toi, budget: group.BudgetPerPersonVND}, tx.Commit(ctx)
+	// The engine's tools read the catalogue; no taste, no default catalogue
+	// is laid on top.
+	return h.processNhomEngine(ctx, j)
 }
 
 // finishFailure fails a group job with code -- unless the worker is stopping,
@@ -926,15 +781,6 @@ func (h *Handler) finishFailure(ctx context.Context, j work, code string) error 
 		j.luong.thatBai(code)
 	}
 	return err
-}
-
-// publish posts the card and closes the job in one transaction. result is the
-// structured outcome kept on the invocation row (chia_bill's drafts); nil
-// leaves the column NULL, which is what a plan job has always stored.
-// Every group card, the brain's and the Go engine's alike, reaches its
-// stream only after this commit (contract §4.1).
-func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage, result json.RawMessage) error {
-	return h.publishGu(ctx, j, card, result, nil)
 }
 
 // publishGu is publish for an answer that used a couple's shared taste: gu
@@ -1022,9 +868,8 @@ func (h *Handler) publishGu(ctx context.Context, j work, card json.RawMessage, r
 }
 
 // chuTheNhom passes the text parts of a group card through the output
-// guard's window, paced nhip apart (design 02 §5.1: an engine that does not
-// stream -- the brain path -- still reaches the stream only through the
-// window). Every part is read before any is released, so a card
+// guard's window, paced nhip apart (design 02 §5.1: a card's text reaches
+// the stream only through the window, after the card posted). Every part is read before any is released, so a card
 // the guard stops leaves nothing in the stream. It reports false when the
 // guard stopped the card.
 func chuTheNhom(ctx context.Context, sink guard.NhanDelta, card []byte, nhip time.Duration) bool {
@@ -1087,4 +932,13 @@ func chuCuaThe(card []byte) []phanTheChu {
 		return out
 	}
 	return nil
+}
+
+// ketQuaHoacNull is the result column's value: NULL for a job that keeps no
+// structured outcome.
+func ketQuaHoacNull(result []byte) any {
+	if len(result) == 0 {
+		return nil
+	}
+	return json.RawMessage(result)
 }

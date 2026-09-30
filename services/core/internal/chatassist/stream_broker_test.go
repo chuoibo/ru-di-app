@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/genai"
 
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/cau"
@@ -411,10 +412,12 @@ func TestStreamNhomLaneCuQuaKhoaPhong(t *testing.T) {
 // next authorization check, and the stream closes.
 func TestStreamThanhVienBiRutNhanThuHoi(t *testing.T) {
 	url := amqpURL(t)
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(3 * time.Second)
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic slow fixture"}})
-	})
+	f := setup(t, &mayGia{traLoi: "Synthetic slow fixture", truocTraLoi: func(ctx context.Context) {
+		select {
+		case <-time.After(3 * time.Second):
+		case <-ctx.Done():
+		}
+	}})
 	cfg := DefaultWorkerConfig()
 	cfg.Heartbeat = 20 * time.Second
 	f.handler.WithWorker(cfg)
@@ -858,9 +861,7 @@ func TestStreamCuaNguoiKhacLa404(t *testing.T) {
 // A group job that fails ends its stream with that_bai{code} (review of
 // slice 11, finding 3), after the failure committed.
 func TestStreamThatBaiKetThucLuong(t *testing.T) {
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		reply(w, 200, map[string]any{"kind": "khong_ro"})
-	})
+	f := setup(t, &mayGia{loi: genai.APIError{Code: 400}})
 	d := moDongSong(t, f)
 	v := f.create(t)
 	if ok, err := f.handler.ProcessOne(context.Background()); err != nil || !ok {
@@ -880,10 +881,12 @@ func TestStreamThatBaiKetThucLuong(t *testing.T) {
 // 11, finding 3): the heartbeat finds the lease gone and the worker tells
 // the stream how, from the row.
 func TestStreamHuyKetThucLuong(t *testing.T) {
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(3 * time.Second)
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic slow fixture"}})
-	})
+	f := setup(t, &mayGia{traLoi: "Synthetic slow fixture", truocTraLoi: func(ctx context.Context) {
+		select {
+		case <-time.After(3 * time.Second):
+		case <-ctx.Done():
+		}
+	}})
 	cfg := DefaultWorkerConfig()
 	cfg.Heartbeat = 100 * time.Millisecond
 	f.handler.WithWorker(cfg)
@@ -902,56 +905,6 @@ func TestStreamHuyKetThucLuong(t *testing.T) {
 	}
 }
 
-// The brain's Nếp answer through Redis (review of slice 11, finding 5): one
-// the output guard stops leaves 0 bytes of itself in any key and fails
-// ai_tra_loi_bi_chan; a clean one reaches the stream as one delta after its
-// commit, then xong with the same text. A raw write of the brain's text into
-// the stream, past the window, turns the first half red.
-func TestStreamBrainNepQuaRedis(t *testing.T) {
-	for _, c := range []struct {
-		ten, text, status string
-	}{
-		{"chan", "Quán nướng đó mở tới 22 giờ nhé. Gọi 0912 " + "345 678 để giữ bàn trước.", "failed"},
-		{"sach", "Quán nướng đó mở tới 22 giờ nhé, bạn đi sớm cho có chỗ.", "succeeded"},
-	} {
-		t.Run(c.ten, func(t *testing.T) {
-			f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-				reply(w, 200, map[string]any{"text": c.text})
-			})
-			d := moDongSong(t, f)
-			id := f.chenNep(t, 1, func(int) string { return "quán nướng đó còn chỗ không?" })[0]
-			if _, err := f.pool.Exec(context.Background(), `UPDATE chat_ai_invocations SET boi_canh='{"luot":[]}' WHERE id=$1`, id); err != nil {
-				t.Fatal(err)
-			}
-			if ok, err := f.handler.ProcessOne(context.Background()); err != nil || !ok {
-				t.Fatalf("worker: %v %v", ok, err)
-			}
-			status, _, _, _ := f.trangThai(t, id)
-			all, k := d.tatCa(t), d.loaiCua(t, d.khoaMoi(id))
-			if status != c.status {
-				t.Fatalf("row %s, stream %v", status, k)
-			}
-			if c.ten == "chan" {
-				if strings.Contains(all, "Quán nướng") || strings.Contains(all, "0912") || k[len(k)-1] != `that_bai:{"code":"ai_tra_loi_bi_chan"}` {
-					t.Fatalf("the stopped brain answer reached Redis: %v", k)
-				}
-				return
-			}
-			var noi strings.Builder
-			for _, e := range k {
-				if strings.HasPrefix(e, "delta:") {
-					var dd aistream.DeltaData
-					_ = json.Unmarshal([]byte(strings.TrimPrefix(e, "delta:")), &dd)
-					noi.WriteString(dd.Text)
-				}
-			}
-			if noi.String() != c.text || !strings.HasPrefix(k[len(k)-1], "xong:") || !strings.Contains(k[len(k)-1], "đi sớm") {
-				t.Fatalf("clean brain answer: %v", k)
-			}
-		})
-	}
-}
-
 // The owner's requirement (2026-09-27): the answer appears progressively.
 // With production pacing (aiharness.NhipPhat) a Nếp answer reaches a real
 // SSE client as several deltas, spread over time and all before xong, their
@@ -960,9 +913,7 @@ func TestStreamBrainNepQuaRedis(t *testing.T) {
 // comes at once; the first delta only after the verifier passed the draft.
 func TestStreamHienDanQuaSSE(t *testing.T) {
 	url := amqpURL(t)
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": traLoiDai}})
-	})
+	f := setup(t, &mayGia{traLoi: traLoiDai, kiem: kiemDatHai})
 	f.nepTrenEngine(t, nepDai(1, 0), aiharness.WithNhipPhat(aiharness.NhipPhat))
 	d := moDongSong(t, f)
 	moTram(t, f, f.handler, url, topology(t, url), false).choSong(t)

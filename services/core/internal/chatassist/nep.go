@@ -11,17 +11,14 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/jackc/pgx/v5"
 	"mobile/services/core/internal/aiharness"
-	"mobile/services/core/internal/aiharness/cau"
-	"mobile/services/core/internal/aiharness/guard"
 	"mobile/services/core/internal/aiharness/metrics"
 	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/auth"
-	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
 	"mobile/services/core/internal/domain/nepphieu"
-	"mobile/services/core/internal/pyjson"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Nếp's words (ADR-0036 §2.6-§2.8, ADR-0033 §2.5-§2.6).
@@ -52,9 +49,6 @@ const (
 	maxChuLuotNep  = 2000
 	maxHoiNep      = 2000
 	maxTongRuneNep = 16000
-	// Nếp answers in a few sentences; anything past this is not an answer the
-	// panel was built to show.
-	maxTraLoiNep = 2000
 )
 
 // luotNep is one turn of the open panel session, as the device keeps it in
@@ -357,81 +351,30 @@ func (h *Handler) nepGet(w http.ResponseWriter, r *http.Request) {
 	reply(w, 200, v)
 }
 
-// nepPayload is the brain body: the slip, the session, the question. Built from
-// the stored column alone.
-func nepPayload(goi []byte, prompt string) (pyjson.Value, error) {
-	var g goiNep
-	if err := json.Unmarshal(goi, &g); err != nil {
-		return nil, err
-	}
-	if g.Luot == nil {
-		g.Luot = []luotNep{}
-	}
-	raw, err := json.Marshal(map[string]any{"slip": g.Phieu, "turns": g.Luot, "prompt": prompt})
-	if err != nil {
-		return nil, err
-	}
-	return pyjson.Loads(raw)
-}
-
-// docTraLoi takes the one field the brain may return and holds it to the
-// panel's bounds. Anything else is an invalid result, not a partial one.
-func docTraLoi(raw pyjson.Value) (string, bool) {
-	obj, err := brain.AsObject(raw)
-	if err != nil {
-		return "", false
-	}
-	v, ok := obj.Get("text")
-	if !ok {
-		return "", false
-	}
-	s, ok := v.(pyjson.String)
-	if !ok {
-		return "", false
-	}
-	text := strings.TrimSpace(string(s))
-	if text == "" || !chuTrongHan(text, maxTraLoiNep) {
-		return "", false
-	}
-	return text, true
-}
-
-// WithNepEngine runs Nếp's jobs on the Go engine (MOBILE_AI_ENGINE_NEP=go):
-// the same queue, lease, sealed {text} result and failure codes, with the
-// model called from Go through aiharness instead of the brain's nep-reply.
+// WithNepEngine runs Nếp's jobs on the Go engine (internal/aiharness): the
+// only engine since ADR-0051 removed the brain's nep-reply. It also says this
+// process has a model (WithCoMay).
 func (h *Handler) WithNepEngine(e *aiharness.Engine) *Handler {
-	h.nepEngine, h.nepGo = e, e != nil
+	h.nepEngine = e
+	h.coMay = h.coMay || e != nil
 	return h
 }
 
-// WithNepGo marks a process that serves Nếp's routes while the jobs run on
-// the Go engine in `core work`: asking Nếp then never probes the brain.
-func (h *Handler) WithNepGo() *Handler {
-	h.nepGo = true
-	return h
-}
-
-// nepSanSang says whether a question to Nếp can be taken at all. On the brain
-// it is the brain's probe. On the Go engine it answers true without asking
-// anything, and how much that true knows depends on where the worker runs:
+// nepSanSang says whether a question to Nếp can be taken at all: whether
+// this host has a model (coMay). How much that knows depends on where the
+// worker runs:
 //
 //   - worker in this process (WithNepEngine): exact. The engine was built at
 //     startup, and `serve` refused to start without its key, a loopback-only
 //     base URL and the metrics schema;
-//   - worker in `core work` (WithNepGo): the host's choice only. Nothing here
-//     knows whether any `core work` is up. Design 01 §1 derives this from a
-//     worker heartbeat, and no slice has built one yet: the heartbeat of
-//     slice 4 renews one job's lease, it is not a worker's presence, and the
-//     queue of slice 10 added none either. Until a worker liveness record
-//     exists, a question asked with no worker up waits and ends as
-//     sharing_expired when its fifteen minutes close -- as it does on the
-//     brain path, whose probe asks the brain, not the workers.
-func (h *Handler) nepSanSang(ctx context.Context) bool {
-	if h.nepGo {
-		return true
-	}
-	return h.available(ctx)
-}
+//   - worker in `core work` (WithCoMay): this process's configuration only.
+//     Nothing here knows whether any `core work` is up. Design 01 §1 derives
+//     this from a worker heartbeat, and no slice has built one yet: the
+//     heartbeat of slice 4 renews one job's lease, it is not a worker's
+//     presence. Until a worker liveness record exists, a question asked with
+//     no worker up waits and ends as sharing_expired when its fifteen
+//     minutes close.
+func (h *Handler) nepSanSang(context.Context) bool { return h.coMay }
 
 // processNep runs one personal job. It never calls prepare: nothing the
 // server owns about a room -- roster, taste, budget, catalogue -- belongs in a
@@ -440,39 +383,12 @@ func (h *Handler) processNep(ctx context.Context, j work) error {
 	if err := h.nepConSong(ctx, j); err != nil {
 		return h.nepThatBai(ctx, j, "sharing_unavailable")
 	}
-	if h.nepEngine != nil {
-		return h.nepQuaEngine(ctx, j)
-	}
-	payload, err := nepPayload(j.goi, j.prompt)
-	if err != nil {
-		return h.nepThatBai(ctx, j, "invalid_ai_result")
-	}
-	inference, cancel := context.WithTimeout(ctx, 60*time.Second)
-	raw, err := h.brain.PostJSONContext(inference, "nep-reply", payload)
-	cancel()
-	if err != nil {
+	// A worker with no engine has no model: it never starts in `core work`,
+	// and `serve` runs no worker without one, so this is a fail-closed floor.
+	if h.nepEngine == nil {
 		return h.nepThatBai(ctx, j, "provider_unavailable")
 	}
-	text, ok := docTraLoi(raw)
-	if !ok {
-		return h.nepThatBai(ctx, j, "invalid_ai_result")
-	}
-	// The brain does not stream. With a stream, its answer will reach it --
-	// one final delta through the output guard's window, then xong{text},
-	// both after the commit -- so it must pass the window's scan first: an
-	// answer the guard stops is refused with the code the app already reads,
-	// and one past the cap or not UTF-8 as invalid (review of slice 11,
-	// finding 11). Without a stream nothing is released and the answer
-	// stores as it did before slice 11 (finding 7).
-	if j.luong != nil {
-		switch kq := guard.QuaCuaSo(aiharness.BoQua{}, 0, guard.DauRa{}, maxTraLoiNep, "", text); {
-		case kq.Chan != guard.RaSach:
-			return h.nepThatBai(ctx, j, string(cau.TraLoiBiChan))
-		case kq.KhongHopLe || kq.Chu == "":
-			return h.nepThatBai(ctx, j, "invalid_ai_result")
-		}
-	}
-	return h.nepXong(ctx, j, text, true)
+	return h.nepQuaEngine(ctx, j)
 }
 
 // luotEngine is the engine's turn, built from the stored job alone: the slip,
@@ -499,7 +415,7 @@ func luotEngine(j work) (aiharness.Turn, error) {
 }
 
 // nepQuaEngine runs the job on the Go engine. The answer is sealed by the same
-// nepXong as the brain's; a turn that ends without one fails the job with the
+// nepXong every Nếp job ends through; a turn that ends without one fails the job with the
 // engine's code, whose sentence the app already has (LOI_KET_QUA_NEP). One
 // metrics row follows the terminal transition, and never decides it.
 //
@@ -530,7 +446,7 @@ func (h *Handler) nepQuaEngine(ctx context.Context, j work) error {
 	}
 	switch {
 	case runErr == nil:
-		err = h.nepXong(ctx, j, res.Text, false)
+		err = h.nepXong(ctx, j, res.Text)
 	case aiharness.TamThoi(runErr) && !dangDung(ctx):
 		var later bool
 		if later, err = h.retryLater(ctx, j); err == nil && !later {
@@ -580,10 +496,8 @@ func (h *Handler) nepConSong(ctx context.Context, j work) error {
 
 // nepXong closes the job with the sealed answer. The question and the session
 // go in the same statement that stores the answer; nothing is published.
-// nhaSauChot releases the answer to the stream after the commit, as one
-// final delta through the output guard's window (the brain, which did not
-// stream); the engine's answer already streamed through it.
-func (h *Handler) nepXong(ctx context.Context, j work, text string, nhaSauChot bool) error {
+// The engine's answer already streamed through the output guard's window.
+func (h *Handler) nepXong(ctx context.Context, j work, text string) error {
 	if h.truocChot != nil {
 		h.truocChot(ctx)
 	}
@@ -613,9 +527,6 @@ func (h *Handler) nepXong(ctx context.Context, j work, text string, nhaSauChot b
 	if tag.RowsAffected() == 1 {
 		// Only now, with the answer sealed: the stream ends with it, on the
 		// invocation key alone.
-		if nhaSauChot {
-			j.luong.nhaChu(text, h.nhipSauChot())
-		}
 		j.luong.xongNep(text)
 	}
 	return nil

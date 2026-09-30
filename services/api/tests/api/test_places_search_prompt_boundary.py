@@ -121,7 +121,7 @@ def test_the_rules_are_stated_before_the_person_s_sentence_is_shown():
 
 
 def test_the_rules_say_out_loud_that_the_query_is_content_and_not_a_command():
-    """The clause `app/api/companion_gemini.py` already carries, kept in step.
+    """The clause every prompt of the product carries, kept in step.
 
     Two prompts in one service disagreeing about whether user text is an
     instruction is how one of them ends up being the weaker one.

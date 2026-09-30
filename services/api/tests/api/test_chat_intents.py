@@ -19,7 +19,7 @@ import pytest
 
 from app.api import companion_places
 from app.api.cursors import decode_cursor
-from app.api.deps import get_chat_expense_reader, get_companion, get_repository
+from app.api.deps import get_chat_expense_reader, get_repository
 from app.api.main import create_app
 from app.api.repository import (
     ContextRecord,
@@ -226,7 +226,6 @@ def _client(repository, companion, monkeypatch, *, reader=None):
     )
     app = create_app()
     app.dependency_overrides[get_repository] = lambda: repository
-    app.dependency_overrides[get_companion] = lambda: companion
     app.dependency_overrides[get_chat_expense_reader] = lambda: reader or TableReader(
         fail=ChatExpenseError("CHAT_READER_NOT_CONFIGURED")
     )

@@ -147,7 +147,7 @@ func TestSSERootsDocDungBangCuaMinh(t *testing.T) {
 		}
 	}
 	for name := range nep.funcs {
-		for _, forbidden := range []string{".authority", ".prepare", ".roster", ".begin"} {
+		for _, forbidden := range []string{".authority", ".chuanBiNhom", ".chuDaLuu", ".begin"} {
 			if strings.HasSuffix(name, forbidden) {
 				t.Errorf("the Nếp stream reaches %s, the room's authorization", name)
 			}

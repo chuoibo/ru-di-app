@@ -285,7 +285,7 @@ for (const duong of DUONG) test(`${duong.ten}: không câu nào lộ chữ của
  * trả lời; app đọc mã ở `LOI_KET_QUA_NEP`. Mã đến từ ba chỗ, đều đọc từ mã Go:
  * (1) `nepThatBai(ctx, j, "mã")` trong `chatassist/nep.go`, (2) hai mã của lượt
  * quét trong `chatassist/worker.go`, (3) bảng câu cố định của engine Go
- * (`aiharness/cau/cau.go`, ADR-0044 §2.9), vì với `MOBILE_AI_ENGINE_NEP=go` mã
+ * (`aiharness/cau/cau.go`, ADR-0044 §2.9), vì engine Go (duy nhất, ADR-0051) đưa mã
  * của engine đi thẳng vào cột `code`. Câu của engine trong app phải đúng TỪNG
  * CHỮ câu trong cau.go: một nguồn sự thật, hai bản chép, và cổng này giữ chúng
  * không lệch.

@@ -21,19 +21,6 @@ func TestInprocWorkerFlag(t *testing.T) {
 	}
 }
 
-// A worker with nothing to call must not start: it would claim every job only
-// to fail it, and the failures would read as the model being down.
-func TestWorkRefusesWithoutModelService(t *testing.T) {
-	t.Setenv("MOBILE_BRAIN_URL", "")
-	t.Setenv("MOBILE_PYTHON_UPSTREAM", "")
-	t.Setenv("MOBILE_INTERNAL_TOKEN", "")
-	var stderr bytes.Buffer
-	code := workUntil(context.Background(), func(string) string { return "" }, &stderr)
-	if code != 1 || !strings.Contains(stderr.String(), "no model service configured") {
-		t.Fatalf("exit %d: %s", code, stderr.String())
-	}
-}
-
 func TestWorkRefusesABadWorkerCount(t *testing.T) {
 	var stderr bytes.Buffer
 	getenv := func(k string) string {

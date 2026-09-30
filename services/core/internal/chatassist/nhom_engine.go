@@ -20,8 +20,8 @@ import (
 	"mobile/services/core/internal/treejson"
 )
 
-// The group assistant on the Go engine (slice 9, MOBILE_AI_ENGINE_GROUP=go;
-// the default stays the brain). The same queue, lease, stream, one publish
+// The group assistant on the Go engine (slice 9; the only engine since
+// ADR-0051). The same queue, lease, stream, one publish
 // as a reply to the tag message, and the same failure codes: only the
 // inference step differs. The engine gets what the caller explicitly shared
 // (the bundle's turns, the reply chain in it) and what the server owns and
@@ -37,16 +37,11 @@ import (
 // of the conversation is read, and a v2 room has no text for the server to
 // read: its shared messages then bill nobody.
 
-// WithNhomEngine runs the group's jobs on the Go engine.
+// WithNhomEngine runs the group's jobs on the Go engine in this process; it
+// also says this process has a model (WithCoMay).
 func (h *Handler) WithNhomEngine(e *aiharness.Engine) *Handler {
-	h.nhomEngine, h.nhomGo = e, e != nil
-	return h
-}
-
-// WithNhomGo marks a process that serves the group's routes while its jobs
-// run on the Go engine in `core work`: `hoi` is taken.
-func (h *Handler) WithNhomGo() *Handler {
-	h.nhomGo = true
+	h.nhomEngine = e
+	h.coMay = h.coMay || e != nil
 	return h
 }
 

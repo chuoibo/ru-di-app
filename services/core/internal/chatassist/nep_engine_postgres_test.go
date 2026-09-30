@@ -21,22 +21,20 @@ import (
 	"mobile/services/core/internal/aiharness/prompts"
 )
 
-// Nếp end to end on the Go engine (MOBILE_AI_ENGINE_NEP=go) against a real
-// database: the same queue and sealed result as the brain path, the model a
+// Nếp end to end on the Go engine against a real
+// database: the same queue and sealed result as every Nếp job, the model a
 // scripted stub injected through the engine's option -- never the network --
 // and one metrics row per turn with no words in it.
 
 type nepGo struct {
-	f     fixture
-	brain *nepGia
-	stub  *llm.Stub
-	log   *bytes.Buffer
+	f    fixture
+	stub *llm.Stub
+	log  *bytes.Buffer
 }
 
 func setupNepGo(t *testing.T, kich ...llm.Buoc) nepGo {
 	t.Helper()
-	brain := &nepGia{}
-	f := setup(t, brain.serve)
+	f := setup(t, nil)
 	if err := aimetrics.Migrate(context.Background(), f.pool); err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +46,7 @@ func setupNepGo(t *testing.T, kich ...llm.Buoc) nepGo {
 		t.Fatal(err)
 	}
 	f.handler.WithNepEngine(engine)
-	return nepGo{f: f, brain: brain, stub: stub, log: &buf}
+	return nepGo{f: f, stub: stub, log: &buf}
 }
 
 func (n nepGo) ask(t *testing.T, body map[string]any) (string, NepInvocation) {
@@ -117,10 +115,6 @@ func TestNepQuaEngineGo(t *testing.T) {
 	if done.Status != "succeeded" || done.Text == nil || *done.Text != "Tối nay bạn đi dạo hồ nhé." {
 		t.Fatalf("kết quả: %+v", done)
 	}
-	// The brain was never asked: not for the answer, not for availability.
-	if n.brain.calls != 0 || n.f.capabilityCalls.Load() != 0 {
-		t.Fatalf("não bị gọi: %d lần, thăm dò %d", n.brain.calls, n.f.capabilityCalls.Load())
-	}
 	// The router, the answer, the verifier.
 	if n.stub.SoGoi() != 3 {
 		t.Fatalf("%d lời gọi mô hình", n.stub.SoGoi())
@@ -177,8 +171,8 @@ func TestNepQuaEngineGoLuatTien(t *testing.T) {
 	if done.Status != "failed" || done.Code == nil || *done.Code != "nep_khong_cham_tien" || done.Text != nil {
 		t.Fatalf("kết quả: %+v", done)
 	}
-	if n.stub.SoGoi() != 1 || n.brain.calls != 0 {
-		t.Fatalf("từ chối tiền gọi thêm: stub=%d não=%d", n.stub.SoGoi(), n.brain.calls)
+	if n.stub.SoGoi() != 1 {
+		t.Fatalf("từ chối tiền gọi thêm: stub=%d", n.stub.SoGoi())
 	}
 	var promptNull, goiNull bool
 	_ = n.f.pool.QueryRow(context.Background(), `SELECT prompt IS NULL, boi_canh IS NULL FROM chat_ai_invocations WHERE id=$1`, id).Scan(&promptNull, &goiNull)
@@ -210,7 +204,7 @@ func TestNepQuaEngineGoChanDauRa(t *testing.T) {
 	}
 }
 
-// A provider failure keeps the brain path's code, so the app's sentence is
+// A provider failure keeps the code the app has always read, so its sentence is
 // the one it always showed. Since slice 10 a 5xx is transient: the job goes
 // back to the queue after a backoff (retryLater) while it has attempts left,
 // and the attempt that has none fails it with that code.

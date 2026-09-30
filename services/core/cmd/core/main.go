@@ -13,9 +13,12 @@
 //	core rag ...       build | eval | promote | rollback | status | tombstone | untombstone
 //	                   the retrieval index (see cmd/core/rag.go)
 //
-// MOBILE_AI_ENGINE_NEP=go runs Nếp on the Go engine (internal/aiharness) in
-// whichever process runs the AI workers; MOBILE_AI_ENGINE_GROUP=go does the
-// same for the group assistant «Rủ Đi AI». The default of both is the brain.
+// Nếp and the group assistant «Rủ Đi AI» run on the Go engine
+// (internal/aiharness) in whichever process runs the AI workers, and every
+// one-shot model step of a route runs in this process (aiharness/motluot):
+// through agy-proxy when AGY_PROXY_URL is set, else Gemini directly
+// (ADR-0051). With neither configured, `serve` still starts and every AI
+// route refuses as it always has without a key; `work` refuses to start.
 //
 //	core migrate-profile install the Go-only profile schemas (after migrate-community)
 package main
@@ -41,14 +44,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/redis/go-redis/v9"
 	"mobile/services/core/internal/achievementv1"
 	"mobile/services/core/internal/aidoc"
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/llm"
 	aimetrics "mobile/services/core/internal/aiharness/metrics"
+	"mobile/services/core/internal/aiharness/motluot"
 	"mobile/services/core/internal/aiharness/nhung"
 	"mobile/services/core/internal/aiharness/tools"
 	"mobile/services/core/internal/aiharness/truyhoi"
@@ -86,6 +88,9 @@ import (
 	"mobile/services/core/internal/vectordb/napkho"
 	"mobile/services/core/internal/websession"
 	"mobile/services/core/ownership"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -180,18 +185,22 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
-	nepGo, err := nepEngineGo(getenv(EnvAIEngineNep))
+	// The process's model for one-shot steps; nil on a keyless stack. Half a
+	// configuration refuses the start rather than every call.
+	may, err := motluot.TuEnv(ctx, getenv, motluot.SongSongServe)
 	if err != nil {
-		logger.Error("refusing to start", "error", err.Error())
+		logger.Error("refusing to start", "error", "model: "+err.Error())
 		return 1
 	}
-	logger.Info("Nếp engine chosen", "env", EnvAIEngineNep, "engine", nepEngineName(nepGo), "runs_here", chat.on && inproc)
-	nhomGo, err := aiEngineGo(EnvAIEngineGroup, getenv(EnvAIEngineGroup))
-	if err != nil {
+	if may == nil {
+		logger.Warn("no model configured: AI routes refuse as without a key", "env", llm.EnvAgyURL+" or "+llm.EnvAPIKey)
+	}
+	if limiter, err := modelLimiter(getenv); err != nil {
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
+	} else if limiter != nil {
+		may.WithGioiHan(limiter)
 	}
-	logger.Info("group engine chosen", "env", EnvAIEngineGroup, "engine", nepEngineName(nhomGo), "runs_here", chat.on && inproc)
 	if chat.on {
 		// On by default, so a host that pulls a chat route back to Python gets
 		// a refusal it can read, never a front door that quietly lost the AI.
@@ -305,7 +314,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			allowedOrigins = strings.Split(origins, ",")
 		}
 		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, chatCtx, allowedOrigins)
-		assistant := chatassist.New(pool, brain.Configured()).WithWorker(workerCfg)
+		assistant := chatassist.New(pool).WithWorker(workerCfg)
 		mem, err := openNepMem(chatCtx, getenv, logger, pool)
 		if err != nil {
 			logger.Error("refusing to start", "error", err.Error())
@@ -314,30 +323,21 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		defer mem.close()
 		memory := nepnho.NewHandler(pool, mem.kho)
 		avatars := avatarfeed.New(avatarfeed.Store{Pool: pool}, pool, chatCtx, allowedOrigins)
-		if nepGo || nhomGo {
-			if inproc {
-				engine, err := nepEngine(chatCtx, getenv, logger, pool, mem)
-				if err == nil {
-					err = aiSchemaReady(chatCtx, pool)
-				}
-				if err != nil {
-					logger.Error("refusing to start", "error", err.Error())
-					return 1
-				}
-				if nepGo {
-					assistant.WithNepEngine(engine)
-				}
-				if nhomGo {
-					assistant.WithNhomEngine(engine)
-				}
-			} else {
-				if nepGo {
-					assistant.WithNepGo()
-				}
-				if nhomGo {
-					assistant.WithNhomGo()
-				}
+		switch {
+		case may != nil && inproc:
+			engine, err := nepEngine(chatCtx, getenv, logger, pool, mem)
+			if err == nil {
+				err = aiSchemaReady(chatCtx, pool)
 			}
+			if err != nil {
+				logger.Error("refusing to start", "error", err.Error())
+				return 1
+			}
+			assistant.WithNepEngine(engine).WithNhomEngine(engine)
+			logger.Info("AI engine runs in this process")
+		case may != nil:
+			assistant.WithCoMay()
+			logger.Info("AI jobs run in `core work`; this process has a model")
 		}
 		// The answer streams (slice 11): this process serves the SSE routes
 		// and, with its in-process workers, writes the streams too. Empty
@@ -702,7 +702,7 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 		}
 	}
 	// Counted from the list this worker will run, before any connection opens.
-	tasks := len(workPeriodic(chatassist.New(nil, nil)))
+	tasks := len(workPeriodic(chatassist.New(nil)))
 	if memOn {
 		tasks += 2 // nep.xoa, nep.don
 	}
@@ -710,25 +710,17 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	if err != nil {
 		return refuse(err)
 	}
-	client := brain.Configured()
-	if client == nil {
-		return refuse(errors.New("no model service configured (MOBILE_BRAIN_URL or MOBILE_PYTHON_UPSTREAM, and MOBILE_INTERNAL_TOKEN): a worker would claim every job only to fail it"))
-	}
-	nepGo, err := nepEngineGo(getenv(EnvAIEngineNep))
+	may, err := motluot.TuEnv(ctx, getenv, motluot.SongSongWork)
 	if err != nil {
 		return refuse(err)
 	}
-	nhomGo, err := aiEngineGo(EnvAIEngineGroup, getenv(EnvAIEngineGroup))
-	if err != nil {
-		return refuse(err)
+	if may == nil {
+		return refuse(errors.New("no model configured (" + llm.EnvAgyURL + " and " + llm.EnvAgyKey + ", or " + llm.EnvAPIKey + "): a worker would claim every job only to fail it"))
 	}
-	var engine *aiharness.Engine
-	if nepGo || nhomGo {
-		// Built once here only to refuse before any connection opens: a key
-		// and a loopback base URL, or no worker at all.
-		if _, err = nepEngine(ctx, getenv, logger, nil, nepMem{}); err != nil {
-			return refuse(err)
-		}
+	// Built once here only to refuse before any connection opens: a key and
+	// a loopback base URL, or no worker at all.
+	if _, err = nepEngine(ctx, getenv, logger, nil, nepMem{}); err != nil {
+		return refuse(err)
 	}
 	pool, err := openPool(ctx, getenv(db.EnvDatabaseURL), conns)
 	if err != nil {
@@ -749,7 +741,7 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	if err != nil || !installed {
 		return refuse(errors.New("the chat schema is missing, older than this binary, or unreachable: run `core migrate-chat` (compose: service migrate-chat) first"))
 	}
-	assistant := chatassist.New(pool, client).WithWorker(cfg).WithNhipPool(beat)
+	assistant := chatassist.New(pool).WithWorker(cfg).WithNhipPool(beat)
 	if _, err = assistant.WithQueues(chatQueues); err != nil {
 		return refuse(err)
 	}
@@ -768,22 +760,16 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 		defer stream.Close()
 		assistant.WithStream(stream, nil, nil)
 	}
-	if nepGo || nhomGo {
-		if err := aiSchemaReady(ctx, pool); err != nil {
-			return refuse(err)
-		}
-		// Now with the tools' read ports over the pool. One engine serves
-		// both bots; each path reaches only its own ports.
-		if engine, err = nepEngine(ctx, getenv, logger, pool, mem); err != nil {
-			return refuse(err)
-		}
-		if nepGo {
-			assistant.WithNepEngine(engine)
-		}
-		if nhomGo {
-			assistant.WithNhomEngine(engine)
-		}
+	if err := aiSchemaReady(ctx, pool); err != nil {
+		return refuse(err)
 	}
+	// Now with the tools' read ports over the pool. One engine serves both
+	// bots; each path reaches only its own ports.
+	engine, err := nepEngine(ctx, getenv, logger, pool, mem)
+	if err != nil {
+		return refuse(err)
+	}
+	assistant.WithNepEngine(engine).WithNhomEngine(engine)
 	periodic := append(workPeriodic(assistant), mem.periodic()...)
 	if err = jobs.KiemDinhKy(periodic); err != nil {
 		return refuse(err)
@@ -797,7 +783,7 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 		}()
 		defer live.Close()
 	}
-	logger.Info("AI worker started", "workers", cfg.Workers, "lease_seconds", int(cfg.Lease.Seconds()), "nep_engine", nepEngineName(nepGo), "group_engine", nepEngineName(nhomGo),
+	logger.Info("AI worker started", "workers", cfg.Workers, "lease_seconds", int(cfg.Lease.Seconds()),
 		"queues", strings.Join(queues, ","), "broker", amqpURL != "", "db_conns", conns)
 	var side sync.WaitGroup
 	side.Add(1)
@@ -826,39 +812,8 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 	return 0
 }
 
-// EnvAIEngineNep chooses what answers Nếp: unset or "brain" keeps the Python
-// brain's nep-reply; "go" runs the Go engine (internal/aiharness), which calls
-// Gemini from this process with GEMINI_API_KEY. Read once at startup.
-const EnvAIEngineNep = "MOBILE_AI_ENGINE_NEP"
-
-func nepEngineGo(raw string) (bool, error) { return aiEngineGo(EnvAIEngineNep, raw) }
-
-// EnvAIEngineGroup chooses what answers the group assistant «Rủ Đi AI» in the
-// thread: unset or "brain" keeps the brain's companion-reply and chat-expense;
-// "go" runs the Go engine (internal/aiharness, slice 9), which also takes the
-// `hoi` command. Read once at startup.
-const EnvAIEngineGroup = "MOBILE_AI_ENGINE_GROUP"
-
-// aiEngineGo reads one engine choice: brain (the default) or go.
-func aiEngineGo(env, raw string) (bool, error) {
-	switch raw {
-	case "", "brain":
-		return false, nil
-	case "go":
-		return true, nil
-	}
-	return false, fmt.Errorf("%s must be brain or go, got %q", env, raw)
-}
-
-func nepEngineName(goEngine bool) string {
-	if goEngine {
-		return "go"
-	}
-	return "brain"
-}
-
-// nepEngine builds the Go engine for a process that runs Nếp's jobs, and
-// refuses what would only fail every job later: no key, a base URL that is
+// nepEngine builds the Go engine for a process that runs the AI jobs (Nếp and
+// the group alike), and refuses what would only fail every job later: no key, a base URL that is
 // not loopback, or a rate limit with nowhere to keep its count. It opens no
 // connection; the key is never logged.
 //
@@ -883,14 +838,14 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 	}
 	embedder, err := nhung.FromEnv(ctx, getenv)
 	if err != nil {
-		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+		return nil, fmt.Errorf("AI engine: %w", err)
 	}
 	opts = append(opts, aiharness.WithHieu(hieu.Moi(hieu.WithViDuLuoi(hieu.MoiKhoViDuLuoi(embedder, hieu.ViDuMacDinh)))))
 	if db != nil {
 		doc := aidoc.Moi(db, 0)
 		quan, err := quanRetriever(ctx, getenv, doc, embedder)
 		if err != nil {
-			return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+			return nil, fmt.Errorf("AI engine: %w", err)
 		}
 		// Nhom is the group's port (its outings and member count, scoped by
 		// the job's room); Doi is a couple's shared taste (ADR-0048: only on
@@ -909,7 +864,7 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 	// http off the host, a short token, a bad timeout) stops the start.
 	xepLai, err := rerank.TuEnv(getenv)
 	if err != nil {
-		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+		return nil, fmt.Errorf("AI engine: %w", err)
 	}
 	if xepLai != nil {
 		opts = append(opts, aiharness.WithXepLai(xepLai))
@@ -924,7 +879,7 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 	opts = append(opts, aiharness.WithNhipPhat(aiharness.NhipPhat))
 	engine, err := aiharness.FromEnv(ctx, getenv, logger, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+		return nil, fmt.Errorf("AI engine: %w", err)
 	}
 	return engine, nil
 }
@@ -1023,7 +978,7 @@ func aiSchemaReady(ctx context.Context, pool *pgxpool.Pool) error {
 	defer cancel()
 	installed, err := aimetrics.Installed(check, pool)
 	if err != nil || !installed {
-		return fmt.Errorf("%s=go needs the AI engine schema: run `core migrate-chat` (compose: service migrate-chat) first", EnvAIEngineNep)
+		return errors.New("the AI engine needs its schema: run `core migrate-chat` (compose: service migrate-chat) first")
 	}
 	return nil
 }

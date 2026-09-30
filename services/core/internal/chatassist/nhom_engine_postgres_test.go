@@ -21,17 +21,15 @@ import (
 	"mobile/services/core/internal/aiharness/truyhoi"
 )
 
-// The group assistant end to end on the Go engine (MOBILE_AI_ENGINE_GROUP=go)
-// against a real database: `hoi` taken with a trigger, the card a `tra_loi`
+// The group assistant end to end on the Go engine against a real database: `hoi` taken with a trigger, the card a `tra_loi`
 // reply to the tag message grounded by GroundReply against the catalogue rows
 // the worker read, a split draft's drafts on the result column billed to the
 // author messages.author_id names, the money refusal posted as the fixed
-// sentence, the brain never asked, one metrics row per turn.
+// sentence, one metrics row per turn.
 
 type nhomGo struct {
-	f     fixture
-	brain *nepGia
-	stub  *llm.Stub
+	f    fixture
+	stub *llm.Stub
 }
 
 func ruNhom(o map[string]any) llm.Buoc {
@@ -54,8 +52,7 @@ func kiemNhom(ket string, ids ...string) llm.Buoc {
 
 func setupNhomGo(t *testing.T, nguon tools.NguonDuLieu, kich ...llm.Buoc) nhomGo {
 	t.Helper()
-	brain := &nepGia{}
-	f := setup(t, brain.serve)
+	f := setup(t, nil)
 	if err := aimetrics.Migrate(context.Background(), f.pool); err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +64,7 @@ func setupNhomGo(t *testing.T, nguon tools.NguonDuLieu, kich ...llm.Buoc) nhomGo
 		t.Fatal(err)
 	}
 	f.handler.WithNhomEngine(engine)
-	return nhomGo{f: f, brain: brain, stub: stub}
+	return nhomGo{f: f, stub: stub}
 }
 
 // hoi posts a group `hoi` with a trigger and the shared turns, runs the
@@ -129,9 +126,6 @@ func TestNhomQuaEngineGo(t *testing.T) {
 		!strings.Contains(string(the.Payload.Phan[0]), "Chào cả nhóm") {
 		t.Fatalf("thẻ: %s", k.card)
 	}
-	if n.brain.calls != 0 {
-		t.Fatalf("brain được hỏi %d lần trên engine Go", n.brain.calls)
-	}
 	if k.version != prompts.VersionNhom() || k.soGoi != 3 || k.duong != "thang" {
 		t.Fatalf("số đo: %+v", k)
 	}
@@ -146,16 +140,10 @@ func TestNhomQuaEngineGo(t *testing.T) {
 	}
 }
 
-// `hoi` belongs to the Go engine and to the thread: refused on the brain,
-// and refused without a trigger.
-func TestNhomHoiChiTrenEngineGo(t *testing.T) {
-	f := setup(t, nil)
-	w := f.request("POST", f.route(), f.token, map[string]any{"logical_id": newID(), "command": "hoi", "prompt": "x", "trigger_message_id": f.tinTag(t, f.context, f.person)})
-	if w.Code != 400 {
-		t.Fatalf("hoi trên brain: %d", w.Code)
-	}
+// `hoi` belongs to the thread: refused without a trigger.
+func TestNhomHoiCanTinTag(t *testing.T) {
 	n := setupNhomGo(t, tools.NguonDuLieu{})
-	w = n.f.request("POST", n.f.route(), n.f.token, map[string]any{"logical_id": newID(), "command": "hoi", "prompt": "x"})
+	w := n.f.request("POST", n.f.route(), n.f.token, map[string]any{"logical_id": newID(), "command": "hoi", "prompt": "x"})
 	if w.Code != 400 {
 		t.Fatalf("hoi không tin tag: %d", w.Code)
 	}

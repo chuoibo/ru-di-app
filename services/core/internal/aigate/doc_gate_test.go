@@ -322,9 +322,8 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 	for _, must := range []string{
 		"(*" + pkgChat + ".Handler).nepXong",
 		pkgChat + ".phien",
-		"(*mobile/services/core/internal/brain.Client).PostJSONContext",
-		// The Go engine (MOBILE_AI_ENGINE_NEP=go) and its metrics writer are
-		// on the path too; a walk that stops at the engine proves nothing
+		// The Go engine (the only one since ADR-0051) and its metrics writer
+		// are on the path; a walk that stops at the engine proves nothing
 		// about it.
 		"(*mobile/services/core/internal/aiharness.Engine).Run",
 		"mobile/services/core/internal/aiharness/metrics.Ghi",
@@ -382,7 +381,7 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 			t.Errorf("Nếp's path names a forbidden column: %q", s)
 		}
 	}
-	for _, forbidden := range []string{".prepare", ".roster", ".authority", ".thuocPhong", ".tacGia", ".hoiThoai", ".publish", "service.GroupTaste", "service.ModelPlaceRows"} {
+	for _, forbidden := range []string{".chuanBiNhom", ".chuDaLuu", ".authority", ".thuocPhong", ".tacGia", ".publish", "service.GroupTaste", "service.ModelPlaceRows"} {
 		for name := range c.funcs {
 			if strings.HasSuffix(name, forbidden) || strings.Contains(name, forbidden+"(") {
 				t.Errorf("Nếp's path reaches %s, a function that lays room context on a question", name)
@@ -676,11 +675,12 @@ func TestTheWalkSeesMethodValuesOtherPackagesAndInterfaces(t *testing.T) {
 	if c := g.reach(g.root(t, pkgChat+".New")); !c.funcs["(*"+pkgChat+".Handler).nepCreate"] {
 		t.Fatal("a handler registered as a method value is invisible to the walk")
 	}
-	// Another package's SQL: prepare's taste comes from service/repo files.
-	prep := g.reach(g.root(t, "(*"+pkgChat+".Handler).prepare"))
+	// Another package's SQL: chuanBiNhom lists the room's members through
+	// repo, whose query holds the SQL.
+	prep := g.reach(g.root(t, "(*"+pkgChat+".Handler).chuanBiNhom"))
 	used := tables(prep.strings)
-	if _, ok := used["person_interests"]; !ok {
-		t.Fatalf("prepare reads per-person interests through service.GroupTaste in another package, and the walk missed it; tables seen: %v", sortedKeys(used))
+	if _, ok := used["memberships"]; !ok || !prep.funcs["(mobile/services/core/internal/repo.Repository).ListMembers"] {
+		t.Fatalf("chuanBiNhom reads the members through repo.ListMembers in another package, and the walk missed it; tables seen: %v", sortedKeys(used))
 	}
 	// And the Nếp allowlist, fed the group path, goes red.
 	allowed := map[string]bool{"chat_ai_invocations": true, "account_sessions": true, "people": true}
@@ -691,7 +691,7 @@ func TestTheWalkSeesMethodValuesOtherPackagesAndInterfaces(t *testing.T) {
 		}
 	}
 	if !red {
-		t.Fatal("the Nếp allowlist found nothing wrong on prepare, which reads memberships and taste")
+		t.Fatal("the Nếp allowlist found nothing wrong on chuanBiNhom, which reads memberships and messages")
 	}
 	// Interface dispatch: the web session handler reaches its store only
 	// through the Backend interface, and the store holds the session SQL.
@@ -729,11 +729,11 @@ func TestGroupNeverReachesMemoryTools(t *testing.T) {
 	}
 	var group []*types.Func
 	for _, name := range []string{"capabilities", "create", "list", "get", "retry", "cancel", "promote", "promotion",
-		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill", "processNhomEngine"} {
+		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "chuanBiNhom", "processNhomEngine"} {
 		group = append(group, g.root(t, "(*"+pkgChat+".Handler)."+name))
 	}
 	cg := g.reach(group...)
-	if !cg.funcs["(*"+pkgChat+".Handler).prepare"] || len(cg.funcs) < 50 {
+	if !cg.funcs["(*"+pkgChat+".Handler).chuanBiNhom"] || len(cg.funcs) < 50 {
 		t.Fatalf("the group closure is too small (%d functions)", len(cg.funcs))
 	}
 	for _, m := range memory {
@@ -775,7 +775,7 @@ func TestGroupNeverReachesMemoryStores(t *testing.T) {
 	}
 	var group []*types.Func
 	for _, name := range []string{"capabilities", "create", "list", "get", "retry", "cancel", "promote", "promotion",
-		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill", "processNhomEngine"} {
+		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "chuanBiNhom", "processNhomEngine"} {
 		group = append(group, g.root(t, "(*"+pkgChat+".Handler)."+name))
 	}
 	cg := g.reach(group...)

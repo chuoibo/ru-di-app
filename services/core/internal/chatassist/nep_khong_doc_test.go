@@ -23,7 +23,7 @@ import (
 // (the two handlers and the worker step) through the package's own call graph,
 // collects every string literal in them, and holds the SQL in those literals to
 // the three tables the path needs to exist: the session, the person row it
-// locks, and the job row itself. Calling `prepare`, `roster` or `authority`
+// locks, and the job row itself. Calling `chuanBiNhom`, `chuDaLuu` or `authority`
 // from here would pull memberships, places or messages into the closure and
 // turn this red at the call site, which is the point: the property decays
 // through a helper, not through a line anyone reads as «reading chat».
@@ -225,7 +225,7 @@ func TestNepKhongDocBangNaoDeLayNguCanh(t *testing.T) {
 	}
 	// Named, so a helper that drags room context in is caught even before its
 	// SQL changes: these are the functions that lay room state on a question.
-	for _, cam := range []string{"m:prepare", "f:roster", "f:authority", "f:thuocPhong", "f:tacGia", "f:hoiThoai", "m:publish", "m:begin", "m:preflight"} {
+	for _, cam := range []string{"m:chuanBiNhom", "f:chuDaLuu", "f:authority", "f:thuocPhong", "f:tacGia", "m:publishGu", "m:begin", "m:preflight"} {
 		for _, n := range names {
 			if n == cam {
 				t.Errorf("đường Nếp gọi tới %s, là hàm đắp ngữ cảnh của phòng", cam)
@@ -237,9 +237,9 @@ func TestNepKhongDocBangNaoDeLayNguCanh(t *testing.T) {
 // The gate is only worth having if it can fail: fed the group path, which
 // legitimately reads rooms, it must go red.
 func TestCongNepThucSuDoDuoc(t *testing.T) {
-	_, chu := baoDong(t, hangChuoi(t), []string{"prepare"})
+	_, chu := baoDong(t, hangChuoi(t), []string{"chuanBiNhom"})
 	if len(viPham(chu)) == 0 {
-		t.Fatal("cổng Nếp không thấy gì sai trên prepare, vốn đọc memberships và gu nhóm")
+		t.Fatal("cổng Nếp không thấy gì sai trên chuanBiNhom, vốn đọc memberships và tin nhắn của phòng")
 	}
 	if len(viPham([]string{"SELECT id, body FROM messages WHERE context_id=$1"})) == 0 {
 		t.Fatal("cổng không bắt được một câu đọc messages ngay trước mắt")

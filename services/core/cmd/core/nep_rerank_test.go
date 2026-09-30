@@ -39,7 +39,7 @@ func TestNepEngineReranker(t *testing.T) {
 		{"MOBILE_RERANK_URL": "http://127.0.0.1:18081", "MOBILE_RERANK_TIMEOUT": "forever"},
 		{"MOBILE_RERANK_URL": "http://127.0.0.1:18081", "MOBILE_RERANK_TOKEN": "short"},
 	} {
-		if _, err := chay(bad); err == nil || !strings.Contains(err.Error(), EnvAIEngineNep) {
+		if _, err := chay(bad); err == nil || !strings.Contains(err.Error(), "AI engine") {
 			t.Errorf("%v accepted: %v", bad, err)
 		}
 	}

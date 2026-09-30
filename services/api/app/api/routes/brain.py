@@ -16,7 +16,6 @@ from __future__ import annotations
 import base64
 import binascii
 import logging
-import os
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, FastAPI, Header, Request
@@ -25,18 +24,13 @@ from fastapi.responses import JSONResponse
 from app.api.achievement_gemini import gemini_achievement_routes
 from app.api.chat_expense_skill import ChatExpenseReader, run_chat_expense_skill
 from app.api.deps import (
-    Companion,
     ContextualSuggester,
     FaceDetector,
-    NepReplyNotConfigured,
-    NepResponder,
     Reeler,
     Suggester,
     get_chat_expense_reader,
-    get_companion,
     get_contextual_suggester,
     get_face_detector,
-    get_nep_responder,
     get_receipt_reader,
     get_reeler,
     get_screenshot_reader,
@@ -45,7 +39,6 @@ from app.api.deps import (
 from app.api.internal_token import INTERNAL_TOKEN_HEADER, tokens_match
 from app.api.receipt_skill import ReceiptReader, run_receipt_skill
 from app.api.screenshot_skill import ScreenshotReader, run_screenshot_skill
-from app.domain import money
 from app.domain.chat_expense import ChatExpenseError
 from app.domain.place_search import PlaceSearchError, ground_search
 from app.domain.receipt import ReceiptError
@@ -198,24 +191,6 @@ def chat_expense(
         raise _code_error(502, "chat_reader_unavailable") from None
 
 
-@router.post("/companion-reply")
-def companion_reply(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-    companion: Annotated[Companion, Depends(get_companion)],
-) -> dict:
-    try:
-        return companion.reply(
-            conversation=_list_of_dict(body, "conversation"),
-            members=_list_of_dict(body, "members"),
-            places=_list_of_dict(body, "places"),
-            budget_per_person_vnd=_optional_int(body.get("budget_per_person_vnd")),
-        )
-    except Exception:
-        _LOGGER.warning("brain companion failed")
-        raise _code_error(502, "companion_unavailable") from None
-
-
 @router.post("/diary")
 def diary_compose(
     body: dict,
@@ -258,51 +233,6 @@ def community_nep(
         return infer_community("nep", body)
     except Exception:
         raise _code_error(502, "community_ai_unavailable") from None
-
-
-@router.post("/nep-reply")
-def nep_reply(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-    responder: Annotated[NepResponder, Depends(get_nep_responder)],
-) -> dict:
-    """Nếp's answer: the model step only (ADR-0036 §2.10).
-
-    Go has already authenticated the caller, applied the money law and the
-    bounds, and will store the answer; this checks shapes and calls the model.
-    """
-
-    prompt = body.get("prompt")
-    slip = body.get("slip")
-    if not isinstance(prompt, str) or not (slip is None or isinstance(slip, dict)):
-        raise _code_error(422, "brain_request_invalid")
-    turns = _list_of_dict(body, "turns")
-    try:
-        answer = responder.reply(slip=slip, turns=turns, prompt=prompt)
-    except NepReplyNotConfigured:
-        raise _code_error(503, "nep_reply_not_configured") from None
-    except Exception:
-        _LOGGER.warning("brain nep reply failed")
-        raise _code_error(502, "nep_reply_unavailable") from None
-    text = answer.get("text") if isinstance(answer, dict) else None
-    if not isinstance(text, str):
-        raise _code_error(502, "nep_reply_unavailable")
-    return {"text": text}
-
-
-@router.post("/capabilities")
-def inference_capabilities(
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    """Report inference configuration only; never expose credential values."""
-
-    configured = bool(os.environ.get("GEMINI_API_KEY", "").strip())
-    return {
-        "plan": {
-            "available": configured,
-            "reason": None if configured else "provider_not_configured",
-        }
-    }
 
 
 @router.post("/place-search")
@@ -483,38 +413,6 @@ def face_boxes(
             for box in found.boxes
         ],
     }
-
-
-def _list_of_dict(body: dict, key: str) -> list[dict]:
-    value = body.get(key)
-    if not isinstance(value, list):
-        raise _code_error(422, "brain_request_invalid")
-    out: list[dict] = []
-    for item in value:
-        if isinstance(item, dict):
-            out.append(item)
-    return out
-
-
-def _optional_int(value: Any) -> int | None:
-    """An optional integer đồng, checked where every other đồng is checked.
-
-    The predicate `isinstance(v, bool) or not isinstance(v, int)` used to be
-    spelled out here, and `tests/test_one_money_check.py` caught it: money.py
-    is the one file allowed to spell that shape, everything else calls it.
-    That gate exists because the same three lines had already been pasted into
-    seven places, each drifting a little.
-
-    Only NOT_INTEGER is rejected, not every violation `vnd_violation` knows.
-    A negative budget is nonsense and the caller already refused it, but
-    tightening this door would change behaviour inside a branch whose whole
-    claim is that behaviour did not change. It is written down instead.
-    """
-    if value is None:
-        return None
-    if money.vnd_violation(value) == money.NOT_INTEGER:
-        raise _code_error(422, "brain_request_invalid")
-    return value
 
 
 def _taste(raw: Any) -> TasteProfile:

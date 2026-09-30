@@ -5,7 +5,6 @@ package chatassist
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
@@ -244,14 +243,8 @@ func TestTraLoiChiLoiNhoNoiRo(t *testing.T) {
 
 // Taking back the `@Rủ Đi` message takes back the question.
 func TestXoaTinTagHuyViecVaXoaChu(t *testing.T) {
-	var calls int
-	var mu sync.Mutex
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		mu.Lock()
-		calls++
-		mu.Unlock()
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic inference fixture"}})
-	})
+	m := &mayGia{}
+	f := setup(t, m)
 	ctx := context.Background()
 	trigger := f.tinTag(t, f.context, f.person)
 	ban := f.tinTrongPhong(t, f.context, "Q1 nha")
@@ -297,8 +290,8 @@ func TestXoaTinTagHuyViecVaXoaChu(t *testing.T) {
 		t.Fatalf("việc đã huỷ vẫn được nhận: %v %v", ok, err)
 	}
 	var published int
-	if err := f.pool.QueryRow(ctx, `SELECT count(*) FROM messages WHERE kind='ai_card'`).Scan(&published); err != nil || published != 0 || calls != 0 {
-		t.Fatalf("tin tag đã xoá mà vẫn có câu trả lời: %d tin, %d lời gọi mô hình", published, calls)
+	if err := f.pool.QueryRow(ctx, `SELECT count(*) FROM messages WHERE kind='ai_card'`).Scan(&published); err != nil || published != 0 || m.SoGoi() != 0 {
+		t.Fatalf("tin tag đã xoá mà vẫn có câu trả lời: %d tin, %d lời gọi mô hình", published, m.SoGoi())
 	}
 	// And a deleted message cannot be asked about again.
 	if w := f.goiTag(f.token, newID(), trigger, nil); w.Code != 422 || maTuChoi(w) != "trigger_khong_hop_le" {
@@ -454,35 +447,6 @@ func TestThuLaiKhongDuocLa409KeCaKhiPhongDay(t *testing.T) {
 	}
 	if w := f.request("POST", f.route()+"/"+jobs["còn thử được"]+"/retry", f.token, map[string]any{}); w.Code != 429 || maTuChoi(w) != "invocation_room_busy" {
 		t.Fatalf("còn thử được, phòng đầy: %d %s", w.Code, w.Body.String())
-	}
-}
-
-// chia_bill in the thread: the summary is the reply's one part, and the
-// drafts stay on the invocation row, never in the message the room reads.
-func TestChiaBillTrongLuongGiuNhapOCotKetQua(t *testing.T) {
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		reply(w, 200, map[string]any{"is_expense": true, "title": "Tiền nước", "amount_vnd": 300000, "needs_review": true})
-	})
-	ctx := context.Background()
-	trigger := f.tinTag(t, f.context, f.person)
-	w := f.request("POST", f.route(), f.token, map[string]any{"logical_id": newID(), "command": "chia_bill", "prompt": "mình trả 300k tiền nước", "trigger_message_id": trigger})
-	requireCode(t, w, 202)
-	var job Invocation
-	_ = json.Unmarshal(w.Body.Bytes(), &job)
-	if ok, err := f.handler.ProcessOne(ctx); !ok || err != nil {
-		t.Fatalf("worker: %v %v", ok, err)
-	}
-	var reply *string
-	var card, result []byte
-	if err := f.pool.QueryRow(ctx, `SELECT m.reply_to_id::text,m.card,j.result FROM messages m JOIN chat_ai_invocations j ON j.message_id=m.id WHERE j.id=$1`, job.ID).Scan(&reply, &card, &result); err != nil {
-		t.Fatal(err)
-	}
-	var the theTraLoi
-	if err := json.Unmarshal(card, &the); err != nil || reply == nil || *reply != trigger || the.Kind != "tra_loi" || the.Payload.Lenh != "chia_bill" || len(the.Payload.Phan) != 1 || !strings.HasPrefix(string(the.Payload.Phan[0]), `{"kind": "text"`) {
-		t.Fatalf("chia_bill trong luồng: reply=%v card=%s", reply, card)
-	}
-	if !strings.Contains(string(result), `"drafts"`) || strings.Contains(string(card), "paid_by_id") || strings.Contains(string(card), f.person) {
-		t.Fatalf("nháp phải ở result, không ở thẻ: result=%s card=%s", result, card)
 	}
 }
 
