@@ -1,11 +1,22 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (24 ảnh, tổng 3.67 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (35 ảnh, tổng 4.94 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
 | [EV-F00-TAB-ghep-a](evidence/EV-F00-TAB-ghep-a.jpg) | Thanh tab năm cột của main ở C1, C2, C3, biên 599 và 600: tab đang chọn có màu nhấn, icon đặc, dải washi (phân xử TC-F00-TAB-DOI) | 197264 | `556058c7` |
 | [EV-F04-CHIA-SE-KHONG-CO-C1](evidence/EV-F04-CHIA-SE-KHONG-CO-C1.jpg) | UI-049 (P1) trên main: đợt thu, «Gửi cho …» khi trình duyệt không có navigator.share; câu lỗi nằm ở đầu trang, ngoài khung nhìn, C1 | 119750 | `d22f3128` |
+| [EV-N26-CHU-NHOM-ghep](evidence/EV-N26-CHU-NHOM-ghep.jpg) | UI-128: chữ của nhóm trong chat hai người, «Cả nhóm thấy cùng một màu.» ở cài đặt, «Rủ hội một buổi» ở phòng cặp đôi | 66675 | `c88f8b53` |
+| [EV-N26-CHUYEN-ghep](evidence/EV-N26-CHUYEN-ghep.jpg) | UI-126, UI-127, UI-125: từ đám bạn thành cặp đôi, hàng mời «Một đôi», màn tới không nhắc lời đề nghị, «Đồng ý là một đôi», không bìa M6, phía người đề nghị vẫn bốn công cụ | 144692 | `9d5a00b7` |
+| [EV-N26-GU-ghep](evidence/EV-N26-GU-ghep.jpg) | N26 «Gu của hai bạn»: lời hứa nói cả chat, «Bật lại cho chat», và UI-129 (dòng nói ngược nhau, câu lỗi dưới lớp phủ khi lệnh hỏng) | 157280 | `6744806d` |
+| [EV-N26-KHAY-ghep](evidence/EV-N26-KHAY-ghep.jpg) | N26 hai lớp chat: khay công cụ của chat hai người, đám bạn bốn công cụ, cặp đôi thêm «Tờ giấy», một hàng từ 320 tới 768 (đạt; ô soạn bị đẩy ở C2 là UI-124) | 142065 | `b7acee57` |
+| [EV-N26-LAB-ghep](evidence/EV-N26-LAB-ghep.jpg) | N26 trang lab /dev/hai-lop-chat trên server dev có cờ fixture: khay năm ô ở 320, tấm «Xem» phủ cả cửa sổ, «Reduce Motion» chỉ câu trọn, sticker cặp đôi (đạt) | 165383 | `c11f013b` |
+| [EV-N26-MOI-ghep](evidence/EV-N26-MOI-ghep.jpg) | N26 hàng mời lập sổ ở chat của đám bạn (đạt), và mở rộng UI-001 (hàng mời 31dp ở C6), UI-083 (đọc sổ 503 thì hàng ghim nói chưa có tờ), UI-093 (sheet gu rộng 768 ở C6) | 132979 | `3807f49a` |
+| [EV-N26-NHAY-tre-800-khung-C1](evidence/EV-N26-NHAY-tre-800-khung-C1.jpg) | UI-125: về chat cặp đôi khi chat-capabilities trễ 800 ms, khung 141 ms không có hàng ghim Tờ giấy, khung 959 ms có và nội dung nhảy xuống | 40417 | `f0680c95` |
+| [EV-N26-Q2-ghep](evidence/EV-N26-Q2-ghep.jpg) | UI-131: bản phác máy chủ nhận ở cặp đám bạn (phác qua API), không gian giấy «Hội bạn» có «Gửi cho người ấy», chat đôi không hàng nào | 61819 | `4984892c` |
+| [EV-N26-RU-ghep](evidence/EV-N26-RU-ghep.jpg) | UI-130: «Rủ … tới đây» với cặp đám bạn, chưa sổ thì màn mời lập sổ không nhắc quán, có sổ thì form kèo mới không mang quán | 152476 | `946e0efd` |
+| [EV-N26-SOAN-ghep](evidence/EV-N26-SOAN-ghep.jpg) | UI-124: chat hai người chưa có tin ở cửa sổ thấp, ô soạn và khay bị đẩy ra ngoài đáy (cặp đôi C8, C4, C2; đám bạn C8) | 150154 | `e0b8f059` |
+| [EV-N26-STICKER-ghep](evidence/EV-N26-STICKER-ghep.jpg) | N26 hai lớp chat: tám sticker của đám bạn, mục «Cho hai người» của cặp đôi, gợi ý lệnh viết cho hai bạn, chip «AI chưa sẵn sàng» (đạt) | 120071 | `3acec351` |
 | [EV-R-E5-ghep](evidence/EV-R-E5-ghep.jpg) | Retest E5 trên main: UI-120, người bị chặn gửi và người chặn nhận tờ hẹn | 61763 | `04fa71ad` |
 | [EV-R-F00-ghep](evidence/EV-R-F00-ghep.jpg) | Retest F00 trên main: UI-004 (C6), UI-005, UI-006, UI-011 | 135321 | `1c5dde51` |
 | [EV-R-F01-ghep](evidence/EV-R-F01-ghep.jpg) | Retest F01 trên main: UI-016, UI-018, UI-019 | 106992 | `12f7202a` |

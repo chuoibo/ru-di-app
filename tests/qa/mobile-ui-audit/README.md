@@ -85,6 +85,12 @@ node kich-ban/retest-phan-xu.mjs     # phán quyết bằng mắt; hàng kịch 
 node kich-ban/retest-ghep.mjs        # ảnh ghép retest theo feature, gắn vào mọi hàng có khung trong ảnh
 # Thứ tự chốt một checkpoint retest: retest-phan-xu → retest-ghep → chot-anh → tong-hop → retest-bang → kiem-tai-lieu
 node kich-ban/tham-do-lich-su-tab.mjs   # chỉ đọc: history.length qua một chuỗi chuyển tab, rồi Back (UI-123); CHUOI=…, PERSONA=…
+# Feature mới #26, hai lớp chat hai người (checkpoint N26). Phần: api, ban, moi, doi, soan, chuyen, gu, ru, q2, loi, nhay, lab-e1
+node kich-ban/n26-hai-lop-chat.mjs --chi ban:C1,doi:C9   # từng cấu hình; chuyen:doi, gu:C1 và q2 GHI lên stack (xem report §A)
+AUDIT_BASE=http://127.0.0.1:8091 node kich-ban/n26-hai-lop-chat.mjs --chi lab   # trang lab /dev/hai-lop-chat: server dev có fixture
+node kich-ban/n26-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native, rút hàng giữ chỗ TC-N-26-…; chạy lại không thêm dòng
+node kich-ban/n26-ghep.mjs           # ảnh ghép của N26, gắn vào hàng
+# Thứ tự chốt checkpoint N26: n26-phan-xu → n26-ghep → chot-anh → tong-hop → kiem-tai-lieu
 node retest-bang.mjs <docs gốc> <docs main>   # sinh retest.md từ issues.md gốc và sổ retest
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
@@ -201,6 +207,22 @@ Bài học của checkpoint retest 2 (P3, 29–30/09):
 - Hàng tự động có thể xanh vì đếm nhầm: 54 ký tự của UI-009 là nhãn năm tab. Hàng nào dựa vào số chữ hay số phần tử thì
   mở ảnh ra xem trước khi tin.
 - Id viết cứng của stack gốc (`f08-ky-niem.mjs`) phải thay bằng tra cứu trước khi chạy trên stack khác.
+
+Bài học của checkpoint N26 (hai lớp chat, 30/09):
+- Ô soạn là textbox, không phải nút: bộ tìm nút không thấy nó, chữ gõ đi vào khoảng không. Tìm theo nhãn
+  (`[aria-label="Ô soạn tin"]`) rồi chạm vào tâm (`oSoan`).
+- Đọc chữ của một hàng thì bỏ glyph icon (vùng private-use) như khi so tên nút: mũi tên cuối hàng là một ký tự.
+- Mỗi phần đo có ID riêng khi cấu hình trùng: sổ giữ hàng cuối theo `tc|nền tảng|cấu hình`, nên hai phần (mạng nhanh và
+  trễ, đám bạn và cặp đôi) cùng ID thì phần sau đè phần trước.
+- Chuỗi rỗng khớp mọi chữ: đọc tên thứ cần tìm từ API (tên quán), và dừng nếu nó rỗng. Một PASS sai đã ra vì thế.
+- Chèn lỗi mạng thì ghi lại từng lần đọc kèm mã, để chứng minh lỗi rơi đúng chỗ; gỡ bằng `goHet` (`unrouteAll`), và kiểm
+  URL sau mỗi bước điều hướng.
+- Trạng thái đã qua thời điểm của nó (đồng ý chia gu trước mốc 29/09) dựng bằng cách sửa đúng một trường của phản hồi
+  (`page.route` + `route.fetch`), rồi để lệnh thật chạy tiếp; ghi rõ trong hàng.
+- Trang lab điều khiển giảm chuyển động bằng prop của nó (chip «Reduce Motion»), không đọc cài đặt hệ thống: C9 không
+  đo được gì ở đó.
+- Khoảnh khắc chỉ diễn khi trạng thái đổi ngay trên màn (M6): đo bằng hai persona và lấy mẫu rAF từ trước cú chạm đồng ý.
+- Script thăm dò dùng `khoiDong` phải gọi `mt.dong()` (hay `process.exit`): server web của harness giữ tiến trình sống.
 
 ## Những điều harness không đo được
 

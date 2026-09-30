@@ -9,6 +9,61 @@
   "sha8": "d22f3128",
   "moTa": "UI-049 (P1) trên main: đợt thu, «Gửi cho …» khi trình duyệt không có navigator.share; câu lỗi nằm ở đầu trang, ngoài khung nhìn, C1"
  },
+ "EV-N26-CHU-NHOM-ghep": {
+  "bytes": 66675,
+  "sha8": "c88f8b53",
+  "moTa": "UI-128: chữ của nhóm trong chat hai người, «Cả nhóm thấy cùng một màu.» ở cài đặt, «Rủ hội một buổi» ở phòng cặp đôi"
+ },
+ "EV-N26-CHUYEN-ghep": {
+  "bytes": 144692,
+  "sha8": "9d5a00b7",
+  "moTa": "UI-126, UI-127, UI-125: từ đám bạn thành cặp đôi, hàng mời «Một đôi», màn tới không nhắc lời đề nghị, «Đồng ý là một đôi», không bìa M6, phía người đề nghị vẫn bốn công cụ"
+ },
+ "EV-N26-GU-ghep": {
+  "bytes": 157280,
+  "sha8": "6744806d",
+  "moTa": "N26 «Gu của hai bạn»: lời hứa nói cả chat, «Bật lại cho chat», và UI-129 (dòng nói ngược nhau, câu lỗi dưới lớp phủ khi lệnh hỏng)"
+ },
+ "EV-N26-KHAY-ghep": {
+  "bytes": 142065,
+  "sha8": "b7acee57",
+  "moTa": "N26 hai lớp chat: khay công cụ của chat hai người, đám bạn bốn công cụ, cặp đôi thêm «Tờ giấy», một hàng từ 320 tới 768 (đạt; ô soạn bị đẩy ở C2 là UI-124)"
+ },
+ "EV-N26-LAB-ghep": {
+  "bytes": 165383,
+  "sha8": "c11f013b",
+  "moTa": "N26 trang lab /dev/hai-lop-chat trên server dev có cờ fixture: khay năm ô ở 320, tấm «Xem» phủ cả cửa sổ, «Reduce Motion» chỉ câu trọn, sticker cặp đôi (đạt)"
+ },
+ "EV-N26-MOI-ghep": {
+  "bytes": 132979,
+  "sha8": "3807f49a",
+  "moTa": "N26 hàng mời lập sổ ở chat của đám bạn (đạt), và mở rộng UI-001 (hàng mời 31dp ở C6), UI-083 (đọc sổ 503 thì hàng ghim nói chưa có tờ), UI-093 (sheet gu rộng 768 ở C6)"
+ },
+ "EV-N26-NHAY-tre-800-khung-C1": {
+  "bytes": 40417,
+  "sha8": "f0680c95",
+  "moTa": "UI-125: về chat cặp đôi khi chat-capabilities trễ 800 ms, khung 141 ms không có hàng ghim Tờ giấy, khung 959 ms có và nội dung nhảy xuống"
+ },
+ "EV-N26-Q2-ghep": {
+  "bytes": 61819,
+  "sha8": "4984892c",
+  "moTa": "UI-131: bản phác máy chủ nhận ở cặp đám bạn (phác qua API), không gian giấy «Hội bạn» có «Gửi cho người ấy», chat đôi không hàng nào"
+ },
+ "EV-N26-RU-ghep": {
+  "bytes": 152476,
+  "sha8": "946e0efd",
+  "moTa": "UI-130: «Rủ … tới đây» với cặp đám bạn, chưa sổ thì màn mời lập sổ không nhắc quán, có sổ thì form kèo mới không mang quán"
+ },
+ "EV-N26-SOAN-ghep": {
+  "bytes": 150154,
+  "sha8": "e0b8f059",
+  "moTa": "UI-124: chat hai người chưa có tin ở cửa sổ thấp, ô soạn và khay bị đẩy ra ngoài đáy (cặp đôi C8, C4, C2; đám bạn C8)"
+ },
+ "EV-N26-STICKER-ghep": {
+  "bytes": 120071,
+  "sha8": "3acec351",
+  "moTa": "N26 hai lớp chat: tám sticker của đám bạn, mục «Cho hai người» của cặp đôi, gợi ý lệnh viết cho hai bạn, chip «AI chưa sẵn sàng» (đạt)"
+ },
  "EV-R-E5-ghep": {
   "bytes": 61763,
   "sha8": "04fa71ad",
