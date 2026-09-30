@@ -1,10 +1,9 @@
 """Internal brain HTTP seam (ADR-0029 §2.7).
 
 Go owns auth, the database, the limiter and, since ADR-0051, the model calls
-that have moved so far. Still here until their Go ports land: community
-moderation and Nếp's community draft, place search and reasons. On-box face
-detection is OpenCV rather than a model (TODO: redo in Go by another
-mechanism).
+that have moved so far. Still here until their Go ports land: place search
+and reasons. On-box face detection is OpenCV rather than a model (TODO: redo
+in Go by another mechanism).
 Nothing in this module opens a repository session. Errors return a closed
 `code` and never interpolate a prompt, a model string, or image bytes.
 
@@ -85,34 +84,6 @@ def ready(_: Annotated[None, Depends(require_internal_token)]) -> dict[str, str]
     """The brain process is up. Deliberately does not touch a model or a DB."""
 
     return {"status": "ready"}
-
-
-@router.post("/community-moderate")
-def community_moderate(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    """Infer relevance and safety; Go retains all publication authority."""
-    from app.api.community_inference import infer_community
-
-    try:
-        return infer_community("moderate", body)
-    except Exception:
-        raise _code_error(502, "community_ai_unavailable") from None
-
-
-@router.post("/community-nep")
-def community_nep(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    """Return a draft from the explicitly confirmed excerpt only."""
-    from app.api.community_inference import infer_community
-
-    try:
-        return infer_community("nep", body)
-    except Exception:
-        raise _code_error(502, "community_ai_unavailable") from None
 
 
 @router.post("/place-search")

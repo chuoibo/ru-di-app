@@ -33,9 +33,10 @@ mới chỉ làm adapter inference, không có writer nghiệp vụ Python mới
 2. API: `MOBILE_AUTH_MODE=prod`, `MOBILE_COMMUNITY_ENABLED=1`, DB và phiên
    thật. Cờ backend mặc định tắt. Composer tường dùng bản cũ khi capability
    trả 404; lỗi mạng không được rơi xuống đường cũ.
-3. Go/Python dùng cùng `MOBILE_INTERNAL_TOKEN`; `MOBILE_BRAIN_URL` hoặc
-   `MOBILE_PYTHON_UPSTREAM` trỏ seam nội bộ. Python cần
-   `COMMUNITY_INFERENCE_URL` là IP loopback/private của model riêng.
+3. Duyệt bài và Nếp chạy trong `core serve` qua agy-proxy (ADR-0051):
+   đặt `AGY_PROXY_URL`/`AGY_PROXY_KEY` cho core. Không có model thì bài
+   công khai nằm chờ duyệt, Nếp trả 503 `nep_unavailable`. Python không còn
+   bước nào của cộng đồng; `COMMUNITY_INFERENCE_URL` đã bỏ.
 4. Build codec: `docker build -f services/core/Dockerfile.community-media
    -t rudi-community-media services/core`. Image mặc định chạy
    `core community-media-worker`, cùng DB và volume `MOBILE_MEDIA_ROOT`
@@ -43,14 +44,17 @@ mới chỉ làm adapter inference, không có writer nghiệp vụ Python mới
 5. Build lại native vì thêm `expo-video`; Metro reload không đủ. Cấu hình
    origin CORS và proxy WebSocket theo môi trường.
 
-**Người dùng xác nhận chưa có model và chọn giữ bài chờ duyệt.** Chưa cấu
-hình hoặc đánh giá model thật trong phiên này; không tự mở public. Người vận hành cấp vai trò bằng
+**Từ ADR-0051 (2026-10-01) model đọc bài chạy qua agy-proxy**; trước đó người
+dùng chọn giữ bài chờ duyệt vì chưa có model. Chất lượng phán đoán mới chỉ
+được thử bằng vài bài bịa (`vnlocal-thu tinh-nang`), chưa đánh giá có hệ thống. Người vận hành cấp vai trò bằng
 `community_moderators`; UI `/community/review` duyệt bài và bình luận.
 
-Model `/moderate` nhận nội dung/media inline đã chọn, trả `relevant`, `safe`,
-`confidence_milli` (0..1000), `media_checked`, `reason`. Go chỉ tự duyệt từ
-900 và media đã kiểm đủ. `/nep` chỉ trả `draft`. Adapter từ chối host công
-khai/DNS/redirect/proxy và payload quá giới hạn. Không cấp DB/chat cho model.
+Model đọc bài (`aiharness/congdong`, lời dặn mới từ ADR-0051) nhận chữ và ảnh
+inline đã chọn, trả `relevant`, `safe`, `confidence_milli` (0..1000),
+`reason`; `media_checked` do Go tự đặt, chỉ đúng khi mọi tệp đính kèm là ảnh
+đã gửi cùng request (video không bao giờ gửi, ảnh cộng dồn quá 14 MiB thì
+không gửi ảnh nào). Go chỉ tự duyệt từ 900 và media đã kiểm đủ. Nếp chỉ trả
+`draft`. Không cấp DB/chat cho model.
 Stub chỉ chứng minh orchestration, không chứng minh chất lượng AI guard.
 
 ## Realtime và lưu trữ

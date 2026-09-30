@@ -56,7 +56,6 @@ import (
 	"mobile/services/core/internal/aiharness/truyhoi"
 	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/avatarfeed"
-	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
 	"mobile/services/core/internal/chatlegacychange"
 	"mobile/services/core/internal/community"
@@ -441,7 +440,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				logger.Error("refusing to start", "error", err.Error())
 				return 1
 			}
-			social := community.New(pool, brain.Configured(), strings.Split(origins, ","))
+			social := community.New(pool, may, strings.Split(origins, ","))
 			go social.Run(chatCtx)
 			inner := front
 			feature := cors.New(origins, origins != "").Middleware(social)

@@ -7,13 +7,13 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
 
-	"mobile/services/core/internal/brain"
+	"mobile/services/core/internal/aiharness/llm"
+	"mobile/services/core/internal/aiharness/motluot"
 	book "mobile/services/core/internal/domain/diary"
 	"mobile/services/core/internal/media/storage"
 )
@@ -135,30 +135,113 @@ func TestPostgresCommunityHiddenRemovedFromOldSnapshot(t *testing.T) {
 	}
 }
 
+// statusOf is the post's status as its author reads it.
+func (f world) statusOf(t *testing.T, p Post) string {
+	t.Helper()
+	w := f.call("GET", "/v2/community/posts/"+p.ID, 0, nil)
+	requireStatus(t, w, 200)
+	var out struct {
+		Status string `json:"status"`
+	}
+	_ = json.Unmarshal(w.Body.Bytes(), &out)
+	return out.Status
+}
+
+// moderate runs the queued job for p once more with the given model.
+func (f world) moderate(t *testing.T, p Post, may *motluot.May) {
+	t.Helper()
+	f.h.ai = may
+	f.exec(t, `UPDATE community_jobs SET available_at=clock_timestamp(),lease_until=NULL WHERE post_id=$1`, p.ID)
+	f.h.workOne(context.Background())
+}
+
 func TestPostgresCommunityInferenceOutageAndUnsafeVerdict(t *testing.T) {
 	f := setup(t)
 	t.Setenv("MOBILE_MEDIA_ROOT", t.TempDir())
 	p := f.post(t, "public")
 	f.h.workOne(context.Background())
 	requireStatus(t, f.call("GET", "/v2/community/posts/"+p.ID, 1, nil), 404)
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/internal/brain/v1/community-moderate" {
-			t.Errorf("unexpected inference path %s", r.URL.Path)
-		}
-		reply(w, 200, verdict{Relevant: false, Safe: true, Confidence: 990, MediaChecked: true})
-	}))
-	defer server.Close()
-	t.Setenv("MOBILE_BRAIN_URL", server.URL)
-	t.Setenv("MOBILE_INTERNAL_TOKEN", "synthetic-inference-only")
-	f.h.brain = brain.Configured()
-	f.exec(t, `UPDATE community_jobs SET available_at=clock_timestamp() WHERE post_id=$1`, p.ID)
-	f.h.workOne(context.Background())
-	w := f.call("GET", "/v2/community/posts/"+p.ID, 0, nil)
-	requireStatus(t, w, 200)
-	if !strings.Contains(w.Body.String(), `"status":"rejected"`) {
-		t.Fatal(w.Body.String())
+	// An answer that is not the reading, and a reading below 900, both
+	// leave the post to a human.
+	f.moderate(t, p, motluot.Moi(llm.NewStub(llm.Buoc{Text: `{"relevant": true}`}), 1))
+	if s := f.statusOf(t, p); s != "pending" {
+		t.Fatalf("malformed reading: %s", s)
+	}
+	f.moderate(t, p, motluot.Moi(llm.NewStub(llm.Buoc{Text: `{"relevant":true,"safe":true,"confidence_milli":899,"reason":"ok"}`}), 1))
+	if s := f.statusOf(t, p); s != "review" {
+		t.Fatalf("unsure reading: %s", s)
 	}
 	requireStatus(t, f.call("GET", "/v2/community/posts/"+p.ID, 1, nil), 404)
+	q := f.post(t, "public")
+	stub := llm.NewStub(llm.Buoc{Text: `{"relevant":false,"safe":true,"confidence_milli":990,"reason":"not about outings"}`})
+	f.moderate(t, q, motluot.Moi(stub, 1))
+	if s := f.statusOf(t, q); s != "rejected" {
+		t.Fatalf("off-topic reading: %s", s)
+	}
+	req := string(stub.YeuCau()[0])
+	if !strings.Contains(req, "Một ngày đi bộ ngắm hồ cùng hội bạn") || !strings.Contains(req, `\"kind\":\"POST\"`) || strings.Contains(req, f.people[0]) {
+		t.Fatalf("the model read the wrong thing: %s", req)
+	}
+	requireStatus(t, f.call("GET", "/v2/community/posts/"+q.ID, 1, nil), 404)
+}
+
+func TestPostgresCommunityReadingSeesEveryImageOrGoesToReview(t *testing.T) {
+	f := setup(t)
+	t.Setenv("MOBILE_MEDIA_ROOT", t.TempDir())
+	confident := `{"relevant":true,"safe":true,"confidence_milli":980,"reason":"ok"}`
+	mid := f.uploadImage(t, 0)
+	w := f.call("POST", "/v2/community/posts", 0, PostInput{LogicalID: uuid(), Body: "Hồ buổi sáng", Audience: "public", Topics: []string{"Đi bộ"}, MediaIDs: []string{mid}})
+	requireStatus(t, w, 201)
+	var withImage Post
+	_ = json.Unmarshal(w.Body.Bytes(), &withImage)
+	stub := llm.NewStub(llm.Buoc{Text: confident})
+	f.moderate(t, withImage, motluot.Moi(stub, 1))
+	if s := f.statusOf(t, withImage); s != "approved" {
+		t.Fatalf("image read and confident: %s", s)
+	}
+	if req := string(stub.YeuCau()[0]); !strings.Contains(req, "image/png") || !strings.Contains(req, "inlineData") {
+		t.Fatal("the image never reached the model")
+	}
+	// A video is never sent, so no reading can vouch for it.
+	f.exec(t, `UPDATE community_media SET content_type='video/mp4' WHERE id=$1`, mid)
+	w = f.call("POST", "/v2/community/posts", 0, PostInput{LogicalID: uuid(), Body: "Video ngắm hồ", Audience: "public", Topics: []string{"Đi bộ"}, MediaIDs: []string{mid}})
+	requireStatus(t, w, 201)
+	var withVideo Post
+	_ = json.Unmarshal(w.Body.Bytes(), &withVideo)
+	stub = llm.NewStub(llm.Buoc{Text: confident})
+	f.moderate(t, withVideo, motluot.Moi(stub, 1))
+	if s := f.statusOf(t, withVideo); s != "review" {
+		t.Fatalf("unseen video: %s", s)
+	}
+	if strings.Contains(string(stub.YeuCau()[0]), "inlineData") {
+		t.Fatal("video bytes reached the model")
+	}
+}
+
+func TestPostgresCommunityNepDraftsOnlyTheConfirmedExcerpt(t *testing.T) {
+	f := setup(t)
+	p := f.post(t, "public")
+	f.approve(t, p)
+	path := "/v2/community/posts/" + p.ID + "/nep"
+	in := map[string]any{"confirmed": true, "excerpt": "Một ngày đi bộ ngắm hồ cùng hội bạn", "request": "Viết vui hơn"}
+	requireStatus(t, f.call("POST", path, 0, in), 503)
+	stub := llm.NewStub(llm.Buoc{Text: `{"draft": "  Một ngày dạo quanh hồ thật vui cùng hội bạn!  "}`})
+	f.h.ai = motluot.Moi(stub, 1)
+	w := f.call("POST", path, 0, in)
+	requireStatus(t, w, 200)
+	var out map[string]any
+	_ = json.Unmarshal(w.Body.Bytes(), &out)
+	if out["draft"] != "Một ngày dạo quanh hồ thật vui cùng hội bạn!" || out["ai_generated"] != true {
+		t.Fatalf("%v", out)
+	}
+	if req := string(stub.YeuCau()[0]); !strings.Contains(req, "Viết vui hơn") || strings.Contains(req, f.people[0]) {
+		t.Fatalf("wrong source: %s", req)
+	}
+	in["excerpt"] = "Đoạn khác"
+	requireStatus(t, f.call("POST", path, 0, in), 409)
+	if stub.SoGoi() != 1 {
+		t.Fatal("a changed source reached the model")
+	}
 }
 
 func TestPostgresCommunityLegacyInsertCannotBypassGuard(t *testing.T) {
