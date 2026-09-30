@@ -26,8 +26,10 @@ import (
 //go:embed doc_khoan.txt
 var huongDan string
 
-// maxRa bounds the answer: a flag, a short title and an amount.
-const maxRa = 512
+// maxRa bounds the answer: a flag, a short title and an amount fit in well
+// under a hundred tokens. Kept low so an answer caught in a word loop (below)
+// ends, and fails, quickly.
+const maxRa = 256
 
 // LuocDo is the response schema; only is_expense is required.
 func LuocDo() *genai.Schema {
@@ -55,11 +57,25 @@ func YeuCau(text string) *model.LLMRequest {
 	return cautruc.NhietDo(req, 0)
 }
 
-// Doc makes the call and returns the raw reading.
+// Doc makes the call and returns the raw reading. An answer that is not one
+// JSON object is asked for once more: through agy-proxy the model sometimes
+// repeats words in "title" until the output cap cuts the JSON off (measured
+// 2026-10-01: 4-6 of 40 calls, whatever the temperature or a schema
+// maxLength). Each loop is an independent draw, so one retry takes the
+// failure rate to about its square. A provider error is not retried.
 func Doc(ctx context.Context, l *motluot.Luot, text string) (map[string]any, error) {
-	answer, err := l.Goi(ctx, YeuCau(text))
-	if err != nil {
-		return nil, err
+	var err error
+	for range 2 {
+		var answer string
+		answer, err = l.Goi(ctx, YeuCau(text))
+		if err != nil {
+			return nil, err
+		}
+		var raw map[string]any
+		raw, err = motluot.DocDoiTuong(answer)
+		if err == nil {
+			return raw, nil
+		}
 	}
-	return motluot.DocDoiTuong(answer)
+	return nil, err
 }

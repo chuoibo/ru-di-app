@@ -18,9 +18,10 @@ giữ khoá AI, `google-genai` đã rời. Ghi chép: `docs/claude/2026-10-01/ad
 
 Còn nợ, theo mức độ:
 
-1. **Nháp khoản chi lặp chữ.** `aiharness/dockhoan` (t=0, `gemini-3.5-flash-lite` qua agy) có lượt model
-   lặp «title» tới hết 512 token → `UNREADABLE`. Đo 3/10, rồi 0/12; `maxLength` 2/12, t=0.3 1/12 — chưa
-   biến thể nào tốt rõ. Cần một lượt đo lớn hơn (báo số lời gọi trước) rồi mới chọn cách sửa.
+1. **Nháp khoản chi.** Lặp chữ trong «title» đo 4–6/40 lượt, không đổi theo nhiệt độ hay `maxLength`
+   (3 × 40 lời gọi, 2026-10-01); đã sửa bằng một lần hỏi lại khi câu trả lời không phải JSON (trần ra 256).
+   Còn mở: 1/10 lượt thật model viết số tiền ở dạng bộ đọc tiền từ chối (`UNREADABLE`, chưa giữ câu thô);
+   «1tr2» luôn bị từ chối — đó là luật của bộ đọc đã port (golden Python), đổi thì mở ADR trước.
 2. **Độ trễ agy dao động.** Cùng một lời gọi 1,6 s lúc rảnh, 30–90 s lúc bận (một lượt quá 90 s bị cắt).
    Route đồng bộ (quét bill, tìm quán) chờ tới 45 s; job nhật ký nâng trần 150 s / lease 160 s. Cần số
    p50/p95 thật dưới tải và quyết định trần theo route.
