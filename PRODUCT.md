@@ -138,7 +138,7 @@ Ràng buộc riêng của tầng hiển thị:
   Server không giữ khóa giải mã chat; AI không tự đọc chat, gu hoặc lịch sử.
 - AI chỉ dựng nháp riêng, người dùng sửa trước khi lưu; dựng lại không ghi đè
   bản đã sửa. AI không quyết định quyền, không viết sổ cái, không tự công khai.
-  Go/SQL sở hữu vòng đời và tác vụ; Python chỉ inference tại seam brain.
+  Go/SQL sở hữu vòng đời, tác vụ và lời gọi model (qua agy-proxy, ADR-0051).
 
 ## Brand Commitments
 
@@ -168,7 +168,8 @@ Có thật, đường dẫn cụ thể:
   5 tờ feature, có màn chia bill 4 bước và màn AI chat.
 - `/home/lakiet/mobile/product/feature_list.md` — spec 47 feature.
 - Lượt Gemini thật được ghi trong tài liệu kiểm thử bên dưới; khóa provider
-  thuộc cấu hình tiến trình brain, không phải bằng chứng để chép vào tài liệu/log.
+  thuộc cấu hình tiến trình `core` (ADR-0051), không phải bằng chứng để chép
+  vào tài liệu/log.
 - 41 golden vector allocator trong `services/api/tests/domain/golden/`.
 
 Bổ sung 27/09/2026 theo [bằng chứng native](docs/testing/so-ky-niem-native.md):

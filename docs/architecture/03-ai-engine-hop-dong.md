@@ -8,6 +8,11 @@ phải chữ ký Lead). Lúc đề xuất bốn văn bản sau cùng mang số 0
 cầu của người dùng: `docs/claude/2026-09-25/ai-chat-v2-ghi-chu.md`. Thiết kế chi tiết từng mảng:
 `docs/claude/2026-09-25/thiet-ke-ai/01…06`. Không phải bằng chứng phát hành.
 
+> **Đổi 2026-10-01 theo ADR-0051:** hai cờ `MOBILE_AI_ENGINE_NEP`/`MOBILE_AI_ENGINE_GROUP` và đường brain Python
+> đã xoá; engine Go là đường duy nhất của Nếp, bot nhóm và chia bill, và mọi bước model một lượt của route (đọc
+> bill, gợi ý, reel, nhật ký, cộng đồng, tìm quán…) cũng chạy trong `core` qua agy-proxy. Các chỗ bên dưới nói «cờ
+> vẫn ở `brain`», «nhóm vẫn đi brain», «worker chạy brain» là lịch sử trước mốc đó.
+
 Tài liệu này là **nguồn sự thật cho mọi thứ nhiều mảng cùng chạm vào**. Một thiết kế mảng lệch
 với bảng dưới đây thì bảng dưới đây thắng. Muốn đổi thì sửa ở đây trước, trong cùng commit với
 thay đổi mảng.

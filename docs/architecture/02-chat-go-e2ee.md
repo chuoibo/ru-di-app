@@ -130,7 +130,6 @@ one-shot `migrate-chat`, sau `migrate` (alembic) và trước `core`.
 |---|---|---|
 | `make up` / 8099 (`docker-compose.yml`) | `dev` | **tắt** (lược đồ có sẵn) |
 | `docker-compose.journey.yml` | chồng lên file trên, không có `core` riêng | như trên |
-| `docker-compose.nep-go.yml` | chồng lên file trên, chỉ sửa `core` | như trên; bật `MOBILE_AI_ENGINE_NEP=go` và đưa `GEMINI_API_KEY` vào `core`. **Chưa dùng** trước khi eval T1 xanh, ADR-0044 được ký và review bảo mật khoá trong core xong |
 | `scripts/e2e_slice.sh` | `prod` | **bật**, luôn migrate |
 | `scripts/chat_e2e_stack.sh` / `chat_e2e_go.sh` | `prod` | **bật**, không đặt cờ nào |
 | `scripts/parity_stacks.sh` | `dev` và `prod` | **tắt rõ** (`=0`): parity so đường legacy với oracle Python |
@@ -220,3 +219,21 @@ hàng đợi của `/plan` và `/chia-bill`, dưới `scope='me'`, `command='hoi
 - Còn mở: chưa chạy mô hình thật (cần user duyệt chi phí); tầng PostgreSQL
   (`nep_postgres_test.go`, 5 ca) chưa chạy trên máy này, CI chạy; chưa có ảnh
   chụp bảng Nếp đang trả lời trên máy thật.
+
+## Checkpoint 01-10-2026 — không còn brain Python (ADR-0051)
+
+Các checkpoint trên là lịch sử; từ mốc này chúng đọc như sau.
+
+- Hai cờ `MOBILE_AI_ENGINE_NEP`/`MOBILE_AI_ENGINE_GROUP` đã bỏ, cùng
+  `docker-compose.nep-go.yml`: Nếp, bot nhóm, `/chia-bill` chỉ chạy trên engine
+  Go. `core serve` dựng model một lần (`aiharness/motluot.TuEnv`, agy-proxy khi
+  có `AGY_PROXY_URL/KEY`, không thì Gemini thẳng); không có model thì route vẫn
+  sống và engine báo `provider_unavailable`; `core work` từ chối khởi động.
+- Không còn action brain nào cho chat: `nep-reply`, `companion-reply`,
+  `chat-expense`, `capabilities` và `nep_gemini.py`/`companion_gemini.py` đã
+  xoá. Chia bill đọc lượt chữ bằng engine Go, nháp khoản chi của một tin bằng
+  `aiharness/dockhoan` + `domain/chatexpense`.
+- chat-e2e dùng `e2e/geministub` (Gemini giả ở loopback) thay `brainstub`.
+- Luật không đổi: người trả là tác giả tin, không bao giờ là tên model viết;
+  không đọc `messages.body` ngoài phần được chia sẻ; không ghi sổ.
+

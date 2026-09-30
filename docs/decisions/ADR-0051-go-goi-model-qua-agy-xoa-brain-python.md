@@ -81,3 +81,34 @@ tổng chép đúng), nhận ra thực đơn, đọc ba ảnh trong một reques
 | ADR-0047 §2.14 (gửi brain shortlist ≤30) | Shortlist gửi thẳng từ Go qua agy, cùng trần |
 | ADR-0049 §2.5 (xoá brain theo từng tính năng, bật cờ) | Làm hết trong đợt này, cờ bị xoá thay vì bật |
 | ADR-0049 §2.8 (trí nhớ Nếp dựng lại bằng Go) | Hoãn: mem0 ở lại sidecar (§2.5) |
+
+## 6. Tiến độ (nhánh `claude/p0-ai-go-agy-bo-brain`, 2026-10-01) và chỗ lệch so với văn bản trên
+
+| Lát | Commit | Nội dung |
+|---|---|---|
+| nền | `db60723d` | `motluot`, ảnh inline, `vnlocal-thu anh`; đo agy thật |
+| cờ | `8d6d2792` | bỏ `MOBILE_AI_ENGINE_NEP/GROUP`, engine Go là đường duy nhất |
+| bill/ảnh/khoản chi | `add7a953`, `6d48b5db` | golden rồi chuyển route, xoá Python |
+| gợi ý/reel/thành tựu | `2c3b2579`, `de985f8e` | prompt khớp từng byte, xoá Python |
+| nhật ký | `08705dd5`, `f6df3591` | vòng viết + kiểm khớp 16/16 ca, xoá `diary_gemini` |
+| cộng đồng | `ae7b2d7d` | lời dặn mới, xoá `community_inference` |
+| tìm quán + lý do | `609930ff`, `5f3b96e8` | 229/229 ca, xoá phần LLM của Python, `google-genai` rời `services/api` |
+
+Lệch, có chủ ý:
+
+- Bộ kiểm của tìm quán nằm ở `aiharness/timquan`, không ở `internal/domain/*`: nó đọc giá trị pyjson (số
+  nguyên lớn, thứ tự khoá) mà biên domain thuần không cho import. Golden vẫn chứng minh như §2.1.
+- Cộng đồng không có prompt cũ để chép (§1): `aiharness/congdong` viết lời dặn mới; `media_checked` do Go
+  đặt (chỉ đúng khi mọi tệp là ảnh đã gửi cùng request), không hỏi model.
+- `GET /places`, `GET /places/{id}`: handler Python không đổi một dòng; `create_app` cài một reason writer
+  không trả lời ai (`no_reasons`). Đó đúng là điều core không khoá phục vụ, và giữ hai route làm oracle
+  parity cho phần danh mục (§2.3 «chỉ mất phần viết lý do»).
+- Nhật ký: trần ảnh 14 MiB (Python 24 MiB) vì agy nhận thân ≤ 20 MB; job 150 s, lease 160 s, mỗi lời gọi
+  45 s — qua agy một lời gọi có lúc treo quá một phút.
+- Câu trả lời của model có thể bọc trong rào ```json dù đã xin MIME JSON (qua agy): `motluot.BoRao` bỏ đúng
+  một rào trước khi đọc. Python không có bước này.
+- Tìm quán: hai cổng từng dòng (số không nguồn, chép lại câu người gõ) route Python có mà bản Go trước đợt
+  này thiếu — nay có ở Go.
+
+Còn mở: `docs/team/hang-doi.md` mục 2026-10-01.
+

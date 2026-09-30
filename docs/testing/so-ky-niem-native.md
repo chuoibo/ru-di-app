@@ -21,9 +21,11 @@ Android emulator là phạm vi kiểm ở đây. Chưa có bằng chứng iOS ru
 2. API Go: `MOBILE_DATABASE_URL`, `MOBILE_MEDIA_ROOT`, `MOBILE_PERSON_ID_KEY`,
    `MOBILE_AUTH_MODE=prod`, `MOBILE_INTERNAL_TOKEN`, `MOBILE_PYTHON_UPSTREAM`.
    Chỉ môi trường thử dùng log sender và `MOBILE_OTP_DEBUG_CODE=000000`.
-3. Brain nhận `GEMINI_API_KEY` qua môi trường; `GEMINI_DIARY_MODEL` tùy chọn.
-   Không đưa khóa vào Expo, APK, Git hay log. Worker có hai consumer, lease,
-   tối đa ba lượt và hạn một giờ; model bị giới hạn tối đa một lần viết lại.
+3. `core` gọi model (ADR-0051: `aiharness/nhatky`, không còn brain Python):
+   `AGY_PROXY_URL`/`AGY_PROXY_KEY`, hoặc `GEMINI_API_KEY` khi không có agy.
+   Không đưa khóa vào Expo, APK, Git hay log. Worker có hai consumer, lease
+   160 s, tối đa ba lượt và hạn một giờ; model bị giới hạn tối đa một lần viết
+   lại (tối đa 4 lời gọi, mỗi lời gọi 45 s, ảnh cộng dồn ≤ 14 MiB).
 4. Trong `apps/mobile`, chạy `tools/seed-diary-native.mjs` bằng Node với
    `DIARY_TEST_API=http://127.0.0.1:<cổng API>` và `DIARY_TEST_OUTPUT` ngoài
    mọi worktree. Seeder tạo tài khoản, hội, hai cuộc đi và ba tranh sọc giả lập.
