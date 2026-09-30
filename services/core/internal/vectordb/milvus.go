@@ -576,7 +576,7 @@ func (y YeuCauTim) Nhanhs() ([]Nhanh, error) {
 		if err := kiemDense(y.Dense); err != nil {
 			return nil, err
 		}
-		out = append(out, Nhanh{FDense, entity.FloatVector(y.Dense), index.NewHNSWAnnParam(HNSWEfTimKiem), w.Dense})
+		out = append(out, Nhanh{FDense, entity.FloatVector(y.Dense), index.NewHNSWAnnParam(max(HNSWEfTimKiem, y.ungVien())), w.Dense})
 	}
 	if y.Thua != nil && w.BM25 > 0 {
 		out = append(out, Nhanh{FSparse, entity.Text(y.Thua.Text), nil, w.BM25})
@@ -649,7 +649,7 @@ func (m *Milvus) Tim(ctx context.Context, y YeuCauTim) ([]Trung, error) {
 			opt := milvusclient.NewSearchOption(y.Ten, y.ungVien(), []entity.Vector{l.vec}).WithANNSField(l.Truong).
 				WithConsistencyLevel(m.nhatQuan()).WithOutputFields(FIndexVersion, FDocID).WithFilter(expr)
 			if l.Truong == FDense {
-				opt = opt.WithAnnParam(m.chiMucDense().thamSoTim())
+				opt = opt.WithAnnParam(m.chiMucDense().thamSoTim(y.ungVien()))
 			} else if l.ann != nil {
 				opt = opt.WithAnnParam(l.ann)
 			}

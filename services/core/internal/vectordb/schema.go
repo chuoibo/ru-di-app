@@ -244,14 +244,18 @@ func (k ChiMucDense) chiMuc() index.Index {
 	return index.NewHNSWIndex(entity.COSINE, hnswM, hnswEfBuild)
 }
 
-// thamSoTim is the ANN parameter a dense search sends for this index.
-func (k ChiMucDense) thamSoTim() index.AnnParam {
+// thamSoTim is the ANN parameter a dense search of topK results sends for
+// this index. Both indexes refuse a search list shorter than topK (HNSW:
+// «ef should be larger than k»; CAGRA: itopk_size below topk), and a served
+// search asks each leg for truyhoi.MaxK·… candidates, so the list is the
+// larger of the tuned value and topK.
+func (k ChiMucDense) thamSoTim(topK int) index.AnnParam {
 	if k == DenseGPUCagra {
 		p := index.NewCustomAnnParam()
-		p.WithExtraParam("itopk_size", cagraITopK)
+		p.WithExtraParam("itopk_size", max(cagraITopK, topK))
 		return p
 	}
-	return index.NewHNSWAnnParam(HNSWEfTimKiem)
+	return index.NewHNSWAnnParam(max(HNSWEfTimKiem, topK))
 }
 
 // denseIndex is the index option on FDense of collection name.

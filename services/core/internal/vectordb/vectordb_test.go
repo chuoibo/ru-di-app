@@ -366,11 +366,19 @@ func TestChiMucDenseTheoMoiTruong(t *testing.T) {
 	if cagra["index_type"] != "GPU_CAGRA" || cagra["metric_type"] != "COSINE" {
 		t.Fatalf("GPU index params %v", cagra)
 	}
-	if p := DenseGPUCagra.thamSoTim().Params(); p["itopk_size"] != cagraITopK || p["ef"] != nil {
+	if p := DenseGPUCagra.thamSoTim(10).Params(); p["itopk_size"] != cagraITopK || p["ef"] != nil {
 		t.Fatalf("GPU search params %v", p)
 	}
-	if DenseHNSW.chiMuc().Params()["index_type"] != "HNSW" || DenseHNSW.thamSoTim().Params()["ef"] != HNSWEfTimKiem {
+	if DenseHNSW.chiMuc().Params()["index_type"] != "HNSW" || DenseHNSW.thamSoTim(10).Params()["ef"] != HNSWEfTimKiem {
 		t.Fatal("HNSW index or search parameter changed")
+	}
+	// A served search asks a leg for more candidates than the tuned list
+	// (150 > 128): the list grows to topK, which both indexes require.
+	if ef := DenseHNSW.thamSoTim(150).Params()["ef"]; ef != 150 {
+		t.Fatalf("HNSW ef for 150 candidates: %v", ef)
+	}
+	if it := DenseGPUCagra.thamSoTim(400).Params()["itopk_size"]; it != 400 {
+		t.Fatalf("CAGRA itopk_size for 400 candidates: %v", it)
 	}
 	env := map[string]string{EnvAddr: "127.0.0.1:1", EnvUser: "u", EnvPassword: "p", EnvDenseIndex: "GPU_CAGRA"}
 	c, err := FromEnv(func(k string) string { return env[k] })

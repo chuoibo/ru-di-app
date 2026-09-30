@@ -106,7 +106,7 @@ func (k *SoTriNho) Tim(ctx context.Context, o ChuSoHuu, q []float32, n int) ([]T
 		return nil, err
 	}
 	rs, err := k.m.cli.Search(ctx, milvusclient.NewSearchOption(k.ten(), n, []entity.Vector{entity.FloatVector(q)}).
-		WithANNSField(FDense).WithAnnParam(k.m.chiMucDense().thamSoTim()).
+		WithANNSField(FDense).WithAnnParam(k.m.chiMucDense().thamSoTim(n)).
 		WithFilter(locChu).WithTemplateParam("o", o.id).
 		WithConsistencyLevel(entity.ClStrong).WithOutputFields(FIndexVersion))
 	if err != nil {
