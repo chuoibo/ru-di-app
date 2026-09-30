@@ -14,7 +14,7 @@
 # MEM0_TELEMETRY=true in the environment (and the canaries show both checks
 # can see what they forbid); memory text never reaches a log; one person never
 # reads, lists or deletes another's memories; every delete is followed by a
-# count of zero; the Gemini request body carries the task-in-text format, 1536
+# count of zero; the Gemini request body carries the task-in-text format, 3072
 # dims, one content per text, no taskType. What it does NOT mean: that the
 # model extracts well (no real model call happens anywhere here), or that
 # MILCO works (its weights are not here and not licensed yet).

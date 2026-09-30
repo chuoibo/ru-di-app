@@ -3,15 +3,16 @@
 // (vectordb) and for Nếp's memory alike, so all of them measure similarity
 // in the same space and one query vector serves every collection.
 //
-// The model is gemini-embedding-2 at 1536 dimensions for every collection
-// (research gemini-embedding-2.md §6.1). On the Gemini Developer API that
+// The model is gemini-embedding-2 at 3072 dimensions for every collection
+// (owner, 2026-09-30: the model's full size; the price is per input token,
+// not per dimension). On the Gemini Developer API that
 // model takes its task as an instruction written into the text, not as the
 // request's taskType, so this package writes the prefix itself
 // (DinhDang) and never sets EmbedContentConfig.TaskType or Title; the
 // request body is pinned by a wire-contract test, and every vector that
 // comes back is checked to have exactly Dims values before it is used,
-// because a provider that ignored outputDimensionality would answer 3072
-// and the vector store would refuse the row (research §Kiểm chứng 2, 6).
+// because a vector of any other length would be refused by the vector
+// store (research §Kiểm chứng 2, 6).
 //
 // Two implementations. Gemini calls the model from Go through
 // google.golang.org/genai, under the same rules as the text model in
@@ -88,7 +89,7 @@ func (d *DemLuot) ConLai() int {
 // and changing any one means a re-embed into a new collection version.
 const (
 	Model         = "gemini-embedding-2"
-	Dims          = 1536
+	Dims          = 3072
 	PromptVersion = "prefix-v1"
 	// MaxBatch is how many texts one request carries. The provider's own
 	// limit is not confirmed (research §Kiểm chứng 9); 100 is the defensive
@@ -101,8 +102,14 @@ const (
 type TacVu string
 
 const (
-	TaiLieu   TacVu = "tai_lieu"
-	CauHoi    TacVu = "cau_hoi"
+	TaiLieu TacVu = "tai_lieu"
+	// CauHoi is a search for a place: «task: search result».
+	CauHoi TacVu = "cau_hoi"
+	// HoiDap is a question the app manual answers: «task: question
+	// answering» (owner, 2026-09-30).
+	HoiDap TacVu = "hoi_dap"
+	// GiongNhau compares two texts of one kind (router examples, Nếp's
+	// memories): «task: sentence similarity».
 	GiongNhau TacVu = "giong_nhau"
 )
 
@@ -141,14 +148,17 @@ func ChuanNFC(s string) string { return strings.TrimSpace(norm.NFC.String(s)) }
 
 // DinhDang writes the task into the text, the way gemini-embedding-2 takes
 // it on the Developer API (the prefixes of Google's recommended mapping,
-// research §3 and §Kiểm chứng 3): a query «task: search result | query: …»,
-// a document «title: … | text: …» with «none» for no title, a symmetric
+// research §3 and §Kiểm chứng 3): a place search «task: search result |
+// query: …», a question to the manual «task: question answering | query:
+// …», a document «title: … | text: …» with «none» for no title, a symmetric
 // comparison «task: sentence similarity | query: …». The text is NFC first.
 func DinhDang(tv TacVu, tieuDe, noiDung string) (string, error) {
 	noiDung = ChuanNFC(noiDung)
 	switch tv {
 	case CauHoi:
 		return "task: search result | query: " + noiDung, nil
+	case HoiDap:
+		return "task: question answering | query: " + noiDung, nil
 	case GiongNhau:
 		return "task: sentence similarity | query: " + noiDung, nil
 	case TaiLieu:

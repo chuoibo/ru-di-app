@@ -151,7 +151,7 @@ const (
 	GiaKhongRo     = int64(-1)
 	KhongRo        = "khong_ro"
 	bm25FuncName   = "text_bm25"
-	embedModelDesc = nhung.Model + "@" + "1536/" + nhung.PromptVersion
+	embedModelDesc = nhung.Model + "@" + "3072/" + nhung.PromptVersion
 )
 
 // AnalyzerParams is the BM25 analyzer of FText: the standard tokenizer,

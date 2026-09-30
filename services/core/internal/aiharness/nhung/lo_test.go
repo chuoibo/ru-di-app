@@ -24,7 +24,7 @@ func TestFileVaoDungDinhDangOnline(t *testing.T) {
 		t.Fatalf("line 0: %s", lines[0])
 	}
 	want, _ := DinhDang(TaiLieu, "Quán A", "cà phê yên tĩnh")
-	if !strings.Contains(lines[0], `"text":"`+want+`"`) || !strings.Contains(lines[0], `"output_dimensionality":1536`) {
+	if !strings.Contains(lines[0], `"text":"`+want+`"`) || !strings.Contains(lines[0], `"output_dimensionality":3072`) {
 		t.Fatalf("the batch text is not the online door's prefix: %s", lines[0])
 	}
 	if strings.Contains(lines[0], "task_type") || strings.Contains(lines[0], "title\":") {

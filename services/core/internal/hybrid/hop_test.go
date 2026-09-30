@@ -41,10 +41,12 @@ func TestChunksFoldToTheirPlace(t *testing.T) {
 type ghiNhung struct {
 	nhung.Stub
 	texts []string
+	tvs   []nhung.TacVu
 }
 
 func (g *ghiNhung) Nhung(ctx context.Context, texts []string, tv nhung.TacVu) ([][]float32, error) {
 	g.texts = append(g.texts, texts...)
+	g.tvs = append(g.tvs, tv)
 	return g.Stub.Nhung(ctx, texts, tv)
 }
 
@@ -133,5 +135,22 @@ func TestFusionWeightsReachTheIndex(t *testing.T) {
 	}
 	if got := th.fake.Da[0].TrongSo; got == nil || *got != w {
 		t.Fatalf("weights %+v", got)
+	}
+}
+
+// A place search is embedded as «search result», a question to the manual
+// as «question answering» (owner, 2026-09-30).
+func TestQueryTaskFollowsTheCorpus(t *testing.T) {
+	_, k := moiThu(t)
+	g := &ghiNhung{}
+	k.Nhung = g
+	k.TenHuongDan = "rd_manual"
+	k.HuongDan = func(context.Context, []string) (map[string]map[string]string, error) {
+		return map[string]map[string]string{}, nil
+	}
+	_, _ = k.Tim(context.Background(), truyhoi.YeuCau{Nguon: truyhoi.Places, Cau: "quán lẩu"})
+	_, _ = k.Tim(context.Background(), truyhoi.YeuCau{Nguon: truyhoi.Manual, Cau: "chia bill thế nào"})
+	if len(g.tvs) != 2 || g.tvs[0] != nhung.CauHoi || g.tvs[1] != nhung.HoiDap {
+		t.Fatalf("tasks %v", g.tvs)
 	}
 }

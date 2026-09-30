@@ -108,7 +108,7 @@ func TestRagDenseTuChoiLechCauHinh(t *testing.T) {
 		t.Fatalf("the committed configuration %s/%d is not the embedding door's %s/%d", cfg.Dense.Model, cfg.Dense.Dims, nhung.Model, nhung.Dims)
 	}
 	off := cfg
-	off.Dense.Dims = 3072
+	off.Dense.Dims = 1536
 	_, err := ragDense(context.Background(), func(k string) string {
 		switch k {
 		case "GEMINI_API_KEY":

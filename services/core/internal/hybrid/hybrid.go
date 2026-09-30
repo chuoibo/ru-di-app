@@ -206,7 +206,13 @@ func (k *Kho) Tim(ctx context.Context, y truyhoi.YeuCau) (truyhoi.KetQuaTruyHoi,
 	// One row per place (rd.v4); ask for more so n places survive the
 	// re-check.
 	req := vectordb.YeuCauTim{Ten: ten, Kho: kho, Loc: loc, K: truyhoi.MaxK, TrongSo: k.TrongSo}
-	if vs, err := k.Nhung.Nhung(ctx, []string{text}, nhung.CauHoi); err == nil && len(vs) == 1 {
+	// A place search is «search result»; a question to the manual is
+	// «question answering» (owner, 2026-09-30). Documents are embedded alike.
+	tacVu := nhung.CauHoi
+	if kho == vectordb.KhoHuongDan {
+		tacVu = nhung.HoiDap
+	}
+	if vs, err := k.Nhung.Nhung(ctx, []string{text}, tacVu); err == nil && len(vs) == 1 {
 		req.Dense = vs[0]
 	} else {
 		kq.Degraded = append(kq.Degraded, truyhoi.NoVector)

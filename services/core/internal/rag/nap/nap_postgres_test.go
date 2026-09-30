@@ -250,11 +250,11 @@ func TestPromoteKiemLaiVanTayVaVang(t *testing.T) {
 	if _, err := n.Promote(ctx, pool, rep.PhienBan, strings.Repeat("0", 64)); !errors.Is(err, nap.ErrCong) {
 		t.Fatalf("promoted on a verdict from another golden set: %v", err)
 	}
-	// A small change of a weight (rd.v4's one BM25 leg, 1 -> 0.9): the
-	// subject is that any configuration change stops for a person, not how
-	// far quality moves.
+	// A configuration change that moves the fingerprint but not the ranking
+	// (how long retired versions are kept): the subject is that any change
+	// stops for a person, not how far quality moves.
 	n2 := n
-	n2.Cfg.Hop.TrongSo.BM25 = 0.9
+	n2.Cfg.GiuBan.Ngay++
 	if _, err := n2.Promote(ctx, pool, rep.PhienBan, v.Sha); !errors.Is(err, nap.ErrCong) {
 		t.Fatalf("promoted under a changed configuration: %v", err)
 	}
@@ -340,11 +340,11 @@ func TestDungTuDong(t *testing.T) {
 	if err != nil || !same.TuDong || same.TyLeDoi != 0 {
 		t.Fatalf("unchanged rebuild: %+v %v", same, err)
 	}
-	// A small change of a weight (rd.v4's one BM25 leg, 1 -> 0.9): the
-	// subject is that any configuration change stops for a person, not how
-	// far quality moves.
+	// A configuration change that moves the fingerprint but not the ranking
+	// (how long retired versions are kept): the subject is that any change
+	// stops for a person, not how far quality moves.
 	n2 := n
-	n2.Cfg.Hop.TrongSo.BM25 = 0.9
+	n2.Cfg.GiuBan.Ngay++
 	moved, err := n2.DungTuDong(ctx, pool, nap.CorpusQuan, enc, v)
 	if err != nil || moved.TuDong || moved.LyDoTay != "doi_cau_hinh" {
 		t.Fatalf("changed configuration: %+v %v", moved, err)

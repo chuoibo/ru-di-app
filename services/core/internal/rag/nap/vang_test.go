@@ -52,25 +52,26 @@ func napNho(t testing.TB) (Nap, StubDense) {
 // same with the dense leg alone: the difference is the recall the folded
 // BM25 leg buys.
 //
-// rd.v4 (one row per place, 2026-09-30) with the stub encoder: recall@10
-// 0.9333 -> 0.8800 against rd.v3's three facets. These are pins of the stub,
+// rd.v4 (one row per place, 3072 dims, 2026-09-30) with the stub encoder:
+// recall@10 0.9333 -> 0.8800 against rd.v3's three facets. These are pins of the stub,
 // not the gate: the same golden set on Milvus with gemini-embedding-2 reads
 // recall@10 0.9467, nDCG@10 0.9120, MRR@10 0.9033, violation 0 (measured
-// 2026-09-30), and v-eval holds the unchanged thresholds on that.
+// 2026-09-30 at 1536 dims), and v-eval holds the unchanged thresholds on
+// whatever a build embeds.
 var vangGhim = map[string]string{
 	"bay_injection":    "n=7 co_lien_quan=2 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
-	"bo_dau":           "n=143 co_lien_quan=75 recall@10=0.8800 ndcg@10=0.7654 mrr@10=0.7299 violation@10=0.0000 so_vi_pham=0",
-	"bo_dau_chi_dense": "n=143 co_lien_quan=75 recall@10=0.7733 ndcg@10=0.7070 mrr@10=0.6859 violation@10=0.0000 so_vi_pham=0",
-	"chi_dense":        "n=143 co_lien_quan=75 recall@10=0.7733 ndcg@10=0.7070 mrr@10=0.6859 violation@10=0.0000 so_vi_pham=0",
+	"bo_dau":           "n=143 co_lien_quan=75 recall@10=0.8800 ndcg@10=0.7858 mrr@10=0.7575 violation@10=0.0000 so_vi_pham=0",
+	"bo_dau_chi_dense": "n=143 co_lien_quan=75 recall@10=0.8067 ndcg@10=0.7452 mrr@10=0.7249 violation@10=0.0000 so_vi_pham=0",
+	"chi_dense":        "n=143 co_lien_quan=75 recall@10=0.8067 ndcg@10=0.7452 mrr@10=0.7249 violation@10=0.0000 so_vi_pham=0",
 	"chi_thua":         "n=143 co_lien_quan=75 recall@10=0.8867 ndcg@10=0.8256 mrr@10=0.8049 violation@10=0.0000 so_vi_pham=0",
-	"di_ung":           "n=86 co_lien_quan=24 recall@10=0.6667 ndcg@10=0.4395 mrr@10=0.3726 violation@10=0.0000 so_vi_pham=0",
+	"di_ung":           "n=86 co_lien_quan=24 recall@10=0.6667 ndcg@10=0.4654 mrr@10=0.4066 violation@10=0.0000 so_vi_pham=0",
 	"khi_chat":         "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.8603 mrr@10=0.8350 violation@10=0.0000 so_vi_pham=0",
 	"khong_dau":        "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9950 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"khong_dau_gap":    "0.0000",
 	"lien_diem_den":    "n=8 co_lien_quan=8 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
-	"rang_buoc":        "n=10 co_lien_quan=9 recall@10=0.8889 ndcg@10=0.8046 mrr@10=0.7444 violation@10=0.0000 so_vi_pham=0",
-	"ten_rieng":        "n=12 co_lien_quan=12 recall@10=1.0000 ndcg@10=0.9218 mrr@10=0.8958 violation@10=0.0000 so_vi_pham=0",
-	"tong":             "n=143 co_lien_quan=75 recall@10=0.8800 ndcg@10=0.7654 mrr@10=0.7299 violation@10=0.0000 so_vi_pham=0",
+	"rang_buoc":        "n=10 co_lien_quan=9 recall@10=0.8889 ndcg@10=0.8422 mrr@10=0.8000 violation@10=0.0000 so_vi_pham=0",
+	"ten_rieng":        "n=12 co_lien_quan=12 recall@10=1.0000 ndcg@10=0.9692 mrr@10=0.9583 violation@10=0.0000 so_vi_pham=0",
+	"tong":             "n=143 co_lien_quan=75 recall@10=0.8800 ndcg@10=0.7858 mrr@10=0.7575 violation@10=0.0000 so_vi_pham=0",
 }
 
 func TestVangGhimVaCong(t *testing.T) {

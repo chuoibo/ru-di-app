@@ -27,9 +27,12 @@ func TestKiemKhop(t *testing.T) {
 	if err := KiemKhop(c); err != nil {
 		t.Fatal(err)
 	}
+	// Each case moves one value AWAY from the committed configuration (3072
+	// dims, rd.v4, rrf 60): the drift must be refused. The dims case halves
+	// the committed size -- a wrong size on purpose, not the one in use.
 	for name, mut := range map[string]func(*nap.CauHinh){
 		"schema": func(c *nap.CauHinh) { c.LuocDo = "rd.v1" },
-		"dims":   func(c *nap.CauHinh) { c.Dense.Dims = 3072 },
+		"dims":   func(c *nap.CauHinh) { c.Dense.Dims /= 2 },
 		"rrf":    func(c *nap.CauHinh) { c.Hop.RRFK = 61 },
 	} {
 		m := c

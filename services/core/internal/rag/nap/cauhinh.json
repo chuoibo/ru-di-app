@@ -2,7 +2,7 @@
   "phien_ban": "nap.v1",
   "dense": {
     "model": "gemini-embedding-2",
-    "dims": 1536,
+    "dims": 3072,
     "co_che": "prefix-v1",
     "lo": 100
   },

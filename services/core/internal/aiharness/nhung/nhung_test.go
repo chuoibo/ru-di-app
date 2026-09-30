@@ -21,7 +21,7 @@ func TestStubIsDeterministicNormalisedAndCloseForSharedWords(t *testing.T) {
 	}
 	again, _ := Stub{}.Nhung(ctx, []string{"quán cà phê view đồi"}, CauHoi)
 	for i, v := range vs {
-		if len(v) != Dims || Dims != 1536 {
+		if len(v) != Dims || Dims != 3072 {
 			t.Fatalf("vector %d has %d dims", i, len(v))
 		}
 		if n := Cosine(v, v); math.Abs(n-1) > 1e-5 {
@@ -50,6 +50,7 @@ func TestDinhDangWritesTheTaskIntoTheText(t *testing.T) {
 		{TaiLieu, "", "mở cửa 7h", "title: none | text: mở cửa 7h"},
 		{TaiLieu, "Cà Phê Dốc", "yên tĩnh", "title: Cà Phê Dốc | text: yên tĩnh"},
 		{GiongNhau, "", "a", "task: sentence similarity | query: a"},
+		{HoiDap, "", "chia bill thế nào", "task: question answering | query: chia bill thế nào"},
 		// NFD input comes out NFC: the cache key and the model see one form.
 		{CauHoi, "", "Đà Lạt", "task: search result | query: Đà Lạt"},
 	} {
@@ -115,7 +116,7 @@ func (f *fakeGemini) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // The wire contract with the provider, pinned on the request body the SDK
 // sends: batchEmbedContents on gemini-embedding-2, every request carrying the
-// prefixed text and outputDimensionality 1536, and no taskType or title
+// prefixed text and outputDimensionality 3072, and no taskType or title
 // anywhere (research gemini-embedding-2 §Kiểm chứng, recommendations 1–2). A
 // change of SDK that moves or drops a field turns this red.
 func TestGeminiWireContract(t *testing.T) {
@@ -180,17 +181,17 @@ func TestGeminiWireContract(t *testing.T) {
 	}
 }
 
-// A provider that ignores the requested dimensionality answers 3072 values:
+// A provider that answers another dimensionality (1536 values here):
 // refused before any vector reaches a store.
 func TestGeminiRefusesAVectorOfTheWrongLength(t *testing.T) {
-	srv := httptest.NewServer(&fakeGemini{dims: 3072})
+	srv := httptest.NewServer(&fakeGemini{dims: 1536})
 	defer srv.Close()
 	g, err := NewGemini(context.Background(), "test-key", srv.URL+"/")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := g.Nhung(context.Background(), []string{"x"}, CauHoi); !errors.Is(err, ErrSaiChieu) {
-		t.Fatalf("a 3072-long vector was accepted: %v", err)
+		t.Fatalf("a 1536-long vector was accepted: %v", err)
 	}
 }
 

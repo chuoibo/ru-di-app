@@ -192,7 +192,7 @@ func TestPlaceSchemaIsRdV4(t *testing.T) {
 	if fs[FDanhMuc].TypeParams["max_capacity"] != "10" {
 		t.Fatalf("danh_muc capacity %q, want 10", fs[FDanhMuc].TypeParams["max_capacity"])
 	}
-	if fs[FDense].TypeParams["dim"] != "1536" {
+	if fs[FDense].TypeParams["dim"] != "3072" {
 		t.Fatalf("dense dim %q", fs[FDense].TypeParams["dim"])
 	}
 	if fs[FID].AutoID || !fs[FID].PrimaryKey {

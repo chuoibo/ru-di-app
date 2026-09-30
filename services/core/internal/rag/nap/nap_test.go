@@ -61,7 +61,7 @@ func TestTenCollectionKhongBaoGioTrungAlias(t *testing.T) {
 
 func TestCauHinhMacDinhVaTuChoi(t *testing.T) {
 	c := cfgMacDinh(t)
-	if c.Dense.Dims != 1536 || c.Dense.Model != "gemini-embedding-2" || c.LuocDo != "rd.v4" || c.Hop.TrongSo != (TrongSo{Dense: 1, BM25: 1}) {
+	if c.Dense.Dims != 3072 || c.Dense.Model != "gemini-embedding-2" || c.LuocDo != "rd.v4" || c.Hop.TrongSo != (TrongSo{Dense: 1, BM25: 1}) {
 		t.Fatalf("committed configuration drifted: %+v", c)
 	}
 	if c.Cong.Recall10 != 0.90 || c.Cong.NDCG10 != 0.75 || c.Cong.MRR10 != 0.70 || c.Cong.Violation10 != 0 || c.Cong.KhongDauGap != 0.05 {
@@ -111,12 +111,12 @@ func TestCauHinhMacDinhVaTuChoi(t *testing.T) {
 	}
 }
 
-// The dense wire contract: a 1536 request answered with 3072 values, a NaN,
+// The dense wire contract: a 3072 request answered with 1536 values, a NaN,
 // a zero vector are refused before Milvus sees them; a good vector comes
 // back unit length.
 func TestKiemVector(t *testing.T) {
-	if _, err := KiemVector(make([]float32, 3072), 1536); !errors.Is(err, ErrVector) {
-		t.Fatal("3072 values accepted for 1536 dims")
+	if _, err := KiemVector(make([]float32, 1536), 3072); !errors.Is(err, ErrVector) {
+		t.Fatal("1536 values accepted for 3072 dims")
 	}
 	v := make([]float32, 4)
 	v[1] = float32(math.NaN())
@@ -195,8 +195,8 @@ func TestNhungHangQuaBoNho(t *testing.T) {
 
 func TestNhungHangTuChoiEncoderLechChieu(t *testing.T) {
 	cfg := cfgMacDinh(t)
-	if _, err := NhungHang(context.Background(), StubDense{N: 3072}, nil, cfg, []Hang{{ContentHash: "x"}}); !errors.Is(err, ErrCauHinh) {
-		t.Fatalf("a 3072-dim encoder under a 1536 configuration: %v", err)
+	if _, err := NhungHang(context.Background(), StubDense{N: 1536}, nil, cfg, []Hang{{ContentHash: "x"}}); !errors.Is(err, ErrCauHinh) {
+		t.Fatalf("a 1536-dim encoder under a 3072 configuration: %v", err)
 	}
 }
 
@@ -205,15 +205,15 @@ func TestNhungHangTuChoiEncoderLechChieu(t *testing.T) {
 type saiChieu struct{ StubDense }
 
 func (s saiChieu) NhungTaiLieu(ctx context.Context, docs []TaiLieu) ([][]float32, error) {
-	out, _ := StubDense{N: 3072}.NhungTaiLieu(ctx, docs)
+	out, _ := StubDense{N: 1536}.NhungTaiLieu(ctx, docs)
 	return out, nil
 }
 
 func TestNhungHangTuChoiVectorSaiDoDai(t *testing.T) {
 	cfg := cfgMacDinh(t)
-	_, err := NhungHang(context.Background(), saiChieu{StubDense{N: 1536}}, nil, cfg, []Hang{{ContentHash: "x", Text: "a"}})
+	_, err := NhungHang(context.Background(), saiChieu{StubDense{N: 3072}}, nil, cfg, []Hang{{ContentHash: "x", Text: "a"}})
 	if !errors.Is(err, ErrVector) {
-		t.Fatalf("3072-value answers accepted: %v", err)
+		t.Fatalf("1536-value answers accepted: %v", err)
 	}
 }
 

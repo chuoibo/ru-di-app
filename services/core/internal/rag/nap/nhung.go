@@ -40,7 +40,7 @@ type NhungCauHoi interface {
 // KiemVector checks one returned vector: exactly dims values, all finite,
 // not all zero; and returns it L2-normalised (a truncated Matryoshka vector
 // is not unit length). A provider that silently answers 3072 values for a
-// 1536 request is refused here, before Milvus would.
+// request of the configured size is refused here, before Milvus would.
 func KiemVector(v []float32, dims int) ([]float32, error) {
 	if len(v) != dims {
 		return nil, fmt.Errorf("%w: %d values, want %d", ErrVector, len(v), dims)
