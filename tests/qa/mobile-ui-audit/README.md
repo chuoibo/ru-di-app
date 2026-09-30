@@ -91,6 +91,15 @@ AUDIT_BASE=http://127.0.0.1:8091 node kich-ban/n26-hai-lop-chat.mjs --chi lab   
 node kich-ban/n26-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native, rút hàng giữ chỗ TC-N-26-…; chạy lại không thêm dòng
 node kich-ban/n26-ghep.mjs           # ảnh ghép của N26, gắn vào hàng
 # Thứ tự chốt checkpoint N26: n26-phan-xu → n26-ghep → chot-anh → tong-hop → kiem-tai-lieu
+# Feature mới #14, Cộng đồng (checkpoint N14). Phần, theo thứ tự: api, rong, khong-phien, tu-kiem-ly-do, dang, duyet,
+# sau-duyet, bang, ws, chi-tiet, binh-luan, phu, loi, tuong. api và rong chỉ đo được TRƯỚC khi duyet duyệt bài đầu tiên.
+# Trước duyet: cấp chat-15 vào community_moderators bằng SQL (cách người vận hành cấp, docs/testing/cong-dong.md).
+AUDIT_CORE_LOG=/tmp/rudi-stack2/core.log node kich-ban/n14-cong-dong.mjs --chi api,rong   # AUDIT_CORE_LOG: đếm dòng 23502 (UI-132)
+node kich-ban/n14-cong-dong.mjs --chi bang:C2,bang:theo-doi,ws:chi-tiet,chi-tiet:sua-doc   # từng cấu hình hay từng phần con
+                                    # dang, duyet, binh-luan, bang:an, chi-tiet:C1 GHI lên stack (report §A); ws đi qua relay Node
+node kich-ban/n14-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native và video BLOCKED, rút TC-N-14-…; chạy lại không thêm dòng
+node kich-ban/n14-ghep.mjs           # ảnh ghép của N14, gắn vào hàng
+# Thứ tự chốt checkpoint N14: n14-phan-xu → n14-ghep → chot-anh → tong-hop → kiem-tai-lieu
 node retest-bang.mjs <docs gốc> <docs main>   # sinh retest.md từ issues.md gốc và sổ retest
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
@@ -223,6 +232,35 @@ Bài học của checkpoint N26 (hai lớp chat, 30/09):
   đo được gì ở đó.
 - Khoảnh khắc chỉ diễn khi trạng thái đổi ngay trên màn (M6): đo bằng hai persona và lấy mẫu rAF từ trước cú chạm đồng ý.
 - Script thăm dò dùng `khoiDong` phải gọi `mt.dong()` (hay `process.exit`): server web của harness giữ tiến trình sống.
+
+Bài học của checkpoint N14 (Cộng đồng, 30/09):
+- Trạng thái chỉ có một lần (cộng đồng chưa có bài duyệt) phải đo trước mọi lần ghi, và kịch bản phải xếp phần theo thứ tự
+  đó (`api`, `rong` trước `duyet`). Đo lại UI-132 cần một stack mới.
+- Lý do của nút tắt nằm ở phần tử liền sau nút (vỏ `lyDo` của `RudiButton`, có glyph thông tin), không ở phần tử cha: cha
+  có thể là cả mục, và đọc cha đã cho một PASS sai. Dùng `LY_DO_SRC` chung, và chạy `--chi tu-kiem-ly-do` (canary «Đăng
+  story», identity «Gửi lên cộng đồng») trước khi tin nó.
+- Nhãn trên màn có thể viết hoa chữ đầu hay không tuỳ chỗ («Theo dõi tác giả», «Bỏ theo dõi tác giả»): so khớp không phân
+  biệt hoa thường, và bỏ glyph icon trước khi so (bộ lấy mẫu rAF cũng vậy).
+- Căn giữa đúng phần tử sẽ chạm, không căn giữa cả thẻ: thẻ có ảnh cao hơn cửa sổ ở 320 và 390×460, và điểm chạm rơi
+  dưới phần đầu màn.
+- Bộ đọc thân bài chọn chữ dài nhất không phải dải trạng thái hay dòng chú thích; chữ dài đầu tiên có thể là dải «Đang chờ
+  duyệt».
+- Dữ liệu đổi giữa hai lượt đo: sau khi sửa B1, B1 rời bảng tin của tác giả. Lượt đo lại phải tới bài bằng đường không
+  phụ thuộc lượt trước («Bài của tôi»), hoặc đo trên bài khác.
+- Stack không cho origin của trang mở WebSocket (403, không có `MOBILE_CORS_ALLOW_ORIGINS`): `routeWebSocket` của
+  Playwright chuyển socket qua một `WebSocket` của Node không gửi Origin. Khung là của máy chủ; relay còn cho phép đóng
+  socket phía máy chủ để đo lúc nối lại. Bản ghi khung phải `trim()`: khung mang dấu xuống dòng ở cuối.
+- Khung của máy chủ mang mốc giờ mili giây (`occurred_at_ms`, 13 chữ số): chép nguyên vào ghi chú thì repo guard chặn ma
+  trận (luật long-number). Che nó như che id bài; nó không phải số đo.
+- Luật `aggregate-base64-fragments` của repo guard cộng mọi token có cả chữ hoa lẫn chữ thường trên toàn file allowlist,
+  kể cả đường dẫn ảnh `…/evidence/EV-…`: tới ghim N14 thì tổng vượt 16 KiB, và chỉ quét range hay tree thấy (staged chỉ
+  cộng dòng thêm). Theo lựa chọn của người giao việc, `chot-anh.mjs` viết mỗi ghim mới với `reason` đứng trước `path` và
+  mở đầu bằng annotation hẹp của luật đó; ghim cũ giữ nguyên. Chạy `repo_guard.py range` và `tree` trước khi push, đừng
+  chỉ `staged`.
+- Lần đọc đầu tiên của màn xảy ra ngay lúc mở trang: đọc nó từ nhật ký HTTP của cả phiên trang (`suKien.log.http`), không
+  từ bộ ghi bắt đầu sau đó.
+- Đừng đặt tên biến trùng hàm đã import: một biến `chup` trong một khối của kịch bản N14 sẽ che hàm `chup` của
+  `thu-vien/chup.mjs` trong khối đó. Đã đổi thành `daChup` trước khi chạy; cùng họ với biến `keo` ở checkpoint retest 1.
 
 ## Những điều harness không đo được
 

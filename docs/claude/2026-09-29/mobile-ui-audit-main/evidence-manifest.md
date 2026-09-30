@@ -1,11 +1,21 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (35 ảnh, tổng 4.94 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (45 ảnh, tổng 6.38 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
 | [EV-F00-TAB-ghep-a](evidence/EV-F00-TAB-ghep-a.jpg) | Thanh tab năm cột của main ở C1, C2, C3, biên 599 và 600: tab đang chọn có màu nhấn, icon đặc, dải washi (phân xử TC-F00-TAB-DOI) | 197264 | `556058c7` |
 | [EV-F04-CHIA-SE-KHONG-CO-C1](evidence/EV-F04-CHIA-SE-KHONG-CO-C1.jpg) | UI-049 (P1) trên main: đợt thu, «Gửi cho …» khi trình duyệt không có navigator.share; câu lỗi nằm ở đầu trang, ngoài khung nhìn, C1 | 119750 | `d22f3128` |
+| [EV-N14-BANG-ghep](evidence/EV-N14-BANG-ghep.jpg) | N14 bảng tin có bài ở C1–C3 (đạt), và UI-143 ở 320dp: khung ảnh bị cắt mép phải, dải «Bảng tin có cập nhật» đè lên tab | 164045 | `5d281793` |
+| [EV-N14-BL-ghep](evidence/EV-N14-BL-ghep.jpg) | UI-096, UI-040: bình luận chờ duyệt, xoá một chạm không hỏi, sheet bình luận và sheet «Bảng tin của bạn» 96% ở cửa sổ thấp với đầu sheet ngoài cửa sổ | 134804 | `3cc27b24` |
+| [EV-N14-CHI-TIET-ghep](evidence/EV-N14-CHI-TIET-ghep.jpg) | N14 chi tiết bài ở C1–C3 (đạt), UI-138 Nếp lỗi không câu nào trong sheet, UI-142 bài vừa sửa rời bảng tin của chính tác giả | 169170 | `2a0f9321` |
+| [EV-N14-DANG-ghep](evidence/EV-N14-DANG-ghep.jpg) | UI-133, UI-091: form «Kể một khoảnh khắc», nút gửi tắt không lý do, sáu chủ đề thì màn không đổi gì và câu lỗi nằm dưới đáy, đổ lỗi cho app | 144925 | `f34f4820` |
+| [EV-N14-DOC-ghep](evidence/EV-N14-DOC-ghep.jpg) | UI-135, UI-134: mở bài rồi quay lại thì mất chỗ đang đọc; stream nối lại thì xoá chữ đang gõ trong ô bình luận | 149782 | `7224f3ca` |
+| [EV-N14-DUYET-ghep](evidence/EV-N14-DUYET-ghep.jpg) | N14 hàng duyệt /community/review ở C1–C3: câu từ chối cho người không có vai trò (đạt), UI-144 mã trạng thái thô, UI-091 hai nút tắt không lý do | 135852 | `28900f64` |
+| [EV-N14-FORM-ghep](evidence/EV-N14-FORM-ghep.jpg) | N14 form «Kể một khoảnh khắc» trống ở C1, C2, C3, C8, C6: nút gửi luôn trong cửa sổ (đạt); ở C6 form trải hết bề ngang (mở rộng UI-093) | 122027 | `ff61fc3c` |
+| [EV-N14-PHU-ghep](evidence/EV-N14-PHU-ghep.jpg) | UI-137, UI-145, UI-146, UI-147, UI-148, UI-095: màn trong không phiên, tìm không ra và «Điều mình muốn giữ» không trạng thái rỗng, trang chủ đề không «Quay lại», thông báo không nói ai, bình luận lỗi không «Thử lại», thích lỗi câu ngoài tầm nhìn | 165327 | `9a1896d5` |
+| [EV-N14-RONG-ghep](evidence/EV-N14-RONG-ghep.jpg) | UI-132: tab Cộng đồng khi chưa có bài công khai nào được duyệt, câu lỗi và «Thử lại» thay trạng thái rỗng ở «Dành cho bạn» và «Thịnh hành», «Đang theo dõi» đúng, «Để sau» giữ lỗi, hết lỗi sau bài duyệt đầu tiên | 191351 | `e269bfcf` |
+| [EV-N14-THE-ghep](evidence/EV-N14-THE-ghep.jpg) | UI-136, UI-094, UI-140, UI-141: «Chia sẻ» trên web không làm gì, trình xem ảnh trống, nút theo dõi lệch giữa các thẻ, «Không quan tâm» không hoàn tác | 132125 | `9d791d9f` |
 | [EV-N26-CHU-NHOM-ghep](evidence/EV-N26-CHU-NHOM-ghep.jpg) | UI-128: chữ của nhóm trong chat hai người, «Cả nhóm thấy cùng một màu.» ở cài đặt, «Rủ hội một buổi» ở phòng cặp đôi | 66675 | `c88f8b53` |
 | [EV-N26-CHUYEN-ghep](evidence/EV-N26-CHUYEN-ghep.jpg) | UI-126, UI-127, UI-125: từ đám bạn thành cặp đôi, hàng mời «Một đôi», màn tới không nhắc lời đề nghị, «Đồng ý là một đôi», không bìa M6, phía người đề nghị vẫn bốn công cụ | 144692 | `9d5a00b7` |
 | [EV-N26-GU-ghep](evidence/EV-N26-GU-ghep.jpg) | N26 «Gu của hai bạn»: lời hứa nói cả chat, «Bật lại cho chat», và UI-129 (dòng nói ngược nhau, câu lỗi dưới lớp phủ khi lệnh hỏng) | 157280 | `6744806d` |

@@ -4,11 +4,13 @@
   Nhánh ghi: `claude/busy-cray-vfmt4r`.
 - MODE = **AUDIT_ONLY**: không sửa mã app. Chỉ thêm tài liệu, ảnh bằng chứng và harness đo.
 - protocol_version: không áp dụng. Verdict: không có (chưa có reviewer thật; đây là báo cáo phát hiện).
-- Trạng thái: **checkpoint N26**.
+- Trạng thái: **checkpoint N14**.
   - Cả 122 issue của audit gốc đã được đo lại trên main (checkpoint retest 1 và 2).
-  - Feature mới đầu tiên đã audit: hai lớp chat hai người «đám bạn» / «cặp đôi» (#660, task #26), thêm 8 issue (UI-124…UI-131).
-  - Tổng 9 issue mới trên main (UI-123…UI-131).
-  - **Chưa đo:** bốn feature mới còn lại (#14, #15, #21, #22), nằm trong ma trận dưới dạng NOT_TESTED.
+  - Hai feature mới đã audit:
+    - hai lớp chat hai người «đám bạn» / «cặp đôi» (#660, task #26): 8 issue (UI-124…UI-131);
+    - Cộng đồng, tab đầu của app (task #14, ADR-0040): 17 issue (UI-132…UI-148).
+  - Tổng 26 issue mới trên main (UI-123…UI-148).
+  - **Chưa đo:** ba feature mới còn lại (#15, #21, #22), nằm trong ma trận dưới dạng NOT_TESTED.
   - Mục «Checkpoint» ở cuối là nguồn sự thật về phần đã và chưa đo.
 
 Tài liệu đi kèm:
@@ -16,7 +18,7 @@ Tài liệu đi kèm:
 - `issues.md`: issue mới (từ UI-123), mở rộng của issue gốc gặp lại ở feature mới, và các quan sát chưa thành issue.
 - `coverage-matrix.md`: mọi hàng đo trên main, có đếm (sinh từ sổ).
 - `evidence-manifest.md`: ảnh đã commit của phần này.
-- Harness: `tests/qa/mobile-ui-audit/` (README ở đó; các script `retest-*` và `n26-*`).
+- Harness: `tests/qa/mobile-ui-audit/` (README ở đó; các script `retest-*`, `n26-*` và `n14-*`).
 
 ## A. Phạm vi và môi trường
 
@@ -43,6 +45,15 @@ Tài liệu đi kèm:
   gì lên đó.
 - **Gián đoạn.** Máy khởi động lại lần thứ sáu giữa lượt P3 F00. Lượt đó dừng ở bước gắn phiên («Failed to fetch»),
   chưa ghi hàng nào. Stack thứ hai được dựng lại bằng script của nó, rồi chạy lại lượt đó.
+- **Checkpoint N14, Cộng đồng.**
+  - **Người duyệt.** chat-15 được cấp vào `community_moderators` bằng một câu INSERT trên DB cục bộ, trước phần `duyet`.
+    Đó đúng là cách người vận hành cấp vai trò theo ADR-0040 và `docs/testing/cong-dong.md`; app không có lối cấp.
+  - **Realtime qua relay.** Stack không đặt `MOBILE_CORS_ALLOW_ORIGINS`, nên cửa trước từ chối WebSocket của trang ở bước
+    bắt tay (403, ghi trong ghi chú của hàng `TC-N14-RONG-BANG-TIN`). Phần `ws` chuyển socket của trang qua một relay
+    trong Node (`routeWebSocket` của Playwright): relay nối tới máy chủ mà không gửi Origin và chuyển nguyên từng khung
+    hai chiều. Khung là khung của máy chủ; relay chỉ thêm khả năng đóng socket phía máy chủ để đo lúc nối lại. Chỉ hàng
+    `TC-N14-WS-*` đi qua relay.
+  - **Log core.** Số dòng `sqlstate=23502` của UI-132 đếm bằng grep trên file log của cửa trước (chỉ đọc).
 
 **Dữ liệu đã ghi lên stack thứ hai** (cục bộ, tổng hợp; phần lớn có chốt để không ghi lần hai):
 
@@ -63,6 +74,16 @@ Tài liệu đi kèm:
 | Checkpoint N26, `gu` | chat-9 (cặp đôi chat-8/chat-9) bật chia gu, bật lại một lần (thu hồi rồi đề nghị), rồi một lần bật lại hỏng nửa chừng (thu hồi thật, đề nghị bị chặn 503 ở trình duyệt). Lúc cuối công tắc tắt, như lúc đầu (`gu_chat.cua_toi = tat`) |
 | Checkpoint N26, `q2` | chat-6 phác một tờ ở cặp đám bạn chat-6/chat-7 qua API (UI-131), rồi bỏ nó qua UI («Bỏ bản phác này»): tờ sang `nghi_tuan` tuần này. Không tờ nào được gửi |
 | Checkpoint N26, phần còn lại | Chỉ đọc. Không tin nhắn, không sticker, không kèo nào được gửi hay tạo (form «Kèo mới» mở rồi rời, không lưu). Lời đề nghị lập sổ của chat-12 vẫn treo |
+| Checkpoint N14, vai trò và lời mời | chat-15 vào `community_moderators` (SQL, xem trên). Lời mời cá nhân hoá: chat-2 «Cá nhân hóa», chat-3 «Để sau» |
+| Checkpoint N14, `dang` | Bốn bài tổng hợp: B1 của chat-0 (công khai, ngắn, hai chủ đề), B2 của chat-0 (công khai, dài, một ảnh tổng hợp 640×480), B3 của chat-0 («Bạn bè»), B4 của chat-1 (công khai). Hai lần gửi bị máy chủ từ chối (sáu chủ đề, chủ đề một ký tự), không ghi gì. Không tải video |
+| Checkpoint N14, `duyet` và `binh-luan` | chat-15 duyệt qua UI B1, B2, bình luận của chat-1 dưới B1 và trả lời của chat-0; B4 được duyệt qua API trong phần `ws`, để có một bài mới lúc stream đang nối. Mỗi lần duyệt kèm lý do. chat-1 gửi một bình luận thử rồi xoá; chat-0 trả lời bình luận của chat-1 và tag chat-1, nên chat-1 có một thông báo |
+| Checkpoint N14, bảng tin và chi tiết | chat-1 thích B1, lưu một bài, bỏ theo dõi rồi theo dõi lại chat-0 (cuối lượt vẫn theo dõi). chat-2 đổi lượt thích B1 nhiều lần qua API (mỗi lần đo dải cập nhật một lần) và chọn «Không quan tâm» cho B2 (B2 ẩn với chat-2, không bỏ ẩn được qua UI: UI-141). chat-0 sửa B1 thành phiên bản 2 (chờ duyệt), đổi B3 sang «Chỉ mình tôi» rồi trả về «Bạn bè» ba lượt (bảng `community_audit` ghi sáu lần đổi; cuối cùng là «Bạn bè»). chat-0 gọi Nếp vài lần, máy chủ trả 503, không có nháp |
+| Checkpoint N14, không làm | Không gửi báo cáo nào (sheet «Báo cáo bài» mở rồi «Thôi»). Không bấm «Xóa lịch sử đề xuất», không bấm «Xác nhận xóa bài và bình luận». Không bài hay bình luận nào bị từ chối |
+
+Đếm bằng SQL chỉ đọc sau checkpoint N14: 4 bài cộng đồng (B1 `pending` phiên bản 2, đã công khai phiên bản 1; B2, B4
+`approved`; B3 «Bạn bè»); `community_audit` có 3 lần duyệt bài, 2 lần duyệt bình luận, 6 lần đổi người đọc của B3, không lần
+từ chối nào; 1 ảnh 640×480; 1 người duyệt; 2 hàng `community_preferences`; 1 lưu và 1 ẩn trong `community_feedback`; 1 lượt
+theo dõi; 1 thông báo; 0 ghi chép riêng.
 
 **Team Đà Lạt.** Report của checkpoint 1 ghi Team Đà Lạt «chỉ được đọc». Câu đó sai: kịch bản F04 gốc chạy lại ở
 checkpoint 1 đã tạo 10 bill nháp trong nhóm này. Ở checkpoint 2, kịch bản F03 và F04 gốc chạy lại cũng ghi vào nó, đúng
@@ -85,13 +106,21 @@ là `brain` không khoá, nên mọi phòng báo `provider_unavailable`. Vì v�
 - câu trả lời thật, và chân thẻ «· dùng gu của …»;
 - lời nhắc riêng của cặp đôi.
 
-## B. Coverage thực tế (checkpoint N26)
+Ở N14 cũng theo khuôn đó: mười màn Cộng đồng (N14.S01–S10), 20 hàng native BLOCKED. Thêm:
+- không có model kiểm duyệt, nên đường model tự duyệt không đo được; mọi bài và bình luận đi qua người duyệt, đúng như
+  ADR-0040 cho phép khi chưa có model;
+- Nếp của bài trả 503 (không có khoá AI): bản nháp Nếp, «Lưu ghi chép riêng» và «Điều mình muốn giữ» khi đã có ghi chép
+  không đo được;
+- stack không chạy worker xử lý video (ffmpeg): tải video là BLOCKED (`TC-N14-DANG-VIDEO`), không video nào được tải lên;
+- WebSocket của trang bị từ chối vì CORS; realtime đo qua relay (xem trên).
+
+## B. Coverage thực tế (checkpoint N14)
 
 Sinh bằng `tong-hop.mjs` từ sổ của main:
 
 | Phạm vi | PASS | FAIL | BLOCKED | NOT_TESTED | N/A |
 |---|---|---|---|---|---|
-| Tất cả (375 hàng; 363 web, 12 native) | 141 | 214 | 14 | 4 | 2 |
+| Tất cả (507 hàng; 475 web, 32 native) | 205 | 262 | 35 | 3 | 2 |
 
 | Nguồn hàng | Hàng | Kết quả |
 |---|---|---|
@@ -99,7 +128,8 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
 | Issue mới `TC-M-UI-123` | 1 | FAIL |
 | Kịch bản gốc chạy lại trên main (F00 5, F02 11, F03 50, F04 44, F05 17, F06 7, F10 7) | 141 | 72 PASS, 66 FAIL, 1 BLOCKED, 2 N/A |
 | Feature mới #26 hai lớp chat, `TC-N26-*` | 98 | 64 PASS, 22 FAIL, 12 BLOCKED (native) |
-| Giữ chỗ feature mới `TC-N-…` (#14, #15, #21, #22) | 4 | NOT_TESTED |
+| Feature mới #14 Cộng đồng, `TC-N14-*` | 133 | 64 PASS, 48 FAIL, 21 BLOCKED (20 native, 1 tải video) |
+| Giữ chỗ feature mới `TC-N-…` (#15, #21, #22) | 3 | NOT_TESTED |
 
 - Năm hàng retest PASS:
   - hai «đổi» đạt tiêu chí của checkpoint 1 (UI-033, UI-096);
@@ -116,8 +146,12 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
     - `TC-L10-NEN` (UI-041), `TC-F05-GHIM-TREN-NEN` (UI-070), `TC-F10-CHAY-LAI` ở C9 (UI-027);
     - UI-026, UI-028, UI-029, UI-030, UI-059;
     - ghi chú ngày của UI-092.
+  - Ở checkpoint N14:
+    - bốn hàng baseline `TC-N14.S01-BASE`, `.S03`, `.S04`, `.S09` ở C1–C3 (bảng tin, form, chi tiết bài, hàng duyệt);
+    - `TC-N14-BANG-THICH`: không có `aria-pressed`, nhưng tên nút nói trạng thái («Bỏ thích bài, 1 lượt thích»), nên PASS;
+    - `TC-N14-BL-MO-RONG` ở C8: sheet «Bình luận» dùng được; phần đầu sheet ngoài cửa sổ tính vào UI-040.
 
-**Hàng đã rút** (23 test case, lý do ghi trong sổ và ở cuối `coverage-matrix.md`):
+**Hàng đã rút** (31 test case, lý do ghi trong sổ và ở cuối `coverage-matrix.md`):
 - Checkpoint 1:
   - bốn hàng của kịch bản F06 gốc chạy lại trên main: `TC-F06-DUOC-MOI-VAO-CUA`, `TC-F05.S01-DONG-Y`, `TC-F06-TU-BO-QUAN-TRI`,
     `TC-F06-MOI-LAI`;
@@ -131,16 +165,20 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
     `TC-N26-MOI-LAP-SO`, `TC-N26-NHAY-VE-CHAT`, `TC-N26-RU-BAN-CHUA-SO`, `TC-N26-RU-BAN-CO-SO`, `TC-N26-LOI-CAP-503`,
     `TC-N26-LOI-SO-503`, `TC-N26-LAB-TRA-LOI`, `TC-N26-SOAN-CHAT-RONG`;
   - hàng giữ chỗ `TC-N-26-HAI-LOP-CHAT`, thay bằng các hàng `TC-N26-*`.
+- Checkpoint N14:
+  - bảy test case vì lỗi harness, đều đã đo lại (§E, sự cố 22–27; sự cố 21 và 28 không rút hàng nào): `TC-N14-DUYET-NUT-TAT`, `TC-N14-BANG-THEO-DOI`,
+    `TC-N14-WS-DAI`, `TC-N14-CHI-TIET-BASE`, `TC-N14-SUA` (hai lần), `TC-N14-QUAN-LY`, `TC-N14-XOA-HOI`;
+  - hàng giữ chỗ `TC-N-14-CONG-DONG`, thay bằng các hàng `TC-N14-*`.
 
 ## C. Issues
 
-**9 issue sau checkpoint N26** (mới trên main: UI-123 từ checkpoint retest 1, UI-124…UI-131 từ N26). Kết quả đo lại
-122 issue cũ nằm ở `retest.md`.
+**26 issue sau checkpoint N14** (mới trên main: UI-123 từ checkpoint retest 1, UI-124…UI-131 từ N26, UI-132…UI-148 từ
+N14). Kết quả đo lại 122 issue cũ nằm ở `retest.md`.
 
 | Mức | BUG | UX ISSUE | VISUAL POLISH |
 |---|---|---|---|
-| P2 | UI-123, UI-124 | UI-130 | |
-| P3 | UI-131 | UI-125, UI-126, UI-127, UI-128, UI-129 | |
+| P2 | UI-123, UI-124, UI-132, UI-133, UI-134, UI-136 | UI-130, UI-135, UI-137, UI-138 | |
+| P3 | UI-131, UI-140 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-139, UI-141, UI-142, UI-144, UI-145, UI-146, UI-147, UI-148 | UI-143 |
 
 ### N26: hai lớp chat hai người (#660)
 
@@ -174,6 +212,45 @@ bề rộng, sticker, hàng mời lập sổ và «Bật lại cho chat» đều
   - UI-093: sheet gu rộng 768 ở C6.
 
 ![UI-124: ô soạn và công cụ bị đẩy ra ngoài đáy](evidence/EV-N26-SOAN-ghep.jpg)
+
+### N14: Cộng đồng (#14, ADR-0040)
+
+Cộng đồng là tab đầu của app trên main: bảng tin ba mode («Dành cho bạn», «Đang theo dõi», «Thịnh hành»), bài và bình luận
+công khai chờ người duyệt khi không có model, và tín hiệu realtime qua WebSocket. Phần đạt nằm ở đầu mục N14 của
+`issues.md`: form đăng bài ở sáu cấu hình, ba sheet của bảng tin, hàng duyệt, quyền đọc của người lạ, lỗi 503, mất mạng và
+404 ở bảng tin, dải cập nhật ở C1 và C9, chỗ gặp tường cá nhân v2.
+
+- **UI-132 (P2).** Chưa có bài công khai nào được duyệt thì «Dành cho bạn» và «Thịnh hành» trả 503.
+  - Tab đầu của app nói «Cộng đồng chưa kết nối được…» thay vì mời kể chuyện đầu tiên, và «Thử lại» không bao giờ thành.
+  - Nguyên nhân đã chứng minh ở runtime: bảng xếp hạng rỗng thành mảng `nil`, và INSERT ghi NULL vào cột NOT NULL (log
+    core `sqlstate=23502`: 12 → 37 dòng qua phần đo rỗng). Duyệt bài đầu tiên thì hết, và log đứng yên.
+  - Route chỉ có Go, không có oracle Python, nên cổng parity không phủ nó.
+- **UI-133 (P2).** Sáu chủ đề, hay một chủ đề một ký tự: câu 422 chung nói «lỗi của app chứ không phải do bạn nhập sai»,
+  và nằm dưới mép màn.
+- **UI-134 (P2).** Stream nối lại (máy chủ ngắt, hay app về nền rồi trở lại) thì chi tiết bài dựng lại từ đầu: bình luận
+  đang gõ mất.
+- **UI-135 (P2).** Mở một bài rồi «Quay lại»: bảng tin về đầu, bài vừa đọc hết gập lại.
+- **UI-136 (P2).** «Chia sẻ» trên web không làm gì, lỗi bị nuốt; có Web Share thì gửi chuỗi `rudi://` làm chữ.
+- **UI-137 (P2).** Không phiên, mở màn trong bằng link: chi tiết bài chờ mãi; viết bài, thông báo, hàng duyệt không có lối
+  đăng nhập.
+- **UI-138 (P2).** Gọi Nếp lỗi: câu lỗi nằm phía sau sheet.
+- **P3:**
+  - UI-139: chạm đầu vào thân bài ngắn không làm gì;
+  - UI-140: nhãn theo dõi lệch giữa các thẻ của cùng tác giả;
+  - UI-141: «Không quan tâm» không hoàn tác, không chỗ xem lại; «Xóa lịch sử đề xuất» một chạm;
+  - UI-142: sửa bài thì bài rời bảng tin của chính tác giả;
+  - UI-143: ở 320dp, ảnh bị cắt 8px và dải cập nhật đè tab 13px;
+  - UI-144: hàng duyệt in «· pending»;
+  - UI-145: tìm không ra và «Điều mình muốn giữ» không có trạng thái rỗng;
+  - UI-146: trang chủ đề không có «Quay lại»;
+  - UI-147: thông báo không nói ai nhắc;
+  - UI-148: đọc bình luận lỗi không có «Thử lại».
+- **Mở rộng issue gốc:** UI-003 (tab bảng tin, radio, ô tag), UI-040 (hai sheet 96% ở C8), UI-091 (sáu nút tắt không lý
+  do), UI-093 (form rộng 720 và 912 ở tablet), UI-094 (trình xem ảnh của bài), UI-095 (thích lỗi, câu ở y −742), UI-096
+  (xoá bình luận một chạm).
+- **Q5 đóng.** Tab Cộng đồng không phiên đúng; phần lệch nằm ở các tab demo (UI-082).
+
+![UI-132: chưa có bài duyệt thì tab đầu báo lỗi; hết lỗi sau bài duyệt đầu tiên](evidence/EV-N14-RONG-ghep.jpg)
 
 ### Retest: tóm tắt
 
@@ -229,10 +306,15 @@ bề rộng, sticker, hàng mời lập sổ và «Bật lại cho chat» đều
 3. **UI-124, UI-130** (mới ở N26, P2).
    - Mọi chat hai người mới đều bắt đầu rỗng, nên UI-124 chạm vào lần mở đầu tiên của mọi cặp trên màn thấp.
    - UI-130 là nút hứa rủ tới một quán, mà với mọi cặp chưa «Một đôi» thì lời hứa không thành.
-4. **UI-005, UI-049, UI-082** (P1) còn nguyên.
-5. **Không issue P3 nào đã được sửa trên main.** Hai chỗ trông như đạt (UI-092, UI-039 ở C1) là nhờ ngày chạy và bố cục
+4. **UI-132** (mới ở N14, P2). Mọi cộng đồng vừa bật đều bắt đầu ở trạng thái này, và khi chưa có model thì nó kéo dài
+   tới lúc người duyệt duyệt bài đầu tiên. Cộng đồng là tab đầu của app. Chỗ sửa là một dòng Go, nhưng route chỉ có Go
+   nên parity không bắt được; cần thêm ca bảng tin rỗng ở test Go và tầng PostgreSQL.
+5. **UI-134, UI-133** (mới ở N14, P2). UI-134 làm mất bình luận đang gõ mà người dùng không làm gì; UI-133 đổ lỗi cho
+   app khi người dùng chỉ cần bớt một chủ đề, và câu nằm ngoài tầm nhìn.
+6. **UI-005, UI-049, UI-082** (P1) còn nguyên.
+7. **Không issue P3 nào đã được sửa trên main.** Hai chỗ trông như đạt (UI-092, UI-039 ở C1) là nhờ ngày chạy và bố cục
    mới, không nhờ sửa mã.
-6. **Quan sát Q4** (`issues.md`). «Đã chia» của album kèo cộng mọi khoản chi của nhóm có ngày rơi vào khoảng ngày của
+8. **Quan sát Q4** (`issues.md`). «Đã chia» của album kèo cộng mọi khoản chi của nhóm có ngày rơi vào khoảng ngày của
    kèo, không theo kèo. Ảnh `EV-R-P3-F08-ghep` (kệ album) lại cho thấy con số đó. Chưa thành issue; cần đối chiếu ý đồ ở
    audit Nhật ký chuyến.
 
@@ -243,10 +325,11 @@ bề rộng, sticker, hàng mời lập sổ và «Bật lại cho chat» đều
 Không file nào trong `apps/`, `services/`, `packages/`, `parity/`, `phase0/`.
 
 - `docs/claude/2026-09-29/mobile-ui-audit-main/`: `report.md`, `retest.md`, `issues.md`, `coverage-matrix.md`,
-  `evidence-manifest.md` và `.json`, `evidence/` (35 ảnh, 4,94 MiB):
+  `evidence-manifest.md` và `.json`, `evidence/` (45 ảnh, 6,38 MiB):
   - checkpoint 1: 10 ảnh ghép retest theo feature, 5 ảnh đơn cho bốn issue P1, ảnh ghép thanh tab;
   - checkpoint 2: 8 ảnh ghép P3 `EV-R-P3-…-ghep`;
-  - checkpoint N26: 10 ảnh ghép `EV-N26-…-ghep` và tờ khung `EV-N26-NHAY-tre-800-khung-C1`.
+  - checkpoint N26: 10 ảnh ghép `EV-N26-…-ghep` và tờ khung `EV-N26-NHAY-tre-800-khung-C1`;
+  - checkpoint N14: 10 ảnh ghép `EV-N14-…-ghep`.
 - `tests/qa/mobile-ui-audit/`:
   - `kich-ban/retest-main.mjs`: đo lại theo issue.
     - Checkpoint 1: `r-f00`, `r-f01`, `r-f02`, `r-f03`, `r-f06`, `r-f07`, `r-f08`, `r-f09`, `r-f10` (cần `AUDIT_BASE` trỏ
@@ -267,19 +350,28 @@ Không file nào trong `apps/`, `services/`, `packages/`, `parity/`, `phase0/`.
       `q2`, `loi`, `nhay`, `lab-e1`; và `lab`, cần `AUDIT_BASE` trỏ server dev.
     - `kich-ban/n26-phan-xu.mjs`: phân xử bằng mắt, gắn issue, hàng native, rút hàng giữ chỗ.
     - `kich-ban/n26-ghep.mjs`: ảnh ghép, và gắn chúng vào hàng.
-- `.repo-guard-allowlist.json`: 8 ghim mới ở checkpoint 2 (259), 11 ghim mới ở N26, tổng 270.
+  - Checkpoint N14:
+    - `kich-ban/n14-cong-dong.mjs` đo Cộng đồng. Các phần, theo thứ tự chạy: `api`, `rong`, `khong-phien`, `tu-kiem-ly-do`,
+      `dang`, `duyet`, `sau-duyet`, `bang`, `ws`, `chi-tiet`, `binh-luan`, `phu`, `loi`, `tuong`. Cần `AUDIT_CORE_LOG` trỏ
+      log của cửa trước (đếm dòng 23502), và chat-15 phải có vai trò duyệt trước phần `duyet`.
+    - `kich-ban/n14-phan-xu.mjs`: phân xử bằng mắt, gắn issue, hàng native và hàng video BLOCKED, rút hàng giữ chỗ.
+    - `kich-ban/n14-ghep.mjs`: ảnh ghép, và gắn chúng vào hàng.
+- `.repo-guard-allowlist.json`: 8 ghim mới ở checkpoint 2 (259), 11 ghim mới ở N26 (270), 10 ghim mới ở N14, tổng 280. Từ N14,
+  ghim mới mang annotation hẹp cho luật `aggregate-base64-fragments` (§E, sự cố 29); `chot-anh.mjs` ghi dạng đó.
 
 ## E. Verification
 
 | Kiểm | Kết quả |
 |---|---|
-| `kiem-tai-lieu` thư mục này, cả `--canary` (checkpoint N26) | identity xanh: 35 ảnh, 35 ghim khớp sha256, 322 link ảnh, 35/35 ảnh có tài liệu dẫn tới ngoài manifest, 9 issue (3 P2, 6 P3) khớp hai bảng. 5/5 canary đỏ đúng dự đoán (`sha`, `bang`, `muc`, `link`, `thua`) |
+| `kiem-tai-lieu` thư mục này, cả `--canary` (checkpoint N14) | identity xanh: 45 ảnh, 45 ghim khớp sha256, 418 link ảnh, 45/45 ảnh có tài liệu dẫn tới ngoài manifest, 26 issue (10 P2, 16 P3) khớp hai bảng. 5/5 canary đỏ đúng dự đoán (`sha`, `bang`, `muc`, `link`, `thua`) |
 | `kiem-tai-lieu` thư mục audit gốc, cả `--canary` | identity xanh: 163 ảnh, 163 ghim, 521 link, 122 issue (4 P1, 38 P2, 80 P3); 5/5 canary đỏ đúng dự đoán. Thư mục gốc không đổi ở checkpoint này |
 | `tu-kiem --dot-bien` | 20/20 xanh; M1–M4 đỏ đúng hàng dự đoán |
 | `retest-phan-xu.mjs` chạy hai lần sau mỗi lần sửa (checkpoint 2) | 411 → 452 → 452; thêm ghi chú UI-092: 452 → 453 → 453; rút giữ chỗ UI-027: 528 → 529 → 529 |
 | `retest-ghep.mjs` chạy hai lần (checkpoint 2) | lượt đầu gắn ảnh ghép vào 75 hàng (453 → 528); lượt hai 0. 10 ảnh ghép của checkpoint 1 dựng lại trùng từng byte với ảnh đã commit |
 | `n26-phan-xu.mjs` và `n26-ghep.mjs` chạy hai lần (checkpoint N26) | phân xử 670 → 706 → 706; ghép gắn 39 hàng (706 → 745), lượt hai 0. Thêm hai hàng phân xử sau khi xem ảnh: 745 → 747 → 747, ghép gắn 2 (747 → 749), lượt sau 0. FAIL thiếu issue: 0 |
-| `retest-bang.mjs` sau N26 | `retest.md` trùng từng byte với bản trước N26 |
+| `n14-phan-xu.mjs` và `n14-ghep.mjs` (checkpoint N14) | Ghép lượt đầu, 9 ảnh: gắn 45 hàng (907 → 952). Phân xử: 952 → 1026 (73 hàng và một dòng rút hàng giữ chỗ), lượt hai 0. Ghép, 10 ảnh (thêm `EV-N14-FORM-ghep`): gắn 11 hàng (1026 → 1037), lượt sau 0. Đo thêm form ở tablet (`dang:C6`, `dang:C7`): 1037 → 1041; phân xử gắn UI-093: 1041 → 1043, lượt hai 0; ghép gắn 2 (1043 → 1045), lượt sau 0. Lúc chốt chạy lại cả hai: 1045 → 1045, 10 ảnh ghép dựng lại trùng từng byte với ảnh đã ghim. Rồi bước che mốc giờ của máy chủ (sự cố 28): 1045 → 1048, lượt hai 0, ghép 0. FAIL thiếu issue: 0 |
+| Tự kiểm bộ đọc lý do (`--chi tu-kiem-ly-do`, checkpoint N14) | trên trang thật, trước mọi phần đo nút tắt: canary là «Đăng story» ở `/stories/new` (nút tắt có lý do), đọc ra đúng «Chọn một tấm ảnh trước đã.»; identity là «Gửi lên cộng đồng» ở `/community/new` (nút tắt không lý do), đọc ra rỗng. Script dừng nếu một trong hai sai |
+| `retest-bang.mjs` và `tong-hop.mjs` sau N14 | `retest.md` trùng từng byte với bản đã commit (N14 không đổi hàng retest); `coverage-matrix.md` và manifest sinh lại trùng từng byte |
 | Diff app từ `7ea1a7c` | 0 dòng trong `apps services packages parity phase0` |
 
 **Phép đo UI-123 trên hai bản** (checkpoint 1; `tham-do-lich-su-tab.mjs`, dalat-0, C1; số sau «#» là `history.length`):
@@ -345,10 +437,54 @@ Checkpoint N26:
 20. **Ngoài sổ.** Một lượt thăm dò chỉ đọc bị treo, vì server web của harness giữ tiến trình sống. Lệnh `pkill -f` dọn nó
     lại khớp chính shell, như sự cố 3. Không hàng nào bị ảnh hưởng.
 
+Checkpoint N14:
+21. **Ghi chú lần đọc đầu.** Hàng của phần `rong` ghi «lần đọc: không», vì lần đọc bảng tin đầu tiên xảy ra ngay lúc mở
+    trang, trước khi bộ ghi mạng của phần đo bắt đầu. Ghi chú nay đọc từ nhật ký HTTP của cả phiên trang; hàng đo lại thay
+    hàng cũ (cùng khoá), status không đổi.
+22. **Một PASS sai của bộ đọc lý do.** Bộ đọc lấy chữ của phần tử cha của nút. Ở hàng duyệt, cha là cả mục (chú thích, thân
+    bài, ô lý do), nên cả mục bị đọc thành «lý do» và `TC-N14-DUYET-NUT-TAT` ra PASS.
+    - Đã rút. Bộ đọc nay đọc đúng vỏ lý do của `RudiButton` (phần tử liền sau nút, có glyph thông tin), dùng chung cho mọi
+      phần đo nút tắt, và tự kiểm trên trang thật trước khi đo (bảng trên).
+    - Đo lại: FAIL (UI-091).
+23. **Regex phân biệt hoa thường.** Bộ tìm nút theo dõi dùng `/theo dõi tác giả$/`, nên không đọc được nhãn «Theo dõi tác
+    giả» của B2 và ghi «không thấy». `TC-N14-BANG-THEO-DOI` đã rút; đo lại bằng phần riêng `bang:theo-doi`: hai chạm trên
+    B1, đọc B2 sau mỗi chạm, kết thúc ở trạng thái ban đầu.
+24. **Ký tự icon, lần nữa.** Bộ lấy mẫu rAF của dải «Bảng tin có cập nhật» so chữ của nút mà không bỏ glyph mũi tên, nên
+    không thấy dải ở khung nào, và hàng C9 ra FAIL giả. `TC-N14-WS-DAI` đã rút; đo lại cả C1, C2, C9 (cùng họ sự cố 1 và
+    15).
+25. **Điểm chạm dưới phần đầu màn.** Bộ mở chi tiết căn giữa cả thẻ B2 (cao vì có ảnh) rồi chạm dòng đầu của thân bài. Ở
+    320 và 390×460, điểm chạm rơi dưới phần đầu màn, không vào được chi tiết. `TC-N14-CHI-TIET-BASE` đã rút; bộ mở nay căn
+    giữa chính thân bài rồi chạm dòng đầu. Đo lại bốn cấu hình.
+26. **Bộ đọc thân bài lấy nhầm dải chờ duyệt.** Nó lấy chữ dài đầu tiên trong thẻ, tức dải «Đang chờ duyệt · …», nên câu
+    vừa sửa không được thấy và `TC-N14-SUA` ra FAIL giả. Lệnh sửa đã chạy đúng một lần. Đã rút; bộ đọc nay lấy chữ dài
+    nhất không phải dải chờ duyệt hay dòng chú thích.
+27. **Dữ liệu đổi giữa hai lượt.** Sau khi B1 được sửa, B1 rời bảng tin của chính tác giả (UI-142).
+    - Lượt đo lại mở B1 từ bảng tin nên không tới được chi tiết, và `TC-N14-QUAN-LY`, `TC-N14-XOA-HOI`, `TC-N14-SUA` ghi
+      FAIL cho màn sai.
+    - Đã rút; đo lại trên B2 của chat-0, và đọc lại B1 qua «Bài của tôi · Trạng thái duyệt».
+    - Chính sự cố này làm lộ UI-142.
+
+28. **Guard chặn lượt commit đầu, đúng.** Ghi chú của `TC-N14-WS-DAI` (C1, C2, C9) chép nguyên khung `feed.changed` của
+    máy chủ, kèm `occurred_at_ms`: mốc giờ tính bằng mili giây, 13 chữ số, và luật long-number chặn nó trong ma trận.
+    Giá trị đó không phải số đo (độ mờ của dải đo bằng đồng hồ của trang). `n14-phan-xu.mjs` chép hàng cuối của ba hàng đó
+    với giá trị che thành `[ms]`; relay che nó cho lượt sau. Status và số đo không đổi.
+29. **Guard chặn lượt commit thứ hai, ở bước quét range và tree.** Luật `aggregate-base64-fragments` cộng mọi token có cả
+    chữ hoa lẫn chữ thường trên toàn file `.repo-guard-allowlist.json`, và các đường dẫn ảnh `…/evidence/EV-…` là những
+    token như vậy. Trước N14 cả file đã là 15.746 byte; 10 ghim N14 đưa tổng lên 16.436 byte, quá ngưỡng 16 KiB. Lượt quét
+    staged không thấy vì nó chỉ cộng các dòng được thêm. Người giao việc chọn cách xử lý (30/09): mỗi ghim mới mở đầu
+    `reason` bằng annotation hẹp `repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path`, viết trước
+    `path`, đúng cơ chế `docs/security/repo-guard.md` §6 cho phép. Annotation chỉ phủ dòng `reason` và dòng `path` của chính
+    ghim đó. Ghim cũ giữ nguyên từng chữ; mã guard không đổi; `chot-anh.mjs` ghi dạng này cho mọi ghim mới. Sau khi ghim
+    lại 10 ảnh N14 (ảnh trùng từng byte), tổng tính là 15.746 byte, 690 byte được annotation loại ra.
+
+Ngoài sổ, ở N14: khung của relay mang dấu xuống dòng ở cuối. Ghi chú của `TC-N14-WS-NHAY` và `TC-N14-WS-MAT-CHU` giữ
+nguyên trong sổ, và `tong-hop.mjs` thay dấu xuống dòng bằng dấu cách trong ma trận. Bản ghi khung của relay nay cắt khoảng
+trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đo nào đổi.
+
 ## F. Giới hạn và rủi ro còn lại
 
-- **Chưa đo.** Bốn feature mới của main: Cộng đồng (#14), Nhật ký chuyến / sổ kỷ niệm Nếp v3 (#15), hồ sơ kể chuyện và
-  tường v2 (#21), Rủ Đi AI trong chat (#22). Có hàng NOT_TESTED trong ma trận.
+- **Chưa đo.** Ba feature mới của main: Nhật ký chuyến / sổ kỷ niệm Nếp v3 (#15), hồ sơ kể chuyện và tường v2 (#21), Rủ Đi
+  AI trong chat (#22). Có hàng NOT_TESTED trong ma trận.
 - **Giới hạn riêng của N26:**
   - AI không có khoá nên chip sẵn sàng, tấm «Xem», câu trả lời và chân thẻ «· dùng gu của …» chỉ đo trên trang lab, hoặc
     BLOCKED (§A).
@@ -358,6 +494,19 @@ Checkpoint N26:
   - Cỡ chữ 1.3 (khay 3 + 2 của `762d5c5`) không đổi được trên web.
   - Trạng thái rỗng của chat nhóm dùng cùng khối với UI-124 nhưng chưa được đo.
   - Tác động của UI-131 lên bản app cũ chỉ là HYPOTHESIS; phần đã đo là API.
+- **Giới hạn riêng của N14:**
+  - Realtime đo qua relay vì CORS của stack cục bộ (§A). Relay chuyển nguyên từng khung, nhưng đường bắt tay thật của trình
+    duyệt với một origin được phép chưa được đo; trên stack này trang không bao giờ nối được.
+  - Không có model: đường tự duyệt, Nếp có trả lời, ghi chép riêng có dữ liệu, và video (không worker) là BLOCKED (§A).
+  - Trạng thái «chưa có bài duyệt» (UI-132) đã qua trên stack này; đo lại cần một stack mới hoặc một cộng đồng trống.
+  - Mỗi bảng tin chỉ có 2–4 bài: phân trang (`onEndReached`), danh sách dài, và hiệu năng cuộn chưa được đo.
+  - «Trả lời» chỉ đo với một bình luận, một tầng. Thông báo chỉ có loại `mention`.
+  - Cấu hình: bảng tin C1–C8; form C1, C2, C3, C8, C6, C7; chi tiết C1, C2, C3, C8; hàng duyệt C1–C3; dải cập nhật C1, C2,
+    C9; tìm C1, C2. Phần còn lại chỉ ở C1. C7 chỉ đo form và thẻ bài.
+  - «Chia sẻ» có Web Share đo bằng một `navigator.share` giả trong trang; khay chia sẻ thật của trình duyệt hay của máy chưa
+    được mở. Link `rudi://` có bấm được trong app nhắn tin hay không là HYPOTHESIS.
+  - «Xóa lịch sử đề xuất» và «Xác nhận xóa bài và bình luận» không được bấm (không xoá dữ liệu để thử UI); phần của chúng
+    trong UI-141 là STATIC.
 - **Chỉ web.** Native Android và iOS vẫn BLOCKED như audit gốc; phần native của từng issue không được đo lại.
 - **Cấu hình.** Phần lớn issue chỉ đo lại ở cấu hình chính (thường là C1). Một số issue nêu nhiều cấu hình mà chỉ đo một:
   - UI-059 chỉ ở C1, trong khi tiêu chí nêu C1–C3;
@@ -371,7 +520,8 @@ Checkpoint N26:
 - **Phụ thuộc ngày.** Kết luận của UI-092 dựa trên phép đo ngày xa, vì phép đo theo ngày thật đạt hay trượt tuỳ ngày chạy.
 - **Đường tái hiện đã đổi.** Nhiều issue phải đi đường khác vì main đã đổi UI: khay tạo, hai lớp sổ, tab đầu, màn Thành tích
   mới. Kết luận «còn» ở những issue này là về cùng lỗi trên đường mới. Ghi chú từng hàng nói rõ đường nào.
-- **Quan sát Q3–Q5** chưa thành issue, và chưa được đo như issue. Q1 và Q2 đã thành UI-127 và UI-131.
+- **Quan sát Q3 và Q4** chưa thành issue, và chưa được đo như issue. Q1 và Q2 đã thành UI-127 và UI-131; Q5 đã đo ở N14 và
+  không thành issue mới.
 - **Dữ liệu.** Kết quả dựa trên stack cục bộ thứ hai với dữ liệu tổng hợp. Các lệnh ghi ở §A làm trạng thái stack khác
   stack của audit gốc.
 - **Retest không chứng minh app đúng.** Nó chỉ nói tiêu chí gỡ của từng issue đạt hay chưa, trong phạm vi đã đo. Không
@@ -385,7 +535,9 @@ Checkpoint N26:
     8 ảnh mới đã ghim.
   - Checkpoint N26: hai lớp chat (#26). 98 hàng `TC-N26-*` (64 PASS, 22 FAIL, 12 BLOCKED native), 8 issue mới
     (UI-124…UI-131), ba mở rộng của issue gốc, Q1 và Q2 đã kết luận. Mọi ảnh ghép đã mở ra xem; 11 ảnh mới đã ghim.
-- **Bước kế:** các feature mới còn lại, theo thứ tự #14 → #15 → #21 → #22. Mỗi feature đi đủ chuỗi feature → màn → lớp →
-  trạng thái như audit gốc, issue mới đánh số từ UI-132.
-- **Nếu bị ngắt:** bốn feature mới còn lại vẫn là NOT_TESTED trong ma trận. Không phần nào ở trên được tuyên bố là xong
+  - Checkpoint N14: Cộng đồng (#14). 133 hàng `TC-N14-*` (64 PASS, 48 FAIL, 21 BLOCKED: 20 native, 1 tải video), 17 issue
+    mới (UI-132…UI-148), bảy mở rộng của issue gốc, Q5 đã kết luận. Mọi ảnh ghép đã mở ra xem; 10 ảnh mới đã ghim.
+- **Bước kế:** các feature mới còn lại, theo thứ tự #15 → #21 → #22. Mỗi feature đi đủ chuỗi feature → màn → lớp →
+  trạng thái như audit gốc, issue mới đánh số từ UI-149. #15 gồm quan sát Q4; #21 gồm Q3.
+- **Nếu bị ngắt:** ba feature mới còn lại vẫn là NOT_TESTED trong ma trận. Không phần nào ở trên được tuyên bố là xong
   ngoài những gì liệt kê ở đây.

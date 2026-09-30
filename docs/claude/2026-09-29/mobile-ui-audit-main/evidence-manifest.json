@@ -9,6 +9,56 @@
   "sha8": "d22f3128",
   "moTa": "UI-049 (P1) trên main: đợt thu, «Gửi cho …» khi trình duyệt không có navigator.share; câu lỗi nằm ở đầu trang, ngoài khung nhìn, C1"
  },
+ "EV-N14-BANG-ghep": {
+  "bytes": 164045,
+  "sha8": "5d281793",
+  "moTa": "N14 bảng tin có bài ở C1–C3 (đạt), và UI-143 ở 320dp: khung ảnh bị cắt mép phải, dải «Bảng tin có cập nhật» đè lên tab"
+ },
+ "EV-N14-BL-ghep": {
+  "bytes": 134804,
+  "sha8": "3cc27b24",
+  "moTa": "UI-096, UI-040: bình luận chờ duyệt, xoá một chạm không hỏi, sheet bình luận và sheet «Bảng tin của bạn» 96% ở cửa sổ thấp với đầu sheet ngoài cửa sổ"
+ },
+ "EV-N14-CHI-TIET-ghep": {
+  "bytes": 169170,
+  "sha8": "2a0f9321",
+  "moTa": "N14 chi tiết bài ở C1–C3 (đạt), UI-138 Nếp lỗi không câu nào trong sheet, UI-142 bài vừa sửa rời bảng tin của chính tác giả"
+ },
+ "EV-N14-DANG-ghep": {
+  "bytes": 144925,
+  "sha8": "f34f4820",
+  "moTa": "UI-133, UI-091: form «Kể một khoảnh khắc», nút gửi tắt không lý do, sáu chủ đề thì màn không đổi gì và câu lỗi nằm dưới đáy, đổ lỗi cho app"
+ },
+ "EV-N14-DOC-ghep": {
+  "bytes": 149782,
+  "sha8": "7224f3ca",
+  "moTa": "UI-135, UI-134: mở bài rồi quay lại thì mất chỗ đang đọc; stream nối lại thì xoá chữ đang gõ trong ô bình luận"
+ },
+ "EV-N14-DUYET-ghep": {
+  "bytes": 135852,
+  "sha8": "28900f64",
+  "moTa": "N14 hàng duyệt /community/review ở C1–C3: câu từ chối cho người không có vai trò (đạt), UI-144 mã trạng thái thô, UI-091 hai nút tắt không lý do"
+ },
+ "EV-N14-FORM-ghep": {
+  "bytes": 122027,
+  "sha8": "ff61fc3c",
+  "moTa": "N14 form «Kể một khoảnh khắc» trống ở C1, C2, C3, C8, C6: nút gửi luôn trong cửa sổ (đạt); ở C6 form trải hết bề ngang (mở rộng UI-093)"
+ },
+ "EV-N14-PHU-ghep": {
+  "bytes": 165327,
+  "sha8": "9a1896d5",
+  "moTa": "UI-137, UI-145, UI-146, UI-147, UI-148, UI-095: màn trong không phiên, tìm không ra và «Điều mình muốn giữ» không trạng thái rỗng, trang chủ đề không «Quay lại», thông báo không nói ai, bình luận lỗi không «Thử lại», thích lỗi câu ngoài tầm nhìn"
+ },
+ "EV-N14-RONG-ghep": {
+  "bytes": 191351,
+  "sha8": "e269bfcf",
+  "moTa": "UI-132: tab Cộng đồng khi chưa có bài công khai nào được duyệt, câu lỗi và «Thử lại» thay trạng thái rỗng ở «Dành cho bạn» và «Thịnh hành», «Đang theo dõi» đúng, «Để sau» giữ lỗi, hết lỗi sau bài duyệt đầu tiên"
+ },
+ "EV-N14-THE-ghep": {
+  "bytes": 132125,
+  "sha8": "9d791d9f",
+  "moTa": "UI-136, UI-094, UI-140, UI-141: «Chia sẻ» trên web không làm gì, trình xem ảnh trống, nút theo dõi lệch giữa các thẻ, «Không quan tâm» không hoàn tác"
+ },
  "EV-N26-CHU-NHOM-ghep": {
   "bytes": 66675,
   "sha8": "c88f8b53",

@@ -8,6 +8,15 @@
  * (27/09); the guard still fails closed on binaries, so each file is pinned by
  * path and sha256 of the exact bytes, and changing one byte means pinning
  * again. Idempotent: an entry for the same path is replaced, never duplicated.
+ *
+ * Every pin written from checkpoint N14 on opens with a narrow annotation for
+ * the aggregate-base64-fragments rule (docs/security/repo-guard.md §6): the
+ * rule adds up every mixed-case token of the allowlist, and the image paths
+ * alone passed its 16 KiB ceiling at the N14 pins (15746 → 16436 bytes). The
+ * annotation sits in `reason`, written before `path`, so it covers exactly
+ * the reason line and the path line of that entry and nothing further. Pins
+ * made before N14 keep their shape word for word (the requester's choice,
+ * 30/09): the ones already in the file stay under the ceiling.
  */
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
@@ -38,6 +47,8 @@ const LY_DO =
   thuMuc === "docs/claude/2026-09-27/mobile-ui-audit"
     ? "Bằng chứng ảnh của audit UI/UX mobile 27/09/2026 (docs/claude/2026-09-27/mobile-ui-audit): ảnh chụp bản web trên stack cục bộ với dữ liệu seed tổng hợp, số điện thoại đã che, không có dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt audit này. Đổi một byte phải ghim lại."
     : `Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (${thuMuc}): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.`;
+const CHU_THICH = "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path";
+const coChuThich = (a) => typeof a.reason === "string" && a.reason.startsWith(CHU_THICH);
 const moTa = new Map(ds.map((d) => [d.id, d.moTa]));
 const cu = existsSync(join(docs, "evidence-manifest.json")) ? JSON.parse(readFileSync(join(docs, "evidence-manifest.json"), "utf8")) : {};
 const manifest = {};
@@ -47,8 +58,13 @@ for (const f of readdirSync(evDir).filter((x) => x.endsWith(".jpg")).sort()) {
   const buf = readFileSync(full);
   const path = relative(repo, full).split("\\").join("/");
   const id = f.replace(/\.jpg$/, "");
-  const entry = { path, sha256: sha(buf), rules: ["controlled-artifact"], reason: LY_DO };
   const i = allow.artifacts.findIndex((a) => a.path === path);
+  // An old pin keeps its shape; a new pin (or one already annotated) carries the
+  // annotation in a reason written ahead of the path it covers.
+  const entry =
+    i >= 0 && !coChuThich(allow.artifacts[i])
+      ? { path, sha256: sha(buf), rules: ["controlled-artifact"], reason: LY_DO }
+      : { reason: `${CHU_THICH} · ${LY_DO}`, path, sha256: sha(buf), rules: ["controlled-artifact"] };
   if (i >= 0) allow.artifacts[i] = entry;
   else allow.artifacts.push(entry);
   // Eight hex characters: enough to tell files apart, never nine digits in a

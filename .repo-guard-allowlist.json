@@ -2166,6 +2166,86 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại."
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-BANG-ghep.jpg",
+      "sha256": "5d281793d49f2e0a0bcb1c2f8b9106d716dae23fbbb6308c5e6d18a70f3e5f76",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-BL-ghep.jpg",
+      "sha256": "3cc27b242a5e78de36a1fab8c8bef65cf2ce9d629cd05b006bb5b36572cac40d",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-CHI-TIET-ghep.jpg",
+      "sha256": "2a0f932119c5c4d37214a6679518b0db6a784ed9dc13ab9000350b42f515034a",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-DANG-ghep.jpg",
+      "sha256": "f34f48200c4ccea51448f81034973423567a4d191feeab538e888076a5bbff61",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-DOC-ghep.jpg",
+      "sha256": "7224f3ca853adbb223f26ba455e517b01e3f95e17f7e79b78f3f94bd81a77b62",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-DUYET-ghep.jpg",
+      "sha256": "28900f646530b005685b554fd74a6ccb91740ef8ccba57233a79104e2de752c5",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-FORM-ghep.jpg",
+      "sha256": "ff61fc3cee545b0a8f2303f438db5f0345806ef86814829b632adf7abcc0f1bd",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-PHU-ghep.jpg",
+      "sha256": "9a1896d55a17fe3061413aa6bdb5b437f4606b84d851d6ca7f6a6a31ad563cfd",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-RONG-ghep.jpg",
+      "sha256": "e269bfcf542a450a21be562b9f3d2b9b9f3fe7ab41921289024d9486314acdcb",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N14-THE-ghep.jpg",
+      "sha256": "9d791d9fa4259ed0de20b490a699b4b8d88ca021949e9406ccc3e3fc6e18168a",
+      "rules": [
+        "controlled-artifact"
+      ]
     }
   ]
 }

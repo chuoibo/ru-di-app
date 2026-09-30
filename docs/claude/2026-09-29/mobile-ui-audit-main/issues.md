@@ -8,6 +8,8 @@
 - Checkpoint retest 2 đo lại 79 issue P3 còn lại và không thêm issue mới.
 - Checkpoint N26 audit feature mới đầu tiên của main, hai lớp chat hai người «đám bạn» / «cặp đôi» (PR #660, task #26), và
   thêm UI-124…UI-131. Mục «N26» dưới đây nói phần nào đạt; mục «Mở rộng» ghi ba issue của audit gốc gặp lại ở màn mới.
+- Checkpoint N14 audit Cộng đồng (task #14, ADR-0040), tab đầu của app trên main, và thêm UI-132…UI-148. Mục «N14» nói phần
+  nào đạt; mục «Mở rộng (đo ở N14)» ghi bảy issue của audit gốc gặp lại. Quan sát Q5 đóng ở đây.
 - MODE = AUDIT_ONLY: không issue nào được sửa. «Trạng thái sửa» của mọi issue là *chưa sửa*; «Retest» là
   *không áp dụng*.
 - Phân loại, mức và phương pháp như audit gốc: BUG · UX ISSUE · VISUAL POLISH; P0–P3; RUNTIME-WEB, STATIC,
@@ -17,8 +19,8 @@
 
 | Mức | Issue |
 |---|---|
-| P2 | UI-123, UI-124, UI-130 |
-| P3 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-131 |
+| P2 | UI-123, UI-124, UI-130, UI-132, UI-133, UI-134, UI-135, UI-136, UI-137, UI-138 |
+| P3 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-131, UI-139, UI-140, UI-141, UI-142, UI-143, UI-144, UI-145, UI-146, UI-147, UI-148 |
 
 ---
 
@@ -221,9 +223,392 @@ Ba issue của `docs/claude/2026-09-27/mobile-ui-audit/issues.md` gặp lại tr
 
 ---
 
+## N14 Cộng đồng (tab đầu của app: bảng tin kiểm duyệt, realtime; #14, ADR-0040)
+
+Đo trên bản web export của main với stack thứ hai. Cờ `MOBILE_COMMUNITY_ENABLED` bật và không có model kiểm duyệt, nên theo
+ADR-0040 mọi bài và bình luận công khai chờ người duyệt. Persona:
+- chat-0: tác giả;
+- chat-1: bạn duy nhất của chat-0;
+- chat-2 chọn «Cá nhân hóa», chat-3 chọn «Để sau»;
+- chat-15: người duyệt, cấp vào `community_moderators` bằng SQL, đúng cách người vận hành cấp theo `docs/testing/cong-dong.md`;
+- chat-16: người lạ, không là bạn của chat-0, không vai trò.
+
+Stack không đặt `MOBILE_CORS_ALLOW_ORIGINS`, nên WebSocket của trang bị từ chối ở bước bắt tay (403). Phần realtime nối
+socket của trang qua một relay Node không gửi Origin; khung nhận được là khung của máy chủ (`report.md` §A). Trạng thái
+«chưa có bài công khai nào được duyệt» chỉ đo được một lần, nên được đo trước mọi lần ghi.
+
+Đạt trong phạm vi đã đo (`coverage-matrix.md`, hàng `TC-N14-*`):
+- **Không phiên, tab Cộng đồng** có lời mời và «Đăng nhập» 358×52 tới `/login`. Quan sát Q5 đóng: tab đúng; màn trong mở
+  từ link thì không (UI-137).
+- **Bảng tin trước bài duyệt đầu tiên**, phần không dính UI-132:
+  - «Đang theo dõi» có trạng thái rỗng «Câu chuyện bắt đầu từ một người» và «Kể khoảnh khắc đầu tiên»;
+  - hộp mời cá nhân hoá có hai nút cao 48dp; «Cá nhân hóa» đưa «Dành cho bạn» về trạng thái rỗng.
+  - Sau bài duyệt đầu tiên, ba mode trả 200 cho chat-0 và chat-3, log core không thêm dòng lỗi nào.
+- **Form «Kể một khoảnh khắc»**:
+  - nút gửi luôn trong cửa sổ ở C1, C2, C3, C8, C6, C7; không tràn, không chữ bị cắt;
+  - đăng công khai (chat-0 ở C1, chat-1 ở C3), đăng kèm một ảnh tổng hợp (bộ chọn tệp, xem trước 120×120, «Bỏ tệp»), đăng
+    «Bạn bè»: cả ba tới chi tiết bài. Bài công khai mang dải «Đang chờ duyệt · Bản mới chưa xuất hiện công khai»; «Quay
+    lại» về bảng tin.
+
+  ![Form «Kể một khoảnh khắc» trống ở C1, C2, C3, C8, C6](evidence/EV-N14-FORM-ghep.jpg)
+- **Hàng duyệt**: người không vai trò nhận «Tài khoản này không có quyền kiểm duyệt.». Người duyệt duyệt hai bài và hai
+  bình luận qua UI, mỗi lần với lý do; bài «Bạn bè» không vào hàng.
+- **Thẻ bài** ở C1, C3–C8:
+  - khung ảnh nằm trọn trong vùng album; không tràn trang, không chữ bị cắt, không nút dưới 48dp;
+  - «Đọc tiếp» mở hết thân bài tại chỗ;
+  - thích đổi tên nút thành «Bỏ thích bài, 1 lượt thích» (phân xử bằng mắt: trạng thái nằm trong tên nút);
+  - ba sheet «Lựa chọn cho bài đăng», «Bảng tin của bạn», «Báo cáo bài» (mở rồi «Thôi», không gửi): role dialog, tiêu điểm
+    vào sheet, Esc đóng và trả tiêu điểm về nút mở, không sót inert.
+
+  ![Bảng tin có bài ở C1–C3, và UI-143 ở C2](evidence/EV-N14-BANG-ghep.jpg)
+- **Realtime** (qua relay):
+  - kết nối nhận khung `sync`; dòng phụ đổi thành «Những câu chuyện đang tiếp nối»;
+  - một bài được duyệt hay một lượt thích đổi thì dải «Bảng tin có cập nhật» hiện: C1 mờ dần khoảng 200 ms, C9 hiện trọn
+    ngay khung đầu. Chạm dải thì tải lại và về đầu;
+  - mở chi tiết bài khi stream đang nối: thẻ hiện một lần, không nháy.
+- **Chi tiết bài** ở C1, C2, C3, C8, có «Quay lại»:
+  - sheet «Quản lý bài» đủ năm lựa chọn của tác giả; «Xóa bài» hỏi bằng cách đổi nhãn thành «Xác nhận xóa bài và bình
+    luận» (không bấm xác nhận); «Chỉ mình tôi» rồi «Cất lại cho bạn bè» đổi người đọc qua lại;
+  - sửa bài đã duyệt tạo phiên bản 2 chờ duyệt, người khác vẫn đọc bản đã duyệt;
+  - người lạ mở bài «Bạn bè» nhận «Bài đã được cất riêng hoặc không còn ở đây.», không lộ nội dung, và không thấy bản sửa
+    chưa duyệt của bài công khai.
+
+  ![Chi tiết bài ở C1–C3; UI-138; UI-142](evidence/EV-N14-CHI-TIET-ghep.jpg)
+- **Bình luận và màn phụ**: bình luận vừa gửi hiện ngay với «Đang chờ duyệt · Chỉ bạn thấy»; «Trả lời» gắn tên người được
+  trả lời; tag một người bạn thì sau khi duyệt người đó có thông báo. Tìm theo chủ đề và theo người, «Bài của tôi · Trạng
+  thái duyệt», «Bài đã lưu» đạt.
+- **Lỗi**: đọc bảng tin 503 hay mất mạng có câu và «Thử lại» chạy được; bài không còn thì có câu và «Quay lại».
+- **Chỗ gặp tường cá nhân v2 (#658)**: bạn thấy cả ba bài của chat-0 trên tường (hai công khai, một «Bạn bè»); người lạ chỉ
+  thấy hai bài công khai.
+
+### UI-132 · Cộng đồng chưa có bài công khai nào được duyệt: tab đầu của app nói «chưa kết nối được» thay cho trạng thái rỗng, và «Thử lại» không bao giờ thành
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (máy chủ trả lỗi cho một trạng thái rỗng) · **P2** |
+| Feature / Screen / Layer | N14 · `/community`, tab đầu của app · bảng tin «Dành cho bạn» và «Thịnh hành»; `GET /v2/community/feed` (LIVE-GO, không có bản Python) |
+| Nền tảng, cấu hình | API trên stack thứ hai (RUNTIME); màn web ở C1, C2, C3. Native gọi cùng API nên nhận cùng lỗi (STATIC) |
+| Điều kiện | Chưa có bài công khai nào được duyệt: trạng thái của mọi cộng đồng vừa bật, kéo dài tới khi người duyệt duyệt bài đầu tiên (không có model thì mọi bài chờ người, ADR-0040). «Dành cho bạn» dính khi người xem chưa bật «Cá nhân hóa», tức mặc định; «Thịnh hành» dính với mọi người |
+| Tái hiện | 1. chat-0 mở tab Cộng đồng. 2. Chạm «Thử lại». 3. Chạm tab «Thịnh hành». 4. Một người khác (chat-3) chạm «Để sau» ở hộp mời cá nhân hoá |
+| Expected | Trạng thái rỗng mời kể chuyện đầu tiên, như tab «Đang theo dõi» đang làm («Câu chuyện bắt đầu từ một người», «Kể khoảnh khắc đầu tiên») |
+| Actual | API: `for_you` và `trending` trả 503 `community_unavailable`; `following`, `mine`, `saved` trả 200 với 0 bài. Màn: «Cộng đồng chưa kết nối được. Bạn thử lại sau một chút nhé.» và «Thử lại» (y 427 ở C1 và C3, y 451 ở C2), không có trạng thái rỗng. «Thử lại» đọc lại và lại 503. «Thịnh hành»: cùng câu. «Để sau»: hộp mời mất, câu lỗi còn. Chỉ «Cá nhân hóa» (chat-2) đưa «Dành cho bạn» về trạng thái rỗng; «Thịnh hành» của chat-2 vẫn lỗi. Mỗi lần đọc hỏng để lại một dòng `sqlstate=23502` (vi phạm NOT NULL) trong log core: 12 dòng có từ trước (các lượt retest có mở tab Cộng đồng), 37 dòng sau phần đo rỗng. Người duyệt duyệt bài đầu tiên xong thì ba mode trả 200 cho chat-0 và chat-3, bảng tin có thẻ, log đứng ở 37 |
+| Evidence | ![Chưa có bài duyệt: câu lỗi ở «Dành cho bạn», «Thịnh hành» và sau «Để sau»; «Đang theo dõi» đúng; hết lỗi sau bài duyệt đầu tiên](evidence/EV-N14-RONG-ghep.jpg) (hàng `TC-N14-API-RONG`, `TC-N14-RONG-BANG-TIN` C1–C3, `TC-N14-RONG-THU-LAI`, `TC-N14-RONG-THINH-HANH`, `TC-N14-RONG-DE-SAU`; đạt: `TC-N14-RONG-THEO-DOI`, `TC-N14-RONG-CA-NHAN-HOA`, `TC-N14-API-SAU-DUYET`, `TC-N14-RONG-SAU-DUYET`) |
+| Source | `services/core/internal/community/candidates.go:54`: bảng xếp hạng chung được chép bằng `append([]string(nil), h.commonRanking...)`, nên danh sách rỗng cho ra `nil`. `feed.go:244`: INSERT `community_feeds(…, post_ids, …)` với mảng đó, và mảng `nil` xuống cơ sở dữ liệu thành NULL. `schema.sql:100`: `post_ids uuid[] NOT NULL`. «Đang theo dõi» và «Dành cho bạn» đã cá nhân hoá đi nhánh `rank()`, trả mảng rỗng khác `nil`, nên không dính. Route chỉ có Go (`routes.json`: `python: absent`): không có oracle, cổng parity không phủ nó |
+| Hậu quả | Ở lần mở đầu tiên của một cộng đồng mới, tab đầu của app nói cộng đồng hỏng thay vì mời kể chuyện đầu tiên, và «Thử lại» không bao giờ thành. Người mới đọc đó là app lỗi, trong khi thứ duy nhất thiếu là một bài được duyệt. Vẫn có lối đi (nút viết bài ở đầu màn, tab «Đang theo dõi»), nên là P2 |
+| Đề xuất sửa | Chép bảng xếp hạng thành mảng rỗng khác `nil` (`make([]string, 0, n)` rồi append), hoặc không ghi snapshot khi không có bài nào. Thêm ca bảng tin rỗng ở test Go và ở tầng PostgreSQL thật |
+| Tiêu chí gỡ | Trên một stack chưa có bài công khai nào được duyệt, `n14-cong-dong.mjs --chi api,rong`: `for_you` và `trending` trả 200 với 0 bài; màn ở C1–C3 có trạng thái rỗng ở cả ba tab, không câu lỗi; log core không thêm dòng 23502 |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-133 · Sáu chủ đề, hoặc một chủ đề một ký tự: máy chủ từ chối, còn app nói đó là lỗi của app và đặt câu dưới mép màn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (câu lỗi sai nguyên nhân, nằm ngoài tầm nhìn) · **P2** |
+| Feature / Screen / Layer | N14 · `/community/new` «Kể một khoảnh khắc» · ô «Chủ đề», câu lỗi của form |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã, cùng câu (STATIC) |
+| Điều kiện | Người viết gõ sáu chủ đề (gợi ý dưới ô nói «Tối đa 5 chủ đề, ngăn cách bằng dấu phẩy.»), hoặc một chủ đề chỉ một ký tự |
+| Tái hiện | 1. Mở «Kể một khoảnh khắc», gõ nội dung. 2. Ô «Chủ đề»: «cà phê, đi bộ, đà lạt, ăn sáng, hoàng hôn, chợ đêm» (hoặc «a»). 3. Chạm «Gửi lên cộng đồng» |
+| Expected | Form nói đúng điều cần sửa (quá năm chủ đề, chủ đề quá ngắn), gần ô chủ đề và trong tầm nhìn. Gợi ý đã nêu giới hạn, nên tốt hơn là báo trước khi gửi |
+| Actual | `POST /v2/community/posts` trả 422 (`too_many_topics`, `invalid_topic`). Câu hiện ra: «App gửi lên một yêu cầu không hợp lệ, nên việc này chưa được ghi. Đây là lỗi của app chứ không phải do bạn nhập sai. Thử lại sau, và báo cho nhóm kỹ thuật nếu vẫn vậy.» Lúc chạm gửi, câu nằm ở y 844–940 trong cửa sổ cao 844, hẳn dưới mép; nút gửi ở y 780–832. Màn trông như không có gì xảy ra. Bản viết và chủ đề còn nguyên |
+| Evidence | ![Nút gửi tắt không lý do; sáu chủ đề: màn không đổi, câu lỗi dưới đáy](evidence/EV-N14-DANG-ghep.jpg) (hàng `TC-N14-DANG-6-CHU-DE`, `TC-N14-DANG-CHU-DE-NGAN`) |
+| Source | `services/core/internal/community/posts.go:28` (`too_many_topics`), `:35` (`invalid_topic`). `apps/mobile/src/rudi/community/api.ts:70–93` (`COMMUNITY_ERRORS`) không có hai mã này, nên câu rơi về câu 4xx chung (`src/api.ts:325`). `Composer.tsx:70`: nút gửi là chân cố định của màn; `:82`: câu lỗi là dòng cuối của phần cuộn, và màn không cuộn tới nó |
+| Hậu quả | Người viết làm đúng gợi ý trừ một chủ đề, rồi được bảo đó là lỗi của app: họ báo lỗi hoặc bỏ bài thay vì bớt một chủ đề. Trên điện thoại chuẩn không thấy câu nào, chỉ thấy nút gửi không làm gì |
+| Đề xuất sửa | Thêm `too_many_topics`, `invalid_topic` vào `COMMUNITY_ERRORS` với câu nói việc cần sửa; kiểm số và độ dài chủ đề ngay khi gõ; đặt câu lỗi gần ô, hoặc cuộn tới câu lỗi và dời tiêu điểm vào nó |
+| Tiêu chí gỡ | `--chi dang:C1`: `TC-N14-DANG-6-CHU-DE` và `TC-N14-DANG-CHU-DE-NGAN` có câu nói về chủ đề, không có «lỗi của app», và câu nằm trong cửa sổ lúc chạm gửi (hoặc nút gửi tắt kèm lý do) |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-134 · Stream nối lại thì chi tiết bài dựng lại từ đầu: chữ đang gõ trong ô bình luận mất, màn về đầu
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (mất chữ người dùng đang gõ, không do thao tác của họ) · **P2** (họ UI-097) |
+| Feature / Screen / Layer | N14 · `/community/posts/[id]` · khu bình luận (ô «Bình luận»), stream `/v2/community/stream` |
+| Nền tảng, cấu hình | web, C1; stream nối qua relay (`report.md` §A). Native: app về nền rồi trở lại (`AppState`) đóng và nối lại socket bằng cùng mã (STATIC) |
+| Điều kiện | Đang ở chi tiết bài với stream đã nối. Stream nối lại khi máy chủ đóng socket (khởi động lại, mạng chập chờn) hoặc khi app về nền rồi trở lại |
+| Tái hiện | 1. chat-1 mở chi tiết B1, gõ «Một lời nháp chưa gửi, gõ dở giữa chừng» vào ô bình luận. 2a. Máy chủ đóng socket (relay đóng phía máy chủ); app tự nối lại. 2b. Hoặc trang ẩn rồi hiện lại (`visibilitychange`, xấp xỉ chuyển app) |
+| Expected | Nối lại xong, bài và chữ đang gõ còn nguyên. ADR-0040: client «phục hồi sau reconnect và không tự đẩy vị trí cuộn» |
+| Actual | Mỗi kết nối mới nhận khung `sync` đầu tiên; màn gỡ thẻ bài cùng khu bình luận rồi đọc lại bài. 5 s sau, ô bình luận trống và màn về đầu. Ẩn rồi hiện lại: cùng kết quả |
+| Evidence | ![Đang gõ bình luận; stream nối lại: ô trống, màn về đầu](evidence/EV-N14-DOC-ghep.jpg) (hàng `TC-N14-WS-MAT-CHU`, `TC-N14-WS-AN-HIEN`; đạt: `TC-N14-WS-NHAY`, lần mở đầu không nháy) |
+| Source | `apps/mobile/src/rudi/community/PostDetail.tsx:45–50`: khung `sync` gọi `setPost(null)`, `setDraft("")`, `setNep(false)` rồi đọc lại. `:100`: khu bình luận (`Comments`, giữ chữ đang gõ trong state của nó) chỉ vẽ khi có `post`, nên bị gỡ và mất state. `useCommunityStream.ts:24`: mọi kết nối mới nhận `sync` trước; `:28`, `:32`: socket đóng hay `AppState` đổi thì nối lại. Cùng dòng `:46–48` đóng sheet Nếp và xoá bản nháp Nếp vừa viết (STATIC, không đo vì AI không có khoá) |
+| Hậu quả | Một bình luận đang viết dở mất mà người viết không làm gì, mỗi khi mạng chập chờn hay khi họ rời app một lát (trả lời tin nhắn rồi quay lại). Trên điện thoại đó là thao tác thường ngày |
+| Đề xuất sửa | Khi `sync` tới, đọc lại bài mà không đặt `post` về `null` (giữ thẻ và khu bình luận, chỉ thay dữ liệu); hoặc nâng chữ đang gõ lên màn cha để nó sống qua lần dựng lại. Không xoá bản nháp Nếp khi nối lại |
+| Tiêu chí gỡ | `--chi ws:chi-tiet`: `TC-N14-WS-MAT-CHU` và `TC-N14-WS-AN-HIEN` còn nguyên chữ đã gõ sau khi nối lại, màn không về đầu |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-135 · Mở một bài rồi «Quay lại»: bảng tin về đầu, bài vừa đọc dở gập lại
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (mất chỗ đang đọc) · **P2** |
+| Feature / Screen / Layer | N14 · `/community` → `/community/posts/[id]` → «Quay lại» · danh sách bảng tin |
+| Nền tảng, cấu hình | web, C1. Native: cùng `useFocusEffect` (STATIC) |
+| Điều kiện | Bảng tin đủ dài để cuộn; người đọc đã cuộn xuống và mở hết thân một bài dài |
+| Tái hiện | 1. chat-1 cuộn bảng tin tới ảnh của B2, chạm «Đọc tiếp» cho hết thân B2. 2. Chạm thân B2 để mở chi tiết. 3. «Quay lại» |
+| Expected | Về đúng chỗ đang đọc, B2 vẫn mở hết. ADR-0040 đặt luật «không tự đẩy vị trí cuộn» cho realtime; quay về từ một bài là trường hợp thường gặp hơn |
+| Actual | Trước: cuộn 367 trên 1407px, thẻ B2 ở y 64. Sau khi về: cuộn 0 (danh sách tải lại, cao 1374px), thẻ B2 xuống y 431 và gập lại («Đọc tiếp» trở lại) |
+| Evidence | ![Đang đọc hết B2; mở bài rồi «Quay lại»: về đầu, B2 gập lại](evidence/EV-N14-DOC-ghep.jpg) (hàng `TC-N14-BANG-CUON`) |
+| Source | `apps/mobile/src/rudi/community/CommunityScreen.tsx:79`: mỗi lần màn được focus, `useFocusEffect` gọi `setPosts([])` rồi đọc lại từ đầu; chi tiết bài là route đẩy lên, nên quay về là một lần focus. Trạng thái mở hết (`expanded`) nằm trong `PostCard`, mất theo thẻ. Stream nối lại ở bảng tin cũng `setPosts([])` (`:85–88`), nên cũng đẩy về đầu (STATIC, chưa đo ở bảng tin) |
+| Hậu quả | Đọc theo kiểu «mở một bài, quay lại, đọc tiếp», cách đọc chính của một bảng tin, thì mỗi lần mở bài lại phải cuộn tìm chỗ cũ. Bảng tin càng dài càng tốn |
+| Đề xuất sửa | Không xoá danh sách khi màn được focus lại; chỉ làm mới khi dữ liệu đã cũ, và giữ vị trí cuộn (hoặc làm mới ngầm rồi báo bằng dải «Bảng tin có cập nhật» như realtime) |
+| Tiêu chí gỡ | `--chi bang:C1`: `TC-N14-BANG-CUON` về lại vị trí cuộn trong khoảng 24px, B2 vẫn mở hết |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-136 · «Chia sẻ» trên thẻ bài: trên web không có gì xảy ra; có Web Share thì gửi đi một chuỗi `rudi://` làm chữ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (nút không làm gì, lỗi bị nuốt) · **P2** (họ UI-049) |
+| Feature / Screen / Layer | N14 · thẻ bài ở `/community` và ở chi tiết bài · nút «Chia sẻ» |
+| Nền tảng, cấu hình | web, C1. Chromium headless không có `navigator.share`; ca có Web Share dựng bằng một `navigator.share` giả cài trong trang, chỉ để đọc thứ app gửi. Native: khay chia sẻ mở với cùng chữ `rudi://community/posts/[id]` (STATIC) |
+| Điều kiện | Bất kỳ bài nào |
+| Tái hiện | Chạm «Chia sẻ» dưới một thẻ bài |
+| Expected | Có một cách gửi bài đi (khay chia sẻ, hoặc chép link) và một câu khi không làm được. Link mở được ở người nhận: https, hoặc link app có đường dự phòng |
+| Actual | Không có Web Share: không gì đổi (đường dẫn, hộp thoại, chữ trang như trước), trang ném lỗi không ai bắt «Share is not supported in this browser», không câu nào cho người dùng. Có Web Share: `navigator.share` nhận `{"title":null,"text":"rudi://community/posts/[id]","url":""}`, tức link nằm trong chữ chứ không trong `url`, và mang scheme của app |
+| Evidence | ![Sau khi chạm «Chia sẻ»: không gì đổi](evidence/EV-N14-THE-ghep.jpg) (hàng `TC-N14-BANG-CHIA-SE`, `TC-N14-BANG-CHIA-SE-LINK`) |
+| Source | `apps/mobile/src/rudi/community/PostCard.tsx:81`: `void Share.share({ message })`, với `message` là `rudi://community/posts/` nối id bài. `void` bỏ promise, nên khi react-native-web từ chối (không có Web Share) thì không ai bắt; react-native-web đưa `message` vào `text` của Web Share. Cùng cơ chế với UI-049 |
+| Hậu quả | Trên web, «Chia sẻ» của mọi bài là nút chết, không một lời. Ở trình duyệt có Web Share và trên native, người nhận nhận một chuỗi `rudi://…`: ai chưa cài app thì không mở được, và nhiều app nhắn tin có thể không biến chuỗi đó thành link bấm được (HYPOTHESIS, chưa đo trên máy) |
+| Đề xuất sửa | Bắt lỗi của `Share.share`; khi không có khay chia sẻ thì chép link rồi báo một câu. Dùng link https mở được app (universal link, app link) hoặc có trang dự phòng, và đưa vào `url` |
+| Tiêu chí gỡ | `--chi bang:C1`: `TC-N14-BANG-CHIA-SE` có phản hồi thấy được (khay, hoặc câu đã chép link), không lỗi trang; `TC-N14-BANG-CHIA-SE-LINK` nhận một link https trong `url` |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-137 · Không phiên, mở màn trong của Cộng đồng bằng link: chi tiết bài chờ mãi, các màn khác không có lối đăng nhập
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (ngõ cụt khi mở link lạnh) · **P2** |
+| Feature / Screen / Layer | N14 · `/community/posts/[id]`, `/community/new`, `/community/notifications`, `/community/review`, mở lạnh không phiên |
+| Nền tảng, cấu hình | web, C1. Native: link app mở cùng các route (STATIC) |
+| Điều kiện | Chưa đăng nhập, hay phiên đã hết, rồi mở một link vào màn trong: ví dụ link bài người khác gửi (UI-136) |
+| Tái hiện | Không phiên, mở thẳng bốn đường trên |
+| Expected | Như tab Cộng đồng không phiên (đạt, `TC-N14-KHONG-PHIEN`): nói cần đăng nhập và có «Đăng nhập», hoặc chuyển tới màn đăng nhập rồi quay lại |
+| Actual | Chi tiết bài: «Một câu chuyện» và «Đang mở câu chuyện…», không gì hơn. Viết bài: «Đăng nhập để viết câu chuyện của bạn.», không nút. Thông báo: «Những lời nhắc sẽ gặp bạn ở đây.»; hàng duyệt: «Chưa có nội dung cần xem xét.», tức trạng thái rỗng như đã đăng nhập. Không màn nào có «Đăng nhập»; đường dẫn đứng yên |
+| Evidence | ![Không phiên, link bài: chờ mãi; form viết: không lối đăng nhập](evidence/EV-N14-PHU-ghep.jpg) (hàng `TC-N14-KHONG-PHIEN-SAU`; đạt: `TC-N14-KHONG-PHIEN`) |
+| Source | `apps/mobile/src/rudi/community/PostDetail.tsx:35–36`: `load` thoát ngay khi không có `person`, nên bài không bao giờ được đọc; `:100` vẽ «Đang mở câu chuyện…» khi chưa có bài và chưa có lỗi. `Composer.tsx:68`: câu không kèm nút. `Notifications.tsx`, `Review.tsx`: không kiểm phiên, vẽ danh sách rỗng. Tab thì có kiểm (`CommunityScreen.tsx:119–120`) |
+| Hậu quả | Link bài gửi cho một người chưa đăng nhập dẫn tới một màn chờ không bao giờ xong; người đó không biết cần đăng nhập, và không có nút để làm. Thông báo và hàng duyệt nói sai rằng không có gì |
+| Đề xuất sửa | Một cổng phiên dùng chung cho các route `/community/*`: câu và nút «Đăng nhập», hoặc chuyển tới đăng nhập kèm đường quay lại, như tab đang làm |
+| Tiêu chí gỡ | `--chi khong-phien`: `TC-N14-KHONG-PHIEN-SAU` có «Đăng nhập» (hoặc tới `/login`) ở cả bốn màn, không màn nào chờ mãi |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-138 · Gọi Nếp lỗi: sheet không đổi gì, câu lỗi nằm ở đầu màn phía sau sheet
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (lỗi không thấy được) · **P2** |
+| Feature / Screen / Layer | N14 · `/community/posts/[id]` · sheet «Gọi Nếp» («Nhờ Nếp giữ một điều») |
+| Nền tảng, cấu hình | web, C1. AI không có khoá nên `POST …/nep` trả 503 (`report.md` §A). Native: cùng mã (STATIC) |
+| Điều kiện | Nếp không trả lời được: chưa có model, model lỗi, hay mất mạng |
+| Tái hiện | chat-0 mở chi tiết bài của mình → «@Nếp · Giúp giữ khoảnh khắc» → gõ «Giữ lại cảm giác buổi sáng sương mù.» → «Đồng ý chia sẻ và gọi Nếp» |
+| Expected | Câu lỗi hiện trong sheet đang mở, gần nút vừa bấm |
+| Actual | `POST …/nep` trả 503. Nút trở lại như cũ, sheet không có câu nào. Câu «Nếp chưa trả lời được. Nội dung của bạn vẫn ở đây.» nằm ở y −148 trên thân màn phía sau sheet, dưới lớp phủ, không thấy và không chạm được. Yêu cầu đã gõ còn |
+| Evidence | ![Nếp lỗi 503: không câu nào trong sheet](evidence/EV-N14-CHI-TIET-ghep.jpg) (hàng `TC-N14-NEP`) |
+| Source | `apps/mobile/src/rudi/community/PostDetail.tsx:51–60` (`act`): lỗi vào `error` của màn; `:99`: `error` chỉ vẽ dưới `TopBar` của thân màn, ngoài sheet. Cùng họ UI-095 (câu lỗi ngoài chỗ nhìn) và phần câu lỗi dưới sheet của UI-129 |
+| Hậu quả | Người gọi Nếp chạm nút, thấy nút đổi rồi trở lại, không biết là lỗi hay phải chờ; thử lại mãi hoặc bỏ. Câu lỗi có trấn an rằng nội dung vẫn còn, nhưng không ai thấy nó |
+| Đề xuất sửa | Vẽ câu lỗi của lệnh Nếp trong sheet (lỗi riêng của sheet), kèm «Thử lại» |
+| Tiêu chí gỡ | `--chi chi-tiet:C1` trên stack không có AI: `TC-N14-NEP` có câu lỗi trong sheet, trong cửa sổ |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-139 · Thẻ bài ngắn: lần chạm đầu vào thân bài không làm gì, lần hai mới mở bài
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (chạm không phản hồi) · **P3** |
+| Feature / Screen / Layer | N14 · `/community` · thẻ bài, vùng thân bài (nhãn trợ năng «Đọc toàn bộ câu chuyện») |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Thân bài đủ ngắn để hiện trọn trong sáu dòng (B1: 121 ký tự), nên không có «Đọc tiếp» |
+| Tái hiện | chat-1 chạm thân B1 một lần, rồi lần hai |
+| Expected | Lần chạm đầu mở chi tiết bài, như nhãn trợ năng hứa: thân đã hiện trọn, không còn gì để mở rộng |
+| Actual | Lần 1: vẫn ở `/community`, thân cao 78px như trước, không gì đổi. Lần 2: tới chi tiết bài. Với bài dài, lần 1 mở hết thân tại chỗ (đạt, `TC-N14-BANG-DOC-TIEP`): hai chạm là thiết kế cho bài dài, nhưng bài ngắn cũng phải chịu |
+| Evidence | Không có ảnh: lần chạm đầu không đổi gì trên màn. Số đo ở hàng `TC-N14-BANG-CHAM-THAN` |
+| Source | `apps/mobile/src/rudi/community/PostCard.tsx:68`: `onPress` luôn đặt `expanded` trước (`if (!expanded) setExpanded(true)`), chỉ lần sau mới `router.push`, không xét thân có bị cắt hay không |
+| Hậu quả | Người đọc chạm một bài ngắn, không thấy gì, nghĩ app không nhạy hay bài không mở được; có người không chạm lần hai |
+| Đề xuất sửa | Chỉ qua bước mở rộng khi thân thật sự bị cắt (đo `onTextLayout` hay độ dài); còn lại mở chi tiết ngay |
+| Tiêu chí gỡ | `--chi bang:C1`: `TC-N14-BANG-CHAM-THAN` tới chi tiết bài sau lần chạm đầu |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-140 · Theo dõi hay bỏ theo dõi ở một thẻ: thẻ khác của cùng tác giả vẫn mang nhãn cũ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (trạng thái lệch giữa các thẻ) · **P3** |
+| Feature / Screen / Layer | N14 · `/community` · thẻ bài, nút theo dõi tác giả |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Bảng tin có hai bài của cùng một tác giả (B1, B2 của chat-0); người xem đang theo dõi tác giả đó |
+| Tái hiện | chat-1 chạm «Bỏ theo dõi tác giả» ở thẻ B1, nhìn thẻ B2; rồi chạm lại để theo dõi |
+| Expected | Mọi thẻ của cùng tác giả đổi nhãn cùng lúc |
+| Actual | Lần 1: B1 «Bỏ theo dõi tác giả» → «Theo dõi tác giả», B2 vẫn «Bỏ theo dõi tác giả». Lần 2: B1 trở lại «Bỏ theo dõi tác giả». Máy chủ đúng: cuối lượt chat-1 vẫn theo dõi chat-0, «Đang theo dõi» có 2 thẻ |
+| Evidence | ![Bỏ theo dõi ở B1, B2 vẫn «Bỏ theo dõi tác giả»](evidence/EV-N14-THE-ghep.jpg) (hàng `TC-N14-BANG-THEO-DOI`) |
+| Source | `apps/mobile/src/rudi/community/CommunityScreen.tsx:136`: `onFollow` gọi API rồi `update({ ...item, following: !item.following })` cho đúng một thẻ; `update` (`:91`) thay theo `id` bài |
+| Hậu quả | Hai nút cạnh nhau nói hai điều ngược nhau về cùng một người; ai đọc thẻ B2 hiểu sai rằng mình vẫn theo dõi |
+| Đề xuất sửa | Sau khi theo dõi hay bỏ, cập nhật mọi thẻ có cùng `author_id`, hoặc đọc lại trạng thái theo dõi |
+| Tiêu chí gỡ | `--chi bang:theo-doi`: sau mỗi lần chạm, B1 và B2 cùng nhãn |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-141 · «Không quan tâm» ẩn bài vĩnh viễn: không câu báo, không hoàn tác, không chỗ xem lại; «Xóa lịch sử đề xuất» chạy ngay sau một chạm
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (thao tác không đảo được, không phản hồi) · **P3** |
+| Feature / Screen / Layer | N14 · `/community` · sheet «Lựa chọn cho bài đăng» («Không quan tâm»), sheet «Bảng tin của bạn» («Xóa lịch sử đề xuất») |
+| Nền tảng, cấu hình | web, C1 cho «Không quan tâm» (RUNTIME). «Xóa lịch sử đề xuất» chỉ đọc mã, không bấm trên stack (STATIC). Native: cùng mã |
+| Điều kiện | Người xem có bài trong bảng tin (chat-2, B2) |
+| Tái hiện | «…» trên thẻ B2 → «Không quan tâm». Tải lại. Tìm lại B2 trong sheet «Bảng tin của bạn» |
+| Expected | ADR-0040 cho người dùng «tắt, xóa lịch sử và không quan tâm». Một lựa chọn làm bài biến mất nên nói đã ẩn và cho hoàn tác, ít nhất trong chốc lát, hoặc có chỗ xem lại bài đã ẩn. Xoá lịch sử đề xuất nên hỏi trước |
+| Actual | B2 biến mất ngay (còn 1 thẻ), không câu nào, không «Hoàn tác». Tải lại vẫn ẩn. Sheet «Bảng tin của bạn» có «Tắt cá nhân hóa», «Xóa lịch sử đề xuất», «Bài đã lưu», «Bài của tôi · Trạng thái duyệt», «Điều mình muốn giữ», «Thông báo»: không có mục bài đã ẩn. API có lệnh bỏ ẩn (`feedback` với `enabled=false`) nhưng app không gọi ở đâu, và xoá lịch sử đề xuất cũng không bỏ ẩn. «Xóa lịch sử đề xuất» (đọc mã): gọi `DELETE /v2/community/history` ngay, tải lại và đóng sheet, không hỏi, không câu báo |
+| Evidence | ![«Không quan tâm»: B2 biến mất, không câu, không hoàn tác](evidence/EV-N14-THE-ghep.jpg) (hàng `TC-N14-BANG-AN`; `TC-N14-XOA-LICH-SU` STATIC) |
+| Source | `apps/mobile/src/rudi/community/CommunityScreen.tsx:127` («Không quan tâm»: `feedback(…, "hidden", true)` rồi lọc bài khỏi danh sách), `:122–126` («Xóa lịch sử đề xuất»). `community/api.ts:112` (`feedback` nhận `enabled`). `services/core/internal/community/feed.go:374–395` (`clearHistory` xoá `community_interactions` và `community_feeds`, không đụng `community_feedback`), `:198` (bảng tin loại bài `hidden`) |
+| Hậu quả | Một cú chạm nhầm làm mất một bài khỏi mọi bảng tin của người đó, không cách nào lấy lại trong app. Lịch sử đề xuất mất sau một chạm, không báo đã xoá |
+| Đề xuất sửa | Sau «Không quan tâm», một dòng «Đã ẩn bài» kèm «Hoàn tác» (gọi `enabled=false`); thêm mục bài đã ẩn ở sheet cài đặt. Hỏi trước khi xoá lịch sử đề xuất, và báo sau khi xoá |
+| Tiêu chí gỡ | `--chi bang:an` trên một bài chưa ẩn: có câu và «Hoàn tác» đưa bài trở lại; sheet có lối xem bài đã ẩn. Chạm «Xóa lịch sử đề xuất» mở bước hỏi |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-142 · Sửa một bài đã duyệt: bài rời bảng tin của chính tác giả cho tới khi bản sửa được duyệt
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (bài của mình biến mất không lời) · **P3** |
+| Feature / Screen / Layer | N14 · `/community` («Dành cho bạn», «Thịnh hành») sau `/community/new?edit=…`; `GET /v2/community/feed` |
+| Nền tảng, cấu hình | API và web, C1 |
+| Điều kiện | Tác giả sửa một bài công khai đã duyệt; bản sửa chờ duyệt (không có model thì chờ người) |
+| Tái hiện | chat-0 sửa B1 («Sửa bài» → «Gửi bản sửa»), về bảng tin; so với bảng tin của chat-1 |
+| Expected | Tác giả vẫn thấy bài của mình trong bảng tin: bản đã duyệt, với dải chờ duyệt cho bản mới, như chi tiết bài đang làm và như người khác vẫn thấy |
+| Actual | Bảng tin của chat-0: 2 bài, không có B1. Bảng tin của chat-1: 3 bài, có B1 (bản đã duyệt). B1 chỉ còn ở «Bài của tôi · Trạng thái duyệt» (mode `mine`, dải «Đang chờ duyệt · Bản mới chưa xuất hiện công khai»). Không câu nào nói bài tạm rời bảng tin |
+| Evidence | ![Sau khi sửa B1: bảng tin của chat-0 không còn B1](evidence/EV-N14-CHI-TIET-ghep.jpg) (hàng `TC-N14-SUA-BANG-TIN`; đạt: `TC-N14-SUA`) |
+| Source | `services/core/internal/community/feed.go:288`: ở mọi mode trừ `mine` và `saved`, bài bị bỏ khi `p.Status == "pending" && p.AuthorID == person`, nên tác giả chỉ thấy bài của mình ở bảng tin khi nó không chờ duyệt |
+| Hậu quả | Tác giả sửa một lỗi chính tả rồi thấy bài biến khỏi cộng đồng, và có thể nghĩ bài đã bị gỡ, trong khi mọi người khác vẫn đọc nó |
+| Đề xuất sửa | Ở bảng tin, cho tác giả thấy bản đã duyệt kèm dải chờ duyệt; hoặc báo một câu khi gửi bản sửa: bài hiện bản cũ cho tới khi bản sửa được duyệt |
+| Tiêu chí gỡ | `--chi chi-tiet:sua-bang`: bảng tin của chat-0 có B1 khi bản sửa đang chờ duyệt |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-143 · 320dp: khung ảnh của bài bị cắt mép phải; dải «Bảng tin có cập nhật» đè lên hàng tab
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen / Layer | N14 · `/community` ở bề rộng 320 · thẻ bài có ảnh; dải «Bảng tin có cập nhật» |
+| Nền tảng, cấu hình | web, C2 (320×640). Ảnh đạt ở C1, C3–C8; dải đạt ở C1 và C9 |
+| Điều kiện | Bài có ảnh (B2). Một cập nhật tới qua stream khi đang ở bảng tin |
+| Tái hiện | Ảnh: chat-1 mở bảng tin ở 320×640. Dải: chat-0 ở bảng tin 320×640 trong lúc chat-2 đổi lượt thích một bài (máy chủ gửi khung `feed.changed`) |
+| Expected | Khung ảnh nằm trọn trong thẻ; dải cập nhật không che hàng tab |
+| Actual | Khung ảnh rộng cố định 296 trong vùng album rộng 288: mép phải bị cắt 8px. Dòng phụ «Những câu chuyện đang tiếp nối» xuống hai dòng nên hàng tab dời xuống y 109–157, còn dải đặt ở y 144: đè 13px lên tab «Dành cho bạn» |
+| Evidence | ![C2: khung ảnh bị cắt mép phải; dải cập nhật đè lên tab](evidence/EV-N14-BANG-ghep.jpg) (hàng `TC-N14-BANG-THE` C2, `TC-N14-WS-DAI` C2; đạt: `TC-N14-BANG-THE` C1, C3–C8, `TC-N14-WS-DAI` C1, C9) |
+| Source | `apps/mobile/src/rudi/community/PostCard.tsx:90`: `mediaFrame: { width: 296 }`, `media: { width: 296, height: 330 }`. `CommunityScreen.tsx:142`: `newPosts: { position: "absolute", top: 136 }`, không theo chiều cao thật của phần đầu màn |
+| Hậu quả | Ở máy hẹp, ảnh bị cắt mép; dải cập nhật che một phần tên tab trong lúc nó hiện |
+| Đề xuất sửa | Khung ảnh theo bề rộng vùng nội dung (trần 296, giữ tỉ lệ); đặt dải dưới phần đầu theo bố cục thật (đo `onLayout`) thay vì `top` cố định |
+| Tiêu chí gỡ | `--chi bang:C2,ws:C2`: ảnh bị cắt 0px, dải chồng lên tab 0px |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-144 · Hàng duyệt in mã trạng thái thô «· pending»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (chữ) · **P3** |
+| Feature / Screen / Layer | N14 · `/community/review` («Xem xét nội dung») · dòng chú thích của mỗi mục |
+| Nền tảng, cấu hình | web, C1, C2, C3 |
+| Điều kiện | Người có vai trò duyệt, hàng có bài hay bình luận |
+| Tái hiện | chat-15 mở «Xem xét nội dung» |
+| Expected | Trạng thái viết bằng tiếng Việt, như dải «Đang chờ duyệt» ở thẻ bài |
+| Actual | «Bài đăng · phiên bản 1 · pending» ở mọi bài; «Bình luận · pending» ở bình luận |
+| Evidence | ![Hàng duyệt: «· pending», hai nút tắt không lý do](evidence/EV-N14-DUYET-ghep.jpg) (hàng `TC-N14-DUYET-HANG`, `TC-N14-DUYET-BL`; bố cục ở C2, C3 đạt: `TC-N14-DUYET-BASE`) |
+| Source | `apps/mobile/src/rudi/community/Review.tsx:47`: in thẳng `item.status`. Hàng lấy cả `pending` lẫn `review` (`services/core/internal/community/moderation.go:237`) |
+| Hậu quả | Người duyệt đọc mã máy; muốn phân biệt hai trạng thái vào hàng (`pending`, `review`) thì phải biết mã |
+| Đề xuất sửa | Nhãn tiếng Việt cho từng trạng thái (ví dụ `pending` → «Chờ duyệt», `review` → «Cần xem lại») |
+| Tiêu chí gỡ | `--chi duyet`: dòng chú thích không còn mã trạng thái thô |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-145 · Không có trạng thái rỗng: tìm không ra, và «Điều mình muốn giữ» khi chưa có ghi chép
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (thiếu trạng thái rỗng) · **P3** |
+| Feature / Screen / Layer | N14 · `/community/search`, `/community/keeps` |
+| Nền tảng, cấu hình | web, C1 |
+| Điều kiện | Từ khoá không khớp chủ đề hay người nào (chat-1 gõ «zzzq»); người chưa có ghi chép riêng nào (chat-0: ghi chép tới từ Nếp, mà Nếp không có AI) |
+| Tái hiện | Tìm «zzzq». Mở «Điều mình muốn giữ» từ sheet «Bảng tin của bạn» |
+| Expected | Một câu nói không tìm thấy và gợi ý thử từ khác; «Điều mình muốn giữ» nói ghi chép tới từ đâu |
+| Actual | Tìm: «Tìm một điều thú vị · Chủ đề hoặc người chia sẻ», rồi hai tiêu đề «Chủ đề» và «Người chia sẻ» với 0 mục mỗi bên, không câu nào. «Điều mình muốn giữ»: tiêu đề và «Những ghi chép riêng của bạn. Chỉ mình bạn đọc được.», không gì dưới đó |
+| Evidence | ![Tìm không ra: hai tiêu đề trống; «Điều mình muốn giữ» trống](evidence/EV-N14-PHU-ghep.jpg) (hàng `TC-N14-TIM-RONG`, `TC-N14-GIU`; đạt: `TC-N14-TIM` C1, C2, `TC-N14-TIM-NGUOI`) |
+| Source | `apps/mobile/src/rudi/community/Search.tsx`, `Keeps.tsx`: vẽ danh sách, không có nhánh rỗng |
+| Hậu quả | Người tìm không biết là không có kết quả hay kết quả chưa tải; «Điều mình muốn giữ» trống không nói cách có ghi chép đầu tiên |
+| Đề xuất sửa | Thêm nhánh rỗng cho cả hai màn |
+| Tiêu chí gỡ | `--chi phu:tim,phu:cua-toi`: hai màn có câu trạng thái rỗng |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-146 · Trang chủ đề không có «Quay lại» trên màn, và không theo dõi được chủ đề tại chỗ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (điều hướng) · **P3** |
+| Feature / Screen / Layer | N14 · `/community/topic?topic=…` |
+| Nền tảng, cấu hình | web, C1: chỉ có Back trình duyệt. Native: route stack có Back hệ thống ở Android, vuốt ở iOS (STATIC) |
+| Điều kiện | Mở một chủ đề từ thẻ bài hay từ trang tìm |
+| Tái hiện | Tìm «cà» → chạm chủ đề «cà phê» |
+| Expected | Như mọi màn đẩy lên khác của Cộng đồng: có «Quay lại» trên màn. Trạng thái rỗng của «Đang theo dõi» mời «Theo dõi tác giả hoặc chủ đề bạn thích», nên trang của chính chủ đề nên có nút theo dõi |
+| Actual | Tới `/community/topic?topic=cà phê`: tiêu đề «cà phê», 1 thẻ, và hàng tab «Dành cho bạn / Đang theo dõi / Thịnh hành» của bảng tin chính. Không có «Quay lại» trên màn; không có nút theo dõi chủ đề (nút đó chỉ ở trang tìm) |
+| Evidence | ![Trang chủ đề: không «Quay lại»](evidence/EV-N14-PHU-ghep.jpg) (hàng `TC-N14-CHU-DE`) |
+| Source | `apps/mobile/app/community/topic.tsx` chỉ export lại `CommunityScreen`: màn bảng tin, không có `TopBar`, với `params.topic` làm tiêu đề. Các màn đẩy lên khác của Cộng đồng đều có `TopBar` (`Search.tsx`, `Notifications.tsx`, `Keeps.tsx`, `Review.tsx`, `PostDetail.tsx`, `Composer.tsx`). Theo dõi chủ đề chỉ có ở `Search.tsx` |
+| Hậu quả | Trên web chỉ về được bằng Back trình duyệt. Màn trông như tab Cộng đồng với tiêu đề khác, dễ tưởng đã ở màn chính. Muốn theo dõi chủ đề đang xem thì phải quay lại trang tìm |
+| Đề xuất sửa | Màn chủ đề có `TopBar` («Quay lại») và nút theo dõi chủ đề |
+| Tiêu chí gỡ | `--chi phu:tim`: `TC-N14-CHU-DE` có «Quay lại» và nút theo dõi trên trang chủ đề |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-147 · Thông báo không nói ai nhắc mình; lối vào chỉ nằm trong sheet cài đặt bảng tin
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (chữ, lối vào) · **P3** |
+| Feature / Screen / Layer | N14 · `/community/notifications` («Có người nhớ đến bạn») · dòng thông báo; lối vào từ sheet «Bảng tin của bạn» |
+| Nền tảng, cấu hình | web, C1; API |
+| Điều kiện | chat-0 tag chat-1 trong một trả lời, trả lời được duyệt |
+| Tái hiện | chat-1 mở sheet «Bảng tin của bạn» → «Thông báo» |
+| Expected | Dòng thông báo nói ai nhắc và ở bài nào (tên, vài chữ của bài); có dấu hiệu ở chỗ dễ thấy khi có thông báo mới |
+| Actual | Một dòng: «Bạn được nhắc trong một câu chuyện · 1 phút». Chạm vào tới đúng bài. API chỉ trả mã, bài, loại (`mention`) và thời điểm. Không có dấu hiệu ở tab hay ở đầu bảng tin; lối vào duy nhất là mục cuối của sheet cài đặt |
+| Evidence | ![Thông báo không nói ai nhắc](evidence/EV-N14-PHU-ghep.jpg) (hàng `TC-N14-THONG-BAO`) |
+| Source | `apps/mobile/src/rudi/community/Notifications.tsx:38`: một câu cố định cho mọi dòng, không đọc `kind`. `services/core/internal/community/social.go:346`: câu đọc thông báo không lấy người tạo ra nó |
+| Hậu quả | Khi có nhiều thông báo, mọi dòng giống hệt nhau, phải mở từng bài mới biết chuyện gì. Không có dấu hiệu, nên người được nhắc có thể không bao giờ thấy |
+| Đề xuất sửa | API trả thêm người nhắc và đoạn đầu của bài; câu theo `kind`; dấu đếm ở tab Cộng đồng hoặc ở nút cài đặt bảng tin |
+| Tiêu chí gỡ | `--chi phu:thong-bao`: dòng thông báo có tên người nhắc; có lối vào ngoài sheet cài đặt |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-148 · Đọc bình luận lỗi: có câu, không có «Thử lại»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (không có lối phục hồi) · **P3** |
+| Feature / Screen / Layer | N14 · `/community/posts/[id]` · khu bình luận |
+| Nền tảng, cấu hình | web, C1; lần đọc bình luận nhận 503 chèn ở trình duyệt |
+| Điều kiện | Đọc bài được, đọc bình luận hỏng (5xx, mạng) |
+| Tái hiện | chat-1 mở chi tiết B1 trong lúc `GET …/comments` trả 503 |
+| Expected | Câu lỗi kèm «Thử lại» cho khu bình luận, như bảng tin và chi tiết bài đang có |
+| Actual | Bài hiện bình thường; khu bình luận có «Rủ Đi đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.»; không có «Thử lại» ở đâu trong chi tiết bài. Muốn đọc lại phải rời bài rồi mở lại |
+| Evidence | ![Đọc bình luận lỗi: không «Thử lại»](evidence/EV-N14-PHU-ghep.jpg) (hàng `TC-N14-LOI-BL`; đạt: `TC-N14-LOI-BANG`, `TC-N14-LOI-OFFLINE`, `TC-N14-LOI-404`) |
+| Source | `apps/mobile/src/rudi/community/Comments.tsx:71`: chỉ vẽ câu lỗi |
+| Hậu quả | Một lần lỗi mạng thoáng qua để khu bình luận trống cho tới khi người dùng tự rời và mở lại bài |
+| Đề xuất sửa | Thêm «Thử lại» gọi lại lần đọc bình luận |
+| Tiêu chí gỡ | `--chi loi:binh-luan`: có «Thử lại», và chạm vào thì đọc lại |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+---
+
+## Mở rộng issue của audit gốc (đo ở N14)
+
+Bảy issue của `docs/claude/2026-09-27/mobile-ui-audit/issues.md` gặp lại trên màn Cộng đồng. Không đánh số mới.
+
+| Issue gốc | Gặp lại ở N14 | Hàng · ảnh |
+|---|---|---|
+| UI-003 (`accessibilityState` không tới DOM) | Ba tab của bảng tin có role `tab` mà không `aria-selected`; tab đang chọn chỉ khác màu chữ và gạch dưới. axe báo `aria-required-parent` (critical) ×8, cho ba tab này và các tab của thanh tab app, vì không có `tablist` bọc. Radio người đọc của form: không `aria-checked`, chỉ có chữ «Đã chọn» trong tên. Ô chọn bạn để tag: «Chat Test 02 · Đã chọn», không `aria-checked` | `TC-N14-TAB-ARIA`, `TC-N14-RONG-AXE`, `TC-N14-BANG-AXE`, `TC-N14-DANG-RADIO`, `TC-N14-BL-TAG` · [EV-N14-RONG-ghep](evidence/EV-N14-RONG-ghep.jpg) |
+| UI-040 (sheet quá cao ở cửa sổ thấp) | Ở C8 (390×460), sheet «Bảng tin của bạn» và sheet «Bình luận» cao 441 (96% cửa sổ), đỉnh ở y −55: tay cầm và «Đóng bảng» ngoài cửa sổ. Mục trong sheet vẫn chạm được sau khi cuộn | `TC-N14-BANG-CAI-DAT` C8, `TC-N14-BL-SHEET` C8 · [EV-N14-BL-ghep](evidence/EV-N14-BL-ghep.jpg) |
+| UI-091 (nút tắt không nói lý do) | Nút gửi của form khi trống (viền đứt), và khi chọn «Một nhóm» mà chưa chọn nhóm; «Duyệt công khai» và «Từ chối» khi lý do chưa đủ ba ký tự; nút gửi bình luận khi trống; «Đồng ý chia sẻ và gọi Nếp» khi chưa gõ yêu cầu. Khi sửa bài, hai lựa chọn người đọc tắt mà không câu nào nói vì sao | `TC-N14-DANG-NUT-TAT`, `TC-N14-DANG-NHOM`, `TC-N14-DUYET-NUT-TAT`, `TC-N14-BL-NUT-TAT`, `TC-N14-NEP-NUT-TAT`, `TC-N14-SUA-KHOA` · [EV-N14-DANG-ghep](evidence/EV-N14-DANG-ghep.jpg), [EV-N14-DUYET-ghep](evidence/EV-N14-DUYET-ghep.jpg) |
+| UI-093 (tablet: trải hết bề ngang) | Form «Kể một khoảnh khắc»: ô nội dung và nút gửi rộng 720 ở C6, 912 ở C7, trong khi bảng tin giữ cột 560 | `TC-N14-DANG-TABLET` C6, C7 · [EV-N14-FORM-ghep](evidence/EV-N14-FORM-ghep.jpg) |
+| UI-094 (web: trình xem ảnh không hiện ảnh) | Trình xem ảnh của bài: hộp thoại 390×844 không tên, ảnh cao 0px, chỉ thấy chữ và «Đóng»; Esc đóng được, tiêu điểm vào trong hộp thoại | `TC-N14-BANG-XEM-ANH` · [EV-N14-THE-ghep](evidence/EV-N14-THE-ghep.jpg) |
+| UI-095 (câu lỗi ngoài khung nhìn) | Thích lỗi (503) ở thẻ thứ hai: lượt thích trả về như cũ (đúng), nhưng câu lỗi nằm ở y −742 đến −638, đầu danh sách, ngoài tầm nhìn | `TC-N14-LOI-THICH` · [EV-N14-PHU-ghep](evidence/EV-N14-PHU-ghep.jpg) |
+| UI-096 (xoá bình luận một chạm, không hỏi) | Xoá bình luận của chính mình ở chi tiết bài: nút «Xóa» 54×48, một chạm là mất, không hỏi, không hoàn tác | `TC-N14-BL-XOA` · [EV-N14-BL-ghep](evidence/EV-N14-BL-ghep.jpg) |
+
+---
+
 ## Quan sát chưa thành issue (chờ audit feature mới)
 
-Q1 và Q2 đã được đo ở checkpoint N26 và thành issue (cột cuối). Q3–Q5 còn chờ feature của chúng.
+Q1 và Q2 đã được đo ở checkpoint N26 và thành issue (cột cuối). Q5 đã được đo ở checkpoint N14. Q3 và Q4 còn chờ feature của
+chúng.
 
 Những điều thấy trong lúc retest, thuộc phần main mới đổi. Chưa đủ căn cứ để gọi là lỗi, vì cần đối chiếu ý đồ
 thiết kế của đúng feature đó. Mỗi điều được giao cho task audit tương ứng, không tính vào số issue.
@@ -234,4 +619,4 @@ thiết kế của đúng feature đó. Mỗi điều được giao cho task aud
 | Q2 | Máy chủ vẫn cho phác và gửi tờ giấy ở cặp chưa «Một đôi»; chỉ UI ẩn nút | `pairsteps/papers.go` `DraftPaper` không kiểm `CanBatDoi` (đọc mã, chưa gọi API trên cặp như vậy) | **Đã đo ở N26, thành UI-131**: phác trả 201 ở cặp chat-6/chat-7 |
 | Q3 | Màn bài `/posts/[id]` không còn lối xoá bình luận nào, cho cả người viết lẫn tác giả bài; nhấn giữ bình luận cũng không mở gì. API `DELETE /posts/{id}/comments/{id}` vẫn còn | `TC-R-UI-096` (đổi); `BaiChiTietScreen.tsx` hàng bình luận chỉ có «Thích», «Trả lời» | #21 tường v2 |
 | Q4 | Album kèo ghi «đã chia» bằng tổng phân bổ của mọi khoản chi trong nhóm có ngày rơi vào khoảng ngày của kèo, không theo kèo: «Kèo album retest» vừa tạo ghi «đã chia 13.705.678đ» của khoản chi lượt F04. Hai kèo trùng ngày sẽ cùng ghi một khoản | `repo/recap.go`: nối `expenses` theo `on_date BETWEEN outings.starts_on AND outings.ends_on`; bảng `expenses` không có cột kèo. Đọc mã Go, chưa đối chiếu oracle Python | #15 nhật ký chuyến |
-| Q5 | Tab Cộng đồng khi chưa đăng nhập có nút «Đăng nhập», trong khi bốn tab demo kia và hai route demo không có (tính vào `TC-R-UI-082-F11`) | `TC-R-UI-082-F11` | #14 Cộng đồng |
+| Q5 | Tab Cộng đồng khi chưa đăng nhập có nút «Đăng nhập», trong khi bốn tab demo kia và hai route demo không có (tính vào `TC-R-UI-082-F11`) | `TC-R-UI-082-F11` | **Đã đo ở N14, không thành issue mới**: tab Cộng đồng đúng (`TC-N14-KHONG-PHIEN`: lời mời, «Đăng nhập» tới `/login`); phần lệch nằm ở các tab demo, đã tính vào UI-082. Màn trong của Cộng đồng mở từ link thì không có lối đăng nhập: UI-137 |
