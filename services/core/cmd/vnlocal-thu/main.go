@@ -5,6 +5,8 @@
 //	vnlocal-thu agy       one run, JSON schema, Google Search, chat, one agent loop
 //	vnlocal-thu bench [-models a,b] [-n 5] [-kieu ngan,json,dai,search] [-song-song 1]
 //	                      latency per model × prompt kind, models interleaved per round
+//	vnlocal-thu anh [-thu-muc DIR] [-models a,b]
+//	                      inline images + response schema through the Go model door
 //
 // Secrets come from the environment only and are never printed.
 package main
@@ -36,8 +38,11 @@ func run(ctx context.Context, args []string, getenv func(string) string, out io.
 	if len(args) >= 1 && args[0] == "bench" {
 		return bench(ctx, args[1:], getenv, out)
 	}
+	if len(args) >= 1 && args[0] == "anh" {
+		return anh(ctx, args[1:], getenv, out)
+	}
 	if len(args) != 1 {
-		fmt.Fprintln(out, "dùng: vnlocal-thu ket-noi | agy | bench")
+		fmt.Fprintln(out, "dùng: vnlocal-thu ket-noi | agy | bench | anh")
 		return 2
 	}
 	var failed int

@@ -232,6 +232,12 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 		}
 		for _, r := range matched {
 			if r.Python == PythonFrozen {
+				// A frozen route's Python no longer does the work (ADR-0051: its
+				// model step is gone), so a rollback of everything or of a group
+				// leaves it on Go; naming it alone is a mistake and is refused.
+				if token == "all" || byID[token].ID == "" {
+					continue
+				}
 				return Force{}, fmt.Errorf("MOBILE_FORCE_PYTHON: %q is frozen in Python and cannot be forced back", r.ID)
 			}
 			if r.Native {
@@ -252,7 +258,7 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 func (m *Manifest) GoServed(force Force) []Route {
 	var served []Route
 	for _, r := range m.Routes {
-		if !r.Native && r.Owner == OwnerGo && !force.All && !force.Routes[r.ID] {
+		if !r.Native && r.Owner == OwnerGo && (r.Python == PythonFrozen || !force.All && !force.Routes[r.ID]) {
 			served = append(served, r)
 		}
 	}

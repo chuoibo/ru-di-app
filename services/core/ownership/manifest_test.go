@@ -112,16 +112,30 @@ func TestForceAndServed(t *testing.T) {
 	}
 }
 
+// A frozen route named alone is refused; a rollback of its group or of
+// everything moves the group's other routes and leaves the frozen one on Go,
+// whose Python no longer does the work (ADR-0051).
 func TestForceRefusesFrozen(t *testing.T) {
 	a := goOwned(row(0, "GET", "/a", "g1"))
 	a.State, a.Python = "FROZEN", PythonFrozen
-	m, err := Parse(encode(t, []Route{a}))
+	b := goOwned(row(1, "GET", "/b", "g1"))
+	m, err := Parse(encode(t, []Route{a, b}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, token := range []string{"GET /a", "g1", "all"} {
-		if _, err := m.ParseForce(token); err == nil || !strings.Contains(err.Error(), "frozen") {
-			t.Fatalf("token %q: err = %v", token, err)
+	if _, err := m.ParseForce("GET /a"); err == nil || !strings.Contains(err.Error(), "frozen") {
+		t.Fatalf("named frozen route: err = %v", err)
+	}
+	for _, token := range []string{"g1", "all"} {
+		force, err := m.ParseForce(token)
+		if err != nil {
+			t.Fatalf("token %q: %v", token, err)
+		}
+		if force.Routes["GET /a"] || !force.Routes["GET /b"] {
+			t.Fatalf("token %q forced %v", token, force.Routes)
+		}
+		if got := ids(m.GoServed(force)); got != "GET /a" {
+			t.Fatalf("token %q: Go serves %q, want the frozen route only", token, got)
 		}
 	}
 }

@@ -40,6 +40,22 @@ const (
 	// BuocKiemChiaBill is the split draft's verifier (chiabill.Kiem), in a
 	// fresh context: each item beside the one message it names.
 	BuocKiemChiaBill LoaiGoi = "kiem_chia_bill"
+
+	// One-shot calls outside a chat turn (aiharness/motluot): a public
+	// route's or a job's structured step. They belong to no path in
+	// KeHoach; each feature bounds its own calls.
+
+	// BuocDocAnh reads images into a closed shape (a bill, a transfer
+	// screenshot, a post's photos).
+	BuocDocAnh LoaiGoi = "doc_anh"
+	// BuocTrichXuat reads text into a closed shape (an expense in a
+	// message).
+	BuocTrichXuat LoaiGoi = "trich_xuat"
+	// BuocViet writes short grounded prose into a closed shape (a
+	// suggestion card, a reel, a diary draft, a reason per place).
+	BuocViet LoaiGoi = "viet"
+	// BuocKiemViet checks a BuocViet draft against its sources.
+	BuocKiemViet LoaiGoi = "kiem_viet"
 )
 
 // mucNghi is each step's thinking level, set explicitly so a provider
@@ -60,6 +76,10 @@ var mucNghi = map[LoaiGoi]genai.ThinkingLevel{
 	BuocAgentTraLoi:  genai.ThinkingLevelMinimal,
 	BuocChiaBill:     genai.ThinkingLevelMinimal,
 	BuocKiemChiaBill: genai.ThinkingLevelMinimal,
+	BuocDocAnh:       genai.ThinkingLevelMinimal,
+	BuocTrichXuat:    genai.ThinkingLevelMinimal,
+	BuocViet:         genai.ThinkingLevelMinimal,
+	BuocKiemViet:     genai.ThinkingLevelMinimal,
 }
 
 // MucNghi is step b's thinking level (MINIMAL for a step outside the set,
