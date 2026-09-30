@@ -18,6 +18,7 @@
  * generated (`pngThuBytes`), never a real photograph.
  */
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { pngThuBytes } from "../../../../apps/mobile/tools/png-thu.mjs";
@@ -32,6 +33,7 @@ import { goHet, loiMayChu } from "../thu-vien/mang.mjs";
 import { khoiDong, trangMoi } from "../thu-vien/moi-truong.mjs";
 import { goiApi, layPhien, personaTheoTen } from "../thu-vien/phien.mjs";
 import { soGhi } from "../thu-vien/ghi.mjs";
+import { moNhom } from "../seed-bien-the.mjs";
 
 const chi = (() => {
   const i = process.argv.indexOf("--chi");
@@ -60,8 +62,10 @@ const ghiApi = async (method, path, body, phien) => {
 };
 const an = (s) => String(s ?? "").replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, "[id]");
 
-const G20 = "9c021c51-63cf-4861-8ccf-2a763d2043de";
-const G8 = "c5f2020e-6d4d-418e-9b65-e2f848281533";
+// Looked up, not written in: the ids differ from one stack to the next (the retest of
+// main runs this on a second stack).
+const G20 = JSON.parse(readFileSync(mt.chatSessions, "utf8")).groupId;
+const { nhomId: G8 } = await moNhom(mt);
 const KEO_ALBUM = "Kèo album F08";
 const ngayVN = (lech = 0) => new Date(Date.now() + 7 * 3600e3 + lech * 864e5).toISOString().slice(0, 10);
 const CAU_DAI = "Chiều cuối tuần cả nhóm ngồi bờ hồ đợi hoàng hôn, trời trong tới mức thấy cả dãy núi phía xa; ai cũng bảo lần sau phải mang thêm áo khoác vì gió lên nhanh, và phải đặt bàn sớm hơn vì quán đông từ năm giờ.";

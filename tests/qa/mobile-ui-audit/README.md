@@ -76,9 +76,14 @@ node kich-ban/e-phan-xu.mjs          # phán quyết bằng mắt của E, gắn
 node kich-ban/retest-main.mjs [--chi r-f00,r-f01,r-f02,r-f03,r-f06,r-f07,r-f08,r-f09,r-f11,r-e,r-moi]
                                     # đo lại từng issue: một hàng TC-R-UI-xxx (hoặc một hàng mỗi phần, -A/-B); issue mới là TC-M-…
                                     # chạy riêng một phần của một mục: --chi r-f08:094 (dữ liệu của mục vẫn được dựng, có chốt)
+node kich-ban/retest-main.mjs --chi r-p3-f00,r-p3-f01,r-p3-f02,r-p3-f03,r-p3-f04,r-p3-f05,r-p3-f06,r-p3-f07,r-p3-f09,r-p3-e
+                                    # P3 (checkpoint retest 2); P3 của F08 nằm trong r-f08: --chi r-f08:098,…,r-f08:106
+                                    # UI-092 đo thêm ngày xa: --chi r-p3-f07:092b (dời bản phác của chat-8 rồi trả lại)
 AUDIT_BASE=http://127.0.0.1:8091 node kich-ban/retest-main.mjs --chi r-f10:113   # bảng dev: cần server dev của main có fixture
+AUDIT_BASE=http://127.0.0.1:8091 node kich-ban/f10-bang-dev.mjs --chi nghieng,long-nut,renderer   # P3 của F10 trên server dev
 node kich-ban/retest-phan-xu.mjs     # phán quyết bằng mắt; hàng kịch bản gốc thành hàng retest; rút hàng lệch; hàng NOT_TESTED giữ chỗ
 node kich-ban/retest-ghep.mjs        # ảnh ghép retest theo feature, gắn vào mọi hàng có khung trong ảnh
+# Thứ tự chốt một checkpoint retest: retest-phan-xu → retest-ghep → chot-anh → tong-hop → retest-bang → kiem-tai-lieu
 node kich-ban/tham-do-lich-su-tab.mjs   # chỉ đọc: history.length qua một chuỗi chuyển tab, rồi Back (UI-123); CHUOI=…, PERSONA=…
 node retest-bang.mjs <docs gốc> <docs main>   # sinh retest.md từ issues.md gốc và sổ retest
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
@@ -180,6 +185,22 @@ Bài học của phần retest trên main (29/09):
   `trangMoi` mở trang gắn phiên (`/favicon.ico`) trước, nên Back về đó cũng là rời app.
 - Kịch bản gốc chạy lại trên bản UI mới có thể lệch từng bước: đọc từng hàng trước khi tin, và rút hàng lệch kèm lý do
   (bốn hàng F06).
+
+Bài học của checkpoint retest 2 (P3, 29–30/09):
+- expo-image bọc `<img>` trong một lớp cao 0px. Khung ảnh là khối đầu tiên phía trên `<img>` có chiều cao, không phải
+  phần tử cha trực tiếp (UI-102, UI-105 đo ra 0 rồi phải rút).
+- Màn stack cũ vẫn mount bên dưới màn mới, và có nút cùng tên (chat dưới form tạo kèo đều có «Tạo kèo»). Khi hai màn
+  cùng có tên nút, bộ tìm chỉ nhận nút mà tâm của nó trúng chính nó (`elementFromPoint`), như `nutTrung` của `r-p3-e`.
+  Form là một route push: chờ URL và ô nhập hiện rồi mới gõ.
+- Một PASS có thể chỉ đúng vào ngày chạy: dải ngày của sheet sửa tờ bắt đầu từ hôm nay (UI-092). Đổi ngày của dữ liệu
+  (và trả lại) để đo một ngày xa, rồi mới kết luận.
+- Muốn thử chữ dài mà stack không có, chèn nó vào phản hồi trình duyệt nhận (`page.route` + `route.fetch`), đừng ghi DB;
+  ghi rõ trong hàng rằng dữ liệu là chèn (UI-099).
+- Hàng giữ chỗ NOT_TESTED không được chặn hàng đo thật (`daDo` trong `retest-phan-xu.mjs`). Issue đo theo phần
+  (`TC-R-UI-027-M5`, …) thì rút hàng giữ chỗ một hàng của nó, nếu không ma trận giữ nó mãi.
+- Hàng tự động có thể xanh vì đếm nhầm: 54 ký tự của UI-009 là nhãn năm tab. Hàng nào dựa vào số chữ hay số phần tử thì
+  mở ảnh ra xem trước khi tin.
+- Id viết cứng của stack gốc (`f08-ky-niem.mjs`) phải thay bằng tra cứu trước khi chạy trên stack khác.
 
 ## Những điều harness không đo được
 

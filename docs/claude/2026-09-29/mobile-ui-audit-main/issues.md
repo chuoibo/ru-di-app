@@ -5,6 +5,7 @@
   audit gốc (xem `report.md` §A).
 - File này chỉ ghi issue **mới**, đánh số tiếp audit gốc (UI-001…UI-122 ở
   `docs/claude/2026-09-27/mobile-ui-audit/issues.md`). Kết quả đo lại các issue cũ ở `retest.md`.
+- Checkpoint retest 2 đo lại 79 issue P3 còn lại và không thêm issue mới. Issue mới duy nhất vẫn là UI-123.
 - MODE = AUDIT_ONLY: không issue nào được sửa. «Trạng thái sửa» của mọi issue là *chưa sửa*; «Retest» là
   *không áp dụng*.
 - Phân loại, mức và phương pháp như audit gốc: BUG · UX ISSUE · VISUAL POLISH; P0–P3; RUNTIME-WEB, STATIC,

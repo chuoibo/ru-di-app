@@ -59,6 +59,46 @@
   "sha8": "1e4a66ea",
   "moTa": "Retest bảng dev, demo và E trên main: UI-113 (C2), UI-116 (C2), UI-117 (đường B), UI-082 (Tin nhắn demo), UI-119"
  },
+ "EV-R-P3-F00-F02-ghep": {
+  "bytes": 234168,
+  "sha8": "6daa4c3f",
+  "moTa": "Retest P3 trên main, F00 và F02: resume chậm trống (UI-009), /create mở lạnh không khay (UI-010), chip Nếp 36dp (UI-012), mép Nếp che chữ ở C2 (UI-014), khay 96% ở C8 (UI-007), Hội An khuyên bỏ lọc (UI-028), 503 và mất mạng cùng một câu, danh sách bị thay (UI-029, UI-030)"
+ },
+ "EV-R-P3-F03-ghep": {
+  "bytes": 164962,
+  "sha8": "fc699aa1",
+  "moTa": "Retest P3 trên main, F03 kèo: Nếp vắng ở Lịch trình (UI-037), sheet «Chặng mới» 96% ở C8 (UI-040), đầu màn không mờ trên sheet (UI-041), vé kèo mất số chặng ở C2 (UI-044), cột tên chặng 53px ở C2 (UI-045), /outings/chon kẹt skeleton (UI-046)"
+ },
+ "EV-R-P3-F04-ghep": {
+  "bytes": 249475,
+  "sha8": "9ca44363",
+  "moTa": "Retest P3 trên main, F04 tiền: Nếp M2 ra ngoài màn ở C2 (UI-055), đọc ảnh hỏng không có «Nhập tay» (UI-056), chạm mép Nếp không làm gì (UI-057), «Tạo đợt thu» bị từ chối (UI-058), dòng người trả mất «(trả)» (UI-059), «Chi theo nhóm» không hàng nào (UI-060), câu giải thích 7 dòng ở C2 (UI-061)"
+ },
+ "EV-R-P3-F05-ghep": {
+  "bytes": 253001,
+  "sha8": "2a5f2c4e",
+  "moTa": "Retest P3 trên main, F05 chat: avatar thấp và thẻ bình chọn 39% (UI-064, UI-065), khay tờ hẹn (UI-066), lý do báo cáo chỉ đổi nền (UI-067), 503 câu chung (UI-068), thẻ «Đã hiểu» mang dấu AI (UI-069), dải ghim sáng trên nền mờ (UI-070), chat đôi sau khi chặn (UI-079), lời mời nhóm không tên người mời (UI-080)"
+ },
+ "EV-R-P3-F06-ghep": {
+  "bytes": 179310,
+  "sha8": "9de11e44",
+  "moTa": "Retest P3 trên main, F06 nhóm và người: mời thành viên ra câu «Lần bấm trước» (UI-072, số điện thoại đã che), hai «Người lập nhóm» (UI-075), 19 nút «Đặt làm quản trị» (UI-076), «Đồng ý» lỗi thành màn lỗi (UI-077), tải lại hồ sơ mất «Đã chặn» (UI-078)"
+ },
+ "EV-R-P3-F07-ghep": {
+  "bytes": 169771,
+  "sha8": "fafc210f",
+  "moTa": "Retest P3 trên main, F07 sổ hai người: sau «Để sau» không câu chờ (UI-086), sheet còn mở sau Back từ chat (UI-087), bìa sổ «Chat Tes…» hai lần (UI-090), «Lưu điều cần tránh» tắt không lý do (UI-091), ngày xa khuất khỏi dải (UI-092), tablet C6 trải hết bề ngang (UI-093)"
+ },
+ "EV-R-P3-F08-ghep": {
+  "bytes": 212569,
+  "sha8": "5c9965a9",
+  "moTa": "Retest P3 trên main, F08 kỷ niệm: chip tên dài tràn sheet Check-in (UI-099, tên dài chèn vào bản danh mục trình duyệt nhận), bài «Chỉ mình tôi» hai khối lỗi (UI-100), story và câu hỏi xoá (UI-101), ảnh 9:16 xem trước và trên tường (UI-102), kệ album chỉ năm (UI-103), Thành tích ở 320px bẻ chữ (UI-106)"
+ },
+ "EV-R-P3-F09-F10-E-ghep": {
+  "bytes": 140100,
+  "sha8": "e61cc975",
+  "moTa": "Retest P3 trên main, F09, bảng dev và luồng E: «Đã lưu» chỉ con số (UI-109), «XOÁ» nút tắt không lý do (UI-110), nút lồng nút trên bảng dev (UI-114), kèo tạo từ chat không để lại dấu trong chat (UI-118), thanh đầu vẫn «2 thành viên» sau 15 s (UI-122)"
+ },
  "EV-R-UI-005-C1": {
   "bytes": 89267,
   "sha8": "681c9e5f",
