@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Annotated, Protocol
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, Header, Request
@@ -36,36 +36,6 @@ class Actor:
     id: UUID
     roles: frozenset[str]
     context_ids: frozenset[UUID]
-
-
-class Suggester(Protocol):
-    """A model backend that returns an untrusted, raw F32 suggestion card.
-
-    Takes the server's own history digest, never a conversation: a proactive
-    card is built from what the group did, not from what anybody just said.
-    Returning `None` is an allowed answer and means "no suggestion right now".
-    """
-
-    def __call__(self, history: dict, places: list[dict]) -> dict | None: ...
-
-
-class ContextualSuggester(Protocol):
-    """A model backend that returns an untrusted, raw F33 card.
-
-    Separate from `Suggester` on purpose. This one is handed a digest of what
-    the group just *said*, which is the only place in the product where a
-    member's own sentences are put in front of a model; keeping the two seams
-    apart means a test that stubs one cannot silently stand in for the other,
-    and the riskier prompt cannot inherit the safer one's envelope by accident.
-    """
-
-    def __call__(self, digest: dict, places: list[dict]) -> dict | None: ...
-
-
-class Reeler(Protocol):
-    """A model backend that returns an untrusted, raw F37 reel."""
-
-    def __call__(self, trip: dict, memories: list[dict]) -> dict | None: ...
 
 
 def _csv(value: str | None) -> list[str]:
@@ -197,19 +167,6 @@ def get_photo_storage() -> PhotoStorage:
     return PhotoStorage()
 
 
-def get_suggester() -> Suggester:
-    """Seam for tests, and the F32 backend for everyone else.
-
-    Returned as a plain function rather than a memoised object: a suggestion is
-    a function of a group's history, and caching one keyed on anything coarser
-    would serve one group's evening to another.
-    """
-
-    from app.api.suggestion_gemini import gemini_suggestion
-
-    return gemini_suggestion
-
-
 def get_face_detector() -> FaceDetector:
     """Seam for tests, and the shipped local detector for everyone else.
 
@@ -228,27 +185,6 @@ def get_face_detector() -> FaceDetector:
     from app.media.face_detection import HaarFaceDetector
 
     return HaarFaceDetector()
-
-
-def get_contextual_suggester() -> ContextualSuggester:
-    """Seam for tests, and the F33 backend for everyone else.
-
-    Not memoised, for the reason above and one more: a contextual card is a
-    function of one group's last few messages, and any cache coarser than that
-    would hand one group's conversation to another.
-    """
-
-    from app.api.suggestion_gemini import gemini_contextual_suggestion
-
-    return gemini_contextual_suggestion
-
-
-def get_reeler() -> Reeler:
-    """Seam for tests, and the uncached F37 backend for everyone else."""
-
-    from app.api.reel_gemini import gemini_reel
-
-    return gemini_reel
 
 
 def get_sms_sender(request: Request):

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"mobile/services/core/internal/brain"
+	"mobile/services/core/internal/aiharness/goiy"
 	"mobile/services/core/internal/domain/conversation"
 	"mobile/services/core/internal/domain/suggestion"
 	"mobile/services/core/internal/httpapi/endpoint"
@@ -100,22 +100,12 @@ func readGroupSuggestion() Route {
 		for _, place := range places {
 			placeList = append(placeList, place)
 		}
-		payload := pyjson.NewOrderedMap()
-		payload.Set("history", wireHistory(history))
-		payload.Set("places", placeList)
-		raw, err := brain.Configured().PostJSON("suggestion", payload)
+		prompt, err := goiy.PromptGoiY(wireHistory(history), placeList)
 		if err != nil {
 			return silent("unavailable"), nil
 		}
-		obj, err := brain.AsObject(raw)
-		if err != nil {
-			return silent("unavailable"), nil
-		}
-		card, _ := obj.Get("card")
-		// A decoded JSON null is `Null{}`, a struct, so `card == nil` is false
-		// and the model saying "nothing" would reach grounding and answer
-		// "ungrounded" where Python stops at None and answers "unavailable".
-		if pyjson.IsNull(card) {
+		card, ok := goiThe(ctx, call, prompt, len(placeList))
+		if !ok {
 			return silent("unavailable"), nil
 		}
 		grounded, err := suggestion.Ground(treejson.To(card), treejson.MapsTo(places))
@@ -201,22 +191,12 @@ func readContextualSuggestion() Route {
 		digestMap.Set("message_count", pyjson.NewInt(int64(digest.MessageCount)))
 		digestMap.Set("speaker_count", pyjson.NewInt(int64(digest.SpeakerCount)))
 		digestMap.Set("member_count", pyjson.NewInt(int64(digest.MemberCount)))
-		payload := pyjson.NewOrderedMap()
-		payload.Set("digest", digestMap)
-		payload.Set("places", placeList)
-		raw, err := brain.Configured().PostJSON("contextual-suggestion", payload)
+		prompt, err := goiy.PromptTheoBoiCanh(digestMap, placeList)
 		if err != nil {
 			return silent("unavailable"), nil
 		}
-		obj, err := brain.AsObject(raw)
-		if err != nil {
-			return silent("unavailable"), nil
-		}
-		card, _ := obj.Get("card")
-		// A decoded JSON null is `Null{}`, a struct, so `card == nil` is false
-		// and the model saying "nothing" would reach grounding and answer
-		// "ungrounded" where Python stops at None and answers "unavailable".
-		if pyjson.IsNull(card) {
+		card, ok := goiThe(ctx, call, prompt, len(placeList))
+		if !ok {
 			return silent("unavailable"), nil
 		}
 		grounded, err := suggestion.Ground(treejson.To(card), treejson.MapsTo(places))
@@ -275,4 +255,22 @@ func wireSuggestion(contextID string, grounded *pyjson.OrderedMap, basis *pyjson
 	out.Set("basis", basis)
 	out.Set("source", pyjson.String("ai"))
 	return out
+}
+
+// proseCallTimeout bounds one suggestion or reel model call.
+const proseCallTimeout = 30 * time.Second
+
+// goiThe asks the model for one card (aiharness/goiy) and returns its raw
+// answer, or false for every way there is none: no model on this process,
+// nothing to choose from, a failed call, an answer that is not an object.
+// "No card" is an honest answer the route serves as unavailable, never a
+// hand-written card.
+func goiThe(ctx context.Context, call *endpoint.Call, prompt string, choices int) (*pyjson.OrderedMap, bool) {
+	if !call.AI.CoMay() || choices == 0 {
+		return nil, false
+	}
+	ctx, cancel := context.WithTimeout(ctx, proseCallTimeout)
+	defer cancel()
+	card, err := goiy.Goi(ctx, call.AI.Luot(3), prompt)
+	return card, err == nil
 }

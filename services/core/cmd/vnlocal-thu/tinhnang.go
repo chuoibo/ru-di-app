@@ -11,15 +11,22 @@ import (
 	"strings"
 	"time"
 
+	"mobile/services/core/internal/achievementv1"
 	"mobile/services/core/internal/aiharness/docanh"
 	"mobile/services/core/internal/aiharness/docbill"
 	"mobile/services/core/internal/aiharness/dockhoan"
+	"mobile/services/core/internal/aiharness/goiy"
 	"mobile/services/core/internal/aiharness/llm"
 	"mobile/services/core/internal/aiharness/motluot"
+	"mobile/services/core/internal/domain/achievement"
 	"mobile/services/core/internal/domain/chatexpense"
 	"mobile/services/core/internal/domain/receipt"
+	"mobile/services/core/internal/domain/reel"
 	"mobile/services/core/internal/domain/screenshot"
+	"mobile/services/core/internal/domain/suggestion"
 	"mobile/services/core/internal/media/sanitize"
+	"mobile/services/core/internal/pyjson"
+	"mobile/services/core/internal/treejson"
 )
 
 // tinhNang sends each ported one-shot AI step (ADR-0051) one real request
@@ -157,9 +164,132 @@ func tinhNang(ctx context.Context, args []string, getenv func(string) string, ou
 		}
 		return "không phải khoản chi", nil
 	})
+	places := quanGia()
+	check("goi-y", func(l *motluot.Luot) (string, error) {
+		history := pyjson.NewOrderedMap()
+		history.Set("outing_count", pyjson.NewInt(3))
+		history.Set("split_total_vnd", pyjson.NewInt(4500000))
+		history.Set("avg_per_person_vnd", pyjson.NewInt(375000))
+		history.Set("top_categories", pyjson.List{pyjson.String("cafe"), pyjson.String("quan-an-local")})
+		history.Set("recent_titles", pyjson.List{pyjson.String("Đà Lạt cuối tuần")})
+		prompt, err := goiy.PromptGoiY(history, places)
+		if err != nil {
+			return "", err
+		}
+		return theGoiY(ctx, l, prompt, places)
+	})
+	check("goi-y-theo-boi-canh", func(l *motluot.Luot) (string, error) {
+		digest := pyjson.NewOrderedMap()
+		digest.Set("recent_lines", pyjson.List{pyjson.String("Tối nay đi đâu ăn gì đó nhỉ"), pyjson.String("Muốn ăn đồ nướng"), pyjson.String("Đừng xa quá nha")})
+		digest.Set("message_count", pyjson.NewInt(3))
+		digest.Set("speaker_count", pyjson.NewInt(2))
+		digest.Set("member_count", pyjson.NewInt(4))
+		prompt, err := goiy.PromptTheoBoiCanh(digest, places)
+		if err != nil {
+			return "", err
+		}
+		return theGoiY(ctx, l, prompt, places)
+	})
+	check("reel", func(l *motluot.Luot) (string, error) {
+		trip := pyjson.NewOrderedMap()
+		trip.Set("title", pyjson.String("Đà Lạt 2 ngày"))
+		trip.Set("starts_on", pyjson.String("2026-10-03"))
+		trip.Set("ends_on", pyjson.String("2026-10-04"))
+		trip.Set("headcount", pyjson.NewInt(4))
+		var offered []reel.Memory
+		memories := pyjson.List{}
+		for i, c := range []string{"Hoàng hôn bên hồ", "Cả nhóm ăn lẩu gà lá é", "Sáng sớm sương mù trên đồi thông", "Check-in quán cà phê"} {
+			id := fmt.Sprintf("m%d", i+1)
+			caption := c
+			created := fmt.Sprintf("2026-10-0%dT1%d:00:00+00:00", 3+i/2, i)
+			offered = append(offered, reel.Memory{ID: id, Caption: &caption, CreatedAt: created, ReactionCount: int64(i)})
+			m := pyjson.NewOrderedMap()
+			m.Set("id", pyjson.String(id))
+			m.Set("kind", pyjson.String("photo"))
+			m.Set("caption", pyjson.String(c))
+			m.Set("place_name", pyjson.Null{})
+			m.Set("created_at", pyjson.String(created))
+			m.Set("reaction_count", pyjson.NewInt(int64(i)))
+			m.Set("comment_count", pyjson.NewInt(0))
+			memories = append(memories, m)
+		}
+		prompt, err := goiy.PromptReel(trip, memories)
+		if err != nil {
+			return "", err
+		}
+		card, err := goiy.Goi(ctx, l, prompt)
+		if err != nil {
+			return "", err
+		}
+		grounded, err := reel.Ground(treejson.To(card), offered)
+		if err != nil {
+			return "", fmt.Errorf("không neo được: %w", err)
+		}
+		title, _ := grounded.Get("title")
+		picks, _ := grounded.Get("picks")
+		n, _ := treejson.From(picks).(pyjson.List)
+		return fmt.Sprintf("«%v», %d ảnh chọn", treejson.From(title), len(n)), nil
+	})
+	check("thanh-tuu", func(l *motluot.Luot) (string, error) {
+		f := achievement.Facts{Checkins: 5, DistinctDestinations: 2, PhotoDays: 4, StoryDays: 1, SharedOutings: 3}
+		choices := achievement.SuggestedChoices(f, map[string]bool{}, "dau_chan", "dau_chan")
+		ids, source, line := achievementv1.GoiY(ctx, may, f, choices, "dau_chan", []string{"dau_chan"})
+		if source != "ai" {
+			return "", fmt.Errorf("rơi về câu dự phòng: %v «%s»", ids, line)
+		}
+		return fmt.Sprintf("%s · «%s»", strings.Join(ids, ","), line), nil
+	})
 	if failed > 0 {
 		fmt.Fprintf(out, "%d mục đỏ\n", failed)
 		return 1
 	}
 	return 0
+}
+
+// quanGia is an invented catalogue: three places no real person wrote.
+func quanGia() pyjson.List {
+	out := pyjson.List{}
+	for _, p := range []struct {
+		id, name, category, hours string
+		lo, hi                    int64
+	}{
+		{"p-nuong-thu", "Tiệm Nướng Thử", "quan-an-local", "16:00 – 23:00", 150000, 250000},
+		{"p-cafe-thu", "Cà Phê Đồi Thử", "cafe", "07:00 – 22:00", 40000, 80000},
+		{"p-lau-thu", "Lẩu Gà Thử", "quan-an-local", "10:00 – 22:00", 120000, 200000},
+	} {
+		m := pyjson.NewOrderedMap()
+		m.Set("id", pyjson.String(p.id))
+		m.Set("name", pyjson.String(p.name))
+		m.Set("category", pyjson.String(p.category))
+		m.Set("open_hours", pyjson.String(p.hours))
+		m.Set("price_min_vnd", pyjson.NewInt(p.lo))
+		m.Set("price_max_vnd", pyjson.NewInt(p.hi))
+		out = append(out, m)
+	}
+	return out
+}
+
+// theGoiY makes the card call and grounds it on the catalogue, as the route does.
+func theGoiY(ctx context.Context, l *motluot.Luot, prompt string, places pyjson.List) (string, error) {
+	card, err := goiy.Goi(ctx, l, prompt)
+	if err != nil {
+		return "", err
+	}
+	maps := make([]*pyjson.OrderedMap, 0, len(places))
+	for _, p := range places {
+		maps = append(maps, p.(*pyjson.OrderedMap))
+	}
+	grounded, err := suggestion.Ground(treejson.To(card), treejson.MapsTo(maps))
+	if err != nil {
+		return "", fmt.Errorf("không neo được: %w", err)
+	}
+	payload, _ := treejson.MapFrom(grounded).Get("payload")
+	card2, _ := payload.(*pyjson.OrderedMap)
+	if card2 == nil {
+		return "", fmt.Errorf("thẻ đã neo không có payload")
+	}
+	title, _ := card2.Get("title")
+	stops, _ := card2.Get("stops")
+	n, _ := stops.(pyjson.List)
+	return fmt.Sprintf("«%v», %d điểm dừng", title, len(n)), nil
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"mobile/services/core/internal/brain"
+	"mobile/services/core/internal/aiharness/goiy"
 	"mobile/services/core/internal/domain/album"
 	"mobile/services/core/internal/domain/reel"
 	"mobile/services/core/internal/httpapi/endpoint"
@@ -114,24 +114,15 @@ func readTripReel() Route {
 		trip.Set("starts_on", pyjson.String(pyjson.Date(found.row.Outing.StartsOn)))
 		trip.Set("ends_on", pyjson.String(pyjson.Date(found.row.Outing.EndsOn)))
 		trip.Set("headcount", pyjson.NewInt(found.row.Outing.Headcount))
-		payload := pyjson.NewOrderedMap()
-		payload.Set("trip", trip)
-		payload.Set("memories", memories)
-		raw, err := brain.Configured().PostJSON("reel", payload)
+		prompt, err := goiy.PromptReel(trip, memories)
 		if err != nil {
 			return silent("unavailable"), nil
 		}
-		obj, err := brain.AsObject(raw)
-		if err != nil {
+		card, ok := goiThe(ctx, call, prompt, len(memories))
+		if !ok {
 			return silent("unavailable"), nil
 		}
-		cardValue, _ := obj.Get("card")
-		// `Null{}` is not a Go nil; without this the fallback never fires and a
-		// model that answered null would be ground as if it were a card.
-		if pyjson.IsNull(cardValue) {
-			cardValue = obj
-		}
-		grounded, err := reel.Ground(treejson.To(cardValue), offered)
+		grounded, err := reel.Ground(treejson.To(card), offered)
 		if err != nil {
 			return silent("ungrounded"), nil
 		}

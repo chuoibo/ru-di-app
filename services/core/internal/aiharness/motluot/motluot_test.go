@@ -124,3 +124,21 @@ func TestAnhDiQuaAgyInline(t *testing.T) {
 		t.Fatal("NhietDo modified the request it was given")
 	}
 }
+
+func TestBoRaoChiBoMotRaoJSON(t *testing.T) {
+	for in, want := range map[string]string{
+		"```json\n{\"a\":1}\n```":   "{\"a\":1}\n",
+		"  ```\n{\"a\":1}```  ":     "{\"a\":1}",
+		"{\"a\":1}":                 "{\"a\":1}",
+		"```python\n{\"a\":1}\n```": "```python\n{\"a\":1}\n```",
+		"```{\"a\":1}```":           "```{\"a\":1}```",
+		"trước ```json\n{}\n```":    "trước ```json\n{}\n```",
+	} {
+		if got := BoRao(in); got != want {
+			t.Errorf("BoRao(%q) = %q, want %q", in, got, want)
+		}
+	}
+	if _, err := DocDoiTuong("```json\n{\"a\":1}\n```"); err != nil {
+		t.Fatal(err)
+	}
+}

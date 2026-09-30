@@ -7,8 +7,9 @@ import (
 	"mobile/services/core/internal/oracletest"
 )
 
-// testdata/python_conversation*.json is rendered by
-// scripts/render_domain_wai_goldens.py from the real app.domain.conversation.
+// testdata/python_conversation*.json was rendered by
+// scripts/render_domain_wai_goldens.py from the real app.domain.conversation
+// before ADR-0051 deleted it; they are frozen vectors now.
 
 func TestConversationMatchesPython(t *testing.T) {
 	files := oracletest.Load(t, "testdata/python_*.json")

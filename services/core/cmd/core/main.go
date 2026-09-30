@@ -403,7 +403,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	// Cộng đồng (ADR-0040) owns moderation of public posts and comments; the
 	// profile social routes hand those writes to it only when it is served.
 	communityOn := pool != nil && cfg.AuthMode == "prod" && getenv("MOBILE_COMMUNITY_ENABLED") == "1"
-	achievements := achievementv1.New(pool, cfg.AuthMode)
+	achievements := achievementv1.New(pool, cfg.AuthMode).WithAI(may)
 	profileSocial := socialv2.New(pool, cfg.AuthMode, communityOn)
 	media := profilemedia.New(pool, cfg.AuthMode, profilemedia.Proxy{
 		URL: getenv("NEP_PROXY_URL"), Token: getenv("NEP_PROXY_TOKEN"), PersonKey: getenv(identity.KeyEnvVar),

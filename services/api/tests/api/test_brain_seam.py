@@ -107,47 +107,6 @@ def test_ready_answers_with_the_token(brain_client):
     assert response.json() == {"status": "ready"}
 
 
-def test_achievement_brain_returns_only_offered_candidate_ids(
-    brain_client, monkeypatch
-):
-    from app.api.routes import brain
-
-    seen = []
-
-    def fake_model(facts, candidate_ids, selected_route, choice_history):
-        seen.append((facts, candidate_ids, selected_route, choice_history))
-        return {
-            "candidate_ids": ["invented", "open_map", "open_map", "many_turns"],
-            "line": "Một con đường mới đang mở trước những dấu chân của bạn.",
-        }
-
-    monkeypatch.setattr(brain, "gemini_achievement_routes", fake_model, raising=False)
-    client, _ = brain_client
-    response = client.post(
-        "/internal/brain/v1/achievement-routes",
-        headers={INTERNAL_TOKEN_HEADER: TEST_TOKEN},
-        json={
-            "facts": {"checkins": 2, "distinct_destinations": 2},
-            "candidate_ids": ["open_map", "many_turns"],
-            "selected_route": "dau_chan",
-            "choice_history": ["ky_niem", "dau_chan"],
-        },
-    )
-    assert response.status_code == 200
-    assert response.json() == {
-        "candidate_ids": ["open_map", "many_turns"],
-        "line": "Một con đường mới đang mở trước những dấu chân của bạn.",
-    }
-    assert seen == [
-        (
-            {"checkins": 2, "distinct_destinations": 2},
-            ["open_map", "many_turns"],
-            "dau_chan",
-            ["ky_niem", "dau_chan"],
-        )
-    ]
-
-
 def test_diary_brain_requires_internal_authority(brain_client, monkeypatch):
     client, _app = brain_client
     path = "/internal/brain/v1/diary"

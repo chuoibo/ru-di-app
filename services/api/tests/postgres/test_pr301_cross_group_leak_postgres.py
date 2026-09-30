@@ -143,41 +143,6 @@ class TestARefusalCarriesNoRecords:
         assert _records(allowed.json()) > 0
         del mine
 
-    def test_the_contextual_card_of_another_group_is_refused_and_empty(
-        self, postgres_session: Session, monkeypatch: pytest.MonkeyPatch
-    ):
-        theirs, their_owner = _group(postgres_session, "Nhóm khác")
-        mine, owner = _group(postgres_session, "Nhóm mình")
-        _say(postgres_session, theirs, their_owner, "tối nay đi đâu")
-        _say(postgres_session, theirs, their_owner, "chán quá")
-
-        seen: list[dict] = []
-
-        def _suggester(digest, places):
-            del places
-            seen.append(digest)
-            return None
-
-        app = _http(postgres_session, monkeypatch, suggester=_suggester)
-        with _Client(app) as client:
-            refused = client.get(
-                f"/contexts/{theirs.id}/contextual-suggestion",
-                headers=_claiming(owner.id, theirs.id),
-            )
-            allowed = client.get(
-                f"/contexts/{theirs.id}/contextual-suggestion",
-                headers=_headers(their_owner.id),
-            )
-
-        _assert_is_a_bare_refusal(refused, status=403)
-        assert allowed.status_code == 200
-        # The refusal must also cost nothing: a gate that runs *after* the
-        # model call has already spent the shared key on a group the caller
-        # may not read, and has already put their sentences in a prompt.
-        assert len(seen) == 1, "the model was reached on the refused request too"
-        assert seen[0]["message_count"] == 2
-        del mine
-
     def test_the_shelf_of_another_group_is_refused_and_empty(
         self, postgres_session: Session, monkeypatch: pytest.MonkeyPatch
     ):
@@ -342,7 +307,6 @@ class TestTheHeaderIsNotTheGate:
         "path",
         [
             "preference-profile",
-            "contextual-suggestion",
             "albums",
         ],
     )
@@ -366,9 +330,7 @@ class TestTheHeaderIsNotTheGate:
         _say(postgres_session, context, owner, "bí mật của nhóm này")
         stranger = _person(postgres_session, "Người lạ")
 
-        app = _http(
-            postgres_session, monkeypatch, suggester=lambda digest, places: None
-        )
+        app = _http(postgres_session, monkeypatch)
         with _Client(app) as client:
             refused = client.get(
                 f"/contexts/{context.id}/{path}",

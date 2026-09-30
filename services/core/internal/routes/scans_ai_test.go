@@ -191,3 +191,22 @@ func TestReadChatExpense(t *testing.T) {
 		}
 	}
 }
+
+func TestGoiTheChiKhiCoMayVaCoLuaChon(t *testing.T) {
+	call := &endpoint.Call{}
+	if _, ok := goiThe(context.Background(), call, "p", 3); ok {
+		t.Fatal("keyless card")
+	}
+	call.AI = motluot.Moi(llm.NewStub(), 1)
+	if _, ok := goiThe(context.Background(), call, "p", 0); ok {
+		t.Fatal("a card with nothing to choose from")
+	}
+	call.AI = motluot.Moi(llm.NewStub(llm.Buoc{Text: `[1,2]`}), 1)
+	if _, ok := goiThe(context.Background(), call, "p", 3); ok {
+		t.Fatal("a list taken for a card")
+	}
+	call.AI = motluot.Moi(llm.NewStub(llm.Buoc{Text: `{"kind":"outing_suggestion"}`}), 1)
+	if card, ok := goiThe(context.Background(), call, "p", 3); !ok || card == nil {
+		t.Fatal("a card refused")
+	}
+}

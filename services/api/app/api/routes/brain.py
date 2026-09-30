@@ -1,8 +1,9 @@
 """Internal brain HTTP seam (ADR-0029 §2.7).
 
-Go owns auth, the database, and the limiter. Python owns the model step:
-the screenshot reader, the chat-expense reader,
-place search and reasons, suggestions, the reel, and on-box face detection.
+Go owns auth, the database, the limiter and, since ADR-0051, every model
+call but two that have not moved yet: place search and reasons. The third
+route here, on-box face detection, is OpenCV rather than a model (TODO: redo
+in Go by another mechanism).
 Nothing in this module opens a repository session. Errors return a closed
 `code` and never interpolate a prompt, a model string, or image bytes.
 
@@ -21,17 +22,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 
-from app.api.achievement_gemini import gemini_achievement_routes
-from app.api.deps import (
-    ContextualSuggester,
-    FaceDetector,
-    Reeler,
-    Suggester,
-    get_contextual_suggester,
-    get_face_detector,
-    get_reeler,
-    get_suggester,
-)
+from app.api.deps import FaceDetector, get_face_detector
 from app.api.internal_token import INTERNAL_TOKEN_HEADER, tokens_match
 from app.domain.place_search import PlaceSearchError, ground_search
 from app.media.face_detection import FaceDetectorUnavailable
@@ -178,116 +169,6 @@ def place_reasons(
         place_id: {"reason": value.reason, "verdict": value.verdict}
         for place_id, value in written.items()
     }
-
-
-@router.post("/suggestion")
-def suggestion(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-    suggester: Annotated[Suggester, Depends(get_suggester)],
-) -> dict:
-    history = body.get("history")
-    places = body.get("places")
-    if not isinstance(history, dict) or not isinstance(places, list):
-        raise _code_error(422, "brain_request_invalid")
-    try:
-        card = suggester(history, places)
-    except Exception:
-        _LOGGER.warning("brain suggestion failed")
-        raise _code_error(502, "suggestion_unavailable") from None
-    return {"card": card}
-
-
-@router.post("/contextual-suggestion")
-def contextual_suggestion(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-    suggester: Annotated[ContextualSuggester, Depends(get_contextual_suggester)],
-) -> dict:
-    digest = body.get("digest")
-    places = body.get("places")
-    if not isinstance(digest, dict) or not isinstance(places, list):
-        raise _code_error(422, "brain_request_invalid")
-    try:
-        card = suggester(digest, places)
-    except Exception:
-        _LOGGER.warning("brain contextual suggestion failed")
-        raise _code_error(502, "contextual_suggestion_unavailable") from None
-    return {"card": card}
-
-
-@router.post("/reel")
-def reel(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-    reeler: Annotated[Reeler, Depends(get_reeler)],
-) -> dict:
-    trip = body.get("trip")
-    memories = body.get("memories")
-    if not isinstance(trip, dict) or not isinstance(memories, list):
-        raise _code_error(422, "brain_request_invalid")
-    try:
-        card = reeler(trip, memories)
-    except Exception:
-        _LOGGER.warning("brain reel failed")
-        raise _code_error(502, "reel_unavailable") from None
-    return {"card": card}
-
-
-@router.post("/achievement-routes")
-def achievement_routes(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    """Choose story directions from count-only facts after explicit Go consent."""
-
-    facts = body.get("facts")
-    offered = body.get("candidate_ids")
-    selected = body.get("selected_route")
-    history = body.get("choice_history", [])
-    if (
-        not isinstance(facts, dict)
-        or not isinstance(offered, list)
-        or not offered
-        or len(offered) > 9
-        or not all(isinstance(candidate, str) for candidate in offered)
-        or not isinstance(selected, str)
-        or not isinstance(history, list)
-        or len(history) > 8
-        or not all(
-            item in {"dau_chan", "ky_niem", "dong_hanh", "nga_re"} for item in history
-        )
-    ):
-        raise _code_error(422, "brain_request_invalid")
-    try:
-        raw = gemini_achievement_routes(facts, offered, selected, history)
-    except Exception:
-        _LOGGER.warning("achievement_gemini_failed")
-        raise _code_error(502, "achievement_suggestion_unavailable") from None
-    if not isinstance(raw, dict) or not isinstance(raw.get("candidate_ids"), list):
-        raise _code_error(503, "achievement_suggestion_unavailable")
-    picked = []
-    for candidate in raw["candidate_ids"]:
-        if (
-            isinstance(candidate, str)
-            and candidate in offered
-            and candidate not in picked
-        ):
-            picked.append(candidate)
-        if len(picked) == 3:
-            break
-    if not picked:
-        raise _code_error(502, "achievement_suggestion_unavailable")
-    line = raw.get("line")
-    if (
-        not isinstance(line, str)
-        or not line.strip()
-        or len(line) > 180
-        or "http" in line.lower()
-        or "@" in line
-    ):
-        raise _code_error(502, "achievement_suggestion_unavailable")
-    return {"candidate_ids": picked, "line": " ".join(line.split())}
 
 
 @router.post("/face-boxes")

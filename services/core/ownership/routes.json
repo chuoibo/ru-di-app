@@ -1547,11 +1547,11 @@
       "group": "suggestions",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "suggestion_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1563,11 +1563,11 @@
       "group": "suggestions",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "contextual_suggestion_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1774,11 +1774,11 @@
       "group": "albums",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "reel_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {

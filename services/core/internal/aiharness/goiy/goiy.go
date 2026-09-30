@@ -229,7 +229,7 @@ func Goi(ctx context.Context, l *motluot.Luot, prompt string) (*pyjson.OrderedMa
 	if err != nil {
 		return nil, err
 	}
-	v, err := pyjson.Loads([]byte(text))
+	v, err := pyjson.Loads([]byte(motluot.BoRao(text)))
 	if err != nil {
 		return nil, ErrKhongPhaiDoiTuong
 	}

@@ -161,11 +161,31 @@ var ErrKhongDocDuoc = errors.New("motluot: the answer is not a JSON object")
 // DocDoiTuong decodes a structured answer: exactly one JSON object, numbers
 // kept as json.Number so nothing is rounded before the domain reads them.
 func DocDoiTuong(text string) (map[string]any, error) {
-	dec := json.NewDecoder(bytes.NewReader([]byte(text)))
+	dec := json.NewDecoder(bytes.NewReader([]byte(BoRao(text))))
 	dec.UseNumber()
 	var out map[string]any
 	if err := dec.Decode(&out); err != nil || out == nil || dec.More() {
 		return nil, ErrKhongDocDuoc
 	}
 	return out, nil
+}
+
+// BoRao is text without one Markdown code fence around it ("```json" … "```").
+// The proxy does not always hold the model to the JSON MIME type, and a
+// fenced object is still the one object asked for; anything else is left as
+// it came, for the decoder to refuse.
+func BoRao(text string) string {
+	t := strings.TrimSpace(text)
+	if !strings.HasPrefix(t, "```") || !strings.HasSuffix(t, "```") || len(t) < 6 {
+		return text
+	}
+	t = strings.TrimSuffix(t, "```")
+	first, rest, ok := strings.Cut(t, "\n")
+	if !ok {
+		return text
+	}
+	if lang := strings.TrimSpace(strings.TrimPrefix(first, "```")); lang != "" && !strings.EqualFold(lang, "json") {
+		return text
+	}
+	return rest
 }
