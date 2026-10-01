@@ -63,3 +63,27 @@ và kỷ niệm ảnh (file ảnh nằm ở volume `rudi-e2e-agy_e2e-media`, kh�
 Ở `docs/team/hang-doi.md` mục 2026-10-01: nháp khoản chi lặp chữ (0–30% lượt), độ trễ agy 30–90 s lúc bận,
 duyệt bài cộng đồng chưa đánh giá có hệ thống, `face-boxes` → Go, eval T3 qua agy. (Khoản «pin bắc cầu của google-genai còn trong
 requirements-dev» ghi trước đây là sai: tính lại bao đóng phụ thuộc, mọi gói đó vẫn có gói khai báo cần.)
+
+## Sau merge (cập nhật cùng ngày)
+
+Merge vào `main` ở `16c0fdca`: 0 xung đột chữ (hai bên cùng sửa `services/api/app/api/service.py`, git tự gộp); quét
+xung đột ngầm — không mã nào của `main` dùng thứ nhánh đã xoá. Cây gốc có việc dở chưa commit của phiên
+`mobile-ui-audit-upgrade`, nên `main` được fast-forward từ một worktree riêng; trước/sau mỗi lần đều so index và
+`git status` của cây gốc — không đổi.
+
+Cổng trên SHA đã merge `16c0fdca`: go vet/test xanh; pytest 3023 passed; tầng Postgres 3291 ca PASS; parity 351 kịch bản /
+10758 bước, 9 / 209, 23 / 605 — `scenarios_diff=0 differences=0`. Trên `main` sau đó (`ae778c00` → `e182ce64`):
+`npm test` mobile 1393/1393 (gồm `build:check`), `go_broker_tier.sh` 180 ca PASS, `eval_kich_ban.sh` 36/36 lượt (canary
+đỏ đúng chỗ), `chat_e2e_go.sh` 43 ca PASS không SKIP, `e2e_slice.sh` 11 pass + 4 skip (đường vẽ ảnh Nếp, `NEP_PROXY_URL`
+không cấu hình — ngoài ADR-0051), lint `ruff_changed.sh d95edb4c` sạch 31 file, contract/CORS/screens/money/Dockerfile
+pinning xanh. Không chạy: `go_milvus_tier.sh`, `ai_infer_tier.sh` (runner riêng; đợt này không đổi Milvus hay
+`services/ai-infer`).
+
+Lỗi tìm ra sau merge và đã sửa:
+- `ae778c00` — test mobile `goi-ai-chia-bill` đỏ: app còn câu cho mã `chia_bill_no_expenses`, mã chỉ đường brain ghi (đã xoá
+  ở `8d6d2792`); engine Go trả «chưa thấy khoản» ngay trong phòng. Do tôi không chạy bộ test mobile trước khi merge;
+  phiên `mobile-ui-audit-upgrade` phát hiện.
+- `5ec73969` — ba file Python nhánh chạm chưa `ruff format` (cổng lint của CI).
+- `478b656f` — `scripts/mutation_cong_cua_so_model.py` vào `scripts/archive/` (cổng và caller của nó đã xoá).
+- `5d3e5476` — bổ sung bằng chứng route cho 11 route sổ hai người mà `a6341c19` (phiên khác) đổi Python + Go nhưng chưa
+  ghi bằng chứng; `check_go_owned_python_touch.py` xanh lại.
