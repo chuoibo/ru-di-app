@@ -230,6 +230,10 @@
     // lại» goes when a link opened the screen cold (QA UI-018). Pure, compiled
     // so the order and the fallback run as they ship.
     "src/rudi/tao-moi.ts",
+    // The tab strip's columns (owner's mockup, 01/10): four columns and the
+    // stamp in the middle, Cộng đồng a route with no column. Pure, compiled so
+    // the strip's arithmetic and Khám phá's last section run as they ship.
+    "src/rudi/ui/thanh-tab.ts",
     "src/rudi/lui-ve.ts",
     // B3 (QA UI-041): the screen's overlay slot. Compiled so the hand-off runs
     // under React's own effect ordering, not read as source.
