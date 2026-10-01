@@ -350,7 +350,7 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 
 | Việc | Vật | Primitive |
 |---|---|---|
-| Khay «Tạo mới», khay công cụ chat | vật ký hoạ trên bàn | `art/vat-ban.ts` + `ui/art/VeLop` |
+| Khay «Tạo mới», khay công cụ chat | vật ký hoạ trên bàn («Viết bài» là `bai-viet`: trang viết dở nghiêng + bút chì coral, từ 02/10 thay `phieu-bau` mượn của bình chọn) | `art/vat-ban.ts` + `ui/art/VeLop` |
 | Kèo | thiệp dán washi, xem trước là vé | `ChonNgayLich`, `TheVe`, `StampButton` |
 | Chia bill | hoá đơn nhiệt, bàn pop-up, cuống phiếu | `HoaDonGiay`, `BanGanMon`, `CuongPhieu` |
 | Sổ, đợt thu, tài chính | trang sổ kẻ dòng | `TrangSo` / `DongSo`, `DaiTienDo` |
@@ -359,7 +359,7 @@ màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-s
 | Nhóm mới, nhóm trên kệ | bìa sổ, gáy sổ theo màu chat | `SoBia` (`nhan`), `bangMauChat` |
 | Mời, lời mời | phong bì | `PhongBi` |
 | Kết bạn | danh thiếp, người là hình nhân | `HinhNhan` |
-| Khám phá, Đi đâu | sân khấu thành phố, bưu thiếp | `art/thanh-pho.ts`, `SanKhau` |
+| Khám phá, Đi đâu | sân khấu thành phố, bưu thiếp | `art/thanh-pho.ts`, `SanKhau`, `SanThanhPho` |
 | Lên plan | vé; kèo đã qua là cuống | `TheVe`, `CuongPhieu` |
 | Tường, khoảnh khắc | ảnh in nghiêng có washi, instax | `KhungAnh` + `nghiengAnh`, `Washi` |
 | Thành tích | tờ tem | `Tem` |
@@ -882,8 +882,9 @@ có CTA bên dưới.
 hai để tiêu đề cân giữa; huy hiệu trong `TopBar` dùng `compactLabel`
 («Demo», «Nháp») vì ở 360dp font 1.3 không thể có cả tiêu đề cân giữa lẫn
 nhãn dài. Tiêu đề có thể mang phụ đề (ảnh `18-album`: «Album Đà Lạt» + ngày).
-Không có nút back thì ô trái là **wordmark trơn** (`Wordmark` `ink` cao 18;
-header Khám phá tự vẽ cao 20): ô icon app gradient chỉ còn ở Welcome/Login,
+Không có nút back thì ô trái là **wordmark trơn** (`Wordmark` `ink` cao 18).
+Khám phá là ngoại lệ có tên từ 02/10: đầu tab là hàng hai mục `DauKhamPha`
+(xem Navigation), không wordmark; wordmark ở đầu rail trên tablet. Ô icon app gradient chỉ còn ở Welcome/Login,
 không lặp lại ở đầu mỗi tab (ảnh `dot8/04-explore`, `07-plan`).
 
 ## Elevation & Depth
@@ -1089,7 +1090,9 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   trong ô 48.
 - **`IconButton`**: 48×48 bo 16; `quiet` không viền không nền (nút «+» góc
   phải album, «Chọn ảnh»); có viền `lineStrong` khi đứng cạnh chip (nút lọc
-  Khám phá). Nhấn co 0.94 (`PressScale`, cùng số với FAB).
+  Khám phá). Nhấn co 0.94 (`PressScale`, cùng số với FAB). `tron` (02/10): bo
+  24, thành đĩa tròn, **chỉ cho control đặt TRÊN ảnh** (tim của thẻ dẫn Khám
+  phá), không cho control đặt trên giấy.
 - **Bốn scale bấm của kit** (đợt 8, thay mọi nhánh `pressed` mờ opacity trên
   JS thread): `RudiButton` 0.98 · `IconButton` 0.94 · `Chip` 0.96 · `ListRow`
   0.985; con dấu CTA 0.97, FAB 0.94, back 0.92 giữ nguyên. Lò xo nhấn {18,
@@ -1108,6 +1111,12 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   Nhấn co 0.96. Bộ lọc Khám phá, chọn ngày lịch trình, «Theo ngày» ở album;
   hàng bộ lọc của AI match giờ là **một hàng cuộn ngang** như Khám phá
   (bằng chứng reviewer `dot8/05-ai-match`, không mở ở đây; đọc từ `Discovery.tsx`), không còn lưới gập.
+- **Chip đổi nội dung (`vaiTab`)** (02/10): cùng hình chip bấm được, nhưng
+  là một trong bộ chip **đổi cái màn đang hiện** (ba bảng tin Cộng đồng «Dành
+  cho bạn · Đang theo dõi · Thịnh hành»): `role="tab"` + `aria-selected` bên
+  trong `tablist` của nơi gọi, thay cho `button` + `aria-pressed` của chip lọc.
+  Chọn vẫn giữ dấu check và nền `<tone>Soft`. Bộ lọc thu hẹp danh sách vẫn là
+  chip thường.
 - **Chip tĩnh** (không `onPress`): cao 30, bo 10, không role; kit còn giữ
   nhưng **đợt này trạng thái đi bằng `Stamp`**; chip tĩnh chỉ cho thẻ phân
   loại không phải trạng thái.
@@ -1495,7 +1504,24 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
 **một** trường `anh: AnhCoGhiCong | null`, nên ảnh và ghi công đi cùng nhau
 ở tầng kiểu và cả ba khung tự in `cauGhiCong(anh.nguon)`. Nhịp kết quả sau `taiSoSanh`: **một ảnh dẫn** (chỉ khi có ảnh) →
 **một cặp so sánh** (khi còn ≥ 2) → **các hàng** (`sua2-sang-1.0/bs-04-kham-pha*`).
-- **`PlaceLead`**: ảnh 16:10 compact / 21:9 rộng, bo 20. *Lịch sử tới 10/09:*
+- **`PlaceLead`** — **hiện hành (02/10): một thẻ.** Nền `card`, viền kẻ tóc
+  `line`, bo `radius.control` (14), `overflow` cắt; ảnh (hoặc tờ ký hoạ `KyHoa`
+  bỏ viền và bo riêng của nó) **tràn mép trên thẻ**, 16:10 compact / 21:9 rộng,
+  `MediaSlot radius={0}`. Tim là `IconButton tron` treo **trên ảnh** góc trên
+  phải (10/10), anh em với vùng bấm mở thẻ (trình đọc màn hình gặp hai control).
+  Dưới ảnh, đệm 14 gap 6: tên `h2 ink`; phụ đề `body inkSoft` **một dòng**;
+  các sự thật còn lại thành **một dòng lặng** `caption inkFaint` nối « · »;
+  rồi hàng chip (gap 8, gập dòng): **chip lý do** nền `aiSoft` chữ `label ai`
+  + `sparkles` 13 và **chip giá** nền `ground` chữ `label inkSoft` +
+  `pricetag-outline` 13, cả hai bo `radius.control`, đệm 10/6, **không bao giờ
+  cắt «…»** — tiền và lý do gập dòng chứ không giấu (`tachTheDan`, tách giá
+  theo icon `wallet-outline`). Không có `lyDo` thì con dấu tím như cũ (trên
+  ảnh, hoặc trên tên khi là ký hoạ). Tiêu đề mục trên nhịp kết quả là
+  **«Chỗ hay ở <thành phố>»** (demo: «Chỗ hay ở Đà Lạt»), dòng đếm «N nơi»
+  `caption inkFaint` sát dưới (−14); **không** «Gần bạn, đúng gu»: danh mục đi
+  theo thứ tự máy chủ, tiêu đề không hứa gần hay hợp gu. Phần dưới là lịch sử
+  của dạng lead trên giấy trước 02/10, giữ để đọc lý do của luật một dấu.
+  *Lịch sử tới 01/10:* ảnh 16:10 compact / 21:9 rộng, bo 20. *Lịch sử tới 10/09:*
   `Stamp` «HỢP GU» trên ảnh **và** một dòng «Hợp gu nhờ Chill và View đẹp»
   dưới tên, chỉ khi máy chủ gửi `reason`; tái audit Codex 10/09 (R3) đọc ra
   cùng một lời hứa bốn lần (tiêu đề mục → con dấu → «Hợp gu nhờ…» → mô tả
@@ -1552,6 +1578,14 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   không bìa (fixture + live `dauGon`) từ 11/09 dùng tờ ký hoạ `KyHoa` thay ô
   34/36** — vẫn không khung 16:10 rỗng (`ky-hoa-trong-so/`). Khung trống
   **không bao giờ** là ảnh stock. Không thêm token.
+- **Sân khấu thành phố (`SanThanhPho`)** (02/10): đầu Khám phá › Địa điểm,
+  dưới dòng vị trí («<thành phố>» `ink` + « · đổi nơi khác» `accent`), cả
+  fixture lẫn live; gập đi khi đang tìm hay lọc. Sân khấu **dâng lên 32 dp dưới
+  dòng vị trí** (dòng đó `zIndex: 1`, nằm trên trời của tranh). Điện thoại:
+  tràn hai mép màn (trả lại lề 16). Tablet: tranh giữ **tỉ lệ gốc, rộng tối
+  đa 480**, ở giữa một dải rộng cả cột, và **vạch đất kéo tiếp tới hai mép
+  cột** cùng mực `ink`, cùng nét (`NET_KY_HOA.gan` theo tỉ lệ) — một chân trời
+  liền, không phóng tranh theo cột (nét dày gấp đôi, đẩy địa điểm khỏi màn đầu).
 
 ### Chat: sticker, trích dẫn, tin đã xoá, theme bong bóng (M15 L1–L2)
 - **Sticker** là hình vector từ từ vựng đóng (`chat/sticker.ts`, 8 hình, cùng
@@ -2117,6 +2151,17 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   mới `router.back()`. Mở lạnh (deep
   link, thông báo) `app/create.tsx` dựng vỏ tab trước rồi mở lại sheet: **chỉ
   đọc từ mã**, chưa kiểm trên máy.
+- **Hàng bài Cộng đồng (`PostCard`)** (02/10): bài là **hàng trên giấy kẻ tóc
+  dưới**, không thẻ; lề ngang 16 (= `space.md`, cùng cột với đầu Khám phá và
+  Địa điểm nên đổi mục không xô cột), đệm trên 24 dưới 16, gap 14. Album lật
+  **từng trang rộng hết cột, 4:3**, bo `radius.control`; nhiều hơn một ảnh thì
+  viên «n/N» góc trên phải (nền `card`, bo pill, `caption ink`, ẩn khỏi trình
+  đọc vì mỗi ảnh tự có tên). Hàng nút Thích · Bình luận · Chia sẻ, **dấu lưu
+  bookmark đứng cuối hàng** (ô 48, `marginLeft: auto`, `bookmark` `accent` khi
+  đã lưu, `bookmark-outline` `inkSoft` khi chưa, `aria-pressed`). Trên tab,
+  đầu là `DauKhamPha` (nút cài đặt bảng tin ở ô phải), rồi `SearchField`, rồi
+  ba chip `vaiTab`; viết bài đi qua con dấu «Tạo», màn không tự vẽ tiêu đề hay
+  nút soạn. Mở theo chủ đề (route stack) thì giữ tiêu đề và nút soạn riêng.
 - **Ô soạn chat** (Group): hàng bo 22 nền `card` viền 1px `line`, đệm 6, ở
   `footer` của màn; không có dải giấy trống thứ hai dưới nó.
 - **Hoá đơn trên gỗ** (Bill): khung tối thiểu 420 bo 20 nền `giayHoaDon.khung`
@@ -2145,23 +2190,44 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
 
 ### Navigation
 - **`RudiTabBar`** tự vẽ: nền `card`, cạnh trên hairline `line`, cao **64 +
-  max(insets.bottom, 10)**; **năm** tab trong một `role="tablist"`, mỗi tab
-  `role="tab"` + `aria-selected` (`tabState`), cao tối thiểu 48, icon
-  Ionicons 24 (outline → filled khi chọn), nhãn 12/14 tối đa hai dòng; đang
-  chọn `accent`, còn lại `inkFaint`; chỉ báo băng 28×4 `accent` treo ở cạnh
-  trên cột đang chọn, trượt `standard` 200ms; haptic `select`.
-- **Con dấu «Tạo mới»** (`ConDauTao`, B2 01/10): **cột thứ ba** của thanh,
-  giữa «Khám phá» và «Lên plan»; tròn 56, nền `brand.coral`, glyph `add` 30
-  `brand.coralInk`, vòng 4px `ground`, nhô lên nửa trên mép thanh, nhãn «Tạo»
-  12/14 `accent`; nhấn co 0.92, để lại một vòng mực mở ra và tan trong
-  `standard` (không có khi Reduce Motion). Chạm mở `/create?tu=<tab>`: khay
-  đưa việc hợp tab lên đầu (`tao-moi.ts`); giữ lâu đi thẳng tới việc đó.
-  Con dấu là nút **ngoài** tablist, phủ lên một cột rỗng `aria-hidden`.
+  max(insets.bottom, 10)**; **bốn cột** — Khám phá · Lên plan · Tin nhắn · Cá
+  nhân — và con dấu «Tạo» **ở ô giữa của năm ô bằng nhau** (`thanh-tab.ts`
+  `xepThanh`: số ô lẻ mới có tâm; 02/10, thay bố cục năm tab + dấu ở cột thứ
+  ba). Bốn cột trong một `role="tablist"`, mỗi cột `role="tab"` +
+  `aria-selected` (`tabState`), cao tối thiểu 48, icon Ionicons 24 (outline →
+  filled khi chọn), nhãn 12/14 tối đa hai dòng; đang chọn `accent`, còn lại
+  `inkFaint`; chỉ báo băng 28×4 `accent` treo ở cạnh trên cột đang sáng, trượt
+  `standard` 200ms; haptic `select`.
+- **Route không cột** (02/10): một route của tab navigator có thể không có
+  cột (`href: null` ở `app/(tabs)/_layout.tsx`) mà vẫn giữ thanh, URL và deep
+  link của nó; `MUC_TRONG_TAB` (`thanh-tab.ts`) nêu cột chủ, và **cột chủ sáng**
+  khi route đó mở. Hiện chỉ có Cộng đồng → Khám phá. Chạm cột Khám phá **mở lại
+  mục đang xem lần cuối** (Địa điểm hay Cộng đồng, chỉ trong bộ nhớ; mở app
+  lạnh là Địa điểm); chạm một cột **đang sáng** không làm gì. Test giữ map và
+  layout đi cùng nhau.
+- **Con dấu «Tạo»** (`ConDauTao`, B2 01/10, về đúng tâm 02/10): ô giữa thanh;
+  tròn 56, nền `brand.coral`, glyph `add` 30 `brand.coralInk`, vòng 4px
+  `ground`, nhô lên nửa trên mép thanh, nhãn «Tạo» 12/14 `accent` (một tên trên
+  cả thanh lẫn rail; trình đọc màn hình nghe «Tạo mới» từ chính nút); nhấn co
+  0.92, để lại một vòng mực mở ra và tan trong `standard` (không có khi Reduce
+  Motion). Chạm mở `/create?tu=<tab>`: khay đưa việc hợp tab lên đầu
+  (`tao-moi.ts`; trên Cộng đồng là «Viết bài»); giữ lâu đi thẳng tới việc đó.
+  Con dấu là nút **ngoài** tablist, phủ lên một ô rỗng `aria-hidden`.
   Spike (a) vắt góc / (b) cột giữa: chọn (b), lý do và ảnh ở
   `docs/claude/2026-10-01/ui-ux-upgrade/direction.md`.
-- **Rail** (medium+): rộng 104, cạnh phải hairline; đầu rail là ô 96 của con
-  dấu (nhãn «Tạo mới»), rồi mỗi tab 72 với icon + nhãn `caption`; chỉ báo vạch
-  4px `accent` bên trái, đo từ lề trên của rail (lệch khi đo từ 0: QA UI-004).
+- **Rail** (medium+): rộng 104, cạnh phải hairline; đầu rail là **hàng
+  wordmark 56** (`Wordmark` `ink` cao 18, ngoài tablist), rồi ô 96 của con dấu
+  (nhãn «Tạo»), rồi bốn hàng 72 với icon + nhãn `caption`; chỉ báo vạch 4px
+  `accent` bên trái, đo từ lề trên của rail cộng 56 + 96 (lệch khi đo từ 0: QA
+  UI-004).
+- **Đầu Khám phá (`DauKhamPha`)** (02/10): hai mục «Địa điểm | Cộng đồng» là
+  một `tablist`, cả hai chữ `h2` (một cỡ nên đổi mục không xô), gap 24; mục mở
+  `ink` trên băng coral 28×4 bo 2 (cùng băng của thanh), mục kia `inkFaint`;
+  mỗi mục cao tối thiểu 48. Ô phải (cài đặt bảng tin trên Cộng đồng) nằm
+  **ngoài** tablist. Chữ to vượt hàng thì hàng **cuộn ngang thay vì cắt**, và
+  tự cuộn mục đang mở vào tầm nhìn. Đặt qua `RudiScreen header` nên đứng yên
+  khi nội dung cuộn; mục mặc định là Địa điểm. Điều hướng giữa hai mục viết ở
+  file route (bộ rút hướng dẫn của Nếp đọc ở đó), component chỉ vẽ.
 - **Bản demo** (chưa đăng nhập): không có cột thêm trên thanh. Nhãn
   `DemoBadge` của mỗi màn demo **là cửa đăng nhập** (bình thí nghiệm + chữ +
   biểu tượng đăng nhập `accent`, tên «Dữ liệu demo. Đăng nhập», tới
@@ -2299,8 +2365,8 @@ mỗi sự thật có **một** chỗ trên màn.
 
 **Luật Một Dấu Cho Một Địa Điểm** (11/09, tái audit Codex 10/09 R3 —
 `docs/archive/codex/2026-09-10/reaudit-evidence/`): một địa điểm mang **lý do hoặc
-con dấu, không cả hai**; **tiêu đề mục** («Gần bạn, đúng gu») là nơi **duy
-nhất** nói lời hứa, nên lý do không mở bằng «Hợp gu…» và con dấu «HỢP GU»
+con dấu, không cả hai**; **tiêu đề mục** («Chỗ hay ở <thành phố>» từ
+02/10, tới 01/10 «Gần bạn, đúng gu») là nơi **duy nhất** nói lời hứa, nên lý do không mở bằng «Hợp gu…» và con dấu «HỢP GU»
 không đứng cạnh một dòng lý do; **mô tả không nhắc lại từ của lý do** — lý do
 phải thêm một sự thật mà dòng dưới nó chưa nói.
 - Cơ chế trong mã: `dauCon(dd)` (`HangDiaDiem.tsx`) trả `null` khi có `lyDo`
@@ -2455,7 +2521,7 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
 - **Don't** truyền `dong` lúc mount hay cho cả danh sách; đừng thay cú đóng
   dấu bằng một zoom ease-out, confetti hay toast.
 - **Don't** vẽ tay cầm sheet không kéo được; tay cầm là lời hứa kéo-để-đóng.
-- **Don't** lặp ô icon app ở đầu mỗi tab; header tab là wordmark trơn.
+- **Don't** lặp ô icon app ở đầu mỗi tab; header tab là wordmark trơn (Khám phá: hàng hai mục `DauKhamPha`; tablet: wordmark ở đầu rail).
 - **Don't** ghi `transform: undefined` vào style Reanimated; chỉ spread khi
   có góc nghiêng.
 - **Don't** dựng hình dạng máy chủ chưa có: không ô mã chuyển khoản, không
