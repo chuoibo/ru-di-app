@@ -224,7 +224,9 @@ def test_two_yeses_make_one_outing_in_the_same_request(client, repository):
     # Named after what was agreed, and the agreed stop is the outing's timeline
     # (QA 23/09: the outing used to hold a date and nothing else).
     assert outing.title == f"Ăn tối, quán mới · {THU_BAY[8:]}/{THU_BAY[5:7]}"
-    assert [(s.minute_of_day, s.label, s.place_id) for s in outing.stops] == [(19 * 60, "Ăn tối, quán mới", None)]
+    assert [(s.minute_of_day, s.label, s.place_id) for s in outing.stops] == [
+        (19 * 60, "Ăn tối, quán mới", None)
+    ]
     assert outing.timeline_revision == 1
     assert outing.starts_on.isoformat() == THU_BAY == outing.ends_on.isoformat()
     assert outing.headcount == 2
@@ -807,20 +809,39 @@ def test_a_sheet_the_list_cannot_read_does_not_take_the_list_down(client, reposi
     assert rows[0]["ngay"] is None
 
 
-
-def test_a_catalogue_place_on_the_sheet_names_the_outing_and_its_stop(client, repository):
+def test_a_catalogue_place_on_the_sheet_names_the_outing_and_its_stop(
+    client, repository
+):
     lap_so(client)
     place = next(iter(repository.list_places()))
     paper_id = _draft(client)
-    content = {"ngay": THU_BAY, "chang": [{"gio": "19:00", "viec": "Ăn tối", "place_id": place.id}, {"gio": "21:00", "viec": "Dạo hồ", "place_id": "p-khong-con-trong-danh-muc"}]}
-    assert client.patch(f"/papers/{paper_id}/draft", json={"content": content}, headers=head(TOI)).status_code == 200
+    content = {
+        "ngay": THU_BAY,
+        "chang": [
+            {"gio": "19:00", "viec": "Ăn tối", "place_id": place.id},
+            {
+                "gio": "21:00",
+                "viec": "Dạo hồ",
+                "place_id": "p-khong-con-trong-danh-muc",
+            },
+        ],
+    }
+    assert (
+        client.patch(
+            f"/papers/{paper_id}/draft", json={"content": content}, headers=head(TOI)
+        ).status_code
+        == 200
+    )
     assert _send(client, paper_id).status_code == 200
     body = _agree(client, paper_id).json()
     outing = repository.get_outing(__import__("uuid").UUID(body["outing_id"]))
     assert outing.title == f"{place.name} · {THU_BAY[8:]}/{THU_BAY[5:7]}"
     # A place the catalogue no longer knows keeps its line and drops its id, so
     # the timeline stays editable (its route refuses unknown places).
-    assert [(s.label, s.place_id, s.place_name) for s in outing.stops] == [("Ăn tối", place.id, place.name), ("Dạo hồ", None, None)]
+    assert [(s.label, s.place_id, s.place_name) for s in outing.stops] == [
+        ("Ăn tối", place.id, place.name),
+        ("Dạo hồ", None, None),
+    ]
 
 
 def _mot_tuan_da_chot(client, repository, clock, *, gio="19:30"):
@@ -833,33 +854,70 @@ def _mot_tuan_da_chot(client, repository, clock, *, gio="19:30"):
     place = next(
         r
         for r in rows
-        if sum(1 for o in rows if (o.destination_id, o.category) == (r.destination_id, r.category)) >= 3
+        if sum(
+            1
+            for o in rows
+            if (o.destination_id, o.category) == (r.destination_id, r.category)
+        )
+        >= 3
     )
     paper_id = _draft(client)
-    content = {"ngay": THU_BAY, "chang": [{"gio": gio, "viec": "Ăn lẩu", "place_id": place.id}]}
-    assert client.patch(f"/papers/{paper_id}/draft", json={"content": content}, headers=head(TOI)).status_code == 200
+    content = {
+        "ngay": THU_BAY,
+        "chang": [{"gio": gio, "viec": "Ăn lẩu", "place_id": place.id}],
+    }
+    assert (
+        client.patch(
+            f"/papers/{paper_id}/draft", json={"content": content}, headers=head(TOI)
+        ).status_code
+        == 200
+    )
     assert _send(client, paper_id).status_code == 200
     assert _agree(client, paper_id).json()["state"] == "chot"
     clock(TUAN_SAU)
-    return place, [r for r in rows if (r.destination_id, r.category) == (place.destination_id, place.category) and r.id != place.id]
+    return place, [
+        r
+        for r in rows
+        if (r.destination_id, r.category) == (place.destination_id, place.category)
+        and r.id != place.id
+    ]
 
 
-def test_next_weeks_draft_keeps_their_hour_and_proposes_a_new_place_of_the_same_kind(client, repository, clock):
+def test_next_weeks_draft_keeps_their_hour_and_proposes_a_new_place_of_the_same_kind(
+    client, repository, clock
+):
     place, same_kind = _mot_tuan_da_chot(client, repository, clock)
     body = _read(client, _draft(client, actor=NGUOI_KIA), actor=NGUOI_KIA).json()
     first = body["versions"][0]
     stop = first["content"]["chang"][0]
     assert stop["gio"] == "19:30", "giờ quen của hai người, không phải 18:30 cố định"
-    best = max(same_kind, key=lambda r: (-1.0 if r.rating is None else r.rating, -1 if r.rating_count is None else r.rating_count))
-    assert stop["place_id"] == best.id, "chỗ mới cùng kiểu, cùng thành phố, điểm cao nhất"
+    best = max(
+        same_kind,
+        key=lambda r: (
+            -1.0 if r.rating is None else r.rating,
+            -1 if r.rating_count is None else r.rating_count,
+        ),
+    )
+    assert stop["place_id"] == best.id, (
+        "chỗ mới cùng kiểu, cùng thành phố, điểm cao nhất"
+    )
     assert stop["can_kiem"] is True, "danh mục không chứng minh món ăn (ADR-0027 §7)"
     assert place.name in first["ly_do"] and best.name in first["ly_do"]
     assert len(first["ly_do"]) <= 200
 
 
-def test_the_draft_avoids_a_place_whose_words_meet_a_constraint(client, repository, clock):
+def test_the_draft_avoids_a_place_whose_words_meet_a_constraint(
+    client, repository, clock
+):
     place, same_kind = _mot_tuan_da_chot(client, repository, clock)
-    ranked = sorted(same_kind, key=lambda r: (-1.0 if r.rating is None else r.rating, -1 if r.rating_count is None else r.rating_count), reverse=True)
+    ranked = sorted(
+        same_kind,
+        key=lambda r: (
+            -1.0 if r.rating is None else r.rating,
+            -1 if r.rating_count is None else r.rating_count,
+        ),
+        reverse=True,
+    )
     blocked = ranked[0]
     put = client.put(
         f"/contexts/{CAP}/notebook/constraints/khong_an_duoc",
@@ -867,7 +925,9 @@ def test_the_draft_avoids_a_place_whose_words_meet_a_constraint(client, reposito
         headers=head(NGUOI_KIA),
     )
     assert put.status_code == 200, put.text
-    first = _read(client, _draft(client, actor=NGUOI_KIA), actor=NGUOI_KIA).json()["versions"][0]
+    first = _read(client, _draft(client, actor=NGUOI_KIA), actor=NGUOI_KIA).json()[
+        "versions"
+    ][0]
     assert first["content"]["chang"][0]["place_id"] not in (blocked.id, place.id)
     assert "hai ô ràng buộc" in first["ly_do"]
 
@@ -889,11 +949,18 @@ def test_a_draft_never_sent_stays_its_owners_after_the_week_is_skipped(client):
     draft whatever its state."""
     lap_so(client)
     paper_id = _draft(client)
-    assert _patch(client, paper_id, viec="Quà sinh nhật, bí mật", ly_do="chưa muốn nói").status_code == 200
+    assert (
+        _patch(
+            client, paper_id, viec="Quà sinh nhật, bí mật", ly_do="chưa muốn nói"
+        ).status_code
+        == 200
+    )
     skipped = client.post(f"/papers/{paper_id}/skip", headers=head(TOI))
     assert skipped.status_code == 200, skipped.text
     assert skipped.json()["state"] == "nghi_tuan"
-    theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
+    theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()[
+        "papers"
+    ]
     assert paper_id not in [p["id"] for p in theirs]
     assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 404
     mine = client.get(f"/contexts/{CAP}/papers", headers=head(TOI)).json()["papers"]
@@ -904,9 +971,14 @@ def test_a_draft_never_sent_stays_its_owners_after_the_week_is_skipped(client):
 def test_a_sheet_that_was_sent_stays_readable_to_both_after_it_closes(client):
     lap_so(client)
     paper_id = _da_gui(client)
-    assert client.post(f"/papers/{paper_id}/skip", headers=head(NGUOI_KIA)).status_code == 200
+    assert (
+        client.post(f"/papers/{paper_id}/skip", headers=head(NGUOI_KIA)).status_code
+        == 200
+    )
     assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 200
-    theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
+    theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()[
+        "papers"
+    ]
     assert paper_id in [p["id"] for p in theirs]
 
 
@@ -927,20 +999,36 @@ def test_a_taste_nobody_shared_changes_nothing_in_the_draft(client, repository):
     assert first["ly_do"] is None
 
 
-def test_the_other_persons_shared_taste_names_the_stop_and_the_reason(client, repository):
+def test_the_other_persons_shared_taste_names_the_stop_and_the_reason(
+    client, repository
+):
     _doi_co_gu(client, repository)
-    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
+    client.post(
+        f"/contexts/{CAP}/notebook/proposals",
+        json={"purpose": "chia_gu"},
+        headers=head(NGUOI_KIA),
+    )
     first = _read(client, _draft(client)).json()["versions"][0]
     stop = first["content"]["chang"][0]
     assert stop["viec"] == "Cà phê", "gu người kia đã chia: Cafe"
-    assert stop.get("place_id") is None, "chưa có buổi nào để biết thành phố, nên không bịa chỗ"
+    assert stop.get("place_id") is None, (
+        "chưa có buổi nào để biết thành phố, nên không bịa chỗ"
+    )
     assert first["ly_do"] == "Người Ấy thích Cafe, nên Nếp phác theo đó."
 
 
 def test_both_shared_uses_what_they_have_in_common_first(client, repository):
     _doi_co_gu(client, repository)
-    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(NGUOI_KIA))
-    client.post(f"/contexts/{CAP}/notebook/proposals", json={"purpose": "chia_gu"}, headers=head(TOI))
+    client.post(
+        f"/contexts/{CAP}/notebook/proposals",
+        json={"purpose": "chia_gu"},
+        headers=head(NGUOI_KIA),
+    )
+    client.post(
+        f"/contexts/{CAP}/notebook/proposals",
+        json={"purpose": "chia_gu"},
+        headers=head(TOI),
+    )
     first = _read(client, _draft(client)).json()["versions"][0]
     assert first["content"]["chang"][0]["viec"] == "Cà phê"
     assert first["ly_do"].startswith("Hai bạn cùng thích Cafe")
@@ -962,20 +1050,27 @@ def test_a_fourth_sheet_in_one_week_is_refused_and_the_next_week_is_open(client,
     assert theirs.status_code == 201, "hạn mức là của từng người"
     clock(TUAN_SAU)
     client.post(f"/papers/{theirs.json()['id']}/skip", headers=head(NGUOI_KIA))
-    assert client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI)).status_code == 201
+    assert (
+        client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI)).status_code
+        == 201
+    )
 
 
 # ADR-0034 §2.4: the baton passes when the usual lead opened two weeks running.
 
 
-def test_the_week_passes_to_the_other_after_two_weeks_opened_by_the_same_person(client, clock):
+def test_the_week_passes_to_the_other_after_two_weeks_opened_by_the_same_person(
+    client, clock
+):
     lap_so(client)
     dong_thuan(client, "bat_doi")
     for _ in range(2):
         paper_id = _draft(client)
         assert _send(client, paper_id).status_code == 200
         clock(timedelta(days=7))
-    role = client.get(f"/contexts/{CAP}/notebook", headers=head(TOI)).json()["week_role"]
+    role = client.get(f"/contexts/{CAP}/notebook", headers=head(TOI)).json()[
+        "week_role"
+    ]
     assert role["cach"] == "luot", role
     assert role["nguoi_lo"] == [str(NGUOI_KIA)]
 
@@ -995,9 +1090,14 @@ def test_a_block_closes_the_notebook_both_ways_but_never_traps_what_you_sent(cli
         assert draft.status_code == 409, draft.text
         assert draft.json()["code"] == "direct_message_unavailable"
     answer = _agree(client, sent, actor=TOI)
-    assert answer.status_code == 409 and answer.json()["code"] == "direct_message_unavailable"
+    assert (
+        answer.status_code == 409
+        and answer.json()["code"] == "direct_message_unavailable"
+    )
     seen = client.post(f"/papers/{sent}/versions/1/viewed", headers=head(TOI))
-    assert seen.status_code == 409 and seen.json()["code"] == "direct_message_unavailable"
+    assert (
+        seen.status_code == 409 and seen.json()["code"] == "direct_message_unavailable"
+    )
 
     taken_back = client.post(
         f"/papers/{sent}/withdraw", json={"version": 1}, headers=head(NGUOI_KIA)

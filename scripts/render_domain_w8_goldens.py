@@ -488,7 +488,10 @@ def pp_lam_giau(routine, rang_buoc, now, lich_su, cho_cu, ung_vien):
     return pair_paper.lam_giau_phac(
         pair_paper.phac_to_giay(routine_of(routine), boxes, now=now),
         lich_su=[
-            {"ngay": ngay, "chang": [{"gio": g, "viec": v, "place_id": p} for g, v, p in chang]}
+            {
+                "ngay": ngay,
+                "chang": [{"gio": g, "viec": v, "place_id": p} for g, v, p in chang],
+            }
             for ngay, chang in lich_su
         ],
         cho_cu=row_of(cho_cu),
@@ -506,7 +509,9 @@ def pp_gu_cho_nep(nguoi_chia, gu, ten, ca_hai):
     return pair_paper.gu_cho_nep(nguoi_chia, gu, ten, ca_hai=ca_hai)
 
 
-def pp_theo_gu(routine, rang_buoc, now, lich_su, cho_cu, ung_vien, gu, ung_vien_gu, da_di):
+def pp_theo_gu(
+    routine, rang_buoc, now, lich_su, cho_cu, ung_vien, gu, ung_vien_gu, da_di
+):
     # ADR-0034: the draft after lam_giau_phac, told the shared tastes.
     return pair_paper.lam_giau_theo_gu(
         pp_lam_giau(routine, rang_buoc, now, lich_su, cho_cu, ung_vien),
@@ -798,7 +803,13 @@ def pair_paper_edges() -> list[dict]:
         ("history_place_no_candidates", [], [da_di], lau, [lau]),
         ("best_rated_new_place", [], [da_di], lau, [bun, lau, nuong, oc]),
         ("tie_on_rating_takes_more_ratings", [], [da_di], lau, [nuong, bun]),
-        ("exact_tie_takes_the_earlier_row", [], [da_di], lau, [bun, ["p-bun2", "Bún bò 2", "quan-an-local", [], [], 48, 200]]),
+        (
+            "exact_tie_takes_the_earlier_row",
+            [],
+            [da_di],
+            lau,
+            [bun, ["p-bun2", "Bún bò 2", "quan-an-local", [], [], 48, 200]],
+        ),
         ("none_rating_ranks_last", [], [da_di], lau, [khong, nuong]),
         ("only_unrated", [], [da_di], lau, [khong]),
         ("constraint_blocks_by_kind_folded", ["Hải sản"], [da_di], lau, [oc]),
@@ -807,12 +818,36 @@ def pair_paper_edges() -> list[dict]:
         ("constraint_one_letter_ignored", ["b, ,  "], [da_di], lau, [bun]),
         ("constraint_unrelated_keeps_place", ["Đừng hát karaoke"], [da_di], lau, [bun]),
         ("constraint_non_str_kind_skipped", ["7"], [da_di], lau, [oc]),
-        ("constraint_dotted_capital_i", ["istanbul"], [da_di], lau, [["p-i", "İstanbul", "quan-an-local", [], [], 40, 1]]),
+        (
+            "constraint_dotted_capital_i",
+            ["istanbul"],
+            [da_di],
+            lau,
+            [["p-i", "İstanbul", "quan-an-local", [], [], 40, 1]],
+        ),
         ("cafe_names_the_stop", [], [da_di], lau, [cafe]),
         ("older_place_is_the_reference", [], [tu_do, da_di], lau, [bun]),
-        ("visited_elsewhere_in_history", [], [["2030-09-21", [["19:00", "Bún", "p-bun"]]], da_di], lau, [bun, nuong]),
-        ("long_name_shortens_both_sentences", [], [da_di], lau, [["p-dai2", "Quán " + "x" * 80, "quan-an-local", [], [], 50, 1]]),
-        ("longer_name_drops_history_sentence", [], [da_di], lau, [["p-dai3", "Quán " + "x" * 115, "quan-an-local", [], [], 50, 1]]),
+        (
+            "visited_elsewhere_in_history",
+            [],
+            [["2030-09-21", [["19:00", "Bún", "p-bun"]]], da_di],
+            lau,
+            [bun, nuong],
+        ),
+        (
+            "long_name_shortens_both_sentences",
+            [],
+            [da_di],
+            lau,
+            [["p-dai2", "Quán " + "x" * 80, "quan-an-local", [], [], 50, 1]],
+        ),
+        (
+            "longer_name_drops_history_sentence",
+            [],
+            [da_di],
+            lau,
+            [["p-dai3", "Quán " + "x" * 115, "quan-an-local", [], [], 50, 1]],
+        ),
         ("too_long_name_not_proposed", [], [da_di], lau, [long_name]),
     ):
         out.append(
@@ -834,7 +869,9 @@ def pair_paper_edges() -> list[dict]:
             "lam_giau_phac",
             "reason_and_next_stop_kept",
             {
-                "routine": dict(good, ly_do="Nếp nhớ.", di_tiep={"gio": "21:00", "viec": "Chè"}),
+                "routine": dict(
+                    good, ly_do="Nếp nhớ.", di_tiep={"gio": "21:00", "viec": "Chè"}
+                ),
                 "rang_buoc": ["Hải sản"],
                 "now": T,
                 "lich_su": [da_di],
@@ -852,35 +889,127 @@ def pair_paper_edges() -> list[dict]:
                 "rang_buoc": [TEXTS[7], TEXTS[10]],
                 "now": T,
                 "lich_su": [["2030-09-14", [[TEXTS[11], TEXTS[12], "p-lau"]]]],
-                "cho_cu": [ "p-lau", TEXTS[9], "quan-an-local", [TEXTS[5]], [], 10, 1],
-                "ung_vien": [["p-x", TEXTS[8], "quan-an-local", [TEXTS[6]], [TEXTS[13]], 30, 2]],
+                "cho_cu": ["p-lau", TEXTS[9], "quan-an-local", [TEXTS[5]], [], 10, 1],
+                "ung_vien": [
+                    ["p-x", TEXTS[8], "quan-an-local", [TEXTS[6]], [TEXTS[13]], 30, 2]
+                ],
             },
         )
     )
     # ADR-0034 §2.2: tastes Nếp may use, and the draft told them.
     for name, chia, gu, ten, ca_hai in (
-        ("both_share_common_first", ["TOI-ID", "KIA-ID"], {"TOI-ID": ["game", "cafe"], "KIA-ID": ["cafe", "outdoor", "tag-bo"]}, {"TOI-ID": "Linh", "KIA-ID": "Minh"}, True),
-        ("one_shares", ["KIA-ID"], {"KIA-ID": ["nightlife", "an-uong"]}, {"KIA-ID": "Minh"}, False),
+        (
+            "both_share_common_first",
+            ["TOI-ID", "KIA-ID"],
+            {"TOI-ID": ["game", "cafe"], "KIA-ID": ["cafe", "outdoor", "tag-bo"]},
+            {"TOI-ID": "Linh", "KIA-ID": "Minh"},
+            True,
+        ),
+        (
+            "one_shares",
+            ["KIA-ID"],
+            {"KIA-ID": ["nightlife", "an-uong"]},
+            {"KIA-ID": "Minh"},
+            False,
+        ),
         ("sharer_without_tags", ["KIA-ID"], {}, {"KIA-ID": "Minh"}, False),
         ("sharer_without_a_name", ["KIA-ID"], {"KIA-ID": ["cafe"]}, {}, False),
-        ("two_share_but_not_both_participants", ["TOI-ID", "KIA-ID"], {"TOI-ID": ["cafe"], "KIA-ID": ["cafe"]}, {"TOI-ID": "Linh", "KIA-ID": "Minh"}, False),
+        (
+            "two_share_but_not_both_participants",
+            ["TOI-ID", "KIA-ID"],
+            {"TOI-ID": ["cafe"], "KIA-ID": ["cafe"]},
+            {"TOI-ID": "Linh", "KIA-ID": "Minh"},
+            False,
+        ),
         ("hostile_name", ["KIA-ID"], {"KIA-ID": ["cafe"]}, {"KIA-ID": TEXTS[7]}, False),
     ):
-        out.append(case("gu_cho_nep", name, {"nguoi_chia": chia, "gu": gu, "ten": ten, "ca_hai": ca_hai}))
+        out.append(
+            case(
+                "gu_cho_nep",
+                name,
+                {"nguoi_chia": chia, "gu": gu, "ten": ten, "ca_hai": ca_hai},
+            )
+        )
     chung_cafe = [["cafe", True, None, ["TOI-ID", "KIA-ID"]]]
-    minh_nightlife = [["outdoor", False, "Minh", ["KIA-ID"]], ["nightlife", False, "Minh", ["KIA-ID"]]]
+    minh_nightlife = [
+        ["outdoor", False, "Minh", ["KIA-ID"]],
+        ["nightlife", False, "Minh", ["KIA-ID"]],
+    ]
     cafe2 = ["p-cafe2", "Cafe Hải Sản", "cafe", [], [], 49, 3]
     cafe3 = ["p-cafe3", "Tiệm Chiều", "cafe", [], ["yên tĩnh"], 45, 9]
     for name, rang_buoc, lich_su, cho_cu, ung_vien, gu, ung_vien_gu, da_di_ids in (
         ("no_taste", [], [], None, [], [], [], []),
-        ("no_usable_taste", [], [], None, [], [["outdoor", True, None, ["TOI-ID", "KIA-ID"]]], [], []),
+        (
+            "no_usable_taste",
+            [],
+            [],
+            None,
+            [],
+            [["outdoor", True, None, ["TOI-ID", "KIA-ID"]]],
+            [],
+            [],
+        ),
         ("no_history_names_the_stop", [], [], None, [], chung_cafe, [], []),
-        ("one_sharer_names_the_stop", ["Hải sản"], [], None, [], minh_nightlife, [], []),
-        ("history_place_wins", [], [da_di], lau, [["p-lau2", "Lẩu Hai", "quan-an-local", [], [], 45, 3]], chung_cafe, [cafe, cafe3], ["p-lau"]),
-        ("history_without_new_place_then_taste_picks", [], [da_di], lau, [], chung_cafe, [cafe, cafe3, cafe2], ["p-lau"]),
-        ("taste_avoids_a_box", ["hải sản"], [da_di], lau, [], chung_cafe, [cafe2, cafe3], ["p-lau"]),
-        ("taste_skips_visited_and_other_kinds", [], [da_di], lau, [], chung_cafe, [cafe, ["p-x", "Khu Vui", "vui-choi", [], [], 50, 9]], ["p-lau", "p-cafe"]),
-        ("long_name_falls_back", [], [da_di], lau, [], chung_cafe, [["p-dai", "Quán " + "x" * 190, "cafe", [], [], 50, 1]], ["p-lau"]),
+        (
+            "one_sharer_names_the_stop",
+            ["Hải sản"],
+            [],
+            None,
+            [],
+            minh_nightlife,
+            [],
+            [],
+        ),
+        (
+            "history_place_wins",
+            [],
+            [da_di],
+            lau,
+            [["p-lau2", "Lẩu Hai", "quan-an-local", [], [], 45, 3]],
+            chung_cafe,
+            [cafe, cafe3],
+            ["p-lau"],
+        ),
+        (
+            "history_without_new_place_then_taste_picks",
+            [],
+            [da_di],
+            lau,
+            [],
+            chung_cafe,
+            [cafe, cafe3, cafe2],
+            ["p-lau"],
+        ),
+        (
+            "taste_avoids_a_box",
+            ["hải sản"],
+            [da_di],
+            lau,
+            [],
+            chung_cafe,
+            [cafe2, cafe3],
+            ["p-lau"],
+        ),
+        (
+            "taste_skips_visited_and_other_kinds",
+            [],
+            [da_di],
+            lau,
+            [],
+            chung_cafe,
+            [cafe, ["p-x", "Khu Vui", "vui-choi", [], [], 50, 9]],
+            ["p-lau", "p-cafe"],
+        ),
+        (
+            "long_name_falls_back",
+            [],
+            [da_di],
+            lau,
+            [],
+            chung_cafe,
+            [["p-dai", "Quán " + "x" * 190, "cafe", [], [], 50, 1]],
+            ["p-lau"],
+        ),
     ):
         out.append(
             case(
@@ -1053,14 +1182,28 @@ def pair_paper_fuzz(seed: int, count: int) -> list[dict]:
     # lam_giau_phac draws from its own stream, so adding it left every case
     # above exactly as it was.
     rng = random.Random(seed * 1000 + 11)
-    words = ("Hải sản", "hải sản", "HẢI SẢN", "lẩu", "Lẩu gà", "nướng", "khói", "cay", "bún", "İ", "i")
+    words = (
+        "Hải sản",
+        "hải sản",
+        "HẢI SẢN",
+        "lẩu",
+        "Lẩu gà",
+        "nướng",
+        "khói",
+        "cay",
+        "bún",
+        "İ",
+        "i",
+    )
     ids = ("p-a", "p-b", "p-c", "p-d", "p-e")
 
     def row() -> list:
         return [
             rng.choice(ids),
             rng.choice(words + TEXTS),
-            rng.choice(("quan-an-local", "cafe", "vui-choi", "di-choi-dem", "", "khac")),
+            rng.choice(
+                ("quan-an-local", "cafe", "vui-choi", "di-choi-dem", "", "khac")
+            ),
             [rng.choice(words + TEXTS + (7, None)) for _ in range(rng.randint(0, 3))],
             [rng.choice(words + TEXTS) for _ in range(rng.randint(0, 2))],
             rng.choice((None, 0, 10, 45, 46, 48, 50)),
@@ -1072,7 +1215,11 @@ def pair_paper_fuzz(seed: int, count: int) -> list[dict]:
             [
                 "2030-09-14",
                 [
-                    [rng.choice(("19:30", "07:05", rng.choice(TEXTS))), rng.choice(words + TEXTS), rng.choice(ids + (None, ""))]
+                    [
+                        rng.choice(("19:30", "07:05", rng.choice(TEXTS))),
+                        rng.choice(words + TEXTS),
+                        rng.choice(ids + (None, "")),
+                    ]
                     for _ in range(rng.randint(0, 2))
                 ],
             ]
@@ -1092,7 +1239,9 @@ def pair_paper_fuzz(seed: int, count: int) -> list[dict]:
                 {
                     "routine": routine,
                     "rang_buoc": [
-                        ", ".join(rng.choice(words + TEXTS) for _ in range(rng.randint(1, 3)))
+                        ", ".join(
+                            rng.choice(words + TEXTS) for _ in range(rng.randint(1, 3))
+                        )
                         for _ in range(rng.randint(0, 2))
                     ],
                     "now": random_instant(rng),
@@ -1104,32 +1253,70 @@ def pair_paper_fuzz(seed: int, count: int) -> list[dict]:
         )
     # ADR-0034: its own stream, so every case above stays as it was.
     rng = random.Random(seed * 1000 + 13)
-    tags = ("an-uong", "cafe", "nightlife", "mon-local", "outdoor", "shopping", "karaoke", "game", "tag-bo", "")
+    tags = (
+        "an-uong",
+        "cafe",
+        "nightlife",
+        "mon-local",
+        "outdoor",
+        "shopping",
+        "karaoke",
+        "game",
+        "tag-bo",
+        "",
+    )
     people = ("TOI-ID", "KIA-ID")
     for i in range(max(1, count // 10)):
         chia = rng.sample(people, rng.randint(0, 2))
-        gu = {p: [rng.choice(tags) for _ in range(rng.randint(0, 4))] for p in people if rng.random() < 0.9}
+        gu = {
+            p: [rng.choice(tags) for _ in range(rng.randint(0, 4))]
+            for p in people
+            if rng.random() < 0.9
+        }
         out.append(
             case(
                 "gu_cho_nep",
                 f"fuzz-gu/{i}",
-                {"nguoi_chia": chia, "gu": gu, "ten": {p: rng.choice(("Minh", "", TEXTS[3])) for p in people}, "ca_hai": rng.random() < 0.7},
+                {
+                    "nguoi_chia": chia,
+                    "gu": gu,
+                    "ten": {p: rng.choice(("Minh", "", TEXTS[3])) for p in people},
+                    "ca_hai": rng.random() < 0.7,
+                },
             )
         )
         spec = [
-            [rng.choice(tags), rng.random() < 0.5, rng.choice((None, "Minh", rng.choice(TEXTS))), list(rng.sample(people, rng.randint(1, 2)))]
+            [
+                rng.choice(tags),
+                rng.random() < 0.5,
+                rng.choice((None, "Minh", rng.choice(TEXTS))),
+                list(rng.sample(people, rng.randint(1, 2))),
+            ]
             for _ in range(rng.randint(0, 3))
         ]
-        spec = [[t, c, (n if not c and n is not None else (None if c else "Minh")), ps] for t, c, n, ps in spec]
+        spec = [
+            [t, c, (n if not c and n is not None else (None if c else "Minh")), ps]
+            for t, c, n, ps in spec
+        ]
         out.append(
             case(
                 "lam_giau_theo_gu",
                 f"fuzz-theo-gu/{i}",
                 {
-                    "routine": {"ngay": ["date", "2030-09-21"], "gio": "18:30", "viec": "Ăn tối", "di_tiep": None, "ly_do": rng.choice(("", "Nếp nhớ."))},
-                    "rang_buoc": [rng.choice(words + TEXTS) for _ in range(rng.randint(0, 2))],
+                    "routine": {
+                        "ngay": ["date", "2030-09-21"],
+                        "gio": "18:30",
+                        "viec": "Ăn tối",
+                        "di_tiep": None,
+                        "ly_do": rng.choice(("", "Nếp nhớ.")),
+                    },
+                    "rang_buoc": [
+                        rng.choice(words + TEXTS) for _ in range(rng.randint(0, 2))
+                    ],
                     "now": random_instant(rng),
-                    "lich_su": rng.choice(([], [["2030-09-14", [["19:30", "Ăn", rng.choice(ids)]]]])),
+                    "lich_su": rng.choice(
+                        ([], [["2030-09-14", [["19:30", "Ăn", rng.choice(ids)]]]])
+                    ),
                     "cho_cu": rng.choice((None, row())),
                     "ung_vien": [row() for _ in range(rng.randint(0, 3))],
                     "gu": spec,
@@ -1198,7 +1385,9 @@ def notebook_record(n: dict | None) -> PairNotebookRecord | None:
                 proposal_expires_at=expires_at,
                 terms_version=1,
             )
-            for person, purpose, granted_at, revoked_at, expires_at, proposal in n["consents"]
+            for person, purpose, granted_at, revoked_at, expires_at, proposal in n[
+                "consents"
+            ]
         ),
         proposals=tuple(proposal_record(row) for row in n["proposals"]),
         constraints=tuple(
@@ -1321,7 +1510,9 @@ class Stub:
     def list_members(self, context_id):
         self.rec("list_members", context_id)
         return [
-            SimpleNamespace(person_id=U(person), state=state, display_name=f"Tên {person}")
+            SimpleNamespace(
+                person_id=U(person), state=state, display_name=f"Tên {person}"
+            )
             for person, state in self.world["roster"]
         ]
 
@@ -1329,7 +1520,11 @@ class Stub:
         self.rec("get_person", person_id)
         if self.world["other_gone"]:
             return None
-        return SimpleNamespace(deleted_at="2030-09-01T00:00:00+00:00" if self.world["other_deleted"] else None)
+        return SimpleNamespace(
+            deleted_at="2030-09-01T00:00:00+00:00"
+            if self.world["other_deleted"]
+            else None
+        )
 
     def get_friend_edge(self, a, b):
         self.rec("get_friend_edge", a, b)
@@ -1588,7 +1783,8 @@ class Stub:
         out = []
         for entry in self.world["places"]:
             pid, name, dest, cat, kinds, traits, rating, count = (
-                list(entry) + ["d-mau", "quan-an-local", [], [], None, None][len(entry) - 2 :]
+                list(entry)
+                + ["d-mau", "quan-an-local", [], [], None, None][len(entry) - 2 :]
             )
             out.append(
                 {
@@ -1799,7 +1995,9 @@ def nb(
 NB_NONE = nb(cycle=None, state=None, participants=())
 
 
-def grant(person, purpose, granted=T - HOUR, revoked=None, expires=T + 6 * DAY, proposal="PR1") -> list:
+def grant(
+    person, purpose, granted=T - HOUR, revoked=None, expires=T + 6 * DAY, proposal="PR1"
+) -> list:
     # The sixth field names the proposal the answer belongs to (2026-09-23:
     # agreement and «does this offer still stand» are per proposal).
     return [person, purpose, granted, revoked, expires, proposal]
@@ -2013,7 +2211,11 @@ def pair_steps_edges() -> list[dict]:
             "KIA",
         ),
         "respond_pair_paper": (
-            {"reads": [paper(owner="KIA", state="da_xem", responses=[[1, "KIA", "dong_y"]])]},
+            {
+                "reads": [
+                    paper(owner="KIA", state="da_xem", responses=[[1, "KIA", "dong_y"]])
+                ]
+            },
             None,
             "TOI",
         ),
@@ -2158,62 +2360,179 @@ def pair_steps_edges() -> list[dict]:
     doi_props = [prop("PRD", "bat_doi", completed=T - DAY)]
     gu = {"TOI": ["cafe", "an-uong"], "KIA": ["outdoor", "cafe", "tag-da-bo"]}
     for name, consents, proposals in (
-        ("taste_friends_only", both("lap_so") + [grant("KIA", "chia_gu", proposal="PGK")], [prop("PGK", "chia_gu", completed=T - DAY)]),
+        (
+            "taste_friends_only",
+            both("lap_so") + [grant("KIA", "chia_gu", proposal="PGK")],
+            [prop("PGK", "chia_gu", completed=T - DAY)],
+        ),
         ("taste_couple_nobody_shares", doi, doi_props),
-        ("taste_couple_they_share", doi + [grant("KIA", "chia_gu", proposal="PGK")], doi_props + [prop("PGK", "chia_gu", completed=T - DAY)]),
-        ("taste_couple_i_share", doi + [grant("TOI", "chia_gu", proposal="PGT")], doi_props + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)]),
+        (
+            "taste_couple_they_share",
+            doi + [grant("KIA", "chia_gu", proposal="PGK")],
+            doi_props + [prop("PGK", "chia_gu", completed=T - DAY)],
+        ),
+        (
+            "taste_couple_i_share",
+            doi + [grant("TOI", "chia_gu", proposal="PGT")],
+            doi_props + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)],
+        ),
         (
             "taste_couple_both_share",
-            doi + [grant("KIA", "chia_gu", proposal="PGK"), grant("TOI", "chia_gu", proposal="PGT")],
-            doi_props + [prop("PGK", "chia_gu", completed=T - DAY), prop("PGT", "chia_gu", by="TOI", completed=T - DAY)],
+            doi
+            + [
+                grant("KIA", "chia_gu", proposal="PGK"),
+                grant("TOI", "chia_gu", proposal="PGT"),
+            ],
+            doi_props
+            + [
+                prop("PGK", "chia_gu", completed=T - DAY),
+                prop("PGT", "chia_gu", by="TOI", completed=T - DAY),
+            ],
         ),
         (
             "taste_they_took_it_back",
-            doi + [grant("KIA", "chia_gu", proposal="PGK", revoked=T - MICRO), grant("TOI", "chia_gu", proposal="PGT")],
-            doi_props + [prop("PGK", "chia_gu", completed=T - DAY), prop("PGT", "chia_gu", by="TOI", completed=T - DAY)],
+            doi
+            + [
+                grant("KIA", "chia_gu", proposal="PGK", revoked=T - MICRO),
+                grant("TOI", "chia_gu", proposal="PGT"),
+            ],
+            doi_props
+            + [
+                prop("PGK", "chia_gu", completed=T - DAY),
+                prop("PGT", "chia_gu", by="TOI", completed=T - DAY),
+            ],
         ),
     ):
-        out.append(S(fn, name, req(fn), {"notebooks": [nb(consents=consents, proposals=proposals)], "papers": [], "interests": gu}, actor=("TOI", ("member",))))
+        out.append(
+            S(
+                fn,
+                name,
+                req(fn),
+                {
+                    "notebooks": [nb(consents=consents, proposals=proposals)],
+                    "papers": [],
+                    "interests": gu,
+                },
+                actor=("TOI", ("member",)),
+            )
+        )
     # ADR-0034 §2.4: «Người lo» of the week, inferred or chosen.
     doi_lap = doi + both("lap_so")
     doi_props_lap = doi_props + [prop("PR1", "lap_so", completed=T - DAY)]
+
     def gui(pid, ai, cycle="CY1"):
-        return paper(pid, owner=ai, state="da_gui", cycle=cycle, versions=[ver(1, sent_by=ai)])
+        return paper(
+            pid, owner=ai, state="da_gui", cycle=cycle, versions=[ver(1, sent_by=ai)]
+        )
+
     for name, state, papers, rhythm in (
         ("role_inferred_opener", "active", [], None),
-        ("role_sent_first_wins", "active", [gui("PP2", "TOI"), gui("PP3", "TOI"), gui("PP4", "KIA", cycle="CY2")], None),
+        (
+            "role_sent_first_wins",
+            "active",
+            [gui("PP2", "TOI"), gui("PP3", "TOI"), gui("PP4", "KIA", cycle="CY2")],
+            None,
+        ),
         ("role_chosen_share", "active", [], [None]),
         ("role_chosen_me", "active", [gui("PP2", "KIA")], ["TOI"]),
         ("role_pending_cycle", "pending", [], ["TOI"]),
     ):
         out.append(
-            S(fn, name, req(fn), {"notebooks": [nb(state=state, consents=doi_lap, proposals=doi_props_lap)], "papers": papers, "rhythm": rhythm}, actor=("TOI", ("member",)))
+            S(
+                fn,
+                name,
+                req(fn),
+                {
+                    "notebooks": [
+                        nb(state=state, consents=doi_lap, proposals=doi_props_lap)
+                    ],
+                    "papers": papers,
+                    "rhythm": rhythm,
+                },
+                actor=("TOI", ("member",)),
+            )
         )
+
     # ADR-0034 §2.4: the baton -- TOI opened the last two weeks, so this week
     # passes to KIA; with a hole in the history it stays.
     def mo(pid, ai, tuan, luc):
-        return paper(pid, owner=ai, state="het_han", cycle="CY1", tuan=tuan, expires=luc + 3 * DAY, versions=[ver(1, sent_by=ai, sent_at=luc)])
+        return paper(
+            pid,
+            owner=ai,
+            state="het_han",
+            cycle="CY1",
+            tuan=tuan,
+            expires=luc + 3 * DAY,
+            versions=[ver(1, sent_by=ai, sent_at=luc)],
+        )
+
     tuan1, tuan2 = TUAN - timedelta(days=7), TUAN - timedelta(days=14)
     luc1, luc2 = T - 7 * DAY, T - 14 * DAY
     for name, papers in (
-        ("role_baton_passes", [mo("PP2", "TOI", tuan1, luc1), mo("PP3", "TOI", tuan2, luc2)]),
+        (
+            "role_baton_passes",
+            [mo("PP2", "TOI", tuan1, luc1), mo("PP3", "TOI", tuan2, luc2)],
+        ),
         ("role_baton_stays_after_a_gap", [mo("PP2", "TOI", tuan1, luc1)]),
-        ("role_baton_other_opened_first", [mo("PP2", "TOI", tuan1, luc1), mo("PP3", "TOI", tuan2, luc2), mo("PP4", "KIA", tuan1, luc1 - HOUR)]),
+        (
+            "role_baton_other_opened_first",
+            [
+                mo("PP2", "TOI", tuan1, luc1),
+                mo("PP3", "TOI", tuan2, luc2),
+                mo("PP4", "KIA", tuan1, luc1 - HOUR),
+            ],
+        ),
     ):
         out.append(
-            S(fn, name, req(fn), {"notebooks": [nb(consents=doi_lap, proposals=doi_props_lap)], "papers": papers}, actor=("TOI", ("member",)))
+            S(
+                fn,
+                name,
+                req(fn),
+                {
+                    "notebooks": [nb(consents=doi_lap, proposals=doi_props_lap)],
+                    "papers": papers,
+                },
+                actor=("TOI", ("member",)),
+            )
         )
     fn = "set_pair_week_role"
     for name, lo, locks, rhythm in (
-        ("outside_a_couple", "toi", [nb(consents=both("lap_so"), proposals=[prop("PR1", "lap_so", completed=T - DAY)])], None),
+        (
+            "outside_a_couple",
+            "toi",
+            [
+                nb(
+                    consents=both("lap_so"),
+                    proposals=[prop("PR1", "lap_so", completed=T - DAY)],
+                )
+            ],
+            None,
+        ),
         ("no_cycle", "toi", [NB_NONE], None),
-        ("pending_cycle", "toi", [nb(state="pending", consents=doi_lap, proposals=doi_props_lap)], None),
+        (
+            "pending_cycle",
+            "toi",
+            [nb(state="pending", consents=doi_lap, proposals=doi_props_lap)],
+            None,
+        ),
         ("me", "toi", [nb(consents=doi_lap, proposals=doi_props_lap)], None),
-        ("the_other", "nguoi_kia", [nb(consents=doi_lap, proposals=doi_props_lap)], None),
+        (
+            "the_other",
+            "nguoi_kia",
+            [nb(consents=doi_lap, proposals=doi_props_lap)],
+            None,
+        ),
         ("both", "ca_hai", [nb(consents=doi_lap, proposals=doi_props_lap)], ["KIA"]),
         ("notebook_created", "toi", [None, NB_NONE], None),
     ):
-        out.append(S(fn, name, req(fn, lo=lo), {"locks": locks, "papers": [], "rhythm": rhythm}))
+        out.append(
+            S(
+                fn,
+                name,
+                req(fn, lo=lo),
+                {"locks": locks, "papers": [], "rhythm": rhythm},
+            )
+        )
     fn = "pair_notebook"
 
     # --- propose_pair_consent ------------------------------------------------------
@@ -2241,25 +2560,53 @@ def pair_steps_edges() -> list[dict]:
         (
             "again_by_the_proposer",
             "lap_so",
-            [nb(state="pending", consents=[grant("TOI", "lap_so")], proposals=[prop("PR1", "lap_so", by="TOI")])],
+            [
+                nb(
+                    state="pending",
+                    consents=[grant("TOI", "lap_so")],
+                    proposals=[prop("PR1", "lap_so", by="TOI")],
+                )
+            ],
             None,
         ),
         (
             "again_after_taking_ones_own_yes_back",
             "lap_so",
-            [nb(state="pending", consents=[grant("TOI", "lap_so", revoked=T - HOUR)], proposals=[prop("PR1", "lap_so", by="TOI")])],
+            [
+                nb(
+                    state="pending",
+                    consents=[grant("TOI", "lap_so", revoked=T - HOUR)],
+                    proposals=[prop("PR1", "lap_so", by="TOI")],
+                )
+            ],
             None,
         ),
         (
             "couple_while_the_other_offers_it",
             "bat_doi",
-            [nb(consents=both("lap_so") + [grant("KIA", "bat_doi", proposal="PR2")], proposals=[prop("PR1", "lap_so", completed=T - HOUR), prop("PR2", "bat_doi", by="KIA")])],
+            [
+                nb(
+                    consents=both("lap_so") + [grant("KIA", "bat_doi", proposal="PR2")],
+                    proposals=[
+                        prop("PR1", "lap_so", completed=T - HOUR),
+                        prop("PR2", "bat_doi", by="KIA"),
+                    ],
+                )
+            ],
             None,
         ),
         (
             "couple_after_the_other_offer_lapsed",
             "bat_doi",
-            [nb(consents=both("lap_so") + [grant("KIA", "bat_doi", proposal="PR2")], proposals=[prop("PR1", "lap_so", completed=T - HOUR), prop("PR2", "bat_doi", by="KIA", expires=T - HOUR)])],
+            [
+                nb(
+                    consents=both("lap_so") + [grant("KIA", "bat_doi", proposal="PR2")],
+                    proposals=[
+                        prop("PR1", "lap_so", completed=T - HOUR),
+                        prop("PR2", "bat_doi", by="KIA", expires=T - HOUR),
+                    ],
+                )
+            ],
             None,
         ),
     ):
@@ -2268,15 +2615,42 @@ def pair_steps_edges() -> list[dict]:
             w["roster"] = roster
         out.append(S(fn, name, req(fn, purpose=purpose), w))
     doi = both("lap_so") + both("bat_doi", proposal="PRD")
-    doi_props = [prop("PR1", "lap_so", completed=T - DAY), prop("PRD", "bat_doi", completed=T - DAY)]
+    doi_props = [
+        prop("PR1", "lap_so", completed=T - DAY),
+        prop("PRD", "bat_doi", completed=T - DAY),
+    ]
     for name, notebook in (
-        ("taste_outside_a_couple", nb(consents=both("lap_so"), proposals=[prop("PR1", "lap_so", completed=T - DAY)])),
+        (
+            "taste_outside_a_couple",
+            nb(
+                consents=both("lap_so"),
+                proposals=[prop("PR1", "lap_so", completed=T - DAY)],
+            ),
+        ),
         ("taste_in_a_couple", nb(consents=doi, proposals=doi_props)),
-        ("taste_while_the_other_shares", nb(consents=doi + [grant("KIA", "chia_gu", proposal="PGK")], proposals=doi_props + [prop("PGK", "chia_gu", completed=T - DAY)])),
-        ("taste_again_while_on", nb(consents=doi + [grant("TOI", "chia_gu", proposal="PGT")], proposals=doi_props + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)])),
+        (
+            "taste_while_the_other_shares",
+            nb(
+                consents=doi + [grant("KIA", "chia_gu", proposal="PGK")],
+                proposals=doi_props + [prop("PGK", "chia_gu", completed=T - DAY)],
+            ),
+        ),
+        (
+            "taste_again_while_on",
+            nb(
+                consents=doi + [grant("TOI", "chia_gu", proposal="PGT")],
+                proposals=doi_props
+                + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)],
+            ),
+        ),
         (
             "taste_again_after_taking_it_back",
-            nb(consents=doi + [grant("TOI", "chia_gu", proposal="PGT", revoked=T - HOUR)], proposals=doi_props + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)]),
+            nb(
+                consents=doi
+                + [grant("TOI", "chia_gu", proposal="PGT", revoked=T - HOUR)],
+                proposals=doi_props
+                + [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)],
+            ),
         ),
     ):
         out.append(S(fn, name, req(fn, purpose="chia_gu"), {"locks": [notebook]}))
@@ -2712,7 +3086,15 @@ def pair_steps_edges() -> list[dict]:
         paper("PP7", state="nghi_tuan"),
     ]
     for who in ("TOI", "KIA"):
-        out.append(S(fn, f"unsent_closed_as_{who.lower()}", req(fn), {"papers": unsent}, actor=(who, ("member",))))
+        out.append(
+            S(
+                fn,
+                f"unsent_closed_as_{who.lower()}",
+                req(fn),
+                {"papers": unsent},
+                actor=(who, ("member",)),
+            )
+        )
 
     # --- draft_pair_paper --------------------------------------------------------------
     fn = "draft_pair_paper"
@@ -2765,15 +3147,25 @@ def pair_steps_edges() -> list[dict]:
             actor=("TOI", ()),
         )
     )
+
     # The draft reads this cycle's agreed sheets and the catalogue around the
     # place they chose (2026-09-24).
-    def agreed(pid="PP3", state="chot", cycle="CY1", stops=(("19:30", "Ăn lẩu"),), place="p-lau", content=None):
+    def agreed(
+        pid="PP3",
+        state="chot",
+        cycle="CY1",
+        stops=(("19:30", "Ăn lẩu"),),
+        place="p-lau",
+        content=None,
+    ):
         return paper(
             pid,
             owner="KIA",
             state=state,
             cycle=cycle,
-            versions=[ver(1, content=content or body(stops=stops, place=place), sent_by="KIA")],
+            versions=[
+                ver(1, content=content or body(stops=stops, place=place), sent_by="KIA")
+            ],
         )
 
     catalogue = [
@@ -2790,50 +3182,144 @@ def pair_steps_edges() -> list[dict]:
         ("history_invitation_ignored", [NB_ACTIVE], [agreed(cycle=None)], catalogue),
         ("history_pending_notebook_reads_nothing", [NB_PENDING], [agreed()], catalogue),
         ("history_cancelled_ignored", [NB_ACTIVE], [agreed(state="huy")], catalogue),
-        ("history_done_and_kept_count", [NB_ACTIVE], [agreed("PP3", "da_giu"), agreed("PP4", "da_di", place="p-bun")], catalogue),
-        ("history_place_unknown", [NB_ACTIVE], [agreed(place="p-khong-con")], catalogue),
+        (
+            "history_done_and_kept_count",
+            [NB_ACTIVE],
+            [agreed("PP3", "da_giu"), agreed("PP4", "da_di", place="p-bun")],
+            catalogue,
+        ),
+        (
+            "history_place_unknown",
+            [NB_ACTIVE],
+            [agreed(place="p-khong-con")],
+            catalogue,
+        ),
         ("history_without_place", [NB_ACTIVE], [agreed(place=None)], catalogue),
         (
             "history_unreadable_skipped",
             [NB_ACTIVE],
-            [agreed("PP3", content={"ngay": None}), agreed("PP4", stops=(("20:00", "Ăn bún"),))],
+            [
+                agreed("PP3", content={"ngay": None}),
+                agreed("PP4", stops=(("20:00", "Ăn bún"),)),
+            ],
             catalogue,
         ),
         (
             "history_limited_to_four",
             [NB_ACTIVE],
-            [agreed(f"PP{i}", place=None, stops=((f"2{i}:00", "Ăn"),)) for i in range(3, 7)] + [agreed("PP7")],
+            [
+                agreed(f"PP{i}", place=None, stops=((f"2{i}:00", "Ăn"),))
+                for i in range(3, 7)
+            ]
+            + [agreed("PP7")],
             catalogue,
         ),
     ):
-        out.append(S(fn, name, req(fn), {"locks": locks, "papers": papers, "places": places}))
+        out.append(
+            S(fn, name, req(fn), {"locks": locks, "papers": papers, "places": places})
+        )
+
     # ADR-0034 §2.5: three sheets per person per week.
-    bo = lambda pid, owner="TOI", tuan=TUAN: paper(pid, owner=owner, state="bo", tuan=tuan, versions=[ver(1, sent_by=None, sent_at=None)])
+    def bo(pid, owner="TOI", tuan=TUAN):
+        return paper(
+            pid,
+            owner=owner,
+            state="bo",
+            tuan=tuan,
+            versions=[ver(1, sent_by=None, sent_at=None)],
+        )
+
     for name, papers in (
         ("quota_two_leaves_room", [bo("PP2"), bo("PP3")]),
         ("quota_three_is_the_ceiling", [bo("PP2"), bo("PP3"), bo("PP4")]),
         ("quota_is_per_person", [bo("PP2", "KIA"), bo("PP3", "KIA"), bo("PP4", "KIA")]),
-        ("quota_is_per_week", [bo("PP2", tuan=TUAN - timedelta(days=7)), bo("PP3", tuan=TUAN - timedelta(days=7)), bo("PP4", tuan=TUAN - timedelta(days=7))]),
+        (
+            "quota_is_per_week",
+            [
+                bo("PP2", tuan=TUAN - timedelta(days=7)),
+                bo("PP3", tuan=TUAN - timedelta(days=7)),
+                bo("PP4", tuan=TUAN - timedelta(days=7)),
+            ],
+        ),
     ):
         out.append(S(fn, name, req(fn), {"locks": [NB_ACTIVE], "papers": papers}))
     # ADR-0034 §2.2: the tastes of whoever shared theirs, and nobody else's.
     doi = both("lap_so") + both("bat_doi", proposal="PRD")
-    doi_props = [prop("PR1", "lap_so", completed=T - DAY), prop("PRD", "bat_doi", completed=T - DAY)]
-    kia_chia = [grant("KIA", "chia_gu", proposal="PGK")], [prop("PGK", "chia_gu", completed=T - DAY)]
-    toi_chia = [grant("TOI", "chia_gu", proposal="PGT")], [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)]
+    doi_props = [
+        prop("PR1", "lap_so", completed=T - DAY),
+        prop("PRD", "bat_doi", completed=T - DAY),
+    ]
+    kia_chia = (
+        [grant("KIA", "chia_gu", proposal="PGK")],
+        [prop("PGK", "chia_gu", completed=T - DAY)],
+    )
+    toi_chia = (
+        [grant("TOI", "chia_gu", proposal="PGT")],
+        [prop("PGT", "chia_gu", by="TOI", completed=T - DAY)],
+    )
     gu = {"TOI": ["cafe", "game"], "KIA": ["nightlife", "cafe", "tag-da-bo"]}
-    chi_lau = [catalogue[0], catalogue[3], ["p-cafe2", "Cafe Hải Sản", "d-da-lat", "cafe", [], [], 49, 3]]
+    chi_lau = [
+        catalogue[0],
+        catalogue[3],
+        ["p-cafe2", "Cafe Hải Sản", "d-da-lat", "cafe", [], [], 49, 3],
+    ]
     for name, consents, proposals, papers, places in (
         ("taste_nobody_shared", doi, doi_props, [], catalogue),
-        ("taste_friends_only", both("lap_so") + kia_chia[0], [prop("PR1", "lap_so", completed=T - DAY)] + kia_chia[1], [], catalogue),
-        ("taste_they_shared_no_history", doi + kia_chia[0], doi_props + kia_chia[1], [], catalogue),
-        ("taste_both_shared_no_history", doi + kia_chia[0] + toi_chia[0], doi_props + kia_chia[1] + toi_chia[1], [], catalogue),
-        ("taste_history_place_wins", doi + kia_chia[0] + toi_chia[0], doi_props + kia_chia[1] + toi_chia[1], [agreed()], catalogue),
-        ("taste_after_history_ran_out", doi + kia_chia[0] + toi_chia[0], doi_props + kia_chia[1] + toi_chia[1], [agreed()], chi_lau),
-        ("taste_only_i_shared", doi + toi_chia[0], doi_props + toi_chia[1], [agreed()], chi_lau),
+        (
+            "taste_friends_only",
+            both("lap_so") + kia_chia[0],
+            [prop("PR1", "lap_so", completed=T - DAY)] + kia_chia[1],
+            [],
+            catalogue,
+        ),
+        (
+            "taste_they_shared_no_history",
+            doi + kia_chia[0],
+            doi_props + kia_chia[1],
+            [],
+            catalogue,
+        ),
+        (
+            "taste_both_shared_no_history",
+            doi + kia_chia[0] + toi_chia[0],
+            doi_props + kia_chia[1] + toi_chia[1],
+            [],
+            catalogue,
+        ),
+        (
+            "taste_history_place_wins",
+            doi + kia_chia[0] + toi_chia[0],
+            doi_props + kia_chia[1] + toi_chia[1],
+            [agreed()],
+            catalogue,
+        ),
+        (
+            "taste_after_history_ran_out",
+            doi + kia_chia[0] + toi_chia[0],
+            doi_props + kia_chia[1] + toi_chia[1],
+            [agreed()],
+            chi_lau,
+        ),
+        (
+            "taste_only_i_shared",
+            doi + toi_chia[0],
+            doi_props + toi_chia[1],
+            [agreed()],
+            chi_lau,
+        ),
     ):
         out.append(
-            S(fn, name, req(fn), {"locks": [nb(consents=consents, proposals=proposals)], "papers": papers, "places": places, "interests": gu})
+            S(
+                fn,
+                name,
+                req(fn),
+                {
+                    "locks": [nb(consents=consents, proposals=proposals)],
+                    "papers": papers,
+                    "places": places,
+                    "interests": gu,
+                },
+            )
         )
 
     # --- pair_paper ----------------------------------------------------------------------
@@ -2863,9 +3349,24 @@ def pair_steps_edges() -> list[dict]:
         ("revised_as_toi", revised, "TOI", T),
         ("revised_as_kia", revised, "KIA", T),
         ("draft_as_owner", paper(state="nhap"), "TOI", T),
-        ("unsent_skipped_as_owner", paper(state="nghi_tuan", versions=[ver(1, sent_at=None, sent_by=None)]), "TOI", T),
-        ("unsent_skipped_as_kia", paper(state="nghi_tuan", versions=[ver(1, sent_at=None, sent_by=None)]), "KIA", T),
-        ("unsent_discarded_as_kia", paper(state="bo", versions=[ver(1, sent_at=None, sent_by=None)]), "KIA", T),
+        (
+            "unsent_skipped_as_owner",
+            paper(state="nghi_tuan", versions=[ver(1, sent_at=None, sent_by=None)]),
+            "TOI",
+            T,
+        ),
+        (
+            "unsent_skipped_as_kia",
+            paper(state="nghi_tuan", versions=[ver(1, sent_at=None, sent_by=None)]),
+            "KIA",
+            T,
+        ),
+        (
+            "unsent_discarded_as_kia",
+            paper(state="bo", versions=[ver(1, sent_at=None, sent_by=None)]),
+            "KIA",
+            T,
+        ),
         ("sent_then_skipped_as_kia", paper(state="nghi_tuan"), "KIA", T),
         (
             "nep_sheet",
@@ -3245,8 +3746,18 @@ def pair_steps_edges() -> list[dict]:
     two_places = {
         "ngay": "2030-09-21",
         "chang": [
-            {"gio": "19:00", "viec": "Ăn tối", "place_id": "p-lau-ga", "can_kiem": True},
-            {"gio": "21:30", "viec": "Chè", "place_id": "p-da-dong-cua", "can_kiem": False},
+            {
+                "gio": "19:00",
+                "viec": "Ăn tối",
+                "place_id": "p-lau-ga",
+                "can_kiem": True,
+            },
+            {
+                "gio": "21:30",
+                "viec": "Chè",
+                "place_id": "p-da-dong-cua",
+                "can_kiem": False,
+            },
         ],
     }
     placed_agreed = dict(agreed, versions=[ver(1, content=two_places, sent_by="KIA")])
