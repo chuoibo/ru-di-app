@@ -24,7 +24,7 @@ import { CuonContext } from "./ui/cuon";
 import { KheLopProvider, useKheLop } from "./ui/KheLop";
 import { gridFor, tabBarHeight } from "./adaptive";
 import { KHONG_VIEN_WEB } from "./ui/khong-vien-web";
-import { TABLIST, giuState } from "../ui/a11y";
+import { TABLIST, giuState, tabState } from "../ui/a11y";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -871,6 +871,7 @@ export function Chip({
   tone = "accent",
   onPress,
   accessibilityLabel,
+  vaiTab = false,
 }: {
   label: string;
   icon?: IconName;
@@ -881,6 +882,12 @@ export function Chip({
   onPress?: () => void;
   /** When the same label appears on several rows, say which row this one is. */
   accessibilityLabel?: string;
+  /**
+   * One of a set that switches what the screen shows (Cộng đồng's three
+   * feeds, owner's mockup 01/10): a `tab` with `aria-selected` inside the
+   * caller's `tablist`, not a toggle button with `aria-pressed`.
+   */
+  vaiTab?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
   const foreground = selected ? toneColor(colors, tone) : colors.inkSoft;
@@ -909,8 +916,7 @@ export function Chip({
   return (
     <PressScale
       accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      aria-pressed={selected}
+      {...(vaiTab ? tabState(selected) : { accessibilityRole: "button" as const, "aria-pressed": selected })}
       onPress={onPress}
       pressedScale={0.96}
       style={[

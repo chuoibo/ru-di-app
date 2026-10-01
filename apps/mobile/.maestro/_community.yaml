@@ -1,4 +1,5 @@
-# Requires a real synthetic session and the community tab already open.
+# Requires a real synthetic session and Khám phá › Cộng đồng open (tap «Cộng đồng»
+# in the Khám phá header). Writing a post starts at the «Tạo mới» stamp.
 # Run against the dedicated QA application, not the fixture smoke suite.
 appId: com.lakiet.rudi
 ---
@@ -8,7 +9,8 @@ appId: com.lakiet.rudi
 - tapOn:
     text: "Để sau"
     optional: true
-- tapOn: "Đăng khoảnh khắc"
+- tapOn: "Tạo mới"
+- tapOn: "Viết bài"
 - extendedWaitUntil:
     visible:
       id: "community-body"
