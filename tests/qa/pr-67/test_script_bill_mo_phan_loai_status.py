@@ -260,7 +260,7 @@ def test_khong_noi_duoc_server_khong_phai_ket_luan_do(bill_image):
     result = _run(f"http://127.0.0.1:{dead_port}", bill_image)
 
     assert result.returncode == 2, (
-        "lỗi mạng phải là 2.\n" f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        f"lỗi mạng phải là 2.\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
     assert "Traceback" not in result.stderr
 

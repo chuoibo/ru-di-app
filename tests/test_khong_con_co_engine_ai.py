@@ -82,7 +82,9 @@ class TheEngineFlagIsGoneTests(unittest.TestCase):
         self.assertEqual(hits(configs, lambda _: True), [])
 
     def test_no_go_source_reads_the_flags(self):
-        names = [n for n in tracked() if n.startswith("services/core/") and n.endswith(".go")]
+        names = [
+            n for n in tracked() if n.startswith("services/core/") and n.endswith(".go")
+        ]
         self.assertGreater(len(names), 500, "the scan looked at too few Go files")
         self.assertEqual(hits(names, lambda _: True), [])
 

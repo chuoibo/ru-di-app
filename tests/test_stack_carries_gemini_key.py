@@ -173,7 +173,10 @@ class KeyCheckerHarness(unittest.TestCase):
         # bug-140342). The sandbox has to carry both or every `.env` case below
         # fails as `sh: cannot open`, which is what happened -- these tests
         # caught the extraction before it reached anybody's `make up`.
-        shutil.copy2(REPO_ROOT / "scripts" / "env_value.sh", self.root / "scripts" / "env_value.sh")
+        shutil.copy2(
+            REPO_ROOT / "scripts" / "env_value.sh",
+            self.root / "scripts" / "env_value.sh",
+        )
 
     def write_env(self, text: str) -> None:
         (self.root / ".env").write_text(text, encoding="utf-8")
