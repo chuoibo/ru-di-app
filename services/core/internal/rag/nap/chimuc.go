@@ -311,6 +311,10 @@ func (c ChiMuc) MotLuot(ctx context.Context, tx pgx.Tx) (BaoCaoChiMuc, error) {
 	if err != nil {
 		return b, err
 	}
+	uoc, err := DocGiaUoc(ctx, tx, ids)
+	if err != nil {
+		return b, err
+	}
 	// Enrich what changed, within the pass's ceiling.
 	if c.Model != nil && c.TranGoi > 0 {
 		var need []HoSoQuan
@@ -397,6 +401,7 @@ func (c ChiMuc) MotLuot(ctx context.Context, tx pgx.Tx) (BaoCaoChiMuc, error) {
 			}
 			continue
 		}
+		rs[0].HienThi = TruongHienThi(p, h, uoc[d.id])
 		viet = append(viet, viec{d: d, row: rs[0]})
 	}
 
@@ -967,6 +972,38 @@ func (c ChiMuc) XuLyTin(pool *pgxpool.Pool) func(ctx context.Context, queue stri
 		_, err := jobs.MotLuot(ctx, pool, c.DinhKy())
 		return err
 	}
+}
+
+// DanhDauLai marks every document the active collection of c holds for a
+// background re-check (priority -1, behind every real change): `core rag
+// v-danh-dau-lai place`. It marks only what that collection holds, so a
+// place the build left out (a duplicate, an unenriched one) is not brought
+// in. A row that still matches costs a read; one that lacks a field the
+// pipeline now writes gets it by a partial update.
+func (n Nap) DanhDauLai(ctx context.Context, q Querier, c Corpus) (int, error) {
+	if c != CorpusQuan {
+		return 0, fmt.Errorf("%w: only places are re-checked", ErrCauHinh)
+	}
+	p, err := PhienBanActive(ctx, q, c)
+	if err != nil {
+		return 0, err
+	}
+	ks, err := n.Kho.LietKe(ctx, p.Collection)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %v", errMilvus, err)
+	}
+	seen := map[string]bool{}
+	var ids []string
+	for _, k := range ks {
+		if !seen[k.DocID] {
+			seen[k.DocID] = true
+			ids = append(ids, k.DocID)
+		}
+	}
+	if _, err := q.Exec(ctx, `SELECT rag_danh_dau('place', $1::text[], NULL, (-1)::smallint)`, ids); err != nil {
+		return 0, err
+	}
+	return len(ids), nil
 }
 
 // TrangThai is `core rag v-status`: per corpus, ids, states, counts and

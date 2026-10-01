@@ -225,6 +225,7 @@ func TestKhoaVaCapNhatMotPhanMilvus(t *testing.T) {
 		{ChunkID: "c", DocID: "c", Text: "Cà phê view đồi thông", ContentHash: "hc", DiemDen: "d-da-lat"},
 	}
 	rows[0].GiaMin, rows[0].GiaMax, rows[0].GiaRo = gia(40000)
+	rows[0].HienThi = map[string]string{"ten": "Bún Bò Hồ", "gia": "40.000–60.000 đ/người"}
 	if _, err := n.Vector(ctx, nil, rows); err != nil {
 		t.Fatal(err)
 	}
@@ -246,6 +247,7 @@ func TestKhoaVaCapNhatMotPhanMilvus(t *testing.T) {
 	moi := rows[0]
 	moi.GiaMin, moi.GiaMax, moi.GiaRo = gia(90000)
 	moi.DiUng, moi.DanhMuc = []string{"dau_phong"}, []string{"an_vat"}
+	moi.HienThi = map[string]string{"ten": "Bún Bò Hồ", "gia": "90.000–110.000 đ/người"}
 	moi.Text, moi.Dense = "", nil // a partial update must not need them
 	if got, err := kho.CapNhatThuocTinhLo(ctx, ten, []nap.Hang{moi}); err != nil || got != 1 {
 		t.Fatalf("partial update: %d %v", got, err)
@@ -271,6 +273,18 @@ func TestKhoaVaCapNhatMotPhanMilvus(t *testing.T) {
 			t.Fatalf("the partially updated row lost its text or vector: %+v", hits)
 		}
 		time.Sleep(100 * time.Millisecond)
+	}
+	// A search hands back the evidence fields, as the partial update left
+	// them (ADR-0051: the answer is built from these).
+	hits, err := kho.M.Tim(ctx, vectordb.YeuCauTim{Ten: kho.ten(ten), Kho: vectordb.KhoDiaDiem, K: 3,
+		Thua: &vectordb.ThuaTruyVan{Text: "bún bò bên hồ"}})
+	if err != nil || len(hits) == 0 || hits[0].DocID != "a" || hits[0].HienThi["gia"] != "90.000–110.000 đ/người" {
+		t.Fatalf("evidence from the index: %+v %v", hits, err)
+	}
+	for _, h := range hits {
+		if h.DocID == "b" && h.HienThi != nil {
+			t.Fatalf("a row written without fields came back with some: %+v", h)
+		}
 	}
 
 	ma := rows[1]

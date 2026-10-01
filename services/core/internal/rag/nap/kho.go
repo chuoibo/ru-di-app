@@ -317,7 +317,7 @@ func (k *KhoNho) CapNhatThuocTinh(_ context.Context, ten, docID string, r Hang) 
 func thuocTinhTu(old, r Hang) Hang {
 	old.DiemDen, old.DiUng, old.DiUngRo, old.AnKieng = r.DiemDen, r.DiUng, r.DiUngRo, r.AnKieng
 	old.GiaMin, old.GiaMax, old.GiaRo, old.MoO, old.GioRo = r.GiaMin, r.GiaMax, r.GiaRo, r.MoO, r.GioRo
-	old.DanhMuc = r.DanhMuc
+	old.DanhMuc, old.HienThi = r.DanhMuc, r.HienThi
 	return old
 }
 
@@ -361,6 +361,18 @@ func (k *KhoNho) CapNhatThuocTinhLo(_ context.Context, ten string, rows []Hang) 
 		c.rows[r.ChunkID] = thuocTinhTu(c.rows[r.ChunkID], r)
 	}
 	return len(rows), nil
+}
+
+// Doc is row id of collection ten as stored (tests read what a write left).
+func (k *KhoNho) Doc(ten, id string) (Hang, bool) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	c, err := k.col(ten)
+	if err != nil {
+		return Hang{}, false
+	}
+	r, ok := c.rows[id]
+	return r, ok
 }
 
 func (k *KhoNho) Dem(_ context.Context, ten string) (int64, error) {

@@ -23,10 +23,17 @@ import (
 // changes, the enrichment stays current, so the place stays indexable.
 func doiChu(t *testing.T, pool *pgxpool.Pool, ids []string, chu string) {
 	t.Helper()
-	ctx := context.Background()
-	if _, err := pool.Exec(ctx, `UPDATE places SET description=$2 WHERE id = ANY($1)`, ids, chu); err != nil {
+	if _, err := pool.Exec(context.Background(), `UPDATE places SET description=$2 WHERE id = ANY($1)`, ids, chu); err != nil {
 		t.Fatal(err)
 	}
+	ghimLamGiau(t, pool, ids)
+}
+
+// ghimLamGiau carries the places' enrichment over to their current profile
+// (its source hash), as if it had been run again with the same answer.
+func ghimLamGiau(t *testing.T, pool *pgxpool.Pool, ids []string) {
+	t.Helper()
+	ctx := context.Background()
 	places, err := repo.Repository{Q: pool}.PlacesByID(ctx, ids)
 	if err != nil {
 		t.Fatal(err)

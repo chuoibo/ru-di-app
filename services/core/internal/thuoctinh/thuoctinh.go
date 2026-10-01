@@ -13,9 +13,10 @@
 //   - its tombstone in rag_tombstones, if any.
 //
 // It writes nothing: rag/nap is the only writer of place_enrichments and of
-// the index. The hybrid retriever checks every hit against Doc's answer, so
-// a stale index can lose a result but never show one that breaks a hard
-// constraint (docs/architecture/03 §8.4).
+// the index. Since ADR-0051 the hybrid retriever reads it only for hits the
+// index returned without evidence fields (rows written before them), and
+// re-checks those; the rest are answered from the index within the
+// freshness SLO.
 package thuoctinh
 
 import (
@@ -45,22 +46,15 @@ type Hang struct {
 	Gio   string
 	GioRo bool
 	GiaRo bool
+	// GiaUoc: the price is estimated from dishes (place_facts.gia_uoc).
+	GiaUoc bool
 }
 
-// ChuaRo are the evidence flags of the attributes Hang does not know:
-// "gio_chua_ro" for unknown hours, "gia_chua_ro" for an unknown price. A
-// place with an unknown attribute under a hard constraint on it never gets
-// this far (it is filtered out); without the constraint it stays, and the
-// answer says the attribute is not known.
-func (h Hang) ChuaRo() []string {
-	var out []string
-	if !h.GioRo {
-		out = append(out, "gio_chua_ro")
-	}
-	if !h.GiaRo {
-		out = append(out, "gia_chua_ro")
-	}
-	return out
+// Truong are the evidence fields (nap.NguonHienThi), the same an index row
+// carries.
+func (h Hang) Truong() map[string]string {
+	return nap.NguonHienThi{Ten: h.Ten, Loai: h.Loai, DiemDen: h.ThuocTinh.DiemDen, DiaChi: h.DiaChi, Gio: h.Gio,
+		GiaMin: h.GiaMinVND, GiaMax: h.GiaMaxVND, GioRo: h.GioRo, GiaRo: h.GiaRo, GiaUoc: h.GiaUoc}.Truong()
 }
 
 // DocTu is Doc bound to q, the form the hybrid retriever takes.
@@ -87,6 +81,10 @@ func Doc(ctx context.Context, q Querier, ids []string) (map[string]Hang, error) 
 		return nil, err
 	}
 	dm, err := nap.DocDanhMuc(ctx, q, ids)
+	if err != nil {
+		return nil, err
+	}
+	uoc, err := nap.DocGiaUoc(ctx, q, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +136,7 @@ func Doc(ctx context.Context, q Querier, ids []string) (map[string]Hang, error) 
 			tt.OSlots = nap.MoO(*h.Lich)
 		}
 		r := Hang{ThuocTinh: tt, Ten: p.Name, Loai: p.Category, GiaMinVND: p.PriceMinVND, GiaMaxVND: p.PriceMaxVND,
-			GioRo: h.Lich != nil, GiaRo: p.PriceMinVND != nil}
+			GioRo: h.Lich != nil, GiaRo: p.PriceMinVND != nil, GiaUoc: uoc[p.ID]}
 		if p.Address != nil {
 			r.DiaChi = *p.Address
 		}
@@ -148,4 +146,11 @@ func Doc(ctx context.Context, q Querier, ids []string) (map[string]Hang, error) 
 		out[p.ID] = r
 	}
 	return out, nil
+}
+
+// HienThiCua is p's evidence fields with no estimated-price flag: what the
+// lexical fallback quotes (it reads places alone).
+func HienThiCua(p repo.Place) map[string]string {
+	h, _ := nap.DungHoSo(p)
+	return nap.TruongHienThi(p, h, false)
 }

@@ -294,6 +294,7 @@ func PullFacts(ctx context.Context, pool *pgxpool.Pool, feed FactFeed, opt PullO
 	}
 
 	batch := &pgx.Batch{}
+	var uocDoi []string
 	for _, r := range rows {
 		if reason := factReject(r); reason != "" {
 			result.Rejected[reason]++
@@ -316,16 +317,38 @@ func PullFacts(ctx context.Context, pool *pgxpool.Pool, feed FactFeed, opt PullO
 		if lienHe == nil {
 			lienHe = []string{}
 		}
-		batch.Queue(upsertFactsSQL, PlaceID(r.PlaceID), r.PlaceID, r.SchemaVersion, r.TrangThai, state,
+		id := PlaceID(r.PlaceID)
+		batch.Queue(upsertFactsSQL, id, r.PlaceID, r.SchemaVersion, r.TrangThai, state,
 			string(r.GioMoCua), r.GioGhiChu, gio,
 			r.GiaNguoiMin, r.GiaNguoiMax, r.GiaNguoiCoSo, r.GiaNguoiGhiChu,
 			r.GiaMin, r.GiaMax, r.GiaDonVi, r.GiaGhiChu, lo, hi, uoc,
 			string(r.Menu), string(r.HoatDong), r.CanDatTruoc, r.TrongNhaNgoaiTroi,
-			r.ThoiLuongMin, r.ThoiLuongMax, lienHe, r.CheckedAt, r.HetHanAt, r.SyncedAt)
+			r.ThoiLuongMin, r.ThoiLuongMax, lienHe, r.CheckedAt, r.HetHanAt, r.SyncedAt).
+			QueryRow(func(row pgx.Row) error {
+				var doi bool
+				switch err := row.Scan(&doi); {
+				case errors.Is(err, pgx.ErrNoRows):
+					return nil
+				case err != nil:
+					return err
+				}
+				if doi {
+					uocDoi = append(uocDoi, id)
+				}
+				return nil
+			})
 		result.Landed++
 	}
 	if batch.Len() > 0 {
 		if err := tx.SendBatch(ctx, batch).Close(); err != nil {
+			return result, err
+		}
+	}
+	// Whether a price is estimated is quoted with it («khoảng … (ước)», the
+	// index's evidence fields) but lives here, not on places: a place whose
+	// flag moved while its numbers did not is marked for the index.
+	if len(uocDoi) > 0 {
+		if _, err := tx.Exec(ctx, `UPDATE places SET updated_at = clock_timestamp() WHERE id = ANY($1) AND source = 'vnlocal'`, uocDoi); err != nil {
 			return result, err
 		}
 	}
@@ -342,6 +365,7 @@ func PullFacts(ctx context.Context, pool *pgxpool.Pool, feed FactFeed, opt PullO
 }
 
 const upsertFactsSQL = `
+	WITH cu AS (SELECT gia_uoc FROM place_facts WHERE place_id = $1)
 	INSERT INTO place_facts (place_id, source_ref, schema_version, trang_thai, con_hoat_dong,
 	  gio_mo_cua, gio_ghi_chu, gio_osm,
 	  gia_nguoi_min_vnd, gia_nguoi_max_vnd, gia_nguoi_co_so, gia_nguoi_ghi_chu,
@@ -365,7 +389,8 @@ const upsertFactsSQL = `
 	  thoi_luong_phut_min = EXCLUDED.thoi_luong_phut_min, thoi_luong_phut_max = EXCLUDED.thoi_luong_phut_max,
 	  lien_he = EXCLUDED.lien_he, checked_at = EXCLUDED.checked_at, het_han_at = EXCLUDED.het_han_at,
 	  synced_at = EXCLUDED.synced_at, landed_at = clock_timestamp()
-	WHERE place_facts.synced_at <= EXCLUDED.synced_at`
+	WHERE place_facts.synced_at <= EXCLUDED.synced_at
+	RETURNING COALESCE((SELECT gia_uoc FROM cu), false) IS DISTINCT FROM place_facts.gia_uoc`
 
 // FactsApplied is what one derivation pass changed and what it left.
 type FactsApplied struct {

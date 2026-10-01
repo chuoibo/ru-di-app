@@ -4,6 +4,7 @@ package nap_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -115,5 +116,59 @@ func TestDoTuoi(t *testing.T) {
 	exec(`INSERT INTO `+s+`.place_lam_giau VALUES ($1)`, a)
 	if got := thieu(); got != before {
 		t.Fatalf("vnlocal's enrichment did not count: %d, want %d", got, before)
+	}
+}
+
+// The evidence fields reach the index with the row and follow the source:
+// a build writes them, new hours are a partial rewrite of them, and a live
+// estimated price is quoted «khoảng … (ước)».
+func TestChiMucTruongHienThi(t *testing.T) {
+	pool := naptest.Pool(t)
+	ctx := context.Background()
+	exec := func(sql string, args ...any) {
+		t.Helper()
+		if _, err := pool.Exec(ctx, sql, args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var schema string
+	_ = pool.QueryRow(ctx, `SELECT current_schema()`).Scan(&schema)
+	exec(`CREATE TABLE ` + pgx.Identifier{schema}.Sanitize() + `.place_facts (place_id text PRIMARY KEY, gia_uoc boolean NOT NULL,
+		het_han_at timestamptz NOT NULL)`)
+	v := naptest.Vang(t)
+	naptest.NapVang(t, pool, v)
+	kho := nap.NewKhoNho()
+	n, enc := naptest.Nap(t, kho)
+	naptest.LamGiauNhanTay(t, pool, n, v)
+	v1, _ := naptest.BuildEvalPromote(t, pool, n, enc, v)
+	const id = "dl-tiem-banh-may-xanh"
+	row := func() map[string]string {
+		t.Helper()
+		r, ok := kho.Doc(v1.Collection, id)
+		if !ok {
+			t.Fatal("the place is not indexed")
+		}
+		return r.HienThi
+	}
+	var ten string
+	_ = pool.QueryRow(ctx, `SELECT name FROM places WHERE id=$1`, id).Scan(&ten)
+	if f := row(); f["ten"] != ten || f["diem_den"] == "" {
+		t.Fatalf("the build wrote %v", f)
+	}
+	// New hours: not in the embedded text, not enrichment input -- a
+	// partial rewrite of the attributes and the evidence.
+	exec(`UPDATE places SET open_hours='Mo-Su 06:00-22:00' WHERE id=$1`, id)
+	if b := naptest.ChiMuc(t, pool, nap.ChiMuc{Nap: n}); b.MotPhan != 1 || b.Ghi != 0 || b.NhungOnline != 0 {
+		t.Fatalf("new hours: %+v", b)
+	}
+	if f := row(); f["gio"] != "Mo-Su 06:00-22:00" || strings.Contains(f["chua_ro"], "gio_chua_ro") {
+		t.Fatalf("the hours did not reach the evidence: %v", f)
+	}
+	exec(`UPDATE places SET price_min_vnd=40000, price_max_vnd=70000 WHERE id=$1`, id)
+	exec(`INSERT INTO place_facts VALUES ($1, true, now() + interval '30 days')`, id)
+	exec(`SELECT rag_danh_dau('place', ARRAY[$1::text], NULL, 0::smallint)`, id)
+	naptest.ChiMuc(t, pool, nap.ChiMuc{Nap: n})
+	if f := row(); f["gia"] != "khoảng 40.000–70.000 đ/người (ước)" || f["gia_min_vnd"] != "40000" {
+		t.Fatalf("an estimated price: %v", f)
 	}
 }

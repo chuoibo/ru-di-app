@@ -78,20 +78,9 @@ func (c *ChiDoc) Doc(ctx context.Context, fn func(pgx.Tx) error) error {
 
 // BangChungQuan is one place as evidence: the fields an answer may quote.
 func BangChungQuan(p repo.Place) truyhoi.BangChung {
-	t := map[string]string{"ten": p.Name, "loai": p.Category, "diem_den": p.DestinationID}
-	if p.Address != nil {
-		t["dia_chi"] = *p.Address
-	}
-	if p.PriceMinVND != nil {
-		t["gia_min_vnd"] = strconv.FormatInt(*p.PriceMinVND, 10)
-	}
-	if p.PriceMaxVND != nil {
-		t["gia_max_vnd"] = strconv.FormatInt(*p.PriceMaxVND, 10)
-	}
-	if p.OpenHours != nil {
-		t["gio"] = *p.OpenHours
-	}
-	return truyhoi.BangChung{ID: p.ID, Nguon: truyhoi.Places, Truong: t}
+	// The index's evidence fields (nap.TruongHienThi through thuoctinh), so
+	// the lexical fallback quotes a place as the hybrid path does.
+	return truyhoi.BangChung{ID: p.ID, Nguon: truyhoi.Places, Truong: thuoctinh.HienThiCua(p)}
 }
 
 // Lexical is the places retriever over rag's lexical index (full text,

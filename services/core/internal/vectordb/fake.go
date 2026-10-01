@@ -120,7 +120,7 @@ func (f *Fake) Tim(_ context.Context, y YeuCauTim) ([]Trung, error) {
 		leg := make([]Trung, len(l2))
 		for i, s := range l2 {
 			r := f.DiaDiem[s.id]
-			leg[i] = Trung{ID: s.id, DocID: r.Doc(), PhienBan: r.PhienBan}
+			leg[i] = Trung{ID: s.id, DocID: r.Doc(), PhienBan: r.PhienBan, HienThi: hienThiTu(r.MoRong)}
 		}
 		ranked = append(ranked, leg)
 		w = append(w, l.TrongSo)

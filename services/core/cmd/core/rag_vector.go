@@ -35,7 +35,7 @@ import (
 // every command prints one JSON object of ids, states and counts, never a
 // word of the catalogue.
 const ragVectorUsage = "usage: core rag v-build <place|manual> [--auto] | v-embed-batch place | v-eval <id> | v-promote <id> | v-rollback <place|manual> | " +
-	"v-status | v-enrich --tran-goi N | v-review list [--all] | v-review approve|reject <place_id> <ban> | v-dlq ls|retry | v-index | v-reconcile"
+	"v-danh-dau-lai place | v-status | v-enrich --tran-goi N | v-review list [--all] | v-review approve|reject <place_id> <ban> | v-dlq ls|retry | v-index | v-reconcile"
 
 // EnvRagDense chooses the dense encoder of the vector pipeline: unset or
 // "gemini" is the engine's embedding door (aiharness/nhung, which refuses a
@@ -85,6 +85,11 @@ func parseRagVector(args []string) (ragVectorCommand, error) {
 		if len(args) != 2 || corpus(args[1]) != nil {
 			return c, bad
 		}
+	case "v-danh-dau-lai":
+		if len(args) != 2 || args[1] != string(nap.CorpusQuan) {
+			return c, bad
+		}
+		c.corpus = nap.CorpusQuan
 	case "v-embed-batch":
 		// Places only: the manual is a few dozen chunks, online is fine.
 		if len(args) != 2 || args[1] != string(nap.CorpusQuan) {
@@ -320,6 +325,12 @@ func runRagVector(args []string, getenv func(string) string, stdout, stderr io.W
 	case "v-rollback":
 		from, to, err := n.Rollback(ctx, pool, c.corpus)
 		return ragOut(stdout, stderr, map[string]int64{"retired": from, "active": to}, err)
+	case "v-danh-dau-lai":
+		// Every place the serving collection holds, checked again in the
+		// background: rows the indexer wrote before a field existed get it
+		// by a partial update (no vector, no API call).
+		so, err := n.DanhDauLai(ctx, pool, c.corpus)
+		return ragOut(stdout, stderr, map[string]int{"danh_dau": so}, err)
 	case "v-status":
 		st, err := n.DocTrangThai(ctx, pool)
 		return ragOut(stdout, stderr, st, err)

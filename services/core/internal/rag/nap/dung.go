@@ -123,6 +123,10 @@ func (n Nap) ChuanBiQuan(ctx context.Context, q Querier, rep *BaoCaoDung) (docs 
 	if err != nil {
 		return nil, nil, err
 	}
+	uoc, err := DocGiaUoc(ctx, q, ids)
+	if err != nil {
+		return nil, nil, err
+	}
 	chunker := n.Cfg.Chunker[CorpusQuan]
 	for _, p := range places {
 		if r, ok := bia[p.ID]; ok && r != "unsafe" && r != "source_deleted" {
@@ -155,6 +159,9 @@ func (n Nap) ChuanBiQuan(ctx context.Context, q Querier, rep *BaoCaoDung) (docs 
 		}
 		if err != nil {
 			return nil, nil, err
+		}
+		for i := range rows {
+			rows[i].HienThi = TruongHienThi(p, h, uoc[p.ID])
 		}
 		docs = append(docs, TaiLieuQuan{HoSo: h, TT: t, Rows: rows})
 	}

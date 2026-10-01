@@ -52,7 +52,8 @@ func TestHanMuc(t *testing.T) {
 // The fingerprint moves with every stored attribute and nothing else.
 func TestDauThuocTinh(t *testing.T) {
 	base := Hang{ChunkID: "a", DocID: "a", Text: "x", DiemDen: "d", DiUng: []string{"tom"}, DiUngRo: true,
-		AnKieng: []string{"chay"}, GiaMin: 1, GiaMax: 2, GiaRo: true, MoO: []int16{1}, GioRo: true, DanhMuc: []string{"cafe"}}
+		AnKieng: []string{"chay"}, GiaMin: 1, GiaMax: 2, GiaRo: true, MoO: []int16{1}, GioRo: true, DanhMuc: []string{"cafe"},
+		HienThi: map[string]string{"ten": "A", "dia_chi": "1 Đường Hoa"}}
 	d0 := DauThuocTinh(base)
 	same := base
 	same.Text, same.ContentHash, same.Dense, same.KhiChat = "khác", "h", []float32{1}, []string{"yen_tinh"}
@@ -70,6 +71,7 @@ func TestDauThuocTinh(t *testing.T) {
 		"slots":       func(h *Hang) { h.MoO = []int16{2} },
 		"hours known": func(h *Hang) { h.GioRo = false },
 		"category":    func(h *Hang) { h.DanhMuc = []string{"cafe", "an_vat"} },
+		"evidence":    func(h *Hang) { h.HienThi = map[string]string{"dia_chi": "2 Đường Khác"} },
 	} {
 		h := base
 		edit(&h)

@@ -125,6 +125,12 @@ const (
 // content hash both match what the ingest would write needs no write.
 const MoRongDau = "dau"
 
+// MoRongHienThi is the FMoRong key of a place row's evidence fields (a
+// string → string dict; rag/nap.TruongHienThi): a search returns them with
+// the hit (Trung.HienThi), so the answer needs no read of Postgres
+// (ADR-0051).
+const MoRongHienThi = "hien_thi"
+
 // PhienBanLuocDo names this file's place and manual schema (fields,
 // analyzers, index parameters). The ingest's committed configuration names
 // the revision it was built for, and the ingest adapter refuses to create a

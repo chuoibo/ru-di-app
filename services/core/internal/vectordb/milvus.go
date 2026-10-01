@@ -520,6 +520,10 @@ type Trung struct {
 	DocID    string
 	Diem     float64
 	PhienBan int64
+	// HienThi are a place row's evidence fields (FMoRong «hien_thi»; nil
+	// when the row carries none, or for the manual): what an answer quotes,
+	// served from the index (ADR-0051).
+	HienThi map[string]string
 }
 
 // TimKiem is a searchable public index: Milvus, or the Fake in unit tests.
@@ -597,7 +601,7 @@ func HopRRF(legs [][]Trung, w []float64, k, K int) []Trung {
 		for r, h := range leg {
 			f, ok := fused[h.ID]
 			if !ok {
-				f = Trung{ID: h.ID, DocID: h.DocID, PhienBan: h.PhienBan}
+				f = Trung{ID: h.ID, DocID: h.DocID, PhienBan: h.PhienBan, HienThi: h.HienThi}
 			}
 			f.Diem += w[i] / float64(k+r+1)
 			fused[h.ID] = f
@@ -646,8 +650,12 @@ func (m *Milvus) Tim(ctx context.Context, y YeuCauTim) ([]Trung, error) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			out := []string{FIndexVersion, FDocID}
+			if y.Kho == KhoDiaDiem {
+				out = append(out, FMoRong)
+			}
 			opt := milvusclient.NewSearchOption(y.Ten, y.ungVien(), []entity.Vector{l.vec}).WithANNSField(l.Truong).
-				WithConsistencyLevel(m.nhatQuan()).WithOutputFields(FIndexVersion, FDocID).WithFilter(expr)
+				WithConsistencyLevel(m.nhatQuan()).WithOutputFields(out...).WithFilter(expr)
 			if l.Truong == FDense {
 				opt = opt.WithAnnParam(m.chiMucDense().thamSoTim(y.ungVien()))
 			} else if l.ann != nil {
@@ -675,6 +683,24 @@ func (m *Milvus) Tim(ctx context.Context, y YeuCauTim) ([]Trung, error) {
 	return HopRRF(res, w, RRFK, y.K), nil
 }
 
+// hienThiTu reads the evidence fields out of a row's FMoRong dict (nil
+// when there are none or the dict does not parse: the caller then reads
+// the live row).
+func hienThiTu(b []byte) map[string]string {
+	if len(b) == 0 {
+		return nil
+	}
+	var d map[string]json.RawMessage
+	if json.Unmarshal(b, &d) != nil {
+		return nil
+	}
+	var f map[string]string
+	if raw, ok := d[MoRongHienThi]; !ok || json.Unmarshal(raw, &f) != nil || len(f) == 0 {
+		return nil
+	}
+	return f
+}
+
 func trungTu(rs []milvusclient.ResultSet) ([]Trung, error) {
 	if len(rs) == 0 {
 		return nil, nil
@@ -686,6 +712,7 @@ func trungTu(rs []milvusclient.ResultSet) ([]Trung, error) {
 	out := make([]Trung, 0, r.ResultCount)
 	ver := r.GetColumn(FIndexVersion)
 	doc := r.GetColumn(FDocID)
+	mr := r.GetColumn(FMoRong)
 	for i := 0; i < r.ResultCount; i++ {
 		id, err := r.IDs.GetAsString(i)
 		if err != nil {
@@ -700,6 +727,13 @@ func trungTu(rs []milvusclient.ResultSet) ([]Trung, error) {
 		if doc != nil {
 			if d, err := doc.GetAsString(i); err == nil && d != "" {
 				t.DocID = d
+			}
+		}
+		if mr != nil {
+			if v, err := mr.Get(i); err == nil {
+				if b, ok := v.([]byte); ok {
+					t.HienThi = hienThiTu(b)
+				}
 			}
 		}
 		out = append(out, t)

@@ -200,10 +200,15 @@ func (k *Kho) CapNhatThuocTinh(ctx context.Context, ten, docID string, r nap.Han
 	return k.M.CapNhatThuocTinh(ctx, k.ten(ten), docID, ThuocTinh(r), giaMax(r))
 }
 
-// MoRong is a place row's FMoRong dict: the ingest's fingerprint of its
-// attributes (nap.DauThuocTinh) under vectordb.MoRongDau.
+// MoRong is a place row's FMoRong dict: the ingest's fingerprint of what it
+// wrote (nap.DauThuocTinh) under vectordb.MoRongDau, and the evidence fields
+// (nap.TruongHienThi) under vectordb.MoRongHienThi.
 func MoRong(r nap.Hang) []byte {
-	b, _ := json.Marshal(map[string]string{vectordb.MoRongDau: nap.DauThuocTinh(r)})
+	d := map[string]any{vectordb.MoRongDau: nap.DauThuocTinh(r)}
+	if len(r.HienThi) > 0 {
+		d[vectordb.MoRongHienThi] = r.HienThi
+	}
+	b, _ := json.Marshal(d)
 	return b
 }
 

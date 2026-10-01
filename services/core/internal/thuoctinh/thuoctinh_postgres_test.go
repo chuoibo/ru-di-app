@@ -48,7 +48,7 @@ func TestDocDocBangNapGhi(t *testing.T) {
 	p1 := rows["p1"]
 	if !slices.Equal(p1.ThuocTinh.DiUng, []string{"tom"}) || !slices.Equal(p1.ThuocTinh.AnKieng, []string{"chay", "thuan_chay"}) ||
 		p1.ThuocTinh.GiaMinVND != 120000 || p1.ThuocTinh.DiemDen != "d-da-lat" || len(p1.ThuocTinh.OSlots) == 0 || p1.ThuocTinh.GoBo ||
-		!p1.GioRo || !p1.GiaRo || p1.Gio != gio || len(p1.ChuaRo()) != 0 {
+		!p1.GioRo || !p1.GiaRo || p1.Gio != gio || p1.Truong()["chua_ro"] != "" {
 		t.Fatalf("p1 read back as %+v", p1)
 	}
 	if want := vectordb.SlotTuan(time.Date(2026, 9, 26, 19, 0, 0, 0, vectordb.ViTri)); !slices.Contains(p1.ThuocTinh.OSlots, want) {
@@ -56,7 +56,7 @@ func TestDocDocBangNapGhi(t *testing.T) {
 	}
 	p2 := rows["p2"]
 	if !slices.Equal(p2.ThuocTinh.DiUng, []string{vectordb.KhongRo}) || p2.ThuocTinh.GiaMinVND != vectordb.GiaKhongRo ||
-		len(p2.ThuocTinh.OSlots) != 0 || slices.Compare(p2.ChuaRo(), []string{"gio_chua_ro", "gia_chua_ro"}) != 0 {
+		len(p2.ThuocTinh.OSlots) != 0 || p2.Truong()["chua_ro"] != "gio_chua_ro,gia_chua_ro" {
 		t.Fatalf("p2 (unreviewed «no allergen», no price, no hours) read back as %+v", p2)
 	}
 	if !rows["p3"].ThuocTinh.GoBo {
