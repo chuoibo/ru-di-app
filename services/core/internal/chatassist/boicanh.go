@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"unicode/utf8"
 
-	"github.com/jackc/pgx/v5"
 	"mobile/services/core/internal/chatv2"
-	"mobile/services/core/internal/pyjson"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // The context bundle the caller hands over (ADR-0036 §2.2).
@@ -139,67 +139,4 @@ func goiHoacNull(goi []byte) any {
 		return nil
 	}
 	return json.RawMessage(goi)
-}
-
-// hoiThoai turns the stored bundle into the `conversation` the brain already
-// accepts, with the caller's own words as the last turn.
-//
-// The brain contract does not change by one line: `companion-reply` has always
-// taken a list of turns, v1 filled it from the database, and this fills it from
-// what the caller shared. That is why the live quality gate written for v1
-// (`test_companion_gemini_live.py`, which checks the model reads a real
-// conversation and respects a constraint the group typed) still measures this
-// path without being rewritten.
-//
-// toi is the caller's label, the one roster returned, so the transcript and
-// the roster name the caller the same way.
-func hoiThoai(goi []byte, prompt, toi string) (pyjson.List, error) {
-	out := pyjson.List{}
-	if len(goi) > 0 {
-		var bc bundle
-		if err := json.Unmarshal(goi, &bc); err != nil {
-			return nil, err
-		}
-		for _, l := range bc.Luot {
-			row := pyjson.NewOrderedMap()
-			kind := "human"
-			if l.Vai == "ai" {
-				kind = "ai"
-			}
-			row.Set("author_kind", pyjson.String(kind))
-			row.Set("kind", pyjson.String("text"))
-			row.Set("speaker", pyjson.String(nhanNguoiNoi(l, toi)))
-			row.Set("body", pyjson.String(l.Chu))
-			row.Set("created_at", pyjson.String(l.Luc))
-			out = append(out, row)
-		}
-	}
-	last := pyjson.NewOrderedMap()
-	last.Set("author_kind", pyjson.String("human"))
-	last.Set("kind", pyjson.String("text"))
-	last.Set("speaker", pyjson.String(toi))
-	last.Set("body", pyjson.String(prompt))
-	out = append(out, last)
-	return out, nil
-}
-
-// nhanNguoiNoi is the speaker label of one shared turn.
-//
-// A friend's label is the display name the client put on the turn (ADR-0036
-// §5), and it is text somebody typed about themselves. It goes through tenDoc,
-// the same test roster applies, so a name written at the model is never
-// quoted; the turn is still attributed to someone in the room rather than
-// dropped.
-func nhanNguoiNoi(l turn, toi string) string {
-	switch l.Vai {
-	case "toi":
-		return toi
-	case "ai":
-		return "Rủ Đi AI"
-	default:
-		if label := tenDoc(l.BiDanh); label != "" {
-			return label
-		}
-		return "Một người trong nhóm"
-	}
 }

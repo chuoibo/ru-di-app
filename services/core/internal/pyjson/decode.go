@@ -40,6 +40,14 @@ func Loads(data []byte) (Value, error) {
 	return v, nil
 }
 
+// RawDecode is json.JSONDecoder().raw_decode(doc, idx) for a str: one
+// value scanned from code point idx, no whitespace skipped, and the index
+// just past it. Errors are Loads' errors.
+func RawDecode(doc []rune, idx int) (Value, int, error) {
+	d := decoder{s: doc}
+	return d.scanOnce(idx)
+}
+
 // decodeText is bytes.decode(json.detect_encoding(b), "surrogatepass").
 func decodeText(b []byte) ([]rune, error) {
 	switch {

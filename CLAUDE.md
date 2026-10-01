@@ -12,8 +12,10 @@ legacy để đối chiếu cho tới khi cổng tương đương chạy thật.
 một writer; không coi proxy sang Python là hoàn tất migration.
 ADR-0049 (chủ sản phẩm 2026-09-28) hẹp thêm: sinh chữ/trích xuất AI chạy
 bằng Go qua agy-proxy; phân loại đi jev, rerank đi qwen3-reranker-8b, cả hai
-qua một sidecar Python OpenRouter (`services/ai-infer`); brain Python bị xoá
-theo từng tính năng khi bản Go thay; tìm kiếm trên Milvus GPU.
+qua một sidecar Python OpenRouter (`services/ai-infer`); tìm kiếm trên Milvus
+GPU. ADR-0051 (2026-10-01): mọi lời gọi LLM đã về Go qua agy-proxy, brain
+Python đã xoá — chỉ còn `face-boxes` (OpenCV, TODO làm lại bằng Go); không
+còn cờ chọn engine; `api` không giữ khoá AI nào.
 
 Chat v2 bắt buộc E2EE, không fallback plaintext; lịch sử cũ chỉ đọc và có
 nhãn. Server không giữ khoá giải mã chat. AI chỉ nhận nội dung được gọi/chia

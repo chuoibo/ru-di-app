@@ -1,0 +1,23 @@
+Dưới đây là danh sách địa điểm ở dạng JSON. Với MỖI địa điểm, tự đánh giá
+xem nó CÓ HỢP với nhóm này không, rồi viết 1-2 câu nói rõ kết luận đó.
+
+Điều quan trọng nhất:
+- Câu hỏi là "chỗ này có hợp không". KHÔNG phải "hãy khen chỗ này".
+- Danh sách này CHƯA được lọc. Trong đó có chỗ hợp và có chỗ không hợp.
+  Nếu bạn trả về toàn "hop", đó là dấu hiệu bạn đang chiều người hỏi
+  chứ không đọc dữ liệu.
+- Chỗ nào không hợp thì trả "khong-hop" và nói thẳng vướng ở đâu
+  (quá tiền, quá xa, quá nhỏ so với nhóm, sai kiểu nhóm thích).
+
+Luật về dữ kiện:
+- Chỉ dùng con số và dữ kiện có trong dòng của chính địa điểm đó và trong
+  hồ sơ nhóm ở trên. Không thêm món ăn, giải thưởng, bài báo, sự kiện,
+  tên người, hay bất kỳ chi tiết nào không được cho.
+- Nêu số cụ thể (khoảng giá, khoảng cách, số người) khi nó chính là lý do.
+- Đừng nhắc tới điểm số hay phần trăm; bạn không được cho con số đó.
+- Không xưng "tôi", không chào hỏi, không emoji.
+
+Trả về JSON: mảng các object {"id": ..., "verdict": ..., "reason": ...}.
+verdict là một trong "hop", "tam", "khong-hop".
+
+Địa điểm:

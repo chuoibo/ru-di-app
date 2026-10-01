@@ -261,3 +261,21 @@ Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy v
 - `GET /places`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
 - `POST /contexts/{context_id}/messages`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
 - `POST /places/search`: đổi thật: `PlaceRecord.to_row` — đọc thêm các cột danh mục nguồn ngoài (migration b3f19c7d2a04: geo_precision, ...); Go đọc cùng cột ở repo/places.go (bc0e1b89); `SqlAlchemyApiRepository._place_record` — như trên; `ApiService._pair_taste_sharers` — gu đôi chỉ cộng người đã tự bật `chia_gu` (ADR-0034); Go service/pair_consent.go PairTasteSharers; `ApiService.group_taste` — như trên; Go catalogue.go GroupTaste · chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `SqlAlchemyApiRepository._pair_rhythm_row`, `ApiService._open_paper_id`, `ApiService._readable_paper_or_404`, `ApiService._week_role`, `_paper_signals`.
+
+## Đổi 2026-10-01 — ADR-0051: bước model của các route WAI chạy trong Go, Python đã xoá
+
+Các mục trên nói «brain», «payload gửi brain», «stack parity không có khoá Gemini nên brain trả …» là lịch sử.
+Từ nhánh `claude/p0-ai-go-agy-bo-brain`:
+
+- Route AI thuần (`POST /receipts/scan`, `POST /screenshots/scan`, `POST …/expense-draft`,
+  `GET …/suggestion`, `GET …/contextual-suggestion`, `GET …/albums/{id}/reel`, `POST /places/search`): Go gọi
+  model qua `aiharness/*`; Python chỉ còn khai báo trả 410 `served_by_go`; hàng manifest `python: frozen`,
+  `state: PY-DELETED`; kịch bản parity của chúng đã xoá, bằng chứng thay thế là test Postgres chạy thẳng
+  pipeline Go (`scans_ai_test.go`, `expense_draft_postgres_test.go`, `goiy_postgres_test.go`,
+  `places_search_shortlist_postgres_test.go`).
+- `GET /places`, `GET /places/{id}`: vẫn `python: live`, oracle cho phần danh mục; lý do do Go viết
+  (`fetchReasons` → `aiharness/timquan`), Python cài writer không trả lời ai.
+- Lệch «payload gửi brain» của `/places/search` (mục 2026-09-25) không còn đối tượng: danh sách ngắn giờ là
+  thứ model đọc trong prompt, test đọc prompt thay payload.
+- `face-boxes` là action brain duy nhất còn lại (OpenCV, TODO làm lại bằng Go).
+

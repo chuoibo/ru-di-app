@@ -214,14 +214,12 @@ services:
     <<: [*core-image, *ai-secrets]
     environment:
       <<: [*env, *milvus-env]
-      # The group bot on the Go engine (ADR-0049): text through agy-proxy
-      # (AGY_PROXY_URL from .env), places from Milvus hybrid, reranked by
-      # qwen/qwen3-reranker-8b through the ai-infer sidecar, which shares
-      # this container's network namespace so the call stays on loopback.
-      # Nếp's engine is opt-in and never set by a tracked file
-      # (tests/test_nep_engine_opt_in.py): this machine sets
-      # MOBILE_AI_ENGINE_NEP in ~/.config/rudi/stack.env.
-      MOBILE_AI_ENGINE_GROUP: go
+      # Every model call is Go's (ADR-0049, ADR-0051): the chat engine
+      # (Nếp and the group bot) and the one-shot AI steps of the routes, text
+      # through agy-proxy (AGY_PROXY_URL from .env), places from Milvus
+      # hybrid, reranked by qwen/qwen3-reranker-8b through the ai-infer
+      # sidecar, which shares this container's network namespace so the call
+      # stays on loopback. MOBILE_BRAIN_URL below is only face-boxes now.
       MOBILE_RERANK_URL: http://127.0.0.1:8090
       MOBILE_RERANK_MODEL: qwen/qwen3-reranker-8b
       MOBILE_PYTHON_UPSTREAM: http://api:8000

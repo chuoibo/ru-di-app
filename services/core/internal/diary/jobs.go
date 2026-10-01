@@ -2,7 +2,6 @@ package diary
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
+	"mobile/services/core/internal/aiharness/nhatky"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/chatv2"
 	book "mobile/services/core/internal/domain/diary"
@@ -199,7 +199,7 @@ func (h *Handler) getJob(w http.ResponseWriter, r *http.Request) {
 	reply(w, 200, j)
 }
 
-// Run shares the configured brain seam with the existing engine. Inference is
+// Run shares the process's model door with the chat engine. Inference is
 // bounded and outside database transactions; a lease recovers a crashed worker.
 func (h *Handler) Run(ctx context.Context) {
 	var wg sync.WaitGroup
@@ -222,7 +222,9 @@ func (h *Handler) Run(ctx context.Context) {
 	wg.Wait()
 }
 func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
-	ctx, cancel := context.WithTimeout(ctx, 70*time.Second)
+	// Up to four model calls through agy-proxy (aiharness/nhatky); the lease
+	// below outlives this bound so a live job is never taken twice.
+	ctx, cancel := context.WithTimeout(ctx, 150*time.Second)
 	defer cancel()
 	_, err := h.pool.Exec(ctx, `UPDATE outing_diary_jobs SET source=NULL,result=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END WHERE expires_at<=clock_timestamp() AND (source IS NOT NULL OR result IS NOT NULL)`)
 	if err != nil {
@@ -235,7 +237,7 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	var id, outingID, owner string
 	var digest, raw []byte
 	lease := uuid()
-	err = h.pool.QueryRow(ctx, `WITH c AS (SELECT id FROM outing_diary_jobs WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND expires_at>clock_timestamp() ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE outing_diary_jobs j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+interval '75 seconds' FROM c WHERE j.id=c.id RETURNING j.id,j.outing_id,j.owner_id,j.session_digest,j.source`, lease).Scan(&id, &outingID, &owner, &digest, &raw)
+	err = h.pool.QueryRow(ctx, `WITH c AS (SELECT id FROM outing_diary_jobs WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND expires_at>clock_timestamp() ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE outing_diary_jobs j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+interval '160 seconds' FROM c WHERE j.id=c.id RETURNING j.id,j.outing_id,j.owner_id,j.session_digest,j.source`, lease).Scan(&id, &outingID, &owner, &digest, &raw)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
 	}
@@ -295,18 +297,18 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 		tx.Rollback(ctx)
 		return true, finish(nil, "sharing_revoked")
 	}
-	type image struct {
-		ID   string `json:"id"`
-		MIME string `json:"mime"`
-		Data string `json:"data"`
+	if !h.ai.CoMay() {
+		tx.Rollback(ctx)
+		return true, finish(nil, "diary_ai_unavailable")
 	}
-	images := []image{}
+	images := []nhatky.Anh{}
 	st, err := storage.New()
 	if err != nil {
 		tx.Rollback(ctx)
 		return true, finish(nil, "diary_media_unavailable")
 	}
 	size := 0
+	tooLarge := false
 	for _, photo := range s.Photos {
 		var key, mime string
 		err = tx.QueryRow(ctx, `SELECT storage_key,content_type FROM uploaded_images WHERE id=$1`, photo.ID).Scan(&key, &mime)
@@ -319,25 +321,29 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 			break
 		}
 		size += len(data)
-		if size > 24<<20 {
-			err = no(422, "diary_images_too_large")
+		if size > nhatky.MaxByteAnh {
+			tooLarge = true
 			break
 		}
-		images = append(images, image{photo.ID, mime, base64.StdEncoding.EncodeToString(data)})
+		images = append(images, nhatky.Anh{ID: photo.ID, MIME: mime, Data: data})
 	}
 	tx.Rollback(ctx)
+	if tooLarge {
+		return true, finish(nil, "diary_images_too_large")
+	}
 	if err != nil {
 		return true, finish(nil, "diary_media_unavailable")
 	}
-	payload, _ := json.Marshal(struct {
-		Source book.Source `json:"source"`
-		Images []image     `json:"images"`
-	}{s, images})
-	v, err := pyjson.Loads(payload)
+	sourceRaw, _ := json.Marshal(s)
+	v, err := pyjson.Loads(sourceRaw)
 	if err != nil {
 		return true, finish(nil, "invalid_diary_source")
 	}
-	answer, err := h.brain.PostJSONContext(ctx, "diary", v)
+	parts, err := nhatky.Phan(v, images)
+	if err != nil {
+		return true, finish(nil, "invalid_diary_source")
+	}
+	answer, err := nhatky.Viet(ctx, h.ai.Luot(nhatky.Luot), parts)
 	if err != nil {
 		return true, finish(nil, "diary_ai_unavailable")
 	}

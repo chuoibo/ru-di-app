@@ -17,14 +17,14 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/aiharness/motluot"
 	"mobile/services/core/internal/auth"
-	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
 )
 
 type Handler struct {
 	pool           *pgxpool.Pool
-	brain          *brain.Client
+	ai             *motluot.May
 	mux            *http.ServeMux
 	mu             sync.Mutex
 	clients        map[*subscriber]struct{}
@@ -56,8 +56,8 @@ var Patterns = []string{
 	"POST /v2/community/diaries/{diary}/share",
 }
 
-func New(pool *pgxpool.Pool, client *brain.Client, origins []string) *Handler {
-	h := &Handler{pool: pool, brain: client, mux: http.NewServeMux(), clients: map[*subscriber]struct{}{}, origins: origins, uploadSlots: make(chan struct{}, 4)}
+func New(pool *pgxpool.Pool, may *motluot.May, origins []string) *Handler {
+	h := &Handler{pool: pool, ai: may, mux: http.NewServeMux(), clients: map[*subscriber]struct{}{}, origins: origins, uploadSlots: make(chan struct{}, 4)}
 	h.mux.HandleFunc("GET /v2/community/feed", h.feed)
 	h.mux.HandleFunc("GET /v2/community/posts/{post}", h.getPost)
 	h.mux.HandleFunc("POST /v2/community/posts", h.createPost)

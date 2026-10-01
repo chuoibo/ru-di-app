@@ -8,11 +8,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 
-from app.api.chat_expense_skill import ChatExpenseReader
 from app.api.deps import (
     Actor,
     get_actor,
-    get_chat_expense_reader,
     get_repository,
 )
 from app.api.errors import ApiProblem
@@ -34,7 +32,6 @@ from app.api.schemas import (
 )
 from app.api.search_rate_limit import FixedWindowLimiter
 from app.api.service import ApiService
-from app.domain.chat_expense import ChatExpenseError
 
 router = APIRouter(tags=["messages"])
 _LOGGER = logging.getLogger(__name__)
@@ -202,55 +199,23 @@ def create_chat_expense_draft(
     context_id: UUID,
     message_id: UUID,
     actor: Annotated[Actor, Depends(get_actor)],
-    reader: Annotated[ChatExpenseReader, Depends(get_chat_expense_reader)],
     repository: Annotated[ApiRepository, Depends(get_repository)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_chat_expense_limiter)],
 ) -> ChatExpenseDraftResponse:
-    """Return a draft only; this route never creates or allocates an expense."""
-    if replay := _authorized_chat_replay(
-        http, repository, context_id, actor, message_id
-    ):
-        return replay
+    """Declaration only: the Go core serves this route (ADR-0051).
 
-    # Keep this outside the backend error boundary. `check` raises ApiProblem;
-    # catching it as a reader failure would turn an honest 429 into a 502.
-    limiter.check(actor.id)
-    try:
-        return ApiService(repository).create_chat_expense_draft(
-            context_id,
-            message_id,
-            actor,
-            reader,
-        )
-    except ChatExpenseError as exc:
-        # Only our closed refusal code reaches the log. The message and raw
-        # model answer are private group data and must never be interpolated.
-        _LOGGER.info("chat expense draft refused: %s", exc.code)
-        if exc.code == "CHAT_READER_NOT_CONFIGURED":
-            raise ApiProblem(
-                503,
-                "chat_reader_not_configured",
-                _CHAT_READER_NOT_CONFIGURED_DETAIL,
-            ) from None
-        if exc.code == "MODEL_NAMED_A_PERSON":
-            raise ApiProblem(
-                422,
-                "chat_expense_model_named_a_person",
-                _MODEL_NAMED_PERSON_DETAIL,
-            ) from None
-        raise ApiProblem(
-            422,
-            "chat_expense_unreadable",
-            _CHAT_UNREADABLE_DETAIL,
-        ) from None
-    except RuntimeError as exc:
-        # The adapter already discarded provider exception text and chaining.
-        _LOGGER.warning("chat expense reader failed (%s)", type(exc).__name__)
-        raise ApiProblem(
-            502,
-            "chat_reader_unavailable",
-            _CHAT_READER_UNAVAILABLE_DETAIL,
-        ) from None
+    The model step and its checks moved to services/core (internal/routes/
+    messages_wai.go, aiharness/dockhoan, domain/chatexpense); the declaration
+    stays because the Go front door takes its route order and request
+    contract from this app's table.
+    """
+
+    del http, context_id, message_id, actor, repository, limiter
+    raise ApiProblem(
+        410,
+        "served_by_go",
+        "POST /contexts/{context_id}/messages/{message_id}/expense-draft do core Go phục vụ.",
+    )
 
 
 @router.put(

@@ -5,32 +5,13 @@ package chatassist
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"strings"
-	"sync"
 	"testing"
 )
 
 // Nếp end to end against a real database: the personal scope on the same
 // queue, a sealed answer returned to the caller alone, nothing published, and
 // nothing read for context but what the device sent.
-
-type nepGia struct {
-	mu     sync.Mutex
-	calls  int
-	bodies []string
-}
-
-func (n *nepGia) serve(w http.ResponseWriter, r *http.Request) {
-	var body map[string]any
-	_ = json.NewDecoder(r.Body).Decode(&body)
-	b, _ := json.Marshal(body)
-	n.mu.Lock()
-	n.calls++
-	n.bodies = append(n.bodies, r.URL.Path+" "+string(b))
-	n.mu.Unlock()
-	reply(w, 200, map[string]string{"text": "Tối nay đi dạo hồ nhé."})
-}
 
 func (f fixture) nepPost(t *testing.T, token string, body map[string]any) (int, NepInvocation, string) {
 	t.Helper()
@@ -50,8 +31,8 @@ func nepThan(prompt string) map[string]any {
 }
 
 func TestNepTraKinVeDungNguoiGoi(t *testing.T) {
-	model := &nepGia{}
-	f := setup(t, model.serve)
+	model := &mayGia{traLoi: "Tối nay đi dạo hồ nhé."}
+	f := setup(t, model)
 	ctx := context.Background()
 	if _, err := f.pool.Exec(ctx, `INSERT INTO messages(id,context_id,author_id,kind,body) VALUES($1,$2,$3,'text','Synthetic group chat sentinel')`, newID(), f.context, f.peer); err != nil {
 		t.Fatal(err)
@@ -74,18 +55,20 @@ func TestNepTraKinVeDungNguoiGoi(t *testing.T) {
 		t.Fatalf("kết quả: %s", w.Body.String())
 	}
 
-	// Exactly one model call, to nep-reply, carrying only the three things.
-	if model.calls != 1 || !strings.HasPrefix(model.bodies[0], "/internal/brain/v1/nep-reply ") {
-		t.Fatalf("gọi não: %v", model.bodies)
+	// The model heard what the device sent (datamarked: a space is ˆ) and
+	// nothing the server owns about any room.
+	heard := model.TatCa()
+	if model.SoGoi() == 0 {
+		t.Fatal("không lời gọi model nào")
 	}
-	for _, cam := range []string{"Synthetic group chat sentinel", "Synthetic caller", "Synthetic peer", "Synthetic job group", f.context, f.person, "places", "members", "budget"} {
-		if strings.Contains(model.bodies[0], cam) {
-			t.Errorf("thân gửi não chứa %q: %s", cam, model.bodies[0])
+	for _, cam := range []string{"Synthetic group chat sentinel", "Synthetic caller", "Synthetic peer", "Synthetic job group", f.context, f.person, f.peer} {
+		if strings.Contains(heard, cam) {
+			t.Errorf("lời gửi model chứa %q", cam)
 		}
 	}
-	for _, can := range []string{"Mình thích yên tĩnh", "Khám phá", "Tối nay đi đâu?"} {
-		if !strings.Contains(model.bodies[0], can) {
-			t.Errorf("thân gửi não thiếu %q", can)
+	for _, can := range []string{"Mìnhˆthíchˆyênˆtĩnh", "Khám", "đi đâu"} {
+		if !strings.Contains(heard, can) {
+			t.Errorf("lời gửi model thiếu %q", can)
 		}
 	}
 
@@ -125,8 +108,8 @@ func TestNepTraKinVeDungNguoiGoi(t *testing.T) {
 }
 
 func TestNepManTienKhongGhiHangKhongGoiNao(t *testing.T) {
-	model := &nepGia{}
-	f := setup(t, model.serve)
+	model := &mayGia{}
+	f := setup(t, model)
 	body := nepThan("Mình nợ ai?")
 	body["phieu"] = map[string]any{"man": "settlements/abc"}
 	code, _, raw := f.nepPost(t, f.token, body)
@@ -135,13 +118,13 @@ func TestNepManTienKhongGhiHangKhongGoiNao(t *testing.T) {
 	}
 	var n int
 	_ = f.pool.QueryRow(context.Background(), `SELECT count(*) FROM chat_ai_invocations`).Scan(&n)
-	if n != 0 || model.calls != 0 || f.capabilityCalls.Load() != 0 {
-		t.Fatalf("màn tiền vẫn chạm: hàng=%d gọi=%d thăm dò=%d", n, model.calls, f.capabilityCalls.Load())
+	if n != 0 || model.SoGoi() != 0 {
+		t.Fatalf("màn tiền vẫn chạm: hàng=%d gọi=%d", n, model.SoGoi())
 	}
 }
 
 func TestNepLapLaiVaXungDot(t *testing.T) {
-	f := setup(t, (&nepGia{}).serve)
+	f := setup(t, nil)
 	body := nepThan("Đi đâu?")
 	code, first, _ := f.nepPost(t, f.token, body)
 	if code != 202 {
@@ -163,8 +146,8 @@ func TestNepLapLaiVaXungDot(t *testing.T) {
 }
 
 func TestNepPhienBiThuHoiThiKhongGoiNao(t *testing.T) {
-	model := &nepGia{}
-	f := setup(t, model.serve)
+	model := &mayGia{}
+	f := setup(t, model)
 	ctx := context.Background()
 	_, job, _ := f.nepPost(t, f.token, nepThan("Đi đâu?"))
 	if _, err := f.pool.Exec(ctx, `UPDATE account_sessions SET revoked_at=clock_timestamp() WHERE person_id=$1`, f.person); err != nil {
@@ -176,13 +159,13 @@ func TestNepPhienBiThuHoiThiKhongGoiNao(t *testing.T) {
 	var status, code string
 	var promptNull, goiNull bool
 	_ = f.pool.QueryRow(ctx, `SELECT status, code, prompt IS NULL, boi_canh IS NULL FROM chat_ai_invocations WHERE id=$1`, job.ID).Scan(&status, &code, &promptNull, &goiNull)
-	if status != "failed" || code != "sharing_unavailable" || !promptNull || !goiNull || model.calls != 0 {
-		t.Fatalf("status=%s code=%s prompt_null=%v boi_canh_null=%v gọi=%d", status, code, promptNull, goiNull, model.calls)
+	if status != "failed" || code != "sharing_unavailable" || !promptNull || !goiNull || model.SoGoi() != 0 {
+		t.Fatalf("status=%s code=%s prompt_null=%v boi_canh_null=%v gọi=%d", status, code, promptNull, goiNull, model.SoGoi())
 	}
 }
 
 func TestNepChungHanMucVoiNhom(t *testing.T) {
-	f := setup(t, (&nepGia{}).serve)
+	f := setup(t, nil)
 	for i := 0; i < 4; i++ {
 		job := f.create(t)
 		// Settled at once: the room holds at most three jobs in flight

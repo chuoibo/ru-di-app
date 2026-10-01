@@ -1,6 +1,7 @@
 # ADR-0042 — Bộ đo chất lượng AI và tín hiệu phản hồi không mang nội dung
 
 - Ngày: 2026-09-25.
+- **Sửa bởi:** ADR-0051 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
 - Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
   định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
 - Số hiệu: giữ nguyên số lúc đề xuất (không trùng số nào trên `main`); chuyển khỏi `proposals/`.

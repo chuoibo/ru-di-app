@@ -169,9 +169,6 @@ func TestCapHoiChayToiTraLoi(t *testing.T) {
 	if the.Kind != "tra_loi" || the.Payload.Lenh != "hoi" || !strings.Contains(string(the.Payload.Phan[0]), "Chào hai bạn") {
 		t.Fatalf("thẻ: %s", k.card)
 	}
-	if n.brain.calls != 0 {
-		t.Fatalf("brain được hỏi %d lần trên engine Go: %v", n.brain.calls, n.brain.bodies)
-	}
 	// The other person reads their own capabilities the same way.
 	w := n.f.request("GET", "/contexts/"+n.f.context+"/chat-capabilities", n.f.peerToken, nil)
 	if w.Code != 200 || !strings.Contains(w.Body.String(), `"hoi":{"available":true,"reason":null}`) || !strings.Contains(w.Body.String(), `"plan":{"available":true,"reason":null}`) {
@@ -198,9 +195,6 @@ func TestCapPlanChayToiThe(t *testing.T) {
 	}
 	if the.Kind != "tra_loi" || the.Payload.Lenh != "plan" {
 		t.Fatalf("thẻ: %s", k.card)
-	}
-	if n.brain.calls != 0 {
-		t.Fatalf("brain được hỏi %d lần", n.brain.calls)
 	}
 }
 
@@ -310,52 +304,6 @@ func TestCapDoiChiKhiCaHaiBatDoi(t *testing.T) {
 	}
 }
 
-// On a brain host a chat of two has no assistant: chat-capabilities says
-// provider_unavailable for every command, a new call is refused 503 before
-// anything is written, and a pair's job that reaches a brain worker (the
-// serving process on the Go engine, the worker on the brain) fails closed
-// without asking the brain.
-func TestCapTrenBrainKhongCoNhaCungCap(t *testing.T) {
-	brain := &nepGia{}
-	f := setup(t, brain.serve)
-	f.exec(t, `UPDATE contexts SET kind='pair',pair_key=$2 WHERE id=$1`, f.context, f.person+":"+f.peer)
-	caps := f.khaNang(t, f.token)
-	for name, c := range map[string]map[string]any{"plan": caps.AI.Plan, "chia_bill": caps.AI.ChiaBill, "hoi": caps.AI.Hoi} {
-		if c["available"] != false || c["reason"] != "provider_unavailable" {
-			t.Fatalf("%s trên brain: %+v", name, c)
-		}
-	}
-	a := f.tinTrongPhong(t, f.context, "Tối nay đi đâu")
-	for _, lenh := range []string{"plan", "chia_bill"} {
-		w := f.request("POST", f.route(), f.token, map[string]any{"logical_id": newID(), "command": lenh, "prompt": "đi đâu", "boi_canh": goiThu(luotThu(a, "Tối nay đi đâu"))})
-		if w.Code != 503 || maTraVe(w.Body.String()) != "provider_unavailable" {
-			t.Fatalf("%s trên brain: %d %s", lenh, w.Code, w.Body.String())
-		}
-	}
-	if n := f.demLoiGoi(t); n != 0 {
-		t.Fatalf("ghi %d lời gọi", n)
-	}
-	f.handler.WithNhomGo()
-	for _, lenh := range []string{"plan", "chia_bill"} {
-		w := f.request("POST", f.route(), f.token, map[string]any{"logical_id": newID(), "command": lenh, "prompt": "đi đâu", "boi_canh": goiThu(luotThu(a, "Tối nay đi đâu"))})
-		requireCode(t, w, 202)
-		var job Invocation
-		_ = json.Unmarshal(w.Body.Bytes(), &job)
-		f.handler.nhomGo, f.handler.nhomEngine = false, nil // the worker's own flag: the brain
-		if ok, err := f.handler.ProcessOne(context.Background()); !ok || err != nil {
-			t.Fatalf("worker: %v %v", ok, err)
-		}
-		f.handler.nhomGo = true
-		var status, code string
-		if err := f.pool.QueryRow(context.Background(), `SELECT status,COALESCE(code,'') FROM chat_ai_invocations WHERE id=$1`, job.ID).Scan(&status, &code); err != nil {
-			t.Fatal(err)
-		}
-		if status != "failed" || code != "provider_unavailable" || brain.calls != 0 {
-			t.Fatalf("%s của cặp trên worker brain: %s/%s, brain %d lần", lenh, status, code, brain.calls)
-		}
-	}
-}
-
 // Someone who is not in the pair gets 403, the membership refusal.
 func TestCapNguoiNgoai(t *testing.T) {
 	n := setupCap(t)
@@ -394,9 +342,9 @@ func TestCapChanHoacXoaTruocKhiGoi(t *testing.T) {
 			if w.Code != 403 || maTraVe(w.Body.String()) != "membership_required" {
 				t.Fatalf("khả năng: %d %s", w.Code, w.Body.String())
 			}
-			// Refused at preflight: nothing written, the provider never probed.
-			if got := n.f.capabilityCalls.Load(); n.f.demLoiGoi(t) != 0 || got != 0 {
-				t.Fatalf("ghi %d lời gọi, dò nhà cung cấp %d lần", n.f.demLoiGoi(t), got)
+			// Refused at preflight: nothing written, the model never asked.
+			if n.f.demLoiGoi(t) != 0 || n.stub.SoGoi() != 0 {
+				t.Fatalf("ghi %d lời gọi, model %d lần", n.f.demLoiGoi(t), n.stub.SoGoi())
 			}
 		})
 	}

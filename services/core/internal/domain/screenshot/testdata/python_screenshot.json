@@ -1,0 +1,1160 @@
+{
+ "generator": "scripts/render_domain_ai_goldens.py",
+ "module": "app.domain.screenshot",
+ "mode": "screenshot",
+ "python": "3.12.11",
+ "seed": 23,
+ "constants": {
+  "names": [
+   "read_screenshot"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "read_screenshot",
+   "name": "doc/ok",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/no-date",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": null,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/date-missing",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": null,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/date-bad-day",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-02-30"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/date-shape",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "15/09/2026"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/date-number",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": 20260915
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/date-arabic",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "\u0662\u0660\u0662\u0666-\u0660\u0669-\u0661\u0665"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/date-time",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15T10:00"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/other",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/unknown-source",
+   "args": {
+    "raw": {
+     "source": "momo",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/source-missing",
+   "args": {
+    "raw": {
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/source-null",
+   "args": {
+    "raw": {
+     "source": null,
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/source-list",
+   "args": {
+    "raw": {
+     "source": [
+      "grab"
+     ],
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "TypeError",
+     "message": "unhashable type: 'list'",
+     "code": "unhashable type: 'list'"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/source-upper",
+   "args": {
+    "raw": {
+     "source": "Grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/banking",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "banking",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/receipt",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "receipt",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/shopeefood",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "shopeefood",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/merchant-blank",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "   ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/merchant-number",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": 5,
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/total-number",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": 125000,
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/total-float",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "$f:h4h0hfheh8h4h8h0h0h0h0h0h0h0h0h0",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/total-zero",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "0 \u0111",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/total-over",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "$sp:1.000.|000.00|0.001",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/total-max",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "$sp:1.000.|000.00|0.000",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": "$i:0xe8_d4a5_1000",
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/total-words",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "m\u1ed9t tr\u0103m",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/total-k",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125k",
+     "occurred_on": "2026-09-15"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "doc/not-dict",
+   "args": {
+    "raw": [
+     "grab"
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/0",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "paid_by": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/1",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "PaidBy": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/2",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "payer": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/3",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "person_id": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/4",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "People": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/5",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "shared_by": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/6",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "sharedWith": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/7",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "participants": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/8",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "attendee": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/9",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "author": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/10",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "advancer": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/11",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "beneficiary": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/12",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "member_ids": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/13",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "recipient": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/14",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "split_with": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/15",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "splitBetween": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/16",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "who_paid": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/17",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "WHO-PAID": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/18",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "pa\u00dfby": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/19",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "pay\u0130r": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/20",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "\ufb00": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/21",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "memb\u0435r": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/22",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "note": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/23",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "confidence": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/24",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "paidbyx": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/25",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "x_payer_y": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/26",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "source ": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/27",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "merchants": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/28",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "title2": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "key/29",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  C\u01a1m t\u1ea5m Cali ",
+     "total_text": "125.000\u0111",
+     "occurred_on": "2026-09-15",
+     "amount": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "C\u01a1m t\u1ea5m Cali",
+     "total_vnd": 125000,
+     "occurred_on": "2026-09-15",
+     "needs_review": true
+    }
+   }
+  }
+ ]
+}

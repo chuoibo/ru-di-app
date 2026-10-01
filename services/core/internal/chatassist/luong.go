@@ -7,10 +7,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"mobile/services/core/internal/domain/companion"
-	"mobile/services/core/internal/domain/tree"
-	"mobile/services/core/internal/pyjson"
-	"mobile/services/core/internal/treejson"
 )
 
 // The group AI answers inside the thread (ADR-0046, proposed; design 03).
@@ -87,34 +83,6 @@ func gioiHanPhong(ctx context.Context, tx pgx.Tx, room string) error {
 func daCoTraLoi(err error) bool {
 	var pg *pgconn.PgError
 	return errors.As(err, &pg) && pg.Code == "23505" && pg.ConstraintName == "chat_ai_one_answer_per_trigger"
-}
-
-// theCuaViec is the card a job publishes. A job with a trigger answers inside
-// the thread with a `tra_loi` reply around exactly the card it published
-// before. A job without one comes from a client that cannot draw a reply (an
-// app from before this change, still in people's pockets), so it gets that
-// card unchanged -- the same bytes GroundCard has always produced.
-func theCuaViec(j work, part tree.Value, places []*tree.OrderedMap) ([]byte, error) {
-	if j.trigger == "" {
-		grounded, err := companion.GroundCard(part, places)
-		if err != nil {
-			return nil, err
-		}
-		return pyjson.Dumps(treejson.From(grounded))
-	}
-	// The brain's text keeps the oracle's bound byte for byte: GroundReply
-	// holds a text to the group ceiling (the Go engine's), so the brain's is
-	// cut by GroundCard first, as it was before that ceiling existed.
-	if g, err := companion.GroundCard(part, places); err == nil {
-		if k, _ := g.Get("kind"); k == tree.String("text") {
-			part = g
-		}
-	}
-	grounded, err := companion.GroundReply(companion.ReplyMeta{InvocationID: j.id, Command: j.command, Read: j.soTin}, []tree.Value{part}, places)
-	if err != nil {
-		return nil, err
-	}
-	return pyjson.Dumps(treejson.From(grounded))
 }
 
 // giuTrigger takes a KEY SHARE lock on the trigger. publish calls it AFTER it

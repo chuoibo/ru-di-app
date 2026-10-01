@@ -5,29 +5,35 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
+
+	"log/slog"
+	"mobile/services/core/internal/aiharness"
+	aimetrics "mobile/services/core/internal/aiharness/metrics"
+	"mobile/services/core/internal/aiharness/tools"
+	"mobile/services/core/internal/auth"
+	"mobile/services/core/internal/jobs"
+	"mobile/services/core/internal/testdb"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"mobile/services/core/internal/auth"
-	"mobile/services/core/internal/brain"
-	"mobile/services/core/internal/jobs"
-	"mobile/services/core/internal/testdb"
 )
 
 type fixture struct {
 	pool                                            *pgxpool.Pool
 	handler                                         *Handler
 	context, person, peer, member, token, peerToken string
-	capabilityCalls                                 *atomic.Int64
+	// may is the engine's model: every model call of every job goes to it.
+	may *mayGia
 }
 
-func setup(t *testing.T, model http.HandlerFunc) fixture {
+// setup is a room of two with the chat schema installed and a handler whose
+// group and Nếp jobs run on the Go engine over m (a fresh mayGia when nil).
+func setup(t *testing.T, m *mayGia) fixture {
 	t.Helper()
 	ctx := context.Background()
 	pool := taoSchema(t)
@@ -43,7 +49,7 @@ func setup(t *testing.T, model http.HandlerFunc) fixture {
 	if err = Migrate(ctx, pool); err != nil {
 		t.Fatal(err)
 	}
-	return setupTren(t, pool, model)
+	return setupTren(t, pool, m)
 }
 
 // taoSchema is a pool whose search_path starts at a fresh schema holding
@@ -82,29 +88,23 @@ func taoSchema(t *testing.T) *pgxpool.Pool {
 }
 
 // setupTren is setup on a pool whose schema is already installed.
-func setupTren(t *testing.T, pool *pgxpool.Pool, model http.HandlerFunc) fixture {
+func setupTren(t *testing.T, pool *pgxpool.Pool, m *mayGia) fixture {
 	t.Helper()
 	ctx := context.Background()
-	var err error
-	capabilityCalls := &atomic.Int64{}
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/internal/brain/v1/capabilities" {
-			capabilityCalls.Add(1)
-			reply(w, 200, map[string]any{"plan": map[string]bool{"available": true}})
-			return
-		}
-		if model != nil {
-			model(w, r)
-			return
-		}
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic inference fixture"}})
-	}))
-	t.Cleanup(server.Close)
-	t.Setenv("MOBILE_BRAIN_URL", server.URL)
-	t.Setenv("MOBILE_INTERNAL_TOKEN", "synthetic-internal-test-only")
+	if m == nil {
+		m = &mayGia{}
+	}
+	if err := aimetrics.Migrate(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	engine, err := aiharness.New(aiharness.WithModel(m), aiharness.WithLogger(slog.New(slog.DiscardHandler)),
+		aiharness.WithRetryWait(func(int) time.Duration { return 0 }), aiharness.WithNguon(tools.NguonDuLieu{}))
+	if err != nil {
+		t.Fatal(err)
+	}
 	f := fixture{pool: pool, context: newID(), person: newID(), peer: newID(), member: newID(), token: "synthetic-" + newID(), peerToken: "synthetic-" + newID()}
-	f.handler = New(pool, brain.Configured())
-	f.capabilityCalls = capabilityCalls
+	f.handler = New(pool).WithNhomEngine(engine).WithNepEngine(engine)
+	f.may = m
 	_, err = pool.Exec(ctx, `INSERT INTO people(id,display_name) VALUES($1,'Synthetic caller'),($2,'Synthetic peer')`, f.person, f.peer)
 	if err != nil {
 		t.Fatal(err)
@@ -154,13 +154,7 @@ func (f fixture) create(t *testing.T) Invocation {
 }
 
 func TestInvocationOnlyInputAndDurableIdempotency(t *testing.T) {
-	var payload map[string]any
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			t.Error(err)
-		}
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic provider fixture"}})
-	})
+	f := setup(t, nil)
 	ctx := context.Background()
 	if _, err := f.pool.Exec(ctx, `INSERT INTO messages(id,context_id,author_id,kind,body) VALUES($1,$2,$3,'text','Synthetic unshared history sentinel')`, newID(), f.context, f.peer); err != nil {
 		t.Fatal(err)
@@ -188,17 +182,14 @@ func TestInvocationOnlyInputAndDurableIdempotency(t *testing.T) {
 	if err != nil || !ok {
 		t.Fatalf("worker: %v %v", ok, err)
 	}
-	raw, _ := json.Marshal(payload)
-	if bytes.Contains(raw, []byte("unshared history")) || !bytes.Contains(raw, []byte("Only this synthetic invocation")) {
+	heard := f.may.TatCa()
+	if strings.Contains(heard, "unshared") || !strings.Contains(heard, "Only") || !strings.Contains(heard, "invocation") {
 		t.Fatal("inference input scope violated")
 	}
-	// ADR-0036 §2.3 and §5: the server lays the roster on top, one entry per
-	// active member by display name. Never an account id.
-	if got := payload["members"].([]any); len(got) != 2 {
-		t.Fatalf("roster has %d entries, want the 2 active members", len(got))
-	}
-	if bytes.Contains(raw, []byte(f.peer)) || bytes.Contains(raw, []byte(f.person)) {
-		t.Fatal("roster carries an account id")
+	// ADR-0036 §2.3 and §5: the members reach the model by label, never by
+	// account id.
+	if strings.Contains(heard, f.peer) || strings.Contains(heard, f.person) {
+		t.Fatal("the model heard an account id")
 	}
 	w := f.request("GET", f.route()+"/"+first.ID, f.token, nil)
 	requireCode(t, w, 200)
@@ -281,11 +272,11 @@ func TestInvocationConcurrentReplayAndMembershipBarrier(t *testing.T) {
 func TestInvocationRevocationWhileInferenceAndLeaseRecovery(t *testing.T) {
 	entered := make(chan struct{})
 	release := make(chan struct{})
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		close(entered)
+	var once sync.Once
+	f := setup(t, &mayGia{traLoi: "Synthetic result after revoke", truocTraLoi: func(context.Context) {
+		once.Do(func() { close(entered) })
 		<-release
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic result after revoke"}})
-	})
+	}})
 	job := f.create(t)
 	done := make(chan error, 1)
 	go func() { _, err := f.handler.ProcessOne(context.Background()); done <- err }()
@@ -320,7 +311,7 @@ func TestInvocationCancellationAndExpiredLease(t *testing.T) {
 		t.Fatal(err)
 	}
 	requireCode(t, f.request("POST", f.route()+"/"+job.ID+"/cancel", f.token, nil), 200)
-	if err = f.handler.publish(ctx, j, json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic stale worker"}}`), nil); err != nil {
+	if err = f.handler.publishGu(ctx, j, json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic stale worker"}}`), nil, nil); err != nil {
 		t.Fatal(err)
 	}
 	another := f.create(t)
@@ -418,8 +409,8 @@ func TestUnauthenticatedCallsNeverReachInferenceCapability(t *testing.T) {
 	input := map[string]string{"logical_id": newID(), "command": "plan", "prompt": "Synthetic unauthorized request"}
 	requireCode(t, f.request("POST", f.route(), "synthetic-invalid-session", input), 401)
 	requireCode(t, f.request("POST", f.route()+"/"+newID()+"/retry", "synthetic-invalid-session", nil), 401)
-	if f.capabilityCalls.Load() != 0 {
-		t.Fatal("unauthorized request reached inference service")
+	if f.may.SoGoi() != 0 {
+		t.Fatal("unauthorized request reached the model")
 	}
 }
 
@@ -434,10 +425,10 @@ func TestExpiredUnclaimedLeaseCannotDispatchOrPublish(t *testing.T) {
 	if _, err = f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET lease_until=clock_timestamp()-interval '1 second' WHERE id=$1`, job.ID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = f.handler.prepare(ctx, j); err == nil {
+	if _, err = f.handler.chuanBiNhom(ctx, j); err == nil {
 		t.Fatal("expired worker retained dispatch permission")
 	}
-	if err = f.handler.publish(ctx, j, json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic expired worker"}}`), nil); err != nil {
+	if err = f.handler.publishGu(ctx, j, json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic expired worker"}}`), nil, nil); err != nil {
 		t.Fatal(err)
 	}
 	var count int
@@ -450,4 +441,15 @@ func TestExpiredUnclaimedLeaseCannotDispatchOrPublish(t *testing.T) {
 	if err = f.pool.QueryRow(ctx, `SELECT count(*) FROM messages WHERE kind='ai_card'`).Scan(&count); err != nil || count != 1 {
 		t.Fatalf("recovery did not publish once: %d %v", count, err)
 	}
+}
+
+// Same idempotency as plan, and the command is part of the digest: the same
+// logical id with a different command is a conflict, not a replay.
+func TestChiaBillCungKhoaKhacLenhLaXungDot(t *testing.T) {
+	f := setup(t, nil)
+	input := map[string]any{"logical_id": newID(), "command": "chia_bill", "prompt": "Chia giúp nhóm"}
+	requireCode(t, f.request("POST", f.route(), f.token, input), 202)
+	requireCode(t, f.request("POST", f.route(), f.token, input), 200)
+	input["command"] = "plan"
+	requireCode(t, f.request("POST", f.route(), f.token, input), 409)
 }

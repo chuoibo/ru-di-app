@@ -14,10 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatlegacychange"
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/httpapi/dispatch"
@@ -27,6 +23,10 @@ import (
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/routes"
 	"mobile/services/core/ownership"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Publishing an answer against the chat write routes that lock its trigger,
@@ -79,7 +79,7 @@ func setupKhoa(t *testing.T) banKhoa {
 	}
 	tag := strings.ReplaceAll(newID(), "-", "")[:12]
 	b := banKhoa{fixture: f, tenGhi: "khoa_ghi_" + tag, tenDang: "khoa_dang_" + tag}
-	b.dang = New(b.poolTen(t, b.tenDang), brain.Configured())
+	b.dang = New(b.poolTen(t, b.tenDang))
 	ghi := b.poolTen(t, b.tenGhi)
 	env := endpoint.Env{Mode: endpoint.ModeDev, NewUnit: func() *db.Unit { return db.NewUnit(ghi) }, Now: time.Now, BeforeServe: chatlegacychange.BeforeWrite}
 	b.cua = cuaTruocGo(t, env)
@@ -207,10 +207,7 @@ func (b banKhoa) mot(t *testing.T, act string, ep, ghiTruoc bool) ketQua {
 	if err != nil || !ok {
 		t.Fatalf("claim %v %v", ok, err)
 	}
-	card, err := theCuaViec(j, phanChu("Synthetic answer"), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	card := json.RawMessage(`{"kind":"text","payload":{"text":"Synthetic answer"}}`)
 	var gate pgx.Tx
 	if ep {
 		if gate, err = b.pool.Begin(ctx); err != nil {
@@ -224,7 +221,7 @@ func (b banKhoa) mot(t *testing.T, act string, ep, ghiTruoc bool) ketQua {
 	ghi := make(chan *httptest.ResponseRecorder, 1)
 	dang := make(chan error, 1)
 	batDauGhi := func() { go func() { ghi <- b.ghi(act, trigger) }() }
-	batDauDang := func() { go func() { dang <- b.dang.publish(ctx, j, card, nil) }() }
+	batDauDang := func() { go func() { dang <- b.dang.publishGu(ctx, j, card, nil, nil) }() }
 	switch {
 	case !ep:
 		batDauGhi()

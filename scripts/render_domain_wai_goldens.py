@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 """Oracle for the Go port of the pure WAI domain packages (ADR-0029).
 
-Eleven packages, one Python module each:
+Eight packages, one Python module each:
 
     app.domain.album              services/core/internal/domain/album
     app.places.catalog            services/core/internal/domain/catalog
     app.domain.chat_intent        services/core/internal/domain/chatintent
     app.domain.companion          services/core/internal/domain/companion
-    app.domain.conversation       services/core/internal/domain/conversation
     app.domain.faces              services/core/internal/domain/faces
     app.domain.message_edit       services/core/internal/domain/messageedit
     app.places.prompt_safety      services/core/internal/domain/promptsafety
-    app.domain.reel               services/core/internal/domain/reel
     app.domain.stickers           services/core/internal/domain/stickers
-    app.domain.suggestion         services/core/internal/domain/suggestion
 
 The script calls the real functions inside the parity API image and records
 what each returned or raised. Each package's oracle_test.go replays every
 case. Image: mobile-parity-api:7bf58e3d (or a tree-built image whose /srv/app
 matches services/api/app byte for byte).
+
+Three more packages -- conversation, reel and suggestion -- had their goldens
+rendered here too. ADR-0051 deleted their Python modules together with the
+last Python caller, so those testdata files are frozen vectors now.
 
     docker run --rm -i --network none --entrypoint python "$IMAGE" - --list \\
       < scripts/render_domain_wai_goldens.py |
@@ -47,12 +48,9 @@ sys.path.insert(0, "/srv")
 from app.domain import album as album_mod  # noqa: E402
 from app.domain import chat_intent  # noqa: E402
 from app.domain import companion as companion_mod  # noqa: E402
-from app.domain import conversation as conversation_mod  # noqa: E402
 from app.domain import faces as faces_mod  # noqa: E402
 from app.domain import message_edit  # noqa: E402
-from app.domain import reel as reel_mod  # noqa: E402
 from app.domain import stickers as stickers_mod  # noqa: E402
-from app.domain import suggestion as suggestion_mod  # noqa: E402
 from app.places import catalog  # noqa: E402
 from app.places import prompt_safety  # noqa: E402
 
@@ -222,14 +220,6 @@ def ground_card(*, raw, allowed_places):
     return companion_mod.ground_card(raw, allowed_places)
 
 
-def summarise_conversation(*, messages, member_count):
-    return conversation_mod.summarise_conversation(messages, member_count=member_count)
-
-
-def has_conversation(*, digest):
-    return conversation_mod.has_conversation(digest)
-
-
 def anonymous_boxes(*, boxes, image_width, image_height):
     return faces_mod.anonymous_boxes(
         boxes, image_width=image_width, image_height=image_height
@@ -257,18 +247,6 @@ def safe_places(*, places):
     return prompt_safety.safe_places(places)
 
 
-def ground_reel(*, raw, memories):
-    return reel_mod.ground_reel(raw, memories)
-
-
-def summarise_history(*, trips, visits):
-    return suggestion_mod.summarise_history(trips, visits)
-
-
-def ground_suggestion(*, raw, allowed_places):
-    return suggestion_mod.ground_suggestion(raw, allowed_places)
-
-
 def category_ids():
     return [row["id"] for row in catalog.CATEGORIES]
 
@@ -280,17 +258,12 @@ FUNCTIONS = {
     "parse_intent": parse_intent,
     "parse_vote": parse_vote,
     "ground_card": ground_card,
-    "summarise_conversation": summarise_conversation,
-    "has_conversation": has_conversation,
     "anonymous_boxes": anonymous_boxes,
     "check_deletable": check_deletable,
     "check_reply_target": check_reply_target,
     "deleted_shape": deleted_shape,
     "place_is_safe_for_prompt": place_is_safe_for_prompt,
     "safe_places": safe_places,
-    "ground_reel": ground_reel,
-    "summarise_history": summarise_history,
-    "ground_suggestion": ground_suggestion,
     "category_ids": lambda: category_ids(),
 }
 
@@ -661,72 +634,6 @@ def companion_fuzz(seed=SEED, count=40):
     return out
 
 
-# ---- conversation ----
-
-
-def conversation_constants():
-    return {
-        "MAX_LINES": conversation_mod.MAX_LINES,
-        "MAX_LINE": conversation_mod.MAX_LINE,
-        "MIN_LINES": conversation_mod.MIN_LINES,
-        "names": ["summarise_conversation", "has_conversation"],
-    }
-
-
-def conversation_edges():
-    msgs = [
-        {"kind": "text", "body": "c", "author_id": A},
-        {"kind": "sticker", "body": "ok-chot", "author_id": A},
-        {"kind": "text", "body": "  ", "author_id": B},
-        {"kind": "text", "body": "b", "author_id": B},
-        {"kind": "text", "body": "a", "author_id": A},
-    ]
-    # newest first
-    out = [
-        case(
-            "summarise_conversation",
-            "three-text",
-            {"messages": msgs, "member_count": 4},
-        )
-    ]
-    digest = conversation_mod.summarise_conversation(msgs, member_count=4)
-    out.append(case("has_conversation", "yes", {"digest": digest}))
-    empty = conversation_mod.summarise_conversation([], member_count=0)
-    out.append(case("has_conversation", "no", {"digest": empty}))
-    long = {"kind": "text", "body": "x" * 250, "author_id": A}
-    out.append(
-        case(
-            "summarise_conversation",
-            "clip",
-            {"messages": [long, long], "member_count": 1},
-        )
-    )
-    return out
-
-
-def conversation_fuzz(seed=SEED, count=40):
-    rng = random.Random(seed)
-    out = []
-    for i in range(count):
-        msgs = []
-        for _ in range(rng.randrange(0, 20)):
-            msgs.append(
-                {
-                    "kind": rng.choice(("text", "text", "sticker")),
-                    "body": rng.choice(("hi", "  ", "café", None)),
-                    "author_id": rng.choice((A, B, None)),
-                }
-            )
-        out.append(
-            case(
-                "summarise_conversation",
-                f"fuzz/{i}",
-                {"messages": msgs, "member_count": rng.randrange(0, 6)},
-            )
-        )
-    return out
-
-
 # ---- faces ----
 
 
@@ -985,208 +892,6 @@ def prompt_safety_fuzz(seed=SEED, count=30):
     return out
 
 
-# ---- reel ----
-
-
-def reel_constants():
-    return {
-        "MAX_PICKS": reel_mod.MAX_PICKS,
-        "MAX_TITLE": reel_mod.MAX_TITLE,
-        "names": ["ground_reel"],
-    }
-
-
-def mem(mid):
-    return {
-        "id": mid,
-        "image_url": f"/contexts/{CTX}/photos/{mid}",
-        "caption": "c",
-        "place_name": "Chợ",
-        "created_at": NOW.isoformat(),
-        "reaction_count": 1,
-        "comment_count": 0,
-    }
-
-
-def reel_edges():
-    memories = [mem("m1"), mem("m2")]
-    out = []
-    out.append(
-        case(
-            "ground_reel",
-            "ok",
-            {
-                "raw": {
-                    "title": "Kỷ niệm",
-                    "picks": [{"memory_id": "m1", "note": "n1"}],
-                },
-                "memories": memories,
-            },
-        )
-    )
-    out.append(
-        case(
-            "ground_reel",
-            "unknown",
-            {
-                "raw": {
-                    "title": "Kỷ niệm",
-                    "picks": [{"memory_id": "nope", "note": "n"}],
-                },
-                "memories": memories,
-            },
-        )
-    )
-    out.append(
-        case(
-            "ground_reel",
-            "dup",
-            {
-                "raw": {
-                    "title": "Kỷ niệm",
-                    "picks": [
-                        {"memory_id": "m1", "note": "a"},
-                        {"memory_id": "m1", "note": "b"},
-                    ],
-                },
-                "memories": memories,
-            },
-        )
-    )
-    out.append(
-        case(
-            "ground_reel",
-            "empty",
-            {"raw": {"title": "Kỷ niệm", "picks": []}, "memories": memories},
-        )
-    )
-    return out
-
-
-def reel_fuzz(seed=SEED, count=20):
-    rng = random.Random(seed)
-    out = []
-    memories = [mem("m1"), mem("m2"), mem("m3")]
-    ids = ["m1", "m2", "m3", "ghost"]
-    for i in range(count):
-        n = rng.randrange(0, 4)
-        picks = [{"memory_id": rng.choice(ids), "note": "n"} for _ in range(n)]
-        out.append(
-            case(
-                "ground_reel",
-                f"fuzz/{i}",
-                {
-                    "raw": {"title": "T", "picks": picks},
-                    "memories": memories,
-                },
-            )
-        )
-    return out
-
-
-# ---- suggestion ----
-
-
-def suggestion_constants():
-    return {
-        "MAX_STOPS": suggestion_mod.MAX_STOPS,
-        "MAX_RECENT_TITLES": suggestion_mod.MAX_RECENT_TITLES,
-        "VERDICTS": list(suggestion_mod.VERDICTS),
-        "names": ["summarise_history", "ground_suggestion"],
-    }
-
-
-def suggestion_edges():
-    trips = [
-        {"title": "Đà Lạt", "split_total_vnd": 90_000, "headcount": 3},
-        {"title": "Biển", "split_total_vnd": 30_000, "headcount": 2},
-    ]
-    visits = [
-        {"category": "cafe"},
-        {"category": "cafe"},
-        {"category": "chợ"},
-        {"category": ""},
-    ]
-    out = [case("summarise_history", "two-trips", {"trips": trips, "visits": visits})]
-    out.append(case("summarise_history", "empty", {"trips": [], "visits": []}))
-    out.append(
-        case(
-            "summarise_history",
-            "bad-headcount",
-            {
-                "trips": [{"title": "x", "split_total_vnd": 1000, "headcount": 0}],
-                "visits": [],
-            },
-        )
-    )
-    place = {"id": "p1", "name": "Chợ"}
-    out.append(
-        case(
-            "ground_suggestion",
-            "ok",
-            {
-                "raw": {
-                    "kind": "outing_suggestion",
-                    "payload": {
-                        "title": "Đi chợ",
-                        "when_text": "sáng",
-                        "stops": [
-                            {
-                                "place_id": "p1",
-                                "time_text": "9h",
-                                "note": "ăn",
-                                "reason": "ngon",
-                                "verdict": "hop",
-                            }
-                        ],
-                    },
-                },
-                "allowed_places": [place],
-            },
-        )
-    )
-    out.append(
-        case(
-            "ground_suggestion",
-            "unknown-place",
-            {
-                "raw": {
-                    "kind": "outing_suggestion",
-                    "payload": {
-                        "title": "x",
-                        "when_text": "y",
-                        "stops": [{"place_id": "no", "time_text": "t", "note": "n"}],
-                    },
-                },
-                "allowed_places": [place],
-            },
-        )
-    )
-    return out
-
-
-def suggestion_fuzz(seed=SEED, count=20):
-    rng = random.Random(seed)
-    out = []
-    for i in range(count):
-        trips = [
-            {
-                "title": rng.choice(("A", " B ", "")),
-                "split_total_vnd": rng.choice((0, 1000, 90_000)),
-                "headcount": rng.choice((1, 2, 3)),
-            }
-            for _ in range(rng.randrange(0, 4))
-        ]
-        visits = [
-            {"category": rng.choice(("cafe", "chợ", ""))}
-            for _ in range(rng.randrange(0, 5))
-        ]
-        out.append(
-            case("summarise_history", f"fuzz/{i}", {"trips": trips, "visits": visits})
-        )
-    return out
-
-
 #: module -> (Go path, py module, constants, edges, fuzz, shards)
 MODULES = {
     "album": (
@@ -1221,14 +926,6 @@ MODULES = {
         companion_fuzz,
         1,
     ),
-    "conversation": (
-        "internal/domain/conversation",
-        conversation_mod,
-        conversation_constants,
-        conversation_edges,
-        conversation_fuzz,
-        1,
-    ),
     "faces": (
         "internal/domain/faces",
         faces_mod,
@@ -1253,28 +950,12 @@ MODULES = {
         prompt_safety_fuzz,
         1,
     ),
-    "reel": (
-        "internal/domain/reel",
-        reel_mod,
-        reel_constants,
-        reel_edges,
-        reel_fuzz,
-        1,
-    ),
     "stickers": (
         "internal/domain/stickers",
         stickers_mod,
         stickers_constants,
         stickers_edges,
         stickers_fuzz,
-        1,
-    ),
-    "suggestion": (
-        "internal/domain/suggestion",
-        suggestion_mod,
-        suggestion_constants,
-        suggestion_edges,
-        suggestion_fuzz,
         1,
     ),
 }

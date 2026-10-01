@@ -1,0 +1,3978 @@
+{
+ "generator": "scripts/render_place_ai_goldens.py",
+ "module": "app.places.search+reasons+app.domain.place_search",
+ "mode": "timquan-fuzz-0",
+ "python": "3.12.11",
+ "seed": 31,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 160
+ },
+ "cases": [
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/0",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/0",
+   "args": {
+    "reason": "",
+    "query": "km gi\u00e1 km c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/1",
+   "args": {
+    "reason": " ",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/1",
+   "args": {
+    "reason": "GI\u00c1",
+    "query": "gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/2",
+   "args": {
+    "reason": "c\u00e1ch",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/2",
+   "args": {
+    "reason": "x   ng\u01b0\u1eddi c\u00e1ch c\u00e1ch gi\u00e1 y",
+    "query": "  ng\u01b0\u1eddi c\u00e1ch c\u00e1ch gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/3",
+   "args": {
+    "reason": "3 3",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "3",
+     "3"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/3",
+   "args": {
+    "reason": "x ng\u01b0\u1eddi ng\u01b0\u1eddi ng\u01b0\u1eddi y",
+    "query": "ng\u01b0\u1eddi ng\u01b0\u1eddi ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/4",
+   "args": {
+    "reason": " c\u00e1ch 250k 250k",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "250",
+     "250"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/4",
+   "args": {
+    "reason": "x ng\u01b0\u1eddi km y",
+    "query": "ng\u01b0\u1eddi km"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/5",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/5",
+   "args": {
+    "reason": "",
+    "query": "ng\u01b0\u1eddi  "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/6",
+   "args": {
+    "reason": "3 0.35",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "0.35"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/6",
+   "args": {
+    "reason": "x gi\u00e1 h\u1ee3p  h\u1ee3p y",
+    "query": "gi\u00e1 h\u1ee3p  h\u1ee3p"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/7",
+   "args": {
+    "reason": "5 6 h\u1ee3p h\u1ee3p",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "6"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/7",
+   "args": {
+    "reason": "H\u1ee2P",
+    "query": "h\u1ee3p"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/8",
+   "args": {
+    "reason": "ng\u01b0\u1eddi c\u00e1ch  120",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/8",
+   "args": {
+    "reason": "ng\u01b0\u1eddi c\u00e1ch  120",
+    "query": "gi\u00e1 "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/9",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/9",
+   "args": {
+    "reason": "x h\u1ee3p ng\u01b0\u1eddi c\u00e1ch y",
+    "query": "h\u1ee3p ng\u01b0\u1eddi c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/10",
+   "args": {
+    "reason": "0.35",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/10",
+   "args": {
+    "reason": "0.35",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/11",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/11",
+   "args": {
+    "reason": "NG\u01af\u1edcI",
+    "query": "ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/12",
+   "args": {
+    "reason": "16:00  ",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "16",
+     "00"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/12",
+   "args": {
+    "reason": "16:00  ",
+    "query": "\u0110\u00e0 L\u1ea1t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/13",
+   "args": {
+    "reason": "gi\u00e1 4.5 999 ng\u01b0\u1eddi 6 h\u1ee3p",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "999",
+     "6"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/13",
+   "args": {
+    "reason": "\u0110\u00c0 L\u1ea0T",
+    "query": "\u0110\u00e0 L\u1ea1t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/14",
+   "args": {
+    "reason": "\u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi   6 150 4.5",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "6",
+     "150",
+     "4.5"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/14",
+   "args": {
+    "reason": "x ng\u01b0\u1eddi gi\u00e1 c\u00e1ch y",
+    "query": "ng\u01b0\u1eddi gi\u00e1 c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/15",
+   "args": {
+    "reason": "$sp:120 30|0.000 |16:00 |250k",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/15",
+   "args": {
+    "reason": "$sp:120 30|0.000 |16:00 |250k",
+    "query": "gi\u00e1 ng\u01b0\u1eddi ng\u01b0\u1eddi h\u1ee3p km"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/16",
+   "args": {
+    "reason": "c\u00e1ch   gi\u00e1",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/16",
+   "args": {
+    "reason": "c\u00e1ch   gi\u00e1",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/17",
+   "args": {
+    "reason": "$sp:300.00|0 120 |  300.|000",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "300.000",
+     "300.000"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/17",
+   "args": {
+    "reason": "$sp:300.00|0 120 |  300.|000",
+    "query": "c\u00e1ch qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/18",
+   "args": {
+    "reason": "120",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "120"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/18",
+   "args": {
+    "reason": "KM GI\u00c1 C\u00c1CH   NG\u01af\u1edcI",
+    "query": "km gi\u00e1 c\u00e1ch   ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/19",
+   "args": {
+    "reason": "5",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/19",
+   "args": {
+    "reason": "5",
+    "query": "h\u1ee3p qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m ng\u01b0\u1eddi h\u1ee3p"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/20",
+   "args": {
+    "reason": "250k 250k 6 ng\u01b0\u1eddi 4.5 4.5",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "6"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/20",
+   "args": {
+    "reason": "x  ng\u01b0\u1eddi   gi\u00e1 y",
+    "query": " ng\u01b0\u1eddi   gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/21",
+   "args": {
+    "reason": "  3 2023",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "3",
+     "2023"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/21",
+   "args": {
+    "reason": "H\u1ee2P  C\u00c1CH",
+    "query": "h\u1ee3p  c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/22",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/22",
+   "args": {
+    "reason": "\u0110\u00c0 L\u1ea0T H\u1ee2P KM  ",
+    "query": "\u0110\u00e0 L\u1ea1t h\u1ee3p km  "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/23",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/23",
+   "args": {
+    "reason": "x \u0110\u00e0 L\u1ea1t gi\u00e1 gi\u00e1 y",
+    "query": "\u0110\u00e0 L\u1ea1t gi\u00e1 gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/24",
+   "args": {
+    "reason": "4.5 120 120",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "4.5",
+     "120",
+     "120"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/24",
+   "args": {
+    "reason": "x ng\u01b0\u1eddi ng\u01b0\u1eddi km qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m y",
+    "query": "ng\u01b0\u1eddi ng\u01b0\u1eddi km qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/25",
+   "args": {
+    "reason": "1.2  km   3 150",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "1.2",
+     "3",
+     "150"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/25",
+   "args": {
+    "reason": "x \u0110\u00e0 L\u1ea1t qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m h\u1ee3p y",
+    "query": "\u0110\u00e0 L\u1ea1t qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m h\u1ee3p"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/26",
+   "args": {
+    "reason": "5 5  3 c\u00e1ch 2023",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "2023"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/26",
+   "args": {
+    "reason": "x ng\u01b0\u1eddi ng\u01b0\u1eddi gi\u00e1    y",
+    "query": "ng\u01b0\u1eddi ng\u01b0\u1eddi gi\u00e1   "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/27",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/27",
+   "args": {
+    "reason": "NG\u01af\u1edcI \u0110\u00c0 L\u1ea0T  ",
+    "query": "ng\u01b0\u1eddi \u0110\u00e0 L\u1ea1t  "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/28",
+   "args": {
+    "reason": "250k 120 0.35 250k 8 2023",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "250",
+     "120",
+     "250",
+     "8",
+     "2023"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/28",
+   "args": {
+    "reason": "x km c\u00e1ch gi\u00e1 \u0110\u00e0 L\u1ea1t \u0110\u00e0 L\u1ea1t y",
+    "query": "km c\u00e1ch gi\u00e1 \u0110\u00e0 L\u1ea1t \u0110\u00e0 L\u1ea1t"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/29",
+   "args": {
+    "reason": "6 6",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "6",
+     "6"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/29",
+   "args": {
+    "reason": "x ng\u01b0\u1eddi km c\u00e1ch y",
+    "query": "ng\u01b0\u1eddi km c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/30",
+   "args": {
+    "reason": "999 250k km 5 0.35 ng\u01b0\u1eddi",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "999",
+     "0.35"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/30",
+   "args": {
+    "reason": "999 250k km 5 0.35 ng\u01b0\u1eddi",
+    "query": "ng\u01b0\u1eddi gi\u00e1 \u0110\u00e0 L\u1ea1t gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/31",
+   "args": {
+    "reason": "$sp:300.00|0 5 20|0",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "300.000",
+     "200"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/31",
+   "args": {
+    "reason": "x ng\u01b0\u1eddi qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m h\u1ee3p c\u00e1ch y",
+    "query": "ng\u01b0\u1eddi qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m h\u1ee3p c\u00e1ch"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/32",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/32",
+   "args": {
+    "reason": "x km   y",
+    "query": "km  "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/33",
+   "args": {
+    "reason": "4.5",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "4.5"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/33",
+   "args": {
+    "reason": "x  h\u1ee3p \u0110\u00e0 L\u1ea1t   y",
+    "query": " h\u1ee3p \u0110\u00e0 L\u1ea1t  "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/34",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/34",
+   "args": {
+    "reason": "",
+    "query": "km c\u00e1ch c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/35",
+   "args": {
+    "reason": "120 4.5  300.000 8 3",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/35",
+   "args": {
+    "reason": "x qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t \u0110\u00e0 L\u1ea1t y",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t \u0110\u00e0 L\u1ea1t"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/36",
+   "args": {
+    "reason": " ",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/36",
+   "args": {
+    "reason": " ",
+    "query": "gi\u00e1 h\u1ee3p"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/37",
+   "args": {
+    "reason": "0.35 120",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "0.35"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/37",
+   "args": {
+    "reason": "0.35 120",
+    "query": "c\u00e1ch ng\u01b0\u1eddi qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/38",
+   "args": {
+    "reason": "km 16:00 4.5 200",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "16",
+     "00",
+     "4.5",
+     "200"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/38",
+   "args": {
+    "reason": "km 16:00 4.5 200",
+    "query": "\u0110\u00e0 L\u1ea1t qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m  h\u1ee3p"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/39",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/39",
+   "args": {
+    "reason": "",
+    "query": "km \u0110\u00e0 L\u1ea1t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/40",
+   "args": {
+    "reason": "$sp:  \u0110\u00e0 L|\u1ea1t 200| 8 300|.000",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/40",
+   "args": {
+    "reason": "x qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m km    y",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m km   "
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/41",
+   "args": {
+    "reason": "6",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "6"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/41",
+   "args": {
+    "reason": "x  ng\u01b0\u1eddi km \u0110\u00e0 L\u1ea1t y",
+    "query": " ng\u01b0\u1eddi km \u0110\u00e0 L\u1ea1t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/42",
+   "args": {
+    "reason": "3",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/42",
+   "args": {
+    "reason": "3",
+    "query": "\u0110\u00e0 L\u1ea1t  km c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/43",
+   "args": {
+    "reason": "120 16:00 1,2 1.2",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/43",
+   "args": {
+    "reason": "x km ng\u01b0\u1eddi c\u00e1ch y",
+    "query": "km ng\u01b0\u1eddi c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/44",
+   "args": {
+    "reason": "8 120 gi\u00e1",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "8",
+     "120"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/44",
+   "args": {
+    "reason": "C\u00c1CH C\u00c1CH C\u00c1CH  ",
+    "query": "c\u00e1ch c\u00e1ch c\u00e1ch  "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/45",
+   "args": {
+    "reason": "120 16:00 h\u1ee3p 250k",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/45",
+   "args": {
+    "reason": "KM   H\u1ee2P C\u00c1CH ",
+    "query": "km   h\u1ee3p c\u00e1ch "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/46",
+   "args": {
+    "reason": "ng\u01b0\u1eddi",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/46",
+   "args": {
+    "reason": "ng\u01b0\u1eddi",
+    "query": "    km h\u1ee3p gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/47",
+   "args": {
+    "reason": "2023 3 km 150",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "2023"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/47",
+   "args": {
+    "reason": "x ng\u01b0\u1eddi \u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi y",
+    "query": "ng\u01b0\u1eddi \u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/48",
+   "args": {
+    "reason": "$sp:16:00 |120 30|0.000",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "16",
+     "00",
+     "120",
+     "300.000"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/48",
+   "args": {
+    "reason": "$sp:16:00 |120 30|0.000",
+    "query": "h\u1ee3p "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/49",
+   "args": {
+    "reason": "$sp:300.00|0 0.35",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "300.000"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/49",
+   "args": {
+    "reason": "$sp:300.00|0 0.35",
+    "query": "   "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/50",
+   "args": {
+    "reason": "$sp:\u0110\u00e0 L\u1ea1t| 250k |150 30|0.000",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "250",
+     "150",
+     "300.000"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/50",
+   "args": {
+    "reason": "x \u0110\u00e0 L\u1ea1t   c\u00e1ch qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t y",
+    "query": "\u0110\u00e0 L\u1ea1t   c\u00e1ch qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/51",
+   "args": {
+    "reason": "gi\u00e1 c\u00e1ch 150 150",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/51",
+   "args": {
+    "reason": "x h\u1ee3p   h\u1ee3p c\u00e1ch y",
+    "query": "h\u1ee3p   h\u1ee3p c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/52",
+   "args": {
+    "reason": "16:00",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/52",
+   "args": {
+    "reason": "16:00",
+    "query": "km \u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi km"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/53",
+   "args": {
+    "reason": "\u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi c\u00e1ch 4.5 0.35",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "4.5"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/53",
+   "args": {
+    "reason": "x c\u00e1ch gi\u00e1   y",
+    "query": "c\u00e1ch gi\u00e1  "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/54",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/54",
+   "args": {
+    "reason": "x c\u00e1ch qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t   y",
+    "query": "c\u00e1ch qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t  "
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/55",
+   "args": {
+    "reason": "$sp:16:00 |1,2 0.|35 999| 16:00| ng\u01b0\u1eddi",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "16",
+     "00",
+     "1,2",
+     "999",
+     "16",
+     "00"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/55",
+   "args": {
+    "reason": "x km c\u00e1ch km y",
+    "query": "km c\u00e1ch km"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/56",
+   "args": {
+    "reason": "1,2 1,2  3",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/56",
+   "args": {
+    "reason": "x qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi y",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/57",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/57",
+   "args": {
+    "reason": "",
+    "query": "  qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m gi\u00e1 gi\u00e1 gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/58",
+   "args": {
+    "reason": "200",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/58",
+   "args": {
+    "reason": "QU\u00c1N N\u01af\u1edaNG NGO\u00c0I TR\u1edcI CHO NH\u00d3M C\u00c1CH C\u00c1CH C\u00c1CH",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m c\u00e1ch c\u00e1ch c\u00e1ch"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/59",
+   "args": {
+    "reason": "$sp:200 0.|35 5 1|20 0.3|5 1.2",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "0.35",
+     "0.35"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/59",
+   "args": {
+    "reason": "x   qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m y",
+    "query": "  qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/60",
+   "args": {
+    "reason": "h\u1ee3p",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/60",
+   "args": {
+    "reason": "QU\u00c1N N\u01af\u1edaNG NGO\u00c0I TR\u1edcI CHO NH\u00d3M GI\u00c1 GI\u00c1  QU\u00c1N N\u01af\u1edaNG NGO\u00c0I TR\u1edcI CHO NH\u00d3M",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m gi\u00e1 gi\u00e1  qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/61",
+   "args": {
+    "reason": "2023 200 250k 300.000",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "2023"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/61",
+   "args": {
+    "reason": "x    c\u00e1ch h\u1ee3p \u0110\u00e0 L\u1ea1t y",
+    "query": "   c\u00e1ch h\u1ee3p \u0110\u00e0 L\u1ea1t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/62",
+   "args": {
+    "reason": "120  c\u00e1ch ng\u01b0\u1eddi",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "120"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/62",
+   "args": {
+    "reason": "120  c\u00e1ch ng\u01b0\u1eddi",
+    "query": " "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/63",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/63",
+   "args": {
+    "reason": "KM",
+    "query": "km"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/64",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/64",
+   "args": {
+    "reason": "",
+    "query": " ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/65",
+   "args": {
+    "reason": "150 4.5",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "150",
+     "4.5"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/65",
+   "args": {
+    "reason": "  H\u1ee2P QU\u00c1N N\u01af\u1edaNG NGO\u00c0I TR\u1edcI CHO NH\u00d3M ",
+    "query": "  h\u1ee3p qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m "
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/66",
+   "args": {
+    "reason": "3 1,2",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "3",
+     "1,2"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/66",
+   "args": {
+    "reason": "3 1,2",
+    "query": " h\u1ee3p qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m km ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/67",
+   "args": {
+    "reason": "  1,2  ",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "1,2"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/67",
+   "args": {
+    "reason": "x qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m  h\u1ee3p y",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m  h\u1ee3p"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/68",
+   "args": {
+    "reason": "gi\u00e1 8",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/68",
+   "args": {
+    "reason": "gi\u00e1 8",
+    "query": "ng\u01b0\u1eddi \u0110\u00e0 L\u1ea1t  c\u00e1ch qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/69",
+   "args": {
+    "reason": "0.35 999",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "0.35",
+     "999"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/69",
+   "args": {
+    "reason": "GI\u00c1 GI\u00c1 C\u00c1CH H\u1ee2P",
+    "query": "gi\u00e1 gi\u00e1 c\u00e1ch h\u1ee3p"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/70",
+   "args": {
+    "reason": "8   6",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "8",
+     "6"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/70",
+   "args": {
+    "reason": "C\u00c1CH GI\u00c1",
+    "query": "c\u00e1ch gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/71",
+   "args": {
+    "reason": "1,2 3 5 1,2",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "1,2",
+     "3",
+     "1,2"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/71",
+   "args": {
+    "reason": "1,2 3 5 1,2",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m km c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/72",
+   "args": {
+    "reason": "$sp:2023 8| 999 8| ",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "2023",
+     "8",
+     "999",
+     "8"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/72",
+   "args": {
+    "reason": "$sp:2023 8| 999 8| ",
+    "query": "km gi\u00e1 "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/73",
+   "args": {
+    "reason": "1.2 0.35 5 c\u00e1ch gi\u00e1",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "0.35"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/73",
+   "args": {
+    "reason": "1.2 0.35 5 c\u00e1ch gi\u00e1",
+    "query": " ng\u01b0\u1eddi h\u1ee3p gi\u00e1  "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/74",
+   "args": {
+    "reason": "16:00 300.000 km \u0110\u00e0 L\u1ea1t 16:00 c\u00e1ch",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "16",
+     "00",
+     "300.000",
+     "16",
+     "00"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/74",
+   "args": {
+    "reason": "x \u0110\u00e0 L\u1ea1t c\u00e1ch y",
+    "query": "\u0110\u00e0 L\u1ea1t c\u00e1ch"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/75",
+   "args": {
+    "reason": "250k   300.000 gi\u00e1 0.35 120",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "250",
+     "120"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/75",
+   "args": {
+    "reason": "  C\u00c1CH KM  GI\u00c1",
+    "query": "  c\u00e1ch km  gi\u00e1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/76",
+   "args": {
+    "reason": "6 150 250k 999 6",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": [
+     "150",
+     "250",
+     "999"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/76",
+   "args": {
+    "reason": "\u0110\u00c0 L\u1ea0T KM ",
+    "query": "\u0110\u00e0 L\u1ea1t km "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/77",
+   "args": {
+    "reason": "",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "nhom",
+     "interests": [
+      "an-uong",
+      "cafe"
+     ],
+     "budget_per_person_vnd": 300000,
+     "size": 6,
+     "people": 6,
+     "people_answered": 4
+    }
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/77",
+   "args": {
+    "reason": "x \u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi h\u1ee3p  y",
+    "query": "\u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi h\u1ee3p "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/78",
+   "args": {
+    "reason": "200 120 6",
+    "place": {
+     "id": "p-nuong-thu",
+     "name": "Ti\u1ec7m N\u01b0\u1edbng Th\u1eed",
+     "category": "quan-an-local",
+     "kinds": [
+      "n\u01b0\u1edbng",
+      "l\u1ea9u"
+     ],
+     "price_min_vnd": 150000,
+     "price_max_vnd": 250000,
+     "traits": [
+      "\u0111\u00f4ng vui",
+      "ngo\u00e0i tr\u1eddi"
+     ],
+     "distance_km": "$f:h3hfhfh3h3h3h3h3h3h3h3h3h3h3h3h3",
+     "travel_minutes": 8,
+     "rating": "$f:h4h0h1h2h0h0h0h0h0h0h0h0h0h0h0h0",
+     "rating_count": 120,
+     "photo_count": 3,
+     "group_fit": {
+      "min_people": 2,
+      "max_people": 8,
+      "relation": "ban-be"
+     },
+     "open_now": true,
+     "open_hours": "16:00 \u2013 23:00",
+     "address": "12 \u0110\u01b0\u1eddng Th\u1eed, Ph\u01b0\u1eddng 3"
+    },
+    "group": {
+     "basis": "ca-nhan",
+     "interests": [],
+     "budget_per_person_vnd": 90000
+    }
+   },
+   "result": {
+    "ok": [
+     "6"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/78",
+   "args": {
+    "reason": "QU\u00c1N N\u01af\u1edaNG NGO\u00c0I TR\u1edcI CHO NH\u00d3M \u0110\u00c0 L\u1ea0T NG\u01af\u1edcI",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m \u0110\u00e0 L\u1ea1t ng\u01b0\u1eddi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "ungrounded_numbers",
+   "name": "fuzz/ungrounded/79",
+   "args": {
+    "reason": "  120",
+    "place": {
+     "id": "p-cafe-thu",
+     "name": "C\u00e0 Ph\u00ea \"\u0110\u1ed3i\" Th\u1eed",
+     "category": "cafe",
+     "kinds": [],
+     "price_min_vnd": null,
+     "price_max_vnd": null,
+     "traits": [
+      "y\u00ean t\u0129nh"
+     ],
+     "distance_km": "$f:h3hfhdh6h6h6h6h6h6h6h6h6h6h6h6h6",
+     "open_now": null,
+     "open_hours": null
+    },
+    "group": null
+   },
+   "result": {
+    "ok": [
+     "120"
+    ]
+   }
+  },
+  {
+   "fn": "echoes_the_query",
+   "name": "fuzz/echo/79",
+   "args": {
+    "reason": "QU\u00c1N N\u01af\u1edaNG NGO\u00c0I TR\u1edcI CHO NH\u00d3M H\u1ee2P QU\u00c1N N\u01af\u1edaNG NGO\u00c0I TR\u1edcI CHO NH\u00d3M",
+    "query": "qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m h\u1ee3p qu\u00e1n n\u01b0\u1edbng ngo\u00e0i tr\u1eddi cho nh\u00f3m"
+   },
+   "result": {
+    "ok": true
+   }
+  }
+ ]
+}

@@ -8,17 +8,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"mobile/services/core/internal/aiharness/llm"
+	"mobile/services/core/internal/aiharness/motluot"
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/limit"
@@ -29,50 +30,55 @@ import (
 // POST /places/search hands the model a shortlist, never the catalogue
 // (design 04 §7). Parity cannot see this: its stacks run keyless, so both
 // answer `unavailable` whatever the payload. This test is the evidence
-// instead: it reads the exact body the brain receives.
+// instead: it reads the exact prompt the model receives (ADR-0051: the
+// model is called from this process, no longer through the brain).
 
-type brainGhi struct {
-	mu     sync.Mutex
-	bodies [][]byte
+// modelGhi is a scripted model that keeps every prompt.
+type modelGhi struct {
+	stub *llm.Stub
 }
 
-func (b *brainGhi) server(t *testing.T) {
-	t.Helper()
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/internal/brain/v1/place-search" || r.Header.Get("X-Internal-Token") != "shortlist-test-token" {
-			http.Error(w, `{"code":"unexpected"}`, 404)
-			return
-		}
-		raw, _ := io.ReadAll(r.Body)
-		b.mu.Lock()
-		b.bodies = append(b.bodies, raw)
-		b.mu.Unlock()
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"source":"none","results":[]}`))
-	}))
-	t.Cleanup(srv.Close)
-	t.Setenv("MOBILE_BRAIN_URL", srv.URL)
-	t.Setenv("MOBILE_PYTHON_UPSTREAM", "")
-	t.Setenv("MOBILE_INTERNAL_TOKEN", "shortlist-test-token")
-}
-
-type payload struct {
-	Query     string           `json:"query"`
-	Catalogue []map[string]any `json:"catalogue"`
-}
-
-func (b *brainGhi) last(t *testing.T) payload {
-	t.Helper()
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if len(b.bodies) == 0 {
-		t.Fatal("the brain was never called")
+func newModelGhi(answers ...string) *modelGhi {
+	script := make([]llm.Buoc, len(answers))
+	for i, a := range answers {
+		script[i] = llm.Buoc{Text: a}
 	}
-	var p payload
-	if err := json.Unmarshal(b.bodies[len(b.bodies)-1], &p); err != nil {
+	return &modelGhi{stub: llm.NewStub(script...)}
+}
+
+// catalogue is the rows the last prompt listed, one JSON object per line
+// between "Danh mục địa điểm:" and the blank line before the query.
+func (m *modelGhi) catalogue(t *testing.T) []map[string]any {
+	t.Helper()
+	reqs := m.stub.YeuCau()
+	if len(reqs) == 0 {
+		t.Fatal("the model was never called")
+	}
+	var req struct {
+		Contents []struct {
+			Parts []struct {
+				Text string `json:"text"`
+			} `json:"parts"`
+		} `json:"contents"`
+	}
+	if err := json.Unmarshal(reqs[len(reqs)-1], &req); err != nil {
 		t.Fatal(err)
 	}
-	return p
+	prompt := req.Contents[0].Parts[0].Text
+	_, rest, ok := strings.Cut(prompt, "Danh mục địa điểm:\n")
+	if !ok {
+		t.Fatal("no catalogue in the prompt")
+	}
+	block, _, _ := strings.Cut(rest, "\n\n")
+	var rows []map[string]any
+	for _, line := range strings.Split(block, "\n") {
+		var row map[string]any
+		if err := json.Unmarshal([]byte(line), &row); err != nil {
+			t.Fatalf("catalogue line %q: %v", line, err)
+		}
+		rows = append(rows, row)
+	}
+	return rows
 }
 
 // catalogueSchema is a private schema with the tables the search reads, and a
@@ -150,85 +156,206 @@ func searchAt(t *testing.T, h http.Handler, path, query string) map[string]any {
 	return out
 }
 
-func handlerOn(t *testing.T, pool *pgxpool.Pool) http.Handler {
+func handlerOn(t *testing.T, pool *pgxpool.Pool, m *modelGhi) http.Handler {
 	env := endpoint.Env{Mode: endpoint.ModeDev, NewUnit: func() *db.Unit { return db.NewUnit(pool) }, Now: time.Now,
 		Limits: limit.NewSet(limit.Monotonic)}
+	if m != nil {
+		env.AI = motluot.Moi(m.stub, 1)
+	}
 	return coreWithEnv(t, env, func(next http.Handler) http.Handler { return next })
 }
 
-// Canary 3: a 5,003-place catalogue reaches the brain as at most 30 rows
+// Canary 3: a 5,003-place catalogue reaches the model as at most 30 rows
 // (rag.ToiDaNgan), chosen by origin/main's searchCandidates over light rows,
 // each cut by promptsafety (modelShortlist). Before the AI v2 branch the same
 // request sent all 5,002 rows Filter keeps; origin/main capped it at 120.
 func TestPlacesSearchSendsAShortlistNotTheCatalogue(t *testing.T) {
-	var brain brainGhi
-	brain.server(t)
+	empty := `{"understood": {}, "results": []}`
+	model := newModelGhi(empty, empty, empty, empty)
 	pool := catalogueSchema(t)
-	h := handlerOn(t, pool)
+	h := handlerOn(t, pool, model)
 
 	started := time.Now()
 	out := search(t, h, "quán cà phê yên tĩnh")
 	elapsed := time.Since(started)
-	p := brain.last(t)
-	if n := len(p.Catalogue); n == 0 || n > rag.ToiDaNgan {
-		t.Fatalf("canary 3: the brain received %d rows (want 1..%d)", n, rag.ToiDaNgan)
+	rows := model.catalogue(t)
+	if n := len(rows); n == 0 || n > rag.ToiDaNgan {
+		t.Fatalf("canary 3: the model read %d rows (want 1..%d)", n, rag.ToiDaNgan)
 	}
-	if out["source"] != "none" || len(out["places"].([]any)) != 0 {
-		t.Fatalf("a keyless brain must still answer unavailable: %v", out)
+	if out["source"] != "ai" || len(out["places"].([]any)) != 0 {
+		t.Fatalf("an empty answer is an answer: %v", out)
 	}
-	t.Logf("5003 places in the catalogue, %d sent, %v for the whole request", len(p.Catalogue), elapsed.Round(time.Millisecond))
+	t.Logf("5003 places in the catalogue, %d sent, %v for the whole request", len(rows), elapsed.Round(time.Millisecond))
 
-	// The rows keep the card's shape, in its field order, safe or cut. The
-	// injected name ranks among the words' best (it says «quán» and «cà
+	// The injected name ranks among the words' best (it says «quán» and «cà
 	// phê»), so Filter is what keeps it out, not the cap.
-	var sawInjected bool
-	for _, row := range p.Catalogue {
+	var sawQuiet bool
+	for _, row := range rows {
 		if row["id"] == "dl-quan-ngon-inj" {
-			t.Fatal("a row Filter refuses reached the brain")
+			t.Fatal("a row Filter refuses reached the model")
 		}
 		if row["id"] == "ha-ca-phe-hoai-niem" {
-			sawInjected = true
-			if reviews := row["reviews"].([]any); len(reviews) != 1 {
-				t.Fatalf("the injected review reached the brain: %v", reviews)
-			}
+			sawQuiet = true
 		}
-		for _, key := range []string{"id", "destination_id", "name", "category", "kinds", "price_min_vnd", "open_hours", "reviews", "photo_url"} {
+		for _, key := range []string{"id", "ten", "nhom", "loai", "khoang_gia_moi_nguoi", "dac_diem", "gio_mo"} {
 			if _, ok := row[key]; !ok {
 				t.Fatalf("row lost %s: %v", key, row)
 			}
 		}
 	}
-	if !sawInjected {
+	if !sawQuiet {
 		t.Fatal("the quiet café with a quarantined review should rank in the shortlist")
 	}
 
+	destinationOf := func(id any) string {
+		var d string
+		if err := pool.QueryRow(context.Background(), `SELECT destination_id FROM places WHERE id=$1`, id).Scan(&d); err != nil {
+			t.Fatal(err)
+		}
+		return d
+	}
 	// `?destination=` (origin/main) holds the shortlist to that destination;
 	// an unknown one is ignored, not refused: the same rows as no parameter.
 	searchAt(t, h, "/places/search?destination=d-tphcm", "cà phê ở Hội An")
-	p = brain.last(t)
-	if len(p.Catalogue) == 0 || len(p.Catalogue) > rag.ToiDaNgan {
-		t.Fatalf("%d rows held to d-tphcm", len(p.Catalogue))
+	rows = model.catalogue(t)
+	if len(rows) == 0 || len(rows) > rag.ToiDaNgan {
+		t.Fatalf("%d rows held to d-tphcm", len(rows))
 	}
-	for _, row := range p.Catalogue {
-		if row["destination_id"] != "d-tphcm" {
-			t.Fatalf("a %v row in a search held to d-tphcm", row["destination_id"])
+	for _, row := range rows {
+		if d := destinationOf(row["id"]); d != "d-tphcm" {
+			t.Fatalf("a %v row in a search held to d-tphcm", d)
 		}
 	}
-	idsOf := func(p payload) []string {
+	idsOf := func(rows []map[string]any) []string {
 		var out []string
-		for _, row := range p.Catalogue {
+		for _, row := range rows {
 			out = append(out, row["id"].(string))
 		}
 		return out
 	}
 	search(t, h, "cà phê ở Hội An")
-	plain := idsOf(brain.last(t))
+	plain := idsOf(model.catalogue(t))
 	searchAt(t, h, "/places/search?destination=d-khong-co", "cà phê ở Hội An")
-	unknown := idsOf(brain.last(t))
+	unknown := idsOf(model.catalogue(t))
 	if len(plain) == 0 || strings.Join(plain, ",") != strings.Join(unknown, ",") {
 		t.Fatalf("an unknown ?destination= moved the search:\n%v\n%v", plain, unknown)
 	}
-	if n := len(brain.bodies); n != 4 {
-		t.Fatalf("%d brain calls for 4 searches", n)
+	if n := model.stub.SoGoi(); n != 4 {
+		t.Fatalf("%d model calls for 4 searches", n)
+	}
+}
+
+// What the model wrote reaches a card only through the gates: an id outside
+// the shortlist sinks the answer; a reason with a figure nobody showed it, or
+// that repeats the caller's sentence, is dropped with its verdict.
+func TestPlacesSearchGroundsWhatTheModelWrote(t *testing.T) {
+	pool := catalogueSchema(t)
+	query := "quán lẩu hải sản yên tĩnh cho cả nhóm"
+	answer := func(reason string) string {
+		b, _ := json.Marshal(map[string]any{
+			"understood": map[string]any{"budget_per_person_vnd": 300000, "group_size": 4, "categories": []string{"quan-an-local"}, "traits": []string{"yên tĩnh"}},
+			"results":    []any{map[string]any{"id": "dl-lau-hai-san", "verdict": "hop", "reason": reason}},
+		})
+		return string(b)
+	}
+	keyless := search(t, handlerOn(t, pool, nil), query)
+	if keyless["source"] != "none" {
+		t.Fatalf("keyless: %v", keyless)
+	}
+	invented := search(t, handlerOn(t, pool, newModelGhi(`{"understood": {}, "results": [{"id": "p-bia", "verdict": "hop", "reason": "ok"}]}`)), query)
+	if invented["source"] != "none" || len(invented["places"].([]any)) != 0 {
+		t.Fatalf("an invented id was served: %v", invented)
+	}
+	match := func(out map[string]any) map[string]any {
+		places := out["places"].([]any)
+		if out["source"] != "ai" || len(places) != 1 {
+			t.Fatalf("%v", out)
+		}
+		return places[0].(map[string]any)["match"].(map[string]any)
+	}
+	if m := match(search(t, handlerOn(t, pool, newModelGhi(answer("Giá 150-300k hợp ngân sách 300k, yên tĩnh."))), query)); m["source"] != "ai" || m["verdict"] != "hop" {
+		t.Fatalf("a grounded reason was dropped: %v", m)
+	}
+	for name, reason := range map[string]string{
+		"a figure nobody showed": "Nổi tiếng từ năm 2019, giá 150-300k.",
+		"the caller's sentence":  "Đúng là QUÁN LẨU HẢI SẢN YÊN TĨNH   cho cả nhóm.",
+	} {
+		if m := match(search(t, handlerOn(t, pool, newModelGhi(answer(reason))), query)); m["source"] != "none" || m["verdict"] != nil {
+			t.Fatalf("%s reached the card: %v", name, m)
+		}
+	}
+}
+
+// GET /places asks the model about the top rows only (maxReasonRows), once,
+// for a reader whose taste is known, and serves a reason only after
+// ParseReasons' gates: a figure nobody showed it drops that one reason.
+func TestPlacesBrowseAsksTheModelAboutTheTopRowsOnly(t *testing.T) {
+	pool := catalogueSchema(t)
+	reader := "7d8f1c2a-3b4c-4d5e-8f90-a1b2c3d4e5f6"
+	for _, stmt := range []string{
+		`INSERT INTO people(id,display_name,budget_band) VALUES ('` + reader + `','Người đọc thử','vua-phai')`,
+		`INSERT INTO person_interests(id,person_id,tag) VALUES (gen_random_uuid(),'` + reader + `','cafe')`,
+	} {
+		if _, err := pool.Exec(context.Background(), stmt); err != nil {
+			t.Fatal(err)
+		}
+	}
+	browse := func(m *modelGhi) []any {
+		r := httptest.NewRequest(http.MethodGet, "/places?destination=d-hoi-an", nil)
+		r.Header.Set("X-Actor-ID", reader)
+		r.Header.Set("X-Actor-Roles", "member")
+		w := httptest.NewRecorder()
+		handlerOn(t, pool, m).ServeHTTP(w, r)
+		if w.Code != 200 {
+			t.Fatalf("%d %s", w.Code, w.Body.String())
+		}
+		var out map[string]any
+		_ = json.Unmarshal(w.Body.Bytes(), &out)
+		return out["places"].([]any)
+	}
+	// The prompt's rows: count and ids, from a model that answers nothing.
+	quiet := newModelGhi("[]")
+	places := browse(quiet)
+	reqs := quiet.stub.YeuCau()
+	if len(reqs) != 1 {
+		t.Fatalf("%d model calls for one browse", len(reqs))
+	}
+	prompt := string(reqs[0])
+	asked := strings.Count(prompt, `\"ten\": `)
+	if asked != maxReasonRows || len(places) <= maxReasonRows {
+		t.Fatalf("asked about %d of %d places, want %d", asked, len(places), maxReasonRows)
+	}
+	for _, p := range places {
+		if m, _ := p.(map[string]any)["match"].(map[string]any); m != nil && m["source"] != "none" {
+			t.Fatalf("an unanswered card claims the model: %v", m)
+		}
+	}
+	// One grounded reason and one with an invented figure: the café whose
+	// price band is 30-60k, and another row the prompt asked about.
+	var other string
+	for _, id := range regexp.MustCompile(`\\"id\\": \\"([^\\]+)\\"`).FindAllStringSubmatch(prompt, -1) {
+		if id[1] != "ha-ca-phe-hoai-niem" {
+			other = id[1]
+			break
+		}
+	}
+	if !strings.Contains(prompt, `ha-ca-phe-hoai-niem`) || other == "" {
+		t.Fatal("the quiet café and one other row should be in the prompt")
+	}
+	answer := `[{"id": "ha-ca-phe-hoai-niem", "verdict": "hop", "reason": "Giá 30-60k, yên tĩnh."},` +
+		` {"id": "` + other + `", "verdict": "tam", "reason": "Mở từ năm 1998."}]`
+	for _, p := range browse(newModelGhi(answer)) {
+		card := p.(map[string]any)
+		m, _ := card["match"].(map[string]any)
+		switch card["id"] {
+		case "ha-ca-phe-hoai-niem":
+			if m["source"] != "ai" || m["verdict"] != "hop" || m["reason"] != "Giá 30-60k, yên tĩnh." {
+				t.Fatalf("a grounded reason was lost: %v", m)
+			}
+		case other:
+			if m["source"] != "none" || m["verdict"] != nil {
+				t.Fatalf("an invented figure reached the card: %v", m)
+			}
+		}
 	}
 }

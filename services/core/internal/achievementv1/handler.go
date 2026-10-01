@@ -7,17 +7,20 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/aiharness/goiy"
+	"mobile/services/core/internal/aiharness/motluot"
 	"mobile/services/core/internal/auth"
-	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/domain/achievement"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var uuidPath = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
@@ -25,9 +28,18 @@ var uuidPath = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}
 type Handler struct {
 	Pool *pgxpool.Pool
 	Mode string
+	// ai is the process's model for Nếp's line on the journey choices
+	// (ADR-0051); nil keeps the Go fallback.
+	ai *motluot.May
 }
 
 func New(pool *pgxpool.Pool, mode string) *Handler { return &Handler{Pool: pool, Mode: mode} }
+
+// WithAI gives the handler the process's model.
+func (h *Handler) WithAI(may *motluot.May) *Handler {
+	h.ai = may
+	return h
+}
 
 // RouteIDs names the Go-only public extension for ownership and gate checks.
 func RouteIDs() []string {
@@ -376,7 +388,7 @@ func (h *Handler) handle(ctx context.Context, r *http.Request, s Store, personID
 			selected = run.RouteID
 		}
 		choices := achievement.SuggestedChoices(f, earnedMap(earned), selected, history...)
-		ids, source, line := suggestions(ctx, f, choices, selected, history)
+		ids, source, line := suggestions(ctx, h.ai, f, choices, selected, history)
 		return 200, map[string]any{"candidate_ids": ids, "source": source, "line": line}, nil
 	}
 	if strings.HasPrefix(path, "/people/") && r.Method == http.MethodGet {
@@ -471,7 +483,20 @@ func minimalSuggestionSummary(f achievement.Facts) map[string]int {
 	}
 }
 
-func suggestions(ctx context.Context, f achievement.Facts, choices []achievement.Choice, selected string, history []string) ([]string, string, string) {
+// nhanhDuocPhep are the journey directions a choice history may name.
+var nhanhDuocPhep = map[string]bool{"dau_chan": true, "ky_niem": true, "dong_hanh": true, "nga_re": true}
+
+// suggestionTimeout bounds Nếp's one call; the fallback answers after it.
+const suggestionTimeout = 20 * time.Second
+
+// GoiY is the journey line POST /me/achievement-suggestions serves, after
+// consent: candidate ids and one line from the model, or the Go fallback with
+// source "go". Exported for cmd/vnlocal-thu's real-request check.
+func GoiY(ctx context.Context, may *motluot.May, f achievement.Facts, choices []achievement.Choice, selected string, history []string) ([]string, string, string) {
+	return suggestions(ctx, may, f, choices, selected, history)
+}
+
+func suggestions(ctx context.Context, may *motluot.May, f achievement.Facts, choices []achievement.Choice, selected string, history []string) ([]string, string, string) {
 	offered := []string{}
 	for _, c := range choices {
 		if !c.Earned {
@@ -484,34 +509,51 @@ func suggestions(ctx context.Context, f achievement.Facts, choices []achievement
 		}
 		return offered
 	}
-	client := brain.Configured()
-	if client == nil {
+	// The bounds the request was always held to before any call.
+	usable := may.CoMay() && len(offered) > 0 && len(offered) <= 9 && len(history) <= 8
+	for _, step := range history {
+		usable = usable && nhanhDuocPhep[step]
+	}
+	if !usable {
 		return fallback(), "go", fallbackNarration(f, selected, history)
 	}
 	// Only aggregate counts and candidate identifiers leave Go after consent.
-	payloadBytes, _ := json.Marshal(map[string]any{"facts": minimalSuggestionSummary(f), "selected_route": selected, "candidate_ids": offered, "choice_history": history})
-	payload, err := pyjson.Loads(payloadBytes)
+	facts := pyjson.NewOrderedMap()
+	summary := minimalSuggestionSummary(f)
+	keys := make([]string, 0, len(summary))
+	for k := range summary {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		facts.Set(k, pyjson.NewInt(int64(summary[k])))
+	}
+	prompt, err := goiy.PromptThanhTuu(facts, offered, selected, history)
 	if err != nil {
 		return fallback(), "go", fallbackNarration(f, selected, history)
 	}
-	raw, err := client.PostJSONContext(ctx, "achievement-routes", payload)
+	ctx, cancel := context.WithTimeout(ctx, suggestionTimeout)
+	defer cancel()
+	raw, err := goiy.Goi(ctx, may.Luot(3), prompt)
 	if err != nil {
 		return fallback(), "go", fallbackNarration(f, selected, history)
 	}
-	encoded, err := pyjson.Dumps(raw)
-	if err != nil {
+	var proposed []string
+	list, _ := raw.Get("candidate_ids")
+	items, ok := list.(pyjson.List)
+	if !ok {
 		return fallback(), "go", fallbackNarration(f, selected, history)
 	}
-	var response struct {
-		CandidateIDs []string `json:"candidate_ids"`
-		Line         string   `json:"line"`
+	for _, item := range items {
+		if s, ok := item.(pyjson.String); ok {
+			proposed = append(proposed, string(s))
+		}
 	}
-	if json.Unmarshal(encoded, &response) != nil {
-		return fallback(), "go", fallbackNarration(f, selected, history)
-	}
-	ids := validatedSuggestionIDs(response.CandidateIDs, choices)
-	line := safeNarration(response.Line)
-	if len(ids) == 0 || line == "" {
+	lineValue, _ := raw.Get("line")
+	rawLine, _ := lineValue.(pyjson.String)
+	ids := validatedSuggestionIDs(proposed, choices)
+	line := safeNarration(string(rawLine))
+	if len(ids) == 0 || line == "" || utf8.RuneCountInString(string(rawLine)) > 180 {
 		return fallback(), "go", fallbackNarration(f, selected, history)
 	}
 	return ids, "ai", line

@@ -184,12 +184,12 @@ func TestGoiAiCoXacNhan(t *testing.T) {
 			}
 			time.Sleep(2 * time.Second)
 		}
-		// The runner always puts a deterministic brain in front of the seam, so
+		// The runner always puts a deterministic Gemini stub behind the engine, so
 		// "settled" is not enough here: the job must actually succeed. A job
 		// stuck in queued/running is the lease machinery losing work; a failed
 		// job with a stub answering means the pipeline broke, not the model.
 		if state != "succeeded" {
-			t.Fatalf("job %s dừng ở %q, mong succeeded (brain stub trả lời tất định)", id[:8], state)
+			t.Fatalf("job %s dừng ở %q, mong succeeded (Gemini stub trả lời tất định)", id[:8], state)
 		}
 	})
 }
@@ -284,15 +284,20 @@ func TestChotKeoTranhNhau(t *testing.T) {
 }
 
 // planCard drives a real invocation through the worker and returns the id of
-// the message carrying the resulting itinerary card. With the deterministic
-// brain stub in front of the seam this is reproducible; without a provider of
-// any kind it fails, which is the honest outcome.
+// the message carrying the resulting itinerary card: a reply in the thread to
+// an «@Rủ Đi» message, as the app sends it (a call with no trigger comes from
+// an app too old to draw a reply, and gets the answer's text alone). With the
+// deterministic Gemini stub behind the engine this is reproducible; without a
+// provider of any kind it fails, which is the honest outcome.
 func planCard(t *testing.T, author *Client, group string) string {
 	t.Helper()
+	trigger := author.Expect(201, "POST", "/contexts/"+group+"/messages",
+		map[string]any{"kind": "text", "body": "@Rủ Đi rủ hội đi chơi một buổi, gợi ý vài chặng."}, Idem(newKey())).Str(t, "id")
 	created := author.Do("POST", "/contexts/"+group+"/ai-invocations", map[string]any{
-		"logical_id": newUUID(),
-		"command":    "plan",
-		"prompt":     "Rủ hội đi chơi một buổi, gợi ý vài chặng.",
+		"logical_id":         newUUID(),
+		"command":            "plan",
+		"prompt":             "Rủ hội đi chơi một buổi, gợi ý vài chặng.",
+		"trigger_message_id": trigger,
 	}, Idem(newKey()))
 	if created.Status != http.StatusAccepted && created.Status != http.StatusCreated {
 		t.Fatalf("không gửi được lời nhờ: %d — %s", created.Status, created.trim())

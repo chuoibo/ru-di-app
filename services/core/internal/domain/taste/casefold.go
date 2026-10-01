@@ -24,6 +24,10 @@ func casefold(s string) string {
 // CPython's str.casefold() does (internal/domain/expense).
 func Casefold(s string) string { return casefold(s) }
 
+// IsSpace is CPython's str.isspace() for one code point, which is also what
+// `\s` matches in a str pattern and what str.strip() removes.
+func IsSpace(r rune) bool { return isPySpace(r) }
+
 func foldRune(b *strings.Builder, r rune) {
 	switch {
 	case r >= 0x13A0 && r <= 0x13F5:

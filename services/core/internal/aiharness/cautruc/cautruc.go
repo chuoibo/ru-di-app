@@ -34,9 +34,22 @@ var ErrBiChan = errors.New("cautruc: the provider's safety filter withheld the a
 // after it, so the request's prefix is the same for every turn of the step
 // (Gemini's implicit cache matches on prefixes).
 func YeuCau(b llm.LoaiGoi, he, noiDung string, schema *genai.Schema, maxRa int32) *model.LLMRequest {
+	return YeuCauPhan(b, he, []*genai.Part{{Text: noiDung}}, schema, maxRa)
+}
+
+// Anh is one image as a request part: the bytes inline, with the MIME type
+// the caller vouches for (a sanitised re-encode, never the uploader's claim).
+func Anh(mime string, data []byte) *genai.Part {
+	return &genai.Part{InlineData: &genai.Blob{MIMEType: mime, Data: data}}
+}
+
+// YeuCauPhan is YeuCau whose one user turn is the given parts: text and
+// inline images (Anh), in the order the model should read them. A nil
+// schema asks for JSON without constraining its shape.
+func YeuCauPhan(b llm.LoaiGoi, he string, phan []*genai.Part, schema *genai.Schema, maxRa int32) *model.LLMRequest {
 	return &model.LLMRequest{
 		Model:    llm.Model,
-		Contents: []*genai.Content{{Role: genai.RoleUser, Parts: []*genai.Part{{Text: noiDung}}}},
+		Contents: []*genai.Content{{Role: genai.RoleUser, Parts: phan}},
 		Config: &genai.GenerateContentConfig{
 			SystemInstruction: &genai.Content{Parts: []*genai.Part{{Text: he}}},
 			ResponseMIMEType:  "application/json",
@@ -46,6 +59,33 @@ func YeuCau(b llm.LoaiGoi, he, noiDung string, schema *genai.Schema, maxRa int32
 			SafetySettings:    agent.AnToan(),
 		},
 	}
+}
+
+// YeuCauChu is a one-turn request whose only content is noiDung, with no
+// system instruction and no response schema: JSON is asked for by MIME type
+// alone. It is the shape the Python brain's prose steps used (one prompt
+// string, rules and data together), kept so their prompts carry over
+// byte for byte (aiharness/goiy).
+func YeuCauChu(b llm.LoaiGoi, noiDung string, maxRa int32) *model.LLMRequest {
+	return &model.LLMRequest{
+		Model:    llm.Model,
+		Contents: []*genai.Content{{Role: genai.RoleUser, Parts: []*genai.Part{{Text: noiDung}}}},
+		Config: &genai.GenerateContentConfig{
+			ResponseMIMEType: "application/json",
+			MaxOutputTokens:  maxRa,
+			ThinkingConfig:   llm.CauHinhNghi(b),
+			SafetySettings:   agent.AnToan(),
+		},
+	}
+}
+
+// NhietDo is req at temperature t; the request passed in is not modified.
+func NhietDo(req *model.LLMRequest, t float32) *model.LLMRequest {
+	out := *req
+	cfg := *req.Config
+	cfg.Temperature = &t
+	out.Config = &cfg
+	return &out
 }
 
 // Them is req with two more turns: the model's earlier output and a user

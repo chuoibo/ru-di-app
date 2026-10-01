@@ -69,8 +69,9 @@ func TestServeAndWorkRefuseBelowBothSchemaVersions(t *testing.T) {
 			if code := serveUntil(ctx, func(k string) string { return env[k] }, logs); code != 1 || !strings.Contains(logs.String(), "migrate-chat") {
 				t.Fatalf("serve: exit %d; log:\n%s", code, logs.String())
 			}
-			t.Setenv("MOBILE_BRAIN_URL", "http://127.0.0.1:1")
-			t.Setenv("MOBILE_INTERNAL_TOKEN", "synthetic-internal-test-only")
+			// A model the worker can build (loopback, never called), so the
+			// refusal reached is the schema's.
+			env["GEMINI_API_KEY"], env["MOBILE_GEMINI_BASE_URL"] = "synthetic-key", "http://127.0.0.1:9"
 			var stderr bytes.Buffer
 			if code := workUntil(ctx, func(k string) string { return env[k] }, &stderr); code != 1 || !strings.Contains(stderr.String(), "migrate-chat") {
 				t.Fatalf("work: exit %d: %s", code, stderr.String())
@@ -124,7 +125,7 @@ func TestServeSweepsWithNoWorkerUp(t *testing.T) {
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
-	if logs := core.logs.String(); !strings.Contains(logs, `"runs_here":false`) {
+	if logs := core.logs.String(); !strings.Contains(logs, "AI jobs run in `core work`, not in this process") {
 		t.Errorf("serve ran the jobs itself:\n%s", logs)
 	}
 	if code := core.stop(); code != 0 {
@@ -146,12 +147,10 @@ func TestServeReleasesItsJobOnStop(t *testing.T) {
 	}
 	defer pool.Close()
 	entered := make(chan struct{}, 1)
+	// A loopback Gemini that never answers: the engine's first request
+	// (the router's, or an embedding of its worked examples) hangs until the
+	// worker hangs up.
 	model := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/capabilities") {
-			w.Header().Set("Content-Type", "application/json")
-			_, _ = io.WriteString(w, `{"plan":{"available":true}}`)
-			return
-		}
 		// The body read to the end: only then does the server watch the
 		// connection, and see the worker hang up.
 		_, _ = io.Copy(io.Discard, r.Body)
@@ -162,8 +161,6 @@ func TestServeReleasesItsJobOnStop(t *testing.T) {
 		<-r.Context().Done()
 	}))
 	defer model.Close()
-	t.Setenv("MOBILE_BRAIN_URL", model.URL)
-	t.Setenv("MOBILE_INTERNAL_TOKEN", "synthetic-internal-test-only")
 	token := "synthetic-token-release-on-stop"
 	var job string
 	if err = pool.QueryRow(ctx, `WITH p AS (INSERT INTO people(id,display_name) VALUES(gen_random_uuid(),'Synthetic caller') RETURNING id),
@@ -174,7 +171,8 @@ func TestServeReleasesItsJobOnStop(t *testing.T) {
 		t.Fatal(err)
 	}
 	python := newPythonStub(t)
-	core := startCore(t, map[string]string{"MOBILE_PYTHON_UPSTREAM": python.URL, "MOBILE_DATABASE_URL": databaseURL})
+	core := startCore(t, map[string]string{"MOBILE_PYTHON_UPSTREAM": python.URL, "MOBILE_DATABASE_URL": databaseURL,
+		"GEMINI_API_KEY": "synthetic-key", "MOBILE_GEMINI_BASE_URL": model.URL})
 	select {
 	case <-entered:
 	case <-time.After(10 * time.Second):
@@ -210,10 +208,9 @@ func deref(s *string) string {
 func TestWorkStartsPollOnlyAndStops(t *testing.T) {
 	databaseURL := chatSchemaURL(t)
 	migrateChatInto(t, databaseURL)
-	t.Setenv("MOBILE_BRAIN_URL", "http://127.0.0.1:1")
-	t.Setenv("MOBILE_INTERNAL_TOKEN", "synthetic-internal-test-only")
 	_, live := freeAddresses(t)
-	env := map[string]string{"MOBILE_DATABASE_URL": databaseURL, "MOBILE_CORE_LIVENESS_LISTEN": live, EnvWorkerQueues: "ai.nep"}
+	env := map[string]string{"MOBILE_DATABASE_URL": databaseURL, "MOBILE_CORE_LIVENESS_LISTEN": live, EnvWorkerQueues: "ai.nep",
+		"GEMINI_API_KEY": "synthetic-key", "MOBILE_GEMINI_BASE_URL": "http://127.0.0.1:9"}
 	ctx, cancel := context.WithCancel(context.Background())
 	var stderr safeBuffer
 	done := make(chan int, 1)

@@ -1,0 +1,2750 @@
+{
+ "generator": "scripts/render_domain_ai_goldens.py",
+ "module": "app.domain.chat_expense",
+ "mode": "chat_expense-fuzz-0",
+ "python": "3.12.11",
+ "seed": 23,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 150
+ },
+ "cases": [
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/0",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "L\u1ea9u",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/1",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/2",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/3",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/4",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": 7,
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/5",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": 7,
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/6",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/7",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/8",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": "1,2tr",
+     "x_payer_y": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/9",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "  ",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/10",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "  ",
+     "amount_text": "850k",
+     "recipient": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/11",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "L\u1ea9u"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/12",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/13",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/14",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/15",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "x",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/16",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "L\u1ea9u",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/17",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/18",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "  ",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/19",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/20",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/21",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "x",
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/22",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/23",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "x",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "x",
+     "amount_vnd": 850000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/24",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/25",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "x",
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/26",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "x",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/27",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/28",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/29",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "x",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/30",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "  ",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/31",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": 7
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/32",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "  ",
+     "memb\u0435r": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/33",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/34",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "abc",
+     "merchants": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/35",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_vnd": 120000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/36",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": 7
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/37",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/38",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/39",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": 7
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/40",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/41",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/42",
+   "args": {
+    "raw": {
+     "is_expense": true
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/43",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/44",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "x",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/45",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/46",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/47",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": 7,
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/48",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/49",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_vnd": 1200000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/50",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/51",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/52",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_vnd": 1200000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/53",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "x_payer_y": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/54",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "L\u1ea9u",
+     "amount_text": "1,2tr",
+     "paid_by": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/55",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "L\u1ea9u",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/56",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "  ",
+     "amount_text": "1tr2",
+     "People": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/57",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/58",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "L\u1ea9u",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/59",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/60",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/61",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/62",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_vnd": 90000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/63",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/64",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/65",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "  ",
+     "amount_text": "1tr2",
+     "merchants": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/66",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "Ti\u1ec1n taxi"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/67",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/68",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_vnd": 850000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/69",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/70",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_vnd": 120000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/71",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": 7,
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/72",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/73",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/74",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "1tr2",
+     "People": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/75",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/76",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": 7,
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/77",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "  ",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/78",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "  ",
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/79",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "  ",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/80",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/81",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "  ",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/82",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/83",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/84",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": 5000,
+     "shared_by": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/85",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": 7,
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/86",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/87",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "  ",
+     "amount_text": "1,2tr",
+     "PaidBy": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/88",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "  ",
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/89",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "L\u1ea9u",
+     "amount_text": "1,2tr",
+     "who_paid": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/90",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/91",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_vnd": 120000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/92",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/93",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/94",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "  ",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/95",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "x",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/96",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "L\u1ea9u",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/97",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "  ",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/98",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": 5000,
+     "sharedWith": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/99",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/100",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "  ",
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/101",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/102",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "120.000",
+     "pa\u00dfby": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_vnd": 120000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/103",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "  ",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/104",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/105",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/106",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/107",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "  ",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/108",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": 7,
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/109",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "1tr2"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/110",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "1,2tr",
+     "recipient": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/111",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/112",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/113",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "1,2tr",
+     "confidence": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/114",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "L\u1ea9u",
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/115",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/116",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "  ",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/117",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/118",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/119",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "L\u1ea9u",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/120",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "L\u1ea9u",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/121",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/122",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/123",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "  ",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/124",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "L\u1ea9u",
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/125",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": 7,
+     "amount_text": 5000
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/126",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "  ",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/127",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "  ",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/128",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "850k",
+     "source ": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi",
+     "amount_vnd": 850000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/129",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": 7,
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/130",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "pay\u0130r": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/131",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": 7,
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/132",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/133",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "Ti\u1ec1n taxi"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/134",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "1tr2",
+     "amount": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/135",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/136",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/137",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/138",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_vnd": 1200000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/139",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "  ",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/140",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "120.000"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_vnd": 120000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/141",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "Ti\u1ec1n taxi"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/142",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": "  ",
+     "amount_text": "850k"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/143",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_text": "  90k ",
+     "note": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": true,
+     "title": "L\u1ea9u",
+     "amount_vnd": 90000,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/144",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/145",
+   "args": {
+    "raw": {
+     "is_expense": 0,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/146",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "Ti\u1ec1n taxi",
+     "amount_text": "abc"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/147",
+   "args": {
+    "raw": {
+     "is_expense": true,
+     "title": 7,
+     "amount_text": "  90k "
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/148",
+   "args": {
+    "raw": {
+     "is_expense": false,
+     "title": 7,
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "ok": {
+     "is_expense": false,
+     "title": null,
+     "amount_vnd": null,
+     "needs_review": false
+    }
+   }
+  },
+  {
+   "fn": "read_chat_expense",
+   "name": "fuzz/149",
+   "args": {
+    "raw": {
+     "is_expense": null,
+     "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "amount_text": "1,2tr"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ChatExpenseError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  }
+ ]
+}

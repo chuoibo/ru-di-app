@@ -66,7 +66,7 @@ from app.api.routes import (
     votes,
 )
 from app.api.routes.brain import BrainDoor, build_brain_app
-from app.api.routes.places import CachedReasonWriter
+from app.api.routes.places import no_reasons
 from app.api.schemas import ErrorResponse
 from app.api.search_rate_limit import (
     FixedWindowLimiter,
@@ -172,13 +172,10 @@ def create_app(
     # And the proactive card, which had nothing at all in front of it: no
     # cache, no cadence, one model call per GET.
     application.state.suggestion_limiter = build_suggestion_limiter()
-    # `GET /places` is the seventh door onto the same key and the only one with
-    # no actor to key a window on. It is capped by a cache rather than a
-    # window, which is why it is built here and not above -- but for the same
-    # reason, and it belongs to the app for the same reason the limiters do.
-    # See `CachedReasonWriter`: caching successes only made a row the model
-    # refused cost a model call on every request.
-    application.state.reason_writer = CachedReasonWriter()
+    # `GET /places` and `GET /places/{id}` read their reasons through this
+    # seam; since ADR-0051 the model's word is the Go core's, and the writer
+    # installed here answers for nobody (see `no_reasons`).
+    application.state.reason_writer = no_reasons
     # F33 is the eighth door. It reads the group's live conversation, so it
     # cannot borrow the cache that caps the seventh -- two people typing
     # different things must not be served one another's answer -- which leaves

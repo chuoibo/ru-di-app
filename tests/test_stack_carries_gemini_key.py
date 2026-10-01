@@ -55,9 +55,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 COMPOSE_FILE = REPO_ROOT / "docker-compose.yml"
 ENV_EXAMPLE = REPO_ROOT / ".env.example"
 
-# The name the code actually reads. `services/api/app/api/vision_gemini.py`
-# does `os.environ["GEMINI_API_KEY"]`; every other spelling is a variable
-# nobody consumes, which is worse than an unset one because it looks configured.
+# The name the code actually reads: core's model door (when AGY_PROXY_URL is
+# empty) and its embeddings read GEMINI_API_KEY; every other spelling is a
+# variable nobody consumes, which is worse than an unset one because it looks
+# configured.
 KEY = "GEMINI_API_KEY"
 
 STUB = """#!/bin/sh
@@ -77,10 +78,18 @@ class TheKeyReachesTheContainerTests(unittest.TestCase):
         self.document = _compose_document()
 
     def api_environment(self) -> dict:
-        return dict(self.document["services"]["api"]["environment"])
+        # Since ADR-0051 the key goes to `core`, the one process that calls the
+        # model and embeds; the name is kept so the cases below read as before.
+        return dict(self.document["services"]["core"]["environment"])
 
-    def test_the_api_service_passes_the_key_the_reader_reads(self):
+    def test_the_core_service_passes_the_key_the_reader_reads(self):
         self.assertIn(KEY, self.api_environment())
+
+    def test_the_python_api_holds_no_ai_credential(self):
+        """ADR-0051: no model call is left in Python, so no key goes there."""
+        environment = dict(self.document["services"]["api"]["environment"])
+        for name in (KEY, "AGY_PROXY_URL", "AGY_PROXY_KEY"):
+            self.assertNotIn(name, environment)
 
     def test_the_value_is_interpolated_from_the_host_not_written_down(self):
         """A literal here would be a committed credential. It must be a `${...}`."""
@@ -468,7 +477,7 @@ class ComposeInterpolationTests(unittest.TestCase):
         result = self.run_compose("config", "--format", "json", **kwargs)
         self.assertEqual(result.returncode, 0, result.stderr)
         config = json.loads(result.stdout)
-        return dict(config["services"]["api"]["environment"])
+        return dict(config["services"]["core"]["environment"])
 
     def test_the_host_value_lands_in_the_api_container(self):
         sentinel = "AIzaSySENTINELsentinelSENTINELsentinel12"

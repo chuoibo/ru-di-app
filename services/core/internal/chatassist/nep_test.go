@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"mobile/services/core/internal/domain/thoigian"
-	"mobile/services/core/internal/pyjson"
 )
 
 func maLoi(err error) string {
@@ -53,7 +52,7 @@ func TestNepCamOManTien(t *testing.T) {
 // The route refuses a money screen with no database and no provider: the
 // handler here has neither, so reaching either would panic.
 func TestNepManTienKhongChamGiCa(t *testing.T) {
-	h := New(nil, nil)
+	h := New(nil)
 	body, _ := json.Marshal(map[string]any{"logical_id": newID(), "prompt": "Mình nợ ai bao nhiêu?", "phieu": map[string]any{"man": "settlements/1"}, "luot": []any{}})
 	r := httptest.NewRequest("POST", "/me/nep/ai-invocations", bytes.NewReader(body))
 	r.Header.Set("Content-Type", "application/json")
@@ -119,7 +118,7 @@ func TestNepLoaiSoHaiNguoiCuDocThanhHoi(t *testing.T) {
 // The request body is closed at the top level and inside the slip: a field the
 // shipped client never sends is refused, not forwarded to the model.
 func TestNepThanDongKhoa(t *testing.T) {
-	h := New(nil, nil)
+	h := New(nil)
 	for _, body := range []string{
 		`{"logical_id":"` + newID() + `","prompt":"x","context":"abc"}`,
 		`{"logical_id":"` + newID() + `","prompt":"x","phieu":{"man":"a","ten":"Lan"}}`,
@@ -145,55 +144,6 @@ func TestNepMatches(t *testing.T) {
 	for _, p := range []string{"/me/nep/media", "/me/nep/media/abc/file", "/me/profile", "/me/nep"} {
 		if Matches(p) {
 			t.Errorf("%s không phải của chatassist", p)
-		}
-	}
-}
-
-func TestNepPayloadChiCoBaThu(t *testing.T) {
-	goi, _ := json.Marshal(goiNep{Phieu: &phieuNep{Man: "explore", TieuDe: "Khám phá"}, Luot: []luotNep{{"toi", "Hỏi"}, {"nep", "Đáp"}}})
-	v, err := nepPayload(goi, "Câu mới")
-	if err != nil {
-		t.Fatal(err)
-	}
-	raw, _ := pyjson.Dumps(v)
-	var got map[string]any
-	if err := json.Unmarshal(raw, &got); err != nil {
-		t.Fatal(err)
-	}
-	keys := []string{}
-	for k := range got {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	if strings.Join(keys, ",") != "prompt,slip,turns" {
-		t.Fatalf("thân gửi não có %v", keys)
-	}
-	if len(got["turns"].([]any)) != 2 || got["prompt"] != "Câu mới" {
-		t.Fatalf("thân sai: %s", raw)
-	}
-	// No slip is sent as null, never as a guessed route.
-	goi, _ = json.Marshal(goiNep{})
-	v, _ = nepPayload(goi, "x")
-	raw, _ = pyjson.Dumps(v)
-	if !strings.Contains(string(raw), `"slip": null`) || !strings.Contains(string(raw), `"turns": []`) {
-		t.Fatalf("thân không phiếu: %s", raw)
-	}
-}
-
-func TestNepDocTraLoi(t *testing.T) {
-	doc := func(s string) (string, bool) {
-		v, err := pyjson.Loads([]byte(s))
-		if err != nil {
-			t.Fatal(err)
-		}
-		return docTraLoi(v)
-	}
-	if s, ok := doc(`{"text":"  Đi Đà Lạt nhé.  "}`); !ok || s != "Đi Đà Lạt nhé." {
-		t.Errorf("câu đúng bị từ chối: %q %v", s, ok)
-	}
-	for _, xau := range []string{`{"text":""}`, `{"text":"   "}`, `{"kind":"text"}`, `{"text":1}`, `[]`, `{"text":"` + strings.Repeat("a", maxTraLoiNep+1) + `"}`} {
-		if _, ok := doc(xau); ok {
-			t.Errorf("%s được nhận", xau[:min(len(xau), 40)])
 		}
 	}
 }

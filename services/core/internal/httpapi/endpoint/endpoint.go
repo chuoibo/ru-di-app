@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"time"
 
+	"mobile/services/core/internal/aiharness/motluot"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/googleid"
@@ -149,6 +150,9 @@ type Call struct {
 	OTPDebugCode *string
 	// Google is get_google_verifier; nil when no client id is configured.
 	Google googleid.Verifier
+	// AI is the process's model for one-shot steps (ADR-0051); nil on a
+	// keyless stack, where every AI route refuses as without a key.
+	AI *motluot.May
 }
 
 // Reply is a route's answer when it does not refuse.
@@ -194,6 +198,9 @@ type Env struct {
 	OTPDebugCode *string
 	// Google is the Google ID-token verifier, or nil when none is configured.
 	Google googleid.Verifier
+	// AI is the process's model for one-shot steps (aiharness/motluot), or
+	// nil when none is configured.
+	AI *motluot.May
 }
 
 // New builds the handler for one route. status is the route decorator's
@@ -233,7 +240,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// A committed unit ignores this; every other path discards its writes.
 	defer func() { _ = unit.Rollback(ctx) }()
 
-	call := &Call{Request: r, Scope: scope, Unit: unit, Body: body, Limits: h.env.Limits, PersonIDKey: h.env.PersonIDKey}
+	call := &Call{Request: r, Scope: scope, Unit: unit, Body: body, Limits: h.env.Limits, PersonIDKey: h.env.PersonIDKey, AI: h.env.AI}
 	hook := func(dependency pyval.Dependency) error {
 		switch dependency.Call {
 		case CallGetRepository:

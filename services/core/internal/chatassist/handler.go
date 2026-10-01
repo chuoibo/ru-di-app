@@ -17,39 +17,33 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/auth"
-	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
 	"mobile/services/core/internal/domain/pairnotebook"
 	"mobile/services/core/internal/domain/pairsteps"
 	"mobile/services/core/internal/featureroute"
 	"mobile/services/core/internal/gudoi"
-	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/service"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Handler struct {
 	pool   *pgxpool.Pool
-	brain  *brain.Client
 	mux    *featureroute.Mux
 	worker WorkerConfig
-	// nepEngine, when set, runs Nếp's jobs in Go instead of the brain's
-	// nep-reply (MOBILE_AI_ENGINE_NEP=go). nepGo says the host chose the Go
-	// engine even where this process runs no worker, so asking Nếp never
-	// waits on a probe of the brain.
-	nepEngine *aiharness.Engine
-	nepGo     bool
-	// nhomEngine, when set, runs the group's jobs in Go instead of the
-	// brain's companion-reply and chat-expense (MOBILE_AI_ENGINE_GROUP=go);
-	// nhomGo says the host chose it even where this process runs no worker,
-	// so `hoi` is taken.
+	// nepEngine and nhomEngine run Nếp's and the group's jobs in this
+	// process (internal/aiharness, the only engine since ADR-0051). coMay
+	// says this host has a model, set with an engine or, in a process that
+	// serves the routes while `core work` runs the jobs, by WithCoMay.
+	// Without it every invocation is refused provider_unavailable.
+	nepEngine  *aiharness.Engine
 	nhomEngine *aiharness.Engine
-	nhomGo     bool
+	coMay      bool
 	// scopes limits the jobs this process claims (WithQueues); nil is all.
 	scopes []string
 	// nhip, when set, carries the heartbeat and the model-call counter
@@ -108,8 +102,8 @@ type Invocation struct {
 
 const columns = `id,command,status,code,message_id,trigger_message_id::text,so_tin_doc,created_at,updated_at`
 
-func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
-	h := &Handler{pool: pool, brain: client, mux: featureroute.NewMux(), worker: DefaultWorkerConfig()}
+func New(pool *pgxpool.Pool) *Handler {
+	h := &Handler{pool: pool, mux: featureroute.NewMux(), worker: DefaultWorkerConfig()}
 	h.mux.HandleFunc("GET /contexts/{context}/chat-capabilities", h.capabilities)
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations", h.create)
 	h.mux.HandleFunc("GET /contexts/{context}/ai-invocations", h.list)
@@ -133,7 +127,7 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 
 // Routes lists the patterns New registers, in order. The ownership manifest's
 // `features` block must name exactly these (cmd/core features --json).
-func Routes() []string { return New(nil, nil).mux.Patterns() }
+func Routes() []string { return New(nil).mux.Patterns() }
 
 // Matches also seals the per-message expense-draft entry point, which reads a
 // stored message for the model without anyone handing it over. The old
@@ -283,17 +277,10 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 // (decision 2026-09-28, two classes): `hoi`, plan, chia_bill, shared drafts
 // and plan promotion alike. A pair whose two people both said yes to «Một
 // đôi» is a couple as well (laDoi), which adds to that and removes nothing.
-// A pair runs only on the Go engine: the brain has no path for it
-// (chat-capabilities says provider_unavailable, the route refuses with it,
-// and a brain worker fails such a job with it, errCapKhongCoBrain).
 const (
 	kindGroup = "group"
 	kindPair  = "pair"
 )
-
-// errCapKhongCoBrain is a pair's job reaching a worker whose group engine is
-// the brain.
-var errCapKhongCoBrain = &denied{503, "provider_unavailable"}
 
 // phongAi is the room check every step of an invocation makes after
 // authority: at preflight, at create, on the stream, and again in the
@@ -482,53 +469,22 @@ func (h *Handler) begin(r *http.Request) (pgx.Tx, grant, error) {
 	return tx, g, nil
 }
 
-// nhomSanSang says a group or pair invocation can be taken: on the Go
-// engine (MOBILE_AI_ENGINE_GROUP=go) the engine was built at startup or
-// `serve` refused to start, so the brain is not asked -- as nepSanSang does
-// for Nếp. Before this, create and retry probed the brain even on the Go
-// engine, and a host whose brain had no Gemini key refused every invocation
-// provider_unavailable while chat-capabilities said the bot was on.
-func (h *Handler) nhomSanSang(ctx context.Context) bool {
-	if h.nhomGo {
-		return true
-	}
-	return h.available(ctx)
+// nhomSanSang says a group or pair invocation can be taken: this host has a
+// model (coMay). With the worker in this process the engine was built at
+// startup or `serve` refused to start; with `core work` elsewhere it is this
+// process's configuration, as nepSanSang says.
+func (h *Handler) nhomSanSang(context.Context) bool { return h.coMay }
+
+// WithCoMay marks a process that serves the assistant's routes while the
+// jobs run in `core work`: it has a model configured, so invocations are
+// taken and chat-capabilities says the assistant is on.
+func (h *Handler) WithCoMay() *Handler {
+	h.coMay = true
+	return h
 }
 
-func (h *Handler) available(ctx context.Context) bool {
-	if h.brain == nil {
-		return false
-	}
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	v, err := h.brain.PostJSONContext(ctx, "capabilities", pyjson.NewOrderedMap())
-	if err != nil {
-		return false
-	}
-	obj, ok := v.(*pyjson.OrderedMap)
-	if !ok {
-		return false
-	}
-	v, ok = obj.Get("plan")
-	if !ok {
-		return false
-	}
-	obj, ok = v.(*pyjson.OrderedMap)
-	if !ok {
-		return false
-	}
-	v, ok = obj.Get("available")
-	if !ok {
-		return false
-	}
-	b, ok := v.(pyjson.Bool)
-	return ok && bool(b)
-}
-
-// preflight authenticates before contacting the internal inference service.
-// Mutation handlers authorize again afterwards without holding locks over I/O.
-// A pair is refused provider_unavailable unless the group runs on the Go
-// engine: the brain has no path for a chat of two.
+// preflight authenticates before anything is queued. Mutation handlers
+// authorize again afterwards without holding locks over I/O.
 func (h *Handler) preflight(r *http.Request) error {
 	tx, g, err := h.begin(r)
 	if err != nil {
@@ -537,9 +493,6 @@ func (h *Handler) preflight(r *http.Request) error {
 	defer tx.Rollback(r.Context())
 	if err = phongAi(r.Context(), tx, g); err != nil {
 		return err
-	}
-	if g.kind == kindPair && !h.nhomGo {
-		return errCapKhongCoBrain
 	}
 	return tx.Commit(r.Context())
 }
@@ -585,14 +538,11 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	// On the Go engine (MOBILE_AI_ENGINE_GROUP=go) the brain is not asked:
-	// the engine was built at startup or `serve` refused to start. A pair
-	// runs only there (the brain has no path for a chat of two), so on a
-	// brain host a pair is told provider_unavailable without a probe.
-	enabled := h.nhomGo || (g.kind == kindGroup && h.available(r.Context()))
-	// `hoi` (the router decides what is asked) runs only on the Go engine,
-	// in a group and in a pair alike.
-	hoiCo := h.nhomGo
+	// One answer for every command, in a group and in a pair alike: this
+	// host has a model or it has none (a keyless stack says
+	// provider_unavailable, as it always has).
+	enabled := h.coMay
+	hoiCo := h.coMay
 	var hoiVi any = "provider_unavailable"
 	if hoiCo {
 		hoiVi = nil
@@ -658,15 +608,14 @@ func newID() string {
 // would refuse is refused here as a 400 rather than surfacing as a 500 from the
 // INSERT. Every command shares one queue, one digest, one rate limit and one
 // authority check; only the worker's inference step differs. `hoi` (the
-// router decides what is asked, design 03 §4.3) runs only on the Go engine
-// (MOBILE_AI_ENGINE_GROUP=go) and only as an answer in the thread: it must
-// name its trigger.
+// router decides what is asked, design 03 §4.3) is only an answer in the
+// thread: it must name its trigger.
 func (h *Handler) lenhNhom(command string, coTrigger bool) bool {
 	switch command {
 	case lenhPlan, lenhChiaBill:
 		return true
 	case lenhHoi:
-		return h.nhomGo && coTrigger
+		return coTrigger
 	}
 	return false
 }

@@ -1,13 +1,11 @@
-"""`GET /contexts/{id}/suggestion` -- F32, the card nobody asked for.
+"""F32 and F33, the suggestion cards: served by Go since ADR-0051.
 
-A GET because opening a screen is what triggers it. The route creates nothing:
-a suggestion is a proposal a group can ignore, and the moment it wrote an
-outing row it would be the product deciding for them, which spec section 3
-spends a page refusing.
-
-Membership is checked in the service against an ACTIVE row, not here. The
-route's whole job is to name the permission-bearing workflow and hand it a
-model backend it does not construct itself.
+The prompt builders and the model call moved to `services/core`
+(internal/routes/suggestions_wai.go, internal/aiharness/goiy). What stays here
+is each route's declaration: the Go front door still takes its route order,
+its request contract and the limiter it shares from this app's table
+(services/core/ownership/routes.json, `python: frozen`, state PY-DELETED).
+Reached directly, each says where it went.
 """
 
 from __future__ import annotations
@@ -17,15 +15,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 
-from app.api.deps import (
-    Actor,
-    ContextualSuggester,
-    Suggester,
-    get_actor,
-    get_contextual_suggester,
-    get_repository,
-    get_suggester,
-)
+from app.api.deps import Actor, get_actor, get_repository
+from app.api.errors import ApiProblem
 from app.api.repository import ApiRepository
 from app.api.schemas import (
     ContextualSuggestionResponse,
@@ -33,7 +24,6 @@ from app.api.schemas import (
     GroupSuggestionResponse,
 )
 from app.api.search_rate_limit import FixedWindowLimiter
-from app.api.service import ApiService
 
 router = APIRouter(tags=["suggestions"])
 
@@ -69,24 +59,14 @@ def read_group_suggestion(
     context_id: UUID,
     actor: Annotated[Actor, Depends(get_actor)],
     repository: Annotated[ApiRepository, Depends(get_repository)],
-    suggester: Annotated[Suggester, Depends(get_suggester)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_suggestion_limiter)],
 ) -> GroupSuggestionResponse:
-    """F32, capped per caller before the model is reached.
+    """Declaration only: the Go core serves this route (ADR-0051)."""
 
-    This route had nothing in front of it. `GET /places` reaches Gemini too and
-    is bounded by `CachedReasonWriter`, one call per place over a fixed
-    catalogue per cooldown -- a bound this comment claimed before it was true,
-    see `tests/api/test_places_reason_retry_storm.py`;
-    there is no equivalent here, because a suggestion is a function of a
-    group's own history and caching one keyed on anything coarser would serve
-    one group's evening to another. So it is one model call per request, on a
-    GET, which a screen that remounts or a client that polls issues without
-    anybody deciding to.
-    """
-
-    limiter.check(actor.id)
-    return ApiService(repository).group_suggestion(context_id, actor, suggester)
+    del context_id, actor, repository, limiter
+    raise ApiProblem(
+        410, "served_by_go", "GET /contexts/{id}/suggestion do core Go phục vụ."
+    )
 
 
 @router.get(
@@ -103,21 +83,13 @@ def read_contextual_suggestion(
     context_id: UUID,
     actor: Annotated[Actor, Depends(get_actor)],
     repository: Annotated[ApiRepository, Depends(get_repository)],
-    suggester: Annotated[ContextualSuggester, Depends(get_contextual_suggester)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_contextual_suggestion_limiter)],
 ) -> ContextualSuggestionResponse:
-    """F33. Also a GET, and also creates nothing.
+    """Declaration only: the Go core serves this route (ADR-0051)."""
 
-    The trigger is opening the chat screen, not sending anything: the server
-    reads the group's own last few messages, which it already has. A POST
-    carrying the conversation would mean the client got to choose what the
-    model reads, and a caller who chooses the evidence chooses the answer.
-
-    Capped per caller before the model is reached, like its neighbour above.
-    This one cannot be cached at all -- the card is a function of the group's
-    live conversation -- so the window is the only thing between a screen that
-    remounts and the paid key.
-    """
-
-    limiter.check(actor.id)
-    return ApiService(repository).contextual_suggestion(context_id, actor, suggester)
+    del context_id, actor, repository, limiter
+    raise ApiProblem(
+        410,
+        "served_by_go",
+        "GET /contexts/{id}/contextual-suggestion do core Go phục vụ.",
+    )

@@ -1,0 +1,6841 @@
+{
+ "generator": "scripts/render_domain_ai_goldens.py",
+ "module": "app.domain.receipt",
+ "mode": "hoadon-fuzz-0",
+ "python": "3.12.11",
+ "seed": 23,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 400
+ },
+ "cases": [
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/0",
+   "args": {
+    "text": " 109852,703 kd "
+   },
+   "result": {
+    "ok": "$i:0x68c_381f"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/1",
+   "args": {
+    "text": "6086.095,3595 k VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/2",
+   "args": {
+    "text": "77222tr\u0103m\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/3",
+   "args": {
+    "text": "1ng\u00e0n"
+   },
+   "result": {
+    "ok": 1000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/4",
+   "args": {
+    "text": "$sp: 951 4|783 19|1tr\u0103m |ngh\u00ecnV|ND  "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/5",
+   "args": {
+    "text": "606ng\u00e0n"
+   },
+   "result": {
+    "ok": 606000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/6",
+   "args": {
+    "text": "3tr\u0103md"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/7",
+   "args": {
+    "text": "VND 73013743.88K"
+   },
+   "result": {
+    "ok": "$i:0x10_fff5_5108"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/8",
+   "args": {
+    "text": " 7961,4664tr\u0103m "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/9",
+   "args": {
+    "text": "58,158.877 56 \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/10",
+   "args": {
+    "text": "2648828 130tr\u0103m ngh\u00ecn\u0111\u1ed3ng"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/11",
+   "args": {
+    "text": "4565 260848tri\u1ec7u\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/12",
+   "args": {
+    "text": "85 kd"
+   },
+   "result": {
+    "ok": 85000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/13",
+   "args": {
+    "text": "$sp: 00416|1tri\u1ec7u|VND  "
+   },
+   "result": {
+    "ok": "$i:0xf803_d240"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/14",
+   "args": {
+    "text": "2 199,12.924tr\u0103m ngh\u00ecn VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/15",
+   "args": {
+    "text": " 9ngh\u00ecn "
+   },
+   "result": {
+    "ok": 9000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/16",
+   "args": {
+    "text": " 36,9658,4725ng\u00e0n VN\u0110 "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/17",
+   "args": {
+    "text": "5382 600ngh\u00ecn\u0111\u1ed3ng"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/18",
+   "args": {
+    "text": "535065989ng\u00e0n \u0111"
+   },
+   "result": {
+    "ok": "$i:0x7c_946b_0f88"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/19",
+   "args": {
+    "text": "$sp: 1706 |06422.|8781k\u0111|\u1ed3ng "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/20",
+   "args": {
+    "text": "190,444ng\u00e0nd"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/21",
+   "args": {
+    "text": "503.144k\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/22",
+   "args": {
+    "text": " VN\u01107tr\u0103m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/23",
+   "args": {
+    "text": "3K \u0111"
+   },
+   "result": {
+    "ok": 3000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/24",
+   "args": {
+    "text": "\u20ab40.9600,05971tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/25",
+   "args": {
+    "text": "2 22K\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/26",
+   "args": {
+    "text": "28.919K\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/27",
+   "args": {
+    "text": "\u20ab86.256288tr"
+   },
+   "result": {
+    "ok": 86256288
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/28",
+   "args": {
+    "text": "2.5007 \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/29",
+   "args": {
+    "text": "75.716029k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/30",
+   "args": {
+    "text": "215,428 8999946ngh\u00ecn \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/31",
+   "args": {
+    "text": " VN\u0110817 61 109,639k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/32",
+   "args": {
+    "text": "$sp:28655t|r\u0103mVND| "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/33",
+   "args": {
+    "text": "\u20ab6.02.164K"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/34",
+   "args": {
+    "text": "$sp:549,69|94.078|27\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/35",
+   "args": {
+    "text": "VND 3823tri\u1ec7u"
+   },
+   "result": {
+    "ok": "$i:0xe3de_59c0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/36",
+   "args": {
+    "text": "\u0111\u1ed3ng47296136"
+   },
+   "result": {
+    "ok": 47296136
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/37",
+   "args": {
+    "text": "\u0111\u1ed3ng243,48tr"
+   },
+   "result": {
+    "ok": "$i:0xe83_35c0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/38",
+   "args": {
+    "text": " 30.02ngh\u00ecn "
+   },
+   "result": {
+    "ok": 30020
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/39",
+   "args": {
+    "text": " 5971 20k "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/40",
+   "args": {
+    "text": "21 780.205896tr\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/41",
+   "args": {
+    "text": " VN\u0110888134ngh\u00ecn"
+   },
+   "result": {
+    "ok": "$i:0x34ef_d970"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/42",
+   "args": {
+    "text": "30016639.2336k\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/43",
+   "args": {
+    "text": "4161.286 VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/44",
+   "args": {
+    "text": "28 260VND "
+   },
+   "result": {
+    "ok": 28260
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/45",
+   "args": {
+    "text": "52.8973,7871.586ngh\u00ecn\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/46",
+   "args": {
+    "text": "VND 45.974 k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/47",
+   "args": {
+    "text": " 0.181,815tr\u20ab "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/48",
+   "args": {
+    "text": "529441ngh\u00ecnd"
+   },
+   "result": {
+    "ok": "$i:0x1f8e_a0e8"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/49",
+   "args": {
+    "text": "8948,6969ng\u00e0n VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/50",
+   "args": {
+    "text": "7 k\u0111"
+   },
+   "result": {
+    "ok": 7000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/51",
+   "args": {
+    "text": "4.275ng\u00e0n VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/52",
+   "args": {
+    "text": " \u0111645656tr"
+   },
+   "result": {
+    "ok": "$i:0x96_5418_b600"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/53",
+   "args": {
+    "text": "501207 39.994ngh\u00ecn\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/54",
+   "args": {
+    "text": "\u0111173037 113158"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/55",
+   "args": {
+    "text": "8 kVND "
+   },
+   "result": {
+    "ok": 8000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/56",
+   "args": {
+    "text": "\u0111\u1ed3ng9855,903tri\u1ec7u"
+   },
+   "result": {
+    "ok": "$i:0x2_4b75_2518"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/57",
+   "args": {
+    "text": "20tr\u0103md"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/58",
+   "args": {
+    "text": " \u011186 153.85.873tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/59",
+   "args": {
+    "text": " 844.07 955,038ng\u00e0nd "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/60",
+   "args": {
+    "text": "$sp:6018 9|2400 0|77ngh\u00ec|n\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/61",
+   "args": {
+    "text": "4 01trVND "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/62",
+   "args": {
+    "text": "d84 700,25 315ngh\u00ecn"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/63",
+   "args": {
+    "text": "9593212ng\u00e0n\u0111"
+   },
+   "result": {
+    "ok": "$i:0x2_3bcc_cc60"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/64",
+   "args": {
+    "text": " \u0111905340,083tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "ok": "$i:0x15_143f_55ec"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/65",
+   "args": {
+    "text": "1220 758 kd"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/66",
+   "args": {
+    "text": "$sp:5458.4|1 505,|7794ng|h\u00ecn VN|\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/67",
+   "args": {
+    "text": "16,722ngh\u00ecn\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/68",
+   "args": {
+    "text": "VND 6385.104tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "ok": "$i:0x260e_e540"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/69",
+   "args": {
+    "text": "$sp: VN\u01108,|0231 7|0.8294| k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/70",
+   "args": {
+    "text": "$sp:1912tr|i\u1ec7uVND| "
+   },
+   "result": {
+    "ok": "$i:0x71f6_ce00"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/71",
+   "args": {
+    "text": "859.024,707tr\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/72",
+   "args": {
+    "text": "\u0111\u1ed3ng765 543,3835k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/73",
+   "args": {
+    "text": " 79112ngh\u00ecn VN\u0110 "
+   },
+   "result": {
+    "ok": 79112000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/74",
+   "args": {
+    "text": "$sp: 20602|60,692|tr\u0103m n|gh\u00ecnVN|D  "
+   },
+   "result": {
+    "ok": "$i:0x2f_f81c_54d0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/75",
+   "args": {
+    "text": "4276,544.1106,9289tr\u0103m ngh\u00ecn\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/76",
+   "args": {
+    "text": "303k"
+   },
+   "result": {
+    "ok": 303000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/77",
+   "args": {
+    "text": "VND 9222.110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/78",
+   "args": {
+    "text": "  VN\u01100.262 k "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/79",
+   "args": {
+    "text": " 587605,9778tr\u0103md "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/80",
+   "args": {
+    "text": "d9582 64634"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/81",
+   "args": {
+    "text": "0 k\u0111"
+   },
+   "result": {
+    "ok": 0
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/82",
+   "args": {
+    "text": "d75tri\u1ec7u"
+   },
+   "result": {
+    "ok": 75000000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/83",
+   "args": {
+    "text": " VND 13 "
+   },
+   "result": {
+    "ok": 13
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/84",
+   "args": {
+    "text": "709 84,941.01 k \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/85",
+   "args": {
+    "text": "\u0111\u1ed3ng479142,7780,313K"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/86",
+   "args": {
+    "text": "$sp:786 70|54ng\u00e0n|VND "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/87",
+   "args": {
+    "text": "2577 688d"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/88",
+   "args": {
+    "text": "$sp:678997|7754.1|72k \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/89",
+   "args": {
+    "text": "1792 k"
+   },
+   "result": {
+    "ok": 1792000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/90",
+   "args": {
+    "text": "8220161.63tri\u1ec7u VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/91",
+   "args": {
+    "text": "8333802.08tri\u1ec7u"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/92",
+   "args": {
+    "text": " 316 76035ngh\u00ecn "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/93",
+   "args": {
+    "text": "9434 \u0111"
+   },
+   "result": {
+    "ok": 9434
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/94",
+   "args": {
+    "text": "9 2800 440K\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/95",
+   "args": {
+    "text": "$sp:374 68|0993 6|47tr \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/96",
+   "args": {
+    "text": "VND 127108,8476k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/97",
+   "args": {
+    "text": " 952104,61,62\u0111\u1ed3ng "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/98",
+   "args": {
+    "text": "$sp:381325|919 26|4tr\u0111\u1ed3n|g"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/99",
+   "args": {
+    "text": "957tr\u0103m ngh\u00ecnd"
+   },
+   "result": {
+    "ok": 95700000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/100",
+   "args": {
+    "text": "\u0111625tri\u1ec7u"
+   },
+   "result": {
+    "ok": "$i:0x2540_be40"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/101",
+   "args": {
+    "text": " VN\u011016987138 k"
+   },
+   "result": {
+    "ok": "$i:0x3_f483_27d0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/102",
+   "args": {
+    "text": "4 580,20tr\u0103m ngh\u00ecn\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/103",
+   "args": {
+    "text": " \u0111924.328.9551 2742K"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/104",
+   "args": {
+    "text": "3tr\u0103m ngh\u00ecn\u20ab"
+   },
+   "result": {
+    "ok": 300000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/105",
+   "args": {
+    "text": "5054 464ng\u00e0n\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/106",
+   "args": {
+    "text": "4.726530703ng\u00e0n\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/107",
+   "args": {
+    "text": "d622K"
+   },
+   "result": {
+    "ok": 622000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/108",
+   "args": {
+    "text": "7509tr \u0111"
+   },
+   "result": {
+    "ok": "$i:0x1_bf92_3f40"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/109",
+   "args": {
+    "text": "27k\u0111\u1ed3ng"
+   },
+   "result": {
+    "ok": 27000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/110",
+   "args": {
+    "text": " 7925,8201tr\u20ab "
+   },
+   "result": {
+    "ok": "$i:0x1_d86a_6ac4"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/111",
+   "args": {
+    "text": "$sp:9430 7|17907\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/112",
+   "args": {
+    "text": "0tr\u0103m\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/113",
+   "args": {
+    "text": "72 712.437"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/114",
+   "args": {
+    "text": " 9,59460682tr\u0111 "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/115",
+   "args": {
+    "text": " VN\u0110929.6209106tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/116",
+   "args": {
+    "text": "5.651tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/117",
+   "args": {
+    "text": "$sp:9451 8|26.588|,942ng|h\u00ecn\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/118",
+   "args": {
+    "text": "$sp:964.28|3 455 |k VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/119",
+   "args": {
+    "text": "677,2160.9890,234ngh\u00ecn\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/120",
+   "args": {
+    "text": "544.52 922.48k VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/121",
+   "args": {
+    "text": "3 246d"
+   },
+   "result": {
+    "ok": 3246
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/122",
+   "args": {
+    "text": " 5026k VN\u0110 "
+   },
+   "result": {
+    "ok": 5026000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/123",
+   "args": {
+    "text": "484,834ngh\u00ecn\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/124",
+   "args": {
+    "text": "48,7857,597 30kd"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/125",
+   "args": {
+    "text": " 9ng\u00e0n\u0111\u1ed3ng "
+   },
+   "result": {
+    "ok": 9000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/126",
+   "args": {
+    "text": "\u20ab615tr"
+   },
+   "result": {
+    "ok": "$i:0x24a8_27c0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/127",
+   "args": {
+    "text": "6885,606.295tri\u1ec7u\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/128",
+   "args": {
+    "text": "61.96.6812tr\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/129",
+   "args": {
+    "text": " \u0111997,710.27tr\u0103m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/130",
+   "args": {
+    "text": "5tri\u1ec7u VN\u0110"
+   },
+   "result": {
+    "ok": 5000000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/131",
+   "args": {
+    "text": "8875.451632ng\u00e0nd"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/132",
+   "args": {
+    "text": "VND 7477,497.1150 217K"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/133",
+   "args": {
+    "text": "394trd"
+   },
+   "result": {
+    "ok": "$i:0x177b_f680"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/134",
+   "args": {
+    "text": "\u011120.016 995tr\u0103m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/135",
+   "args": {
+    "text": "\u0111261tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "ok": 26100000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/136",
+   "args": {
+    "text": "\u20ab2593"
+   },
+   "result": {
+    "ok": 2593
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/137",
+   "args": {
+    "text": "54"
+   },
+   "result": {
+    "ok": 54
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/138",
+   "args": {
+    "text": "$sp: 0.95.|806276|3tr\u0103m\u20ab| "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/139",
+   "args": {
+    "text": "  \u011130tr "
+   },
+   "result": {
+    "ok": 30000000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/140",
+   "args": {
+    "text": "9771244k \u0111"
+   },
+   "result": {
+    "ok": "$i:0x2_4669_59e0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/141",
+   "args": {
+    "text": "204Kd"
+   },
+   "result": {
+    "ok": 204000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/142",
+   "args": {
+    "text": "\u011109043809.932 k"
+   },
+   "result": {
+    "ok": "$i:0x2_1b0d_968c"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/143",
+   "args": {
+    "text": "3,280 86 9016k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/144",
+   "args": {
+    "text": "667.01.603.537K\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/145",
+   "args": {
+    "text": " \u01119tr"
+   },
+   "result": {
+    "ok": 9000000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/146",
+   "args": {
+    "text": " 3328k "
+   },
+   "result": {
+    "ok": 3328000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/147",
+   "args": {
+    "text": "$sp:\u20ab29K"
+   },
+   "result": {
+    "ok": 29000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/148",
+   "args": {
+    "text": "9282tri\u1ec7u"
+   },
+   "result": {
+    "ok": "$i:0x2_2940_1480"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/149",
+   "args": {
+    "text": "96.76578 026K"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/150",
+   "args": {
+    "text": " 6 302k "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/151",
+   "args": {
+    "text": "2789,073\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/152",
+   "args": {
+    "text": "d54tr\u0103m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/153",
+   "args": {
+    "text": "VND 3293666tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "ok": "$i:0x4c_afc7_7940"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/154",
+   "args": {
+    "text": "4,108,456.37 k VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/155",
+   "args": {
+    "text": "103427ng\u00e0n \u0111"
+   },
+   "result": {
+    "ok": "$i:0x62a_2bb8"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/156",
+   "args": {
+    "text": "5695 84tr\u0111\u1ed3ng"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/157",
+   "args": {
+    "text": "3876ng\u00e0n\u20ab"
+   },
+   "result": {
+    "ok": 3876000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/158",
+   "args": {
+    "text": "\u20ab227.789"
+   },
+   "result": {
+    "ok": 227789
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/159",
+   "args": {
+    "text": "444,39 393ngh\u00ecnd"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/160",
+   "args": {
+    "text": "$sp: \u01119479|K"
+   },
+   "result": {
+    "ok": 9479000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/161",
+   "args": {
+    "text": " VN\u011080 45ng\u00e0n"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/162",
+   "args": {
+    "text": "d366,29.20337ng\u00e0n"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/163",
+   "args": {
+    "text": "8tr\u0103m ngh\u00ecn VN\u0110"
+   },
+   "result": {
+    "ok": 800000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/164",
+   "args": {
+    "text": " \u0111861,561,944,037tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/165",
+   "args": {
+    "text": " 064.16992ngh\u00ecn\u20ab "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/166",
+   "args": {
+    "text": "$sp: d32,7|418.54|8746 "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/167",
+   "args": {
+    "text": "211.309VND "
+   },
+   "result": {
+    "ok": 211309
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/168",
+   "args": {
+    "text": "4682tri\u1ec7u VN\u0110"
+   },
+   "result": {
+    "ok": "$i:0x1_1711_a680"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/169",
+   "args": {
+    "text": "VND 7.834.160,013tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/170",
+   "args": {
+    "text": "833tr\u0103md"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/171",
+   "args": {
+    "text": " VN\u011069 7017 k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/172",
+   "args": {
+    "text": " d4ng\u00e0n "
+   },
+   "result": {
+    "ok": 4000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/173",
+   "args": {
+    "text": "\u20ab50 114 984k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/174",
+   "args": {
+    "text": "2973,416,878 kVND "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/175",
+   "args": {
+    "text": " 58,15,664.755ngh\u00ecnd "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/176",
+   "args": {
+    "text": "0trVND "
+   },
+   "result": {
+    "ok": 0
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/177",
+   "args": {
+    "text": "92 k VN\u0110"
+   },
+   "result": {
+    "ok": 92000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/178",
+   "args": {
+    "text": "9505tr\u0103m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/179",
+   "args": {
+    "text": "3.8350,254832ng\u00e0n \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/180",
+   "args": {
+    "text": "d77.5698k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/181",
+   "args": {
+    "text": "$sp: 3 819|1.452 |7032 k| "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/182",
+   "args": {
+    "text": " \u01115141,612.364tri\u1ec7u "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/183",
+   "args": {
+    "text": "$sp:214246|2tr\u0103mV|ND "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/184",
+   "args": {
+    "text": "815556.81.05tr VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/185",
+   "args": {
+    "text": "VND 4.0881k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/186",
+   "args": {
+    "text": "36tr\u0103m\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/187",
+   "args": {
+    "text": "4567 8997 \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/188",
+   "args": {
+    "text": " 5697ng\u00e0n "
+   },
+   "result": {
+    "ok": 5697000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/189",
+   "args": {
+    "text": "1795\u0111"
+   },
+   "result": {
+    "ok": 1795
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/190",
+   "args": {
+    "text": "417,5611 k\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/191",
+   "args": {
+    "text": "  \u011178 "
+   },
+   "result": {
+    "ok": 78
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/192",
+   "args": {
+    "text": "6605K\u20ab"
+   },
+   "result": {
+    "ok": 6605000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/193",
+   "args": {
+    "text": "d2 26tr\u0103m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/194",
+   "args": {
+    "text": " VN\u0110571872"
+   },
+   "result": {
+    "ok": 571872
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/195",
+   "args": {
+    "text": "708145.425ng\u00e0n\u20ab"
+   },
+   "result": {
+    "ok": "$i:0x2a35_7111"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/196",
+   "args": {
+    "text": " 552 074k VN\u0110 "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/197",
+   "args": {
+    "text": " \u01114157 818841tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/198",
+   "args": {
+    "text": " VN\u0110322tr"
+   },
+   "result": {
+    "ok": "$i:0x1331_5480"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/199",
+   "args": {
+    "text": "82,5953 14tri\u1ec7u"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/200",
+   "args": {
+    "text": "823530ngh\u00ecn \u0111"
+   },
+   "result": {
+    "ok": "$i:0x3116_1210"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/201",
+   "args": {
+    "text": "d6608.735336 289tri\u1ec7u"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/202",
+   "args": {
+    "text": "1963 176923ngh\u00ecn VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/203",
+   "args": {
+    "text": "\u01117861 0495k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/204",
+   "args": {
+    "text": "9.893,654k\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/205",
+   "args": {
+    "text": "7309463K\u20ab"
+   },
+   "result": {
+    "ok": "$i:0x1_b3ad_8dd8"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/206",
+   "args": {
+    "text": "$sp:568323|1 834.|22 k\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/207",
+   "args": {
+    "text": "\u0111\u1ed3ng423 853k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/208",
+   "args": {
+    "text": "6052tr\u20ab"
+   },
+   "result": {
+    "ok": "$i:0x1_68ba_3100"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/209",
+   "args": {
+    "text": "6.31.01K\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/210",
+   "args": {
+    "text": "7tr\u0111"
+   },
+   "result": {
+    "ok": 7000000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/211",
+   "args": {
+    "text": "82853,81036tri\u1ec7u"
+   },
+   "result": {
+    "ok": "$i:0x13_4a78_d0b8"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/212",
+   "args": {
+    "text": "98,232052K \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/213",
+   "args": {
+    "text": "581748d"
+   },
+   "result": {
+    "ok": 581748
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/214",
+   "args": {
+    "text": "VND 8 742.272.511ng\u00e0n"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/215",
+   "args": {
+    "text": "5,7308.4908tr\u0103m ngh\u00ecn VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/216",
+   "args": {
+    "text": " 97k "
+   },
+   "result": {
+    "ok": 97000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/217",
+   "args": {
+    "text": "\u011189ngh\u00ecn"
+   },
+   "result": {
+    "ok": 89000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/218",
+   "args": {
+    "text": "$sp:16.286|5.6374| k \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/219",
+   "args": {
+    "text": " \u0111\u1ed3ng0110070.445k "
+   },
+   "result": {
+    "ok": "$i:0x68f_8aad"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/220",
+   "args": {
+    "text": "65K\u0111\u1ed3ng"
+   },
+   "result": {
+    "ok": 65000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/221",
+   "args": {
+    "text": "4997tr\u0103m ngh\u00ecn \u0111"
+   },
+   "result": {
+    "ok": "$i:0x1dc8_d120"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/222",
+   "args": {
+    "text": " \u20ab6475.46548,014tr\u0103m ngh\u00ecn "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/223",
+   "args": {
+    "text": "0tr\u0111"
+   },
+   "result": {
+    "ok": 0
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/224",
+   "args": {
+    "text": "$sp:78 418|5 270,|92ngh\u00ec|nd"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/225",
+   "args": {
+    "text": "$sp:0714,0|678 56|ngh\u00ecnV|ND "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/226",
+   "args": {
+    "text": " \u011172 k"
+   },
+   "result": {
+    "ok": 72000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/227",
+   "args": {
+    "text": "$sp:2966 8|77592,|007K"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/228",
+   "args": {
+    "text": " \u011105tr\u0103m ngh\u00ecn "
+   },
+   "result": {
+    "ok": 500000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/229",
+   "args": {
+    "text": " VN\u011057578849tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/230",
+   "args": {
+    "text": "\u01116ng\u00e0n"
+   },
+   "result": {
+    "ok": 6000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/231",
+   "args": {
+    "text": "$sp: \u01113,16|95121 |768 k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/232",
+   "args": {
+    "text": " VND 15399216tri\u1ec7u "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/233",
+   "args": {
+    "text": "\u20ab09,586 873 15ngh\u00ecn"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/234",
+   "args": {
+    "text": " 394091 1893469tr \u0111 "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/235",
+   "args": {
+    "text": "8.800,62k VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/236",
+   "args": {
+    "text": " 8 825ng\u00e0n\u20ab "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/237",
+   "args": {
+    "text": "75Kd"
+   },
+   "result": {
+    "ok": 75000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/238",
+   "args": {
+    "text": "1957.651tr\u0103md"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/239",
+   "args": {
+    "text": "2 9825,60100d"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/240",
+   "args": {
+    "text": "9,74tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "ok": 974000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/241",
+   "args": {
+    "text": "$sp:511.88|764 82|81"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/242",
+   "args": {
+    "text": "581.458tr\u0103m VN\u0110"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/243",
+   "args": {
+    "text": "6.73.872.276kVND "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/244",
+   "args": {
+    "text": " 0486,6924 8748532tr "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/245",
+   "args": {
+    "text": "617 k\u0111"
+   },
+   "result": {
+    "ok": 617000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/246",
+   "args": {
+    "text": "140,750,206tr\u0103m ngh\u00ecnd"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/247",
+   "args": {
+    "text": " 2695028tr\u0103m \u0111 "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/248",
+   "args": {
+    "text": "17tr\u0103m ngh\u00ecnd"
+   },
+   "result": {
+    "ok": 1700000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/249",
+   "args": {
+    "text": "555 87 209tri\u1ec7u\u0111\u1ed3ng"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/250",
+   "args": {
+    "text": " \u011193,607,6968,17tr\u0103m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/251",
+   "args": {
+    "text": "6116tr"
+   },
+   "result": {
+    "ok": "$i:0x1_6c8a_c100"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/252",
+   "args": {
+    "text": "99ngh\u00ecn\u0111\u1ed3ng"
+   },
+   "result": {
+    "ok": 99000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/253",
+   "args": {
+    "text": "\u0111\u1ed3ng632 722k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/254",
+   "args": {
+    "text": "11463tri\u1ec7u\u0111"
+   },
+   "result": {
+    "ok": "$i:0x2_ab3f_7fc0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/255",
+   "args": {
+    "text": "0 k\u20ab"
+   },
+   "result": {
+    "ok": 0
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/256",
+   "args": {
+    "text": "29ngh\u00ecn \u0111"
+   },
+   "result": {
+    "ok": 29000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/257",
+   "args": {
+    "text": " 22 643tr "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/258",
+   "args": {
+    "text": "26,233 k\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/259",
+   "args": {
+    "text": " VN\u01103395 k"
+   },
+   "result": {
+    "ok": 3395000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/260",
+   "args": {
+    "text": " \u011133424.341"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/261",
+   "args": {
+    "text": "7.946936tri\u1ec7u \u0111"
+   },
+   "result": {
+    "ok": 7946936
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/262",
+   "args": {
+    "text": "284.2225tri\u1ec7u"
+   },
+   "result": {
+    "ok": "$i:0x10f0_e424"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/263",
+   "args": {
+    "text": "616tr\u0103m ngh\u00ecn\u0111\u1ed3ng"
+   },
+   "result": {
+    "ok": 61600000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/264",
+   "args": {
+    "text": "$sp:58.13n|g\u00e0nVND| "
+   },
+   "result": {
+    "ok": 58130
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/265",
+   "args": {
+    "text": "861tri\u1ec7u \u0111"
+   },
+   "result": {
+    "ok": "$i:0x3351_d140"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/266",
+   "args": {
+    "text": "73.443 7238K \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/267",
+   "args": {
+    "text": "089,215tr\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/268",
+   "args": {
+    "text": "8tr\u0103m\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/269",
+   "args": {
+    "text": "d528,0544,636 01tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/270",
+   "args": {
+    "text": " 62.330ng\u00e0n\u0111\u1ed3ng "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/271",
+   "args": {
+    "text": "VND 1.18448 k"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/272",
+   "args": {
+    "text": " 970666,570759\u20ab "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/273",
+   "args": {
+    "text": " \u0111\u1ed3ng9972,14 k "
+   },
+   "result": {
+    "ok": 9972140
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/274",
+   "args": {
+    "text": "9924,13766tr\u0103m ngh\u00ecn"
+   },
+   "result": {
+    "ok": "$i:0x3b27_0846"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/275",
+   "args": {
+    "text": "6081 286 62615k\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/276",
+   "args": {
+    "text": "\u0111\u1ed3ng6557,528,735ng\u00e0n"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/277",
+   "args": {
+    "text": "2,9835 5044K"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/278",
+   "args": {
+    "text": "53.619k\u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/279",
+   "args": {
+    "text": "2409,234K\u20ab"
+   },
+   "result": {
+    "ok": 2409234
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/280",
+   "args": {
+    "text": "7086552.43tr\u0103m\u20ab"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/281",
+   "args": {
+    "text": "12343tr"
+   },
+   "result": {
+    "ok": "$i:0x2_dfb3_3bc0"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/282",
+   "args": {
+    "text": " 39,225ngh\u00ecnd "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/283",
+   "args": {
+    "text": "56tr\u0103m ngh\u00ecn\u20ab"
+   },
+   "result": {
+    "ok": 5600000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/284",
+   "args": {
+    "text": "0 305664tr\u0111\u1ed3ng"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/285",
+   "args": {
+    "text": "$sp:8.4100| 706ng|h\u00ecnVND| "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/286",
+   "args": {
+    "text": " \u20ab507ng\u00e0n "
+   },
+   "result": {
+    "ok": 507000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/287",
+   "args": {
+    "text": " \u0111288k"
+   },
+   "result": {
+    "ok": 288000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/288",
+   "args": {
+    "text": "\u01111781k"
+   },
+   "result": {
+    "ok": 1781000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/289",
+   "args": {
+    "text": "22 56tr"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/290",
+   "args": {
+    "text": "$sp:534823|468tri|\u1ec7uVND "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/291",
+   "args": {
+    "text": "86 728.637VND "
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/292",
+   "args": {
+    "text": "2922,5845tr\u20ab"
+   },
+   "result": {
+    "ok": "$i:0xae33_19b4"
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/293",
+   "args": {
+    "text": "857.675ng\u00e0n \u0111"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/294",
+   "args": {
+    "text": " 9ngh\u00ecn\u0111\u1ed3ng "
+   },
+   "result": {
+    "ok": 9000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/295",
+   "args": {
+    "text": "046 8883 641tr\u0103m\u0111\u1ed3ng"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/296",
+   "args": {
+    "text": "87,732342874tr\u0111\u1ed3ng"
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/297",
+   "args": {
+    "text": " 5,40 k VN\u0110 "
+   },
+   "result": {
+    "ok": 5400
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/298",
+   "args": {
+    "text": "\u011130tr"
+   },
+   "result": {
+    "ok": 30000000
+   }
+  },
+  {
+   "fn": "normalize_vnd",
+   "name": "fuzz/299",
+   "args": {
+    "text": "854074,9769tri\u1ec7u"
+   },
+   "result": {
+    "ok": "$i:0xc6_dad5_ea84"
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/0",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "30.000",
+       "quantity_text": "3",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "60k",
+       "quantity_text": "x2",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": null,
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/1",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "12,5k",
+       "quantity_text": "1",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "60k",
+       "quantity_text": "3",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": " ",
+       "line_total_text": "60k",
+       "quantity_text": "10",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/2",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfhehchchchchchchchchchchchchd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/3",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [],
+     "total_text": null,
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/4",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/5",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "60k",
+       "quantity_text": "0",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "30.000",
+       "quantity_text": "",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": null,
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/6",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/7",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "3",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": null,
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/8",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "45.000",
+       "quantity_text": "10",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "12,5k",
+       "quantity_text": "x2",
+       "unit_price_text": null
+      },
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "10",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "30.000",
+       "quantity_text": "",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/9",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/10",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/11",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": "0",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "30.000",
+       "quantity_text": null,
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3x",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/12",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "60k",
+       "quantity_text": "0",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "60k",
+       "quantity_text": null,
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3x",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/13",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "x",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/14",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "10.000",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "12,5k",
+       "quantity_text": "3",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/15",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/16",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "30.000",
+       "quantity_text": "10",
+       "unit_price_text": null
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "45.000",
+       "quantity_text": "x2",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "60k",
+       "quantity_text": null,
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "quantity": 10,
+       "unit_price_vnd": 3000,
+       "line_total_vnd": 30000
+      },
+      {
+       "name": "Tr\u00e0",
+       "quantity": 1,
+       "unit_price_vnd": 15000,
+       "line_total_vnd": 1000000
+      },
+      {
+       "name": "M\u00f3n A",
+       "quantity": 2,
+       "unit_price_vnd": 20000,
+       "line_total_vnd": 45000
+      },
+      {
+       "name": "Tr\u00e0",
+       "quantity": 1,
+       "unit_price_vnd": 60000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 1135000,
+     "total_vnd": 100000,
+     "totals_agree": false,
+     "total_difference_vnd": -1035000,
+     "confidence": 75,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn.",
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"Tr\u00e0\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1.",
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"M\u00f3n A\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh -1035000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng, nh\u01b0ng \u1ea3nh ch\u01b0a \u0111\u1ee7 r\u00f5 n\u00ean ch\u00eanh l\u1ec7ch n\u00e0y c\u00f3 th\u1ec3 do \u0111\u1ecdc sai d\u00f2ng ch\u1ee9 kh\u00f4ng ph\u1ea3i do bill; \u0111\u1ed1i chi\u1ebfu t\u1eebng d\u00f2ng v\u1edbi t\u1edd gi\u1ea5y tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/17",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "12,5k",
+       "quantity_text": "2",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "60k",
+       "quantity_text": "2",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/18",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "75.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/19",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "30.000",
+       "quantity_text": null,
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "3",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "60k",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": "x2",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/20",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "x",
+     "confidence": "$f:h3hfhehchchchchchchchchchchchchd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/21",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "45.000",
+       "quantity_text": "",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "10.000",
+       "quantity_text": null,
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "60k",
+       "quantity_text": "",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/22",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "x",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/23",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "x",
+     "confidence": "$f:h3hfhehchchchchchchchchchchchchd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/24",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "3x",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "10.000",
+       "quantity_text": "",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "2",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "2",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/25",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "30.000",
+       "quantity_text": "",
+       "unit_price_text": null
+      },
+      {
+       "name": " ",
+       "line_total_text": "10.000",
+       "quantity_text": "3x",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "2",
+       "unit_price_text": null
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "12,5k",
+       "quantity_text": "10",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/26",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [],
+     "total_text": "x",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/27",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": null,
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/28",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "1.000.000",
+       "quantity_text": "1",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "60k",
+       "quantity_text": "1",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/29",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhehchchchchchchchchchchchchd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/30",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "30.000",
+       "quantity_text": "1",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "45.000",
+       "quantity_text": "0",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/31",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "12,5k",
+       "quantity_text": "0",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "30.000",
+       "quantity_text": "1",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "0",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": "x2",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": null,
+     "confidence": "$f:h3hfhehfh0hah3hdh7h0hah3hdh7h0ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/32",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "60k",
+       "quantity_text": null,
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/33",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "60k",
+       "quantity_text": "1",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "10.000",
+       "quantity_text": "0",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/34",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/35",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "3x",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "1.000.000",
+       "quantity_text": "10",
+       "unit_price_text": null
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": "",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "12,5k",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/36",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfhehfh0hah3hdh7h0hah3hdh7h0ha"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "quantity": 3,
+       "unit_price_vnd": 15000,
+       "line_total_vnd": 1000000
+      }
+     ],
+     "items_total_vnd": 1000000,
+     "total_vnd": 100000,
+     "totals_agree": false,
+     "total_difference_vnd": -900000,
+     "confidence": 97,
+     "needs_review": true,
+     "warnings": [
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"M\u00f3n B\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh -900000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/37",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "3x",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "60k",
+       "quantity_text": "2",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/38",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "12,5k",
+       "quantity_text": "10",
+       "unit_price_text": null
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "60k",
+       "quantity_text": "2",
+       "unit_price_text": null
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "10.000",
+       "quantity_text": "",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "30.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/39",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/40",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "12,5k",
+       "quantity_text": "3x",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/41",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "1.000.000",
+       "quantity_text": "1",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "30.000",
+       "quantity_text": "",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/42",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "1.000.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "45.000",
+       "quantity_text": "2",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/43",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/44",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/45",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "12,5k",
+       "quantity_text": "10",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "12,5k",
+       "quantity_text": "2",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "1.000.000",
+       "quantity_text": "",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "12,5k",
+       "quantity_text": "10",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/46",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "3x",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "1",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "3x",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "10.000",
+       "quantity_text": "3x",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/47",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "1.000.000",
+       "quantity_text": "0",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/48",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "2",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "10.000",
+       "quantity_text": "1",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 10000,
+       "line_total_vnd": 1000000
+      },
+      {
+       "name": "M\u00f3n B",
+       "quantity": 1,
+       "unit_price_vnd": 20000,
+       "line_total_vnd": 10000
+      }
+     ],
+     "items_total_vnd": 1010000,
+     "total_vnd": 1030000,
+     "totals_agree": false,
+     "total_difference_vnd": 20000,
+     "confidence": 89,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn.",
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"Tr\u00e0\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1.",
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"M\u00f3n B\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh +20000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng, nh\u01b0ng \u1ea3nh ch\u01b0a \u0111\u1ee7 r\u00f5 n\u00ean ch\u00eanh l\u1ec7ch n\u00e0y c\u00f3 th\u1ec3 do \u0111\u1ecdc sai d\u00f2ng ch\u1ee9 kh\u00f4ng ph\u1ea3i do bill; \u0111\u1ed1i chi\u1ebfu t\u1eebng d\u00f2ng v\u1edbi t\u1edd gi\u1ea5y tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/49",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "60k",
+       "quantity_text": "1",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/50",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/51",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "1.000.000",
+       "quantity_text": "",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": null,
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/52",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "1.000.000",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "45.000",
+       "quantity_text": "0",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/53",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/54",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [],
+     "total_text": "75.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/55",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "10.000",
+       "quantity_text": "1",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "60k",
+       "quantity_text": "3",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "3",
+       "unit_price_text": null
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "10.000",
+       "quantity_text": "3",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfhehfh0hah3hdh7h0hah3hdh7h0ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/56",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/57",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "45.000",
+       "quantity_text": "2",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/58",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": "0",
+       "unit_price_text": null
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "10.000",
+       "quantity_text": "x2",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/59",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "1.000.000",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "12,5k",
+       "quantity_text": "",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "45.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/60",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "10.000",
+       "quantity_text": "1",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "10.000",
+       "quantity_text": "2",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfhehfh0hah3hdh7h0hah3hdh7h0ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/61",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [],
+     "total_text": null,
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/62",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "3",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "10",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": "3",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "45.000",
+       "quantity_text": "10",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/63",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "60k",
+       "quantity_text": "3x",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/64",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "10.000",
+       "quantity_text": "",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/65",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "0",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "45.000",
+       "quantity_text": "0",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "10.000",
+       "quantity_text": "10",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehfh0hah3hdh7h0hah3hdh7h0ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/66",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "30.000",
+       "quantity_text": "3x",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "quantity": 3,
+       "unit_price_vnd": 10000,
+       "line_total_vnd": 30000
+      }
+     ],
+     "items_total_vnd": 30000,
+     "total_vnd": 100000,
+     "totals_agree": false,
+     "total_difference_vnd": 70000,
+     "confidence": 75,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh +70000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng, nh\u01b0ng \u1ea3nh ch\u01b0a \u0111\u1ee7 r\u00f5 n\u00ean ch\u00eanh l\u1ec7ch n\u00e0y c\u00f3 th\u1ec3 do \u0111\u1ecdc sai d\u00f2ng ch\u1ee9 kh\u00f4ng ph\u1ea3i do bill; \u0111\u1ed1i chi\u1ebfu t\u1eebng d\u00f2ng v\u1edbi t\u1edd gi\u1ea5y tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/67",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "12,5k",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "10.000",
+       "quantity_text": "0",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/68",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/69",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "1.030.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/70",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "10.000",
+       "quantity_text": "1",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "12,5k",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "45.000",
+       "quantity_text": "x2",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "60k",
+       "quantity_text": "0",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/71",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": null,
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": "3x",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "10.000",
+       "quantity_text": "2",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfhehfh0hah3hdh7h0hah3hdh7h0ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/72",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "10.000",
+       "quantity_text": null,
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehfh0hah3hdh7h0hah3hdh7h0ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/73",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "1.000.000",
+       "quantity_text": "3x",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "12,5k",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/74",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "x",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/75",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/76",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/77",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "12,5k",
+       "quantity_text": "0",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "12,5k",
+       "quantity_text": "2",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": null,
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/78",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "60k",
+       "quantity_text": "3x",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/79",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": null,
+     "confidence": "$f:h3hfhehchchchchchchchchchchchchd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NO_ITEMS_READ",
+     "code": "NO_ITEMS_READ"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/80",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "30.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "60k",
+       "quantity_text": "10",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehchchchchchchchchchchchchd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/81",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "12,5k",
+       "quantity_text": "2",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/82",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/83",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "12,5k",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "quantity": 1,
+       "unit_price_vnd": 12500,
+       "line_total_vnd": 12500
+      }
+     ],
+     "items_total_vnd": 12500,
+     "total_vnd": 75000,
+     "totals_agree": false,
+     "total_difference_vnd": 62500,
+     "confidence": 100,
+     "needs_review": true,
+     "warnings": [
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh +62500 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/84",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [],
+     "total_text": "1.030.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/85",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [],
+     "total_text": null,
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/86",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "10.000",
+       "quantity_text": "10",
+       "unit_price_text": null
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "45.000",
+       "quantity_text": "",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "45.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/87",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "60k",
+       "quantity_text": "10",
+       "unit_price_text": "20k"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "30.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": null
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "45.000",
+       "quantity_text": "10",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "1.000.000",
+       "quantity_text": "0",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_QUANTITY",
+     "code": "INVALID_QUANTITY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/88",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "45.000",
+       "quantity_text": "",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": "x",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "UNREADABLE_AMOUNT",
+     "code": "UNREADABLE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/89",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "60k",
+       "quantity_text": "2",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "100.000",
+     "confidence": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/90",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "10.000",
+       "quantity_text": "",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "60k",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": null,
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/91",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "60k",
+       "quantity_text": "3",
+       "unit_price_text": null
+      }
+     ],
+     "total_text": "75.000",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "quantity": 3,
+       "unit_price_vnd": 20000,
+       "line_total_vnd": 60000
+      }
+     ],
+     "items_total_vnd": 60000,
+     "total_vnd": 75000,
+     "totals_agree": false,
+     "total_difference_vnd": 15000,
+     "confidence": 56,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh +15000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng, nh\u01b0ng \u1ea3nh ch\u01b0a \u0111\u1ee7 r\u00f5 n\u00ean ch\u00eanh l\u1ec7ch n\u00e0y c\u00f3 th\u1ec3 do \u0111\u1ecdc sai d\u00f2ng ch\u1ee9 kh\u00f4ng ph\u1ea3i do bill; \u0111\u1ed1i chi\u1ebfu t\u1eebng d\u00f2ng v\u1edbi t\u1edd gi\u1ea5y tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/92",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "10.000",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfheh2h3hdh7h0hah3hdh7h0hah3hd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/93",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "45.000",
+       "quantity_text": "10",
+       "unit_price_text": "20k"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "quantity": 10,
+       "unit_price_vnd": 20000,
+       "line_total_vnd": 45000
+      }
+     ],
+     "items_total_vnd": 45000,
+     "total_vnd": 1030000,
+     "totals_agree": false,
+     "total_difference_vnd": 985000,
+     "confidence": 89,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn.",
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"Tr\u00e0\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh +985000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng, nh\u01b0ng \u1ea3nh ch\u01b0a \u0111\u1ee7 r\u00f5 n\u00ean ch\u00eanh l\u1ec7ch n\u00e0y c\u00f3 th\u1ec3 do \u0111\u1ecdc sai d\u00f2ng ch\u1ee9 kh\u00f4ng ph\u1ea3i do bill; \u0111\u1ed1i chi\u1ebfu t\u1eebng d\u00f2ng v\u1edbi t\u1edd gi\u1ea5y tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/94",
+   "args": {
+    "raw": {
+     "document_type": "other",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "30.000",
+       "quantity_text": "2",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "45.000",
+       "quantity_text": "10",
+       "unit_price_text": null
+      },
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "45.000",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT",
+     "code": "NOT_A_RECEIPT"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/95",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "30.000",
+       "quantity_text": "1",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "30.000",
+       "quantity_text": "2",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "12,5k",
+       "quantity_text": "v\u00e0i",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "60k",
+       "quantity_text": "x2",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfheh8h0h0h0h0h0h0h0h0h0h0h0h0"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "INVALID_RECEIPT_ITEM",
+     "code": "INVALID_RECEIPT_ITEM"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/96",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "10.000",
+       "quantity_text": "1",
+       "unit_price_text": "abc"
+      },
+      {
+       "name": " ",
+       "line_total_text": "10.000",
+       "quantity_text": "x2",
+       "unit_price_text": "15.000"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfhehfh0hah3hdh7h0hah3hdh7h0ha"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/97",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "60k",
+       "quantity_text": "1",
+       "unit_price_text": null
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "1.000.000",
+       "quantity_text": "1",
+       "unit_price_text": null
+      },
+      {
+       "name": "M\u00f3n B",
+       "line_total_text": "30.000",
+       "quantity_text": "0",
+       "unit_price_text": "15.000"
+      },
+      {
+       "name": " ",
+       "line_total_text": "60k",
+       "quantity_text": "",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": "x",
+     "confidence": "$f:h3hfhdh2h8hfh5hch2h8hfh5hch2h8hf"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "RECEIPT_TOO_BLURRY",
+     "code": "RECEIPT_TOO_BLURRY"
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/98",
+   "args": {
+    "raw": {
+     "document_type": "receipt",
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "line_total_text": "30.000",
+       "quantity_text": "2",
+       "unit_price_text": "10.000"
+      }
+     ],
+     "total_text": "1.030.000",
+     "confidence": "$f:h3hfhehch7haheh1h4h7haheh1h4h7hb"
+    }
+   },
+   "result": {
+    "ok": {
+     "items": [
+      {
+       "name": "Tr\u00e0",
+       "quantity": 2,
+       "unit_price_vnd": 10000,
+       "line_total_vnd": 30000
+      }
+     ],
+     "items_total_vnd": 30000,
+     "total_vnd": 1030000,
+     "totals_agree": false,
+     "total_difference_vnd": 1000000,
+     "confidence": 89,
+     "needs_review": true,
+     "warnings": [
+      "\u1ea2nh bill ch\u01b0a \u0111\u1ee7 r\u00f5; h\u00e3y ki\u1ec3m tra t\u1eebng m\u00f3n v\u00e0 s\u1ed1 ti\u1ec1n tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn.",
+      "\u0110\u01a1n gi\u00e1 in tr\u00ean bill c\u1ee7a \"Tr\u00e0\" nh\u00e2n s\u1ed1 l\u01b0\u1ee3ng kh\u00f4ng kh\u1edbp th\u00e0nh ti\u1ec1n; gi\u1eef nguy\u00ean c\u1ea3 hai s\u1ed1.",
+      "T\u1ed5ng in tr\u00ean bill ch\u00eanh +1000000 \u0111\u1ed3ng so v\u1edbi t\u1ed5ng c\u00e1c d\u00f2ng, nh\u01b0ng \u1ea3nh ch\u01b0a \u0111\u1ee7 r\u00f5 n\u00ean ch\u00eanh l\u1ec7ch n\u00e0y c\u00f3 th\u1ec3 do \u0111\u1ecdc sai d\u00f2ng ch\u1ee9 kh\u00f4ng ph\u1ea3i do bill; \u0111\u1ed1i chi\u1ebfu t\u1eebng d\u00f2ng v\u1edbi t\u1edd gi\u1ea5y tr\u01b0\u1edbc khi x\u00e1c nh\u1eadn."
+     ]
+    }
+   }
+  },
+  {
+   "fn": "read_scanned_document",
+   "name": "fuzz/doc/99",
+   "args": {
+    "raw": {
+     "document_type": "price_list",
+     "items": [
+      {
+       "name": " ",
+       "line_total_text": "1.000.000",
+       "quantity_text": "2",
+       "unit_price_text": "10.000"
+      },
+      {
+       "name": "M\u00f3n A",
+       "line_total_text": "12,5k",
+       "quantity_text": "0",
+       "unit_price_text": "abc"
+      }
+     ],
+     "total_text": null,
+     "confidence": "$f:h3hfhehchchchchchchchchchchchchd"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReceiptError",
+     "message": "NOT_A_RECEIPT_PRICE_LIST",
+     "code": "NOT_A_RECEIPT_PRICE_LIST"
+    }
+   }
+  }
+ ]
+}

@@ -4,8 +4,6 @@ package chatassist
 
 import (
 	"context"
-	"io"
-	"net/http"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -37,11 +35,11 @@ func TestHeartbeatRenewsTheLeaseWhileTheJobRuns(t *testing.T) {
 	release := make(chan struct{})
 	var once sync.Once
 	letGo := func() { once.Do(func() { close(release) }) }
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		close(entered)
+	var vao sync.Once
+	f := setup(t, &mayGia{traLoi: "Synthetic slow answer", truocTraLoi: func(context.Context) {
+		vao.Do(func() { close(entered) })
 		<-release
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic slow answer"}})
-	})
+	}})
 	// Registered after setup, so it runs before the fake model server closes:
 	// a failed assertion must not leave the handler blocked forever.
 	t.Cleanup(letGo)
@@ -70,17 +68,15 @@ func TestHeartbeatRenewsTheLeaseWhileTheJobRuns(t *testing.T) {
 func TestCancelStopsARunningJobWithinABeat(t *testing.T) {
 	entered := make(chan struct{})
 	aborted := make(chan struct{})
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		// A real model service reads the request before it thinks; Go's
-		// server only notices a vanished client once the body is consumed.
-		_, _ = io.Copy(io.Discard, r.Body)
-		close(entered)
+	var vao sync.Once
+	f := setup(t, &mayGia{truocTraLoi: func(ctx context.Context) {
+		vao.Do(func() { close(entered) })
 		select {
-		case <-r.Context().Done():
+		case <-ctx.Done():
 			close(aborted)
 		case <-time.After(20 * time.Second):
 		}
-	})
+	}})
 	f.handler.WithWorker(fastWorker())
 	job := f.create(t)
 	done := make(chan error, 1)
@@ -112,11 +108,8 @@ func TestCancelStopsARunningJobWithinABeat(t *testing.T) {
 
 // Many consumers told to run the same job (a broker redelivers) run it once.
 func TestClaimByIDRunsANamedJobExactlyOnce(t *testing.T) {
-	var calls atomic.Int64
-	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
-		calls.Add(1)
-		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic once"}})
-	})
+	m := &mayGia{traLoi: "Synthetic once"}
+	f := setup(t, m)
 	older := f.create(t)
 	named := f.create(t)
 	var wg sync.WaitGroup
@@ -136,8 +129,8 @@ func TestClaimByIDRunsANamedJobExactlyOnce(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	if ran.Load() != 1 || calls.Load() != 1 {
-		t.Fatalf("ran=%d model calls=%d, want 1 and 1", ran.Load(), calls.Load())
+	if ran.Load() != 1 || m.SoLuot() != 1 {
+		t.Fatalf("ran=%d model calls=%d, want 1 and 1", ran.Load(), m.SoLuot())
 	}
 	var olderStatus, namedStatus string
 	ctx := context.Background()

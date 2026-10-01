@@ -40,18 +40,17 @@ cleanup_failed_start() {
 }
 trap cleanup_failed_start ERR
 run="chat-e2e-$(date +%s)-$$"
-# Optional deterministic inference seam for the E2E tier; empty in normal use.
-brain_env=""
-if [ -n "${CHAT_E2E_BRAIN_URL:-}" ]; then
-  case "$CHAT_E2E_BRAIN_URL" in http://127.0.0.1:*) brain_env=1 ;; *) echo "CHAT_E2E_BRAIN_URL phải là loopback" >&2; exit 2 ;; esac
+# Optional deterministic Gemini stand-in for the E2E tier (loopback only, so
+# the synthetic key can never reach a real provider); empty in normal use, and
+# the stack then runs keyless.
+gemini_env=""
+if [ -n "${CHAT_E2E_GEMINI_URL:-}" ]; then
+  case "$CHAT_E2E_GEMINI_URL" in http://127.0.0.1:*) gemini_env=1 ;; *) echo "CHAT_E2E_GEMINI_URL phải là loopback" >&2; exit 2 ;; esac
 fi
 free_port() { node -e 'const s=require("net").createServer();s.listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})'; }
 pg_port="$(free_port)"; api_port="$(free_port)"; core_port="$(free_port)"; live_port="$(free_port)"
 password="$(openssl rand -hex 24)"; identity="$(openssl rand -hex 32)"
-# The E2E tier needs the same internal token as its inference stub, so it may
-# supply one. Anything else gets a fresh random secret, as before.
-internal="${CHAT_E2E_INTERNAL_TOKEN:-$(openssl rand -hex 32)}"
-case "$internal" in *[!0-9a-fA-F]*|"") echo "internal token phải là hex" >&2; exit 2 ;; esac
+internal="$(openssl rand -hex 32)"
 image="rudi-chat-e2e-api:$run"
 docker build -q -t "$image" "$ROOT/services/api" >"$work/build.log" 2>&1
 docker run -d --rm --name "$run-pg" -e POSTGRES_DB=chat_e2e_test -e POSTGRES_USER=chat_e2e -e POSTGRES_PASSWORD="$password" -p "127.0.0.1:$pg_port:5432" postgres:16-alpine -c timezone=UTC > /dev/null
@@ -68,7 +67,13 @@ printf '%s\n' "$run-api" >> "$work/containers"
 # the change feed and the AI engine by default. It only needs the schema.
 MOBILE_DATABASE_URL="$dsn" "$work/core" migrate-chat >>"$work/migrate.log" 2>&1
 MOBILE_DATABASE_URL="$dsn" "$work/core" migrate-profile >>"$work/migrate.log" 2>&1
-docker run -d --rm --name "$run-core" --health-cmd "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:$core_port/healthz', timeout=2)\"" --network host --user "$(id -u):$(id -g)" -v "$work:$work" -e MOBILE_CORE_LISTEN="127.0.0.1:$core_port" -e MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$live_port" -e MOBILE_PYTHON_UPSTREAM="http://127.0.0.1:$api_port" -e MOBILE_AUTH_MODE=prod -e MOBILE_DATABASE_URL="$dsn" -e MOBILE_PERSON_ID_KEY="$identity" -e MOBILE_INTERNAL_TOKEN="$internal" -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 -e MOBILE_MEDIA_ROOT="$work/media" -e MOBILE_CORE_CANDIDATE_ROUTES=ported ${brain_env:+-e MOBILE_BRAIN_URL="$CHAT_E2E_BRAIN_URL"} "$image" "$work/core" serve >/dev/null
+# The Go engine's catalogue retrieval reads the retrieval index, not the
+# places table: build it over the seed catalogue, evaluate it, promote it.
+MOBILE_DATABASE_URL="$dsn" "$work/core" migrate-rag >>"$work/migrate.log" 2>&1
+rag_version="$(MOBILE_DATABASE_URL="$dsn" "$work/core" rag build 2>>"$work/migrate.log" | python3 -c 'import json,sys; print(json.load(sys.stdin)["phien_ban"])')"
+MOBILE_DATABASE_URL="$dsn" "$work/core" rag eval "$rag_version" >>"$work/migrate.log" 2>&1
+MOBILE_DATABASE_URL="$dsn" "$work/core" rag promote "$rag_version" >>"$work/migrate.log" 2>&1
+docker run -d --rm --name "$run-core" --health-cmd "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:$core_port/healthz', timeout=2)\"" --network host --user "$(id -u):$(id -g)" -v "$work:$work" -e MOBILE_CORE_LISTEN="127.0.0.1:$core_port" -e MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$live_port" -e MOBILE_PYTHON_UPSTREAM="http://127.0.0.1:$api_port" -e MOBILE_AUTH_MODE=prod -e MOBILE_DATABASE_URL="$dsn" -e MOBILE_PERSON_ID_KEY="$identity" -e MOBILE_INTERNAL_TOKEN="$internal" -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 -e MOBILE_MEDIA_ROOT="$work/media" -e MOBILE_CORE_CANDIDATE_ROUTES=ported ${gemini_env:+-e GEMINI_API_KEY=e2e-stub-key -e MOBILE_GEMINI_BASE_URL="$CHAT_E2E_GEMINI_URL"} "$image" "$work/core" serve >/dev/null
 printf '%s\n' "$run-core" >> "$work/containers"
 for _ in $(seq 1 60); do curl -fsS "http://127.0.0.1:$core_port/healthz" >/dev/null 2>&1 && break; sleep 1; done
 curl -fsS "http://127.0.0.1:$core_port/healthz" >/dev/null

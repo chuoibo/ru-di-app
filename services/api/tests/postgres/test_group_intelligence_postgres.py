@@ -40,7 +40,7 @@ import httpx
 import pytest
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_contextual_suggester, get_repository
+from app.api.deps import get_repository
 from app.api.main import create_app
 from app.api.repository import SqlAlchemyApiRepository
 from app.db.models import (
@@ -86,7 +86,7 @@ def _moment():
     return NOW + timedelta(seconds=next(_tick))
 
 
-def _http(session: Session, monkeypatch: pytest.MonkeyPatch, *, suggester=None):
+def _http(session: Session, monkeypatch: pytest.MonkeyPatch):
     async def run_sync_inline(function, *args, **kwargs):
         del kwargs
         return function(*args)
@@ -95,8 +95,6 @@ def _http(session: Session, monkeypatch: pytest.MonkeyPatch, *, suggester=None):
     monkeypatch.setattr("app.api.service._now", lambda: NOW)
     app = create_app()
     app.dependency_overrides[get_repository] = lambda: SqlAlchemyApiRepository(session)
-    if suggester is not None:
-        app.dependency_overrides[get_contextual_suggester] = lambda: suggester
     return app
 
 
@@ -417,178 +415,6 @@ class TestPreferenceProfileIsOneGroupsOwn:
 
         assert body["checkin_count"] == 1
         assert [row["section"] for row in body["sections"]] == ["food"]
-
-
-# --------------------------------------------------------------------------
-# F33 -- the contextual card
-# --------------------------------------------------------------------------
-
-
-def _refusing_suggester(digest, places):
-    """Records what the service handed the model, and declines to answer."""
-
-    _refusing_suggester.seen = digest
-    del places
-    return None
-
-
-class TestContextualSuggestionPermission:
-    def test_a_member_gets_an_answer(
-        self, postgres_session: Session, monkeypatch: pytest.MonkeyPatch
-    ):
-        context, owner = _group(postgres_session, "Team Đà Lạt")
-        _say(postgres_session, context, owner, "Chán quá")
-        _say(postgres_session, context, owner, "Đi đâu không?")
-
-        app = _http(
-            postgres_session, monkeypatch, suggester=lambda digest, places: None
-        )
-        with _Client(app) as client:
-            response = client.get(
-                f"/contexts/{context.id}/contextual-suggestion",
-                headers=_headers(owner.id),
-            )
-
-        assert response.status_code == 200
-        # The model declined, so the card declines. There is deliberately no
-        # written-in fallback: a plausible card served while the backend is
-        # down is a broken feature nobody can see is broken.
-        assert response.json()["reason"] == "unavailable"
-        assert response.json()["suggested"] is False
-
-    def test_a_stranger_is_refused_and_sees_no_part_of_the_conversation(
-        self, postgres_session: Session, monkeypatch: pytest.MonkeyPatch
-    ):
-        context, owner = _group(postgres_session, "Team Đà Lạt")
-        _say(postgres_session, context, owner, "bí mật của nhóm này")
-        _say(postgres_session, context, owner, "đừng kể ai")
-        stranger = _person(postgres_session, "Người lạ")
-
-        app = _http(
-            postgres_session, monkeypatch, suggester=lambda digest, places: None
-        )
-        with _Client(app) as client:
-            response = client.get(
-                f"/contexts/{context.id}/contextual-suggestion",
-                headers=_headers(stranger.id),
-            )
-
-        assert response.status_code == 403
-        assert "bí mật" not in response.text
-        assert "đừng kể ai" not in response.text
-
-    @pytest.mark.parametrize("state", [MembershipState.LEFT, MembershipState.INVITED])
-    def test_only_an_active_member_may_read_a_card_built_from_the_chat(
-        self,
-        postgres_session: Session,
-        monkeypatch: pytest.MonkeyPatch,
-        state: MembershipState,
-    ):
-        context, owner = _group(postgres_session, "Team Đà Lạt")
-        _say(postgres_session, context, owner, "Chán quá")
-        _say(postgres_session, context, owner, "Đi đâu không?")
-        other = _person(postgres_session, "Chưa vào")
-        _join(postgres_session, context, other, state)
-
-        app = _http(
-            postgres_session, monkeypatch, suggester=lambda digest, places: None
-        )
-        with _Client(app) as client:
-            response = client.get(
-                f"/contexts/{context.id}/contextual-suggestion",
-                headers=_headers(other.id),
-            )
-
-        assert response.status_code == 403
-
-
-class TestContextualSuggestionEvidence:
-    def test_the_response_carries_counts_and_not_the_conversation(
-        self, postgres_session: Session, monkeypatch: pytest.MonkeyPatch
-    ):
-        context, owner = _group(postgres_session, "Team Đà Lạt")
-        friend = _person(postgres_session, "Kiệt")
-        _join(postgres_session, context, friend)
-        _say(postgres_session, context, owner, "chuyện riêng của tụi mình")
-        _say(postgres_session, context, friend, "ừ đừng đăng lên đâu")
-
-        app = _http(
-            postgres_session, monkeypatch, suggester=lambda digest, places: None
-        )
-        with _Client(app) as client:
-            response = client.get(
-                f"/contexts/{context.id}/contextual-suggestion",
-                headers=_headers(owner.id),
-            )
-
-        body = response.json()
-        assert body["basis"] == {
-            "message_count": 2,
-            "speaker_count": 2,
-            "member_count": 2,
-        }
-        assert "chuyện riêng" not in response.text
-        assert str(owner.id) not in response.text
-
-    def test_the_model_is_handed_the_lines_and_never_an_identity(
-        self, postgres_session: Session, monkeypatch: pytest.MonkeyPatch
-    ):
-        """The conversation reaching the model *is* the feature. That it
-        reaches the model without names attached is the constraint."""
-
-        context, owner = _group(postgres_session, "Team Đà Lạt")
-        _say(postgres_session, context, owner, "Chán quá")
-        _say(postgres_session, context, owner, "Đi đâu không?")
-
-        app = _http(postgres_session, monkeypatch, suggester=_refusing_suggester)
-        with _Client(app) as client:
-            client.get(
-                f"/contexts/{context.id}/contextual-suggestion",
-                headers=_headers(owner.id),
-            )
-
-        seen = _refusing_suggester.seen
-        assert seen["recent_lines"] == ["Chán quá", "Đi đâu không?"]
-        assert "author_id" not in seen
-        assert str(owner.id) not in repr(seen)
-
-    def test_a_silent_group_is_not_interrupted(
-        self, postgres_session: Session, monkeypatch: pytest.MonkeyPatch
-    ):
-        context, owner = _group(postgres_session, "Team Đà Lạt")
-        _say(postgres_session, context, owner, "Chào cả nhà")
-
-        def _never_called(digest, places):
-            raise AssertionError("the model must not be called for a silent group")
-
-        app = _http(postgres_session, monkeypatch, suggester=_never_called)
-        with _Client(app) as client:
-            body = client.get(
-                f"/contexts/{context.id}/contextual-suggestion",
-                headers=_headers(owner.id),
-            ).json()
-
-        assert body["reason"] == "no_conversation"
-        assert body["suggested"] is False
-
-    def test_another_groups_chat_is_not_read_into_this_card(
-        self, postgres_session: Session, monkeypatch: pytest.MonkeyPatch
-    ):
-        mine, owner = _group(postgres_session, "Nhóm mình")
-        theirs, _ = _group(postgres_session, "Nhóm khác")
-        _join(postgres_session, theirs, owner)
-        _say(postgres_session, theirs, owner, "câu của nhóm khác")
-        _say(postgres_session, theirs, owner, "câu thứ hai của nhóm khác")
-
-        app = _http(postgres_session, monkeypatch, suggester=_refusing_suggester)
-        with _Client(app) as client:
-            body = client.get(
-                f"/contexts/{mine.id}/contextual-suggestion",
-                headers=_headers(owner.id),
-            ).json()
-
-        assert body["basis"]["message_count"] == 0
-        assert body["reason"] == "no_conversation"
 
 
 # --------------------------------------------------------------------------

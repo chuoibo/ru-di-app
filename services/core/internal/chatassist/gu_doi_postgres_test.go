@@ -33,8 +33,7 @@ import (
 // own pool.
 func setupCapGu(t *testing.T, kich ...llm.Buoc) nhomGo {
 	t.Helper()
-	brain := &nepGia{}
-	f := setup(t, brain.serve)
+	f := setup(t, nil)
 	if err := aimetrics.Migrate(context.Background(), f.pool); err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +47,7 @@ func setupCapGu(t *testing.T, kich ...llm.Buoc) nhomGo {
 	}
 	f.handler.WithNhomEngine(engine)
 	f.exec(t, `UPDATE contexts SET kind='pair',pair_key=$2 WHERE id=$1`, f.context, f.person+":"+f.peer)
-	return nhomGo{f: f, brain: brain, stub: stub}
+	return nhomGo{f: f, stub: stub}
 }
 
 // kichGu is a couple's turn on the tool path: the router, the model's call

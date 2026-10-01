@@ -54,8 +54,10 @@ Stack `e2e_slice --keep` chạy **không có** `MOBILE_AUTH_MODE` (tức `prod`,
 ADR-0014), SMS sender là `log`, và `MOBILE_OTP_DEBUG_CODE=000000` — mã debug chỉ
 hợp lệ với sender `log`; có gateway thật mà còn mã debug thì API từ chối khởi
 động (ADR-0016). Không có khoá Gemini: AI trong chat nói thật là chưa cấu hình;
-muốn AI thật thì đặt `GEMINI_API_KEY` trong môi trường trước khi dựng stack và
-chạy harness với `--ai` (kiểm khoá trước, khoá chết là ĐỎ).
+muốn AI thật thì đặt `AGY_PROXY_URL`/`AGY_PROXY_KEY` (hoặc `GEMINI_API_KEY`) cho
+`core` trước khi dựng stack — từ ADR-0051 mọi lời gọi model chạy trong `core`,
+`api` không cần khoá — và chạy harness với `--ai` (kiểm khoá trước, khoá chết là
+ĐỎ).
 
 Seed là script Node dùng chính module client đã test (`apps/mobile/tools/seed-rudi-world.mjs`);
 mỗi bước đọc trước ghi sau nên chạy lại an toàn. Số điện thoại của 8 người là

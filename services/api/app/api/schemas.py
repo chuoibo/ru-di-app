@@ -1285,7 +1285,7 @@ class SuggestionStop(ApiModel):
 
     The app prints `reason` under the words AI MATCH and prints the badge from
     `verdict`, so half a pair renders as an endorsement nobody gave. They are
-    tied in `app/domain/suggestion.py`, at the single point every stop passes
+    tied in the Go core's `internal/domain/suggestion`, at the single point every stop passes
     through, rather than at each place that builds one of these.
     """
 

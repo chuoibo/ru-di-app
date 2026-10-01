@@ -1,12 +1,13 @@
-# WAI · the last two AI reads: the reel off an album, and faces in one photo.
+# WAI · faces in one photo, the last AI read left on the Python brain.
 #
-#   GET  /contexts/{id}/albums/{outing_id}/reel
 #   POST /contexts/{id}/photos/{photo_id}/face-boxes
 #
-# Both charge a rate limit BEFORE doing the expensive thing, and both say so in
-# the same words: «a 429 raised afterwards has already spent the CPU it was
-# refusing». A port that charged afterwards answers the same 429 with the same
-# body, having already paid -- no happy path and no single refusal can see it.
+# The reel used to share this file. ADR-0051 moved its model call into the Go
+# core and deleted the Python side, so there is nothing left to compare it
+# with; its steps went with it (its Go tests: internal/routes, goiy).
+#
+# `face-boxes` charges its rate limit BEFORE doing the expensive thing: «a 429
+# raised afterwards has already spent the CPU it was refusing».
 #
 # `face-boxes` has NO REQUEST BODY, deliberately: there is no field through
 # which a caller could name a person, supply a candidate list or pick a
@@ -15,24 +16,12 @@
 # is a property, and a port that started reading a body would pass every test
 # that never sent one.
 #
-# The reel inherits the album's check order, so the anti-oracle pair from
-# GET-context-albums applies here too and is repeated: a stranger asking with a
-# real outing id and with an invented one must get the same answer, or the pair
-# becomes a directory of which trips exist.
-#
-# WHAT THIS FILE PROVES: the refusals, the gate, and the wire on the branch
-# where no model answered -- the parity stacks hold no Gemini key, so the reel
-# takes its unavailable path deterministically on both sides.
-#
-# WHAT IT CANNOT PROVE: a real reel picked by a real model, and real faces found
-# by a real cascade. The first needs a key and a non-deterministic reply. The
-# second needs a photograph with a face in it, and the harness generates images
-# from a seed -- they are coloured noise, so the detector finds nothing on both
-# sides and that agreement is about the empty answer, not about detection. The
-# route cards say both.
+# WHAT IT CANNOT PROVE: real faces found by a real cascade. That needs a
+# photograph with a face in it, and the harness generates images from a seed
+# -- they are coloured noise, so the detector finds nothing on both sides and
+# that agreement is about the empty answer, not about detection.
 id: wai/albums/get-reel-and-face-boxes
 routes:
-  - 'GET /contexts/{context_id}/albums/{outing_id}/reel'
   - 'POST /contexts/{context_id}/photos/{photo_id}/face-boxes'
 auth_mode: dev
 personas:
@@ -68,23 +57,11 @@ steps:
       body_raw: '{"display_name":"Người ngoài (dữ liệu mẫu)"}'
 
   # --- refusals before anything exists ------------------------------------
-  - id: reel_anonymous
-    as: anonymous
-    request:
-      method: GET
-      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/albums/abcdefab-cdef-4abc-8def-abcdefabcdef/reel'
-
   - id: faces_anonymous
     as: anonymous
     request:
       method: POST
       path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/photos/abcdefab-cdef-4abc-8def-abcdefabcdef/face-boxes'
-
-  - id: reel_non_uuid_outing
-    as: owner
-    request:
-      method: GET
-      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/albums/khong-phai-uuid/reel'
 
   - id: faces_non_uuid_photo
     as: owner
@@ -166,46 +143,6 @@ steps:
     bind:
       photo: {from: body, pointer: /id, class: uuid}
 
-  # --- the reel -----------------------------------------------------------
-  - id: reel_on_an_empty_album
-    as: owner
-    request:
-      method: GET
-      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
-
-  - id: reel_read_by_the_mate
-    as: mate
-    request:
-      method: GET
-      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
-
-  # The same reader twice: whatever the refusal is, it must not change between
-  # two reads. A limiter charged in the wrong order would differ on the second.
-  - id: reel_read_again
-    as: owner
-    request:
-      method: GET
-      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
-
-  # THE ORACLE PAIR, inherited from the album's check order.
-  - id: oracle_stranger_reel_with_a_real_outing
-    as: stranger
-    request:
-      method: GET
-      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
-
-  - id: oracle_stranger_reel_with_an_invented_outing
-    as: stranger
-    request:
-      method: GET
-      path: '/contexts/{{ctx}}/albums/abcdefab-cdef-4abc-8def-abcdefabcdef/reel'
-
-  - id: member_passes_another_groups_outing_to_the_reel
-    as: owner
-    request:
-      method: GET
-      path: '/contexts/{{ctx}}/albums/{{trip_other}}/reel'
-
   # --- faces --------------------------------------------------------------
   - id: faces_on_the_groups_own_photo
     as: owner
@@ -258,23 +195,9 @@ steps:
       path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes?detector=khac&limit=1'
 
   # --- framework shapes ---------------------------------------------------
-  - id: reel_post_not_allowed
-    as: owner
-    request:
-      method: POST
-      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{}'
-
   - id: faces_get_not_allowed
     as: owner
     request:
       method: GET
       path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes'
 
-  - id: reel_trailing_slash
-    as: owner
-    request:
-      method: GET
-      path: '/contexts/{{ctx}}/albums/{{trip}}/reel/'

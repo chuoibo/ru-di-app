@@ -305,20 +305,6 @@ def test_a_stranger_to_the_group_is_refused_before_the_row_is_read(client):
     assert response.status_code == 403, response.text
 
 
-def test_an_expense_draft_cannot_be_read_from_a_deleted_message(client):
-    posted = _text(client, "bún bò 50k").json()
-    client.delete(
-        f"/contexts/{CONTEXT_ID}/messages/{posted['id']}",
-        headers=actor_headers(actor_id=MEMBER_ID),
-    )
-    response = client.post(
-        f"/contexts/{CONTEXT_ID}/messages/{posted['id']}/expense-draft",
-        headers=actor_headers(actor_id=MEMBER_ID),
-    )
-    assert response.status_code == 409, response.text
-    assert response.json()["code"] == "message_deleted"
-
-
 def test_a_conversation_list_row_reads_sticker_and_deletion_as_labels():
     """The preview a list row shows never carries the words of a deleted row."""
     from app.api.repository import _message_preview

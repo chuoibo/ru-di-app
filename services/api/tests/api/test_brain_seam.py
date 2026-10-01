@@ -107,92 +107,17 @@ def test_ready_answers_with_the_token(brain_client):
     assert response.json() == {"status": "ready"}
 
 
-def test_achievement_brain_returns_only_offered_candidate_ids(
-    brain_client, monkeypatch
-):
-    from app.api.routes import brain
-
-    seen = []
-
-    def fake_model(facts, candidate_ids, selected_route, choice_history):
-        seen.append((facts, candidate_ids, selected_route, choice_history))
-        return {
-            "candidate_ids": ["invented", "open_map", "open_map", "many_turns"],
-            "line": "Một con đường mới đang mở trước những dấu chân của bạn.",
-        }
-
-    monkeypatch.setattr(brain, "gemini_achievement_routes", fake_model, raising=False)
-    client, _ = brain_client
-    response = client.post(
-        "/internal/brain/v1/achievement-routes",
-        headers={INTERNAL_TOKEN_HEADER: TEST_TOKEN},
-        json={
-            "facts": {"checkins": 2, "distinct_destinations": 2},
-            "candidate_ids": ["open_map", "many_turns"],
-            "selected_route": "dau_chan",
-            "choice_history": ["ky_niem", "dau_chan"],
-        },
-    )
-    assert response.status_code == 200
-    assert response.json() == {
-        "candidate_ids": ["open_map", "many_turns"],
-        "line": "Một con đường mới đang mở trước những dấu chân của bạn.",
-    }
-    assert seen == [
-        (
-            {"checkins": 2, "distinct_destinations": 2},
-            ["open_map", "many_turns"],
-            "dau_chan",
-            ["ky_niem", "dau_chan"],
-        )
-    ]
-
-
-def test_diary_brain_requires_internal_authority(brain_client, monkeypatch):
-    client, _app = brain_client
-    path = "/internal/brain/v1/diary"
-    assert client.post(path, json={}).status_code == 401
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    response = client.post(
-        path,
-        headers={INTERNAL_TOKEN_HEADER: TEST_TOKEN},
-        json={"source": {}, "images": []},
-    )
-    assert response.status_code == 502
-    assert response.json() == {"code": "diary_ai_unavailable"}
-
-
-def test_capabilities_require_internal_token_and_never_return_key(
-    brain_client, monkeypatch
-):
-    client, _app = brain_client
-    path = "/internal/brain/v1/capabilities"
-    assert client.post(path, json={}).status_code == 401
-    headers = {INTERNAL_TOKEN_HEADER: TEST_TOKEN}
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    unavailable = client.post(path, headers=headers, json={})
-    assert unavailable.status_code == 200
-    assert unavailable.json() == {
-        "plan": {"available": False, "reason": "provider_not_configured"}
-    }
-    monkeypatch.setenv("GEMINI_API_KEY", "synthetic-inference-configuration")
-    configured = client.post(path, headers=headers, json={})
-    assert configured.status_code == 200
-    assert configured.json() == {"plan": {"available": True, "reason": None}}
-    assert "synthetic-inference-configuration" not in configured.text
-
-
 def test_idempotency_key_does_not_reserve_a_brain_call(brain_client):
     """A write key on /internal must not open an idempotency transaction."""
 
     client, _app = brain_client
     response = client.post(
-        "/internal/brain/v1/place-search",
+        "/internal/brain/v1/face-boxes",
         headers={
             INTERNAL_TOKEN_HEADER: TEST_TOKEN,
             "Idempotency-Key": "brain-must-not-touch-the-store",
         },
-        json={"query": "x"},
+        json={"image": 5},
     )
     assert response.status_code == 422
     assert response.json() == {"code": "brain_request_invalid"}

@@ -126,7 +126,7 @@ func geoCall(t *testing.T, h http.Handler, method, path string, body any) (int, 
 // and a centroid was written into the group's wall for good.
 func TestACheckinStoresOnlyAPointThatSaysWhereThePlaceIs(t *testing.T) {
 	pool := geoSchema(t)
-	h := handlerOn(t, pool)
+	h := handlerOn(t, pool, nil)
 	for _, p := range geoPlaces {
 		code, out := geoCall(t, h, http.MethodPost, "/contexts/"+geoContext+"/checkins", map[string]any{"place_id": p.id})
 		if code != 201 {
@@ -163,7 +163,7 @@ func placeIDs(t *testing.T, layer any, key string) []string {
 // trending and recommended layers would carry all six if a centroid counted.
 func TestTheGroupMapPinsOnlyPlacesWhosePointSaysWhereTheyAre(t *testing.T) {
 	pool := geoSchema(t)
-	h := handlerOn(t, pool)
+	h := handlerOn(t, pool, nil)
 	code, out := geoCall(t, h, http.MethodGet, "/contexts/"+geoContext+"/map", nil)
 	if code != 200 {
 		t.Fatalf("%d %v", code, out)
@@ -184,7 +184,7 @@ func TestTheGroupMapPinsOnlyPlacesWhosePointSaysWhereTheyAre(t *testing.T) {
 // Quận 1 and Quận 7: a centroid between them would be the «fairest» spot.
 func TestAMeetingPointIsNeverACentroid(t *testing.T) {
 	pool := geoSchema(t)
-	h := handlerOn(t, pool)
+	h := handlerOn(t, pool, nil)
 	code, out := geoCall(t, h, http.MethodPost, "/contexts/"+geoContext+"/meet",
 		map[string]any{"from_areas": []string{"hcm-quan-1", "hcm-quan-7"}})
 	if code != 200 {

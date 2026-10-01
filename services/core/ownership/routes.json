@@ -857,11 +857,11 @@
       "group": "messages",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "chat_expense_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1424,11 +1424,11 @@
       "group": "places",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "search_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1515,11 +1515,11 @@
       "group": "receipts",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "receipt_scan_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1531,11 +1531,11 @@
       "group": "screenshots",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "screenshot_scan_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1547,11 +1547,11 @@
       "group": "suggestions",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "suggestion_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1563,11 +1563,11 @@
       "group": "suggestions",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "contextual_suggestion_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
@@ -1774,11 +1774,11 @@
       "group": "albums",
       "class": "ai",
       "owner": "go",
-      "python": "live",
+      "python": "frozen",
       "in_memory": [
         "reel_limiter"
       ],
-      "state": "LIVE-GO",
+      "state": "PY-DELETED",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {

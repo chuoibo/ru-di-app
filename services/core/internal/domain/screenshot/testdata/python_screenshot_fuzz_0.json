@@ -1,0 +1,2905 @@
+{
+ "generator": "scripts/render_domain_ai_goldens.py",
+ "module": "app.domain.screenshot",
+ "mode": "screenshot-fuzz-0",
+ "python": "3.12.11",
+ "seed": 23,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 150
+ },
+ "cases": [
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/0",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "Highlands",
+     "total_text": "45k",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/1",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "12.3456",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/2",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "45.000",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "banking",
+     "merchant": "B\u00e1nh m\u00ec",
+     "total_vnd": 45000,
+     "occurred_on": "2026-01-31",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/3",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45k",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/4",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/5",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "12.3456",
+     "occurred_on": "x",
+     "sharedWith": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/6",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Highlands",
+     "total_text": "12.3456",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/7",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "",
+     "total_text": "45k",
+     "occurred_on": "2024-02-29",
+     "splitBetween": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/8",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "0",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/9",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Highlands",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-13-01",
+     "person_id": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/10",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "abc",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/11",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Highlands",
+     "total_text": "45k",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/12",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Highlands",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/13",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45k",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/14",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "  ",
+     "total_text": "12.3456",
+     "occurred_on": "2026-13-01",
+     "confidence": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/15",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/16",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2024-02-29",
+     "x_payer_y": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/17",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "1,5tr",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/18",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "45k",
+     "occurred_on": "2026-02-29",
+     "x_payer_y": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/19",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "1,5tr",
+     "occurred_on": null,
+     "split_with": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/20",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "  ",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/21",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "",
+     "total_text": "0",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/22",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "  ",
+     "total_text": "abc",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/23",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "12.3456",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/24",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "  ",
+     "total_text": "\u20ab99.000",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/25",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "  ",
+     "total_text": "abc",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/26",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "",
+     "total_text": "45.000",
+     "occurred_on": "2026-02-29",
+     "\ufb00": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/27",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Highlands",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-01-31",
+     "memb\u0435r": "x"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "shopeefood",
+     "merchant": "Highlands",
+     "total_vnd": 99000,
+     "occurred_on": "2026-01-31",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/28",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Highlands",
+     "total_text": "45k",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "Highlands",
+     "total_vnd": 45000,
+     "occurred_on": "2026-01-31",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/29",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "abc",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/30",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  ",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/31",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  ",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/32",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "abc",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/33",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "",
+     "total_text": "0",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/34",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "1,5tr",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "banking",
+     "merchant": "Qu\u00e1n A",
+     "total_vnd": 1500000,
+     "occurred_on": null,
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/35",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "45.000",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/36",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Highlands",
+     "total_text": "12.3456",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/37",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Highlands",
+     "total_text": "12.3456",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/38",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "abc",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/39",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/40",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "",
+     "total_text": "12.3456",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/41",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Highlands",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/42",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/43",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "45k",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/44",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "  ",
+     "total_text": "45k",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/45",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "",
+     "total_text": "12.3456",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/46",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "",
+     "total_text": "0",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/47",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "  ",
+     "total_text": "45.000",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/48",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Highlands",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/49",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45.000",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/50",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Highlands",
+     "total_text": "45.000",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "grab",
+     "merchant": "Highlands",
+     "total_vnd": 45000,
+     "occurred_on": "2026-01-31",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/51",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "  ",
+     "total_text": "1,5tr",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/52",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/53",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Highlands",
+     "total_text": "1,5tr",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/54",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Highlands",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/55",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "  ",
+     "total_text": "12.3456",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/56",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/57",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "",
+     "total_text": "0",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/58",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45.000",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/59",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "  ",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/60",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "abc",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/61",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Highlands",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/62",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "0",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/63",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "45k",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/64",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "abc",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/65",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "12.3456",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/66",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Highlands",
+     "total_text": "0",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/67",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/68",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "x",
+     "\ufb00": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/69",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "Highlands",
+     "total_text": "45k",
+     "occurred_on": "2026-13-01",
+     "who_paid": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/70",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "  ",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/71",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Highlands",
+     "total_text": "abc",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/72",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "",
+     "total_text": "abc",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/73",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  ",
+     "total_text": "0",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/74",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "abc",
+     "occurred_on": "2026-02-29",
+     "source ": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/75",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45k",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/76",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "abc",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/77",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "1,5tr",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/78",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "0",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/79",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "0",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/80",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "",
+     "total_text": "\u20ab99.000",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/81",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "45.000",
+     "occurred_on": "x",
+     "People": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/82",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "12.3456",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/83",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "",
+     "total_text": "\u20ab99.000",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/84",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "12.3456",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/85",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "0",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/86",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "0",
+     "occurred_on": "2026-01-31",
+     "pa\u00dfby": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/87",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-13-01",
+     "shared_by": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/88",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "",
+     "total_text": "1,5tr",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/89",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "0",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/90",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "1,5tr",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/91",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "banking",
+     "merchant": "Qu\u00e1n A",
+     "total_vnd": 1500000,
+     "occurred_on": "2026-01-31",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/92",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "receipt",
+     "merchant": "B\u00e1nh m\u00ec",
+     "total_vnd": 1500000,
+     "occurred_on": "2026-01-31",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/93",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "  ",
+     "total_text": "12.3456",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/94",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  ",
+     "total_text": "0",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/95",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45.000",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/96",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Highlands",
+     "total_text": "12.3456",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/97",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Highlands",
+     "total_text": "abc",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/98",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/99",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "0",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/100",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45.000",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/101",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Highlands",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/102",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "  ",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-02-29",
+     "attendee": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/103",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/104",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Highlands",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/105",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "12.3456",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/106",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "12.3456",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/107",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "45k",
+     "occurred_on": "2026-02-29",
+     "paid_by": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/108",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/109",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "  ",
+     "total_text": "45k",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/110",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "Highlands",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "banking",
+     "merchant": "Highlands",
+     "total_vnd": 1500000,
+     "occurred_on": "2026-01-31",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/111",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "  ",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/112",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "12.3456",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/113",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "45.000",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/114",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "",
+     "total_text": "45k",
+     "occurred_on": null,
+     "person_id": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/115",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/116",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "  ",
+     "total_text": "45k",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/117",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/118",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/119",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "",
+     "total_text": "45.000",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/120",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/121",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "0",
+     "occurred_on": "2024-02-29",
+     "beneficiary": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/122",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "1,5tr",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/123",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "  ",
+     "total_text": "45.000",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/124",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "  ",
+     "total_text": "45k",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/125",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "abc",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/126",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "  ",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/127",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "  ",
+     "total_text": "\u20ab99.000",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/128",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Highlands",
+     "total_text": "0",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/129",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "  ",
+     "total_text": "1,5tr",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/130",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "",
+     "total_text": "1,5tr",
+     "occurred_on": "2024-02-29",
+     "shared_by": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/131",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "  ",
+     "total_text": "1,5tr",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/132",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45.000",
+     "occurred_on": null,
+     "PaidBy": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/133",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "",
+     "total_text": "45.000",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/134",
+   "args": {
+    "raw": {
+     "source": "banking",
+     "merchant": "",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/135",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "  ",
+     "total_text": "abc",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/136",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45k",
+     "occurred_on": null,
+     "payer": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/137",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "  ",
+     "total_text": "45k",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/138",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Highlands",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/139",
+   "args": {
+    "raw": {
+     "source": "",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45.000",
+     "occurred_on": "2026-13-01"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/140",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": "Highlands",
+     "total_text": "2 tr\u0103m",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/141",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Highlands",
+     "total_text": "45.000",
+     "occurred_on": "2026-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/142",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "",
+     "total_text": "0",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/143",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "Highlands",
+     "total_text": "12.3456",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/144",
+   "args": {
+    "raw": {
+     "source": "other",
+     "merchant": "Highlands",
+     "total_text": "abc",
+     "occurred_on": "2026-01-31"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "NOT_A_TRANSACTION",
+     "code": "NOT_A_TRANSACTION"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/145",
+   "args": {
+    "raw": {
+     "source": "zalopay",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45.000",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/146",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "",
+     "total_text": "\u20ab99.000",
+     "occurred_on": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/147",
+   "args": {
+    "raw": {
+     "source": "shopeefood",
+     "merchant": "",
+     "total_text": "45k",
+     "occurred_on": "2026-13-01",
+     "sharedWith": "x"
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "MODEL_NAMED_A_PERSON",
+     "code": "MODEL_NAMED_A_PERSON"
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/148",
+   "args": {
+    "raw": {
+     "source": "receipt",
+     "merchant": "Qu\u00e1n A",
+     "total_text": "45k",
+     "occurred_on": "2024-02-29"
+    }
+   },
+   "result": {
+    "ok": {
+     "source": "receipt",
+     "merchant": "Qu\u00e1n A",
+     "total_vnd": 45000,
+     "occurred_on": "2024-02-29",
+     "needs_review": true
+    }
+   }
+  },
+  {
+   "fn": "read_screenshot",
+   "name": "fuzz/149",
+   "args": {
+    "raw": {
+     "source": "grab",
+     "merchant": " B\u00e1nh m\u00ec ",
+     "total_text": "abc",
+     "occurred_on": null
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ScreenshotError",
+     "message": "UNREADABLE",
+     "code": "UNREADABLE"
+    }
+   }
+  }
+ ]
+}

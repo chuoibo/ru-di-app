@@ -11,6 +11,8 @@ chúng là các phán quyết QA trong `docs/archive/`. Để ở `scripts/` th�
 Giữ lại chứ không xoá vì một bảng đột biến là thứ khó dựng lại: nó ghi **đúng
 mutation nào làm cổng đỏ**, và đó là câu trả lời cho "cổng này có mù không".
 
-Ba file cùng loại **không** nằm ở đây vì còn caller thật trong `tests/qa/`:
-`scripts/mutation_cong_cua_so_model.py`, `scripts/mutation_rd_do_f22.py`,
-`scripts/qc/repro_bill_mo_gemini_bia_mon.py`.
+Hai file cùng loại **không** nằm ở đây vì còn caller thật trong `tests/qa/`:
+`scripts/mutation_rd_do_f22.py`, `scripts/qc/repro_bill_mo_gemini_bia_mon.py`.
+`mutation_cong_cua_so_model.py` vào đây ngày 2026-10-01: ADR-0051 xoá cả cổng
+nó đột biến (`test_contextual_suggestion_rate_limit.py`) lẫn caller cuối cùng
+(`tests/qa/qa-tt-0030/dot_bien_cua_khong_ai_thay.py`).

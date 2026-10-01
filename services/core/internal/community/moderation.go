@@ -2,15 +2,15 @@ package community
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"mobile/services/core/internal/aiharness/congdong"
 	"mobile/services/core/internal/media/storage"
-	"mobile/services/core/internal/pyjson"
 )
 
 type verdict struct {
@@ -33,37 +33,11 @@ func decision(v verdict, comment, hasMedia bool) (string, string) {
 	}
 	return "approved", ""
 }
-func (h *Handler) infer(ctx context.Context, action string, input any, output any) error {
-	if h.brain == nil {
-		return errors.New("community_inference_unavailable")
-	}
-	b, err := json.Marshal(input)
-	if err != nil {
-		return err
-	}
-	v, err := pyjson.Loads(b)
-	if err != nil {
-		return err
-	}
-	answer, err := h.brain.PostJSONContext(ctx, action, v)
-	if err != nil {
-		return err
-	}
-	b, err = pyjson.Dumps(answer)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(b, output)
-}
 
-type inferenceMedia struct {
-	ID   string `json:"id"`
-	Type string `json:"content_type"`
-	Data string `json:"data"`
-}
-
-func (h *Handler) inferenceMedia(ctx context.Context, ids []string) ([]inferenceMedia, error) {
-	out := []inferenceMedia{}
+// inferenceMedia loads the submission's attachments for a reading: image
+// bytes, and only the type of a video, which the model is never sent.
+func (h *Handler) inferenceMedia(ctx context.Context, ids []string) ([]congdong.Media, error) {
+	out := []congdong.Media{}
 	st, err := storage.New()
 	if err != nil {
 		return nil, err
@@ -75,6 +49,10 @@ func (h *Handler) inferenceMedia(ctx context.Context, ids []string) ([]inference
 		if err != nil {
 			return nil, err
 		}
+		if !strings.HasPrefix(mime, "image/") {
+			out = append(out, congdong.Media{MIME: mime})
+			continue
+		}
 		b, e := st.Read(key)
 		if e != nil {
 			return nil, e
@@ -83,7 +61,7 @@ func (h *Handler) inferenceMedia(ctx context.Context, ids []string) ([]inference
 		if total > 64<<20 {
 			return nil, no(422, "media_bundle_too_large")
 		}
-		out = append(out, inferenceMedia{id, mime, base64.StdEncoding.EncodeToString(b)})
+		out = append(out, congdong.Media{MIME: mime, Data: b})
 	}
 	return out, nil
 }
@@ -149,13 +127,17 @@ func (h *Handler) workOne(ctx context.Context) {
 		_, _ = h.pool.Exec(ctx, `UPDATE community_jobs SET done=true WHERE id=$1`, job)
 		return
 	}
-	var media []inferenceMedia
+	var media []congdong.Media
 	if err == nil {
 		media, err = h.inferenceMedia(ctx, ids)
 	}
 	var v verdict
 	if err == nil {
-		err = h.infer(ctx, "community-moderate", map[string]any{"body": body, "comment": comment != nil, "media": media}, &v)
+		// No model on this process is an outage like any other: the job
+		// waits and retries, nothing is approved.
+		var d congdong.Doc
+		d, err = congdong.Duyet(ctx, h.ai.Luot(1), body, comment != nil, media)
+		v = verdict(d)
 	}
 	if err != nil {
 		_, _ = h.pool.Exec(ctx, `UPDATE community_jobs SET lease_until=NULL,available_at=clock_timestamp()+interval '1 minute' WHERE id=$1`, job)
@@ -469,11 +451,8 @@ func (h *Handler) nep(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	var out struct {
-		Draft string `json:"draft"`
-	}
-	err = h.infer(r.Context(), "community-nep", map[string]any{"excerpt": in.Excerpt, "request": in.Request}, &out)
-	if err != nil || out.Draft == "" || len(out.Draft) > 20000 {
+	draft, err := congdong.Nep(r.Context(), h.ai.Luot(1), in.Excerpt, in.Request)
+	if err != nil || draft == "" || len(draft) > 20000 {
 		fail(w, no(503, "nep_unavailable"))
 		return
 	}
@@ -488,7 +467,7 @@ func (h *Handler) nep(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	commit(w, r, tx, 200, map[string]any{"draft": out.Draft, "ai_generated": true})
+	commit(w, r, tx, 200, map[string]any{"draft": draft, "ai_generated": true})
 }
 func (h *Handler) cleanup(ctx context.Context) {
 	_, _ = h.pool.Exec(ctx, `DELETE FROM community_media m WHERE m.created_at<clock_timestamp()-interval '1 day' AND NOT EXISTS(SELECT 1 FROM community_revisions WHERE m.id=ANY(media_ids)) AND NOT EXISTS(SELECT 1 FROM community_comment_drafts WHERE media_id=m.id) AND NOT EXISTS(SELECT 1 FROM community_comment_meta WHERE media_id=m.id)`)

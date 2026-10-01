@@ -15,36 +15,31 @@ import (
 // The review of slices 9/11 against a real database: the group engine's
 // guards that only the database can exercise.
 
-// A brain host says `hoi` is not available, whatever else it serves (the
-// reviewer's mutant G9: capabilities advertised hoi wherever plan was
-// available).
-func TestKhaNangBrainKhongCoHoi(t *testing.T) {
+// A host with a model offers every command, `hoi` included (the reviewer's
+// mutant G9 once advertised hoi where it could not run).
+func TestKhaNangCoMayCoHoi(t *testing.T) {
 	f := setup(t, nil)
 	w := f.request("GET", "/contexts/"+f.context+"/chat-capabilities", f.token, nil)
 	requireCode(t, w, 200)
 	b := w.Body.String()
-	if !strings.Contains(b, `"plan":{"available":true,"reason":null}`) {
-		t.Fatalf("identity: the brain host must still offer plan: %s", b)
-	}
-	if !strings.Contains(b, `"hoi":{"available":false,"reason":"provider_unavailable"}`) {
-		t.Fatalf("a brain host advertises hoi: %s", b)
+	for _, lenh := range []string{"plan", "chia_bill", "hoi"} {
+		if !strings.Contains(b, `"`+lenh+`":{"available":true,"reason":null}`) {
+			t.Fatalf("a host with a model must offer %s: %s", lenh, b)
+		}
 	}
 }
 
-// Configuration skew (finding 2.6): the serving process takes `hoi` (its
-// flag says the group runs on the Go engine) while the worker runs the
-// brain. The worker refuses the job, fail closed, before any read and
-// without asking the brain.
-func TestHoiTrenWorkerBrainThatBai(t *testing.T) {
-	brain := &nepGia{}
-	f := setup(t, brain.serve)
-	f.handler.WithNhomGo()
+// Configuration skew (finding 2.6): the serving process takes the job (it has
+// a model) while the worker that claims it has no engine. The worker refuses
+// the job, fail closed, before any read and without a model call.
+func TestViecTrenWorkerKhongMayThatBai(t *testing.T) {
+	f := setup(t, nil)
 	trigger := f.tinTag(t, f.context, f.person)
 	w := f.request("POST", f.route(), f.token, map[string]any{"logical_id": newID(), "command": "hoi", "prompt": "@Rủ Đi tối nay đi đâu", "trigger_message_id": trigger})
 	requireCode(t, w, 202)
 	var job Invocation
 	_ = json.Unmarshal(w.Body.Bytes(), &job)
-	f.handler.nhomGo, f.handler.nhomEngine = false, nil // the worker's own flag: the brain
+	f.handler.nhomEngine = nil // the worker's own configuration: no model
 	if ok, err := f.handler.ProcessOne(context.Background()); !ok || err != nil {
 		t.Fatalf("worker: %v %v", ok, err)
 	}
@@ -52,8 +47,8 @@ func TestHoiTrenWorkerBrainThatBai(t *testing.T) {
 	if err := f.pool.QueryRow(context.Background(), `SELECT status,COALESCE(code,'') FROM chat_ai_invocations WHERE id=$1`, job.ID).Scan(&status, &code); err != nil {
 		t.Fatal(err)
 	}
-	if status != "failed" || code != "provider_unavailable" || brain.calls != 0 {
-		t.Fatalf("hoi on a brain worker: %s/%s, brain asked %d times", status, code, brain.calls)
+	if status != "failed" || code != "provider_unavailable" || f.may.SoGoi() != 0 {
+		t.Fatalf("a job on a worker with no model: %s/%s, model asked %d times", status, code, f.may.SoGoi())
 	}
 }
 

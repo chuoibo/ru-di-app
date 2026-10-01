@@ -62,7 +62,7 @@ func memoryViolations(c closure) []string {
 func groupRoots(g *graph) []*types.Func {
 	var roots []*types.Func
 	for _, name := range []string{"capabilities", "create", "list", "get", "retry", "cancel", "promote", "promotion",
-		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "prepare", "processChiaBill", "processNhomEngine"} {
+		"draftCreate", "draftGet", "draftPatch", "draftDiscard", "chuanBiNhom", "processNhomEngine"} {
 		if f, ok := g.byName["(*"+pkgChat+".Handler)."+name]; ok {
 			roots = append(roots, f)
 		}
@@ -84,8 +84,8 @@ func pkgRoots(g *graph, pkg string) []*types.Func {
 func TestGroupPathNeverReachesMemory(t *testing.T) {
 	g := load(t)
 	roots := groupRoots(g)
-	if len(roots) != 15 {
-		t.Fatalf("%d of the 15 group roots found; the load is incomplete", len(roots))
+	if len(roots) != 14 {
+		t.Fatalf("%d of the 14 group roots found; the load is incomplete", len(roots))
 	}
 	if v := memoryViolations(g.reach(roots...)); len(v) != 0 {
 		t.Fatalf("the group engine can reach Nếp's memory: %v", v)

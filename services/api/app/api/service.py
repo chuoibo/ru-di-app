@@ -15,9 +15,8 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from app.api import companion_places
-from app.api.chat_expense_skill import ChatExpenseReader, run_chat_expense_skill
 from app.api.cursors import CursorError, decode_cursor, encode_cursor
-from app.api.deps import Actor, ContextualSuggester, Reeler, Suggester
+from app.api.deps import Actor
 from app.api.errors import ApiProblem, RepositoryConflict
 from app.api.google_identity import GoogleTokenInvalid, GoogleTokenVerifier
 from app.api.limits import OBJECTION_KINDS, QUOTA_CONSUMING_OBJECTIONS
@@ -90,8 +89,6 @@ from app.api.schemas import (
     BlockedPersonSummary,
     BlockResponse,
     BudgetBandResponse,
-    ChatExpenseDraft,
-    ChatExpenseDraftResponse,
     CheckinCreateRequest,
     CloseNotebookRequest,
     ClosePreviewResponse,
@@ -104,9 +101,7 @@ from app.api.schemas import (
     ContextLastMessage,
     ContextResponse,
     ContextSummary,
-    ContextualSuggestionResponse,
     ContextUpdateRequest,
-    ConversationBasis,
     ExpenseConfirmationRequest,
     ExpenseConfirmationResponse,
     ExpenseInput,
@@ -122,7 +117,6 @@ from app.api.schemas import (
     GroupBudgetResponse,
     GroupHeatmapResponse,
     GroupRecapResponse,
-    GroupSuggestionResponse,
     HeatmapArea,
     InterestsUpdateRequest,
     InterestTagResponse,
@@ -220,8 +214,6 @@ from app.api.schemas import (
     RecapOutingResponse,
     ReceiptConfirmationRequest,
     ReceiptConfirmationResponse,
-    ReelPick,
-    ReelResponse,
     ReportCreateRequest,
     ReportResponse,
     SavedPlacesResponse,
@@ -238,8 +230,6 @@ from app.api.schemas import (
     StoryFeedResponse,
     StoryResponse,
     StorySeenResponse,
-    SuggestionBasis,
-    SuggestionStop,
     UnavailableLayer,
     UploadedImageResponse,
     VisitedPlace,
@@ -277,7 +267,6 @@ from app.domain.chat_theme import is_theme
 from app.domain.collection import CollectionError, transition, unmet_publish_gates
 from app.domain.companion import CompanionError, ground_card
 from app.domain.contract import AllocationError
-from app.domain.conversation import has_conversation, summarise_conversation
 from app.domain.direct import (
     KIND_PAIR,
     can_open,
@@ -330,14 +319,8 @@ from app.domain.photo_ref import (
     person_photo_url,
 )
 from app.domain.preferences import build_preference_profile
-from app.domain.reel import ReelError, ground_reel
 from app.domain.reports import ReportError, validate_report
 from app.domain.stickers import is_sticker
-from app.domain.suggestion import (
-    SuggestionError,
-    ground_suggestion,
-    summarise_history,
-)
 from app.domain.vote import tally
 from app.media.face_detection import FaceDetector, FaceDetectorUnavailable
 from app.media.images import ImageRejected, sanitize_image
@@ -2690,123 +2673,6 @@ class ApiService:
         )
         return GroupBudgetResponse(context_id=context_id, **budget)
 
-    def group_suggestion(
-        self,
-        context_id: uuid.UUID,
-        actor: Actor,
-        suggester: Suggester,
-    ) -> GroupSuggestionResponse:
-        """F32 -- the companion proposes an evening nobody asked it for.
-
-        Built from this group's own past: the trips that are over and what they
-        cost (the same recomputed figures the memory wall reads, never a stored
-        total), plus the catalogue categories of the places they actually
-        checked in at. Both reads are scoped to `context_id` by the repository,
-        so there is no path here to a second group's history -- which matters
-        more than usual, because this response is the one screen in the product
-        that summarises a group in five numbers.
-
-        Every figure the screen shows as *evidence* is computed here.
-        `basis` never passes through the model, and the model is not asked to
-        restate it: a number written by a model, printed under a number derived
-        from the ledger, is the fabrication this whole surface exists to stop.
-
-        The model's only remaining job is to pick place identifiers and say why.
-        `ground_suggestion` refuses the entire card if it invented one, and
-        every failure lands on the same honest answer: 200, `suggested: false`,
-        with the reason it did not speak. There is no hand-written fallback
-        card, because a plausible suggestion served while the feature is broken
-        is a broken feature that nobody can see is broken.
-        """
-
-        _require_permission(
-            "view_group_suggestion",
-            actor,
-            {"is_group_member": self.repository.is_member(context_id, actor.id)},
-        )
-
-        # The server's own wall-clock day in Vietnam, exactly as the memory
-        # wall reads it: a trip that ended yesterday is history for everybody,
-        # including a phone whose clock is set wrong.
-        today = _now().astimezone(ZoneInfo(WALL_CLOCK_ZONE)).date()
-        trips = [
-            {
-                "title": record.outing.title,
-                "split_total_vnd": record.split_total_vnd,
-                "headcount": record.outing.headcount,
-            }
-            for record in self.repository.group_recap(context_id, today=today)
-        ]
-
-        places = companion_places.load_place_catalogue(self.model_place_rows())
-        category_of = {
-            place["id"]: place.get("category")
-            for place in places
-            if isinstance(place.get("id"), str)
-        }
-        # Check-ins carry a catalogue `place_id`; photographs do not, and a
-        # caption is not evidence of a category. Rows whose place is no longer
-        # in the catalogue are dropped rather than counted under a stale id.
-        visits = [
-            {"category": category_of[memory.place_id]}
-            for memory in self.repository.list_memories(
-                context_id, limit=SUGGESTION_HISTORY_LIMIT, kind="checkin"
-            ).memories
-            if memory.place_id in category_of
-            and category_of[memory.place_id] is not None
-        ]
-
-        history = summarise_history(trips, visits)
-        basis = SuggestionBasis(**history)
-
-        def _silent(reason: str) -> GroupSuggestionResponse:
-            return GroupSuggestionResponse(
-                context_id=context_id,
-                suggested=False,
-                reason=reason,
-                title=None,
-                when_text=None,
-                stops=[],
-                basis=basis,
-                source="none",
-            )
-
-        # Nothing to reason from is not a failure, and inventing a first outing
-        # for a group that has never been anywhere would be the product
-        # asserting a past that did not happen.
-        if history["outing_count"] == 0:
-            return _silent("no_history")
-
-        try:
-            raw = suggester(history, places)
-        except Exception as error:  # noqa: BLE001 - a home screen must not 500
-            logger.warning(
-                "group suggestion: backend failed (%s)", type(error).__name__
-            )
-            return _silent("unavailable")
-        if raw is None:
-            return _silent("unavailable")
-
-        try:
-            grounded = ground_suggestion(raw, places)
-        except SuggestionError as error:
-            # The code, never the card. What provoked the refusal is model
-            # output shaped by a private group's own text.
-            logger.warning("group suggestion: card refused (%s)", error.code)
-            return _silent("ungrounded")
-
-        payload = grounded["payload"]
-        return GroupSuggestionResponse(
-            context_id=context_id,
-            suggested=True,
-            reason="ok",
-            title=payload["title"],
-            when_text=payload["when_text"],
-            stops=[SuggestionStop(**stop) for stop in payload["stops"]],
-            basis=basis,
-            source="ai",
-        )
-
     def create_vote(
         self,
         context_id: uuid.UUID,
@@ -3053,107 +2919,6 @@ class ApiService:
             avg_per_person_vnd=profile["avg_per_person_vnd"],
         )
 
-    def contextual_suggestion(
-        self,
-        context_id: uuid.UUID,
-        actor: Actor,
-        suggester: ContextualSuggester,
-    ) -> ContextualSuggestionResponse:
-        """F33 -- the card that answers what the group is saying right now.
-
-        The gate is the message gate. Reading this card means the server read
-        the group's last few turns, so anyone who may not read the
-        conversation may not read a card built out of it either.
-
-        The group's own sentences do reach the model -- that is the feature --
-        and they reach nothing else. They are absent from the response, which
-        carries counts, and absent from every log line on every path out of
-        here, including the failure paths: the refusal below logs a code, and
-        the code is chosen precisely because the thing that provoked it is
-        model output shaped by a private group's text.
-
-        Grounding is `ground_suggestion`, unchanged and deliberately shared
-        with F32. A model talked into naming a restaurant that does not exist
-        produces a refused card on both surfaces, and this is the surface where
-        somebody can try, because this is the one where their sentence is in
-        the prompt.
-        """
-
-        _require_permission(
-            "view_contextual_suggestion",
-            actor,
-            {"is_group_member": self.repository.is_member(context_id, actor.id)},
-        )
-
-        members = self.repository.list_members(context_id)
-        digest = summarise_conversation(
-            [
-                {
-                    "kind": message.kind,
-                    "body": message.body,
-                    "author_id": message.author_id,
-                }
-                for message in self.repository.list_messages(
-                    context_id, limit=CONVERSATION_WINDOW
-                ).messages
-            ],
-            member_count=sum(1 for member in members if member.state == "active"),
-        )
-        basis = ConversationBasis(
-            message_count=digest["message_count"],
-            speaker_count=digest["speaker_count"],
-            member_count=digest["member_count"],
-        )
-
-        def _silent(reason: str) -> ContextualSuggestionResponse:
-            return ContextualSuggestionResponse(
-                context_id=context_id,
-                suggested=False,
-                reason=reason,
-                title=None,
-                when_text=None,
-                stops=[],
-                basis=basis,
-                source="none",
-            )
-
-        # A silent group has nothing to react to. Speaking into one is the
-        # product interrupting rather than joining, which is the failure the
-        # spec spends section 3 refusing.
-        if not has_conversation(digest):
-            return _silent("no_conversation")
-
-        places = companion_places.load_place_catalogue(self.model_place_rows())
-        try:
-            raw = suggester(digest, places)
-        except Exception as error:  # noqa: BLE001 - a chat screen must not 500
-            logger.warning(
-                "contextual suggestion: backend failed (%s)", type(error).__name__
-            )
-            return _silent("unavailable")
-        if raw is None:
-            return _silent("unavailable")
-
-        try:
-            grounded = ground_suggestion(raw, places)
-        except SuggestionError as error:
-            # The code, never the card, and never the conversation that shaped
-            # it.
-            logger.warning("contextual suggestion: card refused (%s)", error.code)
-            return _silent("ungrounded")
-
-        payload = grounded["payload"]
-        return ContextualSuggestionResponse(
-            context_id=context_id,
-            suggested=True,
-            reason="ok",
-            title=payload["title"],
-            when_text=payload["when_text"],
-            stops=[SuggestionStop(**stop) for stop in payload["stops"]],
-            basis=basis,
-            source="ai",
-        )
-
     def list_trip_albums(
         self, context_id: uuid.UUID, actor: Actor
     ) -> AlbumListResponse:
@@ -3260,119 +3025,6 @@ class ApiService:
             split_total_vnd=found.split_total_vnd,
             expense_count=found.expense_count,
             headcount=found.outing.headcount,
-        )
-
-    def trip_reel(
-        self,
-        context_id: uuid.UUID,
-        outing_id: uuid.UUID,
-        actor: Actor,
-        reeler: Reeler,
-    ) -> ReelResponse:
-        """F37 -- AI picks memories without taking ownership of their facts.
-
-        The access boundary is the exact three-layer security argument
-        documented by ``trip_album``.  This workflow keeps the same order and
-        the same 404 rather than creating a second explanation that can drift
-        away from the album beside it.
-        """
-
-        _require_permission(
-            "view_trip_album",
-            actor,
-            {"is_group_member": self.repository.is_member(context_id, actor.id)},
-        )
-
-        today = _now().astimezone(ZoneInfo(WALL_CLOCK_ZONE)).date()
-        found = next(
-            (
-                record
-                for record in self.repository.group_recap(context_id, today=today)
-                if record.outing.id == outing_id
-            ),
-            None,
-        )
-        if found is None:
-            raise ApiProblem(404, "album_not_found", "Chuyến đi này không có ở đây.")
-
-        rows = self.repository.list_outing_memories(
-            found.outing.id,
-            limit=ALBUM_MEMORY_LIMIT,
-            viewer_id=actor.id,
-        )
-        considered_count = len(rows)
-
-        def _silent(reason: str) -> ReelResponse:
-            return ReelResponse(
-                context_id=context_id,
-                outing_id=outing_id,
-                reeled=False,
-                reason=reason,
-                source="none",
-                title=None,
-                picks=[],
-                considered_count=considered_count,
-            )
-
-        if not rows:
-            return _silent("no_memories")
-
-        grounding_rows = [
-            {
-                "id": memory.id,
-                "kind": memory.kind,
-                "image_url": memory.image_url,
-                "caption": memory.caption,
-                "place_name": memory.place_name,
-                "created_at": memory.created_at,
-                "reaction_count": memory.reaction_count,
-                "comment_count": memory.comment_count,
-            }
-            for memory in rows
-        ]
-        trip = {
-            "title": found.outing.title,
-            "starts_on": found.outing.starts_on.isoformat(),
-            "ends_on": found.outing.ends_on.isoformat(),
-            "headcount": found.outing.headcount,
-        }
-        offered = [
-            {
-                "id": str(memory["id"]),
-                "kind": memory["kind"],
-                "caption": memory["caption"],
-                "place_name": memory["place_name"],
-                "created_at": memory["created_at"].isoformat(),
-                "reaction_count": memory["reaction_count"],
-                "comment_count": memory["comment_count"],
-            }
-            for memory in grounding_rows
-        ]
-
-        try:
-            raw = reeler(trip, offered)
-        except Exception as error:  # noqa: BLE001 - an album read must not 500
-            logger.warning("trip reel: backend failed (%s)", type(error).__name__)
-            return _silent("unavailable")
-        if raw is None:
-            return _silent("unavailable")
-
-        try:
-            grounded = ground_reel(raw, grounding_rows)
-        except ReelError as error:
-            # Closed code only.  Model prose and group metadata stay out of logs.
-            logger.warning("trip reel: answer refused (%s)", error.code)
-            return _silent("ungrounded")
-
-        return ReelResponse(
-            context_id=context_id,
-            outing_id=outing_id,
-            reeled=True,
-            reason="ok",
-            source="ai",
-            title=grounded["title"],
-            picks=[ReelPick(**pick) for pick in grounded["picks"]],
-            considered_count=considered_count,
         )
 
     def _album_of(self, record: RecapOutingRecord, actor: Actor) -> dict:
@@ -5690,76 +5342,6 @@ class ApiService:
             # `None`: there is nothing further to ask for.
             next_cursor=messages[-1].cursor if messages else query.after,
             has_more=page.has_more,
-        )
-
-    def create_chat_expense_draft(
-        self,
-        context_id: uuid.UUID,
-        message_id: uuid.UUID,
-        actor: Actor,
-        reader: ChatExpenseReader,
-    ) -> ChatExpenseDraftResponse:
-        """Read one stored message without giving the model identity authority."""
-
-        _require_permission(
-            "invoke_group_companion",
-            actor,
-            {"is_group_member": self.repository.is_member(context_id, actor.id)},
-        )
-
-        message = self.repository.get_message(message_id)
-        if message is None or message.context_id != context_id:
-            # The same answer for absent and cross-context messages. Naming the
-            # real context, author, or text would turn a guessed UUID into a
-            # window on another group's conversation.
-            raise ApiProblem(404, "message_not_found", "Message does not exist")
-        if message.kind == "deleted":
-            raise ApiProblem(409, "message_deleted", "Tin này đã bị xoá.")
-        if message.author_id is None:
-            raise ApiProblem(
-                422,
-                "message_has_no_author",
-                "An AI message has no person who paid",
-            )
-        if not isinstance(message.body, str) or not message.body.strip():
-            raise ApiProblem(
-                422,
-                "message_has_no_text",
-                "Message has no text to read as an expense",
-            )
-
-        shared_by = sorted(
-            (
-                membership.person_id
-                for membership in self.repository.list_members(context_id)
-                if membership.state == "active"
-            ),
-            key=lambda person_id: person_id.bytes,
-        )
-        reading = run_chat_expense_skill(message.body, reader=reader)
-        if not reading["is_expense"]:
-            return ChatExpenseDraftResponse(
-                context_id=context_id,
-                message_id=message_id,
-                detected=False,
-                draft=None,
-                reason="Tin nhắn không mô tả một khoản chi.",
-            )
-
-        return ChatExpenseDraftResponse(
-            context_id=context_id,
-            message_id=message_id,
-            detected=True,
-            draft=ChatExpenseDraft(
-                title=reading["title"],
-                amount_vnd=reading["amount_vnd"],
-                # The author and roster are database facts. They are never
-                # included in the prompt and never accepted in model output.
-                paid_by_id=message.author_id,
-                shared_by=shared_by,
-                needs_review=reading["needs_review"],
-            ),
-            reason=None,
         )
 
     def set_context_member_role(

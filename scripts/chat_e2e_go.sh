@@ -19,7 +19,7 @@
 #     The sentinel asserts a Go-only route answers, so the tier knows whose
 #     behaviour it recorded.
 #   * a case that skips itself: any `--- SKIP:` line fails the tier. The AI
-#     cases get a deterministic brain stub rather than an excuse to skip.
+#     cases get a deterministic Gemini stub rather than an excuse to skip.
 #
 # Artifacts stay outside the repository. Synthetic data only: the seeded
 # accounts, the stub's itinerary and every message here are invented.
@@ -53,29 +53,25 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# The brain stub answers the inference seam deterministically. It must be
-# listening before the core starts, because the core reads MOBILE_BRAIN_URL once.
-brain_port="$(node -e 'const s=require("net").createServer();s.listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})')"
-export CHAT_E2E_BRAIN_URL="http://127.0.0.1:$brain_port"
-# One secret shared by the stub and the stack. Generated here because the stub
-# must already be listening when the core reads MOBILE_BRAIN_URL at startup.
-export CHAT_E2E_INTERNAL_TOKEN="$(openssl rand -hex 32)"
+# The Gemini stub answers the Go engine's model calls deterministically, on
+# the real genai wire (ADR-0051: no Python brain). It must be listening
+# before the core starts: the core builds its model once at startup.
+gemini_port="$(node -e 'const s=require("net").createServer();s.listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})')"
+export CHAT_E2E_GEMINI_URL="http://127.0.0.1:$gemini_port"
 
-echo "--- dựng brain stub tất định trên $CHAT_E2E_BRAIN_URL"
+echo "--- dựng Gemini stub tất định trên $CHAT_E2E_GEMINI_URL"
 stub_log="$(mktemp)"
 stub_bin="$(mktemp -u)"
-( cd services/core && go build -tags e2e -o "$stub_bin" ./e2e/brainstub )
-BRAIN_STUB_LISTEN="127.0.0.1:$brain_port" \
-MOBILE_INTERNAL_TOKEN="$CHAT_E2E_INTERNAL_TOKEN" \
-  "$stub_bin" >"$stub_log" 2>&1 &
+( cd services/core && go build -tags e2e -o "$stub_bin" ./e2e/geministub )
+GEMINI_STUB_LISTEN="127.0.0.1:$gemini_port" "$stub_bin" >"$stub_log" 2>&1 &
 stub_pid=$!
 
 for _ in $(seq 1 60); do
-  if curl -fsS --max-time 2 "$CHAT_E2E_BRAIN_URL/healthz" >/dev/null 2>&1; then break; fi
+  if curl -fsS --max-time 2 "$CHAT_E2E_GEMINI_URL/healthz" >/dev/null 2>&1; then break; fi
   sleep 1
 done
-curl -fsS --max-time 2 "$CHAT_E2E_BRAIN_URL/healthz" >/dev/null 2>&1 || {
-  echo "brain stub không lên; log:" >&2; cat "$stub_log" >&2; exit 1; }
+curl -fsS --max-time 2 "$CHAT_E2E_GEMINI_URL/healthz" >/dev/null 2>&1 || {
+  echo "Gemini stub không lên; log:" >&2; cat "$stub_log" >&2; exit 1; }
 
 echo "--- dựng stack chat (PostgreSQL + API Python + core Go, candidate bật)"
 ready="$(scripts/chat_e2e_stack.sh up | tail -1)"
@@ -107,6 +103,8 @@ fi
 if [ "$status" -ne 0 ]; then
   echo "tầng E2E chat: có ca ĐỎ" >&2
   grep -E -- "^(    )*--- FAIL:" "$log" >&2 || true
+  echo "--- 40 dòng cuối của Gemini stub:" >&2
+  tail -40 "$stub_log" >&2 || true
   exit "$status"
 fi
 

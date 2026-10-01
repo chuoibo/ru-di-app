@@ -36,7 +36,7 @@ func TestWorkerDBConns(t *testing.T) {
 // pool sizes the review of slice 10 found starving (two connections with a
 // broker) are refused at startup, with the numbers in the message.
 func TestWorkerDBFloor(t *testing.T) {
-	tasks := len(workPeriodic(chatassist.New(nil, nil)))
+	tasks := len(workPeriodic(chatassist.New(nil)))
 	if tasks != 4 {
 		t.Fatalf("work runs %d periodic tasks; the floor below assumes 4", tasks)
 	}
@@ -59,7 +59,7 @@ func TestWorkerDBFloor(t *testing.T) {
 func TestServePeriodicSweepsWithoutWorkers(t *testing.T) {
 	names := func(inproc bool) string {
 		var out []string
-		for _, d := range servePeriodic(chatassist.New(nil, nil), inproc) {
+		for _, d := range servePeriodic(chatassist.New(nil), inproc) {
 			out = append(out, d.Ten)
 		}
 		return strings.Join(out, ",")

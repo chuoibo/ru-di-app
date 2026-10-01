@@ -27,6 +27,16 @@ func Dumps(v Value) ([]byte, error) {
 	return e.run(v)
 }
 
+// DumpsText returns json.dumps(v, ensure_ascii=False, sort_keys=sortKeys)
+// with the default separators ", " and ": ": the form the model prompts
+// (aiharness/goiy) put data in. NaN and infinities are written as Python
+// writes them; surrogate code points fail with *UnicodeEncodeError.
+func DumpsText(v Value, sortKeys bool) (string, error) {
+	e := encoder{itemSep: ", ", keySep: ": ", allowNaN: true, sortKeys: sortKeys}
+	out, err := e.run(v)
+	return string(out), err
+}
+
 // Canonical returns the idempotency fingerprint body:
 //
 //	json.dumps(v, sort_keys=True, separators=(",", ":"),

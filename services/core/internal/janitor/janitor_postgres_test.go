@@ -4,17 +4,51 @@ package janitor
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"mobile/services/core/internal/ingest"
 	"mobile/services/core/internal/testdb"
 )
 
+// ownTables is a pool on a schema of its own holding empty copies of the
+// tables Purge sweeps. Purge deletes by age across the whole table, and this
+// test's clock is years ahead, so run on the shared public schema it deleted
+// every live session of whatever package ran beside it (401s in community
+// and diary tests of go_postgres_tier.sh, seen 2026-10-01).
+func ownTables(t *testing.T) *pgxpool.Pool {
+	t.Helper()
+	ctx := context.Background()
+	base := testdb.Pool(t)
+	schema := fmt.Sprintf("janitor_test_%d", time.Now().UnixNano())
+	ident := pgx.Identifier{schema}.Sanitize()
+	if _, err := base.Exec(ctx, "CREATE SCHEMA "+ident); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = base.Exec(context.Background(), "DROP SCHEMA "+ident+" CASCADE") })
+	for _, table := range []string{"people", "account_sessions", "otp_challenges", "idempotency_keys"} {
+		if _, err := base.Exec(ctx, fmt.Sprintf("CREATE TABLE %s.%s (LIKE public.%s INCLUDING ALL)", ident, table, table)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cfg := base.Config().Copy()
+	cfg.ConnConfig.RuntimeParams["search_path"] = schema
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	return pool
+}
+
 // TestPurgeRemovesOnlyWhatHasExpired: old rows go, recent and live rows stay.
 func TestPurgeRemovesOnlyWhatHasExpired(t *testing.T) {
 	ctx := context.Background()
-	pool := testdb.Pool(t)
+	pool := ownTables(t)
 	now := time.Date(2031, 3, 1, 12, 0, 0, 0, time.UTC)
 	old, recent := now.Add(-60*24*time.Hour), now.Add(-time.Hour)
 	person := "7a111111-aaaa-4aaa-8aaa-aaaaaaaaaaaa"

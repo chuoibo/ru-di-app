@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"mobile/services/core/internal/brain"
+	"mobile/services/core/internal/aiharness/timquan"
 	"mobile/services/core/internal/domain/areas"
 	"mobile/services/core/internal/domain/catalog"
 	"mobile/services/core/internal/domain/promptsafety"
@@ -186,7 +186,7 @@ func listPlacesWAI() Route {
 			if err != nil {
 				return endpoint.Reply{}, err
 			}
-			written = fetchReasons(safe, group)
+			written = fetchReasons(ctx, call, safe, group)
 		}
 		out := make([]*pyjson.OrderedMap, 0, len(cards))
 		for _, card := range cards {
@@ -354,7 +354,7 @@ func getPlaceWAI() Route {
 		}
 		written := map[string]reasonPair{}
 		if group.Known() {
-			written = fetchReasons(cards, group)
+			written = fetchReasons(ctx, call, cards, group)
 		}
 		pair := written[placeID]
 		card, err := wirePlaceCard(cards[0], pair.reason, pair.verdict, group)
@@ -426,10 +426,9 @@ func searchPlacesWAI() Route {
 		}
 		// Light rows for the whole (or the held) catalogue, then full rows
 		// only for the few searchCandidates keeps: at most rag.ToiDaNgan, the
-		// most any search hands the model (design 04 §7). A Go-only deviation
-		// on the brain payload: parity runs keyless, so both stacks answer
-		// `unavailable` whatever the payload, and
-		// places_search_shortlist_postgres_test.go is the evidence instead.
+		// most any search hands the model (design 04 §7).
+		// places_search_shortlist_postgres_test.go reads the prompt the model
+		// receives; parity has nothing to compare since ADR-0051.
 		slim, err := store.ListPlaceCards(ctx, filter)
 		if err != nil {
 			return endpoint.Reply{}, err
@@ -442,29 +441,27 @@ func searchPlacesWAI() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		payload := pyjson.NewOrderedMap()
-		payload.Set("query", pyjson.String(query))
-		payload.Set("catalogue", modelShortlist(cards))
-		payload.Set("group", wireTaste(group))
-		client := brain.Configured()
-		raw, err := client.PostJSON("place-search", payload)
+		shortlist := []*pyjson.OrderedMap{}
+		for _, item := range modelShortlist(cards) {
+			shortlist = append(shortlist, item.(*pyjson.OrderedMap))
+		}
+		// An empty catalogue would ask the model to pick from nothing, which
+		// it can only answer by inventing: refused before the call.
+		if !call.AI.CoMay() || len(shortlist) == 0 {
+			return unavailable(), nil
+		}
+		prompt, err := timquan.PromptTimQuan(query, shortlist, group)
 		if err != nil {
 			return unavailable(), nil
 		}
-		obj, err := brain.AsObject(raw)
+		raw, err := timquan.Tim(ctx, call.AI.Luot(1), prompt)
 		if err != nil {
 			return unavailable(), nil
 		}
-		if _, found := obj.Get("source"); found {
+		understood, results, err := timquan.Ground(raw, shortlist)
+		if err != nil {
 			return unavailable(), nil
 		}
-		understoodValue, _ := obj.Get("understood")
-		understood, ok := understoodValue.(*pyjson.OrderedMap)
-		if !ok {
-			return unavailable(), nil
-		}
-		rawResults, _ := obj.Get("results")
-		results, _ := rawResults.(pyjson.List)
 		if !group.Known() {
 			group = taste.Profile{Basis: taste.BasisPerson, Interests: []string{}, People: 1}
 			if n := service.IntPtrOf(understood, "budget_per_person_vnd"); n != nil {
@@ -476,28 +473,22 @@ func searchPlacesWAI() Route {
 			}
 		}
 		places := pyjson.List{}
-		for _, item := range results {
-			row, ok := item.(*pyjson.OrderedMap)
-			if !ok {
-				continue
+		for _, result := range results {
+			reason, verdict := result.Reason, result.Verdict
+			// Two per-row gates: a sentence quoting a figure the model was
+			// not shown, or repeating the caller's own sentence, is dropped
+			// with its verdict; the real place stays, under the server's
+			// own words.
+			if reason != nil {
+				stray, err := timquan.UngroundedNumbers(*reason, result.Place, group)
+				if err != nil {
+					return unavailable(), nil
+				}
+				if len(stray) > 0 || timquan.EchoesTheQuery(reason, query) {
+					reason, verdict = nil, nil
+				}
 			}
-			placeValue, _ := row.Get("place")
-			place, ok := placeValue.(*pyjson.OrderedMap)
-			if !ok {
-				continue
-			}
-			reasonValue, _ := row.Get("reason")
-			verdictValue, _ := row.Get("verdict")
-			var reason, verdict *string
-			if text, ok := reasonValue.(pyjson.String); ok {
-				s := string(text)
-				reason = &s
-			}
-			if text, ok := verdictValue.(pyjson.String); ok {
-				s := string(text)
-				verdict = &s
-			}
-			card, err := wirePlaceCard(place, reason, verdict, group)
+			card, err := wirePlaceCard(result.Place, reason, verdict, group)
 			if err != nil {
 				return endpoint.Reply{}, err
 			}
@@ -583,29 +574,6 @@ func wireGroupSummary(group taste.Profile) *pyjson.OrderedMap {
 		uncovered = append(uncovered, pyjson.String(tag))
 	}
 	out.Set("uncovered_interests", uncovered)
-	return out
-}
-
-func wireTaste(group taste.Profile) *pyjson.OrderedMap {
-	out := pyjson.NewOrderedMap()
-	out.Set("basis", pyjson.String(string(group.Basis)))
-	interests := pyjson.List{}
-	for _, tag := range group.Interests {
-		interests = append(interests, pyjson.String(tag))
-	}
-	out.Set("interests", interests)
-	if group.BudgetPerPersonVND == nil {
-		out.Set("budget_per_person_vnd", pyjson.Null{})
-	} else {
-		out.Set("budget_per_person_vnd", pyjson.NewInt(*group.BudgetPerPersonVND))
-	}
-	if group.Size == nil {
-		out.Set("size", pyjson.Null{})
-	} else {
-		out.Set("size", pyjson.NewInt(*group.Size))
-	}
-	out.Set("people", pyjson.NewInt(group.People))
-	out.Set("people_answered", pyjson.NewInt(group.PeopleAnswered))
 	return out
 }
 
@@ -869,47 +837,30 @@ func wirePlacePhoto(placeID string, photo repo.PlacePhoto) *pyjson.OrderedMap {
 	return out
 }
 
-func fetchReasons(places []*pyjson.OrderedMap, group taste.Profile) map[string]reasonPair {
+// fetchReasons asks the model, in one call, whether each place fits the
+// group (aiharness/timquan). Every way there is no answer -- no model, a
+// failed call, an unreadable reply -- is an empty map: the cards are then
+// served with the server's own sentence and no AI label.
+func fetchReasons(ctx context.Context, call *endpoint.Call, places []*pyjson.OrderedMap, group taste.Profile) map[string]reasonPair {
 	out := map[string]reasonPair{}
-	if len(places) == 0 {
+	if len(places) == 0 || !call.AI.CoMay() {
 		return out
 	}
-	body := pyjson.NewOrderedMap()
-	rows := pyjson.List{}
-	for _, place := range places {
-		row := pyjson.NewOrderedMap()
-		row.Set("place", place)
-		rows = append(rows, row)
-	}
-	body.Set("rows", rows)
-	body.Set("group", wireTaste(group))
-	raw, err := brain.Configured().PostJSON("place-reasons", body)
+	prompt, err := timquan.PromptLyDo(places, group)
 	if err != nil {
 		return out
 	}
-	obj, err := brain.AsObject(raw)
+	text, err := timquan.VietLyDo(ctx, call.AI.Luot(1), prompt)
 	if err != nil {
 		return out
 	}
-	for key, value := range obj.All() {
-		entry, ok := value.(*pyjson.OrderedMap)
-		if !ok {
-			continue
-		}
-		reasonValue, _ := entry.Get("reason")
-		verdictValue, _ := entry.Get("verdict")
-		reason, rok := reasonValue.(pyjson.String)
-		verdict, vok := verdictValue.(pyjson.String)
-		pair := reasonPair{}
-		if rok {
-			s := string(reason)
-			pair.reason = &s
-		}
-		if vok {
-			s := string(verdict)
-			pair.verdict = &s
-		}
-		out[key] = pair
+	written, err := timquan.ParseReasons(text, places, group)
+	if err != nil {
+		return out
+	}
+	for id, r := range written {
+		reason, verdict := r.Reason, r.Verdict
+		out[id] = reasonPair{reason: &reason, verdict: &verdict}
 	}
 	return out
 }

@@ -19,7 +19,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 
-from app.api.deps import Actor, Reeler, get_actor, get_reeler, get_repository
+from app.api.deps import Actor, get_actor, get_repository
+from app.api.errors import ApiProblem
 from app.api.repository import ApiRepository
 from app.api.schemas import (
     AlbumListResponse,
@@ -88,10 +89,13 @@ def read_trip_reel(
     outing_id: UUID,
     actor: Annotated[Actor, Depends(get_actor)],
     repository: Annotated[ApiRepository, Depends(get_repository)],
-    reeler: Annotated[Reeler, Depends(get_reeler)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_reel_limiter)],
 ) -> ReelResponse:
-    """Build one reel after charging the caller, before reaching the model."""
+    """Declaration only: the Go core serves this route (ADR-0051)."""
 
-    limiter.check(actor.id)
-    return ApiService(repository).trip_reel(context_id, outing_id, actor, reeler)
+    del context_id, outing_id, actor, repository, limiter
+    raise ApiProblem(
+        410,
+        "served_by_go",
+        "GET /contexts/{id}/albums/{id}/reel do core Go phục vụ.",
+    )

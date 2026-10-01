@@ -38,8 +38,8 @@ func (h *Handler) WithStream(stream *aistream.Stream, hub *aistream.Hub, stop <-
 	return h
 }
 
-// nhipPhat paces a finished text that did not stream (the brain's) as it is
-// released after its commit, like the engine's verified answer
+// nhipPhat paces a group card's text as it is released after its commit,
+// like the engine's verified answer
 // (aiharness.NhipPhat, guard.PhatTheoNhip): the reader's client shows it
 // progressively. At most guard.TranNhip per text.
 func (h *Handler) nhipSauChot() time.Duration { return h.nhipPhat }
@@ -182,19 +182,6 @@ func (l *luongViec) nhaThe(card []byte, nhip time.Duration) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*guard.TranNhip)
 	defer cancel()
 	chuTheNhom(ctx, l, card, nhip)
-}
-
-// nhaChu releases a sealed Nếp answer that did not stream (the brain's)
-// through the output guard's window, paced nhip apart, after its commit. The
-// job's own context is not used: after the commit its heartbeat finds no
-// lease and cancels it.
-func (l *luongViec) nhaChu(text string, nhip time.Duration) {
-	if l == nil || !l.w.SauChot() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 2*guard.TranNhip)
-	defer cancel()
-	_, _ = guard.PhatTheoNhip(ctx, l, 0, guard.DauRa{}, maxTraLoiNep, "", text, nhip)
 }
 
 // xongNhom ends a group job's stream after its card committed.

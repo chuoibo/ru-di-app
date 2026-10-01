@@ -42,31 +42,32 @@ fi
 
 if [ "${1:-}" = "--brief" ]; then
   echo >&2
-  echo "!! GEMINI_API_KEY chưa đặt — chụp bill sẽ báo lỗi cấu hình, không đọc được món." >&2
+  echo "!! GEMINI_API_KEY chưa đặt — core không nhúng được; không có AGY_PROXY_URL thì chụp bill và mọi bước AI cũng tắt." >&2
   exit 0
 fi
 
 cat >&2 <<'WARNING'
 
   ┌──────────────────────────────────────────────────────────────────────┐
-  │  CẢNH BÁO: thiếu GEMINI_API_KEY — tính năng chụp bill sẽ KHÔNG chạy  │
+  │  CẢNH BÁO: thiếu GEMINI_API_KEY — chụp bill và AI có thể KHÔNG chạy  │
   └──────────────────────────────────────────────────────────────────────┘
 
   Biến còn thiếu:  GEMINI_API_KEY
 
-  Hệ vẫn dựng lên bình thường và mọi màn vẫn render. Thứ duy nhất chết là
-  đường hero: POST /receipts/scan sẽ trả 503 receipt_reader_not_configured
-  thay vì đọc ra danh sách món.
+  Hệ vẫn dựng lên bình thường và mọi màn vẫn render. Khoá này vào `core`
+  (ADR-0051): core nhúng văn bản bằng nó, và gọi model thẳng Gemini bằng nó
+  khi AGY_PROXY_URL để trống. Thiếu cả hai thì chụp bill trả 503
+  receipt_reader_not_configured, gợi ý và Nếp im, thay vì đọc ra món.
 
-  Phần chia tiền (allocator, sổ cái, đợt thu, VietQR) KHÔNG cần khoá này và
-  vẫn chạy đủ. Nếu bạn đang làm về tiền hay migration thì bỏ qua cảnh báo.
+  Phần chia tiền (allocator, sổ cái, đợt thu) KHÔNG cần khoá này và vẫn chạy
+  đủ. Nếu bạn đang làm về tiền hay migration thì bỏ qua cảnh báo.
 
   Cách đặt — ghi vào .env ở gốc repo (.gitignore đã chặn, không lỡ commit):
 
       echo 'GEMINI_API_KEY=<khoá của bạn>' >> .env
 
   Compose tự đọc .env ở gốc repo, nên chỉ cần `make up` lại. Đang chạy dở
-  thì phải dựng lại container api — biến môi trường chỉ đọc lúc khởi động.
+  thì phải dựng lại container core — biến môi trường chỉ đọc lúc khởi động.
 
 WARNING
 exit 0
