@@ -15,7 +15,7 @@ import { PhotoViewer } from "../ui/PhotoViewer";
 import { BookView } from "../diary/BookView";
 import { chiaSe, type KetQuaChiaSe } from "../web/chia-se";
 import { giuState } from "../../ui/a11y";
-import { nhanTrang, trangAlbum } from "./album";
+import { TI_LE_ALBUM, kichTrangAlbum, nhanTrang, trangAlbum } from "./album";
 
 /** `kich`: the frame to fill (a post's full-width page); without it the review queue's fixed frame. */
 export function CommunityVideo({ media, person, active, kich }: { media: Media; person: string; active: boolean; kich?: { width: number; height: number } }) {
@@ -64,10 +64,12 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
 }) {
   const { colors, radius } = useRudiTheme();
   // The album pages one picture the width of the post's column at a time,
-  // 4:3 like the owner's mockup; nothing is drawn until that width is known.
+  // 4:3 like the owner's mockup. Its 4:3 room is held from the first render
+  // (`khungAlbum`): drawn only once measured, a card the list remounts above
+  // the viewport came back ~270 dp short for a frame and the feed jumped.
   const [rongAlbum, setRongAlbum] = useState(0);
   const [trangDangXem, setTrangDangXem] = useState(0);
-  const kichAnh = { width: rongAlbum, height: Math.round((rongAlbum * 3) / 4) };
+  const kichAnh = kichTrangAlbum(rongAlbum);
   const theoCuon = (e: NativeSyntheticEvent<NativeScrollEvent>) => setTrangDangXem(trangAlbum(e.nativeEvent.contentOffset.x, rongAlbum, post.media.length));
   const soTrang = nhanTrang(trangDangXem, post.media.length); const router = useRouter(); const motion = useMotion(); const [expanded, setExpanded] = useState(detail); const [photo, setPhoto] = useState<Media | null>(null);
   // What «Chia sẻ» just did, said on the button itself for a few seconds (QA UI-136).
@@ -90,7 +92,7 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
       {!expanded && post.body.length > 240 ? <Text style={[typography.label, { color: colors.accent }]}>Đọc tiếp</Text> : null}
     </Pressable>
     {post.diary ? <BookView compact={!detail} kind={post.diary_kind} document={post.diary} photo={(id) => imageSource(person, `/v2/community/media/${id}`)} /> : null}
-    {!post.diary && post.media.length ? <View onLayout={(e) => setRongAlbum(Math.round(e.nativeEvent.layout.width))}>{rongAlbum > 0 ? <View>
+    {!post.diary && post.media.length ? <View onLayout={(e) => setRongAlbum(Math.round(e.nativeEvent.layout.width))} style={styles.khungAlbum}>{rongAlbum > 0 ? <View>
       <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={theoCuon} onMomentumScrollEnd={theoCuon} scrollEventThrottle={16} style={[styles.album, { borderRadius: radius.control }]}>
         {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, kichAnh, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo kich={kichAnh} media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={kichAnh} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
       </ScrollView>
@@ -116,7 +118,7 @@ const styles = StyleSheet.create({
   avatarTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
   identity: { flexDirection: "row", alignItems: "center", gap: 10 }, identityText: { flex: 1, gap: 2 }, follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   body: { lineHeight: 26 }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 },
-  album: { overflow: "hidden" }, mediaFrame: { overflow: "hidden" }, media: { width: 296, height: 330 },
+  khungAlbum: { width: "100%", aspectRatio: TI_LE_ALBUM }, album: { overflow: "hidden" }, mediaFrame: { overflow: "hidden" }, media: { width: 296, height: 330 },
   soTrang: { position: "absolute", top: 10, right: 10, paddingHorizontal: 8, paddingVertical: 3 },
   topics: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, topic: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8, minHeight: 48, minWidth: 48, justifyContent: "center" },
   actions: { flexDirection: "row", gap: 12, flexWrap: "wrap" }, luu: { width: 48, height: 48, alignItems: "center", justifyContent: "center", marginLeft: "auto" }, action: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 48, minWidth: 56, paddingHorizontal: 2 },

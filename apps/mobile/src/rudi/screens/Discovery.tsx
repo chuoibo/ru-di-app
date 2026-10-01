@@ -221,7 +221,7 @@ export function ExploreScreen({ dau }: { dau?: DungDau } = {}) {
       <SectionHeader
         action={filtering ? "Xóa lọc" : undefined}
         onAction={filtering ? resetFilters : undefined}
-        // Not «Gần bạn, đúng gu»: nothing here is ordered by distance or taste,
+        // Not the old near-you-and-to-taste heading: nothing here is ordered by distance or taste,
         // so the heading names the place and the count goes under it.
         title={
           filtering

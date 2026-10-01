@@ -12,3 +12,11 @@ export function trangAlbum(offsetX: number, rong: number, soTrang: number): numb
 export function nhanTrang(i: number, soTrang: number): string | null {
   return soTrang > 1 ? `${i + 1}/${soTrang}` : null;
 }
+
+/** A page of the album, width over height: the owner's mockup draws 4:3. */
+export const TI_LE_ALBUM = 4 / 3;
+
+/** The picture's frame for a column `rong` wide. */
+export function kichTrangAlbum(rong: number): { width: number; height: number } {
+  return { width: rong, height: Math.round(rong / TI_LE_ALBUM) };
+}

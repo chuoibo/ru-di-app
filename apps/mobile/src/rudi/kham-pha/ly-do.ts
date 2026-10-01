@@ -3,7 +3,7 @@
  * no honest photo. Pure: strings in, strings out, no React.
  *
  * Re-audit 10/09 (R3): the Explore lead said the same promise four times --
- * «Gần bạn, đúng gu» → the «HỢP GU» seal → «Hợp gu nhờ Chill và View đẹp» →
+ * the near-you heading (retired 02/10) → the «HỢP GU» seal → «Hợp gu nhờ Chill và View đẹp» →
  * a subtitle that repeated «view … chill». Two rules replace that:
  *
  * 1. `chonLyDo` picks ONE matched tag, and never one the subtitle already

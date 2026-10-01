@@ -15,6 +15,7 @@ import (
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/testdb"
@@ -426,4 +427,40 @@ func TestPostgresCommunityCountersFollowCanonicalWritesAndRollback(t *testing.T)
 	requireStatus(t, f.call("DELETE", path+"/comments/"+c.ID, 1, nil), 204)
 	requireStatus(t, f.call("DELETE", path+"/like", 1, nil), 200)
 	assertCounts(0, 0)
+}
+
+// An empty shared ranking must store as an empty array. The feed snapshot
+// keeps its ids in community_feeds.post_ids, which is NOT NULL, and pgx writes
+// a nil slice as NULL: the copy the ranking used to make of an empty ranking
+// was nil, so every reader of an empty community got 503
+// «community_unavailable» (sqlstate 23502 on the QA stack, 2026-10-02). This
+// holds the insert to the copy the handler now makes (banSaoXepHang), and
+// shows the column still refuses what the old copy produced.
+func TestPostgresCommunityEmptyRankingStoresEmptyArray(t *testing.T) {
+	f := setup(t)
+	ctx := context.Background()
+	tx, err := f.pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	luu := `INSERT INTO community_feeds(id,person_id,mode,post_ids,rank_key) VALUES($1,$2,'for_you',$3,$4)`
+	if _, err := tx.Exec(ctx, luu, uuid(), f.people[0], banSaoXepHang(nil), "rong-"+uuid()); err != nil {
+		t.Fatalf("the copy of an empty ranking does not store: %v", err)
+	}
+	var n int
+	if err := tx.QueryRow(ctx, `SELECT cardinality(post_ids) FROM community_feeds WHERE person_id=$1 AND rank_key LIKE 'rong-%'`, f.people[0]).Scan(&n); err != nil || n != 0 {
+		t.Fatalf("stored ids: %d, %v; want an empty array", n, err)
+	}
+	if _, err := tx.Exec(ctx, "SAVEPOINT tho_nil"); err != nil {
+		t.Fatal(err)
+	}
+	_, err = tx.Exec(ctx, luu, uuid(), f.people[0], append([]string(nil), []string{}...), "nil-"+uuid())
+	var pg *pgconn.PgError
+	if !errors.As(err, &pg) || pg.Code != "23502" {
+		t.Fatalf("a nil slice: %v; want sqlstate 23502 (the column is NOT NULL)", err)
+	}
+	if _, err := tx.Exec(ctx, "ROLLBACK TO SAVEPOINT tho_nil"); err != nil {
+		t.Fatal(err)
+	}
 }

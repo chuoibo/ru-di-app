@@ -305,6 +305,7 @@
     "diary-ai-saved"
   ],
   "daXoa": {
+    "Gần bạn, đúng gu": "Đợt thanh tab 5 cột (02/10): tiêu đề mục kết quả của Khám phá thành «Chỗ hay ở <thành phố>» vì danh mục về theo thứ tự máy chủ (ORDER BY places.id), không theo vị trí hay gu. Flow 22 giữ assertNotVisible để chặn câu nói sai đó quay lại.",
     ".*đang im lặng.*": "ADR-0036 §2.1 xoá v1 tận gốc (main 2a602ba, #650): câu «… đang im lặng» không còn trong mã. Flow 40 và _30 giữ assertNotVisible để chặn nó quay lại."
   },
   "congDongMoi": {

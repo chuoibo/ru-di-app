@@ -348,7 +348,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
             onAction={dangLoc ? boTim : undefined}
             // The city comes from the answer, not from a string typed here:
             // this line used to say «Đà Lạt» over a list of anywhere. Not
-            // «Gần bạn, đúng gu» (owner's mockup): the catalogue comes in
+            // the mockup's near-you-and-to-taste heading: the catalogue comes in
             // the server's order (ORDER BY places.id), not by distance or
             // taste, so the heading claims neither; the count moves under it.
             title={dangLoc ? `${danhSach.length.toLocaleString("vi-VN")} kết quả` : `Chỗ hay ở ${diemDen === null ? "đây" : diemDen.name}`}

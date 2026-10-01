@@ -12,7 +12,7 @@ appId: com.lakiet.rudi
     timeout: 2500
 - pressKey: Back
 - extendedWaitUntil:
-    visible: "Gần bạn, đúng gu"
+    visible: "Chỗ hay ở Đà Lạt"
     timeout: 20000
 - waitForAnimationToEnd:
     timeout: 2500
