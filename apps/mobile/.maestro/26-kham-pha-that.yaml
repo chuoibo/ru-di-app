@@ -23,7 +23,7 @@ appId: com.lakiet.rudi
 # OpenStreetMap có hàng trăm), nên flow gác HÌNH DẠNG câu chứ không gác con số:
 # tên thành phố phải là tên máy chủ vừa phục vụ, không phải chuỗi viết cứng.
 - extendedWaitUntil:
-    visible: "[0-9]+ nơi ở Đà Lạt"
+    visible: "Chỗ hay ở Đà Lạt"
     timeout: 60000
 - assertNotVisible: "Xóm Lèo"
 - assertNotVisible: "Mẫu minh hoạ.*"
@@ -55,7 +55,7 @@ appId: com.lakiet.rudi
 - takeScreenshot: 26-loc-cafe
 - tapOn: "Xóa lọc"
 - extendedWaitUntil:
-    visible: "[0-9]+ nơi ở Đà Lạt"
+    visible: "Chỗ hay ở Đà Lạt"
     timeout: 30000
 # Gõ tên thì lọc ngay trên máy, không cần dấu («lung chung» ra «Lưng Chừng»).
 #
@@ -121,7 +121,7 @@ appId: com.lakiet.rudi
 # hình. Cuộn lên tới nó rồi mới khẳng định.
 - scrollUntilVisible:
     element:
-      text: "[0-9]+ nơi ở Đà Lạt"
+      text: "Chỗ hay ở Đà Lạt"
     direction: UP
     timeout: 30000
 - assertVisible: "Bỏ lưu Tiệm Nướng Xóm Lào"

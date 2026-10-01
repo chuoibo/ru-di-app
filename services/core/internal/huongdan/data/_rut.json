@@ -167,7 +167,7 @@
         "Chia sẻ",
         "Chưa có gợi ý",
         "Chưa thấy nơi phù hợp",
-        "Gần bạn, đúng gu",
+        "Chỗ hay ở Đà Lạt",
         "Gợi ý mẫu cho",
         "Gợi ý mẫu cho …: khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
         "Lưu địa điểm",
@@ -496,6 +496,7 @@
       ],
       "di_toi": [
         "ai-match",
+        "community",
         "destinations",
         "personalization",
         "places/[id]"
@@ -508,7 +509,8 @@
         "Chưa có gợi ý",
         "Chưa rút được ngân sách, số người hay khu vực; xếp theo gu chung.",
         "Chưa thấy nơi phù hợp",
-        "Gần bạn, đúng gu",
+        "Chỗ hay ở Đà Lạt",
+        "Chỗ hay ở …",
         "Gợi ý mẫu cho",
         "Gợi ý mẫu cho …: khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
         "Hỏi Rủ Đi AI",
@@ -531,6 +533,7 @@
         "Từ 90% hợp gu",
         "Vì sao hợp …?",
         "Xóa lọc",
+        "· đổi nơi khác",
         "Ô tìm địa điểm",
         "Đang đọc câu «",
         "Đang đọc câu «…»...",
@@ -540,8 +543,7 @@
         "Đóng bộ lọc",
         "Đổi điểm đến",
         "… kết quả",
-        "… kết quả phù hợp",
-        "… nơi ở …"
+        "… kết quả phù hợp"
       ],
       "tep": [
         "app/(tabs)/explore.tsx",
@@ -1848,7 +1850,7 @@
         "Chưa mở được địa điểm",
         "Chưa thấy nơi phù hợp",
         "Chỉ đường",
-        "Gần bạn, đúng gu",
+        "Chỗ hay ở Đà Lạt",
         "Gợi ý mẫu cho",
         "Gợi ý mẫu cho …: khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
         "Lưu địa điểm",

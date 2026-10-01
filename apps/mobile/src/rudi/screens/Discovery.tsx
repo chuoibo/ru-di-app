@@ -37,7 +37,7 @@ import {
   TopBar,
   type IconName,
 } from "../ui";
-import { Wordmark } from "../ui/Wordmark";
+import type { DungDau } from "../ui/DauKhamPha";
 import { Canh } from "../ui/art/Canh";
 import { MediaSlot } from "../ui/MediaSlot";
 import { GuGlyph } from "../ui/art/Gu";
@@ -96,7 +96,7 @@ function tenNhomHienTai(session: ReturnType<typeof useRudiSession>): string {
   return nhom?.display_name ?? "nhóm của bạn";
 }
 
-export function ExploreScreen() {
+export function ExploreScreen({ dau }: { dau?: DungDau } = {}) {
   // At large text the search box and its two buttons no longer share a row:
   // the box takes the line and the buttons drop under it, right-aligned. The
   // placeholder draws itself on one line now (F44), but a 230dp box at font
@@ -148,10 +148,11 @@ export function ExploreScreen() {
   const { soSanh, hang } = taiSoSanh(conLai);
 
   return (
-    <RudiScreen bottomInset="tab" testID="explore-screen">
+    // The demo's door rides in Khám phá's header, where the live screen keeps
+    // nothing (owner's mockup, 01/10); the inbox bell stays with the place.
+    <RudiScreen bottomInset="tab" header={dau?.(<DemoBadge />)} testID="explore-screen">
       <View style={styles.exploreHeader}>
         <View style={styles.exploreBrand}>
-          <Wordmark color={colors.ink} height={20} />
           <Inline gap={5} style={styles.location}>
             <Ionicons color={colors.accent} name="location" size={16} />
             <Text style={[typography.label, { color: colors.ink }]}>
@@ -160,7 +161,7 @@ export function ExploreScreen() {
           </Inline>
         </View>
         <Inline gap={8}>
-          <DemoBadge />
+          {dau ? null : <DemoBadge />}
           <IconButton
             accessibilityLabel="Thông báo"
             icon="notifications-outline"
@@ -212,14 +213,19 @@ export function ExploreScreen() {
       <SectionHeader
         action={filtering ? "Xóa lọc" : undefined}
         onAction={filtering ? resetFilters : undefined}
+        // Not «Gần bạn, đúng gu»: nothing here is ordered by distance or taste,
+        // so the heading names the place and the count goes under it.
         title={
           filtering
             ? `${visiblePlaces.length} kết quả phù hợp`
             : song
               ? "Mẫu minh hoạ"
-              : "Gần bạn, đúng gu"
+              : "Chỗ hay ở Đà Lạt"
         }
       />
+      {!filtering && !song ? (
+        <Text style={[typography.caption, styles.soNoi, { color: colors.inkFaint }]}>{`${visiblePlaces.length} nơi`}</Text>
+      ) : null}
       {song ? (
         // The rows below carry distances, ratings and prices. For a real
         // session those are sample numbers until M4 reads the catalogue from
@@ -451,6 +457,8 @@ export function PlaceDetailScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   exploreHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  // Close under its heading, as one block (the column's gap is 18).
+  soNoi: { marginTop: -14 },
   exploreBrand: { gap: 6, flexShrink: 1 },
   location: { minHeight: 24 },
   searchRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },

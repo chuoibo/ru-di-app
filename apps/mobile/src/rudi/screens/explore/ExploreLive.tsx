@@ -56,7 +56,8 @@ import {
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField, SectionHeader } from "../../ui";
-import { Wordmark } from "../../ui/Wordmark";
+import type { DungDau } from "../../ui/DauKhamPha";
+import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { SanKhau } from "../../ui/SanKhau";
 import { sanKhauThanhPho } from "../../art/thanh-pho";
 import { Canh } from "../../ui/art/Canh";
@@ -113,9 +114,12 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
   };
 }
 
-export function ExploreLiveScreen({ phien }: { phien: Phien }) {
+export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  // The city stage runs edge to edge on a phone (owner's mockup, 01/10); a
+  // tablet keeps it inside the reading column.
+  const dienThoai = useAdaptiveLayout().sizeClass === "compact";
   // Large text: the search box takes the whole line and the assistant button
   // drops under it. The placeholder here is thirty characters; it draws itself
   // on one line now (F44), and the full width is what keeps most of it legible.
@@ -244,10 +248,10 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const rong = danhSach.length === 0;
 
   return (
-    <RudiScreen bottomInset="tab" onRefresh={nap} testID="explore-screen">
+    <RudiScreen bottomInset="tab" header={dau?.()} onRefresh={nap} testID="explore-screen">
       <View style={styles.dau}>
-        <Wordmark color={colors.ink} height={20} />
-        {/* The destination is a control, not a caption. */}
+        {/* The destination is a control, not a caption: the city in ink, the
+            way to change it in the invitation's coral (owner's mockup). */}
         <Pressable
           accessibilityLabel="Đổi điểm đến"
           accessibilityRole="button"
@@ -255,10 +259,17 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
           style={({ pressed }) => [styles.viTri, pressed && styles.bam]}
         >
           <Ionicons color={colors.accent} name="location" size={16} />
-          <Text style={[typography.label, { color: colors.ink }]}>
-            {diemDen !== null ? `${diemDen.name} · đổi nơi khác` : trang.pha === "hong" ? "Chưa đọc được điểm đến · thử lại" : "Đang đọc điểm đến…"}
-          </Text>
-          <Ionicons color={colors.inkFaint} name="chevron-down" size={14} />
+          {diemDen !== null ? (
+            <Text style={[typography.label, { color: colors.ink }]}>
+              {diemDen.name}
+              <Text style={{ color: colors.accent }}> · đổi nơi khác</Text>
+            </Text>
+          ) : (
+            <Text style={[typography.label, { color: colors.ink }]}>
+              {trang.pha === "hong" ? "Chưa đọc được điểm đến · thử lại" : "Đang đọc điểm đến…"}
+            </Text>
+          )}
+          <Ionicons color={diemDen !== null ? colors.accent : colors.inkFaint} name="chevron-down" size={14} />
         </Pressable>
       </View>
       {/* The city itself, as a pop-up stage (ADR-0037 D1, plan S4): drawn from
@@ -266,7 +277,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
           folds away while a search or filter is under way, so the results
           keep the top of the screen. */}
       {diemDen !== null && !dangLoc && query === "" ? (
-        <View onLayout={(e) => setRongSan(Math.round(e.nativeEvent.layout.width))} style={styles.sanThanhPho} testID="san-thanh-pho">
+        <View onLayout={(e) => setRongSan(Math.round(e.nativeEvent.layout.width))} style={[styles.sanThanhPho, dienThoai && styles.sanTran]} testID="san-thanh-pho">
           {rongSan > 0 ? <SanKhau coMoTa key={diemDen.id} san={sanKhauThanhPho(diemDen.id, diemDen.name)} width={Math.min(rongSan, 480)} /> : null}
         </View>
       ) : null}
@@ -344,13 +355,15 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
             action={dangLoc ? "Xóa lọc" : undefined}
             onAction={dangLoc ? boTim : undefined}
             // The city comes from the answer, not from a string typed here:
-            // this line used to say «Đà Lạt» over a list of anywhere.
-            title={
-              dangLoc
-                ? `${danhSach.length.toLocaleString("vi-VN")} kết quả`
-                : `${trang.places.length.toLocaleString("vi-VN")} nơi ở ${diemDen === null ? "đây" : diemDen.name}`
-            }
+            // this line used to say «Đà Lạt» over a list of anywhere. Not
+            // «Gần bạn, đúng gu» (owner's mockup): the catalogue comes in
+            // the server's order (ORDER BY places.id), not by distance or
+            // taste, so the heading claims neither; the count moves under it.
+            title={dangLoc ? `${danhSach.length.toLocaleString("vi-VN")} kết quả` : `Chỗ hay ở ${diemDen === null ? "đây" : diemDen.name}`}
           />
+          {!dangLoc ? (
+            <Text style={[typography.caption, styles.soNoi, { color: colors.inkFaint }]}>{`${trang.places.length.toLocaleString("vi-VN")} nơi`}</Text>
+          ) : null}
           {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
               button, because it is the one state the person can fix. */}
           {gu === null || gu.co_so === "chua-biet" ? (
@@ -435,6 +448,10 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
 
 const styles = StyleSheet.create({
   sanThanhPho: { alignItems: "center", alignSelf: "stretch" },
+  // The screen's own gutter (`space.md`), given back so the stage meets both edges.
+  sanTran: { marginHorizontal: -16 },
+  // Close under its heading, as one block (the column's gap is 18).
+  soNoi: { marginTop: -14 },
   flex: { flex: 1 },
   dau: { gap: 6 },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
