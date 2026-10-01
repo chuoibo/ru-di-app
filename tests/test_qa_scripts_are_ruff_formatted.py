@@ -69,7 +69,6 @@ RUFF_PINNED = REPO_ROOT / "scripts" / "ruff_pinned.sh"
 LEGACY_UNFORMATTED = frozenset(
     {
         "tests/qa/pr-57/test_rendered_contrast_pr57.py",
-        "tests/qa/pr-67/test_script_bill_mo_phan_loai_status.py",
         "tests/qa/rd-qa-02/run_mutations.py",
         "tests/qa/rd-qa-07/03-mutation-gate.py",
         "tests/qa/rd-qa-10/do_commit_sau_phan_hoi.py",
