@@ -428,7 +428,7 @@ func searchPlacesWAI() Route {
 		// only for the few searchCandidates keeps: at most rag.ToiDaNgan, the
 		// most any search hands the model (design 04 §7).
 		// places_search_shortlist_postgres_test.go reads the prompt the model
-		// receives; parity has nothing to compare since ADR-0051.
+		// receives; parity has nothing to compare since ADR-0052.
 		slim, err := store.ListPlaceCards(ctx, filter)
 		if err != nil {
 			return endpoint.Reply{}, err

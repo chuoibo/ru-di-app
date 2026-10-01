@@ -23,7 +23,7 @@ import (
 
 // testdata/python_nhatky.json was rendered by scripts/render_diary_golden.py
 // from the real diary_gemini.compose_diary, driven by scripted answers,
-// before ADR-0051 deleted it: every request the loop made and what it
+// before ADR-0052 deleted it: every request the loop made and what it
 // returned or raised.
 
 // ghi is a model that answers from a script and keeps every request.

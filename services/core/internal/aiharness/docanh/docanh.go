@@ -2,7 +2,7 @@
 // re-encoded screenshot in, one raw reading out, in the closed shape of
 // LuocDo. The instruction (doc_anh.txt) is the Python brain's screenshot
 // reader's, word for word (services/api/app/api/screenshot_gemini.py before
-// ADR-0051): classify the app, copy merchant and money as printed, a date
+// ADR-0052): classify the app, copy merchant and money as printed, a date
 // only when complete, and never a person.
 //
 // It decides nothing: domain/screenshot reads the answer.

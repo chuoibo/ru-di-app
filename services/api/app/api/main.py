@@ -173,7 +173,7 @@ def create_app(
     # cache, no cadence, one model call per GET.
     application.state.suggestion_limiter = build_suggestion_limiter()
     # `GET /places` and `GET /places/{id}` read their reasons through this
-    # seam; since ADR-0051 the model's word is the Go core's, and the writer
+    # seam; since ADR-0052 the model's word is the Go core's, and the writer
     # installed here answers for nobody (see `no_reasons`).
     application.state.reason_writer = no_reasons
     # F33 is the eighth door. It reads the group's live conversation, so it

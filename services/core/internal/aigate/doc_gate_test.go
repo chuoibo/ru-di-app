@@ -322,7 +322,7 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 	for _, must := range []string{
 		"(*" + pkgChat + ".Handler).nepXong",
 		pkgChat + ".phien",
-		// The Go engine (the only one since ADR-0051) and its metrics writer
+		// The Go engine (the only one since ADR-0052) and its metrics writer
 		// are on the path; a walk that stops at the engine proves nothing
 		// about it.
 		"(*mobile/services/core/internal/aiharness.Engine).Run",

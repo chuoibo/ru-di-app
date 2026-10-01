@@ -2,7 +2,7 @@
 // a first reading of a public post or comment, and Nếp's draft of a member's
 // own post. The Python brain only forwarded both to an operator endpoint that
 // was never in the repository, so these instructions (duyet.txt, nep.txt) are
-// new with ADR-0051; the contract they answer is the one community already
+// new with ADR-0052; the contract they answer is the one community already
 // held: relevant, safe, confidence_milli, reason for a reading, draft for Nếp.
 //
 // It decides nothing. community.decision publishes only from a confident,

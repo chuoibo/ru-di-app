@@ -114,7 +114,7 @@ func TestForceAndServed(t *testing.T) {
 
 // A frozen route named alone is refused; a rollback of its group or of
 // everything moves the group's other routes and leaves the frozen one on Go,
-// whose Python no longer does the work (ADR-0051).
+// whose Python no longer does the work (ADR-0052).
 func TestForceRefusesFrozen(t *testing.T) {
 	a := goOwned(row(0, "GET", "/a", "g1"))
 	a.State, a.Python = "FROZEN", PythonFrozen

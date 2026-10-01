@@ -8,7 +8,7 @@ import (
 )
 
 // testdata/python_screenshot*.json was rendered by scripts/render_domain_ai_goldens.py
-// from the real app.domain.screenshot before ADR-0051 deleted it.
+// from the real app.domain.screenshot before ADR-0052 deleted it.
 
 func refusal(err error) (class, code string, ok bool) {
 	var e *Error

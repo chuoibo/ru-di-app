@@ -91,7 +91,7 @@ def read_trip_reel(
     repository: Annotated[ApiRepository, Depends(get_repository)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_reel_limiter)],
 ) -> ReelResponse:
-    """Declaration only: the Go core serves this route (ADR-0051)."""
+    """Declaration only: the Go core serves this route (ADR-0052)."""
 
     del context_id, outing_id, actor, repository, limiter
     raise ApiProblem(

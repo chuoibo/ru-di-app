@@ -348,7 +348,7 @@ class PlaceSearchResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Reason writer: injected, and since ADR-0051 silent
+# Reason writer: injected, and since ADR-0052 silent
 # ---------------------------------------------------------------------------
 
 Verdict = Literal["hop", "tam", "khong-hop"]
@@ -371,7 +371,7 @@ def no_reasons(rows: list[ReasonRow], group: TasteProfile) -> dict[str, PlaceRea
     """The writer `create_app` installs: no model answers for any row.
 
     The reasons a model writes for these cards are the Go core's since
-    ADR-0051 (internal/aiharness/timquan). These two routes stay the parity
+    ADR-0052 (internal/aiharness/timquan). These two routes stay the parity
     oracle for everything else on the page, which is what a keyless core
     serves, so the writer is kept as a seam that answers for nobody.
     """
@@ -903,7 +903,7 @@ def search_places(
     limiter: Annotated[FixedWindowLimiter, Depends(get_search_rate_limiter)],
     repository: Annotated[ApiRepository, Depends(get_repository)],
 ) -> PlaceSearchResponse:
-    """Declaration only: the Go core serves this route (ADR-0051)."""
+    """Declaration only: the Go core serves this route (ADR-0052)."""
 
     del request, actor, limiter, repository
     raise ApiProblem(410, "served_by_go", "POST /places/search do core Go phục vụ.")

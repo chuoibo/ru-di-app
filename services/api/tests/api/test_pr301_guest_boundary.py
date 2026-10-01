@@ -30,7 +30,7 @@ from .helpers import CONTEXT_ID, create_batch, propose_and_confirm, publish_batc
 
 #: The endpoints this branch added that Python still serves. Written out
 #: because the point is coverage of all of them. The contextual card
-#: (`/contextual-suggestion`) left with ADR-0051: its Python route is only a
+#: (`/contextual-suggestion`) left with ADR-0052: its Python route is only a
 #: declaration now, and the Go core owns its membership gate.
 NEW_ROUTES = pytest.mark.parametrize(
     "path",

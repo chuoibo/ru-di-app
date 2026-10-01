@@ -2,7 +2,7 @@
 #
 #   POST /contexts/{id}/photos/{photo_id}/face-boxes
 #
-# The reel used to share this file. ADR-0051 moved its model call into the Go
+# The reel used to share this file. ADR-0052 moved its model call into the Go
 # core and deleted the Python side, so there is nothing left to compare it
 # with; its steps went with it (its Go tests: internal/routes, goiy).
 #

@@ -1,7 +1,7 @@
 # ADR-0047 — RAG agentic trên retriever lai có kiểu, và vòng đời nạp dữ liệu
 
 - Ngày: 2026-09-25.
-- **Sửa bởi:** ADR-0051 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
+- **Sửa bởi:** ADR-0052 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
 - Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-27.** Không phải chữ ký Lead: chủ sản phẩm quyết
   định sản phẩm và chốt văn bản này; ghi rõ để không ai đọc thành Lead đã ký.
 - Số hiệu: lúc đề xuất là **ADR-0040** (`docs/decisions/proposals/`). `main` đã có ADR-0040 khác nên

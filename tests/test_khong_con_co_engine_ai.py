@@ -1,8 +1,8 @@
-"""The AI engine switch is gone, and nothing may bring it back (ADR-0051).
+"""The AI engine switch is gone, and nothing may bring it back (ADR-0052).
 
 Until 2026-09-30 two flags, MOBILE_AI_ENGINE_NEP and MOBILE_AI_ENGINE_GROUP,
 chose between the Go engine and the Python brain for Nếp and the group
-assistant. ADR-0051 deleted the brain path and the flags with it: the Go
+assistant. ADR-0052 deleted the brain path and the flags with it: the Go
 engine is the only engine, and `core` no longer reads either name.
 
 A flag left in a compose file or an env template would now be a knob wired to

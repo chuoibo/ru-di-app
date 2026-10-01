@@ -618,7 +618,7 @@ type chatReading struct {
 const chatExpenseTimeout = 30 * time.Second
 
 // readChatExpense asks the model whether the message reports an expense its
-// writer paid (aiharness/dockhoan, ADR-0051) and holds the answer to
+// writer paid (aiharness/dockhoan, ADR-0052) and holds the answer to
 // domain/chatexpense: no person, whole đồng, a draft only. Every failure is
 // the closed refusal the app has always read.
 func readChatExpense(ctx context.Context, may *motluot.May, text string) (chatReading, error) {

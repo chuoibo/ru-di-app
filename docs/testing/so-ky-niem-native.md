@@ -21,7 +21,7 @@ Android emulator là phạm vi kiểm ở đây. Chưa có bằng chứng iOS ru
 2. API Go: `MOBILE_DATABASE_URL`, `MOBILE_MEDIA_ROOT`, `MOBILE_PERSON_ID_KEY`,
    `MOBILE_AUTH_MODE=prod`, `MOBILE_INTERNAL_TOKEN`, `MOBILE_PYTHON_UPSTREAM`.
    Chỉ môi trường thử dùng log sender và `MOBILE_OTP_DEBUG_CODE=000000`.
-3. `core` gọi model (ADR-0051: `aiharness/nhatky`, không còn brain Python):
+3. `core` gọi model (ADR-0052: `aiharness/nhatky`, không còn brain Python):
    `AGY_PROXY_URL`/`AGY_PROXY_KEY`, hoặc `GEMINI_API_KEY` khi không có agy.
    Không đưa khóa vào Expo, APK, Git hay log. Worker có hai consumer, lease
    160 s, tối đa ba lượt và hạn một giờ; model bị giới hạn tối đa một lần viết

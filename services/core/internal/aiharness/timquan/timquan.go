@@ -2,7 +2,7 @@
 // of the reasons on GET /places: the prompts, the calls, and every check that
 // stands between a model answer and a card. It is a port of the Python brain's
 // app/places/search.py, app/places/reasons.py and app/domain/place_search.py
-// before ADR-0051 deleted them; testdata/python_*.json holds what those
+// before ADR-0052 deleted them; testdata/python_*.json holds what those
 // modules did, and oracle_test.go replays it.
 //
 // The rules the Python side wrote down hold here unchanged:

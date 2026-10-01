@@ -249,7 +249,7 @@ def test_an_old_ai_command_is_an_ordinary_message_and_reaches_no_model(
     The text is kept exactly as typed and nothing else happens: no intent is
     named, no error is reported, no card is written, and neither the companion
     nor the expense reader is asked anything (neither is wired to this route
-    any more: ADR-0051 moved every model step to Go). The shrunken response
+    any more: ADR-0052 moved every model step to Go). The shrunken response
     carries no `companion` or `expense_card` field at all.
     """
     client = _client(repository, companion, monkeypatch)

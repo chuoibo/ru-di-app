@@ -118,7 +118,7 @@ services:
       ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       <<: *api-env
-      # No AI key here, on purpose (ADR-0051): every model call left this
+      # No AI key here, on purpose (ADR-0052): every model call left this
       # process for `core`, which is where GEMINI_API_KEY and AGY_PROXY_*
       # are listed. What Python still runs of the AI surface is on-box face
       # detection, which needs no credential. A key listed here would be a
@@ -273,7 +273,7 @@ services:
       # Legacy route rollback without a rebuild. Go-only profile routes have
       # no Python implementation and remain owned by Go.
       MOBILE_FORCE_PYTHON: ${MOBILE_FORCE_PYTHON:-}
-      # The model (ADR-0051): core runs the chat engine and every one-shot
+      # The model (ADR-0052): core runs the chat engine and every one-shot
       # AI step itself, through agy-proxy when AGY_PROXY_URL is set, else
       # Gemini directly. Empty everywhere is a keyless stack: core starts and
       # its AI routes refuse as they always have without a key. GEMINI_API_KEY
@@ -347,7 +347,7 @@ services:
     command: ["work"]
     environment:
       <<: *api-env
-      # `core work` refuses to start without a model (ADR-0051).
+      # `core work` refuses to start without a model (ADR-0052).
       AGY_PROXY_URL: ${AGY_PROXY_URL:-}
       AGY_PROXY_KEY: ${AGY_PROXY_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}

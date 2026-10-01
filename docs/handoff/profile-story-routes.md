@@ -133,7 +133,7 @@ oracle; `phase0/` và `docs/protocol/v1/` vẫn đóng băng.
 | Hồ sơ kể chuyện | Hero hành trình, kết đang theo, dấu mốc, lượt MP4; tối đa ba huy hiệu chủ hồ sơ chọn | Android mở hồ sơ mình/bạn bè; badge tải thật; ảnh sáng/tối đã xem | Không tuyên bố mọi viewport/trạng thái đã được quét |
 | Graph thành tích | Bốn mở đầu, ba hướng, sáu kết theo hướng, hai kết giao nhau, một kết cuối; lịch sử chọn có ý nghĩa | Go + PostgreSQL kiểm điều kiện, lịch sử và trao thưởng | Danh mục hiện tại có 13 huy hiệu; chưa có campaign mới do AI sinh tự do |
 | Điểm đến | Tính theo `destination_id` của chuyến đã có dữ liệu | Ca PostgreSQL về hai điểm đến và lịch sử chuyến | Không suy ra thành phố từ tên tự nhập hoặc chuỗi địa chỉ |
-| Gợi ý AI | Preview số đếm, đồng ý từng lần; Go gọi model qua agy-proxy (ADR-0051), lọc ứng viên và fallback | Contract, `achievementv1/ai_test.go`, native đường fallback/consent; 1 lượt thật qua agy (`vnlocal-thu tinh-nang`) | Chưa chạy model thật để đánh giá mức đa dạng hay chất lượng câu kể |
+| Gợi ý AI | Preview số đếm, đồng ý từng lần; Go gọi model qua agy-proxy (ADR-0052), lọc ứng viên và fallback | Contract, `achievementv1/ai_test.go`, native đường fallback/consent; 1 lượt thật qua agy (`vnlocal-thu tinh-nang`) | Chưa chạy model thật để đánh giá mức đa dạng hay chất lượng câu kể |
 | Quyền lợi MP4 | Sổ cấp lượt, reserve nguyên tử, idempotency, hoàn lượt khi hỏng, thư viện riêng | PostgreSQL + MP4 H.264 tổng hợp giải mã bằng ffmpeg; kiểm range và owner | Renderer thật và phát MP4 end to end trên native chưa được xác nhận |
 | Ảnh native | Multipart bằng File của Expo, giữ ảnh đã tải và khóa retry khi lưu bài lỗi | Android chọn ảnh, upload, đăng bài, mở ảnh | Cần kiểm lại sau gộp luồng media mới trên `main` |
 | Bình luận quanh ảnh | Cha/con một tầng, like bình luận, khay bình luận trong ảnh toàn màn hình | Native thao tác cha/con và nhập trong khay ảnh; test PostgreSQL | Parent của Cộng đồng mới nằm ở metadata riêng, cần thống nhất khi tích hợp |
@@ -156,7 +156,7 @@ oracle; `phase0/` và `docs/protocol/v1/` vẫn đóng băng.
 | Go graph / điều kiện | `services/core/internal/domain/achievement/routes.go`; `services/core/internal/achievementv1/handler.go`, `store.go`, `schema.sql` |
 | Go tường / tương tác / sự kiện | `services/core/internal/socialv2/wall.go`, `interactions.go`, `notify.go`, `schema.sql` |
 | Go video / credits / proxy | `services/core/internal/profilemedia/handler.go`, `jobs.go`, `proxy.go`, `schema.sql` |
-| Bước model | `services/core/internal/aiharness/goiy/goiy.go` (`PromptThanhTuu`), `services/core/internal/achievementv1/handler.go` (`suggestions`) — Python đã xoá (ADR-0051) |
+| Bước model | `services/core/internal/aiharness/goiy/goiy.go` (`PromptThanhTuu`), `services/core/internal/achievementv1/handler.go` (`suggestions`) — Python đã xoá (ADR-0052) |
 | Mount/migration | `services/core/cmd/core/main.go`, `docker-compose.yml`, `scripts/chat_e2e_stack.sh` |
 | Contract/ownership | `services/core/ownership/routes.json`, `.api-contract-unresolved.json` |
 | Thiết kế và nguồn ảnh | [huy hiệu](../design/huy-hieu-ho-so.md), `docs/assets/profile-badges/` |
@@ -225,7 +225,7 @@ Không coi log cũ là kết quả của commit sau tích hợp.
 | Dependencies / test | `apps/mobile/package.json`, `package-lock.json`, `tsconfig.test.json`, `tests/rudi-hanh-trinh-web.test.mjs` | Gộp dependency trực tiếp, sinh lại lockfile bằng npm; giữ tests của cả hai nhánh |
 | Bootstrap / SQL | `docker-compose.yml`, `scripts/chat_e2e_stack.sh`, `services/core/cmd/core/main.go` | Giữ migrate-chat mặc định, migrate-diaries/community của main và migrate-profile của nhánh; migration là lệnh tường minh |
 | Ownership / gates | `services/core/ownership/manifest.go`, `routes.json`, `scripts/render_route_manifest.py`, `scripts/check_go_owned_python_touch.py`, `scripts/gate.sh`, `services/core/internal/httpapi/router/router_test.go` | Giữ các cổng mới của main, khai báo chính xác Go-native routes; không mở ngoại lệ chỉ để gate xanh |
-| AI contract test | `services/core/internal/achievementv1/ai_test.go`, `services/core/internal/aiharness/goiy/oracle_test.go` | Bộ lọc ứng viên và prompt khớp bản Python đã xoá (ADR-0051) |
+| AI contract test | `services/core/internal/achievementv1/ai_test.go`, `services/core/internal/aiharness/goiy/oracle_test.go` | Bộ lọc ứng viên và prompt khớp bản Python đã xoá (ADR-0052) |
 | Artifact review | `.repo-guard-allowlist.json` | Gộp theo path, tính hash từ bytes cuối; ảnh/fixture đã đổi phải review lại, không giữ hai digest cho cùng path |
 
 Các đường dẫn UI rút gọn ở bảng nằm trong
@@ -366,7 +366,7 @@ E2EE; luồng chat native và kiểm chứng crypto có cổng riêng.
 
 Điểm cấu hình khi nối dịch vụ thật: `core` gọi model qua `AGY_PROXY_URL`/
 `AGY_PROXY_KEY` (hoặc Gemini thẳng bằng `GEMINI_API_KEY`), không qua Python
-(ADR-0051). Profile media proxy đọc
+(ADR-0052). Profile media proxy đọc
 `NEP_PROXY_URL`, `NEP_PROXY_TOKEN` và khóa danh tính `MOBILE_PERSON_ID_KEY`.
 Đối chiếu lại các tên này với cấu hình trên main sau gộp. Chỉ ghi tên biến
 trong docs; secret thực ở môi trường ngoài repo, không đưa vào log/PR.

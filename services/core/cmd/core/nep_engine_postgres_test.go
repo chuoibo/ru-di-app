@@ -126,7 +126,7 @@ func TestWorkRefusesGoEngineWithoutMetricsSchema(t *testing.T) {
 }
 
 // A keyless stack still serves: `serve` starts, says it has no model, and
-// runs no engine (its AI routes refuse as without a key, ADR-0051).
+// runs no engine (its AI routes refuse as without a key, ADR-0052).
 func TestServeStartsKeyless(t *testing.T) {
 	databaseURL := chatSchemaURL(t)
 	migrateChatInto(t, databaseURL)

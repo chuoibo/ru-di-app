@@ -1,5 +1,5 @@
 // Package goiy builds and sends the prompts of the prose steps the Python
-// brain used to run (ADR-0051): the proactive suggestion card (F32), the
+// brain used to run (ADR-0052): the proactive suggestion card (F32), the
 // suggestion read from the room (F33), the trip reel, and Nếp's line on the
 // journey choices. Each prompt is the Python one byte for byte (rules
 // embedded verbatim, data as json.dumps would write it), pinned by

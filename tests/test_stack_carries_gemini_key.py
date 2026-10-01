@@ -78,7 +78,7 @@ class TheKeyReachesTheContainerTests(unittest.TestCase):
         self.document = _compose_document()
 
     def api_environment(self) -> dict:
-        # Since ADR-0051 the key goes to `core`, the one process that calls the
+        # Since ADR-0052 the key goes to `core`, the one process that calls the
         # model and embeds; the name is kept so the cases below read as before.
         return dict(self.document["services"]["core"]["environment"])
 
@@ -86,7 +86,7 @@ class TheKeyReachesTheContainerTests(unittest.TestCase):
         self.assertIn(KEY, self.api_environment())
 
     def test_the_python_api_holds_no_ai_credential(self):
-        """ADR-0051: no model call is left in Python, so no key goes there."""
+        """ADR-0052: no model call is left in Python, so no key goes there."""
         environment = dict(self.document["services"]["api"]["environment"])
         for name in (KEY, "AGY_PROXY_URL", "AGY_PROXY_KEY"):
             self.assertNotIn(name, environment)

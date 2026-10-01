@@ -22,7 +22,7 @@ import (
 
 type Handler struct {
 	pool *pgxpool.Pool
-	// ai is the process's model door (ADR-0051); nil when no model is
+	// ai is the process's model door (ADR-0052); nil when no model is
 	// configured, and then every AI job fails diary_ai_unavailable.
 	ai  *motluot.May
 	mux *http.ServeMux

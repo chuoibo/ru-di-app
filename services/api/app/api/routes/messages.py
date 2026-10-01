@@ -202,7 +202,7 @@ def create_chat_expense_draft(
     repository: Annotated[ApiRepository, Depends(get_repository)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_chat_expense_limiter)],
 ) -> ChatExpenseDraftResponse:
-    """Declaration only: the Go core serves this route (ADR-0051).
+    """Declaration only: the Go core serves this route (ADR-0052).
 
     The model step and its checks moved to services/core (internal/routes/
     messages_wai.go, aiharness/dockhoan, domain/chatexpense); the declaration

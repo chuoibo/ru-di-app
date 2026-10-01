@@ -150,7 +150,7 @@ type Call struct {
 	OTPDebugCode *string
 	// Google is get_google_verifier; nil when no client id is configured.
 	Google googleid.Verifier
-	// AI is the process's model for one-shot steps (ADR-0051); nil on a
+	// AI is the process's model for one-shot steps (ADR-0052); nil on a
 	// keyless stack, where every AI route refuses as without a key.
 	AI *motluot.May
 }

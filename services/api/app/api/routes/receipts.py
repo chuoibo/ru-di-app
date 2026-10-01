@@ -1,4 +1,4 @@
-"""`POST /receipts/scan`: served by Go since ADR-0051.
+"""`POST /receipts/scan`: served by Go since ADR-0052.
 
 The bill reader moved to `services/core` (internal/routes/scans_ai.go,
 internal/aiharness/docbill, internal/domain/receipt), and with it every line
@@ -46,7 +46,7 @@ def scan_receipt(
     actor: Annotated[Actor, Depends(get_actor)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_receipt_scan_limiter)],
 ) -> ReceiptScanResponse:
-    """Declaration only: the Go core serves this route (ADR-0051)."""
+    """Declaration only: the Go core serves this route (ADR-0052)."""
 
     del image, actor, limiter
     raise ApiProblem(410, "served_by_go", "POST /receipts/scan do core Go phục vụ.")

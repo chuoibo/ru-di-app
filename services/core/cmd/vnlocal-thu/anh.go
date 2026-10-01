@@ -23,7 +23,7 @@ import (
 )
 
 // anh answers the one open question before the brain's image steps move to
-// Go (ADR-0051): does agy-proxy take inline images with a response schema
+// Go (ADR-0052): does agy-proxy take inline images with a response schema
 // on the Gemini wire, how large a body, and which model reads a bill right.
 // Fixtures come from scripts/sinh_anh_gia_ai.py (invented, outside Git).
 //

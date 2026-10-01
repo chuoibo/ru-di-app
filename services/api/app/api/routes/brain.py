@@ -1,6 +1,6 @@
 """Internal brain HTTP seam (ADR-0029 §2.7).
 
-Go owns auth, the database, the limiter and, since ADR-0051, every model
+Go owns auth, the database, the limiter and, since ADR-0052, every model
 call. What is left here is on-box face detection, which is OpenCV rather than
 a model (TODO: redo in Go by another mechanism, then delete this seam).
 Nothing in this module opens a repository session. Errors return a closed

@@ -7,6 +7,6 @@ Split by what can be wrong with each:
   number on screen nobody can reproduce, which the work item exists to prevent.
 
 The third part, the model's sentence about each place, left this package with
-ADR-0051: the Go core writes it (internal/aiharness/timquan), and nothing here
+ADR-0052: the Go core writes it (internal/aiharness/timquan), and nothing here
 touches the network.
 """

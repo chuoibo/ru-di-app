@@ -2,7 +2,7 @@
 // shared bundle and the selected photographs in, one draft diary out, checked
 // by a second call against the same sources. Both instructions (viet.txt,
 // kiem.txt) are the Python brain's diary composer's, word for word
-// (services/api/app/api/diary_gemini.py before ADR-0051), and so is the loop:
+// (services/api/app/api/diary_gemini.py before ADR-0052), and so is the loop:
 // at most two drafts, each followed by a check; a draft the check does not
 // call grounded is rewritten once from the original sources, never repaired.
 //

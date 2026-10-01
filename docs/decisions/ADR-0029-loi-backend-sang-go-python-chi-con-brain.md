@@ -3,7 +3,7 @@
 - Trạng thái: **Đã chấp nhận** — Lead duyệt kế hoạch ngày 2026-09-14
   (`/home/lakiet/.claude/plans/i-want-to-do-stateful-lamport.md`).
 - Quyết định bởi: Lead (chuoibo).
-- **Sửa bởi:** ADR-0051 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
+- **Sửa bởi:** ADR-0052 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
 - Hiện thực: Claude, theo sóng W0 → W10 → WAI → decommission (mục 2.3).
   Backend do Claude làm theo uỷ quyền ADR-0016 §2.3, mở rộng cho chiến dịch này; charter không đổi.
 - Sửa: `docs/architecture/00-layout-va-so-huu.md` («FastAPI, Python 3.12+»),

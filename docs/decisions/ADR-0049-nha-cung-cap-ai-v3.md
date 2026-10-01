@@ -1,7 +1,7 @@
 # ADR-0049 — Nhà cung cấp AI v3: Go sinh chữ qua agy-proxy, Python chỉ còn sidecar OpenRouter, Milvus GPU
 
 - Ngày: 2026-09-28.
-- **Sửa bởi:** ADR-0051 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
+- **Sửa bởi:** ADR-0052 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
 - Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-28** trong phiên lập kế hoạch (câu trả lời có ghi lại
   ở kế hoạch đã duyệt). Không phải chữ ký Lead: ghi rõ để không ai đọc thành Lead đã ký.
 - Thay một số điều khoản của ADR-0043, ADR-0044, ADR-0047, liệt kê ở mục 5; **không sửa bản lịch sử** của ADR nào.

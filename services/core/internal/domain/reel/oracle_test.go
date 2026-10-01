@@ -9,7 +9,7 @@ import (
 )
 
 // testdata/python_reel*.json was rendered by scripts/render_domain_wai_goldens.py
-// from the real app.domain.reel in the parity API image before ADR-0051
+// from the real app.domain.reel in the parity API image before ADR-0052
 // deleted it; they are frozen vectors now.
 
 func refusal(err error) (class, code string, ok bool) {

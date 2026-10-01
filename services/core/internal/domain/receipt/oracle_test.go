@@ -9,7 +9,7 @@ import (
 )
 
 // testdata/python_hoadon*.json was rendered by scripts/render_domain_ai_goldens.py
-// from the real app.domain.receipt before ADR-0051 deleted it; they are frozen
+// from the real app.domain.receipt before ADR-0052 deleted it; they are frozen
 // vectors now.
 
 func refusal(err error) (class, code string, ok bool) {

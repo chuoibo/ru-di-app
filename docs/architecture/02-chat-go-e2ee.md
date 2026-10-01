@@ -220,7 +220,7 @@ hàng đợi của `/plan` và `/chia-bill`, dưới `scope='me'`, `command='hoi
   (`nep_postgres_test.go`, 5 ca) chưa chạy trên máy này, CI chạy; chưa có ảnh
   chụp bảng Nếp đang trả lời trên máy thật.
 
-## Checkpoint 01-10-2026 — không còn brain Python (ADR-0051)
+## Checkpoint 01-10-2026 — không còn brain Python (ADR-0052)
 
 Các checkpoint trên là lịch sử; từ mốc này chúng đọc như sau.
 

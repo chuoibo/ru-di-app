@@ -3,7 +3,7 @@
 // whether it reports an expense its writer paid, a title and the amount as
 // written. The instruction (doc_khoan.txt) is the Python brain's chat-expense
 // reader's, word for word (services/api/app/api/chat_expense_gemini.py before
-// ADR-0051): no person, no money written, the message is data.
+// ADR-0052): no person, no money written, the message is data.
 //
 // It decides nothing: domain/chatexpense reads the answer.
 package dockhoan

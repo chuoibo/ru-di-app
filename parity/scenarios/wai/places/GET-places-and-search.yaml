@@ -3,7 +3,7 @@
 #   GET  /places              mixed: scored rows, then optional model reasons
 #   GET  /places/{place_id}   mixed: one card, `match` only for a session
 #
-# POST /places/search used to share this file. ADR-0051 moved its model call
+# POST /places/search used to share this file. ADR-0052 moved its model call
 # into the Go core and deleted the Python side, so there is nothing left to
 # compare it with; its steps went with it (the Go evidence:
 # internal/routes/places_search_shortlist_postgres_test.go). The two paths
@@ -15,7 +15,7 @@
 # The parity stacks run with NO model, so the reasons take their unavailable
 # branch -- not an error but a shaped answer: the two GETs return the full
 # catalogue with every card in the server's own words. Both sides are
-# deterministic there, so parity compares them exactly. Since ADR-0051 the
+# deterministic there, so parity compares them exactly. Since ADR-0052 the
 # Python side has no model path at all, so this is also the only branch it
 # has.
 #

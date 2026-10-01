@@ -232,7 +232,7 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 		}
 		for _, r := range matched {
 			if r.Python == PythonFrozen {
-				// A frozen route's Python no longer does the work (ADR-0051: its
+				// A frozen route's Python no longer does the work (ADR-0052: its
 				// model step is gone), so a rollback of everything or of a group
 				// leaves it on Go; naming it alone is a mistake and is refused.
 				if token == "all" || byID[token].ID == "" {

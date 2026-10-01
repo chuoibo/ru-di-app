@@ -11,7 +11,7 @@ import (
 
 // testdata/python_suggestion*.json was rendered by
 // scripts/render_domain_wai_goldens.py from the real app.domain.suggestion
-// before ADR-0051 deleted it; they are frozen vectors now.
+// before ADR-0052 deleted it; they are frozen vectors now.
 
 func refusal(err error) (class, code string, ok bool) {
 	var e *Error

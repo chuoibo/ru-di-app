@@ -12,7 +12,7 @@ import (
 // TestKhongMayThiTuChoiRo: a host with a model takes a group invocation; a
 // host with none (a keyless stack) refuses it provider_unavailable at the
 // route, and chat-capabilities says so for every command, as a keyless
-// stack always has (ADR-0051: no brain to ask any more).
+// stack always has (ADR-0052: no brain to ask any more).
 func TestKhongMayThiTuChoiRo(t *testing.T) {
 	n := setupNhomGo(t, tools.NguonDuLieu{})
 	if _, code, e := n.goiCap(t, "plan"); code != 202 {

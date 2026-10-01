@@ -1,7 +1,7 @@
 # ADR-0036 — Một đường gọi AI, và người gọi là người trao ngữ cảnh
 
 - Ngày: 2026-09-22.
-- **Sửa bởi:** ADR-0051 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
+- **Sửa bởi:** ADR-0052 (2026-09-30) — mọi bước model của Python chuyển sang Go qua agy-proxy; cờ engine bị xoá; brain chỉ còn `face-boxes` tạm.
 - Số hiệu: viết và mở PR (#647–#649) dưới số **ADR-0034**. Đổi thành ADR-0036 ngày 2026-09-24 vì
   main đã nhận một ADR-0034 khác (`ADR-0034-gay-vai-nhip-chia-gu…`). Commit message và mô tả PR
   cũ của đợt này nhắc «ADR-0034» là nhắc văn bản này.

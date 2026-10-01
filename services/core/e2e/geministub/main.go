@@ -4,7 +4,7 @@
 // used only by the chat end-to-end tier. The core's real genai transport
 // talks to it (GEMINI_API_KEY + MOBILE_GEMINI_BASE_URL on loopback), so the
 // tier drives the Go engine the product runs -- router, tools, verifier --
-// with nothing but the model's words replaced (ADR-0051 removed the Python
+// with nothing but the model's words replaced (ADR-0052 removed the Python
 // brain this tier used to stub).
 //
 // Why a stub rather than the real provider: the AI cases in this tier are

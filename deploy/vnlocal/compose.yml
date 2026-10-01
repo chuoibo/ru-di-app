@@ -214,7 +214,7 @@ services:
     <<: [*core-image, *ai-secrets]
     environment:
       <<: [*env, *milvus-env]
-      # Every model call is Go's (ADR-0049, ADR-0051): the chat engine
+      # Every model call is Go's (ADR-0049, ADR-0052): the chat engine
       # (Nếp and the group bot) and the one-shot AI steps of the routes, text
       # through agy-proxy (AGY_PROXY_URL from .env), places from Milvus
       # hybrid, reranked by qwen/qwen3-reranker-8b through the ai-infer

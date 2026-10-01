@@ -18,7 +18,7 @@ case. Image: mobile-parity-api:7bf58e3d (or a tree-built image whose /srv/app
 matches services/api/app byte for byte).
 
 Three more packages -- conversation, reel and suggestion -- had their goldens
-rendered here too. ADR-0051 deleted their Python modules together with the
+rendered here too. ADR-0052 deleted their Python modules together with the
 last Python caller, so those testdata files are frozen vectors now.
 
     docker run --rm -i --network none --entrypoint python "$IMAGE" - --list \\

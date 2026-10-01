@@ -24,7 +24,7 @@ import (
 )
 
 // POST /contexts/{id}/messages/{id}/expense-draft on its own, now that its
-// Python twin is gone (ADR-0051) and parity has nothing to compare it with:
+// Python twin is gone (ADR-0052) and parity has nothing to compare it with:
 // every refusal before the model, the keyless answer, and a draft that bills
 // the message's author and never a name the model wrote.
 

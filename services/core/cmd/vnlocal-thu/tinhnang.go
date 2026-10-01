@@ -36,7 +36,7 @@ import (
 	"mobile/services/core/internal/treejson"
 )
 
-// tinhNang sends each ported one-shot AI step (ADR-0051) one real request
+// tinhNang sends each ported one-shot AI step (ADR-0052) one real request
 // through the Go model door (agy-proxy when AGY_PROXY_URL is set), on
 // invented data only, and checks what the Go domain code makes of the
 // answer: the same packages the routes call, in the same order. Images come

@@ -1,6 +1,6 @@
 // Package chatexpense reads what a model made of one chat message: whether
 // it reports an expense its writer paid, a title and the amount as written.
-// The Go port of services/api/app/domain/chat_expense.py (ADR-0051), pinned
+// The Go port of services/api/app/domain/chat_expense.py (ADR-0052), pinned
 // to it by testdata/python_chat_expense*.json. Identity is absent on
 // purpose: the author and the roster are the server's, never the model's.
 package chatexpense

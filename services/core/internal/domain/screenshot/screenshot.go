@@ -1,6 +1,6 @@
 // Package screenshot reads what a model transcribed off a transaction
 // screenshot (Grab, ShopeeFood, a banking app). The Go port of
-// services/api/app/domain/screenshot.py (ADR-0051), pinned to it by
+// services/api/app/domain/screenshot.py (ADR-0052), pinned to it by
 // testdata/python_screenshot*.json. Identity is deliberately absent: a
 // screenshot is evidence about a transaction, never authority for who paid.
 package screenshot

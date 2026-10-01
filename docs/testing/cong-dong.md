@@ -33,7 +33,7 @@ mới chỉ làm adapter inference, không có writer nghiệp vụ Python mới
 2. API: `MOBILE_AUTH_MODE=prod`, `MOBILE_COMMUNITY_ENABLED=1`, DB và phiên
    thật. Cờ backend mặc định tắt. Composer tường dùng bản cũ khi capability
    trả 404; lỗi mạng không được rơi xuống đường cũ.
-3. Duyệt bài và Nếp chạy trong `core serve` qua agy-proxy (ADR-0051):
+3. Duyệt bài và Nếp chạy trong `core serve` qua agy-proxy (ADR-0052):
    đặt `AGY_PROXY_URL`/`AGY_PROXY_KEY` cho core. Không có model thì bài
    công khai nằm chờ duyệt, Nếp trả 503 `nep_unavailable`. Python không còn
    bước nào của cộng đồng; `COMMUNITY_INFERENCE_URL` đã bỏ.
@@ -44,12 +44,12 @@ mới chỉ làm adapter inference, không có writer nghiệp vụ Python mới
 5. Build lại native vì thêm `expo-video`; Metro reload không đủ. Cấu hình
    origin CORS và proxy WebSocket theo môi trường.
 
-**Từ ADR-0051 (2026-10-01) model đọc bài chạy qua agy-proxy**; trước đó người
+**Từ ADR-0052 (2026-10-01) model đọc bài chạy qua agy-proxy**; trước đó người
 dùng chọn giữ bài chờ duyệt vì chưa có model. Chất lượng phán đoán mới chỉ
 được thử bằng vài bài bịa (`vnlocal-thu tinh-nang`), chưa đánh giá có hệ thống. Người vận hành cấp vai trò bằng
 `community_moderators`; UI `/community/review` duyệt bài và bình luận.
 
-Model đọc bài (`aiharness/congdong`, lời dặn mới từ ADR-0051) nhận chữ và ảnh
+Model đọc bài (`aiharness/congdong`, lời dặn mới từ ADR-0052) nhận chữ và ảnh
 inline đã chọn, trả `relevant`, `safe`, `confidence_milli` (0..1000),
 `reason`; `media_checked` do Go tự đặt, chỉ đúng khi mọi tệp đính kèm là ảnh
 đã gửi cùng request (video không bao giờ gửi, ảnh cộng dồn quá 14 MiB thì

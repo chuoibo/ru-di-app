@@ -1,5 +1,5 @@
 // Package receipt reads what a bill reader transcribed into integer đồng.
-// It is the Go port of services/api/app/domain/receipt.py (ADR-0051): the
+// It is the Go port of services/api/app/domain/receipt.py (ADR-0052): the
 // model copies strings off the paper; this package decides, deterministically,
 // what they are worth, and refuses what it cannot read exactly. It performs
 // no I/O and never reconciles the bill's arithmetic.

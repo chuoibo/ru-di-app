@@ -55,7 +55,7 @@ cat >&2 <<'WARNING'
   Biến còn thiếu:  GEMINI_API_KEY
 
   Hệ vẫn dựng lên bình thường và mọi màn vẫn render. Khoá này vào `core`
-  (ADR-0051): core nhúng văn bản bằng nó, và gọi model thẳng Gemini bằng nó
+  (ADR-0052): core nhúng văn bản bằng nó, và gọi model thẳng Gemini bằng nó
   khi AGY_PROXY_URL để trống. Thiếu cả hai thì chụp bill trả 503
   receipt_reader_not_configured, gợi ý và Nếp im, thay vì đọc ra món.
 

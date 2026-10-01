@@ -1,4 +1,4 @@
-"""`POST /screenshots/scan`: served by Go since ADR-0051.
+"""`POST /screenshots/scan`: served by Go since ADR-0052.
 
 The screenshot reader moved to `services/core` (internal/routes/scans_ai.go,
 internal/aiharness/docanh, internal/domain/screenshot). The declaration stays:
@@ -44,7 +44,7 @@ def scan_screenshot(
     actor: Annotated[Actor, Depends(get_actor)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_screenshot_scan_limiter)],
 ) -> ScreenshotScanResponse:
-    """Declaration only: the Go core serves this route (ADR-0051)."""
+    """Declaration only: the Go core serves this route (ADR-0052)."""
 
     del image, actor, limiter
     raise ApiProblem(410, "served_by_go", "POST /screenshots/scan do core Go phục vụ.")

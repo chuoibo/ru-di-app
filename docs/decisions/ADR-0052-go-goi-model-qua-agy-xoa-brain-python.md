@@ -1,6 +1,10 @@
-# ADR-0051 — Mọi lời gọi LLM của Python chuyển sang Go qua agy-proxy; bỏ cờ engine; xoá brain Python
+# ADR-0052 — Mọi lời gọi LLM của Python chuyển sang Go qua agy-proxy; bỏ cờ engine; xoá brain Python
 
 - Ngày: 2026-09-30.
+- Số: viết là **ADR-0051** trên nhánh `claude/p0-ai-go-agy-bo-brain` và trong mọi commit message ngày 2026-10-01
+  (`db60723d` … `9b3e66b5`). `origin/main` đã dùng số 0051 cho «Milvus là bản phục vụ cho tìm quán»
+  (`b4123ae2`) trước khi văn bản này được push, nên văn bản này đổi thành **ADR-0052**. «ADR-0051» trong một commit
+  message của đợt này là văn bản này; trong mã và tài liệu sau lần đổi số, ADR-0051 là văn bản Milvus.
 - Trạng thái: **Chấp nhận — chủ sản phẩm chốt 2026-09-30** trong phiên lập kế hoạch (câu trả lời có ghi lại ở
   kế hoạch đã duyệt; thêm 2026-10-01: «migrate qua Go, test thử xong thì xoá stale Python, không cần giữ»).
   Không phải chữ ký Lead: ghi rõ để không ai đọc thành Lead đã ký.

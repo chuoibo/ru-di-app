@@ -16,7 +16,7 @@ import (
 
 // testdata/python_timquan*.json was rendered by
 // scripts/render_place_ai_goldens.py from the real app.places.search,
-// app.places.reasons and app.domain.place_search before ADR-0051 deleted
+// app.places.reasons and app.domain.place_search before ADR-0052 deleted
 // them: every prompt line, gate and grounding answer.
 
 func toPy(v any) pyjson.Value {

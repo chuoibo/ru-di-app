@@ -17,7 +17,7 @@
 // (internal/aiharness) in whichever process runs the AI workers, and every
 // one-shot model step of a route runs in this process (aiharness/motluot):
 // through agy-proxy when AGY_PROXY_URL is set, else Gemini directly
-// (ADR-0051). With neither configured, `serve` still starts and every AI
+// (ADR-0052). With neither configured, `serve` still starts and every AI
 // route refuses as it always has without a key; `work` refuses to start.
 //
 //	core migrate-profile install the Go-only profile schemas (after migrate-community)

@@ -10,7 +10,7 @@ import (
 	"mobile/services/core/internal/domain/achievement"
 )
 
-// Nếp's line on the journey choices (ADR-0051: the model step moved from
+// Nếp's line on the journey choices (ADR-0052: the model step moved from
 // the brain into this process): only offered ids come back, only counts go
 // out, and every way the model cannot answer is the Go fallback.
 func TestGoiYThanhTuuQuaModel(t *testing.T) {

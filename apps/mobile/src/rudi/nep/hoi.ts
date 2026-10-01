@@ -102,7 +102,7 @@ export const LOI_NEP: Record<string, string> = {
  * Why a question the worker picked up ended without an answer. These never
  * come back as an HTTP refusal, so they are not in `LOI_NEP`.
  *
- * The last four come from the Go engine (the only engine, ADR-0051). Their
+ * The last four come from the Go engine (the only engine, ADR-0052). Their
  * words are fixed in `services/core/internal/aiharness/cau/cau.go`, and
  * `tests/cau-chu-goi-ai.test.mjs` holds each sentence here to that file,
  * word for word.

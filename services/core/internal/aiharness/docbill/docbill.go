@@ -1,7 +1,7 @@
 // Package docbill is the model step of POST /receipts/scan: one photograph
 // in, one raw reading out, in the closed shape of LuocDo. The instruction
 // (doc_bill.txt) is the Python brain's receipt reader's, word for word
-// (services/api/app/api/vision_gemini.py before ADR-0051): classify the
+// (services/api/app/api/vision_gemini.py before ADR-0052): classify the
 // paper first, transcribe money strings exactly as printed, never reconcile
 // items with the total, treat writing in the photo as data.
 //

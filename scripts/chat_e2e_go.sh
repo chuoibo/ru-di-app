@@ -54,7 +54,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # The Gemini stub answers the Go engine's model calls deterministically, on
-# the real genai wire (ADR-0051: no Python brain). It must be listening
+# the real genai wire (ADR-0052: no Python brain). It must be listening
 # before the core starts: the core builds its model once at startup.
 gemini_port="$(node -e 'const s=require("net").createServer();s.listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})')"
 export CHAT_E2E_GEMINI_URL="http://127.0.0.1:$gemini_port"

@@ -2,7 +2,7 @@
 // turn: a public route's structured step (reading a bill, a transfer
 // screenshot, an expense in a message; a suggestion card, a reel, a reason
 // per place) and a job's (a diary draft, a post's moderation). These steps
-// used to be the Python brain's (/internal/brain/v1/*); ADR-0051 moved them
+// used to be the Python brain's (/internal/brain/v1/*); ADR-0052 moved them
 // here, on the same model door as the chat engine (llm.GeminiFromEnv:
 // agy-proxy when AGY_PROXY_URL is set).
 //
@@ -35,7 +35,7 @@ var ErrBan = errors.New("motluot: every model seat is busy")
 // SongSongServe and SongSongWork are the seats a serve and a work process
 // take by default. agy-proxy runs at most 8 requests per client token; the
 // chat engine in `core work` holds its own, so the two stay under that
-// together (ADR-0051).
+// together (ADR-0052).
 const (
 	SongSongServe = 4
 	SongSongWork  = 2

@@ -91,7 +91,7 @@ class EvalThatRefuses(unittest.TestCase):
         self.assertNotIn(FAKE_KEY, r.stdout + r.stderr)
 
     def test_agy_without_its_key_is_refused_and_replay_drops_agy(self) -> None:
-        """ADR-0051: the real run's model goes through agy when configured.
+        """ADR-0052: the real run's model goes through agy when configured.
 
         Half a configuration is refused before anything is built, naming the
         missing variable and printing no value; and the replay that must make

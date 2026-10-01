@@ -30,7 +30,7 @@ import (
 // POST /places/search hands the model a shortlist, never the catalogue
 // (design 04 §7). Parity cannot see this: its stacks run keyless, so both
 // answer `unavailable` whatever the payload. This test is the evidence
-// instead: it reads the exact prompt the model receives (ADR-0051: the
+// instead: it reads the exact prompt the model receives (ADR-0052: the
 // model is called from this process, no longer through the brain).
 
 // modelGhi is a scripted model that keeps every prompt.

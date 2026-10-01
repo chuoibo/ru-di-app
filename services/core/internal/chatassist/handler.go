@@ -37,7 +37,7 @@ type Handler struct {
 	mux    *featureroute.Mux
 	worker WorkerConfig
 	// nepEngine and nhomEngine run Nếp's and the group's jobs in this
-	// process (internal/aiharness, the only engine since ADR-0051). coMay
+	// process (internal/aiharness, the only engine since ADR-0052). coMay
 	// says this host has a model, set with an engine or, in a process that
 	// serves the routes while `core work` runs the jobs, by WithCoMay.
 	// Without it every invocation is refused provider_unavailable.

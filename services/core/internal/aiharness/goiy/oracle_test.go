@@ -14,7 +14,7 @@ import (
 
 // testdata/python_prompt*.json was rendered by scripts/render_ai_prompt_goldens.py
 // from the real suggestion_gemini, reel_gemini and achievement_gemini before
-// ADR-0051 deleted them: every prompt, line by line.
+// ADR-0052 deleted them: every prompt, line by line.
 
 func refusal(err error) (class, code string, ok bool) { return "", "", false }
 

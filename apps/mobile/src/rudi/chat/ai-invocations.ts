@@ -152,7 +152,7 @@ export const LOI_KET_QUA_AI: Record<string, string> = {
 
 /**
  * A job whose answer would be the same on retry offers no «Thử lại». A bill
- * split with nothing to bill is not a failed job any more: since ADR-0051 the
+ * split with nothing to bill is not a failed job any more: since ADR-0052 the
  * Go engine says so in the room (cau.NhomChuaThayKhoan), and the code the
  * deleted brain path wrote for it, chia_bill_no_expenses, no longer exists.
  */

@@ -84,7 +84,7 @@ test("hàng lời gọi chia_bill nói đúng việc, và không mời thử l�
   assert.equal(thuLaiDuoc(hong), true);
   // The tag message is gone: the same request would fail the same way.
   assert.equal(thuLaiDuoc(job({ command: "chia_bill", code: "trigger_deleted" })), false);
-  // «Nothing to bill» is an answer in the room since ADR-0051, never a code
+  // «Nothing to bill» is an answer in the room since ADR-0052, never a code
   // a row has to word (the brain path that wrote chia_bill_no_expenses is gone).
   assert.equal(LOI_KET_QUA_AI.chia_bill_no_expenses, undefined);
   // An older server echoes no command: the row is a plan row, as before.

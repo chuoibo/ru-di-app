@@ -14,7 +14,7 @@
 #               refused when its exact upper-bound estimate exceeds it, and a
 #               watchdog stops it at N (then it is «chưa xong»: no trailer).
 #
-# The model goes where production's goes (ADR-0051): through agy-proxy when
+# The model goes where production's goes (ADR-0052): through agy-proxy when
 # AGY_PROXY_URL and AGY_PROXY_KEY are set, else the Gemini API directly.
 # Embeddings always go to the Gemini API (agy serves none), so GEMINI_API_KEY
 # is needed either way. The scoreboard names which door answered.

@@ -1,4 +1,4 @@
-"""F32 and F33, the suggestion cards: served by Go since ADR-0051.
+"""F32 and F33, the suggestion cards: served by Go since ADR-0052.
 
 The prompt builders and the model call moved to `services/core`
 (internal/routes/suggestions_wai.go, internal/aiharness/goiy). What stays here
@@ -61,7 +61,7 @@ def read_group_suggestion(
     repository: Annotated[ApiRepository, Depends(get_repository)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_suggestion_limiter)],
 ) -> GroupSuggestionResponse:
-    """Declaration only: the Go core serves this route (ADR-0051)."""
+    """Declaration only: the Go core serves this route (ADR-0052)."""
 
     del context_id, actor, repository, limiter
     raise ApiProblem(
@@ -85,7 +85,7 @@ def read_contextual_suggestion(
     repository: Annotated[ApiRepository, Depends(get_repository)],
     limiter: Annotated[FixedWindowLimiter, Depends(get_contextual_suggestion_limiter)],
 ) -> ContextualSuggestionResponse:
-    """Declaration only: the Go core serves this route (ADR-0051)."""
+    """Declaration only: the Go core serves this route (ADR-0052)."""
 
     del context_id, actor, repository, limiter
     raise ApiProblem(

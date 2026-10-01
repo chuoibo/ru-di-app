@@ -1,17 +1,17 @@
-# ADR-0051 — mọi lời gọi LLM về Go qua agy, brain Python đã xoá
+# ADR-0052 — mọi lời gọi LLM về Go qua agy, brain Python đã xoá
 
 - Ngày: 2026-10-01. Nhánh: `claude/p0-ai-go-agy-bo-brain` (worktree `wt-ai-go-agy`), gốc `dcb2e976`.
   Cập nhật cùng ngày: đã merge vào `main` ở `16c0fdca` (0 xung đột, fast-forward `main`), chưa push.
 - protocol_version: không đụng (`docs/protocol/v1/` đóng băng).
 - Verdict: không có reviewer; đây là ghi chép của người làm, không phải review.
-- Quyết định: ADR-0051 (chủ sản phẩm 2026-09-30, thêm 2026-10-01 «test thử xong thì xoá stale Python»).
+- Quyết định: ADR-0052 (chủ sản phẩm 2026-09-30, thêm 2026-10-01 «test thử xong thì xoá stale Python»).
 
 ## Đã làm, theo commit
 
 | Commit | Lát |
 |---|---|
 | `db60723d` | nền `motluot`, ảnh inline, đo agy thật |
-| `7c09a546` | ADR-0051 + dòng «Sửa bởi» ở ADR cũ |
+| `7c09a546` | ADR-0052 + dòng «Sửa bởi» ở ADR cũ |
 | `8d6d2792` | bỏ cờ engine; engine Go là đường duy nhất của Nếp, bot nhóm, chia bill |
 | `add7a953`, `6d48b5db` | đọc bill, ảnh chuyển khoản, khoản chi: golden → route Go → xoá Python |
 | `2c3b2579`, `de985f8e` | gợi ý ×2, reel, câu dẫn hành trình |
@@ -75,7 +75,7 @@ Cổng trên SHA đã merge `16c0fdca`: go vet/test xanh; pytest 3023 passed; t�
 10758 bước, 9 / 209, 23 / 605 — `scenarios_diff=0 differences=0`. Trên `main` sau đó (`ae778c00` → `e182ce64`):
 `npm test` mobile 1393/1393 (gồm `build:check`), `go_broker_tier.sh` 180 ca PASS, `eval_kich_ban.sh` 36/36 lượt (canary
 đỏ đúng chỗ), `chat_e2e_go.sh` 43 ca PASS không SKIP, `e2e_slice.sh` 11 pass + 4 skip (đường vẽ ảnh Nếp, `NEP_PROXY_URL`
-không cấu hình — ngoài ADR-0051), lint `ruff_changed.sh d95edb4c` sạch 31 file, contract/CORS/screens/money/Dockerfile
+không cấu hình — ngoài ADR-0052), lint `ruff_changed.sh d95edb4c` sạch 31 file, contract/CORS/screens/money/Dockerfile
 pinning xanh. Không chạy: `go_milvus_tier.sh`, `ai_infer_tier.sh` (runner riêng; đợt này không đổi Milvus hay
 `services/ai-infer`).
 

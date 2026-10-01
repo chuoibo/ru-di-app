@@ -352,7 +352,7 @@ func (h *Handler) nepGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // WithNepEngine runs Nếp's jobs on the Go engine (internal/aiharness): the
-// only engine since ADR-0051 removed the brain's nep-reply. It also says this
+// only engine since ADR-0052 removed the brain's nep-reply. It also says this
 // process has a model (WithCoMay).
 func (h *Handler) WithNepEngine(e *aiharness.Engine) *Handler {
 	h.nepEngine = e

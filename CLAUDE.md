@@ -13,7 +13,7 @@ một writer; không coi proxy sang Python là hoàn tất migration.
 ADR-0049 (chủ sản phẩm 2026-09-28) hẹp thêm: sinh chữ/trích xuất AI chạy
 bằng Go qua agy-proxy; phân loại đi jev, rerank đi qwen3-reranker-8b, cả hai
 qua một sidecar Python OpenRouter (`services/ai-infer`); tìm kiếm trên Milvus
-GPU. ADR-0051 (2026-10-01): mọi lời gọi LLM đã về Go qua agy-proxy, brain
+GPU. ADR-0052 (2026-10-01): mọi lời gọi LLM đã về Go qua agy-proxy, brain
 Python đã xoá — chỉ còn `face-boxes` (OpenCV, TODO làm lại bằng Go); không
 còn cờ chọn engine; `api` không giữ khoá AI nào.
 

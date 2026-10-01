@@ -29,7 +29,7 @@ type Handler struct {
 	Pool *pgxpool.Pool
 	Mode string
 	// ai is the process's model for Nếp's line on the journey choices
-	// (ADR-0051); nil keeps the Go fallback.
+	// (ADR-0052); nil keeps the Go fallback.
 	ai *motluot.May
 }
 

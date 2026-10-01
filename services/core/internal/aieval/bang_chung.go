@@ -57,7 +57,7 @@ const (
 const (
 	NguonGeminiAPI = "gemini-api"
 	NguonLoopback  = "loopback"
-	// NguonAgy: the real model through agy-proxy (ADR-0049 §2.1, ADR-0051),
+	// NguonAgy: the real model through agy-proxy (ADR-0049 §2.1, ADR-0052),
 	// the door production uses when AGY_PROXY_URL is set.
 	NguonAgy = "agy-proxy"
 )

@@ -3,10 +3,10 @@
 // /internal/brain/v1, gated by X-Internal-Token, and is never reached through
 // the public front door.
 //
-// Since ADR-0051 no model call goes through here: every LLM step runs in this
+// Since ADR-0052 no model call goes through here: every LLM step runs in this
 // process (internal/aiharness, through agy-proxy). The one action left is
 // face-boxes, on-box OpenCV detection (routes/scans_wai.go).
-// TODO(ADR-0051): redo face detection in Go by another mechanism, then delete
+// TODO(ADR-0052): redo face detection in Go by another mechanism, then delete
 // this package, the seam and MOBILE_BRAIN_URL.
 package brain
 

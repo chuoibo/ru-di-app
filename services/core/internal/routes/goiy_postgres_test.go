@@ -21,7 +21,7 @@ import (
 )
 
 // The two suggestion cards and the reel on their own, now that their Python
-// twins are gone (ADR-0051) and parity has nothing to compare them with: the
+// twins are gone (ADR-0052) and parity has nothing to compare them with: the
 // membership gate before the model, the keyless answer, and a card the
 // model wrote reaching the wire only after grounding on the catalogue.
 

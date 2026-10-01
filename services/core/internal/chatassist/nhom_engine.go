@@ -21,7 +21,7 @@ import (
 )
 
 // The group assistant on the Go engine (slice 9; the only engine since
-// ADR-0051). The same queue, lease, stream, one publish
+// ADR-0052). The same queue, lease, stream, one publish
 // as a reply to the tag message, and the same failure codes: only the
 // inference step differs. The engine gets what the caller explicitly shared
 // (the bundle's turns, the reply chain in it) and what the server owns and

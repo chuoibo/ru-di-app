@@ -15,7 +15,7 @@ import (
 	"mobile/services/core/internal/pyjson"
 )
 
-// The scan routes' model step runs here (ADR-0051), where the Python brain's
+// The scan routes' model step runs here (ADR-0052), where the Python brain's
 // receipt skill used to: the upload is checked and re-encoded before any
 // model sees it, the model transcribes, and domain/receipt decides what the
 // transcription is worth.
