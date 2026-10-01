@@ -287,7 +287,9 @@ services:
   ingest:
     <<: [*core-image, *secrets]
     entrypoint: ["/rudi-ingest"]
-    command: ["sync", "--every", "${RUDI_SYNC_EVERY:-10m}"]
+    # A round on every NOTIFY rudi_doi from the feed (vnlocal's triggers),
+    # and this safety poll when none comes.
+    command: ["sync", "--every", "${RUDI_SYNC_EVERY:-20s}"]
     environment:
       <<: *env
       MOBILE_DB_MAX_CONNS: "3"

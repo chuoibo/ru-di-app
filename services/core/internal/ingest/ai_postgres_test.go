@@ -110,3 +110,116 @@ func TestAIPassesLandAndMarkThePlace(t *testing.T) {
 		t.Fatalf("an older category row overwrote a newer one: %v %v", dm, err)
 	}
 }
+
+// TestChiChamQuanKhiDoiThat: the index's trigger fires on any change to a
+// places row, so ingest moves a row only when what it holds changes. A
+// place delivered again identically keeps its updated_at; a new address
+// moves it. Categories and attributes re-landed identically (a newer
+// sync, another model name) mark nothing; a new allergen marks the place.
+func TestChiChamQuanKhiDoiThat(t *testing.T) {
+	pool, ctx := migratedPool(t)
+	ids := []string{"vnl-dta"}
+	clean := func() {
+		for _, sql := range []string{`DELETE FROM place_danh_muc WHERE place_id = ANY($1)`, `DELETE FROM place_lam_giau WHERE place_id = ANY($1)`,
+			`DELETE FROM place_source_post WHERE place_id = ANY($1)`, `DELETE FROM places WHERE id = ANY($1)`} {
+			if _, err := pool.Exec(context.Background(), sql, ids); err != nil {
+				t.Fatal(err)
+			}
+		}
+		for _, sql := range []string{`DELETE FROM ingest_cursor WHERE source IN ('vnlocal.places','vnlocal.place_danh_muc','vnlocal.place_lam_giau')`,
+			`DELETE FROM ingest_place_raw WHERE batch_id LIKE 'pg-%'`, `DELETE FROM ingest_reject WHERE batch_id LIKE 'pg-%'`,
+			`DELETE FROM ingest_batch WHERE id LIKE 'pg-%'`} {
+			if _, err := pool.Exec(context.Background(), sql); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	clean()
+	t.Cleanup(clean)
+	if _, err := SeedProvinces(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := SeedProvinceDestinations(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	at := time.Now().Add(-time.Hour).UTC().Truncate(time.Microsecond)
+	deliver := func(at time.Time, mutate func(map[string]any)) {
+		t.Helper()
+		if _, err := pool.Exec(ctx, `DELETE FROM ingest_cursor WHERE source = 'vnlocal.places'`); err != nil {
+			t.Fatal(err)
+		}
+		line := validLine(t, func(r map[string]any) {
+			r["place_id"] = "plc_dta"
+			if mutate != nil {
+				mutate(r)
+			}
+		})
+		if _, err := SyncOnce(ctx, pool, fakeFeed{rows: []FeedRow{{PlaceID: "plc_dta", SyncedAt: at, Doc: line}}}, nil, nil, SyncOptions{}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	updated := func() time.Time {
+		t.Helper()
+		var u time.Time
+		if err := pool.QueryRow(ctx, `SELECT updated_at FROM places WHERE id='vnl-dta'`).Scan(&u); err != nil {
+			t.Fatal(err)
+		}
+		return u
+	}
+	deliver(at, nil)
+	u0 := updated()
+	deliver(at.Add(time.Minute), nil)
+	if u := updated(); !u.Equal(u0) {
+		t.Fatalf("an identical delivery moved updated_at: %s -> %s", u0, u)
+	}
+	deliver(at.Add(2*time.Minute), func(r map[string]any) { r["dia_chi"] = "2 Đường Khác" })
+	u1 := updated()
+	if !u1.After(u0) {
+		t.Fatal("a new address did not move updated_at")
+	}
+
+	dm := DanhMucRow{PlaceID: "plc_dta", SyncedAt: at, DanhMuc: []string{"cafe"}, Model: sp("m1"), SchemaVersion: "danh-muc@1", CheckedAt: at}
+	lg := LamGiauRow{PlaceID: "plc_dta", SyncedAt: at, DiUng: []string{"tom"}, AnKieng: []string{}, KhiChat: []string{},
+		MonChinh: []string{"Bún"}, TinCay: "cao", Model: sp("m1"), SchemaVersion: "lam-giau@1", CheckedAt: at}
+	pull := func(dm DanhMucRow, lg LamGiauRow) (AIResult, AIResult) {
+		t.Helper()
+		if _, err := pool.Exec(ctx, `DELETE FROM ingest_cursor WHERE source IN ('vnlocal.place_danh_muc','vnlocal.place_lam_giau')`); err != nil {
+			t.Fatal(err)
+		}
+		a, err := PullDanhMuc(ctx, pool, fakeAI{dm: []DanhMucRow{dm}}, PullOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, err := PullLamGiau(ctx, pool, fakeAI{lg: []LamGiauRow{lg}}, PullOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return a, b
+	}
+	a, b := pull(dm, lg)
+	if len(a.Changed) != 1 || len(b.Changed) != 1 {
+		t.Fatalf("first landing: %v %v", a.Changed, b.Changed)
+	}
+	u2 := updated()
+	if !u2.After(u1) {
+		t.Fatal("the first categories did not mark the place")
+	}
+	dm.SyncedAt, dm.Model, dm.CheckedAt = at.Add(time.Hour), sp("m2"), at.Add(time.Hour)
+	lg.SyncedAt, lg.Model, lg.CheckedAt = at.Add(time.Hour), sp("m2"), at.Add(time.Hour)
+	a, b = pull(dm, lg)
+	if a.Landed != 1 || b.Landed != 1 || len(a.Changed) != 0 || len(b.Changed) != 0 || !updated().Equal(u2) {
+		t.Fatalf("an identical re-landing marked: %+v %+v, updated_at moved %v", a, b, !updated().Equal(u2))
+	}
+	var model *string
+	_ = pool.QueryRow(ctx, `SELECT model FROM place_lam_giau WHERE place_id='vnl-dta'`).Scan(&model)
+	if model == nil || *model != "m2" {
+		t.Fatalf("the newer row did not land (model %v)", model)
+	}
+	lg.SyncedAt, lg.DiUng = at.Add(2*time.Hour), []string{"tom", "sua"}
+	_, b = pull(dm, lg)
+	if len(b.Changed) != 1 || !updated().After(u2) {
+		t.Fatalf("a new allergen did not mark the place: %+v", b)
+	}
+}
+
+func sp(s string) *string { return &s }

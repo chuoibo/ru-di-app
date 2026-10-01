@@ -10,13 +10,19 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
+	"log/slog"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/ingest"
+	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/media/storage"
 	"mobile/services/core/internal/rag"
 )
@@ -227,6 +233,9 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 			return 1
 		}
 		opt.Photos = true
+		if *every > 0 {
+			return syncDaemon(ctx, pool, src, feed, frames, store, opt, *every, closed, stdout, stderr)
+		}
 		for {
 			started := time.Now()
 			report, err := ingest.SyncOnce(ctx, pool, feed, frames, store, opt)
@@ -306,4 +315,68 @@ func s3Frames(getenv func(string) string) (ingest.S3Frames, error) {
 		return frames, fmt.Errorf("VNLOCAL_S3_ENDPOINT, VNLOCAL_S3_ACCESS_KEY and VNLOCAL_S3_SECRET are required")
 	}
 	return frames, nil
+}
+
+// syncDaemon is `sync --every D`: a round whenever the feed notifies
+// rudi_doi (vnlocal's statement triggers on the four tables this reads;
+// a burst gathered for a second), at least every D, at once again while a
+// round leaves the feed unread, and once on every (re)connection. The facts'
+// derivation and the web-closed tombstones run after a round that landed
+// something they read, and at least every minute on their own clock (an
+// expiry moves with time, not with the feed; a feed that cannot be reached
+// does not stop it).
+func syncDaemon(ctx context.Context, pool *pgxpool.Pool, src *pgxpool.Pool, feed ingest.Feed, frames ingest.S3Frames,
+	store *storage.PhotoStorage, opt ingest.SyncOptions, every time.Duration, closed func() string,
+	stdout, stderr io.Writer) int {
+	opt.ApDungRieng = true
+	var mu sync.Mutex
+	var lastApply time.Time
+	apply := func() {
+		stamp := time.Now().UTC().Format(time.RFC3339)
+		if a, err := ingest.ApplyFacts(ctx, pool, time.Now()); err != nil {
+			fmt.Fprintf(stderr, "%s web facts: lỗi %v\n", stamp, err)
+		} else {
+			fmt.Fprintf(stdout, "%s web facts: đổi giờ/giá %d · có giờ %d · có giá %d · hết hạn %d · %s\n",
+				stamp, a.Updated, a.CoGio, a.CoGia, a.HetHan, closed())
+		}
+		lastApply = time.Now()
+	}
+	round := func(ctx context.Context) (bool, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		started := time.Now()
+		report, err := ingest.SyncOnce(ctx, pool, feed, frames, store, opt)
+		stamp := started.UTC().Format(time.RFC3339)
+		if err != nil {
+			fmt.Fprintf(stderr, "%s lỗi sau %s: %v\n", stamp, time.Since(started).Round(time.Millisecond), err)
+		} else if report.Pulled+report.Facts+report.DanhMuc+report.LamGiau+report.Photos > 0 {
+			fmt.Fprintf(stdout, "%s %s · %s\n", stamp, report, time.Since(started).Round(time.Millisecond))
+		}
+		if (err == nil && report.Facts+report.Inserted > 0) || time.Since(lastApply) >= time.Minute {
+			apply()
+		}
+		if err != nil {
+			return false, err
+		}
+		return !report.CaughtUp, nil
+	}
+	go func() {
+		t := time.NewTicker(time.Minute)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+			}
+			mu.Lock()
+			if time.Since(lastApply) >= time.Minute {
+				apply()
+			}
+			mu.Unlock()
+		}
+	}()
+	logger := slog.New(slog.NewTextHandler(stderr, nil))
+	jobs.Nghe{Pool: src, Kenh: "rudi_doi", ToiDa: every, Gop: time.Second, Chay: round, Logger: logger}.Run(ctx)
+	return 0
 }
