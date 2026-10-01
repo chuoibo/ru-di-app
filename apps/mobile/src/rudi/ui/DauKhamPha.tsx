@@ -26,16 +26,21 @@ const MUC: readonly { muc: MucKhamPha; nhan: string }[] = [
 export function DauKhamPha({ muc, onDoiMuc, phai }: { muc: MucKhamPha; onDoiMuc: (muc: MucKhamPha) => void; phai?: ReactNode }) {
   const { colors } = useRudiTheme();
   const cuon = useRef<ScrollView>(null);
+  // When large text makes the words outgrow the row, the open section is the
+  // one in view: Cộng đồng, the second word, scrolls itself in. Asked again
+  // once the row knows its own width (on the web the content size arrives
+  // first, and a scroll measured then moved two pixels and hid «đồng» under
+  // the settings button: 246-dp proxy for 320 × 1.3, finish review 02/10).
+  const hienMucMo = () => {
+    if (muc === "community") cuon.current?.scrollToEnd({ animated: false });
+  };
   return (
     <View style={styles.hang} testID="dau-kham-pha">
       <ScrollView
         contentContainerStyle={styles.cuonTrong}
         horizontal
-        // When large text makes the words outgrow the row, the open section
-        // is the one in view: Cộng đồng, the second word, scrolls itself in.
-        onContentSizeChange={() => {
-          if (muc === "community") cuon.current?.scrollToEnd({ animated: false });
-        }}
+        onContentSizeChange={hienMucMo}
+        onLayout={hienMucMo}
         ref={cuon}
         showsHorizontalScrollIndicator={false}
         style={styles.cuon}
