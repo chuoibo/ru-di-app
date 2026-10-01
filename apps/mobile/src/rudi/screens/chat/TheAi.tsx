@@ -32,6 +32,7 @@ import { RudiButton } from "../../ui";
 import { hinhVanTay } from "../../art/giay";
 import { mucNguoi } from "../../nguoi/muc-nguoi";
 import { VeLop } from "../../ui/art/VeLop";
+import { toggleState } from "../../../ui/a11y";
 
 /** One ballot's thumbprint on a poll note, drawn once for every note. */
 const VAN_TAY = { w: 16, h: 20 } as const;
@@ -286,9 +287,9 @@ function ThePoll({
         const so = dem.get(o.id) ?? 0;
         return (
           <Pressable
-            accessibilityRole="radio"
-            accessibilityState={{ checked: cuaToi, disabled: dangBo !== null || dong }}
+            {...toggleState("radio", cuaToi, dangBo !== null || dong ? undefined : () => void bo(o.id))}
             accessibilityLabel={`Bỏ phiếu ${o.label}`}
+            aria-disabled={dangBo !== null || dong}
             disabled={dangBo !== null || dong}
             key={o.id}
             onPress={() => void bo(o.id)}

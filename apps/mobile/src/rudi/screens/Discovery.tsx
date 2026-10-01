@@ -46,6 +46,7 @@ import { guTheoLoai } from "../kham-pha/dia-diem";
 import { chonLyDo, guTheoTag } from "../kham-pha/ly-do";
 import { EmptyState } from "../ui/EmptyState";
 import { PlaceCompare, PlaceGlyph, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./explore/HangDiaDiem";
+import { luiVeVe } from "../lui-ve";
 
 const GLYPH: Record<PlaceCategory, IconName> = {
   "Quán ăn": "restaurant-outline",
@@ -369,7 +370,7 @@ export function PlaceDetailScreen() {
   const rong = width >= 700;
   const nutDau = (
     <>
-      <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => router.back()} />
+      <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => luiVeVe(router as never, "/explore")} />
       <Inline gap={8}>
         <IconButton
           accessibilityLabel="Chia sẻ"

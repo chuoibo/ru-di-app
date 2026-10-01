@@ -26,7 +26,6 @@ export function NapGiay({ tieuDe, children, moSan = false, testID }: { tieuDe: s
       <Pressable
         accessibilityLabel={tieuDe}
         accessibilityRole="button"
-        accessibilityState={{ expanded: mo }}
         aria-expanded={mo}
         onPress={() => setMo((cu) => !cu)}
         style={({ pressed }) => [styles.nap, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small, opacity: pressed ? 0.85 : 1 }]}

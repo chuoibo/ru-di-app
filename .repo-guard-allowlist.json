@@ -1119,6 +1119,38 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B2-CON-DAU-SPIKE.jpg",
+      "sha256": "7412b230bf01745cc6af3a64598724a1f622a580da5b45971da443627c997f73",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B2): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B2-UI-004-RAIL.jpg",
+      "sha256": "a758b22817f872006019601b1bdec4d85c598e387a29a6b87df0f42b889123e9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B2): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B2-UI-029.jpg",
+      "sha256": "61e2d19780faf106d1ddeb4d101b563e71f6e2df1e06b5d3d49b5759e9aa5591",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B2): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B2-UI-166-040.jpg",
+      "sha256": "e5fc0dd837d9d8243585ad3ec57f7a18f2c6756f6e791feb1ed4bc3263e48a74",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B2): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
     }
   ]
 }

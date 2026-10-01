@@ -41,7 +41,12 @@ export type ONhapMucProps = TextInputProps & {
   khungStyle?: StyleProp<ViewStyle>;
 };
 
-const DEM_DUOI = 8;
+/**
+ * Room between the words and the rule. 4, not 8: the input itself is 48 dp
+ * (DESIGN.md's target, QA UI-001 measured 44), and the 4 dp it gained came out
+ * of this gap, so the row is exactly as tall as before and no screen reflows.
+ */
+const DEM_DUOI = 4;
 /** Past this many lines a multiline field scrolls. */
 const DONG_TOI_DA = 8;
 
@@ -57,15 +62,13 @@ export interface KieuGach {
  */
 export function kieuGach({ day = 1, multiline = false, numberOfLines, dongCao }: { day?: number; multiline?: boolean; numberOfLines?: number; dongCao: number }): KieuGach {
   const hang: ViewStyle = { flexDirection: "row", alignItems: multiline ? "flex-start" : "center", gap: 10, borderBottomWidth: day, paddingBottom: DEM_DUOI - (day - 1) };
-  if (!multiline) return { hang, nhap: { flex: 1, minHeight: 44, paddingVertical: 0, paddingHorizontal: 0 } };
+  if (!multiline) return { hang, nhap: { flex: 1, minHeight: 48, paddingVertical: 0, paddingHorizontal: 0 } };
   const dong = Math.max(2, Math.min(DONG_TOI_DA, Math.floor(numberOfLines ?? 3)));
   return {
     hang,
     nhap: { flex: 1, minHeight: dong * dongCao, maxHeight: DONG_TOI_DA * dongCao, paddingVertical: 0, paddingHorizontal: 0, textAlignVertical: "top" },
   };
 }
-
-/** The browser's own focus box, off: the rule shows focus in the product's shape (B7). */
 
 export function ONhapMuc({ label, helper, error, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, ...inputProps }: ONhapMucProps) {
   const { colors } = useRudiTheme();

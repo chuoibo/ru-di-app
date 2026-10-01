@@ -70,6 +70,7 @@ import { chieuTuChang, ganMappedTheoId } from "../../hanh-trinh/chieu";
 import { useCheDoLichTrinh } from "../../hanh-trinh/che-do";
 import { SoHanhTrinh } from "../../hanh-trinh/SoHanhTrinh";
 import { ThanhCheDo } from "../../hanh-trinh/ThanhCheDo";
+import { luiVeVe } from "../../lui-ve";
 
 
 type Trang =
@@ -428,7 +429,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
         </SkeletonGroup>
       ) : null}
       {trang.pha === "hong" ? (
-        <ErrorState body={trang.loi} onRetry={() => void nap()} secondary={{ label: "Về Lên plan", onPress: () => router.back() }} title="Chưa mở được kèo" />
+        <ErrorState body={trang.loi} onRetry={() => void nap()} secondary={{ label: "Về Lên plan", onPress: () => luiVeVe(router as never, "/plan") }} title="Chưa mở được kèo" />
       ) : null}
       {trang.pha === "xong" ? (
         <View style={{ flex: 1, display: hanhTrinh ? "flex" : "none" }}>

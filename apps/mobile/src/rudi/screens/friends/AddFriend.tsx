@@ -27,6 +27,7 @@ import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
 import { Washi } from "../../ui/Washi";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
+import { luiVeVe } from "../../lui-ve";
 
 type Trang =
   | { pha: "nhap" }
@@ -97,7 +98,7 @@ export function AddFriendScreen() {
           <HinhNhan name={tenThat(trang.nguoi.display_name) ?? "?"} personId={trang.nguoi.person_id} size={56} />
           <DauLon co="vua" dong nhan="Đã gửi" tilt={-4} tone="ink" />
         </View>
-        <RudiButton label="Về danh sách bạn" onPress={() => router.back()} />
+        <RudiButton label="Về danh sách bạn" onPress={() => luiVeVe(router as never, "/friends")} />
       </RudiScreen>
     );
   }

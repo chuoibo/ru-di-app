@@ -40,6 +40,7 @@ import type { ChangGui } from "../../../screens/len-plan/buoi-di";
 import { docKeoTuChat, taoKeoTuChat } from "../../chat/ai-invocations";
 import { HangChang } from "./HangChang";
 import { ngayKieuViet, ngayVeISO } from "../../chat/to-hen-chung";
+import { toggleState } from "../../../ui/a11y";
 
 const MUC_NGAN_SACH = [
   { nhan: "200 nghìn", dong: 200000 },
@@ -232,8 +233,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
             return (
               <PressScale
                 accessibilityLabel={m.nhan}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: chon }}
+                {...toggleState("radio", chon, () => setNganSach(String(m.dong)))}
                 haptic="select"
                 key={m.dong}
                 onPress={() => setNganSach(String(m.dong))}

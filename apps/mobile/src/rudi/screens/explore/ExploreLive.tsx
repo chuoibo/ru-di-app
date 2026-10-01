@@ -297,7 +297,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
           <SkeletonRow leading={56} />
         </SkeletonGroup>
       ) : null}
-      {trang.pha === "hong" ? <ErrorState onRetry={() => void nap()} title="Những chỗ hay chưa hiện lên" /> : null}
+      {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Những chỗ hay chưa hiện lên" /> : null}
       {trang.pha === "xong" ? (
         <>
           <ScrollView contentContainerStyle={styles.hangLoai} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={styles.cuonLoai}>

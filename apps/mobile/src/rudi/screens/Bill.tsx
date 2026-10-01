@@ -57,6 +57,7 @@ import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { SoDoChuyen } from "../ui/SoDoChuyen";
 import { Stamp } from "../ui/Stamp";
 import { TrangSo } from "../ui/TrangSo";
+import {  } from "../../ui/a11y";
 
 function ReceiptPaper({ compact = false }: { compact?: boolean }) {
   const { colors } = useRudiTheme();
@@ -249,7 +250,7 @@ export function OcrAssignmentScreen() {
               <Pressable
                 accessibilityLabel={`Sửa người dùng ${item.name}`}
                 accessibilityRole="button"
-                accessibilityState={{ expanded: mo }}
+                aria-expanded={mo}
                 onPress={() => doiMo(itemIndex)}
                 style={({ pressed }) => [styles.dongMonDau, pressed && styles.pressed]}
               >

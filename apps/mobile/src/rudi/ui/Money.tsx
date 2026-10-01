@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Text, type StyleProp, type TextStyle } from "react-native";
+import { StyleSheet, Text, type StyleProp, type TextStyle } from "react-native";
 
 import { dinhDangTienVnd } from "../../screens/chat/ke-hoach";
 import { moneyCountUpMs } from "../motion";
@@ -61,7 +61,10 @@ export function Money({
       numberOfLines={numberOfLines}
       adjustsFontSizeToFit={adjustsFontSizeToFit}
       accessibilityLabel={textCuoi}
-      style={[base, { fontVariant: ["tabular-nums"], color: colors[tone] }, style]}
+      // `flexShrink: 0`: in a row, the name beside an amount gives way, never
+      // the amount. «12.345.678đ» read as «12.3…» on the bill and «1.106.25…»
+      // on the settlement (QA UI-048); a truncated amount is a wrong amount.
+      style={[base, styles.khongCat, { fontVariant: ["tabular-nums"], color: colors[tone] }, style]}
     >
       {text}
     </Text>
@@ -108,3 +111,7 @@ function useCountUp(target: number, enabled: boolean): number {
 
   return shown;
 }
+
+const styles = StyleSheet.create({
+  khongCat: { flexShrink: 0 },
+});

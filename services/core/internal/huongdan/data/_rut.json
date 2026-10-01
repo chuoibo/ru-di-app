@@ -401,6 +401,10 @@
     {
       "canh": [
         {
+          "den": "community/new",
+          "nhan": "Viết bài"
+        },
+        {
           "den": "hai-nguoi/chon-nguoi",
           "nhan": "Hẹn người thương"
         },
@@ -422,11 +426,16 @@
         }
       ],
       "di_toi": [
+        "community",
+        "community/new",
         "create",
         "explore",
         "hai-nguoi/chon-nguoi",
+        "messages",
         "moments/new",
         "outings/new",
+        "plan",
+        "profile",
         "smart-split/[id]/review",
         "stories/new"
       ],
@@ -437,6 +446,7 @@
         "Mình làm gì tiếp?",
         "Tạo cuộc hẹn",
         "Tạo mới",
+        "Viết bài",
         "Đăng kỷ niệm",
         "Đăng story"
       ],

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ResponsiveRow } from "../ui";
 import { typography, useRudiTheme, type RudiTone } from "../theme";
 import { HinhNhan } from "./Avatar";
+import { toggleState } from "../../ui/a11y";
 
 /** The same full-contrast selection contract for fixture and server rosters.
  *  `tone` is the meaning of the choice: `split` (default) for who shares a
@@ -33,8 +34,8 @@ export function RosterPicker({ people, selected, onToggle, disabled = false, ton
     return <View style={styles.hangNhan}>
       {people.map((person) => {
         const checked = selected.includes(person.id);
-        return <Pressable key={person.id} accessibilityRole="checkbox" accessibilityLabel={nhanCho ? nhanCho(person.name) : person.name}
-          accessibilityState={{ checked, disabled }} aria-checked={checked} disabled={disabled}
+        return <Pressable key={person.id} {...toggleState("checkbox", checked, disabled ? undefined : () => onToggle(person.id))} accessibilityLabel={nhanCho ? nhanCho(person.name) : person.name}
+          aria-disabled={disabled} disabled={disabled}
           onPress={() => onToggle(person.id)}
           style={({ pressed }) => [styles.nhan, { opacity: pressed ? 0.8 : 1 }]}>
           <View>
@@ -52,8 +53,8 @@ export function RosterPicker({ people, selected, onToggle, disabled = false, ton
   return <ResponsiveRow minItemWidth={130} gap={8}>
     {people.map((person) => {
       const checked = selected.includes(person.id);
-      return <Pressable key={person.id} accessibilityRole="checkbox" accessibilityLabel={nhanCho ? nhanCho(person.name) : person.name}
-        accessibilityState={{ checked, disabled }} aria-checked={checked} disabled={disabled}
+      return <Pressable key={person.id} {...toggleState("checkbox", checked, disabled ? undefined : () => onToggle(person.id))} accessibilityLabel={nhanCho ? nhanCho(person.name) : person.name}
+        aria-disabled={disabled} disabled={disabled}
         onPress={() => onToggle(person.id)}
         style={({ pressed }) => [styles.person, {
           borderColor: checked ? muc : colors.lineStrong,

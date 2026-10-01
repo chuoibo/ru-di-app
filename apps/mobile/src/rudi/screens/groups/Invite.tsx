@@ -33,6 +33,7 @@ import { ONhapMuc } from "../../ui/ONhapMuc";
 import { PhongBi } from "../../ui/PhongBi";
 import { StampButton } from "../../ui/StampButton";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
+import { luiVeVe } from "../../lui-ve";
 
 type Trang =
   | { pha: "nhap" }
@@ -109,7 +110,7 @@ export function GroupInviteScreen() {
           <Text style={[typography.title, { color: colors.ink }]}>Gửi {trang.ten}</Text>
           <DauLon co="vua" dong nhan="Đã gửi" tilt={-4} tone="ink" />
         </PhongBi>
-        <RudiButton label="Xem thành viên" onPress={() => router.back()} />
+        <RudiButton label="Xem thành viên" onPress={() => luiVeVe(router as never, "/messages")} />
         <RudiButton
           label="Mời thêm người"
           onPress={() => {

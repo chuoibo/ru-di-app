@@ -12,6 +12,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { bongGiay, displayFace, typography, useRudiTheme } from "../theme";
 import { PressScale } from "./PressScale";
+import { toggleState } from "../../ui/a11y";
 
 /** «T7 26/09» → band «T7», day «26», month «Th 09»; anything else stays whole. */
 export function phanLa(ngan: string): { thu: string; ngay: string; thang: string } {
@@ -40,9 +41,7 @@ export function LaLich({
   return (
     <PressScale
       accessibilityLabel={nhan}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: chon }}
-      aria-checked={chon}
+      {...toggleState("radio", chon, onPress)}
       haptic="select"
       onPress={onPress}
       style={[styles.la, { backgroundColor: colors.card, borderColor: chon ? colors.accent : colors.lineStrong }, chon && bongGiay(2, dark)]}

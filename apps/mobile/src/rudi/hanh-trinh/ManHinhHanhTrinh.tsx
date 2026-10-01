@@ -44,6 +44,7 @@ import { hinhTrangXe } from "../art/giay";
 /** Depth of the torn edge; the page overlaps the map by twice this. */
 const XE = 3;
 import { KyHoa } from "../ui/art/KyHoa";
+import { giuState } from "../../ui/a11y";
 
 export function ManHinhHanhTrinh({
   hanh,
@@ -284,7 +285,7 @@ export function ManHinhHanhTrinh({
           </View>
           <View style={styles.hangSo}>
             <Text style={[typography.label, styles.so, styles.dauChu, { color: colors.inkSoft }]}>{coMoc ? tomChu : ""}</Text>
-            <Pressable accessibilityLabel={collapsed ? "Mở trang ngày" : "Thu gọn trang ngày"} accessibilityRole="button" accessibilityState={{ expanded: !collapsed }} hitSlop={12} onPress={() => setCollapsed(!collapsed)} style={styles.nutGap}>
+            <Pressable accessibilityLabel={collapsed ? "Mở trang ngày" : "Thu gọn trang ngày"} accessibilityRole="button" aria-expanded={!collapsed} hitSlop={12} onPress={() => setCollapsed(!collapsed)} style={styles.nutGap}>
               <Text style={[typography.caption, { color: colors.accent }]}>{collapsed ? "Mở trang" : "Thu gọn"}</Text>
             </Pressable>
           </View>
@@ -402,7 +403,7 @@ function ThanhChang({
         <Pressable
           accessibilityLabel={nhanMoc(moc)}
           accessibilityRole="button"
-          accessibilityState={{ selected: moc.chon }}
+          {...giuState(moc.chon)}
           key={moc.id}
           onLayout={(e) => { positions.current[moc.id] = e.nativeEvent.layout.x; }}
           onPress={() => onChon(moc.id)}

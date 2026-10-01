@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNhuongChoNep } from "../../nep/NepProvider";
 import { useEffect, useRef, useState } from "react";
-import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { lenhSanSang, type ChatCapabilities } from "../../chat/ai-invocations";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
 import { CONG_CU_TO_GIAY, KHOANG_CONG_CU, boCucKhay, chuKhay, tranKhay } from "../../chat/khay-cong-cu";
@@ -11,6 +11,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { VeLop } from "../../ui/art/VeLop";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { Field, IconButton, RudiButton } from "../../ui";
+import { useDongKhay } from "../../ui/useDongKhay";
 
 export type KhayChat = "tools" | "poll" | "plan" | null;
 
@@ -110,19 +111,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
       setFieldErrors(loiBinhChonTheoO(next.question, next.choices));
     }
   };
-  useEffect(() => {
-    if (!panel) return;
-    if (Platform.OS === "android") {
-      const sub = BackHandler.addEventListener("hardwareBackPress", () => { onPanelRef.current(null); return true; });
-      return () => sub.remove();
-    }
-    if (Platform.OS !== "web") return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); onPanelRef.current(null); }
-    };
-    document.addEventListener("keydown", onKey, true);
-    return () => document.removeEventListener("keydown", onKey, true);
-  }, [panel !== null]);
+  useDongKhay(panel !== null, () => onPanelRef.current(null));
   if (!panel) return null;
   // Discarding is deliberate, so it does not need a confirmation box in front
   // of it -- but a 2000-character request can die on one mistap, and until now

@@ -13,6 +13,7 @@ import { MediaPicker } from "./MediaPicker";
 import { MentionPicker } from "./MentionPicker";
 import { coTuongNhom } from "../so/ban-tinh";
 import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
+import { toggleState } from "../../ui/a11y";
 export function Composer() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -66,7 +67,7 @@ export function Composer() {
     const change = (update: () => void) => { attempt.current = newAttempt().key; update(); };
     if (!phien)
         return <RudiScreen><TopBar title="Kể một khoảnh khắc"/><Text style={[typography.body, { color: colors.ink }]}>Đăng nhập để viết câu chuyện của bạn.</Text></RudiScreen>;
-    const choice = (value: Audience, title: string, detail: string) => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ selected: audience === value }} disabled={Boolean(params.edit)} onPress={() => change(() => setAudience(value))} style={{ paddingVertical: 16, borderBottomWidth: 1, borderColor: colors.line, gap: 4 }}><Text style={[typography.title, { color: audience === value ? colors.accent : colors.ink }]}>{title}{audience === value ? " · Đã chọn" : ""}</Text><Text style={[typography.caption, { color: colors.inkSoft }]}>{detail}</Text></Pressable>;
+    const choice = (value: Audience, title: string, detail: string) => <Pressable key={value} {...toggleState("radio", audience === value, params.edit ? undefined : () => change(() => setAudience(value)))} aria-disabled={Boolean(params.edit)} disabled={Boolean(params.edit)} onPress={() => change(() => setAudience(value))} style={{ paddingVertical: 16, borderBottomWidth: 1, borderColor: colors.line, gap: 4 }}><Text style={[typography.title, { color: audience === value ? colors.accent : colors.ink }]}>{title}{audience === value ? " · Đã chọn" : ""}</Text><Text style={[typography.caption, { color: colors.inkSoft }]}>{detail}</Text></Pressable>;
     return <RudiScreen avoidKeyboard footerInset={insets.bottom + 12} testID="community-composer" footer={<RudiButton label={busy ? "Đang gửi…" : params.edit ? "Gửi bản sửa" : audience === "public" ? "Gửi lên cộng đồng" : "Đăng lên tường"} disabled={busy || uploading || !body.trim() || (audience === "group" && !group)} onPress={() => void send()}/>}>
     <TopBar title={params.edit ? "Viết tiếp câu chuyện" : "Kể một khoảnh khắc"}/>
     <Text style={[typography.h1, { color: colors.ink }]}>Hôm nay có gì đáng nhớ?</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Một cuộc đi thật, một điều bạn muốn kể.</Text>

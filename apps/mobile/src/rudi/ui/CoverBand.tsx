@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import type { ReactNode } from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { luiVe } from "../lui-ve";
 import { phuMau, useRudiTheme } from "../theme";
 import { Grain } from "./Grain";
 import { PressScale } from "./PressScale";
@@ -42,7 +43,9 @@ export function CoverBand({ children, bleed = 0, onBack, underStatusBar = false,
   const { colors, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const back = onBack === true ? () => router.back() : onBack || null;
+  const pathname = usePathname();
+  // A cover opened cold from a link goes to its tab, not nowhere (QA UI-018).
+  const back = onBack === true ? () => luiVe(router as never, pathname) : onBack || null;
   return (
     <View
       style={[

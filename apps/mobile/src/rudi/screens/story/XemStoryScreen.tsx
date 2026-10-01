@@ -48,6 +48,7 @@ import { ErrorState } from "../../ui/ErrorState";
 import { RudiScreen } from "../../ui";
 import { useMotion } from "../../ui/useMotion";
 import { useNhuongChoNep } from "../../nep/NepProvider";
+import { luiVeVe } from "../../lui-ve";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -120,7 +121,7 @@ export function XemStoryScreen() {
       if (nhom === null) return;
       if (chiSo + 1 >= nhom.stories.length) {
         // Last story: the clock stops here; only the reader's own tap closes.
-        if (tuNguoi) router.back();
+        if (tuNguoi) luiVeVe(router as never, "/messages");
         else {
           setPhan(1);
           setHet(true);
@@ -164,7 +165,7 @@ export function XemStoryScreen() {
     setDangXoa(true);
     try {
       await xoaStory(story.id, toi);
-      router.back();
+      luiVeVe(router as never, "/messages");
     } catch (error) {
       setTrang({ pha: "hong", loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) });
     } finally {
@@ -190,7 +191,7 @@ export function XemStoryScreen() {
       {trang.pha === "trong" ? (
         <View style={[styles.giua, { backgroundColor: colors.ground }]}>
           <EmptyState
-            action={{ label: "Quay lại", onPress: () => router.back() }}
+            action={{ label: "Quay lại", onPress: () => luiVeVe(router as never, "/messages") }}
             body="Có thể story đã qua 24 giờ, hoặc người đăng đã gỡ."
             kind="no-results"
             layout="inline"
@@ -230,7 +231,7 @@ export function XemStoryScreen() {
                   <Ionicons color={colors.coverInk} name="trash-outline" size={22} />
                 </Pressable>
               ) : null}
-              <Pressable accessibilityLabel="Đóng story" accessibilityRole="button" hitSlop={8} onPress={() => router.back()} style={styles.nutTron}>
+              <Pressable accessibilityLabel="Đóng story" accessibilityRole="button" hitSlop={8} onPress={() => luiVeVe(router as never, "/messages")} style={styles.nutTron}>
                 <Ionicons color={colors.coverInk} name="close" size={26} />
               </Pressable>
             </View>

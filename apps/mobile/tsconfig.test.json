@@ -226,6 +226,11 @@
     // QA UI-049/UI-136: what a «Gửi cho …» or «Chia sẻ» tap answers on the
     // web. Compiled so each outcome runs through react-native-web's Platform.
     "src/rudi/web/chia-se.ts",
+    // B2: what the «Tạo mới» desk puts first from each tab, and where «Quay
+    // lại» goes when a link opened the screen cold (QA UI-018). Pure, compiled
+    // so the order and the fallback run as they ship.
+    "src/rudi/tao-moi.ts",
+    "src/rudi/lui-ve.ts",
     "src/rudi/otp-dang-cho.ts",
     "src/rudi/chat/tin-song.ts",
     "src/rudi/cua-fixture.ts",

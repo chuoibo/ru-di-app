@@ -22,6 +22,7 @@ import { Heading, RudiScreen, TopBar } from "../ui";
 import { ONhapMuc } from "../ui/ONhapMuc";
 import { StampButton } from "../ui/StampButton";
 import { GuGlyph } from "../ui/art/Gu";
+import { toggleState } from "../../ui/a11y";
 
 /** The words are the SERVER's (`so-thich.ts`, held equal to `GET /interests`
  *  by `tests/test_interest_vocabulary_matches_client.py`); the picture for each
@@ -209,9 +210,7 @@ export function PersonalizationScreen() {
               <Pressable
                 key={m.id}
                 accessibilityLabel={m.nhan}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: selected }}
-                aria-checked={selected}
+                {...toggleState("checkbox", selected, () => doiMucChon(m.id))}
                 onPress={() => doiMucChon(m.id)}
                 style={({ pressed }) => [
                   styles.sticker,
@@ -250,9 +249,7 @@ export function PersonalizationScreen() {
             return (
               <Pressable
                 accessibilityLabel={k.nhan}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: chon }}
-                aria-checked={chon}
+                {...toggleState("radio", chon, () => doiKhoang(k.id))}
                 key={k.id}
                 onPress={() => doiKhoang(k.id)}
                 style={({ pressed }) => [styles.phongBi, { backgroundColor: chon ? colors.accentSoft : colors.card, borderColor: chon ? colors.accent : colors.lineStrong, borderWidth: chon ? 2 : 1 }, pressed && styles.pressed]}

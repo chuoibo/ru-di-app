@@ -146,6 +146,9 @@ const MOI_REFUSALS: Record<string, string> = {
     "Người này chưa có tài khoản Rủ Đi, nên chưa mời được. Thêm lại bạn đó bằng ô phía trên.",
   membership_conflict: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
   duplicate_membership: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
+  // The name Go gives the same refusal (`repo/contexts.go`); without it the
+  // 409 read as «Lần bấm trước chưa chạy xong» (QA UI-072).
+  membership_already_open: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
   permission_denied:
     "Chỉ người tạo nhóm mới mời được thành viên. Nhờ người đó mời giúp.",
 };

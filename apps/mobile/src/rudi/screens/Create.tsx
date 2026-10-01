@@ -1,12 +1,14 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { type VatBan, KHUNG_VAT, hinhVat } from "../art/vat-ban";
+import { KHUNG_VAT, hinhVat } from "../art/vat-ban";
 import { bongGiay, typography, useRudiTheme } from "../theme";
 import { DEMO_GROUP } from "../fixtures";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
+import { luiVeVe } from "../lui-ve";
+import { tabTu, thuTuViec, type ViecTao } from "../tao-moi";
 import { DemoBadge, Heading } from "../ui";
 import { VeLop } from "../ui/art/VeLop";
 import { NepDien } from "../ui/NepDien";
@@ -15,8 +17,9 @@ import { Sheet } from "../ui/Sheet";
 
 /** One line per action; a second line only where two of them could be
  *  confused (a memory goes to the group's wall, a story to friends for a day).
- *  Each is the paper object it makes (ADR-0037 D1, plan S3). */
-const ACTIONS: { vat: VatBan; title: string; detail?: string; href: string }[] = [
+ *  Each is the paper object it makes (ADR-0037 D1, plan S3). This is the
+ *  desk's stable order; `tao-moi.ts` moves the one card that fits the tab. */
+export const ACTIONS: ViecTao[] = [
   { vat: "lich", title: "Tạo cuộc hẹn", href: "/outings/new" },
   { vat: "hoa-don", title: "Chia hóa đơn", href: "/smart-split/xom-leo/review" },
   { vat: "anh-in", title: "Đăng kỷ niệm", detail: "Ảnh lên tường nhóm", href: "/moments/new" },
@@ -24,12 +27,11 @@ const ACTIONS: { vat: VatBan; title: string; detail?: string; href: string }[] =
   // The one entry the two-person notebook adds here (spec «Nếp truyền giấy»
   // §20.1, Lead): a sheet to ONE person, into the pair's notebook, not the group's.
   { vat: "thu-gap", title: "Hẹn người thương", detail: "Một lời hẹn trong sổ cặp đôi", href: "/hai-nguoi/chon-nguoi" },
+  { vat: "phieu-bau", title: "Viết bài", detail: "Kể chuyến đi cho cộng đồng", href: "/community/new" },
 ];
 
 /** Objects lie on the desk a little askew, the same way every time. */
 const NGHIENG = [-3, 2, -2, 3, -1];
-
-const RU_MOT_NGUOI = "/hai-nguoi/chon-nguoi";
 
 /**
  * Same sheet for the tab FAB (`router.push("/create")`) and the `/create` route.
@@ -46,18 +48,19 @@ export function CreateSheet() {
   const { phien } = useRudiSession();
   const [open, setOpen] = useState(true);
   const currentGroup = phien?.contexts?.find((group) => group.id === phien.context_id);
-  // Somebody who already talks one-to-one with a person gets the two-person
-  // entry first: it was fifth, under the bill and the story, and a couple read
-  // past it (QA 23/09). Everybody else keeps the group order.
+  // The tab the stamp was pressed on puts its own kind of thing first
+  // (`tao-moi.ts`); somebody who already talks one-to-one with a person gets
+  // the two-person entry first where no tab says otherwise (QA 23/09).
+  const tu = tabTu(useLocalSearchParams<{ tu?: string }>().tu);
   const coCap = (phien?.contexts ?? []).some((nhom) => laPair(nhom) && nhom.my_state === "active");
-  const cacViec = coCap ? [...ACTIONS.filter((a) => a.href === RU_MOT_NGUOI), ...ACTIONS.filter((a) => a.href !== RU_MOT_NGUOI)] : ACTIONS;
+  const { viec: cacViec } = thuTuViec({ viec: ACTIONS, tu, coCap, coCongDong: true });
   const subtitle = phien === null
     ? `Bắt đầu với ${DEMO_GROUP.name}.`
     : currentGroup ? `Đang ở ${currentGroup.display_name}.` : "Chọn hội bạn trong bước tiếp theo.";
 
   return (
     <View style={styles.man}>
-      <Sheet accessibilityLabel="Tạo mới" onClose={() => setOpen(false)} onClosed={() => router.back()} open={open} testID="create-sheet">
+      <Sheet accessibilityLabel="Tạo mới" onClose={() => setOpen(false)} onClosed={() => luiVeVe(router as never, "/explore")} open={open} testID="create-sheet">
         <View style={styles.noiDung}>
           <View style={styles.headingRow}>
             <View style={styles.headingText}>

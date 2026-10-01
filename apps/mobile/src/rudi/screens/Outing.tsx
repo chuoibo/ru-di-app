@@ -44,6 +44,7 @@ import { ngayMacDinh } from "../hanh-trinh/ke-hoach";
 import { ThanhCheDo } from "../hanh-trinh/ThanhCheDo";
 
 import { choTuId } from "../hanh-trinh/toa-do-mau";
+import { toggleState } from "../../ui/a11y";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
 function isoTu(ddmmyyyy: string): string {
@@ -187,7 +188,7 @@ export function TripTimelineScreen() {
         subtitle={nhanKhoangNgay(isoTu(session.startDate), isoTu(session.endDate))}
         right={
           <Inline>
-            <IconButton accessibilityLabel="Tạo mới" icon="add" onPress={() => router.push("/create")} quiet />
+            <IconButton accessibilityLabel="Tạo mới" icon="add" onPress={() => router.push("/create?tu=plan")} quiet />
             <IconButton
               accessibilityLabel="Tùy chọn"
               icon="ellipsis-horizontal"
@@ -364,19 +365,18 @@ export function CheckInScreen() {
         <Text style={[typography.h2, { color: colors.ink }]}>Ai đã tới</Text>
         {PEOPLE.map((person) => {
           const here = session.checkedInIds.includes(person.id);
+          const doi = () => {
+            // Landing only for a check-in, never for an undo.
+            if (here) setVuaToi(null);
+            else setVuaToi(person.id);
+            session.toggleCheckIn(person.id);
+          };
           return (
             <Pressable
               key={person.id}
               accessibilityLabel={person.name}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: here }}
-              aria-checked={here}
-              onPress={() => {
-                // Landing only for a check-in, never for an undo.
-                if (here) setVuaToi(null);
-                else setVuaToi(person.id);
-                session.toggleCheckIn(person.id);
-              }}
+              {...toggleState("checkbox", here, doi)}
+              onPress={doi}
               style={({ pressed }) => [styles.checkRow, { borderBottomColor: colors.line }, pressed && styles.pressed]}
             >
               <Avatar name={person.name} ring={here} size={40} tone="split" />

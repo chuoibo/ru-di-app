@@ -5,6 +5,7 @@ import { ngayKieuViet, ngayVeISO, type ToHenChung } from "../../chat/to-hen-chun
 import { typography, useRudiTheme } from "../../theme";
 import { IconButton, RudiButton } from "../../ui";
 import { ONhapMuc } from "../../ui/ONhapMuc";
+import { useDongKhay } from "../../ui/useDongKhay";
 
 /**
  * The tray where the group edits its shared sheet.
@@ -49,6 +50,9 @@ export function KhayToHenChung({
   onClose: () => void;
 }) {
   const { colors } = useRudiTheme();
+  // Mounted only while open (the chat renders it in the tray slot), so its
+  // close contract is always on: Escape, Android Back, focus home (QA UI-066).
+  useDongKhay(true, onClose);
   const [title, setTitle] = useState(sheet.title);
   const [starts, setStarts] = useState(ngayKieuViet(sheet.starts_on));
   const [ends, setEnds] = useState(ngayKieuViet(sheet.ends_on));

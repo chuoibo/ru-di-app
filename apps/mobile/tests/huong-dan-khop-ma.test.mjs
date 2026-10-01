@@ -436,8 +436,12 @@ test("(b)(c)(d) mọi file sổ tay khớp mã", () => {
 
 test("(b) mỗi ngoại lệ CANH_NGOAI_RUT có sổ tay dùng, chưa phải cạnh của mã, và nguồn vẫn làm nó có thật", () => {
   const khongNgoaiLe = { ...NGU_CANH, canhNgoai: [] };
+  // The strip's create button is the «Tạo mới» stamp, in its own file since
+  // B2 (01/10): the strip renders it, the stamp pushes /create.
   const tabBar = readFileSync(join(dirname(DUONG_BAN), "../ui/RudiTabBar.tsx"), "utf8");
-  assert.ok(tabBar.includes('router.push("/create")') && tabBar.includes('accessibilityLabel="Tạo mới"'), "RudiTabBar không còn nút «Tạo mới» đẩy /create");
+  const conDau = readFileSync(join(dirname(DUONG_BAN), "../ui/ConDauTao.tsx"), "utf8");
+  assert.ok(tabBar.includes("<ConDauTao "), "RudiTabBar không còn vẽ con dấu «Tạo mới»");
+  assert.ok(conDau.includes('"/create"') && conDau.includes('accessibilityLabel="Tạo mới"'), "con dấu không còn đẩy /create");
   for (const c of CANH_NGOAI_RUT) {
     assert.ok(c.viSao.length > 0);
     assert.ok(!laCanhMa(c.tu, c.den, khongNgoaiLe), `${c.tu} -> ${c.den} đã là cạnh của mã: ngoại lệ thừa`);

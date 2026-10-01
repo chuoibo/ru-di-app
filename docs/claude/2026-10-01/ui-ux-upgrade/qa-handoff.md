@@ -123,3 +123,72 @@ Rủi ro còn lại của B1:
   - sheet đóng khi màn mất focus;
   - `Share.share` có `url` riêng trên iOS.
 - Chưa có iOS.
+
+### B2 · Primitive dùng chung
+
+Đo trên bản web của cây B2, cùng stack và cùng dữ liệu với B1.
+- «Trước» của các hàng `retest-main` phần chính là bản B1 (`a6341c19`). Các phần `r-p3-*` (B1 không đổi) lấy hàng `main`
+  `d95edb4`.
+- Các kịch bản F02, F05, N22 chạy lần lượt trên bản B1 rồi bản B2.
+
+| Issue | Hàng harness | Trước | Sau | Tự kiểm | Ảnh |
+|---|---|---|---|---|---|
+| UI-003 | `TC-R-UI-003`, `TC-F05-BINH-CHON-PHIEU` | FAIL, FAIL | PASS, PASS | đạt: tab có `aria-selected` trong `tablist`; phiếu bầu `aria-checked` | — |
+| UI-004 | `TC-R-UI-004` | FAIL | FAIL | đạt, ghi chú 1 | `EV-B2-UI-004-RAIL.jpg` |
+| UI-006 | `TC-R-UI-006` | FAIL | FAIL | đạt, ghi chú 2 | — |
+| UI-007 | `TC-R-UI-007` | FAIL (`d95edb4`) | PASS | khay 82% ở C2, C8 | — |
+| UI-010 | `TC-R-UI-010` | FAIL (`d95edb4`) | PASS | `/create` mở lạnh: 1 hộp thoại trên Khám phá | — |
+| UI-013 | `TC-R-UI-013` | FAIL (`d95edb4`) | PASS | khung cuối: đỉnh 868 > 844, độ mờ 0 | — |
+| UI-018 | `TC-R-UI-018` | FAIL | PASS | «Quay lại» mở lạnh về tab của route | — |
+| UI-019 | `TC-R-UI-019` | FAIL | PASS | mã mời sai: câu về mã, không «cập nhật app» | — |
+| UI-029 | `TC-F02-LOI-503` (câu) | câu chung | câu về máy chủ | đạt | `EV-B2-UI-029.jpg` |
+| UI-038 (khay) | `TC-L20-VONGDOI` | FAIL | PASS | Back khi khay mở ở lại chat | — |
+| UI-039 (B3) | `TC-R-UI-039` C6 | FAIL (`d95edb4`) | PASS | chạm đúp «Thêm chặng» = 1 sheet (nhờ Sheet v2) | — |
+| UI-040 | `TC-L08-KICH-THUOC` C8, `TC-N22-XEM-GHIM` | 93–96% | 82% | đạt | `EV-B2-UI-166-040.jpg` |
+| UI-053 | — | — | — | test `trang-thai-tro-nang.test.mjs`; Space ở ghế, danh sách người, phiếu, ngân sách | — |
+| UI-066 | `TC-L21-VONGDOI` (Esc) | khay còn | khay đóng | đạt, ghi chú 4 | — |
+| UI-070 | `TC-F05-GHIM-TREN-NEN` | PASS | PASS | lớp sheet `zIndex 10` | — |
+| UI-072 | `TC-R-UI-072` | FAIL (QA `461eabf`) | PASS | 409: «Người này đã ở trong nhóm hoặc đã được mời rồi.» | — |
+| UI-088 | `TC-R-UI-088` | FAIL (QA `461eabf`) | PASS | chạm đúp ⚙: còn 1 sheet | — |
+| UI-089 | `TC-R-UI-089` | FAIL (QA `461eabf`) | PASS | axe `aria-prohibited-attr` 0 | — |
+| UI-091 | `TC-R-UI-091` | FAIL (QA `461eabf`) | FAIL | đạt: nút «Lưu điều cần tránh» chỉ hiện khi có thay đổi, đúng đề xuất của QA; harness đòi thấy nút | — |
+| UI-093 | `TC-R-UI-093` | FAIL (QA `461eabf`) | PASS | tờ 592px, sheet 640px ở C6, C7 | — |
+| UI-099 | `TC-R-UI-099` | FAIL | PASS | chip tràn 0 ở C1, C2 | — |
+| UI-112 | `TC-R-UI-112` | FAIL (`d95edb4`) | PASS | focus vào tiêu đề ở 5/5 màn | — |
+| UI-166 | `TC-N22-XEM-GHIM` | FAIL | FAIL | đạt, ghi chú 3 | `EV-B2-UI-166-040.jpg` |
+| UI-001 | — | — | — | `ONhapMuc` 48 (test `o-nhap-muc`); các nút 44 của từng màn ở batch của màn đó | — |
+
+Ghi chú B2:
+
+1. **UI-004 rail.** Harness tìm vạch chỉ báo là anh em của phần tử tab. Từ B2 các tab nằm trong một `tablist` riêng, nên
+   harness ghi «vạch không thấy». Đo bằng `kiem-ux/vach-rail.mjs`: tâm vạch so với khoảng dọc của tab đang chọn, 5 tab ×
+   C6, C7.
+   - Trước bản sửa: 2/10 (tab rail chỉ cao 48 trên web vì `flex: 0` thành `flex-basis: 0`).
+   - Sau: 10/10.
+   - Ảnh `EV-B2-UI-004-RAIL.jpg`.
+2. **UI-006.** Hai chạm cách 60 ms: 1 hộp thoại, đạt. Harness so URL bằng đúng `/create`, nhưng nay khay mang ngữ cảnh tab
+   (`/create?tu=plan`). Trên Lên plan, ô dưới ngón tay ở 60 ms là «Đóng», nhưng sheet không nhận chạm trong 250 ms đầu.
+3. **UI-166, UI-040 (tấm «Xem» trong chat có dải ghim).**
+   - Tấm cao đúng 82% ở C1, C2, C8.
+   - Lớp sheet `zIndex 10` nên dải ghim nằm dưới nền mờ.
+   - Chạm vào chỗ «Đóng bảng» trúng «Đóng bảng»; chạm dòng đầu trúng tấm.
+   - Hàng `TC-N22-XEM-GHIM` vẫn FAIL vì quy tắc của nó là FAIL khi dải có `z-index 1` và tấm khác `1`. Nghĩa là mọi lớp sheet
+     cao hơn đều bị chấm FAIL, trái với chính đề xuất sửa của QA («cho lớp sheet zIndex cao hơn»).
+   - Ảnh `EV-B2-UI-166-040.jpg`.
+4. **Hàng `TC-L21-VONGDOI`.** Kịch bản bấm Esc trước. Esc nay đóng khay (UI-066 đạt), nên Back sau đó không còn khay nào để
+   đóng và rời chat là đúng. Back khi khay đang mở được đo ở khay công cụ dùng cùng hook (`TC-L20-VONGDOI` FAIL → PASS).
+5. **Tay cầm sheet** ra khỏi cây truy cập (UI-089), nên harness không tìm được nó bằng nhãn «Tay cầm» để kéo.
+   - Bản B2 cho nó `testID="tay-cam"`.
+   - Bản sao harness của tôi tìm theo cả hai (`thu-vien/lop-phu.mjs`).
+   - Kéo ngắn bật về, kéo dài và vuốt nhanh đều đóng (`TC-L08-DONG-*` 7/7 PASS).
+   - QA nên cập nhật bộ định vị như vậy.
+6. **UI-099, UI-018, UI-019, UI-003:** hàng harness FAIL → PASS. UI-029: câu 503 nay là «Rủ Đi đang gặp sự cố…»
+   (`EV-B2-UI-029.jpg`).
+
+Cổng B2 (cây sạch = `main` + đúng các file của B2): xem commit message.
+
+Rủi ro còn lại của B2:
+- **Sheet v2** thay hành vi của 39 chỗ gọi: trần cả panel, chặn chạm 250 ms, trượt theo chiều cao. Harness đo F03, F05, F07,
+  N22 và khay Tạo mới; các sheet khác chưa được đo riêng.
+- **Android** chưa đo: APK debug cũ hơn `expo-video` nên cần build native mới.
+- **Lên plan** có hai lối mở cùng một khay: nút «Tạo mới» ở đầu màn và con dấu. Để B3 quyết có bỏ nút đầu màn hay không.

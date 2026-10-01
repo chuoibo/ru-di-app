@@ -18,6 +18,7 @@ import { displayFace, typography, useRudiTheme } from "../theme";
 import { ONhapMuc } from "./ONhapMuc";
 import { THU_NGAN, cungNgay, dinhDangNgay, docNgay, luoiThang, tenThang, tenThu, thangSau, type NgayLich } from "./lich/lich-thang";
 import { useMotion } from "./useMotion";
+import { giuState } from "../../ui/a11y";
 
 function homNayThat(): NgayLich {
   const d = new Date();
@@ -57,7 +58,6 @@ export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel,
           accessibilityHint="Mở lịch để chọn ngày"
           accessibilityLabel={noiRo}
           accessibilityRole="button"
-          accessibilityState={{ expanded: mo }}
           aria-expanded={mo}
           onPress={moLich}
           style={({ pressed }) => [styles.la, { borderColor: colors.lineStrong, backgroundColor: colors.card, borderRadius: radius.small, opacity: pressed ? 0.85 : 1 }]}
@@ -115,7 +115,7 @@ export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel,
                 <Pressable
                   accessibilityLabel={`${tenThu(o)}, ${o.ngay} tháng ${o.thang} năm ${o.nam}${laHomNay ? ", hôm nay" : ""}`}
                   accessibilityRole="button"
-                  accessibilityState={{ selected: chon }}
+                  {...giuState(chon)}
                   aria-selected={chon}
                   key={`${o.nam}-${o.thang}-${o.ngay}`}
                   onPress={() => {

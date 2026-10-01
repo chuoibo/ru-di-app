@@ -388,7 +388,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
             <Pressable
               accessibilityLabel="Chọn ảnh bill"
               accessibilityRole="button"
-              accessibilityState={{ disabled: ban, busy: ban }}
+              aria-busy={ban}
               disabled={ban}
               onPress={() => void chonAnh()}
               style={({ pressed }) => [styles.billTrong, { opacity: ban ? 0.6 : pressed ? 0.85 : 1 }]}
@@ -464,7 +464,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                   <Pressable
                     accessibilityLabel={`${mo ? "Gấp" : "Sửa"} ${ten}`}
                     accessibilityRole="button"
-                    accessibilityState={{ expanded: mo }}
+                    aria-expanded={mo}
                     onPress={() => doiMo(line.id)}
                     style={({ pressed }) => [styles.dongDau, pressed && styles.bam]}
                   >
@@ -575,7 +575,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                   <Pressable
                     accessibilityLabel={`Sửa người dùng ${line.name}`}
                     accessibilityRole="button"
-                    accessibilityState={{ expanded: mo }}
+                    aria-expanded={mo}
                     onPress={() => {
                       // A dish off the table goes onto it (and opens); the one
                       // already there folds or opens like any row.

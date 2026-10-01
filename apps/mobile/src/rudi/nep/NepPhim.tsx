@@ -9,6 +9,7 @@ import {
   createProfileVideo, profileVideoFileURL, profileVideoStatus, videoAttempt, videoCredits,
   savedProfileVideos, type SavedVideoJob, type VideoCreditBalance, type VideoJob,
 } from "./profile-video";
+import { giuState } from "../../ui/a11y";
 
 function VideoFrame({ uri, actorId }: { uri: string; actorId: string }) {
   const headers = actorHeaders(actorId);
@@ -145,7 +146,7 @@ export function NepPhim({ actorId, imageJobIds }: { actorId: string | null; imag
       {readyURI && actorId ? <VideoFrame key={readyURI} uri={readyURI} actorId={actorId} /> : null}
       {saved.length > 1 ? <View style={styles.library}>
         <Text style={[typography.label, { color: colors.inkSoft }]}>Các phim đã dựng</Text>
-        <View style={styles.libraryRow}>{saved.map((item, index) => <Pressable key={item.job_id} accessibilityRole="button" accessibilityState={{ selected: job?.job_id === item.job_id }} onPress={() => { setWebURI(null); setJob(item); }} style={[styles.filmTab, { borderColor: job?.job_id === item.job_id ? colors.ai : colors.lineStrong }]}>
+        <View style={styles.libraryRow}>{saved.map((item, index) => <Pressable key={item.job_id} accessibilityRole="button" {...giuState(job?.job_id === item.job_id)} onPress={() => { setWebURI(null); setJob(item); }} style={[styles.filmTab, { borderColor: job?.job_id === item.job_id ? colors.ai : colors.lineStrong }]}>
           <Text style={[typography.caption, { color: colors.ink }]}>{`Phim ${saved.length - index}`}</Text>
         </Pressable>)}</View>
       </View> : null}

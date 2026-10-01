@@ -35,6 +35,7 @@ import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { NapGiay } from "../../ui/NapGiay";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
+import { toggleState } from "../../../ui/a11y";
 
 export function DangBaiScreen() {
   const router = useRouter();
@@ -180,8 +181,7 @@ export function DangBaiScreen() {
               // Named so a driver (and a screen reader) can pick this one and
               // not the sentence under a neighbour, which mentions «Bạn bè» too.
               accessibilityLabel={`Mức người đọc: ${MUC_NGUOI_DOC[a].nhan}`}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: chon }}
+              {...toggleState("radio", chon, () => setMuc(a))}
               key={a}
               onPress={() => setMuc(a)}
               style={({ pressed }) => [

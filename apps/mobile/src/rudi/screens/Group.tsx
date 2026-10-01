@@ -37,6 +37,7 @@ import { Avatar } from "../ui/Avatar";
 import { Money } from "../ui/Money";
 import { HangChang } from "./keo/HangChang";
 import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
+import { toggleState } from "../../ui/a11y";
 
 function ChatBubble({
   person,
@@ -267,7 +268,7 @@ export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embedde
           {/* One opening for the reasoning, the «Cách tính» shape from Thành tích. */}
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ expanded: moViSao }}
+            aria-expanded={moViSao}
             onPress={() => setMoViSao((v) => !v)}
             style={styles.cuaMo}
           >
@@ -282,7 +283,7 @@ export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embedde
           <View style={styles.aiSheetHeader}>
             <Ionicons color={colors.ai} name="sparkles" size={15} />
             <Text style={[typography.caption, styles.flex, { color: colors.ai }]}>Rủ Đi AI</Text>
-            <DemoBadge label="AI nháp" />
+            <DemoBadge cua={false} label="AI nháp" />
           </View>
         </View>
         <ChatBubble person={PEOPLE[3]} time="09:51">Plan xịn đó, mình bình chọn chỗ BBQ trước đi.</ChatBubble>
@@ -423,9 +424,7 @@ export function VotingScreen() {
           return (
             <Pressable
               key={place.id}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: active }}
-              aria-checked={active}
+              {...toggleState("radio", active, () => session.setVoteChoice(index))}
               onPress={() => session.setVoteChoice(index)}
               style={({ pressed }) => [
                 styles.voteOption,

@@ -6,6 +6,7 @@ import { guTheoLoai } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
 import { GuGlyph } from "../../ui/art/Gu";
 import { CAU_ANH_HONG, khoaNguon, veKhung, type AnhCoGhiCong, type KhungDaVe } from "../../ui/ghi-cong";
+import { giuState } from "../../../ui/a11y";
 
 /**
  * One stop on the ink route: the hour on the left axis, a node on the line,
@@ -126,7 +127,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
         )}
       </View>
       {onPress ? (
-        <Pressable accessibilityLabel={accessibilityLabel ?? tieuDe} accessibilityRole="button" accessibilityState={{ selected: chon }} aria-selected={chon} onPress={onPress} style={({ pressed }) => [styles.body, cuoi && styles.bodyCuoi, pressed && styles.pressed]}>
+        <Pressable accessibilityLabel={accessibilityLabel ?? tieuDe} accessibilityRole="button" {...giuState(chon)} aria-selected={chon} onPress={onPress} style={({ pressed }) => [styles.body, cuoi && styles.bodyCuoi, pressed && styles.pressed]}>
           {body}
         </Pressable>
       ) : (

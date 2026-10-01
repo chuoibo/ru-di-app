@@ -25,6 +25,7 @@ import { Heading, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
+import { luiVeVe } from "../../lui-ve";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -111,7 +112,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
         </SkeletonGroup>
       ) : null}
       {trang.pha === "hong" ? (
-        <ErrorState body={trang.loi} onRetry={() => void nap()} secondary={{ label: "Quay về", onPress: () => router.back() }} title="Chưa đọc được kèo" />
+        <ErrorState body={trang.loi} onRetry={() => void nap()} secondary={{ label: "Quay về", onPress: () => luiVeVe(router as never, "/plan") }} title="Chưa đọc được kèo" />
       ) : null}
       {trang.pha === "xong" ? (
         <>

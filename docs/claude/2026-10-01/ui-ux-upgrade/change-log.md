@@ -112,3 +112,102 @@ DESIGN_SYSTEM_IMPROVEMENT) · file · phạm vi hồi quy cần kiểm. Ghi theo
 - Màn chứa sheet mất focus (sang tab khác, đẩy màn khác) thì sheet đóng.
 - File: `src/rudi/ui/Sheet.tsx`. Hồi quy cần kiểm: mọi sheet có hành động điều hướng (cài đặt sổ, khay tạo, menu tin),
   Back Android, Esc.
+
+## B2 · Primitive dùng chung
+
+### Sheet v2 (UI-006, 007, 013, 040, 070, 088, 089, 093, 166) · DESIGN_SYSTEM_IMPROVEMENT + MOTION_UPGRADE
+- **Trần 82% áp cho cả panel** (tay cầm, đầu trang, nội dung và lề đáy), không chỉ cho ScrollView bên trong; nội dung co
+  và cuộn trong trần (UI-007, UI-040).
+- **Trượt theo chiều cao thật của panel** (đo bằng `onLayout`), không cố định 480dp. Mờ dần ở đoạn cuối của pha đóng, nên
+  khung cuối không còn panel đứng giữa màn rồi biến mất (UI-013).
+- **Chặn chạm 250ms sau khi mở**, cả nền lẫn panel: chạm thứ hai của một chạm đúp không còn đóng sheet vừa mở (UI-088),
+  không còn rơi vào thẻ của khay đang trượt lên (UI-006).
+- **Tay cầm** là cử chỉ cho tay, không phải control cho trình đọc màn hình: ẩn khỏi cây truy cập. «Đóng bảng» là lối ra trợ
+  năng; hết `aria-prohibited-attr` (UI-089).
+- Tay cầm có `testID="tay-cam"` để công cụ đo tìm được; trước đó harness tìm bằng nhãn «Tay cầm».
+- **Tablet:** panel rộng tối đa 640dp, canh giữa (UI-093).
+- **Thứ tự lớp:** lớp sheet `zIndex: 10`, nên dải ghim của chat (z 1) không còn vẽ đè lên nền mờ và tấm «Xem» (UI-070,
+  UI-166).
+- File: `src/rudi/ui/Sheet.tsx`.
+- Hồi quy cần kiểm: mọi sheet (39 chỗ gọi), nhất là sheet có trình soạn dài ở C8 và sheet mở rồi điều hướng ngay.
+
+### Khay trong màn: một hợp đồng đóng (UI-066, phần khay của UI-038) · UX_IMPROVEMENT
+- `ui/useDongKhay.ts`: Escape và Back trình duyệt trên web, Back hệ thống trên Android, trả focus về nút đã mở.
+- Khay công cụ của chat chuyển sang dùng hook này; khay «Tờ hẹn chung» lần đầu có nó.
+- Back trình duyệt đi qua `ui/lui-web.ts`: listener `popstate` duy nhất của B1, tách khỏi `Sheet.tsx` để sheet và khay dùng
+  chung một ngăn xếp. Back khi khay công cụ mở nay ở lại chat (`TC-L20-VONGDOI` FAIL → PASS).
+
+### Câu lỗi theo mã (UI-019, UI-029, UI-072, nền cho UI-100) · UX_IMPROVEMENT
+- `src/cau-loi-theo-ma.ts`: mã máy chủ chọn câu **trước** mã HTTP. Có câu riêng cho các mã người dùng gặp; còn lại theo
+  dạng mã (`*_not_found`, `*_wrong_state`, `*_conflict`, `*_expired`, `*_unavailable`, `*_too_large`).
+- `laTuChoiVinhVien`: màn chỉ mời «Thử lại» khi bấm lại có thể đổi kết quả.
+- `thongDiepNguoiDoc` nhận `code`:
+  - 401 nói phiên hết, tách khỏi 403;
+  - 404 «cập nhật app» chỉ còn cho route thiếu;
+  - 409 không mã riêng không còn mặc định là câu idempotency.
+- Mã mời sai: bảng `LOI_DOI_LOI_MOI` thiếu `invite_not_found` (tên Go đặt) nên câu rơi về «Cập nhật app». Nay là một câu
+  gọi tên cả bốn khả năng (gõ sai, hết hạn, đã dùng, đã huỷ) vì máy chủ không nói là cái nào.
+- `membership_already_open` vào bảng mời.
+- Khám phá truyền câu nguyên nhân vào `ErrorState` (503 khác mất mạng).
+- Test `tests/cau-loi-theo-ma.test.mjs` (9 ca).
+
+### `CauTaiCho`: câu lỗi đặt tại chỗ · DESIGN_SYSTEM_IMPROVEMENT
+- Một câu `warn` cỡ `body` kèm icon, đặt ngay dưới control vừa thất bại hoặc trong chân dính trên nút.
+- `aria-live=polite`, mờ vào theo `standard`.
+- Trên web: tự cuộn vào khung nếu còn nằm ngoài cửa sổ.
+- Một lối đi tiếp tuỳ chọn («Nhập tay», «Thử lại»).
+- Dùng lần đầu ở sheet «Những điều cần tránh». Các màn còn lại chuyển dần theo batch của từng feature.
+
+### Back luôn tới đâu đó, và focus vào màn mới (UI-018, UI-112) · BUG_FIX
+- `lui-ve.ts`:
+  - `luiVe(router, pathname)`: có lịch sử thì lùi; không có thì về tab của route.
+  - `luiVeVe(router, cha)`: cho màn biết rõ cha của mình.
+- Áp cho `TopBar`, `CoverBand`, 15 chỗ `router.back()` trần, và cả việc đóng khay Tạo mới.
+- Trên web, màn nhận focus điều hướng thì focus vào tiêu đề `TopBar` (`role="heading"`, `tabIndex -1`), trừ khi đang gõ
+  hay có sheet.
+- Test `tests/lui-ve.test.mjs`.
+
+### Trạng thái tới DOM, và phím Space (UI-003, UI-053) · BUG_FIX
+- `src/ui/a11y.ts`:
+  - `toggleState(role, on, onToggle)` gắn Space cho checkbox, radio, switch trên web;
+  - `tabState` + `TABLIST`;
+  - `giuState` cho nút giữ: `aria-pressed` trên web, `selected` trên native;
+  - `expandState`.
+- 37 chỗ chuyển từ `accessibilityState` (web nhận được không gì) sang các helper này hoặc `aria-*`: thanh tab, Segmented,
+  tab Cộng đồng, tab Thành tích, ghế bàn ăn, danh sách người, phiếu bầu, ngân sách, …
+- Test render qua react-native-web `tests/trang-thai-tro-nang.test.mjs` (5 ca).
+
+### Con dấu «Tạo mới» trên mọi tab · UX_IMPROVEMENT + VISUAL_UPGRADE + MOTION_UPGRADE
+- Spike hai biến thể: chọn **cột giữa nhô lên** (lý do và ảnh ở `direction.md`).
+- `ui/ConDauTao.tsx`, `src/rudi/tao-moi.ts`, `RudiTabBar` (tablist + ô rỗng `aria-hidden` cho con dấu), khay Tạo mới
+  xếp theo tab (`?tu=`) và có «Viết bài».
+- `/create` mở lạnh mở đúng khay (UI-010).
+- Bản demo: cột «Đăng nhập» của B1 thay bằng nhãn `DemoBadge` làm cửa. `DaiTraiNghiem.tsx` bỏ.
+- Rail: vạch chỉ báo đo từ lề trên của rail, và tab rail cao 72 thật trên web (UI-004).
+  - react-native-web viết `flex: 0` thành `flex-basis: 0`, thứ thắng `height`, nên mỗi tab rail chỉ còn 48dp trong khi vạch
+    bước 72.
+  - Style rail nay không có `flex`. Đo lại 10/10 vạch nằm trên tab đang chọn ở C6, C7 (trước 2/10).
+
+### Nút phá huỷ, ô 48, tiền không cắt, chip không tràn, cột đọc · DESIGN_SYSTEM_IMPROVEMENT
+- `RudiButton`:
+  - `tone="warn"` (outline/ghost, màu `warn`);
+  - bản dev cảnh báo một lần mỗi nhãn khi nút tắt không có `lyDo` (ADR-0038 §2.2).
+- `RangBuoc`: nút lưu chỉ hiện khi có thay đổi (UI-091).
+- `ONhapMuc`: ô một dòng cao 48 (UI-001). 4dp lấy từ khe trên gạch nên hàng không đổi chiều cao.
+- `Money`: `flexShrink: 0`, số tiền trong một hàng không bao giờ bị cắt (UI-048, phần primitive).
+- `Chip`: `maxWidth: 100%`, nhãn dài có dấu «…» trong chip (UI-099, phần primitive).
+- `RudiScreen`:
+  - `cot` (`doc` 640, `form` 560, `rong` 960) cho nội dung, đầu và chân;
+  - cột tablet có `width: 100%`, nên không còn co theo phần tử con rộng nhất;
+  - tờ giấy dùng `doc` (UI-093).
+
+### Đột biến tự nghĩ (mỗi cái đỏ đúng chỗ dự đoán)
+- Bỏ đọc mã trước trạng thái → UI-019, UI-072 và ca 404 đỏ.
+- 409 trở lại câu idempotency → ca 409 đỏ.
+- `*_unavailable` nói về mạng → ca UI-029 đỏ.
+- Cộng đồng đặt «Tạo cuộc hẹn» lên đầu → ca theo tab đỏ.
+- Thẻ đầu không bỏ khỏi phần còn lại → ca «không giấu việc nào» đỏ.
+- `luiVe` luôn `back()` → hai ca không lịch sử đỏ.
+- Space nhận cả Enter → ca phím đỏ.
+- Tab mang `aria-checked` → ca tab đỏ.
+- Ô cao 44 → ca chiều cao đỏ.

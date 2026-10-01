@@ -94,11 +94,18 @@ export type { KhoAnToan } from "./phien-web";
 
 const KHOA = "rudi.phien";
 
+/** Typo, expiry, spent or revoked: one answer from the server, so one sentence that names all of them. */
+const CAU_MA_MOI_KHONG_MO =
+  "Mã này không mở được lời mời nào: có thể gõ sai, hoặc lời mời đã hết hạn hay đã được dùng. Kiểm tra lại mã, hoặc nhờ người trong nhóm mời lại.";
+
 const LOI_DOI_LOI_MOI: Record<string, string> = {
   // 404 is every refusal this route makes: expired, revoked, already spent,
   // never existed. The server answers them identically on purpose, so the
   // sentence here must not pretend to know which one happened.
-  http_404: "Lời mời này không dùng được nữa. Nhờ người trong nhóm mời lại.",
+  http_404: CAU_MA_MOI_KHONG_MO,
+  // The same refusal as Go names it. Without this line the table missed, the
+  // status chose, and a mistyped code read «Cập nhật app» (QA UI-019).
+  invite_not_found: CAU_MA_MOI_KHONG_MO,
   http_422: "Mã lời mời không đúng định dạng.",
 };
 

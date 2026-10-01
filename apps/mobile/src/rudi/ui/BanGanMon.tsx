@@ -24,6 +24,7 @@ import { GHE, RONG_GHE, TEN_TREN, theMon, viTriGhe, type NguoiQuanhBan, type ViT
 import { Money } from "./Money";
 import { Stamp } from "./Stamp";
 import { useMotion } from "./useMotion";
+import { toggleState } from "../../ui/a11y";
 
 export function BanGanMon({
   mon,
@@ -101,9 +102,8 @@ export function BanGanMon({
     return (
       <Pressable
         accessibilityLabel={`Ghế ${g.name}`}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: co, disabled }}
-        aria-checked={co}
+        {...toggleState("checkbox", co, disabled ? undefined : () => bam(g.id))}
+        aria-disabled={disabled}
         key={g.id}
         onPress={() => bam(g.id)}
         style={[styles.ghe, { left: g.x - RONG_GHE / 2, top: g.y - GHE * 0.75 - (g.truoc ? 0 : TEN_TREN), width: RONG_GHE }]}

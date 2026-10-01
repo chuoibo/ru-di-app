@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { Tabs, useRouter } from "expo-router";
+import { Tabs } from "expo-router";
 import type { ComponentProps } from "react";
 import { useEffect } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
@@ -9,8 +9,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TAB_BAR_HEIGHT, tabBarHeight } from "../adaptive";
 import { typography, useRudiTheme } from "../theme";
-import { DaiTraiNghiem, useLaTraiNghiem } from "./DaiTraiNghiem";
-import { PressScale } from "./PressScale";
+import { TABLIST, tabState } from "../../ui/a11y";
+import { laPair } from "../nhan-rieng/nhan-rieng";
+import { useRudiSession } from "../session";
+import { ConDauTao } from "./ConDauTao";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
 import { useMotion } from "./useMotion";
 
@@ -27,45 +29,53 @@ const ICONS: Record<string, [keyof typeof Ionicons.glyphMap, keyof typeof Ionico
 
 export { TAB_BAR_HEIGHT };
 export const RAIL_WIDTH = 104;
-const FAB = 56;
+/** Height of one rail row (a destination, or the stamp's slot at the top). */
+const HANG_RAIL = 72;
+const HANG_DAU_RAIL = 96;
 
 /**
- * The notebook's edge strip, with five destinations when Community is present.
- * A four-destination shell retains its create column. The active strip follows
- * reduced-motion preferences; larger windows use the same navigation as a rail.
+ * The notebook's edge strip: five destinations and the «Tạo mới» stamp
+ * between where you look (Cộng đồng, Khám phá) and where you keep (Lên plan,
+ * Tin nhắn, Cá nhân); on a tablet the same as a rail, the stamp at its head.
+ *
+ * The destinations are a `tablist` of real tabs (`aria-selected`, QA UI-003).
+ * The stamp is a button, which a tablist may not own, so the strip keeps an
+ * empty, hidden column for it and the stamp is laid over that column from
+ * outside the list. Signed out, the demo's way in is the «Dữ liệu demo» badge
+ * of each demo screen (a door), so the strip never needs a seventh column
+ * (QA UI-082; a seventh made each column 46 dp at 320 dp). The active strip
+ * follows reduced-motion preferences.
  */
 export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
-  const { colors, brand, dark } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout();
   const { fontScale } = useWindowDimensions();
-  const router = useRouter();
   const motion = useMotion();
-  const traiNghiem = useLaTraiNghiem();
+  const { phien } = useRudiSession();
+  const coCap = (phien?.contexts ?? []).some((nhom) => laPair(nhom) && nhom.my_state === "active");
 
   const routes = state.routes;
   const count = routes.length;
-  const fabAt = Math.floor(count / 2); // between plan and messages
-  const hasCreateColumn = count < 5;
-  // Signed out, «Đăng nhập» is one more column at the end (QA UI-082).
-  const columns = count + (hasCreateColumn ? 1 : 0) + (traiNghiem ? 1 : 0);
+  // The stamp's column: third on the strip, the head of the rail.
+  const viTriDau = layout.rail ? 0 : Math.min(2, count);
+  const columns = count + 1;
+  const tabDangMo = routes[state.index]?.name ?? "";
 
+  // Where the rail's rows begin: its own top padding. The indicator is laid
+  // out from the rail's edge, and measuring its rows from 0 put it beside the
+  // wrong tab (QA UI-004).
+  const dauRail = insets.top + 12;
   const indicator = useSharedValue(state.index);
   useEffect(() => {
     indicator.value = withTiming(state.index, motion.timing("standard"));
   }, [state.index, indicator, motion]);
 
   const indicatorStyle = useAnimatedStyle(() => {
-    const column = hasCreateColumn && indicator.value >= fabAt ? indicator.value + 1 : indicator.value;
-    return layout.rail
-      ? { transform: [{ translateY: column * 72 }] }
-      : { left: `${(column / columns) * 100}%` as const };
+    if (layout.rail) return { transform: [{ translateY: dauRail + HANG_DAU_RAIL + indicator.value * HANG_RAIL }] };
+    const column = indicator.value >= viTriDau ? indicator.value + 1 : indicator.value;
+    return { left: `${(column / columns) * 100}%` as const };
   });
-
-  const openCreate = () => {
-    motion.haptic.impact();
-    router.push("/create");
-  };
 
   const items = routes.map((route, index) => {
     const { options } = descriptors[route.key];
@@ -82,11 +92,10 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
     return (
       <Pressable
         key={route.key}
-        accessibilityRole="tab"
-        accessibilityState={{ selected: focused }}
+        {...tabState(focused)}
         accessibilityLabel={label}
         onPress={onPress}
-        style={[styles.item, layout.rail && styles.railItem]}
+        style={layout.rail ? styles.railItem : styles.item}
       >
         <Ionicons color={focused ? colors.accent : colors.inkFaint} name={focused ? filled : outline} size={24} />
         {/* Two lines before an ellipsis: at 2.0 «Khám …» stopped naming the
@@ -98,33 +107,15 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
     );
   });
 
-  const fab = (
-    <View key="fab" style={[styles.item, layout.rail && styles.railItem, styles.fabSlot]}>
-      <PressScale
-        accessibilityLabel="Tạo mới"
-        accessibilityRole="button"
-        haptic="none"
-        onPress={openCreate}
-        pressedScale={0.94}
-        style={[
-          styles.fab,
-          layout.rail ? null : styles.fabRaised,
-          { backgroundColor: brand.coral, borderColor: colors.ground, shadowColor: colors.accent },
-        ]}
-      >
-        <Ionicons color={brand.coralInk} name="add" size={30} />
-      </PressScale>
-    </View>
+  // The stamp's slot inside the list: empty and hidden, so the list owns tabs only.
+  items.splice(
+    viTriDau,
+    0,
+    <View aria-hidden importantForAccessibility="no-hide-descendants" key="o-dau" pointerEvents="none" style={layout.rail ? styles.oDauRail : styles.item} />,
   );
-
-  if (hasCreateColumn) items.splice(fabAt, 0, fab);
 
   const bottom = Math.max(insets.bottom, 10);
   const glass = Platform.OS === "ios" && !layout.rail;
-
-  // Signed out: «Đăng nhập» is one more destination, a column on a phone and
-  // the rail's foot on a tablet.
-  if (traiNghiem) items.push(<DaiTraiNghiem key="trai-nghiem" rail={layout.rail} />);
 
   const bar = (
     <View
@@ -134,7 +125,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
           backgroundColor: glass ? "transparent" : colors.card,
           borderColor: colors.line,
           ...(layout.rail
-            ? { width: RAIL_WIDTH, paddingTop: insets.top + 12, paddingBottom: Math.max(insets.bottom, 12) }
+            ? { width: RAIL_WIDTH, paddingTop: dauRail, paddingBottom: Math.max(insets.bottom, 12) }
             : { height: tabBarHeight(fontScale) + bottom, paddingBottom: bottom }),
         },
       ]}
@@ -150,7 +141,20 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
       >
         {layout.rail ? null : <View style={[styles.tape, { backgroundColor: colors.accent }]} />}
       </Animated.View>
-      {items}
+      <View {...TABLIST} style={layout.rail ? styles.danhSachRail : styles.danhSach}>
+        {items}
+      </View>
+      {/* Over the empty slot, from outside the list. */}
+      <View
+        pointerEvents="box-none"
+        style={
+          layout.rail
+            ? [styles.dauRail, { top: dauRail }]
+            : [styles.dauThanh, { left: `${(viTriDau / columns) * 100}%`, width: `${100 / columns}%`, bottom }]
+        }
+      >
+        <ConDauTao coCap={coCap} rail={layout.rail} tab={tabDangMo} />
+      </View>
     </View>
   );
   return bar;
@@ -168,24 +172,18 @@ const styles = StyleSheet.create({
     borderRightWidth: StyleSheet.hairlineWidth,
     height: "100%",
   },
+  danhSach: { flex: 1, flexDirection: "row", alignItems: "stretch" },
+  danhSachRail: { flexDirection: "column", alignItems: "stretch" },
   item: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
-  railItem: { flex: 0, height: 72, paddingTop: 0 },
+  // No `flex` here: react-native-web writes `flex: 0` as `flex-basis: 0`,
+  // which outranks `height`, so every rail tab was 48 dp on the web while the
+  // indicator stepped by 72 (QA UI-004).
+  railItem: { height: HANG_RAIL, alignItems: "center", justifyContent: "center", gap: 2 },
+  oDauRail: { height: HANG_DAU_RAIL },
   label: { fontSize: 12, lineHeight: 14, textAlign: "center" },
-  fabSlot: { justifyContent: "flex-start" },
-  fab: {
-    width: FAB,
-    height: FAB,
-    borderRadius: FAB / 2,
-    borderWidth: 4,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 6,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-  },
-  fabRaised: { marginTop: -22 },
+  dauThanh: { position: "absolute", top: 0, alignItems: "stretch" },
+  dauRail: { position: "absolute", left: 0, right: 0, height: HANG_DAU_RAIL, alignItems: "stretch" },
   indicator: { position: "absolute", top: 0, height: 6, alignItems: "center", backgroundColor: "transparent" },
   tape: { width: 28, height: 4, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },
-  railIndicator: { position: "absolute", left: 0, top: 0, height: 72 },
+  railIndicator: { position: "absolute", left: 0, top: 0, height: HANG_RAIL },
 });

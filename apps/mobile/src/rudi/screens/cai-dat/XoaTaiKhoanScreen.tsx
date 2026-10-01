@@ -21,6 +21,7 @@ import {
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { luiVeVe } from "../../lui-ve";
 
 export function XoaTaiKhoanScreen() {
   const router = useRouter();
@@ -67,7 +68,7 @@ export function XoaTaiKhoanScreen() {
             Đăng nhập lại bằng cùng số điện thoại sẽ tạo một tài khoản mới, trắng: không nhóm cũ, không tin cũ.
           </Text>
           <RudiButton label="Tôi hiểu, tiếp tục" onPress={() => setBuoc(2)} variant="outline" />
-          <RudiButton label="Ở lại" onPress={() => router.back()} variant="ghost" />
+          <RudiButton label="Ở lại" onPress={() => luiVeVe(router as never, "/settings")} variant="ghost" />
         </>
       ) : (
         <>
@@ -91,7 +92,7 @@ export function XoaTaiKhoanScreen() {
             onPress={() => void xoa()}
             variant="outline"
           />
-          <RudiButton disabled={dangXoa} label="Ở lại" onPress={() => router.back()} variant="ghost" />
+          <RudiButton disabled={dangXoa} label="Ở lại" onPress={() => luiVeVe(router as never, "/settings")} variant="ghost" />
         </>
       )}
     </RudiScreen>

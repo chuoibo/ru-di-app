@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { typography, useRudiTheme } from "../../theme";
 import type { RangBuoc as RangBuocKieu } from "../../to-giay/so-fixture";
 import { Heading, RudiButton } from "../../ui";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { Field } from "../../ui/Field";
 import { Sheet } from "../../ui/Sheet";
 
@@ -36,8 +37,11 @@ export function RangBuoc({ open, onClose, toi, nguoiKia, tenNguoiKia, onLuu, dan
           <Text style={[typography.body, { color: colors.inkSoft }]}>Không ăn được: {nguoiKia.khong_an_duoc || "chưa ghi"}</Text>
           <Text style={[typography.body, { color: colors.inkSoft }]}>Đừng: {nguoiKia.dung || "chưa ghi"}</Text>
         </View>
-        {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-        <RudiButton disabled={!doi || dangLuu} label="Lưu điều cần tránh" loading={dangLuu} onPress={() => onLuu({ khong_an_duoc: khongAn.trim(), dung: dung.trim() })} />
+        {/* Right above the button that failed, announced once (`CauTaiCho`). */}
+        <CauTaiCho cau={loi} />
+        {/* Shown once there is something to save, like «Lưu tên» in ADR-0038 §2.2:
+            a disabled button with no reason under it was the alternative (QA UI-091). */}
+        {doi || dangLuu ? <RudiButton disabled={dangLuu} label="Lưu điều cần tránh" loading={dangLuu} onPress={() => onLuu({ khong_an_duoc: khongAn.trim(), dung: dung.trim() })} /> : null}
         <RudiButton label="Đóng" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>

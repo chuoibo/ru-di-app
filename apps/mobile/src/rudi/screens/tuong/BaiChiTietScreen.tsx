@@ -33,6 +33,7 @@ import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonCard, SkeletonRow } from "../../ui/Skeleton";
 import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
+import { giuState } from "../../../ui/a11y";
 
 type PostState = { phase: "loading" } | { phase: "ready"; post: BaiTuong } | { phase: "error"; message: string };
 type CommentState = { phase: "loading" } | { phase: "ready"; items: BinhLuanTuong[]; pending: BinhLuanChoDuyet[]; next: string | null; more: boolean } | { phase: "error"; message: string };
@@ -211,7 +212,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
       </View>
       <Text style={[typography.body, { color: colors.ink }]}>{item.body}</Text>
       <View style={styles.commentActions}>
-        <Pressable accessibilityLabel={`${item.liked ? "Bỏ thích" : "Thích"} bình luận`} accessibilityRole="button" accessibilityState={{ selected: item.liked }} disabled={busy} onPress={() => void likeComment(item)} style={styles.touchAction}>
+        <Pressable accessibilityLabel={`${item.liked ? "Bỏ thích" : "Thích"} bình luận`} accessibilityRole="button" {...giuState(item.liked)} disabled={busy} onPress={() => void likeComment(item)} style={styles.touchAction}>
           <Ionicons color={item.liked ? colors.accent : colors.inkSoft} name={item.liked ? "heart" : "heart-outline"} size={18} />
           <Text style={[typography.caption, { color: item.liked ? colors.accent : colors.inkSoft }]}>{item.like_count > 0 ? item.like_count : "Thích"}</Text>
         </Pressable>
@@ -306,7 +307,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
                 ) : null}
                 <Text style={[typography.note, { color: colors.inkFaint }]}>{post.post.like_count} thích · {post.post.comment_count} bình luận</Text>
                 <View style={[styles.postActions, { borderTopColor: colors.line }]}>
-                  <Pressable accessibilityLabel={post.post.liked ? "Bỏ thích bài" : "Thích bài"} accessibilityRole="button" accessibilityState={{ selected: post.post.liked }} disabled={busy} onPress={() => void likePost()} style={styles.postAction}>
+                  <Pressable accessibilityLabel={post.post.liked ? "Bỏ thích bài" : "Thích bài"} accessibilityRole="button" {...giuState(post.post.liked)} disabled={busy} onPress={() => void likePost()} style={styles.postAction}>
                     <Ionicons color={post.post.liked ? colors.accent : colors.inkSoft} name={post.post.liked ? "heart" : "heart-outline"} size={22} />
                     <Text style={[typography.label, { color: post.post.liked ? colors.accent : colors.inkSoft }]}>Thích</Text>
                   </Pressable>

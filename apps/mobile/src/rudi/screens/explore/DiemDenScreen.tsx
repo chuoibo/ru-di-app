@@ -34,6 +34,8 @@ import { RudiScreen, SearchField, TopBar } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
+import { giuState } from "../../../ui/a11y";
+import { luiVeVe } from "../../lui-ve";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -73,7 +75,7 @@ export function DiemDenScreen() {
   const chon = async (diemDen: DiemDen) => {
     setDangChon(diemDen.id);
     await luuDiemDen(diemDen.id);
-    router.back();
+    luiVeVe(router as never, "/explore");
   };
 
   const loc =
@@ -124,7 +126,7 @@ export function DiemDenScreen() {
               <Pressable
                 accessibilityLabel={`Chọn ${d.name}`}
                 accessibilityRole="button"
-                accessibilityState={{ selected: chonRoi }}
+                {...giuState(chonRoi)}
                 key={d.id}
                 onPress={() => void chon(d)}
                 style={({ pressed }) => [

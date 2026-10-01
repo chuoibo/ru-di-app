@@ -9,6 +9,7 @@ import { THEME_CHAT, bangMauChat, nhanTheme, type ThemeChat } from "../../mau-ch
 import { typography, useRudiTheme } from "../../theme";
 import { Field, Heading, ListRow, RudiButton } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
+import { toggleState } from "../../../ui/a11y";
 
 export type NhomCaiDat = {
   id: string;
@@ -150,8 +151,7 @@ export function CaiDatNhomSheet({
           return (
             <Pressable
               accessibilityLabel={`Theme ${nhanTheme(slug)}`}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: chon, checked: chon }}
+              {...toggleState("radio", chon, () => void chonTheme(slug))}
               key={slug}
               onPress={() => void chonTheme(slug)}
               style={[

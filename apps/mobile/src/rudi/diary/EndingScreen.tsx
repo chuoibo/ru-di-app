@@ -19,6 +19,7 @@ import { ngayKieuViet } from "../chat/to-hen-chung";
 import { useNhuongChoNep } from "../nep/NepProvider";
 import { BookView } from "./BookView";
 import { togglePhoto, buildDiary, diaryImage, endOuting, initialPhotos, includeSavedPhotos, movePage, publishedPhoto, readDiary, readEnding, readJob, readSources, saveDiary, selectedBundle, type Diary, type DiaryDocument, type DiaryKind, type DiarySource, type Ending } from "./api";
+import { toggleState } from "../../ui/a11y";
 
 export function EndingScreen({ person, outing }: { person: string; outing: string }) {
   const router = useRouter(); const { colors } = useRudiTheme(); const motion = useMotion();
@@ -104,7 +105,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
   </>;
   return <RudiScreen key={`${phase}-${edit}`} testID="diary-ending-screen" avoidKeyboard overlay={<Sheet open={pickTarget !== null} onClose={() => setPickTarget(null)} accessibilityLabel="Chọn ảnh cho trang"><View style={styles.section}>
     <Heading size="h2" title={pickTarget === "cover" ? "Tấm nào mở đầu câu chuyện?" : "Ảnh cho trang này"} subtitle={pickTarget === "cover" ? "Chọn một tấm làm bìa. Những ảnh khác vẫn ở trong sổ." : "Tối đa bốn ảnh mỗi trang. Chạm ảnh đã chọn để bỏ."} />
-    <View style={styles.grid}>{source?.photos.map((p) => <Pressable key={p.id} accessibilityRole={pickTarget === "cover" ? "radio" : "checkbox"} accessibilityState={pickTarget === "cover" ? { selected: document?.cover_id === p.id } : { checked: typeof pickTarget === "number" && document?.pages[pickTarget]?.photo_ids.includes(p.id) }} accessibilityLabel={`Chọn ảnh ${p.caption || p.day}`} onPress={() => choosePhoto(p.id)} style={styles.tile}><Image source={photo(p.id)} cachePolicy="none" contentFit="cover" style={styles.thumb} /><Text style={[typography.caption, { color: colors.ink }]}>{pickTarget === "cover" && document?.cover_id === p.id ? "Bìa hiện tại" : typeof pickTarget === "number" && document?.pages[pickTarget]?.photo_ids.includes(p.id) ? "Đã chọn" : ngayKieuViet(p.day)}</Text></Pressable>)}</View>
+    <View style={styles.grid}>{source?.photos.map((p) => <Pressable key={p.id} accessibilityRole={pickTarget === "cover" ? "radio" : "checkbox"} aria-checked={pickTarget === "cover" ? document?.cover_id === p.id : typeof pickTarget === "number" && document?.pages[pickTarget]?.photo_ids.includes(p.id) === true} accessibilityLabel={`Chọn ảnh ${p.caption || p.day}`} onPress={() => choosePhoto(p.id)} style={styles.tile}><Image source={photo(p.id)} cachePolicy="none" contentFit="cover" style={styles.thumb} /><Text style={[typography.caption, { color: colors.ink }]}>{pickTarget === "cover" && document?.cover_id === p.id ? "Bìa hiện tại" : typeof pickTarget === "number" && document?.pages[pickTarget]?.photo_ids.includes(p.id) ? "Đã chọn" : ngayKieuViet(p.day)}</Text></Pressable>)}</View>
     <RudiButton label="Xong phần ảnh" onPress={() => setPickTarget(null)} /></View>
   </Sheet>}>
     <TopBar title={kind === "trip" ? "Sổ chuyến đi" : "Khoảnh khắc"} />
@@ -125,7 +126,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
     {phase === "sources" && source && bundle ? <View style={styles.section}>
       <Heading title="Mang theo điều gì vào sổ?" subtitle="Ảnh đã được chọn theo ngày đi. Bạn xem lại nhé, nhất là khi hai cuộc hẹn trùng nhau." />
       <Text style={[typography.label, { color: colors.ink }]}>{selected.length} / 40 ảnh đã chọn</Text>
-      <View style={styles.grid}>{source.photos.map((p) => <Pressable key={p.id} accessibilityRole="checkbox" accessibilityState={{ checked: selected.includes(p.id) }} accessibilityLabel={`Giữ ảnh ${p.caption || p.day}`} onPress={() => setSelected((ids) => togglePhoto(ids, p.id, 40))} style={[styles.tile, { borderColor: selected.includes(p.id) ? colors.accent : colors.line, borderWidth: 2 }]}>
+      <View style={styles.grid}>{source.photos.map((p) => <Pressable key={p.id} {...toggleState("checkbox", selected.includes(p.id), () => setSelected((ids) => togglePhoto(ids, p.id, 40)))} accessibilityLabel={`Giữ ảnh ${p.caption || p.day}`} onPress={() => setSelected((ids) => togglePhoto(ids, p.id, 40))} style={[styles.tile, { borderColor: selected.includes(p.id) ? colors.accent : colors.line, borderWidth: 2 }]}>
         <Image source={p.url ? diaryImage(person, p.url) : undefined} cachePolicy="none" contentFit="cover" style={styles.thumb} /><Text style={[typography.caption, { color: colors.ink }]}>{selected.includes(p.id) ? "Đã chọn · " : ""}{ngayKieuViet(p.day)}</Text>{p.caption ? <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>{p.caption}</Text> : null}
       </Pressable>)}</View>
       <RudiButton label="Thêm ảnh từ máy" variant="outline" loading={busy} onPress={() => void upload()} />

@@ -87,6 +87,7 @@ import { Nep } from "../../ui/art/Nep";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { KHONG_VIEN_WEB } from "../../ui/khong-vien-web";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
+import { luiVeVe } from "../../lui-ve";
 
 /**
  * One send that has not landed yet, drawn where the message will be.
@@ -772,7 +773,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     >
       <View style={[styles.dau, { paddingHorizontal: space.md, borderBottomColor: colors.line }]}>
         <View style={styles.chatHeader}>
-          <IconButton accessibilityLabel="Quay lại" icon="chevron-back" quiet onPress={() => router.back()} />
+          <IconButton accessibilityLabel="Quay lại" icon="chevron-back" quiet onPress={() => luiVeVe(router as never, "/messages")} />
           <Pressable accessibilityRole="button" accessibilityLabel={nhanRieng ? "Xem hồ sơ" : "Thành viên nhóm"}
             onPress={() => router.push((nhanRieng && nguoiKiaId ? `/people/${nguoiKiaId}` : `/groups/${contextId}/members`) as never)} style={styles.headerIdentity}>
             <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenNhom}</Text>

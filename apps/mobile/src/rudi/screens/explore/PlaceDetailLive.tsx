@@ -65,6 +65,7 @@ import { SanKhau } from "../../ui/SanKhau";
 import { StampButton } from "../../ui/StampButton";
 import { sanKhauKyHoa } from "../../art/san-khau";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
+import { luiVeVe } from "../../lui-ve";
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; place: PlaceDetail } | { pha: "hong"; loi: string };
 
@@ -201,7 +202,7 @@ export function PlaceDetailLiveScreen({ phien }: { phien: Phien }) {
         <ErrorState
           body={trang.loi}
           onRetry={() => void nap()}
-          secondary={{ label: "Về Khám phá", onPress: () => router.back() }}
+          secondary={{ label: "Về Khám phá", onPress: () => luiVeVe(router as never, "/explore") }}
           title="Chưa mở được địa điểm"
         />
       ) : null}

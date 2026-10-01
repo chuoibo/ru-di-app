@@ -62,5 +62,9 @@ test("gạch dày 2dp khi viết hay sai mà chữ không xê dịch", () => {
   assert.equal(nhieu.minHeight, 96);
   assert.equal(nhieu.textAlignVertical, "top");
   assert.equal(kieuGach({ multiline: true, numberOfLines: 40, dongCao: 24 }).nhap.minHeight, 8 * 24, "có trần rồi cuộn");
-  assert.ok(kieuGach({ dongCao: 24 }).nhap.minHeight >= 44, "một dòng vẫn đủ 44dp để chạm");
+  // QA UI-001: the input element itself, not the row, is the target; 48dp is DESIGN.md's floor.
+  assert.ok(kieuGach({ dongCao: 24 }).nhap.minHeight >= 48, "một dòng đủ 48dp để chạm");
+  // The 4dp came out of the gap above the rule: the row is as tall as before.
+  const g = kieuGach({ dongCao: 24 });
+  assert.equal(g.nhap.minHeight + g.hang.paddingBottom + g.hang.borderBottomWidth, 44 + 8 + 1);
 });

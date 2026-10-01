@@ -52,32 +52,51 @@ Phần lớn 167 issue không phải lỗi rời: chúng là chỗ kit chưa có
 
 Yêu cầu của người dùng (01/10): mọi tab đều có «+», đẹp, linh hoạt, thông minh, responsive.
 
-- **Vật:** một con dấu coral tròn (ngôn ngữ `StampButton`), glyph «+», do `RudiTabBar` vẽ như lớp phủ chứ không chiếm cột.
-  Năm tab giữ nguyên bề rộng.
-  - Điện thoại: góc phải, vắt qua mép trên thanh tab, như con dấu vừa đóng lên mép trang.
-  - Rail (≥600dp): đầu rail.
-- **Khay mọc ra từ con dấu:** gốc biến hình tại con dấu; «+» xoay thành «×» trong pha mở; Reduce Motion cắt thẳng.
-- **Theo ngữ cảnh, không giấu gì:** thứ tự khay đổi theo tab đang đứng; hàng đầu ghi «Hợp với chỗ bạn đang đứng».
+**Spike (B2, 01/10), hai biến thể dựng thật, chụp ở C1 390 và C2 320** (`evidence/EV-B2-CON-DAU-SPIKE.jpg`):
+
+- (a) **Con dấu vắt góc mép thanh**, thanh giữ 5 cột.
+  - Tab rộng 78dp ở 390 và 64dp ở 320.
+  - Con dấu đè lên icon «Cá nhân» ở cả hai bề rộng.
+  - Ở 320 nó còn đè nút tim của thẻ quán: một nút của nội dung, đúng loại va chạm hướng (a) phải tránh.
+- (b) **Cột giữa nhô lên, thanh 6 cột.**
+  - Tab rộng 65dp ở 390 và 53dp ở 320, vẫn trên 48.
+  - Con dấu có nhãn «Tạo» như các cột khác. Không đè gì, vì nó là một phần của thanh.
+- **Chọn (b).** Nó cũng là ngữ pháp app đã có: FAB nhô giữa thanh khi còn 4 tab.
+
+**Đã làm:**
+- **Vị trí.** Con dấu coral tròn 56dp, viền màu nền, nhô nửa trên mép thanh, giữa «Khám phá» và «Lên plan» (chỗ nhìn | chỗ
+  giữ). Rail (≥600dp): đầu rail, nhãn «Tạo mới».
+- **Ngữ nghĩa.** Thanh là một `tablist` gồm đúng 5 `tab` (`aria-selected`). Con dấu là một nút nằm **ngoài** danh sách: nó
+  phủ lên một cột rỗng `aria-hidden` (axe không cho tablist chứa button).
+- **Theo ngữ cảnh, không giấu gì.** Chạm mở khay với `?tu=<tab>`; khay đưa đúng một việc hợp tab lên đầu, phần còn lại
+  giữ thứ tự cũ (`tao-moi.ts`):
 
   | Tab | Lên đầu khay |
   |---|---|
-  | Cộng đồng | «Viết bài» (thay nút soạn vuông ở header: còn một lối) |
-  | Khám phá | «Tạo kèo» |
-  | Lên plan | «Tạo kèo», «Chia hoá đơn» |
-  | Tin nhắn | «Tạo nhóm», «Đăng story» |
-  | Cá nhân | «Đăng kỷ niệm», «Đăng story» |
+  | Cộng đồng | «Viết bài» (mới trong khay) |
+  | Khám phá, Lên plan | «Tạo cuộc hẹn» |
+  | Tin nhắn | «Hẹn người thương» nếu có chat đôi, không thì «Đăng story» |
+  | Cá nhân | «Đăng kỷ niệm» |
 
-- **Biết nhường:** cuộn xuống thì thu nhỏ và tụt nửa vào thanh tab, dừng hoặc cuộn lên thì hiện lại; ẩn khi bàn phím mở
-  hay có sheet; không đè dock Nếp (dock ở giữa mép phải); nội dung có đệm đáy đủ cho hàng cuối.
-- **Trợ năng:** nhãn «Tạo mới», `aria-haspopup=dialog`, `aria-expanded`; focus trả về con dấu khi khay đóng.
-- **Spike trước khi chốt:** (a) con dấu vắt mép thanh; (b) cột giữa nhô lên của thanh 6 cột. Chọn bằng ảnh ở
-  320/390/768/1024 và Android; ghi lựa chọn vào đây.
+  Không thêm nhãn «Hợp với chỗ bạn đang đứng»: thẻ đầu đã nằm ngang cả bàn, nhãn thứ hai chỉ là chữ thừa.
+- **Giữ lâu** đi thẳng tới việc đầu khay. Trợ năng có hành động «longpress» mang tên việc đó, và gợi ý «Giữ để …».
+- **Một khoảnh khắc chuyển động.** Chạm để lại vết mực của con dấu: một vòng mở ra rồi tan trong `standard`; Reduce Motion
+  thì không.
+- **Mở lạnh.** `/create` mở lạnh mở đúng khay (UI-010: `clearTimeout` trong cleanup đã huỷ lần push).
+- **Demo.** Lối «Đăng nhập» của bản demo không còn là cột thứ bảy. Nhãn «Dữ liệu demo» của mỗi màn demo là cửa, nên ở 320dp
+  mọi cột vẫn ≥48dp.
+
+**Chưa làm, có lý do:**
+- **Khay mọc ra từ con dấu** (gốc biến hình tại con dấu, «+» xoay thành «×»). Khay là một route trong suốt dùng `Sheet`
+  chung. Biến hình từ một điểm ngoài màn đó cần hợp đồng mới cho `Sheet`, để dành B11.
+- **Thu nhỏ khi cuộn, ẩn khi bàn phím mở.** Con dấu nằm trong cột của chính thanh tab, không phủ lên nội dung hay dock Nếp,
+  nên không có gì phải nhường. Thanh tab ẩn theo bàn phím như trước.
 
 ## Motion: mỗi chuyển động phải nói được một điều
 
 - Sheet: vào bằng lò xo; ra bằng mờ và trượt `standard` 200 ms tới hết; nền không nhận chạm trong pha mở; Back và Esc
   đóng; chạm đúp không mở rồi đóng.
-- Khay Tạo mới: mọc ra từ con dấu.
+- Khay Tạo mới: vết mực của con dấu khi chạm; khay trượt lên như mọi sheet (biến hình từ con dấu: B11).
 - Viewer ảnh: mờ vào và mờ ra cân xứng.
 - Sân khấu Khám phá: giữ chỗ trước để danh sách không nhảy; không dựng lại khi bỏ lọc.
 - Reduce Motion: khung cuối ngay, không bao giờ một khung trống.

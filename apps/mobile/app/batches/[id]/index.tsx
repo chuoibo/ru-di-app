@@ -5,6 +5,7 @@ import { DotThuLiveScreen } from "../../../src/rudi/screens/dot-thu/DotThuLive";
 import { useRudiSession } from "../../../src/rudi/session";
 import { RudiButton, RudiScreen, Heading, TopBar } from "../../../src/rudi/ui";
 import { useRouter } from "expo-router";
+import { luiVeVe } from "../../../src/rudi/lui-ve";
 
 function maDot(id: unknown): string {
   if (typeof id === "string") return id;
@@ -32,7 +33,7 @@ export default function BatchRoute() {
     <RudiScreen tone="split" testID="collection-batch-screen">
       <TopBar title="Đợt thu" />
       <Heading title="Cần đăng nhập" subtitle="Đợt thu là của một nhóm thật; bản trải nghiệm không có đợt thu nào." />
-      <RudiButton label="Quay lại" onPress={() => router.back()} tone="split" variant="outline" />
+      <RudiButton label="Quay lại" onPress={() => luiVeVe(router as never, "/plan")} tone="split" variant="outline" />
     </RudiScreen>
   );
 }

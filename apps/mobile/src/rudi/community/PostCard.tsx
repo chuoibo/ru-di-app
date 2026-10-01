@@ -14,6 +14,7 @@ import { imageSource, relativeTime, type Media, type Post } from "./api";
 import { PhotoViewer } from "../ui/PhotoViewer";
 import { BookView } from "../diary/BookView";
 import { chiaSe, type KetQuaChiaSe } from "../web/chia-se";
+import { giuState } from "../../ui/a11y";
 
 export function CommunityVideo({ media, person, active }: { media: Media; person: string; active: boolean }) {
   const { colors } = useRudiTheme();
@@ -49,7 +50,7 @@ export function CommunityVideo({ media, person, active }: { media: Media; person
 }
 export function Action({ icon, label, accessibilityLabel, onPress, selected = false, disabled = false }: { icon: keyof typeof Ionicons.glyphMap; label: string; accessibilityLabel?: string; onPress: () => void; selected?: boolean; disabled?: boolean }) {
   const { colors } = useRudiTheme();
-  return <PressScale accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} accessibilityState={{ selected, disabled }} disabled={disabled} onPress={onPress} style={[styles.action, disabled && { opacity: 0.45 }]}>
+  return <PressScale accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} {...giuState(Boolean(selected))} aria-disabled={disabled} disabled={disabled} onPress={onPress} style={[styles.action, disabled && { opacity: 0.45 }]}>
     <Ionicons name={icon} size={21} color={selected ? colors.accent : colors.inkSoft} />
     <Text style={[typography.caption, { color: selected ? colors.accent : colors.inkSoft }]}>{label}</Text>
   </PressScale>;

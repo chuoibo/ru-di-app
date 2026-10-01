@@ -25,6 +25,7 @@ import { RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Nep } from "../../ui/art/Nep";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
+import { luiVeVe } from "../../lui-ve";
 
 const TRAN_CHU_THICH = 200;
 
@@ -84,7 +85,7 @@ export function DangStoryScreen() {
       }
       if (imageUrl === null) return;
       await dangStory(imageUrl, chuThich, phien.person_id, attemptFor(attempts.current, JSON.stringify({ imageUrl, chuThich })));
-      router.back();
+      luiVeVe(router as never, "/messages");
     } catch (error) {
       const repickHint = anh !== null && !uploadFinished ? " Chọn lại ảnh rồi thử lần nữa." : "";
       setLoi(loiRaChu(error) + repickHint);

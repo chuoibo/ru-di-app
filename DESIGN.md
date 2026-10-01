@@ -937,8 +937,8 @@ mặt/nền +13.5 L* và bóng gấp −11.8 L* là cái làm tờ giấy có th
   còn đúng hai người gọi có tên là nợ: `story/DangStoryScreen`,
   `tuong/BaiChiTietScreen`. Cổng:
   `node --test tests/rudi-khong-card-trong-cai-dat.test.mjs`.
-- **FAB** (`elevation: 6`, 0/6, đục 0.22, mờ 10, màu `accent`): thứ duy nhất
-  nổi trên thanh tab; vòng 4px màu `ground` tách nó khỏi thanh.
+- **Con dấu «Tạo mới»** (`elevation: 6`, 0/6, đục 0.22, mờ 10, màu `accent`):
+  thứ duy nhất nổi trên thanh tab; vòng 4px màu `ground` tách nó khỏi thanh.
 - **Scrim sheet** (`lopPhu.toi(0.42)`): lớp phủ ấm gần đen, không xám.
 - **Tờ giấy AI** (`ToGiay` trong `TheAi.tsx`, khung `aiSheet` trong Group):
   nền `card`, viền 1px `line`, bo `base`, **không bóng**; một tờ giấy đặt lên
@@ -2145,19 +2145,35 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
 
 ### Navigation
 - **`RudiTabBar`** tự vẽ: nền `card`, cạnh trên hairline `line`, cao **64 +
-  max(insets.bottom, 10)**; bốn tab `role="tab"` cao tối thiểu 48, icon
-  Ionicons 24 (outline → filled khi chọn), nhãn 12/14 một dòng; đang chọn
-  `accent`, còn lại `inkFaint`; chỉ báo băng 28×4 `accent` treo ở cạnh trên
-  cột đang chọn, trượt `standard` 200ms; haptic `select`.
-- **FAB «Tạo mới»**: cột giữa, tròn 56, nền `brand.coral`, glyph `add` 30
-  `brand.coralInk` tĩnh, vòng 4px `ground`, nhô lên 22, elevation 6, nhấn co
-  0.94 haptic `impact`, mở `/create`.
-- **Rail** (medium+): rộng 104, cạnh phải hairline, mỗi mục 72 với icon +
-  nhãn `caption`, chỉ báo vạch 4px `accent` bên trái trượt theo `translateY`;
-  FAB nằm trong rail, vòng `ground`, không nhô (`tablet-light-explore`).
-- **`TopBar`** trên giấy: tiêu đề `title` cân giữa, phụ đề `caption inkSoft`,
-  back chevron 48 hoặc wordmark `ink` 18 khi là đầu tab, phải là `DemoBadge
-  compactLabel` hay `IconButton quiet`. Ô icon app chỉ ở Welcome/Login.
+  max(insets.bottom, 10)**; **năm** tab trong một `role="tablist"`, mỗi tab
+  `role="tab"` + `aria-selected` (`tabState`), cao tối thiểu 48, icon
+  Ionicons 24 (outline → filled khi chọn), nhãn 12/14 tối đa hai dòng; đang
+  chọn `accent`, còn lại `inkFaint`; chỉ báo băng 28×4 `accent` treo ở cạnh
+  trên cột đang chọn, trượt `standard` 200ms; haptic `select`.
+- **Con dấu «Tạo mới»** (`ConDauTao`, B2 01/10): **cột thứ ba** của thanh,
+  giữa «Khám phá» và «Lên plan»; tròn 56, nền `brand.coral`, glyph `add` 30
+  `brand.coralInk`, vòng 4px `ground`, nhô lên nửa trên mép thanh, nhãn «Tạo»
+  12/14 `accent`; nhấn co 0.92, để lại một vòng mực mở ra và tan trong
+  `standard` (không có khi Reduce Motion). Chạm mở `/create?tu=<tab>`: khay
+  đưa việc hợp tab lên đầu (`tao-moi.ts`); giữ lâu đi thẳng tới việc đó.
+  Con dấu là nút **ngoài** tablist, phủ lên một cột rỗng `aria-hidden`.
+  Spike (a) vắt góc / (b) cột giữa: chọn (b), lý do và ảnh ở
+  `docs/claude/2026-10-01/ui-ux-upgrade/direction.md`.
+- **Rail** (medium+): rộng 104, cạnh phải hairline; đầu rail là ô 96 của con
+  dấu (nhãn «Tạo mới»), rồi mỗi tab 72 với icon + nhãn `caption`; chỉ báo vạch
+  4px `accent` bên trái, đo từ lề trên của rail (lệch khi đo từ 0: QA UI-004).
+- **Bản demo** (chưa đăng nhập): không có cột thêm trên thanh. Nhãn
+  `DemoBadge` của mỗi màn demo **là cửa đăng nhập** (bình thí nghiệm + chữ +
+  biểu tượng đăng nhập `accent`, tên «Dữ liệu demo. Đăng nhập», tới
+  `/login?tiep=<màn này>`); `cua={false}` cho nhãn gọi tên một phần của màn
+  («AI nháp»).
+- **`TopBar`** trên giấy: tiêu đề `title` **tối đa hai dòng**, cân giữa khi
+  vừa (hai bên bằng nhau), không vừa thì hai bên giữ bề rộng riêng; phụ đề
+  `caption inkSoft`; back chevron 48 hoặc wordmark `ink` 18 khi là đầu tab.
+  Back đi theo lịch sử, không có lịch sử thì về tab của route (`luiVe`). Trên
+  web, màn nhận focus điều hướng thì focus vào tiêu đề (`role="heading"`),
+  trừ khi đang gõ hay có sheet. Màn demo dạng stack có **một** cửa demo ở bên
+  phải (dưới 360dp chỉ còn hai biểu tượng). Ô icon app chỉ ở Welcome/Login.
 - iOS: `BlurView` 78 theo scheme thay nền `card` (chỉ đọc từ mã, chưa có
   ảnh iOS).
 

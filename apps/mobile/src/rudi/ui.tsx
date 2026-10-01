@@ -4,6 +4,7 @@ import { Image, ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { usePathname, useRouter, useSegments } from "expo-router";
+import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
 import { Children, createContext, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
@@ -11,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DemoPerson } from "./fixtures";
 import { duongDangNhap, laCuaVao } from "./duong-vao";
+import { luiVe as luiVeAnToan } from "./lui-ve";
 import { useRudiSession } from "./session";
 import { cardShadow, lopPhu, mucTrenAnh, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
 import { Field as FieldCore, type FieldCoreProps } from "./ui/Field";
@@ -21,6 +23,7 @@ import { Wordmark } from "./ui/Wordmark";
 import { CuonContext } from "./ui/cuon";
 import { gridFor, tabBarHeight } from "./adaptive";
 import { KHONG_VIEN_WEB } from "./ui/khong-vien-web";
+import { TABLIST, giuState } from "../ui/a11y";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -61,7 +64,17 @@ type ScreenProps = {
    * had scrolled the last one to (a plain list only; a staged one folds).
    */
   cuonVeDau?: string | number;
+  /**
+   * The column the content keeps to on a tablet: `doc` 640 dp for a page to
+   * read (a sheet of paper, a post), `form` 560 dp for a form (DESIGN.md),
+   * `rong` 960 dp for grids and lists (the default). On a phone it is the
+   * window. The header keeps to the same column (QA UI-093, UI-047).
+   */
+  cot?: "doc" | "form" | "rong";
 };
+
+/** The tablet column widths of `RudiScreen`'s `cot`. */
+const RONG_COT = { doc: 640, form: 560, rong: 960 } as const;
 
 export function RudiScreen({
   children,
@@ -82,6 +95,7 @@ export function RudiScreen({
   onRefresh,
   canh,
   cuonVeDau,
+  cot = "rong",
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
@@ -128,7 +142,7 @@ export function RudiScreen({
     surface === "cover" && { paddingTop: 0 },
     padded && { paddingHorizontal: tablet ? space.lg : space.md },
     { paddingBottom: bottomInset === "tab" ? tabBarHeight(fontScale) + 48 : bottomInset },
-    tablet && styles.tabletInner,
+    tablet && [styles.tabletInner, { maxWidth: RONG_COT[cot] }],
     contentStyle,
   ];
 
@@ -154,7 +168,7 @@ export function RudiScreen({
         // A keyline under the fixed header: content scrolling beneath it reads
         // as paper under a rule, not as a rendering fault. A staged screen's
         // bar draws its own, only once the stage has folded under it.
-        <View style={[styles.screenHeader, { paddingHorizontal: tablet ? space.lg : space.md, borderBottomColor: colors.line }, coCanh && styles.screenHeaderTrong, tablet && styles.tabletInner]}>{header}</View>
+        <View style={[styles.screenHeader, { paddingHorizontal: tablet ? space.lg : space.md, borderBottomColor: colors.line }, coCanh && styles.screenHeaderTrong, tablet && [styles.tabletInner, { maxWidth: RONG_COT[cot] }]]}>{header}</View>
       ) : null}
       {scroll && coCanh ? (
         <Animated.ScrollView
@@ -199,7 +213,7 @@ export function RudiScreen({
           style={[
             styles.screenFooter,
             { paddingHorizontal: tablet ? space.lg : space.md, paddingBottom: keyboardOpen ? 8 : footerInset },
-            tablet && styles.tabletInner,
+            tablet && [styles.tabletInner, { maxWidth: RONG_COT[cot] }],
           ]}
         >
           {footer}
@@ -244,10 +258,26 @@ export function TopBar({
   // demo notebook was 6 px wide. Never on the doors themselves.
   const cuaDemo = cheDo !== "live" && segments[0] !== "(tabs)" && !laCuaVao(pathname);
   const { width: rongCuaSo } = useWindowDimensions();
+  // Back through history when there is any; a screen a link opened cold goes
+  // to its own tab instead of standing still (QA UI-018).
   const luiVe = () => {
     if (onBack !== undefined) onBack();
-    else router.back();
+    else luiVeAnToan(router as never, pathname);
   };
+  // Web: a screen that gains navigation focus puts the keyboard and the
+  // screen reader on its title, not on `body` (QA UI-112: 7 of 7 screens
+  // measured left focus on `body`). Never over a field the person is typing
+  // in, never under an open sheet that owns focus.
+  const navigation = useContext(NavigationContext);
+  const tieuDeRef = useRef<Text>(null);
+  useEffect(() => {
+    if (Platform.OS !== "web" || !title) return;
+    const dua = () => {
+      requestAnimationFrame(() => duaFocusVaoTieuDe(tieuDeRef.current));
+    };
+    if (!navigation || navigation.isFocused()) dua();
+    return navigation?.addListener("focus", dua);
+  }, [navigation, title]);
   // Both sides take the wider side's natural width, so the title is centred on
   // the screen and not on whatever is left between a chevron and a badge. The
   // natural width is measured on an inner view; measuring the slot itself would
@@ -295,7 +325,15 @@ export function TopBar({
           // Two lines before an ellipsis: a long title next to a wide right
           // side (the demo notebook's gear and door) reflows instead of
           // losing its last word.
-          <Text numberOfLines={2} style={[typography.title, styles.topBarTitle, { color: colors.ink }]}>
+          <Text
+            accessibilityRole="header"
+            numberOfLines={2}
+            ref={tieuDeRef}
+            style={[typography.title, styles.topBarTitle, KHONG_VIEN_WEB, { color: colors.ink }]}
+            // Focusable by script only (react-native-web forwards it), so the
+            // title can take focus when its screen does, and Tab never stops on it.
+            {...({ tabIndex: -1 } as object)}
+          >
             {title}
           </Text>
         ) : null}
@@ -311,7 +349,7 @@ export function TopBar({
       <View style={[styles.topBarSide, styles.topBarRight, { minWidth: rongPhai }]}>
         <View onLayout={doBen("phai")} style={styles.topBarSideInnerRight}>
           {right}
-          {cuaDemo ? <CuaDemo gon={rongCuaSo < 360} onPress={() => router.push(duongDangNhap(pathname) as never)} /> : null}
+          {cuaDemo ? <CuaDemo nhan={rongCuaSo < 360 ? null : "Demo"} onPress={() => router.push(duongDangNhap(pathname) as never)} /> : null}
         </View>
       </View>
     </View>
@@ -355,10 +393,26 @@ export function Eyebrow({ children, tone = "accent" }: { children: ReactNode; to
  * Renders NOTHING in live mode. A badge saying "demo" over real money would be
  * the same lie as the reverse, pointed the other way.
  */
-export function DemoBadge({ label = "Dữ liệu demo", compactLabel }: { label?: string; /** Short form used inside a TopBar; default «Demo». */ compactLabel?: string }) {
+export function DemoBadge({
+  label = "Dữ liệu demo",
+  compactLabel,
+  cua = true,
+}: {
+  label?: string;
+  /** Short form used inside a TopBar; default «Demo». */
+  compactLabel?: string;
+  /**
+   * The badge is the way out of the demo: pressing it goes to sign-in with
+   * this screen as `?tiep=` (QA UI-082). `false` for a label that names a
+   * part of a demo screen, not the screen («AI nháp» on the AI sheet).
+   */
+  cua?: boolean;
+}) {
   const { colors } = useRudiTheme();
   const { cheDo } = useRudiSession();
   const topBar = useContext(TrongTopBar);
+  const router = useRouter();
+  const pathname = usePathname();
   if (cheDo === "live") return null;
   // The bar draws the door, which says «Demo» itself; a second label beside it
   // would be the same word twice and the width the title needs.
@@ -368,6 +422,7 @@ export function DemoBadge({ label = "Dữ liệu demo", compactLabel }: { label?
   // at font 1.3; the flask plus «Demo» keeps the honesty, the accessibility
   // label keeps the full sentence for screen readers and the native gate.
   const chu = trongTopBar ? compactLabel ?? "Demo" : label;
+  if (cua) return <CuaDemo label={label} nhan={chu} onPress={() => router.push(duongDangNhap(pathname) as never)} />;
   return (
     <View accessibilityLabel={label} style={[styles.demoBadge, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <Ionicons color={colors.inkFaint} name="flask-outline" size={12} />
@@ -376,19 +431,34 @@ export function DemoBadge({ label = "Dữ liệu demo", compactLabel }: { label?
   );
 }
 
+/** Focus the screen's title unless someone is typing or a sheet holds focus. */
+function duaFocusVaoTieuDe(node: unknown): void {
+  if (typeof document === "undefined") return;
+  const tieuDe = node as HTMLElement | null;
+  if (!tieuDe?.isConnected || typeof tieuDe.focus !== "function") return;
+  const dangO = document.activeElement as HTMLElement | null;
+  const dangGo =
+    dangO !== null &&
+    dangO.isConnected &&
+    (dangO.tagName === "INPUT" || dangO.tagName === "TEXTAREA" || dangO.isContentEditable) &&
+    dangO.closest('[aria-hidden="true"],[inert]') === null;
+  if (dangGo || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+  tieuDe.focus({ preventScroll: true });
+}
+
 /**
  * The demo door of a TopBar: «Demo» and the way out of it, as one control.
  * The label is 12 sp, not the passive badge's 10, because it is pressed.
- * Under 360 dp it is the flask and the door alone (`gon`), so a long title
+ * Under 360 dp it is the flask and the door alone (`nhan={null}`), so a long title
  * still has two lines' room; its name says the whole sentence either way.
  */
-function CuaDemo({ onPress, gon = false }: { onPress: () => void; gon?: boolean }) {
+function CuaDemo({ onPress, nhan = "Demo", label = "Dữ liệu demo" }: { onPress: () => void; /** `null`: the flask and the door alone. */ nhan?: string | null; label?: string }) {
   const { colors } = useRudiTheme();
   return (
-    <Pressable accessibilityLabel="Dữ liệu demo. Đăng nhập" accessibilityRole="button" onPress={onPress} style={styles.cuaDemo} testID="cua-demo">
+    <Pressable accessibilityLabel={`${label}. Đăng nhập`} accessibilityRole="button" onPress={onPress} style={styles.cuaDemo} testID="cua-demo">
       <View style={[styles.cuaDemoChip, { backgroundColor: colors.card, borderColor: colors.line }]}>
         <Ionicons color={colors.inkFaint} name="flask-outline" size={13} />
-        {gon ? null : <Text numberOfLines={1} style={[styles.cuaDemoChu, { color: colors.inkSoft }]}>Demo</Text>}
+        {nhan === null ? null : <Text numberOfLines={1} style={[styles.cuaDemoChu, { color: colors.inkSoft }]}>{nhan}</Text>}
         <Ionicons color={colors.accent} name="log-in-outline" size={15} />
       </View>
     </Pressable>
@@ -503,7 +573,14 @@ type ButtonProps = {
   label: string;
   onPress?: () => void;
   icon?: IconName;
-  tone?: RudiTone;
+  /**
+   * `warn` is the destructive action: «Xoá cuốn sổ», «Bỏ bản phác». Outline
+   * or ghost only, in the `warn` ink that already marks an error -- there is
+   * no warn fill in the palette, and a solid request draws as outline. Until
+   * this tone, «Xoá cuốn sổ» was a solid coral button and «Bỏ bản phác» looked
+   * like «Tuần này nghỉ» (QA pattern notes).
+   */
+  tone?: RudiTone | "warn";
   variant?: "solid" | "soft" | "outline" | "ghost";
   disabled?: boolean;
   loading?: boolean;
@@ -521,6 +598,17 @@ type ButtonProps = {
   lyDo?: string;
 };
 
+declare const __DEV__: boolean | undefined;
+
+const nutTatDaBao = new Set<string>();
+
+/** One development warning per label for a disabled RudiButton with no `lyDo`. */
+function baoNutTatThieuLyDo(label: string): void {
+  if (nutTatDaBao.has(label)) return;
+  nutTatDaBao.add(label);
+  console.warn(`[RudiButton] "${label}" is disabled without lyDo (ADR-0038 §2.2): say why, or hide it until it can be used.`);
+}
+
 export function RudiButton({
   label,
   onPress,
@@ -536,6 +624,12 @@ export function RudiButton({
   lyDo,
 }: ButtonProps) {
   const { colors, radius } = useRudiTheme();
+  // A disabled button with no reason under it is what ADR-0038 §2.2 rules out
+  // (QA UI-091). Development only: say which one, once per label.
+  if (typeof __DEV__ !== "undefined" && __DEV__ && disabled && !loading && !lyDo) baoNutTatThieuLyDo(label);
+  const phaHuy = tone === "warn";
+  if (phaHuy && (variant === "solid" || variant === "soft")) variant = "outline";
+  const mauTone = phaHuy ? colors.warn : toneColor(colors, tone as RudiTone);
   // ADR-0038 §2.2: not yet usable is not faded. The button keeps a readable
   // label and a dashed edge, both measured (`test_contrast_floor.py`); while
   // it loads it keeps its own face.
@@ -543,16 +637,16 @@ export function RudiButton({
   const vienTat = colors.lineStrong;
   const chuTat = colors.inkSoft;
   const solid = variant === "solid" && !tat;
-  const foreground = tat ? chuTat : solid ? colors[`${tone}Ink` as const] : toneColor(colors, tone);
+  const foreground = tat ? chuTat : solid ? colors[`${tone as RudiTone}Ink` as const] : mauTone;
   const base = [
     styles.button,
     compact && styles.buttonCompact,
     full && styles.buttonFull,
     { borderRadius: radius.control },
-    variant === "soft" && { backgroundColor: toneSoftColor(colors, tone), borderColor: "transparent" },
+    variant === "soft" && { backgroundColor: toneSoftColor(colors, tone as RudiTone), borderColor: "transparent" },
     // The outline is the button's own tone on split/ai screens; `lineStrong`
     // (a warm neutral) only on accent, where it is the brand world's line.
-    variant === "outline" && { backgroundColor: colors.card, borderColor: tone === "accent" ? colors.lineStrong : toneColor(colors, tone) },
+    variant === "outline" && { backgroundColor: colors.card, borderColor: tone === "accent" ? colors.lineStrong : mauTone },
     variant === "ghost" && { backgroundColor: "transparent", borderColor: "transparent" },
     tat && { backgroundColor: colors.card, borderColor: vienTat, borderStyle: "dashed" as const, borderWidth: 1.5 },
     style,
@@ -586,7 +680,7 @@ export function RudiButton({
           colors={
             // Scheme tokens, not the brand's light-only pair: in dark the
             // primary must be the brightest actionable thing on the screen.
-            tone === "accent" ? [colors.accent, colors.accentEnd] : [toneColor(colors, tone), toneColor(colors, tone)]
+            tone === "accent" ? [colors.accent, colors.accentEnd] : [mauTone, mauTone]
           }
           end={{ x: 1, y: 0.6 }}
           start={{ x: 0, y: 0 }}
@@ -662,8 +756,7 @@ export function IconButton({
       accessibilityRole="button"
       aria-busy={loading}
       aria-disabled={disabled || loading}
-      aria-pressed={selected}
-      accessibilityState={{ disabled: disabled || loading, busy: loading, selected }}
+      {...giuState(Boolean(selected))}
       disabled={disabled || loading}
       hitSlop={4}
       onPress={onPress}
@@ -798,7 +891,7 @@ export function Chip({
         ]}
       >
         {leading ?? (icon ? <Ionicons color={foreground} name={icon} size={14} /> : null)}
-        <Text numberOfLines={1} style={[typography.caption, { color: foreground }]}>
+        <Text numberOfLines={1} style={[typography.caption, styles.chipChu, { color: foreground }]}>
           {label}
         </Text>
       </View>
@@ -825,7 +918,7 @@ export function Chip({
       {/* Selected is said twice: fill and a check, so it does not rest on color alone. */}
       {leading ?? (icon ? <Ionicons color={foreground} name={icon} size={16} /> : null)}
       {icon === undefined && leading === undefined && selected ? <Ionicons color={foreground} name="checkmark" size={16} /> : null}
-      <Text numberOfLines={1} style={[typography.caption, { color: foreground }]}>
+      <Text numberOfLines={1} style={[typography.caption, styles.chipChu, { color: foreground }]}>
         {label}
       </Text>
     </PressScale>
@@ -1003,7 +1096,7 @@ export function Segmented({
 }) {
   const { colors, radius } = useRudiTheme();
   return (
-    <View style={[styles.segmented, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]}>
+    <View {...TABLIST} style={[styles.segmented, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]}>
       {items.map((item, index) => {
         const active = selected === index;
         return (
@@ -1173,7 +1266,9 @@ const styles = StyleSheet.create({
   screenHeader: { borderBottomWidth: StyleSheet.hairlineWidth },
   screenHeaderTrong: { borderBottomWidth: 0 },
   screenFooter: { width: "100%", paddingTop: 8, zIndex: 2 },
-  tabletInner: { alignSelf: "center", maxWidth: 960, paddingTop: 22 },
+  // `width: 100%` so the column fills up to its `maxWidth`; centred without it,
+  // the column shrank to whatever its widest child happened to be.
+  tabletInner: { alignSelf: "center", width: "100%", maxWidth: 960, paddingTop: 22 },
   topBar: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   // Sides are at least the 48dp target wide and always equal (see TopBar), so
   // the title is centred on the screen even next to a badge.
@@ -1219,8 +1314,11 @@ const styles = StyleSheet.create({
   lyDo: { flexDirection: "row", alignItems: "flex-start", gap: 6, paddingHorizontal: 4 },
   lyDoChu: { flexShrink: 1 },
   iconButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  chipTinh: { minHeight: 30, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5 },
-  chip: { minHeight: 48, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
+  // `maxWidth`: a chip never grows past the row that holds it; a long place
+  // name ellipsizes inside it instead of running off the sheet (QA UI-099).
+  chipTinh: { minHeight: 30, maxWidth: "100%", flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5 },
+  chip: { minHeight: 48, maxWidth: "100%", flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
+  chipChu: { flexShrink: 1 },
   avatar: { alignItems: "center", justifyContent: "center" },
   avatarText: { color: mucTrenAnh, fontWeight: "800", letterSpacing: -0.2 },
   avatarStack: { flexDirection: "row", alignItems: "center" },

@@ -3,10 +3,11 @@ import { NavigationContext } from "expo-router/build/react-navigation/core/Navig
 import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { interpolate, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useNepGui } from "../nep/NepProvider";
+import { dangKyLuiWeb } from "./lui-web";
 import { lopPhu, useRudiTheme } from "../theme";
 import { useMotion } from "./useMotion";
 
@@ -28,37 +29,18 @@ export interface SheetProps {
 
 /** Open sheets in opening order; only the top one answers Escape and Tab. */
 const webSheetStack: symbol[] = [];
-/**
- * The same order for the browser's Back; only the top sheet answers it.
- *
- * One listener for all of them, added when this module loads, which is before
- * the router mounts and adds its own. Listeners on `window` run in the order
- * they were added -- the capture flag does not move one ahead of another at
- * the target -- so a listener a sheet added when it opened ran AFTER the
- * router's: the router had already switched tab, the sheet's screen blurred,
- * the sheet closed and took its listener with it, and Back left the screen
- * (measured on the web export, QA UI-117). Running first, this stops the
- * router from seeing that Back, puts the entry the person was on back on top
- * (same state, same url), and closes the top sheet.
- */
-type MucLui = { giu: { state: unknown; url: string }; dong: () => void };
-const webBackStack: MucLui[] = [];
-if (Platform.OS === "web" && typeof window !== "undefined") {
-  window.addEventListener(
-    "popstate",
-    (event) => {
-      const tren = webBackStack.at(-1);
-      if (!tren) return;
-      event.stopImmediatePropagation();
-      window.history.pushState(tren.giu.state, "", tren.giu.url);
-      tren.dong();
-    },
-    true,
-  );
-}
 /** Past this drag (dp) or this speed (dp/s) a release closes the sheet. */
 const KEO_DONG_DP = 90;
 const KEO_DONG_TOC = 900;
+/** Widest a panel grows on a tablet; the reading column of DESIGN.md (QA UI-093). */
+const RONG_TOI_DA = 640;
+/**
+ * How long after opening a tap on the sheet means nothing. A second tap of a
+ * double tap lands ~60 ms after the first, on whatever has just appeared under
+ * the finger: the scrim, which closed the sheet it had just opened (UI-088),
+ * or a card of the desk sliding up, which navigated (UI-006).
+ */
+const CHAN_CHAM_MS = 250;
 
 /**
  * A bottom sheet on the UI thread: scrim fades over `standard`, the panel
@@ -67,10 +49,13 @@ const KEO_DONG_TOC = 900;
  * (or a flick) closes the sheet, a shorter release springs it back. The report
  * ruled that a handle may not imply drag-to-dismiss it does not do. The grab
  * zone is the handle row, not the whole panel, so the content's own scroll
- * never fights the drag. Not a modal route, so it can live inside a screen
- * (create menu, picker, filters) and be driven by state; `app/create.tsx`
- * hosts it in a transparent route. Under Reduce Motion the spring resolves
- * instantly.
+ * never fights the drag. The whole panel is capped at `maxHeight` (82% of the
+ * window), is at most 640 dp wide and centred on a tablet, travels by its own
+ * height and fades over the last stretch of a close, takes no tap for the
+ * first `CHAN_CHAM_MS` after opening, and is the top layer of its screen.
+ * Not a modal route, so it can live inside a screen (create menu, picker,
+ * filters) and be driven by state; `app/create.tsx` hosts it in a
+ * transparent route. Under Reduce Motion the spring resolves instantly.
  */
 export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, style, maxHeight, dauTrang, testID }: SheetProps) {
   const { colors, radius, space } = useRudiTheme();
@@ -88,6 +73,14 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   // Mounted while open, and until the close animation has finished: React
   // state, not a shared value read during render (Reanimated strict mode).
   const [hien, setHien] = useState(open);
+  // False for `CHAN_CHAM_MS` after each opening: the panel and the scrim take
+  // no tap while the double tap that opened them is still landing.
+  const [nhanCham, setNhanCham] = useState(false);
+  // The panel's own height, so it travels exactly out of the window and not a
+  // fixed 480 dp that left a third of a tall sheet showing (UI-013).
+  const cao = useSharedValue(windowHeight);
+  // The host's width, so a tablet gets a centred 640 dp panel (UI-093).
+  const [rongKhung, setRongKhung] = useState(windowWidth);
   const panelRef = useRef<View>(null);
   const wrapperRef = useRef<View>(null);
   const closeRef = useRef(onClose);
@@ -167,9 +160,11 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   useEffect(() => {
     if (open) {
       setHien(true);
+      setNhanCham(false);
       keo.value = 0;
       progress.value = withSpring(1, motion.spring.settle);
-      return;
+      const t = setTimeout(() => setNhanCham(true), CHAN_CHAM_MS);
+      return () => clearTimeout(t);
     }
     progress.value = withTiming(0, motion.timing("standard"), (finished) => {
       if (finished) runOnJS(dongXong)();
@@ -180,18 +175,10 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   }, [open, motion, progress, keo]);
 
   // The browser's Back closes the sheet, as Android's does (QA UI-038,
-  // UI-117), and the page stays where it was. Nothing is added to the history
-  // while the sheet is open -- an extra entry gets buried the moment a sheet
-  // action navigates, and becomes a Back that does nothing. The module-level
-  // listener above answers Back for the top open sheet; this registers it.
+  // UI-117), and the page stays where it was (`lui-web.ts`).
   useEffect(() => {
-    if (!open || Platform.OS !== "web" || typeof window === "undefined") return;
-    const muc: MucLui = { giu: { state: window.history.state as unknown, url: window.location.href }, dong: () => closeRef.current() };
-    webBackStack.push(muc);
-    return () => {
-      const i = webBackStack.indexOf(muc);
-      if (i >= 0) webBackStack.splice(i, 1);
-    };
+    if (!open) return;
+    return dangKyLuiWeb(() => closeRef.current());
   }, [open]);
 
   // A sheet belongs to the screen it was opened on. When that screen loses
@@ -223,14 +210,17 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
       else keo.value = withSpring(0, motion.spring.settle);
     });
 
-  const scrim = useAnimatedStyle(() => ({ opacity: progress.value * Math.max(0, 1 - keo.value / 480) }));
+  const scrim = useAnimatedStyle(() => ({ opacity: progress.value * Math.max(0, 1 - keo.value / Math.max(cao.value, 1)) }));
+  // Out by its own height (and the shadow's reach), and faded over the last
+  // stretch, so the final frame before unmount shows nothing: no panel left
+  // standing a third out of the window and then gone (UI-013).
   const panel = useAnimatedStyle(() => ({
-    transform: [{ translateY: (1 - progress.value) * 480 + keo.value }],
+    opacity: interpolate(progress.value, [0, 0.12, 1], [0, 1, 1]),
+    transform: [{ translateY: (1 - progress.value) * (cao.value + 24) + keo.value }],
   }));
 
   if (!hien) return null;
-  // The scroll box inside caps the panel so a long editor at font 2.0 scrolls
-  // instead of pushing its own submit button off the window.
+  const le = Math.max(0, (rongKhung - RONG_TOI_DA) / 2);
 
   // `collapsable={false}`: Fabric flattens a plain wrapper View and attaches
   // its children to the screen directly; toggling `pointerEvents` later makes
@@ -239,9 +229,19 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   // sheet was closing (board 2026-09-06, flow 39). A real native view never
   // has to be re-parented.
   return (
-    <View ref={wrapperRef} collapsable={false} style={StyleSheet.absoluteFill} pointerEvents={open ? "auto" : "none"} testID={testID}>
+    // zIndex: on the web a strip the screen pinned with its own zIndex (the
+    // chat's pinned sheet, z 1) painted over the scrim and the panel (UI-070,
+    // UI-166). The sheet is the top layer of its screen, by declaration.
+    <View
+      ref={wrapperRef}
+      collapsable={false}
+      onLayout={(e) => setRongKhung(Math.round(e.nativeEvent.layout.width))}
+      pointerEvents={open ? "auto" : "none"}
+      style={[StyleSheet.absoluteFill, styles.lop]}
+      testID={testID}
+    >
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: lopPhu.toi(0.42) }, scrim]}>
-        <Pressable accessibilityLabel="Đóng" accessibilityRole="button" onPress={onClose} style={StyleSheet.absoluteFill} />
+        <Pressable accessibilityLabel="Đóng" accessibilityRole="button" onPress={nhanCham ? onClose : undefined} style={StyleSheet.absoluteFill} />
       </Animated.View>
       <Animated.View
         ref={panelRef}
@@ -250,9 +250,18 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
         onAccessibilityEscape={onClose}
         accessibilityViewIsModal
         accessibilityLabel={accessibilityLabel}
+        onLayout={(e) => {
+          cao.value = e.nativeEvent.layout.height;
+        }}
         style={[
           styles.panel,
           {
+            // The ceiling is the whole panel's: handle, head and content
+            // together, not the scroll box alone with the handle and the
+            // insets added on top (92% at 320×640, 96% at 390×460: UI-007, UI-040).
+            maxHeight: tran,
+            left: le,
+            right: le,
             backgroundColor: colors.card,
             borderTopLeftRadius: radius.base,
             borderTopRightRadius: radius.base,
@@ -271,7 +280,10 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
         <View style={styles.handleRow}>
           <View style={styles.closeSpace} />
           <GestureDetector gesture={keoXuong}>
-            <View accessibilityHint="Kéo xuống để đóng" accessibilityLabel="Tay cầm" style={styles.vungKeo}>
+            {/* A gesture for the hand, not a control for assistive tech: «Đóng
+                bảng» beside it is the accessible way out. A label with no role
+                here was axe's aria-prohibited-attr in every sheet (UI-089). */}
+            <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.vungKeo} testID="tay-cam">
               <View style={[styles.handle, { backgroundColor: colors.lineStrong }]} />
             </View>
           </GestureDetector>
@@ -280,16 +292,21 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
           </Pressable>
         </View>
         {dauTrang}
-        <ScrollView bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ maxHeight: tran }}>
+        <ScrollView bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={styles.cuon}>
           {children}
         </ScrollView>
+        {/* The opening's tap guard over the panel itself (UI-006). */}
+        {nhanCham ? null : <View style={StyleSheet.absoluteFill} testID="sheet-chan-cham" />}
       </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { position: "absolute", left: 0, right: 0, bottom: 0 },
+  lop: { zIndex: 10 },
+  panel: { position: "absolute", bottom: 0 },
+  // Shrinks inside the panel's ceiling and scrolls; grows no further than its content.
+  cuon: { flexGrow: 0, flexShrink: 1 },
   // A grab zone the width of the panel and taller than the bar it shows.
   handleRow: { flexDirection: "row", alignItems: "center" },
   closeSpace: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },

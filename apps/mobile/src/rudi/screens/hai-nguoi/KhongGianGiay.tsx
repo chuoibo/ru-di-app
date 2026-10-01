@@ -325,6 +325,9 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
 
   return (
     <RudiScreen
+      // A sheet of paper is read, not scanned: one 640 dp column on a tablet,
+      // its two buttons with it (QA UI-093: 720 and 912 px wide at C6, C7).
+      cot="doc"
       footer={
         // No second lead while a plan stands: with «Đã đi rồi» and «Huỷ buổi
         // này» on the sheet, a coral «Rủ đi chơi» underneath made three things

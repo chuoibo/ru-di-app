@@ -19,6 +19,7 @@ import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { ToGiay } from "../../ui/ToGiay";
 import { Washi } from "../../ui/Washi";
+import { TABLIST, tabState, toggleState } from "../../../ui/a11y";
 
 type Page = { phase: "loading" } | { phase: "ready"; book: JourneySnapshot } | { phase: "error"; message: string };
 
@@ -131,19 +132,19 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
         <Text style={[typography.h2, { color: colors.ink }]}>Chọn lối đi</Text>
         <Text style={[typography.note, { color: colors.inkSoft }]}>Có thể đổi hướng bất cứ lúc nào. Dấu mốc cũ vẫn được giữ.</Text>
       </View>
-      <View onLayout={(event) => setMapWidth(Math.round(event.nativeEvent.layout.width))} style={styles.routeMap} accessibilityLabel="Bản đồ bốn tuyến hành trình. Ba tuyến đầu gặp nhau ở Ngã rẽ.">
+      <View onLayout={(event) => setMapWidth(Math.round(event.nativeEvent.layout.width))} style={styles.routeMap} {...TABLIST} accessibilityLabel="Bản đồ bốn tuyến hành trình. Ba tuyến đầu gặp nhau ở Ngã rẽ.">
         <Svg pointerEvents="none" width={mapWidth} height={184} style={StyleSheet.absoluteFill}>
           {[mapWidth / 6, mapWidth / 2, mapWidth * 5 / 6].map((x, index) => <Path key={index} d={`M ${x} 62 Q ${x} 114 ${mapWidth / 2} 145`} fill="none" stroke={colors.lineStrong} strokeWidth={1.5} strokeDasharray={index === 1 ? undefined : "4 5"} />)}
         </Svg>
         <View style={styles.mapTop}>{book.routes.slice(0, 3).map((item) => {
           const selected = item.id === routeId;
           const count = book.candidates.filter((choice) => choice.route_id === item.id && choice.earned).length;
-          return <Pressable key={item.id} accessibilityRole="tab" accessibilityState={{ selected }} accessibilityLabel={`${item.title}, ${count} kết đã đạt`} onPress={() => setRouteId(item.id)} style={[styles.mapNode, { borderColor: selected ? colors.accent : colors.lineStrong, backgroundColor: selected ? colors.accentSoft : colors.paper, borderRadius: radius.small }]}>
+          return <Pressable key={item.id} {...tabState(selected)} accessibilityLabel={`${item.title}, ${count} kết đã đạt`} onPress={() => setRouteId(item.id)} style={[styles.mapNode, { borderColor: selected ? colors.accent : colors.lineStrong, backgroundColor: selected ? colors.accentSoft : colors.paper, borderRadius: radius.small }]}>
             <Text style={[typography.label, { color: selected ? colors.accent : colors.ink, textAlign: "center" }]}>{item.title}</Text>
             <Text style={[typography.note, { color: colors.inkSoft }]}>{count} kết</Text>
           </Pressable>;
         })}</View>
-        {book.routes[3] ? <Pressable accessibilityRole="tab" accessibilityState={{ selected: routeId === "nga_re" }} onPress={() => setRouteId("nga_re")} style={[styles.mapNode, styles.mapConfluence, { borderColor: routeId === "nga_re" ? colors.accent : colors.lineStrong, backgroundColor: routeId === "nga_re" ? colors.accentSoft : colors.paper, borderRadius: radius.small }]}>
+        {book.routes[3] ? <Pressable {...tabState(routeId === "nga_re")} onPress={() => setRouteId("nga_re")} style={[styles.mapNode, styles.mapConfluence, { borderColor: routeId === "nga_re" ? colors.accent : colors.lineStrong, backgroundColor: routeId === "nga_re" ? colors.accentSoft : colors.paper, borderRadius: radius.small }]}>
           <Text style={[typography.label, { color: routeId === "nga_re" ? colors.accent : colors.ink }]}>Ngã rẽ</Text>
           <Text style={[typography.note, { color: colors.inkSoft }]}>Các tuyến gặp nhau</Text>
         </Pressable> : null}
@@ -200,7 +201,7 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
       <View style={styles.suggestion}>
         <SectionHeader title="Nếp nhìn đường đi" />
         <Text style={[typography.body, { color: colors.inkSoft }]}>Nếp có thể gợi ý 2–3 ngã rẽ theo lối bạn chọn và những dấu mốc đã có.</Text>
-        <Pressable accessibilityRole="button" accessibilityState={{ expanded: previewOpen }} onPress={() => setPreviewOpen((open) => !open)} style={styles.previewToggle}>
+        <Pressable accessibilityRole="button" aria-expanded={previewOpen} onPress={() => setPreviewOpen((open) => !open)} style={styles.previewToggle}>
           <Text style={[typography.label, { color: colors.ai }]}>{previewOpen ? "Đóng bản xem trước" : "Xem Nếp sẽ nhận gì"}</Text>
           <Ionicons color={colors.ai} name={previewOpen ? "chevron-up" : "chevron-down"} size={17} />
         </Pressable>
@@ -235,7 +236,7 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
         {[...openingBadges, ...endingBadges].map((badge) => {
           const displayed = displayedIds.includes(badge.id);
           const title = BADGE_TITLES[badge.id] ?? "Huy hiệu hành trình";
-          return <Pressable key={badge.id} accessibilityRole="checkbox" accessibilityState={{ checked: displayed, disabled: busy !== null && busy !== badge.id }} accessibilityLabel={`${title}, ${displayed ? "đang trưng bày" : "chưa trưng bày"}`} onPress={() => void perform(badge.id, () => trungBayHuyHieu(phien.person_id, toggleDisplayedBadge(displayedIds, badge.id, earnedIds)))} style={[styles.badgeRow, { borderBottomColor: colors.line }]}>
+          return <Pressable key={badge.id} {...toggleState("checkbox", displayed)} aria-disabled={busy !== null && busy !== badge.id} accessibilityLabel={`${title}, ${displayed ? "đang trưng bày" : "chưa trưng bày"}`} onPress={() => void perform(badge.id, () => trungBayHuyHieu(phien.person_id, toggleDisplayedBadge(displayedIds, badge.id, earnedIds)))} style={[styles.badgeRow, { borderBottomColor: colors.line }]}>
             <BadgeArt badgeId={badge.id} label={title} state="unlocked" size={54} />
             <View style={styles.flex}><Text style={[typography.label, { color: colors.ink }]}>{title}</Text><Text style={[typography.note, { color: colors.inkSoft }]}>{displayed ? "Trên hồ sơ" : "Chạm để trưng bày"}</Text></View>
             <Ionicons color={displayed ? colors.accent : colors.inkFaint} name={displayed ? "checkmark-circle" : "ellipse-outline"} size={23} />

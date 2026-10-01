@@ -201,7 +201,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
       <RudiScreen bottomInset="tab" onRefresh={nap} testID="plan-screen">
         <View style={styles.dau}>
           <View style={styles.flex}><Heading title="Lên plan" subtitle="Gom hội mình lại, rồi dành một ngày cho nhau." /></View>
-          <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create")} variant="outline" />
+          <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create?tu=plan")} variant="outline" />
         </View>
         <HenCuaHaiBan phien={phien} today={today} />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} variant="outline" />
@@ -220,7 +220,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
           <Heading title="Lên plan" subtitle={`Những lời hẹn của ${tenNhom(phien)}`} />
         </View>
         {/* Five navigation destinations leave creation in the plan header. */}
-        <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create")} variant="outline" />
+        <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create?tu=plan")} variant="outline" />
       </View>
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup style={styles.khung}>

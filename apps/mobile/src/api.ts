@@ -26,6 +26,7 @@
  * screen says so and names the address it tried. A demo that quietly runs on
  * made-up data is the failure this file keeps being rewritten to avoid.
  */
+import { cauTheoMa } from "./cau-loi-theo-ma";
 import { actorHeaders, datTokenPhien, tokenPhienHienTai } from "./danh-tinh";
 
 // `datTokenPhien` / `tokenPhienHienTai` re-export vì chúng là TRẠNG THÁI, và
@@ -297,22 +298,31 @@ function ghiKhongNoiDuoc(path: string): void {
   if (typeof __DEV__ !== "undefined" && __DEV__) console.warn("[api] unreachable: " + BASE_URL + path);
 }
 
-export function thongDiepNguoiDoc(status: number, detail: unknown): string {
+export function thongDiepNguoiDoc(status: number, detail: unknown, code?: string | null): string {
   if (typeof detail === "string" && detail.trim() !== "" && DAU_TIENG_VIET.test(detail)) {
     return detail.trim();
   }
   if (status === 0) return LOI_KHONG_NOI_DUOC;
-  if (status === 401 || status === 403) {
+  // The server's own name for the refusal is a decision about the cause; the
+  // status below is only a guess at it (QA UI-019, UI-072, UI-029).
+  const theoMa = cauTheoMa(code);
+  if (theoMa) return theoMa;
+  if (status === 401) return "Phiên đăng nhập đã hết. Đăng nhập lại để tiếp tục.";
+  if (status === 403) {
     return "Tài khoản đang dùng chưa được phép làm việc này trong nhóm. Nhờ người tạo nhóm cấp quyền rồi thử lại.";
   }
   if (status === 404) {
-    // A route the server does not have: the app and the server are out of step.
-    // What the person can do is update the app; checking «the address at the
-    // bottom of the screen» was an instruction for a developer.
+    // A route the server does not have (no code of its own): the app and the
+    // server are out of step. What the person can do is update the app;
+    // checking «the address at the bottom of the screen» was an instruction
+    // for a developer. A missing THING carries `<thing>_not_found` and never
+    // reaches this line.
     return "Phần này chưa mở được trên bản app này. Cập nhật app rồi thử lại.";
   }
   if (status === 409) {
-    return "Lần bấm trước chưa chạy xong nên chưa biết đã ghi hay chưa. Chờ một chút rồi mở lại màn hình để xem, đừng bấm lại ngay.";
+    // Not the idempotency sentence: that one is `idempotency_request_in_flight`
+    // and has its own table. Any other conflict means the data moved on.
+    return "Việc này chưa làm được vì dữ liệu vừa thay đổi. Mở lại màn hình để xem bản mới nhất rồi thử lại.";
   }
   if (status === 429) {
     return "Rủ Đi đang nhận quá nhiều yêu cầu cùng lúc. Chờ khoảng một phút rồi thử lại.";
@@ -488,7 +498,7 @@ async function sendRequest<T>(
     throw new ApiError(
       response.status,
       code,
-      IDEMPOTENCY_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail),
+      IDEMPOTENCY_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail, code),
     );
   }
   // 204 means the server did the thing and has nothing to say about it, so
@@ -1266,7 +1276,7 @@ export async function scanReceipt(
     throw new ApiError(
       response.status,
       code,
-      SCAN_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail),
+      SCAN_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail, code),
     );
   }
   // A cast, not a parse, like every other route in this file -- and the one
@@ -1399,7 +1409,7 @@ export async function quetAnhChupMan(
     throw new ApiError(
       response.status,
       code,
-      SCREENSHOT_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail),
+      SCREENSHOT_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail, code),
     );
   }
   return (await response.json()) as ScreenshotScanWire;
@@ -1601,7 +1611,7 @@ async function guiAnhLen(
     throw new ApiError(
       response.status,
       code,
-      ANH_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail),
+      ANH_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail, code),
     );
   }
 
@@ -1741,7 +1751,7 @@ export async function taiAnhCoQuyen(
     throw new ApiError(
       response.status,
       code,
-      ANH_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail),
+      ANH_REFUSALS[code.toLowerCase()] ?? thongDiepNguoiDoc(response.status, detail, code),
     );
   }
 
