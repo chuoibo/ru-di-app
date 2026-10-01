@@ -148,9 +148,11 @@ export function ExploreScreen({ dau }: { dau?: DungDau } = {}) {
   const { soSanh, hang } = taiSoSanh(conLai);
 
   return (
-    // The demo's door rides in Khám phá's header, where the live screen keeps
-    // nothing (owner's mockup, 01/10); the inbox bell stays with the place.
-    <RudiScreen bottomInset="tab" header={dau?.(<DemoBadge />)} testID="explore-screen">
+    // Khám phá's header carries the two sections only, as on the live screen
+    // (owner's mockup, 01/10): the demo's door stays on the place's line with
+    // the inbox bell, where it fits at 320 dp (in the header it pushed the two
+    // words past the edge, 312 of 288 dp).
+    <RudiScreen bottomInset="tab" header={dau?.()} testID="explore-screen">
       <View style={styles.exploreHeader}>
         <View style={styles.exploreBrand}>
           <Inline gap={5} style={styles.location}>
@@ -161,7 +163,7 @@ export function ExploreScreen({ dau }: { dau?: DungDau } = {}) {
           </Inline>
         </View>
         <Inline gap={8}>
-          {dau ? null : <DemoBadge />}
+          <DemoBadge />
           <IconButton
             accessibilityLabel="Thông báo"
             icon="notifications-outline"
@@ -456,7 +458,8 @@ export function PlaceDetailScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  exploreHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  // One line now (the wordmark left for Khám phá's header): the bell sits level with the place.
+  exploreHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   // Close under its heading, as one block (the column's gap is 18).
   soNoi: { marginTop: -14 },
   exploreBrand: { gap: 6, flexShrink: 1 },

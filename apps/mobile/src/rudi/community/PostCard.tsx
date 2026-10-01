@@ -110,7 +110,9 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
   </View>;
 });
 const styles = StyleSheet.create({
-  post: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, gap: 14 },
+  // The screen gutter (`space.md`), the same as Khám phá's header and Địa điểm,
+  // so switching sections does not shift the column.
+  post: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, gap: 14 },
   avatarTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
   identity: { flexDirection: "row", alignItems: "center", gap: 10 }, identityText: { flex: 1, gap: 2 }, follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   body: { lineHeight: 26 }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 },
