@@ -14,9 +14,14 @@
 #               refused when its exact upper-bound estimate exceeds it, and a
 #               watchdog stops it at N (then it is «chưa xong»: no trailer).
 #
+# The model goes where production's goes (ADR-0051): through agy-proxy when
+# AGY_PROXY_URL and AGY_PROXY_KEY are set, else the Gemini API directly.
+# Embeddings always go to the Gemini API (agy serves none), so GEMINI_API_KEY
+# is needed either way. The scoreboard names which door answered.
+#
 # What it does, in order:
 #   1. refuses without GEMINI_API_KEY (it never prints the value) or without
-#      --tran-goi;
+#      --tran-goi, or with AGY_PROXY_URL but no AGY_PROXY_KEY;
 #   2. builds cmd/rudi-eval at the checked-out SHA;
 #   3. prints the estimate; runs `rudi-eval --mo-hinh that`, which records
 #      a cassette of every real call into the evidence store
@@ -72,6 +77,15 @@ if [ -n "${MOBILE_GEMINI_BASE_URL:-}" ]; then
   echo "eval_that: MOBILE_GEMINI_BASE_URL đang đặt — lượt thật phải tới Gemini API thật; bỏ biến đó (bản giả loopback là --mo-hinh ghi)." >&2
   exit 2
 fi
+if [ -n "${AGY_PROXY_URL:-}" ]; then
+  if [ -z "${AGY_PROXY_KEY:-}" ]; then
+    echo "eval_that: TỪ CHỐI — AGY_PROXY_URL đã đặt mà thiếu AGY_PROXY_KEY (không dán khoá vào lệnh; đặt trong môi trường)." >&2
+    exit 2
+  fi
+  echo "--- model qua agy-proxy (cửa production dùng); embedding gọi Gemini API thẳng"
+else
+  echo "--- model gọi Gemini API thẳng (không có AGY_PROXY_URL)"
+fi
 command -v go >/dev/null 2>&1 || { echo "thiếu go" >&2; exit 2; }
 command -v python3 >/dev/null 2>&1 || { echo "thiếu python3" >&2; exit 2; }
 
@@ -110,7 +124,7 @@ echo "thư mục lượt thật: $dir (thoát $rc_that)"
 
 echo "--- phát lại cùng SHA (--mo-hinh phat-lai, không khoá, proxy đóng)"
 set +e
-( cd "$CORE" && env -u GEMINI_API_KEY -u MOBILE_GEMINI_BASE_URL -u MOBILE_RERANK_URL \
+( cd "$CORE" && env -u GEMINI_API_KEY -u MOBILE_GEMINI_BASE_URL -u MOBILE_RERANK_URL -u AGY_PROXY_URL -u AGY_PROXY_KEY \
     HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 ALL_PROXY=http://127.0.0.1:9 \
     https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 all_proxy=http://127.0.0.1:9 NO_PROXY= no_proxy= \
     "$work/rudi-eval" --mo-hinh phat-lai --bang "$dir" --git-sha "$sha" ${out:+--out "$out"} ) >"$work/lai.out"

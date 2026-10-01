@@ -57,6 +57,9 @@ const (
 const (
 	NguonGeminiAPI = "gemini-api"
 	NguonLoopback  = "loopback"
+	// NguonAgy: the real model through agy-proxy (ADR-0049 §2.1, ADR-0051),
+	// the door production uses when AGY_PROXY_URL is set.
+	NguonAgy = "agy-proxy"
 )
 
 // KiemNgoaiGit refuses a directory inside a git worktree: it or any of its
@@ -444,6 +447,8 @@ func moTaNguon(m Manifest) string {
 	switch {
 	case m.Nguon == NguonGeminiAPI:
 		return "Gemini API thật"
+	case m.Nguon == NguonAgy:
+		return "model thật qua agy-proxy (cửa production dùng; embedding vẫn gọi Gemini API thẳng)"
 	case m.Nguon == NguonLoopback:
 		return "bản giả Gemini trên loopback (không phải model thật: số ở đây không đo chất lượng)"
 	case strings.HasPrefix(m.Nguon, "bang:"):

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"google.golang.org/adk/v2/model"
+
 	"mobile/services/core/internal/aieval"
 	"mobile/services/core/internal/aiharness/hieu"
 	"mobile/services/core/internal/aiharness/llm"
@@ -51,26 +53,48 @@ func dungNhaCungCap(ctx context.Context, cheDo string) (*aieval.NoiGhi, string, 
 		return nil, "", ErrThieuKhoa
 	}
 	base := strings.TrimSpace(getenv(llm.EnvBaseURL))
-	nguon := aieval.NguonGeminiAPI
+	// `that` measures the door production uses: through agy-proxy when
+	// AGY_PROXY_URL is set, as llm.GeminiFromEnv does, else the Gemini API
+	// directly. `ghi` records from a loopback Gemini only, never agy.
+	agy := strings.TrimSpace(getenv(llm.EnvAgyURL))
+	var m model.LLM
+	var nguon string
+	var err error
 	switch cheDo {
 	case aieval.MoHinhThat:
 		if base != "" {
 			return nil, "", errors.New("--mo-hinh that là model thật: bỏ MOBILE_GEMINI_BASE_URL, hoặc dùng --mo-hinh ghi để ghi từ bản giả loopback")
 		}
+		if agy != "" {
+			if strings.TrimSpace(getenv(llm.EnvAgyKey)) == "" {
+				return nil, "", errors.New("AGY_PROXY_URL đã đặt mà thiếu AGY_PROXY_KEY: thêm khoá agy trong cài đặt môi trường, hoặc bỏ AGY_PROXY_URL để gọi Gemini API thẳng")
+			}
+			m, err = llm.NewGeminiQuaAgy(ctx, getenv(llm.EnvAgyKey), agy)
+			nguon = aieval.NguonAgy
+		} else {
+			m, err = llm.NewGemini(ctx, key, "")
+			nguon = aieval.NguonGeminiAPI
+		}
 	case aieval.MoHinhGhi:
 		if base == "" {
 			return nil, "", errors.New("--mo-hinh ghi ghi từ một Gemini loopback: đặt MOBILE_GEMINI_BASE_URL (chỉ loopback); model thật là --mo-hinh that")
 		}
+		if agy != "" {
+			return nil, "", errors.New("--mo-hinh ghi ghi từ Gemini loopback, không qua agy-proxy: bỏ AGY_PROXY_URL")
+		}
+		m, err = llm.NewGemini(ctx, key, base)
 		nguon = aieval.NguonLoopback
 	default:
 		return nil, "", errors.New("chỉ that và ghi dựng client")
 	}
-	// Both constructors refuse a real host inside a test binary
+	// Every constructor refuses a real host inside a test binary
 	// (testing.Testing) and any override that is not loopback.
-	m, err := llm.NewGemini(ctx, key, base)
 	if err != nil {
 		return nil, "", err
 	}
+	// The embedder never goes through agy-proxy (it serves no embeddings):
+	// GEMINI_API_KEY and, for ghi, the loopback override. It refuses a real
+	// host inside a test binary (testing.Testing).
 	n, err := nhung.NewGemini(ctx, key, base)
 	if err != nil {
 		return nil, "", err

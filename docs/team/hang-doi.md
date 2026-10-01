@@ -29,7 +29,9 @@ Còn nợ, theo mức độ:
    giá có hệ thống tỉ lệ duyệt nhầm/chặn nhầm. Bài công khai tự duyệt khi model chắc ≥ 900‰.
 4. **`face-boxes`** còn trên seam brain Python (OpenCV, không phải LLM) — TODO làm lại bằng Go theo cơ chế
    khác (chủ sản phẩm 2026-09-30), rồi xoá seam brain và `MOBILE_BRAIN_URL`.
-5. **Eval T3 qua agy** chưa nối (`scripts/eval_that.sh` chỉ biết Gemini thẳng).
+5. **Eval T3 qua agy:** đã nối (`scripts/eval_that.sh` và `rudi-eval --mo-hinh that` đi qua agy khi có
+   `AGY_PROXY_URL/KEY`, bảng điểm ghi nguồn `agy-proxy`; embedding vẫn gọi Gemini thẳng). Chưa có lượt thật nào:
+   cần Lead duyệt số lời gọi (`--tran-goi N`, dự toán in trước khi chạy).
 
 ---
 

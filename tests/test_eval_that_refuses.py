@@ -24,7 +24,13 @@ def run(args: list[str], key: str | None) -> subprocess.CompletedProcess[str]:
     env = {
         k: v
         for k, v in os.environ.items()
-        if k not in ("GEMINI_API_KEY", "MOBILE_GEMINI_BASE_URL")
+        if k
+        not in (
+            "GEMINI_API_KEY",
+            "MOBILE_GEMINI_BASE_URL",
+            "AGY_PROXY_URL",
+            "AGY_PROXY_KEY",
+        )
     }
     # A PATH without go: a case that got past the checks would fail loudly
     # at `command -v go` instead of building anything.
@@ -83,6 +89,52 @@ class EvalThatRefuses(unittest.TestCase):
         self.assertEqual(r.returncode, 2, r.stderr)
         self.assertIn("MOBILE_GEMINI_BASE_URL", r.stderr)
         self.assertNotIn(FAKE_KEY, r.stdout + r.stderr)
+
+    def test_agy_without_its_key_is_refused_and_replay_drops_agy(self) -> None:
+        """ADR-0051: the real run's model goes through agy when configured.
+
+        Half a configuration is refused before anything is built, naming the
+        missing variable and printing no value; and the replay that must make
+        zero calls runs without either agy variable, like without the key.
+        """
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in ("AGY_PROXY_URL", "AGY_PROXY_KEY", "MOBILE_GEMINI_BASE_URL")
+        }
+        env.update(
+            {
+                "GEMINI_API_KEY": FAKE_KEY,
+                "AGY_PROXY_URL": "http://127.0.0.1:9",
+                "PATH": "/usr/bin:/bin",
+            }
+        )
+        r = subprocess.run(
+            [
+                "bash",
+                str(SCRIPT),
+                "--bo",
+                "corpus/nep-kich-ban.json",
+                "--tran-goi",
+                "5",
+            ],
+            cwd=REPO_ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(r.returncode, 2, r.stderr)
+        self.assertIn("AGY_PROXY_KEY", r.stderr)
+        self.assertNotIn(FAKE_KEY, r.stdout + r.stderr)
+        # The replay command line, not the header comment that describes it.
+        replay = next(
+            line
+            for line in SCRIPT.read_text(encoding="utf-8").splitlines()
+            if "env -u GEMINI_API_KEY" in line and not line.lstrip().startswith("#")
+        )
+        self.assertIn("-u AGY_PROXY_URL", replay)
+        self.assertIn("-u AGY_PROXY_KEY", replay)
 
 
 if __name__ == "__main__":
