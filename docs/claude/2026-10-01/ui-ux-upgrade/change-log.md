@@ -211,3 +211,201 @@ DESIGN_SYSTEM_IMPROVEMENT) · file · phạm vi hồi quy cần kiểm. Ghi theo
 - Space nhận cả Enter → ca phím đỏ.
 - Tab mang `aria-checked` → ca tab đỏ.
 - Ô cao 44 → ca chiều cao đỏ.
+
+## B3 · Pilot: Kèo · Lên plan · Hành trình (F03 + E2)
+
+### Kèo nhiều ngày: chặng chưa xếp ngày được nêu tên và xếp được (UI-032) · BUG_FIX + UX_IMPROVEMENT
+- Máy chủ để `day` rỗng cho chặng của kèo dài hơn một ngày, nên chặng ấy không thuộc trang ngày nào. Bản đồ ba ngày đều
+  trống, và còn bảo người dùng «gắn một quán» họ đã gắn.
+- Trang ngày nay nêu tên các chặng ấy: «3 chặng của kèo chưa xếp ngày: Cà phê sáng, Ăn trưa, Tối nướng.».
+  - Ngày trống: tiêu đề «Ngày này chưa có chặng nào», kèm nút chính «Xếp cả 3 chặng vào ngày này».
+  - Ngày đã có chặng: thêm một dòng, kèm nút ghost «Xếp vào ngày này».
+- Xếp là **bản nháp**: mốc hiện ngay trên bản đồ, «Lưu những thay đổi» hiện ra, và cả hội chỉ thấy sau khi lưu. Không
+  đoán ngày cho lịch cũ (giữ đúng luật `nhapTuKeo`): chỉ xếp khi người dùng chạm.
+- Hàm thuần `changChuaXep`, `xepVaoNgay` trong `hanh-trinh/ke-hoach.ts`, có test. Chặng xếp vào nằm sau các chặng sẵn có
+  của ngày, giữ thứ tự của chúng.
+- Chip chặng trong sheet sửa đổi «chưa chia ngày» thành «chưa xếp ngày»: một tên cho một việc.
+
+### Ngày trống trên Bản đồ: «Về Lịch trình» và lời giải thích luôn thấy (UI-033) · UX_IMPROVEMENT
+- Trang ngày chỉ bị giới hạn 60% chiều cao khi ngày có mốc. Ngày trống thì bản đồ không có gì để xem, nên nhường chỗ cho
+  lời giải thích và lối về.
+- Ở cửa sổ thấp, trang của ngày trống co lại vừa khung: phần giữa cuộn, còn đầu trang và «Về Lịch trình» thì giữ nguyên.
+  Vòng đo đầu cho thấy bỏ trần mà không cho co thì nút còn tụt sâu hơn (C8: thấy 40% → 0%), nên đã thêm cả phần co.
+- Hàng «Thu gọn» không vẽ ở ngày trống, vì không có gì để gập. Trang đang gập ở ngày khác sẽ mở lại khi sang ngày trống.
+- Dải mờ ở đáy vùng cuộn chỉ phủ danh sách chặng, không phủ dòng giải thích (QA thấy dòng thứ hai bị cắt ở C1).
+- Tranh 144dp chỉ vẽ khi khung cao ≥560dp; ở cửa sổ thấp (390×460) nó đẩy câu và nút ra ngoài.
+
+### Tạo kèo: ô ngân sách không còn trông như đã điền; lỗi nói ở đúng ô (UI-034) · UX_IMPROVEMENT
+- Gợi ý ô ngân sách đổi từ «250000» sang «ví dụ 250.000». Một số trơn trên dòng mực đọc như đã có người viết.
+- `kiemTraTaoBuoiDi` trả thêm `o` (ô bị từ chối: tên, ngày, số người, ngân sách).
+  - Câu lỗi hiện **dưới đúng ô đó** (dòng mực đổi màu `warn`), và con trỏ được đặt vào ô.
+  - Số người: câu nằm dưới cả hàng, vì ô chỉ rộng 64.
+  - Ngày: câu nằm dưới hàng lịch.
+- Lỗi máy chủ hoặc lỗi nguồn tờ hẹn nằm trong `footer` dính đáy, ngay trên con dấu «Tạo kèo» (`CauTaiCho`). Trước đó câu ở
+  cuối form, dưới nút, ngoài khung nhìn.
+- `ONhapMuc` nhận `oRef` để màn đặt con trỏ.
+
+### `/trips/[id]/timeline` có phiên thì về kèo thật (UI-035) · BUG_FIX
+- Giống `itinerary` bên cạnh: người đã đăng nhập được chuyển tới `/outings/[id]`, không còn thấy lịch trình demo dưới id kèo
+  thật.
+
+### Đổi thứ tự chặng bằng bàn phím; ARIA hợp lệ (UI-036, UI-042) · BUG_FIX
+- Trên web, tay nắm là `slider` thật: nhận focus (`tabIndex 0`), có `aria-valuenow/min/max/valuetext`, hướng dọc.
+  - Mũi tên xuống/phải dời chặng xuống, lên/trái dời lên, Home/End về đầu/cuối.
+  - Focus theo chặng vừa dời, nên bấm tiếp vẫn dời đúng chặng đó.
+- Hàng chặng bỏ `aria-selected` (không hợp lệ trên `button`); trạng thái chọn đi qua `giuState` thành `aria-pressed`.
+- Native giữ `adjustable` với hai thao tác tăng/giảm như cũ.
+
+### Nếp có mặt ở Lịch trình (UI-037) · UX_IMPROVEMENT
+- Bản đồ vẫn mount dưới chế độ Lịch trình để giữ camera. Nó xin Nếp nhường chỗ vô điều kiện, nên Nếp vắng cả ở Lịch trình.
+- `ManHinhHanhTrinh` nhận `nhuongNep`; `SoHanhTrinh` chỉ bật khi đang ở Bản đồ.
+
+### Sheet «Sửa trang ngày» phủ cả màn (UI-041) · DESIGN_SYSTEM_IMPROVEMENT
+- Primitive mới `ui/KheLop.tsx`: khe lớp phủ của màn, với tới được từ sâu bên trong.
+  - `RudiScreen` giữ khe cạnh `overlay`.
+  - `LenLop` đưa con của nó lên khe, nên sheet phủ cả màn (kể cả đầu màn) mà vẫn giữ state và callback của component đã vẽ
+    nó.
+  - Không có khe (trang lab, test) thì vẽ tại chỗ.
+- Con được đưa lên trong layout effect, cập nhật được flush cùng commit, trước khi ô nhập controlled khôi phục giá trị. Ô
+  nhập trong khe không bao giờ hiện chữ chậm một phím.
+- Hai sheet của bản đồ (sửa trang ngày, điểm hẹn) dùng khe. Tiêu đề sheet đổi từ «Những hẹn quan trọng» thành «Sửa trang
+  ngày», đúng tên nút đã mở nó.
+- Sheet sửa trang ngày dùng ô dòng mực `ONhapMuc` thay cho ô hộp `Field`, cho đúng luật «mọi ô nhập là dòng mực»: đây là
+  màn duy nhất của luồng còn ô hộp. «Bỏ chặng» mang tông `warn` (nút phá huỷ của B2). · VISUAL_UPGRADE
+
+### Bản đồ nói tiếng Việt; Esc đóng danh sách điểm gần nhau (UI-043) · UX_IMPROVEMENT
+- Truyền `locale` cho MapLibre: «Đóng danh sách điểm gần nhau», «Hiện hoặc ẩn nguồn bản đồ», «Bản đồ hành trình»…
+- Esc đóng popup cụm như nút đóng, và trả focus về đúng cụm (tìm lại theo `data-nhom` vì lệnh dời bản đồ vẽ lại mọi
+  marker).
+
+### Vé kèo xuống dòng theo cụm (UI-044) · UX_IMPROVEMENT
+- Dòng thông tin của vé kèo ở Lên plan ghép theo cụm «·», mỗi cụm giữ liền bằng khoảng trắng không ngắt, tối đa 3 dòng.
+  Trước đó một dòng bị cắt đúng ở «12 chặng · Còn 23 ngày», phần đáng mở vé nhất.
+
+### Cột tên chặng không dưới 120px (UI-045) · VISUAL_UPGRADE
+- `HangChang` đo bề rộng hàng và nút bên phải. Nếu tên chặng còn dưới 120px thì nút («Tôi đã tới», «Đã tới») xuống một
+  hàng riêng dưới chặng, trục mực chạy tiếp bên cạnh.
+- Ngưỡng tính trên số đo thật, nên đổi cỡ chữ hay nhãn dài hơn thì ngưỡng đi theo.
+
+### `/outings/chon` thiếu địa điểm (UI-046) · BUG_FIX
+- Không còn skeleton vô hạn: «Chưa có địa điểm để thêm», kèm cách làm và nút «Mở Khám phá». Lỗi ghi kèo dùng
+  `CauTaiCho`.
+
+### «Thêm chặng» chỉ mở (UI-039) · BUG_FIX
+- Sheet v2 đã chặn chạm đúp; nay nút cũng chỉ mở (`setMoThem(true)`), còn đóng thuộc về sheet, đúng đề xuất của QA.
+
+### Kèo tạo từ chat để lại dấu trong chat (UI-118) · UX_IMPROVEMENT
+- Chat là E2EE nên máy chủ không đăng được gì vào cuộc trò chuyện. Thay vào đó, dải ghim đầu chat đọc kèo sắp tới của
+  nhóm, từ cùng nguồn với tab Lên plan.
+  - Thẻ «Kèo sắp tới · <tên> · Còn N ngày», chạm thì mở kèo.
+  - Đọc lại mỗi lần chat được focus, nên Back từ kèo vừa tạo là thấy.
+  - Giống nhau trên máy mọi thành viên, và không thêm gì vào cuộc trò chuyện.
+- Dải ghim cho thấy cả việc hội đang chọn lẫn kèo sắp tới.
+  - Có cả hai: kèo là một dòng mảnh phía trên tờ hẹn hoặc phiếu đang mở. Dải chỉ dài thêm một hàng, không thêm một thẻ.
+  - Cửa sổ thấp (<600dp): dải giữ một mục, và việc đang chọn được ưu tiên.
+  - Thẻ «Đã thành kèo» nhường chỗ cho kèo sắp tới, vì nó chỉ trỏ tới một kèo.
+  - Lý do: nhóm Đà Lạt có một phiếu bầu chưa đóng. Nếu việc đang chọn luôn thắng thì nhóm ấy không bao giờ thấy kèo của
+    mình.
+- Đọc kèo hỏng thì giữ dải đang có, không thay bằng lỗi.
+
+### «Tôi đã tới» mời giữ khoảnh khắc; album nói nó đếm gì (UI-119, phần UI) · UX_IMPROVEMENT
+- Ngay sau «Tôi đã tới», dưới chặng hiện: «Cả hội đã thấy bạn tới. Ảnh ở đây thì lên tường kỷ niệm.» và nút «Thêm khoảnh
+  khắc ở đây». Nút mở màn thả khoảnh khắc, gắn sẵn nhóm và quán của chặng.
+- `HangChang` có khe `duoi` nằm ngoài vùng bấm của hàng, nên không thành nút lồng nút.
+- Album đổi «0 chỗ đã tới · 0 check-in» thành «N check-in ở M chỗ». «Đã tới» là chữ của kèo, album không đếm nó.
+- Tường trống nói rõ hai việc khác nhau: «Tôi đã tới» ở kèo chỉ báo cho hội, không tự lên tường.
+- Đổi luật đếm (lượt tới chặng thành check-in của album) vẫn là ADR đề xuất `adr-de-xuat/UI-119-da-toi-la-check-in.md`;
+  không làm trong batch này.
+
+### Lên plan giữ nút «Tạo mới» ở đầu màn (quyết định còn treo từ B2)
+- Con dấu mở khay từ mọi tab. Ở Lên plan, tạo kèo là việc chính của tab, nên tab có thêm một cửa có chữ ở đầu màn.
+- Cạnh `plan → create` của sổ tay hướng dẫn cũng được rút từ chính nút này (`huong-dan-khop-ma.test.mjs`). Bỏ nút thì phải
+  sửa danh sách cạnh ở cả app lẫn máy chủ (`huongdan/nap.go`) mà không đổi được gì cho người dùng.
+
+### Android, hai lỗi nhỏ thấy sau B2
+- Nhãn «Tạo» dưới con dấu nay thẳng hàng với nhãn các tab: cột con dấu bố trí như một cột tab (căn giữa, đệm trên 8),
+  con dấu tính như icon 24dp, phần còn lại nhô lên khỏi dải.
+- `TopBar` đọc navigator của chính màn, không đọc route hiện tại của app. Dưới route trong suốt «Tạo mới», route hiện tại
+  là `/create`, nên đầu màn tab phía sau khay từng vẽ cửa demo.
+
+### Sau critique (Flow D): một đợt sửa ở trang ngày, form tạo kèo và sheet sửa · UX_IMPROVEMENT + BUG_FIX
+Critique trước (24/40) và sau (26/40), mỗi lần hai subagent cô lập, chỉ ra những điểm dưới đây; tất cả nằm trong mặt
+pilot.
+- **Tạo kèo:**
+  - Bỏ trống ngân sách được nói đúng là chưa chọn: «Chọn một mức hoặc gõ số tiền mỗi người.». Câu cũ «… viết bằng chữ số»
+    khiến người dùng đi tìm lỗi gõ.
+  - Nút ± số người 48dp (trước 44).
+- **Sheet sửa trang ngày:**
+  - Dưới tiêu đề ghi ngày đang sửa, và «· bản nháp, cả hội chưa thấy» khi có bản nháp.
+  - Có bản nháp thì «Lưu cho cả hội» là nút chính trong sheet; «Xem trên bản đồ» lùi thành viền.
+- **Trang ngày trên bản đồ:**
+  - Ngày trống không còn «Tính lại đường» (không có gì để tính), và bỏ ghi chú `empty_day` của máy chủ (nhắc lại đúng câu
+    của trang trống).
+  - Có bản nháp ở ngày có mốc thì nút ghim đáy là «Lưu cho cả hội»; «Xem cách đi gọn hơn» lùi vào hàng nút. Ngày có bản
+    nháp mà chưa có mốc thì «Lưu cho cả hội» nằm trong trang. Một động từ lưu cho mọi chỗ.
+  - Lỗi lưu, lỗi xem trước và xung đột hiện bằng `CauTaiCho` (mực `warn`). Trước đó chúng cùng màu inkSoft với «Đã giữ
+    trang ngày cho cả hội», nên lưu hỏng trông như đã lưu.
+  - Điện thoại trên web được bảo «Giữ trên bản đồ…» thay vì «Nhấp chuột phải…»: `(hover: none) and (pointer: coarse)`.
+    Giữ trên Chrome Android phát `contextmenu`, đúng sự kiện bản đồ nghe.
+- **Dòng nguồn bản đồ luôn thấy được (hồi quy của chính B3, probe bắt được):**
+  - Bản đồ web có sàn `minHeight: 220`. Khi trang của ngày trống lấy đủ chỗ, khung bản đồ chỉ còn 152px. Bản đồ thòng
+    68px xuống dưới trang, kéo theo dòng «© OpenStreetMap · OpenFreeMap».
+  - Nay bản đồ cao đúng phần chỗ được chia, và khung cắt phần thừa. Lề khớp camera co theo khung, tối đa một phần tư mỗi
+    cạnh; nếu không, MapLibre không còn chỗ để khớp và giữ camera cũ.
+  - Ngày trống trong cửa sổ thấp (<560): bản đồ, vốn không có gì để xem, ẩn hẳn, cùng câu gợi ý ghim điểm. Một dải bản đồ
+    không có dòng nguồn là điều bản đồ không được phép.
+- **Test:** `khong-vien-web.test.mjs` quét `<TextInput` như chuỗi, nên đọc nhầm `useRef<TextInput>` và `Ref<TextInput>`
+  thành thẻ JSX. Nay bỏ qua chỗ đứng sau một ký tự định danh (generic luôn như vậy, thẻ JSX thì không). Canary: bỏ
+  `KHONG_VIEN_WEB` khỏi ô của `ONhapMuc` → đỏ.
+- **Sổ tay hướng dẫn:** rút lại `_rut.json` cùng mã. Thêm ba cạnh mới: kèo → «Thêm khoảnh khắc ở đây», `/outings/chon` →
+  «Mở Khám phá», timeline → kèo/Lên plan. `huong-dan-ban.ts` đổi theo. Test Go `./internal/huongdan` xanh.
+  - `keo.md` (sổ tay của Nếp) đổi bước lưu ở chế độ hành trình theo nút mới: «Lưu cho cả hội», trong khay hoặc ở trang
+    ngày. Test mobile «nhãn phải là literal của mã» bắt đúng nhãn cũ «Lưu những thay đổi».
+
+### Sau finish review (disposition `fix`): tám điểm, một đợt · VISUAL_UPGRADE + UX_IMPROVEMENT
+Reviewer chạy ngữ cảnh mới, chấm trên ảnh bản cuối, đối chiếu DESIGN.md và direction. Con dấu «Tạo» ngoài phạm vi.
+1. **Popup cụm điểm thành mẩu giấy của sổ** (UI-043):
+   - viền bút chì, độ cao giấy 2, đầu mẩu ghi «N điểm gần nhau» và nút đóng tự vẽ 48dp;
+   - mỗi chặng một hàng trên kẻ tóc, số chặng là con dấu 26dp như dải chặng của trang ngày, giờ chữ số đều;
+   - `offset` để mẩu không che chính con dấu cụm;
+   - focus vào chặng đầu, không vào nút đóng;
+   - bỏ hộp trắng và mũi của MapLibre.
+2. **«ĐÃ TỚI» là con dấu** (teal, nghiêng -2, hạ xuống một lần ở chặng vừa tới), đúng DESIGN.md. Trước đó là chip bo
+   tròn có dấu tích; bản demo đã đúng từ trước.
+3. **«Tôi đã tới» thành nút ghost.** Mười hai chặng không còn đọc như một cột nút viền.
+4. **Công tắc trong sheet sửa trang ngày** theo thế giới của app, như Cài đặt: rãnh `accent` / `lineStrong`, núm `card`.
+   Trước đó là màu xám của nền tảng.
+5. **Chip chặng trong sheet:**
+   - mỗi chip tối đa 240dp, tên cắt sau giờ;
+   - hàng tràn tới mép sheet, nên chip bị cắt đọc như «còn nữa» chứ không như vỡ.
+
+   Dải chặng của trang ngày tràn đúng tới mép trang (16).
+6. **Ngày trống, thứ bậc hành động:**
+   - một nút chính đặc («Xếp cả N chặng…»), gợi ý ghim điểm ngay dưới nó;
+   - «Sửa trang ngày» viền, đủ rộng;
+   - «Về Lịch trình» vẫn luôn thấy (UI-033) nhưng là ghost, vì công tắc «Lịch trình | Bản đồ» ở trên đã nói điều đó.
+7. **Cuống vé ở Lên plan** in tháng «Th 10» bằng chữ con dấu, như lá lịch của «Kèo mới». «tháng 10» gãy hai dòng và chạm
+   đường đục lỗ ở 320.
+8. **Giờ xuất phát và chặng giữ giờ sớm hơn.**
+   - Dưới ô «Giờ xuất phát» có một câu `warn`: «‹chặng› giữ giờ 06:00, sớm hơn giờ xuất phát nên sẽ không kịp. Đổi giờ
+     xuất phát hoặc bỏ giữ giờ ở chặng đó.».
+   - Đúng ngữ nghĩa của máy chủ: `journey.Schedule` chỉ báo `late_fixed_stop` sau khi xem trước tuyến.
+
+**Verdict pass** (cùng reviewer, ảnh dựng lại cùng các khung nhìn). Kết quả 6/8 resolved, 2 partial, 1 hồi quy:
+- **Resolved:** popup cụm, con dấu «ĐÃ TỚI», công tắc, thứ bậc ngày trống, cuống vé, câu giờ xuất phát.
+- **Partial:**
+  - chip và dải chặng vẫn cắt cách mép khoảng 16dp;
+  - «Tôi đã tới» ghost lệch khỏi cột chữ.
+- **Hồi quy:** một mép hộp lộ giữa con dấu cụm và mẩu giấy.
+
+Đợt chỉnh cuối, không chấm lại bằng reviewer mà kiểm bằng ảnh và probe của chính mình:
+- **Cắt 16dp.** Đó là hộp cuộn của `Sheet`, nằm cách mép panel một lề `space.md` và cắt phần tràn ngang. Kéo qua nó thì
+  phải đổi lề của `Sheet` dùng chung (39 chỗ gọi). Thay vào đó, hai hàng cuộn ngang có `MoNgang`: đầu cắt mờ dần vào
+  giấy, nên chip bị cắt đọc như «còn nữa».
+- **«Tôi đã tới» ghost** nằm dưới chặng thì chữ bắt đầu đúng cột chữ của chặng. `HangChang` nhận `phaiLeChu`, bù lề trong
+  14dp của nút compact. Khoảng dọc giữ nguyên, để đích bấm 48dp không chồng lên hàng trên.
+- **«Mép hộp lộ ra»** là con dấu của chặng thứ ba trên bản đồ, nằm dưới mẩu giấy, không thuộc mẩu. Popup phủ lên mốc của
+  bản đồ là thứ tự lớp bình thường, nên không ẩn nội dung bản đồ.
+- **Nhóm «Chọn điểm hẹn gần nhau»** (`role=group`) nay chỉ chứa các hàng chặng, không chứa nút đóng của mẩu.
+  `rudi-hanh-trinh-web.test.mjs` đếm đúng 3 lựa chọn. Test tìm hàng theo tên truy cập «3, 20:00, Chợ đêm Đà Lạt», vì chữ
+  hiển thị nay tách số, giờ và tên.

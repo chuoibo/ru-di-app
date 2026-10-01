@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useEffect, useState, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 
 import { guTheoLoai } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
@@ -35,6 +35,18 @@ export interface HangChangProps {
   chon?: boolean;
   /** Right-hand slot: a stamp, a button, a menu. */
   phai?: ReactNode;
+  /**
+   * The right-hand control's own inner left padding, when its words are its
+   * only visible mark (a ghost text action): stacked under the stop, the words
+   * then start on the stop's text column, not 14 dp right of it.
+   */
+  phaiLeChu?: number;
+  /**
+   * A line under the stop, in its text column and outside its pressable: an
+   * offer that follows what was just done here («Thêm khoảnh khắc ở đây»),
+   * which as a child of the row would be a button inside a button.
+   */
+  duoi?: ReactNode;
   /**
    * The photograph beside a main stop, with the credit it may be shown under.
    * The row draws both -- the 44dp thumbnail at the right and the credit as
@@ -75,7 +87,7 @@ function AnhChang({ ve, alt, loai, onHong }: { ve: KhungDaVe; alt: string; loai?
   );
 }
 
-export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, chon = false, phai, anh = null, children }: HangChangProps) {
+export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, chon = false, phai, phaiLeChu = 0, duoi, anh = null, children }: HangChangProps) {
   const { colors } = useRudiTheme();
   // The picture's failure is the stop's state, not the thumbnail's: the frame
   // shows the drawn object, and the stop says why in words (a state is always
@@ -90,6 +102,27 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
   // thumbnail below and the lines here cannot disagree (F31).
   const ve = veKhung(nguon, { hong });
   const muc = phac ? colors.inkFaint : colors.lineStrong;
+  // The right-hand control («Tôi đã tới») steps under the stop when beside it
+  // the stop's name would get less than `COT_CHU_TOI_THIEU`: at 320 dp, with
+  // the hour, the axis and the reorder handle, the name had 53 px and wrapped
+  // over nine lines (QA UI-045). Both widths are measured, so a larger font or
+  // a longer label moves the threshold with it.
+  const [rongHang, setRongHang] = useState(0);
+  const [rongPhai, setRongPhai] = useState(0);
+  const coPhai = !anh && phai !== undefined && phai !== null;
+  const xepDuoi = coPhai && rongHang > 0 && rongPhai > 0 && rongHang - CHO_TRAI - rongPhai < COT_CHU_TOI_THIEU;
+  const doPhai = (e: LayoutChangeEvent) => {
+    const w = Math.ceil(e.nativeEvent.layout.width);
+    setRongPhai((cu) => (cu === w ? cu : w));
+  };
+  const duongTruc = (
+    <View
+      style={[
+        styles.line,
+        phac ? { borderLeftWidth: 2, borderColor: muc, borderStyle: "dashed", backgroundColor: "transparent" } : { backgroundColor: muc },
+      ]}
+    />
+  );
   const body = (
     <>
       <Text style={[typography.label, { color: colors.ink }]}>{tieuDe}</Text>
@@ -106,6 +139,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
     </>
   );
   return (
+    <View onLayout={(e) => setRongHang(Math.round(e.nativeEvent.layout.width))}>
     <View style={[styles.row, cuoi && !onPress && styles.rowCuoiTinh]}>
       <Text numberOfLines={1} style={[typography.label, styles.gio, { color: colors.ink }]}>{gio}</Text>
       <View style={styles.axis}>
@@ -117,32 +151,46 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
             chon && { borderColor: colors.accent, backgroundColor: colors.accent },
           ]}
         />
-        {cuoi ? null : (
-          <View
-            style={[
-              styles.line,
-              phac ? { borderLeftWidth: 2, borderColor: muc, borderStyle: "dashed", backgroundColor: "transparent" } : { backgroundColor: muc },
-            ]}
-          />
-        )}
+        {cuoi && !xepDuoi ? null : duongTruc}
       </View>
       {onPress ? (
-        <Pressable accessibilityLabel={accessibilityLabel ?? tieuDe} accessibilityRole="button" {...giuState(chon)} aria-selected={chon} onPress={onPress} style={({ pressed }) => [styles.body, cuoi && styles.bodyCuoi, pressed && styles.pressed]}>
+        <Pressable accessibilityLabel={accessibilityLabel ?? tieuDe} accessibilityRole="button" {...giuState(chon)} onPress={onPress} style={({ pressed }) => [styles.body, cuoi && styles.bodyCuoi, xepDuoi && styles.bodyTrenPhai, pressed && styles.pressed]}>
           {body}
         </Pressable>
       ) : (
-        <View style={[styles.body, cuoi && styles.bodyCuoi, cuoi && styles.bodyCuoiTinh]}>{body}</View>
+        <View style={[styles.body, cuoi && styles.bodyCuoi, cuoi && styles.bodyCuoiTinh, xepDuoi && styles.bodyTrenPhai]}>{body}</View>
       )}
       {anh ? (
         <View style={styles.phai}>
           <AnhChang alt={anh.alt} loai={anh.loai} onHong={() => setHong(true)} ve={ve} />
         </View>
-      ) : phai ? (
-        <View style={styles.phai}>{phai}</View>
+      ) : coPhai && !xepDuoi ? (
+        <View onLayout={doPhai} style={styles.phai}>{phai}</View>
       ) : null}
+    </View>
+    {/* Stacked: the control on its own line under the stop, the ink line running on beside it. */}
+    {xepDuoi ? (
+      <View style={styles.row}>
+        <View style={styles.gioTrong} />
+        <View style={styles.axis}>{cuoi ? null : duongTruc}</View>
+        <View onLayout={doPhai} style={[styles.phaiDuoi, cuoi && styles.bodyCuoi, phaiLeChu > 0 && { marginLeft: -phaiLeChu }]}>{phai}</View>
+      </View>
+    ) : null}
+    {duoi ? (
+      <View style={styles.row}>
+        <View style={styles.gioTrong} />
+        <View style={styles.axis}>{cuoi ? null : duongTruc}</View>
+        <View style={[styles.duoi, cuoi && styles.bodyCuoi]}>{duoi}</View>
+      </View>
+    ) : null}
     </View>
   );
 }
+
+/** Hour column, axis and the three gaps of a row: what is left of it goes to the stop and the control. */
+const CHO_TRAI = 46 + 14 + 10 * 3;
+/** Narrowest the stop's name may get beside the control before the control steps under it. */
+const COT_CHU_TOI_THIEU = 120;
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "stretch", gap: 10, minHeight: 64 },
@@ -164,4 +212,9 @@ const styles = StyleSheet.create({
   bodyCuoiTinh: { minHeight: 0 },
   pressed: { opacity: 0.7 },
   phai: { justifyContent: "flex-start", paddingTop: 0, flexShrink: 0 },
+  gioTrong: { minWidth: 46 },
+  // The stop above keeps less bottom room when its control sits under it.
+  bodyTrenPhai: { paddingBottom: 6 },
+  phaiDuoi: { alignSelf: "flex-start", paddingBottom: 18 },
+  duoi: { flex: 1, minWidth: 0, paddingBottom: 18 },
 });

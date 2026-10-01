@@ -14,18 +14,24 @@ test("kiemTraTaoBuoiDi: form hợp lệ ra thân đúng kiểu; từng lỗi m�
   const ok = kiemTraTaoBuoiDi(FORM);
   assert.equal(ok.ok, true);
   assert.deepEqual(ok.body, { title: "Đà Lạt cuối tuần", starts_on: "2026-10-17", ends_on: "2026-10-19", headcount: 8, budget_per_person_vnd: 2_500_000 });
-  for (const hong of [
-    { ...FORM, title: "  " },
-    { ...FORM, starts_on: "17/10/2026" },
-    { ...FORM, ends_on: "2026-10-16" },
-    { ...FORM, headcount: "0" },
-    { ...FORM, nganSach: "2.5 triệu" },
+  // Each refusal names its field, so the form says it under that field (QA UI-034).
+  for (const [hong, o] of [
+    [{ ...FORM, title: "  " }, "ten"],
+    [{ ...FORM, starts_on: "17/10/2026" }, "ngay"],
+    [{ ...FORM, ends_on: "2026-10-16" }, "ngay"],
+    [{ ...FORM, headcount: "0" }, "so-nguoi"],
+    [{ ...FORM, nganSach: "2.5 triệu" }, "ngan-sach"],
+    [{ ...FORM, nganSach: "" }, "ngan-sach"],
   ]) {
     const kq = kiemTraTaoBuoiDi(hong);
     assert.equal(kq.ok, false);
     assert.ok(kq.loi.length > 0);
     assert.doesNotMatch(kq.loi, /—/);
+    assert.equal(kq.o, o);
   }
+  // Empty is a choice not yet made, said as such; a bad number keeps the format rule.
+  assert.equal(kiemTraTaoBuoiDi({ ...FORM, nganSach: " " }).loi, "Chọn một mức hoặc gõ số tiền mỗi người.");
+  assert.match(kiemTraTaoBuoiDi({ ...FORM, nganSach: "2.5 triệu" }).loi, /chữ số/);
 });
 
 test("sapXepChang: theo giờ, ổn định khi trùng giờ, không đổi mảng vào", () => {

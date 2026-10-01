@@ -63,6 +63,7 @@ import { PressScale } from "../../ui/PressScale";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
 import { ReorderList } from "../../ui/ReorderList";
+import { Stamp } from "../../ui/Stamp";
 import { Sheet } from "../../ui/Sheet";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
 import { HangChang } from "./HangChang";
@@ -128,6 +129,10 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const outingId = thamSoChuoi(params.id);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [thongBao, setThongBao] = useState<string | null>(null);
+  // The stop the person has just said they reached: it offers to keep a
+  // moment there, since «Tôi đã tới» tells the group and puts nothing on the
+  // wall or in the album (QA UI-119; the rule change is ADR proposal UI-119).
+  const [vuaToi, setVuaToi] = useState<string | null>(null);
   const [dangGhi, setDangGhi] = useState(false);
   const [moThem, setMoThem] = useState(false);
   const [gio, setGio] = useState(gioTiepTheo());
@@ -314,6 +319,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     setThongBao(null);
     try {
       await danhDauToi(stop.id, keo.context_id, phien.person_id, newAttempt());
+      setVuaToi(stop.id);
       await nap();
     } catch (error) {
       setThongBao(loiRaChu(error));
@@ -331,8 +337,10 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     void napDanhMuc();
   };
 
+  // Opens only: closing belongs to the sheet. A toggle closed the sheet on
+  // the second tap of a double tap (QA UI-039).
   const moThemChang = () => {
-    setMoThem((v) => !v);
+    setMoThem(true);
     void napDanhMuc();
   };
 
@@ -528,15 +536,27 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                       phac={draft !== null}
                       phai={
                         toiRoi ? (
-                          // Arrived is a fact, not a control that went grey: a static badge.
-                          <Chip icon="checkmark" label="Đã tới" selected tone="split" />
+                          // Arrived is a fact, not a control that went grey: the
+                          // «ĐÃ TỚI» stamp of DESIGN.md, landing once on the row
+                          // just reached (B3 finish review; the demo already did).
+                          <Stamp dong={vuaToi === stop.id} label="Đã tới" tilt={-2} tone="split" />
                         ) : (
-                          <RudiButton compact disabled={dangGhi} full={false} label="Tôi đã tới" onPress={() => void daToiChang(trang.keo, stop)} variant="outline" />
+                          <RudiButton compact disabled={dangGhi} lyDo={dangGhi ? "Đang ghi" : undefined} full={false} label="Tôi đã tới" onPress={() => void daToiChang(trang.keo, stop)} variant="ghost" />
                         )
                       }
+                      // 14: a compact RudiButton's inner padding; the ghost
+                      // «Tôi đã tới» is only its words, the stamp is not.
+                      phaiLeChu={toiRoi ? 0 : 14}
                       phu={dong.chu}
                       phuTone={dong.tone}
                       tieuDe={stop.label}
+                      duoi={vuaToi === stop.id && toiRoi ? (
+                        <View style={styles.moiKhoanhKhac}>
+                          <Text style={[typography.caption, { color: colors.inkSoft }]}>Cả hội đã thấy bạn tới. Ảnh ở đây thì lên tường kỷ niệm.</Text>
+                          <RudiButton compact full={false} icon="camera-outline" label="Thêm khoảnh khắc ở đây" variant="outline"
+                            onPress={() => router.push({ pathname: "/moments/new", params: { ctx: trang.keo.context_id, ...(stop.place_id ? { place: stop.place_id, ten: stop.place_name ?? stop.label } : {}) } } as never)} />
+                        </View>
+                      ) : undefined}
                     />
                   );
                 }} />
@@ -573,6 +593,7 @@ const styles = StyleSheet.create({
   nutHoaDon: { alignSelf: "flex-start", transform: [{ rotate: "-1deg" }] },
   hoaDonChu: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10 },
   hangChang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
+  moiKhoanhKhac: { gap: 6, alignItems: "flex-start" },
   dauVuaTao: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   flex1: { flex: 1 },
   hangChip: { flexDirection: "row", gap: 6, paddingRight: 8 },

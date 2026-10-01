@@ -55,7 +55,10 @@ function DauLich({ iso, lon = false, mo = false }: { iso: string; lon?: boolean;
   return (
     <View style={[styles.dauLich, lon && styles.dauLichLon]}>
       <Text style={[lon ? styles.ngayLon : styles.ngay, { color: muc }]}>{dau?.ngay ?? "?"}</Text>
-      <Text style={[typography.caption, { color: mo ? colors.inkFaint : colors.inkSoft }]}>{dau?.thang ?? ""}</Text>
+      {/* «Th 10» in the stamp face, as the date leaves of «Kèo mới» print it:
+          «tháng 10» wrapped onto two lines at 320 and touched the perforation
+          (B3 finish review). */}
+      <Text numberOfLines={1} style={[typography.stamp, { color: mo ? colors.inkFaint : colors.inkSoft }]}>{dau ? dau.thang.replace(/^tháng /, "Th ") : ""}</Text>
     </View>
   );
 }
@@ -93,6 +96,14 @@ function KeoDan({ keo, today, onOpen }: { keo: BuoiDi; today: string; onOpen: ()
   );
 }
 
+/** Metadata groups joined by « · », each kept whole: its own spaces do not break. */
+function theoCum(cum: (string | null)[]): string {
+  return cum
+    .filter((c): c is string => c !== null && c !== "")
+    .map((c) => c.replace(/ /g, "\u00a0"))
+    .join(" · ");
+}
+
 /** A later outing as a smaller ticket; a past one as the stub that is left of it. */
 function HangKeo({ keo, today, mo = false, voi, onOpen }: { keo: BuoiDi; today: string; mo?: boolean; voi?: string; onOpen: () => void }) {
   const { colors } = useRudiTheme();
@@ -100,9 +111,11 @@ function HangKeo({ keo, today, mo = false, voi, onOpen }: { keo: BuoiDi; today: 
   const chu = (
     <View style={styles.hangChu}>
       <Text numberOfLines={2} style={[typography.title, { color: mo ? colors.inkSoft : colors.ink }]}>{keo.title}</Text>
-      <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
-        {voi ? `với ${voi} · ` : ""}{nhanKhoangNgay(keo.starts_on, keo.ends_on)} · {voi ? "" : `${keo.headcount} người · `}{cauSoChang(keo.stops.length)}
-        {nhan ? ` · ${nhan}` : ""}
+      {/* Breaks only between «·» groups, never inside one. On one line,
+          «12 chặng · Còn 27 ngày» -- the reason to open the ticket -- was what
+          got cut (QA UI-044); three lines hold the longest at 320 dp. */}
+      <Text numberOfLines={3} style={[typography.caption, { color: colors.inkSoft }]}>
+        {theoCum([voi ? `với ${voi}` : null, nhanKhoangNgay(keo.starts_on, keo.ends_on), voi ? null : `${keo.headcount} người`, cauSoChang(keo.stops.length), nhan || null])}
       </Text>
     </View>
   );
@@ -219,7 +232,8 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
         <View style={styles.flex}>
           <Heading title="Lên plan" subtitle={`Những lời hẹn của ${tenNhom(phien)}`} />
         </View>
-        {/* Five navigation destinations leave creation in the plan header. */}
+        {/* The stamp opens the tray from every tab; on this one creating is
+            the job, so it also has a labelled door in the header (B3). */}
         <RudiButton compact full={false} icon="add" label="Tạo mới" onPress={() => router.push("/create?tu=plan")} variant="outline" />
       </View>
       {trang.pha === "dang-doc" ? (

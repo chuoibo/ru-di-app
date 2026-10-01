@@ -23,6 +23,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -78,7 +79,9 @@ import { TheAiView } from "./TheAi";
 import { TraLoiAi } from "./TraLoiAi";
 import { HangTraLoiAiDangViet, TraLoiAiDangViet } from "./TraLoiAiDangViet";
 import { ChipBoiCanh, TamXemBoiCanh } from "./ChipBoiCanh";
-import { CongCuChat, ToHen, type KhayChat } from "./SoHen";
+import { CongCuChat, DaiKeoSapToi, ToHen, type KhayChat } from "./SoHen";
+import { docKeoCuaNhom } from "../../keo/keo";
+import { chiaKeo, homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
 import { KhayToHenChung } from "./ToHenChungKhay";
 import { useToHenChung } from "../../chat/useToHenChung";
@@ -319,8 +322,19 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     () => gomBoiCanhChat({ tin: tinHien, personId, tenCua: (id) => tenTheoId[id] }),
     [tinHien, personId, tenTheoId],
   );
+  // The group's next outing, read on every focus with the roster: coming back
+  // from making one shows it (QA UI-118). A failed read keeps what was shown.
+  const [keoToi, setKeoToi] = useState<{ id: string; title: string; starts_on: string; ends_on: string } | null>(null);
+  useEffect(() => {
+    if (lanDoc === 0) return;
+    let song = true;
+    docKeoCuaNhom(contextId, personId)
+      .then((ds) => { if (song) setKeoToi(chiaKeo(ds, homNay()).sapToi[0] ?? null); })
+      .catch(() => undefined);
+    return () => { song = false; };
+  }, [lanDoc, contextId, personId]);
   // Every room pins its open tờ hẹn: a friends' two-person chat plans like a group.
-  const toHen = useMemo(() => {
+  const toHenTimDuoc = useMemo(() => {
     const dangMo = (tin: Tin) => {
       const card = docTheAi(tin.card);
       if (card.loai === "itinerary") return !!card.nhapChung && card.nhapChung.status === "open" && !card.outingId;
@@ -334,8 +348,22 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     // The slot answers "hội đang chốt cái gì?", so a sheet the group can still
     // edit outranks a finished one even when the finished one is newer. Without
     // this the strip says "Đã thành kèo" over an open sheet in the same screen.
-    return chat.tin.find(dangMo) ?? chat.tin.find(bat) ?? null;
+    const mo = chat.tin.find(dangMo);
+    if (mo) return { tin: mo, daThanhKeo: false };
+    const tin = chat.tin.find(bat);
+    if (!tin) return null;
+    const the = lichTrinhTrongThe(docTheAi(tin.card));
+    return { tin, daThanhKeo: !!the?.outingId || the?.nhapChung?.status === "promoted" };
   }, [chat.tin, changes.votes]);
+  // The band shows what the group is deciding and what it has coming. A card
+  // that already became an outing only points at one, so the next outing
+  // takes its place. Both an open decision and an outing: the outing is a
+  // slim line above the decision, except in a short window, where the band
+  // keeps one item and the decision wins (a group whose poll is never closed
+  // would otherwise never see its outing here).
+  const toHen = toHenTimDuoc && (!toHenTimDuoc.daThanhKeo || keoToi === null) ? toHenTimDuoc.tin : null;
+  const { height: caoCuaSo } = useWindowDimensions();
+  const keoTrenBang = keoToi !== null && (toHen === null || caoCuaSo >= 600) ? keoToi : null;
   const coChu = nhap.trim().length > 0;
   // The message being typed also asks the AI (ADR-0046), the same way in
   // every room: the chip reads that command's readiness from the server, so
@@ -798,12 +826,17 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           under it, so the thread visibly starts below it. On the bare ground
           with margins round it, a bubble clipped at the list's top edge read as
           a bubble cut by the bar. */}
-      {toHen ? (
+      {toHen || keoTrenBang ? (
         <View style={[styles.dayGhim, { backgroundColor: colors.ground, borderBottomColor: colors.line }]} testID="day-ghim">
-          <ToHen haiNguoi={nhanRieng} tin={toHen} onOpen={moToHen} onVote={(tin) => {
-            const index = hang.findIndex((row) => row.loai === "tin" && row.tin.id === tin.id);
-            if (index >= 0) danhSachRef.current?.scrollToIndex({ index, animated: !reduced, viewPosition: 0.5 });
-          }} />
+          {keoTrenBang ? (
+            <DaiKeoSapToi gon={toHen !== null} nhip={nhanNhip(nhipKeo(keoTrenBang.starts_on, keoTrenBang.ends_on, homNay()))} onOpen={() => router.push(`/outings/${keoTrenBang.id}` as never)} ten={keoTrenBang.title} />
+          ) : null}
+          {toHen ? (
+            <ToHen haiNguoi={nhanRieng} tin={toHen} onOpen={moToHen} onVote={(tin) => {
+              const index = hang.findIndex((row) => row.loai === "tin" && row.tin.id === tin.id);
+              if (index >= 0) danhSachRef.current?.scrollToIndex({ index, animated: !reduced, viewPosition: 0.5 });
+            }} />
+          ) : null}
         </View>
       ) : null}
       {/* Drawn outside the inverted list: the list flips its own children

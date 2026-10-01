@@ -63,6 +63,48 @@ export function ToHen({ tin, onOpen, onVote, haiNguoi = false }: {
   );
 }
 
+/**
+ * The group's next outing, pinned where the tờ hẹn is when nothing is being
+ * decided. An outing made from the chat with «Tự tạo kèo» has no card in the
+ * thread, so the chat showed no trace of it to anybody (QA UI-118). This is
+ * the plan tab's own data -- the outing, not a message -- so it reads the same
+ * on every member's phone and puts nothing in the conversation.
+ */
+export function DaiKeoSapToi({ ten, nhip, onOpen, gon = false }: {
+  ten: string; nhip: string; onOpen: () => void;
+  /** Above an open tờ hẹn or poll: a slim ruled line, so the band grows by one row, not by a second card. */
+  gon?: boolean;
+}) {
+  const { colors } = useRudiTheme();
+  if (gon) {
+    return (
+      <Pressable accessibilityRole="button" accessibilityLabel={`Mở kèo ${ten}${nhip ? `, ${nhip}` : ""}`} onPress={onOpen} testID="dai-keo-sap-toi"
+        style={({ pressed }) => [styles.keoGon, pressed && styles.pressed]}>
+        <Ionicons name="calendar-outline" size={18} color={colors.accent} />
+        <Text numberOfLines={1} style={[typography.label, styles.flex, { color: colors.ink }]}>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>Kèo sắp tới · </Text>
+          {ten}
+        </Text>
+        {nhip ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhip}</Text> : null}
+        <Ionicons name="chevron-forward" size={16} color={colors.inkSoft} />
+      </Pressable>
+    );
+  }
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={`Mở kèo ${ten}${nhip ? `, ${nhip}` : ""}`} onPress={onOpen} testID="dai-keo-sap-toi"
+      style={({ pressed }) => [styles.toHen, { borderColor: colors.lineStrong, backgroundColor: colors.card }, pressed && styles.pressed]}>
+      <View style={[styles.fold, { borderColor: colors.accent, backgroundColor: colors.ground }]} />
+      <Ionicons name="calendar-outline" size={21} color={colors.accent} />
+      <View style={styles.flex}>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>Kèo sắp tới</Text>
+        <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>{ten}</Text>
+      </View>
+      {nhip ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{nhip}</Text> : null}
+      <Ionicons name="chevron-forward" size={16} color={colors.inkSoft} />
+    </Pressable>
+  );
+}
+
 export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onHoiAi, onManual, capabilities, busy, error, haiNguoi = false, onToGiay }: {
   personId: string; contextId: string;
   /** A two-person conversation: the same tools, worded for two. */
@@ -242,4 +284,5 @@ const styles = StyleSheet.create({
   thay: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 8 },
   luot: { gap: 6 },
   pressed: { opacity: 0.65 },
+  keoGon: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44, paddingHorizontal: 20, marginTop: 4 },
 });

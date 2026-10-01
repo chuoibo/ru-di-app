@@ -127,7 +127,9 @@ if (!existsSync(INDEX)) {
         // Both views remain mounted to preserve the draft and undo; assert the
         // visible timeline row, never a hidden map marker or rail control.
         const nut = [...document.querySelectorAll('[role="button"]')].find((el) => el.getClientRects().length > 0 && (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Ăn trưa - Bánh căn Lệ"));
-        return nut?.getAttribute("aria-selected") === "true";
+        // A row is a button, and a button's held state is `aria-pressed`;
+        // `aria-selected` on it was axe's aria-allowed-attr (QA UI-042).
+        return nut?.getAttribute("aria-pressed") === "true";
       }, { timeout: 10000, label: "chặng đã chọn còn highlight khi về Lịch trình" });
       await page.clickLabel("Bản đồ");
       await openEditor();
@@ -214,7 +216,10 @@ if (!existsSync(INDEX)) {
       // DOM presence alone does not prove the popup can receive a press
       // while the map settles. Check the actual target before aiming.
       await page.waitFor(() => {
-        const button = [...document.querySelectorAll('[aria-label="Chọn điểm hẹn gần nhau"] button')].find((el) => el.textContent === "3 · 20:00 · Chợ đêm Đà Lạt");
+        // Rows are named by their label since the paper slip (B3): the number
+        // is a stamp and the hour and name sit on two lines, so the text no
+        // longer reads «3 · 20:00 · …».
+        const button = [...document.querySelectorAll('[aria-label="Chọn điểm hẹn gần nhau"] button')].find((el) => el.getAttribute("aria-label") === "3, 20:00, Chợ đêm Đà Lạt");
         if (!button) return false;
         const box = button.getBoundingClientRect();
         return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
@@ -272,10 +277,10 @@ if (!existsSync(INDEX)) {
         lot.popup[0] >= lot.khung[0] && lot.popup[1] <= lot.khung[1],
         `bộ chọn phải nằm trọn trong bản đồ, nhận popup ${lot.popup} trong khung ${lot.khung}`,
       );
-      await page.clickChu("3 · 20:00 · Chợ đêm Đà Lạt");
+      await page.clickLabel("3, 20:00, Chợ đêm Đà Lạt");
       await page.waitFor(() => document.querySelector('[data-testid="hanh-trinh-selected-stop"]')?.textContent === "Chợ đêm Đà Lạt" && !document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]'), { label: "chi tiết đúng điểm chọn từ cụm" });
       await page.clickLabel("Lịch trình");
-      await page.waitFor(() => [...document.querySelectorAll('[role="button"]')].some((el) => el.getClientRects().length > 0 && (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Chợ đêm Đà Lạt") && el.getAttribute("aria-selected") === "true"), { label: "điểm chọn từ cụm được giữ ở timeline" });
+      await page.waitFor(() => [...document.querySelectorAll('[role="button"]')].some((el) => el.getClientRects().length > 0 && (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Chợ đêm Đà Lạt") && el.getAttribute("aria-pressed") === "true"), { label: "điểm chọn từ cụm được giữ ở timeline" });
     });
   });
 }

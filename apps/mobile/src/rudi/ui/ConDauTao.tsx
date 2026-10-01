@@ -93,13 +93,17 @@ export function ConDauTao({ tab, rail = false, coCap = false }: { tab: string; r
 }
 
 const styles = StyleSheet.create({
-  cot: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "flex-end", gap: 2, paddingBottom: 0 },
+  // Laid out like a tab column (centred, 8 dp top padding) with the stamp
+  // counting as a 24 dp icon, so «Tạo» sits on the same line as the other
+  // labels; the rest of the stamp stands above the strip (`noiLen`).
+  cot: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
   // No `flex` on the rail (react-native-web turns `flex: 0` into a zero basis
   // that outranks `height`; see RudiTabBar).
   cotRail: { height: 96, alignItems: "center", justifyContent: "center", gap: 2 },
   oDau: { width: DAU, height: DAU, alignItems: "center", justifyContent: "center" },
-  // Half out of the strip's top edge: the stamp stands on the page above.
-  noiLen: { marginTop: -26 },
+  // Out of the strip's top edge by all but an icon's height: the stamp stands
+  // on the page above, its foot where the other columns draw their icon.
+  noiLen: { marginTop: -(DAU - 24) },
   dau: {
     width: DAU,
     height: DAU,

@@ -94,9 +94,12 @@ export type BodyTaoBuoiDi = {
   budget_per_person_vnd: number;
 };
 
+/** The field a refusal is about, so the form can say it there. */
+export type OTaoBuoiDi = "ten" | "ngay" | "so-nguoi" | "ngan-sach";
+
 export type KetQuaTao =
   | { ok: true; body: BodyTaoBuoiDi }
-  | { ok: false; loi: string };
+  | { ok: false; loi: string; o: OTaoBuoiDi };
 
 export type KetQuaChang = { ok: true } | { ok: false; loi: string };
 
@@ -136,38 +139,46 @@ function parseHeadcount(s: string): number | null {
 export function kiemTraTaoBuoiDi(form: FormTaoBuoiDi): KetQuaTao {
   const title = form.title.trim();
   if (title === "") {
-    return { ok: false, loi: "Đặt tên cho chuyến đi." };
+    return { ok: false, loi: "Đặt tên cho chuyến đi.", o: "ten" };
   }
   if (title.length > TITLE_MAX) {
-    return { ok: false, loi: "Tên chuyến tối đa 200 ký tự." };
+    return { ok: false, loi: "Tên chuyến tối đa 200 ký tự.", o: "ten" };
   }
   if (!ngayHopLe(form.starts_on)) {
     return {
       ok: false,
       loi: "Ngày bắt đầu phải theo dạng năm-tháng-ngày, ví dụ 2026-09-07.",
+      o: "ngay",
     };
   }
   if (!ngayHopLe(form.ends_on)) {
     return {
       ok: false,
       loi: "Ngày kết thúc phải theo dạng năm-tháng-ngày, ví dụ 2026-09-08.",
+      o: "ngay",
     };
   }
   if (form.ends_on.trim() < form.starts_on.trim()) {
-    return { ok: false, loi: "Ngày kết thúc không được trước ngày bắt đầu." };
+    return { ok: false, loi: "Ngày kết thúc không được trước ngày bắt đầu.", o: "ngay" };
   }
   const headcount = parseHeadcount(form.headcount);
   if (headcount === null || headcount <= 0 || headcount > HEADCOUNT_MAX) {
-    return { ok: false, loi: "Số người từ 1 đến 1000." };
+    return { ok: false, loi: "Số người từ 1 đến 1000.", o: "so-nguoi" };
+  }
+  // Left empty is a choice not made yet, not a badly written number: the
+  // format sentence below sent people looking for a typo (critique, B3).
+  if (form.nganSach.trim() === "") {
+    return { ok: false, loi: "Chọn một mức hoặc gõ số tiền mỗi người.", o: "ngan-sach" };
   }
   const nganSach = parseAmountVnd(form.nganSach);
   if (!nganSach.ok) {
     if (nganSach.reason === "too-large") {
-      return { ok: false, loi: "Số tiền này lớn quá mức app nhận." };
+      return { ok: false, loi: "Số tiền này lớn quá mức app nhận.", o: "ngan-sach" };
     }
     return {
       ok: false,
       loi: "Ngân sách mỗi người là số tiền Việt Nam, viết bằng chữ số.",
+      o: "ngan-sach",
     };
   }
   return {

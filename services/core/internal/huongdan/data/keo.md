@@ -2,7 +2,7 @@
 {
   "man": "outings/[id]",
   "tieu_de": "Kèo",
-  "nhanUI": ["Kèo", "Lịch trình", "Bản đồ", "Thêm chặng", "Chặng mới", "Giờ chặng", "Chặng", "Địa điểm trong danh mục (tuỳ chọn)", "Gắn địa điểm", "Để sau", "Tôi đã tới", "Đã tới", "Xếp theo giờ hẹn", "Lưu thứ tự", "Bỏ thứ tự nháp", "Ghép thứ tự nháp vào bản mới", "Tải bản mới để đối chiếu", "Xe máy", "Ô tô", "Đi bộ", "Xem cách đi gọn hơn", "Gợi ý", "Hiện tại", "Giữ phương án này", "Sửa trang ngày", "Lên trước", "Xuống sau", "Bỏ chặng", "Điểm xuất phát", "Điểm kết thúc", "Xem trên bản đồ", "Lưu những thay đổi", "Hoàn tác lần lưu vừa rồi", "Hẹn nhau ở đây", "Tên điểm hẹn", "Thêm điểm hẹn", "Chia bill buổi này", "Thành viên nhóm", "Thêm vào kèo", "Chặng …", "Khám phá"],
+  "nhanUI": ["Kèo", "Lịch trình", "Bản đồ", "Thêm chặng", "Chặng mới", "Giờ chặng", "Chặng", "Địa điểm trong danh mục (tuỳ chọn)", "Gắn địa điểm", "Để sau", "Tôi đã tới", "Đã tới", "Xếp theo giờ hẹn", "Lưu thứ tự", "Bỏ thứ tự nháp", "Ghép thứ tự nháp vào bản mới", "Tải bản mới để đối chiếu", "Xe máy", "Ô tô", "Đi bộ", "Xem cách đi gọn hơn", "Gợi ý", "Hiện tại", "Giữ phương án này", "Sửa trang ngày", "Lên trước", "Xuống sau", "Bỏ chặng", "Điểm xuất phát", "Điểm kết thúc", "Xem trên bản đồ", "Lưu cho cả hội", "Hoàn tác lần lưu vừa rồi", "Hẹn nhau ở đây", "Tên điểm hẹn", "Thêm điểm hẹn", "Chia bill buổi này", "Thành viên nhóm", "Thêm vào kèo", "Chặng …", "Khám phá"],
   "di_toi": [
     {"nhan": "Chia bill buổi này", "man": "smart-split/[id]/review"},
     {"nhan": "Thành viên nhóm", "man": "groups/[id]/members"},
@@ -51,8 +51,8 @@ Màn «Kèo» có hai chế độ ở trên cùng: «Lịch trình» là danh s�
 
 1. Ở chế độ «Bản đồ», bấm «Sửa trang ngày» rồi chọn một chặng.
 2. Dùng «Lên trước», «Xuống sau» hoặc «Bỏ chặng»; đánh dấu «Điểm xuất phát» hay «Điểm kết thúc» nếu cần.
-3. Bấm «Xem trên bản đồ» để đóng khay.
-4. Bấm «Lưu những thay đổi». Lỡ tay thì có «Hoàn tác lần lưu vừa rồi».
+3. Bấm «Lưu cho cả hội» ngay trong khay; hoặc bấm «Xem trên bản đồ» để xem trước, rồi lưu bằng «Lưu cho cả hội» ở trang ngày.
+4. Lỡ tay thì có «Hoàn tác lần lưu vừa rồi».
 
 ## Đặt một điểm hẹn trên bản đồ
 

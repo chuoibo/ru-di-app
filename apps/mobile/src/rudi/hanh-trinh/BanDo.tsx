@@ -1,8 +1,25 @@
 /** Web MapLibre GL. Native override: BanDo.native.tsx. */
 
-import { createElement, useEffect, useRef, useState } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { GeoJSONSource, Map, Marker, Popup, setWorkerUrl, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
+
+/**
+ * MapLibre's own words on the controls it draws, in Vietnamese: its English
+ * defaults («Close popup», «Toggle attribution», «Map») reached a screen
+ * reader on a Vietnamese page (QA UI-043). Only the strings a control this
+ * map shows can say; the rest stay MapLibre's.
+ */
+const TIENG_BAN_DO = {
+  "AttributionControl.ToggleAttribution": "Hiện hoặc ẩn nguồn bản đồ",
+  "AttributionControl.MapFeedback": "Góp ý về dữ liệu bản đồ",
+  "Map.Title": "Bản đồ hành trình",
+  "Marker.Title": "Điểm trên bản đồ",
+  "NavigationControl.ResetBearing": "Xoay bản đồ về hướng bắc",
+  "NavigationControl.ZoomIn": "Phóng to",
+  "NavigationControl.ZoomOut": "Thu nhỏ",
+  "Popup.Close": "Đóng danh sách điểm gần nhau",
+};
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { TAM_DA_LAT } from "./toa-do-mau";
@@ -130,6 +147,16 @@ export function BanDo({
   // the first fit ran on a taller frame and left the last stop under the page
   // (412px, 2026-09-29). Native refits on its measured viewport; so does this.
   const [khung, setKhung] = useState({ w: 0, h: 0 });
+  // The fit padding a short map can afford: a quarter of each side at most.
+  // Past that MapLibre has no room to fit and keeps the old camera, and since
+  // B3 the map is exactly as tall as the room the day page leaves it.
+  const demVua = useMemo(
+    () =>
+      khung.w > 0 && khung.h > 0
+        ? { top: Math.min(padding.top, khung.h / 4), bottom: Math.min(padding.bottom, khung.h / 4), left: Math.min(padding.left, khung.w / 4), right: Math.min(padding.right, khung.w / 4) }
+        : padding,
+    [padding, khung.w, khung.h],
+  );
 
   useEffect(() => {
     try {
@@ -153,6 +180,7 @@ export function BanDo({
         center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat],
         zoom: 12,
         attributionControl: { compact: true },
+        locale: TIENG_BAN_DO,
         // No rotation, so no compass control: the stock white button sat
         // over the paper like a browser widget (review, 2026-09-29), and a
         // turned map had no way back but that button.
@@ -304,25 +332,78 @@ export function BanDo({
         ev.stopPropagation();
         chooser.current?.remove();
         if (group.length === 1) { cbs.current.onChonMoc(moc.id); return; }
-        const list = document.createElement("div");
-        list.setAttribute("role", "group");
-        list.setAttribute("aria-label", "Chọn điểm hẹn gần nhau");
+        // A slip of the notebook's paper, not the stock MapLibre box (B3
+        // finish review): pencil edge, paper height 2, a head with its own
+        // 48dp close, one row per stop on a hairline, the stop number as the
+        // same 26dp stamp the day page's stop bar draws.
+        const m = cbs.current.mau;
+        const giay = document.createElement("div");
+        giay.style.cssText = `background:${m.giay};color:${m.chu};border:1.5px solid ${m.vien};border-radius:8px;box-shadow:${m.bongCao};overflow:hidden;min-width:220px`;
+        const dau = document.createElement("div");
+        dau.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding-left:14px;border-bottom:1px solid ${m.vien}`;
+        const tieuDe = document.createElement("span");
+        tieuDe.textContent = `${group.length} điểm gần nhau`;
+        tieuDe.style.cssText = "font-size:13px;line-height:18px;font-weight:700";
+        const dong = document.createElement("button");
+        dong.type = "button";
+        dong.dataset.dongCum = "1";
+        dong.setAttribute("aria-label", "Đóng danh sách điểm gần nhau");
+        dong.style.cssText = `width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;cursor:pointer;color:${m.chu}`;
+        dong.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+        dong.addEventListener("click", (event) => { event.stopPropagation(); chooser.current?.remove(); });
+        dau.append(tieuDe, dong);
         // A popup cannot leave the map: `.maplibregl-map` clips at its box, so
         // anything past that edge is invisible AND unclickable. Measured at
         // 390x844 the map box is only 250px tall, so cap the list to what fits
         // inside it instead of to a constant that happens to fit on a laptop.
         const hopBanDo = map.getContainer().getBoundingClientRect();
-        const caoToiDa = Math.max(120, Math.round(hopBanDo.height) - 56);
-        list.style.cssText = `display:flex;flex-direction:column;max-height:${caoToiDa}px;overflow:auto;background:${mauNen};padding:8px`;
-        for (const stop of group) {
+        const caoToiDa = Math.max(96, Math.round(hopBanDo.height) - 56 - 48);
+        // The choices are the group; the slip's close is not one of them.
+        const list = document.createElement("div");
+        list.setAttribute("role", "group");
+        list.setAttribute("aria-label", "Chọn điểm hẹn gần nhau");
+        list.style.cssText = `display:flex;flex-direction:column;max-height:${caoToiDa}px;overflow:auto`;
+        group.forEach((stop, i) => {
           const button = document.createElement("button");
           button.type = "button";
-          button.textContent = `${stop.so} · ${stop.gio} · ${stop.tieuDe}`;
-          button.style.cssText = `min-height:48px;text-align:left;padding:8px;background:${mauNen};color:${cbs.current.mau.chu};border:0;font:inherit;cursor:pointer`;
+          button.setAttribute("aria-label", `${stop.so}, ${stop.gio}, ${stop.tieuDe}`);
+          button.style.cssText = `display:flex;align-items:center;gap:10px;min-height:48px;text-align:left;padding:8px 14px;background:transparent;color:${m.chu};border:0;${i > 0 ? `border-top:1px solid ${m.vien};` : ""}font:inherit;cursor:pointer`;
+          const so = document.createElement("span");
+          so.textContent = String(stop.so);
+          so.style.cssText = `min-width:26px;height:26px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid ${m.muc};border-radius:6px;color:${m.muc};font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;flex:none`;
+          const chu = document.createElement("span");
+          chu.style.cssText = "display:flex;flex-direction:column;min-width:0";
+          const gio = document.createElement("span");
+          gio.textContent = stop.gio;
+          gio.style.cssText = "font-size:12px;line-height:16px;opacity:0.8;font-variant-numeric:tabular-nums";
+          const ten = document.createElement("span");
+          ten.textContent = stop.tieuDe;
+          ten.style.cssText = "font-size:14px;line-height:19px;font-weight:600";
+          chu.append(gio, ten);
+          button.append(so, chu);
           button.addEventListener("click", (event) => { event.stopPropagation(); chooser.current?.remove(); cbs.current.onChonMoc(stop.id); });
           list.appendChild(button);
-        }
-        chooser.current = new Popup({ closeButton: true, maxWidth: "280px", focusAfterOpen: true }).setLngLat([moc.lng, moc.lat]).setDOMContent(list).addTo(map);
+        });
+        giay.append(dau, list);
+        // `offset` clears the cluster's own stamp: anchored at its centre, the
+        // box covered the stamp's lower edge.
+        // Focus goes to the first stop, not to the close in the head: the
+        // list is what the keyboard came for.
+        chooser.current = new Popup({ closeButton: false, maxWidth: "300px", focusAfterOpen: false, offset: 30 }).setLngLat([moc.lng, moc.lat]).setDOMContent(giay).addTo(map);
+        list.querySelector<HTMLElement>("button")?.focus();
+        // Escape closes the list like the close button does, and focus goes
+        // back to the cluster it came from -- found again by its stops, since
+        // the pan below redraws every marker (QA UI-043).
+        const nhom = group.map((m) => m.id).join(",");
+        const dongBangEsc = (event: KeyboardEvent) => {
+          if (event.key !== "Escape") return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          chooser.current?.remove();
+          map.getContainer().querySelector<HTMLElement>(`[data-nhom="${CSS.escape(nhom)}"]`)?.focus();
+        };
+        document.addEventListener("keydown", dongBangEsc, true);
+        chooser.current.once("close", () => document.removeEventListener("keydown", dongBangEsc, true));
         // Đo trên CI: khung bản đồ y=201..451, mục thứ BA của chooser ở y=465 —
         // NGOÀI bản đồ 14px. `.maplibregl-map` có `overflow: hidden` nên phần
         // thò ra bị xén, và hit-test ở đó trả về một nút của app nằm dưới.
@@ -356,8 +437,11 @@ export function BanDo({
         chooser.current.once("close", () => {
           controls.forEach((el, k) => { el.style.pointerEvents = truoc[k]; });
         });
+        // The slip draws its own paper: MapLibre's white box and its tip go.
         const content = chooser.current.getElement().querySelector<HTMLElement>(".maplibregl-popup-content");
-        if (content) { content.style.background = mauNen; content.style.color = cbs.current.mau.chu; }
+        if (content) { content.style.background = "transparent"; content.style.padding = "0"; content.style.boxShadow = "none"; }
+        const mui = chooser.current.getElement().querySelector<HTMLElement>(".maplibregl-popup-tip");
+        if (mui) mui.style.display = "none";
       });
       // A round chip marks its point at its centre; native does the same.
       el.dataset.moc = moc.id;
@@ -399,11 +483,11 @@ export function BanDo({
         [hop[0], hop[1]],
         [hop[2], hop[3]],
       ],
-      { padding, duration },
+      { padding: demVua, duration },
     );
     // Fit Journey is the only yank; selection uses easeTo, pan stays free.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mocs is read at the tick of fitDem
-  }, [fitDem, cameraKey, padding, san, khung.w, khung.h]);
+  }, [fitDem, cameraKey, demVua, san, khung.w, khung.h]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -411,9 +495,9 @@ export function BanDo({
     // Same reasons as native: the panel owns the bottom of the map, and the
     // stop is shown with the stops before and after it.
     const hop = toi.ke?.length ? hopGioi([toi, ...toi.ke]) : null;
-    if (hop) map.fitBounds([[hop[0], hop[1]], [hop[2], hop[3]]], { padding, duration });
-    else map.easeTo({ center: [toi.lng, toi.lat], zoom: Math.max(map.getZoom(), 14), duration, padding });
-  }, [toi?.dem, padding, san]);
+    if (hop) map.fitBounds([[hop[0], hop[1]], [hop[2], hop[3]]], { padding: demVua, duration });
+    else map.easeTo({ center: [toi.lng, toi.lat], zoom: Math.max(map.getZoom(), 14), duration, padding: demVua });
+  }, [toi?.dem, demVua, san]);
 
   return (
     <View collapsable={false} style={[styles.fill, { backgroundColor: mauNen }]} testID="ban-do-hanh-trinh">
@@ -447,7 +531,9 @@ export function BanDo({
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, minHeight: 220, position: "relative" },
+  // As tall as the room it is given, never more: a 220 floor let the map hang
+  // under the day page with its credit line (B3 probe, empty day at 390×844).
+  fill: { flex: 1, minHeight: 0, position: "relative" },
   fallback: { flex: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 28, paddingVertical: 24, gap: 24 },
   fallbackCopy: { flex: 1, gap: 10, maxWidth: 400 },
   routeLine: { width: 2, height: 100, justifyContent: "space-between", alignItems: "center" },

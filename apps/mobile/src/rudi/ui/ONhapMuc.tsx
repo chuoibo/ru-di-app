@@ -21,7 +21,7 @@
  * announced politely. A multiline field rules its page: faint lines under
  * every line of text, the last one being the control's own rule.
  */
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, type Ref } from "react";
 import { Platform, StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from "react-native";
 
 import { typography, useRudiTheme } from "../theme";
@@ -33,6 +33,8 @@ export type ONhapMucProps = TextInputProps & {
   helper?: string;
   /** What is wrong with the value; replaces `helper` and colours the rule. */
   error?: string | null;
+  /** The input itself, so a refused form can put the cursor where the fix goes. */
+  oRef?: Ref<TextInput>;
   leading?: ReactNode;
   trailing?: ReactNode;
   /** `lon` writes the value in the heading size (a name on a cover, an amount on a receipt). */
@@ -70,7 +72,7 @@ export function kieuGach({ day = 1, multiline = false, numberOfLines, dongCao }:
   };
 }
 
-export function ONhapMuc({ label, helper, error, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, ...inputProps }: ONhapMucProps) {
+export function ONhapMuc({ label, helper, error, oRef, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, ...inputProps }: ONhapMucProps) {
   const { colors } = useRudiTheme();
   const [goDuoc, setGoDuoc] = useState("");
   const [dangNhap, setDangNhap] = useState(false);
@@ -98,6 +100,7 @@ export function ONhapMuc({ label, helper, error, leading, trailing, co = "vua", 
           ) : null}
           <TextInput
             {...inputProps}
+            ref={oRef}
             accessibilityLabel={inputProps.accessibilityLabel ?? label ?? placeholder}
             aria-invalid={coLoi || undefined}
             multiline={multiline}

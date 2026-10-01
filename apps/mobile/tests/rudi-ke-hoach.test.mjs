@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { apDungTuyen, doiViTri, ngayMacDinh, nhapTuKeo, noiDungGui, suaChang, xoaChang } from "../dist-test/rudi/hanh-trinh/ke-hoach.js";
+import { apDungTuyen, changChuaXep, doiViTri, ngayMacDinh, nhapTuKeo, noiDungGui, suaChang, xepVaoNgay, xoaChang } from "../dist-test/rudi/hanh-trinh/ke-hoach.js";
 
 const day = "2030-10-17";
 const other = "2030-10-18";
@@ -38,4 +38,20 @@ test("bỏ chặng bỏ cả neo; lịch cũ nhiều ngày không đoán ngày h
   assert.equal(legacy.stops[0].day, null);
   assert.equal(legacy.stops[0].duration_minutes, null);
   assert.equal(legacy.stops[0].time_locked, true);
+});
+
+test("chặng chưa xếp ngày được nêu ra, và chỉ vào ngày khi người dùng xếp (UI-032)", () => {
+  const third = "2030-10-19";
+  const before = { ...draft(), stops: [...draft().stops, { id: "n1", position: 4, day: null, at: "12:00", label: "Ăn trưa", time_locked: true, duration_minutes: null }, { id: "n2", position: 5, day: "2030-11-01", at: "19:00", label: "Ngoài chuyến", time_locked: true, duration_minutes: null }] };
+  assert.deepEqual(changChuaXep(before, [day, other, third]).map((s) => s.id), ["n1", "n2"]);
+  // A day that has stops: the newcomers come after them, in their own order.
+  const after = xepVaoNgay(before, ["n1", "n2"], day);
+  assert.deepEqual(after.stops.filter((s) => s.day === day).map((s) => s.id), ["a", "b", "c", "n1", "n2"]);
+  assert.deepEqual(changChuaXep(after, [day, other, third]), []);
+  assert.equal(after.stops.find((s) => s.id === "x").day, other);
+  assert.equal(before.stops.find((s) => s.id === "n1").day, null);
+  // A day with no settings yet gets the defaults, as choosing it in the editor does.
+  const empty = xepVaoNgay(before, ["n1"], third);
+  assert.ok(empty.days.some((d) => d.day === third));
+  assert.equal(xepVaoNgay(before, [], third), before);
 });

@@ -44,22 +44,22 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-029 | P3 | UX_IMPROVEMENT | F02 | 503 và mất mạng cùng một câu | B2 | 503 → câu máy chủ; mất mạng → câu mạng | READY_FOR_QA |
 | UI-030 | P3 | UX_IMPROVEMENT | F02 | Mất mạng rồi về tab: danh sách đã tải bị thay bằng màn lỗi | B5 | giữ danh sách đã tải | PLANNED |
 | UI-031 | P3 | VISUAL_UPGRADE | F02 | Điểm đến luôn 2 cột kể cả expanded | B5 | 3 cột ở C7 | PLANNED |
-| UI-032 | P2 | BUG_FIX | F03 | Kèo nhiều ngày: Bản đồ không hiện chặng nào | B3 | tổng ghim = số chặng, hoặc dòng «chưa xếp ngày» | PLANNED |
-| UI-033 | P2 | UX_IMPROVEMENT | F03 | Ngày trống: dòng giải thích dưới «Về Lịch trình» còn bị cắt (nút đã đạt) | B3 | thấy trọn ở C1–C4, C8 | PLANNED |
-| UI-034 | P2 | UX_IMPROVEMENT | F03 | Ô ngân sách trông như đã điền; bỏ trống thì lỗi ngoài màn | B3 | lỗi thấy ngay sau khi chạm | PLANNED |
-| UI-035 | P2 | BUG_FIX | F03 | `/trips/[id]/timeline` hiện demo cho người đã đăng nhập | B3 | có phiên → /outings/[id] | PLANNED |
-| UI-036 | P2 | BUG_FIX | F03 | Đổi thứ tự chặng chỉ bằng kéo; tay nắm không nhận focus | B3 | bàn phím đổi được; ARIA hợp lệ | PLANNED |
-| UI-037 | P3 | UX_IMPROVEMENT | F03 | Nếp vắng ở chế độ Lịch trình | B3 | Nếp ở Lịch trình, ẩn ở Bản đồ | PLANNED |
+| UI-032 | P2 | BUG_FIX | F03 | Kèo nhiều ngày: Bản đồ không hiện chặng nào | B3 | tổng ghim = số chặng, hoặc dòng «chưa xếp ngày» | READY_FOR_QA |
+| UI-033 | P2 | UX_IMPROVEMENT | F03 | Ngày trống: dòng giải thích dưới «Về Lịch trình» còn bị cắt (nút đã đạt) | B3 | thấy trọn ở C1–C4, C8 | READY_FOR_QA |
+| UI-034 | P2 | UX_IMPROVEMENT | F03 | Ô ngân sách trông như đã điền; bỏ trống thì lỗi ngoài màn | B3 | lỗi thấy ngay sau khi chạm | READY_FOR_QA |
+| UI-035 | P2 | BUG_FIX | F03 | `/trips/[id]/timeline` hiện demo cho người đã đăng nhập | B3 | có phiên → /outings/[id] | READY_FOR_QA |
+| UI-036 | P2 | BUG_FIX | F03 | Đổi thứ tự chặng chỉ bằng kéo; tay nắm không nhận focus | B3 | bàn phím đổi được; ARIA hợp lệ | READY_FOR_QA |
+| UI-037 | P3 | UX_IMPROVEMENT | F03 | Nếp vắng ở chế độ Lịch trình | B3 | Nếp ở Lịch trình, ẩn ở Bản đồ | READY_FOR_QA |
 | UI-038 | P3 | UX_IMPROVEMENT | F03+ | Back trình duyệt khi sheet mở rời cả màn, mất chữ đang gõ | B1 (Sheet) + B6 (khay trong màn chat) | Back đóng sheet, giữ URL | READY_FOR_QA |
 | UI-039 | P3 | UX_IMPROVEMENT | F03 | «Thêm chặng» là công tắc: chạm đúp mở rồi đóng | B2 (nhờ Sheet v2) | chạm đúp → 1 sheet | READY_FOR_QA |
 | UI-040 | P3 | VISUAL_UPGRADE | F03+ | Sheet cao 90–96% ở cửa sổ thấp; nút chính dưới mép | B2 | ≤82% ở C8 | READY_FOR_QA |
-| UI-041 | P3 | UX_IMPROVEMENT | F03 | Sheet «Sửa trang ngày» không làm mờ đầu màn mà chặn chạm | B3 | đầu màn mờ; chạm ngoài thì đóng | PLANNED |
-| UI-042 | P3 | BUG_FIX | F03+ | ARIA sai vai trò ở màn kèo | B3 | axe 0 critical ở màn kèo | PLANNED |
-| UI-043 | P3 | UX_IMPROVEMENT | F03 | Điều khiển bản đồ tên tiếng Anh; Esc không đóng popup cụm | B3 | không tiếng Anh; Esc đóng | PLANNED |
-| UI-044 | P3 | UX_IMPROVEMENT | F03 | Dòng thông tin vé kèo bị cắt (mất số chặng) | B3 | C2 giữ số chặng | PLANNED |
-| UI-045 | P3 | VISUAL_UPGRADE | F03 | Ở 320dp cột tên chặng 53px | B3 | ≥120px | PLANNED |
-| UI-046 | P3 | BUG_FIX | F03 | `/outings/chon` thiếu `?place` kẹt skeleton | B3 | câu + lối ra ≤1s | PLANNED |
-| UI-047 | P3 | VISUAL_UPGRADE | F03+ | Tablet: đầu màn co vào giữa, lệch cột nội dung | B3 | nút lui thẳng mép cột | PLANNED |
+| UI-041 | P3 | UX_IMPROVEMENT | F03 | Sheet «Sửa trang ngày» không làm mờ đầu màn mà chặn chạm | B3 | đầu màn mờ; chạm ngoài thì đóng | READY_FOR_QA |
+| UI-042 | P3 | BUG_FIX | F03+ | ARIA sai vai trò ở màn kèo | B3 | axe 0 critical ở màn kèo | READY_FOR_QA |
+| UI-043 | P3 | UX_IMPROVEMENT | F03 | Điều khiển bản đồ tên tiếng Anh; Esc không đóng popup cụm | B3 | không tiếng Anh; Esc đóng | READY_FOR_QA |
+| UI-044 | P3 | UX_IMPROVEMENT | F03 | Dòng thông tin vé kèo bị cắt (mất số chặng) | B3 | C2 giữ số chặng | READY_FOR_QA |
+| UI-045 | P3 | VISUAL_UPGRADE | F03 | Ở 320dp cột tên chặng 53px | B3 | ≥120px | READY_FOR_QA |
+| UI-046 | P3 | BUG_FIX | F03 | `/outings/chon` thiếu `?place` kẹt skeleton | B3 | câu + lối ra ≤1s | READY_FOR_QA |
+| UI-047 | P3 | VISUAL_UPGRADE | F03+ | Tablet: đầu màn co vào giữa, lệch cột nội dung | B3 | nút lui thẳng mép cột | READY_FOR_QA |
 | UI-048 | P2 | BUG_FIX | F04/F11 | Số tiền món bị cắt «12.3…» | B4 | 0 số tiền bị cắt | PLANNED |
 | UI-049 | P1 | BUG_FIX | F04 | Web: «Gửi cho <tên>» không gửi được link, báo «Kiểm tra mạng» ở y −2855 | B1 | có lối chép link; không báo lỗi khi đóng khay | READY_FOR_QA |
 | UI-050 | P2 | UX_IMPROVEMENT | F04 | Từ 9 người ghế đè nhau; 20 người chạm ghế này đổi ghế khác | B4 | chạm đúng ghế tới n=20 | PLANNED |
@@ -130,8 +130,8 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-115 | P3 | BUG_FIX | F10 | Sân khấu kéo nghiêng chặn cuộn dọc | B5 | kéo dọc vẫn cuộn | PLANNED |
 | UI-116 | P2 | BUG_FIX | F11 | Chat demo: bong bóng không xuống dòng, chữ tràn | B6 | 0 chữ bị cắt ở C1–C3 | PLANNED |
 | UI-117 | P2 | BUG_FIX | F11 | Back khi sheet demo mở: Khám phá bị khoá, chạm rơi vào sheet vô hình | B1 | không inert sót; chạm hoạt động | READY_FOR_QA |
-| UI-118 | P3 | UX_IMPROVEMENT | E2 | Kèo tạo từ chat không để lại dấu trong chat | B3 | chat có kèo + lối mở | PLANNED |
-| UI-119 | P2 | UX_IMPROVEMENT | E2 | «Tôi đã tới» không thành kỷ niệm; album «0 chỗ đã tới» | B3 + ADR | lối thêm khoảnh khắc ngay sau khi tới; album nói rõ nó đếm gì (luật: ADR đề xuất) | PLANNED |
+| UI-118 | P3 | UX_IMPROVEMENT | E2 | Kèo tạo từ chat không để lại dấu trong chat | B3 | chat có kèo + lối mở | READY_FOR_QA |
+| UI-119 | P2 | UX_IMPROVEMENT | E2 | «Tôi đã tới» không thành kỷ niệm; album «0 chỗ đã tới» | B3 + ADR | lối thêm khoảnh khắc ngay sau khi tới; album nói rõ nó đếm gì (luật: ADR đề xuất) | READY_FOR_QA (phần UI) · BLOCKED (luật: chờ quyết ADR UI-119) |
 | UI-120 | P1 | BUG_FIX | E5 | Bị chặn vẫn gửi được tờ hẹn tới người đã chặn mình | B1 (Go+Py) | bên bị chặn gửi → từ chối; bên chặn không nhận gì | READY_FOR_QA |
 | UI-121 | P2 | UX_IMPROVEMENT | E6 | Đăng nhập từ link không quay về link đó | B1 | tới đúng link gốc | READY_FOR_QA |
 | UI-122 | P3 | BUG_FIX | E1 | Đầu chat giữ số thành viên cũ khi có người mới vào | B6 | cập nhật trong vài giây | PLANNED |
@@ -182,3 +182,11 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-167 | P3 | VISUAL_UPGRADE | N22 | Ở 320 chip gãy dòng, ✦ đứng riêng | B6 | ✦ cùng dòng; chip ≤36 cao | PLANNED |
 
 Đếm theo batch: ADR 1 · B1 13 · B10 11 · B2 20 · B3 16 · B4 12 · B5 12 · B6 17 · B7 15 · B8 18 · B9 32
+
+## Ngoài danh sách issue
+
+| Mục | Nhóm | Batch | Tiêu chí | Trạng thái |
+|---|---|---|---|---|
+| Con dấu «Tạo mới» trên mọi tab (yêu cầu của chủ sản phẩm) | UX_IMPROVEMENT + VISUAL_UPGRADE | B2, làm lại sau mockup | mọi tab có lối Tạo mới; không che nội dung; không tranh màu với tab đang chọn; theo mockup của chủ sản phẩm | BLOCKED (01/10: chủ sản phẩm đánh giá con dấu tròn chưa đạt, đang vẽ mockup) |
+| `KheLop`: khe lớp phủ của màn (sheet sâu trong màn phủ cả đầu màn) | DESIGN_SYSTEM_IMPROVEMENT | B3 | sheet phủ đầu màn; state giữ; ô nhập không chậm phím | READY_FOR_QA |
+| Dòng nguồn bản đồ luôn thấy khi bản đồ hiện | BUG_FIX | B3 | probe `NGUON-BAN-DO` | READY_FOR_QA |

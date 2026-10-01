@@ -23,6 +23,7 @@ import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { displayFace, typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { luiVeVe } from "../../lui-ve";
@@ -102,6 +103,23 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
     }
   };
 
+  // Opened without a place (a bare link, a stale bookmark): there is nothing to
+  // read, so say what this screen is for and where to start, instead of a
+  // skeleton that never ends (QA UI-046).
+  if (!placeId) {
+    return (
+      <RudiScreen testID="pick-outing-screen">
+        <TopBar title="Thêm vào kèo" />
+        <EmptyState
+          action={{ label: "Mở Khám phá", onPress: () => router.replace("/explore" as never) }}
+          body="Mở một địa điểm ở Khám phá, rồi chọn «Thêm vào kèo» để đưa nó vào lịch trình."
+          kind="no-results"
+          title="Chưa có địa điểm để thêm"
+        />
+      </RudiScreen>
+    );
+  }
+
   return (
     <RudiScreen testID="pick-outing-screen">
       <TopBar title="Thêm vào kèo" />
@@ -117,7 +135,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" ? (
         <>
           <Heading title={trang.ten} subtitle="Chọn kèo để thêm làm một chặng. Giờ đặt tạm là giờ tròn kế tiếp, sửa được trong kèo." />
-          {loi !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+          <CauTaiCho cau={loi} />
           {trang.keo.length === 0 && trang.hen.length === 0 ? (
             <EmptyState
               action={{ label: "Tạo kèo", onPress: () => router.push("/outings/new") }}

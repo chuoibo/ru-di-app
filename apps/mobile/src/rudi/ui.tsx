@@ -3,7 +3,7 @@ import { BlurView } from "expo-blur";
 import { Image, ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-import { usePathname, useRouter, useSegments } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
 import { Children, createContext, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
@@ -21,6 +21,7 @@ import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
 import { CuonContext } from "./ui/cuon";
+import { KheLopProvider, useKheLop } from "./ui/KheLop";
 import { gridFor, tabBarHeight } from "./adaptive";
 import { KHONG_VIEN_WEB } from "./ui/khong-vien-web";
 import { TABLIST, giuState } from "../ui/a11y";
@@ -110,6 +111,8 @@ export function RudiScreen({
     cuonY.value = e.contentOffset.y;
   });
   const cuonMan = useMemo(() => (coCanh ? { cuonY, nguongTieuDe } : null), [coCanh, cuonY, nguongTieuDe]);
+  // Layers a component deep in the screen draws over all of it (`LenLop`).
+  const { khe, lop } = useKheLop();
   // Pull-to-refresh runs the screen's own read; the spinner is the only state
   // the shell adds, and it ends whether the read succeeded or threw.
   const [dangKeo, setDangKeo] = useState(false);
@@ -162,6 +165,7 @@ export function RudiScreen({
             drawn sheet sits on it in the `paper` tone (review 11/09, A3). */}
         {dark ? <Grain material="vaiBia" opacity={0.3} /> : <Grain material="giayTrang" opacity={0.45} />}
       </View>
+      <KheLopProvider khe={khe}>
       <CuonContext.Provider value={cuonMan}>
       <KeyboardAvoidingView style={styles.flex} enabled={avoidKeyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {header ? (
@@ -221,7 +225,9 @@ export function RudiScreen({
       ) : null}
       </KeyboardAvoidingView>
       </CuonContext.Provider>
+      </KheLopProvider>
       {overlay}
+      {lop}
     </SafeAreaView>
   );
 }
@@ -249,14 +255,18 @@ export function TopBar({
   const router = useRouter();
   const { colors } = useRudiTheme();
   const { cheDo } = useRudiSession();
-  const segments = useSegments();
+  // The screen's own navigator, not the app's current route: under the
+  // transparent «Tạo mới» route the current route is `/create`, and a tab's
+  // header behind the tray started drawing the demo door (seen on Android).
+  const navigation = useContext(NavigationContext);
+  const trongTab = navigation?.getState?.()?.type === "tab";
   const pathname = usePathname();
   // A demo screen outside the tabs (the tabs carry «Đăng nhập» in the bar)
   // says it is one and where the way in is, on every such screen, with ONE
   // element: the demo door (QA UI-082). A badge and a separate sign-in icon
   // side by side widened the right side so far that the centred title of the
   // demo notebook was 6 px wide. Never on the doors themselves.
-  const cuaDemo = cheDo !== "live" && segments[0] !== "(tabs)" && !laCuaVao(pathname);
+  const cuaDemo = cheDo !== "live" && !trongTab && !laCuaVao(pathname);
   const { width: rongCuaSo } = useWindowDimensions();
   // Back through history when there is any; a screen a link opened cold goes
   // to its own tab instead of standing still (QA UI-018).
@@ -268,7 +278,6 @@ export function TopBar({
   // screen reader on its title, not on `body` (QA UI-112: 7 of 7 screens
   // measured left focus on `body`). Never over a field the person is typing
   // in, never under an open sheet that owns focus.
-  const navigation = useContext(NavigationContext);
   const tieuDeRef = useRef<Text>(null);
   useEffect(() => {
     if (Platform.OS !== "web" || !title) return;

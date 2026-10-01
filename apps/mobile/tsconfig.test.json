@@ -231,6 +231,9 @@
     // so the order and the fallback run as they ship.
     "src/rudi/tao-moi.ts",
     "src/rudi/lui-ve.ts",
+    // B3 (QA UI-041): the screen's overlay slot. Compiled so the hand-off runs
+    // under React's own effect ordering, not read as source.
+    "src/rudi/ui/KheLop.tsx",
     "src/rudi/otp-dang-cho.ts",
     "src/rudi/chat/tin-song.ts",
     "src/rudi/cua-fixture.ts",

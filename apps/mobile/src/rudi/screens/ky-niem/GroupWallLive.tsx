@@ -258,7 +258,7 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
       ) : null}
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void chay(docTrangDau)} title="Chưa đọc được tường" /> : null}
       {trang.pha === "xong" && trang.kyNiem.length === 0 ? (
-        <EmptyState body="Thả khoảnh khắc đầu tiên của nhóm, hoặc check-in ở chỗ đang ngồi." kind="first-use" layout="inline" illustration={<Canh id="chua-co-ky-niem" width={168} />} title="Chưa có kỷ niệm nào" />
+        <EmptyState body="Thả khoảnh khắc đầu tiên của nhóm: một tấm ảnh, hay một check-in ở chỗ cả hội đang ngồi. «Tôi đã tới» ở kèo chỉ báo cho hội, không tự lên tường." kind="first-use" layout="inline" illustration={<Canh id="chua-co-ky-niem" width={168} />} title="Chưa có kỷ niệm nào" />
       ) : null}
       {trang.pha === "xong" ? (
         <View>

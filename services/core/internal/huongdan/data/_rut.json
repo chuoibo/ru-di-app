@@ -1481,6 +1481,10 @@
           "nhan": "Thành viên nhóm"
         },
         {
+          "den": "moments/new",
+          "nhan": "Thêm khoảnh khắc ở đây"
+        },
+        {
           "den": "outings/[id]/ending",
           "nhan": "Giữ lại cuộc đi"
         },
@@ -1491,6 +1495,7 @@
       ],
       "di_toi": [
         "groups/[id]/members",
+        "moments/new",
         "outings/[id]/ending",
         "places/[id]",
         "plan",
@@ -1508,6 +1513,7 @@
         "Chặng",
         "Chặng mới",
         "Chặng …",
+        "Cả hội đã thấy bạn tới. Ảnh ở đây thì lên tường kỷ niệm.",
         "Ghép thứ tự nháp vào bản mới",
         "Giữ lại cuộc đi",
         "Giữ tay nắm bên phải rồi kéo để đổi thứ tự. Giờ hẹn không đổi khi bạn đổi thứ tự.",
@@ -1520,6 +1526,7 @@
         "Lưu thứ tự",
         "Thành viên nhóm",
         "Thêm chặng",
+        "Thêm khoảnh khắc ở đây",
         "Thứ tự nháp · chưa lưu lên nhóm",
         "Tìm theo tên, món, địa chỉ",
         "Tôi đã tới",
@@ -1556,20 +1563,27 @@
     {
       "canh": [
         {
+          "den": "explore",
+          "nhan": "Mở Khám phá"
+        },
+        {
           "den": "outings/new",
           "nhan": "Tạo kèo"
         }
       ],
       "di_toi": [
+        "explore",
         "outings/[id]",
         "outings/new"
       ],
       "man": "outings/chon",
       "nhan": [
         "Chưa có kèo nào để thêm vào",
+        "Chưa có địa điểm để thêm",
         "Chưa đọc được kèo",
         "Hẹn của hai bạn",
         "Kèo của nhóm",
+        "Mở Khám phá",
         "Thêm vào",
         "Thêm vào kèo",
         "Tạo kèo",
@@ -1684,6 +1698,7 @@
         "thành viên; bạn sửa được trước khi chốt.",
         "tới",
         "từ",
+        "ví dụ 250.000",
         "· 3 ngày 2 đêm ·",
         "Ô ngân sách một người",
         "Ô số người",
@@ -2869,7 +2884,9 @@
         "check-ins/new",
         "create",
         "groups/[id]/wall",
-        "places/[id]"
+        "outings/[id]",
+        "places/[id]",
+        "plan"
       ],
       "man": "trips/[id]/timeline",
       "nhan": [

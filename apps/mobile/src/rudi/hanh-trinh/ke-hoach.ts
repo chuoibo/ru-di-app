@@ -56,6 +56,32 @@ export function doiViTri(draft: BanNhap, id: string, target: "first" | "last" | 
   return { ...draft, stops: draft.stops.map((s) => s.day === stop.day ? same[index++] : s), days: draft.days.map((d) => d.day !== stop.day ? d : { ...d, start_stop_id: d.start_stop_id === same[0]?.id ? d.start_stop_id : null, end_stop_id: d.end_stop_id === same[same.length - 1]?.id ? d.end_stop_id : null }) };
 }
 
+/**
+ * A multi-day outing's stops that are on none of its days: saved without a
+ * day (the server leaves the day empty for an outing longer than one day) or
+ * on a date the outing no longer covers. No day's map shows them (QA UI-032).
+ */
+export function changChuaXep(draft: BanNhap, days: readonly string[]): ChangDi[] {
+  return draft.stops.filter((s) => s.day === null || !days.includes(s.day));
+}
+
+/**
+ * Put these stops on `day`, after the stops already there (a day's order is
+ * its stops' order in the list), in their own order. Only ever on the
+ * person's word: an old multi-day schedule is never given a guessed day (see
+ * `nhapTuKeo`).
+ */
+export function xepVaoNgay(draft: BanNhap, ids: readonly string[], day: string): BanNhap {
+  const chon = new Set(ids);
+  const moved = draft.stops.filter((s) => chon.has(s.id)).map((s) => ({ ...s, day }));
+  if (!moved.length) return draft;
+  return {
+    ...draft,
+    stops: [...draft.stops.filter((s) => !chon.has(s.id)), ...moved],
+    days: draft.days.some((d) => d.day === day) ? draft.days : [...draft.days, ngayMacDinh(day)],
+  };
+}
+
 export function xoaChang(draft: BanNhap, id: string): BanNhap {
   return { ...draft, stops: draft.stops.filter((s) => s.id !== id), days: draft.days.map((d) => ({ ...d, start_stop_id: d.start_stop_id === id ? null : d.start_stop_id, end_stop_id: d.end_stop_id === id ? null : d.end_stop_id })) };
 }

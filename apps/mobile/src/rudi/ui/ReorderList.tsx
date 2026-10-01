@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRef, type ReactNode } from "react";
-import { AccessibilityInfo, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, type ReactNode } from "react";
+import { AccessibilityInfo, Platform, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
@@ -20,11 +20,24 @@ export function ReorderList<T>({ items, itemKey, label, renderItem, onChange, di
   onDragging?(dragging: boolean): void;
 }) {
   const boxes = useRef<Record<string, RowBox>>({});
-  const move = (from: number, to: number) => {
+  // A keyboard move re-orders the rows, and the browser may drop focus from a
+  // node React moves; the moved stop's handle gets it back, so the next arrow
+  // keeps moving the same stop.
+  const tayNam = useRef<Record<string, unknown>>({});
+  const traFocus = useRef<string | null>(null);
+  useEffect(() => {
+    const khoa = traFocus.current;
+    if (khoa === null) return;
+    traFocus.current = null;
+    const el = tayNam.current[khoa] as { focus?: () => void } | undefined;
+    el?.focus?.();
+  }, [items]);
+  const move = (from: number, to: number, banPhim = false) => {
     if (disabled || from === to || to < 0 || to >= items.length) return;
     const next = [...items];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
+    if (banPhim) traFocus.current = itemKey(item);
     onChange(next);
     AccessibilityInfo.announceForAccessibility(`${label(item)}: vị trí ${to + 1} trên ${items.length}`);
   };
@@ -45,16 +58,18 @@ export function ReorderList<T>({ items, itemKey, label, renderItem, onChange, di
   return <View style={styles.list}>{items.map((item, index) => (
     <View key={itemKey(item)} onLayout={({ nativeEvent }) => { boxes.current[itemKey(item)] = nativeEvent.layout; }}>
       <ReorderRow label={label(item)} index={index} count={items.length} disabled={disabled}
-        drop={(dy) => drop(index, dy)} move={(to) => move(index, to)} onDragging={onDragging}>
+        drop={(dy) => drop(index, dy)} move={(to, banPhim) => move(index, to, banPhim)} onDragging={onDragging}
+        tayNamRef={(el) => { tayNam.current[itemKey(item)] = el; }}>
         {renderItem(item, index)}
       </ReorderRow>
     </View>
   ))}</View>;
 }
 
-function ReorderRow({ children, label, index, count, disabled, drop, move, onDragging }: {
+function ReorderRow({ children, label, index, count, disabled, drop, move, onDragging, tayNamRef }: {
   children: ReactNode; label: string; index: number; count: number; disabled?: boolean;
-  drop(dy: number): void; move(to: number): void; onDragging?(value: boolean): void;
+  drop(dy: number): void; move(to: number, banPhim?: boolean): void; onDragging?(value: boolean): void;
+  tayNamRef(el: unknown): void;
 }) {
   const { colors } = useRudiTheme();
   const motion = useMotion();
@@ -72,15 +87,45 @@ function ReorderRow({ children, label, index, count, disabled, drop, move, onDra
       runOnJS(dragState)(false);
     });
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }], zIndex: held.value ? 10 : 0 }));
+  // The web has no adjustable role and drops `accessibilityValue` and the
+  // increment actions, so the handle was a slider nobody could focus or move
+  // without a mouse, and axe flagged its missing value (QA UI-036, UI-042). On
+  // the web it is a real slider: focusable, valued, moved with the arrows
+  // (down and right move it later), Home and End.
+  const banPhim =
+    Platform.OS === "web"
+      ? {
+          role: "slider",
+          "aria-valuemin": 1,
+          "aria-valuemax": count,
+          "aria-valuenow": index + 1,
+          "aria-valuetext": `Vị trí ${index + 1} trên ${count}`,
+          "aria-orientation": "vertical",
+          "aria-disabled": !!disabled,
+          tabIndex: disabled ? -1 : 0,
+          onKeyDown: (event: { key: string; preventDefault(): void }) => {
+            const toi =
+              event.key === "ArrowDown" || event.key === "ArrowRight" ? index + 1
+              : event.key === "ArrowUp" || event.key === "ArrowLeft" ? index - 1
+              : event.key === "Home" ? 0
+              : event.key === "End" ? count - 1
+              : null;
+            if (toi === null) return;
+            event.preventDefault();
+            move(toi, true);
+          },
+        }
+      : {};
   return <Animated.View style={[styles.row, { backgroundColor: colors.ground }, style]}>
     <View style={styles.content}>{children}</View>
     <GestureDetector gesture={gesture}>
-      <View accessible accessibilityRole="adjustable" accessibilityLabel={`Thứ tự ${label}`}
+      <View accessible accessibilityRole="adjustable" accessibilityLabel={`Thứ tự ${label}`} ref={tayNamRef as never}
         accessibilityHint="Giữ rồi kéo để đổi thứ tự. Hoặc dùng thao tác tăng giảm vị trí."
         accessibilityValue={{ min: 1, max: count, now: index + 1 }}
         accessibilityState={{ disabled: !!disabled }}
         accessibilityActions={[{ name: "increment", label: "Xuống một chặng" }, { name: "decrement", label: "Lên một chặng" }]}
         onAccessibilityAction={({ nativeEvent }) => move(index + (nativeEvent.actionName === "increment" ? 1 : -1))}
+        {...(banPhim as object)}
         style={styles.handle}>
         <Ionicons name="reorder-two-outline" size={24} color={colors.inkFaint} />
         <Text style={[typography.caption, { color: colors.inkFaint }]}>{index + 1}</Text>

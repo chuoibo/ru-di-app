@@ -25,10 +25,15 @@ function tep(dir) {
   return ra;
 }
 
-/** Each `<TextInput …>` element's own text, up to its first `/>` or `>` at depth 0 of braces. */
+/**
+ * Each `<TextInput …>` element's own text, up to its first `/>` or `>` at depth 0 of braces.
+ * A type argument (`useRef<TextInput>`, `Ref<TextInput>`) is not an element: a
+ * generic follows an identifier, a JSX tag never does (B3 added the first ones).
+ */
 function theTextInput(nguon) {
   const ra = [];
   let i = nguon.indexOf("<TextInput");
+  while (i >= 0 && /[\w$]/.test(nguon[i - 1] ?? "")) i = nguon.indexOf("<TextInput", i + 1);
   while (i >= 0) {
     let sau = 0;
     let j = i + 10;
@@ -40,6 +45,7 @@ function theTextInput(nguon) {
     }
     ra.push(nguon.slice(i, j + 1));
     i = nguon.indexOf("<TextInput", j);
+    while (i >= 0 && /[\w$]/.test(nguon[i - 1] ?? "")) i = nguon.indexOf("<TextInput", i + 1);
   }
   return ra;
 }

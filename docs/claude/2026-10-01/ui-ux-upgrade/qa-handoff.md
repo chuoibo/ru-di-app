@@ -190,5 +190,118 @@ Cổng B2 (cây sạch = `main` + đúng các file của B2): xem commit message
 Rủi ro còn lại của B2:
 - **Sheet v2** thay hành vi của 39 chỗ gọi: trần cả panel, chặn chạm 250 ms, trượt theo chiều cao. Harness đo F03, F05, F07,
   N22 và khay Tạo mới; các sheet khác chưa được đo riêng.
-- **Android** chưa đo: APK debug cũ hơn `expo-video` nên cần build native mới.
+- **Android: đã đo sau commit B2.** APK debug build mới từ `e182ce64`; JS phục vụ từ worktree sạch đúng `fb6e352b`; AVD
+  `rudi-diary-review`, 1080×2400, density 420, chưa đăng nhập. Kết quả:
+  - Thanh tab 5 tab + con dấu cột giữa vẽ đúng, vạch ở tab đang chọn; cửa demo «Dữ liệu demo ⇥» trên ảnh hero.
+  - Con dấu mở khay: «Tạo cuộc hẹn» đầu khay khi mở từ Lên plan, «Viết bài» cuối; panel dừng ở khoảng 82%.
+  - Back hệ thống đóng khay; kéo tay cầm xuống cũng đóng khay.
+  - Back hệ thống đi qua các tab đã ghé (Lên plan → Khám phá → Tin nhắn, Back về Khám phá), không thoát app.
+- **Hai lỗi nhỏ thấy được trên Android, sửa ở B3:**
+  - nhãn «Tạo» thấp hơn nhãn các tab vài px;
+  - khi khay mở, đầu màn Lên plan phía sau hiện cửa «Demo ⇥» vì `TopBar` đọc segment toàn cục (`/create`) thay vì
+    navigator của chính màn.
 - **Lên plan** có hai lối mở cùng một khay: nút «Tạo mới» ở đầu màn và con dấu. Để B3 quyết có bỏ nút đầu màn hay không.
+  B3 quyết giữ (change-log B3).
+- **Con dấu «Tạo mới» (01/10, sau B3):** chủ sản phẩm đánh giá thiết kế con dấu tròn ở thanh tab chưa đạt và đang vẽ mockup
+  thay thế. Con dấu sẽ làm lại theo mockup; cho tới lúc đó coi phần hình của nó là **BLOCKED**, không phải READY_FOR_QA.
+  Hành vi (mọi tab có lối Tạo mới, khay theo tab, `/create` mở lạnh) không đổi.
+
+### B3 · Pilot: Kèo · Lên plan · Hành trình (F03 + E2)
+
+Đo trên bản web của cây B3, cùng stack và dữ liệu với B2.
+- **«Trước»:** bản B2 `e182ce64`, phục vụ ở cổng của harness. Chạy kịch bản `f03-keo.mjs` đầy đủ và `retest-main.mjs --chi
+  r-f03,r-p3-f03,r-e,r-p3-e` (`out/b3-truoc`).
+- **«Sau»:** bản cuối của B3 (`out/b3-sau2`), cùng `f03-keo.mjs` đầy đủ và `r-f03,r-p3-f03`. Các hàng E2 (UI-118, UI-119,
+  UI-121) lấy từ lượt trên bản B3 trước đợt sửa cuối (`out/b3-sau`): đợt sửa cuối chỉ đổi trang ngày trên bản đồ, không chạm
+  mã của chúng.
+- **Probe riêng** (`kiem-ux/b3-probe.mjs`, `b3-probe-043.mjs`), cho những gì harness không đo được trên giao diện hiện tại:
+  - nền mờ của sheet phủ đầu màn;
+  - nút «Xếp»;
+  - `aria-expanded` của nút gập;
+  - dòng nguồn bản đồ;
+  - tên điều khiển MapLibre;
+  - Esc trên popup cụm.
+
+| Issue | Hàng harness / probe | Trước | Sau | Tự kiểm | Ảnh |
+|---|---|---|---|---|---|
+| UI-032 | `TC-R-UI-032`; probe UI-032 | FAIL | PASS | 3 ngày đều nêu «3 chặng của kèo chưa xếp ngày: Cà phê sáng, Ăn trưa, Tối nướng.»; «Xếp cả 3 chặng vào ngày này» → mốc hiện, «Lưu cho cả hội» hiện, cả hội chưa thấy | `EV-B3-UI-032-C1.jpg` |
+| UI-033 | `TC-R-UI-033` C1–C4, C8; `TC-F03-VE-LICH-TRINH` | FAIL (C8 thấy 40%) | PASS (C8 100%) | câu giải thích trong màn ở cả 5 cấu hình (probe) | `EV-B3-UI-033-C8.jpg` |
+| UI-034 | `TC-R-UI-034`; `TC-F03-TAO-NGAN-SACH-TRONG` | FAIL, FAIL | PASS, PASS | câu «Chọn một mức hoặc gõ số tiền mỗi người.» ở y 676, ngay dưới ô | `EV-B3-UI-034-C1.jpg` |
+| UI-035 | `TC-R-UI-035`; `TC-F03-DEMO-TIMELINE` | FAIL, FAIL | PASS, PASS | có phiên → `/outings/[id]` | — |
+| UI-036 | `TC-R-UI-036`; `TC-F03-SAP-XEP-PHIM` | FAIL, FAIL | PASS, PASS | tay nắm `slider` `tabindex 0`; mũi tên xuống dời chặng | — |
+| UI-037 | `TC-F03-NEP-LICH-TRINH` | FAIL | PASS | Android: dải Nếp ở Lịch trình (trước: vắng) | `EV-B3-UI-037-AND.jpg` |
+| UI-039 | `TC-R-UI-039` C1, C6 | PASS (B2) | PASS | nút chỉ mở | — |
+| UI-041 | probe UI-041 | — | đạt | điểm ở giữa «Quay lại» rơi vào lớp sheet; đầu màn `inert`; Android nền mờ phủ đầu màn | `EV-B3-UI-041.jpg` |
+| UI-042 | `TC-R-UI-042` C1, C3 | FAIL (allowed-attr ×3, required-attr ×3) | PASS (0 critical) | — | — |
+| UI-043 | `TC-F03-BAN-DO-NHAN`; probe UI-043 | FAIL | FAIL; đạt | ghi chú 1 | `EV-B3-UI-046-043-C1.jpg` |
+| UI-044 | `TC-F03-META` C1, C2, C4, C5 | FAIL (2/3 dòng cắt) | PASS | — | `EV-B3-UI-044-045-C2.jpg` |
+| UI-045 | `TC-F03-COT-CHANG` C1, C2 | FAIL (118px, 48px) | PASS (222px, 152px) | — | `EV-B3-UI-044-045-C2.jpg` |
+| UI-046 | `TC-F03-CHON-THIEU` | FAIL (skeleton) | PASS | câu và «Mở Khám phá» | `EV-B3-UI-046-043-C1.jpg` |
+| UI-047 | `TC-F03-DAU-MAN` C6, C7 | PASS (B2) | PASS | lệch 8px = lề của nút | — |
+| UI-118 | `TC-R-UI-118` | FAIL | PASS | tên kèo và lối mở trong chat của người tạo và của `moi-61` | `EV-B3-UI-118-C1.jpg` |
+| UI-119 | `TC-R-UI-119` | FAIL | FAIL | ghi chú 2 | — |
+
+Ghi chú B3:
+
+1. **UI-043.** Harness tìm `.maplibregl-ctrl button`. Bản đồ đã bỏ la bàn từ trước, và nút nguồn của MapLibre là một
+   `<summary>`, nên harness thấy «không có» nút nào và chấm FAIL.
+   - Probe đọc mọi điều khiển: «Bản đồ hành trình» (canvas), «Hiện hoặc ẩn nguồn bản đồ» (summary).
+   - Thu nhỏ cho hai chặng gộp thành cụm «2 điểm gần nhau: 1, 2», chạm mở popup có nút «Đóng danh sách điểm gần nhau».
+   - Esc: còn 0 popup, focus về đúng nút cụm.
+2. **UI-119.** Phần UI đã làm:
+   - sau «Tôi đã tới» có «Thêm khoảnh khắc ở đây», mở màn thả khoảnh khắc gắn sẵn nhóm và quán;
+   - album nói «N check-in ở M chỗ»;
+   - tường trống phân biệt «Tôi đã tới» với check-in.
+
+   Tiêu chí của QA đòi album đếm lượt tới chặng, hoặc tường có dấu của lần tới đó. Đó là đổi luật máy chủ, nên đã viết
+   thành ADR đề xuất (`adr-de-xuat/UI-119-da-toi-la-check-in.md`) và chờ chủ sản phẩm. Hàng sẽ FAIL tới khi có quyết định.
+   Harness còn tìm chữ «chỗ đã tới», mà album nay cố ý không dùng nữa.
+3. **`TC-F03-BAN-DO-CHANG-NHIEU-NGAY`** vẫn FAIL vì chỉ đếm mốc trên bản đồ. Thiết kế B3 không đoán ngày cho chặng: nó nêu
+   tên chúng và để người dùng xếp. Hàng retest `TC-R-UI-032` chấm theo đúng tiêu chí của QA («hoặc có dòng nói rõ các
+   chặng chưa xếp ngày») và PASS.
+4. **`TC-L13-GAP`** tìm nút gập bằng chữ «Các chặng trong ngày», thiết kế cũ. Nút nay là «Thu gọn trang ngày» / «Mở trang
+   ngày», `aria-expanded` true → false (probe).
+5. **`TC-MO-M5` C9** (Nếp đổi ảnh một lần ở 538 ms khi giảm chuyển động) thuộc UI-027, batch B5.
+6. **`TC-L11-GIU`** BLOCKED: CDP không sinh `contextmenu` từ cú giữ; cần Chrome Android thật.
+7. **Dòng nguồn bản đồ** (không phải issue QA; hồi quy của chính B3, probe bắt được):
+   - Trên bản B3 trước đợt sửa cuối, ở ngày trống, trang ngày che dòng «© OpenStreetMap · OpenFreeMap».
+   - Bản cuối: nguồn thấy ở kèo nhiều ngày C1, kèo một ngày C1 và kèo trống C1.
+   - Ở C8 ngày trống, bản đồ ẩn hẳn (0×0), nên không có dải bản đồ nào thiếu nguồn.
+8. **Critique (Flow D)**, hai subagent cô lập mỗi lần: **24/40 → 26/40**. Archive ở
+   `.impeccable/critique/*luong-keo-len-plan-hanh-trinh.md`, chỉ trên máy này (thư mục bị gitignore). Phần detector chạy trên snapshot DOM. Snapshot mất stylesheet
+   của react-native-web (chèn qua CSSOM, không có trong text của thẻ `<style>`), nên phần lớn finding là do cách chụp. Đã
+   dựng lại stylesheet để phân loại, và đã sửa script chụp cho các lượt sau.
+
+9. **Finish review** (`impeccable-finish-reviewer`, ngữ cảnh mới):
+   - Lượt đầu: `fix`, 8 điểm. Đã sửa một đợt, dựng lại và chụp lại.
+   - Verdict pass: 6 resolved, 2 partial, 1 hồi quy.
+   - Ba điểm còn lại được chỉnh một đợt cuối và kiểm bằng ảnh của người sửa, **không** chấm lại bằng reviewer
+     (change-log B3, «Verdict pass»).
+   - Popup cụm điểm trong bản cuối là mẩu giấy có nút đóng 48×48. Focus vào chặng đầu; Esc đóng và trả focus về cụm.
+
+Cổng B3 (cây = `main` + đúng các file của B3): xem commit message.
+
+Rủi ro còn lại của B3:
+- **`KheLop`** mới chỉ dùng cho hai sheet của bản đồ. Ô nhập trong khe được cập nhật cùng commit:
+  - `khe-lop.test.mjs` đo ở mức React;
+  - `rudi-hanh-trinh-web.test.mjs` gõ vào «Giờ xuất phát» thật trên Chrome.
+
+  Chưa đo gõ nhanh trên bàn phím Android.
+- **Bản đồ web không còn sàn 220dp.** Ở cửa sổ thấp có mốc, bản đồ cao đúng phần chỗ còn lại (ở C8 khoảng 90dp), và lề
+  khớp camera co tối đa một phần tư mỗi cạnh. Chưa có ảnh C8 của ngày có mốc.
+- **Dải kèo sắp tới trong chat** đọc `GET /contexts/{id}/outings` mỗi lần chat được focus: thêm một lượt đọc mỗi lần mở
+  chat.
+- **Android:** đã xem trên emulator ở chế độ demo:
+  - sheet sửa trang ngày phủ đầu màn;
+  - dải Nếp ở Lịch trình;
+  - nhãn «Tạo» thẳng hàng;
+  - đầu màn sau khay không còn cửa demo.
+
+  Chưa xem bản live (cần đăng nhập trên emulator): form tạo kèo, dải kèo trong chat, gợi ý ghim điểm.
+- **Còn mở từ critique, chưa làm trong pilot:**
+  - lịch trình kèo nhiều ngày chưa chia theo ngày;
+  - tiền đứng trước lịch trình (B4/B11);
+  - «Tôi đã tới» trước ngày đi (luật, hỏi chủ sản phẩm);
+  - sheet sửa chặng ~20 điều khiển;
+  - từ vựng chặng/điểm/hoạt động (B11);
+  - tiêu đề kèo 28/34 dòng cao 1.21× ở 320.

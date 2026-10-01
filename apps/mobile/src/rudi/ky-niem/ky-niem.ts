@@ -288,7 +288,12 @@ function nhanNgay(ngay: string): string {
 
 export function cauThongKeAlbum(a: Pick<TomTatAlbum, "photo_count" | "place_count" | "checkin_count" | "expense_count" | "split_total_vnd">): string {
   // Non-breaking spaces: a count must not be orphaned from its noun when the line wraps.
-  const phan = [`${a.photo_count}\u00a0ảnh`, `${a.place_count}\u00a0chỗ đã tới`, `${a.checkin_count}\u00a0check-in`];
+  // The album counts the wall's check-ins and the places they were made at.
+  // «0 chỗ đã tới» beside an outing that said «1 đã tới» read as a
+  // contradiction: «đã tới» is the outing's word for a stop reached, which
+  // the album does not count (QA UI-119; ADR proposal UI-119).
+  const checkIn = a.place_count > 0 ? `${a.checkin_count}\u00a0check-in ở\u00a0${a.place_count}\u00a0chỗ` : `${a.checkin_count}\u00a0check-in`;
+  const phan = [`${a.photo_count}\u00a0ảnh`, checkIn];
   if (a.expense_count > 0) phan.push(`đã chia\u00a0${dinhDangTienVnd(a.split_total_vnd)}`);
   return phan.join(" · ");
 }
