@@ -123,3 +123,18 @@ Diff này tách `_pair_context_or_404` thành `_pair_roster_or_404` (cùng ba l�
 Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
 
 - `PATCH /papers/{paper_id}/draft`: chỉ do `ruff format` (cổng ruff trên file đã chạm) kéo vào, hành vi không đổi: `ApiService._readable_paper_or_404`.
+
+## Đổi 2026-10-01 — chặn thì sổ hai người dừng (a6341c19, QA UI-120)
+
+Python đổi cùng Go trong một commit (ngoại lệ bảo mật theo CLAUDE.md): 11 lệnh ghi hướng ra ngoài của sổ hai người
+đọc chặn ngay sau bước kiểm quyền, qua đúng cổng của chat đôi — Python `ApiService._require_pair_is_alive`, Go
+`pairsteps.requirePairIsAlive` (`services/core/internal/domain/pairsteps/papers.go`,
+`services/core/internal/service/pair_store.go`). Người kia đã chặn/bị chặn hoặc tài khoản đã kết thúc → 409
+`direct_message_unavailable` `Cuộc trò chuyện này không còn nhận tin.`, một câu cho cả hai nguyên nhân (ADR-0027 §3
+bước 1). Các lệnh tự rút lui (rút tờ, nghỉ tuần, thu hồi, xoá ô, đóng sổ) không đi qua cổng này. Bằng chứng (ghi trong
+commit a6341c19): golden `python_pair_steps*.json` thêm 44 ca `stopped/*`, Go replay 0 lệch; kịch bản parity
+`w8/pair_notebooks/GET-contexts-context_id-notebook.yaml` thêm bước bị từ chối khi đang chặn rồi bỏ chặn; parity
+auth=dev và auth=prod 353 EQUAL, 0 DIFF; `go_postgres_tier.sh` 3283 ca PASS; đột biến bỏ cổng ở Go và ở Python đều đỏ.
+Mục này bổ sung sau, vì `check_go_owned_python_touch.py` đòi file bằng chứng đổi cùng diff mà commit gốc chưa chạm.
+
+- `PATCH /papers/{paper_id}/draft`: thêm bước cổng chặn ngay sau kiểm quyền; cặp đã dừng → 409 `direct_message_unavailable`, không ghi gì. Cặp còn sống: byte không đổi.
