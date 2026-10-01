@@ -21,6 +21,8 @@
  *   `xem-nguoi`  reads chat-0's profile as a friend, a groupmate and a stranger;
  *   `binh-luan`, `anh-toan-man`, `dang-lai`  work on the photo post, two personas;
  *   `trang`      writes 15 short «Chỉ mình tôi» posts to chat-0's wall, then pages and polls.
+ * Read only again, any time after the writes: `hep` draws the post reader at C2 and C3 (the
+ * sampling rule wants every screen at C1–C3), `khong-phien` opens the book without a session.
  *
  * Personas (chat-test seed on stack 2, read over the API before any write):
  *   chat-0   owner of the wall and of the journey book
@@ -374,30 +376,67 @@ try {
   // --------------------------------------------------------------- ca-nhan
   // The two ways in from the tab Cá nhân: the journey teaser and the menu row «Thành tích».
   if (chay("ca-nhan")) {
-    for (const cfg of ["C1", "C2"]) {
+    // Both ways in push /achievements (HanhTrinhTeaser, the menu row of Profile.tsx). The verdict
+    // reads every clause of the expected: the card's two numbers against the server's book, the
+    // card's destination, and the menu row's name against the title of the screen it opens.
+    const soMay = await soCua("chat-0");
+    const soHuyHieu = soMay?.earned_badges?.length ?? null;
+    const soMp4 = soMay?.mp4_credits?.available ?? null;
+    const docVao = (page) =>
+      page.evaluate(() => {
+        const nut = [...document.querySelectorAll('[role="button"]')].filter((b) => b.getClientRects().length);
+        const chu = (e) => (e?.innerText ?? "").replace(/[-]/g, "").replace(/\s+/g, " ").trim();
+        const teaser = nut.find((b) => /Mở sổ hành trình$/.test(b.getAttribute("aria-label") ?? ""));
+        const menu = nut.find((b) => /^Thành tích/.test(chu(b)));
+        const hop = (e) => { const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
+        const dong = teaser ? (chu(teaser).match(/(\d+) huy hiệu · (\d+) lượt dựng MP4/) ?? []) : [];
+        return {
+          teaser: teaser ? { ten: teaser.getAttribute("aria-label"), chu: chu(teaser), huyHieu: dong[1] ? Number(dong[1]) : null, mp4: dong[2] ? Number(dong[2]) : null, rect: hop(teaser) } : null,
+          menu: menu ? { chu: chu(menu), ten: (menu.innerText ?? "").replace(/[-]/g, "").trim().split("\n")[0].trim(), rect: hop(menu) } : null,
+        };
+      });
+    const tieuDeSo = (page) => page.evaluate(() => ([...document.querySelectorAll('[data-testid="achievements-screen"]')].filter((e) => e.getClientRects().length).pop()?.innerText ?? "").replace(/[-]/g, "").trim().split("\n")[0]?.trim() ?? null);
+    // Scroll the first button whose accessible name or visible text (tested apart: an anchored
+    // pattern must not meet the other one glued on) matches, to the middle of the window.
+    const dua = (page, re) => page.evaluate((src) => { const r = new RegExp(src); [...document.querySelectorAll('[role="button"]')].find((b) => b.getClientRects().length && (r.test(b.getAttribute("aria-label") ?? "") || r.test((b.innerText ?? "").replace(/[\uE000-\uF8FF]/g, "").trim())))?.scrollIntoView({ block: "center", behavior: "instant" }); }, re);
+    for (const cfg of ["C1", "C2", "C3"]) {
       if (!chayPhan("ca-nhan", cfg)) continue;
       const t = await mo(cfg, "chat-0", "/profile");
       const cdp = await cdpCua(t.page);
       await t.page.waitForTimeout(3000);
       await choOn(t.page, { mang: t.mang });
-      const vao = await t.page.evaluate(() => {
-        const nut = [...document.querySelectorAll('[role="button"]')].filter((b) => b.getClientRects().length);
-        const teaser = nut.find((b) => /Mở sổ hành trình$/.test(b.getAttribute("aria-label") ?? ""));
-        const menu = nut.find((b) => /^Thành tích/.test((b.innerText ?? "").replace(/[\uE000-\uF8FF]/g, "").trim()));
-        const chu = (e) => (e?.innerText ?? "").replace(/[-]/g, "").replace(/\s+/g, " ").trim();
-        if (teaser) teaser.scrollIntoView({ block: "center", behavior: "instant" });
-        const r = teaser?.getBoundingClientRect();
-        return { teaser: teaser ? { ten: teaser.getAttribute("aria-label"), chu: chu(teaser), rect: { x: r.left, y: r.top, w: r.width, h: r.height } } : null, menu: menu ? chu(menu) : null };
-      });
+      await dua(t.page, "Mở sổ hành trình$");
+      await t.page.waitForTimeout(300);
+      const vao = await docVao(t.page);
       await anh(t.page, `EV-N21-CA-NHAN-${cfg}`, t, vao.teaser ? { chuThich: [{ rect: vao.teaser.rect }] } : {});
+      let menuDen = null;
+      if (cfg === "C1" && vao.menu) {
+        // The menu row sits under the fold: bring it up, draw it, open it, come back.
+        await dua(t.page, "^Thành tích");
+        await t.page.waitForTimeout(300);
+        const v2 = await docVao(t.page);
+        await anh(t.page, "EV-N21-CA-NHAN-MENU-C1", t, v2.menu ? { chuThich: [{ rect: v2.menu.rect }] } : {});
+        const p = await nut(t.page, "Thành tích", { batDau: true });
+        if (p) {
+          await cham(cdp, p);
+          await t.page.waitForTimeout(2500);
+          menuDen = { den: await duongDan(t.page), tieuDe: await tieuDeSo(t.page) };
+          await t.page.evaluate(() => history.back());
+          await t.page.waitForTimeout(2500);
+          await dua(t.page, "Mở sổ hành trình$");
+          await t.page.waitForTimeout(300);
+        }
+      }
       let den = null;
       let tieuDe = null;
-      if (cfg === "C1" && vao.teaser) {
+      if (vao.teaser) {
         await bam(t, cdp, vao.teaser.ten, { cho: 2500 });
         den = await duongDan(t.page);
-        tieuDe = await t.page.evaluate(() => ([...document.querySelectorAll('[data-testid="achievements-screen"]')].filter((e) => e.getClientRects().length).pop()?.innerText ?? "").replace(/[\uE000-\uF8FF]/g, "").trim().split("\n")[0] ?? null);
+        tieuDe = await tieuDeSo(t.page);
       }
-      ghi({ tc: "TC-N21-CA-NHAN", screen: "N21.S01", state: "chat-0, tab Cá nhân; sổ hành trình có 3 huy hiệu mở đầu", action: "đọc thẻ Hành trình và mục «Thành tích»; chạm thẻ", cauHinh: cfg, expected: "thẻ nói đúng tiến độ (huy hiệu, lượt MP4) và dẫn tới sổ hành trình; tên gọi của lối vào khớp tên màn tới", status: vao.teaser && (cfg !== "C1" || /\/achievements$/.test(den ?? "")) ? "PASS" : "FAIL", evidence: [`EV-N21-CA-NHAN-${cfg}`], ghiChu: `thẻ «${vao.teaser?.chu.slice(0, 200) ?? "không thấy"}»; mục menu «${vao.menu ?? "không thấy"}»${den ? `; chạm thẻ: tới ${den}, tiêu đề màn «${tieuDe ?? "-"}»` : ""}` });
+      const soDung = !!vao.teaser && vao.teaser.huyHieu === soHuyHieu && vao.teaser.mp4 === soMp4;
+      const tenKhop = vao.menu && tieuDe ? vao.menu.ten === tieuDe : null;
+      ghi({ tc: "TC-N21-CA-NHAN", screen: "N21.S01", state: `chat-0, tab Cá nhân; máy chủ: ${soHuyHieu ?? "?"} huy hiệu đã đạt, ${soMp4 ?? "?"} lượt MP4 còn dùng`, action: "đọc thẻ Hành trình và mục «Thành tích»; chạm thẻ (C1: chạm cả mục menu)", cauHinh: cfg, expected: "thẻ nói đúng tiến độ (huy hiệu, lượt MP4) và dẫn tới sổ hành trình; tên gọi của lối vào khớp tên màn tới", status: soDung && /\/achievements$/.test(den ?? "") && tenKhop === true ? "PASS" : "FAIL", evidence: cfg === "C1" ? ["EV-N21-CA-NHAN-C1", "EV-N21-CA-NHAN-MENU-C1"] : [`EV-N21-CA-NHAN-${cfg}`], ghiChu: `thẻ «${vao.teaser?.chu.slice(0, 200) ?? "không thấy"}» (số ${soDung ? "khớp" : "không khớp"} máy chủ); chạm thẻ: tới ${den ?? "-"}, tiêu đề màn «${tieuDe ?? "-"}»; mục menu «${vao.menu?.chu ?? "không thấy"}»${menuDen ? `, chạm: tới ${menuDen.den}, tiêu đề «${menuDen.tieuDe ?? "-"}»` : ""}; tên mục ${tenKhop === null ? "không so được" : tenKhop ? "khớp tiêu đề màn" : `«${vao.menu.ten}» khác tiêu đề «${tieuDe}»`}` });
       await t.context.close();
     }
   }
@@ -535,6 +574,7 @@ try {
     }
     await cuonToi(t.page, 0, "achievements-screen");
     await t.page.waitForTimeout(300);
+    const moiNgay = (await docSo(t.page))?.moi ?? null; // the M8 moment shows right after the claim
     await anh(t.page, "EV-N21-KET-NHAN-C1", t);
     const so = await soCua("chat-0");
     const daDat = (so?.earned_badges ?? []).some((b) => b.id === "storyteller");
@@ -545,7 +585,7 @@ try {
     await choOn(t.page, { mang: t.mang });
     const s2 = await docSo(t.page);
     await anh(t.page, "EV-N21-KET-M8-C1", t);
-    ghi({ tc: "TC-N21-M8", screen: "N21.S02", state: "chat-0, cùng máy vừa nhận kết", action: "mở lại sổ hành trình", cauHinh: "C1", expected: "huy hiệu vừa đạt có khoảnh khắc «MỚI MỞ» một lần", status: /Chuyện mình kể/.test(s2?.moi ?? "") ? "PASS" : "FAIL", evidence: ["EV-N21-KET-M8-C1"], ghiChu: `khối: ${s2?.moi !== null && s2?.moi !== undefined ? `«MỚI MỞ ${s2.moi}»` : "không có"}` });
+    ghi({ tc: "TC-N21-M8", screen: "N21.S02", state: "chat-0, cùng máy vừa nhận kết", action: "đọc khối «MỚI MỞ» ngay sau khi nhận; tải lại sổ", cauHinh: "C1", expected: "huy hiệu vừa đạt có khoảnh khắc «MỚI MỞ» một lần: ngay sau khi nhận, không lặp lại khi mở lại", status: nhan && /Chuyện mình kể/.test(moiNgay ?? "") && !s2?.moi ? "PASS" : "FAIL", evidence: ["EV-N21-KET-NHAN-C1", "EV-N21-KET-M8-C1"], ghiChu: `ngay sau khi nhận: ${moiNgay !== null ? `«MỚI MỞ ${moiNgay}»` : "không có"}; sau khi tải lại: ${s2?.moi !== null && s2?.moi !== undefined ? `«MỚI MỞ ${s2.moi}»` : "không có"}` });
     await t.context.close();
   }
 
@@ -607,14 +647,14 @@ try {
         const soAnhCd = (cd?.media ?? cd?.photos ?? []).length;
         const the = b2 ? await t.page.evaluate((dau) => {
           const e = [...document.querySelectorAll('[role="button"]')].find((x) => x.getClientRects().length && (x.getAttribute("aria-label") ?? "").startsWith(`Mở bài: ${dau}`));
-          let c = e;
-          for (let i = 0; i < 3 && c?.parentElement; i++) c = c.parentElement;
+          // The card is the «Mở bài» button's own parent: one level up, never the list.
+          const c = e?.parentElement ?? null;
           c?.scrollIntoView({ block: "center", behavior: "instant" });
-          return c ? { anh: c.querySelectorAll('[aria-label="Mở ảnh và bình luận"], img').length } : null;
+          return c ? { anh: c.querySelectorAll('[aria-label="Mở ảnh và bình luận"], img').length, chu: (c.innerText ?? "").replace(/\s+/g, " ").trim().slice(0, 80) } : null;
         }, b2.body.slice(0, 20)) : null;
         await t.page.waitForTimeout(400);
         await anh(t.page, "EV-N21-TUONG-B2-C1", t);
-        ghi({ tc: "TC-N21-TUONG-ANH-CD", screen: "N21.S03", state: "chat-1 mở tường chat-0; bài Cộng đồng B2 (công khai, một ảnh 640×480) nằm trên tường", action: "đọc thẻ của B2 trên tường", cauHinh: "C1", expected: "thẻ trên tường hiện ảnh của bài, như chi tiết bài Cộng đồng", status: b2 && soAnhCd > 0 ? (the && the.anh > 0 ? "PASS" : "FAIL") : "BLOCKED", evidence: ["EV-N21-TUONG-B2-C1"], ghiChu: `tường: B2 ${b2 ? `có, image_url ${b2.image_url ? "có" : "null"}` : "không thấy"}; chi tiết Cộng đồng: ${soAnhCd} ảnh; thẻ trên màn: ${the ? `${the.anh} ảnh` : "không thấy"}` });
+        ghi({ tc: "TC-N21-TUONG-ANH-CD", screen: "N21.S03", state: "chat-1 mở tường chat-0; bài Cộng đồng B2 (công khai, một ảnh 640×480) nằm trên tường", action: "đọc thẻ của B2 trên tường", cauHinh: "C1", expected: "thẻ trên tường hiện ảnh của bài, như chi tiết bài Cộng đồng", status: b2 && soAnhCd > 0 ? (the && the.anh > 0 ? "PASS" : "FAIL") : "BLOCKED", evidence: ["EV-N21-TUONG-B2-C1"], ghiChu: `tường: B2 ${b2 ? `có, image_url ${b2.image_url ? "có" : "null"}` : "không thấy"}; chi tiết Cộng đồng: ${soAnhCd} ảnh; thẻ trên màn: ${the ? `${the.anh} ảnh («${the.chu}»)` : "không thấy"}` });
       }
       if (cfg === "C1") ghi({ tc: `TC-N21-XEM-HUY-HIEU-${la ? "LA" : ten === "chat-16" ? "NHOM" : "BAN"}`, screen: "N21.S03", state: `${ten} (${la ? "người lạ" : ten === "chat-16" ? "cùng nhóm, không là bạn" : "bạn"}) mở hồ sơ chat-0; máy chủ trưng bày ${may.length} chiếc`, action: "đọc khối «Dấu ấn chọn giữ trên bìa sổ»", cauHinh: "C1", expected: la ? "người lạ không thấy huy hiệu; không thấy tiến độ" : `thấy đúng ${may.length} huy hiệu chủ hồ sơ chọn; không thấy tiến độ, nhánh, lượt MP4`, status: la ? (!thay.length && !k.rieng.length ? "PASS" : "FAIL") : (thay.length === may.length && !k.rieng.length ? "PASS" : "FAIL"), evidence: [`EV-N21-XEM-${ten.toUpperCase()}-C1`], ghiChu: `thấy: ${thay.join(", ") || "không"}; chữ riêng tư lộ ra: ${k.rieng.join(", ") || "không"}; đầu hồ sơ «${k.chu.slice(0, 120)}»` });
       await t.context.close();
@@ -682,11 +722,13 @@ try {
       // chat-1: like chat-0's reply.
       if (c2 && !c2.liked) {
         const p = await t1.page.evaluate((cau) => {
-          for (const b of document.querySelectorAll('[role="button"]')) {
-            if (!b.getClientRects().length || !/^(Thích|Bỏ thích) bình luận$/.test(b.getAttribute("aria-label") ?? "")) continue;
-            let c = b;
-            for (let i = 0; i < 5 && c.parentElement && !(c.innerText ?? "").includes(cau); i++) c = c.parentElement;
-            if (!(c.innerText ?? "").includes(cau) || (c.innerText ?? "").length > 300) continue;
+          // From the comment's own text up to the first block that holds a like button: a reply sits
+          // inside its parent's block, so starting from the button would find the parent's first.
+          const e = [...document.querySelectorAll('div[dir="auto"]')].find((x) => x.getClientRects().length && (x.innerText ?? "").trim() === cau);
+          let c = e;
+          while (c && c.parentElement && !c.querySelector('[aria-label="Thích bình luận"],[aria-label="Bỏ thích bình luận"]')) c = c.parentElement;
+          for (const b of c ? c.querySelectorAll('[aria-label="Thích bình luận"],[aria-label="Bỏ thích bình luận"]') : []) {
+            if (!b.getClientRects().length) continue;
             b.scrollIntoView({ block: "center", behavior: "instant" });
             const r = b.getBoundingClientRect();
             return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: Math.round(r.width), h: Math.round(r.height), ten: b.getAttribute("aria-label"), pressed: b.getAttribute("aria-pressed") };
@@ -704,11 +746,12 @@ try {
       const q3 = await t1.page.evaluate((cau) => {
         for (const e of document.querySelectorAll('div[dir="auto"]')) {
           if ((e.innerText ?? "").trim() !== cau) continue;
+          // The comment's block: the first ancestor holding its reply button (it also holds its replies' buttons).
           let c = e;
-          for (let i = 0; i < 4 && c.parentElement; i++) c = c.parentElement;
+          while (c.parentElement && !c.querySelector('[role="button"][aria-label^="Trả lời"]')) c = c.parentElement;
           const nut = [...c.querySelectorAll('[role="button"]')].filter((b) => b.getClientRects().length).map((b) => b.getAttribute("aria-label") || (b.innerText ?? "").trim());
           const r = e.getBoundingClientRect();
-          return { nut, x: r.left + r.width / 2, y: r.top + r.height / 2 };
+          return { nut, x: r.left + r.width / 2, y: r.top + r.height / 2, coXoaTrenMan: [...document.querySelectorAll('[role="button"]')].some((b) => /xo[aá]/i.test(b.getAttribute("aria-label") || b.innerText || "")) };
         }
         return null;
       }, CAU1);
@@ -718,7 +761,7 @@ try {
         await t1.page.waitForTimeout(800);
         sauGiu = await dialogTren(t1.page);
       }
-      ghi({ tc: "TC-N21-Q3-XOA-BL", screen: "N21.S04", state: "chat-1, bình luận của chính mình dưới bài của chat-0", action: "tìm lối xoá bình luận: nút trên hàng, nhấn giữ bình luận", cauHinh: "C1", expected: "người viết xoá được bình luận của mình (có bước hỏi); API DELETE /social/v2/comments/{id} vẫn còn", status: q3 && (q3.nut.some((x) => /xo[aá]/i.test(x ?? "")) || /xo[aá]/i.test(sauGiu?.chu ?? "")) ? "PASS" : "FAIL", ghiChu: `nút trên hàng bình luận: ${q3?.nut.join(", ") || "-"}; nhấn giữ: ${sauGiu ? `mở «${sauGiu.ten}»` : "không mở gì"}` });
+      ghi({ tc: "TC-N21-Q3-XOA-BL", screen: "N21.S04", state: "chat-1, bình luận của chính mình dưới bài của chat-0", action: "tìm lối xoá bình luận: nút trên hàng, nhấn giữ bình luận", cauHinh: "C1", expected: "người viết xoá được bình luận của mình (có bước hỏi); API DELETE /social/v2/comments/{id} vẫn còn", status: q3 && (q3.nut.some((x) => /xo[aá]/i.test(x ?? "")) || /xo[aá]/i.test(sauGiu?.chu ?? "")) ? "PASS" : "FAIL", ghiChu: `nút trong khối bình luận của chat-1 (gồm các lời đáp): ${q3?.nut.join(", ") || "-"}; trên cả màn có nút xoá: ${q3?.coXoaTrenMan ? "có" : "không"}; nhấn giữ: ${sauGiu ? `mở «${sauGiu.ten}»` : "không mở gì"}` });
       await t1.context.close();
     }
   }
@@ -878,6 +921,20 @@ try {
     const giam = mau.find((m) => m.n !== null && w1?.soBai && m.n < w1.soBai) ?? null;
     ghi({ tc: "TC-N21-DOI", screen: "N21.S03", state: "chat-0 đang xem tường của mình; chat-1 thích/bỏ thích bài ảnh", action: `${daThich ? "DELETE" : "PUT"} /social/v2/posts/[id]/like từ chat-1; theo dõi thẻ 26 s`, cauHinh: "C1", expected: "lượt thích mới hiện trên thẻ trong vài giây (long poll, LISTEN đánh thức sớm)", status: su && su.status < 300 && doiLike && doiLike.ms <= 5000 ? "PASS" : "FAIL", ghiChu: `sự kiện ${su?.status ?? "-"}; thích trên thẻ ${likeTruoc ?? "?"} → ${doiLike ? `${doiLike.like} sau ${doiLike.ms} ms` : "không đổi trong 26 s"}` });
     ghi({ tc: "TC-N21-TRANG-GIU", screen: "N21.S03", state: `chat-0 đã mở trang sau (${w1?.soBai ?? "?"} thẻ); một sự kiện tới qua long poll`, action: "đứng yên 26 s sau sự kiện", cauHinh: "C1", expected: "làm mới nền giữ những trang đã mở và vị trí đọc (03-profile-story-social.md: làm mới nền khi có sự kiện)", status: w1?.soBai > 20 && !giam ? "PASS" : "FAIL", evidence: ["EV-N21-TRANG-2-C1", "EV-N21-TRANG-SAU-SU-KIEN-C1"], ghiChu: `số thẻ theo thời gian: ${mau.filter((m, i) => i === 0 || m.n !== mau[i - 1].n).map((m) => `${m.n}@${m.ms}ms`).join(" → ")}${giam ? `; về ${giam.n} thẻ sau ${giam.ms} ms` : ""}; vị trí cuộn cuối ${(await docTuong(t.page))?.cuon ?? "-"}` });
+    // No event at all: a poll that simply expires (20 s) also refreshes the list.
+    if (chayPhan("trang", "yen")) {
+      await bam(t, cdp, "Xem những trang trước", { cho: 3000 });
+      const wY0 = await docTuong(t.page);
+      const tY = Date.now();
+      const mauY = [];
+      for (let i = 0; i < 60; i++) {
+        await t.page.waitForTimeout(500);
+        const w = await docTuong(t.page);
+        mauY.push({ ms: Date.now() - tY, n: w?.soBai ?? null });
+      }
+      const giamY = mauY.find((m) => m.n !== null && wY0?.soBai && m.n < wY0.soBai) ?? null;
+      ghi({ tc: "TC-N21-TRANG-GIU-YEN", screen: "N21.S03", state: `chat-0 đã mở trang sau (${wY0?.soBai ?? "?"} thẻ); không ai làm gì trên tường`, action: "đứng yên 30 s (một lượt poll hết hạn không có sự kiện)", cauHinh: "C1", expected: "không có sự kiện thì danh sách giữ nguyên, kể cả trang đã mở thêm", status: wY0?.soBai > 20 && !giamY ? "PASS" : "FAIL", ghiChu: `số thẻ theo thời gian: ${mauY.filter((m, i) => i === 0 || m.n !== mauY[i - 1].n).map((m) => `${m.n}@${m.ms}ms`).join(" → ")}${giamY ? `; về ${giamY.n} thẻ sau ${giamY.ms} ms dù không có sự kiện` : ""}` });
+    }
     // The poll fails for a while: the page keeps what it shows.
     await loiMayChu(t.page, /\/social\/v2\/people\/[^/]+\/(changes|posts)/);
     const wTruoc = await docTuong(t.page);
@@ -888,15 +945,135 @@ try {
     await t.context.close();
   }
 
+  // ------------------------------------------------------------------ hep
+  // Read only, nothing saved. The sampling rule wants every screen at C1–C3: the post reader
+  // (N21.S04, comments one level deep) had only been drawn at C1, and at C8 for the photo.
+  if (chay("hep")) {
+    const b = await baiAnh();
+    for (const cfg of ["C2", "C3"]) {
+      if (!b || !chayPhan("hep", cfg)) continue;
+      const t = await mo(cfg, "chat-1", `/posts/${b.id}`);
+      await t.page.waitForTimeout(3000);
+      await choOn(t.page, { mang: t.mang });
+      const cu = await t.page.evaluate(() => !!document.querySelector('[data-testid="bai-chi-tiet-screen"]'));
+      const dau = await anh(t.page, `EV-N21-BAI-${cfg}`, t);
+      // The comment tree: every like button's left edge; replies sit one step in from their parent.
+      const cay = await t.page.evaluate(() => {
+        const nut = [...document.querySelectorAll('[role="button"]')].filter((b) => b.getClientRects().length && /^(Thích|Bỏ thích) bình luận$/.test(b.getAttribute("aria-label") ?? ""));
+        nut[0]?.scrollIntoView({ block: "start", behavior: "instant" });
+        return nut.map((b) => Math.round(b.getBoundingClientRect().left));
+      });
+      await t.page.waitForTimeout(400);
+      const duoi = await anh(t.page, `EV-N21-BAI-BL-${cfg}`, t);
+      const so = (c) => `tràn trang ${c?.tomTat?.tranTrangPx ?? "?"}px, chữ bị cắt ${c?.tomTat?.chuBiCat ?? "?"}, ellipsis ${c?.tomTat?.ellipsis ?? "?"}, vùng bấm < 48: ${c?.tomTat?.vungBamNho48 ?? "?"} (< 44: ${c?.tomTat?.vungBamNho44 ?? "?"})`;
+      const sach = (c) => c?.tomTat?.tranTrangPx === 0 && c?.tomTat?.chuBiCat === 0;
+      const lech = [...new Set(cay)].sort((x, y) => x - y);
+      ghi({ tc: "TC-N21-BAI-BASE", screen: "N21.S04", state: "chat-1 (bạn) mở bài «Bạn bè» có ảnh của chat-0; ba bình luận: một gốc, hai lời đáp", action: "mở /posts/[id]; cuộn tới bình luận", cauHinh: cfg, expected: "ảnh, thân bài, bình luận gốc và lời đáp (lùi một bậc) hiển thị đủ; không tràn, không cắt chữ", status: cu && sach(dau) && sach(duoi) && cay.length >= 3 && lech.length === 2 ? "PASS" : "FAIL", evidence: [`EV-N21-BAI-${cfg}`, `EV-N21-BAI-BL-${cfg}`], ghiChu: `màn bài cũ: ${cu ? "có" : "không"}; đầu: ${so(dau)}; bình luận: ${so(duoi)}; mép trái nút thích ${cay.join(", ") || "không thấy"} (${lech.length === 2 ? `lời đáp lùi ${lech[1] - lech[0]}px` : "không đúng hai bậc"})` });
+      await t.context.close();
+    }
+    // Tablet: how wide the journey book's blocks run (UI-093 asks for ≤ 640 at C6/C7).
+    for (const cfg of ["C6", "C7"]) {
+      if (!chayPhan("hep", `tablet-${cfg}`) && !chayPhan("hep", "tablet")) continue;
+      const { t } = await moSo(cfg);
+      const w = await t.page.evaluate(() => {
+        const hien = (e) => e && e.getClientRects().length > 0;
+        const chu = (e) => (e?.innerText ?? "").replace(/[-]/g, "").replace(/\s+/g, " ").trim();
+        const man = [...document.querySelectorAll('[data-testid="achievements-screen"]')].filter(hien).pop();
+        if (!man) return null;
+        const tabs = [...man.querySelectorAll('[role="tab"]')].filter(hien).map((e) => e.getBoundingClientRect());
+        const ban = tabs.length ? { trai: Math.round(Math.min(...tabs.map((r) => r.left))), rong: Math.round(Math.max(...tabs.map((r) => r.right)) - Math.min(...tabs.map((r) => r.left))) } : null;
+        // A choice card: the nearest ancestor of its action button that also holds «Mẫu sáng tạo».
+        const the = [...man.querySelectorAll('[role="button"]')].filter((b) => hien(b) && /^(Chọn hướng này|Nhận kết này|Đang theo hướng này|Đã ghi vào sổ)$/.test(chu(b))).map((b) => {
+          let c = b;
+          for (let i = 0; i < 8 && c.parentElement && !/Mẫu sáng tạo/.test(chu(c)); i++) c = c.parentElement;
+          return { the: Math.round(c.getBoundingClientRect().width), nut: Math.round(b.getBoundingClientRect().width), trai: Math.round(c.getBoundingClientRect().left) };
+        });
+        const hang = [...man.querySelectorAll('[role="checkbox"]')].filter(hien).map((e) => Math.round(e.getBoundingClientRect().width));
+        const bia = [...man.querySelectorAll("div")].filter((d) => hien(d) && /^Cuốn sổ có nhiều ngã rẽ/.test(chu(d))).map((d) => Math.round(d.getBoundingClientRect().width)).sort((a, b) => a - b)[0] ?? null;
+        return { cuaSo: innerWidth, ban, the, hang, bia };
+      });
+      if (cfg === "C7") await anh(t.page, "EV-N21-HT-C7", t);
+      const rongNhat = Math.max(0, ...(w?.the ?? []).map((x) => x.the), ...(w?.hang ?? []));
+      ghi({ tc: "TC-N21-HT-TABLET", screen: "N21.S02", state: "chat-0, sổ hành trình", action: `mở /achievements ở ${cfg}; đo bề ngang từng khối`, cauHinh: cfg, expected: "trên tablet nội dung gom cột: thẻ ngã rẽ, hàng huy hiệu ≤ 640px (tiêu chí gỡ UI-093), cùng cột với bản đồ bốn tuyến", status: w && rongNhat > 0 ? (rongNhat <= 640 ? "PASS" : "FAIL") : "BLOCKED", evidence: cfg === "C6" ? ["EV-N21-HT-C6", "EV-N21-HT-DUOI-C6"] : ["EV-N21-HT-C7"], ghiChu: w ? `cửa sổ ${w.cuaSo}; bìa ${w.bia ?? "?"}; bản đồ bốn tuyến rộng ${w.ban?.rong ?? "?"} (mép trái ${w.ban?.trai ?? "?"}); thẻ ngã rẽ ${[...new Set(w.the.map((x) => x.the))].join("/")} (mép trái ${[...new Set(w.the.map((x) => x.trai))].join("/")}), nút ${[...new Set(w.the.map((x) => x.nut))].join("/")}; hàng huy hiệu ${[...new Set(w.hang)].join("/") || "-"}` : "không thấy màn" });
+      await t.context.close();
+    }
+    // Words split across two lines (the column too narrow for a word, the browser breaks inside
+    // it). The shape detector does not see this: nothing is clipped. Each word of every visible
+    // text node is a Range; a word whose boxes sit on more than one line is broken. A fresh
+    // context shows the «MỚI MỞ» block (the per-device memory is empty).
+    for (const cfg of ["C1", "C2", "C3"]) {
+      if (!chayPhan("hep", `tu-vo-${cfg}`) && !chayPhan("hep", "tu-vo")) continue;
+      const { t } = await moSo(cfg);
+      const k = await t.page.evaluate(() => {
+        const man = [...document.querySelectorAll('[data-testid="achievements-screen"]')].filter((e) => e.getClientRects().length).pop();
+        if (!man) return null;
+        const vo = [];
+        const w = document.createTreeWalker(man, NodeFilter.SHOW_TEXT);
+        for (let n = w.nextNode(); n; n = w.nextNode()) {
+          const s = n.textContent ?? "";
+          const el = n.parentElement;
+          if (!s.trim() || !el || !el.getClientRects().length) continue;
+          for (const m of s.matchAll(/[^\s-]{2,}/g)) {
+            const r = document.createRange();
+            r.setStart(n, m.index);
+            r.setEnd(n, m.index + m[0].length);
+            const dong = [...new Set([...r.getClientRects()].filter((x) => x.width > 0.5).map((x) => Math.round(x.top)))];
+            if (dong.length > 1) vo.push({ tu: m[0], dong: dong.length, cot: Math.round(el.getBoundingClientRect().width) });
+          }
+        }
+        const moi = [...man.querySelectorAll("div")].filter((d) => d.getClientRects().length && /^MỚI MỞ/.test((d.innerText ?? "").trim())).sort((a, b) => a.getBoundingClientRect().width - b.getBoundingClientRect().width)[0];
+        const khoi = moi?.parentElement?.getBoundingClientRect();
+        return { vo, cotMoi: moi ? Math.round(moi.getBoundingClientRect().width) : null, khoi: khoi ? { x: khoi.left, y: khoi.top, w: khoi.width, h: khoi.height } : null, tenMoi: moi ? (moi.innerText ?? "").replace(/\s+/g, " ").trim() : null };
+      });
+      await anh(t.page, `EV-N21-TU-VO-${cfg}`, t, k?.khoi ? { chuThich: [{ rect: k.khoi }] } : {});
+      ghi({ tc: "TC-N21-TU-VO", screen: "N21.S02", state: "chat-0 mở sổ hành trình trên một máy chưa từng mở (khối «MỚI MỞ» hiện)", action: "đọc từng từ trên màn: từ nào nằm trên hơn một dòng", cauHinh: cfg, expected: "không từ nào bị ngắt giữa chừng; cột chữ đủ rộng cho từ dài nhất", status: k ? (k.vo.length ? "FAIL" : "PASS") : "BLOCKED", evidence: cfg === "C2" ? ["EV-N21-TU-VO-C2", "EV-N21-HT-C2"] : [`EV-N21-TU-VO-${cfg}`], ghiChu: k ? `khối «MỚI MỞ»: ${k.tenMoi ? `«${k.tenMoi}», cột chữ rộng ${k.cotMoi}` : "không hiện"}; từ bị ngắt: ${k.vo.map((x) => `«${x.tu}» trên ${x.dong} dòng (cột ${x.cot})`).join(", ") || "không"}` : "không thấy màn" });
+      await t.context.close();
+    }
+    // A stranger on chat-0's profile (403 person_not_visible): what «Thử lại» does, and whether
+    // the sentence asking for a friend request comes with a way to send one (UI-100's family).
+    if (chayPhan("hep", "la")) {
+      const t = await mo("C1", NGOAI, `/people/${ID0}`);
+      const cdp = await cdpCua(t.page);
+      const doc = [];
+      t.page.on("response", (r) => { if (r.url().includes(ID0)) doc.push(r.status()); });
+      await t.page.waitForTimeout(3000);
+      await choOn(t.page, { mang: t.mang });
+      const khoi = async () => t.page.evaluate(() => {
+        const man = [...document.querySelectorAll('[data-testid="ho-so-nguoi-screen"]')].filter((e) => e.getClientRects().length).pop() ?? document.body;
+        const nut = [...man.querySelectorAll('[role="button"]')].filter((b) => b.getClientRects().length).map((b) => (b.getAttribute("aria-label") || (b.innerText ?? "")).replace(/[-]/g, "").replace(/\s+/g, " ").trim());
+        return { chu: (man.innerText ?? "").replace(/[-]/g, "").replace(/\s+/g, " ").trim().slice(0, 200), nut };
+      });
+      const truoc = await khoi();
+      const soTruoc = doc.length;
+      const p = await bam(t, cdp, "Thử lại", { cho: 2500 });
+      const sau = await khoi();
+      const trangThai = doc.slice(soTruoc);
+      const loiKetBan = sau.nut.filter((x) => /Kết bạn|lời mời/i.test(x));
+      ghi({ tc: "TC-N21-XEM-LA-THU-LAI", screen: "N21.S03", state: "dalat-0 (người lạ: không là bạn, không chung nhóm) mở hồ sơ chat-0; máy chủ trả 403 person_not_visible", action: "đọc khối lỗi; chạm «Thử lại»", cauHinh: "C1", expected: "không có «Thử lại» cho một từ chối cố định; câu mời kết bạn đi kèm một lối kết bạn (họ UI-100)", status: p && sau.chu === truoc.chu && !loiKetBan.length ? "FAIL" : p ? "PASS" : "BLOCKED", evidence: ["EV-N21-XEM-DALAT-0-C1"], ghiChu: `khối: «${truoc.chu}»; nút: ${truoc.nut.join(", ") || "không"}; «Thử lại»: ${p ? "chạm" : "không thấy"}, gọi lại ${trangThai.length} lần (${trangThai.join(", ") || "-"}); sau: ${sau.chu === truoc.chu ? "y như trước" : `«${sau.chu}»`}; lối kết bạn: ${loiKetBan.join(", ") || "không"}` });
+      await t.context.close();
+    }
+  }
+
   // ---------------------------------------------------------- khong-phien
+  // Two clauses, two rows. The label: inside a TopBar DemoBadge draws «Demo» and keeps
+  // «Dữ liệu demo» as its accessible name (ui.tsx), so the label is read from the name, not
+  // from innerText. The way in: UI-082's clearing criterion (F11) asks every demo screen
+  // for a visible «Đăng nhập».
   if (chay("khong-phien")) {
     const t = await mo("C1", null, "/achievements");
     await t.page.waitForTimeout(3000);
     await choOn(t.page, { mang: t.mang });
     const chu = (await chuTrang(t.page)).slice(0, 220);
     const den = await duongDan(t.page);
+    const k = await t.page.evaluate(() => {
+      const hien = (e) => e.getClientRects().length > 0;
+      const nhan = [...document.querySelectorAll('[aria-label="Dữ liệu demo"]')].filter(hien).map((e) => (e.innerText ?? "").replace(/[-]/g, "").trim());
+      const vao = [...document.querySelectorAll('[role="button"],[role="link"],a[href]')].filter((e) => hien(e) && /Đăng nhập/.test((e.getAttribute("aria-label") ?? "") + " " + (e.innerText ?? ""))).length;
+      return { nhan, vao };
+    });
     await anh(t.page, "EV-N21-KHONG-PHIEN-C1", t);
-    ghi({ tc: "TC-N21-KHONG-PHIEN", screen: "N21.S02", state: "không phiên", action: "mở /achievements bằng link", cauHinh: "C1", expected: "không lộ dữ liệu của ai; hoặc có lối đăng nhập, hoặc bản demo mang nhãn «Dữ liệu demo»", status: /Dữ liệu demo|Đăng nhập/.test(chu) ? "PASS" : "FAIL", evidence: ["EV-N21-KHONG-PHIEN-C1"], ghiChu: `tới ${den}; «${chu}»` });
+    ghi({ tc: "TC-N21-KHONG-PHIEN", screen: "N21.S02", state: "không phiên", action: "mở /achievements bằng link", cauHinh: "C1", expected: "không lộ dữ liệu của ai; hoặc có lối đăng nhập, hoặc bản demo mang nhãn «Dữ liệu demo»", status: k.nhan.length || k.vao ? "PASS" : "FAIL", evidence: ["EV-N21-KHONG-PHIEN-C1"], ghiChu: `tới ${den}; nhãn demo: ${k.nhan.length ? `có, hiện chữ «${k.nhan[0]}», tên trợ năng «Dữ liệu demo»` : "không"}; lối đăng nhập: ${k.vao}; «${chu}»` });
+    ghi({ tc: "TC-N21-KHONG-PHIEN-DANG-NHAP", screen: "N21.S02", state: "không phiên, màn «Thành tích» bản demo", action: "tìm lối «Đăng nhập» trên màn", cauHinh: "C1", expected: "màn demo có một lối «Đăng nhập» nhìn thấy được (tiêu chí gỡ UI-082, phần F11); bản demo nói về đúng tính năng đang có", status: k.vao ? "PASS" : "FAIL", evidence: ["EV-N21-KHONG-PHIEN-C1"], ghiChu: `lối đăng nhập: ${k.vao ? `${k.vao} nút` : "không có"}; màn là «Thành tích» bản cũ: «Huy hiệu của bạn», sáu huy hiệu kèm số đếm («1/10 chuyến»…), câu «Số này đếm từ những gì bạn đã làm trong Rủ Đi», không phải sổ hành trình người có phiên thấy` });
     await t.context.close();
   }
 } finally {

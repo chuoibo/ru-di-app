@@ -13,6 +13,10 @@
 - Checkpoint N15 audit sổ chuyến đi / Nếp v3 (task #15, ADR-0039): khép cuộc đi, giữ sổ, sửa, công khai, gửi Cộng đồng, xoá,
   và thêm UI-149…UI-154. Mục «N15» nói phần nào đạt; mục «Mở rộng (đo ở N15)» ghi tám issue của audit gốc gặp lại, trong đó
   link sổ khi chưa đăng nhập là UI-121. Quan sát Q4 đóng ở đây (UI-149).
+- Checkpoint N21 audit hồ sơ kể chuyện (task #21, PR #658): sổ hành trình nhiều ngã rẽ, huy hiệu trưng bày, tường cá nhân v2,
+  bình luận một tầng, ảnh toàn màn kèm khay, đăng lại. Thêm UI-155…UI-162. Mục «N21» nói phần nào đạt; mục «Mở rộng (đo ở
+  N21)» ghi tám issue của audit gốc gặp lại. Quan sát Q3 đóng ở đây (UI-158). Cùng checkpoint, phần hero quyết toán của UI-149
+  đã đo được trên màn (không còn là giả thuyết).
 - MODE = AUDIT_ONLY: không issue nào được sửa. «Trạng thái sửa» của mọi issue là *chưa sửa*; «Retest» là
   *không áp dụng*.
 - Phân loại, mức và phương pháp như audit gốc: BUG · UX ISSUE · VISUAL POLISH; P0–P3; RUNTIME-WEB, STATIC,
@@ -22,8 +26,8 @@
 
 | Mức | Issue |
 |---|---|
-| P2 | UI-123, UI-124, UI-130, UI-132, UI-133, UI-134, UI-135, UI-136, UI-137, UI-138, UI-149, UI-150, UI-151 |
-| P3 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-131, UI-139, UI-140, UI-141, UI-142, UI-143, UI-144, UI-145, UI-146, UI-147, UI-148, UI-152, UI-153, UI-154 |
+| P2 | UI-123, UI-124, UI-130, UI-132, UI-133, UI-134, UI-135, UI-136, UI-137, UI-138, UI-149, UI-150, UI-151, UI-155, UI-156, UI-157, UI-158 |
+| P3 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-131, UI-139, UI-140, UI-141, UI-142, UI-143, UI-144, UI-145, UI-146, UI-147, UI-148, UI-152, UI-153, UI-154, UI-159, UI-160, UI-161, UI-162 |
 
 ---
 
@@ -672,17 +676,17 @@ Chưa đo được: native (14 hàng BLOCKED), và Nếp dựng sổ với khoá
 | Trường | Nội dung |
 |---|---|
 | Category / Severity | BUG (số tiền hiện sai chỗ) · **P2** |
-| Feature / Screen / Layer | N15 (quan sát Q4) · `/groups/[id]/album`, kệ album · `GET /contexts/{id}/albums`, `GET /contexts/{id}/recap` (LIVE-GO; bản Python còn chạy và là oracle) |
-| Nền tảng, cấu hình | API trên stack thứ hai (RUNTIME); kệ album web C1. Native gọi cùng API (STATIC) |
+| Feature / Screen / Layer | N15 (quan sát Q4) · `/groups/[id]/album`, kệ album; `/settlements/[id]`, hero quyết toán của nhóm · `GET /contexts/{id}/albums`, `GET /contexts/{id}/recap` (LIVE-GO; bản Python còn chạy và là oracle) |
+| Nền tảng, cấu hình | API trên stack thứ hai (RUNTIME); kệ album và hero quyết toán, web C1. Native gọi cùng API (STATIC) |
 | Điều kiện | Nhóm có hai kèo mà khoảng ngày chồng nhau (một kèo một ngày trong một chuyến hai ngày, hay hai kèo cùng ngày), và một khoản chi có ngày rơi vào phần chồng |
 | Tái hiện | 1. Nhóm chat-test có một khoản chi ngày 29/09 (tổng phân bổ 13.705.678đ, ghi ở F04) và «Kèo album retest» 29–30/09. 2. chat-0 tạo «Kèo trùng ngày kiểm tổng» ngày 29/09, không chi gì, không ảnh. 3. Mở kệ album của nhóm; đọc hai API trên |
 | Expected | Mỗi khoản chi thuộc đúng một kèo, hoặc không kèo nào. «Đã chia» của các kèo cộng lại không vượt tổng chi của nhóm |
-| Actual | API: cả hai kèo `split_total_vnd` 13.705.678, `expense_count` 1. Recap: «đã xong» có «Kèo trùng ngày kiểm tổng» 13.705.678đ, «đang đi» có «Kèo album retest» 13.705.678đ. Kệ album: hai hàng cùng ghi «3 ảnh · 0 chỗ đã tới · 0 check-in · đã chia 13.705.678đ», dù kèo vừa tạo không có ảnh hay khoản chi nào của riêng nó. Số ảnh cũng tính theo ngày. Riêng với ảnh, màn chọn chất liệu của sổ nói rõ «Ảnh đã được chọn theo ngày đi. Bạn xem lại nhé, nhất là khi hai cuộc hẹn trùng nhau.»; với tiền thì không có bước xem lại nào. Kệ chỉ ghi năm «2026»: đó là UI-103 |
-| Evidence | ![Kệ album: hai kèo trùng ngày cùng ghi «đã chia 13.705.678đ»](evidence/EV-N15-Q4-KE-C1.jpg) (hàng `TC-N15-Q4-API`, `TC-N15-Q4-KE`) |
+| Actual | API: cả hai kèo `split_total_vnd` 13.705.678, `expense_count` 1. Recap: «đã xong» có «Kèo trùng ngày kiểm tổng» 13.705.678đ, «đang đi» có «Kèo album retest» 13.705.678đ. Kệ album: hai hàng cùng ghi «3 ảnh · 0 chỗ đã tới · 0 check-in · đã chia 13.705.678đ», dù kèo vừa tạo không có ảnh hay khoản chi nào của riêng nó. Số ảnh cũng tính theo ngày. Riêng với ảnh, màn chọn chất liệu của sổ nói rõ «Ảnh đã được chọn theo ngày đi. Bạn xem lại nhé, nhất là khi hai cuộc hẹn trùng nhau.»; với tiền thì không có bước xem lại nào. Kệ chỉ ghi năm «2026»: đó là UI-103. Đo lại ngày 01/10, khi «Kèo album retest» đã xong (`TC-N15-Q4-HERO`): recap ghi cả hai kèo trong «đã xong», mỗi kèo 13.705.678đ, tổng 27.411.356đ; hero quyết toán của nhóm ghi «2 chuyến đã kết thúc (20 người) · Số này tính lại từ sổ mỗi lần mở · 27.411.356đ», trong khi cả nhóm chỉ có một khoản chi 13.705.678đ |
+| Evidence | ![Kệ album: hai kèo trùng ngày cùng ghi «đã chia 13.705.678đ»](evidence/EV-N15-Q4-KE-C1.jpg) (hàng `TC-N15-Q4-API`, `TC-N15-Q4-KE`) ![Hero quyết toán sau khi hai kèo cùng xong: 27.411.356đ cho một khoản chi 13.705.678đ](evidence/EV-N15-Q4-HERO-C1.jpg) (hàng `TC-N15-Q4-HERO`; nhãn tên chồng nhau trong sơ đồ là UI-054) |
 | Source | `services/core/internal/repo/recap.go:127`: khoản chi nối vào kèo bằng `on_date BETWEEN outings.starts_on AND outings.ends_on`, trong cùng nhóm. `:160`: kỷ niệm (ảnh) nối cùng cách. Bảng `expenses` không có cột kèo. Oracle Python làm y hệt: `services/api/app/api/repository.py:3012` (tiền), `:3029` (kỷ niệm). `routes.json`: `/contexts/{context_id}/albums` và `/recap` là LIVE-GO, `python: live`. Parity so Go với Python nên vẫn xanh trong khi cả hai cùng cộng trùng; bản sửa phải đi qua cả hai. App: `src/rudi/doc-live.ts:126` (`tongTuRecap`) lấy tổng của kèo đang đi đầu tiên, không thì tổng các kèo đã xong; `screens/Bill.tsx:464` đưa số đó lên hero quyết toán |
-| Hậu quả | Người trong nhóm đọc album thấy nhiều kèo cùng «đã chia» một khoản, và cộng lại nhiều hơn số cả nhóm đã chi. **UNVERIFIED HYPOTHESIS** (suy từ mã, chưa đo trên màn): sau 30/09, khi «Kèo album retest» thành đã xong, recap cộng hai kèo thành 27.411.356đ, gấp đôi khoản chi thật, và hero quyết toán hiện số đó. Sổ cái và số dư không bị ảnh hưởng; sai nằm ở con số đọc ra. Còn lối đọc đúng (Tài chính, quyết toán theo sổ), nên là P2 |
+| Hậu quả | Người trong nhóm đọc album thấy nhiều kèo cùng «đã chia» một khoản, và cộng lại nhiều hơn số cả nhóm đã chi. Từ khi cả hai kèo đã xong, hero quyết toán của nhóm hiện 27.411.356đ, gấp đôi khoản chi thật (RUNTIME, `TC-N15-Q4-HERO`; ở checkpoint N15 phần này còn là giả thuyết suy từ mã). Sổ cái và số dư không bị ảnh hưởng; sai nằm ở con số đọc ra. Còn lối đọc đúng (Tài chính, quyết toán theo sổ), nên là P2 |
 | Đề xuất sửa | Gắn khoản chi với kèo lúc ghi (cột kèo trên khoản chi, hoặc bảng nối). Hoặc khi hai kèo chồng ngày thì chỉ tính một lần và nói rõ trên màn. Đây là đổi mô hình dữ liệu của tiền, nên theo quy trình của repo mở ADR trước. Sửa cả Go lẫn oracle Python; thêm ca kèo chồng ngày vào parity và vào tầng PostgreSQL thật |
-| Tiêu chí gỡ | `n15-nhat-ky.mjs --chi q4`: tổng `split_total_vnd` của các kèo trong nhóm không vượt tổng phân bổ của nhóm; kèo không có khoản chi nào của riêng nó ghi 0đ; kệ album không ghi cùng một khoản ở hai kèo |
+| Tiêu chí gỡ | `n15-nhat-ky.mjs --chi q4`: tổng `split_total_vnd` của các kèo trong nhóm không vượt tổng phân bổ của nhóm; kèo không có khoản chi nào của riêng nó ghi 0đ; kệ album không ghi cùng một khoản ở hai kèo. `--chi q4:hero`: hero quyết toán của nhóm không vượt tổng chi của nhóm |
 | Trạng thái sửa · Retest | chưa sửa · không áp dụng |
 
 ### UI-150 · Lưu sổ lỗi: nút thôi quay, quanh nút không gì đổi; câu lỗi nằm ở đầu màn, trên hơn một nghìn điểm ảnh
@@ -794,10 +798,233 @@ Tám issue của `docs/claude/2026-09-27/mobile-ui-audit/issues.md` gặp lại 
 
 ---
 
+## N21 Hồ sơ kể chuyện: sổ hành trình, huy hiệu trưng bày, tường cá nhân v2 (#658, `03-profile-story-social.md`)
+
+Đo trên bản web export của main với stack thứ hai. Thiết kế đọc đối chiếu: `docs/architecture/03-profile-story-social.md`.
+Stack không có khoá AI và chưa nối worker dựng MP4. Persona (seed chat-test, đọc qua API trước mọi lần ghi):
+- chat-0: chủ sổ hành trình và chủ tường; ba huy hiệu mở đầu (check-in, ảnh, bài kể) có từ các lượt trước;
+- chat-1: bạn của chat-0. Bình luận, trả lời, thích, đăng lại;
+- chat-16: cùng nhóm với chat-0, không là bạn;
+- chat-17: bạn của chat-1 (kết bạn trong lượt đo), không là bạn của chat-0. Dùng để kiểm quyền xem bài gốc của bài đăng lại;
+- dalat-0: ngoài nhóm chat-test, người lạ.
+
+Phần ghi chạy sau 0 giờ 01/10 giờ Việt Nam, để bài kể mới rơi vào ngày kể thứ ba. Mọi lần ghi liệt kê ở `report.md` §A.
+
+Đạt trong phạm vi đã đo (`coverage-matrix.md`, hàng `TC-N21-*`):
+- **Quyền xem huy hiệu** (API và màn):
+  - bạn và người cùng nhóm thấy đúng ba huy hiệu chủ hồ sơ chọn; không thấy tiến độ, nhánh hay lượt MP4;
+  - người lạ nhận 403 `person_not_visible`, màn không lộ gì.
+
+  ![Hồ sơ chat-0 qua mắt bạn (C1–C3), người cùng nhóm, người lạ; thẻ bài Cộng đồng trên tường](evidence/EV-N21-XEM-ghep.jpg)
+- **Sổ hành trình** ở C1, C3, C6:
+  - bìa, khối «MỚI MỞ», bản đồ bốn tuyến, thẻ ngã rẽ có tiến độ, «Nếp nhìn đường đi», «Dấu ấn đã giữ» thấy trọn;
+  - mọi mẫu sáng tạo ghi «Mẫu sáng tạo sắp dùng được: …». Đúng thiết kế: không quảng cáo mẫu chưa nối như quyền đã dùng được;
+  - mỗi tuyến hiện hai ngã rẽ của nó; tuyến «Ngã rẽ» nói cần một kết trước.
+
+  ![Sổ hành trình ở C1, C2, C3, C6](evidence/EV-N21-HT-ghep.jpg)
+- **Chọn và nhận kết**:
+  - bài «Bạn bè» có ảnh của chat-0 là bài kể ở ngày thứ ba, đưa «Chuyện mình kể» lên 3/3;
+  - «Chọn hướng này» đổi thành «Nhận kết này». Nhận thì máy chủ ghi kết và cấp 1 lượt MP4;
+  - bìa thành «1 kết đã mở · 1 lượt dựng MP4 còn dùng được»; thẻ thành «Đã ghi vào sổ», tắt kèm lý do «Kết này đã ghi vào sổ.»;
+  - khoảnh khắc «MỚI MỞ Chuyện mình kể» (Nếp M8) hiện ngay sau khi nhận; tải lại thì không lặp.
+- **Nếp, khi không có khoá AI**:
+  - «Xem Nếp sẽ nhận gì» liệt kê đúng thứ sẽ gửi: chỉ số đếm và mã ngã rẽ. Không gửi ảnh, nội dung bài, danh tính bạn đồng hành,
+    chat hay vị trí; mỗi lần hỏi phải đồng ý lại;
+  - thân yêu cầu app gửi chỉ có `{"consent":true}`;
+  - không có khoá thì sổ tự gợi ý ba ngã rẽ, nói rõ «Nếp đang vắng. Sổ đã gợi ý từ tiến độ thật của bạn.».
+
+  ![Tuyến Ngã rẽ, chọn ngã rẽ, bản xem trước cho Nếp, gợi ý khi không có AI, lỗi đọc sổ](evidence/EV-N21-NEP-ghep.jpg)
+- **Trưng bày**: chạm ba huy hiệu thì cả ba thành «Trên hồ sơ»; máy chủ lưu đúng ba.
+- **Lối vào từ tab Cá nhân** ở C1–C3: thẻ «Dấu mốc mới» nói đúng số huy hiệu và lượt MP4 của máy chủ; chạm thì tới sổ.
+- **Trang viết cũ** (`/posts/[id]`) ở C1–C3:
+  - bình luận gốc, lời đáp lùi một bậc (24px). Trả lời một lời đáp thì câu mới vẫn treo dưới bình luận gốc: đúng một tầng;
+  - thích bình luận: máy chủ ghi, tên nút đổi thành «Bỏ thích bình luận»;
+  - chạm ảnh trên tường mở ảnh toàn màn kèm khay «Lời nhắn dưới ảnh»: dialog, tiêu điểm vào trong, «Đóng ảnh» 48×48. Gửi từ khay
+    thành bình luận của bài. Esc đóng hết, không còn lớp phủ.
+
+  ![Trang viết cũ: bình luận một tầng ở C1–C3, ảnh toàn màn kèm khay ở C1 và C8](evidence/EV-N21-BAI-ghep.jpg)
+- **Chia sẻ và đăng lại**:
+  - khay nói ai thấy bài đăng lại, và rằng nội dung bài gốc chỉ hiện cho người đã có quyền xem bài đó;
+  - «Gửi vào chat» tắt, kèm câu chờ chat mã hoá đầu cuối;
+  - chat-17 thấy bài đăng lại của chat-1, không thấy chữ hay ảnh của bài gốc «Bạn bè»: API trả trích gốc rỗng, màn ghi «Bài gốc
+    không còn xem được».
+- **Tường v2**:
+  - trang đầu 20 bài; «Xem những trang trước» nối trang sau (23 bài), hết bài thì nút biến mất;
+  - lượt thích của người khác hiện trên thẻ sau 517 ms (long poll);
+  - máy chủ lỗi 25 s: tường giữ nguyên 20 thẻ, không hiện khối lỗi.
+
+  ![Khay chia sẻ, đăng lại, quyền xem bài gốc; trang 2 khi long poll trả về](evidence/EV-N21-TUONG-ghep.jpg)
+- **Lỗi đọc sổ** (503 ở lần đọc đầu): câu «Chưa mở được sổ hành trình», «Thử lại» mở được sổ.
+- **Không phiên**: `/achievements` ra bản demo có nhãn «Demo» (tên trợ năng «Dữ liệu demo»); không lộ dữ liệu của ai.
+
+Chưa đo được: native (8 hàng BLOCKED); Nếp với khoá AI thật (`TC-N21-NEP-AI-THAT`); dựng MP4, vì worker chưa nối
+(`TC-N21-MP4-DUNG`). Hai hàng cuối cũng BLOCKED.
+
+### UI-155 · Tường: mỗi lần long poll trả về, danh sách bị thay bằng trang đầu; trang vừa mở thêm biến mất dưới tay người đang đọc
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (mất nội dung đang đọc) · **P2** |
+| Feature / Screen / Layer | N21 · `/people/[id]` (hồ sơ người, tường v2) · danh sách bài, «Xem những trang trước»; `GET /social/v2/people/{person_id}/posts` và `/changes` (LIVE-GO, chỉ có bản Go) |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Tường có hơn 20 bài người xem đọc được, và người xem đã chạm «Xem những trang trước» |
+| Tái hiện | 1. chat-0 mở tường của mình (23 bài). 2. Cuộn xuống, chạm «Xem những trang trước»: 23 thẻ. 3a. Một người khác thích một bài (một sự kiện). 3b. Hoặc không ai làm gì, chờ |
+| Expected | Làm mới nền giữ các trang đã mở và chỗ đang đọc. 03-profile-story-social.md: «Client làm mới nền khi có sự kiện và đối soát mỗi lần poll hết hạn, giữ nội dung hiện tại khi mạng tạm lỗi» |
+| Actual | Có sự kiện: 517 ms sau, danh sách về 20 thẻ và «Xem những trang trước» hiện lại. Vị trí cuộn vẫn 4394, nên chỗ bài đang đọc giờ là cuối trang đầu và cái nút. Không có sự kiện: sau 10,6 s, khi lượt poll đang chờ hết hạn, danh sách cũng về 20 thẻ. Khi máy chủ lỗi thì danh sách giữ nguyên (`TC-N21-DOI-LOI` đạt): chỉ lần poll thành công mới cắt |
+| Evidence | ![Đã mở trang 2: 23 bài; 517 ms sau một sự kiện: 20 bài](evidence/EV-N21-TUONG-ghep.jpg) (hai khung cuối; hàng `TC-N21-TRANG-GIU`, `TC-N21-TRANG-GIU-YEN`) |
+| Source | `apps/mobile/src/rudi/screens/nguoi/HoSoNguoiScreen.tsx:187–201`: `napTuong` đọc trang đầu rồi đặt `bai: page.posts`, bỏ các trang đã ghép. `:235`: vòng `watch` gọi `napTuong(true)` sau mỗi lần `docDoiTuong` trả về, có sự kiện hay hết hạn đều vậy. `:203–219`: kết quả của `taiThem` đang chạy bị bỏ, vì `napTuong` đã tăng `tuongLanDoc` |
+| Hậu quả | Phần cũ của tường dài hơn 20 bài gần như không đọc được: mở thêm xong thì trong tối đa 20 s danh sách lại cắt về 20 bài, người đọc mất chỗ. 20 bài mới nhất thì không bị ảnh hưởng |
+| Đề xuất sửa | Làm mới nền chỉ cập nhật các bài đã có và chèn bài mới ở đầu, giữ con trỏ của trang đã tải. Hoặc chỉ đọc lại khi có sự kiện thật, ghép theo id thay vì thay cả danh sách |
+| Tiêu chí gỡ | `n21-ho-so.mjs --chi trang`: sau khi mở trang sau, `TRANG-GIU` (có sự kiện) và `TRANG-GIU-YEN` (30 s không sự kiện) đều giữ 23 thẻ |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-156 · Bài Cộng đồng có ảnh lên tường cá nhân thành bài chữ: thẻ trên tường không có ảnh
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (mất nội dung trên thẻ) · **P2** |
+| Feature / Screen / Layer | N21, chỗ gặp với N14 Cộng đồng · `/people/[id]`, thẻ bài trên tường · `GET /social/v2/people/{person_id}/posts` (LIVE-GO, chỉ có bản Go: không có oracle Python) |
+| Nền tảng, cấu hình | API; web C1. Native: cùng API (STATIC) |
+| Điều kiện | Tác giả có bài Cộng đồng công khai có ảnh. Ở đây là bài B2 của chat-0 (N14), một ảnh tổng hợp 640×480, đã duyệt |
+| Tái hiện | 1. chat-1 mở hồ sơ chat-0. 2. Cuộn tới thẻ «Chiều hôm đó cả nhóm đi bộ dọc bờ hồ…» |
+| Expected | Thẻ trên tường hiện ảnh của bài, như chi tiết bài ở Cộng đồng |
+| Actual | API tường trả bài B2 với `image_url` rỗng; chi tiết bài ở Cộng đồng có 1 ảnh. Thẻ trên tường chỉ có chữ («NHẬT KÝ · 10 giờ trước · Công khai…»): không ảnh, không dấu hiệu bài có ảnh |
+| Evidence | ![Thẻ bài Cộng đồng B2 trên tường: không ảnh](evidence/EV-N21-XEM-ghep.jpg) (khung cuối; hàng `TC-N21-TUONG-ANH-CD`) |
+| Source | `services/core/internal/community/posts.go:190`: bài Cộng đồng INSERT vào `posts` không có `image_url`; ảnh nằm ở `community_revisions.media_ids` (`:141`). `services/core/internal/socialv2/wall.go:110–119` (`wireWallPost`) chỉ đọc `posts.image_url`, nên bài Cộng đồng nào có ảnh cũng lên tường không ảnh |
+| Hậu quả | Bài ảnh mất phần chính khi xem từ hồ sơ. Người xem không biết bài có ảnh, trừ khi mở bài |
+| Đề xuất sửa | `wireWallPost` lấy ảnh từ bản sửa đang công bố của bài Cộng đồng (`community_revisions.media_ids`), qua route ảnh của Cộng đồng có kiểm quyền; hoặc trả danh sách ảnh. Thêm ca bài Cộng đồng có ảnh vào test PostgreSQL thật của `socialv2` |
+| Tiêu chí gỡ | `--chi xem-nguoi:chat-1:C1`: `TC-N21-TUONG-ANH-CD` PASS (thẻ B2 trên tường có ảnh) |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-157 · Sổ hành trình: chọn lối, nhận kết hay trưng bày lỗi thì câu lỗi nằm ở cuối sổ, ngoài khung nhìn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (câu lỗi ngoài tầm nhìn) · **P2** (cùng họ UI-051, UI-095, UI-107, UI-150) |
+| Feature / Screen / Layer | N21 · `/achievements` · thẻ ngã rẽ, «Dấu ấn đã giữ»; `POST /me/achievement-runs`, `POST …/finish`, `PATCH /me/achievement-display` (LIVE-GO, chỉ có bản Go) |
+| Nền tảng, cấu hình | web, C1; máy chủ trả 503 cho `POST /me/achievement-runs` (giả lập bằng `route()`). Native: cùng mã (STATIC) |
+| Điều kiện | Một thao tác của sổ lỗi khi máy chủ gặp sự cố |
+| Tái hiện | 1. chat-0 mở sổ, chọn tuyến «Kỷ niệm». 2. Máy chủ trả 503. 3. Chạm «Chọn hướng này» ở «Những tấm ảnh còn đây» |
+| Expected | Câu lỗi hiện gần nút vừa chạm, trong khung nhìn; không có gì được ghi |
+| Actual | Lúc chạm, nút ở y 422. Sau khi chạm, quanh nút không gì đổi. Câu «Rủ Đi đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.» nằm ở y 1268–1316, cửa sổ cao 844. Không lối nào bị chọn (đạt) |
+| Evidence | ![Lỗi khi chọn lối: khung nhìn sau khi chạm, không có câu lỗi](evidence/EV-N21-SO-ghep.jpg) (khung cuối; hàng `TC-N21-LOI-CHON`) |
+| Source | `apps/mobile/src/rudi/screens/ky-niem/AchievementsLive.tsx:79–86` (`perform`: mọi lỗi vào `actionError`), `:245` (`actionError` vẽ sau danh sách «Dấu ấn đã giữ», ở cuối màn; có `role="alert"` nên trình đọc màn hình có đọc) |
+| Hậu quả | Người chạm «Chọn hướng này», «Nhận kết này» hay một huy hiệu thấy không có gì xảy ra; chạm lại, hoặc nghĩ đã xong |
+| Đề xuất sửa | Đặt câu lỗi ngay dưới nút vừa chạm (biết nút nào nhờ `busy`), hoặc cuộn tới câu lỗi. Cùng đề xuất với UI-051, UI-150 |
+| Tiêu chí gỡ | `--chi loi`: `TC-N21-LOI-CHON` PASS (câu lỗi trong cửa sổ ngay sau khi chạm) |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-158 · Trang viết cũ: không còn lối xoá bình luận của chính mình
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (thiếu thao tác, quyền riêng tư) · **P2** |
+| Feature / Screen / Layer | N21 (quan sát Q3) · `/posts/[id]` (trang viết cũ, `BaiChiTietScreen`) và khay «Lời nhắn dưới ảnh» · hàng bình luận |
+| Nền tảng, cấu hình | web, C1. Native: cùng màn (STATIC) |
+| Điều kiện | Người xem đã bình luận dưới một bài |
+| Tái hiện | 1. chat-1 mở bài «Bạn bè» có ảnh của chat-0, nơi chat-1 có một bình luận gốc và một lời đáp. 2. Tìm lối xoá trên hàng bình luận và trên cả màn. 3. Nhấn giữ bình luận |
+| Expected | Người viết xoá được bình luận của mình, có bước hỏi (tiêu chí của UI-096). Máy chủ vẫn có route xoá |
+| Actual | Trong khối bình luận của chat-1 chỉ có «Thích bình luận» và «Trả lời Chat Test 02». Cả màn không có nút xoá nào; nhấn giữ không mở gì. Khay bình luận của ảnh cũng chỉ có «Thích», «Trả lời» |
+| Evidence | ![Trang viết cũ và khay ảnh: mỗi bình luận chỉ có «Thích», «Trả lời»](evidence/EV-N21-BAI-ghep.jpg) (hàng `TC-N21-Q3-XOA-BL`) |
+| Source | `apps/mobile/src/rudi/screens/tuong/BaiChiTietScreen.tsx`: hàng bình luận chỉ có thích và trả lời. `src/rudi/tuong/bai-chi-tiet.ts:83`: `xoaBinhLuanBai` gọi `DELETE /posts/{post_id}/comments/{comment_id}`, nhưng không màn nào gọi hàm này. `routes.json`: route đó LIVE-GO, còn bản Python. Retest UI-096 trên main ghi «đổi»: nút xoá một chạm bị bỏ hẳn, thay vì thêm bước hỏi |
+| Hậu quả | Bình luận lỡ tay, nhầm người hay lỡ để lộ điều riêng thì không gỡ được, trừ khi tác giả xoá cả bài. Cộng đồng thì có «Xóa» cho bình luận của mình (một chạm, UI-096 ở N14): hai nơi làm khác nhau |
+| Đề xuất sửa | Đưa lại «Xoá» cho bình luận của chính mình, có bước hỏi như ở chat, dùng lại `xoaBinhLuanBai` |
+| Tiêu chí gỡ | `--chi binh-luan`: `TC-N21-Q3-XOA-BL` PASS: có lối xoá bình luận của chat-1, có bước hỏi; sau khi xoá, `GET /social/v2/posts/{post_id}/comments` không còn bình luận đó |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-159 · Đăng lại: khay đóng, câu xác nhận nằm ngoài khung nhìn
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (phản hồi ngoài tầm nhìn) · **P3** |
+| Feature / Screen / Layer | N21 · `/posts/[id]` · khay «Chia sẻ bài»; `POST /social/v2/posts/{post_id}/repost` (LIVE-GO, chỉ có bản Go) |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Đăng lại một bài từ trang viết. Nút «Chia sẻ» nằm dưới ảnh, nên lúc đó màn đang ở phần trên |
+| Tái hiện | 1. chat-1 mở bài của chat-0, chạm «Chia sẻ». 2. Chạm «Bạn bè của tôi» |
+| Expected | Thấy ngay việc đăng lại đã xong: câu xác nhận nằm trong khung nhìn |
+| Actual | Bài đăng lại lên tường chat-1 (bạn bè, mang trích bài gốc). Khay đóng, màn trông như trước khi chạm. Câu «Đã chia sẻ lên tường của bạn.» nằm ở y 1219–1237, cửa sổ cao 844 |
+| Evidence | ![Sau «Bạn bè của tôi»: không thấy câu xác nhận](evidence/EV-N21-TUONG-ghep.jpg) (khung 2; hàng `TC-N21-DANG-LAI`) |
+| Source | `BaiChiTietScreen.tsx:193–200` (`repost`: đóng khay rồi `setNotice`), `:327` (câu `notice` vẽ dưới khối bình luận; có `accessibilityLiveRegion="polite"`, nên trình đọc màn hình có đọc) |
+| Hậu quả | Người dùng không biết đã đăng lại hay chưa, phải mở tường của mình để xem. Chạm lại trên cùng màn dùng cùng khoá (`attemptFor`), nên không đăng hai lần. Mở lại màn rồi đăng lại thì máy chủ tạo bài thứ hai: chỉ có khoá thử chặn trùng (`socialv2/interactions.go:384–395`). Đọc mã, chưa đo |
+| Đề xuất sửa | Hiện câu xác nhận trong khay trước khi đóng, hoặc gần nút «Chia sẻ», hoặc cuộn tới câu |
+| Tiêu chí gỡ | `--chi dang-lai` trên một bài chưa đăng lại: câu xác nhận nằm trong cửa sổ |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-160 · «MỚI MỞ» nhớ theo máy: máy mới trình bày huy hiệu cũ nhất như vừa mở
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | N21 · `/achievements` · khối «MỚI MỞ» (khoảnh khắc Nếp M8) |
+| Nền tảng, cấu hình | web, C1; cùng hiện tượng ở mọi lượt mở bằng trình duyệt mới (C1–C3, C6, C7). Native: bộ nhớ giao diện của máy (STATIC) |
+| Điều kiện | Mở sổ trên máy hay trình duyệt chưa từng mở sổ: máy mới, trình duyệt khác, xoá dữ liệu trang |
+| Tái hiện | 1. chat-0, đã có ba huy hiệu từ 29/09, mở sổ trong một trình duyệt mới. 2. Tải lại |
+| Expected | «MỚI MỞ» chỉ dành cho huy hiệu vừa đạt kể từ lần xem trước của chính người đó. Máy mới không trình bày huy hiệu cũ như vừa mở |
+| Actual | Lần đầu: «MỚI MỞ Dấu chân đầu tiên» cùng Nếp M8. Đó là huy hiệu đạt sớm nhất (29/09). Ngày 01/10, sau khi đã nhận «Chuyện mình kể», mọi trình duyệt mới vẫn trình bày «Dấu chân đầu tiên», không phải huy hiệu mới nhất (`TC-N21-TU-VO` C1–C3, ảnh C7 ngoài git). Tải lại thì hết |
+| Evidence | ![Máy mới: «MỚI MỞ» cho huy hiệu đạt từ 29/09](evidence/EV-N21-SO-ghep.jpg) (khung 1; hàng `TC-N21-MOI-MO`) |
+| Source | `apps/mobile/src/rudi/ky-niem/ky-niem.ts:364–373` (`huyHieuMoi`: huy hiệu đạt đầu tiên chưa có trong danh sách «đã thấy»); `screens/ky-niem/AchievementsLive.tsx:48–60` (danh sách «đã thấy» nằm trong bộ nhớ giao diện của máy, `docGiaoDienAsync`, ghi ngay sau khi hiện) |
+| Hậu quả | Đổi máy hay mở web lần đầu, người dùng được chúc mừng một huy hiệu đạt từ lâu, còn huy hiệu mới thật thì không. «MỚI MỞ» mất nghĩa |
+| Đề xuất sửa | Lưu mốc «đã thấy» theo tài khoản, hoặc chỉ trình bày huy hiệu đạt sau lần mở sổ gần nhất của tài khoản. Nếu vẫn nhớ theo máy thì máy chưa có dữ liệu không trình bày gì, hoặc trình bày huy hiệu mới nhất |
+| Tiêu chí gỡ | `--chi moi-mo`: trình duyệt mới không có khối «MỚI MỞ» cho huy hiệu đạt trước lần xem gần nhất |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-161 · Đã trưng bày đủ ba: chạm huy hiệu thứ tư không gì đổi, hàng vẫn mời «Chạm để trưng bày»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE · **P3** |
+| Feature / Screen / Layer | N21 · `/achievements` · «Dấu ấn đã giữ» (checkbox huy hiệu); `PATCH /me/achievement-display` |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Đã trưng bày ba huy hiệu (tối đa), còn một huy hiệu đã đạt chưa trưng bày |
+| Tái hiện | 1. chat-0 trưng bày «Dấu chân đầu tiên», «Khung ảnh đầu», «Lời kể đầu tiên». 2. Chạm «Chuyện mình kể» |
+| Expected | Nói vì sao không được (đã đủ ba, bỏ một chiếc trước), hoặc hàng đó tắt kèm lý do (ADR-0038) |
+| Actual | Không câu báo nào; hàng vẫn «Chuyện mình kể · Chạm để trưng bày», không dấu chọn. App vẫn gửi một `PATCH` với đúng ba id cũ. Câu «Chọn tối đa ba huy hiệu để hiện trên hồ sơ.» dưới tiêu đề có từ trước, không đổi |
+| Evidence | ![Chạm huy hiệu thứ tư: không gì đổi](evidence/EV-N21-SO-ghep.jpg) (khung 4; hàng `TC-N21-TRUNG-BAY-4`) |
+| Source | `apps/mobile/src/rudi/ky-niem/journey-view.ts:17–21` (`toggleDisplayedBadge` trả nguyên danh sách khi đã đủ ba); `AchievementsLive.tsx:238` (`perform` vẫn gọi `trungBayHuyHieu`, rồi đọc lại sổ) |
+| Hậu quả | Người dùng chạm nhiều lần, nghĩ app hỏng. Mỗi lần chạm là một lệnh ghi thừa |
+| Đề xuất sửa | Khi đã đủ ba: hàng chưa trưng bày ghi «Bỏ một huy hiệu trước để trưng bày» và tắt (viền đứt kèm lý do); không gửi `PATCH` |
+| Tiêu chí gỡ | `--chi trung-bay`: chạm thứ tư không sinh `PATCH`, và có lý do nhìn thấy được |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-162 · Mục «Thành tích · Cấp và huy hiệu tính từ sổ của bạn» mở màn «Hành trình»: tên và lời của bản cũ
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (chữ) · **P3** |
+| Feature / Screen / Layer | N21 · tab Cá nhân (`/profile`) · hàng menu «Thành tích» → `/achievements` |
+| Nền tảng, cấu hình | web, C1, C2, C3 |
+| Điều kiện | Có phiên |
+| Tái hiện | 1. chat-0 mở tab Cá nhân. 2. Đọc mục «Thành tích». 3. Chạm vào |
+| Expected | Tên lối vào khớp tên màn tới; lời không nhắc khái niệm không còn |
+| Actual | Mục ghi «Thành tích · Cấp và huy hiệu tính từ sổ của bạn». Chạm thì tới `/achievements`, tiêu đề màn «Hành trình» (sổ «Cuốn sổ có nhiều ngã rẽ»), không có «cấp» nào. Thẻ ngay phía trên dẫn tới cùng chỗ và nói đúng («Dấu mốc mới…», «4 huy hiệu · 1 lượt dựng MP4») |
+| Evidence | ![Thẻ Hành trình ở C1–C3; mục «Thành tích»](evidence/EV-N21-VAO-ghep.jpg) (khung 1–4; hàng `TC-N21-CA-NHAN` C1–C3) |
+| Source | `apps/mobile/src/rudi/screens/Profile.tsx:270–275` (hàng khi có phiên). Không phiên thì `/achievements` ra bản demo vẫn tên «Thành tích» (`Profile.tsx:569`) |
+| Hậu quả | Hai lối vào một màn mang hai tên; «cấp» gợi một thứ không có. Lỗi nhỏ, nhưng là chữ đầu tiên người dùng đọc trước khi vào sổ |
+| Đề xuất sửa | Đổi hàng thành «Hành trình · Sổ huy hiệu và các ngã rẽ của bạn», hoặc bỏ hàng vì đã có thẻ |
+| Tiêu chí gỡ | `--chi ca-nhan`: `TC-N21-CA-NHAN` PASS ở C1–C3 |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+## Mở rộng issue của audit gốc (đo ở N21)
+
+Tám issue của `docs/claude/2026-09-27/mobile-ui-audit/issues.md` gặp lại trên màn hồ sơ kể chuyện. Không đánh số mới.
+
+| Issue gốc | Gặp lại ở N21 | Hàng · ảnh |
+|---|---|---|
+| UI-001 (vùng bấm dưới 48dp) | Tường: dòng «N thích · N bình luận» dưới mỗi thẻ là nút «Mở N bình luận của bài» cao 18 (324×18 ở C1, 254×18 ở C2), dưới cả 24; cùng đích với nút «Mở bài» ngay trên. Trang viết: «Thích bình luận», «Trả lời …» 68×44 và ô «Viết bình luận» 302×44 | `TC-N21-TUONG-VUNG-BAM` C1, C2 · `TC-N21-BL-VUNG-BAM` C1–C3 · [EV-N21-XEM-ghep](evidence/EV-N21-XEM-ghep.jpg), [EV-N21-BAI-ghep](evidence/EV-N21-BAI-ghep.jpg) |
+| UI-003 (`accessibilityState` không tới DOM) | Sổ hành trình: bốn tab tuyến không có `aria-selected`; huy hiệu trưng bày là checkbox không có `aria-checked`; «Xem Nếp sẽ nhận gì» không có `aria-expanded`. axe critical: aria-required-attr ×3, aria-required-parent ×4 (tab không nằm trong tablist), image-alt ×6 (ảnh huy hiệu) | `TC-N21-HT-TAB-ARIA`, `TC-N21-HT-AXE`, `TC-N21-NEP-ARIA` · [EV-N21-HT-ghep](evidence/EV-N21-HT-ghep.jpg) |
+| UI-008 (Nếp là điểm dừng Tab không tên) | Khối «MỚI MỞ» của sổ: Nếp M8 nhận Tab mà không có tên (112×112 ở C1–C3, 128×128 ở C6). Cùng gốc `NepDien.tsx:52` | `TC-N21-NEP-DIEN-TAB` · [EV-N21-HT-ghep](evidence/EV-N21-HT-ghep.jpg) |
+| UI-040 (sheet quá cao ở cửa sổ thấp) | Ở C8 (390×460), khay «Lời nhắn dưới ảnh» cao 441, tức 96% cửa sổ, đỉnh ở y 19: ảnh chỉ còn dải 19px. Ở C1 khay chiếm 70% | `TC-N21-ANH-KHAY-C8` · [EV-N21-BAI-ghep](evidence/EV-N21-BAI-ghep.jpg) |
+| UI-082 (không phiên: màn demo không có lối đăng nhập) | `/achievements` không phiên ra «Thành tích» bản cũ: có nhãn «Demo» (đạt phần nhãn), nhưng không có lối «Đăng nhập». Lời «Số này đếm từ những gì bạn đã làm trong Rủ Đi» đứng cạnh số bịa; màn khác hẳn sổ hành trình người có phiên thấy | `TC-N21-KHONG-PHIEN-DANG-NHAP` · [EV-N21-VAO-ghep](evidence/EV-N21-VAO-ghep.jpg) |
+| UI-093 (tablet: trải hết bề ngang) | Sổ hành trình: thẻ ngã rẽ và hàng huy hiệu rộng 720 ở C6, 912 ở C7 (nút 686, 878), trong khi bản đồ bốn tuyến giữ 560 (`AchievementsLive.tsx:259`: `routeMap` có `maxWidth: 560`, thẻ thì không) | `TC-N21-HT-TABLET` C6, C7 · [EV-N21-HT-ghep](evidence/EV-N21-HT-ghep.jpg) |
+| UI-100 («Thử lại» vô ích với nội dung không dành cho mình) | Người lạ mở hồ sơ: «Chưa mở được hồ sơ · Hồ sơ này chỉ bạn bè hoặc người cùng nhóm mới xem được. Gửi lời mời kết bạn trước nhé.» kèm «Thử lại». Chạm thì gọi lại một lần, nhận 403, khối y nguyên; màn không có lối kết bạn nào (`HoSoNguoiScreen.tsx:286`) | `TC-N21-XEM-LA-THU-LAI` · [EV-N21-XEM-ghep](evidence/EV-N21-XEM-ghep.jpg) |
+| UI-106 (khối huy hiệu vừa mở bẻ chữ ở 320) | Sổ hành trình ở C2: khối «MỚI MỞ» còn cột chữ 44px giữa ảnh huy hiệu và Nếp M8; chữ «chân» nằm trên hai dòng («châ\|n»), đo bằng Range. C1 (cột 114) và C3 (cột 84) không bẻ. Cùng số đo với `TC-R-UI-106` | `TC-N21-TU-VO` C2, `TC-N21.S02-BASE` C2 · [EV-N21-HT-ghep](evidence/EV-N21-HT-ghep.jpg) |
+
+---
+
 ## Quan sát chưa thành issue (chờ audit feature mới)
 
 Q1 và Q2 đã được đo ở checkpoint N26 và thành issue (cột cuối). Q5 đã được đo ở checkpoint N14. Q4 đã được đo ở checkpoint N15
-và thành UI-149. Q3 còn chờ #21.
+và thành UI-149. Q3 đã được đo ở checkpoint N21 và thành UI-158.
 
 Những điều thấy trong lúc retest, thuộc phần main mới đổi. Chưa đủ căn cứ để gọi là lỗi, vì cần đối chiếu ý đồ
 thiết kế của đúng feature đó. Mỗi điều được giao cho task audit tương ứng, không tính vào số issue.
@@ -806,6 +1033,6 @@ thiết kế của đúng feature đó. Mỗi điều được giao cho task aud
 |---|---|---|---|
 | Q1 | Cặp bạn bè (chưa «Một đôi») vừa lập sổ: thân màn sang «Hai người cũng thành một hội», khoảnh khắc bìa sổ M6 không còn diễn | `KhongGianGiay.tsx`: M6 (`vuaMoSo`) chỉ nằm trong nhánh `giay-trong`, nhánh này chỉ tới được khi `batDoi`; runtime: `TC-R-UI-084-B` C1/C9 không thấy khung M6 nào | **Đã đo ở N26, thành UI-127**: lúc thành «Một đôi» cũng không có khung M6 nào |
 | Q2 | Máy chủ vẫn cho phác và gửi tờ giấy ở cặp chưa «Một đôi»; chỉ UI ẩn nút | `pairsteps/papers.go` `DraftPaper` không kiểm `CanBatDoi` (đọc mã, chưa gọi API trên cặp như vậy) | **Đã đo ở N26, thành UI-131**: phác trả 201 ở cặp chat-6/chat-7 |
-| Q3 | Màn bài `/posts/[id]` không còn lối xoá bình luận nào, cho cả người viết lẫn tác giả bài; nhấn giữ bình luận cũng không mở gì. API `DELETE /posts/{id}/comments/{id}` vẫn còn | `TC-R-UI-096` (đổi); `BaiChiTietScreen.tsx` hàng bình luận chỉ có «Thích», «Trả lời» | #21 tường v2 |
+| Q3 | Màn bài `/posts/[id]` không còn lối xoá bình luận nào, cho cả người viết lẫn tác giả bài; nhấn giữ bình luận cũng không mở gì. API `DELETE /posts/{id}/comments/{id}` vẫn còn | `TC-R-UI-096` (đổi); `BaiChiTietScreen.tsx` hàng bình luận chỉ có «Thích», «Trả lời» | **Đã đo ở N21, thành UI-158**: chat-1 không có lối xoá bình luận của mình, ở trang viết lẫn khay ảnh; `xoaBinhLuanBai` không màn nào gọi |
 | Q4 | Album kèo ghi «đã chia» bằng tổng phân bổ của mọi khoản chi trong nhóm có ngày rơi vào khoảng ngày của kèo, không theo kèo: «Kèo album retest» vừa tạo ghi «đã chia 13.705.678đ» của khoản chi lượt F04. Hai kèo trùng ngày sẽ cùng ghi một khoản | `repo/recap.go`: nối `expenses` theo `on_date BETWEEN outings.starts_on AND outings.ends_on`; bảng `expenses` không có cột kèo. Đọc mã Go, chưa đối chiếu oracle Python | **Đã đo ở N15, thành UI-149**: hai kèo trùng ngày cùng ghi «đã chia 13.705.678đ»; oracle Python tính y hệt Go (`repository.py:3012`) |
 | Q5 | Tab Cộng đồng khi chưa đăng nhập có nút «Đăng nhập», trong khi bốn tab demo kia và hai route demo không có (tính vào `TC-R-UI-082-F11`) | `TC-R-UI-082-F11` | **Đã đo ở N14, không thành issue mới**: tab Cộng đồng đúng (`TC-N14-KHONG-PHIEN`: lời mời, «Đăng nhập» tới `/login`); phần lệch nằm ở các tab demo, đã tính vào UI-082. Màn trong của Cộng đồng mở từ link thì không có lối đăng nhập: UI-137 |

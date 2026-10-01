@@ -99,6 +99,11 @@
   "sha8": "90fdbbe9",
   "moTa": "N15 màn «Mang theo điều gì vào sổ?» ở C1, C2, C3, C8, C6 (đạt)"
  },
+ "EV-N15-Q4-HERO-C1": {
+  "bytes": 192184,
+  "sha8": "a9d4b4e6",
+  "moTa": "N15 bổ sung (UI-149): quyết toán nhóm chat-test sau khi hai kèo cùng ngày đã xong, hero ghi «2 chuyến đã kết thúc (20 người)» 27.411.356đ trong khi cả nhóm chỉ có một khoản chi 13.705.678đ; nhãn tên chồng nhau trong sơ đồ là UI-054"
+ },
  "EV-N15-Q4-KE-C1": {
   "bytes": 81387,
   "sha8": "a153702c",
@@ -118,6 +123,41 @@
   "bytes": 171943,
   "sha8": "61c5ca2c",
   "moTa": "N15 thành viên giữ sổ rồi xoá từ link lạnh (có sheet hỏi); UI-121 link sổ khi chưa đăng nhập về Welcome, đăng nhập xong vào Khám phá, mất link"
+ },
+ "EV-N21-BAI-ghep": {
+  "bytes": 133428,
+  "sha8": "a7bef94d",
+  "moTa": "N21 trang viết cũ: bình luận gốc và một tầng trả lời ở C1–C3, không có lối xoá bình luận (UI-158); ảnh toàn màn kèm khay, ở C8 khay 96% cửa sổ (UI-040)"
+ },
+ "EV-N21-HT-ghep": {
+  "bytes": 157076,
+  "sha8": "9e187024",
+  "moTa": "N21 sổ hành trình của chat-0 ở C1, C2, C3, C6: bìa, khối «MỚI MỞ», bản đồ bốn tuyến, thẻ ngã rẽ «sắp dùng được»; ở C2 tên huy hiệu vỡ giữa từ (UI-106), ở C6 thẻ trải 720 còn bản đồ 560 (UI-093)"
+ },
+ "EV-N21-NEP-ghep": {
+  "bytes": 183064,
+  "sha8": "ee71d879",
+  "moTa": "N21 tuyến Ngã rẽ, chọn «Chuyện mình kể», bản xem trước cho Nếp chỉ số đếm, sau khi đồng ý sổ tự gợi ý khi không có AI, lỗi đọc sổ có «Thử lại» (đạt)"
+ },
+ "EV-N21-SO-ghep": {
+  "bytes": 196368,
+  "sha8": "fcff3624",
+  "moTa": "N21 «MỚI MỞ» trên máy mới trình bày huy hiệu cũ (UI-160); khoảnh khắc sau khi nhận kết và tải lại (đạt); chạm huy hiệu thứ tư không gì đổi (UI-161); lỗi chọn lối ngoài khung nhìn (UI-157)"
+ },
+ "EV-N21-TUONG-ghep": {
+  "bytes": 188210,
+  "sha8": "50ddb733",
+  "moTa": "N21 khay chia sẻ, đăng lại (câu xác nhận ngoài khung nhìn, UI-159), bài gốc không lộ cho người không có quyền; trang 2 của tường bị cắt về 20 bài khi long poll trả về (UI-155)"
+ },
+ "EV-N21-VAO-ghep": {
+  "bytes": 172567,
+  "sha8": "bcf4ea92",
+  "moTa": "N21 lối vào sổ hành trình: thẻ trên tab Cá nhân ở C1–C3; mục «Thành tích · Cấp và huy hiệu…» mở màn «Hành trình» (UI-162); không phiên: «Thành tích» bản cũ có nhãn «Demo», không lối đăng nhập (UI-082)"
+ },
+ "EV-N21-XEM-ghep": {
+  "bytes": 197809,
+  "sha8": "3b8b616a",
+  "moTa": "N21 hồ sơ chat-0 qua mắt bạn (C1–C3), người cùng nhóm, người lạ (UI-100: «Thử lại» vô ích); bài Cộng đồng có ảnh lên tường không ảnh (UI-156)"
  },
  "EV-N26-CHU-NHOM-ghep": {
   "bytes": 66675,

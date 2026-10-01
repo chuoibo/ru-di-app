@@ -109,6 +109,15 @@ node kich-ban/n15-nhat-ky.mjs --chi hep,vao:chat-0:C2   # chỉ đọc: sửa s�
 node kich-ban/n15-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native và Nếp thật BLOCKED, rút TC-N-15-…; chạy lại không thêm dòng
 node kich-ban/n15-ghep.mjs           # ảnh ghép của N15, gắn vào hàng
 # Thứ tự chốt checkpoint N15: n15-phan-xu → n15-ghep → chot-anh → tong-hop → kiem-tai-lieu
+node kich-ban/n15-nhat-ky.mjs --chi q4:hero   # chỉ đọc, sau khi «Kèo album retest» xong: recap và hero quyết toán (UI-149)
+# Feature mới #21, hồ sơ kể chuyện (checkpoint N21). Đọc trước mọi lần ghi: api, hanh-trinh, ca-nhan, moi-mo, nep, loi.
+# Ghi, sau 0 giờ của một ngày Việt Nam mới (ngày kể đếm theo ngày VN) và theo thứ tự: bai-anh, ket, trung-bay, xem-nguoi,
+# binh-luan, anh-toan-man, dang-lai, trang. Mỗi phần ghi kiểm trước khi ghi. ket nhận kết thật, không nhận lại được.
+node kich-ban/n21-ho-so.mjs --chi api,hanh-trinh,ca-nhan,moi-mo,nep,loi   # chỉ đọc
+node kich-ban/n21-ho-so.mjs --chi hep,khong-phien   # chỉ đọc, lúc nào cũng được: hep:C2, hep:tablet, hep:tu-vo, hep:la
+node kich-ban/n21-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native, Nếp thật và MP4 BLOCKED, rút TC-N-21-…; chạy lại không thêm dòng
+node kich-ban/n21-ghep.mjs           # ảnh ghép của N21, gắn vào hàng
+# Thứ tự chốt checkpoint N21: n21-phan-xu (và n15-phan-xu cho hàng hero) → n21-ghep → chot-anh → tong-hop → kiem-tai-lieu
 node retest-bang.mjs <docs gốc> <docs main>   # sinh retest.md từ issues.md gốc và sổ retest
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
@@ -286,6 +295,21 @@ Bài học của checkpoint N15 (sổ chuyến đi, 30/09):
   liệu hay comment khi giải thích (chính lời giải thích đã bị chặn một lần).
 - Khung đỏ của ảnh chú thích (`-ct`) có thể đè lên chữ đầu dòng («0 check-in» đọc thành «check-in»). Ảnh commit cho một
   con số thì dùng bản không chú thích.
+
+Bài học của checkpoint N21 (hồ sơ kể chuyện, 30/09–01/10):
+- Luật PASS tự động phải phủ mọi vế của expected. Hàng `TC-N21-CA-NHAN` nêu ba vế (số trên thẻ, nơi tới, tên lối vào) mà
+  luật chỉ xét thẻ có mặt; hai hàng PASS thiếu vế đã phải rút. Viết expected xong thì đọc lại luật theo từng vế.
+- Một mẫu neo cuối (`…$`) không được thử trên chuỗi ghép từ hai nguồn (tên trợ năng nối với chữ hiện): chuỗi kết thúc bằng
+  nguồn sau. Thử riêng từng chuỗi.
+- Nhãn có thể ở tên trợ năng chứ không ở chữ hiện: trong thanh đầu, `DemoBadge` vẽ «Demo» nhưng tên là «Dữ liệu demo». Đọc
+  nhãn theo `aria-label` trước khi kết luận «không có nhãn».
+- Khoảnh khắc chỉ diễn một lần phải đọc ngay sau thao tác gây ra nó, không đọc sau khi tải lại (`TC-N21-M8`).
+- Phần tử cha của một nút là thẻ; leo thêm vài tầng là ra cả danh sách (`TC-N21-TUONG-ANH-CD` PASS giả). Tìm khối của một bình
+  luận thì đi từ chữ của nó lên, không đi từ một nút thích lên: lời đáp lồng trong khối của bình luận gốc.
+- Detector hình (tràn, cắt) không thấy từ bị vỡ giữa chừng: chữ vẫn nằm trong khung. `hep:tu-vo` đo bằng Range cho từng từ;
+  dùng khi cột chữ hẹp (khối có ảnh hai bên).
+- Một thao tác ghi có thể chạm dữ liệu của chính persona đang đo (thích nhầm bình luận của chính mình). Đếm lại trạng thái
+  máy chủ ngay sau mỗi lần ghi, và trả lại bằng API khi lệch.
 
 ## Những điều harness không đo được
 

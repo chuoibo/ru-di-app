@@ -68,6 +68,8 @@ phanXu({ tc: "TC-N15-O-NHAP-44", screen: "N15.S04", state: "chat-0, chế độ 
 // ------------------------------------------- measured rows, now with issues
 ganIssue("TC-N15-Q4-API", ["-"], "UI-149");
 ganIssue("TC-N15-Q4-KE", ["C1"], "UI-149");
+// Measured after «Kèo album retest» ended (q4:hero, 01/10): the group settlement hero adds the shared expense once per outing.
+ganIssue("TC-N15-Q4-HERO", ["C1"], "UI-149");
 ganIssue("TC-N15-LUU-LOI", ["C1"], "UI-150");
 ganIssue("TC-N15-API", ["-"], "UI-151");
 ganIssue("TC-N15-KHEP-SAP-TOI", ["C1"], "UI-151");
