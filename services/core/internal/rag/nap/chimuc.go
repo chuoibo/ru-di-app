@@ -105,6 +105,8 @@ type ChiMuc struct {
 	// HanMuc is the online budget and the backoff of a failing online door
 	// (nil: no budget, a fixed backoff; tests).
 	HanMuc *HanMuc
+	// GiamSat receives the loop's heartbeat (nil: none).
+	GiamSat *GiamSat
 }
 
 // BaoCaoChiMuc is one pass, counts only.
@@ -477,10 +479,13 @@ func (c ChiMuc) MotLuot(ctx context.Context, tx pgx.Tx) (BaoCaoChiMuc, error) {
 		}
 		// A row a change reached meanwhile is not deferred: the change
 		// may be the one that unblocks it.
+		// Its attributes are current as of this pass's read: what waits is
+		// its vector (cho_tu dates the wait).
 		if _, err := tx.Exec(ctx, `UPDATE rag_dirty d SET cho_den = clock_timestamp() + s.giay * interval '1 second',
-				cho_nhung = d.cho_nhung OR s.nhung
+				cho_nhung = d.cho_nhung OR s.nhung, cho_tu = COALESCE(d.cho_tu, $5),
+				noticed_at = GREATEST(d.noticed_at, $5)
 			FROM unnest($1::text[], $2::bigint[], $3::float8[], $4::bool[]) AS s(id, lan, giay, nhung)
-			WHERE d.corpus='place' AND d.doc_id=s.id AND d.lan=s.lan`, ids, lans, giay, nhung); err != nil {
+			WHERE d.corpus='place' AND d.doc_id=s.id AND d.lan=s.lan`, ids, lans, giay, nhung, docAt); err != nil {
 			return b, err
 		}
 	}
@@ -922,6 +927,7 @@ func (c ChiMuc) Luot(ctx context.Context, pool *pgxpool.Pool) (ran bool, rep Bao
 func (c ChiMuc) Nghe(pool *pgxpool.Pool, logger *slog.Logger) jobs.Nghe {
 	return jobs.Nghe{Pool: pool, Kenh: "rag_dirty", ToiDa: 20 * time.Second, Gop: 2 * time.Second, Logger: logger,
 		Chay: func(ctx context.Context) (bool, error) {
+			c.GiamSat.Nhip(time.Now())
 			ran, rep, err := c.Luot(ctx, pool)
 			if err != nil {
 				return false, err
@@ -981,6 +987,8 @@ type TrangThai struct {
 	PhienBanSong int      `json:"phien_ban_song"`
 	NhanhSuyGiam []string `json:"nhanh_suy_giam"`
 	Loi          string   `json:"loi,omitempty"`
+	// DoTuoi is the place index's freshness (the SLO's numbers).
+	DoTuoi *DoTuoi `json:"do_tuoi,omitempty"`
 }
 
 // DocTrangThai reads the status of every corpus. A Milvus that does not
@@ -1021,10 +1029,26 @@ func (n Nap) DocTrangThai(ctx context.Context, q Querier) ([]TrangThai, error) {
 			if err := q.QueryRow(ctx, `SELECT count(*) FROM place_enrichments WHERE extractor=$1 AND can_duyet AND review='auto'`, Extractor).Scan(&t.ChoDuyet); err != nil {
 				return nil, err
 			}
-			if err := q.QueryRow(ctx, `SELECT count(*) FROM places p WHERE NOT EXISTS (SELECT 1 FROM place_enrichments e
-				WHERE e.place_id=p.id AND e.extractor=$1 AND e.review<>'rejected')`, Extractor).Scan(&t.ThieuLamGiau); err != nil {
+			// An enrichment counts from either source: RuDi's own
+			// (place_enrichments) or vnlocal's (place_lam_giau, when ingest
+			// has installed it).
+			var coNgoai bool
+			if err := q.QueryRow(ctx, `SELECT to_regclass('place_lam_giau') IS NOT NULL`).Scan(&coNgoai); err != nil {
 				return nil, err
 			}
+			ngoai := ""
+			if coNgoai {
+				ngoai = ` AND NOT EXISTS (SELECT 1 FROM place_lam_giau l WHERE l.place_id=p.id)`
+			}
+			if err := q.QueryRow(ctx, `SELECT count(*) FROM places p WHERE NOT EXISTS (SELECT 1 FROM place_enrichments e
+				WHERE e.place_id=p.id AND e.extractor=$1 AND e.review<>'rejected')`+ngoai, Extractor).Scan(&t.ThieuLamGiau); err != nil {
+				return nil, err
+			}
+			dt, err := DocDoTuoi(ctx, q)
+			if err != nil {
+				return nil, err
+			}
+			t.DoTuoi = &dt
 		}
 		t.DirtyCuNhatS = float64(int64(t.DirtyCuNhatS*10)) / 10
 		sort.Strings(t.NhanhSuyGiam)

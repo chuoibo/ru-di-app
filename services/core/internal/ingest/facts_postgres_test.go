@@ -4,8 +4,11 @@ package ingest
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // fakeFactFeed serves web facts in (synced_at, place_id) order.
@@ -183,4 +186,57 @@ func placeRows(t *testing.T, at time.Time, ids ...string) []FeedRow {
 		out = append(out, FeedRow{PlaceID: id, SyncedAt: at, Doc: feedDoc(t, id)})
 	}
 	return out
+}
+
+// TestGhiDoTre: after a round, each source records when it ran, its cursor
+// and how far the feed's newest row is past it; a feed table the role
+// cannot read is skipped.
+func TestGhiDoTre(t *testing.T) {
+	pool, ctx := migratedPool(t)
+	base := pool
+	schema := fmt.Sprintf("feed_dt_%d", time.Now().UnixNano())
+	if _, err := base.Exec(ctx, "CREATE SCHEMA "+schema); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = base.Exec(context.Background(), "DROP SCHEMA "+schema+" CASCADE") })
+	at := time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC)
+	for _, tb := range []string{"places", "place_danh_muc", "place_lam_giau"} {
+		if _, err := base.Exec(ctx, "CREATE TABLE "+schema+"."+tb+" (synced_at timestamptz)"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := base.Exec(ctx, "INSERT INTO "+schema+".places VALUES ($1)", at.Add(90*time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	cfg := base.Config().Copy()
+	cfg.ConnConfig.RuntimeParams["search_path"] = schema
+	feed, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(feed.Close)
+	clean := func() {
+		_, _ = base.Exec(context.Background(), `DELETE FROM ingest_do_tre`)
+		_, _ = base.Exec(context.Background(), `DELETE FROM ingest_cursor WHERE source = $1`, FeedSource)
+	}
+	clean()
+	t.Cleanup(clean)
+	if _, err := base.Exec(ctx, `INSERT INTO ingest_cursor (source, synced_at, place_id) VALUES ($1, $2, 'plc_x')`, FeedSource, at); err != nil {
+		t.Fatal(err)
+	}
+	if err := GhiDoTre(ctx, pool, feed, at.Add(2*time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]float64{}
+	rows, _ := pool.Query(ctx, `SELECT source, tre_giay FROM ingest_do_tre`)
+	for rows.Next() {
+		var s string
+		var tre float64
+		_ = rows.Scan(&s, &tre)
+		got[s] = tre
+	}
+	rows.Close()
+	if len(got) != 3 || got[FeedSource] != 90 || got[DanhMucSource] != 0 {
+		t.Fatalf("freshness rows: %v (place_web_facts is missing from the feed and must be skipped)", got)
+	}
 }

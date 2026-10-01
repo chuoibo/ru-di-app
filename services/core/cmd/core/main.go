@@ -122,6 +122,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return runRag(args[1:], getenv, stdout, stderr)
 	case "migrate-rag-vector":
 		return migrateRagVector(getenv, stdout, stderr)
+	case "rag-indexer-healthcheck":
+		return ragIndexerHealthcheck(getenv, stderr)
 	case "rag-indexer":
 		return ragIndexer(getenv, stderr)
 	case "purge-expired":

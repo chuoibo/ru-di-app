@@ -358,6 +358,9 @@ func syncDaemon(ctx context.Context, pool *pgxpool.Pool, src *pgxpool.Pool, feed
 		if err != nil {
 			return false, err
 		}
+		if err := ingest.GhiDoTre(ctx, pool, src, time.Now()); err != nil {
+			fmt.Fprintf(stderr, "%s độ trễ: lỗi %v\n", stamp, err)
+		}
 		return !report.CaughtUp, nil
 	}
 	go func() {

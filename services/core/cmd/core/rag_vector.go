@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
+	"net/http"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -14,6 +17,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/adk/v2/model"
 	"google.golang.org/genai"
 
@@ -481,7 +485,8 @@ func ragIndexer(getenv func(string) string, stderr io.Writer) int {
 		return refuse(err)
 	}
 	defer closeFn()
-	cm := nap.ChiMuc{Nap: n, Logger: logger, Pool: pool, HanMuc: nap.NewHanMuc(nap.TranOnlineGio)}
+	gs := &nap.GiamSat{}
+	cm := nap.ChiMuc{Nap: n, Logger: logger, Pool: pool, HanMuc: nap.NewHanMuc(nap.TranOnlineGio), GiamSat: gs}
 	if lo, err := nhung.LoFromEnv(ctx, getenv); err == nil {
 		cm.Lo = napLo{l: lo}
 	} else {
@@ -495,6 +500,22 @@ func ragIndexer(getenv func(string) string, stderr io.Writer) int {
 	go func() { defer side.Done(); _ = jobs.ChayDinhKy(ctx, pool, logger, periodic) }()
 	side.Add(1)
 	go func() { defer side.Done(); cm.Nghe(pool, logger).Run(ctx) }()
+	side.Add(1)
+	go func() { defer side.Done(); docSLO(ctx, pool, gs, logger) }()
+	srv := &http.Server{Addr: ragIndexerListen(getenv), Handler: sloHandler(gs), ReadHeaderTimeout: 3 * time.Second}
+	side.Add(1)
+	go func() {
+		defer side.Done()
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("rag indexer: health port failed", "error", err.Error())
+		}
+	}()
+	go func() {
+		<-ctx.Done()
+		closing, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(closing)
+	}()
 	if cm.Lo != nil {
 		side.Add(1)
 		go func() {
@@ -593,4 +614,101 @@ func ragEmbedBatch(ctx context.Context, getenv func(string) string, pool nap.CSD
 	}
 	kq, err := n.NhungQuaLo(ctx, pool, napLo{l: lo}, rows, 30*time.Second, nap.ToiDaLo)
 	return ragOut(stdout, stderr, map[string]any{"quan": len(docs), "qua_dai": rep.QuaDai, "cho_lam_giau": rep.ThieuLamGiau, "lo": kq}, err)
+}
+
+// EnvRagIndexerListen is the rag-indexer's health port (loopback by
+// default; nothing outside the container needs it).
+const EnvRagIndexerListen = "MOBILE_RAG_INDEXER_LISTEN"
+
+func ragIndexerListen(getenv func(string) string) string {
+	if a := getenv(EnvRagIndexerListen); a != "" {
+		return a
+	}
+	return "127.0.0.1:8091"
+}
+
+// docSLO reads the index's freshness every 15 s into gs, and logs a WARN
+// slo_vi_pham at most once a minute while the SLO is broken.
+func docSLO(ctx context.Context, pool *pgxpool.Pool, gs *nap.GiamSat, logger *slog.Logger) {
+	var warned time.Time
+	t := time.NewTicker(15 * time.Second)
+	defer t.Stop()
+	for {
+		read, cancel := context.WithTimeout(ctx, 10*time.Second)
+		d, err := nap.DocDoTuoi(read, pool)
+		cancel()
+		if ctx.Err() != nil {
+			return
+		}
+		now := time.Now()
+		k := gs.Ghi(now, d, err)
+		if !k.Dat && now.Sub(warned) >= time.Minute {
+			logger.Warn("slo_vi_pham", "vi_pham", k.ViPham, "tu_giay", k.TuGiay, "do_tuoi", k.DoTuoi, "loi", k.Loi)
+			warned = now
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+		}
+	}
+}
+
+// sloHandler answers /livez (the indexer loop passed within 90 s; it
+// passes at least every 20 s) and /slo (the last freshness reading: 503
+// when the SLO has been broken for nap.SLOKeoDai, the reading failed, or the
+// loop is not alive). Counts and ages only.
+func sloHandler(gs *nap.GiamSat) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /livez", func(w http.ResponseWriter, _ *http.Request) {
+		if !gs.Song(time.Now(), 90*time.Second) {
+			http.Error(w, "loop not alive", http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("GET /slo", func(w http.ResponseWriter, _ *http.Request) {
+		k := gs.Doc()
+		w.Header().Set("Content-Type", "application/json")
+		if k == nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"dat":false,"loi":"chua_doc"}`))
+			return
+		}
+		out := *k
+		if !gs.Song(time.Now(), 90*time.Second) {
+			out.Dat, out.Loi = false, "vong_khong_chay"
+		}
+		if !out.Dat {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		_ = json.NewEncoder(w).Encode(out)
+	})
+	return mux
+}
+
+// ragIndexerHealthcheck is `core rag-indexer-healthcheck`, the container's
+// probe: /slo on the indexer's own port. Unhealthy means the index is
+// staler than the SLO allows (Docker shows it; it does not restart for it).
+func ragIndexerHealthcheck(getenv func(string) string, stderr io.Writer) int {
+	host, port, err := net.SplitHostPort(ragIndexerListen(getenv))
+	if err != nil {
+		fmt.Fprintf(stderr, "rag-indexer-healthcheck: %v\n", err)
+		return 1
+	}
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		host = "127.0.0.1"
+	}
+	resp, err := (&http.Client{Timeout: 3 * time.Second}).Get("http://" + net.JoinHostPort(host, port) + "/slo")
+	if err != nil {
+		fmt.Fprintf(stderr, "rag-indexer-healthcheck: %v\n", err)
+		return 1
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		fmt.Fprintf(stderr, "rag-indexer-healthcheck: status %d %s\n", resp.StatusCode, body)
+		return 1
+	}
+	return 0
 }
