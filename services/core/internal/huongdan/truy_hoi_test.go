@@ -344,10 +344,16 @@ func TestBoVangKhongSua(t *testing.T) {
 // The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
 // duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
 // 0.3526 (teen 0.8214 / 0.2905).
+// UI/UX upgrade B4 (2026-10-02): tai-chinh.md's step no longer points at a
+// «chi theo nhóm» section (the finance screen has none), and the screen labels
+// in _rut.json follow the money screens' new copy. Recall@5 unchanged on every
+// set and group; duongVang MRR 0.9179 → 0.9177, [co_dau] 0.8978 → 0.8972.
+// Rewording the step without «ở» moved «bo fieu o dau v» out of the top 5:
+// that question sits one token's weight from the edge.
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9179"},
-		"co_dau":    {"0.9405", "0.8978"},
+		"":          {"0.9505", "0.9177"},
+		"co_dau":    {"0.9405", "0.8972"},
 		"khong_dau": {"1.0000", "1.0000"},
 		"teen":      {"0.8333", "0.7354"},
 	},

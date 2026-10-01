@@ -349,5 +349,14 @@ export function blockingProblem(reading: BillReading): string | null {
       ? "Một món chưa có tên. Đặt tên cho nó trước, vì màn sau sẽ hỏi ai đã ăn món này."
       : `${nameless} món chưa có tên. Đặt tên cho chúng trước, vì màn sau sẽ hỏi ai đã ăn từng món.`;
   }
+  // The server takes only dishes above 0đ (`line_total_vnd: PositiveMoneyVnd`).
+  // Sent anyway, a dish whose amount was never typed came back as «lỗi của
+  // app» (B4, Android); it is said here, before anything leaves the phone.
+  const zero = reading.lines.filter((line) => line.lineTotalVnd <= 0);
+  if (zero.length > 0) {
+    return zero.length === 1
+      ? `Món "${zero[0].name}" chưa có số tiền. Gõ thành tiền của cả dòng, hoặc bỏ món này.`
+      : `${zero.length} món chưa có số tiền. Gõ thành tiền cho từng món, hoặc bỏ chúng.`;
+  }
   return null;
 }

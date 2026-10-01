@@ -203,7 +203,9 @@ Rủi ro còn lại của B2:
 - **Lên plan** có hai lối mở cùng một khay: nút «Tạo mới» ở đầu màn và con dấu. Để B3 quyết có bỏ nút đầu màn hay không.
   B3 quyết giữ (change-log B3).
 - **Con dấu «Tạo mới» (01/10, sau B3):** chủ sản phẩm đánh giá thiết kế con dấu tròn ở thanh tab chưa đạt và đang vẽ mockup
-  thay thế. Con dấu sẽ làm lại theo mockup; cho tới lúc đó coi phần hình của nó là **BLOCKED**, không phải READY_FOR_QA.
+  thay thế.
+  - Sau đó (01/10) chủ sản phẩm nhận luôn phần thanh tab dưới cùng: **chuyển giao, ra khỏi danh sách việc của đợt này**.
+  - Đừng retest phần hình của thanh tab theo bản B2.
   Hành vi (mọi tab có lối Tạo mới, khay theo tab, `/create` mở lạnh) không đổi.
 
 ### B3 · Pilot: Kèo · Lên plan · Hành trình (F03 + E2)
@@ -305,3 +307,91 @@ Rủi ro còn lại của B3:
   - sheet sửa chặng ~20 điều khiển;
   - từ vựng chặng/điểm/hoạt động (B11);
   - tiêu đề kèo 28/34 dòng cao 1.21× ở 320.
+
+### B4 · Tiền: chia bill · quyết toán · đợt thu · tài chính (F04 + E3)
+
+Đo trên bản web, cùng stack riêng. **Mỗi bản đo trên một thế giới vừa dựng lại** (`reseed.sh`), cùng thứ tự kịch bản.
+Lượt baseline đầu (`out/b4-truoc`) chạy trên trạng thái B3 để lại, nên PHAT và L32 hỏng vì trạng thái, không vì mã.
+- **«Trước»:** bản main `bc8dbdfb` (B3), `f04-tien.mjs` đầy đủ và `retest-main.mjs --chi r-p3-f04` (`out/b4-truoc-sach`).
+- **«Sau»:** bản cuối của B4 (`out/b4-cuoi3`, bản `b4h`), cùng hai kịch bản, cộng probe `kiem-ux/b4-probe.mjs` và
+  `kiem-ux/b4-chup-rong.mjs`.
+- Các bản giữa chừng:
+  - `out/b4-sau`: ba chỗ yếu về hình (tên ghế, cuống bị ép, hàng đợt thu cao);
+  - `out/b4-cuoi2`: sau finish review;
+  - `out/b4-cuoi2-anh`: lượt `--chi anh` trên `b4g`.
+
+  Mỗi bản sửa một đợt rồi mới đo bản kế.
+
+- **Tổng:**
+  - `f04-tien.mjs`: **39 PASS / 20 FAIL → 52 PASS / 7 FAIL** (59 hàng, 0 BLOCKED).
+  - `r-p3-f04`: 0/2 → 1/2.
+  - Bảy hàng còn FAIL đều có lý do ở ghi chú: bộ định vị cũ, đo không cuộn, verdict viết cứng, hoặc thuộc batch khác.
+- **«Sau» là bản `b4h`.** Bản này có thêm đợt chỉnh sau finish review và verdict pass. Lượt `out/b4-cuoi3` đo trên thế
+  giới vừa dựng lại.
+
+| Issue | Hàng harness / probe | Trước | Sau | Tự kiểm của người sửa | Ảnh |
+|---|---|---|---|---|---|
+| UI-048 | `TC-F04-MON-DAI` C2; probe `B4-BAN-DAI` | FAIL (B3 «12.345.678đ» còn 68px) | PASS | thẻ món không cắt số ở C1, C2, C6; quyết toán demo «1.106.250đ» đủ ở 320 | `EV-B4-UI-050-048.jpg` |
+| UI-050 | `TC-F04-BAN-20` C1, C2, C6; probe `B4-BAN-DAI` | FAIL (10/17/6 ghế nhầm; chạm «07» đổi «08») | FAIL theo kịch bản (6/12/2, mọi chỗ là `null`) · probe đạt | ghi chú 3; probe cuộn từng ghế: 0/20 nhầm ở cả 3 cấu hình, hộp chạm nhỏ nhất 69dp, 0 cặp hộp chồng | `EV-B4-UI-050-048.jpg`, `EV-B4-AND.jpg` |
+| UI-051 | `TC-F04-CHAN-TEN`, `CHAN-NGUOI`, `BILL-503` | FAIL ×3 (câu ở y −267, −275, −597) | PASS ×3 | câu chặn ở footer ngay trên nút; dòng có lỗi mở ra, ô cần sửa có câu và con trỏ | `EV-B4-UI-052-056.jpg` |
+| UI-052 | `TC-F04-LUI-VE-BUOC1`, `BACK-TRINH-DUYET`, `TAI-LAI` | FAIL ×3 | FAIL (ghi chú 4), PASS, PASS | tải lại hay Back rồi Forward: về đúng bước Gán món; về bước 1: tờ «Bill đang gõ» là nút tiếp tục | `EV-B4-UI-052-056.jpg` |
+| UI-054 | `TC-F04-QT-20` C1, C2 | FAIL (25, 32 cặp nhãn đè) | PASS | 20 người: một câu thay sơ đồ; 8 người ở 320: tên gọi | `EV-B4-UI-054-061.jpg` |
+| UI-055 | `TC-F04-NEP-M2-KHUNG` C1–C3 | FAIL (ra ngoài 43/113/73px) | PASS | — | `EV-B4-UI-055.jpg` |
+| UI-056 | `TC-F04-ANH-DOC` | FAIL | PASS | câu sau 268 ms, chỉ tới «Nhập tay», và «Nhập tay» là nút chính | `EV-B4-UI-052-056.jpg` |
+| UI-057 | `TC-F04-NEP-MEP` | FAIL (mép là nút «chạm để kéo ra», chạm không làm gì) | PASS | mép không role, không nhãn, không Tab stop | — |
+| UI-058 | `TC-F04-DOT-RONG`; probe `B4-DOT-RONG` | FAIL (nút mời, máy chủ từ chối) | FAIL viết cứng · probe đạt | ghi chú 2: không nút, câu nói vì sao, route đếm 0 | `EV-B4-UI-058.jpg` |
+| UI-059 | — (không có hàng harness) | ảnh: «Chat Test …», mất «(trả)» | ảnh: tên đủ, «ĐÃ TRẢ» dòng dưới | trang «Đã ghi» | `EV-B4-UI-059.jpg` |
+| UI-060 | `TC-R-UI-060` | FAIL | FAIL theo bộ định vị (ghi chú 1) | mục cũ đã bỏ; dưới trang sổ chỉ còn chú thích nguồn số và «Xem quyết toán» | — |
+| UI-061 | `TC-R-UI-061` C2 | FAIL (9 dòng) | PASS (đầu sổ 1 + 1 + 1 dòng) | — | `EV-B4-UI-054-061.jpg` |
+| Bước «Kết quả» | probe `B4-KET-QUA` | — | đạt | «Cộng 20 phần 13.705.678đ … 18 phần được làm tròn lên 1đ»; con dấu người trả hạ đúng hàng | `EV-B4-KET-QUA.jpg` |
+| Đợt thu | probe `B4-DOT-THU` | 19 nút đầy chiều ngang, 19 dấu «CHƯA CHUYỂN» | đạt | 1 mục «Chuyển cho …», 0 dấu «chưa chuyển», 0 mũi tên, không mắt chữ; 18 nút «Đã về» 94px | `EV-B4-DOT-THU.jpg` |
+| Bill 0đ (ngoài QA) | Android | «lỗi của app» | đạt | chặn ở bước xem lại, ô tiền có câu và con trỏ | `EV-B4-AND.jpg` |
+
+Ghi chú B4:
+
+1. **Bộ định vị đổi theo nhãn mới** (bản sao harness ngoài repo, không sửa ý của hàng):
+   - Nút hàng ở đợt thu nay là «Đã về» / «Gửi» / «Gửi lại». Tên đầy đủ («Tiền đã về từ X», «Gửi cho X») nằm ở
+     `aria-label`. `f04-tien.mjs` tìm theo chữ hiển thị, nên bản sao được sửa để tìm theo tên truy cập (`aria-label`, rồi
+     mới tới chữ), 7 chỗ, ghi chú tại chỗ.
+   - `TC-R-UI-060` tìm tiêu đề «Chi theo nhóm», nay là «Ai nợ ai» nên báo «không thấy mục». Tiêu chí của QA là «tiêu đề
+     mục khớp nội dung bên dưới»: bên dưới là «Người khác đang nợ bạn …đ» và lối «Xem quyết toán».
+2. **`TC-F04-DOT-RONG` có `status: "FAIL"` viết cứng.** Kịch bản ghi lại điều QA thấy, không kiểm nút có hay không.
+   Trong log, `nut` vắng (không tìm thấy nút «Tạo đợt thu từ sổ»), số đợt 1 → 1, không câu từ chối. Probe `B4-DOT-RONG`
+   đọc thẳng: nút không có, câu «Mọi khoản đã ghi đều đã vào một đợt thu ở trên: chưa có gì mới để gom.», route đếm 0.
+3. **`TC-F04-BAN-20`** đo bằng `elementFromPoint` không cuộn. Bàn dài cao hơn khung, nên ghế dưới mép màn trả `null` và
+   bị đếm là «trúng ghế khác». Chạm thật vào ghế bị đếm sai đổi **đúng** ghế đó. Probe `B4-BAN-DAI` cuộn từng ghế vào khung
+   rồi mới đo.
+4. **`TC-F04-LUI-VE-BUOC1`**: khi có bill đang gõ, bước 1 không còn «Nhập tay» trần mà là tờ «Bill đang gõ» (chạm để tiếp
+   tục), «Chọn ảnh bill khác», «Bắt đầu bill mới» (hỏi trước khi bỏ). Kịch bản chạm «Nhập tay» nên không tìm thấy nút.
+   Tiêu chí «bill đã gõ còn nguyên, hoặc có câu hỏi trước khi bỏ» đạt theo thiết kế.
+5. **Back của trình duyệt** vẫn rời luồng (về `/plan`), không lùi một bước trong luồng. Bill không mất (Forward hay mở lại
+   đều về đúng bước), nên không cần hỏi. Đưa từng bước vào lịch sử trình duyệt là việc của điều hướng (B10/B11).
+6. **`TC-MO13-M3` C9** (Nếp đổi ảnh khi giảm chuyển động) thuộc UI-027, batch B5. **`TC-L32-VONGDOI`**: UI-049, xem ghi
+   chú 1 của B1.
+7. **Tầng PostgreSQL của Go.**
+   - Lượt đầu đỏ ở một test không liên quan: `nepnho.TestQuenKhiConHangThiThuLai:420`. `t.Fatal` trong lúc còn giữ
+     transaction mở, nên `pool.Close()` của cleanup chờ mãi, và test treo 21 phút. Cùng lúc máy đang chạy harness, export
+     và reseed.
+   - Chạy lại gói đó: PASS (0.02 s). Chạy lại trọn tầng khi máy rảnh: **3319 PASS, sentinel có mặt, exit 0**.
+   - Test chập chờn này, và việc nó treo thay vì đỏ, là việc mở ngoài B4.
+8. **Android** (emulator, dev client nối stack riêng, đăng nhập bằng OTP của stack riêng):
+   - đã xem chặn món 0đ tại dòng, bàn dài 20 người và dải phiếu «Kết quả»;
+   - chưa xem trang đợt thu trên Android (cần tạo và phát đợt trên máy), bàn tròn, và chế độ tối.
+9. **Bộ định vị ngoài F04 cũng đổi theo:**
+   - tiêu đề quyết toán nay là «Quyết toán» (`f11-demo.mjs` liệt kê «Quyết toán chuyến đi» trong regex chữ cần đo);
+   - bảng đợt thu không còn «A → B» và «chưa chuyển»;
+   - 6 flow Maestro trong repo đã sửa cùng commit.
+10. **Thiết kế (luật của chủ sản phẩm 01/10)** được làm thành ba vòng:
+    - tự đánh giá màn tiền;
+    - finish review ngữ cảnh mới: `fix`, 8 điểm;
+    - verdict pass: 6 resolved, 1 partial, 1 unresolved và hồi quy. Hai điểm cuối đã chỉnh, kiểm bằng test hình học
+      (`hinh-tien`, cả hộp đĩa), ảnh và probe, **không** chấm lại bằng reviewer.
+
+    Chi tiết ở `change-log.md` mục B4.
+11. **Detector** (`impeccable detect`) trên 7 file màn đổi: 0 finding. Đây là quét nguồn; StyleSheet của RN phần lớn nằm
+    ngoài tầm luật, nên chỉ là bằng chứng yếu. Không quét được URL vì màn cần phiên.
+12. **Còn mở:**
+    - tài chính theo từng nhóm (cần chủ sản phẩm chọn ngữ nghĩa, route Go đọc tổng hợp);
+    - Back của trình duyệt lùi trong luồng chia bill (B10/B11);
+    - test `nepnho` chập chờn và treo;
+    - câu hỏi truy hồi sổ tay «bo fieu o dau v» nằm sát mép top 5.

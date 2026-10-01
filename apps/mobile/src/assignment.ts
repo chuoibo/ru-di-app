@@ -203,7 +203,8 @@ export function blockingProblem(
       orphans.length === 1
         ? "Tích ít nhất một người đã ăn món này."
         : "Tích ít nhất một người cho từng món.";
-    return `${dau}, còn ${formatVnd(con)} chưa có người trả. ${duoi}`;
+    // «đ»: a bare «12.345.678» read as a count, not an amount (QA UI-051).
+    return `${dau}, còn ${formatVnd(con)}đ chưa có người trả. ${duoi}`;
   }
 
   const zeros = reading.lines.filter((line) => line.lineTotalVnd === 0);

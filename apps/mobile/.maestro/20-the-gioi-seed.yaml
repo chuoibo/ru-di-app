@@ -60,7 +60,7 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "Tài chính của tôi"
 - extendedWaitUntil:
-    visible: "Chi theo nhóm"
+    visible: "Các số trên đọc từ sổ cái.*"
     timeout: 60000
 # Người seed số 0 trả bill Xóm Lèo 1.280.000đ, cả 8 người cùng dùng: phần của họ
 # («Bạn đã chi») là 160.000đ, bảy người kia nợ họ 1.120.000đ («Sẽ nhận»).
@@ -69,7 +69,7 @@ appId: com.lakiet.rudi
 - takeScreenshot: 20-tai-chinh-seed
 - tapOn: "Xem quyết toán"
 - extendedWaitUntil:
-    visible: "Quyết toán chuyến đi"
+    visible: "Quyết toán"
     timeout: 60000
 - scrollUntilVisible:
     element:

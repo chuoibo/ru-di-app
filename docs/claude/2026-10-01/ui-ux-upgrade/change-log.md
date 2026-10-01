@@ -409,3 +409,189 @@ Reviewer chạy ngữ cảnh mới, chấm trên ảnh bản cuối, đối chi�
 - **Nhóm «Chọn điểm hẹn gần nhau»** (`role=group`) nay chỉ chứa các hàng chặng, không chứa nút đóng của mẩu.
   `rudi-hanh-trinh-web.test.mjs` đếm đúng 3 lựa chọn. Test tìm hàng theo tên truy cập «3, 20:00, Chợ đêm Đà Lạt», vì chữ
   hiển thị nay tách số, giờ và tên.
+
+## B4 · Tiền: chia bill · quyết toán · đợt thu · tài chính (F04 + E3)
+
+Không đụng allocator, sổ cái hay ba luật tiền. Mọi số trên màn vẫn là số máy chủ gửi; màn chỉ cộng lại để *cho thấy* tổng
+khớp, không chia, không sửa.
+
+### Số tiền không bị cắt trên bàn gán món (UI-048) · BUG_FIX
+- Thẻ món trên bàn có bề rộng tối thiểu, lớn dần theo số tiền và không vượt bàn (`theMonToiDa`: bàn tròn +20%, bàn dài
+  bằng mặt bàn trừ lề). Trước đó bề rộng cố định cắt «12.345.678đ» còn «12.345.6…» ở 320.
+- Tên món xuống tối đa hai dòng, căn giữa. Ở thẻ hẹp hơn 124dp, số tiền viết nhỏ một bậc, không bao giờ cắt.
+- Bàn tròn: `ry` tối thiểu 44 để đĩa không nằm dưới thẻ ở 288dp (test `hinh-tien`, bề rộng 288 thêm vào bộ đo).
+- Quyết toán demo (F11): con dấu «Người thu bill» xuống dưới số tiền. Đứng cạnh số, nó để lại cho «1.106.250đ» 114 trên
+  116dp cần ở 320.
+
+### Nhóm đông ngồi bàn dài (UI-050) · UX_IMPROVEMENT + VISUAL_UPGRADE
+- Từ 9 người, bàn tròn nhường cho **bàn dài nhìn từ trên xuống**, như bàn dài ở quán: mỗi bên một ghế mỗi hàng, ghế đủ
+  48dp, thẻ món ở đầu bàn, hàng ghế đầu nằm dưới thẻ nên không đĩa nào bị che. Mặt bàn 120–180dp, để hai dãy ghế nhìn
+  nhau qua bàn chứ không qua một mảng trắng 220dp.
+- **Tên ghế rút từ phía họ** (`tenVua`): giữ phần đuôi dài nhất còn vừa ô, như cách cả nhóm gọi nhau («Nguyễn Thị Minh
+  Anh» → «Minh Anh»). Lượt đo đầu của bàn dài cho thấy 20 ghế cùng đọc «Chat Test…», không ai phân biệt được ai. Tên đầy
+  đủ vẫn ở tên truy cập «Ghế …». `RosterPicker` (dùng ở chia bill, quyết toán, kèo, kỷ niệm) dùng cùng quy tắc cho ô 72dp.
+- Vẽ cùng ngữ pháp với bàn tròn (bóng, cạnh, mặt), không thêm token. Vẫn kéo món tới ghế và chạm ghế như cũ.
+- Plan ban đầu nói «trên 10 người chuyển sang danh sách». Bàn dài giữ được cử chỉ kéo-thả và cái nhìn «cả hội quanh một
+  bàn», nên chọn nó thay cho danh sách.
+
+### Lý do chặn và lỗi nằm ngay trên nút (UI-051) · UX_IMPROVEMENT
+- Câu của bước (thiếu tên món, chưa ai dùng món, 503…) đi vào `footer` dính đáy qua `CauTaiCho`, ngay trên nút chính.
+  Trước đó ở đầu trang, y −248 / −256 / −578, ngoài khung nhìn.
+- «còn 12.345.678đ chưa có người trả»: thêm «đ», số trơn đọc như số đếm.
+
+### Bill đang gõ không mất (UI-052) · UX_IMPROVEMENT
+- Bản nháp giữ theo nhóm ở mỗi thay đổi (`chia-bill/nhap-bill.ts`): trên web trong `sessionStorage` (sống qua Back,
+  Forward, tải lại tab, chết cùng tab), trên điện thoại trong bộ nhớ suốt đời app. Không gửi gì lên máy chủ.
+- Bỏ khi đã ghi sổ, hoặc khi món cuối bị bỏ (tải lại không được hồi sinh món đã xoá).
+- **Mở lại ở đúng bước** khi vừa rời (tải lại, Back rồi Forward; bản nháp sửa trong 15 phút): bước Xem lại, hoặc bước Gán
+  món với bill máy chủ đang giữ (`BillWire` cất cùng bản nháp). Bước Kết quả mở lại thành bước Gán món: cách chia luôn
+  được tính lại, không bao giờ hiện lại số cũ. Bản nháp để lâu hơn thì không tự mở, mà được mời ở bước 1.
+- Bước 1 khi có bản nháp: **chính tờ hoá đơn đang gõ nằm trên bàn và là nút** («Bill đang gõ», 3 món đầu, tổng, «Tiếp tục
+  bill này»). Các lối khác thành nét bút chì: «Chọn ảnh bill khác», «Bắt đầu bill mới». Bắt đầu mới hỏi tại chỗ «Bỏ N món
+  đang gõ để làm bill mới?» với «Bỏ, làm bill mới» (tông `warn`) / «Giữ lại».
+- Test `rudi-nhap-bill.test.mjs`: sống qua một lần nạp lại module (= tải lại tab), không lẫn nhóm, kho bị chặn vẫn giữ bản
+  trong bộ nhớ, dòng trống không tính là bill.
+
+### Sơ đồ quyết toán biết lúc nào thôi vẽ (UI-054) · VISUAL_UPGRADE
+- `soDoChuyen` chọn bề rộng nhãn theo hàng đông nhất: nhãn đầy đủ 88dp, chật thì 44dp với tên gọi (chữ cuối). Khi cả tên
+  gọi cũng đè nhau thì không vẽ, và nói một câu: «Nhóm đông nên không vẽ sơ đồ: từng khoản chuyển ở danh sách dưới.».
+
+### Nếp M2 ở trong màn (UI-055) · VISUAL_UPGRADE
+- Tiêu đề «Ảnh này đúng bill chứ?» co lại nhường chỗ, nên Nếp ở bước xem ảnh không còn bị đẩy ra ngoài mép phải.
+
+### Đọc ảnh hỏng: «Nhập tay» ngay chỗ báo (UI-056) · UX_IMPROVEMENT
+- Câu lỗi đọc ảnh mang hành động «Nhập tay» ngay dưới nó (có bill đang gõ thì «Nhập tay» mở tiếp bill đó).
+- Máy chủ chưa bật phần đọc (`receipt_reader_not_configured`) hay không có quyền: «Dùng ảnh này» rút đi, vì bấm lại cũng
+  không được. Lỗi tạm thời: nút đổi thành «Đọc lại ảnh này».
+
+### Mép Nếp trên màn tiền không hứa điều nó không làm (UI-057) · BUG_FIX
+- Trên màn tiền Nếp bị đẩy ra mép và ở đó (luật «Nếp Không Chạm Số»). Mép ấy nay là trang trí: không role, không nhãn,
+  không Tab stop, `aria-hidden`. Trước đó là nút «chạm để kéo ra» mà chạm không làm gì.
+
+### «Tạo đợt thu từ sổ» chỉ mời khi máy chủ sẽ nhận (UI-058) · UX_IMPROVEMENT + Go
+- Route Go mới, chỉ đọc: `GET /contexts/{context_id}/unbatched-expenses` → `{context_id, unbatched_expense_count}`.
+  - Gói native `internal/gomdot`, theo mẫu `achievementv1`: không có hợp đồng Python, `python: absent`, `native: true`.
+  - Phép chọn giống hệt `moneysteps.FreezeBatch` (bản mới nhất của mỗi khoản có phân bổ, chưa dòng thu nào làm nguồn cho
+    nghĩa vụ), đọc không khoá dòng, trong giao dịch chỉ đọc. Chỉ một con số đếm, không đọc số tiền.
+  - Thành viên mới đọc được (403 `is_group_member`, nhóm lạ cũng vậy); id sai 422; không cache.
+  - Test: `repo` trên PostgreSQL (`TestCountUnbatchedExpenses`: 1 khoản ngoài đợt → 0 khi phần của Bình làm nguồn cho
+    nghĩa vụ; bản không phân bổ và nhóm khác không tính), unit `gomdot` (đường dẫn, phương thức, id sai, không có sổ;
+    người ngoài nhóm bị từ chối **trước khi** sổ được đếm).
+  - Chạy thật trên stack riêng: thành viên 200 `unbatched_expense_count: 1`, không phiên 401, người ngoài 403, id sai 422,
+    cả bốn `Cache-Control: private, no-store`.
+- Màn quyết toán: 0 khoản chưa vào đợt thì nút ẩn, thay bằng câu «Mọi khoản đã ghi đều đã vào một đợt thu ở trên: chưa có gì
+  mới để gom.». Có thì caption nói gom bao nhiêu khoản.
+
+### «Đã trả» luôn thấy (UI-059) · UX_IMPROVEMENT
+- Trang sổ «Đã ghi»: người trả có con dấu «Đã trả» cạnh tên (`DongSo nhan`), ngoài phần tên bị cắt. Trước đó «(trả)» nằm
+  trong tên và mất cùng chữ cuối khi tên dài.
+
+### Tài chính: tiêu đề nói đúng điều bên dưới (UI-060) · UX_IMPROVEMENT
+- «Chi theo nhóm» → «Ai nợ ai». Wire `Finance` không có số theo nhóm; thêm số theo nhóm là đổi ngữ nghĩa đọc tiền, nên
+  ghi thành việc sau (route Go tổng hợp chỉ đọc), không làm trong batch này.
+- Sau finish review, mục này bỏ hẳn (điểm 10 dưới): «Ai nợ ai» chỉ lặp số «Sẽ nhận».
+
+### Dòng đầu sổ quyết toán ở 320dp (UI-061) · VISUAL_UPGRADE
+- Trạng thái không phải số («Chưa có chuyến») xuống dưới câu thay vì chiếm cột phải, nên câu không bị ép.
+
+### Đánh giá thiết kế (luật của chủ sản phẩm 01/10): những chỗ yếu nhất của màn tiền, làm lại
+1. **Bước «Kết quả» là một dải phiếu, có dòng cộng.** Trước: tám cuống phiếu rời giống hệt nhau, mỗi cái một mép răng
+   cưa, một sọc màu, chip viền («Đã trả bill», «+lẻ đồng») trông như nút. Nay:
+   - phần của bạn vẫn là cuống xé rời, nổi cao một lớp giấy;
+   - phần của mọi người khác còn **trên một dải hoá đơn**, ngăn bằng đường đục lỗ;
+   - dải kết bằng **gạch đôi và dòng cộng** «Cộng N phần · 13.705.678đ — Đúng bằng tổng bill: chia lẻ không làm mất hay
+     thừa đồng nào.». Luật tiền số 2 được cho thấy, không chỉ hứa. Cộng lệch (không thể xảy ra với máy chủ đúng) thì số và
+     câu đổi sang `warn`;
+   - người trả nhận **con dấu «Đã trả bill» hạ xuống dưới tên** của đúng hàng khi chip bên phải chọn họ (đặt cạnh tên, nó
+     ép «Phần của bạn» thành một chữ mỗi dòng ở 390);
+   - chip «+lẻ đồng» và câu «Lẻ đồng dồn về: …» bỏ đi. Dòng cộng nói một lần «N phần được làm tròn lên 1đ để cộng lại
+     đủ» (mỗi phần đúng 1đ: phần dư lớn nhất của allocator). Ghi dưới từng hàng thì nó lặp 6 trên 8 hàng.
+   - Hàm thuần `dongCong` (chỉ cộng số nguyên máy chủ gửi), có test.
+2. **Đợt thu: hành động của hàng, không phải tường nút** (sau finish review: gom theo người nhận, điểm 2 dưới). 19 nút đầy chiều ngang «Tiền đã về từ X» thành nút gọn «Đã về»
+   **dưới số tiền** của hàng, chỉ ở hàng chưa về; «Gửi cho X» ×19 thành «Gửi»/«Gửi lại», cũng dưới số tiền. Lượt đo đầu
+   để nút ở một dòng riêng, mỗi hàng còn cao ~290px. Tên đầy đủ nằm ở tên truy cập. Lỗi của một hàng
+   nói dưới đúng hàng đó; lỗi phát dưới con dấu phát; lỗi làm mới cạnh «Làm mới».
+3. **Quyết toán nói một lần.** «Đề xuất, chưa phải nghĩa vụ» lặp dưới mỗi hàng (19 lần ở chuyến 20 người) và lặp thêm ở
+   ghi chú cuối, ở dòng đợt thu. Nay một câu trên danh sách: «Đề xuất tính từ sổ, chưa phải nghĩa vụ: nghĩa vụ chỉ có khi
+   một đợt thu được phát.». Hàng gọn lại (64 → 56dp).
+4. **«Bỏ món này» là hành động phá huỷ.** Trước: nút teal căn giữa dưới mỗi món, đọc như bước tiếp. Nay ghost tông
+   `warn`, cuối hàng, tên truy cập «Bỏ món ‹tên›».
+
+### Sau finish review (disposition `fix`): một đợt · VISUAL_UPGRADE + UX_IMPROVEMENT + BUG_FIX
+Reviewer chạy ngữ cảnh mới (`impeccable-finish-reviewer`), chấm 14 ảnh của bản cuối và 6 ảnh ghép trước/sau, đối chiếu
+DESIGN.md, direction.md, craft-floor. Giữ nguyên hai thứ reviewer nói đừng làm loãng: dải phiếu có dòng cộng, và tờ
+«Bill đang gõ» làm nút tiếp tục.
+1. **Trang sổ «Đã ghi» (UI-059 hồi quy):** trang hẹp cạnh Nếp nên dòng người trả còn «C… [ĐÃ TRẢ]». `DongSo` nay đặt
+   con dấu ở dòng kẻ dưới tên (hàng cao đúng hai dòng kẻ, các hàng dưới vẫn nằm trên dòng kẻ). Số tiền trên trang sổ là
+   teal (màu của tiền), chữ số đều. Câu «Đã ghi: …» lên trên trang, không còn nằm dưới 20 hàng.
+2. **Đợt thu gom theo người nhận:** mỗi người được nhận một mục «Chuyển cho X · N lượt», dưới đó từng người chuyển.
+   Bỏ hình nhỏ người nhận ở góc, bỏ «→ người nhận» lặp mỗi hàng. Hàng chưa về **không còn con dấu**. Con dấu chỉ còn
+   cho điều đã xảy ra (đã về, về dư, thắc mắc…); hàng chưa về ghi một chữ «chưa về». «Đã về» là nút viền gọn dưới số
+   tiền.
+3. **Đầu trang đợt thu:** bỏ dòng mắt chữ hoa «AI CHUYỂN CHO AI» (sàn chất lượng cấm). Câu «N/M người đã xong phần mình»
+   chỉ còn khi nó khác số lượt ở tiêu đề (một người có hai lượt). Giữ dải băng teal và Nếp M4.
+4. **Bước gán món:**
+   - hàng món không còn khối nền teal: món đang trên bàn nói bằng chữ «· đang trên bàn», teal chỉ ở số tiền;
+   - nhóm từ 9 người: hàng mở ra không lặp 20 hình nhân của bàn dài, chỉ còn «Cả nhóm / Bỏ hết / Như món trên».
+   - Nhóm nhỏ giữ lưới hình nhân (gọn, và là lối bàn phím QA đã đo).
+5. **Bàn tròn:** thẻ món giữ một dòng tên, con dấu «Chia đều» là dấu đóng chéo ở góc thẻ, nằm ngoài chiều cao thẻ. Hai
+   dòng tên cộng con dấu từng che bốn đĩa. Bàn dài vẫn hai dòng tên, vì thẻ ở đầu bàn có chỗ.
+6. **Quyết toán:**
+   - danh sách chuyển gom theo người nhận, cùng ngữ pháp với đợt thu, số tiền cỡ label thay cỡ display;
+   - tiêu đề «Quyết toán chuyến đi» thành «Quyết toán» (ở 320 nó gãy ra một chữ «đi» mồ côi);
+   - đầu sổ khi chưa có chuyến: dòng trạng thái tự nói «Chưa có chuyến đang đi hay đã xong», câu dưới còn một dòng (trước:
+     bốn dòng ở 320 trước khi tới con số nào).
+7. **Cuống «Phần của bạn» bỏ sọc màu bên trái** (sàn chất lượng cấm sọc màu cạnh). Xé rời và nổi cao một lớp giấy đã
+   đủ nói đó là của bạn.
+8. **Đọc ảnh tắt hẳn** (`receipt_reader_not_configured`, `permission_denied`):
+   - «Nhập tay» thành nút chính của bước (có bill đang gõ thì «Tiếp tục bill đang gõ»);
+   - «Chọn ảnh khác» rút đi như «Dùng ảnh này», vì ảnh khác cũng qua đúng bộ đọc đang tắt;
+   - câu lỗi chỉ còn nói vì sao.
+
+   Lỗi đọc tạm thời vẫn giữ «Nhập tay» cạnh câu.
+9. **Bước xem lại chỉ ra đúng dòng:** khi «Tiếp» bị chặn, món có lỗi mở ra, tên món đổi màu `warn`, ô cần sửa mang câu
+   ngay dưới nó («Đặt tên cho món này.» / «Gõ thành tiền của cả dòng.») và nhận con trỏ. Tên món dài sẽ gãy dòng thì
+   không vẽ dấu chấm dẫn: một mẩu chấm từng trôi lơ lửng cạnh số tiền.
+10. **Tài chính:** bỏ mục «Ai nợ ai». Câu của nó chỉ lặp số «Sẽ nhận» ngay trên. Dưới trang sổ còn một chú thích «Các số
+    trên đọc từ sổ cái, không phải số dư ngân hàng.» và nút «Xem quyết toán». Sổ tay `tai-chinh.md` đổi bước theo.
+
+**Thấy thêm trên Android (ngoài review): bill 0đ không bị chặn.**
+- Bước xem lại để đi tiếp một món chưa gõ tiền, máy chủ từ chối (`line_total_vnd: PositiveMoneyVnd`), và màn nói «App
+  gửi lên một yêu cầu không hợp lệ… lỗi của app»: đổ lỗi cho app về một số chưa ai gõ.
+- `blockingProblem` của `receipt.ts` nay chặn món 0đ ngay ở bước này, sau món chưa tên: «Món "X" chưa có số tiền. Gõ
+  thành tiền của cả dòng, hoặc bỏ món này.».
+- Câu tương ứng ở bước gán món (`assignment.ts`, «Quay lại màn trước…») không còn tới được. Test của nó đổi có chủ đích.
+
+**Cổng phụ đổi theo nhãn mới, cùng commit:**
+- 6 flow Maestro: «Quyết toán», «Các số trên đọc từ sổ cái.*», «Chuyển cho .*», «chưa về»,
+  «Đề xuất tính từ sổ.*»;
+- `chuoi-maestro-dong.json` gạch «1.106.250đ» (nay có nguyên văn trong mã; danh sách chỉ được co lại);
+- `mac-dinh-am-tham-id` thêm `daGoTruoc?.payerId ?? phien.person_id` vào danh sách «id dùng làm id», có lý do: trạng
+  thái chọn người trả, mọi tên hiện ra đều lấy từ roster;
+- `chia-bill-buoc.test.mjs` đọc thẻ `RudiScreen` có footer bọc `{nutChinh}` (footer nay mang câu chặn ngay trên nút);
+- `nap_test.go`, `huong-dan-khop-ma.test.mjs`: câu bước mới của `tai-chinh.md`.
+
+**Sổ tay truy hồi (`truy_hoi_test.go`):**
+- Hai MRR ghim lại: `duongVang` 0.9179 → 0.9177, `[co_dau]` 0.8978 → 0.8972. Recall@5 không đổi ở mọi bộ, mọi nhóm.
+- Viết câu bước không có «ở» thì «bo fieu o dau v» rơi khỏi top 5. Câu hỏi đó nằm cách mép đúng sức nặng của một token.
+
+**Verdict pass** (cùng reviewer, ảnh chụp lại cùng khung nhìn trên thế giới dựng lại):
+- **Resolved, 6/8:** đợt thu (hàng, đầu trang), bảng gán món, quyết toán, cuống không sọc, đọc ảnh tắt và bước xem lại.
+- **Partial, 1:** tên trên trang sổ «Đã ghi» vẫn mỗi người một màu.
+- **Unresolved và hồi quy, 1:** con dấu «Chia đều» đặt ở góc thẻ che đúng đĩa của một ghế và đuôi tên món; thẻ còn che
+  nửa ba đĩa chéo.
+
+Đợt chỉnh cuối, không chấm lại bằng reviewer mà kiểm bằng test hình học, ảnh và probe:
+- **Bàn tròn:** độ sâu `ry` tính sao cho **cả chiếc đĩa** (14×7, đúng như vẽ) ra ngoài thẻ món ở bề rộng lớn nhất và
+  chiều cao thật (`CAO_THE_TRON` 56: một dòng tên, số tiền, đệm).
+  - Test `hinh-tien` nay so cả hộp đĩa, không chỉ tâm đĩa.
+  - Luật chặt hơn bắt thêm một chỗ sai có từ trước: đĩa của cặp đôi ở 288 nằm nửa dưới thẻ khi thẻ nở 1.2×. Đĩa cặp đôi
+    nay đặt qua mép thẻ ở bề rộng lớn nhất.
+- **«Chia đều» rời khỏi bàn hẳn:** hàng món dưới bàn nói «Chia đều cả N người». Đĩa của mọi ghế đã cho thấy ai dùng món.
+- **Trang sổ «Đã ghi»:** tên mực, số teal, như dải phiếu ở bước trước.
+- **Đầu sổ quyết toán khi chưa có chuyến:** «Chưa có chuyến nào bắt đầu». Chuyến đang đi và chuyến đã xong đều đã bắt
+  đầu, nên câu vẫn đúng ý QA 23/09, và vừa một dòng ở 320 (bản trước để «xong» mồ côi).
+- **Đọc ảnh tắt hẳn:** câu còn hai, ba dòng mà vẫn chỉ lối đi tiếp, đúng tiêu chí QA UI-056 («một câu nói vì sao, và
+  lối đi tiếp mà câu đó chỉ tới có ngay trên màn»): «Phần đọc ảnh bill của Rủ Đi chưa bật; ảnh của bạn không có lỗi.
+  Bạn có thể nhập món bằng tay.».
+  - Bản rút gọn trước đó bỏ mất vế chỉ đường, và `TC-F04-ANH-DOC` đỏ ở lượt đo.

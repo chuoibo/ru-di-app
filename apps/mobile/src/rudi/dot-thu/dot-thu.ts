@@ -112,6 +112,20 @@ export async function docDotThuCuaNhom(contextId: string, actorId: string): Prom
 }
 
 /**
+ * `GET /contexts/{id}/unbatched-expenses` (Go only): how many recorded
+ * expenses a new round would gather. The settlement screen offers «Tạo đợt
+ * thu từ sổ» only when this is above zero (QA UI-058).
+ */
+export async function demKhoanChuaVaoDot(contextId: string, actorId: string): Promise<number> {
+  const result = await translatedAsActor<{ unbatched_expense_count: number }>({}, `/contexts/${contextId}/unbatched-expenses`, {
+    method: "GET",
+    actorId,
+    contexts: contextId,
+  });
+  return result.unbatched_expense_count;
+}
+
+/**
  * `POST /batches`: the same request App B's `openBatch` sends, minus the
  * proposal object it reads the group from -- the shell has the group id in
  * hand. `expenseVersionIds: null` asks the server for every confirmed

@@ -14,11 +14,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { BANG_NGAN_NHAT, GHE, R_NHAN, dayBang, diemTrenMui, hinhCuaGhe, hopGhe, hopNhan, soDoChuyen, tenCuaGhe, theMon, viTriGhe } from "../dist-test/rudi/ui/hinh-tien.js";
+import { BANG_NGAN_NHAT, BAN_DAI_TU, CAO_THE_TRON, DIA, GHE, NHAN_DAY, NHAN_GON, R_NHAN, tenGoi, theMonToiDa, dayBang, diemTrenMui, hinhCuaGhe, hopGhe, hopNhan, soDoChuyen, tenCuaGhe, theMon, viTriGhe } from "../dist-test/rudi/ui/hinh-tien.js";
 import { phanTich } from "./_kiem-lop.mjs";
 
 const nguoi = (n) => Array.from({ length: n }, (_, i) => ({ id: `nguoi-${i}`, name: `Người ${i + 1}` }));
-const BE_RONG = [300, 328, 380, 520, 700];
+const BE_RONG = [288, 300, 328, 380, 520, 700];
+/** Up to a big group's twenty (QA UI-050 measured nine seats crossing at 288–358). */
+const TOI_DA = 20;
 
 test("bàn của một đôi: hai người ngồi hai đầu, bàn thấp hơn hẳn bàn tròn", () => {
   for (const w of BE_RONG) {
@@ -32,7 +34,7 @@ test("bàn của một đôi: hai người ngồi hai đầu, bàn thấp hơn h
 
 test("không ghế nào tràn khung, không hai ghế nào đè nhau", () => {
   for (const w of BE_RONG) {
-    for (let n = 1; n <= 8; n += 1) {
+    for (let n = 1; n <= TOI_DA; n += 1) {
       const ban = viTriGhe(nguoi(n), w);
       const hop = ban.ghe.map(hopGhe);
       for (const [i, h] of hop.entries()) {
@@ -54,7 +56,7 @@ const giao = (a, b) => a.trai < b.phai && b.trai < a.phai && a.tren < b.duoi && 
 
 test("tên của một ghế không đè lên hình nhân hay tên của ghế khác", () => {
   for (const w of BE_RONG) {
-    for (let n = 1; n <= 8; n += 1) {
+    for (let n = 1; n <= TOI_DA; n += 1) {
       const ghe = viTriGhe(nguoi(n), w).ghe;
       for (const a of ghe) {
         for (const b of ghe) {
@@ -75,14 +77,22 @@ test("ghế sau bàn mang tên ở trên đầu; ghế trước bàn ở dưới
 
 test("đĩa nằm trên mặt bàn, ngoài thẻ món ở giữa", () => {
   for (const w of BE_RONG) {
-    for (let n = 1; n <= 8; n += 1) {
+    for (let n = 1; n <= TOI_DA; n += 1) {
       const ban = viTriGhe(nguoi(n), w);
       for (const g of ban.ghe) {
-        const e = ((g.dia.x - ban.cx) / ban.rx) ** 2 + ((g.dia.y - ban.cy) / ban.ry) ** 2;
-        assert.ok(e < 1, `w=${w} n=${n}: đĩa của ${g.name} rơi khỏi bàn (${e.toFixed(2)})`);
-        const the = theMon(ban.rx);
-        const trongThe = Math.abs(g.dia.x - ban.cx) < the.w / 2 - 2 && Math.abs(g.dia.y - ban.cy) < the.h / 2 - 2;
-        assert.ok(!trongThe, `w=${w} n=${n}: đĩa của ${g.name} nằm dưới thẻ món`);
+        if (ban.ban) {
+          const b = ban.ban;
+          assert.ok(g.dia.x > b.trai && g.dia.x < b.trai + b.rong && g.dia.y > b.tren && g.dia.y < b.tren + b.cao, `w=${w} n=${n}: đĩa của ${g.name} rơi khỏi bàn dài`);
+        } else {
+          const e = ((g.dia.x - ban.cx) / ban.rx) ** 2 + ((g.dia.y - ban.cy) / ban.ry) ** 2;
+          assert.ok(e < 1, `w=${w} n=${n}: đĩa của ${g.name} rơi khỏi bàn (${e.toFixed(2)})`);
+        }
+        // Against the widest the card may grow to (`theMonToiDa`) and its
+        // real height, and the WHOLE plate as drawn: a centre just outside the
+        // card left half the plate under it (B4 finish review).
+        const the = { w: theMonToiDa(ban), h: ban.ban ? ban.the.h : CAO_THE_TRON };
+        const duoiThe = Math.abs(g.dia.x - ban.cx) < the.w / 2 + DIA.rx && Math.abs(g.dia.y - ban.cy) < the.h / 2 + DIA.ry;
+        assert.ok(!duoiThe, `w=${w} n=${n}: đĩa của ${g.name} nằm (một phần) dưới thẻ món`);
       }
     }
   }
@@ -124,7 +134,7 @@ test("mũi tên quyết toán: đúng ngữ pháp, dừng trước hình nhân, 
       assert.ok(m.dai > 0 && Number.isFinite(m.dai));
     }
     for (const p of sd.nguoi) {
-      const h = hopNhan(p);
+      const h = hopNhan(p, sd.rongNhan);
       assert.ok(h.trai >= -1 && h.phai <= w + 1 && h.tren >= -1 && h.duoi <= sd.h + 1, `hình nhân ${p.id} tràn khung ${w}×${sd.h}`);
     }
     assert.deepEqual(soDoChuyen(chuyen, w), sd, "cùng đầu vào, cùng hình");
@@ -164,7 +174,7 @@ test("mũi tên không đi xuyên qua hình nhân thứ ba, người trả và n
             // included, once it has left them.
             const quaNguoi = Math.hypot(x - p.x, y - (p.y - 3)) < 24;
             const yTen = p.ten === "tren" ? [p.y - 46, p.y - 28] : [p.y + 22, p.y + 40];
-            const quaTen = Math.abs(x - p.x) < 36 && y > yTen[0] && y < yTen[1];
+            const quaTen = Math.abs(x - p.x) < sd.rongNhan * 0.41 && y > yTen[0] && y < yTen[1];
             assert.ok(!quaNguoi && !quaTen, `w=${w}: mũi tên ${m.tu}→${m.toi} đi qua ${quaNguoi ? "hình" : "tên"} của ${p.id} tại (${x.toFixed(0)}, ${y.toFixed(0)})`);
           }
         }
@@ -180,4 +190,58 @@ test("mũi tên không đi xuyên qua hình nhân thứ ba, người trả và n
       assert.ok(!chungHang || !chungCot, `w=${w}: người trả và người nhận lẫn vào nhau`);
     }
   }
+});
+
+test("nhóm đông ngồi bàn dài: từ BAN_DAI_TU người, hai dãy dọc bàn, thẻ món ở đầu bàn (QA UI-050)", () => {
+  assert.equal(viTriGhe(nguoi(BAN_DAI_TU - 1), 380).kieu, "tron");
+  for (const w of BE_RONG) {
+    for (let n = BAN_DAI_TU; n <= TOI_DA; n += 1) {
+      const ban = viTriGhe(nguoi(n), w);
+      assert.equal(ban.kieu, "dai");
+      // Two sides of the table, seats alternating, so the order round the table is kept.
+      const trai = ban.ghe.filter((g) => g.x < ban.cx).length;
+      assert.ok(Math.abs(trai - (n - trai)) <= 1, `w=${w} n=${n}: hai dãy lệch ${trai}/${n - trai}`);
+      // Every seat is a full 48 dp to touch, and no seat starts above the card's foot.
+      for (const g of ban.ghe) {
+        const h = hopGhe(g);
+        assert.ok(h.duoi - h.tren >= 48, `w=${w} n=${n}: ghế ${g.name} cao ${h.duoi - h.tren} < 48`);
+        assert.ok(g.y - GHE * 0.75 > ban.cy + ban.the.h / 2, `w=${w} n=${n}: ghế ${g.name} đứng ngang thẻ món`);
+      }
+    }
+  }
+});
+
+test("sơ đồ quyết toán nhóm đông: tên không đè nhau, không ra ngoài khung, hoặc không vẽ (QA UI-054)", () => {
+  // The shape of a minimal settlement: most owe a few.
+  const nhom = (n, soNhan) => Array.from({ length: n - soNhan }, (_, i) => ({ tu: `tra-${i}`, toi: `nhan-${i % soNhan}` }));
+  for (const [n, soNhan] of [[6, 2], [10, 3], [12, 3], [20, 5]]) {
+    for (const w of [288, 300, 320, 360, 398, 700]) {
+      const sd = soDoChuyen(nhom(n, soNhan), w);
+      if (sd.quaDong) {
+        assert.equal(sd.nguoi.length, 0);
+        continue;
+      }
+      const hop = sd.nguoi.map((p) => hopNhan(p, sd.rongNhan));
+      for (const [i, h] of hop.entries()) {
+        assert.ok(h.trai >= -1 && h.phai <= w + 1, `n=${n} w=${w}: nhãn ${sd.nguoi[i].id} ra ngoài khung`);
+        for (const k of hop.slice(i + 1)) assert.ok(!giao(h, k), `n=${n} w=${w}: hai nhãn đè nhau`);
+      }
+    }
+  }
+  // Ten people fit at every phone width, with given names when they must.
+  for (const w of [288, 320, 398]) assert.equal(soDoChuyen(nhom(10, 3), w).quaDong, false, `10 người ở ${w} vẫn phải vẽ được`);
+  assert.equal(soDoChuyen(nhom(10, 3), 320).rongNhan, NHAN_GON);
+  assert.equal(soDoChuyen(nhom(6, 2), 390).rongNhan, NHAN_DAY);
+  assert.equal(tenGoi("Nguyễn Minh Anh"), "Anh");
+});
+
+test("tenVua: tên rút từ phía họ, giữ phần đuôi dài nhất còn vừa ô ghế (QA UI-050)", async () => {
+  const { tenVua } = await import("../dist-test/rudi/ui/hinh-tien.js");
+  assert.equal(tenVua("Khánh Linh", 72), "Khánh Linh", "vừa thì để nguyên");
+  assert.equal(tenVua("Chat Test 07", 72), "Test 07");
+  assert.equal(tenVua("Nguyễn Thị Minh Anh", 72), "Minh Anh");
+  assert.equal(tenVua("  Bình  ", 72), "Bình");
+  assert.equal(tenVua("Nguyễn Hoàngthiênphúc", 72), "Hoàngthiênphúc", "một chữ dài vẫn là tên gọi, ô tự cắt đuôi");
+  const hai = ["Chat Test 07", "Chat Test 08"].map((t) => tenVua(t, 72));
+  assert.notEqual(hai[0], hai[1], "hai người cùng họ vẫn phân biệt được");
 });

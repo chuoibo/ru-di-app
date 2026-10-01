@@ -21,8 +21,11 @@ const MAN = readFileSync(new URL("../src/rudi/screens/chia-bill/ChiaBillLive.tsx
 const UI = readFileSync(new URL("../src/rudi/ui.tsx", import.meta.url), "utf8");
 
 test("màn chia bill đưa bước hiện tại cho RudiScreen", () => {
-  // The stepped screen is the one whose footer is the step's decision.
-  const the = [...MAN.matchAll(/<RudiScreen\b[^>]*>/gs)].map((m) => m[0]).find((t) => t.includes("footer={nutChinh}"));
+  // The stepped screen is the one whose footer is the step's decision. Since
+  // B4 (QA UI-051) the footer also carries the step's refusal right above
+  // that button, so the footer is an expression around `{nutChinh}` and the
+  // opening tag holds JSX: read it up to its own closing «>» line.
+  const the = [...MAN.matchAll(/<RudiScreen\b[\s\S]*?\n\s*>\n/g)].map((m) => m[0]).find((t) => /footer=\{[\s\S]*\{nutChinh\}/.test(t));
   assert.ok(the, "không thấy thẻ RudiScreen mang nút bước của màn chia bill");
   assert.match(the, /cuonVeDau=\{buoc\.ten\}/, "RudiScreen của màn chia bill thiếu cuonVeDau={buoc.ten}");
 });

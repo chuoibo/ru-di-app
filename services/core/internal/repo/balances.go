@@ -288,3 +288,34 @@ func numericInteger(n pgtype.Numeric) (*big.Int, error) {
 	}
 	return out, nil
 }
+
+// CountUnbatchedExpenses is how many of the group's expenses «Tạo đợt thu từ
+// sổ» would gather now: the selection FreezeBatch makes -- the latest version
+// of each expense that has confirmed allocations, none of whose collectable
+// rows (not the payer's, above zero) already backs an obligation -- counted,
+// and read without the batch path's row locks. The settlement screen offered
+// the button whenever anyone owed anyone, and the server then refused it with
+// no_unbatched_allocations (QA UI-058). Nothing about an amount is read here.
+func (r Repository) CountUnbatchedExpenses(ctx context.Context, contextID string) (int, error) {
+	var n int
+	err := r.Q.QueryRow(ctx,
+		`SELECT count(*)
+		   FROM expense_versions
+		   JOIN expenses ON expenses.id = expense_versions.expense_id
+		   JOIN (SELECT expense_versions.expense_id AS expense_id,
+		                max(expense_versions.version_number) AS version_number
+		           FROM expense_versions GROUP BY expense_versions.expense_id) AS latest
+		     ON latest.expense_id = expense_versions.expense_id
+		    AND latest.version_number = expense_versions.version_number
+		  WHERE expenses.context_id = $1::UUID
+		    AND EXISTS (SELECT 1 FROM confirmed_allocations
+		                 WHERE confirmed_allocations.expense_version_id = expense_versions.id)
+		    AND NOT EXISTS (SELECT 1
+		                      FROM confirmed_allocations
+		                      JOIN collection_obligation_sources
+		                        ON collection_obligation_sources.confirmed_allocation_id = confirmed_allocations.id
+		                     WHERE confirmed_allocations.expense_version_id = expense_versions.id
+		                       AND confirmed_allocations.participant_id <> expense_versions.paid_by_id
+		                       AND confirmed_allocations.amount_vnd > 0)`, contextID).Scan(&n)
+	return n, err
+}

@@ -19,7 +19,17 @@ export const TEN_TREN = 18;
 export const RONG_GHE = GHE * 1.8;
 /** The dish card in the middle of the table: 128 wide, narrower on a small table so the plates stay in view. */
 export function theMon(rx: number): { w: number; h: number } {
-  return { w: Math.min(128, Math.round(rx * 1.1)), h: 52 };
+  return { w: Math.min(128, Math.round(rx * 1.1)), h: CAO_THE_TRON };
+}
+
+/**
+ * The widest the dish card may grow to fit its amount: a fifth past its
+ * size on a round table (every plate still clears it, `hinh-tien.test.mjs`),
+ * the table's width less a margin on a long one. A fixed width cut
+ * «12.345.678đ» to «12.345.6…» at 320 (QA UI-048).
+ */
+export function theMonToiDa(ban: Pick<HinhBan, "the" | "rx" | "ban">): number {
+  return ban.ban ? ban.rx * 2 - 8 : Math.round(ban.the.w * 1.2);
 }
 
 export interface NguoiQuanhBan {
@@ -40,13 +50,59 @@ export interface ViTriGhe {
 }
 
 export interface HinhBan {
+  /** Round for a few people; long, like a quán's long table, for a big group. */
+  kieu: "tron" | "dai";
+  /** Centre of the dish card (and of the round table). */
   cx: number;
   cy: number;
+  /** Half the round table's width and depth; on the long table, the card's room. */
   rx: number;
   ry: number;
   /** The frame's height. */
   cao: number;
   ghe: ViTriGhe[];
+  /** The dish card's least size; it grows to its words, never past the table. */
+  the: { w: number; h: number };
+  /** The long table's top, as a rectangle in the frame. */
+  ban?: { trai: number; tren: number; rong: number; cao: number };
+}
+
+/**
+ * From this many people the table is a long one. Round, nine people put a
+ * name on a standee and sixteen put standees on each other, and a tap on one
+ * seat changed the next (QA UI-050). A big group at a quán sits at a long
+ * table anyway: down the page, one seat per row on each side, every seat a
+ * full 48 dp, and the dish card at the head of the table.
+ */
+export const BAN_DAI_TU = 9;
+/** One seat's row along the long table: the standee, its name under it, a gap. */
+const DONG_BAN_DAI = GHE * 1.25 + TEN_TREN + 8;
+
+function banDai(nguoi: readonly NguoiQuanhBan[], w: number): HinhBan {
+  // Narrow enough that the two rows of seats face each other across it, not
+  // across a 220 dp slab of empty white; wide enough for the dish card.
+  const rong = Math.min(180, Math.max(120, w - 2 * (RONG_GHE + 40)));
+  const trai = (w - rong) / 2;
+  const tren = 8;
+  const the = { w: Math.max(72, Math.min(rong - 12, 140)), h: 52 };
+  const cy = tren + 10 + the.h / 2;
+  // The first seats sit below the card, so no plate is ever under it.
+  const y0 = tren + 10 + the.h + 18 + GHE * 0.75;
+  const ghe = nguoi.map((p, i) => {
+    const benTrai = i % 2 === 0;
+    const y = y0 + Math.floor(i / 2) * DONG_BAN_DAI;
+    return {
+      id: p.id,
+      name: p.name,
+      x: benTrai ? trai - RONG_GHE / 2 - 2 : trai + rong + RONG_GHE / 2 + 2,
+      y,
+      truoc: true,
+      dia: { x: benTrai ? trai + 16 : trai + rong - 16, y: y + 4 },
+    };
+  });
+  const cuoi = y0 + (Math.ceil(nguoi.length / 2) - 1) * DONG_BAN_DAI;
+  const cao = cuoi + GHE * 0.5 + TEN_TREN + 10;
+  return { kieu: "dai", cx: w / 2, cy, rx: rong / 2, ry: the.h / 2 + 4, cao, ghe, the, ban: { trai, tren, rong, cao: cao - tren - 4 } };
 }
 
 /**
@@ -58,12 +114,32 @@ export interface HinhBan {
  * cover it, and the side seats step a little further out so a long name
  * clears the rim.
  */
+/** A plate on the table, as drawn (`BanGanMon`): half its width and depth, stroke included. */
+export const DIA = { rx: 14, ry: 7 };
+/** The round table's dish card as it renders: one name line, the amount, its padding. */
+export const CAO_THE_TRON = 56;
+
 export function viTriGhe(nguoi: readonly NguoiQuanhBan[], w: number): HinhBan {
   const n = nguoi.length;
+  if (n >= BAN_DAI_TU) return banDai(nguoi, w);
   const haiDau = n === 2;
   // A table the size of a table: on a tablet the frame widens, the table does not.
   const rx = haiDau ? Math.min(130, Math.max(60, w / 2 - GHE * 1.4 - 10)) : Math.min(170, Math.max(60, w / 2 - GHE - 22));
-  const ry = rx * 0.42;
+  // At least 44 deep: on a phone's small table the diagonal plates sat under
+  // the dish card (288 dp, five to eight people). And deep enough that every
+  // whole plate, not only its centre, clears the card at its widest: a plate
+  // half under the card hid whether that seat has the dish (B4 finish review).
+  const theRong = theMonToiDa({ the: theMon(rx), rx });
+  let ry = Math.max(rx * 0.42, haiDau ? 0 : 44);
+  if (!haiDau) {
+    for (let i = 0; i < n; i += 1) {
+      const t = Math.PI / 2 + (i * 2 * Math.PI) / Math.max(1, n);
+      const ngang = rx * 0.84 * Math.abs(Math.cos(t)) - DIA.rx;
+      const doc = 0.84 * Math.abs(Math.sin(t));
+      if (ngang < theRong / 2 + 2 && doc > 0.05) ry = Math.max(ry, (CAO_THE_TRON / 2 + 2 + DIA.ry) / doc);
+    }
+  }
+  ry = Math.round(ry);
   const cx = w / 2;
   // The ring the seats stand on. From five people on, seats stand on the
   // diagonals too, and a side seat's name hangs right where the diagonal
@@ -74,8 +150,8 @@ export function viTriGhe(nguoi: readonly NguoiQuanhBan[], w: number): HinhBan {
   const ghe = nguoi.map((p, i) => {
     const t = haiDau ? (i === 0 ? Math.PI : 0) : Math.PI / 2 + (i * 2 * Math.PI) / Math.max(1, n);
     // A plate at the rim in front of its seat, clear of the dish card in the
-    // middle; a couple's plates sit just past the card's two ends.
-    const dia = haiDau ? Math.min(rx - 8, Math.max(rx * 0.72, the.w / 2 + 4)) / rx : 0.84;
+    // middle; a couple's plates sit just past the card's two ends at its widest.
+    const dia = haiDau ? Math.min(rx - 8, Math.max(rx * 0.72, theRong / 2 + DIA.rx + 2)) / rx : 0.84;
     return {
       id: p.id,
       name: p.name,
@@ -86,7 +162,7 @@ export function viTriGhe(nguoi: readonly NguoiQuanhBan[], w: number): HinhBan {
     };
   });
   const cao = haiDau ? cy + ry + 24 : cy + vongY + GHE + 2;
-  return { cx, cy, rx, ry, cao, ghe };
+  return { kieu: "tron", cx, cy, rx, ry, cao, ghe, the };
 }
 
 /** Where a seat's standee is drawn (head to base): what a name must never cover. */
@@ -161,6 +237,46 @@ export interface SoDo {
   h: number;
   nguoi: HinhNhanSoDo[];
   muiTen: MuiTen[];
+  /** Each figure's name tag width: a full name, or the given name only on a crowded row. */
+  rongNhan: number;
+  /** Too many people in a row even for given names: no drawing; the list under it says every transfer. */
+  quaDong: boolean;
+}
+
+/**
+ * A full name's tag, and the crowded row's tag that carries only the given
+ * name -- the last word, the name friends call each other by («Minh Anh» →
+ * «Anh»). Ten people at 320 dp put 25 tags on top of each other and names
+ * off the screen's edge (QA UI-054); 88 per figure is what a row must give a
+ * full name, 44 what it must give a given name.
+ */
+export const NHAN_DAY = 88;
+export const NHAN_GON = 44;
+
+/** The name a crowded diagram prints: the given name, the last word. */
+export function tenGoi(ten: string): string {
+  const tu = ten.trim().split(/\s+/);
+  return tu[tu.length - 1] ?? ten;
+}
+
+/** About how wide one letter of the caption face is (13 sp, weight 600). */
+const CHU_CAPTION = 7;
+
+/**
+ * A seat's name in `rong` dp: the whole name when it fits, else the longest
+ * run of its last words that does, the way a group shortens a name
+ * («Nguyễn Thị Minh Anh» → «Minh Anh», «Chat Test 07» → «Test 07») rather
+ * than cutting its end off («Chat Test…» on all twenty seats said nobody,
+ * QA UI-050). The full name stays in the seat's accessible name.
+ */
+export function tenVua(ten: string, rong: number): string {
+  const tu = ten.trim().split(/\s+/);
+  const toiDa = Math.floor(rong / CHU_CAPTION);
+  for (let i = 0; i < tu.length; i += 1) {
+    const duoi = tu.slice(i).join(" ");
+    if (duoi.length <= toiDa) return duoi;
+  }
+  return tu[tu.length - 1] ?? ten;
 }
 
 /** Points along the shaft (the quadratic the cubic equals), ends included. */
@@ -187,9 +303,10 @@ function hang(ids: readonly string[], w: number, y: number, ten: HinhNhanSoDo["t
   return ids.map((id, i) => ({ id, x: (w * (i + 0.5)) / ids.length, y, ten }));
 }
 
-/** A figure's box in the diagram: the standee, and its name over or under it. */
-export function hopNhan(p: HinhNhanSoDo): { trai: number; tren: number; phai: number; duoi: number } {
-  return p.ten === "tren" ? { trai: p.x - 44, tren: p.y - 46, phai: p.x + 44, duoi: p.y + 22 } : { trai: p.x - 44, tren: p.y - 26, phai: p.x + 44, duoi: p.y + 40 };
+/** A figure's box in the diagram: the standee, and its name over or under it, `rong` wide. */
+export function hopNhan(p: HinhNhanSoDo, rong = NHAN_DAY): { trai: number; tren: number; phai: number; duoi: number } {
+  const n = rong / 2;
+  return p.ten === "tren" ? { trai: p.x - n, tren: p.y - 46, phai: p.x + n, duoi: p.y + 22 } : { trai: p.x - n, tren: p.y - 26, phai: p.x + n, duoi: p.y + 40 };
 }
 
 /**
@@ -216,6 +333,11 @@ export function soDoChuyen(chuyen: readonly ChuyenSoDo[], w: number): SoDo {
   let h: number;
   let nguoi: HinhNhanSoDo[];
   const cot = tra.length <= 2 && nhan.length <= 2;
+  // The widest row decides the tags: full names while they fit side by side,
+  // given names when only those fit, and no drawing when not even those do.
+  const hangDai = cot ? 0 : Math.max(Math.ceil(tra.length / 2), nhan.length);
+  const rongNhan = cot || hangDai * NHAN_DAY <= w ? NHAN_DAY : hangDai * NHAN_GON <= w ? NHAN_GON : 0;
+  if (rongNhan === 0) return { w, h: 0, nguoi: [], muiTen: [], rongNhan: 0, quaDong: true };
   if (cot) {
     const so = Math.max(tra.length, nhan.length, 1);
     h = so * DONG + 16;
@@ -260,7 +382,7 @@ export function soDoChuyen(chuyen: readonly ChuyenSoDo[], w: number): SoDo {
       const cx = vx / l;
       const cy = vy / l;
       const quaTen = p.ten === "duoi" ? cy > 0.35 : cy < -0.35;
-      const raKhoiTen = Math.min((p.ten === "duoi" ? 42 : 48) / Math.abs(cy), Math.abs(cx) > 1e-6 ? 38 / Math.abs(cx) : Infinity);
+      const raKhoiTen = Math.min((p.ten === "duoi" ? 42 : 48) / Math.abs(cy), Math.abs(cx) > 1e-6 ? (rongNhan * 0.43) / Math.abs(cx) : Infinity);
       const r = (quaTen ? Math.max(R_NHAN, raKhoiTen) : R_NHAN) + them;
       return [p.x + cx * r, p.y + cy * r];
     };
@@ -273,5 +395,5 @@ export function soDoChuyen(chuyen: readonly ChuyenSoDo[], w: number): SoDo {
     const canh = (goc: number): Diem => [p1[0] - MUI * (ex * Math.cos(goc) - ey * Math.sin(goc)), p1[1] - MUI * (ex * Math.sin(goc) + ey * Math.cos(goc))];
     muiTen.push({ tu: c.tu, toi: c.toi, d: qCong(p0, giua, p1), dau: netGay([canh(0.5), p1, canh(-0.5)]), dai: doDai(diemTrenMui(p0, giua, p1)), mui: p1, dieuKhien: giua });
   }
-  return { w, h, nguoi, muiTen };
+  return { w, h, nguoi, muiTen, rongNhan, quaDong: false };
 }

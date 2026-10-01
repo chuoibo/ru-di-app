@@ -62,6 +62,7 @@ import (
 	"mobile/services/core/internal/config"
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/diary"
+	"mobile/services/core/internal/gomdot"
 	"mobile/services/core/internal/googleid"
 	"mobile/services/core/internal/httpapi/dispatch"
 	"mobile/services/core/internal/httpapi/endpoint"
@@ -405,6 +406,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	// profile social routes hand those writes to it only when it is served.
 	communityOn := pool != nil && cfg.AuthMode == "prod" && getenv("MOBILE_COMMUNITY_ENABLED") == "1"
 	achievements := achievementv1.New(pool, cfg.AuthMode).WithAI(may)
+	unbatched := gomdot.New(pool, cfg.AuthMode)
 	profileSocial := socialv2.New(pool, cfg.AuthMode, communityOn)
 	media := profilemedia.New(pool, cfg.AuthMode, profilemedia.Proxy{
 		URL: getenv("NEP_PROXY_URL"), Token: getenv("NEP_PROXY_TOKEN"), PersonKey: getenv(identity.KeyEnvVar),
@@ -422,12 +424,14 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			achievements.ServeHTTP(w, r)
 		case socialv2.Matches(r.URL.Path):
 			profileSocial.ServeHTTP(w, r)
+		case gomdot.Matches(r.URL.Path):
+			unbatched.ServeHTTP(w, r)
 		default:
 			media.ServeHTTP(w, r)
 		}
 	}))
 	front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if achievementv1.Matches(r.URL.Path) || socialv2.Matches(r.URL.Path) || profilemedia.Matches(r.URL.Path) {
+		if achievementv1.Matches(r.URL.Path) || socialv2.Matches(r.URL.Path) || profilemedia.Matches(r.URL.Path) || gomdot.Matches(r.URL.Path) {
 			native.ServeHTTP(w, r)
 			return
 		}
@@ -1065,6 +1069,7 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 func nativeRouteIDs() []string {
 	ids := append([]string{}, achievementv1.RouteIDs()...)
 	ids = append(ids, socialv2.RouteIDs()...)
+	ids = append(ids, gomdot.RouteIDs()...)
 	return append(ids, profilemedia.RouteIDs()...)
 }
 

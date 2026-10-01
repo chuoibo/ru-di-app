@@ -16,7 +16,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - openLink: rudi://settlements/team-da-lat
 - extendedWaitUntil:
-    visible: "Quyết toán chuyến đi"
+    visible: "Quyết toán"
     timeout: 150000
 - assertVisible: "3.840.000đ"
 - assertNotVisible: "Rủ Đi thôi!"

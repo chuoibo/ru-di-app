@@ -14,6 +14,7 @@ import { StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle 
 import { hinhHoaDon } from "../art/giay";
 import { phuMau, typography, useRudiTheme } from "../theme";
 import { NenGiay } from "./NenGiay";
+import { Stamp } from "./Stamp";
 
 /** Left of the margin: the binding's holes. */
 const LE = 34;
@@ -71,17 +72,41 @@ export function TrangSo({
  * person's ink when it is a person), how much on the right in tabular
  * figures. `dau` is the page's heading line, in condensed caps.
  */
-export function DongSo({ trai, phai, mau, dau = false, testID }: { trai: string; phai?: string; mau?: string; dau?: boolean; testID?: string }) {
+export function DongSo({ trai, phai, mau, nhan, dau = false, testID }: {
+  trai: string;
+  phai?: string;
+  mau?: string;
+  /**
+   * A short state for the row («Đã trả»), stamped on the next rule under the
+   * name, never inside the part a long name is cut from: «Chat Test 0…» had
+   * lost exactly the «(trả)» that said who paid (QA UI-059). Beside the name,
+   * on the narrow page next to Nếp, the stamp left the name «C…».
+   */
+  nhan?: string;
+  dau?: boolean;
+  testID?: string;
+}) {
   const { colors } = useRudiTheme();
   // Condensed caps stack two marks over a capital («SỔ»); a single line is
   // clipped to its box on the web, so the heading gets the room above.
   const chu: TextStyle = dau ? { ...typography.stamp, lineHeight: 18, color: colors.inkSoft } : { ...typography.body, color: mau ?? colors.ink };
-  return (
-    <View style={styles.dong} testID={testID}>
+  // A sum on the page is money: teal, in figures that line up down the page.
+  const dong = (
+    <View style={styles.dong}>
       <Text numberOfLines={1} style={[chu, styles.trai]}>
         {trai}
       </Text>
-      {phai !== undefined ? <Text style={[typography.body, styles.so, { color: colors.ink }]}>{phai}</Text> : null}
+      {phai !== undefined ? <Text style={[typography.body, styles.so, { color: colors.split }]}>{phai}</Text> : null}
+    </View>
+  );
+  if (!nhan) return <View testID={testID}>{dong}</View>;
+  // Two rules tall, so the rows under it stay on the page's lines.
+  return (
+    <View style={styles.haiDong} testID={testID}>
+      {dong}
+      <View style={styles.dongNhan}>
+        <Stamp label={nhan} tilt={-2} tone="split" />
+      </View>
     </View>
   );
 }
@@ -89,6 +114,8 @@ export function DongSo({ trai, phai, mau, dau = false, testID }: { trai: string;
 const styles = StyleSheet.create({
   trang: { paddingLeft: LE + 10, paddingRight: 14, paddingTop: TREN, paddingBottom: 14 },
   dong: { minHeight: DONG_KE, flexDirection: "row", alignItems: "center", gap: 8 },
+  haiDong: { minHeight: DONG_KE * 2 },
+  dongNhan: { height: DONG_KE, justifyContent: "center", alignItems: "flex-start" },
   trai: { flex: 1 },
   so: { fontVariant: ["tabular-nums"] },
   ke: { position: "absolute", left: LE - 6, right: 0, height: StyleSheet.hairlineWidth },

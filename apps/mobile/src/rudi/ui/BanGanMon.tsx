@@ -16,13 +16,12 @@ import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import Svg, { Ellipse } from "react-native-svg";
+import Svg, { Ellipse, Rect } from "react-native-svg";
 
 import { mucNguoi, phuMau, typography, useRudiTheme } from "../theme";
 import { HinhNhan } from "./Avatar";
-import { GHE, RONG_GHE, TEN_TREN, theMon, viTriGhe, type NguoiQuanhBan, type ViTriGhe } from "./hinh-tien";
+import { GHE, RONG_GHE, TEN_TREN, tenVua, theMonToiDa, viTriGhe, type NguoiQuanhBan, type ViTriGhe } from "./hinh-tien";
 import { Money } from "./Money";
-import { Stamp } from "./Stamp";
 import { useMotion } from "./useMotion";
 import { toggleState } from "../../ui/a11y";
 
@@ -55,7 +54,6 @@ export function BanGanMon({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const hinh = w > 0 ? viTriGhe(nguoi, w) : null;
-  const tatCa = nguoi.length > 1 && nguoi.every((p) => dangDung.includes(p.id));
 
   const bam = (id: string) => {
     if (disabled) return;
@@ -96,7 +94,7 @@ export function BanGanMon({
     const co = dangDung.includes(g.id);
     const ten = (
       <Text numberOfLines={1} style={[typography.caption, { color: co ? mucNguoi(g.id, dark) : colors.inkSoft, maxWidth: GHE * 1.8, textAlign: "center" }]}>
-        {g.name}
+        {tenVua(g.name, RONG_GHE)}
       </Text>
     );
     return (
@@ -127,9 +125,21 @@ export function BanGanMon({
           {hinh.ghe.filter((g) => !g.truoc).map(ghe)}
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transformOrigin: `${hinh.cx}px ${hinh.cy}px` }, kieuMat]}>
             <Svg height={hinh.cao} width={w}>
-              <Ellipse cx={hinh.cx + 3} cy={hinh.cy + 10} fill={phuMau(colors.ink, dark ? 0.35 : 0.08)} rx={hinh.rx} ry={hinh.ry} />
-              <Ellipse cx={hinh.cx} cy={hinh.cy + 5} fill={colors.paperShade} rx={hinh.rx} ry={hinh.ry} stroke={colors.lineStrong} strokeWidth={1} />
-              <Ellipse cx={hinh.cx} cy={hinh.cy} fill={colors.card} rx={hinh.rx} ry={hinh.ry} stroke={colors.lineStrong} strokeWidth={1.2} />
+              {hinh.ban ? (
+                // A big group's long table, seen from above: its shadow, its
+                // edge, its top, drawn like the round one (QA UI-050).
+                <>
+                  <Rect fill={phuMau(colors.ink, dark ? 0.35 : 0.08)} height={hinh.ban.cao} rx={12} width={hinh.ban.rong} x={hinh.ban.trai + 3} y={hinh.ban.tren + 10} />
+                  <Rect fill={colors.paperShade} height={hinh.ban.cao} rx={12} stroke={colors.lineStrong} strokeWidth={1} width={hinh.ban.rong} x={hinh.ban.trai} y={hinh.ban.tren + 5} />
+                  <Rect fill={colors.card} height={hinh.ban.cao} rx={12} stroke={colors.lineStrong} strokeWidth={1.2} width={hinh.ban.rong} x={hinh.ban.trai} y={hinh.ban.tren} />
+                </>
+              ) : (
+                <>
+                  <Ellipse cx={hinh.cx + 3} cy={hinh.cy + 10} fill={phuMau(colors.ink, dark ? 0.35 : 0.08)} rx={hinh.rx} ry={hinh.ry} />
+                  <Ellipse cx={hinh.cx} cy={hinh.cy + 5} fill={colors.paperShade} rx={hinh.rx} ry={hinh.ry} stroke={colors.lineStrong} strokeWidth={1} />
+                  <Ellipse cx={hinh.cx} cy={hinh.cy} fill={colors.card} rx={hinh.rx} ry={hinh.ry} stroke={colors.lineStrong} strokeWidth={1.2} />
+                </>
+              )}
               {hinh.ghe.map((g) =>
                 dangDung.includes(g.id) ? (
                   <Ellipse cx={g.dia.x} cy={g.dia.y} fill={colors.card} key={`dia-${g.id}`} rx={13} ry={6} stroke={mucNguoi(g.id, dark)} strokeWidth={2} />
@@ -141,20 +151,28 @@ export function BanGanMon({
             </Svg>
           </Animated.View>
           {mon ? (
-            // The card stands in the middle of the table whatever its height:
-            // «Chia đều» is stamped on the card itself, where no seat or plate is.
+            // The card stands in the middle of the table. On the round table
+            // it stays one name line tall: grown to two lines and a «Chia đều»
+            // stamp it covered four plates, and the stamp laid over its corner
+            // covered a fifth (B4 finish review). Who shares the dish is said
+            // by the plates and by the dish's row under the table; the whole
+            // name is there and in the card's name.
             <View pointerEvents="box-none" style={[styles.giua, { left: hinh.cx - hinh.rx, top: hinh.cy - hinh.ry, width: hinh.rx * 2, height: hinh.ry * 2 }]}>
               <GestureDetector gesture={keo}>
                 <Animated.View
                   accessibilityHint="Kéo thẻ món tới một ghế, hoặc chạm vào ghế"
                   accessibilityLabel={`Món trên bàn: ${mon.ten}`}
-                  style={[styles.the, { width: theMon(hinh.rx).w, minHeight: theMon(hinh.rx).h, backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small / 2 }, kieuThe]}
+                  // At least the card's size, grown to its amount, never past
+                  // the table: a fixed width cut «12.345.678đ» to «12.345.6…»
+                  // at 320 (QA UI-048). The dish's name wraps first.
+                  style={[styles.the, { minWidth: hinh.the.w, maxWidth: theMonToiDa(hinh), minHeight: hinh.the.h, backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small / 2 }, kieuThe]}
                 >
-                  <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>
+                  <Text numberOfLines={hinh.ban ? 2 : 1} style={[typography.label, styles.tenMon, { color: colors.ink }]}>
                     {mon.ten}
                   </Text>
-                  <Money size="label" tone="split" vnd={mon.tienVnd} />
-                  {tatCa ? <Stamp label="Chia đều" tilt={-2} tone="split" /> : null}
+                  {/* One size down on a card too small for the label size: the
+                      amount is written smaller, never cut. */}
+                  <Money size={theMonToiDa(hinh) < 124 ? "caption" : "label"} tone="split" vnd={mon.tienVnd} />
                 </Animated.View>
               </GestureDetector>
             </View>
@@ -172,4 +190,5 @@ const styles = StyleSheet.create({
   vang: { opacity: 0.45 },
   giua: { position: "absolute", alignItems: "center", justifyContent: "center" },
   the: { borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, alignItems: "center", justifyContent: "center", gap: 2 },
+  tenMon: { textAlign: "center" },
 });

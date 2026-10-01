@@ -324,6 +324,9 @@
     // mỗi lời gọi một Attempt, và không phép chia nào ở phía client.
     "src/rudi/chia-bill/ai-co-gi.ts",
     "src/rudi/chia-bill/hoa-don.ts",
+    // B4 (01/10, QA UI-052): the bill being typed survives Back, Forward and a
+    // reload, and dies when it is recorded or dropped.
+    "src/rudi/chia-bill/nhap-bill.ts",
     "src/rudi/chia-bill/o-so.ts",
     "src/screens/kham-pha/ban-do-nhom.ts",
     "src/rudi/loi-moi-den.ts",

@@ -125,6 +125,17 @@ export function hangKetQua(chia: ChiaBill, roster: readonly ThanhVien[]): { id: 
     .sort((a, b) => a.ten.localeCompare(b.ten, "vi"));
 }
 
+/**
+ * The footing under the shares: the server's integer shares added up, and
+ * whether they land exactly on the bill (money rule 2, shown rather than
+ * promised). It only adds what the server sent; nothing here splits or corrects.
+ */
+export function dongCong(chia: ChiaBill): { soPhan: number; tongVnd: number; lechVnd: number } {
+  const phan = Object.values(chia.allocations);
+  const tongVnd = phan.reduce((a, b) => a + b, 0);
+  return { soPhan: phan.length, tongVnd, lechVnd: tongVnd - chia.totalAmountVnd };
+}
+
 /** What a scan refusal means for the next move, or the honest generic line. */
 export function cauSauKhiScanHong(message: string): string {
   return `${message} Bạn có thể nhập món bằng tay.`;

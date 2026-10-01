@@ -60,20 +60,20 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-045 | P3 | VISUAL_UPGRADE | F03 | Ở 320dp cột tên chặng 53px | B3 | ≥120px | READY_FOR_QA |
 | UI-046 | P3 | BUG_FIX | F03 | `/outings/chon` thiếu `?place` kẹt skeleton | B3 | câu + lối ra ≤1s | READY_FOR_QA |
 | UI-047 | P3 | VISUAL_UPGRADE | F03+ | Tablet: đầu màn co vào giữa, lệch cột nội dung | B3 | nút lui thẳng mép cột | READY_FOR_QA |
-| UI-048 | P2 | BUG_FIX | F04/F11 | Số tiền món bị cắt «12.3…» | B4 | 0 số tiền bị cắt | PLANNED |
+| UI-048 | P2 | BUG_FIX | F04/F11 | Số tiền món bị cắt «12.3…» | B4 | 0 số tiền bị cắt | READY_FOR_QA |
 | UI-049 | P1 | BUG_FIX | F04 | Web: «Gửi cho <tên>» không gửi được link, báo «Kiểm tra mạng» ở y −2855 | B1 | có lối chép link; không báo lỗi khi đóng khay | READY_FOR_QA |
-| UI-050 | P2 | UX_IMPROVEMENT | F04 | Từ 9 người ghế đè nhau; 20 người chạm ghế này đổi ghế khác | B4 | chạm đúng ghế tới n=20 | PLANNED |
-| UI-051 | P2 | UX_IMPROVEMENT | F04 | Lý do chặn và lỗi 503 ở đầu trang, ngoài màn | B4 | câu trong khung nhìn sau khi chạm | PLANNED |
-| UI-052 | P2 | UX_IMPROVEMENT | F04 | Lùi bước 1, Back hay tải lại đều mất bill đang gõ | B4 | không mất mà không hỏi | PLANNED |
+| UI-050 | P2 | UX_IMPROVEMENT | F04 | Từ 9 người ghế đè nhau; 20 người chạm ghế này đổi ghế khác | B4 | chạm đúng ghế tới n=20 | READY_FOR_QA |
+| UI-051 | P2 | UX_IMPROVEMENT | F04 | Lý do chặn và lỗi 503 ở đầu trang, ngoài màn | B4 | câu trong khung nhìn sau khi chạm | READY_FOR_QA |
+| UI-052 | P2 | UX_IMPROVEMENT | F04 | Lùi bước 1, Back hay tải lại đều mất bill đang gõ | B4 | không mất mà không hỏi | READY_FOR_QA |
 | UI-053 | P3 | BUG_FIX, DESIGN_SYSTEM_IMPROVEMENT | F04+ | Phím Space không đổi checkbox/radio dựng bằng Pressable | B2 | Space đổi trạng thái | VERIFIED_LOCALLY |
-| UI-054 | P3 | VISUAL_UPGRADE | F04 | Sơ đồ quyết toán từ 10 người: nhãn đè nhau | B4 | 10 người: 0 chỗ đè | PLANNED |
-| UI-055 | P3 | VISUAL_UPGRADE | F04 | Nếp M2 bị đẩy ra ngoài màn | B4 | trong màn ở C1–C3 | PLANNED |
-| UI-056 | P3 | UX_IMPROVEMENT | F04 | Đọc ảnh bill lỗi khuyên nhập tay mà không có nút | B4 | có lối nhập tay tại chỗ | PLANNED |
-| UI-057 | P3 | UX_IMPROVEMENT | F04 | Mép Nếp hứa «chạm để kéo ra» mà chạm không làm gì | B4 | không hứa điều không làm | PLANNED |
-| UI-058 | P3 | UX_IMPROVEMENT | F04 | «Tạo đợt thu từ sổ» vẫn mời khi mọi khoản đã vào đợt | B4 | không có nút chắc chắn hỏng | PLANNED |
-| UI-059 | P3 | UX_IMPROVEMENT | F04 | Dòng người trả mất «(trả)» | B4 | «trả» luôn thấy | PLANNED |
-| UI-060 | P3 | UX_IMPROVEMENT | F04 | Tài chính: «Chi theo nhóm» không có hàng | B4 | tiêu đề khớp nội dung | PLANNED |
-| UI-061 | P3 | VISUAL_UPGRADE | F04 | Quyết toán ở 320dp: dòng đầu sổ ép thành 9 dòng | B4 | ≤5 dòng ở C2 | PLANNED |
+| UI-054 | P3 | VISUAL_UPGRADE | F04 | Sơ đồ quyết toán từ 10 người: nhãn đè nhau | B4 | 10 người: 0 chỗ đè | READY_FOR_QA |
+| UI-055 | P3 | VISUAL_UPGRADE | F04 | Nếp M2 bị đẩy ra ngoài màn | B4 | trong màn ở C1–C3 | READY_FOR_QA |
+| UI-056 | P3 | UX_IMPROVEMENT | F04 | Đọc ảnh bill lỗi khuyên nhập tay mà không có nút | B4 | có lối nhập tay tại chỗ | READY_FOR_QA |
+| UI-057 | P3 | UX_IMPROVEMENT | F04 | Mép Nếp hứa «chạm để kéo ra» mà chạm không làm gì | B4 | không hứa điều không làm | READY_FOR_QA |
+| UI-058 | P3 | UX_IMPROVEMENT | F04 | «Tạo đợt thu từ sổ» vẫn mời khi mọi khoản đã vào đợt | B4 | không có nút chắc chắn hỏng | READY_FOR_QA |
+| UI-059 | P3 | UX_IMPROVEMENT | F04 | Dòng người trả mất «(trả)» | B4 | «trả» luôn thấy | READY_FOR_QA |
+| UI-060 | P3 | UX_IMPROVEMENT | F04 | Tài chính: «Chi theo nhóm» không có hàng | B4 | tiêu đề khớp nội dung | READY_FOR_QA |
+| UI-061 | P3 | VISUAL_UPGRADE | F04 | Quyết toán ở 320dp: dòng đầu sổ ép thành 9 dòng | B4 | ≤5 dòng ở C2 | READY_FOR_QA |
 | UI-062 | P2 | BUG_FIX | F05 | Ô soạn web là textarea 2 hàng không cao lên; chữ lệch 20px | B6 | lệch ≤4px; cao dần tới trần | PLANNED |
 | UI-063 | P2 | BUG_FIX | F05 | Bong bóng có link dài tràn cột; 320dp mất đầu link | B6 | bong bóng trong khung | PLANNED |
 | UI-064 | P3 | VISUAL_UPGRADE | F05 | Avatar thấp hơn bong bóng 22px; giờ lặp dưới mọi cụm | B6 | avatar ±4px; giờ theo khoảng thời gian | PLANNED |
@@ -187,6 +187,12 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 
 | Mục | Nhóm | Batch | Tiêu chí | Trạng thái |
 |---|---|---|---|---|
-| Con dấu «Tạo mới» trên mọi tab (yêu cầu của chủ sản phẩm) | UX_IMPROVEMENT + VISUAL_UPGRADE | B2, làm lại sau mockup | mọi tab có lối Tạo mới; không che nội dung; không tranh màu với tab đang chọn; theo mockup của chủ sản phẩm | BLOCKED (01/10: chủ sản phẩm đánh giá con dấu tròn chưa đạt, đang vẽ mockup) |
+| Con dấu «Tạo mới» trên mọi tab (yêu cầu của chủ sản phẩm) | UX_IMPROVEMENT + VISUAL_UPGRADE | B2, làm lại sau mockup | mọi tab có lối Tạo mới; không che nội dung; không tranh màu với tab đang chọn; theo mockup của chủ sản phẩm | CHUYỂN GIAO (01/10: chủ sản phẩm đánh giá con dấu tròn chưa đạt và tự đảm nhận thanh tab dưới cùng; ra khỏi danh sách việc của đợt này) |
 | `KheLop`: khe lớp phủ của màn (sheet sâu trong màn phủ cả đầu màn) | DESIGN_SYSTEM_IMPROVEMENT | B3 | sheet phủ đầu màn; state giữ; ô nhập không chậm phím | READY_FOR_QA |
 | Dòng nguồn bản đồ luôn thấy khi bản đồ hiện | BUG_FIX | B3 | probe `NGUON-BAN-DO` | READY_FOR_QA |
+| Bước «Kết quả» chia bill: cuống của bạn + dải phiếu đục lỗ + dòng cộng «Cộng N phần» (luật tiền 2 hiện ra màn) | VISUAL_UPGRADE + UX_IMPROVEMENT | B4 | dòng cộng = tổng bill; con dấu người trả hạ đúng hàng; không chip giả nút | READY_FOR_QA |
+| Bill 0đ chặn ở bước xem lại, chỉ ra đúng dòng (thấy trên Android, ngoài QA) | BUG_FIX | B4 | không gửi món 0đ; câu ngay trên nút; ô cần sửa có câu và con trỏ | READY_FOR_QA |
+| Đợt thu và quyết toán gom theo người nhận; hàng chưa về không con dấu | VISUAL_UPGRADE + UX_IMPROVEMENT | B4 | người nhận nói một lần mỗi mục; 0 con dấu «chưa chuyển» | READY_FOR_QA |
+| Route Go `GET /contexts/{id}/unbatched-expenses` (gói native `gomdot`) | UX_IMPROVEMENT (backend cho UI-058) | B4 | thành viên đọc được số đếm, người ngoài 403; tầng PostgreSQL | READY_FOR_QA |
+| Tài chính: số theo từng nhóm (route Go đọc tổng hợp) | UX_IMPROVEMENT | sau B11, cần chủ sản phẩm chọn ngữ nghĩa «chi theo nhóm» | — | PLANNED |
+| Test `nepnho.TestQuenKhiConHangThiThuLai` chập chờn, treo tới timeout thay vì đỏ (t.Fatal khi còn giữ transaction) | — (ngoài phạm vi UI) | ghi lại, không sửa | đỏ ngay khi hỏng, không treo | PLANNED |

@@ -15,7 +15,7 @@ import Svg, { Path } from "react-native-svg";
 
 import { mucNguoi, typography, useRudiTheme } from "../theme";
 import { HinhNhan } from "./Avatar";
-import { soDoChuyen, type ChuyenSoDo, type MuiTen } from "./hinh-tien";
+import { NHAN_DAY, soDoChuyen, tenGoi, type ChuyenSoDo, type MuiTen } from "./hinh-tien";
 import { useMotion } from "./useMotion";
 
 const PathDong = Animated.createAnimatedComponent(Path);
@@ -44,7 +44,7 @@ export function SoDoChuyen({
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
-  const { dark } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const motion = useMotion();
   const [w, setW] = useState(0);
   const tien = useSharedValue(motion.reduced ? 1 : 0);
@@ -56,6 +56,16 @@ export function SoDoChuyen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coRong]);
   const sd = coRong ? soDoChuyen(chuyen, w) : null;
+  if (sd?.quaDong) {
+    // Too many people for even their given names side by side: no drawing
+    // whose tags lie on each other (QA UI-054); the list says every transfer.
+    return (
+      <View onLayout={(e) => setW(Math.round(e.nativeEvent.layout.width))} style={style} testID={testID}>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>Nhóm đông nên không vẽ sơ đồ: từng khoản chuyển ở danh sách dưới.</Text>
+      </View>
+    );
+  }
+  const rong = sd?.rongNhan ?? NHAN_DAY;
   return (
     <View
       accessibilityElementsHidden
@@ -74,14 +84,15 @@ export function SoDoChuyen({
           </Svg>
           {sd.nguoi.map((p) => {
             const ten = nguoi.find((x) => x.id === p.id)?.ten ?? "Thành viên";
+            // A crowded row prints the given name only, on a tag half as wide.
             const chu = (
-              <Text numberOfLines={1} style={[typography.caption, styles.ten, { color: mucNguoi(p.id, dark) }]}>
-                {ten}
+              <Text numberOfLines={1} style={[typography.caption, styles.ten, { maxWidth: rong, color: mucNguoi(p.id, dark) }]}>
+                {rong < NHAN_DAY ? tenGoi(ten) : ten}
               </Text>
             );
             // The top row wears its name above the standee (`hinh-tien.ts`).
             return (
-              <View key={p.id} style={[styles.nhan, { left: p.x - 44, top: p.ten === "tren" ? p.y - 46 : p.y - 26 }]}>
+              <View key={p.id} style={[styles.nhan, { width: rong, left: p.x - rong / 2, top: p.ten === "tren" ? p.y - 46 : p.y - 26 }]}>
                 {p.ten === "tren" ? chu : null}
                 <HinhNhan name={ten} personId={p.id} size={30} />
                 {p.ten === "tren" ? null : chu}
@@ -95,6 +106,6 @@ export function SoDoChuyen({
 }
 
 const styles = StyleSheet.create({
-  nhan: { position: "absolute", width: 88, alignItems: "center", gap: 2 },
-  ten: { maxWidth: 88, textAlign: "center" },
+  nhan: { position: "absolute", alignItems: "center", gap: 2 },
+  ten: { textAlign: "center" },
 });

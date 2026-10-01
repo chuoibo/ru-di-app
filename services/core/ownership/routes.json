@@ -3060,6 +3060,20 @@
       "state": "LIVE-GO",
       "evidence": "docs/migration/go-native-profile.md",
       "native": true
+    },
+    {
+      "id": "GET /contexts/{context_id}/unbatched-expenses",
+      "order": 227,
+      "kind": "route",
+      "method": "GET",
+      "path": "/contexts/{context_id}/unbatched-expenses",
+      "group": "batches",
+      "class": "core",
+      "owner": "go",
+      "python": "absent",
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/routes/batches/GET-contexts-context_id-unbatched-expenses.md",
+      "native": true
     }
   ],
   "features": [

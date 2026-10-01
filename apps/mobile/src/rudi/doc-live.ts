@@ -161,10 +161,13 @@ export function dongHeroQuyetToan(
   if (tong.kieu === "chua-co-chuyen") {
     return {
       nhan: `Chi tiêu theo chuyến (${nguoi})`,
-      so: "Chưa có chuyến",
       // Not «nhóm chưa có kèo nào»: a pair that has just agreed on a plan for
-      // Saturday has a kèo, it simply has not started (QA 23/09).
-      cau: "Chưa có kèo nào đang đi hay đã xong để gom chi tiêu theo ngày. Các khoản chuyển bên dưới vẫn tính từ sổ, kể cả khoản vừa ghi.",
+      // Saturday has a kèo, it simply has not started (QA 23/09); an ongoing
+      // trip and an ended one have both started. Said in the state line
+      // itself, short enough for one line at 320: the sentence under it took
+      // four lines before any money (B4 finish review).
+      so: "Chưa có chuyến nào bắt đầu",
+      cau: "Các khoản chuyển dưới đây vẫn tính từ sổ.",
       laSo: false,
     };
   }
