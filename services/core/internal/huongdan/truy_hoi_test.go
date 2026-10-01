@@ -341,24 +341,35 @@ func TestBoVangKhongSua(t *testing.T) {
 // (ADR-0047 §9). duongHaiNguoi has no miss left; «ko bik bo fieu o dau» and
 // «bo fieu o dau v» went from rank 7 to 8, «đóng sổ hai người» from 2 to 1.
 //
+// Re-pinned at the five-column tab strip (2026-10-02): the ranker did not
+// change, the manual did. Cộng đồng became Khám phá's second section, so
+// kham-pha.md and cong-dong.md say so in their overviews and in the existing
+// steps (no new section: a first try added three, and «ở đầu màn» folds to the
+// «o dau» of «ở đâu» questions; recall@5 fell 0.9505 → 0.9396). Recall@5 did
+// not move on any group; MRR (before → after):
+//
+//	duongVang       0.9179 → 0.9181   teen 0.7354 → 0.7369
+//	duongManKhac    0.7661 → 0.7701   teen 0.6280 → 0.6412
+//	duongTruyVan    0.8942 → 0.8974
+//
 // The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
 // duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
 // 0.3526 (teen 0.8214 / 0.2905).
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9179"},
+		"":          {"0.9505", "0.9181"},
 		"co_dau":    {"0.9405", "0.8978"},
 		"khong_dau": {"1.0000", "1.0000"},
-		"teen":      {"0.8333", "0.7354"},
+		"teen":      {"0.8333", "0.7369"},
 	},
 	duongTruyVan: {
-		"": {"1.0000", "0.8942"},
+		"": {"1.0000", "0.8974"},
 	},
 	duongManKhac: {
-		"":          {"0.9565", "0.7661"},
+		"":          {"0.9565", "0.7701"},
 		"co_dau":    {"0.9333", "0.7578"},
 		"khong_dau": {"1.0000", "0.8873"},
-		"teen":      {"0.9286", "0.6280"},
+		"teen":      {"0.9286", "0.6412"},
 	},
 	duongHaiNguoi: {
 		"":          {"1.0000", "0.6859"},

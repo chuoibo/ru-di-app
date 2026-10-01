@@ -3,8 +3,9 @@
  *
  * The desk had one order for everyone (a pair saw the pair's entry first), and
  * it opened only from Lên plan. With the stamp on every tab, the desk knows
- * where the person was standing: on Cộng đồng the thing to make is a post, on
- * Lên plan an outing, on Cá nhân a memory. The first item lies across the desk;
+ * where the person was standing: on Cộng đồng (Khám phá's second section, a
+ * tab route with no column, still `community` here) the thing to make is a
+ * post, on Lên plan an outing, on Cá nhân a memory. The first item lies across the desk;
  * the rest keep one stable order beneath it, so nothing is hidden and nothing
  * moves except the one card that fits the place.
  */
@@ -49,8 +50,8 @@ function viecHop(tu: TabTao | null, coCap: boolean): string | null {
 /**
  * The desk's order for `viec` (the desk's own list, in its stable order).
  * `coCap`: the person has an active one-to-one chat, so the pair's entry
- * exists for them as a first choice. `coCongDong`: the community tab is on,
- * so «Viết bài» has somewhere to go.
+ * exists for them as a first choice. `coCongDong`: Cộng đồng is on, so
+ * «Viết bài» has somewhere to go.
  */
 export function thuTuViec<T extends { href: string }>({ viec, tu, coCap, coCongDong }: { viec: readonly T[]; tu: TabTao | null; coCap: boolean; coCongDong: boolean }): { viec: T[]; hopCho: boolean } {
   const co = viec.filter((v) => v.href !== VIEC_BAI || coCongDong);

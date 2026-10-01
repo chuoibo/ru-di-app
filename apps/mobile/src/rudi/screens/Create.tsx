@@ -27,7 +27,7 @@ export const ACTIONS: ViecTao[] = [
   // The one entry the two-person notebook adds here (spec «Nếp truyền giấy»
   // §20.1, Lead): a sheet to ONE person, into the pair's notebook, not the group's.
   { vat: "thu-gap", title: "Hẹn người thương", detail: "Một lời hẹn trong sổ cặp đôi", href: "/hai-nguoi/chon-nguoi" },
-  { vat: "phieu-bau", title: "Viết bài", detail: "Kể chuyến đi cho cộng đồng", href: "/community/new" },
+  { vat: "phieu-bau", title: "Viết bài", detail: "Kể một điều hay với cộng đồng", href: "/community/new" },
 ];
 
 /** Objects lie on the desk a little askew, the same way every time. */

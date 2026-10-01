@@ -37,13 +37,12 @@ func TestDuongToiTrenDuLieuThat(t *testing.T) {
 		// through the settlement screen, so the unlabelled one wins (review 13).
 		{"finance", "messages", true, []string{"explore[]", "messages[Tin nhắn]"}},
 		{"explore", "smart-split/[id]/review", true, []string{"plan[Lên plan]", "create[Tạo mới]", "smart-split/[id]/review[Chia hóa đơn]"}},
-		// Two ways of two steps since main's memory-book merge (2026-09-28): the
-		// pair notebook of two people who are not «Một đôi» gained «Rủ hội mình
-		// đi chơi» to outings/new (KhongGianGiay.tsx), so «Rủ … tới đây» ties
-		// with «Thêm vào kèo»; both first steps are labelled, and the smaller
-		// route id wins. The second step has no label because to-giay.md does
-		// not declare that button yet.
-		{"places/[id]", "outings/new", true, []string{"groups/[id]/to-giay[Rủ … tới đây]", "outings/new[]"}},
+		// Two ways of two steps since main's memory-book merge (2026-09-28):
+		// «Rủ … tới đây» through the pair notebook, whose second step has no
+		// label (to-giay.md does not declare «Rủ hội mình đi chơi»), and «Thêm
+		// vào kèo» then «Tạo kèo». Since 02/10 the way with fewer unlabelled
+		// steps wins before the route id: Nếp can name every tap of it.
+		{"places/[id]", "outings/new", true, []string{"outings/chon[Thêm vào kèo]", "outings/new[Tạo kèo]"}},
 		{"groups/[id]/to-giay", "places/[id]", true, []string{"outings/[id][Xem kèo]", "places/[id][Chặng …]"}},
 		// Only the code knows the second edge: no label, and TieuDe empty too
 		// because settings/phien has no manual.
@@ -516,5 +515,32 @@ func TestTabKhopLayout(t *testing.T) {
 	}
 	if soCanh != len(layout)*(len(layout)-1) {
 		t.Fatalf("checked %d tab edges", soCanh)
+	}
+}
+
+// From another tab Cộng đồng is two taps: the Khám phá column, then
+// «Cộng đồng» in Khám phá's header; back from it is «Địa điểm» in the same
+// header. The labels are the manuals' (kham-pha.md, cong-dong.md), the edges
+// the route files' navigations.
+func TestCongDongLaMucCuaKhamPha(t *testing.T) {
+	want := []struct {
+		tu, den string
+		nhan    []string
+	}{
+		{"plan", "community", []string{"Khám phá", "Cộng đồng"}},
+		{"explore", "community", []string{"Cộng đồng"}},
+		{"community", "explore", []string{"Địa điểm"}},
+	}
+	for _, w := range want {
+		got, ok := soTay.duongToi(w.tu, w.den)
+		if !ok || len(got) != len(w.nhan) {
+			t.Errorf("%s -> %s: %v, want %v", w.tu, w.den, buoc(got), w.nhan)
+			continue
+		}
+		for i := range w.nhan {
+			if got[i].Nhan != w.nhan[i] {
+				t.Errorf("%s -> %s step %d: «%s», want «%s»", w.tu, w.den, i, got[i].Nhan, w.nhan[i])
+			}
+		}
 	}
 }

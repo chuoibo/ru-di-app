@@ -162,20 +162,24 @@ func (s *SoTay) duongToi(tu, den string) ([]Buoc, bool) {
 		return 0
 	}
 	// qua[v] is the fewest money screens a shortest way from v to den passes
-	// through after v. thuTu is in order of distance, so every screen one step
-	// closer is settled before the screens that lead to it.
+	// through after v; mu[v], among those ways, the fewest steps with no label
+	// (a step Nếp cannot name: the create sheet's cold-open redirect to a tab,
+	// say). thuTu is in order of distance, so every screen one step closer is
+	// settled before the screens that lead to it.
 	qua := map[string]int{den: 0}
+	mu := map[string]int{den: 0}
 	for _, v := range thuTu[1:] {
-		itNhat := -1
+		q0, m0 := -1, -1
 		for _, c := range s.ke[v] {
 			if d, ok := xa[c.Den]; !ok || d != xa[v]-1 {
 				continue
 			}
-			if q := gia(c.Den) + qua[c.Den]; itNhat < 0 || q < itNhat {
-				itNhat = q
+			q, m := gia(c.Den)+qua[c.Den], khongNhan(c)+mu[c.Den]
+			if q0 < 0 || q < q0 || (q == q0 && m < m0) {
+				q0, m0 = q, m
 			}
 		}
-		qua[v] = itNhat
+		qua[v], mu[v] = q0, m0
 	}
 	out := make([]Buoc, 0, n)
 	for cur := tu; cur != den; {
@@ -184,7 +188,7 @@ func (s *SoTay) duongToi(tu, den string) ([]Buoc, bool) {
 			if d, ok := xa[c.Den]; !ok || d != xa[cur]-1 {
 				continue
 			}
-			if chon == nil || tot(&s.ke[cur][i], chon, gia, qua) {
+			if chon == nil || tot(&s.ke[cur][i], chon, gia, qua, mu) {
 				chon = &s.ke[cur][i]
 			}
 		}
@@ -200,15 +204,28 @@ func (s *SoTay) duongToi(tu, den string) ([]Buoc, bool) {
 
 // tot reports whether edge a is a better next step than edge b, both one step
 // closer to the destination: fewer money screens on the rest of the way, then
-// a label over none, then the smaller route id.
-func tot(a, b *canh, gia func(string) int, qua map[string]int) bool {
+// fewer unlabelled steps on the rest of the way (Lên plan to Cộng đồng is
+// «Khám phá» then «Cộng đồng», not «Tạo mới» then the create sheet's
+// cold-open redirect), then a label over none, then the smaller route id.
+func tot(a, b *canh, gia func(string) int, qua, mu map[string]int) bool {
 	if qa, qb := gia(a.Den)+qua[a.Den], gia(b.Den)+qua[b.Den]; qa != qb {
 		return qa < qb
+	}
+	if ma, mb := khongNhan(*a)+mu[a.Den], khongNhan(*b)+mu[b.Den]; ma != mb {
+		return ma < mb
 	}
 	if (a.Nhan != "") != (b.Nhan != "") {
 		return a.Nhan != ""
 	}
 	return a.Den < b.Den
+}
+
+// khongNhan is 1 for a step with no label, 0 for one Nếp can name.
+func khongNhan(c canh) int {
+	if c.Nhan == "" {
+		return 1
+	}
+	return 0
 }
 
 // chuanMan maps a screen as walked or as declared to its route id: the query

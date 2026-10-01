@@ -2,15 +2,16 @@
 {
   "man": "explore",
   "tieu_de": "Khám phá",
-  "nhanUI": ["Khám phá", "Một món thèm, một nơi muốn ghé…", "Hỏi Rủ Đi AI", "Rủ Đi AI", "Xóa lọc", "Đổi điểm đến", "Chưa thấy nơi phù hợp", "Thêm vào kèo", "Mở …"],
+  "nhanUI": ["Khám phá", "Địa điểm", "Cộng đồng", "Một món thèm, một nơi muốn ghé…", "Hỏi Rủ Đi AI", "Rủ Đi AI", "Xóa lọc", "Đổi điểm đến", "Chưa thấy nơi phù hợp", "Thêm vào kèo", "Mở …"],
   "di_toi": [
     {"nhan": "Mở …", "man": "places/[id]"},
-    {"nhan": "Đổi điểm đến", "man": "destinations"}
+    {"nhan": "Đổi điểm đến", "man": "destinations"},
+    {"nhan": "Cộng đồng", "man": "community"}
   ],
   "tien": false
 }
 ---
-Tab «Khám phá» là danh mục quán và chỗ chơi ở điểm đến bạn đang chọn. Bạn có thể lọc theo loại, gõ tìm, hoặc hỏi Rủ Đi AI bằng một câu tự nhiên.
+Tab «Khám phá» có hai mục, chữ to trên cùng. «Địa điểm» là danh mục quán và chỗ chơi ở điểm đến bạn đang chọn; mở app là vào mục này. «Cộng đồng» là bảng tin chuyện mọi người kể về những cuộc đi. Ở «Địa điểm» bạn có thể lọc theo loại, gõ tìm, hoặc hỏi Rủ Đi AI bằng một câu tự nhiên.
 
 ## Tìm một quán
 
