@@ -483,8 +483,14 @@ func TestCanhNgoaiRut(t *testing.T) {
 		}
 		return string(raw)
 	}
-	if bar := doc("src", "rudi", "ui", "RudiTabBar.tsx"); !strings.Contains(bar, `router.push("/create")`) || !strings.Contains(bar, `accessibilityLabel="Tạo mới"`) {
-		t.Fatal("RudiTabBar no longer pushes /create from a «Tạo mới» button")
+	// The strip's create button is the «Tạo mới» stamp, in its own file since
+	// B2 (2026-10-01): the strip renders it, the stamp pushes /create. Same
+	// check as apps/mobile/tests/huong-dan-khop-ma.test.mjs.
+	if bar := doc("src", "rudi", "ui", "RudiTabBar.tsx"); !strings.Contains(bar, "<ConDauTao ") {
+		t.Fatal("RudiTabBar no longer renders the «Tạo mới» stamp")
+	}
+	if dau := doc("src", "rudi", "ui", "ConDauTao.tsx"); !strings.Contains(dau, `"/create"`) || !strings.Contains(dau, `accessibilityLabel="Tạo mới"`) {
+		t.Fatal("the «Tạo mới» stamp no longer pushes /create")
 	}
 	if !strings.Contains(doc("app", "(tabs)", "_layout.tsx"), "<RudiTabBar") {
 		t.Fatal("the tab layout no longer renders RudiTabBar")
