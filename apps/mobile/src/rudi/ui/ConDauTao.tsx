@@ -1,12 +1,12 @@
 /**
  * «Tạo mới», the coral stamp of the tab strip, on every tab.
  *
- * With five destinations the strip had no room left for its create button, so
- * the desk opened only from a button on Lên plan. The stamp is now a column of
- * its own, raised out of the strip's top edge the way a rubber stamp stands on
- * the page: the five destinations keep their order, and the one thing that
- * makes something new sits between where you look (Cộng đồng, Khám phá) and
- * where you keep (Lên plan, Tin nhắn, Cá nhân).
+ * The stamp is a slot of its own, raised out of the strip's top edge the way a
+ * rubber stamp stands on the page, in the middle of five equal slots: four
+ * columns (Khám phá, Lên plan | Tin nhắn, Cá nhân) and the one thing that
+ * makes something new between them (owner's mockup, 01/10; until then five
+ * columns put it third of six, off centre). Cộng đồng is Khám phá's second
+ * section, a route with no column (`thanh-tab.ts`).
  *
  * It knows the tab it was pressed on:
  *
