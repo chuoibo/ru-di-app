@@ -43,7 +43,7 @@ var problemCodes = []string{
 	"consent_proposal_not_found", "consent_proposal_expired", "couple_slot_taken", "consent_purpose_unknown",
 	"constraint_kind_unknown", "notebook_revision_stale", "paper_not_found", "paper_wrong_state",
 	"paper_version_stale", "paper_self_response", "paper_not_withdrawable", "paper_expired",
-	"paper_frozen", "paper_outing_exists",
+	"paper_frozen", "paper_outing_exists", "direct_message_unavailable",
 }
 
 // raisedTypes is every exception class the corpus must show ending a request.
@@ -512,6 +512,12 @@ type fakeStore struct {
 	// rhythm is the world's "rhythm": nil for no stored choice, else a
 	// pointer to the chosen person (nil inside for «cả hai»).
 	rhythm **string
+	// edge, otherGone and otherDeleted are the world's "edge" ([state,
+	// decided_by] or null), "other_gone" (no person row) and "other_deleted"
+	// (a row marked deleted): what the pair gate reads (QA UI-120).
+	edge         *FriendEdge
+	otherGone    bool
+	otherDeleted bool
 }
 
 func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
@@ -610,6 +616,39 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 			}
 			s.context = &Context{Kind: kind}
 		}
+	}
+	if raw, ok := world["edge"].([]any); ok {
+		pair, err := fields(raw, 2)
+		if err != nil {
+			return nil, err
+		}
+		state, err := oracletest.Str(pair[0])
+		if err != nil {
+			return nil, err
+		}
+		edge := &FriendEdge{State: state}
+		if pair[1] != nil {
+			decider, err := h.id(pair[1])
+			if err != nil {
+				return nil, err
+			}
+			edge.DecidedByID = &decider
+		}
+		s.edge = edge
+	}
+	if raw, ok := world["other_gone"]; ok {
+		gone, err := oracletest.Bool(raw)
+		if err != nil {
+			return nil, err
+		}
+		s.otherGone = gone
+	}
+	if raw, ok := world["other_deleted"]; ok {
+		deleted, err := oracletest.Bool(raw)
+		if err != nil {
+			return nil, err
+		}
+		s.otherDeleted = deleted
 	}
 	if raw, ok := world["member"]; ok {
 		member, err := oracletest.Bool(raw)
@@ -799,6 +838,19 @@ func (s *fakeStore) IsMember(contextID, personID string) (bool, error) {
 func (s *fakeStore) ListMembers(contextID string) ([]Member, error) {
 	s.rec("list_members", s.h.name(contextID))
 	return append([]Member(nil), s.roster...), nil
+}
+
+func (s *fakeStore) GetPerson(personID string) (*PersonRef, error) {
+	s.rec("get_person", s.h.name(personID))
+	if s.otherGone {
+		return nil, nil
+	}
+	return &PersonRef{Deleted: s.otherDeleted}, nil
+}
+
+func (s *fakeStore) GetFriendEdge(personA, personB string) (*FriendEdge, error) {
+	s.rec("get_friend_edge", s.h.name(personA), s.h.name(personB))
+	return s.edge, nil
 }
 
 func (s *fakeStore) GetPairNotebook(contextID string) (*Notebook, error) {

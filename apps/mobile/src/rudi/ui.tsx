@@ -3,13 +3,14 @@ import { BlurView } from "expo-blur";
 import { Image, ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter, useSegments } from "expo-router";
 import { Children, createContext, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DemoPerson } from "./fixtures";
+import { duongDangNhap, laCuaVao } from "./duong-vao";
 import { useRudiSession } from "./session";
 import { cardShadow, lopPhu, mucTrenAnh, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
 import { Field as FieldCore, type FieldCoreProps } from "./ui/Field";
@@ -211,8 +212,11 @@ export function RudiScreen({
   );
 }
 
-/** True inside a TopBar: a DemoBadge there shortens its label so the title can stay centred. */
-const TrongTopBar = createContext(false);
+/**
+ * Inside a TopBar: a DemoBadge there shortens its label so the title can stay
+ * centred, and steps aside entirely where the bar draws the demo door itself.
+ */
+const TrongTopBar = createContext<{ trong: boolean; cua: boolean }>({ trong: false, cua: false });
 
 export function TopBar({
   title,
@@ -230,6 +234,16 @@ export function TopBar({
 }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  const { cheDo } = useRudiSession();
+  const segments = useSegments();
+  const pathname = usePathname();
+  // A demo screen outside the tabs (the tabs carry «Đăng nhập» in the bar)
+  // says it is one and where the way in is, on every such screen, with ONE
+  // element: the demo door (QA UI-082). A badge and a separate sign-in icon
+  // side by side widened the right side so far that the centred title of the
+  // demo notebook was 6 px wide. Never on the doors themselves.
+  const cuaDemo = cheDo !== "live" && segments[0] !== "(tabs)" && !laCuaVao(pathname);
+  const { width: rongCuaSo } = useWindowDimensions();
   const luiVe = () => {
     if (onBack !== undefined) onBack();
     else router.back();
@@ -237,18 +251,30 @@ export function TopBar({
   // Both sides take the wider side's natural width, so the title is centred on
   // the screen and not on whatever is left between a chevron and a badge. The
   // natural width is measured on an inner view; measuring the slot itself would
-  // read back the minimum we set and never shrink again.
+  // read back the minimum we set and never shrink again. Centring gives way
+  // when it would cut the title: then each side keeps its own width and the
+  // title takes what is between them, a little off centre but whole.
   const [benRong, setBenRong] = useState({ trai: 0, phai: 0 });
-  const rongBen = Math.max(52, benRong.trai, benRong.phai);
+  const [rongThanh, setRongThanh] = useState(0);
+  const [rongChu, setRongChu] = useState(0);
+  const canBang = Math.max(52, benRong.trai, benRong.phai);
+  const vuaKhiCanBang = rongThanh === 0 || rongChu === 0 || rongThanh - 2 * canBang - 16 >= rongChu;
+  const rongTrai = vuaKhiCanBang ? canBang : Math.max(52, benRong.trai);
+  const rongPhai = vuaKhiCanBang ? canBang : Math.max(52, benRong.phai);
   const doBen = (ben: "trai" | "phai") => (e: LayoutChangeEvent) => {
     const w = Math.ceil(e.nativeEvent.layout.width);
     setBenRong((cu) => (cu[ben] === w ? cu : { ...cu, [ben]: w }));
   };
 
   return (
-    <TrongTopBar.Provider value={true}>
-    <View style={styles.topBar}>
-      <View style={[styles.topBarSide, { minWidth: rongBen }]}>
+    <TrongTopBar.Provider value={{ trong: true, cua: cuaDemo }}>
+    <View onLayout={(e) => setRongThanh(Math.round(e.nativeEvent.layout.width))} style={styles.topBar}>
+      {/* The title's and subtitle's natural width, measured off-screen for the rule above. */}
+      <View aria-hidden importantForAccessibility="no-hide-descendants" onLayout={(e) => setRongChu(Math.ceil(e.nativeEvent.layout.width))} pointerEvents="none" style={styles.doChu}>
+        {title ? <Text style={typography.title}>{title}</Text> : null}
+        {subtitle ? <Text style={typography.caption}>{subtitle}</Text> : null}
+      </View>
+      <View style={[styles.topBarSide, { minWidth: rongTrai }]}>
         <View onLayout={doBen("trai")} style={styles.topBarSideInner}>
         {back ? (
           <IconButton
@@ -266,7 +292,10 @@ export function TopBar({
       </View>
       <View style={styles.topBarTitleWrap}>
         {title ? (
-          <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>
+          // Two lines before an ellipsis: a long title next to a wide right
+          // side (the demo notebook's gear and door) reflows instead of
+          // losing its last word.
+          <Text numberOfLines={2} style={[typography.title, styles.topBarTitle, { color: colors.ink }]}>
             {title}
           </Text>
         ) : null}
@@ -279,8 +308,11 @@ export function TopBar({
           </Text>
         ) : null}
       </View>
-      <View style={[styles.topBarSide, styles.topBarRight, { minWidth: rongBen }]}>
-        <View onLayout={doBen("phai")} style={styles.topBarSideInnerRight}>{right}</View>
+      <View style={[styles.topBarSide, styles.topBarRight, { minWidth: rongPhai }]}>
+        <View onLayout={doBen("phai")} style={styles.topBarSideInnerRight}>
+          {right}
+          {cuaDemo ? <CuaDemo gon={rongCuaSo < 360} onPress={() => router.push(duongDangNhap(pathname) as never)} /> : null}
+        </View>
       </View>
     </View>
     </TrongTopBar.Provider>
@@ -326,8 +358,12 @@ export function Eyebrow({ children, tone = "accent" }: { children: ReactNode; to
 export function DemoBadge({ label = "Dữ liệu demo", compactLabel }: { label?: string; /** Short form used inside a TopBar; default «Demo». */ compactLabel?: string }) {
   const { colors } = useRudiTheme();
   const { cheDo } = useRudiSession();
-  const trongTopBar = useContext(TrongTopBar);
+  const topBar = useContext(TrongTopBar);
   if (cheDo === "live") return null;
+  // The bar draws the door, which says «Demo» itself; a second label beside it
+  // would be the same word twice and the width the title needs.
+  if (topBar.cua) return null;
+  const trongTopBar = topBar.trong;
   // In a title bar the full label cannot share a 360dp row with a centred title
   // at font 1.3; the flask plus «Demo» keeps the honesty, the accessibility
   // label keeps the full sentence for screen readers and the native gate.
@@ -337,6 +373,25 @@ export function DemoBadge({ label = "Dữ liệu demo", compactLabel }: { label?
       <Ionicons color={colors.inkFaint} name="flask-outline" size={12} />
       <Text numberOfLines={1} style={[styles.demoText, { color: colors.inkFaint }]}>{chu}</Text>
     </View>
+  );
+}
+
+/**
+ * The demo door of a TopBar: «Demo» and the way out of it, as one control.
+ * The label is 12 sp, not the passive badge's 10, because it is pressed.
+ * Under 360 dp it is the flask and the door alone (`gon`), so a long title
+ * still has two lines' room; its name says the whole sentence either way.
+ */
+function CuaDemo({ onPress, gon = false }: { onPress: () => void; gon?: boolean }) {
+  const { colors } = useRudiTheme();
+  return (
+    <Pressable accessibilityLabel="Dữ liệu demo. Đăng nhập" accessibilityRole="button" onPress={onPress} style={styles.cuaDemo} testID="cua-demo">
+      <View style={[styles.cuaDemoChip, { backgroundColor: colors.card, borderColor: colors.line }]}>
+        <Ionicons color={colors.inkFaint} name="flask-outline" size={13} />
+        {gon ? null : <Text numberOfLines={1} style={[styles.cuaDemoChu, { color: colors.inkSoft }]}>Demo</Text>}
+        <Ionicons color={colors.accent} name="log-in-outline" size={15} />
+      </View>
+    </Pressable>
   );
 }
 
@@ -1125,9 +1180,14 @@ const styles = StyleSheet.create({
   topBarSide: { minWidth: 52, flexShrink: 0, alignItems: "flex-start" },
   topBarSideInner: { alignSelf: "flex-start" },
   // The right content hugs the right edge when the left side is the wider one (Logo instead of a chevron).
-  topBarSideInnerRight: { alignSelf: "flex-end" },
+  topBarSideInnerRight: { alignItems: "center", alignSelf: "flex-end", flexDirection: "row", gap: 4 },
   topBarRight: { alignItems: "flex-end" },
   topBarTitleWrap: { flex: 1, alignItems: "center", paddingHorizontal: 8 },
+  topBarTitle: { textAlign: "center" },
+  doChu: { position: "absolute", left: 0, top: 0, opacity: 0 },
+  cuaDemo: { minHeight: 48, minWidth: 48, justifyContent: "center" },
+  cuaDemoChip: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5 },
+  cuaDemoChu: { fontSize: 12, lineHeight: 14, fontWeight: "700", letterSpacing: 0.2 },
   logoRow: { flexDirection: "row", alignItems: "center", flexShrink: 0, gap: 9 },
   logoMark: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-4deg" }] },
   logoMarkCompact: { width: 40, height: 40, borderRadius: 14 },

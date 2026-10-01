@@ -4,6 +4,8 @@ import { KhongGianGiayScreen } from "../../../src/rudi/screens/hai-nguoi/KhongGi
 import { useRudiSession } from "../../../src/rudi/session";
 import { tenCuocTroChuyen } from "../../../src/rudi/nhan-rieng/nhan-rieng";
 import { SoDoiSongProvider } from "../../../src/rudi/to-giay/SoDoiSong";
+import { CAP_DEMO } from "../../../src/rudi/to-giay/fixtures-doi";
+import { CuaDangNhap } from "../../../src/rudi/ui/CuaDangNhap";
 
 /**
  * The paper surface of a two-person notebook.
@@ -38,5 +40,14 @@ export default function ToGiayRoute() {
       </SoDoiSongProvider>
     );
   }
-  return <KhongGianGiayScreen contextId={typeof params.id === "string" ? params.id : "cap-demo"} ruNgay={ruNgay} />;
+  // Signed out, only the demo notebook is the demo. A real pair's link used to
+  // fall through to the fixture store and show «Hội bạn · Người ấy» under a
+  // real id, unlabelled, with a «Gửi» that wrote nothing (QA UI-082, P1): it
+  // now goes through the sign-in door and comes back to this notebook.
+  const id = typeof params.id === "string" ? params.id : CAP_DEMO.id;
+  if (id !== CAP_DEMO.id) {
+    const query = [ruNgay ? "ru=1" : null, cho ? `cho=${encodeURIComponent(cho)}` : null].filter(Boolean).join("&");
+    return <CuaDangNhap tiep={`/groups/${id}/to-giay${query ? `?${query}` : ""}`} />;
+  }
+  return <KhongGianGiayScreen contextId={id} ruNgay={ruNgay} />;
 }

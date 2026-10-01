@@ -1,1 +1,11 @@
-export { Search as default } from "../../src/rudi/community/Search";
+import { Search } from "../../src/rudi/community/Search";
+import { CanPhien } from "../../src/rudi/ui/CuaDangNhap";
+
+/** Signed out, a link here goes through the sign-in door and comes back (QA UI-137). */
+export default function Route() {
+  return (
+    <CanPhien>
+      <Search />
+    </CanPhien>
+  );
+}

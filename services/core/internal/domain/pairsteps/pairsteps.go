@@ -42,6 +42,7 @@ import (
 	"strings"
 	"time"
 
+	"mobile/services/core/internal/domain/blocking"
 	"mobile/services/core/internal/domain/contexts"
 	"mobile/services/core/internal/domain/direct"
 	"mobile/services/core/internal/domain/pairnotebook"
@@ -102,6 +103,18 @@ type Member struct {
 	// DisplayName is MembershipRecord.display_name: the draft names whose
 	// taste it used (ADR-0034).
 	DisplayName string
+}
+
+// PersonRef is the part of a PersonRecord the pair gate reads: whether the
+// account ended.
+type PersonRef struct {
+	Deleted bool
+}
+
+// FriendEdge is the pair's live friend edge as the blocking domain reads it.
+type FriendEdge struct {
+	State       string
+	DecidedByID *string
 }
 
 // Consent is PairConsentRecord, the keys `_consents_as_dicts` reads.
@@ -260,6 +273,11 @@ type Store interface {
 	IsMember(contextID, personID string) (bool, error)
 	ListMembers(contextID string) ([]Member, error)
 
+	// GetPerson and GetFriendEdge are get_person and get_friend_edge, read by
+	// the pair gate (requirePairIsAlive) before every outward write.
+	GetPerson(personID string) (*PersonRef, error)
+	GetFriendEdge(personA, personB string) (*FriendEdge, error)
+
 	GetPairNotebook(contextID string) (*Notebook, error)
 	CreatePairNotebook(contextID string, now time.Time) error
 	LockPairNotebook(contextID string) (*Notebook, error)
@@ -391,6 +409,55 @@ func PaperErrorDetails() map[string]string {
 
 func refusal(status int, code, detail string) error {
 	return &Refusal{Status: status, Code: code, Detail: detail}
+}
+
+// requirePairIsAlive is ApiService._require_pair_is_alive: the gate a direct
+// message goes through, read before every outward write of the notebook
+// (ADR-0027 §3 step 1, QA UI-120). The same reads in the same order as
+// Python -- the context, its members, the other person, the edge -- and one
+// code and one sentence for both causes (blocked, or the account ended).
+// The writes that only take something back (withdraw, skip the week, revoke,
+// delete a box, close) do not call it.
+func requirePairIsAlive(s Store, actor Actor, contextID string) error {
+	record, err := s.GetContext(contextID)
+	if err != nil {
+		return err
+	}
+	if record == nil || !direct.IsPair(record.Kind) {
+		return nil
+	}
+	members, err := s.ListMembers(contextID)
+	if err != nil {
+		return err
+	}
+	var other *string
+	for _, member := range members {
+		if member.PersonID != actor.ID {
+			id := member.PersonID
+			other = &id
+			break
+		}
+	}
+	stopped := refusal(409, blocking.DirectMessageUnavailable, "Cuộc trò chuyện này không còn nhận tin.")
+	if other == nil {
+		return stopped
+	}
+	person, err := s.GetPerson(*other)
+	if err != nil {
+		return err
+	}
+	edge, err := s.GetFriendEdge(actor.ID, *other)
+	if err != nil {
+		return err
+	}
+	var blockingEdge *blocking.Edge
+	if edge != nil {
+		blockingEdge = &blocking.Edge{State: edge.State, DecidedByID: edge.DecidedByID}
+	}
+	if !blocking.DMAllowed(blockingEdge, person == nil || person.Deleted) {
+		return stopped
+	}
+	return nil
 }
 
 // fact is one entry of the context dict `_require_pair_permission` receives.

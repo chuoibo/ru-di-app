@@ -176,6 +176,9 @@ func SetWeekRole(s Store, actor Actor, contextID, lo string, now time.Time) (Wee
 	if err := requirePairPermission("set_pair_week_role", actor, fact{"is_group_member", true}); err != nil {
 		return WeekRole{}, err
 	}
+	if err := requirePairIsAlive(s, actor, contextID); err != nil {
+		return WeekRole{}, err
+	}
 	notebook, err := lockedNotebook(s, contextID, now)
 	if err != nil {
 		return WeekRole{}, err
@@ -264,6 +267,9 @@ func ProposeConsent(s Store, actor Actor, contextID, purpose string, now time.Ti
 		return ProposalView{}, err
 	}
 	if err := requirePairPermission("propose_pair_consent", actor, fact{"is_group_member", true}); err != nil {
+		return ProposalView{}, err
+	}
+	if err := requirePairIsAlive(s, actor, contextID); err != nil {
 		return ProposalView{}, err
 	}
 	notebook, err := lockedNotebook(s, contextID, now)
@@ -403,6 +409,9 @@ func GrantConsent(s Store, actor Actor, contextID, proposalID string, now time.T
 	); err != nil {
 		return ProposalView{}, err
 	}
+	if err := requirePairIsAlive(s, actor, contextID); err != nil {
+		return ProposalView{}, err
+	}
 	if err := s.GrantConsent(proposal.ID, actor.ID, now); err != nil {
 		return ProposalView{}, err
 	}
@@ -518,6 +527,9 @@ func PutConstraint(s Store, actor Actor, contextID, kind, content string, now ti
 		return Constraint{}, err
 	}
 	if err := requirePairPermission("edit_pair_constraint", actor, fact{"is_self", true}); err != nil {
+		return Constraint{}, err
+	}
+	if err := requirePairIsAlive(s, actor, contextID); err != nil {
 		return Constraint{}, err
 	}
 	notebook, err := lockedNotebook(s, contextID, now)

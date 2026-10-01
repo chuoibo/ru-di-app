@@ -223,6 +223,9 @@
     // produces no navigation -- and the version that lived inside a `useEffect`
     // could only be measured by driving an emulator.
     "src/rudi/duong-vao.ts",
+    // QA UI-049/UI-136: what a «Gửi cho …» or «Chia sẻ» tap answers on the
+    // web. Compiled so each outcome runs through react-native-web's Platform.
+    "src/rudi/web/chia-se.ts",
     "src/rudi/otp-dang-cho.ts",
     "src/rudi/chat/tin-song.ts",
     "src/rudi/cua-fixture.ts",

@@ -978,3 +978,33 @@ def test_the_week_passes_to_the_other_after_two_weeks_opened_by_the_same_person(
     role = client.get(f"/contexts/{CAP}/notebook", headers=head(TOI)).json()["week_role"]
     assert role["cach"] == "luot", role
     assert role["nguoi_lo"] == [str(NGUOI_KIA)]
+
+
+def test_a_block_closes_the_notebook_both_ways_but_never_traps_what_you_sent(client):
+    """QA UI-120 (P1): after a block, neither side can put anything new in front
+    of the other through the notebook (ADR-0027 §3 step 1 reads the block before
+    every write), with the one code and sentence a dead direct message uses. The
+    writes that only take something back stay open: blocking somebody must not
+    leave your own sheet stuck in front of them."""
+    sent = _da_gui(client, actor=NGUOI_KIA)
+    blocked = client.post(f"/people/{NGUOI_KIA}/block", headers=head(TOI))
+    assert blocked.status_code == 200, blocked.text
+
+    for actor in (TOI, NGUOI_KIA):
+        draft = client.post(f"/contexts/{CAP}/papers/draft", headers=head(actor))
+        assert draft.status_code == 409, draft.text
+        assert draft.json()["code"] == "direct_message_unavailable"
+    answer = _agree(client, sent, actor=TOI)
+    assert answer.status_code == 409 and answer.json()["code"] == "direct_message_unavailable"
+    seen = client.post(f"/papers/{sent}/versions/1/viewed", headers=head(TOI))
+    assert seen.status_code == 409 and seen.json()["code"] == "direct_message_unavailable"
+
+    taken_back = client.post(
+        f"/papers/{sent}/withdraw", json={"version": 1}, headers=head(NGUOI_KIA)
+    )
+    assert taken_back.status_code == 200, taken_back.text
+
+    lifted = client.delete(f"/people/{NGUOI_KIA}/block", headers=head(TOI))
+    assert lifted.status_code in (200, 204), lifted.text
+    again = client.post(f"/contexts/{CAP}/papers/draft", headers=head(TOI))
+    assert again.status_code == 201, again.text

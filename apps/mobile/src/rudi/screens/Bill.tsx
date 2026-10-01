@@ -228,7 +228,7 @@ export function OcrAssignmentScreen() {
 
   return (
     <RudiScreen tone="split" testID="ocr-assignment-screen">
-      <TopBar title="Ai dùng món nào?" right={<DemoBadge compactLabel="Nháp" label="Nháp trên máy" />} />
+      <TopBar title="Ai dùng món nào?" right={<DemoBadge label="Dữ liệu demo · nháp trên máy" />} />
       <HaiCot
         phaiChiKhiRong
         phai={

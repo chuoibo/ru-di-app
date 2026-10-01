@@ -27,7 +27,9 @@
  */
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Share, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+
+import { chiaSe, type KetQuaChiaSe } from "../../web/chia-se";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -92,7 +94,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
   const [ban, setBan] = useState(false);
   // Per sender: the sheet was opened and not dismissed. Not "delivered" -- the
   // phone cannot know that -- and the caption says as much.
-  const [daMoKhay, setDaMoKhay] = useState<Record<string, boolean>>({});
+  const [daMoKhay, setDaMoKhay] = useState<Record<string, Exclude<KetQuaChiaSe, "huy">>>({});
   // Publishing cannot be undone and hands out links exactly once, so the first
   // tap only opens the sentence that says so; the second tap publishes.
   const [sapPhat, setSapPhat] = useState(false);
@@ -155,12 +157,14 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
       await doc();
     });
 
-  const guiLink = (envelope: Envelope) =>
-    chay(async () => {
-      const ketQua = await Share.share({ message: loiNhanChiaSe(envelope) });
-      if (ketQua.action === Share.dismissedAction) return;
-      setDaMoKhay((hienTai) => ({ ...hienTai, [envelope.senderId]: true }));
-    });
+  // Each link's outcome is said on its own row, under the finger that sent it
+  // (QA UI-049): «đã mở khay», «đã chép», or the link itself to copy by hand.
+  // Never the page-top network sentence: sharing does not touch the network.
+  const guiLink = async (envelope: Envelope) => {
+    const ketQua = await chiaSe({ text: loiNhanChiaSe(envelope), title: `Phần của ${envelope.senderName}` });
+    if (ketQua === "huy") return;
+    setDaMoKhay((hienTai) => ({ ...hienTai, [envelope.senderId]: ketQua }));
+  };
 
   // The obligation just confirmed under this finger: its seal lands after the
   // server has said so (the state is re-read, never assumed).
@@ -324,9 +328,14 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
                     <Avatar name={env.senderName} personId={env.senderId} size={28} />
                     <View style={styles.flex}>
                       <Text style={[typography.label, { color: mucNguoi(env.senderId, dark) }]}>{env.senderName}</Text>
-                      <Text style={[typography.caption, { color: colors.inkSoft }]}>
-                        {daMoKhay[env.senderId] === true ? "Đã mở khay chia sẻ, chưa rõ đã gửi link chưa" : "Chưa gửi link. Mỗi người một link riêng."}
+                      <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: daMoKhay[env.senderId] === "khong-duoc" ? colors.warn : colors.inkSoft }]}>
+                        {cauGuiLink(daMoKhay[env.senderId], env.senderName)}
                       </Text>
+                      {daMoKhay[env.senderId] === "khong-duoc" ? (
+                        <Text selectable style={[typography.caption, { color: colors.ink }]}>
+                          {env.url}
+                        </Text>
+                      ) : null}
                     </View>
                     <Money size="label" vnd={env.amountVnd} />
                   </View>
@@ -335,7 +344,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
                     disabled={ban}
                     full={false}
                     icon="share-social-outline"
-                    label={daMoKhay[env.senderId] === true ? `Gửi lại cho ${env.senderName}` : `Gửi cho ${env.senderName}`}
+                    label={daMoKhay[env.senderId] !== undefined ? `Gửi lại cho ${env.senderName}` : `Gửi cho ${env.senderName}`}
                     onPress={() => void guiLink(env)}
                     tone="split"
                     variant="outline"
@@ -365,3 +374,13 @@ const styles = StyleSheet.create({
   dauHang: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
   xacNhan: { gap: 10, padding: 16, borderWidth: 1.5, borderStyle: "dashed" },
 });
+
+/** The line under a person's name once their link has been sent somewhere. */
+function cauGuiLink(ketQua: Exclude<KetQuaChiaSe, "huy"> | undefined, ten: string): string {
+  // No platform reports whether the link was then sent; the row says what is
+  // known, and the button beside it already reads «Gửi lại cho …».
+  if (ketQua === "da-mo-khay") return `Đã mở khay chia sẻ cho ${ten}.`;
+  if (ketQua === "da-chep") return `Đã chép link. Dán vào tin nhắn gửi ${ten}.`;
+  if (ketQua === "khong-duoc") return "Máy này không mở được khay chia sẻ. Chép link dưới đây gửi tay:";
+  return "Chưa gửi link. Mỗi người một link riêng.";
+}

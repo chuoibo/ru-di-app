@@ -32,6 +32,7 @@ import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -68,7 +69,7 @@ export function GroupMembersScreen() {
   );
 
   if (!phienDaDoc) return null;
-  if (phien === null) return <Redirect href="/welcome" />;
+  if (phien === null) return <CuaDangNhap />;
   if (typeof id !== "string") return <Redirect href="/messages" />;
 
   const tenNhom = tenCuocTroChuyen(phien.contexts?.find((nhom) => nhom.id === id));

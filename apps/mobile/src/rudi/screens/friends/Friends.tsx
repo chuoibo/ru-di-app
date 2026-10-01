@@ -9,7 +9,7 @@
  * Reuses the legacy client module (`ban-be.ts`) as-is: the routes are the ones
  * App B called, with the bearer now doing the identifying.
  */
-import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Canh } from "../../ui/art/Canh";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -31,6 +31,7 @@ import { Divider, RudiButton, RudiScreen, Segmented, TopBar } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { HangNguoi, HangNguoiCho } from "./HangNguoi";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
 type Du = { ban: Ban[]; daNhan: LoiMoi[]; daGui: LoiMoi[] };
 type Trang = { pha: "dang-doc" } | { pha: "xong"; du: Du } | { pha: "hong"; loi: string };
@@ -108,7 +109,7 @@ export function FriendsScreen() {
   );
 
   if (!phienDaDoc) return null;
-  if (phien === null) return <Redirect href="/welcome" />;
+  if (phien === null) return <CuaDangNhap />;
 
   const nhanTin = async (b: Ban) => {
     if (dangNhan !== null) return;

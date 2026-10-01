@@ -729,6 +729,22 @@ export function duongChiDuong(place: Pick<Place, "lat" | "lng" | "name" | "geoPr
 }
 
 /**
+ * The same directions as a web address, for the web build (QA UI-022).
+ *
+ * A browser has no handler for `geo:`, so «Chỉ đường» opened nothing and said
+ * nothing. This is the documented cross-platform Maps URL: in a desktop
+ * browser it opens the map, on a phone it hands off to the installed map app.
+ * The query is the name and address, biased by the point when one is drawable,
+ * exactly as the `geo:` form searches.
+ */
+export function duongChiDuongWeb(place: Pick<Place, "lat" | "lng" | "name" | "geoPrecision" | "address">): string {
+  const address = place.address?.trim();
+  const ten = address ? `${place.name}, ${address}` : place.name;
+  const query = veDuocLenBanDo(place) ? `${ten} @${place.lat},${place.lng}` : ten;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+/**
  * What the search screen says when the server did not hand back places.
  * `null` means there are results (or nothing was asked yet).
  */

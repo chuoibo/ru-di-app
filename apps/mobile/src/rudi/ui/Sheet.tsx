@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
+import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
@@ -25,8 +26,37 @@ export interface SheetProps {
   testID?: string;
 }
 
-/** Past this drag (dp) or this speed (dp/s) a release closes the sheet. */
+/** Open sheets in opening order; only the top one answers Escape and Tab. */
 const webSheetStack: symbol[] = [];
+/**
+ * The same order for the browser's Back; only the top sheet answers it.
+ *
+ * One listener for all of them, added when this module loads, which is before
+ * the router mounts and adds its own. Listeners on `window` run in the order
+ * they were added -- the capture flag does not move one ahead of another at
+ * the target -- so a listener a sheet added when it opened ran AFTER the
+ * router's: the router had already switched tab, the sheet's screen blurred,
+ * the sheet closed and took its listener with it, and Back left the screen
+ * (measured on the web export, QA UI-117). Running first, this stops the
+ * router from seeing that Back, puts the entry the person was on back on top
+ * (same state, same url), and closes the top sheet.
+ */
+type MucLui = { giu: { state: unknown; url: string }; dong: () => void };
+const webBackStack: MucLui[] = [];
+if (Platform.OS === "web" && typeof window !== "undefined") {
+  window.addEventListener(
+    "popstate",
+    (event) => {
+      const tren = webBackStack.at(-1);
+      if (!tren) return;
+      event.stopImmediatePropagation();
+      window.history.pushState(tren.giu.state, "", tren.giu.url);
+      tren.dong();
+    },
+    true,
+  );
+}
+/** Past this drag (dp) or this speed (dp/s) a release closes the sheet. */
 const KEO_DONG_DP = 90;
 const KEO_DONG_TOC = 900;
 
@@ -111,10 +141,19 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
       cancelAnimationFrame(frame);
       document.removeEventListener("keydown", onKey, true);
       webSheetStack.splice(webSheetStack.indexOf(identity), 1);
+      // Put back only what is still this sheet's doing. The navigator changes
+      // these same attributes when a screen gains or loses focus, and Back
+      // while the sheet was open runs that change first: restoring the values
+      // saved at open time then re-hid the screen the person had just returned
+      // to, tab bar included (QA UI-005, P1). An attribute that no longer reads
+      // what this sheet wrote belongs to someone else now and is left alone.
       for (const saved of hidden) {
-        saved.element.inert = saved.inert;
-        if (saved.ariaHidden === null) saved.element.removeAttribute("aria-hidden");
-        else saved.element.setAttribute("aria-hidden", saved.ariaHidden);
+        if (!saved.element.isConnected) continue;
+        if (saved.element.inert === true) saved.element.inert = saved.inert;
+        if (saved.element.getAttribute("aria-hidden") === "true") {
+          if (saved.ariaHidden === null) saved.element.removeAttribute("aria-hidden");
+          else saved.element.setAttribute("aria-hidden", saved.ariaHidden);
+        }
       }
       if (previous?.isConnected) previous.focus();
     };
@@ -139,6 +178,31 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
     // one from the render that closed the sheet, which is the one wanted.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, motion, progress, keo]);
+
+  // The browser's Back closes the sheet, as Android's does (QA UI-038,
+  // UI-117), and the page stays where it was. Nothing is added to the history
+  // while the sheet is open -- an extra entry gets buried the moment a sheet
+  // action navigates, and becomes a Back that does nothing. The module-level
+  // listener above answers Back for the top open sheet; this registers it.
+  useEffect(() => {
+    if (!open || Platform.OS !== "web" || typeof window === "undefined") return;
+    const muc: MucLui = { giu: { state: window.history.state as unknown, url: window.location.href }, dong: () => closeRef.current() };
+    webBackStack.push(muc);
+    return () => {
+      const i = webBackStack.indexOf(muc);
+      if (i >= 0) webBackStack.splice(i, 1);
+    };
+  }, [open]);
+
+  // A sheet belongs to the screen it was opened on. When that screen loses
+  // focus -- another tab, a route pushed from inside the sheet -- the sheet
+  // closes, instead of staying open on a screen nobody can see and keeping
+  // the rest of the app inert beneath it (QA UI-117, UI-087).
+  const navigation = useContext(NavigationContext);
+  useEffect(() => {
+    if (!open || !navigation) return;
+    return navigation.addListener("blur", () => closeRef.current());
+  }, [open, navigation]);
 
   useEffect(() => {
     if (!open || Platform.OS !== "android") return;

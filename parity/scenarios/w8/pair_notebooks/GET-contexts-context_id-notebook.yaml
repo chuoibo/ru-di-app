@@ -2,8 +2,9 @@
 # two and an unknown id all read the same 404 notebook_not_found; the dev roles header
 # is refused only after the pair is found. The view follows the notebook: one yes, both
 # yes, two constraints, a pending couple offer, a draft only its owner sees as
-# open_paper_id, a sent sheet both see, a block that closes nothing, and a new pending
-# cycle after closing that carries none of the old consents or constraints. A notebook
+# open_paper_id, a sent sheet both see, a block that stops every new write but neither
+# the reads nor the close (QA UI-120, ADR-0027 §3 step 1), and a new pending cycle after
+# unblocking and closing that carries none of the old consents or constraints. A notebook
 # with no live cycle is never read with 200: its participant order is random in Python.
 # Texts are sample data (dữ liệu mẫu).
 id: w8/pair_notebooks/get-contexts-context_id-notebook
@@ -293,6 +294,20 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"revision":"{{rev}}"}'
+  # blocked, the notebook takes nothing new: asking again is refused like a direct message (QA UI-120)
+  - id: owner_reopens_while_blocked
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+  - id: mate_unblocks_owner
+    as: mate
+    request:
+      method: DELETE
+      path: '/people/{{persona.owner}}/block'
   # a closed notebook reads like a fresh one (random participant order); ask again to read a new pending cycle
   - id: owner_reopens
     as: owner

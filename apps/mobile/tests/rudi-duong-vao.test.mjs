@@ -19,7 +19,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { diemVaoTuUrl, manDau } from "../dist-test/rudi/duong-vao.js";
+import { diemVaoTuUrl, duongDangNhap, duongTiep, manDau, manSauDangNhap } from "../dist-test/rudi/duong-vao.js";
 
 test("the reproduced link is left alone", () => {
   assert.deepEqual(diemVaoTuUrl("exp://localhost:8095/--/settlements/team-da-lat"), {
@@ -147,4 +147,37 @@ test("manDau: không phiên → welcome; nhóm active → explore; còn lại �
   // button lives on the Tin nhắn tab, not on a tab that would invent its numbers.
   assert.equal(manDau({ context_id: "ctx", membership_state: "invited" }), "/messages");
   assert.equal(manDau({ context_id: "ctx", membership_state: "left" }), "/messages");
+});
+
+// QA UI-121, UI-082, UI-137: a door remembers where the person was going, and
+// sends them only to a route inside this app after the code. Anything that a
+// browser would read as another host, a scheme, or one of the doors themselves
+// is dropped, which is the old landing, never an open redirect.
+test("duongTiep: chỉ nhận đường bên trong app", () => {
+  for (const ok of ["/groups/abc/chat", "/groups/abc/to-giay?ru=1&cho=p-cu", "/community/posts/9", "/outings/x/ending"]) {
+    assert.equal(duongTiep(ok), ok, ok);
+  }
+  for (const bad of [
+    "//evil.example/x", "https://evil.example", "javascript:alert(1)", "groups/abc", "/a b", "/a\\b",
+    "/login", "/login?tiep=/x", "/otp", "/welcome", "/moi", "/personalization?tiep=/x", "", null, undefined, 7,
+    "/" + "x".repeat(600), "/x/http://evil",
+  ]) {
+    assert.equal(duongTiep(bad), null, String(bad));
+  }
+});
+
+test("duongDangNhap: mang tiep đã kiểm, bỏ tiep hỏng", () => {
+  assert.equal(duongDangNhap("/groups/a/chat"), "/login?tiep=%2Fgroups%2Fa%2Fchat");
+  assert.equal(duongDangNhap("//evil.example"), "/login");
+  assert.equal(duongDangNhap(undefined), "/login");
+});
+
+test("manSauDangNhap: về đúng link; người mới qua Sở thích rồi mới về link", () => {
+  const cu = { context_id: "c", membership_state: "active", is_new_person: false };
+  const moi = { context_id: null, membership_state: null, is_new_person: true };
+  assert.equal(manSauDangNhap(cu, "/groups/a/chat"), "/groups/a/chat");
+  assert.equal(manSauDangNhap(cu, "//evil.example"), "/explore");
+  assert.equal(manSauDangNhap(cu), "/explore");
+  assert.equal(manSauDangNhap(moi, "/groups/a/chat"), "/personalization?tiep=%2Fgroups%2Fa%2Fchat");
+  assert.equal(manSauDangNhap(moi), "/personalization");
 });

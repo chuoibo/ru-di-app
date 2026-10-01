@@ -143,6 +143,9 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 	); err != nil {
 		return Command{}, err
 	}
+	if err := requirePairIsAlive(s, actor, contextID); err != nil {
+		return Command{}, err
+	}
 	papers, err := s.ListPairPapers(contextID)
 	if err != nil {
 		return Command{}, err
@@ -384,6 +387,9 @@ func EditDraft(s Store, actor Actor, paperID string, content ContentInput, lyDo 
 	if err := requirePairPermission("edit_pair_draft", actor, fact{"is_draft_owner", paper.DraftOwnerID == actor.ID}); err != nil {
 		return Command{}, err
 	}
+	if err := requirePairIsAlive(s, actor, paper.ContextID); err != nil {
+		return Command{}, err
+	}
 	if pairpaper.HieuLuc(PaperDict(paper), now) != "nhap" {
 		return Command{}, refusal(409, "paper_wrong_state", "Tờ này đã gửi, sửa thì gửi bản mới.")
 	}
@@ -403,6 +409,9 @@ func SendPaper(s Store, actor Actor, paperID string, version int64, now time.Tim
 		fact{"is_draft_owner", paper.DraftOwnerID == actor.ID},
 		fact{"version_current", version == int64(paper.CurrentVersion)},
 	); err != nil {
+		return Command{}, err
+	}
+	if err := requirePairIsAlive(s, actor, paper.ContextID); err != nil {
 		return Command{}, err
 	}
 	after, err := chuyen(paper, "gui", now, pairpaper.Facts{})
@@ -437,6 +446,9 @@ func MarkViewed(s Store, actor Actor, paperID string, version int64, now time.Ti
 	); err != nil {
 		return err
 	}
+	if err := requirePairIsAlive(s, actor, paper.ContextID); err != nil {
+		return err
+	}
 	if err := s.MarkPaperViewed(paper.ID, row.Version, actor.ID, now); err != nil {
 		return err
 	}
@@ -464,6 +476,9 @@ func RespondPaper(s Store, actor Actor, paperID string, version int64, reply Rep
 		fact{"is_not_version_sender", row.SentBy == nil || *row.SentBy != actor.ID},
 		fact{"version_current", version == int64(paper.CurrentVersion)},
 	); err != nil {
+		return Command{}, err
+	}
+	if err := requirePairIsAlive(s, actor, paper.ContextID); err != nil {
 		return Command{}, err
 	}
 	if reply.Kind == "dong_y" {
@@ -735,6 +750,9 @@ func RecordDone(s Store, actor Actor, paperID string, now time.Time) (Command, e
 	if err := requirePairPermission("record_pair_outing_done", actor, fact{"is_group_member", true}); err != nil {
 		return Command{}, err
 	}
+	if err := requirePairIsAlive(s, actor, paper.ContextID); err != nil {
+		return Command{}, err
+	}
 	if !CoTheGhiDaDi(paper, now) {
 		return Command{}, refusal(409, "paper_wrong_state", "Chưa tới ngày đi.")
 	}
@@ -757,6 +775,9 @@ func KeepLine(s Store, actor Actor, paperID, line string, now time.Time) (Keep, 
 		return Keep{}, err
 	}
 	if err := requirePairPermission("keep_pair_paper_line", actor, fact{"is_group_member", true}); err != nil {
+		return Keep{}, err
+	}
+	if err := requirePairIsAlive(s, actor, paper.ContextID); err != nil {
 		return Keep{}, err
 	}
 	after, err := chuyen(paper, "giu", now, pairpaper.Facts{})

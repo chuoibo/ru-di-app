@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TAB_BAR_HEIGHT, tabBarHeight } from "../adaptive";
 import { typography, useRudiTheme } from "../theme";
+import { DaiTraiNghiem, useLaTraiNghiem } from "./DaiTraiNghiem";
 import { PressScale } from "./PressScale";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
 import { useMotion } from "./useMotion";
@@ -40,12 +41,14 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   const { fontScale } = useWindowDimensions();
   const router = useRouter();
   const motion = useMotion();
+  const traiNghiem = useLaTraiNghiem();
 
   const routes = state.routes;
   const count = routes.length;
   const fabAt = Math.floor(count / 2); // between plan and messages
   const hasCreateColumn = count < 5;
-  const columns = count + (hasCreateColumn ? 1 : 0);
+  // Signed out, «Đăng nhập» is one more column at the end (QA UI-082).
+  const columns = count + (hasCreateColumn ? 1 : 0) + (traiNghiem ? 1 : 0);
 
   const indicator = useSharedValue(state.index);
   useEffect(() => {
@@ -119,7 +122,11 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   const bottom = Math.max(insets.bottom, 10);
   const glass = Platform.OS === "ios" && !layout.rail;
 
-  return (
+  // Signed out: «Đăng nhập» is one more destination, a column on a phone and
+  // the rail's foot on a tablet.
+  if (traiNghiem) items.push(<DaiTraiNghiem key="trai-nghiem" rail={layout.rail} />);
+
+  const bar = (
     <View
       style={[
         layout.rail ? styles.rail : styles.bar,
@@ -146,6 +153,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
       {items}
     </View>
   );
+  return bar;
 }
 
 const styles = StyleSheet.create({

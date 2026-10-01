@@ -90,6 +90,32 @@ func (s PairStore) ListMembers(contextID string) ([]pairsteps.Member, error) {
 	return out, nil
 }
 
+// GetPerson is get_person, as much of it as the pair gate reads.
+func (s PairStore) GetPerson(personID string) (*pairsteps.PersonRef, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	person, err := r.GetPerson(s.Ctx, personID)
+	if err != nil || person == nil {
+		return nil, storeError(err)
+	}
+	return &pairsteps.PersonRef{Deleted: person.DeletedAt != nil}, nil
+}
+
+// GetFriendEdge is get_friend_edge, as much of it as the pair gate reads.
+func (s PairStore) GetFriendEdge(personA, personB string) (*pairsteps.FriendEdge, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	edge, err := r.GetFriendEdge(s.Ctx, personA, personB)
+	if err != nil || edge == nil {
+		return nil, storeError(err)
+	}
+	return &pairsteps.FriendEdge{State: edge.State, DecidedByID: edge.DecidedByID}, nil
+}
+
 // GetPairNotebook is get_pair_notebook.
 func (s PairStore) GetPairNotebook(contextID string) (*pairsteps.Notebook, error) {
 	r, err := s.repository()

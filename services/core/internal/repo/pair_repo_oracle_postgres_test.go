@@ -787,7 +787,9 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 		{"GET papers: a stranger", "404:notebook_not_found", onCtx("list_pair_papers", w.la, w.ab)},
 		{"POST papers/draft: a notebook whose cycle closed", "", onCtx("draft_pair_paper", w.binh, w.bc)},
 		{"POST papers/draft: no notebook yet", "", onCtx("draft_pair_paper", w.em, w.be)},
-		{"POST papers/draft: a constraint on file", "", onCtx("draft_pair_paper", w.an, w.fa)},
+		// fa's other person left: the notebook takes nothing new, as a direct
+		// message would not (QA UI-120, ADR-0027 §3 step 1).
+		{"POST papers/draft: a constraint on file", "409:direct_message_unavailable", onCtx("draft_pair_paper", w.an, w.fa)},
 		{"POST papers/draft: a sheet already open", "409:paper_wrong_state", onCtx("draft_pair_paper", w.an, w.ab)},
 		{"POST papers/draft: a pending notebook", "409:cycle_not_active", onCtx("draft_pair_paper", w.em, w.ae)},
 		{"POST papers/draft: beside a sheet whose week is over", "IntegrityError", onCtx("draft_pair_paper", w.em, w.eg)},
@@ -833,7 +835,7 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 		{"POST skip: a sheet whose week is over", "409:paper_expired", onPaper("skip_pair_week", w.em, w.pEG1)},
 		{"POST done: a plan whose day has come", "", onPaper("record_pair_outing_done", w.binh, w.pAB2)},
 		{"POST done: a sheet not agreed", "409:paper_wrong_state", onPaper("record_pair_outing_done", w.an, w.pAB1)},
-		{"POST keeps: the first line", "", onPaper("keep_pair_paper_line", w.an, w.pFA1, "body", body("line", "  Vui (dữ liệu mẫu)  "))},
+		{"POST keeps: the first line", "409:direct_message_unavailable", onPaper("keep_pair_paper_line", w.an, w.pFA1, "body", body("line", "  Vui (dữ liệu mẫu)  "))},
 		{"POST keeps: another line", "", onPaper("keep_pair_paper_line", w.binh, w.pAB3, "body", body("line", hostile))},
 		{"POST keeps: before the outing", "409:paper_wrong_state", onPaper("keep_pair_paper_line", w.an, w.pAB1, "body", body("line", "x"))},
 	}
@@ -857,7 +859,9 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 			               106.7, 'rooftop', 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
 				onPaper("respond_pair_paper", w.an, w.pAB1, "version", 2, "body", body("kind", "dong_y")))))
 	// draft_pair_paper reads the cycle's agreed sheets and the catalogue
-	// around their place: a plan at a catalogue place, newest in fa.
+	// around their place: a plan at a catalogue place, newest in fa. Phương is
+	// back in fa for this case: a pair whose other person left takes no draft
+	// at all now (QA UI-120), and this case is about the catalogue.
 	add("route POST papers/draft: an agreed place and new places of its kind", "", base,
 		tweak(`INSERT INTO destinations (id, name, lat, lng, bbox_south, bbox_west, bbox_north, bbox_east, created_at, updated_at)
 		       VALUES ('d-nhip', 'Nơi (dữ liệu mẫu)', 12, 109, 11, 108, 13, 110, '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
@@ -874,7 +878,8 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 					       VALUES ('`+fid(kindPaper, 0x85)+`', 1,
 					               '{"ngay": "2030-09-14", "chang": [{"gio": "19:45", "viec": "Ăn tối (dữ liệu mẫu)", "place_id": "p-cu", "can_kiem": false}]}',
 					               NULL, '{}', 'human', '2030-09-10T00:00:00Z', '`+w.phuong+`', '2030-09-10T00:00:00Z')`,
-						onCtx("draft_pair_paper", w.an, w.fa))))))
+						tweak(`UPDATE memberships SET state = 'active', left_at = NULL WHERE context_id = '`+w.fa+`' AND person_id = '`+w.phuong+`'`,
+							onCtx("draft_pair_paper", w.an, w.fa)))))))
 	// ADR-0038 §2.1: An's invitation, written before the notebook existed, is
 	// filed under the cycle when Em's yes opens it.
 	add("route POST grant: the second lap_so files the open invitation", "", base,

@@ -13,6 +13,12 @@ export type OtpDangCho = {
   phone: string;
   /** Epoch milliseconds after which the server accepts a resend. */
   guiLaiLuc: number;
+  /**
+   * Where the person was going when they were asked to sign in (`?tiep=` on
+   * the login door, already checked by `duongTiep`). Carried here because the
+   * OTP screen is a second route and the path must survive the hop.
+   */
+  tiep?: string;
 };
 
 /**

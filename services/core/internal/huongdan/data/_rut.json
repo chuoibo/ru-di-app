@@ -463,9 +463,7 @@
     },
     {
       "canh": [],
-      "di_toi": [
-        "welcome"
-      ],
+      "di_toi": [],
       "man": "diaries/[id]",
       "nhan": [],
       "tep": [
@@ -652,8 +650,7 @@
       "di_toi": [
         "friends/add",
         "groups/[id]/chat",
-        "people/[id]",
-        "welcome"
+        "people/[id]"
       ],
       "man": "friends",
       "nhan": [
@@ -675,9 +672,7 @@
     },
     {
       "canh": [],
-      "di_toi": [
-        "welcome"
-      ],
+      "di_toi": [],
       "man": "friends/add",
       "nhan": [
         "Gửi lời mời",
@@ -701,8 +696,8 @@
     {
       "canh": [],
       "di_toi": [
-        "trips/[id]/album",
-        "welcome"
+        "messages",
+        "trips/[id]/album"
       ],
       "man": "groups/[id]/album",
       "nhan": [
@@ -758,13 +753,11 @@
         "groups/[id]/members",
         "groups/[id]/to-giay",
         "groups/[id]/wall",
-        "login",
         "messages",
         "outings/[id]",
         "outings/new",
         "people/[id]",
-        "votes/[id]",
-        "welcome"
+        "votes/[id]"
       ],
       "man": "groups/[id]/chat",
       "nhan": [
@@ -788,6 +781,7 @@
         "Cuộc trò chuyện này không còn nhận tin.",
         "Cài đặt nhóm",
         "Dùng plan này",
+        "Dữ liệu demo · AI nháp",
         "Gửi tin nhắn",
         "Hôm nay",
         "Lên",
@@ -863,8 +857,7 @@
     {
       "canh": [],
       "di_toi": [
-        "messages",
-        "welcome"
+        "messages"
       ],
       "man": "groups/[id]/invite",
       "nhan": [
@@ -908,8 +901,7 @@
         "groups/[id]/album",
         "groups/[id]/invite",
         "groups/[id]/wall",
-        "messages",
-        "welcome"
+        "messages"
       ],
       "man": "groups/[id]/members",
       "nhan": [
@@ -979,6 +971,7 @@
         "Những điều cần tránh",
         "Rủ hội mình đi chơi",
         "Rủ đi chơi",
+        "Sổ này đã dừng",
         "Sổ này đã đóng",
         "Thôi",
         "Tin nhắn",
@@ -1116,8 +1109,7 @@
     {
       "canh": [],
       "di_toi": [
-        "friends/add",
-        "welcome"
+        "friends/add"
       ],
       "man": "groups/new",
       "nhan": [
@@ -1261,6 +1253,7 @@
         "Chỉnh lịch trình",
         "Cuối tuần tháng 10 đi Đà Lạt không mọi người?",
         "Dùng plan này",
+        "Dữ liệu demo · AI nháp",
         "Gửi tin nhắn",
         "Hôm nay",
         "Lên",
@@ -1491,8 +1484,7 @@
         "outings/[id]/ending",
         "places/[id]",
         "plan",
-        "smart-split/[id]/review",
-        "welcome"
+        "smart-split/[id]/review"
       ],
       "man": "outings/[id]",
       "nhan": [
@@ -1544,9 +1536,7 @@
     },
     {
       "canh": [],
-      "di_toi": [
-        "welcome"
-      ],
+      "di_toi": [],
       "man": "outings/[id]/ending",
       "nhan": [],
       "tep": [
@@ -1562,8 +1552,7 @@
       ],
       "di_toi": [
         "outings/[id]",
-        "outings/new",
-        "welcome"
+        "outings/new"
       ],
       "man": "outings/chon",
       "nhan": [
@@ -2357,6 +2346,7 @@
         "Cả nhóm",
         "Cảm ơn quý khách!",
         "Dùng giấy mẫu",
+        "Dữ liệu demo · nháp trên máy",
         "Giấy mẫu Tiệm Nướng Xóm Lèo",
         "Gom mọi khoản đã ghi mà chưa vào đợt nào thành một đợt thu. Chưa phát thì chưa ai bị nhắn gì.",
         "HÓA ĐƠN THANH TOÁN",
@@ -2366,7 +2356,6 @@
         "Nghĩa vụ chỉ tồn tại sau khi một đợt thu được phát.",
         "Ngày: 17/10/2026 19:45",
         "Người thu bill",
-        "Nháp trên máy",
         "Như món trên",
         "Nhắc … người đang chờ",
         "Quyết toán",
@@ -2445,6 +2434,7 @@
         "Cả nhóm",
         "Cảm ơn quý khách!",
         "Dùng giấy mẫu",
+        "Dữ liệu demo · nháp trên máy",
         "Giấy mẫu Tiệm Nướng Xóm Lèo",
         "Gom mọi khoản đã ghi mà chưa vào đợt nào thành một đợt thu. Chưa phát thì chưa ai bị nhắn gì.",
         "HÓA ĐƠN THANH TOÁN",
@@ -2454,7 +2444,6 @@
         "Nghĩa vụ chỉ tồn tại sau khi một đợt thu được phát.",
         "Ngày: 17/10/2026 19:45",
         "Người thu bill",
-        "Nháp trên máy",
         "Như món trên",
         "Nhắc … người đang chờ",
         "Quyết toán",
@@ -2551,6 +2540,7 @@
         "Cảm ơn quý khách!",
         "Dùng giấy mẫu",
         "Dùng ảnh này",
+        "Dữ liệu demo · nháp trên máy",
         "Ghi vào sổ",
         "Ghi vào sổ là tạo khoản chi với đúng các số ở trên; tổng được kiểm cho khớp trước khi ghi.",
         "Giấy mẫu Tiệm Nướng Xóm Lèo",
@@ -2565,7 +2555,6 @@
         "Ngày: 17/10/2026 19:45",
         "Người thu bill",
         "Người trả …",
-        "Nháp trên máy",
         "Như món trên",
         "Nhập tay",
         "Nhắc … người đang chờ",
@@ -2801,6 +2790,7 @@
         "Chỉnh lịch trình",
         "Cuối tuần tháng 10 đi Đà Lạt không mọi người?",
         "Dùng plan này",
+        "Dữ liệu demo · AI nháp",
         "Gửi tin nhắn",
         "Hôm nay",
         "Lên",
@@ -2965,6 +2955,7 @@
         "Chỉnh lịch trình",
         "Cuối tuần tháng 10 đi Đà Lạt không mọi người?",
         "Dùng plan này",
+        "Dữ liệu demo · AI nháp",
         "Gửi tin nhắn",
         "Hôm nay",
         "Lên",

@@ -7,7 +7,7 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Redirect, useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -86,6 +86,7 @@ import { docKhoiNhap } from "../../chat/to-hen-chung";
 import { Nep } from "../../ui/art/Nep";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { KHONG_VIEN_WEB } from "../../ui/khong-vien-web";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
 /**
  * One send that has not landed yet, drawn where the message will be.
@@ -760,7 +761,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     );
   };
 
-  if (phien === null) return <Redirect href="/welcome" />;
+  if (phien === null) return <CuaDangNhap />;
 
   return (
     <KeyboardAvoidingView
@@ -785,7 +786,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             (and «Một đôi») from the settings row «Tờ giấy của hai mình», and
             sees a slim line here only while the other's proposal waits for
             an answer (`hangGhimChat`). Pairs only: a group has no notebook. */}
-        {nhanRieng && phien !== null ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
+        {nhanRieng && phien !== null && !khongNhanTin ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
         <View style={styles.baoMat}>
           <Ionicons name="lock-open-outline" size={13} color={colors.inkSoft} />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text>

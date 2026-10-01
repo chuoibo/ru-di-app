@@ -115,6 +115,46 @@ func (p *pairRoute) contextOr404(contextID string) ([]string, error) {
 	return members, nil
 }
 
+// alive is ApiService._require_pair_is_alive, read right after the permission
+// of every outward write of the notebook (QA UI-120): the context, its
+// members, the other person, the pair's edge -- and one refusal for a block or
+// an ended account.
+func (p *pairRoute) alive(contextID string) error {
+	c, err := p.repo.GetContext(bg, contextID)
+	if err != nil {
+		return err
+	}
+	if c == nil || c.Kind != "pair" {
+		return nil
+	}
+	rows, err := p.repo.ListMembers(bg, contextID)
+	if err != nil {
+		return err
+	}
+	other := ""
+	for _, row := range rows {
+		if row.PersonID != p.actor {
+			other = row.PersonID
+			break
+		}
+	}
+	if other == "" {
+		return refuse(409, "direct_message_unavailable")
+	}
+	person, err := p.repo.GetPerson(bg, other)
+	if err != nil {
+		return err
+	}
+	edge, err := p.repo.GetFriendEdge(bg, p.actor, other)
+	if err != nil {
+		return err
+	}
+	if (edge != nil && edge.State == "blocked") || person == nil || person.DeletedAt != nil {
+		return refuse(409, "direct_message_unavailable")
+	}
+	return nil
+}
+
 func (p *pairRoute) lockedNotebook(contextID string) (*PairNotebook, error) {
 	notebook, err := p.repo.LockPairNotebook(bg, contextID)
 	if err != nil || notebook != nil {
@@ -204,6 +244,9 @@ func (p *pairRoute) body() map[string]any { return p.a["body"].(map[string]any) 
 func (p *pairRoute) proposeConsent() error {
 	members, err := p.contextOr404(p.text("context_id"))
 	if err != nil {
+		return err
+	}
+	if err := p.alive(p.text("context_id")); err != nil {
 		return err
 	}
 	purpose := p.body()["purpose"].(string)
@@ -302,6 +345,9 @@ func (p *pairRoute) grantConsent() error {
 	}
 	if !p.dangCho(proposal.CompletedAt, proposal.ExpiresAt) {
 		return refuse(409, "consent_proposal_expired")
+	}
+	if err := p.alive(p.text("context_id")); err != nil {
+		return err
 	}
 	if err := p.repo.GrantConsent(bg, proposal.ID, p.actor, p.now); err != nil {
 		return err
@@ -402,6 +448,9 @@ func (p *pairRoute) putConstraint() error {
 		return refuse(404, "constraint_kind_unknown")
 	}
 	if _, err := p.contextOr404(p.text("context_id")); err != nil {
+		return err
+	}
+	if err := p.alive(p.text("context_id")); err != nil {
 		return err
 	}
 	notebook, err := p.lockedNotebook(p.text("context_id"))
@@ -746,6 +795,9 @@ func (p *pairRoute) draftPaper() error {
 	if !(notebook.CycleID == nil || (notebook.CycleState != nil && *notebook.CycleState == "active")) {
 		return refuse(409, "cycle_not_active")
 	}
+	if err := p.alive(contextID); err != nil {
+		return err
+	}
 	papers, err := p.repo.ListPairPapers(bg, contextID)
 	if err != nil {
 		return err
@@ -927,6 +979,9 @@ func (p *pairRoute) editDraft() error {
 	if paper.DraftOwnerID != p.actor {
 		return refuse(404, "paper_not_found")
 	}
+	if err := p.alive(paper.ContextID); err != nil {
+		return err
+	}
 	if p.hieuLuc(*paper) != "nhap" {
 		return refuse(409, "paper_wrong_state")
 	}
@@ -943,6 +998,9 @@ func (p *pairRoute) sendPaper() error {
 	}
 	if p.bodyVersion() != paper.CurrentVersion {
 		return refuse(409, "paper_version_stale")
+	}
+	if err := p.alive(paper.ContextID); err != nil {
+		return err
 	}
 	state, _, err := p.chuyen(*paper, "gui")
 	if err != nil {
@@ -970,6 +1028,9 @@ func (p *pairRoute) markViewed() error {
 	}
 	if row.SentBy != nil && *row.SentBy == p.actor {
 		return refuse(409, "paper_self_response")
+	}
+	if err := p.alive(paper.ContextID); err != nil {
+		return err
 	}
 	if _, err := p.repo.MarkPaperViewed(bg, paper.ID, version, p.actor, p.now); err != nil {
 		return err
@@ -999,6 +1060,9 @@ func (p *pairRoute) respond() error {
 	}
 	if row.SentBy != nil && *row.SentBy == p.actor {
 		return refuse(409, "paper_self_response")
+	}
+	if err := p.alive(paper.ContextID); err != nil {
+		return err
 	}
 	body := p.body()
 	if body["kind"] == "dong_y" {
@@ -1175,6 +1239,9 @@ func (p *pairRoute) recordDone() error {
 	if err != nil {
 		return err
 	}
+	if err := p.alive(paper.ContextID); err != nil {
+		return err
+	}
 	day := dayOf(paper)
 	if p.hieuLuc(*paper) != "chot" || day == nil || WallClockDate(p.now).Before(*day) {
 		return refuse(409, "paper_wrong_state")
@@ -1189,6 +1256,9 @@ func (p *pairRoute) recordDone() error {
 func (p *pairRoute) keepLine() error {
 	paper, err := p.lockedPaper()
 	if err != nil {
+		return err
+	}
+	if err := p.alive(paper.ContextID); err != nil {
 		return err
 	}
 	state, _, err := p.chuyen(*paper, "giu")
@@ -1285,6 +1355,9 @@ func (p *pairRoute) setWeekRole() error {
 	contextID := p.text("context_id")
 	members, err := p.contextOr404(contextID)
 	if err != nil {
+		return err
+	}
+	if err := p.alive(contextID); err != nil {
 		return err
 	}
 	notebook, err := p.lockedNotebook(contextID)

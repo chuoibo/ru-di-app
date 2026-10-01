@@ -18,7 +18,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
@@ -43,6 +43,7 @@ import {
   docDaLuu,
   dongPhu,
   duongChiDuong,
+  duongChiDuongWeb,
   luuDiaDiem,
   nguonAnhDiaDiem,
   cauNguonAnh,
@@ -153,7 +154,8 @@ export function PlaceDetailLiveScreen({ phien }: { phien: Phien }) {
 
   const chiDuong = async (place: PlaceDetail) => {
     try {
-      await Linking.openURL(duongChiDuong(place));
+      // A browser has no `geo:` handler: the web build opens the map address.
+      await Linking.openURL(Platform.OS === "web" ? duongChiDuongWeb(place) : duongChiDuong(place));
     } catch {
       setThongBao("Máy này chưa có ứng dụng bản đồ để chỉ đường.");
     }

@@ -126,7 +126,15 @@ export interface XemTruocDongSo {
  * `pair_chat_consent_required` used to be first here; its only raise site was
  * the automatic companion turn, deleted by ADR-0036 §2.1.
  */
+/**
+ * The code a stopped pair answers with: blocked, or the other account ended
+ * (ADR-0023 §2.3.2). Shared with the direct message on purpose, so the two
+ * doors never tell the two causes apart (QA UI-120).
+ */
+export const MA_CAP_DA_DUNG = "direct_message_unavailable";
+
 export const LOI_TO_GIAY: Record<string, string> = {
+  [MA_CAP_DA_DUNG]: "Sổ này đã dừng. Hai bạn không gửi tờ cho nhau được nữa.",
   // 409, and news rather than a refusal: the other person wrote while this
   // screen was open. The screen re-reads; the sentence says why.
   paper_version_stale: "Người kia vừa gửi bản mới. Mở lại để xem đã.",

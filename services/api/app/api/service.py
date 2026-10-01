@@ -1473,6 +1473,13 @@ class ApiService:
     def _require_pair_is_alive(self, context_id: uuid.UUID, actor: Actor) -> None:
         """Refuse a new message in a pair that has stopped (ADR-0023 §2.3.2).
 
+        The two-person notebook goes through the same gate (ADR-0027 §3 step 1:
+        block is read before every write). Every outward write of a sheet or of
+        the notebook calls this right after its permission check; the writes
+        that only take something back (withdraw, skip the week, revoke, delete a
+        box, close) stay open, because blocking somebody must never trap you
+        inside what you shared with them (QA UI-120).
+
         Two causes, ONE code and ONE sentence: the other person blocked (or was
         blocked by) the caller, or their account ended. This is a weak oracle
         and it is taken on purpose -- somebody typing into a dead conversation
@@ -7299,6 +7306,7 @@ class ApiService:
         Either of the two may choose; the choice is not a permission."""
         _context, members = self._pair_context_or_404(context_id, actor)
         _require_pair_permission("set_pair_week_role", actor, {"is_group_member": True})
+        self._require_pair_is_alive(context_id, actor)
         now = _now()
         notebook = self._locked_notebook(context_id, now=now)
         participants = self._participants(notebook, members)
@@ -7400,6 +7408,7 @@ class ApiService:
         _require_pair_permission(
             "propose_pair_consent", actor, {"is_group_member": True}
         )
+        self._require_pair_is_alive(context_id, actor)
         now = _now()
         notebook = self._locked_notebook(context_id, now=now)
         cycle_id = notebook.cycle_id
@@ -7580,6 +7589,7 @@ class ApiService:
                 ),
             },
         )
+        self._require_pair_is_alive(context_id, actor)
         self.repository.grant_consent(proposal.id, actor.id, now=now)
         after = self.repository.get_pair_notebook(context_id)
         assert after is not None
@@ -7671,6 +7681,7 @@ class ApiService:
             raise ApiProblem(404, "constraint_kind_unknown", "Không có ô này.")
         self._pair_context_or_404(context_id, actor)
         _require_pair_permission("edit_pair_constraint", actor, {"is_self": True})
+        self._require_pair_is_alive(context_id, actor)
         now = _now()
         notebook = self._locked_notebook(context_id, now=now)
         if notebook.cycle_id is None:
@@ -7793,6 +7804,7 @@ class ApiService:
                 ),
             },
         )
+        self._require_pair_is_alive(context_id, actor)
         papers = self.repository.list_pair_papers(context_id)
         for paper in papers:
             if (
@@ -7974,6 +7986,7 @@ class ApiService:
             actor,
             {"is_draft_owner": paper.draft_owner_id == actor.id},
         )
+        self._require_pair_is_alive(paper.context_id, actor)
         now = _now()
         if pair_paper.hieu_luc(_paper_dict(paper), now=now) != "nhap":
             raise ApiProblem(
@@ -8004,6 +8017,7 @@ class ApiService:
                 "version_current": request.version == paper.current_version,
             },
         )
+        self._require_pair_is_alive(paper.context_id, actor)
         now = _now()
         after = self._chuyen(paper, "gui", now=now)
         self.repository.mark_version_sent(
@@ -8032,6 +8046,7 @@ class ApiService:
             actor,
             {"is_not_version_sender": row.sent_by != actor.id},
         )
+        self._require_pair_is_alive(paper.context_id, actor)
         now = _now()
         self.repository.mark_paper_viewed(paper.id, version, actor.id, now=now)
         if version == paper.current_version and paper.state == "da_gui":
@@ -8054,6 +8069,7 @@ class ApiService:
                 "version_current": version == paper.current_version,
             },
         )
+        self._require_pair_is_alive(paper.context_id, actor)
         now = _now()
         if request.kind == "dong_y":
             return self._dong_y(paper, version, actor, now=now)
@@ -8282,6 +8298,7 @@ class ApiService:
         _require_pair_permission(
             "record_pair_outing_done", actor, {"is_group_member": True}
         )
+        self._require_pair_is_alive(paper.context_id, actor)
         now = _now()
         if not _co_the_ghi_da_di(paper, now=now):
             raise ApiProblem(409, "paper_wrong_state", "Chưa tới ngày đi.")
@@ -8299,6 +8316,7 @@ class ApiService:
         _require_pair_permission(
             "keep_pair_paper_line", actor, {"is_group_member": True}
         )
+        self._require_pair_is_alive(paper.context_id, actor)
         now = _now()
         after = self._chuyen(paper, "giu", now=now)
         keep = self.repository.add_paper_keep(

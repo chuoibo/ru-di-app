@@ -21,7 +21,7 @@
  * the prompt.
  */
 import { chuTraLoi, docTheAi, tacGiaTin, type Tin } from "./tin-song";
-import { GIOI_HAN_BOI_CANH, chuGon, ganNgan, type BoiCanh, type LuotBoiCanh, type VaiLuot } from "../ai/boi-canh";
+import { GIOI_HAN_BOI_CANH, SO_LUOT_MAC_DINH, chuGon, ganNgan, type BoiCanh, type LuotBoiCanh, type VaiLuot } from "../ai/boi-canh";
 
 /** A deleted row is still a turn. Its old text is never what travels. */
 const CHU_DA_XOA = "Tin nhắn đã bị xoá";
@@ -118,7 +118,9 @@ export function gomBoiCanhChat(opts: {
   soLuot?: number;
   hanByte?: number;
 }): BoiCanh {
-  const soLuot = opts.soLuot ?? GIOI_HAN_BOI_CANH.soLuot;
+  // The default is ADR-0046's 20; an explicit number is still held to the
+  // ceiling the server enforces, so no caller can widen what is sent.
+  const soLuot = Math.min(opts.soLuot ?? SO_LUOT_MAC_DINH, GIOI_HAN_BOI_CANH.soLuot);
   // `chat.tin` is newest first, because the list is inverted. A transcript is
   // read forwards, and handing a model a reversed conversation is a quality
   // fault nobody can see on screen. Take from the head, then flip.

@@ -1055,6 +1055,70 @@
         "long-number"
       ],
       "reason": "Bản LỊCH SỬ của services/core/go.sum ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 6 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B1-CUA-DEMO.jpg",
+      "sha256": "e4e99e1a75948ed0f92db28c3288c738cdd7174b9ce6217968489e1f961549c5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B1-UI-005-117-C1.jpg",
+      "sha256": "683bf039f2629734e96799825dbf5de3cc1c10c9bda56316b3292e422c4a1d01",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B1-UI-049-C1.jpg",
+      "sha256": "643d5cfa87d55efbcc0f3bae5c30e3ce132161bdfaa092c7721d44637456d249",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B1-UI-082-C1.jpg",
+      "sha256": "db34d1cff64a13be1188b3935d6119874c91a4a91443d60e21d8664232c303e5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B1-UI-087-C1.jpg",
+      "sha256": "91239def8e8ec070945d9c1f00f08d5fbf183c7f64cd118b7e5869887d5b0339",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B1-UI-120-C1.jpg",
+      "sha256": "4c4ce6f18189fa841b2235ad14eb9327c9a7663f68727f60a6070a5d9bbb9a45",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B1-UI-121-C1.jpg",
+      "sha256": "4720c7b6d35e11612313d2552d0aa7133dcb9fa77b11a3bee3649b5a769c17d7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B1-UI-137-C1.jpg",
+      "sha256": "b6f5a6f0c863cf17e49e99de48d67ccc42a984bc565a4e92a266d709ec7c5b2e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B1): ảnh ghép JPEG chụp bản web trên stack loopback riêng với dữ liệu seed tổng hợp («Chat Test NN», «Team Đà Lạt»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
     }
   ]
 }

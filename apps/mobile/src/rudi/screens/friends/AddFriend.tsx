@@ -10,7 +10,7 @@
  * The number typed here never leaves this screen except inside that one
  * lookup body, and is not stored.
  */
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -26,6 +26,7 @@ import { DauLon } from "../../ui/DauLon";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
 import { Washi } from "../../ui/Washi";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
 type Trang =
   | { pha: "nhap" }
@@ -44,7 +45,7 @@ export function AddFriendScreen() {
   const lanBam = useRef<{ id: string; attempt: Attempt } | null>(null);
 
   if (!phienDaDoc) return null;
-  if (phien === null) return <Redirect href="/welcome" />;
+  if (phien === null) return <CuaDangNhap />;
 
   const tim = async () => {
     const sach = phone.trim();

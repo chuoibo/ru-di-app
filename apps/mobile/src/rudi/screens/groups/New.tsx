@@ -14,7 +14,7 @@
  * trusting the response: the session needs the membership id and state the
  * list carries, and it is the list `chonNhomMacDinh` reads.
  */
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
@@ -29,6 +29,7 @@ import { ChuThichLe } from "../../ui/ChuThichLe";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { SoBia } from "../../ui/SoBia";
 import { StampButton } from "../../ui/StampButton";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
 type Trang = { pha: "nhap" } | { pha: "dang-mo" } | { pha: "hong"; loi: string };
 
@@ -42,7 +43,7 @@ export function GroupNewScreen() {
   const lanBam = useRef<{ ten: string; attempt: Attempt } | null>(null);
 
   if (!phienDaDoc) return null;
-  if (phien === null) return <Redirect href="/welcome" />;
+  if (phien === null) return <CuaDangNhap />;
 
   const mo = async () => {
     const sach = ten.trim();

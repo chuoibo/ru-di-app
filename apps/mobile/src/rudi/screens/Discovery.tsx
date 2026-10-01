@@ -12,7 +12,9 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+
+import { chiaSe } from "../web/chia-se";
 
 import { LOAI_MAU, PLACES, type DemoPlace } from "../fixtures";
 import { PLACE_CATEGORIES, filterPlaces, type PlaceCategory } from "../places";
@@ -372,11 +374,7 @@ export function PlaceDetailScreen() {
         <IconButton
           accessibilityLabel="Chia sẻ"
           icon="share-social-outline"
-          onPress={() =>
-            void Share.share({
-              message: `${place.name}: ${place.subtitle}`,
-            })
-          }
+          onPress={() => void chiaSe({ text: `${place.name}: ${place.subtitle}` })}
         />
         <IconButton
           accessibilityLabel={saved ? "Bỏ lưu" : "Lưu địa điểm"}

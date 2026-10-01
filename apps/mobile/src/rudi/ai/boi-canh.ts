@@ -52,6 +52,15 @@ import type { PhieuNguCanh } from "../nep/phieu";
  */
 export const GIOI_HAN_BOI_CANH = Object.freeze({ soLuot: 40, chuMoiLuot: 300, byte: 24_000 });
 
+/**
+ * How many recent messages ride along when nobody asked for a different
+ * number: ADR-0046 §2 («N tin gần, mặc định 20»). The ceiling above is what the
+ * server will still accept, not what a person agreed to send by tagging Rủ Đi
+ * AI; reading the ceiling as the default sent twice what the ADR promised
+ * (QA UI-163).
+ */
+export const SO_LUOT_MAC_DINH = 20;
+
 /** Who spoke. Never a name, never an id. */
 export type VaiLuot = "toi" | "ban" | "ai";
 

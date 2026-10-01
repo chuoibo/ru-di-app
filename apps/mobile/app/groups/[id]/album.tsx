@@ -2,6 +2,7 @@ import { Redirect, useLocalSearchParams } from "expo-router";
 
 import { AlbumNhomLiveScreen } from "../../../src/rudi/screens/ky-niem/AlbumLive";
 import { useRudiSession } from "../../../src/rudi/session";
+import { CuaDangNhap } from "../../../src/rudi/ui/CuaDangNhap";
 
 function maNhom(id: unknown): string {
   if (typeof id === "string") return id;
@@ -14,6 +15,8 @@ export default function GroupAlbumRoute() {
   if (!phienDaDoc) return null;
   const id = maNhom(params.id);
   if (phien !== null && id !== "") return <AlbumNhomLiveScreen contextId={id} phien={phien} />;
-  // The fixture album lives under the trip route; a group shelf has no fixture.
-  return <Redirect href="/welcome" />;
+  // The fixture album lives under the trip route; a group shelf has no fixture,
+  // so a cold link without a session goes through the sign-in door (UI-121).
+  if (phien === null) return <CuaDangNhap />;
+  return <Redirect href="/messages" />;
 }

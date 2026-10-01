@@ -80,6 +80,14 @@ export interface TrangThaiSoDoi {
    */
   deNghiCho: readonly { id: string; purpose: "lap_so" | "bat_doi" | "doc_chat"; cuaToi: boolean }[];
   daDong: boolean;
+  /**
+   * The pair has stopped: one of the two blocked the other, or the other
+   * account ended (ADR-0023 §2.3.2). The server refuses every outward write of
+   * the notebook from then on (ADR-0027 §3, QA UI-120), so the screen stops
+   * offering them and says ONE sentence for both causes -- which of the two it
+   * was is not this screen's to tell. Sheets already written stay readable.
+   */
+  daDung: boolean;
   /** Taste in «Một đôi», per person (ADR-0034); null outside it. */
   gu: GuSo | null;
   /** «Người lo» of this week (ADR-0034 §2.4); null outside an open «Một đôi». */
@@ -186,6 +194,7 @@ function seed(): TrangThaiSoDoi {
     toGiay: TO_GIAY_CU,
     deNghiCho: [],
     daDong: false,
+    daDung: false,
     gu: null,
     vai: null,
     daNap: true,

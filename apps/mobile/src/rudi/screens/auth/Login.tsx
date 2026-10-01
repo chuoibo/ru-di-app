@@ -31,7 +31,7 @@
  * stay in view (2026-09-06 review: the tall cover pushed the form under the
  * keyboard). The error prints directly under the field it is about.
  */
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
@@ -39,7 +39,7 @@ import { Platform, StyleSheet, Text, View } from "react-native";
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { dangNhapGoogle, guiOtp } from "../../../phien";
 import { googleConfigured, googleSession } from "../../google";
-import { manSauDangNhap } from "../../duong-vao";
+import { duongTiep, manSauDangNhap } from "../../duong-vao";
 import { useRudiSession } from "../../session";
 import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
 import { CUA_FIXTURE_DEV } from "../../cua-fixture";
@@ -59,6 +59,9 @@ const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim();
 
 export function LoginScreen() {
   const router = useRouter();
+  // `?tiep=`: the route this person was opening when a door sent them here.
+  // Checked once; anything that is not a path inside the app is dropped.
+  const tiep = duongTiep(useLocalSearchParams<{ tiep?: string }>().tiep) ?? undefined;
   const { colors, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
   const banPhim = useKeyboardOpen();
@@ -84,7 +87,7 @@ export function LoginScreen() {
         const phien = await googleSession(() => GoogleSignin.signIn(), dangNhapGoogle);
         if (phien !== null) {
           datPhien(phien);
-          router.replace(manSauDangNhap(phien) as never);
+          router.replace(manSauDangNhap(phien, tiep) as never);
         }
       } catch (error) {
         if (isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED) return;
@@ -114,6 +117,7 @@ export function LoginScreen() {
         challengeId: daGui.challenge_id,
         phone: sach,
         guiLaiLuc: Date.now() + daGui.resend_after_seconds * 1000,
+        tiep,
       });
       setTrang({ pha: "nhap" });
       router.push("/otp");

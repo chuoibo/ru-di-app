@@ -164,7 +164,7 @@ export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embedde
       header={
         laCapDemo ? (
           <>
-            <TopBar back={!embeddedInTabs} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title={so.tenNguoiKia} />
+            <TopBar back={!embeddedInTabs} right={<DemoBadge compactLabel="Demo" />} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title={so.tenNguoiKia} />
             <HangToGiay cauMo={tuVung.cauMo} onPress={() => router.push(`/groups/${contextId}/to-giay` as never)} tieuDe={tuVung.tenKhongGian} toMo={so.toMo} toiId={so.toiId} />
           </>
         ) : (
@@ -173,13 +173,17 @@ export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embedde
             back={!embeddedInTabs}
             title={DEMO_GROUP.name}
             subtitle={`${PEOPLE.length} thành viên`}
+            // The demo chat says it is one, as every demo tab does (QA UI-082).
             right={
-              <IconButton
-                accessibilityLabel="Thông tin nhóm"
-                icon="information-circle-outline"
-                onPress={() => router.push(("/groups/" + DEMO_GROUP.id + "/wall") as never)}
-                quiet
-              />
+              <View style={styles.dauPhai}>
+                <DemoBadge compactLabel="Demo" />
+                <IconButton
+                  accessibilityLabel="Thông tin nhóm"
+                  icon="information-circle-outline"
+                  onPress={() => router.push(("/groups/" + DEMO_GROUP.id + "/wall") as never)}
+                  quiet
+                />
+              </View>
             }
           />
           {/* The outing being talked about: one pinned line, not a photo card. */}
@@ -337,7 +341,7 @@ export function AiItineraryScreen() {
 
   return (
     <RudiScreen footer={hanhDong} footerInset={Math.max(insets.bottom, 12) + 4} tone="ai" testID="ai-itinerary-screen">
-      <TopBar title="Lịch trình AI" right={<DemoBadge compactLabel="Nháp" label="AI nháp" />} />
+      <TopBar title="Lịch trình AI" right={<DemoBadge label="Dữ liệu demo · AI nháp" />} />
       <View style={styles.itineraryHead}>
         <Text style={[typography.h1, { color: colors.ink }]}>{session.tripName}</Text>
         <Text style={[typography.body, { color: colors.inkSoft }]}>17 - 19/10/2026 · 3 ngày 2 đêm</Text>
@@ -503,6 +507,7 @@ function ThanCapDemo({ tenNguoiKia, tinCuaToi }: { tenNguoiKia: string; tinCuaTo
 }
 
 const styles = StyleSheet.create({
+  dauPhai: { alignItems: "center", flexDirection: "row", gap: 4 },
   flex: { flex: 1 },
   tripPin: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, minHeight: 56 },
   tripPinIcon: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },

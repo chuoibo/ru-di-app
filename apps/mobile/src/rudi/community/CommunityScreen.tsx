@@ -5,6 +5,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View, type ViewToken } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { duongDangNhap } from "../duong-vao";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
 import { RudiButton, RudiScreen } from "../ui";
@@ -117,7 +118,7 @@ export function CommunityScreen() {
         attempt: newAttempt()
     })); await load(); }); };
     if (!person)
-        return <RudiScreen><Text style={[typography.display, { color: colors.ink }]}>Những cuộc đi, những câu chuyện.</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Đăng nhập để gặp cộng đồng Rủ Đi và kể về ngày của bạn.</Text><RudiButton label="Đăng nhập" onPress={() => router.push("/login" as never)}/></RudiScreen>;
+        return <RudiScreen><Text style={[typography.display, { color: colors.ink }]}>Những cuộc đi, những câu chuyện.</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Đăng nhập để gặp cộng đồng Rủ Đi và kể về ngày của bạn.</Text><RudiButton label="Đăng nhập" onPress={() => router.push(duongDangNhap("/community") as never)}/></RudiScreen>;
     return <RudiScreen scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
     <Sheet open={settings} onClose={() => setSettings(false)} accessibilityLabel="Bảng tin của bạn"><Text style={[typography.h1, { color: colors.ink }]}>Bảng tin của bạn</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Chỉ dùng những gì bạn xem và tương tác trong cộng đồng. Bạn luôn có thể đổi ý.</Text><RudiButton label={prefs?.personalized ? "Tắt cá nhân hóa" : "Bật cá nhân hóa"} onPress={() => void consent(!prefs?.personalized)}/><RudiButton label="Xóa lịch sử đề xuất" variant="outline" onPress={() => void act(async () => { await translatedAsActor(COMMUNITY_ERRORS, "/v2/community/history", {
             actorId: person,

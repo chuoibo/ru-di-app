@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo, useEffect, useState } from "react";
-import { AppState, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { BASE_URL } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
@@ -13,6 +13,7 @@ import { useMotion } from "../ui/useMotion";
 import { imageSource, relativeTime, type Media, type Post } from "./api";
 import { PhotoViewer } from "../ui/PhotoViewer";
 import { BookView } from "../diary/BookView";
+import { chiaSe, type KetQuaChiaSe } from "../web/chia-se";
 
 export function CommunityVideo({ media, person, active }: { media: Media; person: string; active: boolean }) {
   const { colors } = useRudiTheme();
@@ -57,6 +58,13 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
   post: Post; person: string; active?: boolean; onLike: () => void; onComment: () => void; onMore: () => void; onTopic?: (topic: string) => void; onFollow: () => void; busy?: boolean; detail?: boolean;
 }) {
   const { colors } = useRudiTheme(); const router = useRouter(); const motion = useMotion(); const [expanded, setExpanded] = useState(detail); const [photo, setPhoto] = useState<Media | null>(null);
+  // What «Chia sẻ» just did, said on the button itself for a few seconds (QA UI-136).
+  const [daChiaSe, setDaChiaSe] = useState<string | null>(null);
+  useEffect(() => {
+    if (daChiaSe === null) return;
+    const hen = setTimeout(() => setDaChiaSe(null), 4000);
+    return () => clearTimeout(hen);
+  }, [daChiaSe]);
   return <View testID={`community-post-${post.id}`} style={[styles.post, { borderBottomColor: colors.line }]}>
     <View style={styles.identity}>
       <Pressable accessibilityRole="button" accessibilityLabel={`Hồ sơ ${post.author}`} onPress={() => router.push(`/people/${post.author_id}`)} style={styles.avatarTarget}><Avatar name={post.author} size={42} /></Pressable>
@@ -78,7 +86,7 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
     <View style={styles.actions}>
       <Action icon={post.liked ? "heart" : "heart-outline"} label={`${post.likes || "Thích"}`} accessibilityLabel={`${post.liked ? "Bỏ thích bài" : "Thích bài"}, ${post.likes} lượt thích`} selected={post.liked} disabled={busy} onPress={onLike} />
       <Action icon="chatbubble-outline" label={`${post.comments || "Bình luận"}`} accessibilityLabel={`Mở bình luận, ${post.comments} bình luận`} onPress={onComment} />
-      <Action icon="paper-plane-outline" label="Chia sẻ" onPress={() => { void Share.share({ message: `rudi://community/posts/${post.id}` }); }} />
+      <Action icon="paper-plane-outline" label={daChiaSe ?? "Chia sẻ"} accessibilityLabel={daChiaSe ?? "Chia sẻ bài"} onPress={() => { void chiaSe({ title: "Bài trên Rủ Đi", url: linkBai(post.id) }).then((kq) => setDaChiaSe(cauChiaSe(kq))); }} />
     </View>
   </View>;
 });
@@ -91,3 +99,19 @@ const styles = StyleSheet.create({
   topics: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, topic: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8, minHeight: 48, minWidth: 48, justifyContent: "center" },
   actions: { flexDirection: "row", gap: 12, flexWrap: "wrap" }, action: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 48, minWidth: 56, paddingHorizontal: 2 },
 });
+
+/**
+ * The post's address to share. The web build shares the page it is on, which a
+ * browser can open; the native build still has only the app scheme until the
+ * product has a public https host for posts (proposal in the UI/UX handoff).
+ */
+function linkBai(id: string): string {
+  if (Platform.OS === "web" && typeof window !== "undefined") return `${window.location.origin}/community/posts/${id}`;
+  return `rudi://community/posts/${id}`;
+}
+
+function cauChiaSe(ketQua: KetQuaChiaSe): string | null {
+  if (ketQua === "da-chep") return "Đã chép link";
+  if (ketQua === "khong-duoc") return "Chưa chia sẻ được";
+  return null;
+}

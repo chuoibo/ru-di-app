@@ -171,7 +171,49 @@ export function manSauDangNhap(
         is_new_person?: boolean;
       }
     | null,
-): "/welcome" | "/explore" | "/messages" | "/personalization" {
-  if (phien !== null && phien.is_new_person === true) return "/personalization";
-  return manDau(phien);
+  tiep?: string | null,
+): string {
+  const ve = duongTiep(tiep);
+  if (phien !== null && phien.is_new_person === true) {
+    return ve === null ? "/personalization" : `/personalization?tiep=${encodeURIComponent(ve)}`;
+  }
+  return ve ?? manDau(phien);
+}
+
+/**
+ * The doors a return path must never point back into: following one after
+ * signing in would land the person on the door they just walked through.
+ */
+const CUA_VAO = ["/login", "/otp", "/welcome", "/moi", "/personalization"];
+
+/**
+ * The route a person was trying to reach when the app asked them to sign in,
+ * if it is one this app may send them to after (QA UI-121, UI-082, UI-137).
+ *
+ * Only a path inside this app: it starts with one «/», carries no scheme, no
+ * second slash that a browser would read as another host, no whitespace or
+ * backslash, and is not one of the doors themselves. Anything else is null and
+ * the person lands where `manDau` would have put them, which is the old
+ * behaviour rather than an open redirect.
+ */
+export function duongTiep(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const duong = raw.trim();
+  if (duong.length === 0 || duong.length > 512) return null;
+  if (!duong.startsWith("/") || duong.startsWith("//") || duong.includes("://") || /[\s\\]/.test(duong)) return null;
+  const chiDuong = duong.split(/[?#]/)[0];
+  if (CUA_VAO.some((cua) => chiDuong === cua || chiDuong.startsWith(`${cua}/`))) return null;
+  return duong;
+}
+
+/** Whether this path is one of the doors themselves (welcome, sign-in, code, invite, taste). */
+export function laCuaVao(path: string): boolean {
+  const chiDuong = path.split(/[?#]/)[0];
+  return CUA_VAO.some((cua) => chiDuong === cua || chiDuong.startsWith(`${cua}/`));
+}
+
+/** The sign-in door, remembering where to go after it when there is somewhere. */
+export function duongDangNhap(tiep?: string | null): string {
+  const ve = duongTiep(tiep);
+  return ve === null ? "/login" : `/login?tiep=${encodeURIComponent(ve)}`;
 }

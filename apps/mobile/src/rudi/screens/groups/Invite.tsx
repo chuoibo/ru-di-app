@@ -32,6 +32,7 @@ import { DauLon } from "../../ui/DauLon";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { PhongBi } from "../../ui/PhongBi";
 import { StampButton } from "../../ui/StampButton";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 
 type Trang =
   | { pha: "nhap" }
@@ -50,7 +51,7 @@ export function GroupInviteScreen() {
   const lanBam = useRef<{ khoa: string; dat: Attempt; moi: Attempt } | null>(null);
 
   if (!phienDaDoc) return null;
-  if (phien === null) return <Redirect href="/welcome" />;
+  if (phien === null) return <CuaDangNhap />;
   if (typeof id !== "string") return <Redirect href="/messages" />;
 
   const moi = async () => {

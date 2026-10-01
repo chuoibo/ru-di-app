@@ -36,12 +36,12 @@ function tin(i, chu) {
 }
 
 test("số tin trên chip là số lượt của gói, không phải số tin trên màn", () => {
-  // 60 long messages on screen: the bundle keeps at most 40 turns and then
-  // drops whole turns from the old end until it fits the byte ceiling.
-  // Three-byte letters at the per-turn cap: 40 of them are well over the
-  // bundle's byte ceiling.
+  // 60 long messages on screen, and a caller asking for the ceiling: the
+  // bundle keeps at most 40 turns and then drops whole turns from the old end
+  // until it fits the byte ceiling. Three-byte letters at the per-turn cap: 40
+  // of them are well over the bundle's byte ceiling.
   const tinHien = Array.from({ length: 60 }, (_, i) => tin(60 - i, "ờ".repeat(400)));
-  const goi = gomBoiCanhChat({ tin: tinHien, personId: toi });
+  const goi = gomBoiCanhChat({ tin: tinHien, personId: toi, soLuot: 40 });
   assert.ok(goi.luot.length < 40 && goi.luot.length > 0, `gói phải bị cắt theo byte, có ${goi.luot.length} lượt`);
   const chu = chuChip(goi, true, true);
   assert.equal(chu.cau, `Kèm ${goi.luot.length} tin gần đây`);
@@ -127,4 +127,12 @@ test("tấm «Xem» không nằm trong chip: màn gắn nó ở gốc, cạnh c�
   const tamLab = lab.findIndex((d) => d.includes("<TamXemBoiCanh "));
   const stickerLab = lab.findIndex((d) => d.includes("<KhaySticker "));
   assert.ok(tamLab > 0 && thut(lab[tamLab]) === thut(lab[stickerLab]), "trang lab phải gắn tấm ở gốc như màn chat");
+});
+
+test("UI-163: mặc định kèm 20 tin như ADR-0046 §2, và không ai nới được quá trần 40", () => {
+  const tinHien = Array.from({ length: 60 }, (_, i) => tin(60 - i, "ừ"));
+  assert.equal(gomBoiCanhChat({ tin: tinHien, personId: toi }).luot.length, 20, "mặc định là 20, không phải trần");
+  assert.equal(chuChip(gomBoiCanhChat({ tin: tinHien, personId: toi }), true, true).cau, "Kèm 20 tin gần đây");
+  assert.equal(gomBoiCanhChat({ tin: tinHien, personId: toi, soLuot: 60 }).luot.length, 40, "số xin thêm vẫn bị giữ ở trần máy chủ nhận");
+  assert.equal(gomBoiCanhChat({ tin: tinHien.slice(0, 7), personId: toi }).luot.length, 7, "ít tin hơn thì kèm đúng số đang có");
 });

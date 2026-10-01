@@ -33,7 +33,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { guiOtp, xacMinhOtp } from "../../../phien";
-import { manSauDangNhap } from "../../duong-vao";
+import { duongDangNhap, manSauDangNhap } from "../../duong-vao";
 import { cheSo, datOtpDangCho, layOtpDangCho, xoaOtpDangCho, type OtpDangCho } from "../../otp-dang-cho";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
@@ -82,7 +82,7 @@ export function OtpScreen() {
       const phien = await xacMinhOtp(cho.challengeId, cho.phone, code);
       xoaOtpDangCho();
       datPhien(phien);
-      router.replace(manSauDangNhap(phien) as never);
+      router.replace(manSauDangNhap(phien, cho.tiep) as never);
     } catch (error) {
       // The boxes clear so the next attempt starts from the first one; the
       // sentence stays until the person types again.
@@ -99,6 +99,7 @@ export function OtpScreen() {
         challengeId: daGui.challenge_id,
         phone: cho.phone,
         guiLaiLuc: Date.now() + daGui.resend_after_seconds * 1000,
+        tiep: cho.tiep,
       };
       datOtpDangCho(moi);
       setCho(moi);
@@ -117,7 +118,7 @@ export function OtpScreen() {
 
   const doiSo = () => {
     xoaOtpDangCho();
-    router.replace("/login");
+    router.replace(duongDangNhap(cho.tiep) as never);
   };
   const bleed = layout.sizeClass === "compact" ? space.md : space.lg;
 

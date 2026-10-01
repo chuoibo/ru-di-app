@@ -19,10 +19,13 @@
  */
 import { type ReactNode, useMemo } from "react";
 
+import { useRudiSession } from "../session";
+
 import { batLaiChoChat } from "./gu-doi";
 import { type NoiDungTo, sauKhiXinTo } from "./to-giay";
 import { SoDoiContext, type SoDoiApi } from "./SoDoi";
 import { caHaiDongY, ghiRangBuocTuanTu, rangBuocCua, toTomTatThanhTo } from "./so-doi-map";
+import { MA_CAP_DA_DUNG } from "./to-giay-song";
 import { useToGiay } from "./useToGiay";
 
 export function SoDoiSongProvider({
@@ -37,6 +40,13 @@ export function SoDoiSongProvider({
   children: ReactNode;
 }) {
   const song = useToGiay(contextId, toiId);
+  const { phien } = useRudiSession();
+  // Known before anybody presses anything: the session already says which pair
+  // stopped taking messages, and the notebook stops with it (QA UI-120). A
+  // refusal with the same code while the screen is open says it too.
+  const daDung =
+    phien?.contexts?.find((nhom) => nhom.id === contextId)?.unavailable === true ||
+    song.lenhBiChan?.ma === MA_CAP_DA_DUNG;
 
   const api = useMemo<SoDoiApi>(() => {
     const so = song.so;
@@ -66,6 +76,7 @@ export function SoDoiSongProvider({
         cuaToi: d.proposed_by_id === toiId,
       })),
       daDong: false,
+      daDung,
       gu: so?.taste ?? null,
       vai: so?.week_role ?? null,
       daNap: song.pha !== "dang-nap",
@@ -122,7 +133,7 @@ export function SoDoiSongProvider({
 
       nguoiKia: null,
     };
-  }, [contextId, song, tenNguoiKia, toiId]);
+  }, [contextId, daDung, song, tenNguoiKia, toiId]);
 
   return <SoDoiContext.Provider value={api}>{children}</SoDoiContext.Provider>;
 }

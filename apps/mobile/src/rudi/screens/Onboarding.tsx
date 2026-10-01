@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { doiTenTrongPhien, suaHoSoToi } from "../../phien";
-import { manDau } from "../duong-vao";
+import { duongTiep, manDau } from "../duong-vao";
 import { laTenGiuCho } from "../ten-giu-cho";
 import {
   LOI_SO_THICH,
@@ -52,6 +52,8 @@ const NGHIENG_DAN = [-2, 1.5, -1, 2, -1.5, 1];
 
 export function PersonalizationScreen() {
   const router = useRouter();
+  // A new person who arrived by a link goes on to it after this step.
+  const tiep = duongTiep(useLocalSearchParams<{ tiep?: string }>().tiep);
   const { colors, dark } = useRudiTheme();
   // At a large font scale two columns leave a label the width of one word,
   // and Android breaks «Shopping» in half rather than wrap it (dark/1.3
@@ -135,7 +137,7 @@ export function PersonalizationScreen() {
 
   const boQua = async () => {
     await luuTen();
-    router.replace(personId === null ? "/explore" : manDau(session.phien));
+    router.replace(personId === null ? "/explore" : ((tiep ?? manDau(session.phien)) as never));
   };
 
   const xong = async () => {
@@ -151,7 +153,7 @@ export function PersonalizationScreen() {
     try {
       await luuTen();
       await luuSoThich(personId, { muc, khoang });
-      router.replace(manDau(session.phien));
+      router.replace((tiep ?? manDau(session.phien)) as never);
     } catch (error) {
       const ma = maLoi(error);
       setLoi((ma !== null ? LOI_SO_THICH[ma] : null) ?? "Chưa lưu được. Thử lại giúp mình nhé.");

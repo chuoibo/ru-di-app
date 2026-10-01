@@ -11,7 +11,7 @@ import { docChatCapabilities } from "../../chat/ai-invocations";
 import { cauVaiTuan } from "../../to-giay/vai-tuan";
 import { type ToGiay, goiYChoLam, nenXinTo, phienBan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
-import { Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { DemoBadge, Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Nep } from "../../ui/art/Nep";
 import { DauLon } from "../../ui/DauLon";
 import { EmptyState } from "../../ui/EmptyState";
@@ -75,7 +75,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   // `?ru=1` from «Rủ một người đi chơi»: draft straight away, once, and only
   // when nothing is already on the table (the notebook refuses a second one).
   useEffect(() => {
-    if (!ruNgay || daRu.current || !so.batDoi) return;
+    if (!ruNgay || daRu.current || !so.batDoi || so.daDung) return;
     const lam = nenXinTo(so.daNap, so.toMo, so.lapSo);
     if (lam === "cho") return;
     daRu.current = true;
@@ -88,7 +88,8 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   const cauGuSo = cauGu(so.gu, so.tenNguoiKia);
   // Whose week it is (ADR-0034 §2.4), inferred or chosen; shown only in an
   // open «Một đôi», with a way to change it.
-  const cauVai = cauVaiTuan(so.vai, so.toiId, so.tenNguoiKia);
+  // A stopped pair has no week to share out (the server refuses the change).
+  const cauVai = so.daDung ? null : cauVaiTuan(so.vai, so.toiId, so.tenNguoiKia);
   // «Rủ … tới đây»: once this person's own draft is on the table, open it
   // with the place filled in as the main stop -- once, not on every render.
   const [goiYCho, setGoiYCho] = useState<string | undefined>(choGoiY);
@@ -171,8 +172,39 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     };
   }, [mo, so]);
 
+  // Sheets that can only be read now: the day, the stops, and the way to the
+  // outing they became. Shared by «một hội» and by a stopped pair.
+  const toChiDoc = () =>
+    so.toGiay.map((t) => {
+      const version = phienBan(t);
+      return (
+        <View key={t.id} style={{ gap: 8 }}>
+          <Text style={[typography.h2, { color: colors.ink }]}>{ngayDocDuoc(version?.content.ngay ?? "") || "Tờ chưa có ngày"}</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>Tờ giấy cũ · chỉ đọc</Text>
+          {version?.content.chang.map((c, i) => <Text key={i} style={[typography.body, { color: colors.ink }]}>{c.gio} · {c.viec}</Text>)}
+          {t.outing_id ? <RudiButton label="Mở cuộc đi này" variant="ghost" onPress={() => router.push(`/outings/${t.outing_id}?ctx=${contextId}` as never)} /> : null}
+        </View>
+      );
+    });
+
   let than: React.ReactNode;
-  if (so.daDong) {
+  if (so.daDung) {
+    // QA UI-120: blocked, or the other account ended. The server refuses every
+    // outward write from now on, so nothing here offers one; one sentence for
+    // both causes, and what was already written stays readable underneath.
+    than = (
+      <View style={{ gap: space.lg }} testID="giay-so-da-dung">
+        <EmptyState
+          body={so.toGiay.length > 0 ? "Hai bạn không gửi tờ cho nhau được nữa. Những tờ cũ vẫn đọc được ở dưới." : "Hai bạn không gửi tờ cho nhau được nữa."}
+          illustration={<Nep gap="manh" pose="gap-lai" />}
+          kind="permission"
+          layout="inline"
+          title="Sổ này đã dừng"
+        />
+        {toChiDoc()}
+      </View>
+    );
+  } else if (so.daDong) {
     than = (
       <EmptyState
         action={{ label: "Lập sổ mới", onPress: () => setMo("lap-so") }}
@@ -210,15 +242,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       <Heading title="Hai người cũng thành một hội" subtitle="Hẹn nhau như mọi hội bạn. Những tờ giấy cũ vẫn nằm ở đây." />
       <RudiButton label="Rủ hội mình đi chơi" onPress={() => router.push(`/outings/new?contextId=${contextId}` as never)} />
       <RudiButton label="Mở sổ cặp đôi" variant="outline" onPress={() => setMo("loai-so")} />
-      {so.toGiay.map((t) => {
-        const version = phienBan(t);
-        return <View key={t.id} style={{ gap: 8 }}>
-          <Text style={[typography.h2, { color: colors.ink }]}>{ngayDocDuoc(version?.content.ngay ?? "") || "Tờ chưa có ngày"}</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>Tờ giấy cũ · chỉ đọc</Text>
-          {version?.content.chang.map((c, i) => <Text key={i} style={[typography.body, { color: colors.ink }]}>{c.gio} · {c.viec}</Text>)}
-          {t.outing_id ? <RudiButton label="Mở cuộc đi này" variant="ghost" onPress={() => router.push(`/outings/${t.outing_id}?ctx=${contextId}` as never)} /> : null}
-        </View>;
-      })}
+      {toChiDoc()}
     </View>;
   } else if (toMo) {
     than = (
@@ -309,7 +333,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         // word: with no sheet at all, «Rủ đi chơi» rendered twice in coral,
         // 1300px apart, and the second one reads as a different action somebody
         // then hunts for the difference between (finish review 14/09).
-        so.batDoi && !so.daDong && so.lapSo && toMo !== undefined && !dangCoToMo && !(toMo.state === "chot" || toMo.state === "da_di") ? (
+        so.batDoi && !so.daDong && !so.daDung && so.lapSo && toMo !== undefined && !dangCoToMo && !(toMo.state === "chot" || toMo.state === "da_di") ? (
           <View style={styles.footer}>
             <RudiButton label="Rủ đi chơi" onPress={() => void so.ruDiChoi()} />
           </View>
@@ -323,8 +347,8 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       <Sheet accessibilityLabel="Cài đặt sổ" onClose={dong} open={mo === "cai-dat"} testID="cai-dat-so">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>
           <Heading size="h2" title="Chuyện của hai mình" />
-          <ListRow icon="people-outline" onPress={() => setMo("loai-so")} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title="Loại sổ" />
-          <ListRow icon="hand-left-outline" onPress={() => setMo("rang-buoc")} subtitle="Không ăn được · Đừng" title="Những điều cần tránh" />
+          {!so.daDung ? <ListRow icon="people-outline" onPress={() => setMo("loai-so")} subtitle={so.batDoi ? "Một đôi" : "Hội bạn"} title="Loại sổ" /> : null}
+          {!so.daDung ? <ListRow icon="hand-left-outline" onPress={() => setMo("rang-buoc")} subtitle="Không ăn được · Đừng" title="Những điều cần tránh" /> : null}
           {so.gu ? <ListRow icon="heart-outline" onPress={() => setMo("gu")} subtitle={cauGuSo?.chung ?? (so.gu.mine_shared ? "Bạn đang chia gu" : "Mỗi người tự bật")} title="Gu của hai bạn" /> : null}
           <ListRow icon="book-outline" onPress={() => router.push(`/groups/${contextId}/chat` as never)} subtitle="Về cuộc trò chuyện" title="Tin nhắn" />
           <ListRow icon="images-outline" onPress={() => router.push(`/groups/${contextId}/wall` as never)} subtitle="Ảnh và những buổi hai bạn đã giữ" title="Kỷ niệm của hai bạn" />
@@ -420,7 +444,13 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       header={
         <TopBar
           back
-          right={<IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => setMo("cai-dat")} quiet />}
+          // The demo notebook says it is one (QA UI-082); live, the badge is empty.
+          right={
+            <View style={styles.dauPhai}>
+              <DemoBadge compactLabel="Demo" />
+              <IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => setMo("cai-dat")} quiet />
+            </View>
+          }
           subtitle={so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hội bạn · ${so.tenNguoiKia}`}
           title="Tờ giấy của hai mình"
         />
@@ -430,7 +460,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       <View style={[styles.than, { gap: space.lg }]}>
         {/* The waiting state below already says what `paper_wrong_state` meant;
             the server's sentence above it said the same thing worse (QC 24/09). */}
-        {so.loiLenh && !so.xinToBiChan ? (
+        {so.loiLenh && !so.xinToBiChan && !so.daDung ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]} testID="loi-lenh-so">
             {so.loiLenh}
           </Text>
@@ -521,6 +551,7 @@ function dongTom(t: ToGiay): string {
 }
 
 const styles = StyleSheet.create({
+  dauPhai: { alignItems: "center", flexDirection: "row", gap: 4 },
   than: { paddingTop: 8 },
   canh: { gap: 16 },
   hangCanh: { flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: 12 },

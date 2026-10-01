@@ -1168,6 +1168,13 @@ WORLD_DEFAULTS = {
     "interests": {},
     # None: no week choice stored; [name or None]: the chosen «Người lo».
     "rhythm": None,
+    # The pair's friend edge as [state, decided_by] (None: no edge), and
+    # whether the other person's account is gone (no row) or deleted (a row
+    # with `deleted_at`): what _require_pair_is_alive reads before every
+    # outward write of the notebook (QA UI-120).
+    "edge": None,
+    "other_gone": False,
+    "other_deleted": False,
 }
 
 
@@ -1317,6 +1324,19 @@ class Stub:
             SimpleNamespace(person_id=U(person), state=state, display_name=f"Tên {person}")
             for person, state in self.world["roster"]
         ]
+
+    def get_person(self, person_id):
+        self.rec("get_person", person_id)
+        if self.world["other_gone"]:
+            return None
+        return SimpleNamespace(deleted_at="2030-09-01T00:00:00+00:00" if self.world["other_deleted"] else None)
+
+    def get_friend_edge(self, a, b):
+        self.rec("get_friend_edge", a, b)
+        edge = self.world["edge"]
+        if edge is None:
+            return None
+        return SimpleNamespace(state=edge[0], decided_by_id=UN(edge[1]))
 
     def get_pair_notebook(self, context_id):
         self.rec("get_pair_notebook", context_id)
@@ -1970,6 +1990,55 @@ def pair_steps_edges() -> list[dict]:
         ]
         if fn != "pair_paper":
             out.append(S(fn, "door/lock_lost", r, dict(w, locked=[None])))
+
+    # --- a pair that has stopped (QA UI-120, ADR-0027 §3 step 1) ------------------
+    # Every outward write reads the block right after its permission; the
+    # writes that only take something back (withdraw, skip, revoke, delete a
+    # box, close) stay open. Each world is the least that reaches the gate.
+    stopped_worlds = {
+        "set_pair_week_role": ({}, None, "TOI"),
+        "propose_pair_consent": ({}, None, "TOI"),
+        "grant_pair_consent": (
+            {"locks": [NB_PENDING], "proposal": prop("PR1", "lap_so", by="KIA")},
+            None,
+            "TOI",
+        ),
+        "put_pair_constraint": ({}, None, "TOI"),
+        "draft_pair_paper": ({"locks": [NB_ACTIVE], "papers": []}, None, "TOI"),
+        "edit_pair_draft": ({"reads": [paper(state="nhap")]}, None, "TOI"),
+        "send_pair_paper": ({"reads": [paper(state="nhap")]}, None, "TOI"),
+        "mark_pair_paper_viewed": (
+            {"reads": [paper(state="da_gui", versions=[ver(1, sent_by="TOI")])]},
+            None,
+            "KIA",
+        ),
+        "respond_pair_paper": (
+            {"reads": [paper(owner="KIA", state="da_xem", responses=[[1, "KIA", "dong_y"]])]},
+            None,
+            "TOI",
+        ),
+        "record_pair_outing_done": (
+            {"reads": [paper(state="chot", expires=T - DAY)]},
+            SAT_START,
+            "TOI",
+        ),
+        "keep_pair_paper_line": ({"reads": [paper(state="da_di")]}, None, "TOI"),
+    }
+    for fn, (world, now, who) in stopped_worlds.items():
+        other = "KIA" if who == "TOI" else "TOI"
+        for name, extra in (
+            ("stopped/blocked_by_them", {"edge": ["blocked", other]}),
+            ("stopped/blocked_by_me", {"edge": ["blocked", who]}),
+            ("stopped/account_gone", {"other_gone": True}),
+            # A deleted account whose membership row is still read as live:
+            # §2.1 ends both together, so this is the gate's second road, and
+            # the branch the real repositories take (`deleted_at`, `Deleted`).
+            ("stopped/account_deleted", {"other_deleted": True}),
+        ):
+            kw = {"actor": (who, ("member",))}
+            if now is not None:
+                kw["now"] = now
+            out.append(S(fn, name, req(fn), dict(world, **extra), **kw))
 
     # --- pair_notebook -------------------------------------------------------------
     fn = "pair_notebook"
