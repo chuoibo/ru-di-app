@@ -13,6 +13,7 @@ import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
 import { KyHoa } from "../../ui/art/KyHoa";
 import { guTheoLoai } from "../../kham-pha/dia-diem";
+import { tachTheDan } from "../../kham-pha/the-dan";
 
 /*
  * 2026-09-11 (re-audit 10/09, R3): one mark per place. A place prints EITHER
@@ -128,69 +129,70 @@ function dauCon(dd: DiaDiemHienThi): string | null {
   return dd.lyDo ? null : dd.badge;
 }
 
+/**
+ * The lead place, as a card (owner's mockup, 01/10): the picture — the
+ * licensed photo, or the sketch of the kind of place when there is none —
+ * edge to edge at the top with the heart on it; under it the name, the
+ * subtitle on one line, the other facts as one quiet line, and two chips: the
+ * reason in the AI tone and the price, whole (`tachTheDan`). The heart is the
+ * card's sibling, not inside its tap, so a screen reader meets two controls.
+ */
 export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const { sizeClass } = useAdaptiveLayout();
   // 16:10 fills a phone's width at reading height; on a tablet the same ratio
   // is a screenful of photograph before the first name, so the frame widens.
   const tiLe = sizeClass === "compact" ? 16 / 10 : 21 / 9;
-  const chu = (
-    <>
-      <Text style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
-      {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
-      {dd.sub ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-      {dd.facts.length > 0 ? (
-        <Inline gap={12} wrap>
-          {dd.facts.map((f) => (
-            <Inline gap={5} key={f.icon + f.text}>
-              <Ionicons color={f.icon === "star" ? colors.accent : colors.inkFaint} name={f.icon} size={15} />
-              <Text style={[typography.label, { color: colors.inkSoft }]}>{f.text}</Text>
-            </Inline>
-          ))}
-        </Inline>
-      ) : null}
-    </>
+  const { gia, phu } = tachTheDan(dd.facts);
+  const dau = dauCon(dd);
+  const chip = (mau: string, nen: string, icon: IconName, text: string) => (
+    <View style={[styles.chipDan, { backgroundColor: nen, borderRadius: radius.control }]}>
+      <Ionicons color={mau} importantForAccessibility="no" name={icon} size={13} />
+      <Text style={[typography.label, styles.chuChipDan, { color: mau }]}>{text}</Text>
+    </View>
   );
-  const tim = (
-    <IconButton
-      accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
-      icon={daLuu ? "heart" : "heart-outline"}
-      onPress={onSave}
-      selected={daLuu}
-    />
-  );
-  if (dd.anh === null) {
-    // No honest picture: the place gets a sketch («ký hoạ trong sổ», review
-    // 11/09 A1) — a sheet of paper the width of the column drawing the KIND of
-    // place from its category and up to two of its tags, never the place
-    // itself — and the text block under it, the way a photo lead is built.
-    // Not a 16:10 frame of nothing (review 08/09 F01), not a glyph in a disc.
-    return (
-      <View style={[styles.lead, styles.leadGon, { borderBottomColor: colors.line }]} testID={testID}>
-        <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadPress, pressed && styles.pressed]}>
-          <KyHoa loai={dd.loai} tags={dd.tags} />
-          <View style={styles.leadText}>
-            {dauCon(dd) ? <Stamp label={dauCon(dd) as string} style={styles.leadGonDau} tone="ai" /> : null}
-            {chu}
-          </View>
-        </Pressable>
-        <View style={styles.leadSave}>{tim}</View>
-      </View>
-    );
-  }
   return (
-    <View style={styles.lead} testID={testID}>
-      <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadPress, pressed && styles.pressed]}>
-        <MediaSlot
-          alt={dd.name}
-          fallback={<PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={44} />}
-          nguon={{ loai: "danh-muc", anh: dd.anh }}
-          overlay={dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
-          ratio={tiLe}
-        />
-        <View style={styles.leadText}>{chu}</View>
+    <View style={[styles.theDan, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.control }]} testID={testID}>
+      <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => pressed && styles.pressed}>
+        {dd.anh === null ? (
+          // No honest picture: the sketch of the KIND of place («ký hoạ trong
+          // sổ», review 11/09 A1), never a 16:10 frame of nothing.
+          <KyHoa loai={dd.loai} style={styles.kyHoaTrongThe} tags={dd.tags} />
+        ) : (
+          <MediaSlot
+            alt={dd.name}
+            fallback={<PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={44} />}
+            nguon={{ loai: "danh-muc", anh: dd.anh }}
+            overlay={dau ? <View style={styles.badgeOnMedia}><Stamp label={dau} nen tilt={-2} tone="ai" /></View> : null}
+            radius={0}
+            ratio={tiLe}
+          />
+        )}
+        <View style={styles.chuDan}>
+          {dd.anh === null && dau ? <Stamp label={dau} style={styles.leadGonDau} tone="ai" /> : null}
+          <Text style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
+          {dd.sub ? (
+            <Text numberOfLines={1} style={[typography.body, { color: colors.inkSoft }]}>
+              {dd.sub}
+            </Text>
+          ) : null}
+          {phu ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{phu}</Text> : null}
+          {dd.lyDo || gia ? (
+            <View style={styles.hangChipDan}>
+              {dd.lyDo ? chip(colors.ai, colors.aiSoft, "sparkles", dd.lyDo) : null}
+              {gia ? chip(colors.inkSoft, colors.ground, "pricetag-outline", gia) : null}
+            </View>
+          ) : null}
+        </View>
       </Pressable>
-      <View style={styles.leadSave}>{tim}</View>
+      <View style={styles.timTrenAnh}>
+        <IconButton
+          accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
+          icon={daLuu ? "heart" : "heart-outline"}
+          onPress={onSave}
+          selected={daLuu}
+        />
+      </View>
     </View>
   );
 }
@@ -388,16 +390,20 @@ const styles = StyleSheet.create({
   ungVienPress: { gap: 6 },
   ungVienDau: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   // The no-photo lead: the sketch sheet and the text stack like the photo lead; only the hairline under it is its own.
-  leadGon: { paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   leadGonDau: { alignSelf: "flex-start" },
   timOnMedia: { position: "absolute", right: 6, bottom: 6 },
   rowTen: { flexDirection: "row", alignItems: "center", gap: 8 },
   flex1: { flex: 1, minWidth: 0 },
   glyphTo: { alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, flexShrink: 0 },
-  lead: { gap: 4 },
-  leadPress: { gap: 12 },
-  leadText: { gap: 6, paddingRight: 56 },
-  leadSave: { position: "absolute", right: 0, bottom: 0 },
+  theDan: { borderWidth: StyleSheet.hairlineWidth, overflow: "hidden" },
+  // The card is the frame: the sketch drops its own edge and corners.
+  kyHoaTrongThe: { borderWidth: 0, borderRadius: 0 },
+  chuDan: { gap: 6, padding: 14 },
+  hangChipDan: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 2 },
+  chipDan: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, maxWidth: "100%" },
+  // Money and the reason wrap rather than clip.
+  chuChipDan: { flexShrink: 1 },
+  timTrenAnh: { position: "absolute", top: 10, right: 10 },
   badgeOnMedia: { position: "absolute", left: 12, top: 12 },
   pressed: { opacity: 0.86 },
   row: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
