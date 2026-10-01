@@ -191,6 +191,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           icon={daLuu ? "heart" : "heart-outline"}
           onPress={onSave}
           selected={daLuu}
+          tron
         />
       </View>
     </View>

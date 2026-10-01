@@ -3,14 +3,14 @@
  * way to start something is the thing it makes, sketched small. A calendar
  * leaf for an outing, a thermal receipt for a bill, a photo print for a
  * memory, a polaroid for a story, a letter folded in three for the pair's
- * sheet. Drawn in a 64 x 64 frame, absolute M/L/C/Z only, numbers built at
+ * sheet, a written page and a pencil for a community post. Drawn in a 64 x 64 frame, absolute M/L/C/Z only, numbers built at
  * run time (the art rules of `net.ts`).
  */
 import { type Diem, type LopVe, bau, daGiac, duong, khungBo, netGay, tron } from "./net";
 
 export const KHUNG_VAT = 64;
 
-export const VAT_BAN = ["lich", "hoa-don", "anh-in", "polaroid", "thu-gap", "sticker", "phieu-bau"] as const;
+export const VAT_BAN = ["lich", "hoa-don", "anh-in", "polaroid", "thu-gap", "sticker", "phieu-bau", "bai-viet"] as const;
 export type VatBan = (typeof VAT_BAN)[number];
 
 /** A short sentence for each drawing, for the one place it is read aloud. */
@@ -22,6 +22,7 @@ export const MO_TA_VAT: Readonly<Record<VatBan, string>> = Object.freeze({
   "thu-gap": "Ký hoạ một lá thư gấp ba",
   sticker: "Ký hoạ một miếng sticker đang bóc",
   "phieu-bau": "Ký hoạ hai tờ giấy nhớ bình chọn",
+  "bai-viet": "Ký hoạ một trang viết dở và cây bút chì",
 });
 
 const NET = 2;
@@ -190,6 +191,37 @@ function phieuBau(): LopVe[] {
   ];
 }
 
+function baiViet(): LopVe[] {
+  // A page being written (owner's mockup, 01/10): a sheet a little askew, four
+  // lines of handwriting, the last one short, and a coral pencil lying across
+  // its corner, point down on the page — «write», not the ballot's «vote».
+  const goc = -5;
+  const trang = khung(10, 8, 34, 46, goc);
+  const dong = [
+    [15, 18, 39],
+    [15, 25, 37],
+    [15, 32, 39],
+    [15, 39, 29],
+  ].map(([x0, y, x1]) => xoay([[x0, y], [x1, y]], goc, 27, 31));
+  // The pencil drawn lying flat, point at the origin, then turned and laid down.
+  const dat = (diem: readonly Diem[]): Diem[] => xoay(diem.map(([x, y]) => [x + 30, y + 46] as const), -52, 30, 46);
+  const mui = dat([[0, 0], [7, -3.4], [7, 3.4]]);
+  const than = dat([[7, -3.4], [31, -3.4], [31, 3.4], [7, 3.4]]);
+  const dau = dat([[31, -3.4], [36, -3.4], [36, 3.4], [31, 3.4]]);
+  const vien = dat([[0, 0], [7, -3.4], [36, -3.4], [36, 3.4], [7, 3.4]]);
+  const ngoi = dat([[0, 0], [2.6, -1.2], [2.6, 1.2]]);
+  return [
+    { d: daGiac(trang), mau: "giay" },
+    { d: vienKin(trang), mau: "muc", net: NET },
+    ...dong.map((d) => ({ d: netGay(d), mau: "bong" as const, net: 1.6 })),
+    { d: daGiac(mui), mau: "giay" },
+    { d: daGiac(than), mau: "gap" },
+    { d: daGiac(dau), mau: "bong" },
+    { d: daGiac(ngoi), mau: "muc" },
+    { d: vienKin(vien), mau: "muc", net: 1.6 },
+  ];
+}
+
 /** The drawing of one desk object, as layers in the 64 x 64 frame. */
 export function hinhVat(vat: VatBan): LopVe[] {
   switch (vat) {
@@ -207,5 +239,7 @@ export function hinhVat(vat: VatBan): LopVe[] {
       return sticker();
     case "phieu-bau":
       return phieuBau();
+    case "bai-viet":
+      return baiViet();
   }
 }

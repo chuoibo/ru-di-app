@@ -722,12 +722,18 @@ export function IconButton({
   loading = false,
   disabled = false,
   tone = "accent",
+  tron = false,
 }: {
   icon: IconName;
   onPress?: () => void;
   accessibilityLabel: string;
   selected?: boolean;
   quiet?: boolean;
+  /**
+   * A round badge rather than the kit's soft square: a control laid ON a
+   * picture (the lead card's heart, owner's mockup 01/10), not on the page.
+   */
+  tron?: boolean;
   /** The surface's primary action: tone fill, ink-on-tone glyph. */
   solid?: boolean;
   /** Nothing to act on yet: faint glyph, no border. */
@@ -774,6 +780,7 @@ export function IconButton({
         styles.iconButton,
         { backgroundColor: background, borderColor: quiet || dim || solid ? "transparent" : colors.line },
         tatSolid && { borderColor: colors.lineStrong, borderStyle: "dashed" as const, borderWidth: 1.5 },
+        tron && styles.iconButtonTron,
       ]}
     >
       {loading ? <ActivityIndicator color={glyph} size="small" /> : <Ionicons color={glyph} name={icon} size={22} />}
@@ -1329,6 +1336,7 @@ const styles = StyleSheet.create({
   lyDo: { flexDirection: "row", alignItems: "flex-start", gap: 6, paddingHorizontal: 4 },
   lyDoChu: { flexShrink: 1 },
   iconButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  iconButtonTron: { borderRadius: 24 },
   // `maxWidth`: a chip never grows past the row that holds it; a long place
   // name ellipsizes inside it instead of running off the sheet (QA UI-099).
   chipTinh: { minHeight: 30, maxWidth: "100%", flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5 },

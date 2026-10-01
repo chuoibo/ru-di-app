@@ -86,7 +86,9 @@ export function ConDauTao({ tab, rail = false, coCap = false }: { tab: string; r
       </View>
       {/* Named like its neighbours, so the row reads as one strip of words. */}
       <Text importantForAccessibility="no" numberOfLines={1} style={[typography.caption, styles.nhan, { color: colors.accent }]}>
-        {rail ? "Tạo mới" : "Tạo"}
+        {/* One stamp, one name on the strip and the rail (owner's mockup,
+            01/10); a screen reader hears «Tạo mới» from the button itself. */}
+        Tạo
       </Text>
     </View>
   );

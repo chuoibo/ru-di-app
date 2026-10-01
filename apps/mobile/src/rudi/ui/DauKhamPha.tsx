@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { TABLIST, tabState } from "../../ui/a11y";
@@ -25,9 +25,21 @@ const MUC: readonly { muc: MucKhamPha; nhan: string }[] = [
  */
 export function DauKhamPha({ muc, onDoiMuc, phai }: { muc: MucKhamPha; onDoiMuc: (muc: MucKhamPha) => void; phai?: ReactNode }) {
   const { colors } = useRudiTheme();
+  const cuon = useRef<ScrollView>(null);
   return (
     <View style={styles.hang} testID="dau-kham-pha">
-      <ScrollView contentContainerStyle={styles.cuonTrong} horizontal showsHorizontalScrollIndicator={false} style={styles.cuon}>
+      <ScrollView
+        contentContainerStyle={styles.cuonTrong}
+        horizontal
+        // When large text makes the words outgrow the row, the open section
+        // is the one in view: Cộng đồng, the second word, scrolls itself in.
+        onContentSizeChange={() => {
+          if (muc === "community") cuon.current?.scrollToEnd({ animated: false });
+        }}
+        ref={cuon}
+        showsHorizontalScrollIndicator={false}
+        style={styles.cuon}
+      >
         <View {...TABLIST} style={styles.danhSach}>
           {MUC.map((m) => {
             const chon = m.muc === muc;

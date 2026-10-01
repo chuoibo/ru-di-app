@@ -57,9 +57,7 @@ import {
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, IconButton, ResponsiveRow, RudiButton, RudiScreen, SearchField, SectionHeader } from "../../ui";
 import type { DungDau } from "../../ui/DauKhamPha";
-import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
-import { SanKhau } from "../../ui/SanKhau";
-import { sanKhauThanhPho } from "../../art/thanh-pho";
+import { SanThanhPho } from "../../ui/SanThanhPho";
 import { Canh } from "../../ui/art/Canh";
 import { GuGlyph } from "../../ui/art/Gu";
 import { EmptyState } from "../../ui/EmptyState";
@@ -117,9 +115,6 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
 export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
-  // The city stage runs edge to edge on a phone (owner's mockup, 01/10); a
-  // tablet keeps it inside the reading column.
-  const dienThoai = useAdaptiveLayout().sizeClass === "compact";
   // Large text: the search box takes the whole line and the assistant button
   // drops under it. The placeholder here is thirty characters; it draws itself
   // on one line now (F44), and the full width is what keeps most of it legible.
@@ -140,7 +135,6 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   // When, and for which destination, the catalogue was last read.
   const lanDoc = useRef<{ diemDen: string | null; luc: number } | null>(null);
   const [soHang, setSoHang] = useState(HANG_MOI_LUOT);
-  const [rongSan, setRongSan] = useState(0);
   // Whose taste the badges are relative to. Starts as «chưa biết» because that
   // is true until the server has answered, and it is what the screen says.
   const [gu, setGu] = useState<Gu | null>(null);
@@ -277,9 +271,7 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           folds away while a search or filter is under way, so the results
           keep the top of the screen. */}
       {diemDen !== null && !dangLoc && query === "" ? (
-        <View onLayout={(e) => setRongSan(Math.round(e.nativeEvent.layout.width))} style={[styles.sanThanhPho, dienThoai && styles.sanTran]} testID="san-thanh-pho">
-          {rongSan > 0 ? <SanKhau coMoTa key={diemDen.id} san={sanKhauThanhPho(diemDen.id, diemDen.name)} width={Math.min(rongSan, 480)} /> : null}
-        </View>
+        <SanThanhPho id={diemDen.id} ten={diemDen.name} />
       ) : null}
       {/* One row at every font size: the field's own hint ellipsizes, so the
           assistant no longer drops to a line of its own at 1.3 (QA 23/09). */}
@@ -447,13 +439,11 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
 }
 
 const styles = StyleSheet.create({
-  sanThanhPho: { alignItems: "center", alignSelf: "stretch" },
-  // The screen's own gutter (`space.md`), given back so the stage meets both edges.
-  sanTran: { marginHorizontal: -16 },
   // Close under its heading, as one block (the column's gap is 18).
   soNoi: { marginTop: -14 },
   flex: { flex: 1 },
-  dau: { gap: 6 },
+  // Above the city stage, whose sky rises under this line (SanThanhPho).
+  dau: { gap: 6, zIndex: 1 },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
   timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   khung: { gap: 12 },

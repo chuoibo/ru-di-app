@@ -38,6 +38,7 @@ import {
   type IconName,
 } from "../ui";
 import type { DungDau } from "../ui/DauKhamPha";
+import { SanThanhPho } from "../ui/SanThanhPho";
 import { Canh } from "../ui/art/Canh";
 import { MediaSlot } from "../ui/MediaSlot";
 import { GuGlyph } from "../ui/art/Gu";
@@ -173,6 +174,11 @@ export function ExploreScreen({ dau }: { dau?: DungDau } = {}) {
           />
         </Inline>
       </View>
+      {/* The sample city as a stage, as on the live screen (finish review 02/10):
+          the first Khám phá a new person sees is the screen the owner approved.
+          The demo cannot change city, so its place line names the city and no
+          «đổi nơi khác»; its filter button and bell are the demo's own tools. */}
+      {!song && !filtering && query === "" ? <SanThanhPho id="d-da-lat" ten="Đà Lạt" /> : null}
       {session.inboxOpen ? (
         <EmptyState
           action={{ label: "Đóng", onPress: () => session.setInboxOpen(false) }}
@@ -459,7 +465,8 @@ export function PlaceDetailScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   // One line now (the wordmark left for Khám phá's header): the bell sits level with the place.
-  exploreHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  // Above the city stage, whose sky rises under this line (SanThanhPho).
+  exploreHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, zIndex: 1 },
   // Close under its heading, as one block (the column's gap is 18).
   soNoi: { marginTop: -14 },
   exploreBrand: { gap: 6, flexShrink: 1 },
