@@ -234,6 +234,10 @@
     // stamp in the middle, Cộng đồng a route with no column. Pure, compiled so
     // the strip's arithmetic and Khám phá's last section run as they ship.
     "src/rudi/ui/thanh-tab.ts",
+    // Khám phá's header (owner's mockup, 01/10): «Địa điểm | Cộng đồng» as a
+    // tablist, the right-hand control outside it. Rendered so the roles and
+    // the selected section are held as they ship.
+    "src/rudi/ui/DauKhamPha.tsx",
     "src/rudi/lui-ve.ts",
     // B3 (QA UI-041): the screen's overlay slot. Compiled so the hand-off runs
     // under React's own effect ordering, not read as source.
