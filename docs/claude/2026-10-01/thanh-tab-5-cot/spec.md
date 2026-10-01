@@ -152,11 +152,36 @@ Maestro: không flow nào chạm nhãn «Cộng đồng»; nhãn «Khám phá» 
   số đỏ, icon và nhãn vẫn xám.
 - **Thân Lên plan, bản đồ, thẻ «Kế hoạch Đà Lạt»** trong khung thanh tab: chỉ là minh hoạ, không thuộc đợt này.
 
-## Còn mở (chủ sản phẩm chọn khi duyệt spec)
+## Đã đóng (trước là «Còn mở»)
 
-- **Màu nhãn «Tạo».** Mockup để coral; tab đang chọn cũng coral, nên một thanh có hai nhãn coral cùng lúc. Tiêu chí
-  trong `feature-plan.md` ghi con dấu «không tranh màu với tab đang chọn». Đề xuất: nhãn «Tạo» dùng màu mực, chỉ
-  vòng tròn mang màu coral. Mặc định nếu chưa chọn: theo mockup (coral).
+- **Màu nhãn «Tạo»: coral, theo mockup.** Chủ sản phẩm duyệt spec với lời dặn «bám sát mockup» (02/10), nên giữ
+  mặc định đã ghi. Hai nhãn coral cùng lúc là cái giá đã biết.
+
+## Bổ sung khi lập kế hoạch (02/10)
+
+Rà code và hỏi lại chủ sản phẩm ra 8 điểm spec trên chưa đúng hoặc chưa đủ. Chúng thắng phần tương ứng ở trên.
+Kế hoạch: `docs/claude/2026-10-02/thanh-tab-5-cot/ke-hoach.md`.
+
+1. **Chủ đề** không sống trên tab: `/community/topic` là route stack re-export `CommunityScreen`. Trang đó giữ đầu
+   màn cũ (tiêu đề = chủ đề, cài đặt, nút đăng), không có hàng «Địa điểm | Cộng đồng». Bỏ ý «dòng #chủ đề ×» ở mục 5.
+2. **Nếp**: test Go (`duong_test.go`: `tabLayout`, `TestTabRutBangTabLayout`, `TestTabKhopLayout`) và test JS
+   `huong-dan-khop-ma` coi mọi route trong `app/(tabs)/` là một cột cách nhau một chạm. Bộ rút ghi thêm
+   `muc_trong_tab` (`{"community": "explore"}`); Go và JS học «route không cột»: không là tab của thanh, thanh vẫn
+   hiện trên nó nên các cột khác (trừ cột chủ) cách một chạm; tới nó từ tab khác là hai chạm («Khám phá», «Cộng đồng»).
+3. **Maestro**: `26-kham-pha-that.yaml` (dòng 26, 58, 124) chờ `"[0-9]+ nơi ở Đà Lạt"`, `38-anh-dia-diem.yaml:33`
+   chờ `"[0-9]+ nơi ở .*"`, subflow `_community.yaml:11` bấm «Đăng khoảnh khắc». Sửa theo chữ và lối mới. Mục «Chỗ
+   chạm» ở trên nói «không flow nào chạm» là sai.
+4. **Cỡ chữ 1.3** không chụp được trên web (react-native-web ghim `fontScale` = 1). Bằng chứng 320 × 1.3 lấy từ
+   Android emulator.
+5. **Thẻ đầu** giữ một dòng phụ mờ (sao · km · giờ) dưới mô tả: mockup vẽ dữ liệu mẫu ít trường, bỏ thì thẻ đầu nói
+   ít hơn các thẻ so sánh bên dưới.
+6. **Chi tiết mockup chưa có ở trên**: sân khấu thành phố tràn hết bề ngang ở điện thoại; «· đổi nơi khác ▾» coral,
+   tên thành phố màu mực; ô tìm Cộng đồng là `SearchField` viền tròn như Khám phá; thanh dọc tablet có logo «Rủ Đi»
+   trên con dấu.
+7. **Màu nhãn «Tạo»**: coral (xem «Đã đóng»).
+8. **Thẻ bài Cộng đồng** (chủ sản phẩm chọn 02/10 sau khi hỏi ý kiến thẩm mỹ): ảnh/video rộng hết cột, album nhiều
+   ảnh lật từng trang rộng hết cột có số «1/3»; nút Lưu 🔖 cuối hàng nút. **Không** bọc thẻ trắng (bài vẫn nằm trên
+   nền giấy, ngăn bằng nét mảnh — `direction.md`); **không** dòng «· Đà Lạt» (bài không có trường địa điểm).
 
 ## Ngoài phạm vi
 
