@@ -241,6 +241,9 @@
     // Khám phá's lead card (owner's mockup, 01/10): the price chip whole and
     // the other facts as one line. Pure, compiled so money stays uncut.
     "src/rudi/kham-pha/the-dan.ts",
+    // A community post's album pages one full-width picture at a time (owner's
+    // choice, 02/10). Pure, compiled so the page count matches the scroll.
+    "src/rudi/community/album.ts",
     "src/rudi/lui-ve.ts",
     // B3 (QA UI-041): the screen's overlay slot. Compiled so the hand-off runs
     // under React's own effect ordering, not read as source.

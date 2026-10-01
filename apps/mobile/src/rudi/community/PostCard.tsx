@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo, useEffect, useState } from "react";
-import { AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { BASE_URL } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
@@ -15,8 +15,10 @@ import { PhotoViewer } from "../ui/PhotoViewer";
 import { BookView } from "../diary/BookView";
 import { chiaSe, type KetQuaChiaSe } from "../web/chia-se";
 import { giuState } from "../../ui/a11y";
+import { nhanTrang, trangAlbum } from "./album";
 
-export function CommunityVideo({ media, person, active }: { media: Media; person: string; active: boolean }) {
+/** `kich`: the frame to fill (a post's full-width page); without it the review queue's fixed frame. */
+export function CommunityVideo({ media, person, active, kich }: { media: Media; person: string; active: boolean; kich?: { width: number; height: number } }) {
   const { colors } = useRudiTheme();
   const [webSource, setWebSource] = useState<{ key: string; uri: string } | null>(null);
   const [videoError, setVideoError] = useState(false);
@@ -46,7 +48,7 @@ export function CommunityVideo({ media, person, active }: { media: Media; person
   const player = useVideoPlayer(
     Platform.OS === "web" ? webURI : { uri: BASE_URL + media.url, headers, useCaching: false }, (p) => { p.loop = false; p.muted = true; });
   useEffect(() => { if (!active) player.pause(); const subscription = AppState.addEventListener("change", (state) => { if (state !== "active") player.pause(); }); return () => subscription.remove(); }, [active, player]);
-  return <View><VideoView player={player} nativeControls fullscreenOptions={{ enable: true }} style={styles.media} contentFit="contain" />{videoError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.inkSoft, padding: 12 }]}>Chưa mở được video. Mở lại câu chuyện để thử lại nhé.</Text> : null}</View>;
+  return <View><VideoView player={player} nativeControls fullscreenOptions={{ enable: true }} style={kich ?? styles.media} contentFit="contain" />{videoError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.inkSoft, padding: 12 }]}>Chưa mở được video. Mở lại câu chuyện để thử lại nhé.</Text> : null}</View>;
 }
 export function Action({ icon, label, accessibilityLabel, onPress, selected = false, disabled = false }: { icon: keyof typeof Ionicons.glyphMap; label: string; accessibilityLabel?: string; onPress: () => void; selected?: boolean; disabled?: boolean }) {
   const { colors } = useRudiTheme();
@@ -55,10 +57,19 @@ export function Action({ icon, label, accessibilityLabel, onPress, selected = fa
     <Text style={[typography.caption, { color: selected ? colors.accent : colors.inkSoft }]}>{label}</Text>
   </PressScale>;
 }
-export const PostCard = memo(function PostCard({ post, person, active = false, onLike, onComment, onMore, onTopic, onFollow, busy = false, detail = false }: {
-  post: Post; person: string; active?: boolean; onLike: () => void; onComment: () => void; onMore: () => void; onTopic?: (topic: string) => void; onFollow: () => void; busy?: boolean; detail?: boolean;
+export const PostCard = memo(function PostCard({ post, person, active = false, onLike, onComment, onMore, onTopic, onFollow, onSave, busy = false, detail = false }: {
+  post: Post; person: string; active?: boolean; onLike: () => void; onComment: () => void; onMore: () => void; onTopic?: (topic: string) => void; onFollow: () => void;
+  /** Keep or drop the post for later, right on its row (owner's choice, 02/10); the feed's own sheet still offers it too. */
+  onSave?: () => void; busy?: boolean; detail?: boolean;
 }) {
-  const { colors } = useRudiTheme(); const router = useRouter(); const motion = useMotion(); const [expanded, setExpanded] = useState(detail); const [photo, setPhoto] = useState<Media | null>(null);
+  const { colors, radius } = useRudiTheme();
+  // The album pages one picture the width of the post's column at a time,
+  // 4:3 like the owner's mockup; nothing is drawn until that width is known.
+  const [rongAlbum, setRongAlbum] = useState(0);
+  const [trangDangXem, setTrangDangXem] = useState(0);
+  const kichAnh = { width: rongAlbum, height: Math.round((rongAlbum * 3) / 4) };
+  const theoCuon = (e: NativeSyntheticEvent<NativeScrollEvent>) => setTrangDangXem(trangAlbum(e.nativeEvent.contentOffset.x, rongAlbum, post.media.length));
+  const soTrang = nhanTrang(trangDangXem, post.media.length); const router = useRouter(); const motion = useMotion(); const [expanded, setExpanded] = useState(detail); const [photo, setPhoto] = useState<Media | null>(null);
   // What «Chia sẻ» just did, said on the button itself for a few seconds (QA UI-136).
   const [daChiaSe, setDaChiaSe] = useState<string | null>(null);
   useEffect(() => {
@@ -79,15 +90,22 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
       {!expanded && post.body.length > 240 ? <Text style={[typography.label, { color: colors.accent }]}>Đọc tiếp</Text> : null}
     </Pressable>
     {post.diary ? <BookView compact={!detail} kind={post.diary_kind} document={post.diary} photo={(id) => imageSource(person, `/v2/community/media/${id}`)} /> : null}
-    {!post.diary && post.media.length ? <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.album} contentContainerStyle={{ gap: 8 }}>
-      {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={styles.media} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
-    </ScrollView> : null}
+    {!post.diary && post.media.length ? <View onLayout={(e) => setRongAlbum(Math.round(e.nativeEvent.layout.width))}>{rongAlbum > 0 ? <View>
+      <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={theoCuon} onMomentumScrollEnd={theoCuon} scrollEventThrottle={16} style={[styles.album, { borderRadius: radius.control }]}>
+        {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, kichAnh, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo kich={kichAnh} media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={kichAnh} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
+      </ScrollView>
+      {/* Which picture of how many; each picture already names itself to a screen reader. */}
+      {soTrang ? <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={[styles.soTrang, { backgroundColor: colors.card, borderRadius: radius.pill }]}><Text style={[typography.caption, { color: colors.ink }]}>{soTrang}</Text></View> : null}
+    </View> : null}</View> : null}
     {photo ? <PhotoViewer title="Ảnh khoảnh khắc" photos={post.media.filter((m) => m.type.startsWith("image/")).map((m) => ({ id: m.id, source: imageSource(person, m.url), caption: post.body }))} initialIndex={post.media.filter((m) => m.type.startsWith("image/")).findIndex((m) => m.id === photo.id)} onClose={() => setPhoto(null)} /> : null}
     {post.topics.length ? <View style={styles.topics}>{post.topics.map((t) => <Pressable key={t} accessibilityRole="button" onPress={() => onTopic ? onTopic(t) : router.push({ pathname: "/community/topic", params: { topic: t } } as never)} style={[styles.topic, { backgroundColor: colors.accentSoft }]}><Text style={[typography.caption, { color: colors.accent }]}>{t}</Text></Pressable>)}</View> : null}
     <View style={styles.actions}>
       <Action icon={post.liked ? "heart" : "heart-outline"} label={`${post.likes || "Thích"}`} accessibilityLabel={`${post.liked ? "Bỏ thích bài" : "Thích bài"}, ${post.likes} lượt thích`} selected={post.liked} disabled={busy} onPress={onLike} />
       <Action icon="chatbubble-outline" label={`${post.comments || "Bình luận"}`} accessibilityLabel={`Mở bình luận, ${post.comments} bình luận`} onPress={onComment} />
       <Action icon="paper-plane-outline" label={daChiaSe ?? "Chia sẻ"} accessibilityLabel={daChiaSe ?? "Chia sẻ bài"} onPress={() => { void chiaSe({ title: "Bài trên Rủ Đi", url: linkBai(post.id) }).then((kq) => setDaChiaSe(cauChiaSe(kq))); }} />
+      {onSave ? <PressScale accessibilityRole="button" accessibilityLabel={post.saved ? "Bỏ lưu bài" : "Lưu để đọc lại"} {...giuState(post.saved)} aria-disabled={busy} disabled={busy} onPress={onSave} style={[styles.luu, busy && { opacity: 0.45 }]}>
+        <Ionicons name={post.saved ? "bookmark" : "bookmark-outline"} size={21} color={post.saved ? colors.accent : colors.inkSoft} />
+      </PressScale> : null}
     </View>
   </View>;
 });
@@ -96,9 +114,10 @@ const styles = StyleSheet.create({
   avatarTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
   identity: { flexDirection: "row", alignItems: "center", gap: 10 }, identityText: { flex: 1, gap: 2 }, follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   body: { lineHeight: 26 }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 },
-  album: { marginHorizontal: -4 }, mediaFrame: { width: 296, borderRadius: 14, overflow: "hidden" }, media: { width: 296, height: 330 }, expandedPhoto: { height: 480 },
+  album: { overflow: "hidden" }, mediaFrame: { overflow: "hidden" }, media: { width: 296, height: 330 },
+  soTrang: { position: "absolute", top: 10, right: 10, paddingHorizontal: 8, paddingVertical: 3 },
   topics: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, topic: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8, minHeight: 48, minWidth: 48, justifyContent: "center" },
-  actions: { flexDirection: "row", gap: 12, flexWrap: "wrap" }, action: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 48, minWidth: 56, paddingHorizontal: 2 },
+  actions: { flexDirection: "row", gap: 12, flexWrap: "wrap" }, luu: { width: 48, height: 48, alignItems: "center", justifyContent: "center", marginLeft: "auto" }, action: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 48, minWidth: 56, paddingHorizontal: 2 },
 });
 
 /**
