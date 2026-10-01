@@ -77,11 +77,16 @@ test("máy chủ không khai chia_bill thì coi là chưa sẵn sàng", () => {
 
 test("hàng lời gọi chia_bill nói đúng việc, và không mời thử lại khi vô ích", () => {
   const job = (extra) => ({ id: "j", status: "failed", code: null, message_id: null, created_at: "", updated_at: "", ...extra });
-  const khongKhoan = job({ command: "chia_bill", code: "chia_bill_no_expenses" });
-  assert.equal(chuHangLoiGoi(khongKhoan).tieuDe, "Chưa gom được khoản chi");
-  assert.equal(chuHangLoiGoi(khongKhoan).cau, LOI_KET_QUA_AI.chia_bill_no_expenses);
-  assert.equal(thuLaiDuoc(khongKhoan), false);
-  assert.equal(thuLaiDuoc(job({ command: "chia_bill", code: "provider_unavailable" })), true);
+  // A provider outage is worth another try, in the bill's own words.
+  const hong = job({ command: "chia_bill", code: "provider_unavailable" });
+  assert.equal(chuHangLoiGoi(hong).tieuDe, "Chưa gom được khoản chi");
+  assert.match(chuHangLoiGoi(hong).cau, /thử lại.*Chia bill/);
+  assert.equal(thuLaiDuoc(hong), true);
+  // The tag message is gone: the same request would fail the same way.
+  assert.equal(thuLaiDuoc(job({ command: "chia_bill", code: "trigger_deleted" })), false);
+  // «Nothing to bill» is an answer in the room since ADR-0051, never a code
+  // a row has to word (the brain path that wrote chia_bill_no_expenses is gone).
+  assert.equal(LOI_KET_QUA_AI.chia_bill_no_expenses, undefined);
   // An older server echoes no command: the row is a plan row, as before.
   assert.equal(chuHangLoiGoi(job({})).tieuDe, "Chưa phác được tờ hẹn");
   assert.equal(chuHangLoiGoi(job({ status: "running", command: "chia_bill" })).tieuDe, "Đang gom khoản chi…");

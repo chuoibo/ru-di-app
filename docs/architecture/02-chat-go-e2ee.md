@@ -234,6 +234,9 @@ Các checkpoint trên là lịch sử; từ mốc này chúng đọc như sau.
   xoá. Chia bill đọc lượt chữ bằng engine Go, nháp khoản chi của một tin bằng
   `aiharness/dockhoan` + `domain/chatexpense`.
 - chat-e2e dùng `e2e/geministub` (Gemini giả ở loopback) thay `brainstub`.
+- `/chia-bill` không thấy khoản nào: engine trả một câu trong phòng (`cau.NhomChuaThayKhoan`,
+  `cau.DoiChuaThayKhoan`), job `succeeded`. Mã `chia_bill_no_expenses` (chỉ đường brain ghi) không còn; app
+  bỏ câu của nó khỏi `LOI_KET_QUA_AI`.
 - Luật không đổi: người trả là tác giả tin, không bao giờ là tên model viết;
   không đọc `messages.body` ngoài phần được chia sẻ; không ghi sổ.
 

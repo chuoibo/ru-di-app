@@ -144,16 +144,20 @@ export const LOI_GOI_AI: Record<string, string> = {
  * falls back to the row's own sentence.
  */
 export const LOI_KET_QUA_AI: Record<string, string> = {
-  chia_bill_no_expenses: "Rủ Đi AI chưa thấy khoản chi nào có số tiền trong đoạn chat gửi kèm. Bạn gửi kèm tin có số tiền, hoặc thêm khoản chi ở mục Chia bill.",
   trigger_deleted: "Tin nhờ Rủ Đi AI không còn nữa, nên câu trả lời không được gửi. Bạn gửi một tin mới có @Rủ Đi nhé.",
   // Word for word services/core/internal/aiharness/cau/cau.go (bangNhom);
   // tests/cau-chu-goi-ai.test.mjs holds it there.
   ai_tu_choi: "Rủ Đi AI vừa viết ra một câu không nên gửi nên đã dừng lại. Bạn nhờ lại theo cách khác nhé.",
 };
 
-/** A job whose answer would be the same on retry offers no «Thử lại». */
+/**
+ * A job whose answer would be the same on retry offers no «Thử lại». A bill
+ * split with nothing to bill is not a failed job any more: since ADR-0051 the
+ * Go engine says so in the room (cau.NhomChuaThayKhoan), and the code the
+ * deleted brain path wrote for it, chia_bill_no_expenses, no longer exists.
+ */
 export function thuLaiDuoc(request: AiInvocation): boolean {
-  return request.status === "failed" && request.code !== "chia_bill_no_expenses" && request.code !== "trigger_deleted";
+  return request.status === "failed" && request.code !== "trigger_deleted";
 }
 
 /**
