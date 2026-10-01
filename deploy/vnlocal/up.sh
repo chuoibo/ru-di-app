@@ -78,4 +78,19 @@ fi
 export RUDI_VNLOCAL_HOST="$host" RUDI_VNLOCAL_IP="$ip"
 echo "--- $host = $ip (đường $duong)" >&2
 cd "$(dirname "$0")/../.."
-exec docker compose -f deploy/vnlocal/compose.yml "$@"
+docker compose -f deploy/vnlocal/compose.yml "$@" || exit $?
+# ai-infer lives in core's network namespace (network_mode: service:core) and
+# stays in the namespace of the core container it started with: an `up` that
+# replaced core leaves the reranker answering no one, and every search runs
+# no_rerank (2026-10-01, after `up -d core rag-indexer`). Recreate it then.
+if [ "${1:-}" = "up" ]; then
+  core_id="$(docker compose -f deploy/vnlocal/compose.yml ps -q core 2>/dev/null || true)"
+  side_id="$(docker compose -f deploy/vnlocal/compose.yml ps -q ai-infer 2>/dev/null || true)"
+  if [ -n "$core_id" ] && [ -n "$side_id" ]; then
+    side_net="$(docker inspect "$side_id" --format '{{.HostConfig.NetworkMode}}' 2>/dev/null || true)"
+    if [ "$side_net" != "container:$core_id" ]; then
+      echo "--- core đổi container: tạo lại ai-infer trong namespace mạng mới" >&2
+      docker compose -f deploy/vnlocal/compose.yml up -d --no-deps --force-recreate ai-infer
+    fi
+  fi
+fi
