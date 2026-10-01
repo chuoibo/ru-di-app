@@ -38,7 +38,11 @@ type canh struct {
 //  2. The tab bar: every route whose route file sits in app/(tabs)/ (read
 //     from `tep`, kept in s.tab) is one tap from every other such route. The
 //     label is the tab's title, which is its manual's tieu_de; a test holds
-//     the set of tabs and each title to app/(tabs)/_layout.tsx.
+//     the set of tabs and each title to app/(tabs)/_layout.tsx. A route of
+//     app/(tabs)/ with no column (_rut.json muc_trong_tab: Cộng đồng, hosted
+//     by Khám phá) is not a tab: nothing on the strip leads to it, but the
+//     strip is on screen over it, so every column but its lit host is one tap
+//     from it.
 //  3. The manuals' di_toi, which carry the label a person taps. The first one
 //     a manual declares for a pair of screens is the one used, so the author
 //     orders them.
@@ -61,13 +65,27 @@ func (s *SoTay) dungDoThi(rut *banRut) {
 			nhan[tu][den] = n
 		}
 	}
+	tieuDe := func(man string) string {
+		if t, ok := s.trangCua[man]; ok {
+			return t.tieuDe
+		}
+		return ""
+	}
 	for _, a := range s.tab {
 		for _, b := range s.tab {
-			n := ""
-			if t, ok := s.trangCua[b]; ok {
-				n = t.tieuDe
+			them(a, b, tieuDe(b))
+		}
+	}
+	khongCot := make([]string, 0, len(s.banDo.chu))
+	for h := range s.banDo.chu {
+		khongCot = append(khongCot, h)
+	}
+	sort.Strings(khongCot)
+	for _, h := range khongCot {
+		for _, b := range s.tab {
+			if b != s.banDo.chu[h] {
+				them(h, b, tieuDe(b))
 			}
-			them(a, b, n)
 		}
 	}
 	for _, t := range s.trang {

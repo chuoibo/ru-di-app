@@ -561,3 +561,23 @@ func TestDuLieuNhungDayDu(t *testing.T) {
 		}
 	}
 }
+
+// muc_trong_tab names routes of app/(tabs)/ the strip draws no column for,
+// each hosted by a real column; anything else does not load.
+func TestMucTrongTabSai(t *testing.T) {
+	for _, ca := range []struct{ thay, loi string }{
+		{`"community": "explore"`, `"settings": "explore"`},
+		{`"community": "explore"`, `"community": "settings"`},
+		{`"community": "explore"`, `"community": "community"`},
+	} {
+		m := banSaoDuLieu(t)
+		rut := string(m[duongRut].Data)
+		if !strings.Contains(rut, ca.thay) {
+			t.Fatal("_rut.json no longer marks community as hosted by explore")
+		}
+		m[duongRut] = &fstest.MapFile{Data: []byte(strings.Replace(rut, ca.thay, ca.loi, 1))}
+		if _, err := nap(m); err == nil || !strings.Contains(err.Error(), "muc_trong_tab") {
+			t.Errorf("%s: %v, want a muc_trong_tab error", ca.loi, err)
+		}
+	}
+}

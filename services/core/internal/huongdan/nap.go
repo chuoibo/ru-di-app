@@ -86,7 +86,12 @@ type dauTrang struct {
 }
 
 type banRut struct {
-	Routes []tuyenRut `json:"routes"`
+	// MucTrongTab names the routes of app/(tabs)/ the strip draws no column
+	// for, each with the column that hosts it (community -> explore: Cộng đồng
+	// is Khám phá's second section). Read from MUC_TRONG_TAB in
+	// apps/mobile/src/rudi/ui/thanh-tab.ts, held there to `href: null`.
+	MucTrongTab map[string]string `json:"muc_trong_tab"`
+	Routes      []tuyenRut        `json:"routes"`
 }
 
 type tuyenRut struct {
@@ -109,11 +114,15 @@ type banDoRut struct {
 	diToi map[string]map[string]bool  // route -> routes its code navigates to
 	nhan  map[string]map[string]bool  // route -> labels printed on it
 	canh  map[string]map[canhRut]bool // route -> its labelled edges
-	tab   map[string]bool             // tab routes
+	tab   map[string]bool             // tab routes with a column on the strip
+	chu   map[string]string           // tab route with no column -> its host column
 }
 
+// laCanhMa: the code navigates tu -> den, or both are columns of the strip,
+// or tu is a route with no column (the strip is still on screen over it) and
+// den is any column but its host, which is lit and does nothing when tapped.
 func (b *banDoRut) laCanhMa(tu, den string) bool {
-	return b.diToi[tu][den] || (b.tab[tu] && b.tab[den])
+	return b.diToi[tu][den] || (b.tab[tu] && b.tab[den]) || (b.chu[tu] != "" && b.tab[den] && den != b.chu[tu])
 }
 
 // phaiNap is nap for package init: the manual this binary carries either
@@ -139,7 +148,7 @@ func nap(fsys fs.FS) (*SoTay, error) {
 		return nil, err
 	}
 	s := &SoTay{trangCua: map[string]*trang{}, theoID: map[string]int{}, coMan: map[string]bool{}}
-	bd := &banDoRut{diToi: map[string]map[string]bool{}, nhan: map[string]map[string]bool{}, canh: map[string]map[canhRut]bool{}, tab: map[string]bool{}}
+	bd := &banDoRut{diToi: map[string]map[string]bool{}, nhan: map[string]map[string]bool{}, canh: map[string]map[canhRut]bool{}, tab: map[string]bool{}, chu: map[string]string{}}
 	s.banDo = bd
 	for _, r := range rut.Routes {
 		s.cacMan = append(s.cacMan, r.Man)
@@ -158,6 +167,10 @@ func nap(fsys fs.FS) (*SoTay, error) {
 		}
 		for _, tep := range r.Tep {
 			if strings.HasPrefix(tep, thuMucTab) {
+				if chu, ok := rut.MucTrongTab[r.Man]; ok {
+					bd.chu[r.Man] = chu
+					break
+				}
 				bd.tab[r.Man] = true
 				s.tab = append(s.tab, r.Man)
 				break
@@ -166,6 +179,16 @@ func nap(fsys fs.FS) (*SoTay, error) {
 	}
 	sort.Strings(s.cacMan)
 	sort.Strings(s.tab)
+	// Every route with no column is a route of app/(tabs)/, and its host is a
+	// column: otherwise the graph would hang a section on nothing.
+	for man, chu := range rut.MucTrongTab {
+		if _, ok := bd.chu[man]; !ok {
+			return nil, fmt.Errorf("_rut.json: muc_trong_tab «%s» không phải route của %s", man, thuMucTab)
+		}
+		if !bd.tab[chu] {
+			return nil, fmt.Errorf("_rut.json: muc_trong_tab «%s» nằm trong «%s», không phải cột của thanh tab", man, chu)
+		}
+	}
 
 	tenTep, err := fs.Glob(fsys, mauSoTay)
 	if err != nil {

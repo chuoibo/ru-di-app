@@ -43,6 +43,13 @@
  *     is what lets the manual's money doors be held to a button that really
  *     leads there, not merely to a word printed somewhere on the screen. The
  *     label of such an object is a label too.
+ *   - tab routes with no column (`muc_trong_tab`): a route of `app/(tabs)/`
+ *     that the strip does not draw, with the column that hosts it
+ *     (`community` -> `explore`, Cộng đồng being Khám phá's second section).
+ *     Read from `MUC_TRONG_TAB` in `src/rudi/ui/thanh-tab.ts` and held to the
+ *     `href: null` screens of `app/(tabs)/_layout.tsx`: the two disagreeing is
+ *     an error, so the guide never counts as one tap a column that is not
+ *     on screen.
  *
  * Parsing is TypeScript's own parser (already a dev dependency), not regex:
  * comments are trivia rather than nodes, so a label mentioned only in a
@@ -447,7 +454,50 @@ export function rutBanDo() {
       tep: [...muc.tep].sort(),
     };
   });
-  return { routes };
+  return { muc_trong_tab: mucTrongTab(), routes };
+}
+
+/**
+ * The tab routes the strip draws no column for, each with its host column:
+ * `MUC_TRONG_TAB` of `src/rudi/ui/thanh-tab.ts`, which must name exactly the
+ * `href: null` screens of `app/(tabs)/_layout.tsx`.
+ */
+function mucTrongTab() {
+  const map = {};
+  const thanh = docNguon(join(THU_MUC_SRC, "rudi/ui/thanh-tab.ts"));
+  const tim = (n) => {
+    if (ts.isVariableDeclaration(n) && n.name.getText() === "MUC_TRONG_TAB" && n.initializer && ts.isObjectLiteralExpression(n.initializer)) {
+      for (const p of n.initializer.properties) {
+        if (ts.isPropertyAssignment(p) && ts.isStringLiteral(p.initializer)) map[p.name.getText().replace(/^["']|["']$/g, "")] = p.initializer.text;
+      }
+    }
+    ts.forEachChild(n, tim);
+  };
+  tim(thanh);
+  const an = [];
+  const layout = docNguon(join(THU_MUC_APP, "(tabs)/_layout.tsx"));
+  const timAn = (n) => {
+    if (ts.isJsxSelfClosingElement(n) && n.tagName.getText() === "Tabs.Screen") {
+      let ten = null;
+      let khongCot = false;
+      for (const a of n.attributes.properties) {
+        if (!ts.isJsxAttribute(a)) continue;
+        if (a.name.getText() === "name" && a.initializer && ts.isStringLiteral(a.initializer)) ten = a.initializer.text;
+        const bt = a.name.getText() === "options" && a.initializer && ts.isJsxExpression(a.initializer) ? a.initializer.expression : null;
+        if (bt && ts.isObjectLiteralExpression(bt)) {
+          khongCot = bt.properties.some((p) => ts.isPropertyAssignment(p) && p.name.getText() === "href" && p.initializer.kind === ts.SyntaxKind.NullKeyword);
+        }
+      }
+      if (ten !== null && khongCot) an.push(ten);
+    }
+    ts.forEachChild(n, timAn);
+  };
+  timAn(layout);
+  const khoa = Object.keys(map).sort();
+  if (JSON.stringify(khoa) !== JSON.stringify(an.sort())) {
+    throw new Error(`MUC_TRONG_TAB ${JSON.stringify(khoa)} khác các Tabs.Screen href: null ${JSON.stringify(an)} của app/(tabs)/_layout.tsx`);
+  }
+  return map;
 }
 
 /** Adds one parsed file's labels, targets and labelled edges to a route's sets. */

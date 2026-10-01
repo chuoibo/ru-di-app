@@ -45,6 +45,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 
 import { MAN_NEP_LUI } from "../dist-test/rudi/nep/phieu.js";
+import { MUC_TRONG_TAB } from "../dist-test/rudi/ui/thanh-tab.js";
 import {
   DUONG_BAN,
   DUONG_RUT,
@@ -118,8 +119,18 @@ function laManTien(man) {
 }
 
 /** Whether the app has a way from `tu` to `den`: its code, the tab bar, or a named exception. */
-function laCanhMa(tu, den, { rut, tab, canhNgoai }) {
-  return (rut.get(tu)?.di_toi ?? []).includes(den) || (tab.has(tu) && tab.has(den)) || canhNgoai.some((c) => c.tu === tu && c.den === den);
+/**
+ * Same rule as huongdan's `laCanhMa`: the code navigates there, or both are
+ * columns of the strip, or `tu` is a route with no column (the strip is still
+ * on screen over it) and `den` is a column other than its lit host.
+ */
+function laCanhMa(tu, den, { rut, tab, chu, canhNgoai }) {
+  return (
+    (rut.get(tu)?.di_toi ?? []).includes(den) ||
+    (tab.has(tu) && tab.has(den)) ||
+    (chu.has(tu) && tab.has(den) && den !== chu.get(tu)) ||
+    canhNgoai.some((c) => c.tu === tu && c.den === den)
+  );
 }
 
 /** Whether `tu` has a button labelled `nhan` that leads to `den` (`_rut.json` `canh`). */
@@ -340,13 +351,16 @@ const RUT_DA_COMMIT = readFileSync(DUONG_RUT, "utf8");
 const RUT_SINH_LAI = chuoiRut();
 const BAN_DA_COMMIT = readFileSync(DUONG_BAN, "utf8");
 const ROUTES = JSON.parse(RUT_DA_COMMIT).routes;
+/** Tab routes the strip draws no column for -> their host column (`muc_trong_tab`). */
+const CHU = new Map(Object.entries(JSON.parse(RUT_DA_COMMIT).muc_trong_tab ?? {}));
 const CAC_MAN = new Set(ROUTES.map((r) => r.man));
 const LITERAL = literalTrongMa();
 const NGU_CANH = {
   cacMan: CAC_MAN,
   literal: LITERAL,
   rut: new Map(ROUTES.map((r) => [r.man, r])),
-  tab: new Set(ROUTES.filter((r) => r.tep.some((p) => p.startsWith("app/(tabs)/"))).map((r) => r.man)),
+  tab: new Set(ROUTES.filter((r) => !CHU.has(r.man) && r.tep.some((p) => p.startsWith("app/(tabs)/"))).map((r) => r.man)),
+  chu: CHU,
   canhNgoai: CANH_NGOAI_RUT,
 };
 const SO_TAY = readdirSync(THU_MUC_SO_TAY)
@@ -427,6 +441,13 @@ test("(a) mỗi cạnh có nhãn là một cạnh của màn đó, mang một nh
     }
   }
   assert.ok(so >= 50, `chỉ rút được ${so} cạnh có nhãn`);
+});
+
+test("(b) Cộng đồng là route không cột: không là tab của thanh, cột chủ là Khám phá", () => {
+  assert.deepEqual(JSON.parse(RUT_DA_COMMIT).muc_trong_tab, { ...MUC_TRONG_TAB });
+  assert.ok(!NGU_CANH.tab.has("community"), "community bị tính là một cột của thanh");
+  assert.ok(laCanhMa("community", "plan", NGU_CANH), "thanh vẫn hiện trên Cộng đồng: Lên plan cách một chạm");
+  assert.ok(!laCanhMa("community", "explore", { ...NGU_CANH, rut: new Map() }), "cột chủ đang sáng không phải lối đi");
 });
 
 test("(b)(c)(d) mọi file sổ tay khớp mã", () => {
@@ -539,6 +560,7 @@ function nguCanhGo(routes = RUT_GO) {
     literal: LITERAL_GO,
     rut: new Map(routes.map((r) => [r.man, r])),
     tab: new Set(routes.filter((r) => r.tep.some((p) => p.startsWith("app/(tabs)/"))).map((r) => r.man)),
+    chu: new Map(),
     canhNgoai: [],
   };
 }

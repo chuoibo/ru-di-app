@@ -353,7 +353,9 @@ func TestChuanMan(t *testing.T) {
 	}
 }
 
-// tabLayout reads the tabs app/(tabs)/_layout.tsx renders: name -> title.
+// tabLayout reads the columns app/(tabs)/_layout.tsx renders: name -> title.
+// A screen marked `href: null` (Cộng đồng, Khám phá's second section) is a
+// route of the navigator with no column on the strip, so it is not a tab here.
 func tabLayout(t *testing.T) map[string]string {
 	t.Helper()
 	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "apps", "mobile", "app", "(tabs)", "_layout.tsx"))
@@ -361,8 +363,14 @@ func tabLayout(t *testing.T) map[string]string {
 		t.Fatal(err)
 	}
 	layout := map[string]string{}
-	for _, m := range regexp.MustCompile(`<Tabs\.Screen\s+name="([^"]+)"\s+options=\{\{\s*title:\s*"([^"]+)"`).FindAllStringSubmatch(string(raw), -1) {
-		layout[m[1]] = m[2]
+	tieuDe := regexp.MustCompile(`title:\s*"([^"]+)"`)
+	for _, m := range regexp.MustCompile(`<Tabs\.Screen\s+name="([^"]+)"\s+options=\{\{([^}]*)\}\}`).FindAllStringSubmatch(string(raw), -1) {
+		if regexp.MustCompile(`href:\s*null`).MatchString(m[2]) {
+			continue
+		}
+		if td := tieuDe.FindStringSubmatch(m[2]); td != nil {
+			layout[m[1]] = td[1]
+		}
 	}
 	if len(layout) < 4 {
 		t.Fatalf("read %d tabs from _layout.tsx", len(layout))
@@ -413,18 +421,65 @@ func TestTabRutBangTabLayout(t *testing.T) {
 		t.Fatalf("fake tab: %v, want [+settings]", lech)
 	}
 	// The other way: a tab the layout renders whose route file moved out of
-	// app/(tabs)/ in _rut.json.
+	// app/(tabs)/ in _rut.json. Lên plan, not Khám phá: Khám phá hosts
+	// Cộng đồng, and a host that is no column does not load at all
+	// (TestMucTrongTabSai).
 	m = banSaoDuLieu(t)
 	rut = string(m[duongRut].Data)
-	if !strings.Contains(rut, `"app/(tabs)/explore.tsx"`) {
-		t.Fatal("_rut.json no longer lists app/(tabs)/explore.tsx")
+	if !strings.Contains(rut, `"app/(tabs)/plan.tsx"`) {
+		t.Fatal("_rut.json no longer lists app/(tabs)/plan.tsx")
 	}
-	m[duongRut] = &fstest.MapFile{Data: []byte(strings.Replace(rut, `"app/(tabs)/explore.tsx"`, `"app/explore.tsx"`, 1))}
+	m[duongRut] = &fstest.MapFile{Data: []byte(strings.Replace(rut, `"app/(tabs)/plan.tsx"`, `"app/plan.tsx"`, 1))}
 	if gia, err = nap(m); err != nil {
 		t.Fatalf("the second probe must still load: %v", err)
 	}
-	if lech := lechTab(gia.tab, layout); !reflect.DeepEqual(lech, []string{"-explore"}) {
-		t.Fatalf("missing tab: %v, want [-explore]", lech)
+	if lech := lechTab(gia.tab, layout); !reflect.DeepEqual(lech, []string{"-plan"}) {
+		t.Fatalf("missing tab: %v, want [-plan]", lech)
+	}
+	// And a route with no column that _rut.json forgets to mark: the graph
+	// would count Cộng đồng as a column the strip does not draw.
+	m = banSaoDuLieu(t)
+	rut = string(m[duongRut].Data)
+	cot := `"community": "explore"`
+	if !strings.Contains(rut, cot) {
+		t.Fatal("_rut.json no longer marks community as hosted by explore")
+	}
+	m[duongRut] = &fstest.MapFile{Data: []byte(strings.Replace(rut, `"muc_trong_tab": {
+    `+cot+`
+  },`, `"muc_trong_tab": {},`, 1))}
+	if gia, err = nap(m); err != nil {
+		t.Fatalf("the third probe must still load: %v", err)
+	}
+	if lech := lechTab(gia.tab, layout); !reflect.DeepEqual(lech, []string{"+community"}) {
+		t.Fatalf("unmarked route with no column: %v, want [+community]", lech)
+	}
+}
+
+// Cộng đồng is Khám phá's second section: a tab route the strip draws no
+// column for. It is not one of the strip's tabs; the strip is still on screen
+// over it, so every other column is one tap away, labelled with its title,
+// except the host column, which is the lit one (tapping it does nothing).
+func TestRouteKhongCot(t *testing.T) {
+	if soTay.banDo.tab["community"] {
+		t.Fatal("community counted as a column of the strip")
+	}
+	if got := soTay.banDo.chu["community"]; got != "explore" {
+		t.Fatalf("host column of community: %q, want explore", got)
+	}
+	layout := tabLayout(t)
+	for _, den := range []string{"plan", "messages", "profile"} {
+		got, ok := soTay.duongToi("community", den)
+		if !ok || len(got) != 1 || got[0].Nhan != layout[den] {
+			t.Errorf("community -> %s: %v, want one tap on «%s»", den, buoc(got), layout[den])
+		}
+	}
+	for _, c := range soTay.ke["community"] {
+		if c.Den == "explore" && c.Nhan == layout["explore"] {
+			t.Errorf("community -> explore labelled «%s»: the lit column does nothing", c.Nhan)
+		}
+	}
+	if soTay.banDo.laCanhMa("community", "explore") && !soTay.banDo.diToi["community"]["explore"] {
+		t.Error("community -> explore counted as a strip edge")
 	}
 }
 
