@@ -159,6 +159,21 @@
   "sha8": "3b8b616a",
   "moTa": "N21 hồ sơ chat-0 qua mắt bạn (C1–C3), người cùng nhóm, người lạ (UI-100: «Thử lại» vô ích); bài Cộng đồng có ảnh lên tường không ảnh (UI-156)"
  },
+ "EV-N22-CHIP-ghep": {
+  "bytes": 176437,
+  "sha8": "b20d5254",
+  "moTa": "N22 chat khi máy chủ chưa có khoá AI: chip «Rủ Đi AI chưa sẵn sàng · Gửi như tin thường» ở nhóm C1–C3 và ở chat đôi; ở 320 ký hiệu đứng riêng một dòng (UI-167) và nhãn dải ghim mất «bản 1» (UI-023); lúc gửi vẫn hiện «Đang hỏi Rủ Đi AI…» (UI-164); sau khi gửi là tin thường, không lời gọi AI"
+ },
+ "EV-N22-LAB-ghep": {
+  "bytes": 270463,
+  "sha8": "b082178d",
+  "moTa": "N22 hai trang lab của server dev (fixture, dữ liệu bịa): /dev/tra-loi-song bảng Nếp đang nghĩ, đang viết, xong và hàng Rủ Đi AI trong luồng nhóm ở C1–C3, «Chạy thử» xong; không vùng aria-live nào quanh chữ đang hiện (UI-165); /dev/hai-lop-chat tấm «Xem» của chat đôi nói «cả hai bạn»"
+ },
+ "EV-N22-SAN-ghep": {
+  "bytes": 251875,
+  "sha8": "f21ad69c",
+  "moTa": "N22 nhóm như máy chủ có khoá (chỉ chat-capabilities viết lại ở trình duyệt): chip «Kèm 40 tin gần đây» thay vì 20 (UI-163), nút «Xem» 28×32 (UI-001); tấm «Xem» trượt dưới dải ghim ở C1 và C8 (UI-166); máy chủ thật từ chối 503 với «Thử lại», «Bỏ»; lời nhờ hỏng cũ «Thử lại lời nhờ» tắt không lý do (UI-091); bảng Nếp khi không có khoá"
+ },
  "EV-N26-CHU-NHOM-ghep": {
   "bytes": 66675,
   "sha8": "c88f8b53",

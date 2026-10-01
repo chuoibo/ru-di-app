@@ -4,17 +4,18 @@
   Nhánh ghi: `claude/busy-cray-vfmt4r`.
 - MODE = **AUDIT_ONLY**: không sửa mã app. Chỉ thêm tài liệu, ảnh bằng chứng và harness đo.
 - protocol_version: không áp dụng. Verdict: không có (chưa có reviewer thật; đây là báo cáo phát hiện).
-- Trạng thái: **checkpoint N21**.
+- Trạng thái: **checkpoint N22**.
   - Cả 122 issue của audit gốc đã được đo lại trên main (checkpoint retest 1 và 2).
-  - Bốn feature mới đã audit:
+  - Năm feature mới đã audit:
     - hai lớp chat hai người «đám bạn» / «cặp đôi» (#660, task #26): 8 issue (UI-124…UI-131);
     - Cộng đồng, tab đầu của app (task #14, ADR-0040): 17 issue (UI-132…UI-148);
     - sổ chuyến đi / Nếp v3: khép cuộc đi, giữ sổ, sửa, công khai, xoá (task #15, ADR-0039): 6 issue (UI-149…UI-154);
     - hồ sơ kể chuyện: sổ hành trình nhiều ngã rẽ, huy hiệu trưng bày, tường cá nhân v2, bình luận một tầng, đăng lại (task
-      #21, PR #658): 8 issue (UI-155…UI-162).
-  - Tổng 40 issue mới trên main (UI-123…UI-162).
-  - **Chưa đo:** Rủ Đi AI trong chat (#22) của `461eabf`, nằm trong ma trận dưới dạng NOT_TESTED; và bản đồ giấy Hành trình
-    của main `79baa1c` (#40), chưa có hàng.
+      #21, PR #658): 8 issue (UI-155…UI-162);
+    - Rủ Đi AI trong chat: chip bối cảnh, «Xem», lời gọi và hàng lời nhờ hỏng, chat đôi, Nếp, trang lab chữ hiện dần (task
+      #22, PR #654 và #659, ADR-0046): 5 issue (UI-163…UI-167).
+  - Tổng 45 issue mới trên main (UI-123…UI-167).
+  - **Chưa đo:** bản đồ giấy Hành trình của main `79baa1c` (#40), chưa có hàng.
   - Mục «Checkpoint» ở cuối là nguồn sự thật về phần đã và chưa đo.
 
 Tài liệu đi kèm:
@@ -22,7 +23,7 @@ Tài liệu đi kèm:
 - `issues.md`: issue mới (từ UI-123), mở rộng của issue gốc gặp lại ở feature mới, và các quan sát chưa thành issue.
 - `coverage-matrix.md`: mọi hàng đo trên main, có đếm (sinh từ sổ).
 - `evidence-manifest.md`: ảnh đã commit của phần này.
-- Harness: `tests/qa/mobile-ui-audit/` (README ở đó; các script `retest-*`, `n26-*`, `n14-*`, `n15-*` và `n21-*`).
+- Harness: `tests/qa/mobile-ui-audit/` (README ở đó; các script `retest-*`, `n26-*`, `n14-*`, `n15-*`, `n21-*` và `n22-*`).
 
 ## A. Phạm vi và môi trường
 
@@ -75,6 +76,17 @@ Tài liệu đi kèm:
     đụng máy chủ.
   - **Gián đoạn.** Máy khởi động lại thêm một lần sau khi đo xong N21, lúc đang chốt. Stack dựng lại bằng `start.sh`, dữ liệu
     còn nguyên; chỉ phần đếm SQL dưới đây chạy sau đó.
+- **Checkpoint N22, Rủ Đi AI trong chat.**
+  - **Không có khoá AI.** Mọi phòng báo `provider_unavailable`. Phòng «sẵn sàng» được dựng ở trình duyệt: `page.route` viết
+    lại đúng một phản hồi, `chat-capabilities` của phòng đang đo (ba lệnh thành `available`). Mọi lời gọi khác tới máy chủ
+    thật, và máy chủ từ chối thật (503). Riêng phần `loi-goi` viết lại thêm danh sách lời gọi của phòng, để hiện ba lời gọi
+    hỏng bịa: `plan` với `provider_unavailable`, `chia_bill` với `chia_bill_no_expenses`, `hoi` với `ai_tu_choi`.
+  - **Giữ tin ở trình duyệt.** Lượt `nhac:gui` giữ yêu cầu gửi tin 2,5 s rồi mới cho đi, để đọc được trạng thái chờ (UI-164).
+    Máy chủ nhận tin bình thường.
+  - **Server dev E2** (fixture bật, cổng 8091) cho hai trang lab `/dev/tra-loi-song` và `/dev/hai-lop-chat`; tắt sau khi
+    đo. `lab-prod` chạy trên bản export E1.
+  - **Gián đoạn.** Máy khởi động lại một lần lúc chốt N22, sau khi đã đo, phân xử và viết tài liệu xong. Không phần đo nào
+    chạy sau đó; stack dựng lại bằng `start.sh`.
 
 **Dữ liệu đã ghi lên stack thứ hai** (cục bộ, tổng hợp; phần lớn có chốt để không ghi lần hai):
 
@@ -113,6 +125,10 @@ Tài liệu đi kèm:
 | Checkpoint N21, `dang-lai` | chat-1 gửi lời mời kết bạn cho chat-17, chat-17 đồng ý, cả hai qua API. chat-1 đăng lại bài ảnh của chat-0 cho bạn bè |
 | Checkpoint N21, `trang` | chat-0 đăng 15 bài ngắn «Chỉ mình tôi» («Ghi chú trang thử 01…15») để tường có trang sau. chat-1 thích rồi bỏ thích bài ảnh: một sự kiện long poll, cuối cùng 0 lượt |
 | Checkpoint N21, không làm | Không xoá bình luận nào (không có lối: UI-158), không dùng lượt MP4, không gửi gì vào chat. Phần `hep` và `khong-phien` chỉ đọc |
+| Checkpoint N22, `nhac` và `san-sang` | chat-0 gửi ba tin vào nhóm chat-test: «@Rủ Đi tối nay nhóm mình đi đâu ngắm đèn?» (phòng như thật, chưa sẵn sàng), «@Rủ Đi gợi ý quán ăn tối gần hồ cho cả nhóm» (phòng dựng sẵn sàng, kèm 40 tin), «@Rủ Đi cuối tuần này đi đâu cho mát?» (phòng dựng sẵn sàng, «Chỉ gửi lời nhờ»). Mỗi tin kiểm trước khi gửi. Hai tin sau kéo theo hai lời gọi AI và một lần «Thử lại» cùng khoá; máy chủ từ chối cả ba (503), không lưu lời gọi nào |
+| Checkpoint N22, `api` và `chan` | Qua API: ở nhóm, một lời nhờ hợp lệ (503) và một lời nhờ trống (400); ở chat đôi chat-0/chat-1, một lời nhờ (503); ở chat đôi chat-20/chat-21 lúc đang chặn, mỗi phía một lời nhờ (403). chat-20 chặn chat-21 rồi bỏ chặn ngay; sau cùng không còn chặn |
+| Checkpoint N22, `nep` | chat-0 hỏi Nếp một câu ở Khám phá. Không có khoá: Nếp báo lỗi, không có câu trả lời |
+| Checkpoint N22, không làm | Không gửi tin nào trong chat đôi: phần `doi` chỉ gõ rồi xoá. Không bấm «Tự tạo kèo». Phần `xem-ghim`, `loi-goi` và trang lab chỉ đọc |
 
 Đếm bằng SQL chỉ đọc sau checkpoint N14: 4 bài cộng đồng (B1 `pending` phiên bản 2, đã công khai phiên bản 1; B2, B4
 `approved`; B3 «Bạn bè»); `community_audit` có 3 lần duyệt bài, 2 lần duyệt bình luận, 6 lần đổi người đọc của B3, không lần
@@ -131,6 +147,10 @@ theo dõi; 1 thông báo; 0 ghi chép riêng.
   nhận kết, 1 lượt MP4;
 - bài của chat-0: 2 công khai, 3 «Bạn bè», 18 «Chỉ mình tôi» (15 trong số đó là «Ghi chú trang thử»);
 - bài ảnh của chat-0: 4 bình luận, 0 lượt thích bài. Cả DB có 1 lượt thích bình luận và 1 bài đăng lại.
+
+Đếm bằng SQL chỉ đọc sau checkpoint N22 (01/10):
+- nhóm chat-test có 49 tin; 3 tin bắt đầu bằng «@Rủ Đi», đều của chat-0, đều là tin chữ;
+- `chat_ai_invocations`: 0 hàng. Không lời gọi AI nào được lưu, kể cả các lời gọi app gửi khi phòng được dựng sẵn sàng.
 
 **Team Đà Lạt.** Report của checkpoint 1 ghi Team Đà Lạt «chỉ được đọc». Câu đó sai: kịch bản F04 gốc chạy lại ở
 checkpoint 1 đã tạo 10 bill nháp trong nhóm này. Ở checkpoint 2, kịch bản F03 và F04 gốc chạy lại cũng ghi vào nó, đúng
@@ -167,13 +187,17 @@ nhánh lỗi (`TC-N15-DUNG-AI`); sổ do Nếp viết là BLOCKED (`TC-N15-DUNG-
 Ở N21 cũng theo khuôn đó: bốn màn (N21.S01–S04), 8 hàng native BLOCKED. Không có khoá AI, nên gợi ý của Nếp thật là BLOCKED
 (`TC-N21-NEP-AI-THAT`). Bộ dựng MP4 chưa nối vào worker, nên dùng lượt dựng là BLOCKED (`TC-N21-MP4-DUNG`).
 
-## B. Coverage thực tế (checkpoint N21)
+Ở N22 cũng theo khuôn đó: ba màn (N22.S01–S03), 6 hàng native BLOCKED. Trang lab (N22.S04) là trang dev, không có hàng
+native. Không có khoá AI, nên câu trả lời thật, chữ chạy qua SSE, khung `ai` của WebSocket phòng ở thành viên khác và chuyển
+giao sang thẻ là BLOCKED (`TC-N22-AI-THAT`). Các trạng thái đó được đọc trên trang lab, vẽ bằng chính thành phần app.
+
+## B. Coverage thực tế (checkpoint N22)
 
 Sinh bằng `tong-hop.mjs` từ sổ của main:
 
 | Phạm vi | PASS | FAIL | BLOCKED | NOT_TESTED | N/A |
 |---|---|---|---|---|---|
-| Tất cả (665 hàng; 611 web, 54 native) | 295 | 307 | 60 | 1 | 2 |
+| Tất cả (720 hàng; 660 web, 60 native) | 328 | 323 | 67 | 0 | 2 |
 
 | Nguồn hàng | Hàng | Kết quả |
 |---|---|---|
@@ -184,7 +208,7 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
 | Feature mới #14 Cộng đồng, `TC-N14-*` | 133 | 64 PASS, 48 FAIL, 21 BLOCKED (20 native, 1 tải video) |
 | Feature mới #15 sổ chuyến đi, `TC-N15-*` | 84 | 49 PASS, 20 FAIL, 15 BLOCKED (14 native, 1 Nếp thật) |
 | Feature mới #21 hồ sơ kể chuyện, `TC-N21-*` | 76 | 41 PASS, 25 FAIL, 10 BLOCKED (8 native, Nếp thật, dựng MP4) |
-| Giữ chỗ feature mới `TC-N-…` (#22) | 1 | NOT_TESTED |
+| Feature mới #22 Rủ Đi AI trong chat, `TC-N22-*` | 56 | 33 PASS, 16 FAIL, 7 BLOCKED (6 native, AI thật) |
 
 - Năm hàng retest PASS:
   - hai «đổi» đạt tiêu chí của checkpoint 1 (UI-033, UI-096);
@@ -214,8 +238,14 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
     - `TC-N21-M8`: khoảnh khắc «MỚI MỞ» ngay sau khi nhận kết, không lặp khi tải lại;
     - bốn hàng đọc từ số đo đã có: `TC-N21-TUONG-VUNG-BAM`, `TC-N21-BL-VUNG-BAM` (UI-001), `TC-N21-ANH-KHAY-C8` (UI-040),
       `TC-N21-NEP-DIEN-TAB` (UI-008).
+  - Ở checkpoint N22:
+    - baseline `TC-N22.S01-BASE` (chat nhóm), `.S02` (chat đôi) và `.S04` (trang lab) ở C1–C3. `.S01` và `.S02` ở C2 là
+      FAIL (UI-167): số đo hình sạch, nhưng chip gãy dòng, ký hiệu đứng riêng một dòng;
+    - `TC-N22-SAN-XEM` thêm ảnh chụp tấm «Xem» dưới dải ghim;
+    - bốn hàng đọc từ số đo đã có: `TC-N22-XEM-CAO` (UI-040), `TC-N22-GHIM-C2` (UI-023), `TC-N22-CHIP-HEP` (UI-167),
+      `TC-N22-NEP-LIVE` (UI-165).
 
-**Hàng đã rút** (44 test case, lý do ghi trong sổ và ở cuối `coverage-matrix.md`):
+**Hàng đã rút** (47 test case, lý do ghi trong sổ và ở cuối `coverage-matrix.md`):
 - Checkpoint 1:
   - bốn hàng của kịch bản F06 gốc chạy lại trên main: `TC-F06-DUOC-MOI-VAO-CUA`, `TC-F05.S01-DONG-Y`, `TC-F06-TU-BO-QUAN-TRI`,
     `TC-F06-MOI-LAI`;
@@ -242,16 +272,20 @@ Sinh bằng `tong-hop.mjs` từ sổ của main:
     (thay bằng phân xử bằng mắt), `TC-N21-TUONG-ANH-CD`, `TC-N21-BL-THICH`, `TC-N21-Q3-XOA-BL`, `TC-N21-KHONG-PHIEN`,
     `TC-N21-KHONG-PHIEN-DANG-NHAP`;
   - hàng giữ chỗ `TC-N-21-HO-SO`, thay bằng các hàng `TC-N21-*`.
+- Checkpoint N22:
+  - hai test case vì lỗi harness, đều đã đo lại (§E, sự cố 44–45): `TC-N22-API-TU-CHOI`, `TC-N22-DOI-SAN` (thay bằng
+    `TC-N22-DOI-SAN-TRONG` và `TC-N22-DOI-LAB-XEM`);
+  - hàng giữ chỗ `TC-N-22-AI-CHAT`, thay bằng các hàng `TC-N22-*`.
 
 ## C. Issues
 
-**40 issue sau checkpoint N21** (mới trên main: UI-123 từ checkpoint retest 1, UI-124…UI-131 từ N26, UI-132…UI-148 từ
-N14, UI-149…UI-154 từ N15, UI-155…UI-162 từ N21). Kết quả đo lại 122 issue cũ nằm ở `retest.md`.
+**45 issue sau checkpoint N22** (mới trên main: UI-123 từ checkpoint retest 1, UI-124…UI-131 từ N26, UI-132…UI-148 từ
+N14, UI-149…UI-154 từ N15, UI-155…UI-162 từ N21, UI-163…UI-167 từ N22). Kết quả đo lại 122 issue cũ nằm ở `retest.md`.
 
 | Mức | BUG | UX ISSUE | VISUAL POLISH |
 |---|---|---|---|
-| P2 | UI-123, UI-124, UI-132, UI-133, UI-134, UI-136, UI-149, UI-151, UI-155, UI-156 | UI-130, UI-135, UI-137, UI-138, UI-150, UI-157, UI-158 | |
-| P3 | UI-131, UI-140 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-139, UI-141, UI-142, UI-144, UI-145, UI-146, UI-147, UI-148, UI-152, UI-153, UI-154, UI-159, UI-160, UI-161, UI-162 | UI-143 |
+| P2 | UI-123, UI-124, UI-132, UI-133, UI-134, UI-136, UI-149, UI-151, UI-155, UI-156, UI-163, UI-166 | UI-130, UI-135, UI-137, UI-138, UI-150, UI-157, UI-158 | |
+| P3 | UI-131, UI-140 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-139, UI-141, UI-142, UI-144, UI-145, UI-146, UI-147, UI-148, UI-152, UI-153, UI-154, UI-159, UI-160, UI-161, UI-162, UI-164, UI-165 | UI-143, UI-167 |
 
 ### N26: hai lớp chat hai người (#660)
 
@@ -402,6 +436,38 @@ Issue mới và mở rộng:
 
 ![UI-160, UI-161, UI-157: khoảnh khắc «MỚI MỞ», trưng bày, lỗi của sổ](evidence/EV-N21-SO-ghep.jpg)
 
+### N22: Rủ Đi AI trong chat (#22, PR #654 và #659, ADR-0046)
+
+Tin «@Rủ Đi», «/plan», «/chia-bill» là tin thường. Chỉ khi máy chủ đã lưu tin, app mới nhờ AI, chỉ đích danh tin đó. Chip
+trên nút gửi nói thứ gì sẽ đi kèm («Kèm N tin gần đây · Xem · Chỉ gửi lời nhờ»), hoặc nói AI chưa sẵn sàng. Câu trả lời viết
+dần vào luồng, thành viên khác xem cùng hàng đó. Chat đôi có đúng AI của nhóm. Stack không có khoá AI: phòng «sẵn sàng» được
+dựng ở trình duyệt (một phản hồi viết lại), máy chủ thật từ chối 503, còn trạng thái cần model đọc trên trang lab. Phần đạt
+nằm ở đầu mục N22 của `issues.md`:
+- máy chủ đóng an toàn ở cả ba loại phòng; cặp đang chặn bị từ chối 403 từ cả hai phía, trước cả cổng nhà cung cấp;
+- chip chưa sẵn sàng nói thật; tin đi như tin thường, không có lời gọi AI;
+- khi sẵn sàng: tin lưu trước, rồi đúng một lời gọi; gói đúng như «Xem» liệt kê, không ảnh. «Thử lại» gửi lại đúng thân và
+  khoá; «Chỉ gửi lời nhờ» không gửi gói;
+- chat đôi nói bằng lời của hai người;
+- Nếp không có khoá thì nói rõ chưa trả lời được, không đổ cho mạng;
+- trang lab: ba trạng thái; «Reduce Motion» cho chữ tới từng câu trọn; bản production không có trang lab.
+
+Issue mới và mở rộng:
+- **UI-163 (P2, BUG).** Gói bối cảnh mặc định kèm 40 tin, gấp đôi mức 20 tin ADR-0046 đã chốt: `gomBoiCanhChat` được gọi
+  không có `soLuot`, nên lấy trần làm mặc định.
+- **UI-166 (P2, BUG).** Tấm «Xem» trượt dưới dải ghim «Tờ hẹn chung». Ở C1, dải che «Đóng bảng», tay cầm và câu «Rủ Đi AI sẽ
+  đọc đúng 40 tin…»; câu này không bao giờ cuộn ra được. Cùng gốc với UI-070 và UI-040 của audit gốc.
+- **P3:**
+  - UI-164: chip nói «Gửi như tin thường», nhưng lúc gửi luồng vẫn hiện «Đang hỏi Rủ Đi AI...»;
+  - UI-165: chữ hiện dần, dòng «đang đọc / đang nghĩ» và câu lỗi của Nếp không nằm trong vùng aria-live;
+  - UI-167: ở 320, chip gãy dòng, ký hiệu ✦ đứng riêng một dòng.
+- **Mở rộng issue gốc:**
+  - UI-001: «Xem» 28×32 và «Chỉ gửi lời nhờ» 90×32 trên web, vì react-native-web bỏ qua `hitSlop`;
+  - UI-023: nhãn dải ghim thành «Tờ hẹn chung · b…» ở 320;
+  - UI-040: tấm «Xem» cao 90–96% cửa sổ;
+  - UI-091: «Thử lại lời nhờ» tắt mà không nói lý do.
+
+![UI-163, UI-166, UI-001, UI-091: chip «Kèm 40 tin», tấm «Xem» dưới dải ghim ở C1 và C8, từ chối 503, lời nhờ hỏng cũ, Nếp](evidence/EV-N22-SAN-ghep.jpg)
+
 ### Retest: tóm tắt
 
 | Mức | Còn | Hết | Chưa đo lại |
@@ -474,6 +540,11 @@ Issue mới và mở rộng:
     tường gần như không đọc được. Lỗi nằm ở app (`napTuong`); máy chủ trả đúng.
 11. **UI-156** (mới ở N21, P2). Bài Cộng đồng có ảnh lên tường không ảnh. Route tường v2 chỉ có Go, nên không có oracle nào
     để so; cần một ca bài Cộng đồng có ảnh ở test PostgreSQL thật của `socialv2`.
+12. **UI-163** (mới ở N22, P2). Mỗi lời nhờ Rủ Đi AI mặc định gửi kèm 40 tin gần nhất cho nhà cung cấp AI, gấp đôi mức 20
+    ADR-0046 đã chốt. Lỗi ở app (một tham số không truyền); máy chủ nhận tới trần 40 nên không chặn. Thuộc nhóm quyền riêng
+    tư/consent trong các loại blocker của charter.
+13. **UI-166** (mới ở N22, P2). Tấm «Xem» trượt dưới dải ghim: ở C1, câu nói AI sẽ đọc bao nhiêu tin bị che, mà đó là lý do
+    tấm này có mặt. Cùng gốc z-index với UI-070 (P3 của audit gốc): một chỗ sửa cho cả hai.
 
 ![Retest P3 trên main, F08](evidence/EV-R-P3-F08-ghep.jpg)
 
@@ -482,13 +553,14 @@ Issue mới và mở rộng:
 Không file nào trong `apps/`, `services/`, `packages/`, `parity/`, `phase0/`.
 
 - `docs/claude/2026-09-29/mobile-ui-audit-main/`: `report.md`, `retest.md`, `issues.md`, `coverage-matrix.md`,
-  `evidence-manifest.md` và `.json`, `evidence/` (65 ảnh, 9,31 MiB):
+  `evidence-manifest.md` và `.json`, `evidence/` (68 ảnh, 9,98 MiB):
   - checkpoint 1: 10 ảnh ghép retest theo feature, 5 ảnh đơn cho bốn issue P1, ảnh ghép thanh tab;
   - checkpoint 2: 8 ảnh ghép P3 `EV-R-P3-…-ghep`;
   - checkpoint N26: 10 ảnh ghép `EV-N26-…-ghep` và tờ khung `EV-N26-NHAY-tre-800-khung-C1`;
   - checkpoint N14: 10 ảnh ghép `EV-N14-…-ghep`;
   - checkpoint N15: 11 ảnh ghép `EV-N15-…-ghep` và ảnh đơn `EV-N15-Q4-KE-C1`;
   - checkpoint N21: 7 ảnh ghép `EV-N21-…-ghep`, và ảnh đơn `EV-N15-Q4-HERO-C1` (phần bổ sung của N15).
+  - checkpoint N22: 3 ảnh ghép `EV-N22-…-ghep` (dựng ở cao 660 thay vì 700 để vừa ngân sách).
 - `tests/qa/mobile-ui-audit/`:
   - `kich-ban/retest-main.mjs`: đo lại theo issue.
     - Checkpoint 1: `r-f00`, `r-f01`, `r-f02`, `r-f03`, `r-f06`, `r-f07`, `r-f08`, `r-f09`, `r-f10` (cần `AUDIT_BASE` trỏ
@@ -529,14 +601,24 @@ Không file nào trong `apps/`, `services/`, `packages/`, `parity/`, `phase0/`.
     - `kich-ban/n21-phan-xu.mjs`: phân xử bằng mắt, gắn issue, hàng native, hàng Nếp thật và dựng MP4 BLOCKED, rút hàng giữ chỗ.
     - `kich-ban/n21-ghep.mjs`: ảnh ghép, và gắn chúng vào hàng.
     - `kich-ban/n15-nhat-ky.mjs` thêm phần `q4:hero`; `n15-phan-xu.mjs` gắn `TC-N15-Q4-HERO` vào UI-149.
-- `.repo-guard-allowlist.json`: 8 ghim mới ở checkpoint 2 (259), 11 ghim mới ở N26 (270), 10 ghim mới ở N14 (280), 12 ghim mới ở N15 (292), 8 ghim mới ở N21, tổng 300. Từ N14,
+  - Checkpoint N22:
+    - `kich-ban/n22-ai-chat.mjs` đo Rủ Đi AI trong chat. Các phần trên bản export: `api`, `chan`, `nhac` (gồm `nhac:gui`),
+      `san-sang` (gồm `san-sang:gui`), `doi`, `xem-ghim`, `loi-goi`, `nep`, `lab-prod`. Trên server dev (`AUDIT_BASE`):
+      `lab`, `lab-nhom`, `doi-lab`. `nhac:gui` và `san-sang:gui` gửi tin thật, mỗi tin kiểm trước khi gửi; `chan` chặn
+      rồi bỏ chặn; các phần còn lại chỉ đọc hoặc chỉ gõ.
+    - `kich-ban/n22-phan-xu.mjs`: phân xử bằng mắt, gắn issue, hàng native và hàng AI thật BLOCKED, rút hàng giữ chỗ.
+    - `kich-ban/n22-ghep.mjs`: ảnh ghép, và gắn chúng vào hàng.
+    - `ghim-ma-tran.mjs`: ghim `coverage-matrix.md` bằng path và digest cho luật `aggregate-base64-fragments`; chạy lại sau
+      mỗi lần `tong-hop` (sự cố 47).
+- `.repo-guard-allowlist.json`: 8 ghim mới ở checkpoint 2 (259), 11 ghim mới ở N26 (270), 10 ghim mới ở N14 (280), 12 ghim mới ở N15 (292), 8 ghim mới ở N21 (300), 3 ghim ảnh mới ở N22 và một ghim theo digest cho `coverage-matrix.md`
+  (luật `aggregate-base64-fragments`, sự cố 47), tổng 304. Từ N14,
   ghim mới mang annotation hẹp cho luật `aggregate-base64-fragments` (§E, sự cố 29); `chot-anh.mjs` ghi dạng đó.
 
 ## E. Verification
 
 | Kiểm | Kết quả |
 |---|---|
-| `kiem-tai-lieu` thư mục này, cả `--canary` (checkpoint N21) | identity xanh: 65 ảnh, 65 ghim khớp sha256, 9,31 MiB, 591 link ảnh, 65/65 ảnh có tài liệu dẫn tới ngoài manifest, 40 issue (17 P2, 23 P3) khớp hai bảng. 5/5 canary đỏ đúng dự đoán (`sha`, `bang`, `muc`, `link`, `thua`) |
+| `kiem-tai-lieu` thư mục này, cả `--canary` (checkpoint N22) | identity xanh: 68 ảnh, 68 ghim khớp sha256, 9,98 MiB, 642 link ảnh, 68/68 ảnh có tài liệu dẫn tới ngoài manifest, 45 issue (19 P2, 26 P3) khớp hai bảng. 5/5 canary đỏ đúng dự đoán (`sha`, `bang`, `muc`, `link`, `thua`) |
 | `kiem-tai-lieu` thư mục audit gốc, cả `--canary` | identity xanh: 163 ảnh, 163 ghim, 521 link, 122 issue (4 P1, 38 P2, 80 P3); 5/5 canary đỏ đúng dự đoán. Thư mục gốc không đổi ở checkpoint này |
 | `tu-kiem --dot-bien` | 20/20 xanh; M1–M4 đỏ đúng hàng dự đoán |
 | `retest-phan-xu.mjs` chạy hai lần sau mỗi lần sửa (checkpoint 2) | 411 → 452 → 452; thêm ghi chú UI-092: 452 → 453 → 453; rút giữ chỗ UI-027: 528 → 529 → 529 |
@@ -545,9 +627,10 @@ Không file nào trong `apps/`, `services/`, `packages/`, `parity/`, `phase0/`.
 | `n14-phan-xu.mjs` và `n14-ghep.mjs` (checkpoint N14) | Ghép lượt đầu, 9 ảnh: gắn 45 hàng (907 → 952). Phân xử: 952 → 1026 (73 hàng và một dòng rút hàng giữ chỗ), lượt hai 0. Ghép, 10 ảnh (thêm `EV-N14-FORM-ghep`): gắn 11 hàng (1026 → 1037), lượt sau 0. Đo thêm form ở tablet (`dang:C6`, `dang:C7`): 1037 → 1041; phân xử gắn UI-093: 1041 → 1043, lượt hai 0; ghép gắn 2 (1043 → 1045), lượt sau 0. Lúc chốt chạy lại cả hai: 1045 → 1045, 10 ảnh ghép dựng lại trùng từng byte với ảnh đã ghim. Rồi bước che mốc giờ của máy chủ (sự cố 28): 1045 → 1048, lượt hai 0, ghép 0. FAIL thiếu issue: 0 |
 | `n15-phan-xu.mjs` và `n15-ghep.mjs` (checkpoint N15) | Ghép lượt đầu, 10 ảnh: gắn 44 hàng (1130 → 1174). Đo thêm `hep` và kệ ở C2, C3: 1174 → 1178; ghép, 11 ảnh (thêm `EV-N15-HEP-ghep`): gắn 4 hàng (1178 → 1182). Phân xử: 1182 → 1220 (37 hàng và một dòng rút hàng giữ chỗ), lượt hai 0. Đánh số lại (sự cố 33): 1220 → 1230, lượt hai 0; ghép 0. Lúc chốt chạy lại cả hai: 1230 → 1230, 11 ảnh ghép dựng lại trùng từng byte với ảnh đã ghim. Rồi bước đặt ngày trong «» (sự cố 34): 1230 → 1231, lượt hai 0, ghép 0. FAIL thiếu issue: 0 |
 | `n21-phan-xu.mjs`, `n15-phan-xu.mjs` và `n21-ghep.mjs` (checkpoint N21) | Ghép lượt đầu, trước phân xử, 7 ảnh: gắn 37 hàng. Phân xử: 1360 → 1403 (42 hàng và một dòng rút hàng giữ chỗ), lượt hai 0. `n15-phan-xu` gắn `TC-N15-Q4-HERO`: 1403 → 1404, lượt hai 0. Ghép lại sau khi sửa nhãn một khung của `EV-N21-NEP-ghep`: gắn 2 hàng (1404 → 1406), lượt hai 0; sáu ảnh ghép dựng lại trùng từng byte, ảnh thứ bảy đổi đúng vì nhãn. FAIL thiếu issue: 0 |
+| `n22-phan-xu.mjs` và `n22-ghep.mjs` (checkpoint N22) | Ghép lượt đầu, trước phân xử, 3 ảnh: gắn 17 hàng (1437 → 1454), lượt hai 0. Đo thêm `lab-nhom`, `xem-ghim`, `doi`, `doi-lab` (sau sự cố 45 và 46): 1454 → 1471, gồm một dòng rút; hai lần ghép lại khi thêm khung gắn 3 và 4 hàng, lượt sau 0. Phân xử: 1475 → 1505 (29 hàng và một dòng rút hàng giữ chỗ), lượt hai 0; ghép sau phân xử 0. FAIL thiếu issue: 0 |
 | Bộ đo từ vỡ giữa chừng (`hep:tu-vo`, checkpoint N21) | mỗi từ của mọi đoạn chữ (text node) trên màn là một Range; từ nằm trên hơn một dòng là vỡ. Đỏ đúng chỗ đã dự đoán ở C2 («chân», cột 44, khớp `TC-R-UI-106`); xanh ở C1 (cột 114) và C3 (cột 84) |
 | Tự kiểm bộ đọc lý do (`--chi tu-kiem-ly-do`, checkpoint N14) | trên trang thật, trước mọi phần đo nút tắt: canary là «Đăng story» ở `/stories/new` (nút tắt có lý do), đọc ra đúng «Chọn một tấm ảnh trước đã.»; identity là «Gửi lên cộng đồng» ở `/community/new` (nút tắt không lý do), đọc ra rỗng. Script dừng nếu một trong hai sai |
-| `retest-bang.mjs` và `tong-hop.mjs` sau N21 | `retest.md` trùng từng byte với bản đã commit (N21 không đổi hàng retest); `coverage-matrix.md` và hai manifest sinh lại lần hai trùng từng byte lần một |
+| `retest-bang.mjs` và `tong-hop.mjs` sau N22 | `retest.md` trùng từng byte với bản đã commit (N22 không đổi hàng retest); `coverage-matrix.md` và hai manifest sinh lại lần hai trùng từng byte lần một |
 | Diff app từ `7ea1a7c` | 0 dòng trong `apps services packages parity phase0` |
 
 **Phép đo UI-123 trên hai bản** (checkpoint 1; `tham-do-lich-su-tab.mjs`, dalat-0, C1; số sau «#» là `history.length`):
@@ -707,15 +790,35 @@ Checkpoint N21:
     cho thấy «châ / n». Không rút hàng nào: hàng được lật bằng mắt, và phần `hep:tu-vo` đo bằng Range cho từng từ (bảng trên).
     Đây là cùng lỗi mà audit gốc đã ghi là UI-106.
 
+Checkpoint N22:
+44. **`TC-N22-API-TU-CHOI` expected sai.** Expected đoán mã HTTP 422 cho lời nhờ trống. Máy chủ trả 400 `invalid_invocation`,
+    đúng cách mọi lỗi đầu vào của chatassist trả (`invalid()` → 400), và app đọc lỗi theo `code` chứ không theo mã HTTP. Sửa
+    expected, đo lại: PASS. Lượt `api` đầu tiên còn dừng trước khi ghi hàng nào, vì `ghi.mjs` chặn một method lạ («API»):
+    sổ chỉ nhận RUNTIME-WEB, STATIC, HYPOTHESIS, và hàng API ghi RUNTIME-WEB như ở N14–N21.
+45. **`TC-N22-DOI-SAN` expected sai cho dữ liệu.** Hàng đòi chip «Kèm N tin · Xem» trong chat đôi chat-0/chat-1, nhưng luồng
+    đó trống (API: 0 tin; màn «Một lời mở đầu»), nên chip đúng phải là «Hai bạn chưa có tin nào, chỉ gửi lời nhờ». Tách thành
+    `TC-N22-DOI-SAN-TRONG` (luồng trống, màn thật: PASS) và `TC-N22-DOI-LAB-XEM` (chip có tin và tấm «Xem» của chat đôi trên
+    trang lab: PASS). Không ghi tin nào vào chat đôi để có dữ liệu.
+46. **Nhãn ảnh ghép lab sai.** Khung đầu của `EV-N22-LAB-ghep` ghi «cả trang», nhưng react-native-web cuộn một view bên trong,
+    nên ảnh `fullPage` chỉ là khung nhìn. Nửa dưới của trang (hàng Rủ Đi AI trong luồng nhóm) vì thế chưa được nhìn. Không rút
+    hàng nào, vì hàng tự động đọc DOM của cả trang. Sửa nhãn, thêm phần `lab-nhom` cuộn view đó tới luồng nhóm và chụp ở
+    C1–C3; baseline `.S04` phân xử trên cả hai nửa.
+47. **Ma trận vượt ngưỡng `aggregate-base64-fragments`.** Lượt commit đầu của N22 qua guard `staged`, vì mode này chỉ xét
+    dòng thêm. Guard `range` và `tree` thì chặn: cả file `coverage-matrix.md` cộng được 17757 byte mảnh «giống base64»
+    (889 mảnh), trên ngưỡng 16 KiB. 14692 byte trong số đó là link ảnh ghép (chữ `EV-…-ghep`, đích `evidence/EV-…-ghep.jpg`)
+    lặp ở 360 hàng; phần còn lại là ID và tiêu đề cột. Đây là dương tính giả: file không có dữ liệu mã hoá. Commit đó chưa push.
+    Xử lý theo `docs/security/repo-guard.md` §6: ghim `coverage-matrix.md` bằng path và digest với đúng luật đó, như lockfile
+    sinh máy, qua script mới `ghim-ma-tran.mjs`. Mỗi lần `tong-hop` sinh lại ma trận phải ghim lại; quên thì `range` và
+    `tree` chặn trước khi push. Đổi sang link kiểu tham chiếu cũng hết vượt, nhưng phải sửa `kiem-tai-lieu` và hai canary
+    của nó, nên không làm ở checkpoint này. Commit được sửa lại (amend, chưa push) rồi qua đủ cổng.
+
 Ngoài sổ, ở N14: khung của relay mang dấu xuống dòng ở cuối. Ghi chú của `TC-N14-WS-NHAY` và `TC-N14-WS-MAT-CHU` giữ
 nguyên trong sổ, và `tong-hop.mjs` thay dấu xuống dòng bằng dấu cách trong ma trận. Bản ghi khung của relay nay cắt khoảng
 trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đo nào đổi.
 
 ## F. Giới hạn và rủi ro còn lại
 
-- **Chưa đo.**
-  - Feature mới của `461eabf`: Rủ Đi AI trong chat (#22). Có hàng NOT_TESTED trong ma trận.
-  - Bản đồ giấy Hành trình của main `79baa1c` (#40): chưa có hàng.
+- **Chưa đo.** Bản đồ giấy Hành trình của main `79baa1c` (#40): chưa có hàng.
 - **Giới hạn riêng của N26:**
   - AI không có khoá nên chip sẵn sàng, tấm «Xem», câu trả lời và chân thẻ «· dùng gu của …» chỉ đo trên trang lab, hoặc
     BLOCKED (§A).
@@ -767,6 +870,18 @@ trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đ
     máy thật.
   - Sau khi đóng ảnh toàn màn, URL vẫn giữ `?photo=1`, nên tải lại thì ảnh mở lại (đọc mã: `BaiChiTietScreen.tsx:73` mở ảnh
     «khi tới»). Chưa đo, không ghi thành issue.
+- **Giới hạn riêng của N22:**
+  - Không có khoá AI. «Sẵn sàng» là dựng: một phản hồi viết lại ở trình duyệt. Máy chủ chưa từng nhận một lời gọi khi có khoá;
+    câu trả lời, SSE, khung `ai` của WebSocket phòng, chuyển giao sang thẻ và chất lượng câu trả lời là BLOCKED.
+  - Chữ hiện dần và dòng «đang đọc» chỉ đo trên trang lab (cùng thành phần, dữ liệu bịa). C9 đo qua công tắc «Reduce Motion»
+    của lab; màn thật lấy giá trị đó từ `useMotion().reduced` (STATIC), chưa đo bằng `prefers-reduced-motion`.
+  - Chuỗi hỏi tiếp (tối đa 6 lượt theo ADR-0046) chưa đo, vì không có câu trả lời nào để hỏi tiếp.
+  - Hàng lời nhờ hỏng đo bằng danh sách viết lại với ba mã lỗi; các mã còn lại chưa đo.
+  - Chat đôi trên màn thật chỉ có luồng trống; chip có tin và tấm «Xem» của chat đôi đo trên trang lab. Cặp đôi chat-8/chat-9
+    chỉ đọc capabilities. Màn chat đôi lúc đang chặn khi gõ «@Rủ Đi» chưa đo; phần chặn đo qua API.
+  - Cấu hình: chip chưa sẵn sàng C1–C3 (nhóm và chat đôi); chip sẵn sàng C1, C2, C8; tấm «Xem» C1, C2, C8; trang lab C1–C3;
+    phần còn lại chỉ ở C1. Tablet (C6, C7) chưa đo cho chip và tấm.
+  - Native: `hitSlop` của hai nút trên chip (UI-001) là STATIC; chip gãy dòng trên Yoga (UI-167) là HYPOTHESIS.
 - **Chỉ web.** Native Android và iOS vẫn BLOCKED như audit gốc; phần native của từng issue không được đo lại.
 - **Cấu hình.** Phần lớn issue chỉ đo lại ở cấu hình chính (thường là C1). Một số issue nêu nhiều cấu hình mà chỉ đo một:
   - UI-059 chỉ ở C1, trong khi tiêu chí nêu C1–C3;
@@ -803,12 +918,13 @@ trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đ
   - Checkpoint N21: hồ sơ kể chuyện (#21). 76 hàng `TC-N21-*` (41 PASS, 25 FAIL, 10 BLOCKED: 8 native, Nếp thật, dựng MP4),
     8 issue mới (UI-155…UI-162), tám mở rộng của issue gốc, Q3 đã kết luận thành UI-158. Phần hero của UI-149 đã đo. Mọi ảnh
     ghép đã mở ra xem; 8 ảnh mới đã ghim.
-- **Bước kế:** #22 → #40. #40 là bản đồ giấy Hành trình trên main `79baa1c`, cần bản web dựng từ commit đó. Mỗi feature đi
-  đủ chuỗi feature → màn → lớp → trạng thái như audit gốc, issue mới đánh số từ UI-163.
-- **Ngân sách ảnh.** Thư mục ảnh đã 9,31 MiB trên mức tự đặt 10 MiB. #22 và #40 cần ảnh ghép gọn hơn; nếu vẫn vượt thì nới
-  ngân sách và ghi lý do ở đây.
-- **Nếu bị ngắt:** #22 vẫn là NOT_TESTED trong ma trận; #40 chưa có hàng. Không phần nào ở trên được tuyên bố là xong
-  ngoài những gì liệt kê ở đây.
+  - Checkpoint N22: Rủ Đi AI trong chat (#22). 56 hàng `TC-N22-*` (33 PASS, 16 FAIL, 7 BLOCKED: 6 native, AI thật), 5 issue
+    mới (UI-163…UI-167), bốn mở rộng của issue gốc. Mọi ảnh ghép đã mở ra xem; 3 ảnh mới đã ghim.
+- **Bước kế:** #40, bản đồ giấy Hành trình trên main `79baa1c`, cần bản web dựng từ commit đó. Đi đủ chuỗi feature → màn →
+  lớp → trạng thái như audit gốc; issue mới đánh số từ UI-168.
+- **Ngân sách ảnh.** Thư mục ảnh đã 9,98 MiB trên mức tự đặt 10 MiB, nên #40 không còn chỗ. Trước khi commit ảnh của #40
+  phải nới ngân sách: dự kiến 12 MiB, vì bản đồ giấy chỉ chứng minh được bằng ảnh. Lý do và con số sẽ ghi ở checkpoint #40.
+- **Nếu bị ngắt:** #40 chưa có hàng. Không phần nào ở trên được tuyên bố là xong ngoài những gì liệt kê ở đây.
 
 ### Tiến độ
 
@@ -821,9 +937,9 @@ trắng ở cuối; khung chuyển cho trang vẫn giữ nguyên. Không số đ
 | #26 hai lớp chat (98 hàng) | xong | 100% |
 | #14 Cộng đồng (133 hàng) | xong | 100% |
 | #15 sổ chuyến đi (84 hàng, gồm hàng hero đo ở N21) | xong | 100% |
-| #21 hồ sơ kể chuyện, tường v2 (76 hàng) | xong ở checkpoint này | 100% |
-| #22 Rủ Đi AI trong chat | chưa (ước 40–60 hàng; phần AI thật BLOCKED) | 0% |
+| #21 hồ sơ kể chuyện, tường v2 (76 hàng) | xong | 100% |
+| #22 Rủ Đi AI trong chat (56 hàng; phần AI thật BLOCKED) | xong ở checkpoint này | 100% |
 | #40 bản đồ giấy Hành trình (main `79baa1c`) | chưa (ước 50–70 hàng) | 0% |
 
-Đã đo 1593 hàng (929 của audit gốc, 664 trên main) trên tổng ước 1680–1720 hàng, tức khoảng 92–95%. Không con số nào ở
+Đã đo 1649 hàng (929 của audit gốc, 720 trên main) trên tổng ước 1700–1720 hàng (#40 ước 50–70), tức khoảng 96–97%. Không con số nào ở
 đây nói app đúng; nó chỉ nói phần nào đã được đo.

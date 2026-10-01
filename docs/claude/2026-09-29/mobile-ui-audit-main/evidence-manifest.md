@@ -1,6 +1,6 @@
 # Evidence manifest
 
-Ảnh bằng chứng đã commit của audit (65 ảnh, tổng 9.31 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
+Ảnh bằng chứng đã commit của audit (68 ảnh, tổng 9.98 MiB). Mỗi ảnh được ghim path + sha256 trong `.repo-guard-allowlist.json`. Ảnh gốc PNG, số đo JSON và video nằm ngoài git.
 
 | Ảnh | Mô tả | Byte | sha256 (8 ký tự đầu) |
 |---|---|---|---|
@@ -36,6 +36,9 @@
 | [EV-N21-TUONG-ghep](evidence/EV-N21-TUONG-ghep.jpg) | N21 khay chia sẻ, đăng lại (câu xác nhận ngoài khung nhìn, UI-159), bài gốc không lộ cho người không có quyền; trang 2 của tường bị cắt về 20 bài khi long poll trả về (UI-155) | 188210 | `50ddb733` |
 | [EV-N21-VAO-ghep](evidence/EV-N21-VAO-ghep.jpg) | N21 lối vào sổ hành trình: thẻ trên tab Cá nhân ở C1–C3; mục «Thành tích · Cấp và huy hiệu…» mở màn «Hành trình» (UI-162); không phiên: «Thành tích» bản cũ có nhãn «Demo», không lối đăng nhập (UI-082) | 172567 | `bcf4ea92` |
 | [EV-N21-XEM-ghep](evidence/EV-N21-XEM-ghep.jpg) | N21 hồ sơ chat-0 qua mắt bạn (C1–C3), người cùng nhóm, người lạ (UI-100: «Thử lại» vô ích); bài Cộng đồng có ảnh lên tường không ảnh (UI-156) | 197809 | `3b8b616a` |
+| [EV-N22-CHIP-ghep](evidence/EV-N22-CHIP-ghep.jpg) | N22 chat khi máy chủ chưa có khoá AI: chip «Rủ Đi AI chưa sẵn sàng · Gửi như tin thường» ở nhóm C1–C3 và ở chat đôi; ở 320 ký hiệu đứng riêng một dòng (UI-167) và nhãn dải ghim mất «bản 1» (UI-023); lúc gửi vẫn hiện «Đang hỏi Rủ Đi AI…» (UI-164); sau khi gửi là tin thường, không lời gọi AI | 176437 | `b20d5254` |
+| [EV-N22-LAB-ghep](evidence/EV-N22-LAB-ghep.jpg) | N22 hai trang lab của server dev (fixture, dữ liệu bịa): /dev/tra-loi-song bảng Nếp đang nghĩ, đang viết, xong và hàng Rủ Đi AI trong luồng nhóm ở C1–C3, «Chạy thử» xong; không vùng aria-live nào quanh chữ đang hiện (UI-165); /dev/hai-lop-chat tấm «Xem» của chat đôi nói «cả hai bạn» | 270463 | `b082178d` |
+| [EV-N22-SAN-ghep](evidence/EV-N22-SAN-ghep.jpg) | N22 nhóm như máy chủ có khoá (chỉ chat-capabilities viết lại ở trình duyệt): chip «Kèm 40 tin gần đây» thay vì 20 (UI-163), nút «Xem» 28×32 (UI-001); tấm «Xem» trượt dưới dải ghim ở C1 và C8 (UI-166); máy chủ thật từ chối 503 với «Thử lại», «Bỏ»; lời nhờ hỏng cũ «Thử lại lời nhờ» tắt không lý do (UI-091); bảng Nếp khi không có khoá | 251875 | `f21ad69c` |
 | [EV-N26-CHU-NHOM-ghep](evidence/EV-N26-CHU-NHOM-ghep.jpg) | UI-128: chữ của nhóm trong chat hai người, «Cả nhóm thấy cùng một màu.» ở cài đặt, «Rủ hội một buổi» ở phòng cặp đôi | 66675 | `c88f8b53` |
 | [EV-N26-CHUYEN-ghep](evidence/EV-N26-CHUYEN-ghep.jpg) | UI-126, UI-127, UI-125: từ đám bạn thành cặp đôi, hàng mời «Một đôi», màn tới không nhắc lời đề nghị, «Đồng ý là một đôi», không bìa M6, phía người đề nghị vẫn bốn công cụ | 144692 | `9d5a00b7` |
 | [EV-N26-GU-ghep](evidence/EV-N26-GU-ghep.jpg) | N26 «Gu của hai bạn»: lời hứa nói cả chat, «Bật lại cho chat», và UI-129 (dòng nói ngược nhau, câu lỗi dưới lớp phủ khi lệnh hỏng) | 157280 | `6744806d` |

@@ -2406,6 +2406,38 @@
       "rules": [
         "controlled-artifact"
       ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N22-CHIP-ghep.jpg",
+      "sha256": "b20d525485a2170dccc76e6ef202a1ebe82b9ce5934d1371c8bf8045012d5063",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N22-LAB-ghep.jpg",
+      "sha256": "b082178dcf54e68851d3bb60e88663b97257c0d64ebd514861e3ba4496dde174",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Bằng chứng ảnh của phần tiếp theo audit UI/UX mobile (docs/claude/2026-09-29/mobile-ui-audit-main): ảnh chụp bản web của main trên stack cục bộ thứ hai với dữ liệu seed tổng hợp, không có số điện thoại, không có dữ liệu người thật. Người giao việc cho phép commit ảnh của đợt audit này và các phần sau pipeline của nó. Đổi một byte phải ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/evidence/EV-N22-SAN-ghep.jpg",
+      "sha256": "f21ad69c84169b46306d066e6861bf1191cbad56402a80181a3c81878c61874e",
+      "rules": [
+        "controlled-artifact"
+      ]
+    },
+    {
+      "reason": "repo-guard: allow=aggregate-base64-fragments reason=audit-evidence-path · Ma trận coverage sinh máy (tong-hop.mjs) của audit UI/UX mobile trên main. Luật aggregate-base64-fragments đếm đường dẫn ảnh bằng chứng, ID ảnh và ID test case như mảnh base64; file không có dữ liệu mã hoá, số điện thoại hay token (đã quét). Ghim theo digest như lockfile sinh máy (docs/security/repo-guard.md §6). Mỗi lần tong-hop sinh lại ma trận thì ghim lại.",
+      "path": "docs/claude/2026-09-29/mobile-ui-audit-main/coverage-matrix.md",
+      "sha256": "0ca85cd1b05ee49fd63ecd67aef4a0a55e085150ac1f53e95dc3bc1d5e26ffb3",
+      "rules": [
+        "aggregate-base64-fragments"
+      ]
     }
   ]
 }

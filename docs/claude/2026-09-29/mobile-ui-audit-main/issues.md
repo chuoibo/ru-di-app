@@ -17,6 +17,10 @@
   bình luận một tầng, ảnh toàn màn kèm khay, đăng lại. Thêm UI-155…UI-162. Mục «N21» nói phần nào đạt; mục «Mở rộng (đo ở
   N21)» ghi tám issue của audit gốc gặp lại. Quan sát Q3 đóng ở đây (UI-158). Cùng checkpoint, phần hero quyết toán của UI-149
   đã đo được trên màn (không còn là giả thuyết).
+- Checkpoint N22 audit Rủ Đi AI trong chat (task #22, AI v2 PR #654, chat hai người #659; ADR-0046): chip bối cảnh, «Xem»,
+  «Chỉ gửi lời nhờ», lời gọi và hàng lời nhờ hỏng, chat đôi, Nếp, trang lab chữ hiện dần. Stack không có khoá AI: phòng «sẵn
+  sàng» dựng bằng cách viết lại một phản hồi ở trình duyệt, câu trả lời thật BLOCKED. Thêm UI-163…UI-167. Mục «N22» nói phần
+  nào đạt; mục «Mở rộng (đo ở N22)» ghi bốn issue của audit gốc gặp lại.
 - MODE = AUDIT_ONLY: không issue nào được sửa. «Trạng thái sửa» của mọi issue là *chưa sửa*; «Retest» là
   *không áp dụng*.
 - Phân loại, mức và phương pháp như audit gốc: BUG · UX ISSUE · VISUAL POLISH; P0–P3; RUNTIME-WEB, STATIC,
@@ -26,8 +30,8 @@
 
 | Mức | Issue |
 |---|---|
-| P2 | UI-123, UI-124, UI-130, UI-132, UI-133, UI-134, UI-135, UI-136, UI-137, UI-138, UI-149, UI-150, UI-151, UI-155, UI-156, UI-157, UI-158 |
-| P3 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-131, UI-139, UI-140, UI-141, UI-142, UI-143, UI-144, UI-145, UI-146, UI-147, UI-148, UI-152, UI-153, UI-154, UI-159, UI-160, UI-161, UI-162 |
+| P2 | UI-123, UI-124, UI-130, UI-132, UI-133, UI-134, UI-135, UI-136, UI-137, UI-138, UI-149, UI-150, UI-151, UI-155, UI-156, UI-157, UI-158, UI-163, UI-166 |
+| P3 | UI-125, UI-126, UI-127, UI-128, UI-129, UI-131, UI-139, UI-140, UI-141, UI-142, UI-143, UI-144, UI-145, UI-146, UI-147, UI-148, UI-152, UI-153, UI-154, UI-159, UI-160, UI-161, UI-162, UI-164, UI-165, UI-167 |
 
 ---
 
@@ -1018,6 +1022,164 @@ Tám issue của `docs/claude/2026-09-27/mobile-ui-audit/issues.md` gặp lại 
 | UI-093 (tablet: trải hết bề ngang) | Sổ hành trình: thẻ ngã rẽ và hàng huy hiệu rộng 720 ở C6, 912 ở C7 (nút 686, 878), trong khi bản đồ bốn tuyến giữ 560 (`AchievementsLive.tsx:259`: `routeMap` có `maxWidth: 560`, thẻ thì không) | `TC-N21-HT-TABLET` C6, C7 · [EV-N21-HT-ghep](evidence/EV-N21-HT-ghep.jpg) |
 | UI-100 («Thử lại» vô ích với nội dung không dành cho mình) | Người lạ mở hồ sơ: «Chưa mở được hồ sơ · Hồ sơ này chỉ bạn bè hoặc người cùng nhóm mới xem được. Gửi lời mời kết bạn trước nhé.» kèm «Thử lại». Chạm thì gọi lại một lần, nhận 403, khối y nguyên; màn không có lối kết bạn nào (`HoSoNguoiScreen.tsx:286`) | `TC-N21-XEM-LA-THU-LAI` · [EV-N21-XEM-ghep](evidence/EV-N21-XEM-ghep.jpg) |
 | UI-106 (khối huy hiệu vừa mở bẻ chữ ở 320) | Sổ hành trình ở C2: khối «MỚI MỞ» còn cột chữ 44px giữa ảnh huy hiệu và Nếp M8; chữ «chân» nằm trên hai dòng («châ\|n»), đo bằng Range. C1 (cột 114) và C3 (cột 84) không bẻ. Cùng số đo với `TC-R-UI-106` | `TC-N21-TU-VO` C2, `TC-N21.S02-BASE` C2 · [EV-N21-HT-ghep](evidence/EV-N21-HT-ghep.jpg) |
+
+## N22 Rủ Đi AI trong chat (AI v2 #654, chat hai người #659; ADR-0046)
+
+Đo trên bản web export của main với stack thứ hai. Thiết kế đọc đối chiếu: ADR-0046 (chấp nhận, chủ sản phẩm chốt 27/09) và
+`docs/claude/2026-09-25/thiet-ke-ai/03-rudi-ai-trong-luong.md`. Stack không có khoá AI, nên mọi phòng báo `provider_unavailable`.
+Đo theo ba cách:
+- **màn thật như nó là**: phòng chưa sẵn sàng;
+- **phòng «sẵn sàng» dựng ở trình duyệt**: chỉ viết lại đúng một phản hồi, `chat-capabilities` của phòng. Mọi lời gọi khác tới
+  máy chủ thật, và máy chủ từ chối thật (503). Danh sách lời gọi hỏng trong quá khứ cũng viết lại ở trình duyệt, để đọc các hàng
+  lỗi;
+- **trạng thái cần model** (chữ hiện dần, chuyển giao sang thẻ): đọc trên hai trang lab của server dev (fixture),
+  `/dev/tra-loi-song` và `/dev/hai-lop-chat`. Hai trang vẽ bằng chính thành phần app dùng, dữ liệu bịa.
+
+Persona: chat-0 (nhóm chat-test 20 người, luồng 49 tin; chat đôi với chat-1, đám bạn, luồng trống); chat-20 và chat-21 (cặp bị
+chặn trong lúc đo rồi bỏ chặn); chat-8 và chat-9 (cặp đôi, chỉ đọc). Mọi lần ghi liệt kê ở `report.md` §A.
+
+Đạt trong phạm vi đã đo (`coverage-matrix.md`, hàng `TC-N22-*`):
+- **Máy chủ đóng an toàn** (API):
+  - ba phòng (nhóm, đám bạn, cặp đôi) báo `plan`, `chia_bill`, `hoi` là `available=false`, lý do `provider_unavailable`;
+    `mention=true`, `share_scope=caller_attached`. Cặp có đúng AI của nhóm;
+  - lời nhờ hợp lệ: 503, không lưu lời gọi nào. Lời nhờ trống: 400 `invalid_invocation`;
+  - cặp đang chặn: 403 `membership_required` từ cả hai phía, chặn trước cả cổng nhà cung cấp. Cặp không chặn: 503.
+- **Chip khi chưa sẵn sàng**, ở nhóm (C1–C3) và chat đôi (C1–C3): «Rủ Đi AI chưa sẵn sàng · Gửi như tin thường», trong vùng
+  aria-live polite, không có «Xem». Gửi thì tin đi như tin thường: app không gọi AI, không có hàng lời nhờ. Phần chữ hiện lúc gửi
+  lệch với chip: UI-164.
+
+  ![Chip chưa sẵn sàng ở nhóm C1–C3 và chat đôi; lúc gửi và sau khi gửi](evidence/EV-N22-CHIP-ghep.jpg)
+- **Phòng sẵn sàng (dựng)**:
+  - chip «Kèm N tin gần đây · Xem · Chỉ gửi lời nhờ»;
+  - «Xem» liệt kê đúng N tin chip đếm và nói lời nhờ cùng câu trả lời hiện cho ai. Ảnh đi bằng chú thích, sticker bằng chữ;
+  - gửi thì tin được lưu trước, rồi đúng một lời gọi `plan`. Lời nhờ đã bỏ «@Rủ Đi»; `trigger_message_id` là tin vừa lưu;
+    gói có đúng N lượt với các trường `id, vai, luc, biDanh, loai, chu`, không `image_url`;
+  - máy chủ thật từ chối 503, luồng hiện «Rủ Đi AI chưa nhận lời nhờ · AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.» trong khung
+    nhìn. «Thử lại» gửi lại đúng thân cũ, từng byte, cùng khoá idempotency. «Bỏ» bỏ hàng, tin vẫn ở luồng;
+  - «Chỉ gửi lời nhờ» đổi chip thành «Chỉ gửi lời nhờ, không kèm tin nào · Kèm lại 40 tin». Lời gọi không có `boi_canh`.
+
+  ![Chip «Kèm 40 tin», tấm «Xem» dưới dải ghim ở C1 và C8, từ chối 503, lời nhờ hỏng cũ, Nếp không khoá](evidence/EV-N22-SAN-ghep.jpg)
+- **Lời nhờ hỏng trong quá khứ** (danh sách viết lại): mỗi hàng nói chuyện gì đã xảy ra và nên làm gì. Hàng
+  `chia_bill_no_expenses` không có «Thử lại lời nhờ»; hàng `plan` có «Tự tạo kèo». Nút tắt mà không nói lý do: UI-091.
+- **Chat đôi**:
+  - «/» và «@» gợi ý đúng bốn lệnh của nhóm, lời viết cho hai bạn;
+  - luồng trống: chip «Hai bạn chưa có tin nào, chỉ gửi lời nhờ»;
+  - tấm «Xem» của chat đôi (trang lab) nói «…hiện cho cả hai bạn» và «Tên hiển thị của hai bạn», không có chữ «nhóm».
+- **Nếp, khi không có khoá**: câu hỏi hiện, «Nếp đang nghĩ…», rồi sau 256 ms «Nếp chưa trả lời được lúc này. Bạn thử lại sau ít
+  phút nhé.». Câu này không đổ cho mạng; câu hỏi trả về ô nhập để gửi lại. Thiếu vùng aria-live: UI-165.
+- **Trang lab**:
+  - bảng Nếp (đang nghĩ, đang viết, xong) và hàng Rủ Đi AI trong luồng nhóm (người hỏi, thành viên khác) ở C1–C3: không tràn,
+    không cắt;
+  - «Chạy thử»: «đang nghĩ», chữ đầu lúc 1227 ms, lớn dần qua 7 nhịp, xong lúc 1626 ms thành lượt có chip. Với «Reduce Motion»:
+    hai lần lớn lên, mỗi lần một câu trọn;
+  - bản production không có trang lab: `/dev/tra-loi-song` chuyển về `/welcome`.
+
+  ![Trang lab: bảng Nếp và luồng nhóm ở C1–C3, «Chạy thử», tấm «Xem» của chat đôi](evidence/EV-N22-LAB-ghep.jpg)
+
+Chưa đo được: native (6 hàng BLOCKED). Cũng BLOCKED là câu trả lời thật, chữ chạy qua mạng (SSE), khung `ai` của WebSocket phòng
+ở thành viên khác và chuyển giao sang thẻ (`TC-N22-AI-THAT`).
+
+### UI-163 · Gói bối cảnh kèm 40 tin gần nhất, gấp đôi mặc định 20 tin ADR-0046 đã chốt
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (lệch quyết định đã chốt; quyền riêng tư) · **P2** |
+| Feature / Screen / Layer | N22 · `/groups/[id]/chat` (nhóm và chat đôi) · chip «Kèm N tin gần đây», tấm «Xem», thân `POST /contexts/{id}/ai-invocations` |
+| Nền tảng, cấu hình | web, C1 (số tin không phụ thuộc bề rộng). Native: cùng mã (STATIC) |
+| Điều kiện | Phòng sẵn sàng (ở đây dựng bằng cách viết lại `chat-capabilities`); luồng có hơn 20 tin (nhóm chat-test: 49) |
+| Tái hiện | 1. Mở chat nhóm. 2. Gõ «@Rủ Đi gợi ý quán ăn tối gần hồ cho cả nhóm». 3. Đọc chip, chạm «Xem». 4. Gửi, đọc thân lời gọi |
+| Expected | ADR-0046 §2, quyết định 2: «Ngữ cảnh là lời nhờ trong tin tag, cộng N tin gần (mặc định 20), cộng tối đa 6 lượt của chuỗi hỏi tiếp, trong trần 40 lượt hiện có» |
+| Actual | Chip ghi «Kèm 40 tin gần đây». «Xem» liệt kê 40 tin. Thân lời gọi có `boi_canh.luot` 40 lượt. Máy chủ nhận tới 40 lượt (trần), nên không có gì chặn lại |
+| Evidence | ![Chip «Kèm 40 tin gần đây», tấm «Xem» 40 tin](evidence/EV-N22-SAN-ghep.jpg) (khung 1, 2; hàng `TC-N22-SAN-SO-TIN`, `TC-N22-SAN-GUI-KEM`, `TC-N22-SAN-XEM`) |
+| Source | `apps/mobile/src/rudi/screens/chat/GroupChatLive.tsx:317` gọi `gomBoiCanhChat({ tin, personId, tenCua })`, không truyền `soLuot`. `chat/boi-canh-chat.ts:121` lấy mặc định `GIOI_HAN_BOI_CANH.soLuot`. `ai/boi-canh.ts:53` đặt `soLuot: 40`: trần bị dùng làm mặc định |
+| Hậu quả | Mỗi lời nhờ gửi cho nhà cung cấp AI số tin của bạn bè gấp đôi mức chủ sản phẩm đã chốt. Chip có hiện số 40 và có «Chỉ gửi lời nhờ», nhưng đa số người dùng giữ mặc định. Lệch này thuộc nhóm «quyền riêng tư/consent» trong năm loại blocker của charter |
+| Đề xuất sửa | Truyền `soLuot: 20` ở `GroupChatLive`, hoặc tách hằng mặc định 20 khỏi trần 40. Thêm test đơn vị cho mặc định |
+| Tiêu chí gỡ | `n22-ai-chat.mjs --chi san-sang:C1` trên luồng hơn 20 tin: `TC-N22-SAN-SO-TIN` PASS (chip ≤ 20). Gói gửi đi bằng số chip đếm (`TC-N22-SAN-GUI-KEM`) |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-164 · Chip nói «Gửi như tin thường», nhưng lúc gửi luồng vẫn hiện «Đang hỏi Rủ Đi AI...»
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (chữ sai trạng thái) · **P3** |
+| Feature / Screen / Layer | N22 · `/groups/[id]/chat` · khối chờ gửi ở cuối luồng |
+| Nền tảng, cấu hình | web, C1. Native: cùng mã (STATIC) |
+| Điều kiện | Phòng chưa sẵn sàng (máy chủ báo `provider_unavailable`); tin bắt đầu bằng «@Rủ Đi» |
+| Tái hiện | 1. Gõ «@Rủ Đi tối nay nhóm mình đi đâu ngắm đèn?»: chip «Rủ Đi AI chưa sẵn sàng · Gửi như tin thường». 2. Gửi. Lượt đo giữ yêu cầu gửi 2,5 s ở trình duyệt để đọc được trạng thái chờ |
+| Expected | Đúng như chip nói: tin đi như tin thường, không nhắc tới AI |
+| Actual | Trong lúc gửi, cuối luồng hiện khối ✦ «Đang hỏi Rủ Đi AI...» kèm «Bạn có thể tiếp tục soạn tin trong lúc chờ.». Sau khi lưu là tin thường: app gọi AI 0 lần, máy chủ có 0 lời gọi, không có hàng lời nhờ. Trên mạng thật khối chỉ tồn tại trong một lượt gửi, nhưng nó trái với câu chip vừa nói |
+| Evidence | ![Đang gửi: «Đang hỏi Rủ Đi AI...»; sau khi gửi: tin thường](evidence/EV-N22-CHIP-ghep.jpg) (khung 4, 5; hàng `TC-N22-GUI-CHUA-SAN-SANG`) |
+| Source | `GroupChatLive.tsx:916–929`: khối hiện khi `timNhacAi(dangGuiThan) !== null`, không xét `lenhSanSang`. Đường gửi ở `:413` có xét, nên không gọi AI |
+| Hậu quả | Người dùng vừa được báo AI chưa sẵn sàng thì lại thấy «đang hỏi», rồi không có câu trả lời nào, như AI bỏ dở giữa chừng |
+| Đề xuất sửa | Chỉ hiện khối khi `lenhSanSang(ai.capabilities, nhac.lenh)`. Tin thường đã có hàng chờ gửi riêng |
+| Tiêu chí gỡ | `--chi nhac:gui` trên nhóm chưa có câu nhắc đó (hoặc đổi câu): `TC-N22-GUI-CHUA-SAN-SANG` PASS |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-165 · Chữ AI hiện dần, dòng «đang đọc / đang nghĩ» và câu lỗi của Nếp không nằm trong vùng aria-live
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | UX ISSUE (trợ năng) · **P3** |
+| Feature / Screen / Layer | N22 · hàng trả lời trong luồng (`TraLoiAiDangViet`) · bảng Nếp (`NepPhien`) |
+| Nền tảng, cấu hình | web, C1: bảng Nếp đo trên màn thật; hàng luồng nhóm và «Nếp đang viết» đo trên trang lab. Native: `accessibilityLiveRegion` chỉ có tác dụng trên Android, iOS cần `AccessibilityInfo.announceForAccessibility` (STATIC) |
+| Điều kiện | Có lời nhờ đang chạy, hoặc vừa hỏi Nếp |
+| Tái hiện | 1. Ở Khám phá, hỏi Nếp «Tối nay đi đâu ngắm đèn?». 2. Đọc thuộc tính aria-live quanh «Nếp đang nghĩ…» và câu lỗi. 3. Trên `/dev/tra-loi-song`, đọc quanh `nep-dang-nghi`, `nep-dang-viet`, `chat-tra-loi-dang-doc`, `chat-tra-loi-dang-viet` |
+| Expected | Trình đọc màn hình được báo khi AI bắt đầu đọc hay nghĩ, khi câu trả lời tới, hoặc khi lỗi. Chip bối cảnh (`ChipBoiCanh.tsx:40`), câu lỗi `ai.error` (`GroupChatLive.tsx:834`) và thông báo (`:908`) đã làm vậy |
+| Actual | aria-live null ở cả sáu chỗ trên lab: Nếp đang nghĩ, Nếp đang viết, nhóm đang đọc ×2, nhóm đang viết ×2. Trên màn thật, «Nếp đang nghĩ…» (lúc 0 ms) và «Nếp chưa trả lời được lúc này…» (lúc 256 ms) cũng null |
+| Evidence | ![Trang lab](evidence/EV-N22-LAB-ghep.jpg) · ![Bảng Nếp không khoá](evidence/EV-N22-SAN-ghep.jpg) (khung 6; hàng `TC-N22-LAB-LIVE`, `TC-N22-NEP-LIVE`) |
+| Source | `screens/chat/TraLoiAiDangViet.tsx:99` (`chat-tra-loi-dang-viet`), `:103` (`chat-tra-loi-dang-doc`). `nep/NepPhien.tsx:81` (`nep-dang-viet`), `:85` (`nep-dang-nghi`), `:132` (`nep-loi-hoi`). Không chỗ nào có `accessibilityLiveRegion` |
+| Hậu quả | Người dùng trình đọc màn hình gửi lời nhờ rồi không nghe gì; phải tự dò mới biết AI đã trả lời hay đã lỗi |
+| Đề xuất sửa | Đặt `accessibilityLiveRegion="polite"` cho dòng trạng thái và câu lỗi. Với chữ đang chạy, chỉ báo một lần khi xong, cả câu, không báo từng nhịp |
+| Tiêu chí gỡ | `--chi nep`: ghi chú của `TC-N22-NEP-KHONG-KHOA` đọc aria-live polite cho «đang nghĩ» và câu lỗi. `--chi lab` (server dev): `TC-N22-LAB-LIVE` PASS |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-166 · Tấm «Xem» trượt dưới dải ghim «Tờ hẹn chung»: tay cầm, «Đóng bảng» và dòng đầu bị che
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | BUG (layout, che nội dung) · **P2**. Cùng gốc với UI-070 và UI-040 của audit gốc |
+| Feature / Screen / Layer | N22 · `/groups/[id]/chat` · tấm «Những tin sẽ gửi kèm lời nhờ» (`TamXemBoiCanh`, `ui/Sheet.tsx`) dưới dải ghim |
+| Nền tảng, cấu hình | web, C1, C2, C8. Native: `zIndex` chỉ xếp các phần tử anh em trong cùng cha; chưa đo dải và tấm có cùng cha hay không (HYPOTHESIS) |
+| Điều kiện | Nhóm có tờ hẹn chung (hoặc bình chọn) ghim trên đầu luồng; lời nhờ kèm đủ nhiều tin để tấm cao tới trần |
+| Tái hiện | 1. Trong nhóm chat-test (phòng sẵn sàng), gõ «@Rủ Đi …». 2. Chạm «Xem» |
+| Expected | Tấm phủ lên mọi thứ của màn, kể cả dải ghim. Tay cầm, «Đóng bảng» và câu đầu «Rủ Đi AI sẽ đọc đúng N tin…» thấy được |
+| Actual | Dải ghim (y 91–160) vẽ đè lên tấm. **C1**: tấm bắt đầu ở y 88 (90% cửa sổ); «Đóng bảng» (y 88–136), tay cầm và dòng đầu «Rủ Đi AI sẽ đọc đúng 40 tin dưới đây cùng lời» (y 138) nằm dưới dải. Dòng này ở đầu vùng cuộn nên không bao giờ cuộn ra được. **C2**: tấm từ y 51 (92%); dòng đầu (y 101) nằm dưới dải. **C8**: tấm từ y 19 (96%); dải che dòng 2–4 («nhờ trong tin của bạn. Lời nhờ và câu trả lời hiện cho cả nhóm.» và đầu câu thứ hai). Dải là lớp trơ (inert), nên chạm vào chỗ «Đóng bảng» vẫn đóng được tấm, chạm dải không mở tờ hẹn: đóng được, nhưng không thấy nút |
+| Evidence | ![«Xem» ở C1 và C8, khung đỏ là dải ghim](evidence/EV-N22-SAN-ghep.jpg) (khung 2, 3; hàng `TC-N22-XEM-GHIM` C1, C2, C8; `TC-N22-XEM-CAO`) |
+| Source | `GroupChatLive.tsx:800` (dải `day-ghim`), `:1152` (`dayGhim: { …, zIndex: 1 }`), `:1109` (`TamXemBoiCanh` gắn ở gốc màn). `ui/Sheet.tsx:178`: lớp sheet `absoluteFill`, z-index 0 trên web. `:51`, `:219`: trần 82% chỉ áp cho `ScrollView`, hàng tay cầm 48 cộng thêm (UI-040) |
+| Hậu quả | Câu nói rõ AI sẽ đọc bao nhiêu tin bị che ở C1, mà đó là lý do tấm này có mặt (bản xem trước của ADR-0036 §2.5). Nút đóng không thấy. Sheet nào mở trong chat có dải ghim mà đủ cao cũng bị đè như vậy. UI-070 chỉ ghi phần dải sáng trên nền mờ |
+| Đề xuất sửa | Bỏ `zIndex` của dải, hoặc cho lớp sheet `zIndex` cao hơn mọi thứ trong màn: một chỗ sửa cho cả UI-070. Áp trần 82% cho cả khung sheet (UI-040) |
+| Tiêu chí gỡ | `--chi xem-ghim`: `TC-N22-XEM-GHIM` PASS ở C1, C2, C8. Nghĩa là tấm không chồng lên dải, hoặc dải nằm dưới lớp mờ |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+### UI-167 · Ở 320dp chip gãy dòng: ký hiệu ✦ đứng riêng một dòng, «Chỉ gửi lời nhờ» rớt xuống dòng hai
+
+| Trường | Nội dung |
+|---|---|
+| Category / Severity | VISUAL POLISH · **P3** |
+| Feature / Screen / Layer | N22 · `/groups/[id]/chat` (nhóm và chat đôi) · chip trên nút gửi |
+| Nền tảng, cấu hình | web, C2 (320). C1, C3, C8 vẫn một dòng. Native: Yoga gói dòng tương tự (HYPOTHESIS) |
+| Điều kiện | Ô soạn có tin bắt đầu bằng «@Rủ Đi» |
+| Tái hiện | Gõ «@Rủ Đi …» ở bề rộng 320 |
+| Expected | Chip gọn một dòng (chú thích mã: «48dp touch targets on a one-line chip»). Nếu buộc phải xuống dòng thì ký hiệu đi cùng câu |
+| Actual | Chưa sẵn sàng: chip 288×52, ✦ một mình dòng đầu, «Rủ Đi AI chưa sẵn sàng · Gửi như tin thường» ở dòng hai (C1: 358×28). Sẵn sàng: chip 288×82, dòng đầu «✦ Kèm 40 tin gần đây Xem», «Chỉ gửi lời nhờ» ở dòng hai cách một khoảng trống (C1: 358×42) |
+| Evidence | ![Chip ở C2](evidence/EV-N22-CHIP-ghep.jpg) (khung 2; hàng `TC-N22-CHIP-HEP`, `TC-N22.S01-BASE` C2, `TC-N22.S02-BASE` C2) |
+| Source | `screens/chat/ChipBoiCanh.tsx:84–85`: `chip` có `flexWrap: "wrap"`, câu chỉ có `flexShrink: 1`. Trên web, khi hàng được phép gói, phần tử xuống dòng trước khi co; câu dài hơn chỗ còn lại sau ký hiệu nên nhảy xuống dòng mới |
+| Hậu quả | Chip cao gấp đôi tới gấp ba, đẩy luồng lên, trông như vỡ bố cục. Vẫn đọc được, vẫn bấm được |
+| Đề xuất sửa | Bỏ `flexWrap` của hàng ký hiệu và câu, để câu co và tự xuống dòng bên trong nó. Đặt hai nút ở hàng riêng khi không đủ chỗ |
+| Tiêu chí gỡ | `--chi nhac:C2`, `--chi doi:C2`, `--chi san-sang:C2`: ký hiệu cùng dòng với chữ (đọc ảnh), chip chưa sẵn sàng cao ≤ 36 |
+| Trạng thái sửa · Retest | chưa sửa · không áp dụng |
+
+## Mở rộng issue của audit gốc (đo ở N22)
+
+Bốn issue của `docs/claude/2026-09-27/mobile-ui-audit/issues.md` gặp lại ở chat có Rủ Đi AI. Không đánh số mới. UI-070 (dải ghim
+sáng trên nền mờ) gặp lại với hậu quả nặng hơn, thành UI-166.
+
+| Issue gốc | Gặp lại ở N22 | Hàng · ảnh |
+|---|---|---|
+| UI-001 (vùng bấm dưới 48dp) | Chip «Kèm N tin gần đây»: «Xem» 28×32 và «Chỉ gửi lời nhờ» 90×32 ở C1, C2, C8. Mã định cao 48 bằng `hitSlop={12}` (`ChipBoiCanh.tsx:42`, `:47`, chú thích `:86`), nhưng react-native-web bỏ qua `hitSlop`. Native: 52×56 và 114×56 (STATIC) | `TC-N22-SAN-CHIP` C1, C2, C8 · [EV-N22-SAN-ghep](evidence/EV-N22-SAN-ghep.jpg) |
+| UI-023 (nhãn của nút bị cắt ở điện thoại hẹp) | Dải ghim của nhóm ở 320: «Tờ hẹn chung · bản 1» thành «Tờ hẹn chung · b…» (thiếu 12px, mất số bản); «Sửa cùng hội» không co nên chiếm chỗ (`SoHen.tsx:57–58`). C1, C3 đọc trọn | `TC-N22-GHIM-C2` · [EV-N22-CHIP-ghep](evidence/EV-N22-CHIP-ghep.jpg) |
+| UI-040 (sheet quá cao) | Tấm «Xem» 40 tin cao 90% cửa sổ ở C1, 92% ở C2, 96% ở C8 | `TC-N22-XEM-CAO` · [EV-N22-SAN-ghep](evidence/EV-N22-SAN-ghep.jpg) |
+| UI-091 (nút tắt không nói lý do) | Hàng lời nhờ hỏng: «Thử lại lời nhờ» tắt (viền đứt) khi phòng chưa sẵn sàng, không câu nào nói vì sao (`GroupChatLive.tsx:891`, `disabled` khi `!lenhSanSang`) | `TC-N22-LOI-GOI-THU-LAI-TAT` · [EV-N22-SAN-ghep](evidence/EV-N22-SAN-ghep.jpg) |
 
 ---
 

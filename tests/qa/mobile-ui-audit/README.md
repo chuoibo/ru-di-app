@@ -118,6 +118,16 @@ node kich-ban/n21-ho-so.mjs --chi hep,khong-phien   # chỉ đọc, lúc nào c�
 node kich-ban/n21-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native, Nếp thật và MP4 BLOCKED, rút TC-N-21-…; chạy lại không thêm dòng
 node kich-ban/n21-ghep.mjs           # ảnh ghép của N21, gắn vào hàng
 # Thứ tự chốt checkpoint N21: n21-phan-xu (và n15-phan-xu cho hàng hero) → n21-ghep → chot-anh → tong-hop → kiem-tai-lieu
+# Feature mới #22, Rủ Đi AI trong chat (checkpoint N22). Stack không có khoá AI: phòng «sẵn sàng» dựng bằng cách viết lại
+# đúng một phản hồi (chat-capabilities) ở trình duyệt; mọi lời gọi khác tới máy chủ thật.
+node kich-ban/n22-ai-chat.mjs --chi api,chan,nhac,san-sang,doi,xem-ghim,loi-goi,nep,lab-prod   # bản export E1, không AUDIT_BASE
+# nhac:gui và san-sang:gui gửi tin thật vào nhóm chat-test (mỗi tin kiểm trước khi gửi); chan chặn rồi bỏ chặn chat-21;
+# api gọi ai-invocations (máy chủ không có khoá nên không lưu gì). Các phần còn lại chỉ đọc hoặc chỉ gõ.
+AUDIT_BASE=http://127.0.0.1:8091 node kich-ban/n22-ai-chat.mjs --chi lab,lab-nhom,doi-lab   # server dev E2, fixture bật
+node kich-ban/n22-phan-xu.mjs        # phân xử bằng mắt, gắn issue, hàng native và AI thật BLOCKED, rút TC-N-22-…; chạy lại không thêm dòng
+node kich-ban/n22-ghep.mjs           # 3 ảnh ghép của N22 (cao 660 cho vừa ngân sách), gắn vào hàng
+# Thứ tự chốt checkpoint N22: n22-ghep → n22-phan-xu → n22-ghep → chot-anh → tong-hop → ghim-ma-tran → kiem-tai-lieu
+node ghim-ma-tran.mjs <docs main>   # ghim coverage-matrix.md theo digest (luật aggregate-base64-fragments); chạy lại sau mỗi tong-hop
 node retest-bang.mjs <docs gốc> <docs main>   # sinh retest.md từ issues.md gốc và sổ retest
 node tong-hop.mjs <docs-dir>        # coverage-matrix.md (+ CSV và đếm ngoài git)
 node kiem-tai-lieu.mjs <docs-dir> [--canary]
@@ -310,6 +320,26 @@ Bài học của checkpoint N21 (hồ sơ kể chuyện, 30/09–01/10):
   dùng khi cột chữ hẹp (khối có ảnh hai bên).
 - Một thao tác ghi có thể chạm dữ liệu của chính persona đang đo (thích nhầm bình luận của chính mình). Đếm lại trạng thái
   máy chủ ngay sau mỗi lần ghi, và trả lại bằng API khi lệch.
+
+Bài học của checkpoint N22 (Rủ Đi AI trong chat, 01/10):
+- `fullPage` không chụp được nửa dưới của màn react-native-web: trang không cuộn, chỉ một view bên trong cuộn. Muốn thấy
+  phần dưới thì cuộn chính view đó (tìm tổ tiên có `overflow-y` auto/scroll) rồi chụp (`lab-nhom`, sự cố 46). Nhãn «cả
+  trang» trên một ảnh như vậy là sai.
+- Expected phải khớp dữ liệu đang có. Đọc số tin của luồng qua API trước khi đòi chip «Kèm N tin»: chat đôi trống thì chip
+  đúng là «Hai bạn chưa có tin nào» (sự cố 45). Thiếu dữ liệu thì đo trên trang lab, không ghi thêm tin để có dữ liệu.
+- Khi máy chủ thiếu một năng lực (khoá AI), dựng trạng thái bằng cách viết lại đúng một phản hồi ở trình duyệt; mọi lời gọi
+  khác vẫn tới máy chủ thật, nên yêu cầu app gửi đi và lời từ chối của máy chủ là thật. Ghi rõ phản hồi nào đã viết lại.
+- Hit-test bỏ qua lớp inert, giống cú chạm: chạm vào chỗ một nút bị che vẫn trúng nút đó. Muốn biết lớp nào vẽ trên cùng
+  thì nhìn ảnh, kèm `z-index` tính được (UI-166).
+- Đọc danh sách ellipsis trong file số đo của mỗi ảnh (`metrics/*.json`, `doDac.ellipsis`): nhãn bị «…» không tính là cắt
+  chữ, nên hàng tự động vẫn PASS (nhãn dải ghim ở 320, UI-023).
+- `ghi.mjs` chặn method lạ: hàng gọi API ghi RUNTIME-WEB như các checkpoint trước.
+- `pkill -f "<mẫu>"` nằm trong một lệnh ghép thì khớp luôn dòng lệnh của chính shell và giết nó (exit 144). Chạy `pkill` một
+  mình, rồi kiểm bằng `ps aux | grep "[e]xpo start"`.
+- Guard `staged` chỉ xét dòng thêm, còn `range` và `tree` xét cả file. Một file sinh máy lớn dần (ma trận) có thể qua `staged`
+  rồi bị `range` chặn sau commit (sự cố 47). Sau mỗi `tong-hop` của thư mục main, chạy `ghim-ma-tran.mjs`; trước khi commit,
+  `python3 scripts/repo_guard.py tree HEAD` chỉ đọc allowlist của commit đã có, nên kiểm sau commit và sửa bằng amend khi
+  chưa push.
 
 ## Những điều harness không đo được
 
