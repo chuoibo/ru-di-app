@@ -1215,6 +1215,38 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B3): ảnh ghép JPEG chụp bản web trên stack loopback riêng và Android emulator ở chế độ demo, dữ liệu seed tổng hợp («Team Đà Lạt», «Chat Test NN», kèo biến thể của harness), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-02/thanh-tab-5-cot/evidence/EV-TT5-THANH.jpg",
+      "sha256": "313bf15439b449ae7cba46967130daa83d395659b68b240ef257879fff9afc40",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt thanh tab 5 cột 02/10/2026 (docs/claude/2026-10-02/thanh-tab-5-cot, kế hoạch chủ sản phẩm đã duyệt có mục ảnh bằng chứng vào Git): ảnh ghép JPEG chụp bản web export trên stack loopback QA, persona tổng hợp dalat-0 («Minh Anh» là tên seed) và bản demo; ảnh trong bài thử là ảnh mẫu của repo (apps/mobile/assets/rudi); không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-02/thanh-tab-5-cot/evidence/EV-TT5-KHAM-PHA.jpg",
+      "sha256": "d9039ccad262c24a8eae238de29a8a3b2badd21a0093911c91fb8463ddf691d1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt thanh tab 5 cột 02/10/2026 (docs/claude/2026-10-02/thanh-tab-5-cot, kế hoạch chủ sản phẩm đã duyệt có mục ảnh bằng chứng vào Git): ảnh ghép JPEG chụp bản web export trên stack loopback QA, persona tổng hợp dalat-0 («Minh Anh» là tên seed) và bản demo; ảnh trong bài thử là ảnh mẫu của repo (apps/mobile/assets/rudi); không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-02/thanh-tab-5-cot/evidence/EV-TT5-CONG-DONG.jpg",
+      "sha256": "5777af371bca785147624f52f35e63ce27ad2bd868c8406825f5cd73a925c1eb",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt thanh tab 5 cột 02/10/2026 (docs/claude/2026-10-02/thanh-tab-5-cot, kế hoạch chủ sản phẩm đã duyệt có mục ảnh bằng chứng vào Git): ảnh ghép JPEG chụp bản web export trên stack loopback QA, persona tổng hợp dalat-0 («Minh Anh» là tên seed) và bản demo; ảnh trong bài thử là ảnh mẫu của repo (apps/mobile/assets/rudi); không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-02/thanh-tab-5-cot/evidence/EV-TT5-TOI-HEP.jpg",
+      "sha256": "59a113429874107b27aeb9cfeb62556f6ca10a05ba9336ae1d8d19587c95aeb3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt thanh tab 5 cột 02/10/2026 (docs/claude/2026-10-02/thanh-tab-5-cot, kế hoạch chủ sản phẩm đã duyệt có mục ảnh bằng chứng vào Git): ảnh ghép JPEG chụp bản web export trên stack loopback QA, persona tổng hợp dalat-0 («Minh Anh» là tên seed) và bản demo; ảnh trong bài thử là ảnh mẫu của repo (apps/mobile/assets/rudi); không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
     }
   ]
 }
