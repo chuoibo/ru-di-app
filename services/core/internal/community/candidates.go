@@ -51,7 +51,7 @@ func (h *Handler) discoveryRanking(ctx context.Context, tx pgx.Tx, person, mode 
 		h.candidateUntil = time.Now().Add(time.Second)
 	}
 	if mode != "following" && (!personalized || mode == "trending") {
-		ids := append([]string(nil), h.commonRanking...)
+		ids := banSaoXepHang(h.commonRanking)
 		h.candidateMu.Unlock()
 		return ids, nil
 	}
@@ -119,4 +119,12 @@ func (h *Handler) discoveryRanking(ctx context.Context, tx pgx.Tx, person, mode 
 		}
 	}
 	return rank(out, mode, personalized, time.Now()), nil
+}
+
+// banSaoXepHang copies the shared ranking for one reader. Never nil, even when
+// no public post exists yet: the snapshot row stores the ids in
+// community_feeds.post_ids, which is NOT NULL, and pgx writes a nil slice as
+// NULL.
+func banSaoXepHang(ids []string) []string {
+	return append(make([]string, 0, len(ids)), ids...)
 }
