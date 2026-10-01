@@ -3,6 +3,7 @@ package nap
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -73,6 +74,26 @@ type Hang struct {
 	DenseModel string
 	SparseRev  string
 	Chunker    string
+}
+
+// DauThuocTinh is the fingerprint of everything a place row stores besides
+// its text and vector: the hard-filter attributes and the categories, as
+// the index writes them. The adapter stores it in the row (vectordb's
+// FMoRong); a row whose fingerprint and content hash both match needs no
+// write, one whose hash matches needs only a partial update.
+func DauThuocTinh(r Hang) string {
+	b, _ := json.Marshal(struct {
+		DiemDen        string
+		DiUng, AnKieng []string
+		DiUngRo        bool
+		GiaMin, GiaMax int64
+		GiaRo          bool
+		MoO            []int16
+		GioRo          bool
+		DanhMuc        []string
+	}{r.DiemDen, r.DiUng, r.AnKieng, r.DiUngRo, r.GiaMin, r.GiaMax, r.GiaRo, r.MoO, r.GioRo, r.DanhMuc})
+	sum := sha256.Sum256(append([]byte("dau.v1\x00"), b...))
+	return hex.EncodeToString(sum[:12])
 }
 
 // MoO returns the slots of the week the schedule is open for in full.

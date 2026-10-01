@@ -58,6 +58,7 @@ SENTINELS=(
   # violation, the lifecycle through the alias, a takedown surviving a
   # rollback, attributes reaching a collection of another configuration.
   TestBM25GapDauMilvus
+  TestKhoaVaCapNhatMotPhanMilvus
   TestLocMilvusKhopGo
   TestHybridLocCungKhongViPham
   TestBuildDoiSoatPromoteRollbackQuaAlias

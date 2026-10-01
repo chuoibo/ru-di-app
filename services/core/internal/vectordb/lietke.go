@@ -24,6 +24,8 @@ type KhoaHang struct {
 	DocID       string
 	ContentHash string
 	EmbedModel  string
+	// Dau is the writer's fingerprint stored in FMoRong (KhoaTheoDoc only).
+	Dau string
 }
 
 var cotKhoa = []string{FID, FDocID, FContentHash, FEmbedModel}
@@ -152,24 +154,60 @@ func (m *Milvus) CapNhatThuocTinh(ctx context.Context, name, docID string, t Thu
 	if err != nil || len(ids) == 0 {
 		return 0, err
 	}
+	t.GiaMaxVND = giaMaxVND
+	hs := make([]CapNhatHang, len(ids))
+	for i, id := range ids {
+		hs[i] = CapNhatHang{ID: id, ThuocTinh: t}
+	}
+	return m.CapNhatThuocTinhLo(ctx, name, hs)
+}
+
+// CapNhatHang is one row's new attributes for CapNhatThuocTinhLo; MoRong,
+// when set, replaces the row's FMoRong dict as well.
+type CapNhatHang struct {
+	ID        string
+	ThuocTinh ThuocTinh
+	MoRong    []byte
+}
+
+// CapNhatThuocTinhLo rewrites the hard-constraint attributes (and FMoRong
+// where given) of the rows hs name, in one partial upsert: vectors, text and
+// hashes stay. Every id must already be in name -- a partial upsert of a
+// missing key would have to insert a row without a vector, and Milvus
+// refuses the whole call -- so the ingest passes only ids it has just read
+// back (KhoaTheoDoc). MoRong is all or nothing: every row carries one or
+// none does. It returns how many rows it rewrote.
+func (m *Milvus) CapNhatThuocTinhLo(ctx context.Context, name string, hs []CapNhatHang) (int, error) {
+	n := len(hs)
+	if n == 0 {
+		return 0, nil
+	}
 	coDanhMuc, err := m.coTruong(ctx, name, FDanhMuc)
 	if err != nil {
 		return 0, err
 	}
-	dmLuu, err := danhMucLuu(t)
-	if err != nil {
-		return 0, err
-	}
-	n := len(ids)
-	dests, slots := make([]string, n), make([][]int16, n)
+	ids, dests, slots := make([]string, n), make([]string, n), make([][]int16, n)
 	pmin, pmax := make([]int64, n), make([]int64, n)
 	alg, diet, dm := make([][]string, n), make([][]string, n), make([][]string, n)
 	tomb := make([]bool, n)
-	for i := range ids {
-		dests[i], slots[i] = t.DiemDen, notNil(t.OSlots)
-		pmin[i], pmax[i] = t.GiaMinVND, giaMaxVND
+	var moRong [][]byte
+	for i, h := range hs {
+		t := h.ThuocTinh
+		if dm[i], err = danhMucLuu(t); err != nil {
+			return 0, err
+		}
+		ids[i], dests[i], slots[i] = h.ID, t.DiemDen, notNil(t.OSlots)
+		pmin[i], pmax[i] = t.GiaMinVND, t.GiaMaxVND
 		alg[i], diet[i], tomb[i] = notNil(t.DiUng), notNil(t.AnKieng), t.GoBo
-		dm[i] = slices.Clone(dmLuu)
+		if (len(h.MoRong) > 0) != (len(hs[0].MoRong) > 0) {
+			return 0, fmt.Errorf("vectordb: %s given for some rows of a batch, not all", FMoRong)
+		}
+		if len(h.MoRong) > 0 {
+			if !json.Valid(h.MoRong) || h.MoRong[0] != '{' {
+				return 0, fmt.Errorf("vectordb: %s of %s must be a JSON object", FMoRong, h.ID)
+			}
+			moRong = append(moRong, h.MoRong)
+		}
 	}
 	opt := milvusclient.NewColumnBasedInsertOption(name).
 		WithVarcharColumn(FID, ids).
@@ -183,10 +221,54 @@ func (m *Milvus) CapNhatThuocTinh(ctx context.Context, name, docID string, t Thu
 	if coDanhMuc {
 		opt = opt.WithColumns(column.NewColumnVarCharArray(FDanhMuc, dm))
 	}
+	if moRong != nil {
+		opt = opt.WithColumns(column.NewColumnJSONBytes(FMoRong, moRong))
+	}
 	if _, err = m.cli.Upsert(ctx, opt); err != nil {
 		return 0, err
 	}
 	return n, nil
+}
+
+// KhoaTheoDoc reads the keys of every row of the documents docIDs in place
+// collection name, at strong consistency, with the fingerprint each row's
+// FMoRong carries (MoRongDau; "" when it has none): what the indexer
+// compares to know whether a row needs a new vector, only its attributes,
+// or nothing. One query for the whole batch.
+func (m *Milvus) KhoaTheoDoc(ctx context.Context, name string, docIDs []string) ([]KhoaHang, error) {
+	if len(docIDs) == 0 {
+		return nil, nil
+	}
+	if len(docIDs) > MaxLoc/8 {
+		return nil, fmt.Errorf("vectordb: %d documents in one key read, at most %d", len(docIDs), MaxLoc/8)
+	}
+	rs, err := m.cli.Query(ctx, milvusclient.NewQueryOption(name).WithFilter(FDocID+" in {ds}").
+		WithTemplateParam("ds", docIDs).WithOutputFields(append(slices.Clone(cotKhoa), FMoRong)...).
+		WithLimit(MaxLoc).WithConsistencyLevel(entity.ClStrong))
+	if err != nil {
+		return nil, err
+	}
+	out, err := docKhoa(rs)
+	if err != nil || len(out) == 0 {
+		return out, err
+	}
+	mr := rs.GetColumn(FMoRong)
+	if mr == nil {
+		return nil, fmt.Errorf("vectordb: %s missing from the answer", FMoRong)
+	}
+	for i := range out {
+		v, err := mr.Get(i)
+		if err != nil {
+			return nil, err
+		}
+		if b, ok := v.([]byte); ok && len(b) > 0 {
+			var d map[string]json.RawMessage
+			if json.Unmarshal(b, &d) == nil {
+				_ = json.Unmarshal(d[MoRongDau], &out[i].Dau)
+			}
+		}
+	}
+	return sapKhoa(out), nil
 }
 
 // coTruong reports whether collection name has field f.

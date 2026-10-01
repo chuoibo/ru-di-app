@@ -384,7 +384,7 @@ func (n Nap) Dung(ctx context.Context, db CSDL, c Corpus) (BaoCaoDung, error) {
 		return fail(err)
 	}
 	var rows []Hang
-	var unsafe, safe []string
+	var unsafe, safe, trung, giu []string
 	switch c {
 	case CorpusQuan:
 		kept, bad, dup, moi, err := n.KyVongQuan(ctx, db, &rep)
@@ -392,6 +392,9 @@ func (n Nap) Dung(ctx context.Context, db CSDL, c Corpus) (BaoCaoDung, error) {
 			return fail(err)
 		}
 		unsafe, rep.NhungMoi, rep.Trung = bad, moi, len(dup)
+		for d, g := range dup {
+			trung, giu = append(trung, d), append(giu, g)
+		}
 		for _, d := range kept {
 			rows = append(rows, d.Rows...)
 			safe = append(safe, d.HoSo.ID)
@@ -453,6 +456,23 @@ func (n Nap) Dung(ctx context.Context, db CSDL, c Corpus) (BaoCaoDung, error) {
 	if _, err = tx.Exec(ctx, `UPDATE rag_vector_versions SET state='built', docs=$2, chunks=$3, changed_docs=$4, source_digest=$5
 		WHERE id=$1 AND state='building'`, rep.PhienBan, rep.Docs, rep.Chunks, rep.DocDoi, digest(rows)); err != nil {
 		return fail(err)
+	}
+	if len(trung) > 0 {
+		if _, err = tx.Exec(ctx, `INSERT INTO rag_trung(phien_ban, doc_id, giu) SELECT $1, unnest($2::text[]), unnest($3::text[])`,
+			rep.PhienBan, trung, giu); err != nil {
+			return fail(err)
+		}
+	}
+	if c == CorpusQuan {
+		// The collection holds the snapshot read when the build began, and
+		// the indexer skipped it while it was building: every place, and
+		// every document the snapshot held, is checked again in the
+		// background now that the indexer writes this version too. A row
+		// that still matches costs a read, not a write.
+		if _, err = tx.Exec(ctx, `SELECT rag_danh_dau('place',
+			ARRAY(SELECT id FROM places UNION SELECT unnest($1::text[])), NULL, (-1)::smallint)`, safe); err != nil {
+			return fail(err)
+		}
 	}
 	if err = tx.Commit(ctx); err != nil {
 		return fail(err)

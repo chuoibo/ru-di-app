@@ -206,3 +206,85 @@ func TestTenTrungAliasBiTuChoi(t *testing.T) {
 		t.Fatalf("an alias-named collection was created: %v", err)
 	}
 }
+
+// The indexer's two batched calls on a real Milvus: KhoaTheoDoc reads the
+// keys and the stored fingerprint of exactly the documents asked; a
+// partial update rewrites attributes, categories and fingerprint and leaves
+// text, hash and vector where they were (the row is still found by its
+// text); a batch naming a key Milvus does not hold is refused whole or
+// writes nothing for it -- never a row without a vector.
+func TestKhoaVaCapNhatMotPhanMilvus(t *testing.T) {
+	kho := khoTest(t)
+	ctx := context.Background()
+	n, _ := naptest.Nap(t, kho)
+	const ten = "rd_places__v1"
+	gia := func(lo int64) (int64, int64, bool) { return lo, lo + 20000, true }
+	rows := []nap.Hang{
+		{ChunkID: "a", DocID: "a", Text: "Quán bún bò bên hồ", ContentHash: "ha", DiemDen: "d-da-lat", DiUngRo: true, DiUng: []string{}},
+		{ChunkID: "b", DocID: "b", Text: "Tiệm bánh căn sáng sớm", ContentHash: "hb", DiemDen: "d-da-lat", DiUngRo: true, DiUng: []string{"tom"}},
+		{ChunkID: "c", DocID: "c", Text: "Cà phê view đồi thông", ContentHash: "hc", DiemDen: "d-da-lat"},
+	}
+	rows[0].GiaMin, rows[0].GiaMax, rows[0].GiaRo = gia(40000)
+	if _, err := n.Vector(ctx, nil, rows); err != nil {
+		t.Fatal(err)
+	}
+	if err := kho.TaoCollection(ctx, ten, nap.LuocDoTu(n.Cfg, nap.CorpusQuan)); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = kho.XoaCollection(context.Background(), ten) })
+	if err := kho.Upsert(ctx, ten, rows); err != nil {
+		t.Fatal(err)
+	}
+	ks, err := kho.KhoaTheoDoc(ctx, ten, []string{"a", "b", "khong-co"})
+	if err != nil || len(ks) != 2 || ks[0].DocID != "a" || ks[1].DocID != "b" {
+		t.Fatalf("keys of a, b and a missing id: %+v %v", ks, err)
+	}
+	if ks[0].ContentHash != "ha" || ks[0].Dau != nap.DauThuocTinh(rows[0]) || ks[1].Dau != nap.DauThuocTinh(rows[1]) {
+		t.Fatalf("stored keys: %+v", ks)
+	}
+
+	moi := rows[0]
+	moi.GiaMin, moi.GiaMax, moi.GiaRo = gia(90000)
+	moi.DiUng, moi.DanhMuc = []string{"dau_phong"}, []string{"an_vat"}
+	moi.Text, moi.Dense = "", nil // a partial update must not need them
+	if got, err := kho.CapNhatThuocTinhLo(ctx, ten, []nap.Hang{moi}); err != nil || got != 1 {
+		t.Fatalf("partial update: %d %v", got, err)
+	}
+	ks, _ = kho.KhoaTheoDoc(ctx, ten, []string{"a"})
+	if len(ks) != 1 || ks[0].ContentHash != "ha" || ks[0].Dau != nap.DauThuocTinh(moi) {
+		t.Fatalf("after the partial update: %+v", ks)
+	}
+	tt, err := kho.M.DocThuocTinh(ctx, kho.ten(ten), "a")
+	if err != nil || tt["a"].GiaMinVND != 90000 || len(tt["a"].DanhMuc) != 1 || tt["a"].DanhMuc[0] != "an_vat" ||
+		len(tt["a"].DiUng) != 1 || tt["a"].DiUng[0] != "dau_phong" {
+		t.Fatalf("stored attributes: %+v %v", tt["a"], err)
+	}
+	for i := 0; ; i++ {
+		hits, err := kho.TimLai(ctx, ten, nap.TruyVan{Chu: "bun bo ben ho", Dense: rows[0].Dense, TrongSo: nap.TrongSo{Dense: 1, BM25: 1}, K: 3})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(hits) > 0 && hits[0].DocID == "a" {
+			break
+		}
+		if i == 100 {
+			t.Fatalf("the partially updated row lost its text or vector: %+v", hits)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	ma := rows[1]
+	ma.DiUng = []string{"tom", "cua"}
+	ghost := nap.Hang{ChunkID: "khong-co", DocID: "khong-co", DiemDen: "d-da-lat"}
+	// Milvus 3.0.2 refuses the whole batch ("cannot insert a new entity:
+	// missing required field dense"): the indexer then writes row by row.
+	if _, err = kho.CapNhatThuocTinhLo(ctx, ten, []nap.Hang{ma, ghost}); err == nil {
+		t.Fatal("a partial update naming a missing key was accepted")
+	}
+	if c, e := kho.Dem(ctx, ten); e != nil || c != 3 {
+		t.Fatalf("a partial update of a missing key left %d rows (%v)", c, e)
+	}
+	if ks, _ = kho.KhoaTheoDoc(ctx, ten, []string{"b"}); len(ks) != 1 || ks[0].Dau != nap.DauThuocTinh(rows[1]) {
+		t.Fatalf("the refused batch wrote part of itself: %+v", ks)
+	}
+}

@@ -320,13 +320,10 @@ func runRagVector(args []string, getenv func(string) string, stdout, stderr io.W
 		st, err := n.DocTrangThai(ctx, pool)
 		return ragOut(stdout, stderr, st, err)
 	case "v-index":
-		var b nap.BaoCaoChiMuc
-		cm := nap.ChiMuc{Nap: n}
-		_, err := jobs.MotLuot(ctx, pool, jobs.DinhKy{Ten: cm.DinhKy().Ten, Nhip: time.Minute, Chay: func(ctx context.Context, tx pgxTx) error {
-			var err error
-			b, err = cm.MotLuot(ctx, tx)
-			return err
-		}})
+		// One pass by hand: the same budget as the rag-indexer's (at most
+		// NguongOnline vectors paid online), no batch door.
+		cm := nap.ChiMuc{Nap: n, Pool: pool, HanMuc: nap.NewHanMuc(nap.TranOnlineGio)}
+		_, b, err := cm.Luot(ctx, pool)
 		return ragOut(stdout, stderr, b, err)
 	case "v-reconcile":
 		var b nap.BaoCaoDoiChieu
@@ -459,9 +456,10 @@ func migrateRagVector(getenv func(string) string, stdout, stderr io.Writer) int 
 }
 
 // ragIndexer is `core rag-indexer`: the vector index's only long-running
-// writer. The indexer pass every minute and on every message of the lane
-// 'rag' (MOBILE_AMQP_URL set), and the alias reconciler every minute, each
-// under its own advisory lock.
+// writer. The indexer pass on every notification of rag_dirty (at least
+// every 20 s) and on every message of the lane 'rag' (MOBILE_AMQP_URL set),
+// the batch embedding door's turn every two minutes, and the alias
+// reconciler every minute, each under its own advisory lock.
 func ragIndexer(getenv func(string) string, stderr io.Writer) int {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -483,11 +481,44 @@ func ragIndexer(getenv func(string) string, stderr io.Writer) int {
 		return refuse(err)
 	}
 	defer closeFn()
-	cm := nap.ChiMuc{Nap: n, Logger: logger}
-	periodic := []jobs.DinhKy{cm.DinhKy(), n.DinhKyDoiChieu(logger)}
+	cm := nap.ChiMuc{Nap: n, Logger: logger, Pool: pool, HanMuc: nap.NewHanMuc(nap.TranOnlineGio)}
+	if lo, err := nhung.LoFromEnv(ctx, getenv); err == nil {
+		cm.Lo = napLo{l: lo}
+	} else {
+		// Without the batch door a bulk change is embedded online, within
+		// the hour's budget, NguongOnline at a time.
+		logger.Warn("rag indexer: no batch embedding door; bulk changes wait for the online budget", "code", nap.MaLoi(err))
+	}
+	periodic := []jobs.DinhKy{n.DinhKyDoiChieu(logger)}
 	var side sync.WaitGroup
 	side.Add(1)
 	go func() { defer side.Done(); _ = jobs.ChayDinhKy(ctx, pool, logger, periodic) }()
+	side.Add(1)
+	go func() { defer side.Done(); cm.Nghe(pool, logger).Run(ctx) }()
+	if cm.Lo != nil {
+		side.Add(1)
+		go func() {
+			defer side.Done()
+			t := time.NewTicker(nap.ChuKyLo)
+			defer t.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-t.C:
+				}
+				turn, cancel := context.WithTimeout(ctx, 5*time.Minute)
+				rep, err := cm.LuotLo(turn, pool)
+				cancel()
+				switch {
+				case err != nil && ctx.Err() == nil:
+					logger.Warn("rag indexer: batch embedding turn failed", "code", nap.MaLoi(err))
+				case rep.Job != "" || rep.Gui > 0:
+					logger.Info("rag indexer: batch embedding turn", "report", rep)
+				}
+			}
+		}()
+	}
 	if url := getenv(EnvAMQPURL); url != "" {
 		if err := jobs.CheckURL(url); err != nil {
 			return refuse(err)
@@ -560,9 +591,6 @@ func ragEmbedBatch(ctx context.Context, getenv func(string) string, pool nap.CSD
 	for _, d := range docs {
 		rows = append(rows, d.Rows...)
 	}
-	// At most 4,000 documents per job: a job of the whole catalogue (~25k
-	// chunks) was refused 429 RESOURCE_EXHAUSTED at creation (enqueued-token
-	// quota), 5,000 was accepted (probe 2026-09-29).
-	kq, err := n.NhungQuaLo(ctx, pool, napLo{l: lo}, rows, 30*time.Second, 4000)
+	kq, err := n.NhungQuaLo(ctx, pool, napLo{l: lo}, rows, 30*time.Second, nap.ToiDaLo)
 	return ragOut(stdout, stderr, map[string]any{"quan": len(docs), "qua_dai": rep.QuaDai, "cho_lam_giau": rep.ThieuLamGiau, "lo": kq}, err)
 }

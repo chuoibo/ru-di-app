@@ -313,11 +313,30 @@ func BuildEvalPromote(t *testing.T, pool *pgxpool.Pool, n nap.Nap, enc nap.StubD
 	if _, err := n.Promote(ctx, pool, rep.PhienBan, v.Sha); err != nil {
 		t.Fatal(err)
 	}
+	XongKiemLai(t, pool, nap.ChiMuc{Nap: n})
 	return rep, k
 }
 
+// XongKiemLai drains the background re-check a build leaves (every place
+// marked at priority -1) and holds that it writes nothing: a fresh build
+// already holds exactly what the indexer would write, fingerprints
+// included, so the re-check costs reads only.
+func XongKiemLai(t *testing.T, pool *pgxpool.Pool, c nap.ChiMuc) {
+	t.Helper()
+	for i := 0; ; i++ {
+		b := ChiMuc(t, pool, c)
+		if b.Lay == 0 {
+			return
+		}
+		if b.Ghi != 0 || b.MotPhan != 0 || b.ChoNhung != 0 || b.Hong != 0 || b.NhungOnline != 0 || i > 20 {
+			t.Fatalf("the re-check after a build wrote: %+v", b)
+		}
+	}
+}
+
 // VongDoi is the lifecycle scenario: build → reconcile → gate → promote by
-// alias → change capture (trigger → rag_dirty + outbox lane) → indexer
+// alias → background re-check → change capture (triggers on places and
+// rag_tombstones → rag_dirty + outbox lane) → indexer
 // (dual-write, tombstone everywhere) → second version → rollback by alias →
 // a removed place stays removed → the reconciler puts a moved alias back.
 func VongDoi(t *testing.T, pool *pgxpool.Pool, kho nap.KhoVector) {
@@ -358,8 +377,10 @@ func VongDoi(t *testing.T, pool *pgxpool.Pool, kho nap.KhoVector) {
 	if err := rag.Tombstone(ctx, pool, go_, "takedown"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(ctx, `INSERT INTO rag_dirty(corpus,doc_id) VALUES('place',$1)`, go_); err != nil {
-		t.Fatal(err)
+	// The tombstone marks its place itself, ahead of source changes.
+	var uuTien int
+	if err := pool.QueryRow(ctx, `SELECT uu_tien FROM rag_dirty WHERE doc_id=$1`, go_).Scan(&uuTien); err != nil || uuTien != 1 {
+		t.Fatalf("a takedown did not mark its place first: %d %v", uuTien, err)
 	}
 	// The edited place needs a new enrichment; the indexer asks the model
 	// (one scripted call) within its ceiling.
@@ -404,7 +425,6 @@ func VongDoi(t *testing.T, pool *pgxpool.Pool, kho nap.KhoVector) {
 	if err := rag.Tombstone(ctx, pool, go2, "closed"); err != nil {
 		t.Fatal(err)
 	}
-	_, _ = pool.Exec(ctx, `INSERT INTO rag_dirty(corpus,doc_id) VALUES('place',$1)`, go2)
 	ChiMuc(t, pool, cm)
 	from, to, err := n.Rollback(ctx, pool, nap.CorpusQuan)
 	if err != nil || from != v2.PhienBan || to != v1.PhienBan {
@@ -483,9 +503,6 @@ func TombstoneQuaRollback(t *testing.T, pool *pgxpool.Pool, kho nap.KhoVector) {
 	v2, _ := BuildEvalPromote(t, pool, n, enc, v)
 	const id = "dl-lau-nam-doi-thong"
 	if err := rag.Tombstone(ctx, pool, id, "takedown"); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := pool.Exec(ctx, `INSERT INTO rag_dirty(corpus,doc_id) VALUES('place',$1)`, id); err != nil {
 		t.Fatal(err)
 	}
 	ChiMuc(t, pool, nap.ChiMuc{Nap: n})
