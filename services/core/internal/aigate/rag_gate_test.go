@@ -41,19 +41,21 @@ const pkgRag = "mobile/services/core/internal/rag"
 // place_enrichments (a place's closed-id enrichment and its review verdict),
 // rag_embedding_cache (dense vectors by content hash),
 // rag_embed_batches (batch embedding jobs: provider job name, model, counts,
-// state; ADR-0049 §2.7) and rag_ingest_dlq (which place failed at which
-// stage, as enums). None names a
+// state; ADR-0049 §2.7), rag_trung (which place a build's dedupe merged
+// into which: version and place ids) and rag_ingest_dlq (which place failed
+// at which stage, as enums). None names a
 // person (nap_postgres_test.go lists their columns). And one read outside
 // rag: job_schema_migrations, whose version its migration checks before
 // installing a trigger that enqueues on the outbox's lane 'rag' -- a version
-// number, never a job.
+// number, never a job; and ingest_do_tre, the feed's freshness the SLO
+// reads (sources, instants, seconds).
 var ragAllowed = map[string]bool{
 	"rag_schema_migrations": true, "rag_index_versions": true, "rag_docs": true, "rag_chunks": true,
 	"rag_tombstones": true, "rag_query_log": true,
 	"places": true, "destinations": true, "place_facts": true, "place_danh_muc": true, "place_lam_giau": true,
 	"rag_nap_schema_migrations": true, "rag_vector_versions": true, "rag_dirty": true, "place_enrichments": true,
 	"rag_embedding_cache": true, "rag_ingest_dlq": true, "job_schema_migrations": true,
-	"rag_embed_batches": true,
+	"rag_embed_batches": true, "rag_trung": true, "ingest_do_tre": true,
 }
 
 // ragViolations lists the tables SQL-looking strings name outside the

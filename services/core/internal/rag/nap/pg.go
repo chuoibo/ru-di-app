@@ -286,9 +286,10 @@ func Duyet(ctx context.Context, q Querier, placeID, ban, review string) error {
 		}
 		return ErrKhongCoLamGiau
 	}
-	// The place's chunks carry its enrichment: index it again.
-	_, err = q.Exec(ctx, `INSERT INTO rag_dirty(corpus, doc_id) VALUES('place',$1)
-		ON CONFLICT (corpus, doc_id) DO UPDATE SET lan = rag_dirty.lan + 1`, placeID)
+	// The place's row carries its enrichment: index it again, first (the
+	// trigger on place_enrichments marks it too; this mark does not depend
+	// on the review having changed).
+	_, err = q.Exec(ctx, `SELECT rag_danh_dau('place', ARRAY[$1::text], NULL, 1::smallint)`, placeID)
 	return err
 }
 
@@ -346,15 +347,17 @@ func ThuLaiDLQ(ctx context.Context, db Beginner) (int, error) {
 		return 0, err
 	}
 	defer tx.Rollback(ctx)
-	tag, err := tx.Exec(ctx, `INSERT INTO rag_dirty(corpus, doc_id) SELECT DISTINCT corpus, doc_id FROM rag_ingest_dlq WHERE corpus='place'
-		ON CONFLICT (corpus, doc_id) DO UPDATE SET lan = rag_dirty.lan + 1`)
-	if err != nil {
+	var ids []string
+	if err := tx.QueryRow(ctx, `SELECT COALESCE(array_agg(DISTINCT doc_id), '{}') FROM rag_ingest_dlq WHERE corpus='place'`).Scan(&ids); err != nil {
+		return 0, err
+	}
+	if _, err = tx.Exec(ctx, `SELECT rag_danh_dau('place', $1::text[], NULL, 0::smallint)`, ids); err != nil {
 		return 0, err
 	}
 	if _, err = tx.Exec(ctx, `DELETE FROM rag_ingest_dlq WHERE corpus='place'`); err != nil {
 		return 0, err
 	}
-	return int(tag.RowsAffected()), tx.Commit(ctx)
+	return len(ids), tx.Commit(ctx)
 }
 
 // PhienBan is one row of rag_vector_versions.

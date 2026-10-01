@@ -2,8 +2,11 @@
 // the place catalogue and the app manual, from PostgreSQL into versioned
 // Milvus collections (research sdlc-production §C; design 04 §6).
 //
-//	places ──trigger──▶ rag_dirty + job_outbox('rag')        (change capture)
-//	  │                        │ indexer pass (lane 'rag' or 60 s tick)
+//	places, rag_tombstones, place_enrichments
+//	  ──trigger──▶ rag_danh_dau: rag_dirty + NOTIFY rag_dirty  (change capture)
+//	  │                        │ indexer pass (LISTEN, 2 s gather, 20 s
+//	  │                        │ safety poll; also the lane 'rag'); writes
+//	  │                        │ only what differs (hash + fingerprint)
 //	  ▼                        ▼
 //	S1 source hash → S2 SafeDeep → S5 LLM enrichment (quarantined, review
 //	queue) → S6 dedupe (embedding cosine + haversine) → S7 chunks with
@@ -32,7 +35,8 @@
 //
 // Writers: this package is the only writer of its tables (rag_dirty,
 // rag_vector_versions, place_enrichments, rag_embedding_cache,
-// rag_ingest_dlq) and of every Milvus collection whose
+// rag_embed_batches, rag_trung, rag_ingest_dlq) and of every Milvus
+// collection whose
 // name starts with rd_. It never names a nep_* table or collection
 // (aigate/rag_gate_test.go). It imports no engine package: the dense
 // encoder, the vector store and the model arrive through the interfaces

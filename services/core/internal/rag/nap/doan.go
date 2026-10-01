@@ -3,6 +3,7 @@ package nap
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -69,10 +70,34 @@ type Hang struct {
 	// the classification lands, which the index stores as [khong_ro].
 	DanhMuc  []string
 	Lat, Lng float64
+	// HienThi are the place's evidence fields (TruongHienThi), stored with
+	// the row so a search answers without reading Postgres (ADR-0051).
+	HienThi map[string]string
 
 	DenseModel string
 	SparseRev  string
 	Chunker    string
+}
+
+// DauThuocTinh is the fingerprint of everything a place row stores besides
+// its text and vector: the hard-filter attributes, the categories and the
+// evidence fields, as the index writes them. The adapter stores it in the row (vectordb's
+// FMoRong); a row whose fingerprint and content hash both match needs no
+// write, one whose hash matches needs only a partial update.
+func DauThuocTinh(r Hang) string {
+	b, _ := json.Marshal(struct {
+		DiemDen        string
+		DiUng, AnKieng []string
+		DiUngRo        bool
+		GiaMin, GiaMax int64
+		GiaRo          bool
+		MoO            []int16
+		GioRo          bool
+		DanhMuc        []string
+		HienThi        map[string]string
+	}{r.DiemDen, r.DiUng, r.AnKieng, r.DiUngRo, r.GiaMin, r.GiaMax, r.GiaRo, r.MoO, r.GioRo, r.DanhMuc, r.HienThi})
+	sum := sha256.Sum256(append([]byte("dau.v2\x00"), b...))
+	return hex.EncodeToString(sum[:12])
 }
 
 // MoO returns the slots of the week the schedule is open for in full.

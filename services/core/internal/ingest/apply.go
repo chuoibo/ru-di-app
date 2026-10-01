@@ -234,7 +234,17 @@ const upsertPlaceSQL = `
 	  evidence_posts = EXCLUDED.evidence_posts,
 	  description = EXCLUDED.description,
 	  reviews = EXCLUDED.reviews,
-	  updated_at = clock_timestamp()
+	  -- Moves only when the content does: an identical delivery leaves the
+	  -- row as it was, so the index's trigger (WHEN OLD.* IS DISTINCT FROM
+	  -- NEW.*) sees no change in what it reads. Not a WHERE: the row must
+	  -- still answer, and a newer source_updated_at still lands.
+	  updated_at = CASE WHEN (places.name, places.category, places.kinds, places.address, places.lat, places.lng,
+	      places.geo_precision, places.geo_evidence, places.province_code, places.destination_id, places.source_kind,
+	      places.confidence, places.evidence_posts, places.description, places.reviews)
+	    IS DISTINCT FROM (EXCLUDED.name, EXCLUDED.category, EXCLUDED.kinds, EXCLUDED.address, EXCLUDED.lat, EXCLUDED.lng,
+	      EXCLUDED.geo_precision, EXCLUDED.geo_evidence, EXCLUDED.province_code, EXCLUDED.destination_id, EXCLUDED.source_kind,
+	      EXCLUDED.confidence, EXCLUDED.evidence_posts, EXCLUDED.description, EXCLUDED.reviews)
+	    THEN clock_timestamp() ELSE places.updated_at END
 	WHERE places.source_updated_at IS NULL
 	   OR EXCLUDED.source_updated_at IS NULL
 	   OR EXCLUDED.source_updated_at >= places.source_updated_at

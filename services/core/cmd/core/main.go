@@ -126,6 +126,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return runRag(args[1:], getenv, stdout, stderr)
 	case "migrate-rag-vector":
 		return migrateRagVector(getenv, stdout, stderr)
+	case "rag-indexer-healthcheck":
+		return ragIndexerHealthcheck(getenv, stderr)
 	case "rag-indexer":
 		return ragIndexer(getenv, stderr)
 	case "purge-expired":
@@ -886,11 +888,13 @@ func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Log
 
 // quanRetriever is the places retriever the engine's tools and retrieval
 // path use. With MOBILE_MILVUS_ADDR set it is the hybrid adapter over the
-// index the ingest (rag/nap) builds -- gemini-embedding-2 dense + Milvus's
-// BM25 on both text fields (MILCO is shelved) fused with the
-// ingest's committed weights, every hit re-checked against the live rows in
-// a READ ONLY transaction (thuoctinh over aidoc.ChiDoc) -- falling back to
-// the lexical index only when neither leg can run. Unset, it is the lexical
+// index the ingest (rag/nap) builds -- gemini-embedding-2 dense (the query
+// vector cached in the process, outside the turn's budget: a repeated query
+// costs no call) + Milvus's BM25 on the one folded text field, fused with
+// the ingest's committed weights, the evidence served from the index
+// (ADR-0051; a hit without evidence fields is read live in a READ ONLY
+// transaction, thuoctinh over aidoc.ChiDoc, and re-checked) -- falling back
+// to the lexical index only when neither leg can run. Unset, it is the lexical
 // index alone (aidoc.Lexical, flagged lexical_only). A Milvus named but not
 // configured completely, or an ingestion configuration that disagrees with
 // vectordb's schema, is refused at start rather than at every turn.
@@ -919,7 +923,8 @@ func quanRetriever(ctx context.Context, getenv func(string) string, doc *aidoc.C
 	k := &hybrid.Kho{
 		// The sparse leg is Milvus's BM25 function over the one folded text
 		// field (rd.v4, owner 2026-09-29; MILCO removed).
-		Nhung: nhung.TheoLuot{Inner: embedder}, Index: m, Thua: vectordb.BM25{}, TenDiaDiem: alias,
+		Nhung: nhung.CoCache{Inner: nhung.TheoLuot{Inner: embedder}, Bo: nhung.MoiBoNhoCau(nhung.MacDinhMucCache)},
+		Index: m, Thua: vectordb.BM25{}, TenDiaDiem: alias,
 		TrongSo: &vectordb.TrongSo{Dense: w.Dense, BM25: w.BM25},
 		DocSong: aidoc.ThuocTinhSong{C: doc},
 		BiLoai: func(ctx context.Context, l vectordb.LocCung) (map[truyhoi.RangBuoc]int, error) {

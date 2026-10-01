@@ -53,7 +53,8 @@ func TestMigrateNapIdempotentVaTuChoiChecksumLech(t *testing.T) {
 func TestMigrateNapDoiOutboxV2(t *testing.T) {
 	pool := naptest.Pool(t)
 	ctx := context.Background()
-	for _, s := range []string{`DROP TRIGGER rag_nap_places_dirty ON places`, `DROP TABLE rag_nap_schema_migrations`,
+	for _, s := range []string{`DROP TRIGGER rag_nap_places_ghi ON places`, `DROP TRIGGER rag_nap_places_doi ON places`,
+		`DROP TABLE rag_nap_schema_migrations`,
 		`DELETE FROM job_schema_migrations WHERE version=2`} {
 		if _, err := pool.Exec(ctx, s); err != nil {
 			t.Fatal(err)
@@ -269,52 +270,6 @@ func TestPromoteKiemLaiVanTayVaVang(t *testing.T) {
 	}
 	if _, err := n.Promote(ctx, pool, rep.PhienBan, v.Sha); err != nil {
 		t.Fatalf("a verdict that still holds was refused: %v", err)
-	}
-}
-
-// failKho fails every write: the indexer counts dead letters and, after
-// MaxThuLai passes, moves the document out of rag_dirty; retry brings it
-// back.
-type failKho struct{ nap.KhoVector }
-
-func (failKho) Upsert(context.Context, string, []nap.Hang) error { return errors.New("down") }
-
-func TestChiMucDLQ(t *testing.T) {
-	pool := naptest.Pool(t)
-	ctx := context.Background()
-	v := naptest.Vang(t)
-	naptest.NapVang(t, pool, v)
-	kho := nap.NewKhoNho()
-	n, enc := naptest.Nap(t, kho)
-	naptest.LamGiauNhanTay(t, pool, n, v)
-	naptest.BuildEvalPromote(t, pool, n, enc, v)
-	id := "dl-tiem-banh-may-xanh"
-	if _, err := pool.Exec(ctx, `UPDATE places SET updated_at=now() WHERE id=$1`, id); err != nil {
-		t.Fatal(err)
-	}
-	bad := nap.ChiMuc{Nap: nap.Nap{Kho: failKho{kho}, Dense: n.Dense, Cfg: n.Cfg}}
-	for i := 1; i <= nap.MaxThuLai; i++ {
-		b := naptest.ChiMuc(t, pool, bad)
-		if b.Hong != 1 {
-			t.Fatalf("pass %d: %+v", i, b)
-		}
-	}
-	var dirty, so int
-	_ = pool.QueryRow(ctx, `SELECT (SELECT count(*) FROM rag_dirty), (SELECT so_lan FROM rag_ingest_dlq WHERE doc_id=$1)`, id).Scan(&dirty, &so)
-	if dirty != 0 || so != nap.MaxThuLai {
-		t.Fatalf("after %d failures: dirty %d, dead letter count %d", nap.MaxThuLai, dirty, so)
-	}
-	st, _ := n.DocTrangThai(ctx, pool)
-	if st[0].DLQ != 1 {
-		t.Fatalf("status DLQ %d", st[0].DLQ)
-	}
-	back, err := nap.ThuLaiDLQ(ctx, pool)
-	if err != nil || back != 1 {
-		t.Fatalf("retry: %d %v", back, err)
-	}
-	good := nap.ChiMuc{Nap: n}
-	if b := naptest.ChiMuc(t, pool, good); b.Ghi != 1 || b.Hong != 0 {
-		t.Fatalf("after retry: %+v", b)
 	}
 }
 

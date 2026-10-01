@@ -4,8 +4,11 @@ package ingest
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // fakeFactFeed serves web facts in (synced_at, place_id) order.
@@ -183,4 +186,122 @@ func placeRows(t *testing.T, at time.Time, ids ...string) []FeedRow {
 		out = append(out, FeedRow{PlaceID: id, SyncedAt: at, Doc: feedDoc(t, id)})
 	}
 	return out
+}
+
+// TestGhiDoTre: after a round, each source records when it ran, its cursor
+// and how far the feed's newest row is past it; a feed table the role
+// cannot read is skipped.
+func TestGhiDoTre(t *testing.T) {
+	pool, ctx := migratedPool(t)
+	base := pool
+	schema := fmt.Sprintf("feed_dt_%d", time.Now().UnixNano())
+	if _, err := base.Exec(ctx, "CREATE SCHEMA "+schema); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = base.Exec(context.Background(), "DROP SCHEMA "+schema+" CASCADE") })
+	at := time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC)
+	for _, tb := range []string{"places", "place_danh_muc", "place_lam_giau"} {
+		if _, err := base.Exec(ctx, "CREATE TABLE "+schema+"."+tb+" (synced_at timestamptz)"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := base.Exec(ctx, "INSERT INTO "+schema+".places VALUES ($1)", at.Add(90*time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	cfg := base.Config().Copy()
+	cfg.ConnConfig.RuntimeParams["search_path"] = schema
+	feed, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(feed.Close)
+	clean := func() {
+		_, _ = base.Exec(context.Background(), `DELETE FROM ingest_do_tre`)
+		_, _ = base.Exec(context.Background(), `DELETE FROM ingest_cursor WHERE source = $1`, FeedSource)
+	}
+	clean()
+	t.Cleanup(clean)
+	if _, err := base.Exec(ctx, `INSERT INTO ingest_cursor (source, synced_at, place_id) VALUES ($1, $2, 'plc_x')`, FeedSource, at); err != nil {
+		t.Fatal(err)
+	}
+	if err := GhiDoTre(ctx, pool, feed, at.Add(2*time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]float64{}
+	rows, _ := pool.Query(ctx, `SELECT source, tre_giay FROM ingest_do_tre`)
+	for rows.Next() {
+		var s string
+		var tre float64
+		_ = rows.Scan(&s, &tre)
+		got[s] = tre
+	}
+	rows.Close()
+	if len(got) != 3 || got[FeedSource] != 90 || got[DanhMucSource] != 0 {
+		t.Fatalf("freshness rows: %v (place_web_facts is missing from the feed and must be skipped)", got)
+	}
+}
+
+// TestGiaUocDanhDauQuan: a fact whose price turns estimated (or back) while
+// its numbers stay marks its place (updated_at moves) -- the index quotes
+// the flag; a fact landing again unchanged does not.
+func TestGiaUocDanhDauQuan(t *testing.T) {
+	pool, ctx := migratedPool(t)
+	ids := []string{"vnl-guo"}
+	clean := func() {
+		for _, sql := range []string{`DELETE FROM place_facts WHERE place_id = ANY($1)`,
+			`DELETE FROM place_source_post WHERE place_id = ANY($1)`, `DELETE FROM places WHERE id = ANY($1)`} {
+			_, _ = pool.Exec(context.Background(), sql, ids)
+		}
+		for _, sql := range []string{`DELETE FROM ingest_cursor WHERE source IN ('vnlocal.places','vnlocal.place_web_facts')`,
+			`DELETE FROM ingest_place_raw WHERE batch_id LIKE 'pg-%'`, `DELETE FROM ingest_reject WHERE batch_id LIKE 'pg-%'`,
+			`DELETE FROM ingest_batch WHERE id LIKE 'pg-%'`} {
+			_, _ = pool.Exec(context.Background(), sql)
+		}
+	}
+	clean()
+	t.Cleanup(clean)
+	if _, err := SeedProvinces(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := SeedProvinceDestinations(ctx, pool); err != nil {
+		t.Fatal(err)
+	}
+	at := time.Now().Add(-time.Hour).UTC().Truncate(time.Microsecond)
+	if _, err := SyncOnce(ctx, pool, fakeFeed{rows: placeRows(t, at, "plc_guo")}, nil, nil, SyncOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	updated := func() time.Time {
+		t.Helper()
+		var u time.Time
+		if err := pool.QueryRow(ctx, `SELECT updated_at FROM places WHERE id='vnl-guo'`).Scan(&u); err != nil {
+			t.Fatal(err)
+		}
+		return u
+	}
+	land := func(at time.Time, coSo string) {
+		t.Helper()
+		if _, err := pool.Exec(ctx, `DELETE FROM ingest_cursor WHERE source = $1`, FactsSource); err != nil {
+			t.Fatal(err)
+		}
+		r := FactRow{PlaceID: "plc_guo", SyncedAt: at, GioMoCua: []byte(`[]`), Menu: []byte(`[]`), HoatDong: []byte(`[]`),
+			GiaNguoiMin: i64(40000), GiaNguoiMax: i64(70000), GiaNguoiCoSo: str(coSo), CheckedAt: at, HetHanAt: at.Add(30 * 24 * time.Hour)}
+		if _, err := PullFacts(ctx, pool, fakeFactFeed{rows: []FactRow{r}}, PullOptions{}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	land(at, "review_web")
+	u0 := updated()
+	land(at.Add(time.Minute), "review_web")
+	if !updated().Equal(u0) {
+		t.Fatal("a fact landing again unchanged marked the place")
+	}
+	land(at.Add(2*time.Minute), "uoc_tu_mon")
+	u1 := updated()
+	if !u1.After(u0) {
+		t.Fatal("a price turning estimated did not mark the place")
+	}
+	land(at.Add(3*time.Minute), "review_web")
+	if !updated().After(u1) {
+		t.Fatal("a price turning measured did not mark the place")
+	}
 }

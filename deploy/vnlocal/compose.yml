@@ -159,8 +159,16 @@ services:
     environment:
       <<: [*env, *milvus-env]
       MOBILE_DB_MAX_CONNS: "2"
+    # The freshness SLO (nap.DoTuoi): unhealthy when the place index has lagged
+    # Postgres by more than 60 s for 2 min, a place is dead-lettered, the
+    # ingest has not finished a round in 3 min, or the indexer loop stopped.
+    # An alert, not a restart: Docker does not restart an unhealthy container.
     healthcheck:
-      disable: true
+      test: ["CMD", "/core", "rag-indexer-healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 2
     depends_on:
       migrate-rag-vector:
         condition: service_completed_successfully
@@ -285,7 +293,9 @@ services:
   ingest:
     <<: [*core-image, *secrets]
     entrypoint: ["/rudi-ingest"]
-    command: ["sync", "--every", "${RUDI_SYNC_EVERY:-10m}"]
+    # A round on every NOTIFY rudi_doi from the feed (vnlocal's triggers),
+    # and this safety poll when none comes.
+    command: ["sync", "--every", "${RUDI_SYNC_EVERY:-20s}"]
     environment:
       <<: *env
       MOBILE_DB_MAX_CONNS: "3"

@@ -113,11 +113,23 @@ const (
 	FDocID = "doc_id"
 	// FMoRong is a JSON dict for fields that arrive later, upserted on its
 	// own (CapNhatMoRong) without a schema revision. Nullable; written {}.
+	// Its key MoRongDau holds the ingest's fingerprint of what it wrote.
 	FMoRong    = "mo_rong"
 	FOwner     = "owner_id"
 	FKind      = "kind"
 	FCreatedAt = "created_at"
 )
+
+// MoRongDau is the FMoRong key under which the ingest stores its
+// fingerprint of a place row's attributes: a row whose fingerprint and
+// content hash both match what the ingest would write needs no write.
+const MoRongDau = "dau"
+
+// MoRongHienThi is the FMoRong key of a place row's evidence fields (a
+// string → string dict; rag/nap.TruongHienThi): a search returns them with
+// the hit (Trung.HienThi), so the answer needs no read of Postgres
+// (ADR-0051).
+const MoRongHienThi = "hien_thi"
 
 // PhienBanLuocDo names this file's place and manual schema (fields,
 // analyzers, index parameters). The ingest's committed configuration names

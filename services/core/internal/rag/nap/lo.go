@@ -59,7 +59,8 @@ var ErrLoHong = errors.New("nap: the batch embedding job failed")
 // (KiemVector) and written to the cache under the configuration's task. A
 // job already running for this model, dims and task is polled instead of a
 // new one submitted, so a run cut short costs nothing twice. The build that
-// follows (Vector / NhungHang) then finds every vector in the cache.
+// follows (Vector / NhungHang) then finds every vector in the cache. cho 0
+// or less polls once and returns ("dang_chay" while the job runs).
 func (n Nap) NhungQuaLo(ctx context.Context, db CSDL, lo NhungLo, rows []Hang, cho time.Duration, toiDa int) (BaoCaoLo, error) {
 	started := time.Now()
 	var tong BaoCaoLo
@@ -181,6 +182,12 @@ func (n Nap) motLuotLo(ctx context.Context, db CSDL, lo NhungLo, rows []Hang, ch
 				return rep, err
 			}
 			rep.Ghi, rep.TrangThai = len(fresh), "xong"
+			rep.Giay = time.Since(started).Seconds()
+			return rep, nil
+		}
+		if cho <= 0 {
+			// One look (the indexer's turn): the next turn polls again.
+			rep.TrangThai = "dang_chay"
 			rep.Giay = time.Since(started).Seconds()
 			return rep, nil
 		}

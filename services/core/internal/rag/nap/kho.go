@@ -32,6 +32,16 @@ type KhoVector interface {
 	// GiaMin/GiaMax/GiaRo, MoO/GioRo), leaving vectors and text as they
 	// are, and returns how many rows it rewrote.
 	CapNhatThuocTinh(ctx context.Context, ten, docID string, r Hang) (int, error)
+	// KhoaTheoDoc reads the keys of every row of the documents docIDs in
+	// place collection ten, with the fingerprint each stores (Dau), at
+	// strong consistency, in one call: what the indexer compares before it
+	// writes.
+	KhoaTheoDoc(ctx context.Context, ten string, docIDs []string) ([]KhoaHang, error)
+	// CapNhatThuocTinhLo rewrites, in one call, the hard-filter attributes,
+	// the categories and the fingerprint of the given rows (by ChunkID, each
+	// already in ten) from themselves; vectors and text stay. It returns
+	// how many rows it rewrote.
+	CapNhatThuocTinhLo(ctx context.Context, ten string, rows []Hang) (int, error)
 	// Dem is count(*) at strong consistency.
 	Dem(ctx context.Context, ten string) (int64, error)
 	// LietKe lists every row's keys at strong consistency, for
@@ -54,6 +64,8 @@ type KhoaHang struct {
 	DocID       string
 	ContentHash string
 	DenseModel  string
+	// Dau is the stored fingerprint (DauThuocTinh), KhoaTheoDoc only.
+	Dau string
 }
 
 // LuocDo is a collection's schema parameters: the corpus, the dense
@@ -294,12 +306,73 @@ func (k *KhoNho) CapNhatThuocTinh(_ context.Context, ten, docID string, r Hang) 
 		if old.DocID != docID {
 			continue
 		}
-		old.DiemDen, old.DiUng, old.DiUngRo, old.AnKieng = r.DiemDen, r.DiUng, r.DiUngRo, r.AnKieng
-		old.GiaMin, old.GiaMax, old.GiaRo, old.MoO, old.GioRo = r.GiaMin, r.GiaMax, r.GiaRo, r.MoO, r.GioRo
-		c.rows[id] = old
+		c.rows[id] = thuocTinhTu(old, r)
 		n++
 	}
 	return n, nil
+}
+
+// thuocTinhTu is old with r's attributes and categories: what a partial
+// update leaves in a row.
+func thuocTinhTu(old, r Hang) Hang {
+	old.DiemDen, old.DiUng, old.DiUngRo, old.AnKieng = r.DiemDen, r.DiUng, r.DiUngRo, r.AnKieng
+	old.GiaMin, old.GiaMax, old.GiaRo, old.MoO, old.GioRo = r.GiaMin, r.GiaMax, r.GiaRo, r.MoO, r.GioRo
+	old.DanhMuc, old.HienThi = r.DanhMuc, r.HienThi
+	return old
+}
+
+func (k *KhoNho) KhoaTheoDoc(_ context.Context, ten string, docIDs []string) ([]KhoaHang, error) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	c, err := k.col(ten)
+	if err != nil {
+		return nil, err
+	}
+	want := map[string]bool{}
+	for _, d := range docIDs {
+		want[d] = true
+	}
+	var out []KhoaHang
+	for _, r := range c.rows {
+		if want[r.DocID] {
+			out = append(out, KhoaHang{ChunkID: r.ChunkID, DocID: r.DocID, ContentHash: r.ContentHash,
+				DenseModel: r.DenseModel, Dau: DauThuocTinh(r)})
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ChunkID < out[j].ChunkID })
+	return out, nil
+}
+
+// CapNhatThuocTinhLo refuses the whole batch when one id is missing, as a
+// Milvus partial upsert does.
+func (k *KhoNho) CapNhatThuocTinhLo(_ context.Context, ten string, rows []Hang) (int, error) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	c, err := k.col(ten)
+	if err != nil {
+		return 0, err
+	}
+	for _, r := range rows {
+		if _, ok := c.rows[r.ChunkID]; !ok {
+			return 0, fmt.Errorf("nap: row %s is missing, a partial rewrite needs it", r.ChunkID)
+		}
+	}
+	for _, r := range rows {
+		c.rows[r.ChunkID] = thuocTinhTu(c.rows[r.ChunkID], r)
+	}
+	return len(rows), nil
+}
+
+// Doc is row id of collection ten as stored (tests read what a write left).
+func (k *KhoNho) Doc(ten, id string) (Hang, bool) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	c, err := k.col(ten)
+	if err != nil {
+		return Hang{}, false
+	}
+	r, ok := c.rows[id]
+	return r, ok
 }
 
 func (k *KhoNho) Dem(_ context.Context, ten string) (int64, error) {

@@ -82,6 +82,13 @@ func TestTroLyKhongVietChiMucVector(t *testing.T) {
 		"(*" + pkgNapKho + ".Kho).Upsert", "(*" + pkgNapKho + ".Kho).XoaID",
 		"(*" + pkgNapKho + ".Kho).TaoCollection", "(*" + pkgNapKho + ".Kho).DatAlias",
 		"(*" + pkgNapKho + ".Kho).XoaCollection",
+		"(*" + pkgNapKho + ".Kho).CapNhatThuocTinh", "(*" + pkgNapKho + ".Kho).CapNhatThuocTinhLo",
+		"(" + pkgNap + ".ChiMuc).Luot", "(" + pkgNap + ".ChiMuc).LuotLo", pkgNap + ".ThuLaiDLQ",
+	}
+	for _, w := range writers {
+		if _, ok := g.byName[w]; !ok {
+			t.Fatalf("writer %s is not in the program: the list is stale", w)
+		}
 	}
 	var nep []*types.Func
 	for _, r := range nepRoots {

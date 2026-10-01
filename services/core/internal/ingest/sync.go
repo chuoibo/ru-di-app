@@ -21,6 +21,10 @@ type SyncOptions struct {
 	// AI is the feed's categories and search attributes (place_danh_muc,
 	// place_lam_giau); nil skips them.
 	AI AIFeed
+	// ApDungRieng leaves the facts' derivation (ApplyFacts) to the caller:
+	// the daemon runs it when something landed and on a clock of its own,
+	// not on every round a notification wakes.
+	ApDungRieng bool
 }
 
 // SyncReport is what one round did.
@@ -115,11 +119,13 @@ func SyncOnce(ctx context.Context, pool *pgxpool.Pool, feed Feed, frames FrameSo
 				break
 			}
 		}
-		applied, err := ApplyFacts(ctx, pool, time.Now())
-		if err != nil {
-			return report, fmt.Errorf("apply web facts: %w", err)
+		if !opt.ApDungRieng {
+			applied, err := ApplyFacts(ctx, pool, time.Now())
+			if err != nil {
+				return report, fmt.Errorf("apply web facts: %w", err)
+			}
+			report.FactsApplied = applied
 		}
-		report.FactsApplied = applied
 	}
 	if opt.AI != nil {
 		for _, pass := range []struct {

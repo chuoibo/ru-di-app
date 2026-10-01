@@ -14,6 +14,7 @@ package napkho
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -171,7 +172,8 @@ func (k *Kho) Upsert(ctx context.Context, ten string, rows []nap.Hang) error {
 		out := make([]vectordb.HangDiaDiem, len(rows))
 		for i, r := range rows {
 			out[i] = vectordb.HangDiaDiem{ID: r.ChunkID, DocID: r.DocID, Dense: r.Dense, Text: r.Text,
-				ContentHash: r.ContentHash, EmbedModel: r.DenseModel, ThuocTinh: ThuocTinh(r), GiaMaxVND: giaMax(r), PhienBan: v}
+				ContentHash: r.ContentHash, EmbedModel: r.DenseModel, ThuocTinh: ThuocTinh(r), GiaMaxVND: giaMax(r), PhienBan: v,
+				MoRong: MoRong(r)}
 		}
 		return k.M.GhiDiaDiem(ctx, k.ten(ten), out)
 	default:
@@ -196,6 +198,41 @@ func (k *Kho) CapNhatThuocTinh(ctx context.Context, ten, docID string, r nap.Han
 		return 0, fmt.Errorf("%w: attributes of %s", vectordb.ErrTen, ten)
 	}
 	return k.M.CapNhatThuocTinh(ctx, k.ten(ten), docID, ThuocTinh(r), giaMax(r))
+}
+
+// MoRong is a place row's FMoRong dict: the ingest's fingerprint of what it
+// wrote (nap.DauThuocTinh) under vectordb.MoRongDau, and the evidence fields
+// (nap.TruongHienThi) under vectordb.MoRongHienThi.
+func MoRong(r nap.Hang) []byte {
+	d := map[string]any{vectordb.MoRongDau: nap.DauThuocTinh(r)}
+	if len(r.HienThi) > 0 {
+		d[vectordb.MoRongHienThi] = r.HienThi
+	}
+	b, _ := json.Marshal(d)
+	return b
+}
+
+func (k *Kho) KhoaTheoDoc(ctx context.Context, ten string, docIDs []string) ([]nap.KhoaHang, error) {
+	if kk, _, err := kho(ten); err != nil || kk != vectordb.KhoDiaDiem {
+		return nil, fmt.Errorf("%w: keys of %s", vectordb.ErrTen, ten)
+	}
+	ks, err := k.M.KhoaTheoDoc(ctx, k.ten(ten), docIDs)
+	out := khoaNap(ks)
+	for i := range ks {
+		out[i].Dau = ks[i].Dau
+	}
+	return out, err
+}
+
+func (k *Kho) CapNhatThuocTinhLo(ctx context.Context, ten string, rows []nap.Hang) (int, error) {
+	if kk, _, err := kho(ten); err != nil || kk != vectordb.KhoDiaDiem {
+		return 0, fmt.Errorf("%w: attributes of %s", vectordb.ErrTen, ten)
+	}
+	hs := make([]vectordb.CapNhatHang, len(rows))
+	for i, r := range rows {
+		hs[i] = vectordb.CapNhatHang{ID: r.ChunkID, ThuocTinh: ThuocTinh(r), MoRong: MoRong(r)}
+	}
+	return k.M.CapNhatThuocTinhLo(ctx, k.ten(ten), hs)
 }
 
 func (k *Kho) Dem(ctx context.Context, ten string) (int64, error) {

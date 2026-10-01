@@ -168,7 +168,7 @@ func lamGiauReject(r LamGiauRow) string {
 // AIResult is what one pull of either pass did.
 type AIResult struct {
 	Landed   int
-	Changed  []string // catalogue ids whose row was written
+	Changed  []string // catalogue ids whose content changed
 	Rejected map[string]int
 	CaughtUp bool
 }
@@ -260,16 +260,18 @@ func PullDanhMuc(ctx context.Context, pool *pgxpool.Pool, feed AIFeed, opt PullO
 			}
 			id := PlaceID(r.PlaceID)
 			b.Queue(`
+				WITH cu AS (SELECT danh_muc FROM place_danh_muc WHERE place_id = $1)
 				INSERT INTO place_danh_muc (place_id, source_ref, danh_muc, model, prompt_version, schema_version, checked_at, synced_at)
 				VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
 				ON CONFLICT (place_id) DO UPDATE SET
 				  danh_muc = EXCLUDED.danh_muc, model = EXCLUDED.model, prompt_version = EXCLUDED.prompt_version,
 				  schema_version = EXCLUDED.schema_version, checked_at = EXCLUDED.checked_at,
 				  synced_at = EXCLUDED.synced_at, landed_at = clock_timestamp()
-				WHERE place_danh_muc.synced_at <= EXCLUDED.synced_at`,
-				id, r.PlaceID, r.DanhMuc, r.Model, r.PromptVersion, r.SchemaVersion, r.CheckedAt, r.SyncedAt)
+				WHERE place_danh_muc.synced_at <= EXCLUDED.synced_at
+				RETURNING NOT EXISTS (SELECT 1 FROM cu) OR (SELECT danh_muc FROM cu) IS DISTINCT FROM place_danh_muc.danh_muc`,
+				id, r.PlaceID, r.DanhMuc, r.Model, r.PromptVersion, r.SchemaVersion, r.CheckedAt, r.SyncedAt).
+				QueryRow(doiThat(id, res))
 			res.Landed++
-			res.Changed = append(res.Changed, id)
 		})
 }
 
@@ -284,6 +286,7 @@ func PullLamGiau(ctx context.Context, pool *pgxpool.Pool, feed AIFeed, opt PullO
 			}
 			id := PlaceID(r.PlaceID)
 			b.Queue(`
+				WITH cu AS (SELECT di_ung, an_kieng, khi_chat, mon_chinh, chen_lenh, tin_cay FROM place_lam_giau WHERE place_id = $1)
 				INSERT INTO place_lam_giau (place_id, source_ref, di_ung, an_kieng, khi_chat, mon_chinh, chen_lenh, tin_cay,
 				  model, prompt_version, schema_version, checked_at, synced_at)
 				VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
@@ -293,12 +296,36 @@ func PullLamGiau(ctx context.Context, pool *pgxpool.Pool, feed AIFeed, opt PullO
 				  model = EXCLUDED.model, prompt_version = EXCLUDED.prompt_version,
 				  schema_version = EXCLUDED.schema_version, checked_at = EXCLUDED.checked_at,
 				  synced_at = EXCLUDED.synced_at, landed_at = clock_timestamp()
-				WHERE place_lam_giau.synced_at <= EXCLUDED.synced_at`,
+				WHERE place_lam_giau.synced_at <= EXCLUDED.synced_at
+				RETURNING NOT EXISTS (SELECT 1 FROM cu)
+				  OR (SELECT ROW(di_ung, an_kieng, khi_chat, mon_chinh, chen_lenh, tin_cay) FROM cu)
+				     IS DISTINCT FROM ROW(place_lam_giau.di_ung, place_lam_giau.an_kieng, place_lam_giau.khi_chat,
+				                          place_lam_giau.mon_chinh, place_lam_giau.chen_lenh, place_lam_giau.tin_cay)`,
 				id, r.PlaceID, nonNilList(r.DiUng), nonNilList(r.AnKieng), nonNilList(r.KhiChat), nonNilList(r.MonChinh),
-				r.ChenLenh, r.TinCay, r.Model, r.PromptVersion, r.SchemaVersion, r.CheckedAt, r.SyncedAt)
+				r.ChenLenh, r.TinCay, r.Model, r.PromptVersion, r.SchemaVersion, r.CheckedAt, r.SyncedAt).
+				QueryRow(doiThat(id, res))
 			res.Landed++
-			res.Changed = append(res.Changed, id)
 		})
+}
+
+// doiThat reads an upsert's answer: the place is marked for the index only
+// when what it holds changed (a new row, or new content). A row the
+// version guard refused answers nothing; one rewritten identically (a new
+// model name, a re-check at the source) answers false.
+func doiThat(id string, res *AIResult) func(pgx.Row) error {
+	return func(row pgx.Row) error {
+		var doi bool
+		switch err := row.Scan(&doi); {
+		case errors.Is(err, pgx.ErrNoRows):
+			return nil
+		case err != nil:
+			return err
+		}
+		if doi {
+			res.Changed = append(res.Changed, id)
+		}
+		return nil
+	}
 }
 
 func nonNilList(s []string) []string {

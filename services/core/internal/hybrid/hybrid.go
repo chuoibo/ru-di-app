@@ -1,9 +1,7 @@
 // Package hybrid is the truyhoi.Retriever adapter «hybrid»: one query
 // embedding (under the turn's MaxEmbedCallsPerTurn), a Milvus search that
-// fuses the dense leg and the sparse leg (BM25 by default, MILCO behind its
-// flag) by RRF with the hard constraints in the filter expression, then a
-// second check of every hit against its live PostgreSQL rows, then the
-// optional reranker.
+// fuses the dense leg and the sparse leg (BM25) by RRF with the hard
+// constraints in the filter expression, then the optional reranker.
 //
 // What it decides and what it does not (docs/architecture/03, «Luật không
 // heuristic»): the hard constraints arrive as ids, an instant and whole
@@ -13,24 +11,28 @@
 // preferences (Mem) are closed ids too; their labels join the query text so
 // they rank, never filter.
 //
-// Fail closed: a hit whose live row is missing, tombstoned or breaks a hard
-// constraint is dropped and counted (KiemLaiLoai, and BiLoai under the
-// constraint it broke); a PostgreSQL error fails the retrieval rather than
-// showing unchecked hits. The live row is read by package thuoctinh from
-// the tables the ingest (rag/nap) writes -- places, place_enrichments,
-// rag_tombstones -- with the ingest's own rule (nap.ApDung), so the index
-// and the re-check are two copies of one truth. A leg that is down is
-// reported (NoVector, NoSparse, NoRerank) and the other legs answer.
+// Milvus is the serving copy (ADR-0051): a hit carries its evidence fields
+// (vectordb.Trung.HienThi, written by the ingest with the row) and is
+// answered from the index, the filter having held the hard constraints. How
+// stale the index may be is the freshness SLO's (rag/nap DoTuoi: 60 s,
+// allergens and closures included), not a read per query. Only a hit
+// without evidence fields -- a row written before them, a collection rolled
+// back to -- is read live (package thuoctinh, the ingest's own rule) and
+// re-checked: gone, tombstoned or breaking a constraint, it is dropped and
+// counted (KiemLaiLoai, and BiLoai under the constraint it broke); a
+// PostgreSQL error then fails the retrieval rather than showing unchecked
+// hits. A leg that is down is reported (NoVector, NoSparse, NoRerank) and
+// the other legs answer.
 //
-// The index holds chunks (a place's profile and its reviews); a retrieval
-// answers places: hits are folded to their document, the best-ranked chunk
-// standing for it.
+// The index holds one row per place (rd.v4); hits are folded to their
+// document all the same, the best-ranked row standing for it.
 package hybrid
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -89,9 +91,9 @@ type Kho struct {
 	Nhung nhung.Nhung
 	Index vectordb.TimKiem
 	Thua  vectordb.Thua
-	// DocSong reads the live rows of hit ids (aidoc.ThuocTinhSong: thuoctinh
-	// in a READ ONLY transaction); the re-check is the last word on every
-	// hit.
+	// DocSong reads the live rows of the hits that carry no evidence fields
+	// (aidoc.ThuocTinhSong: thuoctinh in a READ ONLY transaction), which are
+	// then re-checked; nil drops such hits (fail closed).
 	DocSong DocSong
 	// TenDiaDiem and TenHuongDan are the aliases searched.
 	TenDiaDiem  string
@@ -112,8 +114,10 @@ type Kho struct {
 	HuongDan DocHuongDan
 
 	// KiemLaiLoai counts the hits the PostgreSQL re-check dropped over this
-	// Kho's life (content-free). Atomic: one Kho serves every turn.
+	// Kho's life (content-free); DocSongLuot the hits it had to read live.
+	// Atomic: one Kho serves every turn.
 	KiemLaiLoai atomic.Int64
+	DocSongLuot atomic.Int64
 }
 
 // DuPhong answers from Chinh, and from Phu when Chinh has no leg at all
@@ -340,50 +344,44 @@ func hopLe(out, in []truyhoi.BangChung, n int) bool {
 	return true
 }
 
-// kiemLai hydrates the hits from their live rows and drops, and counts,
-// every one that is gone or breaks a hard constraint.
+// kiemLai builds the evidence of the hits: from the index where a hit
+// carries its evidence fields, from the live row otherwise -- read, and
+// re-checked against the constraints, dropped and counted when gone or
+// breaking one.
 func (k *Kho) kiemLai(ctx context.Context, hits []vectordb.Trung, loc vectordb.LocCung, kq *truyhoi.KetQuaTruyHoi) ([]truyhoi.BangChung, error) {
-	ids := make([]string, len(hits))
-	for i, h := range hits {
-		ids[i] = h.ID
+	var thieu []string
+	for _, h := range hits {
+		if len(h.HienThi) == 0 {
+			thieu = append(thieu, h.ID)
+		}
 	}
-	rows, err := k.DocSong.DocSong(ctx, ids)
-	if err != nil {
-		return nil, fmt.Errorf("hybrid: re-check: %w", err)
+	var rows map[string]thuoctinh.Hang
+	if len(thieu) > 0 && k.DocSong != nil {
+		k.DocSongLuot.Add(int64(len(thieu)))
+		var err error
+		if rows, err = k.DocSong.DocSong(ctx, thieu); err != nil {
+			return nil, fmt.Errorf("hybrid: re-check: %w", err)
+		}
 	}
 	out := make([]truyhoi.BangChung, 0, len(hits))
 	for _, h := range hits {
-		row, ok := rows[h.ID]
-		if !ok {
-			k.KiemLaiLoai.Add(1)
-			continue
-		}
-		if dat, rb := loc.Dat(row.ThuocTinh); !dat {
-			k.KiemLaiLoai.Add(1)
-			if rb != "" {
-				kq.BiLoai[rb]++
+		f := h.HienThi
+		if len(f) == 0 {
+			row, ok := rows[h.ID]
+			if !ok {
+				k.KiemLaiLoai.Add(1)
+				continue
 			}
-			continue
+			if dat, rb := loc.Dat(row.ThuocTinh); !dat {
+				k.KiemLaiLoai.Add(1)
+				if rb != "" {
+					kq.BiLoai[rb]++
+				}
+				continue
+			}
+			f = row.Truong()
 		}
-		f := map[string]string{"ten": row.Ten, "loai": row.Loai, "diem_den": row.ThuocTinh.DiemDen}
-		if row.DiaChi != "" {
-			f["dia_chi"] = row.DiaChi
-		}
-		if row.GiaMinVND != nil {
-			f["gia_min_vnd"] = strconv.FormatInt(*row.GiaMinVND, 10)
-		}
-		if row.GiaMaxVND != nil {
-			f["gia_max_vnd"] = strconv.FormatInt(*row.GiaMaxVND, 10)
-		}
-		if row.Gio != "" {
-			f["gio"] = row.Gio
-		}
-		// Unknown and not asked about: kept, and said (docs/architecture/03
-		// §8.4). Unknown and asked about never reaches here: Dat refused it.
-		if co := row.ChuaRo(); len(co) > 0 {
-			f["chua_ro"] = strings.Join(co, ",")
-		}
-		out = append(out, truyhoi.BangChung{ID: h.ID, Nguon: truyhoi.Places, Diem: h.Diem, Truong: f,
+		out = append(out, truyhoi.BangChung{ID: h.ID, Nguon: truyhoi.Places, Diem: h.Diem, Truong: maps.Clone(f),
 			PhienBanChiMuc: "v" + strconv.FormatInt(h.PhienBan, 10)})
 	}
 	return out, nil
