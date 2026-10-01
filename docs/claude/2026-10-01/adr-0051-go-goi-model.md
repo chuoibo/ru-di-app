@@ -1,7 +1,7 @@
 # ADR-0051 — mọi lời gọi LLM về Go qua agy, brain Python đã xoá
 
 - Ngày: 2026-10-01. Nhánh: `claude/p0-ai-go-agy-bo-brain` (worktree `wt-ai-go-agy`), gốc `dcb2e976`.
-  Chưa merge, chưa push. `main` có thêm `508092b8`, `d95edb4c` (hybrid/vectordb): `git merge-tree` sạch.
+  Cập nhật cùng ngày: đã merge vào `main` ở `16c0fdca` (0 xung đột, fast-forward `main`), chưa push.
 - protocol_version: không đụng (`docs/protocol/v1/` đóng băng).
 - Verdict: không có reviewer; đây là ghi chép của người làm, không phải review.
 - Quyết định: ADR-0051 (chủ sản phẩm 2026-09-30, thêm 2026-10-01 «test thử xong thì xoá stale Python»).
@@ -61,5 +61,5 @@ và kỷ niệm ảnh (file ảnh nằm ở volume `rudi-e2e-agy_e2e-media`, kh�
 ## Còn mở
 
 Ở `docs/team/hang-doi.md` mục 2026-10-01: nháp khoản chi lặp chữ (0–30% lượt), độ trễ agy 30–90 s lúc bận,
-duyệt bài cộng đồng chưa đánh giá có hệ thống, `face-boxes` → Go, eval T3 qua agy, pin bắc cầu còn trong
-requirements-dev, `MOBILE_AI_ENGINE_NEP` còn trong `~/.config/rudi/stack.env` của máy dev.
+duyệt bài cộng đồng chưa đánh giá có hệ thống, `face-boxes` → Go, eval T3 qua agy. (Khoản «pin bắc cầu của google-genai còn trong
+requirements-dev» ghi trước đây là sai: tính lại bao đóng phụ thuộc, mọi gói đó vẫn có gói khai báo cần.)

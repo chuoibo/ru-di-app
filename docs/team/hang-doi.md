@@ -9,9 +9,9 @@ Xếp theo mức độ nghiêm trọng, không theo thứ tự nghĩ ra.
 
 ---
 
-## MỚI 2026-10-01 — ADR-0051: mọi lời gọi LLM về Go qua agy, brain Python đã xoá (nhánh `claude/p0-ai-go-agy-bo-brain`)
+## MỚI 2026-10-01 — ADR-0051: mọi lời gọi LLM về Go qua agy, brain Python đã xoá (đã vào `main` ở `16c0fdca`)
 
-Xong trên nhánh (chưa merge, chưa push): bỏ hai cờ engine; quét bill, quét ảnh chuyển khoản, nháp khoản
+Xong và đã merge vào `main` (`16c0fdca`, chưa push): bỏ hai cờ engine; quét bill, quét ảnh chuyển khoản, nháp khoản
 chi, gợi ý ×2, reel, câu dẫn hành trình, nhật ký, duyệt bài + Nếp cộng đồng, tìm quán + lý do quán đều gọi
 model trong `core` (`aiharness/motluot` → agy-proxy); `services/api` không còn dòng nào gọi Gemini, không
 giữ khoá AI, `google-genai` đã rời. Ghi chép: `docs/claude/2026-10-01/adr-0051-go-goi-model.md`.
@@ -30,8 +30,6 @@ Còn nợ, theo mức độ:
 4. **`face-boxes`** còn trên seam brain Python (OpenCV, không phải LLM) — TODO làm lại bằng Go theo cơ chế
    khác (chủ sản phẩm 2026-09-30), rồi xoá seam brain và `MOBILE_BRAIN_URL`.
 5. **Eval T3 qua agy** chưa nối (`scripts/eval_that.sh` chỉ biết Gemini thẳng).
-6. `services/api/requirements-dev.txt` còn pin các gói bắc cầu của `google-genai` (vô hại, chưa dọn).
-7. Máy dev: `~/.config/rudi/stack.env` còn đặt `MOBILE_AI_ENGINE_NEP` — nay bị bỏ qua, xoá được.
 
 ---
 
