@@ -236,7 +236,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
             {/* The people count only when it says something the heading does
                 not: someone with two transfers makes the two differ. */}
             <Text style={[typography.body, { color: colors.inkSoft }]}>
-              {tom.nguoiGui !== tom.tong ? `${tom.nguoiXong}/${tom.nguoiGui} người đã xong phần mình. ` : ""}
+              {tom.nguoiGui !== tom.tong ? `${tom.nguoiXong} trên ${tom.nguoiGui} người đã xong phần mình. ` : ""}
               {daPhatRoi ? "Đã phát: mỗi người xem phần của mình qua link riêng." : "Chưa phát: chưa ai bị nhắn gì."}
             </Text>
           </View>
