@@ -72,8 +72,9 @@ ngưỡng 90%, AI phải chấm):
 đọc. Go chỉ tự duyệt từ 900 và media đã kiểm đủ; một lời gọi hỏng thì cả lần đọc
 hỏng, job chờ 1 phút rồi đọc lại (lease 8 phút đủ cho 4 đoạn × 85 s). Nếp chỉ
 trả `draft`. Không cấp DB/chat cho model. Test cắt video thật mang tag
-`communitymedia` (cần ffmpeg) và **chưa cổng nào chạy nó**:
-`scripts/go_postgres_tier.sh -tags 'postgres communitymedia' ./internal/community/ ./internal/db/`.
+`communitymedia` (cần ffmpeg) chạy ở chặng `go-media` của `scripts/gate.sh`
+(bước «Community video review cut with a real ffmpeg» của job `core`); thiếu
+ffmpeg là HỎNG, không phải bỏ qua.
 Stub chỉ chứng minh orchestration, không chứng minh chất lượng AI guard.
 
 ## Realtime và lưu trữ

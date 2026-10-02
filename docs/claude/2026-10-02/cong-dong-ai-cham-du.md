@@ -85,7 +85,10 @@ Vậy kết quả gộp đúng là nhờ đọc tới đoạn thứ hai.
 
 ## Còn mở
 
-- Test cắt video thật (tag `communitymedia`, cần ffmpeg) chưa nằm trong cổng nào.
-- Video xử lý trước migration 4 không có bản cắt nên vẫn vào duyệt tay; chưa có lệnh cắt bù.
+- ~~Test cắt video thật chưa nằm trong cổng nào.~~ Commit sau đã thêm chặng `go-media` vào
+  `scripts/gate.sh` và một bước tương ứng vào job `core`.
+- Video xử lý trước migration 4 không có bản cắt nên vẫn vào duyệt tay. Đã kiểm 2026-10-02: DB vnlocal
+  không có bảng cộng đồng, không compose nào bật cờ, nên hiện không có video nào như vậy và chưa cần
+  lệnh cắt bù.
 - Video 180 s cần 4 lời gọi nối tiếp. Lúc agy bận, mỗi lời gọi có thể tới 85 s.
 - Chất lượng phán đoán vẫn mới chỉ thử bằng bài bịa (`hang-doi.md` mục ADR-0052 số 3).

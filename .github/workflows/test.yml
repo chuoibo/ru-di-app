@@ -256,6 +256,15 @@ jobs:
         # `go test -tags postgres`; a skip or a missing sentinel fails.
         run: scripts/go_postgres_tier.sh
 
+      - name: Community video review cut with a real ffmpeg
+        # The media worker cuts every video into the pieces a moderation
+        # reading sends the model (communitymedia tag). The runner has no
+        # ffmpeg until this installs it; without it the tests fail, not skip.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          scripts/go_postgres_tier.sh -tags 'postgres communitymedia' ./internal/community/ ./internal/db/
+
       - name: Redis and RabbitMQ tests on disposable brokers
         # The AI stream (Redis Streams) and the job outbox relay (RabbitMQ with
         # publisher confirms) against real services; a skip or a missing

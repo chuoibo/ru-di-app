@@ -276,6 +276,14 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="e9f9152379fb882b",
         why="",
     ),
+    "test.yml::core::Community video review cut with a real ffmpeg": Covered(
+        kind=GATE_KIND,
+        stages=("go-media",),
+        body_sha="9e4ec15e01940ee9",
+        # The apt install is the runner's half of the stage's own preflight
+        # (`have ffmpeg && have ffprobe`); the tier call is the same line.
+        why="",
+    ),
     "test.yml::core::Redis and RabbitMQ tests on disposable brokers": Covered(
         kind=GATE_KIND,
         stages=("go-broker",),

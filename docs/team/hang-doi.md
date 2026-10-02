@@ -27,9 +27,10 @@ Còn nợ, theo mức độ:
    p50/p95 thật dưới tải và quyết định trần theo route.
 3. **Duyệt bài cộng đồng dùng lời dặn MỚI** (repo chưa từng có prompt cũ). Mới thử vài bài bịa; chưa đánh
    giá có hệ thống tỉ lệ duyệt nhầm/chặn nhầm. Bài công khai tự duyệt khi model chắc ≥ 900‰ (= 90%, chủ sản
-   phẩm giữ 2026-10-02). Từ 2026-10-02 AI xem đủ mọi ảnh (thu nhỏ) và video (bản cắt 45 s/đoạn). Còn mở:
-   (a) test cắt video thật (tag `communitymedia`, cần ffmpeg) chưa cổng nào chạy; (b) video xử lý trước
-   migration cộng đồng số 4 không có bản cắt nên vẫn vào duyệt tay — chưa có lệnh cắt bù; (c) một video
+   phẩm giữ 2026-10-02). Từ 2026-10-02 AI xem đủ mọi ảnh (thu nhỏ) và video (bản cắt 45 s/đoạn). Test cắt video thật
+   chạy ở chặng `go-media` của `scripts/gate.sh`. Còn mở: (a) video xử lý trước migration cộng đồng số 4
+   không có bản cắt nên vào duyệt tay — hiện không DB nào có (vnlocal không có bảng cộng đồng, không compose
+   nào bật cờ), nên chưa viết lệnh cắt bù; DB nào bật cộng đồng trước `79911d70` thì cần nó; (b) một video
    180 s là 4 lời gọi nối tiếp, mỗi lời gọi tới 85 s lúc agy bận.
 4. **`face-boxes`** còn trên seam brain Python (OpenCV, không phải LLM) — TODO làm lại bằng Go theo cơ chế
    khác (chủ sản phẩm 2026-09-30), rồi xoá seam brain và `MOBILE_BRAIN_URL`.

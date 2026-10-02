@@ -90,6 +90,7 @@ COVERED_BY: dict[str, tuple[str, ...]] = {
         "go-vet",
         "go-test",
         "go-postgres",
+        "go-media",
         "go-broker",
     ),
     # The Milvus tier is a job of its own: it needs a Milvus and a served
