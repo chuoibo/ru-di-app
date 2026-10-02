@@ -140,3 +140,84 @@ giữ cấu trúc legacy để tương thích script. Không sửa hoặc biến
 detector/contrast incomplete thành luật thiết kế chỉ để chứng minh lượt
 documenter. Tham chiếu [brief/checklist](ui-ux-campaign.md) và
 `finish-review.md`, `regression.log`, `evidence.md` trong bó CP07.
+
+## CP08 · Bảng Nếp, đồng ý vẽ và lề Khám phá — UI-008, UI-011, UI-012, UI-014
+
+Lát mở rộng Operate + Experience của hệ giấy hiện hành: nhập lời nhờ → đọc
+đúng mô tả sẽ gửi → Sửa/Vẽ → phản hồi cạnh bản nháp → về màn cũ. Finish
+reviewer trả **ship cho hai sửa chữa đã chấm** sau một vòng fix: câu về thời
+gian/phạm vi chia sẻ luôn thấy cạnh hành động ở font 1.3, và đối chiếu đủ
+6/20 phần tử buried-raster. Đây là finish cục bộ, **chưa QA_ACCEPTED**, chưa
+landing `main`; full mobile và clean exact-SHA gates vẫn thuộc CP09.
+
+Giữ `card`, `ink`, `inkSoft`, `line`/`lineStrong` và màu AI semantic; tiêu đề
+«Nhờ Nếp vẽ?» dùng Bricolage H1 28/34, mô tả/giải thích dùng body system
+17/24, tiêu đề bảng dùng title 17/23, nhãn gợi ý dùng caption 13/18. Nếp
+`dua-giay` 72dp nối lời nhờ với bước xác nhận. Mô tả dài cuộn có chỉ báo;
+disclosure và Sửa/Vẽ đứng ở chân bảng. Không thu nhỏ chữ để vừa screenshot,
+không thêm world, font, token hoặc QUALITY BAR card/comp mới.
+
+| Loại | Thay đổi trong CP08 |
+|---|---|
+| **BUG_FIX** | UI-008: editor và hành động ở chân sheet, sheet thích ứng IME/safe area; lỗi không đẩy thao tác khỏi khung. UI-011: thay native Alert bằng bước xác nhận trong cùng bảng, giữ mô tả đóng băng theo màn/người; chống gửi lặp. UI-012: tiết mục đang chạy có nút skip được đặt tên, khung tĩnh không còn nút vô danh. UI-014: rail danh mục live/demo dừng trước mép Nếp, bỏ negative margin bên phải. |
+| **UX_IMPROVEMENT** | Back/Escape/browser Back ở bước xác nhận trả lại editor và bản nháp; Sửa không gửi; đóng bảng đóng cả flow. Lỗi 503 và trạng thái chờ nằm cạnh bản nháp, có live region. Lời về phạm vi Nếp nhận luôn đọc được trước Vẽ đi. Gợi ý có đích bấm tối thiểu 48dp và gap 8dp. |
+| **VISUAL_UPGRADE** | Hai trạng thái cùng giấy có lỗ gáy, nét mực và thứ bậc hiện hành; Nếp đưa giấy cho bước quyết định. Kẻ tóc phân vùng mô tả/footer, focus editor dùng AI semantic; hai hành động phân biệt outline và solid AI. Tablet giữ cột sheet tối đa 640dp. |
+| **MOTION_UPGRADE** | Giữ spring vào/standard ra và reduced motion của Sheet; thao tác hủy trở lại editor có focus, không nhảy body web. Gợi ý dùng PressScale/haptic select; tiết mục M1 vẫn diễn một lần rồi tĩnh, có cách bỏ qua bằng phím. Không thêm độ trễ trang trí hoặc diễn lại Nếp. |
+| **DESIGN_SYSTEM_IMPROVEMENT** | Sheet thêm `footer`, `avoidKeyboard`, `onBack` và chỉ báo cuộn opt-in; default callers giữ API/hành vi cũ. Đây là khả năng của primitive, chưa phong thành luật bố cục toàn app; CP09 phải kiểm hồi quy các callers. |
+
+Source: `apps/mobile/src/rudi/nep/NepBang.tsx`, `ui/Sheet.tsx`,
+`ui/NepDien.tsx`, `screens/Discovery.tsx`, `screens/explore/ExploreLive.tsx`;
+hồi quy mới `apps/mobile/tests/rudi-nep-web.test.mjs`. Không đổi money,
+quota, API/E2EE, quyền AI hay patch B8/B9 của Claude. UI-014 là ca gutter mới,
+không làm lại batch B7.
+
+| Ca QA cần retest | Expected / bằng chứng cục bộ |
+|---|---|
+| Nhập dài, keyboard mở và font lớn | Editor/Vẽ/Gửi và lỗi nằm trên IME; tham khảo cuộn riêng. Android `keyboard-check-final.txt` và `keyboard-check-320-font130.txt` ghi `mInputShown=true`; ảnh actual IME đã mở nhìn. |
+| Vẽ → Back/Escape/browser Back hoặc Sửa | Trở lại đúng draft, không POST; web focus về editor, body top 0. Native phone/narrow chạy Back và Sửa; regression dùng browser history thật. |
+| Xác nhận mô tả dài | Đọc trọn lời về lượt vẽ, thời gian và đúng phạm vi chia sẻ cạnh Sửa/Vẽ đi; mô tả có thể cuộn, chỉ báo persistent Android/thin web. Cùng paragraph ở phone, 320dp/font 1.3, tablet và web recapture cuối. |
+| Vẽ đi, tap lặp, lỗi rồi thử lại | Chỉ một POST với đúng mô tả đóng băng và tên màn; 503 hiển thị cạnh bản nháp còn nguyên. Đóng bảng từ xác nhận không gửi. Provider bị chặn trước upstream, không tiêu quota thật. |
+| Gợi ý, gutter live/demo, tiết mục M1 | Gợi ý ≥48dp; web 320dp rail kết thúc 304, mép Nếp 310. M1 đang chạy là skip có tên và phím Enter bỏ qua; xong là ảnh tĩnh có mô tả, ngoài Tab order. AX tree của lượt Create không có nút vô danh. |
+
+Bó bằng chứng ngoài repo: `/home/lakiet/.local/share/rudi-b9a/campaign/cp08/`.
+Android emulator-5600 `rudi-diary-review`, devclient SDK57, Metro 8163 từ B10:
+phone **1080×2400/density 420/font 1.0**, narrow **840×1840/density 420/font
+1.3**, tablet **2016×2688/density 420/font 1.0**. Web **320×700 và 1280×800
+dark**. Dữ liệu tổng hợp; proxy loopback 58395 chặn AI POST, trả 503
+`nep_media_chua_cau_hinh`; backend binary B9a, không phải backend B10 mới.
+`phone-final2`, `narrow-footer`, `tablet-final`/`tablet-settle` hoàn tất CLI
+exit 0; tablet capture cuối ghi `mInputShown=false` sau ổn định.
+
+Documenter mở nhìn [xác nhận 320dp/font 1.3](/home/lakiet/.local/share/rudi-b9a/campaign/cp08/after-native-confirm-320-font130.png),
+[desktop dark](/home/lakiet/.local/share/rudi-b9a/campaign/cp08/after-web-confirm-desktop.png)
+và [keyboard thật](/home/lakiet/.local/share/rudi-b9a/campaign/cp08/after-native-keyboard-visible-final.png).
+Reviewer mở packet 13 ảnh rồi năm recapture consent cuối; người phụ trách mở
+montage `panel-keyboard-final-frames.png` và `performance-frames.png` từ video
+native thật. M1 cho thấy sheet vào, Nếp đổi tư thế rồi đứng; không đo FPS/frame
+time. Baseline `before-native-panel.png`, `before-keyboard-fix.png` giữ riêng;
+vòng narrow cũ có đuôi draft nhân đôi không dùng làm cặp trước/sau cuối.
+
+Typecheck và web export đạt. `regression-final.log`: **6 pass / 0 fail / 0
+skip**: ba ca CP08, hai ca opening (gồm anonymous recovery mới của CP09), một
+ca Welcome. Không đọc con số này thành full mobile hoặc native gate tại SHA
+cuối. Concern selection «Lịch trình → Hành trình» từ CP06 vẫn cần CP09 khép.
+
+Detector rendered frozen DOM/CSSOM vẫn **23 mobile / 36 desktop findings,
+exit 2**, không ignore. `raster-map.md` và hai `raster-map-*-detail.json` đối
+chiếu đủ 6/20 IMG opacity 0: cùng `vai-bia.png`, alt rỗng, cạnh sibling DIV
+background-image cùng URI/geometry opacity 1, thuộc nền Explore inert dưới
+sheet. Vân ngoài sheet nhìn thấy; không phải 26 asset mới bị giấu. Mapping
+không đóng các findings còn lại, không chứng nhận detector sạch hay AA.
+
+Chưa kiểm provider/media job thành công thật, iOS, thiết bị vật lý, TalkBack,
+native dark, landscape hoặc FPS. Success incumbent chỉ review source, không
+gọi là runtime verified. CP09 còn full regression shared Sheet, clean
+exact-SHA gates, identity/canary và hai mutant không tương đương. Tham chiếu
+`evidence.md`, `finish-review.md`, `finish-verdict.md`, `regression-final.log`
+và [brief/checklist](ui-ux-campaign.md).
+
+Giữ nguyên `PRODUCT.md`, `DESIGN.md`, `.impeccable/design.json`: ordinary
+extension, không được yêu cầu sửa hệ. Mục Sheet trong tài liệu vẫn mô tả tay
+cầm có label/hint và công thức scrim cũ; sidecar giữ cấu trúc legacy. Không
+canonize các mô tả lệch source, số đo contrast incomplete hay findings
+detector thành luật mới; capability opt-in của CP08 được ghi ở handoff này.

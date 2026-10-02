@@ -66,3 +66,33 @@ test("slow restore paints a protected cover within 300ms, then an unknown link p
     await server.close();
   }
 });
+
+
+test("an anonymous unknown link recovers to Welcome with and without browser history", async () => {
+  assert.equal(lyDoBanDungCu(exported, root), null);
+  assert.ok(findChrome(), "Chrome is required for anonymous recovery");
+  const server = await serve(exported);
+  const page = await launch(findChrome());
+  try {
+    await page.viewport(320, 700);
+    await page.call("Page.addScriptToEvaluateOnNewDocument", { source: `
+      const realFetch = globalThis.fetch;
+      globalThis.fetch = async (input, init) => {
+        if (String(input).includes('api.build-check.invalid')) return new Response('{}',{status:401});
+        return realFetch(input,init);
+      };
+    ` });
+    await page.goto(`${server.url}cp09-khong-co`, () => document.activeElement?.textContent === "Không tìm thấy trang");
+    await page.clickLabel("Quay lại");
+    await page.waitFor(() => location.pathname === "/welcome" && !!document.querySelector('[data-testid="welcome-screen"]'), {label:"anonymous recovery without route history"});
+    await page.goto(`${server.url}cp09-link-khac`, () => document.activeElement?.textContent === "Không tìm thấy trang");
+    await page.clickChu("Về Rủ Đi");
+    await page.waitFor(() => location.pathname === "/welcome" && !!document.querySelector('[data-testid="welcome-screen"]'), {label:"anonymous CTA preserves the Welcome door"});
+    assert.equal(await page.evaluate(() => document.querySelectorAll('[inert]').length), 0);
+    // A browser navigation creates actual history. Back must remain usable
+    // when a direct unknown URL followed an existing page as well.
+    await page.goto(`${server.url}cp09-co-history`, () => document.activeElement?.textContent === "Không tìm thấy trang");
+    await page.clickLabel("Quay lại");
+    await page.waitFor(() => location.pathname === "/welcome" && !document.querySelector('[inert]'), {label:"anonymous Back with browser history"});
+  } finally { await page.close(); await server.close(); }
+});

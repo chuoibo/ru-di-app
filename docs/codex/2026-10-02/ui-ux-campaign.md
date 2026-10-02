@@ -59,8 +59,17 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 - [x] Baseline: NepDien Pressable vô danh vẫn focus được; chip bảng 36dp; Vẽ dùng Alert.alert web không phản hồi; hàng loại Khám phá cuộn sát cạnh nơi mép sổ đứng.
 - [x] Brief: Nếp ở bên cạnh thao tác, nói rõ phần sẽ gửi; mỗi lần vẽ là một xác nhận riêng. Một lời nhờ → xem mô tả → xác nhận/cancel → trạng thái đang vẽ. Không gọi AI có phí khi test, không sửa quota/business rules.
 - [x] Điều chỉnh từ render Android: keyboard che hoàn toàn ô nhập của sheet cũ. Chỉ Nếp bật tránh keyboard; ô soạn nhiều dòng và hành động giữ ở chân sheet, lời tham khảo và mô tả xác nhận cuộn phía trên. Nút Sửa/Vẽ luôn ở chân sheet. Trần sheet theo vùng còn lại, không cộng padding cố định và không giảm font.
-- [ ] Implement 008/011/012/014: performance có tên nút bỏ qua khi đang chạy, tĩnh không nhận Tab; chip ≥48dp; xác nhận Vẽ trong ngôn ngữ sheet/giấy, mô tả cố định, đóng/Back hủy; mép dock không che hàng loại ở 320dp.
-- [ ] Keyboard/font lớn/error/cancel, native motion, web focus/geometry; detector/polish/fresh finish/test/handoff.
+- [x] Implement 008/011/012/014: performance có tên nút bỏ qua khi đang chạy, tĩnh không nhận Tab; chip ≥48dp; xác nhận Vẽ trong ngôn ngữ sheet/giấy, mô tả cố định, đóng/Back hủy; mép dock không che hàng loại ở 320dp.
+- [x] Keyboard/font lớn/error/cancel, native motion, web focus/geometry: 6 test web pass/0 fail/0 skip; phone/320 font130/tablet Android + IME/video thực đã mở nhìn. Detector 23/36 findings giữ nguyên; mapping6/20 raster cụ thể, không ignore.
+- [x] Finish `fix` → một batch: disclosure cố định cạnh Sửa/Vẽ, thanh cuộn cho mô tả; recapture cùng file và verdict `ship` cho đúng hai sửa.
+- [x] Documenter ghi CP08 vào b10-handoff.md, giữ DESIGN/sidecar; commit riêng. Clean SHA/gates thuộc CP09.
+
+### CP09 · Nhất quán và cổng kiểm chứng
+- [x] So sánh screen/overlay/state mới với notebook world; không đổi hệ nhận diện, quota, money/API hoặc B8/B9.
+- [x] Thêm recovery web anonymous có/không history; test kết hợp6/0/0. Native warm place → Back → unknown → Back → invite điền mã tổng hợp, không redeem.
+- [ ] Native anonymous/cold deep links; ghi giới hạn devclient cold launcher.
+- [ ] Clean exact-SHA full gate, identity xanh, canary và ≥2 mutant không tương đương đỏ đúng dự đoán cùng harness.
+- [ ] Tái kiểm concern journey selection, cập nhật handoff/status thật và khôi phục emulator.
 
 ## Theo dõi đủ ID
 
@@ -73,13 +82,13 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 | UI-005 | B1 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Đóng khay «Tạo mới» bằng Back trình duyệt để lại `aria-hidden`/`inert` trên cả màn và thanh tab · 0 vùng inert ≥25% màn sau Back |
 | UI-006 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Chạm «+» hai lần nhanh: lần hai rơi vào khay đang mở · chạm đúp = 1 hộp thoại |
 | UI-007 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Khay tạo cao 92% (C2) / 96% (C8), vượt trần 82% · panel ≤82% ở C2, C8 |
-| UI-008 | B10 | PLANNED | PLANNED | Điểm dừng Tab đầu tiên là khối Nếp không tên · không còn điểm dừng không tên |
+| UI-008 | B10 | PLANNED | VERIFIED_LOCALLY · CP08 | Điểm dừng Tab đầu tiên là khối Nếp không tên · không còn điểm dừng không tên |
 | UI-009 | B10 | PLANNED | VERIFIED_LOCALLY · CP06 web300/native nhìn | Khôi phục phiên chậm: vùng nội dung trống, không chỉ báo · skeleton/chỉ báo ≤300ms |
 | UI-010 | B2 (sửa sớm: khay Tạo mới) | READY_FOR_QA | KẾ_THỪA · cần retest cuối | `/create` mở lạnh không mở khay · mở lạnh /create → 1 hộp thoại |
-| UI-011 | B10 | PLANNED | PLANNED | Nút «Vẽ» của bảng Nếp chết trên web (`Alert.alert` rỗng) · có phản hồi thấy được trên web |
-| UI-012 | B10 | PLANNED | PLANNED | Chip gợi ý của bảng Nếp cao 36dp · ≥48dp |
+| UI-011 | B10 | PLANNED | VERIFIED_LOCALLY · CP08 | Nút «Vẽ» của bảng Nếp chết trên web (`Alert.alert` rỗng) · có phản hồi thấy được trên web |
+| UI-012 | B10 | PLANNED | VERIFIED_LOCALLY · CP08 | Chip gợi ý của bảng Nếp cao 36dp · ≥48dp |
 | UI-013 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Sheet đóng: panel còn lộ rồi biến mất đột ngột · khung cuối ra ngoài màn hoặc mờ ≈0 |
-| UI-014 | B10 | PLANNED | PLANNED | Ở 320dp mép Nếp đè chữ hàng chip · không chữ nào bị che ở C2 |
+| UI-014 | B10 | PLANNED | VERIFIED_LOCALLY · CP08 | Ở 320dp mép Nếp đè chữ hàng chip · không chữ nào bị che ở C2 |
 | UI-015 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Cài đặt hiện giá trị giữ chỗ («Bạn», «B», công tắc sai) rồi mới đổi · không khung giữ chỗ sai |
 | UI-016 | B10 | PLANNED | VERIFIED_LOCALLY · CP07 | Welcome web: chấm trang và mốc đường đứng yên ở trang 1 khi vuốt · chấm/nhãn khớp trang đang xem |
 | UI-017 | B10 | PLANNED | VERIFIED_LOCALLY · CP07 | Welcome: vuốt nhanh nhảy hai trang · vuốt nhanh = 1 trang |

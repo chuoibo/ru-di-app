@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   // Large text: the box wraps onto its own line, the buttons onto the next.
   searchRowXuongDong: { flexWrap: "wrap", justifyContent: "flex-end" },
   flexTronHang: { flexBasis: "100%" },
-  cuonLoai: { marginHorizontal: -16 },
+  cuonLoai: { marginLeft: -16 },
   hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   ketQua: { gap: 20 },
   khoi: { gap: 8 },
