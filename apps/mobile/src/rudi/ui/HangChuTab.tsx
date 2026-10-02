@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { TABLIST, tabState } from "../../ui/a11y";
+import { EASING, durationFor } from "../motion";
 import { typography, useRudiTheme } from "../theme";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
 
@@ -77,6 +78,22 @@ export function khoangCachLo(rong: readonly number[], khung: number, le: number)
 }
 
 /**
+ * Where the ink rule sits under tab `chon`, in the list's own coordinates
+ * (after the gutter): the widths before it and their gaps. Null with no tab
+ * picked or a width not measured yet.
+ */
+export function viTriGach<T extends string>(muc: readonly MucChuTab<T>[], rong: Readonly<Record<string, number>>, khoang: number, chon: T | null): Doan | null {
+  let x = 0;
+  for (const m of muc) {
+    const w = rong[m.id];
+    if (w === undefined) return null;
+    if (m.id === chon) return { x, w };
+    x += w + khoang;
+  }
+  return null;
+}
+
+/**
  * A row of small text tabs: the community feed's modes (owner's choice,
  * 02/10). It is told apart from the filter chips of Địa điểm on purpose: words
  * at label size on a hairline, the selected one in ink with a 2 dp ink rule
@@ -91,7 +108,18 @@ export function khoangCachLo(rong: readonly number[], khung: number, le: number)
  * Picking a tab that sits half off screen brings it into view, and `chon` may
  * be a mode with no tab (the hidden posts), when none is selected.
  */
-export function HangChuTab<T extends string>({ muc, chon, onChon }: { muc: readonly MucChuTab<T>[]; chon: T | null; onChon: (id: T) => void }) {
+export function HangChuTab<T extends string>({
+  muc,
+  chon,
+  onChon,
+  giamChuyenDong = false,
+}: {
+  muc: readonly MucChuTab<T>[];
+  chon: T | null;
+  onChon: (id: T) => void;
+  /** Reduce Motion: the rule jumps to the picked tab instead of sliding. */
+  giamChuyenDong?: boolean;
+}) {
   const { colors } = useRudiTheme();
   // Out to the screen's edges only where the column is the screen.
   const tran = useAdaptiveLayout().sizeClass === "compact";
@@ -106,6 +134,25 @@ export function HangChuTab<T extends string>({ muc, chon, onChon }: { muc: reado
     const rong = muc.map((m) => rongTab[m.id]);
     return rong.every((w) => w !== undefined) ? khoangCachLo(rong as number[], rongKhung, le) : { khoang: KHOANG, demCuoi: le };
   }, [muc, rongTab, rongKhung, le]);
+  // One ink rule that slides from tab to tab over `standard`, as the strip's
+  // own tape does; a jump under Reduce Motion, and on the first placement.
+  // Until every width is measured each tab draws its own rule instead.
+  const gach = viTriGach(muc, rongTab, khoang, chon);
+  const gachX = useRef(new Animated.Value(0)).current;
+  const gachW = useRef(new Animated.Value(0)).current;
+  const daDatGach = useRef(false);
+  useEffect(() => {
+    if (gach === null) return;
+    if (!daDatGach.current || giamChuyenDong) {
+      gachX.setValue(gach.x);
+      gachW.setValue(gach.w);
+      daDatGach.current = true;
+      return;
+    }
+    const cach = { duration: durationFor("standard", false), easing: Easing.bezier(...EASING.standard), useNativeDriver: false };
+    Animated.parallel([Animated.timing(gachX, { ...cach, toValue: gach.x }), Animated.timing(gachW, { ...cach, toValue: gach.w })]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gach?.x, gach?.w, giamChuyenDong]);
   // Where the selected tab sits in the row, from the widths and the gap: on
   // the web onLayout reports a change of size only, so a position read from
   // it went stale when the gap moved and the row stopped 20 dp short.
@@ -166,10 +213,13 @@ export function HangChuTab<T extends string>({ muc, chon, onChon }: { muc: reado
                 <Text numberOfLines={1} style={[typography.label, { color: dangChon ? colors.ink : colors.inkSoft }]}>
                   {m.nhan}
                 </Text>
-                <View style={[styles.gach, { backgroundColor: dangChon ? colors.ink : "transparent" }]} />
+                <View style={[styles.gach, { backgroundColor: dangChon && gach === null ? colors.ink : "transparent" }]} />
               </Pressable>
             );
           })}
+          {gach !== null ? (
+            <Animated.View pointerEvents="none" style={[styles.gachTruot, { left: gachX, width: gachW, backgroundColor: colors.ink }]} testID="gach-chu-tab" />
+          ) : null}
         </View>
       </ScrollView>
     </View>
@@ -187,4 +237,5 @@ const styles = StyleSheet.create({
   // 48 dp tall, the words low so the rule sits on the hairline.
   tab: { minHeight: 48, justifyContent: "flex-end", paddingTop: 12 },
   gach: { height: 2, marginTop: 11, borderRadius: 1 },
+  gachTruot: { position: "absolute", bottom: 0, height: 2, borderRadius: 1 },
 });

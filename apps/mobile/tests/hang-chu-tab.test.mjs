@@ -145,3 +145,15 @@ test("cuộn hết sang phải (chọn tab cuối) thì mép trái cũng cắt n
     }
   }
 });
+
+import { viTriGach } from "../dist-test/rudi/ui/HangChuTab.js";
+
+test("gạch mực trượt tới tab được chọn: vị trí trong hàng từ bề rộng các tab và khoảng", () => {
+  const muc = MUC;
+  const rong = { for_you: 86, following: 88, trending: 71, saved: 41, mine: 72 };
+  assert.deepEqual(viTriGach(muc, rong, 22, "trending"), { x: 86 + 22 + 88 + 22, w: 71 });
+  assert.deepEqual(viTriGach(muc, rong, 16, "for_you"), { x: 0, w: 86 });
+  // No tab picked (the hidden posts), or a width not measured yet: no rule to slide.
+  assert.equal(viTriGach(muc, rong, 22, null), null);
+  assert.equal(viTriGach(muc, { for_you: 86 }, 22, "trending"), null);
+});

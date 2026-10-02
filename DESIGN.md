@@ -2259,7 +2259,10 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   danh sách *là gì* còn chip lọc thu hẹp nó; và thấp hơn đầu Khám phá một bậc
   (`h2` trên băng coral) nên hai hàng không đọc thành một control. Mỗi tab cao
   tối thiểu 48, chữ đặt thấp để gạch nằm trên **kẻ tóc `line`** chạy dưới cả
-  hàng. **Khoảng giữa các tab là số tính, không phải hằng**: thường 22; khi
+  hàng. Gạch là **một vạch trượt** (`viTriGach`) từ tab cũ sang tab mới trong
+  `standard` (đường cong `standard`), như băng chỉ báo của thanh tab; dưới
+  Reduce Motion và ở lần đặt đầu thì nhảy thẳng; khi bề rộng các tab chưa đo
+  xong, mỗi tab tự vẽ gạch của nó nên khung đầu không thiếu chỉ báo. **Khoảng giữa các tab là số tính, không phải hằng**: thường 22; khi
   hàng rộng hơn cửa sổ, `khoangCachLo` chọn khoảng **12–32** gần 22 nhất sao
   cho **cả hai mép cắt ngang một chữ** (lộ ≥ 16, giấu ≥ 10) mỗi khi hàng cuộn,
   mép phải lúc nghỉ, mép trái khi cuộn hết về cuối; đệm cuối **16–24** (lề 16

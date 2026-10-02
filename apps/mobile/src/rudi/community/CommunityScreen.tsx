@@ -363,7 +363,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         {/* Khám phá › Cộng đồng, in the mockup's order: the search field as on
             Địa điểm, then the feed tabs as chips that scroll rather than clip. */}
         {dau ? oTim : null}
-        {dau ? <HangChuTab muc={CHE_DO} chon={CHE_DO.some((c) => c.id === mode) ? mode : null} onChon={(m) => { setMode(m); motion.haptic.select(); }} /> : null}
+        {dau ? <HangChuTab giamChuyenDong={motion.reduced} muc={CHE_DO} chon={CHE_DO.some((c) => c.id === mode) ? mode : null} onChon={(m) => { setMode(m); motion.haptic.select(); }} /> : null}
         {tieuDeRieng ? <Text style={[typography.h2, { color: colors.ink }]}>{tieuDeRieng}</Text> : null}
         {dau || topic ? null : oTim}
         {/* Asked where it changes something: only «Dành cho bạn» learns from what one reads. */}
