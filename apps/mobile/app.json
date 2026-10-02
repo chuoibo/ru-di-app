@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#1d2140",
     "ios": {
       "bundleIdentifier": "com.lakiet.rudi",
       "supportsTablet": true,
@@ -37,6 +38,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#1d2140",
+          "image": "./assets/rudi/wordmark-splash.png",
+          "imageWidth": 138,
+          "dark": { "backgroundColor": "#0f1126" }
+        }
+      ],
       [
         "expo-camera",
         {

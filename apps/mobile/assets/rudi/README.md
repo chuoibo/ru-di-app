@@ -42,3 +42,11 @@ Không dùng `dark-wood-grain`, `dalat-friends` hay `friends-rooftop` làm ảnh
 một địa điểm. Ba đối tượng đầu của danh sách Khám phá mẫu (Tiệm Nướng, Bánh căn,
 Lẩu gà) cố ý **không có ảnh**: không có ảnh nào trong repo nói được quan hệ với
 món nướng, bánh căn hay lẩu gà.
+
+## Chữ hiệu khi mở native
+
+`wordmark-splash.png` là bản raster 828×288 lấy nguyên bốn outline và
+viewBox của `src/rudi/ui/Wordmark.tsx` (Baloo 2 ExtraBold, Ek Type, SIL OFL
+1.1 đã ghi ở source), mực `coverInk` hiện hành, chuyển SVG sang PNG bằng
+CairoSVG 2.8.2. Config plugin splash cần raster; không tạo logo/font mới.
+Khi đổi chữ hiệu, tạo lại raster từ cùng source vector.

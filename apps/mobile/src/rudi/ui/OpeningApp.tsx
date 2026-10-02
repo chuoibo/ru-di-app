@@ -1,15 +1,15 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, type ReactNode } from "react";
-import { ActivityIndicator, Platform, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, StyleSheet, Text, View, type ViewProps } from "react-native";
 
 import { useRudiSession } from "../session";
 import { useRudiTheme } from "../theme";
 import { Wordmark } from "./Wordmark";
 
 /** Available before fonts and credentials, without pretending either is ready. */
-export function OpeningApp() {
+export function OpeningApp({ onLayout }: Pick<ViewProps, "onLayout"> = {}) {
   const { colors } = useRudiTheme();
-  return <View testID="opening-app" accessibilityRole="progressbar" accessibilityLabel="Đang mở Rủ Đi" style={[styles.opening, { backgroundColor: colors.cover }]}>
+  return <View onLayout={onLayout} testID="opening-app" accessibilityRole="progressbar" accessibilityLabel="Đang mở Rủ Đi" style={[styles.opening, { backgroundColor: colors.cover }]}>
     <StatusBar style="light" />
     <Wordmark height={48} color={colors.coverInk} />
     <View style={styles.message}>
