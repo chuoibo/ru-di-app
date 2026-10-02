@@ -110,3 +110,30 @@ Snapshot: `.impeccable/critique/` (gitignore).
 7. Nút Lưu không có trạng thái chờ (bấm nhanh gửi trùng, idempotent).
 8. Worklet RudiTabBar lặp phép tính `oCuaCot` thay vì gọi hàm đã test.
 9. Bản ghi: các quyết định trên đã được đính chính trong sổ tiến độ.
+
+## Gộp vào main (02/10, tối)
+
+main đi thêm 8 commit trong lúc nhánh làm (33daaa38..95755a71: B4–B7 của đợt nâng cấp UI/UX, AI chấm ảnh/video,
+chặng go-media). Gộp một lần ở merge `8a244502`; cách giải từng xung đột ghi trong commit đó. Tóm tắt: bản sửa bảng
+tin trống của B7 thay `4601085e`; thẻ đầu dùng `tachGia` của B5 (bỏ `the-dan.ts`); cách gập sân khấu của B5 chuyển
+vào `SanThanhPho`; `CommunityScreen` lấy bản B7 làm gốc, trên tab ô phải của hàng đầu là chuông + cài đặt; dưới
+360dp ô phải lên trên hàng chữ.
+
+Cổng trên cây sạch đúng SHA `8a244502`:
+
+- `gate.sh` guard · guard-range · screens · go-vet · go-test · eval-kich-ban · shared · mobile: **ĐẠT** (mobile: npm ci,
+  tsc, npm test **1473/1473** với MOBILE_REQUIRE_WEB_A11Y=1, expo export --platform all).
+- contract · client-routes · server-routes · cors · ownership · python-touch (`--strict`, trong container
+  `rudi-ux-pytest-git:dev` vì máy không có fastapi): **ĐẠT 6/6**.
+- pytest gốc trong container: 841 pass / 19 fail; main sạch 840 / 19 — **cùng 19 lỗi môi trường, 0 lỗi mới**.
+- `go_postgres_tier.sh`: 3328 PASS, 0 SKIP, **1 FAIL có sẵn trên main**: `TestXoaTaiKhoanKhongConHangNaoCuaNguoi`
+  (nepnho) — migration B7 `notification_source.sql` thêm `community_notifications.actor_id` mà danh sách cột cần dọn
+  khi xoá tài khoản không có. Đỏ y hệt trên main `95755a71` sạch; đã báo phiên sở hữu module.
+- Nếp: recall@5 không đổi ở mọi bộ; MRR ≥ main ở mọi bộ (ghi trong `truy_hoi_test.go`).
+
+Hình (web export bản gộp, stack QA, cổng 8081 phiên kia nhường): probe `thanh-tab-5.mjs` **17/18** — tâm con dấu
+lệch 0 dp ở 390/320/430; ở 320 đầu Cộng đồng: chuông + cài đặt lên trên, chữ cần 216/288 dp (× 1.3 ≈ 274/288);
+ca còn lại («thẻ bài») không có dữ liệu: stack đã dựng lại, không còn bài có ảnh, và đăng bài mới sẽ gọi AI duyệt
+(trả tiền) nên không làm; mã album không đổi qua gộp ngoài tên prop `khung` và `thanBiCat`. Probe `tt5-gap.mjs`:
+gõ tìm thì sân khấu 163 → 0 dp, ô tìm ngay dưới dòng điểm đến (không đè), xoá chữ thì về đúng 274 dp, cả bản thật
+lẫn demo. Ảnh đã mở xem: 390 sáng/tối, 320, 1024, demo, lúc đang tìm.
