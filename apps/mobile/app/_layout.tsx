@@ -17,6 +17,7 @@ import { SoDoiProvider } from "../src/rudi/to-giay/SoDoi";
 import { useRudiTheme } from "../src/rudi/theme";
 import { useMotion } from "../src/rudi/ui/useMotion";
 import { GiaoDienProvider } from "../src/rudi/ui/GiaoDienProvider";
+import { OpeningApp, SessionOpening } from "../src/rudi/ui/OpeningApp";
 import "../src/rudi/tep-anh-native";
 
 // Module level, before the first frame: `index.ts` never runs under
@@ -157,7 +158,7 @@ function RootInner() {
   // re-audit 10/09, R1), so the stack is told to cut, and `useMotion` re-renders
   // this component when the setting changes mid-session.
   const motion = useMotion();
-  if (!fontsLoaded && !fontsError) return null;
+  if (!fontsLoaded && !fontsError) return <OpeningApp />;
   const chuyen = (wanted: "slide_from_right" | "slide_from_bottom" | "fade") => stackAnimation(wanted, motion.reduced);
 
   // Design contract: warm editorial surfaces, one semantic leading tone per
@@ -167,6 +168,7 @@ function RootInner() {
     <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <RudiSessionProvider>
+      <SessionOpening>
       {/* Friends' new avatars reach every screen while the app is open. */}
       <LuongAnhDaiDien />
       {/* The two-person notebook of the experience build: in memory, wire-shaped,
@@ -216,6 +218,7 @@ function RootInner() {
         <NepNoi />
       </NepProvider>
       </SoDoiProvider>
+      </SessionOpening>
       </RudiSessionProvider>
     </SafeAreaProvider>
     </GestureHandlerRootView>
