@@ -42,21 +42,23 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 - [x] Implement UI-002/009; source và 2 đường recovery đã chạy.
 - [x] Android phone/320dp font130, web390/1280, phiên thật tổng hợp; Back/CTA → Khám phá. Proxy web trễ5s/20s khóa scene. Hồi quy export giữ phiên tổng hợp không nhóm → Tin nhắn, frame5.0ms từ resume request. Chưa đo native300ms/TalkBack/iOS.
 - [x] Detector URL thất bại timeout (không dùng [] làm bằng chứng); fallback source [] chỉ regex. Polish và review fresh bắt thiếu focus, sửa + CUA xác minh heading rồi Tab → CTA.
-- [ ] Finish verdict cuối/documenter.
+- [x] Finish CP06 `ship` theo scope; documenter giữ hệ thống và ghi bàn giao. Clean gates cuối ở CP09.
 - [x] Typecheck/export; testopening1/0/0, journey riêng1/0/0.
 - [ ] Clean SHA, commit/handoff/tick: fullpatch1472pass1fail0skip (journey selection, 2 lần); fullbaseline sạch1473pass0fail0skip; isolatedpatch/baseline xanh. Giữ phát hiện flaky trong bàn giao, kiểm lại clean SHA cuối B10.
 
 ### CP07 · Bìa Welcome
 - [x] Baseline: web không phát momentum-end; pager chỉ nghe sự kiện đó, snap cho phép nhảy trang, chấm không role và vùng cuộn không focus. Chữ hiệu, washi và đường giấy đã có bản sắc; giữ chúng.
 - [x] Brief: người mới hiểu chuỗi lời rủ → chọn nơi → rõ phần tiền → giữ kỷ niệm. Một câu dẫn mỗi trang, mốc đường/copy/chấm cùng một vị trí. CTA đóng dấu mở bìa hiện có là khoảnh khắc chính; điều khiển trang cần phản hồi rõ và truy cập bằng phím.
-- [x] Motion: bìa mở theo spine; hủy callback khi rời màn, bấm nhanh chỉ một navigation. Swipe dừng một chặng, resize giữ trang; reduced motion đổi trang ngay. Không thêm hiệu ứng trang trí hay đổi promise sản phẩm.
-- [ ] Implement 016/017/020; onScroll đồng bộ, snap-stop always web/disableIntervalMomentum native, chấm 48dp có tên/trạng thái; phím trái/phải và Home/End; trang ngoài khung không đọc cùng lúc.
-- [ ] Review native phone/320-font lớn/tablet và chuyển động thật; web vuốt/keyboard + accessibility; build fingerprint chỉ xuất hiện khi harness yêu cầu.
-- [ ] Detector một lần, polish, fresh finish, test và handoff.
+- [x] Motion sau review video: dùng một chuyển trang native Welcome → Login, giữ bìa đọc được tới khi trang sau sẵn sàng; bỏ xoay bìa giữ khung trắng rồi chuyển lần hai. Chạm đúp chỉ một navigation; trở lại mới mở khóa. Swipe dừng một chặng, resize giữ trang; reduced motion đổi ngay. Giữ đường giấy vào màn hiện có, không thêm độ trễ.
+- [x] Implement 016/017/020; onScroll đồng bộ, snap-stop always web/disableIntervalMomentum native, chấm 48dp có tên/trạng thái; phím trái/phải và Home/End; trang ngoài khung không đọc cùng lúc.
+- [x] Review native phone/320-font lớn/tablet và chuyển động thật; web vuốt/keyboard + accessibility; build fingerprint chỉ xuất hiện khi harness yêu cầu.
+- [x] Detector rendered một lần: 23/34 finding mobile/desktop còn ghi nhận, không ignore. Axe 0 violation/32 pass/11 incomplete. Fresh review chấm hai sửa motion resolved; `ship` theo scope. Test export Welcome + opening 2/0/0; typecheck/export đạt.
+- [x] Documenter giữ DESIGN/sidecar và ghi bàn giao; commit CP07 riêng. Clean SHA/gates và handoff cuối tiếp tục ở CP09.
 
 ### CP08 · Nếp có chỗ đứng và lời xác nhận
 - [x] Baseline: NepDien Pressable vô danh vẫn focus được; chip bảng 36dp; Vẽ dùng Alert.alert web không phản hồi; hàng loại Khám phá cuộn sát cạnh nơi mép sổ đứng.
 - [x] Brief: Nếp ở bên cạnh thao tác, nói rõ phần sẽ gửi; mỗi lần vẽ là một xác nhận riêng. Một lời nhờ → xem mô tả → xác nhận/cancel → trạng thái đang vẽ. Không gọi AI có phí khi test, không sửa quota/business rules.
+- [x] Điều chỉnh từ render Android: keyboard che hoàn toàn ô nhập của sheet cũ. Chỉ Nếp bật tránh keyboard; ô soạn nhiều dòng và hành động giữ ở chân sheet, lời tham khảo và mô tả xác nhận cuộn phía trên. Nút Sửa/Vẽ luôn ở chân sheet. Trần sheet theo vùng còn lại, không cộng padding cố định và không giảm font.
 - [ ] Implement 008/011/012/014: performance có tên nút bỏ qua khi đang chạy, tĩnh không nhận Tab; chip ≥48dp; xác nhận Vẽ trong ngôn ngữ sheet/giấy, mô tả cố định, đóng/Back hủy; mép dock không che hàng loại ở 320dp.
 - [ ] Keyboard/font lớn/error/cancel, native motion, web focus/geometry; detector/polish/fresh finish/test/handoff.
 
@@ -79,11 +81,11 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 | UI-013 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Sheet đóng: panel còn lộ rồi biến mất đột ngột · khung cuối ra ngoài màn hoặc mờ ≈0 |
 | UI-014 | B10 | PLANNED | PLANNED | Ở 320dp mép Nếp đè chữ hàng chip · không chữ nào bị che ở C2 |
 | UI-015 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Cài đặt hiện giá trị giữ chỗ («Bạn», «B», công tắc sai) rồi mới đổi · không khung giữ chỗ sai |
-| UI-016 | B10 | PLANNED | PLANNED | Welcome web: chấm trang và mốc đường đứng yên ở trang 1 khi vuốt · chấm/nhãn khớp trang đang xem |
-| UI-017 | B10 | PLANNED | PLANNED | Welcome: vuốt nhanh nhảy hai trang · vuốt nhanh = 1 trang |
+| UI-016 | B10 | PLANNED | VERIFIED_LOCALLY · CP07 | Welcome web: chấm trang và mốc đường đứng yên ở trang 1 khi vuốt · chấm/nhãn khớp trang đang xem |
+| UI-017 | B10 | PLANNED | VERIFIED_LOCALLY · CP07 | Welcome: vuốt nhanh nhảy hai trang · vuốt nhanh = 1 trang |
 | UI-018 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | «Quay lại» chết khi màn mở thẳng bằng link (TopBar không kiểm `canGoBack`) · nút lui luôn tới một màn |
 | UI-019 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Mã lời mời sai báo «Cập nhật app rồi thử lại» · câu theo `code` (mã sai/hết hạn) |
-| UI-020 | B10 | PLANNED | PLANNED | Chấm trang Welcome không đọc được; pager không nhận focus · axe 0 trên /welcome |
+| UI-020 | B10 | PLANNED | VERIFIED_LOCALLY · CP07 | Chấm trang Welcome không đọc được; pager không nhận focus · axe 0 trên /welcome |
 | UI-021 | B5 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Hàng địa điểm: dòng giá bị cắt ở 8–10/10 hàng · 0 dòng giá bị cắt ở C1–C6 |
 | UI-022 | B1 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | «Chỉ đường» trên web không làm gì (`geo:`) · mở bản đồ hoặc nói vì sao |
 | UI-023 | B5 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Nhãn «Lưu địa điểm» và nút demo bị cắt · nhãn trọn ở C2 |
