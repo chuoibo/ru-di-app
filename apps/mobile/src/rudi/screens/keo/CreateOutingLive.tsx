@@ -42,6 +42,7 @@ import { docKeoTuChat, taoKeoTuChat } from "../../chat/ai-invocations";
 import { HangChang } from "./HangChang";
 import { ngayKieuViet, ngayVeISO } from "../../chat/to-hen-chung";
 import { toggleState } from "../../../ui/a11y";
+import { laPair } from "../../nhan-rieng/nhan-rieng";
 
 const MUC_NGAN_SACH = [
   { nhan: "200 nghìn", dong: 200000 },
@@ -57,10 +58,12 @@ function tienDaGo(chu: string): string | null {
   return dinhDangTienVnd(Number(t));
 }
 
-function nhomHienTai(phien: Phien): { ten: string; soNguoi: string } {
+function nhomHienTai(phien: Phien): { ten: string; soNguoi: string; haiNguoi: boolean } {
   const nhom = phien.contexts?.find((n) => n.id === phien.context_id);
-  if (nhom === undefined) return { ten: "nhóm của bạn", soNguoi: "" };
-  return { ten: nhom.display_name, soNguoi: String(nhom.member_count) };
+  if (nhom === undefined) return { ten: "nhóm của bạn", soNguoi: "", haiNguoi: false };
+  // A two-person conversation is named after the other person, so «X hiện có
+  // 2 người» read as if X were a group (QA UI-128): two people get their own words.
+  return { ten: nhom.display_name, soNguoi: String(nhom.member_count), haiNguoi: laPair(nhom) };
 }
 
 export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phien; sourceMessageId?: string }) {
@@ -203,7 +206,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
       testID="create-outing-screen"
     >
       <TopBar title={sourceMessageId ? "Sửa tờ hẹn" : "Kèo mới"} />
-      <Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : "Hội mình đi đâu?"} subtitle={sourceMessageId ? `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.` : undefined} />
+      <Heading title={sourceMessageId ? "Từ nét chì, thành lời hẹn." : nhom.haiNguoi ? "Hai bạn đi đâu?" : "Hội mình đi đâu?"} subtitle={sourceMessageId ? (nhom.haiNguoi ? "Bạn xác nhận tờ hẹn này cho hai bạn." : `Bạn xác nhận tờ hẹn này cho ${nhom.ten}.`) : undefined} />
       {/* The invitation said out loud, with its blanks: what, when, how many,
           how much (plan S3). The words are the labels; each blank is its own field. */}
       <View style={[styles.thiep, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small }]}>
@@ -250,7 +253,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
         {loiCua("so-nguoi") ? (
           <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiCua("so-nguoi")}</Text>
         ) : null}
-        {nhom.soNguoi ? <ChuThichLe icon="people-outline">{nhom.ten} hiện có {nhom.soNguoi} người; bớt đi nếu chỉ một phần đi.</ChuThichLe> : null}
+        {nhom.soNguoi && !nhom.haiNguoi ? <ChuThichLe icon="people-outline">{nhom.ten} hiện có {nhom.soNguoi} người; bớt đi nếu chỉ một phần đi.</ChuThichLe> : null}
         <Text style={[typography.h2, { color: colors.ink }]}>mỗi người khoảng</Text>
         {/* Four envelopes, thin to thick, or the amount typed. */}
         <View style={styles.hangPhongBi}>

@@ -19,7 +19,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { CHI_GUI_LOI_NHO, cauXem, chuChip, goiSeGui } from "../dist-test/rudi/chat/chip-boi-canh.js";
+import { CHI_GUI_LOI_NHO, cauXem, chuChip, goiSeGui, gomTheoNguoi } from "../dist-test/rudi/chat/chip-boi-canh.js";
 import { gomBoiCanhChat } from "../dist-test/rudi/chat/boi-canh-chat.js";
 import { goiAi } from "../dist-test/rudi/chat/ai-invocations.js";
 import { datTokenPhien } from "../dist-test/danh-tinh.js";
@@ -80,7 +80,8 @@ test("«Chỉ gửi lời nhờ» là một chạm, và sau chạm đó không l
 
 test("chip nói thật khi AI chưa sẵn sàng, khi nhóm chưa có tin, và khi máy chủ không nhận gói", () => {
   const goi = gomBoiCanhChat({ tin: [tin(1, "chào")], personId: toi });
-  assert.deepEqual(chuChip(goi, true, false), { cau: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường", xem: false, doi: null });
+  // The line fits 320dp; the spoken name keeps the whole sentence (QA UI-167).
+  assert.deepEqual(chuChip(goi, true, false), { cau: "AI chưa sẵn sàng · gửi như tin thường", nhanDoc: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường", xem: false, doi: null });
   assert.deepEqual(chuChip(gomBoiCanhChat({ tin: [], personId: toi }), true, true), { cau: "Nhóm chưa có tin nào, chỉ gửi lời nhờ", xem: false, doi: null });
   assert.deepEqual(chuChip(null, true, true), { cau: "Chỉ gửi lời nhờ, không kèm tin nào", xem: false, doi: null });
   assert.equal(goiSeGui(null, true), undefined);
@@ -91,7 +92,8 @@ test("màn đưa cho chip đúng gói sẽ gửi, và «Xem» liệt kê đúng 
   // The pair flag only picks words for two people; the count still comes
   // from the bundle (design 2026-09-28).
   assert.match(chip, /chuChip\(goi, kemTin, sanSang(, haiNguoi)?\)/, "câu của chip phải đọc từ gói");
-  assert.match(chip, /goi\.luot\.map\(/, "«Xem» phải liệt kê đúng các lượt của gói");
+  assert.match(chip, /gomTheoNguoi\(goi\.luot\)/, "«Xem» phải liệt kê đúng các lượt của gói");
+  assert.match(chip, /accessibilityLabel=\{chu\.nhanDoc\}/, "câu ngắn trên mắt, câu đủ cho tai");
   const live = readFileSync(join(SRC, "screens", "chat", "GroupChatLive.tsx"), "utf8");
   assert.match(live, /const goiChip = [^;]*boiCanhAi/, "gói trên chip phải là gói gomBoiCanhChat dựng");
   assert.match(live, /<ChipBoiCanh goi=\{goiChip\}/);
@@ -135,4 +137,16 @@ test("UI-163: mặc định kèm 20 tin như ADR-0046 §2, và không ai nới �
   assert.equal(chuChip(gomBoiCanhChat({ tin: tinHien, personId: toi }), true, true).cau, "Kèm 20 tin gần đây");
   assert.equal(gomBoiCanhChat({ tin: tinHien, personId: toi, soLuot: 60 }).luot.length, 40, "số xin thêm vẫn bị giữ ở trần máy chủ nhận");
   assert.equal(gomBoiCanhChat({ tin: tinHien.slice(0, 7), personId: toi }).luot.length, 7, "ít tin hơn thì kèm đúng số đang có");
+});
+
+// The «Xem» sheet as a transcript: one name over a person's consecutive turns,
+// nothing merged away -- the sheet still lists exactly the bundle's turns.
+test("«Xem» gom lượt liền nhau của một người, giữ đủ và đúng thứ tự", () => {
+  const tinHien = [tin(5, "e"), tin(3, "d"), tin(2, "b"), tin(1, "a")];
+  const goi = gomBoiCanhChat({ tin: tinHien, personId: toi });
+  const doan = gomTheoNguoi(goi.luot);
+  assert.deepEqual(doan.flatMap((d) => d.luot.map((l) => l.id)), goi.luot.map((l) => l.id), "đủ lượt, đúng thứ tự");
+  for (let i = 1; i < doan.length; i += 1) assert.notEqual(doan[i].nguoi, doan[i - 1].nguoi, "hai đoạn liền nhau là hai người");
+  assert.ok(doan.some((d) => d.luot.length > 1), "lượt liền nhau của một người chung một đoạn");
+  assert.ok(doan.every((d) => d.cuaToi === d.luot.every((l) => l.vai === "toi")));
 });

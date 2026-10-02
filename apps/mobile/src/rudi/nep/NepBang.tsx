@@ -129,7 +129,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
       ) : null}
 
       {phien.loi ? (
-        <Text style={[typography.body, styles.loi, { color: colors.ink }]} testID="nep-loi-hoi">
+        <Text accessibilityLiveRegion="polite" style={[typography.body, styles.loi, { color: colors.ink }]} testID="nep-loi-hoi">
           {phien.loi}
         </Text>
       ) : null}

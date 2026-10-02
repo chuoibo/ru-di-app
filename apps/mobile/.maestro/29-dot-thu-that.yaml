@@ -25,7 +25,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Tài chính của tôi"
 - extendedWaitUntil:
-    visible: "Chi theo nhóm"
+    visible: "Các số trên đọc từ sổ cái.*"
     timeout: 60000
 - takeScreenshot: 29-tai-chinh
 - scrollUntilVisible:
@@ -35,7 +35,7 @@ appId: com.lakiet.rudi
     timeout: 20000
 - tapOn: "Xem quyết toán"
 - extendedWaitUntil:
-    visible: "Quyết toán chuyến đi"
+    visible: "Quyết toán"
     timeout: 60000
 # Chưa có đợt nào: các khoản chuyển ở trên mới là đề xuất.
 - extendedWaitUntil:
@@ -48,9 +48,11 @@ appId: com.lakiet.rudi
     visible: "0/1 lượt chuyển đã về"
     timeout: 60000
 - assertVisible: "Chưa phát"
-- assertVisible: "An QA → Ban QA"
+# B4: bảng thu gom theo người nhận, «Chuyển cho Ban QA» rồi từng người chuyển.
+- assertVisible: "Chuyển cho .*"
+- assertVisible: "An QA"
 - assertVisible: "75.000đ"
-- assertVisible: "chưa chuyển"
+- assertVisible: "chưa về"
 - assertNotVisible: "Gửi cho An QA"
 - takeScreenshot: 29-dot-chua-phat
 - tapOn: "Phát đợt thu"
@@ -90,7 +92,7 @@ appId: com.lakiet.rudi
 # Về Quyết toán: mục «Đợt thu» đọc lại khi màn được focus.
 - back
 - extendedWaitUntil:
-    visible: "Quyết toán chuyến đi"
+    visible: "Quyết toán"
     timeout: 60000
 - extendedWaitUntil:
     visible: "1 lượt chuyển · 1 đã về · 75.000đ"
@@ -102,7 +104,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Sổ không còn ai nợ ai.*"
     timeout: 60000
-- assertNotVisible: "Đề xuất, chưa phải nghĩa vụ"
+- assertNotVisible: "Đề xuất tính từ sổ.*"
 - assertNotVisible: "Tạo đợt thu từ sổ"
 - assertVisible: "Sổ không còn khoản nào ngoài đợt.*"
 - takeScreenshot: 29-quyet-toan-co-dot

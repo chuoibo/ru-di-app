@@ -20,6 +20,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import {
+  cotDiemDen,
   docDiemDen,
   docDiemDenDaChon,
   dongPhuDiemDen,
@@ -121,7 +122,7 @@ export function DiemDenScreen() {
         <View onLayout={(e) => setRongLuoi(Math.round(e.nativeEvent.layout.width))} style={styles.luoi}>
           {loc.map((d) => {
             const chonRoi = dangChon === d.id;
-            const rongThe = rongLuoi > 0 ? Math.floor((rongLuoi - KHE) / 2) : 0;
+            const { rongThe } = cotDiemDen(rongLuoi, KHE);
             return (
               <Pressable
                 accessibilityLabel={`Chọn ${d.name}`}

@@ -17,6 +17,7 @@ import {
   cauNguonBill,
   cauSauKhiScanHong,
   cauTongMon,
+  dongCong,
   ghiVaoSo,
   hangKetQua,
   hoaDonTrong,
@@ -72,6 +73,13 @@ test("hangKetQua vẽ đúng số máy chủ đưa, ghi ai nhận lẻ đồng, 
     ROSTER,
   );
   assert.deepEqual(hang.map((h) => [h.ten, h.tien, h.lamTron]), [["An QA", "75.000đ", false], ["Ban QA", "125.000đ", true]]);
+});
+
+test("dongCong cộng đúng số nguyên máy chủ gửi, và nói lệch bao nhiêu nếu có", () => {
+  const chia = (allocations, totalAmountVnd) => ({ allocations, exactShares: {}, roundingGainers: [], warnings: [], assignmentState: "confirmed", suggestedItemKeys: [], totalAmountVnd });
+  assert.deepEqual(dongCong(chia({ [ROSTER[0].id]: 1713210, [ROSTER[1].id]: 1713209 }, 3426419)), { soPhan: 2, tongVnd: 3426419, lechVnd: 0 });
+  assert.deepEqual(dongCong(chia({ [ROSTER[0].id]: 100, [ROSTER[1].id]: 0 }, 101)), { soPhan: 2, tongVnd: 100, lechVnd: -1 }, "một đồng thiếu là lệch, không làm tròn");
+  assert.deepEqual(dongCong(chia({}, 0)), { soPhan: 0, tongVnd: 0, lechVnd: 0 });
 });
 
 test("ghiVaoSo đề xuất với items của bill rồi chốt, mỗi lần một Attempt riêng, kèm expected_allocations", async () => {

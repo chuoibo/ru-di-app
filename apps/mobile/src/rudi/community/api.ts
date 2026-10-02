@@ -3,7 +3,8 @@ import { BASE_URL, newAttempt, translatedAsActor } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
 import type { DiaryDocument, DiaryKind } from "../diary/api";
 export type Audience = "friends" | "public" | "only_me" | "group";
-export type FeedMode = "for_you" | "following" | "trending" | "saved" | "mine";
+/** `hidden`: the posts this person marked «Không quan tâm», so they can take one back (QA UI-141). */
+export type FeedMode = "for_you" | "following" | "trending" | "saved" | "mine" | "hidden";
 export type Media = {
     id: string;
     url: string;
@@ -89,6 +90,10 @@ export const COMMUNITY_ERRORS: Record<string, string> = {
     post_unavailable: "Bài hoặc quyền bình luận vừa thay đổi. Mở lại để kiểm tra nhé.",
     cannot_review_own_post: "Nội dung cần được một người kiểm duyệt khác xem xét.",
     moderator_required: "Tài khoản này không có quyền kiểm duyệt.",
+    // The topic box says what to fix, never «lỗi của app» (QA UI-133).
+    too_many_topics: "Tối đa 5 chủ đề. Bỏ bớt rồi gửi lại nhé.",
+    invalid_topic: "Mỗi chủ đề dài 2 đến 40 ký tự, không có / \\ < > @.",
+    invalid_feed: "Bảng tin này chưa mở được trên bản app này. Cập nhật app rồi thử lại.",
 };
 export const readFeed = (person: string, mode: FeedMode, after?: string | null, topic?: string, author?: string) => translatedAsActor<Page>(COMMUNITY_ERRORS, `/v2/community/feed?mode=${mode}${after ? `&after=${encodeURIComponent(after)}` : ""}${topic ? `&topic=${encodeURIComponent(topic)}` : ""}${author ? `&author=${encodeURIComponent(author)}` : ""}`, {
     actorId: person,

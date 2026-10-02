@@ -1514,7 +1514,7 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   rồi hàng chip (gap 8, gập dòng): **chip lý do** nền `aiSoft` chữ `label ai`
   + `sparkles` 13 và **chip giá** nền `ground` chữ `label inkSoft` +
   `pricetag-outline` 13, cả hai bo `radius.control`, đệm 10/6, **không bao giờ
-  cắt «…»** — tiền và lý do gập dòng chứ không giấu (`tachTheDan`, tách giá
+  cắt «…»** — tiền và lý do gập dòng chứ không giấu (`tachGia` của `dia-diem.ts`, tách giá
   theo icon `wallet-outline`). Không có `lyDo` thì con dấu tím như cũ (trên
   ảnh, hoặc trên tên khi là ký hoạ). Tiêu đề mục trên nhịp kết quả là
   **«Chỗ hay ở <thành phố>»** (demo: «Chỗ hay ở Đà Lạt»), dòng đếm «N nơi»

@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { CAU_BAT_LAI_CHO_CHAT, batLaiChoChat, canBatLaiChoChat, cauBatGu, cauGu, noiDanhSach } from "../dist-test/rudi/to-giay/gu-doi.js";
+import { CAU_BAT_LAI_CHO_CHAT, batLaiChoChat, canBatLaiChoChat, cauBatGu, cauGu, cauLoiGu, noiDanhSach } from "../dist-test/rudi/to-giay/gu-doi.js";
 
 const SHEET = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "src", "rudi", "screens", "hai-nguoi", "GuHaiBan.tsx"), "utf8");
 
@@ -78,4 +78,29 @@ test("bật lại = tắt rồi bật; bật chỉ chạy khi tắt đã xong, h
   assert.equal(await batLaiChoChat(async () => { goi.push("tat"); return false; }, async () => { goi.push("bat"); return true; }), false);
   assert.deepEqual(goi, ["tat"], "tắt không xong thì không bật");
   assert.equal(await batLaiChoChat(async () => true, async () => false), false);
+});
+
+// QA UI-129 (a): a switch from before the chat was named covers the notebook
+// only, so my line must not promise the chat right above «Bật lại cho chat».
+test("gu bật theo lời cũ: dòng của mình chỉ nói phần sổ", () => {
+  const bat = gu({ mine_shared: true });
+  const cu = cauGu(bat, "Minh", { cua_toi: "can_bat_lai", nguoi_kia: false });
+  assert.equal(cu.cuaToi, "Minh thấy gu của bạn, và Nếp dùng nó khi phác tờ.");
+  assert.doesNotMatch(cu.cuaToi, /Rủ Đi AI/);
+  assert.match(cauGu(bat, "Minh", { cua_toi: "bat", nguoi_kia: true }).cuaToi, /Rủ Đi AI dùng nó trong chat/);
+  assert.match(cauGu(bat, "Minh", null).cuaToi, /Rủ Đi AI dùng nó trong chat/, "chưa biết gu_chat: giữ câu theo lời mới đã ký");
+  assert.match(SHEET, /cauGu\(gu, tenNguoiKia, guChat\)/);
+});
+
+// QA UI-129 (b): the failure is said in the sheet and says where the switch is.
+test("câu lỗi của tấm gu nói công tắc đang ở đâu", () => {
+  const loi = "Rủ Đi đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.";
+  const nuaChung = cauLoiGu("bat-lai", "de-nghi:chia_gu", loi, "Minh");
+  assert.match(nuaChung, /gu của bạn đang tắt/);
+  assert.match(nuaChung, /Cho Minh thấy gu của mình/, "mời đúng nút đang hiện");
+  assert.doesNotMatch(nuaChung, /Chưa có gì bị ghi sai/, "bước tắt đã ghi: không mượn câu chung");
+  assert.match(cauLoiGu("bat-lai", "thu-hoi:chia_gu", loi, "Minh"), /vẫn bật như cũ/);
+  assert.match(cauLoiGu("bat", "de-nghi:chia_gu", loi, "Minh"), /^Chưa bật được: gu của bạn vẫn để riêng\./);
+  assert.match(cauLoiGu("tat", "thu-hoi:chia_gu", loi, "Minh"), /^Chưa tắt được: Minh vẫn thấy gu của bạn\./);
+  assert.match(SHEET, /<CauTaiCho cau=\{loi\}/, "câu lỗi nằm trong tấm");
 });

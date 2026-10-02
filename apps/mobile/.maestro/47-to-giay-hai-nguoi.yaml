@@ -6,7 +6,7 @@
 #
 # Cả thang đồng ý lẫn vòng tờ giấy, qua HAI tài khoản thật trên một máy:
 #   C: chat hai người thường là đám bạn, KHÔNG có hàng ghim «Tờ giấy»; vào
-#      qua «Cài đặt nhóm» → dòng «Tờ giấy của hai mình» → đề nghị lập sổ.
+#      qua «Cài đặt cuộc trò chuyện» → dòng «Tờ giấy của hai mình» → đề nghị lập sổ.
 #   D: vẫn đám bạn, nhưng thấy trong chat một hàng mỏng «… đề nghị lập sổ lời
 #      hẹn» (lời đề nghị của C chờ D) → «Xem lời đề nghị» → Đồng ý → sổ mở →
 #      đề nghị bật «Một đôi».
@@ -47,7 +47,7 @@ appId: com.lakiet.rudi
 # Chưa là cặp đôi: không có hàng ghim «Tờ giấy», chat như đám bạn. Lối vào
 # không gian giấy (và «Một đôi») là dòng trong cài đặt, có ở mọi chat hai người.
 - assertNotVisible: "Tờ giấy của hai mình"
-- tapOn: "Cài đặt nhóm"
+- tapOn: "Cài đặt cuộc trò chuyện"
 - tapOn: "Tờ giấy của hai mình"
 - extendedWaitUntil:
     visible: "Một chỗ cho chuyện hai mình"
@@ -90,7 +90,7 @@ appId: com.lakiet.rudi
     visible: "Ô soạn tin"
     timeout: 60000
 # Vẫn là đám bạn, nhưng lời đề nghị của C đang chờ D trả lời: một hàng mỏng
-# ngay trong chat (không có nó thì D chỉ biết khi tự mò vào «Cài đặt nhóm»).
+# ngay trong chat (không có nó thì D chỉ biết khi tự mò vào «Cài đặt cuộc trò chuyện»).
 - extendedWaitUntil:
     visible: '.*đề nghị lập sổ lời hẹn\. Mở để xem và trả lời\.'
     timeout: 60000

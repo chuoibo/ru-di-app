@@ -108,7 +108,9 @@ export function KeoTab({ nhan, goiY, onKeo, tien, huong = "phai", disabled = fal
   };
 
   return (
-    <GestureDetector gesture={cuChi}>
+    // The page keeps the drag the tab does not use (web): a sideways tab lets
+    // vertical drags scroll, a downward one sideways ones (QA UI-115 pattern).
+    <GestureDetector gesture={cuChi} touchAction={ngang ? "pan-y" : "pan-x"}>
       <Animated.View style={[styles.cho, kieu, style]}>
         <Pressable
           accessibilityActions={[{ name: "activate" }]}

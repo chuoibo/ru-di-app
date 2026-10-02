@@ -304,7 +304,7 @@ func TestDuLieuThatBiSuaBiTuChoi(t *testing.T) {
 	// label, Bill.tsx) added to nhanUI, declared as a di_toi back to finance
 	// itself, and a step telling the person to transfer and press it.
 	const nhanTC = `"nhanUI": ["Tài chính của tôi", "Cá nhân", "Xem quyết toán"]`
-	const buoc2TC = "- Ở mục chi theo nhóm, bấm «Xem quyết toán» để mở màn quyết toán của nhóm."
+	const buoc2TC = "- Bấm «Xem quyết toán» ở dưới các con số để mở màn quyết toán của nhóm."
 	themNhan := func(n string) sua {
 		return sua{"data/tai-chinh.md", nhanTC, strings.TrimSuffix(nhanTC, "]") + `, "` + n + `"]`}
 	}

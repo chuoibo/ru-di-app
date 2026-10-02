@@ -2,7 +2,7 @@
 {
   "man": "places/[id]",
   "tieu_de": "Địa điểm",
-  "nhanUI": ["Địa điểm", "Thêm vào kèo", "Thêm vào", "Rủ … tới đây", "Tờ giấy của hai mình", "Lưu địa điểm", "Đã lưu", "Chỉ đường", "Mở địa chỉ trên bản đồ", "Cá nhân"],
+  "nhanUI": ["Địa điểm", "Thêm vào kèo", "Thêm vào", "Rủ … tới đây", "Tờ giấy của hai mình", "Lưu", "Đã lưu", "Chỉ đường", "Mở địa chỉ trên bản đồ", "Cá nhân"],
   "di_toi": [
     {"nhan": "Thêm vào kèo", "man": "outings/chon"},
     {"nhan": "Rủ … tới đây", "man": "groups/[id]/to-giay"}
@@ -27,7 +27,7 @@ Màn «Địa điểm» là trang của một quán hay một chỗ chơi: ảnh
 
 ## Lưu để xem lại sau
 
-1. Bấm «Lưu địa điểm».
+1. Bấm «Lưu» để lưu địa điểm.
 2. Nút đổi thành «Đã lưu»; bấm lần nữa để bỏ lưu.
 3. Chỗ đã lưu nằm trong tab «Cá nhân», mục «Đã lưu».
 

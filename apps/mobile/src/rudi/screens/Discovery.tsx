@@ -177,8 +177,9 @@ export function ExploreScreen({ dau }: { dau?: DungDau } = {}) {
       {/* The sample city as a stage, as on the live screen (finish review 02/10):
           the first Khám phá a new person sees is the screen the owner approved.
           The demo cannot change city, so its place line names the city and no
-          «đổi nơi khác»; its filter button and bell are the demo's own tools. */}
-      {!song && !filtering && query === "" ? <SanThanhPho id="d-da-lat" ten="Đà Lạt" /> : null}
+          «đổi nơi khác»; its filter button and bell are the demo's own tools.
+          It folds away during a search rather than unmounting (QA UI-026). */}
+      {!song ? <SanThanhPho gap={filtering || query !== ""} id="d-da-lat" ten="Đà Lạt" /> : null}
       {session.inboxOpen ? (
         <EmptyState
           action={{ label: "Đóng", onPress: () => session.setInboxOpen(false) }}

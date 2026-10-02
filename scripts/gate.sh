@@ -72,7 +72,7 @@ REPO_ROOT="$PWD"
 
 # Every stage, in run order: cheapest and most likely to fail first, so a
 # broken tree is reported in seconds rather than after a docker build.
-STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test eval-kich-ban ai-infer api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres go-broker go-milvus ai-infer-milvus e2e chat-e2e crypto)
+STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test eval-kich-ban ai-infer api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres go-media go-broker go-milvus ai-infer-milvus e2e chat-e2e crypto)
 
 stage_help() {
   case "$1" in
@@ -102,6 +102,7 @@ stage_help() {
     parity)    echo "harness unit tests; two isolated stacks from the API image; canary catches every exercised damage; W0 scenarios equal through core (ADR-0029)" ;;
     postgres)  echo "every live case -- tests/postgres AND tests/qa -- against a real PostgreSQL it provisions itself (postgres-repository.yml)" ;;
     go-postgres) echo "Go core tests on a disposable PostgreSQL migrated by Alembic; a skip or a missing sentinel is a failure (ADR-0029)" ;;
+    go-media)  echo "Go community tests tagged communitymedia on the go-postgres tier: a real ffmpeg cuts every video's review pieces, the ones a moderation reading sends the model; a missing ffmpeg is a failure, never a skip" ;;
     go-broker) echo "Go tests tagged broker -- Redis Streams, RabbitMQ outbox relay -- on real services, disposable or CORE_TEST_*_URL; a skip or a missing sentinel is a failure" ;;
     ai-infer-milvus) echo "inference sidecar on a real Milvus (AI_INFER_TEST_MILVUS_URI or a disposable pinned container): lifecycle, isolation, purge with compaction to zero; a skip is a failure (test.yml: ai-infer)" ;;
     go-milvus) echo "Go tests tagged milvus -- the one retrieval + ingestion system: the Milvus index and its schema, the ingestion pipeline (rag/nap over vectordb/napkho), the hybrid retriever over Milvus and PostgreSQL, the reranker's golden check -- on real services, local installs or MOBILE_TEST_*; a skip or a missing sentinel is a failure (test.yml: milvus)" ;;
@@ -453,6 +454,11 @@ do_go-test() { ( cd services/core && go test -count=1 ./... ); }
 do_eval-kich-ban() { scripts/eval_kich_ban.sh; }
 
 do_go-postgres() { scripts/go_postgres_tier.sh; }
+
+# The media worker's ffmpeg half: the review cut a moderation reading sends
+# the model in place of a video (docs/testing/cong-dong.md). The tier's own
+# skip-is-red holds; the tests call ffmpeg and fail without it.
+do_go-media() { scripts/go_postgres_tier.sh -tags 'postgres communitymedia' ./internal/community/ ./internal/db/; }
 
 do_go-broker() { scripts/go_broker_tier.sh; }
 
@@ -869,6 +875,12 @@ check_prereq() {
       [ -f services/core/go.mod ] || return 2
       have docker && have go || { echo "cần docker và go"; return 1; }
       docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời"; return 1; } ;;
+    go-media)
+      [ -d services/core ] || { echo "services/core không có trên nhánh này"; return 1; }
+      [ -f services/core/internal/community/video_postgres_test.go ] || return 2
+      have docker && have go || { echo "cần docker và go"; return 1; }
+      have ffmpeg && have ffprobe || { echo "cần ffmpeg và ffprobe"; return 1; }
+      docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời"; return 1; } ;;
     eval-kich-ban)
       # Go and python3 only: T1 runs on the scripted stub, with no database,
       # no Docker and no network. Present without the script or the corpus is
@@ -1116,6 +1128,7 @@ broken_why() {
     mobile-native) echo "apps/mobile có mặt nhưng thiếu .maestro -- xoá bảng flow không được biến chặng này thành xanh" ;;
     e2e) echo "apps/mobile có mặt nhưng thiếu tests/e2e/vertical-slice.test.mjs -- từ chối bỏ qua" ;;
     chat-e2e) echo "có services/core/e2e/chat nhưng thiếu scripts/chat_e2e_go.sh -- từ chối bỏ qua" ;;
+    go-media) echo "có services/core nhưng thiếu internal/community/video_postgres_test.go -- từ chối bỏ qua" ;;
     crypto) echo "có packages/chat-crypto nhưng thiếu tests/mls_canaries.rs -- từ chối bỏ qua" ;;
     ownership|go-vet|go-test) echo "services/core có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
     python-touch) echo "services/core có mặt nhưng thiếu ownership/routes.json -- từ chối bỏ qua" ;;

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ResponsiveRow } from "../ui";
 import { typography, useRudiTheme, type RudiTone } from "../theme";
 import { HinhNhan } from "./Avatar";
+import { tenVua } from "./hinh-tien";
 import { toggleState } from "../../ui/a11y";
 
 /** The same full-contrast selection contract for fixture and server rosters.
@@ -44,7 +45,7 @@ export function RosterPicker({ people, selected, onToggle, disabled = false, ton
               {checked ? <Ionicons color={colors.card} name="checkmark" size={11} /> : null}
             </View>
           </View>
-          <Text numberOfLines={1} style={[typography.caption, styles.tenNhan, { color: checked ? colors.ink : colors.inkSoft }]}>{person.name}</Text>
+          <Text numberOfLines={1} style={[typography.caption, styles.tenNhan, { color: checked ? colors.ink : colors.inkSoft }]}>{tenVua(person.name, 72)}</Text>
         </Pressable>;
       })}
       {them ? <View style={styles.them}>{them}</View> : null}

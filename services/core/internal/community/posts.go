@@ -314,7 +314,7 @@ func publish(ctx context.Context, tx pgx.Tx, id string, rev int, actor, status, 
 			_, err = tx.Exec(ctx, `UPDATE community_posts c SET published_revision=$2,status=$3,reason='',topics=v.topics,mentions=v.mentions,published_at=CASE WHEN $3='approved' THEN clock_timestamp() ELSE NULL END FROM community_revisions v WHERE c.post_id=$1 AND v.post_id=c.post_id AND v.revision=$2`, id, rev, status)
 		}
 		if err == nil {
-			_, err = tx.Exec(ctx, `INSERT INTO community_notifications(id,person_id,post_id,kind) SELECT gen_random_uuid(),m,$1,'mention' FROM community_revisions v CROSS JOIN unnest(v.mentions) m WHERE v.post_id=$1 AND v.revision=$2`, id, rev)
+			_, err = tx.Exec(ctx, `INSERT INTO community_notifications(id,person_id,post_id,kind,actor_id) SELECT gen_random_uuid(),m,$1,'mention',p.author_id FROM community_revisions v JOIN posts p ON p.id=v.post_id CROSS JOIN unnest(v.mentions) m WHERE v.post_id=$1 AND v.revision=$2`, id, rev)
 		}
 	} else {
 		// A moderator withdrawing the currently published revision revokes its bytes too.

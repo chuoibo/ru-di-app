@@ -201,6 +201,11 @@ const CHO_PHEP = new Map([
   ["rudi/screens/keo/CreateOutingLive.tsx", [
     "sourceMessageId ? (await taoKeoTuChat(contextId, phien.person_id, sourceMessageId, kq.body, reviewTime ? stops : undefined)).outing_id : (await taoKeo(contextId, phien.person_id, kq.body, attempt.current!)).id",
   ]],
+  // B4 (QA UI-052): who paid the bill being typed, restored from the kept
+  // draft. Selection state the payer chips compare with (`payerId === tv.id`)
+  // and the id sent with the expense; every name shown for it comes from the
+  // roster (`tenCua`), never from this value.
+  ["rudi/screens/chia-bill/ChiaBillLive.tsx", ["daGoTruoc?.payerId ?? phien.person_id"]],
   ["navigation/VoTab.tsx", [
     // Which group the tab shell is showing. An argument to navigation.
     "nhom?.id ?? nhomId",

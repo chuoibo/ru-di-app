@@ -103,7 +103,7 @@ appId: com.lakiet.rudi
 - tapOn: "Xem quyết toán"
 # Quyết toán sống đọc /contexts/{ctx}/balances: C chuyển cho D 75.000đ.
 - extendedWaitUntil:
-    visible: "Quyết toán chuyến đi"
+    visible: "Quyết toán"
     timeout: 60000
 - extendedWaitUntil:
     visible: "75.000đ"

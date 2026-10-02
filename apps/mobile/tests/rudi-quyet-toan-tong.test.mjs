@@ -34,7 +34,9 @@ test("không có chuyến nào: nói vậy, không in 0đ", () => {
   const tong = tongTuRecap({ outings: [], in_progress: [], split_total_vnd: 0 });
   assert.deepEqual(tong, { kieu: "chua-co-chuyen" });
   const hero = dongHeroQuyetToan(tong, 2);
-  assert.equal(hero.so, "Chưa có chuyến");
+  // B4: the state line says no trip has started (ongoing and ended ones both
+  // have; QA 23/09), so the sentence under it is one line.
+  assert.equal(hero.so, "Chưa có chuyến nào bắt đầu");
   assert.doesNotMatch(hero.so + hero.nhan + hero.cau, /0đ/);
 });
 

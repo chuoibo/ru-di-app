@@ -19,7 +19,7 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { cauBiCat } from "../../../screens/chat/ke-hoach";
 
 import { ApiError, boPhieu, docBinhChon, dongBinhChon, thongDiepNguoiDoc, type CuocBinhChonWire } from "../../../api";
@@ -137,6 +137,7 @@ export function TheAiView({
               <HangChang
                 cuoi={i === the.the.chang.length - 1}
                 gio={c.gio}
+                sat
                 key={`${c.diaDiem.id}-${i}`}
                 phac
                 phu={c.ghiChu ?? null}
@@ -271,69 +272,106 @@ function ThePoll({
   const highest = Math.max(0, ...dem.values());
   const leading = the.options.filter((option) => dem.get(option.id) === highest);
   const summary = highest === 0 ? "Chưa có phiếu" : leading.length === 1 ? `${leading[0].label} · ${highest} phiếu` : `${leading.length} lựa chọn ngang phiếu`;
+  const cuaNguoiTao = !dong && ketQua?.created_by_id === personId;
 
   if (live?.deleted) return <View style={[styles.card, { borderColor: colors.line, backgroundColor: colors.card }]}><Text style={[typography.caption, { color: colors.inkSoft }]}>Bình chọn này không còn.</Text></View>;
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: 4, borderTopRightRadius: 18 }]}>
-      {/* The poll question is the sheet's title at message size, like the itinerary heading (R5). */}
-      <Text style={[typography.title, { color: colors.ink }]}>{the.question}</Text>
+    <View style={[styles.card, styles.thePoll, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: 4, borderTopRightRadius: 18 }]}>
+      {/* The question is the note's title at message size (R5). */}
+      <Text style={[typography.title, styles.dauPoll, { color: colors.ink }]}>{the.question}</Text>
       {dong ? <View style={styles.summary}>
         <Ionicons name="checkmark-circle-outline" size={20} color={colors.accent} />
         <Text style={[typography.label, styles.flex, { color: colors.ink }]}>{summary}</Text>
       </View> : null}
-      {(!dong || showClosedVotes) ? the.options.map((o) => {
-        const cuaToi = ketQua?.my_option_id === o.id;
-        const so = dem.get(o.id) ?? 0;
-        return (
-          <Pressable
-            {...toggleState("radio", cuaToi, dangBo !== null || dong ? undefined : () => void bo(o.id))}
-            accessibilityLabel={`Bỏ phiếu ${o.label}`}
-            aria-disabled={dangBo !== null || dong}
-            disabled={dangBo !== null || dong}
-            key={o.id}
-            onPress={() => void bo(o.id)}
-            // Each choice is a sticky note; every ballot is an ink thumbprint
-            // on it, so the count is seen before it is read (ADR-0037 D1).
-            style={({ pressed }) => [
-              styles.luaChon,
-              styles.giayNho,
-              { borderColor: cuaToi ? colors.accent : colors.lineStrong, borderWidth: cuaToi ? 2 : 1, backgroundColor: cuaToi ? colors.accentSoft : colors.card },
-              pressed && styles.bam,
-            ]}
-          >
-            <View style={styles.flex}>
-              <Text style={[typography.body, { color: colors.ink }]}>{o.label}</Text>
-              {so > 0 ? (
-                <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.vanTay}>
-                  {Array.from({ length: Math.min(so, 12) }, (_, i) => (
-                    // A drawn print with ridges, not a filled blob (read as «a
-                    // grey dot» in the blind read); yours is in your own ink.
-                    <VeLop
-                      doiMau={cuaToi && i === 0 ? { muc: mucNguoi(personId, dark) } : undefined}
-                      height={VAN_TAY.h}
-                      key={i}
-                      khungH={VAN_TAY.h}
-                      khungW={VAN_TAY.w}
-                      lop={HINH_VAN_TAY}
-                      style={{ transform: [{ rotate: `${(i * 37) % 60 - 30}deg` }] }}
-                      width={VAN_TAY.w}
-                    />
-                  ))}
-                  {so > 12 ? <Text style={[typography.caption, { color: colors.inkSoft }]}>+{so - 12}</Text> : null}
+      {(!dong || showClosedVotes) ? (
+        <View accessibilityRole="radiogroup" style={styles.dsLuaChon}>
+          {the.options.map((o, thu) => {
+            const cuaToi = ketQua?.my_option_id === o.id;
+            const so = dem.get(o.id) ?? 0;
+            // One scale for every row, the whole poll: a bar is a share of the
+            // ballots cast, so two bars compare without counting prints.
+            const muc = cuaToi ? colors.accent : colors.inkSoft;
+            return (
+              <Pressable
+                {...toggleState("radio", cuaToi, dangBo !== null || dong ? undefined : () => void bo(o.id))}
+                accessibilityLabel={`Bỏ phiếu ${o.label}`}
+                // The count is said by value on native, so the name stays the one
+                // the manual quotes. Not on the web: `aria-valuetext` is not an
+                // attribute a radio may carry (axe aria-allowed-attr).
+                accessibilityValue={Platform.OS !== "web" && so > 0 ? { text: `${so} phiếu` } : undefined}
+                aria-disabled={dangBo !== null || dong}
+                disabled={dangBo !== null || dong}
+                key={o.id}
+                onPress={() => void bo(o.id)}
+                style={({ pressed }) => [styles.luaChon, thu > 0 && { borderTopColor: colors.line, borderTopWidth: StyleSheet.hairlineWidth }, pressed && styles.bam]}
+              >
+                {/* The radio says which is yours before any colour does. */}
+                <View style={[styles.vong, { borderColor: cuaToi ? colors.accent : colors.lineStrong }]}>
+                  {cuaToi ? <View style={[styles.cham, { backgroundColor: colors.accent }]} /> : null}
                 </View>
-              ) : null}
-              <Text style={[typography.caption, { color: cuaToi ? colors.accent : colors.inkSoft }]}>
-                {dangBo === o.id ? "Đang gửi phiếu…" : `${so} phiếu${cuaToi ? " · của bạn" : ""}`}
-              </Text>
-            </View>
-            {cuaToi ? <Ionicons color={colors.accent} name="checkmark-circle" size={22} /> : null}
-          </Pressable>
-        );
-      }) : null}
-      <Text style={[typography.caption, { color: colors.inkSoft }]}>
-        {tong} phiếu{dong ? " · đã đóng" : ""}
-      </Text>
+                <View style={styles.flex}>
+                  <View style={styles.hangLuaChon}>
+                    <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{o.label}</Text>
+                    {dangBo === o.id ? (
+                      <Text style={[typography.note, { color: colors.inkSoft }]}>Đang gửi…</Text>
+                    ) : so > 0 ? (
+                      // Ballots are ink thumbprints (ADR-0037 D1): up to three
+                      // pressed on the row, then the number, so the count is
+                      // seen before it is read and never runs off the note.
+                      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.vanTay}>
+                        {Array.from({ length: Math.min(so, 3) }, (_, i) => (
+                          <VeLop
+                            doiMau={cuaToi && i === 0 ? { muc: mucNguoi(personId, dark) } : undefined}
+                            height={VAN_TAY.h}
+                            key={i}
+                            khungH={VAN_TAY.h}
+                            khungW={VAN_TAY.w}
+                            lop={HINH_VAN_TAY}
+                            style={[styles.motDau, { transform: [{ rotate: `${(i * 37) % 60 - 30}deg` }] }]}
+                            width={VAN_TAY.w}
+                          />
+                        ))}
+                        <Text style={[typography.label, styles.so, { color: muc }]}>{so}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  {/* The track is drawn before the first ballot too, empty: the
+                      note reads as a poll at a glance, and the first vote fills
+                      a bar that was already there instead of adding a line. */}
+                  <View
+                    accessibilityRole="progressbar"
+                    accessibilityValue={{ min: 0, max: Math.max(tong, 1), now: so }}
+                    style={[styles.ray, { backgroundColor: colors.line }]}
+                  >
+                    {/* Two flex parts, ballots for and the rest: a share drawn,
+                        never a percentage printed (ADR-0009 §4). */}
+                    <View style={[styles.rayDay, { flex: so, backgroundColor: muc }]} />
+                    <View style={{ flex: Math.max(tong - so, so === 0 ? 1 : 0) }} />
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+      {/* The foot of the note: the total, said once, and the creator's close
+          on the same line. Nothing at all for anyone else while nobody has
+          voted -- an empty row already says it, and «0 phiếu» four times said
+          it five (QA UI-065). */}
+      {tong > 0 || dong || (cuaNguoiTao && !confirmClose) ? (
+        <View style={styles.chanPoll}>
+          <Text style={[typography.note, styles.flex, { color: colors.inkSoft }]}>
+            {tong > 0 ? `${tong} phiếu` : "Chưa có phiếu"}{dong ? " · đã đóng" : ""}
+          </Text>
+          {cuaNguoiTao && !confirmClose ? (
+            <Pressable accessibilityRole="button" disabled={dangBo !== null} hitSlop={6} onPress={() => setConfirmClose(true)} style={styles.nutChot}>
+              <Ionicons color={colors.inkSoft} name="lock-closed-outline" size={15} />
+              <Text style={[typography.label, { color: colors.ink }]}>Chốt bình chọn</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
       {dong ? <RudiButton label={showClosedVotes ? "Thu gọn phiếu" : "Xem các phiếu"} variant="ghost" compact onPress={() => setShowClosedVotes((value) => !value)} /> : null}
       {/* Where a decision turns into a plan. Without this the vote ends and the
           group is back to one person filling a private form (reviewer C1/C6). */}
@@ -351,17 +389,20 @@ function ThePoll({
           />
         </View>
       ) : null}
-      {/* Signed at the foot like every sheet: the question is the heading, not a label over it. */}
-      <View style={styles.chuKy}>
-        <Ionicons color={colors.accent} name="stats-chart-outline" size={15} />
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{tacGia} tạo bình chọn</Text>
-      </View>
-      {!dong && ketQua?.created_by_id === personId ? (
-        confirmClose ? <View style={styles.dong}>
+      {/* Who made the poll is the message's sender, drawn above it like any
+          message's; the note only signs a closed poll, which outlives the run. */}
+      {dong ? (
+        <View style={styles.chuKy}>
+          <Ionicons color={colors.accent} name="stats-chart-outline" size={15} />
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>{tacGia} tạo bình chọn</Text>
+        </View>
+      ) : null}
+      {cuaNguoiTao && confirmClose ? (
+        <View style={styles.dong}>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Sau khi đóng, mọi người không thể đổi phiếu.</Text>
           <RudiButton label="Đóng bình chọn" compact variant="outline" loading={dangBo === "close"} disabled={dangBo !== null} onPress={() => void closePoll()} />
           <RudiButton label="Tiếp tục bình chọn" compact variant="ghost" disabled={dangBo !== null} onPress={() => setConfirmClose(false)} />
-        </View> : <RudiButton label="Chốt bình chọn" compact variant="ghost" disabled={dangBo !== null} onPress={() => setConfirmClose(true)} />
+        </View>
       ) : null}
       {loi ? <View style={styles.dong}><Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loi}</Text><RudiButton label="Tải lại bình chọn" variant="ghost" compact onPress={() => void nap()} /></View> : null}
     </View>
@@ -369,16 +410,33 @@ function ThePoll({
 }
 
 const styles = StyleSheet.create({
-  giayNho: { borderRadius: 3, borderTopRightRadius: 12 },
-  vanTay: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, paddingVertical: 4 },
+  vanTay: { flexDirection: "row", alignItems: "center", flexShrink: 0 },
+  // Prints overlap a little, the way three thumbs pressed in a hurry do.
+  motDau: { marginLeft: -5 },
+  so: { marginLeft: 6, minWidth: 14, textAlign: "right" },
   flex: { flex: 1 },
   card: { gap: 8, padding: 14, borderWidth: 1 },
+  // A poll is a note, not a banner: on a tablet it keeps a note's width
+  // instead of stretching one choice across 780dp (QA UI-065, C6).
+  thePoll: { gap: 4, paddingVertical: 10, maxWidth: 560, width: "100%" },
+  dauPoll: { paddingBottom: 2 },
+  chanPoll: { flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 2 },
+  // 48dp to the finger: 36 on the note plus the slop above and below.
+  nutChot: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 36 },
   chuKy: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 6, paddingTop: 2 },
   dong: { gap: 2, paddingVertical: 6 },
   duong: { paddingTop: 4 },
   hangTien: { flexDirection: "row", alignItems: "center", gap: 10 },
   summary: { flexDirection: "row", alignItems: "center", gap: 8 },
-  luaChon: { flexDirection: "row", alignItems: "center", gap: 10, borderBottomWidth: StyleSheet.hairlineWidth, paddingHorizontal: 8, paddingVertical: 8, minHeight: 52 },
+  dsLuaChon: { gap: 0 },
+  // One line a choice, 48dp: the radio, the label, the prints and the count,
+  // and under them a hairline bar on the poll's one scale.
+  luaChon: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingVertical: 6 },
+  hangLuaChon: { flexDirection: "row", alignItems: "center", gap: 8 },
+  vong: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: "center", justifyContent: "center" },
+  cham: { width: 10, height: 10, borderRadius: 5 },
+  ray: { flexDirection: "row", height: 3, borderRadius: 2, marginTop: 4, overflow: "hidden" },
+  rayDay: { height: 3, borderRadius: 2 },
   bam: { opacity: 0.8 },
   // The step after a decision sits apart from the ballots, on the 4pt scale.
   tiepTheo: { gap: 6, paddingTop: 6 },

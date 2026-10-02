@@ -27,8 +27,20 @@ export type CapChoAi = {
   loi: string | null;
 };
 
-export function useChatAi(contextId: string, personId: string) {
+/**
+ * How often a two-person room re-reads what it is. Only the other person's
+ * «Một đôi» can turn a friends' pair into a couple, and no message or change
+ * frame says so; five seconds keeps the pinned paper row and the fifth tool
+ * within a breath of their agreement without leaving the chat (QA UI-125).
+ */
+export const NHIP_DOC_LAI_PHONG_DOI_MS = 5000;
+
+export function useChatAi(contextId: string, personId: string, { haiNguoi = false }: { haiNguoi?: boolean } = {}) {
   const [capabilities, setCapabilities] = useState<ChatCapabilities | null>(null);
+  // Which room the held answers belong to. Coming back to the same room keeps
+  // them while they are re-read: blanking them on every focus drew the room as
+  // a friends' pair for a beat and the pinned row jumped 78dp (QA UI-125).
+  const phongDaDoc = useRef<string | null>(null);
   const [requests, setRequests] = useState<AiInvocation[]>([]);
   const [cho, setCho] = useState<CapChoAi[]>([]);
   const [busy, setBusy] = useState(false);
@@ -44,7 +56,12 @@ export function useChatAi(contextId: string, personId: string) {
     let disposed = false;
     let reading = false;
     generation.current += 1;
-    setCapabilities(null); setRequests([]); setCho([]); setError(null); setBusy(false);
+    const phong = `${contextId}:${personId}`;
+    if (phongDaDoc.current !== phong) {
+      phongDaDoc.current = phong;
+      setCapabilities(null); setRequests([]); setCho([]);
+    }
+    setError(null); setBusy(false);
     const refresh = async (capabilitiesToo = false) => {
       if (reading || disposed || AppState.currentState !== "active") return;
       reading = true;
@@ -64,9 +81,10 @@ export function useChatAi(contextId: string, personId: string) {
     const timer = setInterval(() => {
       if (requestsRef.current.some((request) => request.status === "queued" || request.status === "running")) void refresh();
     }, 2000);
+    const doiPhong = haiNguoi ? setInterval(() => { void refresh(true); }, NHIP_DOC_LAI_PHONG_DOI_MS) : null;
     const sub = AppState.addEventListener("change", (state) => { if (state === "active") void refresh(true); });
-    return () => { disposed = true; refreshRef.current = null; generation.current += 1; clearInterval(timer); sub.remove(); };
-  }, [contextId, personId]));
+    return () => { disposed = true; refreshRef.current = null; generation.current += 1; clearInterval(timer); if (doiPhong) clearInterval(doiPhong); sub.remove(); };
+  }, [contextId, personId, haiNguoi]));
 
   /**
    * Ask the AI to answer a stored message. The bundle goes only when the

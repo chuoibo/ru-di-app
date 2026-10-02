@@ -17,11 +17,11 @@
  *   FOR, not who may ask, and slice 1 has no turn on the wire (ADR-0027 §6.3).
  *   `coLuot` is false so no screen reads it as «Tuần này bạn mở lời» (B1).
  */
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { useRudiSession } from "../session";
 
-import { batLaiChoChat } from "./gu-doi";
+import { batLaiChoChat, cauLoiGu, type LenhGu } from "./gu-doi";
 import { type NoiDungTo, sauKhiXinTo } from "./to-giay";
 import { SoDoiContext, type SoDoiApi } from "./SoDoi";
 import { caHaiDongY, ghiRangBuocTuanTu, rangBuocCua, toTomTatThanhTo } from "./so-doi-map";
@@ -40,6 +40,11 @@ export function SoDoiSongProvider({
   children: ReactNode;
 }) {
   const song = useToGiay(contextId, toiId);
+  // The taste sheet's last press: its failure is worded by what was pressed,
+  // not only by which write failed (`cauLoiGu`).
+  const [lenhGu, setLenhGu] = useState<LenhGu | null>(null);
+  const buocGu = song.lenhBiChan?.ten ?? "";
+  const loiGu = lenhGu !== null && song.loiLenh !== null && buocGu.endsWith(":chia_gu") ? cauLoiGu(lenhGu, buocGu, song.loiLenh, tenNguoiKia) : null;
   const { phien } = useRudiSession();
   // Known before anybody presses anything: the session already says which pair
   // stopped taking messages, and the notebook stops with it (QA UI-120). A
@@ -82,6 +87,7 @@ export function SoDoiSongProvider({
       daNap: song.pha !== "dang-nap",
       dangLam: song.dangLam,
       loiLenh: song.loiLenh,
+      loiGu,
 
       capId: contextId,
       toiId,
@@ -94,9 +100,9 @@ export function SoDoiSongProvider({
       deNghiLapSo: () => void song.xinLapSo(),
       deNghiBatDoi: () => void song.xinBac("bat_doi"),
       thuHoiBatDoi: () => void song.thuHoi("bat_doi"),
-      chiaGu: () => void song.xinBac("chia_gu"),
-      thoiChiaGu: () => void song.thuHoi("chia_gu"),
-      batLaiChiaGu: () => void batLaiChoChat(() => song.thuHoi("chia_gu"), () => song.xinBac("chia_gu")),
+      chiaGu: () => { setLenhGu("bat"); void song.xinBac("chia_gu"); },
+      thoiChiaGu: () => { setLenhGu("tat"); void song.thuHoi("chia_gu"); },
+      batLaiChiaGu: () => { setLenhGu("bat-lai"); void batLaiChoChat(() => song.thuHoi("chia_gu"), () => song.xinBac("chia_gu")); },
       chonLo: (lo) => void song.chonVai(lo),
       datRangBuoc: async (rb) => {
         // Two fields, two writes, and an empty one is a delete: the route takes
@@ -133,7 +139,7 @@ export function SoDoiSongProvider({
 
       nguoiKia: null,
     };
-  }, [contextId, daDung, song, tenNguoiKia, toiId]);
+  }, [contextId, daDung, loiGu, song, tenNguoiKia, toiId]);
 
   return <SoDoiContext.Provider value={api}>{children}</SoDoiContext.Provider>;
 }

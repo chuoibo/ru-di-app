@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { TABLIST, tabState } from "../../ui/a11y";
 import { typography, useRudiTheme } from "../theme";
@@ -20,12 +20,16 @@ const MUC: readonly { muc: MucKhamPha; nhan: string }[] = [
  * only draws: the route file owns the navigation, because the guide's
  * extractor (`tools/rut-huong-dan.mjs`) reads a route's exits there. The
  * words scroll sideways rather than clip when a large text size outgrows a
- * narrow phone; `phai` (the feed settings, or the demo door) stays put,
- * outside the tablist, which may own tabs only.
+ * narrow phone; `phai` (the bell and the feed settings) stays put, outside
+ * the tablist, which may own tabs only. Below 360dp it rises above the words,
+ * as the community's own header does (B7): beside two 48dp buttons the words
+ * had 180 of 288dp and «Địa điểm» was cut to its last letters.
  */
 export function DauKhamPha({ muc, onDoiMuc, phai }: { muc: MucKhamPha; onDoiMuc: (muc: MucKhamPha) => void; phai?: ReactNode }) {
   const { colors } = useRudiTheme();
   const cuon = useRef<ScrollView>(null);
+  // The words stay first in reading order; only the controls' place on screen changes.
+  const hep = useWindowDimensions().width < 360 && phai !== undefined;
   // When large text makes the words outgrow the row, the open section is the
   // one in view: Cộng đồng, the second word, scrolls itself in. Asked again
   // once the row knows its own width (on the web the content size arrives
@@ -35,7 +39,7 @@ export function DauKhamPha({ muc, onDoiMuc, phai }: { muc: MucKhamPha; onDoiMuc:
     if (muc === "community") cuon.current?.scrollToEnd({ animated: false });
   };
   return (
-    <View style={styles.hang} testID="dau-kham-pha">
+    <View style={[styles.hang, hep && styles.hangHep]} testID="dau-kham-pha">
       <ScrollView
         contentContainerStyle={styles.cuonTrong}
         horizontal
@@ -67,7 +71,7 @@ export function DauKhamPha({ muc, onDoiMuc, phai }: { muc: MucKhamPha; onDoiMuc:
           })}
         </View>
       </ScrollView>
-      {phai ? <View style={styles.phai}>{phai}</View> : null}
+      {phai ? <View style={[styles.phai, hep && styles.phaiHep]}>{phai}</View> : null}
     </View>
   );
 }
@@ -80,4 +84,6 @@ const styles = StyleSheet.create({
   muc: { minHeight: 48, alignItems: "center", justifyContent: "center", paddingTop: 6, gap: 4 },
   bang: { width: 28, height: 4, borderRadius: 2 },
   phai: { flexShrink: 0 },
+  hangHep: { paddingTop: 48 },
+  phaiHep: { position: "absolute", top: 0, right: 0 },
 });

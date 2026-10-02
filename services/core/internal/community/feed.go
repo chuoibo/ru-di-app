@@ -133,7 +133,9 @@ func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
 	if mode == "" {
 		mode = "for_you"
 	}
-	if !slices.Contains([]string{"for_you", "following", "trending", "saved", "mine"}, mode) {
+	// `hidden`: the posts this person marked «Không quan tâm», so they can take
+	// one back (QA UI-141); like `mine` and `saved` it is a list, not a ranking.
+	if !slices.Contains([]string{"for_you", "following", "trending", "saved", "mine", "hidden"}, mode) {
 		fail(w, no(422, "invalid_feed"))
 		return
 	}
@@ -180,7 +182,7 @@ func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
 		}
 		items := []candidate{}
 		ranked := false
-		if topic == "" && author == "" && mode != "mine" && mode != "saved" {
+		if topic == "" && author == "" && mode != "mine" && mode != "saved" && mode != "hidden" {
 			ids, err = h.discoveryRanking(ctx, tx, person, mode, personalized)
 			if err != nil {
 				fail(w, err)
@@ -195,7 +197,7 @@ func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
   WHERE c.deleted_at IS NULL AND a.deleted_at IS NULL AND (`+readableSQL+`)
    AND (($2='mine' AND p.author_id=$1) OR ($2='saved' AND EXISTS(SELECT 1 FROM community_feedback WHERE person_id=$1 AND post_id=p.id AND kind='saved')) OR ($2 NOT IN ('mine','saved') AND p.audience='public' AND c.published_revision IS NOT NULL))
    AND ($3='' OR $3=ANY(c.topics)) AND ($4='' OR p.author_id::text=$4)
-   AND NOT EXISTS(SELECT 1 FROM community_feedback WHERE person_id=$1 AND post_id=p.id AND kind='hidden')
+   AND ($2='hidden')=EXISTS(SELECT 1 FROM community_feedback WHERE person_id=$1 AND post_id=p.id AND kind='hidden')
   ORDER BY COALESCE(c.published_at,p.created_at) DESC,p.id DESC LIMIT 500
  ), interest AS (
  SELECT unnest(cp.topics) AS topic,count(DISTINCT i.id)::integer AS weight FROM community_interactions i JOIN community_posts cp ON cp.post_id=i.post_id JOIN posts p ON p.id=cp.post_id WHERE $5 AND p.audience='public' AND cp.deleted_at IS NULL AND cp.published_revision IS NOT NULL AND (`+readableSQL+`) AND i.person_id=$1 AND i.kind IN ('view','complete') AND i.created_at>clock_timestamp()-interval '90 days' GROUP BY cp.topics
@@ -227,7 +229,7 @@ func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		if mode == "mine" || mode == "saved" {
+		if mode == "mine" || mode == "saved" || mode == "hidden" {
 			for _, c := range items {
 				ids = append(ids, c.ID)
 			}
@@ -235,6 +237,9 @@ func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
 			ids = rank(items, mode, personalized, time.Now())
 		}
 		snapshot = uuid()
+		if ids == nil {
+			ids = []string{}
+		}
 		rankKey := fmt.Sprintf("%x", sha256.Sum256([]byte(strings.Join(ids, ":"))))
 		// A refresh with the same ranking should not generate another row
 		// version and WAL record. Renew only near expiry; ACLs stay live below.
@@ -282,14 +287,20 @@ func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for _, p := range batch {
-			if hidden[p.ID] {
+			if hidden[p.ID] != (mode == "hidden") {
 				continue
 			}
-			if mode != "mine" && mode != "saved" && (p.Audience != "public" || p.Status == "pending" && p.AuthorID == person) {
+			// The author's own post stays in their feed while an edit waits for
+			// review: it reads as their latest words under the «Đang chờ duyệt»
+			// band, the way the post page shows it. It used to leave the
+			// author's feed until the edit was approved (QA UI-142).
+			if mode != "mine" && mode != "saved" && p.Audience != "public" {
 				continue
 			}
 			p.Why = "Mới trong cộng đồng"
-			if mode == "trending" {
+			if mode == "hidden" {
+				p.Why = "Bạn đã chọn «Không quan tâm» cho bài này"
+			} else if mode == "trending" {
 				p.Why = "Được nhiều người tương tác gần đây"
 			} else if mode == "following" || p.Following {
 				p.Why = "Bạn đang theo dõi"

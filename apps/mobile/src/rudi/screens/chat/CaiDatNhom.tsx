@@ -111,7 +111,7 @@ export function CaiDatNhomSheet({
   };
 
   return (
-    <Sheet accessibilityLabel="Cài đặt nhóm" onClose={onClose} open={open} testID="cai-dat-nhom">
+    <Sheet accessibilityLabel={laPair ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} onClose={onClose} open={open} testID="cai-dat-nhom">
       <Heading size="h2" title={laPair ? "Cuộc trò chuyện" : "Cài đặt nhóm"} />
       {!laPair ? (
         <View style={styles.khoi}>
@@ -174,14 +174,14 @@ export function CaiDatNhomSheet({
         })}
       </View>
       <Text style={[typography.caption, { color: colors.inkFaint }]}>
-        {nhanTheme(nhom.theme ?? "mac-dinh")}. Cả nhóm thấy cùng một màu.
+        {nhanTheme(nhom.theme ?? "mac-dinh")}. {laPair ? "Hai bạn thấy cùng một màu." : "Cả nhóm thấy cùng một màu."}
       </Text>
       {aiTuGoiY ? (
         <View style={styles.hangCongTac}>
           <View style={styles.hangChu}>
             <Text style={[typography.label, { color: colors.ai }]}>Rủ Đi AI tự gợi ý</Text>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              Khi thấy nhóm hỏi ăn gì, đi đâu, Rủ Đi AI gợi ý mà không cần gọi.
+              {laPair ? "Khi hai bạn hỏi nhau ăn gì, đi đâu, Rủ Đi AI gợi ý mà không cần gọi." : "Khi thấy nhóm hỏi ăn gì, đi đâu, Rủ Đi AI gợi ý mà không cần gọi."}
             </Text>
           </View>
           <Switch

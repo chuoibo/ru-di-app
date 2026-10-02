@@ -580,6 +580,74 @@ class TheGoHalfOfTheServerIsRead(unittest.TestCase):
         self.assertIn(key, contract.routes, "Go route missing from live contract")
         self.assertIn("POST", contract.routes[key])
 
+    def test_every_route_the_manifest_says_only_go_serves_is_read(self):
+        """The hand-written handler list is the reader's blind side.
+
+        A Go package added without a line in `GO_*_HANDLERS` serves its route
+        and the client's call to it reads as a 404 -- `gomdot` on 2026-10-02.
+        The ownership gate already holds the manifest to the binary, so every
+        row Python does not have, and every Go feature route, must be in the
+        contract this gate checks the client against.
+        """
+        import json
+
+        manifest = json.loads(
+            (contract_gate.REPO_ROOT / "services/core/ownership/routes.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        go_only = [
+            r
+            for r in manifest["routes"]
+            if r.get("kind") == "route" and r.get("python") == "absent"
+        ] + list(manifest.get("features", []))
+        self.assertGreater(len(go_only), 50, "the manifest reader found too few rows")
+        contract = contract_gate.live_contract()
+        missing = [
+            f"{r['method']} {r['path']}"
+            for r in go_only
+            if r["method"]
+            not in contract.routes.get(contract_gate.normalise(r["path"]), set())
+        ]
+        self.assertEqual(missing, [], "Go-only routes the contract gate cannot see")
+
+    def test_a_route_registered_through_a_constant_is_read_through_its_registration(
+        self,
+    ):
+        code = (
+            'const routeA = "GET /a/{id}/events"\n'
+            'const routeB = "GET /b"\n'
+            "func (h *H) init() { h.mux.HandleFunc(routeA, h.a) }\n"
+        )
+        with tempfile.TemporaryDirectory() as root:
+            handler = Path(root) / "handler.go"
+            handler.write_text(code, encoding="utf-8")
+            with (
+                mock.patch.object(contract_gate, "REPO_ROOT", Path(root)),
+                mock.patch.object(contract_gate, "GO_CHAT_HANDLERS", ("handler.go",)),
+                mock.patch.object(contract_gate, "GO_PROFILE_HANDLERS", ()),
+                mock.patch.object(contract_gate, "GO_FEATURE_HANDLERS", ()),
+            ):
+                found = contract_gate.read_go_routes()
+        # routeB is declared and never registered: it is not a route.
+        self.assertEqual(found, {contract_gate.normalise("/a/{id}/events"): {"GET"}})
+
+    def test_a_one_line_route_ids_declaration_is_read(self):
+        one_line = (
+            'func RouteIDs() []string { return []string{"GET /a/{id}/b", "POST /c"} }\n'
+        )
+        many = 'func RouteIDs() []string {\n\treturn []string{\n\t\t"GET /a/{id}",\n\t}\n}\n'
+        for code, want in (
+            (one_line, [("GET", "/a/{id}/b"), ("POST", "/c")]),
+            (many, [("GET", "/a/{id}")]),
+        ):
+            got = [
+                hit
+                for body in contract_gate.GO_ROUTE_IDS.findall(code)
+                for hit in contract_gate.GO_ROUTE_LITERAL.findall(body)
+            ]
+            self.assertEqual(got, want, code)
+
     def test_an_empty_openapi_document_is_still_refused(self):
         """The check the merge nearly swallowed.
 

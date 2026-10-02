@@ -692,7 +692,7 @@ test("(e) canary: fixture của bộ nạp Go — cửa tiêu đề chỉ là ti
 // nhanUI, declared as a di_toi back to finance, and a step to press it. Every
 // gate passed it; now three rules refuse it.
 const NHAN_TC = '"nhanUI": ["Tài chính của tôi", "Cá nhân", "Xem quyết toán"]';
-const BUOC2_TC = "- Ở mục chi theo nhóm, bấm «Xem quyết toán» để mở màn quyết toán của nhóm.";
+const BUOC2_TC = "- Bấm «Xem quyết toán» ở dưới các con số để mở màn quyết toán của nhóm.";
 /** [cu, moi] for suaSoTay: one more label in tai-chinh.md's nhanUI. */
 const themNhanTC = (nhan) => [NHAN_TC, NHAN_TC.replace(/\]$/, `, "${nhan}"]`)];
 /** [cu, moi] for suaSoTay: one more line after tai-chinh.md's last step. */

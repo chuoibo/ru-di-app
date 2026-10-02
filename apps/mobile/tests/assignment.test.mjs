@@ -166,10 +166,11 @@ test("blockingProblem: nhóm rỗng, món không ai nhận, món 0đ, hợp lệ
   assert.match(counted, /chưa ai nhận/);
 
   const free = readingOf([line("mon-0", "Pepsi", 0), BA_CHI]);
+  // B4: a 0đ dish is now refused on the bill step itself (`receipt.ts`), where
+  // the server would refuse it, so the bill step's sentence is the one heard.
   const zeroed = blockingProblem(free, people, everyoneShares(free.lines, people));
   assert.match(zeroed, /Pepsi/);
-  assert.match(zeroed, /0đ/);
-  assert.match(zeroed, /màn trước/);
+  assert.match(zeroed, /chưa có số tiền/);
 
   const nameless = readingOf([line("mon-0", "   ", 1000), BA_CHI]);
   const named = blockingProblem(nameless, people, everyoneShares(nameless.lines, people));

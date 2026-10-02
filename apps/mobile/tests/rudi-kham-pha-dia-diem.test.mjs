@@ -47,6 +47,7 @@ import {
   nguonAnhDiaDiem,
   parseAnhDiaDiem,
   luuDiaDiem,
+  tachGia,
 } from "../dist-test/rudi/kham-pha/dia-diem.js";
 
 const CHO = {
@@ -214,7 +215,9 @@ test("chỉ đường tìm theo tên kèm địa chỉ: toạ độ chỉ để 
 test("cauTimKiem: có kết quả thì im, mỗi kiểu thất bại một câu thật", () => {
   assert.equal(cauTimKiem({ kind: "chua-tim" }), null);
   assert.equal(cauTimKiem({ kind: "co-ket-qua", query: "x", understood: {}, places: [] }), null);
-  assert.match(cauTimKiem({ kind: "khong-tra-loi", query: "x" }), /chưa đủ chắc/);
+  // B5 (QA UI-024): no guessed cause, no «nói rõ số người…» for a question that may be fine.
+  assert.match(cauTimKiem({ kind: "khong-tra-loi", query: "x" }), /chưa trả lời được câu này/);
+  assert.doesNotMatch(cauTimKiem({ kind: "khong-tra-loi", query: "x" }), /Thử nói rõ/);
   assert.match(cauTimKiem({ kind: "qua-nhieu-lan", query: "x" }), /Hết lượt/);
   assert.match(cauTimKiem({ kind: "cau-khong-hop-le", max: 300 }), /300/);
   assert.match(cauTimKiem({ kind: "khong-noi-duoc", url: "u", detail: "d" }), /Không kết nối được/);
@@ -552,4 +555,21 @@ test("quay lại màn Khám phá: không đọc lại cả danh mục nếu vừ
   assert.equal(canDocLaiDanhMuc(vua, null, luc + 5_000), false, "chưa chọn gì: vẫn là nơi vừa đọc");
   assert.equal(canDocLaiDanhMuc(vua, "d-tinh-1", luc + 5_000), true, "đổi điểm đến");
   assert.equal(canDocLaiDanhMuc(vua, "d-tinh-79", luc + TUOI_DANH_MUC_MS), true, "quá hạn");
+});
+
+test("tachGia: giá tìm theo loại (ví), không theo vị trí; giờ mở không chiếm chỗ của giá (QA UI-021)", () => {
+  const facts = [
+    { icon: "star", text: "4.8 (64)" },
+    { icon: "navigate-outline", text: "3.9 km" },
+    { icon: "wallet-outline", text: "200.000đ – 250.000đ mỗi người" },
+    { icon: "time-outline", text: "Mở tới 22:00" },
+  ];
+  const nb = (t) => t.replace(/ /g, "\u00a0").replace(/([–-])/g, "$1\u2060");
+  assert.deepEqual(tachGia(facts), { gia: "200.000đ – 250.000đ mỗi người", khac: [nb("4.8 (64)"), nb("3.9 km"), nb("Mở tới 22:00")].join(" · ") });
+  assert.deepEqual(tachGia(facts.filter((f) => f.icon !== "wallet-outline")).gia, "");
+  // Breakable only at « · »: «Đang mở · 09:00 – 18:00» may part between its two pieces, never inside one.
+  const gio = tachGia([{ icon: "time-outline", text: "Đang mở · 09:00 – 18:00" }]).khac;
+  assert.deepEqual(gio.split(" · "), [nb("Đang mở"), nb("09:00 – 18:00")]);
+  assert.equal(tachGia(facts).khac.split(" ").filter((x) => x !== "·").length, 3);
+  assert.deepEqual(tachGia([]), { gia: "", khac: "" });
 });

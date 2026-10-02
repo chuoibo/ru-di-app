@@ -14,12 +14,14 @@
  * ai đã báo cáo.
  */
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { baoCao, LY_DO_BAO_CAO, type LoaiBaoCao, type LyDoBaoCao } from "../../cai-dat/quyen-rieng-tu";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, RudiButton } from "../../ui";
+import { CauTaiCho } from "../../ui/CauTaiCho";
+import { toggleState } from "../../../ui/a11y";
 
 export function NoiDungBaoCao({
   actorId,
@@ -36,7 +38,7 @@ export function NoiDungBaoCao({
   /** Người dùng đổi ý trước khi gửi. */
   onThoi: () => void;
 }) {
-  const { colors } = useRudiTheme();
+  const { colors, space } = useRudiTheme();
   const [lyDo, setLyDo] = useState<LyDoBaoCao>("spam");
   const [ghiChu, setGhiChu] = useState("");
   const [dangGui, setDangGui] = useState(false);
@@ -73,17 +75,27 @@ export function NoiDungBaoCao({
   return (
     <View style={styles.khoi}>
       <Text style={[typography.label, { color: colors.ink }]}>Vì sao bạn báo cáo?</Text>
-      <View accessibilityRole="radiogroup" style={styles.lyDo}>
-        {LY_DO_BAO_CAO.map((muc) => (
-          <RudiButton
-            compact
-            full={false}
-            key={muc.ma}
-            label={muc.nhan}
-            onPress={() => setLyDo(muc.ma)}
-            variant={lyDo === muc.ma ? "soft" : "ghost"}
-          />
-        ))}
+      {/* One choice of five, drawn as one: a ring that fills, not a fill that
+          only changes colour (QA UI-067, where four reasons read as red links
+          and the chosen one had no state a screen reader could hear). */}
+      <View accessibilityLabel="Vì sao bạn báo cáo?" accessibilityRole="radiogroup" style={styles.lyDo}>
+        {LY_DO_BAO_CAO.map((muc, i) => {
+          const chon = lyDo === muc.ma;
+          return (
+            <Pressable
+              {...toggleState("radio", chon, () => setLyDo(muc.ma))}
+              accessibilityLabel={muc.nhan}
+              key={muc.ma}
+              onPress={() => setLyDo(muc.ma)}
+              style={({ pressed }) => [styles.hangLyDo, { gap: space.md }, i > 0 && { borderTopColor: colors.line, borderTopWidth: StyleSheet.hairlineWidth }, pressed && styles.bam]}
+            >
+              <View style={[styles.vong, { borderColor: chon ? colors.ink : colors.lineStrong }]}>
+                {chon ? <View style={[styles.cham, { backgroundColor: colors.ink }]} /> : null}
+              </View>
+              <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{muc.nhan}</Text>
+            </Pressable>
+          );
+        })}
       </View>
       <Field
         accessibilityLabel="Ô ghi chú báo cáo"
@@ -94,7 +106,7 @@ export function NoiDungBaoCao({
         onChangeText={setGhiChu}
         value={ghiChu}
       />
-      {loi ? <Text style={[typography.caption, { color: colors.warn }]}>{loi}</Text> : null}
+      <CauTaiCho cau={loi} />
       <RudiButton label="Gửi báo cáo" loading={dangGui} onPress={() => void gui()} variant="outline" />
       <RudiButton label="Thôi" onPress={onThoi} variant="ghost" />
     </View>
@@ -103,5 +115,10 @@ export function NoiDungBaoCao({
 
 const styles = StyleSheet.create({
   khoi: { gap: 10 },
-  lyDo: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  lyDo: { gap: 0 },
+  hangLyDo: { flexDirection: "row", alignItems: "center", minHeight: 48, paddingVertical: 6 },
+  vong: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: "center", justifyContent: "center" },
+  cham: { width: 10, height: 10, borderRadius: 5 },
+  flex: { flex: 1 },
+  bam: { opacity: 0.7 },
 });

@@ -14,4 +14,4 @@ Màn «Tài chính của tôi» thuộc phần tiền. Nếp chỉ chỉ đườ
 ## Tới màn này và đi tiếp
 
 - Mở tab «Cá nhân», bấm «Tài chính của tôi».
-- Ở mục chi theo nhóm, bấm «Xem quyết toán» để mở màn quyết toán của nhóm.
+- Bấm «Xem quyết toán» ở dưới các con số để mở màn quyết toán của nhóm.

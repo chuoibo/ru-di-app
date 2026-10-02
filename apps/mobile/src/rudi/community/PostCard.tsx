@@ -16,9 +16,10 @@ import { BookView } from "../diary/BookView";
 import { chiaSe, type KetQuaChiaSe } from "../web/chia-se";
 import { giuState } from "../../ui/a11y";
 import { TI_LE_ALBUM, kichTrangAlbum, nhanTrang, trangAlbum } from "./album";
+import { thanBiCat } from "./bang-tin";
 
-/** `kich`: the frame to fill (a post's full-width page); without it the review queue's fixed frame. */
-export function CommunityVideo({ media, person, active, kich }: { media: Media; person: string; active: boolean; kich?: { width: number; height: number } }) {
+/** `khung`: the frame to fill (a post's full-width page); without it the review queue's fixed frame. */
+export function CommunityVideo({ media, person, active, khung }: { media: Media; person: string; active: boolean; khung?: { width: number; height: number } }) {
   const { colors } = useRudiTheme();
   const [webSource, setWebSource] = useState<{ key: string; uri: string } | null>(null);
   const [videoError, setVideoError] = useState(false);
@@ -48,7 +49,7 @@ export function CommunityVideo({ media, person, active, kich }: { media: Media; 
   const player = useVideoPlayer(
     Platform.OS === "web" ? webURI : { uri: BASE_URL + media.url, headers, useCaching: false }, (p) => { p.loop = false; p.muted = true; });
   useEffect(() => { if (!active) player.pause(); const subscription = AppState.addEventListener("change", (state) => { if (state !== "active") player.pause(); }); return () => subscription.remove(); }, [active, player]);
-  return <View><VideoView player={player} nativeControls fullscreenOptions={{ enable: true }} style={kich ?? styles.media} contentFit="contain" />{videoError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.inkSoft, padding: 12 }]}>Chưa mở được video. Mở lại câu chuyện để thử lại nhé.</Text> : null}</View>;
+  return <View><VideoView player={player} nativeControls fullscreenOptions={{ enable: true }} style={khung ?? styles.media} contentFit="contain" />{videoError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.inkSoft, padding: 12 }]}>Chưa mở được video. Mở lại câu chuyện để thử lại nhé.</Text> : null}</View>;
 }
 export function Action({ icon, label, accessibilityLabel, onPress, selected = false, disabled = false }: { icon: keyof typeof Ionicons.glyphMap; label: string; accessibilityLabel?: string; onPress: () => void; selected?: boolean; disabled?: boolean }) {
   const { colors } = useRudiTheme();
@@ -71,7 +72,11 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
   const [trangDangXem, setTrangDangXem] = useState(0);
   const kichAnh = kichTrangAlbum(rongAlbum);
   const theoCuon = (e: NativeSyntheticEvent<NativeScrollEvent>) => setTrangDangXem(trangAlbum(e.nativeEvent.contentOffset.x, rongAlbum, post.media.length));
-  const soTrang = nhanTrang(trangDangXem, post.media.length); const router = useRouter(); const motion = useMotion(); const [expanded, setExpanded] = useState(detail); const [photo, setPhoto] = useState<Media | null>(null);
+  const soTrang = nhanTrang(trangDangXem, post.media.length);
+  // A body that already shows whole opens the post on the first tap; only a
+  // cut one spends that tap on the rest of itself (QA UI-139).
+  const biCat = thanBiCat(post.body);
+  const router = useRouter(); const motion = useMotion(); const [expanded, setExpanded] = useState(detail); const [photo, setPhoto] = useState<Media | null>(null);
   // What «Chia sẻ» just did, said on the button itself for a few seconds (QA UI-136).
   const [daChiaSe, setDaChiaSe] = useState<string | null>(null);
   useEffect(() => {
@@ -87,14 +92,14 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
       <Pressable accessibilityRole="button" accessibilityLabel="Thêm lựa chọn cho bài" onPress={onMore} style={styles.follow}><Ionicons name="ellipsis-horizontal" size={20} color={colors.inkSoft} /></Pressable>
     </View>
     {post.author_id === person && ["pending", "review", "rejected"].includes(post.status) ? <View style={[styles.status, { backgroundColor: colors.accentSoft }]}><Ionicons name={post.status === "rejected" ? "alert-circle-outline" : "time-outline"} size={17} color={colors.accent} /><Text style={[typography.caption, { color: colors.accent }]}>{post.status === "rejected" ? "Chưa phù hợp cộng đồng · Có thể sửa hoặc yêu cầu xem xét" : "Đang chờ duyệt · Bản mới chưa xuất hiện công khai"}</Text></View> : null}
-    <Pressable accessibilityRole="button" accessibilityLabel="Đọc toàn bộ câu chuyện" onPress={() => { if (!expanded) setExpanded(true); else if (!detail) router.push(`/community/posts/${post.id}` as never); }}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Đọc toàn bộ câu chuyện" onPress={() => { if (!expanded && biCat) setExpanded(true); else if (!detail) router.push(`/community/posts/${post.id}` as never); }}>
       <Text numberOfLines={expanded ? undefined : 6} style={[typography.body, styles.body, { color: colors.ink }]}>{post.body}</Text>
-      {!expanded && post.body.length > 240 ? <Text style={[typography.label, { color: colors.accent }]}>Đọc tiếp</Text> : null}
+      {!expanded && biCat ? <Text style={[typography.label, { color: colors.accent }]}>Đọc tiếp</Text> : null}
     </Pressable>
     {post.diary ? <BookView compact={!detail} kind={post.diary_kind} document={post.diary} photo={(id) => imageSource(person, `/v2/community/media/${id}`)} /> : null}
     {!post.diary && post.media.length ? <View onLayout={(e) => setRongAlbum(Math.round(e.nativeEvent.layout.width))} style={styles.khungAlbum}>{rongAlbum > 0 ? <View>
       <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={theoCuon} onMomentumScrollEnd={theoCuon} scrollEventThrottle={16} style={[styles.album, { borderRadius: radius.control }]}>
-        {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, kichAnh, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo kich={kichAnh} media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={kichAnh} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
+        {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, kichAnh, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo khung={kichAnh} media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={kichAnh} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
       </ScrollView>
       {/* Which picture of how many; each picture already names itself to a screen reader. */}
       {soTrang ? <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={[styles.soTrang, { backgroundColor: colors.card, borderRadius: radius.pill }]}><Text style={[typography.caption, { color: colors.ink }]}>{soTrang}</Text></View> : null}

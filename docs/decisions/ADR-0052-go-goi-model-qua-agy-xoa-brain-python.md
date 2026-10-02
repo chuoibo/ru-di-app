@@ -103,7 +103,10 @@ Lệch, có chủ ý:
 - Bộ kiểm của tìm quán nằm ở `aiharness/timquan`, không ở `internal/domain/*`: nó đọc giá trị pyjson (số
   nguyên lớn, thứ tự khoá) mà biên domain thuần không cho import. Golden vẫn chứng minh như §2.1.
 - Cộng đồng không có prompt cũ để chép (§1): `aiharness/congdong` viết lời dặn mới; `media_checked` do Go
-  đặt (chỉ đúng khi mọi tệp là ảnh đã gửi cùng request), không hỏi model.
+  đặt (chỉ đúng khi mọi tệp đã đi cùng các lần đọc), không hỏi model. **Sửa 2026-10-02** (chủ sản phẩm:
+  giữ ngưỡng 900‰ = 90%, «AI phải đánh giá», không thêm cờ duyệt tay toàn bộ): ảnh được thu nhỏ cho vừa
+  14 MiB thay vì bị bỏ, video gửi bằng bản cắt duyệt 45 s/đoạn do media worker cắt — chi tiết và số đo ở
+  `docs/testing/cong-dong.md` và `docs/claude/2026-10-02/cong-dong-ai-cham-du.md`.
 - `GET /places`, `GET /places/{id}`: handler Python không đổi một dòng; `create_app` cài một reason writer
   không trả lời ai (`no_reasons`). Đó đúng là điều core không khoá phục vụ, và giữ hai route làm oracle
   parity cho phần danh mục (§2.3 «chỉ mất phần viết lý do»).

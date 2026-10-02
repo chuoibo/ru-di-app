@@ -235,6 +235,11 @@ export function NepDock() {
   // And for the screens Nếp is absent from (`trang-thai.ts` rules 3 and 4).
   if (!nepHien(dock)) return null;
 
+  // On a money screen Nếp is pushed to the edge and stays there (rule 4,
+  // «Nếp Không Chạm Số»): a tap is ignored, so the edge is not a button and
+  // promises nothing. It was a Tab stop labelled «chạm để kéo ra» that did
+  // nothing (QA UI-057).
+  const nghi = dock.luiLai;
   const nhan = dangAn
     ? coToSau
       ? "Nếp đang cài trong mép sổ và có việc mới, chạm để kéo ra"
@@ -278,9 +283,15 @@ export function NepDock() {
             // reader user cannot make, and the timed tuck is off for them:
             // without this, Nếp pulled out stays 56dp over the page until they
             // leave the screen.
-            accessibilityActions={dangAn ? undefined : [{ name: "activate" }, { name: "cat", label: "Cất Nếp vào mép" }]}
-            accessibilityLabel={nhan}
-            accessibilityRole="button"
+            accessibilityActions={dangAn || nghi ? undefined : [{ name: "activate" }, { name: "cat", label: "Cất Nếp vào mép" }]}
+            accessibilityLabel={nghi ? undefined : nhan}
+            accessibilityRole={nghi ? undefined : "button"}
+            accessible={!nghi}
+            aria-hidden={nghi || undefined}
+            disabled={nghi}
+            focusable={!nghi}
+            importantForAccessibility={nghi ? "no-hide-descendants" : "auto"}
+            {...(Platform.OS === "web" && nghi ? ({ tabIndex: -1 } as object) : {})}
             onAccessibilityAction={(e) => {
               if (e.nativeEvent.actionName === "cat") gui({ kieu: "vuot-ra" });
               else if (e.nativeEvent.actionName === "activate") gui({ kieu: "cham" });

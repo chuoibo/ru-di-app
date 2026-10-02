@@ -380,6 +380,18 @@ test("không có dòng nào, hoặc có dòng chưa đặt tên, thì chưa đi 
   assert.match(blockingProblem(twoNameless), /2 món chưa có tên/);
 });
 
+test("món chưa có số tiền thì chặn ở đây, trước khi gửi: máy chủ không nhận món 0đ", () => {
+  const reading = readingFromWire(LIVE_SCAN);
+  const mot = setLineTotal(reading, "mon-3", "0");
+  assert.equal(mot.ok, true);
+  const ten = mot.reading.lines.find((l) => l.id === "mon-3").name;
+  assert.equal(blockingProblem(mot.reading), `Món "${ten}" chưa có số tiền. Gõ thành tiền của cả dòng, hoặc bỏ món này.`);
+  const hai = setLineTotal(mot.reading, "mon-4", "0");
+  assert.match(blockingProblem(hai.reading), /^2 món chưa có số tiền/);
+  // A dish with no name is said first: the name is what the next screen asks about.
+  assert.match(blockingProblem(renameLine(hai.reading, "mon-3", "")), /chưa có tên/);
+});
+
 test("bill không có dòng tổng cộng thì nói thẳng là không đối chiếu được", () => {
   // `null` is not agreement. Rendering it as a tick would claim a check that
   // never ran.
@@ -398,6 +410,8 @@ test("câu chữ hiện ra màn hình không dùng em-dash", () => {
     blockingProblem(empty),
     blockingProblem(renameLine(reading, "mon-3", "")),
     blockingProblem(renameLine(renameLine(reading, "mon-3", ""), "mon-4", "")),
+    blockingProblem(setLineTotal(reading, "mon-3", "0").reading),
+    blockingProblem(setLineTotal(setLineTotal(reading, "mon-3", "0").reading, "mon-4", "0").reading),
   ];
   for (const sentence of sentences) {
     assert.equal(sentence.includes("—"), false, `còn em-dash: ${sentence}`);

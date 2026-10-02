@@ -574,6 +574,17 @@ export function locTheoTen(places: Place[], q: string): Place[] {
   });
 }
 
+/**
+ * Whether the search field filters the list by name: only while it holds a
+ * name. Not while a question for Rủ Đi AI waits to be sent (`choGui`), and not
+ * once one has been asked (its words are not a place's name, whatever came
+ * back). The sample question used to filter the list to «0 kết quả» before
+ * anything was asked (QA UI-024).
+ */
+export function nenLocTheoTen(query: string, timKiem: string, choGui: boolean): boolean {
+  return query.trim().length > 0 && timKiem === "chua-tim" && !choGui;
+}
+
 /** How long a read catalogue is good for when the screen regains focus. The
  *  server changes it only when a sync applies a batch (~every 10 minutes). */
 export const TUOI_DANH_MUC_MS = 60_000;
@@ -689,6 +700,29 @@ export function chiTietNgan(
 }
 
 /**
+ * A place's facts as a row prints them: the price band on its own line, found
+ * by what it is (the wallet), never by where it falls; everything else on one
+ * line that may wrap. The rows used to take the LAST fact for the price, and
+ * `chiTietNgan` puts the opening hours after it, so the price went into the
+ * one-line meta and was cut on 9 rows in 10 at 390 (QA UI-021).
+ */
+export function tachGia<T extends { icon: string; text: string }>(facts: readonly T[]): { gia: string; khac: string } {
+  const gia = facts.find((f) => f.icon === "wallet-outline");
+  return {
+    gia: gia?.text ?? "",
+    // Each piece of a fact holds together (no-break spaces inside it), so the
+    // line wraps at « · » -- between facts, or inside «Đang mở · 09:00 – 18:00»
+    // on a half-width tile -- never inside «07:00 – 22:00» or «4.8 (64)».
+    khac: facts
+      .filter((f) => f !== gia)
+      // A dash may break after it even between no-break spaces: a word joiner
+      // after it holds «09:00 – 18:00» on one line (seen at 320: «09:00 – / 18:00»).
+      .map((f) => f.text.split(" · ").map((manh) => manh.replace(/ /g, "\u00a0").replace(/([–-])/g, "$1\u2060")).join(" · "))
+      .join(" · "),
+  };
+}
+
+/**
  * The subtitle under the address: distance and ride time, when either is known.
  *
  * Both come from the catalogue rather than from the phone, so an imported
@@ -755,7 +789,10 @@ export function cauTimKiem(trang: TimKiemState): string | null {
     case "co-ket-qua":
       return null;
     case "khong-tra-loi":
-      return "Rủ Đi AI chưa đủ chắc để xếp hạng cho câu này. Thử nói rõ số người, ngân sách hoặc khu vực.";
+      // Nothing came back for this sentence, and the server keeps why to itself
+      // (`tim-kiem.ts`): no guessed cause, and no telling the person to fix a
+      // question that may be fine (QA UI-024). The catalogue stays whole under it.
+      return "Rủ Đi AI chưa trả lời được câu này lúc này. Danh mục bên dưới vẫn đủ để bạn tự chọn.";
     case "cau-khong-hop-le":
       return `Câu tìm cần từ 1 tới ${trang.max} ký tự.`;
     case "chua-biet-la-ai":

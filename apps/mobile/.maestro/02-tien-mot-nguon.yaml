@@ -32,7 +32,7 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "Xem quyết toán"
 - extendedWaitUntil:
-    visible: "Quyết toán chuyến đi"
+    visible: "Quyết toán"
     timeout: 30000
 - assertVisible: "3.840.000đ"
 # Quyết toán là sổ phẳng: bill và phần còn lại là hai dòng sổ, mỗi dòng một số.

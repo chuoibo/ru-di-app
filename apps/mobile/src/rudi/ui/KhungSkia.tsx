@@ -59,8 +59,19 @@ class BatLoiSkia extends Component<{ onLoi: () => void; children: ReactNode }, {
 }
 
 /**
+ * How long the SVG drawing stays under a freshly mounted Skia layer at least.
+ * The canvas paints its first real frame 430-700 ms after mounting on the web
+ * (WebGL context, first shaders); two animation frames are not that frame.
+ * With Reduce Motion the fade is 0 ms, so the SVG went at ~30 ms and the stage
+ * was empty until the canvas painted (QA UI-027). Under the same drawing the
+ * overlap is invisible.
+ */
+export const GIU_SVG_MS = 1000;
+
+/**
  * The Skia layer, mounted invisible over the SVG drawing: two frames for the
- * canvas to paint, then a fade in, then `onXong` lets the SVG go.
+ * canvas to paint, then a fade in, then -- once the fade is done AND the
+ * canvas has had `GIU_SVG_MS` to paint -- `onXong` lets the SVG go.
  */
 function HienSauKhiVe({ children, onXong, phu }: { children: ReactNode; onXong: () => void; phu: boolean }) {
   const motion = useMotion();
@@ -69,11 +80,19 @@ function HienSauKhiVe({ children, onXong, phu }: { children: ReactNode; onXong: 
     let huy = false;
     let a = 0;
     let b = 0;
+    let hen: ReturnType<typeof setTimeout> | undefined;
+    const luc = Date.now();
+    const xong = () => {
+      if (huy) return;
+      hen = setTimeout(() => {
+        if (!huy) onXong();
+      }, Math.max(0, GIU_SVG_MS - (Date.now() - luc)));
+    };
     a = requestAnimationFrame(() => {
       b = requestAnimationFrame(() => {
         if (huy) return;
-        op.value = withTiming(1, motion.timing("standard"), (xong) => {
-          if (xong) runOnJS(onXong)();
+        op.value = withTiming(1, motion.timing("standard"), (daXong) => {
+          if (daXong) runOnJS(xong)();
         });
       });
     });
@@ -81,6 +100,7 @@ function HienSauKhiVe({ children, onXong, phu }: { children: ReactNode; onXong: 
       huy = true;
       cancelAnimationFrame(a);
       cancelAnimationFrame(b);
+      if (hen !== undefined) clearTimeout(hen);
     };
     // Once per mount: the fade is the hand-over, not a response to props.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,6 +137,11 @@ export function KhungSkia<P extends object>({
   testID?: string;
 }) {
   const trangThai = useTrangThaiSkia();
+  // Reduce Motion: the SVG drawing only. The Skia layer is there for motion;
+  // still, the hand-over is a second picture of the same thing ~500 ms after
+  // the first (Nếp's M3/M4/M5 changed image under reduced motion), or an empty
+  // frame while the canvas warms up (QA UI-027). One picture from the start.
+  const motion = useMotion();
   // `boSvg`: the Skia canvas has painted and faded in, the SVG may go.
   // `hong`: Skia failed to render; the SVG stays for good.
   const [boSvg, setBoSvg] = useState(false);
@@ -124,7 +149,7 @@ export function KhungSkia<P extends object>({
   useEffect(() => {
     void napSkia();
   }, []);
-  const coSkia = trangThai === "san-sang" && !hong;
+  const coSkia = trangThai === "san-sang" && !hong && !motion.reduced;
   return (
     <View pointerEvents="box-none" style={style} testID={testID}>
       {!boSvg || !coSkia ? <Dau renderer="svg">{svg}</Dau> : null}

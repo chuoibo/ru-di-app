@@ -35,7 +35,8 @@ func decision(v verdict, comment, hasMedia bool) (string, string) {
 }
 
 // inferenceMedia loads the submission's attachments for a reading: image
-// bytes, and only the type of a video, which the model is never sent.
+// bytes, and a video's review cut rather than the video. A video processed
+// before the cut existed has none, and is never sent.
 func (h *Handler) inferenceMedia(ctx context.Context, ids []string) ([]congdong.Media, error) {
 	out := []congdong.Media{}
 	st, err := storage.New()
@@ -45,23 +46,32 @@ func (h *Handler) inferenceMedia(ctx context.Context, ids []string) ([]congdong.
 	total := 0
 	for _, id := range ids {
 		var key, mime string
-		err = h.pool.QueryRow(ctx, `SELECT storage_key,content_type FROM community_media WHERE id=$1 AND state='ready'`, id).Scan(&key, &mime)
+		var review []string
+		err = h.pool.QueryRow(ctx, `SELECT storage_key,content_type,review_keys FROM community_media WHERE id=$1 AND state='ready'`, id).Scan(&key, &mime, &review)
 		if err != nil {
 			return nil, err
 		}
-		if !strings.HasPrefix(mime, "image/") {
-			out = append(out, congdong.Media{MIME: mime})
-			continue
+		m := congdong.Media{MIME: mime}
+		keys := review
+		if strings.HasPrefix(mime, "image/") {
+			keys = []string{key}
 		}
-		b, e := st.Read(key)
-		if e != nil {
-			return nil, e
+		for _, k := range keys {
+			b, e := st.Read(k)
+			if e != nil {
+				return nil, e
+			}
+			total += len(b)
+			if total > 64<<20 {
+				return nil, no(422, "media_bundle_too_large")
+			}
+			if strings.HasPrefix(mime, "image/") {
+				m.Data = b
+			} else {
+				m.Doan = append(m.Doan, b)
+			}
 		}
-		total += len(b)
-		if total > 64<<20 {
-			return nil, no(422, "media_bundle_too_large")
-		}
-		out = append(out, congdong.Media{MIME: mime, Data: b})
+		out = append(out, m)
 	}
 	return out, nil
 }
@@ -105,7 +115,9 @@ func (h *Handler) workOne(ctx context.Context) {
 	var job int64
 	var post, comment *string
 	var rev *int
-	err = tx.QueryRow(ctx, `UPDATE community_jobs SET lease_until=clock_timestamp()+interval '2 minutes',attempts=attempts+1 WHERE id=(SELECT id FROM community_jobs WHERE NOT done AND available_at<=clock_timestamp() AND (lease_until IS NULL OR lease_until<clock_timestamp()) ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING id,post_id,revision,comment_id`).Scan(&job, &post, &rev, &comment)
+	// The lease outlasts a whole reading: a 180 s video is four calls of up
+	// to 85 s each (congdong), one after another.
+	err = tx.QueryRow(ctx, `UPDATE community_jobs SET lease_until=clock_timestamp()+interval '8 minutes',attempts=attempts+1 WHERE id=(SELECT id FROM community_jobs WHERE NOT done AND available_at<=clock_timestamp() AND (lease_until IS NULL OR lease_until<clock_timestamp()) ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING id,post_id,revision,comment_id`).Scan(&job, &post, &rev, &comment)
 	if err != nil {
 		return
 	}
@@ -136,7 +148,7 @@ func (h *Handler) workOne(ctx context.Context) {
 		// No model on this process is an outage like any other: the job
 		// waits and retries, nothing is approved.
 		var d congdong.Doc
-		d, err = congdong.Duyet(ctx, h.ai.Luot(1), body, comment != nil, media)
+		d, err = congdong.Duyet(ctx, h.ai.Luot, body, comment != nil, media)
 		v = verdict(d)
 	}
 	if err != nil {
@@ -193,7 +205,7 @@ func publishComment(ctx context.Context, tx pgx.Tx, id string) error {
 		_, err = tx.Exec(ctx, `INSERT INTO community_comment_meta(comment_id,parent_id,mentions,media_id) SELECT id,(SELECT c.id FROM post_comments c WHERE c.id=d.parent_id AND c.post_id=d.post_id),mentions,media_id FROM community_comment_drafts d WHERE id=$1 ON CONFLICT DO NOTHING`, id)
 	}
 	if err == nil {
-		_, err = tx.Exec(ctx, `INSERT INTO community_notifications(id,person_id,post_id,kind) SELECT gen_random_uuid(),m,post_id,'mention' FROM community_comment_drafts CROSS JOIN unnest(mentions) m WHERE id=$1`, id)
+		_, err = tx.Exec(ctx, `INSERT INTO community_notifications(id,person_id,post_id,kind,actor_id,comment_id) SELECT gen_random_uuid(),m,post_id,'mention',author_id,id FROM community_comment_drafts CROSS JOIN unnest(mentions) m WHERE id=$1`, id)
 	}
 	return err
 }

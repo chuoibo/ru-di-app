@@ -14,6 +14,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { translatedAnonymous } from "../../api";
+import { gridFor } from "../adaptive";
 
 export type DiemDen = {
   id: string;
@@ -155,4 +156,14 @@ export function cauGanToi(
         ? "Chỗ bạn đang đứng chưa nằm trong vùng RuDi biết. Chọn tay ở dưới nhé."
         : `Gần bạn: ${trang.ganNhat.name}`;
   }
+}
+
+/**
+ * Postcards a row on the destination screen: two on a phone, three once the
+ * column holds 200 dp a card (`gridFor`, as the other card grids). Always two
+ * left 8 of 15 cities on a 1024 screen (QA UI-031).
+ */
+export function cotDiemDen(rongLuoi: number, khe: number): { cot: number; rongThe: number } {
+  const cot = Math.max(2, gridFor(rongLuoi, 200, khe, 3).columns);
+  return { cot, rongThe: rongLuoi > 0 ? Math.floor((rongLuoi - khe * (cot - 1)) / cot) : 0 };
 }

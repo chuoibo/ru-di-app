@@ -341,39 +341,52 @@ func TestBoVangKhongSua(t *testing.T) {
 // (ADR-0047 §9). duongHaiNguoi has no miss left; «ko bik bo fieu o dau» and
 // «bo fieu o dau v» went from rank 7 to 8, «đóng sổ hai người» from 2 to 1.
 //
-// Re-pinned at the five-column tab strip (2026-10-02): the ranker did not
+// The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
+// duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
+// 0.3526 (teen 0.8214 / 0.2905).
+// UI/UX upgrade B4 (2026-10-02): tai-chinh.md's step no longer points at a
+// «chi theo nhóm» section (the finance screen has none), and the screen labels
+// in _rut.json follow the money screens' new copy. Recall@5 unchanged on every
+// set and group; duongVang MRR 0.9179 → 0.9177, [co_dau] 0.8978 → 0.8972.
+// Rewording the step without «ở» moved «bo fieu o dau v» out of the top 5:
+// that question sits one token's weight from the edge.
+// UI/UX upgrade B6 (2026-10-02): the settings button of a two-person chat is
+// named «Cài đặt cuộc trò chuyện» (it said «Cài đặt nhóm», QA UI-128), and
+// to-giay.md quotes the new name. That is the very phrase of the hai-nguoi
+// question «mở tờ giấy từ cài đặt cuộc trò chuyện», which moves up: duongHaiNguoi
+// MRR 0.6859 → 0.7051, [co_dau] 0.6806 → 0.7222. Recall@5 and every other set
+// unchanged. Adding «Chốt» to chat-nhom.md's labels moved four sets (duongTruyVan
+// MRR 0.8942 → 0.8923): the poll's close button keeps the words the manual
+// already quotes instead.
+// Five-column tab strip (2026-10-02, merged onto B4–B7): the ranker did not
 // change, the manual did. Cộng đồng became Khám phá's second section, so
 // kham-pha.md and cong-dong.md say so in their overviews and in the existing
 // steps (no new section: a first try added three, and «ở đầu màn» folds to the
 // «o dau» of «ở đâu» questions; recall@5 fell 0.9505 → 0.9396). Recall@5 did
-// not move on any group; MRR (before → after):
+// not move on any group; MRR against main before the merge:
 //
-//	duongVang       0.9179 → 0.9181   teen 0.7354 → 0.7369
-//	duongManKhac    0.7661 → 0.7701   teen 0.6280 → 0.6412
-//	duongTruyVan    0.8942 → 0.8974
-//
-// The numbers of the ranking of 5c3a3c1 on the same sets, for the record:
-// duongVang 0.9725 / 0.8560 (teen 0.8333 / 0.6694), duongManKhac 0.8514 /
-// 0.3526 (teen 0.8214 / 0.2905).
+//	duongVang       0.9177 → 0.9179   teen 0.7354 → 0.7369
+//	duongManKhac    0.7661 → 0.7665   teen 0.6280 → 0.6293
+//	duongTruyVan    0.8942 (unchanged), duongHaiNguoi unchanged
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9181"},
-		"co_dau":    {"0.9405", "0.8978"},
+		"":          {"0.9505", "0.9179"},
+		"co_dau":    {"0.9405", "0.8972"},
 		"khong_dau": {"1.0000", "1.0000"},
 		"teen":      {"0.8333", "0.7369"},
 	},
 	duongTruyVan: {
-		"": {"1.0000", "0.8974"},
+		"": {"1.0000", "0.8942"},
 	},
 	duongManKhac: {
-		"":          {"0.9565", "0.7701"},
+		"":          {"0.9565", "0.7665"},
 		"co_dau":    {"0.9333", "0.7578"},
 		"khong_dau": {"1.0000", "0.8873"},
-		"teen":      {"0.9286", "0.6412"},
+		"teen":      {"0.9286", "0.6293"},
 	},
 	duongHaiNguoi: {
-		"":          {"1.0000", "0.6859"},
-		"co_dau":    {"1.0000", "0.6806"},
+		"":          {"1.0000", "0.7051"},
+		"co_dau":    {"1.0000", "0.7222"},
 		"khong_dau": {"1.0000", "0.8750"},
 		"teen":      {"1.0000", "0.4444"},
 	},

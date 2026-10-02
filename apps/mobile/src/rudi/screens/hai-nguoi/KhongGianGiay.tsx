@@ -415,7 +415,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         />
       ) : null}
       <AiLoTuanNay dangLam={so.dangLam?.startsWith("vai:") ?? false} onChon={(lo) => so.chonLo(lo)} onClose={dong} open={mo === "vai"} tenNguoiKia={so.tenNguoiKia} toiId={so.toiId} vai={so.vai} />
-      <GuHaiBan dangLam={so.dangLam?.includes("chia_gu") ?? false} gu={so.gu} onBat={so.chiaGu} onClose={dong} onSuaGuCuaToi={() => { dong(); router.push("/personalization" as never); }} onTat={so.thoiChiaGu} open={mo === "gu"} tenNguoiKia={so.tenNguoiKia} guChat={guChat} onBatLai={so.batLaiChiaGu} />
+      <GuHaiBan dangLam={so.dangLam?.includes("chia_gu") ?? false} gu={so.gu} onBat={so.chiaGu} onClose={dong} onSuaGuCuaToi={() => { dong(); router.push("/personalization" as never); }} onTat={so.thoiChiaGu} open={mo === "gu"} tenNguoiKia={so.tenNguoiKia} guChat={guChat} onBatLai={so.batLaiChiaGu} loi={so.loiGu} />
       <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
       <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>
@@ -463,7 +463,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       <View style={[styles.than, { gap: space.lg }]}>
         {/* The waiting state below already says what `paper_wrong_state` meant;
             the server's sentence above it said the same thing worse (QC 24/09). */}
-        {so.loiLenh && !so.xinToBiChan && !so.daDung ? (
+        {so.loiLenh && so.loiGu === null && !so.xinToBiChan && !so.daDung ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]} testID="loi-lenh-so">
             {so.loiLenh}
           </Text>

@@ -22,7 +22,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, formatVnd } from "../fixtures";
 import { docSoThich, tomTat, type SoThichSong } from "../nguoi/so-thich-song";
-import { ghiChuGioiHan, layTaiChinh, moTaGiaoDich, ngayNgan, tienCoDau, tinhTrangNo, type Finance } from "../../screens/ca-nhan/tai-chinh";
+import { ghiChuGioiHan, layTaiChinh, moTaGiaoDich, ngayNgan, tienCoDau, type Finance } from "../../screens/ca-nhan/tai-chinh";
 import { docLoiMoi } from "../../screens/ca-nhan/ban-be";
 import { docDaLuu } from "../kham-pha/dia-diem";
 import { nhanKhoangNgay } from "../../screens/len-plan/buoi-di";
@@ -50,6 +50,7 @@ import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { Stamp } from "../ui/Stamp";
 import { TrangSo } from "../ui/TrangSo";
+import { ChuThichLe } from "../ui/ChuThichLe";
 import { useNepNguCanh } from "../nep/NepProvider";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
@@ -403,17 +404,15 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
         <DongTien nhan="Còn phải trả" phu={`Đã trả ${formatVnd(du.settled_vnd)}`} tone={du.outstanding_vnd > 0 ? "warn" : "ink"} vnd={du.outstanding_vnd} />
         <DongTien cuoi nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
       </TrangSo>
-      <SectionHeader
-        action={contextId !== null ? "Xem quyết toán" : undefined}
-        onAction={contextId !== null ? () => router.push(("/settlements/" + contextId) as never) : undefined}
-        title="Chi theo nhóm"
-      />
-      <View style={styles.ghiChu}>
-        <Ionicons color={colors.split} name="calculator-outline" size={20} />
-        <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
-          {tinhTrangNo(du).cau} Số này đọc từ sổ cái, không phải số dư ngân hàng.
-        </Text>
-      </View>
+      {/* Every figure is said once, on the page above; under it only where
+          they come from and the way to the group's settlement. A section
+          heading here promised rows the finance read does not carry («Chi theo
+          nhóm», QA UI-060), then repeated «Sẽ nhận» in a sentence («Ai nợ ai»,
+          B4 finish review). */}
+      <ChuThichLe icon="calculator-outline">Các số trên đọc từ sổ cái, không phải số dư ngân hàng.</ChuThichLe>
+      {contextId !== null ? (
+        <RudiButton compact full={false} icon="wallet-outline" label="Xem quyết toán" onPress={() => router.push(("/settlements/" + contextId) as never)} tone="split" variant="ghost" />
+      ) : null}
       {/* What has actually arrived, newest first: the movements the server
           always sent and the screen never showed. Each one a line on the
           timeline, dotted in the other person's ink. */}

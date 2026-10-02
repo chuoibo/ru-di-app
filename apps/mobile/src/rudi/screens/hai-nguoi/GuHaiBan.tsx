@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { CAU_BAT_LAI_CHO_CHAT, type GuChat, type GuSo, canBatLaiChoChat, cauBatGu, cauGu } from "../../to-giay/gu-doi";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, ListRow, RudiButton } from "../../ui";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { Sheet } from "../../ui/Sheet";
 
 /**
@@ -26,6 +27,7 @@ export function GuHaiBan({
   onSuaGuCuaToi,
   guChat = null,
   onBatLai,
+  loi = null,
 }: {
   open: boolean;
   onClose: () => void;
@@ -39,9 +41,11 @@ export function GuHaiBan({
   guChat?: GuChat | null;
   /** Re-consent for the chat: off, then on again (ADR-0048 §3.2). */
   onBatLai?: () => void;
+  /** A failed press, worded by `cauLoiGu`; said here, above the buttons. */
+  loi?: string | null;
 }) {
   const { colors, space } = useRudiTheme();
-  const cau = cauGu(gu, tenNguoiKia);
+  const cau = cauGu(gu, tenNguoiKia, guChat);
   return (
     <Sheet accessibilityLabel="Gu của hai bạn" onClose={onClose} open={open} testID="gu-hai-ban">
       <View style={[styles.noiDung, { gap: space.md }]}>
@@ -61,6 +65,8 @@ export function GuHaiBan({
         <Text style={[typography.caption, { color: colors.inkSoft }]} testID="gu-cua-toi">
           {cau?.cuaToi ?? "Gu của bạn đang để riêng."}
         </Text>
+        {/* The notebook command's own sentence, under the notebook's own id. */}
+        <CauTaiCho cau={loi} testID="loi-lenh-so" />
         {onBatLai && canBatLaiChoChat(gu, guChat) ? (
           <>
             <Text style={[typography.caption, { color: colors.inkSoft }]} testID="gu-bat-lai-cau">

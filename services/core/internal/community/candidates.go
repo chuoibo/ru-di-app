@@ -51,7 +51,12 @@ func (h *Handler) discoveryRanking(ctx context.Context, tx pgx.Tx, person, mode 
 		h.candidateUntil = time.Now().Add(time.Second)
 	}
 	if mode != "following" && (!personalized || mode == "trending") {
-		ids := banSaoXepHang(h.commonRanking)
+		// A copy that is an empty slice when nothing is ranked, never nil: nil
+		// reaches the snapshot as NULL, which `post_ids NOT NULL` refuses, and a
+		// community with no approved public post answered 503 instead of an
+		// empty feed (QA UI-132).
+		ids := make([]string, 0, len(h.commonRanking))
+		ids = append(ids, h.commonRanking...)
 		h.candidateMu.Unlock()
 		return ids, nil
 	}
@@ -119,12 +124,4 @@ func (h *Handler) discoveryRanking(ctx context.Context, tx pgx.Tx, person, mode 
 		}
 	}
 	return rank(out, mode, personalized, time.Now()), nil
-}
-
-// banSaoXepHang copies the shared ranking for one reader. Never nil, even when
-// no public post exists yet: the snapshot row stores the ids in
-// community_feeds.post_ids, which is NOT NULL, and pgx writes a nil slice as
-// NULL.
-func banSaoXepHang(ids []string) []string {
-	return append(make([]string, 0, len(ids)), ids...)
 }

@@ -135,6 +135,8 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   // The tool row's real width once laid out; before that, the window's less
   // the tray's side padding (the chat column is at most 820 wide).
   const [rongHang, setRongHang] = useState<number | null>(null);
+  // The photo note's own height, so the tray's cap counts it with the grid.
+  const [caoGhiChu, setCaoGhiChu] = useState(0);
   const [draft, setDraft] = useState(() => docBanNhapCongCu(personId, contextId));
   const held = useRef(draft);
   const [restored, setRestored] = useState(() => ({ poll: !!draft.question || draft.choices.some(Boolean) }));
@@ -205,7 +207,6 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
-      {panel === "tools" ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{chu.ghiChuAnh}</Text> : null}
       {panel === "poll" && undo?.panel === panel ? <View style={styles.draftRow}>
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Đã bỏ bản nháp.</Text>
         <RudiButton label="Hoàn tác" variant="ghost" compact full={false} disabled={busy} onPress={undoDiscard} />
@@ -213,7 +214,13 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>{restored.poll ? "Đã khôi phục bản nháp" : ""}</Text>
         <RudiButton label="Bỏ bản nháp" variant="ghost" compact full={false} disabled={busy} onPress={discard} />
       </View> : null}
-      <ScrollView keyboardShouldPersistTaps="handled" style={[styles.scroll, { maxHeight: tranKhay(height, panel === "tools" ? boCuc.caoNoiDung : null) }]}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={[styles.scroll, {
+        // The cap holds the grid and the photo note under it; when a short
+        // window squeezes the tray it may shrink, but never below one whole
+        // row of tools, so a tile is never cut in half.
+        maxHeight: tranKhay(height, panel === "tools" ? boCuc.caoNoiDung + caoGhiChu : null),
+        minHeight: panel === "tools" ? Math.min(boCuc.caoNoiDung, (boCuc.caoNoiDung - (boCuc.hang - 1) * KHOANG_CONG_CU) / boCuc.hang) : 0,
+      }]}>
         {panel === "tools" ? (
           // One row while every tool still holds its widest word, else balanced
           // rows of equal tools (`boCucKhay`): five never wrap 4 + 1 (lab 28/09).
@@ -226,7 +233,11 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
               <Text numberOfLines={2} style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
             </Pressable>
           ))}</View>
-        ) : panel === "poll" ? (
+        ) : null}
+        {/* The photo note scrolls under the tools rather than holding its
+            lines above them: when a short window squeezes the tray, the note
+            is what gets cut, never a tool (QA UI-124). */}
+        {panel === "tools" ? <Text onLayout={(e) => { const h = Math.ceil(e.nativeEvent.layout.height); if (h !== caoGhiChu) setCaoGhiChu(h); }} style={[typography.caption, styles.ghiChu, { color: colors.inkSoft }]}>{chu.ghiChuAnh}</Text> : panel === "poll" ? (
           // Written on a sticky note, one pen line per choice (plan S5).
           <View style={[styles.form, styles.giayNho, { backgroundColor: colors.card, borderColor: colors.lineStrong }]}>
             <ONhapMuc label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder={chu.goiYPoll} />
@@ -266,8 +277,12 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   toHen: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 52, padding: 12, marginHorizontal: 16, marginTop: 8, marginBottom: 4, borderWidth: 1, borderRadius: 4, borderTopRightRadius: 18, overflow: "hidden" },
   fold: { position: "absolute", top: -1, right: -1, width: 16, height: 16, borderLeftWidth: 1, borderBottomWidth: 1, borderBottomLeftRadius: 4 },
-  tools: { borderTopWidth: 1, paddingHorizontal: 16, paddingBottom: 12 },
+  // The tray gives way in a short window: it shrinks and its body scrolls, so
+  // the composer under it never leaves the screen (QA UI-124: a couple's room
+  // at 390×460 with the tray open pushed the send button 60dp under the edge).
+  tools: { borderTopWidth: 1, paddingHorizontal: 16, paddingBottom: 12, flexShrink: 1, minHeight: 0 },
   titleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  ghiChu: { paddingTop: 2, paddingBottom: 4 },
   draftRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   // A box and the sentence about it are one thing, so they move together.
   o: { gap: 4 },
@@ -278,7 +293,7 @@ const styles = StyleSheet.create({
   toolIcon: { borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   giayNho: { borderWidth: 1, borderRadius: 4, padding: 12, marginTop: 4 },
   form: { gap: 12, paddingBottom: 4 },
-  scroll: { flexGrow: 0 },
+  scroll: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
   footer: { flexShrink: 0, gap: 8, paddingTop: 10 },
   scope: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   thay: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 8 },

@@ -28,8 +28,10 @@ mới chỉ làm adapter inference, không có writer nghiệp vụ Python mới
 ## Chạy tính năng
 
 1. Migrate nền trên PostgreSQL, chạy `core migrate-community`. Lệnh kiểm
-   checksum và khóa migration; bao gồm phụ thuộc diary và ba migration
-   cộng đồng. Không chạy migration từ HTTP.
+   checksum và khóa migration; bao gồm phụ thuộc diary và bốn migration
+   cộng đồng (số 4, 2026-10-02: bản cắt duyệt của video). DB đã bật cộng
+   đồng phải chạy lại lệnh này, nếu không `core serve` từ chối khởi động.
+   Không chạy migration từ HTTP.
 2. API: `MOBILE_AUTH_MODE=prod`, `MOBILE_COMMUNITY_ENABLED=1`, DB và phiên
    thật. Cờ backend mặc định tắt. Composer tường dùng bản cũ khi capability
    trả 404; lỗi mạng không được rơi xuống đường cũ.
@@ -49,12 +51,30 @@ dùng chọn giữ bài chờ duyệt vì chưa có model. Chất lượng phán
 được thử bằng vài bài bịa (`vnlocal-thu tinh-nang`), chưa đánh giá có hệ thống. Người vận hành cấp vai trò bằng
 `community_moderators`; UI `/community/review` duyệt bài và bình luận.
 
-Model đọc bài (`aiharness/congdong`, lời dặn mới từ ADR-0052) nhận chữ và ảnh
-inline đã chọn, trả `relevant`, `safe`, `confidence_milli` (0..1000),
-`reason`; `media_checked` do Go tự đặt, chỉ đúng khi mọi tệp đính kèm là ảnh
-đã gửi cùng request (video không bao giờ gửi, ảnh cộng dồn quá 14 MiB thì
-không gửi ảnh nào). Go chỉ tự duyệt từ 900 và media đã kiểm đủ. Nếp chỉ trả
-`draft`. Không cấp DB/chat cho model.
+Model đọc bài (`aiharness/congdong`, lời dặn mới từ ADR-0052) nhận chữ cùng
+**mọi** ảnh và video của bài, trả `relevant`, `safe`, `confidence_milli`
+(0..1000, phần nghìn: 900 = 90%), `reason`. Từ 2026-10-02 (chủ sản phẩm: giữ
+ngưỡng 90%, AI phải chấm):
+
+- Ảnh được thu nhỏ trước khi gửi (JPEG, cạnh dài 1536 → 1024 → 768 → 512 px,
+  lấy nấc lớn nhất mà cả bài vừa 14 MiB), nên bài 10 ảnh điện thoại hay nhật
+  ký 40 ảnh vẫn được xem đủ. Trước đó ảnh cộng dồn quá 14 MiB thì không gửi
+  ảnh nào.
+- Video gửi bằng **bản cắt duyệt**: media worker cắt lúc xử lý upload, mỗi
+  đoạn 45 s, 1 khung/giây, cao ≤ 360 px, kèm tiếng mono (cột
+  `community_media.review_keys`, migration cộng đồng số 4). Mỗi đoạn một lời
+  gọi; kết quả gộp: liên quan nếu một lần đọc nói có, an toàn nếu mọi lần đọc
+  nói có, độ tự tin lấy thấp nhất. Gửi nguyên video 180 s qua agy mất 171 s
+  rồi lần sau không trả lời trong 400 s; một đoạn 45 s mất 4–30 s. Video xử lý
+  trước migration 4 không có bản cắt: không gửi, bài vào duyệt tay.
+
+`media_checked` do Go tự đặt, chỉ đúng khi mọi tệp đính kèm đã đi cùng các lần
+đọc. Go chỉ tự duyệt từ 900 và media đã kiểm đủ; một lời gọi hỏng thì cả lần đọc
+hỏng, job chờ 1 phút rồi đọc lại (lease 8 phút đủ cho 4 đoạn × 85 s). Nếp chỉ
+trả `draft`. Không cấp DB/chat cho model. Test cắt video thật mang tag
+`communitymedia` (cần ffmpeg) chạy ở chặng `go-media` của `scripts/gate.sh`
+(bước «Community video review cut with a real ffmpeg» của job `core`); thiếu
+ffmpeg là HỎNG, không phải bỏ qua.
 Stub chỉ chứng minh orchestration, không chứng minh chất lượng AI guard.
 
 ## Realtime và lưu trữ

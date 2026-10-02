@@ -24,7 +24,7 @@
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, type TextInput } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -52,6 +52,7 @@ import {
   guTheoLoai,
   locTheoTen,
   luuDiaDiem,
+  nenLocTheoTen,
   type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
@@ -64,6 +65,7 @@ import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonCard, SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { useMotion } from "../../ui/useMotion";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { PlaceCompare, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./HangDiaDiem";
 
 type Trang =
@@ -125,6 +127,15 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   const [loai, setLoai] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [timKiem, setTimKiem] = useState<TimKiemState>({ kind: "chua-tim" });
+  // The field holds a question for Rủ Đi AI that is not sent yet (the sample
+  // ✦ dropped in, being edited): a question is not a name, so it does not
+  // filter the list by name. It did, and «0 kết quả» came before any answer
+  // (QA UI-024).
+  const [choGui, setChoGui] = useState(false);
+  const oTim = useRef<TextInput | null>(null);
+  // A reload that fails while a list is on screen keeps the list and says so
+  // in one line; only a first read that fails is the error screen (QA UI-030).
+  const [loiNapLai, setLoiNapLai] = useState<string | null>(null);
   // Which city the list is of. The server always answers with one and says
   // which, so this starts as null and is filled from the answer -- the screen
   // never guesses a city name it has not been told.
@@ -174,8 +185,11 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
       setGu(danhMuc.gu);
       setTrang({ pha: "xong", places: danhMuc.places, categories: danhMuc.categories });
       setDaLuu(luu);
+      setLoiNapLai(null);
     } catch (error) {
-      setTrang({ pha: "hong", loi: loiRaChu(error) });
+      const loi = loiRaChu(error);
+      setTrang((t) => (t.pha === "xong" ? t : { pha: "hong", loi }));
+      setLoiNapLai(loi);
     }
   }, [phien.person_id]);
 
@@ -201,24 +215,47 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   const hoi = async () => {
     const cau = query.trim();
     if (!cau) return;
+    setChoGui(false);
     setTimKiem({ kind: "dang-tim", query: cau });
     setTimKiem(await askSearch(cau, { actorId: phien.person_id, destination: diemDen?.id ?? null }));
+  };
+
+  // ✦ asks: with a sentence in the field it sends it; on an empty field it
+  // lays a sample question down to edit and puts the cursor there. It used to
+  // only fill the field, and the field then filtered by name (QA UI-024).
+  const bamHoi = () => {
+    if (query.trim()) {
+      void hoi();
+      return;
+    }
+    setQuery(CAU_MAU);
+    setChoGui(true);
+    setTimKiem({ kind: "chua-tim" });
+    oTim.current?.focus();
   };
 
   const boTim = () => {
     setTimKiem({ kind: "chua-tim" });
     setQuery("");
+    setChoGui(false);
     setLoai(null);
   };
 
+  // The field filters by name only while it holds a name: not while a question
+  // waits to be sent, and not once one has been asked (its words are not a
+  // place's name, whatever the answer was).
+  const locTen = nenLocTheoTen(query, timKiem.kind, choGui);
   const danhSach = useMemo(() => {
     if (trang.pha !== "xong") return [];
     if (timKiem.kind === "co-ket-qua") return timKiem.places;
     const theoLoai = loai === null ? trang.places : trang.places.filter((p) => p.category === loai);
-    return locTheoTen(theoLoai, query);
-  }, [trang, timKiem, loai, query]);
+    return locTen ? locTheoTen(theoLoai, query) : theoLoai;
+  }, [trang, timKiem, loai, query, locTen]);
 
-  const dangLoc = loai !== null || query.trim().length > 0 || timKiem.kind === "co-ket-qua";
+  const dangLoc = loai !== null || locTen || timKiem.kind === "co-ket-qua";
+  // A search session (a name, a question, an answer) keeps the top of the
+  // screen for the results: the city's stage folds away.
+  const gapSan = dangLoc || query !== "";
   const cauLoi = cauTimKiem(timKiem);
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
@@ -240,6 +277,13 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
   // choice starts as a comparison (`taiSoSanh`).
   const { soSanh, hang: conLai } = taiSoSanh(coAnhDan ? danhSach.slice(1) : danhSach);
   const rong = danhSach.length === 0;
+  // An empty list for a city with nothing in it is not an empty search: it
+  // must not advise dropping a filter that is not there (QA UI-028).
+  const thanhPhoRong = rong && !dangLoc && trang.pha === "xong" && trang.places.length === 0;
+  // A name search that found nothing but reads like a question is handed to
+  // Rủ Đi AI rather than left at «0 kết quả».
+  const giongCauHoi = locTen && query.trim().split(/\s+/).length >= 3;
+
 
   return (
     <RudiScreen bottomInset="tab" header={dau?.()} onRefresh={nap} testID="explore-screen">
@@ -270,8 +314,8 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           what the server says about the place. It stands up once per city and
           folds away while a search or filter is under way, so the results
           keep the top of the screen. */}
-      {diemDen !== null && !dangLoc && query === "" ? (
-        <SanThanhPho id={diemDen.id} ten={diemDen.name} />
+      {diemDen !== null ? (
+        <SanThanhPho gap={gapSan} id={diemDen.id} ten={diemDen.name} />
       ) : null}
       {/* One row at every font size: the field's own hint ellipsizes, so the
           assistant no longer drops to a line of its own at 1.3 (QA 23/09). */}
@@ -279,8 +323,10 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
         <View style={styles.flex}>
           <SearchField
             accessibilityLabel="Ô tìm địa điểm"
+            oRef={oTim}
             onChangeText={(t) => {
               setQuery(t);
+              if (t.trim() === "") setChoGui(false);
               if (timKiem.kind !== "chua-tim") setTimKiem({ kind: "chua-tim" });
             }}
             onSubmitEditing={() => void hoi()}
@@ -290,8 +336,12 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
         </View>
         {/* The assistant stands beside the search, not above the places: one
             tap drops a sample question in so the person sees what to ask. */}
-        <IconButton accessibilityLabel="Hỏi Rủ Đi AI" icon="sparkles" onPress={() => setQuery(CAU_MAU)} selected tone="ai" />
+        <IconButton accessibilityLabel="Hỏi Rủ Đi AI" icon="sparkles" onPress={bamHoi} selected tone="ai" />
       </View>
+      {choGui ? (
+        <Text style={[typography.caption, { color: colors.ai }]}>Sửa câu cho đúng ý bạn, rồi chạm ✦ hoặc Enter để hỏi Rủ Đi AI.</Text>
+      ) : null}
+      <CauTaiCho cau={loiNapLai !== null && trang.pha === "xong" ? `Chưa cập nhật được danh mục: ${loiNapLai}` : null} />
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup style={styles.khung}>
           <SkeletonCard lines={1} media={200} />
@@ -344,8 +394,8 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           ) : null}
           {loiLuu !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiLuu}</Text> : null}
           <SectionHeader
-            action={dangLoc ? "Xóa lọc" : undefined}
-            onAction={dangLoc ? boTim : undefined}
+            action={dangLoc || query !== "" ? "Xóa lọc" : undefined}
+            onAction={dangLoc || query !== "" ? boTim : undefined}
             // The city comes from the answer, not from a string typed here:
             // this line used to say «Đà Lạt» over a list of anywhere. Not
             // the mockup's near-you-and-to-taste heading: the catalogue comes in
@@ -358,7 +408,8 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
           ) : null}
           {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
               button, because it is the one state the person can fix. */}
-          {gu === null || gu.co_so === "chua-biet" ? (
+          {/* Whose taste a list follows is nothing to say over a city with no places. */}
+          {thanhPhoRong ? null : gu === null || gu.co_so === "chua-biet" ? (
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push("/personalization" as never)}
@@ -379,7 +430,26 @@ export function ExploreLiveScreen({ phien, dau }: { phien: Phien; dau?: DungDau 
               ) : null}
             </View>
           )}
-          {rong ? (
+          {thanhPhoRong ? (
+            <EmptyState
+              action={{ label: "Đổi điểm đến", onPress: () => router.push("/destinations") }}
+              body="Danh mục của Rủ Đi chưa có chỗ nào ở đây. Chọn một điểm đến khác để xem chỗ hay."
+              illustration={<Canh id="tim-khong-ra" width={168} />}
+              kind="no-results"
+              layout="inline"
+              title={`${diemDen?.name ?? "Nơi này"} chưa có địa điểm nào`}
+            />
+          ) : rong && giongCauHoi ? (
+            <EmptyState
+              action={{ label: "Hỏi Rủ Đi AI", onPress: () => void hoi() }}
+              body="Câu này giống một câu hỏi hơn một cái tên. Để Rủ Đi AI tìm theo ý câu này."
+              illustration={<Canh id="tim-khong-ra" width={168} />}
+              kind="no-results"
+              layout="inline"
+              secondary={{ label: "Xóa lọc", onPress: boTim }}
+              title={`Không có tên nào khớp «${query.trim()}»`}
+            />
+          ) : rong ? (
             <EmptyState
               action={{ label: "Xóa lọc", onPress: boTim }}
               body="Thử từ khóa khác, hoặc bỏ bớt bộ lọc để thấy lại cả danh mục."

@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"mobile/services/core/internal/aiharness/congdong"
 	"mobile/services/core/internal/media/storage"
 )
 
@@ -183,7 +184,7 @@ func (h *Handler) processVideo(ctx context.Context) {
 	if err != nil {
 		return
 	}
-	duration, width, height, newKey, err := transcode(ctx, key)
+	duration, width, height, newKey, reviewKeys, err := transcode(ctx, key)
 	if err != nil {
 		_, _ = h.pool.Exec(ctx, `UPDATE community_media SET state='failed',lease_until=NULL WHERE id=$1`, id)
 		return
@@ -192,21 +193,25 @@ func (h *Handler) processVideo(ctx context.Context) {
 	if e != nil {
 		return
 	}
+	drop := func(keys ...string) {
+		for _, k := range keys {
+			_, _ = st.Delete(k)
+		}
+	}
 	path, e := st.PathFor(newKey)
 	if e != nil {
 		return
 	}
 	info, e := os.Stat(path)
 	if e != nil {
+		drop(append(reviewKeys, newKey)...)
 		return
 	}
-	tag, err := h.pool.Exec(ctx, `UPDATE community_media SET storage_key=$2,content_type='video/mp4',state='ready',duration_ms=$3,width=$4,height=$5,byte_size=$6,lease_until=NULL WHERE id=$1 AND state='processing'`, id, newKey, duration, width, height, info.Size())
-	if e == nil {
-		if err == nil && tag.RowsAffected() == 1 {
-			_, _ = st.Delete(key)
-		} else {
-			_, _ = st.Delete(newKey)
-		}
+	tag, err := h.pool.Exec(ctx, `UPDATE community_media SET storage_key=$2,content_type='video/mp4',state='ready',duration_ms=$3,width=$4,height=$5,byte_size=$6,review_keys=$7,lease_until=NULL WHERE id=$1 AND state='processing'`, id, newKey, duration, width, height, info.Size(), reviewKeys)
+	if err == nil && tag.RowsAffected() == 1 {
+		drop(key)
+	} else {
+		drop(append(reviewKeys, newKey)...)
 	}
 }
 
@@ -228,20 +233,23 @@ func (h *Handler) RunMedia(ctx context.Context) error {
 		}
 	}
 }
-func transcode(ctx context.Context, key string) (int, int, int, string, error) {
+
+// transcode makes the served video and its review cut (cutReview) from the
+// upload, and stores both.
+func transcode(ctx context.Context, key string) (int, int, int, string, []string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	st, err := storage.New()
 	if err != nil {
-		return 0, 0, 0, "", err
+		return 0, 0, 0, "", nil, err
 	}
 	source, err := st.PathFor(key)
 	if err != nil {
-		return 0, 0, 0, "", err
+		return 0, 0, 0, "", nil, err
 	}
 	raw, err := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe", "-show_entries", "format=duration:stream=codec_type,width,height", "-of", "json", source).Output()
 	if err != nil {
-		return 0, 0, 0, "", err
+		return 0, 0, 0, "", nil, err
 	}
 	var info struct {
 		Format struct {
@@ -254,11 +262,11 @@ func transcode(ctx context.Context, key string) (int, int, int, string, error) {
 		} `json:"streams"`
 	}
 	if json.Unmarshal(raw, &info) != nil {
-		return 0, 0, 0, "", no(422, "invalid_video")
+		return 0, 0, 0, "", nil, no(422, "invalid_video")
 	}
 	seconds, err := strconv.ParseFloat(info.Format.Duration, 64)
 	if err != nil || seconds <= 0 || seconds > 180 {
-		return 0, 0, 0, "", no(422, "video_too_long")
+		return 0, 0, 0, "", nil, no(422, "video_too_long")
 	}
 	width, height := 0, 0
 	for _, s := range info.Streams {
@@ -268,30 +276,70 @@ func transcode(ctx context.Context, key string) (int, int, int, string, error) {
 		}
 	}
 	if width < 1 || height < 1 || width > 7680 || height > 7680 {
-		return 0, 0, 0, "", no(422, "invalid_video")
+		return 0, 0, 0, "", nil, no(422, "invalid_video")
 	}
 	dir, err := os.MkdirTemp("", "rudi-community-video-")
 	if err != nil {
-		return 0, 0, 0, "", err
+		return 0, 0, 0, "", nil, err
 	}
 	defer os.RemoveAll(dir)
 	dest := filepath.Join(dir, "processed.mp4")
 	err = exec.CommandContext(ctx, "ffmpeg", "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe", "-i", source, "-map", "0:v:0", "-map", "0:a:0?", "-map_metadata", "-1", "-vf", "scale='min(1280,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2", "-c:v", "libx264", "-preset", "fast", "-crf", "24", "-threads", "2", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", "-t", "180", dest).Run()
 	if err != nil {
-		return 0, 0, 0, "", err
+		return 0, 0, 0, "", nil, err
 	}
 	processed, err := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "json", dest).Output()
 	if err != nil || json.Unmarshal(processed, &info) != nil || len(info.Streams) != 1 {
-		return 0, 0, 0, "", no(422, "invalid_video")
+		return 0, 0, 0, "", nil, no(422, "invalid_video")
 	}
 	width, height = info.Streams[0].Width, info.Streams[0].Height
 	data, err := os.ReadFile(dest)
 	if err != nil || len(data) > 64<<20 {
-		return 0, 0, 0, "", no(422, "video_too_large")
+		return 0, 0, 0, "", nil, no(422, "video_too_large")
 	}
-	newKey, err := storage.NewStorageKey()
-	if err == nil {
-		err = st.Write(newKey, data)
+	pieces, err := cutReview(ctx, dest, seconds, dir)
+	if err != nil {
+		return 0, 0, 0, "", nil, err
 	}
-	return int(seconds * 1000), width, height, newKey, err
+	keys := []string{}
+	for _, b := range append([][]byte{data}, pieces...) {
+		k, e := storage.NewStorageKey()
+		if e == nil {
+			e = st.Write(k, b)
+		}
+		if e != nil {
+			for _, written := range keys {
+				_, _ = st.Delete(written)
+			}
+			return 0, 0, 0, "", nil, e
+		}
+		keys = append(keys, k)
+	}
+	return int(seconds * 1000), width, height, keys[0], keys[1:], nil
+}
+
+// cutReview is the review cut of a processed video: one piece per
+// congdong.GiayDoan seconds, at one frame a second, at most 360 pixels high,
+// with its sound in mono, which is what a moderation reading sends the model
+// in place of the video. A tail under a second gets no piece of its own.
+// Each piece is its own encode: ffmpeg's segment muxer split the first piece
+// at 97 s instead of 45 when tried.
+func cutReview(ctx context.Context, source string, seconds float64, dir string) ([][]byte, error) {
+	pieces := [][]byte{}
+	for start := 0; start == 0 || float64(start) < seconds-1; start += congdong.GiayDoan {
+		out := filepath.Join(dir, fmt.Sprintf("review-%d.mp4", start))
+		err := exec.CommandContext(ctx, "ffmpeg", "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe", "-ss", strconv.Itoa(start), "-i", source, "-t", strconv.Itoa(congdong.GiayDoan), "-map", "0:v:0", "-map", "0:a:0?", "-map_metadata", "-1", "-vf", "fps=1,scale=-2:'min(360,ih)'", "-c:v", "libx264", "-preset", "veryfast", "-crf", "32", "-threads", "2", "-c:a", "aac", "-ac", "1", "-ar", "16000", "-b:a", "32k", "-movflags", "+faststart", out).Run()
+		if err != nil {
+			return nil, err
+		}
+		b, err := os.ReadFile(out)
+		if err != nil {
+			return nil, err
+		}
+		pieces = append(pieces, b)
+	}
+	if len(pieces) > congdong.MaxDoan {
+		return nil, no(422, "video_too_long")
+	}
+	return pieces, nil
 }

@@ -9,6 +9,10 @@
   },
   "include": [
     "src/rudi/community/api.ts",
+    // B7 (QA N14): the composer's topic rules held to the server's, and the
+    // feed's small decisions (follow by author, cut body, notification words).
+    "src/rudi/community/chu-de.ts",
+    "src/rudi/community/bang-tin.ts",
     "src/rudi/diary/api.ts",
     // QA 23/09: the placeholder-name check (held equal to both server spellings)
     // and the invite-by-number steps (a 403 rename no longer aborts the invite).
@@ -238,9 +242,6 @@
     // tablist, the right-hand control outside it. Rendered so the roles and
     // the selected section are held as they ship.
     "src/rudi/ui/DauKhamPha.tsx",
-    // Khám phá's lead card (owner's mockup, 01/10): the price chip whole and
-    // the other facts as one line. Pure, compiled so money stays uncut.
-    "src/rudi/kham-pha/the-dan.ts",
     // A community post's album pages one full-width picture at a time (owner's
     // choice, 02/10). Pure, compiled so the page count matches the scroll.
     "src/rudi/community/album.ts",
@@ -338,6 +339,9 @@
     // mỗi lời gọi một Attempt, và không phép chia nào ở phía client.
     "src/rudi/chia-bill/ai-co-gi.ts",
     "src/rudi/chia-bill/hoa-don.ts",
+    // B4 (01/10, QA UI-052): the bill being typed survives Back, Forward and a
+    // reload, and dies when it is recorded or dropped.
+    "src/rudi/chia-bill/nhap-bill.ts",
     "src/rudi/chia-bill/o-so.ts",
     "src/screens/kham-pha/ban-do-nhom.ts",
     "src/rudi/loi-moi-den.ts",
