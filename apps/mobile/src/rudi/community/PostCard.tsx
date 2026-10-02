@@ -97,7 +97,7 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
       {!expanded && biCat ? <Text style={[typography.label, { color: colors.accent }]}>Đọc tiếp</Text> : null}
     </Pressable>
     {post.diary ? <BookView compact={!detail} kind={post.diary_kind} document={post.diary} photo={(id) => imageSource(person, `/v2/community/media/${id}`)} /> : null}
-    {!post.diary && post.media.length ? <View onLayout={(e) => setRongAlbum(Math.round(e.nativeEvent.layout.width))} style={styles.khungAlbum}>{rongAlbum > 0 ? <View>
+    {!post.diary && post.media.length ? <View onLayout={(e) => setRongAlbum(e.nativeEvent.layout.width)} style={styles.khungAlbum}>{rongAlbum > 0 ? <View>
       <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={theoCuon} onMomentumScrollEnd={theoCuon} scrollEventThrottle={16} style={[styles.album, { borderRadius: radius.control }]}>
         {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, kichAnh, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo khung={kichAnh} media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={kichAnh} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
       </ScrollView>

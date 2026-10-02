@@ -43,3 +43,17 @@ test("«Đã lưu» và «Bài của tôi» rỗng thì nói ở đó sẽ có g
 test("lời xin cá nhân hoá chỉ ở «Dành cho bạn», nơi nó đổi được điều gì", () => {
   assert.match(man, /prefs && !prefs\.asked && !topic && mode === "for_you" \? <View style=\{\[styles\.consent/);
 });
+
+// Deferred minor of 02/10: the save button had no pending state, so two quick
+// taps sent two requests (idempotent, but the icon flickered). It saves like the
+// like button: the card is busy while the request runs, the icon turns at once
+// and turns back if the request fails.
+test("nút Lưu trên thẻ bài chờ như nút thích: bận trong lúc gửi, hoàn lại khi lỗi", () => {
+  const luu = man.slice(man.indexOf("const luu = async"), man.indexOf("const theoDoiTacGia", man.indexOf("const luu = async")));
+  assert.ok(luu.length > 0, "không thấy hàm luu");
+  assert.match(luu, /if \(!person \|\| busy\) return;/);
+  assert.match(luu, /setBusy\(p\.id\)/);
+  assert.match(luu, /update\(p\)/, "lỗi thì trả thẻ về như cũ");
+  assert.match(luu, /setBusy\(null\)/);
+  assert.match(man, /onSave=\{\(\) => void luu\(item\)\}/);
+});

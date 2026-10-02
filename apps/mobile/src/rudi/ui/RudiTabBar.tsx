@@ -13,7 +13,7 @@ import { TABLIST, tabState } from "../../ui/a11y";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
 import { ConDauTao } from "./ConDauTao";
-import { dichCuaCot, xepThanh } from "./thanh-tab";
+import { dichCuaCot, oCuaCot, xepThanh } from "./thanh-tab";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
 import { useMotion } from "./useMotion";
 import { Wordmark } from "./Wordmark";
@@ -79,15 +79,18 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   // out from the rail's edge, and measuring its rows from 0 put it beside the
   // wrong tab (QA UI-004).
   const dauRail = insets.top + 12;
-  const indicator = useSharedValue(viTriSang);
+  // On the strip the indicator moves by slot (oCuaCot counts the stamp's), so
+  // a move past the stamp slides over it instead of jumping a slot at the end;
+  // the rail lists the columns under the stamp, so there it moves by column.
+  const viTriVach = layout.rail ? viTriSang : oCuaCot(thanh, viTriSang);
+  const indicator = useSharedValue(viTriVach);
   useEffect(() => {
-    indicator.value = withTiming(viTriSang, motion.timing("standard"));
-  }, [viTriSang, indicator, motion]);
+    indicator.value = withTiming(viTriVach, motion.timing("standard"));
+  }, [viTriVach, indicator, motion]);
 
   const indicatorStyle = useAnimatedStyle(() => {
     if (layout.rail) return { transform: [{ translateY: dauRail + HANG_LOGO_RAIL + HANG_DAU_RAIL + indicator.value * HANG_RAIL }] };
-    const column = indicator.value >= viTriDau ? indicator.value + 1 : indicator.value;
-    return { left: `${(column / columns) * 100}%` as const };
+    return { left: `${(indicator.value / columns) * 100}%` as const };
   });
 
   const items = thanh.cot.flatMap((ten, index) => {
@@ -153,6 +156,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
       {glass ? <BlurView intensity={78} tint={dark ? "dark" : "light"} style={StyleSheet.absoluteFill} /> : null}
       <Animated.View
         pointerEvents="none"
+        testID="vach-thanh"
         style={[
           layout.rail ? styles.railIndicator : styles.indicator,
           layout.rail ? { backgroundColor: colors.accent, width: 4 } : { width: `${100 / columns}%` },

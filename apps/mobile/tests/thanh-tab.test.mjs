@@ -56,3 +56,14 @@ test("route href: null của _layout.tsx đúng bằng MUC_TRONG_TAB, cột ch�
   const hien = tat.filter(([, , o]) => !/href:\s*null/.test(o)).map(([, ten]) => ten);
   for (const chu of Object.values(MUC_TRONG_TAB)) assert.ok(hien.includes(chu), `${chu} không phải tab hiện`);
 });
+
+// Deferred minor of 02/10: the strip's indicator worklet recomputed the slot
+// of a column by hand instead of using oCuaCot, and animated the column index:
+// a move from Lên plan to Tin nhắn slid to the stamp's slot and then jumped
+// one slot at the end. The slot comes from oCuaCot and the indicator moves by
+// slot. Read from the source: RudiTabBar needs Reanimated and is not rendered.
+test("vạch chỉ báo của thanh đi theo ô do oCuaCot tính, không tự tính lại trong worklet", () => {
+  const thanhTab = readFileSync(new URL("../src/rudi/ui/RudiTabBar.tsx", import.meta.url), "utf8");
+  assert.match(thanhTab, /oCuaCot\(thanh, viTriSang\)/);
+  assert.doesNotMatch(thanhTab, />= viTriDau \? indicator\.value \+ 1/);
+});

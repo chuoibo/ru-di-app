@@ -187,6 +187,24 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
       setBusy(null);
     }
   };
+  // Saving waits like liking: the card is busy while the request runs (two
+  // quick taps sent two), the icon turns at once and turns back on a failure.
+  const luu = async (p: Post) => {
+    if (!person || busy) return;
+    setBusy(p.id);
+    const sau = { ...p, saved: !p.saved };
+    if (mode === "saved" && p.saved) setPosts((items) => items.filter((x) => x.id !== p.id));
+    else update(sau);
+    try {
+      await feedback(person, p.id, "saved", sau.saved);
+    } catch (e) {
+      if (mode === "saved" && p.saved) setPosts((items) => (items.some((x) => x.id === p.id) ? items : [p, ...items]));
+      else update(p);
+      setError(e instanceof Error ? e.message : "Chưa lưu được bài.");
+    } finally {
+      setBusy(null);
+    }
+  };
   const theoDoiTacGia = async (p: Post) => {
     if (!person) return;
     await act(async () => {
@@ -345,7 +363,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
           <RudiButton compact full={false} label="Hoàn tác" onPress={() => void hoanTacAn(item)} variant="ghost"/>
         </View>
       ) : (
-        <PostCard post={item} person={person} active={active === item.id} busy={busy === item.id} onLike={() => void like(item)} onComment={() => setComments(item)} onMore={() => setSelected(item)} onFollow={() => void theoDoiTacGia(item)} onSave={() => void act(async () => { await feedback(person, item.id, "saved", !item.saved); if (mode === "saved" && item.saved) setPosts((items) => items.filter((p) => p.id !== item.id)); else update({ ...item, saved: !item.saved }); })} onTopic={(t) => router.push({ pathname: "/community/topic", params: { topic: t } } as never)}/>
+        <PostCard post={item} person={person} active={active === item.id} busy={busy === item.id} onLike={() => void like(item)} onComment={() => setComments(item)} onMore={() => setSelected(item)} onFollow={() => void theoDoiTacGia(item)} onSave={() => void luu(item)} onTopic={(t) => router.push({ pathname: "/community/topic", params: { topic: t } } as never)}/>
       )}
       viewabilityConfig={{ itemVisiblePercentThreshold: 60, minimumViewTime: 1000 }}
       onViewableItemsChanged={viewable.current}
