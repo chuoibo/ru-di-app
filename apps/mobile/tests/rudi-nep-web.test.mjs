@@ -157,6 +157,9 @@ test("the demonstration catalogue keeps the same gutter before the tucked Nếp 
   try {
     await page.viewport(320, 700);
     await page.goto(`${url}explore`, () => !!document.querySelector('[data-testid="nep-mep"]') && !document.querySelector('[inert]'));
+    // The global bookmark mounts before the asynchronous demo catalogue.
+    // Measure the category rail only once its actual category is rendered.
+    await page.waitFor(() => [...document.querySelectorAll('[role="button"]')].some(e => e.textContent.trim() === "Cafe"), { label: "demonstration categories ready" });
     const gutter = await page.evaluate(() => {
       const chip = [...document.querySelectorAll('[role="button"]')].find(e => e.textContent.trim() === "Cafe");
       let rail = chip?.parentElement;
