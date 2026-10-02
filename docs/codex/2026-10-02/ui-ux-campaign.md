@@ -44,7 +44,7 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 - [x] Detector URL thất bại timeout (không dùng [] làm bằng chứng); fallback source [] chỉ regex. Polish và review fresh bắt thiếu focus, sửa + CUA xác minh heading rồi Tab → CTA.
 - [x] Finish CP06 `ship` theo scope; documenter giữ hệ thống và ghi bàn giao. Clean gates cuối ở CP09.
 - [x] Typecheck/export; testopening1/0/0, journey riêng1/0/0.
-- [ ] Clean SHA, commit/handoff/tick: fullpatch1472pass1fail0skip (journey selection, 2 lần); fullbaseline sạch1473pass0fail0skip; isolatedpatch/baseline xanh. Giữ phát hiện flaky trong bàn giao, kiểm lại clean SHA cuối B10.
+- [x] Clean mobile tại `b46bdcf7`: **1479 pass / 0 fail / 0 skip**, typecheck và export Android/iOS/web đạt. Concern selection cũ được khép bằng harness chờ đúng selected-stop và `aria-pressed` trước đổi view; không sửa source Hành trình. Hai lượt đỏ CP06 và baseline vẫn giữ trong evidence.
 
 ### CP07 · Bìa Welcome
 - [x] Baseline: web không phát momentum-end; pager chỉ nghe sự kiện đó, snap cho phép nhảy trang, chấm không role và vùng cuộn không focus. Chữ hiệu, washi và đường giấy đã có bản sắc; giữ chúng.
@@ -67,34 +67,38 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 ### CP09 · Nhất quán và cổng kiểm chứng
 - [x] So sánh screen/overlay/state mới với notebook world; không đổi hệ nhận diện, quota, money/API hoặc B8/B9.
 - [x] Thêm recovery web anonymous có/không history; test kết hợp6/0/0. Native warm place → Back → unknown → Back → invite điền mã tổng hợp, không redeem.
-- [ ] Native anonymous/cold deep links; ghi giới hạn devclient cold launcher.
-- [ ] Clean exact-SHA full gate, identity xanh, canary và ≥2 mutant không tương đương đỏ đúng dự đoán cùng harness.
-- [ ] Tái kiểm concern journey selection, cập nhật handoff/status thật và khôi phục emulator.
+- [x] Native anonymous recovery → Welcome → invite, CLI exit0. Cold custom scheme vào devclient launcher trước JS; **release cold link/invite chưa xác minh**. Không gọi đó là sản phẩm pass/fail.
+- [x] Clean mobile tại `b46bdcf7`; identity trước/sau **2/0/0**, canary bỏ cover và hai mutant bỏ inert/CTA sai đều đỏ đúng bước dự đoán, cùng hash harness, mỗi variant export mới, khôi phục tree sạch.
+- [ ] Full strict 33 chặng tại `dc1bd772` còn chạy; đã có chặng đỏ, chưa đủ điều kiện landing main. Ghi SHA và giới hạn riêng với lượt mobile cuối.
+- [x] Tái kiểm concern journey selection; 14 file private và cấu hình emulator cũ đã khôi phục khớp backup. Không sửa/pm-clear dữ liệu Claude.
+- [x] Clean native tại `c8328b0e`: **1 stage pass / 0 fail / 0 skip**, 12 flow mặc định; dấu vân sai và canary09 đỏ đúng bước. APK đã dựng/cài có package/app config khớp. Video enter/exit/Back Nếp trên APK mới đã mở nhìn; không suy thành OTP/AI/iOS/48 flow hay native startup300ms.
+- [x] Dọn hai bản sao flow tạm, Metro riêng và dừng AVD tổng hợp riêng để trả RAM; `native-cleanup.json`. Công việc/data Claude giữ nguyên.
+- [ ] Hoàn tất số liệu full gate, handoff và dọn runtime do Codex tạo.
 
 ## Theo dõi đủ ID
 
 | ID | Batch kế thừa | Trạng thái Claude | Tiếp nối Codex | Vấn đề/tiêu chí |
 |---|---|---|---|---|
 | UI-001 | B2 | VERIFIED_LOCALLY | KẾ_THỪA · cần retest cuối | Ô nhập một dòng 44dp (<48); nút cảm xúc, nút story nhỏ; hitSlop bị web bỏ qua · mọi ô nhập một dòng ≥48dp |
-| UI-002 | B10 | PLANNED | VERIFIED_LOCALLY · CP06 | Có phiên mà mở URL lạ thì về Welcome rồi bị đòi đăng nhập · URL lạ + phiên → về tab, hoặc 404 có lối ra |
+| UI-002 | B10 | PLANNED | READY_FOR_QA · CP06 | Có phiên mà mở URL lạ thì về Welcome rồi bị đòi đăng nhập · URL lạ + phiên → về tab, hoặc 404 có lối ra |
 | UI-003 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | `accessibilityState` không tới DOM: tab, radio, checkbox, mở gập không có `aria-*` · mọi control có trạng thái mang `aria-*` khớp; tab đang chọn có `aria-selected` |
 | UI-004 | B2 (sửa sớm: rail và tablist) | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Rail (≥600dp): vạch chỉ báo lệch khỏi tab · vạch nằm giữa tab đang chọn ở 600/768/839/840/1024 |
 | UI-005 | B1 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Đóng khay «Tạo mới» bằng Back trình duyệt để lại `aria-hidden`/`inert` trên cả màn và thanh tab · 0 vùng inert ≥25% màn sau Back |
 | UI-006 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Chạm «+» hai lần nhanh: lần hai rơi vào khay đang mở · chạm đúp = 1 hộp thoại |
 | UI-007 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Khay tạo cao 92% (C2) / 96% (C8), vượt trần 82% · panel ≤82% ở C2, C8 |
-| UI-008 | B10 | PLANNED | VERIFIED_LOCALLY · CP08 | Điểm dừng Tab đầu tiên là khối Nếp không tên · không còn điểm dừng không tên |
-| UI-009 | B10 | PLANNED | VERIFIED_LOCALLY · CP06 web300/native nhìn | Khôi phục phiên chậm: vùng nội dung trống, không chỉ báo · skeleton/chỉ báo ≤300ms |
+| UI-008 | B10 | PLANNED | READY_FOR_QA · CP08 | Điểm dừng Tab đầu tiên là khối Nếp không tên · không còn điểm dừng không tên |
+| UI-009 | B10 | PLANNED | READY_FOR_QA · CP06 web300; native300ms chưa đo | Khôi phục phiên chậm: vùng nội dung trống, không chỉ báo · skeleton/chỉ báo ≤300ms |
 | UI-010 | B2 (sửa sớm: khay Tạo mới) | READY_FOR_QA | KẾ_THỪA · cần retest cuối | `/create` mở lạnh không mở khay · mở lạnh /create → 1 hộp thoại |
-| UI-011 | B10 | PLANNED | VERIFIED_LOCALLY · CP08 | Nút «Vẽ» của bảng Nếp chết trên web (`Alert.alert` rỗng) · có phản hồi thấy được trên web |
-| UI-012 | B10 | PLANNED | VERIFIED_LOCALLY · CP08 | Chip gợi ý của bảng Nếp cao 36dp · ≥48dp |
+| UI-011 | B10 | PLANNED | READY_FOR_QA · CP08 | Nút «Vẽ» của bảng Nếp chết trên web (`Alert.alert` rỗng) · có phản hồi thấy được trên web |
+| UI-012 | B10 | PLANNED | READY_FOR_QA · CP08 | Chip gợi ý của bảng Nếp cao 36dp · ≥48dp |
 | UI-013 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Sheet đóng: panel còn lộ rồi biến mất đột ngột · khung cuối ra ngoài màn hoặc mờ ≈0 |
-| UI-014 | B10 | PLANNED | VERIFIED_LOCALLY · CP08 | Ở 320dp mép Nếp đè chữ hàng chip · không chữ nào bị che ở C2 |
+| UI-014 | B10 | PLANNED | READY_FOR_QA · CP08 | Ở 320dp mép Nếp đè chữ hàng chip · không chữ nào bị che ở C2 |
 | UI-015 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Cài đặt hiện giá trị giữ chỗ («Bạn», «B», công tắc sai) rồi mới đổi · không khung giữ chỗ sai |
-| UI-016 | B10 | PLANNED | VERIFIED_LOCALLY · CP07 | Welcome web: chấm trang và mốc đường đứng yên ở trang 1 khi vuốt · chấm/nhãn khớp trang đang xem |
-| UI-017 | B10 | PLANNED | VERIFIED_LOCALLY · CP07 | Welcome: vuốt nhanh nhảy hai trang · vuốt nhanh = 1 trang |
+| UI-016 | B10 | PLANNED | READY_FOR_QA · CP07 | Welcome web: chấm trang và mốc đường đứng yên ở trang 1 khi vuốt · chấm/nhãn khớp trang đang xem |
+| UI-017 | B10 | PLANNED | READY_FOR_QA · CP07 | Welcome: vuốt nhanh nhảy hai trang · vuốt nhanh = 1 trang |
 | UI-018 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | «Quay lại» chết khi màn mở thẳng bằng link (TopBar không kiểm `canGoBack`) · nút lui luôn tới một màn |
 | UI-019 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Mã lời mời sai báo «Cập nhật app rồi thử lại» · câu theo `code` (mã sai/hết hạn) |
-| UI-020 | B10 | PLANNED | VERIFIED_LOCALLY · CP07 | Chấm trang Welcome không đọc được; pager không nhận focus · axe 0 trên /welcome |
+| UI-020 | B10 | PLANNED | READY_FOR_QA · CP07 | Chấm trang Welcome không đọc được; pager không nhận focus · axe 0 trên /welcome |
 | UI-021 | B5 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Hàng địa điểm: dòng giá bị cắt ở 8–10/10 hàng · 0 dòng giá bị cắt ở C1–C6 |
 | UI-022 | B1 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | «Chỉ đường» trên web không làm gì (`geo:`) · mở bản đồ hoặc nói vì sao |
 | UI-023 | B5 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Nhãn «Lưu địa điểm» và nút demo bị cắt · nhãn trọn ở C2 |

@@ -159,7 +159,7 @@ không thêm world, font, token hoặc QUALITY BAR card/comp mới.
 
 | Loại | Thay đổi trong CP08 |
 |---|---|
-| **BUG_FIX** | UI-008: editor và hành động ở chân sheet, sheet thích ứng IME/safe area; lỗi không đẩy thao tác khỏi khung. UI-011: thay native Alert bằng bước xác nhận trong cùng bảng, giữ mô tả đóng băng theo màn/người; chống gửi lặp. UI-012: tiết mục đang chạy có nút skip được đặt tên, khung tĩnh không còn nút vô danh. UI-014: rail danh mục live/demo dừng trước mép Nếp, bỏ negative margin bên phải. |
+| **BUG_FIX** | UI-008: tiết mục đang chạy có nút skip được đặt tên, khung tĩnh không còn nút vô danh. UI-011: thay native Alert bằng bước xác nhận trong cùng bảng, giữ mô tả đóng băng theo màn/người; chống gửi lặp. UI-012: chip gợi ý có đích bấm tối thiểu 48dp. UI-014: rail danh mục live/demo dừng trước mép Nếp, bỏ negative margin bên phải. Editor/footer thích ứng IME/safe area là cải thiện UX chủ động trong cùng flow. |
 | **UX_IMPROVEMENT** | Back/Escape/browser Back ở bước xác nhận trả lại editor và bản nháp; Sửa không gửi; đóng bảng đóng cả flow. Lỗi 503 và trạng thái chờ nằm cạnh bản nháp, có live region. Lời về phạm vi Nếp nhận luôn đọc được trước Vẽ đi. Gợi ý có đích bấm tối thiểu 48dp và gap 8dp. |
 | **VISUAL_UPGRADE** | Hai trạng thái cùng giấy có lỗ gáy, nét mực và thứ bậc hiện hành; Nếp đưa giấy cho bước quyết định. Kẻ tóc phân vùng mô tả/footer, focus editor dùng AI semantic; hai hành động phân biệt outline và solid AI. Tablet giữ cột sheet tối đa 640dp. |
 | **MOTION_UPGRADE** | Giữ spring vào/standard ra và reduced motion của Sheet; thao tác hủy trở lại editor có focus, không nhảy body web. Gợi ý dùng PressScale/haptic select; tiết mục M1 vẫn diễn một lần rồi tĩnh, có cách bỏ qua bằng phím. Không thêm độ trễ trang trí hoặc diễn lại Nếp. |
@@ -222,46 +222,127 @@ cầm có label/hint và công thức scrim cũ; sidecar giữ cấu trúc legac
 canonize các mô tả lệch source, số đo contrast incomplete hay findings
 detector thành luật mới; capability opt-in của CP08 được ghi ở handoff này.
 
-## CP09 · Kiểm chứng tích hợp đang chạy
+## CP09 · Kết quả kiểm chứng và cổng còn mở
 
-Lượt clean `dea5152d`: API **3028 pass / 743 skip**, không suy thành PostgreSQL
-đã kiểm; mobile **1478 pass / 1 fail / 0 skip**. Finding thật là bản đồ
-hướng dẫn Nếp chưa chứa sáu nhãn mới của Welcome. Generator
-`tools/rut-huong-dan.mjs` cập nhật đúng sáu nhãn và băm frontend/Go; diff
-đã đọc, không cập nhật snapshot mù hay bỏ assertion. Test hướng dẫn riêng
-và Go package đã chạy lại; full gate phải tiếp tục ở SHA chứa sửa này.
-Chặng AI offline ban đầu thiếu env đã retest bằng requirements đúng pin,
-**1 stage pass / 0 fail / 0 skip**; không gọi provider thật.
+B10 đã triển khai đủ **9 ID độc lập**: 002/009, 016/017/020,
+008/011/012/014. B9a có thêm 150/151/152/154 trong nhánh riêng. Đây không
+phải kết luận 167 ID đã hoàn tất: **18 B8 + 26 B9 vẫn RESERVED_CLAUDE**,
+109 ID kế thừa chưa được Codex xác nhận QA độc lập, UI-096 được thay bằng
+UI-158. Các ADR UI-073/119/131/149 và điều kiện HTTPS UI-136 vẫn giữ giới
+hạn nghiệp vụ/hạ tầng; không sửa rule để đổi màu trạng thái.
 
-Identity/canary/mutants tại `dea5152d` dùng cùng hash của opening/chrome-cdp/
-tuoi-ban-dung: identity trước/sau **2/0/0**, bỏ cover đỏ ở chờ first frame,
-bỏ inert đỏ ở protected scene, CTA luôn Welcome đỏ ở home signed-in.
-Mỗi variant export mới; source variant cuối khôi phục sạch. Cần identity
-cuối cho SHA có map mới trước kết luận gate.
+| Phép kiểm | SHA / kết quả / phạm vi |
+|---|---|
+| Clean mobile cuối | `b46bdcf7`, npm ci đúng lock, typecheck + **1479 pass / 0 fail / 0 skip**, export **Android/iOS/web**; `mobile-b46.log`, `mobile-b46-summary.txt`. Export iOS không phải chạy iOS. |
+| Hướng dẫn Nếp | `dc1bd772`: generator đọc 60 route, chỉ sáu nhãn Welcome đổi; băm frontend/Go `99be676b0199`. Test web hướng dẫn **29/0/0**, Go package đạt. Không đổi route hay cập nhật snapshot bỏ qua review. |
+| API trong full gate | `dc1bd772`: **3028 pass / 743 skip**. Không đọc skip thành bằng chứng PostgreSQL. AI inference offline đúng pin/env **65 pass / 3 deselected**, không gọi provider. |
+| Identity, canary và mutant | Clean `b46bdcf7`: identity trước/sau **2/0/0**; canary bỏ cover đỏ tại chờ first frame; mutant bỏ inert đỏ tại protected scene; mutant CTA luôn Welcome đỏ tại chờ home signed-in. Cùng hash opening/chrome-cdp/freshness, mỗi variant export mới; kiểm không tương đương trước chạy, khôi phục tree sạch. `mutations-b46bdcf7/mutations.json` và các diff/log giữ ngoài repo. |
+| Full strict 33 chặng | Clean `dc1bd772` còn chạy ở `gate-final.log`; đã có chặng đỏ. Kết quả mobile cuối ở SHA khác được ghi riêng, chưa có full strict xanh hay gate trên merge-result với main mới. **Chưa đủ điều kiện landing main.** |
+
+Ba sửa harness đều giữ assertion và dữ liệu:
+
+- `65a306e0`: đợi chip Café demo thực sự render trước đo gutter; dock có
+  mặt không chứng minh dữ liệu danh mục đã về.
+- `4e62573c`: đợi `opening-app` biến mất rồi mới điều khiển Nếp bằng phím;
+  scene có DOM dưới bìa không chứng minh scene tương tác được.
+- `b46bdcf7`: sau chọn chặng, đợi đúng selected-stop **và** rail
+  `aria-pressed=true` rồi mới chuyển sang Hành trình. Tên chặng vốn có trên
+  rail chưa chọn nên predicate cũ có thể qua quá sớm. Source Hành trình
+  không đổi; concern CP06 được khép bằng lượt full clean **1479/0/0** sau
+  assertion mạnh hơn. Lịch sử hai lượt CP06 đỏ và baseline1473 xanh giữ nguyên.
+
+### Android, APK và link
 
 Android warm (5600) mở địa điểm → Back → unknown → Back → invite; guest
 (AVD riêng5620) unknown → CTA Welcome → invite. Hai CLI hoàn tất exit0,
-ảnh mở nhìn; mã CP09-TEST-ONLY chỉ điền, không redeem. Cold custom scheme
-vào devclient launcher khi chưa nạp JS; đó không phải evidence release
-link hỏng hay pass. Release cold link và cold invite vẫn chưa kiểm.
+ảnh đã mở nhìn; mã CP09-TEST-ONLY chỉ điền, không redeem. Web anonymous
+có/không browser history nằm trong hai test opening. Cold custom scheme
+vào devclient launcher trước JS; **release cold link/invite chưa kiểm**.
 
 Emulator cũ đã khôi phục **14 private file**, băm nội dung khớp backup mới
-trước lượt này; font/system scales/size/density và reverses trả lại. Gate
-pm-clear chỉ dùng AVD5620 tổng hợp mới tạo. APK SDK57 kéo từ devclient
-đã cài; không có fingerprint native build trong clean tree để chứng nhận
-APK dependency matching. Fingerprint Metro/runtime JS là cổng riêng.
+trước lượt này; font/system scales/size/density và reverses trả lại.
+`device-restore.json` giữ bằng chứng, không pm-clear thiết bị cũ. AVD tổng
+hợp mới `rudi-b10-clean` là thiết bị duy nhất chịu pm-clear/reboot thử nghiệm.
 
-Review hai assessment độc lập Nếp: UX **28/40**, native kỹ thuật **15/20**.
-Ba P2 cần retest/iteration kế: độ hẹp khối disclosure khi font lớn; cue
-phân biệt hỏi/vẽ tại editor; lối tiếp sau lỗi chức năng chưa bật. Đây là
-findings mới của critique, không gán lại thành bug QA. B10 giữ cấu trúc
-quyền/chia sẻ và hai hành động hiện hành; không thêm mode mới hoặc tắt
-thao tác dựa trên chuỗi lỗi. Ưu tiên kiểm với người dùng/chức năng thật
-trước đổi meaning hoặc availability. Không có P0/P1 được hai assessment
-xác nhận trong phạm vi này, không suy thành toàn app sạch.
+APK debug đã được **prebuild + assembleDebug x86_64** từ B10, **568 task**,
+build thành công; cài lại thành công trên AVD mới. Fingerprint native đúng
+hai file package/app config (28be9856… / 1465aa33…); APK SHA256 và build log
+ở `native-apk-sha256.txt`, `native-prebuild.log`, `native-build.log`. Lượt
+full gate trước đó dùng APK kéo từ thiết bị, không có chứng nhận matching;
+không xóa giới hạn ấy bằng kết quả APK mới. Fingerprint Metro là cổng riêng.
+
+Native full gate đầu bị ngắt sau mất transport/launcher, chưa chứng minh
+regression sản phẩm. Chẩn đoán sau trên APK mới thấy Metro sống nhưng
+reverse port biến mất; chưa xác lập tác nhân gây mất binding. Dùng host
+emulator 10.0.2.2 đã mở đúng Welcome/dấu vân, nhưng Maestro còn báo
+`DeviceServerDiedException`/device offline ở port5620. Khi chuyển AVD riêng
+sang port5560 có System UI ANR phủ app; đã lưu ảnh và đóng hộp hệ thống,
+không sửa/tắt assertion để bảng xanh.
+
+Sau ANR, cùng các YAML gốc: **flow00 smoke và flow01 Welcome/auth hoàn
+tất** trên APK mới, có ảnh Welcome/trang2/Login/Sở thích. Cả bảng rút gọn
+vẫn **exit1**: canary dấu vân bắt đầu từ Sở thích sau flow01, đỏ trước
+assert dấu vân. Không gọi canary đó là đỏ đúng dự đoán.
+
+`c8328b0e` thêm `MOBILE_METRO_HOST_NATIVE` opt-in vào harness, mặc định
+localhost giữ nguyên; host được dùng đồng thời cho URL bundle và packager.
+Host dạng URL bị từ chối exit64 trước thao tác thiết bị; bash syntax và
+staged guard đạt. Không đổi assertion, app behavior hoặc API host. Bảng
+smoke từ app tổng hợp sạch tại `c8328b0e` **exit0**: flow00 đúng dấu vân;
+dấu vân sai đỏ đúng assertion; canary09 đi hết flow tới Tài chính rồi đỏ
+đúng chuỗi không tồn tại ở bước cuối. `native-tracked-host-smoke.log` giữ
+lượt đo. Ảnh Welcome và trang2 trên APK mới đã mở nhìn. Đây là bảng một
+flow + hai negative control, không phải toàn bộ native gate.
+Clean native gate mặc định tại `c8328b0e` **1 stage pass / 0 fail / 0 skip**,
+**12 flow**, 874s; dấu vân sai đỏ đúng assertion, canary09 đỏ đúng bước cuối.
+`native-clean-c832.log` và `native-c832-summary.txt` giữ verdict. Đây là
+fixture/default gate: chưa chạy Expo Go với host tùy chọn, thiết bị vật lý
+hoặc các flow OTP/AI có điều kiện. Không suy 12 flow thành 48 flow hay đủ
+167 ID. Verifier kiểm package/app config byte-identical với APK đã dựng/cài,
+chỉ sao fingerprint vào thư mục Android ignored, không giả một build mới.
+Test meta harness tại SHA này: **8 pass** với toolchain đúng; lượt trước
+**6 pass / 2 fail** vì thiếu Node trên PATH giữ riêng, không sửa test để xanh.
+
+Video `native-nep-gate-c832.mp4` (99,89s, Android thật) đã được giải mã và
+mở nhìn: sheet đi lên cùng scrim, Back đưa panel xuống ngoài khung rồi trở
+lại đúng Khám phá; dock cất lại, gesture không làm app sập. Montage
+`native-nep-transition-c832-frames.png` và
+`native-nep-exit-final-c832-frames.png` có khung trung gian enter/exit;
+không suy tần suất lấy mẫu thành FPS. Đầu recording có khung trắng của
+devclient trước JS khi stop/launch; **không chứng nhận native startup
+≤300ms** hoặc đồng nhất nó với slow-session cover đã đo trên web.
+
+### Review thiết kế và QA cần làm tiếp
+
+Hai assessment độc lập Nếp: UX **28/40**, native kỹ thuật **15/20**.
+Ba P2 giữ riêng để iteration kế: độ hẹp disclosure khi font lớn; cue phân
+biệt hỏi/vẽ tại editor; lối tiếp sau lỗi chức năng chưa bật. Đây là findings
+mới của critique, không gán thành bug QA hoặc bịa trend điểm tăng.
+B10 giữ đúng phạm vi quyền/chia sẻ và hai hành động hiện hành; không thêm
+mode mới/tắt hành động theo chuỗi lỗi. Hai sửa finish đã có recapture và
+verdict ship trong phạm vi đó; chưa có P0/P1 được assessment xác nhận,
+không suy thành toàn app sạch.
 
 Detector **23/36** là scan frozen DOM trước batch fix footer. Recapture
 cuối chứng minh hai sửa finish; JSON không phải scan exact SHA cuối.
-Không có overlay inject vì browser evaluate read-only; metadata/design
-drift và contrast incomplete giữ nguyên. Bó CP09 ngoài repo chứa hai
-assessment, mutation-plan/results, log gates và device-restore.
+Không inject overlay vì browser evaluate read-only; metadata/design drift
+và contrast incomplete giữ nguyên. Video/khung chuyển động native CP06–08
+đã mở nhìn; không bịa FPS, frame time hoặc motion từ screenshot tĩnh.
+
+QA retest theo các hàng CP06/07/08 phía trên, ưu tiên:
+
+- 002/009: slow session, guest/có phiên, Back và CTA; đo startup native
+  ≤300ms trên bản ship, cold link thật/lời mời và state preservation.
+- 016/017/020: swipe nhanh chỉ một trang; phím/resize/pager state;
+  double tap CTA, Back giữa transition và reduced motion lạnh/warm.
+- 008/011/012/014: tên/nút skip của performance, chip48dp, gutter320;
+  keyboard/font lớn, mô tả dài, Sửa/Back/Escape/đóng không POST;
+  confirm một POST, pending/error giữ draft, shared Sheet ở caller khác.
+- Provider/media success, TalkBack, iOS, thiết bị vật lý, native dark và
+  landscape còn thiếu runtime; không nhận QA_ACCEPTED từ tự kiểm.
+
+Bó CP09: `/home/lakiet/.local/share/rudi-b9a/campaign/cp09/`; liên kết
+[checklist 167 ID](ui-ux-campaign.md). Không sửa QA report gốc, session/plan
+Claude, PRODUCT/DESIGN/sidecar hoặc patch B8/B9. Main đã tiến tới `cff7e288`
+trong lane khác; merge-tree đọc trước đó chỉ chứng minh không conflict văn
+bản tại lúc đo, chưa chứng minh tích hợp semantic hay gates trên main mới.
