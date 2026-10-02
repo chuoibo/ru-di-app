@@ -722,6 +722,30 @@ export function tachGia<T extends { icon: string; text: string }>(facts: readonl
   };
 }
 
+/** One fact held together on a line: no-break spaces, and a word joiner after a dash. */
+function giuManh(chu: string): string {
+  return chu.replace(/ /g, "\u00a0").replace(/([–-])/g, "$1\u2060");
+}
+
+/**
+ * A place's facts as two quiet lines (finish review 03/10): `dau`, the rating
+ * and the distance (and the address when there is one), breaking only at
+ * « · » between facts; and `gio`, whether it is open and its hours, on a line
+ * of its own, breaking only after the comma between the two. Neither line
+ * can end or start on «·», which the single line did on five rows in six at
+ * 390. The price is not in either: it has its own line (`tachGia`).
+ */
+export function chiaDongSuThat<T extends { icon: string; text: string }>(facts: readonly T[]): { dau: string; gio: string | null } {
+  const gio = facts.find((f) => f.icon === "time-outline");
+  return {
+    dau: facts
+      .filter((f) => f.icon !== "wallet-outline" && f !== gio)
+      .map((f) => giuManh(f.text))
+      .join(" · "),
+    gio: gio ? gio.text.split(" · ").map(giuManh).join(", ") : null,
+  };
+}
+
 /**
  * Whether the quiet line `tachGia` leaves (`khac`) opens on the rating, which
  * then wears a star: «4.8 (64)» alone does not say what it counts (critique

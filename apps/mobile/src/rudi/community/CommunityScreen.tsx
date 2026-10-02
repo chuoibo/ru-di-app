@@ -262,8 +262,14 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   const oTim = <SearchField accessibilityLabel="Tìm chủ đề" placeholder="Đi đâu, ăn gì, trải nghiệm gì?" value={search} onChangeText={setSearch} onSubmitEditing={() => { if (search.trim()) router.push({ pathname: "/community/search", params: { q: search.trim() } } as never); }}/>;
   return <RudiScreen header={dau?.(<View style={styles.hangNut}>{nutThongBao}{nutCaiDat}</View>)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
     <Sheet open={settings} onClose={dongCaiDat} accessibilityLabel="Bảng tin của bạn">
+      {/* One rhythm (finish review 03/10): the title close over its line, 16 to
+          the actions, 8 between every action, the quiet ones too. */}
+      <View style={styles.caiDat}>
+      <View style={styles.caiDatDau}>
       <Text style={[typography.h1, { color: colors.ink }]}>Bảng tin của bạn</Text>
       <Text style={[typography.body, { color: colors.inkSoft }]}>Chỉ dùng những gì bạn xem và tương tác trong cộng đồng. Bạn luôn có thể đổi ý.</Text>
+      </View>
+      <View style={styles.caiDatNut}>
       <RudiButton label={prefs?.personalized ? "Tắt cá nhân hóa" : "Bật cá nhân hóa"} onPress={() => void consent(!prefs?.personalized)}/>
       {xacNhanXoa ? (
         // One step to undo nothing: what goes, and what stays, before it goes.
@@ -279,6 +285,8 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
       {/* «Đã lưu» and «Bài của tôi» are tabs now, and the bell sits on the header. */}
       <RudiButton label="Bài đã ẩn" variant="ghost" onPress={() => { setMode("hidden"); dongCaiDat(); }}/>
       <RudiButton label="Điều mình muốn giữ" variant="ghost" onPress={() => { dongCaiDat(); router.push("/community/keeps" as never); }} />
+      </View>
+      </View>
     </Sheet>
     <Sheet open={selected !== null} onClose={() => setSelected(null)} accessibilityLabel="Lựa chọn cho bài đăng">{selected ? <>
       <Text style={[typography.h2, { color: colors.ink }]}>Câu chuyện này</Text>
@@ -366,8 +374,8 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
       ListEmptyComponent={loading ? <View style={styles.intro}><SkeletonLines lines={4}/></View> : !error ? (
         mode === "hidden" ? <View style={styles.empty}><Ionicons name="eye-off-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Chưa ẩn bài nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Bài bạn chọn «Không quan tâm» nằm ở đây. Chạm «…» trên một bài để bỏ ẩn.</Text></View>
         // The reader's own two lists say what goes in them, and how.
-        : mode === "saved" ? <View style={styles.empty}><Ionicons name="bookmark-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Chưa lưu bài nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Chạm dấu lưu ở cuối một bài để để dành đọc lại.</Text></View>
-        : mode === "mine" ? <View style={styles.empty}><Ionicons name="create-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Bạn chưa kể chuyện nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài.</Text><RudiButton label="Viết bài" onPress={() => router.push("/community/new" as never)}/></View>
+        : mode === "saved" ? <View style={styles.empty}><Ionicons name="bookmark-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Chưa lưu bài nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Chạm dấu lưu ở cuối một bài để đọc lại sau.</Text></View>
+        : mode === "mine" ? <View style={styles.empty}><Ionicons name="create-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Chưa kể chuyện nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài.</Text><RudiButton label="Viết bài" onPress={() => router.push("/community/new" as never)}/></View>
         : <View style={styles.empty}><Ionicons name="trail-sign-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>{mode === "following" ? "Câu chuyện bắt đầu từ một người" : "Một ngày đáng kể"}</Text><Text style={[typography.body, { color: colors.inkSoft }]}>{mode === "following" ? "Theo dõi tác giả hoặc chủ đề bạn thích. Những cuộc đi của họ sẽ gặp bạn ở đây." : "Một quán nhỏ, một cung đường, một buổi đi chơi. Kể điều bạn muốn giữ lại."}</Text><RudiButton label="Kể khoảnh khắc đầu tiên" onPress={() => router.push("/community/new" as never)}/></View>
       ) : null}
       ListFooterComponent={loading && posts.length ? <Text style={[typography.caption, styles.intro, { color: colors.inkFaint }]}>Đang mở thêm câu chuyện…</Text> : null}
@@ -377,6 +385,9 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
 }
 const styles = StyleSheet.create({
   moiVao: { paddingTop: 16, gap: 18 },
+  caiDat: { gap: 16 },
+  caiDatDau: { gap: 6 },
+  caiDatNut: { gap: 8 },
   readingColumn: { flex: 1, width: "100%", maxWidth: 560, alignSelf: "center" },
   header: { paddingHorizontal: 20, paddingTop: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   headerChuDe: { paddingHorizontal: 16, paddingTop: 0, paddingBottom: 8 },

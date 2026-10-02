@@ -36,8 +36,8 @@ test("menu cài đặt chỉ giữ cái không phải một danh sách bài", ()
 });
 
 test("«Đã lưu» và «Bài của tôi» rỗng thì nói ở đó sẽ có gì, «Bài của tôi» mời viết bài", () => {
-  assert.match(man, /mode === "saved" \?[\s\S]{0,400}Chưa lưu bài nào/);
-  assert.match(man, /mode === "mine" \?[\s\S]{0,600}Bạn chưa kể chuyện nào[\s\S]{0,400}label="Viết bài" onPress=\{\(\) => router\.push\("\/community\/new" as never\)\}/);
+  assert.match(man, /mode === "saved" \?[\s\S]{0,400}Chưa lưu bài nào[\s\S]{0,300}Chạm dấu lưu ở cuối một bài để đọc lại sau\./);
+  assert.match(man, /mode === "mine" \?[\s\S]{0,600}Chưa kể chuyện nào<[\s\S]{0,400}label="Viết bài" onPress=\{\(\) => router\.push\("\/community\/new" as never\)\}/);
 });
 
 test("lời xin cá nhân hoá chỉ ở «Dành cho bạn», nơi nó đổi được điều gì", () => {

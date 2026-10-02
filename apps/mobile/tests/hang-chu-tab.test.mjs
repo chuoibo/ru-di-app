@@ -66,3 +66,52 @@ test("cuộn tới tab được chọn: không cuộn khi nó đã thấy trọn
   // Not measured yet: nothing to do.
   assert.equal(cuonDeThay({ x: 400, w: 80 }, { x: 0, w: 0 }, 16), null);
 });
+
+import { khoangCachLo } from "../dist-test/rudi/ui/HangChuTab.js";
+
+// Where the row ends inside the window, given a gap: which tab straddles the edge.
+const catNgang = (rong, gap, khung, le) => {
+  let x = le;
+  for (const w of rong) {
+    if (x <= khung - 16 && x + w >= khung + 10) return true;
+    x += w + gap;
+  }
+  return false;
+};
+
+test("hàng tràn thì luôn có một chữ bị mép cắt ngang, để người đọc biết còn nữa (finish review 03/10)", () => {
+  // Tab widths in dp as measured (03/10): Android 411 at 1.0 and at 1.3
+  // (uiautomator bounds ÷ 2.625), the web at 390.
+  const coChu = [
+    [86, 88, 71, 41, 72],
+    [117, 118, 96, 54, 94],
+    [92, 93, 75, 44, 78],
+  ];
+  for (const rong of coChu) {
+    // From the narrowest phone the app is laid out for (320) to past a large one.
+    for (let khung = 320; khung <= 540; khung++) {
+      const gap = khoangCachLo(rong, khung, 16);
+      const tong = rong.reduce((a, b) => a + b, 0) + gap * (rong.length - 1) + 32;
+      if (tong <= khung) continue;
+      assert.ok(gap >= 12 && gap <= 32, `khoảng ${gap} ngoài 12…32 ở ${khung}`);
+      assert.ok(catNgang(rong, gap, khung, 16), `không chữ nào bị cắt ngang ở ${khung} dp (khoảng ${gap})`);
+    }
+  }
+});
+
+test("khoảng mặc định 22 giữ nguyên khi nó đã cắt ngang một chữ, hay khi cả hàng vừa", () => {
+  // 411 at 1.0: «Bài» already peeks past «Đã lưu».
+  assert.equal(khoangCachLo([86, 88, 71, 41, 72], 411, 16), 22);
+  // A tablet column: everything fits, nothing to hint.
+  assert.equal(khoangCachLo([86, 88, 71, 41, 72], 528, 0), 22);
+  // Not measured yet.
+  assert.equal(khoangCachLo([], 0, 16), 22);
+});
+
+test("cuộn tới một tab giữa hàng thì chừa chỗ cho tab bên cạnh ló ra, để hàng vẫn nói còn nữa", () => {
+  // «Đã lưu» picked with «Bài của tôi» after it: its right edge stops a gap
+  // and a peek (22 + 16) inside the window, not the gutter.
+  assert.equal(cuonDeThay({ x: 400, w: 44 }, { x: 0, w: 358 }, 16, 38), 400 + 44 + 38 - 358);
+  // Same on the left, for a tab with one before it.
+  assert.equal(cuonDeThay({ x: 140, w: 90 }, { x: 200, w: 358 }, 38, 16), 102);
+});
