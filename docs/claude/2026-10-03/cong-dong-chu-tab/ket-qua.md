@@ -73,6 +73,17 @@ lại ở `.impeccable/review/cdt*/` (gitignore).
   lên file đang sửa dở của phiên kia. Bản của phiên kia vào main thì `TestXoaTaiKhoanKhongConHangNaoCuaNguoi` xanh.
 - Không làm: ký hoạ cho trạng thái rỗng — bốn trạng thái rỗng của Cộng đồng sẽ thành hai kiểu nếu chỉ đổi hai cái mới.
 
+## Việc nhỏ để lại của đợt thanh tab (03/10)
+
+| Việc | Commit |
+|---|---|
+| Nếp biết con dấu «Tạo mới» trên mọi màn có thanh tab và thẻ «Viết bài» của khay: «viết bài ở đâu» từ mọi tab là [Tạo mới, Viết bài] (trước: ba chạm vòng qua Lên plan, bước cuối không nhãn) | `0e4a6126` |
+| Album giữ đúng bề rộng đo được (không làm tròn, hết lệch khi lật nhiều trang); nút Lưu chờ như nút thích; vạch thanh tab đi theo ô do `oCuaCot` tính (Lên plan → Tin nhắn hết nhảy một ô ở cuối) | `314a7e5f` |
+
+Không làm: bước «Khám phá» của Nếp mở mục xem sau cùng (có thể là Cộng đồng) — hàng «Địa điểm | Cộng đồng» ngay trên
+đầu màn, một chạm sửa được; thêm bước «Địa điểm» vào mọi đường tới Khám phá sẽ dài thêm cho trường hợp thường gặp.
+Lề PostDetail (20) quanh PostCard (16) không đo được trên stack (không có bài), để lại.
+
 ## Còn mở
 
 - `TestXoaTaiKhoanKhongConHangNaoCuaNguoi` còn đỏ trên main tới khi bản sửa của phiên B8 vào main (xem trên).
