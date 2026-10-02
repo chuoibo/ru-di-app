@@ -167,24 +167,28 @@ export function PlaceDetailLiveScreen({ phien }: { phien: Phien }) {
     <RudiScreen
       footer={
         trang.pha === "xong" ? (
-          <View style={styles.hanhDong}>
-            <View style={styles.flex}>
-              <RudiButton
-                icon={daLuuChoNay ? "heart" : "heart-outline"}
-                label={daLuuChoNay ? "Đã lưu" : "Lưu địa điểm"}
-                loading={dangLuu}
-                onPress={() => void doiLuu(trang.place.id)}
-                variant={daLuuChoNay ? "soft" : "outline"}
-              />
-            </View>
-            <View style={styles.chinh}>
-              <RudiButton
-                icon="add-circle-outline"
-                label="Thêm vào kèo"
-                onPress={() => router.push(`/outings/chon?place=${encodeURIComponent(trang.place.id)}` as never)}
-              />
-            </View>
-          </View>
+          // On a place's own page «Lưu» says enough; the pair is sized by its
+          // labels and wraps when they cannot share a line. Split 1 : 1.4 it
+          // cut «Lưu địa điểm» to «Lưu đ…» at 320 (QA UI-023).
+          <Inline gap={10} wrap>
+            <RudiButton
+              accessibilityLabel={daLuuChoNay ? "Bỏ lưu địa điểm này" : "Lưu địa điểm này"}
+              full={false}
+              icon={daLuuChoNay ? "heart" : "heart-outline"}
+              label={daLuuChoNay ? "Đã lưu" : "Lưu"}
+              loading={dangLuu}
+              onPress={() => void doiLuu(trang.place.id)}
+              style={styles.nutLuu}
+              variant={daLuuChoNay ? "soft" : "outline"}
+            />
+            <RudiButton
+              full={false}
+              icon="add-circle-outline"
+              label="Thêm vào kèo"
+              onPress={() => router.push(`/outings/chon?place=${encodeURIComponent(trang.place.id)}` as never)}
+              style={styles.nutChinh}
+            />
+          </Inline>
         ) : null
       }
       bottomInset={110}
@@ -338,16 +342,28 @@ function ThanChiTiet({
         )
       ))}
       {place.description ? <Text style={[typography.body, { color: colors.ink }]}>{place.description}</Text> : null}
-      <View style={styles.suKien}>
-        <View style={styles.hangSuKien}>
-          <Ionicons color={colors.inkFaint} name="time-outline" size={18} />
-          <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{cauMoCua(place)}</Text>
+      {/* Each fact said once (Luật Nói Một Lần): the price is in the facts at
+          the head and the open/closed state is its badge there, so this block
+          carries only what the head does not -- the hours, and the words for
+          an unknown price. It used to repeat both. */}
+      {place.openHours !== null || place.openNow === null || place.priceMinVnd === null || place.priceMaxVnd === null ? (
+        <View style={styles.suKien}>
+          {place.openHours !== null || place.openNow === null ? (
+            <View style={styles.hangSuKien}>
+              <Ionicons color={colors.inkFaint} name="time-outline" size={18} />
+              <Text style={[typography.body, styles.flex, { color: colors.ink }]}>
+                {place.openHours !== null ? `Giờ mở cửa: ${place.openHours}` : cauMoCua(place)}
+              </Text>
+            </View>
+          ) : null}
+          {place.priceMinVnd === null || place.priceMaxVnd === null ? (
+            <View style={styles.hangSuKien}>
+              <Ionicons color={colors.inkFaint} name="wallet-outline" size={18} />
+              <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{cauGia(place)}</Text>
+            </View>
+          ) : null}
         </View>
-        <View style={styles.hangSuKien}>
-          <Ionicons color={colors.inkFaint} name="wallet-outline" size={18} />
-          <Text style={[typography.body, styles.flex, { color: colors.ink }]}>{cauGia(place)}</Text>
-        </View>
-      </View>
+      ) : null}
       {place.traits.length > 0 ? (
         <Inline gap={8} wrap>
           {place.traits.map((t) => (
@@ -488,7 +504,8 @@ const styles = StyleSheet.create({
   dai: { gap: 12, paddingRight: 8 },
   oAnh: { width: 280, gap: 6 },
   flex: { flex: 1 },
-  chinh: { flex: 1.4 },
+  nutLuu: { flexGrow: 1, flexShrink: 0, maxWidth: "100%" },
+  nutChinh: { flexGrow: 2, flexShrink: 0, maxWidth: "100%" },
   khung: { gap: 16 },
   badgeOnMedia: { position: "absolute", left: 12, top: 12 },
   dau: { gap: 8 },
@@ -501,5 +518,4 @@ const styles = StyleSheet.create({
   hangSuKien: { flexDirection: "row", alignItems: "center", gap: 10 },
   khoi: { gap: 8 },
   nhanXet: { gap: 2, paddingVertical: 8 },
-  hanhDong: { flexDirection: "row", gap: 10 },
 });

@@ -86,7 +86,7 @@ appId: com.lakiet.rudi
 # «mỗi người» chứ không phải «một người»: câu giá do `cauGia` dựng từ M9c, và
 # nó nói «Chưa có giá» cho chỗ nhập từ OSM. Chỗ seed này có giá nên phải ra dải.
 - assertVisible: ".*mỗi người"
-- assertVisible: "Lưu địa điểm"
+- assertVisible: "Lưu địa điểm này"
 - takeScreenshot: 26-chi-tiet
 # «Nên làm gì ở đây» (M12b): câu sinh lúc nhập từ tag của chính chỗ này, không
 # phải mô hình viết lúc mở màn. Chỗ seed này ra «Ăn nướng» từ tên + category.
@@ -109,7 +109,8 @@ appId: com.lakiet.rudi
     direction: DOWN
     timeout: 20000
 - takeScreenshot: 26-chi-tiet-cuoi
-- tapOn: "Lưu địa điểm"
+# B5: nút ghi «Lưu», tên truy cập đủ câu (QA UI-023).
+- tapOn: "Lưu địa điểm này"
 - extendedWaitUntil:
     visible: "Đã lưu"
     timeout: 30000

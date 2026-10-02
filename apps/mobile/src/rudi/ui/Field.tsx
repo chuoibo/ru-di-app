@@ -23,7 +23,7 @@
  * from the padding, so nothing moves), and an `error` replaces the `helper`
  * line under the box, in the warning colour, announced politely.
  */
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, type Ref } from "react";
 import { StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, type ViewStyle } from "react-native";
 
 import { typography, useRudiTheme } from "../theme";
@@ -39,6 +39,8 @@ export type FieldCoreProps = TextInputProps & {
   helper?: string;
   /** What is wrong with the value; replaces `helper` and colours the border. */
   error?: string | null;
+  /** The input, for a screen that must put the cursor in it (as `ONhapMuc`). */
+  oRef?: Ref<TextInput>;
 };
 
 /** Body text's line height; the multiline box is sized in lines of it. */
@@ -91,7 +93,7 @@ export function kieuO({ multiline = false, numberOfLines, vien = 1 }: { multilin
   };
 }
 
-export function Field({ label, leading, trailing, multiline, numberOfLines, style, placeholder, helper, error, ...inputProps }: FieldCoreProps) {
+export function Field({ label, leading, trailing, multiline, numberOfLines, style, placeholder, helper, error, oRef, ...inputProps }: FieldCoreProps) {
   const { colors, radius } = useRudiTheme();
   // Android lays the native hint out at the box's width and lets it WRAP, even
   // in a single-line input, then clips the second line (audit native 09/09,
@@ -118,6 +120,7 @@ export function Field({ label, leading, trailing, multiline, numberOfLines, styl
         <View style={kieu.boc}>
           <TextInput
             {...inputProps}
+            ref={oRef}
             accessibilityLabel={inputProps.accessibilityLabel ?? label ?? placeholder}
             aria-invalid={coLoi || undefined}
             multiline={multiline}

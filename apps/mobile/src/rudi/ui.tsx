@@ -799,7 +799,7 @@ export const Field = ({ icon, ...props }: FieldCoreProps & { icon?: IconName }) 
   return <FieldCore {...props} leading={icon ? <Ionicons color={colors.inkFaint} name={icon} size={20} /> : undefined} />;
 };
 
-export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps) {
+export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps & { oRef?: FieldCoreProps["oRef"] }) {
   return <Field {...props} icon="search-outline" placeholder={placeholder} returnKeyType="search" />;
 }
 

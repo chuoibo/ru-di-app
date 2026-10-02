@@ -12,7 +12,7 @@ import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
 import { KyHoa } from "../../ui/art/KyHoa";
-import { guTheoLoai } from "../../kham-pha/dia-diem";
+import { guTheoLoai, tachGia } from "../../kham-pha/dia-diem";
 
 /*
  * 2026-09-11 (re-audit 10/09, R3): one mark per place. A place prints EITHER
@@ -198,13 +198,11 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
 export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   const { colors, radius } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
-  // The facts that decide come first and whole: rating and distance on one
-  // line, the price band with its unit on its own, so a large font truncates
-  // the prose and never the price (review 08/09 F04). The seal sits beside
-  // the name at 1.0 and under the facts once the text is big.
-  const facts = dd.facts.map((f) => f.text);
-  const dauFacts = facts.slice(0, -1).join(" · ");
-  const cuoiFact = facts.length > 0 ? facts[facts.length - 1] : "";
+  // The facts that decide come first and whole: rating, distance and hours on
+  // one line that may wrap, the price band with its unit on its own line, never
+  // cut (review 08/09 F04; QA UI-021: found by what it is, not by position).
+  // The seal sits beside the name at 1.0 and under the facts once the text is big.
+  const { gia: cuoiFact, khac: dauFacts } = tachGia(dd.facts);
   const chuLonHon = chuLon(fontScale);
   // A thumbnail that fails to load shows the category's object, never an
   // empty tinted square (review 08/09 F01). Reset when the picture changes.
@@ -236,10 +234,10 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           {dd.sub ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
-          {dauFacts ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
-          {/* The price band may take a second line at a large font: cut to one
-              it read «200.000đ – 250.000đ mỗi n…» at 1.3 (QA 23/09). */}
-          {cuoiFact ? <Text numberOfLines={chuLonHon ? 2 : 1} style={[typography.caption, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
+          {dauFacts ? <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+          {/* The price band is never cut: it wraps when it must («200.000đ –
+              250.000đ mỗi n…» at 1.3, QA 23/09; 9 rows in 10 at 390, UI-021). */}
+          {cuoiFact ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
           {dauCon(dd) && chuLonHon ? <Stamp label={dauCon(dd) as string} style={styles.rowBadgeDuoi} tone="ai" /> : null}
           {/* The thumbnail is a licensed photograph, so its credit is a line
               of this row (ADR-0017 §2.5) -- two lines, since a long author
@@ -306,19 +304,16 @@ export function PlaceCompare({
     <View style={[styles.soSanh, xepDoc && styles.soSanhDoc, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
         const luu = daLuu(dd.id);
-        // The same facts the rows print, so the two really compare; the last
-        // fact (the price band, with its unit) gets its own line so a half-width
-        // tile never breaks «80K/người» across two lines (finish review 08/09).
-        const facts = dd.facts.map((f) => f.text);
-        const dauFacts = facts.slice(0, -1).join(" · ");
-        const cuoiFact = facts.length > 0 ? facts[facts.length - 1] : "";
+        // The same facts the rows print, so the two really compare; the price
+        // band (found by what it is, QA UI-021) gets its own line, never cut.
+        const { gia: cuoiFact, khac: dauFacts } = tachGia(dd.facts);
         const chu = (
           <>
             <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
             {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
             {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-            {dauFacts ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
-            {cuoiFact ? <Text numberOfLines={chuLon(fontScale) ? 2 : 1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
+            {dauFacts ? <Text numberOfLines={3} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+            {cuoiFact ? <Text style={[typography.note, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
           </>
         );
         if (khongAnhNao) {
@@ -327,9 +322,10 @@ export function PlaceCompare({
           // compare on one axis. A photo tile beside a glyph strip does not.
           return (
             <View key={dd.id} style={styles.ungVien}>
+              {/* The object and the heart on one line, the seal under them: all
+                  three on one line pushed the heart out of the tile at 320 (QA UI-113). */}
               <View style={styles.ungVienDau}>
                 <PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={24} />
-                {dauCon(dd) ? <Stamp label={dauCon(dd) as string} tone="ai" /> : null}
                 <View style={styles.flex1} />
                 <IconButton
                   accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
@@ -339,6 +335,7 @@ export function PlaceCompare({
                   selected={luu}
                 />
               </View>
+              {dauCon(dd) ? <Stamp label={dauCon(dd) as string} style={styles.dauUngVien} tone="ai" /> : null}
               <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
                 {chu}
               </Pressable>
@@ -351,20 +348,7 @@ export function PlaceCompare({
               <MediaSlot
                 alt={dd.name}
                 fallback={<PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={34} />}
-                overlay={
-                  <>
-                    {dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
-                    {/* The heart lives on the picture's corner, as on the lead; no orphan row under the facts. */}
-                    <View style={styles.timOnMedia}>
-                      <IconButton
-                        accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
-                        icon={luu ? "heart" : "heart-outline"}
-                        onPress={() => onSave(dd.id)}
-                        selected={luu}
-                      />
-                    </View>
-                  </>
-                }
+                overlay={dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
                 // The credit is the frame's own line now, printed under the
                 // picture instead of after the facts: it was the one call site
                 // that handed this frame a bare address (review 08/09, F31).
@@ -373,6 +357,16 @@ export function PlaceCompare({
               />
               {chu}
             </Pressable>
+            {/* The heart lies on the picture's top corner but is not inside «Mở …»:
+                a button within a button (QA UI-114, axe nested-interactive). */}
+            <View style={styles.timOnMedia}>
+              <IconButton
+                accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
+                icon={luu ? "heart" : "heart-outline"}
+                onPress={() => onSave(dd.id)}
+                selected={luu}
+              />
+            </View>
           </View>
         );
       })}
@@ -390,7 +384,8 @@ const styles = StyleSheet.create({
   // The no-photo lead: the sketch sheet and the text stack like the photo lead; only the hairline under it is its own.
   leadGon: { paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   leadGonDau: { alignSelf: "flex-start" },
-  timOnMedia: { position: "absolute", right: 6, bottom: 6 },
+  timOnMedia: { position: "absolute", right: 6, top: 6 },
+  dauUngVien: { alignSelf: "flex-start", marginBottom: 4 },
   rowTen: { flexDirection: "row", alignItems: "center", gap: 8 },
   flex1: { flex: 1, minWidth: 0 },
   glyphTo: { alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, flexShrink: 0 },

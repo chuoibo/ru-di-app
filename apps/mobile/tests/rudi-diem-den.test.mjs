@@ -18,7 +18,7 @@ import {
   dongPhuDiemDen,
   luuDiemDen,
 } from "../dist-test/rudi/kham-pha/diem-den.js";
-import { docDanhMucCoLui } from "../dist-test/rudi/kham-pha/dia-diem.js";
+import { docDanhMucCoLui, nenLocTheoTen } from "../dist-test/rudi/kham-pha/dia-diem.js";
 
 const DA_LAT = {
   id: "d-da-lat",
@@ -155,4 +155,23 @@ test("dòng phụ không lặp lại tên khi điểm đến chính là một t�
     "Cách bạn 3 km",
   );
   assert.equal(dongPhuDiemDen(doc({ name: "Đà Lạt", province: "Lâm Đồng" })), "Lâm Đồng");
+});
+
+test("cotDiemDen: điện thoại 2 cột, màn rộng 3 cột, không bao giờ 1 hay 4 (QA UI-031)", async () => {
+  const { cotDiemDen } = await import("../dist-test/rudi/kham-pha/diem-den.js");
+  assert.equal(cotDiemDen(288, 12).cot, 2, "320dp");
+  assert.equal(cotDiemDen(358, 12).cot, 2, "390dp");
+  assert.equal(cotDiemDen(704, 12).cot, 3, "768dp");
+  assert.equal(cotDiemDen(960, 12).cot, 3, "1024dp, cột đọc");
+  const { cot, rongThe } = cotDiemDen(704, 12);
+  assert.ok(rongThe * cot + 12 * (cot - 1) <= 704, "các thẻ vừa trong lưới");
+  assert.equal(cotDiemDen(0, 12).rongThe, 0, "chưa đo thì chưa có bề rộng");
+});
+
+test("nenLocTheoTen: ô tìm chỉ lọc theo tên khi nó chứa một cái tên (QA UI-024)", () => {
+  assert.equal(nenLocTheoTen("lẩu", "chua-tim", false), true);
+  assert.equal(nenLocTheoTen("  ", "chua-tim", false), false);
+  assert.equal(nenLocTheoTen("quán nướng cho 6 người", "chua-tim", true), false, "câu mẫu chờ gửi");
+  assert.equal(nenLocTheoTen("quán nướng cho 6 người", "khong-tra-loi", false), false, "đã hỏi, AI không trả lời");
+  assert.equal(nenLocTheoTen("quán nướng cho 6 người", "dang-tim", false), false);
 });

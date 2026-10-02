@@ -1287,6 +1287,54 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B4 · màn tiền): ảnh ghép JPEG chụp bản web trên stack loopback riêng và Android emulator (dev client nối stack riêng), dữ liệu seed tổng hợp («Team Đà Lạt», «Chat Test NN», bill thử «Lẩu gà lá é…»), không có số điện thoại, tên hay dữ liệu người thật, không có ảnh bill thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B5-UI-021-023.jpg",
+      "sha256": "aac662500aa8d3f8cc4dabbe9924b778299d9291af73ae3c7d5863afc3188b7f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B5 · Khám phá): ảnh ghép JPEG chụp bản web trên stack loopback riêng và bảng dev /dev/ui-lab (dữ liệu tổng hợp, server dev có fixture), danh mục seed tổng hợp («Tiệm Nướng Xóm Lào», «Sống Màu Workshop»…), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B5-UI-024.jpg",
+      "sha256": "94809dec0915e9019456814e81584ec91b0ff301ee07fe7e4231eebedcf28e53",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B5 · Khám phá): ảnh ghép JPEG chụp bản web trên stack loopback riêng và bảng dev /dev/ui-lab (dữ liệu tổng hợp, server dev có fixture), danh mục seed tổng hợp («Tiệm Nướng Xóm Lào», «Sống Màu Workshop»…), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B5-UI-026.jpg",
+      "sha256": "1e8279f958bb2af5fd05d676be4d980c1ba25cbca6275bad24262e8d9841cdde",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B5 · Khám phá): ảnh ghép JPEG chụp bản web trên stack loopback riêng và bảng dev /dev/ui-lab (dữ liệu tổng hợp, server dev có fixture), danh mục seed tổng hợp («Tiệm Nướng Xóm Lào», «Sống Màu Workshop»…), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B5-UI-028-030.jpg",
+      "sha256": "3577b0b538c6b80d728d0af9347af9813be81a48e3364761e9040e576cc9ba56",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B5 · Khám phá): ảnh ghép JPEG chụp bản web trên stack loopback riêng và bảng dev /dev/ui-lab (dữ liệu tổng hợp, server dev có fixture), danh mục seed tổng hợp («Tiệm Nướng Xóm Lào», «Sống Màu Workshop»…), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B5-UI-031.jpg",
+      "sha256": "3fe6b6f59d8edc1a063577660d5c25a441c766a48a99875aa3751fe0937df0c4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B5 · Khám phá): ảnh ghép JPEG chụp bản web trên stack loopback riêng và bảng dev /dev/ui-lab (dữ liệu tổng hợp, server dev có fixture), danh mục seed tổng hợp («Tiệm Nướng Xóm Lào», «Sống Màu Workshop»…), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B5-UI-113-027.jpg",
+      "sha256": "67fe1bd278f5cf5899960f6de76d738dc9b63be05ef472ab9672553ff0cc13cf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B5 · Khám phá): ảnh ghép JPEG chụp bản web trên stack loopback riêng và bảng dev /dev/ui-lab (dữ liệu tổng hợp, server dev có fixture), danh mục seed tổng hợp («Tiệm Nướng Xóm Lào», «Sống Màu Workshop»…), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
     }
   ]
 }

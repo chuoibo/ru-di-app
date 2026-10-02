@@ -50,7 +50,8 @@ export function ThuSanKhau({ lan }: { lan: number }) {
         <SanKhau key={`canh-${lan}`} san={SAN_CANH} testID="lab-san-khau-canh" width={Math.min(cot, 240)} />
       </View>
       <NhanNho>{"2 · Ký hoạ tách ba độ sâu theo độ dày nét. Kéo ngang để nghiêng, thả ra là về chỗ."}</NhanNho>
-      <GestureDetector gesture={cuChi}>
+      {/* A sideways lean leaves vertical drags to the page on the web (QA UI-115). */}
+      <GestureDetector gesture={cuChi} touchAction="pan-y">
         <View style={{ alignItems: "center" }}>
           <SanKhau key={`ky-hoa-${lan}`} san={SAN_KY_HOA} testID="lab-san-khau-ky-hoa" thiSai={thiSai} width={cot} />
         </View>

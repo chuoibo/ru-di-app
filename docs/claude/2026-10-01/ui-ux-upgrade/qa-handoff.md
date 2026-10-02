@@ -395,3 +395,46 @@ Ghi chú B4:
     - Back của trình duyệt lùi trong luồng chia bill (B10/B11);
     - test `nepnho` chập chờn và treo;
     - câu hỏi truy hồi sổ tay «bo fieu o dau v» nằm sát mép top 5.
+
+### B5 · Khám phá (F02 + F10)
+
+Đo trên bản web, stack riêng, thế giới dựng lại trước mỗi lượt chính.
+- **«Trước»:** main `33daaa38` (B4), `f02-kham-pha.mjs` đầy đủ và `retest-main --chi r-f02,r-f09` (`out/b5-truoc`),
+  cộng `r-p3-f02` (`out/b5-truoc-p3`).
+- **«Sau»:** bản B5 (`out/b5-sau`), cùng các kịch bản. Các lượt kiểm lại có mục tiêu trên bản cuối:
+  - `b5-sau-them`: `r-p3-f02`, F02 `cat-chu`, `r-f10`, F10 đầy đủ;
+  - `b5-b`: sân khấu, F03 `tao`, F04 `c9`;
+  - `b5-d`: dòng giá.
+- **F10 (bảng dev)** cần server dev có `EXPO_PUBLIC_RUDI_FIXTURE=1`, không chạy trên bản export. «Sau» chạy trên server
+  dev của cây B5 (cổng 8171). «Trước» lấy theo retest của QA trên main: các file F10 đo (`HangDiaDiem`, `CanhGap`,
+  `KhungSkia`) không đổi từ bản đó tới `33daaa38`.
+
+| Issue | Hàng harness | Trước | Sau | Tự kiểm của người sửa | Ảnh |
+|---|---|---|---|---|---|
+| UI-021 | `TC-R-UI-021` C1–C6; `TC-F02-META` C1–C7 | FAIL (8/8 dòng cắt ở C1–C4) | PASS (0/8 ở cả 7 cấu hình) | giá tìm theo loại, dòng riêng; giờ mở không gãy giữa khung giờ | `EV-B5-UI-021-023.jpg` |
+| UI-023 | `TC-R-UI-023`; `TC-F02-NHAN-LUU` C1–C7 | FAIL (thiếu 10–39px) | PASS («Lưu» 27px, thiếu 0) | demo: hai nút xếp theo nhãn, xuống dòng khi không vừa | `EV-B5-UI-021-023.jpg` |
+| UI-024 | `TC-R-UI-024`; `TC-F02-AI-MAU` | FAIL («0 kết quả») | PASS (con trỏ vào ô, danh sách 8 nơi) | `source none` nói «chưa trả lời được câu này», không đoán lỗi ở câu | `EV-B5-UI-024.jpg` |
+| UI-025 | `TC-F02-NHAY` C1, C9 | FAIL (nhảy 149dp) | PASS (0dp) | khung mang tỉ lệ của bức vẽ từ lần dựng đầu | — |
+| UI-026 | `TC-MO12-BO-LOC` C1 (ảnh khung) | sân khấu gỡ rồi dựng lại từ phẳng ~550 ms | gập/mở theo chiều cao ~250 ms, không mount lại | C9: hai khung, đứng sẵn | `EV-B5-UI-026.jpg` |
+| UI-027 | `TC-MO-M5` C9; `TC-MO13-M3` C9; bảng dev «Chạy lại» C9 | FAIL (Nếp 2 ảnh; khung trống 603/704 ms) | PASS (1 ảnh, `vẽ: svg`); bảng dev 8/8 khung có sân khấu | giảm chuyển động: chỉ SVG | `EV-B5-UI-113-027.jpg` |
+| UI-028 | ảnh `EV-F02-HOI-AN` | «Xóa lọc» khi không có lọc | «Hội An chưa có địa điểm nào» + «Đổi điểm đến» | dòng gu không in trên danh sách rỗng | `EV-B5-UI-028-030.jpg` |
+| UI-029 | ảnh `EV-F02-LOI-503`, `EV-F02-OFFLINE` | — | — | đã đạt từ B2: 503 và mất mạng hai câu khác nhau | — |
+| UI-030 | ảnh `EV-F02-OFFLINE` | danh sách bị thay bằng màn lỗi | danh sách còn, một câu «Chưa cập nhật được danh mục: …» | — | `EV-B5-UI-028-030.jpg` |
+| UI-031 | `TC-R-UI-031` C6, C7 | FAIL (2 cột) | PASS (3 cột) | `cotDiemDen` | `EV-B5-UI-031.jpg` |
+| UI-113 | `TC-R-UI-113` C1, C4, C2; `TC-F10-SO-SANH-TIM` | FAIL (QA) | PASS (tim 48px thấy trọn ở 320) | — | `EV-B5-UI-113-027.jpg` |
+| UI-114 | `TC-F10-TIM-LONG` | FAIL (QA) | PASS (0 chỗ lồng ở cặp so sánh) | lỗi axe còn lại là `div[aria-label="Giờ chặng"]` của bàn xoay giờ, issue khác (B9) | — |
+| UI-115 | `TC-F10-KEO-DOC-TREN-TRANH` C1, C9 | FAIL (QA, cuộn 0 → 0) | PASS (cuộn 0 → 175) | `touchAction` theo hướng kéo | — |
+
+Ghi chú B5:
+
+1. **Bộ định vị:** `f02-kham-pha.mjs` tìm «Lưu địa điểm|Đã lưu». Nút nay ghi «Lưu», tên truy cập «Lưu địa điểm này»; bản
+   sao harness được thêm «Lưu» vào regex, như `retest-main` của QA đã có sẵn. Lượt `b5-sau` thiếu 7 hàng `NHAN-LUU` vì
+   chưa sửa regex; lượt `b5-sau-them` và `b5-d` đo đủ.
+2. **Không làm lại hình Khám phá:** chủ sản phẩm có spec làm lại đầu tab Khám phá đang chờ duyệt (`claude/thanh-tab-5-cot`).
+   Batch này không đụng hàng tiêu đề, tiêu đề mục kết quả hay kiểu thẻ đầu. Khi spec được code, phải gộp với các thay
+   đổi trong `ExploreLive.tsx`/`HangDiaDiem.tsx` của B5.
+3. **F10, các hàng FAIL không thuộc B5:** `ALBUM-XEM`, `XEM-ANH` (ảnh 390×0 trong trình xem, UI-094, B9),
+   `BAN-XOAY-LONG` (B9), `TAM-STICKER` C2 (ellipsis).
+4. **Còn mở:** hàng `TC-MO12-BAT`, `BO-LOC` của QA là hàng đọc ảnh («cần đọc ảnh ghép»); tôi đã đọc ảnh và ghi ở bảng.
+   `TC-R-UI-107` thuộc B9.
+5. **Android:** chưa xem Khám phá trên emulator ở batch này.

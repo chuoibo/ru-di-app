@@ -595,3 +595,80 @@ DESIGN.md, direction.md, craft-floor. Giữ nguyên hai thứ reviewer nói đ�
   lối đi tiếp mà câu đó chỉ tới có ngay trên màn»): «Phần đọc ảnh bill của Rủ Đi chưa bật; ảnh của bạn không có lỗi.
   Bạn có thể nhập món bằng tay.».
   - Bản rút gọn trước đó bỏ mất vế chỉ đường, và `TC-F04-ANH-DOC` đỏ ở lượt đo.
+
+## B5 · Khám phá (F02 + F10)
+
+Chủ sản phẩm đang có spec làm lại đầu tab Khám phá (`claude/thanh-tab-5-cot`, `93fed2a5`, chờ duyệt, chưa code). Batch
+này không đụng hàng tiêu đề, tiêu đề mục kết quả hay kiểu thẻ đầu. Nó chỉ sửa đúng các issue trong cấu trúc hiện có, và
+giữ hai điều spec cũng đòi: giá không bao giờ bị cắt, tim nằm trên ảnh.
+
+### Giá có dòng riêng, không bao giờ cắt (UI-021) · UX_IMPROVEMENT
+- Hàng địa điểm và cặp so sánh coi phần tử **cuối** của danh sách sự kiện là giá. `chiTietNgan` lại đặt giờ mở sau
+  giá, nên giá rơi vào dòng meta một dòng và bị cắt (8/8 dòng ở C1–C4), còn giờ mở chiếm dòng của giá.
+- `tachGia` (thuần, có test) tìm giá theo loại (biểu tượng ví). Giá có dòng riêng, không `numberOfLines`, mực đậm hơn
+  một bậc. Điểm, khoảng cách và giờ mở chung một dòng, gãy tối đa hai dòng (ba ở ô so sánh nửa màn).
+- Mỗi mẩu của một sự kiện giữ liền: khoảng trắng không ngắt bên trong, dấu nối từ (U+2060) sau gạch «–». Vì vậy dòng chỉ
+  gãy ở « · ». Lượt đo giữa chừng thấy «07:00 – / 22:00» ở hàng và «09:00 –…» ở ô so sánh 320, vì gạch ngang cho ngắt
+  dòng sau nó kể cả giữa hai NBSP.
+
+### Nhãn nút đọc trọn (UI-023) · UX_IMPROVEMENT
+- Chân trang chi tiết quán: «Lưu địa điểm» → «Lưu» / «Đã lưu». Trên trang của chính quán thì một chữ là đủ; tên truy
+  cập giữ đủ câu «Lưu địa điểm này».
+- Hai nút xếp theo nhãn chứ không chia theo tỉ lệ 1 : 1.4: cùng một dòng khi cả hai vừa, mỗi nút một dòng đầy khi không
+  (`flexGrow` + `flexShrink: 0` + `wrap`).
+- Bản demo (F11) dùng cùng cách cho «Chỉnh lịch trình / Dùng plan này» và «Nhắc thành viên / Tôi đã tới».
+- Sổ tay `dia-diem.md` và flow Maestro 26 theo nhãn mới. Câu sổ tay giữ cụm «lưu địa điểm» («Bấm «Lưu» để lưu địa
+  điểm.»): bỏ cụm ấy thì câu hỏi «luu dia diem» rơi khỏi top 5 của bộ truy hồi; câu này giữ nguyên mọi chỉ số đã ghim.
+
+### ✦ hỏi thật; câu hỏi không lọc theo tên (UI-024) · UX_IMPROVEMENT
+- ✦ có câu trong ô thì gửi câu đó. Ô trống thì đặt câu mẫu, đặt con trỏ vào ô, và nói «Sửa câu cho đúng ý bạn, rồi chạm
+  ✦ hoặc Enter để hỏi Rủ Đi AI.».
+- Câu đang chờ gửi, hoặc câu đã hỏi, **không lọc danh sách theo tên** (`nenLocTheoTen`, thuần, có test). Trước đó câu mẫu lọc ra «0 kết quả / Chưa thấy nơi
+  phù hợp» trước khi có câu hỏi nào.
+- Tìm theo tên ra 0 mà ô trông như một câu (≥3 chữ): trạng thái rỗng mời «Hỏi Rủ Đi AI», «Xóa lọc» là lối phụ.
+- `source: "none"`: «Rủ Đi AI chưa trả lời được câu này lúc này. Danh mục bên dưới vẫn đủ để bạn tự chọn.». Câu cũ đoán
+  lỗi ở người hỏi («Thử nói rõ số người…») cho một câu có thể chẳng sai gì; máy chủ cố ý giữ lý do (`tim-kiem.ts`).
+- `SearchField`/`Field` nhận `oRef` để màn đặt con trỏ (cùng mẫu `ONhapMuc`).
+
+### Sân khấu thành phố: giữ chỗ trước, không dựng lại (UI-025, UI-026) · MOTION_UPGRADE
+- Khung sân khấu mang tỉ lệ của chính bức vẽ (`aspectRatio`, rộng tối đa 480) ngay lần dựng đầu. Danh sách được xếp dưới
+  nó một lần, không còn bị đẩy xuống 149dp khi bề rộng đo xong.
+- Khi tìm hay lọc, sân khấu không bị gỡ: nó gập lại bằng chiều cao và độ mờ (`standard`), rồi đứng lại như cũ khi bỏ lọc.
+  Không phát lại cú bật dựng. Giảm chuyển động thì cắt thẳng.
+
+### Giảm chuyển động: một bức vẽ từ đầu, không khung trống (UI-027) · BUG_FIX + MOTION_UPGRADE
+- **Giảm chuyển động:** `KhungSkia` chỉ vẽ bản SVG (cùng bức vẽ). Lớp Skia có để làm chuyển động; khi giảm chuyển động,
+  lúc đổi sang Skia là một bức thứ hai của cùng thứ đó ~500 ms sau bức đầu, hoặc một khung trống khi canvas còn khởi động.
+  - Nếp M3/M4/M5 đổi ảnh (`TC-MO13-M3` C9 FAIL ở B4).
+  - Bảng dev trống ở 603 và 704 ms.
+- **Chuyển động bình thường:** SVG ở dưới cho tới khi cú fade xong **và** lớp Skia đã có `GIU_SVG_MS` (1 giây) để vẽ
+  khung thật đầu tiên.
+  - Canvas trên web vẽ khung thật 430–700 ms sau khi mount (QA đo); hai `requestAnimationFrame` không phải khung đó.
+  - `react-native-skia` 2.6 không có callback «đã vẽ» mà `KhungSkia` với tới được.
+
+### Thành phố chưa có quán (UI-028) · UX_IMPROVEMENT
+- «Hội An chưa có địa điểm nào», câu nói vì sao, nút «Đổi điểm đến». Không còn «Xóa lọc» khi không có bộ lọc.
+- Dòng «Xếp theo mức chi bạn đã chọn.» không in trên một danh sách rỗng.
+
+### Mất mạng không làm mất danh sách đã tải (UI-030) · UX_IMPROVEMENT
+- Nạp lại lỗi khi danh sách đang có: giữ danh sách, một câu `CauTaiCho` «Chưa cập nhật được danh mục: …». Chỉ lần đọc đầu
+  lỗi mới là màn lỗi.
+- UI-029 (503 khác mất mạng) đã đạt từ B2: ảnh baseline cho hai câu khác nhau.
+
+### Lưới Điểm đến 3 cột ở màn rộng (UI-031) · VISUAL_UPGRADE
+- `cotDiemDen` (thuần, có test) dùng `gridFor` như các lưới thẻ khác: điện thoại vẫn 2 cột, từ 200dp mỗi thẻ thì 3 cột.
+
+### Cặp so sánh: tim trong ô, không lồng nút (UI-113, UI-114) · BUG_FIX
+- Không ảnh: biểu tượng và tim chung một dòng, dấu «HỢP GU» xuống dòng dưới. Cả ba chung một dòng đẩy tim ra ngoài mép
+  ở 320.
+- Có ảnh: tim nằm đè góc trên phải của ảnh nhưng **ngoài** nút «Mở …». axe báo `nested-interactive`.
+
+### Kéo dọc trên tranh vẫn cuộn trang (UI-115) · BUG_FIX
+- `GestureDetector` của sân khấu nghiêng mang `touchAction="pan-y"` trên web. RNGH mặc định `none` chặn cú cuộn bắt đầu
+  trên tranh.
+- Cùng mẫu cho sân khấu thử ở bảng dev và `KeoTab`: tab kéo ngang chừa `pan-y`, tab kéo xuống chừa `pan-x`.
+
+### Chủ động: chi tiết quán nói mỗi điều một lần · UX_IMPROVEMENT
+- Giá đã ở hàng sự kiện đầu trang, trạng thái mở là con dấu «Đang mở / Đã đóng» ở đó.
+- Khối dưới mô tả chỉ còn khung giờ («Giờ mở cửa: …»), và câu «Chưa có giá» khi đầu trang không có giá. Trước đó giá và
+  «Đang mở» mỗi thứ in hai lần.

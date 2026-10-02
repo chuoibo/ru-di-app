@@ -406,13 +406,13 @@ export function CheckInScreen() {
         <Text style={[typography.caption, { color: colors.inkFaint }]}>Điểm đến tiếp theo</Text>
         <Text style={[typography.title, { color: colors.ink }]}>Still Cafe · 10:00</Text>
       </View>
-      <Inline gap={10}>
+      <Inline gap={10} wrap>
         <RudiButton
           full={false}
           icon="notifications-outline"
           label="Nhắc thành viên"
           onPress={() => session.remindPending()}
-          style={styles.flex}
+          style={styles.nutCo}
           variant="outline"
         />
         <RudiButton
@@ -423,7 +423,7 @@ export function CheckInScreen() {
             session.checkInSelf();
             router.replace(("/groups/" + DEMO_GROUP.id + "/wall") as never);
           }}
-          style={styles.flex}
+          style={styles.nutCo}
         />
       </Inline>
       {session.remindedPending ? (
@@ -436,6 +436,10 @@ export function CheckInScreen() {
 }
 
 const styles = StyleSheet.create({
+  // A pair of buttons sized by their labels: on one line while both fit,
+  // each on its own full line when not. Split by ratio they cut «Chỉnh lịc…»,
+  // «Nhắc thành…» at 320 (QA UI-023).
+  nutCo: { flexGrow: 1, flexShrink: 0, maxWidth: "100%" },
   flex: { flex: 1 },
   // The map is the page here: it runs to the bottom edge and the journey
   // panel keeps its own clearance over the tab bar.

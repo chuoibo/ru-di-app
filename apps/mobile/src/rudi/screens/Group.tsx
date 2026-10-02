@@ -316,13 +316,13 @@ export function AiItineraryScreen() {
   // The two decisions stay reachable above the gesture bar however long the
   // day runs; in the scroll they sat under the system's own line.
   const hanhDong = (
-    <Inline gap={10}>
+    <Inline gap={10} wrap>
       <RudiButton
         full={false}
         icon="create-outline"
         label={session.itineraryEditing ? "Xong chỉnh" : "Chỉnh lịch trình"}
         onPress={() => session.setItineraryEditing(!session.itineraryEditing)}
-        style={styles.flex}
+        style={styles.nutCo}
         tone="ai"
         variant="outline"
       />
@@ -334,7 +334,7 @@ export function AiItineraryScreen() {
           session.setItineraryEditing(false);
           router.replace(session.tripPath("/timeline") as never);
         }}
-        style={styles.flex}
+        style={styles.nutCo}
         tone="ai"
       />
     </Inline>
@@ -506,6 +506,10 @@ function ThanCapDemo({ tenNguoiKia, tinCuaToi }: { tenNguoiKia: string; tinCuaTo
 }
 
 const styles = StyleSheet.create({
+  // A pair of buttons sized by their labels: on one line while both fit,
+  // each on its own full line when not. Split by ratio they cut «Chỉnh lịc…»,
+  // «Nhắc thành…» at 320 (QA UI-023).
+  nutCo: { flexGrow: 1, flexShrink: 0, maxWidth: "100%" },
   dauPhai: { alignItems: "center", flexDirection: "row", gap: 4 },
   flex: { flex: 1 },
   tripPin: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, minHeight: 56 },

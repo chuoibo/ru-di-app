@@ -104,7 +104,10 @@ export function CanhGap({ san, tieuDe, phuDe, nhanTren, keo = false, coMoTa = fa
 
   return (
     <View onLayout={doKhoi} style={styles.khoi} testID={testID}>
-      {sanKhau && keo ? <GestureDetector gesture={cuChi}>{sanKhau}</GestureDetector> : sanKhau}
+      {/* `pan-y` on the web: the lean is a sideways drag, so a vertical drag
+          that starts on the drawing still scrolls the page. RNGH's default
+          `none` stopped it dead on the stage (QA UI-115). */}
+      {sanKhau && keo ? <GestureDetector gesture={cuChi} touchAction="pan-y">{sanKhau}</GestureDetector> : sanKhau}
       <View style={styles.chu}>
         {/* Condensed caps stack two marks over a capital («SỔ»): one clipped line needs the room above. */}
         {nhanTren ? (

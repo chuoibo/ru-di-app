@@ -33,17 +33,17 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-018 | P2 | UX_IMPROVEMENT, DESIGN_SYSTEM_IMPROVEMENT | F00 toàn app | «Quay lại» chết khi màn mở thẳng bằng link (TopBar không kiểm `canGoBack`) | B2 | nút lui luôn tới một màn | READY_FOR_QA |
 | UI-019 | P2 | UX_IMPROVEMENT | F01 | Mã lời mời sai báo «Cập nhật app rồi thử lại» | B2 | câu theo `code` (mã sai/hết hạn) | READY_FOR_QA |
 | UI-020 | P3 | UX_IMPROVEMENT | F01 | Chấm trang Welcome không đọc được; pager không nhận focus | B10 | axe 0 trên /welcome | PLANNED |
-| UI-021 | P2 | UX_IMPROVEMENT | F02 | Hàng địa điểm: dòng giá bị cắt ở 8–10/10 hàng | B5 | 0 dòng giá bị cắt ở C1–C6 | PLANNED |
+| UI-021 | P2 | UX_IMPROVEMENT | F02 | Hàng địa điểm: dòng giá bị cắt ở 8–10/10 hàng | B5 | 0 dòng giá bị cắt ở C1–C6 | READY_FOR_QA |
 | UI-022 | P2 | BUG_FIX | F02 | «Chỉ đường» trên web không làm gì (`geo:`) | B1 | mở bản đồ hoặc nói vì sao | READY_FOR_QA |
-| UI-023 | P2 | UX_IMPROVEMENT | F02/F11 | Nhãn «Lưu địa điểm» và nút demo bị cắt | B5 | nhãn trọn ở C2 | PLANNED |
-| UI-024 | P2 | UX_IMPROVEMENT | F02 | Nút ✦ chỉ điền câu mẫu, danh sách báo «0 kết quả» trước khi có câu hỏi | B5 | không «0 kết quả» trước câu trả lời | PLANNED |
-| UI-025 | P3 | VISUAL_UPGRADE, MOTION_UPGRADE | F02 | Danh sách nhảy 149dp khi sân khấu chen vào | B5 | 0dp ở C1, C9 | PLANNED |
-| UI-026 | P3 | VISUAL_UPGRADE, MOTION_UPGRADE | F02 | Bỏ lọc làm sân khấu dựng lại từ đầu | B5 | không dựng lại | PLANNED |
-| UI-027 | P3 | BUG_FIX, MOTION_UPGRADE | F02/F10 | Giảm chuyển động: sân khấu trống một lúc; Nếp M5 nhảy tư thế | B5 | không khung trống ở C9; M5 một hình | PLANNED |
-| UI-028 | P3 | UX_IMPROVEMENT | F02 | Thành phố chưa có quán khuyên bỏ bộ lọc không tồn tại | B5 | không «Xóa lọc» khi không có lọc | PLANNED |
+| UI-023 | P2 | UX_IMPROVEMENT | F02/F11 | Nhãn «Lưu địa điểm» và nút demo bị cắt | B5 | nhãn trọn ở C2 | READY_FOR_QA |
+| UI-024 | P2 | UX_IMPROVEMENT | F02 | Nút ✦ chỉ điền câu mẫu, danh sách báo «0 kết quả» trước khi có câu hỏi | B5 | không «0 kết quả» trước câu trả lời | READY_FOR_QA |
+| UI-025 | P3 | VISUAL_UPGRADE, MOTION_UPGRADE | F02 | Danh sách nhảy 149dp khi sân khấu chen vào | B5 | 0dp ở C1, C9 | READY_FOR_QA |
+| UI-026 | P3 | VISUAL_UPGRADE, MOTION_UPGRADE | F02 | Bỏ lọc làm sân khấu dựng lại từ đầu | B5 | không dựng lại | READY_FOR_QA |
+| UI-027 | P3 | BUG_FIX, MOTION_UPGRADE | F02/F10 | Giảm chuyển động: sân khấu trống một lúc; Nếp M5 nhảy tư thế | B5 | không khung trống ở C9; M5 một hình | READY_FOR_QA |
+| UI-028 | P3 | UX_IMPROVEMENT | F02 | Thành phố chưa có quán khuyên bỏ bộ lọc không tồn tại | B5 | không «Xóa lọc» khi không có lọc | READY_FOR_QA |
 | UI-029 | P3 | UX_IMPROVEMENT | F02 | 503 và mất mạng cùng một câu | B2 | 503 → câu máy chủ; mất mạng → câu mạng | READY_FOR_QA |
-| UI-030 | P3 | UX_IMPROVEMENT | F02 | Mất mạng rồi về tab: danh sách đã tải bị thay bằng màn lỗi | B5 | giữ danh sách đã tải | PLANNED |
-| UI-031 | P3 | VISUAL_UPGRADE | F02 | Điểm đến luôn 2 cột kể cả expanded | B5 | 3 cột ở C7 | PLANNED |
+| UI-030 | P3 | UX_IMPROVEMENT | F02 | Mất mạng rồi về tab: danh sách đã tải bị thay bằng màn lỗi | B5 | giữ danh sách đã tải | READY_FOR_QA |
+| UI-031 | P3 | VISUAL_UPGRADE | F02 | Điểm đến luôn 2 cột kể cả expanded | B5 | 3 cột ở C7 | READY_FOR_QA |
 | UI-032 | P2 | BUG_FIX | F03 | Kèo nhiều ngày: Bản đồ không hiện chặng nào | B3 | tổng ghim = số chặng, hoặc dòng «chưa xếp ngày» | READY_FOR_QA |
 | UI-033 | P2 | UX_IMPROVEMENT | F03 | Ngày trống: dòng giải thích dưới «Về Lịch trình» còn bị cắt (nút đã đạt) | B3 | thấy trọn ở C1–C4, C8 | READY_FOR_QA |
 | UI-034 | P2 | UX_IMPROVEMENT | F03 | Ô ngân sách trông như đã điền; bỏ trống thì lỗi ngoài màn | B3 | lỗi thấy ngay sau khi chạm | READY_FOR_QA |
@@ -125,9 +125,9 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-110 | P3 | UX_IMPROVEMENT | F09 | Xoá tài khoản: «XOA» không dấu; «XOÁ» tắt nút không lý do; Back rời trang | B9 | nhận «XOÁ» hoặc nói lý do; Back về bước 1 | PLANNED |
 | UI-111 | P3 | UX_IMPROVEMENT | F09 | Câu cuối Cài đặt chỉ sai chỗ đổi tên | B9 | chỉ đúng chỗ | PLANNED |
 | UI-112 | P3 | UX_IMPROVEMENT, DESIGN_SYSTEM_IMPROVEMENT | F00 | Sang màn mới focus ở `body` | B2 | focus trong màn mới | READY_FOR_QA |
-| UI-113 | P2 | UX_IMPROVEMENT | F02 | 320dp: tim «Lưu» của cặp so sánh bị đẩy ra ngoài | B5 | cả hai tim trong ô | PLANNED |
-| UI-114 | P3 | BUG_FIX | F02 | Nút «Lưu» lồng trong nút «Mở …» | B5 | không nút lồng nút | PLANNED |
-| UI-115 | P3 | BUG_FIX | F10 | Sân khấu kéo nghiêng chặn cuộn dọc | B5 | kéo dọc vẫn cuộn | PLANNED |
+| UI-113 | P2 | UX_IMPROVEMENT | F02 | 320dp: tim «Lưu» của cặp so sánh bị đẩy ra ngoài | B5 | cả hai tim trong ô | READY_FOR_QA |
+| UI-114 | P3 | BUG_FIX | F02 | Nút «Lưu» lồng trong nút «Mở …» | B5 | không nút lồng nút | READY_FOR_QA |
+| UI-115 | P3 | BUG_FIX | F10 | Sân khấu kéo nghiêng chặn cuộn dọc | B5 | kéo dọc vẫn cuộn | READY_FOR_QA |
 | UI-116 | P2 | BUG_FIX | F11 | Chat demo: bong bóng không xuống dòng, chữ tràn | B6 | 0 chữ bị cắt ở C1–C3 | PLANNED |
 | UI-117 | P2 | BUG_FIX | F11 | Back khi sheet demo mở: Khám phá bị khoá, chạm rơi vào sheet vô hình | B1 | không inert sót; chạm hoạt động | READY_FOR_QA |
 | UI-118 | P3 | UX_IMPROVEMENT | E2 | Kèo tạo từ chat không để lại dấu trong chat | B3 | chat có kèo + lối mở | READY_FOR_QA |
