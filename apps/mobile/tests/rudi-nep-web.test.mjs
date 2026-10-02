@@ -52,7 +52,7 @@ test("drawing consent cancels without a request, keeps the draft and sends only 
   const { page, url, close } = await setup();
   try {
     await page.viewport(320, 700);
-    await page.goto(`${url}explore`, () => !!document.querySelector('[data-testid="nep-mep"]') && !document.querySelector('[inert]'));
+    await page.goto(`${url}explore`, () => !!document.querySelector('[data-testid="nep-mep"]') && !document.querySelector('[data-testid="opening-app"]') && !document.querySelector('[inert]'));
     await page.evaluate(() => [...document.querySelectorAll('[role="tab"]')].find(e => e.textContent.includes("Cá nhân")).focus());
     await key(page, "Enter", 13);
     await page.waitFor(() => location.pathname === "/profile");
@@ -128,7 +128,7 @@ test("Nếp performance is a named keyboard skip while playing, then a static im
   try {
     await page.viewport(390, 844);
     await page.call("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "no-preference" }] });
-    await page.goto(`${url}explore`, () => !!document.querySelector('[data-testid="nep-mep"]') && !document.querySelector('[inert]'));
+    await page.goto(`${url}explore`, () => !!document.querySelector('[data-testid="nep-mep"]') && !document.querySelector('[data-testid="opening-app"]') && !document.querySelector('[inert]'));
     await page.clickLabel("Tạo mới");
     await page.waitFor(() => !!globalThis.nepSkip, { label: "named performance appeared", diagnose: () => ({ text: document.body.innerText.slice(0,900), labels: [...document.querySelectorAll('[role="button"]')].map(e=>e.getAttribute('aria-label')), observed: globalThis.nepSkip, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches }) });
     const label = await page.evaluate(() => globalThis.nepSkip);
@@ -156,7 +156,7 @@ test("the demonstration catalogue keeps the same gutter before the tucked Nếp 
   const { page, url, close } = await setup(false);
   try {
     await page.viewport(320, 700);
-    await page.goto(`${url}explore`, () => !!document.querySelector('[data-testid="nep-mep"]') && !document.querySelector('[inert]'));
+    await page.goto(`${url}explore`, () => !!document.querySelector('[data-testid="nep-mep"]') && !document.querySelector('[data-testid="opening-app"]') && !document.querySelector('[inert]'));
     // The global bookmark mounts before the asynchronous demo catalogue.
     // Measure the category rail only once its actual category is rendered.
     await page.waitFor(() => [...document.querySelectorAll('[role="button"]')].some(e => e.textContent.trim() === "Cafe"), { label: "demonstration categories ready" });
