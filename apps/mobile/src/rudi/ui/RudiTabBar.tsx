@@ -99,7 +99,8 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
     const label = typeof options.title === "string" ? options.title : route.name;
     const onPress = () => {
       // The Khám phá column reopens the section last in view; a lit column
-      // (Cộng đồng open counts as Khám phá) stays where it is.
+      // (Cộng đồng open counts as Khám phá) does not navigate: its screen
+      // hears the press and goes back to its top (`useChamLaiTab`).
       const dich = dichCuaCot(route.name);
       const dichRoute = routes.find((r) => r.name === dich) ?? route;
       const event = navigation.emit({ type: "tabPress", target: dichRoute.key, canPreventDefault: true });

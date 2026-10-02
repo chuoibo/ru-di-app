@@ -21,10 +21,11 @@ Bạn bè là những người đã kết bạn, không phải follower.
 
 **FIRST VIEWPORT:** (đổi 02/10 theo mockup chủ sản phẩm, xem surface brief của
 `apps/mobile/app/(tabs)/explore.tsx`) Cộng đồng là mục thứ hai của Khám phá: hàng
-«Địa điểm | Cộng đồng» cố định trên đầu, nút cài đặt bảng tin ở bên phải; ô tìm chủ đề;
-ba chip-tab Dành cho bạn / Đang theo dõi / Thịnh hành; consent ngắn ở lần đầu; luồng bài
-với ảnh rộng hết cột. Viết bài qua con dấu «Tạo» (thẻ đầu khay). Trang chủ đề giữ tiêu
-đề và nút viết riêng.
+«Địa điểm | Cộng đồng» cố định trên đầu, chuông và nút cài đặt bảng tin ở bên phải; ô tìm
+chủ đề; (03/10, chủ sản phẩm chọn) một hàng năm chữ-tab Dành cho bạn / Đang theo dõi /
+Thịnh hành / Đã lưu / Bài của tôi — chữ mực, gạch mực 2dp, mép luôn cắt ngang một chữ khi
+hàng tràn; consent ngắn ở lần đầu, chỉ ở «Dành cho bạn»; luồng bài với ảnh rộng hết cột.
+Viết bài qua con dấu «Tạo» (thẻ đầu khay). Trang chủ đề giữ tiêu đề và nút viết riêng.
 
 **FORM:** Mở rộng thế giới “Nhật ký chuyến đi sau giờ làm” hiện hữu; không có
 seed chọn lại bản sắc. Feed một cột, khay bình luận, album vuốt/phóng ảnh.

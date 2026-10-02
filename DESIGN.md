@@ -1111,12 +1111,12 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   Nhấn co 0.96. Bộ lọc Khám phá, chọn ngày lịch trình, «Theo ngày» ở album;
   hàng bộ lọc của AI match giờ là **một hàng cuộn ngang** như Khám phá
   (bằng chứng reviewer `dot8/05-ai-match`, không mở ở đây; đọc từ `Discovery.tsx`), không còn lưới gập.
-- **Chip đổi nội dung (`vaiTab`)** (02/10): cùng hình chip bấm được, nhưng
-  là một trong bộ chip **đổi cái màn đang hiện** (ba bảng tin Cộng đồng «Dành
-  cho bạn · Đang theo dõi · Thịnh hành»): `role="tab"` + `aria-selected` bên
-  trong `tablist` của nơi gọi, thay cho `button` + `aria-pressed` của chip lọc.
-  Chọn vẫn giữ dấu check và nền `<tone>Soft`. Bộ lọc thu hẹp danh sách vẫn là
-  chip thường.
+- **Chip đổi nội dung (`vaiTab`)** (02/10; **từ 03/10 không màn nào gọi**):
+  prop vẫn còn trên `Chip` (cùng hình chip bấm được, `role="tab"` +
+  `aria-selected` trong `tablist` của nơi gọi thay cho `button` +
+  `aria-pressed`, chọn giữ dấu check và nền `<tone>Soft`), nhưng nơi gọi duy
+  nhất, các bảng tin Cộng đồng, đã sang hàng chữ-tab `HangChuTab` (xem
+  Navigation). Bộ lọc thu hẹp danh sách vẫn là chip thường.
 - **Chip tĩnh** (không `onPress`): cao 30, bo 10, không role; kit còn giữ
   nhưng **đợt này trạng thái đi bằng `Stamp`**; chip tĩnh chỉ cho thẻ phân
   loại không phải trạng thái.
@@ -1510,8 +1510,8 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   `MediaSlot radius={0}`. Tim là `IconButton tron` treo **trên ảnh** góc trên
   phải (10/10), anh em với vùng bấm mở thẻ (trình đọc màn hình gặp hai control).
   Dưới ảnh, đệm 14 gap 6: tên `h2 ink`; phụ đề `body inkSoft` **một dòng**;
-  các sự thật còn lại thành **một dòng lặng** `caption inkFaint` nối « · »;
-  rồi hàng chip (gap 8, gập dòng): **chip lý do** nền `aiSoft` chữ `label ai`
+  các sự thật còn lại thành **hai dòng lặng** `caption inkFaint` (03/10, xem
+  «Hai dòng sự thật» dưới); rồi hàng chip (gap 8, gập dòng): **chip lý do** nền `aiSoft` chữ `label ai`
   + `sparkles` 13 và **chip giá** nền `ground` chữ `label inkSoft` +
   `pricetag-outline` 13, cả hai bo `radius.control`, đệm 10/6, **không bao giờ
   cắt «…»** — tiền và lý do gập dòng chứ không giấu (`tachGia` của `dia-diem.ts`, tách giá
@@ -1547,21 +1547,33 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   `MediaSlot` **4:3** với trái tim `IconButton` ở góc dưới phải **trên ảnh**
   (như ảnh dẫn, không hàng mồ côi dưới sự thật) và `Stamp` tím `nen` khi có
   badge và không có `lyDo`; tên `title` hai dòng, **dòng lý do `LyDo`** khi
-  có, mô tả `note inkSoft` hai dòng, các sự thật
-  đầu nối « · » trên một dòng `note inkFaint`, **sự thật cuối (giá kèm đơn
-  vị) đứng riêng một dòng** để ô nửa màn không bẻ «80K/người»; ghi công
+  có, mô tả `note inkSoft` hai dòng, **hai dòng sự thật** `note inkFaint`
+  (03/10, mỗi dòng tối đa hai dòng hiện; xem «Hai dòng sự thật»), **giá kèm
+  đơn vị đứng riêng một dòng** `note inkSoft` để ô nửa màn không bẻ «80K/người»; ghi công
   `note inkFaint` khi ảnh có giấy phép. Thuần: cùng hàm chia cho fixture và
   live.
 - **`PlaceRow`**: thumbnail 56 bo 10 khi có ảnh; trống thì **`PlaceGlyph`
   33** (ô giấy 56, cùng cỡ ảnh) thay cho ô `accentSoft` cũ; **con dấu đứng
   cạnh tên** trên cùng hàng (`rowTen`, tên rút về một dòng khi có dấu) để
   hàng có match cao bằng hàng thường — chỉ khi hàng không có `lyDo`; có thì
-  **dòng lý do `LyDo`** dưới tên thay con dấu; mô tả `caption inkSoft` một dòng, sự
-  thật `caption inkFaint` một dòng, ghi công `caption inkFaint` tối đa hai
+  **dòng lý do `LyDo`** dưới tên thay con dấu; mô tả `caption inkSoft` một dòng,
+  **hai dòng sự thật** `caption inkFaint` (03/10, mỗi dòng tối đa hai dòng hiện),
+  giá riêng một dòng `caption inkSoft` không cắt, ghi công `caption inkFaint` tối đa hai
   dòng (`cauGhiCong`); nút tim phải; đệm dọc 10, gap 8, kẻ tóc dưới. Hàng
   nằm trên giấy, **không thẻ**; ở tablet hai cột. Ảnh hỏng (`onError`): ô
   56 vẽ lại hình gu và hàng in «Chưa tải được ảnh» `caption warn` dưới sự
   thật, ghi công vẫn in (ảnh `sua-review-2/native-kham-pha-anh-hong-*`).
+- **Hai dòng sự thật (`DongSuThat`, `chiaDongSuThat`)** (03/10, cả ba khung):
+  dòng đầu là điểm đánh giá và khoảng cách (cả địa chỉ khi có), nối « · »;
+  khi dòng mở bằng điểm (`moDauBangSao`) thì trước điểm là **một ngôi sao
+  Ionicons `star` 12 vẽ bằng chính mực của chữ** (icon vẽ, không phải ký tự
+  «★» trong chuỗi), nằm trong dòng, giữ với điểm bằng NBSP: «4.8 (64)» một
+  mình không nói nó đếm gì.
+  Dòng sau là giờ mở, «Đang mở, 08:00 – 21:00», chỉ gãy sau dấu phẩy. Mỗi sự
+  thật giữ liền bằng NBSP (và word joiner sau gạch), nên dòng chỉ gãy giữa hai
+  sự thật và **không dòng nào mở hay kết bằng «·»**. Giá không ở hai dòng này:
+  nó vẫn là dòng riêng hoặc chip giá (`tachGia`). Trình đọc màn hình nghe chữ,
+  không nghe sao.
 - **`PlaceGlyph`**: *Lịch sử tới 10/09:* đĩa `accentSoft` tròn, hình gu tô
   coral toàn phần; tái audit 10/09 (R3) đọc «ba quán ăn là ba cái bát giống
   nhau» và đĩa tint + icon một màu là mặc định của mọi app. **Hiện hành
@@ -2159,9 +2171,13 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   đọc vì mỗi ảnh tự có tên). Hàng nút Thích · Bình luận · Chia sẻ, **dấu lưu
   bookmark đứng cuối hàng** (ô 48, `marginLeft: auto`, `bookmark` `accent` khi
   đã lưu, `bookmark-outline` `inkSoft` khi chưa, `aria-pressed`). Trên tab,
-  đầu là `DauKhamPha` (nút cài đặt bảng tin ở ô phải), rồi `SearchField`, rồi
-  ba chip `vaiTab`; viết bài đi qua con dấu «Tạo», màn không tự vẽ tiêu đề hay
+  đầu là `DauKhamPha` (chuông «Thông báo» có chấm và nút cài đặt bảng tin ở ô phải), rồi `SearchField`, rồi
+  hàng chữ-tab `HangChuTab` năm chế độ (03/10, xem Navigation); viết bài đi qua con dấu «Tạo», màn không tự vẽ tiêu đề hay
   nút soạn. Mở theo chủ đề (route stack) thì giữ tiêu đề và nút soạn riêng.
+  Sheet «Bảng tin của bạn» (nút cài đặt) từ 03/10 chỉ còn cá nhân hoá, xoá lịch
+  sử đề xuất, «Bài đã ẩn» và «Điều mình muốn giữ»; «Đã lưu» và «Bài của tôi»
+  rời sheet lên hàng tab. Nhịp sheet: tiêu đề `h1` cách câu dưới 6, 16 tới khối
+  nút, 8 giữa mọi nút kể cả nút `ghost`.
 - **Ô soạn chat** (Group): hàng bo 22 nền `card` viền 1px `line`, đệm 6, ở
   `footer` của màn; không có dải giấy trống thứ hai dưới nó.
 - **Hoá đơn trên gỗ** (Bill): khung tối thiểu 420 bo 20 nền `giayHoaDon.khung`
@@ -2203,13 +2219,20 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   link của nó; `MUC_TRONG_TAB` (`thanh-tab.ts`) nêu cột chủ, và **cột chủ sáng**
   khi route đó mở. Hiện chỉ có Cộng đồng → Khám phá. Chạm cột Khám phá **mở lại
   mục đang xem lần cuối** (Địa điểm hay Cộng đồng, chỉ trong bộ nhớ; mở app
-  lạnh là Địa điểm); chạm một cột **đang sáng** không làm gì. Test giữ map và
-  layout đi cùng nhau.
+  lạnh là Địa điểm). Chạm lại một cột **đang sáng** thì thanh không điều hướng,
+  không haptic, và **màn của cột đó cuộn về đầu** (03/10, như app của chính
+  điện thoại; `useChamLaiTab`): đúng với mọi cột, qua `RudiScreen
+  bottomInset="tab"`; trên Cộng đồng cột Khám phá mở chính Cộng đồng (mục xem
+  cuối) nên bảng tin (`FlatList`) về bài đầu. Dưới Reduce Motion là nhảy về
+  đầu, không trượt. Test giữ map và layout đi cùng nhau.
 - **Con dấu «Tạo»** (`ConDauTao`, B2 01/10, về đúng tâm 02/10): ô giữa thanh;
   tròn 56, nền `brand.coral`, glyph `add` 30 `brand.coralInk`, vòng 4px
   `ground`, nhô lên nửa trên mép thanh, nhãn «Tạo» 12/14 `accent` (một tên trên
-  cả thanh lẫn rail; trình đọc màn hình nghe «Tạo mới» từ chính nút); nhấn co
-  0.92, để lại một vòng mực mở ra và tan trong `standard` (không có khi Reduce
+  cả thanh lẫn rail). **Cả cột, con dấu coral lẫn chữ «Tạo», là MỘT nút**
+  (03/10: `PressScale`, `testID con-dau-tao`, `accessibilityLabel` «Tạo mới»,
+  chữ `importantForAccessibility="no"`): chạm chữ mở khay như chạm con dấu,
+  giống mỗi cột bên cạnh mở trên chữ của nó. Nhấn thì cả cột co 0.92, để lại
+  một vòng mực mở ra và tan trong `standard` (không có khi Reduce
   Motion). Chạm mở `/create?tu=<tab>`: khay đưa việc hợp tab lên đầu
   (`tao-moi.ts`; trên Cộng đồng là «Viết bài»); giữ lâu đi thẳng tới việc đó.
   Con dấu là nút **ngoài** tablist, phủ lên một ô rỗng `aria-hidden`.
@@ -2223,11 +2246,32 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
 - **Đầu Khám phá (`DauKhamPha`)** (02/10): hai mục «Địa điểm | Cộng đồng» là
   một `tablist`, cả hai chữ `h2` (một cỡ nên đổi mục không xô), gap 24; mục mở
   `ink` trên băng coral 28×4 bo 2 (cùng băng của thanh), mục kia `inkFaint`;
-  mỗi mục cao tối thiểu 48. Ô phải (cài đặt bảng tin trên Cộng đồng) nằm
-  **ngoài** tablist. Chữ to vượt hàng thì hàng **cuộn ngang thay vì cắt**, và
+  mỗi mục cao tối thiểu 48. Ô phải (trên Cộng đồng: chuông «Thông báo» và cài đặt bảng tin, mỗi nút 48) nằm
+  **ngoài** tablist; dưới 360dp ô phải lên trên hàng chữ. Chữ to vượt hàng thì hàng **cuộn ngang thay vì cắt**, và
   tự cuộn mục đang mở vào tầm nhìn. Đặt qua `RudiScreen header` nên đứng yên
   khi nội dung cuộn; mục mặc định là Địa điểm. Điều hướng giữa hai mục viết ở
   file route (bộ rút hướng dẫn của Nếp đọc ở đó), component chỉ vẽ.
+- **Hàng chữ-tab (`HangChuTab`)** (03/10, chủ sản phẩm 02/10): các chế độ
+  bảng tin Cộng đồng trên tab là **một hàng chữ-tab nhỏ** «Dành cho bạn ·
+  Đang theo dõi · Thịnh hành · Đã lưu · Bài của tôi», một `tablist` dưới
+  `SearchField`. Chữ `label`; tab chọn `ink` trên **gạch 2 dp `ink`** (bo 1),
+  tab khác `inkSoft`; **không viền, không nền, không dấu check**, vì tab chọn
+  danh sách *là gì* còn chip lọc thu hẹp nó; và thấp hơn đầu Khám phá một bậc
+  (`h2` trên băng coral) nên hai hàng không đọc thành một control. Mỗi tab cao
+  tối thiểu 48, chữ đặt thấp để gạch nằm trên **kẻ tóc `line`** chạy dưới cả
+  hàng. **Khoảng giữa các tab là số tính, không phải hằng**: thường 22; khi
+  hàng rộng hơn cửa sổ, `khoangCachLo` chọn khoảng **12–32** gần 22 nhất sao
+  cho **cả hai mép cắt ngang một chữ** (lộ ≥ 16, giấu ≥ 10) mỗi khi hàng cuộn,
+  mép phải lúc nghỉ, mép trái khi cuộn hết về cuối; đệm cuối **16–24** (lề 16
+  cộng tối đa 8 để đặt mép trái); hàng vừa thì giữ 22 và lề. Không fade, không
+  mũi tên: chữ bị cắt là lời nói hàng còn tiếp. Chọn một tab đang khuất thì
+  hàng cuộn (không animation) để nó vào tầm; với tab giữa hàng, **tab kề vẫn
+  lộ một mẩu**. Chỉ ở `sizeClass` compact hàng mới **tràn hai mép màn** (chữ
+  bắt đầu ở lề 16, kẻ tóc tràn theo); trong cột đọc của tablet hàng giữ trong
+  cột, chữ và kẻ tóc như nhau. Chế độ không có tab («Bài đã ẩn») thì không tab
+  nào sáng và màn in tiêu đề `h2` riêng; chạm tab đang chọn không làm gì; đổi
+  tab haptic `select`. Ảnh `.impeccable/review/cdt-fix2/cdt7-*`,
+  `phone-android-community-cua-toi-1.0/1.3`.
 - **Bản demo** (chưa đăng nhập): không có cột thêm trên thanh. Nhãn
   `DemoBadge` của mỗi màn demo **là cửa đăng nhập** (bình thí nghiệm + chữ +
   biểu tượng đăng nhập `accent`, tên «Dữ liệu demo. Đăng nhập», tới

@@ -1479,6 +1479,22 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-03/cong-dong-chu-tab/evidence/EV-CDT-WEB.jpg",
+      "sha256": "b4eacb8ac79af909371aa2d98af580f054935d6807209347851c410468cc3c97",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của đợt «Cộng đồng năm chữ-tab» 03/10/2026 (docs/claude/2026-10-03/cong-dong-chu-tab): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0 và dữ liệu seed tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-03/cong-dong-chu-tab/evidence/EV-CDT-ANDROID.jpg",
+      "sha256": "a3714f4d74e841b86fb32da8cc9c06970f2b532ec547f072ecca6ffdd6125e38",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của đợt «Cộng đồng năm chữ-tab» 03/10/2026 (docs/claude/2026-10-03/cong-dong-chu-tab): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0 và dữ liệu seed tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
     }
   ]
 }
