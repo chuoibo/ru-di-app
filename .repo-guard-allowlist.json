@@ -1511,6 +1511,78 @@
         "controlled-artifact"
       ],
       "reason": "UI-009, 03/10/2026: bằng chứng Android guest trên AVD tổng hợp riêng; PNG khung video trước8ac64443/sau source6144ff2c hoặc clip native sau bundled release ký debug cục bộ. Fresh finish reviewer mở hai PNG, kiểm metadata/chunks, xem toàn38frame MP4, không audio hay metadata payload: safe đúng hash trong campaign/cp09/ui009-committed-evidence-review.md. Không bill, tài khoản, người tham gia, credential hoặc dữ liệu thật; launcher chỉ icon công khai/wallpaper/giờ. Không chứng nhận FPS,300ms,pixelmatch hoặc tốc độ từ hai lần quay. Đổi byte phải review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-before-future.png",
+      "sha256": "d7b124c6404062aecbaf5221181162060f0b05076b381a78fa5508a138bf7083",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-future.png",
+      "sha256": "0bf2d744c48f53fffbc76b9a3d60699fd76e0c8909de34379d5fa05561c6202e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-before-save-error.png",
+      "sha256": "b8a6f55a498702ada6c95d057ad5c14cef80aab3c91c29a80cc4124abb22ba0b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-save-error.png",
+      "sha256": "3b5f7febafeac7c24df1e669a572ee7b3c93dcd4504b73ecd73775bac2223b33",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-320-font130-dark.png",
+      "sha256": "b660be2849c8c1f718820fb8dd57547e86e689f9971e9d24d7330dc2af296bf8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-save-320-font130-dark.png",
+      "sha256": "a9d36ff056fe3fa154c3b7e360457195c7799268527c80f24d4b941337486555",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-tablet.png",
+      "sha256": "43e71256c85e4cbf140da7f446d685615618fc0ec22f99aae1b6c49339331cf0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-keyboard-phone.png",
+      "sha256": "ca0c52ab19918d1e4e95011b494b8d228449f7d18b4ce41e82086a5d98f3cd56",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-success.png",
+      "sha256": "c38538719eaa62f36c761a797cb1adabc5e6c8a46a29f7ddd5e4b6ca999e78ad",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
     }
   ]
 }

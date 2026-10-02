@@ -7,7 +7,7 @@ env:
 ---
 - openLink: "rudi://outings/${MOMENT_ID}/ending"
 - extendedWaitUntil:
-    visible: "Cuộc đi khép lại. Câu chuyện còn đây."
+    visible: "Khép cuộc đi, giữ câu chuyện."
     timeout: 30000
 - takeScreenshot: diary-06-moment-ending
 - scrollUntilVisible:

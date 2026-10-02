@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/aiharness/llm"
@@ -115,6 +116,49 @@ func TestPostgresEndingAuthorityAndRetry(t *testing.T) {
 	f.close(t)
 	require(t, f.request("POST", path, f.token, map[string]string{"kind": "moment"}), 409)
 }
+
+// Read and write agree on dates without changing role refusal precedence.
+func TestPostgresEndingReadOffersOnlyStartedOutings(t *testing.T) {
+	f := setup(t)
+	ctx := context.Background()
+	today := time.Now().In(time.FixedZone("Vietnam", 7*3600))
+	path := "/outings/" + f.outing + "/ending"
+	read := func(token string, want bool) {
+		t.Helper()
+		w := f.request("GET", path, token, nil)
+		require(t, w, 200)
+		var e Ending
+		if err := json.Unmarshal(w.Body.Bytes(), &e); err != nil {
+			t.Fatal(err)
+		}
+		if e.CanEnd != want {
+			t.Fatalf("can_end=%t, want %t for %s", e.CanEnd, want, e.Start)
+		}
+	}
+	for _, delta := range []int{1, 0, -1} {
+		date := today.AddDate(0, 0, delta).Format("2006-01-02")
+		if _, err := f.pool.Exec(ctx, `UPDATE outings SET starts_on=$2,ends_on=$2 WHERE id=$1`, f.outing, date); err != nil {
+			t.Fatal(err)
+		}
+		read(f.token, delta <= 0)
+		read(f.peerToken, false)
+		if delta == 1 {
+			w := f.request("POST", path, f.token, map[string]string{"kind": "trip"})
+			require(t, w, 409)
+			if !strings.Contains(w.Body.String(), "outing_not_started") {
+				t.Fatal(w.Body.String())
+			}
+			require(t, f.request("POST", path, f.peerToken, map[string]string{"kind": "trip"}), 403)
+			var count int
+			if err := f.pool.QueryRow(ctx, `SELECT count(*) FROM outing_endings WHERE outing_id=$1`, f.outing).Scan(&count); err != nil || count != 0 {
+				t.Fatalf("refusal wrote an ending: %d, %v", count, err)
+			}
+		}
+	}
+	require(t, f.request("POST", path, f.token, map[string]string{"kind": "trip"}), 200)
+	read(f.token, true)
+}
+
 func TestPostgresDiaryPrivacyIncludesImageBytes(t *testing.T) {
 	f := setup(t)
 	f.close(t)
@@ -363,6 +407,12 @@ func TestPostgresCoupleConsentAllowsEitherPersonToEnd(t *testing.T) {
 	exec(`INSERT INTO pair_consents(id,proposal_id,person_id,granted_at) VALUES($1,$2,$3,clock_timestamp()),($4,$2,$5,clock_timestamp())`, uuid(), proposal, f.person, uuid(), f.peer)
 	// The real deferred database trigger requires both live consents here.
 	exec(`INSERT INTO active_couple_members(person_id,cycle_id) VALUES($1,$3),($2,$3)`, f.person, f.peer, cycle)
+	w := f.request("GET", path, f.peerToken, nil)
+	require(t, w, 200)
+	var e Ending
+	if err := json.Unmarshal(w.Body.Bytes(), &e); err != nil || !e.CanEnd {
+		t.Fatalf("eligible member not offered ending: %+v, %v", e, err)
+	}
 	require(t, f.request("POST", path, f.peerToken, map[string]string{"kind": "trip"}), 200)
 	require(t, f.request("POST", path, f.token, map[string]string{"kind": "trip"}), 200)
 }
@@ -377,6 +427,12 @@ func TestPostgresAdminFallbackRequiresOrganizerToHaveLeft(t *testing.T) {
 	require(t, f.request("POST", path, f.peerToken, map[string]string{"kind": "trip"}), 403)
 	if _, err := f.pool.Exec(ctx, `UPDATE memberships SET state='left',left_at=clock_timestamp() WHERE context_id=$1 AND person_id=$2`, f.room, f.person); err != nil {
 		t.Fatal(err)
+	}
+	w := f.request("GET", path, f.peerToken, nil)
+	require(t, w, 200)
+	var e Ending
+	if err := json.Unmarshal(w.Body.Bytes(), &e); err != nil || !e.CanEnd {
+		t.Fatalf("eligible member not offered ending: %+v, %v", e, err)
 	}
 	require(t, f.request("POST", path, f.peerToken, map[string]string{"kind": "trip"}), 200)
 }
