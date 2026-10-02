@@ -58,12 +58,25 @@ lại ở `.impeccable/review/cdt*/` (gitignore).
 - Máy ảo của chiến dịch `rudi-b9a` đang chạy không bị mượn; dùng AVD riêng ở chế độ chỉ-đọc, gỡ bản release có dấu vân
   lạ trên AVD đó (mất khi tắt máy ảo).
 
+## Tiếp theo (03/10, sau khi vào main `cff7e288`)
+
+- Gạch mực của `HangChuTab` trượt sang tab mới trong `standard`, nhảy khi giảm chuyển động (`viTriGach`; DESIGN.md).
+  Web 390: ở 60 ms gạch x 160 (giữa 16 và 228), 700 ms trùng tab; `reducedMotion` 60 ms đã trùng. Android 30 fps:
+  43–267 → 520–711 → 553–741 → 613–797 px trong ~5 khung; tắt hoạt ảnh hệ thống: nhảy trong một khung (43–267 →
+  615–799). Tablet web 530/75 = tab; Android 800 dp x 810–951 ≈ tab 809–950. Finish review `recapture` → **`ship`**.
+- `TestQuenKhiConHangThiThuLai` (nepnho) hết giẫm việc xoá tài khoản của gói khác: lượt xoá chạy mọi việc tới hạn của
+  cả database dùng chung, nên test kiểm việc của chính nó và rollback khi hỏng (trước đó treo 30 phút).
+- Lỗi quyền riêng tư có từ B7 (`community_notifications.actor_id` không được dọn khi xoá tài khoản; `ON DELETE SET
+  NULL` không chạy vì xoá mềm) **không vào main ở đợt này**: phiên đang giữ việc dở B8 ở cây gốc đã tự sửa cùng lỗi
+  (migration cộng đồng thứ 6 `notification_actor_erasure.sql`, chưa commit). Bản của mình (`e2dc63f1` trên nhánh
+  `claude/cong-dong-chu-tab`, kèm test PostgreSQL chạy trong transaction rollback) tương đương; đưa nó vào main sẽ đè
+  lên file đang sửa dở của phiên kia. Bản của phiên kia vào main thì `TestXoaTaiKhoanKhongConHangNaoCuaNguoi` xanh.
+- Không làm: ký hoạ cho trạng thái rỗng — bốn trạng thái rỗng của Cộng đồng sẽ thành hai kiểu nếu chỉ đổi hai cái mới.
+
 ## Còn mở
 
-- Lỗi có sẵn trên main, đã báo phiên sở hữu module: `TestXoaTaiKhoanKhongConHangNaoCuaNguoi` đỏ —
-  `community_notifications.actor_id` (migration B7) không nằm trong danh sách cột dọn khi xoá tài khoản.
+- `TestXoaTaiKhoanKhongConHangNaoCuaNguoi` còn đỏ trên main tới khi bản sửa của phiên B8 vào main (xem trên).
 - Đổi cỡ chữ Android khi app đang chạy làm chữ bị cắt khắp nơi tới khi mở lại app (có sẵn, ngoài phạm vi).
-- Ceiling reviewer gợi ý, chưa làm: trạng thái rỗng dùng ký hoạ của thế giới (trang giấy + bút chì) thay Ionicons; gạch
-  mực 2dp trượt `standard` như băng của hàng đầu thay vì nhảy.
+- Ceiling reviewer gợi ý: gạch trượt đã làm; ký hoạ cho trạng thái rỗng để đợt vẽ lại cả bốn.
 - `.impeccable/design.json` lệch schema (CONTEXT_STALE), `Chip vaiTab` không còn nơi gọi.
 - iOS chưa chụp (máy Linux).
