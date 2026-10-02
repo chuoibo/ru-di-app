@@ -41,7 +41,13 @@ export interface CauGu {
   cuaToi: string;
 }
 
-export function cauGu(gu: GuSo | null | undefined, tenNguoiKia: string): CauGu | null {
+/**
+ * @param guChat `gu_chat` of chat-capabilities, when known. A switch turned on
+ *   under the older wording covers the notebook only (ADR-0048 §3.1), so my
+ *   line then says exactly that and leaves the chat to «Bật lại cho chat» --
+ *   two lines that said opposite things one under the other (QA UI-129).
+ */
+export function cauGu(gu: GuSo | null | undefined, tenNguoiKia: string, guChat?: GuChat | null): CauGu | null {
   if (!gu) return null;
   const ten = tenNguoiKia.trim() || "Người ấy";
   const cuaHo = gu.theirs_shared ? nhanCua(gu.theirs) : null;
@@ -49,7 +55,11 @@ export function cauGu(gu: GuSo | null | undefined, tenNguoiKia: string): CauGu |
   return {
     chung: chung === null ? null : chung.length > 0 ? `Hai bạn cùng thích ${noiDanhSach(chung)}.` : "Hai bạn chưa trùng gu nào. Một dịp để rủ nhau thử cái mới.",
     cuaHo: cuaHo === null ? null : cuaHo.length > 0 ? `${ten} thích ${noiDanhSach(cuaHo)}.` : `${ten} chưa chọn gu nào.`,
-    cuaToi: gu.mine_shared ? `${ten} thấy gu của bạn; Nếp dùng nó khi phác tờ, và Rủ Đi AI dùng nó trong chat của hai bạn.` : "Gu của bạn đang để riêng.",
+    cuaToi: !gu.mine_shared
+      ? "Gu của bạn đang để riêng."
+      : canBatLaiChoChat(gu, guChat)
+        ? `${ten} thấy gu của bạn, và Nếp dùng nó khi phác tờ.`
+        : `${ten} thấy gu của bạn; Nếp dùng nó khi phác tờ, và Rủ Đi AI dùng nó trong chat của hai bạn.`,
   };
 }
 
@@ -93,4 +103,30 @@ export const CAU_BAT_LAI_CHO_CHAT = "Bạn bật từ trước, khi lời hứa 
 export async function batLaiChoChat(thuHoi: () => Promise<boolean>, bat: () => Promise<boolean>): Promise<boolean> {
   if (!(await thuHoi())) return false;
   return bat();
+}
+
+/** Which press of the taste sheet failed. */
+export type LenhGu = "bat" | "tat" | "bat-lai";
+
+/**
+ * The sentence the taste sheet shows when a press failed, said in the sheet
+ * and naming where the switch now stands (QA UI-129). «Bật lại cho chat» is
+ * two writes: off, then on. When the second one fails the switch is OFF --
+ * closed, as ADR-0048 §3.2 requires -- and the general «chưa có gì bị ghi
+ * sai» would be false, so that case never borrows the server's sentence.
+ *
+ * @param buocHong the failed command's name in `useToGiay` (`thu-hoi:chia_gu`
+ *   or `de-nghi:chia_gu`).
+ * @param loi the server's sentence for that refusal.
+ */
+export function cauLoiGu(lenh: LenhGu, buocHong: string, loi: string, tenNguoiKia: string): string {
+  const ten = tenNguoiKia.trim() || "Người ấy";
+  if (lenh === "bat-lai") {
+    return buocHong === "de-nghi:chia_gu"
+      ? `Bật lại chưa xong: gu của bạn đang tắt, ${ten} không thấy và Rủ Đi AI không dùng nó. Bấm «Cho ${ten} thấy gu của mình» để bật lại.`
+      : `Chưa bật lại được: gu của bạn vẫn bật như cũ, chỉ dùng cho tờ giấy. ${loi}`;
+  }
+  return lenh === "bat"
+    ? `Chưa bật được: gu của bạn vẫn để riêng. ${loi}`
+    : `Chưa tắt được: ${ten} vẫn thấy gu của bạn. ${loi}`;
 }

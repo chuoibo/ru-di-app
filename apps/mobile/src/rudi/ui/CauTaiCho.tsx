@@ -41,9 +41,16 @@ export type CauTaiChoProps = {
   hanhDong?: { label: string; onPress: () => void };
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /**
+   * `nho`: inside a thread, under one message. Note size, the action right
+   * after the sentence (wrapping under it, never pushed to the far edge),
+   * and a 48dp target that gives its height back so the line stays a line.
+   */
+  co?: "thuong" | "nho";
 };
 
-export function CauTaiCho({ cau, hanhDong, style, testID }: CauTaiChoProps) {
+export function CauTaiCho({ cau, hanhDong, style, testID, co = "thuong" }: CauTaiChoProps) {
+  const nho = co === "nho";
   const { colors } = useRudiTheme();
   const motion = useMotion();
   const ref = useRef<View>(null);
@@ -68,16 +75,16 @@ export function CauTaiCho({ cau, hanhDong, style, testID }: CauTaiChoProps) {
     <Animated.View
       entering={FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated)}
       ref={ref}
-      style={[styles.hang, style]}
+      style={[styles.hang, nho && styles.hangNho, style]}
       testID={testID}
     >
-      <View accessibilityLiveRegion="polite" aria-live="polite" style={styles.cau}>
-        <Ionicons color={colors.warn} name="alert-circle-outline" size={18} style={styles.dau} />
-        <Text style={[typography.body, styles.chu, { color: colors.warn }]}>{cau}</Text>
+      <View accessibilityLiveRegion="polite" aria-live="polite" style={[styles.cau, nho && styles.cauNho]}>
+        <Ionicons color={colors.warn} name="alert-circle-outline" size={nho ? 15 : 18} style={nho ? styles.dauNho : styles.dau} />
+        <Text style={[nho ? typography.note : typography.body, styles.chu, { color: colors.warn }]}>{cau}</Text>
       </View>
       {hanhDong ? (
-        <Pressable accessibilityRole="button" onPress={hanhDong.onPress} style={styles.hanhDong}>
-          <Text style={[typography.label, styles.hanhDongChu, { color: colors.ink }]}>{hanhDong.label}</Text>
+        <Pressable accessibilityRole="button" onPress={hanhDong.onPress} style={[styles.hanhDong, nho && styles.hanhDongNho]}>
+          <Text style={[nho ? typography.caption : typography.label, styles.hanhDongChu, { color: colors.ink }]}>{hanhDong.label}</Text>
         </Pressable>
       ) : null}
     </Animated.View>
@@ -92,4 +99,8 @@ const styles = StyleSheet.create({
   chu: { flexShrink: 1 },
   hanhDong: { minHeight: 48, justifyContent: "center", paddingHorizontal: 4 },
   hanhDongChu: { textDecorationLine: "underline" },
+  hangNho: { columnGap: 10, rowGap: 0 },
+  cauNho: { flexGrow: 0, flexBasis: "auto", gap: 5 },
+  dauNho: { marginTop: 2 },
+  hanhDongNho: { marginVertical: -14 },
 });

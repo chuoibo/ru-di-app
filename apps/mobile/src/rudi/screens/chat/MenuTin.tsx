@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Clipboard, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { PHAN_UNG, type LoaiPhanUng, type Tin } from "../../chat/tin-song";
+import { ngayDiaPhuong, nhanNgayDiaPhuong } from "../../chat/nhip-tin";
+import { PHAN_UNG, gioPhut, type LoaiPhanUng, type Tin } from "../../chat/tin-song";
 import { typography, useRudiTheme } from "../../theme";
 import { ListRow, RudiButton } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
@@ -55,7 +56,16 @@ export function MenuTin({
         </View>
       ) : (
         <View style={styles.khoi}>
-          <View style={[styles.thanhPhanUng, { borderColor: colors.line }]}>
+          {/* One message's own time lives here, a touch away, now that the
+              thread prints a time only where the talk paused (QA UI-064). */}
+          <Text style={[typography.note, styles.luc, { color: colors.inkSoft }]} testID="menu-tin-luc">
+            {/* Day first, as the thread's bands write it. */}
+            {`${nhanNgayDiaPhuong(ngayDiaPhuong(new Date(tin.created_at)), new Date())} · ${gioPhut(tin.created_at)}`}
+          </Text>
+          {/* Six 48dp targets edge to edge: at 320dp the sheet has exactly
+              288dp for them, so the bar is a tinted ground, not a bordered pill
+              with padding that shrank each to 44 (QA UI-001, F05 menu). */}
+          <View style={[styles.thanhPhanUng, { backgroundColor: colors.paperShade }]}>
             {PHAN_UNG.map((p) => (
               <Pressable
                 accessibilityLabel={p.nhan}
@@ -69,10 +79,11 @@ export function MenuTin({
             ))}
           </View>
           {tin.kind !== "deleted" ? (
-            <ListRow icon="return-up-back-outline" onPress={() => onTraLoi(tin)} title="Trả lời" />
+            <ListRow chevron={false} icon="return-up-back-outline" onPress={() => onTraLoi(tin)} title="Trả lời" />
           ) : null}
           {tin.kind === "text" && tin.body ? (
             <ListRow
+              chevron={false}
               icon="copy-outline"
               onPress={() => {
                 Clipboard.setString(tin.body ?? "");
@@ -93,7 +104,8 @@ export function MenuTin({
 
 const styles = StyleSheet.create({
   khoi: { gap: 6, paddingBottom: 4 },
-  thanhPhanUng: { flexDirection: "row", justifyContent: "space-between", borderWidth: 1, borderRadius: 999, padding: 4, marginBottom: 6 },
-  nutPhanUng: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  luc: { textAlign: "center" },
+  thanhPhanUng: { flexDirection: "row", justifyContent: "space-between", borderRadius: 999, marginBottom: 6 },
+  nutPhanUng: { width: 48, height: 48, flexShrink: 1, alignItems: "center", justifyContent: "center" },
   glyph: { fontSize: 22 },
 });

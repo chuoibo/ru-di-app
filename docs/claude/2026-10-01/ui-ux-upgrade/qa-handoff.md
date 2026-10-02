@@ -438,3 +438,63 @@ Ghi chú B5:
 4. **Còn mở:** hàng `TC-MO12-BAT`, `BO-LOC` của QA là hàng đọc ảnh («cần đọc ảnh ghép»); tôi đã đọc ảnh và ghi ở bảng.
    `TC-R-UI-107` thuộc B9.
 5. **Android:** chưa xem Khám phá trên emulator ở batch này.
+
+### B6 · Chat (F05, N22, N26)
+
+Đo trên bản web, stack riêng. Thứ tự giống nhau ở hai lượt: thế giới dựng lại → `f05-chat` → `retest-main --chi r-f07`
+(dựng các cặp chat đôi như stack 2 của QA) → `kiem-ux/b6-cap.mjs` (cặp chat-12/13, đề nghị lập sổ chờ) → `n26` → `n22`
+(phần export) → `retest-main --chi r-p3-f05,r-p3-f06,r-f11,r-p3-e`.
+- **«Trước»:** main `f808dbbe` (B5), bản `b5d`, `out/b6-truoc`. N22 lượt «trước» chạy sau retest (chat-20/21 do retest
+  tạo); lượt «sau» chạy lại N22 sau retest cho cùng thứ tự (`out/b6-sau2`).
+- **«Sau»:** `out/b6-sau` (bản `b6c`), `out/b6-sau2` (`b6d`: trần ô soạn 120, rãnh phiếu, khay co, id câu lỗi gu),
+  `out/b6-sau3` (`b6f`: trích dẫn trong hàng đo, dải ghim gập khi khay mở ở cửa sổ thấp), `out/b6-sau4` (`b6g`) và
+  `out/b6-sau5` (`b6h`, bản cuối, sau vòng soát hoàn thiện). Các hàng lab của N22 chạy trên server dev của cây B6
+  (`out/b6-lab`, cổng 8171, fixture bật).
+- **Probe riêng** (`kiem-ux/b6-probe2.mjs`, `kiem-ux/b6-the-ai.mjs`; `out/b6-probe2`…`b6-probe4`): UI-069 khi đang đọc
+  tin cũ, form «Kèo mới» của chat hai người, thẻ AI trên tablet, ảnh cho vòng soát.
+
+| Issue | Hàng harness | Trước | Sau | Tự kiểm của người sửa | Ảnh |
+|---|---|---|---|---|---|
+| UI-062 | `TC-F05-SOAN-CAN`, `TC-F05-SOAN-NHIEU-DONG` | FAIL (ô 64, lệch 20px; 7 dòng: 64 → 64) | PASS (ô 48, lệch 0px; 48 → 120, cuộn trong ô) | Enter gửi khi có phím cứng; IME giữ Enter | `EV-B6-UI-064-065.jpg`, `EV-B6-UI-063-116.jpg` |
+| UI-063 | `TC-F05-URL-DAI` C1, C2, C3, C5 | FAIL (341px mọi bề rộng; C2 x −37) | PASS (294/236/269/326 = đúng 82%) | — | `EV-B6-UI-063-116.jpg` |
+| UI-064 | `TC-F05-BO-CUC-TIN` G8, G20 | FAIL (avatar thấp 22px; 5 nhãn giờ) | PASS (0px; 0–1 dải giờ) | giờ của từng tin ở menu tin | `EV-B6-UI-064-065.jpg` |
+| UI-065 | `TC-F05-BINH-CHON-THE` G8; `TC-R-UI-065-C6` | FAIL (333px = 39%, «phiếu» ×4, không thanh; C6 736px) | PASS (195px = 23%, 0 lần, có thanh; C6 530px) | xem ghi chú 2 | `EV-B6-UI-065.jpg` |
+| UI-067 | `TC-R-UI-067` | FAIL (5 button, 0 radio) | PASS (5 radio, một `aria-checked`, axe sạch) | dùng ở mọi nơi báo cáo | `EV-B6-UI-129-067.jpg` |
+| UI-068 | `TC-F05.S02-503` | FAIL | PASS | trang tin cũ hỏng: câu ở đỉnh luồng + «Thử lại» | — |
+| UI-069 | `TC-L22-KHI-DOC-CU`; probe `069` | FAIL (thẻ ✦ ở y 2086–2266) | probe (b6h): câu gọn dưới đúng tin, y 596–652, trong khung, không ✦, có «Thử lại» | xem ghi chú 3 | `EV-B6-UI-069-079.jpg` |
+| UI-079 | `TC-R-UI-079` | FAIL («Đang nối lại» ở 20 s, mời mở lời) | PASS («Bạn đã chặn Chat Test 22.») | người bị chặn chỉ đọc câu trung tính | `EV-B6-UI-069-079.jpg` |
+| UI-116 | `TC-R-UI-116` C1–C3 | FAIL (tràn 30–100px) | PASS (0px, câu 2 dòng) | — | `EV-B6-UI-063-116.jpg` |
+| UI-122 | `TC-R-UI-122` | FAIL (vẫn 2 ở 15 s) | PASS (3 sau 19 ms) | — | — |
+| UI-124 | `TC-N26-SOAN-CHAT-RONG-{BAN,DOI}` C2, C4, C8 | 6 FAIL | 10/10 PASS (thêm C1) | ảnh C8 khay mở: nhãn công cụ thấy trọn ở bản cuối (ghi chú 4) | `EV-B6-UI-124-128.jpg` |
+| UI-125 | `TC-N26-NHAY-VE-CHAT`, `-TRE`, `TC-N26-CHUYEN-BEN-KIA` | 3 FAIL | 3 PASS | phòng hai người đọc lại lớp phòng mỗi 5 giây | — |
+| UI-128 | `TC-N26-BAN-CAI-DAT`, `-BAN-TRONG`; probe `128` | FAIL («Cài đặt nhóm», «Cả nhóm thấy…») | PASS; form «Hai bạn đi đâu?», không «hiện có N người» | ghi chú 1 | `EV-B6-UI-124-128.jpg` |
+| UI-129 | `TC-N26-GU-BAT-LAI-LOI`, `-GU-BAT-LOI` | 2 FAIL (câu lỗi dưới lớp phủ) | 2 PASS (trong tấm, nói công tắc đang tắt) | dòng của mình khi `can_bat_lai` chỉ nói phần sổ | `EV-B6-UI-129-067.jpg` |
+| UI-164 | `TC-N22-GUI-CHUA-SAN-SANG` | FAIL | PASS | — | — |
+| UI-165 | `TC-N22-LAB-LIVE` (server dev); `TC-N22-NEP-KHONG-KHOA` | FAIL (QA: null ×6) | PASS (polite ×6) | chữ đang chạy giữ `aria-busy`, báo một lần khi xong | — |
+| UI-167 | `TC-N22-SAN-CHIP` C1, C2, C8; `TC-N22-CHIP-CHUA-SAN-SANG` C2 | FAIL (nút 32 cao; chip 82 cao ở 320) | PASS (nút 48; chip 288×36, ✦ cùng dòng) | — | `EV-B6-UI-167-XEM.jpg` |
+
+Ghi chú B6:
+
+1. **Bộ định vị đã đổi theo nhãn mới (bản sao harness):** UI-128 đòi phòng hai người không còn «nhóm», «hội». Nút cài
+   đặt của chat hai người nay tên «Cài đặt cuộc trò chuyện», nút trạng thái rỗng «Rủ đi một buổi». `n26-hai-lop-chat.mjs`
+   tìm nhãn cũ; bản sao được thêm nhãn mới trước nhãn cũ. Lượt `b6-sau` (chưa sửa bộ định vị) đọc hai hàng đó là FAIL.
+   Maestro 47 và sổ tay `to-giay.md` đổi cùng commit.
+2. **Thẻ đã có phiếu:** `TC-F05-BINH-CHON-CO-PHIEU` tính đạt khi mỗi hàng có đúng `min(12, N)` dấu tay và chữ «N phiếu»,
+   tức là cách vẽ cũ mà UI-065 bỏ đi. Thẻ mới: ba dấu tay rồi con số, thanh tỉ lệ cùng thang, phiếu của mình là vòng
+   đặc và thanh màu nhấn; thẻ 260px (31%) với 12 phiếu, so với 498px (59%). Tiêu chí ≤ 25% của QA là cho thẻ 0 phiếu và
+   đạt (23%). `TC-F05-BINH-CHON-THE` G20 (thẻ 12 phiếu) đọc theo cùng ngưỡng 25% nên FAIL ở 31%.
+3. **Thẻ «Đã hiểu» đã bỏ có chủ đích (UI-069: «không dùng dáng AI»):** `TC-L22-VONGDOI` và `TC-L22-KHI-DOC-CU` tìm thẻ đó,
+   nên đọc là FAIL. Tiêu chí của UI-069 được đo bằng probe ở bảng trên.
+4. **Ảnh, không chỉ số đo:** ở bản `b6d`, harness đạt cả 10 hàng ô soạn, nhưng ảnh C8 của phòng cặp đôi cho thấy khay bị
+   ép tới mức nhãn công cụ bị che. Bản cuối gập dải ghim khi khay mở ở cửa sổ thấp; lượt `b6-sau3` đo lại 10/10 PASS.
+5. **Không thuộc B6, ghi lại:** `TC-N22-XEM-GHIM` C1/C2/C8 FAIL theo công thức z-index của harness; chạm vào «Đóng bảng»
+   trúng tấm ở cả ba cấu hình và ảnh cho thấy tấm phủ dải ghim (UI-166, B2). Tấm «Xem» mới cao hơn nên C1 cũng chồng
+   8px. `TC-N26-GU-LOI` C6 đo khung `dialog` (768px); tấm thật rộng 640 (ảnh `EV-N26-GU-C6`). `TC-N22-LOI-GOI-HANG` mong
+   2 nút thử lại vì hàng `chia_bill_no_expenses`, mã máy chủ đã bỏ từ ADR-0052. `TC-F05-MENU-PHAN-UNG` (UI-001): FAIL (44×44) →
+   PASS (48×48) trên bản cuối.
+6. **Android (emulator-5600, Metro từ cây B6):** luồng Team Đà Lạt cùng ngữ pháp (avatar theo đáy bong bóng, thẻ bình chọn
+   gọn có rãnh trống, ô soạn thẳng hàng), ảnh `EV-B6-ANDROID.jpg`. Thấy thêm trên máy: hết phiên → «Đăng nhập lại» đưa về
+   đúng chat; nhóm không còn → «Về Tin nhắn». Chưa xem trên Android: khay ở cửa sổ thấp, chặn, tấm gu.
+7. **Vòng soát hoàn thiện** (subagent ngữ cảnh mới, ba vòng): «fix» 8 mục → còn 3 mục một phần + 1 hồi quy → «ship». Phạm
+   vi của «ship» là các mục đó, không phải một lượt soát toàn bộ chat. Mục người soát nêu mà không sửa: tiêu đề tờ hẹn lặp
+   chặng duy nhất (dữ liệu ghi lúc bình chọn thành tờ hẹn), không chặn.

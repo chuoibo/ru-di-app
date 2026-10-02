@@ -2,7 +2,7 @@
 {
   "man": "groups/[id]/to-giay",
   "tieu_de": "Tờ giấy của hai mình",
-  "nhanUI": ["Tờ giấy của hai mình", "Tờ giấy", "Cài đặt nhóm", "Một đôi", "Tạo mới", "Hẹn người thương", "Đề nghị lập sổ", "Xem lời đề nghị", "Lập sổ mới", "Rủ đi chơi", "Sửa trước khi gửi", "Gửi cho người ấy", "Bỏ bản phác này", "Tuần này nghỉ", "Ừ, hẹn …", "Đề nghị sửa", "Gửi phiên bản …", "Rút lại", "Xem kèo", "Huỷ buổi này", "Đã đi rồi", "Để đấy", "Giữ lại một điều", "Giữ lại", "Giữ một tấm ảnh của buổi này", "Cài đặt sổ", "Loại sổ", "Những điều cần tránh", "Tin nhắn", "Kỷ niệm của hai bạn", "Đóng sổ", "Giữ sổ"],
+  "nhanUI": ["Tờ giấy của hai mình", "Tờ giấy", "Cài đặt cuộc trò chuyện", "Một đôi", "Tạo mới", "Hẹn người thương", "Đề nghị lập sổ", "Xem lời đề nghị", "Lập sổ mới", "Rủ đi chơi", "Sửa trước khi gửi", "Gửi cho người ấy", "Bỏ bản phác này", "Tuần này nghỉ", "Ừ, hẹn …", "Đề nghị sửa", "Gửi phiên bản …", "Rút lại", "Xem kèo", "Huỷ buổi này", "Đã đi rồi", "Để đấy", "Giữ lại một điều", "Giữ lại", "Giữ một tấm ảnh của buổi này", "Cài đặt sổ", "Loại sổ", "Những điều cần tránh", "Tin nhắn", "Kỷ niệm của hai bạn", "Đóng sổ", "Giữ sổ"],
   "di_toi": [
     {"nhan": "Xem kèo", "man": "outings/[id]"},
     {"nhan": "Tin nhắn", "man": "groups/[id]/chat"},
@@ -16,7 +16,7 @@
 
 ## Mở tờ giấy
 
-1. Trong mọi chat hai người, bấm nút ba chấm «Cài đặt nhóm» ở góc trên, rồi chạm dòng «Tờ giấy của hai mình». Đây cũng là chỗ mở sổ và chọn «Loại sổ».
+1. Trong mọi chat hai người, bấm nút ba chấm «Cài đặt cuộc trò chuyện» ở góc trên, rồi chạm dòng «Tờ giấy của hai mình». Đây cũng là chỗ mở sổ và chọn «Loại sổ».
 2. Khi cả hai đã cùng bật trong «Loại sổ», chat của hai bạn có thêm dòng «Tờ giấy của hai mình» ghim dưới tên người ấy và nút «Tờ giấy» trong khay dấu cộng. Chưa bật thì chat không có dòng ghim và nút đó.
 3. Hoặc bấm «Tạo mới» giữa thanh tab, chọn «Hẹn người thương» (rủ một người đi chơi), rồi chọn người.
 

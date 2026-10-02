@@ -8,7 +8,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   Keyboard,
@@ -22,6 +22,7 @@ import {
   type ViewToken,
   Text,
   TextInput,
+  type TextStyle,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -32,12 +33,10 @@ import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
   docTheAi,
-  gioPhut,
   lichTrinhTrongThe,
   tacGiaTin,
   glyphPhanUng,
   khoaHang,
-  nhomTheoNgay,
   trichTu,
   tinChoHoiThoai,
   type HangHienThi,
@@ -46,6 +45,9 @@ import {
   type TrichDan,
 } from "../../chat/tin-song";
 import { TAT_KAV_QA } from "../../chat/qa-ban-phim";
+import { cauLoiThaoTac, gocBong, nhomTheoQuang, viTriTrongCum } from "../../chat/nhip-tin";
+import { docDaChan } from "../../cai-dat/quyen-rieng-tu";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
 import { nguonAnh } from "../../ky-niem/ky-niem";
 import { CHAT_VIEWABILITY } from "../../chat/viewability";
@@ -91,6 +93,7 @@ import { useNepNguCanh } from "../../nep/NepProvider";
 import { KHONG_VIEN_WEB } from "../../ui/khong-vien-web";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { luiVeVe } from "../../lui-ve";
+import { duongDangNhap } from "../../duong-vao";
 
 /**
  * One send that has not landed yet, drawn where the message will be.
@@ -115,8 +118,8 @@ export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLa
               <Sticker id={tin.than} size={120} />
             </View>
           ) : (
-            <View style={[styles.bong, { backgroundColor: colors.card, borderColor: colors.line }]}>
-              <Text style={[tin.kind === "text" ? typography.body : typography.caption, { color: colors.ink }]}>{tin.kind === "text" ? tin.than : tin.phuDe ?? "Ảnh"}</Text>
+            <View style={[styles.bong, gocBong("mot", true), { backgroundColor: colors.card, borderColor: colors.line }]}>
+              <Text style={[tin.kind === "text" ? typography.body : typography.caption, BE_CHU, { color: colors.ink }]}>{tin.kind === "text" ? tin.than : tin.phuDe ?? "Ảnh"}</Text>
             </View>
           )}
           {hong ? (
@@ -136,6 +139,28 @@ export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLa
   );
 }
 
+/**
+ * One shape for a request to Rủ Đi AI that is waiting or did not go through:
+ * the call that never reached the server and the invocation that failed are
+ * the same news to the person who asked, so they read the same way -- a mark,
+ * a title, the reason, and only the actions that can help (QA 27/09: three
+ * kinds of failed-request card stacked under one message).
+ */
+function HangLoiNho({ title, cau, dangCho = false, testID, children }: { title: string; cau: string; dangCho?: boolean; testID?: string; children?: React.ReactNode }) {
+  const { colors } = useRudiTheme();
+  const nut = Array.isArray(children) ? children.some(Boolean) : Boolean(children);
+  return (
+    <View accessibilityLiveRegion="polite" style={[styles.invocation, { backgroundColor: colors.card, borderColor: colors.line }]} testID={testID}>
+      <View style={styles.dauAi}>
+        <Ionicons name={dangCho ? "time-outline" : "alert-circle-outline"} size={20} color={colors.inkSoft} />
+        <Text style={[typography.label, styles.flex1, { color: colors.ink }]}>{title}</Text>
+      </View>
+      <Text style={[typography.note, { color: colors.inkSoft }]}>{cau}</Text>
+      {nut ? <View style={styles.requestActions}>{children}</View> : null}
+    </View>
+  );
+}
+
 export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const router = useRouter();
   const { colors, dark, radius, space } = useRudiTheme();
@@ -148,15 +173,20 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // feed's own socket (slice 12).
   const phongAi = useRoomAi(contextId);
   const changes = useChatChanges(contextId, personId, chat.nhanAnhChup, phongAi.nhan);
-  const ai = useChatAi(contextId, personId);
+  // A two-person room re-reads what it is (friends or a couple) while open.
+  const ai = useChatAi(contextId, personId, { haiNguoi: laPair(phien?.contexts?.find((n) => n.id === contextId)) });
   const { text: nhap, change: doiNhap, snapshot: nhapRef, clearIfUnchanged: xoaNhapCu } = useBanNhap();
   const [dangGui, setDangGui] = useState(false);
   // A model command gets an additional waiting row; the queue owns its text.
   const [dangGuiThan, setDangGuiThan] = useState<string | null>(null);
   const [banPhimMo, setBanPhimMo] = useState(false);
-  // What the server said about the last command, drawn as a row in the thread
-  // (where the pending card promised it), signed by who is speaking.
-  const [thongBao, setThongBao] = useState<{ tu: string; cau: string; luc: string } | null>(null);
+  // A composer action that failed (a photo, a malformed /vote): one sentence
+  // at the newest end of the thread, just above the composer where the finger
+  // was. The app's voice, never the AI's sparkle (QA UI-069).
+  const [loiCuoi, setLoiCuoi] = useState<{ cau: string; hanhDong?: { label: string; onPress: () => void } } | null>(null);
+  // An action on one message that failed (a reaction, a delete): said under
+  // THAT message, which is where the reader is looking (QA UI-069).
+  const [loiTin, setLoiTin] = useState<{ id: string; cau: string; thuLai: (() => void) | null } | null>(null);
   // Social v1.1 (ADR-0021): the sticker tray, the long-press menu of one
   // message, the message being replied to, and the group settings sheet.
   const [khaySticker, setKhaySticker] = useState(false);
@@ -203,12 +233,29 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     return () => { songRef.current = false; };
   }, []);
   const [tenTheoId, setTenTheoId] = useState<Record<string, string>>({});
+  // Who the roster last read as here now, and which messages were already in
+  // the thread at that read.
+  const [dangOIds, setDangOIds] = useState<ReadonlySet<string>>(new Set());
+  const tinLucDoc = useRef<ReadonlySet<string>>(new Set());
 
   const nhom = phien?.contexts?.find((n) => n.id === contextId);
   // ADR-0023 §2.3.2: bị chặn, hoặc người kia đã xoá tài khoản. Tin cũ vẫn
   // đọc được -- chúng cũng là của người kia -- nhưng cửa soạn tin đóng, và
   // câu nói ra KHÔNG cho biết vì lý do nào trong hai lý do.
   const khongNhanTin = nhom?.unavailable === true;
+  // The person who blocked is told so, and where to undo it; the person who
+  // was blocked is not (ADR-0023 §2.3.2), so this reads the reader's OWN block
+  // list and nothing about the other side (QA UI-079).
+  const [toiDaChan, setToiDaChan] = useState(false);
+  useEffect(() => {
+    const kiaId = nhom?.counterpart?.id;
+    if (!khongNhanTin || !kiaId || !personId) { setToiDaChan(false); return; }
+    let song = true;
+    docDaChan(personId)
+      .then((ds) => { if (song) setToiDaChan(ds.blocked.some((b) => b.person_id === kiaId)); })
+      .catch(() => undefined);
+    return () => { song = false; };
+  }, [khongNhanTin, nhom?.counterpart?.id, personId]);
   const tenNhom = tenCuocTroChuyen(nhom);
   // A pair (ADR-0021 §2.5) has no roster to show or invite into; the pill in
   // that place opens the other person's profile instead.
@@ -257,10 +304,25 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       setLanDoc((n) => n + 1);
     }, []),
   );
-  const coNguoiLa = chat.tin.some((t) => t.author_id !== null && t.author_id !== personId && !(t.author_id in tenTheoId));
+  // Read again when a message arrives from someone the roster does not count
+  // as here: a stranger to it, or someone it read as only invited. The second
+  // half is QA UI-122 -- the invitee's name was already known from the
+  // invitation, so their first message changed nothing and the header kept
+  // «2 thành viên» until the chat was reopened. Only messages newer than the
+  // last read count, so a member who has left does not start a loop.
+  const tacGiaChuaDem = useMemo(() => {
+    const ids = new Set<string>();
+    for (const t of chat.tin) {
+      if (t.author_id === null || t.author_id === personId || tacGiaTin(t).loai === "ai") continue;
+      if (!(t.author_id in tenTheoId) || (!dangOIds.has(t.author_id) && !tinLucDoc.current.has(t.id))) ids.add(t.author_id);
+    }
+    return [...ids].sort().join(",");
+  }, [chat.tin, tenTheoId, dangOIds, personId]);
   useEffect(() => {
-    if (coNguoiLa) setLanDoc((n) => n + 1);
-  }, [coNguoiLa]);
+    if (tacGiaChuaDem !== "") setLanDoc((n) => n + 1);
+  }, [tacGiaChuaDem]);
+  const tinRef = useRef(chat.tin);
+  tinRef.current = chat.tin;
   useEffect(() => {
     if (lanDoc === 0) return;
     let song = true;
@@ -271,7 +333,9 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         // author's name after they leave); the count is who is here now.
         const map: Record<string, string> = {};
         for (const tv of ds) if (tv.display_name) map[tv.person_id] = tv.display_name;
+        tinLucDoc.current = new Set(tinRef.current.map((t) => t.id));
         setTenTheoId(map);
+        setDangOIds(new Set(ds.filter((tv) => tv.state === "active").map((tv) => tv.person_id)));
         setSoDangO(ds.filter((tv) => tv.state === "active").length);
       })
       .catch(() => undefined);
@@ -298,7 +362,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   );
 
   const tinHien = useMemo(() => tinChoHoiThoai(chat.tin), [chat.tin]);
-  const hang = useMemo(() => nhomTheoNgay(tinHien), [tinHien]);
+  // One time band per stretch of talk, not a time under every run (QA UI-064).
+  const hang = useMemo(() => nhomTheoQuang(tinHien), [tinHien]);
   // Which messages are in the thread, for the streamed reply's hand-over: its
   // row gives way the moment the published card is here.
   const tinTheoId = useMemo(() => new Map(chat.tin.map((t) => [t.id, t])), [chat.tin]);
@@ -362,9 +427,39 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // keeps one item and the decision wins (a group whose poll is never closed
   // would otherwise never see its outing here).
   const toHen = toHenTimDuoc && (!toHenTimDuoc.daThanhKeo || keoToi === null) ? toHenTimDuoc.tin : null;
-  const { height: caoCuaSo } = useWindowDimensions();
+  const { height: caoCuaSo, width: rongCuaSo } = useWindowDimensions();
+  // Below 360dp the header says the count only: «· sổ hẹn của hội» wrapped to
+  // a line of its own and the header took four lines of a 640 window.
+  const hepCuaSo = rongCuaSo < 360;
   const keoTrenBang = keoToi !== null && (toHen === null || caoCuaSo >= 600) ? keoToi : null;
   const coChu = nhap.trim().length > 0;
+  const rongTrang = !chat.dangNap && chat.tin.length === 0 && dangGuiThan === null && chat.hangCho.length === 0;
+  const thapCuaSo = caoCuaSo < 600;
+  // While the tray is open in a short window the pinned rows fold away.
+  const gonDau = khay !== null && thapCuaSo;
+  // The composer grows with what is typed up to 120dp -- four lines, the
+  // ceiling QA's acceptance pins (UI-062) and the most a phone can give the
+  // box before the thread above it stops being the conversation -- and never
+  // past 30% of a short window; then it scrolls inside itself.
+  const caoOToiDa = Math.min(4 * DONG_O + 2 * DEM_O, Math.max(CAO_O + DONG_O, Math.round(caoCuaSo * 0.3)));
+  const oNhapRef = useRef<TextInput>(null);
+  // Web only: a textarea neither grows with its text nor starts at one row
+  // (react-native-web leaves `rows` unset, and the browser draws two). Measure
+  // the text at no height, then give the box exactly that, between one line
+  // and the ceiling. Native multiline inputs already grow on their own.
+  useLayoutEffect(() => {
+    if (Platform.OS !== "web") return;
+    const o = oNhapRef.current as unknown as HTMLTextAreaElement | null;
+    if (!o?.style || typeof o.scrollHeight !== "number") return;
+    o.style.height = "0px";
+    const can = o.scrollHeight;
+    o.style.height = `${Math.min(caoOToiDa, Math.max(CAO_O, can))}px`;
+    o.style.overflowY = can > caoOToiDa ? "auto" : "hidden";
+  }, [nhap, caoOToiDa]);
+  // Enter sends where there is a hardware keyboard (a fine pointer is the
+  // web's tell); Shift+Enter breaks the line, and a composing IME -- Telex on
+  // a phone keyboard -- keeps its Enter.
+  const enterGui = Platform.OS === "web" && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches === true;
   // The message being typed also asks the AI (ADR-0046), the same way in
   // every room: the chip reads that command's readiness from the server, so
   // it never promises what the server refuses.
@@ -407,13 +502,17 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     if (chat.tin.length > soHang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
     soHang.current = chat.tin.length;
   }, [chat.tin.length, reduced]);
-  // The notice under the newest bubble (why the model stayed quiet, a send
-  // error) is a list header, not a row: `maintainVisibleContentPosition` keeps
-  // row 0 in place and leaves the header under the composer, so it is pulled
-  // into view the same way a new row is.
+  // The composer's notice is a list header, not a row: `maintainVisibleContentPosition`
+  // keeps row 0 in place and leaves the header under the composer, so it is
+  // pulled into view. Always, not only at the end: it answers the press the
+  // person just made down there (QA UI-069 measured it 1,500px off screen).
   useEffect(() => {
-    if (thongBao !== null && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
-  }, [thongBao, reduced]);
+    if (loiCuoi !== null) {
+      ganCuoi.current = true;
+      setOCuoi(true);
+      danhSachRef.current?.scrollToOffset({ offset: 0, animated: !reduced });
+    }
+  }, [loiCuoi, reduced]);
   useEffect(() => {
     const sub = Keyboard.addListener("keyboardDidShow", () => {
       if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -444,6 +543,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       capChoTin.current.set(attempt.key, { lenh: nhac.lenh, loiNho: nhac.loiNho, goi: goiSeGui(goiChip, kemTin) });
     }
     guiRef.current = true;
+    setLoiCuoi(null);
     setDangGui(true);
     setDangGuiThan(body);
     if (command === undefined) doiNhap("");
@@ -458,7 +558,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       hoiAiVeTin(attempt.key, daGui.id);
       veCuoi();
       const cau = cauYDinh(daGui);
-      if (cau !== null) setThongBao({ tu: "Rủ Đi", cau, luc: new Date().toISOString() });
+      if (cau !== null) setLoiCuoi({ cau });
       return !daGui.intent_error;
     } catch {
       // The failed row owns the exact text, quote and retry key. Leave any
@@ -514,11 +614,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     } catch (error) {
       guiAnhRef.current = false;
       if (!songRef.current) return;
-      setThongBao({
-        tu: "Rủ Đi",
-        cau: error instanceof ApiError ? error.message : "Không mở được thư viện ảnh trên máy này.",
-        luc: new Date().toISOString(),
-      });
+      setLoiCuoi({ cau: error instanceof ApiError ? error.message : "Chưa mở được thư viện ảnh trên máy này." });
       return;
     }
     if (daChon === null || !songRef.current) {
@@ -528,6 +624,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     }
     const draft = nhapRef.current;
     const caption = draft.text.trim();
+    setLoiCuoi(null);
     setDangGuiAnh(true);
     // Two stages with one press. The upload has no row of its own, so its
     // failure is a notice; the message does, so its failure belongs there and
@@ -549,11 +646,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     } catch (error) {
       await boAnh(daChon);
       if (!daToiTin) {
-        setThongBao({
-          tu: "Rủ Đi",
-          cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-          luc: new Date().toISOString(),
-        });
+        const loi = cauLoiThaoTac("gửi được ảnh", error);
+        setLoiCuoi({ cau: loi.cau, hanhDong: loi.thuLai ? { label: "Chọn lại ảnh", onPress: () => void guiAnh() } : undefined });
       }
     } finally {
       guiAnhRef.current = false;
@@ -600,14 +694,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   /** Take back one's own message; the server's refusal is shown as its sentence. */
   const xoaTinChon = async (tin: Tin) => {
     setMenuTin(null);
+    setLoiTin(null);
     try {
       await chat.xoaTin(tin.id);
     } catch (error) {
-      setThongBao({
-        tu: "Rủ Đi",
-        cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-        luc: new Date().toISOString(),
-      });
+      const loi = cauLoiThaoTac("xoá được tin này", error);
+      setLoiTin({ id: tin.id, cau: loi.cau, thuLai: loi.thuLai ? () => void xoaTinChon(tin) : null });
     }
   };
 
@@ -619,27 +711,21 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
 
   const phanUng = async (tin: Tin, kind: LoaiPhanUng) => {
     setMenuTin(null);
+    setLoiTin(null);
     const cuaToi = tin.reactions?.some((r) => r.kind === kind && r.mine) ?? false;
     try {
       await chat.doiPhanUng(tin.id, kind, cuaToi);
     } catch (error) {
-      setThongBao({
-        tu: "Rủ Đi",
-        cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-        luc: new Date().toISOString(),
-      });
+      const loi = cauLoiThaoTac(cuaToi ? `bỏ ${glyphPhanUng(kind)}` : `thả ${glyphPhanUng(kind)}`, error);
+      setLoiTin({ id: tin.id, cau: loi.cau, thuLai: loi.thuLai ? () => void phanUng(tin, kind) : null });
     }
   };
 
-  /** Same human author as the neighbour row (not the AI, not a day divider). */
-  const cungNguoi = (a: HangHienThi | undefined, b: HangHienThi | undefined) =>
-    a !== undefined && b !== undefined && a.loai === "tin" && b.loai === "tin" &&
-    a.tin.kind !== "ai_card" && b.tin.kind !== "ai_card" &&
-    a.tin.author_id !== null && a.tin.author_id === b.tin.author_id &&
-    Math.abs(Date.parse(a.tin.created_at) - Date.parse(b.tin.created_at)) <= 5 * 60 * 1000;
-
   const renderItem = ({ item, index }: { item: HangHienThi; index: number }) => {
     if (item.loai === "ngay") {
+      // A band where the talk paused: the day where it starts, then the time
+      // it resumed. The only times on the thread; one message's own time is
+      // in its menu (QA UI-064).
       return (
         <View style={styles.ngay}>
           <View style={[styles.duong, { backgroundColor: colors.line }]} />
@@ -652,6 +738,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const cuaToi = tin.author_id === personId;
     const laAi = tin.kind === "ai_card";
     const theCuaTin = docTheAi(tin.card);
+    // A poll is a member's message: it hangs from its sender like any other,
+    // name above and avatar beside, and is not a run's bubble.
+    const laPoll = laAi && theCuaTin.loai === "poll" && tacGiaTin(tin).loai !== "ai";
+    const cuaNguoi = !laAi || laPoll;
+    const benKia = cuaNguoi && !cuaToi;
+    const benToi = cuaNguoi && cuaToi;
     const laSticker = tin.kind === "sticker";
     const daXoa = tin.kind === "deleted";
     const chips = (tin.reactions ?? []).filter((r) => r.count > 0);
@@ -659,115 +751,116 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const nenBong = daXoa ? colors.card : cuaToi ? mauChat.bubble : colors.card;
     const vienBong = daXoa ? colors.line : cuaToi ? mauChat.bubble : colors.line;
     const mucBong = cuaToi && !daXoa ? mauChat.bubbleInk : colors.ink;
-    // Inverted list: index + 1 is the older neighbour, index - 1 the newer.
-    const dauChuoi = !cungNguoi(item, hang[index + 1]);
-    const cuoiChuoi = !cungNguoi(item, hang[index - 1]);
+    const viTri = viTriTrongCum(hang, index);
+    const dauChuoi = viTri === "mot" || viTri === "dau";
+    const cuoiChuoi = viTri === "mot" || viTri === "cuoi";
+    const loiCuaTin = loiTin !== null && loiTin.id === tin.id ? loiTin : null;
     return (
-      <View
-        testID={`chat-message-${tin.id}`}
-        style={[
-          styles.hang,
-          cuaToi && !laAi && styles.hangToi,
-          // A photo makes the row tall; an initial pinned to the bottom of it
-          // floats away from the name it belongs to.
-          tin.kind === "image" && styles.hangCao,
-        ]}
-      >
-        {!cuaToi && !laAi ? (
-          cuoiChuoi ? <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
+      // The name, the quote and the reactions sit around the line, not in it:
+      // the line holds only the avatar and the bubble, so the avatar's foot is
+      // the last bubble's foot (QA UI-064 measured it 22px low, beside the
+      // time). Runs sit 2dp apart, separate voices 12dp.
+      <View style={[styles.tinKhoi, { paddingTop: dauChuoi ? 12 : 2 }]}>
+        {benKia && dauChuoi ? (
+          // The sender in their own ink (ADR-0037 D6): the same colour as their avatar ring.
+          <Text style={[typography.caption, styles.thut, { color: tin.author_id ? mucNguoi(tin.author_id, dark) : colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
         ) : null}
-        <View style={[styles.khoi, cuaToi && !laAi && styles.khoiToi, laAi && styles.khoiAi]}>
-          {!cuaToi && !laAi && dauChuoi ? (
-            // The sender in their own ink (ADR-0037 D6): the same colour as their avatar ring.
-            <Text style={[typography.caption, { color: tin.author_id ? mucNguoi(tin.author_id, dark) : colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
+        <View testID={`chat-message-${tin.id}`} style={[styles.hang, benToi && styles.hangToi, laAi && !laPoll && styles.hangGiua]}>
+          {benKia ? (
+            cuoiChuoi ? <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
           ) : null}
-          {/* The quote sits ABOVE the bubble, in the block, never in the
-              flex-wrapped row under it: a lone Text at the end of a wrapping
-              row keeps one word's width (bài học RN 2026-09-04). A deleted
-              row keeps no quote either: what it answered went with it. */}
-          {tin.reply_to && !laAi && !daXoa ? (
-            <View
-              accessibilityLabel={`Trích: ${tin.reply_to.preview}`}
-              style={[styles.trich, { borderLeftColor: mauChat.accent, backgroundColor: colors.card, borderColor: colors.line }]}
-            >
-              <Text style={[typography.caption, { color: colors.inkSoft }]}>{tenNguoi(tin.reply_to.author_id)}</Text>
-              <Text numberOfLines={1} style={[typography.caption, { color: colors.ink }]}>
-                {tin.reply_to.preview}
-              </Text>
-            </View>
-          ) : null}
-          {laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
-            <TraLoiAi
-              contextId={contextId}
-              onMenu={() => setMenuTin(tin)}
-              onOpenPlan={() => moToHen(tin)}
-              personId={personId}
-              tenNguoi={tenNguoi}
-              the={theCuaTin}
-              tin={tin}
-            />
-          ) : laAi ? (
-            <TheAiView
-              the={docTheAi(tin.card)}
-              contextId={contextId}
-              personId={personId}
-              tenNguoi={tenNguoi}
-              tacGia={tenNguoi(tin.author_id)}
-              vote={(() => { const card = docTheAi(tin.card); return card.loai === "poll" ? changes.votes[card.vote_id] : undefined; })()}
-              onOpenPlan={() => moToHen(tin)}
-              onMoToHen={(voteId, goiY) => void moToHenTuBinhChon(voteId, goiY)}
-              banToHen={(() => { const card = docTheAi(tin.card); return card.loai === "poll" ? (coToHenChoBinhChon(card.vote_id)?.ban ?? null) : null; })()}
-              daCoToHen={(() => { const card = docTheAi(tin.card); return card.loai === "poll" && coToHenChoBinhChon(card.vote_id) !== null; })()}
-              tenToHen={(() => { const card = docTheAi(tin.card); return card.loai === "poll" ? (coToHenChoBinhChon(card.vote_id)?.ten || null) : null; })()}
-            />
-          ) : laSticker ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Tin nhắn: sticker"
-              accessibilityActions={[{ name: "activate", label: "Tuỳ chọn tin nhắn" }]}
-              onAccessibilityAction={() => setMenuTin(tin)}
-              onLongPress={() => setMenuTin(tin)}
-              onPress={() => setMenuTin(tin)}
-              style={styles.stickerHang}
-            >
-              <Sticker id={tin.body ?? ""} size={120} />
-            </Pressable>
-          ) : (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={daXoa ? "Tin nhắn đã bị xoá" : `Tin nhắn: ${tin.body ?? ""}`}
-              disabled={daXoa}
-              accessibilityActions={daXoa ? [] : [{ name: "activate", label: "Tuỳ chọn tin nhắn" }]}
-              onAccessibilityAction={() => { if (!daXoa) setMenuTin(tin); }}
-              onLongPress={() => setMenuTin(tin)}
-              onPress={() => { if (!daXoa) setMenuTin(tin); }}
-              style={[styles.bong, { backgroundColor: nenBong, borderColor: vienBong }]}
-            >
-              {daXoa ? (
-                <Text style={[typography.caption, styles.nghieng, { color: colors.inkFaint }]}>Tin nhắn đã bị xoá</Text>
-              ) : tin.kind === "image" ? (
-                <View style={styles.anhKhoi}>
-                  {anhTin(tin) === null ? (
-                    <Text style={[typography.caption, { color: cuaToi ? mauChat.bubbleInk : colors.inkFaint }]}>
-                      Ảnh này máy không mở được.
-                    </Text>
-                  ) : (
-                    <Image
-                      accessibilityLabel={tin.body ? `Ảnh: ${tin.body}` : "Ảnh trong nhóm"}
-                      contentFit="cover"
-                      source={anhTin(tin)}
-                      style={[styles.anh, { borderRadius: radius.small }]}
-                    />
-                  )}
-                  {tin.body ? <Text style={[typography.body, { color: mucBong }]}>{tin.body}</Text> : null}
-                </View>
-              ) : (
-                <Text style={[typography.body, { color: mucBong }]}>{tin.body}</Text>
-              )}
-            </Pressable>
-          )}
-          <View style={styles.duoiBong}>
-            {cuoiChuoi || chips.length > 0 ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{gioPhut(tin.created_at)}</Text> : null}
+          <View style={[styles.khoi, benToi && styles.khoiToi, laPoll ? styles.khoiPoll : laAi && styles.khoiAi]}>
+            {/* The quote sits ABOVE the bubble, in the bubble's column: the
+                avatar beside the column still meets the bubble's foot, and the
+                quote stays part of the message it introduces. Never in a
+                flex-wrapped row under it: a lone Text at the end of a wrapping
+                row keeps one word's width (bài học RN 2026-09-04). A deleted
+                row keeps no quote either: what it answered went with it. */}
+            {tin.reply_to && !laAi && !daXoa ? (
+              <View
+                accessibilityLabel={`Trích: ${tin.reply_to.preview}`}
+                style={[styles.trich, { borderLeftColor: mauChat.accent, backgroundColor: colors.card, borderColor: colors.line }]}
+              >
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{tenNguoi(tin.reply_to.author_id)}</Text>
+                <Text numberOfLines={1} style={[typography.caption, { color: colors.ink }]}>
+                  {tin.reply_to.preview}
+                </Text>
+              </View>
+            ) : null}
+            {laAi && theCuaTin.loai === "tra_loi" && tacGiaTin(tin).loai === "ai" ? (
+              <TraLoiAi
+                contextId={contextId}
+                onMenu={() => setMenuTin(tin)}
+                onOpenPlan={() => moToHen(tin)}
+                personId={personId}
+                tenNguoi={tenNguoi}
+                the={theCuaTin}
+                tin={tin}
+              />
+            ) : laAi ? (
+              <TheAiView
+                the={theCuaTin}
+                contextId={contextId}
+                personId={personId}
+                tenNguoi={tenNguoi}
+                tacGia={tenNguoi(tin.author_id)}
+                vote={theCuaTin.loai === "poll" ? changes.votes[theCuaTin.vote_id] : undefined}
+                onOpenPlan={() => moToHen(tin)}
+                onMoToHen={(voteId, goiY) => void moToHenTuBinhChon(voteId, goiY)}
+                banToHen={theCuaTin.loai === "poll" ? (coToHenChoBinhChon(theCuaTin.vote_id)?.ban ?? null) : null}
+                daCoToHen={theCuaTin.loai === "poll" && coToHenChoBinhChon(theCuaTin.vote_id) !== null}
+                tenToHen={theCuaTin.loai === "poll" ? (coToHenChoBinhChon(theCuaTin.vote_id)?.ten || null) : null}
+              />
+            ) : laSticker ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Tin nhắn: sticker"
+                accessibilityActions={[{ name: "activate", label: "Tuỳ chọn tin nhắn" }]}
+                onAccessibilityAction={() => setMenuTin(tin)}
+                onLongPress={() => setMenuTin(tin)}
+                onPress={() => setMenuTin(tin)}
+                style={styles.stickerHang}
+              >
+                <Sticker id={tin.body ?? ""} size={120} />
+              </Pressable>
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={daXoa ? "Tin nhắn đã bị xoá" : `Tin nhắn: ${tin.body ?? ""}`}
+                disabled={daXoa}
+                accessibilityActions={daXoa ? [] : [{ name: "activate", label: "Tuỳ chọn tin nhắn" }]}
+                onAccessibilityAction={() => { if (!daXoa) setMenuTin(tin); }}
+                onLongPress={() => setMenuTin(tin)}
+                onPress={() => { if (!daXoa) setMenuTin(tin); }}
+                style={[styles.bong, gocBong(viTri, cuaToi), { backgroundColor: nenBong, borderColor: vienBong }]}
+              >
+                {daXoa ? (
+                  <Text style={[typography.caption, styles.nghieng, { color: colors.inkFaint }]}>Tin nhắn đã bị xoá</Text>
+                ) : tin.kind === "image" ? (
+                  <View style={styles.anhKhoi}>
+                    {anhTin(tin) === null ? (
+                      <Text style={[typography.caption, { color: cuaToi ? mauChat.bubbleInk : colors.inkFaint }]}>
+                        Ảnh này máy không mở được.
+                      </Text>
+                    ) : (
+                      <Image
+                        accessibilityLabel={tin.body ? `Ảnh: ${tin.body}` : "Ảnh trong nhóm"}
+                        contentFit="cover"
+                        source={anhTin(tin)}
+                        style={[styles.anh, { borderRadius: radius.small }]}
+                      />
+                    )}
+                    {tin.body ? <Text style={[typography.body, BE_CHU, { color: mucBong }]}>{tin.body}</Text> : null}
+                  </View>
+                ) : (
+                  <Text style={[typography.body, BE_CHU, { color: mucBong }]}>{tin.body}</Text>
+                )}
+              </Pressable>
+            )}
+          </View>
+        </View>
+        {chips.length > 0 ? (
+          <View style={[styles.duoiBong, benKia && styles.thut, benToi && styles.duoiToi]}>
             {chips.map((r) => (
               <Pressable
                 accessibilityLabel={`${r.count} ${glyphPhanUng(r.kind)}`}
@@ -785,7 +878,16 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               </Pressable>
             ))}
           </View>
-        </View>
+        ) : null}
+        {loiCuaTin ? (
+          <CauTaiCho
+            cau={loiCuaTin.cau}
+            co="nho"
+            hanhDong={loiCuaTin.thuLai ? { label: "Thử lại", onPress: loiCuaTin.thuLai } : undefined}
+            style={[benKia && styles.thut, benToi && styles.loiTinToi, styles.loiTin]}
+            testID="chat-loi-tin"
+          />
+        ) : null}
       </View>
     );
   };
@@ -806,16 +908,16 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             onPress={() => router.push((nhanRieng && nguoiKiaId ? `/people/${nguoiKiaId}` : `/groups/${contextId}/members`) as never)} style={styles.headerIdentity}>
             <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenNhom}</Text>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              {nhanRieng ? "Cuộc trò chuyện của hai mình" : `${soDangO || nhom?.member_count || 1} thành viên · sổ hẹn của hội`}
+              {nhanRieng ? "Cuộc trò chuyện của hai mình" : hepCuaSo ? `${soDangO || nhom?.member_count || 1} thành viên` : `${soDangO || nhom?.member_count || 1} thành viên · sổ hẹn của hội`}
             </Text>
           </Pressable>
-          <IconButton accessibilityLabel="Cài đặt nhóm" icon="ellipsis-horizontal" quiet onPress={() => setCaiDatMo(true)} />
+          <IconButton accessibilityLabel={nhanRieng ? "Cài đặt cuộc trò chuyện" : "Cài đặt nhóm"} icon="ellipsis-horizontal" quiet onPress={() => setCaiDatMo(true)} />
         </View>
         {/* The pinned paper is a couple's; a friends' pair reaches the paper
             (and «Một đôi») from the settings row «Tờ giấy của hai mình», and
             sees a slim line here only while the other's proposal waits for
             an answer (`hangGhimChat`). Pairs only: a group has no notebook. */}
-        {nhanRieng && phien !== null && !khongNhanTin ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
+        {nhanRieng && phien !== null && !khongNhanTin && !gonDau ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
         <View style={styles.baoMat}>
           <Ionicons name="lock-open-outline" size={13} color={colors.inkSoft} />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text>
@@ -826,7 +928,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           under it, so the thread visibly starts below it. On the bare ground
           with margins round it, a bubble clipped at the list's top edge read as
           a bubble cut by the bar. */}
-      {toHen || keoTrenBang ? (
+      {/* The pinned rows give way to an open tray in a short window and come
+          back when it closes (`gonDau`): at 390×460 a couple's room kept its
+          paper row and band, and the tray had too little left for its labels. */}
+      {(toHen || keoTrenBang) && !gonDau ? (
         <View style={[styles.dayGhim, { backgroundColor: colors.ground, borderBottomColor: colors.line }]} testID="day-ghim">
           {keoTrenBang ? (
             <DaiKeoSapToi gon={toHen !== null} nhip={nhanNhip(nhipKeo(keoTrenBang.starts_on, keoTrenBang.ends_on, homNay()))} onOpen={() => router.push(`/outings/${keoTrenBang.id}` as never)} ten={keoTrenBang.title} />
@@ -840,183 +945,186 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         </View>
       ) : null}
       {/* Drawn outside the inverted list: the list flips its own children
-          back upright, and an extra flip here once mirrored this copy. */}
-      {!chat.dangNap && chat.tin.length === 0 && dangGuiThan === null && chat.hangCho.length === 0 ? (
-        <View style={[styles.rong, { paddingHorizontal: space.md }]}>
-          <View style={styles.moLoi}>
-            <Nep pose="moi" size={96} />
-            <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : "Có hội rồi. Mở lời thôi."}</Text>
-            <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
-            {/* Every room, a friends' pair included, can start a plan from here. */}
-            <RudiButton label="Rủ hội một buổi" variant="outline" full={false} onPress={() => setKhay("plan")} />
-          </View>
-        </View>
+          back upright, and an extra flip here once mirrored this copy. It is
+          the flexible part of the column now, and scrolls inside itself: as a
+          fixed block it pushed the composer under the bottom edge of a short
+          window (QA UI-124, 390×460 and 375×667 with the tray open). */}
+      {rongTrang ? (
+        <ScrollView contentContainerStyle={[styles.rongNoi, { paddingHorizontal: space.md }]} keyboardShouldPersistTaps="handled" style={styles.rong} testID="chat-rong">
+          {chat.loi ? (
+            // The first page did not load and nothing came by the feed either.
+            <CauTaiCho
+              cau={chat.loi}
+              hanhDong={chat.loiLoai === "phien"
+                ? { label: "Đăng nhập lại", onPress: () => router.push(duongDangNhap(`/groups/${contextId}/chat`) as never) }
+                : chat.loiLoai === "vinh-vien"
+                  ? { label: "Về Tin nhắn", onPress: () => luiVeVe(router as never, "/messages") }
+                  : { label: "Thử lại", onPress: () => void chat.taiLai() }}
+              testID="chat-loi-dau"
+            />
+          ) : khongNhanTin || gonDau ? null : (
+            <View style={styles.moLoi}>
+              {/* The sketch is the first thing to give way: a short window or
+                  an open tray keeps the words and the one action. */}
+              {thapCuaSo || khay !== null ? null : <Nep pose="moi" size={96} />}
+              <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : "Có hội rồi. Mở lời thôi."}</Text>
+              <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
+              {/* Every room, a friends' pair included, can start a plan from here. */}
+              <RudiButton label={nhanRieng ? "Rủ đi một buổi" : "Rủ hội một buổi"} variant="outline" full={false} onPress={() => setKhay("plan")} />
+            </View>
+          )}
+        </ScrollView>
       ) : null}
-      <FlatList
-        ref={danhSachRef}
-        contentContainerStyle={[styles.danhSach, { paddingHorizontal: space.md }]}
-        data={hang}
-        inverted
-        keyExtractor={khoaHang}
-        onViewableItemsChanged={baoTinHienThi}
-        viewabilityConfig={viewabilityConfig}
-        keyboardDismissMode="on-drag"
-        keyboardShouldPersistTaps="handled"
-        // Inverted, so the header sits at the newest end: what is being sent
-        // shows there at once, and a command shows the model is being asked.
-        ListHeaderComponent={
-          <>
-            {ai.error ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn, paddingVertical: 10 }]}>{ai.error}</Text> : null}
-            {/* The AI half of an `@Rủ Đi` send that failed after the message
-                landed. Only the person who asked sees it; «Thử lại» replays the
-                same key with the same frozen bundle. */}
-            {ai.cho.filter((cap) => cap.loi !== null).map((cap) => (
-              <View key={cap.khoa} style={[styles.invocation, { backgroundColor: colors.card, borderColor: colors.line }]} testID="chat-loi-nho-hong">
-                <View style={styles.dauAi}>
-                  <Ionicons name="alert-circle-outline" size={20} color={colors.inkSoft} />
-                  <Text style={[typography.label, { color: colors.ink }]}>Rủ Đi AI chưa nhận lời nhờ</Text>
-                </View>
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>{cap.loi}</Text>
-                <View style={styles.requestActions}>
+      {/* The list and the jump pill share one box: the pill floats over the
+          newest end instead of taking 60dp from the list, which made the
+          thread jump every time it came and went. */}
+      <View style={rongTrang ? styles.dsRong : styles.ds}>
+        <FlatList
+          ref={danhSachRef}
+          // Empty, the list keeps only its header's height and the empty page
+          // above takes the room.
+          style={rongTrang ? styles.dsRongTrong : styles.ds}
+          contentContainerStyle={[styles.danhSach, { paddingHorizontal: space.md }]}
+          data={hang}
+          inverted
+          keyExtractor={khoaHang}
+          onViewableItemsChanged={baoTinHienThi}
+          viewabilityConfig={viewabilityConfig}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          // Inverted, so the header sits at the newest end: what is being sent
+          // shows there at once, and a command shows the model is being asked.
+          ListHeaderComponent={
+            <>
+              <CauTaiCho cau={ai.error} style={styles.loiCuoi} />
+              {/* The AI half of an `@Rủ Đi` send that failed after the message
+                  landed. Only the person who asked sees it; «Thử lại» replays the
+                  same key with the same frozen bundle. */}
+              {ai.cho.filter((cap) => cap.loi !== null).map((cap) => (
+                <HangLoiNho cau={cap.loi ?? ""} key={cap.khoa} testID="chat-loi-nho-hong" title="Rủ Đi AI chưa nhận lời nhờ">
                   <RudiButton label="Thử lại" compact full={false} variant="outline" onPress={() => ai.thuLaiCap(cap.khoa)} />
                   <RudiButton label="Bỏ" compact full={false} variant="ghost" onPress={() => ai.boCap(cap.khoa)} />
-                </View>
-              </View>
-            ))}
-            {/* The requester's own answer in the thread while it is written:
-                the reading sentence, the words as they come, then the real
-                card (slice 11). */}
-            {ai.requests.filter(laTraLoiDangCho).map((request) => (
-              <TraLoiAiDangViet
-                contextId={contextId}
-                daCoThe={daCoThe}
-                docMot={ai.docMot}
-                giamChuyenDong={reduced}
-                key={`song-${request.id}`}
-                khiKetThuc={ai.lamMoi}
-                personId={personId}
-                request={request}
-                tenNguoi={tenNguoi}
-                trigger={request.trigger_message_id ? tinTheoId.get(request.trigger_message_id) ?? null : null}
-              />
-            ))}
-            {/* Everyone else in the room watches the same answer: the same row
-                and state machine, fed by the feed socket's `ai` frames, until
-                the card arrives (slice 12). */}
-            {traLoiPhong.map((l) => (
-              <HangTraLoiAiDangViet
-                daCoThe={daCoThe}
-                giamChuyenDong={reduced}
-                key={`phong-${l.inv}`}
-                nguoiXem="thanh_vien"
-                request={loiGoiCuaPhong(l.inv, l.tin, l.soTin)}
-                tenNguoi={tenNguoi}
-                traLoi={l.traLoi}
-                trigger={tinTheoId.get(l.tin) ?? null}
-              />
-            ))}
-            {ai.requests.filter((request) => request.status !== "succeeded" && request.status !== "cancelled" && !laTraLoiDangCho(request)).map((request) => (
-              <View key={request.id} style={[styles.invocation, { backgroundColor: colors.card, borderColor: colors.line }]}>
-                <View style={styles.dauAi}>
-                  <Ionicons name={request.status === "failed" ? "alert-circle-outline" : "time-outline"} size={20} color={colors.inkSoft} />
-                  <Text style={[typography.label, { color: colors.ink }]}>{chuHangLoiGoi(request).tieuDe}</Text>
-                </View>
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>{chuHangLoiGoi(request).cau}</Text>
-                {request.status === "failed" ? <View style={styles.requestActions}>
-                  {thuLaiDuoc(request) ? <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !lenhSanSang(ai.capabilities, request.command ?? "plan")} onPress={() => void ai.retry(request.id)} /> : null}
-                  {(request.command ?? "plan") === "plan" ? <RudiButton label="Tự tạo kèo" compact full={false} variant="ghost" onPress={() => moToHen()} /> : null}
-                </View> : null}
-              </View>
-            ))}
-            {/* Every logical send owns its pending and failed row. */}
-            {chat.hangCho.map((t) => (
-              <HangChoGui key={t.attempt.key} onBoQua={() => { capChoTin.current.delete(t.attempt.key); chat.boQua(t.attempt.key); }} onThuLai={() => void thuLaiGui(t.attempt.key)} tin={t} />
-            ))}
-            {dangGuiThan === null && thongBao !== null ? (
-            <View style={styles.hang}>
-              <View style={[styles.khoi, styles.khoiAi]}>
-                <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
-                  <View style={styles.dauAi}>
-                    <Ionicons color={colors.ai} name="sparkles" size={15} />
-                    <Text style={[typography.caption, { color: colors.ai }]}>{thongBao.tu}</Text>
-                  </View>
-                  <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>{thongBao.cau}</Text>
-                  <RudiButton compact label="Đã hiểu" variant="ghost" onPress={() => setThongBao(null)} />
-                </View>
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>{gioPhut(thongBao.luc)}</Text>
-              </View>
-            </View>
-          ) : dangGuiThan !== null ? (
-            <View style={styles.choGui}>
-              {timNhacAi(dangGuiThan) !== null ? (
-                <View style={styles.hang}>
-                  <View style={[styles.khoi, styles.khoiAi]}>
-                    <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
-                      <View style={styles.dauAi}>
-                        <Ionicons color={colors.ai} name="sparkles" size={15} />
-                        <Text style={[typography.caption, { color: colors.ai }]}>Đang hỏi Rủ Đi AI...</Text>
+                </HangLoiNho>
+              ))}
+              {/* The requester's own answer in the thread while it is written:
+                  the reading sentence, the words as they come, then the real
+                  card (slice 11). */}
+              {ai.requests.filter(laTraLoiDangCho).map((request) => (
+                <TraLoiAiDangViet
+                  contextId={contextId}
+                  daCoThe={daCoThe}
+                  docMot={ai.docMot}
+                  giamChuyenDong={reduced}
+                  key={`song-${request.id}`}
+                  khiKetThuc={ai.lamMoi}
+                  personId={personId}
+                  request={request}
+                  tenNguoi={tenNguoi}
+                  trigger={request.trigger_message_id ? tinTheoId.get(request.trigger_message_id) ?? null : null}
+                />
+              ))}
+              {/* Everyone else in the room watches the same answer: the same row
+                  and state machine, fed by the feed socket's `ai` frames, until
+                  the card arrives (slice 12). */}
+              {traLoiPhong.map((l) => (
+                <HangTraLoiAiDangViet
+                  daCoThe={daCoThe}
+                  giamChuyenDong={reduced}
+                  key={`phong-${l.inv}`}
+                  nguoiXem="thanh_vien"
+                  request={loiGoiCuaPhong(l.inv, l.tin, l.soTin)}
+                  tenNguoi={tenNguoi}
+                  traLoi={l.traLoi}
+                  trigger={tinTheoId.get(l.tin) ?? null}
+                />
+              ))}
+              {ai.requests.filter((request) => request.status !== "succeeded" && request.status !== "cancelled" && !laTraLoiDangCho(request)).map((request) => (
+                <HangLoiNho cau={chuHangLoiGoi(request).cau} dangCho={request.status !== "failed"} key={request.id} title={chuHangLoiGoi(request).tieuDe}>
+                  {request.status === "failed" && thuLaiDuoc(request) ? <RudiButton label="Thử lại lời nhờ" compact full={false} variant="outline" loading={ai.busy} disabled={ai.busy || !lenhSanSang(ai.capabilities, request.command ?? "plan")} lyDo={lenhSanSang(ai.capabilities, request.command ?? "plan") ? undefined : "Rủ Đi AI chưa sẵn sàng trong cuộc trò chuyện này."} onPress={() => void ai.retry(request.id)} /> : null}
+                  {request.status === "failed" && (request.command ?? "plan") === "plan" ? <RudiButton label="Tự tạo kèo" compact full={false} variant="ghost" onPress={() => moToHen()} /> : null}
+                </HangLoiNho>
+              ))}
+              {/* Every logical send owns its pending and failed row. */}
+              {chat.hangCho.map((t) => (
+                <HangChoGui key={t.attempt.key} onBoQua={() => { capChoTin.current.delete(t.attempt.key); chat.boQua(t.attempt.key); }} onThuLai={() => void thuLaiGui(t.attempt.key)} tin={t} />
+              ))}
+              {dangGuiThan === null && loiCuoi !== null ? (
+              <CauTaiCho cau={loiCuoi.cau} hanhDong={loiCuoi.hanhDong} style={styles.loiCuoi} testID="chat-loi-cuoi" />
+            ) : dangGuiThan !== null ? (
+              <View style={styles.choGui}>
+                {/* Only when the AI will really be asked: a command the server
+                    is not ready for goes as an ordinary message, as the chip
+                    above the send button just said (QA UI-164). */}
+                {(() => { const nhac = timNhacAi(dangGuiThan); return nhac !== null && lenhSanSang(ai.capabilities, nhac.lenh); })() ? (
+                  <View style={styles.hang}>
+                    <View style={[styles.khoi, styles.khoiAi]}>
+                      <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
+                        <View accessibilityLiveRegion="polite" style={styles.dauAi}>
+                          <Ionicons color={colors.ai} name="sparkles" size={15} />
+                          <Text style={[typography.caption, { color: colors.ai }]}>Đang hỏi Rủ Đi AI...</Text>
+                        </View>
+                        <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                          Bạn có thể tiếp tục soạn tin trong lúc chờ.
+                        </Text>
                       </View>
-                      <Text style={[typography.caption, { color: colors.inkSoft }]}>
-                        Bạn có thể tiếp tục soạn tin trong lúc chờ.
-                      </Text>
                     </View>
                   </View>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
-          </>
-        }
-        ListFooterComponent={
-          chat.dangNapCu ? (
-            <Text style={[typography.caption, styles.giua, { color: colors.inkFaint }]}>Đang tải tin cũ...</Text>
-          ) : null
-        }
-        // Hold the reader's place while they are up in the history and rows
-        // arrive at the newest end. Off while they are at the end: in an
-        // inverted list offset 0 *is* the newest end, so a new row, the
-        // pending bubble and the notice header land in view with no scroll at
-        // all. Keeping the anchor on there was the flow-30 red: the native
-        // helper answers every content change with a smooth scroll of its
-        // own, the JS side holds the render window until a scroll event comes
-        // back, and the throttle dropped the event that would have said «at
-        // the end again» -- the sent bubble ended half under the composer and
-        // the notice below it, off screen.
-        maintainVisibleContentPosition={oCuoi ? undefined : { minIndexForVisible: 0 }}
-        // Content grows at the newest end (a row, the pending bubble, the
-        // notice header): within a bubble of the end, stay at the end.
-        onContentSizeChange={() => {
-          if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
-        }}
-        onEndReached={() => void chat.napCuHon()}
-        onEndReachedThreshold={0.6}
-        onScrollToIndexFailed={({ index, averageItemLength }) => {
-          danhSachRef.current?.scrollToOffset({ offset: index * averageItemLength, animated: false });
-        }}
-        onMomentumScrollEnd={ghiViTri}
-        onScroll={ghiViTri}
-        onScrollEndDrag={ghiViTri}
-        renderItem={renderItem}
-        // Every event: Android drops (not delays) events inside the throttle
-        // window, and a dropped last event leaves `ganCuoi` pointing at the
-        // wrong end of the list.
-        scrollEventThrottle={16}
-        testID="chat-list"
-      />
-      {!oCuoi ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Về tin nhắn mới nhất"
-          onPress={veCuoi}
-          style={[styles.veCuoi, { backgroundColor: colors.card, borderColor: colors.line }]}
-        >
-          <Ionicons name="arrow-down" size={18} color={colors.accent} />
-          <Text style={[typography.label, { color: colors.ink }]}>Tin mới nhất</Text>
-        </Pressable>
-      ) : null}
-      {chat.loi ? (
-        <Text style={[typography.caption, { color: colors.warn, paddingHorizontal: space.md }]}>{chat.loi}</Text>
-      ) : null}
+                ) : null}
+              </View>
+            ) : null}
+            </>
+          }
+          ListFooterComponent={
+            chat.dangNapCu ? (
+              <Text style={[typography.caption, styles.giua, { color: colors.inkFaint }]}>Đang tải tin cũ...</Text>
+            ) : chat.loiCu ? (
+              // Where the older messages would have appeared: the top of the thread.
+              <CauTaiCho cau={chat.loiCu} hanhDong={{ label: "Thử lại", onPress: () => void chat.napCuHon() }} style={styles.loiCuoi} testID="chat-loi-cu" />
+            ) : null
+          }
+          // Hold the reader's place while they are up in the history and rows
+          // arrive at the newest end. Off while they are at the end: in an
+          // inverted list offset 0 *is* the newest end, so a new row, the
+          // pending bubble and the notice header land in view with no scroll at
+          // all. Keeping the anchor on there was the flow-30 red: the native
+          // helper answers every content change with a smooth scroll of its
+          // own, the JS side holds the render window until a scroll event comes
+          // back, and the throttle dropped the event that would have said «at
+          // the end again» -- the sent bubble ended half under the composer and
+          // the notice below it, off screen.
+          maintainVisibleContentPosition={oCuoi ? undefined : { minIndexForVisible: 0 }}
+          // Content grows at the newest end (a row, the pending bubble, the
+          // notice header): within a bubble of the end, stay at the end.
+          onContentSizeChange={() => {
+            if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+          }}
+          onEndReached={() => void chat.napCuHon()}
+          onEndReachedThreshold={0.6}
+          onScrollToIndexFailed={({ index, averageItemLength }) => {
+            danhSachRef.current?.scrollToOffset({ offset: index * averageItemLength, animated: false });
+          }}
+          onMomentumScrollEnd={ghiViTri}
+          onScroll={ghiViTri}
+          onScrollEndDrag={ghiViTri}
+          renderItem={renderItem}
+          // Every event: Android drops (not delays) events inside the throttle
+          // window, and a dropped last event leaves `ganCuoi` pointing at the
+          // wrong end of the list.
+          scrollEventThrottle={16}
+          testID="chat-list"
+        />
+        {!oCuoi ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Về tin nhắn mới nhất"
+            onPress={veCuoi}
+            style={[styles.veCuoi, { backgroundColor: colors.card, borderColor: colors.line }]}
+          >
+            <Ionicons name="arrow-down" size={18} color={colors.accent} />
+            <Text style={[typography.label, { color: colors.ink }]}>Tin mới nhất</Text>
+          </Pressable>
+        ) : null}
+      </View>
       {moLenh && lenhPhuHop.length > 0 ? (
         <ScrollView keyboardShouldPersistTaps="handled" style={[styles.lenh, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
           {lenhPhuHop.map((l) => (
@@ -1093,8 +1201,16 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         </View>
       ) : null}
       {khongNhanTin ? (
-        <View style={[styles.dungNhan, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>Cuộc trò chuyện này không còn nhận tin.</Text>
+        <View style={[styles.dungNhan, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md, marginBottom: Math.max(insets.bottom, 10) }]} testID="chat-dung-nhan">
+          <Text style={[typography.body, { color: colors.ink }]}>
+            {toiDaChan ? `Bạn đã chặn ${tenNhom}.` : "Cuộc trò chuyện này không còn nhận tin."}
+          </Text>
+          {toiDaChan || chat.tin.length > 0 ? (
+            <Text style={[typography.note, { color: colors.inkSoft }]}>
+              {[toiDaChan ? "Hai bạn không nhắn cho nhau được nữa." : null, chat.tin.length > 0 ? "Tin cũ vẫn đọc được ở trên." : null].filter(Boolean).join(" ")}
+            </Text>
+          ) : null}
+          {toiDaChan ? <RudiButton compact full={false} label="Xem danh sách đã chặn" onPress={() => router.push("/settings/da-chan" as never)} variant="ghost" /> : null}
         </View>
       ) : (
         <View
@@ -1123,10 +1239,19 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             cursorColor={colors.accent}
             multiline
             onChangeText={doiNhap}
+            onKeyPress={enterGui ? (e) => {
+              const phim = e as unknown as { key?: string; shiftKey?: boolean; nativeEvent: { isComposing?: boolean }; preventDefault: () => void };
+              if (phim.key === "Enter" && !phim.shiftKey && !phim.nativeEvent.isComposing) {
+                phim.preventDefault();
+                void gui();
+              }
+            } : undefined}
+            ref={oNhapRef}
+            {...(Platform.OS === "web" ? { rows: 1 } : null)}
             placeholder={nhanRieng ? `Nhắn cho ${tenNhom}` : "Nhắn cho hội…"}
             placeholderTextColor={colors.inkSoft}
             selectionColor={colors.accentSoft}
-            style={[typography.body, styles.oNhap, { color: colors.ink }, KHONG_VIEN_WEB]}
+            style={[typography.body, styles.oNhap, { color: colors.ink, maxHeight: caoOToiDa }, KHONG_VIEN_WEB]}
             value={nhap}
           />
           <IconButton
@@ -1183,6 +1308,18 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   );
 }
 
+/** The composer: one line of body text, its padding, and the 48dp it adds up to. */
+const DONG_O = typography.body.lineHeight;
+const DEM_O = (48 - DONG_O) / 2;
+const CAO_O = DONG_O + 2 * DEM_O;
+
+/**
+ * Web only: a word longer than the bubble breaks anywhere. The browser's
+ * default `overflow-wrap: break-word` wraps it but still sizes the bubble to
+ * the whole word, so a long link pushed it out of its column (QA UI-063).
+ */
+const BE_CHU: TextStyle | null = Platform.OS === "web" ? ({ wordBreak: "break-word" } as unknown as TextStyle) : null;
+
 const styles = StyleSheet.create({
   dayGhim: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 4, zIndex: 1 },
   chatHeader: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 64 },
@@ -1190,7 +1327,7 @@ const styles = StyleSheet.create({
   moLoi: { alignItems: "center", gap: 6 },
   invocation: { borderWidth: 1, borderRadius: 12, padding: 14, gap: 8, marginBottom: 10 },
   requestActions: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  dungNhan: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: 12, marginBottom: 10 },
+  dungNhan: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: 12, gap: 4 },
   man: { flex: 1, width: "100%", maxWidth: 820, alignSelf: "center" },
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },
@@ -1201,22 +1338,43 @@ const styles = StyleSheet.create({
   nghieng: { fontStyle: "italic" },
   dangTraLoi: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderRadius: 14, paddingLeft: 12, paddingRight: 2, paddingVertical: 4, marginBottom: 6 },
   dangTraLoiChu: { flex: 1, gap: 1 },
-  danhSach: { paddingTop: 12, paddingBottom: 22, gap: 8 },
-  ngay: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 },
+  danhSach: { paddingTop: 12, paddingBottom: 22 },
+  ngay: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 16, paddingBottom: 4 },
   duong: { flex: 1, height: StyleSheet.hairlineWidth },
   hang: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   hangToi: { justifyContent: "flex-end" },
-  hangCao: { alignItems: "flex-start" },
-  khoi: { maxWidth: "82%", gap: 4 },
+  // A card nobody in the room sent (the AI's, the group's shared sheet) is an
+  // object laid across the thread: full width on a phone, centred in its
+  // reading column on a tablet, never hanging from the avatar gutter.
+  hangGiua: { justifyContent: "center" },
+  // `minWidth: 0` lets the column be narrower than its longest word, so a
+  // link breaks inside the bubble instead of pushing it past 82% and off the
+  // left edge (QA UI-063: 346px at every width).
+  khoi: { maxWidth: "82%", minWidth: 0, flexShrink: 1, gap: 4 },
   khoiToi: { alignItems: "flex-end" },
-  khoiAi: { maxWidth: "100%", flex: 1 },
+  // A card is an object in the thread: the full line on a phone, a reading
+  // column on a tablet.
+  khoiAi: { maxWidth: 640, flex: 1 },
+  khoiPoll: { maxWidth: 560, flex: 1 },
   choChuDau: { width: 30, height: 30 },
-  bong: { borderWidth: 1, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
+  bong: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, minWidth: 0 },
   duoiBong: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   chip: { minHeight: 48, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 },
   baoMat: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" },
   dau: { paddingBottom: 8, borderBottomWidth: StyleSheet.hairlineWidth },
-  rong: { paddingVertical: 24 },
+  rong: { flex: 1 },
+  rongNoi: { flexGrow: 1, justifyContent: "center", paddingVertical: 16 },
+  ds: { flex: 1 },
+  dsRong: { flexGrow: 0, flexShrink: 1 },
+  dsRongTrong: { flexGrow: 0 },
+  tinKhoi: { gap: 3 },
+  // The name, quote and reactions start where the bubble does, past the avatar.
+  thut: { marginLeft: 38 },
+  duoiToi: { justifyContent: "flex-end" },
+  loiTin: { marginTop: 2 },
+  // Under your own message the sentence hangs from the right, like the bubble.
+  loiTinToi: { alignSelf: "flex-end", justifyContent: "flex-end", maxWidth: "82%" },
+  loiCuoi: { paddingVertical: 8 },
   choGui: { gap: 12 },
   // Two content-sized buttons that may wrap. `RudiButton` is full-width by
   // default, and two full-width buttons in one row pushed «Thử lại» off the
@@ -1226,8 +1384,9 @@ const styles = StyleSheet.create({
   mo: { opacity: 0.62 },
   choAi: { gap: 6, padding: 14, borderWidth: 1 },
   dauAi: { flexDirection: "row", alignItems: "center", gap: 6 },
+  flex1: { flex: 1 },
   giua: { textAlign: "center", paddingVertical: 8 },
-  veCuoi: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, minHeight: 48, borderWidth: 1, borderRadius: 24, paddingHorizontal: 16, marginVertical: 6 },
+  veCuoi: { position: "absolute", bottom: 8, alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, minHeight: 48, borderWidth: 1, borderRadius: 24, paddingHorizontal: 16 },
   lenh: { maxHeight: 200, flexGrow: 0, borderWidth: 1, borderRadius: 16, padding: 6, gap: 2 },
   lenhHang: { minHeight: 48, paddingHorizontal: 10, paddingVertical: 8, gap: 1 },
   soan: { flexDirection: "row", alignItems: "flex-end", gap: 6, padding: 6, borderWidth: 1, borderRadius: 22 },
@@ -1235,5 +1394,7 @@ const styles = StyleSheet.create({
   // with its text, so one line sits in the middle of the pill and a longer
   // message fills it from the top anyway. Said out loud because Android's
   // default is what made every other box start mid-way (QA 23/09).
-  oNhap: { flex: 1, minHeight: 48, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8, textAlignVertical: "center" },
+  // One line is exactly the 48dp of «+» and the send button beside it, so the
+  // three share a centre line; more lines grow upward from the same foot.
+  oNhap: { flex: 1, minHeight: CAO_O, paddingHorizontal: 10, paddingVertical: DEM_O, textAlignVertical: "center" },
 });

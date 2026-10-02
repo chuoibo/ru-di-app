@@ -17,6 +17,12 @@ import { giuState } from "../../../ui/a11y";
  */
 export interface HangChangProps {
   gio: string;
+  /**
+   * Set inside a card in the chat: the hour starts flush with the card's text
+   * instead of right-aligned in its column, so «19:00» sits under the title's
+   * first letter (finish review B6). The plan screens keep the column.
+   */
+  sat?: boolean;
   tieuDe: string;
   /** The line under the title: the place, or what is still missing. */
   phu?: string | null;
@@ -87,7 +93,7 @@ function AnhChang({ ve, alt, loai, onHong }: { ve: KhungDaVe; alt: string; loai?
   );
 }
 
-export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, chon = false, phai, phaiLeChu = 0, duoi, anh = null, children }: HangChangProps) {
+export function HangChang({ gio, sat = false, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, chon = false, phai, phaiLeChu = 0, duoi, anh = null, children }: HangChangProps) {
   const { colors } = useRudiTheme();
   // The picture's failure is the stop's state, not the thumbnail's: the frame
   // shows the drawn object, and the stop says why in words (a state is always
@@ -141,7 +147,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
   return (
     <View onLayout={(e) => setRongHang(Math.round(e.nativeEvent.layout.width))}>
     <View style={[styles.row, cuoi && !onPress && styles.rowCuoiTinh]}>
-      <Text numberOfLines={1} style={[typography.label, styles.gio, { color: colors.ink }]}>{gio}</Text>
+      <Text numberOfLines={1} style={[typography.label, styles.gio, sat && styles.gioSat, { color: colors.ink }]}>{gio}</Text>
       <View style={styles.axis}>
         <View
           style={[
@@ -213,6 +219,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.7 },
   phai: { justifyContent: "flex-start", paddingTop: 0, flexShrink: 0 },
   gioTrong: { minWidth: 46 },
+  gioSat: { textAlign: "left" },
   // The stop above keeps less bottom room when its control sits under it.
   bodyTrenPhai: { paddingBottom: 6 },
   phaiDuoi: { alignSelf: "flex-start", paddingBottom: 18 },

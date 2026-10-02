@@ -74,14 +74,14 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-059 | P3 | UX_IMPROVEMENT | F04 | Dòng người trả mất «(trả)» | B4 | «trả» luôn thấy | READY_FOR_QA |
 | UI-060 | P3 | UX_IMPROVEMENT | F04 | Tài chính: «Chi theo nhóm» không có hàng | B4 | tiêu đề khớp nội dung | READY_FOR_QA |
 | UI-061 | P3 | VISUAL_UPGRADE | F04 | Quyết toán ở 320dp: dòng đầu sổ ép thành 9 dòng | B4 | ≤5 dòng ở C2 | READY_FOR_QA |
-| UI-062 | P2 | BUG_FIX | F05 | Ô soạn web là textarea 2 hàng không cao lên; chữ lệch 20px | B6 | lệch ≤4px; cao dần tới trần | PLANNED |
-| UI-063 | P2 | BUG_FIX | F05 | Bong bóng có link dài tràn cột; 320dp mất đầu link | B6 | bong bóng trong khung | PLANNED |
-| UI-064 | P3 | VISUAL_UPGRADE | F05 | Avatar thấp hơn bong bóng 22px; giờ lặp dưới mọi cụm | B6 | avatar ±4px; giờ theo khoảng thời gian | PLANNED |
-| UI-065 | P3 | VISUAL_UPGRADE | F05 | Thẻ bình chọn chiếm 39–59% màn, «phiếu» lặp 4 lần, trải hết tablet | B6 | ≤25% chiều cao C1; «phiếu» ≤1; ≤560 ở C6 | PLANNED |
+| UI-062 | P2 | BUG_FIX | F05 | Ô soạn web là textarea 2 hàng không cao lên; chữ lệch 20px | B6 | lệch ≤4px; cao dần tới trần | READY_FOR_QA |
+| UI-063 | P2 | BUG_FIX | F05 | Bong bóng có link dài tràn cột; 320dp mất đầu link | B6 | bong bóng trong khung | READY_FOR_QA |
+| UI-064 | P3 | VISUAL_UPGRADE | F05 | Avatar thấp hơn bong bóng 22px; giờ lặp dưới mọi cụm | B6 | avatar ±4px; giờ theo khoảng thời gian | READY_FOR_QA |
+| UI-065 | P3 | VISUAL_UPGRADE | F05 | Thẻ bình chọn chiếm 39–59% màn, «phiếu» lặp 4 lần, trải hết tablet | B6 | ≤25% chiều cao C1; «phiếu» ≤1; ≤560 ở C6 | READY_FOR_QA |
 | UI-066 | P3 | UX_IMPROVEMENT | F05 | Khay «Tờ hẹn chung» không đóng bằng Esc | B2 | Esc đóng, focus trả về | READY_FOR_QA |
-| UI-067 | P3 | UX_IMPROVEMENT | F05+ | Sheet báo cáo: lý do chọn chỉ khác màu nền | B6 | 5 radio, một đang chọn | PLANNED |
-| UI-068 | P3 | UX_IMPROVEMENT | F05 | Một request tin hỏng: câu lỗi chung, không «Thử lại», dù tin vẫn hiện đủ | B6 | không câu thừa, hoặc có «Thử lại» | PLANNED |
-| UI-069 | P3 | UX_IMPROVEMENT | F05 | Thẻ thông báo lỗi mọc ở cuối chat, mặc áo AI | B6 | trong khung nhìn, không kiểu AI | PLANNED |
+| UI-067 | P3 | UX_IMPROVEMENT | F05+ | Sheet báo cáo: lý do chọn chỉ khác màu nền | B6 | 5 radio, một đang chọn | READY_FOR_QA |
+| UI-068 | P3 | UX_IMPROVEMENT | F05 | Một request tin hỏng: câu lỗi chung, không «Thử lại», dù tin vẫn hiện đủ | B6 | không câu thừa, hoặc có «Thử lại» | READY_FOR_QA |
+| UI-069 | P3 | UX_IMPROVEMENT | F05 | Thẻ thông báo lỗi mọc ở cuối chat, mặc áo AI | B6 | trong khung nhìn, không kiểu AI | READY_FOR_QA |
 | UI-070 | P3 | VISUAL_UPGRADE | F05 | Dải ghim sáng trên nền mờ khi sheet mở | B2 | dải bị mờ cùng nền | READY_FOR_QA |
 | UI-071 | P3 | UX_IMPROVEMENT | F06 | Lập nhóm xong về Khám phá, không thấy nhóm vừa lập | B8 | vào nhóm mới + lời mời | PLANNED |
 | UI-072 | P3 | BUG_FIX | F06 | Mời người đã ở trong nhóm: 409 hiện thành câu «lần bấm trước» | B2 | câu «đã ở trong nhóm» | READY_FOR_QA |
@@ -91,7 +91,7 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-076 | P3 | UX_IMPROVEMENT | F06 | 19 nút cùng tên «Đặt làm quản trị»; hàng không mở hồ sơ | B8 | tên nút riêng; hàng mở hồ sơ | PLANNED |
 | UI-077 | P3 | UX_IMPROVEMENT | F06 | «Đồng ý» lỗi thì cả danh sách bạn thành màn lỗi | B8 | lỗi theo hàng, danh sách giữ | PLANNED |
 | UI-078 | P3 | UX_IMPROVEMENT | F06 | Sau khi chặn, tải lại mất dấu «Đã chặn» | B8 | «Đã chặn» + «Bỏ chặn» sau tải lại | PLANNED |
-| UI-079 | P3 | UX_IMPROVEMENT | F05/F06 | Chat đôi bị chặn: «Đang nối lại» mãi, vẫn mời nhắn | B6 | 20s: không còn; người chặn thấy lý do | PLANNED |
+| UI-079 | P3 | UX_IMPROVEMENT | F05/F06 | Chat đôi bị chặn: «Đang nối lại» mãi, vẫn mời nhắn | B6 | 20s: không còn; người chặn thấy lý do | READY_FOR_QA |
 | UI-080 | P3 | UX_IMPROVEMENT | F05/F06 | Lời mời vào nhóm không nói ai mời, không từ chối được | B8 | tên người mời + hai lựa chọn | PLANNED |
 | UI-081 | P3 | VISUAL_UPGRADE | F06 | Tablet: danh sách trải hết, nút cách tên 487–679px | B8 | ≤160px | PLANNED |
 | UI-082 | P1 | BUG_FIX | F07/F11/E6 | Không phiên: link thật mở sổ demo không nhãn, «Gửi» báo đã gửi | B1 | cửa đăng nhập rồi về link; không báo gửi giả | READY_FOR_QA |
@@ -128,20 +128,20 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-113 | P2 | UX_IMPROVEMENT | F02 | 320dp: tim «Lưu» của cặp so sánh bị đẩy ra ngoài | B5 | cả hai tim trong ô | READY_FOR_QA |
 | UI-114 | P3 | BUG_FIX | F02 | Nút «Lưu» lồng trong nút «Mở …» | B5 | không nút lồng nút | READY_FOR_QA |
 | UI-115 | P3 | BUG_FIX | F10 | Sân khấu kéo nghiêng chặn cuộn dọc | B5 | kéo dọc vẫn cuộn | READY_FOR_QA |
-| UI-116 | P2 | BUG_FIX | F11 | Chat demo: bong bóng không xuống dòng, chữ tràn | B6 | 0 chữ bị cắt ở C1–C3 | PLANNED |
+| UI-116 | P2 | BUG_FIX | F11 | Chat demo: bong bóng không xuống dòng, chữ tràn | B6 | 0 chữ bị cắt ở C1–C3 | READY_FOR_QA |
 | UI-117 | P2 | BUG_FIX | F11 | Back khi sheet demo mở: Khám phá bị khoá, chạm rơi vào sheet vô hình | B1 | không inert sót; chạm hoạt động | READY_FOR_QA |
 | UI-118 | P3 | UX_IMPROVEMENT | E2 | Kèo tạo từ chat không để lại dấu trong chat | B3 | chat có kèo + lối mở | READY_FOR_QA |
 | UI-119 | P2 | UX_IMPROVEMENT | E2 | «Tôi đã tới» không thành kỷ niệm; album «0 chỗ đã tới» | B3 + ADR | lối thêm khoảnh khắc ngay sau khi tới; album nói rõ nó đếm gì (luật: ADR đề xuất) | READY_FOR_QA (phần UI) · BLOCKED (luật: chờ quyết ADR UI-119) |
 | UI-120 | P1 | BUG_FIX | E5 | Bị chặn vẫn gửi được tờ hẹn tới người đã chặn mình | B1 (Go+Py) | bên bị chặn gửi → từ chối; bên chặn không nhận gì | READY_FOR_QA |
 | UI-121 | P2 | UX_IMPROVEMENT | E6 | Đăng nhập từ link không quay về link đó | B1 | tới đúng link gốc | READY_FOR_QA |
-| UI-122 | P3 | BUG_FIX | E1 | Đầu chat giữ số thành viên cũ khi có người mới vào | B6 | cập nhật trong vài giây | PLANNED |
+| UI-122 | P3 | BUG_FIX | E1 | Đầu chat giữ số thành viên cũ khi có người mới vào | B6 | cập nhật trong vài giây | READY_FOR_QA |
 | UI-123 | P2 | BUG_FIX | F00 | Web: đổi tab thay mục lịch sử, Back rời app | B1 | Back qua lại giữa các tab | READY_FOR_QA |
-| UI-124 | P2 | BUG_FIX | N26 | Chat hai người rỗng ở cửa sổ thấp đẩy ô soạn ra ngoài | B6 | nút gửi trong khung ở C2/C4/C8 | PLANNED |
-| UI-125 | P3 | UX_IMPROVEMENT | N26 | Hàng ghim tắt/bật mỗi lần focus (nhảy 78dp); không thấy phòng thành cặp đôi | B6 | 0 khung mất hàng; cập nhật ≤8s | PLANNED |
+| UI-124 | P2 | BUG_FIX | N26 | Chat hai người rỗng ở cửa sổ thấp đẩy ô soạn ra ngoài | B6 | nút gửi trong khung ở C2/C4/C8 | READY_FOR_QA |
+| UI-125 | P3 | UX_IMPROVEMENT | N26 | Hàng ghim tắt/bật mỗi lần focus (nhảy 78dp); không thấy phòng thành cặp đôi | B6 | 0 khung mất hàng; cập nhật ≤8s | READY_FOR_QA |
 | UI-126 | P3 | UX_IMPROVEMENT | N26 | Hàng mời «Một đôi» dẫn tới màn không nhắc lời đề nghị | B8 | màn tới nói về lời đề nghị | PLANNED |
 | UI-127 | P3 | UX_IMPROVEMENT, MOTION_UPGRADE | N26 | Khoảnh khắc M6 «sổ hai người mở» không diễn | B8 | M6 diễn một lần; C9 khung cuối | PLANNED |
-| UI-128 | P3 | UX_IMPROVEMENT | N26 | Chat hai người còn chữ của nhóm | B6 | không «nhóm/hội» trong chat hai người | PLANNED |
-| UI-129 | P3 | UX_IMPROVEMENT | N26 | Sheet «Gu của hai bạn»: hai dòng ngược nhau; lỗi nằm dưới lớp phủ | B6 | một câu đúng; lỗi trong sheet | PLANNED |
+| UI-128 | P3 | UX_IMPROVEMENT | N26 | Chat hai người còn chữ của nhóm | B6 | không «nhóm/hội» trong chat hai người | READY_FOR_QA |
+| UI-129 | P3 | UX_IMPROVEMENT | N26 | Sheet «Gu của hai bạn»: hai dòng ngược nhau; lỗi nằm dưới lớp phủ | B6 | một câu đúng; lỗi trong sheet | READY_FOR_QA |
 | UI-130 | P2 | UX_IMPROVEMENT | N26×F02 | «Rủ X tới đây» cho cặp bạn: chỗ vừa chọn bị bỏ | B8 | màn tới mang quán, hoặc nút ẩn | PLANNED |
 | UI-131 | P3 | BUG_FIX | N26 | Máy chủ vẫn phác tờ cho cặp chưa «Một đôi» | ADR (`adr-de-xuat/UI-131-…`, chờ chủ sản phẩm) | draft cho cặp bạn → 4xx | BLOCKED |
 | UI-132 | P2 | BUG_FIX | N14 | Cộng đồng mới: tab đầu báo «chưa kết nối được», «Thử lại» không bao giờ được | B7 (Go) | 200 với 0 bài; trạng thái rỗng mời kể chuyện | PLANNED |
@@ -176,10 +176,10 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-161 | P3 | UX_IMPROVEMENT | N21 | Chạm huy hiệu thứ tư không phản hồi mà vẫn gửi PATCH | B9 | không PATCH; nói lý do | PLANNED |
 | UI-162 | P3 | UX_IMPROVEMENT | N21 | Mục «Thành tích…» mở màn «Hành trình» | B9 | tên mục khớp màn tới | PLANNED |
 | UI-163 | P2 | BUG_FIX | N22 | Gói bối cảnh mặc định 40 tin, gấp đôi mức 20 của ADR-0046 | B1 | chip ≤20; gói = số trên chip | READY_FOR_QA |
-| UI-164 | P3 | UX_IMPROVEMENT | N22 | Chip nói «gửi như tin thường» mà vẫn hiện «Đang hỏi Rủ Đi AI…» | B6 | không khối AI khi AI chưa sẵn sàng | PLANNED |
-| UI-165 | P3 | UX_IMPROVEMENT | N22 | Chữ hiện dần, «đang đọc/nghĩ», lỗi Nếp không trong vùng aria-live | B6 | vùng live lịch sự, báo một lần | PLANNED |
+| UI-164 | P3 | UX_IMPROVEMENT | N22 | Chip nói «gửi như tin thường» mà vẫn hiện «Đang hỏi Rủ Đi AI…» | B6 | không khối AI khi AI chưa sẵn sàng | READY_FOR_QA |
+| UI-165 | P3 | UX_IMPROVEMENT | N22 | Chữ hiện dần, «đang đọc/nghĩ», lỗi Nếp không trong vùng aria-live | B6 | vùng live lịch sự, báo một lần | READY_FOR_QA |
 | UI-166 | P2 | BUG_FIX | N22 | Tấm «Xem» trượt dưới dải ghim | B2 | sheet phủ dải; trần 82% cả sheet | READY_FOR_QA |
-| UI-167 | P3 | VISUAL_UPGRADE | N22 | Ở 320 chip gãy dòng, ✦ đứng riêng | B6 | ✦ cùng dòng; chip ≤36 cao | PLANNED |
+| UI-167 | P3 | VISUAL_UPGRADE | N22 | Ở 320 chip gãy dòng, ✦ đứng riêng | B6 | ✦ cùng dòng; chip ≤36 cao | READY_FOR_QA |
 
 Đếm theo batch: ADR 1 · B1 13 · B10 11 · B2 20 · B3 16 · B4 12 · B5 12 · B6 17 · B7 15 · B8 18 · B9 32
 

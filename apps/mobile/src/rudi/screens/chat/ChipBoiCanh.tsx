@@ -16,8 +16,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { nhanVai, type BoiCanh } from "../../ai/boi-canh";
-import { XEM, cauXem, cauXemCach, chuChip } from "../../chat/chip-boi-canh";
+import type { BoiCanh } from "../../ai/boi-canh";
+import { XEM, cauXem, cauXemCach, chuChip, gomTheoNguoi } from "../../chat/chip-boi-canh";
 import { typography, useRudiTheme } from "../../theme";
 import { Sheet } from "../../ui/Sheet";
 
@@ -36,17 +36,27 @@ export function ChipBoiCanh({ goi, kemTin, sanSang, onDoi, onXem, haiNguoi = fal
   const chu = chuChip(goi, kemTin, sanSang, haiNguoi);
   return (
     <View style={[styles.chip, { backgroundColor: colors.aiSoft, borderColor: colors.line }]} testID="chat-chip-boi-canh">
-      <Ionicons color={colors.ai} name="sparkles" size={15} />
-      <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.cau, { color: colors.ink }]} testID="chat-boi-canh">{chu.cau}</Text>
-      {chu.xem && goi !== null ? (
-        <Pressable accessibilityRole="button" accessibilityLabel="Xem những tin sẽ gửi kèm" hitSlop={12} onPress={onXem} style={styles.nut} testID="chat-boi-canh-mo">
-          <Text style={[typography.label, { color: colors.ai }]}>{XEM}</Text>
-        </Pressable>
-      ) : null}
-      {chu.doi !== null ? (
-        <Pressable accessibilityRole="button" hitSlop={12} onPress={() => onDoi(!kemTin)} style={styles.nut} testID="chat-boi-canh-doi">
-          <Text style={[typography.label, { color: colors.ai }]}>{chu.doi}</Text>
-        </Pressable>
+      {/* The mark and its sentence are one unit that never wraps apart: the
+          sentence shrinks and breaks inside itself. The two actions are the
+          unit that moves to a line of their own when the chip is narrow
+          (QA UI-167: at 320dp the ✦ stood alone on the first line). */}
+      <View style={styles.cauKhoi}>
+        <Ionicons color={colors.ai} name="sparkles" size={15} style={styles.dau} />
+        <Text accessibilityLabel={chu.nhanDoc} accessibilityLiveRegion="polite" style={[typography.note, styles.cau, { color: colors.ink }]} testID="chat-boi-canh">{chu.cau}</Text>
+      </View>
+      {(chu.xem && goi !== null) || chu.doi !== null ? (
+        <View style={styles.nutKhoi}>
+          {chu.xem && goi !== null ? (
+            <Pressable accessibilityRole="button" accessibilityLabel="Xem những tin sẽ gửi kèm" hitSlop={12} onPress={onXem} style={styles.nut} testID="chat-boi-canh-mo">
+              <Text style={[typography.label, { color: colors.ai }]}>{XEM}</Text>
+            </Pressable>
+          ) : null}
+          {chu.doi !== null ? (
+            <Pressable accessibilityRole="button" hitSlop={12} onPress={() => onDoi(!kemTin)} style={styles.nut} testID="chat-boi-canh-doi">
+              <Text style={[typography.label, { color: colors.ai }]}>{chu.doi}</Text>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -68,22 +78,53 @@ export function TamXemBoiCanh({ goi, open, onClose, haiNguoi = false }: {
   return (
     <Sheet accessibilityLabel="Những tin sẽ gửi kèm lời nhờ" onClose={onClose} open={open && goi !== null} testID="chat-boi-canh-tam">
       {goi === null ? null : (
-        <ScrollView style={styles.xem} testID="chat-boi-canh-luot">
+        <View style={styles.xem} testID="chat-boi-canh-luot">
+          {/* The promise stays in view while the transcript scrolls: it is
+              the one sentence the sheet exists to keep (ADR-0036 §2.5). */}
           <Text style={[typography.body, { color: colors.ink }]}>{cauXem(goi, haiNguoi)}</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauXemCach(haiNguoi)}</Text>
-          {goi.luot.map((l) => (
-            <Text key={l.id} style={[typography.caption, { color: colors.ink }]} testID="chat-boi-canh-muc">{`${nhanVai(l)}: ${l.chu}`}</Text>
-          ))}
-        </ScrollView>
+          <ScrollView contentContainerStyle={styles.banGhi} style={[styles.cuon, { borderColor: colors.line }]}>
+            {gomTheoNguoi(goi.luot).map((doan) => (
+              <View key={doan.key} style={[styles.doan, doan.cuaToi && styles.doanToi]}>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{doan.nguoi}</Text>
+                {doan.luot.map((l) => (
+                  <View
+                    accessibilityLabel={`${doan.nguoi}: ${l.chu}`}
+                    accessible
+                    key={l.id}
+                    style={[styles.bongNho, { backgroundColor: doan.cuaToi ? colors.accentSoft : colors.card, borderColor: colors.line }]}
+                    testID="chat-boi-canh-muc"
+                  >
+                    <Text style={[typography.note, { color: colors.ink }]}>{l.chu}</Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </ScrollView>
+          <Text style={[typography.note, { color: colors.inkSoft }]}>{cauXemCach(haiNguoi)}</Text>
+        </View>
       )}
     </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  chip: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 6 },
+  chip: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", columnGap: 12, rowGap: 0, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 6 },
+  // Grows into the line and shrinks before anything wraps; 140dp is the least
+  // a sentence keeps before the actions give way to a line of their own.
+  cauKhoi: { flexDirection: "row", alignItems: "center", gap: 8, flexGrow: 1, flexShrink: 1, flexBasis: 140, minHeight: 26 },
+  dau: { flexShrink: 0 },
   cau: { flexShrink: 1 },
-  // 48dp touch targets on a one-line chip: the height comes from hitSlop.
-  nut: { minHeight: 32, justifyContent: "center" },
-  xem: { gap: 8 },
+  nutKhoi: { flexDirection: "row", alignItems: "center", gap: 14, marginLeft: "auto" },
+  // A real 48dp target on a 36dp chip: the button is 48 tall and gives 10dp
+  // back above and below, so the chip keeps one line's height while the box a
+  // finger (or a measuring tool) finds is the full 48 (DESIGN.md; QA measured
+  // 32 when the height came from hitSlop, which the web does not have).
+  nut: { minHeight: 48, marginVertical: -10, justifyContent: "center", paddingHorizontal: 2 },
+  xem: { gap: 10, flexShrink: 1 },
+  // The transcript scrolls inside the sheet; the sentences above and below it stay.
+  cuon: { flexShrink: 1, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  banGhi: { gap: 12, paddingVertical: 12 },
+  doan: { gap: 3, alignItems: "flex-start", maxWidth: "88%" },
+  doanToi: { alignSelf: "flex-end", alignItems: "flex-end" },
+  bongNho: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6 },
 });

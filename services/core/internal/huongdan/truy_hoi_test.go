@@ -350,6 +350,14 @@ func TestBoVangKhongSua(t *testing.T) {
 // set and group; duongVang MRR 0.9179 → 0.9177, [co_dau] 0.8978 → 0.8972.
 // Rewording the step without «ở» moved «bo fieu o dau v» out of the top 5:
 // that question sits one token's weight from the edge.
+// UI/UX upgrade B6 (2026-10-02): the settings button of a two-person chat is
+// named «Cài đặt cuộc trò chuyện» (it said «Cài đặt nhóm», QA UI-128), and
+// to-giay.md quotes the new name. That is the very phrase of the hai-nguoi
+// question «mở tờ giấy từ cài đặt cuộc trò chuyện», which moves up: duongHaiNguoi
+// MRR 0.6859 → 0.7051, [co_dau] 0.6806 → 0.7222. Recall@5 and every other set
+// unchanged. Adding «Chốt» to chat-nhom.md's labels moved four sets (duongTruyVan
+// MRR 0.8942 → 0.8923): the poll's close button keeps the words the manual
+// already quotes instead.
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
 		"":          {"0.9505", "0.9177"},
@@ -367,8 +375,8 @@ var vangGhim = map[string]map[string][2]string{
 		"teen":      {"0.9286", "0.6280"},
 	},
 	duongHaiNguoi: {
-		"":          {"1.0000", "0.6859"},
-		"co_dau":    {"1.0000", "0.6806"},
+		"":          {"1.0000", "0.7051"},
+		"co_dau":    {"1.0000", "0.7222"},
 		"khong_dau": {"1.0000", "0.8750"},
 		"teen":      {"1.0000", "0.4444"},
 	},

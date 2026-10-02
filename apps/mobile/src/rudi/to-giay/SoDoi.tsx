@@ -107,6 +107,12 @@ export interface TrangThaiSoDoi {
    * as if it had worked (the «Đừng» box lost every save without a word).
    */
   loiLenh: string | null;
+  /**
+   * A failed press of the taste sheet, worded for that sheet (`cauLoiGu`), or
+   * null. Said inside the sheet: the body's `loiLenh` line sits under the
+   * scrim, where nobody reads it (QA UI-129).
+   */
+  loiGu: string | null;
 }
 
 export interface SoDoiApi extends TrangThaiSoDoi {
@@ -200,6 +206,7 @@ function seed(): TrangThaiSoDoi {
     daNap: true,
     dangLam: null,
     loiLenh: null,
+    loiGu: null,
   };
 }
 

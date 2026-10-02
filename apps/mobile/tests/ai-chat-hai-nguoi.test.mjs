@@ -167,7 +167,8 @@ test("màn chat: không cổng nhanRieng nào chặn AI hay tờ hẹn; phần c
   assert.doesNotMatch(live, /timNhacAi\([^)]*nhanRieng/, "timNhacAi không còn nhận cờ cặp");
   assert.doesNotMatch(live, /if \(nhanRieng\) return null;/, "cặp đám bạn có hàng ghim tờ hẹn như nhóm");
   assert.doesNotMatch(live, /!nhanRieng \? <RudiButton label="Rủ hội một buổi"/);
-  assert.match(live, /\n\s*<RudiButton label="Rủ hội một buổi" variant="outline"/, "nút mở tờ hẹn ở màn trống có ở mọi phòng");
+  // Still in every room; a room of two words it for two (QA UI-128).
+  assert.match(live, /\n\s*<RudiButton label=\{nhanRieng \? "Rủ đi một buổi" : "Rủ hội một buổi"\} variant="outline"/, "nút mở tờ hẹn ở màn trống có ở mọi phòng");
   assert.match(live, /const nhacDangGo = timNhacAi\(nhap\)/);
   assert.match(live, /const nhac = command === undefined \? timNhacAi\(body\) : null/);
   assert.match(live, /MO_DAU_HOI_AI \+ nhapRef\.current\.text/);
@@ -177,7 +178,8 @@ test("màn chat: không cổng nhanRieng nào chặn AI hay tờ hẹn; phần c
   // is `hangGhimChat`'s call, so the couple gate travels as a prop. A pair that
   // has stopped (blocked, or the account ended) has no row at all: the server
   // refuses every outward write of the notebook (QA UI-120).
-  assert.match(live, /\{nhanRieng && phien !== null && !khongNhanTin \? <HangToGiaySong capDoi=\{capDoi\} /, "hàng ghim đọc sổ chỉ ở chat hai người còn nhận tin, cặp đôi quyết qua capDoi");
+  // `gonDau`: the row folds while the tray is open in a short window (B6, QA UI-124).
+  assert.match(live, /\{nhanRieng && phien !== null && !khongNhanTin && !gonDau \? <HangToGiaySong capDoi=\{capDoi\} /, "hàng ghim đọc sổ chỉ ở chat hai người còn nhận tin, cặp đôi quyết qua capDoi");
   assert.doesNotMatch(live, /<HangToGiaySong(?![^>]*capDoi=\{capDoi\})/);
   const song = readFileSync(join(SRC, "screens", "hai-nguoi", "HangToGiaySong.tsx"), "utf8");
   assert.match(song, /hangGhimChat\(\{ haiNguoi: true, capDoi, so: so\.so, toiId \}\)/);
@@ -201,7 +203,10 @@ test("màn chat: không cổng nhanRieng nào chặn AI hay tờ hẹn; phần c
   assert.match(soHen, /boCucKhay\(rongHang \?\? Math\.min\(width, 820\) - 32, tools\.length, fontScale\)/, "lưới khay phải tính từ số công cụ và cỡ chữ");
   assert.match(soHen, /\{ width: boCuc\.oRong \}/, "mỗi ô rộng đúng theo boCucKhay");
   assert.doesNotMatch(soHen, /minWidth: 62/, "ô tối thiểu 62 cố định làm năm ô xuống hàng 4 + 1 ở 360");
-  assert.match(soHen, /maxHeight: tranKhay\(height, panel === "tools" \? boCuc\.caoNoiDung : null\)/, "trần khay không được cắt lưới công cụ");
+  // The cap counts the photo note under the grid too (B6, QA UI-124), and the
+  // box never shrinks below one whole row of tools.
+  assert.match(soHen, /maxHeight: tranKhay\(height, panel === "tools" \? boCuc\.caoNoiDung \+ caoGhiChu : null\)/, "trần khay không được cắt lưới công cụ");
+  assert.match(soHen, /minHeight: panel === "tools" \? Math\.min\(boCuc\.caoNoiDung, /);
   assert.match(soHen, /\{chu\.ghiChuAnh\}/, "dòng chú thích ảnh đọc theo hai người / nhóm");
   assert.match(soHen, /nhapDangMo \? chuKhay\(haiNguoi\)\.suaChung/, "«Sửa cùng hội» có bản cho hai người");
   assert.match(live, /<ToHen haiNguoi=\{nhanRieng\} /);

@@ -520,7 +520,9 @@ const styles = StyleSheet.create({
   messages: { gap: 10 },
   messageRow: { flexDirection: "row", alignItems: "flex-end", gap: 8, maxWidth: "88%" },
   messageOwn: { alignSelf: "flex-end", justifyContent: "flex-end" },
-  messageBlock: { alignItems: "flex-start", gap: 3 },
+  // Shrinks with the row: without it the block kept its one-line width and ran
+  // past the row's 88% and off the right edge (QA UI-116, 22–92px at C1–C3).
+  messageBlock: { alignItems: "flex-start", gap: 3, flexShrink: 1, minWidth: 0 },
   messageBlockOwn: { alignItems: "flex-end" },
   choChuDau: { width: 30, height: 30 },
   sender: { marginLeft: 7 },

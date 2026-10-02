@@ -16,6 +16,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { vungSong } from "../../../ui/a11y";
 
 import { chuHienThi, type TraLoiSong } from "../../ai/tra-loi-song";
 import { useAiStream } from "../../ai/useAiStream";
@@ -96,10 +97,10 @@ export function HangTraLoiAiDangViet({ request, traLoi, trigger, tenNguoi, daCoT
         ) : null}
         {hang.kieu === "viet" ? (
           <View style={[styles.bong, { backgroundColor: colors.card, borderColor: colors.line }]}>
-            <Text style={[typography.body, { color: colors.ink }]} testID="chat-tra-loi-dang-viet">{hang.chu}</Text>
+            <Text {...vungSong(traLoi.pha !== "xong")} style={[typography.body, { color: colors.ink }]} testID="chat-tra-loi-dang-viet">{hang.chu}</Text>
           </View>
         ) : (
-          <View style={[styles.bong, { backgroundColor: colors.card, borderColor: colors.line }]}>
+          <View accessibilityLiveRegion="polite" style={[styles.bong, { backgroundColor: colors.card, borderColor: colors.line }]}>
             <Text style={[typography.label, { color: colors.ink }]} testID="chat-tra-loi-dang-doc">{hang.tieuDe}</Text>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>{hang.cau}</Text>
           </View>

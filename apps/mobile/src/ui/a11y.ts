@@ -102,3 +102,20 @@ export function giuState(pressed: boolean): GiuProps {
 export function expandState(expanded: boolean): { "aria-expanded": boolean } {
   return { "aria-expanded": expanded };
 }
+
+export type VungSongProps = { accessibilityLiveRegion: "polite" | "none"; "aria-busy"?: boolean };
+
+/**
+ * Spread onto the text of an answer that arrives word by word (QA UI-165): it
+ * is announced once, whole, when it settles -- never once per tick, which on
+ * a screen reader is a stutter of half-sentences.
+ *
+ * The web has the tool for it: a polite live region held `aria-busy` while the
+ * words arrive, read when the flag drops. Native has no busy flag, so there the
+ * line becomes a live region only once it has settled. The status line before
+ * the first word («đang đọc…», «đang nghĩ…») is a plain polite region.
+ */
+export function vungSong(dangChay: boolean): VungSongProps {
+  if (Platform.OS === "web") return { accessibilityLiveRegion: "polite", "aria-busy": dangChay };
+  return { accessibilityLiveRegion: dangChay ? "none" : "polite" };
+}

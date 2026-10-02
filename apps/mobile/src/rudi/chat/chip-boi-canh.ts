@@ -12,11 +12,16 @@
  *
  * Pure, so `tests/chip-boi-canh.test.mjs` can hold it to that.
  */
-import type { BoiCanh } from "../ai/boi-canh";
+import { nhanVai, type BoiCanh, type LuotBoiCanh } from "../ai/boi-canh";
 
 export type ChuChip = {
   /** The chip's sentence. */
   cau: string;
+  /**
+   * The same sentence for a screen reader when the chip leaves its subject to
+   * the ✦: the eye reads the mark, the ear needs the name.
+   */
+  nhanDoc?: string;
   /** Whether «Xem» is offered: only while messages go along. */
   xem: boolean;
   /** The one-tap toggle's label, or null when there is nothing to toggle. */
@@ -25,6 +30,7 @@ export type ChuChip = {
 
 export const XEM = "Xem";
 export const CHI_GUI_LOI_NHO = "Chỉ gửi lời nhờ";
+export const CHUA_SAN_SANG = "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường";
 
 /**
  * @param goi the bundle that would go with the message, or null when this
@@ -35,7 +41,11 @@ export const CHI_GUI_LOI_NHO = "Chỉ gửi lời nhờ";
  *   never of «nhóm» (design 2026-09-28).
  */
 export function chuChip(goi: BoiCanh | null, kemTin: boolean, sanSang: boolean, haiNguoi = false): ChuChip {
-  if (!sanSang) return { cau: "Rủ Đi AI chưa sẵn sàng · Gửi như tin thường", xem: false, doi: null };
+  // The ✦ in the AI's colour already names whose readiness this is, so the
+  // line keeps «AI» and drops «Rủ Đi»: it fits one line at 320dp (QA UI-167:
+  // two lines, the mark alone on the first). The full sentence stays the
+  // chip's spoken name, and the flows that look for it still find it.
+  if (!sanSang) return { cau: "AI chưa sẵn sàng · gửi như tin thường", nhanDoc: CHUA_SAN_SANG, xem: false, doi: null };
   if (goi === null) return { cau: "Chỉ gửi lời nhờ, không kèm tin nào", xem: false, doi: null };
   const n = goi.luot.length;
   if (n === 0) return { cau: haiNguoi ? "Hai bạn chưa có tin nào, chỉ gửi lời nhờ" : "Nhóm chưa có tin nào, chỉ gửi lời nhờ", xem: false, doi: null };
@@ -58,4 +68,25 @@ export function cauXem(goi: BoiCanh, haiNguoi = false): string {
 export function cauXemCach(haiNguoi = false): string {
   const ten = haiNguoi ? "Tên hiển thị của hai bạn" : "Tên hiển thị của các thành viên";
   return `Ảnh đi bằng chú thích, sticker đi bằng chữ «Sticker», tin đã xoá đi bằng một dòng nói là đã xoá. ${ten} đi kèm để AI biết ai nói gì, còn chữ trong tin nhắn thì đi nguyên văn.`;
+}
+
+/** One speaker's consecutive turns in the «Xem» sheet. */
+export type DoanXem = { key: string; nguoi: string; cuaToi: boolean; luot: LuotBoiCanh[] };
+
+/**
+ * The bundle as a transcript: consecutive turns of one speaker under one name,
+ * in the order they go to the model. The sheet used to print «Name: text» for
+ * every turn, forty lines of small type with nothing to rest the eye on; this
+ * is the same list, said the way a chat says it. Nothing is merged, dropped or
+ * reordered -- the count on the chip is still the count here.
+ */
+export function gomTheoNguoi(luot: readonly LuotBoiCanh[]): DoanXem[] {
+  const ra: DoanXem[] = [];
+  for (const l of luot) {
+    const nguoi = nhanVai(l);
+    const cuoi = ra[ra.length - 1];
+    if (cuoi && cuoi.nguoi === nguoi) cuoi.luot.push(l);
+    else ra.push({ key: l.id, nguoi, cuaToi: l.vai === "toi", luot: [l] });
+  }
+  return ra;
 }

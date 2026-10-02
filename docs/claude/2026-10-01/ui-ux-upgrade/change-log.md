@@ -672,3 +672,125 @@ giữ hai điều spec cũng đòi: giá không bao giờ bị cắt, tim nằm 
 - Giá đã ở hàng sự kiện đầu trang, trạng thái mở là con dấu «Đang mở / Đã đóng» ở đó.
 - Khối dưới mô tả chỉ còn khung giờ («Giờ mở cửa: …»), và câu «Chưa có giá» khi đầu trang không có giá. Trước đó giá và
   «Đang mở» mỗi thứ in hai lần.
+
+## B6 · Chat (F05, N22, N26) — tham chiếu Messenger
+
+Chat là chỗ «quen tay thắng biểu cảm» (Operate): giấy chỉ ở chất liệu, không được cản việc gõ. Batch này đưa luồng tin, ô
+soạn và thẻ bình chọn về quy ước người dùng đã quen (Messenger, người yêu cầu đã chọn làm thước), và gom mọi câu lỗi
+của chat về một ngữ pháp: một câu tại chỗ, bằng giọng của app, không bao giờ mặc áo AI.
+
+### Nhịp của luồng tin: avatar theo đáy bong bóng, giờ theo quãng nghỉ (UI-064) · VISUAL_UPGRADE
+- Hàng đo được (`chat-message-*`) giờ chỉ chứa avatar và bong bóng. Tên, trích dẫn và cảm xúc nằm quanh hàng, thụt theo
+  cột bong bóng. Đáy avatar = đáy bong bóng cuối của cụm (trước: thấp hơn 22px, đứng ngang dòng giờ).
+- Giờ là một **dải giữa luồng** ở nơi cuộc nói chuyện nghỉ: «Hôm nay · 13:27» ở đầu một ngày, «15:40» khi nói tiếp sau
+  hơn 15 phút (`nhomTheoQuang`, thuần, có test). Trước: «13:27» lặp dưới mọi cụm, 5 lần cho 11 tin cùng phút.
+- Giờ của một tin nằm trong menu tin («Gửi lúc 13:27 · hôm nay»), một chạm là thấy.
+- Ngày tính theo giờ máy, không theo UTC: tin 06:30 ở Hà Nội là tin của hôm nay (`nhomTheoNgay` cũ cắt theo UTC).
+- Cụm bong bóng thành một hình: phía cụm treo khít góc lại (6), phía ngoài giữ tròn (18), chân tin cuối của người khác
+  tròn vì avatar đứng đó (`gocBong`). Các cụm cách nhau 12dp, tin trong cụm 2dp.
+
+### Ô soạn: một dòng, cao dần, thẳng hàng (UI-062) · BUG_FIX
+- Web: `rows={1}`, và ô tự đo chữ ở chiều cao 0 rồi nhận đúng chiều cao đó, kẹp giữa một dòng và trần 120dp (bốn dòng,
+  đúng trần tiêu chí gỡ của QA; không quá 30% cửa sổ thấp), quá trần thì cuộn trong ô. Bản giữa chừng để trần sáu dòng
+  (168dp) và trượt tiêu chí `≤ 122`; đã hạ về 120.
+- Một dòng = 24 + 2×12 = 48dp, đúng bằng «+» và nút gửi, nên ba thứ chung một đường giữa. Nhiều dòng thì «+» và nút gửi ở
+  đáy, như Messenger.
+- Có bàn phím cứng (con trỏ «fine») thì Enter gửi, Shift+Enter xuống dòng; IME đang ghép chữ (Telex) giữ Enter của nó.
+  Điện thoại vẫn xuống dòng bằng Enter.
+
+### Link dài xuống dòng trong bong bóng (UI-063, UI-116) · BUG_FIX
+- Web: chữ trong bong bóng `wordBreak: "break-word"`, cột bong bóng `minWidth: 0`. `overflow-wrap: break-word` mặc định
+  vẫn lấy cả từ làm bề rộng tối thiểu, nên bong bóng giữ 341px ở mọi bề rộng và mất đầu link ở 320.
+- Chat demo: khối tin `flexShrink: 1`, `minWidth: 0`.
+
+### Thẻ bình chọn gọn (UI-065) · VISUAL_UPGRADE
+- Mỗi lựa chọn một hàng 48dp: vòng chọn, tên, rồi tối đa ba dấu vân tay và con số. Dấu vân tay vẫn là đơn vị đếm
+  (ADR-0037 D1), nhưng không còn chạy dài 12 dấu.
+- Dưới mỗi tên một thanh mực mảnh trên **cùng một thang** (phần của tổng phiếu), `role=progressbar`: đọc được bên nào
+  hơn mà không phải đếm.
+- «N phiếu» một lần, ở chân thẻ. Chưa ai bầu thì không có dòng nào nói «0 phiếu». Người tạo có «Chốt bình chọn» cùng
+  dòng chân.
+- Thẻ là tin của người tạo: tên ở trên, avatar bên cạnh như mọi tin. Chữ ký chân thẻ chỉ còn ở bình chọn đã đóng.
+- Trần 560dp ở tablet; các thẻ AI khác trần 640dp.
+
+### Lỗi tại chỗ, bằng giọng của app (UI-068, UI-069) · UX_IMPROVEMENT
+- Thả cảm xúc / xoá tin hỏng: một câu `CauTaiCho` **dưới đúng tin đó**, nêu đúng thao tác («Chưa thả ❤️: Rủ Đi đang trục
+  trặc. Chưa có gì thay đổi.»), «Thử lại» chỉ khi bấm lại có ích (`cauLoiThaoTac`).
+- Lỗi của ô soạn (ảnh, `/vote` sai dạng): một câu ở đầu mới của luồng, ngay trên ô soạn; luồng tự về cuối để câu hiện.
+- Thẻ «Đã hiểu» mang ✦ và màu AI đã bỏ: không lỗi hệ thống nào còn trông như AI trả lời.
+- Trang đầu không tải được: chỉ nói khi màn chưa có tin nào («Chưa tải được tin nhắn…» + «Thử lại»). Trang tin cũ hơn
+  không tải được: câu ở đỉnh luồng, nơi tin cũ lẽ ra hiện, có «Thử lại».
+
+### Báo cáo: năm lý do là radio thật (UI-067) · UX_IMPROVEMENT
+- Mỗi lý do một hàng 48dp có vòng chọn mực, `role=radio` + `aria-checked`, Space chọn được trên web. Câu lỗi là
+  `CauTaiCho`. Áp cho mọi nơi dùng `NoiDungBaoCao` (người, bài, tin, bình luận).
+
+### Phòng đã dừng (UI-079) · UX_IMPROVEMENT
+- Máy chủ trả 403 `chat_unavailable` cho luồng thay đổi: app thôi nối lại (`connection = "dung"`), nên «Đang nối lại»
+  không còn hiện mãi.
+- Không mời mở lời, không mời hẹn trong phòng đã dừng.
+- Người chặn đọc danh sách chặn **của chính mình** và thấy «Bạn đã chặn X.» + «Xem danh sách đã chặn». Người bị chặn chỉ
+  thấy «Cuộc trò chuyện này không còn nhận tin.» (ADR-0023 §2.3.2).
+
+### Số thành viên theo kịp (UI-122) · BUG_FIX
+- Đọc lại danh sách khi một tin mới tới từ người danh sách chưa tính là đang ở đây, không chỉ từ người lạ tên. Người được
+  mời đã có tên từ lời mời, nên tin đầu của họ trước đây không đổi gì.
+
+### Chat rỗng ở cửa sổ thấp (UI-124) · BUG_FIX
+- Trang rỗng là phần co giãn của cột và tự cuộn; ô soạn luôn là khối cuối. Hình Nếp nhường chỗ trước khi cửa sổ thấp hơn
+  600 hoặc khay đang mở.
+- Khay công cụ co lại và tự cuộn thay vì đẩy ô soạn; câu ghi chú ảnh nằm **sau** lưới công cụ, nên khi khay bị ép thì câu
+  ghi chú bị cắt trước, không bao giờ là một công cụ.
+- Cửa sổ thấp (< 600) và khay đang mở: dải ghim (kèo sắp tới / tờ hẹn) gập lại, trở lại khi đóng khay. Lượt đo giữa chừng
+  cho thấy harness đạt nhưng ảnh C8 của phòng cặp đôi chỉ còn icon, nhãn công cụ bị che; gập dải ghim trả lại chỗ cho nhãn.
+
+### Lớp phòng không nhảy (UI-125) · UX_IMPROVEMENT
+- Quay lại cùng một phòng giữ capabilities và lời gọi đang có trong lúc đọc lại; trước đây chúng về `null` mỗi lần focus và
+  hàng ghim Tờ giấy tắt rồi bật (nhảy 78dp).
+- Phòng hai người đọc lại capabilities mỗi 5 giây khi đang mở: người kia đồng ý «Một đôi» thì hàng ghim và công cụ thứ năm
+  tới mà không phải rời chat.
+
+### Chữ của phòng hai người (UI-128) · UX_IMPROVEMENT
+- Nút và sheet cài đặt: «Cài đặt cuộc trò chuyện» (nhóm giữ «Cài đặt nhóm»); màu bong bóng «Hai bạn thấy cùng một màu.»;
+  «Rủ Đi AI tự gợi ý» nói cho hai người.
+- Trạng thái rỗng: «Rủ đi một buổi».
+- Form «Kèo mới» từ chat hai người: «Hai bạn đi đâu?», bỏ câu «X hiện có 2 người».
+- Maestro 47 và sổ tay `to-giay.md` theo nhãn mới, cùng commit. Quyết định giữ nhãn cũ ghi ở
+  `docs/claude/2026-09-28/chay-may-that.md` §6 được đảo ở đây, có Maestro đi cùng.
+
+### Tấm «Gu của hai bạn» (UI-129) · UX_IMPROVEMENT
+- Gu bật theo lời cũ (`can_bat_lai`): dòng của mình chỉ nói phần sổ («Minh thấy gu của bạn, và Nếp dùng nó khi phác
+  tờ.»), để dòng «Bật lại cho chat» nói phần chat. Không đổi lời đồng ý, không đổi luồng ADR-0048 §3.2.
+- Câu lỗi nằm **trong tấm**, nói công tắc đang ở đâu (`cauLoiGu`). Bật lại hỏng ở bước hai: «Bật lại chưa xong: gu của bạn
+  đang tắt…», không mượn câu «Chưa có gì bị ghi sai» vì bước tắt đã ghi.
+
+### AI trong chat (UI-164, UI-165, UI-167) · UX_IMPROVEMENT + VISUAL_UPGRADE
+- Khối «Đang hỏi Rủ Đi AI…» chỉ hiện khi lệnh sẵn sàng, đúng như chip vừa nói.
+- Vùng thông báo: dòng «đang đọc / đang nghĩ», câu lỗi của Nếp, khối «Đang hỏi», hàng lời nhờ hỏng là `polite`. Chữ hiện
+  dần được báo **một lần khi xong**: web giữ `aria-busy` trong lúc chạy; native chỉ thành vùng live khi đã xong
+  (`vungSong`).
+- Chip: ✦ và câu là một khối không bao giờ tách dòng; hai nút là khối riêng, xuống dòng khi chật. Câu chưa sẵn sàng ngắn
+  lại «AI chưa sẵn sàng · gửi như tin thường» (tên đọc vẫn đủ câu cũ). «Xem» và «Chỉ gửi lời nhờ» là đích 48dp thật
+  (trả lại 10dp trên dưới) thay cho `hitSlop`, thứ web không có.
+
+### Chủ động
+- Tấm «Xem»: bản ghi gom theo người, bong bóng nhỏ, của mình bên phải; câu «Rủ Đi AI sẽ đọc đúng N tin…» đứng yên trên
+  cùng trong lúc bản ghi cuộn (`gomTheoNguoi`, có test). Vẫn liệt kê đúng từng lượt của gói.
+- Một khuôn cho lời nhờ đang chờ hoặc hỏng (`HangLoiNho`): lời gọi không tới máy chủ và lời gọi hỏng là cùng một tin cho
+  người hỏi. «Thử lại lời nhờ» tắt thì nói vì sao (ADR-0038).
+
+### Vòng soát hoàn thiện (subagent ngữ cảnh mới) · VISUAL_UPGRADE + UX_IMPROVEMENT
+Vòng đầu trả «fix» với 8 mục; vòng chấm thứ hai còn 3 mục một phần và một hồi quy; vòng ba «ship» (phạm vi: các mục đó).
+- Nút «Tin mới nhất» nổi trên danh sách (`position: absolute`), không lấy 60dp của nó; luồng thôi nhảy khi nút hiện/ẩn.
+- Câu lỗi dưới một tin dùng biến thể gọn `CauTaiCho co="nho"`: cỡ note, «Thử lại» ngay sau câu (đích 48dp trả lại chiều
+  cao), treo phía phải dưới tin của mình, ở cột bong bóng dưới tin người khác.
+- Tiêu đề chat dưới 360dp chỉ ghi số thành viên; «· sổ hẹn của hội» từng xuống một dòng riêng làm đầu màn cao bốn dòng.
+- Tấm «Xem»: lượt của mình tông của tin mình (accent-soft), tím chỉ cho AI.
+- Thẻ không ai trong phòng gửi (của AI, tờ hẹn chung) căn giữa cột đọc trên tablet, đầy màn trên điện thoại; giờ của chặng
+  trong thẻ chat thẳng mép với tiêu đề (`HangChang sat`, màn plan không đổi).
+- Cửa sổ thấp, khay mở: hàng tờ giấy và dải ghim cùng gập; trang rỗng không vẽ chữ (trước đó «Một» bị cắt mất dấu nặng
+  khi bị ép); trần khay tính cả câu ghi chú, phần cuộn không bao giờ hẹp hơn một hàng công cụ.
+- Menu tin: ngày trước giờ như dải giờ («Hôm nay · 11:08»); «Trả lời», «Sao chép» không mũi tên (`ListRow chevron`).
+- Trang đầu không tải được: hết phiên thì «Đăng nhập lại» (về đúng chat sau khi vào), bị từ chối vĩnh viễn thì «Về Tin
+  nhắn», còn lại «Thử lại». `cauLoiThaoTac` không mời thử lại với 401.
+

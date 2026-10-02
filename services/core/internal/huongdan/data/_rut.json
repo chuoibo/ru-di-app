@@ -754,6 +754,10 @@
           "nhan": "Xem hồ sơ"
         },
         {
+          "den": "settings/da-chan",
+          "nhan": "Xem danh sách đã chặn"
+        },
+        {
           "den": "votes/[id]",
           "nhan": "Bình chọn"
         },
@@ -770,6 +774,7 @@
         "outings/[id]",
         "outings/new",
         "people/[id]",
+        "settings/da-chan",
         "votes/[id]"
       ],
       "man": "groups/[id]/chat",
@@ -791,7 +796,7 @@
         "Chưa mã hoá đầu cuối",
         "Chỉnh lịch trình",
         "Cuối tuần tháng 10 đi Đà Lạt không mọi người?",
-        "Cuộc trò chuyện này không còn nhận tin.",
+        "Cài đặt cuộc trò chuyện",
         "Cài đặt nhóm",
         "Dùng plan này",
         "Dữ liệu demo · AI nháp",
@@ -815,6 +820,7 @@
         "Rủ Đi AI chưa nhận lời nhờ",
         "Rủ Đi AI phác theo quãng đường. Nét chì là nháp: nhóm sửa được trước khi chốt.",
         "Rủ Đi đã phác một plan",
+        "Rủ đi một buổi",
         "Thành viên nhóm",
         "Thêm vào cuộc trò chuyện",
         "Thông tin nhóm",
@@ -832,6 +838,7 @@
         "Vì sao phác vậy",
         "Về tin nhắn mới nhất",
         "Vị trí",
+        "Xem danh sách đã chặn",
         "Xem hồ sơ",
         "Xem lịch trình",
         "Xong chỉnh",
@@ -848,7 +855,6 @@
         "Đang trả lời …",
         "Đang tải tin cũ...",
         "Đi chứ! Tớ vote săn mây với BBQ nha 🌤️",
-        "Đã hiểu",
         "Đã xác nhận",
         "Đính kèm",
         "Đóng công cụ chat",
@@ -1656,6 +1662,7 @@
         "Dựa trên gu của",
         "Dựa trên gu của … thành viên; bạn sửa được trước khi chốt.",
         "Giờ · …",
+        "Hai bạn đi đâu?",
         "Hội mình đi đâu?",
         "Kèo mới",
         "Lời rủ sẽ hiện trên Lên plan",

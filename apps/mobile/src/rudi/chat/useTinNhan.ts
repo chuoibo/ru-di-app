@@ -23,6 +23,7 @@ import { AppState } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../api";
 import type { AnhChupChat } from "./thay-doi";
+import { cauLoiThaoTac } from "./nhip-tin";
 import {
   boKhoiHang,
   danhDauLoi,
@@ -60,7 +61,20 @@ export type TrangThaiChat = {
   dangNap: boolean;
   dangNapCu: boolean;
   hetTinCu: boolean;
+  /**
+   * Why the first page did not load, naming that: the screen says it only
+   * while it has no messages to show (QA UI-068), since the change feed may
+   * have brought them anyway.
+   */
   loi: string | null;
+  /** Why the page of older messages did not load; said at the top of the thread with «Thử lại». */
+  loiCu: string | null;
+  /**
+   * What kind of refusal the first page met, so the screen offers the way that
+   * can help: `phien` (ended session: sign in again), `vinh-vien` (not a
+   * member any more, the room is gone: leave), `tam` (try again).
+   */
+  loiLoai: "phien" | "vinh-vien" | "tam" | null;
   /**
    * What is on its way or has failed, newest first. Deliberately NOT part of
    * `tin`: that list is confirmed server data; pending rows have no server
@@ -73,7 +87,13 @@ function loiRaChu(error: unknown): string {
   return error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
 }
 
-const TRANG_DAU: TrangThaiChat = { tin: [], dangNap: true, dangNapCu: false, hetTinCu: false, loi: null, hangCho: [] };
+/** Which way on a failed first page offers (see `loiLoai`). */
+function loaiLoiDau(error: unknown): "phien" | "vinh-vien" | "tam" {
+  if (error instanceof ApiError && error.status === 401) return "phien";
+  return cauLoiThaoTac("tải được tin nhắn", error).thuLai ? "tam" : "vinh-vien";
+}
+
+const TRANG_DAU: TrangThaiChat = { tin: [], dangNap: true, dangNapCu: false, hetTinCu: false, loi: null, loiCu: null, loiLoai: null, hangCho: [] };
 
 export function useTinNhan(contextId: string, personId: string) {
   const [trang, setTrang] = useState<TrangThaiChat>(TRANG_DAU);
@@ -147,10 +167,10 @@ export function useTinNhan(contextId: string, personId: string) {
       const page = await docTrangTin(contextId, personId);
       if (theHe !== theHeRef.current) return;
       if (cursorDaNhan.current === null) cursorDaNhan.current = cursorMoiNhat(page.messages);
-      dat(gopTin(tinRef.current, page.messages), { dangNap: false, hetTinCu: !page.has_more, loi: null });
+      dat(gopTin(tinRef.current, page.messages), { dangNap: false, hetTinCu: !page.has_more, loi: null, loiLoai: null });
     } catch (error) {
       if (theHe !== theHeRef.current) return;
-      setTrang((cu) => ({ ...cu, dangNap: false, loi: loiRaChu(error) }));
+      setTrang((cu) => ({ ...cu, dangNap: false, loi: cauLoiThaoTac("tải được tin nhắn", error).cau, loiLoai: loaiLoiDau(error) }));
     } finally {
       if (dangNhan.current === theHe) dangNhan.current = null;
     }
@@ -233,14 +253,14 @@ export function useTinNhan(contextId: string, personId: string) {
     const before = cursorCuNhat(tinRef.current);
     if (before === null || trang.hetTinCu || trang.dangNapCu) return;
     const theHe = theHeRef.current;
-    setTrang((cu) => ({ ...cu, dangNapCu: true }));
+    setTrang((cu) => ({ ...cu, dangNapCu: true, loiCu: null }));
     try {
       const page = await docTrangTin(contextId, personId, { before });
       if (theHe !== theHeRef.current) return;
       dat(gopTin(tinRef.current, page.messages), { dangNapCu: false, hetTinCu: !page.has_more });
     } catch (error) {
       if (theHe !== theHeRef.current) return;
-      setTrang((cu) => ({ ...cu, dangNapCu: false, loi: loiRaChu(error) }));
+      setTrang((cu) => ({ ...cu, dangNapCu: false, loiCu: cauLoiThaoTac("tải được tin cũ hơn", error).cau }));
     }
   }, [contextId, personId, dat, trang.hetTinCu, trang.dangNapCu]);
 

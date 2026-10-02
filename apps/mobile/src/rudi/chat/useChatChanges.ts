@@ -19,7 +19,10 @@ import { docAnhChupChat, docThayDoi, docTrangThayDoi, gopBinhChon, type AnhChupC
  */
 export function useChatChanges(contextId: string, personId: string, apply: (snapshot: AnhChupChat) => void, ai?: NhanKhungAi) {
   const [votes, setVotes] = useState<Record<string, BinhChonSong>>({});
-  const [connection, setConnection] = useState<"connecting" | "live" | "recovering" | "unsupported">("connecting");
+  // `dung`: the server refused this reader the room (403 `chat_unavailable`:
+  // blocked, or the other account ended). Nothing will reconnect it, so the
+  // feed stops asking and the header stops saying «Đang nối lại» (QA UI-079).
+  const [connection, setConnection] = useState<"connecting" | "live" | "recovering" | "unsupported" | "dung">("connecting");
   const applyRef = useRef(apply);
   applyRef.current = apply;
   const aiRef = useRef(ai);
@@ -124,6 +127,9 @@ export function useChatChanges(contextId: string, personId: string, apply: (snap
         if (error instanceof ApiError && [404, 501].includes(error.status)) {
           unsupported = true;
           setConnection("unsupported");
+        } else if (error instanceof ApiError && error.status === 403) {
+          unsupported = true;
+          setConnection("dung");
         } else setConnection("recovering");
       } finally { if (version === generation) busy = false; }
     };

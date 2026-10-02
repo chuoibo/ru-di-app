@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { vungSong } from "../../ui/a11y";
 
 import { typography, useRudiTheme } from "../theme";
 import { chuHienThi, type TraLoiSong } from "../ai/tra-loi-song";
@@ -78,11 +79,11 @@ export function NepPhien({
         </Text>
       ) : null}
       {chuSong !== "" ? (
-        <Text style={[typography.body, { color: colors.ink }]} testID="nep-dang-viet">
+        <Text {...vungSong(song?.pha !== "xong")} style={[typography.body, { color: colors.ink }]} testID="nep-dang-viet">
           {chuSong}
         </Text>
       ) : dangHoi ? (
-        <Text style={[typography.body, { color: colors.inkSoft }]} testID="nep-dang-nghi">
+        <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.inkSoft }]} testID="nep-dang-nghi">
           {cauTrangThaiNep(song?.trangThai ?? null)}
         </Text>
       ) : null}

@@ -1138,6 +1138,7 @@ export function ListRow({
   trailing,
   tone = "accent",
   onPress,
+  chevron = true,
 }: {
   icon: IconName;
   title: string;
@@ -1145,6 +1146,8 @@ export function ListRow({
   trailing?: ReactNode;
   tone?: RudiTone;
   onPress?: () => void;
+  /** False for a row that acts on the spot (copy, reply): a chevron promises somewhere to go. */
+  chevron?: boolean;
 }) {
   const { colors } = useRudiTheme();
   return (
@@ -1162,7 +1165,7 @@ export function ListRow({
         <Text style={[typography.label, { color: colors.ink }]}>{title}</Text>
         {subtitle ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{subtitle}</Text> : null}
       </View>
-      {trailing ?? (onPress ? <Ionicons color={colors.inkFaint} name="chevron-forward" size={19} /> : null)}
+      {trailing ?? (onPress && chevron ? <Ionicons color={colors.inkFaint} name="chevron-forward" size={19} /> : null)}
     </PressScale>
   );
 }
