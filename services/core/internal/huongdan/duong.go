@@ -29,6 +29,14 @@ type canh struct {
 	Nhan string
 }
 
+// The «Tạo mới» stamp in the middle of the strip (apps/mobile/src/rudi/ui/
+// ConDauTao.tsx): the route it opens and its accessible name. A test holds
+// both to that file.
+const (
+	manConDau  = "create"
+	nhanConDau = "Tạo mới"
+)
+
 // dungDoThi builds the screen graph from three sources, all read from the
 // embedded data:
 //
@@ -42,7 +50,8 @@ type canh struct {
 //     app/(tabs)/ with no column (_rut.json muc_trong_tab: Cộng đồng, hosted
 //     by Khám phá) is not a tab: nothing on the strip leads to it, but the
 //     strip is on screen over it, so every column but its lit host is one tap
-//     from it.
+//     from it. The «Tạo mới» stamp in the strip's middle slot is on screen
+//     over every one of them too: each is one tap from the desk (manConDau).
 //  3. The manuals' di_toi, which carry the label a person taps. The first one
 //     a manual declares for a pair of screens is the one used, so the author
 //     orders them.
@@ -86,6 +95,11 @@ func (s *SoTay) dungDoThi(rut *banRut) {
 			if b != s.banDo.chu[h] {
 				them(h, b, tieuDe(b))
 			}
+		}
+	}
+	if s.coMan[manConDau] {
+		for _, a := range append(append([]string(nil), s.tab...), khongCot...) {
+			them(a, manConDau, nhanConDau)
 		}
 	}
 	for _, t := range s.trang {
