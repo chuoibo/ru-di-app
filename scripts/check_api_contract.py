@@ -438,13 +438,29 @@ GO_PROFILE_HANDLERS = (
     "services/core/internal/socialv2/handler.go",
     "services/core/internal/profilemedia/handler.go",
 )
+#: Go-native routes of the money screens (ADR-0031): the collection round's
+#: count of expenses not yet in a round (`gomdot`, B4 on 2026-10-02). Missing
+#: here, the client's call to it read as a 404 on a route Go serves.
+GO_FEATURE_HANDLERS = ("services/core/internal/gomdot/handler.go",)
 
 #: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`
 GO_ROUTE = re.compile(r'HandleFunc\(\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"')
+#: `func RouteIDs() []string { return []string{"GET /a", "POST /b"} }`, on one
+#: line or with one literal per line. The body ends at the first `}` followed by
+#: another; a path parameter's `}` is followed by `/` or `"`, never by `}`.
 GO_ROUTE_IDS = re.compile(
-    r"func RouteIDs\(\) \[\]string \{\s*return \[\]string\{(.*?)\n\s*\}\s*\}", re.S
+    r"func RouteIDs\(\) \[\]string \{\s*return \[\]string\{(.*?)\}\s*\}", re.S
 )
 GO_ROUTE_LITERAL = re.compile(r'"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"')
+#: `h.mux.HandleFunc(routeSuKienNhom, ...)` with the pattern in a constant of
+#: the same file (`routeSuKienNhom = "GET /contexts/{context}/..."`): the
+#: chat AI's event streams. Read through the registration, so deleting the
+#: HandleFunc line still drops the route even when the constant stays.
+GO_ROUTE_BY_NAME = re.compile(r"HandleFunc\(\s*([A-Za-z_]\w*)\s*,")
+GO_ROUTE_CONST = re.compile(
+    r'^\s*(?:const\s+|var\s+)?([A-Za-z_]\w*)\s*=\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"',
+    re.M,
+)
 
 
 def read_go_routes() -> dict[str, set[str]]:
@@ -456,7 +472,7 @@ def read_go_routes() -> dict[str, set[str]]:
     and the client call goes red again, as it should.
     """
     found: dict[str, set[str]] = {}
-    for relative in (*GO_CHAT_HANDLERS, *GO_PROFILE_HANDLERS):
+    for relative in (*GO_CHAT_HANDLERS, *GO_PROFILE_HANDLERS, *GO_FEATURE_HANDLERS):
         source = REPO_ROOT / relative
         if not source.exists():
             continue
@@ -464,6 +480,12 @@ def read_go_routes() -> dict[str, set[str]]:
         declared = GO_ROUTE.findall(code)
         for body in GO_ROUTE_IDS.findall(code):
             declared.extend(GO_ROUTE_LITERAL.findall(body))
+        constants = {
+            name: (method, raw) for name, method, raw in GO_ROUTE_CONST.findall(code)
+        }
+        for name in GO_ROUTE_BY_NAME.findall(code):
+            if name in constants:
+                declared.append(constants[name])
         for method, raw in declared:
             found.setdefault(normalise(raw), set()).add(method.upper())
     return found
