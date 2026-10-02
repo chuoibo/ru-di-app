@@ -110,9 +110,16 @@ if (!existsSync(INDEX)) {
       // The rail is the accessible control now: pins are MapLibre markers and
       // carry no name. Its label is «Mốc N, giờ, tên chặng».
       await page.clickLabel("Mốc 1, 12:30, Ăn trưa - Bánh căn Lệ");
+      // The stop name also exists on the unselected rail. Wait for the
+      // actual selection before switching views; text presence alone raced
+      // the press's state update under the full suite's load.
       await page.waitFor(
-        () => document.body?.innerText?.includes("Xem chi tiết") || document.body?.innerText?.includes("Ăn trưa - Bánh căn Lệ"),
-        { timeout: 10000, label: "sheet chặng" },
+        () => document.querySelector('[data-testid="hanh-trinh-selected-stop"]')?.textContent === "Ăn trưa - Bánh căn Lệ" &&
+          document.querySelector('[aria-label="Mốc 1, 12:30, Ăn trưa - Bánh căn Lệ"]')?.getAttribute("aria-pressed") === "true",
+        { timeout: 10000, label: "chặng thực sự được chọn trên bản đồ", diagnose: () => ({
+          title: document.querySelector('[data-testid="hanh-trinh-selected-stop"]')?.textContent,
+          pressed: document.querySelector('[aria-label="Mốc 1, 12:30, Ăn trưa - Bánh căn Lệ"]')?.getAttribute("aria-pressed"),
+        }) },
       );
 
       const khop = await page.evaluate(() => !!document.querySelector("[aria-label=\"Khớp hành trình\"]"));
