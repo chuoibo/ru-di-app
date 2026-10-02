@@ -26,7 +26,11 @@ Còn nợ, theo mức độ:
    Route đồng bộ (quét bill, tìm quán) chờ tới 45 s; job nhật ký nâng trần 150 s / lease 160 s. Cần số
    p50/p95 thật dưới tải và quyết định trần theo route.
 3. **Duyệt bài cộng đồng dùng lời dặn MỚI** (repo chưa từng có prompt cũ). Mới thử vài bài bịa; chưa đánh
-   giá có hệ thống tỉ lệ duyệt nhầm/chặn nhầm. Bài công khai tự duyệt khi model chắc ≥ 900‰.
+   giá có hệ thống tỉ lệ duyệt nhầm/chặn nhầm. Bài công khai tự duyệt khi model chắc ≥ 900‰ (= 90%, chủ sản
+   phẩm giữ 2026-10-02). Từ 2026-10-02 AI xem đủ mọi ảnh (thu nhỏ) và video (bản cắt 45 s/đoạn). Còn mở:
+   (a) test cắt video thật (tag `communitymedia`, cần ffmpeg) chưa cổng nào chạy; (b) video xử lý trước
+   migration cộng đồng số 4 không có bản cắt nên vẫn vào duyệt tay — chưa có lệnh cắt bù; (c) một video
+   180 s là 4 lời gọi nối tiếp, mỗi lời gọi tới 85 s lúc agy bận.
 4. **`face-boxes`** còn trên seam brain Python (OpenCV, không phải LLM) — TODO làm lại bằng Go theo cơ chế
    khác (chủ sản phẩm 2026-09-30), rồi xoá seam brain và `MOBILE_BRAIN_URL`.
 5. **Eval T3 qua agy:** đã nối (`scripts/eval_that.sh` và `rudi-eval --mo-hinh that` đi qua agy khi có

@@ -19,7 +19,10 @@ var feedStorage string
 //go:embed post_metrics.sql
 var postMetrics string
 
-var migrations = []string{schema, feedStorage, postMetrics}
+//go:embed media_review.sql
+var mediaReview string
+
+var migrations = []string{schema, feedStorage, postMetrics, mediaReview}
 
 // SchemaFiles returns the migrations the binary embeds, in order, so the AI
 // trigger gate (internal/aigate) reads the same bytes this package installs.

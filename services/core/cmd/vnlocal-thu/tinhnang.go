@@ -298,7 +298,7 @@ func tinhNang(ctx context.Context, args []string, getenv func(string) string, ou
 			}
 			media = append(media, congdong.Media{MIME: s.ContentType, Data: s.Data})
 		}
-		return congdong.Duyet(ctx, l, body, false, media)
+		return congdong.Duyet(ctx, func(int) *motluot.Luot { return l }, body, false, media)
 	}
 	check("duyet-bai", func(l *motluot.Luot) (string, error) {
 		d, err := duyet(l, "Sáng nay cả nhóm đi dạo quanh hồ rồi ghé quán cà phê nhỏ, view đẹp mà giá mềm lắm.", "canh_1.jpg")

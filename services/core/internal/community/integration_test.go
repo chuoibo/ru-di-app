@@ -199,10 +199,12 @@ func TestPostgresCommunityReadingSeesEveryImageOrGoesToReview(t *testing.T) {
 	if s := f.statusOf(t, withImage); s != "approved" {
 		t.Fatalf("image read and confident: %s", s)
 	}
-	if req := string(stub.YeuCau()[0]); !strings.Contains(req, "image/png") || !strings.Contains(req, "inlineData") {
+	// Images go shrunk, as JPEG, whatever they were stored as.
+	if req := string(stub.YeuCau()[0]); !strings.Contains(req, "image/jpeg") || !strings.Contains(req, "inlineData") {
 		t.Fatal("the image never reached the model")
 	}
-	// A video is never sent, so no reading can vouch for it.
+	// A video without its review cut (processed before the cut existed) is
+	// never sent, so no reading can vouch for it.
 	f.exec(t, `UPDATE community_media SET content_type='video/mp4' WHERE id=$1`, mid)
 	w = f.call("POST", "/v2/community/posts", 0, PostInput{LogicalID: uuid(), Body: "Video ngắm hồ", Audience: "public", Topics: []string{"Đi bộ"}, MediaIDs: []string{mid}})
 	requireStatus(t, w, 201)
@@ -215,6 +217,44 @@ func TestPostgresCommunityReadingSeesEveryImageOrGoesToReview(t *testing.T) {
 	}
 	if strings.Contains(string(stub.YeuCau()[0]), "inlineData") {
 		t.Fatal("video bytes reached the model")
+	}
+	// With its cut, every piece is read, one call each, and a confident
+	// reading of all of them publishes the post.
+	st, err := storage.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pieces := []string{}
+	for _, b := range []string{"piece one", "piece two"} {
+		key, e := storage.NewStorageKey()
+		if e == nil {
+			e = st.Write(key, []byte(b))
+		}
+		if e != nil {
+			t.Fatal(e)
+		}
+		pieces = append(pieces, key)
+	}
+	f.exec(t, `UPDATE community_media SET review_keys=$2 WHERE id=$1`, mid, pieces)
+	w = f.call("POST", "/v2/community/posts", 0, PostInput{LogicalID: uuid(), Body: "Video ngắm hồ có đoạn duyệt", Audience: "public", Topics: []string{"Đi bộ"}, MediaIDs: []string{mid}})
+	requireStatus(t, w, 201)
+	var withCut Post
+	_ = json.Unmarshal(w.Body.Bytes(), &withCut)
+	stub = llm.NewStub(llm.Buoc{Text: confident}, llm.Buoc{Text: confident})
+	f.moderate(t, withCut, motluot.Moi(stub, 1))
+	if s := f.statusOf(t, withCut); s != "approved" || stub.SoGoi() != 2 {
+		t.Fatalf("video read piece by piece: %s after %d calls", s, stub.SoGoi())
+	}
+	for i, req := range stub.YeuCau() {
+		if !strings.Contains(string(req), "video/mp4") || !strings.Contains(string(req), `\"piece\":`+string(rune('1'+i))) {
+			t.Fatalf("piece %d was not sent: %s", i+1, req)
+		}
+	}
+	// Deleting the media queues the cut for the store's sweep with the video.
+	f.exec(t, `DELETE FROM community_media WHERE id=$1`, mid)
+	var queued int
+	if err = f.pool.QueryRow(context.Background(), `SELECT count(*) FROM community_media_gc WHERE storage_key=ANY($1)`, pieces).Scan(&queued); err != nil || queued != 2 {
+		t.Fatalf("review pieces left for the sweep: %d %v", queued, err)
 	}
 }
 
