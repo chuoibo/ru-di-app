@@ -90,10 +90,11 @@ test("hàng tràn thì luôn có một chữ bị mép cắt ngang, để ngư�
   for (const rong of coChu) {
     // From the narrowest phone the app is laid out for (320) to past a large one.
     for (let khung = 320; khung <= 540; khung++) {
-      const gap = khoangCachLo(rong, khung, 16);
-      const tong = rong.reduce((a, b) => a + b, 0) + gap * (rong.length - 1) + 32;
+      const { khoang: gap, demCuoi } = khoangCachLo(rong, khung, 16);
+      const tong = rong.reduce((a, b) => a + b, 0) + gap * (rong.length - 1) + 16 + demCuoi;
       if (tong <= khung) continue;
       assert.ok(gap >= 12 && gap <= 32, `khoảng ${gap} ngoài 12…32 ở ${khung}`);
+      assert.ok(demCuoi >= 16 && demCuoi <= 24, `đệm cuối ${demCuoi} ngoài 16…24 ở ${khung}`);
       assert.ok(catNgang(rong, gap, khung, 16), `không chữ nào bị cắt ngang ở ${khung} dp (khoảng ${gap})`);
     }
   }
@@ -101,11 +102,11 @@ test("hàng tràn thì luôn có một chữ bị mép cắt ngang, để ngư�
 
 test("khoảng mặc định 22 giữ nguyên khi nó đã cắt ngang một chữ, hay khi cả hàng vừa", () => {
   // 411 at 1.0: «Bài» already peeks past «Đã lưu».
-  assert.equal(khoangCachLo([86, 88, 71, 41, 72], 411, 16), 22);
+  assert.equal(khoangCachLo([86, 88, 71, 41, 72], 411, 16).khoang, 22);
   // A tablet column: everything fits, nothing to hint.
-  assert.equal(khoangCachLo([86, 88, 71, 41, 72], 528, 0), 22);
+  assert.deepEqual(khoangCachLo([86, 88, 71, 41, 72], 528, 0), { khoang: 22, demCuoi: 0 });
   // Not measured yet.
-  assert.equal(khoangCachLo([], 0, 16), 22);
+  assert.deepEqual(khoangCachLo([], 0, 16), { khoang: 22, demCuoi: 16 });
 });
 
 test("cuộn tới một tab giữa hàng thì chừa chỗ cho tab bên cạnh ló ra, để hàng vẫn nói còn nữa", () => {
@@ -114,4 +115,33 @@ test("cuộn tới một tab giữa hàng thì chừa chỗ cho tab bên cạnh 
   assert.equal(cuonDeThay({ x: 400, w: 44 }, { x: 0, w: 358 }, 16, 38), 400 + 44 + 38 - 358);
   // Same on the left, for a tab with one before it.
   assert.equal(cuonDeThay({ x: 140, w: 90 }, { x: 200, w: 358 }, 38, 16), 102);
+});
+
+// The window at full scroll (the last tab picked): which tab straddles the left edge.
+const catNgangTrai = (rong, gap, khung, le, demCuoi) => {
+  const tong = rong.reduce((a, b) => a + b, 0) + gap * (rong.length - 1) + le + demCuoi;
+  const trai = tong - khung;
+  let x = le;
+  for (const w of rong) {
+    if (x <= trai - 10 && x + w >= trai + 16) return true;
+    x += w + gap;
+  }
+  return false;
+};
+
+test("cuộn hết sang phải (chọn tab cuối) thì mép trái cũng cắt ngang một chữ (verdict 03/10)", () => {
+  const coChu = [
+    [86, 88, 71, 41, 72],
+    [117, 118, 96, 54, 94],
+    [92, 93, 75, 44, 78],
+  ];
+  for (const rong of coChu) {
+    for (let khung = 320; khung <= 540; khung++) {
+      const { khoang: gap, demCuoi } = khoangCachLo(rong, khung, 16);
+      const tong = rong.reduce((a, b) => a + b, 0) + gap * (rong.length - 1) + 16 + demCuoi;
+      if (tong <= khung) continue;
+      assert.ok(catNgangTrai(rong, gap, khung, 16, demCuoi), `mép trái không cắt chữ nào ở ${khung} dp (khoảng ${gap}, đệm ${demCuoi})`);
+      assert.ok(catNgang(rong, gap, khung, 16), `mép phải không cắt chữ nào ở ${khung} dp (khoảng ${gap})`);
+    }
+  }
 });

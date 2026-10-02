@@ -31,32 +31,49 @@ const KHOANG_MAX = 32;
 const LO_HIEN = 16;
 const LO_AN = 10;
 
+/** How much paper may follow the last tab beyond the gutter, to place the left edge. */
+const DEM_THEM = 8;
+
 /**
- * The gap that makes the window's edge cut one tab's word in two when the row
- * is wider than the window, so the row says it goes on (finish review 03/10:
- * at 390 on the web, and at 1.3 on Android, the edge fell between two tabs
- * and the row looked finished, with «Bài của tôi» out of sight). No fade or
- * arrow: the world takes no gradient and the tabs no chrome. The gap closest
- * to the usual one wins; a row that fits keeps the usual gap.
+ * The gap between tabs, and the paper after the last one, that make a window
+ * edge cut a word in two when the row is wider than the window, so the row
+ * says it goes on (finish review 03/10: at 390 on the web, and at 1.3 on
+ * Android, the edge fell between two tabs and the row looked finished, with
+ * «Bài của tôi» out of sight). Both ends count: at rest the right edge cuts a
+ * word, and scrolled to the end (the last tab picked) the left edge does, or
+ * «Dành cho bạn» went with no trace (verdict 03/10). One gap cannot always
+ * place both edges, so the paper after the last tab may grow by up to 8 dp.
+ * No fade or arrow: the world takes no gradient and the tabs no chrome. The
+ * gap closest to the usual one wins, then the least paper; a row that fits
+ * keeps the usual gap and gutter.
  */
-export function khoangCachLo(rong: readonly number[], khung: number, le: number): number {
-  if (rong.length === 0 || khung <= 0) return KHOANG;
-  const tong = (g: number) => rong.reduce((a, b) => a + b, 0) + g * (rong.length - 1) + 2 * le;
-  if (tong(KHOANG) <= khung) return KHOANG;
-  const catNgang = (g: number) => {
+export function khoangCachLo(rong: readonly number[], khung: number, le: number): { khoang: number; demCuoi: number } {
+  const thuong = { khoang: KHOANG, demCuoi: le };
+  if (rong.length === 0 || khung <= 0) return thuong;
+  const tong = (g: number, p: number) => rong.reduce((a, b) => a + b, 0) + g * (rong.length - 1) + le + p;
+  if (tong(KHOANG, le) <= khung) return thuong;
+  // Whether a tab straddles the window's edge at `bien` (row coordinates),
+  // showing at least LO_HIEN on the window's side and hiding at least LO_AN.
+  const catTai = (g: number, bien: number, cuaSo: "trai" | "phai") => {
     let x = le;
     for (const w of rong) {
-      if (x <= khung - LO_HIEN && x + w >= khung + LO_AN) return true;
+      const hien = cuaSo === "trai" ? bien - x : x + w - bien;
+      const an = cuaSo === "trai" ? x + w - bien : bien - x;
+      if (hien >= LO_HIEN && an >= LO_AN) return true;
       x += w + g;
     }
     return false;
   };
   for (let d = 0; d <= KHOANG_MAX - KHOANG_MIN; d++) {
     for (const g of [KHOANG - d, KHOANG + d]) {
-      if (g >= KHOANG_MIN && g <= KHOANG_MAX && tong(g) > khung && catNgang(g)) return g;
+      if (g < KHOANG_MIN || g > KHOANG_MAX || !catTai(g, khung, "trai")) continue;
+      for (let p = le; p <= le + DEM_THEM; p++) {
+        // At rest the window is [0, khung]; scrolled to the end, [tong - khung, tong].
+        if (tong(g, p) > khung && catTai(g, tong(g, p) - khung, "phai")) return { khoang: g, demCuoi: p };
+      }
     }
   }
-  return KHOANG;
+  return thuong;
 }
 
 /**
@@ -85,9 +102,9 @@ export function HangChuTab<T extends string>({ muc, chon, onChon }: { muc: reado
   // the gap is worked out once both are known and the row is laid out again.
   const [rongTab, setRongTab] = useState<Readonly<Record<string, number>>>({});
   const [rongKhung, setRongKhung] = useState(0);
-  const khoang = useMemo(() => {
+  const { khoang, demCuoi } = useMemo(() => {
     const rong = muc.map((m) => rongTab[m.id]);
-    return rong.every((w) => w !== undefined) ? khoangCachLo(rong as number[], rongKhung, le) : KHOANG;
+    return rong.every((w) => w !== undefined) ? khoangCachLo(rong as number[], rongKhung, le) : { khoang: KHOANG, demCuoi: le };
   }, [muc, rongTab, rongKhung, le]);
   // Where the selected tab sits in the row, from the widths and the gap: on
   // the web onLayout reports a change of size only, so a position read from
@@ -107,16 +124,16 @@ export function HangChuTab<T extends string>({ muc, chon, onChon }: { muc: reado
     if (o === undefined) return;
     // A neighbour keeps a peek in view, so the row still says it goes on.
     const canh = khoang + LO_HIEN;
-    const x = cuonDeThay(o, khung.current, o.i === 0 ? le : canh, o.i === muc.length - 1 ? le : canh);
+    const x = cuonDeThay(o, khung.current, o.i === 0 ? le : canh, o.i === muc.length - 1 ? demCuoi : canh);
     if (x !== null) cuon.current?.scrollTo({ x, animated: false });
   };
   // Asked again once the row knows its width, its words' and its gap.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(hienChon, [chon, khoang, rongKhung]);
+  useEffect(hienChon, [chon, khoang, demCuoi, rongKhung]);
   return (
     <View style={[styles.vien, tran && styles.tran, { borderBottomColor: colors.line }]}>
       <ScrollView
-        contentContainerStyle={tran ? styles.trong : null}
+        contentContainerStyle={tran ? { paddingLeft: le, paddingRight: demCuoi } : null}
         horizontal
         onLayout={(e) => {
           khung.current = { ...khung.current, w: e.nativeEvent.layout.width };
@@ -166,7 +183,6 @@ const styles = StyleSheet.create({
   vien: { borderBottomWidth: StyleSheet.hairlineWidth },
   // On a phone: out to both screen edges, the hairline with it; the words start on the gutter.
   tran: { marginHorizontal: -LE },
-  trong: { paddingHorizontal: LE },
   danhSach: { flexDirection: "row" },
   // 48 dp tall, the words low so the rule sits on the hairline.
   tab: { minHeight: 48, justifyContent: "flex-end", paddingTop: 12 },
