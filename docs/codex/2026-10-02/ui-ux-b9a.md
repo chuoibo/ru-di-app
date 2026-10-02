@@ -61,7 +61,7 @@ B9a không giải quyết bảo toàn nháp khi rời màn, viewer ảnh hoặc 
   `TestOutingStartedUsesVietnamCalendar`; mutant UTC thay ngày Việt Nam đỏ ở ranh
   17:00Z; mutant trả heading ISO đỏ ở `TestManualPageHeadingIsReadableWithoutChangingSource`.
   Cả hai mutant không tương đương: có input phản ví dụ nêu trong test. Mã được trả
-  nguyên lại sau mỗi phép thử. Cổng ở SHA sạch được ghi riêng bên dưới khi hoàn tất.
+  nguyên lại sau mỗi phép thử. Kết quả ở commit triển khai sạch được ghi bên dưới.
 - Impeccable: static TSX detector không có finding chính (`[]`), đây là regex,
   **không phải** contrast đo trên native. Reviewer ngữ cảnh mới đã mở sáu ảnh,
   không yêu cầu sửa visual; disposition ban đầu `fix` vì DESIGN.md còn mô tả
@@ -101,3 +101,33 @@ liệu và trạng thái request; UI-150 có vị trí cuộn khác vì hành đ
   Chỉ cập nhật đoạn diary trong DESIGN.md cho hành vi đã triển khai. Nhánh riêng
   cần được tích hợp sau khi B8 được tiếp tục; chưa đặt lên main đang có thay đổi dở.
 
+## Cổng ở commit sạch và khôi phục môi trường
+
+Commit triển khai `88282a877837a999856e24aea102ae4a9be24d5c` được checkout riêng
+ở detached worktree sạch, cài dependency bằng `npm ci`, không dùng node_modules
+symlink. Chạy `make gate ONLY="guard guard-range contract client-routes
+server-routes screens cors ownership python-touch go-vet go-test shared mobile"`:
+**13 chặng đạt, 0 hỏng, 0 bỏ qua**. Bao gồm repo guard toàn tree/range, toàn bộ Go
+unit/vet, mobile **1459 PASS** và export bundle web/iOS/Android. Export bundle
+không chứng minh runtime iOS hoặc release APK.
+
+Tầng PostgreSQL thật chạy lại ở cùng commit: **13 ca PASS**, sentinel có mặt,
+không skip. Identity, canary và hai mutant nêu trên cũng chạy lại tại đây bằng
+`go test -count=1 ./internal/diary ./internal/domain/diary`; exit lần lượt
+**0 / 1 / 1 / 1 / 0** (identity cuối sau khôi phục). Harness SHA-256, gồm lệnh và
+hai file test, là `96d3059e7e9bbb14a1aaa52e0d5e7f95dbbcb9579a5741e6ac9816c3be3b28d3`.
+Git status sau khôi phục không có thay đổi tracked/untracked.
+
+Lần `make gate` toàn repo trước đó chạy trong worktree đang triển khai, không
+phải cổng sạch ở commit cuối. Chặng parity bị chủ động ngắt sau khoảng71 phút
+khi còn chạy ma trận; PostgreSQL toàn repo tiếp theo cũng bị dừng. Không có verdict
+hoàn chỉnh cho hai chặng này hoặc các chặng còn lại. Không suy ra lỗi parity của
+sản phẩm từ việc ngắt harness; cũng không ghi chúng là PASS.
+
+AVD được trả về kích thước/density, chữ100%, theme sáng và animator setting ban
+đầu. Các file app-private đã sao lưu được khôi phục và đối chiếu hash bằng nhau;
+app được mở lại với Metro8150 gốc. Gỡ đúng adb reverse và dừng đúng Metro/proxy/
+API/container của B9a để trả RAM. Không dừng Metro8150, web8171 hay stack gốc.
+Worktree chính vẫn ở `95755a71` với28 mục thay đổi B8 ban đầu; không chạm session
+Claude hoặc file plan của nó. QA nhận nhánh `codex/ui-ux-b9a` cùng evidence ở trên,
+không nhận lời khẳng định toàn app đã đạt.
