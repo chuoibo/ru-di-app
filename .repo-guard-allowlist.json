@@ -1487,6 +1487,30 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/ui009/startup-before.png",
+      "sha256": "4fa15a204b6cd58689510fe027cb1d2a6b9af8b73f17037a2520482dd734fc63",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "UI-009, 03/10/2026: bằng chứng Android guest trên AVD tổng hợp riêng; PNG khung video trước8ac64443/sau source6144ff2c hoặc clip native sau bundled release ký debug cục bộ. Fresh finish reviewer mở hai PNG, kiểm metadata/chunks, xem toàn38frame MP4, không audio hay metadata payload: safe đúng hash trong campaign/cp09/ui009-committed-evidence-review.md. Không bill, tài khoản, người tham gia, credential hoặc dữ liệu thật; launcher chỉ icon công khai/wallpaper/giờ. Không chứng nhận FPS,300ms,pixelmatch hoặc tốc độ từ hai lần quay. Đổi byte phải review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/ui009/startup-after.png",
+      "sha256": "96eab9c6f4d9cb6c97d4240bf3d1bb638f4791477223552d38c46da42d8eb7dd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "UI-009, 03/10/2026: bằng chứng Android guest trên AVD tổng hợp riêng; PNG khung video trước8ac64443/sau source6144ff2c hoặc clip native sau bundled release ký debug cục bộ. Fresh finish reviewer mở hai PNG, kiểm metadata/chunks, xem toàn38frame MP4, không audio hay metadata payload: safe đúng hash trong campaign/cp09/ui009-committed-evidence-review.md. Không bill, tài khoản, người tham gia, credential hoặc dữ liệu thật; launcher chỉ icon công khai/wallpaper/giờ. Không chứng nhận FPS,300ms,pixelmatch hoặc tốc độ từ hai lần quay. Đổi byte phải review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/ui009/startup-after.mp4",
+      "sha256": "bbb624d43555a36b7301f6d4a6fe683865c1334b65ff3d9228e5d5438acb069d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "UI-009, 03/10/2026: bằng chứng Android guest trên AVD tổng hợp riêng; PNG khung video trước8ac64443/sau source6144ff2c hoặc clip native sau bundled release ký debug cục bộ. Fresh finish reviewer mở hai PNG, kiểm metadata/chunks, xem toàn38frame MP4, không audio hay metadata payload: safe đúng hash trong campaign/cp09/ui009-committed-evidence-review.md. Không bill, tài khoản, người tham gia, credential hoặc dữ liệu thật; launcher chỉ icon công khai/wallpaper/giờ. Không chứng nhận FPS,300ms,pixelmatch hoặc tốc độ từ hai lần quay. Đổi byte phải review lại."
     }
   ]
 }

@@ -31,7 +31,7 @@ Không ghi đè worktree chính hay report QA/Claude. File có B8 sửa dở ch�
 - [ ] Commit riêng, kiểm clean SHA và handoff QA; chưa QA_ACCEPTED.
 
 ### Đối chiếu khi tiếp tục · 2026-10-03
-Worktree chính hiện `d97430db`, session Claude đã viết thêm patch B9 tới 21:20 ngày 2026-10-02 (UTC+7), chưa commit/bàn giao. Vì yêu cầu không làm lại việc Claude đã/đang làm, CP02–CP05 và viewer trùng scope được giữ cho Claude. Không copy patch B9 đang dở vào nhánh Codex và không sửa worktree chính.
+Tại lúc tiếp tục ban đầu, worktree chính `d97430db`, session Claude đã viết thêm patch B9 tới 21:20 ngày 2026-10-02 (UTC+7), chưa commit/bàn giao. Vì yêu cầu không làm lại việc Claude đã/đang làm, CP02–CP05 và viewer trùng scope được giữ cho Claude. Không copy patch B9 đang dở vào nhánh Codex và không sửa worktree chính.
 CP01 Codex đã implement riêng trước khi phát hiện phần trùng: 1.460 test pass, 0 fail/skip trên nhánh cũ; ảnh Android phone/320/font130/dark/tablet và video thực đã xem. Review yêu cầu sửa giới hạn pan theo ảnh contain, trả focus native và chụp lại status bar; source hai sửa đầu đã có, **render cuối chưa xác minh**. Giữ patch này ở `codex/ui-ux-b9a`, IMPLEMENTED_UNVERIFIED; không tự áp đè patch Claude.
 Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/011/012/014); CP09 retest và consistency phần mới. Nhánh mới bắt đầu từ commit main `d97430db`, không mang patch B9 trùng việc.
 
@@ -65,15 +65,16 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 - [x] Documenter ghi CP08 vào b10-handoff.md, giữ DESIGN/sidecar; commit riêng. Clean SHA/gates thuộc CP09.
 
 ### CP09 · Nhất quán và cổng kiểm chứng
+- [x] UI-009 mở lại từ video release `8ac64443`: icon mặc định → khoảng trắng trước JS → bìa → Welcome trượt trên nền trắng. Brief: người mở app cần nhận ra Rủ Đi trong lúc runtime/font/phiên trả lời; dùng cùng indigo và wordmark hiện có từ cửa sổ native tới trang đích, index chờ vẫn là bìa. Welcome mở lạnh đứng sẵn, CTA tới Login giữ handoff hiện hành; không thêm delay. Acceptance: release phone/narrow có continuity, cold URL/invite giữ đích, Back/reduced đúng, kiểm web và Android build mới. Không suy am-start/video thành first-brand-frame300ms. Source `6144ff2c`: native cover/onLayout/index cover, release phone/narrow/tablet guest/Login/Back và video thực đã review; finish ship + asset safe, giữ world hiện hành.
 - [x] So sánh screen/overlay/state mới với notebook world; không đổi hệ nhận diện, quota, money/API hoặc B8/B9.
 - [x] Thêm recovery web anonymous có/không history; test kết hợp6/0/0. Native warm place → Back → unknown → Back → invite điền mã tổng hợp, không redeem.
-- [x] Native anonymous recovery → Welcome → invite, CLI exit0. Cold custom scheme vào devclient launcher trước JS; **release cold link/invite chưa xác minh**. Không gọi đó là sản phẩm pass/fail.
-- [x] Clean mobile tại `b46bdcf7`; identity trước/sau **2/0/0**, canary bỏ cover và hai mutant bỏ inert/CTA sai đều đỏ đúng bước dự đoán, cùng hash harness, mỗi variant export mới, khôi phục tree sạch.
-- [ ] Full strict 33 chặng tại `dc1bd772` còn chạy; đã có chặng đỏ, chưa đủ điều kiện landing main. Ghi SHA và giới hạn riêng với lượt mobile cuối.
+- [x] Native anonymous recovery → Welcome → invite, CLI exit0. Lượt debug cold custom scheme vào devclient launcher trước JS giữ riêng; APK release cục bộ tại `8ac64443` đã kiểm cold unknown → CTA/Quay lại → Welcome, cold invite giữ mã tổng hợp và mở từ icon, CLI exit0, năm ảnh đã mở nhìn. Chưa kiểm cold có phiên, signing production hoặc native startup300ms.
+- [x] Clean mobile mới tại `6144ff2c`: **1479/0/0**, typecheck + Android/iOS/web export, 86s; native **12 flow,1/0/0**,830s. Identity trước/sau **2/0/0**, canary bỏ cover và hai mutant bỏ inert/CTA sai đều đỏ đúng bước dự đoán, cùng hash harness, mỗi variant export mới, khôi phục tree sạch. Bộ `mutations-6144ff2c` giữ bằng chứng mới; concern Hành trình một lượt1478/1/0 vẫn ghi riêng, chưa xác lập nguyên nhân.
+- [x] Full strict 33 chặng tại clean `dc1bd772` kết thúc: **26 pass / 7 fail / 0 skip**. Đỏ: ruff, demo-watch, hero-walk, mobile, mobile-native, go-postgres, crypto. Mobile/native cũ có lượt đạt riêng ở SHA sau; không thay lịch sử full đỏ. Parity HTTP/DB/media 0 diff; PostgreSQL thật 702 + 51 pass. GoPG registry xóa tài khoản thiếu `community_notifications.actor_id` trong log clean này; `dangky.go` worktree Claude đang dirty, giữ BLOCKED tích hợp. Crypto thiếu PATH/toolchain trong full; lượt riêng với Rust1.98.1/NDK27.1 đạt **1/0/0**, build Android x86_64 và symbol được kiểm riêng. Không thay full33 thành xanh. Chưa đủ điều kiện landing main.
 - [x] Tái kiểm concern journey selection; 14 file private và cấu hình emulator cũ đã khôi phục khớp backup. Không sửa/pm-clear dữ liệu Claude.
 - [x] Clean native tại `c8328b0e`: **1 stage pass / 0 fail / 0 skip**, 12 flow mặc định; dấu vân sai và canary09 đỏ đúng bước. APK đã dựng/cài có package/app config khớp. Video enter/exit/Back Nếp trên APK mới đã mở nhìn; không suy thành OTP/AI/iOS/48 flow hay native startup300ms.
-- [x] Dọn hai bản sao flow tạm, Metro riêng và dừng AVD tổng hợp riêng để trả RAM; `native-cleanup.json`. Công việc/data Claude giữ nguyên.
-- [ ] Hoàn tất số liệu full gate, handoff và dọn runtime do Codex tạo.
+- [x] Lượt dọn trước `8ac64443`: hai bản sao flow tạm, Metro riêng và AVD tổng hợp đã dừng; `native-cleanup.json`. Khi mở lại UI-009 chỉ AVD riêng5560 được bật lại; đã dừng sau gate mới, Metro8175 không còn listener, `native-ui009-cleanup.json`. Công việc/data Claude giữ nguyên.
+- [x] Hoàn tất số liệu full gate, handoff và dọn runtime riêng. Code `6144ff2c`; 9 B10 +4 B9a READY_FOR_QA, 44 RESERVED_CLAUDE/109 kế thừa/1 superseded. Ảnh trước/sau +clip startup đã review safe đúng hash và đưa cùng bàn giao; chưa QA_ACCEPTED hoặc landing main.
 
 ## Theo dõi đủ ID
 
@@ -87,7 +88,7 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 | UI-006 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Chạm «+» hai lần nhanh: lần hai rơi vào khay đang mở · chạm đúp = 1 hộp thoại |
 | UI-007 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Khay tạo cao 92% (C2) / 96% (C8), vượt trần 82% · panel ≤82% ở C2, C8 |
 | UI-008 | B10 | PLANNED | READY_FOR_QA · CP08 | Điểm dừng Tab đầu tiên là khối Nếp không tên · không còn điểm dừng không tên |
-| UI-009 | B10 | PLANNED | READY_FOR_QA · CP06 web300; native300ms chưa đo | Khôi phục phiên chậm: vùng nội dung trống, không chỉ báo · skeleton/chỉ báo ≤300ms |
+| UI-009 | B10 | PLANNED | READY_FOR_QA · CP09 native; native300ms chưa đo | Khôi phục phiên chậm: vùng nội dung trống, không chỉ báo · skeleton/chỉ báo ≤300ms |
 | UI-010 | B2 (sửa sớm: khay Tạo mới) | READY_FOR_QA | KẾ_THỪA · cần retest cuối | `/create` mở lạnh không mở khay · mở lạnh /create → 1 hộp thoại |
 | UI-011 | B10 | PLANNED | READY_FOR_QA · CP08 | Nút «Vẽ» của bảng Nếp chết trên web (`Alert.alert` rỗng) · có phản hồi thấy được trên web |
 | UI-012 | B10 | PLANNED | READY_FOR_QA · CP08 | Chip gợi ý của bảng Nếp cao 36dp · ≥48dp |

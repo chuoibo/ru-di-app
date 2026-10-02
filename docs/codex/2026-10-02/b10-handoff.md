@@ -6,6 +6,9 @@ Commit worktree `dfc985f7`, trên baseline sạch `d97430db`; chưa landing `mai
 Finish reviewer trả **ship** trong phạm vi CP06 sau vòng **fix** về focus và
 bằng chứng mở native. Đây là finish cục bộ, **chưa QA_ACCEPTED** và chưa thay
 cổng CP09 tại SHA B10 cuối. Checklist chiến dịch do người phụ trách cập nhật.
+Kết quả bổ sung ở CP09 bên dưới đã khép concern selection bằng full mobile
+1479/0/0 và kiểm cold guest trên release cục bộ; các số đỏ dưới đây là lịch
+sử CP06, không phải trạng thái cuối của concern đó.
 
 Giữ thế giới hiện hành của [DESIGN.md](../../../DESIGN.md): giấy và mực trên
 trang, bìa indigo, chữ hiệu SVG, Bricolage cho tiêu đề và body system. Màn
@@ -224,6 +227,120 @@ detector thành luật mới; capability opt-in của CP08 được ghi ở hand
 
 ## CP09 · Kết quả kiểm chứng và cổng còn mở
 
+**UI-009 mở lại sau video release `8ac64443`.** Các lượt dưới đây là bằng
+chứng trước sửa native mới: icon mặc định/khung trắng trước JS và Welcome
+trượt trên nền trắng vẫn nhìn thấy trong `native-release-startup-frames.png`.
+`am start -W` ghi COLD/657ms, không phải phép đo first-brand-frame. Patch
+bổ sung splash chính thức SDK57 với chữ hiệu hiện có, hide khi layout có
+mặt, bìa index và Welcome không slide khi vào. Source đã commit riêng tại
+`6144ff2c`; build/retest native và finish review đã khép ở phạm vi dưới đây.
+Clean mobile/native, identity và đối chứng tại SHA mới đã khép: UI-009
+là **READY_FOR_QA**, cùng tám ID B10 còn lại. Native300ms, QA độc lập và
+các cấu hình còn thiếu vẫn là cổng riêng, không nhận QA_ACCEPTED.
+
+### UI-009 · Pattern native, bằng chứng và retest bổ sung
+
+Bằng chứng đi cùng repo: [ảnh trước](evidence/ui009/startup-before.png),
+[ảnh sau](evidence/ui009/startup-after.png), [clip native](evidence/ui009/startup-after.mp4)
+và [nguồn/giới hạn](evidence/ui009/README.md). Hai lần quay có launcher khác;
+không nhận so thời gian hoặc pixel match. Fresh reviewer kiểm ba copy trùng
+byte/source, PNG không metadata, MP4 không audio/payload metadata và mở
+đủ **38/38 frame giải mã**; safe đúng ba hash trong
+`ui009-committed-evidence-review.md`, ghim riêng trong repo guard.
+Đây là review dữ liệu/evidence, không nâng verdict thành chứng nhận hiệu năng.
+
+Ordinary scoped improvement trong hệ notebook: native splash trước JS giữ
+chữ hiệu trên indigo; React `OpeningApp` tiếp cùng bìa trong lúc đọc
+font/phiên; index vẽ bìa khi quyết định Redirect. `onLayout` hide splash khi
+React đã có layout, không timer chờ trang trí. Index/Welcome dùng animation
+none/nền cover; CTA → Login và Back giữ handoff hiện hành, tắt khi reduced
+motion. Đây vừa là **BUG_FIX** khung Expo/trắng, **UX/VISUAL_UPGRADE** về
+continuity nhận diện và **MOTION_UPGRADE** bỏ entry slide; `onLayout` là
+capability startup, chưa phong thành luật toàn app. Giữ nguyên `PRODUCT.md`,
+`DESIGN.md`, `.impeccable/design.json`; không identity, font hay token mới.
+
+Packet base `8ac64443`, fingerprint literal **`b10-ui009-review`**;
+`splash-build-source.json` pin 8 file, root đối chiếu **8/8 hash khớp source
+commit `6144ff2c`**. APK dựng trước commit từ source byte-identical, bản
+dựng/cài cùng SHA256
+`3abcfa68341e6114ee83652cc8af9a652f85f731c98cfd28810689c894928945`.
+Release cục bộ bundled, không Metro, debug signing; không profile production
+và không tự thay gate clean exact-SHA. Clean mobile riêng tại `6144ff2c` đã kết thúc **1 stage pass / 0 fail / 0 skip**, **1479/0/0** + typecheck và export Android/iOS/web (86s). Lượt đầu đỏ được giữ trong concern bên dưới.
+
+| Phép kiểm mới | Kết quả / phạm vi |
+|---|---|
+| Native build | `splash-native-build.log`: **BUILD SUCCESSFUL**, 4m33s, **1460 task** (1428 executed, 32 up-to-date); SDK57, assembleRelease x86_64. |
+| Cold release guest | `splash-release-cold.log`, **exit0**: URL lạ → recovery → CTA/Quay lại Welcome; lời mời giữ `CP09-TEST-ONLY`, không redeem; icon → Welcome → Login → Back, đúng fingerprint. |
+| Narrow dark/reduced | `splash-native-narrow.log`/JSON, Maestro/record **exit0**: **840×1840, density420 (~320dp), font1.3**, night yes, ba animation scale **0/0/0**; Welcome/CTA/Login/Back. |
+| Tablet thường | `splash-native-tablet.log`/JSON, Maestro/record **exit0**: **2016×2688, density420, font1.0**, light, scale **1/1/1**; cùng flow. |
+| Web hồi quy | `splash-web-regression.log`: **6 pass / 0 fail / 0 skip** (ba Nếp, hai opening, một Welcome); ảnh font settled **390×844/1280×800**. Không suy thành full mobile/native. |
+
+Finish reviewer fresh ghi **`ship`** cho continuity startup trong
+[ui009-finish-review.md](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/ui009-finish-review.md).
+Documenter mở nhìn [startup phone](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/ui009-review/native-phone-startup-frames.png),
+[reduced-motion narrow](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/ui009-review/native-narrow-dark-reduced-transition-dense.png),
+[Login/Back tablet](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/ui009-review/native-tablet-normal-transition-dense.png),
+[Login font1.3](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/ui009-review/native-narrow-ui009-login.png)
+và [Opening web](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/ui009-review/mobile-opening.png).
+Các khung phone đã lấy mẫu cho thấy wordmark/indigo → Welcome, không
+Expo/trắng như baseline; không tách rõ React Opening thành giai đoạn riêng.
+Tablet có khung slide Login/Back; narrow scale0 cắt về Welcome. Mẫu thời gian
+không loại được flash giữa hai khung, không đo first-brand ≤300ms, FPS ứng
+dụng, frame pacing hay hiệu năng native.
+
+| Controlled artifact | SHA256 được reviewer xác nhận safe |
+|---|---|
+| `apps/mobile/assets/rudi/wordmark-splash.png` | `6296dc0fcd7ad6ab0857e8210f61533bc2a74f858758b552f257bb897be8b99c` |
+| `apps/mobile/package-lock.json` | `e99327fe89cf009b69d1079a853530a7ba7334c9205bb924b061fbd3eef6e36f` |
+
+PNG **828×288 RGBA, 24.764 byte**, chỉ mark kem trên alpha;
+IHDR/bKGD/IDAT/IEND, không text/EXIF. Reviewer tái raster độc lập trong bộ
+nhớ bằng **CairoSVG2.8.2** từ đúng bốn `GLYPHS` hiện có trong `Wordmark.tsx`,
+viewBox đúng vector nguồn, fill `#f7f3ec`: trùng toàn bộ byte/hash, pixel diff
+rỗng. Baloo 2 ExtraBold/Ek Type/OFL1.1 đã có ở source. Lock chỉ thêm
+`expo-splash-screen ~57.0.9` cùng metadata công khai, không đổi/bỏ package
+khác. Safe chỉ cho hai hash trên, không thay dependency security audit.
+
+Wrapper Impeccable cũ không tìm được plugin, **exit127**; lượt thực dùng
+launcher hiện đang ship, engine **0.1.9**, rendered frozen Opening:
+**5 mobile / 5 desktop findings, exit2**, không ignore. Theo review, ba
+`transition: padding` còn **unresolved về detector**: source startup không
+thêm animation padding, frame không cho thấy đổi padding. `text-occlusion`
+được giải thích bằng status dưới cover bị che có chủ đích, scene inert/ẩn
+AX, ảnh cuối chỉ một status đọc được; `monotonous-spacing` non-material cho
+mark + status gap24/12. Không gọi detector sạch hoặc so trend CP08 khác
+scope/version; không canonize findings thành luật thiết kế.
+
+Concern QA riêng: privacy caption Login narrow/font1.3 bị cắt tại navigation
+bar. Login source không đổi, thiếu baseline cùng cấu hình nên chưa quy
+nguyên nhân/đóng accessibility hoặc inset. Signed-in release, iOS, máy vật
+lý, TalkBack và production API/signing chưa kiểm; Back CLI không chứng minh
+predictive-back gesture. Verdict startup không phải QA_ACCEPTED hay duyệt main.
+
+Checkpoint tại lúc bàn giao:
+
+- [x] Build bundled, hash APK/source và asset provenance có bằng chứng.
+- [x] Retest guest/Login/Back đúng các cấu hình trên; mở nhìn khung chuyển động native.
+- [x] Detector có findings đã triage, finish fresh `ship`, documenter ghi pattern/giới hạn.
+- [x] Gate cây sạch tại `6144ff2c`: mobile1479/0/0+typecheck/ba export; native12flow1/0/0; identity trước/sau2/0/0 và canary/hai mutant cùng harness đỏ đúng dự đoán.
+- [ ] QA độc lập nhận UI-009; cold có phiên/link hợp lệ, TalkBack, iOS và máy thật.
+
+Retest trên **AVD tổng hợp riêng**, cài đúng APK/fingerprint trên, không gửi
+OTP/redeem lời mời. Đặt `QA_AVD_SERIAL` thành serial AVD ấy. Hai YAML là
+flow đã chạy, không đủ tự đóng các ô còn trống:
+
+```bash
+maestro --device "$QA_AVD_SERIAL" test /home/lakiet/.local/share/rudi-b9a/campaign/cp09/splash-cold.yaml
+maestro --device "$QA_AVD_SERIAL" test /home/lakiet/.local/share/rudi-b9a/campaign/cp09/splash-compact.yaml
+```
+
+| Retest tiếp | Thao tác / expected |
+|---|---|
+| Cold guest sáng | Cold YAML; quay từ trước launch và mở khung trước JS/handoff. Cùng mark/indigo đến Welcome, không Expo/trắng/entry slide; recovery CTA/Quay lại giữ đích. |
+| Narrow dark/font1.3/reduced | Cấu hình 840×1840/density420/font1.3/night yes/scale0 rồi compact YAML: Welcome/CTA trong safe area, Login/Back không slide. Ghi riêng caption Login cắt, so baseline để điều tra. |
+| Tablet normal | Cấu hình 2016×2688/density420/font1.0/light/scale1 rồi compact YAML; mở khung giữa CTA/Login/Back, nền thuộc hai màn hiện hành; ảnh cuối không thay motion proof. |
+| Có phiên/link hợp lệ/TalkBack | Fixture tổng hợp có phiên, stop rồi mở icon/link địa điểm hợp lệ: giữ đích/quyền/state; TalkBack không vào controls dưới cover, chỉ status rồi đích đúng. Chưa có runtime evidence cho các ca này. |
+
 B10 đã triển khai đủ **9 ID độc lập**: 002/009, 016/017/020,
 008/011/012/014. B9a có thêm 150/151/152/154 trong nhánh riêng. Đây không
 phải kết luận 167 ID đã hoàn tất: **18 B8 + 26 B9 vẫn RESERVED_CLAUDE**,
@@ -233,11 +350,11 @@ hạn nghiệp vụ/hạ tầng; không sửa rule để đổi màu trạng th�
 
 | Phép kiểm | SHA / kết quả / phạm vi |
 |---|---|
-| Clean mobile cuối | `b46bdcf7`, npm ci đúng lock, typecheck + **1479 pass / 0 fail / 0 skip**, export **Android/iOS/web**; `mobile-b46.log`, `mobile-b46-summary.txt`. Export iOS không phải chạy iOS. |
+| Clean mobile cuối | `6144ff2c`: npm ci đúng lock, typecheck + **1479 pass / 0 fail / 0 skip**, export **Android/iOS/web**, 86s; `mobile-6144-repeat.log`/summary. Lượt đầu1478/1/0 và concern không ổn định giữ phía dưới; không sửa assertion/source Hành trình. Lượt `b46bdcf7` giữ lịch sử. Export iOS không phải chạy iOS. |
 | Hướng dẫn Nếp | `dc1bd772`: generator đọc 60 route, chỉ sáu nhãn Welcome đổi; băm frontend/Go `99be676b0199`. Test web hướng dẫn **29/0/0**, Go package đạt. Không đổi route hay cập nhật snapshot bỏ qua review. |
 | API trong full gate | `dc1bd772`: **3028 pass / 743 skip**. Không đọc skip thành bằng chứng PostgreSQL. AI inference offline đúng pin/env **65 pass / 3 deselected**, không gọi provider. |
-| Identity, canary và mutant | Clean `b46bdcf7`: identity trước/sau **2/0/0**; canary bỏ cover đỏ tại chờ first frame; mutant bỏ inert đỏ tại protected scene; mutant CTA luôn Welcome đỏ tại chờ home signed-in. Cùng hash opening/chrome-cdp/freshness, mỗi variant export mới; kiểm không tương đương trước chạy, khôi phục tree sạch. `mutations-b46bdcf7/mutations.json` và các diff/log giữ ngoài repo. |
-| Full strict 33 chặng | Clean `dc1bd772` còn chạy ở `gate-final.log`; đã có chặng đỏ. Kết quả mobile cuối ở SHA khác được ghi riêng, chưa có full strict xanh hay gate trên merge-result với main mới. **Chưa đủ điều kiện landing main.** |
+| Identity, canary và mutant | Clean `6144ff2c`: identity trước/sau **2/0/0**; canary bỏ cover đỏ tại chờ first frame; mutant bỏ inert đỏ tại protected scene; mutant CTA luôn Welcome đỏ tại chờ home signed-in. Cùng hash opening/chrome-cdp/freshness, mỗi variant export mới; kiểm không tương đương trước chạy, khôi phục tree sạch. `mutations-6144ff2c/mutations.json`: identity2/0/0 trước/sau; web frame3.8/8.6ms từ resume request. Canary bỏ cover không có paint probe, đỏ trước khi đọc frame; hai mutant đỏ đúng assertion/đích. Lượt `b46bdcf7` giữ lịch sử; các diff/log ngoài repo. |
+| Full strict 33 chặng | Clean `dc1bd772` **đã kết thúc: 26 pass / 7 fail / 0 skip**, `gate-final.log` + `gate-final-summary.txt`, pin-drift clean. Đỏ: ruff (nhánh không đổi Python), demo-watch/hero-walk (thiếu demo/8099), mobile/mobile-native (lượt cũ; xanh riêng tại `b46bdcf7`/`c8328b0e` ghi bên dưới), Go PostgreSQL (`internal/nepnho` xóa tài khoản: registry thiếu `community_notifications.actor_id`), crypto (thiếu cargo). Crypto rerun riêng cùng SHA: 48s đạt1/0/0 nhưng bỏ dựng Android; lượt hai `crypto-android-final.log` 16s đạt1/0/0, đúng NDKr27b có compile Android; root kiểm ELF Android và đủ7 symbol, **21 test (4+17)**. Đây là build, chưa runtime E2EE. Giữ nguyên bảy chặng đỏ cũ. Parity dev **351/10758**, limiter **9/209**, production **23/605** scenario/step, đều **0 diff**; PostgreSQL live **702 + 51 pass**. Không sửa `dangky.go` original đang có patch Claude để khép Go PostgreSQL. Chưa có full strict xanh hay gate trên merge-result với main mới; **chưa đủ điều kiện landing main**, không phải gate cuối của UI-009 tại `6144ff2c`. |
 
 Ba sửa harness đều giữ assertion và dữ liệu:
 
@@ -251,13 +368,66 @@ Ba sửa harness đều giữ assertion và dữ liệu:
   không đổi; concern CP06 được khép bằng lượt full clean **1479/0/0** sau
   assertion mạnh hơn. Lịch sử hai lượt CP06 đỏ và baseline1473 xanh giữ nguyên.
 
+### Concern mới từ gate UI-009
+
+Lượt clean mobile đầu tại `6144ff2c`: **1478 pass / 1 fail / 0 skip**,
+ca Hành trình chờ selected-stop/`aria-pressed=true` hết hạn, kết quả cuối
+`pressed=false`. Source Hành trình không đổi. Lượt chạy riêng **1/0/0**,
+lượt full test lặp **1479/0/0**, rồi lượt có instrumentation cũng **1479/0/0**;
+trace thành công cho thấy cover đã đóng khi pointerdown/up/click. Không
+quan sát được trace của lần đỏ, nên chưa xác lập nguyên nhân và không
+được nhận đã sửa lỗi này. Instrumentation chỉ ở verifier, đã khôi phục
+harness nguyên bản trước gate tiếp; giữ `journey-diagnostic.diff`, các log
+`mobile-6144-journey-*` và `journey-6144-isolated.log` ngoài repo.
+Đây là concern không ổn định của kiểm chứng để QA/theo dõi tích hợp,
+không đánh tráo thành bug QA gốc hoặc sửa/tắt assertion để xanh.
+
+Native cuối tại clean `6144ff2c`: **12 flow**, **1 stage pass / 0 fail /
+0 skip**, **830s**, `native-6144.log`/summary. Dấu vân sai đỏ đúng assertion;
+canary09 tới Tài chính rồi đỏ ở chuỗi không tồn tại bước cuối. Metro riêng
+8175 ở verifier không bị mutation; mã nguồn8/8 khớp APK debug dựng/cài.
+Debug APK SHA256 `f47d6a4d5a327b10b3ba30dadd7a5e6276c408de8f741e7fc6998740beb444b2`,
+`splash-debug-apk-verification.json`. Thư mục Android ignored chỉ nhận
+fingerprint sau đối chiếu; không giả build trong verifier. Đã mở contact
+22 ảnh (giữ hai file cùng tên từ hai flow thành đường dẫn riêng), ảnh
+Welcome/trang2 đầy đủ tại `native-6144-images/`. Đây là default fixture,
+không OTP/AI có điều kiện/Expo Go/máy thật hoặc 167 ca QA.
+Repo guard tree tại clean `6144ff2c`: **4837 file** đạt;
+staged code trước commit **9 file** đạt. Asset evidence docs sẽ có cổng
+staged/tree riêng sau commit bàn giao.
+
 ### Android, APK và link
 
 Android warm (5600) mở địa điểm → Back → unknown → Back → invite; guest
 (AVD riêng5620) unknown → CTA Welcome → invite. Hai CLI hoàn tất exit0,
 ảnh đã mở nhìn; mã CP09-TEST-ONLY chỉ điền, không redeem. Web anonymous
-có/không browser history nằm trong hai test opening. Cold custom scheme
-vào devclient launcher trước JS; **release cold link/invite chưa kiểm**.
+có/không browser history nằm trong hai test opening. Lượt debug cold
+custom scheme vào devclient launcher trước JS giữ nguyên giới hạn ấy;
+không dùng lỗi launcher để suy kết quả release.
+
+APK **release cục bộ** tại `8ac64443` đã được assembleRelease x86_64,
+**957 task** (898 executed, 59 up-to-date), build thành công trong 3m27s.
+APK cài trên AVD tổng hợp riêng có SHA256 khớp bản dựng:
+`8f4ba7957c76b8936e91a86d5bc65a89dca4ffc89f4ea7fb78281e20363c3053`.
+Bundle nằm trong APK, không dùng Metro. `native-release-build.log`,
+`native-release-apk-verification.json` và `native-release-cold.log` giữ
+bằng chứng; CLI **exit0** cho các ca guest:
+
+- Cold URL lạ mở trang recovery; CTA và nút Quay lại trong UI về Welcome.
+- Cold `rudi://moi/CP09-TEST-ONLY` giữ đúng mã, không tự redeem.
+- Stop rồi mở từ icon về Welcome, đúng fingerprint release tổng hợp.
+
+Năm ảnh trong `release-native/2026-10-03_050224/release-cold/` đã mở nhìn:
+[recovery lạnh](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/release-native/2026-10-03_050224/release-cold/takeScreenshot/release-cold-unknown.png),
+[CTA về Welcome](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/release-native/2026-10-03_050224/release-cold/takeScreenshot/release-cold-unknown-cta.png),
+[Quay lại](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/release-native/2026-10-03_050224/release-cold/takeScreenshot/release-cold-unknown-back.png),
+[lời mời](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/release-native/2026-10-03_050224/release-cold/takeScreenshot/release-cold-invite.png)
+và [mở từ icon](/home/lakiet/.local/share/rudi-b9a/campaign/cp09/release-native/2026-10-03_050224/release-cold/takeScreenshot/release-cold-launch.png).
+Nội dung/action và safe area đúng tại cấu hình đã chạy. Đây là signing
+debug mặc định của build release cục bộ, không chứng nhận signing/profile
+production. API dùng loopback tổng hợp; chưa kiểm authenticated release
+network, cold có phiên, link địa điểm hợp lệ lạnh hoặc startup ≤300ms.
+Không gọi đây là QA_ACCEPTED hay bằng chứng iOS.
 
 Emulator cũ đã khôi phục **14 private file**, băm nội dung khớp backup mới
 trước lượt này; font/system scales/size/density và reverses trả lại.
@@ -331,8 +501,9 @@ và contrast incomplete giữ nguyên. Video/khung chuyển động native CP06�
 
 QA retest theo các hàng CP06/07/08 phía trên, ưu tiên:
 
-- 002/009: slow session, guest/có phiên, Back và CTA; đo startup native
-  ≤300ms trên bản ship, cold link thật/lời mời và state preservation.
+- 002/009: slow session, guest/có phiên, Back và CTA; cold guest trên
+  release cục bộ đã tự kiểm. QA cần cold có phiên/link địa điểm hợp lệ,
+  state preservation và startup native ≤300ms trên bản ship.
 - 016/017/020: swipe nhanh chỉ một trang; phím/resize/pager state;
   double tap CTA, Back giữa transition và reduced motion lạnh/warm.
 - 008/011/012/014: tên/nút skip của performance, chip48dp, gutter320;
@@ -343,6 +514,11 @@ QA retest theo các hàng CP06/07/08 phía trên, ưu tiên:
 
 Bó CP09: `/home/lakiet/.local/share/rudi-b9a/campaign/cp09/`; liên kết
 [checklist 167 ID](ui-ux-campaign.md). Không sửa QA report gốc, session/plan
-Claude, PRODUCT/DESIGN/sidecar hoặc patch B8/B9. Main đã tiến tới `cff7e288`
-trong lane khác; merge-tree đọc trước đó chỉ chứng minh không conflict văn
-bản tại lúc đo, chưa chứng minh tích hợp semantic hay gates trên main mới.
+Claude, PRODUCT/DESIGN/sidecar hoặc patch B8/B9. Main đã tiến tới `f043bea4` trong lane khác. Merge-tree chỉ đọc tại
+`6144ff2c`/`f043bea4` exit0, không conflict văn bản; chưa merge hay chứng
+minh tích hợp semantic/gates trên main mới.
+
+Lượt cleanup sau UI-009: xác nhận đúng AVD riêng `rudi-b10-clean`/5560,
+size/density không override, font1/animator1; dừng AVD, Metro8175 không còn
+listener. `native-ui009-cleanup.json` giữ kết quả. Các thiết bị/data Claude
+không thao tác trong lượt này.
