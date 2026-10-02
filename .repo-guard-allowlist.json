@@ -1399,6 +1399,54 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B6 · Chat): ảnh ghép JPEG chụp bản web trên stack loopback riêng và emulator Android (dữ liệu tổng hợp: «Team Đà Lạt», «Chat Test NN», «Phòng kiểm thử đồng thời»), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B7-BINH-LUAN.jpg",
+      "sha256": "68d73f56d2be17d2fc65763aa3917b6a78cee308983314b187ef036deca645d8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B7-UI-132.jpg",
+      "sha256": "f5f0de50f175ed3bde1ec2899e6d341f6f50eed4d4ef3b4574c16d9b5db1928d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B7-UI-133.jpg",
+      "sha256": "de68681d024064e3bdfb71ba3ff1122c314260c8a6a5c565ee678f4e7c52c0bd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B7-UI-138-148.jpg",
+      "sha256": "7fd2e953958f0606d71d06ae99df2badf0fe68f00bc2e191f258e2dad7869678",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B7-UI-141.jpg",
+      "sha256": "601f6c648b635c0052db7344c0433fb6dafa4f67879b9aa020f805d88236b707",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-01/ui-ux-upgrade/evidence/EV-B7-UI-146-147.jpg",
+      "sha256": "eddea206b9c00d042aeebc2a35db5685dde4a4ea222119741f7e0008e8439d68",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
     }
   ]
 }

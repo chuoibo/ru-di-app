@@ -343,7 +343,11 @@ func (h *Handler) notifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
-	rows, err := tx.Query(r.Context(), `SELECT n.id,n.post_id,n.kind,n.created_at FROM community_notifications n JOIN posts p ON p.id=n.post_id JOIN people a ON a.id=p.author_id LEFT JOIN community_posts c ON c.post_id=p.id WHERE n.person_id=$1 AND a.deleted_at IS NULL AND c.deleted_at IS NULL AND (`+readableSQL+`) ORDER BY n.created_at DESC LIMIT 50`, person)
+	// Who mentioned you and the first words of where (QA UI-147): the actor's
+	// display name, whether it came from a comment, and up to 120 characters
+	// of that comment or of the post as published. A row from before the
+	// actor was recorded answers null and the app says «Bạn được nhắc…».
+	rows, err := tx.Query(r.Context(), `SELECT n.id,n.post_id,n.kind,n.created_at,x.display_name,n.comment_id IS NOT NULL,left(COALESCE(cm.body,p.body),120) FROM community_notifications n JOIN posts p ON p.id=n.post_id JOIN people a ON a.id=p.author_id LEFT JOIN community_posts c ON c.post_id=p.id LEFT JOIN people x ON x.id=n.actor_id AND x.deleted_at IS NULL LEFT JOIN post_comments cm ON cm.id=n.comment_id WHERE n.person_id=$1 AND a.deleted_at IS NULL AND c.deleted_at IS NULL AND (`+readableSQL+`) ORDER BY n.created_at DESC LIMIT 50`, person)
 	if err != nil {
 		fail(w, err)
 		return
@@ -352,10 +356,12 @@ func (h *Handler) notifications(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var id, post, kind string
 		var at time.Time
-		if err = rows.Scan(&id, &post, &kind, &at); err != nil {
+		var actor, excerpt *string
+		var fromComment bool
+		if err = rows.Scan(&id, &post, &kind, &at, &actor, &fromComment, &excerpt); err != nil {
 			break
 		}
-		out = append(out, map[string]any{"id": id, "post_id": post, "kind": kind, "created_at": at})
+		out = append(out, map[string]any{"id": id, "post_id": post, "kind": kind, "created_at": at, "actor": actor, "from_comment": fromComment, "excerpt": excerpt})
 	}
 	rows.Close()
 	if err == nil {

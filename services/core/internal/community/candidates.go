@@ -51,7 +51,12 @@ func (h *Handler) discoveryRanking(ctx context.Context, tx pgx.Tx, person, mode 
 		h.candidateUntil = time.Now().Add(time.Second)
 	}
 	if mode != "following" && (!personalized || mode == "trending") {
-		ids := append([]string(nil), h.commonRanking...)
+		// A copy that is an empty slice when nothing is ranked, never nil: nil
+		// reaches the snapshot as NULL, which `post_ids NOT NULL` refuses, and a
+		// community with no approved public post answered 503 instead of an
+		// empty feed (QA UI-132).
+		ids := make([]string, 0, len(h.commonRanking))
+		ids = append(ids, h.commonRanking...)
 		h.candidateMu.Unlock()
 		return ids, nil
 	}

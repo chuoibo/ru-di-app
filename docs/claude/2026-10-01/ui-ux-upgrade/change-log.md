@@ -794,3 +794,95 @@ Vòng đầu trả «fix» với 8 mục; vòng chấm thứ hai còn 3 mục m�
 - Trang đầu không tải được: hết phiên thì «Đăng nhập lại» (về đúng chat sau khi vào), bị từ chối vĩnh viễn thì «Về Tin
   nhắn», còn lại «Thử lại». `cauLoiThaoTac` không mời thử lại với 401.
 
+## B7 · Cộng đồng (N14) + Go
+
+Cộng đồng là bề mặt «Experience» nhưng các issue của nó là việc nền: bảng tin không được báo lỗi khi chỉ là chưa có bài,
+không được dựng lại dưới tay người đọc, câu lỗi phải nằm chỗ người vừa bấm. Batch này sửa ba route Go (chỉ Go phục vụ,
+`python: absent`, không có oracle) kèm test trên PostgreSQL thật, và làm lại phần trạng thái của các màn Cộng đồng. Không
+đổi luật duyệt, không đổi điều kiện ai đọc được gì.
+
+### Bảng tin rỗng là bảng tin rỗng (UI-132) · BUG_FIX (Go)
+- `candidates.go`: bảng xếp hạng chung được chép bằng `append([]string(nil), …)`, nên khi chưa có bài công khai nào được
+  duyệt nó là `nil`; `nil` xuống `community_feeds.post_ids` thành NULL, cột NOT NULL từ chối, và «Dành cho bạn», «Thịnh
+  hành» trả 503 `community_unavailable` cho một cộng đồng chỉ là chưa có bài. Nay chép thành mảng rỗng; `feed.go` thêm
+  một chốt trước khi ghi snapshot.
+- Test PostgreSQL: `TestPostgresCommunityEmptyDiscoveryIsAnEmptyFeed` (for_you, trending → 200, 0 bài).
+- Màn: trạng thái rỗng sẵn có («Một ngày đáng kể» + «Kể khoảnh khắc đầu tiên») nay hiện đúng chỗ của nó.
+
+### Chủ đề nói điều cần sửa, trước khi gửi (UI-133) · UX_IMPROVEMENT
+- `chu-de.ts` (thuần, có test) kiểm chủ đề như `normalizeTopics` của máy chủ: tối đa 5, mỗi chủ đề 2–40 ký tự, không
+  `/ \ < > @`. Câu nằm ngay dưới ô «Chủ đề» trong lúc gõ; «Gửi» chờ kèm lý do.
+- `too_many_topics`, `invalid_topic` có câu riêng; không còn «lỗi của app». Lỗi máy chủ của ô soạn nằm ngay trên nút gửi.
+- Nút gửi tắt luôn nói vì sao (UI-091); form theo cột 560 trên tablet (UI-093).
+
+### Nối lại không dựng lại (UI-134, UI-135) · BUG_FIX
+- Chi tiết bài: khung `sync` đọc lại bài tại chỗ; bài, chữ đang gõ trong ô bình luận và sheet Nếp còn nguyên.
+- Bảng tin: quay về từ một bài giữ danh sách, vị trí cuộn và bài đang mở hết; chỉ đổi tab/chủ đề mới bắt đầu lại.
+  Trên web, trình duyệt đưa danh sách bị che về đầu; màn ghi vị trí trong lúc đang ở trước mặt và đặt lại khi quay về.
+- Luồng sự kiện: khung `sync` đầu tiên là lúc mở kết nối, không phải tin mới, nên không bật dải «Bảng tin có cập nhật»;
+  chỉ một lần nối lại (có thể đã lỡ thay đổi) hay `feed.changed` mới bật. Lượt đo đầu của B7 cho thấy dải hiện ngay khi
+  mở tab và đè đích bấm của thẻ đầu.
+- Bình luận: đọc lại không làm trống danh sách.
+
+### Lỗi nằm chỗ vừa bấm (UI-138, UI-148) · UX_IMPROVEMENT
+- Gọi Nếp hỏng: câu trong sheet Nếp, kèm «Thử lại»; nút gọi tắt khi chưa có lời nhờ thì nói vì sao.
+- Sheet quản lý bài: bước bị từ chối nói trong sheet.
+- Bình luận: đọc hỏng có «Thử lại» và giữ những bình luận đang hiện; gửi hỏng nói ngay ô bình luận.
+
+### Thẻ bài (UI-139, UI-140, UI-143) · UX_IMPROVEMENT + BUG_FIX
+- Thân không bị cắt thì lần chạm đầu mở bài (`thanBiCat`, cùng phép thử in «Đọc tiếp»).
+- Theo dõi / bỏ theo dõi đổi mọi thẻ của cùng tác giả (`doiTheoDoiTacGia`).
+- Khung ảnh theo bề rộng album thật (trần 296, giữ tỉ lệ); dải «Bảng tin có cập nhật» nằm dưới phần đầu màn theo chiều
+  cao đo được, không ở `top: 136` cố định.
+
+### «Không quan tâm» lấy lại được (UI-141) · UX_IMPROVEMENT (Go + màn)
+- Thẻ nhường chỗ cho một dòng tại chỗ: «Đã ẩn bài của X…» + «Hoàn tác». Không toast, không biến mất không một lời.
+- Go: mode `hidden` của bảng tin liệt kê đúng bài người đó đã ẩn; sheet «Bảng tin của bạn» có «Bài đã ẩn», mỗi bài có
+  «Bỏ ẩn». Test PostgreSQL: `TestPostgresCommunityHiddenModeListsAndRestores`.
+- «Xóa lịch sử đề xuất» hỏi trước (nói cái gì mất, cái gì giữ), xoá xong nói đã xoá.
+
+### Tác giả không mất bài của mình khi sửa (UI-142) · BUG_FIX (Go)
+- `feed.go` bỏ điều kiện giấu bài đang chờ duyệt bản sửa khỏi bảng tin của chính tác giả. Bài hiện như ở trang chi tiết:
+  chữ mới nhất của tác giả dưới dải «Đang chờ duyệt»; người khác vẫn chỉ thấy bản đã duyệt.
+- Test PostgreSQL: `TestPostgresCommunityAuthorKeepsEditedPostInFeed` (gồm vế người đọc khác không thấy bản sửa).
+
+### Hàng duyệt, tìm, ghi chép, chủ đề (UI-144, UI-145, UI-146) · UX_IMPROVEMENT
+- Hàng duyệt: «Chờ duyệt», «Cần người xem lại»… thay mã thô; lỗi quyết định nằm dưới đúng mục; nút tắt nói vì sao.
+- Tìm ra 0: «Không tìm thấy chủ đề hay người nào khớp «q»» + gợi ý; tiêu đề nhóm chỉ in khi có mục.
+- «Điều mình muốn giữ» rỗng: nói ghi chép tới từ đâu và mở bằng gì.
+- Trang chủ đề: «Quay lại», «Theo dõi chủ đề» / «Đang theo dõi» tại chỗ; không còn hàng tab của bảng tin chính.
+
+### Thông báo nói ai nhắc, ở đâu (UI-147) · UX_IMPROVEMENT (Go + migration + màn)
+- Migration cộng đồng thứ 5 `notification_source.sql`: `actor_id`, `comment_id` cho `community_notifications`. Lời nhắc
+  trong bài ghi tác giả; lời nhắc trong bình luận ghi người viết bình luận và bình luận đó. Dòng cũ để NULL, không đoán.
+- Route trả thêm `actor`, `from_comment`, `excerpt` (120 ký tự của bình luận, hoặc của bài như đã công bố).
+- Màn: «Lan nhắc bạn trong một bình luận» + vài chữ trích; chuông ở đầu tab Cộng đồng có chấm khi có thông báo mới hơn lần
+  xem trên máy này. Test PostgreSQL: `TestPostgresCommunityNotificationNamesWhoAndWhere`.
+
+### Đầu màn Cộng đồng giữ một dòng · VISUAL_UPGRADE
+- Chuông thông báo là ô 48dp thứ ba cạnh tiêu đề. Ở 390dp nó đẩy dòng phụ xuống hai dòng («nối» đứng một mình); ở 320dp nó
+  bẻ «Cộng đồng» làm đôi. Bắt được trên ảnh lượt đo đầu, không phải từ bảng số.
+- Dòng phụ nay chạy hết bề ngang dưới hàng tiêu đề. Dưới 360dp, hàng nút lên trên, căn phải, tiêu đề lớn nằm dưới, như
+  thanh tiêu đề lớn của ứng dụng hệ thống. Thứ tự đọc vẫn là tiêu đề trước.
+
+### Bình luận và bản sửa nói rõ (UI-096, UI-091 gặp lại ở N14) · UX_IMPROVEMENT
+- «Xóa» dưới bình luận của mình hỏi ngay tại hàng: «Xóa bình luận này? Không lấy lại được.», rồi «Xóa» (tông warn) và
+  «Thôi». Tên truy cập nói xoá bình luận nào. Xoá hỏng thì câu nằm dưới đúng bình luận đó, kèm «Thử lại», không rơi xuống
+  ô gửi.
+- «Gửi bình luận» tắt thì nói vì sao: chưa có chữ, hoặc ảnh còn đang tải.
+- Sửa bài: chỉ hiện người đọc hiện tại (khoá), kèm câu «Bản sửa giữ người đọc như lúc đăng…» chỉ ra «Thêm lựa chọn cho
+  bài» (⋯) ở trang bài. Bỏ «Lựa chọn khác» và danh sách nhóm, vì không lựa chọn nào trong đó dùng được khi sửa.
+
+### Câu lỗi là một `alert` đọc lịch sự · DESIGN_SYSTEM_IMPROVEMENT
+- `CauTaiCho` và câu lỗi dưới `Field` mang `role="alert"` cùng `aria-live="polite"`: công nghệ hỗ trợ (và bộ đo) tìm được
+  chúng như câu lỗi, mà vẫn không cắt ngang điều người dùng đang gõ hay đang nghe. Trước đó Cộng đồng có 10 chỗ
+  `role=alert` tự viết; nay câu lỗi tại chỗ của mọi màn cùng một vai.
+
+### Test hành trình web hết chập chờn · BUG_FIX (test)
+- `tests/rudi-hanh-trinh-web.test.mjs` chờ đúng trạng thái thay vì chờ thời gian: bước «về lịch trình» chờ
+  `che-do-lich-trinh` mang `aria-selected="true"`; bước tô sáng tìm trong các nút đang thấy (`getClientRects` +
+  `checkVisibility`) một nút mang tên chặng và `aria-pressed="true"`. Phiên song song báo test này chập chờn trên `main`.
+
+### Chưa làm trong B7, chuyển batch
+- Gộp hai hệ bình luận (Cộng đồng và trang tường kể chuyện) về một ngữ pháp hiển thị: chuyển sang B9, cùng lúc với UI-157,
+  UI-158, UI-159 ở `BaiChiTietScreen`, để chỉ chạm màn đó một lần.

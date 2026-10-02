@@ -144,23 +144,23 @@ B11 rà nhất quán. Primitive ở B2 được xác nhận lại ở batch củ
 | UI-129 | P3 | UX_IMPROVEMENT | N26 | Sheet «Gu của hai bạn»: hai dòng ngược nhau; lỗi nằm dưới lớp phủ | B6 | một câu đúng; lỗi trong sheet | READY_FOR_QA |
 | UI-130 | P2 | UX_IMPROVEMENT | N26×F02 | «Rủ X tới đây» cho cặp bạn: chỗ vừa chọn bị bỏ | B8 | màn tới mang quán, hoặc nút ẩn | PLANNED |
 | UI-131 | P3 | BUG_FIX | N26 | Máy chủ vẫn phác tờ cho cặp chưa «Một đôi» | ADR (`adr-de-xuat/UI-131-…`, chờ chủ sản phẩm) | draft cho cặp bạn → 4xx | BLOCKED |
-| UI-132 | P2 | BUG_FIX | N14 | Cộng đồng mới: tab đầu báo «chưa kết nối được», «Thử lại» không bao giờ được | B7 (Go) | 200 với 0 bài; trạng thái rỗng mời kể chuyện | PLANNED |
-| UI-133 | P2 | BUG_FIX | N14 | Sáu chủ đề hay chủ đề một ký tự → câu «lỗi của app», dưới mép màn | B7 | câu theo chủ đề, thấy lúc gửi | PLANNED |
-| UI-134 | P2 | BUG_FIX | N14 | Stream nối lại làm mất bình luận đang gõ | B7 | nháp sống qua nối lại | PLANNED |
-| UI-135 | P2 | UX_IMPROVEMENT | N14 | Mở bài rồi lui: bảng tin về đầu, bài gập lại | B7 | giữ vị trí cuộn ±24px và trạng thái mở | PLANNED |
+| UI-132 | P2 | BUG_FIX | N14 | Cộng đồng mới: tab đầu báo «chưa kết nối được», «Thử lại» không bao giờ được | B7 (Go) | 200 với 0 bài; trạng thái rỗng mời kể chuyện | READY_FOR_QA |
+| UI-133 | P2 | BUG_FIX | N14 | Sáu chủ đề hay chủ đề một ký tự → câu «lỗi của app», dưới mép màn | B7 | câu theo chủ đề, thấy lúc gửi | READY_FOR_QA |
+| UI-134 | P2 | BUG_FIX | N14 | Stream nối lại làm mất bình luận đang gõ | B7 | nháp sống qua nối lại | READY_FOR_QA |
+| UI-135 | P2 | UX_IMPROVEMENT | N14 | Mở bài rồi lui: bảng tin về đầu, bài gập lại | B7 | giữ vị trí cuộn ±24px và trạng thái mở | READY_FOR_QA |
 | UI-136 | P2 | BUG_FIX | N14 | «Chia sẻ» trên web không làm gì; có Web Share thì gửi chuỗi `rudi://` | B1 | có phản hồi; link https | VERIFIED_LOCALLY |
 | UI-137 | P2 | UX_IMPROVEMENT | N14 | Mở màn trong bằng link khi không phiên: chờ mãi, không lối đăng nhập | B1 | cả 4 route có «Đăng nhập» | READY_FOR_QA |
-| UI-138 | P2 | UX_IMPROVEMENT | N14 | Gọi Nếp lỗi: câu lỗi nằm sau sheet | B7 | lỗi trong sheet + thử lại | PLANNED |
-| UI-139 | P3 | UX_IMPROVEMENT | N14 | Bài ngắn: chạm đầu vào thân không làm gì | B7 | chạm mở chi tiết khi không bị cắt | PLANNED |
-| UI-140 | P3 | BUG_FIX | N14 | Theo dõi chỉ cập nhật một thẻ của tác giả | B7 | mọi thẻ cùng tác giả | PLANNED |
-| UI-141 | P3 | UX_IMPROVEMENT | N14 | «Không quan tâm» không hoàn tác; «Xóa lịch sử đề xuất» một chạm | B7 (Go) | hoàn tác tại chỗ; xem lại bài đã ẩn; hỏi trước khi xoá | PLANNED |
-| UI-142 | P3 | UX_IMPROVEMENT | N14 | Sửa bài thì bài rời bảng tin của chính tác giả | B7 (Go) | tác giả thấy bản đã duyệt + dải chờ duyệt | PLANNED |
-| UI-143 | P3 | VISUAL_UPGRADE | N14 | 320: ảnh cắt 8px; dải cập nhật đè tab 13px | B7 | 0px cắt; 0px đè | PLANNED |
-| UI-144 | P3 | UX_IMPROVEMENT | N14 | Hàng duyệt in «· pending» | B7 | nhãn tiếng Việt | PLANNED |
-| UI-145 | P3 | UX_IMPROVEMENT | N14 | Tìm không ra và «Điều mình muốn giữ» không có trạng thái rỗng | B7 | có câu rỗng | PLANNED |
-| UI-146 | P3 | UX_IMPROVEMENT | N14 | Trang chủ đề không có «Quay lại» | B7 | TopBar lui + theo dõi chủ đề | PLANNED |
-| UI-147 | P3 | UX_IMPROVEMENT | N14 | Thông báo không nói ai nhắc | B7 (Go) | tên người nhắc; lối vào ngoài sheet | PLANNED |
-| UI-148 | P3 | UX_IMPROVEMENT | N14 | Đọc bình luận lỗi không có «Thử lại» | B7 | «Thử lại» đọc lại | PLANNED |
+| UI-138 | P2 | UX_IMPROVEMENT | N14 | Gọi Nếp lỗi: câu lỗi nằm sau sheet | B7 | lỗi trong sheet + thử lại | READY_FOR_QA |
+| UI-139 | P3 | UX_IMPROVEMENT | N14 | Bài ngắn: chạm đầu vào thân không làm gì | B7 | chạm mở chi tiết khi không bị cắt | READY_FOR_QA |
+| UI-140 | P3 | BUG_FIX | N14 | Theo dõi chỉ cập nhật một thẻ của tác giả | B7 | mọi thẻ cùng tác giả | READY_FOR_QA |
+| UI-141 | P3 | UX_IMPROVEMENT | N14 | «Không quan tâm» không hoàn tác; «Xóa lịch sử đề xuất» một chạm | B7 (Go) | hoàn tác tại chỗ; xem lại bài đã ẩn; hỏi trước khi xoá | READY_FOR_QA |
+| UI-142 | P3 | UX_IMPROVEMENT | N14 | Sửa bài thì bài rời bảng tin của chính tác giả | B7 (Go) | tác giả thấy bản đã duyệt + dải chờ duyệt | READY_FOR_QA |
+| UI-143 | P3 | VISUAL_UPGRADE | N14 | 320: ảnh cắt 8px; dải cập nhật đè tab 13px | B7 | 0px cắt; 0px đè | READY_FOR_QA |
+| UI-144 | P3 | UX_IMPROVEMENT | N14 | Hàng duyệt in «· pending» | B7 | nhãn tiếng Việt | READY_FOR_QA |
+| UI-145 | P3 | UX_IMPROVEMENT | N14 | Tìm không ra và «Điều mình muốn giữ» không có trạng thái rỗng | B7 | có câu rỗng | READY_FOR_QA |
+| UI-146 | P3 | UX_IMPROVEMENT | N14 | Trang chủ đề không có «Quay lại» | B7 | TopBar lui + theo dõi chủ đề | READY_FOR_QA |
+| UI-147 | P3 | UX_IMPROVEMENT | N14 | Thông báo không nói ai nhắc | B7 (Go) | tên người nhắc; lối vào ngoài sheet | READY_FOR_QA |
+| UI-148 | P3 | UX_IMPROVEMENT | N14 | Đọc bình luận lỗi không có «Thử lại» | B7 | «Thử lại» đọc lại | READY_FOR_QA |
 | UI-149 | P2 | BUG_FIX | N15 | «Đã chia» tính theo ngày: hai kèo trùng ngày cùng ghi một khoản | ADR (`adr-de-xuat/UI-149-…`, chờ chủ sản phẩm) | chỉ đề xuất ADR (mô hình dữ liệu tiền) | BLOCKED |
 | UI-150 | P2 | UX_IMPROVEMENT | N15 | Lưu sổ lỗi: câu lỗi ở đầu màn, trên nút hơn 1000px | B9 | lỗi thấy ngay sau khi chạm | PLANNED |
 | UI-151 | P2 | BUG_FIX | N15 | Kèo chưa tới ngày vẫn có «Khép cuộc đi»; chạm thì 409 | B9 (Go) | `can_end` false + lý do; không nút | PLANNED |

@@ -78,7 +78,9 @@ export function CauTaiCho({ cau, hanhDong, style, testID, co = "thuong" }: CauTa
       style={[styles.hang, nho && styles.hangNho, style]}
       testID={testID}
     >
-      <View accessibilityLiveRegion="polite" aria-live="polite" style={[styles.cau, nho && styles.cauNho]}>
+      {/* An error is an alert by role, announced politely by its own live
+          setting: found by what it is, without interrupting what is read. */}
+      <View accessibilityLiveRegion="polite" accessibilityRole="alert" aria-live="polite" style={[styles.cau, nho && styles.cauNho]}>
         <Ionicons color={colors.warn} name="alert-circle-outline" size={nho ? 15 : 18} style={nho ? styles.dauNho : styles.dau} />
         <Text style={[nho ? typography.note : typography.body, styles.chu, { color: colors.warn }]}>{cau}</Text>
       </View>

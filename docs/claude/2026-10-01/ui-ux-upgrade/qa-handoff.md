@@ -498,3 +498,71 @@ Ghi chú B6:
 7. **Vòng soát hoàn thiện** (subagent ngữ cảnh mới, ba vòng): «fix» 8 mục → còn 3 mục một phần + 1 hồi quy → «ship». Phạm
    vi của «ship» là các mục đó, không phải một lượt soát toàn bộ chat. Mục người soát nêu mà không sửa: tiêu đề tờ hẹn lặp
    chặng duy nhất (dữ liệu ghi lúc bình chọn thành tờ hẹn), không chặn.
+
+### B7 · Cộng đồng (N14) + Go
+
+Đo trên bản web, stack riêng, `n14-cong-dong.mjs` của bản sao harness. Thứ tự giống nhau ở hai lượt: thế giới dựng lại →
+`--chi api,rong` (trước khi có bài nào được duyệt) → cấp quyền duyệt cho chat-15 bằng SQL như QA → mọi phần còn lại.
+- **«Trước»:** main `03f5233a`, `out/b7-truoc`.
+- **«Sau»:** `out/b7-sau3` (bản `b7c`, thế giới mới). Phần bình luận và chi tiết bài chạy lại trên cùng thế giới với bản
+  `b7d`/`b7e` (`out/b7-sau4`, `out/b7-sau5`); `out/b7-sau5` có thêm probe đầu màn ở C1–C3 và màn sửa bài.
+- Tổng hàng N14 ở `b7-sau3` (khoá `tc` + cấu hình): **30 FAIL → PASS, 0 PASS → FAIL**, 58 PASS giữ nguyên, 19 FAIL còn
+  lại (ghi chú 3; một trong số đó PASS ở lượt chạy lại). Log core: lỗi `23502` (NOT NULL) 31 → 0.
+- Go, PostgreSQL thật (`scripts/go_postgres_tier.sh`): 29 ca PASS, 0 skip, sentinel có mặt; 4 ca mới ở
+  `internal/community/bang_tin_b7_postgres_test.go`.
+
+| Issue | Hàng harness | Trước | Sau | Tự kiểm của người sửa | Ảnh |
+|---|---|---|---|---|---|
+| UI-132 | `TC-N14-API-RONG`; `TC-N14-RONG-BANG-TIN` C1–C3; `-THEO-DOI`, `-THINH-HANH`, `-CA-NHAN-HOA`, `-DE-SAU` | FAIL (503 `community_unavailable`) | PASS (5 mode 200, 0 bài; trạng thái rỗng, không câu lỗi) | Go: bảng xếp hạng rỗng là mảng rỗng, không `nil` | `EV-B7-UI-132.jpg` |
+| UI-133 | `TC-N14-DANG-6-CHU-DE`, `-CHU-DE-NGAN` | FAIL («lỗi của app» ngoài màn) | PASS (câu dưới ô, y 419/407 trong cửa sổ 844; không gửi gì) | kiểm như `normalizeTopics`; đúng 5 chủ đề vẫn gửi được | `EV-B7-UI-133.jpg` |
+| UI-134 | `TC-N14-WS-MAT-CHU`, `-WS-AN-HIEN` | FAIL | PASS (chữ đang gõ còn sau nối lại) | khung `sync` đọc lại tại chỗ | — |
+| UI-135 | `TC-N14-BANG-CUON` | FAIL (385 → 0) | PASS (372 → 372, B2 vẫn mở) | web đưa danh sách bị che về đầu; màn đặt lại vị trí | `EV-B7-UI-141.jpg` |
+| UI-138 | `TC-N14-NEP`, `-NEP-NUT-TAT` | FAIL | PASS (câu trong sheet, y 780, yêu cầu còn) | — | `EV-B7-UI-138-148.jpg` |
+| UI-139 | `TC-N14-BANG-CHAM-THAN` | FAIL | PASS (lần chạm đầu tới chi tiết) | thân bị cắt vẫn tốn lần đầu để mở | — |
+| UI-140 | `TC-N14-BANG-THEO-DOI` | FAIL (B2 không đổi) | PASS (B1, B2 cùng nhãn cả hai lần) | — | — |
+| UI-141 | `TC-N14-BANG-AN`; `TC-N14-XOA-LICH-SU` | FAIL; FAIL | PASS; FAIL theo công thức (ghi chú 2) | hoàn tác tại chỗ; «Bài đã ẩn»; xoá lịch sử hỏi trước | `EV-B7-UI-141.jpg` |
+| UI-142 | không có hàng riêng ở lượt này (ghi chú 4) | — | Go PostgreSQL: `TestPostgresCommunityAuthorKeepsEditedPostInFeed` | người đọc khác vẫn chỉ thấy bản đã duyệt | — |
+| UI-143 | `TC-N14-BANG-THE` C2; `TC-N14-WS-DAI` C2 | FAIL (ảnh cắt 8px; dải đè tab) | PASS (0px; dải dưới đầu màn) | đầu màn ở 320dp: ghi chú 5 | `EV-B7-UI-132.jpg` |
+| UI-144 | `TC-N14-DUYET-HANG`, `-DUYET-NUT-TAT`, `-DUYET-BL` | FAIL («· pending») | PASS («Chờ duyệt»; lý do nút tắt) | lỗi quyết định dưới đúng mục | — |
+| UI-145 | `TC-N14-TIM-RONG`, `TC-N14-GIU` | FAIL | PASS | — | — |
+| UI-146 | `TC-N14-CHU-DE` | FAIL | FAIL theo công thức (ghi chú 2); ảnh: «Quay lại», tiêu đề «cà phê», «Theo dõi chủ đề» | — | `EV-B7-UI-146-147.jpg` |
+| UI-147 | `TC-N14-THONG-BAO` | FAIL | PASS («Chat Test 01 nhắc bạn trong một bình luận» + trích) | chuông có chấm khi có thông báo mới | `EV-B7-UI-146-147.jpg` |
+| UI-148 | `TC-N14-LOI-BL` | FAIL | PASS («Thử lại» trong chi tiết, đọc lại được) | danh sách đang hiện không bị xoá | `EV-B7-UI-138-148.jpg` |
+| UI-091 (N14) | `TC-N14-DANG-NUT-TAT`, `-DANG-NHOM`, `-BL-NUT-TAT`, `-SUA-KHOA` | FAIL ×4 | PASS ×3; `SUA-KHOA` không chạy (ghi chú 4), probe: câu nói vì sao và đổi ở đâu | — | `EV-B7-BINH-LUAN.jpg` |
+| UI-093 (N14) | `TC-N14-DANG-TABLET` C6, C7 | FAIL (720/912) | PASS (512/512) | — | — |
+| UI-095 (N14) | `TC-N14-LOI-THICH` | FAIL (y −742) | PASS (y 14) | — | — |
+| UI-096 (N14) | `TC-N14-BL-XOA` | FAIL (mất ngay) | FAIL theo công thức (ghi chú 2); bình luận còn sau một chạm, hỏi tại hàng, tên nút riêng | — | `EV-B7-BINH-LUAN.jpg` |
+
+Ghi chú B7:
+
+1. **Bản đo hỏng, đã bỏ:** lượt `out/b7-sau2` (bản `b7b`) export không có `--clear`, Metro dùng lại cache của một bản
+   không có `EXPO_PUBLIC_API_URL`: bundle không có địa chỉ API, mọi persona thấy cửa đăng nhập. Mọi số ở trên là của bản
+   có địa chỉ API (kiểm bằng grep trước khi đo).
+2. **Công thức gắn với thiết kế cũ (bản sao harness không sửa):**
+   - `TC-N14-CHU-DE`, `-DANG-FORM` C1–C8, `-SUA` đọc tiêu đề là chữ đầu tiên trong màn. Màn nay có `TopBar`, chữ đầu
+     tiên là glyph của nút «Quay lại» (rỗng sau khi lọc). Ảnh cho thấy tiêu đề đúng.
+   - `TC-N14-BL-XOA` chỉ nhận hộp thoại hoặc chữ «Hoàn tác / Xác nhận». Bản mới hỏi ngay tại hàng: «Xóa bình luận này?
+     Không lấy lại được.» với «Xóa» · «Thôi»; bình luận còn sau một chạm.
+   - `TC-N14-XOA-LICH-SU` là hàng đọc mã tĩnh (`CommunityScreen.tsx:122–126` của bản QA đo), luôn in FAIL. Mã mới: tấm
+     hỏi `tone="warn"` nói cái gì mất, xoá xong có câu báo.
+   - `TC-N14-RONG-THU-LAI` cần một câu lỗi kèm «Thử lại» để bấm. Bảng tin rỗng nay không còn lỗi, ra thẳng trạng thái rỗng
+     (điều hàng mong đợi).
+3. **19 hàng còn FAIL ở `b7-sau3`:**
+   - 11 hàng của ghi chú 2: `CHU-DE`, `DANG-FORM` ×6, `SUA`, `BL-XOA`, `XOA-LICH-SU`, `RONG-THU-LAI`.
+   - `TC-N14-TIM-NGUOI` do dữ liệu: điều kiện là «chat-1 đang theo dõi chat-0», nhưng bước `BANG-THEO-DOI` trước đó (nay
+     đúng) theo dõi rồi bỏ theo dõi.
+   - Bốn hàng của B1 (ghi chú B1): `KHONG-PHIEN`, `KHONG-PHIEN-SAU`, `BANG-CHIA-SE`, `BANG-CHIA-SE-LINK`.
+   - `TC-N14-BANG-XEM-ANH` là UI-094 (B9).
+   - Hai hàng đỏ ở bản `b7c` và được sửa sau lượt đó:
+     - `BL-NUT-TAT` PASS ở `b7-sau4` và `b7-sau5`.
+     - `SUA-KHOA` chỉ chạy khi B1 còn ở `revision === 1`, nên không đo lại được trên cùng thế giới. Probe
+       `b7-sau5/sua-khoa.png` thay cho nó: khi sửa chỉ hiện người đọc hiện tại, kèm câu nói đổi ở đâu.
+4. **UI-142** không có hàng `sua-bang` trong `results.jsonl` của cả hai lượt. Bằng chứng là ca PostgreSQL thật, gồm vế
+   người đọc khác không thấy bản sửa trước khi duyệt.
+5. **Thêm chuông làm hỏng đầu màn (tự bắt bằng ảnh, đã sửa):** ô 48dp thứ ba đẩy dòng phụ xuống hai dòng ở 390dp («nối»
+   đứng một mình), và ở 320dp bẻ «Cộng đồng» làm đôi. Dòng phụ nay chạy hết bề ngang dưới hàng tiêu đề. Dưới 360dp, hàng
+   nút lên trên, căn phải, tiêu đề lớn nằm dưới (thứ tự đọc vẫn là tiêu đề trước).
+6. **Câu lỗi là `alert`:** `CauTaiCho` và câu lỗi dưới `Field` mang `role="alert"` cùng `aria-live="polite"`. Lượt đầu
+   (`b7-sau`) các hàng `LOI-*`, `NEP`, `NGUOI-LA` không tìm thấy câu lỗi vì nó không có vai nào.
+7. **Dải «Bảng tin có cập nhật»:** khung `sync` đầu tiên của luồng là lúc mở kết nối. Lượt đầu bật dải ngay khi mở tab, đè
+   đích bấm của thẻ đầu (`CHI-TIET-BASE` C8, `TIM` C2 đỏ). Nay chỉ lần nối lại và `feed.changed` mới bật dải.

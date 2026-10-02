@@ -119,18 +119,26 @@ if (!existsSync(INDEX)) {
       assert.equal(khop, true);
 
       await page.clickLabel("Lịch trình");
+      // The switch is proved by the toggle's own state: the page text holds
+      // both views' words even while the map is still showing, so a text test
+      // passed at once and the next step raced the change under load (a peer
+      // session measured 4 failures in 11 full runs at load 14-16).
       await page.waitFor(
-        () => document.body?.innerText?.includes("Ăn trưa - Bánh căn Lệ") && document.body?.innerText?.includes("Lịch trình"),
+        () => document.querySelector('[data-testid="che-do-lich-trinh"]')?.getAttribute("aria-selected") === "true",
         { timeout: 10000, label: "về lịch trình" },
       );
-      await page.waitFor(() => {
-        // Both views remain mounted to preserve the draft and undo; assert the
-        // visible timeline row, never a hidden map marker or rail control.
-        const nut = [...document.querySelectorAll('[role="button"]')].find((el) => el.getClientRects().length > 0 && (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Ăn trưa - Bánh căn Lệ"));
+      await page.waitFor(() =>
+        // Both views remain mounted to preserve the draft and undo: ANY visible
+        // timeline row naming the stop and held, never the first match, which
+        // could be the map's rail control still on its way out.
         // A row is a button, and a button's held state is `aria-pressed`;
         // `aria-selected` on it was axe's aria-allowed-attr (QA UI-042).
-        return nut?.getAttribute("aria-pressed") === "true";
-      }, { timeout: 10000, label: "chặng đã chọn còn highlight khi về Lịch trình" });
+        [...document.querySelectorAll('[role="button"]')].some((el) =>
+          el.getClientRects().length > 0 &&
+          (el.checkVisibility?.({ opacityProperty: true, visibilityProperty: true }) ?? true) &&
+          (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Ăn trưa - Bánh căn Lệ") &&
+          el.getAttribute("aria-pressed") === "true"),
+      { timeout: 10000, label: "chặng đã chọn còn highlight khi về Lịch trình" });
       await page.clickLabel("Bản đồ");
       await openEditor();
       await page.evaluate(() => {

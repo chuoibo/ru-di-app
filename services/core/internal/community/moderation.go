@@ -205,7 +205,7 @@ func publishComment(ctx context.Context, tx pgx.Tx, id string) error {
 		_, err = tx.Exec(ctx, `INSERT INTO community_comment_meta(comment_id,parent_id,mentions,media_id) SELECT id,(SELECT c.id FROM post_comments c WHERE c.id=d.parent_id AND c.post_id=d.post_id),mentions,media_id FROM community_comment_drafts d WHERE id=$1 ON CONFLICT DO NOTHING`, id)
 	}
 	if err == nil {
-		_, err = tx.Exec(ctx, `INSERT INTO community_notifications(id,person_id,post_id,kind) SELECT gen_random_uuid(),m,post_id,'mention' FROM community_comment_drafts CROSS JOIN unnest(mentions) m WHERE id=$1`, id)
+		_, err = tx.Exec(ctx, `INSERT INTO community_notifications(id,person_id,post_id,kind,actor_id,comment_id) SELECT gen_random_uuid(),m,post_id,'mention',author_id,id FROM community_comment_drafts CROSS JOIN unnest(mentions) m WHERE id=$1`, id)
 	}
 	return err
 }

@@ -152,7 +152,9 @@ export function Field({ label, leading, trailing, multiline, numberOfLines, styl
         {trailing}
       </View>
       {coLoi ? (
-        <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>
+        // An alert by role so it is found as an error, announced politely so
+        // it never cuts off what the person is typing.
+        <Text accessibilityLiveRegion="polite" accessibilityRole="alert" aria-live="polite" style={[typography.caption, { color: colors.warn }]}>
           {error}
         </Text>
       ) : helper ? (

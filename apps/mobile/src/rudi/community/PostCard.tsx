@@ -15,8 +15,9 @@ import { PhotoViewer } from "../ui/PhotoViewer";
 import { BookView } from "../diary/BookView";
 import { chiaSe, type KetQuaChiaSe } from "../web/chia-se";
 import { giuState } from "../../ui/a11y";
+import { thanBiCat } from "./bang-tin";
 
-export function CommunityVideo({ media, person, active }: { media: Media; person: string; active: boolean }) {
+export function CommunityVideo({ media, person, active, khung }: { media: Media; person: string; active: boolean; khung?: { width: number; height: number } }) {
   const { colors } = useRudiTheme();
   const [webSource, setWebSource] = useState<{ key: string; uri: string } | null>(null);
   const [videoError, setVideoError] = useState(false);
@@ -46,7 +47,7 @@ export function CommunityVideo({ media, person, active }: { media: Media; person
   const player = useVideoPlayer(
     Platform.OS === "web" ? webURI : { uri: BASE_URL + media.url, headers, useCaching: false }, (p) => { p.loop = false; p.muted = true; });
   useEffect(() => { if (!active) player.pause(); const subscription = AppState.addEventListener("change", (state) => { if (state !== "active") player.pause(); }); return () => subscription.remove(); }, [active, player]);
-  return <View><VideoView player={player} nativeControls fullscreenOptions={{ enable: true }} style={styles.media} contentFit="contain" />{videoError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.inkSoft, padding: 12 }]}>Chưa mở được video. Mở lại câu chuyện để thử lại nhé.</Text> : null}</View>;
+  return <View><VideoView player={player} nativeControls fullscreenOptions={{ enable: true }} style={khung ?? styles.media} contentFit="contain" />{videoError ? <Text accessibilityRole="alert" style={[typography.caption, { color: colors.inkSoft, padding: 12 }]}>Chưa mở được video. Mở lại câu chuyện để thử lại nhé.</Text> : null}</View>;
 }
 export function Action({ icon, label, accessibilityLabel, onPress, selected = false, disabled = false }: { icon: keyof typeof Ionicons.glyphMap; label: string; accessibilityLabel?: string; onPress: () => void; selected?: boolean; disabled?: boolean }) {
   const { colors } = useRudiTheme();
@@ -59,6 +60,14 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
   post: Post; person: string; active?: boolean; onLike: () => void; onComment: () => void; onMore: () => void; onTopic?: (topic: string) => void; onFollow: () => void; busy?: boolean; detail?: boolean;
 }) {
   const { colors } = useRudiTheme(); const router = useRouter(); const motion = useMotion(); const [expanded, setExpanded] = useState(detail); const [photo, setPhoto] = useState<Media | null>(null);
+  // A body that already shows whole opens the post on the first tap; only a
+  // cut one spends that tap on the rest of itself (QA UI-139).
+  const biCat = thanBiCat(post.body);
+  // The album's own width: a frame never wider than the space it sits in
+  // (QA UI-143: a fixed 296 in a 288 album lost 8px at 320dp).
+  const [rongAlbum, setRongAlbum] = useState(0);
+  const rongKhung = rongAlbum > 0 ? Math.min(296, rongAlbum) : 296;
+  const khung = { width: rongKhung, height: Math.round((rongKhung * 330) / 296) };
   // What «Chia sẻ» just did, said on the button itself for a few seconds (QA UI-136).
   const [daChiaSe, setDaChiaSe] = useState<string | null>(null);
   useEffect(() => {
@@ -74,13 +83,13 @@ export const PostCard = memo(function PostCard({ post, person, active = false, o
       <Pressable accessibilityRole="button" accessibilityLabel="Thêm lựa chọn cho bài" onPress={onMore} style={styles.follow}><Ionicons name="ellipsis-horizontal" size={20} color={colors.inkSoft} /></Pressable>
     </View>
     {post.author_id === person && ["pending", "review", "rejected"].includes(post.status) ? <View style={[styles.status, { backgroundColor: colors.accentSoft }]}><Ionicons name={post.status === "rejected" ? "alert-circle-outline" : "time-outline"} size={17} color={colors.accent} /><Text style={[typography.caption, { color: colors.accent }]}>{post.status === "rejected" ? "Chưa phù hợp cộng đồng · Có thể sửa hoặc yêu cầu xem xét" : "Đang chờ duyệt · Bản mới chưa xuất hiện công khai"}</Text></View> : null}
-    <Pressable accessibilityRole="button" accessibilityLabel="Đọc toàn bộ câu chuyện" onPress={() => { if (!expanded) setExpanded(true); else if (!detail) router.push(`/community/posts/${post.id}` as never); }}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Đọc toàn bộ câu chuyện" onPress={() => { if (!expanded && biCat) setExpanded(true); else if (!detail) router.push(`/community/posts/${post.id}` as never); }}>
       <Text numberOfLines={expanded ? undefined : 6} style={[typography.body, styles.body, { color: colors.ink }]}>{post.body}</Text>
-      {!expanded && post.body.length > 240 ? <Text style={[typography.label, { color: colors.accent }]}>Đọc tiếp</Text> : null}
+      {!expanded && biCat ? <Text style={[typography.label, { color: colors.accent }]}>Đọc tiếp</Text> : null}
     </Pressable>
     {post.diary ? <BookView compact={!detail} kind={post.diary_kind} document={post.diary} photo={(id) => imageSource(person, `/v2/community/media/${id}`)} /> : null}
-    {!post.diary && post.media.length ? <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.album} contentContainerStyle={{ gap: 8 }}>
-      {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, { backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo media={m} person={person} active={active} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={styles.media} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
+    {!post.diary && post.media.length ? <ScrollView horizontal onLayout={(e) => { const w = Math.floor(e.nativeEvent.layout.width); if (w > 0 && w !== rongAlbum) setRongAlbum(w); }} pagingEnabled showsHorizontalScrollIndicator={false} style={styles.album} contentContainerStyle={{ gap: 8 }}>
+      {post.media.map((m) => <View key={m.id} style={[styles.mediaFrame, { width: rongKhung, backgroundColor: colors.paperShade }]}>{m.type.startsWith("video/") ? <CommunityVideo media={m} person={person} active={active} khung={khung} /> : <Pressable accessibilityRole="button" accessibilityLabel="Mở ảnh khoảnh khắc" onPress={() => setPhoto(m)}><Image source={imageSource(person, m.url)} accessibilityLabel="Ảnh trong bài đăng" cachePolicy="none" contentFit="cover" style={khung} transition={Platform.OS === "web" ? 0 : motion.ms("standard")} /></Pressable>}</View>)}
     </ScrollView> : null}
     {photo ? <PhotoViewer title="Ảnh khoảnh khắc" photos={post.media.filter((m) => m.type.startsWith("image/")).map((m) => ({ id: m.id, source: imageSource(person, m.url), caption: post.body }))} initialIndex={post.media.filter((m) => m.type.startsWith("image/")).findIndex((m) => m.id === photo.id)} onClose={() => setPhoto(null)} /> : null}
     {post.topics.length ? <View style={styles.topics}>{post.topics.map((t) => <Pressable key={t} accessibilityRole="button" onPress={() => onTopic ? onTopic(t) : router.push({ pathname: "/community/topic", params: { topic: t } } as never)} style={[styles.topic, { backgroundColor: colors.accentSoft }]}><Text style={[typography.caption, { color: colors.accent }]}>{t}</Text></Pressable>)}</View> : null}
@@ -96,7 +105,7 @@ const styles = StyleSheet.create({
   avatarTarget: { minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" },
   identity: { flexDirection: "row", alignItems: "center", gap: 10 }, identityText: { flex: 1, gap: 2 }, follow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   body: { lineHeight: 26 }, status: { padding: 12, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 },
-  album: { marginHorizontal: -4 }, mediaFrame: { width: 296, borderRadius: 14, overflow: "hidden" }, media: { width: 296, height: 330 }, expandedPhoto: { height: 480 },
+  album: { marginHorizontal: -4 }, mediaFrame: { borderRadius: 14, overflow: "hidden" }, media: { width: 296, height: 330 }, expandedPhoto: { height: 480 },
   topics: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, topic: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8, minHeight: 48, minWidth: 48, justifyContent: "center" },
   actions: { flexDirection: "row", gap: 12, flexWrap: "wrap" }, action: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 48, minWidth: 56, paddingHorizontal: 2 },
 });

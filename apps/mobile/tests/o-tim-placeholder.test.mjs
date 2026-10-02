@@ -88,4 +88,6 @@ test("lỗi thay dòng gợi ý và được đọc lên", () => {
   assert.match(html, /Giờ phải dạng hh:mm/);
   assert.equal(html.includes("Dạng hh:mm<"), false, "gợi ý không hiện cùng lỗi");
   assert.match(html, /aria-live="polite"/);
+  assert.match(html, /role="alert"[^>]*>Giờ phải dạng hh:mm|>Giờ phải dạng hh:mm/, "câu lỗi");
+  assert.match(html, /role="alert"/, "lỗi của ô là một alert (đọc lịch sự), tìm được như mọi câu lỗi");
 });
