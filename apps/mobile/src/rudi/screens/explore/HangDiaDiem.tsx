@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextStyle } from "react-native";
 
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
@@ -12,7 +12,7 @@ import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
 import { KyHoa } from "../../ui/art/KyHoa";
-import { guTheoLoai, tachGia } from "../../kham-pha/dia-diem";
+import { guTheoLoai, moDauBangSao, tachGia } from "../../kham-pha/dia-diem";
 
 /*
  * 2026-09-11 (re-audit 10/09, R3): one mark per place. A place prints EITHER
@@ -175,7 +175,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
               {dd.sub}
             </Text>
           ) : null}
-          {phu ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{phu}</Text> : null}
+          {phu ? <DongSuThat chu={phu} facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} /> : null}
           {dd.lyDo || gia ? (
             <View style={styles.hangChipDan}>
               {dd.lyDo ? chip(colors.ai, colors.aiSoft, "sparkles", dd.lyDo) : null}
@@ -236,7 +236,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           {dd.sub ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
-          {dauFacts ? <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+          {dauFacts ? <DongSuThat chu={dauFacts} facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} soDong={2} /> : null}
           {/* The price band is never cut: it wraps when it must («200.000đ –
               250.000đ mỗi n…» at 1.3, QA 23/09; 9 rows in 10 at 390, UI-021). */}
           {cuoiFact ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
@@ -314,7 +314,7 @@ export function PlaceCompare({
             <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
             {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
             {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-            {dauFacts ? <Text numberOfLines={3} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+            {dauFacts ? <DongSuThat chu={dauFacts} facts={dd.facts} kieu={typography.note} mau={colors.inkFaint} soDong={3} /> : null}
             {cuoiFact ? <Text style={[typography.note, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
           </>
         );
@@ -373,6 +373,28 @@ export function PlaceCompare({
         );
       })}
     </View>
+  );
+}
+
+/**
+ * A place's quiet line of facts (`tachGia`'s `khac`), with a star before the
+ * rating when the line opens on it (`moDauBangSao`). The star is drawn, in
+ * the words' own ink, and runs inline, held to the rating by a no-break space:
+ * a wrapped line starts at the card's edge like the name above it, not
+ * indented under the words. A screen reader hears the words alone.
+ */
+function DongSuThat({ chu, facts, kieu, mau, soDong }: { chu: string; facts: readonly { icon: string }[]; kieu: TextStyle; mau: string; soDong?: number }) {
+  const sao = moDauBangSao(facts);
+  return (
+    <Text accessibilityLabel={sao ? chu : undefined} numberOfLines={soDong} style={[kieu, { color: mau }]}>
+      {sao ? (
+        <>
+          <Ionicons color={mau} name="star" size={12} />
+          {"\u00a0"}
+        </>
+      ) : null}
+      {chu}
+    </Text>
   );
 }
 

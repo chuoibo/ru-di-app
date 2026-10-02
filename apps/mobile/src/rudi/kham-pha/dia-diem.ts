@@ -723,6 +723,15 @@ export function tachGia<T extends { icon: string; text: string }>(facts: readonl
 }
 
 /**
+ * Whether the quiet line `tachGia` leaves (`khac`) opens on the rating, which
+ * then wears a star: «4.8 (64)» alone does not say what it counts (critique
+ * 02/10). The price is not on that line, so it does not count as its start.
+ */
+export function moDauBangSao<T extends { icon: string }>(facts: readonly T[]): boolean {
+  return facts.find((f) => f.icon !== "wallet-outline")?.icon === "star";
+}
+
+/**
  * The subtitle under the address: distance and ride time, when either is known.
  *
  * Both come from the catalogue rather than from the phone, so an imported

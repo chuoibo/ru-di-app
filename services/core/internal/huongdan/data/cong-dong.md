@@ -2,7 +2,7 @@
 {
   "man": "community",
   "tieu_de": "Cộng đồng",
-  "nhanUI": ["Cộng đồng", "Khám phá", "Địa điểm", "Cài đặt bảng tin", "Thông báo", "Tạo mới", "Viết bài"],
+  "nhanUI": ["Cộng đồng", "Khám phá", "Địa điểm", "Thông báo", "Tạo mới", "Viết bài", "Đã lưu", "Bài của tôi"],
   "di_toi": [
     {"nhan": "Địa điểm", "man": "explore"}
   ],
@@ -16,4 +16,5 @@
 1. Ở mục Cộng đồng, chạm con dấu «Tạo mới» giữa thanh tab rồi chọn «Viết bài».
 2. Viết câu chuyện, thêm ảnh, chọn người xem rồi đăng; bài công khai chờ kiểm duyệt.
 3. Chạm một chủ đề dưới bài để đọc những bài cùng chủ đề.
-4. Bấm «Cài đặt bảng tin» rồi «Thông báo» để xem những câu chuyện có nhắc tên bạn.
+4. Bấm chuông «Thông báo» để xem những câu chuyện có nhắc tên bạn.
+5. Chạm «Đã lưu» để đọc lại bài bạn đã lưu, «Bài của tôi» để xem bài bạn viết và trạng thái duyệt.

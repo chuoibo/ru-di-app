@@ -62,27 +62,31 @@ export function ConDauTao({ tab, rail = false, coCap = false }: { tab: string; r
   }));
 
   return (
-    <View style={rail ? styles.cotRail : styles.cot}>
+    // One button for the stamp and its word: a tap on «Tạo» opens the desk as
+    // a tap on the coral does, the way each neighbouring column opens on its
+    // word (critique 02/10). Pressed, the whole column gives a little; the
+    // stamp sits near its middle, so it barely moves.
+    <PressScale
+      accessibilityActions={dauTien ? [{ name: "longpress", label: dauTien.title }] : undefined}
+      accessibilityHint={dauTien ? `Giữ để ${dauTien.title.toLowerCase()} ngay` : undefined}
+      accessibilityLabel="Tạo mới"
+      accessibilityRole="button"
+      aria-haspopup="dialog"
+      haptic="none"
+      onAccessibilityAction={(e) => {
+        if (e.nativeEvent.actionName === "longpress") thangToi();
+      }}
+      onLongPress={thangToi}
+      onPress={mo}
+      pressedScale={0.92}
+      style={rail ? styles.cotRail : styles.cot}
+      testID="con-dau-tao"
+    >
       <View style={[styles.oDau, rail ? null : styles.noiLen]}>
         <Animated.View pointerEvents="none" style={[styles.vet, { borderColor: brand.coral }, vetStyle]} />
-        <PressScale
-          accessibilityActions={dauTien ? [{ name: "longpress", label: dauTien.title }] : undefined}
-          accessibilityHint={dauTien ? `Giữ để ${dauTien.title.toLowerCase()} ngay` : undefined}
-          accessibilityLabel="Tạo mới"
-          accessibilityRole="button"
-          aria-haspopup="dialog"
-          haptic="none"
-          onAccessibilityAction={(e) => {
-            if (e.nativeEvent.actionName === "longpress") thangToi();
-          }}
-          onLongPress={thangToi}
-          onPress={mo}
-          pressedScale={0.92}
-          style={[styles.dau, { backgroundColor: brand.coral, borderColor: colors.ground, shadowColor: colors.accent }]}
-          testID="con-dau-tao"
-        >
+        <View style={[styles.dau, { backgroundColor: brand.coral, borderColor: colors.ground, shadowColor: colors.accent }]}>
           <Ionicons color={brand.coralInk} name="add" size={30} />
-        </PressScale>
+        </View>
       </View>
       {/* Named like its neighbours, so the row reads as one strip of words. */}
       <Text importantForAccessibility="no" numberOfLines={1} style={[typography.caption, styles.nhan, { color: colors.accent }]}>
@@ -90,7 +94,7 @@ export function ConDauTao({ tab, rail = false, coCap = false }: { tab: string; r
             01/10); a screen reader hears «Tạo mới» from the button itself. */}
         Tạo
       </Text>
-    </View>
+    </PressScale>
   );
 }
 
