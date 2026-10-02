@@ -221,3 +221,47 @@ extension, không được yêu cầu sửa hệ. Mục Sheet trong tài liệu 
 cầm có label/hint và công thức scrim cũ; sidecar giữ cấu trúc legacy. Không
 canonize các mô tả lệch source, số đo contrast incomplete hay findings
 detector thành luật mới; capability opt-in của CP08 được ghi ở handoff này.
+
+## CP09 · Kiểm chứng tích hợp đang chạy
+
+Lượt clean `dea5152d`: API **3028 pass / 743 skip**, không suy thành PostgreSQL
+đã kiểm; mobile **1478 pass / 1 fail / 0 skip**. Finding thật là bản đồ
+hướng dẫn Nếp chưa chứa sáu nhãn mới của Welcome. Generator
+`tools/rut-huong-dan.mjs` cập nhật đúng sáu nhãn và băm frontend/Go; diff
+đã đọc, không cập nhật snapshot mù hay bỏ assertion. Test hướng dẫn riêng
+và Go package đã chạy lại; full gate phải tiếp tục ở SHA chứa sửa này.
+Chặng AI offline ban đầu thiếu env đã retest bằng requirements đúng pin,
+**1 stage pass / 0 fail / 0 skip**; không gọi provider thật.
+
+Identity/canary/mutants tại `dea5152d` dùng cùng hash của opening/chrome-cdp/
+tuoi-ban-dung: identity trước/sau **2/0/0**, bỏ cover đỏ ở chờ first frame,
+bỏ inert đỏ ở protected scene, CTA luôn Welcome đỏ ở home signed-in.
+Mỗi variant export mới; source variant cuối khôi phục sạch. Cần identity
+cuối cho SHA có map mới trước kết luận gate.
+
+Android warm (5600) mở địa điểm → Back → unknown → Back → invite; guest
+(AVD riêng5620) unknown → CTA Welcome → invite. Hai CLI hoàn tất exit0,
+ảnh mở nhìn; mã CP09-TEST-ONLY chỉ điền, không redeem. Cold custom scheme
+vào devclient launcher khi chưa nạp JS; đó không phải evidence release
+link hỏng hay pass. Release cold link và cold invite vẫn chưa kiểm.
+
+Emulator cũ đã khôi phục **14 private file**, băm nội dung khớp backup mới
+trước lượt này; font/system scales/size/density và reverses trả lại. Gate
+pm-clear chỉ dùng AVD5620 tổng hợp mới tạo. APK SDK57 kéo từ devclient
+đã cài; không có fingerprint native build trong clean tree để chứng nhận
+APK dependency matching. Fingerprint Metro/runtime JS là cổng riêng.
+
+Review hai assessment độc lập Nếp: UX **28/40**, native kỹ thuật **15/20**.
+Ba P2 cần retest/iteration kế: độ hẹp khối disclosure khi font lớn; cue
+phân biệt hỏi/vẽ tại editor; lối tiếp sau lỗi chức năng chưa bật. Đây là
+findings mới của critique, không gán lại thành bug QA. B10 giữ cấu trúc
+quyền/chia sẻ và hai hành động hiện hành; không thêm mode mới hoặc tắt
+thao tác dựa trên chuỗi lỗi. Ưu tiên kiểm với người dùng/chức năng thật
+trước đổi meaning hoặc availability. Không có P0/P1 được hai assessment
+xác nhận trong phạm vi này, không suy thành toàn app sạch.
+
+Detector **23/36** là scan frozen DOM trước batch fix footer. Recapture
+cuối chứng minh hai sửa finish; JSON không phải scan exact SHA cuối.
+Không có overlay inject vì browser evaluate read-only; metadata/design
+drift và contrast incomplete giữ nguyên. Bó CP09 ngoài repo chứa hai
+assessment, mutation-plan/results, log gates và device-restore.

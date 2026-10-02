@@ -3060,12 +3060,17 @@
       "nhan": [
         "Bản trải nghiệm",
         "Chặng … trên …",
+        "Chọn trang giới thiệu",
+        "Giới thiệu Rủ Đi, trang … trên …",
         "Rủ Đi thôi!",
+        "Trang",
         "Trang … trên …",
+        "Trang …: …",
         "Tìm hiểu thêm",
         "Từ lời rủ đến trang kỷ niệm",
         "Xem lại từ đầu",
-        "dau-van-cay"
+        "dau-van-cay",
+        "trên"
       ],
       "tep": [
         "app/welcome.tsx",
