@@ -64,6 +64,12 @@ export function kieuBanDo(toi: boolean): string {
 }
 
 /** Light default, kept for callers that have no theme in hand. */
+/**
+ * Where an empty map opens: central Ho Chi Minh City, where the live
+ * catalogue is. A day with any mapped stop fits to its stops instead.
+ */
+export const TAM_MAC_DINH = { lat: 10.7769, lng: 106.7009 };
+
 export const KIEU_BAN_DO = kieuBanDo(false);
 
 /** Which end of the day a stop anchors, when the day says so. */

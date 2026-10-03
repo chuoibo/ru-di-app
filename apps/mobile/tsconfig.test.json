@@ -103,6 +103,8 @@
     // `tests/ket-qua-binh-chon.test.mjs`.
     "src/screens/binh-chon/ket-qua.ts",
     "src/screens/chat/nhom.ts",
+    // The end-to-end harness's seeded people (`tests/e2e`). No screen imports it.
+    "src/rudi/nhom-demo.ts",
     "src/screens/chat/nhap-tu-chat.ts",
     // F31/F33/F34/F36. Compile both the four-route client and the markup the
     // group-understanding test reads through react-native-web.
@@ -213,15 +215,6 @@
     // than a lifetime count. See `tests/thanh-tich.test.mjs`.
     "src/screens/thanh-tich/thanh-tich.ts",
     "src/screens/quet-anh.ts",
-    // The frozen bill behind the `?man=` scan pages. Compiled because the
-    // claim it carries is arithmetic, not markup: the eight lines and the
-    // who-ate-what matrix must fold to the same four allocations the
-    // settlement fixture settles. A source read cannot check that, and if it
-    // ever stops being true the scan pages still render -- `GoiYChia` just
-    // prints "..." in every cell, and a detector would measure a screen caught
-    // mid-flight while the report calls it the settled one. See
-    // `tests/fixture-hai-man-giua.test.mjs`.
-    "src/fixtures/thanh-toan-demo.ts",
     // The cold-start URL decision. Compiled rather than read as source because
     // the rule it carries is a negative one -- a URL that already names a route
     // produces no navigation -- and the version that lived inside a `useEffect`
@@ -254,12 +247,6 @@
     "src/rudi/ui/KheLop.tsx",
     "src/rudi/otp-dang-cho.ts",
     "src/rudi/chat/tin-song.ts",
-    "src/rudi/cua-fixture.ts",
-    // Đọc/ghi phiên. Compile chứ không đọc nguồn vì luật nó mang là luật PHỦ
-    // ĐỊNH: không blob nào, dù hỏng thế nào, được phép làm màn tiền ném. Một
-    // chỉ số người sai trong dữ liệu đã lưu là crash ở MỌI lần mở app, và chỉ
-    // có chạy hàm thật trên đúng những giá trị hỏng đó mới trả lời được.
-    "src/rudi/luu-tru.ts",
     // Màn này đọc số của ai. Compile vì luật nó mang là: chế độ live KHÔNG BAO
     // GIỜ tự tới — phải có người gõ cấu hình vào. Một cổng đọc nguồn không phân
     // biệt được "không thăm dò máy chủ" với "chưa kịp viết đoạn thăm dò".
@@ -270,7 +257,6 @@
     // xong, nhưng đó là đo cách viết; cái hỏng là 401 trên host thật, và chỉ
     // `tests/e2e/vertical-slice.test.mjs` gọi được nó qua HTTP để biết.
     "src/rudi/doc-live.ts",
-    "src/rudi/money.ts",
     // Lớp kích cỡ (UI v2): compile để test đo đúng biên 600/840 và chiều cao
     // ngắn; trước đó là số 700 gõ tay ở bốn chỗ, đọc nguồn không đo được biên.
     "src/rudi/adaptive.ts",
@@ -313,7 +299,6 @@
     // Nhịp chuyển động (UI v2): compile để test pin bốn bậc, luật Reduce
     // Motion và luật «tiền không animate trước domain state» bằng hàm thật.
     "src/rudi/motion.ts",
-    "src/rudi/places.ts",
     // Khám phá trên danh mục thật (M4): compile để test chứng minh danh mục được
     // đọc như người lạ KHÔNG mang context_id bịa và việc lưu đi với bearer.
     "src/rudi/kham-pha/dia-diem.ts",
@@ -335,7 +320,6 @@
     "src/rudi/hanh-trinh/tom-tat.ts",
     "src/rudi/hanh-trinh/duong.ts",
     "src/rudi/hanh-trinh/toi-uu.ts",
-    "src/rudi/hanh-trinh/toa-do-mau.ts",
     "src/rudi/hanh-trinh/kieu-ban-do.ts",
     // Chia hóa đơn trong vỏ RuDi (M5): compile để test chứng minh khoản chi được
     // đề xuất bằng items của bill rồi chốt với expected_allocations của máy chủ,
@@ -352,7 +336,6 @@
     "src/rudi/ky-niem/ky-niem.ts",
     "src/rudi/ky-niem/achievement-routes.ts",
     "src/rudi/ky-niem/journey-view.ts",
-    "src/rudi/vote.ts",
     // Điểm đến (M10): compile để test chứng minh toạ độ chỉ đi trong MỘT lời
     // gọi và không nằm lại đâu cả, và câu «gần tôi» có đủ bốn trạng thái —
     // trong đó có trạng thái «không nơi nào đủ gần», thứ dễ bị bỏ quên nhất.

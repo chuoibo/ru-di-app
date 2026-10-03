@@ -119,9 +119,6 @@ export function PersonalizationScreen() {
     setMuc(doiMuc(muc, id));
   };
 
-  // Skipping from the fixture door (no session) goes into the fixture app, not
-  // back to the cover: `manDau(null)` is Welcome, which the Maestro board
-  // caught as a loop on 2026-09-06.
   /** Save the typed name, if any; a failure is not worth blocking the step. */
   const luuTen = async () => {
     const phien = session.phien;
@@ -138,16 +135,15 @@ export function PersonalizationScreen() {
 
   const boQua = async () => {
     await luuTen();
-    router.replace(personId === null ? "/explore" : ((tiep ?? manDau(session.phien)) as never));
+    router.replace((tiep ?? manDau(session.phien)) as never);
   };
 
   const xong = async () => {
     setLoi(null);
     if (personId === null) {
-      // The dev fixture door reaches this screen with no session. Nothing to
-      // attach the answers to, and writing them to a file a later sign-in
-      // adopts would make one phone's guesses look like somebody's taste.
-      router.replace("/explore");
+      // The route is behind `CanPhien`; without a session there is nothing to
+      // attach the answers to.
+      router.replace("/login");
       return;
     }
     setDangLuu(true);

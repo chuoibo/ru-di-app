@@ -7,8 +7,7 @@ import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef, type MapRef 
 import Svg, { Path } from "react-native-svg";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useNhipDau } from "../ui/useNhipDau";
-import { TAM_DA_LAT } from "./toa-do-mau";
-import { chuNeo, DEM_KHOP, DUONG_TICK, giuaDoan, hinhTem, hopGioi, hopHanhTrinh, lopDuong, mocChum, muiTenDoan, nhanMoc, tapHop, type BanDoProps } from "./kieu-ban-do";
+import { TAM_MAC_DINH, chuNeo, DEM_KHOP, DUONG_TICK, giuaDoan, hinhTem, hopGioi, hopHanhTrinh, lopDuong, mocChum, muiTenDoan, nhanMoc, tapHop, type BanDoProps } from "./kieu-ban-do";
 
 
 export function BanDo({
@@ -68,7 +67,7 @@ export function BanDo({
     // Fit after the map's measured frame reaches native, including a tablet
     // layout change. A hidden view reports zero and keeps its previous frame.
     const frame = requestAnimationFrame(() => {
-      if (!hop) void cam.current?.easeTo({ center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12, duration });
+      if (!hop) void cam.current?.easeTo({ center: [TAM_MAC_DINH.lng, TAM_MAC_DINH.lat], zoom: 12, duration });
       else void cam.current?.fitBounds(hop, { padding, duration });
     });
     return () => cancelAnimationFrame(frame);
@@ -131,7 +130,7 @@ export function BanDo({
         initialViewState={
           hopBanDau
             ? { bounds: hopBanDau, padding }
-            : { center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12 }
+            : { center: [TAM_MAC_DINH.lng, TAM_MAC_DINH.lat], zoom: 12 }
         }
       />
       <GeoJSONSource

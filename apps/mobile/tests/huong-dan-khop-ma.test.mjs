@@ -553,7 +553,7 @@ const RUT_GO = [
   { canh: [{ den: "a", nhan: "Về A" }], di_toi: ["a"], man: "finance", nhan: ["Về A"], tep: ["app/finance.tsx"] },
   { canh: [], di_toi: ["a"], man: "welcome", nhan: [], tep: ["app/welcome.tsx"] },
 ];
-const LITERAL_GO = new Set(["Màn A", "Mở tiền", "Nút B", "Về A", "Màn C", "Quyết toán", "Về tài chính", "Đánh dấu đã trả", "Tiền"]);
+const LITERAL_GO = new Set(["Màn A", "Mở tiền", "Nút B", "Về A", "Màn C", "Quyết toán", "Về tài chính", "Đã trả bill", "Tiền"]);
 function nguCanhGo(routes = RUT_GO) {
   return {
     cacMan: new Set(routes.map((r) => r.man)),
@@ -625,21 +625,21 @@ test("(e) canary: fixture của bộ nạp Go — màn tiền một mục, chỉ
   assert.deepEqual(kiemTatCa(soTayGo([["Màn tiền. Nếp", "Màn tiền của 2 người. Nếp"]]), nguCanhGo()), ["tien.md: màn tiền không được có chữ số trong thân"]);
   assert.deepEqual(kiemTatCa(soTayGo([['"tien":true', '"tien":false']]), nguCanhGo()), ["tien.md: tien phải là true cho màn «finance»"]);
   // A door on the step does not carry the payment button with it.
-  const nhanTra = ['"nhanUI":["Về A","Mở tiền"]', '"nhanUI":["Về A","Mở tiền","Đánh dấu đã trả"]'];
-  assert.deepEqual(kiemTatCa(soTayGo([nhanTra, [XONG, "- Chuyển khoản xong thì bấm «Đánh dấu đã trả», rồi bấm «Về A»."]]), nguCanhGo()), [
-    'tien.md: màn tiền: bước trích «Đánh dấu đã trả», không phải lối vào hay lối ra nào: "Chuyển khoản xong thì bấm «Đánh dấu đã trả», rồi bấm «Về A»."',
+  const nhanTra = ['"nhanUI":["Về A","Mở tiền"]', '"nhanUI":["Về A","Mở tiền","Đã trả bill"]'];
+  assert.deepEqual(kiemTatCa(soTayGo([nhanTra, [XONG, "- Chuyển khoản xong thì bấm «Đã trả bill», rồi bấm «Về A»."]]), nguCanhGo()), [
+    'tien.md: màn tiền: bước trích «Đã trả bill», không phải lối vào hay lối ra nào: "Chuyển khoản xong thì bấm «Đã trả bill», rồi bấm «Về A»."',
   ]);
-  assert.deepEqual(kiemTatCa(soTayGo([nhanTra, [XONG, "- Bấm «Về A» sau khi đã bấm «Đánh dấu đã trả»."]]), nguCanhGo()), [
-    'tien.md: màn tiền: bước trích «Đánh dấu đã trả», không phải lối vào hay lối ra nào: "Bấm «Về A» sau khi đã bấm «Đánh dấu đã trả»."',
+  assert.deepEqual(kiemTatCa(soTayGo([nhanTra, [XONG, "- Bấm «Về A» sau khi đã bấm «Đã trả bill»."]]), nguCanhGo()), [
+    'tien.md: màn tiền: bước trích «Đã trả bill», không phải lối vào hay lối ra nào: "Bấm «Về A» sau khi đã bấm «Đã trả bill»."',
   ]);
   // The payment button declared as a way out, printed on finance, but no
   // button with that label leads to a.
-  const inNutTra = rutGo({ ...RUT_GO[2], nhan: ["Về A", "Đánh dấu đã trả"] });
-  const buocTra = "- Chuyển khoản cho người ứng xong thì bấm «Đánh dấu đã trả».";
+  const inNutTra = rutGo({ ...RUT_GO[2], nhan: ["Về A", "Đã trả bill"] });
+  const buocTra = "- Chuyển khoản cho người ứng xong thì bấm «Đã trả bill».";
   assert.deepEqual(
-    kiemTatCa(soTayGo([nhanTra, ['{"nhan":"Về A","man":"a"}', '{"nhan":"Về A","man":"a"},{"nhan":"Đánh dấu đã trả","man":"a"}'], [XONG, `${XONG}\n${buocTra}`]]), nguCanhGo(inNutTra)),
+    kiemTatCa(soTayGo([nhanTra, ['{"nhan":"Về A","man":"a"}', '{"nhan":"Về A","man":"a"},{"nhan":"Đã trả bill","man":"a"}'], [XONG, `${XONG}\n${buocTra}`]]), nguCanhGo(inNutTra)),
     [
-      "tien.md: màn tiền: lối ra «Đánh dấu đã trả» tới «a» không phải nút nào của «finance» dẫn tới đó",
+      "tien.md: màn tiền: lối ra «Đã trả bill» tới «a» không phải nút nào của «finance» dẫn tới đó",
       `tien.md: màn tiền: bước không chỉ lối vào hay lối ra nào: ${JSON.stringify(buocTra.slice(2))}`,
     ],
   );
@@ -697,42 +697,42 @@ const BUOC2_TC = "- Bấm «Xem quyết toán» ở dưới các con số để 
 const themNhanTC = (nhan) => [NHAN_TC, NHAN_TC.replace(/\]$/, `, "${nhan}"]`)];
 /** [cu, moi] for suaSoTay: one more line after tai-chinh.md's last step. */
 const themBuocTC = (dong) => [BUOC2_TC, `${BUOC2_TC}\n${dong}`];
-const NHAN_TRA = themNhanTC("Đánh dấu đã trả");
-const BUOC_TRA = themBuocTC("- Chuyển khoản cho người ứng xong thì bấm «Đánh dấu đã trả».");
+const NHAN_TRA = themNhanTC("Đã trả bill");
+const BUOC_TRA = themBuocTC("- Chuyển khoản cho người ứng xong thì bấm «Đã trả bill».");
 const diToiTra = (den) => [
   '{"nhan": "Xem quyết toán", "man": "settlements/[id]"}',
-  `{"nhan": "Xem quyết toán", "man": "settlements/[id]"}, {"nhan": "Đánh dấu đã trả", "man": "${den}"}`,
+  `{"nhan": "Xem quyết toán", "man": "settlements/[id]"}, {"nhan": "Đã trả bill", "man": "${den}"}`,
 ];
-const BUOC_LOI = 'tai-chinh.md: màn tiền: bước không chỉ lối vào hay lối ra nào: "Chuyển khoản cho người ứng xong thì bấm «Đánh dấu đã trả»."';
+const BUOC_LOI = 'tai-chinh.md: màn tiền: bước không chỉ lối vào hay lối ra nào: "Chuyển khoản cho người ứng xong thì bấm «Đã trả bill»."';
 
 test("(e) canary: lách màn tiền của review 13, đúng nguyên bản, bị từ chối", () => {
   assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", NHAN_TRA, diToiTra("finance"), BUOC_TRA)), [
-    "tai-chinh.md: di_toi «Đánh dấu đã trả» về chính màn «finance»",
-    "tai-chinh.md: màn tiền: lối ra «Đánh dấu đã trả» tới «finance» không phải nút nào của «finance» dẫn tới đó",
+    "tai-chinh.md: di_toi «Đã trả bill» về chính màn «finance»",
+    "tai-chinh.md: màn tiền: lối ra «Đã trả bill» tới «finance» không phải nút nào của «finance» dẫn tới đó",
     BUOC_LOI,
   ]);
 });
 
 test("(e) canary: nút trả tiền khai làm lối ra tới một cạnh thật của mã, hay tới chỗ mã không đi, đều bị từ chối", () => {
   assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", NHAN_TRA, diToiTra("settlements/[id]"), BUOC_TRA)), [
-    "tai-chinh.md: màn tiền: lối ra «Đánh dấu đã trả» tới «settlements/[id]» không phải nút nào của «finance» dẫn tới đó",
+    "tai-chinh.md: màn tiền: lối ra «Đã trả bill» tới «settlements/[id]» không phải nút nào của «finance» dẫn tới đó",
     BUOC_LOI,
   ]);
   assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", NHAN_TRA, diToiTra("messages"), BUOC_TRA)), [
-    "tai-chinh.md: di_toi «Đánh dấu đã trả» từ «finance» tới «messages» không phải cạnh nào của mã",
-    "tai-chinh.md: màn tiền: lối ra «Đánh dấu đã trả» tới «messages» không phải nút nào của «finance» dẫn tới đó",
+    "tai-chinh.md: di_toi «Đã trả bill» từ «finance» tới «messages» không phải cạnh nào của mã",
+    "tai-chinh.md: màn tiền: lối ra «Đã trả bill» tới «messages» không phải nút nào của «finance» dẫn tới đó",
     BUOC_LOI,
   ]);
   // On chia-hoa-don the payment button IS printed (Bill.tsx is one of the
   // route's files): only «a button with that label leads there» refuses it.
-  assert.ok(NGU_CANH.rut.get("smart-split/[id]/review").nhan.includes("Đánh dấu đã trả"));
+  assert.ok(NGU_CANH.rut.get("smart-split/[id]/review").nhan.includes("Đã trả bill"));
   const chia = suaSoTay(
     "chia-hoa-don.md",
-    ['"nhanUI": ["Chia hóa đơn", "Tạo mới", "Chia bill buổi này", "Xem quyết toán", "Về Tin nhắn"]', '"nhanUI": ["Chia hóa đơn", "Tạo mới", "Chia bill buổi này", "Xem quyết toán", "Về Tin nhắn", "Đánh dấu đã trả"]'],
-    ['{"nhan": "Về Tin nhắn", "man": "messages"}', '{"nhan": "Về Tin nhắn", "man": "messages"}, {"nhan": "Đánh dấu đã trả", "man": "settlements/[id]"}'],
+    ['"nhanUI": ["Chia hóa đơn", "Tạo mới", "Chia bill buổi này", "Xem quyết toán", "Về Tin nhắn"]', '"nhanUI": ["Chia hóa đơn", "Tạo mới", "Chia bill buổi này", "Xem quyết toán", "Về Tin nhắn", "Đã trả bill"]'],
+    ['{"nhan": "Về Tin nhắn", "man": "messages"}', '{"nhan": "Về Tin nhắn", "man": "messages"}, {"nhan": "Đã trả bill", "man": "settlements/[id]"}'],
   );
   assert.deepEqual(kiemTatCa(chia), [
-    "chia-hoa-don.md: màn tiền: lối ra «Đánh dấu đã trả» tới «settlements/[id]» không phải nút nào của «smart-split/[id]/review» dẫn tới đó",
+    "chia-hoa-don.md: màn tiền: lối ra «Đã trả bill» tới «settlements/[id]» không phải nút nào của «smart-split/[id]/review» dẫn tới đó",
   ]);
 });
 
@@ -753,35 +753,35 @@ test("(e) canary: bước màn tiền chỉ nêu tiêu đề màn xuất phát t
 test("(e) canary: bước màn tiền trích gì ngoài cửa (nút trả tiền cạnh cửa, tiêu đề mục in trên màn) bị từ chối", () => {
   // Review 13 round 2, P9 exactly: the payment button on a line that also
   // names the door «Xem quyết toán».
-  const p9 = "- Chuyển khoản cho người ứng xong thì bấm «Đánh dấu đã trả», rồi bấm «Xem quyết toán».";
+  const p9 = "- Chuyển khoản cho người ứng xong thì bấm «Đã trả bill», rồi bấm «Xem quyết toán».";
   assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", NHAN_TRA, themBuocTC(p9))), [
-    `tai-chinh.md: màn tiền: bước trích «Đánh dấu đã trả», không phải lối vào hay lối ra nào: ${JSON.stringify(p9.slice(2))}`,
+    `tai-chinh.md: màn tiền: bước trích «Đã trả bill», không phải lối vào hay lối ra nào: ${JSON.stringify(p9.slice(2))}`,
   ]);
   // The door first: every quote is read, not only those before the first door.
-  const cuaTruoc = "- Bấm «Xem quyết toán», chuyển khoản xong thì bấm «Đánh dấu đã trả».";
+  const cuaTruoc = "- Bấm «Xem quyết toán», chuyển khoản xong thì bấm «Đã trả bill».";
   assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", NHAN_TRA, themBuocTC(cuaTruoc))), [
-    `tai-chinh.md: màn tiền: bước trích «Đánh dấu đã trả», không phải lối vào hay lối ra nào: ${JSON.stringify(cuaTruoc.slice(2))}`,
+    `tai-chinh.md: màn tiền: bước trích «Đã trả bill», không phải lối vào hay lối ra nào: ${JSON.stringify(cuaTruoc.slice(2))}`,
   ]);
-  // The line as it stood before this rule: «Chi theo nhóm» is the heading the
+  // The line as it stood before this rule: «Tiền đã về» is the heading the
   // button sits under, not a door.
-  const cu = "- Ở mục «Chi theo nhóm», bấm «Xem quyết toán» để mở màn quyết toán của nhóm.";
-  assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", themNhanTC("Chi theo nhóm"), [BUOC2_TC, cu])), [
-    `tai-chinh.md: màn tiền: bước trích «Chi theo nhóm», không phải lối vào hay lối ra nào: ${JSON.stringify(cu.slice(2))}`,
+  const cu = "- Ở mục «Tiền đã về», bấm «Xem quyết toán» để mở màn quyết toán của nhóm.";
+  assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", themNhanTC("Tiền đã về"), [BUOC2_TC, cu])), [
+    `tai-chinh.md: màn tiền: bước trích «Tiền đã về», không phải lối vào hay lối ra nào: ${JSON.stringify(cu.slice(2))}`,
   ]);
   // Review 13 round 2, P5b: the heading declared as a way out. The extractor
-  // pairs onAction with action only, so no «Chi theo nhóm» button of finance
+  // pairs onAction with action only, so no «Tiền đã về» button of finance
   // leads to settlements/[id].
-  assert.ok(NGU_CANH.rut.get("finance").nhan.includes("Chi theo nhóm"));
-  assert.ok(!laCanhCoNhan("finance", "settlements/[id]", "Chi theo nhóm", NGU_CANH));
+  assert.ok(NGU_CANH.rut.get("finance").nhan.includes("Tiền đã về"));
+  assert.ok(!laCanhCoNhan("finance", "settlements/[id]", "Tiền đã về", NGU_CANH));
   const p5b = suaSoTay(
     "tai-chinh.md",
-    themNhanTC("Chi theo nhóm"),
-    ['{"nhan": "Xem quyết toán", "man": "settlements/[id]"}', '{"nhan": "Xem quyết toán", "man": "settlements/[id]"}, {"nhan": "Chi theo nhóm", "man": "settlements/[id]"}'],
-    themBuocTC("- Đọc số ở «Chi theo nhóm» rồi chuyển khoản cho người ứng."),
+    themNhanTC("Tiền đã về"),
+    ['{"nhan": "Xem quyết toán", "man": "settlements/[id]"}', '{"nhan": "Xem quyết toán", "man": "settlements/[id]"}, {"nhan": "Tiền đã về", "man": "settlements/[id]"}'],
+    themBuocTC("- Đọc số ở «Tiền đã về» rồi chuyển khoản cho người ứng."),
   );
   assert.deepEqual(kiemTatCa(p5b), [
-    "tai-chinh.md: màn tiền: lối ra «Chi theo nhóm» tới «settlements/[id]» không phải nút nào của «finance» dẫn tới đó",
-    'tai-chinh.md: màn tiền: bước không chỉ lối vào hay lối ra nào: "Đọc số ở «Chi theo nhóm» rồi chuyển khoản cho người ứng."',
+    "tai-chinh.md: màn tiền: lối ra «Tiền đã về» tới «settlements/[id]» không phải nút nào của «finance» dẫn tới đó",
+    'tai-chinh.md: màn tiền: bước không chỉ lối vào hay lối ra nào: "Đọc số ở «Tiền đã về» rồi chuyển khoản cho người ứng."',
   ]);
 });
 
@@ -801,7 +801,7 @@ test("(e) canary: front matter có khoá trùng bị từ chối, kể cả nhan
   const trongDiToi = MAU_DUNG.replace('{"nhan":"Tạo kèo","man":"outings/new"}', '{"nhan":"Tạo kèo","man":"groups/new","man":"outings/new"}');
   assert.deepEqual(kiemSoTay("di-toi.md", trongDiToi, NGU_CANH), ["di-toi.md: front matter có khoá trùng «man»"]);
   // P9's second nhanUI on the real finance manual.
-  const nhanUI2 = suaSoTay("tai-chinh.md", ['"tien": true', `"tien": true,\n  ${NHAN_TC.replace(/\]$/, ', "Đánh dấu đã trả"]')}`]);
+  const nhanUI2 = suaSoTay("tai-chinh.md", ['"tien": true', `"tien": true,\n  ${NHAN_TC.replace(/\]$/, ', "Đã trả bill"]')}`]);
   assert.deepEqual(kiemTatCa(nhanUI2), ["tai-chinh.md: front matter có khoá trùng «nhanUI»"]);
 });
 
@@ -835,7 +835,7 @@ test("(e) canary: « và » phải thành cặp trên từng dòng, theo thứ t
   assert.deepEqual(kiemTatCa(aGo("1. Bấm «Nút B».", "1. Bấm «Nút B».\nXem »Nút Z«."), nguCanhGo()), loiDong("a.md", "Xem »Nút Z«."));
   // Review 13 round 3, probe Q1 exactly, on the real finance manual: the
   // payment button between reversed marks, beside a door.
-  const q1 = "- Bấm «Xem quyết toán», chuyển khoản xong thì bấm »Đánh dấu đã trả«.";
+  const q1 = "- Bấm «Xem quyết toán», chuyển khoản xong thì bấm »Đã trả bill«.";
   assert.deepEqual(kiemTatCa(suaSoTay("tai-chinh.md", themBuocTC(q1))), loiDong("tai-chinh.md", q1));
 });
 
@@ -906,7 +906,7 @@ test("(e) canary: bộ rút chỉ ghép nhãn với điều hướng của cùng
   const nguon = [
     "const a = <View>",
     '  <RudiButton label="Xem quyết toán" onPress={() => router.replace(`/settlements/${ctx}` as never)} />',
-    // A heading that carries a button (Profile.tsx «Chi theo nhóm»): only
+    // A heading that carries a button (Profile.tsx «Tiền đã về»): only
     // `action` names what `onAction` does; the heading is no button.
     '  <SectionHeader action={id !== null ? "Mở kèo" : undefined} onAction={id !== null ? () => router.push(("/outings/" + id) as never) : undefined} title="Kèo nhóm" />',
     '  <SectionHeader onAction={() => router.push("/messages")} title="Chỉ tiêu đề" />',
@@ -919,7 +919,7 @@ test("(e) canary: bộ rút chỉ ghép nhãn với điều hướng của cùng
     '  <Sheet accessibilityLabel="Tấm tạo mới" onClosed={() => router.replace("/plan")} />',
     '  <SearchBar placeholder="Tìm quán" onSubmitEditing={() => router.push("/explore")} />',
     '  <EmptyState title="Chưa có gì" action={{ label: "Tới Tin nhắn", onPress: () => router.replace("/messages" as never) }} />',
-    '  <RudiButton label="Đánh dấu đã trả" onPress={() => danhDau(id)} />',
+    '  <RudiButton label="Đã trả bill" onPress={() => danhDau(id)} />',
     '  <ListRow title="Hàng" right={<IconButton onPress={() => router.push("/plan")} />} />',
     '  <Pressable onPress={() => router.push("/plan")}><Text>Chữ con không phải thuộc tính</Text></Pressable>',
     "</View>;",
@@ -937,7 +937,7 @@ test("(e) canary: bộ rút chỉ ghép nhãn với điều hướng của cùng
   // The heading is still printed on the screen: a label, never a door.
   assert.ok(ra.nhan.includes("Kèo nhóm") && ra.nhan.includes("Chỉ tiêu đề"));
   // A button that leads nowhere is a label, never an edge.
-  assert.ok(ra.nhan.includes("Đánh dấu đã trả") && !ra.canh.some((c) => c.nhan === "Đánh dấu đã trả"));
+  assert.ok(ra.nhan.includes("Đã trả bill") && !ra.canh.some((c) => c.nhan === "Đã trả bill"));
   // Neither an action object nor a render prop lends its navigation to the
   // tag's own title: only an on… handler (or href) of that tag is its tap.
   assert.ok(!ra.canh.some((c) => c.nhan === "Chưa có gì" || c.nhan === "Hàng"));

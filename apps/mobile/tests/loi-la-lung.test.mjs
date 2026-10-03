@@ -62,7 +62,7 @@ import { CAU_KHONG_RO, chiTietLoi, moTaLoi } from "../dist-test/ui/loi-tren-man.
 import { themChiTiet } from "../dist-test/ui/loi-may-chu.js";
 import { fetchPlaces } from "../dist-test/screens/kham-pha/places.js";
 import { askSearch } from "../dist-test/screens/kham-pha/tim-kiem.js";
-import { khoiDongNhom } from "../dist-test/screens/chat/nhom.js";
+import { khoiDongNhomDemo } from "../dist-test/rudi/nhom-demo.js";
 import {
   guiTheAi,
   guiTinNhan,
@@ -271,7 +271,7 @@ test("askSearch: không thứ gì bị ném thành chữ máy", async () => {
 
 /* Một người có thật, không phải một slug.
  *
- * Dòng này từng là `khoiDongNhom("an", ...)`, và "an" không phải một trong bảy
+ * Dòng này từng là `khoiDongNhomDemo("an", ...)`, và "an" không phải một trong bảy
  * người của `nhom-demo.ts`. Bản cũ tra bảng rồi trả `hong` ngay ở dòng đầu, nên
  * transport hay ném ở đây KHÔNG BAO GIỜ ĐƯỢC GỌI: phép quét chạy 1 lần cho mỗi
  * tổ hợp và đo đúng một nhánh không đi qua mạng. Đường lỗi của cả năm request
@@ -286,7 +286,7 @@ const NGUOI_THAT = {
 
 test("khoiDongNhom: không thứ gì bị ném thành chữ máy", async () => {
   await quetMotCua("khoiDongNhom", (f) =>
-    voiFetch(f, () => khoiDongNhom(NGUOI_THAT, { base: BASE })),
+    voiFetch(f, () => khoiDongNhomDemo(NGUOI_THAT, { base: BASE })),
   );
 });
 

@@ -1,6 +1,5 @@
-/** Demo content is available only through explicitly named fixture routes. */
-export function chatRoute(id: string | undefined, signedIn: boolean, fixtureIds: readonly string[]): "live" | "fixture" | "login" | "messages" {
+/** Where `/groups/{id}/chat` goes: no id is the list, no session is the sign-in door. */
+export function chatRoute(id: string | undefined, signedIn: boolean): "live" | "login" | "messages" {
   if (!id) return "messages";
-  if (signedIn) return "live";
-  return fixtureIds.includes(id) ? "fixture" : "login";
+  return signedIn ? "live" : "login";
 }

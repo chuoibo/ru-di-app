@@ -12,7 +12,7 @@
 import type { VatBan } from "./art/vat-ban";
 
 export const VIEC_HEN = "/outings/new";
-export const VIEC_BILL = "/smart-split/xom-leo/review";
+export const VIEC_BILL = "/smart-split/moi/review";
 export const VIEC_KY_NIEM = "/moments/new";
 export const VIEC_STORY = "/stories/new";
 export const VIEC_CAP = "/hai-nguoi/chon-nguoi";

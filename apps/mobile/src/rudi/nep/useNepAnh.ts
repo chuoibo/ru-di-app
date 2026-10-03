@@ -62,7 +62,7 @@ export function useNepAnh(actorId: string | null): LuotVeAnh {
   const nhoVe = useCallback(
     async (moTa: string, man?: string) => {
       if (!actorId) {
-        datLoi("Bản trải nghiệm chưa vẽ được. Đăng nhập rồi thử lại nhé.");
+        datLoi("Cần đăng nhập để Nếp vẽ. Đăng nhập rồi thử lại nhé.");
         return;
       }
       const luot = ++doi.current;

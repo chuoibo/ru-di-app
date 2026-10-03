@@ -22,7 +22,8 @@ import {
   khoangGia,
   theTuCard,
 } from "../dist-test/screens/chat/ke-hoach.js";
-import { khoiDongNhom, thanNhuSeed } from "../dist-test/screens/chat/nhom.js";
+import { thanNhuSeed } from "../dist-test/screens/chat/nhom.js";
+import { khoiDongNhomDemo } from "../dist-test/rudi/nhom-demo.js";
 import {
   cursorCuNhat,
   cursorMoiNhat,

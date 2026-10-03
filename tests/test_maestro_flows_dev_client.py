@@ -13,9 +13,11 @@ This file pins that shape so it cannot drift back one flow at a time:
 
   * every flow declares the dev client's application id;
   * no non-comment line opens `exp://` or names Expo Go;
-  * the two entry flows guard against the dev-client launcher, which is what
+  * the sign-in flows guard against the dev-client launcher, which is what
     `pm clear` leaves behind and what a dead bundle looks like;
-  * the smoke flow asserts the per-run tree fingerprint (NEO 2b).
+  * the smoke flow asserts the per-run tree fingerprint (NEO 2b);
+  * there is no fixture board any more (the demo story went 2026-10-03): the
+    harness refuses to run without a server instead of falling back to one.
 
 It reads YAML as text on purpose: the assertions are about literal tokens, and
 a YAML parser would happily normalise the very strings this is looking for.
@@ -61,7 +63,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
                 self.assertIsNone(bad.search(line), f"{flow.name}: {line.strip()}")
 
     def test_entry_flows_refuse_the_launcher(self) -> None:
-        for name in ("_vao-app.yaml", "_vao-app-sach.yaml"):
+        for name in ("22-dang-nhap-otp.yaml", "23-phien-song-qua-lan-tat.yaml"):
             lines = code_lines(FLOWS / name)
             self.assertIn("- launchApp", lines, name)
             self.assertIn(
@@ -71,6 +73,12 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
     def test_smoke_flow_asserts_the_tree_fingerprint(self) -> None:
         lines = code_lines(FLOWS / "00-smoke-deeplink.yaml")
         self.assertIn('- assertVisible: ".*${TREE_FINGERPRINT}.*"', lines)
+
+    def test_no_fixture_flow_is_left(self) -> None:
+        for flow in self.flows:
+            text = "\n".join(code_lines(flow))
+            self.assertNotIn("_vao-app", text, flow.name)
+            self.assertNotIn('tapOn: "Vào bản trải nghiệm', text, flow.name)
 
     def test_every_launch_is_followed_by_the_dev_menu_skip(self) -> None:
         # The dev client shows «This is the developer menu» on the first cold
@@ -160,7 +168,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
             "${OTP_PHONE_F}", (FLOWS / "_dang-nhap-f.yaml").read_text(encoding="utf-8")
         )
 
-    def test_harness_otp_mode_probes_the_debug_code_and_hides_the_fixture_door(
+    def test_harness_otp_mode_probes_the_debug_code_and_has_no_fixture_door(
         self,
     ) -> None:
         script = (REPO_ROOT / "scripts" / "mobile_native.sh").read_text(
@@ -170,10 +178,11 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
         self.assertIn("kiem_ma_debug", script)
         self.assertIn("/auth/otp/verify", script)
         self.assertIn('-e OTP_PHONE="$OTP_PHONE"', script)
-        # The fixture door is off for both doors real people use: --otp and
-        # --live --otp-phone (the seeded person signs in through OTP too).
+        # No fixture door at all: the flag is never exported, and a run with no
+        # mode says it could not measure instead of driving a demo.
+        self.assertNotIn("EXPO_PUBLIC_RUDI_FIXTURE=1", script)
         self.assertIn(
-            'if [ "$OTP" = 0 ] && [ "$LIVE" = 0 ]; then\n    export EXPO_PUBLIC_RUDI_FIXTURE=1',
+            'if [ "$OTP" = 0 ] && [ "$LIVE" = 0 ] && [ "$DANG_NHAP" = 0 ]; then\n  khong_do_duoc',
             script,
         )
         self.assertIn("--otp-phone) OTP_PHONE_SEED=", script)

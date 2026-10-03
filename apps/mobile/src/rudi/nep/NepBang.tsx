@@ -52,7 +52,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
   const { phieu } = useNep();
   const { colors } = useRudiTheme();
   const { reduced } = useMotion();
-  const { cheDo, nguon } = useRudiSession();
+  const { nguon } = useRudiSession();
   const buc = useNepAnh(nguon.kieu === "live" ? nguon.actorId : null);
   const [nhap, datNhap] = useState("");
   const phien = useNepHoi(nguon.kieu === "live" ? nguon.actorId : null, phieu, open);
@@ -73,7 +73,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         <View style={styles.dauChu}>
           <Text style={[typography.title, { color: colors.ink }]}>Nếp</Text>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            {cheDo === "live" ? "Trợ lý riêng của bạn" : "Chế độ trải nghiệm"}
+            {nguon.kieu === "live" ? "Trợ lý riêng của bạn" : "Đăng nhập để trò chuyện"}
           </Text>
         </View>
       </View>

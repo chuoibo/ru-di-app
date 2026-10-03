@@ -11,9 +11,6 @@
  * that group the current one (`chonNhom`, so the money screens read it) and
  * opens its chat (M3); the roster and invite tools sit behind the chat header.
  *
- * On the fixture build (`cheDo !== "live"`) the tab still renders the fixture
- * chat, unchanged, so the default Maestro table keeps its ground.
- *
  * UI v2: rows on the paper with a hairline between them; unread is a mark
  * and a number; loading is the list's own shape; errors keep the list.
  */

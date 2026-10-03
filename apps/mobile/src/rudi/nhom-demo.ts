@@ -1,69 +1,25 @@
-/** The demo group the opening screen signs you in as.
- *
- * There is no OAuth here and there is not going to be one before the deadline.
- * Google and Apple sign-in are a console project, a redirect scheme, a consent
- * screen and a native rebuild each, and none of that is visible in the thing
- * being demonstrated: the person watching sees a name appear. So the buttons
- * are drawn to spec and pressing one picks a member of this group instead.
- *
- * That trade is only acceptable while it is *stated*, so it is stated in three
- * places that cannot drift apart from the code: the sheet's own heading, the
- * caption under the buttons, and the PR description. A shell is not a defect.
- * A shell that presents itself as working is.
- *
- * Names match `scripts/seed_demo_data.py` ("Team Đà Lạt") so the person picked
- * here is a person the seeded database has actually heard of.
- *
- * `personId` is the row in the seeded database, and it arrived with the Cá
- * nhân screen -- the first screen that sends a real request on this person's
- * behalf, which this file's earlier note predicted would be the one to need
- * it. Before that, nothing here wrote or read money and a slug was enough.
- *
- * The two ids are kept apart rather than merged. `id` stays a slug because it
- * is what a human reads in this file and what `personById` is called with;
- * `personId` is what the API is asked about. Collapsing them would mean either
- * UUIDs in every call site or a lookup on every render, and the seed script's
- * own comment rules out a third option -- a padded UUID literal is a long
- * digit run and the repo guard blocks it on sight, unable to tell a demo id
- * from an account number. These derive from `uuid5` and carry no such run.
- *
- * Copied values in two files drift, so they are not trusted to match by care:
- * `tests/test_demo_identity_matches_seed.py` re-derives every one of them from
- * `scripts/seed_demo_data.py` and fails if a single character moves. Getting
- * this wrong is silent -- the screen would ask about a person who does not
- * exist and render a truthful, correct, entirely empty answer.
- */
-
 /**
- * Whoever the app is currently acting as.
+ * The seeded people of the end-to-end harness. TEST DATA ONLY.
  *
- * Named for what it is rather than where it came from, because since F01 it is
- * no longer always a demo row: `screens/vao-cua/DangKy.tsx` builds one of these
- * from a real `PUT /people/{id}`, and a type called `DemoPerson` holding a
- * genuinely registered person is a comment that lies in every file it reaches.
+ * No screen imports this file, so it is not in the app bundle; the RuDi app
+ * has no demo story (2026-10-03: production launch, every screen reads the
+ * signed-in person's own data or shows the sign-in door). `tests/e2e/*` use
+ * it to reach the group `scripts/seed_demo_data.py` builds on a throwaway
+ * stack, and `scripts/e2e_demo_people.py` reads it there.
  *
- * The two ids collapse for a registered person -- `id` and `personId` are the
- * same UUID -- and stay apart for the seeded seven below, where `id` is a slug
- * somebody reads in this file. Anything sending a request must use `personId`.
+ * `personId` is the row in the seeded database. Copied values in two files
+ * drift, so they are not trusted to match by care:
+ * `tests/test_demo_identity_matches_seed.py` re-derives every one of them from
+ * `scripts/seed_demo_data.py` and fails if a single character moves. These
+ * derive from `uuid5` and carry no long digit run the repo guard would block.
  */
-export type NguoiDung = {
-  /** Slug for a seeded person, or the person's own UUID once registered.
-   *  Read by `personById`; never sent to the API. */
-  id: string;
-  /** The `people` row this person is. This is what the API is asked about. */
-  personId: string;
-  name: string;
-  /** Two-letter monogram for the avatar. No photos of real people in Git. */
-  initials: string;
-};
+import { khoiDongNhom, type NguoiDung, type NhomState } from "../screens/chat/nhom";
 
-/** The old name, kept so the call sites that predate F01 keep compiling.
- *  New code should say `NguoiDung`. */
-export type DemoPerson = NguoiDung;
+export type { NguoiDung };
 
 export const DEMO_GROUP_NAME = "Team Đà Lạt";
 
-export const DEMO_PEOPLE: DemoPerson[] = [
+export const DEMO_PEOPLE: NguoiDung[] = [
   { id: "minh", personId: "46b55e67-932b-5415-a5ee-08fb2641a4ff", name: "Minh", initials: "M" },
   { id: "trang", personId: "49871dab-3bf9-5140-acf3-6c9736b31e8f", name: "Trang", initials: "Tr" },
   { id: "hai", personId: "be2389f9-62cb-5b28-8e5f-874768e9fb75", name: "Hải", initials: "H" },
@@ -73,6 +29,11 @@ export const DEMO_PEOPLE: DemoPerson[] = [
   { id: "quan", personId: "93c153f7-042a-556d-b227-7b1e54f2d50b", name: "Quân", initials: "Q" },
 ];
 
-export function personById(id: string): DemoPerson | null {
+export function personById(id: string): NguoiDung | null {
   return DEMO_PEOPLE.find((p) => p.id === id) ?? null;
+}
+
+/** The seeded group, as `minh` made it, opened under `nguoi`. */
+export function khoiDongNhomDemo(nguoi: NguoiDung, opts: { base?: string } = {}): Promise<NhomState> {
+  return khoiDongNhom(nguoi, { ...opts, chuNhom: personById("minh")!, tenNhom: DEMO_GROUP_NAME });
 }

@@ -72,21 +72,21 @@ DANH_SACH_MAN: tuple[ManMockup, ...] = (
         "Welcome / Màn hình chào",
         "READY",
         "01_onboarding/01_welcome/01_01_welcome.png",
-        ("00-welcome", "23-dang-xuat-ben-qua-lan-tat", "11-session-cleared-on-logout"),
+        ("00-welcome", "23-dang-xuat-ben-qua-lan-tat"),
     ),
     ManMockup(
         "01.02",
         "Đăng ký / Đăng nhập",
         "READY",
         "01_onboarding/02_login/01_02_login.png",
-        ("22-man-dang-nhap", "01-login-google-honest"),
+        ("22-man-dang-nhap",),
     ),
     ManMockup(
         "01.03",
         "Cá nhân hóa sở thích",
         "READY",
         "01_onboarding/03_personalization/01_03_personalization.png",
-        ("01-personalization",),
+        ("36-ca-nhan-hoa",),
         "Chỉ bảng mặc định (flow 01) chụp màn này; bảng --otp không đi qua.",
     ),
     ManMockup(
@@ -94,7 +94,7 @@ DANH_SACH_MAN: tuple[ManMockup, ...] = (
         "Khám phá địa điểm",
         "READY",
         "02_discovery/01_explore/02_01_explore.png",
-        ("26-danh-muc-that", "22-trong-nhom-moi", "04-explore-before"),
+        ("26-danh-muc-that", "22-trong-nhom-moi"),
     ),
     ManMockup(
         "02.02",
@@ -131,7 +131,7 @@ DANH_SACH_MAN: tuple[ManMockup, ...] = (
         "Bình chọn & chốt plan",
         "NEEDS UPDATE",
         "03_group_chat_ai/03_voting/03_03_voting.png",
-        ("30-binh-chon", "20-chat-seed", "06-vote-hidden-after-pick"),
+        ("30-binh-chon", "20-chat-seed"),
     ),
     ManMockup(
         "04.01",
@@ -166,7 +166,7 @@ DANH_SACH_MAN: tuple[ManMockup, ...] = (
         "AI nhận diện món & gán người",
         "NEEDS UPDATE",
         "05_smart_bill/02_ocr_assignment/05_02_ocr_assignment.png",
-        ("28-gan-mon", "10-assignment-after"),
+        ("28-gan-mon",),
     ),
     ManMockup(
         "05.03",
@@ -209,7 +209,7 @@ DANH_SACH_MAN: tuple[ManMockup, ...] = (
         "Tài chính cá nhân",
         "READY",
         "07_profile_finance/02_finance/07_02_finance.png",
-        ("29-tai-chinh", "20-tai-chinh-seed", "02-finance"),
+        ("29-tai-chinh", "20-tai-chinh-seed"),
     ),
     ManMockup(
         "07.03",

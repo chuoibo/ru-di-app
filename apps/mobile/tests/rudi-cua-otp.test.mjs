@@ -1,6 +1,6 @@
 /* The pieces around the OTP door that are not the wire: what the code screen
- * shows of a number, where the fixture door may exist, and what `nguon.ts`
- * says about a session that has no group yet.
+ * shows of a number, that no demo door is left, and what `nguon.ts` says
+ * about a session that has no group yet.
  *
  * Run from apps/mobile:
  *     npx tsc -p tsconfig.test.json && node --test tests/rudi-cua-otp.test.mjs
@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { CUA_FIXTURE_DEV } from "../dist-test/rudi/cua-fixture.js";
+import { readdirSync, statSync } from "node:fs";
 import { nguonHienTai } from "../dist-test/rudi/nguon.js";
 import { cheSo } from "../dist-test/rudi/otp-dang-cho.js";
 
@@ -23,36 +23,37 @@ test("cheSo giữ đúng ba số cuối và giấu phần còn lại", () => {
   assert.equal(cheSo("12"), "số của bạn");
 });
 
-test("dưới node không có __DEV__ nên cửa fixture đóng, dù cờ có lên hay không", () => {
-  assert.equal(CUA_FIXTURE_DEV, false);
-});
+/** Every source file of the app shell, for the sweep below. */
+function moiTep(thuMuc) {
+  const goc = new URL(`../${thuMuc}/`, import.meta.url);
+  return readdirSync(goc, { recursive: true })
+    .filter((ten) => /\.(ts|tsx)$/.test(ten))
+    .map((ten) => `${thuMuc}/${ten}`)
+    .filter((duong) => statSync(new URL(`../${duong}`, import.meta.url)).isFile());
+}
 
-test("cua-fixture đọc cờ bằng member expression thuần, để Expo inline được", () => {
-  const src = doc("src/rudi/cua-fixture.ts");
-  assert.match(src, /process\.env\.EXPO_PUBLIC_RUDI_FIXTURE/);
-  assert.doesNotMatch(src, /process\?\.env|env\[/);
-});
-
-test("cửa «Vào bản trải nghiệm» có đúng MỘT chỗ, và chỗ đó nằm sau CUA_FIXTURE_DEV", () => {
-  const login = doc("src/rudi/screens/auth/Login.tsx");
-  const nhan = "Vào bản trải nghiệm Team Đà Lạt";
-  const viTri = login.indexOf(nhan);
-  assert.ok(viTri > 0, "màn đăng nhập không còn cửa dev: bảng Maestro mặc định mất đường vào");
-  assert.equal(login.indexOf(nhan, viTri + 1), -1, "cửa dev xuất hiện hai lần trong Login.tsx");
-  const dieuKien = login.lastIndexOf("CUA_FIXTURE_DEV ? (", viTri);
-  assert.ok(dieuKien > 0, "nhãn cửa dev không nằm trong nhánh CUA_FIXTURE_DEV");
-  assert.ok(login.indexOf(") : null}", viTri) > viTri);
-  // And nowhere else on the RuDi shell.
-  for (const tep of ["src/rudi/screens/Onboarding.tsx", "src/rudi/screens/Profile.tsx"]) {
-    assert.equal(doc(tep).includes(nhan), false, `${tep} vẫn còn một cửa fixture`);
+test("không còn cửa demo nào: không nút «bản trải nghiệm», không cờ EXPO_PUBLIC_RUDI_FIXTURE", () => {
+  const tep = [...moiTep("app"), ...moiTep("src")];
+  assert.ok(tep.length > 100, "quét không thấy mã nguồn");
+  for (const duong of tep) {
+    const src = doc(duong);
+    assert.doesNotMatch(src, /EXPO_PUBLIC_RUDI_FIXTURE|CUA_FIXTURE_DEV/, `${duong} còn cờ cửa fixture`);
+    assert.doesNotMatch(src, /"[^"\n]*[Bb]ản trải nghiệm[^"\n]*"/, `${duong} còn chữ «bản trải nghiệm» hiện ra màn`);
   }
 });
 
-test("phiên không có nhóm là trải nghiệm có lý do, không phải live với contextId rỗng", () => {
+test("Team Đà Lạt chỉ còn trong dữ liệu harness, không màn nào import", () => {
+  for (const duong of [...moiTep("app"), ...moiTep("src")]) {
+    if (duong === "src/rudi/nhom-demo.ts") continue;
+    assert.doesNotMatch(doc(duong), /from "[^"]*nhom-demo"/, `${duong} import dữ liệu harness`);
+  }
+});
+
+test("phiên không có nhóm là chưa-có-nhóm có lý do, không phải live với contextId rỗng", () => {
   const nguon = nguonHienTai(
     { person_id: "p", context_id: null, membership_state: null },
     {},
   );
-  assert.equal(nguon.kieu, "trai-nghiem");
+  assert.equal(nguon.kieu, "chua-co-nhom");
   assert.match(nguon.viSao, /chưa ở nhóm nào/);
 });

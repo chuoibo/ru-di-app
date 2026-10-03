@@ -38,7 +38,7 @@ import {
   newAttempt,
   taoBill,
 } from "../../dist-test/api.js";
-import { khoiDongNhom } from "../../dist-test/screens/chat/nhom.js";
+import { khoiDongNhomDemo } from "../../dist-test/rudi/nhom-demo.js";
 import { DEMO_PEOPLE, personById } from "../../dist-test/rudi/nhom-demo.js";
 import { batPhienE2E } from "./phien-e2e.mjs";
 
@@ -79,7 +79,7 @@ async function moNhom() {
     // only a live run says so.
     const nguoiDangNhap = personById(slug);
     assert.ok(nguoiDangNhap, `khong co nguoi "${slug}" trong nhom demo`);
-    state = await khoiDongNhom(nguoiDangNhap, { base: BASE_URL });
+    state = await khoiDongNhomDemo(nguoiDangNhap, { base: BASE_URL });
     if (state.kind !== "xong") {
       assert.fail(
         `khong mo duoc nhom o buoc "${state.buoc}" (${state.status}) ${state.url}: ${state.detail}`,

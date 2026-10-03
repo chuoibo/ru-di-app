@@ -35,7 +35,7 @@ import {
   publishBatch,
   registerPeople,
 } from "../../dist-test/api.js";
-import { khoiDongNhom } from "../../dist-test/screens/chat/nhom.js";
+import { khoiDongNhomDemo } from "../../dist-test/rudi/nhom-demo.js";
 import { layTaiChinh } from "../../dist-test/screens/ca-nhan/tai-chinh.js";
 import { layKyUc } from "../../dist-test/screens/ky-niem/ky-uc.js";
 import { docQuyetToanLive } from "../../dist-test/rudi/doc-live.js";
@@ -111,7 +111,7 @@ async function moNhom() {
     // only a live run says so.
     const nguoi = personById(slug);
     assert.ok(nguoi, `khong co nguoi "${slug}" trong nhom demo`);
-    state = await khoiDongNhom(nguoi, { base: BASE_URL });
+    state = await khoiDongNhomDemo(nguoi, { base: BASE_URL });
     if (state.kind !== "xong") {
       assert.fail(
         `khong mo duoc nhom o buoc "${state.buoc}" (${state.status}) ${state.url}: ${state.detail}`,

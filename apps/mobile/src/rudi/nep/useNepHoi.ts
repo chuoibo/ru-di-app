@@ -134,7 +134,7 @@ export function useNepHoi(actorId: string | null, phieu: PhieuNguCanh | null, mo
       const chu = cau.trim();
       if (!chu || dangHoi) return false;
       if (!actorId) {
-        datLoi("Bản trải nghiệm chưa hỏi Nếp được. Đăng nhập rồi thử lại nhé.");
+        datLoi("Cần đăng nhập để hỏi Nếp. Đăng nhập rồi thử lại nhé.");
         return false;
       }
       if (!nepDuocHoi(phieu)) {

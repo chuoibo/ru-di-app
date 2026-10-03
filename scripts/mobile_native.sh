@@ -139,6 +139,14 @@ METRO_PID=""
 khong_do_duoc() { echo "KHÔNG ĐO ĐƯỢC: $*" >&2; exit 2; }
 hong()          { echo "ĐỎ: $*" >&2; exit 1; }
 
+# Bảng mặc định cũ chạy trên bản trải nghiệm (Team Đà Lạt, cửa
+# EXPO_PUBLIC_RUDI_FIXTURE). Ngày 2026-10-03 app lên production và bản trải
+# nghiệm bị gỡ cùng các màn của nó, nên không còn bảng nào chạy được mà không
+# có máy chủ: mọi bảng giờ đăng nhập như người thật.
+if [ "$OTP" = 0 ] && [ "$LIVE" = 0 ] && [ "$DANG_NHAP" = 0 ]; then
+  khong_do_duoc "không có bảng mặc định nữa (bản trải nghiệm đã gỡ 2026-10-03). Chạy: scripts/mobile_native.sh --otp --api-port <cổng API prod có MOBILE_OTP_DEBUG_CODE=$OTP_CODE>"
+fi
+
 # --- công cụ ---------------------------------------------------------------
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$HOME/.maestro/bin:$PATH"
@@ -1782,9 +1790,8 @@ print(hit[0]["id"] if hit else "")')"
   echo "máy chủ xác nhận: nhóm «Plan QA» có $so_ai câu trả lời AI ($loai), mọi địa điểm đều trong catalogue"
 }
 
-# Canary cho chế độ --otp. Canary 09 đi đường fixture, mà ở đây cửa fixture tắt
-# có chủ ý — nó sẽ chết ở bước 1, tức chứng minh harness hỏng chứ không chứng
-# minh assert cắn. Đối chứng âm đúng của lượt này: chạy LẠI flow 22 với mã SAI
+# Canary của mọi bảng (bản trải nghiệm và canary 09 của nó đã gỡ 2026-10-03).
+# Đối chứng âm: chạy LẠI flow 22 với mã SAI
 # làm «mã debug». Flow phải đỏ, và đỏ ĐÚNG ở bước chờ «Chưa có nhóm nào» —
 # nghĩa là không có mã đúng thì app không bao giờ vào được trạng thái đăng nhập.
 canary_otp() {
@@ -1919,13 +1926,6 @@ if [ "$ANH" = 1 ]; then kiem_co_anh_dia_diem; fi
   # below caught it as "Metro is not serving this tree" -- which was true.
   export CI=1 EXPO_NO_TELEMETRY=1 EXPO_NO_DEPENDENCY_VALIDATION=1
   export EXPO_PUBLIC_TREE_FINGERPRINT="$DAU_VAN"
-  # Cửa «Vào bản trải nghiệm» chỉ tồn tại khi cờ này lên (và __DEV__). Mọi chế
-  # độ trừ --otp đi qua cửa đó — canary 09 đi `_vao-app-sach`, kể cả ở
-  # --dang-nhap (đo 2026-09-04: tắt cờ ở --dang-nhap làm canary chết ở bước 1
-  # dù flow 21 xanh). Bằng chứng «bản ship không có cửa fixture» nằm ở flow 22.
-  if [ "$OTP" = 0 ] && [ "$LIVE" = 0 ]; then
-    export EXPO_PUBLIC_RUDI_FIXTURE=1
-  fi
   if [ "$TAT_KAV" = 1 ]; then
     export EXPO_PUBLIC_QA_TAT_KAV=1
   fi
@@ -2234,7 +2234,11 @@ for f in "$FLOWS"/*.yaml; do
     # Nó chạy sau 30 trong cùng lượt và thừa hưởng nhóm «Hoi QA» của flow đó,
     # nên không cần bước chuẩn bị riêng.
     48-*)        [ "$OTP" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
-    *)           { [ "$LIVE" = 1 ] || [ "$DANG_NHAP" = 1 ] || [ "$OTP" = 1 ]; } && continue ;;
+    # 00 là màn chào + dấu vân cây (neo 2b): mọi bảng bắt đầu từ app sạch,
+    # trừ --live, bảng mở trên phiên của người seed.
+    00-*)        [ "$LIVE" = 0 ] || continue ;;
+    # Bảng fixture cũ (01–12, 91) đã gỡ cùng bản trải nghiệm (2026-10-03).
+    *)           continue ;;
   esac
   # Flow 34 cần một tấm ảnh CÓ THẬT trong nhóm trước khi mở màn: bộ chọn ảnh của
   # hệ thống không lái được bằng flow, nên ảnh đi vào bằng đường sản phẩm (upload
@@ -2300,7 +2304,13 @@ echo "đã chạy $DA_CHAY flow"
 # NEO 2b. Flow 00 vừa assert dấu vân THẬT ở trong bảng; giờ cùng flow với dấu vân
 # SAI phải đỏ, và đỏ đúng ở dòng đó. Không thì `assertVisible` của dấu vân là một
 # dòng trang trí và hai neo Metro ở trên lại là tất cả những gì ta có.
-if [ "$LIVE" = 0 ] && [ "$DANG_NHAP" = 0 ] && [ "$OTP" = 0 ]; then
+# Mọi bảng trừ --live (bảng đó mở trên phiên của người seed, không qua màn chào).
+# Flow 00 đo màn chào, nên phải chạy trên app CHƯA đăng nhập: sau bảng --otp máy
+# đang giữ phiên của flow cuối, và flow 00 sẽ đỏ ở «Rủ Đi thôi!» chứ không ở dòng
+# dấu vân (đo 2026-10-03, lượt đầu sau khi bảng fixture gỡ).
+if [ "$LIVE" = 0 ] && da_chay 00; then
+  xoa_du_lieu_app
+  mo_link "$(url_metro)"; cho_bundle || true; sleep 2
   RA_2B="$(mktemp)"
   set +e
   maestro --device "$SERIAL" test -e TREE_FINGERPRINT="KHONG_CO_DAU_VAN_NAY" "$FLOWS/00-smoke-deeplink.yaml" > "$RA_2B" 2>&1
@@ -2361,39 +2371,13 @@ elif [ "$LIVE" = 1 ]; then
   kiem_may_chu_sau_20
   canary_otp
 else
-RA_CANARY="$(mktemp)"
-# Canary chạy đường FIXTURE trên app CHƯA đăng nhập. Ở chế độ `--dang-nhap` thì
-# bảng vừa đăng nhập thật xong, nên phải trả máy về trạng thái đó trước.
-if [ "$DANG_NHAP" = 1 ]; then
+  # --dang-nhap: cùng đối chứng âm với --otp, trên app đã trả về trạng thái
+  # chưa đăng nhập. Canary 09 cũ đi cửa fixture, nay đã gỡ.
   echo "xoá phiên trước khi chạy canary (canary đo đường chưa đăng nhập)"
   xoa_du_lieu_app
   # Sau pm clear, dev client về launcher: nạp lại bundle rồi mới chạy canary.
   mo_link "$(url_metro)"; cho_bundle || true; sleep 2
-fi
-set +e; maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" "$FLOWS/09-canary-phai-do.yaml" 2>&1 | tee "$RA_CANARY"; CANARY=${PIPESTATUS[0]}; set -e
-
-# NEO 3. Canary xanh nghĩa là phép đo không phân biệt được đúng với sai, nên cả
-# bảng xanh ở trên không chứng minh gì.
-[ "$CANARY" -ne 0 ] || hong "canary XANH. Bảng trên không chứng minh gì."
-
-# NEO 3b. Và nó phải đỏ Ở BƯỚC CUỐI. Docstring của chính flow 09 nói thẳng điều
-# này — «a red canary that dies early proves the harness is broken, not that the
-# assertions bite» — nhưng cho tới hôm nay không có gì cưỡng chế nó, nên bất kỳ
-# màu đỏ nào cũng được đọc thành «canary đỏ đúng thiết kế».
-#
-# Đã xảy ra thật, ngày 2026-09-03, chạy `--port 8096`: canary chết ngay ở bước 1
-# vì `_vao-app-sach.yaml` mở `exp://localhost:8095` — một cổng TRỐNG. Không một
-# assert nào của nó được thực thi, và cổng vẫn in dòng XANH ở cuối. Cùng lỗi ấy
-# với 8095 KHÔNG trống thì tệ hơn nữa: canary lái bundle của lane khác.
-CHUOI_CANARY="KHONG_BAO_GIO_CO_CHUOI_NAY_TREN_MAN"
-DONG_DO_DAU="$(grep -n 'FAILED' "$RA_CANARY" | head -1 || true)"
-case "$DONG_DO_DAU" in
-  *"$CHUOI_CANARY"*) ;;
-  "") hong "canary thoát khác 0 mà không có bước nào FAILED — nó chết trước khi chạy, không phải vì assert cắn." ;;
-  *) echo "--- canary ---" >&2; sed -n '1,40p' "$RA_CANARY" >&2
-     hong "canary đỏ ở bước KHÁC bước cuối ($DONG_DO_DAU). Nó chết vì hạ tầng, nên bảng trên vẫn chưa chứng minh gì." ;;
-esac
-rm -f "$RA_CANARY"
+  canary_otp
 fi
 
-echo "XANH: bảng qua ($LAP lượt), $([ "$OTP" = 1 ] && echo "canary OTP (mã sai) đỏ đúng chỗ" || echo "NEO 2b cắn, canary đỏ đúng thiết kế"), trên $ANDROID_SERIAL / $EXPO_VER / dấu vân $DAU_VAN"
+echo "XANH: bảng qua ($LAP lượt), $([ "$LIVE" = 0 ] && echo "NEO 2b cắn, ")canary OTP (mã sai) đỏ đúng chỗ, trên $ANDROID_SERIAL / $EXPO_VER / dấu vân $DAU_VAN"

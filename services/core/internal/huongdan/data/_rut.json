@@ -4,194 +4,65 @@
   },
   "routes": [
     {
-      "canh": [
-        {
-          "den": "achievements",
-          "nhan": "Thành tích"
-        },
-        {
-          "den": "explore",
-          "nhan": "Mở Khám phá"
-        },
-        {
-          "den": "finance",
-          "nhan": "Tài chính của tôi"
-        },
-        {
-          "den": "friends",
-          "nhan": "Bạn bè"
-        },
-        {
-          "den": "personalization",
-          "nhan": "Sở thích"
-        },
-        {
-          "den": "settings",
-          "nhan": "Cài đặt"
-        },
-        {
-          "den": "settlements/[id]",
-          "nhan": "Xem quyết toán"
-        },
-        {
-          "den": "welcome",
-          "nhan": "Đăng xuất"
-        },
-        {
-          "den": "welcome",
-          "nhan": "Đăng xuất bản trải nghiệm"
-        }
-      ],
-      "di_toi": [
-        "achievements",
-        "explore",
-        "finance",
-        "friends",
-        "personalization",
-        "settings",
-        "settlements/[id]",
-        "welcome"
-      ],
+      "canh": [],
+      "di_toi": [],
       "man": "achievements",
       "nhan": [
-        "1 chuyến đi ·",
-        "1 chuyến đi · … đã lưu · … ảnh",
-        "Bio",
-        "Bạn bè",
         "Bạn chọn cách kể chuyến đi của mình. Mỗi huy hiệu mở thêm một trang, và những trang đã mở sẽ ở lại.",
-        "Bản dựng",
-        "Bản dựng …",
         "Bản đồ bốn tuyến hành trình. Ba tuyến đầu gặp nhau ở Ngã rẽ.",
         "Bắt đầu bằng một lần check-in tự khai, một ảnh kỷ niệm hoặc một lời kể.",
-        "Chi theo nhóm",
-        "Chưa có khoản chuyển nào được xác nhận là đã về.",
         "Chưa mở được sổ hành trình",
-        "Chưa đọc được sổ",
         "Chỉ gửi số đếm và mã ngã rẽ",
-        "Chỉnh hồ sơ",
         "Chọn lối đi",
         "Chọn tối đa ba huy hiệu để hiện trên hồ sơ. Tiến độ và số lượt MP4 chỉ mình bạn thấy.",
         "Cuốn sổ có nhiều ngã rẽ",
-        "Cài đặt",
-        "Cá nhân",
-        "Các số trên đọc từ sổ cái, không phải số dư ngân hàng.",
         "Các tuyến gặp nhau",
         "Còn gửi mã nhánh hiện tại, các ngã rẽ có thể chọn và tối đa tám lựa chọn gần đây. Không gửi ảnh, nội dung bài, danh tính bạn đồng hành, chat hoặc vị trí cụ thể. Mỗi lần hỏi cần bạn đồng ý lại.",
         "Có thể đổi hướng bất cứ lúc nào. Dấu mốc cũ vẫn được giữ.",
         "Dấu ấn đã giữ",
-        "Giao dịch gần đây",
-        "Gần nhất",
-        "Huy hiệu của bạn",
         "Huy hiệu hành trình",
         "Hành trình",
-        "Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ.",
         "Mẫu sáng tạo sắp dùng được:",
         "Mẫu sáng tạo sắp dùng được: …",
         "Mỗi chuyến đi là một câu chuyện khác",
         "MỚI MỞ",
-        "Mở Khám phá",
-        "Mở chuyến …",
         "Mở hướng …",
         "Ngã rẽ",
         "Ngã rẽ đang chờ",
         "Nếp có thể gợi ý 2–3 ngã rẽ theo lối bạn chọn và những dấu mốc đã có.",
         "Nếp nhìn đường đi",
         "Nếp đang vắng. Sổ đã gợi ý từ tiến độ thật của bạn.",
-        "Sắp tới",
-        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa ghi vào sổ. Đây không phải số dư ngân hàng.",
-        "Sở thích",
         "TRANG VỪA MỞ TỪ LỐI BẠN CHỌN",
-        "Team Đà Lạt",
-        "Thành tích",
-        "Tiền đã về",
-        "Tài chính của tôi",
-        "Tài khoản",
-        "Tên",
-        "Tường của tôi",
         "Xem ngã rẽ …",
-        "Xem quyết toán",
-        "Xong",
         "chuyến có bạn cùng đi.",
-        "dau-van-cay",
         "kết",
         "kết đã mở ·",
         "lượt dựng MP4 còn dùng được",
         "lần check-in ·",
         "ngày có bài kể ·",
         "ngày có ảnh ·",
-        "nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.",
-        "«…»: còn … … nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.",
-        "»: còn",
-        "Đang xem với tư cách",
-        "Đang xem với tư cách ….",
-        "Đã lưu",
-        "Đã mở",
-        "Đăng xuất",
-        "Đăng xuất bản trải nghiệm",
         "Đạt một kết Dấu chân, Kỷ niệm hoặc Đồng hành để những câu chuyện bắt đầu gặp nhau ở đây.",
         "Đồng ý hỏi Nếp lần này",
         "điểm đến ·",
-        "đã lưu ·",
-        "ảnh",
         "… kết",
         "… kết đã mở · … lượt dựng MP4 còn dùng được",
         "… lần check-in · … điểm đến · … ngày có ảnh · … ngày có bài kể · … chuyến có bạn cùng đi.",
-        "… lời mời đang chờ",
-        "… địa điểm",
-        "…, … kết đã đạt",
-        "…/… đã mở"
+        "…, … kết đã đạt"
       ],
       "tep": [
         "app/achievements.tsx",
-        "src/rudi/screens/Profile.tsx",
         "src/rudi/screens/ky-niem/AchievementsLive.tsx"
       ]
     },
     {
-      "canh": [
-        {
-          "den": "ai-match",
-          "nhan": "Match gu cả nhóm bằng AI"
-        }
-      ],
+      "canh": [],
       "di_toi": [
-        "ai-match",
-        "explore",
-        "places/[id]"
+        "explore"
       ],
       "man": "ai-match",
-      "nhan": [
-        ": khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
-        "Bỏ lưu",
-        "Chia sẻ",
-        "Chưa có gợi ý",
-        "Chưa thấy nơi phù hợp",
-        "Chỗ hay ở Đà Lạt",
-        "Gợi ý mẫu cho",
-        "Gợi ý mẫu cho …: khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
-        "Lưu địa điểm",
-        "Match gu cả nhóm",
-        "Match gu cả nhóm bằng AI",
-        "Mẫu minh hoạ",
-        "Mở bộ lọc",
-        "Nhóm 8 người ngồi được một bàn, món nướng chia nhau dễ.",
-        "Quay lại",
-        "Thêm vào …",
-        "Thông báo",
-        "Trong 2 km",
-        "Tối nay cả hội đi đâu?",
-        "Từ 90% hợp gu",
-        "Vì sao hợp …?",
-        "Xóa lọc",
-        "Đây là gợi ý có thể chỉnh. Rủ Đi không tự thêm nơi vào kế hoạch của nhóm.",
-        "Đã lưu",
-        "Đã thêm vào …",
-        "Đóng bộ lọc",
-        "… kết quả phù hợp"
-      ],
+      "nhan": [],
       "tep": [
-        "app/ai-match.tsx",
-        "src/rudi/screens/Discovery.tsx"
+        "app/ai-match.tsx"
       ]
     },
     {
@@ -202,12 +73,12 @@
         }
       ],
       "di_toi": [
-        "messages"
+        "messages",
+        "plan"
       ],
       "man": "batches/[id]",
       "nhan": [
         "Chưa đọc được bảng thu",
-        "Cần đăng nhập",
         "Gửi",
         "Gửi cho …",
         "Gửi link riêng",
@@ -223,7 +94,6 @@
         "Phát đợt thu",
         "Phát đợt thu này?",
         "Phát, không hoàn lại",
-        "Quay lại",
         "Thôi, chưa phát",
         "Tiền đã về từ …",
         "Tới Tin nhắn",
@@ -243,91 +113,14 @@
       ]
     },
     {
-      "canh": [
-        {
-          "den": "check-ins/new",
-          "nhan": "Check-in nhóm"
-        },
-        {
-          "den": "check-ins/new",
-          "nhan": "Đến nơi rồi?"
-        },
-        {
-          "den": "create",
-          "nhan": "Tạo mới"
-        },
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Tôi đã tới"
-        },
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Tường nhóm"
-        }
-      ],
+      "canh": [],
       "di_toi": [
-        "check-ins/new",
-        "create",
-        "groups/[id]/wall",
-        "places/[id]",
         "plan"
       ],
       "man": "check-ins/new",
-      "nhan": [
-        ". Chưa gửi push.",
-        "Ai đã tới",
-        "Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái",
-        "Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái ….",
-        "Check-in nhóm",
-        "Chia vị trí",
-        "Chưa tới",
-        "Chọn tất cả",
-        "Dừng chia sẻ",
-        "Dựa trên gu của",
-        "Dựa trên gu của … thành viên; bạn sửa được trước khi chốt.",
-        "Hội mình đi đâu?",
-        "Mở lịch trình AI",
-        "Ngày về",
-        "Ngày đi",
-        "Ngân sách mỗi người",
-        "Nhắc thành viên",
-        "Nhờ Rủ Đi gợi ý lịch trình",
-        "Rủ hội bạn",
-        "Still Cafe · 10:00",
-        "Tên cuộc hẹn",
-        "Tôi đã tới",
-        "Tùy chọn",
-        "Tùy chọn chuyến đi",
-        "Tường nhóm",
-        "Tạo cuộc hẹn",
-        "Tạo mới",
-        "Ví dụ: Đà Lạt cuối tuần",
-        "chưa check-in.",
-        "dự kiến một người",
-        "hoạt động",
-        "người",
-        "người được chọn",
-        "tham gia",
-        "thành viên; bạn sửa được trước khi chốt.",
-        "· 3 ngày 2 đêm ·",
-        "Điểm đến",
-        "Điểm đến tiếp theo",
-        "Đà Lạt, Lâm Đồng",
-        "Đã ghi nhắc",
-        "Đã ghi nhắc … người …. Chưa gửi push.",
-        "Đã tới",
-        "Đến nơi rồi?",
-        "Đủ 8 người.",
-        "… chưa check-in.",
-        "… hoạt động",
-        "… tham gia",
-        "… · 3 ngày 2 đêm · … người",
-        "…/… người được chọn",
-        "…/… thành viên đã tới"
-      ],
+      "nhan": [],
       "tep": [
-        "app/check-ins/new.tsx",
-        "src/rudi/screens/Outing.tsx"
+        "app/check-ins/new.tsx"
       ]
     },
     {
@@ -489,16 +282,11 @@
     {
       "canh": [
         {
-          "den": "ai-match",
-          "nhan": "Match gu cả nhóm bằng AI"
-        },
-        {
           "den": "destinations",
           "nhan": "Đổi điểm đến"
         }
       ],
       "di_toi": [
-        "ai-match",
         "community",
         "destinations",
         "personalization",
@@ -506,54 +294,28 @@
       ],
       "man": "explore",
       "nhan": [
-        ": khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
-        "Bỏ lưu",
-        "Chia sẻ",
-        "Chưa có gợi ý",
         "Chưa rút được ngân sách, số người hay khu vực; xếp theo gu chung.",
         "Chưa thấy nơi phù hợp",
-        "Chỗ hay ở Đà Lạt",
         "Chỗ hay ở …",
-        "Gợi ý mẫu cho",
-        "Gợi ý mẫu cho …: khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
         "Hỏi Rủ Đi AI",
         "Không có tên nào khớp «…»",
-        "Lưu địa điểm",
-        "Match gu cả nhóm",
-        "Match gu cả nhóm bằng AI",
-        "Mẫu minh hoạ",
         "Một món thèm, một nơi muốn ghé…",
-        "Mở bộ lọc",
-        "Nhóm 8 người ngồi được một bàn, món nướng chia nhau dễ.",
         "Những chỗ hay chưa hiện lên",
-        "Quay lại",
         "Rủ Đi AI",
         "Rủ Đi AI hiểu câu «",
         "Rủ Đi AI hiểu câu «…»",
         "Sửa câu cho đúng ý bạn, rồi chạm ✦ hoặc Enter để hỏi Rủ Đi AI.",
-        "Thêm vào …",
-        "Thông báo",
-        "Trong 2 km",
-        "Tối nay cả hội đi đâu?",
-        "Từ 90% hợp gu",
-        "Vì sao hợp …?",
         "Xóa lọc",
         "· đổi nơi khác",
         "Ô tìm địa điểm",
         "Đang đọc câu «",
         "Đang đọc câu «…»...",
-        "Đây là gợi ý có thể chỉnh. Rủ Đi không tự thêm nơi vào kế hoạch của nhóm.",
-        "Đã lưu",
-        "Đã thêm vào …",
-        "Đóng bộ lọc",
         "Đổi điểm đến",
         "… chưa có địa điểm nào",
-        "… kết quả",
-        "… kết quả phù hợp"
+        "… kết quả"
       ],
       "tep": [
         "app/(tabs)/explore.tsx",
-        "src/rudi/screens/Discovery.tsx",
         "src/rudi/screens/explore/ExploreLive.tsx"
       ]
     },
@@ -590,10 +352,6 @@
         {
           "den": "welcome",
           "nhan": "Đăng xuất"
-        },
-        {
-          "den": "welcome",
-          "nhan": "Đăng xuất bản trải nghiệm"
         }
       ],
       "di_toi": [
@@ -608,52 +366,30 @@
       ],
       "man": "finance",
       "nhan": [
-        "1 chuyến đi ·",
-        "1 chuyến đi · … đã lưu · … ảnh",
-        "Bio",
         "Bạn bè",
         "Bản dựng",
         "Bản dựng …",
-        "Chi theo nhóm",
         "Chưa có khoản chuyển nào được xác nhận là đã về.",
         "Chưa đọc được sổ",
-        "Chỉnh hồ sơ",
         "Cài đặt",
         "Cá nhân",
         "Các số trên đọc từ sổ cái, không phải số dư ngân hàng.",
-        "Giao dịch gần đây",
-        "Gần nhất",
-        "Huy hiệu của bạn",
-        "Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ.",
         "Mở Khám phá",
-        "Mở chuyến …",
-        "Sắp tới",
-        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa ghi vào sổ. Đây không phải số dư ngân hàng.",
         "Sở thích",
-        "Team Đà Lạt",
         "Thành tích",
         "Tiền đã về",
         "Tài chính của tôi",
         "Tài khoản",
-        "Tên",
         "Tường của tôi",
         "Xem quyết toán",
-        "Xong",
         "dau-van-cay",
-        "nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.",
-        "«…»: còn … … nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.",
-        "»: còn",
         "Đang xem với tư cách",
         "Đang xem với tư cách ….",
         "Đã lưu",
-        "Đã mở",
         "Đăng xuất",
-        "Đăng xuất bản trải nghiệm",
-        "đã lưu ·",
-        "ảnh",
+        "Đăng xuất kết thúc phiên đăng nhập, xoá lựa chọn trên máy này rồi đưa về màn chào.",
         "… lời mời đang chờ",
-        "… địa điểm",
-        "…/… đã mở"
+        "… địa điểm"
       ],
       "tep": [
         "app/finance.tsx",
@@ -749,10 +485,6 @@
           "nhan": "Xem hồ sơ"
         },
         {
-          "den": "groups/[id]/wall",
-          "nhan": "Thông tin nhóm"
-        },
-        {
           "den": "people/[id]",
           "nhan": "Thành viên nhóm"
         },
@@ -763,74 +495,35 @@
         {
           "den": "settings/da-chan",
           "nhan": "Xem danh sách đã chặn"
-        },
-        {
-          "den": "votes/[id]",
-          "nhan": "Bình chọn"
-        },
-        {
-          "den": "votes/[id]",
-          "nhan": "Mở bình chọn"
         }
       ],
       "di_toi": [
         "groups/[id]/members",
         "groups/[id]/to-giay",
-        "groups/[id]/wall",
         "messages",
         "outings/[id]",
         "outings/new",
         "people/[id]",
-        "settings/da-chan",
-        "votes/[id]"
+        "settings/da-chan"
       ],
       "man": "groups/[id]/chat",
       "nhan": [
-        ". Chưa gửi đi đâu.",
-        "17 - 19/10/2026 · 3 ngày 2 đêm",
-        "3 ngày 2 đêm · đồ ăn local · săn mây",
-        "AI nháp",
-        "BBQ tối thứ Bảy ở đâu?",
         "Báo cáo tin nhắn",
-        "Bình chọn",
         "Bạn có thể tiếp tục soạn tin trong lúc chờ.",
-        "Bạn đã chọn",
-        "Bạn đã chọn …",
         "Bỏ",
         "Bỏ trả lời",
-        "Chi phí",
-        "Chuyến đi sắp tới · 17 - 19/10/2026",
         "Chưa mã hoá đầu cuối",
-        "Chỉnh lịch trình",
-        "Cuối tuần tháng 10 đi Đà Lạt không mọi người?",
         "Cài đặt cuộc trò chuyện",
         "Cài đặt nhóm",
-        "Dùng plan này",
-        "Dữ liệu demo · AI nháp",
         "Gửi tin nhắn",
-        "Hôm nay",
-        "Lên",
-        "Lịch trình AI",
-        "Mở bình chọn",
-        "Mở chuyến …",
-        "Nhắn Team Đà Lạt...",
         "Nhắn cho hội…",
         "Nhắn cho …",
-        "Nhắn …...",
-        "Phiếu",
-        "Phiếu …. Chưa gửi đi đâu.",
-        "Plan xịn đó, mình bình chọn chỗ BBQ trước đi.",
         "Quay lại",
-        "Rảnh. Để Nếp phác một tờ rồi mình sửa.",
         "Rủ hội một buổi",
-        "Rủ Đi AI",
         "Rủ Đi AI chưa nhận lời nhờ",
-        "Rủ Đi AI phác theo quãng đường. Nét chì là nháp: nhóm sửa được trước khi chốt.",
-        "Rủ Đi đã phác một plan",
         "Rủ đi một buổi",
         "Thành viên nhóm",
         "Thêm vào cuộc trò chuyện",
-        "Thông tin nhóm",
         "Thử lại",
         "Thử lại lời nhờ",
         "Tin mới nhất",
@@ -840,20 +533,10 @@
         "Trích: …",
         "Trả lời:",
         "Trả lời: …",
-        "Tuần này tối thứ Bảy rảnh không?",
         "Tự tạo kèo",
-        "Vì sao phác vậy",
         "Về tin nhắn mới nhất",
-        "Vị trí",
         "Xem danh sách đã chặn",
         "Xem hồ sơ",
-        "Xem lịch trình",
-        "Xong chỉnh",
-        "Xuống",
-        "Xác nhận lựa chọn của tôi",
-        "Xóa",
-        "dự kiến một người · số tham chiếu của chuyến",
-        "phiếu của bạn trên bản này",
         "· Đang nối lại",
         "Ô soạn tin",
         "Đang gửi…",
@@ -861,22 +544,13 @@
         "Đang trả lời",
         "Đang trả lời …",
         "Đang tải tin cũ...",
-        "Đi chứ! Tớ vote săn mây với BBQ nha 🌤️",
-        "Đã xác nhận",
-        "Đính kèm",
         "Đóng công cụ chat",
-        "Đóng tệp đính kèm",
-        "Để Rủ Đi gom gu rồi lên lịch trình thử nhé.",
-        "Ưu tiên đồ ăn local và săn mây theo gu nhóm; các điểm xếp gần nhau để đỡ mệt.",
-        "Ảnh",
         "Ảnh này máy không mở được.",
         "Ảnh trong nhóm",
-        "Ảnh: …",
-        "… phiếu của bạn trên bản này"
+        "Ảnh: …"
       ],
       "tep": [
         "app/groups/[id]/chat.tsx",
-        "src/rudi/screens/Group.tsx",
         "src/rudi/screens/chat/GroupChatLive.tsx"
       ]
     },
@@ -978,10 +652,6 @@
       ],
       "man": "groups/[id]/to-giay",
       "nhan": [
-        "(Bản trải nghiệm) Người kia xem",
-        "(Bản trải nghiệm) Người kia đề nghị sửa giờ",
-        "(Bản trải nghiệm) Người kia đồng ý",
-        "Bản trải nghiệm: đóng vai người ấy",
         "Chuyện của hai mình",
         "Chưa có tờ nào tuần này",
         "Cài đặt sổ",
@@ -999,7 +669,6 @@
         "Rủ đi chơi",
         "Sổ này đã dừng",
         "Sổ này đã đóng",
-        "Thôi",
         "Tin nhắn",
         "Tuần này",
         "Tờ giấy cũ · chỉ đọc",
@@ -1008,7 +677,6 @@
         "Tờ đã khép",
         "Xem lời đề nghị",
         "Đóng sổ",
-        "Đóng vai người ấy",
         "Đề nghị lập sổ"
       ],
       "tep": [
@@ -1019,105 +687,44 @@
     {
       "canh": [
         {
-          "den": "groups/[id]/wall",
-          "nhan": "Đăng vào tường nhóm"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Chia sẻ khoảnh khắc với cả nhóm"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Chia sẻ … ảnh"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Thêm khoảnh khắc"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Thêm ảnh"
-        },
-        {
           "den": "moments/new",
           "nhan": "Thả khoảnh khắc"
         }
       ],
       "di_toi": [
-        "groups/[id]/wall",
+        "messages",
         "moments/new"
       ],
       "man": "groups/[id]/wall",
       "nhan": [
-        "17 - 19/10/2026 · … ảnh",
-        "Album Đà Lạt",
-        "Bình luận",
         "Check-in",
         "Check-in ở đâu?",
-        "Chia sẻ khoảnh khắc",
-        "Chia sẻ khoảnh khắc với cả nhóm",
-        "Chia sẻ khoảnh khắc với cả nhóm...",
-        "Chia sẻ với",
-        "Chia sẻ … ảnh",
-        "Chuyện của hội mình",
         "Chưa có bình luận. Viết câu đầu tiên.",
         "Chưa có kỷ niệm nào",
         "Chưa đọc được tường",
-        "Chọn ảnh",
         "Chọn …",
-        "Gắn thẻ bạn bè",
         "Gửi bình luận",
         "Không có chỗ nào khớp «",
         "Không có chỗ nào khớp «…». Thử tên ngắn hơn nhé.",
-        "Kể hội bạn nghe về khoảnh khắc này...",
         "Kỷ niệm của hai bạn",
         "Một câu (không bắt buộc)",
-        "Mới trước",
-        "Mở album",
-        "Mở ảnh …",
-        "Những ngày mình đi cùng nhau",
-        "Team Đà Lạt",
-        "Theo ngày",
-        "Thêm khoảnh khắc",
-        "Thêm ảnh",
-        "Thích",
         "Thôi",
         "Thả khoảnh khắc",
         "Tìm chỗ bạn đang ở",
-        "Tùy chọn bài viết",
-        "Tùy chọn nhóm",
         "Tường nhóm",
         "Tải thêm kỷ niệm cũ hơn",
         "Viết bình luận…",
-        "Viết vài dòng",
         "Ví dụ: Ốc ở đây ngon",
-        "Vị trí demo",
-        "check-in",
-        "người khác · 4 bình luận",
-        "thành viên · 1 chuyến đi",
-        "và",
         "». Thử tên ngắn hơn nhé.",
         "Ô câu check-in",
         "Ô tìm chỗ check-in",
         "Ô viết bình luận",
         "Đang đọc bình luận…",
         "Đang đọc danh mục…",
-        "Đà Lạt ·",
-        "Đà Lạt · …",
-        "Đà Lạt, Lâm Đồng",
-        "Đóng chọn ảnh",
-        "Đăng check-in",
-        "Đăng vào tường nhóm",
-        "ảnh",
-        "ảnh ·",
-        "… thành viên · 1 chuyến đi",
-        "… và … người khác · 4 bình luận",
-        "… ảnh · … check-in",
-        "… ảnh …"
+        "Đăng check-in"
       ],
       "tep": [
         "app/groups/[id]/wall.tsx",
-        "src/rudi/screens/Memories.tsx",
         "src/rudi/screens/ky-niem/GroupWallLive.tsx"
       ]
     },
@@ -1195,21 +802,15 @@
         {
           "den": "moi",
           "nhan": "Tôi có lời mời"
-        },
-        {
-          "den": "personalization",
-          "nhan": "Vào bản trải nghiệm Team Đà Lạt"
         }
       ],
       "di_toi": [
         "moi",
-        "otp",
-        "personalization"
+        "otp"
       ],
       "man": "login",
       "nhan": [
         "Chào bạn",
-        "Cửa dev: dữ liệu demo",
         "Gửi mã",
         "Nhập số di động để nhận mã 6 số qua tin nhắn. Chưa có tài khoản thì Rủ Đi tạo luôn, không cần mật khẩu.",
         "Số di động của bạn",
@@ -1217,7 +818,6 @@
         "Số điện thoại chỉ dùng để gửi mã và không hiển thị cho người khác.",
         "Tiếp tục với Google",
         "Tôi có lời mời",
-        "Vào bản trải nghiệm Team Đà Lạt",
         "hoặc",
         "Ô số điện thoại"
       ],
@@ -1233,100 +833,35 @@
           "nhan": "Thêm bạn bằng số điện thoại"
         },
         {
-          "den": "groups/[id]/wall",
-          "nhan": "Thông tin nhóm"
-        },
-        {
           "den": "groups/new",
           "nhan": "Tạo nhóm"
         },
         {
           "den": "moi",
           "nhan": "Tôi có lời mời"
-        },
-        {
-          "den": "votes/[id]",
-          "nhan": "Bình chọn"
-        },
-        {
-          "den": "votes/[id]",
-          "nhan": "Mở bình chọn"
         }
       ],
       "di_toi": [
         "friends/add",
         "groups/[id]/chat",
-        "groups/[id]/to-giay",
-        "groups/[id]/wall",
         "groups/new",
-        "moi",
-        "votes/[id]"
+        "moi"
       ],
       "man": "messages",
       "nhan": [
-        ". Chưa gửi đi đâu.",
-        "17 - 19/10/2026 · 3 ngày 2 đêm",
-        "3 ngày 2 đêm · đồ ăn local · săn mây",
-        "AI nháp",
-        "BBQ tối thứ Bảy ở đâu?",
-        "Bình chọn",
-        "Bạn đã chọn",
-        "Bạn đã chọn …",
-        "Chi phí",
-        "Chuyến đi sắp tới · 17 - 19/10/2026",
         "Chưa có nhóm nào",
         "Chưa đọc được danh sách nhóm",
-        "Chỉnh lịch trình",
-        "Cuối tuần tháng 10 đi Đà Lạt không mọi người?",
-        "Dùng plan này",
-        "Dữ liệu demo · AI nháp",
-        "Gửi tin nhắn",
-        "Hôm nay",
-        "Lên",
-        "Lịch trình AI",
-        "Mở bình chọn",
-        "Mở chuyến …",
         "Mở cuộc trò chuyện với …",
         "Mở nhóm …",
-        "Nhắn Team Đà Lạt...",
-        "Nhắn …...",
-        "Phiếu",
-        "Phiếu …. Chưa gửi đi đâu.",
-        "Plan xịn đó, mình bình chọn chỗ BBQ trước đi.",
-        "Rảnh. Để Nếp phác một tờ rồi mình sửa.",
-        "Rủ Đi AI",
-        "Rủ Đi AI phác theo quãng đường. Nét chì là nháp: nhóm sửa được trước khi chốt.",
-        "Rủ Đi đã phác một plan",
         "Thêm bạn bằng số điện thoại",
-        "Thông tin nhóm",
         "Tin nhắn",
-        "Tuần này tối thứ Bảy rảnh không?",
         "Tôi có lời mời",
         "Tạo nhóm",
-        "Vì sao phác vậy",
-        "Vị trí",
-        "Xem lịch trình",
-        "Xong chỉnh",
-        "Xuống",
-        "Xác nhận lựa chọn của tôi",
-        "Xóa",
-        "dự kiến một người · số tham chiếu của chuyến",
-        "phiếu của bạn trên bản này",
-        "Ô soạn tin",
-        "Đi chứ! Tớ vote săn mây với BBQ nha 🌤️",
-        "Đã xác nhận",
-        "Đính kèm",
-        "Đóng tệp đính kèm",
-        "Để Rủ Đi gom gu rồi lên lịch trình thử nhé.",
         "Đồng ý vào nhóm",
-        "Ưu tiên đồ ăn local và săn mây theo gu nhóm; các điểm xếp gần nhau để đỡ mệt.",
-        "Ảnh",
-        "… phiếu của bạn trên bản này",
         "… tin chưa đọc"
       ],
       "tep": [
         "app/(tabs)/messages.tsx",
-        "src/rudi/screens/Group.tsx",
         "src/rudi/screens/groups/Conversations.tsx"
       ]
     },
@@ -1335,10 +870,6 @@
         {
           "den": "explore",
           "nhan": "Vào nhóm"
-        },
-        {
-          "den": "welcome",
-          "nhan": "Xem bản trải nghiệm"
         },
         {
           "den": "welcome",
@@ -1358,7 +889,6 @@
         "Mã lời mời",
         "Nhận lời mời",
         "Vào nhóm",
-        "Xem bản trải nghiệm",
         "Xong, bạn đã ở trong nhóm",
         "Đã đăng nhập",
         "Để sau",
@@ -1372,97 +902,36 @@
     {
       "canh": [
         {
-          "den": "groups/[id]/wall",
-          "nhan": "Đăng vào tường nhóm"
-        },
-        {
           "den": "messages",
           "nhan": "Tới Tin nhắn"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Chia sẻ khoảnh khắc với cả nhóm"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Chia sẻ … ảnh"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Thêm khoảnh khắc"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Thêm ảnh"
         }
       ],
       "di_toi": [
         "groups/[id]/wall",
-        "messages",
-        "moments/new"
+        "messages"
       ],
       "man": "moments/new",
       "nhan": [
         ". Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.",
-        "17 - 19/10/2026 · … ảnh",
-        "Album Đà Lạt",
-        "Bình luận",
-        "Chia sẻ khoảnh khắc",
-        "Chia sẻ khoảnh khắc với cả nhóm",
-        "Chia sẻ khoảnh khắc với cả nhóm...",
         "Chia sẻ ngay vào nhóm",
-        "Chia sẻ với",
-        "Chia sẻ … ảnh",
-        "Chuyện của hội mình",
         "Chưa chọn ảnh, chạm để chọn",
         "Chưa có ảnh. Chạm để chọn một tấm.",
         "Chọn ảnh",
         "Chọn ảnh khác",
         "Giữ một khoảnh khắc",
         "Giữ vào kỷ niệm của hai bạn",
-        "Gắn thẻ bạn bè",
-        "Kể hội bạn nghe về khoảnh khắc này...",
         "Một khoảnh khắc cho nhóm",
-        "Mới trước",
-        "Mở album",
-        "Mở ảnh …",
-        "Những ngày mình đi cùng nhau",
-        "Team Đà Lạt",
-        "Theo ngày",
-        "Thêm khoảnh khắc",
-        "Thêm ảnh",
-        "Thích",
+        "Sài Gòn về đêm",
         "Thả khoảnh khắc",
-        "Tùy chọn bài viết",
-        "Tùy chọn nhóm",
         "Tới Tin nhắn",
-        "Viết vài dòng",
         "Vào một nhóm trước",
-        "Vị trí demo",
-        "check-in",
-        "người khác · 4 bình luận",
-        "thành viên · 1 chuyến đi",
-        "và",
         "Ô câu chú thích",
-        "Đà Lạt về đêm",
-        "Đà Lạt ·",
-        "Đà Lạt · …",
-        "Đà Lạt, Lâm Đồng",
-        "Đóng chọn ảnh",
         "Đăng vào",
-        "Đăng vào tường nhóm",
         "Đăng vào …. Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.",
-        "Ảnh đã chọn",
-        "ảnh",
-        "ảnh ·",
-        "… thành viên · 1 chuyến đi",
-        "… và … người khác · 4 bình luận",
-        "… ảnh · … check-in",
-        "… ảnh …"
+        "Ảnh đã chọn"
       ],
       "tep": [
         "app/moments/new.tsx",
-        "src/rudi/screens/Memories.tsx",
         "src/rudi/screens/ky-niem/ShareMomentLive.tsx"
       ]
     },
@@ -1614,26 +1083,6 @@
     {
       "canh": [
         {
-          "den": "check-ins/new",
-          "nhan": "Check-in nhóm"
-        },
-        {
-          "den": "check-ins/new",
-          "nhan": "Đến nơi rồi?"
-        },
-        {
-          "den": "create",
-          "nhan": "Tạo mới"
-        },
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Tôi đã tới"
-        },
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Tường nhóm"
-        },
-        {
           "den": "outings/[id]",
           "nhan": "Mở kèo đã tạo"
         },
@@ -1643,105 +1092,52 @@
         }
       ],
       "di_toi": [
-        "check-ins/new",
-        "create",
-        "groups/[id]/wall",
         "outings/[id]",
         "outings/new",
-        "places/[id]",
         "plan"
       ],
       "man": "outings/new",
       "nhan": [
-        ". Chưa gửi push.",
         "AI chưa ghi giờ theo dạng 24 giờ. Điền giờ cho mỗi chặng để hội cùng theo được.",
-        "Ai đã tới",
-        "Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái",
-        "Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái ….",
         "Bớt một người",
-        "Check-in nhóm",
-        "Chia vị trí",
-        "Chưa tới",
-        "Chọn tất cả",
+        "Cà phê cuối tuần",
         "Các chặng gốc sẽ theo sang kèo. Hội có thể sửa giờ, đổi chỗ và sắp xếp lại trong lịch trình.",
         "Các chặng trong tờ hẹn",
-        "Dừng chia sẻ",
-        "Dựa trên gu của",
-        "Dựa trên gu của … thành viên; bạn sửa được trước khi chốt.",
         "Giờ · …",
         "Hai bạn đi đâu?",
         "Hội mình đi đâu?",
         "Kèo mới",
         "Lời rủ sẽ hiện trên Lên plan",
         "Mở kèo đã tạo",
-        "Mở lịch trình AI",
-        "Ngày về",
-        "Ngày đi",
-        "Ngân sách mỗi người",
-        "Nhắc thành viên",
-        "Nhờ Rủ Đi gợi ý lịch trình",
         "Rủ",
-        "Rủ hội bạn",
         "Rủ … đi",
-        "Still Cafe · 10:00",
         "Sửa tờ hẹn",
         "Thêm một người",
-        "Tên cuộc hẹn",
-        "Tôi đã tới",
-        "Tùy chọn",
-        "Tùy chọn chuyến đi",
-        "Tường nhóm",
-        "Tạo cuộc hẹn",
         "Tạo kèo",
-        "Tạo mới",
         "Tờ hẹn này đã thành kèo. Mọi người tiếp tục sửa trên cùng một lịch trình.",
         "Từ nét chì, thành lời hẹn.",
         "Viết kèo mới",
         "Vé",
-        "Ví dụ: Đà Lạt cuối tuần",
         "Xác nhận và tạo kèo",
-        "chưa check-in.",
-        "dự kiến một người",
         "hiện có",
-        "hoạt động",
         "hoặc gõ số đồng",
         "mỗi người khoảng",
         "một người",
         "người",
-        "người được chọn",
         "người,",
         "người; bớt đi nếu chỉ một phần đi.",
-        "tham gia",
-        "thành viên; bạn sửa được trước khi chốt.",
         "tới",
         "từ",
         "ví dụ 250.000",
-        "· 3 ngày 2 đêm ·",
         "Ô ngân sách một người",
         "Ô số người",
         "Ô tên kèo",
-        "Điểm đến",
-        "Điểm đến tiếp theo",
-        "Đà Lạt cuối tuần",
-        "Đà Lạt, Lâm Đồng",
-        "Đã ghi nhắc",
-        "Đã ghi nhắc … người …. Chưa gửi push.",
-        "Đã tới",
-        "Đến nơi rồi?",
-        "Đủ 8 người.",
         "đi",
-        "… chưa check-in.",
         "… hiện có … người; bớt đi nếu chỉ một phần đi.",
-        "… hoạt động",
-        "… một người",
-        "… tham gia",
-        "… · 3 ngày 2 đêm · … người",
-        "…/… người được chọn",
-        "…/… thành viên đã tới"
+        "… một người"
       ],
       "tep": [
         "app/outings/new.tsx",
-        "src/rudi/screens/Outing.tsx",
         "src/rudi/screens/keo/CreateOutingLive.tsx"
       ]
     },
@@ -1817,7 +1213,7 @@
     {
       "canh": [],
       "di_toi": [
-        "explore"
+        "login"
       ],
       "man": "personalization",
       "nhan": [
@@ -1837,95 +1233,46 @@
     {
       "canh": [
         {
-          "den": "ai-match",
-          "nhan": "Match gu cả nhóm bằng AI"
-        },
-        {
           "den": "outings/chon",
           "nhan": "Thêm vào kèo"
         }
       ],
       "di_toi": [
-        "ai-match",
         "groups/[id]/to-giay",
         "moments/new",
-        "outings/chon",
-        "places/[id]"
+        "outings/chon"
       ],
       "man": "places/[id]",
       "nhan": [
-        ": khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
-        "Bỏ lưu",
         "Bỏ lưu địa điểm này",
-        "Chia sẻ",
-        "Chưa có gợi ý",
         "Chưa có điểm theo gu nhóm cho nơi này. Ở Khám phá, hỏi Rủ Đi AI một câu để nó chấm.",
         "Chưa mở được địa điểm",
-        "Chưa thấy nơi phù hợp",
         "Chỉ đường",
-        "Chỗ hay ở Đà Lạt",
-        "Gợi ý mẫu cho",
-        "Gợi ý mẫu cho …: khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.",
         "Lưu",
-        "Lưu địa điểm",
         "Lưu địa điểm này",
-        "Match gu cả nhóm",
-        "Match gu cả nhóm bằng AI",
-        "Mẫu minh hoạ",
-        "Mở bộ lọc",
         "Mở địa chỉ trên bản đồ",
-        "Nhóm 8 người ngồi được một bàn, món nướng chia nhau dễ.",
-        "Quay lại",
         "Rủ … tới đây",
         "Thêm một ảnh nữa",
         "Thêm vào kèo",
-        "Thêm vào …",
         "Thêm ảnh của nhóm ở đây",
-        "Thông báo",
-        "Trong 2 km",
-        "Tối nay cả hội đi đâu?",
-        "Từ 90% hợp gu",
         "Vì sao hợp nhóm?",
-        "Vì sao hợp …?",
-        "Xóa lọc",
         "Đang mở",
-        "Đây là gợi ý có thể chỉnh. Rủ Đi không tự thêm nơi vào kế hoạch của nhóm.",
         "Đã lưu",
-        "Đã thêm vào …",
         "Đã đóng",
-        "Đóng bộ lọc",
         "Địa điểm",
         "Ảnh của nhóm bạn",
-        "… kết quả phù hợp",
         "… nhận xét"
       ],
       "tep": [
         "app/places/[id]/index.tsx",
-        "src/rudi/screens/Discovery.tsx",
         "src/rudi/screens/explore/PlaceDetailLive.tsx"
       ]
     },
     {
       "canh": [
         {
-          "den": "check-ins/new",
-          "nhan": "Check-in nhóm"
-        },
-        {
-          "den": "check-ins/new",
-          "nhan": "Đến nơi rồi?"
-        },
-        {
           "den": "create",
           "nhan": "Tạo mới"
-        },
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Tôi đã tới"
-        },
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Tường nhóm"
         },
         {
           "den": "messages",
@@ -1937,80 +1284,28 @@
         }
       ],
       "di_toi": [
-        "check-ins/new",
         "create",
-        "groups/[id]/wall",
         "messages",
         "outings/[id]",
-        "outings/new",
-        "places/[id]"
+        "outings/new"
       ],
       "man": "plan",
       "nhan": [
-        ". Chưa gửi push.",
-        "Ai đã tới",
-        "Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái",
-        "Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái ….",
-        "Check-in nhóm",
-        "Chia vị trí",
         "Chưa có kèo nào",
-        "Chưa tới",
         "Chưa đọc được kèo",
-        "Chọn tất cả",
-        "Dừng chia sẻ",
-        "Dựa trên gu của",
-        "Dựa trên gu của … thành viên; bạn sửa được trước khi chốt.",
         "Hẹn của hai bạn",
-        "Hội mình đi đâu?",
         "Lên plan",
         "Mở kèo …",
-        "Mở lịch trình AI",
-        "Ngày về",
-        "Ngày đi",
-        "Ngân sách mỗi người",
-        "Nhắc thành viên",
-        "Nhờ Rủ Đi gợi ý lịch trình",
-        "Rủ hội bạn",
         "Sau đó",
-        "Still Cafe · 10:00",
-        "Tên cuộc hẹn",
-        "Tôi đã tới",
-        "Tùy chọn",
-        "Tùy chọn chuyến đi",
-        "Tường nhóm",
-        "Tạo cuộc hẹn",
         "Tạo kèo",
         "Tạo mới",
         "Tới Tin nhắn",
-        "Ví dụ: Đà Lạt cuối tuần",
-        "chưa check-in.",
-        "dự kiến một người",
-        "hoạt động",
         "người",
-        "người được chọn",
-        "tham gia",
-        "thành viên; bạn sửa được trước khi chốt.",
-        "· 3 ngày 2 đêm ·",
-        "Điểm đến",
-        "Điểm đến tiếp theo",
-        "Đà Lạt, Lâm Đồng",
-        "Đã ghi nhắc",
-        "Đã ghi nhắc … người …. Chưa gửi push.",
         "Đã qua",
-        "Đã tới",
-        "Đến nơi rồi?",
-        "Đủ 8 người.",
-        "… chưa check-in.",
-        "… hoạt động",
-        "… người",
-        "… tham gia",
-        "… · 3 ngày 2 đêm · … người",
-        "…/… người được chọn",
-        "…/… thành viên đã tới"
+        "… người"
       ],
       "tep": [
         "app/(tabs)/plan.tsx",
-        "src/rudi/screens/Outing.tsx",
         "src/rudi/screens/keo/PlanLive.tsx"
       ]
     },
@@ -2149,10 +1444,6 @@
         {
           "den": "welcome",
           "nhan": "Đăng xuất"
-        },
-        {
-          "den": "welcome",
-          "nhan": "Đăng xuất bản trải nghiệm"
         }
       ],
       "di_toi": [
@@ -2167,52 +1458,30 @@
       ],
       "man": "profile",
       "nhan": [
-        "1 chuyến đi ·",
-        "1 chuyến đi · … đã lưu · … ảnh",
-        "Bio",
         "Bạn bè",
         "Bản dựng",
         "Bản dựng …",
-        "Chi theo nhóm",
         "Chưa có khoản chuyển nào được xác nhận là đã về.",
         "Chưa đọc được sổ",
-        "Chỉnh hồ sơ",
         "Cài đặt",
         "Cá nhân",
         "Các số trên đọc từ sổ cái, không phải số dư ngân hàng.",
-        "Giao dịch gần đây",
-        "Gần nhất",
-        "Huy hiệu của bạn",
-        "Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ.",
         "Mở Khám phá",
-        "Mở chuyến …",
-        "Sắp tới",
-        "Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa ghi vào sổ. Đây không phải số dư ngân hàng.",
         "Sở thích",
-        "Team Đà Lạt",
         "Thành tích",
         "Tiền đã về",
         "Tài chính của tôi",
         "Tài khoản",
-        "Tên",
         "Tường của tôi",
         "Xem quyết toán",
-        "Xong",
         "dau-van-cay",
-        "nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.",
-        "«…»: còn … … nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.",
-        "»: còn",
         "Đang xem với tư cách",
         "Đang xem với tư cách ….",
         "Đã lưu",
-        "Đã mở",
         "Đăng xuất",
-        "Đăng xuất bản trải nghiệm",
-        "đã lưu ·",
-        "ảnh",
+        "Đăng xuất kết thúc phiên đăng nhập, xoá lựa chọn trên máy này rồi đưa về màn chào.",
         "… lời mời đang chờ",
-        "… địa điểm",
-        "…/… đã mở"
+        "… địa điểm"
       ],
       "tep": [
         "app/(tabs)/profile.tsx",
@@ -2357,82 +1626,34 @@
         {
           "den": "messages",
           "nhan": "Tới Tin nhắn"
-        },
-        {
-          "den": "settlements/[id]",
-          "nhan": "Xác nhận cách chia"
-        },
-        {
-          "den": "smart-split/[id]/assignment",
-          "nhan": "Dùng giấy mẫu"
         }
       ],
       "di_toi": [
         "batches/[id]",
-        "messages",
-        "settlements/[id]",
-        "smart-split/[id]/assignment"
+        "messages"
       ],
       "man": "settlements/[id]",
       "nhan": [
-        "Ai dùng món nào?",
-        "Bàn: 07",
-        "Bỏ hết",
         "Chi tiêu chung",
         "Chưa có sổ nào để quyết toán",
         "Chưa có đợt thu nào.",
         "Chưa phát thì chưa ai bị nhắn gì.",
         "Chưa đọc được các đợt thu của nhóm.",
         "Chưa đọc được sổ",
-        "Chọn ảnh bill",
         "Các khoản chuyển",
-        "Các khoản chuyển (chỉ bill Xóm Lèo)",
         "Cân lại chi tiêu",
-        "Cả nhóm",
-        "Cảm ơn quý khách!",
-        "Dùng giấy mẫu",
-        "Dữ liệu demo · nháp trên máy",
-        "Giấy mẫu Tiệm Nướng Xóm Lèo",
-        "HÓA ĐƠN THANH TOÁN",
-        "Không gồm homestay / xăng",
         "Muốn cân lại? Xem cách chuyển",
-        "MÓN",
         "Mọi khoản đã ghi đều đã vào một đợt thu ở trên: chưa có gì mới để gom.",
-        "Ngày: 17/10/2026 19:45",
-        "Người thu bill",
-        "Như món trên",
-        "Nhắc … người đang chờ",
         "Quyết toán",
-        "STT",
         "Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.",
         "Sổ không còn khoản nào ngoài đợt: không có gì để gom thêm.",
-        "Sửa người dùng …",
-        "THÀNH TIỀN",
-        "TIỆM NƯỚNG XÓM LÈO",
         "Tạo đợt thu từ sổ",
-        "TỔNG CỘNG",
-        "Tổng hóa đơn Xóm Lèo",
         "Tới Tin nhắn",
-        "Xem lại hóa đơn",
-        "Xác nhận cách chia",
-        "sẽ nhận (bill Xóm Lèo)",
-        "thành viên",
         "Đang đọc các đợt thu…",
-        "Đà Lạt, Lâm Đồng",
-        "Đánh dấu đã trả",
-        "Đánh dấu … đã trả",
-        "Đã nhắc … người …",
-        "Đã trả",
         "Đề xuất tính từ sổ, chưa phải nghĩa vụ: nghĩa vụ chỉ có khi một đợt thu được phát.",
         "Đợt thu",
-        "đang chờ ·",
-        "đã trả ·",
-        "“Đã trả” là xác nhận trong Rủ Đi, không phải bằng chứng chuyển tiền. Chuyển bằng cách nào là việc giữa hai người; app dừng ở phần của mỗi người.",
         "… Chưa phát thì chưa ai bị nhắn gì.",
-        "… chuyển cho …",
-        "… món · …",
-        "… sẽ nhận (bill Xóm Lèo)",
-        "… đã trả · … đang chờ · … thành viên"
+        "… chuyển cho …"
       ],
       "tep": [
         "app/settlements/[id]/index.tsx",
@@ -2440,91 +1661,14 @@
       ]
     },
     {
-      "canh": [
-        {
-          "den": "messages",
-          "nhan": "Tới Tin nhắn"
-        },
-        {
-          "den": "settlements/[id]",
-          "nhan": "Xác nhận cách chia"
-        },
-        {
-          "den": "smart-split/[id]/assignment",
-          "nhan": "Dùng giấy mẫu"
-        }
-      ],
+      "canh": [],
       "di_toi": [
-        "batches/[id]",
-        "messages",
-        "settlements/[id]",
-        "smart-split/[id]/assignment",
         "smart-split/[id]/review"
       ],
       "man": "smart-split/[id]/assignment",
-      "nhan": [
-        "Ai dùng món nào?",
-        "Bàn: 07",
-        "Bỏ hết",
-        "Chi tiêu chung",
-        "Chưa có sổ nào để quyết toán",
-        "Chưa có đợt thu nào.",
-        "Chưa phát thì chưa ai bị nhắn gì.",
-        "Chưa đọc được các đợt thu của nhóm.",
-        "Chưa đọc được sổ",
-        "Chọn ảnh bill",
-        "Các khoản chuyển",
-        "Các khoản chuyển (chỉ bill Xóm Lèo)",
-        "Cân lại chi tiêu",
-        "Cả nhóm",
-        "Cảm ơn quý khách!",
-        "Dùng giấy mẫu",
-        "Dữ liệu demo · nháp trên máy",
-        "Giấy mẫu Tiệm Nướng Xóm Lèo",
-        "HÓA ĐƠN THANH TOÁN",
-        "Không gồm homestay / xăng",
-        "Muốn cân lại? Xem cách chuyển",
-        "MÓN",
-        "Mọi khoản đã ghi đều đã vào một đợt thu ở trên: chưa có gì mới để gom.",
-        "Ngày: 17/10/2026 19:45",
-        "Người thu bill",
-        "Như món trên",
-        "Nhắc … người đang chờ",
-        "Quyết toán",
-        "STT",
-        "Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.",
-        "Sổ không còn khoản nào ngoài đợt: không có gì để gom thêm.",
-        "Sửa người dùng …",
-        "THÀNH TIỀN",
-        "TIỆM NƯỚNG XÓM LÈO",
-        "Tạo đợt thu từ sổ",
-        "TỔNG CỘNG",
-        "Tổng hóa đơn Xóm Lèo",
-        "Tới Tin nhắn",
-        "Xem lại hóa đơn",
-        "Xác nhận cách chia",
-        "sẽ nhận (bill Xóm Lèo)",
-        "thành viên",
-        "Đang đọc các đợt thu…",
-        "Đà Lạt, Lâm Đồng",
-        "Đánh dấu đã trả",
-        "Đánh dấu … đã trả",
-        "Đã nhắc … người …",
-        "Đã trả",
-        "Đề xuất tính từ sổ, chưa phải nghĩa vụ: nghĩa vụ chỉ có khi một đợt thu được phát.",
-        "Đợt thu",
-        "đang chờ ·",
-        "đã trả ·",
-        "“Đã trả” là xác nhận trong Rủ Đi, không phải bằng chứng chuyển tiền. Chuyển bằng cách nào là việc giữa hai người; app dừng ở phần của mỗi người.",
-        "… Chưa phát thì chưa ai bị nhắn gì.",
-        "… chuyển cho …",
-        "… món · …",
-        "… sẽ nhận (bill Xóm Lèo)",
-        "… đã trả · … đang chờ · … thành viên"
-      ],
+      "nhan": [],
       "tep": [
-        "app/smart-split/[id]/assignment.tsx",
-        "src/rudi/screens/Bill.tsx"
+        "app/smart-split/[id]/assignment.tsx"
       ]
     },
     {
@@ -2540,131 +1684,68 @@
         {
           "den": "settlements/[id]",
           "nhan": "Xem quyết toán"
-        },
-        {
-          "den": "settlements/[id]",
-          "nhan": "Xác nhận cách chia"
-        },
-        {
-          "den": "smart-split/[id]/assignment",
-          "nhan": "Dùng giấy mẫu"
         }
       ],
       "di_toi": [
-        "batches/[id]",
         "messages",
         "plan",
-        "settlements/[id]",
-        "smart-split/[id]/assignment"
+        "settlements/[id]"
       ],
       "man": "smart-split/[id]/review",
       "nhan": [
-        "Ai dùng món nào?",
         "Ai đã trả bill?",
-        "Bàn: 07",
         "Bắt đầu bill mới",
         "Bỏ hết",
         "Bỏ món này",
         "Bỏ món …",
         "Bỏ, làm bill mới",
-        "Chi tiêu chung",
         "Chia hóa đơn",
-        "Chưa có sổ nào để quyết toán",
-        "Chưa có đợt thu nào.",
         "Chưa gửi gì cho tới khi bạn bấm dùng.",
-        "Chưa phát thì chưa ai bị nhắn gì.",
-        "Chưa đọc được các đợt thu của nhóm.",
-        "Chưa đọc được sổ",
         "Chạm ghế hoặc kéo món tới ghế. Tổng không đổi.",
         "Chọn ảnh bill",
         "Chọn ảnh bill khác",
         "Chọn ảnh khác",
         "Chụp hoặc chọn ảnh hoá đơn để Rủ Đi đọc từng món, hoặc gõ tay.",
-        "Các khoản chuyển",
-        "Các khoản chuyển (chỉ bill Xóm Lèo)",
-        "Cân lại chi tiêu",
         "Cả hai",
         "Cả nhóm",
-        "Cảm ơn quý khách!",
-        "Dùng giấy mẫu",
         "Dùng ảnh này",
-        "Dữ liệu demo · nháp trên máy",
         "Ghi vào sổ",
         "Ghi vào sổ là tạo khoản chi với đúng các số ở trên; tổng được kiểm cho khớp trước khi ghi.",
-        "Giấy mẫu Tiệm Nướng Xóm Lèo",
         "Giữ lại",
         "Gọi khoản này là",
-        "HÓA ĐƠN THANH TOÁN",
-        "Không gồm homestay / xăng",
-        "Muốn cân lại? Xem cách chuyển",
-        "MÓN",
         "Món",
-        "Mọi khoản đã ghi đều đã vào một đợt thu ở trên: chưa có gì mới để gom.",
-        "Ngày: 17/10/2026 19:45",
-        "Người thu bill",
         "Người trả …",
         "Như món trên",
         "Nhập tay",
-        "Nhắc … người đang chờ",
         "Phần của mỗi người",
-        "Quyết toán",
         "Rủ Đi đọc từng món trên hoá đơn. Bước sau, cả nhóm chọn ai dùng món nào; máy chủ chia mỗi món cho đúng những người đó, lẻ đồng dồn về một người, và tổng luôn khớp hoá đơn.",
-        "STT",
         "Số phần",
-        "Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.",
-        "Sổ không còn khoản nào ngoài đợt: không có gì để gom thêm.",
         "Sửa người dùng …",
-        "THÀNH TIỀN",
-        "TIỆM NƯỚNG XÓM LÈO",
         "Thành tiền (đồng)",
         "Thêm món",
         "Tiếp tục bill này",
         "Tiếp tục bill đang gõ",
         "Tiếp tục bill đang gõ, … món",
         "Tiếp: ai dùng món nào?",
-        "Tạo đợt thu từ sổ",
-        "TỔNG CỘNG",
-        "Tổng hóa đơn Xóm Lèo",
         "Tới Tin nhắn",
         "Vào một nhóm trước",
         "Ví dụ: Bún bò",
         "Ví dụ: Tối nay Xóm Lào",
         "Về Tin nhắn",
         "Xem kết quả",
-        "Xem lại hóa đơn",
         "Xem quyết toán",
-        "Xác nhận cách chia",
-        "sẽ nhận (bill Xóm Lèo)",
-        "thành viên",
         "Ô số lượng món …",
         "Ô tiền món …",
         "Ô tên khoản chi",
         "Ô tên món …",
-        "Đang đọc các đợt thu…",
-        "Đà Lạt, Lâm Đồng",
-        "Đánh dấu đã trả",
-        "Đánh dấu … đã trả",
         "Đã ghi: …",
-        "Đã nhắc … người …",
-        "Đã trả",
         "Đã trả bill",
-        "Đề xuất tính từ sổ, chưa phải nghĩa vụ: nghĩa vụ chỉ có khi một đợt thu được phát.",
         "Đọc lại ảnh này",
-        "Đợt thu",
-        "đang chờ ·",
-        "đã trả ·",
         "Ảnh bill đã chọn",
-        "Ảnh này đúng bill chứ?",
-        "“Đã trả” là xác nhận trong Rủ Đi, không phải bằng chứng chuyển tiền. Chuyển bằng cách nào là việc giữa hai người; app dừng ở phần của mỗi người.",
-        "… Chưa phát thì chưa ai bị nhắn gì.",
-        "… chuyển cho …",
-        "… món · …",
-        "… sẽ nhận (bill Xóm Lèo)",
-        "… đã trả · … đang chờ · … thành viên"
+        "Ảnh này đúng bill chứ?"
       ],
       "tep": [
         "app/smart-split/[id]/review.tsx",
-        "src/rudi/screens/Bill.tsx",
         "src/rudi/screens/chia-bill/ChiaBillLive.tsx"
       ]
     },
@@ -2718,337 +1799,63 @@
       ]
     },
     {
-      "canh": [
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Đăng vào tường nhóm"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Chia sẻ khoảnh khắc với cả nhóm"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Chia sẻ … ảnh"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Thêm khoảnh khắc"
-        },
-        {
-          "den": "moments/new",
-          "nhan": "Thêm ảnh"
-        }
-      ],
+      "canh": [],
       "di_toi": [
-        "groups/[id]/wall",
-        "moments/new",
+        "plan",
         "trips/[id]/album"
       ],
       "man": "trips/[id]/album",
       "nhan": [
-        "17 - 19/10/2026 · … ảnh",
         "Album",
         "Album chuyến đi",
-        "Album Đà Lạt",
-        "Bình luận",
-        "Chia sẻ khoảnh khắc",
-        "Chia sẻ khoảnh khắc với cả nhóm",
-        "Chia sẻ khoảnh khắc với cả nhóm...",
-        "Chia sẻ với",
-        "Chia sẻ … ảnh",
-        "Chuyện của hội mình",
         "Chưa check-in ở đâu trong kèo này.",
         "Chưa có khoảnh khắc",
         "Chưa mở được album",
         "Chưa đọc được album",
-        "Chọn ảnh",
         "Chỗ đã tới",
         "Dựng lại",
         "Dựng thước phim",
-        "Gắn thẻ bạn bè",
-        "Kể hội bạn nghe về khoảnh khắc này...",
-        "Mới trước",
-        "Mở album",
-        "Mở ảnh …",
-        "Những ngày mình đi cùng nhau",
-        "Team Đà Lạt",
-        "Theo ngày",
-        "Thêm khoảnh khắc",
-        "Thêm ảnh",
-        "Thích",
         "Thước phim",
-        "Tùy chọn bài viết",
-        "Tùy chọn nhóm",
-        "Viết vài dòng",
-        "Vị trí demo",
-        "Xem câu chuyện ảnh",
-        "check-in",
-        "người khác · 4 bình luận",
-        "thành viên · 1 chuyến đi",
-        "và",
-        "Đà Lạt ·",
-        "Đà Lạt · …",
-        "Đà Lạt, Lâm Đồng",
-        "Đóng chọn ảnh",
-        "Đăng vào tường nhóm",
-        "ảnh",
-        "ảnh ·",
-        "… thành viên · 1 chuyến đi",
-        "… và … người khác · 4 bình luận",
-        "… ảnh · … check-in",
-        "… ảnh …"
+        "Xem câu chuyện ảnh"
       ],
       "tep": [
         "app/trips/[id]/album.tsx",
-        "src/rudi/screens/Memories.tsx",
         "src/rudi/screens/ky-niem/AlbumLive.tsx"
       ]
     },
     {
-      "canh": [
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Thông tin nhóm"
-        },
-        {
-          "den": "votes/[id]",
-          "nhan": "Bình chọn"
-        },
-        {
-          "den": "votes/[id]",
-          "nhan": "Mở bình chọn"
-        }
-      ],
+      "canh": [],
       "di_toi": [
-        "groups/[id]/to-giay",
-        "groups/[id]/wall",
         "outings/[id]",
-        "plan",
-        "votes/[id]"
+        "plan"
       ],
       "man": "trips/[id]/itinerary",
-      "nhan": [
-        ". Chưa gửi đi đâu.",
-        "17 - 19/10/2026 · 3 ngày 2 đêm",
-        "3 ngày 2 đêm · đồ ăn local · săn mây",
-        "AI nháp",
-        "BBQ tối thứ Bảy ở đâu?",
-        "Bình chọn",
-        "Bạn đã chọn",
-        "Bạn đã chọn …",
-        "Chi phí",
-        "Chuyến đi sắp tới · 17 - 19/10/2026",
-        "Chỉnh lịch trình",
-        "Cuối tuần tháng 10 đi Đà Lạt không mọi người?",
-        "Dùng plan này",
-        "Dữ liệu demo · AI nháp",
-        "Gửi tin nhắn",
-        "Hôm nay",
-        "Lên",
-        "Lịch trình AI",
-        "Mở bình chọn",
-        "Mở chuyến …",
-        "Nhắn Team Đà Lạt...",
-        "Nhắn …...",
-        "Phiếu",
-        "Phiếu …. Chưa gửi đi đâu.",
-        "Plan xịn đó, mình bình chọn chỗ BBQ trước đi.",
-        "Rảnh. Để Nếp phác một tờ rồi mình sửa.",
-        "Rủ Đi AI",
-        "Rủ Đi AI phác theo quãng đường. Nét chì là nháp: nhóm sửa được trước khi chốt.",
-        "Rủ Đi đã phác một plan",
-        "Thông tin nhóm",
-        "Tuần này tối thứ Bảy rảnh không?",
-        "Vì sao phác vậy",
-        "Vị trí",
-        "Xem lịch trình",
-        "Xong chỉnh",
-        "Xuống",
-        "Xác nhận lựa chọn của tôi",
-        "Xóa",
-        "dự kiến một người · số tham chiếu của chuyến",
-        "phiếu của bạn trên bản này",
-        "Ô soạn tin",
-        "Đi chứ! Tớ vote săn mây với BBQ nha 🌤️",
-        "Đã xác nhận",
-        "Đính kèm",
-        "Đóng tệp đính kèm",
-        "Để Rủ Đi gom gu rồi lên lịch trình thử nhé.",
-        "Ưu tiên đồ ăn local và săn mây theo gu nhóm; các điểm xếp gần nhau để đỡ mệt.",
-        "Ảnh",
-        "… phiếu của bạn trên bản này"
-      ],
+      "nhan": [],
       "tep": [
-        "app/trips/[id]/itinerary.tsx",
-        "src/rudi/screens/Group.tsx"
+        "app/trips/[id]/itinerary.tsx"
       ]
     },
     {
-      "canh": [
-        {
-          "den": "check-ins/new",
-          "nhan": "Check-in nhóm"
-        },
-        {
-          "den": "check-ins/new",
-          "nhan": "Đến nơi rồi?"
-        },
-        {
-          "den": "create",
-          "nhan": "Tạo mới"
-        },
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Tôi đã tới"
-        },
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Tường nhóm"
-        }
-      ],
+      "canh": [],
       "di_toi": [
-        "check-ins/new",
-        "create",
-        "groups/[id]/wall",
         "outings/[id]",
-        "places/[id]",
         "plan"
       ],
       "man": "trips/[id]/timeline",
-      "nhan": [
-        ". Chưa gửi push.",
-        "Ai đã tới",
-        "Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái",
-        "Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái ….",
-        "Check-in nhóm",
-        "Chia vị trí",
-        "Chưa tới",
-        "Chọn tất cả",
-        "Dừng chia sẻ",
-        "Dựa trên gu của",
-        "Dựa trên gu của … thành viên; bạn sửa được trước khi chốt.",
-        "Hội mình đi đâu?",
-        "Mở lịch trình AI",
-        "Ngày về",
-        "Ngày đi",
-        "Ngân sách mỗi người",
-        "Nhắc thành viên",
-        "Nhờ Rủ Đi gợi ý lịch trình",
-        "Rủ hội bạn",
-        "Still Cafe · 10:00",
-        "Tên cuộc hẹn",
-        "Tôi đã tới",
-        "Tùy chọn",
-        "Tùy chọn chuyến đi",
-        "Tường nhóm",
-        "Tạo cuộc hẹn",
-        "Tạo mới",
-        "Ví dụ: Đà Lạt cuối tuần",
-        "chưa check-in.",
-        "dự kiến một người",
-        "hoạt động",
-        "người",
-        "người được chọn",
-        "tham gia",
-        "thành viên; bạn sửa được trước khi chốt.",
-        "· 3 ngày 2 đêm ·",
-        "Điểm đến",
-        "Điểm đến tiếp theo",
-        "Đà Lạt, Lâm Đồng",
-        "Đã ghi nhắc",
-        "Đã ghi nhắc … người …. Chưa gửi push.",
-        "Đã tới",
-        "Đến nơi rồi?",
-        "Đủ 8 người.",
-        "… chưa check-in.",
-        "… hoạt động",
-        "… tham gia",
-        "… · 3 ngày 2 đêm · … người",
-        "…/… người được chọn",
-        "…/… thành viên đã tới"
-      ],
+      "nhan": [],
       "tep": [
-        "app/trips/[id]/timeline.tsx",
-        "src/rudi/screens/Outing.tsx"
+        "app/trips/[id]/timeline.tsx"
       ]
     },
     {
-      "canh": [
-        {
-          "den": "groups/[id]/wall",
-          "nhan": "Thông tin nhóm"
-        },
-        {
-          "den": "votes/[id]",
-          "nhan": "Bình chọn"
-        },
-        {
-          "den": "votes/[id]",
-          "nhan": "Mở bình chọn"
-        }
-      ],
+      "canh": [],
       "di_toi": [
-        "groups/[id]/to-giay",
-        "groups/[id]/wall",
-        "messages",
-        "votes/[id]"
+        "messages"
       ],
       "man": "votes/[id]",
-      "nhan": [
-        ". Chưa gửi đi đâu.",
-        "17 - 19/10/2026 · 3 ngày 2 đêm",
-        "3 ngày 2 đêm · đồ ăn local · săn mây",
-        "AI nháp",
-        "BBQ tối thứ Bảy ở đâu?",
-        "Bình chọn",
-        "Bạn đã chọn",
-        "Bạn đã chọn …",
-        "Chi phí",
-        "Chuyến đi sắp tới · 17 - 19/10/2026",
-        "Chỉnh lịch trình",
-        "Cuối tuần tháng 10 đi Đà Lạt không mọi người?",
-        "Dùng plan này",
-        "Dữ liệu demo · AI nháp",
-        "Gửi tin nhắn",
-        "Hôm nay",
-        "Lên",
-        "Lịch trình AI",
-        "Mở bình chọn",
-        "Mở chuyến …",
-        "Nhắn Team Đà Lạt...",
-        "Nhắn …...",
-        "Phiếu",
-        "Phiếu …. Chưa gửi đi đâu.",
-        "Plan xịn đó, mình bình chọn chỗ BBQ trước đi.",
-        "Rảnh. Để Nếp phác một tờ rồi mình sửa.",
-        "Rủ Đi AI",
-        "Rủ Đi AI phác theo quãng đường. Nét chì là nháp: nhóm sửa được trước khi chốt.",
-        "Rủ Đi đã phác một plan",
-        "Thông tin nhóm",
-        "Tuần này tối thứ Bảy rảnh không?",
-        "Vì sao phác vậy",
-        "Vị trí",
-        "Xem lịch trình",
-        "Xong chỉnh",
-        "Xuống",
-        "Xác nhận lựa chọn của tôi",
-        "Xóa",
-        "dự kiến một người · số tham chiếu của chuyến",
-        "phiếu của bạn trên bản này",
-        "Ô soạn tin",
-        "Đi chứ! Tớ vote săn mây với BBQ nha 🌤️",
-        "Đã xác nhận",
-        "Đính kèm",
-        "Đóng tệp đính kèm",
-        "Để Rủ Đi gom gu rồi lên lịch trình thử nhé.",
-        "Ưu tiên đồ ăn local và săn mây theo gu nhóm; các điểm xếp gần nhau để đỡ mệt.",
-        "Ảnh",
-        "… phiếu của bạn trên bản này"
-      ],
+      "nhan": [],
       "tep": [
-        "app/votes/[id]/index.tsx",
-        "src/rudi/screens/Group.tsx"
+        "app/votes/[id]/index.tsx"
       ]
     },
     {
@@ -3058,7 +1865,6 @@
       ],
       "man": "welcome",
       "nhan": [
-        "Bản trải nghiệm",
         "Chặng … trên …",
         "Rủ Đi thôi!",
         "Trang … trên …",

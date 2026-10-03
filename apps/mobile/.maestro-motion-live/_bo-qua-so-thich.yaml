@@ -12,6 +12,11 @@ appId: com.lakiet.rudi
 ---
 - runFlow:
     when:
-      visible: "Cho Rủ Đi biết gu của bạn"
+      visible: "Điều gì khiến bạn muốn ra ngoài?"
     commands:
+      - scrollUntilVisible:
+          element:
+            text: "Bỏ qua"
+          direction: UP
+          timeout: 30000
       - tapOn: "Bỏ qua"

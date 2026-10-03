@@ -11,7 +11,7 @@ import { docChatCapabilities } from "../../chat/ai-invocations";
 import { cauVaiTuan } from "../../to-giay/vai-tuan";
 import { type ToGiay, goiYChoLam, nenXinTo, phienBan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
-import { DemoBadge, Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Nep } from "../../ui/art/Nep";
 import { DauLon } from "../../ui/DauLon";
 import { EmptyState } from "../../ui/EmptyState";
@@ -57,7 +57,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   const motion = useMotion();
   const { phien } = useRudiSession();
   const so = useSoDoi();
-  const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat" | "nguoi-kia" | "gu" | "vai">(null);
+  const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat" | "gu" | "vai">(null);
   const daRu = useRef(false);
   // Where my taste switch stands for the chat (ADR-0048 §3.2), asked when the
   // taste sheet opens and again after each change of it; unknown reads as
@@ -387,11 +387,11 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       ) : null}
       {/* A sheet closes on the notebook's answer, not on the press: a refused
           or dropped write used to close it exactly like a saved one (QA 23/09). */}
-      <LapSo dangCho={deNghiLapSo !== undefined} deNghiCuaToi={deNghiLapSo?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiLapSo ? () => so.nguoiKia?.dongYDeNghi(deNghiLapSo.id) : null} onClose={dong} onDeNghi={so.deNghiLapSo} onDongY={() => { if (deNghiLapSo) void so.dongYDeNghi(deNghiLapSo.id).then((ok) => ok && dong()); }} open={mo === "lap-so"} tenNguoiKia={so.tenNguoiKia} />
-      <BatMotDoi dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onClose={dong} onDeNghi={so.deNghiBatDoi} onDongY={() => { if (deNghiBatDoi) void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()); }} open={mo === "bat-doi"} tenNguoiKia={so.tenNguoiKia} />
+      <LapSo dangCho={deNghiLapSo !== undefined} deNghiCuaToi={deNghiLapSo?.cuaToi ?? true} onClose={dong} onDeNghi={so.deNghiLapSo} onDongY={() => { if (deNghiLapSo) void so.dongYDeNghi(deNghiLapSo.id).then((ok) => ok && dong()); }} open={mo === "lap-so"} tenNguoiKia={so.tenNguoiKia} />
+      <BatMotDoi dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} onClose={dong} onDeNghi={so.deNghiBatDoi} onDongY={() => { if (deNghiBatDoi) void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()); }} open={mo === "bat-doi"} tenNguoiKia={so.tenNguoiKia} />
       {/* Choosing «Một đôi» opens the rung's own sheet (what it allows, what it
           does not pull along) instead of filing the proposal on one tap. */}
-      <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onChonBan={so.thuHoiBatDoi} onChonDoi={() => { if (!so.batDoi && deNghiBatDoi === undefined) setMo("bat-doi"); }} onClose={dong} onDongY={deNghiBatDoi && !deNghiBatDoi.cuaToi ? () => void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()) : undefined} open={mo === "loai-so"} tenNguoiKia={so.tenNguoiKia} />
+      <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} onChonBan={so.thuHoiBatDoi} onChonDoi={() => { if (!so.batDoi && deNghiBatDoi === undefined) setMo("bat-doi"); }} onClose={dong} onDongY={deNghiBatDoi && !deNghiBatDoi.cuaToi ? () => void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()) : undefined} open={mo === "loai-so"} tenNguoiKia={so.tenNguoiKia} />
       <RangBuoc dangLuu={so.dangLam?.includes("rang-buoc") ?? false} loi={mo === "rang-buoc" ? so.loiLenh : null} nguoiKia={so.rangBuoc.nguoiKia} onClose={dong} onLuu={(rb) => void so.datRangBuoc(rb).then((ok) => ok && dong())} open={mo === "rang-buoc"} tenNguoiKia={so.tenNguoiKia} toi={so.rangBuoc.toi} />
       {/* Chỉ tồn tại khi có cả việc lẫn tờ. Bản trước mount vô điều kiện và
           rơi về chuỗi rỗng khi thiếu một trong hai — không tới được hôm nay,
@@ -417,40 +417,13 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       <AiLoTuanNay dangLam={so.dangLam?.startsWith("vai:") ?? false} onChon={(lo) => so.chonLo(lo)} onClose={dong} open={mo === "vai"} tenNguoiKia={so.tenNguoiKia} toiId={so.toiId} vai={so.vai} />
       <GuHaiBan dangLam={so.dangLam?.includes("chia_gu") ?? false} gu={so.gu} onBat={so.chiaGu} onClose={dong} onSuaGuCuaToi={() => { dong(); router.push("/personalization" as never); }} onTat={so.thoiChiaGu} open={mo === "gu"} tenNguoiKia={so.tenNguoiKia} guChat={guChat} onBatLai={so.batLaiChiaGu} loi={so.loiGu} />
       <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
-      <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
-        <View style={{ gap: space.sm, paddingBottom: 8 }}>
-          <Heading size="h2" subtitle="Bản trải nghiệm: máy này đóng cả vai người ấy. Mỗi nút là một việc người ấy làm trên máy của họ." title="Đóng vai người ấy" />
-          {toMo && toMo.state === "da_gui" ? <RudiButton label="(Bản trải nghiệm) Người kia xem" onPress={() => { so.nguoiKia?.xem(toMo.id); dong(); }} variant="outline" /> : null}
-          {toMo ? <RudiButton label="(Bản trải nghiệm) Người kia đồng ý" onPress={() => { so.nguoiKia?.dongY(toMo.id); dong(); }} variant="outline" /> : null}
-          {toMo ? (
-            <RudiButton
-              label="(Bản trải nghiệm) Người kia đề nghị sửa giờ"
-              onPress={() => {
-                const pb = phienBan(toMo);
-                if (!pb) return;
-                // The reason must agree with the arrow: 18:30 → 18:00 is earlier,
-                // 18:00 → 19:00 is later (blind read 12/09 caught «Sớm hơn» on a
-                // change that went later).
-                const somHon = pb.content.chang[0]?.gio !== "18:00";
-                const chang = pb.content.chang.map((c, i) => (i === 0 ? { ...c, gio: somHon ? "18:00" : "19:00" } : c));
-                so.nguoiKia?.deNghiSua(toMo.id, { ...pb.content, chang }, somHon ? "Sớm hơn một chút." : "Muộn hơn một chút.");
-                dong();
-              }}
-              variant="outline"
-            />
-          ) : null}
-          <RudiButton label="Thôi" onPress={dong} variant="ghost" />
-        </View>
-      </Sheet>
         </>
       }
       header={
         <TopBar
           back
-          // The demo notebook says it is one (QA UI-082); live, the badge is empty.
           right={
             <View style={styles.dauPhai}>
-              <DemoBadge compactLabel="Demo" />
               <IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => setMo("cai-dat")} quiet />
             </View>
           }
@@ -495,11 +468,6 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
             onPress={() => router.push(`/moments/new?ctx=${contextId}` as never)}
             variant="outline"
           />
-        ) : null}
-        {so.nguoiKia && toMo && toiGuiToMo && ["da_gui", "da_xem"].includes(toMo.state) ? (
-          // One quiet row, not three coral lines: the tester's table must not
-          // count among the things the person can do (blind read 12/09).
-          <ListRow icon="swap-horizontal-outline" onPress={() => setMo("nguoi-kia")} subtitle="Xem, ừ, hay đề nghị sửa thay người ấy" title="Bản trải nghiệm: đóng vai người ấy" />
         ) : null}
         {so.toKhac.length > 0 ? (
           <View style={{ gap: space.sm }}>

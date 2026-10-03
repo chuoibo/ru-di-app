@@ -136,8 +136,6 @@ export function SoDoiSongProvider({
       daDi: () => void song.ghiDaDiRoi(),
       giu: (_id: string, line: string) => void song.giuDong(line),
       huy: () => void song.nghiTuanNay(),
-
-      nguoiKia: null,
     };
   }, [contextId, daDung, loiGu, song, tenNguoiKia, toiId]);
 

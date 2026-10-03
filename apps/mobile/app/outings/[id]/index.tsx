@@ -5,7 +5,7 @@ import { OutingLiveScreen } from "../../../src/rudi/screens/keo/OutingLive";
 import { useRudiSession } from "../../../src/rudi/session";
 import { CuaDangNhap } from "../../../src/rudi/ui/CuaDangNhap";
 
-// Outings live on the server only; the fixture build has no route here.
+// Outings live on the server only.
 // `?ctx=` opens an outing of a context that is not the current group: the plan
 // a two-person sheet became lives in the pair (see `nguCanhMo`).
 export default function OutingRoute() {

@@ -39,18 +39,9 @@ import {
 } from "../dist-test/rudi/san-khau/dong-hoc.js";
 import { MOTION_MS, NGAN_SACH_SAN_KHAU, batToiDa } from "../dist-test/rudi/motion.js";
 import { kiemLop } from "./_kiem-lop.mjs";
+import { LOAI_MAU, PLACES } from "./_bo-ky-hoa.mjs";
 
-// The same (category, tags) pairs the Explore fixture hands to a sketch, read
-// as source because fixtures.ts pulls expo-image (as art-ky-hoa.test.mjs does).
-const NGUON = readFileSync(new URL("../src/rudi/fixtures.ts", import.meta.url), "utf8");
-const KHOI_LOAI = NGUON.slice(NGUON.indexOf("export const LOAI_MAU"), NGUON.indexOf("};", NGUON.indexOf("export const LOAI_MAU")));
-const LOAI_MAU = Object.fromEntries([...KHOI_LOAI.matchAll(/^\s*"?([^"\n:]+?)"?: "([a-z-]+)",?$/gm)].map((m) => [m[1], m[2]]));
-const PLACES = [...NGUON.matchAll(/name: "([^"]+)",[\s\S]*?tags: \[([^\]]*)\],\s*category: "([^"]+)"/g)].map((m) => ({
-  name: m[1],
-  tags: [...m[2].matchAll(/"([^"]+)"/g)].map((t) => t[1]),
-  category: m[3],
-}));
-assert.equal(PLACES.length, 12, "fixture phải có đúng 12 nơi (đọc nguồn)");
+assert.equal(PLACES.length, 12, "bộ ký hoạ phải có đúng 12 nơi");
 const KY_HOA = [
   ...PLACES.map((p) => ({ ten: p.name, loai: LOAI_MAU[p.category], tags: p.tags })),
   ...["quan-an-local", "cafe", "vui-choi", "di-choi-dem", "khac", undefined].map((loai) => ({ ten: `chỉ loại ${loai}`, loai, tags: [] })),

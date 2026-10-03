@@ -15,11 +15,9 @@
  */
 import { BASE_URL } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
-import { DEMO_GROUP_NAME } from "../../rudi/nhom-demo";
 // Read from the chat lane's module, never edited here. It is the one place the
 // seed's `uuid5` key derivation is implemented on this side, and a second copy
 // is a copy that drifts the day the namespace changes.
-import { khoaGhi } from "../chat/uuid5";
 
 /** One stop on a trip's timeline, in the order the group built it. */
 export type Chang = {
@@ -125,52 +123,6 @@ export function tomTatChang(stops: Chang[]): string {
   if (names.length === 0) return "";
   if (names.length <= 3) return names.join(" · ");
   return `${names.slice(0, 3).join(" · ")} · +${names.length - 3}`;
-}
-
-/**
- * Which group's wall to read, when the URL did not name one.
- *
- * There is no route that answers "which groups am I in", so the demo group is
- * found the way the rest of the demo already finds it: `POST /contexts` under
- * the seed's own idempotency key, which replays and hands back the group the
- * seed created rather than making a second one. `khoaGhi` derives that key with
- * the same `uuid5` the seed script uses.
- *
- * The replay header is read, and that is the point of doing it this way rather
- * than firing the request and taking the id. On a stack nobody seeded there is
- * nothing to replay, so this call *creates* an empty group -- and an empty wall
- * for a group that never existed reads exactly like a group that has been
- * nowhere. `daCoSan` carries that difference up to the screen so it can say
- * which one happened instead of showing eight silent zeroes.
- */
-export async function timNhomDemo(
-  personId: string,
-  fetchImpl: typeof fetch = fetch,
-): Promise<{ contextId: string; daCoSan: boolean }> {
-  let response: Response;
-  try {
-    response = await fetchImpl(`${BASE_URL}/contexts`, {
-      method: "POST",
-      headers: headerNguoiGoi(personId, {
-        roles: "group_admin,member",
-        key: khoaGhi("context"),
-      }),
-      body: JSON.stringify({ display_name: DEMO_GROUP_NAME }),
-    });
-  } catch {
-    throw new KyUcError(0, "Không kết nối được Rủ Đi.");
-  }
-  if (!response.ok) {
-    throw new KyUcError(response.status, loiKyUc(response.status, ""));
-  }
-  const body = (await response.json()) as { id?: unknown };
-  if (typeof body.id !== "string") {
-    throw new KyUcError(response.status, "Rủ Đi trả lời thiếu thông tin nhóm.");
-  }
-  return {
-    contextId: body.id,
-    daCoSan: response.headers.get("Idempotency-Replayed") === "true",
-  };
 }
 
 export class KyUcError extends Error {

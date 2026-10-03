@@ -84,7 +84,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
   }, [outing.starts_on, outing.ends_on]);
   const inspect = async (recommend: boolean) => {
     if (saving.current) return;
-    if (!actorId || fixture) { setMessage("Bản dùng thử chỉ xem lịch trình. Đề xuất cần kết nối dịch vụ đường bộ."); return; }
+    if (!actorId || fixture) { setMessage("Chưa đăng nhập nên chỉ xem được lịch trình."); return; }
     const sequence = ++request.current; setBusy(true); setMessage(null); setLoi(null); setPreview(null); setSuggestion(false);
     try {
       const result = await xemTruocHanhTrinh(outing.id, draft, day, recommend, actorId, outing.context_id);

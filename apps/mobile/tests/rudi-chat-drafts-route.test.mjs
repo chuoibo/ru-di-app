@@ -41,13 +41,11 @@ test('poll corrections remove validation while parser-ambiguous values remain re
  assert.match(loiBinhChon('Đi? ở đâu?', ['A','B']),/cuối câu/);
 });
 
-test('cold signed-out real chat never becomes a demo, fixtures are exact allowlist', () => {
- const fixtures=['demo-hoi','demo-doi'];
+test('signed out, every chat id goes through the sign-in door; there is no demo chat', () => {
  const real='e7f91f65-614c-4b11-9e42-e6d46867c04c';
- assert.equal(chatRoute(real,false,fixtures),'login');
- assert.equal(chatRoute(real,true,fixtures),'live');
- assert.equal(chatRoute('demo-hoi',false,fixtures),'fixture');
- assert.equal(chatRoute('demo-doi',false,fixtures),'fixture');
- assert.equal(chatRoute('demo-hoi-unknown',false,fixtures),'login');
- assert.equal(chatRoute(undefined,false,fixtures),'messages');
+ assert.equal(chatRoute(real,false),'login');
+ assert.equal(chatRoute(real,true),'live');
+ assert.equal(chatRoute('demo-hoi',false),'login');
+ assert.equal(chatRoute('demo-doi',false),'login');
+ assert.equal(chatRoute(undefined,false),'messages');
 });

@@ -22,8 +22,7 @@ const TIENG_BAN_DO = {
 };
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import { TAM_DA_LAT } from "./toa-do-mau";
-import { chuNeo, DEM_KHOP, DUONG_TICK, giuaDoan, hinhTem, hopGioi, hopHanhTrinh, lopDuong, mocChum, muiTenDoan, tapHop, type BanDoProps, type MauBanDo, type MocBanDo } from "./kieu-ban-do";
+import { TAM_MAC_DINH, chuNeo, DEM_KHOP, DUONG_TICK, giuaDoan, hinhTem, hopGioi, hopHanhTrinh, lopDuong, mocChum, muiTenDoan, tapHop, type BanDoProps, type MauBanDo, type MocBanDo } from "./kieu-ban-do";
 import { typography, useRudiTheme } from "../theme";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -177,7 +176,7 @@ export function BanDo({
       map = new Map({
         container: el,
         style: kieu.startsWith("{") ? JSON.parse(kieu) : kieu,
-        center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat],
+        center: [TAM_MAC_DINH.lng, TAM_MAC_DINH.lat],
         zoom: 12,
         attributionControl: { compact: true },
         locale: TIENG_BAN_DO,
@@ -475,7 +474,7 @@ export function BanDo({
     if (!map || !san || fitDem === 0) return;
     const hop = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
     if (!hop) {
-      map.easeTo({ center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12, duration });
+      map.easeTo({ center: [TAM_MAC_DINH.lng, TAM_MAC_DINH.lat], zoom: 12, duration });
       return;
     }
     map.fitBounds(

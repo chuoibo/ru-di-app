@@ -17,8 +17,10 @@ mục cuối — đừng đọc sự im lặng thành "cái đó chạy được
 | Dữ liệu | seed cũ `make demo` (roster 7 người, App B) | **`make demo-rudi`**: «Team Đà Lạt» 8 người, chat, kèo, bill, đợt thu, kỷ niệm — chạy lại là no-op |
 | Bằng chứng | ảnh React Native Web trong Chrome | 11 flow Maestro trên emulator Android, light/dark, font 1.0/1.3 |
 
-Cửa fixture chỉ còn khi `__DEV__` **và** `EXPO_PUBLIC_RUDI_FIXTURE=1`; bản dựng
-thường không có nút «Vào bản trải nghiệm».
+**Từ 03/10/2026 không còn bản trải nghiệm.** Cửa fixture, cờ
+`EXPO_PUBLIC_RUDI_FIXTURE` và mọi màn mẫu đã gỡ: chưa đăng nhập thì mọi màn đưa về
+cửa đăng nhập. «Team Đà Lạt» dưới đây chỉ là dữ liệu seed của stack dev
+(`make demo-rudi`), không bao giờ có trên stack production và không còn trong app.
 
 ---
 

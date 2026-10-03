@@ -12,10 +12,8 @@ import {
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CUA_FIXTURE_DEV } from "../cua-fixture";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { displayFace, lopPhu, mauSang, typography, useRudiTheme } from "../theme";
-import { DemoBadge } from "../ui";
 import { CoverButton } from "../ui/CoverButton";
 import { Grain } from "../ui/Grain";
 import { RouteLine } from "../ui/RouteLine";
@@ -148,7 +146,7 @@ export function WelcomeScreen() {
           style={styles.flex}
         >
           <View style={styles.top}>
-            {CUA_FIXTURE_DEV ? <DemoBadge label="Bản trải nghiệm" /> : <View />}
+            <View />
           </View>
 
           <View style={[styles.mark, short && styles.markShort]}>

@@ -1,11 +1,9 @@
-import { useLocalSearchParams } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 
 import { nguCanhMo } from "../../../src/rudi/ngu-canh-mo";
 import { DotThuLiveScreen } from "../../../src/rudi/screens/dot-thu/DotThuLive";
 import { useRudiSession } from "../../../src/rudi/session";
-import { RudiButton, RudiScreen, Heading, TopBar } from "../../../src/rudi/ui";
-import { useRouter } from "expo-router";
-import { luiVeVe } from "../../../src/rudi/lui-ve";
+import { CuaDangNhap } from "../../../src/rudi/ui/CuaDangNhap";
 
 function maDot(id: unknown): string {
   if (typeof id === "string") return id;
@@ -20,7 +18,6 @@ function maDot(id: unknown): string {
 export default function BatchRoute() {
   const params = useLocalSearchParams<{ id: string; ctx?: string }>();
   const { phien, phienDaDoc } = useRudiSession();
-  const router = useRouter();
   if (!phienDaDoc) return null;
   const id = maDot(params.id);
   if (phien !== null && id !== "") {
@@ -28,12 +25,6 @@ export default function BatchRoute() {
     if (mo.kieu === "khac") return <DotThuLiveScreen batchId={id} key={mo.contextId} phien={{ ...phien, context_id: mo.contextId }} />;
     return <DotThuLiveScreen batchId={id} phien={phien} />;
   }
-  // No fixture round exists: the settlement fixture never opens one. Say so.
-  return (
-    <RudiScreen tone="split" testID="collection-batch-screen">
-      <TopBar title="Đợt thu" />
-      <Heading title="Cần đăng nhập" subtitle="Đợt thu là của một nhóm thật; bản trải nghiệm không có đợt thu nào." />
-      <RudiButton label="Quay lại" onPress={() => luiVeVe(router as never, "/plan")} tone="split" variant="outline" />
-    </RudiScreen>
-  );
+  if (phien === null) return <CuaDangNhap />;
+  return <Redirect href="/(tabs)/plan" />;
 }

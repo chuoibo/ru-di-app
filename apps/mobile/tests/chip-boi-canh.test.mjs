@@ -125,10 +125,6 @@ test("tấm «Xem» không nằm trong chip: màn gắn nó ở gốc, cạnh c�
   assert.equal(thut(dong[tam]), thut(dong[sticker]), "TamXemBoiCanh phải cùng tầng với KhaySticker (gốc màn)");
   assert.match(dong[tam], /goi=\{goiChip\}/, "tấm phải liệt kê đúng gói chip đếm");
 
-  const lab = readFileSync(join(HERE, "..", "app", "dev", "hai-lop-chat.tsx"), "utf8").split("\n");
-  const tamLab = lab.findIndex((d) => d.includes("<TamXemBoiCanh "));
-  const stickerLab = lab.findIndex((d) => d.includes("<KhaySticker "));
-  assert.ok(tamLab > 0 && thut(lab[tamLab]) === thut(lab[stickerLab]), "trang lab phải gắn tấm ở gốc như màn chat");
 });
 
 test("UI-163: mặc định kèm 20 tin như ADR-0046 §2, và không ai nới được quá trần 40", () => {

@@ -9,7 +9,7 @@ import { Sheet } from "../../ui/Sheet";
  * Friendship includes two people. Couple mode still requires both people
  * to agree; switching back withdraws only this person's couple consent.
  */
-export function LoaiSo({ open, onClose, batDoi, dangCho, deNghiCuaToi = true, tenNguoiKia, onChonDoi, onChonBan, onDongY, nguoiKiaDongY, testID }: { open: boolean; onClose: () => void; batDoi: boolean; dangCho: boolean; deNghiCuaToi?: boolean; tenNguoiKia?: string; onChonDoi: () => void; onChonBan: () => void; onDongY?: () => void; nguoiKiaDongY: (() => void) | null; testID?: string }) {
+export function LoaiSo({ open, onClose, batDoi, dangCho, deNghiCuaToi = true, tenNguoiKia, onChonDoi, onChonBan, onDongY, testID }: { open: boolean; onClose: () => void; batDoi: boolean; dangCho: boolean; deNghiCuaToi?: boolean; tenNguoiKia?: string; onChonDoi: () => void; onChonBan: () => void; onDongY?: () => void; testID?: string }) {
   const { colors, space } = useRudiTheme();
   // Highlight follows what IS, never what is proposed: a lit «Một đôi» while
   // the other person had not agreed read as already on (blind read 12/09).
@@ -33,7 +33,6 @@ export function LoaiSo({ open, onClose, batDoi, dangCho, deNghiCuaToi = true, te
             ấy đồng ý» about their own decision and had no button; the only
             thing to press was «Một đôi», which filed a SECOND proposal. */}
         {dangCho && !batDoi && !deNghiCuaToi && onDongY ? <RudiButton label="Đồng ý là một đôi" onPress={onDongY} /> : null}
-        {dangCho && nguoiKiaDongY ? <RudiButton label="(Bản trải nghiệm) Người kia đồng ý" onPress={nguoiKiaDongY} variant="outline" /> : null}
         <RudiButton label="Xong" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>

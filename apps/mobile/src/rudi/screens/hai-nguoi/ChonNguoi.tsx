@@ -7,9 +7,9 @@ import { ganDanhSachNhom, type Phien } from "../../../phien";
 import { docDanhSachBan, type Ban } from "../../../screens/ca-nhan/ban-be";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
+import { CuaDangNhap } from "../../ui/CuaDangNhap";
 import { mucNguoi, typography, useRudiTheme } from "../../theme";
-import { CAP_DEMO, NGUOI_KIA_DEMO } from "../../to-giay/fixtures-doi";
-import { Heading, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { HinhNhan } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
 import { PressScale } from "../../ui/PressScale";
@@ -25,13 +25,12 @@ import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
  * `POST /people/{id}/dm` the friend list's «Nhắn tin» uses. Before 23/09 this
  * screen offered the fixture pair to everybody, so a signed-in person with no
  * friends at all saw «Người ấy — Mở sổ lời hẹn», and pressing on
- * through it did nothing (QA 23/09). The fixture row stays for the experience
- * build only.
+ * through it did nothing (QA 23/09). Signed out, it is the sign-in door.
  */
 export function ChonNguoiScreen() {
   const { phien } = useRudiSession();
-  if (phien !== null) return <ChonNguoiSong phien={phien} />;
-  return <ChonNguoiTraiNghiem />;
+  if (phien === null) return <CuaDangNhap tiep="/hai-nguoi/chon-nguoi" />;
+  return <ChonNguoiSong phien={phien} />;
 }
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; ban: Ban[] } | { pha: "hong"; loi: string };
@@ -129,21 +128,6 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
         {trang.pha === "xong" && trang.ban.length > 0 ? (
           <RudiButton icon="person-add-outline" label="Thêm bạn khác" onPress={() => router.push("/friends/add")} variant="ghost" />
         ) : null}
-      </View>
-    </RudiScreen>
-  );
-}
-
-/** The experience build: one person to pick, the fixture pair. */
-function ChonNguoiTraiNghiem() {
-  const router = useRouter();
-  return (
-    <RudiScreen header={<TopBar back title="Hẹn người thương" subtitle="Một lời hẹn, hai người cùng chọn" />} testID="chon-nguoi">
-      <View style={{ gap: 10, paddingTop: 8 }}>
-        <Heading size="h2" subtitle="Chọn người bạn muốn mở sổ cặp đôi. Hai bạn cùng đồng ý trước khi gửi lời hẹn." title="Rủ ai?" />
-        <NhomHang>
-          <ListRow icon="person-outline" onPress={() => router.replace(`/groups/${CAP_DEMO.id}/to-giay?ru=1` as never)} subtitle="Mở sổ lời hẹn" title={NGUOI_KIA_DEMO.ten} />
-        </NhomHang>
       </View>
     </RudiScreen>
   );

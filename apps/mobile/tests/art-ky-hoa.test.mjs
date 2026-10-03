@@ -11,27 +11,17 @@ import test from "node:test";
 import { KHUNG_KY_HOA, SAN_KHAU_IDS, daoCuTheoTag, hinhKyHoa, moTaKyHoa, sanKhauTheoLoai } from "../dist-test/rudi/art/ky-hoa.js";
 import { readFileSync } from "node:fs";
 import { kiemLop } from "./_kiem-lop.mjs";
+import { LOAI_MAU, PLACES } from "./_bo-ky-hoa.mjs";
 
 const { w, h } = KHUNG_KY_HOA;
-// fixtures.ts pulls expo-image and the theme, so it is read as source: every
-// place's category and tags, exactly as the Explore fixture hands them over.
-const NGUON = readFileSync(new URL("../src/rudi/fixtures.ts", import.meta.url), "utf8");
-const KHOI_LOAI = NGUON.slice(NGUON.indexOf("export const LOAI_MAU"), NGUON.indexOf("};", NGUON.indexOf("export const LOAI_MAU")));
-const LOAI_MAU = Object.fromEntries([...KHOI_LOAI.matchAll(/^\s*"?([^"\n:]+?)"?: "([a-z-]+)",?$/gm)].map((m) => [m[1], m[2]]));
-assert.equal(Object.keys(LOAI_MAU).length, 4, "LOAI_MAU phải có bốn loại (đọc nguồn)");
-const PLACES = [...NGUON.matchAll(/name: "([^"]+)",[\s\S]*?tags: \[([^\]]*)\],\s*category: "([^"]+)"/g)].map((m) => ({
-  name: m[1],
-  tags: [...m[2].matchAll(/"([^"]+)"/g)].map((t) => t[1]),
-  category: m[3],
-}));
-assert.equal(PLACES.length, 12, "fixture phải có đúng 12 nơi (đọc nguồn)");
+assert.equal(PLACES.length, 12, "bộ ký hoạ phải có đúng 12 nơi");
 const LOAI = ["quan-an-local", "cafe", "vui-choi", "di-choi-dem", "khac"];
 const BO = [
   ...PLACES.map((p) => ({ ten: p.name, loai: LOAI_MAU[p.category], tags: p.tags })),
   ...LOAI.map((loai) => ({ ten: `chỉ loại ${loai}`, loai, tags: [] })),
 ];
 
-test("mọi bộ (loại, tag) của fixture và mỗi loại trần: lớp hợp lệ trong hộp 288×96, cả hai khung đọc", () => {
+test("mọi bộ (loại, tag) mẫu và mỗi loại trần: lớp hợp lệ trong hộp 288×96, cả hai khung đọc", () => {
   for (const b of BO) {
     for (const gon of [false, true]) {
       kiemLop(`${b.ten}${gon ? " (gọn)" : ""}`, hinhKyHoa(b.loai, b.tags, { gon }), w, h);
@@ -56,7 +46,7 @@ test("bản gọn ít lớp hơn bản đủ và cùng sân khấu; hàm xác đ
   }
 });
 
-test("mười hai nơi fixture cho ra ít nhất tám ký hoạ khác nhau (tag có thật quyết định)", () => {
+test("mười hai nơi mẫu cho ra ít nhất tám ký hoạ khác nhau (tag có thật quyết định)", () => {
   const khac = new Set(PLACES.map((p) => JSON.stringify(hinhKyHoa(LOAI_MAU[p.category], p.tags))));
   assert.ok(khac.size >= 8, `chỉ ${khac.size} bộ lớp khác nhau`);
 });

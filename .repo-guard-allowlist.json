@@ -178,46 +178,6 @@
       "reason": "Hình huy hiệu hành trình tổng hợp bằng Codex image_gen, chỉ dùng mô tả giả lập; không chứa ảnh hoặc dữ liệu người tham gia. Nguồn và prompt ở docs/design/huy-hieu-ho-so.md và docs/assets/profile-badges/prompts.json. Ghim digest để mọi thay đổi binary được xem lại."
     },
     {
-      "path": "apps/mobile/assets/rudi/dalat-cafe.jpg",
-      "sha256": "1efcdd2bc9c02c6c3727e8e02ccec6808469ce4fb86e20a8fac10d507727cbc3",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh stock công khai của Pexels dùng riêng cho dữ liệu trình diễn RuDi. Nguồn và tác giả được ghi tại assets/rudi/README.md; không chứa người tham gia hay dữ liệu nghiên cứu. Path và digest được ghim để mọi thay đổi byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/rudi/dalat-friends.jpg",
-      "sha256": "9febeb1cb3f9361951755682664aa388bbaa522c844e6e8f5af84fa0c1b9ec3c",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh stock công khai của Pexels dùng riêng cho dữ liệu trình diễn RuDi. Nguồn và tác giả được ghi tại assets/rudi/README.md; không chứa người tham gia hay dữ liệu nghiên cứu. Path và digest được ghim để mọi thay đổi byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/rudi/dark-wood-grain.jpg",
-      "sha256": "dad8ec3b4e3d26cd9691451283d1656ce9488f2fb0fc08c8655d790cb68a4958",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh stock công khai của Unsplash mô tả mặt bàn gỗ, dùng làm nền hóa đơn trình diễn. Nguồn và tác giả được ghi tại assets/rudi/README.md; không chứa người, hóa đơn thật hay dữ liệu nghiên cứu. Path và digest được ghim để mọi thay đổi byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/rudi/friends-rooftop.jpg",
-      "sha256": "0441952ff19dcbbf7ccfea3b80185a8f6a0da079055bf35a5f5059d7548bdd49",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh stock công khai của Unsplash dùng riêng cho dữ liệu trình diễn RuDi. Nguồn và tác giả được ghi tại assets/rudi/README.md; không chứa người tham gia hay dữ liệu nghiên cứu. Path và digest được ghim để mọi thay đổi byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/rudi/vietnam-road.jpg",
-      "sha256": "4c3d9e080fd4018f795e62258bb7e15071b92e6e84d9f21c7f001c470e840f8a",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh stock công khai của Unsplash dùng riêng cho dữ liệu trình diễn RuDi. Nguồn và tác giả được ghi tại assets/rudi/README.md; không chứa người tham gia hay dữ liệu nghiên cứu. Path và digest được ghim để mọi thay đổi byte phải review lại."
-    },
-    {
       "path": "apps/mobile/assets/splash-icon.png",
       "sha256": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8",
       "rules": [

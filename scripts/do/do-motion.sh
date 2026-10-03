@@ -29,9 +29,9 @@
 #
 # `khung>150ms` is the sum of the histogram buckets from 150 ms up; p50…p99 are
 # the LABELS of the buckets the percentiles fall in (the histogram runs to
-# 4950 ms). FLOWS_DIR=.maestro-motion-live and OTP_PHONE/OTP_CODE select the
-# live variant; default is the dev-client fixture board. The rig is an emulator
-# on WSL2: a regression baseline, not a verdict on a phone.
+# 4950 ms). The board is `.maestro-motion-live`, signed in through OTP_PHONE/
+# OTP_CODE: the fixture board went with the demo story (2026-10-03). The rig is
+# an emulator on WSL2: a regression baseline, not a verdict on a phone.
 set -u -o pipefail
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 # Tools already on PATH win (the canary puts fakes there); the usual homes are appended, not prepended.
@@ -43,8 +43,8 @@ OUT="${1:?thư mục ra}"; MODE="${2:-thuong}"
 case "$MODE" in thuong|reduce) ;; *) echo "chế độ «$MODE» không có; dùng thuong|reduce" >&2; exit 2 ;; esac
 APP=com.lakiet.rudi
 DAY="$(cd "$(dirname "$0")" && pwd)"
-FLOWS="$(cd "$DAY/../../apps/mobile/${FLOWS_DIR:-.maestro-motion}" && pwd)"
-VAO="${VAO_FLOW:-$([ "${FLOWS_DIR:-}" = .maestro-motion-live ] && echo _vao-live.yaml || echo _vao-app-sach.yaml)}"
+FLOWS="$(cd "$DAY/../../apps/mobile/${FLOWS_DIR:-.maestro-motion-live}" && pwd)"
+VAO="${VAO_FLOW:-_vao-live.yaml}"
 THEM=()
 [ -n "${OTP_PHONE:-}" ] && THEM=(-e OTP_PHONE="$OTP_PHONE" -e OTP_CODE="${OTP_CODE:-000000}")
 mkdir -p "$OUT"

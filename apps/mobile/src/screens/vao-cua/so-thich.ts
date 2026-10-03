@@ -167,7 +167,7 @@ export function cauVeDanhBa(ket: KetQuaQuyen): string {
     case "tu-choi":
       return "Chưa bật đồng bộ. Bạn vẫn tìm được bạn bè bằng số điện thoại ở mục Cá nhân.";
     case "chua-co":
-      return "Bản demo này chưa đọc danh bạ, nên chưa có gì được gửi đi. Tìm bạn bằng số điện thoại ở mục Cá nhân.";
+      return "Bản này chưa đọc danh bạ, nên chưa có gì được gửi đi. Tìm bạn bằng số điện thoại ở mục Cá nhân.";
   }
 }
 

@@ -5,15 +5,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { usePathname, useRouter } from "expo-router";
 import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
-import { Children, createContext, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
-import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
+import { Children, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { DemoPerson } from "./fixtures";
-import { duongDangNhap, laCuaVao } from "./duong-vao";
 import { luiVe as luiVeAnToan } from "./lui-ve";
-import { useRudiSession } from "./session";
 import { cardShadow, lopPhu, mucTrenAnh, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
 import { Field as FieldCore, type FieldCoreProps } from "./ui/Field";
 import { Grain } from "./ui/Grain";
@@ -239,11 +236,6 @@ export function RudiScreen({
   );
 }
 
-/**
- * Inside a TopBar: a DemoBadge there shortens its label so the title can stay
- * centred, and steps aside entirely where the bar draws the demo door itself.
- */
-const TrongTopBar = createContext<{ trong: boolean; cua: boolean }>({ trong: false, cua: false });
 
 export function TopBar({
   title,
@@ -261,20 +253,10 @@ export function TopBar({
 }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
-  const { cheDo } = useRudiSession();
   // The screen's own navigator, not the app's current route: under the
-  // transparent «Tạo mới» route the current route is `/create`, and a tab's
-  // header behind the tray started drawing the demo door (seen on Android).
+  // transparent «Tạo mới» route the current route is `/create`.
   const navigation = useContext(NavigationContext);
-  const trongTab = navigation?.getState?.()?.type === "tab";
   const pathname = usePathname();
-  // A demo screen outside the tabs (the tabs carry «Đăng nhập» in the bar)
-  // says it is one and where the way in is, on every such screen, with ONE
-  // element: the demo door (QA UI-082). A badge and a separate sign-in icon
-  // side by side widened the right side so far that the centred title of the
-  // demo notebook was 6 px wide. Never on the doors themselves.
-  const cuaDemo = cheDo !== "live" && !trongTab && !laCuaVao(pathname);
-  const { width: rongCuaSo } = useWindowDimensions();
   // Back through history when there is any; a screen a link opened cold goes
   // to its own tab instead of standing still (QA UI-018).
   const luiVe = () => {
@@ -313,7 +295,6 @@ export function TopBar({
   };
 
   return (
-    <TrongTopBar.Provider value={{ trong: true, cua: cuaDemo }}>
     <View onLayout={(e) => setRongThanh(Math.round(e.nativeEvent.layout.width))} style={styles.topBar}>
       {/* The title's and subtitle's natural width, measured off-screen for the rule above. */}
       <View aria-hidden importantForAccessibility="no-hide-descendants" onLayout={(e) => setRongChu(Math.ceil(e.nativeEvent.layout.width))} pointerEvents="none" style={styles.doChu}>
@@ -365,11 +346,9 @@ export function TopBar({
       <View style={[styles.topBarSide, styles.topBarRight, { minWidth: rongPhai }]}>
         <View onLayout={doBen("phai")} style={styles.topBarSideInnerRight}>
           {right}
-          {cuaDemo ? <CuaDemo nhan={rongCuaSo < 360 ? null : "Demo"} onPress={() => router.push(duongDangNhap(pathname) as never)} /> : null}
         </View>
       </View>
     </View>
-    </TrongTopBar.Provider>
   );
 }
 
@@ -402,51 +381,6 @@ export function Eyebrow({ children, tone = "accent" }: { children: ReactNode; to
   );
 }
 
-/**
- * "Dữ liệu demo". A claim about where the numbers came from, so it reads the
- * mode rather than being placed by hand on the screens somebody remembered.
- *
- * Renders NOTHING in live mode. A badge saying "demo" over real money would be
- * the same lie as the reverse, pointed the other way.
- */
-export function DemoBadge({
-  label = "Dữ liệu demo",
-  compactLabel,
-  cua = true,
-}: {
-  label?: string;
-  /** Short form used inside a TopBar; default «Demo». */
-  compactLabel?: string;
-  /**
-   * The badge is the way out of the demo: pressing it goes to sign-in with
-   * this screen as `?tiep=` (QA UI-082). `false` for a label that names a
-   * part of a demo screen, not the screen («AI nháp» on the AI sheet).
-   */
-  cua?: boolean;
-}) {
-  const { colors } = useRudiTheme();
-  const { cheDo } = useRudiSession();
-  const topBar = useContext(TrongTopBar);
-  const router = useRouter();
-  const pathname = usePathname();
-  if (cheDo === "live") return null;
-  // The bar draws the door, which says «Demo» itself; a second label beside it
-  // would be the same word twice and the width the title needs.
-  if (topBar.cua) return null;
-  const trongTopBar = topBar.trong;
-  // In a title bar the full label cannot share a 360dp row with a centred title
-  // at font 1.3; the flask plus «Demo» keeps the honesty, the accessibility
-  // label keeps the full sentence for screen readers and the native gate.
-  const chu = trongTopBar ? compactLabel ?? "Demo" : label;
-  if (cua) return <CuaDemo label={label} nhan={chu} onPress={() => router.push(duongDangNhap(pathname) as never)} />;
-  return (
-    <View accessibilityLabel={label} style={[styles.demoBadge, { backgroundColor: colors.card, borderColor: colors.line }]}>
-      <Ionicons color={colors.inkFaint} name="flask-outline" size={12} />
-      <Text numberOfLines={1} style={[styles.demoText, { color: colors.inkFaint }]}>{chu}</Text>
-    </View>
-  );
-}
-
 /** Focus the screen's title unless someone is typing or a sheet holds focus. */
 function duaFocusVaoTieuDe(node: unknown): void {
   if (typeof document === "undefined") return;
@@ -460,25 +394,6 @@ function duaFocusVaoTieuDe(node: unknown): void {
     dangO.closest('[aria-hidden="true"],[inert]') === null;
   if (dangGo || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
   tieuDe.focus({ preventScroll: true });
-}
-
-/**
- * The demo door of a TopBar: «Demo» and the way out of it, as one control.
- * The label is 12 sp, not the passive badge's 10, because it is pressed.
- * Under 360 dp it is the flask and the door alone (`nhan={null}`), so a long title
- * still has two lines' room; its name says the whole sentence either way.
- */
-function CuaDemo({ onPress, nhan = "Demo", label = "Dữ liệu demo" }: { onPress: () => void; /** `null`: the flask and the door alone. */ nhan?: string | null; label?: string }) {
-  const { colors } = useRudiTheme();
-  return (
-    <Pressable accessibilityLabel={`${label}. Đăng nhập`} accessibilityRole="button" onPress={onPress} style={styles.cuaDemo} testID="cua-demo">
-      <View style={[styles.cuaDemoChip, { backgroundColor: colors.card, borderColor: colors.line }]}>
-        <Ionicons color={colors.inkFaint} name="flask-outline" size={13} />
-        {nhan === null ? null : <Text numberOfLines={1} style={[styles.cuaDemoChu, { color: colors.inkSoft }]}>{nhan}</Text>}
-        <Ionicons color={colors.accent} name="log-in-outline" size={15} />
-      </View>
-    </Pressable>
-  );
 }
 
 export function Heading({
@@ -954,55 +869,6 @@ export function Chip({
   );
 }
 
-export function Avatar({
-  person,
-  size = 44,
-  ring = false,
-}: {
-  person: DemoPerson;
-  size?: number;
-  ring?: boolean;
-}) {
-  const { colors } = useRudiTheme();
-  return (
-    <View
-      accessibilityLabel={person.name}
-      style={[
-        styles.avatar,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: person.color,
-          borderColor: ring ? colors.accent : colors.card,
-          borderWidth: ring ? 2 : 2,
-        },
-      ]}
-    >
-      <Text style={[styles.avatarText, { fontSize: Math.max(10, size * 0.3) }]}>{person.initials}</Text>
-    </View>
-  );
-}
-
-export function AvatarStack({ people, max = 4 }: { people: DemoPerson[]; max?: number }) {
-  const { colors } = useRudiTheme();
-  const visible = people.slice(0, max);
-  const remaining = people.length - visible.length;
-  return (
-    <View style={styles.avatarStack}>
-      {visible.map((person, index) => (
-        <View key={person.id} style={{ marginLeft: index ? -10 : 0, zIndex: visible.length - index }}>
-          <Avatar person={person} size={34} />
-        </View>
-      ))}
-      {remaining > 0 ? (
-        <View style={[styles.avatarMore, { backgroundColor: colors.ink, borderColor: colors.card }]}>
-          <Text style={styles.avatarMoreText}>+{remaining}</Text>
-        </View>
-      ) : null}
-    </View>
-  );
-}
 
 /**
  * A picture the group owns: an authored asset, or a photograph the group took
@@ -1312,9 +1178,6 @@ const styles = StyleSheet.create({
   topBarTitleWrap: { flex: 1, alignItems: "center", paddingHorizontal: 8 },
   topBarTitle: { textAlign: "center" },
   doChu: { position: "absolute", left: 0, top: 0, opacity: 0 },
-  cuaDemo: { minHeight: 48, minWidth: 48, justifyContent: "center" },
-  cuaDemoChip: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5 },
-  cuaDemoChu: { fontSize: 12, lineHeight: 14, fontWeight: "700", letterSpacing: 0.2 },
   logoRow: { flexDirection: "row", alignItems: "center", flexShrink: 0, gap: 9 },
   logoMark: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-4deg" }] },
   logoMarkCompact: { width: 40, height: 40, borderRadius: 14 },
@@ -1322,8 +1185,6 @@ const styles = StyleSheet.create({
   logoMarkTypeCompact: { fontSize: 12, lineHeight: 11 },
   eyebrow: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 999 },
   eyebrowDot: { width: 6, height: 6, borderRadius: 3 },
-  demoBadge: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 5, borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5 },
-  demoText: { fontSize: 10, lineHeight: 12, fontWeight: "700", letterSpacing: 0.2 },
   heading: { gap: 8, maxWidth: 620 },
   center: { alignSelf: "center", alignItems: "center" },
   headingSubtitle: { maxWidth: 560 },

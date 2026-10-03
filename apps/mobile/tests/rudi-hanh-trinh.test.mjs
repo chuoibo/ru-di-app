@@ -30,7 +30,7 @@ import {
 } from "../dist-test/rudi/hanh-trinh/tom-tat.js";
 import { geodesic, gioTru, khoaDoan } from "../dist-test/rudi/hanh-trinh/duong.js";
 import { toiUuGanNhat } from "../dist-test/rudi/hanh-trinh/toi-uu.js";
-import { TOA_DO_MAU } from "../dist-test/rudi/hanh-trinh/toa-do-mau.js";
+import { TAM_MAC_DINH } from "../dist-test/rudi/hanh-trinh/kieu-ban-do.js";
 
 const A = { lat: 11.94, lng: 108.43 };
 const B = { lat: 11.98, lng: 108.45 };
@@ -274,14 +274,9 @@ test("ganMappedTheoId giữ giờ của chỗ khi được nêu tên trường g
   );
 });
 
-test("toạ độ mẫu Đà Lạt có cho mọi placeId trên lịch, không bịa Sài Gòn", () => {
-  const can = ["banh-can-le", "ho-tuyen-lam-dem", "cho-dem", "doi-thien-phuc", "still-cafe", "lau-ga-la-e"];
-  for (const id of can) {
-    const t = TOA_DO_MAU[id];
-    assert.ok(t, id);
-    assert.ok(t.lat > 11.85 && t.lat < 12.05, `${id} lat ${t.lat}`);
-    assert.ok(t.lng > 108.35 && t.lng < 108.55, `${id} lng ${t.lng}`);
-  }
+test("bản đồ trống mở ở trung tâm TP.HCM, nơi có danh mục thật", () => {
+  assert.ok(TAM_MAC_DINH.lat > 10.7 && TAM_MAC_DINH.lat < 10.85, `lat ${TAM_MAC_DINH.lat}`);
+  assert.ok(TAM_MAC_DINH.lng > 106.6 && TAM_MAC_DINH.lng < 106.8, `lng ${TAM_MAC_DINH.lng}`);
 });
 
 test("BanDo.native không import MapLibre ở top-level — APK cũ không được redbox cả tab Plan", () => {

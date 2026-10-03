@@ -364,16 +364,11 @@ class DesignDocRecordsWhatWasMeasured(unittest.TestCase):
 class TextContrastStillHolds(unittest.TestCase):
     """Guard the pairs the old table did cover, so the fix cannot trade them away."""
 
-    def test_assignment_summary_caption_uses_readable_semantic_text(self):
-        # Since the ledger redesign (2026-09-06) the assignment summary is a
-        # `Heading` on paper, not a caption on a teal block: the title counts
-        # the dishes from the fixture and prints the total, the subtitle says
-        # what a tap does. The pair to guard is the Heading subtitle on ground.
-        source = (REPO / "apps/mobile/src/rudi/screens/Bill.tsx").read_text()
-        self.assertIn(
-            'subtitle="Chạm một món để sửa ai dùng. Tổng bill giữ nguyên khi bạn sửa người."',
-            source,
-        )
+    def test_heading_subtitle_uses_readable_semantic_text(self):
+        # Since the ledger redesign (2026-09-06) summaries are a `Heading` on
+        # paper, not a caption on a teal block. The fixture assignment screen
+        # that first carried one went with the demo story (2026-10-03); the
+        # pair to guard is still the Heading subtitle on ground.
         heading = kit_component("Heading")
         match = re.search(r"subtitle \?[\s\S]*?color: colors\.(\w+)", heading)
         self.assertIsNotNone(match)
@@ -394,11 +389,20 @@ class TextContrastStillHolds(unittest.TestCase):
         self.assertIsNotNone(rudi, "RudiButton không còn khai `chuTat`")
         stamp = kit_component("StampButton")
         dau = re.search(r"const mucChu = tat \? colors\.(\w+) : muc;", stamp)
-        self.assertIsNotNone(dau, "StampButton không còn khai mực của dấu chưa bấm được")
-        self.assertNotRegex(button + stamp, r"opacity:\s*disabled", "nút tắt lại được làm mờ bằng opacity")
+        self.assertIsNotNone(
+            dau, "StampButton không còn khai mực của dấu chưa bấm được"
+        )
+        self.assertNotRegex(
+            button + stamp,
+            r"opacity:\s*disabled",
+            "nút tắt lại được làm mờ bằng opacity",
+        )
         for mode in ("light", "dark"):
             colours = palette(mode)
-            for ten, token in (("RudiButton", rudi.group(1)), ("StampButton", dau.group(1))):
+            for ten, token in (
+                ("RudiButton", rudi.group(1)),
+                ("StampButton", dau.group(1)),
+            ):
                 with self.subTest(mode=mode, nut=ten):
                     self.assertGreaterEqual(
                         round(contrast(colours[token], colours["card"]), 2),

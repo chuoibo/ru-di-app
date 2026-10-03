@@ -13,7 +13,6 @@ import { RudiSessionProvider, useRudiSession } from "../src/rudi/session";
 import { LuongAnhDaiDien } from "../src/rudi/nguoi/LuongAnhDaiDien";
 import { NepNoi } from "../src/rudi/nep/NepNoi";
 import { NepProvider } from "../src/rudi/nep/NepProvider";
-import { SoDoiProvider } from "../src/rudi/to-giay/SoDoi";
 import { useRudiTheme } from "../src/rudi/theme";
 import { useMotion } from "../src/rudi/ui/useMotion";
 import { GiaoDienProvider } from "../src/rudi/ui/GiaoDienProvider";
@@ -162,19 +161,15 @@ function RootInner() {
 
   // Design contract: warm editorial surfaces, one semantic leading tone per
   // screen, native 44pt targets, real text, restrained motion, and no visual
-  // treatment that could blur the boundary between demo and live money data.
+  // treatment that could blur what the ledger says.
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <RudiSessionProvider>
       {/* Friends' new avatars reach every screen while the app is open. */}
       <LuongAnhDaiDien />
-      {/* The two-person notebook of the experience build: in memory, wire-shaped,
-          swapped for the ADR-0027 routes in Phase 4. Inside the session so it can
-          later read the bearer; outside the Stack so every route sees one notebook. */}
-      <SoDoiProvider>
       {/* Nếp (ADR-0032): one assistant for every route. Inside the session so it
-          can read `phien`/`cheDo`, outside the Stack so a push does not remount it
+          can read `phien`, outside the Stack so a push does not remount it
           and lose where the person parked it. */}
       <NepProvider>
         <StatusBar style={dark ? "light" : "dark"} />
@@ -215,7 +210,6 @@ function RootInner() {
         {/* Last child: the dock paints over whatever route is open. */}
         <NepNoi />
       </NepProvider>
-      </SoDoiProvider>
       </RudiSessionProvider>
     </SafeAreaProvider>
     </GestureHandlerRootView>

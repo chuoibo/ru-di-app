@@ -158,7 +158,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
           multiline
           numberOfLines={2}
           onChangeText={setCaption}
-          placeholder="Đà Lạt về đêm"
+          placeholder="Sài Gòn về đêm"
           value={caption}
         />
       </View>

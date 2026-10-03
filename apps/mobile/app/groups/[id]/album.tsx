@@ -15,8 +15,7 @@ export default function GroupAlbumRoute() {
   if (!phienDaDoc) return null;
   const id = maNhom(params.id);
   if (phien !== null && id !== "") return <AlbumNhomLiveScreen contextId={id} phien={phien} />;
-  // The fixture album lives under the trip route; a group shelf has no fixture,
-  // so a cold link without a session goes through the sign-in door (UI-121).
+  // A cold link without a session goes through the sign-in door (UI-121).
   if (phien === null) return <CuaDangNhap />;
   return <Redirect href="/messages" />;
 }

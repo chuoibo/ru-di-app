@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 // QA 23/09: «Rủ một người đi chơi» offered the fixture pair to a real account
-// with no friends. The fixture ids may appear only inside the experience-build
-// component, and the screen must branch on the session before either renders.
+// with no friends. There is no fixture pair any more (2026-10-03): a session
+// gets the friend list, no session gets the sign-in door.
 const src = readFileSync(new URL("../src/rudi/screens/hai-nguoi/ChonNguoi.tsx", import.meta.url), "utf8");
 
 function than(ten) {
@@ -16,18 +16,16 @@ function than(ten) {
   return src.slice(dau, cuoi);
 }
 
-test("phiên thật đi nhánh sống, không qua hàng fixture", () => {
-  assert.match(than("ChonNguoiScreen"), /phien !== null\) return <ChonNguoiSong/);
+test("phiên thật đi nhánh sống, không phiên thì cửa đăng nhập", () => {
+  assert.match(than("ChonNguoiScreen"), /phien === null\) return <CuaDangNhap[^\n]*\n\s*return <ChonNguoiSong/);
   const song = than("ChonNguoiSong");
   assert.doesNotMatch(song, /CAP_DEMO|NGUOI_KIA_DEMO/);
   assert.match(song, /docDanhSachBan/);
   assert.match(song, /moNhanRieng/);
 });
 
-test("fixture chỉ sống trong ChonNguoiTraiNghiem", () => {
-  const ngoai = src.replace(than("ChonNguoiTraiNghiem"), "");
-  const dungFixture = ngoai.split("\n").filter((d) => /CAP_DEMO|NGUOI_KIA_DEMO/.test(d) && !d.startsWith("import"));
-  assert.deepEqual(dungFixture, []);
+test("không còn cặp mẫu nào trong màn chọn người", () => {
+  assert.doesNotMatch(src, /CAP_DEMO|NGUOI_KIA_DEMO|TraiNghiem|fixtures-doi/);
 });
 
 // QA 23/09: the conversation list read a direct conversation as «Mở nhóm Linh».

@@ -227,7 +227,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
             boLoi("ten");
             if (loi !== null) setLoi(null);
           }}
-          placeholder="Đà Lạt cuối tuần"
+          placeholder="Cà phê cuối tuần"
           value={title}
         />
         <View style={styles.hangLich}>

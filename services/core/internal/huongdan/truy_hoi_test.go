@@ -368,21 +368,36 @@ func TestBoVangKhongSua(t *testing.T) {
 //	duongVang       0.9177 → 0.9179   teen 0.7354 → 0.7369
 //	duongManKhac    0.7661 → 0.7665   teen 0.6280 → 0.6293
 //	duongTruyVan    0.8942 (unchanged), duongHaiNguoi unchanged
+//
+// Production, no demo story (2026-10-03): the ranker did not change, the
+// manual did. ca-nhan.md described the demo's profile editor («Bio», «Xong»),
+// which is gone; it now names the real one (`HoSoSong`: «Tên», «Giới thiệu»,
+// «Thành phố», «Lưu hồ sơ»). Recall@5 did not move on any group. MRR:
+//
+//	duongVang       0.9179 → 0.9124   khong_dau 1.0000 → 0.9865
+//	duongTruyVan    0.8942 → 0.8878
+//	duongManKhac    0.7665 → 0.7647   khong_dau 0.8873 → 0.8922, teen 0.6293 → 0.6173
+//
+// Two groups fall by more than 0.01 (khong_dau 0.0135, teen 0.0120). Every
+// accurate wording tried moved them the same way; only manuals naming labels
+// the app does not have («Xong», «Bio») kept the old numbers, and a manual
+// that sends a person to a button that is not there is the worse trade.
+// «log out o dau» is back among duongVang's misses.
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9179"},
+		"":          {"0.9505", "0.9124"},
 		"co_dau":    {"0.9405", "0.8972"},
-		"khong_dau": {"1.0000", "1.0000"},
+		"khong_dau": {"1.0000", "0.9865"},
 		"teen":      {"0.8333", "0.7369"},
 	},
 	duongTruyVan: {
-		"": {"1.0000", "0.8942"},
+		"": {"1.0000", "0.8878"},
 	},
 	duongManKhac: {
-		"":          {"0.9565", "0.7665"},
+		"":          {"0.9565", "0.7647"},
 		"co_dau":    {"0.9333", "0.7578"},
-		"khong_dau": {"1.0000", "0.8873"},
-		"teen":      {"0.9286", "0.6293"},
+		"khong_dau": {"1.0000", "0.8922"},
+		"teen":      {"0.9286", "0.6173"},
 	},
 	duongHaiNguoi: {
 		"":          {"1.0000", "0.7051"},

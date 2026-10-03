@@ -1,7 +1,6 @@
 /**
  * Lên plan on a real session (M4): the current group's outings from the
- * server, and the door to make one. The fixture build keeps the fixture
- * trip, which is what the default Maestro table drives.
+ * server, and the door to make one.
  *
  * ## The next appointment leads (UI v2, đợt 4)
  *

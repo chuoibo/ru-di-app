@@ -10,8 +10,8 @@
  *
  * Not proven here: that the scrim covers the header on a real page (the B3
  * probe measures the hit point over «Quay lại»), or that an input inside the
- * slot never lags a keystroke in a browser (tests/rudi-hanh-trinh-web.test.mjs
- * types into the day editor, which lives in the slot).
+ * slot never lags a keystroke in a browser (the browser test that typed into
+ * the day editor drove the demo trip, and went with it on 2026-10-03).
  */
 import assert from "node:assert/strict";
 import test from "node:test";

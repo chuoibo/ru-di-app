@@ -12,10 +12,8 @@
  *   forget and no «Quên mật khẩu?» to offer.
  * - The number in a route param or a log. It goes into ONE request body and
  *   into `otp-dang-cho.ts` (memory only) for the code screen to echo masked.
- * - The fixture door on a shipped build. The «Vào bản trải nghiệm…» button is
- *   rendered only when `CUA_FIXTURE_DEV` is true -- a development build with
- *   `EXPO_PUBLIC_RUDI_FIXTURE=1` -- because the Maestro table and the design
- *   measurements need it and nobody with a real account should ever land on it.
+ * - A demo door. There is no demo build: every screen behind this one reads
+ *   the server as the person who signed in.
  *
  * Google is available only in configured native builds. Apple is not offered.
  *
@@ -42,10 +40,9 @@ import { googleConfigured, googleSession } from "../../google";
 import { duongTiep, manSauDangNhap } from "../../duong-vao";
 import { useRudiSession } from "../../session";
 import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
-import { CUA_FIXTURE_DEV } from "../../cua-fixture";
 import { datOtpDangCho } from "../../otp-dang-cho";
 import { typography, useRudiTheme } from "../../theme";
-import { DemoBadge, Logo, RudiButton, RudiScreen } from "../../ui";
+import { Logo, RudiButton, RudiScreen } from "../../ui";
 import { CoverBand } from "../../ui/CoverBand";
 import { StampButton } from "../../ui/StampButton";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
@@ -203,18 +200,6 @@ export function LoginScreen() {
           <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>{thongBao}</Text>
         ) : null}
       </View>
-      {CUA_FIXTURE_DEV ? (
-        // Development builds only, and only when the operator asked. A store
-        // build has neither switch and never renders this block.
-        <View style={styles.cuaDev}>
-          <DemoBadge label="Cửa dev: dữ liệu demo" />
-          <RudiButton
-            label="Vào bản trải nghiệm Team Đà Lạt"
-            onPress={() => router.push("/personalization")}
-            variant="soft"
-          />
-        </View>
-      ) : null}
       {/* No Terms/Privacy claim until those pages exist to link to: a sentence
           that names documents nobody can open is a claim, not a footer. */}
       <Text style={[typography.caption, styles.phapLy, { color: colors.inkFaint }]}>
@@ -235,6 +220,5 @@ const styles = StyleSheet.create({
   orRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   orLine: { flex: 1, height: StyleSheet.hairlineWidth },
   khac: { gap: 10 },
-  cuaDev: { gap: 8, alignItems: "center" },
   phapLy: { textAlign: "center", paddingHorizontal: 18 },
 });

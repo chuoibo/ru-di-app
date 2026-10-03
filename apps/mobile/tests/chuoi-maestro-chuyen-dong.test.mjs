@@ -1,5 +1,5 @@
 /**
- * Chuỗi của các flow quay chuyển động (`.maestro-motion/`, chạy bằng
+ * Chuỗi của các flow quay chuyển động (`.maestro-motion-live/`, chạy bằng
  * scripts/do/quay-chuyen-canh.sh, không chạy trong CI) còn có mặt trong mã.
  *
  * Đợt thanh tab 5 cột (02/10) bỏ dòng tiêu đề cũ của Khám phá; ba flow r1 vẫn
@@ -14,7 +14,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 const GOC = new URL("..", import.meta.url).pathname;
-const THU_MUC = join(GOC, ".maestro-motion");
+const THU_MUC = join(GOC, ".maestro-motion-live");
 
 function tep(dir) {
   const ra = [];

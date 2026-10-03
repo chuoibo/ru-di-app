@@ -28,9 +28,9 @@ const PHIEN_ACTIVE = {
   membership_state: "active",
 };
 
-test("chưa đăng nhập là bản trải nghiệm, và nói ra vì sao", () => {
+test("chưa đăng nhập thì chưa có nhóm để đọc, và nói ra vì sao", () => {
   const nguon = nguonHienTai(null, {});
-  assert.equal(nguon.kieu, "trai-nghiem");
+  assert.equal(nguon.kieu, "chua-co-nhom");
   assert.match(nguon.viSao, /Chưa đăng nhập/);
 });
 
@@ -48,7 +48,7 @@ test("đã đăng nhập nhưng nhóm chưa duyệt thì KHÔNG live", () => {
   // has accepted you yet".
   for (const state of ["invited", "left"]) {
     const nguon = nguonHienTai({ ...PHIEN_ACTIVE, membership_state: state }, {});
-    assert.equal(nguon.kieu, "trai-nghiem", state);
+    assert.equal(nguon.kieu, "chua-co-nhom", state);
     assert.match(nguon.viSao, /duyệt/);
   }
 });
@@ -58,7 +58,7 @@ test("phiên mang mã nhóm không đọc được thì không thành đường 
   // of 404s that reads on screen as "máy chủ hỏng".
   for (const xau of ["", "team-da-lat", "../../etc", "  " + CONTEXT]) {
     const nguon = nguonHienTai({ ...PHIEN_ACTIVE, context_id: xau }, {});
-    assert.equal(nguon.kieu, "trai-nghiem", xau);
+    assert.equal(nguon.kieu, "chua-co-nhom", xau);
   }
 });
 
@@ -73,10 +73,10 @@ test("cặp dev vẫn là đường dev, và nó thắng khi có mặt", () => {
   });
 });
 
-test("nửa cấu hình dev là lỗi được nêu tên, không phải im lặng về fixture", () => {
+test("nửa cấu hình dev là lỗi được nêu tên, không phải im lặng", () => {
   for (const moiTruong of [{ actor: ACTOR }, { context: CONTEXT }]) {
     const nguon = nguonHienTai(null, moiTruong);
-    assert.equal(nguon.kieu, "trai-nghiem");
+    assert.equal(nguon.kieu, "chua-co-nhom");
     assert.match(nguon.viSao, /Thiếu một nửa/);
   }
 });
@@ -92,6 +92,6 @@ test("live không bao giờ tự tới", () => {
     [null, { actor: ACTOR }],
   ];
   for (const [phien, moiTruong] of khong) {
-    assert.equal(nguonHienTai(phien, moiTruong).kieu, "trai-nghiem", JSON.stringify(moiTruong));
+    assert.equal(nguonHienTai(phien, moiTruong).kieu, "chua-co-nhom", JSON.stringify(moiTruong));
   }
 });

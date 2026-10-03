@@ -48,9 +48,9 @@ const HANG_LOGO_RAIL = 56;
  * The destinations are a `tablist` of real tabs (`aria-selected`, QA UI-003).
  * The stamp is a button, which a tablist may not own, so the strip keeps an
  * empty, hidden column for it and the stamp is laid over that column from
- * outside the list. Signed out, the demo's way in is the «Dữ liệu demo» badge
- * of each demo screen (a door), so the strip never needs a seventh column
- * (QA UI-082; a seventh made each column 46 dp at 320 dp). The active strip
+ * outside the list. Signed out, every tab is the sign-in door, so the strip
+ * never needs a seventh column (QA UI-082; a seventh made each column 46 dp
+ * at 320 dp). The active strip
  * follows reduced-motion preferences.
  */
 export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {

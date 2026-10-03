@@ -2,7 +2,7 @@
 {
   "man": "profile",
   "tieu_de": "Cá nhân",
-  "nhanUI": ["Cá nhân", "Chỉnh hồ sơ", "Tên", "Bio", "Xong", "Đã lưu", "Mở Khám phá", "Bạn bè", "Tường của tôi", "Sở thích", "Tài chính của tôi", "Thành tích", "Cài đặt", "Tài khoản", "Đăng xuất"],
+  "nhanUI": ["Cá nhân", "Chỉnh hồ sơ", "Tên", "Giới thiệu", "Thành phố", "Lưu hồ sơ", "Đã lưu", "Mở Khám phá", "Bạn bè", "Tường của tôi", "Sở thích", "Tài chính của tôi", "Thành tích", "Cài đặt", "Tài khoản", "Đăng xuất"],
   "di_toi": [
     {"nhan": "Bạn bè", "man": "friends"},
     {"nhan": "Sở thích", "man": "personalization"},
@@ -19,8 +19,8 @@ Tab «Cá nhân» là không gian của riêng bạn: hồ sơ, bạn bè, nhữ
 ## Sửa tên và giới thiệu
 
 1. Bấm «Chỉnh hồ sơ».
-2. Sửa ô «Tên» và ô «Bio».
-3. Bấm «Xong».
+2. Sửa ô «Tên», «Giới thiệu» hay «Thành phố».
+3. Bấm «Lưu hồ sơ».
 
 ## Xem những chỗ đã lưu
 

@@ -37,7 +37,6 @@ import { ApiError, thongDiepNguoiDoc } from "../../api";
 import { doiLoiMoiLayPhien, vaoNhom, type Phien } from "../../phien";
 import { cauSauKhiNhan } from "../loi-moi-den";
 import { layLoiMoiDen } from "../loi-moi-den";
-import { CUA_FIXTURE_DEV } from "../cua-fixture";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
 import { Heading, RudiButton, RudiScreen, TopBar } from "../ui";
@@ -177,15 +176,6 @@ export function LoiMoiScreen() {
       <ChuThichLe icon="mail-open-outline">
         Chưa có lời mời? Nhờ một người trong nhóm gửi cho bạn. Đây là chủ ý, không phải thiếu sót: không ai tự tạo tài khoản trước khi có bạn rủ đi.
       </ChuThichLe>
-      {/* The fixture door exists only on a QA build (`cua-fixture.ts`); a real
-          person reading «bản trải nghiệm» here took it for a demo app. */}
-      {CUA_FIXTURE_DEV ? (
-        <RudiButton
-          label="Xem bản trải nghiệm"
-          onPress={() => router.replace("/welcome")}
-          variant="ghost"
-        />
-      ) : null}
     </RudiScreen>
   );
 }

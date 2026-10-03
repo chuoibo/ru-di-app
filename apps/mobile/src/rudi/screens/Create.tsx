@@ -4,12 +4,11 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { KHUNG_VAT, hinhVat } from "../art/vat-ban";
 import { bongGiay, typography, useRudiTheme } from "../theme";
-import { DEMO_GROUP } from "../fixtures";
 import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
 import { luiVeVe } from "../lui-ve";
 import { tabTu, thuTuViec, type ViecTao } from "../tao-moi";
-import { DemoBadge, Heading } from "../ui";
+import { Heading } from "../ui";
 import { VeLop } from "../ui/art/VeLop";
 import { NepDien } from "../ui/NepDien";
 import { PressScale } from "../ui/PressScale";
@@ -21,7 +20,7 @@ import { Sheet } from "../ui/Sheet";
  *  desk's stable order; `tao-moi.ts` moves the one card that fits the tab. */
 export const ACTIONS: ViecTao[] = [
   { vat: "lich", title: "Tạo cuộc hẹn", href: "/outings/new" },
-  { vat: "hoa-don", title: "Chia hóa đơn", href: "/smart-split/xom-leo/review" },
+  { vat: "hoa-don", title: "Chia hóa đơn", href: "/smart-split/moi/review" },
   { vat: "anh-in", title: "Đăng kỷ niệm", detail: "Ảnh lên tường nhóm", href: "/moments/new" },
   { vat: "polaroid", title: "Đăng story", detail: "Một tấm 24 giờ, chỉ bạn bè thấy", href: "/stories/new" },
   // The one entry the two-person notebook adds here (spec «Nếp truyền giấy»
@@ -55,7 +54,7 @@ export function CreateSheet() {
   const coCap = (phien?.contexts ?? []).some((nhom) => laPair(nhom) && nhom.my_state === "active");
   const { viec: cacViec } = thuTuViec({ viec: ACTIONS, tu, coCap, coCongDong: true });
   const subtitle = phien === null
-    ? `Bắt đầu với ${DEMO_GROUP.name}.`
+    ? "Đăng nhập để bắt đầu."
     : currentGroup ? `Đang ở ${currentGroup.display_name}.` : "Chọn hội bạn trong bước tiếp theo.";
 
   return (
@@ -65,7 +64,6 @@ export function CreateSheet() {
           <View style={styles.headingRow}>
             <View style={styles.headingText}>
               <Heading size="h2" subtitle={subtitle} title="Mình làm gì tiếp?" />
-              {phien === null ? <DemoBadge /> : null}
             </View>
             {/* M1: Nếp walks onto the desk, once a session. */}
             <NepDien khoanhKhac="M1" suKien="khay-tao" />

@@ -39,7 +39,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import * as api from "../../dist-test/api.js";
-import { khoiDongNhom } from "../../dist-test/screens/chat/nhom.js";
+import { khoiDongNhomDemo } from "../../dist-test/rudi/nhom-demo.js";
 import { personById } from "../../dist-test/rudi/nhom-demo.js";
 import { batPhienE2E } from "./phien-e2e.mjs";
 
@@ -103,7 +103,7 @@ async function nhomAppDung() {
  */
 async function nhomThat() {
   // The person, not the slug (bug-223337): a bare string has no `.personId`.
-  const state = await khoiDongNhom(personById("minh"));
+  const state = await khoiDongNhomDemo(personById("minh"));
   assert.equal(
     state?.kind,
     "xong",
