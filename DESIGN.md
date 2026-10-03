@@ -1318,7 +1318,8 @@ xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy g�
      (hai đỉnh cùng một đường ngang, đáy : cao = 19 : 18), vì cảnh và sticker
      đều truyền `x0`·`y0`·`tiLe` nên toạ độ 20/38 không còn.
   4. **Chạy trên thứ thật sự lên màn.** `hinhNep` đứng một mình không phải cái
-     màn hình vẽ; cổng quét cả tám sticker (hai bản đọc) lẫn mười cảnh, và bỏ
+     màn hình vẽ; cổng quét cả tám sticker (hai bản đọc) lẫn mọi cảnh của
+     `CANH_IDS` (mười hai từ 03/10), và bỏ
      qua lớp nằm **trước** nếp gấp vì chúng bị chính mảng coral phủ lên.
   Phạm vi quét là `nghieng ∈ [−8, 13]` × `dam ∈ {1, 1.3}` chứ không chỉ giá trị
   mặc định của pose, vì cả hai là **override công khai** và sticker «Chờ tí»
@@ -1355,7 +1356,8 @@ xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy g�
   CHAN_NEP × tiLe`) cùng kết thúc ở đó, nên không nhân vật nào lơ lửng cạnh
   đồ vật. Cảnh `chua-co-keo` là ngoại lệ có chủ ý: tờ hẹn bay, nhân vật viết
   bên cạnh, không có sàn nào để đứng.
-- **Mười cảnh** (`hinhCanh`, `CANH_IDS`, 09/09). Trước đó có năm, và ba trong
+- **Mười hai cảnh** (`hinhCanh`, `CANH_IDS`; mười từ 09/09, thêm hai 03/10 cho
+  hai danh sách riêng của bảng tin Cộng đồng). Trước 09/09 có năm, và ba trong
   số đó dùng **cùng một dáng người đổi đạo cụ** — chính điều review cấm nhân
   lên. *Lịch sử 09/09:* lượt đầu của bản mười cảnh tái phạm đúng lỗi ấy ở ba
   cảnh mới; lượt chấm bắt được và ba cảnh ấy được vẽ lại bằng pose mới — trong
@@ -1363,7 +1365,9 @@ xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy g�
   được thay bằng `dua-hai-tay` ở `chua-co-loi-moi`. *Hiện hành (10/09, audit
   F45a):* mỗi cảnh có Nếp đứng bằng **một pose riêng**, và điều ấy là **dữ liệu**
   chứ không phải lời hứa — `POSE_CANH` trong `canh.ts` đọc từ đúng entry
-  `hinhCanh` vẽ, `tests/art-duong.test.mjs` đòi mười giá trị không trùng:
+  `hinhCanh` vẽ, `tests/art-duong.test.mjs` đòi đúng một giá trị cho mỗi id
+  của `CANH_IDS`, không hai cảnh trùng pose (03/10 ca đổi tên từ «mười cảnh»
+  thành «mọi cảnh», nên thêm cảnh không phải sửa số):
   `chua-co-hoi` `keo-ghe` (mặt `nhuong`) · `chua-co-keo` `ghi-lai` cúi viết
   (`quyet`) · `chua-co-anh` `giu-khung` nhìn xuyên khung rỗng (`hoi`) ·
   `chua-co-ban` `giu-cho` **ngồi** ở bàn hai chỗ, tay mời sang ghế trống
@@ -1371,7 +1375,22 @@ xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy g�
   `goi-loi` **gọi lời** — tay khum cạnh miệng, bong bóng mọc từ miệng (trước
   đó cùng `ghi-lai` với `chua-co-keo`: hai cảnh một dáng, audit F45a) ·
   `chua-co-loi-moi` `dua-hai-tay` · `chua-co-ky-niem` `voi-len` ·
-  `bo-loc-che-het` `ghe-nhin` · và `chua-doc-duoc` **không pose**.
+  `bo-loc-che-het` `ghe-nhin` · `chua-co-bai` `dua-giay` (03/10) — **bảng tin
+  khu phố**: hai cột chạy từ sàn lên một mái ván, bảng trống giữa hai cột,
+  **một** ghim coral ở phía gần chờ tờ đầu tiên; Nếp chìa tờ gấp nhỏ và dừng
+  một bước trước mép bảng — đưa, chưa ghim. Hai bản bị cắt ở review: bảng trên
+  chân dưới mái phẳng đọc thành **tủ** (đoạn cột nhô lên trên bảng mới giữ nó
+  là bảng tin), và ghim mực còn lại của tin cũ đọc thành **trời sao** ở nền
+  tối · `chua-luu-bai` `gap-lai`, mặt **`binh-than`** (03/10) — **hộp mở
+  nắp**, nhìn đủ cao để thấy lòng: miệng sau cao hơn miệng trước **14 đơn
+  vị**, lòng hộp `bong` ở cả hai scheme, một nét góc trong phía sau chạy
+  xuống miệng trước, và **dải đánh dấu coral vắt qua miệng trước**, cùng dấu
+  với nút lưu trên thẻ bài. Bản đầu cho miệng hộp là khe 8 đơn vị gần như
+  nhìn thẳng: «rỗng» được nói chứ không được thấy, ở nền tối không nói được cả
+  thế; mặt `giu-kin` mặc định của pose có miệng phẳng đọc thành **dỗi** trước
+  hộp rỗng, và giữ một bài để đọc sau không phải bí mật · và `chua-doc-duoc`
+  **không pose**. *Hình và mặt là quyết định đọc ảnh ở review; pose không trùng
+  là luật đo được.*
 - **`CANH_KHONG_NEP` là cơ chế, không phải lời hứa.** `chua-doc-duoc` **không
   bao giờ** vẽ Nếp, kể cả khi người gọi truyền `nep`: `hinhCanh` bỏ qua yêu
   cầu ấy. Lý do là luật «Nếp Đứng Xa Tiền» phải đúng ở **khoảng hai mươi** màn
@@ -1379,22 +1398,38 @@ xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy g�
   hỏng. `ErrorState` gắn sẵn cảnh này nên mọi màn lỗi có hình mà không nơi nào
   phải nhớ gì. Cổng `art-duong` biết tập ấy và đòi bản có/không Nếp **giống hệt
   nhau** cho các id trong đó.
-- **Im lặng hành chính cố ý để trống**: «Bạn chưa chặn ai», «Chưa có phiên
-  nào», và dải «Thông báo» ở Khám phá. Không phải quên: hai cái đầu là danh
-  sách quản trị rỗng, không cần ai kể chuyện, và review đã cấm đưa hình kể
-  chuyện vào mọi hàng dữ liệu; cái thứ ba là **ghi chú kỹ thuật của bản trải
-  nghiệm** («chưa có hộp thư máy chủ»), tức lời của hệ thống nói về chính nó,
-  không phải im lặng của người dùng. Ba chỗ này là **toàn bộ** các ô rỗng không
-  có hình; kiểm lại bằng cách quét `illustration=` trên mọi chỗ mount
-  `EmptyState`, đừng tin danh sách này tự biết mình thiếu.
+- **Ô rỗng không có cảnh là một danh sách trong CỔNG, không trong văn này**
+  (03/10). `apps/mobile/tests/trang-rong-co-hinh.test.mjs` quét mọi
+  `<EmptyState …/>` trong `src/` và `app/` (trừ chính component và
+  `app/dev/`): ô nào thiếu `illustration=` phải có tên — đúng tệp, đúng tiêu đề
+  như viết trong mã — ở một trong hai bảng, và tên nào không còn ứng với ô rỗng
+  không cảnh nào cũng đỏ. **`KHONG_HINH`: bảy im lặng cố ý, mỗi cái một lý
+  do.** Ba danh sách quản trị («Bạn chưa chặn ai», «Chưa có phiên nào», «Chưa
+  ẩn bài nào» của Cộng đồng) không cần ai kể chuyện, và review đã cấm đưa hình
+  kể chuyện vào mọi hàng dữ liệu; dải «Thông báo» ở Khám phá là **ghi chú kỹ
+  thuật của bản trải nghiệm** («chưa có hộp thư máy chủ»), lời hệ thống nói
+  về chính nó, không phải im lặng của người dùng; «Chưa có sổ nào để quyết
+  toán» là màn tiền — Nếp đứng xa tiền, và sổ không nhận chuyện kể; «Chưa có
+  lời nhắn nào» là một dòng dưới bài trên tường, nơi một cảnh sẽ nặng hơn chính
+  bài nó trả lời; «Chưa có ghi chép nào» là danh sách ghi chép riêng mở từ khay
+  cài đặt bảng tin. **`CHUA_VE`: hai ô là NỢ, không phải quyết định** — «Chưa
+  có bạn nào để rủ» (`ChonNguoi`) và «Chưa có địa điểm để thêm»
+  (`PickOutingLive`), mỗi ô là trọn nội dung một màn khi rỗng, chưa vẽ. Bảng
+  tách đôi để không ai đọc nợ thành quyết định. *Lịch sử:* tới 03/10 văn ở đây
+  kể ba chỗ là «toàn bộ» trong khi mã đã nhiều hơn — lý do danh sách chuyển vào
+  cổng. Ô rỗng mới không cảnh thì ghi tên và lý do vào bảng của cổng, không ghi
+  vào đây.
 - **Mỗi cảnh trọn vẹn khi không có
   Nếp** (`nep: false`, so `sua-ab/A-co-nep` với `B-khong-nep`) và được trình
   đọc màn hình đọc thành **một câu**: `chua-co-hoi` «Một chiếc ghế được kéo
   ra, chừa sẵn chỗ» · `chua-co-keo` «Một tờ hẹn trống, nét mực bắt đầu từ
   đó» · `chua-co-anh` «Một khung ảnh còn trống, góc giấy gấp» · `chua-co-ban`
   «Hai chiếc ghế, một chỗ còn trống» · `tim-khong-ra` «Một tấm bản đồ gấp,
-  đường đi chưa tới nơi». `Canh` khung chặt theo `hopNgang` + `viewBox`, nên
-  bỏ Nếp thì cảnh không để lại khoảng thụt bên trái; `width` là bề rộng
+  đường đi chưa tới nơi» · `chua-co-bai` «Một bảng tin còn trống, chiếc ghim
+  đầu tiên chờ sẵn» · `chua-luu-bai` «Một chiếc hộp mở nắp, bên trong còn
+  trống» (đủ cả mười hai câu ở `MO_TA`, `canh.ts`). `Canh` khung chặt theo
+  `hopNgang` + `viewBox`, nên bỏ Nếp thì cảnh không để lại khoảng thụt bên
+  trái; `width` là bề rộng
   khung 144 đầy đủ để đạo cụ giữ một cỡ có hay không có nhân vật.
 - **Quyết định mở rộng nhận diện (08/09, sau review đợt 1).** Nếp là **một
   lớp tháo được**, không phải nhân vật bắt buộc: mọi cảnh phải đọc được với
@@ -1474,7 +1509,10 @@ xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy g�
   1.4), `giu-kin`} **đứng**, tờ hai mảng gập thật trước ngực (mảng phải là
   hình bình hành hẹp đang quay về người xem, sống gấp là nét mực). Cổng: ba
   pose đúng **một** lớp coral ở cả hai biến thể. *Tay và tờ là quyết định
-  đọc mù; số coral là luật đo được.*
+  đọc mù; số coral là luật đo được.* Từ 03/10 hai trong ba còn đứng trong
+  cảnh rỗng (bản trang): `dua-giay` ở `chua-co-bai`, `gap-lai` ở
+  `chua-luu-bai` với mặt `binh-than` đè `giu-kin` của pose qua `them`
+  (xem «Mười hai cảnh»); `up-xuong` chưa cảnh nào dùng.
 - **Vạt của tờ nhỏ là `giay` dưới viền mực, không `bong`.** Trên nền tối
   `paperShade` tối hơn `paper`, vạt `bong` đọc thành **lỗ khoét** thay vì góc
   lật lên (vòng 3, motif). Áp cho tờ trong tay `dua-giay`, tờ sàn `up-xuong`
@@ -2294,15 +2332,53 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
 - **`EmptyState`** năm loại (`first-use`, `no-results`, `filtered`,
   `permission`, `failure`): `h2` + một câu `body` `inkSoft` rộng tối đa 420,
   **một** hành động `RudiButton compact` (`outline` khi `failure`) và một cửa
-  phụ `ghost`; khe `illustration` từ 08/09 nhận `<Canh>` **rộng 168**:
+  phụ `ghost`. **Cả hai nút `full={false}`, rộng theo nhãn trên mọi nền
+  tảng** (03/10): `full` là `width: 100%`, web tính nó theo hàng nút đã co
+  theo nội dung còn Yoga tính theo cột, nên trên Android nút duy nhất giãn
+  mép tới mép trong khi web là viên gọn; vẫn cao ≥ 48 (`compact`), và hàng hai
+  nút giờ theo đúng luật «Hai nút cùng một hàng» (F41). *Luật đo được*
+  (`cong-dong-trang-rong.test.mjs` đòi đúng hai `RudiButton`, cả hai
+  `full={false}`). Hàng hai nút trên Android, trước là hai nút giãn chồng
+  nhau, nay một hàng: đã chụp `ErrorState` của `PlaceDetailLive` («Thử lại» +
+  «Về Khám phá») ở 411×914 và 360×640, cỡ chữ 1.0 và 1.3 — một hàng, không
+  cắt; Conversations «Tôi có lời mời», Khám phá «Xóa lọc» và hai `ErrorState`
+  còn lại cùng component nhưng chưa chụp. Khe `illustration` từ 08/09 nhận
+  `<Canh>` **rộng 168**:
   Album «Chưa có kèo nào» → `chua-co-keo`, «Chưa có khoảnh khắc» →
   `chua-co-anh`, Khám phá «Chưa thấy nơi phù hợp» → `tim-khong-ra`
-  (`sua2-sang-1.0/bs-04-tim-khong-ra`: cảnh, `h2`, một câu, một nút). Hai
-  cảnh còn lại (`chua-co-hoi`, `chua-co-ban`) đã vẽ, chưa có màn gọi. Câu
+  (`sua2-sang-1.0/bs-04-tim-khong-ra`: cảnh, `h2`, một câu, một nút).
+  `chua-co-hoi` (Nhóm «Chưa có nhóm nào») và `chua-co-ban` (Bạn bè «Chưa có
+  bạn nào», Cộng đồng «Chưa theo dõi ai») nay đều có màn gọi; cảnh duy nhất
+  đã vẽ mà **chưa màn nào gọi** là `chua-co-tin-nhan` — chỉ bàn thử
+  `app/dev/ui-lab` (grep `<Canh id=` trong `src/` và `app/`, 03/10). Câu
   thân rút về một câu vì cảnh đã nói vế đầu. Từ 11/09 câu thân đi qua
   `khongMoCoi` (`ui/chu.ts`): hai chữ cuối nối bằng NBSP nên không dòng nào
   kết bằng một chữ lẻ («…rồi thử / lại.» — tái audit 10/09 ảnh 20; câu dưới
   bốn chữ giữ nguyên); `r13-77-loi-canh-moi-*`.
+- **Cộng đồng rỗng (Khám phá › Cộng đồng, 03/10)**: năm danh sách là
+  `EmptyState` `inline` trên gutter 16 của ô tìm và hàng chữ-tab
+  (`marginHorizontal: 16`, không đệm trên — vạch của hàng chữ-tab đã tách),
+  không còn icon Ionicons trên `h1` — những ô rỗng cuối cùng ngoài
+  `EmptyState`. «Dành cho bạn»/«Thịnh hành» → `chua-co-ky-niem` «Một ngày đáng
+  kể» + «Viết bài»; «Đang theo dõi» → `chua-co-ban` «Chưa theo dõi ai» + «Xem
+  bài thịnh hành» (danh sách theo dõi đầy lên bằng cách tìm người trong các
+  bảng tin, viết bài của mình không làm nó đầy); «Đã lưu» → `chua-luu-bai`
+  «Chưa lưu bài nào» + «Xem bài thịnh hành»; «Bài của tôi» → `chua-co-bai`
+  «Chưa kể chuyện nào» + «Viết bài» (tên của khay Tạo); «Bài đã ẩn» **không
+  cảnh, không nút**: danh sách quản trị (`KHONG_HINH`). **Một cỡ cảnh cho cả
+  năm tab**, để tiêu đề không nhảy khi đổi tab: **168**, chỉ **120** khi cửa
+  sổ thấp (`height < 700`) **và** chật (`width < 360` hoặc `fontScale >
+  1.15`) — ở 320×640 cỡ 168 (và cả 144) đẩy nút xuống dưới thanh tab, còn
+  375×667 dư chỗ và giữ 168; không bao giờ hạ cả một lớp máy chỉ vì chiều
+  cao. Thẻ xin cá nhân hoá **chờ tới khi «Dành cho bạn» có bài**: trên bảng
+  tin rỗng nó là lời mời coral thứ hai cạnh nút của cảnh, và cá nhân hoá một
+  bảng tin rỗng không đổi gì. Tiêu đề riêng của danh sách chỉ hiện **trên
+  danh sách có bài**: trên danh sách rỗng nó chồng cùng hạng với tiêu đề của
+  ô rỗng, trên khung xương nó đổi chữ lúc danh sách về rỗng. Tìm trong Cộng
+  đồng không thấy → `tim-khong-ra` 168 như Khám phá, và **cảnh lui khi bàn
+  phím mở** (`useKeyboardOpen`: ô tìm chạy theo từng chữ gõ nên «không
+  thấy» hiện khi phím còn lên), câu gợi ý ở ngay dưới ô. *Luật đo được*
+  (`cong-dong-trang-rong.test.mjs`); ảnh `.impeccable/review/cdr2/`, `cdr3/`.
 - **`Skeleton`**: xương màu `line`, bo 10, băng sáng `card` 0.55 chạy 1400ms;
   tắt hẳn dưới Reduce Motion. `SkeletonLines` dòng cuối 62%.
 - **`ErrorState`**: cùng khung với `EmptyState kind="failure"`.

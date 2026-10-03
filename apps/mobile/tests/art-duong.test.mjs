@@ -247,7 +247,7 @@ test("bound của cubic: sai số lấy từ chính điểm điều khiển, và
   assert.ok(mau.saiSo > 0 && mau.saiSo < 0.02, "sai số phải dương và nhỏ hơn bề dày một nét");
 });
 
-test("cổng nếp gấp cũng chạy trên thứ thật sự lên màn: tám sticker và mười cảnh", () => {
+test("cổng nếp gấp cũng chạy trên thứ thật sự lên màn: tám sticker và mọi cảnh", () => {
   // `hinhNep` in isolation is not what a screen draws. Scenes and stickers
   // compose props with the figure, and the pencil nib in `ghi-lai` is a second
   // coral triangle that ink legitimately touches -- the reason the fold is

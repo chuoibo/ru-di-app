@@ -357,7 +357,7 @@ const NEP: Record<CanhId, ChoNep> = {
   "bo-loc-che-het": { pose: "ghe-nhin", x0: -1, tiLe: 0.76 },
   // Holding a small folded sheet out to the empty board: the far hand at box
   // (85, 47) → scene (66, 66.8), the sheet's edge at x 70.8, a step short of
-  // the board's near edge (76). Offering the first story, not pinning it.
+  // the board's near edge (78). Offering the first story, not pinning it.
   "chua-co-bai": { pose: "dua-giay", x0: -2, tiLe: 0.8 },
   // Folding a sheet small at the chest, eyes on the fold, beside the open box
   // it goes into: keeping something for later, not filing it away. Calm, not

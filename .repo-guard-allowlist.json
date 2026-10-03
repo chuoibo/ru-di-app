@@ -1495,6 +1495,22 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh của đợt «Cộng đồng năm chữ-tab» 03/10/2026 (docs/claude/2026-10-03/cong-dong-chu-tab): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0 và dữ liệu seed tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-03/cong-dong-trang-rong/evidence/EV-CDR-WEB.jpg",
+      "sha256": "1b0feb3dc6c56cf279a1eb920158a19fdf1346b2172eb889570af6a8ace9e3ad",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của đợt «Trạng thái rỗng Cộng đồng» 03/10/2026 (docs/claude/2026-10-03/cong-dong-trang-rong): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0, từ khoá tìm tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-03/cong-dong-trang-rong/evidence/EV-CDR-ANDROID.jpg",
+      "sha256": "df78eb8465daeb6133c7798c04f1503d52970b2df5ed0489c43edc99c133ddbf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của đợt «Trạng thái rỗng Cộng đồng» 03/10/2026 (docs/claude/2026-10-03/cong-dong-trang-rong): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0, từ khoá tìm tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
     }
   ]
 }

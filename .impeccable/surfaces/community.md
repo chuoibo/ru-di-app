@@ -193,3 +193,42 @@ Mobile 1.239 PASS, 0 fail/skip; export web/iOS/Android PASS (bundle,
 không phải native E2E). Không suy rộng kết luận sang frame timing hay
 native sau merge. Các ảnh feed kèm commit được cập nhật từ lượt này;
 ảnh legacy-pending vẫn là lượt `0ec19fa9`, bridge không đổi sau đó.
+
+## Trạng thái rỗng · 03/10/2026
+
+Bản ship `63e40909`. Năm danh sách rỗng của Khám phá › Cộng đồng là
+`EmptyState` `inline` trên gutter 16, vẽ bằng cảnh của app; luật chung (cỡ
+cảnh, nút gọn, cổng quét ô rỗng) ở `DESIGN.md` mục «Trạng thái rỗng, tải, lỗi»
+và «Mười hai cảnh». Cổng: `apps/mobile/tests/cong-dong-trang-rong.test.mjs`.
+
+| Tab | Cảnh | Tiêu đề | Nút |
+|---|---|---|---|
+| Dành cho bạn, Thịnh hành | `chua-co-ky-niem` | Một ngày đáng kể | Viết bài |
+| Đang theo dõi | `chua-co-ban` | Chưa theo dõi ai | Xem bài thịnh hành |
+| Đã lưu | `chua-luu-bai` (mới: hộp mở nắp) | Chưa lưu bài nào | Xem bài thịnh hành |
+| Bài của tôi | `chua-co-bai` (mới: bảng tin khu phố) | Chưa kể chuyện nào | Viết bài |
+| Bài đã ẩn | không cảnh: danh sách quản trị | Chưa ẩn bài nào | không |
+
+- **Cỡ cảnh:** một cỡ cho cả năm tab, 168; 120 chỉ khi cửa sổ thấp hơn 700
+  và chật (rộng dưới 360 hoặc chữ trên 1.15).
+- **Bảng tin rỗng không có thẻ xin cá nhân hoá**: thẻ chờ tới khi «Dành cho
+  bạn» có bài. Tiêu đề riêng của danh sách chỉ hiện khi danh sách có bài.
+- **Tìm không thấy:** `tim-khong-ra` 168; cảnh lui khi bàn phím mở, câu gợi ý
+  ở ngay dưới ô tìm.
+
+Hai điều thấy trong ảnh `.impeccable/review/cdr3/`, ngoài phạm vi bản này,
+ghi lại để không ai đọc thành đã xong:
+
+- **Câu gợi ý tìm kiếm nằm dưới bàn phím ở 360×640, chữ 1.3**
+  (`android-360x640-1.3-tim-mo-phim.png`): tiêu đề trích nguyên từ khoá nên
+  chiếm ba dòng, cảnh đã lui mà câu gợi ý vẫn bị phím che. Có từ trước bản
+  này. Hướng mở: tiêu đề ngắn hơn khi từ khoá dài, hoặc cuộn theo bàn phím.
+- **Hàng đầu Khám phá hiện «a điểm» ở mép trái ở 360×640, chữ 1.3**
+  (`android-360x640-1.3-theo-doi.png`): ở chữ lớn hai chữ «Địa điểm | Cộng
+  đồng» tràn hàng, nên hàng cuộn ngang và tự cuộn mục đang mở vào tầm nhìn
+  (`ui/DauKhamPha.tsx`, `hienMucMo`); chữ bị cắt ở mép là dấu hàng còn cuộn
+  được, giống hàng chữ-tab. Ghi là đã quan sát, đúng như mã định; chưa đánh
+  giá là lỗi.
+
+Documenter đọc mã và mở ảnh; không chạy lại cổng nào ngoài
+`trang-rong-co-hinh.test.mjs` (xanh, 1/1). Không đổi `.impeccable/design.json`.
