@@ -36,12 +36,14 @@ test("menu cài đặt chỉ giữ cái không phải một danh sách bài", ()
 });
 
 test("«Đã lưu» và «Bài của tôi» rỗng thì nói ở đó sẽ có gì, «Bài của tôi» mời viết bài", () => {
-  assert.match(man, /mode === "saved" \?[\s\S]{0,400}Chưa lưu bài nào[\s\S]{0,300}Chạm dấu lưu ở cuối một bài để đọc lại sau\./);
-  assert.match(man, /mode === "mine" \?[\s\S]{0,600}Chưa kể chuyện nào<[\s\S]{0,400}label="Viết bài" onPress=\{\(\) => router\.push\("\/community\/new" as never\)\}/);
+  // Since 03/10 both are `EmptyState`s with a scene (cong-dong-trang-rong.test.mjs).
+  assert.match(man, /mode === "saved" \? <EmptyState [^\n]*body="Chạm dấu lưu ở cuối một bài để đọc lại sau\."[^\n]*title="Chưa lưu bài nào"/);
+  assert.match(man, /mode === "mine" \? <EmptyState action=\{\{ label: "Viết bài", onPress: \(\) => router\.push\("\/community\/new" as never\) \}\}[^\n]*title="Chưa kể chuyện nào"/);
 });
 
 test("lời xin cá nhân hoá chỉ ở «Dành cho bạn», nơi nó đổi được điều gì", () => {
-  assert.match(man, /prefs && !prefs\.asked && !topic && mode === "for_you" \? <View style=\{\[styles\.consent/);
+  // And only over a feed with posts in it (finish review 03/10, cong-dong-trang-rong.test.mjs).
+  assert.match(man, /prefs && !prefs\.asked && !topic && mode === "for_you" && posts\.length > 0 \? <View style=\{\[styles\.consent/);
 });
 
 // Deferred minor of 02/10: the save button had no pending state, so two quick

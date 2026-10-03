@@ -13,12 +13,14 @@ import type { DungDau } from "../ui/DauKhamPha";
 import { HangChuTab, type MucChuTab } from "../ui/HangChuTab";
 import { useChamLaiTab } from "../ui/cham-lai-tab";
 import { CauTaiCho } from "../ui/CauTaiCho";
+import { EmptyState } from "../ui/EmptyState";
+import { Canh } from "../ui/art/Canh";
 import { Sheet } from "../ui/Sheet";
 import { SkeletonLines } from "../ui/Skeleton";
 import { useMotion } from "../ui/useMotion";
 import { docGiaoDienAsync } from "../kho";
 import { feedback, follow, likePost, mergePosts, readFeed, type FeedMode, type Post, type Preferences } from "./api";
-import { coThongBaoMoi, doiTheoDoiTacGia, khoaThongBaoDaXem, type ThongBao } from "./bang-tin";
+import { coThongBaoMoi, doiTheoDoiTacGia, khoaThongBaoDaXem, traVeCho, type ThongBao } from "./bang-tin";
 import { PostCard } from "./PostCard";
 import { Comments } from "./Comments";
 import { useCommunityStream } from "./useCommunityStream";
@@ -61,6 +63,14 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   // «Cộng đồng» in two: the actions rise above it, the large title keeps the
   // page's width (the large-title bar of a phone's own apps).
   const hep = useWindowDimensions().width < 360;
+  // The scene of an empty list at the slot's 168, or at 120 where that does
+  // not fit: a short window that is also cramped -- the header on two rows
+  // (`hep`) or large text. At 320×640 the one action fell under the tab bar
+  // (finish review 03/10), and at 144 it still ended 4 dp past the strip;
+  // 375×667 has 114 dp to spare at 120 and keeps 168. One size for the five
+  // tabs, so the headings do not jump from tab to tab.
+  const { height: caoCuaSo, fontScale } = useWindowDimensions();
+  const rongCanh = caoCuaSo < 700 && (hep || fontScale > 1.15) ? 120 : 168;
   const [mode, setMode] = useState<FeedMode>("for_you");
   const [posts, setPosts] = useState<Post[]>([]);
   const [next, setNext] = useState<string | null>(null);
@@ -193,12 +203,14 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
     if (!person || busy) return;
     setBusy(p.id);
     const sau = { ...p, saved: !p.saved };
+    // Where the card sat, so a failed un-save on «Đã lưu» puts it back there.
+    const viTri = posts.findIndex((x) => x.id === p.id);
     if (mode === "saved" && p.saved) setPosts((items) => items.filter((x) => x.id !== p.id));
     else update(sau);
     try {
       await feedback(person, p.id, "saved", sau.saved);
     } catch (e) {
-      if (mode === "saved" && p.saved) setPosts((items) => (items.some((x) => x.id === p.id) ? items : [p, ...items]));
+      if (mode === "saved" && p.saved) setPosts((items) => [...traVeCho(items, p, viTri)]);
       else update(p);
       setError(e instanceof Error ? e.message : "Chưa lưu được bài.");
     } finally {
@@ -382,19 +394,31 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
             Địa điểm, then the feed tabs as chips that scroll rather than clip. */}
         {dau ? oTim : null}
         {dau ? <HangChuTab giamChuyenDong={motion.reduced} muc={CHE_DO} chon={CHE_DO.some((c) => c.id === mode) ? mode : null} onChon={(m) => { setMode(m); motion.haptic.select(); }} /> : null}
-        {tieuDeRieng ? <Text style={[typography.h2, { color: colors.ink }]}>{tieuDeRieng}</Text> : null}
+        {/* Named once there is a list to name: over an empty one the title and
+            the empty state's own heading stacked at one rank, and over the
+            skeleton it swapped for that heading when the list came back empty
+            (finish review 03/10). */}
+        {tieuDeRieng && posts.length > 0 ? <Text style={[typography.h2, { color: colors.ink }]}>{tieuDeRieng}</Text> : null}
         {dau || topic ? null : oTim}
-        {/* Asked where it changes something: only «Dành cho bạn» learns from what one reads. */}
-        {prefs && !prefs.asked && !topic && mode === "for_you" ? <View style={[styles.consent, { backgroundColor: colors.paper }]}><Text style={[typography.h2, { color: colors.ink }]}>Một góc hợp với bạn</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text><View style={styles.row}><RudiButton full={false} compact label="Cá nhân hóa" onPress={() => void consent(true)}/><Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, { color: colors.ink }]}>Để sau</Text></Pressable></View></View> : null}
+        {/* Asked where it changes something: only «Dành cho bạn» learns from
+            what one reads, and only once there is something to read; over an
+            empty feed it was a second coral ask beside the scene's. */}
+        {prefs && !prefs.asked && !topic && mode === "for_you" && posts.length > 0 ? <View style={[styles.consent, { backgroundColor: colors.paper }]}><Text style={[typography.h2, { color: colors.ink }]}>Một góc hợp với bạn</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text><View style={styles.row}><RudiButton full={false} compact label="Cá nhân hóa" onPress={() => void consent(true)}/><Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, { color: colors.ink }]}>Để sau</Text></Pressable></View></View> : null}
         {/* Said where the list is, with the way on; a failed reload keeps the cards already shown. */}
         <CauTaiCho cau={error} hanhDong={{ label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bang-tin" />
       </View>}
       ListEmptyComponent={loading ? <View style={styles.intro}><SkeletonLines lines={4}/></View> : !error ? (
-        mode === "hidden" ? <View style={styles.empty}><Ionicons name="eye-off-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Chưa ẩn bài nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Bài bạn chọn «Không quan tâm» nằm ở đây. Chạm «…» trên một bài để bỏ ẩn.</Text></View>
-        // The reader's own two lists say what goes in them, and how.
-        : mode === "saved" ? <View style={styles.empty}><Ionicons name="bookmark-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Chưa lưu bài nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Chạm dấu lưu ở cuối một bài để đọc lại sau.</Text></View>
-        : mode === "mine" ? <View style={styles.empty}><Ionicons name="create-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Chưa kể chuyện nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài.</Text><RudiButton label="Viết bài" onPress={() => router.push("/community/new" as never)}/></View>
-        : <View style={styles.empty}><Ionicons name="trail-sign-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>{mode === "following" ? "Câu chuyện bắt đầu từ một người" : "Một ngày đáng kể"}</Text><Text style={[typography.body, { color: colors.inkSoft }]}>{mode === "following" ? "Theo dõi tác giả hoặc chủ đề bạn thích. Những cuộc đi của họ sẽ gặp bạn ở đây." : "Một quán nhỏ, một cung đường, một buổi đi chơi. Kể điều bạn muốn giữ lại."}</Text><RudiButton label="Kể khoảnh khắc đầu tiên" onPress={() => router.push("/community/new" as never)}/></View>
+        // An administrative list, reached from the settings sheet: no scene,
+        // as DESIGN.md keeps «Bạn chưa chặn ai» and «Chưa có phiên nào».
+        mode === "hidden" ? <EmptyState body="Bài bạn chọn «Không quan tâm» sẽ nằm ở đây, để bỏ ẩn khi đổi ý." kind="first-use" layout="inline" style={styles.empty} title="Chưa ẩn bài nào" />
+        // The reader's own two lists say what goes in them, and how; saved
+        // posts, like followed people, are found in the feeds.
+        : mode === "saved" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Chạm dấu lưu ở cuối một bài để đọc lại sau." illustration={<Canh id="chua-luu-bai" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa lưu bài nào" />
+        : mode === "mine" ? <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài." illustration={<Canh id="chua-co-bai" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa kể chuyện nào" />
+        // Following fills by finding someone to follow, and they are found
+        // in the feeds; writing a post of one's own does not fill it.
+        : mode === "following" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Theo dõi một tác giả hay một chủ đề, bài của họ sẽ hiện ở đây." illustration={<Canh id="chua-co-ban" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa theo dõi ai" />
+        : <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Một quán nhỏ, một cung đường, một buổi đi chơi: kể điều bạn muốn giữ lại." illustration={<Canh id="chua-co-ky-niem" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Một ngày đáng kể" />
       ) : null}
       ListFooterComponent={loading && posts.length ? <Text style={[typography.caption, styles.intro, { color: colors.inkFaint }]}>Đang mở thêm câu chuyện…</Text> : null}
     />
@@ -428,7 +452,9 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: 12 },
   later: { minHeight: 48, paddingHorizontal: 16, justifyContent: "center" },
   xacNhan: { gap: 8 },
-  empty: { margin: 24, paddingVertical: 36, gap: 20, alignItems: "flex-start" },
+  // On the gutter the search field and the tabs start on; the tab row's
+  // rule already sets it apart, so no space over it.
+  empty: { marginHorizontal: 16, paddingTop: 0 },
   daAn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   newPosts: { position: "absolute", alignSelf: "center", zIndex: 3 },
 });

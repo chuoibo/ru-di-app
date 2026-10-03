@@ -143,8 +143,8 @@ test("mọi cảnh hợp lệ có và không có Nếp; cảnh không Nếp là 
 // `chua-co-tin-nhan` were both `ghi-lai`. The pose a scene stands in is data
 // (`POSE_CANH`, read from the same entry `hinhCanh` draws from), so this can be
 // checked instead of remembered.
-test("mười cảnh: mỗi cảnh có Nếp đứng bằng một pose riêng, cảnh lỗi không có pose", () => {
-  assert.deepEqual(Object.keys(POSE_CANH).sort(), [...CANH_IDS].sort(), "POSE_CANH phải nói về đúng mười cảnh");
+test("mọi cảnh: mỗi cảnh có Nếp đứng bằng một pose riêng, cảnh lỗi không có pose", () => {
+  assert.deepEqual(Object.keys(POSE_CANH).sort(), [...CANH_IDS].sort(), "POSE_CANH phải nói về đúng mọi cảnh trong CANH_IDS");
   for (const id of CANH_KHONG_NEP) assert.equal(POSE_CANH[id], null, `${id}: cảnh không Nếp thì không có pose`);
   const dung = Object.entries(POSE_CANH).filter(([id]) => !CANH_KHONG_NEP.has(id));
   for (const [id, pose] of dung) assert.ok(pose !== null && laPoseNep(pose), `${id}: pose «${pose}» không có trong POSE_NEP`);
