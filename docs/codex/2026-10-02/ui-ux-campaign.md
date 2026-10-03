@@ -1,5 +1,8 @@
 # Tiếp nối toàn bộ audit UI/UX · 167 ID
 
+Điểm đọc đầu tiên khi Claude tiếp tục: [bàn giao tổng hợp13 ca và phần còn lại](claude-resume-handoff.md).
+Các số/SHA bên dưới là lịch sử kiểm chứng riêng của batch; bản gộp và xung đột production mới ghi ở tài liệu tổng hợp.
+
 Nguồn: PR #663 (`3bd112e5`), plan và bàn giao của session Claude `c97c4813-340b-485b-a30b-32b6828ad498`.
 Mục tiêu là xử lý toàn bộ phần còn lại, kèm review thiết kế, runtime native Android và QA retest; B9a không phải kết thúc chiến dịch.
 
@@ -11,7 +14,7 @@ READY_FOR_QA là tự kiểm và có hướng dẫn retest; không phải QA_ACC
 
 Giữ giấy, mực, coral và chữ Bricolage. Kỷ niệm để ảnh/câu chuyện dẫn; trình xem recedes; form có một quyết định, lỗi cạnh thao tác; cài đặt dùng trạng thái thật và lời dễ hiểu.
 CP00 baseline và bảo vệ công việc; CP01 viewer (094/098/101); CP02 nháp/ảnh (097/102); CP03 tường/album/bình luận (095/100/103/104/105/155/156/158/159); CP04 hành trình/kệ sổ (106/153/157/160/161/162); CP05 cài đặt/Cá nhân (015/107/108/109/110/111); CP06 vỏ app (002/009); CP07 Welcome (016/017/020); CP08 Nếp (008/011/012/014); CP09 consistency/gates/bàn giao.
-Không ghi đè worktree chính hay report QA/Claude. File có B8 sửa dở chỉ được patch phần issue mới, trong worktree riêng.
+Không ghi đè worktree chính hay report QA/Claude. Không patch phạm vi B8/B9 dành lại cho Claude; chỉ đối chiếu source để tránh làm trùng.
 
 ## Checkpoint đang thực hiện
 
@@ -20,7 +23,7 @@ Không ghi đè worktree chính hay report QA/Claude. File có B8 sửa dở ch�
 - [x] Worktree riêng `codex/ui-ux-b9a`, baseline `b4f4b189`; manifest hash bảo vệ công việc Claude lưu ngoài repo.
 - [x] Backup app-private và cấu hình của AVD đang có; runtime riêng, dữ liệu tổng hợp.
 
-### CP01 · Xem ảnh và story
+### CP01 · Xem ảnh và story · tạm giữ cho Claude, WIP ngoài PR
 - [x] Source baseline: viewer đo mỗi chiều rộng nên ảnh web có thể cao 0; counter chỉ nghe momentum; caller unmount ngay khi đóng; vùng story chưa có role/focus xác nhận.
 - [x] Brief: ảnh làm trọng tâm, cover indigo làm nền; tên/counter tách rõ khỏi caption. Một cụm nút trước/sau/phóng ảnh phục vụ cả gesture lẫn bàn phím. Không cắt ảnh, không làm đổi quy tắc xem story.
 - [x] Motion thesis: ảnh bước vào/ra cùng một fade có lifecycle, exit ngắn hơn enter; đóng nhanh/Back/tap lặp chỉ hoàn tất một lần; zoom giữ giới hạn ảnh và không phóng trang. Reduced motion giữ nguyên thông tin.
@@ -94,7 +97,7 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 | UI-012 | B10 | PLANNED | READY_FOR_QA · CP08 | Chip gợi ý của bảng Nếp cao 36dp · ≥48dp |
 | UI-013 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Sheet đóng: panel còn lộ rồi biến mất đột ngột · khung cuối ra ngoài màn hoặc mờ ≈0 |
 | UI-014 | B10 | PLANNED | READY_FOR_QA · CP08 | Ở 320dp mép Nếp đè chữ hàng chip · không chữ nào bị che ở C2 |
-| UI-015 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Cài đặt hiện giá trị giữ chỗ («Bạn», «B», công tắc sai) rồi mới đổi · không khung giữ chỗ sai |
+| UI-015 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Cài đặt hiện giá trị giữ chỗ («Bạn», «B», công tắc sai) rồi mới đổi · không khung giữ chỗ sai |
 | UI-016 | B10 | PLANNED | READY_FOR_QA · CP07 | Welcome web: chấm trang và mốc đường đứng yên ở trang 1 khi vuốt · chấm/nhãn khớp trang đang xem |
 | UI-017 | B10 | PLANNED | READY_FOR_QA · CP07 | Welcome: vuốt nhanh nhảy hai trang · vuốt nhanh = 1 trang |
 | UI-018 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | «Quay lại» chết khi màn mở thẳng bằng link (TopBar không kiểm `canGoBack`) · nút lui luôn tới một màn |
@@ -173,24 +176,24 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 | UI-091 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Nút tắt không nói lý do · không nút tắt nào thiếu lý do |
 | UI-092 | B8 | PLANNED | RESERVED_CLAUDE_B8 | Lá ngày đang chọn nằm khuất · lá chọn thấy trọn (cả ngày xa) |
 | UI-093 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Tablet: tờ giấy, sheet trải hết bề ngang · ≤640 |
-| UI-094 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Viewer web: ảnh cao 0, vuốt nhảy hai ảnh, chụm phóng cả trang · ảnh >0; «2/3»; không phóng trang |
-| UI-095 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Thả tim lỗi ở cuối tường: câu lỗi ở đầu tường · trong khung nhìn |
+| UI-094 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Viewer web: ảnh cao 0, vuốt nhảy hai ảnh, chụm phóng cả trang · ảnh >0; «2/3»; không phóng trang |
+| UI-095 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Thả tim lỗi ở cuối tường: câu lỗi ở đầu tường · trong khung nhìn |
 | UI-096 | B9 | PLANNED | SUPERSEDED_BY_UI_158 | (đã hết: nút xoá bình luận bị gỡ; lối xoá chuyển thành UI-158) · xem UI-158 |
-| UI-097 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Rời «Thả khoảnh khắc»/«Đăng story» mất ảnh và chữ, không hỏi · hỏi hoặc giữ nháp |
-| UI-098 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Viewer mờ dần khi mở nhưng biến mất ngay khi đóng · ≥1 khung mờ giữa chừng |
+| UI-097 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Rời «Thả khoảnh khắc»/«Đăng story» mất ảnh và chữ, không hỏi · hỏi hoặc giữ nháp |
+| UI-098 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Viewer mờ dần khi mở nhưng biến mất ngay khi đóng · ≥1 khung mờ giữa chừng |
 | UI-099 | B2 (Chip `maxWidth`) | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Chip tên quán dài tràn mép sheet check-in · chip trong sheet |
-| UI-100 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Bài «Chỉ mình tôi» mở bởi người khác: hai khối lỗi, hai «Thử lại» vô ích · một khối, không «Thử lại» |
-| UI-101 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Viewer story: vùng chạm không role; câu hỏi xoá không nhận focus · axe 0; focus vào câu hỏi |
-| UI-102 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Ảnh dọc 9:16: xem trước trọn, lên tường bị cắt · cùng vùng thấy |
-| UI-103 | B9 (Go) | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Album chỉ ghi năm, không ghi ngày chuyến · có ngày chuyến |
-| UI-104 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Ngày viết «28-09», «28/9/2026» lẫn lộn · một định dạng |
-| UI-105 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Tablet: ảnh tường 702–894px, cao hơn cửa sổ · cột ≤640 |
-| UI-106 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Ở 320px thẻ huy hiệu bẻ đôi chữ «châ/n» · cột chữ ≥120px |
-| UI-107 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Lưu công tắc lỗi: câu lỗi ở cuối trang · cạnh control |
-| UI-108 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Panel trong Cá nhân trông như màn con, Back rời tab · Back đóng panel |
-| UI-109 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | «Đã lưu» chỉ có con số · mở được từng chỗ |
-| UI-110 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Xoá tài khoản: «XOA» không dấu; «XOÁ» tắt nút không lý do; Back rời trang · nhận «XOÁ» hoặc nói lý do; Back về bước 1 |
-| UI-111 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Câu cuối Cài đặt chỉ sai chỗ đổi tên · chỉ đúng chỗ |
+| UI-100 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Bài «Chỉ mình tôi» mở bởi người khác: hai khối lỗi, hai «Thử lại» vô ích · một khối, không «Thử lại» |
+| UI-101 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Viewer story: vùng chạm không role; câu hỏi xoá không nhận focus · axe 0; focus vào câu hỏi |
+| UI-102 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Ảnh dọc 9:16: xem trước trọn, lên tường bị cắt · cùng vùng thấy |
+| UI-103 | B9 (Go) | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Album chỉ ghi năm, không ghi ngày chuyến · có ngày chuyến |
+| UI-104 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Ngày viết «28-09», «28/9/2026» lẫn lộn · một định dạng |
+| UI-105 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Tablet: ảnh tường 702–894px, cao hơn cửa sổ · cột ≤640 |
+| UI-106 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Ở 320px thẻ huy hiệu bẻ đôi chữ «châ/n» · cột chữ ≥120px |
+| UI-107 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Lưu công tắc lỗi: câu lỗi ở cuối trang · cạnh control |
+| UI-108 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Panel trong Cá nhân trông như màn con, Back rời tab · Back đóng panel |
+| UI-109 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | «Đã lưu» chỉ có con số · mở được từng chỗ |
+| UI-110 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Xoá tài khoản: «XOA» không dấu; «XOÁ» tắt nút không lý do; Back rời trang · nhận «XOÁ» hoặc nói lý do; Back về bước 1 |
+| UI-111 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Câu cuối Cài đặt chỉ sai chỗ đổi tên · chỉ đúng chỗ |
 | UI-112 | B2 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Sang màn mới focus ở `body` · focus trong màn mới |
 | UI-113 | B5 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | 320dp: tim «Lưu» của cặp so sánh bị đẩy ra ngoài · cả hai tim trong ô |
 | UI-114 | B5 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Nút «Lưu» lồng trong nút «Mở …» · không nút lồng nút |
@@ -232,16 +235,16 @@ Scope tiếp nối độc lập: CP06–CP08, 9 ID B10 (002/009/016/017/020/008/
 | UI-150 | B9 | PLANNED | READY_FOR_QA · B9a | Lưu sổ lỗi: câu lỗi ở đầu màn, trên nút hơn 1000px · lỗi thấy ngay sau khi chạm |
 | UI-151 | B9 (Go) | PLANNED | READY_FOR_QA · B9a | Kèo chưa tới ngày vẫn có «Khép cuộc đi»; chạm thì 409 · `can_end` false + lý do; không nút |
 | UI-152 | B9 | PLANNED | READY_FOR_QA · B9a | Thành viên thấy bộ chọn loại mà không có tác dụng · không bộ chọn với người không tổ chức |
-| UI-153 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Kệ trống chỉ có một câu, không hành động · một hành động qua EmptyState |
+| UI-153 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Kệ trống chỉ có một câu, không hành động · một hành động qua EmptyState |
 | UI-154 | B9 (Go) | PLANNED | READY_FOR_QA · B9a | Tên trang tự xếp là «2026-09-29» · không ngày ISO |
-| UI-155 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Long poll trả về thì tường cắt về trang đầu · giữ đủ bài sau sự kiện hoặc 30s |
-| UI-156 | B9 (Go) | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Bài Cộng đồng có ảnh lên tường không ảnh · thẻ tường có ảnh |
-| UI-157 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Lỗi thao tác sổ hành trình nằm ở cuối sổ · thấy ngay sau khi chạm |
-| UI-158 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Không còn lối xoá bình luận của mình ở trang viết · xoá có hỏi |
-| UI-159 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Câu xác nhận đăng lại ngoài khung · trong khung nhìn |
-| UI-160 | B9 (Go) | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | «MỚI MỞ» nhớ theo máy · máy mới không «MỚI MỞ» huy hiệu đã thấy |
-| UI-161 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Chạm huy hiệu thứ tư không phản hồi mà vẫn gửi PATCH · không PATCH; nói lý do |
-| UI-162 | B9 | PLANNED | RESERVED_CLAUDE_B9 · patch dở, chưa bàn giao | Mục «Thành tích…» mở màn «Hành trình» · tên mục khớp màn tới |
+| UI-155 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Long poll trả về thì tường cắt về trang đầu · giữ đủ bài sau sự kiện hoặc 30s |
+| UI-156 | B9 (Go) | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Bài Cộng đồng có ảnh lên tường không ảnh · thẻ tường có ảnh |
+| UI-157 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Lỗi thao tác sổ hành trình nằm ở cuối sổ · thấy ngay sau khi chạm |
+| UI-158 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Không còn lối xoá bình luận của mình ở trang viết · xoá có hỏi |
+| UI-159 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Câu xác nhận đăng lại ngoài khung · trong khung nhìn |
+| UI-160 | B9 (Go) | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | «MỚI MỞ» nhớ theo máy · máy mới không «MỚI MỞ» huy hiệu đã thấy |
+| UI-161 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Chạm huy hiệu thứ tư không phản hồi mà vẫn gửi PATCH · không PATCH; nói lý do |
+| UI-162 | B9 | PLANNED | RESERVED_CLAUDE_B9 · scope giữ lại, từng ca chưa xác minh | Mục «Thành tích…» mở màn «Hành trình» · tên mục khớp màn tới |
 | UI-163 | B1 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Gói bối cảnh mặc định 40 tin, gấp đôi mức 20 của ADR-0046 · chip ≤20; gói = số trên chip |
 | UI-164 | B6 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Chip nói «gửi như tin thường» mà vẫn hiện «Đang hỏi Rủ Đi AI…» · không khối AI khi AI chưa sẵn sàng |
 | UI-165 | B6 | READY_FOR_QA | KẾ_THỪA · cần retest cuối | Chữ hiện dần, «đang đọc/nghĩ», lỗi Nếp không trong vùng aria-live · vùng live lịch sự, báo một lần |

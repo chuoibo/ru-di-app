@@ -1,5 +1,8 @@
 # B9a · Trang cuối của cuộc đi
 
+Điểm đọc đầu tiên khi Claude tiếp tục: [bàn giao tổng hợp13 ca và phần còn lại](claude-resume-handoff.md).
+Các số/SHA bên dưới là lịch sử kiểm chứng riêng của batch; bản gộp và xung đột production mới ghi ở tài liệu tổng hợp.
+
 Ngày 02/10/2026 · gốc `95755a71` · nhánh `codex/ui-ux-b9a`.
 Tiếp nối session Claude `c97c4813-340b-485b-a30b-32b6828ad498` sau B7; B8 đang dở
 ở worktree chính được giữ nguyên. Không sửa bảng tiến độ hay report của Claude.

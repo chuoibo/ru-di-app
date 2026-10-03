@@ -1,5 +1,8 @@
 # B10 · Bàn giao
 
+Điểm đọc đầu tiên khi Claude tiếp tục: [bàn giao tổng hợp13 ca và phần còn lại](claude-resume-handoff.md).
+Các số/SHA bên dưới là lịch sử kiểm chứng riêng của batch; bản gộp và xung đột production mới ghi ở tài liệu tổng hợp.
+
 ## CP06 · Vỏ app và đường lạ — UI-002, UI-009
 
 Commit worktree `dfc985f7`, trên baseline sạch `d97430db`; chưa landing `main`.
