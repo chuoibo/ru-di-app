@@ -36,7 +36,8 @@ func TestDuongToiTrenDuLieuThat(t *testing.T) {
 		// Two ways of two steps; the labelled one («Xem quyết toán») passes
 		// through the settlement screen, so the unlabelled one wins (review 13).
 		{"finance", "messages", true, []string{"explore[]", "messages[Tin nhắn]"}},
-		{"explore", "smart-split/[id]/review", true, []string{"plan[Lên plan]", "create[Tạo mới]", "smart-split/[id]/review[Chia hóa đơn]"}},
+		// The «Tạo mới» stamp is on the strip over Khám phá too (03/10): no detour through Lên plan.
+		{"explore", "smart-split/[id]/review", true, []string{"create[Tạo mới]", "smart-split/[id]/review[Chia hóa đơn]"}},
 		// Two ways of two steps since main's memory-book merge (2026-09-28):
 		// «Rủ … tới đây» through the pair notebook, whose second step has no
 		// label (to-giay.md does not declare «Rủ hội mình đi chơi»), and «Thêm
@@ -541,6 +542,27 @@ func TestCongDongLaMucCuaKhamPha(t *testing.T) {
 			if got[i].Nhan != w.nhan[i] {
 				t.Errorf("%s -> %s step %d: «%s», want «%s»", w.tu, w.den, i, got[i].Nhan, w.nhan[i])
 			}
+		}
+	}
+}
+
+// The «Tạo mới» stamp sits in the middle of the strip on every screen the
+// strip is drawn over, Cộng đồng included (ui/ConDauTao.tsx pushes /create):
+// from any of them, writing a post is the stamp, then «Viết bài» on the desk.
+// Before the stamp was in the graph, Nếp routed a question from Khám phá
+// through Lên plan's own «Tạo mới» button, three taps for a two-tap errand.
+func TestConDauTaoTuMoiManCoThanh(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "apps", "mobile", "src", "rudi", "ui", "ConDauTao.tsx"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(raw), `"/create"`) || !strings.Contains(string(raw), `accessibilityLabel="`+nhanConDau+`"`) {
+		t.Fatalf("ConDauTao.tsx no longer pushes /create under the label «%s»", nhanConDau)
+	}
+	for _, tu := range []string{"explore", "community", "plan", "messages", "profile"} {
+		got, ok := soTay.duongToi(tu, "community/new")
+		if !ok || len(got) != 2 || got[0].Nhan != nhanConDau || got[0].Den != manConDau || got[1].Nhan != "Viết bài" {
+			t.Errorf("%s -> community/new: %v, want [%s, Viết bài]", tu, buoc(got), nhanConDau)
 		}
 	}
 }

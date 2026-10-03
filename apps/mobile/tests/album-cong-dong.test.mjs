@@ -36,3 +36,14 @@ test("khung album giữ chỗ 4:3 từ lần vẽ đầu, trước khi đo", () 
   assert.match(nguon, /khungAlbum:\s*\{[^}]*aspectRatio:\s*TI_LE_ALBUM/);
   assert.match(nguon, /style=\{styles\.khungAlbum\}/);
 });
+
+// Deferred minor of 02/10: the album stored its measured width rounded, but a
+// paging ScrollView pages by its own, unrounded width (357.71 dp at 2.625 px
+// per dp): each page drifted a third of a dp and a sliver of the next picture
+// showed after a few pages. The width is kept as measured.
+test("trang album rộng đúng bề rộng đo được, không làm tròn", () => {
+  const the = readFileSync(new URL("../src/rudi/community/PostCard.tsx", import.meta.url), "utf8");
+  assert.match(the, /setRongAlbum\(e\.nativeEvent\.layout\.width\)/);
+  assert.doesNotMatch(the, /setRongAlbum\(Math\.(round|floor)\(/);
+  assert.deepEqual(kichTrangAlbum(357.71), { width: 357.71, height: Math.round((357.71 * 3) / 4) });
+});

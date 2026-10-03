@@ -36,8 +36,9 @@ khác ▾» coral; sân khấu thành phố tràn hết bề ngang; ô tìm + n�
 nửa trên thẻ đầu. Thanh tab năm ô bằng nhau, con dấu coral 56dp nhô nửa trên mép ở ô giữa.
 
 **FORM:** Extension của thế giới «nhật ký chuyến đi» đã có (không concept-seed, không đổi bản sắc). Hàng tiêu đề là
-`tablist` hai tab; ba chế độ bảng tin là chip-tab; route Cộng đồng `href: null` sáng cột Khám phá. Chuyển động:
-chỉ báo băng trượt `standard` như hiện có, không thêm hiệu ứng mới.
+`tablist` hai tab; năm chế độ bảng tin là một hàng chữ-tab (`HangChuTab`, 03/10 — không phải chip lọc); route Cộng
+đồng `href: null` sáng cột Khám phá; chạm lại cột đang sáng thì màn của nó về đầu. Chuyển động: chỉ báo băng trượt
+`standard` như hiện có, không thêm hiệu ứng mới.
 
 **FINISH:** unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 

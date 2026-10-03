@@ -33,6 +33,10 @@ export const CANH_IDS = [
   "chua-co-loi-moi",
   "chua-co-ky-niem",
   "bo-loc-che-het",
+  // 03/10: the community feed's own two lists, «Bài của tôi» and «Đã lưu»,
+  // were the last silences drawn as an icon over a heading.
+  "chua-co-bai",
+  "chua-luu-bai",
 ] as const;
 export type CanhId = (typeof CANH_IDS)[number];
 
@@ -58,6 +62,8 @@ const MO_TA: Record<CanhId, string> = {
   "chua-co-loi-moi": "Một phong thư còn nguyên, chưa có ai gửi đi",
   "chua-co-ky-niem": "Một sợi dây phơi ảnh, hai chiếc kẹp còn trống",
   "bo-loc-che-het": "Một tấm lưới che gần kín, còn một ô để nhìn qua",
+  "chua-co-bai": "Một bảng tin còn trống, chiếc ghim đầu tiên chờ sẵn",
+  "chua-luu-bai": "Một chiếc hộp mở nắp, bên trong còn trống",
 };
 
 export function laCanhId(id: string): id is CanhId {
@@ -222,6 +228,54 @@ const NEN: Record<CanhId, () => LopVe[]> = {
       { d: netGay([[58, 56], [76, 56], [76, 72], [58, 72], [58, 56]]), mau: "gap", net: 2.4 },
     ];
   },
+  // Nothing told yet: a neighbourhood notice board, the kind a street puts
+  // up -- two posts that run from the floor to a plank roof, the board
+  // between them with nothing on it but one coral pin, on the near side,
+  // waiting for the first sheet. The posts showing above the board are what
+  // keep it a board: a panel on legs under a flat top read as a cabinet
+  // (first cut, 03/10), and ink pins left over from older notices read as a
+  // starry sky on the dark scheme (second cut). Its near edge runs down x 78,
+  // a step past the sheet the figure holds out.
+  "chua-co-bai": () => {
+    const bang: readonly Diem[] = [[78, 32], [130, 32], [130, 72], [78, 72]];
+    const mai: readonly Diem[] = [[72, 27], [136, 27], [132, 21], [76, 21]];
+    return [
+      { d: netGay([[83, 26], [83, SAN]]), mau: "muc", net: 2.6 },
+      { d: netGay([[125, 26], [125, SAN]]), mau: "muc", net: 2.6 },
+      { d: daGiac(bang), mau: "giay" },
+      { d: daGiac(bang), mau: "muc", net: 2.2 },
+      { d: daGiac(mai), mau: "bong" },
+      { d: daGiac(mai), mau: "muc", net: 2.2 },
+      { d: tron(92, 43, 3.4), mau: "gap" },
+      { d: tron(92, 43, 3.4), mau: "muc", net: 1.4 },
+    ];
+  },
+  // Nothing saved yet: a box with its lid up and nothing inside, a coral
+  // bookmark hanging over its front rim, the same mark as the card's save
+  // button. Seen from above enough to look in: the back rim sits 14 units
+  // over the front one, the inside is `bong` on both schemes, and the inner
+  // back corner runs down to the front rim. The first cut showed the opening
+  // as an 8-unit sliver almost head on, so «empty» was told, not shown, and
+  // on the dark scheme not even told (finish review 03/10).
+  "chua-luu-bai": () => {
+    const truoc: readonly Diem[] = [[72, 80], [114, 80], [114, SAN], [72, SAN]];
+    const mieng: readonly Diem[] = [[72, 80], [114, 80], [126, 66], [84, 66]];
+    const ben: readonly Diem[] = [[114, 80], [126, 66], [126, 88], [114, SAN]];
+    const nap: readonly Diem[] = [[84, 66], [126, 66], [130, 40], [88, 40]];
+    const dau: readonly Diem[] = [[97, 78], [104, 78], [104, 92], [100.5, 88.5], [97, 92]];
+    return [
+      { d: daGiac(nap), mau: "giay" },
+      { d: daGiac(nap), mau: "muc", net: 2.2 },
+      { d: daGiac(mieng), mau: "bong" },
+      { d: netGay([[84, 66], [84, 79]]), mau: "muc", net: 1.4 },
+      { d: daGiac(mieng), mau: "muc", net: 2.2 },
+      { d: daGiac(ben), mau: "giay" },
+      { d: daGiac(ben), mau: "muc", net: 2.2 },
+      { d: daGiac(truoc), mau: "giay" },
+      { d: daGiac(truoc), mau: "muc", net: 2.2 },
+      { d: daGiac(dau), mau: "gap" },
+    ];
+  },
 };
 
 /**
@@ -301,6 +355,15 @@ const NEP: Record<CanhId, ChoNep> = {
   // figure is looking through it. A body bent sideways with the other arm
   // down, not the two-handed grip `tim-khong-ra` already uses.
   "bo-loc-che-het": { pose: "ghe-nhin", x0: -1, tiLe: 0.76 },
+  // Holding a small folded sheet out to the empty board: the far hand at box
+  // (85, 47) → scene (66, 66.8), the sheet's edge at x 70.8, a step short of
+  // the board's near edge (78). Offering the first story, not pinning it.
+  "chua-co-bai": { pose: "dua-giay", x0: -2, tiLe: 0.8 },
+  // Folding a sheet small at the chest, eyes on the fold, beside the open box
+  // it goes into: keeping something for later, not filing it away. Calm, not
+  // the pose's own `giu-kin`: its flat mouth read as sulking over an empty
+  // box (03/10), and keeping a post is not a secret.
+  "chua-luu-bai": { pose: "gap-lai", x0: 6, tiLe: 0.8, them: { bieuCam: "binh-than" } },
 };
 
 /** The pose each scene stands in; `null` for a scene that never has the figure. */

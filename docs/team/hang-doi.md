@@ -9,6 +9,18 @@ Xếp theo mức độ nghiêm trọng, không theo thứ tự nghĩ ra.
 
 ---
 
+## MỚI 2026-10-03 — trạng thái rỗng: hai màn còn nợ cảnh, một chỗ chật ở cỡ chữ lớn
+
+Đợt vẽ lại trạng thái rỗng Cộng đồng (`63e40909`, ghi chép `docs/claude/2026-10-03/cong-dong-trang-rong/ket-qua.md`)
+đưa danh sách ô rỗng không hình vào test (`apps/mobile/tests/trang-rong-co-hinh.test.mjs`). Mức độ thấp, không chặn gì:
+
+1. **Hai màn rỗng chưa có cảnh** (`CHUA_VE`, nợ chứ không phải quyết định): «Chưa có bạn nào để rủ»
+   (`hai-nguoi/ChonNguoi.tsx`, ứng viên `chua-co-ban`), «Chưa có địa điểm để thêm» (`keo/PickOutingLive.tsx`).
+   Vẽ xong thì chuyển khỏi `CHUA_VE`, test tự đỏ nếu quên.
+2. **Tìm trong Cộng đồng ở 360×640 cỡ chữ 1.3, bàn phím mở**: tiêu đề trích từ khoá dài ba dòng, câu gợi ý chỉ còn
+   dòng đầu trên bàn phím (có từ trước; cảnh đã lui khi bàn phím mở). Hướng: tiêu đề ngắn khi từ khoá dài, hoặc
+   cuộn theo bàn phím.
+
 ## MỚI 2026-10-01 — ADR-0052: mọi lời gọi LLM về Go qua agy, brain Python đã xoá (đã vào `main` ở `16c0fdca`)
 
 Xong và đã merge vào `main` (`16c0fdca`, chưa push): bỏ hai cờ engine; quét bill, quét ảnh chuyển khoản, nháp khoản

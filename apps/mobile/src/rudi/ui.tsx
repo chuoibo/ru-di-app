@@ -24,6 +24,8 @@ import { CuonContext } from "./ui/cuon";
 import { KheLopProvider, useKheLop } from "./ui/KheLop";
 import { gridFor, tabBarHeight } from "./adaptive";
 import { KHONG_VIEN_WEB } from "./ui/khong-vien-web";
+import { useChamLaiTab } from "./ui/cham-lai-tab";
+import { useMotion } from "./ui/useMotion";
 import { TABLIST, giuState, tabState } from "../ui/a11y";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -130,6 +132,9 @@ export function RudiScreen({
     if (cuonVeDau === undefined) return;
     cuon.current?.scrollTo({ y: 0, animated: false });
   }, [cuonVeDau]);
+  // A tab's own screen goes back to its top when its lit column is tapped again.
+  const motion = useMotion();
+  useChamLaiTab(bottomInset === "tab" ? () => cuon.current?.scrollTo({ y: 0, animated: !motion.reduced }) : null);
   useEffect(() => {
     if (!avoidKeyboard) return;
     const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
@@ -176,6 +181,8 @@ export function RudiScreen({
       ) : null}
       {scroll && coCanh ? (
         <Animated.ScrollView
+          // The same handle as the plain branch: a staged screen scrolls to its top too.
+          ref={cuon as never}
           scrollEnabled={scrollEnabled}
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"

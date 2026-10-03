@@ -3,36 +3,49 @@ import { COMMUNITY_ERRORS } from "./api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions, type ViewToken } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View, useWindowDimensions, type ViewToken } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { duongDangNhap } from "../duong-vao";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
-import { Chip, RudiButton, RudiScreen, SearchField, TopBar } from "../ui";
+import { RudiButton, RudiScreen, SearchField, TopBar } from "../ui";
 import type { DungDau } from "../ui/DauKhamPha";
+import { HangChuTab, type MucChuTab } from "../ui/HangChuTab";
+import { useChamLaiTab } from "../ui/cham-lai-tab";
 import { CauTaiCho } from "../ui/CauTaiCho";
+import { EmptyState } from "../ui/EmptyState";
+import { Canh } from "../ui/art/Canh";
 import { Sheet } from "../ui/Sheet";
 import { SkeletonLines } from "../ui/Skeleton";
 import { useMotion } from "../ui/useMotion";
 import { docGiaoDienAsync } from "../kho";
 import { feedback, follow, likePost, mergePosts, readFeed, type FeedMode, type Post, type Preferences } from "./api";
-import { coThongBaoMoi, doiTheoDoiTacGia, khoaThongBaoDaXem, type ThongBao } from "./bang-tin";
+import { coThongBaoMoi, doiTheoDoiTacGia, khoaThongBaoDaXem, traVeCho, type ThongBao } from "./bang-tin";
 import { PostCard } from "./PostCard";
 import { Comments } from "./Comments";
 import { useCommunityStream } from "./useCommunityStream";
 import { useViewSignal } from "./useViewSignal";
 import { TABLIST, tabState } from "../../ui/a11y";
 
-const TABS: {
-  mode: FeedMode;
-  label: string;
-}[] = [{ mode: "for_you", label: "Dành cho bạn" }, { mode: "following", label: "Đang theo dõi" }, { mode: "trending", label: "Thịnh hành" }];
+// On the tab the feed's modes are one row of text tabs (owner's choice, 02/10):
+// the three feeds, then the reader's own two lists, which used to hide in the
+// settings sheet. The hidden posts stay in the sheet: a list one goes to
+// rarely, to take a «Không quan tâm» back.
+const CHE_DO: readonly MucChuTab<FeedMode>[] = [
+  { id: "for_you", nhan: "Dành cho bạn" },
+  { id: "following", nhan: "Đang theo dõi" },
+  { id: "trending", nhan: "Thịnh hành" },
+  { id: "saved", nhan: "Đã lưu" },
+  { id: "mine", nhan: "Bài của tôi" },
+];
+// The three feeds alone, for the screen's own header when it has no Khám phá header.
+const TABS = CHE_DO.slice(0, 3).map((c) => ({ mode: c.id, label: c.nhan }));
 
 /**
  * The community feed. On the tab it is Khám phá's second section (owner's
  * mockup, 01/10): the route hands it Khám phá's header (`dau`), the bell and
- * the feed settings ride on that header's right, the feed tabs are chips over
- * the list, and writing a post is the «Tạo» stamp's first card, so the screen
+ * the feed settings ride on that header's right, the feed's modes are text
+ * tabs over the list, and writing a post is the «Tạo» stamp's first card, so the screen
  * draws no title or compose button of its own. Opened on a topic
  * (`/community/topic`, a stack route with no strip and no stamp) it keeps its
  * own header.
@@ -50,6 +63,14 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   // «Cộng đồng» in two: the actions rise above it, the large title keeps the
   // page's width (the large-title bar of a phone's own apps).
   const hep = useWindowDimensions().width < 360;
+  // The scene of an empty list at the slot's 168, or at 120 where that does
+  // not fit: a short window that is also cramped -- the header on two rows
+  // (`hep`) or large text. At 320×640 the one action fell under the tab bar
+  // (finish review 03/10), and at 144 it still ended 4 dp past the strip;
+  // 375×667 has 114 dp to spare at 120 and keeps 168. One size for the five
+  // tabs, so the headings do not jump from tab to tab.
+  const { height: caoCuaSo, fontScale } = useWindowDimensions();
+  const rongCanh = caoCuaSo < 700 && (hep || fontScale > 1.15) ? 120 : 168;
   const [mode, setMode] = useState<FeedMode>("for_you");
   const [posts, setPosts] = useState<Post[]>([]);
   const [next, setNext] = useState<string | null>(null);
@@ -140,6 +161,8 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
     }
     return () => { dangTruoc.current = false; generation.current++; setActive(null); };
   }, [load, person, mode, topic]));
+  // On the tab, tapping the lit Khám phá column again goes back to the top of the feed.
+  useChamLaiTab(dau ? () => { viTriCuon.current = 0; list.current?.scrollToOffset({ offset: 0, animated: !motion.reduced }); } : null);
   const refresh = async () => { await load(); list.current?.scrollToOffset({ offset: 0, animated: !motion.reduced }); };
   // A (re)connection is not news by itself: it offers the refresh band instead
   // of rebuilding the list under the reader (ADR-0040: never push the scroll).
@@ -170,6 +193,26 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
     } catch (e) {
       update(p);
       setError(e instanceof Error ? e.message : "Chưa lưu được lượt thích.");
+    } finally {
+      setBusy(null);
+    }
+  };
+  // Saving waits like liking: the card is busy while the request runs (two
+  // quick taps sent two), the icon turns at once and turns back on a failure.
+  const luu = async (p: Post) => {
+    if (!person || busy) return;
+    setBusy(p.id);
+    const sau = { ...p, saved: !p.saved };
+    // Where the card sat, so a failed un-save on «Đã lưu» puts it back there.
+    const viTri = posts.findIndex((x) => x.id === p.id);
+    if (mode === "saved" && p.saved) setPosts((items) => items.filter((x) => x.id !== p.id));
+    else update(sau);
+    try {
+      await feedback(person, p.id, "saved", sau.saved);
+    } catch (e) {
+      if (mode === "saved" && p.saved) setPosts((items) => [...traVeCho(items, p, viTri)]);
+      else update(p);
+      setError(e instanceof Error ? e.message : "Chưa lưu được bài.");
     } finally {
       setBusy(null);
     }
@@ -239,7 +282,8 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   const dongCaiDat = () => { setSettings(false); setXacNhanXoa(false); setDaXoaLichSu(false); };
   if (!person)
     return <RudiScreen header={dau?.()}><View style={dau ? styles.moiVao : undefined}><Text style={[typography.display, { color: colors.ink }]}>Những cuộc đi, những câu chuyện.</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Đăng nhập để gặp cộng đồng Rủ Đi và kể về ngày của bạn.</Text><RudiButton label="Đăng nhập" onPress={() => router.push(duongDangNhap("/community") as never)}/></View></RudiScreen>;
-  const tieuDeRieng = mode === "mine" ? "Những điều bạn đã kể" : mode === "saved" ? "Để dành cho một ngày" : mode === "hidden" ? "Những bài bạn đã ẩn" : null;
+  // A mode with a tab names itself in the row; only the hidden posts need a title.
+  const tieuDeRieng = mode === "hidden" ? "Những bài bạn đã ẩn" : !dau && mode === "mine" ? "Những điều bạn đã kể" : !dau && mode === "saved" ? "Để dành cho một ngày" : null;
   const nutThongBao = <Pressable accessibilityRole="button" accessibilityLabel={coMoi ? "Thông báo, có điều mới" : "Thông báo"} onPress={() => { setCoMoi(false); router.push("/community/notifications" as never); }} style={styles.icon}>
     <Ionicons name="notifications-outline" size={24} color={colors.ink}/>
     {coMoi ? <View style={[styles.cham, { backgroundColor: colors.accent, borderColor: colors.ground }]} /> : null}
@@ -248,8 +292,14 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
   const oTim = <SearchField accessibilityLabel="Tìm chủ đề" placeholder="Đi đâu, ăn gì, trải nghiệm gì?" value={search} onChangeText={setSearch} onSubmitEditing={() => { if (search.trim()) router.push({ pathname: "/community/search", params: { q: search.trim() } } as never); }}/>;
   return <RudiScreen header={dau?.(<View style={styles.hangNut}>{nutThongBao}{nutCaiDat}</View>)} scroll={false} padded={false} bottomInset={0} testID="community-screen" overlay={<>
     <Sheet open={settings} onClose={dongCaiDat} accessibilityLabel="Bảng tin của bạn">
+      {/* One rhythm (finish review 03/10): the title close over its line, 16 to
+          the actions, 8 between every action, the quiet ones too. */}
+      <View style={styles.caiDat}>
+      <View style={styles.caiDatDau}>
       <Text style={[typography.h1, { color: colors.ink }]}>Bảng tin của bạn</Text>
       <Text style={[typography.body, { color: colors.inkSoft }]}>Chỉ dùng những gì bạn xem và tương tác trong cộng đồng. Bạn luôn có thể đổi ý.</Text>
+      </View>
+      <View style={styles.caiDatNut}>
       <RudiButton label={prefs?.personalized ? "Tắt cá nhân hóa" : "Bật cá nhân hóa"} onPress={() => void consent(!prefs?.personalized)}/>
       {xacNhanXoa ? (
         // One step to undo nothing: what goes, and what stays, before it goes.
@@ -262,11 +312,11 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         <RudiButton label="Xóa lịch sử đề xuất" variant="outline" onPress={() => { setDaXoaLichSu(false); setXacNhanXoa(true); }}/>
       )}
       {daXoaLichSu ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Đã xoá lịch sử đề xuất. Bảng tin bắt đầu lại từ những gì mới.</Text> : null}
-      <RudiButton label="Bài đã lưu" variant="ghost" onPress={() => { setMode("saved"); dongCaiDat(); }}/>
+      {/* «Đã lưu» and «Bài của tôi» are tabs now, and the bell sits on the header. */}
       <RudiButton label="Bài đã ẩn" variant="ghost" onPress={() => { setMode("hidden"); dongCaiDat(); }}/>
-      <RudiButton label="Bài của tôi · Trạng thái duyệt" variant="ghost" onPress={() => { setMode("mine"); dongCaiDat(); }}/>
       <RudiButton label="Điều mình muốn giữ" variant="ghost" onPress={() => { dongCaiDat(); router.push("/community/keeps" as never); }} />
-      <RudiButton label="Thông báo" variant="ghost" onPress={() => { dongCaiDat(); router.push("/community/notifications" as never); }}/>
+      </View>
+      </View>
     </Sheet>
     <Sheet open={selected !== null} onClose={() => setSelected(null)} accessibilityLabel="Lựa chọn cho bài đăng">{selected ? <>
       <Text style={[typography.h2, { color: colors.ink }]}>Câu chuyện này</Text>
@@ -325,7 +375,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
           <RudiButton compact full={false} label="Hoàn tác" onPress={() => void hoanTacAn(item)} variant="ghost"/>
         </View>
       ) : (
-        <PostCard post={item} person={person} active={active === item.id} busy={busy === item.id} onLike={() => void like(item)} onComment={() => setComments(item)} onMore={() => setSelected(item)} onFollow={() => void theoDoiTacGia(item)} onSave={() => void act(async () => { await feedback(person, item.id, "saved", !item.saved); if (mode === "saved" && item.saved) setPosts((items) => items.filter((p) => p.id !== item.id)); else update({ ...item, saved: !item.saved }); })} onTopic={(t) => router.push({ pathname: "/community/topic", params: { topic: t } } as never)}/>
+        <PostCard post={item} person={person} active={active === item.id} busy={busy === item.id} onLike={() => void like(item)} onComment={() => setComments(item)} onMore={() => setSelected(item)} onFollow={() => void theoDoiTacGia(item)} onSave={() => void luu(item)} onTopic={(t) => router.push({ pathname: "/community/topic", params: { topic: t } } as never)}/>
       )}
       viewabilityConfig={{ itemVisiblePercentThreshold: 60, minimumViewTime: 1000 }}
       onViewableItemsChanged={viewable.current}
@@ -343,16 +393,32 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
         {/* Khám phá › Cộng đồng, in the mockup's order: the search field as on
             Địa điểm, then the feed tabs as chips that scroll rather than clip. */}
         {dau ? oTim : null}
-        {dau ? <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.cuonChip} contentContainerStyle={styles.hangChip}><View {...TABLIST} style={styles.hangChipTrong}>{TABS.map((t) => <Chip key={t.mode} vaiTab label={t.label} selected={mode === t.mode} onPress={() => { setMode(t.mode); motion.haptic.select(); }}/>)}</View></ScrollView> : null}
-        {tieuDeRieng ? <Text style={[typography.h2, { color: colors.ink }]}>{tieuDeRieng}</Text> : null}
+        {dau ? <HangChuTab giamChuyenDong={motion.reduced} muc={CHE_DO} chon={CHE_DO.some((c) => c.id === mode) ? mode : null} onChon={(m) => { setMode(m); motion.haptic.select(); }} /> : null}
+        {/* Named once there is a list to name: over an empty one the title and
+            the empty state's own heading stacked at one rank, and over the
+            skeleton it swapped for that heading when the list came back empty
+            (finish review 03/10). */}
+        {tieuDeRieng && posts.length > 0 ? <Text style={[typography.h2, { color: colors.ink }]}>{tieuDeRieng}</Text> : null}
         {dau || topic ? null : oTim}
-        {prefs && !prefs.asked && !topic ? <View style={[styles.consent, { backgroundColor: colors.paper }]}><Text style={[typography.h2, { color: colors.ink }]}>Một góc hợp với bạn</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text><View style={styles.row}><RudiButton full={false} compact label="Cá nhân hóa" onPress={() => void consent(true)}/><Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, { color: colors.ink }]}>Để sau</Text></Pressable></View></View> : null}
+        {/* Asked where it changes something: only «Dành cho bạn» learns from
+            what one reads, and only once there is something to read; over an
+            empty feed it was a second coral ask beside the scene's. */}
+        {prefs && !prefs.asked && !topic && mode === "for_you" && posts.length > 0 ? <View style={[styles.consent, { backgroundColor: colors.paper }]}><Text style={[typography.h2, { color: colors.ink }]}>Một góc hợp với bạn</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Cho phép học từ tương tác cộng đồng? Không đọc chat hay sổ riêng.</Text><View style={styles.row}><RudiButton full={false} compact label="Cá nhân hóa" onPress={() => void consent(true)}/><Pressable accessibilityRole="button" onPress={() => void consent(false)} style={styles.later}><Text style={[typography.label, { color: colors.ink }]}>Để sau</Text></Pressable></View></View> : null}
         {/* Said where the list is, with the way on; a failed reload keeps the cards already shown. */}
         <CauTaiCho cau={error} hanhDong={{ label: "Thử lại", onPress: () => void load() }} testID="cong-dong-loi-bang-tin" />
       </View>}
       ListEmptyComponent={loading ? <View style={styles.intro}><SkeletonLines lines={4}/></View> : !error ? (
-        mode === "hidden" ? <View style={styles.empty}><Ionicons name="eye-off-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>Chưa ẩn bài nào</Text><Text style={[typography.body, { color: colors.inkSoft }]}>Bài bạn chọn «Không quan tâm» nằm ở đây. Chạm «…» trên một bài để bỏ ẩn.</Text></View>
-        : <View style={styles.empty}><Ionicons name="trail-sign-outline" size={42} color={colors.accent}/><Text style={[typography.h1, { color: colors.ink }]}>{mode === "following" ? "Câu chuyện bắt đầu từ một người" : "Một ngày đáng kể"}</Text><Text style={[typography.body, { color: colors.inkSoft }]}>{mode === "following" ? "Theo dõi tác giả hoặc chủ đề bạn thích. Những cuộc đi của họ sẽ gặp bạn ở đây." : "Một quán nhỏ, một cung đường, một buổi đi chơi. Kể điều bạn muốn giữ lại."}</Text><RudiButton label="Kể khoảnh khắc đầu tiên" onPress={() => router.push("/community/new" as never)}/></View>
+        // An administrative list, reached from the settings sheet: no scene,
+        // as DESIGN.md keeps «Bạn chưa chặn ai» and «Chưa có phiên nào».
+        mode === "hidden" ? <EmptyState body="Bài bạn chọn «Không quan tâm» sẽ nằm ở đây, để bỏ ẩn khi đổi ý." kind="first-use" layout="inline" style={styles.empty} title="Chưa ẩn bài nào" />
+        // The reader's own two lists say what goes in them, and how; saved
+        // posts, like followed people, are found in the feeds.
+        : mode === "saved" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Chạm dấu lưu ở cuối một bài để đọc lại sau." illustration={<Canh id="chua-luu-bai" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa lưu bài nào" />
+        : mode === "mine" ? <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Bài bạn viết hiện ở đây, kèm trạng thái duyệt của từng bài." illustration={<Canh id="chua-co-bai" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa kể chuyện nào" />
+        // Following fills by finding someone to follow, and they are found
+        // in the feeds; writing a post of one's own does not fill it.
+        : mode === "following" ? <EmptyState action={{ label: "Xem bài thịnh hành", onPress: () => setMode("trending") }} body="Theo dõi một tác giả hay một chủ đề, bài của họ sẽ hiện ở đây." illustration={<Canh id="chua-co-ban" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Chưa theo dõi ai" />
+        : <EmptyState action={{ label: "Viết bài", onPress: () => router.push("/community/new" as never) }} body="Một quán nhỏ, một cung đường, một buổi đi chơi: kể điều bạn muốn giữ lại." illustration={<Canh id="chua-co-ky-niem" width={rongCanh} />} kind="first-use" layout="inline" style={styles.empty} title="Một ngày đáng kể" />
       ) : null}
       ListFooterComponent={loading && posts.length ? <Text style={[typography.caption, styles.intro, { color: colors.inkFaint }]}>Đang mở thêm câu chuyện…</Text> : null}
     />
@@ -361,6 +427,9 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
 }
 const styles = StyleSheet.create({
   moiVao: { paddingTop: 16, gap: 18 },
+  caiDat: { gap: 16 },
+  caiDatDau: { gap: 6 },
+  caiDatNut: { gap: 8 },
   readingColumn: { flex: 1, width: "100%", maxWidth: 560, alignSelf: "center" },
   header: { paddingHorizontal: 20, paddingTop: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   headerChuDe: { paddingHorizontal: 16, paddingTop: 0, paddingBottom: 8 },
@@ -376,10 +445,6 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: "row", marginTop: 14, gap: 18 },
   tab: { minHeight: 48, justifyContent: "center", borderBottomWidth: 2 },
   chuDeHang: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 4 },
-  // The chips run to both screen edges, starting on the column's gutter.
-  cuonChip: { marginHorizontal: -16 },
-  hangChip: { paddingHorizontal: 16 },
-  hangChipTrong: { flexDirection: "row", gap: 8 },
   list: { paddingBottom: 32 },
   // 16 like the posts and Khám phá's header above, so one gutter runs down the screen.
   intro: { padding: 16, gap: 16 },
@@ -387,7 +452,9 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: 12 },
   later: { minHeight: 48, paddingHorizontal: 16, justifyContent: "center" },
   xacNhan: { gap: 8 },
-  empty: { margin: 24, paddingVertical: 36, gap: 20, alignItems: "flex-start" },
+  // On the gutter the search field and the tabs start on; the tab row's
+  // rule already sets it apart, so no space over it.
+  empty: { marginHorizontal: 16, paddingTop: 0 },
   daAn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   newPosts: { position: "absolute", alignSelf: "center", zIndex: 3 },
 });

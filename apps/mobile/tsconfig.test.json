@@ -242,6 +242,9 @@
     // tablist, the right-hand control outside it. Rendered so the roles and
     // the selected section are held as they ship.
     "src/rudi/ui/DauKhamPha.tsx",
+    // The community feed's modes as small text tabs (owner's choice, 02/10).
+    // Rendered so the roles and the one selected tab are held as they ship.
+    "src/rudi/ui/HangChuTab.tsx",
     // A community post's album pages one full-width picture at a time (owner's
     // choice, 02/10). Pure, compiled so the page count matches the scroll.
     "src/rudi/community/album.ts",

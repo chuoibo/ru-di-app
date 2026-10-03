@@ -414,15 +414,30 @@ func TestQuenKhiConHangThiThuLai(t *testing.T) {
 	if n := b.so(t, `SELECT count(*) FROM nep_su_that WHERE id=$1 AND deleted_at IS NOT NULL`, f.ID); n != 0 {
 		t.Fatal("a receipt was written with rows left")
 	}
-	// Not due yet: the pass leaves it.
+	// Not due yet: the pass leaves it. The pass is the whole database's, and
+	// other packages' tests share the database: an account one of them deletes
+	// queues a due 'tai_khoan' job the pass may well run. So the check is on
+	// this person's own job, not on how many jobs the pass ran (tier run
+	// 03/10: «pass before due = 1», then a 30-minute hang on the open tx).
 	tx, _ := b.pool.Begin(ctx)
-	if ran, err := b.kho.LuotXoa(ctx, tx); err != nil || ran != 0 {
-		t.Fatalf("pass before due = %d %v", ran, err)
+	if _, err := b.kho.LuotXoa(ctx, tx); err != nil {
+		_ = tx.Rollback(ctx)
+		t.Fatalf("pass before due: %v", err)
 	}
 	_ = tx.Commit(ctx)
+	var lanSau int
+	var chaySau time.Time
+	_ = b.pool.QueryRow(ctx, `SELECT lan_thu, chay_luc FROM nep_xoa WHERE person_id=$1`, p).Scan(&lanSau, &chaySau)
+	if lanSau != lan || !chaySau.Equal(chay) {
+		t.Fatalf("the pass ran a job before it was due: lan_thu %d -> %d, chay_luc %v -> %v", lan, lanSau, chay, chaySau)
+	}
+	if n := b.so(t, `SELECT count(*) FROM nep_su_that WHERE id=$1 AND deleted_at IS NOT NULL`, f.ID); n != 0 {
+		t.Fatal("a pass before due wrote a receipt")
+	}
 	b.now = chay.Add(time.Second)
 	tx, _ = b.pool.Begin(ctx)
 	if _, err := b.kho.LuotXoa(ctx, tx); err != nil {
+		_ = tx.Rollback(ctx)
 		t.Fatal(err)
 	}
 	_ = tx.Commit(ctx)

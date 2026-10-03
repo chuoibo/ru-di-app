@@ -218,14 +218,6 @@
       "reason": "Ảnh stock công khai của Unsplash dùng riêng cho dữ liệu trình diễn RuDi. Nguồn và tác giả được ghi tại assets/rudi/README.md; không chứa người tham gia hay dữ liệu nghiên cứu. Path và digest được ghim để mọi thay đổi byte phải review lại."
     },
     {
-      "path": "apps/mobile/assets/rudi/wordmark-splash.png",
-      "sha256": "6296dc0fcd7ad6ab0857e8210f61533bc2a74f858758b552f257bb897be8b99c",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "UI-009 03/10/2026: raster 828×288 RGBA từ nguyên bốn GLYPHS/viewBox Wordmark.tsx hiện hành, Baloo 2 ExtraBold (Ek Type, SIL OFL 1.1), CairoSVG 2.8.2. Fresh finish reviewer mở ảnh, kiểm chunks không text/EXIF, tái raster in-memory trùng toàn byte; verdict safe đúng digest tại campaign/cp09/ui009-finish-review.md. Chỉ chữ hiệu trên alpha, không dữ liệu người thật. Đổi byte phải review và ghim lại."
-    },
-    {
       "path": "apps/mobile/assets/splash-icon.png",
       "sha256": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8",
       "rules": [
@@ -631,11 +623,11 @@
     },
     {
       "path": "parity/go.mod",
-      "sha256": "4960c1fdccd7bc0366bf516fed36122dd8454e5bf47d8d1c8aae854a87b6531e",
+      "sha256": "27c64389bec9727fdb6f1b8f5e21a601630f97b4c056c9b73106e95d2ab68415",
       "rules": [
         "long-number"
       ],
-      "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25. Ghim lại 2026-09-14 khi cmd/parity dùng pgxpool trực tiếp (thêm jackc/puddle/v2 và golang.org/x/sync). Ghim lại 2026-09-25 khi nâng go 1.25.0 / toolchain go1.25.14 (lát 3); câu «go 1.23 / toolchain go1.23.4 giữ nguyên» ở trên là của lần ghim trước. Đã kiểm bằng máy: chỗ luật bắt duy nhất nằm trong pseudo-version của pgservicefile. Ghim lại 2026-09-27 trên nhánh toolchain/adk-v2: chỉ đổi dòng go 1.26.6 / toolchain go1.26.8, require giữ nguyên, go.sum giữ nguyên byte; đã kiểm bằng máy: chỗ luật bắt duy nhất vẫn nằm trong pseudo-version của pgservicefile."
+      "reason": "Bản LỊCH SỬ của parity/go.mod ở commit 637b7f38613f (nâng Go 1.23.4 → 1.25.14) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 1 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
     },
     {
       "path": "parity/go.sum",
@@ -873,11 +865,11 @@
     },
     {
       "path": "services/core/go.mod",
-      "sha256": "dee085cf07855d73aa654ec1787f76aa100b25dc5f958a2824ee73988e784aa9",
+      "sha256": "f26bf42c259fb9ae3f1e2e66b45198486d202b73b2e42b28a9f8cc94693e5cec",
       "rules": [
         "long-number"
       ],
-      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc. Thêm google.golang.org/adk v1.7.0 + google.golang.org/genai v1.71.0 cho engine AI Go (ADR-0044, lát 6); pseudo-version của genproto/go-rendezvous vẫn là ngày giờ, không có dữ liệu người dùng. Ghim lại 2026-09-25 sau khi gộp lát 3 (go 1.25.0 / toolchain go1.25.14), x/tools v0.49.0 cho aigate, amqp091-go v1.15.0 cho jobs, adk + genai cho lát 6: đã kiểm bằng máy rằng cả 3 chỗ luật bắt đều nằm trong chuỗi pseudo-version v0.0.0-<14 số>-<12 hex>. Ghim lại trên nhánh infra/retrieval-core: thêm github.com/milvus-io/milvus/client/v3 v3.0.0 + milvus-proto/go-api/v3 v3.0.1 (Milvus, quyết định của owner) cùng phụ thuộc gián tiếp; đã kiểm bằng máy rằng cả 4 chỗ luật bắt đều nằm trong pseudo-version v0.0.0-<14 số>-<12 hex>. Ghim lại trên nhánh infra/rag-unified (gộp lõi agent + retrieval-core + ingest-sdlc, `go mod tidy`): chỉ thêm dòng require trực tiếp github.com/google/jsonschema-go v0.4.2 (của lõi agent) và chuyển google.golang.org/grpc v1.83.0 từ gián tiếp sang trực tiếp; không dòng pseudo-version nào đổi, go.sum giữ nguyên byte (sha256 như lần ghim trước). Ghim lại 2026-09-27 trên nhánh toolchain/adk-v2: go 1.26.6 / toolchain go1.26.8, google.golang.org/adk v1.7.0 → google.golang.org/adk/v2 v2.4.0 (đòi go 1.26.6), `go mod tidy` kéo theo grpc v1.83.2, jsonschema-go v0.4.3, otel v1.46.0, genproto/googleapis/rpc mới; đã kiểm bằng máy (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 4 chỗ luật bắt đều nằm trong pseudo-version."
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
     },
     {
       "path": "services/core/go.sum",
@@ -1026,27 +1018,27 @@
     },
     {
       "path": "services/core/go.mod",
-      "sha256": "5e2c042d70062ae1a0161303aee359ff58f64ede73ef513417c2c1c4f8b79a59",
+      "sha256": "f26bf42c259fb9ae3f1e2e66b45198486d202b73b2e42b28a9f8cc94693e5cec",
       "rules": [
         "long-number"
       ],
-      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit 637b7f38613f (nâng Go 1.23.4 → 1.25.14) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
     },
     {
       "path": "services/core/go.mod",
-      "sha256": "de18ccdd33d7cad409afccfcf7d79492c46a532492e91f195f6e69f5337ac3b2",
+      "sha256": "f26bf42c259fb9ae3f1e2e66b45198486d202b73b2e42b28a9f8cc94693e5cec",
       "rules": [
         "long-number"
       ],
-      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit 71fb3112dd5b (thêm x/tools cho aigate) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+      "reason": "Bản LỊCH SỬ của services/core/go.mod ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 2 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
     },
     {
       "path": "services/core/go.sum",
-      "sha256": "b1b6007bb9af99a84a54fb31ae27f227be6fdd0913869ec2f2a9b2da27f4b09a",
+      "sha256": "d204ecbeb51336e29fd9af46e85b51b0bc60cdd84848321e716e583100511fde",
       "rules": [
         "long-number"
       ],
-      "reason": "Bản LỊCH SỬ của services/core/go.sum ở commit 71fb3112dd5b (thêm x/tools cho aigate) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 6 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
+      "reason": "Bản LỊCH SỬ của services/core/go.sum ở commit d76a0a4fab45 (thêm amqp091-go cho jobs) trên nhánh claude/peaceful-hopper-32kwjs: commit đó đổi file mà không ghim lại, và allowlist trong cây của một commit cũ không sửa được nếu không viết lại lịch sử. Ghim đúng sha256 của blob đó để `repo_guard.py range` (đọc cả allowlist ở đầu dải) duyệt nó. Đã kiểm bằng máy 2026-09-28 (LONG_NUMBER_RE của repo_guard.py đối chiếu mẫu v<x.y.z>-[pre.]<14 số>-<12 hex>): cả 6 chỗ luật bắt đều nằm trong pseudo-version Go, không có dữ liệu người dùng. Blob này không còn ở cây hiện tại; entry chỉ có tác dụng với đúng các byte đó."
     },
     {
       "path": "services/core/go.mod",
@@ -1487,6 +1479,46 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B7 · Cộng đồng): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», bài và bình luận do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-03/cong-dong-chu-tab/evidence/EV-CDT-WEB.jpg",
+      "sha256": "b4eacb8ac79af909371aa2d98af580f054935d6807209347851c410468cc3c97",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của đợt «Cộng đồng năm chữ-tab» 03/10/2026 (docs/claude/2026-10-03/cong-dong-chu-tab): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0 và dữ liệu seed tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-03/cong-dong-chu-tab/evidence/EV-CDT-ANDROID.jpg",
+      "sha256": "a3714f4d74e841b86fb32da8cc9c06970f2b532ec547f072ecca6ffdd6125e38",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của đợt «Cộng đồng năm chữ-tab» 03/10/2026 (docs/claude/2026-10-03/cong-dong-chu-tab): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0 và dữ liệu seed tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-03/cong-dong-trang-rong/evidence/EV-CDR-WEB.jpg",
+      "sha256": "1b0feb3dc6c56cf279a1eb920158a19fdf1346b2172eb889570af6a8ace9e3ad",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của đợt «Trạng thái rỗng Cộng đồng» 03/10/2026 (docs/claude/2026-10-03/cong-dong-trang-rong): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0, từ khoá tìm tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "docs/claude/2026-10-03/cong-dong-trang-rong/evidence/EV-CDR-ANDROID.jpg",
+      "sha256": "df78eb8465daeb6133c7798c04f1503d52970b2df5ed0489c43edc99c133ddbf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng ảnh của đợt «Trạng thái rỗng Cộng đồng» 03/10/2026 (docs/claude/2026-10-03/cong-dong-trang-rong): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0, từ khoá tìm tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/wordmark-splash.png",
+      "sha256": "6296dc0fcd7ad6ab0857e8210f61533bc2a74f858758b552f257bb897be8b99c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "UI-009 03/10/2026: raster 828×288 RGBA từ nguyên bốn GLYPHS/viewBox Wordmark.tsx hiện hành, Baloo 2 ExtraBold (Ek Type, SIL OFL 1.1), CairoSVG 2.8.2. Fresh finish reviewer mở ảnh, kiểm chunks không text/EXIF, tái raster in-memory trùng toàn byte; verdict safe đúng digest tại campaign/cp09/ui009-finish-review.md. Chỉ chữ hiệu trên alpha, không dữ liệu người thật. Đổi byte phải review và ghim lại."
     },
     {
       "path": "docs/codex/2026-10-02/evidence/ui009/startup-before.png",

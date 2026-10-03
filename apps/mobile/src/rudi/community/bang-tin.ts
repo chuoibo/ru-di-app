@@ -79,3 +79,15 @@ export function nhanTrangThaiDuyet(status: string): string {
       return "Đang xử lý";
   }
 }
+
+/**
+ * A card taken off a list at once (un-saved on «Đã lưu») put back where it
+ * was when the request behind it failed: at `viTri` when that is still inside
+ * the list, last when the list has grown shorter meanwhile, first when its
+ * place was not known. A list that already holds it again is left alone.
+ */
+export function traVeCho<T extends { id: string }>(items: readonly T[], p: T, viTri: number): readonly T[] {
+  if (items.some((x) => x.id === p.id)) return items;
+  const i = viTri < 0 ? 0 : Math.min(viTri, items.length);
+  return [...items.slice(0, i), p, ...items.slice(i)];
+}

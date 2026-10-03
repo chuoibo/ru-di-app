@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextStyle } from "react-native";
 
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
@@ -12,7 +12,7 @@ import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
 import { KyHoa } from "../../ui/art/KyHoa";
-import { guTheoLoai, tachGia } from "../../kham-pha/dia-diem";
+import { chiaDongSuThat, guTheoLoai, moDauBangSao, tachGia } from "../../kham-pha/dia-diem";
 
 /*
  * 2026-09-11 (re-audit 10/09, R3): one mark per place. A place prints EITHER
@@ -142,7 +142,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   // 16:10 fills a phone's width at reading height; on a tablet the same ratio
   // is a screenful of photograph before the first name, so the frame widens.
   const tiLe = sizeClass === "compact" ? 16 / 10 : 21 / 9;
-  const { gia, khac: phu } = tachGia(dd.facts);
+  const { gia } = tachGia(dd.facts);
   const dau = dauCon(dd);
   const chip = (mau: string, nen: string, icon: IconName, text: string) => (
     <View style={[styles.chipDan, { backgroundColor: nen, borderRadius: radius.control }]}>
@@ -175,7 +175,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
               {dd.sub}
             </Text>
           ) : null}
-          {phu ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{phu}</Text> : null}
+          <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} />
           {dd.lyDo || gia ? (
             <View style={styles.hangChipDan}>
               {dd.lyDo ? chip(colors.ai, colors.aiSoft, "sparkles", dd.lyDo) : null}
@@ -204,7 +204,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   // one line that may wrap, the price band with its unit on its own line, never
   // cut (review 08/09 F04; QA UI-021: found by what it is, not by position).
   // The seal sits beside the name at 1.0 and under the facts once the text is big.
-  const { gia: cuoiFact, khac: dauFacts } = tachGia(dd.facts);
+  const { gia: cuoiFact } = tachGia(dd.facts);
   const chuLonHon = chuLon(fontScale);
   // A thumbnail that fails to load shows the category's object, never an
   // empty tinted square (review 08/09 F01). Reset when the picture changes.
@@ -236,7 +236,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           {dd.sub ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
-          {dauFacts ? <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+          <DongSuThat facts={dd.facts} kieu={typography.caption} mau={colors.inkFaint} soDong={2} />
           {/* The price band is never cut: it wraps when it must («200.000đ –
               250.000đ mỗi n…» at 1.3, QA 23/09; 9 rows in 10 at 390, UI-021). */}
           {cuoiFact ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
@@ -308,13 +308,13 @@ export function PlaceCompare({
         const luu = daLuu(dd.id);
         // The same facts the rows print, so the two really compare; the price
         // band (found by what it is, QA UI-021) gets its own line, never cut.
-        const { gia: cuoiFact, khac: dauFacts } = tachGia(dd.facts);
+        const { gia: cuoiFact } = tachGia(dd.facts);
         const chu = (
           <>
             <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
             {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
             {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-            {dauFacts ? <Text numberOfLines={3} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+            <DongSuThat facts={dd.facts} kieu={typography.note} mau={colors.inkFaint} soDong={2} />
             {cuoiFact ? <Text style={[typography.note, { color: colors.inkSoft }]}>{cuoiFact}</Text> : null}
           </>
         );
@@ -373,6 +373,38 @@ export function PlaceCompare({
         );
       })}
     </View>
+  );
+}
+
+/**
+ * A place's quiet facts (`chiaDongSuThat`), as two lines that never end or
+ * start on «·» (finish review 03/10): the rating and the distance, with a
+ * star before the rating when the line opens on it (`moDauBangSao`), drawn in
+ * the words' own ink, inline and held to the rating by a no-break space; then
+ * whether it is open, and its hours. A screen reader hears the words alone.
+ */
+function DongSuThat({ facts, kieu, mau, soDong }: { facts: readonly { icon: string; text: string }[]; kieu: TextStyle; mau: string; soDong?: number }) {
+  const { dau, gio } = chiaDongSuThat(facts);
+  const sao = moDauBangSao(facts);
+  return (
+    <>
+      {dau ? (
+        <Text accessibilityLabel={sao ? dau : undefined} numberOfLines={soDong} style={[kieu, { color: mau }]}>
+          {sao ? (
+            <>
+              <Ionicons color={mau} name="star" size={12} />
+              {"\u00a0"}
+            </>
+          ) : null}
+          {dau}
+        </Text>
+      ) : null}
+      {gio ? (
+        <Text numberOfLines={soDong} style={[kieu, { color: mau }]}>
+          {gio}
+        </Text>
+      ) : null}
+    </>
   );
 }
 

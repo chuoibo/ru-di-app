@@ -70,8 +70,13 @@ export function EmptyState({
       ) : null}
       {action || secondary ? (
         <View style={[styles.actions, { gap: space.sm, marginTop: space.xs, alignSelf: full ? "center" : "flex-start" }]}>
+          {/* Sized to the label on every platform: `full` is `width: 100%`,
+              which the web resolves against this shrink-wrapped row and Yoga
+              against the column, so on Android the one action ran edge to
+              edge where the web shows a compact pill (03/10). Still 48 tall. */}
           {action ? (
             <RudiButton
+              full={false}
               label={action.label}
               onPress={action.onPress}
               loading={action.loading}
@@ -81,7 +86,7 @@ export function EmptyState({
             />
           ) : null}
           {secondary ? (
-            <RudiButton label={secondary.label} onPress={secondary.onPress} tone={tone} variant="ghost" compact />
+            <RudiButton full={false} label={secondary.label} onPress={secondary.onPress} tone={tone} variant="ghost" compact />
           ) : null}
         </View>
       ) : null}

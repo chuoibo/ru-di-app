@@ -1,0 +1,61 @@
+/**
+ * Khám phá › Cộng đồng after the owner's choice of 02/10: the feed's modes
+ * are five text tabs — the three feeds plus «Đã lưu» and «Bài của tôi», which
+ * used to hide in the settings sheet — and the sheet keeps only what is not a
+ * list of posts. Each new tab has an empty state that says what goes there.
+ *
+ * Read from the source: the screen needs the router, the session and the
+ * stream, and is not rendered here. Does not prove: the row on a device (that
+ * is the probe `kiem-ux/thanh-tab-5.mjs`) or that the words read well (the
+ * screenshots).
+ */
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+
+const man = readFileSync(new URL("../src/rudi/community/CommunityScreen.tsx", import.meta.url), "utf8");
+// The settings sheet, from its opening tag to its close.
+const sheet = man.slice(man.indexOf('accessibilityLabel="Bảng tin của bạn"'), man.indexOf("</Sheet>", man.indexOf('accessibilityLabel="Bảng tin của bạn"')));
+
+test("trên tab, các chế độ bảng tin là một hàng chữ-tab năm mục theo đúng thứ tự", () => {
+  assert.match(man, /<HangChuTab\b/);
+  const nhan = [...man.slice(man.indexOf("const CHE_DO")).matchAll(/nhan: "([^"]+)"/g)].slice(0, 5).map((m) => m[1]);
+  assert.deepEqual(nhan, ["Dành cho bạn", "Đang theo dõi", "Thịnh hành", "Đã lưu", "Bài của tôi"]);
+  // The chips of the first cut are gone: a chip narrows a list, a tab picks it.
+  assert.doesNotMatch(man, /<Chip key=\{t\.mode\} vaiTab/);
+});
+
+test("menu cài đặt chỉ giữ cái không phải một danh sách bài", () => {
+  assert.ok(sheet.length > 0, "không thấy sheet «Bảng tin của bạn»");
+  for (const daRa of ['label="Bài đã lưu"', 'label="Bài của tôi · Trạng thái duyệt"', 'label="Thông báo"']) {
+    assert.ok(!sheet.includes(daRa), `${daRa} vẫn còn trong menu cài đặt`);
+  }
+  for (const con of ['label="Bài đã ẩn"', 'label="Điều mình muốn giữ"', "Bật cá nhân hóa", 'label="Xóa lịch sử đề xuất"']) {
+    assert.ok(sheet.includes(con), `${con} phải còn trong menu cài đặt`);
+  }
+});
+
+test("«Đã lưu» và «Bài của tôi» rỗng thì nói ở đó sẽ có gì, «Bài của tôi» mời viết bài", () => {
+  // Since 03/10 both are `EmptyState`s with a scene (cong-dong-trang-rong.test.mjs).
+  assert.match(man, /mode === "saved" \? <EmptyState [^\n]*body="Chạm dấu lưu ở cuối một bài để đọc lại sau\."[^\n]*title="Chưa lưu bài nào"/);
+  assert.match(man, /mode === "mine" \? <EmptyState action=\{\{ label: "Viết bài", onPress: \(\) => router\.push\("\/community\/new" as never\) \}\}[^\n]*title="Chưa kể chuyện nào"/);
+});
+
+test("lời xin cá nhân hoá chỉ ở «Dành cho bạn», nơi nó đổi được điều gì", () => {
+  // And only over a feed with posts in it (finish review 03/10, cong-dong-trang-rong.test.mjs).
+  assert.match(man, /prefs && !prefs\.asked && !topic && mode === "for_you" && posts\.length > 0 \? <View style=\{\[styles\.consent/);
+});
+
+// Deferred minor of 02/10: the save button had no pending state, so two quick
+// taps sent two requests (idempotent, but the icon flickered). It saves like the
+// like button: the card is busy while the request runs, the icon turns at once
+// and turns back if the request fails.
+test("nút Lưu trên thẻ bài chờ như nút thích: bận trong lúc gửi, hoàn lại khi lỗi", () => {
+  const luu = man.slice(man.indexOf("const luu = async"), man.indexOf("const theoDoiTacGia", man.indexOf("const luu = async")));
+  assert.ok(luu.length > 0, "không thấy hàm luu");
+  assert.match(luu, /if \(!person \|\| busy\) return;/);
+  assert.match(luu, /setBusy\(p\.id\)/);
+  assert.match(luu, /update\(p\)/, "lỗi thì trả thẻ về như cũ");
+  assert.match(luu, /setBusy\(null\)/);
+  assert.match(man, /onSave=\{\(\) => void luu\(item\)\}/);
+});
