@@ -79,8 +79,8 @@ Bản đồ:
 - 360×640 cỡ 1.3: hàng «Địa điểm | Cộng đồng» cuộn ngang nên mép trái hiện «a điểm» (hành vi cuộn có chủ ý của
   `DauKhamPha`; chưa xét là lỗi).
 - Bỏ lưu lỗi trên «Đã lưu» chỉ kiểm bằng hàm thuần và đọc mã; không giả lập được lỗi mạng trên stack.
-- iOS chưa chụp (máy Linux). Việc từ trước vẫn mở: lỗi xoá tài khoản chờ bản phiên B8; «Điều mình muốn giữ» trong
-  menu chờ chủ sản phẩm xác nhận.
+- iOS chưa chụp (máy Linux). Việc từ trước vẫn mở: lỗi xoá tài khoản chờ bản phiên B8. «Điều mình muốn giữ» ở lại
+  menu cài đặt bảng tin: chủ sản phẩm xác nhận 03/10.
 
 ## Cổng sạch
 

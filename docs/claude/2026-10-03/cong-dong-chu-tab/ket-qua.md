@@ -49,7 +49,8 @@ lại ở `.impeccable/review/cdt*/` (gitignore).
   `useChamLaiTab` khỏi `RudiScreen`, giữ ở Cộng đồng/Khám phá.
 - Sao ở cả thẻ so sánh và hàng, không chỉ thẻ đầu: «4.8 (64)» trần không nói nó đếm gì ở chỗ nào cũng vậy.
 - **«Điều mình muốn giữ» giữ trong menu cài đặt** dù chủ sản phẩm liệt kê ba mục: đó là lối vào duy nhất của
-  `/community/keeps`. Cần chủ sản phẩm xác nhận.
+  `/community/keeps`. **Chủ sản phẩm xác nhận 03/10: giữ trong menu** (chọn giữ nguyên, không dời sang tab Cá nhân
+  hay «Đã lưu», không bỏ tính năng).
 - «Thông báo» bỏ khỏi menu vì chuông đã ở hàng đầu (có chấm khi có tin mới).
 - Thẻ xin cá nhân hoá chỉ ở «Dành cho bạn» (chỉ bảng tin đó học từ tương tác).
 - Không làm mờ mép hàng tab: `direction.md` cấm gradient; thay bằng khoảng tab 12…32dp và đệm cuối 16…24dp.
