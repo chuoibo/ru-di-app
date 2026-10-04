@@ -12,6 +12,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import (
     Date,
@@ -142,6 +143,8 @@ def _wall_clock_date(column):
 class ExpenseIdentity:
     id: uuid.UUID
     context_id: uuid.UUID
+    # The trip the expense belongs to, set once (ADR-0054); None is «no trip».
+    outing_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -2079,7 +2082,9 @@ class ApiRepository(Protocol):
         after: tuple[datetime, uuid.UUID] | None = None,
     ) -> MessagePage: ...
 
-    def create_expense(self, context_id: uuid.UUID) -> ExpenseIdentity: ...
+    def create_expense(
+        self, context_id: uuid.UUID, outing_id: uuid.UUID | None = None
+    ) -> ExpenseIdentity: ...
 
     def get_expense(self, expense_id: uuid.UUID) -> ExpenseIdentity | None: ...
 
@@ -2939,10 +2944,12 @@ class SqlAlchemyApiRepository:
     ) -> tuple[RecapOutingRecord, ...]:
         """Started trips of one group, newest first, money read back from the ledger.
 
-        There is no `expenses.outing_id`, so a trip claims the spending that
-        happened on its days. That rule is stated on the screen rather than
-        hidden here, because it is a rule and not a fact: a dinner split three
-        days after the group got home belongs to nobody's trip.
+        A trip's money is the expenses that belong to it (`expenses.outing_id`,
+        ADR-0054): the trip it was written from, else the one trip covering its
+        day, else none. Before that a trip claimed whatever happened on its
+        days, so two trips sharing a day both counted one dinner (QA UI-149:
+        27.411.356đ shown for a 13.705.678đ ledger). Photos still follow the
+        days: a photo belongs to the day it was taken; money belongs to a trip.
 
         Two passes rather than one join. Allocations are per participant and
         memories are per photo; counting both in a single grouped query
@@ -2974,7 +2981,7 @@ class SqlAlchemyApiRepository:
             select(
                 Expense.id.label("expense_id"),
                 ConfirmedAllocation.amount_vnd.label("amount_vnd"),
-                _wall_clock_date(ExpenseVersion.occurred_at).label("on_date"),
+                Expense.outing_id.label("outing_id"),
             )
             .select_from(ConfirmedAllocation)
             .join(
@@ -3007,10 +3014,7 @@ class SqlAlchemyApiRepository:
                     ),
                 )
                 .select_from(Outing)
-                .outerjoin(
-                    ledger,
-                    ledger.c.on_date.between(Outing.starts_on, Outing.ends_on),
-                )
+                .outerjoin(ledger, ledger.c.outing_id == Outing.id)
                 .where(Outing.id.in_([outing.id for outing in outings]))
                 .group_by(Outing.id)
             )
@@ -5317,8 +5321,9 @@ class SqlAlchemyApiRepository:
 
         There is no `memories.outing_id` -- a photograph is not filed against a
         trip when it is taken -- so a trip claims the memories that happened on
-        its days, exactly as `group_recap` claims the spending that happened on
-        its days. The predicate below is deliberately the same one
+        its days. Spending used to be claimed the same way; since ADR-0054 an
+        expense belongs to at most one trip (`expenses.outing_id`), but a
+        photograph still belongs to the day it was taken. The predicate below is deliberately the same one
         `group_recap` uses for `memory_count`: same wall-clock date cast, same
         inclusive `between`, same `Memory.context_id == Outing.context_id`.
 
@@ -6121,8 +6126,10 @@ class SqlAlchemyApiRepository:
         self.session.flush()
         return self._bill_record(bill)
 
-    def create_expense(self, context_id: uuid.UUID) -> ExpenseIdentity:
-        expense = Expense(context_id=context_id)
+    def create_expense(
+        self, context_id: uuid.UUID, outing_id: uuid.UUID | None = None
+    ) -> ExpenseIdentity:
+        expense = Expense(context_id=context_id, outing_id=outing_id)
         self.session.add(expense)
         try:
             self.session.flush()
@@ -6140,7 +6147,30 @@ class SqlAlchemyApiRepository:
             if constraint == "fk_expenses_context_id":
                 raise RepositoryConflict("EXPENSE_CONTEXT_NOT_FOUND") from exc
             raise
-        return ExpenseIdentity(id=expense.id, context_id=expense.context_id)
+        return ExpenseIdentity(
+            id=expense.id, context_id=expense.context_id, outing_id=expense.outing_id
+        )
+
+    def _only_outing_covering(
+        self, context_id: uuid.UUID, occurred_at: datetime
+    ) -> uuid.UUID | None:
+        """The group's one trip whose days hold `occurred_at`, or None.
+
+        The Vietnam calendar day, as every other «which day» in the ledger
+        (`_wall_clock_date`). Two trips sharing the day are not guessed
+        between: the expense belongs to neither (ADR-0054 §2.2 rule 3).
+        """
+        day = occurred_at.astimezone(ZoneInfo(WALL_CLOCK_ZONE)).date()
+        ids = self.session.scalars(
+            select(Outing.id)
+            .where(
+                Outing.context_id == context_id,
+                Outing.starts_on <= day,
+                Outing.ends_on >= day,
+            )
+            .limit(2)
+        ).all()
+        return ids[0] if len(ids) == 1 else None
 
     def get_expense(self, expense_id: uuid.UUID) -> ExpenseIdentity | None:
         expense = self.session.scalar(
@@ -6148,7 +6178,9 @@ class SqlAlchemyApiRepository:
         )
         if expense is None:
             return None
-        return ExpenseIdentity(id=expense.id, context_id=expense.context_id)
+        return ExpenseIdentity(
+            id=expense.id, context_id=expense.context_id, outing_id=expense.outing_id
+        )
 
     def save_expense_confirmation(
         self,
@@ -6176,6 +6208,17 @@ class SqlAlchemyApiRepository:
             )
         )
         version_number = (latest or 0) + 1
+        # ADR-0054 §2.2: an expense belongs to at most one trip, set once. The
+        # trip it was written from (checked against the group by the service);
+        # else, at its first version, the one trip of the group covering its
+        # Vietnam day; two trips or none, no trip. Later versions never move it.
+        if expense.outing_id is None:
+            if proposal.outing_id is not None:
+                expense.outing_id = proposal.outing_id
+            elif latest is None:
+                expense.outing_id = self._only_outing_covering(
+                    expense.context_id, proposal.occurred_at
+                )
         version = ExpenseVersion(
             expense_id=expense_id,
             version_number=version_number,

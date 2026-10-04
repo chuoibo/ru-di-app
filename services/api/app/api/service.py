@@ -5792,8 +5792,11 @@ class ApiService:
                 )
             },
         )
+        self._require_outing_in_context(proposal.context_id, proposal.outing_id)
         try:
-            identity = self.repository.create_expense(proposal.context_id)
+            identity = self.repository.create_expense(
+                proposal.context_id, proposal.outing_id
+            )
         except RepositoryConflict as exc:
             if exc.code == "EXPENSE_CONTEXT_NOT_FOUND":
                 raise ApiProblem(
@@ -5805,6 +5808,24 @@ class ApiService:
             proposal=proposal,
             allocation=_wire_allocation(allocation_result),
         )
+
+    def _require_outing_in_context(
+        self, context_id: uuid.UUID, outing_id: uuid.UUID | None
+    ) -> None:
+        """A bill written from a trip names a trip of this group (ADR-0054).
+
+        The ledger's key (`fk_expenses_outing_context`) refuses the row anyway;
+        asking first answers with a sentence instead of a database error, and
+        answers the same for a trip of another group and a trip that does not
+        exist, so the route says nothing about groups the caller is not in.
+        """
+        if outing_id is None:
+            return
+        outing = self.repository.get_outing(outing_id)
+        if outing is None or outing.context_id != context_id:
+            raise ApiProblem(
+                422, "outing_not_in_context", "Outing is not a trip of this group"
+            )
 
     def _require_participants_are_members(
         self, context_id: uuid.UUID, participants: Sequence[uuid.UUID]
@@ -5868,6 +5889,16 @@ class ApiService:
                 )
             },
         )
+        # ADR-0054: the trip an expense belongs to is set once. A later
+        # confirmation may repeat it or leave it out, never move it.
+        named = request.proposal.outing_id
+        if named is not None and identity.outing_id not in (None, named):
+            raise ApiProblem(
+                409,
+                "expense_outing_mismatch",
+                "The expense already belongs to another trip",
+            )
+        self._require_outing_in_context(identity.context_id, named)
         # `#235` gated `participants` here and stopped there, but two more of
         # this body's ids name people, and one of them is the only id in the
         # request that receives money. `paid_by_id` becomes the allocator's

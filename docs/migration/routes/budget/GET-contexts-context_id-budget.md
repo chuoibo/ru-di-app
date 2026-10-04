@@ -109,3 +109,9 @@ Corpus 422 sinh: route bị hoãn trong `scripts/render_parity_422_scenarios.py`
 Python đổi cùng Go trong một diff: cột danh mục nguồn ngoài, truy vấn nóng (LATERAL, nạp sẵn chặng), `chia_gu` cho gu đôi, và hai lỗ hổng C1 (POST /expenses ẩn danh) / C2 (dò số điện thoại). Bằng chứng: go_postgres_tier 106 gói ok 0 skip, oracle người lạ mới trong repo/people_repo_routes_postgres_test.go, golden python_people_steps sinh lại (Go 0 lệch), parity dev 348 EQUAL, prod 23 EQUAL. Phần còn lại là `ruff format` bắt buộc trên file đã chạm.
 
 - `GET /contexts/{context_id}/budget`: đổi thật: `SqlAlchemyApiRepository._outing_record` — nạp sẵn chặng (`stops=`) thay vì một SELECT mỗi kèo — cùng kết quả; Go repo/recap.go outingStopsFor; `SqlAlchemyApiRepository.group_recap` — như trên, một câu cho mọi kèo.
+
+## Đổi 2026-10-04 — ADR-0054: mỗi khoản chi thuộc nhiều nhất một kèo (QA UI-149, sai tiền)
+
+Python đổi cùng Go trong một diff, theo ngoại lệ có tên trong ADR-0054 (sửa sai tiền, blocker loại 2). `expenses.outing_id` (Alembic `d5e1a7c3b902`, khoá ghép `(outing_id, context_id) → outings(id, context_id)`, backfill theo luật 2) thay phép nối theo ngày: tiền của một kèo là các khoản chi **thuộc** kèo đó. Hai kèo trùng ngày không còn cùng tính một khoản. Bằng chứng: oracle tiền Go↔Python 7 ca mới (`repo/money_oracle_postgres_test.go`), oracle recap trên fixture có quy thuộc, `tests/postgres/test_expense_belongs_to_one_trip_postgres.py` 9 ca, kịch bản parity `w1/recap/GET-contexts-context_id-recap.yaml` thêm đề nghị/xác nhận có `outing_id`, `409 expense_outing_mismatch`, `422 outing_not_in_context`.
+
+- `GET /contexts/{context_id}/budget`: đổi thật: `SqlAlchemyApiRepository.group_recap` — `split_total_vnd` của kèo đọc theo `expenses.outing_id`, không theo ngày; Go repo/recap.go `GroupRecap` cùng phép nối. Ngân sách so với «đã chia» của chính kèo đó, nên kèo trùng ngày với kèo khác không còn mượn tiền của kèo kia.

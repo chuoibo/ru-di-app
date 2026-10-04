@@ -104,7 +104,9 @@ def _save_expense_confirmation(repository, args: dict, expense_id=None):
 
 
 def _create_expense_confirm_flow(repository, args: dict):
-    identity = repository.create_expense(_uuid(args["context_id"]))
+    identity = repository.create_expense(
+        _uuid(args["context_id"]), _optional_uuid(args.get("outing_id"))
+    )
     loaded = repository.get_expense(identity.id)
     record = _save_expense_confirmation(repository, args, expense_id=identity.id)
     return (identity, loaded, record)
@@ -199,7 +201,7 @@ base.CALLS.update(
     {
         # --- expenses ------------------------------------------------------------
         "create_expense": lambda repository, args: repository.create_expense(
-            _uuid(args["context_id"])
+            _uuid(args["context_id"]), _optional_uuid(args.get("outing_id"))
         ),
         "get_expense": lambda repository, args: repository.get_expense(
             _uuid(args["expense_id"])

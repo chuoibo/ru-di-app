@@ -4,7 +4,9 @@ recap · core · trạng thái trong bộ nhớ: không có
 
 ## Mục đích
 
-Tường kỷ niệm của nhóm: các chuyến đã kết thúc (mới nhất trước) và, tách riêng, chuyến đang đi. Mỗi chuyến kèm tổng chi tính lại từ sổ theo ngày lịch Việt Nam, số khoản chi và số kỷ niệm.
+Tường kỷ niệm của nhóm: các chuyến đã kết thúc (mới nhất trước) và, tách riêng, chuyến đang đi. Mỗi chuyến kèm tổng chi tính lại từ sổ, số khoản chi và số kỷ niệm.
+
+Từ ADR-0054 (2026-10-04, QA UI-149), tiền của một chuyến là các khoản chi **thuộc** chuyến đó (`expenses.outing_id`): chuyến bill được ghi từ, hoặc chuyến duy nhất phủ ngày lịch Việt Nam của khoản chi. Trước đó một chuyến tính mọi khoản chi rơi vào ngày của nó, nên hai chuyến trùng ngày cùng tính một bữa tối, và tổng của các chuyến đã kết thúc vượt tổng sổ. Kỷ niệm (ảnh, check-in) vẫn theo ngày lịch Việt Nam. Bất biến: Σ `split_total_vnd` của mọi chuyến ≤ tổng sổ của nhóm.
 
 ## Xác thực và quyền
 

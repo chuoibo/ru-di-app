@@ -159,6 +159,12 @@ func (w *world) expense(n int, contextID, payer string, versions ...expenseVersi
 	}
 }
 
+// belongsTo records the trip an expense belongs to (expenses.outing_id,
+// ADR-0054), as POST /expenses or the first confirmation would have set it.
+func (w *world) belongsTo(expenseN, outingN int) {
+	w.sql = append(w.sql, fmt.Sprintf("UPDATE expenses SET outing_id = '%s' WHERE id = '%s'", fid(kindOuting, outingN), fid(kindExpense, expenseN)))
+}
+
 // stdWorld is the roster every scenario starts from: one group with a member
 // in each membership state, a second group, an empty group, and people whose
 // optional columns are NULL, empty or set.
@@ -308,6 +314,18 @@ func (w *stdWorld) trips() {
 	w.expense(6, w.group, w.owner, expenseVersion{340000, "2030-08-27T03:00:00Z", []int64{340000}})
 	w.expense(7, w.group, w.owner, expenseVersion{50000, "2030-08-22T12:00:00Z", nil})
 	w.expense(8, w.other, w.owner, expenseVersion{999000, "2030-08-22T12:00:00Z", []int64{999000}})
+	// Which trip each belongs to, by ADR-0054 §2.2. Written from a trip: 1
+	// from trip 3 (its Vietnam day, the 22nd, is also trip 2's), 2 from trip 1
+	// (the 23rd is trips 1, 2 and 3), 6 from trip 6 (the 27th is also trip
+	// 5's). The one trip covering its day: 3 (the 24th, trip 4), 4 (the 21st,
+	// trip 3), 8 (trip 8 of the other group). 5 (the 20th, no trip) and 7 (the
+	// 22nd, two trips, never confirmed) belong to none.
+	w.belongsTo(1, 3)
+	w.belongsTo(2, 1)
+	w.belongsTo(6, 6)
+	w.belongsTo(3, 4)
+	w.belongsTo(4, 3)
+	w.belongsTo(8, 8)
 
 	w.photo(0x21, w.group, w.owner, "2030-08-23T16:59:59.999999Z")
 	w.checkin(0x22, w.group, w.mate, "2030-08-23T17:00:00Z", "p-b", "Quán B (dữ liệu mẫu)", 10.77, 106.7)

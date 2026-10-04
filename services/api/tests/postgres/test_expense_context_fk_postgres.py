@@ -108,6 +108,10 @@ def _context_foreign_key(session: Session, table: str) -> dict[str, object] | No
              WHERE c.conrelid = CAST(:table AS regclass)
                AND c.contype = 'f'
                AND att.attname = 'context_id'
+               -- The key of the column alone. `expenses.context_id` is also
+               -- half of `fk_expenses_outing_context` (ADR-0054: a trip of
+               -- the same group), a second guarantee, not this one.
+               AND cardinality(c.conkey) = 1
             """
             ),
             {"table": table},

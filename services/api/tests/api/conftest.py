@@ -1833,8 +1833,10 @@ class FakeRepository(SeedCatalogueReads):
         self.bills[bill_id] = updated
         return self._ordered_bill(updated)
 
-    def create_expense(self, context_id):
-        record = ExpenseIdentity(id=uuid.uuid4(), context_id=context_id)
+    def create_expense(self, context_id, outing_id=None):
+        record = ExpenseIdentity(
+            id=uuid.uuid4(), context_id=context_id, outing_id=outing_id
+        )
         self.expenses[record.id] = record
         return record
 
@@ -1854,6 +1856,11 @@ class FakeRepository(SeedCatalogueReads):
         now,
     ):
         del allocator_expense, rollups, confirmed_by_id, now
+        # ADR-0054: the first trip named sticks; the date rule needs the real
+        # ledger (tests/postgres) and is not imitated here.
+        identity = self.expenses.get(expense_id)
+        if identity is not None and identity.outing_id is None and proposal.outing_id:
+            self.expenses[expense_id] = replace(identity, outing_id=proposal.outing_id)
         version_id = uuid.uuid4()
         number = self.version_numbers.get(expense_id, 0) + 1
         self.version_numbers[expense_id] = number

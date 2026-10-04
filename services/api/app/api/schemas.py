@@ -106,6 +106,9 @@ class ExpenseInput(ApiModel):
     items: list[ExpenseItemInput] = Field(default_factory=list)
     surcharges: list[ExpenseSurchargeInput] = Field(default_factory=list)
     discounts: list[ExpenseDiscountInput] = Field(default_factory=list)
+    # The trip the bill was written from (ADR-0054). Optional: without it the
+    # ledger places the expense in the one trip covering its day, or none.
+    outing_id: UUID | None = None
 
     _occurred_at_has_timezone = field_validator("occurred_at")(_require_timezone)
 

@@ -58,10 +58,12 @@ type RecapOuting struct {
 // `today` is the calendar day the service computed from its own clock
 // (WallClockDate); only its year, month and day are used. Statement order is
 // Python's: outings, the money pass, the memory pass, then one outing_stops
-// read for every outing. The money pass keeps only the
-// newest version of each expense and folds occurred_at into Vietnam's day in
-// PostgreSQL; SUM of a bigint is numeric (a Decimal in Python), converted to
-// an integer exactly like `int(...)` and refused if it would not fit int64.
+// read for every outing. The money pass keeps only the newest version of each
+// expense and gives a trip the expenses that belong to it (expenses.outing_id,
+// ADR-0054), so two trips sharing a day no longer both count one dinner (QA
+// UI-149); the memory pass still folds created_at into Vietnam's day. SUM of
+// a bigint is numeric (a Decimal in Python), converted to an integer exactly
+// like `int(...)` and refused if it would not fit int64.
 func (r Repository) GroupRecap(ctx context.Context, contextID string, today time.Time) ([]RecapOuting, error) {
 	day := calendarDay(today)
 	rows, err := r.Q.Query(ctx,
@@ -114,7 +116,7 @@ func (r Repository) GroupRecap(ctx context.Context, contextID string, today time
 		   FROM outings
 		   LEFT OUTER JOIN (
 		        SELECT expenses.id AS expense_id, confirmed_allocations.amount_vnd AS amount_vnd,
-		               `+wallClockDate("$2", "expense_versions.occurred_at")+` AS on_date
+		               expenses.outing_id AS outing_id
 		          FROM confirmed_allocations
 		          JOIN expense_versions ON expense_versions.id = confirmed_allocations.expense_version_id
 		          JOIN (SELECT expense_versions.expense_id AS expense_id,
@@ -123,11 +125,11 @@ func (r Repository) GroupRecap(ctx context.Context, contextID string, today time
 		            ON anon_2.expense_id = expense_versions.expense_id
 		           AND anon_2.version_number = expense_versions.version_number
 		          JOIN expenses ON expenses.id = expense_versions.expense_id
-		         WHERE expenses.context_id = $3::UUID) AS anon_1
-		     ON anon_1.on_date BETWEEN outings.starts_on AND outings.ends_on
-		  WHERE outings.id IN (`+uuidPlaceholders(4, len(ids))+`)
+		         WHERE expenses.context_id = $2::UUID) AS anon_1
+		     ON anon_1.outing_id = outings.id
+		  WHERE outings.id IN (`+uuidPlaceholders(3, len(ids))+`)
 		  GROUP BY outings.id`,
-		append([]any{0, WallClockZone, contextID}, uuidArgs(ids)...)...)
+		append([]any{0, contextID}, uuidArgs(ids)...)...)
 	if err != nil {
 		return nil, err
 	}
