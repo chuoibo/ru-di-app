@@ -1490,6 +1490,15 @@
       "reason": "Ghim 2026-10-04 cho ADR-0055: soát toàn bộ diff chỉ gỡ dependency và metadata @react-native-google-signin/google-signin; native dùng Credential Manager trong module Kotlin. Các chuỗi còn lại là integrity npm và phiên bản công khai, không có dữ liệu người tham gia. Giữ các pin lịch sử để kiểm range."
     },
     {
+      "path": "apps/mobile/package-lock.json",
+      "sha256": "9599330327159cdfdae449563bb57e0d49bfea24c3dbe4e1c730eb93b1e967bf",
+      "rules": [
+        "aggregate-base64-fragments",
+        "long-number"
+      ],
+      "reason": "Ghim 2026-10-05 cho lockfile sau khi gộp main d8bbd584 vào nhánh tài khoản (ADR-0055): so với lockfile đã ghim của main (UI-009, expo-splash-screen) diff chỉ xoá 20 dòng của @react-native-google-signin/google-signin (dependency, version/resolved/integrity/peer metadata công khai từ registry.npmjs.org); native dùng Credential Manager trong module Kotlin. Không dòng nào thêm, không dữ liệu người tham gia. Giữ các pin lịch sử để kiểm range."
+    },
+    {
       "path": "services/core/go.mod",
       "sha256": "bbccd6ff4db1662e304363179ef53c19645b223d178a8ce4deb44da8b0449159",
       "rules": [
