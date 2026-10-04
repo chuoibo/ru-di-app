@@ -179,8 +179,15 @@ type Ending struct {
 	DiaryID *string    `json:"diary_id"`
 }
 
+// outingStarted uses the same calendar as the deliberate ending transition.
+func outingStarted(start string, now time.Time) bool {
+	return start <= now.In(time.FixedZone("Vietnam", 7*3600)).Format("2006-01-02")
+}
+
 func readEnding(ctx context.Context, tx pgx.Tx, o outing, person string) (Ending, error) {
-	e := Ending{Title: o.Title, Start: o.Start, End: o.End, Kind: book.SuggestedKind(o.Start, o.End), CanEnd: o.CanEnd}
+	// The read must offer only the transition that POST would accept today.
+	// Keep role authorization separate so POST retains its 403/409 contract.
+	e := Ending{Title: o.Title, Start: o.Start, End: o.End, Kind: book.SuggestedKind(o.Start, o.End), CanEnd: o.CanEnd && outingStarted(o.Start, time.Now())}
 	err := tx.QueryRow(ctx, `SELECT kind,ended_at FROM outing_endings WHERE outing_id=$1`, o.ID).Scan(&e.Kind, &e.EndedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		err = nil
@@ -241,7 +248,7 @@ func (h *Handler) end(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// A date passing only suggests an ending; this transition is always deliberate.
-	if o.Start > time.Now().In(time.FixedZone("Vietnam", 7*3600)).Format("2006-01-02") {
+	if !outingStarted(o.Start, time.Now()) {
 		fail(w, no(409, "outing_not_started"))
 		return
 	}

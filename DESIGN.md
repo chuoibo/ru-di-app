@@ -2110,7 +2110,7 @@ kia.
 - **Lịch sử 12/09:** chuỗi `tuVung` của `hai-nguoi` và `doi` **chưa lên màn nào**;
   là dữ liệu, không phải câu chữ đã đọc mù.
 
-### Khoảnh khắc và Sổ chuyến đi (27/09/2026)
+### Khoảnh khắc và Sổ chuyến đi (27/09/2026; cập nhật 02/10/2026)
 
 Đọc từ `diary/BookView.tsx`, `Wall.tsx`, `EndingScreen.tsx` và
 `DiaryScreen.tsx`; đây là phần mở rộng UI v3 «Sân khấu giấy», kế thừa seed
@@ -2131,12 +2131,23 @@ kia.
   Khoảng cách giữa bìa và trang (28dp), trong trang (16dp), giữa mục tường
   (24dp). Nhãn quyền xem và các nút ngoài `BookView` ở trình đọc/tường
   không có giới hạn (560dp) riêng.
+- Trang cuối dùng `RudiScreen cot="form"`, giữ cùng màn khi đổi bước/chế độ;
+  `cuonVeDau` theo `phase` và `edit` đưa nội dung về đầu mà không remount.
+  Header cùng cột form, ghi «Trang cuối» khi tải hoặc chưa khép cuộc đi.
+  Tờ mời ghi tên cuộc đi và ngày thật: «Ngày hẹn» nếu cùng ngày, hoặc
+  «Bắt đầu»/«Ngày về» nếu nhiều ngày; không dùng `RouteLine` trang trí.
+  Chỉ khi `can_end` mới hiện bộ chọn loại và hành động khép; trạng thái chờ
+  có lời dẫn theo ngày/quyền và lối «Về cuộc hẹn».
 - Khi sửa, ẩn bản xem trước và hiện lời dẫn «Viết lại theo cách mình nhớ»;
-  nút «Xem như người đọc» đổi về bản xem trước. Khóa `RudiScreen` theo
-  `phase` và `edit` khởi tạo lại màn cuộn khi đổi bước/chế độ. Lựa chọn
-  «Chỉ mình tôi»/«Công khai» và nút «Lưu riêng tư»/«Đăng sổ công khai» nằm
-  trước các trường nhập khi sửa, sau bản xem trước khi đọc. Ô nhập dùng
-  `ONhapMuc`, hành động lưu dùng `StampButton` của kit.
+  nút «Xem như người đọc» đổi về bản xem trước. Lựa chọn «Chỉ mình tôi»/
+  «Công khai» nằm cuối phần xem trước hoặc sau các trường sửa, trong đoạn
+  có kẻ mảnh. Nút «Lưu riêng tư»/«Đăng sổ công khai» dùng `StampButton`,
+  giữ trong footer cùng lỗi lưu `CauTaiCho`; `footerInset={insets.bottom}`
+  và `avoidKeyboard` dành chỗ cho vùng an toàn và bàn phím.
+- Ô nhập dùng `ONhapMuc`; lúc đang lưu, trường sửa không cho nhập và các
+  điều khiển sửa/quyền xem bị khóa. Ref `operation` khóa đồng bộ trước khi
+  gửi để bấm nhanh không tạo request trùng. Lưu thất bại giữ bản đang soạn;
+  lỗi nằm cạnh hành động lưu, chỉ lỗi có thể thử lại mới có «Thử lại».
 - Bộ chọn bìa ghi «Bìa hiện tại», dùng vai trợ năng `radio` cùng trạng thái
   `selected`; chọn một ảnh thì đóng bộ chọn. Bộ chọn ảnh trang dùng
   `checkbox`/`checked`, nhãn «Đã chọn», tối đa bốn ảnh mỗi trang.
@@ -2148,13 +2159,20 @@ kia.
 - Giữ luật không kicker/eyebrow trên tiêu đề. Nếu còn trong lát đang sửa,
   đó là lỗi cần dọn ở mã bởi phiên chính, không phải mẫu của hệ.
 
-**Giới hạn bằng chứng của cập nhật này:** chỉ đối chiếu mã nguồn và tài liệu,
+**Giới hạn bằng chứng lịch sử 27/09:** chỉ đối chiếu mã nguồn và tài liệu,
 không chạy lại native hay mở lại ảnh. Theo bàn giao của người dùng, ma trận
 emulator trước đó gồm điện thoại, tối/chữ 1.3, giảm chuyển động, màn nhỏ/chữ
 200% và tablet đã được xem; thiết bị thật được người dùng hoãn. Ma trận đó
 không xác nhận các sửa mới nhất về cột đọc/sửa, ẩn bản xem trước, vị trí quyền
 xem/lưu, đặt lại cuộn và trạng thái chọn bìa. Chưa có kết quả native cho các
 sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứng iOS.
+
+**Phạm vi bằng chứng 02/10:** đối chiếu mã và mở sáu ảnh native B9a tại
+`~/.local/share/rudi-b9a/`; xem [bàn giao B9a](docs/codex/2026-10-02/ui-ux-b9a.md).
+Ảnh ghi trạng thái chờ, lỗi lưu, bàn phím và cột form trên Android emulator
+điện thoại (411dp), màn ảo (320dp, chữ 1.3, tối, giảm chuyển động) và tablet
+ảo (768dp). Đây là tinh chỉnh từ mã trong hệ hiện có, không có comp mới;
+ảnh không chứng minh thiết bị thật, native iOS hay độ mượt khi chạy.
 
 ### Cards / Containers
 - **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*

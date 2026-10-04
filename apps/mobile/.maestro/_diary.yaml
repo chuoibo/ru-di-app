@@ -12,7 +12,7 @@ env:
     timeout: 30000
 - tapOn: "Giữ lại cuộc đi"
 - extendedWaitUntil:
-    visible: "Cuộc đi khép lại. Câu chuyện còn đây."
+    visible: "Khép cuộc đi, giữ câu chuyện."
     timeout: 30000
 - takeScreenshot: diary-01-ending
 - scrollUntilVisible:

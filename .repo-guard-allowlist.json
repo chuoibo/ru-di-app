@@ -211,12 +211,12 @@
     },
     {
       "path": "apps/mobile/package-lock.json",
-      "sha256": "e6b36ca1d2b6480700c2d649eba23a11b4a802c6985ba6239c49f7bb9715d320",
+      "sha256": "e99327fe89cf009b69d1079a853530a7ba7334c9205bb924b061fbd3eef6e36f",
       "rules": [
         "aggregate-base64-fragments",
         "long-number"
       ],
-      "reason": "Lockfile npm của ứng dụng mobile. Các chuỗi base64 là integrity digest của npm và số dài là metadata phiên bản; cả hai thuộc cấu trúc lockfile. Ghim lại 2026-09-03 khi gộp hai nhánh cùng thêm phụ thuộc: `expo-secure-store` cho phiên đăng nhập (ADR-0014, PR #514) và `@react-native-async-storage/async-storage@2.2.0` cho lớp lưu trữ phiên nháp của RuDi, kéo theo is-plain-obj@2.1.0 và merge-options@3.0.4. Sau khi gộp đã chạy `npm install --package-lock-only` để lockfile khớp package.json, rồi mới tính digest — ghim một digest của cây gộp chưa chuẩn hoá là ghim một file không ai từng cài. Toàn bộ dòng thêm là version/resolved/integrity/license/engines từ registry.npmjs.org; không dòng nào mang dữ liệu người tham gia. Ghim lại 2026-09-03 sau khi thêm expo-dev-client + @react-native-google-signin/google-signin (kéo theo react-native-reanimated 4.6.0, react-native-worklets 0.12.1); các số dài vẫn chỉ là version của devtools-protocol và hermes-compiler. Ghim lại 2026-09-05 (UI v2, PR UI-0) sau khi `npx expo install react-native-svg expo-font` (react-native-svg 15.15.4 cho wordmark và minh hoạ vector, expo-font 57.0.3 khai tường minh để nạp display face); mọi dòng thêm là version/resolved/integrity từ registry.npmjs.org. Ghim lại 2026-09-12 (ADR-0026, Hành trình trên bản đồ) sau khi `npx expo install @maplibre/maplibre-react-native maplibre-gl` cho bản đồ hành trình — native dùng module MapLibre, web dùng maplibre-gl; kéo theo @maplibre/maplibre-gl-style-spec, @mapbox/point-geometry, kdbush, pbf, quickselect, tinyqueue và vài gói @turf. Mọi dòng thêm là version/resolved/integrity/bin/engines từ registry.npmjs.org; đã soát toàn bộ 369 dòng thêm, không dòng nào mang dữ liệu người tham gia. Lockfile đã chạy `npm install --package-lock-only` (không đổi byte nào) trước khi tính digest. Ghim lại 2026-09-24 (ADR-0037, UI v3 «Sân khấu giấy», lát S0.2) sau khi `npm install @shopify/react-native-skia@2.6.2 --save-exact` (đúng bản bundledNativeModules của Expo SDK 57 khuyến nghị; `npx expo install` bị proxy chặn khi gọi API của Expo) rồi `npm install --package-lock-only`: thêm @shopify/react-native-skia 2.6.2, canvaskit-wasm 0.41.0, react-reconciler 0.31.0 và các gói prebuilt react-native-skia-android/-apple-ios/-apple-macos/-apple-tvos 147.1.0; mọi dòng thêm là version/resolved/integrity/license/engines từ registry.npmjs.org, không dòng nào mang dữ liệu người tham gia. Ghim lại 2026-09-27 (Cộng đồng): giữ phụ thuộc Skia mới trên main, thêm đúng 12 dòng dependency và metadata npm công khai của expo-video 57.0.5. Không có dữ liệu người tham gia; không mở rộng rule."
+      "reason": "Lockfile npm của ứng dụng mobile. Các chuỗi base64 là integrity digest của npm và số dài là metadata phiên bản; cả hai thuộc cấu trúc lockfile. Ghim lại 2026-09-03 khi gộp hai nhánh cùng thêm phụ thuộc: `expo-secure-store` cho phiên đăng nhập (ADR-0014, PR #514) và `@react-native-async-storage/async-storage@2.2.0` cho lớp lưu trữ phiên nháp của RuDi, kéo theo is-plain-obj@2.1.0 và merge-options@3.0.4. Sau khi gộp đã chạy `npm install --package-lock-only` để lockfile khớp package.json, rồi mới tính digest — ghim một digest của cây gộp chưa chuẩn hoá là ghim một file không ai từng cài. Toàn bộ dòng thêm là version/resolved/integrity/license/engines từ registry.npmjs.org; không dòng nào mang dữ liệu người tham gia. Ghim lại 2026-09-03 sau khi thêm expo-dev-client + @react-native-google-signin/google-signin (kéo theo react-native-reanimated 4.6.0, react-native-worklets 0.12.1); các số dài vẫn chỉ là version của devtools-protocol và hermes-compiler. Ghim lại 2026-09-05 (UI v2, PR UI-0) sau khi `npx expo install react-native-svg expo-font` (react-native-svg 15.15.4 cho wordmark và minh hoạ vector, expo-font 57.0.3 khai tường minh để nạp display face); mọi dòng thêm là version/resolved/integrity từ registry.npmjs.org. Ghim lại 2026-09-12 (ADR-0026, Hành trình trên bản đồ) sau khi `npx expo install @maplibre/maplibre-react-native maplibre-gl` cho bản đồ hành trình — native dùng module MapLibre, web dùng maplibre-gl; kéo theo @maplibre/maplibre-gl-style-spec, @mapbox/point-geometry, kdbush, pbf, quickselect, tinyqueue và vài gói @turf. Mọi dòng thêm là version/resolved/integrity/bin/engines từ registry.npmjs.org; đã soát toàn bộ 369 dòng thêm, không dòng nào mang dữ liệu người tham gia. Lockfile đã chạy `npm install --package-lock-only` (không đổi byte nào) trước khi tính digest. Ghim lại 2026-09-24 (ADR-0037, UI v3 «Sân khấu giấy», lát S0.2) sau khi `npm install @shopify/react-native-skia@2.6.2 --save-exact` (đúng bản bundledNativeModules của Expo SDK 57 khuyến nghị; `npx expo install` bị proxy chặn khi gọi API của Expo) rồi `npm install --package-lock-only`: thêm @shopify/react-native-skia 2.6.2, canvaskit-wasm 0.41.0, react-reconciler 0.31.0 và các gói prebuilt react-native-skia-android/-apple-ios/-apple-macos/-apple-tvos 147.1.0; mọi dòng thêm là version/resolved/integrity/license/engines từ registry.npmjs.org, không dòng nào mang dữ liệu người tham gia. Ghim lại 2026-09-27 (Cộng đồng): giữ phụ thuộc Skia mới trên main, thêm đúng 12 dòng dependency và metadata npm công khai của expo-video 57.0.5. Không có dữ liệu người tham gia; không mở rộng rule. UI-009 03/10/2026: delta chỉ thêm expo-splash-screen 57.0.9 và metadata registry công khai; fresh finish reviewer xác nhận safe đúng digest tại campaign/cp09/ui009-finish-review.md, không credential/dữ liệu người thật."
     },
     {
       "path": "apps/mobile/public/anh-nhom-dung-san.svg",
@@ -1471,6 +1471,110 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh của đợt «Trạng thái rỗng Cộng đồng» 03/10/2026 (docs/claude/2026-10-03/cong-dong-trang-rong): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0, từ khoá tìm tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "apps/mobile/assets/rudi/wordmark-splash.png",
+      "sha256": "6296dc0fcd7ad6ab0857e8210f61533bc2a74f858758b552f257bb897be8b99c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "UI-009 03/10/2026: raster 828×288 RGBA từ nguyên bốn GLYPHS/viewBox Wordmark.tsx hiện hành, Baloo 2 ExtraBold (Ek Type, SIL OFL 1.1), CairoSVG 2.8.2. Fresh finish reviewer mở ảnh, kiểm chunks không text/EXIF, tái raster in-memory trùng toàn byte; verdict safe đúng digest tại campaign/cp09/ui009-finish-review.md. Chỉ chữ hiệu trên alpha, không dữ liệu người thật. Đổi byte phải review và ghim lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/ui009/startup-before.png",
+      "sha256": "4fa15a204b6cd58689510fe027cb1d2a6b9af8b73f17037a2520482dd734fc63",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "UI-009, 03/10/2026: bằng chứng Android guest trên AVD tổng hợp riêng; PNG khung video trước8ac64443/sau source6144ff2c hoặc clip native sau bundled release ký debug cục bộ. Fresh finish reviewer mở hai PNG, kiểm metadata/chunks, xem toàn38frame MP4, không audio hay metadata payload: safe đúng hash trong campaign/cp09/ui009-committed-evidence-review.md. Không bill, tài khoản, người tham gia, credential hoặc dữ liệu thật; launcher chỉ icon công khai/wallpaper/giờ. Không chứng nhận FPS,300ms,pixelmatch hoặc tốc độ từ hai lần quay. Đổi byte phải review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/ui009/startup-after.png",
+      "sha256": "96eab9c6f4d9cb6c97d4240bf3d1bb638f4791477223552d38c46da42d8eb7dd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "UI-009, 03/10/2026: bằng chứng Android guest trên AVD tổng hợp riêng; PNG khung video trước8ac64443/sau source6144ff2c hoặc clip native sau bundled release ký debug cục bộ. Fresh finish reviewer mở hai PNG, kiểm metadata/chunks, xem toàn38frame MP4, không audio hay metadata payload: safe đúng hash trong campaign/cp09/ui009-committed-evidence-review.md. Không bill, tài khoản, người tham gia, credential hoặc dữ liệu thật; launcher chỉ icon công khai/wallpaper/giờ. Không chứng nhận FPS,300ms,pixelmatch hoặc tốc độ từ hai lần quay. Đổi byte phải review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/ui009/startup-after.mp4",
+      "sha256": "bbb624d43555a36b7301f6d4a6fe683865c1334b65ff3d9228e5d5438acb069d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "UI-009, 03/10/2026: bằng chứng Android guest trên AVD tổng hợp riêng; PNG khung video trước8ac64443/sau source6144ff2c hoặc clip native sau bundled release ký debug cục bộ. Fresh finish reviewer mở hai PNG, kiểm metadata/chunks, xem toàn38frame MP4, không audio hay metadata payload: safe đúng hash trong campaign/cp09/ui009-committed-evidence-review.md. Không bill, tài khoản, người tham gia, credential hoặc dữ liệu thật; launcher chỉ icon công khai/wallpaper/giờ. Không chứng nhận FPS,300ms,pixelmatch hoặc tốc độ từ hai lần quay. Đổi byte phải review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-before-future.png",
+      "sha256": "d7b124c6404062aecbaf5221181162060f0b05076b381a78fa5508a138bf7083",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-future.png",
+      "sha256": "0bf2d744c48f53fffbc76b9a3d60699fd76e0c8909de34379d5fa05561c6202e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-before-save-error.png",
+      "sha256": "b8a6f55a498702ada6c95d057ad5c14cef80aab3c91c29a80cc4124abb22ba0b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-save-error.png",
+      "sha256": "3b5f7febafeac7c24df1e669a572ee7b3c93dcd4504b73ecd73775bac2223b33",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-320-font130-dark.png",
+      "sha256": "b660be2849c8c1f718820fb8dd57547e86e689f9971e9d24d7330dc2af296bf8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-save-320-font130-dark.png",
+      "sha256": "a9d36ff056fe3fa154c3b7e360457195c7799268527c80f24d4b941337486555",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-tablet.png",
+      "sha256": "43e71256c85e4cbf140da7f446d685615618fc0ec22f99aae1b6c49339331cf0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-keyboard-phone.png",
+      "sha256": "ca0c52ab19918d1e4e95011b494b8d228449f7d18b4ce41e82086a5d98f3cd56",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
+    },
+    {
+      "path": "docs/codex/2026-10-02/evidence/native-after-success.png",
+      "sha256": "c38538719eaa62f36c761a797cb1adabc5e6c8a46a29f7ddd5e4b6ca999e78ad",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng B9a chụp bằng adb trên Android emulator dùng stack loopback riêng: tiêu đề dài, ảnh sọc và nội dung tổng hợp từ fixture; không chứa tên, số điện thoại hay dữ liệu người thật. Không chỉnh nội dung ảnh. Ghim digest; thay byte cần review lại."
     }
   ]
 }

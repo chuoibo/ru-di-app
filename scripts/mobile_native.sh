@@ -39,6 +39,9 @@
 set -euo pipefail
 
 PORT="${MOBILE_METRO_PORT:-8095}"
+# Android emulators can reach host loopback through 10.0.2.2 when an ADB
+# transport reconnect drops reverse bindings. Physical devices keep localhost.
+METRO_HOST_NATIVE="${MOBILE_METRO_HOST_NATIVE:-localhost}"
 API_PORT="${MOBILE_API_PORT_NATIVE:-}"
 SERIAL="${ANDROID_SERIAL:-}"
 FLOWS=".maestro"
@@ -101,6 +104,11 @@ while [ $# -gt 0 ]; do
     *) echo "tham số lạ: $1" >&2; exit 64 ;;
   esac
 done
+
+if [[ ! "$METRO_HOST_NATIVE" =~ ^[A-Za-z0-9.-]+$ ]]; then
+  echo "MOBILE_METRO_HOST_NATIVE cần hostname hoặc IPv4, không phải URL." >&2
+  exit 64
+fi
 
 if [ "$LIVE" = 1 ]; then
   [ -n "$OTP_PHONE_SEED" ] \
@@ -1926,6 +1934,9 @@ if [ "$ANH" = 1 ]; then kiem_co_anh_dia_diem; fi
   # below caught it as "Metro is not serving this tree" -- which was true.
   export CI=1 EXPO_NO_TELEMETRY=1 EXPO_NO_DEPENDENCY_VALIDATION=1
   export EXPO_PUBLIC_TREE_FINGERPRINT="$DAU_VAN"
+  if [ "$METRO_HOST_NATIVE" != localhost ]; then
+    export EXPO_PACKAGER_PROXY_URL="http://$METRO_HOST_NATIVE:$PORT"
+  fi
   if [ "$TAT_KAV" = 1 ]; then
     export EXPO_PUBLIC_QA_TAT_KAV=1
   fi
@@ -1993,9 +2004,9 @@ mo_link() {
 # khi bundle đã lên — link ẤM, qua Linking.addEventListener trong app/_layout.tsx.
 url_metro() {
   if [ "$MODE" = "dev-client" ]; then
-    printf 'rudi://expo-development-client/?url=http%%3A%%2F%%2Flocalhost%%3A%s' "$PORT"
+    printf 'rudi://expo-development-client/?url=http%%3A%%2F%%2F%s%%3A%s' "$METRO_HOST_NATIVE" "$PORT"
   else
-    printf 'exp://localhost:%s' "$PORT"
+    printf 'exp://%s:%s' "$METRO_HOST_NATIVE" "$PORT"
   fi
 }
 cho_bundle() {
@@ -2020,7 +2031,7 @@ if [ "$DANG_NHAP" = 1 ] && [ "$MODE" = "expo-go" ]; then
   # giao link. App vẫn KHỞI ĐỘNG LẠNH cùng cái link — đúng đường một người bấm
   # link bạn gửi — chỉ khác là cái nhận link là app chứ không phải màn chào của
   # Expo Go.
-  mo_link "exp://localhost:$PORT"
+  mo_link "exp://$METRO_HOST_NATIVE:$PORT"
   for _ in $(seq 1 90); do
     grep -q "Android Bundled" "$LOG" && break
     sleep 2
@@ -2031,7 +2042,7 @@ fi
 
 DUONG_MO="$(url_metro)"
 if [ "$DANG_NHAP" = 1 ] && [ "$MODE" = "expo-go" ]; then
-  DUONG_MO="exp://localhost:$PORT/--/moi/$MA_LOI_MOI"
+  DUONG_MO="exp://$METRO_HOST_NATIVE:$PORT/--/moi/$MA_LOI_MOI"
 fi
 mo_link "$DUONG_MO"
 cho_bundle || true
@@ -2071,7 +2082,7 @@ if [ "$MODE" = "dev-client" ]; then
   # Một flow ghi lại `exp://` hay Expo Go là quay về đúng cái bẫy đã tả bên dưới.
   LOI_URL="$(grep -lE '^\s*-\s*openLink:\s*exp://|^appId:\s*host\.exp\.exponent' "$APP/$FLOWS"/*.yaml || true)"
   [ -z "$LOI_URL" ] || hong "flow còn ghim Expo Go / exp:// trong khi đang lái dev client:$(printf ' %s' $LOI_URL)"
-elif [ "$PORT" != 8095 ]; then
+elif [ "$PORT" != 8095 ] || [ "$METRO_HOST_NATIVE" != localhost ]; then
   FLOWS_GOC="$FLOWS"
   FLOWS="$(mktemp -d)/maestro"
   cp -r "$APP/$FLOWS_GOC" "$FLOWS"
@@ -2079,7 +2090,7 @@ elif [ "$PORT" != 8095 ]; then
   for f in "$FLOWS"/*.yaml; do
     truoc="$(grep -c 'localhost:8095' "$f" || true)"
     [ "$truoc" -gt 0 ] || continue
-    sed -i "s|localhost:8095|localhost:$PORT|g" "$f"
+    sed -i "s|localhost:8095|$METRO_HOST_NATIVE:$PORT|g" "$f"
     DA_THAY=$((DA_THAY + truoc))
   done
   [ "$DA_THAY" -gt 0 ] \

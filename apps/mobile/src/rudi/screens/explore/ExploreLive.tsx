@@ -517,7 +517,8 @@ const styles = StyleSheet.create({
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
   timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   khung: { gap: 12 },
-  cuonLoai: { marginHorizontal: -16 },
+  // Keep a paper gutter between scrolling labels and Nếp's bookmark rail.
+  cuonLoai: { marginLeft: -16 },
   hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   theAi: { gap: 4, padding: 14, borderRadius: 14 },
   guRow: { marginTop: -8, gap: 2 },

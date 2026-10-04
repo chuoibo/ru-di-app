@@ -26,7 +26,8 @@ env:
     direction: DOWN
 - tapOn: "Dựng sổ cùng Nếp"
 - extendedWaitUntil:
-    visible: "Mình thử lại nhé"
+    visible:
+      id: "diary-compose-error"
     timeout: 60000
 - takeScreenshot: diary-11-ai-unavailable
 - scrollUntilVisible:
