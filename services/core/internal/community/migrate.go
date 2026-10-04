@@ -25,7 +25,10 @@ var mediaReview string
 //go:embed notification_source.sql
 var notificationSource string
 
-var migrations = []string{schema, feedStorage, postMetrics, mediaReview, notificationSource}
+//go:embed notification_actor_erasure.sql
+var notificationActorErasure string
+
+var migrations = []string{schema, feedStorage, postMetrics, mediaReview, notificationSource, notificationActorErasure}
 
 // SchemaFiles returns the migrations the binary embeds, in order, so the AI
 // trigger gate (internal/aigate) reads the same bytes this package installs.
