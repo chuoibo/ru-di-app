@@ -165,13 +165,16 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 
 func pairKey(username, ip string) string { return username + "\x00" + ip }
 
-// Ten wrong passwords from one address pause that address for the username;
-// a hundred from one address in an hour pause the address; a hundred from
-// anywhere in a day pause the username, except from addresses its owner
-// signed in from in the last thirty days, until a reset proves the owner.
+// Ten wrong passwords from one address pause that address for the username,
+// thirty in a day pause it until the next day; a hundred from one address in
+// an hour pause the address; a hundred from anywhere in a day pause the
+// username, except from addresses its owner signed in from in the last thirty
+// days (someone sharing that address, behind one NAT, still has only the
+// thirty a day), until a reset proves the owner.
 func (h *Handler) loginBudgets(ctx context.Context, username, ip string) ([]budget, error) {
 	budgets := []budget{
 		{"login-fail", pairKey(username, ip), 10, 15 * time.Minute},
+		{"login-fail-day", pairKey(username, ip), 30, 24 * time.Hour},
 		{"login-fail-ip", ip, 100, time.Hour},
 	}
 	if h.cfg.Limits == nil {

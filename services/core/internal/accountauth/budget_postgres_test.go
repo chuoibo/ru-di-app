@@ -93,6 +93,17 @@ func TestPostgresLoginFailuresPauseTheGuesserNotTheOwner(t *testing.T) {
 	// Except from where the owner signed in before.
 	s, out = callFrom(t, h, "192.0.2.10", "/auth/login", "POST", "", right)
 	requireCode(t, s, 201, out)
+	// Where a guesser shares that address, a day still holds thirty guesses.
+	for i := range 30 {
+		s, out = callFrom(t, h, "192.0.2.10", "/auth/login", "POST", "", wrong)
+		requireCode(t, s, 401, out)
+		if i%10 == 9 {
+			// Fifteen minutes pass: the short pause lifts, the day's count stays.
+			h.forgive(context.Background(), budget{"login-fail", pairKey("synthetic_victim", "192.0.2.10"), 10, 15 * time.Minute})
+		}
+	}
+	s, out = callFrom(t, h, "192.0.2.10", "/auth/login", "POST", "", wrong)
+	requireCode(t, s, 429, out)
 	// Proving the mailbox lifts that pause everywhere.
 	// repo-guard: allow=email reason=synthetic-reserved-test-domain
 	s, out = callFrom(t, h, "192.0.2.20", "/auth/password/reset/request", "POST", "", map[string]string{"email": "synthetic_victim@example.test"})

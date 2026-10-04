@@ -98,7 +98,8 @@ tìm ra các đường lạm dụng giới hạn thử. Quyết định đã tri
   trong 15 phút thì tạm dừng đúng cặp đó; một trăm lần sai từ mọi nơi trong
   24 giờ thì tạm dừng username; một trăm lần sai từ một địa chỉ trong một giờ
   thì tạm dừng địa chỉ — trừ các địa chỉ chủ tài khoản đã đăng nhập đúng
-  trong 30 ngày, nơi trần theo username không áp dụng. Mỗi lượt giữ chỗ
+  trong 30 ngày, nơi trần theo username không áp dụng; người dùng chung địa
+  chỉ đó (NAT, CGNAT) vẫn chỉ có 30 lần sai/ngày cho username ấy. Mỗi lượt giữ chỗ
   nguyên tử trên mọi ngân sách trước khi băm và chỉ hoàn lại khi không sai,
   nên request song song không vượt được trần. Đăng nhập đúng xoá bộ đếm của
   cặp; đặt lại mật khẩu qua email xoá bộ đếm của username. Người lạ không còn khoá được chủ tài

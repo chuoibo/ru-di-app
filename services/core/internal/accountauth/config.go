@@ -259,8 +259,10 @@ func (h *Handler) reserve(ctx context.Context, budgets ...budget) error {
 	return nil
 }
 
-// refund gives back a reservation that did not end in a failure; best
-// effort, an unreturned unit only expires with its window.
+// refund gives back a reservation that made no wrong guess (a success, a
+// refusal before the password was compared, a server error). Best effort: a
+// unit Redis fails to take back errs towards refusing, never towards more
+// guesses, and expires with its window.
 func (h *Handler) refund(ctx context.Context, budgets ...budget) {
 	for _, b := range budgets {
 		_ = h.cfg.Limits.Undo(ctx, h.rateKey(b.scope, b.value))
