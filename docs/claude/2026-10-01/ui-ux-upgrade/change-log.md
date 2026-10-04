@@ -1234,7 +1234,13 @@ Ba lượt `scripts/mobile_native.sh --otp` trên AVD chỉ-đọc, stack riêng
 - Flow 30: thẻ bình chọn sau B6 không còn in «· của bạn»; chờ radio đã chọn (trên Android tên mang giá trị: «Bỏ phiếu Bun
   bo, 1 phiếu»). Fixture chuỗi Maestro co lại một dòng.
 - Flow 42: ô bình luận của trang viết tên «Viết bình luận» từ trước đợt này, flow vẫn tìm «Ô viết bình luận» (lệch có sẵn
-  trên `main` 2b6c9360, lộ ra khi chuỗi đỏ dây chuyền hết).
+  trên `main` 2b6c9360, lộ ra khi chuỗi đỏ dây chuyền hết); sau «Thích» flow chờ chip «❤️ 1» của trang bài cũ, nay chờ
+  dòng đếm «1 thích · 0 bình luận», và thẻ trên tường cá nhân «1 thích · 1 bình luận».
+- Flow 45: sau khi chặn, flow chờ «Kết bạn để nhắn riêng.»; màn không mời kết bạn lại người vừa bị chặn (có trên `main`).
+  Flow kiểm cửa nhắn riêng đóng.
+- Script chạy e2e của người sửa (ngoài repo) truyền DSN của stack riêng (`MOBILE_DATABASE_URL`, venv riêng có SQLAlchemy và
+  psycopg) cho `scripts/mobile_native.sh`, để phép kiểm máy
+  chủ sau flow 43 (story hết hạn) và 45 (hàng «reports») chạy được; trước đó chúng «không đo được», tức đỏ.
 - Harness: sau một lần trả phiên về màn chào, đợi 66s trước flow kế (máy chủ chặn xin mã lại trong 60s, nên một flow đỏ kéo
   đỏ sáu flow sau); `lai_la_c` cho tám bước chuẩn bị và kiểm biết ai đang cầm máy sau khi trả phiên.
 - `tests/test_maestro_flows_are_all_reachable.py`: hồi quy từ tích hợp PR #664 (c8328b0e thêm `00-*)` cho flow smoke).

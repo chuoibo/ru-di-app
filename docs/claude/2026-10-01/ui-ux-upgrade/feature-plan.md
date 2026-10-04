@@ -19,7 +19,7 @@ Phần trùng của đợt này (lý do `cannot_end_reason`, «chưa tới ngày
 
 | ID | Mức | Nhóm | Feature | Vấn đề | Batch | Tiêu chí | Trạng thái |
 |---|---|---|---|---|---|---|---|
-| UI-001 | P3 | UX_IMPROVEMENT, DESIGN_SYSTEM_IMPROVEMENT | F01+ | Ô nhập một dòng 44dp (<48); nút cảm xúc, nút story nhỏ; hitSlop bị web bỏ qua | B2 | mọi ô nhập một dòng ≥48dp | VERIFIED_LOCALLY |
+| UI-001 | P3 | UX_IMPROVEMENT, DESIGN_SYSTEM_IMPROVEMENT | F01+ | Ô nhập một dòng 44dp (<48); nút cảm xúc, nút story nhỏ; hitSlop bị web bỏ qua | B2 | mọi ô nhập một dòng ≥48dp | READY_FOR_QA (lượt cuối: `TC-R-UI-001` PASS, 10 ô, 0 ô dưới 48dp) |
 | UI-002 | P2 | UX_IMPROVEMENT | F00 | Có phiên mà mở URL lạ thì về Welcome rồi bị đòi đăng nhập | B10 | URL lạ + phiên → về tab, hoặc 404 có lối ra | READY_FOR_QA (Codex CP06, PR #664 — tích hợp `a0fb9ba3`; bằng chứng: `docs/codex/2026-10-02/`) |
 | UI-003 | P2 | BUG_FIX, DESIGN_SYSTEM_IMPROVEMENT | F00 hệ | `accessibilityState` không tới DOM: tab, radio, checkbox, mở gập không có `aria-*` | B2 | mọi control có trạng thái mang `aria-*` khớp; tab đang chọn có `aria-selected` | READY_FOR_QA |
 | UI-004 | P2 | BUG_FIX | F00 | Rail (≥600dp): vạch chỉ báo lệch khỏi tab | B2 (sửa sớm: rail và tablist) | vạch nằm giữa tab đang chọn ở 600/768/839/840/1024 | READY_FOR_QA |
@@ -91,7 +91,7 @@ Phần trùng của đợt này (lý do `cannot_end_reason`, «chưa tới ngày
 | UI-070 | P3 | VISUAL_UPGRADE | F05 | Dải ghim sáng trên nền mờ khi sheet mở | B2 | dải bị mờ cùng nền | READY_FOR_QA |
 | UI-071 | P3 | UX_IMPROVEMENT | F06 | Lập nhóm xong về Khám phá, không thấy nhóm vừa lập | B8 | vào nhóm mới + lời mời | READY_FOR_QA |
 | UI-072 | P3 | BUG_FIX | F06 | Mời người đã ở trong nhóm: 409 hiện thành câu «lần bấm trước» | B2 | câu «đã ở trong nhóm» | READY_FOR_QA |
-| UI-073 | P2 | BUG_FIX | F06/E1 | Người vào bằng lời mời bỏ qua Sở thích; tên người mời đặt thành tên công khai | B8 + ADR | Sở thích có ô tên sửa được (luật tra số: ADR đề xuất) | VERIFIED_LOCALLY (luật đọc từ phiên; harness đo lại ở lượt cuối) |
+| UI-073 | P2 | BUG_FIX | F06/E1 | Người vào bằng lời mời bỏ qua Sở thích; tên người mời đặt thành tên công khai | B8 + ADR | Sở thích có ô tên sửa được (luật tra số: ADR đề xuất) | READY_FOR_QA (lượt cuối: `TC-R-UI-073` PASS, tới Sở thích, ô tên điền sẵn tên người mời đặt) |
 | UI-074 | P2 | UX_IMPROVEMENT | F06 | Quản trị tự bỏ quyền bằng một chạm | B8 | hỏi trước khi tự hạ quyền | READY_FOR_QA |
 | UI-075 | P3 | BUG_FIX | F06 | Mọi quản trị mang nhãn «Người lập nhóm» | B8 | chỉ người lập | READY_FOR_QA |
 | UI-076 | P3 | UX_IMPROVEMENT | F06 | 19 nút cùng tên «Đặt làm quản trị»; hàng không mở hồ sơ | B8 | tên nút riêng; hàng mở hồ sơ | READY_FOR_QA |
@@ -148,7 +148,7 @@ Phần trùng của đợt này (lý do `cannot_end_reason`, «chưa tới ngày
 | UI-127 | P3 | UX_IMPROVEMENT, MOTION_UPGRADE | N26 | Khoảnh khắc M6 «sổ hai người mở» không diễn | B8 | M6 diễn một lần; C9 khung cuối | READY_FOR_QA |
 | UI-128 | P3 | UX_IMPROVEMENT | N26 | Chat hai người còn chữ của nhóm | B6 | không «nhóm/hội» trong chat hai người | READY_FOR_QA |
 | UI-129 | P3 | UX_IMPROVEMENT | N26 | Sheet «Gu của hai bạn»: hai dòng ngược nhau; lỗi nằm dưới lớp phủ | B6 | một câu đúng; lỗi trong sheet | READY_FOR_QA |
-| UI-130 | P2 | UX_IMPROVEMENT | N26×F02 | «Rủ X tới đây» cho cặp bạn: chỗ vừa chọn bị bỏ | B8 | màn tới mang quán, hoặc nút ẩn | VERIFIED_LOCALLY (một cửa mang quán vào form ở B11; đo ở lượt cuối) |
+| UI-130 | P2 | UX_IMPROVEMENT | N26×F02 | «Rủ X tới đây» cho cặp bạn: chỗ vừa chọn bị bỏ | B8 | màn tới mang quán, hoặc nút ẩn | READY_FOR_QA (lượt cuối: `TC-N26-RU-BAN-CHUA-SO`, `-CO-SO` PASS, màn tới nhắc tên chỗ) |
 | UI-131 | P3 | BUG_FIX | N26 | Máy chủ vẫn phác tờ cho cặp chưa «Một đôi» | ADR-0053 (B8 phần app) | QA: draft cho cặp bạn → 4xx; chủ sản phẩm chọn B (ADR-0053): 201 có chủ đích, khay chat chỉ cho cặp đôi | READY_FOR_QA (phương án B: máy chủ giữ tờ tạm có chủ đích, ADR-0053; phần app «Rủ … tới đây» ở B8) |
 | UI-132 | P2 | BUG_FIX | N14 | Cộng đồng mới: tab đầu báo «chưa kết nối được», «Thử lại» không bao giờ được | B7 (Go) | 200 với 0 bài; trạng thái rỗng mời kể chuyện | READY_FOR_QA |
 | UI-133 | P2 | BUG_FIX | N14 | Sáu chủ đề hay chủ đề một ký tự → câu «lỗi của app», dưới mép màn | B7 | câu theo chủ đề, thấy lúc gửi | READY_FOR_QA |
@@ -167,7 +167,7 @@ Phần trùng của đợt này (lý do `cannot_end_reason`, «chưa tới ngày
 | UI-146 | P3 | UX_IMPROVEMENT | N14 | Trang chủ đề không có «Quay lại» | B7 | TopBar lui + theo dõi chủ đề | READY_FOR_QA |
 | UI-147 | P3 | UX_IMPROVEMENT | N14 | Thông báo không nói ai nhắc | B7 (Go) | tên người nhắc; lối vào ngoài sheet | READY_FOR_QA |
 | UI-148 | P3 | UX_IMPROVEMENT | N14 | Đọc bình luận lỗi không có «Thử lại» | B7 | «Thử lại» đọc lại | READY_FOR_QA |
-| UI-149 | P2 | BUG_FIX | N15 | «Đã chia» tính theo ngày: hai kèo trùng ngày cùng ghi một khoản | ADR-0054 (Go + Python + migration + app) | mỗi khoản chi thuộc nhiều nhất một kèo; Σ «đã chia» ≤ sổ; hai kèo trùng ngày không đếm hai lần | VERIFIED_LOCALLY (ADR-0054; chờ lượt đo cuối và parity) |
+| UI-149 | P2 | BUG_FIX | N15 | «Đã chia» tính theo ngày: hai kèo trùng ngày cùng ghi một khoản | ADR-0054 (Go + Python + migration + app) | mỗi khoản chi thuộc nhiều nhất một kèo; Σ «đã chia» ≤ sổ; hai kèo trùng ngày không đếm hai lần | READY_FOR_QA (ADR-0054; bằng chứng máy chủ: oracle Go/Python, 9 ca PostgreSQL gồm backfill, parity; thế giới harness không có khoản chi trùng ngày) |
 | UI-150 | P2 | UX_IMPROVEMENT | N15 | Lưu sổ lỗi: câu lỗi ở đầu màn, trên nút hơn 1000px | B9 | lỗi thấy ngay sau khi chạm | READY_FOR_QA (Codex B9a, PR #664 — tích hợp `a0fb9ba3`; bằng chứng: `docs/codex/2026-10-02/`) |
 | UI-151 | P2 | BUG_FIX | N15 | Kèo chưa tới ngày vẫn có «Khép cuộc đi»; chạm thì 409 | B9 (Go) | `can_end` false + lý do; không nút | READY_FOR_QA (Codex B9a, PR #664 — tích hợp `a0fb9ba3`; bằng chứng: `docs/codex/2026-10-02/`) |
 | UI-152 | P3 | UX_IMPROVEMENT | N15 | Thành viên thấy bộ chọn loại mà không có tác dụng | B9 | không bộ chọn với người không tổ chức | READY_FOR_QA (Codex B9a, PR #664 — tích hợp `a0fb9ba3`; bằng chứng: `docs/codex/2026-10-02/`) |
