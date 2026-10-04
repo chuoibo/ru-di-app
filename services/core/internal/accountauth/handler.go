@@ -78,12 +78,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
+	ip := h.clientIP(r)
+	ctx = context.WithValue(ctx, clientIPKey{}, ip)
 	r = r.WithContext(ctx)
-	if err := h.limit(ctx, "ip", h.clientIP(r), 300, time.Minute); err != nil {
+	if err := h.limit(ctx, "ip", ip, 300, time.Minute); err != nil {
 		refuse(w, err)
 		return
 	}
 	h.mux.ServeHTTP(w, r)
+}
+
+type clientIPKey struct{}
+
+// requestIP is the address ServeHTTP resolved; empty outside a request.
+func requestIP(ctx context.Context) string {
+	ip, _ := ctx.Value(clientIPKey{}).(string)
+	return ip
 }
 func respond(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -118,27 +128,36 @@ func decode(w http.ResponseWriter, r *http.Request, out any) error {
 	}
 	return nil
 }
-func (h *Handler) hash(ctx context.Context, password string) (string, error) {
+
+// A burst waits briefly for a hash slot rather than failing at once; a queue
+// longer than that is load the replica cannot carry, and says so.
+const hashWait = 2 * time.Second
+
+func (h *Handler) slot(ctx context.Context) error {
+	wait := time.NewTimer(hashWait)
+	defer wait.Stop()
 	select {
 	case h.hashes <- struct{}{}:
-		defer func() { <-h.hashes }()
-		return hashPassword(password)
+		return nil
 	case <-ctx.Done():
-		return "", problem(503, "auth_temporarily_unavailable")
-	default:
-		return "", problem(503, "auth_busy")
+		return problem(503, "auth_temporarily_unavailable")
+	case <-wait.C:
+		return problem(503, "auth_busy")
 	}
 }
-func (h *Handler) checkPassword(ctx context.Context, password, encoded string) (bool, error) {
-	select {
-	case h.hashes <- struct{}{}:
-		defer func() { <-h.hashes }()
-		return verifyPassword(password, encoded), nil
-	case <-ctx.Done():
-		return false, ctx.Err()
-	default:
-		return false, problem(503, "auth_busy")
+func (h *Handler) hash(ctx context.Context, password string) (string, error) {
+	if err := h.slot(ctx); err != nil {
+		return "", err
 	}
+	defer func() { <-h.hashes }()
+	return hashPassword(password)
+}
+func (h *Handler) checkPassword(ctx context.Context, password, encoded string) (bool, error) {
+	if err := h.slot(ctx); err != nil {
+		return false, err
+	}
+	defer func() { <-h.hashes }()
+	return verifyPassword(password, encoded), nil
 }
 func conflict(err error) error {
 	var p *pgconn.PgError
@@ -163,9 +182,15 @@ func (h *Handler) actor(r *http.Request) (string, string, error) {
 		return "", "", problem(401, "authentication_required")
 	}
 	var person, session string
-	err := h.pool.QueryRow(r.Context(), `SELECT a.person_id::text,a.id::text FROM account_sessions a JOIN managed_accounts m USING(person_id) JOIN people p ON p.id=a.person_id WHERE a.token_digest=$1 AND a.revoked_at IS NULL AND a.expires_at>clock_timestamp() AND p.deleted_at IS NULL`, auth.TokenDigest(token)).Scan(&person, &session)
+	var managed bool
+	err := h.pool.QueryRow(r.Context(), `SELECT a.person_id::text,a.id::text,EXISTS(SELECT 1 FROM managed_accounts m WHERE m.person_id=a.person_id) FROM account_sessions a JOIN people p ON p.id=a.person_id WHERE a.token_digest=$1 AND a.revoked_at IS NULL AND a.expires_at>clock_timestamp() AND p.deleted_at IS NULL`, auth.TokenDigest(token)).Scan(&person, &session, &managed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", "", problem(401, "authentication_required")
+	}
+	if err == nil && !managed {
+		// A live session of a person without a managed account (an operator's
+		// genesis session) is valid elsewhere; 401 would sign the client out.
+		return "", "", problem(403, "managed_account_required")
 	}
 	return person, session, err
 }

@@ -125,7 +125,8 @@ func triggerWrites(sqls []string, table string) map[string][]string {
 }
 
 func schemaSQL() []string {
-	out := append(chatassist.SchemaFiles(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(), aimetrics.SchemaSQL(), nepnho.SchemaSQL(), accountauth.SchemaSQL())
+	out := append(chatassist.SchemaFiles(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(), aimetrics.SchemaSQL(), nepnho.SchemaSQL())
+	out = append(out, accountauth.SchemaFiles()...)
 	out = append(out, nap.SchemaFiles()...)
 	out = append(out, community.SchemaFiles()...)
 	out = append(out, diary.SchemaFiles()...)

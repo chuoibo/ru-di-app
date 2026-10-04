@@ -87,7 +87,15 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		refuse(w, problem(401, "credentials_invalid"))
 		return
 	}
-	if err = h.limit(r.Context(), "login", username, 10, time.Minute); err != nil {
+	ip := h.clientIP(r)
+	// Attempts from one address bound the Argon2 work it can ask for; the
+	// failure budgets below decide who may still guess at a username.
+	if err = h.limit(r.Context(), "login-ip", ip, 60, time.Minute); err != nil {
+		refuse(w, err)
+		return
+	}
+	budgets := loginBudgets(username, ip)
+	if err = h.spent(r.Context(), budgets...); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -107,6 +115,10 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !ok || person == "" {
+		if err = h.fail(r.Context(), budgets...); err != nil {
+			refuse(w, err)
+			return
+		}
 		refuse(w, problem(401, "credentials_invalid"))
 		return
 	}
@@ -135,7 +147,19 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
+	h.forgive(r.Context(), budgets[0])
 	respond(w, 201, out)
+}
+
+// Ten wrong passwords from one address pause that address for the username;
+// a hundred from anywhere in a day pause the username itself until a reset
+// proves the owner; a hundred from one address in an hour pause the address.
+func loginBudgets(username, ip string) []budget {
+	return []budget{
+		{"login-fail", username + "\x00" + ip, 10, 15 * time.Minute},
+		{"login-fail-user", username, 100, 24 * time.Hour},
+		{"login-fail-ip", ip, 100, time.Hour},
+	}
 }
 
 // A valid encoded hash with a random salt and a non-password digest costs the same as a real lookup.

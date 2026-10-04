@@ -21,11 +21,30 @@ import (
 type testLimit struct{}
 
 func (testLimit) Allow(context.Context, string, int, time.Duration) (bool, error) { return true, nil }
+func (testLimit) Count(context.Context, string) (int, error)                      { return 0, nil }
+func (testLimit) Clear(context.Context, string) error                             { return nil }
 
 type testGoogle struct{ claims GoogleClaims }
 
 func (g testGoogle) Verify(context.Context, string) (GoogleClaims, error) { return g.claims, nil }
 func authWorld(t *testing.T) *Handler {
+	t.Helper()
+	pool := authSchema(t)
+	if e := Migrate(context.Background(), pool); e != nil {
+		t.Fatal(e)
+	}
+	if e := Migrate(context.Background(), pool); e != nil {
+		t.Fatal("migration repeat", e)
+	}
+	if e := CheckSchema(context.Background(), pool); e != nil {
+		t.Fatal(e)
+	}
+	return New(pool, Config{Vault: testVault(t), Limits: testLimit{}, HashSlots: 4})
+}
+
+// authSchema is an isolated schema holding copies of the tables the account
+// migration touches, so its DELETEs never reach the shared public tables.
+func authSchema(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	ctx := context.Background()
 	base := testdb.Pool(t)
@@ -47,21 +66,12 @@ func authWorld(t *testing.T) *Handler {
 		t.Fatal(e)
 	}
 	t.Cleanup(pool.Close)
-	for _, table := range []string{"people", "account_identities", "account_sessions", "contexts", "memberships", "friend_requests"} {
+	for _, table := range []string{"people", "account_identities", "account_sessions", "contexts", "memberships", "friend_requests", "otp_challenges"} {
 		if _, e = pool.Exec(ctx, "CREATE TABLE "+table+" (LIKE public."+table+" INCLUDING ALL)"); e != nil {
 			t.Fatal(e)
 		}
 	}
-	if e = Migrate(ctx, pool); e != nil {
-		t.Fatal(e)
-	}
-	if e = Migrate(ctx, pool); e != nil {
-		t.Fatal("migration repeat", e)
-	}
-	if e = CheckSchema(ctx, pool); e != nil {
-		t.Fatal(e)
-	}
-	return New(pool, Config{Vault: testVault(t), Limits: testLimit{}, HashSlots: 4})
+	return pool
 }
 func call(t *testing.T, h *Handler, path, method, token string, body any) (int, map[string]any) {
 	t.Helper()

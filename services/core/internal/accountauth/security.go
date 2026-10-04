@@ -2,6 +2,7 @@ package accountauth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -45,7 +46,10 @@ func (h *Handler) reauth(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
-	if err = h.limit(r.Context(), "reauth", person, 10, time.Minute); err != nil {
+	// A stolen session must not become a password oracle: failures are capped
+	// per person, and a correct proof is never slowed by a stranger's tries.
+	budgets := []budget{{"reauth-fail", person, 10, 15 * time.Minute}, {"reauth-fail-day", person, 30, 24 * time.Hour}}
+	if err = h.spent(r.Context(), budgets...); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -80,6 +84,12 @@ func (h *Handler) reauth(w http.ResponseWriter, r *http.Request) {
 		err = problem(401, "credentials_invalid")
 	}
 	if err != nil {
+		var e *Error
+		if errors.As(err, &e) && e.Status == 401 {
+			if failed := h.fail(r.Context(), budgets...); failed != nil {
+				err = failed
+			}
+		}
 		refuse(w, commit(r.Context(), tx, err))
 		return
 	}
@@ -171,7 +181,11 @@ func (h *Handler) changeEmail(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
-	if err = h.limit(r.Context(), "mail", email, 5, 15*time.Minute); err != nil {
+	if err = h.limit(r.Context(), "email-change", person, 5, time.Hour); err != nil {
+		refuse(w, err)
+		return
+	}
+	if err = h.issuing(r, email); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -185,15 +199,8 @@ func (h *Handler) changeEmail(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
-	var used bool
-	if err = tx.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM managed_accounts WHERE email_digest=$1)`, h.cfg.Vault.mac("email", email)).Scan(&used); err != nil {
-		refuse(w, err)
-		return
-	}
-	if used {
-		refuse(w, problem(409, "email_unavailable"))
-		return
-	}
+	// Whether another account holds this email is said only after its OTP
+	// (verifyEmail), so the request cannot be used to test addresses.
 	out, err := h.newChallenge(r.Context(), tx, "email", email, person, pending{Email: email, Person: person, Session: session}, true)
 	if err = commit(r.Context(), tx, err); err != nil {
 		refuse(w, err)
@@ -237,7 +244,11 @@ func (h *Handler) verifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err = tx.Exec(r.Context(), `UPDATE managed_accounts SET email_digest=$2,email_cipher=$3 WHERE person_id=$1`, person, h.cfg.Vault.mac("email", p.Email), ciphertext); err != nil {
-		refuse(w, conflict(err))
+		if conflict(err) != err {
+			// Another account holds the address; told only now, after its OTP.
+			err = problem(409, "email_unavailable")
+		}
+		refuse(w, err)
 		return
 	}
 	// Recovery proofs for the previous email must not remain usable.

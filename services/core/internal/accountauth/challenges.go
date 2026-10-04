@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/subtle"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -45,8 +46,26 @@ func (h *Handler) newChallenge(ctx context.Context, tx pgx.Tx, kind, subject, pe
 	if err := tx.QueryRow(ctx, `SELECT count(*) FILTER(WHERE created_at>clock_timestamp()-interval '60 seconds'),count(*) FROM account_challenges WHERE kind=$1 AND subject_digest=$2 AND created_at>clock_timestamp()-interval '15 minutes'`, kind, h.cfg.Vault.mac("challenge:"+kind, subject)).Scan(&recent, &count); err != nil {
 		return challengeReply{}, err
 	}
-	if kind != "google" && kind != "google_register" && (recent > 0 || count >= 5) {
-		return challengeReply{}, problem(429, "challenge_resend_limited")
+	codeBearing := send || kind == "reset"
+	// The day-long refusal comes first: it is the one a waiting person
+	// must hear, not «wait a minute» followed by it.
+	if codeBearing {
+		if err := h.guessesLeft(ctx, tx, kind, h.cfg.Vault.mac("challenge:"+kind, subject)); err != nil {
+			return challengeReply{}, err
+		}
+	}
+	if kind != "google" && kind != "google_register" {
+		if recent > 0 {
+			return challengeReply{}, problem(429, "challenge_resend_limited")
+		}
+		if count >= 5 {
+			return challengeReply{}, problem(429, "challenge_quota_reached")
+		}
+	}
+	if codeBearing {
+		if err := h.mailOpen(ctx, kind); err != nil {
+			return challengeReply{}, err
+		}
 	}
 	id, err := newID()
 	if err != nil {
@@ -62,7 +81,7 @@ func (h *Handler) newChallenge(ctx context.Context, tx pgx.Tx, kind, subject, pe
 	}
 	var codeHash []byte
 	var code string
-	if send || kind == "reset" {
+	if codeBearing {
 		n, e := rand.Int(rand.Reader, big.NewInt(1000000))
 		if e != nil {
 			return challengeReply{}, e
@@ -94,7 +113,7 @@ func (h *Handler) newChallenge(ctx context.Context, tx pgx.Tx, kind, subject, pe
 	return challengeReply{id, secret, 300, 60}, nil
 }
 func (h *Handler) consume(ctx context.Context, tx pgx.Tx, kind string, in proof) (pending, error) {
-	var payload, binding, code []byte
+	var payload, binding, code, subject []byte
 	var consumed *time.Time
 	var alive bool
 	var attempts int
@@ -102,7 +121,7 @@ func (h *Handler) consume(ctx context.Context, tx pgx.Tx, kind string, in proof)
 	if !validID(in.ID) || len(in.Secret) != 43 {
 		return pending{}, problem(401, "challenge_invalid")
 	}
-	err := tx.QueryRow(ctx, `SELECT payload_cipher,binding_digest,code_digest,consumed_at,expires_at>clock_timestamp(),attempts FROM account_challenges WHERE id=$1 AND kind=$2 FOR UPDATE`, in.ID, kind).Scan(&payload, &binding, &code, &consumed, &alive, &attempts)
+	err := tx.QueryRow(ctx, `SELECT payload_cipher,binding_digest,code_digest,subject_digest,consumed_at,expires_at>clock_timestamp(),attempts FROM account_challenges WHERE id=$1 AND kind=$2 FOR UPDATE`, in.ID, kind).Scan(&payload, &binding, &code, &subject, &consumed, &alive, &attempts)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return pending{}, problem(401, "challenge_invalid")
 	}
@@ -112,8 +131,16 @@ func (h *Handler) consume(ctx context.Context, tx pgx.Tx, kind string, in proof)
 	if consumed != nil || !alive || attempts >= 5 || subtle.ConstantTimeCompare(binding, digest(in.Secret)) != 1 {
 		return pending{}, problem(401, "challenge_invalid")
 	}
+	if code != nil {
+		if err = h.guessesLeft(ctx, tx, kind, subject); err != nil {
+			return pending{}, err
+		}
+	}
 	if code != nil && (len(in.Code) != 6 || subtle.ConstantTimeCompare(code, h.cfg.Vault.mac("otp:"+in.ID, in.Code)) != 1) {
 		if _, err = tx.Exec(ctx, `UPDATE account_challenges SET attempts=attempts+1,consumed_at=CASE WHEN attempts=4 THEN clock_timestamp() ELSE NULL END WHERE id=$1`, in.ID); err != nil {
+			return pending{}, err
+		}
+		if err = h.fail(ctx, codeBudget(kind, subject, requestIP(ctx))); err != nil {
 			return pending{}, err
 		}
 		return pending{}, problem(401, "code_invalid")
@@ -126,6 +153,72 @@ func (h *Handler) consume(ctx context.Context, tx pgx.Tx, kind string, in proof)
 		return pending{}, err
 	}
 	return value, nil
+}
+
+// Five wrong codes end one challenge, and a resend starts a fresh one, so the
+// subject (an email) carries caps across challenges, a day long: ten wrong
+// codes from one address, thirty from everywhere. A stranger must spread over
+// three addresses to keep an owner from a code for a day; a guesser gets
+// thirty tries in a million. Challenges are kept a day past expiry.
+const subjectFailureCap = 30
+const subjectFailures = `SELECT coalesce(sum(attempts),0) FROM account_challenges WHERE kind=$1 AND subject_digest=$2 AND created_at>clock_timestamp()-interval '24 hours'`
+
+func codeBudget(kind string, subject []byte, ip string) budget {
+	return budget{"otp-fail", kind + ":" + hex.EncodeToString(subject) + ":" + ip, 10, 24 * time.Hour}
+}
+
+// guessesLeft refuses a code, or a new one, once the subject is spent from
+// this address or from all of them; subject is the stored digest.
+func (h *Handler) guessesLeft(ctx context.Context, tx pgx.Tx, kind string, subject []byte) error {
+	var failures int
+	if err := tx.QueryRow(ctx, subjectFailures, kind, subject).Scan(&failures); err != nil {
+		return err
+	}
+	if failures >= subjectFailureCap {
+		return problem(429, "challenge_attempts_exhausted")
+	}
+	if err := h.spent(ctx, codeBudget(kind, subject, requestIP(ctx))); err != nil {
+		var e *Error
+		if errors.As(err, &e) && e.Status == 429 {
+			return problem(429, "challenge_attempts_exhausted")
+		}
+		return err
+	}
+	return nil
+}
+
+// issuing charges the budgets an OTP mail spends: the address's own and the
+// asking client's, so one client cannot use up the day's mail for everyone.
+func (h *Handler) issuing(r *http.Request, email string) error {
+	ip := h.clientIP(r)
+	if err := h.limit(r.Context(), "mail-ip", ip, 20, time.Hour); err != nil {
+		return err
+	}
+	if err := h.limit(r.Context(), "mail-ip-day", ip, 50, 24*time.Hour); err != nil {
+		return err
+	}
+	return h.limit(r.Context(), "mail", email, 5, 15*time.Minute)
+}
+
+// precheck refuses a proof that cannot match before any Argon2 work is spent
+// on the password that came with it; consume still decides under lock.
+func (h *Handler) precheck(ctx context.Context, kind string, in proof) error {
+	if !validID(in.ID) || len(in.Secret) != 43 {
+		return problem(401, "challenge_invalid")
+	}
+	var binding []byte
+	var usable bool
+	err := h.pool.QueryRow(ctx, `SELECT binding_digest,consumed_at IS NULL AND expires_at>clock_timestamp() AND attempts<5 FROM account_challenges WHERE id=$1 AND kind=$2`, in.ID, kind).Scan(&binding, &usable)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return problem(401, "challenge_invalid")
+	}
+	if err != nil {
+		return err
+	}
+	if !usable || subtle.ConstantTimeCompare(binding, digest(in.Secret)) != 1 {
+		return problem(401, "challenge_invalid")
+	}
+	return nil
 }
 func validID(s string) bool {
 	if len(s) != 36 {
@@ -167,7 +260,19 @@ func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
-	if err = h.limit(r.Context(), "mail", email, 5, 15*time.Minute); err != nil {
+	var exists bool
+	// Usernames are public (ADR-0055), so a taken one is said at once and
+	// spends no mail budget. Email ownership is disclosed only after its OTP.
+	err = h.pool.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM managed_accounts WHERE username=$1) OR EXISTS(SELECT 1 FROM retired_usernames WHERE digest=sha256(convert_to($1,'UTF8')))`, username).Scan(&exists)
+	if err != nil {
+		refuse(w, err)
+		return
+	}
+	if exists {
+		refuse(w, problem(409, "account_already_exists"))
+		return
+	}
+	if err = h.issuing(r, email); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -182,17 +287,6 @@ func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
-	var exists bool
-	// Usernames are public. Email ownership is disclosed only after its OTP.
-	err = tx.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM managed_accounts WHERE username=$1)`, username).Scan(&exists)
-	if err != nil {
-		refuse(w, err)
-		return
-	}
-	if exists {
-		refuse(w, problem(409, "account_already_exists"))
-		return
-	}
 	out, err := h.newChallenge(r.Context(), tx, "register", email, "", pending{Username: username, Email: email, PasswordHash: hashed}, true)
 	if err = commit(r.Context(), tx, err); err != nil {
 		refuse(w, err)
@@ -241,7 +335,7 @@ func (h *Handler) requestReset(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
-	if err = h.limit(r.Context(), "mail", email, 5, 15*time.Minute); err != nil {
+	if err = h.issuing(r, email); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -277,6 +371,10 @@ func (h *Handler) confirmReset(w http.ResponseWriter, r *http.Request) {
 	}
 	password, err := Password(in.Password)
 	if err != nil {
+		refuse(w, err)
+		return
+	}
+	if err = h.precheck(r.Context(), "reset", in.proof); err != nil {
 		refuse(w, err)
 		return
 	}
@@ -335,12 +433,15 @@ func (h *Handler) confirmReset(w http.ResponseWriter, r *http.Request) {
 		refuse(w, commit(r.Context(), tx, problem(401, "challenge_invalid")))
 		return
 	}
-	if _, err = tx.Exec(r.Context(), `UPDATE managed_accounts SET password_hash=$2 WHERE person_id=$1`, p.Person, hashed); err == nil {
+	var username string
+	if err = tx.QueryRow(r.Context(), `UPDATE managed_accounts SET password_hash=$2 WHERE person_id=$1 RETURNING username`, p.Person, hashed).Scan(&username); err == nil {
 		_, err = tx.Exec(r.Context(), `UPDATE account_sessions SET revoked_at=clock_timestamp() WHERE person_id=$1 AND revoked_at IS NULL`, p.Person)
 	}
 	if err = commit(r.Context(), tx, err); err != nil {
 		refuse(w, err)
 		return
 	}
+	// The owner proved the mailbox; strangers' wrong passwords stop pausing them.
+	h.forgive(r.Context(), loginBudgets(username, "")[1])
 	respond(w, 200, map[string]bool{"reset": true})
 }

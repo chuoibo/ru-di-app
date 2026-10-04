@@ -7,7 +7,7 @@ import (
 )
 
 func TestAccountJSONRejectsAmbiguousProofs(t *testing.T) {
-	for _, body := range []string{`{"username":"first","username":"second"}`, `{"username":"first","user\u006eame":"second"}`, `{"google":{"id_token":"first","id_token":"second"}}`, `{"password":"\ud800"}`, `{"password":"\udc00"}`, `{"username":"x"} {}`, strings.Repeat("[", 17) + strings.Repeat("]", 17)} {
+	for _, body := range []string{`{"username":"first","username":"second"}`, `{"username":"first","user\u006eame":"second"}`, `{"google":{"id_token":"first","id_token":"second"}}`, `{"password":"\ud800"}`, `{"password":"\udc00"}`, `{"username":"x"} {}`, strings.Repeat("[", 17) + strings.Repeat("]", 17), `{"password":"first","PASSWORD":"second"}`, `{"password":"first","paſsword":"second"}`} {
 		if unambiguousJSON([]byte(body)) {
 			t.Fatal("ambiguous input accepted")
 		}

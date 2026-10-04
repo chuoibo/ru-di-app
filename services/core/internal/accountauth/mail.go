@@ -141,12 +141,16 @@ func (h *Handler) deliverOne(ctx context.Context) {
 	var mail mailPayload
 	err = h.cfg.Vault.open("mail:"+id, payload, &mail)
 	if err == nil {
-		err = h.limit(ctx, "smtp-day", time.Now().UTC().Format("2006-01-02"), 300, 26*time.Hour)
+		err = h.mailOpen(ctx, "")
 	}
 	if err == nil {
 		err = h.cfg.Sender.Send(ctx, mail)
 	}
 	if err == nil {
+		// Only accepted mail counts against the provider's day, not retries.
+		if _, spendErr := h.cfg.Limits.Allow(ctx, h.rateKey("smtp-day", mailDay()), h.mailPerDay(), 26*time.Hour); spendErr != nil {
+			h.mailWarning("quota", attempts)
+		}
 		_, updateErr := h.pool.Exec(ctx, `UPDATE account_mail_outbox SET done_at=clock_timestamp(),payload_cipher='\x',lease_until=NULL WHERE id=$1 AND lease_id=$2`, id, lease)
 		if updateErr != nil {
 			h.mailWarning("acknowledgement", attempts)
@@ -159,6 +163,36 @@ func (h *Handler) deliverOne(ctx context.Context) {
 			h.mailWarning("reschedule", attempts)
 		}
 	}
+}
+
+func mailDay() string { return time.Now().UTC().Format("2006-01-02") }
+func (h *Handler) mailPerDay() int {
+	if h.cfg.MailPerDay > 0 {
+		return h.cfg.MailPerDay
+	}
+	return 300
+}
+
+// mailOpen refuses new codes once the provider's day is spent, instead of
+// issuing codes whose mail can never leave; the answer is the same whether
+// or not the address has an account. Registrations stop at four fifths of
+// the day, so a flood of sign-ups cannot take recovery codes with it.
+func (h *Handler) mailOpen(ctx context.Context, kind string) error {
+	if h.cfg.Limits == nil {
+		return problem(503, "auth_temporarily_unavailable")
+	}
+	sent, err := h.cfg.Limits.Count(ctx, h.rateKey("smtp-day", mailDay()))
+	if err != nil {
+		return problem(503, "auth_temporarily_unavailable")
+	}
+	limit := h.mailPerDay()
+	if kind == "register" {
+		limit -= limit / 5
+	}
+	if sent >= limit {
+		return problem(503, "mail_unavailable")
+	}
+	return nil
 }
 
 // Only fixed categories and aggregate counts enter logs; provider errors may

@@ -89,6 +89,65 @@ Green unit test không chứng minh email thật, Google thật, crypto native, 
 hay vận hành. Chỉ nhận production-ready khi từng cổng có bằng chứng; công việc
 chưa đạt phải ghi rõ, không thay bằng bảng xanh hoặc tài khoản seed.
 
+## Bổ sung sau review trước merge (2026-10-05)
+
+Ba review độc lập (backend, migration/retirement, frontend) trước khi merge
+tìm ra các đường lạm dụng giới hạn thử. Quyết định đã triển khai:
+
+- **Đăng nhập chỉ đếm lần sai.** Mười lần sai từ một địa chỉ cho một username
+  trong 15 phút thì tạm dừng đúng cặp đó; một trăm lần sai từ mọi nơi trong
+  24 giờ thì tạm dừng username; một trăm lần sai từ một địa chỉ trong một giờ
+  thì tạm dừng địa chỉ. Đăng nhập đúng xoá bộ đếm của cặp; đặt lại mật khẩu
+  qua email xoá bộ đếm của username. Người lạ không còn khoá được chủ tài
+  khoản chỉ bằng một lần sai mỗi sáu giây. Xác thực lại: 10 lần sai/15 phút,
+  30 lần/ngày mỗi người.
+- **Mã email có trần xuyên qua các lần gửi lại.** Trong 24 giờ, mỗi loại
+  thử thách của một email nhận tối đa mười lần nhập sai từ một địa chỉ và ba
+  mươi lần từ mọi nơi, kể cả nhiều thử thách sống cùng lúc; hết trần thì mã
+  đúng cũng bị từ chối và không phát mã mới (`challenge_attempts_exhausted`).
+  Trước đây gửi lại tạo bộ đếm mới, cho khoảng 2.400 lần đoán/ngày.
+- **Phát mã có ngân sách theo client**: 20/giờ và 50/ngày mỗi địa chỉ, cộng
+  5/15 phút mỗi email; hạn mức mail của nhà cung cấp (`MOBILE_EMAIL_DAILY_LIMIT`,
+  mặc định 300) được kiểm lúc phát mã, trả `mail_unavailable` như nhau dù email
+  có tài khoản hay không, và chỉ mail được nhận mới tính vào hạn mức. Đăng ký
+  dừng ở bốn phần năm hạn mức để phần còn lại luôn dành cho khôi phục và đổi
+  email.
+  `challenge_resend_limited` chỉ còn nghĩa chờ 60 giây; quá năm mã/15 phút là
+  `challenge_quota_reached`.
+- **Đổi email không còn cho biết địa chỉ đã có chủ.** Yêu cầu luôn trả 202
+  và gửi mã; trùng chỉ báo `email_unavailable` sau khi nhập đúng mã. Mỗi
+  người tối đa năm yêu cầu đổi email mỗi giờ.
+- **Username công khai và cố định cả sau khi xoá.** Đăng ký báo username đã
+  có ngay, vì username hiện trên hồ sơ và lời mời. Xoá tài khoản giữ digest
+  SHA-256 của username trong `retired_usernames`; trigger từ chối cấp lại, để
+  người sau không mạo danh người đã xoá.
+- **Đặt lại mật khẩu kiểm thử thách trước khi băm**; hàng đợi Argon2 chờ tối
+  đa hai giây thay vì từ chối ngay. JSON từ chối khoá trùng nhau chỉ khác hoa
+  thường (bộ giải mã Go ghép field không phân biệt hoa thường).
+- **Migration có phiên bản, chỉ thêm.** Phiên bản 1 đã cài trên stack
+  nghiệm thu không bao giờ sửa tại chỗ; phiên bản 2 (`schema_v2.sql`) sửa
+  trigger để người đã xoá không còn `discoverable_by_phone`, thêm
+  `retired_usernames` và xoá `otp_challenges` (HMAC số điện thoại) còn sót.
+  `core serve` từ chối chạy khi thiếu phiên bản nào; vận hành chạy lại
+  `core migrate-accounts` sau khi nâng bản.
+
+- **Phiên sống không thuộc tài khoản tự quản** (phiên genesis của operator)
+  nhận 403 `managed_account_required` ở các cửa tài khoản, không phải 401:
+  client coi 401 `authentication_required` là phiên đã bị thu hồi và đăng xuất.
+
+Giới hạn còn lại, ghi rõ: trần theo username vẫn cho phép người có nhiều địa
+chỉ tạm dừng đăng nhập mật khẩu của một username tới 24 giờ (chủ tài khoản
+gỡ bằng đặt lại mật khẩu); trần mã theo email cho phép người có từ ba địa chỉ
+trở lên làm một email không xin được mã reset trong 24 giờ. Đổi lại, xác suất
+đoán trúng mã sáu số giảm từ khoảng 7%/tháng xuống khoảng 0,09%/tháng mỗi tài
+khoản. Mọi
+giới hạn theo địa chỉ chỉ đúng khi `MOBILE_AUTH_TRUSTED_PROXY_CIDRS` trỏ đúng
+proxy làm sạch `X-Forwarded-For`; để trống sau proxy thì mọi người dùng chung
+một địa chỉ. `PATCH /people/me` vẫn trả lại giá trị `discoverable_by_phone`
+được gửi lên dù trigger giữ giá trị của tài khoản tự quản: route này còn so
+từng câu SQL với oracle Python, nên sửa phải gỡ field ở cả hai phía theo
+ADR-0036; client hiện không còn gửi field này.
+
 ## Nguồn
 
 - [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)

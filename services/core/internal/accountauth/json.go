@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"strconv"
+	"strings"
 )
 
 // Reject ambiguous duplicate fields and escaped lone surrogates before the
@@ -66,10 +67,14 @@ func unambiguousJSON(raw []byte) bool {
 					return false
 				}
 				name, ok := key.(string)
-				if !ok || keys[name] {
+				// encoding/json matches field names case-insensitively (with
+				// Unicode folding: ſ and K too), so {"password","PASSWORD"}
+				// would be one field twice, the last one winning.
+				folded := strings.ToLower(strings.ToUpper(name))
+				if !ok || keys[folded] {
 					return false
 				}
-				keys[name] = true
+				keys[folded] = true
 				if !value(depth + 1) {
 					return false
 				}

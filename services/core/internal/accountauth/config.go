@@ -3,10 +3,12 @@ package accountauth
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,6 +48,9 @@ func (g officialGoogle) Verify(ctx context.Context, token string) (GoogleClaims,
 
 type Limiter interface {
 	Allow(context.Context, string, int, time.Duration) (bool, error)
+	// Count reads a counter without spending from it; a missing key is zero.
+	Count(context.Context, string) (int, error)
+	Clear(context.Context, string) error
 }
 type redisLimiter struct {
 	client    *redis.Client
@@ -59,6 +64,16 @@ func (l redisLimiter) Allow(ctx context.Context, key string, max int, window tim
 	n, err := limitScript.Run(ctx, l.client, []string{l.namespace + key}, window.Milliseconds()).Int64()
 	return n <= int64(max), err
 }
+func (l redisLimiter) Count(ctx context.Context, key string) (int, error) {
+	n, err := l.client.Get(ctx, l.namespace+key).Int()
+	if errors.Is(err, redis.Nil) {
+		return 0, nil
+	}
+	return n, err
+}
+func (l redisLimiter) Clear(ctx context.Context, key string) error {
+	return l.client.Del(ctx, l.namespace+key).Err()
+}
 
 type Config struct {
 	Logger         *slog.Logger
@@ -68,6 +83,8 @@ type Config struct {
 	Sender         Sender
 	HashSlots      int
 	TrustedProxies []*net.IPNet
+	// MailPerDay is the provider's daily sending allowance (Brevo Free: 300).
+	MailPerDay int
 }
 
 // FromEnv returns no handler only when explicitly disabled. Enabling refuses incomplete configuration.
@@ -100,7 +117,15 @@ func FromEnv(ctx context.Context, getenv func(string) string) (Config, func(), e
 		cleanup()
 		return Config{}, nil, err
 	}
-	c := Config{Vault: v, Limits: redisLimiter{client, "rudi:accounts:v1:"}, Sender: sender, HashSlots: 4}
+	c := Config{Vault: v, Limits: redisLimiter{client, "rudi:accounts:v1:"}, Sender: sender, HashSlots: 4, MailPerDay: 300}
+	if raw := strings.TrimSpace(getenv("MOBILE_EMAIL_DAILY_LIMIT")); raw != "" {
+		n, e := strconv.Atoi(raw)
+		if e != nil || n < 1 {
+			cleanup()
+			return Config{}, nil, fmt.Errorf("MOBILE_EMAIL_DAILY_LIMIT must be a positive integer")
+		}
+		c.MailPerDay = n
+	}
 	for _, raw := range strings.Split(getenv("MOBILE_AUTH_TRUSTED_PROXY_CIDRS"), ",") {
 		if strings.TrimSpace(raw) == "" {
 			continue
@@ -154,12 +179,14 @@ func (h *Handler) clientIP(r *http.Request) string {
 	}
 	return "unknown"
 }
+func (h *Handler) rateKey(scope, value string) string {
+	return scope + ":" + hex.EncodeToString(h.cfg.Vault.mac("rate:"+scope, value))
+}
 func (h *Handler) limit(ctx context.Context, scope, value string, max int, window time.Duration) error {
 	if h.cfg.Limits == nil {
 		return problem(503, "auth_temporarily_unavailable")
 	}
-	key := scope + ":" + hex.EncodeToString(h.cfg.Vault.mac("rate:"+scope, value))
-	ok, err := h.cfg.Limits.Allow(ctx, key, max, window)
+	ok, err := h.cfg.Limits.Allow(ctx, h.rateKey(scope, value), max, window)
 	if err != nil {
 		return problem(503, "auth_temporarily_unavailable")
 	}
@@ -167,4 +194,47 @@ func (h *Handler) limit(ctx context.Context, scope, value string, max int, windo
 		return problem(429, "auth_rate_limited")
 	}
 	return nil
+}
+
+// A budget counts failures only, so a stranger cannot lock someone out by
+// spending the attempts of a person who then types the right password.
+type budget struct {
+	scope, value string
+	max          int
+	window       time.Duration
+}
+
+// spent refuses once any budget is used up, before the expensive work.
+func (h *Handler) spent(ctx context.Context, budgets ...budget) error {
+	if h.cfg.Limits == nil {
+		return problem(503, "auth_temporarily_unavailable")
+	}
+	for _, b := range budgets {
+		n, err := h.cfg.Limits.Count(ctx, h.rateKey(b.scope, b.value))
+		if err != nil {
+			return problem(503, "auth_temporarily_unavailable")
+		}
+		if n >= b.max {
+			return problem(429, "auth_rate_limited")
+		}
+	}
+	return nil
+}
+
+// fail records one failure against every budget; a lost write closes auth.
+func (h *Handler) fail(ctx context.Context, budgets ...budget) error {
+	for _, b := range budgets {
+		if _, err := h.cfg.Limits.Allow(ctx, h.rateKey(b.scope, b.value), b.max, b.window); err != nil {
+			return problem(503, "auth_temporarily_unavailable")
+		}
+	}
+	return nil
+}
+
+// forgive drops failures a proven owner has cleared; best effort, the
+// counter expires by itself anyway.
+func (h *Handler) forgive(ctx context.Context, budgets ...budget) {
+	for _, b := range budgets {
+		_ = h.cfg.Limits.Clear(ctx, h.rateKey(b.scope, b.value))
+	}
 }

@@ -36,7 +36,13 @@ func (h *Handler) googleChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 	p := pending{Purpose: in.Purpose}
 	var err error
-	if in.Purpose != "login" {
+	if in.Purpose == "login" {
+		// Anonymous challenges are rows; one client cannot fill the table.
+		if err = h.limit(r.Context(), "google-challenge-ip", h.clientIP(r), 30, time.Minute); err != nil {
+			refuse(w, err)
+			return
+		}
+	} else {
 		p.Person, p.Session, err = h.actor(r)
 		if err != nil {
 			refuse(w, err)

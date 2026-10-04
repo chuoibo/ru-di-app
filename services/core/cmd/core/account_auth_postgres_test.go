@@ -39,9 +39,9 @@ func accountBootEnv(t *testing.T) map[string]string {
 		t.Fatal(err)
 	}
 	defer pool.Close()
-	// Shadow every legacy table changed by account migration. Never retire
-	// public identities used by other packages in this parallel tier.
-	if _, err = pool.Exec(ctx, `CREATE TABLE account_identities (LIKE public.account_identities INCLUDING ALL); CREATE TABLE managed_auth_migrations(version integer PRIMARY KEY,digest text NOT NULL)`); err != nil {
+	// Shadow every legacy table account migration deletes from. Never retire
+	// public identities or phone challenges other packages use in this tier.
+	if _, err = pool.Exec(ctx, `CREATE TABLE account_identities (LIKE public.account_identities INCLUDING ALL); CREATE TABLE otp_challenges (LIKE public.otp_challenges INCLUDING ALL); CREATE TABLE managed_auth_migrations(version integer PRIMARY KEY,digest text NOT NULL)`); err != nil {
 		t.Fatal(err)
 	}
 	return map[string]string{
