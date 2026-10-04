@@ -44,7 +44,7 @@ func (d *doiThu) id() string {
 func (d *doiThu) chiaGu(t *testing.T, person string, luc time.Time) {
 	t.Helper()
 	p := d.id()
-	d.exec(t, `INSERT INTO pair_consent_proposals(id,cycle_id,purpose,proposed_by_id,completed_at,expires_at) VALUES($1,$2,'chia_gu',$3,$4,$4::timestamptz + interval '7 days')`, p, d.chuKy, person, luc)
+	d.exec(t, `INSERT INTO pair_consent_proposals(id,cycle_id,purpose,proposed_by_id,completed_at,expires_at) VALUES($1,$2,'chia_gu',$3,$4,now() + interval '7 days')`, p, d.chuKy, person, luc)
 	d.exec(t, `INSERT INTO pair_consents(id,proposal_id,person_id,granted_at) VALUES($1,$2,$3,$4)`, d.id(), p, person, luc)
 }
 
@@ -70,7 +70,9 @@ func moDoi(t *testing.T) *doiThu {
 	d.exec(t, `INSERT INTO pair_notebook_cycles(id,notebook_id,state,opened_at) VALUES($1,$2,'active',now())`, d.chuKy, so)
 	d.exec(t, `INSERT INTO pair_cycle_participants(cycle_id,person_id) VALUES($1,$2),($1,$3)`, d.chuKy, d.an, d.binh)
 	d.deNghiDoi = d.id()
-	d.exec(t, `INSERT INTO pair_consent_proposals(id,cycle_id,purpose,proposed_by_id,completed_at,expires_at) VALUES($1,$2,'bat_doi',$3,$4,$4::timestamptz + interval '7 days')`, d.deNghiDoi, d.chuKy, d.an, d.cu)
+	// Expiry follows the database clock (created_at is now()), never the
+	// fixed consent instant: cu+7d fell behind now() on the 4th of October.
+	d.exec(t, `INSERT INTO pair_consent_proposals(id,cycle_id,purpose,proposed_by_id,completed_at,expires_at) VALUES($1,$2,'bat_doi',$3,$4,now() + interval '7 days')`, d.deNghiDoi, d.chuKy, d.an, d.cu)
 	for _, p := range []string{d.an, d.binh} {
 		d.exec(t, `INSERT INTO pair_consents(id,proposal_id,person_id,granted_at) VALUES($1,$2,$3,$4)`, d.id(), d.deNghiDoi, p, d.cu)
 	}
