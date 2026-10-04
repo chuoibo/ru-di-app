@@ -14,6 +14,11 @@ import { chiaSe } from "../dist-test/rudi/web/chia-se.js";
 
 /** Install `share` / `clipboard` on the global navigator for one test. */
 function voiNavigator(t, { share, clipboard }) {
+  // Node 20, which the CI mobile job runs, has no global navigator (21+ does).
+  const khongCoNavigator = globalThis.navigator === undefined;
+  if (khongCoNavigator) {
+    Object.defineProperty(globalThis, "navigator", { configurable: true, writable: true, value: {} });
+  }
   for (const [ten, giaTri] of [["share", share], ["clipboard", clipboard]]) {
     const cu = Object.getOwnPropertyDescriptor(globalThis.navigator, ten);
     Object.defineProperty(globalThis.navigator, ten, { configurable: true, value: giaTri });
@@ -22,6 +27,8 @@ function voiNavigator(t, { share, clipboard }) {
       else delete globalThis.navigator[ten];
     });
   }
+  // `after` hooks run in registration order, so this one goes last.
+  if (khongCoNavigator) t.after(() => delete globalThis.navigator);
 }
 
 test("Web Share mở được: «đã mở khay», và link đi riêng trong trường url", async (t) => {
