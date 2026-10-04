@@ -237,7 +237,7 @@
     },
     {
       "path": "apps/mobile/tests/achievement-routes.test.mjs",
-      "sha256": "44d1f2ec06e5259b06b96045f91515da154483502626772c7b783f6b6af90373",
+      "sha256": "fc827cc8cd8095c7efdc96340c3a74f2a7a62d7c73e886806dcb4428caf18b85",
       "rules": [
         "long-number"
       ],
@@ -842,7 +842,7 @@
     },
     {
       "path": "services/core/internal/achievementv1/handler_test.go",
-      "sha256": "1c8ea56f5af27605fdfe2c920d0dd0c22dd58518f1d9462fdbb26bac0503f97c",
+      "sha256": "ccc0adae70adeb7b75bb53bb4440f0515349d46c515b12cd8c55927ebd57808d",
       "rules": [
         "long-number"
       ],
