@@ -10,6 +10,7 @@
  * invite as the one action at the foot.
  */
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { HoiTaiHang } from "../../ui/HoiTaiHang";
 import { useCallback, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -199,14 +200,15 @@ export function GroupMembersScreen() {
                 </View>
                 {nutVaiTro && luoi ? <View style={styles.nutDuoi}>{nutVaiTro}</View> : null}
                 {laToi && hoiTuBo ? (
-                  <View style={styles.hoi} testID="thanh-vien-hoi-tu-bo">
-                    <Text style={[typography.note, { color: colors.ink }]}>
-                      Bỏ quyền quản trị của bạn? Sau đó bạn không tự lấy lại được; một quản trị khác phải đặt lại cho bạn.
-                    </Text>
-                    <View style={styles.hoiNut}>
-                      <RudiButton compact full={false} label="Bỏ quyền" loading={dangDoiVaiTro === tv.person_id} onPress={() => void doiVaiTro(tv, true)} tone="warn" variant="outline" />
-                      <RudiButton compact full={false} label="Thôi" onPress={() => setHoiTuBo(false)} variant="ghost" />
-                    </View>
+                  <View style={styles.hoi}>
+                    <HoiTaiHang
+                      cau="Bỏ quyền quản trị của bạn? Sau đó bạn không tự lấy lại được; một quản trị khác phải đặt lại cho bạn."
+                      dangLam={dangDoiVaiTro === tv.person_id}
+                      nhan="Bỏ quyền"
+                      onDongY={() => void doiVaiTro(tv, true)}
+                      onThoi={() => setHoiTuBo(false)}
+                      testID="thanh-vien-hoi-tu-bo"
+                    />
                   </View>
                 ) : null}
                 {loiVaiTro?.id === tv.person_id ? <CauTaiCho cau={loiVaiTro.cau} co="nho" /> : null}

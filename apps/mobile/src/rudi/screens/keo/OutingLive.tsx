@@ -463,6 +463,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             </Text>
             {/* Two sums, side by side while the window allows, one under the other
                 when it does not. Neither is ever shrunk to fit. */}
+            {/* Both sums are the plan's estimate, not the bill: «dự kiến» says so
+                beside each, since «Chia bill buổi này» sits right under them
+                (B11 critique; the create form already calls it «số tham chiếu»). */}
             {/* A plan made from a two-person sheet has no budget, and «0đ · 0đ»
                 read as «this evening costs nothing» (QA 23/09). No budget is
                 said as such; the two sums appear only when there is one. */}
@@ -470,11 +473,11 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
               <View style={styles.tien}>
                 <View style={styles.oTien}>
                   <Money vnd={trang.keo.budget_per_person_vnd} />
-                  <Text style={[typography.caption, { color: colors.inkSoft }]}>một người</Text>
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>dự kiến một người</Text>
                 </View>
                 <View style={styles.oTien}>
                   <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
-                  <Text style={[typography.caption, { color: colors.inkSoft }]}>cả kèo, {trang.keo.headcount} người</Text>
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>dự kiến cả kèo, {trang.keo.headcount} người</Text>
                 </View>
               </View>
             ) : (
@@ -571,9 +574,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                     setThongBao("Đã ghép thứ tự. Giữ giờ và nội dung mới của nhóm; chặng mới nằm cuối. Kiểm tra rồi lưu.");
                   }} />
                 </> : null}
-                <RudiButton label="Lưu thứ tự" loading={dangGhi} disabled={conflict || draft.revision !== trang.keo.timeline_revision}
+                <RudiButton label="Lưu thứ tự" loading={dangGhi} disabled={conflict || draft.revision !== trang.keo.timeline_revision} lyDo={conflict || draft.revision !== trang.keo.timeline_revision ? "Lịch trình vừa đổi trên máy khác. Ghép thứ tự trước rồi lưu." : undefined}
                   onPress={() => void ghiLichTrinh({ ...trang.keo, timeline_revision: draft.revision }, draft.stops.map(changGuiTu)).then((ok) => { if (ok) setDraft(null); })} />
-                <RudiButton label="Bỏ thứ tự nháp" variant="ghost" disabled={dangGhi}
+                <RudiButton label="Bỏ thứ tự nháp" tone="warn" variant="ghost" disabled={dangGhi}
                   onPress={() => { setDraft(null); setConflict(false); setThongBao(null); }} />
               </View> : <RudiButton label="Xếp theo giờ hẹn" variant="ghost" disabled={dangGhi}
                 onPress={() => setDraft({ stops: sapXepChang(trang.keo.stops), revision: trang.keo.timeline_revision })} />}

@@ -16,6 +16,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ApiError, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
+import { boNhapDang, docNhapDang, ghiNhapDang, khoaNhapDang } from "../../ky-niem/nhap-dang";
 import { tiLeKhung } from "../../ky-niem/ti-le";
 import { laPair } from "../../nhan-rieng/nhan-rieng";
 import { CAPTION_DAI_NHAT, dangAnhLenTuong } from "../../ky-niem/ky-niem";
@@ -49,23 +50,29 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const nhom = phien.contexts?.find((n) => n.id === contextId);
   const laDoi = laPair(nhom);
   const tenNhom = laDoi ? `kỷ niệm của bạn và ${nhom?.display_name || "người ấy"}` : nhom?.display_name ?? "nhóm hiện tại";
-  const [anh, setAnh] = useState<TempPhoto | null>(null);
-  const [caption, setCaption] = useState("");
+  // QA UI-097: what was being posted waits here when the person steps away.
+  const khoaNhap = khoaNhapDang("khoanh-khac", phien.person_id, contextId);
+  const [nhapCu] = useState(() => docNhapDang(khoaNhap));
+  const [anh, setAnh] = useState<TempPhoto | null>(nhapCu?.anh ?? null);
+  const [caption, setCaption] = useState(nhapCu?.chu ?? "");
+  const [conNhapCu, setConNhapCu] = useState(nhapCu !== null);
   const [giaiDoan, setGiaiDoan] = useState<GiaiDoanTaiAnh | null>(null);
   const [ban, setBan] = useState(false);
   const [thongBao, setThongBao] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
-  // The pick outlives a failed upload (`nenVaDung`), so leaving the screen
-  // without sharing is what discards it.
-  const anhRef = useRef<TempPhoto | null>(null);
-  anhRef.current = anh;
+  // Leaving keeps the pick and the words as a draft; sharing, «Bỏ ảnh» or
+  // «Bỏ bản nháp» is what lets the picked file go.
   const daGuiRef = useRef(false);
-  useEffect(
-    () => () => {
-      if (anhRef.current !== null && !daGuiRef.current) void boAnh(anhRef.current);
-    },
-    [],
-  );
+  useEffect(() => {
+    if (!daGuiRef.current) ghiNhapDang(khoaNhap, { anh, chu: caption });
+  }, [khoaNhap, anh, caption]);
+  const boBanNhap = () => {
+    if (anh !== null) void boAnh(anh);
+    setAnh(null);
+    setCaption("");
+    setConNhapCu(false);
+    boNhapDang(khoaNhap);
+  };
 
   if (contextId === null) {
     return (
@@ -97,6 +104,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
     try {
       await nenVaDung(anh, (nen) => dangAnhLenTuong(ctx, nen, caption.trim() === "" ? null : caption.trim(), phien.person_id, attempts.current, placeId), setGiaiDoan);
       daGuiRef.current = true;
+      boNhapDang(khoaNhap);
       router.replace(`/groups/${ctx}/wall` as never);
     } catch (error) {
       // The caption stays, but `nenVaDung` discarded the picked file.
@@ -118,7 +126,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
       // print and the caption it was pushed past the fold (QA 23/09).
       footer={
         <View style={styles.footer}>
-          <RudiButton disabled={ban || anh === null} icon="paper-plane-outline" label={laDoi ? "Giữ vào kỷ niệm của hai bạn" : "Chia sẻ ngay vào nhóm"} loading={ban} onPress={() => void chiaSe()} />
+          <RudiButton disabled={ban || anh === null} lyDo={!ban && anh === null ? "Chọn ảnh trước." : undefined} icon="paper-plane-outline" label={laDoi ? "Giữ vào kỷ niệm của hai bạn" : "Chia sẻ ngay vào nhóm"} loading={ban} onPress={() => void chiaSe()} />
           {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
         </View>
       }
@@ -127,9 +135,15 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
     >
       <TopBar title="Thả khoảnh khắc" />
       <Heading
-        subtitle={laDoi ? `Ảnh và một câu, vào ${tenNhom}. Hai bạn xem được; mỗi người có thể chọn ảnh này vào diary công khai.` : `Ảnh và một câu, lên tường của ${tenNhom}. Hội mình xem được; thành viên có thể chọn ảnh này vào diary công khai.`}
+        subtitle={laDoi ? `Ảnh và một câu, vào ${tenNhom}. Hai bạn xem được; mỗi người có thể chọn ảnh này vào sổ chuyến đi của mình.` : `Ảnh và một câu, lên tường của ${tenNhom}. Hội mình xem được; thành viên có thể chọn ảnh này vào sổ chuyến đi của mình.`}
         title={laDoi ? "Giữ một khoảnh khắc" : "Một khoảnh khắc cho nhóm"}
       />
+      {conNhapCu && (anh !== null || caption.trim() !== "") ? (
+        <View style={styles.nhapCu} testID="tha-khoanh-khac-nhap-cu">
+          <Text style={[typography.note, styles.flexNhap, { color: colors.inkSoft }]}>Bản nháp lần trước còn đây.</Text>
+          <RudiButton compact full={false} label="Bỏ bản nháp" onPress={boBanNhap} tone="warn" variant="ghost" />
+        </View>
+      ) : null}
       {placeId === null ? null : (
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
           {`Gắn vào ${tenCho ?? "địa điểm bạn vừa mở"}: ảnh sẽ hiện ở màn chỗ đó, cho người trong nhóm.`}
@@ -149,7 +163,10 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
           // The frame takes the photo's own shape, within a portrait-to-wide
           // range: a square frame put two grey bands beside every portrait
           // photo and read as a card still loading, not as a print (QA 23/09).
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anh, { aspectRatio: tiLeKhung(anh), backgroundColor: colors.ground }]} />
+          // Filled as the wall fills it (QA UI-102): a 9:16 photo showed whole
+          // here and lost a quarter of its height on the wall; the preview now
+          // shows exactly the part the wall will.
+          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={[styles.anh, { aspectRatio: tiLeKhung(anh), backgroundColor: colors.ground }]} />
         )}
         <ONhapMuc
           accessibilityLabel="Ô câu chú thích"
@@ -169,6 +186,8 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
 }
 
 const styles = StyleSheet.create({
+  nhapCu: { flexDirection: "row", alignItems: "center", gap: 8 },
+  flexNhap: { flex: 1 },
   screen: { maxWidth: 640 },
   // An instax print: narrow sides, a deep bottom margin for the words.
   instax: { gap: 14, padding: 12, paddingBottom: 22, borderWidth: 1, borderRadius: 3 },

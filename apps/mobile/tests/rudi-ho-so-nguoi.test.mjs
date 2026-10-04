@@ -58,12 +58,13 @@ function gaJson(than, ghi) {
 
 test("tường rỗng không khẳng định người ấy chưa đăng gì", () => {
   for (const quanHe of ["friend", "groupmate"]) {
-    const cau = cauTuongRong(quanHe);
+    const { tieuDe, than } = cauTuongRong(quanHe);
+    const cau = `${tieuDe}. ${than}`;
     assert.match(cau, /bạn đọc được/);
     assert.ok(!/chưa đăng bài nào/i.test(cau), `«${cau}» khẳng định quá tay`);
   }
   // Với chính mình thì khẳng định được: mình luôn đọc được mọi bài mình viết.
-  assert.match(cauTuongRong("self"), /Bạn chưa đăng bài nào/);
+  assert.match(cauTuongRong("self").tieuDe, /Bạn chưa đăng bài nào/);
 });
 
 test("quan hệ nói bằng ngôi thứ hai, không lộ cách máy chủ suy ra", () => {

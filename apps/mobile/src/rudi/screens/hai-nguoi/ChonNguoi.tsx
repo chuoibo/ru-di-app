@@ -15,6 +15,7 @@ import { EmptyState } from "../../ui/EmptyState";
 import { PressScale } from "../../ui/PressScale";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
+import { Canh } from "../../ui/art/Canh";
 
 /**
  * «Hẹn người thương» (the one new entry in «Tạo mới», spec §20.1): pick
@@ -90,6 +91,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
           <EmptyState
             action={{ label: "Thêm bạn bằng số điện thoại", onPress: () => router.push("/friends/add") }}
             body="Kết bạn trước để tìm thấy nhau ở đây. Sổ cặp đôi chỉ mở khi cả hai đồng ý."
+            illustration={<Canh id="chua-co-ban" width={168} />}
             kind="first-use"
             layout="inline"
             title="Chưa có bạn nào để rủ"

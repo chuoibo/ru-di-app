@@ -56,7 +56,7 @@ func (h *Handler) wall(w http.ResponseWriter, r *http.Request) {
 			if !facts.visible {
 				continue
 			}
-			item, err := wireWallPost(ctx, tx, post, actor, facts)
+			item, err := wireWallPost(ctx, tx, post, actor, facts, h.moderated)
 			if err != nil {
 				return 0, nil, err
 			}
@@ -83,12 +83,14 @@ func (h *Handler) detail(w http.ResponseWriter, r *http.Request) {
 			return 0, nil, err
 		}
 		access := facts{visible: true, friend: post.friend, member: post.member}
-		body, err := wireWallPost(ctx, tx, post.post, actor, access)
+		body, err := wireWallPost(ctx, tx, post.post, actor, access, h.moderated)
 		return 200, body, err
 	})
 }
 
-func wireWallPost(ctx context.Context, tx pgx.Tx, post repo.Post, actor string, access facts) (map[string]any, error) {
+// congDong is true when Cộng đồng is served on this host: only then do its
+// tables hold a post's photos (see community.WallImage).
+func wireWallPost(ctx context.Context, tx pgx.Tx, post repo.Post, actor string, access facts, congDong bool) (map[string]any, error) {
 	store := repo.Repository{Q: tx}
 	author, err := store.GetPerson(ctx, post.AuthorID)
 	if err != nil {
@@ -109,6 +111,14 @@ func wireWallPost(ctx context.Context, tx pgx.Tx, post repo.Post, actor string, 
 	var image any
 	if post.ImageURL != nil {
 		image = *post.ImageURL
+	} else if congDong {
+		anh, err := community.WallImage(ctx, tx, post.ID)
+		if err != nil {
+			return nil, err
+		}
+		if anh != "" {
+			image = anh
+		}
 	}
 	var contextID any
 	if post.ContextID != nil {

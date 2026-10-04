@@ -615,6 +615,8 @@ type ExpenseInput = {
   items: ExpenseItemWire[];
   surcharges: never[];
   discounts: never[];
+  /** The trip the bill was written from (ADR-0054); left out when none. */
+  outing_id?: string;
 };
 
 type AllocationWire = {
@@ -657,6 +659,7 @@ function expenseBody(input: {
   totalVnd: number;
   items: ExpenseItemWire[];
   occurredAt: number;
+  outingId?: string;
 }): ExpenseInput {
   return {
     context_id: input.contextId,
@@ -671,6 +674,10 @@ function expenseBody(input: {
     items: input.items,
     surcharges: [],
     discounts: [],
+    // ADR-0054: the bill belongs to the trip it was written from. Left out,
+    // not null, when there is none, so a bill from «Tạo mới» sends what it
+    // always sent and the server places it by its day.
+    ...(input.outingId === undefined ? {} : { outing_id: input.outingId }),
   };
 }
 
@@ -749,6 +756,7 @@ export async function proposeSplit(
   draft: Draft,
   attempt: Attempt,
   items: ExpenseItemWire[] = [],
+  outingId?: string,
 ): Promise<PendingProposal> {
   const body = expenseBody({
     contextId,
@@ -759,6 +767,7 @@ export async function proposeSplit(
     totalVnd: draft.totalVnd,
     items,
     occurredAt: attempt.at,
+    outingId,
   });
   // As the advancer, like `previewSplit`, and for the reason spelled out there.
   const result = await translatedAsActor<ExpenseResponse>(ALLOCATOR_REFUSALS, "/expenses", {

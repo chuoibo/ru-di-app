@@ -15,6 +15,7 @@
  * and a number; loading is the list's own shape; errors keep the list.
  */
 import { Ionicons } from "@expo/vector-icons";
+import { HoiTaiHang } from "../../ui/HoiTaiHang";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
@@ -265,14 +266,15 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                 ) : null}
                 {duocMoi && hoiTuChoi === nhom.id ? (
                   // Asked in the row, like every answer that removes something.
-                  <View style={styles.hoi} testID={`tin-nhan-hoi-tu-choi-${nhom.id}`}>
-                    <Text style={[typography.note, { color: colors.ink }]}>
-                      Từ chối lời mời vào {tenCuocTroChuyen(nhom)}? Nếu đổi ý, bạn cần được mời lại.
-                    </Text>
-                    <View style={[styles.traLoi, styles.khongThut]}>
-                      <RudiButton compact full={false} label="Từ chối" loading={dangBam === nhom.id} onPress={() => void tuChoi(nhom)} tone="warn" variant="outline" />
-                      <RudiButton compact full={false} label="Thôi" onPress={() => setHoiTuChoi(null)} variant="ghost" />
-                    </View>
+                  <View style={styles.hoi}>
+                    <HoiTaiHang
+                      cau={`Từ chối lời mời vào ${tenCuocTroChuyen(nhom)}? Nếu đổi ý, bạn cần được mời lại.`}
+                      dangLam={dangBam === nhom.id}
+                      nhan="Từ chối"
+                      onDongY={() => void tuChoi(nhom)}
+                      onThoi={() => setHoiTuChoi(null)}
+                      testID={`tin-nhan-hoi-tu-choi-${nhom.id}`}
+                    />
                   </View>
                 ) : null}
                 {loiHang?.id === nhom.id ? <CauTaiCho cau={loiHang.cau} co="nho" /> : null}

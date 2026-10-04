@@ -7,6 +7,7 @@
  * do client đoán.
  */
 import { type Attempt, translatedAsActor } from "../../api";
+import { ngayVN } from "../ngay-viet";
 
 export type CuaCapPhien = "invite" | "otp" | "google" | "genesis";
 
@@ -68,7 +69,7 @@ export function cauPhien(phien: PhienWire): string {
   if (phien.current) return "Phiên này, đang dùng";
   const luc = new Date(phien.created_at);
   if (Number.isNaN(luc.getTime())) return nhanCua(phien.issued_via);
-  return `${nhanCua(phien.issued_via)} · từ ${luc.toLocaleDateString("vi-VN")}`;
+  return `${nhanCua(phien.issued_via)} · từ ${ngayVN(phien.created_at)}`;
 }
 
 export async function docPhien(actorId: string): Promise<DanhSachPhienWire> {

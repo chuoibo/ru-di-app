@@ -19,6 +19,7 @@ import { Avatar } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonRow } from "../../ui/Skeleton";
+import { ngayVN } from "../../ngay-viet";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -99,7 +100,7 @@ export function DaChanScreen() {
               <View style={styles.hangChu}>
                 <Text style={[typography.label, { color: colors.ink }]}>{nguoi.display_name}</Text>
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                  Chặn từ {new Date(nguoi.blocked_at).toLocaleDateString("vi-VN")}
+                  Chặn từ {ngayVN(nguoi.blocked_at)}
                 </Text>
               </View>
               <RudiButton

@@ -13,6 +13,8 @@ import { DiaryWall } from "../../diary/Wall";
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Canh } from "../../ui/art/Canh";
+import { luiVeVe } from "../../lui-ve";
+import { laTuChoiVinhVien } from "../../../cau-loi-theo-ma";
 import { useCallback, useRef, useState } from "react";
 import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -39,7 +41,7 @@ import { useRudiSession } from "../../session";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { mucNguoi } from "../../nguoi/muc-nguoi";
 import { Ionicons } from "@expo/vector-icons";
-import { docDoiTuong, docTrangTuong, ghepTrangTuong, type BaiTuong } from "../../tuong/social-v2";
+import { docDoiTuong, docTrangTuong, ghepTrangTuong, lamMoiDauTuong, type BaiTuong } from "../../tuong/social-v2";
 import { HanhDongHoSoSheet } from "./HanhDongHoSo";
 import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
@@ -51,7 +53,7 @@ import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
 type TrangHoSo =
   | { pha: "dang-doc" }
   | { pha: "xong"; hoSo: HoSoNguoi }
-  | { pha: "hong"; loi: string };
+  | { pha: "hong"; loi: string; vinhVien?: "403" | "404" };
 
 type TrangTuong =
   | { pha: "dang-doc" }
@@ -99,6 +101,7 @@ export function HoSoNguoiScreen() {
   const attempts = useRef<Record<string, Attempt>>({});
   const doiTuongCursor = useRef<string | null>(null);
   const tuongLanDoc = useRef(0);
+  const lamMoiLan = useRef(0);
   const [dangTaiThem, setDangTaiThem] = useState(false);
   const [loiTaiThem, setLoiTaiThem] = useState<string | null>(null);
   // ADR-0022 §2.2: on one's own wall, who may comment. Read from `/people/me`
@@ -175,7 +178,12 @@ export function HoSoNguoiScreen() {
       setHoSo({ pha: "xong", hoSo: doc });
     } catch (error) {
       if (!quiet || (error instanceof ApiError && (error.status === 403 || error.status === 404))) {
-        setHoSo({ pha: "hong", loi: loiRaChu(error) });
+        // A refusal that pressing again cannot change gets no «Thử lại»
+        // (QA UI-100's rule, here for profiles: one «Thử lại» called 403 again).
+        const vinhVien = error instanceof ApiError && laTuChoiVinhVien(error.status, error.code ?? null)
+          ? (error.status === 403 ? "403" : "404")
+          : undefined;
+        setHoSo({ pha: "hong", loi: loiRaChu(error), vinhVien });
       }
     }
   }, [personId, phien]);
@@ -191,16 +199,23 @@ export function HoSoNguoiScreen() {
     }
   }, [personId, phien]);
 
+  // A quiet refresh (a long-poll answer, the app back in front) merges the
+  // first page into what is shown (QA UI-155): it neither replaces the pages
+  // the reader opened nor cancels one being opened. Only a full load starts
+  // the list again.
   const napTuong = useCallback(async (quiet = false) => {
     if (phien === null || personId === "") return;
-    const lanDoc = ++tuongLanDoc.current;
+    const lanDoc = quiet ? tuongLanDoc.current : ++tuongLanDoc.current;
+    const lanLamMoi = ++lamMoiLan.current;
     if (!quiet) setTuong({ pha: "dang-doc" });
     try {
       const page = await docTrangTuong(personId, phien.person_id);
-      if (lanDoc !== tuongLanDoc.current) return;
-      setTuong({ pha: "xong", bai: page.posts, conTro: page.next_cursor, conNua: page.has_more });
+      if (lanDoc !== tuongLanDoc.current || lanLamMoi !== lamMoiLan.current) return;
+      setTuong((current) => quiet && current.pha === "xong"
+        ? { pha: "xong", ...lamMoiDauTuong(current, page) }
+        : { pha: "xong", bai: page.posts, conTro: page.next_cursor, conNua: page.has_more });
     } catch (error) {
-      if (lanDoc !== tuongLanDoc.current) return;
+      if (lanDoc !== tuongLanDoc.current || lanLamMoi !== lamMoiLan.current) return;
       if (!quiet || (error instanceof ApiError && (error.status === 403 || error.status === 404))) {
         setTuong({ pha: "hong", loi: loiRaChu(error) });
       }
@@ -290,7 +305,21 @@ export function HoSoNguoiScreen() {
           <SkeletonRow leading={60} />
         </SkeletonGroup>
       ) : null}
-      {hoSo.pha === "hong" ? <ErrorState body={hoSo.loi} onRetry={() => void napHoSo()} title="Chưa mở được hồ sơ" /> : null}
+      {hoSo.pha === "hong" && hoSo.vinhVien === undefined ? <ErrorState body={hoSo.loi} onRetry={() => void napHoSo()} title="Chưa mở được hồ sơ" /> : null}
+      {hoSo.pha === "hong" && hoSo.vinhVien !== undefined ? (
+        <EmptyState
+          // Closed to you: the sentence says friends or groupmates read it, so
+          // the one way on is where friends are added. Gone: the way back.
+          action={hoSo.vinhVien === "403"
+            ? { label: "Mở Bạn bè", onPress: () => router.push("/friends" as never) }
+            : { label: "Quay lại", onPress: () => luiVeVe(router as never, "/explore") }}
+          body={hoSo.loi}
+          illustration={<Canh id="chua-doc-duoc" width={168} />}
+          kind="permission"
+          layout="inline"
+          title="Chưa xem được hồ sơ này"
+        />
+      ) : null}
       {hoSo.pha === "xong" ? (
         <>
           <View style={styles.hoSo}>
@@ -384,6 +413,7 @@ export function HoSoNguoiScreen() {
                       label={c.nhan}
                       onPress={() => void doiChinhSach(c.id)}
                       selected={chinhSach === c.id}
+                      vaiRadio
                     />
                   ))}
                 </View>
@@ -457,7 +487,15 @@ export function HoSoNguoiScreen() {
           ) : null}
           {tuong.pha === "hong" ? <ErrorState body={tuong.loi} onRetry={() => void napTuong()} title="Chưa đọc được tường" /> : null}
           {tuong.pha === "xong" && tuong.bai.length === 0 ? (
-            <EmptyState illustration={<Canh id="chua-co-ky-niem" width={150} />} kind="first-use" layout="inline" title={cauTuongRong(hoSo.hoSo.relation)} />
+            <EmptyState
+              action={hoSo.hoSo.relation === "self" ? { label: "Viết bài đầu tiên", onPress: () => router.push("/posts/new" as never) } : undefined}
+              body={cauTuongRong(hoSo.hoSo.relation).than}
+              // Not the diary shelf's scene: the two empty states sit one under the other on your own page.
+              illustration={<Canh id="chua-co-bai" width={150} />}
+              kind="first-use"
+              layout="inline"
+              title={cauTuongRong(hoSo.hoSo.relation).tieuDe}
+            />
           ) : null}
           {tuong.pha === "xong" && tuong.bai.length > 0 ? (
             <View style={styles.dongChay}>

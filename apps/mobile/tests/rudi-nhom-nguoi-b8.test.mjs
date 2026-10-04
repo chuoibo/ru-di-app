@@ -21,7 +21,8 @@ test("lời mời vào nhóm nói ai mời và nhóm có mấy người; lời m
   assert.match(LOI_LOI_MOI.invitation_not_found, /không còn/);
   const man = doc("screens/groups/Conversations.tsx");
   assert.match(man, /label="Từ chối"/);
-  assert.match(man, /Từ chối lời mời vào \{tenCuocTroChuyen\(nhom\)\}\? Nếu đổi ý, bạn cần được mời lại\./, "từ chối hỏi tại hàng");
+  assert.match(man, /Từ chối lời mời vào \$\{tenCuocTroChuyen\(nhom\)\}\? Nếu đổi ý, bạn cần được mời lại\./, "từ chối hỏi tại hàng");
+  assert.match(man, /<HoiTaiHang[\s\S]*?nhan="Từ chối"/, "hỏi tại hàng bằng primitive chung (B11)");
   assert.doesNotMatch(man, /setTrang\(\{ pha: "hong", loi: loiRaChu\(error\) \}\);\s*\} finally \{\s*setDangBam/, "lỗi trả lời không thành màn lỗi (UI-077 pattern)");
 });
 

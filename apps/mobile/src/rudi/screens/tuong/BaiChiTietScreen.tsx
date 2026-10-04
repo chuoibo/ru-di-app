@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { HoiTaiHang } from "../../ui/HoiTaiHang";
 import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -30,12 +31,17 @@ import { KhungAnh } from "../../ui/KhungAnh";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { Sheet } from "../../ui/Sheet";
 import { EmptyState } from "../../ui/EmptyState";
+import { Canh } from "../../ui/art/Canh";
+import { CauTaiCho } from "../../ui/CauTaiCho";
+import { luiVeVe } from "../../lui-ve";
+import { xoaBinhLuanBai } from "../../tuong/bai-chi-tiet";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonCard, SkeletonRow } from "../../ui/Skeleton";
 import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 import { giuState } from "../../../ui/a11y";
 
-type PostState = { phase: "loading" } | { phase: "ready"; post: BaiTuong } | { phase: "error"; message: string };
+/** `vinhVien`: the post is not there for this reader (403/404); trying again cannot help. */
+type PostState = { phase: "loading" } | { phase: "ready"; post: BaiTuong } | { phase: "error"; message: string; vinhVien: boolean };
 type CommentState = { phase: "loading" } | { phase: "ready"; items: BinhLuanTuong[]; pending: BinhLuanChoDuyet[]; next: string | null; more: boolean } | { phase: "error"; message: string };
 
 export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () => Promise<void> } = {}) {
@@ -56,8 +62,15 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  // Said where the press was (QA UI-159): the post's own actions under the
+  // post, a comment's under the composer, never one line at the page's foot.
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [loiBai, setLoiBai] = useState<string | null>(null);
+  const [baoBai, setBaoBai] = useState<string | null>(null);
+  // QA UI-158: one's own comment can be deleted again, after a question in its row.
+  const [hoiXoaBl, setHoiXoaBl] = useState<string | null>(null);
+  const [loiXoaBl, setLoiXoaBl] = useState<{ id: string; cau: string } | null>(null);
   const [photoError, setPhotoError] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerCommentsOpen, setViewerCommentsOpen] = useState(false);
@@ -83,7 +96,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
     try { setPost({ phase: "ready", post: await docBaiTuong(postId, actor) }); }
     catch (cause) {
       if (!silent || (cause instanceof ApiError && (cause.status === 403 || cause.status === 404))) {
-        setPost({ phase: "error", message: loiRaChu(cause) });
+        setPost({ phase: "error", message: loiRaChu(cause), vinhVien: cause instanceof ApiError && (cause.status === 403 || cause.status === 404) });
         setViewerOpen(false);
         setViewerCommentsOpen(false);
       }
@@ -145,11 +158,11 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
 
   const likePost = async () => {
     if (post.phase !== "ready" || busy) return;
-    setBusy(true); setError(null);
+    setBusy(true); setLoiBai(null); setBaoBai(null);
     try {
       const result = await thichBaiTuong(postId, actor, !post.post.liked);
       setPost({ phase: "ready", post: { ...post.post, liked: result.liked, like_count: result.like_count } });
-    } catch (cause) { setError(loiRaChu(cause)); }
+    } catch (cause) { setLoiBai(loiRaChu(cause)); }
     finally { setBusy(false); }
   };
 
@@ -193,12 +206,23 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
 
   const repost = async (audience: PostAudience) => {
     if (busy) return;
-    setBusy(true); setError(null); setNotice(null);
+    setBusy(true); setLoiBai(null); setBaoBai(null);
     try {
       await dangLaiBai(postId, audience, actor, attemptFor(attempts.current, `repost:${postId}:${audience}`));
       setShareOpen(false);
-      setNotice("Đã chia sẻ lên tường của bạn.");
-    } catch (cause) { setError(loiRaChu(cause)); }
+      setBaoBai(audience === "friends" ? "Đã chia sẻ lên tường của bạn, cho bạn bè." : "Đã chia sẻ lên tường của bạn, chỉ mình bạn thấy.");
+    } catch (cause) { setLoiBai(loiRaChu(cause)); }
+    finally { setBusy(false); }
+  };
+
+  const xoaBl = async (item: BinhLuanTuong) => {
+    if (busy) return;
+    setBusy(true); setLoiXoaBl(null);
+    try {
+      await xoaBinhLuanBai(postId, item.id, actor, attemptFor(attempts.current, `xoa-bl:${item.id}`));
+      setHoiXoaBl(null);
+      await Promise.all([loadPost(true), loadComments(true)]);
+    } catch (cause) { setLoiXoaBl({ id: item.id, cau: loiRaChu(cause) }); }
     finally { setBusy(false); }
   };
 
@@ -226,7 +250,17 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Trả lời</Text>
           </Pressable>
         ) : null}
+        {item.author_id === actor && hoiXoaBl !== item.id ? (
+          <Pressable accessibilityLabel={`Xóa bình luận của bạn: «${item.body.slice(0, 40)}»`} accessibilityRole="button" disabled={busy} onPress={() => { setHoiXoaBl(item.id); setLoiXoaBl(null); }} style={styles.touchAction}>
+            <Ionicons color={colors.warn} name="trash-outline" size={17} />
+            <Text style={[typography.caption, { color: colors.warn }]}>Xóa</Text>
+          </Pressable>
+        ) : null}
       </View>
+      {hoiXoaBl === item.id ? (
+        <HoiTaiHang cau="Xóa bình luận này? Không lấy lại được." dangLam={busy} nhan="Xóa" onDongY={() => void xoaBl(item)} onThoi={() => setHoiXoaBl(null)} />
+      ) : null}
+      {loiXoaBl?.id === item.id ? <CauTaiCho cau={loiXoaBl.cau} co="nho" /> : null}
     </View>
   );
 
@@ -269,7 +303,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
   );
 
   return (
-    <RudiScreen scroll={false} testID="bai-chi-tiet-screen">
+    <RudiScreen cot="doc" scroll={false} testID="bai-chi-tiet-screen">
       <TopBar title="Trang viết" />
       <FlatList
         contentContainerStyle={{ gap: space.lg, paddingBottom: space.xl }}
@@ -281,7 +315,12 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
         ListHeaderComponent={
           <View style={{ gap: space.lg }}>
             {post.phase === "loading" ? <SkeletonCard lines={3} media={0} /> : null}
-            {post.phase === "error" ? <ErrorState body={post.message} onRetry={() => void loadPost()} title="Chưa mở được bài" /> : null}
+            {/* QA UI-100: a post not there for this reader is one sentence and a
+                way back; two stacked failures with two useless «Thử lại» said
+                the same thing twice. */}
+            {post.phase === "error" && post.vinhVien ? (
+              <EmptyState action={{ label: "Quay lại", onPress: () => luiVeVe(router as never, "/explore") }} body={post.message} illustration={<Canh id="chua-doc-duoc" width={168} />} kind="permission" layout="inline" title="Không mở được bài này" />
+            ) : post.phase === "error" ? <ErrorState body={post.message} onRetry={() => void loadPost()} title="Chưa mở được bài" /> : null}
             {post.phase === "ready" ? (
               // The post as a page pinned to the wall (ADR-0037 D1): the author
               // in their ink, the photograph as a print leaning on its angle.
@@ -316,14 +355,18 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
                     <Text style={[typography.label, { color: colors.inkSoft }]}>Chia sẻ</Text>
                   </Pressable>
                 </View>
+                {loiBai ? <CauTaiCho cau={loiBai} co="nho" /> : null}
+                {baoBai ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]} testID="bai-bao-chia-se">{baoBai}</Text> : null}
                 {onShareCommunity && post.post.author_id === actor && post.post.audience === "public" && !post.post.image_url && !post.post.is_repost ? (
                   <RudiButton accessibilityLabel="Chia sẻ lên cộng đồng" icon="people-outline" label="Chia sẻ lên cộng đồng" onPress={() => { setCommunityError(null); setCommunityOpen(true); }} variant="outline" />
                 ) : null}
               </View>
             ) : null}
-            <Text style={[typography.h2, { color: colors.ink }]}>Lời nhắn dưới trang</Text>
-            {commentsBlock}
-            {composer}
+            {post.phase === "error" && post.vinhVien ? null : <>
+              <Text style={[typography.h2, { color: colors.ink }]}>Lời nhắn dưới trang</Text>
+              {commentsBlock}
+              {composer}
+            </>}
             {error ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{error}</Text> : null}
             {notice ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.accent }]}>{notice}</Text> : null}
             {post.phase === "ready" && post.post.author_id !== actor ? <RudiButton label="Báo cáo bài này" icon="flag-outline" onPress={() => setReportOpen(true)} variant="ghost" /> : null}
@@ -372,6 +415,7 @@ export function BaiChiTietScreen({ onShareCommunity }: { onShareCommunity?: () =
 }
 
 const styles = StyleSheet.create({
+  hoiNut: { flexDirection: "row", gap: 8, marginLeft: -14 },
   postCard: { gap: 16, padding: 14, borderWidth: 1, borderRadius: 4 },
   author: { flexDirection: "row", alignItems: "center", gap: 11, minHeight: 48 },
   image: { width: "100%", aspectRatio: 4 / 3 },
@@ -383,7 +427,7 @@ const styles = StyleSheet.create({
   reply: { marginLeft: 24 },
   commentHeading: { flexDirection: "row", alignItems: "center", gap: 8 },
   commentActions: { flexDirection: "row", gap: 16 },
-  touchAction: { flexDirection: "row", gap: 6, minHeight: 44, alignItems: "center", minWidth: 68 },
+  touchAction: { flexDirection: "row", gap: 6, minHeight: 48, alignItems: "center", minWidth: 68 },
   composer: { gap: 8, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
   composeRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   viewer: { flex: 1 },

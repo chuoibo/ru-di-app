@@ -1,6 +1,6 @@
 import { DiaryWall } from "../diary/Wall";
 /**
- * Cá nhân, Tài chính and Thành tích: the person's own pages.
+ * Cá nhân, Tài chính and Hành trình: the person's own pages.
  *
  * On a real session the profile card is `HoSoSong` (the server's words and
  * counts), the finance page is `GET /people/{id}/finance` printed, and the
@@ -30,7 +30,9 @@ import { displayFace, mucNguoi, typography, useRudiTheme } from "../theme";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { HoSoSong } from "./profile/HoSoSong";
 import { HanhTrinhTeaser } from "./profile/HanhTrinhTeaser";
-import { Heading, ListRow, RudiButton, RudiScreen, SectionHeader, TopBar } from "../ui";
+import { Heading, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, TopBar } from "../ui";
+import { useLuiLop } from "../ui/useLuiLop";
+import { useTenCho } from "../to-giay/useTenCho";
 import { ErrorState } from "../ui/ErrorState";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { TrangSo } from "../ui/TrangSo";
@@ -58,7 +60,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
   const [soThich, setSoThich] = useState<SoThichSong>({ muc: [], khoang: null });
   // Counts what the SERVER saved and who is waiting on it: a friend request
   // nobody can see is a request that never arrives.
-  const [soDaLuu, setSoDaLuu] = useState<number | null>(null);
+  const [soDaLuu, setSoDaLuu] = useState<string[] | null>(null);
   const [loiMoiCho, setLoiMoiCho] = useState(0);
   useFocusEffect(
     useCallback(() => {
@@ -67,7 +69,7 @@ function ProfileSong({ phien }: { phien: Phien }) {
         .then((da) => con && setSoThich(da))
         .catch(() => undefined);
       void docDaLuu(personId)
-        .then((ids) => con && setSoDaLuu(ids.length))
+        .then((ids) => con && setSoDaLuu(ids))
         .catch(() => undefined);
       void docLoiMoi(personId, personId, "incoming")
         .then((ds) => con && setLoiMoiCho(ds.filter((loi) => loi.state === "pending").length))
@@ -77,11 +79,16 @@ function ProfileSong({ phien }: { phien: Phien }) {
       };
     }, [personId]),
   );
-  const soLuuHien = soDaLuu;
+  const soLuuHien = soDaLuu?.length ?? null;
+  // QA UI-109: «Đã lưu» lists every saved place by name, each the way to it.
+  const idsDaLuu = soDaLuu ?? [];
+  const tenDaLuu = useTenCho(panel === "saved" ? idsDaLuu : []);
+  // QA UI-108: Back on a panel closes it and stays on Cá nhân.
+  useLuiLop(panel !== "home", () => setPanel("home"));
 
   if (panel === "account") {
     return (
-      <RudiScreen bottomInset="tab" testID="profile-screen">
+      <RudiScreen bottomInset="tab" cot="doc" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Tài khoản" />
         <Text style={[typography.body, { color: colors.ink }]}>
           Đang xem với tư cách {phien.profile?.display_name ?? "bạn"}.
@@ -106,19 +113,26 @@ function ProfileSong({ phien }: { phien: Phien }) {
   }
   if (panel === "saved") {
     return (
-      <RudiScreen bottomInset="tab" testID="profile-screen">
+      <RudiScreen bottomInset="tab" cot="doc" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Đã lưu" />
         <Heading
           title={soLuuHien === null ? "Đã lưu" : `${soLuuHien} địa điểm`}
           subtitle="Danh sách lưu trong tài khoản của bạn. Mở Khám phá để thêm."
         />
-        <RudiButton label="Mở Khám phá" onPress={() => router.push("/explore")} />
+        {idsDaLuu.length > 0 ? (
+          <NhomHang>
+            {idsDaLuu.map((id) => (
+              <ListRow icon="bookmark-outline" key={id} onPress={() => router.push(`/places/${id}` as never)} subtitle="Mở trang của chỗ này" title={tenDaLuu[id] ?? "Một chỗ đã lưu"} />
+            ))}
+          </NhomHang>
+        ) : null}
+        <RudiButton label="Mở Khám phá" onPress={() => router.push("/explore")} variant={idsDaLuu.length > 0 ? "outline" : "solid"} />
       </RudiScreen>
     );
   }
 
   return (
-    <RudiScreen bottomInset="tab" testID="profile-screen">
+    <RudiScreen bottomInset="tab" cot="doc" testID="profile-screen">
       <View style={styles.profileTop}>
         <View style={styles.flex}>
           <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
@@ -175,8 +189,8 @@ function ProfileSong({ phien }: { phien: Phien }) {
           <ListRow
             icon="ribbon-outline"
             onPress={() => router.push("/achievements")}
-            subtitle="Cấp và huy hiệu tính từ sổ của bạn"
-            title="Thành tích"
+            subtitle="Sổ huy hiệu và các ngã rẽ của bạn"
+            title="Hành trình"
           />
         </View>
         <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>

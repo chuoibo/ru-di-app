@@ -227,7 +227,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { ph
         <View style={styles.chan}>
           <CauTaiCho cau={loi} />
           {sourceMessageId ? (
-            <RudiButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null} label="Xác nhận và tạo kèo" loading={dangTao || sourceLoading} onPress={() => void tao()} />
+            <RudiButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null} label="Xác nhận và tạo kèo" lyDo={dangTao || sourceLoading ? undefined : existingId !== null ? "Tờ hẹn này đã thành kèo rồi." : sourceFailed ? "Chưa đọc được tờ hẹn này." : undefined} loading={dangTao || sourceLoading} onPress={() => void tao()} />
           ) : (
             // The invitation is sealed with a stamp, not filed with a button (ADR-0037 D1).
             <StampButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null || daTaoThieuCho !== null} label="Tạo kèo" loading={dangTao} onPress={() => void tao()} size="vua" tilt={-1} />

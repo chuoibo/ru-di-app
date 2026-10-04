@@ -35,12 +35,22 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 60000
 - tapOn: "Cá nhân"
+# The profile tab may still be leaving a screen pushed on it: wait for its own
+# heading and the transition's end before looking for a row.
+- extendedWaitUntil:
+    visible: "Không gian của riêng bạn"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+# The row's subtitle is unique on the tab («Bạn bè» also names the passport count and
+# other mounted tabs); centred, so the tab bar and the «Tạo» stamp never cover it.
 - scrollUntilVisible:
     element:
-      text: "Bạn bè"
+      text: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
     direction: DOWN
+    centerElement: true
     timeout: 60000
-- tapOn: "Bạn bè"
+- tapOn: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
 - extendedWaitUntil:
     visible: "Chưa có bạn nào"
     timeout: 30000
@@ -88,6 +98,13 @@ appId: com.lakiet.rudi
 # --- đăng xuất C ---------------------------------------------------------------
 - tapOn: "Quay lại"
 - tapOn: "Cá nhân"
+# The profile tab may still be leaving a screen pushed on it: wait for its own
+# heading and the transition's end before looking for a row.
+- extendedWaitUntil:
+    visible: "Không gian của riêng bạn"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
 - scrollUntilVisible:
     element:
       text: "Tài khoản"
@@ -131,12 +148,22 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 60000
 - tapOn: "Cá nhân"
+# The profile tab may still be leaving a screen pushed on it: wait for its own
+# heading and the transition's end before looking for a row.
+- extendedWaitUntil:
+    visible: "Không gian của riêng bạn"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+# The row's subtitle is unique on the tab («Bạn bè» also names the passport count and
+# other mounted tabs); centred, so the tab bar and the «Tạo» stamp never cover it.
 - scrollUntilVisible:
     element:
-      text: "Bạn bè"
+      text: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
     direction: DOWN
+    centerElement: true
     timeout: 60000
-- tapOn: "Bạn bè"
+- tapOn: "(Bạn bè, lời mời đã nhận và đã gửi|[0-9]+ lời mời kết bạn đang chờ bạn)"
 - extendedWaitUntil:
     visible: "Đã nhận"
     timeout: 30000

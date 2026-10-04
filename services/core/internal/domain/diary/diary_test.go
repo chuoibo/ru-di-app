@@ -43,3 +43,13 @@ func TestManualPageHeadingIsReadableWithoutChangingSource(t *testing.T) {
 		t.Fatalf("invented a date: %q", got)
 	}
 }
+
+// QA UI-154, books saved before readable headings: the stored ISO title reads
+// as a day; a title somebody wrote is untouched.
+func TestTenTrangReadsStoredDates(t *testing.T) {
+	for in, want := range map[string]string{"2026-09-29": "Ngày 29/09/2026", "2026-02-30": "2026-02-30", "Chiều bên hồ": "Chiều bên hồ", "": ""} {
+		if got := TenTrang(in); got != want {
+			t.Errorf("TenTrang(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

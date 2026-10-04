@@ -212,7 +212,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         <RudiButton label="Hoàn tác" variant="ghost" compact full={false} disabled={busy} onPress={undoDiscard} />
       </View> : panel === "poll" && hasDraft ? <View style={styles.draftRow}>
         <Text accessibilityLiveRegion="polite" style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>{restored.poll ? "Đã khôi phục bản nháp" : ""}</Text>
-        <RudiButton label="Bỏ bản nháp" variant="ghost" compact full={false} disabled={busy} onPress={discard} />
+        <RudiButton label="Bỏ bản nháp" tone="warn" variant="ghost" compact full={false} disabled={busy} onPress={discard} />
       </View> : null}
       <ScrollView keyboardShouldPersistTaps="handled" style={[styles.scroll, {
         // The cap holds the grid and the photo note under it; when a short
@@ -299,5 +299,5 @@ const styles = StyleSheet.create({
   thay: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 8 },
   luot: { gap: 6 },
   pressed: { opacity: 0.65 },
-  keoGon: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44, paddingHorizontal: 20, marginTop: 4 },
+  keoGon: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 48, paddingHorizontal: 20, marginTop: 4 },
 });

@@ -1,5 +1,5 @@
 {
-  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8, cập nhật thêm ở shippedV5; shippedV5 là đợt «bản sắc và nhịp thị giác» 2026-09-08 (cdccb590..8c1d8600 trên 3d89f070, verdict ship cho màn fixture sáng 1.0 và Sở thích 1.3). Giữ cấu trúc hiện có để tương thích script. shippedV6 là Phase 1 «Nếp truyền giấy» 2026-09-12 (nhánh claude/p0-w-hn-1-nen-to-giay, head 137c6c04): nền không cần máy chủ của sổ hai người, chỉ trên ui-lab, ba vòng đọc mù.",
+  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8, cập nhật thêm ở shippedV5; shippedV5 là đợt «bản sắc và nhịp thị giác» 2026-09-08 (cdccb590..8c1d8600 trên 3d89f070, verdict ship cho màn fixture sáng 1.0 và Sở thích 1.3). Giữ cấu trúc hiện có để tương thích script. shippedV6 là Phase 1 «Nếp truyền giấy» 2026-09-12 (nhánh claude/p0-w-hn-1-nen-to-giay, head 137c6c04): nền không cần máy chủ của sổ hai người, chỉ trên ui-lab, ba vòng đọc mù. shippedV7 là đợt nâng cấp UI/UX 01–04/10 (B1–B11, ghi từ mã 04/10).",
   "source": "packages/shared/tokens.json",
   "measuredFrom": "packages/shared/tokens.json là nguồn; script chỉ sinh mirror và số đo. Các tỷ lệ token không thay thế bằng chứng native của từng component.",
   "color": {
@@ -740,14 +740,14 @@
     "RouteLine": "stroke 3, stops 2..5, glyph r16 (active r21), activeColor brand.coral + activeInk mauSang.ink, opacity 0.82 trên bìa, maxWidth 560",
     "Stamp": "viền 2 màu tông, bo 6, đệm 8/4, minHeight 26, typography.stamp; outline mặc định, ink hiếm; accessibilityLabel = nhãn, không role; nen = miếng giấy card dưới con dấu viền khi đặt trên ảnh (HỢP GU, GỢI Ý); dong = cú đóng dấu: lao 130ms Easing.in(quad) scale 1.35→1 mực 25% (roi), chạm 60ms mực 25→100% + haptic.success (muc), lún 1→0.97→1 spring.press (lun, shared value riêng); Reduce Motion gập thành tĩnh; chỉ truyền cho hàng vừa bấm (Bill «Đã trả», Outing «Đã tới», DotThuLive sau máy chủ xác nhận); ship 12 màn",
     "Money": "typography.money 21/27 EB tabular; sizes display/money/body/label/caption; countUp chỉ khi domainStateValid (moneyCountUpMs)",
-    "RudiTabBar": "card + hairline line, cao 64 + max(insets.bottom,10), tab minHeight 48, icon 24, caption override 12/14, active accent / inactive inkFaint, chỉ báo băng 28x4 accent trượt standard; FAB 56 coral glyph brand.coralInk tĩnh vòng 4px ground nhô 22 elevation 6 PressScale 0.94; rail 104 ở >=600dp, mục 72, vạch 4px accent; iOS BlurView 78 chỉ đọc từ mã",
+    "RudiTabBar": "card + hairline line, cao tabBarHeight(fontScale) + max(insets.bottom,10): 64 tới fontScale 1.15, + round((fs−1.15)×44) tới 2.0, tab minHeight 48, icon 24, caption override 12/14, active accent / inactive inkFaint, chỉ báo băng 28x4 accent trượt standard; FAB 56 coral glyph brand.coralInk tĩnh vòng 4px ground nhô 22 elevation 6 PressScale 0.94; rail 104 ở >=600dp, mục 72, vạch 4px accent; iOS BlurView 78 chỉ ở thanh đáy, chỉ đọc từ mã",
     "PressScale": "scale-only trên UI thread; 0.97 mặc định (con dấu CTA), 0.98 RudiButton, 0.985 ListRow/khay tạo, 0.96 Chip, 0.94 IconButton/FAB, 0.92 back; spring press {18,260,0.6} settle {20,180,0.8}; haptic select/impact; đợt 8 thay mọi nhánh pressed mờ trong kit (RudiButton, IconButton, Chip, ListRow), màn feature còn nhánh mờ riêng",
-    "Sheet": "card, bo trên 20, pad ngang md / dưới max(insets.bottom,16), maxHeight 82% cửa sổ, ScrollView; scrim lopPhu.toi(0.42), spring vào / standard ra; back Android và scrim đóng; onClosed sau khi tấm rời; tay cầm là vùng nắm minHeight 36 rộng cả tấm, vạch 40x4 lineStrong, label «Tay cầm» hint «Kéo xuống để đóng»; Gesture.Pan activeOffsetY 6, tấm theo ngón tay, thả > 90dp hoặc > 900dp/s đóng, ngắn hơn spring về; scrim = progress × (1 − kéo/480); đặt qua RudiScreen overlay hoặc route trong suốt",
+    "Sheet": "v2 (01/10): card, bo trên 20, pad ngang md / dưới max(insets.bottom,16), hàng lỗ giấy paperShade 5x5 mép trên; trần 82% cửa sổ cho CẢ tấm (tay cầm + dauTrang + nội dung + footer + đệm), maxHeight thay trần, avoidKeyboard co theo khung trên bàn phím; rộng tối đa 640 căn giữa (RONG_TOI_DA); trượt theo chiều cao đo được của tấm + 24, khép mờ (opacity theo progress 0→0.12→1); spring settle vào / standard ra; scrim lopPhu.toi(0.42); 250ms đầu (CHAN_CHAM_MS) scrim và tấm không nhận chạm; Back cứng Android, Esc web, Back trình duyệt (lui-web.ts) đóng; onBack tiêu Back cho bước nội tuyến; màn blur thì đóng; web role=dialog aria-modal, anh em inert+aria-hidden, focus control đầu, Tab quay vòng, trả lại thuộc tính chỉ khi còn là của nó; zIndex 10; Nếp không đè; tay cầm: hàng minHeight 36 giữa hai ô 48, vạch 40x4 lineStrong, Gesture.Pan activeOffsetY 6, > 90dp hoặc > 900dp/s đóng, scrim × (1 − kéo/cao tấm), ẨN khỏi trợ năng; lối ra trợ năng «Đóng bảng» 48x48 close 22 ink; onClosed sau khi tấm rời; thân khép đọc useGiuKhiDong; đặt qua RudiScreen overlay, LenLop hoặc route trong suốt",
     "Skeleton": "xương line bo 10, băng card 0.55 1400ms, tắt dưới Reduce Motion",
-    "EmptyState": "h2 + body inkSoft maxWidth 420, một RudiButton compact (outline khi failure) + ghost phụ; full/inline; illustration = <Canh width 168> (chua-co-keo, chua-co-anh, tim-khong-ra)",
+    "EmptyState": "h2 + body inkSoft maxWidth 420, một RudiButton compact (outline khi failure) + ghost phụ; full/inline; illustration = <Canh width 168> (chua-co-keo, chua-co-anh, tim-khong-ra); mọi EmptyState mang <Canh id> trừ ô có tên trong tests/trang-rong-co-hinh.test.mjs: KHONG_HINH (im lặng có lý do) và CHUA_VE (nợ chưa vẽ); ErrorState toàn màn chỉ khi chưa có gì để giữ",
     "useAdaptiveLayout": "helper compact <600 (columns 1, gutter 16, tab đáy, maxContent width) / medium 600..839 (columns 2, gutter 24, rail, maxContent 960, twoPane khi cao >=480) / expanded >=840 (columns 3, gutter 36, rail, twoPane, maxContent 1200); short <480. Đây là khả năng helper, không tự áp bố cục cho mọi màn.",
-    "RudiScreen": "page = ground + Grain giayTrang; cover không top inset (CoverBand underStatusBar). Lề 16 compact / 24 medium+, maxWidth 960 tablet, gap 18, bottomInset 32 (112 dưới tab). footer ghim đáy (đệm về 8 khi bàn phím mở); overlay ngoài hộp cuộn; keepEnd scrollToEnd khi nội dung dài ra; avoidKeyboard theo màn; header (đợt 8) đứng trên hộp cuộn, kẻ tóc line dưới, dùng cho TopBar + dòng ghim chuyến ở chat",
-    "RudiButton": "minHeight 52 (48 compact), bo 14, label 14/19 một dòng; solid dùng LinearGradient với hai đầu cùng màu tông nên nền phẳng, nhãn <tone>Ink theo scheme; outline card/lineStrong với accent, viền màu tông với split/ai; soft nền <tone>Soft; ghost trong suốt; nhấn PressScale 0.98, không mờ",
+    "RudiScreen": "page = ground + Grain giayTrang; cover không top inset (CoverBand underStatusBar). Lề 16 compact / 24 medium+, cột tablet theo cot: doc 640 / form 560 / rong 960 (mặc định), header và footer cùng cột (RONG_COT), gap 18, bottomInset 32 (112 dưới tab). footer ghim đáy (đệm về 8 khi bàn phím mở); overlay ngoài hộp cuộn; keepEnd scrollToEnd khi nội dung dài ra; avoidKeyboard theo màn; header (đợt 8) đứng trên hộp cuộn, kẻ tóc line dưới, dùng cho TopBar + dòng ghim chuyến ở chat; khe lớp KheLop: con của <LenLop> vẽ trên cả màn, giữ state của component đã vẽ (QA UI-041)",
+    "RudiButton": "minHeight 52 (48 compact, pad 14), pad 18, bo 14, label 14/19 một dòng; solid LinearGradient hai đầu cùng màu tông (phẳng), nhãn <tone>Ink; outline card/lineStrong với accent, viền màu tông với split/ai/warn; soft <tone>Soft; ghost trong suốt; nhấn PressScale 0.98, không mờ; tone warn = phá huỷ, chỉ outline/ghost (solid/soft vẽ thành outline), chữ warn (tests/nut-pha-huy-tong-warn.test.mjs); tắt (ADR-0038 §2.2): nền card, viền đứt 1.5 lineStrong, chữ/icon inkSoft, không opacity; lyDo in dưới nút (info-circle 16 + caption inkSoft, ẩn khỏi cây) và là accessibilityHint; thiếu lyDo thì console.warn dev một lần mỗi nhãn",
     "ResponsiveRow": "onLayout đo vùng nội dung thật; gridFor(width, minItemWidth 250, gap 12, maxColumns 3) → itemWidth floor dp nguyên; album maxColumns 6 minItemWidth 104 gap 6; RosterPicker 130/8/3",
     "CreateSheet": "screens/Create.tsx là kit Sheet trong route create trong suốt (app/_layout.tsx: animation fade, contentStyle transparent, transparentModal), tab dưới nguyên dưới scrim; nội dung maxWidth 560 gap 18, Heading h2 + phụ đề, DemoBadge chỉ khi chưa có phiên; ba hành động PressScale 0.985 minHeight 72 icon 48 bo 16 <tone>Soft, kẻ tóc; onClose → onClosed → router.back(); app/create.tsx mở lạnh replace /explore rồi push lại (chỉ đọc từ mã)",
     "PhotoViewer": "Modal toàn màn nền cover, safe area, Đóng minHeight 48, bộ đếm, caption tối đa 4 dòng. Pager theo width đo thực, remount tại currentIndex đã chặn biên khi width đổi và reset zoom. Pinch 1..4x, double tap 1/2x; pan chỉ khi zoom, offset chặn theo viewport/scale cả khi pinch thu nhỏ; zoom khoá paging, rời ảnh reset. Image contain, cachePolicy none, source do adapter có xác thực cấp; FlatList initial 1/batch 2/window 3. Reduce Motion bỏ modal fade và settle duration. Chưa có shared-element/focal zoom/tải nền.",
@@ -759,7 +759,7 @@
     "HangChang": "row minHeight 64 gap 10; giờ label tabular minWidth 46 canh phải; axis 14, node 12 bo 6 viền 2 ink (daToi tô split), line 2 lineStrong hoặc dashed 2 inkFaint khi phac; body label ink + caption phuTone + caption inkSoft, paddingBottom 18, minHeight 48; slot phai; cuoi không đường dưới; prop anh {anh: AnhCoGhiCong, alt, loai?} (vòng 2 08/09, AnhChang không export): ảnh 44x44 expo-image cover trong khung padding 2 card + hairline line bo radius.small (ảnh bo 8, nền line) ở khe phải, chặng tự in cauGhiCong(anh.nguon) caption inkFaint không trần số dòng làm dòng cuối; ảnh hỏng → GuGlyph theo loai trong cùng khung + chữ «Chưa tải được ảnh» caption warn; chỉ khi chặng có địa điểm có ảnh; dùng ở Outing (Lên plan) và Group (tờ lịch trình AI); phu = tên địa điểm khi có, «Chọn địa điểm» khi chưa (live «Mở địa điểm» khi chỉ có id); nháp nói một lần ở đầu màn",
     "PlaceLead": "MediaSlot ratio 16:10 compact / 21:9 medium+, bo 20, attribution = anh.nguon in caption inkFaint dưới khung, Stamp ai nen tilt -2 trên ảnh chỉ khi không có lyDo (dauCon); anh null → KyHoa (tờ paper rộng cột, 3:1 · 4:1 chữ lớn) rồi tên + sự thật (tới 11/09: PlaceGlyph 34); tên h2, lyDo: một dòng LyDo (sparkles 13 + label ai, numberOfLines 1) dưới tên thay con dấu — một tag qua chonLyDo (fixture) hoặc reason của mô hình (live); mô tả body inkSoft không lặp từ của lý do, sự thật icon 16 + label inkSoft; IconButton lưu",
     "HaiCot": "twoPane → hàng 3:2 gap lg, mỗi cột gap 18; điện thoại xếp dọc; phaiChiKhiRong bỏ cột phải trên điện thoại; bill: AiCoGi (label + caption món, warn cho món chưa người) cạnh gán món, ai-đã-trả + tên khoản cạnh sổ",
-    "TouchTarget": "mọi node bấm được ≥48dp kể cả TextInput trong Field (52/48), ô soạn chat, pill; Pressable chỉ khi còn bấm được; nhãn a11y phân biệt control cùng chữ; đo bằng scripts/a11y_native_audit.py",
+    "TouchTarget": "mọi node bấm được ≥48dp kể cả TextInput trong Field (52/48), ô soạn chat, pill; Pressable chỉ khi còn bấm được; nhãn a11y phân biệt control cùng chữ; đo bằng scripts/a11y_native_audit.py; ONhapMuc ô nhập 48 (UI-001); đợt 01–04/10 nâng các đích 44 còn lại lên 48; ngoại lệ có tên: lưới ngày ChonNgayLich 44 (bảy cột 48 không vừa 320); hành động lặp theo hàng giữ nhãn ngắn, tên trợ năng mang tên hàng («Đặt <tên> làm quản trị», «Đồng ý vào nhóm <tên nhóm>»)",
     "ChatM15": "sticker vector 120 (từ vựng đóng 8 id, không GIF); lớp tô hoặc nét (net, round cap), vai thêm line; hai cỡ đọc: chiTiet=size>=72, khay 64 dùng HINH_RUT_GON, không thu 120 xuống; cho-ti là sticker đầu vẽ bằng ngôn ngữ Nếp qua tuLopVe (ghế + tay lên lưng ghế + đồng hồ), bảy hình còn lại chờ Lead (docs/archive/claude/2026-09-08/tra-loi-sticker-cho-ti.md); tests/rudi-chat-sticker.test.mjs; trích dẫn trả lời TRÊN bong bóng: viền line, vạch trái 3 accent theme, caption; tin đã xoá: bong bóng giấy + caption nghiêng inkFaint; theme bong bóng (tokens.chatTheme, mac-dinh = accent scheme) chỉ tô bong bóng người gửi + viền chip mình; hàng hai pill dưới tiêu đề (thành viên|Xem hồ sơ, Cài đặt) caption inkSoft icon 15 cao 40; cặp = Avatar 44 + «Nhắn riêng»",
     "PlaceRow": "thumb 56 bo 10 khi có ảnh, trống → PlaceGlyph 33 (ô giấy 56); Stamp ai cạnh tên trên cùng hàng chỉ khi không có lyDo (tên một dòng khi có dấu), lyDo → dòng LyDo dưới tên, caption inkSoft, caption inkFaint, ghi công caption inkFaint ≤2 dòng (cauGhiCong(anh.nguon)); ảnh hỏng → GuGlyph + «Chưa tải được ảnh» caption warn; paddingVertical 10 gap 8 hairline line dưới; không thẻ; 2 cột ở tablet",
     "AiNote": "ghi chú lề: sparkles 17 ai, label ink, caption ai «Rủ Đi AI gợi ý» dưới câu; hairline trên/dưới, paddingVertical 12, gap 11; không nền, không viền trái",
@@ -782,7 +782,16 @@
     "PlaceCompare": "hai ứng viên trên một trục giữa ảnh dẫn và hàng (taiSoSanh); hàng gap 16 đệm dưới 12 hairline line; mỗi ô flex 1: MediaSlot 4:3 với IconButton tim góc dưới phải trên ảnh + Stamp ai nen khi có badge và không có lyDo, title 2 dòng, LyDo khi có lyDo, note inkSoft 2 dòng, sự thật đầu nối « · » note inkFaint, sự thật cuối (giá) riêng dòng, ghi công note inkFaint; không thẻ",
     "PlaceGlyph": "ô giấy vuông cạnh round(1.7×size), nền card, viền hairline line, bo radius.small; bên trong GuGlyph round(1.15×size) tone ink (mực + một chi tiết coral của hình); hình theo gu (guTheoTag: tag thật) trước, guTheoLoai sau (quan-an-local→an-uong, cafe, vui-choi→game, di-choi-dem→nightlife, khác→thẻ gấp); Ionicons màu ink chỉ khi thiếu cả hai",
     "VetGap": "vết gấp: View hairline paperShade, marginVertical sm, marginHorizontal -md chạy mép tới mép; không phải divider",
-    "ThuGapBa": "motif thư gấp ba: tờ 5 đỉnh góc cắt, vạt giay viền mực, hai vết bong ở 1/3 và 2/3, không coral"
+    "ThuGapBa": "motif thư gấp ba: tờ 5 đỉnh góc cắt, vạt giay viền mực, hai vết bong ở 1/3 và 2/3, không coral",
+    "CauTaiCho": "ui/CauTaiCho.tsx: câu lỗi tại chỗ ngón tay; nơi gọi đặt ngay dưới control thất bại hoặc trong footer trên nút dính đáy; icon alert-circle-outline 18 + body, warn; hanhDong tuỳ chọn («Thử lại», «Nhập tay») label ink gạch chân cao 48; co=nho: icon 15, note, caption, đích 48 trả chiều cao; role alert + aria-live polite; FadeIn standard, ngay khi Reduce Motion; web scrollIntoView nearest nếu ngoài cửa sổ; cau null không vẽ; lỗi tải lại không thay dữ liệu đã hiện; không toast, không modal",
+    "CauLoiTheoMa": "src/cau-loi-theo-ma.ts + thongDiepNguoiDoc (src/api.ts): câu tiếng Việt của máy chủ đi thẳng; status 0 → LOI_KHONG_NOI_DUOC «Kiểm tra mạng»; bảng riêng của màn; cauTheoMa(code): câu riêng rồi theo hình (*_not_found, *_wrong_state/*_already_*, *_conflict, *_expired, *_unavailable «đang tạm ngưng», *_too_large); chỉ sau đó mới đoán theo status; không in mã/status/địa chỉ; laTuChoiVinhVien (not_found, wrong_state, already, expired, membership_required, direct_message_unavailable, 403/404/410) → không «Thử lại»",
+    "ONhapMuc": "ui/ONhapMuc.tsx: không hộp, một gạch dưới: 1dp lineStrong nghỉ, 2dp accent khi viết (chỉ báo focus, vòng trình duyệt tắt), 2dp warn khi sai, dp thêm lấy từ đệm dưới 4; ô một dòng minHeight 48; chữ body (co lon: h2); placeholder inkFaint kit vẽ; helper note inkSoft; error caption warn thay helper, đọc polite; multiline kẻ dòng, cuộn quá 8 dòng",
+    "ChonNgayLich": "ui/ChonNgayLich.tsx: lá lịch xé (số Bricolage 34/40) hoặc gõ dd/mm/yyyy; tháng mở tại chỗ, bảy cột ô 44 (ngoại lệ sàn 48), thứ Hai trước, hôm nay có vòng, ngày chọn tô; mỗi ngày đọc đủ thứ/ngày/tháng/năm",
+    "LuoiNguoi": "ui/LuoiNguoi.tsx: danh sách người có hành động; một cột, kẻ tóc line từ cột chữ (lề 52); hai cột khi chính danh sách chứa được 2×280 (gridFor(rong,280,16,2)), mỗi ô kẻ tóc dưới, hàng nhận luoi=true để đặt hành động dưới tên; đo onLayout, không đọc cửa sổ (QA UI-081)",
+    "useLuiLop": "ui/useLuiLop.ts: lớp màn tự vẽ (bảng Cá nhân, bước hai xoá tài khoản, hồ sơ sống) đăng ký Back cứng Android + Back trình duyệt (lui-web.ts, chạy trước router) trong lúc mo; Back đóng lớp, không rời màn (QA UI-108, UI-110)",
+    "useGiuKhiDong": "ui/giu-khi-dong.ts: mở thì giá trị đi thẳng, khép thì giữ giá trị lần cuối còn mở, để thân sheet đang khép không vẽ lại theo state vừa đóng nó (QA UI-084)",
+    "NgayViet": "src/rudi/ngay-viet.ts, viết tay không Intl: ngayVN «28/09/2026»; gioNgayVN «10:07 · 28/09» (năm khi khác năm nay); khoangNgayChuyen «28 - 29/09», «30/09 - 02/10»; thangNamVN «Tháng 9, 2026»; chuỗi lạ trả rỗng",
+    "HoiTaiHang": "Xác nhận phá huỷ tại hàng, không hộp thoại: nút warn nhường chỗ cho câu hỏi ink nói cái mất («Xoá ghi chép này? Không lấy lại được.»), rồi hai nút compact full=false: động từ tone warn (outline hoặc ghost) + «Thôi» ghost; lỗi CauTaiCho dưới đúng hàng; Keeps.tsx, Comments.tsx, tuong/BaiChiTietScreen.tsx, groups/Members.tsx (tự bỏ quyền), groups/Conversations.tsx (từ chối lời mời)"
   },
   "surfaces": {
     "Welcome": "bìa đóng: cover + vaiBia 0.3, lề 20, wordmark 118/150/72, washi accent tilt -2 cao 34, RouteLine 4 chặng glyph theo pager, pager 4 trang (EB 28/33 coverInk, body coverInkSoft), chấm 7 (đang ở 20 accent), StampButton lon «Rủ Đi thôi!» tilt -3, CoverButton link «Tìm hiểu thêm ›»; DemoBadge «Bản trải nghiệm»; mở bìa translateY -48 + mờ 0.65 shared 300 accelerate rồi push /login",
@@ -946,6 +955,31 @@
         "name": "Luật Bản Tính Một Chỗ",
         "section": "components",
         "body": "Mọi khác biệt giữa các loại sổ là trường của BanTinhSo trong so/ban-tinh.ts; không file nào khác so kind hay loaiSo (cổng hai chiều với allowlist ba chỗ có sẵn). Là chính sách trình bày, không phải quyền."
+      },
+      {
+        "name": "Luật Câu Tại Chỗ",
+        "section": "components",
+        "body": "Một việc vừa bấm không thành nói bằng CauTaiCho ngay dưới control đó hoặc trong footer trên nút dính đáy: role alert, aria-live polite, một lối đi tiếp. Không toast, không modal lỗi."
+      },
+      {
+        "name": "Luật Lỗi Không Thay Dữ Liệu",
+        "section": "components",
+        "body": "Lần tải lại hỏng không bao giờ thay dữ liệu đã hiện; câu đứng cạnh dữ liệu cũ. ErrorState toàn màn chỉ khi chưa có gì để giữ."
+      },
+      {
+        "name": "Luật Câu Lỗi Theo Mã",
+        "section": "components",
+        "body": "code của máy chủ chọn câu trước mã HTTP (cau-loi-theo-ma.ts); mất mạng và *_unavailable là hai câu khác nhau; từ chối vĩnh viễn (laTuChoiVinhVien) không mời «Thử lại»; không in mã, status, địa chỉ."
+      },
+      {
+        "name": "Luật Phá Huỷ Là Warn",
+        "section": "components",
+        "body": "Nút phá huỷ là RudiButton tone warn, chỉ outline hoặc ghost (không nền warn), và hỏi tại hàng trước khi xoá thứ không lấy lại được (nut-pha-huy-tong-warn.test.mjs)."
+      },
+      {
+        "name": "Luật Một Cách Viết Ngày",
+        "section": "components",
+        "body": "Ngày giờ đi qua ngay-viet.ts, viết tay, không Intl/toLocaleDateString: «28/09/2026», «10:07 · 28/09», «28 - 29/09», «Tháng 9, 2026»."
       }
     ],
     "notCanonized": [
@@ -964,7 +998,12 @@
       "Album theo ngày chỉ ở AlbumLive.tsx (đọc từ mã); Memories.tsx fixture vẫn lưới đều ba cột",
       "Hai cảnh chua-co-hoi/chua-co-ban và bốn tư thế Nếp ngoài moi/ghi-lai chưa màn nào gọi",
       "Ionicons vẫn là ngôn ngữ của control; lớp vẽ chỉ thay icon ở nội dung phân loại",
-      "Phase 1 Nếp truyền giấy (12/09) chỉ trên ui-lab; vòng đọc mù 4 chưa ghi; hai ToGiay trùng tên; KyHoa coral cạnh ToGiay dan trên lab"
+      "Phase 1 Nếp truyền giấy (12/09) chỉ trên ui-lab; vòng đọc mù 4 chưa ghi; hai ToGiay trùng tên; KyHoa coral cạnh ToGiay dan trên lab",
+      "Đợt 01–04/10 (ghi 04/10, chỉ đọc mã): hai nút tháng của ChonNgayLich 44 không hitSlop là nợ dưới sàn, không thuộc ngoại lệ bảy cột; phép tính 320dp của ngoại lệ chưa kín (7×44 + đệm ≈ 326 > cột 288)",
+      "Nút kích hoạt xoá bình luận ở tuong/BaiChiTietScreen là Pressable caption inkSoft, không RudiButton warn; test quét không thấy Pressable",
+      "Hỏi tại hàng còn hai giọng (câu body ở Keeps, note nơi khác; xác nhận outline ở Keeps/Members/Conversations, ghost ở hai màn bình luận); chưa có primitive hay test giữ hình",
+      "Sheet v2 không có test node riêng; RONG_TOI_DA 640 là hằng trong Sheet.tsx trùng RONG_COT.doc bằng tay",
+      "CHUA_VE: «Chưa có bạn nào để rủ» (ChonNguoi), «Chưa có địa điểm để thêm» (PickOutingLive) chưa có cảnh; cảnh báo thiếu lyDo chỉ là console.warn dev, không phải cổng"
     ],
     "keyCharacteristics": [
       "Hai bề mặt vật chất đo được bằng pixel: vải bìa, giấy, mực con dấu",
@@ -1347,6 +1386,43 @@
       "KyHoa coral trên cùng lab surface với ToGiay dan",
       "mép cắt chéo hairline anti-alias mờ hơn viền",
       "số tương phản trong chú thích ToGiay.tsx là trích spec, không phải script sinh"
+    ]
+  },
+  "shippedV7": {
+    "_": "Đợt nâng cấp UI/UX từ audit QA PR #663 (B1–B11), tinh chỉnh v3 «Sân khấu giấy», không đổi token màu/font/bán kính. Bản ghi này chỉ đọc mã ở cây làm việc; bằng chứng native và QA retest ở docs/claude/2026-10-01/ui-ux-upgrade/.",
+    "date": "2026-10-04",
+    "headCommit": "a58d11a8 + sửa chưa commit",
+    "direction": "docs/claude/2026-10-01/ui-ux-upgrade/direction.md",
+    "verdict": "chưa ghi trong lượt tài liệu này",
+    "added": [
+      "CauTaiCho",
+      "CauLoiTheoMa",
+      "Sheet v2",
+      "KheLop/LenLop",
+      "RudiButton tone warn + lyDo",
+      "RudiScreen cot",
+      "LuoiNguoi",
+      "useLuiLop",
+      "useGiuKhiDong",
+      "NgayViet",
+      "HoiTaiHang",
+      "ONhapMuc 48",
+      "ChonNgayLich 44 (ngoại lệ)"
+    ],
+    "gates": [
+      "tests/nut-pha-huy-tong-warn.test.mjs",
+      "tests/trang-rong-co-hinh.test.mjs",
+      "tests/cau-loi-theo-ma.test.mjs",
+      "tests/o-nhap-muc.test.mjs",
+      "tests/khe-lop.test.mjs",
+      "tests/rudi-b9-ke-va-tuong.test.mjs"
+    ],
+    "fromCodeOnly": [
+      "Sheet v2 (trần 82% cả tấm, 640, 250ms, khép mờ, web inert/Back)",
+      "useLuiLop",
+      "useGiuKhiDong",
+      "LuoiNguoi hai cột ở tablet",
+      "RudiTabBar tabBarHeight theo fontScale"
     ]
   }
 }

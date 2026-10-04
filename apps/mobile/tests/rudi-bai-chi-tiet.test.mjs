@@ -76,8 +76,8 @@ test("đếm và câu tương tác đọc từ danh sách máy chủ trả, thi�
   assert.equal(tongPhanUng(bai), 3);
   assert.equal(daPhanUng(bai, "fire"), true);
   assert.equal(daPhanUng(bai, "heart"), false);
-  assert.equal(cauTuongTacBai(bai), "2 tim · 3 bình luận");
-  assert.equal(cauTuongTacBai({}), "0 tim · 0 bình luận");
+  assert.equal(cauTuongTacBai(bai), "2 thích · 3 bình luận");
+  assert.equal(cauTuongTacBai({}), "0 thích · 0 bình luận");
   const sau = apPhanUng(bai, { post_id: POST, reactions: [{ kind: "heart", count: 3 }], my_reactions: ["heart"] });
   assert.equal(demLoai(sau, "heart"), 3);
   assert.equal(sau.comment_count, 3, "phản ứng không chạm số bình luận");

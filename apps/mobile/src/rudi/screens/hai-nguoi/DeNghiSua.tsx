@@ -261,6 +261,9 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
         <RudiButton
           disabled={!guiDuoc}
           label={nhap ? "Lưu bản phác" : `Gửi phiên bản ${to.version + 1}`}
+          // With nothing changed the line above already says so; otherwise
+          // what is left to fix is named here (ADR-0038 §2.2).
+          lyDo={guiDuoc || doi.length === 0 ? undefined : "Mỗi chặng cần một việc, và chỗ đang báo ở trên cần sửa."}
           onPress={() => onGui(noiDung, lyDo.trim() || null)}
         />
         <RudiButton label="Thôi" onPress={onClose} variant="ghost" />

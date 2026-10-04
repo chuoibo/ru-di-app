@@ -64,6 +64,10 @@ export function BadgeArt({ badgeId, state, label, size = 56, style, testID }: Ba
     >
       {art !== undefined ? (
         <Image
+          // The frame is the image and carries the name; this is its paint.
+          // On the web expo-image writes `alt` from the label, and with none
+          // the <img> had no `alt` at all (axe image-alt, critical ×5).
+          accessibilityLabel=""
           accessible={false}
           source={art}
           contentFit="contain"

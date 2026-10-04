@@ -19,6 +19,7 @@ import { Stamp } from "../../ui/Stamp";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonRow } from "../../ui/Skeleton";
+import { ngayVN } from "../../ngay-viet";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -95,22 +96,27 @@ export function PhienScreen() {
       ) : null}
       {trang.pha === "xong" ? (
         <NhomHang>
-          {trang.phien.map((row) => (
+          {/* «Phiên này» first, always: web and Android listed the rows in the
+              server's order, so the one to keep moved (B11 critique). */}
+          {[...trang.phien].sort((a, b) => Number(b.current) - Number(a.current)).map((row) => (
             <View key={row.id} style={styles.hang}>
               <View style={styles.hangChu}>
                 <Text style={[typography.label, { color: colors.ink }]}>{cauPhien(row)}</Text>
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                  Hết hạn {new Date(row.expires_at).toLocaleDateString("vi-VN")}
+                  Hết hạn {ngayVN(row.expires_at)}
                 </Text>
               </View>
               {row.current ? (
                 <Stamp label="PHIÊN NÀY" tilt={-3} tone="accent" variant="ink" />
               ) : (
                 <RudiButton
+                  // The row is another session: «phiên này» on its button read
+                  // as the one in your hand (B11 critique, P1).
+                  accessibilityLabel={`Đăng xuất phiên ${cauPhien(row)}`}
                   compact
                   disabled={dangThuHoi !== null}
                   full={false}
-                  label="Đăng xuất phiên này"
+                  label="Đăng xuất phiên đó"
                   loading={dangThuHoi === row.id}
                   onPress={() => void thuHoi(row.id)}
                   variant="outline"

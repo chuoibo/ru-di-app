@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { datTokenPhien } from "../dist-test/api.js";
-import { chonKet, docHanhTrinh, goiYNep, trungBayHuyHieu } from "../dist-test/rudi/ky-niem/achievement-routes.js";
+import { chonKet, danhDauDaThay, docHanhTrinh, goiYNep, trungBayHuyHieu } from "../dist-test/rudi/ky-niem/achievement-routes.js";
 
 const ACTOR = "11111111-1111-4111-8111-111111111111";
 
@@ -31,5 +31,18 @@ test("journey client uses server progress and explicit one-call AI consent", asy
     ["PATCH", { badge_ids: ["first_photo"] }],
   ]);
   assert.ok(calls.every((c) => c.auth === "Bearer synthetic-token"));
+  datTokenPhien(null);
+});
+
+test("«MỚI MỞ» đã diễn thì tài khoản nhớ: POST /me/achievement-seen mang đúng huy hiệu (QA UI-160)", async () => {
+  datTokenPhien("synthetic-token");
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ path: new URL(String(url)).pathname, method: init.method, body: init.body ? JSON.parse(init.body) : null, auth: init.headers.Authorization });
+    return Response.json({ badge_ids: ["first_photo"] });
+  };
+  const ra = await danhDauDaThay(ACTOR, ["first_photo"]);
+  assert.deepEqual(ra.badge_ids, ["first_photo"]);
+  assert.deepEqual(calls, [{ path: "/me/achievement-seen", method: "POST", body: { badge_ids: ["first_photo"] }, auth: "Bearer synthetic-token" }]);
   datTokenPhien(null);
 });

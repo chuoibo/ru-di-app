@@ -13,6 +13,7 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { Canh } from "../../ui/art/Canh";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { KhungAnh } from "../../ui/KhungAnh";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -48,6 +49,7 @@ import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { Sheet } from "../../ui/Sheet";
 import { SkeletonCard, SkeletonGroup } from "../../ui/Skeleton";
+import { gioNgayVN } from "../../ngay-viet";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -66,9 +68,7 @@ function tenHienThi(ten: string | null | undefined): string {
 }
 
 function gioViet(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return gioNgayVN(iso);
 }
 
 export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contextId: string }) {
@@ -78,6 +78,9 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [roster, setRoster] = useState<ThanhVien[]>([]);
   const [thongBao, setThongBao] = useState<string | null>(null);
+  // QA UI-095: a heart or a comment that failed is said under that memory,
+  // where the press was; it used to land at the top of the wall, off-screen.
+  const [loiKyNiem, setLoiKyNiem] = useState<{ id: string; cau: string; thu: () => void } | null>(null);
   // Each memory's photo ratio, learned from the image as it loads (the wire has no size).
   const [tiLe, setTiLe] = useState<Record<string, number>>({});
   const [ban, setBan] = useState(false);
@@ -125,13 +128,15 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
     };
   }, [contextId, me]);
 
-  const chay = async (viec: () => Promise<void>) => {
+  const chay = async (viec: () => Promise<void>, tai?: { id: string; thu: () => void }) => {
     setBan(true);
     setThongBao(null);
+    setLoiKyNiem(null);
     try {
       await viec();
     } catch (error) {
-      setThongBao(loiRaChu(error));
+      if (tai) setLoiKyNiem({ id: tai.id, cau: loiRaChu(error), thu: tai.thu });
+      else setThongBao(loiRaChu(error));
     } finally {
       setBan(false);
     }
@@ -140,9 +145,9 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
   const thayKyNiem = (moi: KyNiem) =>
     setTrang((t) => (t.pha === "xong" ? { ...t, kyNiem: t.kyNiem.map((k) => (k.id === moi.id ? moi : k)) } : t));
 
-  const tim = (k: KyNiem) => chay(async () => thayKyNiem(await doiTim(k, contextId, me)));
+  const tim = (k: KyNiem): Promise<void> => chay(async () => thayKyNiem(await doiTim(k, contextId, me)), { id: k.id, thu: () => void tim(k) });
 
-  const moHoacDongBinhLuan = (k: KyNiem) =>
+  const moHoacDongBinhLuan = (k: KyNiem): Promise<void> =>
     chay(async () => {
       if (moBinhLuan === k.id) {
         setMoBinhLuan(null);
@@ -154,16 +159,22 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
         const ds = await docBinhLuanCua(contextId, k.id, me);
         setBinhLuan((b) => ({ ...b, [k.id]: ds }));
       }
-    });
+    }, { id: k.id, thu: () => void docLaiBinhLuan(k) });
 
-  const guiBinhLuan = (k: KyNiem) =>
+  const docLaiBinhLuan = (k: KyNiem): Promise<void> =>
+    chay(async () => {
+      const ds = await docBinhLuanCua(contextId, k.id, me);
+      setBinhLuan((b) => ({ ...b, [k.id]: ds }));
+    }, { id: k.id, thu: () => void docLaiBinhLuan(k) });
+
+  const guiBinhLuan = (k: KyNiem): Promise<void> =>
     chay(async () => {
       if (nhap.trim() === "") return;
       const bl = await guiBinhLuanCho(contextId, k.id, nhap, me, attempts.current);
       setBinhLuan((b) => ({ ...b, [k.id]: [...(b[k.id] === undefined ? [] : b[k.id]), bl] }));
       thayKyNiem({ ...k, commentCount: k.commentCount + 1 });
       setNhap("");
-    });
+    }, { id: k.id, thu: () => void guiBinhLuan(k) });
 
   const taiThem = () =>
     chay(async () => {
@@ -234,14 +245,14 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
         ) : null}
         <Field accessibilityLabel="Ô câu check-in" label="Một câu (không bắt buộc)" onChangeText={setCauCheckIn} placeholder="Ví dụ: Ốc ở đây ngon" value={cauCheckIn} />
         {thongBao !== null && moCheckIn ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
-        <RudiButton disabled={ban || choChon === null} icon="checkmark" label="Đăng check-in" loading={ban} onPress={() => void dangCheckIn()} />
+        <RudiButton disabled={ban || choChon === null} icon="checkmark" label="Đăng check-in" lyDo={!ban && choChon === null ? "Chọn một chỗ trước." : undefined} loading={ban} onPress={() => void dangCheckIn()} />
         <RudiButton label="Thôi" onPress={() => setMoCheckIn(false)} variant="ghost" />
       </View>
     </Sheet>
   );
 
   return (
-    <RudiScreen overlay={khayCheckIn} testID="group-wall-screen">
+    <RudiScreen cot="doc" overlay={khayCheckIn} testID="group-wall-screen">
       <TopBar subtitle={laDoi ? "Chỉ hai bạn thấy" : "Chỉ thành viên nhóm thấy"} title={laDoi ? "Kỷ niệm của hai bạn" : "Tường nhóm"} />
       <Text style={[typography.h1, { color: colors.ink }]}>{tenNhom}</Text>
       {thongBao !== null && !moCheckIn ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
@@ -318,7 +329,7 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                     style={({ pressed }) => [styles.nutHanhDong, pressed && styles.pressed]}
                   >
                     <Ionicons color={k.toiDaTim ? colors.accent : colors.inkSoft} name={k.toiDaTim ? "heart" : "heart-outline"} size={22} />
-                    <Text style={[typography.label, { color: k.toiDaTim ? colors.accent : colors.inkSoft }]}>{k.toiDaTim ? "Đã tim" : "Thích"}</Text>
+                    <Text style={[typography.label, { color: k.toiDaTim ? colors.accent : colors.inkSoft }]}>{k.toiDaTim ? "Đã thả tim" : "Thả tim"}</Text>
                   </Pressable>
                   <Pressable
                     accessibilityLabel={`${dangMoBl ? "Ẩn bình luận" : "Bình luận"} ${cauKyNiem(k)}`}
@@ -333,9 +344,10 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                   </Pressable>
                   <Text style={[typography.caption, styles.flex, { color: colors.inkFaint, textAlign: "right" }]}>{cauTuongTac(k)}</Text>
                 </View>
+                {loiKyNiem?.id === k.id ? <CauTaiCho cau={loiKyNiem.cau} co="nho" hanhDong={{ label: "Thử lại", onPress: loiKyNiem.thu }} /> : null}
                 {dangMoBl ? (
                   <View style={[styles.khungBl, { borderLeftColor: colors.line }]}>
-                    {dsBl === undefined ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc bình luận…</Text> : null}
+                    {dsBl === undefined && loiKyNiem?.id !== k.id ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc bình luận…</Text> : null}
                     {dsBl !== undefined && dsBl.length === 0 ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Chưa có bình luận. Viết câu đầu tiên.</Text> : null}
                     {(dsBl === undefined ? [] : dsBl).map((bl) => (
                       <Text key={bl.id} style={[typography.body, { color: colors.ink }]}>

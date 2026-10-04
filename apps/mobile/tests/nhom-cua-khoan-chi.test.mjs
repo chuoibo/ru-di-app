@@ -236,3 +236,20 @@ test("lời gọi không nêu nhóm thì không gửi header, thay vì mượn m
     "gửi X-Actor-Contexts dù không ai nêu nhóm nào: đó là lời khai app tự bịa",
   );
 });
+
+// ADR-0054 (QA UI-149): a bill written from a trip names that trip; one from
+// «Tạo mới» sends exactly what it always sent, with no `outing_id` key at all.
+test("bill viết từ một kèo mang outing_id; bill không từ kèo nào không có khoá đó", async () => {
+  const KEO = "0b1c2d3e-4f50-4617-8293-a4b5c6d7e8f9";
+  const may = bat();
+  try {
+    await proposeSplit(NHOM, DRAFT, attemptFor({}, "tu-keo"), [], KEO);
+    await proposeSplit(NHOM, DRAFT, attemptFor({}, "khong-keo"));
+  } finally {
+    may.thoi();
+  }
+  const [tuKeo, khongKeo] = may.gui.map((g) => JSON.parse(g.body));
+  assert.equal(tuKeo.outing_id, KEO);
+  assert.equal("outing_id" in khongKeo, false);
+  assert.equal(tuKeo.context_id, NHOM);
+});

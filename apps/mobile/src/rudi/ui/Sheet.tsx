@@ -10,6 +10,7 @@ import { useNepGui } from "../nep/NepProvider";
 import { dangKyLuiWeb } from "./lui-web";
 import { lopPhu, useRudiTheme } from "../theme";
 import { useMotion } from "./useMotion";
+import { COT_DOC } from "../adaptive";
 
 export interface SheetProps {
   open: boolean;
@@ -41,7 +42,7 @@ const webSheetStack: symbol[] = [];
 const KEO_DONG_DP = 90;
 const KEO_DONG_TOC = 900;
 /** Widest a panel grows on a tablet; the reading column of DESIGN.md (QA UI-093). */
-const RONG_TOI_DA = 640;
+const RONG_TOI_DA = COT_DOC;
 /**
  * How long after opening a tap on the sheet means nothing. A second tap of a
  * double tap lands ~60 ms after the first, on whatever has just appeared under

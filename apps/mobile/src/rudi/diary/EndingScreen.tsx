@@ -11,6 +11,7 @@ import { Heading, RudiButton, RudiScreen, Segmented, TopBar } from "../ui";
 import { ErrorState } from "../ui/ErrorState";
 import { EmptyState } from "../ui/EmptyState";
 import { Canh } from "../ui/art/Canh";
+import { voiTenTrang } from "./ten-trang";
 import { SkeletonGroup, SkeletonCard } from "../ui/Skeleton";
 import { Sheet } from "../ui/Sheet";
 import { useMotion } from "../ui/useMotion";
@@ -57,7 +58,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
       const e = await readEnding(person, outing); if (!mounted.current) return; setEnding(e); setKind(e.kind);
       if (e.ended_at) {
         await loadSources();
-        if (e.diary_id) { const b = await readDiary(person, e.diary_id); if (!mounted.current) return; setSaved(b); setDocument(b.document); setAudience(b.audience); setSource((s) => s ? includeSavedPhotos(s, b) : s); setPhase("editing"); }
+        if (e.diary_id) { const b = await readDiary(person, e.diary_id); if (!mounted.current) return; setSaved(b); setDocument(voiTenTrang(b.document)); setAudience(b.audience); setSource((s) => s ? includeSavedPhotos(s, b) : s); setPhase("editing"); }
         else setPhase("sources");
       } else setPhase("ending");
     } catch (e) { if (mounted.current) report(e, "load"); }
@@ -86,7 +87,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
       }
       if (!mounted.current) return;
       if (j.status !== "succeeded" || !j.result) { pending.current = null; throw new Error("Nếp chưa xếp xong cuốn sổ. Chất liệu vẫn còn; bạn thử lại hoặc tự xếp trang nhé."); }
-      setDocument(j.result); setPhase("editing"); setEdit(false); turn.value = 1; turn.value = withTiming(0, motion.timing("shared", "decelerate"));
+      setDocument(voiTenTrang(j.result)); setPhase("editing"); setEdit(false); turn.value = 1; turn.value = withTiming(0, motion.timing("shared", "decelerate"));
     } catch (e) { if (mounted.current) { report(e, "compose"); setPhase("sources"); } } finally { operation.current = false; }
   }
   async function keep() {
@@ -193,7 +194,7 @@ export function EndingScreen({ person, outing }: { person: string; outing: strin
             <ONhapMuc label="Tên trang" editable={!busy} value={p.heading} maxLength={200} onChangeText={(heading) => setDocument({ ...document, pages: document.pages.map((p, j) => j === i ? { ...p, heading } : p) })} />
             <ONhapMuc label="Chuyện của trang" editable={!busy} value={p.text} multiline maxLength={2000} onChangeText={(text) => setDocument({ ...document, pages: document.pages.map((p, j) => j === i ? { ...p, text } : p) })} />
             <RudiButton label={`Thay ảnh trang ${i + 1}`} variant="outline" onPress={() => setPickTarget(i)} />
-            {i > 0 ? <RudiButton label={`Đưa trang ${i + 1} lên trước`} accessibilityLabel={`Đưa trang ${i + 1} lên trước`} variant="ghost" disabled={i === 0} onPress={() => setDocument(movePage(document, i, i - 1))} /> : null}
+            {i > 0 ? <RudiButton label={`Đưa trang ${i + 1} lên trước`} accessibilityLabel={`Đưa trang ${i + 1} lên trước`} variant="ghost" onPress={() => setDocument(movePage(document, i, i - 1))} /> : null}
             <RudiButton label="Bỏ trang này" variant="ghost" disabled={document.pages.length === 1} lyDo={document.pages.length === 1 ? "Giữ ít nhất một trang trong sổ." : undefined} onPress={() => setDocument({ ...document, pages: document.pages.filter((_, j) => j !== i) })} />
           </View>)}
           <RudiButton label="Thêm một trang viết" variant="outline" disabled={document.pages.length >= 24} lyDo={document.pages.length >= 24 ? "Cuốn sổ đã đủ 24 trang." : undefined} onPress={() => setDocument({ ...document, pages: [...document.pages, { layout: "note", heading: "", text: "", photo_ids: [] }] })} />

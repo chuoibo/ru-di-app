@@ -113,6 +113,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
         <EmptyState
           action={{ label: "Mở Khám phá", onPress: () => router.replace("/explore" as never) }}
           body="Mở một địa điểm ở Khám phá, rồi chọn «Thêm vào kèo» để đưa nó vào lịch trình."
+          illustration={<Canh id="tim-khong-ra" width={168} />}
           kind="no-results"
           title="Chưa có địa điểm để thêm"
         />

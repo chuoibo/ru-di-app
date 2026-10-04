@@ -2,12 +2,12 @@
 {
   "man": "profile",
   "tieu_de": "Cá nhân",
-  "nhanUI": ["Cá nhân", "Chỉnh hồ sơ", "Tên", "Giới thiệu", "Thành phố", "Lưu hồ sơ", "Đã lưu", "Mở Khám phá", "Bạn bè", "Tường của tôi", "Sở thích", "Tài chính của tôi", "Thành tích", "Cài đặt", "Tài khoản", "Đăng xuất"],
+  "nhanUI": ["Cá nhân", "Chỉnh hồ sơ", "Tên", "Giới thiệu", "Thành phố", "Lưu hồ sơ", "Đã lưu", "Mở Khám phá", "Bạn bè", "Tường của tôi", "Sở thích", "Tài chính của tôi", "Hành trình", "Cài đặt", "Tài khoản", "Đăng xuất"],
   "di_toi": [
     {"nhan": "Bạn bè", "man": "friends"},
     {"nhan": "Sở thích", "man": "personalization"},
     {"nhan": "Tài chính của tôi", "man": "finance"},
-    {"nhan": "Thành tích", "man": "achievements"},
+    {"nhan": "Hành trình", "man": "achievements"},
     {"nhan": "Cài đặt", "man": "settings"},
     {"nhan": "Mở Khám phá", "man": "explore"}
   ],
@@ -45,4 +45,4 @@ Tab «Cá nhân» là không gian của riêng bạn: hồ sơ, bạn bè, nhữ
 ## Tới phần tài chính và thành tích
 
 1. Bấm «Tài chính của tôi» để mở màn tài chính.
-2. Bấm «Thành tích» để xem cấp và huy hiệu.
+2. Bấm «Hành trình» để xem thành tích và huy hiệu.

@@ -35,6 +35,28 @@ func Readable(ctx context.Context, tx pgx.Tx, person, post string) (string, erro
 	return readable(ctx, tx, person, post)
 }
 
+// WallImage is the first ready image of a Cộng đồng post's published
+// revision, as the Cộng đồng media route serves it (with its own audience
+// check), or "" for a post that is not one or has no image. The wall read only
+// `posts.image_url`, which a Cộng đồng post never sets: its photos live on the
+// revision, and a post with a photo reached the wall as words (QA UI-156).
+func WallImage(ctx context.Context, tx pgx.Tx, post string) (string, error) {
+	var id string
+	err := tx.QueryRow(ctx, `SELECT m.id::text FROM community_posts c
+  JOIN community_revisions v ON v.post_id=c.post_id AND v.revision=c.published_revision
+  CROSS JOIN LATERAL unnest(v.media_ids) WITH ORDINALITY AS u(mid,ord)
+  JOIN community_media m ON m.id=u.mid
+ WHERE c.post_id=$1 AND c.deleted_at IS NULL AND m.state='ready' AND m.content_type LIKE 'image/%'
+ ORDER BY u.ord LIMIT 1`, post).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return "/v2/community/media/" + id, nil
+}
+
 // WriteLike sets or clears the person's like on a post they can read.
 func WriteLike(ctx context.Context, tx pgx.Tx, person, post string, like bool) error {
 	if _, err := readable(ctx, tx, person, post); err != nil {

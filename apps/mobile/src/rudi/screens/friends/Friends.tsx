@@ -34,6 +34,7 @@ import { ErrorState } from "../../ui/ErrorState";
 import { HangNguoi, HangNguoiCho } from "./HangNguoi";
 import { LuoiNguoi } from "../../ui/LuoiNguoi";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
+import { ngayVN } from "../../ngay-viet";
 
 type Du = { ban: Ban[]; daNhan: LoiMoi[]; daGui: LoiMoi[] };
 type Trang = { pha: "dang-doc" } | { pha: "xong"; du: Du } | { pha: "hong"; loi: string };
@@ -45,7 +46,7 @@ function loiRaChu(error: unknown): string {
 }
 
 function ngayKetBan(iso: string): string {
-  return `Bạn từ ${new Date(iso).toLocaleDateString("vi-VN")}`;
+  return `Bạn từ ${ngayVN(iso)}`;
 }
 
 /** Rows on the paper, a hairline between neighbours; two columns where they fit (QA UI-081). */

@@ -76,7 +76,7 @@ export function HangNguoiCho({ soHang = 3 }: { soHang?: number }) {
 
 const styles = StyleSheet.create({
   hang: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
-  nguoi: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 44 },
+  nguoi: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 },
   hangChu: { flex: 1, gap: 2 },
   duoi: { flexShrink: 0, flexDirection: "row", alignItems: "center", gap: 8 },
 });

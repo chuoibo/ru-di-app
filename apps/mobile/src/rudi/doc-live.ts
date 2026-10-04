@@ -176,7 +176,9 @@ export function dongHeroQuyetToan(
     return {
       nhan: `Chi tiêu chuyến ${tong.ten}${them}, đang đi (${nguoi})`,
       so: dinhDangTienVnd(tong.tong),
-      cau: "Tính từ sổ theo ngày của chuyến, tới giờ này. Sửa một bill là số đổi theo.",
+      // ADR-0054: a trip's money is the bills that belong to it, no longer
+      // whatever happened on its days.
+      cau: "Các bill ghi cho chuyến này, tính từ sổ tới giờ này. Sửa một bill là số đổi theo.",
       laSo: true,
     };
   }

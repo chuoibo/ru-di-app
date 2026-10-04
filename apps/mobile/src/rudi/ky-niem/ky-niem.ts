@@ -361,18 +361,35 @@ export function nghiengAnh(id: string): -2 | -1 | 1 | 2 {
   return muc[h % muc.length];
 }
 
+/** How long a badge counts as just opened on a phone that never looked before. */
+export const MOI_MO_MS = 48 * 60 * 60 * 1000;
+
 /**
- * The first badge opened since this phone last looked (M8, plan S6), or null.
- * `daThay` is what was stored last time; anything unreadable counts as
- * nothing seen, so the worst a broken store does is play the moment once more.
+ * The badge to present as just opened (M8, plan S6), or null.
+ *
+ * The account's own mark leads (QA UI-160): when every badge says whether the
+ * book has presented it, the newest one not yet presented, on any phone.
+ *
+ * Without it (a server before the mark), what this phone stored last time,
+ * `daThayTho`: the newest badge not in it. Never stored (a new phone, a
+ * cleared or broken store), only a badge opened within `MOI_MO_MS`: every
+ * fresh browser used to present the OLDEST badge, earned days ago, as if it
+ * had just opened. Errs on the side of not replaying an old moment.
  */
-export function huyHieuMoi(moIds: readonly string[], daThayTho: string | null): string | null {
-  let daThay: unknown = [];
+export function huyHieuMoi(dat: readonly { id: string; earned_at: string; seen?: boolean }[], daThayTho: string | null, now: number = Date.now()): string | null {
+  let daThay: unknown = null;
   try {
-    daThay = daThayTho === null ? [] : JSON.parse(daThayTho);
+    daThay = daThayTho === null ? null : JSON.parse(daThayTho);
   } catch {
-    daThay = [];
+    daThay = null;
   }
-  const cu = new Set(Array.isArray(daThay) ? daThay.filter((x): x is string => typeof x === "string") : []);
-  return moIds.find((id) => !cu.has(id)) ?? null;
+  const moiNhat = [...dat].sort((a, b) => Date.parse(b.earned_at) - Date.parse(a.earned_at));
+  if (dat.length > 0 && dat.every((b) => typeof b.seen === "boolean")) return moiNhat.find((b) => b.seen === false)?.id ?? null;
+  if (!Array.isArray(daThay)) {
+    const gan = moiNhat[0];
+    if (gan === undefined || now - Date.parse(gan.earned_at) > MOI_MO_MS) return null;
+    return gan.id;
+  }
+  const cu = new Set(daThay.filter((x): x is string => typeof x === "string"));
+  return moiNhat.find((b) => !cu.has(b.id))?.id ?? null;
 }

@@ -177,6 +177,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           disabled={!nhap.trim() || phien.dangHoi || !duocHoi}
           full={false}
           label="Gửi"
+          lyDo={!phien.dangHoi && duocHoi && !nhap.trim() ? "Gõ điều muốn nhờ trước." : undefined}
           loading={phien.dangHoi}
           onPress={() => void guiCau()}
           tone="ai"

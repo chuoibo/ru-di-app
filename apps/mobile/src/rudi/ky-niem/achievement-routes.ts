@@ -33,7 +33,11 @@ export type RouteChoice = {
 };
 export type JourneyRoute = { id: RouteID; title: string; blurb: string };
 export type JourneyChapter = { id: string; title: string; line: string; route_id: RouteID; target_ending_id: string };
-export type EarnedBadge = { id: string; earned_at: string; displayed: boolean };
+/**
+ * `seen`: the person's own book has presented the badge (QA UI-160). Only the
+ * owner's read carries it; another person's view of displayed badges does not.
+ */
+export type EarnedBadge = { id: string; earned_at: string; displayed: boolean; seen?: boolean };
 export type JourneyRun = { id: string; route_id: RouteID; ending_id: string; selected_at: string; finished_at?: string };
 export type JourneySnapshot = {
   routes: JourneyRoute[];
@@ -82,6 +86,11 @@ export async function goiYNep(actorId: string, consent: boolean): Promise<{ cand
 }
 
 /** Other profiles receive only the owner's selected earned badges. */
+/** The book presented these badges as just opened; no phone presents them again (QA UI-160). */
+export async function danhDauDaThay(actorId: string, badgeIds: string[]): Promise<{ badge_ids: string[] }> {
+  return translatedAsActor(LOI, "/me/achievement-seen", { method: "POST", actorId, body: { badge_ids: badgeIds } });
+}
+
 export async function docHuyHieuTrungBay(actorId: string, personId: string): Promise<{ person_id: string; badges: EarnedBadge[] }> {
   return translatedAsActor(LOI, `/people/${encodeURIComponent(personId)}/achievements`, { method: "GET", actorId });
 }

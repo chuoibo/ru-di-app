@@ -99,6 +99,11 @@ func Compose(s Source) Document {
 	return d
 }
 
+// TenTrang is a stored page title as people read it: books saved before
+// Compose wrote readable days kept the bare ISO date, which the Cộng đồng post
+// built from a book printed verbatim (QA UI-154). Same rule as dayHeading.
+func TenTrang(heading string) string { return dayHeading(heading) }
+
 // dayHeading changes presentation only; source dates remain ISO on the wire.
 func dayHeading(day string) string {
 	date, err := time.Parse("2006-01-02", day)

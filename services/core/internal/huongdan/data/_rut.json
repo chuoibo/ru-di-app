@@ -14,7 +14,7 @@
         "Chưa mở được sổ hành trình",
         "Chỉ gửi số đếm và mã ngã rẽ",
         "Chọn lối đi",
-        "Chọn tối đa ba huy hiệu để hiện trên hồ sơ. Tiến độ và số lượt MP4 chỉ mình bạn thấy.",
+        "Chọn tối đa ba huy hiệu để hiện trên hồ sơ. Tiến độ và số lượt dựng phim chỉ mình bạn thấy.",
         "Cuốn sổ có nhiều ngã rẽ",
         "Các tuyến gặp nhau",
         "Còn gửi mã nhánh hiện tại, các ngã rẽ có thể chọn và tối đa tám lựa chọn gần đây. Không gửi ảnh, nội dung bài, danh tính bạn đồng hành, chat hoặc vị trí cụ thể. Mỗi lần hỏi cần bạn đồng ý lại.",
@@ -37,7 +37,7 @@
         "chuyến có bạn cùng đi.",
         "kết",
         "kết đã mở ·",
-        "lượt dựng MP4 còn dùng được",
+        "lượt dựng phim còn dùng được",
         "lần check-in ·",
         "ngày có bài kể ·",
         "ngày có ảnh ·",
@@ -45,7 +45,7 @@
         "Đồng ý hỏi Nếp lần này",
         "điểm đến ·",
         "… kết",
-        "… kết đã mở · … lượt dựng MP4 còn dùng được",
+        "… kết đã mở · … lượt dựng phim còn dùng được",
         "… lần check-in · … điểm đến · … ngày có ảnh · … ngày có bài kể · … chuyến có bạn cùng đi.",
         "…, … kết đã đạt"
       ],
@@ -323,7 +323,7 @@
       "canh": [
         {
           "den": "achievements",
-          "nhan": "Thành tích"
+          "nhan": "Hành trình"
         },
         {
           "den": "explore",
@@ -340,6 +340,10 @@
         {
           "den": "personalization",
           "nhan": "Sở thích"
+        },
+        {
+          "den": "places/[id]",
+          "nhan": "Một chỗ đã lưu"
         },
         {
           "den": "settings",
@@ -360,6 +364,7 @@
         "finance",
         "friends",
         "personalization",
+        "places/[id]",
         "settings",
         "settlements/[id]",
         "welcome"
@@ -374,9 +379,10 @@
         "Cài đặt",
         "Cá nhân",
         "Các số trên đọc từ sổ cái, không phải số dư ngân hàng.",
+        "Hành trình",
+        "Một chỗ đã lưu",
         "Mở Khám phá",
         "Sở thích",
-        "Thành tích",
         "Tiền đã về",
         "Tài chính của tôi",
         "Tài khoản",
@@ -621,16 +627,13 @@
       "man": "groups/[id]/members",
       "nhan": [
         "Album chuyến đi",
-        "Bỏ quyền",
         "Bỏ quyền quản trị của bạn",
-        "Bỏ quyền quản trị của bạn? Sau đó bạn không tự lấy lại được; một quản trị khác phải đặt lại cho bạn.",
         "Bỏ quyền quản trị của …",
         "Chưa đọc được danh sách thành viên",
         "Mời bằng số điện thoại",
         "Người được mời thấy lời mời ở tab Tin nhắn ngay khi đăng nhập bằng số đó, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.",
         "Quản trị",
         "Thành viên",
-        "Thôi",
         "Tường kỷ niệm",
         "Xem hồ sơ của bạn",
         "Xem hồ sơ …",
@@ -665,19 +668,11 @@
         },
         {
           "den": "outings/chon",
+          "nhan": "Thêm vào buổi đã hẹn"
+        },
+        {
+          "den": "outings/chon",
           "nhan": "Thêm … vào buổi đã hẹn"
-        },
-        {
-          "den": "outings/new",
-          "nhan": "Rủ hội mình đi chơi"
-        },
-        {
-          "den": "outings/new",
-          "nhan": "Tạo kèo với chỗ này"
-        },
-        {
-          "den": "outings/new",
-          "nhan": "Tạo kèo ở …"
         }
       ],
       "di_toi": [
@@ -687,7 +682,6 @@
         "moments/new",
         "outings/[id]",
         "outings/chon",
-        "outings/new",
         "personalization"
       ],
       "man": "groups/[id]/to-giay",
@@ -711,6 +705,7 @@
         "Sổ này đã dừng",
         "Sổ này đã đóng",
         "Thêm chỗ này vào buổi đã hẹn",
+        "Thêm vào buổi đã hẹn",
         "Thêm … vào buổi đã hẹn",
         "Tin nhắn",
         "Tuần này",
@@ -896,20 +891,16 @@
       ],
       "man": "messages",
       "nhan": [
-        "? Nếu đổi ý, bạn cần được mời lại.",
         "Chưa có nhóm nào",
         "Chưa đọc được danh sách nhóm",
         "Mở cuộc trò chuyện với …",
         "Mở nhóm …",
         "Thêm bạn bằng số điện thoại",
-        "Thôi",
         "Tin nhắn",
         "Tôi có lời mời",
         "Tạo nhóm",
         "Từ chối",
-        "Từ chối lời mời vào",
         "Từ chối lời mời vào nhóm …",
-        "Từ chối lời mời vào …? Nếu đổi ý, bạn cần được mời lại.",
         "Đồng ý vào nhóm",
         "Đồng ý vào nhóm …",
         "… tin chưa đọc"
@@ -967,6 +958,8 @@
       "man": "moments/new",
       "nhan": [
         ". Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.",
+        "Bản nháp lần trước còn đây.",
+        "Bỏ bản nháp",
         "Chia sẻ ngay vào nhóm",
         "Chưa chọn ảnh, chạm để chọn",
         "Chưa có ảnh. Chạm để chọn một tấm.",
@@ -997,12 +990,9 @@
       "man": "otp",
       "nhan": [
         "Gửi lại mã",
-        "Gửi lại được sau",
-        "Gửi lại được sau … giây.",
         "Nhập mã 6 số",
         "Nhập đủ 6 số là tự kiểm. Mã có hiệu lực 5 phút.",
         "Vé vào Rủ Đi",
-        "giây.",
         "Đang kiểm mã...",
         "Đã gửi tới",
         "Đổi số",
@@ -1071,9 +1061,9 @@
         "Tôi đã tới",
         "Tải bản mới để đối chiếu",
         "Xếp theo giờ hẹn",
-        "cả kèo,",
-        "cả kèo, … người",
-        "một người",
+        "dự kiến cả kèo,",
+        "dự kiến cả kèo, … người",
+        "dự kiến một người",
         "người",
         "». Thử tên ngắn hơn nhé.",
         "Ô tên chặng",
@@ -1209,6 +1199,10 @@
           "nhan": "Xem hành trình"
         },
         {
+          "den": "friends",
+          "nhan": "Mở Bạn bè"
+        },
+        {
           "den": "posts/[id]",
           "nhan": "Mở bài: …"
         },
@@ -1222,11 +1216,16 @@
         },
         {
           "den": "posts/new",
+          "nhan": "Viết bài đầu tiên"
+        },
+        {
+          "den": "posts/new",
           "nhan": "Đăng bài mới"
         }
       ],
       "di_toi": [
         "achievements",
+        "friends",
         "groups/[id]/chat",
         "groups/[id]/to-giay",
         "posts/[id]",
@@ -1237,6 +1236,7 @@
         "Ai được bình luận tường tôi",
         "Bình luận: …",
         "Chưa mở được hồ sơ",
+        "Chưa xem được hồ sơ này",
         "Chưa đọc được tường",
         "Dấu ấn chọn giữ trên bìa sổ",
         "Huy hiệu hành trình",
@@ -1245,6 +1245,7 @@
         "Hộ chiếu Rủ Đi",
         "Kết bạn",
         "Kết bạn để nhắn riêng.",
+        "Mở Bạn bè",
         "Mở bài: …",
         "Mở ảnh và bình luận",
         "Mở … bình luận của bài",
@@ -1254,6 +1255,7 @@
         "Trang viết của bạn",
         "Trang viết được chia sẻ",
         "Tờ giấy của hai mình",
+        "Viết bài đầu tiên",
         "Xem hành trình",
         "Xem những trang trước",
         "bình luận",
@@ -1406,6 +1408,7 @@
         "Gửi bình luận",
         "Gửi vào chat",
         "Huỷ trả lời",
+        "Không mở được bài này",
         "Lời nhắn dưới trang",
         "Lời nhắn dưới ảnh",
         "Mở bình luận ảnh",
@@ -1422,6 +1425,8 @@
         "Viết điều bạn muốn nói…",
         "Xem hồ sơ …",
         "Xác nhận gửi duyệt",
+        "Xóa",
+        "Xóa bình luận của bạn: «…»",
         "bình luận",
         "thích ·",
         "· Huỷ",
@@ -1476,7 +1481,7 @@
       "canh": [
         {
           "den": "achievements",
-          "nhan": "Thành tích"
+          "nhan": "Hành trình"
         },
         {
           "den": "explore",
@@ -1493,6 +1498,10 @@
         {
           "den": "personalization",
           "nhan": "Sở thích"
+        },
+        {
+          "den": "places/[id]",
+          "nhan": "Một chỗ đã lưu"
         },
         {
           "den": "settings",
@@ -1513,6 +1522,7 @@
         "finance",
         "friends",
         "personalization",
+        "places/[id]",
         "settings",
         "settlements/[id]",
         "welcome"
@@ -1527,9 +1537,10 @@
         "Cài đặt",
         "Cá nhân",
         "Các số trên đọc từ sổ cái, không phải số dư ngân hàng.",
+        "Hành trình",
+        "Một chỗ đã lưu",
         "Mở Khám phá",
         "Sở thích",
-        "Thành tích",
         "Tiền đã về",
         "Tài chính của tôi",
         "Tài khoản",
@@ -1592,12 +1603,12 @@
         "Quyền riêng tư",
         "Sở thích",
         "Tài khoản",
+        "Tên hiển thị và lời giới thiệu đổi ở «Chỉnh hồ sơ» trên trang Cá nhân; đăng xuất ở mục Tài khoản của trang đó.",
         "Tìm theo số điện thoại",
         "Về Rủ Đi",
         "Xoá tài khoản",
         "Điều khoản và dữ liệu",
         "Đăng nhập & phiên",
-        "Đăng nhập, đăng xuất và tên hiển thị vẫn nằm ở mục Tài khoản trên màn Cá nhân.",
         "Đổi ảnh đại diện",
         "Ảnh này hiện với những người chung nhóm với bạn."
       ],
@@ -1637,7 +1648,8 @@
         "Mỗi lần đăng nhập là một phiên. Đăng xuất một phiên ở đây thì máy đó phải đăng nhập lại.",
         "PHIÊN NÀY",
         "Đăng nhập & phiên",
-        "Đăng xuất phiên này"
+        "Đăng xuất phiên đó",
+        "Đăng xuất phiên …"
       ],
       "tep": [
         "app/settings/phien.tsx",
@@ -1667,12 +1679,12 @@
       "man": "settings/xoa-tai-khoan",
       "nhan": [
         "Gõ",
-        "Gõ … vào ô dưới để xác nhận.",
+        "Gõ … vào ô dưới để xác nhận (có dấu hay không đều được).",
         "Tôi hiểu, tiếp tục",
         "Xoá tài khoản",
         "Xoá tài khoản là vĩnh viễn.",
         "Xoá vĩnh viễn",
-        "vào ô dưới để xác nhận.",
+        "vào ô dưới để xác nhận (có dấu hay không đều được).",
         "Ô xác nhận xoá",
         "Đăng nhập lại bằng cùng số điện thoại sẽ tạo một tài khoản mới, trắng: không nhóm cũ, không tin cũ.",
         "Ở lại"
@@ -1702,6 +1714,7 @@
         "Chưa đọc được các đợt thu của nhóm.",
         "Chưa đọc được sổ",
         "Các khoản chuyển",
+        "Cách chuyển gọn nhất, tính từ sổ. Chưa ai phải trả gì: mỗi người chỉ nhận phần của mình khi một đợt thu được phát.",
         "Cân lại chi tiêu",
         "Muốn cân lại? Xem cách chuyển",
         "Mọi khoản đã ghi đều đã vào một đợt thu ở trên: chưa có gì mới để gom.",
@@ -1711,7 +1724,6 @@
         "Tạo đợt thu từ sổ",
         "Tới Tin nhắn",
         "Đang đọc các đợt thu…",
-        "Đề xuất tính từ sổ, chưa phải nghĩa vụ: nghĩa vụ chỉ có khi một đợt thu được phát.",
         "Đợt thu",
         "… Chưa phát thì chưa ai bị nhắn gì.",
         "… chuyển cho …"
@@ -1838,6 +1850,8 @@
       "man": "stories/new",
       "nhan": [
         "24 giờ",
+        "Bản nháp lần trước còn đây.",
+        "Bỏ bản nháp",
         "Bỏ ảnh",
         "Chú thích, nếu muốn",
         "Chưa có ảnh nào, chạm để chọn",

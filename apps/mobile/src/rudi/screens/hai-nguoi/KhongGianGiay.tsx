@@ -217,6 +217,12 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     });
 
   let than: React.ReactNode;
+  // The «hội» body carries «Rủ hội mình đi chơi»; a place brought here rides
+  // that one button into the form instead of a second button above it (B11).
+  let coNutRuHoi = false;
+  const ruHoi = choVaoKeo?.lam === "tao-keo"
+    ? `/outings/new?contextId=${contextId}&place=${encodeURIComponent(choVaoKeo.id)}`
+    : `/outings/new?contextId=${contextId}`;
   if (so.loiDoc !== null) {
     // QA UI-083: a failed read is not a notebook that was never opened. It
     // drew «Chưa có sổ hai người» and offered «Đề nghị lập sổ» over a notebook
@@ -265,7 +271,9 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           <SoBia rong={128} ten={[tenToi, so.tenNguoiKia || "Người ấy"]} />
           <NepTrongTrang pose="gap-lai" size={112} />
         </View>
-        <Heading subtitle="Mở sổ để gửi lời hẹn cho người thương. Cả hai đồng ý mở sổ, rồi cùng xác nhận là cặp đôi." title="Một chỗ cho chuyện hai mình" />
+        {/* Any pair keeps a notebook, «Hội bạn» or «Một đôi» (ADR-0053): the
+            line does not assume a couple, and says the kind is chosen later. */}
+        <Heading subtitle="Một cuốn sổ chỉ hai bạn đọc, để hẹn nhau từng tuần. Cả hai đồng ý thì sổ mở; là «Hội bạn» hay «Một đôi», hai bạn chọn sau." title="Một chỗ cho chuyện hai mình" />
         {/* Whose proposal is waiting, said on the page (QA UI-086): closing
             the sheet left the proposer reading the receiver's words. */}
         {deNghiLapSo ? (
@@ -279,6 +287,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   } else if (!so.batDoi && !dangCoToMo) {
     // A sheet still in play (sent before the pair became a group, or by an
     // older client) keeps its actions below; only settled sheets turn read-only.
+    coNutRuHoi = true;
     than = <View style={{ gap: space.md }}>
       {khoanhKhacM6}
       <Heading title="Hai người cũng thành một hội" subtitle={so.toGiay.length > 0 ? "Hẹn nhau như mọi hội bạn. Những tờ giấy cũ vẫn nằm ở đây." : "Hẹn nhau như mọi hội bạn."} />
@@ -292,7 +301,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
       ) : deNghiBatDoi ? (
         <Text style={[typography.body, { color: colors.inkSoft }]} testID="giay-cho-dong-y-doi">{`Đã đề nghị «Một đôi». Chờ ${so.tenNguoiKia || "người ấy"} đồng ý trên máy của họ.`}</Text>
       ) : null}
-      <RudiButton label="Rủ hội mình đi chơi" onPress={() => router.push(`/outings/new?contextId=${contextId}` as never)} />
+      <RudiButton label="Rủ hội mình đi chơi" onPress={() => router.push(ruHoi as never)} />
       {/* The screen's own door to «Loại sổ» stays in every state, with the same
           name: the stamp above is a shortcut for a proposal waiting, not a
           replacement (hiding the door broke the way people and Maestro 47
@@ -505,15 +514,19 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           </Text>
         ) : null}
         {choVaoKeo?.lam === "them-vao-buoi" ? (
-          <RudiButton icon="add-circle-outline" label={tenChoVaoKeo ? `Thêm ${tenChoVaoKeo} vào buổi đã hẹn` : "Thêm chỗ này vào buổi đã hẹn"} onPress={() => router.push(`/outings/chon?place=${encodeURIComponent(choVaoKeo.id)}` as never)} variant="outline" />
+          <RudiButton accessibilityLabel={tenChoVaoKeo ? `Thêm ${tenChoVaoKeo} vào buổi đã hẹn` : "Thêm chỗ này vào buổi đã hẹn"} icon="add-circle-outline" label="Thêm vào buổi đã hẹn" onPress={() => router.push(`/outings/chon?place=${encodeURIComponent(choVaoKeo.id)}` as never)} variant="outline" />
         ) : null}
         {choVaoKeo?.lam === "tao-keo" ? (
           // The place named, where it goes, and the one way there (QA UI-130).
           <View style={{ gap: space.sm }} testID="giay-goi-y-keo">
             <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>
-              {`${tenChoVaoKeo ?? "Chỗ bạn chọn"} đi vào một kèo của hai bạn, làm chặng đầu: tờ giấy dành cho «Một đôi».`}
+              {coNutRuHoi
+                ? `${tenChoVaoKeo ?? "Chỗ bạn chọn"} đi vào kèo của hai bạn, làm chặng đầu: chạm «Rủ hội mình đi chơi».`
+                : `${tenChoVaoKeo ?? "Chỗ bạn chọn"} đi vào một kèo của hai bạn, làm chặng đầu.`}
             </Text>
-            <RudiButton label={tenChoVaoKeo ? `Tạo kèo ở ${tenChoVaoKeo}` : "Tạo kèo với chỗ này"} onPress={() => router.push(`/outings/new?contextId=${contextId}&place=${encodeURIComponent(choVaoKeo.id)}` as never)} />
+            {coNutRuHoi ? null : (
+              <RudiButton label={tenChoVaoKeo ? `Tạo kèo ở ${tenChoVaoKeo}` : "Tạo kèo với chỗ này"} onPress={() => router.push(ruHoi as never)} />
+            )}
           </View>
         ) : null}
         {than}

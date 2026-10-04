@@ -141,9 +141,13 @@ export function daPhanUng(bai: Pick<BaiWire, "my_reactions">, kind: LoaiPhanUng)
   return (bai.my_reactions ?? []).includes(kind);
 }
 
-/** «1 tim · 2 bình luận», the way the memory wall says it. */
+/**
+ * «1 thích · 2 bình luận», the way the post's own page says it («Thích»,
+ * «N thích»). A post is liked; a memory on a group wall gets a heart («Thả
+ * tim», «N tim»): one word per thing, never both on one card (B11 critique).
+ */
 export function cauTuongTacBai(bai: Pick<BaiWire, "reactions" | "comment_count">): string {
-  return `${demLoai(bai, "heart")} tim · ${bai.comment_count ?? 0} bình luận`;
+  return `${demLoai(bai, "heart")} thích · ${bai.comment_count ?? 0} bình luận`;
 }
 
 /** The post's counts after a reaction write, without a second read. */

@@ -25,7 +25,7 @@ export function DiaryScreen({ person, id }: { person: string; id: string }) {
   return <RudiScreen testID="diary-reader-screen" overlay={<Sheet open={deleting} onClose={() => setDeleting(false)} accessibilityLabel="Xóa cuốn sổ">
     <Text style={[typography.h2, { color: colors.ink }]}>Bỏ cuốn sổ này khỏi tường?</Text>
     <Text style={[typography.body, { color: colors.inkSoft }]}>Ảnh gốc trong hội vẫn còn. Cuốn sổ và những bản sửa của riêng bạn sẽ bị xóa.</Text>
-    <RudiButton label="Xóa cuốn sổ" loading={busy} onPress={() => void change(true)} /><RudiButton label="Giữ sổ lại" variant="ghost" onPress={() => setDeleting(false)} />
+    <RudiButton label="Xóa cuốn sổ" loading={busy} onPress={() => void change(true)} tone="warn" variant="outline" /><RudiButton label="Giữ sổ lại" variant="ghost" onPress={() => setDeleting(false)} />
   </Sheet>}>
     <TopBar title={book?.kind === "moment" ? "Khoảnh khắc" : "Sổ chuyến đi"} />
     {error ? <ErrorState title="Sổ chưa mở được" body={error} onRetry={() => void load()} /> : null}
@@ -35,7 +35,7 @@ export function DiaryScreen({ person, id }: { person: string; id: string }) {
       {book.owner_id === person ? <><RudiButton label="Sửa cuốn sổ" onPress={() => router.push(`/outings/${book.outing_id}/ending` as never)} />
         {book.audience === "public" ? <RudiButton label="Gửi sổ lên cộng đồng để duyệt" variant="outline" disabled={busy} onPress={() => { setBusy(true); void translatedAsActor<{ id: string }>(COMMUNITY_ERRORS, `/v2/community/diaries/${id}/share`, { actorId: person, method: "POST", attempt: newAttempt(), body: { logical_id: shareAttempt, revision: book.revision, confirmed: true, topics: [book.kind === "trip" ? "du lịch" : "khoảnh khắc"] } }).then((p) => router.push(`/community/posts/${p.id}` as never)).catch((e) => setError(e.message)).finally(() => setBusy(false)); }} /> : null}
         {book.audience === "public" ? <RudiButton label="Cất về riêng tư" variant="outline" loading={busy} onPress={() => void change(false)} /> : null}
-        <RudiButton label="Xóa cuốn sổ" variant="ghost" onPress={() => setDeleting(true)} /></> : null}
+        <RudiButton label="Xóa cuốn sổ" tone="warn" variant="ghost" onPress={() => setDeleting(true)} /></> : null}
     </View> : null}
   </RudiScreen>;
 }

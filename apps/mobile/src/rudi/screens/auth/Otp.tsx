@@ -169,16 +169,12 @@ export function OtpScreen() {
             disabled={ban || conLai > 0}
             label="Gửi lại mã"
             loading={trang.pha === "dang-gui-lai"}
+            // The countdown is the reason, said where every disabled button
+            // says its reason (ADR-0038 §2.2), in ink under the button.
+            lyDo={!ban && conLai > 0 ? `Gửi lại được sau ${conLai} giây.` : undefined}
             onPress={() => void guiLai()}
             variant="outline"
           />
-          {conLai > 0 ? (
-            // Live information stays readable: a disabled button's label is pale
-            // by design, so the countdown lives in ink beneath it instead.
-            <Text style={[typography.caption, styles.demNguoc, { color: colors.inkSoft }]}>
-              Gửi lại được sau {conLai} giây.
-            </Text>
-          ) : null}
         </View>
       </View>
     </RudiScreen>
@@ -196,5 +192,4 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.68 },
   form: { gap: 16 },
   veVao: { gap: 10, alignItems: "center", paddingHorizontal: 12, paddingVertical: 14 },
-  demNguoc: { textAlign: "center" },
 });

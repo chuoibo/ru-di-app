@@ -25,6 +25,8 @@ import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, Inline, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, Segmented, TopBar } from "../../ui";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
+import { CauTaiCho } from "../../ui/CauTaiCho";
+import { congTac } from "../../ui/cong-tac";
 import { useGiaoDien } from "../../ui/GiaoDienProvider";
 
 export function CaiDatScreen() {
@@ -33,7 +35,12 @@ export function CaiDatScreen() {
   const { phien, phienDaDoc } = useRudiSession();
   const { cheDo, datCheDo } = useGiaoDien();
   const [hoSo, setHoSo] = useState<HoSoToi | null>(null);
+  // QA UI-107: each control says its own failure under itself; one sentence
+  // at the foot of the page was 700px below the switch that failed.
   const [loi, setLoi] = useState<string | null>(null);
+  const [loiAnh, setLoiAnh] = useState<string | null>(null);
+  const [loiTim, setLoiTim] = useState<string | null>(null);
+  const [loiChinhSach, setLoiChinhSach] = useState<string | null>(null);
   const [dangLuu, setDangLuu] = useState(false);
   const [dangDoiAnh, setDangDoiAnh] = useState(false);
 
@@ -53,12 +60,12 @@ export function CaiDatScreen() {
   const doiTimTheoSo = async (bat: boolean) => {
     if (phien === null || dangLuu) return;
     setDangLuu(true);
-    setLoi(null);
+    setLoiTim(null);
     try {
       const moi = await suaHoSoToi(phien.person_id, { discoverable_by_phone: bat });
       setHoSo(moi);
     } catch (error) {
-      setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
+      setLoiTim(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
       setDangLuu(false);
     }
@@ -68,12 +75,12 @@ export function CaiDatScreen() {
     if (!laChinhSach(ma)) return;
     if (phien === null || dangLuu) return;
     setDangLuu(true);
-    setLoi(null);
+    setLoiChinhSach(null);
     try {
       const sau = await datChinhSachBinhLuan(ma, phien.person_id, newAttempt());
       setHoSo((truoc) => (truoc === null ? truoc : { ...truoc, wall_comment_policy: sau.wall_comment_policy }));
     } catch (error) {
-      setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
+      setLoiChinhSach(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
       setDangLuu(false);
     }
@@ -81,9 +88,9 @@ export function CaiDatScreen() {
 
   const doiAnhDaiDien = async () => {
     if (phien === null || dangDoiAnh) return;
-    setLoi(null);
+    setLoiAnh(null);
     const daChon = await chonAnh().catch((error: unknown) => {
-      setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
+      setLoiAnh(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
       return null;
     });
     if (daChon === null) return;
@@ -98,7 +105,7 @@ export function CaiDatScreen() {
       // `AnhNhomError` carries the device's own words ("not a picture", "too
       // large"); replacing them with the network sentence sent people looking
       // at their Wi-Fi for a file that was never an image (measured 2026-09-24).
-      setLoi(error instanceof ApiError || error instanceof AnhNhomError ? error.message : thongDiepNguoiDoc(0, null));
+      setLoiAnh(error instanceof ApiError || error instanceof AnhNhomError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
       setDangDoiAnh(false);
     }
@@ -106,11 +113,15 @@ export function CaiDatScreen() {
 
   if (!phienDaDoc) return null;
 
-  const timDuoc = hoSo?.discoverable_by_phone ?? true;
+  // QA UI-015: nothing drawn from a stand-in. The name comes from the session
+  // until the profile answers; the switch and the chips wait for real values.
+  const timDuoc = hoSo?.discoverable_by_phone ?? null;
+  const tenToi = hoSo?.display_name ?? phien?.profile?.display_name ?? "";
 
   return (
     <RudiScreen testID="cai-dat-screen">
       <TopBar title="Cài đặt" />
+      {loi !== null && hoSo === null ? <CauTaiCho cau={loi} hanhDong={{ label: "Thử lại", onPress: () => { setLoi(null); void nap(); } }} /> : null}
       {/* Rows on paper, one hairline under each: the same surface system as
           Cá nhân and the ledger next door. Eight floating white cards here read
           as a second UI kit (re-audit 10/09, R5), and a card around `Segmented`
@@ -121,9 +132,9 @@ export function CaiDatScreen() {
           <Inline gap={12}>
             {/* A 404 before the first upload is ordinary; the frame draws
                 initials for it rather than an empty ring (board 2026-09-07). */}
-            <AvatarNguoi name={hoSo?.display_name ?? "Bạn"} personId={phien?.person_id} size={64} />
+            <AvatarNguoi name={tenToi} personId={phien?.person_id} size={64} />
             <View style={styles.hangChu}>
-              <Text style={[typography.label, { color: colors.ink }]}>{hoSo?.display_name ?? "Bạn"}</Text>
+              <Text style={[typography.label, { color: colors.ink }]}>{tenToi}</Text>
               <Text style={[typography.caption, { color: colors.inkFaint }]}>
                 Ảnh này hiện với những người chung nhóm với bạn.
               </Text>
@@ -135,6 +146,7 @@ export function CaiDatScreen() {
             onPress={() => void doiAnhDaiDien()}
             variant="outline"
           />
+          <CauTaiCho cau={loiAnh} co="nho" />
         </View>
         <ListRow
           icon="person-outline"
@@ -158,20 +170,24 @@ export function CaiDatScreen() {
           <View style={styles.hangChu}>
             <Text style={[typography.label, { color: colors.ink }]}>Tìm theo số điện thoại</Text>
             <Text style={[typography.caption, { color: colors.inkFaint }]}>
-              {timDuoc
-                ? "Bạn bè nhập đúng số của bạn thì tìm thấy bạn."
-                : "Không ai tìm được bạn theo số điện thoại."}
+              {timDuoc === null
+                ? "Đang đọc cài đặt của bạn…"
+                : timDuoc
+                  ? "Bạn bè nhập đúng số của bạn thì tìm thấy bạn."
+                  : "Không ai tìm được bạn theo số điện thoại."}
             </Text>
           </View>
-          <Switch
-            accessibilityLabel="Cho tìm theo số điện thoại"
-            disabled={dangLuu || hoSo === null}
-            onValueChange={(bat) => void doiTimTheoSo(bat)}
-            thumbColor={colors.card}
-            trackColor={{ true: colors.accent, false: colors.line }}
-            value={timDuoc}
-          />
+          {timDuoc === null ? null : (
+            <Switch
+              accessibilityLabel="Cho tìm theo số điện thoại"
+              disabled={dangLuu}
+              onValueChange={(bat) => void doiTimTheoSo(bat)}
+              {...congTac(colors, colors.accent)}
+              value={timDuoc}
+            />
+          )}
         </View>
+        {loiTim ? <View style={styles.loiHang}><CauTaiCho cau={loiTim} co="nho" /></View> : null}
         <View style={styles.khoi}>
           <Text style={[typography.label, { color: colors.ink }]}>Ai được bình luận tường tôi</Text>
           <View accessibilityRole="radiogroup" style={styles.chips}>
@@ -180,13 +196,17 @@ export function CaiDatScreen() {
                 key={muc.id}
                 label={muc.nhan}
                 onPress={() => void doiChinhSach(muc.id)}
-                selected={(hoSo?.wall_comment_policy ?? "readers") === muc.id}
+                selected={hoSo !== null && hoSo.wall_comment_policy === muc.id}
+                vaiRadio
               />
             ))}
           </View>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>
-            {(CHINH_SACH.find((muc) => muc.id === (hoSo?.wall_comment_policy ?? "readers")) ?? CHINH_SACH[0]).giaiThich}
-          </Text>
+          {hoSo !== null ? (
+            <Text style={[typography.caption, { color: colors.inkFaint }]}>
+              {(CHINH_SACH.find((muc) => muc.id === hoSo.wall_comment_policy) ?? CHINH_SACH[0]).giaiThich}
+            </Text>
+          ) : null}
+          <CauTaiCho cau={loiChinhSach} co="nho" />
         </View>
         <ListRow
           icon="hand-left-outline"
@@ -224,9 +244,9 @@ export function CaiDatScreen() {
           title="Xoá tài khoản"
         />
       </NhomHang>
-      {loi ? <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+      {/* QA UI-111: the name is changed in «Chỉnh hồ sơ», not in «Tài khoản». */}
       <Text style={[typography.caption, { color: colors.inkFaint }]}>
-        Đăng nhập, đăng xuất và tên hiển thị vẫn nằm ở mục Tài khoản trên màn Cá nhân.
+        Tên hiển thị và lời giới thiệu đổi ở «Chỉnh hồ sơ» trên trang Cá nhân; đăng xuất ở mục Tài khoản của trang đó.
       </Text>
     </RudiScreen>
   );
@@ -235,6 +255,7 @@ export function CaiDatScreen() {
 const styles = StyleSheet.create({
   khoi: { gap: 12, paddingVertical: 6 },
   hang: { flexDirection: "row", alignItems: "center", gap: 12 },
+  loiHang: { paddingBottom: 6 },
   hangChu: { flex: 1, gap: 2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 });

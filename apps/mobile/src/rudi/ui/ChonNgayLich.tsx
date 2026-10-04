@@ -5,9 +5,12 @@
  * that switches to this changes nothing downstream.
  *
  * The month opens IN PLACE under the leaf (a sheet inside a scrolling page
- * would rise below the viewport): seven columns of 44 dp days, Monday first,
- * today ringed, the chosen day filled. Every day is a button with its full
- * spoken date.
+ * would rise below the viewport): seven columns, Monday first, today ringed,
+ * the chosen day filled. Every day is a button with its full spoken date.
+ *
+ * The columns share the width the month actually has, up to 48 dp each, and
+ * every row is 48 dp tall: seven fixed 44 dp columns plus the panel's edges
+ * came to 326 dp, wider than a 320 dp phone's 288 dp column (B11).
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
@@ -45,6 +48,8 @@ export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel,
   const hn = homNay ?? homNayThat();
   const ngay = docNgay(giaTri);
   const [mo, setMo] = useState(false);
+  const [rongLuoi, setRongLuoi] = useState(7 * O_TOI_DA);
+  const o = Math.max(1, Math.min(O_TOI_DA, Math.floor(rongLuoi / 7)));
   const [xem, setXem] = useState({ thang: ngay?.thang ?? hn.thang, nam: ngay?.nam ?? hn.nam });
   const moLich = () => {
     setXem({ thang: ngay?.thang ?? hn.thang, nam: ngay?.nam ?? hn.nam });
@@ -100,32 +105,32 @@ export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel,
               <Ionicons color={colors.ink} name="chevron-forward" size={20} />
             </Pressable>
           </View>
-          <View style={styles.hang}>
+          <View onLayout={(e) => setRongLuoi(e.nativeEvent.layout.width)} style={styles.hang}>
             {THU_NGAN.map((t) => (
-              <Text importantForAccessibility="no" key={t} style={[typography.caption, styles.thu, { color: colors.inkSoft }]}>
+              <Text importantForAccessibility="no" key={t} style={[typography.caption, styles.thu, { width: o, color: colors.inkSoft }]}>
                 {t}
               </Text>
             ))}
           </View>
-          <View style={styles.luoi}>
-            {luoiThang(xem.thang, xem.nam).map((o) => {
-              const chon = cungNgay(o, ngay);
-              const laHomNay = cungNgay(o, hn);
+          <View style={[styles.luoi, { width: o * 7 }]}>
+            {luoiThang(xem.thang, xem.nam).map((d) => {
+              const chon = cungNgay(d, ngay);
+              const laHomNay = cungNgay(d, hn);
               return (
                 <Pressable
-                  accessibilityLabel={`${tenThu(o)}, ${o.ngay} tháng ${o.thang} năm ${o.nam}${laHomNay ? ", hôm nay" : ""}`}
+                  accessibilityLabel={`${tenThu(d)}, ${d.ngay} tháng ${d.thang} năm ${d.nam}${laHomNay ? ", hôm nay" : ""}`}
                   accessibilityRole="button"
                   {...giuState(chon)}
                   aria-selected={chon}
-                  key={`${o.nam}-${o.thang}-${o.ngay}`}
+                  key={`${d.nam}-${d.thang}-${d.ngay}`}
                   onPress={() => {
-                    onChange(dinhDangNgay(o));
+                    onChange(dinhDangNgay(d));
                     setMo(false);
                   }}
-                  style={styles.o}
+                  style={[styles.o, { width: o }]}
                 >
-                  <View style={[styles.oTron, chon ? { backgroundColor: colors.accent } : laHomNay ? { borderWidth: 1.5, borderColor: colors.ink } : null]}>
-                    <Text style={[typography.body, { color: chon ? colors.accentInk : o.trongThang ? colors.ink : colors.inkFaint }]}>{o.ngay}</Text>
+                  <View style={[styles.oTron, { width: Math.min(38, o - 2), height: Math.min(38, o - 2), borderRadius: 19 }, chon ? { backgroundColor: colors.accent } : laHomNay ? { borderWidth: 1.5, borderColor: colors.ink } : null]}>
+                    <Text style={[typography.body, { color: chon ? colors.accentInk : d.trongThang ? colors.ink : colors.inkFaint }]}>{d.ngay}</Text>
                   </View>
                 </Pressable>
               );
@@ -137,18 +142,21 @@ export function ChonNgayLich({ giaTri, onChange, nhan, kieu = "to-lich", oLabel,
   );
 }
 
+/** A day column's widest; the month's own width decides below it. */
+const O_TOI_DA = 48;
+
 const styles = StyleSheet.create({
   khoi: { gap: 8 },
   la: { width: 84, minHeight: 96, borderWidth: 1, alignItems: "center", overflow: "hidden", paddingBottom: 8 },
   bangLa: { alignSelf: "stretch", alignItems: "center", paddingVertical: 4 },
   so: { fontFamily: displayFace.extraBold, fontSize: 34, lineHeight: 40 },
-  nutLich: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  thang: { borderWidth: 1, padding: 8, gap: 4, alignSelf: "flex-start" },
+  nutLich: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
+  thang: { borderWidth: 1, padding: 8, gap: 4, alignSelf: "stretch", maxWidth: O_TOI_DA * 7 + 18 },
   dauThang: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  nutThang: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  hang: { flexDirection: "row" },
-  thu: { width: 44, textAlign: "center" },
-  luoi: { flexDirection: "row", flexWrap: "wrap", width: 44 * 7 },
-  o: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  oTron: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
+  nutThang: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
+  hang: { flexDirection: "row", alignSelf: "stretch" },
+  thu: { textAlign: "center" },
+  luoi: { flexDirection: "row", flexWrap: "wrap" },
+  o: { height: 48, alignItems: "center", justifyContent: "center" },
+  oTron: { alignItems: "center", justifyContent: "center" },
 });

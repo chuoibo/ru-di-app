@@ -78,3 +78,20 @@ test("buocMoLai: vừa rời (tải lại, Back rồi Forward) thì mở lại �
   assert.equal(buocMoLai({ buoc: ban }, bayGio), null, "bản nháp không có giờ (bản cũ) thì không tự mở");
   assert.equal(buocMoLai(null, bayGio), null);
 });
+
+test("ADR-0054: bill viết từ một kèo có bản nháp riêng, không lẫn sang kèo khác hay sang bill của cả nhóm", async () => {
+  const kho = khoPhien();
+  globalThis.sessionStorage = kho;
+  try {
+    const m = await taiLai(30);
+    const KEO_1 = "11111111-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const KEO_2 = "22222222-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    assert.equal(m.khoaNhapBill(NHOM_A), NHOM_A, "bill không từ kèo nào giữ đúng khoá cũ");
+    m.luuNhapBill(m.khoaNhapBill(NHOM_A, KEO_1), NHAP);
+    assert.deepEqual(m.docNhapBill(m.khoaNhapBill(NHOM_A, KEO_1)), NHAP);
+    assert.equal(m.docNhapBill(m.khoaNhapBill(NHOM_A, KEO_2)), null);
+    assert.equal(m.docNhapBill(m.khoaNhapBill(NHOM_A)), null);
+  } finally {
+    delete globalThis.sessionStorage;
+  }
+});

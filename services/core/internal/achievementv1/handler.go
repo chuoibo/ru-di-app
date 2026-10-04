@@ -49,6 +49,7 @@ func RouteIDs() []string {
 		"POST /me/achievement-runs/{run_id}/finish",
 		"POST /me/achievement-suggestions",
 		"PATCH /me/achievement-display",
+		"POST /me/achievement-seen",
 		"GET /people/{person_id}/achievements",
 	}
 }
@@ -57,7 +58,7 @@ func RouteIDs() []string {
 // continues to own every legacy route.
 func Matches(path string) bool {
 	switch path {
-	case "/me/achievement-routes", "/me/achievement-runs", "/me/achievement-suggestions", "/me/achievement-display":
+	case "/me/achievement-routes", "/me/achievement-runs", "/me/achievement-suggestions", "/me/achievement-display", "/me/achievement-seen":
 		return true
 	}
 	if strings.HasPrefix(path, "/me/achievement-runs/") && strings.HasSuffix(path, "/finish") {
@@ -353,6 +354,35 @@ func (h *Handler) handle(ctx context.Context, r *http.Request, s Store, personID
 			seen[id] = true
 		}
 		if err := s.SetDisplay(ctx, personID, input.BadgeIDs); err != nil {
+			return 0, nil, err
+		}
+		return 200, map[string]any{"badge_ids": input.BadgeIDs}, nil
+	}
+	if path == "/me/achievement-seen" && r.Method == http.MethodPost {
+		// QA UI-160: the book presented these badges as just opened; the next
+		// phone or browser does not present them again.
+		var input struct {
+			BadgeIDs []string `json:"badge_ids"`
+		}
+		if decodeRequest(r, &input) != nil || len(input.BadgeIDs) == 0 {
+			return 400, nil, bad(400, "invalid_request", "Name the badges that were shown")
+		}
+		earned, err := s.Earned(ctx, personID)
+		if err != nil {
+			return 0, nil, err
+		}
+		known := earnedMap(earned)
+		if len(input.BadgeIDs) > len(known) {
+			return 422, nil, bad(422, "badge_not_earned", "Name distinct earned badges")
+		}
+		seen := map[string]bool{}
+		for _, id := range input.BadgeIDs {
+			if !known[id] || seen[id] {
+				return 422, nil, bad(422, "badge_not_earned", "Name distinct earned badges")
+			}
+			seen[id] = true
+		}
+		if err := s.MarkSeen(ctx, personID, input.BadgeIDs); err != nil {
 			return 0, nil, err
 		}
 		return 200, map[string]any{"badge_ids": input.BadgeIDs}, nil

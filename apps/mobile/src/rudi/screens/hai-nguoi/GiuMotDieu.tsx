@@ -37,7 +37,7 @@ export function GiuMotDieu({ open, onClose, onGiu, testID }: { open: boolean; on
           value={dong}
         />
         <Text style={[typography.caption, { color: colors.inkSoft }]}>Chỉ hai bạn đọc được dòng này.</Text>
-        <RudiButton disabled={sach.length === 0} label="Giữ lại" onPress={giu} />
+        <RudiButton disabled={sach.length === 0} label="Giữ lại" lyDo={sach.length === 0 ? "Viết một điều trước." : undefined} onPress={giu} />
       </View>
     </Sheet>
   );
