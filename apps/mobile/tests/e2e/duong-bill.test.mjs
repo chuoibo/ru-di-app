@@ -38,8 +38,8 @@ import {
   newAttempt,
   taoBill,
 } from "../../dist-test/api.js";
-import { khoiDongNhomDemo } from "../../dist-test/rudi/nhom-demo.js";
-import { DEMO_PEOPLE, personById } from "../../dist-test/rudi/nhom-demo.js";
+import { khoiDongNhomDemo } from "../fixtures/group-world.mjs";
+import { DEMO_PEOPLE, personById } from "../fixtures/group-world.mjs";
 import { batPhienE2E } from "./phien-e2e.mjs";
 
 // The API this file talks to runs in `prod` and does not believe `X-Actor-ID`

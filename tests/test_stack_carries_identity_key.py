@@ -33,8 +33,16 @@ class TheComposeFileTests(unittest.TestCase):
     def setUp(self) -> None:
         self.text = COMPOSE.read_text(encoding="utf-8")
 
-    def test_the_api_service_passes_the_key_the_deriver_reads(self):
-        self.assertIn(f"{KEY}: ${{{KEY}:-}}", self.text)
+    def test_retired_phone_key_is_not_forwarded_to_the_runtime(self):
+        self.assertNotIn(f"{KEY}:", self.text)
+        core = re.search(
+            r"(?ms)^  core:\n(.*?)(?=^  \S|^volumes:|\Z)", self.text
+        ).group(1)
+        for account_key in (
+            "MOBILE_ACCOUNT_ENCRYPTION_KEY",
+            "MOBILE_ACCOUNT_LOOKUP_KEY",
+        ):
+            self.assertIn(f"{account_key}: ${{{account_key}:-}}", core)
 
     def test_the_value_is_interpolated_from_the_host_not_written_down(self):
         """A literal here would be a committed secret AND a public key.
@@ -182,24 +190,10 @@ class TheIdentityKeyCheckerTests(unittest.TestCase):
 
 
 class TheMakefileTests(unittest.TestCase):
-    def test_make_up_runs_the_identity_check(self):
-        """Before `docker build`, not after: a build takes minutes and a
-        warning printed afterwards has scrolled away."""
-
+    def test_make_up_does_not_request_a_retired_phone_identity_key(self):
         text = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
         up = text.split("\nup:", 1)[1].split("\ndown:", 1)[0]
-        self.assertIn("IDENTITY_KEY_CHECK", up)
-
-        recipe = [line for line in up.splitlines() if line.startswith("\t")]
-        build_at = next(
-            (i for i, line in enumerate(recipe) if "up -d --build" in line), None
-        )
-        check_at = next(
-            (i for i, line in enumerate(recipe) if "IDENTITY_KEY_CHECK" in line), None
-        )
-        self.assertIsNotNone(build_at)
-        self.assertIsNotNone(check_at)
-        self.assertLess(check_at, build_at)
+        self.assertNotIn("IDENTITY_KEY_CHECK", up)
 
 
 class NoUnkeyedDerivationSurvivesTests(unittest.TestCase):

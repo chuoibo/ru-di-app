@@ -24,15 +24,14 @@ import {
   dangXuat,
   docHoSoToi,
   docNhomCuaToi,
-  doiLoiMoiLayPhien,
   ganDanhSachNhom,
-  guiOtp,
   khoTrongBoNho,
   khoiPhucPhien,
   suaHoSoToi,
   vaoNhom,
-  xacMinhOtp,
 } from "../dist-test/phien.js";
+
+import { doiLoiMoiLayPhien, guiOtp, xacMinhOtp } from "./fixtures/auth-legacy.mjs";
 
 const NGUOI = "2bb00000-bbbb-4bbb-8bbb-0000b0000001";
 

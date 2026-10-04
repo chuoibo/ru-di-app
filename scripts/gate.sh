@@ -72,7 +72,7 @@ REPO_ROOT="$PWD"
 
 # Every stage, in run order: cheapest and most likely to fail first, so a
 # broken tree is reported in seconds rather than after a docker build.
-STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test eval-kich-ban ai-infer api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres go-media go-broker go-milvus ai-infer-milvus e2e chat-e2e crypto)
+STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test eval-kich-ban ai-infer api migration pinned-import account-auth shared mobile mobile-native docker parity postgres go-postgres go-media go-broker go-milvus ai-infer-milvus e2e chat-e2e crypto)
 
 stage_help() {
   case "$1" in
@@ -93,11 +93,10 @@ stage_help() {
     api)       echo "pytest services/api/tests tests (test.yml: api)" ;;
     migration) echo "alembic upgrade head --sql, no database (test.yml: api, inline)" ;;
     pinned-import) echo "app imports under the fastapi version pinned in requirements-dev.txt, not the machine's (test.yml: docker, cheap half)" ;;
-    demo-watch) echo "the demo box is still being watched, and its last verdict was about main (máy này thôi)" ;;
-    hero-walk) echo "somebody walked ảnh->món->chia->trang khách on the demo box recently, and it worked (máy này thôi)" ;;
+    account-auth) echo "Go account security and retired Python doors; real PostgreSQL is measured by go-postgres" ;;
     shared)    echo "node packages/shared/money.test.mjs (test.yml: shared)" ;;
     mobile)    echo "tsc, npm test with MOBILE_REQUIRE_WEB_A11Y=1, expo export --platform all (test.yml: mobile)" ;;
-    mobile-native) echo "lái .maestro trên máy ảo Android thật qua Expo Go -- target sẽ ship, không phải react-native-web (test.yml: mobile-native)" ;;
+    mobile-native) echo "lái tài khoản trên máy ảo Android thật qua dev client -- target sẽ ship, không phải react-native-web (test.yml: mobile-native)" ;;
     docker)    echo "api and core images pinned, build, non-root, api has no dev tooling, core no shell, both healthy (test.yml: docker)" ;;
     parity)    echo "harness unit tests; two isolated stacks from the API image; canary catches every exercised damage; W0 scenarios equal through core (ADR-0029)" ;;
     postgres)  echo "every live case -- tests/postgres AND tests/qa -- against a real PostgreSQL it provisions itself (postgres-repository.yml)" ;;
@@ -544,56 +543,10 @@ PY
   )
 }
 
-# The demo box on 8099 is what the leader opens to decide whether the product
-# runs. Twice now it has served an older main than the one it claims to:
-# 58 routes against 62 for sixteen commits, then 65 against 69 for the four
-# album and contextual-suggestion routes. Neither was a gate failing.
-# `check_demo_matches_main.py` answered correctly both times -- it was simply
-# never asked, because its only caller was `make demo-check`, which nobody
-# types until they already suspect the answer.
-#
-# So this stage is the caller, and it is deliberately in the DEFAULT list.
-# `make gate` is the one thing on this machine that gets run dozens of times a
-# day; a check wired anywhere else is decoration with extra steps. It reads the
-# recorded verdict rather than measuring live -- `run` builds a worktree and
-# renders main's OpenAPI, which is far too slow to sit in every gate run, and
-# duplicating it here would just be a second unscheduled call site.
-#
-# What it does NOT prove: nothing here calls a product route, so a demo serving
-# every path of main and answering 500 to all of them passes this stage. It
-# says nothing about the mobile bundle, which is built separately and can be
-# older than the API on the same box. And `status` proves a check RAN, not that
-# the box was reachable between two runs.
-do_demo-watch() {
-  # --expect-ref is the default, spelled out because this is the assertion the
-  # stage exists to make: a verdict about somebody's open branch is not a
-  # verdict about main, however fresh it is.
-  python3 scripts/demo_watch.py status --expect-ref origin/main
-}
-
-# The scan seam -- `POST /receipts/scan` -> `readingFromWire()` -> `POST /bills`
-# -- is the one joint of the hero path no other stage crosses. `e2e` runs
-# `duong-bill.test.mjs`, which begins at a `reading` written by hand; the client
-# unit tests replay a wire body frozen on 2026-08-29; the live model tier is
-# opt-in behind a variable nothing sets. Two green halves, no path.
-#
-# Like `demo-watch`, this reads a RECORDED verdict instead of measuring live: a
-# real walk costs a Gemini call, and a paid nondeterministic step in the list
-# that runs dozens of times a day would be removed within the week. The live
-# walk is `make hero-walk`; this asserts somebody ran it, recently, against this
-# box, and that it worked.
-#
-# What it does NOT prove: nothing here is measured now. A demo that broke five
-# minutes ago passes this stage until the verdict ages out. Nor does it prove
-# the commits added since the walk still cross the seam -- the verdict binds to
-# an ancestor of HEAD, which rules out evidence borrowed from another branch,
-# not staleness within this one.
-do_hero-walk() {
-  # --url spelled out for the same reason demo-watch spells out --expect-ref:
-  # a verdict about another box is the failure that looks most like a pass.
-  # The runner separately refuses a verdict about another BRANCH; one shared
-  # verdict dir serves every worktree here, so both halves are load-bearing.
-  scripts/hero_walk.sh --status --url http://127.0.0.1:8099
+# Managed auth runs in Go; legacy Python is checked only for retired doors.
+do_account-auth() {
+  (cd services/core && go test -count=1 ./internal/accountauth) || return 1
+  python3 -m pytest services/api/tests/api/test_retired_auth_runtime.py -q
 }
 
 do_shared() { node packages/shared/money.test.mjs; }
@@ -624,7 +577,7 @@ do_mobile() {
 # nằm trong script chứ không nằm ở đây, nên chạy tay và chạy trên CI hỏi đúng một
 # câu hỏi.
 do_mobile-native() {
-  scripts/mobile_native.sh
+  scripts/mobile_native_gate.sh
   local rc=$?
   # Mã 2 nghĩa là KHÔNG ĐO ĐƯỢC, và check_prereq ở trên đã lọc hết các lý do
   # thường gặp. Tới được đây với mã 2 là hạ tầng rụng GIỮA lượt đo -- máy ảo
@@ -699,6 +652,7 @@ do_docker() {
     -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 \
     -e MOBILE_DATABASE_URL=postgresql://none@127.0.0.1:9/none \
     -e MOBILE_CHAT_CHANGES_CANDIDATE=0 \
+    -e MOBILE_ACCOUNT_AUTH_ENABLED=0 \
     "$core_image" >/dev/null || return 1
   wait_container_healthy "$core_container"
 }
@@ -773,7 +727,7 @@ do_crypto() {
     echo "thiếu target x86_64-linux-android hoặc ANDROID_NDK_ROOT; bỏ qua bước dựng cho Android (CI vẫn dựng)" >&2
   fi
   # A cdylib that exports nothing is a file, not a bridge.
-  local so; so="$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' 2>/dev/null | head -1)"
+  local so; so="$(find "${CARGO_TARGET_DIR:-packages/chat-crypto-ffi/target}" -name 'librudi_chat_crypto_ffi.so' 2>/dev/null | head -1)"
   [ -n "$so" ] || { echo "không sinh ra thư viện dùng chung nào" >&2; return 1; }
   local sym missing=0
   for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_free \
@@ -1000,40 +954,10 @@ check_prereq() {
       [ -d apps/mobile/src ] || return 2
       python3 -c "import fastapi" 2>/dev/null || {
         echo "chưa cài fastapi (pip install -r services/api/requirements-dev.txt)"; return 1; } ;;
-    demo-watch)
-      # Only this machine hosts the demo. On a CI runner or a fresh clone there
-      # is no box on 8099 and no crontab of ours, so the question is meaningless
-      # and the stage says so out loud instead of being red for everyone forever
-      # -- which is how the `guard history` variant would have died.
-      #
-      # Two signals, either one enough, because they fail in opposite
-      # directions. The crontab block says "this machine took on the job of
-      # watching"; that alone must keep the stage running even while the box is
-      # down, since a demo that stopped answering is exactly what wants
-      # reporting. The live port says "there is a demo here"; that alone keeps
-      # the stage running on a host that has one but never installed the
-      # schedule -- the state this repo was in when 8099 drifted twice.
-      #
-      # The hole left: kill the container AND clear the crontab and this skips.
-      # It is a skip with a printed reason, and --strict turns it into a
-      # failure, which is the most this file can honestly claim.
-      [ -f scripts/demo_watch.py ] || return 2
-      if ! crontab -l 2>/dev/null | grep -q 'mobile-demo-watch'; then
-        (exec 3<>/dev/tcp/127.0.0.1/8099) 2>/dev/null || {
-          echo "máy này không dựng demo: không có khối cron canh gác, và 8099 không trả lời"
-          return 1
-        }
-      fi ;;
-    hero-walk)
-      # Only this machine hosts the demo, so on a CI runner or a fresh clone the
-      # question is meaningless and the stage says so rather than being red for
-      # everyone forever. Deleting the runner is a different matter: that is the
-      # one edit that must not turn this green.
-      [ -f scripts/hero_walk.sh ] || return 2
-      (exec 3<>/dev/tcp/127.0.0.1/8099) 2>/dev/null || {
-        echo "máy này không dựng demo: 8099 không trả lời"
-        return 1
-      } ;;
+    account-auth)
+      have go || return 1
+      python3 -c "import fastapi" 2>/dev/null || return 1
+      [ -f services/core/internal/accountauth/schema.sql ] || return 2 ;;
     shared)
       have node || { echo "không có node"; return 1; }
       [ -d packages/shared ] || { echo "packages/shared không có trên nhánh này"; return 1; }
@@ -1050,6 +974,9 @@ check_prereq() {
       [ -d apps/mobile ] || { echo "apps/mobile không có trên nhánh này"; return 1; }
       [ -d apps/mobile/.maestro ] || return 2
       [ -d apps/mobile/node_modules ] || { echo "chưa 'npm ci' trong apps/mobile"; return 1; }
+      have docker || return 1
+      have go || return 1
+      have java || return 1
       have maestro || { echo "không có maestro trên PATH"; return 1; }
       command -v adb >/dev/null 2>&1 || [ -x "${ANDROID_HOME:-$HOME/Android/Sdk}/platform-tools/adb" ] \
         || { echo "không có adb (đặt ANDROID_HOME)"; return 1; }
@@ -1138,8 +1065,7 @@ broken_why() {
     go-milvus) echo "services/core có mặt nhưng thiếu go.mod hoặc scripts/go_milvus_tier.sh -- từ chối bỏ qua" ;;
     eval-kich-ban) echo "services/core có mặt nhưng thiếu go.mod, scripts/eval_kich_ban.sh hoặc corpus Nếp -- từ chối bỏ qua" ;;
     ai-infer|ai-infer-milvus) echo "services/ai-infer có mặt nhưng thiếu pyproject.toml hoặc scripts/ai_infer_tier.sh -- từ chối bỏ qua" ;;
-    demo-watch) echo "thiếu scripts/demo_watch.py -- xoá canh gác không được biến chặng này thành xanh" ;;
-    hero-walk) echo "thiếu scripts/hero_walk.sh -- xoá bài đi bộ không được biến chặng này thành xanh" ;;
+    account-auth) echo "thiếu schema Go hoặc công cụ kiểm thử tài khoản" ;;
     *) echo "thiếu file mà chặng này cần -- từ chối bỏ qua" ;;
   esac
 }

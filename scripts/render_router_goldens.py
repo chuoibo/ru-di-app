@@ -107,7 +107,11 @@ def _route_ids(app) -> list[str]:
     """Manifest ids in registration order, after checking the app agrees."""
     from starlette.routing import Mount, Route
 
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))["routes"]
+    manifest = [
+        row
+        for row in json.loads(MANIFEST.read_text(encoding="utf-8"))["routes"]
+        if not row.get("native")
+    ]
     routes = app.router.routes
     if len(routes) != len(manifest):
         raise SystemExit(

@@ -32,7 +32,6 @@ from app.api.idempotency import (
 from app.api.internal_token import resolve_internal_token
 from app.api.routes import (
     albums,
-    auth,
     batches,
     bills,
     budget,
@@ -42,7 +41,6 @@ from app.api.routes import (
     finance,
     friends,
     guests,
-    identity,
     memories,
     messages,
     nep,
@@ -213,8 +211,6 @@ def create_app(
     application.include_router(obligations.router)
     application.include_router(people.router)
     application.include_router(sessions.router)
-    application.include_router(auth.router)
-    application.include_router(identity.router)
     application.include_router(places.router)
     application.include_router(finance.router)
     application.include_router(recap.router)

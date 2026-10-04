@@ -383,21 +383,26 @@ func TestBoVangKhongSua(t *testing.T) {
 // the app does not have («Xong», «Bio») kept the old numbers, and a manual
 // that sends a person to a button that is not there is the worse trade.
 // «log out o dau» is back among duongVang's misses.
+// ADR-0053 replaces the retired phone invitation instructions. The accurate
+// photo action in the tool tray keeps all four frozen corpora within ADR-0047's
+// 0.01 regression budget: duongVang MRR 0.9124 -> 0.9122, accentless unchanged
+// at 0.9865; off-screen recall 0.9565 -> 0.9783 and MRR 0.7647 -> 0.7861.
+// The two-person and model-query sets are unchanged. Golden bytes stay frozen.
 var vangGhim = map[string]map[string][2]string{
 	duongVang: {
-		"":          {"0.9505", "0.9124"},
+		"":          {"0.9505", "0.9122"},
 		"co_dau":    {"0.9405", "0.8972"},
 		"khong_dau": {"1.0000", "0.9865"},
-		"teen":      {"0.8333", "0.7369"},
+		"teen":      {"0.8333", "0.7354"},
 	},
 	duongTruyVan: {
 		"": {"1.0000", "0.8878"},
 	},
 	duongManKhac: {
-		"":          {"0.9565", "0.7647"},
-		"co_dau":    {"0.9333", "0.7578"},
+		"":          {"0.9783", "0.7861"},
+		"co_dau":    {"1.0000", "0.8244"},
 		"khong_dau": {"1.0000", "0.8922"},
-		"teen":      {"0.9286", "0.6173"},
+		"teen":      {"0.9286", "0.6161"},
 	},
 	duongHaiNguoi: {
 		"":          {"1.0000", "0.7051"},

@@ -117,12 +117,12 @@ WAVES: dict[str, Wave] = {
             (
                 "POST",
                 "/friends/lookup",
-                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+                "Go-only username lookup; archived phone oracle is not an active parity contract",
             ),
             (
                 "POST",
                 "/identity/person-id",
-                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+                "retired phone identity endpoint; production returns 410",
             ),
         ),
     ),
@@ -290,7 +290,6 @@ WAVES: dict[str, Wave] = {
     ),
     "w9": Wave(
         routes=(
-            ("POST", "/sessions"),
             ("GET", "/sessions"),
             ("DELETE", "/sessions/{session_id}"),
         ),
@@ -305,27 +304,23 @@ WAVES: dict[str, Wave] = {
                 "/sessions/current",
                 "dev has no bearer, so every step is 401 and PersonasRefused stops the run",
             ),
-            # Same reason as POST /friends/lookup and POST /identity/person-id in
-            # w2, plus one more that is specific to these three: the address window
-            # is spent BEFORE the body is read, so every generated step spends one
-            # of ten (or thirty). A corpus of 18-56 steps would become a wall of
-            # 429s -- equal on both sides, so green and meaningless -- and would
-            # empty the window out from under every other scenario in the run.
-            # parity/scenarios/w9/limiter/ covers them by hand instead.
+            # ADR-0053 retires phone OTP and gives managed Google auth to Go.
+            # The old oracle survives only under fixtures/retired-auth; it must
+            # not define validation or limiter behavior for the new contract.
             (
                 "POST",
                 "/auth/otp/request",
-                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+                "retired phone OTP endpoint; production returns 410",
             ),
             (
                 "POST",
                 "/auth/otp/verify",
-                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+                "retired phone OTP endpoint; production returns 410",
             ),
             (
                 "POST",
                 "/auth/google",
-                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+                "Go-only managed account auth; PostgreSQL security suite owns its contract",
             ),
         ),
     ),

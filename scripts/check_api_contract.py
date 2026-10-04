@@ -441,7 +441,10 @@ GO_PROFILE_HANDLERS = (
 #: Go-native routes of the money screens (ADR-0031): the collection round's
 #: count of expenses not yet in a round (`gomdot`, B4 on 2026-10-02). Missing
 #: here, the client's call to it read as a 404 on a route Go serves.
-GO_FEATURE_HANDLERS = ("services/core/internal/gomdot/handler.go",)
+GO_FEATURE_HANDLERS = (
+    "services/core/internal/gomdot/handler.go",
+    "services/core/internal/accountauth/handler.go",
+)
 
 #: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`
 GO_ROUTE = re.compile(r'HandleFunc\(\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"')

@@ -30,7 +30,8 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-FLOWS = REPO_ROOT / "apps" / "mobile" / ".maestro"
+# Historical contracts remain measurable after phone login is retired.
+FLOWS = REPO_ROOT / "apps" / "mobile" / "tests/fixtures/legacy_native/flows"
 APP_ID = "com.lakiet.rudi"
 
 
@@ -171,9 +172,9 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
     def test_harness_otp_mode_probes_the_debug_code_and_has_no_fixture_door(
         self,
     ) -> None:
-        script = (REPO_ROOT / "scripts" / "mobile_native.sh").read_text(
-            encoding="utf-8"
-        )
+        script = (
+            REPO_ROOT / "tests" / "fixtures" / "legacy_native" / "mobile_native.sh"
+        ).read_text(encoding="utf-8")
         self.assertIn("--otp) OTP=1", script)
         self.assertIn("kiem_ma_debug", script)
         self.assertIn("/auth/otp/verify", script)
@@ -201,9 +202,9 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
         # `chay_flow` must not turn errexit back on before returning a non-zero
         # rc: set -e is global, so the caller's `set +e` would be undone and the
         # table would stop at the first red flow with no summary line.
-        script = (REPO_ROOT / "scripts" / "mobile_native.sh").read_text(
-            encoding="utf-8"
-        )
+        script = (
+            REPO_ROOT / "tests" / "fixtures" / "legacy_native" / "mobile_native.sh"
+        ).read_text(encoding="utf-8")
         body = script[
             script.index("chay_flow() {") : script.index(
                 "\n}\n", script.index("chay_flow() {")
@@ -222,9 +223,9 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
         self.assertIn("kiem_may_chu_sau_25", script)
 
     def test_harness_passes_the_fingerprint_and_checks_it_bites(self) -> None:
-        script = (REPO_ROOT / "scripts" / "mobile_native.sh").read_text(
-            encoding="utf-8"
-        )
+        script = (
+            REPO_ROOT / "tests" / "fixtures" / "legacy_native" / "mobile_native.sh"
+        ).read_text(encoding="utf-8")
         self.assertIn('-e TREE_FINGERPRINT="$DAU_VAN"', script)
         self.assertIn("KHONG_CO_DAU_VAN_NAY", script)
         self.assertIn("EXPO_PUBLIC_TREE_FINGERPRINT", script)

@@ -22,6 +22,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
 import { useRudiSession } from "../../session";
+import { nhanCua } from "../../cai-dat/phien-cai-dat";
 import { bongGiay, typography, useRudiTheme } from "../../theme";
 import { RudiButton } from "../../ui";
 import { DauLon } from "../../ui/DauLon";
@@ -39,8 +40,6 @@ type Trang =
 function loiRaChu(error: unknown): string {
   return error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
 }
-
-const NHAN_CUA: Record<string, string> = { phone: "số điện thoại", google: "Google" };
 
 export function HoSoSong({ phien }: { phien: Phien }) {
   const { datPhien } = useRudiSession();
@@ -182,7 +181,7 @@ export function HoSoSong({ phien }: { phien: Phien }) {
         <View style={styles.hangDau}>
           <DauLon co="nho" nhan={`Tham gia ${namVao}`} tilt={-6} tone="ink" />
           <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
-            Đăng nhập bằng {hoSo.login_methods.map((m) => NHAN_CUA[m] ?? m).join(", ") || "lời mời"}
+            Phiên này: {nhanCua(phien.issued_via ?? "")}
           </Text>
         </View>
         <Text style={[typography.caption, { color: colors.inkSoft }]}>{soDem}</Text>

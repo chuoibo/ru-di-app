@@ -23,7 +23,7 @@ import {
   theTuCard,
 } from "../dist-test/screens/chat/ke-hoach.js";
 import { thanNhuSeed } from "../dist-test/screens/chat/nhom.js";
-import { khoiDongNhomDemo } from "../dist-test/rudi/nhom-demo.js";
+import { khoiDongNhomDemo } from "./fixtures/group-world.mjs";
 import {
   cursorCuNhat,
   cursorMoiNhat,

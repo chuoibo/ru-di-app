@@ -145,12 +145,13 @@ type runningCore struct {
 	stop func() int
 }
 
-// startCore runs serveUntil with exactly env and nothing else, and waits for
-// liveness. It fails the test if core exits first.
+// startCore isolates unrelated feature tests from managed auth infrastructure.
+// Account boot tests explicitly override the flag; other env values are exact.
+// It waits for both listeners and fails if core exits first.
 func startCore(t *testing.T, env map[string]string) runningCore {
 	t.Helper()
 	listen, live := freeAddresses(t)
-	full := map[string]string{"MOBILE_CORE_LISTEN": listen, "MOBILE_CORE_LIVENESS_LISTEN": live}
+	full := map[string]string{"MOBILE_CORE_LISTEN": listen, "MOBILE_CORE_LIVENESS_LISTEN": live, "MOBILE_ACCOUNT_AUTH_ENABLED": "0"}
 	for k, v := range env {
 		full[k] = v
 	}

@@ -168,39 +168,6 @@ def list_friends(
     return ApiService(repository).list_friends(person_id, actor)
 
 
-@router.post(
-    "/friends/lookup",
-    response_model=PersonMatchResponse,
-    responses={
-        404: {"model": ErrorResponse},
-        422: {"model": ErrorResponse},
-        429: {"model": ErrorResponse},
-        503: {"model": ErrorResponse},
-    },
-    openapi_extra={
-        "requestBody": {
-            "required": True,
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "type": "object",
-                        "required": ["phone"],
-                        "properties": {
-                            "phone": {
-                                "type": "string",
-                                "description": (
-                                    "A Vietnamese mobile number the caller"
-                                    " already holds. Never logged, never"
-                                    " stored, never returned."
-                                ),
-                            }
-                        },
-                    }
-                }
-            },
-        }
-    },
-)
 async def find_person_by_phone(
     request: Request,
     actor: Annotated[Actor, Depends(get_actor)],

@@ -21,7 +21,7 @@ const GOC = new URL("../src/rudi/screens/", import.meta.url);
 /** Every screen in scope: creation doors, money, the two-person notebook. */
 const PHAM_VI = [
   "Create.tsx",
-  "LoiMoi.tsx",
+  "auth/Register.tsx",
   "keo/CreateOutingLive.tsx",
   "groups/New.tsx",
   "groups/Invite.tsx",

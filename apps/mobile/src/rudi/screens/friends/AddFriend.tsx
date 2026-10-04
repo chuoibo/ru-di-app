@@ -1,22 +1,11 @@
-/**
- * Thêm bạn bằng số điện thoại (M2).
- *
- * Two steps and two server calls: the number resolves to a person the server
- * already knows (`POST /friends/lookup` -- answers an id and a display name,
- * never a number, and refuses numbers nobody has signed in or been named
- * with), then a request is sent (`POST /friends/requests`). Asking is not
- * adding: the other person accepts on their own phone.
- *
- * The number typed here never leaves this screen except inside that one
- * lookup body, and is not stored.
- */
+/** Find an existing account by username, then ask for friendship. */
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
-import { guiLoiMoi, timBanTheoSo, type NguoiTimDuoc } from "../../../screens/ca-nhan/ban-be";
-import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
+import { guiLoiMoi, timBanTheoUsername, type NguoiTimDuoc } from "../../../screens/ca-nhan/ban-be";
+import { validUsername } from "../../account";
 import { useRudiSession } from "../../session";
 import { tenThat } from "../../ten-giu-cho";
 import { bongGiay, mucNguoi, typography, useRudiTheme } from "../../theme";
@@ -41,7 +30,7 @@ export function AddFriendScreen() {
   const router = useRouter();
   const { colors, dark } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
-  const [phone, setPhone] = useState("");
+  const [username, setUsername] = useState("");
   const [trang, setTrang] = useState<Trang>({ pha: "nhap" });
   const lanBam = useRef<{ id: string; attempt: Attempt } | null>(null);
 
@@ -49,16 +38,16 @@ export function AddFriendScreen() {
   if (phien === null) return <CuaDangNhap />;
 
   const tim = async () => {
-    const sach = phone.trim();
-    if (chuanHoaSo(sach) === null) {
-      setTrang({ pha: "hong", loi: "Chưa đúng dạng số di động Việt Nam." });
+    const sach = username.trim();
+    if (!validUsername(sach)) {
+      setTrang({ pha: "hong", loi: "Tên tài khoản gồm 3–32 chữ, số, dấu chấm hoặc gạch dưới." });
       return;
     }
     setTrang({ pha: "dang-tim" });
     try {
-      const nguoi = await timBanTheoSo(sach, phien.person_id);
+      const nguoi = await timBanTheoUsername(sach, phien.person_id);
       if (nguoi.person_id === phien.person_id) {
-        setTrang({ pha: "hong", loi: "Đó là số của chính bạn." });
+        setTrang({ pha: "hong", loi: "Đó là tài khoản của chính bạn." });
         return;
       }
       setTrang({ pha: "tim-thay", nguoi });
@@ -91,7 +80,7 @@ export function AddFriendScreen() {
       <RudiScreen testID="add-friend-screen">
         <TopBar title="Thêm bạn" />
         <Heading
-          title={`Đã gửi lời mời tới ${tenThat(trang.nguoi.display_name) ?? `số đuôi ${duoiSo(phone)}`}`}
+          title={`Đã gửi lời mời tới ${tenThat(trang.nguoi.display_name) ?? `@${username.replace(/^@/, "")}`}`}
           subtitle="Khi người ấy đồng ý, hai bạn có thể nhắn riêng và xem những bài chia sẻ với bạn bè."
         />
         <View style={[styles.danhThiep, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
@@ -108,10 +97,10 @@ export function AddFriendScreen() {
     <RudiScreen contentStyle={styles.screen} testID="add-friend-screen">
       <TopBar title="Thêm bạn" />
       <Heading
-        title="Thêm bạn bằng số điện thoại"
-        subtitle="Chỉ tìm được người đã dùng Rủ Đi hoặc đã được ai đó đặt tên bằng số này. Số không được lưu."
+        title="Thêm bạn bằng username"
+        subtitle="Nhập @username của bạn ấy. Người dùng có thể tắt cho phép tìm kiếm."
       />
-      {/* A calling card: the number written on it, and, once found, the
+      {/* A calling card: the username written on it, and, once found, the
           person standing on it in their own ink (ADR-0037 D1, D6). */}
       <View style={[styles.danhThiep, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]} testID="danh-thiep">
         <Washi style={styles.washi} tilt={-2} />
@@ -119,32 +108,31 @@ export function AddFriendScreen() {
           <View style={styles.nguoi}>
             <HinhNhan name={tenThat(trang.nguoi.display_name) ?? "?"} personId={trang.nguoi.person_id} size={56} />
             <View style={styles.flex}>
-              <Text style={[typography.caption, { color: colors.inkSoft }]}>Tìm thấy theo số điện thoại</Text>
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>Tìm thấy theo username</Text>
               <Text style={[typography.title, { color: tenThat(trang.nguoi.display_name) === null ? colors.ink : mucNguoi(trang.nguoi.person_id, dark) }]}>
                 {tenThat(trang.nguoi.display_name) ?? "Người chưa đặt tên"}
               </Text>
-              {/* Somebody who has not chosen a name yet only has the server's
-                  placeholder; the tail of the number the searcher typed is what
-                  tells them they found the right person (QA 23/09). */}
+              {/* The username identifies the account even before its owner
+                  chooses a display name. */}
               <Text style={[typography.caption, { color: colors.inkSoft }]}>
-                Số đuôi {duoiSo(phone)} · {tenThat(trang.nguoi.display_name) === null ? "chưa đặt tên trên Rủ Đi" : "đã dùng Rủ Đi"}
+                @{username.replace(/^@/, "")} · {tenThat(trang.nguoi.display_name) === null ? "chưa đặt tên trên Rủ Đi" : "đã dùng Rủ Đi"}
               </Text>
             </View>
           </View>
         ) : null}
         <ONhapMuc
-          accessibilityLabel="Ô số điện thoại bạn"
-          autoComplete="tel"
+          accessibilityLabel="Ô username bạn"
+          autoComplete="username"
           editable={!ban}
-          keyboardType="phone-pad"
-          label="Số điện thoại"
+          autoCapitalize="none"
+          label="Tên tài khoản"
           onChangeText={(t) => {
-            setPhone(t);
+            setUsername(t);
             if (trang.pha !== "nhap") setTrang({ pha: "nhap" });
           }}
-          placeholder="Số di động của bạn ấy"
-          textContentType="telephoneNumber"
-          value={phone}
+          placeholder="Tên tài khoản của bạn ấy"
+          textContentType="username"
+          value={username}
         />
       </View>
       {trang.pha === "tim-thay" || trang.pha === "dang-gui" ? (
@@ -157,12 +145,6 @@ export function AddFriendScreen() {
       ) : null}
     </RudiScreen>
   );
-}
-
-/** The last three digits of what the searcher typed; the number itself is not stored. */
-function duoiSo(so: string): string {
-  const chuSo = so.replace(/\D/g, "");
-  return chuSo.length >= 3 ? `•••${chuSo.slice(-3)}` : "này";
 }
 
 const styles = StyleSheet.create({

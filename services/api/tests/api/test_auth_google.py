@@ -15,6 +15,7 @@ from __future__ import annotations
 import uuid
 
 import pytest
+from legacy_auth_oracle import create_app
 
 from app.api.deps import get_repository
 from app.api.google_identity import (
@@ -25,7 +26,6 @@ from app.api.google_identity import (
     build_google_verifier,
     claims_from,
 )
-from app.api.main import create_app
 from app.api.person_identity import KEY_ENV_VAR
 
 from .conftest import ASGITestClient

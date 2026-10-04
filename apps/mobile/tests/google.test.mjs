@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { googleConfigured, googleSession } from "../dist-test/rudi/google.js";
+import { googleConfigured, googleSession } from "./fixtures/google-legacy.mjs";
 
 const client = "synthetic-test.apps.googleusercontent.com";
 test("Google chỉ hiện khi native có cấu hình đúng nền tảng", () => {

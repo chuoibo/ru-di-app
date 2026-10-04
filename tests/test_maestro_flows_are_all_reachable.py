@@ -16,8 +16,8 @@ import pathlib
 import re
 
 _GOC = pathlib.Path(__file__).resolve().parents[1]
-_SCRIPT = _GOC / "scripts/mobile_native.sh"
-_FLOWS = _GOC / "apps/mobile/.maestro"
+_SCRIPT = _GOC / "tests/fixtures/legacy_native/mobile_native.sh"
+_FLOWS = _GOC / "apps/mobile/tests/fixtures/legacy_native/flows"
 
 
 def _tien_to_duoc_khai() -> set[str]:
@@ -25,7 +25,9 @@ def _tien_to_duoc_khai() -> set[str]:
     nguon = _SCRIPT.read_text(encoding="utf-8")
     dau = nguon.index('for f in "$FLOWS"/*.yaml; do')
     than = nguon[dau : nguon.index("esac", dau)]
-    return set(re.findall(r"(\d{2})-\*", than))
+    return {
+        p for p in re.findall(r"(\d{2})-\*", than) if _SONG_TU <= int(p) <= _SONG_DEN
+    }
 
 
 #: Quy ước đánh số của bảng, đọc ra từ chính `case`: 00–19 là bảng MẶC ĐỊNH

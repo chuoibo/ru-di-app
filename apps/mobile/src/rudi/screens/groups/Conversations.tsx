@@ -16,7 +16,7 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
@@ -56,17 +56,29 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
   const { datPhien } = useRudiSession();
+  const phienMoiNhat = useRef(phien);
+  phienMoiNhat.current = phien;
+  const conMo = useRef(true);
+  useEffect(() => {
+    conMo.current = true;
+    return () => { conMo.current = false; };
+  }, []);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangBam, setDangBam] = useState<string | null>(null);
   useNepNguCanh({ man: "messages", tieuDe: "Tin nhắn", goiY: ["Rủ ai đó đi chơi tuần này", "Cuộc hẹn nào sắp tới?"] });
 
   const nap = useCallback(async () => {
+    const lucBatDau = phienMoiNhat.current;
     try {
-      const nhom = await docNhomCuaToi(phien.person_id);
+      const nhom = await docNhomCuaToi(lucBatDau.person_id);
+      if (!conMo.current || phienMoiNhat.current.token !== lucBatDau.token) return;
       setTrang({ pha: "xong", nhom });
       // Keep the session's own copy fresh too: it is what the empty state and
       // the entry decision read on the next cold start.
-      datPhien(await ganDanhSachNhom(phien, nhom));
+      // A mounted tab keeps this callback across group selections. Merge into
+      // the current session, never the one captured before the user chose.
+      const moi = await ganDanhSachNhom(phienMoiNhat.current, nhom);
+      if (conMo.current && phienMoiNhat.current.token === lucBatDau.token) datPhien(moi);
     } catch (error) {
       setTrang({ pha: "hong", loi: loiRaChu(error) });
     }
@@ -148,16 +160,15 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
         <EmptyState
           action={{ label: "Tạo nhóm", onPress: () => router.push("/groups/new") }}
-          body="Mở một nhóm cho cả hội, nhận lời mời của người đã ở trong nhóm, hoặc kết bạn bằng số điện thoại để nhắn riêng và rủ một người đi chơi."
+          body="Mở một nhóm cho cả hội, nhận lời mời của người đã ở trong nhóm, hoặc kết bạn bằng tên tài khoản để nhắn riêng và rủ một người đi chơi."
           illustration={<Canh id="chua-co-hoi" width={168} />}
           kind="first-use"
           layout="inline"
-          secondary={{ label: "Tôi có lời mời", onPress: () => router.push("/moi") }}
           title="Chưa có nhóm nào"
         />
       ) : null}
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
-        <RudiButton icon="person-add-outline" label="Thêm bạn bằng số điện thoại" onPress={() => router.push("/friends/add")} variant="ghost" />
+        <RudiButton icon="person-add-outline" label="Thêm bạn bằng tên tài khoản" onPress={() => router.push("/friends/add")} variant="ghost" />
       ) : null}
       {trang.pha === "xong" ? (
         <View>

@@ -1,0 +1,71 @@
+# Synthetic isolated QA. Credentials are supplied by the fixture harness.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow: _dang-xuat-neu-co.yaml
+- assertNotVisible: "Fetch development servers"
+- assertVisible: ".*${TREE_FINGERPRINT}.*"
+- tapOn: "Rủ Đi thôi!"
+- extendedWaitUntil:
+    visible: "Chào bạn"
+    timeout: 30000
+- assertNotVisible: "Tôi có lời mời"
+- assertNotVisible: "Ô số điện thoại"
+- tapOn:
+    id: "account-username"
+- inputText: "${RUDI_TEST_USERNAME}"
+- tapOn:
+    id: "account-password"
+- inputText: "wrong synthetic credential"
+- hideKeyboard
+- tapOn: "Đăng nhập"
+- extendedWaitUntil:
+    visible: "Tên tài khoản hoặc mật khẩu chưa đúng."
+    timeout: 30000
+- takeScreenshot: account-invalid-password
+- tapOn:
+    id: "account-password"
+- eraseText
+- inputText: "${RUDI_TEST_PASSWORD}"
+- hideKeyboard
+- tapOn: "Đăng nhập"
+- runFlow: _bo-qua-so-thich.yaml
+- extendedWaitUntil:
+    visible: "Địa điểm|Tin nhắn|Chưa có nhóm nào"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Tin nhắn"
+    timeout: 30000
+- openLink: "rudi://settings/account"
+- extendedWaitUntil:
+    visible: "@${RUDI_TEST_USERNAME}"
+    timeout: 30000
+- takeScreenshot: account-logged-in
+- openLink: "rudi://messages"
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Địa điểm|Tin nhắn|Chưa có nhóm nào"
+    timeout: 150000
+- assertNotVisible: "Chào bạn"
+- openLink: "rudi://settings/account"
+- extendedWaitUntil:
+    visible: "@${RUDI_TEST_USERNAME}"
+    timeout: 30000
+- takeScreenshot: account-session-resumed
+- openLink: "rudi://messages"
+- runFlow: _dang-xuat-neu-co.yaml
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!"
+    timeout: 150000
+- takeScreenshot: account-logged-out

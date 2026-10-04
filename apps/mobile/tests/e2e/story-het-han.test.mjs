@@ -26,7 +26,7 @@ import { deflateSync } from "node:zlib";
 import test from "node:test";
 
 import { BASE_URL, newAttempt } from "../../dist-test/api.js";
-import { personById } from "../../dist-test/rudi/nhom-demo.js";
+import { personById } from "../fixtures/group-world.mjs";
 import { docStories, dangStory, nhomCua } from "../../dist-test/rudi/story/story.js";
 import { guiLoiMoi, traLoiLoiMoi } from "../../dist-test/screens/ca-nhan/ban-be.js";
 import { banDoPhien, batPhienE2E, fetchTho } from "./phien-e2e.mjs";

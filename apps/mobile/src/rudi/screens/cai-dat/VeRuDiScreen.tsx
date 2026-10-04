@@ -20,7 +20,7 @@ const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
   {
     tieuDe: "Rủ Đi giữ gì của bạn",
     cau: [
-      "Số điện thoại, để bạn đăng nhập và để bạn bè tìm ra bạn. Bạn tắt được việc tìm theo số ở mục Quyền riêng tư.",
+      "Mã tài khoản ngẫu nhiên, tên tài khoản và email đã xác minh. Bạn đăng nhập bằng tên tài khoản và mật khẩu hoặc bằng Google, và tắt được việc tìm theo tên tài khoản ở mục Tài khoản & bảo mật.",
       "Tên hiển thị, giới thiệu, thành phố và ảnh đại diện bạn tự nhập.",
       "Tin nhắn, ảnh, bài đăng, story và khoản chi bạn tạo trong các nhóm của mình.",
       "Sở thích bạn chọn, để Rủ Đi AI gợi ý sát hơn.",
@@ -29,7 +29,7 @@ const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
   {
     tieuDe: "Rủ Đi không giữ gì",
     cau: [
-      "Không mật khẩu: đăng nhập bằng mã một lần gửi tới số của bạn.",
+      "Không giữ mật khẩu nguyên văn. Rủ Đi chỉ giữ bản băm để kiểm tra đăng nhập; email được mã hoá khi lưu.",
       "Không một thông tin ngân hàng nào. Rủ Đi nói ai nợ ai bao nhiêu; chuyển tiền là việc giữa hai người.",
       "Không vị trí chạy nền. App chỉ biết nơi bạn tự chọn khi check-in.",
       "Không bán dữ liệu cho ai, và không có quảng cáo trong app.",
@@ -58,7 +58,7 @@ const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
       "Tên, giới thiệu, ảnh, bài đăng, story, bình luận và phản ứng của bạn bị xoá. Sổ kỷ niệm của bạn cùng các bản cũ và phần nguồn gửi AI cũng bị xoá.",
       "Bạn rời mọi nhóm. Tin nhắn cũ ở lại với tên «Người dùng đã rời», vì chúng là một phần cuộc trò chuyện của người khác.",
       "Sổ tiền của các nhóm giữ nguyên: xoá tài khoản không xoá một khoản nợ.",
-      "Đăng nhập lại bằng cùng số điện thoại sẽ tạo một tài khoản mới, trắng.",
+      "Đăng ký lại bằng cùng email hoặc Google sẽ tạo một tài khoản mới, không khôi phục dữ liệu của tài khoản đã xoá.",
     ],
   },
 ];

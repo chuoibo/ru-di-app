@@ -142,7 +142,7 @@ export function FriendsScreen() {
       footer={
         <RudiButton
           icon="person-add-outline"
-          label="Thêm bạn bằng số điện thoại"
+          label="Thêm bạn bằng tên tài khoản"
           onPress={() => router.push("/friends/add")}
         />
       }
@@ -155,7 +155,7 @@ export function FriendsScreen() {
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách bạn" /> : null}
       {trang.pha === "xong" && muc === 0 ? (
         trang.du.ban.length === 0 ? (
-          <EmptyState body="Thêm bạn bằng số điện thoại. Người ấy đồng ý thì hai bên là bạn." kind="first-use" layout="inline" illustration={<Canh id="chua-co-ban" width={168} />} title="Chưa có bạn nào" />
+          <EmptyState body="Thêm bạn bằng tên tài khoản. Người ấy đồng ý thì hai bên là bạn." kind="first-use" layout="inline" illustration={<Canh id="chua-co-ban" width={168} />} title="Chưa có bạn nào" />
         ) : (
           <DanhSach
             hang={trang.du.ban.map((b) => (

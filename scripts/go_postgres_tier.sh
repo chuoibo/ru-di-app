@@ -45,6 +45,7 @@ done
 container="go-pg-tier-$$"
 log="$(mktemp)"
 cleanup() {
+  docker rm -f "$container-redis" >/dev/null 2>&1 || true
   docker rm -f "$container" >/dev/null 2>&1 || true
   rm -f "$log"
 }
@@ -65,15 +66,25 @@ s.close()")"
 password="$(head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 24)"
 
 echo "--- PostgreSQL dùng một lần trên 127.0.0.1:$port"
+pg_options=(-c timezone=UTC)
+if [ "${MOBILE_TEST_POSTGRES_DURABLE:-0}" != "1" ]; then
+  pg_options+=(-c fsync=off -c synchronous_commit=off -c full_page_writes=off)
+fi
 docker run -d --rm --name "$container" \
   -e POSTGRES_DB=mobile -e POSTGRES_USER=mobile -e POSTGRES_PASSWORD="$password" \
   -p "127.0.0.1:$port:5432" "$PG_IMAGE" \
-  -c timezone=UTC -c fsync=off -c synchronous_commit=off -c full_page_writes=off >/dev/null
+  "${pg_options[@]}" >/dev/null
 for _ in $(seq 1 60); do
   docker exec "$container" pg_isready -h 127.0.0.1 -U mobile -d mobile >/dev/null 2>&1 && break
   sleep 1
 done
 
+redis_port="$(python3 -c "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1]); s.close()")"
+docker run -d --rm --name "$container-redis" -p "127.0.0.1:$redis_port:6379" redis@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499 redis-server --maxmemory-policy noeviction >/dev/null
+for _ in $(seq 1 30); do
+  docker exec "$container-redis" redis-cli ping >/dev/null 2>&1 && break
+  sleep 1
+done
 echo "--- alembic upgrade head (từ ảnh API)"
 docker run --rm --network host \
   -e MOBILE_DATABASE_URL="postgresql+psycopg://mobile:$password@127.0.0.1:$port/mobile" \
@@ -95,6 +106,7 @@ set +e
   cd services/core &&
     CORE_TEST_DATABASE_URL="postgresql://mobile:$password@127.0.0.1:$port/mobile" \
     CORE_REQUIRE_POSTGRES_TESTS=1 \
+    CORE_TEST_REDIS_URL="redis://127.0.0.1:$redis_port/0" \
     IDEM_ORACLE_IMAGE="$image" \
     CORE_PYTHON_IMAGE="$image" \
     go test -tags postgres -count=1 -timeout 30m -v "${go_args[@]}"

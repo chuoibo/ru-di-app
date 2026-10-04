@@ -270,6 +270,12 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="a8496b1836c1e6e4",
         why="",
     ),
+    "test.yml::core::Managed account security and retired legacy doors": Covered(
+        kind=GATE_KIND,
+        stages=("account-auth",),
+        body_sha="043a3fda259b5f68",
+        why="",
+    ),
     "test.yml::core::Real-PostgreSQL tests on a disposable database": Covered(
         kind=GATE_KIND,
         stages=("go-postgres",),
@@ -426,7 +432,7 @@ INLINE_STEPS: dict[str, Covered] = {
     "test.yml::docker::The core container reports healthy": Covered(
         kind=GATE_KIND,
         stages=("docker",),
-        body_sha="3bc9b5262c5e090f",
+        body_sha="d00e06b0c5c24293",
         why="",
     ),
     # --- test.yml: shared -------------------------------------------------
@@ -450,19 +456,19 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="f15dd098705bf5de",
         why="",
     ),
-    "test.yml::mobile-native::npm --prefix apps/mobile ci": Covered(
+    "test.yml::mobile-native::Install native account gate dependencies": Covered(
         kind=SETUP_KIND,
         stages=(),
         # Same reason as the mobile job's `npm ci` above: the gate's stage
         # refuses to run without node_modules rather than installing them, so
         # there is nothing local for this to correspond to.
-        why="npm ci for apps/mobile; asserts nothing about the tree",
-        body_sha="094386e53acc99c7",
+        why="pip/npm dependencies and disposable PostgreSQL/Redis images; asserts nothing about the tree",
+        body_sha="013cefaed2de1395",
     ),
     "test.yml::mobile-native::Drive the flows on a device, or say out loud that it could not": Covered(
         kind=GATE_KIND,
         stages=("mobile-native",),
-        body_sha="4c440526aa429b3c",
+        body_sha="4246c29caf1603f3",
         why="",
     ),
     "test.yml::mobile::present": Covered(

@@ -23,12 +23,12 @@ appId: com.lakiet.rudi
       - extendedWaitUntil:
           visible: "Chào bạn"
           timeout: 30000
-      - runFlow: _nhap-otp.yaml
+      - runFlow: _nhap-account.yaml
 - runFlow:
     when:
       visible: "Chào bạn"
     commands:
-      - runFlow: _nhap-otp.yaml
+      - runFlow: _nhap-account.yaml
 - extendedWaitUntil:
     visible: "Khám phá"
     timeout: 30000

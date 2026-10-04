@@ -40,7 +40,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-WATCH = REPO_ROOT / "scripts" / "demo_watch.py"
+WATCH = REPO_ROOT / "tests" / "fixtures" / "legacy_demo" / "demo_watch.py"
 
 
 def _rev(repo: Path, ref: str) -> str | None:
@@ -308,7 +308,7 @@ def test_khong_doi_chieu_duoc_phai_noi_LY_DO_chu_khong_phai_do_lien_ref(
     `data.get("ref")` ra `None`, lệch `origin/main`, và `status` in ra:
 
         phán quyết gần nhất là về 'None', không phải 'origin/main'.
-        Chĩa lại lượt canh:  scripts/demo_watch.py install --apply --ref origin/main
+        Chĩa lại lượt canh:  tests/fixtures/legacy_demo/demo_watch.py install --apply --ref origin/main
 
     Lượt canh ĐANG chĩa đúng `origin/main`. Lệnh gợi ý là no-op, và lý do thật
     (fetch hỏng) bị nuốt hoàn toàn. Người vận hành chạy lệnh đó, thấy không đổi
@@ -655,7 +655,7 @@ def test_gate_co_chang_goi_canh_gac(tmp_path):
         cwd=str(REPO_ROOT),
     )
     assert listed.returncode == 0, listed.stderr
-    assert "demo-watch" in listed.stdout, (
+    assert "demo-watch" not in listed.stdout and "account-auth" in listed.stdout, (
         "gate.sh không có chặng nào đọc phán quyết canh gác — "
         "đúng hình dạng đã để máy demo lệch 4 route mà cả đội không thấy"
     )
@@ -854,7 +854,7 @@ def test_dong_cron_tro_vao_checkout_on_dinh_chu_khong_phai_cay_dang_dung(repo):
     block = watch.cron_block(
         argparse.Namespace(url="http://127.0.0.1:8099", repo=str(repo))
     )
-    assert str(repo / "scripts" / "demo_watch.py") in block
+    assert str(repo / "tests" / "fixtures" / "legacy_demo" / "demo_watch.py") in block
     assert str(WATCH) not in block, "đang ghim chính cây đang đứng vào crontab"
 
 
@@ -879,7 +879,9 @@ def test_dong_cron_mang_dung_nhip_va_dung_ref_duoc_chon(repo):
 
 def test_khong_cam_lich_tro_vao_file_khong_ton_tai(repo, capsys):
     """Cắm cron trỏ vào file không có = 10 phút một lần hỏng mà không ai đọc."""
-    (repo / "scripts" / "demo_watch.py").unlink(missing_ok=True)
+    (repo / "tests" / "fixtures" / "legacy_demo" / "demo_watch.py").unlink(
+        missing_ok=True
+    )
     code = watch.main(["install", "--repo", str(repo), "--apply"])
     assert code == watch.EXIT_CANNOT_RUN
     assert "không tồn tại" in capsys.readouterr().err

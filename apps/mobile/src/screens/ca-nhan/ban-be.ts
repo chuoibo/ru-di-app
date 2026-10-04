@@ -1,38 +1,11 @@
-/** F03/F04 over the wire: find somebody by number, ask, answer, list.
- *
- * `services/api/app/api/routes/friends.py` is written around one rule -- the
- * telephone number goes in and never comes back out -- and this file is the
- * client half of that rule. Three things it does on purpose:
- *
- * **The number travels in a POST body and nowhere else.** `timBanTheoSo` takes
- * the number as an argument and puts it in `body`. It is never interpolated
- * into a path, never appended as `?phone=`, and never logged. uvicorn writes
- * method and path into its access log; a number in a query string is a number
- * written to disk on the server, forever, by a route whose whole design is
- * about not storing it. That is the 24th shape QA measured and the only one
- * the server cannot defend against on its own, because it is the client that
- * decides the URL.
- *
- * **Nothing that comes back carries a number.** `NguoiTimDuoc` has two fields
- * because `PersonMatchResponse` has two fields. There is no telephone number
- * on the wire to render by accident -- the server never stored one -- and this
- * type is written to keep it that way if the response ever grows.
- *
- * **The refusal tables are read off the server, not invented.** Every key
- * below is a code raised in `routes/friends.py`, `api/service.py` or
- * `domain/friendship.py`; `tests/ban-be.test.mjs` parses those three files and
- * fails on a key that no longer exists. A table nobody checks is how
- * `PUBLISH_REFUSALS` shipped naming two codes the server had never sent.
- *
- * Split out of the screen so the parts worth asserting -- the shape check, the
- * sentences, the request the app builds -- can be exercised without rendering.
- */
+/** Username lookup, friendship requests and their public refusal messages. */
 import { BASE_URL, translatedAsActor, type Attempt } from "../../api";
 
-/** Who holds a number. An id and a name; there is no third field. */
+/** A discoverable account returned by username lookup. */
 export type NguoiTimDuoc = {
   person_id: string;
   display_name: string;
+  username?: string;
 };
 
 /** One friend edge, as whichever party is reading it sees it. */
@@ -56,77 +29,15 @@ export type Ban = {
 
 export type TraLoi = "accept" | "decline" | "block";
 
-/* --------------------------------------------------- the shape of a number */
-
-const DAU_PHAN_CACH = /[\s.\-()]/g;
-
-/**
- * Nine digits after the trunk prefix, first of them one of 3 5 7 8 9.
- *
- * A copy of `_MOBILE` in `services/api/app/api/person_identity.py`, and a copy
- * is a liability, so it is a *checked* copy: `tests/ban-be.test.mjs` reads the
- * regex out of that Python file and fails if the two stop agreeing. Same trick
- * `tests/publish-refusals.test.mjs` uses on the publish gate codes, for the
- * same reason -- a client rule that drifts from the server rule produces a
- * refusal the person holding the phone cannot act on.
- */
-const SO_DI_DONG = /^[35789]\d{8}$/;
-
-/**
- * Does this look like a Vietnamese mobile number at all?
- *
- * Deliberately NOT an authority on validity -- the server decides that, and
- * its 422 says so in Vietnamese. This exists for one narrower job: the lookup
- * route allows thirty calls a minute per caller, and spending one of them on a
- * half-typed number means the person who then types it correctly is the one
- * who gets throttled. So the button stays inert until the field holds
- * something that could be a number.
- *
- * Accepts what `canonical_mobile` accepts: `+84`, a bare `84`, a trunk `0`, or
- * none of the three, with spaces, dots, dashes and brackets anywhere.
- */
-export function soCoTheGoi(raw: string): boolean {
-  const packed = raw.replace(DAU_PHAN_CACH, "");
-  if (packed === "") return false;
-  const rest = packed.startsWith("+84")
-    ? packed.slice(3)
-    : packed.startsWith("84")
-      ? packed.slice(2)
-      : packed.startsWith("0")
-        ? packed.slice(1)
-        : packed;
-  return SO_DI_DONG.test(rest);
-}
-
 /* ------------------------------------------------------ what refusals mean */
 
-/**
- * Refusals of `POST /friends/lookup`.
- *
- * The server's own sentences are already Vietnamese and already correct; these
- * replace the two where the app can say more about what to do next, and leave
- * the rest alone. Not one of them interpolates anything: the input to this
- * route is a telephone number, and a refusal that echoed its input is how a
- * refusal becomes a disclosure. The same reasoning is written out at length in
- * the route's own module docstring.
- */
+/** Username discovery never reveals hidden, blocked or deleted accounts. */
 export const LOI_TIM: Record<string, string> = {
-  person_not_found:
-    "Chưa có ai dùng số này trong Rủ Đi. Kiểm tra lại số, hoặc rủ họ tải app rồi tìm lại sau.",
-  phone_not_mobile:
-    "Số này chưa đúng dạng số di động Việt Nam. Nhập 10 số bắt đầu bằng 0, hoặc dạng +84.",
-  // 429. The wording matters more than most: throttled and broken look
-  // identical from the outside, and somebody who reads a bare refusal here
-  // concludes the app is broken and stops. It says the wait, and says the app
-  // is fine.
-  rate_limited:
-    "Bạn vừa tìm hơi nhiều lần nên Rủ Đi tạm nghỉ một chút. Thử lại sau một phút. App không hỏng, chỉ đang chờ.",
-  // 503. Configured wrongly, not broken, and above all not the fault of the
-  // number that was typed -- so the sentence says so before somebody spends
-  // ten minutes retyping their friend's number.
-  identity_key_missing:
-    "Rủ Đi chưa bật được phần tìm bạn. Đây là lỗi phía Rủ Đi chứ không phải do số bạn nhập. Báo nhóm kỹ thuật giúp mình.",
-  permission_denied: "Tài khoản đang dùng chưa được phép tìm bạn bằng số điện thoại.",
+  person_not_found: "Chưa tìm thấy tài khoản này. Kiểm tra username hoặc nhờ bạn ấy bật cho phép tìm kiếm.",
+  username_invalid: "Tên tài khoản gồm 3–32 chữ, số, dấu chấm hoặc gạch dưới.",
+  auth_rate_limited: "Bạn vừa tìm hơi nhiều lần. Thử lại sau một phút. App vẫn hoạt động.",
+  authentication_required: "Hãy đăng nhập lại để tìm bạn.",
+  auth_temporarily_unavailable: "Tìm bạn đang gián đoạn. Hãy thử lại sau.",
 };
 
 /**
@@ -147,10 +58,10 @@ export const LOI_TIM: Record<string, string> = {
  */
 export const LOI_GUI: Record<string, string> = {
   person_not_found:
-    "Người này không còn trong Rủ Đi nữa. Tìm lại bằng số điện thoại một lần nữa.",
+    "Người này không còn trong Rủ Đi nữa. Tìm lại bằng tên tài khoản.",
   request_not_open:
     "Lời mời này chưa gửi được. Kéo xuống xem \"Lời mời đã gửi\" và \"Bạn bè\" bên dưới để biết hai bạn đang ở đâu.",
-  self_edge: "Đây là số của chính bạn. Không tự kết bạn với mình được.",
+  self_edge: "Đây là tài khoản của chính bạn. Không tự kết bạn với mình được.",
   permission_denied: "Tài khoản đang dùng chưa được phép gửi lời mời kết bạn.",
 };
 
@@ -175,21 +86,14 @@ export const LOI_DOC: Record<string, string> = {
 
 /* ------------------------------------------------------------- the calls */
 
-/**
- * Who holds this number.
- *
- * POST, with the number in the body. Read the top of this file before changing
- * the method or the path: `GET /friends/lookup?phone=...` would put a real
- * telephone number into the server's access log on every search, and no amount
- * of care further down would take it back out.
- */
-export async function timBanTheoSo(
-  soDienThoai: string,
+/** POST the username in a body, keeping it out of access-log URLs. */
+export async function timBanTheoUsername(
+  username: string,
   actorId: string,
 ): Promise<NguoiTimDuoc> {
   return translatedAsActor<NguoiTimDuoc>(LOI_TIM, "/friends/lookup", {
     method: "POST",
-    body: { phone: soDienThoai },
+    body: { username },
     actorId,
   });
 }

@@ -9,7 +9,6 @@
     "@expo/vector-icons": "^15.0.2",
     "@maplibre/maplibre-react-native": "^11.3.10",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-native-google-signin/google-signin": "^16.1.5",
     "@shopify/react-native-skia": "2.6.2",
     "expo": "~57.0.17",
     "expo-blur": "~57.0.2",
@@ -55,8 +54,7 @@
     "postinstall": "node tools/chep-canvaskit.mjs && node tools/chep-maplibre-worker.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build:check && tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test $(find tests -path tests/e2e -prune -o -name '*.test.mjs' -print | sort)",
-    "seed:rudi": "tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node tools/seed-rudi-world.mjs",
-    "test:e2e": "tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test $(find tests/e2e -name '*.test.mjs' | sort)",
+    "test:e2e": "npm run build:check && tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test --test-concurrency=1 $(find tests/e2e -name '*.test.mjs' | sort)",
     "build:check": "node tools/chep-canvaskit.mjs && node tools/chep-maplibre-worker.mjs && EXPO_PUBLIC_API_URL=http://api.build-check.invalid expo export --platform web --output-dir .expo-build-check --clear"
   },
   "private": true

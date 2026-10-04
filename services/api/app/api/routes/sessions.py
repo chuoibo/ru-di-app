@@ -38,15 +38,6 @@ from app.api.service import ApiService
 router = APIRouter(tags=["sessions"])
 
 
-@router.post(
-    "/sessions",
-    response_model=SessionResponse,
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        404: {"model": ErrorResponse},
-        422: {"model": ErrorResponse},
-    },
-)
 def create_session(
     request: SessionBootstrapRequest,
     repository: Annotated[ApiRepository, Depends(get_repository)],

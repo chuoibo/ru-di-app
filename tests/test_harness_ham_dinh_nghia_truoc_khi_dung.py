@@ -33,7 +33,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-HARNESS = REPO_ROOT / "scripts" / "mobile_native.sh"
+HARNESS = REPO_ROOT / "tests" / "fixtures" / "legacy_native" / "mobile_native.sh"
 
 #: Dòng mở vòng lặp flow. Ghim nguyên văn, và ghim cả việc nó KHÔNG thụt đầu
 #: dòng: file còn một vòng `for f in "$FLOWS"/*.yaml` thứ hai, thụt vào trong

@@ -25,7 +25,7 @@ from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CHECK = REPO_ROOT / "scripts" / "kiem_the_ai_sau_40.py"
-HARNESS = REPO_ROOT / "scripts" / "mobile_native.sh"
+HARNESS = REPO_ROOT / "tests" / "fixtures" / "legacy_native" / "mobile_native.sh"
 
 _spec = importlib.util.spec_from_file_location("kiem_the_ai_sau_40", CHECK)
 assert _spec is not None and _spec.loader is not None

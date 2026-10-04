@@ -22,7 +22,7 @@ mới, thì file này sai chứ không phải người đọc — hãy sửa c�
 | `migration/` | 132 route card cho đợt chuyển lõi sang Go (ADR-0029) | Trước khi đụng một route. **Máy đọc thư mục này**: `scripts/check_route_ownership.py` đỏ cổng nếu một hàng Go-owned mất file bằng chứng |
 | `team/` | `charter.md` (quy trình), `hang-doi.md` (việc còn nợ), `backlog.md`, `de-xuat-agy.md` | Khi cần biết cái gì còn mở, ai quyết cái gì |
 | `security/` | `repo-guard.md` (chính `scripts/repo_guard.py` in ra khi chặn), prompt-injection địa điểm | Khi repo guard chặn commit, hoặc khi đụng dữ liệu từ nguồn ngoài |
-| `testing/` | `postgres-repository.md` — tầng test PostgreSQL thật | Khi đổi persistence. Fake repository **không** thay được tầng này |
+| `testing/` | `postgres-repository.md` — tầng test PostgreSQL thật; `tai-khoan-tu-quan.md` — vận hành và nghiệm thu auth | Khi đổi persistence hoặc tài khoản. Fake repository **không** thay được tầng PostgreSQL |
 | `runbooks/` | `pii-git-history.md` | Khi dữ liệu thật lỡ vào Git |
 | `superpowers/specs/` | Spec thiết kế tính năng | Khi làm tiếp tính năng đã có spec |
 | `assets/` | 11 ảnh/sơ đồ `README.md` dựng | Khi sửa README |

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -767,4 +768,18 @@ func wireStrings(values []string) pyjson.List {
 		list[i] = pyjson.String(value)
 	}
 	return list
+}
+
+// AccountContexts uses the existing context contract, including pair visibility.
+func AccountContexts(ctx context.Context, q repo.Querier, person string) (json.RawMessage, error) {
+	summaries, err := peoplesteps.ContextSummaries(peopleStore{ctx: ctx, store: repo.Repository{Q: q}}, person)
+	if err != nil {
+		return nil, err
+	}
+	out := make(pyjson.List, len(summaries))
+	for i, summary := range summaries {
+		out[i] = wireContextSummary(summary)
+	}
+	b, err := pyjson.Compact(out)
+	return json.RawMessage(b), err
 }

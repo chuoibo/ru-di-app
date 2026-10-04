@@ -1,6 +1,6 @@
 """The app's demo people must be the rows the seed script actually writes.
 
-Two files now carry the same seven ids: `scripts/seed_demo_data.py` derives
+Two files now carry the same seven ids: `tests/fixtures/legacy_demo/seed_demo_data.py` derives
 them with `uuid5`, and `apps/mobile/src/rudi/nhom-demo.ts` has them
 written out because Hermes cannot derive a `uuid5` without shipping SHA-1.
 
@@ -26,8 +26,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SEED_SCRIPT = REPO_ROOT / "scripts" / "seed_demo_data.py"
-DEMO_TS = REPO_ROOT / "apps" / "mobile" / "src" / "rudi" / "nhom-demo.ts"
+SEED_SCRIPT = REPO_ROOT / "tests" / "fixtures" / "legacy_demo" / "seed_demo_data.py"
+DEMO_TS = REPO_ROOT / "apps" / "mobile" / "tests" / "fixtures" / "group-world.mjs"
 
 # One object literal per person, in the DEMO_PEOPLE array. Deliberately strict
 # about the field order it accepts: a loose pattern that silently matched fewer

@@ -56,10 +56,13 @@ var CotNguoiGo = []CotNguoi{
 	{"community_interactions", "person_id", Chua, "community: interaction signals for ranking; deleted by community_erase, not counted by any test yet"},
 	{"community_audit", "actor_id", Chua, "community: moderation audit trail; the actor is set NULL by community_erase (the FK is ON DELETE SET NULL), not counted by any test yet"},
 	{"community_notifications", "person_id", Chua, "community: notifications; deleted by community_erase, not counted by any test yet"},
+	{"community_notifications", "actor_id", Chua, "community: notification sender added by its second migration; not erased by account deletion yet, an id only"},
 	{"community_idempotency", "person_id", Chua, "community: idempotency keys; deleted by community_erase, not counted by any test yet"},
 	{"community_limits", "person_id", Chua, "community: rate-limit counters; deleted by community_erase, not counted by any test yet"},
 	// internal/diary (ADR-0039).
 	{"outing_diaries", "owner_id", Chua, "diary: memory books (versions and photos cascade); deleted by diary's own trigger diary_erase_for_account, counted by diary's TestPostgresAccountErasurePurgesBooksVersionsAndJobs"},
 	{"outing_diary_jobs", "owner_id", Chua, "diary: AI jobs holding the excerpts sent for a book; deleted by diary_erase_for_account, counted by the same diary test"},
 	{"outing_endings", "ended_by", Chua, "diary: who closed an outing (the FK has no ON DELETE); not erased by account deletion yet: an id only, no text of the person"},
+	{"managed_accounts", "person_id", Chua, "accountauth: encrypted login and recovery credentials; erased by erase_managed_account_credentials, counted by TestPostgresAccountErasureAndDiscoveryCompatibility"},
+	{"account_challenges", "person_id", Chua, "accountauth: bound sensitive-change proofs; erased by the same trigger, counted by the same accountauth test"},
 }

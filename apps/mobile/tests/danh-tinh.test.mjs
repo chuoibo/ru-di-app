@@ -30,8 +30,8 @@ import {
   idNgauNhien,
   soHopLe,
   tenHopLe,
-} from "../dist-test/screens/vao-cua/danh-tinh.js";
-import { layIdTuSo } from "../dist-test/screens/vao-cua/cong-api.js";
+} from "./fixtures/phone-identity-legacy.mjs";
+import { layIdTuSo } from "./fixtures/phone-door-legacy.mjs";
 
 /* Every number in this file is invented, and the repo guard cannot tell an
  * invented one from a real one -- nor should it have to. `LONG_NUMBER_RE` in

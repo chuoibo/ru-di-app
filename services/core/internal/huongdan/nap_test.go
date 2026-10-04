@@ -549,8 +549,8 @@ func TestDuLieuNhungDayDu(t *testing.T) {
 	if len(soTay.doan) != 55 {
 		t.Fatalf("%d sections embedded, want 55", len(soTay.doan))
 	}
-	if len(soTay.cacMan) != 60 {
-		t.Fatalf("%d routes in _rut.json, want 60", len(soTay.cacMan))
+	if len(soTay.cacMan) != 61 {
+		t.Fatalf("%d routes in _rut.json, want 61", len(soTay.cacMan))
 	}
 	for _, d := range soTay.doan {
 		if !soTay.coMan[d.Man] || d.TieuDe == "" || len(d.Buoc) == 0 || len(d.Buoc) > MaxBuoc {

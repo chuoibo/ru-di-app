@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { laTuChoiDoiTen, moiBangSo } from "../dist-test/rudi/moi-bang-so.js";
+import { laTuChoiDoiTen, moiBangSo } from "./fixtures/phone-invitation-legacy.mjs";
 
 // A synthetic number, assembled at run time: the repo guard refuses a literal
 // Vietnamese mobile number in any tracked file, test data included.

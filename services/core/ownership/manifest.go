@@ -69,7 +69,7 @@ type Feature struct {
 const StateGoOnly = "GO-ONLY"
 
 // FeaturePackages are the packages that register feature routes.
-var FeaturePackages = []string{"chatassist", "chatlegacychange", "avatarfeed", "websession", "nepnho"}
+var FeaturePackages = []string{"chatassist", "chatlegacychange", "avatarfeed", "websession", "nepnho", "accountauth"}
 
 // Manifest is the parsed, validated file.
 type Manifest struct {

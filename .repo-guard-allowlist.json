@@ -1471,6 +1471,40 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh của đợt «Trạng thái rỗng Cộng đồng» 03/10/2026 (docs/claude/2026-10-03/cong-dong-trang-rong): ảnh ghép JPEG chụp bản web export trên stack loopback QA và máy ảo Android riêng (dev client nạp Metro của nhánh), persona tổng hợp dalat-0, từ khoá tìm tổng hợp; không có mockup của chủ sản phẩm, số điện thoại, tên hay dữ liệu người thật. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "apps/mobile/assets/google-signin-light.png",
+      "sha256": "2f30a746fd0acc72417c460139f3a2ae9f93d3e31bb6f44181719556ec54a2d5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Nút Sign in with Google PNG 4x chính thức từ developers.google.com/static/identity/images/signin-assets.zip; giữ nguyên byte, đã mở ảnh kiểm tra, chỉ logo và caption, không dữ liệu người tham gia."
+    },
+    {
+      "path": "apps/mobile/package-lock.json",
+      "sha256": "a13fc5745d407e61d8fac0da13b0dd22aa3c0b46eb5e16daa281374c97922e37",
+      "rules": [
+        "aggregate-base64-fragments",
+        "long-number"
+      ],
+      "reason": "Ghim 2026-10-04 cho ADR-0053: soát toàn bộ diff chỉ gỡ dependency và metadata @react-native-google-signin/google-signin; native dùng Credential Manager trong module Kotlin. Các chuỗi còn lại là integrity npm và phiên bản công khai, không có dữ liệu người tham gia. Giữ các pin lịch sử để kiểm range."
+    },
+    {
+      "path": "services/core/go.mod",
+      "sha256": "bbccd6ff4db1662e304363179ef53c19645b223d178a8ce4deb44da8b0449159",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Ghim 2026-10-04 cho verifier Google chính thức: diff chỉ thêm cloud.google.com/go/auth/oauth2adapt v0.2.8 và golang.org/x/oauth2 v0.36.0. Các số dài trong toàn file là pseudo-version upstream công khai, không phải số điện thoại hoặc tài khoản. Giữ pin lịch sử."
+    },
+    {
+      "path": "services/core/go.sum",
+      "sha256": "7b2a46cceaffab33eafb78177bdaf4edc7d07d5b91e11b8f8e8f92283c02cf60",
+      "rules": [
+        "long-number",
+        "aggregate-base64-fragments"
+      ],
+      "reason": "Ghim 2026-10-04 cho verifier Google chính thức: diff chỉ thêm bốn checksum của oauth2adapt v0.2.8 và oauth2 v0.36.0. Đã kiểm toàn file gồm module/version/digest h1 của Go; chuỗi dài là checksum hoặc pseudo-version upstream công khai, không phải credential hay dữ liệu người tham gia. Giữ pin lịch sử."
     }
   ]
 }

@@ -65,6 +65,7 @@
 # Usage:
 #   scripts/e2e_slice.sh                provision, run the slice, tear down
 #   scripts/e2e_slice.sh --keep         leave the stack up, print its URL
+#   scripts/e2e_slice.sh --native       run managed-account Android acceptance
 #   scripts/e2e_slice.sh -- -t "ten"    extra arguments go to `node --test`
 #
 # Exit codes: 0 the slice passed, 1 the slice failed,
@@ -77,11 +78,13 @@ REPO_ROOT="$PWD"
 
 IMAGE="${MOBILE_TEST_POSTGRES_IMAGE:-postgres:16-alpine}"
 KEEP=0
+NATIVE=0
 TEST_ARGS=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --keep) KEEP=1 ;;
+    --native) NATIVE=1 ;;
     --) shift; TEST_ARGS=("$@"); break ;;
     -h|--help) sed -n '2,72p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Tham số lạ: $1 (xem scripts/e2e_slice.sh --help)" >&2; exit 2 ;;
@@ -92,9 +95,11 @@ done
 CONTAINER=""
 API_PID=""
 CORE_PID=""
+REDIS_CONTAINER=""
 WORK_DIR=""
 
 cleanup() {
+  if [ "$KEEP" -ne 1 ] && [ -n "$REDIS_CONTAINER" ]; then docker rm -f "$REDIS_CONTAINER" >/dev/null 2>&1 || true; fi
   # EXIT so Ctrl-C and early returns are covered too. A uvicorn that outlives
   # the run is worse than none: it holds a port and answers /healthz, and the
   # next reader diagnoses a stale answer as somebody else's bug.
@@ -249,8 +254,6 @@ s.close()")" || { echo "không tìm được cổng trống" >&2; return 2; }
     MOBILE_DATABASE_URL="$DATABASE_URL" \
     MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
     MOBILE_PERSON_ID_KEY="$ID_KEY" \
-    MOBILE_OTP_DEBUG_CODE="000000" \
-    MOBILE_OTP_LOG_CODES="1" \
     MOBILE_INTERNAL_TOKEN="$INTERNAL_TOKEN" \
       python3 -m uvicorn app.api.main:app \
         --host 127.0.0.1 --port "$port" --log-level warning
@@ -336,6 +339,14 @@ s.close()")" || return 2
     tail -3 "$core_log" >&2
     return 2
   fi
+  ACCOUNT_ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64 | tr -d '\n')"
+  ACCOUNT_LOOKUP_KEY="$(head -c 32 /dev/urandom | base64 | tr -d '\n')"
+  REDIS_CONTAINER="rudi-e2e-auth-redis-$$"
+  docker run -d --rm --name "$REDIS_CONTAINER" -p 127.0.0.1::6379 redis@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499 redis-server --maxmemory-policy noeviction >/dev/null || return 2
+  local redis_port
+  redis_port="$(docker port "$REDIS_CONTAINER" 6379/tcp | cut -d: -f2)"
+  for i in $(seq 1 30); do docker exec "$REDIS_CONTAINER" redis-cli ping >/dev/null 2>&1 && break; sleep 1; done
+  MOBILE_DATABASE_URL="$DATABASE_URL" "$core_bin" migrate-accounts >>"$core_log" 2>&1 || return 2
   MOBILE_CORE_LISTEN="127.0.0.1:$port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$liveness" \
   MOBILE_PYTHON_UPSTREAM="$API_URL" \
@@ -343,8 +354,13 @@ s.close()")" || return 2
   MOBILE_CORE_CANDIDATE_ROUTES="${MOBILE_CORE_CANDIDATE_ROUTES:-ported}" \
   MOBILE_PERSON_ID_KEY="$ID_KEY" \
   MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
-  MOBILE_OTP_DEBUG_CODE="000000" \
-  MOBILE_OTP_LOG_CODES="1" \
+  MOBILE_ACCOUNT_AUTH_ENABLED=1 \
+  MOBILE_ACCOUNT_ENCRYPTION_KEY="$ACCOUNT_ENCRYPTION_KEY" \
+  MOBILE_ACCOUNT_LOOKUP_KEY="$ACCOUNT_LOOKUP_KEY" \
+  MOBILE_AUTH_REDIS_URL="redis://127.0.0.1:$redis_port/0" \
+  MOBILE_EMAIL_SMTP_HOST=127.0.0.1 MOBILE_EMAIL_SMTP_PORT=9 \
+  MOBILE_EMAIL_SMTP_USER=isolated-fixture MOBILE_EMAIL_SMTP_PASSWORD=isolated-fixture \
+  MOBILE_EMAIL_FROM="fixture@${SYNTHETIC_MAIL_DOMAIN:-example.test}" \
   MOBILE_CHAT_CHANGES_CANDIDATE="${MOBILE_CHAT_CHANGES_CANDIDATE:-}" \
   MOBILE_INTERNAL_TOKEN="$INTERNAL_TOKEN" \
     "$core_bin" serve >"$core_log" 2>&1 &
@@ -372,187 +388,15 @@ s.close()")" || return 2
   return 2
 }
 
-# --- sessions -------------------------------------------------------------
-
-# The API above runs with no MOBILE_AUTH_MODE, so it runs in `prod` (ADR-0014):
-# it does not believe `X-Actor-ID`. That is deliberate and is the point of this
-# stage. Running the slice in `dev` would keep it green and would stop it
-# saying anything about the adapter the product actually ships.
-#
-# So the three demo people need real sessions. They are minted the way a real
-# host mints its first one -- `scripts/genesis_session.py`, straight at the
-# database, no HTTP -- because the HTTP route that issues a session requires an
-# invitation, and issuing an invitation requires a session. On a fresh database
-# that loop has no entry point, which is exactly why that script exists.
+# --- synthetic accounts through the shipped HTTP auth door ----------------
 mint_sessions() {
-  local people
-  people="$(python3 "$REPO_ROOT/scripts/e2e_demo_people.py" \
-              "$REPO_ROOT/apps/mobile/src/rudi/nhom-demo.ts")" \
-    || { echo "khong lay duoc danh sach nguoi demo" >&2; return 2; }
-
   SESSION_FILE="$WORK_DIR/sessions.json"
-  local first=1
-  printf '{' >"$SESSION_FILE"
-  while IFS=$'\t' read -r pid name; do
-    [ -n "$pid" ] || continue
-    local line token
-    line="$(
-      MOBILE_DATABASE_URL="$DATABASE_URL" python3 "$REPO_ROOT/scripts/genesis_session.py" \
-        --person-id "$pid" --display-name "$name" --group "E2E genesis" --json
-    )" || { echo "genesis_session.py hong cho $name" >&2; return 2; }
-    token="$(printf '%s' "$line" | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')" \
-      || { echo "khong doc duoc token cho $name" >&2; return 2; }
-    [ "$first" -eq 1 ] || printf ',' >>"$SESSION_FILE"
-    first=0
-    printf '"%s":"%s"' "$pid" "$token" >>"$SESSION_FILE"
-  done <<<"$people"
-  printf '}' >>"$SESSION_FILE"
-
-  echo "--- phien that cho 3 nguoi demo (che do prod, khong tin X-Actor-ID)"
-  return 0
-}
-
-# `POST /sessions` -- cua ma NGUOI THAT di qua, tren HTTP that, o che do prod.
-#
-# `mint_sessions` o tren di thang vao database vi vong cap phien khong co diem
-# vao tren mot database moi. Nhung the thi route bootstrap KHONG duoc lat cat nao
-# cham toi, va no la route duy nhat mot nguoi lam duoc trong doi that. Buoc nay
-# dong cho trong do: dung phien genesis de tao mot chuyen va mot loi moi DICH
-# DANH, roi doi loi moi do lay phien qua HTTP.
-#
-# Cai no gac, va la ly do buoc nay ton tai: phien tra ve phai noi ro NHOM nao.
-# Thieu `context_id` thi client biet minh la ai va khong biet doc gi -- khong co
-# route nao liet ke nhom cua mot nguoi -- nen man hinh dung o che do fixture.
-redeem_a_real_invite() {
-  local owner_id owner_token ctx_id outing_id invite_token body got_ctx
-  owner_id="$(python3 -c 'import json,sys;print(next(iter(json.load(open(sys.argv[1])))))' "$SESSION_FILE")" \
-    || { echo "khong doc duoc nguoi dau tien tu $SESSION_FILE" >&2; return 2; }
-  owner_token="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))[sys.argv[2]])' "$SESSION_FILE" "$owner_id")" \
-    || return 2
-
-  ctx_id="$(curl -fsS -X POST "$API_URL/contexts" \
-      -H 'Content-Type: application/json' -H "Authorization: Bearer $owner_token" \
-      -H "Idempotency-Key: e2e-ctx-$owner_id" \
-      -d '{"display_name":"E2E cua vao"}' \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')" \
-    || { echo "khong tao duoc nhom cho buoc doi loi moi" >&2; return 2; }
-
-  outing_id="$(curl -fsS -X POST "$API_URL/contexts/$ctx_id/outings" \
-      -H 'Content-Type: application/json' -H "Authorization: Bearer $owner_token" \
-      -H "Idempotency-Key: e2e-outing-$owner_id" \
-      -d '{"title":"E2E cua vao","starts_on":"2030-10-17","ends_on":"2030-10-19","headcount":2,"budget_per_person_vnd":0}' \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')" \
-    || { echo "khong tao duoc chuyen" >&2; return 2; }
-
-  # Nguoi duoc moi: mot person moi, dat ten qua chinh duong app dat ten.
-  local guest_id="$(python3 -c 'import uuid;print(uuid.uuid4())')"
-  curl -fsS -X PUT "$API_URL/people/$guest_id" \
-      -H 'Content-Type: application/json' -H "Authorization: Bearer $owner_token" \
-      -d '{"display_name":"Khach e2e"}' >/dev/null \
-    || { echo "khong dat duoc ten nguoi duoc moi" >&2; return 2; }
-
-  invite_token="$(curl -fsS -X POST "$API_URL/outings/$outing_id/invites" \
-      -H 'Content-Type: application/json' -H "Authorization: Bearer $owner_token" \
-      -H "Idempotency-Key: e2e-invite-$guest_id" \
-      -d "{\"source\":\"friend\",\"person_id\":\"$guest_id\"}" \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin)["invite_token"])')" \
-    || { echo "khong mint duoc loi moi dich danh" >&2; return 2; }
-
-  body="$(curl -fsS -X POST "$API_URL/sessions" \
-      -H 'Content-Type: application/json' \
-      -d "{\"invite_token\":\"$invite_token\"}")" \
-    || { echo "POST /sessions hong" >&2; return 2; }
-
-  got_ctx="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("context_id",""))')"
-  if [ "$got_ctx" != "$ctx_id" ]; then
-    echo "phien khong noi dung nhom: mong $ctx_id, nhan '${got_ctx:-<thieu>}'" >&2
-    return 1
-  fi
-  echo "--- POST /sessions tren HTTP that: phien tra dung context_id cua nhom trong loi moi"
-
-  # Va cai id ma nguoi do se bam. `context_id` noi HO O NHOM NAO; `membership_id`
-  # la thu duy nhat bien `invited` thanh `active` duoc, va no chi lay duoc o day:
-  # route liet ke thanh vien nam SAU chinh cai the dang cho dong y.
-  local mem_id state
-  mem_id="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("membership_id",""))')"
-  if [ -z "$mem_id" ]; then
-    echo "phien khong mang membership_id: nguoi duoc moi khong co nut nao bam duoc" >&2
-    return 1
-  fi
-  state="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("membership_state",""))')"
-  if [ "$state" != "invited" ]; then
-    echo "vua doi loi moi ma da '$state' — buoc dong y bi bo qua" >&2
-    return 1
-  fi
-
-  # Bam bang chinh bearer cua phien vua duoc cap, khong phai bang token chu nhom.
-  # Do la ca ADR-0014 muc 8 noi: nguoi duoc goi ten tu dong y, khong phai duoc
-  # duyet. Dung token chu nhom o day se xanh ma khong chung minh gi.
-  local guest_token accepted
-  guest_token="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')"
-  accepted="$(curl -fsS -X POST "$API_URL/memberships/$mem_id/accept" \
-      -H "Authorization: Bearer $guest_token" \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin).get("state",""))')" \
-    || { echo "nguoi duoc moi khong tu dong y duoc: POST /memberships/$mem_id/accept hong" >&2; return 1; }
-  if [ "$accepted" != "active" ]; then
-    echo "dong y xong van '$accepted', chua vao duoc nhom" >&2
-    return 1
-  fi
-  echo "--- nguoi duoc moi tu dong y bang bearer cua chinh minh: invited -> active"
-  return 0
-}
-
-# --- OTP: the first door that needs nobody's invitation ----------------------
-#
-# ADR-0016. The API above runs the log sender (no gateway configured) with a
-# fixed debug code, which is the ONLY pairing `resolve_otp_debug_code` allows;
-# the same env on a host with a real gateway refuses to boot. So this stage
-# proves the whole door in prod mode -- request, verify, a bearer that a real
-# route accepts -- without a telephone in the loop. The number is synthetic and
-# built at run time: the repo guard refuses a literal one, rightly.
-login_by_otp() {
-  local phone challenge body token via
-  phone="09$(printf '%08d' 1)"
-  challenge="$(curl -fsS -X POST "$API_URL/auth/otp/request" \
-      -H 'Content-Type: application/json' -d "{\"phone\":\"$phone\"}" \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin)["challenge_id"])')" \
-    || { echo "OTP: khong xin duoc challenge" >&2; return 2; }
-  body="$(curl -fsS -X POST "$API_URL/auth/otp/verify" \
-      -H 'Content-Type: application/json' \
-      -d "{\"challenge_id\":\"$challenge\",\"phone\":\"$phone\",\"code\":\"000000\"}")" \
-    || { echo "OTP: verify khong tra 2xx" >&2; return 2; }
-  via="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin)["issued_via"])')"
-  [ "$via" = "otp" ] || { echo "OTP: issued_via=$via, mong 'otp'" >&2; return 2; }
-  token="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')"
-  # A wrong code on a fresh challenge must be a 422 with the attempts left, and
-  # the bearer just minted must open a real door. Two claims, both cheap.
-  challenge="$(curl -fsS -X POST "$API_URL/auth/otp/request" \
-      -H 'Content-Type: application/json' -d "{\"phone\":\"09$(printf '%08d' 2)\"}" \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin)["challenge_id"])')" || return 2
-  local wrong
-  wrong="$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API_URL/auth/otp/verify" \
-      -H 'Content-Type: application/json' \
-      -d "{\"challenge_id\":\"$challenge\",\"phone\":\"09$(printf '%08d' 2)\",\"code\":\"111111\"}")"
-  [ "$wrong" = "422" ] || { echo "OTP: ma sai tra $wrong, mong 422" >&2; return 2; }
-  local mine
-  mine="$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/people/me/contexts" \
-      -H "Authorization: Bearer $token")"
-  [ "$mine" = "200" ] || { echo "OTP: bearer moi mint bi tu choi ($mine)" >&2; return 2; }
-  echo "--- OTP: xin ma -> verify -> bearer mo duoc GET /people/me/contexts (che do prod, ma debug chi hop le voi log sender)"
-  return 0
-}
-
-# The Google door on a host with no client ids must be CLOSED, not permissive:
-# 503 `google_not_configured` before the token is even looked at. A junk token
-# is enough to prove the order -- a permissive host would answer 401 (it tried
-# to verify) or worse.
-google_door_closed_without_ids() {
-  local code
-  code="$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API_URL/auth/google" \
-      -H 'Content-Type: application/json' -d '{"id_token":"khong-phai-token"}')"
-  [ "$code" = "503" ] || { echo "Google: host khong co client id ma tra $code, mong 503" >&2; return 2; }
-  echo "--- Google: khong co MOBILE_GOOGLE_CLIENT_IDS -> 503 google_not_configured (cua dong, khong nhan token nao)"
-  return 0
+  (cd "$REPO_ROOT/services/core" && \
+    CORE_REQUIRE_POSTGRES_TESTS=1 CORE_TEST_DATABASE_URL="${DATABASE_URL/postgresql+psycopg:/postgresql:}" \
+    RUDI_TEST_ACCOUNT_URL="$API_URL" RUDI_TEST_ACCOUNT_OUTPUT="$WORK_DIR" \
+    MOBILE_ACCOUNT_ENCRYPTION_KEY="$ACCOUNT_ENCRYPTION_KEY" \
+    MOBILE_ACCOUNT_LOOKUP_KEY="$ACCOUNT_LOOKUP_KEY" \
+    go test -tags=postgres,authfixture -count=1 -run '^TestProvisionSyntheticAccountWorld$' ./internal/accountauth) || return 2
 }
 
 # --- run ------------------------------------------------------------------
@@ -566,15 +410,21 @@ provision_db || exit $?
 start_api || exit $?
 start_core || exit $?
 mint_sessions || exit $?
-redeem_a_real_invite || exit $?
-login_by_otp || exit $?
-google_door_closed_without_ids || exit $?
+
+if [ "$NATIVE" -eq 1 ]; then
+  # The same disposable HTTP-created account world supplies the device.
+  # Real credentials never enter Maestro arguments or this fixture harness.
+  RUDI_NATIVE_TEST_ACK=synthetic-only RUDI_NATIVE_QA_PORT="${API_URL##*:}" \
+    RUDI_TEST_USERNAME=fixture_minh RUDI_TEST_PASSWORD='isolated synthetic credential for minh' \
+    scripts/mobile_native.sh --account --lap 2
+  exit $?
+fi
 
 if [ "$KEEP" -eq 1 ]; then
   echo "--keep: giữ stack lại."
   echo "  API:       $API_URL"
-  echo "  database:  $DATABASE_URL"
-  echo "  dọn bằng:  docker rm -f $CONTAINER; kill $API_PID"
+  echo "  fixture:   $WORK_DIR"
+  echo "  dọn bằng:  docker rm -f $CONTAINER $REDIS_CONTAINER; kill $API_PID $CORE_PID; rm -rf $WORK_DIR"
 fi
 
 # EXPO_PUBLIC_API_URL is pinned, not defaulted. `src/api.ts` falls back to
@@ -590,6 +440,7 @@ echo "--- npm run test:e2e (EXPO_PUBLIC_API_URL=$API_URL, MOBILE_REQUIRE_E2E=1)"
   cd "$REPO_ROOT/apps/mobile" || exit 2
   EXPO_PUBLIC_API_URL="$API_URL" \
   MOBILE_REQUIRE_E2E=1 \
+  RUDI_TEST_ACCOUNT_WORLD="$WORK_DIR/world.json" \
   MOBILE_E2E_SESSIONS="$SESSION_FILE" \
   MOBILE_E2E_DATABASE_URL="$DATABASE_URL" \
     npm run --silent test:e2e ${TEST_ARGS[0]+-- "${TEST_ARGS[@]}"}

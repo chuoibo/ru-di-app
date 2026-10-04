@@ -165,9 +165,9 @@ export function cauVeDanhBa(ket: KetQuaQuyen): string {
     case "cho-phep":
       return "Đã bật. Rủ Đi sẽ cho bạn biết những người trong danh bạ đang dùng app.";
     case "tu-choi":
-      return "Chưa bật đồng bộ. Bạn vẫn tìm được bạn bè bằng số điện thoại ở mục Cá nhân.";
+      return "Chưa bật đồng bộ. Bạn vẫn tìm được bạn bè bằng tên tài khoản ở mục Cá nhân.";
     case "chua-co":
-      return "Bản này chưa đọc danh bạ, nên chưa có gì được gửi đi. Tìm bạn bằng số điện thoại ở mục Cá nhân.";
+      return "Bản này chưa đọc danh bạ, nên chưa có gì được gửi đi. Tìm bạn bằng tên tài khoản ở mục Cá nhân.";
   }
 }
 

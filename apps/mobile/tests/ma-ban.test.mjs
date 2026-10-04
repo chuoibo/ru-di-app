@@ -19,7 +19,7 @@ import {
   linkMaBan,
   maMoDuocApp,
 } from "../dist-test/screens/vao-cua/ma-ban.js";
-import { chuanHoaSo } from "../dist-test/screens/vao-cua/danh-tinh.js";
+import { chuanHoaSo } from "./fixtures/phone-identity-legacy.mjs";
 
 // Built from pieces, never written out. `repo_guard.py` refuses digit runs
 // that look like telephone numbers and cannot tell a fixture from a real one.

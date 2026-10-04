@@ -62,7 +62,7 @@ import { CAU_KHONG_RO, chiTietLoi, moTaLoi } from "../dist-test/ui/loi-tren-man.
 import { themChiTiet } from "../dist-test/ui/loi-may-chu.js";
 import { fetchPlaces } from "../dist-test/screens/kham-pha/places.js";
 import { askSearch } from "../dist-test/screens/kham-pha/tim-kiem.js";
-import { khoiDongNhomDemo } from "../dist-test/rudi/nhom-demo.js";
+import { khoiDongNhomDemo } from "./fixtures/group-world.mjs";
 import {
   guiTheAi,
   guiTinNhan,

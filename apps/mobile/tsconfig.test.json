@@ -8,6 +8,7 @@
     "target": "es2022"
   },
   "include": [
+    "src/rudi/account.ts",
     "src/rudi/community/api.ts",
     // B7 (QA N14): the composer's topic rules held to the server's, and the
     // feed's small decisions (follow by author, cut body, notification words).
@@ -17,7 +18,6 @@
     // QA 23/09: the placeholder-name check (held equal to both server spellings)
     // and the invite-by-number steps (a 403 rename no longer aborts the invite).
     "src/rudi/ten-giu-cho.ts",
-    "src/rudi/moi-bang-so.ts",
     "src/rudi/photo-viewer.ts",
     "src/api.ts",
     "src/assignment.ts",
@@ -104,7 +104,6 @@
     "src/screens/binh-chon/ket-qua.ts",
     "src/screens/chat/nhom.ts",
     // The end-to-end harness's seeded people (`tests/e2e`). No screen imports it.
-    "src/rudi/nhom-demo.ts",
     "src/screens/chat/nhap-tu-chat.ts",
     // F31/F33/F34/F36. Compile both the four-route client and the markup the
     // group-understanding test reads through react-native-web.
@@ -144,7 +143,6 @@
     // bug-140342 -- an unkeyed digest over 5x10^8 numbers is reversible -- so
     // what is compiled here is what the device still decides on its own: which
     // strings are a Vietnamese mobile number at all.
-    "src/screens/vao-cua/danh-tinh.ts",
     // The entry door's requests, including the one that asks the server for an
     // id. Compiled so a test can assert the client refuses a bad number
     // BEFORE it travels, which is a property of this file and not of the API.
@@ -245,7 +243,6 @@
     // B3 (QA UI-041): the screen's overlay slot. Compiled so the hand-off runs
     // under React's own effect ordering, not read as source.
     "src/rudi/ui/KheLop.tsx",
-    "src/rudi/otp-dang-cho.ts",
     "src/rudi/chat/tin-song.ts",
     // Màn này đọc số của ai. Compile vì luật nó mang là: chế độ live KHÔNG BAO
     // GIỜ tự tới — phải có người gõ cấu hình vào. Một cổng đọc nguồn không phân
@@ -264,7 +261,6 @@
     "src/rudi/kham-pha/ly-do.ts",
     // Chữ: nối hai chữ cuối bằng NBSP để câu không rớt một chữ mồ côi (EmptyState body).
     "src/rudi/ui/chu.ts",
-    "src/rudi/google.ts",
     // Đường SVG của bộ kit (UI v2): compile vì react-native-svg parse `d` trong
     // Java lúc mount; một token sai là app chết ở khung hình đầu, tsc và web mù.
     "src/rudi/ui/duong-svg.ts",
@@ -331,7 +327,6 @@
     "src/rudi/chia-bill/nhap-bill.ts",
     "src/rudi/chia-bill/o-so.ts",
     "src/screens/kham-pha/ban-do-nhom.ts",
-    "src/rudi/loi-moi-den.ts",
     "src/rudi/dot-thu/dot-thu.ts",
     "src/rudi/ky-niem/ky-niem.ts",
     "src/rudi/ky-niem/achievement-routes.ts",

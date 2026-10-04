@@ -172,7 +172,6 @@ cmd_up() {
       "${auth_env[@]}" \
       -e MOBILE_PERSON_ID_KEY="$id_key" \
       -e MOBILE_INTERNAL_TOKEN="$internal_token" \
-      -e MOBILE_OTP_DEBUG_CODE="$otp_debug_code" -e MOBILE_OTP_LOG_CODES=1 \
       -e MOBILE_MEDIA_ROOT="${media_dir[$role]}" -e TZ=UTC \
       -e MOBILE_VALHALLA_URL="${routing_url[$role]}" \
       -e MOBILE_ROUTING_GRAPH_VERSION="$graph_version" \
@@ -214,8 +213,7 @@ cmd_up() {
   MOBILE_DATABASE_URL="${dsn[cand]}" \
   MOBILE_PERSON_ID_KEY="$id_key" \
   MOBILE_INTERNAL_TOKEN="$internal_token" \
-  MOBILE_OTP_DEBUG_CODE="$otp_debug_code" \
-  MOBILE_OTP_LOG_CODES=1 \
+  MOBILE_ACCOUNT_AUTH_ENABLED=0 \
   MOBILE_MEDIA_ROOT="${media_dir[cand]}" \
   MOBILE_VALHALLA_URL="${routing_url[cand]}" \
   MOBILE_ROUTING_GRAPH_VERSION="$graph_version" \

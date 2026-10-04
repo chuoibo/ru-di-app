@@ -2,13 +2,12 @@
 {
   "man": "messages",
   "tieu_de": "Tin nhắn",
-  "nhanUI": ["Tin nhắn", "Mở nhóm …", "Mở cuộc trò chuyện với …", "Tạo nhóm", "Tôi có lời mời", "Thêm bạn bằng số điện thoại", "Đồng ý vào nhóm", "Nhóm mới", "Đặt tên cho hội", "Mở nhóm", "Mã lời mời", "Nhận lời mời", "Lên plan", "Số điện thoại", "Gửi lời mời", "Chưa có nhóm nào"],
+  "nhanUI": ["Tin nhắn", "Mở nhóm …", "Mở cuộc trò chuyện với …", "Tạo nhóm", "Thêm bạn bằng username", "Đồng ý vào nhóm", "Nhóm mới", "Đặt tên cho hội", "Mở nhóm", "Lên plan", "Tên tài khoản", "Gửi lời mời"],
   "di_toi": [
     {"nhan": "Mở nhóm …", "man": "groups/[id]/chat"},
     {"nhan": "Mở cuộc trò chuyện với …", "man": "groups/[id]/chat"},
     {"nhan": "Tạo nhóm", "man": "groups/new"},
-    {"nhan": "Tôi có lời mời", "man": "moi"},
-    {"nhan": "Thêm bạn bằng số điện thoại", "man": "friends/add"}
+    {"nhan": "Thêm bạn bằng username", "man": "friends/add"}
   ],
   "tien": false
 }
@@ -29,9 +28,9 @@ Tab «Tin nhắn» liệt kê các nhóm và các cuộc trò chuyện hai ngư�
 ## Vào nhóm bằng lời mời
 
 1. Có người mời bạn thì nhóm đó hiện trong danh sách với nút «Đồng ý vào nhóm».
-2. Có mã mời mà danh sách còn «Chưa có nhóm nào» thì bấm «Tôi có lời mời», dán vào ô «Mã lời mời», rồi bấm «Nhận lời mời».
+2. Đăng nhập bằng tài khoản hoặc Google, rồi bấm «Đồng ý vào nhóm» để gia nhập.
 
 ## Thêm bạn
 
-1. Bấm «Thêm bạn bằng số điện thoại».
-2. Điền «Số điện thoại» của bạn ấy rồi bấm «Gửi lời mời».
+1. Bấm «Thêm bạn bằng username».
+2. Điền «Tên tài khoản» của bạn ấy rồi bấm «Gửi lời mời».

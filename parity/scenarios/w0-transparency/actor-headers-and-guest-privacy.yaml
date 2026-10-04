@@ -1,7 +1,7 @@
 # W0 transparency: dev-mode actor parsing errors, validation errors and the
 # guest privacy headers, all of which Python renders and core must pass through.
 id: w0/actor-headers-and-guest-privacy
-routes: ["GET /contexts/{context_id}", "GET /g/{token}", "POST /friends/lookup"]
+routes: ["GET /contexts/{context_id}", "GET /g/{token}"]
 auth_mode: dev
 personas:
   caller: {}
@@ -33,10 +33,3 @@ steps:
   - id: guest_token_unknown
     as: anonymous
     request: {method: GET, path: /g/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
-  - id: lookup_not_json
-    as: caller
-    request:
-      method: POST
-      path: /friends/lookup
-      headers: {content-type: application/json}
-      body_raw: '{"phone": '

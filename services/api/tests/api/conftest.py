@@ -62,12 +62,12 @@ from app.api.repository import (
     OutingStopRecord,
     PairConsentRecord,
     PairConstraintRecord,
-    PairRhythmRecord,
     PairKeepRecord,
     PairNotebookRecord,
     PairPaperRecord,
     PairProposalRecord,
     PairResponseRecord,
+    PairRhythmRecord,
     PairVersionRecord,
     PairViewRecord,
     PaymentReportRecord,
@@ -2388,7 +2388,9 @@ class FakeRepository(SeedCatalogueReads):
             )
             for i, stop in enumerate(stops)
         )
-        record = dataclasses.replace(record, stops=written, timeline_revision=record.timeline_revision + 1)
+        record = dataclasses.replace(
+            record, stops=written, timeline_revision=record.timeline_revision + 1
+        )
         self.outings[outing_id] = record
         return record
 
@@ -2602,7 +2604,13 @@ class FakeRepository(SeedCatalogueReads):
         return self.pair_rhythms.get((cycle_id, tuan))
 
     def set_pair_rhythm(self, *, cycle_id, tuan, nguoi_lo_id, chon_boi_id, now):
-        row = PairRhythmRecord(cycle_id=cycle_id, tuan=tuan, nguoi_lo_id=nguoi_lo_id, chon_boi_id=chon_boi_id, updated_at=now)
+        row = PairRhythmRecord(
+            cycle_id=cycle_id,
+            tuan=tuan,
+            nguoi_lo_id=nguoi_lo_id,
+            chon_boi_id=chon_boi_id,
+            updated_at=now,
+        )
         self.pair_rhythms[(cycle_id, tuan)] = row
         return row
 
@@ -2901,7 +2909,7 @@ def repository():
 
 
 @pytest.fixture
-def client(repository, monkeypatch):
+def client(repository, monkeypatch, request):
     async def run_sync_inline(function, *args, **kwargs):
         del kwargs
         return function(*args)
@@ -2914,6 +2922,18 @@ def client(repository, monkeypatch):
     # mode that trusts `X-Actor-*`; `create_app()` with no argument is prod
     # now, and a suite that quietly kept the old default would have been
     # testing an adapter the product no longer ships.
-    app = create_app(auth_mode="dev")
+    # These three modules retain the retired phone wire as historical evidence.
+    # All other modules use the actual runtime; retirement has a separate test.
+    legacy = {
+        "test_identity_route",
+        "test_friends_routes",
+        "test_friends_lookup_phone_shapes",
+    }
+    factory = create_app
+    if request.module.__name__.split(".")[-1] in legacy:
+        from legacy_auth_oracle import create_app as legacy_factory
+
+        factory = legacy_factory
+    app = factory(auth_mode="dev")
     app.dependency_overrides[get_repository] = lambda: repository
     return ASGITestClient(app)

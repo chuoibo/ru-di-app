@@ -35,11 +35,11 @@ import {
   publishBatch,
   registerPeople,
 } from "../../dist-test/api.js";
-import { khoiDongNhomDemo } from "../../dist-test/rudi/nhom-demo.js";
+import { khoiDongNhomDemo } from "../fixtures/group-world.mjs";
 import { layTaiChinh } from "../../dist-test/screens/ca-nhan/tai-chinh.js";
 import { layKyUc } from "../../dist-test/screens/ky-niem/ky-uc.js";
 import { docQuyetToanLive } from "../../dist-test/rudi/doc-live.js";
-import { DEMO_PEOPLE, personById } from "../../dist-test/rudi/nhom-demo.js";
+import { DEMO_PEOPLE, personById } from "../fixtures/group-world.mjs";
 import { batPhienE2E, daVa, fetchTho } from "./phien-e2e.mjs";
 
 // The API this file talks to runs in `prod` and does not believe `X-Actor-ID`

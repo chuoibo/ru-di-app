@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { nhanLoiMoiBuoiDi } from "../dist-test/api.js";
-import { cauSauKhiNhan } from "../dist-test/rudi/loi-moi-den.js";
+import { cauSauKhiNhan } from "./fixtures/invitation-legacy.mjs";
 
 const ACTOR = "46b55e67-932b-5415-a5ee-08fb2641a4ff";
 const LAN = { key: "a1b2c3d4-e5f6-4a1b-8c2d-e3f4a5b6c7d8", at: 0 };

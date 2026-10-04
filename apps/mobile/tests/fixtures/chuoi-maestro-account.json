@@ -1,0 +1,18 @@
+{
+  "dong": [
+    ".*This is the developer menu.*",
+    ".*Toggle performance monitor.*",
+    "Fetch development servers"
+  ],
+  "id": [],
+  "anh": [
+    "account-invalid-password",
+    "account-logged-in",
+    "account-logged-out",
+    "account-session-resumed"
+  ],
+  "daXoa": {
+    "Tôi có lời mời": "Luồng đổi lời mời lấy phiên đã được gỡ theo ADR-0053; flow chỉ kiểm không còn cửa này.",
+    "Ô số điện thoại": "Định danh tài khoản là UUID ngẫu nhiên theo ADR-0053; flow chặn cửa nhập số điện thoại."
+  }
+}

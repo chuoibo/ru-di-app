@@ -44,6 +44,7 @@ import (
 	"syscall"
 	"time"
 
+	"mobile/services/core/internal/accountauth"
 	"mobile/services/core/internal/achievementv1"
 	"mobile/services/core/internal/aidoc"
 	"mobile/services/core/internal/aiharness"
@@ -63,7 +64,6 @@ import (
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/diary"
 	"mobile/services/core/internal/gomdot"
-	"mobile/services/core/internal/googleid"
 	"mobile/services/core/internal/httpapi/dispatch"
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/httpapi/mw/cors"
@@ -82,7 +82,6 @@ import (
 	"mobile/services/core/internal/rag/nap"
 	"mobile/services/core/internal/rerank"
 	"mobile/services/core/internal/routes"
-	"mobile/services/core/internal/sms"
 	"mobile/services/core/internal/socialv2"
 	"mobile/services/core/internal/vectordb"
 	"mobile/services/core/internal/vectordb/napkho"
@@ -133,6 +132,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return ragIndexer(getenv, stderr)
 	case "purge-expired":
 		return purgeExpired(args[1:], getenv, stdout, stderr)
+	case "migrate-accounts":
+		return migrateAccounts(getenv, stdout, stderr)
 	case "migrate-profile":
 		return migrateProfile(getenv, stdout, stderr)
 	default:
@@ -229,21 +230,13 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 
 	// Go routes authenticate in the auth mode Python resolved and query the
 	// same database. Go-only profile routes always require the database.
-	sender, debug, err := sms.FromEnv(getenv)
-	if err != nil {
-		logger.Error("refusing to start", "error", err.Error())
-		return 1
-	}
 	env := endpoint.Env{
-		Mode:         endpoint.Mode(cfg.AuthMode),
-		Now:          time.Now,
-		NewUnit:      func() *db.Unit { return db.NewUnit(nil) },
-		Limits:       limit.NewSet(limit.Monotonic),
-		PersonIDKey:  getenv(identity.KeyEnvVar),
-		SMS:          sender,
-		OTPDebugCode: debug,
-		Google:       googleid.FromEnv(getenv),
-		AI:           may,
+		Mode:        endpoint.Mode(cfg.AuthMode),
+		Now:         time.Now,
+		NewUnit:     func() *db.Unit { return db.NewUnit(nil) },
+		Limits:      limit.NewSet(limit.Monotonic),
+		PersonIDKey: getenv(identity.KeyEnvVar),
+		AI:          may,
 	}
 	var idempotency func(http.Handler) http.Handler
 	var pool *pgxpool.Pool
@@ -491,6 +484,43 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			inner.ServeHTTP(w, r)
 		})
 	}
+	// Account auth stays outside generic idempotency, including its request-body capture.
+	if pool != nil && (getenv("MOBILE_ACCOUNT_AUTH_ENABLED") == "1" || (getenv("MOBILE_ACCOUNT_AUTH_ENABLED") != "0" && cfg.AuthMode == "prod")) {
+		check, cancel := context.WithTimeout(ctx, 10*time.Second)
+		accountCfg, closeAccounts, accountErr := accountauth.FromEnv(check, getenv)
+		if accountErr == nil {
+			accountErr = accountauth.CheckSchema(check, pool)
+		}
+		cancel()
+		if closeAccounts != nil {
+			defer closeAccounts()
+		}
+		if accountErr != nil {
+			logger.Error("refusing to start managed accounts", "error", accountErr.Error())
+			return 1
+		}
+		accountCfg.Logger = logger
+		accounts := accountauth.New(pool, accountCfg)
+		background.Add(1)
+		go func() { defer background.Done(); accounts.RunMail(chatCtx) }()
+		inner := front
+		feature := cors.New(origins, origins != "").Middleware(accounts)
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if accountauth.Matches(r.URL.Path) {
+				feature.ServeHTTP(w, r)
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
+	innerAccounts := front
+	front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if accountauth.Retired(r) {
+			accountauth.Retire(w)
+			return
+		}
+		innerAccounts.ServeHTTP(w, r)
+	})
 	logger.Info("core starting",
 		"listen", cfg.Listen,
 		"liveness", cfg.LivenessListen,
@@ -1112,6 +1142,7 @@ func featureRoutes() []featureView {
 		"avatarfeed":       avatarfeed.Routes(),
 		"websession":       websession.Routes(),
 		"nepnho":           nepnho.Routes(),
+		"accountauth":      accountauth.Routes(),
 	}
 	var out []featureView
 	for _, pkg := range ownership.FeaturePackages {
@@ -1345,5 +1376,22 @@ func migrateDiaries(getenv func(string) string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	fmt.Fprintln(stdout, "Đã áp dụng migration ending và sổ kỷ niệm.")
+	return 0
+}
+
+func migrateAccounts(getenv func(string) string, stdout, stderr io.Writer) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "account migration: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = accountauth.Migrate(ctx, pool); err != nil {
+		fmt.Fprintln(stderr, "account migration failed:", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Đã áp dụng migration tài khoản Go.")
 	return 0
 }

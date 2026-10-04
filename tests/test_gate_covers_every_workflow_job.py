@@ -89,6 +89,7 @@ COVERED_BY: dict[str, tuple[str, ...]] = {
         "python-touch",
         "go-vet",
         "go-test",
+        "account-auth",
         "go-postgres",
         "go-media",
         "go-broker",
@@ -158,28 +159,7 @@ COVERED_BY: dict[str, tuple[str, ...]] = {
 # `test_local_only_stages_are_really_local` refuses an entry whose name a
 # workflow job declares, an entry already claimed in COVERED_BY, and an entry
 # the gate no longer has.
-LOCAL_ONLY: dict[str, str] = {
-    "demo-watch": (
-        "asks whether the demo box on 8099 is still being watched, and whether "
-        "its last recorded verdict was about main. A CI runner has no demo box "
-        "and no crontab of ours, so a job would be answering about nothing. It "
-        "runs locally because the demo drifted from main twice -- 58 routes "
-        "against 62 for sixteen commits, then 65 against 69 -- and neither time "
-        "was a gate failing: the gate that would have caught it had no caller."
-    ),
-    "hero-walk": (
-        "asks whether somebody recently walked the whole hero path -- photo to "
-        "Gemini to assignment to split to guest page -- on the demo box, and "
-        "whether it worked. Local for the same reason as demo-watch (a runner "
-        "has no demo box) and for one of its own: the walk spends a real Gemini "
-        "call, which is not something to put on every push. It exists because "
-        "the scan seam had no gate at all: `duong-bill.test.mjs` starts from a "
-        "hand-written reading, the client unit tests replay a wire body frozen "
-        "on 2026-08-29, and the live model tier is opt-in behind "
-        "MOBILE_LIVE_GEMINI, which `grep -rn` finds in no script and no "
-        "workflow. Two green halves that never met."
-    ),
-}
+LOCAL_ONLY: dict[str, str] = {}
 
 JOB_ID = re.compile(r"^  ([A-Za-z0-9_-]+):\s*$", re.M)
 

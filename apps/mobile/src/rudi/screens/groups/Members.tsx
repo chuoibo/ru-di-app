@@ -152,7 +152,7 @@ export function GroupMembersScreen() {
           {loiVaiTro ? <Text style={[typography.caption, { color: colors.warn }]}>{loiVaiTro}</Text> : null}
         </View>
       ) : null}
-      <StampButton label="Mời bằng số điện thoại" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} />
+      <StampButton label="Mời bằng tên tài khoản" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} />
       {/* Consent, said where the invitation starts: a margin note, still read. */}
       <ChuThichLe icon="mail-open-outline">
         Người được mời thấy lời mời ở tab Tin nhắn ngay khi đăng nhập bằng số đó, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.

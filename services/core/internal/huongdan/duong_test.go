@@ -180,9 +180,8 @@ func TestDuongToiLaNganNhatMoiCap(t *testing.T) {
 			}
 		}
 	}
-	// 60 routes since main's community board and memory books (2026-09-27):
-	// 3600 ordered pairs, 50 before.
-	if soCap != 3600 || coDuong < 1500 {
+	// 61 routes after managed auth replaces the old OTP and invitation doors.
+	if soCap != 3721 || coDuong < 1500 {
 		t.Fatalf("%d pairs, %d with a way: the graph is not the one embedded", soCap, coDuong)
 	}
 	t.Logf("%d pairs, %d with a way of at most %d steps; %d pass through a money screen because every way that short does, %d of two steps or more pass through none",

@@ -12,14 +12,14 @@
  */
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, taiAnhDaiDien, thongDiepNguoiDoc } from "../../../api";
 import { baoDaDoiAnh } from "../../nguoi/anh-dai-dien";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
 import { AnhNhomError } from "../../../camera/anh-nhom";
 import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach } from "../../nguoi/chinh-sach-tuong";
-import { docHoSoToi, suaHoSoToi, type HoSoToi } from "../../../phien";
+import { docHoSoToi, type HoSoToi } from "../../../phien";
 import { NHAN_GIAO_DIEN } from "../../giao-dien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
@@ -49,20 +49,6 @@ export function CaiDatScreen() {
   useEffect(() => {
     void nap();
   }, [nap]);
-
-  const doiTimTheoSo = async (bat: boolean) => {
-    if (phien === null || dangLuu) return;
-    setDangLuu(true);
-    setLoi(null);
-    try {
-      const moi = await suaHoSoToi(phien.person_id, { discoverable_by_phone: bat });
-      setHoSo(moi);
-    } catch (error) {
-      setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
-    } finally {
-      setDangLuu(false);
-    }
-  };
 
   const doiChinhSach = async (ma: string) => {
     if (!laChinhSach(ma)) return;
@@ -106,7 +92,6 @@ export function CaiDatScreen() {
 
   if (!phienDaDoc) return null;
 
-  const timDuoc = hoSo?.discoverable_by_phone ?? true;
 
   return (
     <RudiScreen testID="cai-dat-screen">
@@ -144,6 +129,7 @@ export function CaiDatScreen() {
         />
       </NhomHang>
       <SectionHeader title="Đăng nhập & phiên" />
+      <ListRow icon="shield-checkmark-outline" onPress={() => router.push("/settings/account" as never)} title="Tài khoản & bảo mật" subtitle="Username, email, mật khẩu và Google" />
       <NhomHang>
         <ListRow
           icon="phone-portrait-outline"
@@ -154,24 +140,6 @@ export function CaiDatScreen() {
       </NhomHang>
       <SectionHeader title="Quyền riêng tư" />
       <NhomHang>
-        <View style={styles.hang}>
-          <View style={styles.hangChu}>
-            <Text style={[typography.label, { color: colors.ink }]}>Tìm theo số điện thoại</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>
-              {timDuoc
-                ? "Bạn bè nhập đúng số của bạn thì tìm thấy bạn."
-                : "Không ai tìm được bạn theo số điện thoại."}
-            </Text>
-          </View>
-          <Switch
-            accessibilityLabel="Cho tìm theo số điện thoại"
-            disabled={dangLuu || hoSo === null}
-            onValueChange={(bat) => void doiTimTheoSo(bat)}
-            thumbColor={colors.card}
-            trackColor={{ true: colors.accent, false: colors.line }}
-            value={timDuoc}
-          />
-        </View>
         <View style={styles.khoi}>
           <Text style={[typography.label, { color: colors.ink }]}>Ai được bình luận tường tôi</Text>
           <View accessibilityRole="radiogroup" style={styles.chips}>
