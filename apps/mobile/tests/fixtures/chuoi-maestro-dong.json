@@ -2,7 +2,6 @@
   "_": "Chuỗi Maestro dựng lúc chạy (tên người seed ghép tên món, số tiền tính ra...), không có nguyên văn trong mã. Danh sách chỉ được CO LẠI: tests/chuoi-maestro-con-song.test.mjs. Tên ảnh takeScreenshot ghim nguyên bộ.",
   "dong": [
     ".* QA: Ngon that",
-    ".* · 1 tim · 1 bình luận",
     ".*1 nhóm.*",
     ".*1 phiếu.*",
     ".*1.check-in.*",
