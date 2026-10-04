@@ -1,0 +1,25 @@
+# Đăng nhập bằng tài khoản tự quản (ADR-0055): từ màn chào, username + mật
+# khẩu, rồi bỏ qua bước sở thích nếu tài khoản mới rơi vào đó.
+#
+# Người gọi truyền `TK` và `MK` qua `env:` của runFlow; giá trị thật đến từ `-e`
+# của harness (tài khoản tổng hợp của stack QA cô lập, mật khẩu sinh lúc chạy).
+# Không có giá trị nào nằm trong file. Gọi khi máy đang ở màn chào («Rủ Đi
+# thôi!»): người gọi tự đăng xuất trước bằng `_dang-xuat-neu-co.yaml`.
+#
+# Thay `_dang-nhap-so.yaml` cùng ô số điện thoại + mã debug của cửa OTP đã gỡ.
+appId: com.lakiet.rudi
+---
+- tapOn: "Rủ Đi thôi!"
+- extendedWaitUntil:
+    visible: "Chào bạn"
+    timeout: 30000
+- tapOn:
+    id: "account-username"
+- inputText: "${TK}"
+- tapOn:
+    id: "account-password"
+- inputText: "${MK}"
+- hideKeyboard
+- tapOn: "Đăng nhập"
+- runFlow:
+    file: _bo-qua-so-thich.yaml

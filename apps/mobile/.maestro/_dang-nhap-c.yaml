@@ -1,0 +1,10 @@
+# Đăng nhập bằng tài khoản C — người LÁI của các flow từ 37 trở đi, và là người
+# xem story của người kia ở flow 43. Cần vì flow 46 kết thúc bằng một máy đã
+# đăng xuất (nó vừa xoá một tài khoản), còn `_43b` chạy SAU cả bảng.
+appId: com.lakiet.rudi
+---
+- runFlow:
+    file: _dang-nhap-tai-khoan.yaml
+    env:
+      TK: "${TK_C}"
+      MK: "${MK_C}"

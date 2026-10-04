@@ -339,6 +339,14 @@ s.close()")" || return 2
     tail -3 "$core_log" >&2
     return 2
   fi
+  # --native: the Android table writes wall posts through the community
+  # composer (flow 33, 42), which core serves only with its schema and flag.
+  local community=""
+  if [ "$NATIVE" -eq 1 ]; then
+    MOBILE_DATABASE_URL="$DATABASE_URL" "$core_bin" migrate-community >>"$core_log" 2>&1 || {
+      echo 'không migrate được lược đồ cộng đồng:' >&2; tail -3 "$core_log" >&2; return 2; }
+    community=1
+  fi
   ACCOUNT_ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64 | tr -d '\n')"
   ACCOUNT_LOOKUP_KEY="$(head -c 32 /dev/urandom | base64 | tr -d '\n')"
   REDIS_CONTAINER="rudi-e2e-auth-redis-$$"
@@ -356,6 +364,7 @@ s.close()")" || return 2
   MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
   MOBILE_ACCOUNT_AUTH_ENABLED=1 \
   MOBILE_AUTH_TRUSTED_PROXY_CIDRS=127.0.0.1/32 \
+  MOBILE_COMMUNITY_ENABLED="$community" \
   MOBILE_ACCOUNT_ENCRYPTION_KEY="$ACCOUNT_ENCRYPTION_KEY" \
   MOBILE_ACCOUNT_LOOKUP_KEY="$ACCOUNT_LOOKUP_KEY" \
   MOBILE_AUTH_REDIS_URL="redis://127.0.0.1:$redis_port/0" \
@@ -392,9 +401,15 @@ s.close()")" || return 2
 # --- synthetic accounts through the shipped HTTP auth door ----------------
 mint_sessions() {
   SESSION_FILE="$WORK_DIR/sessions.json"
+  # --native: the Android table's world (seven people per lap, passwords drawn
+  # at runtime, nobody signed in yet), written next to the stack in the system
+  # temp directory, never in a worktree.
+  local world=""
+  if [ "$NATIVE" -eq 1 ]; then world=native; fi
   (cd "$REPO_ROOT/services/core" && \
     CORE_REQUIRE_POSTGRES_TESTS=1 CORE_TEST_DATABASE_URL="${DATABASE_URL/postgresql+psycopg:/postgresql:}" \
     RUDI_TEST_ACCOUNT_URL="$API_URL" RUDI_TEST_ACCOUNT_OUTPUT="$WORK_DIR" \
+    RUDI_TEST_ACCOUNT_WORLD="$world" RUDI_TEST_ACCOUNT_LAPS="${MOBILE_NATIVE_ACCOUNT_LAPS:-${MOBILE_NATIVE_LAP:-1}}" \
     MOBILE_ACCOUNT_ENCRYPTION_KEY="$ACCOUNT_ENCRYPTION_KEY" \
     MOBILE_ACCOUNT_LOOKUP_KEY="$ACCOUNT_LOOKUP_KEY" \
     go test -tags=postgres,authfixture -count=1 -run '^TestProvisionSyntheticAccountWorld$' ./internal/accountauth) || return 2
@@ -413,11 +428,22 @@ start_core || exit $?
 mint_sessions || exit $?
 
 if [ "$NATIVE" -eq 1 ]; then
-  # The same disposable HTTP-created account world supplies the device.
-  # Real credentials never enter Maestro arguments or this fixture harness.
-  RUDI_NATIVE_TEST_ACK=synthetic-only RUDI_NATIVE_QA_PORT="${API_URL##*:}" \
-    RUDI_TEST_USERNAME=fixture_minh RUDI_TEST_PASSWORD='isolated synthetic credential for minh' \
-    scripts/mobile_native.sh --account --lap 2
+  # The same disposable HTTP-created account world supplies the device: the
+  # whole product table (scripts/mobile_native.sh), not one login flow.
+  # Real credentials never enter Maestro arguments or this fixture harness;
+  # the synthetic ones live in $WORK_DIR (system temp) and die with the stack.
+  # MOBILE_DATABASE_URL: two checks (story expiry after 43, the reports row
+  # after 45) read the disposable database because no route exposes them.
+  if [ "$KEEP" -eq 1 ]; then
+    echo "--keep: giữ stack lại sau bảng Android."
+    echo "  API:        $API_URL"
+    echo "  tài khoản:  $WORK_DIR/credentials.json"
+    echo "  dọn bằng:   docker rm -f $CONTAINER $REDIS_CONTAINER; kill $API_PID $CORE_PID; rm -rf $WORK_DIR"
+  fi
+  RUDI_NATIVE_TEST_ACK=synthetic-only MOBILE_DATABASE_URL="$DATABASE_URL" \
+    scripts/mobile_native.sh --account --api-port "${API_URL##*:}" \
+      --credentials "$WORK_DIR/credentials.json" --lap "${MOBILE_NATIVE_LAP:-1}" \
+      ${ANDROID_SERIAL:+--serial "$ANDROID_SERIAL"} "${TEST_ARGS[@]}"
   exit $?
 fi
 

@@ -1,3 +1,5 @@
+# ĐÃ GỠ cùng cửa của nó (ADR-0055): KHÔNG chạy ở bảng nào. Giữ nguyên văn để
+# scripts/bang_doi_chieu_mockup.py còn đọc được tên ảnh lịch sử; xem apps/mobile/.maestro/README.md.
 # Thế giới seed («Team Đà Lạt» của make demo-rudi) nhìn từ máy, qua đúng đường
 # người thật: số của một người đã seed + mã debug (`--live --otp-phone`). Không
 # ghim danh tính vào bundle, không cửa fixture. Harness kiểm máy chủ sau flow:

@@ -1,3 +1,5 @@
+# ĐÃ GỠ cùng cửa của nó (ADR-0055): KHÔNG chạy ở bảng nào. Giữ nguyên văn để
+# scripts/bang_doi_chieu_mockup.py còn đọc được tên ảnh lịch sử; xem apps/mobile/.maestro/README.md.
 # Đăng nhập bằng số cố định OTP_PHONE — người đã seed, cho `--live --otp-phone`.
 # Đăng nhập bằng số D (người được mời ở flow 24, đã vào «Hoi QA» ở flow 25).
 # Dùng khi một flow mở app ra màn chào mà không muốn xin mã cho C trong nhịp 60 s.

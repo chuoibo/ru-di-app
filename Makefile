@@ -221,8 +221,8 @@ db-check: ## Hỏi database xem nó có ở đúng head mà mã đang phục v�
 	@sh scripts/check_db_revision.sh $(DC) run --rm --no-deps -T migrate alembic
 
 # Dữ liệu tổng hợp chỉ được dựng trong stack cô lập của `make e2e`.
-mobile-native: ## Kiểm thử app Android đã đăng nhập trên stack QA cô lập — API=, PORT=, SERIAL=
-	@scripts/mobile_native.sh $(if $(PORT),--port $(PORT)) $(if $(SERIAL),--serial $(SERIAL)) $(if $(API),--api-port $(API)) $(if $(KEEP),--keep) $(if $(LAP),--lap $(LAP))
+mobile-native: ## Dựng APK, stack QA cô lập + tài khoản tổng hợp, chạy trọn bảng Maestro — SERIAL=, LAP=, PORT=
+	@$(if $(SERIAL),ANDROID_SERIAL=$(SERIAL)) $(if $(LAP),MOBILE_NATIVE_LAP=$(LAP)) $(if $(PORT),MOBILE_METRO_PORT=$(PORT)) scripts/mobile_native_gate.sh
 
 bundle-check: ## Cây đang đứng có khớp origin/main không — hỏi TRƯỚC khi xuất bundle
 	@python3 scripts/check_tree_matches_main.py \

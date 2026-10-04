@@ -125,12 +125,12 @@ function conSong(s) {
   return nhanh.some((m) => m.length > 0 && m.every((x) => KHO_DAY_DU.includes(x)));
 }
 
-const DONG = JSON.parse(readFileSync(new URL("./fixtures/chuoi-maestro-account.json", import.meta.url), "utf8"));
+const DONG = JSON.parse(readFileSync(new URL("./fixtures/chuoi-maestro-dong.json", import.meta.url), "utf8"));
 
 const DA_XOA = DONG.daXoa ?? {};
 
 test("mọi chữ Maestro bấm hay kiểm còn có mặt trong mã, seed, máy chủ hay chữ flow gõ vào", () => {
-  assert.ok(chu.length > 20, `chỉ trích được ${chu.length} chuỗi: bộ đọc YAML đã hỏng`);
+  assert.ok(chu.length > 400, `chỉ trích được ${chu.length} chuỗi: bộ đọc YAML đã hỏng`);
   const chet = [...new Set(chu.filter(({ s }) => !conSong(s)).map(({ s }) => s))].sort();
   const moi = chet.filter((s) => !DONG.dong.includes(s) && !(s in DA_XOA));
   assert.deepEqual(moi, [], `chuỗi Maestro không còn ở đâu (đổi tên nhãn thì sửa flow cùng commit):\n${moi.join("\n")}`);

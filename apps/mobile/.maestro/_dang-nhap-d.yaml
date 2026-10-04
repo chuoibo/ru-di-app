@@ -1,0 +1,9 @@
+# Đăng nhập bằng tài khoản D (người được mời ở flow 24, đã vào «Hoi QA» ở
+# flow 25).
+appId: com.lakiet.rudi
+---
+- runFlow:
+    file: _dang-nhap-tai-khoan.yaml
+    env:
+      TK: "${TK_D}"
+      MK: "${MK_D}"

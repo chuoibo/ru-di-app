@@ -18,7 +18,7 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Ô số điện thoại"
 - tapOn:
     id: "account-username"
-- inputText: "${RUDI_TEST_USERNAME}"
+- inputText: "${TK_B}"
 - tapOn:
     id: "account-password"
 - inputText: "wrong synthetic credential"
@@ -31,7 +31,7 @@ appId: com.lakiet.rudi
 - tapOn:
     id: "account-password"
 - eraseText
-- inputText: "${RUDI_TEST_PASSWORD}"
+- inputText: "${MK_B}"
 - hideKeyboard
 - tapOn: "Đăng nhập"
 - runFlow: _bo-qua-so-thich.yaml
@@ -44,7 +44,7 @@ appId: com.lakiet.rudi
     timeout: 30000
 - openLink: "rudi://settings/account"
 - extendedWaitUntil:
-    visible: "@${RUDI_TEST_USERNAME}"
+    visible: "@${TK_B}"
     timeout: 30000
 - takeScreenshot: account-logged-in
 - openLink: "rudi://messages"
@@ -57,7 +57,7 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Chào bạn"
 - openLink: "rudi://settings/account"
 - extendedWaitUntil:
-    visible: "@${RUDI_TEST_USERNAME}"
+    visible: "@${TK_B}"
     timeout: 30000
 - takeScreenshot: account-session-resumed
 - openLink: "rudi://messages"

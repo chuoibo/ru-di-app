@@ -2,7 +2,7 @@
 #
 # Đây là màn duy nhất trong app hỏi người dùng một câu về CHÍNH HỌ, và cho tới
 # hôm nay nó nói thẳng trên màn rằng câu trả lời không đi đâu cả. Flow này đo
-# đường đã nối: tài khoản mới rơi vào bước này ngay sau khi nhập mã, chọn ba
+# đường đã nối: tài khoản mới rơi vào bước này ngay lần đăng nhập đầu, chọn ba
 # sở thích và một mức chi, lưu, rồi mở lại từ Cá nhân và thấy đúng lựa chọn cũ.
 #
 # `kiem_may_chu_sau_36` hỏi máy chủ bằng curl: chỉ có màn nói «đã lưu» thì
@@ -17,16 +17,16 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Chào bạn"
     timeout: 30000
-- tapOn: "Ô số điện thoại"
-# Số E: một người MỚI thật. B đã đăng nhập ở flow 23, nên với B bước này không hiện.
-- inputText: "${OTP_PHONE_E}"
+# Tài khoản E: một người MỚI thật — đăng ký qua cửa HTTP, chưa đăng nhập lần
+# nào. B đã đăng nhập ở flow 23, nên với B bước này không hiện.
+- tapOn:
+    id: "account-username"
+- inputText: "${TK_E}"
+- tapOn:
+    id: "account-password"
+- inputText: "${MK_E}"
 - hideKeyboard
-- tapOn: "Gửi mã"
-- extendedWaitUntil:
-    visible: "Nhập mã 6 số"
-    timeout: 60000
-- tapOn: "Ô nhập mã"
-- inputText: "${OTP_CODE}"
+- tapOn: "Đăng nhập"
 # Tài khoản mới đi thẳng vào bước cá nhân hoá — KHÔNG bấm gì để tới đây.
 - extendedWaitUntil:
     visible: "Điều gì khiến bạn muốn ra ngoài?"
@@ -38,6 +38,13 @@ appId: com.lakiet.rudi
 - tapOn: "100K–250K"
 - takeScreenshot: 36-da-chon
 # Nút gọi đúng việc nó làm (đợt chuyển mình UI 06/09): có phiên thì «Lưu sở thích».
+# Màn 393dp (Pixel 5) để nút dưới mép sau hàng mức chi; `tapOn` không cuộn.
+- scrollUntilVisible:
+    element:
+      text: "Lưu sở thích"
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
 - tapOn: "Lưu sở thích"
 # Tài khoản mới chưa có nhóm nào, nên đích sau khi lưu là tab Tin nhắn rỗng.
 - extendedWaitUntil:

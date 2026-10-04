@@ -29,7 +29,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MOBILE = REPO_ROOT / "apps" / "mobile"
-FLOWS = MOBILE / "tests/fixtures/legacy_native/flows"
+FLOWS = MOBILE / ".maestro"
 AI_FLOWS = ("_30-ai-khong-khoa.yaml", "_30-ai-co-khoa.yaml", "40-ai-plan.yaml")
 #: Words the app draws from a function rather than a literal in one place.
 NAMES = ("Bạn",)

@@ -79,8 +79,12 @@ hoặc `scripts/gate.sh --strict` để thiếu prerequisite là lỗi. Không s
 - `scripts/account_auth_mutants.sh` nhận cây sạch, chạy identity xanh và
   canary sai kỳ vọng đỏ, rồi hai mutant: bỏ kiểm nonce và bỏ thu hồi phiên
   reset. Mỗi mutant phải đỏ đúng test hành vi, không phải lỗi compile.
-- `scripts/mobile_native_gate.sh` dựng APK và stack QA riêng, chạy hai lượt
-  Maestro, kiểm fingerprint bản dựng và canary sai fingerprint. Mở ảnh để xem.
+- `scripts/mobile_native_gate.sh` dựng APK và stack QA riêng, tạo thế giới tài
+  khoản tổng hợp `native` (bảy người mỗi lượt, mật khẩu sinh lúc chạy, tệp ở
+  thư mục tạm) rồi chạy TRỌN bảng sản phẩm `apps/mobile/.maestro` (00, 22–37,
+  39, 41–48, 50; 38/40 theo cờ `--anh`/`--ai`) qua `scripts/mobile_native.sh`,
+  cùng các phép kiểm máy chủ sau flow, neo dấu vân sai và canary mật khẩu sai.
+  Flow đã gỡ cùng cửa cũ ghi ở `apps/mobile/.maestro/README.md`. Mở ảnh để xem.
 - `scripts/e2e_slice.sh` và `scripts/chat_e2e_stack.sh` chỉ tạo fixture tổng hợp
   trong DB dùng một lần. Kiểm bản đồ web thường/không WebGL không chứng minh
   tile mạng, email thật, Google thật hoặc crypto native.

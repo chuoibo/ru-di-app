@@ -1,12 +1,14 @@
-# Cửa thứ hai vào app, và là cửa đầu tiên KHÔNG cần ai mời: số điện thoại → mã 6
-# số → phiên (ADR-0016, `POST /auth/otp/request` + `/verify`).
+# Cửa vào KHÔNG cần ai mời: tài khoản tự quản (ADR-0055) — username + mật
+# khẩu → phiên (`POST /auth/login`). Người A là một tài khoản vừa đăng ký qua cửa
+# HTTP thật của stack QA cô lập và chưa đăng nhập lần nào, nên đây là lần đầu
+# THẬT: rỗng, chưa nhóm, có thể đi qua bước sở thích.
 #
-# API chạy chế độ prod (không MOBILE_AUTH_MODE) với log sender và
-# MOBILE_OTP_DEBUG_CODE — harness `--otp` đã tự kiểm bằng curl rằng mã debug
-# được nhận TRƯỚC khi chạy flow này, nên một màn đỏ ở đây là app, không phải
-# môi trường. Số điện thoại và mã đi qua `-e`: số sinh lúc chạy (mỗi lượt một
-# số mới, vì người đã có nhóm sẽ không còn thấy «Chưa có nhóm nào»), và repo
-# guard không cho phép một số di động nằm trong file.
+# Trước ADR-0055 flow này đi cửa số điện thoại → mã 6 số với mã debug của API;
+# phần ấy gỡ cùng cửa. Phần còn lại giữ nguyên: ca âm trước ca dương, trạng
+# thái rỗng thật, mở được nhóm, Khám phá đọc danh mục của máy chủ. Harness đã
+# tự kiểm bằng curl rằng stack nhận tài khoản tổng hợp và từ chối mật khẩu sai
+# TRƯỚC khi chạy flow này, nên một màn đỏ ở đây là app, không phải môi trường.
+# Username và mật khẩu đi qua `-e` (TK_A / MK_A), không nằm trong file.
 #
 # Bản dựng của lượt này KHÔNG có EXPO_PUBLIC_RUDI_FIXTURE: cửa «Vào bản trải
 # nghiệm» phải vắng, đúng như trên một bản ship.
@@ -27,25 +29,29 @@ appId: com.lakiet.rudi
     timeout: 30000
 - assertNotVisible: "Vào bản trải nghiệm Team Đà Lạt"
 - assertNotVisible: "Dữ liệu demo"
+- assertNotVisible: "Ô số điện thoại"
+- assertNotVisible: "Gửi mã"
 - takeScreenshot: 22-man-dang-nhap
-- tapOn: "Ô số điện thoại"
-- inputText: "${OTP_PHONE}"
+# Ca âm trước ca dương: mật khẩu sai phải bị máy chủ từ chối bằng một câu không
+# nói username có tồn tại hay không.
+- tapOn:
+    id: "account-username"
+- inputText: "${TK_A}"
+- tapOn:
+    id: "account-password"
+- inputText: "sai-mat-khau-tong-hop"
 - hideKeyboard
-- tapOn: "Gửi mã"
+- tapOn: "Đăng nhập"
 - extendedWaitUntil:
-    visible: "Nhập mã 6 số"
-    timeout: 60000
-- takeScreenshot: 22-man-nhap-ma
-# Ca âm trước ca dương: mã sai phải bị máy chủ từ chối, và màn phải nói còn mấy
-# lần — con số là của máy chủ (5 lần rồi cháy), không phải chữ cứng của app.
-- tapOn: "Ô nhập mã"
-- inputText: "111111"
-- extendedWaitUntil:
-    visible: "Mã chưa đúng. Còn 4 lần thử."
+    visible: "Tên tài khoản hoặc mật khẩu chưa đúng."
     timeout: 30000
-- takeScreenshot: 22-ma-sai-con-4-lan
-- tapOn: "Ô nhập mã"
-- inputText: "${OTP_CODE}"
+- takeScreenshot: 22-mat-khau-sai
+- tapOn:
+    id: "account-password"
+- eraseText
+- inputText: "${MK_A}"
+- hideKeyboard
+- tapOn: "Đăng nhập"
 - runFlow:
     file: _bo-qua-so-thich.yaml
 # Người mới, chưa ai mời: đăng nhập xong phải là trạng thái rỗng THẬT, không
@@ -56,8 +62,8 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Dữ liệu demo"
 # The empty live account has the same tabs as every signed-in account.
 - assertVisible: "Khám phá"
-- assertVisible: "Tôi có lời mời"
-- assertVisible: "Thêm bạn bằng số điện thoại"
+- assertNotVisible: "Tôi có lời mời"
+- assertVisible: "Thêm bạn bằng tên tài khoản"
 - takeScreenshot: 22-chua-co-nhom
 # Và dùng được thật: mở một nhóm, vào tới tab.
 - tapOn: "Tạo nhóm"
@@ -65,7 +71,7 @@ appId: com.lakiet.rudi
     visible: "Đặt tên cho hội"
     timeout: 30000
 - tapOn: "Ô tên nhóm"
-- inputText: "Nhom OTP"
+- inputText: "Nhom Moi QA"
 - hideKeyboard
 - tapOn: "Mở nhóm"
 - runFlow: _vao-nhom-vua-lap.yaml

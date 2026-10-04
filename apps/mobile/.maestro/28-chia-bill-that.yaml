@@ -50,9 +50,23 @@ appId: com.lakiet.rudi
 - tapOn: "Ô tên món 2"
 - inputText: "Nuoc"
 - hideKeyboard
+# Màn 393dp (Pixel 5, 440dpi) để ô tiền của món thứ hai nằm dưới mép, sau dải
+# cảnh báo «chưa có số tiền»; `tapOn` không cuộn. Đã thấy thì bước này không cuộn.
+- scrollUntilVisible:
+    element:
+      text: "Ô tiền món 2"
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
 - tapOn: "Ô tiền món 2"
 - inputText: "50000"
 - hideKeyboard
+# Đầu phiếu nằm trên chỗ vừa cuộn tới: cuộn lại lên để đọc nó (không thấy thì đỏ).
+- scrollUntilVisible:
+    element:
+      text: "2 món · 200.000đ"
+    direction: UP
+    timeout: 20000
 - assertVisible: "2 món · 200.000đ"
 # Bill gõ tay nói là gõ tay; «Chưa nhận diện được món nào» dưới hai món vừa gõ đọc như thất bại.
 - assertVisible: "Bạn nhập tay 2 món.*"

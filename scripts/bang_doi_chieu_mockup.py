@@ -38,7 +38,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 THU_MUC_MOCKUP = ROOT / "product" / "RuDi_Mobile_Product_Mockups"
 THU_MUC_MAESTRO = ROOT / "apps" / "mobile" / ".maestro"
-THU_MUC_LICH_SU = ROOT / "apps/mobile/tests/fixtures/legacy_native/flows"
+THU_MUC_LICH_SU = ROOT / "apps/mobile/tests/fixtures/maestro-da-go"
 README_MOCKUP = THU_MUC_MOCKUP / "README.md"
 
 CHUA_CHUP = "CHƯA CHỤP"

@@ -1,3 +1,5 @@
+# ĐÃ GỠ cùng cửa của nó (ADR-0055): KHÔNG chạy ở bảng nào. Giữ nguyên văn để
+# scripts/bang_doi_chieu_mockup.py còn đọc được tên ảnh lịch sử; xem apps/mobile/.maestro/README.md.
 # Cửa vào thật, trên giao diện thật, ở chế độ prod.
 #
 # Mọi flow khác trong thư mục này đi vòng qua cửa đăng nhập: bảng mặc định dùng

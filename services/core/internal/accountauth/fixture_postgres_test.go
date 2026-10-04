@@ -5,6 +5,8 @@ package accountauth
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -66,26 +68,63 @@ func TestProvisionSyntheticAccountWorld(t *testing.T) {
 	}
 	world := map[string]map[string]string{}
 	sessions := map[string]string{}
+	credentials := map[string]map[string]string{}
 	slugs := []string{"minh", "trang", "hai", "ngoc", "duc", "linh", "quan"}
-	if os.Getenv("RUDI_TEST_ACCOUNT_WORLD") == "chat" {
+	// The native world is the Android table's: seven people per lap (A-G), each
+	// password drawn at runtime, and nobody signed in yet, so every person's
+	// first session is the one the device opens (is_new_person, as a real
+	// first sign-in is).
+	native := os.Getenv("RUDI_TEST_ACCOUNT_WORLD") == "native"
+	switch os.Getenv("RUDI_TEST_ACCOUNT_WORLD") {
+	case "chat":
 		slugs = nil
 		for i := 0; i < 22; i++ {
 			slugs = append(slugs, "chat"+strconv.Itoa(i))
+		}
+	case "native":
+		laps, err := strconv.Atoi(os.Getenv("RUDI_TEST_ACCOUNT_LAPS"))
+		if err != nil || laps < 1 || laps > 9 {
+			laps = 1
+		}
+		slugs = nil
+		for lap := 1; lap <= laps; lap++ {
+			for _, who := range "abcdefg" {
+				slugs = append(slugs, "n"+strconv.Itoa(lap)+string(who))
+			}
 		}
 	}
 	for i, slug := range slugs {
 		clientIP = "192.0.2." + strconv.Itoa(i+1)
 		username := "fixture_" + slug
 		password := "isolated synthetic credential for " + slug
+		if native {
+			raw := make([]byte, 18)
+			if _, err := rand.Read(raw); err != nil {
+				t.Fatal(err)
+			}
+			password = "qa-" + base64.RawURLEncoding.EncodeToString(raw)
+		}
 		c := request("/auth/register", map[string]string{"username": username, "email": username + "@example.test", "password": password}, 202)
 		p := proof{c["challenge_id"].(string), c["challenge_secret"].(string), mailCode(t, h, c["challenge_id"].(string))}
-		request("/auth/register/verify", p, 201)
-		s := request("/auth/login", map[string]string{"username": username, "password": password}, 201)
-		person := s["person_id"].(string)
-		sessions[person] = s["token"].(string)
+		v := request("/auth/register/verify", p, 201)
+		person, _ := v["person_id"].(string)
+		if !native {
+			s := request("/auth/login", map[string]string{"username": username, "password": password}, 201)
+			person = s["person_id"].(string)
+			sessions[person] = s["token"].(string)
+		} else {
+			credentials[slug] = map[string]string{"person_id": person, "username": username, "password": password}
+		}
+		if person == "" {
+			t.Fatal("fixture account has no person id")
+		}
 		world[slug] = map[string]string{"person_id": person, "username": username}
 	}
-	for name, value := range map[string]any{"world.json": world, "sessions.json": sessions} {
+	files := map[string]any{"world.json": world, "sessions.json": sessions}
+	if native {
+		files["credentials.json"] = credentials
+	}
+	for name, value := range files {
 		b, err := json.Marshal(value)
 		if err != nil {
 			t.Fatal(err)
