@@ -20,6 +20,8 @@
     // and the invite-by-number steps (a 403 rename no longer aborts the invite).
     "src/rudi/ten-giu-cho.ts",
     "src/rudi/photo-viewer.ts",
+    // A transform origin Android's parser accepts (whole pixels only).
+    "src/rudi/ui/goc-bien.ts",
     "src/api.ts",
     "src/assignment.ts",
     "src/participants.ts",
