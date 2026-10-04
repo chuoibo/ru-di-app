@@ -240,11 +240,11 @@ export function ToLoiRu({
       {phu.length > 0 ? (
         // Tách khỏi nhóm trên bằng một nét: đây là các lối THOÁT, và «Bỏ bản
         // phác này» vứt đi thứ vừa viết còn «Huỷ buổi này» xoá một buổi người
-        // kia đang trông. Bảng màu không có tông «phá huỷ» nên nét kẻ mang việc
-        // ấy, và tờ xác nhận ở dưới mới là thứ nói ra hậu quả.
+        // kia đang trông. Hai việc ấy mang tông `warn` của bảng màu, để không
+        // trông như «Tuần này nghỉ»; tờ xác nhận ở dưới mới nói ra hậu quả.
         <View style={[styles.thoat, { borderTopColor: colors.line, gap: space.sm }]}>
           {phu.map((n) => (
-            <RudiButton key={n} label={chuNut(n, pb)} onPress={bam[n]!} variant="ghost" />
+            <RudiButton key={n} label={chuNut(n, pb)} onPress={bam[n]!} tone={n === "bo" || n === "huy" ? "warn" : undefined} variant="ghost" />
           ))}
         </View>
       ) : null}

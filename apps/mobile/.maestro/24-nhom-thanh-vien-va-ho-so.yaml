@@ -43,9 +43,7 @@ appId: com.lakiet.rudi
 - inputText: "Hoi QA"
 - hideKeyboard
 - tapOn: "Mở nhóm"
-- extendedWaitUntil:
-    visible: "Khám phá"
-    timeout: 60000
+- runFlow: _vao-nhom-vua-lap.yaml
 # Tin nhắn: danh sách nhóm từ máy chủ, không phải chat fixture.
 - tapOn: "Tin nhắn"
 - extendedWaitUntil:

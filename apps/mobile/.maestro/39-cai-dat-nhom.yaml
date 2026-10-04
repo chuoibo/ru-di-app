@@ -37,9 +37,7 @@ appId: com.lakiet.rudi
 - inputText: "Nhom Cai Dat QA"
 - hideKeyboard
 - tapOn: "Mở nhóm"
-- extendedWaitUntil:
-    visible: "Khám phá|Tin nhắn"
-    timeout: 60000
+- runFlow: _vao-nhom-vua-lap.yaml
 - tapOn: "Tin nhắn"
 - extendedWaitUntil:
     visible: "Nhom Cai Dat QA"

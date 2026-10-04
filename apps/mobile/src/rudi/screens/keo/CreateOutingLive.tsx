@@ -23,7 +23,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
 import { kiemTraTaoBuoiDi, nhanKhoangNgay, type OTaoBuoiDi } from "../../../screens/len-plan/buoi-di";
-import { homNayIso, taoKeo, kiemTraChangMoi } from "../../keo/keo";
+import { gioTiepTheo, homNayIso, kiemTraChangMoi, luuLichTrinh, taoKeo, themChang } from "../../keo/keo";
+import { docChiTiet } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { ChonNgayLich } from "../../ui/ChonNgayLich";
@@ -66,7 +67,7 @@ function nhomHienTai(phien: Phien): { ten: string; soNguoi: string; haiNguoi: bo
   return { ten: nhom.display_name, soNguoi: String(nhom.member_count), haiNguoi: laPair(nhom) };
 }
 
-export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phien; sourceMessageId?: string }) {
+export function CreateOutingLiveScreen({ phien, sourceMessageId, placeId }: { phien: Phien; sourceMessageId?: string; placeId?: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, radius } = useRudiTheme();
@@ -97,6 +98,23 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
   const [reviewTime, setReviewTime] = useState(false);
   const [existingId, setExistingId] = useState<string | null>(null);
   const creating = useRef(false);
+  // «Rủ … tới đây» for two friends (QA UI-130): the place they chose is the
+  // outing's first stop, named on the form, removable, added right after the
+  // outing is made. It used to be dropped on the way here.
+  const [choDau, setChoDau] = useState<{ id: string; ten: string } | null>(null);
+  const [daTaoThieuCho, setDaTaoThieuCho] = useState<string | null>(null);
+  useEffect(() => {
+    if (!placeId) return;
+    let song = true;
+    docChiTiet(placeId)
+      .then((p) => {
+        if (!song) return;
+        setChoDau({ id: placeId, ten: p.name });
+        setTitle((cu) => (cu.trim() === "" ? p.name : cu));
+      })
+      .catch(() => undefined);
+    return () => { song = false; };
+  }, [placeId]);
 
   useEffect(() => {
     if (!sourceMessageId || !phien.context_id) return;
@@ -154,9 +172,23 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
     setDangTao(true);
     setLoi(null);
     try {
-      const id = sourceMessageId
-        ? (await taoKeoTuChat(contextId, phien.person_id, sourceMessageId, kq.body, reviewTime ? stops : undefined)).outing_id
-        : (await taoKeo(contextId, phien.person_id, kq.body, attempt.current!)).id;
+      let id: string;
+      if (sourceMessageId) {
+        id = (await taoKeoTuChat(contextId, phien.person_id, sourceMessageId, kq.body, reviewTime ? stops : undefined)).outing_id;
+      } else {
+        const keo = await taoKeo(contextId, phien.person_id, kq.body, attempt.current!);
+        id = keo.id;
+        if (choDau !== null) {
+          try {
+            await luuLichTrinh(keo, themChang([], { at: gioTiepTheo(), label: choDau.ten, place_name: choDau.ten, place_id: choDau.id }), phien.person_id, newAttempt());
+          } catch {
+            // The outing stands; the place is not lost without a word.
+            setDaTaoThieuCho(id);
+            setLoi(`Kèo đã tạo, nhưng chưa thêm được ${choDau.ten} làm chặng. Mở kèo để thêm lại.`);
+            return;
+          }
+        }
+      }
       // `vua=tao`: the outing opens on the moment it was made (M5).
       router.replace(`/outings/${id}?vua=tao` as never);
     } catch (error) {
@@ -198,7 +230,7 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
             <RudiButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null} label="Xác nhận và tạo kèo" loading={dangTao || sourceLoading} onPress={() => void tao()} />
           ) : (
             // The invitation is sealed with a stamp, not filed with a button (ADR-0037 D1).
-            <StampButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null} label="Tạo kèo" loading={dangTao} onPress={() => void tao()} size="vua" tilt={-1} />
+            <StampButton disabled={dangTao || sourceLoading || sourceFailed || existingId !== null || daTaoThieuCho !== null} label="Tạo kèo" loading={dangTao} onPress={() => void tao()} size="vua" tilt={-1} />
           )}
         </View>
       }
@@ -308,6 +340,14 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
           ? <Field key={`${stop.place_id}-${index}`} label={`Giờ · ${stop.label}`} value={stop.at} placeholder="18:30" onChangeText={(at) => setStops((held) => held.map((old, i) => i === index ? { ...old, at } : old))} />
           : <HangChang key={`${stop.place_id}-${index}`} gio={stop.at} tieuDe={stop.label} phac cuoi={index === stops.length - 1} />)}
       </View> : null}
+      {choDau !== null && daTaoThieuCho === null ? (
+        <View style={styles.khoi} testID="keo-cho-dau">
+          <Text style={[typography.title, { color: colors.ink }]}>Chặng đầu</Text>
+          <HangChang cuoi gio={gioTiepTheo()} phac phu="Giờ sửa được trong lịch trình" tieuDe={choDau.ten} />
+          <RudiButton compact full={false} label="Bỏ chỗ này" onPress={() => setChoDau(null)} variant="ghost" />
+        </View>
+      ) : null}
+      {daTaoThieuCho ? <RudiButton label="Mở kèo vừa tạo" variant="outline" onPress={() => router.replace(`/outings/${daTaoThieuCho}?vua=tao` as never)} /> : null}
       {existingId ? <View style={styles.khoi}>
         <Text style={[typography.caption, { color: colors.inkSoft }]}>Tờ hẹn này đã thành kèo. Mọi người tiếp tục sửa trên cùng một lịch trình.</Text>
         <RudiButton label="Mở kèo đã tạo" variant="outline" onPress={() => router.replace(`/outings/${existingId}` as never)} />

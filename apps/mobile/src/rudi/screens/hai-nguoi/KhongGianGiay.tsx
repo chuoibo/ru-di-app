@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Easing, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
@@ -11,10 +11,12 @@ import { docChatCapabilities } from "../../chat/ai-invocations";
 import { cauVaiTuan } from "../../to-giay/vai-tuan";
 import { type ToGiay, goiYChoLam, nenXinTo, phienBan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
+import { useTenCho } from "../../to-giay/useTenCho";
 import { Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Nep } from "../../ui/art/Nep";
 import { DauLon } from "../../ui/DauLon";
 import { EmptyState } from "../../ui/EmptyState";
+import { ErrorState } from "../../ui/ErrorState";
 import { NepDien } from "../../ui/NepDien";
 import { NepTrongTrang } from "../../ui/NepRoi";
 import { Sheet } from "../../ui/Sheet";
@@ -94,27 +96,32 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   // with the place filled in as the main stop -- once, not on every render.
   const [goiYCho, setGoiYCho] = useState<string | undefined>(choGoiY);
   const [cauGoiY, setCauGoiY] = useState<string | null>(null);
+  // Where the place goes when no sheet can take it (QA UI-085, UI-130): a kèo
+  // of the two with it as the first stop, or the plan they already agreed.
+  const [choVaoKeo, setChoVaoKeo] = useState<{ id: string; lam: "tao-keo" | "them-vao-buoi" } | null>(null);
+  const tenChoVaoKeo = useTenCho([choVaoKeo?.id])[choVaoKeo?.id ?? ""];
   const daMoGoiY = useRef(false);
   useEffect(() => {
-    if (!goiYCho || daMoGoiY.current) return;
-    // A pair that is not a couple plans like any group: no sheet to put the
-    // place on, so say so instead of dropping the place without a word.
-    if (so.daNap && so.lapSo && !so.batDoi) {
+    if (!goiYCho || daMoGoiY.current || !so.daNap || so.loiDoc !== null) return;
+    // Two friends who are not «Một đôi» (with a notebook or not) plan like any
+    // group: the place opens a kèo of the two of them, already its first stop.
+    // It used to be dropped, with or without a sentence (QA UI-130).
+    if (!so.batDoi) {
       daMoGoiY.current = true;
+      setChoVaoKeo({ id: goiYCho, lam: "tao-keo" });
       setGoiYCho(undefined);
-      setCauGoiY("Hai bạn đang hẹn như một hội bạn. Bấm «Rủ hội mình đi chơi» rồi thêm chỗ này làm một chặng.");
       return;
     }
-    if (!so.batDoi) return;
     const lam = goiYChoLam(toMo, so.toiId, so.tenNguoiKia, goiYCho);
     if (lam.lam === "cho") return;
     daMoGoiY.current = true;
     if (lam.lam === "mo") setMo("de-nghi-sua");
     else {
+      if (lam.lam === "them-vao-buoi") setChoVaoKeo({ id: goiYCho, lam: "them-vao-buoi" });
       setGoiYCho(undefined);
       setCauGoiY(lam.cau);
     }
-  }, [goiYCho, toMo, so.toiId, so.tenNguoiKia, so.daNap, so.lapSo, so.batDoi]);
+  }, [goiYCho, toMo, so.toiId, so.tenNguoiKia, so.daNap, so.loiDoc, so.batDoi]);
   const dangCoToMo = toMo !== undefined && ["nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(toMo.state);
   const deNghiLapSo = so.deNghiCho.find((d) => d.purpose === "lap_so");
   const deNghiBatDoi = so.deNghiCho.find((d) => d.purpose === "bat_doi");
@@ -141,16 +148,38 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
   // one time the M6 moment plays. A notebook that was already open when the
   // screen came up is not news.
   const lapSoTruoc = useRef<boolean | null>(null);
+  const batDoiTruoc = useRef<boolean | null>(null);
   const [vuaMoSo, setVuaMoSo] = useState(false);
   const moBia = useSharedValue(0);
-  useEffect(() => {
+  // Before paint, not after (QA UI-084): an effect left one or two frames of
+  // the plain «Tuần này» body between the agreement and the open cover. The
+  // sheet that asked for the notebook closes on both phones the moment it
+  // opens: it used to stay up on the proposer's and offer to propose again.
+  useLayoutEffect(() => {
     if (!so.daNap) return;
     if (lapSoTruoc.current === false && so.lapSo) {
       setVuaMoSo(true);
+      setMo((m) => (m === "lap-so" ? null : m));
       moBia.value = withDelay(120, withTiming(1, { duration: motion.ms("shared") * 2, easing: Easing.bezier(0.3, 0, 0.2, 1), reduceMotion: motion.reanimated }));
     }
     lapSoTruoc.current = so.lapSo;
   }, [so.daNap, so.lapSo, moBia, motion]);
+  useLayoutEffect(() => {
+    if (!so.daNap) return;
+    if (batDoiTruoc.current === false && so.batDoi) setMo((m) => (m === "bat-doi" || m === "loai-so" ? null : m));
+    batDoiTruoc.current = so.batDoi;
+  }, [so.daNap, so.batDoi]);
+  // M6, the notebook just opened under this person's eyes (ADR-0037): the
+  // cover swings open, Nếp pulls the tab and jumps, the seal lands. Once, at
+  // the step that opens the notebook, in whichever body comes next (QA UI-127:
+  // a pair not yet «Một đôi» never reached the body that drew it).
+  const tenToiBia = phien?.profile?.display_name?.trim() || "Bạn";
+  const khoanhKhacM6 = vuaMoSo ? (
+    <View style={styles.hangCanh} testID="giay-m6">
+      <SoBia mo={moBia} rong={140} ten={[tenToiBia, so.tenNguoiKia || "Người ấy"]} trang={<DauLon co="nho" dong nhan="Sổ đã mở" tone="accent" tre={380} />} />
+      <NepDien khoanhKhac="M6" suKien={`so-mo:${so.capId}`} />
+    </View>
+  ) : null;
   const tenToi = phien?.profile?.display_name?.trim() || "Bạn";
 
   // The close preview is asked for when the sheet opens, not computed while
@@ -188,7 +217,12 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     });
 
   let than: React.ReactNode;
-  if (so.daDung) {
+  if (so.loiDoc !== null) {
+    // QA UI-083: a failed read is not a notebook that was never opened. It
+    // drew «Chưa có sổ hai người» and offered «Đề nghị lập sổ» over a notebook
+    // both had already opened.
+    than = <ErrorState body={so.loiDoc} onRetry={so.lamMoi} title="Chưa đọc được sổ của hai bạn" />;
+  } else if (so.daDung) {
     // QA UI-120: blocked, or the other account ended. The server refuses every
     // outward write from now on, so nothing here offers one; one sentence for
     // both causes, and what was already written stays readable underneath.
@@ -232,15 +266,37 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           <NepTrongTrang pose="gap-lai" size={112} />
         </View>
         <Heading subtitle="Mở sổ để gửi lời hẹn cho người thương. Cả hai đồng ý mở sổ, rồi cùng xác nhận là cặp đôi." title="Một chỗ cho chuyện hai mình" />
-        <StampButton label={deNghiLapSo ? "Xem lời đề nghị" : "Đề nghị lập sổ"} onPress={() => setMo("lap-so")} size="vua" tilt={-1} />
+        {/* Whose proposal is waiting, said on the page (QA UI-086): closing
+            the sheet left the proposer reading the receiver's words. */}
+        {deNghiLapSo ? (
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]} testID={deNghiLapSo.cuaToi ? "giay-cho-dong-y" : "giay-duoc-de-nghi"}>
+            {deNghiLapSo.cuaToi ? `Đã đề nghị lập sổ. Chờ ${so.tenNguoiKia || "người ấy"} đồng ý trên máy của họ.` : `${so.tenNguoiKia || "Người ấy"} đề nghị lập sổ cho hai bạn.`}
+          </Text>
+        ) : null}
+        <StampButton label={deNghiLapSo ? (deNghiLapSo.cuaToi ? "Xem lời đề nghị của bạn" : "Xem lời đề nghị") : "Đề nghị lập sổ"} onPress={() => setMo("lap-so")} size="vua" tilt={-1} />
       </View>
     );
   } else if (!so.batDoi && !dangCoToMo) {
     // A sheet still in play (sent before the pair became a group, or by an
     // older client) keeps its actions below; only settled sheets turn read-only.
     than = <View style={{ gap: space.md }}>
-      <Heading title="Hai người cũng thành một hội" subtitle="Hẹn nhau như mọi hội bạn. Những tờ giấy cũ vẫn nằm ở đây." />
+      {khoanhKhacM6}
+      <Heading title="Hai người cũng thành một hội" subtitle={so.toGiay.length > 0 ? "Hẹn nhau như mọi hội bạn. Những tờ giấy cũ vẫn nằm ở đây." : "Hẹn nhau như mọi hội bạn."} />
+      {/* QA UI-126: the other person's «Một đôi» proposal is answered from the
+          page it leads to, not from behind «Mở sổ cặp đôi». */}
+      {deNghiBatDoi && !deNghiBatDoi.cuaToi ? (
+        <View style={{ gap: space.sm }} testID="giay-duoc-de-nghi-doi">
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>{`${so.tenNguoiKia || "Người ấy"} đề nghị hai bạn là «Một đôi».`}</Text>
+          <StampButton label="Xem lời đề nghị" onPress={() => setMo("loai-so")} size="vua" tilt={-1} />
+        </View>
+      ) : deNghiBatDoi ? (
+        <Text style={[typography.body, { color: colors.inkSoft }]} testID="giay-cho-dong-y-doi">{`Đã đề nghị «Một đôi». Chờ ${so.tenNguoiKia || "người ấy"} đồng ý trên máy của họ.`}</Text>
+      ) : null}
       <RudiButton label="Rủ hội mình đi chơi" onPress={() => router.push(`/outings/new?contextId=${contextId}` as never)} />
+      {/* The screen's own door to «Loại sổ» stays in every state, with the same
+          name: the stamp above is a shortcut for a proposal waiting, not a
+          replacement (hiding the door broke the way people and Maestro 47
+          already knew). Both open the same sheet. */}
       <RudiButton label="Mở sổ cặp đôi" variant="outline" onPress={() => setMo("loai-so")} />
       {toChiDoc()}
     </View>;
@@ -295,12 +351,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
     than = (
       <View style={styles.canh} testID="giay-trong">
         {vuaMoSo ? (
-          // M6, the notebook just opened under this person's eyes: the cover
-          // swings open, Nếp pulls the tab and jumps, the seal lands.
-          <View style={styles.hangCanh}>
-            <SoBia mo={moBia} rong={140} ten={[tenToi, so.tenNguoiKia || "Người ấy"]} trang={<DauLon co="nho" dong nhan="Sổ đã mở" tone="accent" tre={380} />} />
-            <NepDien khoanhKhac="M6" suKien={`so-mo:${so.capId}`} />
-          </View>
+          khoanhKhacM6
         ) : (
           <View style={styles.hangCanh}>
             <View style={styles.toTrong}>
@@ -401,6 +452,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
         <XacNhanViec
           hauQua={HAU_QUA[viec](so.tenNguoiKia, phienBan(toMo)?.content.ngay ?? "")}
           nhanLam={NHAN_LAM[viec]}
+          nguyHiem={viec === "bo" || viec === "huy"}
           onClose={() => setViec(null)}
           onXacNhan={() => {
             if (viec === "bo") so.boNhap(toMo.id);
@@ -427,7 +479,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
               <IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => setMo("cai-dat")} quiet />
             </View>
           }
-          subtitle={so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hội bạn · ${so.tenNguoiKia}`}
+          subtitle={so.loiDoc !== null ? so.tenNguoiKia : so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hội bạn · ${so.tenNguoiKia}`}
           title="Tờ giấy của hai mình"
         />
       }
@@ -451,6 +503,18 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { co
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.inkSoft }]} testID="giay-goi-y-cho">
             {cauGoiY}
           </Text>
+        ) : null}
+        {choVaoKeo?.lam === "them-vao-buoi" ? (
+          <RudiButton icon="add-circle-outline" label={tenChoVaoKeo ? `Thêm ${tenChoVaoKeo} vào buổi đã hẹn` : "Thêm chỗ này vào buổi đã hẹn"} onPress={() => router.push(`/outings/chon?place=${encodeURIComponent(choVaoKeo.id)}` as never)} variant="outline" />
+        ) : null}
+        {choVaoKeo?.lam === "tao-keo" ? (
+          // The place named, where it goes, and the one way there (QA UI-130).
+          <View style={{ gap: space.sm }} testID="giay-goi-y-keo">
+            <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]}>
+              {`${tenChoVaoKeo ?? "Chỗ bạn chọn"} đi vào một kèo của hai bạn, làm chặng đầu: tờ giấy dành cho «Một đôi».`}
+            </Text>
+            <RudiButton label={tenChoVaoKeo ? `Tạo kèo ở ${tenChoVaoKeo}` : "Tạo kèo với chỗ này"} onPress={() => router.push(`/outings/new?contextId=${contextId}&place=${encodeURIComponent(choVaoKeo.id)}` as never)} />
+          </View>
         ) : null}
         {than}
         {cauGuSo?.chung ? (

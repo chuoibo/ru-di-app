@@ -13,6 +13,7 @@
     // feed's small decisions (follow by author, cut body, notification words).
     "src/rudi/community/chu-de.ts",
     "src/rudi/community/bang-tin.ts",
+    "src/rudi/nhom/loi-moi-nhom.ts",
     "src/rudi/diary/api.ts",
     // QA 23/09: the placeholder-name check (held equal to both server spellings)
     // and the invite-by-number steps (a 403 rename no longer aborts the invite).

@@ -74,6 +74,7 @@ import (
 	"mobile/services/core/internal/identity"
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/limit"
+	"mobile/services/core/internal/loimoi"
 	"mobile/services/core/internal/nepnho"
 	"mobile/services/core/internal/profilemedia"
 	"mobile/services/core/internal/proxy"
@@ -407,6 +408,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	communityOn := pool != nil && cfg.AuthMode == "prod" && getenv("MOBILE_COMMUNITY_ENABLED") == "1"
 	achievements := achievementv1.New(pool, cfg.AuthMode).WithAI(may)
 	unbatched := gomdot.New(pool, cfg.AuthMode)
+	invitation := loimoi.New(pool, cfg.AuthMode)
 	profileSocial := socialv2.New(pool, cfg.AuthMode, communityOn)
 	media := profilemedia.New(pool, cfg.AuthMode, profilemedia.Proxy{
 		URL: getenv("NEP_PROXY_URL"), Token: getenv("NEP_PROXY_TOKEN"), PersonKey: getenv(identity.KeyEnvVar),
@@ -426,12 +428,14 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			profileSocial.ServeHTTP(w, r)
 		case gomdot.Matches(r.URL.Path):
 			unbatched.ServeHTTP(w, r)
+		case loimoi.Matches(r.URL.Path):
+			invitation.ServeHTTP(w, r)
 		default:
 			media.ServeHTTP(w, r)
 		}
 	}))
 	front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if achievementv1.Matches(r.URL.Path) || socialv2.Matches(r.URL.Path) || profilemedia.Matches(r.URL.Path) || gomdot.Matches(r.URL.Path) {
+		if achievementv1.Matches(r.URL.Path) || socialv2.Matches(r.URL.Path) || profilemedia.Matches(r.URL.Path) || gomdot.Matches(r.URL.Path) || loimoi.Matches(r.URL.Path) {
 			native.ServeHTTP(w, r)
 			return
 		}
@@ -1070,6 +1074,7 @@ func nativeRouteIDs() []string {
 	ids := append([]string{}, achievementv1.RouteIDs()...)
 	ids = append(ids, socialv2.RouteIDs()...)
 	ids = append(ids, gomdot.RouteIDs()...)
+	ids = append(ids, loimoi.RouteIDs()...)
 	return append(ids, profilemedia.RouteIDs()...)
 }
 

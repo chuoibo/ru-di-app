@@ -438,10 +438,15 @@ GO_PROFILE_HANDLERS = (
     "services/core/internal/socialv2/handler.go",
     "services/core/internal/profilemedia/handler.go",
 )
-#: Go-native routes of the money screens (ADR-0031): the collection round's
-#: count of expenses not yet in a round (`gomdot`, B4 on 2026-10-02). Missing
-#: here, the client's call to it read as a 404 on a route Go serves.
-GO_FEATURE_HANDLERS = ("services/core/internal/gomdot/handler.go",)
+#: Go-native routes beside screens whose neighbours still have Python as their
+#: oracle (ADR-0031): the collection round's count of expenses not yet in a
+#: round (`gomdot`, B4 on 2026-10-02) and a group invitation read and declined
+#: by the person invited (`loimoi`, B8). Missing here, the client's call read
+#: as a 404 on a route Go serves.
+GO_FEATURE_HANDLERS = (
+    "services/core/internal/gomdot/handler.go",
+    "services/core/internal/loimoi/handler.go",
+)
 
 #: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`
 GO_ROUTE = re.compile(r'HandleFunc\(\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"')

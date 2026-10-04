@@ -27,6 +27,7 @@ import {
   loiRaChu,
   type HoSoNguoi,
 } from "../../nguoi/ho-so-nguoi";
+import { docDaChan } from "../../cai-dat/quyen-rieng-tu";
 import { ApiError, attemptFor, type Attempt } from "../../../api";
 import { docHoSoToi, ganDanhSachNhom } from "../../../phien";
 import { guiLoiMoi } from "../../../screens/ca-nhan/ban-be";
@@ -86,8 +87,9 @@ export function HoSoNguoiScreen() {
   const [huyHieu, setHuyHieu] = useState<EarnedBadge[]>([]);
   const [tuong, setTuong] = useState<TrangTuong>({ pha: "dang-doc" });
   // ADR-0023 §2.3: blocking and reporting live behind «Thêm hành động». The
-  // flag is local because the server never says «you blocked them» on a
-  // profile read -- the list of people one blocks is its own screen.
+  // profile read never says «you blocked them»; the person's own block list
+  // does, so it is read with the profile (QA UI-078: a reload lost «Đã chặn»
+  // and offered «Kết bạn» and «Chặn» again).
   const [moHanhDong, setMoHanhDong] = useState(false);
   const [daChan, setDaChan] = useState(false);
   // ADR-0021 §2.5: «Nhắn tin» opens (or finds) the pair with this friend. One
@@ -165,7 +167,12 @@ export function HoSoNguoiScreen() {
     if (phien === null || personId === "") return;
     if (!quiet) setHoSo({ pha: "dang-doc" });
     try {
-      setHoSo({ pha: "xong", hoSo: await docHoSoNguoi(personId, phien.person_id) });
+      const [doc, dsChan] = await Promise.all([
+        docHoSoNguoi(personId, phien.person_id),
+        personId === phien.person_id ? Promise.resolve(null) : docDaChan(phien.person_id).catch(() => null),
+      ]);
+      if (dsChan !== null) setDaChan(dsChan.blocked.some((n) => n.person_id === personId));
+      setHoSo({ pha: "xong", hoSo: doc });
     } catch (error) {
       if (!quiet || (error instanceof ApiError && (error.status === 403 || error.status === 404))) {
         setHoSo({ pha: "hong", loi: loiRaChu(error) });
@@ -328,7 +335,8 @@ export function HoSoNguoiScreen() {
                 {/* One line, not a stamp beside a sentence saying the same year
                     (blind read, S9); flow 33 reads «Tham gia từ tháng …». */}
                 <View style={styles.hangDau}>
-                  <Chip icon={hoSo.hoSo.relation === "couple" ? "heart" : undefined} label={cauQuanHe(hoSo.hoSo.relation)} selected={hoSo.hoSo.relation === "couple"} />
+                  {/* Blocked, the relation is the block: no «Cùng nhóm» over a pair chat. */}
+                  {daChan ? <Chip label="Đã chặn" selected /> : <Chip icon={hoSo.hoSo.relation === "couple" ? "heart" : undefined} label={cauQuanHe(hoSo.hoSo.relation)} selected={hoSo.hoSo.relation === "couple"} />}
                   <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>{cauNgayVao(hoSo.hoSo.created_at)}</Text>
                 </View>
                 {/* The badges the owner chose, stamped on the data page (at most
@@ -407,7 +415,7 @@ export function HoSoNguoiScreen() {
                 {loiChat ? <Text style={[typography.caption, { color: colors.warn }]}>{loiChat}</Text> : null}
               </View>
             ) : null}
-            {hoSo.hoSo.relation === "groupmate" ? (
+            {hoSo.hoSo.relation === "groupmate" && !daChan ? (
               <View style={styles.khoiChat}>
                 {/* ADR-0038 §2.2: no locked «Nhắn tin» that reads as broken;
                     the sentence says what opens it and the button beside it
@@ -430,7 +438,6 @@ export function HoSoNguoiScreen() {
             ) : null}
             {hoSo.hoSo.relation !== "self" ? (
               <View style={styles.khoiChat}>
-                {daChan ? <Chip label="Đã chặn" selected /> : null}
                 <RudiButton
                   icon="ellipsis-horizontal"
                   label="Thêm hành động"

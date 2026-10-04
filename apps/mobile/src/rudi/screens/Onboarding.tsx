@@ -23,6 +23,7 @@ import { ONhapMuc } from "../ui/ONhapMuc";
 import { StampButton } from "../ui/StampButton";
 import { GuGlyph } from "../ui/art/Gu";
 import { toggleState } from "../../ui/a11y";
+import { laVaoQuaLoiMoi } from "../duong-vao";
 
 /** The words are the SERVER's (`so-thich.ts`, held equal to `GET /interests`
  *  by `tests/test_interest_vocabulary_matches_client.py`); the picture for each
@@ -54,7 +55,13 @@ const NGHIENG_DAN = [-2, 1.5, -1, 2, -1.5, 1];
 export function PersonalizationScreen() {
   const router = useRouter();
   // A new person who arrived by a link goes on to it after this step.
-  const tiep = duongTiep(useLocalSearchParams<{ tiep?: string }>().tiep);
+  const thamSo = useLocalSearchParams<{ tiep?: string }>();
+  const tiep = duongTiep(thamSo.tiep);
+  // Arrived through a group invitation (QA UI-073): the account carries the
+  // name the inviter typed. It is shown, filled in, and the person decides.
+  // QA UI-073: arrived through a group's invitation, read from the session
+  // (not from the URL, which anyone can edit).
+  const quaLoiMoi = laVaoQuaLoiMoi(useRudiSession().phien);
   const { colors, dark } = useRudiTheme();
   // At a large font scale two columns leave a label the width of one word,
   // and Android breaks «Shopping» in half rather than wrap it (dark/1.3
@@ -65,8 +72,9 @@ export function PersonalizationScreen() {
   // placeholder. Without it the person who looks this number up to invite them
   // reads «Thành viên mới» and cannot tell they found the right one, and the
   // invitation then refuses any other name (QA 23/09). Skippable like the rest.
-  const hoiTen = personId !== null && laTenGiuCho(session.phien?.profile?.display_name);
-  const [ten, setTen] = useState("");
+  const tenNhomGoi = quaLoiMoi ? (session.phien?.profile?.display_name?.trim() ?? "") : "";
+  const hoiTen = personId !== null && (laTenGiuCho(session.phien?.profile?.display_name) || (quaLoiMoi && tenNhomGoi !== ""));
+  const [ten, setTen] = useState(laTenGiuCho(tenNhomGoi) ? "" : tenNhomGoi);
 
   const [muc, setMuc] = useState<string[]>([]);
   const [khoang, setKhoang] = useState<string | null>(null);
@@ -122,7 +130,8 @@ export function PersonalizationScreen() {
   /** Save the typed name, if any; a failure is not worth blocking the step. */
   const luuTen = async () => {
     const phien = session.phien;
-    if (!hoiTen || phien === null || ten.trim() === "") return;
+    // An invited person who keeps the name the group gave writes nothing.
+    if (!hoiTen || phien === null || ten.trim() === "" || ten.trim() === tenNhomGoi) return;
     try {
       const hoSo = await suaHoSoToi(phien.person_id, { display_name: ten.trim() });
       // The session carries the name the rest of the app greets with; without
@@ -185,6 +194,7 @@ export function PersonalizationScreen() {
           accessibilityLabel="Ô tên của bạn"
           co="lon"
           autoCapitalize="words"
+          helper={quaLoiMoi && tenNhomGoi !== "" && !laTenGiuCho(tenNhomGoi) ? `Nhóm mời bạn đang gọi bạn là «${tenNhomGoi}». Sửa nếu bạn muốn được gọi khác.` : undefined}
           label="Bạn tên gì?"
           maxLength={60}
           onChangeText={setTen}

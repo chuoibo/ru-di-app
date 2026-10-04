@@ -116,14 +116,17 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Ô nhập mã"
 - inputText: "${OTP_CODE}"
-# D được mời nhưng chưa đồng ý → tab Tin nhắn, hàng «Hoi QA · bạn được mời» với
-# nút đồng ý (từ 23/09 người chưa có nhóm vào tab Tin nhắn, có thanh tab).
+# D được mời nhưng chưa đồng ý: từ B8 (QA UI-073) người vào bằng lời mời đi qua
+# Sở thích trước, ô tên điền sẵn tên nhóm đặt; bỏ qua thì về tab Tin nhắn, hàng
+# «Hoi QA» nói ai mời (QA UI-080), với «Đồng ý vào nhóm» và «Từ chối».
+- runFlow: _bo-qua-so-thich.yaml
 - extendedWaitUntil:
     visible: "Hoi QA"
     timeout: 60000
-- assertVisible: ".*bạn được mời.*"
+- assertVisible: ".*mời bạn · .* người trong nhóm"
+- assertVisible: "Từ chối"
 - takeScreenshot: 25-d-loi-moi-cho
-- tapOn: "Đồng ý vào nhóm"
+- tapOn: "Đồng ý vào nhóm.*"
 - extendedWaitUntil:
     visible: "Khám phá"
     timeout: 60000

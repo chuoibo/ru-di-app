@@ -299,6 +299,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // until the screen was reopened (QA 23/09).
   const [lanDoc, setLanDoc] = useState(0);
   const [soDangO, setSoDangO] = useState<number | null>(null);
+  const chiMinhToi = !nhanRieng && (soDangO ?? nhom?.member_count ?? 2) <= 1;
   useFocusEffect(
     useCallback(() => {
       setLanDoc((n) => n + 1);
@@ -967,10 +968,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               {/* The sketch is the first thing to give way: a short window or
                   an open tray keeps the words and the one action. */}
               {thapCuaSo || khay !== null ? null : <Nep pose="moi" size={96} />}
-              <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : "Có hội rồi. Mở lời thôi."}</Text>
-              <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
+              {/* A group of one (just opened, QA UI-071) asks for friends first:
+                  a plan for nobody is not the next step. */}
+              <Text style={[typography.h2, styles.giua, { color: colors.ink }]}>{nhanRieng ? "Một lời mở đầu." : chiMinhToi ? "Hội mới, mới có mình bạn." : "Có hội rồi. Mở lời thôi."}</Text>
+              <Text style={[typography.body, styles.giua, { color: colors.inkSoft }]}>{nhanRieng ? `Một tin nhắn nhỏ cho ${tenNhom}.` : chiMinhToi ? "Mời vài người bạn vào, rồi cùng rủ nhau một buổi." : "Từ một câu rủ, thành một buổi cùng đi."}</Text>
+              {chiMinhToi ? <RudiButton icon="person-add-outline" label="Mời bạn vào nhóm" full={false} onPress={() => router.push(`/groups/${contextId}/invite` as never)} /> : null}
               {/* Every room, a friends' pair included, can start a plan from here. */}
-              <RudiButton label={nhanRieng ? "Rủ đi một buổi" : "Rủ hội một buổi"} variant="outline" full={false} onPress={() => setKhay("plan")} />
+              <RudiButton label={nhanRieng ? "Rủ đi một buổi" : "Rủ hội một buổi"} variant={chiMinhToi ? "ghost" : "outline"} full={false} onPress={() => setKhay("plan")} />
             </View>
           )}
         </ScrollView>

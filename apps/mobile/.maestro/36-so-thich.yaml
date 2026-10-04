@@ -53,9 +53,7 @@ appId: com.lakiet.rudi
 - inputText: "Nhom Gu"
 - hideKeyboard
 - tapOn: "Mở nhóm"
-- extendedWaitUntil:
-    visible: "Khám phá"
-    timeout: 30000
+- runFlow: _vao-nhom-vua-lap.yaml
 - tapOn: "Cá nhân"
 - scrollUntilVisible:
     element:

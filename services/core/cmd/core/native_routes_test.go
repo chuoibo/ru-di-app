@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"mobile/services/core/internal/achievementv1"
+	"mobile/services/core/internal/gomdot"
+	"mobile/services/core/internal/loimoi"
 	"mobile/services/core/internal/profilemedia"
 	"mobile/services/core/internal/socialv2"
 )
@@ -25,7 +27,9 @@ func TestRoutesCommandListsEveryGoNativeExtension(t *testing.T) {
 	for _, row := range rows {
 		listed[row.ID] = true
 	}
-	for _, id := range append(append(achievementv1.RouteIDs(), socialv2.RouteIDs()...), profilemedia.RouteIDs()...) {
+	ids := append(append(achievementv1.RouteIDs(), socialv2.RouteIDs()...), profilemedia.RouteIDs()...)
+	ids = append(append(ids, gomdot.RouteIDs()...), loimoi.RouteIDs()...)
+	for _, id := range ids {
 		if !listed[id] {
 			t.Fatalf("Go-only handler %q absent from routes --json", id)
 		}

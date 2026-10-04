@@ -886,3 +886,123 @@ không được dựng lại dưới tay người đọc, câu lỗi phải nằ
 ### Chưa làm trong B7, chuyển batch
 - Gộp hai hệ bình luận (Cộng đồng và trang tường kể chuyện) về một ngữ pháp hiển thị: chuyển sang B9, cùng lúc với UI-157,
   UI-158, UI-159 ở `BaiChiTietScreen`, để chỉ chạm màn đó một lần.
+
+## Tích hợp PR #664 (Codex) · 04/10
+
+Trong lúc đợt này dừng vì hết lượt, Codex làm 13 ID và để PR #664 ở dạng draft. Danh sách ID nằm ở đầu `feature-plan.md`;
+bằng chứng của Codex ở `docs/codex/2026-10-02/`. Codex dành lại 44 ID của B8/B9 cho đợt này để hai bên không làm trùng.
+
+- `a0fb9ba3`: gộp `codex/ui-ux-qa-handoff` vào `main` (`d3f74730`). Bảy xung đột được giải theo bảng của Codex và theo
+  hướng production của `4f74b011`:
+  - Không dựng lại demo: `Discovery.tsx` và test hành trình demo vẫn bị xoá.
+  - `NepBang` đọc `actorId` từ phiên live.
+  - `mobile_native.sh` giữ phần chọn Metro host, bỏ phần fixture.
+  - Sổ tay hướng dẫn được sinh lại từ mã nguồn.
+  - Test gutter của Nếp chuyển sang danh mục live.
+  - Trạng thái «Chưa mở được trang cuối» không có nút thử lại của `EndingScreen` nay có cảnh `chua-doc-duoc`, đúng cổng
+    «ô rỗng phải có cảnh».
+  - Phần trùng của đợt này ở trang cuối (`cannot_end_reason`, «chưa tới ngày») được bỏ; bản Codex giữ nguyên.
+- `76637302` · BUG_FIX (Go + migration): xoá tài khoản nay xoá luôn dấu «ai nhắc» trong thông báo Cộng đồng
+  (`community_notifications.actor_id`, cột thêm ở B7 với UI-147).
+  - Migration cộng đồng thứ 6 `notification_actor_erasure.sql` thay `community_person_erasure()`. Không sửa migration đã
+    chạy.
+  - Đăng ký cột trong `nepnho/dangky.go`.
+  - Test PostgreSQL `TestPostgresCommunityErasureForgetsWhoMentioned` chạy trong một transaction rồi rollback, vì DB của
+    tầng này dùng chung.
+  - Phiên thanh tab phát hiện lỗi này.
+
+## B8 · Nhóm · Người · Sổ hai người (F06, F07, N26) + Go
+
+Đây là các màn «Operate»: nhóm, bạn bè, hồ sơ người, sổ hai người. Lỗi ở đây chủ yếu là màn nói sai điều vừa xảy ra:
+- lập nhóm xong bị đưa về Khám phá;
+- lời mời không nói ai mời;
+- mọi quản trị đều mang nhãn «Người lập nhóm»;
+- tải lại thì mất dấu «Đã chặn»;
+- một lời đồng ý trong sổ đôi bị vẽ lại thành lời mời.
+
+Batch này thêm hai route Go (chỉ Go phục vụ, `python: absent`) cho lời mời vào nhóm. Phần còn lại là sửa ở màn. Không đổi
+luật ai được vào nhóm, ai đọc được danh sách thành viên, và không đổi luật tra số điện thoại.
+
+### Lập nhóm xong là vào nhóm (UI-071) · UX_IMPROVEMENT
+- «Mở nhóm» chọn nhóm vừa lập (`chonNhom`) rồi vào thẳng chat của nhóm, không về Khám phá.
+- Chat của nhóm chỉ có mình bạn không phải màn rỗng câm. Tiêu đề là «Hội mới, mới có mình bạn.», kèm «Mời bạn vào nhóm»
+  (vào danh sách thành viên, nơi có lời mời) và «Rủ hội một buổi».
+- Hai flow Maestro mới, `_vao-nhom-vua-lap.yaml` và 24/39, đi theo đường mới.
+
+### Lời mời nói ai mời, và từ chối được (UI-080) · UX_IMPROVEMENT (Go + màn)
+- Gói Go mới `loimoi`, hai route mới:
+  - `GET /contexts/{id}/invitation`: tên nhóm, người mời, số người đang ở trong, lúc mời.
+  - `DELETE /contexts/{id}/invitation`: đổi hàng `invited` của chính người đó sang `left`.
+- Người được mời không đọc được danh sách thành viên, nên tên người mời phải đi qua route riêng. Không thêm trường vào
+  `GET /people/me/contexts`, vì Python vẫn là oracle của route đó (ADR-0031).
+- Từ chối là cùng câu `UPDATE` mà `leave_context` dùng, chỉ khác điểm xuất phát là `invited`. Một lời mời sau đó tạo hàng
+  mới (partial unique index chỉ áp lên các hàng đang mở).
+- Đã có:
+  - test đơn vị;
+  - test PostgreSQL: đọc, từ chối, mời lại, người ngoài 404, mã lỗi;
+  - hai hàng `routes.json` kèm evidence;
+  - khai trong `GO_FEATURE_HANDLERS`;
+  - `nativeRouteIDs`.
+- Màn Tin nhắn:
+  - Lời mời xếp đầu danh sách, đọc «Chat Test 01 mời bạn · 2 người trong nhóm».
+  - Hai nút «Đồng ý vào nhóm» và «Từ chối» nằm cạnh nhau. «Từ chối» hỏi lại ngay trên hàng.
+  - Trả lời hỏng thì câu lỗi nằm dưới đúng hàng đó; danh sách vẫn giữ nguyên.
+
+### Người vào bằng lời mời đi qua Sở thích, có ô tên (UI-073) · BUG_FIX (phần UI)
+- Đăng nhập xong, người được mời đi qua Sở thích (`manSauDangNhap` thêm `?moi=1`).
+- Màn hiện cái tên nhóm đang gọi họ, đã điền sẵn: «Nhóm mời bạn đang gọi bạn là «…». Sửa nếu bạn muốn được gọi khác.»
+- Giữ nguyên tên thì không ghi gì.
+- Luật «tên do người mời đặt khi người lạ tra số» vẫn chỉ ở dạng ADR đề xuất (`adr-de-xuat/UI-073-…`, đã cập nhật).
+
+### Quản trị và thành viên (UI-074, UI-075, UI-076, UI-081) · UX_IMPROVEMENT + BUG_FIX + VISUAL_UPGRADE
+- Tự bỏ quyền quản trị phải hỏi lại ngay trên hàng: «Bỏ quyền» (tông `warn`) hoặc «Thôi».
+- «Người lập nhóm» chỉ còn ở người đã lập nhóm (`created_by_id` đọc từ chính nhóm). Quản trị khác mang con dấu
+  «Quản trị»; người được mời mang «Đã mời, chưa đồng ý».
+- Mỗi nút có tên truy cập riêng, ví dụ «Đặt Chat Test 07 làm quản trị», không còn 19 nút cùng tên. Chạm vào hàng thì mở hồ
+  sơ người đó.
+- Thêm primitive `ui/LuoiNguoi.tsx`:
+  - Điện thoại: một cột, kẻ tóc bắt đầu từ cột chữ.
+  - Chỗ đủ hai cột ≥280dp (cột đọc của tablet): hai cột, nút nằm dưới tên.
+  - Bề rộng lấy từ chính danh sách, không lấy từ cửa sổ.
+  - Trước đây nút cách tên 487–679px.
+- Màn Thành viên và Bạn bè dùng `LuoiNguoi` theo cột đọc `doc`.
+
+### Bạn bè và hồ sơ người (UI-077, UI-078) · UX_IMPROVEMENT + BUG_FIX
+- «Đồng ý» hay «Nhắn tin» hỏng thì câu lỗi nằm dưới đúng hàng, kèm «Thử lại». Danh sách đã đọc không bị thay bằng màn lỗi.
+- Hồ sơ người đọc thêm danh sách chặn của chính mình. Sau khi tải lại vẫn thấy dấu «Đã chặn» ở chỗ quan hệ, cùng
+  «Bỏ chặn»; không còn mời «Kết bạn» và «Chặn» lại.
+
+### Sổ hai người (UI-083, UI-084, UI-085, UI-086, UI-090, UI-092, UI-126, UI-127, UI-130) · BUG_FIX + UX_IMPROVEMENT
+- Đọc sổ lỗi thì hiện `ErrorState` kèm «Thử lại». Trước đây là «Chưa có sổ» kèm lời mời lập sổ lại (UI-083).
+- Vừa được đồng ý (UI-084):
+  - Sheet «Lập sổ» đóng trên cả hai máy trước khi vẽ khung (`useLayoutEffect`), không còn một hai khung mời lại.
+  - «Đồng ý bậc» và «Loại sổ» giữ nguyên điều chúng vừa nói trong lúc đóng (`useGiuKhiDong`, primitive mới).
+- «Rủ … tới đây» (UI-085, UI-130):
+  - Tuần đã chốt hẹn không mời phác thêm tờ (`nenXinTo` bỏ tuần `chot`). Quán đi vào kèo đã hẹn qua «Thêm vào kèo».
+  - Hai người bạn không phải «Một đôi» thì quán mở một kèo của hai người, quán là chặng đầu. Thêm prop `placeId` cho
+    `CreateOutingLive` và `/outings/new`.
+- Người đề nghị đóng sheet vẫn thấy «đang chờ» trên màn (UI-086).
+- Hàng mời «Một đôi» dẫn tới màn nói về lời đề nghị, kể cả đề nghị bật đôi (UI-126).
+- Bìa sổ: tên xuống hai dòng, không cắt «Chat Tes…» (UI-090).
+- Lá ngày: cuộn tới lá đang chọn, kể cả ngày xa (UI-092).
+- Khoảnh khắc M6 «sổ mở» diễn một lần, ở bước mở sổ, trong cả nhánh «hội» (UI-127). Giảm chuyển động thì hiện khung cuối.
+- Không còn `DemoBadge` trong không gian giấy live.
+
+### Phân biệt việc phá huỷ với việc tạm hoãn · VISUAL_UPGRADE (chủ động)
+- «Tờ lời rủ»: hai việc phá huỷ («Bỏ bản phác này», «Huỷ buổi này») mang tông `warn`, không còn trông giống «Tuần này nghỉ».
+- «Xác nhận việc» nhận cờ `nguyHiem`: nút xác nhận một việc phá huỷ mang tông `warn`; tờ xác nhận vẫn là nơi nói ra hậu quả.
+
+### Sửa sau lượt đo đầu của B8 (cùng batch)
+- **Hồi quy B8 đo được, đã sửa: cửa «Mở sổ cặp đôi» thường trực.**
+  - Lượt đo đầu cho thấy B8 (UI-126) đã giấu nút «Mở sổ cặp đôi» khi người kia đề nghị «Một đôi», thay bằng con dấu «Xem
+    lời đề nghị».
+  - Lối quen của người dùng, flow Maestro 47 và harness QA đều đi qua nút đó, nên chuỗi đồng ý đứt: `CHUYEN-DONG-Y`,
+    `CHUYEN-BEN-KIA`, `CHUYEN-CHAT-TOI` tụt từ PASS xuống FAIL.
+  - Nay cửa thường trực luôn hiện, cùng tên ở mọi trạng thái; con dấu là lối tắt theo ngữ cảnh. Cả hai mở cùng một
+    sheet. Đo lại: ba hàng PASS.
+- **UI-073, lỗi thật: người được mời không qua Sở thích.**
+  - Luật của B8 đọc `membership_state` của phiên, nhưng phiên đăng nhập bằng OTP không gắn nhóm nào (`null`); lời mời
+    nằm trong `contexts`. Test của B8 dựng phiên theo giả định sai, nên xanh mà luật không bao giờ chạy.
+  - Nay `laVaoQuaLoiMoi` đọc `contexts` (có lời mời đang chờ, chưa ở nhóm nào). Màn Sở thích đọc điều đó từ phiên,
+    không từ cờ `?moi=1` trên URL, vì cờ đó ai cũng thêm hay bớt được.
+  - Test dựng đúng dạng phiên mà máy chủ trả.

@@ -85,6 +85,7 @@ export function SoDoiSongProvider({
       gu: so?.taste ?? null,
       vai: so?.week_role ?? null,
       daNap: song.pha !== "dang-nap",
+      loiDoc: song.pha === "loi" ? song.loi : null,
       dangLam: song.dangLam,
       loiLenh: song.loiLenh,
       loiGu,

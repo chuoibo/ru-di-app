@@ -181,3 +181,21 @@ test("manSauDangNhap: về đúng link; người mới qua Sở thích rồi m�
   assert.equal(manSauDangNhap(moi, "/groups/a/chat"), "/personalization?tiep=%2Fgroups%2Fa%2Fchat");
   assert.equal(manSauDangNhap(moi), "/personalization");
 });
+
+test("manSauDangNhap: người vào bằng lời mời (chưa ở nhóm nào) cũng qua Sở thích; màn đọc điều đó từ phiên, không từ URL (QA UI-073)", () => {
+  const duocMoi = { context_id: "g", membership_state: "invited", is_new_person: false };
+  assert.equal(manSauDangNhap(duocMoi), "/personalization");
+  assert.equal(manSauDangNhap(duocMoi, "/groups/g/chat"), "/personalization?tiep=%2Fgroups%2Fg%2Fchat");
+  // Somebody already in a group with a new invitation is not new.
+  assert.equal(manSauDangNhap({ context_id: "c", membership_state: "active", is_new_person: false }), "/explore");
+  // The shape POST /auth/otp/verify really answers (B8 measured it): no
+  // context on the session, the invitation in `contexts`.
+  const quaOtp = { context_id: null, membership_state: null, is_new_person: false, contexts: [{ my_state: "invited" }] };
+  assert.equal(manSauDangNhap(quaOtp), "/personalization");
+  assert.doesNotMatch(
+    manSauDangNhap({ ...quaOtp, contexts: [{ my_state: "invited" }, { my_state: "active" }] }),
+    /personalization/,
+    "already in one group: an extra invitation is answered in Tin nhắn",
+  );
+  assert.doesNotMatch(manSauDangNhap({ ...quaOtp, contexts: [] }), /personalization/, "no group and no invitation: not this path");
+});

@@ -162,6 +162,19 @@ export function manDau(
  * Everybody else skips it. The step is not a gate; it is editable forever from
  * Cá nhân, and re-asking somebody who already answered would read as the app
  * having forgotten them.
+ *
+ * One more person is new in every way that matters (QA UI-073): somebody
+ * whose account the server made when a group invited their number. The server
+ * calls them not new (a `people` row exists, with the name the inviter typed),
+ * so the app reads it from the session: no group joined yet, an invitation
+ * waiting. They go through the step too, where the name the group calls them
+ * is shown and can be changed before anyone else sees it. The step reads that
+ * from the session itself (`laVaoQuaLoiMoi`), not from the URL: a query flag
+ * is state anyone can add or drop.
+ * The invitation is read from `contexts` (an OTP sign-in names no context:
+ * `membership_state` is null there), or from the session's own membership
+ * when it was minted by an invitation.
+ * The server-side rule (who may look a number up) is ADR-proposal material.
  */
 export function manSauDangNhap(
   phien:
@@ -169,15 +182,31 @@ export function manSauDangNhap(
         context_id: string | null;
         membership_state: string | null;
         is_new_person?: boolean;
+        contexts?: readonly { my_state: string }[];
       }
     | null,
   tiep?: string | null,
 ): string {
   const ve = duongTiep(tiep);
-  if (phien !== null && phien.is_new_person === true) {
+  if (phien !== null && (phien.is_new_person === true || laVaoQuaLoiMoi(phien))) {
     return ve === null ? "/personalization" : `/personalization?tiep=${encodeURIComponent(ve)}`;
   }
   return ve ?? manDau(phien);
+}
+
+/**
+ * Somebody whose account a group's invitation made (QA UI-073): not new to
+ * the server, in no group yet, with an invitation waiting. Read from the
+ * session's `contexts` (an OTP sign-in names no context), or from the
+ * session's own membership when an invitation minted it.
+ */
+export function laVaoQuaLoiMoi(
+  phien: { membership_state: string | null; is_new_person?: boolean; contexts?: readonly { my_state: string }[] } | null,
+): boolean {
+  if (phien === null || phien.is_new_person === true) return false;
+  const nhom = phien.contexts ?? [];
+  if (nhom.length === 0) return phien.membership_state === "invited";
+  return nhom.some((n) => n.my_state === "invited") && !nhom.some((n) => n.my_state === "active");
 }
 
 /**
