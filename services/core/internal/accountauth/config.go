@@ -51,6 +51,8 @@ type Limiter interface {
 	// Count reads a counter without spending from it; a missing key is zero.
 	Count(context.Context, string) (int, error)
 	Clear(context.Context, string) error
+	// Undo gives back one spent unit, never below zero.
+	Undo(context.Context, string) error
 }
 type redisLimiter struct {
 	client    *redis.Client
@@ -73,6 +75,12 @@ func (l redisLimiter) Count(ctx context.Context, key string) (int, error) {
 }
 func (l redisLimiter) Clear(ctx context.Context, key string) error {
 	return l.client.Del(ctx, l.namespace+key).Err()
+}
+
+var undoScript = redis.NewScript(`local n=tonumber(redis.call('GET',KEYS[1]) or '0'); if n>0 then return redis.call('DECR',KEYS[1]) end; return 0`)
+
+func (l redisLimiter) Undo(ctx context.Context, key string) error {
+	return undoScript.Run(ctx, l.client, []string{l.namespace + key}).Err()
 }
 
 type Config struct {
@@ -229,6 +237,34 @@ func (h *Handler) fail(ctx context.Context, budgets ...budget) error {
 		}
 	}
 	return nil
+}
+
+// reserve spends one unit of every budget atomically before the work it
+// guards, so concurrent requests cannot all pass a check made before any of
+// them is counted. Over any budget, everything is given back and refused.
+func (h *Handler) reserve(ctx context.Context, budgets ...budget) error {
+	if h.cfg.Limits == nil {
+		return problem(503, "auth_temporarily_unavailable")
+	}
+	for i, b := range budgets {
+		ok, err := h.cfg.Limits.Allow(ctx, h.rateKey(b.scope, b.value), b.max, b.window)
+		if err != nil || !ok {
+			h.refund(ctx, budgets[:i+1]...)
+			if err != nil {
+				return problem(503, "auth_temporarily_unavailable")
+			}
+			return problem(429, "auth_rate_limited")
+		}
+	}
+	return nil
+}
+
+// refund gives back a reservation that did not end in a failure; best
+// effort, an unreturned unit only expires with its window.
+func (h *Handler) refund(ctx context.Context, budgets ...budget) {
+	for _, b := range budgets {
+		_ = h.cfg.Limits.Undo(ctx, h.rateKey(b.scope, b.value))
+	}
 }
 
 // forgive drops failures a proven owner has cleared; best effort, the

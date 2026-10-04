@@ -48,7 +48,7 @@ elif sys.argv[2] == "otp-subject-cap":
     new = 'if err = h.guessesLeft(ctx, tx, kind, subject); false && err != nil {'
 else:
     path = base / "sessions.go"
-    old = '{"login-fail", username + "\\x00" + ip, 10, 15 * time.Minute}'
+    old = '{"login-fail", pairKey(username, ip), 10, 15 * time.Minute}'
     new = '{"login-fail", username, 10, 15 * time.Minute}'
 source = path.read_text()
 assert source.count(old) == 1, "Mutation anchor drifted"

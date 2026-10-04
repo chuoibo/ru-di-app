@@ -49,10 +49,16 @@ func (h *Handler) reauth(w http.ResponseWriter, r *http.Request) {
 	// A stolen session must not become a password oracle: failures are capped
 	// per person, and a correct proof is never slowed by a stranger's tries.
 	budgets := []budget{{"reauth-fail", person, 10, 15 * time.Minute}, {"reauth-fail-day", person, 30, 24 * time.Hour}}
-	if err = h.spent(r.Context(), budgets...); err != nil {
+	if err = h.reserve(r.Context(), budgets...); err != nil {
 		refuse(w, err)
 		return
 	}
+	failed := false
+	defer func() {
+		if !failed {
+			h.refund(context.WithoutCancel(r.Context()), budgets...)
+		}
+	}()
 	tx, err := h.pool.Begin(r.Context())
 	if err != nil {
 		refuse(w, err)
@@ -85,11 +91,7 @@ func (h *Handler) reauth(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		var e *Error
-		if errors.As(err, &e) && e.Status == 401 {
-			if failed := h.fail(r.Context(), budgets...); failed != nil {
-				err = failed
-			}
-		}
+		failed = errors.As(err, &e) && e.Status == 401
 		refuse(w, commit(r.Context(), tx, err))
 		return
 	}

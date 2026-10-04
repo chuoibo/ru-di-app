@@ -442,6 +442,6 @@ func (h *Handler) confirmReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// The owner proved the mailbox; strangers' wrong passwords stop pausing them.
-	h.forgive(r.Context(), loginBudgets(username, "")[1])
+	h.forgive(r.Context(), userLoginBudget(username))
 	respond(w, 200, map[string]bool{"reset": true})
 }

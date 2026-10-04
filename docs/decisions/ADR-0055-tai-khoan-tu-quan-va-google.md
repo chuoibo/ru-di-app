@@ -97,8 +97,11 @@ tìm ra các đường lạm dụng giới hạn thử. Quyết định đã tri
 - **Đăng nhập chỉ đếm lần sai.** Mười lần sai từ một địa chỉ cho một username
   trong 15 phút thì tạm dừng đúng cặp đó; một trăm lần sai từ mọi nơi trong
   24 giờ thì tạm dừng username; một trăm lần sai từ một địa chỉ trong một giờ
-  thì tạm dừng địa chỉ. Đăng nhập đúng xoá bộ đếm của cặp; đặt lại mật khẩu
-  qua email xoá bộ đếm của username. Người lạ không còn khoá được chủ tài
+  thì tạm dừng địa chỉ — trừ các địa chỉ chủ tài khoản đã đăng nhập đúng
+  trong 30 ngày, nơi trần theo username không áp dụng. Mỗi lượt giữ chỗ
+  nguyên tử trên mọi ngân sách trước khi băm và chỉ hoàn lại khi không sai,
+  nên request song song không vượt được trần. Đăng nhập đúng xoá bộ đếm của
+  cặp; đặt lại mật khẩu qua email xoá bộ đếm của username. Người lạ không còn khoá được chủ tài
   khoản chỉ bằng một lần sai mỗi sáu giây. Xác thực lại: 10 lần sai/15 phút,
   30 lần/ngày mỗi người.
 - **Mã email có trần xuyên qua các lần gửi lại.** Trong 24 giờ, mỗi loại
@@ -136,8 +139,8 @@ tìm ra các đường lạm dụng giới hạn thử. Quyết định đã tri
   client coi 401 `authentication_required` là phiên đã bị thu hồi và đăng xuất.
 
 Giới hạn còn lại, ghi rõ: trần theo username vẫn cho phép người có nhiều địa
-chỉ tạm dừng đăng nhập mật khẩu của một username tới 24 giờ (chủ tài khoản
-gỡ bằng đặt lại mật khẩu); trần mã theo email cho phép người có từ ba địa chỉ
+chỉ tạm dừng đăng nhập mật khẩu của một username tới 24 giờ ở những địa chỉ
+chủ tài khoản chưa từng dùng (gỡ bằng đặt lại mật khẩu); trần mã theo email cho phép người có từ ba địa chỉ
 trở lên làm một email không xin được mã reset trong 24 giờ. Đổi lại, xác suất
 đoán trúng mã sáu số giảm từ khoảng 7%/tháng xuống khoảng 0,09%/tháng mỗi tài
 khoản. Mọi

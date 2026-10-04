@@ -94,11 +94,23 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
-	budgets := loginBudgets(username, ip)
-	if err = h.spent(r.Context(), budgets...); err != nil {
+	budgets, err := h.loginBudgets(r.Context(), username, ip)
+	if err != nil {
 		refuse(w, err)
 		return
 	}
+	// Every attempt holds a unit until it proves itself; only a wrong
+	// password keeps it. Whatever else ends the request gives it back.
+	if err = h.reserve(r.Context(), budgets...); err != nil {
+		refuse(w, err)
+		return
+	}
+	failed := false
+	defer func() {
+		if !failed {
+			h.refund(context.WithoutCancel(r.Context()), budgets...)
+		}
+	}()
 	var person, encoded string
 	err = h.pool.QueryRow(r.Context(), `SELECT m.person_id::text,coalesce(m.password_hash,'') FROM managed_accounts m JOIN people p ON p.id=m.person_id WHERE m.username=$1 AND p.deleted_at IS NULL`, username).Scan(&person, &encoded)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
@@ -115,10 +127,7 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !ok || person == "" {
-		if err = h.fail(r.Context(), budgets...); err != nil {
-			refuse(w, err)
-			return
-		}
+		failed = true
 		refuse(w, problem(401, "credentials_invalid"))
 		return
 	}
@@ -148,18 +157,37 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.forgive(r.Context(), budgets[0])
+	// The owner's address is remembered, so a stranger spending the
+	// username's day cannot keep them out from where they usually sign in.
+	_, _ = h.cfg.Limits.Allow(r.Context(), h.rateKey("login-known", pairKey(username, ip)), 1<<30, 30*24*time.Hour)
 	respond(w, 201, out)
 }
 
+func pairKey(username, ip string) string { return username + "\x00" + ip }
+
 // Ten wrong passwords from one address pause that address for the username;
-// a hundred from anywhere in a day pause the username itself until a reset
-// proves the owner; a hundred from one address in an hour pause the address.
-func loginBudgets(username, ip string) []budget {
-	return []budget{
-		{"login-fail", username + "\x00" + ip, 10, 15 * time.Minute},
-		{"login-fail-user", username, 100, 24 * time.Hour},
+// a hundred from one address in an hour pause the address; a hundred from
+// anywhere in a day pause the username, except from addresses its owner
+// signed in from in the last thirty days, until a reset proves the owner.
+func (h *Handler) loginBudgets(ctx context.Context, username, ip string) ([]budget, error) {
+	budgets := []budget{
+		{"login-fail", pairKey(username, ip), 10, 15 * time.Minute},
 		{"login-fail-ip", ip, 100, time.Hour},
 	}
+	if h.cfg.Limits == nil {
+		return nil, problem(503, "auth_temporarily_unavailable")
+	}
+	known, err := h.cfg.Limits.Count(ctx, h.rateKey("login-known", pairKey(username, ip)))
+	if err != nil {
+		return nil, problem(503, "auth_temporarily_unavailable")
+	}
+	if known == 0 {
+		budgets = append(budgets, userLoginBudget(username))
+	}
+	return budgets, nil
+}
+func userLoginBudget(username string) budget {
+	return budget{"login-fail-user", username, 100, 24 * time.Hour}
 }
 
 // A valid encoded hash with a random salt and a non-password digest costs the same as a real lookup.

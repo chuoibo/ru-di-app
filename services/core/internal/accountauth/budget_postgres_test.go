@@ -34,6 +34,14 @@ func (m *memLimiter) Count(_ context.Context, key string) (int, error) {
 	defer m.mu.Unlock()
 	return m.n[key], nil
 }
+func (m *memLimiter) Undo(_ context.Context, key string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.n[key] > 0 {
+		m.n[key]--
+	}
+	return nil
+}
 func (m *memLimiter) Clear(_ context.Context, key string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -80,17 +88,46 @@ func TestPostgresLoginFailuresPauseTheGuesserNotTheOwner(t *testing.T) {
 			requireCode(t, s, 401, out)
 		}
 	}
-	s, out = callFrom(t, h, "192.0.2.10", "/auth/login", "POST", "", right)
+	s, out = callFrom(t, h, "192.0.2.20", "/auth/login", "POST", "", right)
 	requireCode(t, s, 429, out)
-	// Proving the mailbox lifts that pause.
+	// Except from where the owner signed in before.
+	s, out = callFrom(t, h, "192.0.2.10", "/auth/login", "POST", "", right)
+	requireCode(t, s, 201, out)
+	// Proving the mailbox lifts that pause everywhere.
 	// repo-guard: allow=email reason=synthetic-reserved-test-domain
-	s, out = callFrom(t, h, "192.0.2.10", "/auth/password/reset/request", "POST", "", map[string]string{"email": "synthetic_victim@example.test"})
+	s, out = callFrom(t, h, "192.0.2.20", "/auth/password/reset/request", "POST", "", map[string]string{"email": "synthetic_victim@example.test"})
 	requireCode(t, s, 202, out)
 	reset := map[string]string{"challenge_id": out["challenge_id"].(string), "challenge_secret": out["challenge_secret"].(string), "code": mailCode(t, h, out["challenge_id"].(string)), "password": "replacement synthetic victim credential"}
-	s, out = callFrom(t, h, "192.0.2.10", "/auth/password/reset/confirm", "POST", "", reset)
+	s, out = callFrom(t, h, "192.0.2.20", "/auth/password/reset/confirm", "POST", "", reset)
 	requireCode(t, s, 200, out)
-	s, out = callFrom(t, h, "192.0.2.10", "/auth/login", "POST", "", map[string]string{"username": "synthetic_victim", "password": reset["password"]})
+	s, out = callFrom(t, h, "192.0.2.20", "/auth/login", "POST", "", map[string]string{"username": "synthetic_victim", "password": reset["password"]})
 	requireCode(t, s, 201, out)
+}
+
+func TestPostgresConcurrentGuessesCannotOutrunTheBudget(t *testing.T) {
+	h := authWorld(t)
+	h.cfg.Limits = newMemLimiter()
+	h.cfg.HashSlots = 16
+	h.hashes = make(chan struct{}, 16)
+	signup(t, h, "synthetic_burst")
+	var mu sync.Mutex
+	codes := map[int]int{}
+	var wg sync.WaitGroup
+	for range 30 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			s, _ := callFrom(t, h, "192.0.2.66", "/auth/login", "POST", "", map[string]string{"username": "synthetic_burst", "password": "not the synthetic credential"})
+			mu.Lock()
+			codes[s]++
+			mu.Unlock()
+		}()
+	}
+	wg.Wait()
+	// Checked before counted, all thirty would have reached Argon2.
+	if codes[401] != 10 || codes[429] != 20 {
+		t.Fatalf("burst outcomes %v", codes)
+	}
 }
 
 func TestPostgresWrongCodesAreCappedPerEmailAcrossResends(t *testing.T) {

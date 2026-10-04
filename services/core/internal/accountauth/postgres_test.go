@@ -316,3 +316,4 @@ func TestPostgresUsernameDiscoveryAndRecentAuth(t *testing.T) {
 	requireCode(t, s, 401, out)
 	_ = fmt.Sprintf("%v", out["code"])
 }
+func (testLimit) Undo(context.Context, string) error { return nil }
