@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -41,6 +42,31 @@ func TestPasswordNormalizationAndPolicy(t *testing.T) {
 	// repo-guard: allow=long-number reason=synthetic-unbounded-argon-parameters
 	if verifyPassword(a, "$argon2id$v=19$m=999999999,t=2,p=1$x$x") {
 		t.Fatal("unbounded encoded parameters accepted")
+	}
+}
+func TestPasswordLengthBoundaries(t *testing.T) {
+	for _, tc := range []struct {
+		name, value string
+		valid       bool
+	}{
+		{"seven", "m7Z!q2R", false},
+		{"eight", "m7Z!q2Rp", true},
+		{"fourteen", "m7Z!q2Rp_4D%v8", true},
+		{"unicode_seven", "é猫🌿ßø水Ж", false},
+		{"unicode_eight", "é猫🌿ßø水Жλ", true},
+		{"nfc_seven", "e\u0301猫🌿ßø水Ж", false},
+		{"nfc_eight", "e\u0301猫🌿ßø水Жλ", true},
+		{"maximum", strings.Repeat("xY!4", 32), true},
+		{"over_maximum", strings.Repeat("xY!4", 32) + "z", false},
+		{"blocked_eight", "password", false},
+		{"same_eight", "zzzzzzzz", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Password(tc.value)
+			if (err == nil) != tc.valid {
+				t.Fatalf("password validity = %v, want %v", err == nil, tc.valid)
+			}
+		})
 	}
 }
 func TestEmailUsernameAndVault(t *testing.T) {

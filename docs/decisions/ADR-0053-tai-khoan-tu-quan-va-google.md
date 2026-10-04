@@ -17,11 +17,19 @@ bằng mã sáu số trước khi tạo tài khoản hoạt động, dùng cho k
 và thay email. Email cắt khoảng trắng, chữ thường, không gộp dấu chấm hay
 `+tag`; lưu bản mã và HMAC phục vụ tra cứu. Không dùng email làm UUID.
 
-Mật khẩu 15–128 ký tự, nhận Unicode và khoảng trắng, NFC, không cắt hoặc trim,
+Mật khẩu 8–128 ký tự theo điều chỉnh của chủ sản phẩm ngày 2026-10-04,
+nhận Unicode và khoảng trắng, NFC, không cắt hoặc trim,
 chặn mật khẩu thông dụng. Argon2id ít nhất 19 MiB, hai lượt, một luồng, salt
 riêng và tham số có phiên bản. Không yêu cầu đổi định kỳ hoặc thành phần ký tự.
 Phiên opaque hiện có giữ TTL 30 ngày, chỉ lưu digest. Reset mật khẩu thu hồi
 tất cả phiên, đăng nhập lại bình thường. Không thêm MFA cho ứng dụng đợt này.
+
+Mốc tám ký tự là quyết định trải nghiệm của sản phẩm, không phải bằng chứng
+đáp ứng chính sách mật khẩu single-factor của NIST SP 800-63B-4. Chuẩn này
+yêu cầu tối thiểu 15 ký tự cho single-factor và cho phép tám ký tự khi mật
+khẩu chỉ là một phần của MFA. Xác minh email khi đăng ký không biến các lượt
+đăng nhập chỉ dùng mật khẩu thành MFA. Vẫn khuyến nghị câu mật khẩu dài,
+giữ blocklist, Argon2id và giới hạn thử dùng chung giữa replica.
 
 Google xác minh server bằng thư viện chính thức, kiểm chữ ký, issuer, audience,
 hạn và nonce một lần gắn với bí mật của lượt bắt đầu. Danh tính là `(issuer, sub)`.

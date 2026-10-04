@@ -77,7 +77,7 @@ func Password(s string) (string, error) {
 	}
 	s = norm.NFC.String(s)
 	n := utf8.RuneCountInString(s)
-	if n < 15 || n > 128 || commonlyGuessed(s) {
+	if n < 8 || n > 128 || commonlyGuessed(s) {
 		return "", problem(422, "password_weak")
 	}
 	same := true

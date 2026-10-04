@@ -146,6 +146,48 @@ func TestPostgresAccountProofResetAndSessionRevocation(t *testing.T) {
 		}
 	}
 }
+func TestPostgresEightCharacterPasswordLifecycle(t *testing.T) {
+	h := authWorld(t)
+	// repo-guard: allow=email reason=synthetic-reserved-test-domain
+	registration := map[string]string{"username": "eight_chars", "email": "eight_chars@example.test", "password": "m7Z!q2R"}
+	s, out := call(t, h, "/auth/register", "POST", "", registration)
+	requireCode(t, s, 422, out)
+	registration["password"] = "m7Z!q2Rp"
+	s, out = call(t, h, "/auth/register", "POST", "", registration)
+	requireCode(t, s, 202, out)
+	p := proof{out["challenge_id"].(string), out["challenge_secret"].(string), mailCode(t, h, out["challenge_id"].(string))}
+	s, out = call(t, h, "/auth/register/verify", "POST", "", p)
+	requireCode(t, s, 201, out)
+	s, out = call(t, h, "/auth/login", "POST", "", map[string]string{"username": registration["username"], "password": registration["password"]})
+	requireCode(t, s, 201, out)
+	person, token := out["person_id"], out["token"].(string)
+	s, out = call(t, h, "/people/me/account/password", "PUT", token, map[string]string{"password": "v3K#y5N"})
+	requireCode(t, s, 422, out)
+	s, out = call(t, h, "/people/me/account/password", "PUT", token, map[string]string{"password": "v3K#y5Ns"})
+	requireCode(t, s, 200, out)
+	if out["person_id"] != person {
+		t.Fatal("password change moved identity")
+	}
+	rotated := out["token"].(string)
+	s, out = call(t, h, "/people/me/account", "GET", token, nil)
+	requireCode(t, s, 401, out)
+	// repo-guard: allow=email reason=synthetic-reserved-test-domain
+	s, out = call(t, h, "/auth/password/reset/request", "POST", "", map[string]string{"email": "eight_chars@example.test"})
+	requireCode(t, s, 202, out)
+	reset := map[string]string{"challenge_id": out["challenge_id"].(string), "challenge_secret": out["challenge_secret"].(string), "code": mailCode(t, h, out["challenge_id"].(string)), "password": "t6H@w9C"}
+	s, out = call(t, h, "/auth/password/reset/confirm", "POST", "", reset)
+	requireCode(t, s, 422, out)
+	reset["password"] = "t6H@w9Cb"
+	s, out = call(t, h, "/auth/password/reset/confirm", "POST", "", reset)
+	requireCode(t, s, 200, out)
+	s, out = call(t, h, "/people/me/account", "GET", rotated, nil)
+	requireCode(t, s, 401, out)
+	s, out = call(t, h, "/auth/login", "POST", "", map[string]string{"username": registration["username"], "password": reset["password"]})
+	requireCode(t, s, 201, out)
+	if out["person_id"] != person {
+		t.Fatal("password reset moved identity")
+	}
+}
 func TestPostgresOTPAttemptBudgetExpiryAndDuplicateRace(t *testing.T) {
 	h := authWorld(t)
 	// repo-guard: allow=email reason=synthetic-reserved-test-domain

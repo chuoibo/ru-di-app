@@ -9,7 +9,7 @@ export type GoogleRegistration = Proof & { registration_required: true };
 export type Account = { username: string; email: string; has_password: boolean; has_google: boolean; discoverable_by_username: boolean };
 const errors = {
  credentials_invalid: "Tên tài khoản hoặc mật khẩu chưa đúng.", username_invalid: "Tên tài khoản gồm 3–32 chữ, số, dấu chấm hoặc gạch dưới.",
- password_weak: "Dùng mật khẩu 15–128 ký tự, tránh mật khẩu phổ biến.", email_invalid: "Địa chỉ email chưa đúng.",
+ password_weak: "Dùng mật khẩu 8–128 ký tự, tránh mật khẩu phổ biến.", email_invalid: "Địa chỉ email chưa đúng.",
  account_already_exists: "Tên tài khoản hoặc email đã được dùng. Hãy đăng nhập hoặc chọn tên khác.", email_unavailable: "Email này đã được dùng.",
  code_invalid: "Mã chưa đúng. Bạn có tối đa 5 lần thử.", challenge_invalid: "Lượt xác minh đã hết hạn hoặc không còn hiệu lực. Hãy bắt đầu lại.",
  challenge_resend_limited: "Chờ ít nhất 60 giây trước khi gửi lại mã.", auth_rate_limited: "Bạn đã thử nhiều lần. Hãy chờ một phút rồi thử lại.",
