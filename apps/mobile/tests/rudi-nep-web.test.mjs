@@ -76,7 +76,12 @@ test("drawing consent cancels without a request, keeps the draft and sends only 
     await key(page, "Enter", 13);
     await page.waitFor(() => !!document.querySelector('textarea[aria-label="Hỏi Nếp"]'));
     assert.ok(await page.evaluate(() => document.querySelector('[data-testid="nep-bang"]').textContent.includes("Trợ lý riêng của bạn")), "the test uses a live synthetic session, not the demonstration catalogue");
-    const chips = await page.evaluate(() => [...document.querySelectorAll('[data-testid="nep-bang"] [aria-label]')].filter(e => ["Quanh đây có gì hay?", "Chỗ này hợp đi mấy người?"].includes(e.getAttribute("aria-label"))).map(e => e.getBoundingClientRect().height));
+    // Measured at rest: the board springs open, and a chip read mid-spring was
+    // under 48 when the machine was busy (clean-tree run, 04/10). A chip that
+    // never reaches 48 still fails, on the wait's label.
+    const doChip = () => [...document.querySelectorAll('[data-testid="nep-bang"] [aria-label]')].filter(e => ["Quanh đây có gì hay?", "Chỗ này hợp đi mấy người?"].includes(e.getAttribute("aria-label"))).map(e => e.getBoundingClientRect().height);
+    await page.waitFor(() => { const h = [...document.querySelectorAll('[data-testid="nep-bang"] [aria-label]')].filter(e => ["Quanh đây có gì hay?", "Chỗ này hợp đi mấy người?"].includes(e.getAttribute("aria-label"))).map(e => e.getBoundingClientRect().height); return h.length === 2 && h.every(x => x >= 48); }, { label: "two suggestion chips at rest, 48dp tall", diagnose: doChip });
+    const chips = await page.evaluate(doChip);
     assert.equal(chips.length, 2);
     assert.ok(chips.every(height => height >= 48));
     await page.typeInto("Hỏi Nếp", description);
