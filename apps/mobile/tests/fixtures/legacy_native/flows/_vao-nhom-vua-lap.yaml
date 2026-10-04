@@ -1,0 +1,11 @@
+# Sau «Mở nhóm» (QA UI-071, B8 02/10/2026): app mở thẳng phòng chat của nhóm vừa
+# lập, trang trống nói «Hội mới, mới có mình bạn.» và mời «Mời bạn vào nhóm»
+# trước tiên. Trước đó app đưa về Khám phá, không tên nhóm, không lối mời.
+# Các flow đi tiếp từ thanh tab thì lui một bước ra khỏi phòng.
+appId: com.lakiet.rudi
+---
+- extendedWaitUntil:
+    visible: "Hội mới, mới có mình bạn."
+    timeout: 60000
+- assertVisible: "Mời bạn vào nhóm"
+- tapOn: "Quay lại"

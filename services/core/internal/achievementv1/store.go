@@ -17,6 +17,10 @@ type EarnedBadge struct {
 	ID        string    `json:"id"`
 	EarnedAt  time.Time `json:"earned_at"`
 	Displayed bool      `json:"displayed"`
+	// Seen is whether the person's own book has presented the badge (QA
+	// UI-160). Only the owner's read sets it; another person's view of the
+	// displayed badges leaves it out, since when someone looked is theirs.
+	Seen *bool `json:"seen,omitempty"`
 }
 
 type Run struct {
@@ -104,7 +108,7 @@ func (s Store) Facts(ctx context.Context, personID string) (achievement.Facts, e
 }
 
 func (s Store) Earned(ctx context.Context, personID string) ([]EarnedBadge, error) {
-	rows, err := s.Q.Query(ctx, `SELECT e.badge_id,e.earned_at,(d.badge_id IS NOT NULL)
+	rows, err := s.Q.Query(ctx, `SELECT e.badge_id,e.earned_at,(d.badge_id IS NOT NULL),(e.seen_at IS NOT NULL)
 	 FROM achievement_earned e LEFT JOIN achievement_display d ON d.person_id=e.person_id AND d.badge_id=e.badge_id
 	 WHERE e.person_id=$1::uuid ORDER BY e.earned_at,e.badge_id`, personID)
 	if err != nil {
@@ -114,9 +118,11 @@ func (s Store) Earned(ctx context.Context, personID string) ([]EarnedBadge, erro
 	out := []EarnedBadge{}
 	for rows.Next() {
 		var badge EarnedBadge
-		if err := rows.Scan(&badge.ID, &badge.EarnedAt, &badge.Displayed); err != nil {
+		var seen bool
+		if err := rows.Scan(&badge.ID, &badge.EarnedAt, &badge.Displayed, &seen); err != nil {
 			return nil, err
 		}
+		badge.Seen = &seen
 		out = append(out, badge)
 	}
 	return out, rows.Err()
@@ -207,6 +213,13 @@ func (s Store) RunByID(ctx context.Context, personID, runID string) (*Run, error
 
 func (s Store) FinishRun(ctx context.Context, personID, runID string) error {
 	_, err := s.Q.Exec(ctx, `UPDATE achievement_runs SET finished_at=COALESCE(finished_at,clock_timestamp()),closed_at=COALESCE(closed_at,clock_timestamp()) WHERE id=$1::uuid AND person_id=$2::uuid`, runID, personID)
+	return err
+}
+
+// MarkSeen records that the person's own book presented these earned badges.
+// The first presentation stays: a badge already seen keeps its seen_at.
+func (s Store) MarkSeen(ctx context.Context, personID string, ids []string) error {
+	_, err := s.Q.Exec(ctx, `UPDATE achievement_earned SET seen_at=clock_timestamp() WHERE person_id=$1::uuid AND badge_id=ANY($2::text[]) AND seen_at IS NULL`, personID, ids)
 	return err
 }
 

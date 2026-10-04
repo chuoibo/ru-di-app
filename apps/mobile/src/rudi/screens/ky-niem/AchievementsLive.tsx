@@ -5,13 +5,14 @@ import Svg, { Path } from "react-native-svg";
 
 import type { Phien } from "../../../phien";
 import {
-  BADGE_TITLES, chonKet, docHanhTrinh, goiYNep, nhanKet, trungBayHuyHieu,
+  BADGE_TITLES, chonKet, danhDauDaThay, docHanhTrinh, goiYNep, nhanKet, trungBayHuyHieu,
   type JourneySnapshot, type RouteChoice, type RouteID,
 } from "../../ky-niem/achievement-routes";
 import { choicesForRoute, toggleDisplayedBadge } from "../../ky-niem/journey-view";
 import { huyHieuMoi } from "../../ky-niem/ky-niem";
 import { docGiaoDienAsync, ghiGiaoDienAsync } from "../../kho";
 import { NepDien } from "../../ui/NepDien";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { displayFace, typography, useRudiTheme } from "../../theme";
 import { RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { BadgeArt } from "../../ui/BadgeArt";
@@ -40,7 +41,9 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
   const [page, setPage] = useState<Page>({ phase: "loading" });
   const [routeId, setRouteId] = useState<RouteID>("dau_chan");
   const [busy, setBusy] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  // QA UI-157: a refused choice, claim or display is said under what was
+  // pressed; one sentence at the foot of the book was 850px away from it.
+  const [actionError, setActionError] = useState<{ key: string; cau: string } | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [suggested, setSuggested] = useState<string[]>([]);
   const [suggestionSource, setSuggestionSource] = useState<"ai" | "go" | null>(null);
@@ -54,7 +57,11 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
     let live = true;
     void docGiaoDienAsync(`${KHOA_DA_THAY}:${phien.person_id}`).then((stored) => {
       if (!live) return;
-      setMoi(huyHieuMoi(earned, stored));
+      const vuaMo = huyHieuMoi(page.book.earned_badges, stored);
+      setMoi(vuaMo);
+      // The account remembers it was shown (QA UI-160). A failed mark only
+      // means the moment may play once more somewhere; nothing to say here.
+      if (vuaMo !== null && page.book.earned_badges.some((b) => typeof b.seen === "boolean")) void danhDauDaThay(phien.person_id, [vuaMo]).catch(() => undefined);
       void ghiGiaoDienAsync(`${KHOA_DA_THAY}:${phien.person_id}`, JSON.stringify(earned));
     });
     return () => { live = false; };
@@ -82,15 +89,15 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
     setBusy(key);
     setActionError(null);
     try { await work(); await reload(); }
-    catch (error) { setActionError(messageOf(error)); }
+    catch (error) { setActionError({ key, cau: messageOf(error) }); }
     finally { setBusy(null); }
   };
 
   if (page.phase === "loading") {
-    return <RudiScreen testID="achievements-screen"><TopBar title="Hành trình" /><SkeletonGroup><SkeletonRow /><SkeletonRow /><SkeletonRow /></SkeletonGroup></RudiScreen>;
+    return <RudiScreen cot="doc" testID="achievements-screen"><TopBar title="Hành trình" /><SkeletonGroup><SkeletonRow /><SkeletonRow /><SkeletonRow /></SkeletonGroup></RudiScreen>;
   }
   if (page.phase === "error") {
-    return <RudiScreen testID="achievements-screen"><TopBar title="Hành trình" /><ErrorState title="Chưa mở được sổ hành trình" body={page.message} onRetry={() => { setPage({ phase: "loading" }); void reload().catch((error: unknown) => setPage({ phase: "error", message: messageOf(error) })); }} /></RudiScreen>;
+    return <RudiScreen cot="doc" testID="achievements-screen"><TopBar title="Hành trình" /><ErrorState title="Chưa mở được sổ hành trình" body={page.message} onRetry={() => { setPage({ phase: "loading" }); void reload().catch((error: unknown) => setPage({ phase: "error", message: messageOf(error) })); }} /></RudiScreen>;
   }
 
   const book = page.book;
@@ -104,15 +111,16 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
   const chapterTarget = nextChapter ? book.candidates.find((choice) => choice.id === nextChapter.target_ending_id) : undefined;
 
   return (
-    <RudiScreen contentStyle={styles.page} onRefresh={async () => { try { await reload(); } catch (error) { setActionError(messageOf(error)); } }} testID="achievements-screen">
+    <RudiScreen contentStyle={styles.page} cot="doc" onRefresh={async () => { try { await reload(); } catch (error) { setActionError({ key: "lam-moi", cau: messageOf(error) }); } }} testID="achievements-screen">
       <TopBar title="Hành trình" />
+      {actionError?.key === "lam-moi" ? <CauTaiCho cau={actionError.cau} co="nho" /> : null}
       <View style={[styles.cover, { backgroundColor: colors.cover, borderRadius: radius.base }]}>
         <View style={[styles.coverRule, { backgroundColor: colors.coverLineStrong }]} />
         <Text style={[styles.coverTitle, { color: colors.coverInk }]}>Cuốn sổ có nhiều ngã rẽ</Text>
         <Text style={[typography.body, { color: colors.coverInkSoft }]}>Bạn chọn cách kể chuyến đi của mình. Mỗi huy hiệu mở thêm một trang, và những trang đã mở sẽ ở lại.</Text>
         <View style={styles.coverBottom}>
           <Ionicons color={colors.coverInkSoft} name="book-outline" size={19} />
-          <Text style={[typography.note, { color: colors.coverInkSoft }]}>{endingBadges.length} kết đã mở · {book.mp4_credits.available} lượt dựng MP4 còn dùng được</Text>
+          <Text style={[typography.note, { color: colors.coverInkSoft }]}>{endingBadges.length} kết đã mở · {book.mp4_credits.available} lượt dựng phim còn dùng được</Text>
         </View>
       </View>
 
@@ -120,7 +128,9 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
         // The badge earned since the last look, as its stamp; Nếp lifts it (M8).
         <View style={[styles.fresh, { backgroundColor: colors.accentSoft, borderRadius: radius.base }]}>
           <BadgeArt badgeId={moi} label={BADGE_TITLES[moi] ?? "Huy hiệu hành trình"} size={72} state="unlocked" />
-          <View style={styles.flex}>
+          {/* At least 120dp for the words (QA UI-106: at 320 «Mở hà / ng» broke
+              in three); Nếp moves under them when the row is too narrow. */}
+          <View style={styles.freshChu}>
             <Text style={[typography.caption, { color: colors.accent }]}>MỚI MỞ</Text>
             <Text style={[typography.h2, { color: colors.ink }]}>{BADGE_TITLES[moi] ?? "Huy hiệu hành trình"}</Text>
           </View>
@@ -194,6 +204,7 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
             <View style={styles.rewardRow}><Ionicons color={colors.ai} name="sparkles-outline" size={18} /><Text style={[typography.label, { color: colors.ink }]}>Mẫu sáng tạo sắp dùng được: {choice.reward}</Text></View>
             {suggested.includes(choice.id) ? <Text style={[typography.caption, { color: colors.ai }]}>{suggestionSource === "ai" ? "Nếp gợi ý hướng này" : "Sổ gợi ý hướng này"}</Text> : null}
             <RudiButton label={actionLabel} compact full={false} variant="solid" disabled={choice.earned || (active && !choice.eligible) || busy !== null} lyDo={choice.earned ? "Kết này đã ghi vào sổ." : active && !choice.eligible ? `Còn thiếu dấu mốc: ${progressText(choice)}.` : undefined} loading={busy === choice.id} onPress={() => void perform(choice.id, active && book.active_run ? () => nhanKet(phien.person_id, book.active_run!.id) : () => chonKet(phien.person_id, choice.route_id, choice.id))} />
+            {actionError?.key === choice.id ? <CauTaiCho cau={actionError.cau} co="nho" /> : null}
           </ToGiay>;
         })}
       </View>
@@ -216,6 +227,7 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
             setSuggestionLine(result.line);
             setPreviewOpen(false);
           })} />
+          {actionError?.key === "suggest" ? <CauTaiCho cau={actionError.cau} co="nho" /> : null}
         </ToGiay> : null}
         {suggestionLine ? <Text style={[typography.body, { color: colors.ink }]}>{suggestionLine}</Text> : null}
         {suggested.length > 0 ? <View style={styles.suggestedList}>{suggested.map((id) => {
@@ -230,20 +242,28 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
       </View>
 
       <SectionHeader title="Dấu ấn đã giữ" />
-      <Text style={[typography.note, { color: colors.inkSoft }]}>Chọn tối đa ba huy hiệu để hiện trên hồ sơ. Tiến độ và số lượt MP4 chỉ mình bạn thấy.</Text>
+      <Text style={[typography.note, { color: colors.inkSoft }]}>Chọn tối đa ba huy hiệu để hiện trên hồ sơ. Tiến độ và số lượt dựng phim chỉ mình bạn thấy.</Text>
       {earnedIds.length === 0 ? <Text style={[typography.body, { color: colors.inkSoft }]}>Bắt đầu bằng một lần check-in tự khai, một ảnh kỷ niệm hoặc một lời kể.</Text> : null}
       <View style={styles.badgeList}>
         {[...openingBadges, ...endingBadges].map((badge) => {
           const displayed = displayedIds.includes(badge.id);
           const title = BADGE_TITLES[badge.id] ?? "Huy hiệu hành trình";
-          return <Pressable key={badge.id} {...toggleState("checkbox", displayed)} aria-disabled={busy !== null && busy !== badge.id} accessibilityLabel={`${title}, ${displayed ? "đang trưng bày" : "chưa trưng bày"}`} onPress={() => void perform(badge.id, () => trungBayHuyHieu(phien.person_id, toggleDisplayedBadge(displayedIds, badge.id, earnedIds)))} style={[styles.badgeRow, { borderBottomColor: colors.line }]}>
-            <BadgeArt badgeId={badge.id} label={title} state="unlocked" size={54} />
-            <View style={styles.flex}><Text style={[typography.label, { color: colors.ink }]}>{title}</Text><Text style={[typography.note, { color: colors.inkSoft }]}>{displayed ? "Trên hồ sơ" : "Chạm để trưng bày"}</Text></View>
-            <Ionicons color={displayed ? colors.accent : colors.inkFaint} name={displayed ? "checkmark-circle" : "ellipse-outline"} size={23} />
-          </Pressable>;
+          // QA UI-161: with three on show, a fourth is not sent at all (the
+          // PATCH carried the same three); the row says why, where it was tapped.
+          const day = !displayed && displayedIds.length >= 3;
+          return <View key={badge.id}>
+            <Pressable {...toggleState("checkbox", displayed)} aria-disabled={(busy !== null && busy !== badge.id) || day} accessibilityLabel={`${title}, ${displayed ? "đang trưng bày" : day ? "chưa trưng bày, đã đủ ba" : "chưa trưng bày"}`} onPress={() => {
+              if (day) { setActionError({ key: badge.id, cau: "Đã trưng bày đủ ba. Chạm một huy hiệu đang trưng bày để bỏ nó trước." }); return; }
+              void perform(badge.id, () => trungBayHuyHieu(phien.person_id, toggleDisplayedBadge(displayedIds, badge.id, earnedIds)));
+            }} style={[styles.badgeRow, { borderBottomColor: colors.line }]}>
+              <BadgeArt badgeId={badge.id} label={title} state="unlocked" size={54} />
+              <View style={styles.flex}><Text style={[typography.label, { color: colors.ink }]}>{title}</Text><Text style={[typography.note, { color: colors.inkSoft }]}>{displayed ? "Trên hồ sơ" : day ? "Đã đủ ba trên hồ sơ" : "Chạm để trưng bày"}</Text></View>
+              <Ionicons color={displayed ? colors.accent : colors.inkFaint} name={displayed ? "checkmark-circle" : "ellipse-outline"} size={23} />
+            </Pressable>
+            {actionError?.key === badge.id ? <CauTaiCho cau={actionError.cau} co="nho" /> : null}
+          </View>;
         })}
       </View>
-      {actionError ? <Text accessibilityRole="alert" style={[typography.body, { color: colors.warn }]}>{actionError}</Text> : null}
       <Washi tone="ai" tilt={-1}><Text style={[typography.stamp, { color: colors.aiInk }]}>Mỗi chuyến đi là một câu chuyện khác</Text></Washi>
     </RudiScreen>
   );
@@ -256,7 +276,8 @@ const styles = StyleSheet.create({
   coverTitle: { fontFamily: displayFace.extraBold, fontSize: 30, lineHeight: 35, letterSpacing: -0.7 },
   coverBottom: { flexDirection: "row", alignItems: "center", gap: 9, marginTop: 9 },
   sectionTop: { gap: 3 },
-  fresh: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16 },
+  fresh: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14, padding: 16 },
+  freshChu: { flex: 1, minWidth: 120 },
   routeMap: { height: 184, alignSelf: "center", width: "100%", maxWidth: 560, justifyContent: "space-between" },
   mapTop: { flexDirection: "row", justifyContent: "space-between" },
   mapNode: { minHeight: 64, width: "30%", borderWidth: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 6, paddingVertical: 6 },
@@ -264,7 +285,7 @@ const styles = StyleSheet.create({
   routeIntro: { flexDirection: "row", alignItems: "flex-start", gap: 13 },
   chapter: { gap: 9 }, chapterHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   chapterTarget: { flexDirection: "row", alignItems: "center", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
-  chapterArrow: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
+  chapterArrow: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   routeMark: { width: 6, minHeight: 49, borderRadius: 3 },
   branchList: { gap: 14 }, branch: { gap: 14 },
   branchHead: { flexDirection: "row", alignItems: "center", gap: 12 },

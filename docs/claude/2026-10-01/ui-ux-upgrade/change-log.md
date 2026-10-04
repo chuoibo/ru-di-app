@@ -886,3 +886,362 @@ không được dựng lại dưới tay người đọc, câu lỗi phải nằ
 ### Chưa làm trong B7, chuyển batch
 - Gộp hai hệ bình luận (Cộng đồng và trang tường kể chuyện) về một ngữ pháp hiển thị: chuyển sang B9, cùng lúc với UI-157,
   UI-158, UI-159 ở `BaiChiTietScreen`, để chỉ chạm màn đó một lần.
+
+## Tích hợp PR #664 (Codex) · 04/10
+
+Trong lúc đợt này dừng vì hết lượt, Codex làm 13 ID và để PR #664 ở dạng draft. Danh sách ID nằm ở đầu `feature-plan.md`;
+bằng chứng của Codex ở `docs/codex/2026-10-02/`. Codex dành lại 44 ID của B8/B9 cho đợt này để hai bên không làm trùng.
+
+- `a0fb9ba3`: gộp `codex/ui-ux-qa-handoff` vào `main` (`d3f74730`). Bảy xung đột được giải theo bảng của Codex và theo
+  hướng production của `4f74b011`:
+  - Không dựng lại demo: `Discovery.tsx` và test hành trình demo vẫn bị xoá.
+  - `NepBang` đọc `actorId` từ phiên live.
+  - `mobile_native.sh` giữ phần chọn Metro host, bỏ phần fixture.
+  - Sổ tay hướng dẫn được sinh lại từ mã nguồn.
+  - Test gutter của Nếp chuyển sang danh mục live.
+  - Trạng thái «Chưa mở được trang cuối» không có nút thử lại của `EndingScreen` nay có cảnh `chua-doc-duoc`, đúng cổng
+    «ô rỗng phải có cảnh».
+  - Phần trùng của đợt này ở trang cuối (`cannot_end_reason`, «chưa tới ngày») được bỏ; bản Codex giữ nguyên.
+- `76637302` · BUG_FIX (Go + migration): xoá tài khoản nay xoá luôn dấu «ai nhắc» trong thông báo Cộng đồng
+  (`community_notifications.actor_id`, cột thêm ở B7 với UI-147).
+  - Migration cộng đồng thứ 6 `notification_actor_erasure.sql` thay `community_person_erasure()`. Không sửa migration đã
+    chạy.
+  - Đăng ký cột trong `nepnho/dangky.go`.
+  - Test PostgreSQL `TestPostgresCommunityErasureForgetsWhoMentioned` chạy trong một transaction rồi rollback, vì DB của
+    tầng này dùng chung.
+  - Phiên thanh tab phát hiện lỗi này.
+
+## B8 · Nhóm · Người · Sổ hai người (F06, F07, N26) + Go
+
+Đây là các màn «Operate»: nhóm, bạn bè, hồ sơ người, sổ hai người. Lỗi ở đây chủ yếu là màn nói sai điều vừa xảy ra:
+- lập nhóm xong bị đưa về Khám phá;
+- lời mời không nói ai mời;
+- mọi quản trị đều mang nhãn «Người lập nhóm»;
+- tải lại thì mất dấu «Đã chặn»;
+- một lời đồng ý trong sổ đôi bị vẽ lại thành lời mời.
+
+Batch này thêm hai route Go (chỉ Go phục vụ, `python: absent`) cho lời mời vào nhóm. Phần còn lại là sửa ở màn. Không đổi
+luật ai được vào nhóm, ai đọc được danh sách thành viên, và không đổi luật tra số điện thoại.
+
+### Lập nhóm xong là vào nhóm (UI-071) · UX_IMPROVEMENT
+- «Mở nhóm» chọn nhóm vừa lập (`chonNhom`) rồi vào thẳng chat của nhóm, không về Khám phá.
+- Chat của nhóm chỉ có mình bạn không phải màn rỗng câm. Tiêu đề là «Hội mới, mới có mình bạn.», kèm «Mời bạn vào nhóm»
+  (vào danh sách thành viên, nơi có lời mời) và «Rủ hội một buổi».
+- Hai flow Maestro mới, `_vao-nhom-vua-lap.yaml` và 24/39, đi theo đường mới.
+
+### Lời mời nói ai mời, và từ chối được (UI-080) · UX_IMPROVEMENT (Go + màn)
+- Gói Go mới `loimoi`, hai route mới:
+  - `GET /contexts/{id}/invitation`: tên nhóm, người mời, số người đang ở trong, lúc mời.
+  - `DELETE /contexts/{id}/invitation`: đổi hàng `invited` của chính người đó sang `left`.
+- Người được mời không đọc được danh sách thành viên, nên tên người mời phải đi qua route riêng. Không thêm trường vào
+  `GET /people/me/contexts`, vì Python vẫn là oracle của route đó (ADR-0031).
+- Từ chối là cùng câu `UPDATE` mà `leave_context` dùng, chỉ khác điểm xuất phát là `invited`. Một lời mời sau đó tạo hàng
+  mới (partial unique index chỉ áp lên các hàng đang mở).
+- Đã có:
+  - test đơn vị;
+  - test PostgreSQL: đọc, từ chối, mời lại, người ngoài 404, mã lỗi;
+  - hai hàng `routes.json` kèm evidence;
+  - khai trong `GO_FEATURE_HANDLERS`;
+  - `nativeRouteIDs`.
+- Màn Tin nhắn:
+  - Lời mời xếp đầu danh sách, đọc «Chat Test 01 mời bạn · 2 người trong nhóm».
+  - Hai nút «Đồng ý vào nhóm» và «Từ chối» nằm cạnh nhau. «Từ chối» hỏi lại ngay trên hàng.
+  - Trả lời hỏng thì câu lỗi nằm dưới đúng hàng đó; danh sách vẫn giữ nguyên.
+
+### Người vào bằng lời mời đi qua Sở thích, có ô tên (UI-073) · BUG_FIX (phần UI)
+- Đăng nhập xong, người được mời đi qua Sở thích (`manSauDangNhap` thêm `?moi=1`).
+- Màn hiện cái tên nhóm đang gọi họ, đã điền sẵn: «Nhóm mời bạn đang gọi bạn là «…». Sửa nếu bạn muốn được gọi khác.»
+- Giữ nguyên tên thì không ghi gì.
+- Luật «tên do người mời đặt khi người lạ tra số» vẫn chỉ ở dạng ADR đề xuất (`adr-de-xuat/UI-073-…`, đã cập nhật).
+
+### Quản trị và thành viên (UI-074, UI-075, UI-076, UI-081) · UX_IMPROVEMENT + BUG_FIX + VISUAL_UPGRADE
+- Tự bỏ quyền quản trị phải hỏi lại ngay trên hàng: «Bỏ quyền» (tông `warn`) hoặc «Thôi».
+- «Người lập nhóm» chỉ còn ở người đã lập nhóm (`created_by_id` đọc từ chính nhóm). Quản trị khác mang con dấu
+  «Quản trị»; người được mời mang «Đã mời, chưa đồng ý».
+- Mỗi nút có tên truy cập riêng, ví dụ «Đặt Chat Test 07 làm quản trị», không còn 19 nút cùng tên. Chạm vào hàng thì mở hồ
+  sơ người đó.
+- Thêm primitive `ui/LuoiNguoi.tsx`:
+  - Điện thoại: một cột, kẻ tóc bắt đầu từ cột chữ.
+  - Chỗ đủ hai cột ≥280dp (cột đọc của tablet): hai cột, nút nằm dưới tên.
+  - Bề rộng lấy từ chính danh sách, không lấy từ cửa sổ.
+  - Trước đây nút cách tên 487–679px.
+- Màn Thành viên và Bạn bè dùng `LuoiNguoi` theo cột đọc `doc`.
+
+### Bạn bè và hồ sơ người (UI-077, UI-078) · UX_IMPROVEMENT + BUG_FIX
+- «Đồng ý» hay «Nhắn tin» hỏng thì câu lỗi nằm dưới đúng hàng, kèm «Thử lại». Danh sách đã đọc không bị thay bằng màn lỗi.
+- Hồ sơ người đọc thêm danh sách chặn của chính mình. Sau khi tải lại vẫn thấy dấu «Đã chặn» ở chỗ quan hệ, cùng
+  «Bỏ chặn»; không còn mời «Kết bạn» và «Chặn» lại.
+
+### Sổ hai người (UI-083, UI-084, UI-085, UI-086, UI-090, UI-092, UI-126, UI-127, UI-130) · BUG_FIX + UX_IMPROVEMENT
+- Đọc sổ lỗi thì hiện `ErrorState` kèm «Thử lại». Trước đây là «Chưa có sổ» kèm lời mời lập sổ lại (UI-083).
+- Vừa được đồng ý (UI-084):
+  - Sheet «Lập sổ» đóng trên cả hai máy trước khi vẽ khung (`useLayoutEffect`), không còn một hai khung mời lại.
+  - «Đồng ý bậc» và «Loại sổ» giữ nguyên điều chúng vừa nói trong lúc đóng (`useGiuKhiDong`, primitive mới).
+- «Rủ … tới đây» (UI-085, UI-130):
+  - Tuần đã chốt hẹn không mời phác thêm tờ (`nenXinTo` bỏ tuần `chot`). Quán đi vào kèo đã hẹn qua «Thêm vào kèo».
+  - Hai người bạn không phải «Một đôi» thì quán mở một kèo của hai người, quán là chặng đầu. Thêm prop `placeId` cho
+    `CreateOutingLive` và `/outings/new`.
+- Người đề nghị đóng sheet vẫn thấy «đang chờ» trên màn (UI-086).
+- Hàng mời «Một đôi» dẫn tới màn nói về lời đề nghị, kể cả đề nghị bật đôi (UI-126).
+- Bìa sổ: tên xuống hai dòng, không cắt «Chat Tes…» (UI-090).
+- Lá ngày: cuộn tới lá đang chọn, kể cả ngày xa (UI-092).
+- Khoảnh khắc M6 «sổ mở» diễn một lần, ở bước mở sổ, trong cả nhánh «hội» (UI-127). Giảm chuyển động thì hiện khung cuối.
+- Không còn `DemoBadge` trong không gian giấy live.
+
+### Phân biệt việc phá huỷ với việc tạm hoãn · VISUAL_UPGRADE (chủ động)
+- «Tờ lời rủ»: hai việc phá huỷ («Bỏ bản phác này», «Huỷ buổi này») mang tông `warn`, không còn trông giống «Tuần này nghỉ».
+- «Xác nhận việc» nhận cờ `nguyHiem`: nút xác nhận một việc phá huỷ mang tông `warn`; tờ xác nhận vẫn là nơi nói ra hậu quả.
+
+### Sửa sau lượt đo đầu của B8 (cùng batch)
+- **Hồi quy B8 đo được, đã sửa: cửa «Mở sổ cặp đôi» thường trực.**
+  - Lượt đo đầu cho thấy B8 (UI-126) đã giấu nút «Mở sổ cặp đôi» khi người kia đề nghị «Một đôi», thay bằng con dấu «Xem
+    lời đề nghị».
+  - Lối quen của người dùng, flow Maestro 47 và harness QA đều đi qua nút đó, nên chuỗi đồng ý đứt: `CHUYEN-DONG-Y`,
+    `CHUYEN-BEN-KIA`, `CHUYEN-CHAT-TOI` tụt từ PASS xuống FAIL.
+  - Nay cửa thường trực luôn hiện, cùng tên ở mọi trạng thái; con dấu là lối tắt theo ngữ cảnh. Cả hai mở cùng một
+    sheet. Đo lại: ba hàng PASS.
+- **UI-073, lỗi thật: người được mời không qua Sở thích.**
+  - Luật của B8 đọc `membership_state` của phiên, nhưng phiên đăng nhập bằng OTP không gắn nhóm nào (`null`); lời mời
+    nằm trong `contexts`. Test của B8 dựng phiên theo giả định sai, nên xanh mà luật không bao giờ chạy.
+  - Nay `laVaoQuaLoiMoi` đọc `contexts` (có lời mời đang chờ, chưa ở nhóm nào). Màn Sở thích đọc điều đó từ phiên,
+    không từ cờ `?moi=1` trên URL, vì cờ đó ai cũng thêm hay bớt được.
+  - Test dựng đúng dạng phiên mà máy chủ trả.
+
+## B9 · Kỷ niệm · Sổ chuyến đi · Hồ sơ kể chuyện · Cài đặt (F08, F09, N15, N21) + Go
+
+Đây là các bề mặt «Experience»: tường nhóm, album, story, sổ hành trình, hồ sơ kể chuyện. Cùng batch còn có các màn
+«Operate» của Cài đặt. Phần lớn lỗi là mất thứ người dùng đang làm hoặc đang đọc:
+- rời màn đăng là mất ảnh;
+- tường cắt về trang đầu dưới tay người đọc;
+- câu lỗi rơi xa chỗ vừa chạm;
+- ngày viết ba kiểu.
+
+Batch có ba thay đổi Go, đều ở route chỉ Go phục vụ (`python: absent`) và đều kèm ca PostgreSQL thật:
+- ảnh bài Cộng đồng lên tường;
+- tên trang đọc được trong bài dựng từ sổ;
+- dấu «đã thấy» huy hiệu theo tài khoản (route mới).
+
+Codex đã làm UI-150, 151, 152 và 154 (B9a, trang cuối) trong PR #664. Batch này không làm lại các mục đó; phần trang cuối
+ở đây chỉ dùng tên trang đọc được cho sổ đã lưu.
+
+### Cài đặt và tài khoản (UI-015, UI-107, UI-108, UI-109, UI-110, UI-111) · BUG_FIX + UX_IMPROVEMENT
+- Cài đặt không vẽ giá trị giữ chỗ («Bạn», «B», công tắc sai) rồi mới đổi. Tên đọc từ phiên, công tắc chờ máy chủ trả
+  lời (UI-015).
+- Công tắc lưu hỏng thì câu lỗi nằm ngay dưới chính công tắc đó, không ở cuối trang (UI-107).
+- Panel trong Cá nhân («Chỉnh hồ sơ», «Đã lưu»):
+  - Back đóng panel và ở lại tab, không rời tab (UI-108).
+  - Chữ đang gõ trong «Chỉnh hồ sơ» còn nguyên sau Back.
+  - Primitive mới `ui/useLuiLop.ts`: Back đóng lớp mà màn tự vẽ (BackHandler Android + lịch sử web).
+- «Đã lưu» liệt kê từng chỗ theo tên, mỗi chỗ là lối tới nó, thay cho một con số (UI-109).
+- Xoá tài khoản (UI-110):
+  - Nhận «XOÁ» có dấu hoặc không dấu.
+  - Nút tắt nói lý do (`lyDo`).
+  - Back ở bước 2 về bước 1, không rời trang.
+- Câu cuối Cài đặt chỉ đúng chỗ đổi tên, là «Chỉnh hồ sơ» (UI-111).
+
+### Tường nhóm, ảnh, story (UI-094, UI-095, UI-097, UI-098, UI-101, UI-102, UI-105) · BUG_FIX + UX_IMPROVEMENT + MOTION_UPGRADE
+- Viewer ảnh trên web (UI-094):
+  - Ô ảnh có chiều cao; trước đây ảnh và vùng cử chỉ cao 0px.
+  - Bộ đếm «2/3» theo `onScroll`.
+  - Vuốt dừng đúng một ảnh (`scrollSnapStop`).
+  - Chụm hai ngón không phóng cả trang (`touchAction`).
+- Đóng viewer mờ dần như lúc mở (UI-098).
+- Thả tim hay bình luận hỏng thì câu lỗi nằm dưới đúng khoảnh khắc đó, không ở đầu tường (UI-095).
+- «Thả khoảnh khắc» và «Đăng story» giữ bản nháp (ảnh và chữ) khi người dùng rời đi, bằng Back hay đổi tab (UI-097).
+  - Module mới `ky-niem/nhap-dang.ts`, giữ trong bộ nhớ suốt đời app, một bản cho mỗi màn, người và nhóm.
+  - Đăng, «Bỏ ảnh» hay «Bỏ bản nháp» mới bỏ bản nháp.
+- Xem trước vẽ ảnh như tường vẽ (`cover`, cùng khung). Ảnh 9:16 thấy cùng một vùng ở cả hai nơi (UI-102).
+- Tablet: tường theo cột đọc, ảnh không cao hơn cửa sổ (UI-105).
+- Trình xem story (UI-101):
+  - Hai vùng chạm «Story trước» / «Story tiếp theo» là nút, nên axe không còn báo `aria-prohibited-attr`.
+  - Câu hỏi xoá hiện ra thì focus vào «Giữ lại», lựa chọn không làm mất gì; giữ lại thì focus về «Xoá story».
+  - Hai vùng chạm ngủ trong lúc câu hỏi mở.
+  - Nút tròn và nút chữ cao 48dp.
+
+### Album nói ngày của chuyến (UI-103) · UX_IMPROVEMENT
+- Kệ album và đầu album ghi «28 - 29/09 · đang đi · 20 người». Năm chỉ ghi khi không phải năm nay; trước đây chỉ có
+  «2026».
+- Route album vẫn có Python làm oracle (`python: live`), nên ngày không được thêm vào wire của nó (ADR-0031). Ngày lấy từ
+  danh sách kèo của nhóm, đúng danh sách tab Lên plan đọc. Đọc hỏng thì giữ nhãn năm của máy chủ.
+- Thêm hàm `khoangNgayChuyen` vào `ngay-viet.ts`.
+
+### Một cách viết ngày (UI-104) · VISUAL_UPGRADE
+- `ngay-viet.ts` (`ngayVN`, `gioNgayVN`): «28/09/2026», «10:07 · 28/09».
+- Áp cho: tường nhóm, Đã chặn, Phiên đăng nhập, hồ sơ người, Bạn bè, Cộng đồng. Không còn «10:07 28-09» hay «28/9/2026».
+
+### Sổ hành trình (UI-106, UI-157, UI-160, UI-161, UI-162) · BUG_FIX + UX_IMPROVEMENT (Go + màn)
+- Thẻ huy hiệu giữ cột chữ ≥120dp. Ở 320dp không còn «Mở hà / ng» (UI-106).
+- Chọn nhánh, nhận kết hay trưng huy hiệu bị từ chối thì câu nằm ngay dưới thứ vừa chạm (UI-157). Trước đây câu nằm ở cuối
+  sổ, cách 850px.
+- Chạm huy hiệu thứ tư khi đã trưng ba: không gửi PATCH, nói lý do ngay tại chỗ (UI-161).
+- «MỚI MỞ» nhớ theo tài khoản (UI-160):
+  - Go: migration thứ hai của `achievementv1` thêm `achievement_earned.seen_at`. Huy hiệu đạt quá 48 giờ trước lúc
+    migrate được coi là đã thấy.
+  - `GET /me/achievement-routes` trả thêm `seen` cho từng huy hiệu, chỉ trong sổ của chính chủ.
+  - Route mới `POST /me/achievement-seen`, chỉ Go: manifest, evidence `docs/migration/routes/me/POST-me-achievement-seen.md`.
+  - Màn trình bày huy hiệu mới nhất chưa thấy, rồi đánh dấu. Máy mới không chúc mừng lại một huy hiệu cũ.
+  - Người khác xem huy hiệu được trưng thì không thấy dấu này.
+  - Test PostgreSQL: `TestSeenBadgesFollowTheAccountInPostgres`.
+- Hàng menu ở Cá nhân mang tên màn nó mở: «Hành trình · Sổ huy hiệu và các ngã rẽ của bạn», không còn «Thành tích · Cấp và
+  huy hiệu…» (UI-162). Flow Maestro 32 chạm theo dòng phụ, dòng duy nhất trên tab.
+
+### Hồ sơ kể chuyện và trang viết (UI-100, UI-153, UI-155, UI-156, UI-158, UI-159) · BUG_FIX + UX_IMPROVEMENT (Go + màn)
+- Kệ «Những ngày muốn giữ» trống của chính chủ là một `EmptyState` (UI-153):
+  - cảnh «chưa có kỷ niệm» và đúng một hành động;
+  - có kèo đã qua: «Mở «tên kèo»», tới màn kèo, nơi có «Giữ lại cuộc đi»;
+  - chưa có: «Xem kèo của nhóm».
+  - Hàm thuần `diary/trang-dau.ts`.
+- Tường cá nhân (UI-155):
+  - Lượt long-poll hay lúc app quay lại ghép trang đầu mới vào những gì đang hiện (`lamMoiDauTuong`), không thay cả danh
+    sách.
+  - Các trang đã mở bằng «Xem những trang trước» và con trỏ của chúng còn nguyên.
+  - Bài đã xoá trong cửa sổ trang đầu thì rời đi.
+  - Làm mới lặng không huỷ trang đang tải thêm.
+- Bài Cộng đồng có ảnh lên tường cá nhân kèm ảnh (UI-156, Go):
+  - `community.WallImage` đọc ảnh của bản đang hiện, kể cả bản sửa.
+  - `socialv2.wireWallPost` dùng ảnh đó.
+  - Test ranh giới PostgreSQL: `TestPostgresCommunityPhotoReachesTheWall`.
+- Bài dựng từ sổ có tên trang là ngày đọc được (UI-154 ở phía Cộng đồng, Go):
+  - `community/diary.go` dùng `diary.TenTrang`;
+  - trang cuối đọc sổ đã lưu cũng đổi tên trang ISO thành ngày đọc được (`diary/ten-trang.ts`).
+- Trang viết, `BaiChiTietScreen`:
+  - Bài «Chỉ mình tôi» mở bởi người khác là một câu với cảnh «chưa đọc được», không có hai khối lỗi, không «Thử lại» vô
+    ích (UI-100).
+  - Xoá bình luận của mình hỏi lại ngay tại hàng (UI-158).
+  - Câu xác nhận đăng lại và lỗi của bài nằm ngay dưới các hành động của bài (UI-159).
+  - Theo cột đọc trên tablet.
+
+### Sửa sau các lượt đo của B9 (cùng batch)
+- Viewer ảnh trên web (UI-094): ba vòng đo lộ ba lỗi.
+  - `touchAction: "none"` của bản đầu làm khung lật trang đứng yên.
+  - Trình duyệt khớp trang lúc nhấc tay rồi để đà cuộn trôi tiếp một trang (0 → 390 → 780px, «1 / 5» → «3 / 5»); không
+    `scroll-snap-stop` nào với tới lớp bọc react-native-web đặt quanh mỗi trang.
+  - Nay trên web, JS lật trang: trang theo ngón tay, nhấc tay thì đúng một trang (kéo quá 48px hoặc hất nhanh), phím ← →
+    lật trang, con lăn và trackpad cuộn tự do rồi khớp về ảnh gần nhất. Native giữ cách lật của FlatList.
+  - Đo trên bản cuối: một cú vuốt 0 → 390px, «2 / 5»; chạm đúp `scale(2)`, lần hai `scale(1)`; chụm `scale(1.78)`, trang ×1.
+- Nháp story mất khi Back trình duyệt (UI-097): lần render đầu khi phiên chưa đọc xong dùng khoá nháp «-», rồi ghi biểu mẫu
+  rỗng dưới khoá thật khi phiên tới, và nháp rỗng là nháp bị xoá. Phần soạn story nay chỉ dựng khi phiên đã đọc, mỗi người
+  một lần (`key`). Bốn đường (khoảnh khắc, story × Back, «Quay lại») còn nháp.
+
+## Hai quyết định nghiệp vụ, chủ sản phẩm chốt 04/10 (UI-131, UI-149)
+
+Chủ sản phẩm chọn theo khuyến nghị, với yêu cầu «tính đường xa cho production, giải quyết triệt để và nhất quán mọi
+xung đột». Hai ADR thật thay cho hai đề xuất.
+
+### UI-131 · ADR-0053 «Tờ giấy» là sổ của mọi cặp · BUG_FIX (luật)
+- Gỡ mâu thuẫn giữa ADR-0027 §4 / ADR-0038 §2.1 (tờ tạm trước khi lập sổ) và ADR-0046 §8.4 (lớp cặp đôi trong chat).
+  Sổ hai người có hai loại «Hội bạn» và «Một đôi»; tờ giấy thuộc về sổ, còn lối tắt trong khay chat là của cặp đôi.
+- Máy chủ không đổi: phác tờ cho cặp bạn là hành vi có chủ đích. Mọi tính năng riêng của cặp đôi (gu cho Nếp,
+  «Người lo», `chia_gu`) vẫn đòi `CanBatDoi`.
+- Ghim cả hai phía:
+  - ca oracle mới Go so với Python «an active friends' notebook, «Một đôi» not on» (thành công ở cả hai máy chủ;
+    canary đổi kỳ vọng sang `409` đỏ đúng ca);
+  - phía app, test sẵn có ghim công cụ «Tờ giấy» trong khay chỉ cho cặp đôi.
+- Phần app (lối «Rủ … tới đây» không phác tờ bỏ quán) đã ở B8.
+
+### UI-149 · ADR-0054 mỗi khoản chi thuộc nhiều nhất một kèo · BUG_FIX (tiền: Go + Python oracle + migration + app)
+- Lỗi: «đã chia» của kèo tính theo ngày. Hai kèo trùng ngày cùng tính một khoản, nên hero quyết toán ghi 27.411.356đ
+  cho một sổ 13.705.678đ. Parity vẫn xanh vì hai bên cộng trùng giống nhau.
+- Lược đồ (Alembic `d5e1a7c3b902`):
+  - `expenses.outing_id`, khoá ghép `(outing_id, context_id) → outings(id, context_id)`;
+  - `uq_outings_id_context_id`, index `ix_expenses_outing_id`;
+  - không `ON DELETE`: kèo đang giữ tiền thì không xoá được.
+- Một luật quy thuộc cho cả dữ liệu cũ (backfill) và mới:
+  1. kèo bill được ghi từ;
+  2. không có thì kèo duy nhất phủ ngày Việt Nam;
+  3. hai kèo trở lên hoặc không kèo nào thì không thuộc kèo nào.
+  Quy thuộc đặt một lần; đổi kèo là `409 expense_outing_mismatch`, kèo ngoài nhóm là `422 outing_not_in_context`.
+- Đọc: Go `GroupRecap` và Python `group_recap` nối `expenses.outing_id = outings.id`, nên recap, album, budget, hồ sơ
+  gu, gợi ý đều đúng theo. Kỷ niệm vẫn theo ngày. Phương án C (hero không vượt sổ) thành bất biến có test:
+  Σ «đã chia» các kèo ≤ tổng sổ.
+- Ngoại lệ Python có tên trong ADR: sửa sai tiền là blocker loại 2. Python sửa cùng commit với Go.
+- Contract IR: chỉ thêm định nghĩa trường `outing_id` của `ExpenseInput` (15 dòng). IR trên `main` đã lệch sẵn với mã
+  Python (thứ tự route và dependency sau ADR-0052); bản đó không trộn vào đây, ghi ở phần việc còn mở.
+- App:
+  - chia bill mở từ màn kèo (`/smart-split/{kèo}/review`) gửi `outing_id`; đường dẫn đã mang id kèo nhưng màn bỏ
+    qua nó;
+  - bản nháp bill tách theo nhóm và kèo, nên bill bắt đầu ở kèo này không lẫn sang kèo khác;
+  - câu dưới hero của chuyến đang đi nói đúng luật mới.
+- Bằng chứng:
+  - Go, PostgreSQL thật: 1193 ca, gồm oracle tiền với 7 ca mới và oracle recap trên fixture có quy thuộc.
+  - Python, PostgreSQL thật: 702 ca, cộng 9 ca mới trong `test_expense_belongs_to_one_trip_postgres.py`.
+  - Đột biến: 2 Python và 2 Go, mỗi cái đỏ ở đúng ca dự đoán.
+  - Parity dev, hai stack dựng từ cây: recap 48 bước EQUAL ×2; expenses, crossreplay, concurrency, albums,
+    preference-profile, budget: 11 kịch bản EQUAL, 323 bước.
+  - Cổng python-touch: các route Go phục vụ đọc `group_recap` (budget, albums, preference-profile) có mục ADR-0054 trong
+    tài liệu bằng chứng của chúng.
+
+## B11 · Rà nhất quán xuyên feature, critique cuối, Android · DESIGN_SYSTEM_IMPROVEMENT + BUG_FIX + UX_IMPROVEMENT
+
+### Một ngữ pháp cho việc phá huỷ và cho nút tắt
+- Nút phá huỷ mang tông `warn` ở mọi nơi (16 nút): «Xoá vĩnh viễn» tài khoản, «Rời nhóm», «Chặn», «Xoá tin», «Xóa cuốn
+  sổ» (trước là nút cam đặc), «Bỏ tờ hẹn», «Bỏ bản nháp»… Test quét toàn cây `nut-pha-huy-tong-warn.test.mjs`: nút phá huỷ
+  mới thiếu `warn` thì đỏ, và phép quét tự kiểm đã quét đủ nhiều nút.
+- Hỏi tại hàng là một primitive, `ui/HoiTaiHang.tsx`: câu, hành động màu `warn`, «Thôi»; focus tới câu hỏi khi nó hiện
+  (web: «Thôi», lựa chọn không làm mất gì; native: đọc câu). Dùng ở Thành viên, Cuộc trò chuyện, trang viết, bình luận
+  Cộng đồng, «Điều mình muốn giữ». «Xóa ghi chép» trước xoá ngay sau một chạm.
+- Nút tắt lâu dài luôn nói vì sao (`lyDo`): Sổ hành trình ×3, OTP (đếm ngược vào `lyDo`), tạo kèo, kèo, tường nhóm, thả
+  khoảnh khắc, «Giữ một điều», đề nghị sửa, thư bỏ giấy, Nếp. Một nút tắt chết ở trang cuối bị gỡ. Test
+  `nut-tat-co-ly-do.test.mjs` (canary đỏ đúng chỗ đã thử).
+
+### Kích thước, cột, lưới
+- Đích bấm còn 44dp nâng lên 48dp: nút «Khớp» của bản đồ hành trình, hàng người ở Bạn bè, hành động của bình luận ở trang
+  viết, dòng kèo gọn ở chat, mũi tên chương của sổ hành trình.
+- Lịch chọn ngày `ChonNgayLich`: bảy cột chia bề ngang thật, tối đa 48dp, hàng cao 48, hai nút tháng 48×48. Trước là bảy
+  ô 44 cố định (≈ 326dp), tràn cột 288 của màn 320.
+- Một số cho cột đọc: `adaptive.ts` `COT_DOC = 640`, dùng cho cột của `RudiScreen` và bề rộng tối đa của `Sheet`.
+- Hành trình (`/achievements`) theo cột đọc ở cả ba trạng thái: trên tablet thẻ ngã rẽ và hàng huy hiệu từng trải
+  720/912px, nay cùng cột với bản đồ.
+
+### Trạng thái rỗng có cảnh, câu chữ đúng chỗ
+- Cảnh cho hai ô rỗng còn trơn: chọn người (`chua-co-ban`) và chọn kèo (`tim-khong-ra`); `CHUA_VE` trống.
+- Hồ sơ của chính mình: trang viết rỗng là tiêu đề ngắn cộng thân (trước: cả câu dựng thành tiêu đề h2), cảnh
+  `chua-co-bai` thay cho cảnh trùng với kệ ngay trên, chính chủ có «Viết bài đầu tiên».
+- Hồ sơ người bị từ chối cố định (403/404, `laTuChoiVinhVien`): không còn «Thử lại» gọi lại 403; 403 dẫn «Mở Bạn bè» (câu
+  báo khuyên gửi lời mời kết bạn), 404 «Quay lại». Cùng luật UI-100 của trang bài.
+- «Đã lưu»: tên chỗ đọc hỏng thì hàng ghi «Một chỗ đã lưu», không «Đang đọc tên chỗ…» mãi (nhãn đó còn lọt vào sổ tay Nếp).
+- Sổ đôi chưa lập: câu không gán sẵn loại («Một cuốn sổ chỉ hai bạn đọc… là «Hội bạn» hay «Một đôi», hai bạn chọn sau»);
+  quán mang tới chỉ có một lối «Rủ … tới đây», mang theo quán.
+- Chuỗi máy «lượt dựng MP4» → «lượt dựng phim» (thẻ Hành trình ở Cá nhân, sổ huy hiệu, Nếp Phim). MediaPicker giữ «tệp
+  MP4» vì đó là định dạng tệp người dùng chọn.
+
+### Trợ năng
+- `Chip vaiRadio`: «Ai được bình luận tường tôi» (Cài đặt, hồ sơ của mình) là `radio` có `aria-checked` trong
+  `radiogroup`, không còn nút `aria-pressed`.
+- `BadgeArt`: ảnh huy hiệu là nét vẽ của khung `role="img"` đã mang tên; `accessibilityLabel=""` cho expo-image web ra
+  `alt=""` (axe image-alt critical ×5 trên Hành trình).
+
+### Critique cuối (Flow D) và đợt sửa theo nó
+Hai subagent cô lập đọc ảnh web `b9-sau`, `b8-sau3` và ảnh Android: **27/40 và 26/40** (pilot B3: 24 → 26).
+- Công tắc: helper `ui/cong-tac.ts`. Tắt là vạch `lineStrong` (vạch `line` gần như mất trên nền kem); núm giấy trên cả web
+  (`activeThumbColor`; react-native-web tự tô núm teal, màu của tiền). Cài đặt, Cài đặt nhóm, Sổ hành trình dùng chung.
+- Phiên đăng nhập: hàng của phiên khác ghi «Đăng xuất phiên đó» (trước «phiên này» trên một phiên không phải phiên đang
+  cầm), tên trợ năng nói phiên nào; phiên hiện tại luôn đứng đầu. Máy chủ không lưu tên thiết bị nên màn không đoán.
+- Hộ chiếu Cá nhân: «6 khoảnh khắc» (trước «6 kỷ niệm» nằm ngay trên «Chưa giữ ngày nào»).
+- Một chữ cho mỗi thứ: khoảnh khắc trên tường nhóm «Thả tim / Đã thả tim · N tim» (trước nút «Thích» cạnh «0 tim», bấm
+  xong «Đã tim», tên trợ năng «Thả tim»); bài viết «Thích · N thích», cả ở thẻ trên tường cá nhân.
+- «Thêm vào buổi đã hẹn» không còn bị cắt tên quán (tên quán vào tên trợ năng); «diary công khai» → «sổ chuyến đi của
+  mình»; ngân sách kèo «dự kiến một người / dự kiến cả kèo»; quyết toán bỏ chữ «nghĩa vụ».
+- DESIGN.md: «Công tắc (Switch)», «Chip vaiRadio», «Luật Một Thứ Một Chữ»; dòng `ChonNgayLich` ở Inputs sửa cho khớp lưới
+  mới. Documenter (Impeccable) cập nhật DESIGN.md và `.impeccable/design.json` trước đó trong batch.
+- Không tự đổi, ghi ở việc còn mở: thanh tab và con dấu «Tạo» (chủ sản phẩm giữ); tông `warn` gần `accent` (đổi token là
+  quyết định hệ màu); hàng «Đặt làm quản trị» lặp mỗi thành viên.
+
+### Native: e2e Android
+Ba lượt `scripts/mobile_native.sh --otp` trên AVD chỉ-đọc, stack riêng thứ hai (API 25299). Lỗi lộ ra, đã sửa:
+- Flow theo kịp app: 29, 33, 41, 42, 45 cuộn tới hàng menu Cá nhân (kệ rỗng UI-153 đẩy menu xuống dưới mép), nhắm dòng phụ
+  duy nhất của hàng «Bạn bè» (hai dạng, có/không lời mời chờ), chờ đầu màn «Không gian của riêng bạn» trước khi cuộn.
+- Flow 30: thẻ bình chọn sau B6 không còn in «· của bạn»; chờ radio đã chọn (trên Android tên mang giá trị: «Bỏ phiếu Bun
+  bo, 1 phiếu»). Fixture chuỗi Maestro co lại một dòng.
+- Flow 42: ô bình luận của trang viết tên «Viết bình luận» từ trước đợt này, flow vẫn tìm «Ô viết bình luận» (lệch có sẵn
+  trên `main` 2b6c9360, lộ ra khi chuỗi đỏ dây chuyền hết); sau «Thích» flow chờ chip «❤️ 1» của trang bài cũ, nay chờ
+  dòng đếm «1 thích · 0 bình luận», và thẻ trên tường cá nhân «1 thích · 1 bình luận».
+- Flow 45: sau khi chặn, flow chờ «Kết bạn để nhắn riêng.»; màn không mời kết bạn lại người vừa bị chặn (có trên `main`).
+  Flow kiểm cửa nhắn riêng đóng.
+- Script chạy e2e của người sửa (ngoài repo) truyền DSN của stack riêng (`MOBILE_DATABASE_URL`, venv riêng có SQLAlchemy và
+  psycopg) cho `scripts/mobile_native.sh`, để phép kiểm máy
+  chủ sau flow 43 (story hết hạn) và 45 (hàng «reports») chạy được; trước đó chúng «không đo được», tức đỏ.
+- Harness: sau một lần trả phiên về màn chào, đợi 66s trước flow kế (máy chủ chặn xin mã lại trong 60s, nên một flow đỏ kéo
+  đỏ sáu flow sau); `lai_la_c` cho tám bước chuẩn bị và kiểm biết ai đang cầm máy sau khi trả phiên.
+- `tests/test_maestro_flows_are_all_reachable.py`: hồi quy từ tích hợp PR #664 (c8328b0e thêm `00-*)` cho flow smoke).
+  Test so với mọi flow có số, không chỉ dải sống; đột biến `77-*)` đỏ.

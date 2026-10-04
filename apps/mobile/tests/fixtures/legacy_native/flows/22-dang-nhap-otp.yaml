@@ -68,6 +68,8 @@ appId: com.lakiet.rudi
 - inputText: "Nhom OTP"
 - hideKeyboard
 - tapOn: "Mở nhóm"
+- runFlow: _vao-nhom-vua-lap.yaml
+- tapOn: "Khám phá"
 - extendedWaitUntil:
     visible: "Khám phá"
     timeout: 60000

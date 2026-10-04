@@ -684,6 +684,21 @@
       },
       "annotation": "list[app.api.schemas.ExpenseDiscountInput]",
       "required": false
+     },
+     {
+      "name": "outing_id",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "uuid"
+        }
+       },
+       "default": null
+      },
+      "annotation": "uuid.UUID | None",
+      "required": false
      }
     ]
    }

@@ -9,6 +9,7 @@ import { THEME_CHAT, bangMauChat, nhanTheme, type ThemeChat } from "../../mau-ch
 import { typography, useRudiTheme } from "../../theme";
 import { Field, Heading, ListRow, RudiButton } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
+import { congTac } from "../../ui/cong-tac";
 import { toggleState } from "../../../ui/a11y";
 
 export type NhomCaiDat = {
@@ -187,8 +188,7 @@ export function CaiDatNhomSheet({
           <Switch
             accessibilityLabel="Rủ Đi AI tự gợi ý"
             onValueChange={aiTuGoiY.onDoi}
-            thumbColor={colors.card}
-            trackColor={{ true: colors.ai, false: colors.line }}
+            {...congTac(colors, colors.ai)}
             value={aiTuGoiY.bat}
           />
         </View>
@@ -222,11 +222,11 @@ export function CaiDatNhomSheet({
         xacNhanRoi ? (
           <View style={styles.khoi}>
             <Text style={[typography.body, { color: colors.ink }]}>Rời nhóm này? Bạn sẽ không đọc được tin và sổ của nhóm nữa.</Text>
-            <RudiButton label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} variant="outline" />
+            <RudiButton label="Rời nhóm" loading={dangLuu === "roi"} onPress={() => void roi()} tone="warn" variant="outline" />
             <RudiButton label="Ở lại" onPress={() => setXacNhanRoi(false)} variant="ghost" />
           </View>
         ) : (
-          <RudiButton icon="exit-outline" label="Rời nhóm" onPress={() => setXacNhanRoi(true)} variant="ghost" />
+          <RudiButton icon="exit-outline" label="Rời nhóm" onPress={() => setXacNhanRoi(true)} tone="warn" variant="ghost" />
         )
       ) : null}
     </Sheet>

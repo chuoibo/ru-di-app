@@ -1,0 +1,26 @@
+# Run on a synthetic local stack with a controlled 503 on PUT diary.
+# No inference call: the source is composed manually and the draft stays local.
+appId: com.lakiet.rudi
+---
+- openLink: "rudi://plan"
+- openLink: "rudi://outings/${OUTING_ID}/ending"
+- extendedWaitUntil:
+    visible: "Mang theo điều gì vào sổ?"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Tự xếp trang, không gửi AI"
+    direction: DOWN
+- tapOn: "Tự xếp trang, không gửi AI"
+- extendedWaitUntil:
+    visible:
+      id: "diary-save-button"
+    timeout: 30000
+- tapOn:
+    id: "diary-save-button"
+- extendedWaitUntil:
+    visible:
+      id: "diary-save-error"
+    timeout: 30000
+- assertVisible: "Thử lại"
+- assertVisible: "Lưu riêng tư"

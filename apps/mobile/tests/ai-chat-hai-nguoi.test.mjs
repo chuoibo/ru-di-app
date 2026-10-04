@@ -168,7 +168,8 @@ test("màn chat: không cổng nhanRieng nào chặn AI hay tờ hẹn; phần c
   assert.doesNotMatch(live, /if \(nhanRieng\) return null;/, "cặp đám bạn có hàng ghim tờ hẹn như nhóm");
   assert.doesNotMatch(live, /!nhanRieng \? <RudiButton label="Rủ hội một buổi"/);
   // Still in every room; a room of two words it for two (QA UI-128).
-  assert.match(live, /\n\s*<RudiButton label=\{nhanRieng \? "Rủ đi một buổi" : "Rủ hội một buổi"\} variant="outline"/, "nút mở tờ hẹn ở màn trống có ở mọi phòng");
+  // B8 (QA UI-071): a group of one shows it quieter, under «Mời bạn vào nhóm».
+  assert.match(live, /\n\s*<RudiButton label=\{nhanRieng \? "Rủ đi một buổi" : "Rủ hội một buổi"\} variant=\{chiMinhToi \? "ghost" : "outline"\}/, "nút mở tờ hẹn ở màn trống có ở mọi phòng");
   assert.match(live, /const nhacDangGo = timNhacAi\(nhap\)/);
   assert.match(live, /const nhac = command === undefined \? timNhacAi\(body\) : null/);
   assert.match(live, /MO_DAU_HOI_AI \+ nhapRef\.current\.text/);

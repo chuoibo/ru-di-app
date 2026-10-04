@@ -843,6 +843,12 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 		add("route "+r.name, r.want, base, r.call)
 	}
 	// Routes that need a tweak or another clock.
+	// ADR-0053 (QA UI-131): «Tờ giấy» is the notebook of any pair; only the
+	// chat tray's shortcut to it is for a couple. An active friends' notebook,
+	// «Một đôi» not on, with no sheet open, takes a draft on both servers.
+	add("route POST papers/draft: an active friends' notebook, «Một đôi» not on", "", base,
+		tweak("UPDATE pair_papers SET state = 'nghi_tuan' WHERE context_id = '"+w.ab+"' AND state IN ('nhap', 'da_gui', 'da_xem', 'de_nghi_sua', 'dong_y')",
+			onCtx("draft_pair_paper", w.binh, w.ab)))
 	add("route POST responses: one yes of two on a Nếp sheet", "", base,
 		tweak("DELETE FROM pair_paper_responses WHERE id = '"+fid(kindResponse, 0x21)+"'",
 			onPaper("respond_pair_paper", w.em, w.pDE1, "version", 1, "body", body("kind", "dong_y"))))

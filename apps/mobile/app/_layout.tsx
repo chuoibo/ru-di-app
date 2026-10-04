@@ -1,5 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef } from "react";
 import { Linking, LogBox, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -15,6 +16,7 @@ import { NepProvider } from "../src/rudi/nep/NepProvider";
 import { useRudiTheme } from "../src/rudi/theme";
 import { useMotion } from "../src/rudi/ui/useMotion";
 import { GiaoDienProvider } from "../src/rudi/ui/GiaoDienProvider";
+import { OpeningApp, SessionOpening } from "../src/rudi/ui/OpeningApp";
 import "../src/rudi/tep-anh-native";
 
 // Module level, before the first frame: `index.ts` never runs under
@@ -25,6 +27,13 @@ import "../src/rudi/tep-anh-native";
 // uncaught errors still open LogBox full-screen, and warnings still reach the
 // console and logcat. No-op in release builds and on web.
 LogBox.ignoreAllLogs();
+
+// Keep the native cover until React has a laid-out surface to replace it.
+// This runs before the font/session effects, without adding a timed delay.
+if (Platform.OS !== "web") void SplashScreen.preventAutoHideAsync().catch(console.warn);
+function hideNativeCover() {
+  if (Platform.OS !== "web") SplashScreen.hide();
+}
 
 /*
  * Direction contract v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24; plan copy in
@@ -144,16 +153,17 @@ function RootInner() {
   // re-audit 10/09, R1), so the stack is told to cut, and `useMotion` re-renders
   // this component when the setting changes mid-session.
   const motion = useMotion();
-  if (!fontsLoaded && !fontsError) return null;
+  if (!fontsLoaded && !fontsError) return <OpeningApp onLayout={hideNativeCover} />;
   const chuyen = (wanted: "slide_from_right" | "slide_from_bottom" | "fade") => stackAnimation(wanted, motion.reduced);
 
   // Design contract: warm editorial surfaces, one semantic leading tone per
   // screen, native 44pt targets, real text, restrained motion, and no visual
   // treatment that could blur what the ledger says.
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView onLayout={hideNativeCover} style={{ flex: 1, backgroundColor: colors.cover }}>
     <SafeAreaProvider>
       <RudiSessionProvider>
+      <SessionOpening>
       {/* Friends' new avatars reach every screen while the app is open. */}
       <LuongAnhDaiDien />
       {/* Nếp (ADR-0032): one assistant for every route. Inside the session so it
@@ -169,6 +179,9 @@ function RootInner() {
             headerShown: false,
           }}
         >
+          {/* Cold redirects reveal an already-present cover, never a white page. */}
+          <Stack.Screen name="index" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover } }} />
+          <Stack.Screen name="welcome" options={{ animation: "none", contentStyle: { backgroundColor: colors.cover } }} />
           <Stack.Screen name="(tabs)" options={{ animation: chuyen("fade") }} />
           <Stack.Screen
             name="create"
@@ -198,6 +211,7 @@ function RootInner() {
         {/* Last child: the dock paints over whatever route is open. */}
         <NepNoi />
       </NepProvider>
+      </SessionOpening>
       </RudiSessionProvider>
     </SafeAreaProvider>
     </GestureHandlerRootView>

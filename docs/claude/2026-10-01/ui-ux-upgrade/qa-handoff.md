@@ -566,3 +566,275 @@ Ghi chú B7:
    (`b7-sau`) các hàng `LOI-*`, `NEP`, `NGUOI-LA` không tìm thấy câu lỗi vì nó không có vai nào.
 7. **Dải «Bảng tin có cập nhật»:** khung `sync` đầu tiên của luồng là lúc mở kết nối. Lượt đầu bật dải ngay khi mở tab, đè
    đích bấm của thẻ đầu (`CHI-TIET-BASE` C8, `TIM` C2 đỏ). Nay chỉ lần nối lại và `feed.changed` mới bật dải.
+
+### B8 · Nhóm · Người · Sổ hai người (F06, F07, N26) + Go
+
+Đo trên bản web, stack riêng, cùng thế giới dựng lại cho mỗi lượt. Lượt gồm:
+- `f06-nhom-nguoi.mjs`, `f07-so-doi.mjs`, `n26-hai-lop-chat.mjs` trọn;
+- `retest-main.mjs --chi r-f07` và `--chi r-f06,r-p3-f06,r-p3-f07`;
+- `kiem-ux/b6-cap.mjs`.
+
+Hai lượt:
+- **«Trước»:** cây tích hợp PR #664 `76637302`, `out/b8-truoc3`, 228 hàng.
+- **«Sau»:** bản `b8-sau3` (có cả hai bản sửa sau lượt đầu), `out/b8-sau3`.
+
+Kết quả (khoá `tc` + cấu hình):
+- **21 FAIL → PASS**, 5 PASS → FAIL (ghi chú 1, 2), 122 PASS giữ nguyên, 49 FAIL giữ nguyên.
+- Phần lớn hàng FAIL giữ nguyên là kết luận nhìn ảnh mà script phán xử chép lại từ lượt audit gốc (ghi chú 3), không phải
+  phép đo trên bản này.
+
+Go, PostgreSQL thật (`scripts/go_postgres_tier.sh`, trọn cây): **3337 ca PASS**, 0 skip, có sentinel. Gồm hai ca mới của
+`internal/loimoi` và ca xoá tài khoản `TestPostgresCommunityErasureForgetsWhoMentioned`.
+
+| Issue | Hàng harness | Trước | Sau | Tự kiểm của người sửa | Ảnh |
+|---|---|---|---|---|---|
+| UI-071 | `TC-F06-TAO-SAU` | FAIL (tới /explore) | PASS (tới chat của nhóm, tên nhóm trên màn) | Maestro `_vao-nhom-vua-lap.yaml` | — |
+| UI-073 | `TC-F06-DUOC-MOI-VAO-CUA`, `TC-R-UI-073` | FAIL | xem ghi chú 4 | luật đọc từ phiên; test dựng đúng phiên OTP | — |
+| UI-074 | `TC-F06-TU-BO-QUAN-TRI`; `TC-R-UI-074` | FAIL; FAIL | PASS (bước hỏi có, vai trò giữ admin); FAIL theo công thức (ghi chú 2) | — | — |
+| UI-075 | `TC-R-UI-075` | FAIL | FAIL do dữ liệu: nhóm không còn hai quản trị; nhãn «Người lập nhóm» chỉ ở người lập | `created_by_id` đọc từ nhóm | — |
+| UI-076 | `TC-F06-THANH-VIEN-20` C1, C6; `TC-R-UI-076` | FAIL | PASS (19 nút, 19 tên khác nhau; 20 hàng chạm mở hồ sơ) | — | — |
+| UI-077 | `TC-F06-DONG-Y-503` | FAIL | PASS (danh sách và hàng lời mời còn khi 503) | — | — |
+| UI-078 | `TC-F06-CHAN-MO-LAI` | FAIL | PASS («Đã chặn» và «Bỏ chặn» sau tải lại) | — | — |
+| UI-080 | `TC-R-UI-080`; `TC-F05.S01-LOI-MOI` | FAIL | FAIL theo công thức (ghi chú 2, 3); ảnh: «Thành viên mới mời bạn · 1 người trong nhóm», «Đồng ý vào nhóm», «Từ chối» | Go `loimoi` + PostgreSQL | `EV-F06-LOI-MOI-DEN-C1` |
+| UI-081 | `TC-F06-BAN-TABLET` C6, C7; `TC-R-UI-081` | FAIL (483/675px) | PASS (51px) | `LuoiNguoi` | — |
+| UI-083 | `TC-R-UI-083`; `TC-F07.S02-503` | FAIL | PASS (lỗi + «Thử lại», không bìa «chưa lập sổ») | — | — |
+| UI-084 | `TC-R-UI-084-A`, `-B` C1; `TC-F07-DONG-Y-NHAY-C1` | FAIL | PASS (0 khung sheet mời sau khi đồng ý) | `useLayoutEffect`, `useGiuKhiDong` | — |
+| UI-085 | `TC-R-UI-085` | FAIL (tờ 1 → 2) | PASS (tờ 1 → 1) | `nenXinTo` bỏ tuần đã chốt | — |
+| UI-086 | `TC-F07-CHO-SAU-KHI-DONG` | FAIL | PASS (câu chờ trên màn) | — | — |
+| UI-090 | `TC-F07-BIA-TEN`; `TC-R-UI-090` | FAIL (66 cho 82px) | PASS (trọn); R-row không đo được (ghi chú 5). Probe: hai tên trọn ở 390/320/768 | — | probe `b8-probe3/090-C2.png` |
+| UI-092 | `TC-R-UI-092`, `-XA` | PASS | FAIL theo dữ liệu (ghi chú 1). Probe trên một bản phác hợp lệ: lá chọn 56/56px ở C1, C2 (320), C8 | — | — |
+| UI-093 (F07) | `TC-R-UI-093` C6, C7 | PASS | FAIL theo dữ liệu (ghi chú 1). Probe: tờ 592px ở 768 và 1024 | cột đọc | — |
+| UI-126 | `TC-N26-MOI-BAT-DOI-DEN` | FAIL | PASS (màn nhắc lời đề nghị) | — | — |
+| UI-127 | ảnh chuỗi khung | — | M6 diễn ở bước lập sổ: bìa mở, «Sổ đã mở», Nếp nhảy (ghi chú 6) | — | `EV-F07-M6-KHUNG-C1` |
+| UI-130 | `TC-N26-RU-BAN-CHUA-SO`; `-CO-SO` | — | PASS; FAIL (harness bấm «Rủ hội mình đi chơi», mà quán đi qua nút riêng; B11 gom về một nút, đo ở lượt cuối) | `placeId` cho `CreateOutingLive` | — |
+
+Ghi chú B8:
+
+1. **Ba hàng UI-092/093 phụ thuộc vào chính lỗi UI-085.**
+   - Ở lượt «trước», bản phác mà hai hàng này mở là tờ thứ hai do `?ru=1` phác thêm bên cạnh tuần đã chốt.
+   - Sửa UI-085 xong thì tuần đã chốt không còn bản phác: hàng ra «không thấy dải / không thấy tờ».
+   - Probe `kiem-ux/b8-giay.mjs` đo lại trên một bản phác hợp lệ (phác qua API ở cặp chat-0/chat-1, đúng ADR-0053).
+2. **Công thức tìm nút theo tên cũ.**
+   - `TC-F06-VAI-TRO` tìm «Đặt làm quản trị»; `TC-F05.S01-DONG-Y` tìm đúng «Đồng ý vào nhóm»; `TC-R-UI-074` tìm «Bỏ quyền
+     quản trị»; `TC-R-UI-080` tìm chuỗi «bạn được mời».
+   - UI-076 đòi mỗi nút một tên riêng, nên tên truy cập nay mang người hoặc nhóm («Đặt Chat Test 02 làm quản trị», «Đồng
+     ý vào nhóm «…»», «Bỏ quyền quản trị của bạn»). Chữ thấy trên nút giữ ngắn.
+   - Hai hàng của QA (VAI-TRO và R-UI-076) đòi hai điều trái nhau; bản này theo UI-076.
+3. **Hàng «phân xử bằng mắt:».** Script phán xử chép kết luận nhìn ảnh của lượt audit gốc vào sổ của mỗi lượt. Ví dụ:
+   `TC-F05.S01-LOI-MOI`, `TC-F07.S02-BASE`, `TC-F07-DAI-NGAY`, `TC-F02-CHI-TIET-RU`, `TC-F07-SO-MO-BEN-KIA`,
+   `TC-N26-LOI-SO-503`. Đó không phải phép đo trên bản này; bảng trên dùng hàng tự động và ảnh của lượt này. Hai script
+   phán xử f07, n26 ngã giữa chừng ở cả hai lượt vì gắn issue vào một hàng không có.
+4. **UI-073.**
+   - Ở `b8-sau3`, số mới R61 đã tới Sở thích với ô tên điền sẵn «Bạn cũ tên do người mời đặt R61» và câu «Nhóm mời bạn
+     đang gọi bạn là…» (lượt đầu: tới thẳng /messages).
+   - Harness so đường dẫn đúng bằng `/personalization`, nên bỏ qua bước điền form khi thấy `?moi=1`. Bản cuối của B8 bỏ
+     cờ đó (đọc từ phiên), nên lượt đo cuối sẽ đi trọn.
+   - moi-53 (`TC-F06-DUOC-MOI-VAO-CUA`) là tài khoản seed đã từng đăng nhập. Máy chủ giữ tên của chính chủ (tên giữ
+     chỗ), nên không có tên người mời nào để hiện; màn hỏi tên, đúng với dữ liệu đó.
+5. **`TC-R-UI-090`.** Bước này mở bìa sổ bằng một persona không có phiên (từ `4f74b011` không còn bản trải nghiệm), nên
+   rơi vào cửa đăng nhập ở cả hai lượt.
+6. **`TC-N26-M6-BAT-DOI`.** Harness chỉ tìm M6 trong thân `giay-trong`. Cặp bạn mở sổ ở thân «hội», nơi M6 diễn (ảnh
+   chuỗi khung 134 khung, 0–3076 ms); `TC-R-UI-084-B` cũng không thấy vì cùng lý do.
+7. **Đo lỗi do môi trường, đã bỏ.** Ba lượt đo không dùng:
+   - `b8-truoc2`: API Python của stack riêng chết lúc khởi động, vì cổng 58298 nằm trong dải cổng tạm và một lượt parity
+     của phiên khác đang giữ nó. `stack.sh` nay khởi động lại tối đa sáu lần và không báo READY khi API chưa sống.
+   - `b8-sau`: máy chủ web cũ không bị thay, vì mẫu `pgrep` không khớp tên bản có dấu gạch. `serve()` nay giết mọi máy chủ
+     trên 58280 và kiểm file `entry-*.js` đang phục vụ.
+   - `b8-sau-n26`: lượt đo riêng phần «chuyen» sau bản sửa cửa thường trực; nay đã nằm trong `b8-sau3`.
+
+### B9 · Kỷ niệm · Sổ chuyến đi · Hồ sơ kể chuyện · Cài đặt (F08, F09, N15, N21) + Go
+
+Đo trên bản web, stack riêng, cùng thế giới dựng lại cho mỗi lượt. Mỗi lượt gồm:
+- `f08-ky-niem.mjs`, `f09-ho-so.mjs`, `n15-nhat-ky.mjs`, `n21-ho-so.mjs` trọn, cùng bốn script phán xử;
+- `retest-main.mjs --chi r-f08,r-f09,r-p3-f09`;
+- một lượt bù trên **cùng thế giới**: `retest-main --chi r-f03` (tạo kèo cho n15), rồi `n15` và `f08` trọn lần nữa.
+  Lý do: lượt đầu của n15 và phần `bai` của f08 cần dữ liệu mà chính retest tạo ra.
+
+Hai lượt:
+- **«Trước»:** bản `b8-sau3` trên cây tích hợp B8 `3cbadb14`, `out/b9-truoc`.
+- **«Sau»:** bản `b9-sau`, `out/b9-sau`.
+- Thêm, trên **cùng thế giới** của «sau»:
+  - `b9-sau2`: bản dựng sau đợt sửa của critique cuối (xem B11), đo lại f08, f09, n21 và retest r-f08/r-f09;
+  - `b9-sau4`: bản dựng sau hai bản sửa cuối của B9 (viewer, nháp story), đo `f08 --chi xem-anh` và
+    `retest --chi r-f08:095,r-f08:097`; kèm probe riêng `kiem-ux/b9-viewer.mjs`, `kiem-ux/b9-tim.mjs`.
+
+Kết quả «trước» → «sau» (khoá `tc` + cấu hình):
+- **29 FAIL → PASS**, 3 PASS → FAIL (ghi chú 1), 131 PASS giữ nguyên, 82 FAIL giữ nguyên.
+- Phần lớn hàng FAIL giữ nguyên là kết luận nhìn ảnh mà script phán xử chép lại từ lượt audit gốc, hoặc hàng thiếu dữ
+  liệu (ghi chú 3). Đó không phải phép đo trên bản này.
+
+Ảnh ghép trước/sau: `evidence/EV-B9-UI-107-157.jpg`, `EV-B9-UI-103-109.jpg`, `EV-B9-UI-105-106.jpg`, `EV-B9-UI-153-100.jpg`.
+
+Go, PostgreSQL thật (`scripts/go_postgres_tier.sh -- -count=1 ./...`, cây B9): **3346 ca PASS**, 0 skip, có sentinel.
+- Một ca oracle idempotency đỏ khi máy quá tải (số lần thử 9 so với 13). Chạy lại riêng `TestOracleDifferential`: 46 PASS.
+- Ca mới: `TestSeenBadgesFollowTheAccountInPostgres`, `TestPostgresCommunityPhotoReachesTheWall`.
+
+Python, PostgreSQL thật: `tests/postgres` 711 passed, `tests/qa` 51 passed.
+
+| Issue | Hàng harness | Trước | Sau | Ghi chú |
+|---|---|---|---|---|
+| UI-015 | `TC-R-UI-015` | FAIL | FAIL theo công thức: 0 khung tên «Bạn»; công tắc chỉ hiện khi máy chủ trả lời (một lần đổi từ «chưa có» sang giá trị thật) | ghi chú 2 |
+| UI-094 | `TC-L25-ANH`; `TC-L25-CU-CHI`, `TC-R-UI-094` | FAIL (ảnh 390×0; vuốt không đổi bộ đếm; chụm phóng cả trang ×5) | PASS (ảnh 390×688); `b9-sau4`: một cú vuốt 0 → 390px, «1 / 5» → «2 / 5»; CU-CHI vẫn FAIL theo công thức | ghi chú 4 |
+| UI-095 | `TC-F08-TIM-503`; `TC-R-UI-095` | FAIL | PASS (câu ở y 788, trong khung; `b9-sau2`: cả trên tim thứ 6); R-row FAIL vì tường xê dịch dưới ngón tay | ghi chú 5 |
+| UI-097 | `TC-R-UI-097` | FAIL | `b9-sau4`: PASS, bốn đường (khoảnh khắc và story, Back trình duyệt và «Quay lại»), Forward và mở lại còn nháp | ghi chú 6 |
+| UI-098 | `TC-MO24-DONG`, `TC-R-UI-098` C1, C9 | FAIL | PASS (17 mẫu, mờ 1 → 0.38 trong 269 ms) | — |
+| UI-100 | `TC-F08-BAI-KHONG-DANH-CHO`; `TC-R-UI-100` | FAIL | PASS (0 khối lỗi, 0 «Thử lại»); R-row đếm tiêu đề và thân của một khối là hai | — |
+| UI-101 | `TC-F08-STORY-VUNG-CHAM`, `TC-L26-XOA`, `TC-R-UI-101` | FAIL | PASS (vùng chạm là nút, axe sạch, focus vào «Giữ lại», 48×48) | — |
+| UI-102 | `TC-F08-THA-DOC-9-16`, `TC-R-UI-102` | FAIL | PASS (xem trước và tường cùng `cover`, 0.75) | — |
+| UI-103 | `TC-R-UI-103` | FAIL | PASS («04 - 05/10» trên kệ và đầu album) | — |
+| UI-104 | `TC-R-UI-104` | FAIL | PASS (không còn «giờ ngày-tháng») | — |
+| UI-105 | `TC-F08-TABLET` C6, C7; `TC-F09-TABLET` C7; `TC-R-UI-105` | FAIL | PASS (ảnh rộng nhất 574, thẻ hộ chiếu 592) | — |
+| UI-106 | `TC-R-UI-106` C2; `TC-N21-TU-VO` C2 | FAIL | PASS (không từ nào bị bẻ) | — |
+| UI-107 | `TC-F09-LOI-CONG-TAC`, `TC-R-UI-107` | FAIL (câu ở y 1124) | PASS (y 454, ngay dưới công tắc) | — |
+| UI-108 | `TC-L36-VONGDOI`, `TC-R-UI-108`; `TC-F09-SUA-BACK` | FAIL | PASS; SUA-BACK FAIL theo công thức | ghi chú 7 |
+| UI-109 | `TC-R-UI-109` | FAIL | PASS (tên từng chỗ, mỗi chỗ là lối mở) | — |
+| UI-110 | `TC-R-UI-110` | FAIL | PASS (nhận «XOÁ» có dấu hoặc không, Back ở bước 2 về bước 1) | — |
+| UI-111 | `TC-F09-CHU-CHAN-TRANG` | FAIL | PASS (câu cũ không còn, tên đổi ở «Chỉnh hồ sơ») | — |
+| UI-153 | `TC-N15-TUONG-RONG` C1, C2, C3 | FAIL | PASS (kệ rỗng có cảnh và một hành động) | — |
+| UI-155 | `TC-N21-TRANG-GIU`, `-YEN` | FAIL | FAIL do dữ liệu: tường có 16 thẻ, không có trang thứ hai để giữ | `lamMoiDauTuong` + test |
+| UI-156 | `TC-N21-TUONG-ANH-CD` | BLOCKED | BLOCKED (harness không tạo được bài Cộng đồng có ảnh) | Go `TestPostgresCommunityPhotoReachesTheWall` |
+| UI-157 | `TC-N21-LOI-CHON` | FAIL (y 1196) | PASS (y 460, ngay dưới nút) | — |
+| UI-158 | `TC-N21-Q3-XOA-BL`; `TC-R-UI-096` | FAIL; PASS | nút «Xóa bình luận của bạn: «…»» có, hỏi tại hàng (`HoiTaiHang`) | ghi chú 1 |
+| UI-159 | `TC-N21-DANG-LAI` | FAIL | FAIL theo công thức: harness tìm đúng câu «Đã chia sẻ lên tường của bạn.»; bản này nói thêm ai đọc được («…, cho bạn bè.») | — |
+| UI-160 | `TC-N21-MOI-MO` | FAIL | PASS (máy mới không chúc mừng lại huy hiệu đã thấy) | Go `seen_postgres_test.go` |
+| UI-161 | `TC-N21-TRUNG-BAY-4` | FAIL | FAIL do dữ liệu: tài khoản đo chưa có huy hiệu thứ tư; 0 PATCH gửi thêm | test `rudi-b9-ke-va-tuong` |
+| UI-162 | `TC-F08-THANH-TICH-*`; `TC-N21-CA-NHAN` | PASS | FAIL theo công thức (tìm hàng «Thành tích»; hàng nay là «Hành trình», tên màn nó mở) | ghi chú 1 |
+
+Ghi chú B9:
+
+1. **Ba hàng PASS → FAIL là công thức đòi tên cũ.**
+   - `TC-F08-THANH-TICH-CHAT-0` và `-DALAT-0` tìm nút «Thành tích Cấp và huy hiệu…». UI-162 đòi tên mục khớp tên màn tới,
+     nên hàng nay là «Hành trình · Sổ huy hiệu và các ngã rẽ của bạn».
+   - `TC-R-UI-096` đọc «có nút xoá bình luận» thành «còn». UI-096 gốc là xoá một chạm; UI-158 đòi lối xoá có bước hỏi, và
+     bản này hỏi ngay tại hàng.
+2. **UI-015.** Không khung nào vẽ tên giữ chỗ «Bạn». Công tắc không vẽ gì cho tới khi máy chủ trả lời, rồi hiện đúng giá
+   trị: công thức đếm lần xuất hiện đó là một lần đổi.
+3. **Hàng phân xử bằng mắt.** Như B8, các script phán xử chép kết luận nhìn ảnh của lượt audit gốc (ví dụ
+   `TC-F08-ALBUM-NGAY`, `TC-F08-GIO-TUONG`, `TC-F08.S0x-BASE`, `TC-F09-NGAY`, `TC-F09-DA-LUU`). Bảng trên dùng hàng tự động
+   và ảnh của lượt này.
+4. **UI-094.** Ảnh có chiều cao thật, bộ đếm theo cuộn. Ba vòng đo lộ ba lỗi, cả ba đã sửa:
+   - `b9-sau`: `touchAction: "none"` trên trang cộng mặc định `none` của `GestureDetector` làm khung đứng yên (0 → 0);
+   - `b9-sau2`/`b9-sau3`: trình duyệt khớp trang lúc nhấc tay rồi để đà cuộn trôi tiếp một trang (0 → 390 → 780), không
+     `scroll-snap-stop` nào với tới lớp bọc react-native-web đặt quanh mỗi trang;
+   - nay trên web, JS lật trang: trang theo ngón tay, nhấc tay thì đúng một trang (kéo quá 48px hoặc hất nhanh), phím ← →
+     lật trang, con lăn/trackpad cuộn tự do rồi khớp về ảnh gần nhất. Native giữ cách lật của FlatList.
+   - Probe riêng trên `b9-sau4`: vuốt 0 → 390, «2 / 5»; chạm đúp `scale(2)`, lần hai `scale(1)`; chụm `scale(1.77778)`, trang
+     ×1.
+   - `TC-L25-CU-CHI` đọc transform của ảnh nằm **trọn** trong khung nhìn; ảnh đã phóng ×2 rộng hơn khung nhìn nên hàng đọc
+     «null». Đó là giới hạn của công thức, không phải ảnh không phóng.
+5. **UI-095.** Câu lỗi nằm ngay dưới khoảnh khắc vừa thả tim (`TC-F08-TIM-503` PASS, cả trên tim thứ 6 ở `b9-sau2`).
+   Hàng R FAIL vì một lỗi khác, có từ trước: probe `kiem-ux/b9-tim.mjs` đo tim cuối ở y 747 ngay sau `scrollIntoView`, rồi
+   y 945 sau 100 ms (cửa sổ 844), `scrollTop` không đổi. Khung ảnh của tường bắt đầu ở 4:3 và đổi sang tỉ lệ thật khi ảnh
+   nạp (`tiLeKhung`, quyết định QA 23/09); ảnh dọc làm thẻ cao thêm 198px dưới ngón tay. Sửa tận gốc cần máy chủ lưu
+   tỉ lệ ảnh lúc tải lên (đổi lược đồ ở route `python: live`): ghi ở phần việc còn mở.
+6. **UI-097.** Story mất nháp khi Back trình duyệt: lần render đầu khi phiên chưa đọc xong dùng khoá nháp «-», không thấy
+   gì, rồi ghi biểu mẫu rỗng dưới khoá thật khi phiên tới; nháp rỗng là nháp bị xoá. Nay phần soạn story chỉ dựng khi phiên
+   đã đọc, và mỗi người một lần (`key`). Khoảnh khắc nhận phiên qua prop nên không dính.
+7. **UI-108.** Back đóng «Chỉnh hồ sơ» và ở lại tab, chữ đang gõ được giữ. Nút trên thẻ hộ chiếu đổi thành «Sửa tiếp hồ
+   sơ» khi còn bản đang sửa. Công thức đòi form tự mở lại khi chạm tab.
+
+
+### B11 · Rà nhất quán, critique cuối, e2e Android
+
+B11 không có issue riêng của QA: nó rà các mẫu lệch xuyên feature, chạy Flow D (critique, documenter) và e2e Android.
+Danh sách thay đổi ở `change-log.md` mục B11. Phần cần QA nhìn lại:
+
+| Mục | Đo ở đâu | Kết quả tự kiểm |
+|---|---|---|
+| Nút phá huỷ tông `warn`, hỏi tại hàng `HoiTaiHang` | `nut-pha-huy-tong-warn.test.mjs`; flow Android 37, 45, 46 | 16 nút; hỏi tại hàng ở 5 màn, focus tới câu hỏi |
+| Nút tắt có `lyDo` | `nut-tat-co-ly-do.test.mjs` | 11 chỗ; canary đỏ đúng chỗ |
+| Lịch chọn ngày ở 320dp | mã `ui/ChonNgayLich.tsx` (cột = bề ngang/7, tối đa 48); `TC-R-UI-034` (lượt cuối, PASS) | bảy cột vừa cột 288 của màn 320 (trước ≈ 326dp, tràn) |
+| Công tắc | ảnh `EV-F09-CAI-DAT-C1` (`b9-sau2`) | núm giấy trên web, vạch tắt `lineStrong` |
+| «Ai được bình luận tường tôi» là radio | `TC-F09-CAI-DAT-ARIA` (`b9-sau2`) | FAIL → PASS (radio, `aria-checked`) |
+| Hành trình theo cột đọc; ảnh huy hiệu `alt=""` | `TC-N21-HT-TABLET` C6, C7; `TC-N21-HT-AXE` (lượt cuối) | PASS: thẻ và hàng huy hiệu 592px cùng cột với bản đồ; axe sạch (trước: image-alt critical ×5) |
+| Hồ sơ bị từ chối cố định | `TC-N21-XEM-LA-THU-LAI` (lượt cuối) | BLOCKED theo tiêu chí probe; khối «Chưa xem được hồ sơ này … Mở Bạn bè», không «Thử lại» (trước: «Thử lại» gọi lại 403) |
+| Phiên đăng nhập | flow Android 44 (lượt cuối, đạt) | «Đăng xuất phiên đó», phiên hiện tại đầu danh sách |
+
+Critique Flow D cuối: hai subagent cô lập, **27/40 và 26/40** (pilot B3: 24 → 26). Các phát hiện đã sửa ghi ở change-log;
+những phát hiện không sửa ở phần «Việc còn mở».
+
+Ghi chú B11 cho người chạy harness:
+1. **Hai hàng đổi theo critique, công thức đòi dạng cũ.**
+   - `TC-F09-PHIEN` tìm nút đúng chữ «Đăng xuất phiên này». Critique xếp P1 vì chữ ấy nằm trên hàng của một phiên **khác**;
+     nút nay là «Đăng xuất phiên đó», tên trợ năng «Đăng xuất phiên Số điện thoại · từ …».
+   - `TC-F09-CHINH-SACH-BL` tìm chip theo vai `button`; `TC-F09-CAI-DAT-ARIA` (họ UI-042/089) đòi vai `radio`. Bản này theo
+     hàng ARIA.
+2. **Chữ đổi theo «Luật Một Thứ Một Chữ».** Khoảnh khắc trên tường nhóm: «Thả tim / Đã thả tim · N tim»; bài viết: «Thích ·
+   N thích». Probe nào tìm «Thích» trên tường nhóm hay «tim» trên thẻ bài cần đổi chữ.
+
+**e2e Android** (`scripts/mobile_native.sh --otp`, AVD chỉ-đọc `rudi-diary-v3`, stack riêng thứ hai, dev client debug):
+xem «Lượt đo cuối».
+
+## Lượt đo cuối (cây sạch, trước khi đưa lên `main`)
+
+Mã app và máy chủ của lượt này là `0301fa2a`. Các commit sau nó (`c426b7de`, `6a84a1f4`, `cbb755c4`, `02f351a6`) chỉ ghim
+lại allowlist và sửa flow Maestro, không đổi mã đang được đo.
+
+**Harness web** (`run-cuoi.sh`, `out/cuoi`): thế giới dựng lại từ đầu, bản web `b11-cuoi` dựng trong worktree sạch. Lượt
+gồm: n14 (hai nửa, kèm quyền kiểm duyệt cho chat-15), `retest-main.mjs` trọn, n15, n21, n22, n26. Tổng 365 hàng: 210 PASS,
+152 FAIL, 3 BLOCKED.
+- **Retest 122 issue gốc**: 84 issue có hàng `TC-R-UI-*`. **56 issue đạt mọi hàng; trên `main` `d95edb4` (lượt B0) là 2/72.**
+  Theo hàng: 53 FAIL → PASS, 2 PASS → FAIL (`UI-096`, `UI-017`, xem dưới), 18 FAIL giữ.
+- 28 issue còn ít nhất một hàng FAIL. Phân loại:
+  - **công thức tìm chữ, vai hoặc cấu trúc cũ**: UI-015, 074, 075, 080, 091, 092, 093 (B8 ghi chú 1–2, 5); UI-078 (probe tìm «Bỏ chặn» trên mặt màn, nút nằm trong «Thêm hành động»); UI-094 (`CU-CHI`
+    đọc transform của ảnh nằm trọn khung nhìn, B9 ghi chú 4), UI-096 (lối xoá có hỏi của UI-158), UI-100 (đếm tiêu đề và
+    thân một khối là hai), UI-111 (câu cũ đã gỡ); UI-016, UI-017 (Codex CP07 làm lại pager màn chào: ảnh `EV-R-UI-016-C1`
+    cho thấy «Trang 2 trên 4» và chấm theo trang, probe không còn tìm thấy chấm); UI-002 (URL lạ khi có phiên ra trang
+    404 có lối về, đúng nhánh «hoặc 404 có lối ra» của tiêu chí, Codex CP06); UI-014 C2 (hàng chip dừng trước mép Nếp, chip
+    thứ ba bị cắt ở cuối hàng cuộn ngang, không bị Nếp che);
+  - **thiết kế thanh tab của chủ sản phẩm** (`2b6c9360`, đã trên `main` trước đợt này): UI-003, UI-004, UI-006, UI-082-F11,
+    UI-117-A/B;
+  - **dữ liệu của thế giới đo**: UI-060, UI-061, UI-086, UI-113, UI-116, UI-118, UI-119 (theo các ghi chú B4–B8; ví dụ
+    UI-116 persona rơi về cửa đăng nhập, UI-119 «Tôi đã tới» không tự lên tường theo đề xuất ADR của B3).
+- **N15, N22, N26**: 0 hàng PASS → FAIL so với lượt «sau» của batch tương ứng (`b9-sau`, `b6-sau5`, `b8-sau3`).
+- **N21**: 3 hàng đổi, đều do dữ liệu hoặc công thức (số ngày có bài kể, chưa đủ dấu mốc để chọn hướng, chữ câu xác nhận
+  đăng lại).
+- **N14**: 43 hàng PASS → FAIL so với `b7-sau3`, cùng một gốc. `b7-sau3` đo trước khi chủ sản phẩm gộp Cộng đồng vào
+  Khám phá (`2b6c9360`). Ở dạng nhúng, phần đầu là dải «Địa điểm / Cộng đồng» với chuông và bộ lọc; lối viết bài là con dấu
+  «Tạo» và «Viết bài» của trạng thái rỗng. Probe vẫn tìm tiêu đề «Cộng đồng» và nút «Đăng khoảnh khắc» ở header, nên phần
+  `dang` không mở được trình soạn, không tạo được B1–B4, và các hàng dựa vào chúng hỏng theo. Đợt này chỉ đổi một dòng ở
+  `CommunityScreen` (tông `warn` của «Xóa lịch sử đề xuất»). Probe N14 cần đi theo dạng nhúng.
+- n22 dừng ở phần `lab-prod` (đòi bỏ `AUDIT_BASE`), sau 37 hàng; phần đó đo riêng ở B6 (`run-b6-lab`).
+- UI-149: thế giới harness không có khoản chi nằm trong hai kèo trùng ngày như dữ liệu gốc của QA, nên `TC-N15-Q4-*` chỉ
+  thấy tổng 0. Bằng chứng ở phía máy chủ: oracle Go so với Python, 9 ca PostgreSQL thật (gồm backfill của migration),
+  parity recap và tiền.
+
+**e2e Android** (`scripts/mobile_native.sh --otp`, AVD chỉ-đọc, stack riêng thứ hai, dev client debug):
+- `0301fa2a`: 26 flow, 2 đỏ (42, 45), cả hai là flow nói về một màn đã đổi trước đợt này; sửa ở `6a84a1f4`.
+- `cbb755c4`: 26 flow, neo 2b đỏ đúng chỗ khi dấu vân sai, canary DM đỏ đúng chỗ, phép kiểm máy chủ sau 43 và 45 (đọc DB)
+  chạy được; 1 đỏ: flow 42, mẫu chữ của flow còn tiền tố cũ, thẻ trên màn đúng; sửa ở `02f351a6`.
+- **`02f351a6` (mã app và flow như SHA cuối `622d0c84`): XANH.** 26 flow qua trong 1 lượt; neo 2b cắn (dấu vân sai thì đỏ
+  ở bước assert dấu vân); canary OTP (mã sai) đỏ đúng chỗ; canary 37 (xoá tin người khác → 403, theme lạ → 422), 41 (DM với
+  người chưa là bạn → 404 một câu), 42 (người ngoài mở ảnh → 404, tường đóng → 403), 43 (người ngoài không thấy story) đỏ
+  đúng chỗ; phép kiểm máy chủ sau flow (chat có 6 tin chữ, 2 thẻ bình chọn, 1 phản ứng; hàng «reports» sau 45; story
+  qua hạn sau 43) chạy được và đạt. Dấu vân mang SHA `02f351a6`, ảnh ở `.impeccable/review/native/` của cây.
+  - Một bảng mini 00 + 42 trước đó đỏ ở bước đăng nhập của 42: bảng mini xoá dữ liệu app, flow 42 phải xin mã cho D đúng
+    lúc bước chuẩn bị vừa xin qua curl, và máy chủ chặn xin lại trong 60s. Bảng đầy đủ không gặp vì phiên của D đã có.
+
+**Cổng trong worktree sạch, `git status` trống trước và sau mỗi cổng** (SHA `622d0c84`; tầng Go và gate chạy ở `02f351a6`,
+khác `622d0c84` đúng một test Node):
+- Go, PostgreSQL thật, `scripts/go_postgres_tier.sh -- -count=1 ./...`: **3348 PASS, 0 FAIL, 0 SKIP**, sentinel có mặt.
+- Python, PostgreSQL thật dùng một lần: `tests/postgres` **711 passed**, `tests/qa` **51 passed**.
+- npm test **1518/1518** (build:check, tsc, node --test).
+- Pytest gốc trong container: 2996 passed, 5 failed — đúng năm ca môi trường hỏng y hệt trên `main` 2b6c9360 trước tích hợp
+  (demo_watch, gate_failure_report ×2, make_targets, motion_measurement_gate).
+- `gate.sh --strict contract client-routes server-routes cors ownership python-touch`: 6/6 ĐẠT.
+- `repo_guard.py tree HEAD` và `range 2b6c9360 HEAD` (28 commit) ở `622d0c84`: đạt. Migration biên dịch offline: đạt.
+- Parity dev, hai stack dựng từ cây sạch: recap, POST expenses, confirm, albums, budget: 5 kịch bản EQUAL, 258 bước.
+
+## Việc còn mở
+
+- **Tường nhóm xê dịch dưới ngón tay** (đo ở B9, có từ trước): khung ảnh bắt đầu 4:3 rồi đổi sang tỉ lệ thật khi ảnh nạp;
+  ảnh dọc làm thẻ cao thêm 198px sau khi người dùng đã cuộn tới. Sửa tận gốc cần máy chủ lưu tỉ lệ ảnh lúc tải lên
+  (lược đồ `memories`, route `python: live`, parity), nên cần một ADR.
+- **Tông `warn` gần `accent`** (critique cuối): `#c2410c` và `#ba3e20` gần như một màu, câu lỗi trông như link coral bên
+  cạnh. Đổi token là quyết định hệ màu.
+- **Con dấu «Tạo» và thanh tab** (critique cuối, thuộc chủ sản phẩm): nhãn «Tạo» luôn coral như tab đang chọn, con dấu nhô
+  lên che chữ của hàng cuối danh sách.
+- **«Đặt làm quản trị» lặp trên mỗi hàng thành viên** (critique cuối): nên chuyển vào hành động của hàng.
+- **Chính tả «Xoá»/«Xóa»** lẫn trong app (22 «Xoá», khoảng 15 «Xóa»). Thống nhất cần sửa sổ tay Nếp (truy hồi ghim), flow
+  và DESIGN.md cùng lúc.
+- **Contract IR trên `main` lệch mã Python** từ trước đợt (thứ tự route, dependency sau ADR-0052); đợt này chỉ thêm định
+  nghĩa `outing_id`.
+- **Probe của QA cần đi theo app**: N14 dạng nhúng trong Khám phá; tên nút đã đổi theo UI-076/162 và critique cuối; chữ
+  tim/thích theo «Luật Một Thứ Một Chữ».

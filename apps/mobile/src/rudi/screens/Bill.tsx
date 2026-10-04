@@ -256,7 +256,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
       {/* What these rows are is said once, over them: printed under every row
           it read nineteen times on a twenty-person trip (Luật Nói Một Lần). */}
       {du.chuyenTien.length > 0 ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>Đề xuất tính từ sổ, chưa phải nghĩa vụ: nghĩa vụ chỉ có khi một đợt thu được phát.</Text>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>Cách chuyển gọn nhất, tính từ sổ. Chưa ai phải trả gì: mỗi người chỉ nhận phần của mình khi một đợt thu được phát.</Text>
       ) : null}
       {du.chuyenTien.length === 0 ? (
         <Text style={[typography.body, { color: colors.inkSoft }]}>Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.</Text>

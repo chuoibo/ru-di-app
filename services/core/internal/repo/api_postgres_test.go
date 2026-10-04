@@ -615,7 +615,10 @@ func recapRows(got []RecapOuting) []recapRow {
 	return out
 }
 
-func TestGroupRecapClaimsMoneyAndMemoriesOnVietnamsDays(t *testing.T) {
+// A trip's money is the expenses that belong to it (ADR-0054); its memories
+// are still the ones of its Vietnam days. Trips 5 and 6 share the 27th and
+// trips 1, 2, 3 share the 22nd-23rd: no expense is counted twice (QA UI-149).
+func TestGroupRecapClaimsMoneyByTripAndMemoriesOnVietnamsDays(t *testing.T) {
 	for _, zone := range []string{"", "Asia/Ho_Chi_Minh", "Etc/GMT+10"} {
 		t.Run("session TimeZone "+zone, func(t *testing.T) {
 			w := newStdWorld()
@@ -633,11 +636,11 @@ func TestGroupRecapClaimsMoneyAndMemoriesOnVietnamsDays(t *testing.T) {
 			}
 			want := []recapRow{
 				{6, true, 340000, 1, 1},
-				{5, true, 340000, 1, 1},
+				{5, true, 0, 0, 1},
 				{4, false, 70000, 1, 1},
 				{1, false, 90000, 1, 1},
-				{2, false, 690000, 2, 1},
-				{3, false, 701000, 3, 2},
+				{2, false, 0, 0, 1},
+				{3, false, 611000, 2, 2},
 			}
 			if !slices.Equal(recapRows(got), want) {
 				t.Fatalf("recap = %+v\nwant   %+v", recapRows(got), want)
@@ -662,7 +665,7 @@ func TestGroupRecapClaimsMoneyAndMemoriesOnVietnamsDays(t *testing.T) {
 			}
 
 			onTheLastDay, err := repo.GroupRecap(bg, w.group, day(t, "2030-08-23"))
-			if err != nil || !slices.Equal(recapRows(onTheLastDay), []recapRow{{1, true, 90000, 1, 1}, {2, true, 690000, 2, 1}, {3, true, 701000, 3, 2}}) {
+			if err != nil || !slices.Equal(recapRows(onTheLastDay), []recapRow{{1, true, 90000, 1, 1}, {2, true, 0, 0, 1}, {3, true, 611000, 2, 2}}) {
 				t.Fatalf("on the last day: %+v %v", recapRows(onTheLastDay), err)
 			}
 			rec.log = nil

@@ -100,7 +100,10 @@ export function SoBia({
           <View style={styles.nhan}>
             {nhan ?? ten.map((t) => (
               <View key={t} style={[styles.the, { backgroundColor: colors.card, borderColor: colors.coverLineStrong }]}>
-                <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>
+                {/* Two lines, centred: the label is 68px of text on a 128px
+                    cover, and one line cut «Chat Test 01» and «Chat Test 02»
+                    to the same «Chat Tes…» (QA UI-090). */}
+                <Text numberOfLines={2} style={[typography.label, styles.tenBia, { color: colors.ink }]}>
                   {t}
                 </Text>
               </View>
@@ -132,5 +135,6 @@ const styles = StyleSheet.create({
   gay: { position: "absolute", left: 0, top: 0, bottom: 0, width: 12 },
   nhan: { marginLeft: 22, marginRight: 22, gap: 6, alignItems: "stretch" },
   the: { borderWidth: 1, borderRadius: 3, paddingHorizontal: 8, paddingVertical: 4, alignItems: "center" },
+  tenBia: { textAlign: "center" },
   thun: { position: "absolute", right: 14, top: 0, bottom: 0, width: 6 },
 });

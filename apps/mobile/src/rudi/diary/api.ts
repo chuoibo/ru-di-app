@@ -1,5 +1,6 @@
 /** Personal memory books. Only the previewed bundle reaches the inference API. */
-import { BASE_URL, newAttempt, translatedAsActor } from "../../api";
+import { ApiError, BASE_URL, newAttempt, translatedAsActor } from "../../api";
+import { laTuChoiVinhVien } from "../../cau-loi-theo-ma";
 import { headerNguoiGoi } from "../../danh-tinh";
 
 export type DiaryKind = "moment" | "trip";
@@ -11,7 +12,7 @@ export type Diary = { id: string; outing_id: string; owner_id: string; kind: Dia
 export type Ending = { title: string; starts_on: string; ends_on: string; kind: DiaryKind; ended_at: string | null; can_end: boolean; diary_id: string | null };
 export type DiaryJob = { id: string; status: "queued" | "running" | "succeeded" | "failed"; code: string | null; result: DiaryDocument | null };
 const ERRORS: Record<string, string> = {
-  diary_unavailable: "Sổ chưa mở được. Bạn thử lại một chút nhé.",
+  diary_unavailable: "Rủ Đi đang gặp sự cố. Bạn thử lại sau một chút nhé.",
   outing_not_started: "Cuộc đi còn ở phía trước. Mình giữ trang cuối cho hôm trở về nhé.",
   outing_not_ended: "Người tổ chức chưa khép cuộc đi. Bạn quay lại sau nhé.",
   organizer_required: "Người tổ chức sẽ khép cuộc đi cho cả hội.",
@@ -84,4 +85,22 @@ export function includeSavedPhotos(source: DiarySource, saved: Diary): DiarySour
     photos.push({ id, url: publishedPhoto(saved.id, id), caption: "", day: source.ends_on });
   }
   return { ...source, photos };
+}
+
+/** A waiting message is presentation, never an authorization check. */
+export function endingWait(ending: Ending, now: Date = new Date()): "future" | "organizer" | null {
+  if (ending.ended_at || ending.can_end) return null;
+  const vietnamDay = new Date(now.getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return ending.starts_on > vietnamDay ? "future" : "organizer";
+}
+
+/** Only transient failures offer the same request again; a conflict needs review. */
+export function diaryFailure(error: unknown): { message: string; retryable: boolean; code: string | null } {
+  const api = error instanceof ApiError ? error : null;
+  const blocked = new Set(["outing_not_started", "outing_not_ended", "organizer_required", "ending_already_confirmed", "diary_revision_conflict", "diary_source_changed", "diary_photo_not_found"]);
+  return {
+    message: error instanceof Error ? error.message : "Chưa giữ được trang này. Bạn thử lại nhé.",
+    retryable: !api || (!blocked.has(api.code.toLowerCase()) && !laTuChoiVinhVien(api.status, api.code)),
+    code: api?.code.toLowerCase() ?? null,
+  };
 }

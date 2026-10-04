@@ -154,11 +154,13 @@ test("lý do báo cáo là bộ đóng năm mã, khớp máy chủ", () => {
   for (const muc of LY_DO_BAO_CAO) assert.ok(!muc.nhan.includes("—"), muc.ma);
 });
 
-test("cửa xoá tài khoản chỉ mở với đúng một từ", () => {
-  assert.equal(TU_XAC_NHAN, "XOA");
-  assert.equal(xacNhanHopLe("XOA"), true);
-  assert.equal(xacNhanHopLe(" xoa "), true, "gõ thường và thừa khoảng trắng vẫn là từ ấy");
-  for (const sai of ["", "XO", "XOAA", "DELETE", "xoá"]) {
+test("cửa xoá tài khoản chỉ mở với đúng một từ, có dấu hay không (QA UI-110)", () => {
+  assert.equal(TU_XAC_NHAN, "XOÁ");
+  assert.equal(xacNhanHopLe("XOÁ"), true);
+  assert.equal(xacNhanHopLe("XOA"), true, "không dấu vẫn là từ ấy");
+  assert.equal(xacNhanHopLe(" xoá "), true, "gõ thường và thừa khoảng trắng vẫn là từ ấy");
+  assert.equal(xacNhanHopLe("xoa"), true);
+  for (const sai of ["", "XO", "XOAA", "DELETE", "XOÁ TÀI KHOẢN"]) {
     assert.equal(xacNhanHopLe(sai), false, sai);
   }
 });

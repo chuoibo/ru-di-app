@@ -31,6 +31,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
+import { useLuiLop } from "../../ui/useLuiLop";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -52,6 +53,13 @@ export function HoSoSong({ phien }: { phien: Phien }) {
   const [city, setCity] = useState("");
   const [dangLuu, setDangLuu] = useState(false);
   const [loiLuu, setLoiLuu] = useState<string | null>(null);
+  // QA UI-108: Back closes the form and stays on Cá nhân; what was typed is
+  // kept and comes back when the form opens again. «Huỷ» is what drops it.
+  const [conNhap, setConNhap] = useState(false);
+  useLuiLop(dangSua, () => {
+    setConNhap(true);
+    setDangSua(false);
+  });
 
   const nap = useCallback(async () => {
     try {
@@ -68,9 +76,11 @@ export function HoSoSong({ phien }: { phien: Phien }) {
   );
 
   const moSua = (hoSo: HoSoToi) => {
-    setTen(hoSo.display_name);
-    setBio(hoSo.bio ?? "");
-    setCity(hoSo.city ?? "");
+    if (!conNhap) {
+      setTen(hoSo.display_name);
+      setBio(hoSo.bio ?? "");
+      setCity(hoSo.city ?? "");
+    }
     setLoiLuu(null);
     setDangSua(true);
   };
@@ -86,6 +96,7 @@ export function HoSoSong({ phien }: { phien: Phien }) {
       setTrang({ pha: "xong", hoSo });
       // Keep the session's greeting in step with the server (QA 23/09).
       datPhien(await doiTenTrongPhien(phien, hoSo.display_name));
+      setConNhap(false);
       setDangSua(false);
     } catch (error) {
       setLoiLuu(loiRaChu(error));
@@ -131,7 +142,7 @@ export function HoSoSong({ phien }: { phien: Phien }) {
           value={city}
         />
         <RudiButton disabled={dangLuu} label="Lưu hồ sơ" loading={dangLuu} onPress={() => void luu()} />
-        <RudiButton disabled={dangLuu} label="Huỷ" onPress={() => setDangSua(false)} variant="ghost" />
+        <RudiButton disabled={dangLuu} label="Huỷ" onPress={() => { setConNhap(false); setDangSua(false); }} variant="ghost" />
       </View>
     );
   }
@@ -141,7 +152,10 @@ export function HoSoSong({ phien }: { phien: Phien }) {
     `${hoSo.counts.contexts} nhóm`,
     `${hoSo.counts.outings} kèo`,
     `${hoSo.counts.places_checked_in} nơi đã tới`,
-    `${hoSo.counts.memories} kỷ niệm`,
+    // The moments posted to a group's wall, named as «Thả khoảnh khắc» names
+    // them: «6 kỷ niệm» sat over «Chưa giữ ngày nào» (the kept days, a
+    // different thing) and read as lost data (B11 critique).
+    `${hoSo.counts.memories} khoảnh khắc`,
   ].join(" · ");
 
   const namVao = new Date(hoSo.created_at).getFullYear();
@@ -185,7 +199,8 @@ export function HoSoSong({ phien }: { phien: Phien }) {
           </Text>
         </View>
         <Text style={[typography.caption, { color: colors.inkSoft }]}>{soDem}</Text>
-        <RudiButton compact full={false} icon="create-outline" label="Chỉnh hồ sơ" onPress={() => moSua(hoSo)} variant="outline" />
+        <RudiButton compact full={false} icon="create-outline" label={conNhap ? "Sửa tiếp hồ sơ" : "Chỉnh hồ sơ"} onPress={() => moSua(hoSo)} variant="outline" />
+        {conNhap ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>Bản sửa chưa lưu vẫn còn đây.</Text> : null}
       </View>
     </View>
   );

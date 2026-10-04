@@ -1,6 +1,6 @@
 # Đề xuất ADR: «tờ giấy chỉ cho cặp đôi» là luật của máy chủ hay chỉ của app (QA UI-131)
 
-- Trạng thái: **đề xuất**, chưa triển khai. Viết 01/10/2026 trong đợt nâng cấp UI/UX từ audit PR #663.
+- Trạng thái: **đã quyết 2026-10-04 → phương án B**, thành `docs/decisions/ADR-0053-to-giay-la-so-cua-moi-cap.md`. Viết 01/10/2026 trong đợt nâng cấp UI/UX từ audit PR #663.
 - Người quyết: chủ sản phẩm.
 
 ## Vấn đề

@@ -227,7 +227,7 @@ export function KhayToHenChung({
           </Text>
           <View style={styles.hangPhu}>
             <RudiButton compact disabled={busy} full={false} label="Giữ lại" onPress={onHuyBo} variant="ghost" />
-            <RudiButton compact disabled={busy} full={false} label="Bỏ tờ hẹn" loading={busy} onPress={onBoThat} variant="outline" />
+            <RudiButton compact disabled={busy} full={false} label="Bỏ tờ hẹn" loading={busy} onPress={onBoThat} tone="warn" variant="outline" />
           </View>
         </View>
       ) : open ? (
@@ -240,6 +240,7 @@ export function KhayToHenChung({
               full={false}
               label="Bỏ tờ hẹn"
               onPress={onDiscard}
+              tone="warn"
               variant="ghost"
             />
             <RudiButton

@@ -19,9 +19,8 @@ import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
-import { docNhomCuaToi, ganDanhSachNhom } from "../../../phien";
+import { chonNhom, docNhomCuaToi, ganDanhSachNhom } from "../../../phien";
 import { taoNhom } from "../../../screens/vao-cua/cong-api";
-import { manDau } from "../../duong-vao";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiScreen, TopBar } from "../../ui";
@@ -56,11 +55,14 @@ export function GroupNewScreen() {
     }
     setTrang({ pha: "dang-mo" });
     try {
-      await taoNhom(sach, phien.person_id, lanBam.current.attempt);
+      const lap = await taoNhom(sach, phien.person_id, lanBam.current.attempt);
       const nhom = await docNhomCuaToi(phien.person_id);
-      const moi = await ganDanhSachNhom(phien, nhom);
+      // Into the group just opened, its own room, where the first thing on
+      // the page is inviting friends (QA UI-071: it used to land on Khám phá
+      // with no group name and no way to invite).
+      const moi = await chonNhom(await ganDanhSachNhom(phien, nhom), lap.id);
       datPhien(moi);
-      router.replace(manDau(moi) as never);
+      router.replace(`/groups/${lap.id}/chat` as never);
     } catch (error) {
       setTrang({
         pha: "hong",

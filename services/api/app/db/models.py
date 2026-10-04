@@ -275,6 +275,18 @@ class Expense(Base):
     """
 
     __tablename__ = "expenses"
+    __table_args__ = (
+        # ADR-0054: an expense belongs to at most one trip, and only to a trip
+        # of its own group -- the composite key makes another group's trip
+        # unrepresentable. No ON DELETE: a trip that holds money cannot be
+        # deleted out from under its ledger rows.
+        ForeignKeyConstraint(
+            ["outing_id", "context_id"],
+            ["outings.id", "outings.context_id"],
+            name="fk_expenses_outing_context",
+        ),
+        Index("ix_expenses_outing_id", "outing_id"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -288,6 +300,7 @@ class Expense(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    outing_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
 
 
 class ExpenseVersion(Base):
@@ -1235,6 +1248,8 @@ class Outing(Base):
         CheckConstraint("headcount > 0", name="headcount_positive"),
         CheckConstraint("budget_per_person_vnd >= 0", name="budget_not_negative"),
         CheckConstraint("title <> ''", name="title_not_blank"),
+        # The target of `fk_expenses_outing_context` (ADR-0054).
+        UniqueConstraint("id", "context_id", name="uq_outings_id_context_id"),
         Index(
             "ix_outings_context_schedule",
             "context_id",

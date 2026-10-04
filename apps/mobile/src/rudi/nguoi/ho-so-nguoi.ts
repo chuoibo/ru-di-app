@@ -16,6 +16,7 @@
 import { ApiError, docTuongNguoi, translatedAsActor } from "../../api";
 import { MUC_NGUOI_DOC, type Audience } from "../../screens/ca-nhan/bai-dang";
 import type { BaiWire } from "../tuong/bai-chi-tiet";
+import { ngayVN } from "../ngay-viet";
 
 /** What `GET /people/{id}` returns: no counts, no login methods, no phone. */
 export type HoSoNguoi = {
@@ -74,9 +75,11 @@ export function cauQuanHe(quanHe: QuanHe): string {
  * For `self` the claim is safe: you are allowed to read everything you wrote,
  * so nothing back means nothing written. For the other two it is not.
  */
-export function cauTuongRong(quanHe: QuanHe): string {
-  if (quanHe === "self") return "Bạn chưa đăng bài nào. Bài đầu tiên chỉ mình bạn đọc, trừ khi bạn đổi mức người đọc.";
-  return "Chưa có bài nào bạn đọc được. Người ấy có thể đã đăng ở mức riêng tư hơn.";
+export function cauTuongRong(quanHe: QuanHe): { tieuDe: string; than: string } {
+  // A short title and a body, as every empty state: the whole sentence set as
+  // a headline read as a shout under the shelf above it (04/10).
+  if (quanHe === "self") return { tieuDe: "Bạn chưa đăng bài nào", than: "Bài đầu tiên chỉ mình bạn đọc, trừ khi bạn đổi mức người đọc." };
+  return { tieuDe: "Chưa có bài nào bạn đọc được", than: "Người ấy có thể đã đăng ở mức riêng tư hơn." };
 }
 
 /** «Tham gia từ tháng 9/2026», from the server's ISO string. */
@@ -112,7 +115,7 @@ export function cauLucNao(iso: string, bayGio: Date = new Date()): string {
   if (gio < 24) return `${gio} giờ trước`;
   const ngay = Math.floor(gio / 24);
   if (ngay < 7) return `${ngay} ngày trước`;
-  return luc.toLocaleDateString("vi-VN");
+  return ngayVN(iso);
 }
 
 /** Server refusals to a sentence, for the two reads this module makes. */

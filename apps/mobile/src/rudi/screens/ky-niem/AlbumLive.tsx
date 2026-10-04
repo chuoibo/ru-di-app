@@ -29,6 +29,7 @@ import type { Phien } from "../../../phien";
 import { AlbumError } from "../../../screens/album/album-api";
 import { docKeoCuaNhom } from "../../keo/keo";
 import { homNay } from "../../keo/nhip-keo";
+import { khoangNgayChuyen } from "../../ngay-viet";
 import {
   cauKeAlbumRong,
   cauThongKeAlbum,
@@ -58,8 +59,32 @@ function loiRaChu(error: unknown): string {
   return "Chưa mở được album. Kéo xuống để thử lại.";
 }
 
-function cauKhoang(a: { period_label: string; in_progress: boolean; headcount: number }): string {
-  return `${a.period_label}${a.in_progress ? " · đang đi" : ""} · ${a.headcount}\u00a0người`;
+/** The trip's days when known (QA UI-103), else the server's year label. */
+function cauKhoang(a: { period_label: string; in_progress: boolean; headcount: number }, ngay = ""): string {
+  return `${ngay || a.period_label}${a.in_progress ? " · đang đi" : ""} · ${a.headcount}\u00a0người`;
+}
+
+/**
+ * Each outing's days, by id (QA UI-103). The album routes still have Python
+ * as their parity oracle, so the days are not added to their wire (ADR-0031):
+ * they come from the group's outings, the list «Lên plan» reads. A failed
+ * read leaves the year label as it was; it is a caption, not the page.
+ */
+function useNgayChuyen(contextId: string, personId: string): Record<string, string> {
+  const [ngay, setNgay] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let song = true;
+    docKeoCuaNhom(contextId, personId).then(
+      (keo) => {
+        if (song) setNgay(Object.fromEntries(keo.map((k) => [k.id, khoangNgayChuyen(k.starts_on, k.ends_on)])));
+      },
+      () => undefined,
+    );
+    return () => {
+      song = false;
+    };
+  }, [contextId, personId]);
+  return ngay;
 }
 
 /* ------------------------------------------------------------------ kệ */
@@ -73,6 +98,7 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
   // B4: an empty shelf asks the plan list whether an outing is merely ahead.
   const [keoNhom, setKeoNhom] = useState<{ title: string; starts_on: string }[]>([]);
   const cauRong = cauKeAlbumRong(keoNhom, homNay());
+  const ngayChuyen = useNgayChuyen(contextId, phien.person_id);
 
   const doc = async () => {
     try {
@@ -103,7 +129,7 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
   }, [contextId, phien.person_id]);
 
   return (
-    <RudiScreen testID="trip-album-screen">
+    <RudiScreen cot="doc" testID="trip-album-screen">
       <TopBar subtitle="Mỗi kèo một album" title="Album chuyến đi" />
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
@@ -127,7 +153,7 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
               icon={a.in_progress ? "walk-outline" : "albums-outline"}
               key={a.outing_id}
               onPress={() => router.push(`/trips/${a.outing_id}/album?ctx=${contextId}` as never)}
-              subtitle={`${cauKhoang(a)} · ${cauThongKeAlbum(a)}`}
+              subtitle={`${cauKhoang(a, ngayChuyen[a.outing_id])} · ${cauThongKeAlbum(a)}`}
               title={a.title}
             />
           ))
@@ -151,6 +177,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
   const tiLeDan = sizeClass === "compact" ? 4 / 3 : 21 / 9;
   const [trang, setTrang] = useState<TrangAlbum>({ pha: "dang-doc" });
   const me = phien.person_id;
+  const ngayChuyen = useNgayChuyen(contextId, me);
   const [viewer, setViewer] = useState<{ photos: ViewerPhoto[]; index: number; title?: string } | null>(null);
 
   useEffect(() => {
@@ -180,7 +207,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
 
   if (trang.pha === "dang-doc") {
     return (
-      <RudiScreen testID="trip-album-screen">
+      <RudiScreen cot="doc" testID="trip-album-screen">
         <TopBar title="Album" />
         <SkeletonGroup style={styles.khung}>
           <SkeletonCard lines={1} media={240} />
@@ -191,7 +218,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
   }
   if (trang.pha === "hong") {
     return (
-      <RudiScreen testID="trip-album-screen">
+      <RudiScreen cot="doc" testID="trip-album-screen">
         <TopBar title="Album" />
         <ErrorState body={trang.loi} onRetry={() => { setTrang({ pha: "dang-doc" }); void layAlbum(contextId, outingId, me).then((album) => setTrang({ pha: "xong", album, phim: null, dangDung: false, loiPhim: null })).catch((error: unknown) => setTrang({ pha: "hong", loi: loiRaChu(error) })); }} title="Chưa mở được album" />
       </RudiScreen>
@@ -203,10 +230,10 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
     return source === null ? [] : [{ id: photo.memory_id, source, caption: photo.caption || "Khoảnh khắc của nhóm", created_at: photo.created_at }];
   });
   return (
-    <RudiScreen testID="trip-album-screen">
+    <RudiScreen cot="doc" testID="trip-album-screen">
       {viewer ? <PhotoViewer photos={viewer.photos} initialIndex={viewer.index} title={viewer.title} onClose={() => setViewer(null)} /> : null}
       <TopBar title="Album" />
-      <Heading title={a.title} subtitle={`${cauKhoang(a)} · ${cauThongKeAlbum(a)}`} />
+      <Heading title={a.title} subtitle={`${cauKhoang(a, ngayChuyen[outingId])} · ${cauThongKeAlbum(a)}`} />
 
       {photos.length === 0 ? (
         <EmptyState

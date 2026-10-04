@@ -17,6 +17,9 @@ import (
 type ExpenseIdentity struct {
 	ID        string
 	ContextID string
+	// OutingID is the trip the expense belongs to, set once (ADR-0054); nil
+	// is «no trip».
+	OutingID *string
 }
 
 // ExpenseItemInput is one ExpenseItemInput of the proposal.
@@ -50,9 +53,11 @@ type ExpenseProposal struct {
 	PaidByID          string
 	VerificationScope string
 	OccurredAt        time.Time
-	Items             []ExpenseItemInput
-	Surcharges        []ExpenseSurchargeInput
-	Discounts         []ExpenseDiscountInput
+	// OutingID is the trip the bill was written from, when it was (ADR-0054).
+	OutingID   *string
+	Items      []ExpenseItemInput
+	Surcharges []ExpenseSurchargeInput
+	Discounts  []ExpenseDiscountInput
 }
 
 // ExpenseRollups is component_rollups' dict, spread into ExpenseVersion.
@@ -79,6 +84,36 @@ type ExpenseConfirmation struct {
 	Now                  time.Time
 }
 
+// onlyOutingCovering is _only_outing_covering: the group's one trip whose
+// days hold the instant's Vietnam calendar day, or nil when two trips share
+// that day or none covers it (ADR-0054 §2.2 rule 3: never guessed between).
+func (r Repository) onlyOutingCovering(ctx context.Context, contextID string, at time.Time) (*string, error) {
+	day := at.In(wallClockLocation).Format(time.DateOnly)
+	rows, err := r.Q.Query(ctx,
+		`SELECT outings.id FROM outings
+		  WHERE outings.context_id = $1::UUID AND outings.starts_on <= $2::DATE AND outings.ends_on >= $3::DATE
+		  LIMIT $4::INTEGER`, contextID, day, day, 2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(ids) != 1 {
+		return nil, nil
+	}
+	return &ids[0], nil
+}
+
 // ConfirmationRecord is ConfirmationRecord.
 type ConfirmationRecord struct {
 	ExpenseVersionID string
@@ -90,22 +125,22 @@ type ConfirmationRecord struct {
 // no row is fk_expenses_context_id, raised as Conflict
 // EXPENSE_CONTEXT_NOT_FOUND from that violation; any other error is returned
 // as is. There is no savepoint: the transaction is aborted either way.
-func (r Repository) CreateExpense(ctx context.Context, contextID string) (ExpenseIdentity, error) {
+func (r Repository) CreateExpense(ctx context.Context, contextID string, outingID *string) (ExpenseIdentity, error) {
 	id, err := newUUID()
 	if err != nil {
 		return ExpenseIdentity{}, err
 	}
 	var created time.Time
 	err = r.Q.QueryRow(ctx,
-		`INSERT INTO expenses (id, context_id) VALUES ($1::UUID, $2::UUID) RETURNING expenses.created_at`,
-		id, contextID).Scan(&created)
+		`INSERT INTO expenses (id, context_id, outing_id) VALUES ($1::UUID, $2::UUID, $3::UUID) RETURNING expenses.created_at`,
+		id, contextID, outingID).Scan(&created)
 	if err != nil {
 		if pg := integrityViolation(err); pg != nil && pg.ConstraintName == "fk_expenses_context_id" {
 			return ExpenseIdentity{}, &Conflict{Code: "EXPENSE_CONTEXT_NOT_FOUND", Err: pg}
 		}
 		return ExpenseIdentity{}, err
 	}
-	return ExpenseIdentity{ID: id, ContextID: contextID}, nil
+	return ExpenseIdentity{ID: id, ContextID: contextID, OutingID: outingID}, nil
 }
 
 // GetExpense is get_expense: the expense row by id, SELECT ... FOR UPDATE,
@@ -114,9 +149,9 @@ func (r Repository) GetExpense(ctx context.Context, expenseID string) (*ExpenseI
 	var e ExpenseIdentity
 	var created time.Time
 	err := r.Q.QueryRow(ctx,
-		`SELECT expenses.id, expenses.context_id, expenses.created_at
+		`SELECT expenses.id, expenses.context_id, expenses.created_at, expenses.outing_id
 		   FROM expenses
-		  WHERE expenses.id = $1::UUID FOR UPDATE`, expenseID).Scan(&e.ID, &e.ContextID, &created)
+		  WHERE expenses.id = $1::UUID FOR UPDATE`, expenseID).Scan(&e.ID, &e.ContextID, &created, &e.OutingID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -202,6 +237,23 @@ func (r Repository) SaveExpenseConfirmation(ctx context.Context, in ExpenseConfi
 		return ConfirmationRecord{}, ErrUnknownPayerAcknowledgement
 	}
 	p := in.Proposal
+	// ADR-0054 §2.2: an expense belongs to at most one trip, set once. The
+	// trip it was written from (checked against the group by the route);
+	// else, at its first version, the one trip of the group covering its
+	// Vietnam day; two trips or none, no trip. Later versions never move it.
+	if expense.OutingID == nil {
+		outing := p.OutingID
+		if outing == nil && latest == nil {
+			if outing, err = r.onlyOutingCovering(ctx, expense.ContextID, p.OccurredAt); err != nil {
+				return ConfirmationRecord{}, err
+			}
+		}
+		if outing != nil {
+			if _, err := r.Q.Exec(ctx, `UPDATE expenses SET outing_id=$1::UUID WHERE expenses.id = $2::UUID`, *outing, in.ExpenseID); err != nil {
+				return ConfirmationRecord{}, err
+			}
+		}
+	}
 	if !verificationScopes[p.VerificationScope] {
 		return ConfirmationRecord{}, ErrUnknownVerificationScope
 	}

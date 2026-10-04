@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { NavigationContext } from "expo-router/build/react-navigation/core/NavigationContext";
 import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
+import { BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { interpolate, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,10 +10,13 @@ import { useNepGui } from "../nep/NepProvider";
 import { dangKyLuiWeb } from "./lui-web";
 import { lopPhu, useRudiTheme } from "../theme";
 import { useMotion } from "./useMotion";
+import { COT_DOC } from "../adaptive";
 
 export interface SheetProps {
   open: boolean;
   onClose: () => void;
+  /** An inline step may consume Back/Escape; dismiss/drag/blur still close. */
+  onBack?: () => void;
   /** After the close animation has finished; a route that hosts the sheet navigates back from here. */
   onClosed?: () => void;
   children: ReactNode;
@@ -24,6 +27,12 @@ export interface SheetProps {
   maxHeight?: number;
   /** A head for the page above its scrolling content: a small stage, a stamp (ADR-0037). */
   dauTrang?: ReactNode;
+  /** Keep a form's editor/actions outside the reference content's scroll. */
+  footer?: ReactNode;
+  /** Opt-in for an editor whose panel must fit above the software keyboard. */
+  avoidKeyboard?: boolean;
+  /** Opt-in overflow cue for long content that must remain readable. */
+  showsVerticalScrollIndicator?: boolean;
   testID?: string;
 }
 
@@ -33,7 +42,7 @@ const webSheetStack: symbol[] = [];
 const KEO_DONG_DP = 90;
 const KEO_DONG_TOC = 900;
 /** Widest a panel grows on a tablet; the reading column of DESIGN.md (QA UI-093). */
-const RONG_TOI_DA = 640;
+const RONG_TOI_DA = COT_DOC;
 /**
  * How long after opening a tap on the sheet means nothing. A second tap of a
  * double tap lands ~60 ms after the first, on whatever has just appeared under
@@ -57,7 +66,7 @@ const CHAN_CHAM_MS = 250;
  * filters) and be driven by state; `app/create.tsx` hosts it in a
  * transparent route. Under Reduce Motion the spring resolves instantly.
  */
-export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, style, maxHeight, dauTrang, testID }: SheetProps) {
+export function Sheet({ open, onClose, onBack, onClosed, children, accessibilityLabel, style, maxHeight, dauTrang, footer, avoidKeyboard = false, showsVerticalScrollIndicator = false, testID }: SheetProps) {
   const { colors, radius, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
@@ -81,10 +90,13 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   const cao = useSharedValue(windowHeight);
   // The host's width, so a tablet gets a centred 640 dp panel (UI-093).
   const [rongKhung, setRongKhung] = useState(windowWidth);
+  const [caoKhung, setCaoKhung] = useState(windowHeight);
   const panelRef = useRef<View>(null);
   const wrapperRef = useRef<View>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const backRef = useRef(onBack ?? onClose);
+  backRef.current = onBack ?? onClose;
   const nepGui = useNepGui();
 
   // Nếp is not drawn over an open sheet (`nep/trang-thai.ts` rule 3). Counted
@@ -120,7 +132,7 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
     const onKey = (event: KeyboardEvent) => {
       if (webSheetStack.at(-1) !== identity) return;
       if (event.key === "Escape") {
-        event.preventDefault(); event.stopImmediatePropagation(); closeRef.current();
+        event.preventDefault(); event.stopImmediatePropagation(); backRef.current();
       } else if (event.key === "Tab") {
         const targets = focusable();
         const current = targets.indexOf(document.activeElement as HTMLElement);
@@ -178,7 +190,7 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   // UI-117), and the page stays where it was (`lui-web.ts`).
   useEffect(() => {
     if (!open) return;
-    return dangKyLuiWeb(() => closeRef.current());
+    return dangKyLuiWeb(() => backRef.current());
   }, [open]);
 
   // A sheet belongs to the screen it was opened on. When that screen loses
@@ -194,11 +206,11 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   useEffect(() => {
     if (!open || Platform.OS !== "android") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      onClose();
+      backRef.current();
       return true;
     });
     return () => sub.remove();
-  }, [open, onClose]);
+  }, [open]);
 
   const keoXuong = Gesture.Pan()
     .activeOffsetY(6)
@@ -240,6 +252,12 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
       style={[StyleSheet.absoluteFill, styles.lop]}
       testID={testID}
     >
+      <KeyboardAvoidingView
+        enabled={avoidKeyboard}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        onLayout={(event) => setCaoKhung(event.nativeEvent.layout.height)}
+        style={StyleSheet.absoluteFill}
+      >
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: lopPhu.toi(0.42) }, scrim]}>
         <Pressable accessibilityLabel="Đóng" accessibilityRole="button" onPress={nhanCham ? onClose : undefined} style={StyleSheet.absoluteFill} />
       </Animated.View>
@@ -259,14 +277,14 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
             // The ceiling is the whole panel's: handle, head and content
             // together, not the scroll box alone with the handle and the
             // insets added on top (92% at 320×640, 96% at 390×460: UI-007, UI-040).
-            maxHeight: tran,
+            maxHeight: avoidKeyboard ? Math.min(tran, Math.max(0, caoKhung - insets.top)) : tran,
             left: le,
             right: le,
             backgroundColor: colors.card,
             borderTopLeftRadius: radius.base,
             borderTopRightRadius: radius.base,
             paddingHorizontal: space.md,
-            paddingBottom: Math.max(insets.bottom, space.md),
+            paddingBottom: Math.max(avoidKeyboard && caoKhung < windowHeight - insets.bottom ? 0 : insets.bottom, space.md),
           },
           panel,
           style,
@@ -292,12 +310,20 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
           </Pressable>
         </View>
         {dauTrang}
-        <ScrollView bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={styles.cuon}>
+        <ScrollView
+          bounces={false}
+          keyboardShouldPersistTaps="handled"
+          persistentScrollbar={showsVerticalScrollIndicator}
+          showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+          style={[styles.cuon, showsVerticalScrollIndicator && Platform.OS === "web" ? { scrollbarWidth: "thin", scrollbarColor: `${colors.lineStrong} ${colors.card}` } as ViewStyle : null]}
+        >
           {children}
         </ScrollView>
+        {footer}
         {/* The opening's tap guard over the panel itself (UI-006). */}
         {nhanCham ? null : <View style={StyleSheet.absoluteFill} testID="sheet-chan-cham" />}
       </Animated.View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

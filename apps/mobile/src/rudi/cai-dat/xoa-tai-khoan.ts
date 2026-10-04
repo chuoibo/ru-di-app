@@ -7,8 +7,12 @@
  */
 import { type Attempt, translatedAsActor } from "../../api";
 
-/** Từ phải gõ. Không dấu, viết hoa, ngắn — gõ được trên bàn phím bất kỳ. */
-export const TU_XAC_NHAN = "XOA";
+/**
+ * Từ phải gõ, viết như mọi chữ «Xoá» trên màn (QA UI-110: câu nhắc «XOA» không
+ * dấu, gõ «XOÁ» thì nút tắt mà không nói vì sao). Có dấu hay không đều nhận:
+ * bàn phím nào cũng gõ được.
+ */
+export const TU_XAC_NHAN = "XOÁ";
 
 export const LOI_XOA_TAI_KHOAN: Record<string, string> = {
   confirm_required: "Cần xác nhận rõ ràng để xoá tài khoản.",
@@ -24,8 +28,10 @@ export const DIEU_SE_XAY_RA: readonly string[] = [
   "Sổ tiền của các nhóm giữ nguyên: ai nợ ai bao nhiêu không đổi.",
 ];
 
+const boDau = (chu: string) => chu.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d");
+
 export function xacNhanHopLe(da_go: string): boolean {
-  return da_go.trim().toUpperCase() === TU_XAC_NHAN;
+  return boDau(da_go.trim().toUpperCase()) === boDau(TU_XAC_NHAN);
 }
 
 export async function xoaTaiKhoan(actorId: string, attempt: Attempt): Promise<void> {

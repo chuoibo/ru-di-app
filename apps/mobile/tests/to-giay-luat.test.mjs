@@ -223,9 +223,14 @@ test("«Rủ … tới đây»: mở trình sửa khi được sửa, chờ khi 
   const toiGui = goiYChoLam(to("da_gui", [phienBan(1, TOI)]), TOI, "Minh", "p-1");
   assert.equal(toiGui.lam, "bao", "tờ mình đã gửi thì không lặng lẽ bỏ chỗ");
   assert.match(toiGui.cau, /chờ Minh trả lời/);
+  // QA UI-085: an agreed plan that became an outing takes the place as a stop,
+  // through «Thêm vào kèo»; one without an outing still says why not.
   const daChot = goiYChoLam(to("chot", [phienBan(1, TOI)]), TOI, "Minh", "p-1");
-  assert.equal(daChot.lam, "bao");
-  assert.match(daChot.cau, /tuần sau/);
+  assert.equal(daChot.lam, "them-vao-buoi");
+  assert.match(daChot.cau, /đã hẹn.*thành một chặng của buổi đó/);
+  const chotChuaKeo = goiYChoLam(to("chot", [phienBan(1, TOI)], { outing_id: null }), TOI, "Minh", "p-1");
+  assert.equal(chotChuaKeo.lam, "bao");
+  assert.match(chotChuaKeo.cau, /tuần sau/);
 });
 
 test("?ru=1 chỉ xin tờ khi đã đọc xong và chưa có tờ mở", () => {
@@ -234,6 +239,7 @@ test("?ru=1 chỉ xin tờ khi đã đọc xong và chưa có tờ mở", () => 
   assert.equal(nenXinTo(true, to("da_gui", [phienBan(1, TOI)])), "thoi", "tờ đang mở: không xin tờ thứ hai");
   assert.equal(nenXinTo(true, to("nhap", [phienBan(1, null)])), "thoi");
   assert.equal(nenXinTo(true, to("nghi_tuan", [phienBan(1, TOI)])), "xin");
+  assert.equal(nenXinTo(true, to("chot", [phienBan(1, TOI)])), "thoi", "tuần đã chốt: không phác tờ thứ hai cùng tối (QA UI-085)");
 });
 
 test("B1: chưa lập sổ thì ?ru=1 không xin tờ, vì tờ xin lúc đó thành tờ mồ côi chặn tuần của người kia", () => {

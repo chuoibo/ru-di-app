@@ -35,17 +35,20 @@ def _tien_to_duoc_khai() -> set[str]:
 #: SỐNG (cần API thật) và mỗi số phải tự khai; 90+ là flow lẻ chạy bằng tay.
 #: Chỉ khoảng giữa mới có lỗ: một flow sống không khai sẽ rơi vào `*)`, bị bỏ
 #: qua ở mọi chế độ sống, và ở bảng mặc định thì chạy mà không có máy chủ.
+#: Bảng mặc định đã gỡ cùng bản trải nghiệm (2026-10-03); flow còn lại dưới 20
+#: là `00` (màn chào + dấu vân cây), nay tự khai `00-*)` để chạy ở mọi bảng
+#: đăng nhập.
 _SONG_TU, _SONG_DEN = 20, 89
 
 
-def _tien_to_co_that() -> set[str]:
-    """Tiền tố `NN-` của mọi flow SỐNG, bỏ subflow `_*` ra."""
+def _tien_to_co_that(chi_song: bool = True) -> set[str]:
+    """Tiền tố `NN-` của flow SỐNG (hoặc mọi flow có số), bỏ subflow `_*` ra."""
     return {
         m.group(1)
         for f in _FLOWS.glob("*.yaml")
         if not f.name.startswith("_")
         for m in [re.match(r"(\d{2})-", f.name)]
-        if m and _SONG_TU <= int(m.group(1)) <= _SONG_DEN
+        if m and (not chi_song or _SONG_TU <= int(m.group(1)) <= _SONG_DEN)
     }
 
 
@@ -58,7 +61,9 @@ def test_moi_flow_co_so_deu_duoc_bang_nhac_ten():
 
 
 def test_bang_khong_nhac_ten_flow_khong_ton_tai():
-    thua = sorted(_tien_to_duoc_khai() - _tien_to_co_that())
+    # Against every numbered flow, not only the live range: `00-*)` names a
+    # flow that exists, and a case naming any existing flow is not dead.
+    thua = sorted(_tien_to_duoc_khai() - _tien_to_co_that(chi_song=False))
     assert thua == [], (
         f"`case` nhắc tới flow {thua} mà .maestro không có — một nhánh chết đọc "
         "như một flow đang được chạy"

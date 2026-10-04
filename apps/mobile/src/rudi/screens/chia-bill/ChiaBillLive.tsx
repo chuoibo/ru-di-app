@@ -99,7 +99,7 @@ import { StampButton } from "../../ui/StampButton";
 import { Stepper } from "../../ui/Stepper";
 import { DongSo, TrangSo } from "../../ui/TrangSo";
 import { CauTaiCho } from "../../ui/CauTaiCho";
-import { boNhapBill, buocMoLai, coMonDangGo, docNhapBill, luuNhapBill } from "../../chia-bill/nhap-bill";
+import { boNhapBill, buocMoLai, coMonDangGo, docNhapBill, khoaNhapBill, luuNhapBill } from "../../chia-bill/nhap-bill";
 
 type Buoc =
   | { ten: "bat-dau" }
@@ -187,7 +187,7 @@ function datNguoi(a: Assignment, lineId: string, ids: readonly string[], roster:
   return ra;
 }
 
-export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string }) {
+export function ChiaBillLiveScreen({ phien, dip, outingId }: { phien: Phien; dip?: string; outingId?: string }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
   // The step CTA is the last thing in the scroll; at font 1.3 it met the gesture pill.
@@ -195,8 +195,11 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
   const contextId = phien.context_id;
   // A bill typed here before comes back as it was (QA UI-052): after a
   // reload, or Back then Forward, at the step the person was on; after a
-  // while away, offered from step 1 instead of a blank receipt.
-  const [daGoTruoc] = useState(() => (contextId === null ? null : docNhapBill<NhapDaGo>(contextId)));
+  // while away, offered from step 1 instead of a blank receipt. One draft per
+  // group and trip: a bill begun from one trip never surfaces in another and
+  // lands in its ledger (ADR-0054).
+  const khoaNhap = contextId === null ? null : khoaNhapBill(contextId, outingId);
+  const [daGoTruoc] = useState(() => (khoaNhap === null ? null : docNhapBill<NhapDaGo>(khoaNhap)));
   const [buoc, setBuoc] = useState<Buoc>(() => buocMoLai(daGoTruoc, Date.now()) ?? { ten: "bat-dau" });
   const [reading, setReading] = useState<BillReading>(daGoTruoc?.reading ?? hoaDonTrong());
   const [assignment, setAssignment] = useState<Assignment>(daGoTruoc?.assignment ?? {});
@@ -244,15 +247,15 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
   // Kept on every change; dropped once it is in the book, and when the last
   // dish is taken off (a reload must not bring back what was removed).
   useEffect(() => {
-    if (contextId === null) return;
+    if (khoaNhap === null) return;
     if (buoc.ten === "da-ghi" || !coMonDangGo(reading.lines)) {
-      boNhapBill(contextId);
+      boNhapBill(khoaNhap);
       return;
     }
     const buocLuu: BuocLuu | undefined =
       buoc.ten === "gan-mon" || buoc.ten === "ket-qua" ? { ten: "gan-mon", bill: buoc.bill } : buoc.ten === "xem-lai" ? { ten: "xem-lai" } : undefined;
-    luuNhapBill(contextId, { reading, assignment, payerId, occasion, luc: Date.now(), buoc: buocLuu } satisfies NhapDaGo);
-  }, [contextId, buoc, reading, assignment, payerId, occasion]);
+    luuNhapBill(khoaNhap, { reading, assignment, payerId, occasion, luc: Date.now(), buoc: buocLuu } satisfies NhapDaGo);
+  }, [khoaNhap, buoc, reading, assignment, payerId, occasion]);
 
   if (contextId === null) {
     return (
@@ -401,7 +404,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
   const ghi = (chia: ChiaBill) =>
     chay(async () => {
       const ten = occasion.trim() === "" ? "Hóa đơn của nhóm" : occasion.trim();
-      const kq = await ghiVaoSo({ reading, assignment, roster, contextId: ctx, payerId, occasion: ten, attempts: attempts.current });
+      const kq = await ghiVaoSo({ reading, assignment, roster, contextId: ctx, payerId, occasion: ten, attempts: attempts.current, outingId });
       setBuoc({ ten: "da-ghi", expenseVersionId: kq.expenseVersionId, tenKhoan: ten, tongVnd: chia.totalAmountVnd, nguoiTraId: payerId, hang: hangKetQua(chia, roster) });
     });
 
@@ -538,7 +541,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
                 <View accessibilityLiveRegion="polite" style={styles.xacNhan}>
                   <Text style={[typography.body, { color: colors.ink }]}>{`Bỏ ${reading.lines.length} món đang gõ để làm bill mới?`}</Text>
                   <View style={styles.hangXacNhan}>
-                    <RudiButton compact full={false} label="Bỏ, làm bill mới" onPress={() => { if (contextId !== null) boNhapBill(contextId); nhapTay(); }} tone="warn" variant="outline" />
+                    <RudiButton compact full={false} label="Bỏ, làm bill mới" onPress={() => { if (khoaNhap !== null) boNhapBill(khoaNhap); nhapTay(); }} tone="warn" variant="outline" />
                     <RudiButton compact full={false} label="Giữ lại" onPress={() => setXacNhanBo(false)} tone="split" variant="ghost" />
                   </View>
                 </View>

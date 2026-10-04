@@ -25,6 +25,10 @@ func TestMatchesOnlyAchievementExtensionPaths(t *testing.T) {
 			t.Fatalf("extension did not claim %s", path)
 		}
 	}
+	// QA UI-160: the "seen" mark is the extension's too.
+	if !Matches("/me/achievement-seen") {
+		t.Fatal("extension did not claim /me/achievement-seen")
+	}
 	for _, path := range []string{"/me/achievement-routes/other", "/people/me/posts", "/people/11111111-1111-4111-8111-111111111111/posts"} {
 		if Matches(path) {
 			t.Fatalf("extension swallowed existing route %s", path)

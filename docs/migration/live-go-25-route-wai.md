@@ -279,3 +279,8 @@ Từ nhánh `claude/p0-ai-go-agy-bo-brain`:
   thứ model đọc trong prompt, test đọc prompt thay payload.
 - `face-boxes` là action brain duy nhất còn lại (OpenCV, TODO làm lại bằng Go).
 
+## Đổi 2026-10-04 — ADR-0054: mỗi khoản chi thuộc nhiều nhất một kèo (QA UI-149, sai tiền)
+
+Python đổi cùng Go trong một diff, theo ngoại lệ có tên trong ADR-0054 (sửa sai tiền, blocker loại 2). `expenses.outing_id` (Alembic `d5e1a7c3b902`, khoá ghép `(outing_id, context_id) → outings(id, context_id)`, backfill theo luật 2) thay phép nối theo ngày: tiền của một kèo là các khoản chi **thuộc** kèo đó. Hai kèo trùng ngày không còn cùng tính một khoản. Bằng chứng: oracle tiền Go↔Python 7 ca mới (`repo/money_oracle_postgres_test.go`), oracle recap trên fixture có quy thuộc, `tests/postgres/test_expense_belongs_to_one_trip_postgres.py` 9 ca, kịch bản parity `w1/recap/GET-contexts-context_id-recap.yaml` thêm đề nghị/xác nhận có `outing_id`, `409 expense_outing_mismatch`, `422 outing_not_in_context`.
+
+- `GET /contexts/{context_id}/albums`, `GET /contexts/{context_id}/albums/{outing_id}`: đổi thật: `SqlAlchemyApiRepository.group_recap` — «đã chia» và số khoản chi của album đọc theo `expenses.outing_id`; ảnh và check-in vẫn theo ngày lịch Việt Nam. Go repo/recap.go `GroupRecap` cùng phép nối. Σ «đã chia» các album ≤ tổng sổ của nhóm.

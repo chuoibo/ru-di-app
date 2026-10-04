@@ -10,7 +10,7 @@
  *     server has not confirmed (`useKhoanhKhac`);
  *   - a tap skips to the still frame; it never blocks an input;
  *   - while it is on screen the dock's Nếp tucks away (one Nếp at a time);
- *   - it is one image to a screen reader, with the performance's sentence;
+ *   - while playing it is a named skip button; afterwards one static image;
  *   - `EXPO_PUBLIC_QA_TAT_NEP_DIEN=1` turns it off for evidence runs that
  *     need the page without it.
  */
@@ -48,11 +48,15 @@ export function NepDien({ khoanhKhac, suKien, hopLe = true, coLoi = false, co, g
   const hien = kk.tm !== null && canh > 0;
   useNhuongChoNep(hien);
   if (!hien || !kk.tm) return null;
+  const hinh = (
+    <View accessibilityLabel={kk.tm.moTa} accessibilityRole="image" accessible={!kk.dangChay} aria-hidden={kk.dangChay} style={{ width: canh, height: canh }}>
+      <NepRoi gap={gap} t={kk.t} tm={kk.tm} width={canh} />
+    </View>
+  );
+  if (!kk.dangChay) return <View style={[{ width: canh, height: canh }, style]} testID={testID}>{hinh}</View>;
   return (
-    <Pressable accessible={false} onPress={kk.dangChay ? kk.boQua : undefined} style={[{ width: canh, height: canh }, style]} testID={testID}>
-      <View accessibilityLabel={kk.tm.moTa} accessibilityRole="image" accessible style={{ width: canh, height: canh }}>
-        <NepRoi gap={gap} t={kk.t} tm={kk.tm} width={canh} />
-      </View>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${kk.tm.moTa}. Bỏ qua chuyển động của Nếp`} onPress={kk.boQua} style={[{ width: canh, height: canh }, style]} testID={testID}>
+      {hinh}
     </Pressable>
   );
 }

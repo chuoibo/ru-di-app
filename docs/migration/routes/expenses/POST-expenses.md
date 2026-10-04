@@ -6,6 +6,26 @@ expenses · core · trạng thái trong bộ nhớ: không có
 
 Đề xuất một khoản chi: chạy allocator để cho người dùng xem mỗi người phải bỏ ra bao nhiêu, và tạo **danh tính** khoản chi (dòng `expenses`) để lần xác nhận sau gắn phiên bản vào. **Không ghi gì vào sổ**: không phiên bản, không phân bổ (`services/api/app/api/service.py:6317-6334`). Allocator là bản ADR-0004 (`services/api/app/domain/allocator.py:274-303`): số nguyên đồng, `Fraction` cho giá trị trung gian, một điểm làm tròn duy nhất (phần dư lớn nhất).
 
+## Quy thuộc kèo (ADR-0054, 2026-10-04)
+
+Mỗi khoản chi thuộc nhiều nhất một kèo, ghi ở `expenses.outing_id` (QA UI-149: hai kèo trùng ngày từng cùng tính một
+bữa tối).
+
+- `ExpenseInput.outing_id` (UUID, tuỳ chọn): kèo mà bill được ghi từ đó. Kèo phải thuộc đúng nhóm của khoản chi,
+  nếu không thì `422 outing_not_in_context` («Outing is not a trip of this group»). Kèo không tồn tại nhận cùng câu
+  trả lời, nên route không cho biết gì về nhóm khác. Kiểm sau quyền thành viên, trước allocator ở bước xác nhận.
+- Không nêu kèo thì lần xác nhận đầu (phiên bản 1) gán kèo **duy nhất** của nhóm phủ ngày lịch Việt Nam của
+  `occurred_at`. Hai kèo hoặc không kèo nào phủ ngày đó thì để trống.
+- Quy thuộc đặt một lần. Một lần xác nhận sau nêu kèo khác: `409 expense_outing_mismatch` («The expense already
+  belongs to another trip»). Nêu lại đúng kèo đó, hoặc bỏ trống: không đổi.
+- Khoá ghép `fk_expenses_outing_context` `(outing_id, context_id) → outings(id, context_id)` từ chối ở tầng dữ liệu
+  mọi khoản chi trỏ tới kèo của nhóm khác.
+- Bằng chứng:
+  - Go so với Python oracle: `services/core/internal/repo/money_oracle_postgres_test.go`.
+  - Python, PostgreSQL thật: `services/api/tests/postgres/test_expense_belongs_to_one_trip_postgres.py`.
+  - Parity: `parity/scenarios/w1/recap/GET-contexts-context_id-recap.yaml` (bữa trưa ghi từ một kèo, đổi kèo bị
+    `409`, kèo không tồn tại bị `422`).
+
 ## Xác thực và quyền
 
 Thứ tự (theo mã; stack tham chiếu là mốc):

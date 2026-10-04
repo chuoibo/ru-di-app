@@ -55,7 +55,10 @@ test("§2.2: «Lưu tên» chỉ hiện khi tên đã khác; người cùng nhó
   const caiDat = doc("rudi/screens/chat/CaiDatNhom.tsx");
   assert.match(caiDat, /\{ten\.trim\(\) !== nhom\.display_name \? \(\s*<RudiButton/);
   const hoSo = doc("rudi/screens/nguoi/HoSoNguoiScreen.tsx");
-  const nhanh = hoSo.slice(hoSo.indexOf('relation === "groupmate" ?'), hoSo.indexOf('relation !== "self" ?', hoSo.indexOf('relation === "groupmate" ?')));
+  // B8 (QA UI-078): the branch also waits on the block list (`&& !daChan`).
+  const dau = hoSo.indexOf('relation === "groupmate" && !daChan ?');
+  assert.ok(dau > 0, "nhánh người cùng nhóm còn đó");
+  const nhanh = hoSo.slice(dau, hoSo.indexOf('relation !== "self" ?', dau));
   assert.match(nhanh, /Kết bạn để nhắn riêng\./);
   assert.doesNotMatch(nhanh, /label="Nhắn tin"/, "nút «Nhắn tin» khoá quay lại");
 });

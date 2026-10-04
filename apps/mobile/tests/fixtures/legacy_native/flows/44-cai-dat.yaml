@@ -56,7 +56,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "PHIÊN NÀY"
     timeout: 30000
-- assertVisible: "Đăng xuất phiên này"
+- assertVisible: "Đăng xuất phiên .*"
 - takeScreenshot: 44-phien
 - pressKey: Back
 - extendedWaitUntil:

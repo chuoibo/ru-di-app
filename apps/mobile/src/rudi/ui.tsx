@@ -19,11 +19,11 @@ import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
 import { CuonContext } from "./ui/cuon";
 import { KheLopProvider, useKheLop } from "./ui/KheLop";
-import { gridFor, tabBarHeight } from "./adaptive";
+import { COT_DOC, gridFor, tabBarHeight } from "./adaptive";
 import { KHONG_VIEN_WEB } from "./ui/khong-vien-web";
 import { useChamLaiTab } from "./ui/cham-lai-tab";
 import { useMotion } from "./ui/useMotion";
-import { TABLIST, giuState, tabState } from "../ui/a11y";
+import { TABLIST, giuState, tabState, toggleState } from "../ui/a11y";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -74,7 +74,7 @@ type ScreenProps = {
 };
 
 /** The tablet column widths of `RudiScreen`'s `cot`. */
-const RONG_COT = { doc: 640, form: 560, rong: 960 } as const;
+const RONG_COT = { doc: COT_DOC, form: 560, rong: 960 } as const;
 
 export function RudiScreen({
   children,
@@ -801,6 +801,7 @@ export function Chip({
   onPress,
   accessibilityLabel,
   vaiTab = false,
+  vaiRadio = false,
 }: {
   label: string;
   icon?: IconName;
@@ -817,6 +818,11 @@ export function Chip({
    * caller's `tablist`, not a toggle button with `aria-pressed`.
    */
   vaiTab?: boolean;
+  /**
+   * One answer of a `radiogroup` the caller draws (who may comment on my
+   * wall): a `radio` with `aria-checked`, Space presses it on the web.
+   */
+  vaiRadio?: boolean;
 }) {
   const { colors, radius } = useRudiTheme();
   const foreground = selected ? toneColor(colors, tone) : colors.inkSoft;
@@ -845,7 +851,7 @@ export function Chip({
   return (
     <PressScale
       accessibilityLabel={accessibilityLabel}
-      {...(vaiTab ? tabState(selected) : { accessibilityRole: "button" as const, "aria-pressed": selected })}
+      {...(vaiTab ? tabState(selected) : vaiRadio ? toggleState("radio", selected, onPress) : { accessibilityRole: "button" as const, "aria-pressed": selected })}
       onPress={onPress}
       pressedScale={0.96}
       style={[

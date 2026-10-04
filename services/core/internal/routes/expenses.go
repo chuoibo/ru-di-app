@@ -49,7 +49,10 @@ func proposeExpense() Route {
 		if err := requireGroupMember(ctx, call, store, "confirm_expense_proposal", proposal.contextID); err != nil {
 			return endpoint.Reply{}, err
 		}
-		identity, err := store.CreateExpense(ctx, proposal.contextID)
+		if err := requireOutingInContext(ctx, store, proposal.contextID, proposal.outingID); err != nil {
+			return endpoint.Reply{}, err
+		}
+		identity, err := store.CreateExpense(ctx, proposal.contextID, proposal.outingID)
 		var conflict *repo.Conflict
 		if errors.As(err, &conflict) && conflict.Code == "EXPENSE_CONTEXT_NOT_FOUND" {
 			return endpoint.Reply{}, contextNotFound()
@@ -120,6 +123,14 @@ func confirmExpense() Route {
 		if err := requireGroupMember(ctx, call, store, "confirm_expense_proposal", identity.ContextID); err != nil {
 			return endpoint.Reply{}, err
 		}
+		// ADR-0054: the trip an expense belongs to is set once. A later
+		// confirmation may repeat it or leave it out, never move it.
+		if named := proposal.outingID; named != nil && identity.OutingID != nil && *identity.OutingID != *named {
+			return endpoint.Reply{}, endpoint.Refuse(409, "expense_outing_mismatch", "The expense already belongs to another trip")
+		}
+		if err := requireOutingInContext(ctx, store, identity.ContextID, proposal.outingID); err != nil {
+			return endpoint.Reply{}, err
+		}
 		plan, refused, err := moneysteps.ConfirmExpense(moneysteps.ExpenseConfirmation{
 			ActorID:               call.Actor.ID,
 			ActorRoles:            call.Actor.Roles,
@@ -181,11 +192,31 @@ func confirmExpense() Route {
 	}}
 }
 
+// requireOutingInContext is _require_outing_in_context: a bill written from
+// a trip names a trip of this group (ADR-0054). The ledger's key refuses the
+// row anyway; asking first answers with a sentence, and answers the same for
+// another group's trip and a trip that does not exist.
+func requireOutingInContext(ctx context.Context, store repo.Repository, contextID string, outingID *string) error {
+	if outingID == nil {
+		return nil
+	}
+	outing, err := store.GetOuting(ctx, *outingID)
+	if err != nil {
+		return err
+	}
+	if outing == nil || outing.ContextID != contextID {
+		return endpoint.Refuse(422, "outing_not_in_context", "Outing is not a trip of this group")
+	}
+	return nil
+}
+
 // expenseInput is a validated ExpenseInput as the service reads it.
 type expenseInput struct {
 	contextID    string
 	recordedByID string
 	paidByID     string
+	// outingID is the trip the bill was written from, when it was (ADR-0054).
+	outingID *string
 	// expense is _allocator_input(proposal): every amount saturated into
 	// money.VND, which changes no answer (allocator.Saturate).
 	expense allocator.Expense
@@ -204,6 +235,9 @@ func readExpenseInput(model *pyval.Model) (expenseInput, error) {
 		return in, err
 	}
 	if in.paidByID, err = uuidField(model, "paid_by_id"); err != nil {
+		return in, err
+	}
+	if in.outingID, err = optionalUUIDField(model, "outing_id"); err != nil {
 		return in, err
 	}
 	participants, err := uuidListField(model, "participants")
@@ -316,6 +350,7 @@ func (in expenseInput) stored() (repo.ExpenseProposal, error) {
 		PaidByID:          in.paidByID,
 		VerificationScope: scope,
 		OccurredAt:        occurredAt.Time(),
+		OutingID:          in.outingID,
 	}
 	for i, item := range items {
 		label, err := optionalStringField(item, "label")

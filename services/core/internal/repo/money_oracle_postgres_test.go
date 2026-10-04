@@ -157,7 +157,7 @@ func argProposal(v any) ExpenseProposal {
 	m := v.(map[string]any)
 	p := ExpenseProposal{Description: argText(m["description"]), RecordedByID: m["recorded_by_id"].(string),
 		PaidByID: m["paid_by_id"].(string), VerificationScope: m["verification_scope"].(string),
-		OccurredAt: argInstant(m["occurred_at"].(string))}
+		OccurredAt: argInstant(m["occurred_at"].(string)), OutingID: argOptionalUUID(m, "outing_id")}
 	for _, item := range argMaps(m["items"]) {
 		p.Items = append(p.Items, ExpenseItemInput{ItemID: item["item_id"].(string), Label: argText(item["label"]),
 			AmountVND: argNumber(item["amount_vnd"]), SharedBy: argStrings(item["shared_by"])})
@@ -255,7 +255,15 @@ func tUUIDList(ids []string) any {
 }
 
 func tExpenseIdentity(e ExpenseIdentity) any {
-	return tRecord("ExpenseIdentity", "id", tUUID(e.ID), "context_id", tUUID(e.ContextID))
+	return tRecord("ExpenseIdentity", "id", tUUID(e.ID), "context_id", tUUID(e.ContextID), "outing_id", optional(e.OutingID, tUUID))
+}
+
+// argOptionalUUID reads an optional id the case may leave out (ADR-0054's outing_id).
+func argOptionalUUID(a map[string]any, key string) *string {
+	if v, ok := a[key].(string); ok {
+		return &v
+	}
+	return nil
 }
 
 func tConfirmation(c ConfirmationRecord) any {
@@ -378,7 +386,7 @@ func moneyGoCall(repo Repository, method string, a map[string]any) (any, error) 
 	s := func(key string) string { return argString(a, key) }
 	switch method {
 	case "create_expense":
-		e, err := repo.CreateExpense(bg, s("context_id"))
+		e, err := repo.CreateExpense(bg, s("context_id"), argOptionalUUID(a, "outing_id"))
 		return tExpenseIdentity(e), err
 	case "get_expense":
 		e, err := repo.GetExpense(bg, s("expense_id"))
@@ -387,7 +395,7 @@ func moneyGoCall(repo Repository, method string, a map[string]any) (any, error) 
 		c, err := repo.SaveExpenseConfirmation(bg, argConfirmation(a, s("expense_id")))
 		return tConfirmation(c), err
 	case "flow.create_expense_confirm":
-		identity, err := repo.CreateExpense(bg, s("context_id"))
+		identity, err := repo.CreateExpense(bg, s("context_id"), argOptionalUUID(a, "outing_id"))
 		if err != nil {
 			return nil, err
 		}
@@ -720,6 +728,42 @@ func moneyOracleCases() ([]socialCase, oracleSpec) {
 		confirm(w.e4, noLines, rollups(10, 0, 0, 0, 0, 10), allocations(w.an, -1, w.binh, 11), "pending", moneyNow))
 	add("save_expense_confirmation: allocations at the bigint maximum", "", base,
 		confirm(w.e4, noLines, rollups(max, 0, 0, 0, 0, max), allocations(w.an, max, w.binh, 0), "pending", moneyNow))
+	// ADR-0054 (QA UI-149): which trip an expense belongs to. The proposal's
+	// day is 2030-07-09 in Vietnam.
+	julyTrip := func(n int, context, starts, ends string) string {
+		return insertSQL("outings", "id", fid(kindOuting, n), "context_id", context, "created_by_id", w.an,
+			"title", fmt.Sprintf("Kèo %d (dữ liệu mẫu)", n), "starts_on", starts, "ends_on", ends, "headcount", 3,
+			"budget_per_person_vnd", int64(0), "created_at", stdCreated)
+	}
+	oneTrip := join(base, []string{julyTrip(0x5a, w.g, "2030-07-08", "2030-07-10")})
+	twoTrips := join(oneTrip, []string{julyTrip(0x5b, w.g, "2030-07-09", "2030-07-09")})
+	otherTrip := join(base, []string{julyTrip(0x5c, w.g2, "2030-07-09", "2030-07-09")})
+	fromTrip := func(p map[string]any, outing string) map[string]any {
+		q := map[string]any{}
+		for k, v := range p {
+			q[k] = v
+		}
+		q["outing_id"] = outing
+		return q
+	}
+	createFrom := func(context, outing string) oracleCall {
+		return write("create_expense", args("context_id", context, "outing_id", outing), expensesDump)
+	}
+	firstVersion := func(p map[string]any) oracleCall {
+		return confirm(w.e4, p, rollups(50_000, 0, 0, 0, 0, 50_000), allocations(w.dung, 25_000, w.an, 25_000), "acknowledged", moneyNow)
+	}
+	add("create_expense: written from a trip of its group", "", oneTrip, createFrom(w.g, fid(kindOuting, 0x5a)))
+	add("create_expense: naming another group's trip", "IntegrityError", otherTrip, createFrom(w.g, fid(kindOuting, 0x5c)))
+	add("save_expense_confirmation: the first version, one trip covering its day", "", oneTrip, firstVersion(noLines))
+	add("save_expense_confirmation: the first version, two trips sharing its day", "", twoTrips, firstVersion(noLines))
+	add("save_expense_confirmation: the first version, a trip named", "", twoTrips,
+		firstVersion(fromTrip(noLines, fid(kindOuting, 0x5b))))
+	add("save_expense_confirmation: a later version stays without a trip", "", oneTrip,
+		confirm(w.e1, noLines, rollups(50_000, 0, 0, 0, 0, 50_000), allocations(w.dung, 25_000, w.an, 25_000), "pending", moneyNow))
+	add("save_expense_confirmation: a trip named once stays", "", twoTrips,
+		firstVersion(fromTrip(noLines, fid(kindOuting, 0x5b))),
+		confirm(w.e4, fromTrip(noLines, fid(kindOuting, 0x5a)), rollups(50_000, 0, 0, 0, 0, 50_000),
+			allocations(w.dung, 25_000, w.an, 25_000), "pending", later(1)))
 	var many []any
 	var manyDiners []any
 	for i := 0; i < 1001; i++ {

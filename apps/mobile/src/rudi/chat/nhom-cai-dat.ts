@@ -51,6 +51,14 @@ export function coGiDeDoi(thay: ThayDoiNhom): boolean {
   return Object.keys(body).length > 0;
 }
 
+/** The group as the server holds it: name, theme, and who opened it (QA UI-075). */
+export async function docNhom(contextId: string, personId: string): Promise<NhomChiTietWire> {
+  return translatedAsActor<NhomChiTietWire>(LOI_NHOM, `/contexts/${contextId}`, {
+    method: "GET",
+    actorId: personId,
+  });
+}
+
 export async function doiNhom(
   contextId: string,
   personId: string,

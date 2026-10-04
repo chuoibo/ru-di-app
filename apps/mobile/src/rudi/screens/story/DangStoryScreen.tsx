@@ -10,12 +10,13 @@
  */
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { attemptFor, type Attempt } from "../../../api";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
+import { boNhapDang, docNhapDang, ghiNhapDang, khoaNhapDang } from "../../ky-niem/nhap-dang";
 import { nguonAnhBai, taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
 import { loiRaChu } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
@@ -29,14 +30,44 @@ import { luiVeVe } from "../../lui-ve";
 
 const TRAN_CHU_THICH = 200;
 
+/**
+ * The composer is drawn only once the session is read, and once per person
+ * (`key`): its draft is found by person, and a first render with no session
+ * yet read the «-» key, found nothing, then wrote the empty form under the
+ * real key when the session came -- and an empty draft is a deleted one.
+ * Leaving by the browser's Back lost the photo and the words that way
+ * (QA UI-097, b9-sau: «stories-back … mở lại khung trống»).
+ */
 export function DangStoryScreen() {
+  const { phien, phienDaDoc } = useRudiSession();
+  if (!phienDaDoc) return null;
+  return <DangStory key={phien?.person_id ?? "-"} />;
+}
+
+function DangStory() {
   const router = useRouter();
   const { colors, dark } = useRudiTheme();
-  const { phien, phienDaDoc } = useRudiSession();
-  const [anh, setAnh] = useState<TempPhoto | null>(null);
+  const { phien } = useRudiSession();
+  // QA UI-097: the photo and the caption wait here when the person steps away.
+  const khoaNhap = khoaNhapDang("story", phien?.person_id ?? "-", null);
+  const [nhapCu] = useState(() => docNhapDang(khoaNhap));
+  const [anh, setAnh] = useState<TempPhoto | null>(nhapCu?.anh ?? null);
   const [anhDaTai, setAnhDaTai] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
-  const [chuThich, setChuThich] = useState("");
+  const [chuThich, setChuThich] = useState(nhapCu?.chu ?? "");
+  const [conNhapCu, setConNhapCu] = useState(nhapCu !== null);
+  const daDang = useRef(false);
+  useEffect(() => {
+    if (!daDang.current) ghiNhapDang(khoaNhap, { anh, chu: chuThich });
+  }, [khoaNhap, anh, chuThich]);
+  const boBanNhap = () => {
+    if (anh !== null) void boAnh(anh);
+    setAnh(null);
+    setAnhDaTai(null);
+    setChuThich("");
+    setConNhapCu(false);
+    boNhapDang(khoaNhap);
+  };
   const [giaiDoan, setGiaiDoan] = useState<GiaiDoanTaiAnh | null>(null);
   const [dangGui, setDangGui] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
@@ -62,8 +93,6 @@ export function DangStoryScreen() {
     setAnhDaTai(null);
   };
 
-  if (!phienDaDoc) return null;
-
   const guiDuoc = phien !== null && (anh !== null || anhDaTai !== null) && chuThich.length <= TRAN_CHU_THICH && !dangGui;
 
   const gui = async () => {
@@ -85,6 +114,8 @@ export function DangStoryScreen() {
       }
       if (imageUrl === null) return;
       await dangStory(imageUrl, chuThich, phien.person_id, attemptFor(attempts.current, JSON.stringify({ imageUrl, chuThich })));
+      daDang.current = true;
+      boNhapDang(khoaNhap);
       luiVeVe(router as never, "/messages");
     } catch (error) {
       const repickHint = anh !== null && !uploadFinished ? " Chọn lại ảnh rồi thử lần nữa." : "";
@@ -102,6 +133,12 @@ export function DangStoryScreen() {
     <RudiScreen testID="dang-story-screen">
       <TopBar title="Đăng story" />
       <Text style={[typography.body, { color: colors.inkSoft }]}>Một tấm ảnh, chỉ bạn bè thấy, trong 24 giờ.</Text>
+      {conNhapCu && (anh !== null || chuThich.trim() !== "") ? (
+        <View style={styles.nhapCu} testID="dang-story-nhap-cu">
+          <Text style={[typography.note, styles.flexNhap, { color: colors.inkSoft }]}>Bản nháp lần trước còn đây.</Text>
+          <RudiButton compact full={false} label="Bỏ bản nháp" onPress={boBanNhap} tone="warn" variant="ghost" />
+        </View>
+      ) : null}
       {/* A polaroid that lasts a day (ADR-0037 D1): the picture, then the
           caption on its white margin, and an hourglass for the 24 hours. The
           empty frame is itself the way to pick the photo. */}
@@ -156,6 +193,8 @@ export function DangStoryScreen() {
 }
 
 const styles = StyleSheet.create({
+  nhapCu: { flexDirection: "row", alignItems: "center", gap: 8 },
+  flexNhap: { flex: 1 },
   flex: { flex: 1 },
   // A polaroid: even sides, the deep margin under the picture for the words.
   polaroid: { gap: 12, padding: 12, paddingBottom: 18, borderWidth: 1, borderRadius: 3, alignSelf: "center", width: "100%", maxWidth: 420 },

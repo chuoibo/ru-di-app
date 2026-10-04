@@ -15,14 +15,16 @@
  * and a number; loading is the list's own shape; errors keep the list.
  */
 import { Ionicons } from "@expo/vector-icons";
+import { HoiTaiHang } from "../../ui/HoiTaiHang";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { ApiError, thongDiepNguoiDoc } from "../../../api";
+import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
 import { tacGiaTin, xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
+import { cauLoiMoi, docLoiMoiNhom, loiMoiTruoc, tuChoiLoiMoiNhom, type LoiMoiNhom } from "../../nhom/loi-moi-nhom";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { useRudiSession } from "../../session";
 import { StoryRail } from "../story/StoryRail";
@@ -30,6 +32,7 @@ import { bangMauChat, bongGiay, phuMau, typography, useRudiTheme } from "../../t
 import { Heading, RudiButton, RudiScreen } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { Canh } from "../../ui/art/Canh";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { ErrorState } from "../../ui/ErrorState";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
@@ -65,6 +68,11 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   }, []);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangBam, setDangBam] = useState<string | null>(null);
+  // QA UI-080: who invited, read for each open invitation; and an answer that
+  // failed is said under its own row, the list stays (QA UI-077 pattern).
+  const [loiMoi, setLoiMoi] = useState<Record<string, LoiMoiNhom | null>>({});
+  const [hoiTuChoi, setHoiTuChoi] = useState<string | null>(null);
+  const [loiHang, setLoiHang] = useState<{ id: string; cau: string } | null>(null);
   useNepNguCanh({ man: "messages", tieuDe: "Tin nhắn", goiY: ["Rủ ai đó đi chơi tuần này", "Cuộc hẹn nào sắp tới?"] });
 
   const nap = useCallback(async () => {
@@ -73,6 +81,12 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       const nhom = await docNhomCuaToi(lucBatDau.person_id);
       if (!conMo.current || phienMoiNhat.current.token !== lucBatDau.token) return;
       setTrang({ pha: "xong", nhom });
+      // An invitation that cannot be read still shows, without a name.
+      for (const n of nhom.filter((x) => x.my_state === "invited" && !laPair(x))) {
+        docLoiMoiNhom(n.id, phien.person_id)
+          .then((lm) => setLoiMoi((cu) => ({ ...cu, [n.id]: lm })))
+          .catch(() => setLoiMoi((cu) => ({ ...cu, [n.id]: null })));
+      }
       // Keep the session's own copy fresh too: it is what the empty state and
       // the entry decision read on the next cold start.
       // A mounted tab keeps this callback across group selections. Merge into
@@ -112,7 +126,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       }
       router.push(`/groups/${nhom.id}/chat` as never);
     } catch (error) {
-      setTrang({ pha: "hong", loi: loiRaChu(error) });
+      setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
     } finally {
       setDangBam(null);
     }
@@ -120,6 +134,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
 
   const dongY = async (nhom: NhomTomTat) => {
     setDangBam(nhom.id);
+    setLoiHang(null);
     try {
       const daVao = await vaoNhom({
         ...phien,
@@ -130,7 +145,21 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       datPhien(daVao);
       await nap();
     } catch (error) {
-      setTrang({ pha: "hong", loi: loiRaChu(error) });
+      setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
+    } finally {
+      setDangBam(null);
+    }
+  };
+
+  const tuChoi = async (nhom: NhomTomTat) => {
+    setDangBam(nhom.id);
+    setLoiHang(null);
+    try {
+      await tuChoiLoiMoiNhom(nhom.id, phien.person_id, newAttempt());
+      setHoiTuChoi(null);
+      await nap();
+    } catch (error) {
+      setLoiHang({ id: nhom.id, cau: loiRaChu(error) });
     } finally {
       setDangBam(null);
     }
@@ -172,7 +201,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
       ) : null}
       {trang.pha === "xong" ? (
         <View>
-          {trang.nhom.map((nhom) => {
+          {loiMoiTruoc(trang.nhom).map((nhom) => {
             const duocMoi = nhom.my_state === "invited";
             return (
               <View key={nhom.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
@@ -202,13 +231,14 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                   <View style={styles.hangChu}>
                     <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
                     <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
-                      {nhom.unavailable === true
-                        ? "Không còn nhận tin"
-                        : laPair(nhom)
-                          ? "Nhắn riêng"
-                          : `${nhom.member_count} thành viên`}
-                      {!laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
-                      {duocMoi ? " · bạn được mời" : ""}
+                      {duocMoi && !laPair(nhom)
+                        ? cauLoiMoi(loiMoi[nhom.id] ?? null, nhom.member_count)
+                        : nhom.unavailable === true
+                          ? "Không còn nhận tin"
+                          : laPair(nhom)
+                            ? "Nhắn riêng"
+                            : `${nhom.member_count} thành viên`}
+                      {!duocMoi && !laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
                     </Text>
                     <Text numberOfLines={1} style={[typography.caption, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "600" }]}>
                       {nhom.last_message
@@ -222,15 +252,43 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                     </View>
                   ) : null}
                 </Pressable>
-                {duocMoi ? (
-                  <RudiButton
-                    compact
-                    disabled={dangBam !== null}
-                    label="Đồng ý vào nhóm"
-                    loading={dangBam === nhom.id}
-                    onPress={() => void dongY(nhom)}
-                  />
+                {duocMoi && hoiTuChoi !== nhom.id ? (
+                  // Two answers side by side (QA UI-080): yes, or no.
+                  <View style={styles.traLoi}>
+                    <RudiButton
+                      accessibilityLabel={`Đồng ý vào nhóm ${tenCuocTroChuyen(nhom)}`}
+                      compact
+                      disabled={dangBam !== null}
+                      full={false}
+                      label="Đồng ý vào nhóm"
+                      loading={dangBam === nhom.id}
+                      onPress={() => void dongY(nhom)}
+                    />
+                    <RudiButton
+                      accessibilityLabel={`Từ chối lời mời vào nhóm ${tenCuocTroChuyen(nhom)}`}
+                      compact
+                      disabled={dangBam !== null}
+                      full={false}
+                      label="Từ chối"
+                      onPress={() => { setHoiTuChoi(nhom.id); setLoiHang(null); }}
+                      variant="ghost"
+                    />
+                  </View>
                 ) : null}
+                {duocMoi && hoiTuChoi === nhom.id ? (
+                  // Asked in the row, like every answer that removes something.
+                  <View style={styles.hoi}>
+                    <HoiTaiHang
+                      cau={`Từ chối lời mời vào ${tenCuocTroChuyen(nhom)}? Nếu đổi ý, bạn cần được mời lại.`}
+                      dangLam={dangBam === nhom.id}
+                      nhan="Từ chối"
+                      onDongY={() => void tuChoi(nhom)}
+                      onThoi={() => setHoiTuChoi(null)}
+                      testID={`tin-nhan-hoi-tu-choi-${nhom.id}`}
+                    />
+                  </View>
+                ) : null}
+                {loiHang?.id === nhom.id ? <CauTaiCho cau={loiHang.cau} co="nho" /> : null}
               </View>
             );
           })}
@@ -265,6 +323,10 @@ const styles = StyleSheet.create({
   dau: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   hangChinh: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
+  // Answers start under the text column (avatar 44 + gap 12).
+  traLoi: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, paddingLeft: 56 },
+  hoi: { gap: 4, paddingLeft: 56 },
+  khongThut: { paddingLeft: 0 },
   hinh: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   hangChu: { flex: 1, gap: 2 },
   chuaDoc: { minWidth: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },

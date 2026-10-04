@@ -160,7 +160,7 @@ func (h *Handler) shareDiary(w http.ResponseWriter, r *http.Request) {
 	words.WriteString(doc.Title + "\n" + doc.Subtitle)
 	for i := range doc.Pages {
 		page := &doc.Pages[i]
-		words.WriteString("\n\n" + page.Heading + "\n" + page.Text)
+		words.WriteString("\n\n" + book.TenTrang(page.Heading) + "\n" + page.Text)
 		for j, sourceID := range page.PhotoIDs {
 			mid, ok := mapping[sourceID]
 			if !ok {

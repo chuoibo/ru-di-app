@@ -40,11 +40,24 @@ test("ảnh in nghiêng một hai độ, không bao giờ thẳng, tất định
   assert.equal(thay.size, 4, "bốn góc đều phải xuất hiện: một bức tường cùng một góc là không nghiêng");
 });
 
-test("M8: huy hiệu mới là cái mở mà lần trước chưa thấy; kho hỏng coi như chưa thấy gì", () => {
-  assert.equal(huyHieuMoi(["a", "b"], JSON.stringify(["a"])), "b");
-  assert.equal(huyHieuMoi(["a", "b"], JSON.stringify(["a", "b"])), null);
-  assert.equal(huyHieuMoi(["a"], null), "a", "lần đầu mở màn: mọi huy hiệu đã mở đều mới");
-  assert.equal(huyHieuMoi(["a"], "{hỏng"), "a");
-  assert.equal(huyHieuMoi(["a"], JSON.stringify({ a: 1 })), "a");
-  assert.equal(huyHieuMoi([], JSON.stringify(["a"])), null);
+test("M8: huy hiệu mới là cái MỚI NHẤT chưa thấy; máy chưa từng xem chỉ trình bày huy hiệu vừa mở (QA UI-160)", () => {
+  const now = Date.parse("2026-10-01T12:00:00+07:00");
+  const a = { id: "a", earned_at: "2026-09-29T09:00:00+07:00" };
+  const b = { id: "b", earned_at: "2026-10-01T08:00:00+07:00" };
+  assert.equal(huyHieuMoi([a, b], JSON.stringify(["a"]), now), "b");
+  assert.equal(huyHieuMoi([a, b], JSON.stringify([]), now), "b", "hai cái chưa thấy: trình bày cái mới nhất, không phải cái cũ nhất");
+  assert.equal(huyHieuMoi([a, b], JSON.stringify(["a", "b"]), now), null);
+  // A phone that never looked: only a badge opened within 48 hours.
+  assert.equal(huyHieuMoi([a, b], null, now), "b");
+  assert.equal(huyHieuMoi([a], null, now), null, "máy mới: huy hiệu đạt từ hai ngày trước không diễn lại");
+  assert.equal(huyHieuMoi([a], "{hỏng", now), null, "kho hỏng coi như máy chưa từng xem");
+  assert.equal(huyHieuMoi([a], JSON.stringify({ a: 1 }), now), null);
+  assert.equal(huyHieuMoi([], JSON.stringify(["a"]), now), null);
+  // QA UI-160: the account's mark leads; the phone's store no longer decides.
+  const sa = { ...a, seen: true };
+  const sb = { ...b, seen: false };
+  assert.equal(huyHieuMoi([sa, sb], null, now), "b", "máy mới, tài khoản chưa thấy b: trình bày b");
+  assert.equal(huyHieuMoi([sa, { ...b, seen: true }], null, now), null, "máy mới, tài khoản đã thấy cả hai: không trình bày gì");
+  assert.equal(huyHieuMoi([sa, { ...b, seen: true }], JSON.stringify([]), now), null, "kho máy nói chưa thấy gì, tài khoản nói đã thấy: tài khoản thắng");
+  assert.equal(huyHieuMoi([{ ...a, seen: false }, sb], null, now), "b", "hai cái chưa thấy: cái mới nhất");
 });

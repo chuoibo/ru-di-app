@@ -175,6 +175,26 @@ components:
     rounded: "{rounded.control}"
     padding: "0 18dp"
     height: "52dp"
+  button-warn:
+    backgroundColor: "{colors.card}"
+    textColor: "{colors.warn}"
+    typography: "{typography.label}"
+    rounded: "{rounded.control}"
+    padding: "0 18dp"
+    height: "52dp"
+  button-disabled:
+    backgroundColor: "{colors.card}"
+    textColor: "{colors.ink-soft}"
+    typography: "{typography.label}"
+    rounded: "{rounded.control}"
+    padding: "0 18dp"
+    height: "52dp"
+  field-line:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    padding: "0 0 4dp"
+    height: "48dp"
   field:
     backgroundColor: "{colors.card}"
     textColor: "{colors.ink}"
@@ -867,6 +887,25 @@ Nội dung cuộn **dưới** footer; ảnh `09-itinerary` chụp giữa chừng
 đang nằm dưới footer là hành vi cuộn, không phải cắt.
 
 **Login/OTP** là **một cột 560 bọc cả trang** (`alignSelf: center`).
+
+**Cột đọc của `RudiScreen` (`cot`, 01–04/10, QA UI-093, UI-047).** Ở mọi
+`sizeClass` khác `compact`, nội dung, `header` và `footer` của màn giữ
+**cùng một cột** `maxWidth = RONG_COT[cot]` (`ui.tsx`): `doc` **640** cho
+trang để đọc (tờ giấy, bài, hồ sơ, album, thành viên, bạn bè), `form`
+**560** cho form (trang cuối sổ chuyến đi, soạn bài Cộng đồng), `rong`
+**960** (mặc định) cho lưới và danh sách rộng. Trên điện thoại cột là cửa
+sổ. Header đi cùng cột nên tiêu đề không lệch khỏi nội dung dưới nó. Sheet
+có trần bề rộng riêng (640, căn giữa; xem `Sheet`). **Lưới trong cột đo cột,
+không đo cửa sổ**: `LuoiNguoi` chỉ xếp hai cột khi chính danh sách rộng đủ
+2 × 280 + 16 (xem Components).
+
+**Khe lớp của màn (`KheLop`, `LenLop`).** Ngoài `overlay`, `RudiScreen` giữ
+một khe lớp vẽ **trên cả màn** (`ui/KheLop.tsx`): component nằm sâu trong
+thân màn bọc lớp phủ của nó trong `<LenLop>` thì lớp ấy lên khe, phủ cả
+header, mà vẫn giữ state và callback của component đã vẽ nó (trình sửa ngày
+cạnh bản đồ của `hanh-trinh/SoHanhTrinh.tsx`; trước đó scrim dừng ở mép trên
+thân màn và header vẫn sáng, bấm được: QA UI-041). Không có host (trang lab,
+test) thì con ở yên chỗ cũ.
 **Welcome**: lề 20, wordmark 118 (compact) / 150 (medium+), route `maxWidth`
 560, khối đáy `maxWidth` 640 ở medium+.
 
@@ -1032,7 +1071,10 @@ Kit nằm ở `src/rudi/ui.tsx` (`RudiScreen`, `TopBar`, `Heading`,
 (`StampButton`, `Stamp`, `CoverButton`, `KhungAnh`, `DongTien`, `Money`,
 `MediaSlot`, `Sheet`, `Skeleton*`, `EmptyState`, `ErrorState`, `RosterPicker`,
 `ReorderList`, `CoverBand`, `Washi`, `RouteLine`, `Wordmark`, `Grain`,
-`PressScale`, `PhotoViewer`). Hai hàng feature dùng lại nhiều nơi:
+`PressScale`, `PhotoViewer`; đợt nâng cấp 01–04/10 thêm `CauTaiCho`,
+`LuoiNguoi`, `KheLop`/`LenLop`, và ghi lại `ONhapMuc`, `ChonNgayLich`), cùng
+hai hook lớp phủ `useLuiLop` và `useGiuKhiDong` (`ui/giu-khi-dong.ts`) và
+một module chữ ngày `src/rudi/ngay-viet.ts`. Hai hàng feature dùng lại nhiều nơi:
 `screens/explore/HangDiaDiem.tsx` (`PlaceLead`, `PlaceRow`) và
 `screens/keo/HangChang.tsx` (`HangChang`; ảnh chặng chỉ qua prop `anh`,
 `AnhChang` không export). Số màn gọi (đếm `grep`
@@ -1059,6 +1101,12 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
 | Con dấu đặt lên ảnh | `Stamp nen` (miếng giấy dưới) | con dấu viền trơn trên ảnh |
 | Chặng có địa điểm có ảnh | `HangChang anh={{ anh, alt, loai }}` (chặng tự in ghi công) | thẻ ảnh cho mọi chặng; `Image` tự đặt vào khe `phai` |
 | Phản hồi bấm | `PressScale` (lò xo scale) | mờ `opacity` khi `pressed` |
+| Một việc vừa bấm không thành | `CauTaiCho` ngay dưới control đó (hoặc trong `footer` ngay trên nút) | toast, modal lỗi, câu `warn` tự viết ở đầu trang |
+| Hành động xoá/bỏ thứ người ta đã làm | `RudiButton tone="warn"` `outline`/`ghost`, rồi **hỏi tại hàng** | nút cam đặc, hộp thoại xác nhận |
+| Nút chưa dùng được | `disabled` + `lyDo` (viền đứt, lý do in dưới) | nút mờ không lời |
+| Danh sách người có hành động trên mỗi hàng | `LuoiNguoi` | một hàng 590dp kéo nút xa khỏi tên |
+| Lớp phủ vẽ từ sâu trong màn | `<LenLop>` (lên khe lớp của `RudiScreen`) | `Sheet` trong thân màn (scrim dừng ở mép header) |
+| Một ngày, một giờ | `ngay-viet.ts` | `toLocaleDateString`, `Intl`, chuỗi tự ghép |
 
 ### Buttons
 - **Con dấu CTA (`StampButton`)**, nút chính của bề mặt thuyết phục: tô
@@ -1083,8 +1131,29 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   giữ viền `lineStrong`, tông chỉ ở chữ (xem «Nhịp của tờ AI trong luồng
   chat»);
   `soft` = nền `<tone>Soft`; `ghost` trong suốt. Nhấn **co 0.98 bằng lò xo
-  trên UI thread** (`PressScale`), không còn mờ 0.82; `disabled` 0.45. Hai nút chân đứng cạnh nhau trong `footer`, outline trái,
+  trên UI thread** (`PressScale`), không còn mờ 0.82. Hai nút chân đứng cạnh nhau trong `footer`, outline trái,
   solid phải.
+  - **Tắt (`disabled`, ADR-0038 §2.2)**: không mờ opacity nữa (dòng cũ
+    «`disabled` 0.45» đã hết hiệu lực): nền `card`, **viền đứt 1.5
+    `lineStrong`**, nhãn và icon `inkSoft`, ở mọi `variant`. `lyDo` in lý do
+    **ngay dưới nút** (icon `information-circle-outline` 16 + `caption
+    inkSoft`, ẩn khỏi cây trợ năng) và trao câu ấy cho trình đọc làm
+    `accessibilityHint` của nút. Tắt mà thiếu `lyDo` thì bản dev
+    `console.warn` một lần mỗi nhãn, và **cổng** `tests/nut-tat-co-ly-do.test.mjs`
+    quét mọi `RudiButton`: điều kiện tắt có vế kéo dài (không chỉ «đang chạy»:
+    `busy`, `ban`, `dang…`) thì phải có `lyDo`, ngoại lệ ghi tên và lý do. Nói
+    vì sao, hoặc đừng vẽ nút. Đang
+    `loading` thì nút giữ mặt của nó (spinner màu chữ), không thành viền đứt.
+  - **Tông `warn` = hành động phá huỷ** («Xoá cuốn sổ», «Bỏ bản phác», «Rời
+    nhóm», «Chặn», «Xoá tin», «Xoá vĩnh viễn»): **chỉ `outline` hoặc
+    `ghost`**, chữ (và viền outline) màu `warn`. Palette không có nền warn:
+    gọi `solid` hay `soft` với `warn` thì kit vẽ `outline`. *Luật đo được*:
+    `tests/nut-pha-huy-tong-warn.test.mjs` quét mọi `<RudiButton label=…>`
+    trong `src/rudi` mở bằng «Xoá/Xóa, Rời nhóm, Chặn, Bỏ bản/nháp/tờ/thứ
+    tự, Huỷ buổi, Thu hồi» và đỏ khi thiếu `tone="warn"`; ngoại lệ có tên
+    kèm lý do (`EndingScreen` «Bỏ trang này»: trang còn thêm lại được); phép
+    quét tự kiểm đã thấy ≥ 10 nút. Không chứng minh: nút vẽ bằng
+    `Pressable` hay nhãn dựng lúc chạy.
 - **Nút back** trên bìa: `PressScale` 48×48 co 0.92, mặt tròn là View con
   (nền `coverInk` 0.08, chevron 26); trên giấy `TopBar` dùng chevron `ink`
   trong ô 48.
@@ -1117,6 +1186,11 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   `aria-pressed`, chọn giữ dấu check và nền `<tone>Soft`), nhưng nơi gọi duy
   nhất, các bảng tin Cộng đồng, đã sang hàng chữ-tab `HangChuTab` (xem
   Navigation). Bộ lọc thu hẹp danh sách vẫn là chip thường.
+- **Chip trả lời một câu hỏi chọn một (`vaiRadio`)** (04/10, B11): cùng hình
+  chip bấm được, `role="radio"` + `aria-checked` trong `radiogroup` của nơi
+  gọi, Space bấm trên web (`toggleState`). Dùng cho «Ai được bình luận tường
+  tôi» (Cài đặt, hồ sơ của mình); trước đó là `button` + `aria-pressed`
+  trong một `radiogroup`, công nghệ hỗ trợ đọc ba nút rời.
 - **Chip tĩnh** (không `onPress`): cao 30, bo 10, không role; kit còn giữ
   nhưng **đợt này trạng thái đi bằng `Stamp`**; chip tĩnh chỉ cho thẻ phân
   loại không phải trạng thái.
@@ -1412,10 +1486,10 @@ xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy g�
   toán» là màn tiền — Nếp đứng xa tiền, và sổ không nhận chuyện kể; «Chưa có
   lời nhắn nào» là một dòng dưới bài trên tường, nơi một cảnh sẽ nặng hơn chính
   bài nó trả lời; «Chưa có ghi chép nào» là danh sách ghi chép riêng mở từ khay
-  cài đặt bảng tin. **`CHUA_VE`: hai ô là NỢ, không phải quyết định** — «Chưa
-  có bạn nào để rủ» (`ChonNguoi`) và «Chưa có địa điểm để thêm»
-  (`PickOutingLive`), mỗi ô là trọn nội dung một màn khi rỗng, chưa vẽ. Bảng
-  tách đôi để không ai đọc nợ thành quyết định. *Lịch sử:* tới 03/10 văn ở đây
+  cài đặt bảng tin. **`CHUA_VE` trống từ 04/10**: hai ô nợ cuối cùng đã có
+  cảnh — «Chưa có bạn nào để rủ» (`ChonNguoi`) → `chua-co-ban`, «Chưa có địa
+  điểm để thêm» (`PickOutingLive`) → `tim-khong-ra`. Bảng vẫn tách đôi để không
+  ai đọc nợ thành quyết định. *Lịch sử:* tới 03/10 văn ở đây
   kể ba chỗ là «toàn bộ» trong khi mã đã nhiều hơn — lý do danh sách chuyển vào
   cổng. Ô rỗng mới không cảnh thì ghi tên và lý do vào bảng của cổng, không ghi
   vào đây.
@@ -1848,12 +1922,58 @@ thoại khi nội dung ấy đã có ở cột trái. Tờ bill dùng nó: bư�
 món chưa có người ở cuối bằng `warn`; chỉ đếm và tên, không tiền), bước kết
 quả có «ai đã trả» và tên khoản bên phải sổ. Không thẻ, không cột nào có nền.
 
+### Danh sách người (`LuoiNguoi`)
+Danh sách người mà mỗi hàng có hành động (Thành viên nhóm, Bạn bè) giữ hành
+động **cạnh tên nó tác động** (`ui/LuoiNguoi.tsx`). Điện thoại: một cột, kẻ
+tóc `line` giữa hai hàng **bắt đầu từ cột chữ** (lề trái 52 = avatar 40 +
+gap 12). Khi **chính danh sách** (đo bằng `onLayout`, không đọc cửa sổ) chứa
+được hai cột ≥ 280dp (`gridFor(rong, 280, 16, 2)`, gap 16): hai cột, mỗi ô kẻ
+tóc dưới riêng, và hàng nhận `luoi = true` để **đặt hành động dưới tên, trong
+cột chữ** (cạnh tên trong ô 280 bẻ tên làm đôi). Lý do: một hàng 590dp ở
+tablet đặt «Nhắn tin», «Đặt làm quản trị» cách tên 330 đến 680px (QA
+UI-081). Hàng tự kẻ viền của nó thì truyền `vachTrong={false}`. Hàng nhắc
+lại hành động trên mỗi người dùng `RudiButton compact ghost` («một chữ lặng,
+không phải viên»), người là một `Pressable` mở hồ sơ («Xem hồ sơ <tên>»),
+hành động đứng cạnh, không bao giờ nằm trong nó.
+
+### Hỏi tại hàng (xác nhận hành động phá huỷ)
+Hành động xoá thứ không lấy lại được **hỏi ngay tại hàng**, không mở hộp
+thoại, không toast. Một primitive: **`ui/HoiTaiHang.tsx`** (B11, 04/10), dùng ở
+`community/Keeps.tsx`, `community/Comments.tsx`,
+`screens/tuong/BaiChiTietScreen.tsx`, `screens/groups/Members.tsx` (tự bỏ
+quyền quản trị) và `screens/groups/Conversations.tsx` (từ chối lời mời):
+- Chạm nút `warn` (thường `ghost`) thay chỗ của nó trong hàng bằng **một câu
+  hỏi `ink`** nói cái mất và vì sao không quay lại được («Xoá ghi chép này?
+  Không lấy lại được.», «Bỏ quyền quản trị của bạn? Sau đó bạn không tự lấy
+  lại được; một quản trị khác phải đặt lại cho bạn.», «Từ chối lời mời vào
+  <nhóm>? Nếu đổi ý, bạn cần được mời lại.»), cỡ `note`, rồi **hai nút
+  `compact full={false}`**: động từ phá huỷ `tone="warn"` **`outline`** và
+  «Thôi» `ghost`. Nút phá huỷ mang `loading` tại chỗ trong lúc chạy. Nút mở
+  câu hỏi cũng mang màu `warn`.
+- Câu hỏi hiện ra thì focus tới nó: trên web vào «Thôi» (câu trả lời không
+  làm mất gì), trên điện thoại trình đọc màn hình đọc chính câu hỏi.
+- Thất bại thì `CauTaiCho` ngay dưới **đúng hàng đó** (cỡ `nho` trong
+  luồng/danh sách dày), kèm «Thử lại» khi bấm lại có thể đổi kết quả.
+- Một hàng hỏi một lúc: mở câu hỏi ở hàng khác thì câu cũ đóng (state là id
+  của hàng đang hỏi), và mở câu hỏi xoá lỗi cũ của hàng.
+
 ### Mục tiêu chạm và trình đọc màn hình
 Mọi node bấm được ≥48×48dp — kể cả `TextInput` bên trong `Field` (52dp hộp,
-48dp ô), ô soạn chat, pill dưới tiêu đề chat, pill điểm đến. Một câu chỉ là
+48dp ô) và **ô nhập của `ONhapMuc` (48dp, QA UI-001 đo 44)**, ô soạn chat, pill dưới tiêu đề chat, pill điểm đến.
+Đợt 01–04/10 nâng các đích còn 44 lên 48: nút «Khớp» của bản đồ hành trình,
+hàng người ở Bạn bè, hành động của bình luận, dòng kèo gọn ở chat, mũi tên
+chương của sổ hành trình. **Lưới ngày của `ChonNgayLich`**: mỗi hàng cao
+**48dp**; bảy cột chia bề ngang thật của tháng, tối đa 48dp mỗi cột (ở 320dp
+khoảng 38dp, đích bấm 38×48). Hai nút tháng 48×48. Trước 04/10 là bảy ô 44 cố
+định, cộng đệm và viền ≈ 326dp, tràn cột 288 của màn 320. Một câu chỉ là
 `Pressable` khi còn việc để bấm (`Pressable` bị `disabled` vẫn là «nút» với
 TalkBack). Hai control cùng chữ trên một màn phải khác nhau ở `accessibilityLabel`
-(«Đánh dấu Minh Anh đã trả»). Đo bằng `scripts/a11y_native_audit.py`.
+(«Đánh dấu Minh Anh đã trả»). **Hành động lặp trên mỗi hàng giữ nhãn nhìn
+thấy ngắn, tên trợ năng mang tên của hàng**: «Đặt làm quản trị» → «Đặt
+<tên> làm quản trị», «Bỏ quyền quản trị của <tên>», «Bỏ quyền quản trị của
+bạn» (`Members.tsx`); «Đồng ý vào nhóm» → «Đồng ý vào nhóm <tên nhóm>»,
+«Từ chối» → «Từ chối lời mời vào nhóm <tên nhóm>» (`Conversations.tsx`);
+«Xóa» → «Xóa bình luận của bạn: «<40 chữ đầu>»» (`Comments.tsx`). Đo bằng `scripts/a11y_native_audit.py`.
 
 ### Lịch trình (`HangChang`)
 Giờ trái (`label` tabular, rộng tối thiểu 46, canh phải), trục 14 với nút
@@ -2110,7 +2230,7 @@ kia.
 - **Lịch sử 12/09:** chuỗi `tuVung` của `hai-nguoi` và `doi` **chưa lên màn nào**;
   là dữ liệu, không phải câu chữ đã đọc mù.
 
-### Khoảnh khắc và Sổ chuyến đi (27/09/2026)
+### Khoảnh khắc và Sổ chuyến đi (27/09/2026; cập nhật 02/10/2026)
 
 Đọc từ `diary/BookView.tsx`, `Wall.tsx`, `EndingScreen.tsx` và
 `DiaryScreen.tsx`; đây là phần mở rộng UI v3 «Sân khấu giấy», kế thừa seed
@@ -2131,12 +2251,23 @@ kia.
   Khoảng cách giữa bìa và trang (28dp), trong trang (16dp), giữa mục tường
   (24dp). Nhãn quyền xem và các nút ngoài `BookView` ở trình đọc/tường
   không có giới hạn (560dp) riêng.
+- Trang cuối dùng `RudiScreen cot="form"`, giữ cùng màn khi đổi bước/chế độ;
+  `cuonVeDau` theo `phase` và `edit` đưa nội dung về đầu mà không remount.
+  Header cùng cột form, ghi «Trang cuối» khi tải hoặc chưa khép cuộc đi.
+  Tờ mời ghi tên cuộc đi và ngày thật: «Ngày hẹn» nếu cùng ngày, hoặc
+  «Bắt đầu»/«Ngày về» nếu nhiều ngày; không dùng `RouteLine` trang trí.
+  Chỉ khi `can_end` mới hiện bộ chọn loại và hành động khép; trạng thái chờ
+  có lời dẫn theo ngày/quyền và lối «Về cuộc hẹn».
 - Khi sửa, ẩn bản xem trước và hiện lời dẫn «Viết lại theo cách mình nhớ»;
-  nút «Xem như người đọc» đổi về bản xem trước. Khóa `RudiScreen` theo
-  `phase` và `edit` khởi tạo lại màn cuộn khi đổi bước/chế độ. Lựa chọn
-  «Chỉ mình tôi»/«Công khai» và nút «Lưu riêng tư»/«Đăng sổ công khai» nằm
-  trước các trường nhập khi sửa, sau bản xem trước khi đọc. Ô nhập dùng
-  `ONhapMuc`, hành động lưu dùng `StampButton` của kit.
+  nút «Xem như người đọc» đổi về bản xem trước. Lựa chọn «Chỉ mình tôi»/
+  «Công khai» nằm cuối phần xem trước hoặc sau các trường sửa, trong đoạn
+  có kẻ mảnh. Nút «Lưu riêng tư»/«Đăng sổ công khai» dùng `StampButton`,
+  giữ trong footer cùng lỗi lưu `CauTaiCho`; `footerInset={insets.bottom}`
+  và `avoidKeyboard` dành chỗ cho vùng an toàn và bàn phím.
+- Ô nhập dùng `ONhapMuc`; lúc đang lưu, trường sửa không cho nhập và các
+  điều khiển sửa/quyền xem bị khóa. Ref `operation` khóa đồng bộ trước khi
+  gửi để bấm nhanh không tạo request trùng. Lưu thất bại giữ bản đang soạn;
+  lỗi nằm cạnh hành động lưu, chỉ lỗi có thể thử lại mới có «Thử lại».
 - Bộ chọn bìa ghi «Bìa hiện tại», dùng vai trợ năng `radio` cùng trạng thái
   `selected`; chọn một ảnh thì đóng bộ chọn. Bộ chọn ảnh trang dùng
   `checkbox`/`checked`, nhãn «Đã chọn», tối đa bốn ảnh mỗi trang.
@@ -2148,13 +2279,20 @@ kia.
 - Giữ luật không kicker/eyebrow trên tiêu đề. Nếu còn trong lát đang sửa,
   đó là lỗi cần dọn ở mã bởi phiên chính, không phải mẫu của hệ.
 
-**Giới hạn bằng chứng của cập nhật này:** chỉ đối chiếu mã nguồn và tài liệu,
+**Giới hạn bằng chứng lịch sử 27/09:** chỉ đối chiếu mã nguồn và tài liệu,
 không chạy lại native hay mở lại ảnh. Theo bàn giao của người dùng, ma trận
 emulator trước đó gồm điện thoại, tối/chữ 1.3, giảm chuyển động, màn nhỏ/chữ
 200% và tablet đã được xem; thiết bị thật được người dùng hoãn. Ma trận đó
 không xác nhận các sửa mới nhất về cột đọc/sửa, ẩn bản xem trước, vị trí quyền
 xem/lưu, đặt lại cuộn và trạng thái chọn bìa. Chưa có kết quả native cho các
 sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứng iOS.
+
+**Phạm vi bằng chứng 02/10:** đối chiếu mã và mở sáu ảnh native B9a tại
+`~/.local/share/rudi-b9a/`; xem [bàn giao B9a](docs/codex/2026-10-02/ui-ux-b9a.md).
+Ảnh ghi trạng thái chờ, lỗi lưu, bàn phím và cột form trên Android emulator
+điện thoại (411dp), màn ảo (320dp, chữ 1.3, tối, giảm chuyển động) và tablet
+ảo (768dp). Đây là tinh chỉnh từ mã trong hệ hiện có, không có comp mới;
+ảnh không chứng minh thiết bị thật, native iOS hay độ mượt khi chạy.
 
 ### Cards / Containers
 - **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*
@@ -2178,18 +2316,55 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   `md` (+`insets.top` khi `underStatusBar`), đệm dưới `lg`, tràn lề theo
   `bleed`; `compact` rút vải khi bàn phím mở; chứa logo compact, `hero`
   `coverInk`, đoạn dẫn `body` `coverInkSoft`, nút back tròn.
-- **`Sheet`**: nền `card`, bo trên 20, đệm ngang `md`, đệm dưới
-  `max(insets.bottom, 16)`, cao tối đa 82% cửa sổ (hoặc `maxHeight`), nội
-  dung cuộn; vào bằng spring, ra bằng `standard`; scrim `lopPhu.toi(0.42)`;
-  nút cứng back Android và scrim đều đóng; `onClosed` nổ **sau khi** tấm đã
-  rời màn. **Tay cầm là vùng nắm thật** (đợt 8): hàng cao tối thiểu 36 rộng
-  cả tấm, vạch 40×4 `lineStrong` ở giữa, `accessibilityLabel` «Tay cầm»,
-  hint «Kéo xuống để đóng»; `Gesture.Pan` `activeOffsetY` 6, tấm đi theo
-  ngón tay, thả quá **90 dp** hoặc vẩy **900 dp/s** thì đóng, thả ngắn hơn
-  thì lò xo về; scrim mỏng dần theo kéo (`progress × (1 − kéo/480)`). Vùng
-  nắm chỉ là hàng tay cầm, không phải cả tấm, nên cuộn của nội dung không
-  đánh nhau với kéo (`clip-keo-sheet`). Đặt qua `RudiScreen overlay`, hoặc
-  trong một route trong suốt.
+- **`Sheet`** (v2 từ 01/10, một hợp đồng mở/đóng cho mọi sheet và khay):
+  nền `card`, bo trên 20, đệm ngang `md`, đệm dưới
+  `max(insets.bottom, 16)`; một hàng lỗ giấy `paperShade` 5×5 dọc mép trên
+  (tờ xé khỏi tập, ẩn khỏi trợ năng); scrim `lopPhu.toi(0.42)`; `onClosed`
+  nổ **sau khi** tấm đã rời màn. Hợp đồng v2, đọc từ `ui/Sheet.tsx`:
+  - **Trần 82% là của cả tấm** (tay cầm, `dauTrang`, nội dung, `footer` và
+    đệm đáy cộng lại), không riêng hộp cuộn: trước đó tay cầm và inset cộng
+    thêm trên trần thành 92% ở 320×640, 96% ở 390×460 (UI-007, UI-040).
+    `maxHeight` thay trần khi truyền; `avoidKeyboard` co trần theo khung còn
+    lại trên bàn phím.
+  - **Trượt theo chiều cao của chính tấm** (đo `onLayout`, + 24), không một
+    hằng 480 để lại một phần ba tấm cao trên màn (UI-013); **khép thì mờ** ở
+    đoạn cuối (opacity theo `progress` 0 → 0.12 → 1), nên khung cuối trước
+    khi gỡ không còn gì. Vào bằng lò xo `settle`, ra bằng `standard`.
+  - **Rộng tối đa 640, căn giữa** ở tablet (đo bề rộng host, UI-093).
+  - **Back đóng sheet trên mọi nền tảng**: nút cứng Android, Esc trên web, và
+    **Back của trình duyệt** qua `lui-web.ts` (một listener `popstate` cài
+    trước router, đặt lại mục lịch sử đang đứng rồi đóng lớp trên cùng, nên
+    trang không rời màn: UI-038, UI-117). `onBack` cho một bước nội tuyến
+    tiêu Back/Esc trước khi đóng.
+  - **Màn mất focus thì sheet đóng** (đổi tab, route đẩy từ trong sheet), để
+    không còn sheet mở trên màn không ai thấy giữ phần còn lại `inert`.
+  - **Nền chết trong lúc mở**: 250 ms đầu (`CHAN_CHAM_MS`) cả scrim lẫn tấm
+    không nhận chạm, vì cú chạm thứ hai của chạm đúp rơi ~60 ms sau lên thứ
+    vừa hiện (UI-088, UI-006). Trên web, sheet là `role="dialog"`
+    `aria-modal`, anh em của nhánh nó được `inert` + `aria-hidden`, focus vào
+    control đầu, Tab quay vòng trong tấm, chỉ sheet trên cùng nghe phím; khi
+    đóng chỉ trả lại thuộc tính **còn đúng là của nó** (Back trong lúc mở để
+    navigator đổi trước, trả mù từng ẩn lại màn vừa về: UI-005).
+  - **Lớp trên cùng của màn** (`zIndex` 10): dải ghim của chat không còn vẽ
+    đè scrim (UI-070, UI-166). Nếp không vẽ đè sheet đang mở.
+  - **Tay cầm là vùng nắm thật cho tay, không phải control cho trình đọc**:
+    hàng cao tối thiểu 36 giữa hai ô 48, vạch 40×4 `lineStrong`;
+    `Gesture.Pan` `activeOffsetY` 6, tấm đi theo ngón tay, thả quá **90 dp**
+    hoặc vẩy **900 dp/s** thì đóng, ngắn hơn thì lò xo về; scrim mỏng dần
+    theo kéo (`progress × (1 − kéo/cao tấm)`). Tay cầm **ẩn khỏi cây trợ
+    năng** (`aria-hidden`; nhãn không role trên nó là lỗi axe
+    `aria-prohibited-attr` ở mọi sheet, UI-089); lối ra trợ năng là nút
+    **«Đóng bảng»** 48×48 (`close` 22 `ink`) ở góc phải cùng hàng. Vùng nắm
+    chỉ là hàng tay cầm, nên cuộn của nội dung không đánh nhau với kéo
+    (`clip-keo-sheet`).
+  - **Thân tấm khép giữ lời cuối** (`useGiuKhiDong(open, value)`,
+    `ui/giu-khi-dong.ts`): lúc mở, giá trị đi thẳng; lúc khép, giữ giá trị
+    lần cuối còn mở. State đóng sheet thường đổi luôn điều thân sheet sẽ nói
+    (sổ mở trong lúc «Lập sổ» còn lên làm thân đang khép vẽ lại thành lời mời
+    đề nghị lại trong bốn khung, UI-084). Dùng ở `hai-nguoi/LoaiSo.tsx`,
+    `DongYBac.tsx`.
+  Đặt qua `RudiScreen overlay`, qua `<LenLop>` khi sheet được vẽ từ sâu trong
+  thân màn, hoặc trong một route trong suốt.
 - **Khay tạo** (`screens/Create.tsx`) giờ **là** `Sheet` đó, không còn bản
   chép tay: route `create` chỉ `fade` với `contentStyle` trong suốt
   (`app/_layout.tsx`), tab bên dưới còn nguyên dưới scrim (ảnh
@@ -2239,12 +2414,41 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
 - **`RosterPicker`**: checkbox cao 48; chưa chọn `card`/`lineStrong`, chọn
   `splitSoft`/`split` + check; tên `ink` xuống dòng; lưới ô 130 gap 8 tối đa
   3 cột.
-- **Lỗi**: một câu `body` màu `warn` ngay dưới control; không toast, không
-  modal. Đang tải: `StampButton loading` tại chỗ vừa bấm, hoặc `Skeleton`.
+- **`ONhapMuc`** (ô nhập của v3, «dòng mực, không hộp»; `ui/ONhapMuc.tsx`):
+  chữ nằm thẳng trên trang, **ranh giới duy nhất là một gạch mực dưới chữ**:
+  1dp `lineStrong` khi nghỉ (≥ 3:1 trên mọi mặt nó đậu,
+  `test_contrast_floor.py`), **2dp `accent` khi đang viết** (đó là chỉ báo
+  focus; vòng focus xanh của trình duyệt tắt qua `KHONG_VIEN_WEB` vì gạch đã
+  nói «bạn đang viết ở đây»), 2dp `warn` khi giá trị sai. Dp gạch dày thêm
+  lấy từ đệm dưới (4), nên chữ không nhích. **Ô nhập một dòng cao 48** (QA
+  UI-001 đo 44; 4dp thêm cũng lấy từ khe chữ–gạch nên hàng không đổi cao).
+  Chữ `body`; `co="lon"` viết giá trị bằng `h2` (tên trên bìa, số trên hoá đơn).
+  Placeholder `inkFaint` do kit vẽ một dòng; tên trợ năng là nhãn hoặc placeholder;
+  `helper` là `note inkSoft`; `error` (`caption warn`) thay dòng `helper` và được đọc lịch sự; `multiline` kẻ dòng mờ dưới
+  mỗi dòng chữ, quá 8 dòng thì cuộn. `oRef` để form bị từ chối đặt con trỏ
+  vào đúng chỗ cần sửa. `Field` có hộp chỉ còn ở màn chưa làm lại.
+- **`ChonNgayLich`**: một lá lịch xé (số ngày Bricolage 34/40) hoặc gõ tay
+  `dd/mm/yyyy`; tháng mở **tại chỗ** dưới lá (sheet trong trang cuộn sẽ nổi
+  dưới khung nhìn): bảy cột chia bề ngang thật, tối đa **48dp**, hàng cao 48
+  (ở 320dp cột còn khoảng 38dp, xem «Mục tiêu chạm»), thứ Hai trước, hôm nay có vòng, ngày chọn tô; mỗi ngày là một
+  nút đọc đủ «<thứ>, <ngày> tháng <tháng> năm <năm>», thêm «, hôm nay».
+- **Lỗi**: một câu `warn` qua **`CauTaiCho`** ngay dưới control (xem «Trạng
+  thái rỗng, tải, lỗi»); lỗi của một ô `ONhapMuc` là `error` của chính ô.
+  Không toast, không modal. Đang tải: `loading` tại chỗ vừa bấm, hoặc `Skeleton`.
+
+**Công tắc (`Switch`)** (04/10, critique B11): màu qua `ui/cong-tac.ts`
+`congTac(colors, tone)`, một hình ở mọi nơi. Tắt là vạch `lineStrong` (sàn 3:1
+của mép control; vạch `line` gần như mất trên nền kem); bật là tông của thứ
+công tắc bật (`accent`, hoặc `ai` cho công tắc của Rủ Đi AI); núm là giấy
+(`card`) trên cả hai nền tảng, web phải có `activeThumbColor` vì
+react-native-web tự tô núm teal, màu của tiền.
 
 ### Navigation
-- **`RudiTabBar`** tự vẽ: nền `card`, cạnh trên hairline `line`, cao **64 +
-  max(insets.bottom, 10)**; **bốn cột** — Khám phá · Lên plan · Tin nhắn · Cá
+- **`RudiTabBar`** tự vẽ: nền `card`, cạnh trên hairline `line`, cao
+  **`tabBarHeight(fontScale)` + max(insets.bottom, 10)**: 64 ở cỡ chữ ≤ 1.15,
+  rồi cộng `round((fontScale − 1.15) × 44)` tới trần 2.0 (`adaptive.ts`), vì
+  nhãn được hai dòng thay vì «Khám …»; màn dưới thanh đọc cùng số qua
+  `RudiScreen bottomInset="tab"`; **bốn cột** — Khám phá · Lên plan · Tin nhắn · Cá
   nhân — và con dấu «Tạo» **ở ô giữa của năm ô bằng nhau** (`thanh-tab.ts`
   `xepThanh`: số ô lẻ mới có tâm; 02/10, thay bố cục năm tab + dấu ở cột thứ
   ba). Bốn cột trong một `role="tablist"`, mỗi cột `role="tab"` +
@@ -2325,8 +2529,14 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   web, màn nhận focus điều hướng thì focus vào tiêu đề (`role="heading"`),
   trừ khi đang gõ hay có sheet. Màn demo dạng stack có **một** cửa demo ở bên
   phải (dưới 360dp chỉ còn hai biểu tượng). Ô icon app chỉ ở Welcome/Login.
-- iOS: `BlurView` 78 theo scheme thay nền `card` (chỉ đọc từ mã, chưa có
-  ảnh iOS).
+- **Back đóng lớp trên cùng trước khi rời màn.** Sheet tự lo (xem `Sheet`);
+  lớp mà màn **tự vẽ** (một bảng của Cá nhân, bước hai của xoá tài khoản,
+  hồ sơ sống) đăng ký `useLuiLop(mo, dong)` (`ui/useLuiLop.ts`): trong lúc
+  `mo`, Back cứng Android và Back trình duyệt (`lui-web.ts`, chạy trước
+  router) đóng lớp đó, không rời màn (QA UI-108, UI-110). Người gọi:
+  `Profile.tsx`, `profile/HoSoSong.tsx`, `cai-dat/XoaTaiKhoanScreen.tsx`.
+- iOS: `BlurView` 78 theo scheme thay nền `card`, **chỉ ở thanh đáy**, rail
+  giữ `card` (chỉ đọc từ mã, chưa có ảnh iOS).
 
 ### Trạng thái rỗng, tải, lỗi
 - **`EmptyState`** năm loại (`first-use`, `no-results`, `filtered`,
@@ -2343,7 +2553,15 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   «Về Khám phá») ở 411×914 và 360×640, cỡ chữ 1.0 và 1.3 — một hàng, không
   cắt; Conversations «Tôi có lời mời», Khám phá «Xóa lọc» và hai `ErrorState`
   còn lại cùng component nhưng chưa chụp. Khe `illustration` từ 08/09 nhận
-  `<Canh>` **rộng 168**:
+  `<Canh>` **rộng 168**. **Mọi `EmptyState` mang một cảnh của thế giới
+  app** (`<Canh id=…>`, id trong `art/canh.ts`), trừ ô rỗng được đặt tên
+  kèm lý do trong `tests/trang-rong-co-hinh.test.mjs` (từ 03/10 danh sách
+  sống ở test, không ở đây): `KHONG_HINH` là im lặng có chủ ý (danh sách
+  quản trị: «Bạn chưa chặn ai», «Chưa có phiên nào», «Chưa ẩn bài nào»,
+  «Chưa có ghi chép nào»; tiền: «Chưa có sổ nào để quyết toán»; lời nhắn
+  dưới một bài tường, nơi cảnh sẽ nặng hơn chính bài), `CHUA_VE` là **nợ
+  chưa vẽ**, tách riêng để không ai đọc nợ thành quyết định. Mount mới không
+  cảnh thì test đỏ tới khi có người nói vì sao.
   Album «Chưa có kèo nào» → `chua-co-keo`, «Chưa có khoảnh khắc» →
   `chua-co-anh`, Khám phá «Chưa thấy nơi phù hợp» → `tim-khong-ra`
   (`sua2-sang-1.0/bs-04-tim-khong-ra`: cảnh, `h2`, một câu, một nút).
@@ -2381,7 +2599,64 @@ sửa này trong lượt ghi tài liệu; không suy rộng thành bằng chứn
   (`cong-dong-trang-rong.test.mjs`); ảnh `.impeccable/review/cdr2/`, `cdr3/`.
 - **`Skeleton`**: xương màu `line`, bo 10, băng sáng `card` 0.55 chạy 1400ms;
   tắt hẳn dưới Reduce Motion. `SkeletonLines` dòng cuối 62%.
-- **`ErrorState`**: cùng khung với `EmptyState kind="failure"`.
+- **`ErrorState`**: cùng khung với `EmptyState kind="failure"`. Chỉ dùng khi
+  **chưa có gì** để hiện; xem luật dưới.
+- **`CauTaiCho`** (`ui/CauTaiCho.tsx`, «câu tại chỗ»): câu lỗi nói **ở đúng
+  chỗ ngón tay vừa chạm**. Trước nó, ~60 màn tự viết câu `warn` và đặt nơi
+  bố cục còn chỗ: y −2855 ở màn lô (UI-049), dưới mép đáy ở ô soạn Cộng đồng
+  (UI-133), cuối form có nút dính đáy (UI-051). Hợp đồng:
+  - **Vị trí là quyết định duy nhất của nơi gọi**: ngay dưới control vừa
+    thất bại, hoặc trong `footer` dính đáy ngay trên nút. Còn lại cố định.
+  - Hình: icon `alert-circle-outline` 18 + câu `body`, cả hai màu `warn`;
+    câu dàn theo cột rộng tối thiểu 220 và xuống dòng; **một lối đi tiếp**
+    tuỳ chọn (`hanhDong`: «Thử lại», «Nhập tay») là chữ `label ink` gạch
+    chân, cao 48, đứng cạnh câu hoặc gập xuống dưới. Cỡ `nho` cho lỗi dưới
+    một tin/hàng trong luồng dày: icon 15, câu `note`, hành động `caption`
+    ngay sau câu (không đẩy ra mép), đích 48 trả lại chiều cao (lề âm 14) để
+    dòng vẫn là một dòng.
+  - Trợ năng: `accessibilityRole="alert"` + `aria-live="polite"`: tìm được
+    theo vai, đọc một lần khi hiện, không ngắt câu đang đọc.
+  - Hiện bằng mờ vào `standard`; dưới Reduce Motion hiện ngay. Trên web,
+    nếu bố cục vẫn để câu ngoài cửa sổ, cuộn khung gần nhất **vừa đủ** để
+    thấy nó (`scrollIntoView nearest`).
+  - `cau = null` không vẽ gì, nên màn giữ một khe cố định; câu biến mất khi
+    lần làm lại thành công.
+  Dùng ở 26 file (03–04/10), gồm footer lưu của trang cuối sổ chuyến đi, lỗi
+  dưới hàng trong luồng chat, thành viên, bình luận, ghi chép.
+- **Luật Lỗi Không Thay Dữ Liệu.** Một lần tải lại thất bại **không bao giờ
+  thay dữ liệu đã hiện**: câu `CauTaiCho` đứng cạnh dữ liệu cũ (QA UI-030,
+  UI-077, UI-083). `ErrorState` toàn màn chỉ khi lần tải đầu đã hỏng và
+  không có gì để giữ. Đây là nửa hợp đồng của nơi gọi, và là lý do
+  `CauTaiCho` là một dòng chứ không phải một trạng thái.
+- **Câu lỗi đọc `code` trước mã HTTP** (`src/cau-loi-theo-ma.ts` →
+  `thongDiepNguoiDoc` trong `src/api.ts`). Thứ tự: câu tiếng Việt máy chủ
+  đã viết (có dấu) đi thẳng; không nối được (status 0) là
+  `LOI_KHONG_NOI_DUOC` «Không kết nối được Rủ Đi. Kiểm tra mạng rồi thử
+  lại.»; rồi bảng riêng của màn (`IDEMPOTENCY_REFUSALS`, `SCAN_REFUSALS`,
+  `ANH_REFUSALS`…); rồi `cauTheoMa(code)`: mã có câu riêng (`invite_not_found`
+  gọi tên cả gõ sai, hết hạn, đã dùng; `membership_already_open`;
+  `otp_*`…), rồi theo **hình** của mã (`*_not_found` → «Không tìm thấy
+  <thứ này>. Có thể nó đã bị xoá, hoặc bạn không còn quyền xem.»,
+  `*_wrong_state`/`*_already_*`, `*_conflict` → «Ai đó vừa sửa chỗ này trước
+  bạn…», `*_expired`, `*_unavailable`, `*_too_large`), để mã máy chủ thêm
+  ngày mai vẫn rơi vào câu đúng loại; **chỉ khi đó** mới đoán theo status.
+  Mỗi câu nói hỏng gì, vì sao khi biết, làm gì tiếp; **không bao giờ in mã,
+  status hay địa chỉ** (địa chỉ chỉ ra console dev).
+  - **Mất mạng và máy chủ tạm ngưng là hai câu khác nhau**: không nối được →
+    «Kiểm tra mạng»; một phần của Rủ Đi trả `*_unavailable` (503) → «Phần
+    này của Rủ Đi đang tạm ngưng. Thử lại sau ít phút.», không bảo người ta
+    đi kiểm tra mạng đang tốt (UI-029); 5xx khác → «Rủ Đi đang gặp sự cố…
+    Chưa có gì bị ghi sai».
+  - **Từ chối vĩnh viễn không mời «Thử lại»**: `laTuChoiVinhVien(status,
+    code)` đúng với `*_not_found`, `*_wrong_state`, `*_already_*`,
+    `*_expired`, `membership_required`, `direct_message_unavailable`, và
+    status 403, 404, 410; màn chỉ đưa «Thử lại» khi nó sai (QA UI-100: hai
+    «Thử lại» dưới «Bài này không dành cho bạn»). 401 nói «Phiên đăng nhập
+    đã hết. Đăng nhập lại để tiếp tục.»; luồng chat (`chat/nhip-tin.ts`)
+    cũng không đưa «Thử lại» cho nó.
+  - 409 `idempotency_request_in_flight` nói thật là **chưa biết** đã ghi hay
+    chưa và dặn **đừng bấm lại ngay**: bấm lại ở đây là cách một khoản trả
+    thành hai.
 - **Bộ lọc vắng vì không có dữ liệu** được nói thẳng bằng một câu `body
   inkSoft` («Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ»), không
   vẽ control chết.
@@ -2465,6 +2740,31 @@ fixture luôn dán «Dữ liệu demo» (đầy đủ), «Demo»/«Nháp» (tron
 «Bản trải nghiệm» (Welcome). Số tiền viết «1.106.250đ»; không có số nào màn
 tự bịa: đếm ảnh, huy hiệu, ngày còn lại đều tính từ dữ liệu.
 
+**Luật Một Cách Viết Ngày** (01–04/10, QA UI-103, UI-104): ngày và giờ đi qua
+`src/rudi/ngay-viet.ts`, **viết tay, không qua `Intl`/`toLocaleDateString`**
+(locale vi-VN nối ngày tháng bằng gạch ngang, và Hermes với trình duyệt gọi
+tên tháng khác nhau). Ngày là ngày địa phương của máy, ngày và tháng luôn hai chữ số:
+- `ngayVN` → «28/09/2026» (cài đặt, phiên);
+- `gioNgayVN` → «10:07 · 28/09», năm chỉ khi không phải năm nay (tường, ảnh in);
+- `khoangNgayChuyen` → ngày của một chuyến từ ngày lịch máy chủ giữ
+  (`YYYY-MM-DD`): «28 - 29/09», «30/09 - 02/10», «28/09» khi một ngày, năm chỉ
+  khi khác năm nay; trước đó kệ album chỉ in năm nên hai chuyến cùng năm
+  không phân biệt được;
+- `thangNamVN` → tiêu đề tháng «Tháng 9, 2026» (kệ sổ).
+Chuỗi không đọc được thì trả rỗng. Tờ giấy của sổ đôi có bộ chữ riêng cùng
+ngữ pháp (`to-giay/ngay.ts`: «Thứ Bảy 19/09», cũng không `toLocaleDateString`).
+
+**Luật Một Thứ Một Chữ** (04/10, critique B11): một thứ có đúng một tên,
+động từ và số đếm cùng họ, không bao giờ hai họ trên một thẻ.
+- Khoảnh khắc trên tường nhóm được **tim**: «Thả tim» / «Đã thả tim», «N tim».
+- Bài viết (trang viết, Cộng đồng) được **thích**: «Thích», «N thích».
+- Đếm trên hộ chiếu Cá nhân là **khoảnh khắc** (`counts.memories`), không
+  «kỷ niệm»: ngay dưới nó là kệ «Những ngày muốn giữ», một thứ khác.
+- Ngân sách của kèo luôn kèm «dự kiến»: nó nằm ngay trên «Chia bill buổi
+  này» và không phải tiền đã chi.
+- Thuật ngữ của sổ (`nghĩa vụ`, `obligation`) không lên màn; «đợt thu» và
+  «phát» là tên thao tác có thật (ADR-0037 D14) nên được dùng.
+
 **Luật Nói Một Lần** (08/09, báo cáo 07/09 §8.5, §4.6): mỗi trạng thái và
 mỗi sự thật có **một** chỗ trên màn.
 - `HangChang phu` mang **tên địa điểm** khi có, «Chọn địa điểm» khi chưa có
@@ -2511,7 +2811,14 @@ phải thêm một sự thật mà dòng dưới nó chưa nói.
 riêng có kiểm ở font 1.3 (tem 12, nhãn tab 12, demo 10); mọi cặp chữ/nền
 trong bảng đo dưới; viền control ≥ 3:1; con dấu có `accessibilityLabel`,
 `Stamp` không role; `role="tab"` cho tab và segmented; Reduce Motion tôn
-trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
+trọng; chụp lại ở font 1.3 trước khi nói «không cắt». Thêm từ 01–04/10: ô
+nhập `ONhapMuc` 48, ngoại lệ duy nhất có tên là lưới ngày 44 của
+`ChonNgayLich`; câu lỗi tại chỗ là `alert` + `aria-live="polite"`
+(`CauTaiCho`), lỗi của ô nhập đọc lịch sự; nút tắt nói lý do qua
+`accessibilityHint` (`lyDo`); hành động lặp theo hàng có tên trợ năng
+riêng mang tên của hàng; tay cầm sheet ẩn khỏi trình đọc, lối ra là
+«Đóng bảng»; Back (cứng, trình duyệt, Esc) đóng lớp trên cùng trước khi rời
+màn.
 
 ## Do's and Don'ts
 
@@ -2614,6 +2921,23 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   biệt giữa các loại thì thêm **trường** vào `BanTinhSo`, không thêm nhánh.
 - **Do** giữ bản `trang` của Nếp trùng sha256 baseline; biến thể mới đi qua
   `GAP_NEP` và phải qua cùng bốn cổng của `manh`.
+- **Do** nói lỗi bằng `CauTaiCho` ngay dưới control vừa thất bại (hoặc trong
+  `footer` ngay trên nút dính đáy), với **một** lối đi tiếp khi có; giữ dữ
+  liệu đã hiện khi lần tải lại hỏng.
+- **Do** chọn câu lỗi theo `code` của máy chủ trước mã HTTP (`cauTheoMa`), và
+  chỉ đưa «Thử lại» khi `laTuChoiVinhVien` sai.
+- **Do** cho hành động phá huỷ `RudiButton tone="warn"` `outline`/`ghost` và
+  hỏi tại hàng: câu nói cái mất, rồi động từ `warn` + «Thôi».
+- **Do** truyền `lyDo` cho mọi nút tắt; nút mà việc chưa có nghĩa thì không vẽ.
+- **Do** chọn cột đọc của màn bằng `RudiScreen cot` (`doc` 640, `form` 560,
+  `rong` 960) và đo lưới trên chính vùng của nó (`LuoiNguoi`, `gridFor`).
+- **Do** đóng lớp trên cùng bằng Back trước khi rời màn: `Sheet` tự làm,
+  lớp tự vẽ thì `useLuiLop`; lớp phủ vẽ từ sâu trong màn thì `<LenLop>`;
+  thân sheet đang khép đọc `useGiuKhiDong`.
+- **Do** viết ngày giờ qua `ngay-viet.ts` («28/09/2026», «10:07 · 28/09»,
+  «28 - 29/09», «Tháng 9, 2026»).
+- **Do** giữ nhãn nhìn thấy của hành động lặp theo hàng ngắn và đặt tên trợ
+  năng mang tên của hàng («Đặt <tên> làm quản trị»).
 ### Don't:
 - **Don't** đặt chữ nhỏ hay icon lên `brand.*` bằng mực của scheme; coral với
   chữ trắng 2.92:1.
@@ -2678,6 +3002,20 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
 - **Don't** tô vạt của tờ nhỏ bằng `bong` (nền tối đọc thành khoét).
 - **Don't** so `kind === "pair"` hay `loaiSo === "doi"` ngoài
   `so/ban-tinh.ts`; đừng đọc `BanTinhSo` thành quyền.
+- **Don't** thay dữ liệu đang hiện bằng `ErrorState` khi một lần tải lại hỏng;
+  đừng đặt câu lỗi nơi bố cục còn chỗ (đầu trang dài, đáy hộp cuộn).
+- **Don't** mời «Thử lại» dưới một từ chối vĩnh viễn (403, 404, 410,
+  `*_not_found`, `*_expired`…); đừng nói «Kiểm tra mạng» khi máy chủ trả
+  `*_unavailable`, hay «Cập nhật app» cho một thứ không tìm thấy; đừng in mã,
+  status hay địa chỉ.
+- **Don't** tô nền `warn`, hay vẽ hành động phá huỷ bằng nút cam đặc; đừng
+  mở hộp thoại để xác nhận xoá.
+- **Don't** mờ nút tắt bằng opacity, hay để nút tắt không lời.
+- **Don't** đặt `Sheet` trong thân màn khi nó phải phủ header; đừng để
+  `Sheet` nhận chạm trong pha mở, hay trượt một quãng cố định thay vì chiều
+  cao của nó.
+- **Don't** viết ngày bằng `toLocaleDateString`/`Intl`, hay ghép chuỗi ngày
+  tay ngoài `ngay-viet.ts`.
 
 ## Những gì bản ship KHÔNG phong thánh
 
@@ -2732,7 +3070,9 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 - **Nút vô hiệu của kit** («Tiếp tục» mờ trên `sua2-sang-1.0/bs-03-so-thich`):
   chữ trắng trên coral nhạt, reviewer 08/09 ghi là nợ tương phản có tên,
   không đo ở đây và không có tỉ lệ nào được in để hợp thức nó. Không lấy làm
-  mẫu trạng thái vô hiệu.
+  mẫu trạng thái vô hiệu. **Hiện hành (ADR-0038, kit 04/10):** `RudiButton`
+  và `StampButton` tắt là nền `card` viền đứt `lineStrong` chữ `inkSoft` kèm
+  `lyDo` (mục Buttons); dòng trên là lịch sử, ảnh `bs-03` chưa chụp lại.
 - **Chế độ tối sau loạt sửa cuối** chỉ có bảng art (`art.png` nửa dưới) và
   `toi-1.3/` chụp **trước** loạt sửa; cảnh trong `EmptyState`, cặp so sánh
   và ô gu ở dark chưa có ảnh.
@@ -2812,6 +3152,24 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 - Đề nghị đổi nền tờ khỏi `paper` (vòng 2) **không nhận**: đổi token là việc
   của spec/ADR, không của Phase 1.
 
+**Đợt nâng cấp UI/UX 01–04/10 (B1–B11, `direction.md`), ghi 04/10.** Lượt
+ghi tài liệu này **chỉ đọc mã** trong cây làm việc (head `a58d11a8` cộng sửa
+chưa commit); không chạy cổng, không mở ảnh. Bằng chứng native và QA retest
+nằm ở `docs/claude/2026-10-01/ui-ux-upgrade/` (`change-log.md`,
+`qa-handoff.md`), không suy rộng ở đây. Có trong cây nhưng chưa là hệ:
+
+- **Hợp đồng `Sheet` v2 không có test node riêng** (`khe-lop.test.mjs` chỉ
+  giữ khe lớp; Back trình duyệt qua `lui-web.ts`, trần 82%, 250 ms, khép mờ,
+  `useLuiLop` và `useGiuKhiDong` đo bằng harness QA và ảnh, không bằng node).
+  Bề rộng tối đa của sheet nay là `COT_DOC` (`adaptive.ts`), cùng một số với cột
+  đọc.
+- Năm chỗ lệch khác mà lượt ghi này thấy đã được sửa trước khi bàn giao (B11):
+  - lưới ngày và hai nút tháng của `ChonNgayLich`;
+  - nút mở xoá bình luận ở `BaiChiTietScreen` mang màu `warn`;
+  - hỏi tại hàng gom về `HoiTaiHang`;
+  - `CHUA_VE` trống;
+  - `lyDo` có cổng `nut-tat-co-ly-do.test.mjs`.
+
 ## Cổng phải xanh trước khi đổi hệ này
 
 ```bash
@@ -2846,6 +3204,17 @@ node --test tests/route-fixture-co-phien.test.mjs # B5: ba route fixture chuyể
 node --test tests/khong-vien-web.test.mjs         # B7: mọi TextInput mang KHONG_VIEN_WEB, không còn khung focus của trình duyệt
 node --test tests/suc-song-man-tao.test.mjs       # màn tạo, màn tiền, sổ đôi và các màn trong phạm vi phải render ít nhất một vật sân khấu
 node --test tests/san-khau.test.mjs tests/nep-roi.test.mjs tests/muc-nguoi.test.mjs tests/token-san-khau.test.mjs tests/skia-ranh-gioi.test.mjs tests/chuoi-maestro-con-song.test.mjs
+```
+
+Cổng của đợt nâng cấp UI/UX 01–04/10 (cũng trong `npm test`, cùng bước dựng như trên):
+
+```bash
+node --test tests/nut-pha-huy-tong-warn.test.mjs  # mọi RudiButton có nhãn phá huỷ mang tone="warn"; ngoại lệ có tên và lý do; quét ≥ 10 nút
+node --test tests/trang-rong-co-hinh.test.mjs     # mọi EmptyState có illustration, trừ KHONG_HINH (im lặng có lý do) và CHUA_VE (nợ chưa vẽ)
+node --test tests/cau-loi-theo-ma.test.mjs        # câu lỗi theo code trước status qua thongDiepNguoiDoc thật; quy tắc theo hình mã
+node --test tests/o-nhap-muc.test.mjs             # ONhapMuc: không hộp, chỉ gạch; ô nhập 48; gạch 2dp khi viết/sai mà chữ không nhích; lỗi thay dòng phụ và được đọc
+node --test tests/khe-lop.test.mjs                # LenLop đưa con lên khe lớp của RudiScreen, giữ state và callback
+node --test tests/rudi-b9-ke-va-tuong.test.mjs    # khoangNgayChuyen («28 - 29/09», «30/09 - 02/10»), thangNamVN
 ```
 
 Màn native thì cổng là **emulator**, không phải web export (dòng FINISH của

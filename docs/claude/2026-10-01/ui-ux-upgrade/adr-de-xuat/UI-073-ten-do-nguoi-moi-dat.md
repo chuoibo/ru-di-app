@@ -38,3 +38,13 @@ B chỉ cần khi chủ sản phẩm muốn tách «đã nói gu» khỏi «đã
 
 - Số được mời đăng nhập lần đầu: vào Sở thích, ô tên điền sẵn và sửa được.
 - Tra số: không lộ tên người khác đặt khi chính chủ chưa xác nhận.
+
+## Phần UI đã làm (B8, 02/10/2026), không đổi luật máy chủ
+
+- App đoán phía mình: phiên `is_new_person = false` nhưng nhóm mặc định đang ở `invited` (chưa vào nhóm nào) thì coi là
+  người mới. Người đó đi qua Sở thích với `?moi=1` (`duong-vao.ts`, `manSauDangNhap`).
+- Sở thích hiện ô «Bạn tên gì?» điền sẵn tên nhóm đang gọi, kèm câu «Nhóm mời bạn đang gọi bạn là «…». Sửa nếu bạn muốn
+  được gọi khác.». Giữ nguyên thì không ghi gì; sửa thì `PUT /people/{id}` như ô tên của người mới.
+- Giới hạn của cách đoán: người từng có nhóm, rời hết nhóm, rồi được mời lại cũng đi qua Sở thích một lần (bỏ qua được),
+  và ô tên điền sẵn tên của chính họ. Phương án A hoặc B ở trên mới phân biệt đúng hai trường hợp.
+- Phần tra số (phương án C) không đổi: vẫn là quyết định của chủ sản phẩm.

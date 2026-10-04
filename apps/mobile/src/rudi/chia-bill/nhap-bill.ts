@@ -24,6 +24,16 @@ function kho(): Storage | null {
   }
 }
 
+/**
+ * Where a bill draft is kept: one per group, and one per group and trip when
+ * the bill is written from a trip (ADR-0054), so a bill begun from one trip
+ * never surfaces in another and lands in its ledger.
+ */
+export function khoaNhapBill(contextId: string, outingId?: string): string {
+  if (outingId === undefined) return contextId;
+  return `${contextId}:${outingId}`;
+}
+
 export function luuNhapBill(contextId: string, nhap: unknown): void {
   boNho.set(contextId, nhap);
   try {

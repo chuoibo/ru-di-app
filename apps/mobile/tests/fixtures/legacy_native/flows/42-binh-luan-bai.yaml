@@ -5,8 +5,8 @@
 # một ảnh cá nhân tải lên `POST /people/me/photos` và một bài «Bai co anh QA»
 # mức «Bạn bè» trỏ vào ảnh ấy. Flow: Cá nhân → «Bài bạn đã đăng và ai đọc được»
 # → «Mở bài: Bai co anh QA» → màn chi tiết có «Ảnh bài đăng» (không phải khung
-# «Chưa tải được ảnh») → bấm «Thích» → chip đọc «❤️ 1» → viết «Binh luan QA» →
-# «Gửi bình luận» → bình luận hiện → chụp → quay lại → dòng «… · 1 tim · 1 bình
+# «Chưa tải được ảnh») → bấm «Thích» → dòng đếm «1 thích · 0 bình luận» → viết «Binh luan QA» →
+# «Gửi bình luận» → bình luận hiện → chụp → quay lại → dòng «… · 1 thích · 1 bình
 # luận» → trên tường của mình đổi «Ai được bình luận tường tôi» sang «Không ai»
 # rồi trả về «Ai đọc được bài» → «Đăng bài mới» có nút «Chọn ảnh» (không lái
 # bộ chọn ảnh của hệ thống).
@@ -31,8 +31,19 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 60000
 - tapOn: "Cá nhân"
+# The profile tab may still be leaving a screen pushed on it: wait for its own
+# heading and the transition's end before looking for a row.
 - extendedWaitUntil:
-    visible: "Bài bạn đã đăng và ai đọc được"
+    visible: "Không gian của riêng bạn"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+# The row sits under the owner's diary shelf (QA UI-153 empty state), below the fold.
+- scrollUntilVisible:
+    element:
+      text: "Bài bạn đã đăng và ai đọc được"
+    direction: DOWN
+    centerElement: true
     timeout: 30000
 - tapOn: "Bài bạn đã đăng và ai đọc được"
 # Posts sit below the owner's diary shelf, under the fold on a phone.
@@ -46,25 +57,32 @@ appId: com.lakiet.rudi
     visible: "Ảnh bài đăng"
     timeout: 60000
 - assertNotVisible: "Chưa tải được ảnh"
-- assertVisible: "Ô viết bình luận"
+# The composer is the post page's last row, under the photo and the empty
+# comments; its name opens with the verb (DESIGN.md), not «Ô …».
+- scrollUntilVisible:
+    element:
+      text: "Viết bình luận"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
 - tapOn: "Thích"
 - extendedWaitUntil:
-    visible: "❤️ 1"
+    visible: "[1] thích · [0] bình luận"
     timeout: 30000
-- tapOn: "Ô viết bình luận"
+- tapOn: "Viết bình luận"
 - inputText: "Binh luan QA"
 - hideKeyboard
 - tapOn: "Gửi bình luận"
 - extendedWaitUntil:
     visible: "Binh luan QA"
     timeout: 30000
-- assertVisible: "1 tim · 1 bình luận"
+- assertVisible: "[1] thích · [1] bình luận"
 - takeScreenshot: 42-chi-tiet-bai
 - pressKey: Back
 # The wall reloads on focus and starts from the top again.
 - scrollUntilVisible:
     element:
-      text: ".* · 1 tim · 1 bình luận"
+      text: "[1] thích · [1] bình luận"
     direction: DOWN
     timeout: 30000
 - scrollUntilVisible:

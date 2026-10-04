@@ -80,7 +80,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "1 tim · 0 bình luận"
     timeout: 60000
-- assertVisible: "Đã tim"
+- assertVisible: "Đã thả tim"
 # Bình luận: mở, đọc (rỗng), gửi, thấy tên mình trước câu.
 - tapOn: "Bình luận Check-in tại Lưng Chừng Cafe"
 - extendedWaitUntil:
@@ -153,13 +153,15 @@ appId: com.lakiet.rudi
     timeout: 30000
 - waitForAnimationToEnd:
     timeout: 5000
+# QA UI-162: the menu row is named after the screen it opens («Hành trình»);
+# its subtitle is unique on the tab, the card above shares the title.
 - scrollUntilVisible:
     element:
-      text: "Thành tích"
+      text: "Sổ huy hiệu và các ngã rẽ của bạn"
     direction: DOWN
     centerElement: true
     timeout: 60000
-- tapOn: "Thành tích"
+- tapOn: "Sổ huy hiệu và các ngã rẽ của bạn"
 # The journey book replaced the level/weekly-challenge page (profile routes):
 # the cover, the route choice, then the badges kept, below.
 - extendedWaitUntil:

@@ -46,3 +46,25 @@ test('mở lại sổ vẫn chọn được ảnh đã nhập, không đọc c�
   assert.equal(restored.photos[0], source.photos[0]);
   assert.deepEqual(includeSavedPhotos(restored, saved), restored);
 });
+
+
+test("màn khép chờ ngày Việt Nam, không tự suy ra quyền", async () => {
+  const { endingWait } = await import("../dist-test/rudi/diary/api.js");
+  const e = { starts_on: "2026-10-02", can_end: false, ended_at: null };
+  assert.equal(endingWait(e, new Date("2026-10-01T16:59:59Z")), "future");
+  assert.equal(endingWait(e, new Date("2026-10-01T17:00:00Z")), "organizer");
+  assert.equal(endingWait({ ...e, can_end: true }), null);
+  assert.equal(endingWait({ ...e, ended_at: "2026-10-02T10:00:00Z" }), null);
+});
+
+test("sổ: lỗi tạm được thử lại, quyền và xung đột cần xem lại", async () => {
+  const { diaryFailure } = await import("../dist-test/rudi/diary/api.js");
+  const { ApiError } = await import("../dist-test/api.js");
+  for (const [status, code] of [[409,"outing_not_started"],[403,"organizer_required"],[404,"diary_not_found"],[409,"diary_revision_conflict"],[409,"ending_already_confirmed"],[409,"diary_source_changed"],[422,"diary_photo_not_found"]]) {
+    const f = diaryFailure(new ApiError(status, code, "Synthetic refusal"));
+    assert.equal(f.retryable, false, code);
+    assert.equal(f.message, "Synthetic refusal");
+  }
+  assert.equal(diaryFailure(new ApiError(503, "diary_unavailable", "Synthetic outage")).retryable, true);
+  assert.equal(diaryFailure(new TypeError("Synthetic offline")).retryable, true);
+});

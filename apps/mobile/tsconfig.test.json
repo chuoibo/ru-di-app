@@ -14,6 +14,7 @@
     // feed's small decisions (follow by author, cut body, notification words).
     "src/rudi/community/chu-de.ts",
     "src/rudi/community/bang-tin.ts",
+    "src/rudi/nhom/loi-moi-nhom.ts",
     "src/rudi/diary/api.ts",
     // QA 23/09: the placeholder-name check (held equal to both server spellings)
     // and the invite-by-number steps (a 403 rename no longer aborts the invite).
@@ -306,6 +307,10 @@
     // số học theo ngày lịch: một ngày không đọc được KHÔNG thành con số bịa.
     "src/rudi/keo/nhip-keo.ts",
     "src/rudi/keo/hen-hai-ban.ts",
+    // Kệ «Những ngày muốn giữ» trống (QA UI-153): lối vào trang đầu là kèo đã qua gần nhất.
+    "src/rudi/diary/trang-dau.ts",
+    // Một cách viết ngày (QA UI-104) và khoảng ngày của chuyến trên kệ album (QA UI-103).
+    "src/rudi/ngay-viet.ts",
     "src/rudi/ngu-canh-mo.ts",
     // Hành trình (ADR-0026): chiếu lịch trình lên địa lý. Compile vì luật
     // phủ định — chặng không toạ độ không thành marker, hiệu suất không bịa,

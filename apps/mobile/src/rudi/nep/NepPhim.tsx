@@ -122,10 +122,10 @@ export function NepPhim({ actorId, imageJobIds }: { actorId: string | null; imag
 
   const confirmStart = () => {
     if (Platform.OS === "web") {
-      if (globalThis.confirm("Dùng một lượt thưởng để dựng MP4 từ các bức Nếp vừa vẽ?")) void start();
+      if (globalThis.confirm("Dùng một lượt thưởng để dựng phim từ các bức Nếp vừa vẽ?")) void start();
       return;
     }
-    Alert.alert("Dựng phim cùng Nếp?", "Dùng một lượt thưởng để dựng MP4 từ các bức Nếp vừa vẽ.", [
+    Alert.alert("Dựng phim cùng Nếp?", "Dùng một lượt thưởng để dựng phim từ các bức Nếp vừa vẽ.", [
       { text: "Để sau", style: "cancel" },
       { text: "Dựng phim", onPress: () => void start() },
     ]);
@@ -140,8 +140,8 @@ export function NepPhim({ actorId, imageJobIds }: { actorId: string | null; imag
       </View>
       <Text style={[typography.body, { color: colors.ink }]}>
         {job?.status === "ready" ? "Một đoạn phim thật, ghép từ những bức bạn chọn." :
-          job?.status === "reserved" || job?.status === "queued" || job?.status === "running" ? "Nếp đang nối các khung hình thành phim MP4…" :
-            `${imageJobIds.length} bức Nếp vừa vẽ · 1 lượt dựng cho 1 phim MP4`}
+          job?.status === "reserved" || job?.status === "queued" || job?.status === "running" ? "Nếp đang nối các khung hình thành phim…" :
+            `${imageJobIds.length} bức Nếp vừa vẽ · 1 lượt dựng cho 1 phim`}
       </Text>
       {readyURI && actorId ? <VideoFrame key={readyURI} uri={readyURI} actorId={actorId} /> : null}
       {saved.length > 1 ? <View style={styles.library}>

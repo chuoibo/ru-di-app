@@ -16,6 +16,13 @@
  */
 
 export type SizeClass = "compact" | "medium" | "expanded";
+
+/**
+ * The reading column on a tablet, and the widest a sheet gets: one number, so a
+ * sheet over a page lines up with the page's column (B11; it was 640 written
+ * twice, in `ui.tsx` and `ui/Sheet.tsx`).
+ */
+export const COT_DOC = 640;
 export type HeightClass = "short" | "regular";
 
 /** Android window size class boundaries, in dp. */

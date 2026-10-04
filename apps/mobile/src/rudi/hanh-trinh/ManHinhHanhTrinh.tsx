@@ -595,7 +595,7 @@ function TheDoan({ doan, activities }: { doan: DoanDuongHanhTrinh; activities: r
 const styles = StyleSheet.create({
   khung: { flex: 1, minHeight: 0 },
   hangNut: { paddingHorizontal: 12, paddingTop: 8, alignItems: "flex-start" },
-  nutKhop: { width: 44, height: 44, borderRadius: 8, borderWidth: 2, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-2deg" }] },
+  nutKhop: { width: 48, height: 48, borderRadius: 8, borderWidth: 2, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-2deg" }] },
   dan: { flex: 1 },
   the: { paddingHorizontal: 16, gap: 8 },
   // The torn edge and the holes (13dp in) sit over the map's last few dp.

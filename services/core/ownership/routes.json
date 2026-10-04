@@ -2981,6 +2981,48 @@
       "state": "LIVE-GO",
       "evidence": "docs/migration/routes/batches/GET-contexts-context_id-unbatched-expenses.md",
       "native": true
+    },
+    {
+      "id": "GET /contexts/{context_id}/invitation",
+      "order": 228,
+      "kind": "route",
+      "method": "GET",
+      "path": "/contexts/{context_id}/invitation",
+      "group": "contexts",
+      "class": "core",
+      "owner": "go",
+      "python": "absent",
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/routes/contexts/GET-contexts-context_id-invitation.md",
+      "native": true
+    },
+    {
+      "id": "DELETE /contexts/{context_id}/invitation",
+      "order": 229,
+      "kind": "route",
+      "method": "DELETE",
+      "path": "/contexts/{context_id}/invitation",
+      "group": "contexts",
+      "class": "core",
+      "owner": "go",
+      "python": "absent",
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/routes/contexts/DELETE-contexts-context_id-invitation.md",
+      "native": true
+    },
+    {
+      "id": "POST /me/achievement-seen",
+      "order": 230,
+      "kind": "route",
+      "method": "POST",
+      "path": "/me/achievement-seen",
+      "group": "achievements",
+      "class": "core",
+      "owner": "go",
+      "python": "absent",
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/routes/me/POST-me-achievement-seen.md",
+      "native": true
     }
   ],
   "features": [

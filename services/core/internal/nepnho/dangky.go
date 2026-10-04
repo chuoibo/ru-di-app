@@ -56,7 +56,7 @@ var CotNguoiGo = []CotNguoi{
 	{"community_interactions", "person_id", Chua, "community: interaction signals for ranking; deleted by community_erase, not counted by any test yet"},
 	{"community_audit", "actor_id", Chua, "community: moderation audit trail; the actor is set NULL by community_erase (the FK is ON DELETE SET NULL), not counted by any test yet"},
 	{"community_notifications", "person_id", Chua, "community: notifications; deleted by community_erase, not counted by any test yet"},
-	{"community_notifications", "actor_id", Chua, "community: notification sender added by its second migration; not erased by account deletion yet, an id only"},
+	{"community_notifications", "actor_id", Chua, "community: who mentioned the recipient (QA UI-147); set NULL by community_erase as rewritten in notification_actor_erasure.sql, counted by community's TestPostgresCommunityErasureForgetsWhoMentioned"},
 	{"community_idempotency", "person_id", Chua, "community: idempotency keys; deleted by community_erase, not counted by any test yet"},
 	{"community_limits", "person_id", Chua, "community: rate-limit counters; deleted by community_erase, not counted by any test yet"},
 	// internal/diary (ADR-0039).

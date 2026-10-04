@@ -22,12 +22,15 @@ import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { luiVeVe } from "../../lui-ve";
+import { useLuiLop } from "../../ui/useLuiLop";
 
 export function XoaTaiKhoanScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
   const { phien, phienDaDoc, resetSession } = useRudiSession();
   const [buoc, setBuoc] = useState<1 | 2>(1);
+  // Back on the second step returns to the first, as its «Quay lại» would.
+  useLuiLop(buoc === 2, () => setBuoc(1));
   const [daGo, setDaGo] = useState("");
   const [dangXoa, setDangXoa] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
@@ -74,7 +77,7 @@ export function XoaTaiKhoanScreen() {
         <>
           <View style={styles.khoi}>
             <Text style={[typography.body, { color: colors.ink }]}>
-              Gõ {TU_XAC_NHAN} vào ô dưới để xác nhận.
+              Gõ {TU_XAC_NHAN} vào ô dưới để xác nhận (có dấu hay không đều được).
             </Text>
             <Field
               accessibilityLabel="Ô xác nhận xoá"
@@ -87,9 +90,11 @@ export function XoaTaiKhoanScreen() {
           {loi ? <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
           <RudiButton
             disabled={!xacNhanHopLe(daGo) || dangXoa}
+            lyDo={dangXoa ? undefined : !xacNhanHopLe(daGo) ? `Gõ ${TU_XAC_NHAN} vào ô trên để mở nút này.` : undefined}
             label="Xoá vĩnh viễn"
             loading={dangXoa}
             onPress={() => void xoa()}
+            tone="warn"
             variant="outline"
           />
           <RudiButton disabled={dangXoa} label="Ở lại" onPress={() => luiVeVe(router as never, "/settings")} variant="ghost" />

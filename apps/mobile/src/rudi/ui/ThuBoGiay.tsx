@@ -144,10 +144,10 @@ export function ThuBoGiay() {
       </LatTrang>
       <View style={{ flexDirection: "row", gap: 8 }}>
         <View style={{ flex: 1 }}>
-          <RudiButton disabled={trang === 0} label="Lùi" onPress={() => setTrang((n) => Math.max(0, n - 1))} variant="outline" />
+          <RudiButton disabled={trang === 0} label="Lùi" lyDo={trang === 0 ? "Đây là trang đầu." : undefined} onPress={() => setTrang((n) => Math.max(0, n - 1))} variant="outline" />
         </View>
         <View style={{ flex: 1 }}>
-          <RudiButton disabled={trang === 2} label="Tiếp" onPress={() => setTrang((n) => Math.min(2, n + 1))} />
+          <RudiButton disabled={trang === 2} label="Tiếp" lyDo={trang === 2 ? "Đây là trang cuối." : undefined} onPress={() => setTrang((n) => Math.min(2, n + 1))} />
         </View>
       </View>
 

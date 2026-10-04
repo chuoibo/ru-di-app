@@ -91,6 +91,8 @@ export async function ghiVaoSo(input: {
   payerId: string;
   occasion: string;
   attempts: Record<string, Attempt>;
+  /** The trip the bill is written from, when it is (ADR-0054). */
+  outingId?: string;
 }): Promise<{ expenseVersionId: string; acknowledged: boolean }> {
   const participants = nguoiThamGia(input.reading, input.assignment, input.roster);
   const items = itemsForWire(input.reading, input.assignment);
@@ -101,7 +103,7 @@ export async function ghiVaoSo(input: {
     occasion: input.occasion,
   };
   const khoa = `khoan-chi:${input.payerId}:${draft.totalVnd}:${input.occasion}:${participants.map((p) => p.id).join(",")}`;
-  const proposal = await proposeSplit(input.contextId, draft, attemptFor(input.attempts, khoa), items);
+  const proposal = await proposeSplit(input.contextId, draft, attemptFor(input.attempts, khoa), items, input.outingId);
   return confirmExpense(proposal, attemptFor(input.attempts, `xac-nhan:${proposal.expenseId}`));
 }
 

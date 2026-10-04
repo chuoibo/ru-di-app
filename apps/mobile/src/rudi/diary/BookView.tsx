@@ -7,7 +7,7 @@ import { SoBia } from "../ui/SoBia";
 import { TrangSo } from "../ui/TrangSo";
 import { KhungAnh } from "../ui/KhungAnh";
 import { Washi } from "../ui/Washi";
-import { ngayKieuViet } from "../chat/to-hen-chung";
+import { tenTrang } from "./ten-trang";
 import type { DiaryDocument, DiaryKind } from "./api";
 
 /** One reading surface, shared by the private editor and the published book. */
@@ -32,7 +32,7 @@ export function BookView({ document, photo, compact = false, kind = "trip" }: { 
       </View>
     } />}
     {!compact ? document.pages.map((page, i) => <TrangSo key={i} tone="accent" ke={false} style={styles.page}>
-      {page.heading ? <Text style={[typography.h2, { color: colors.ink }]}>{/^\d{4}-\d{2}-\d{2}$/.test(page.heading) ? `Ngày ${ngayKieuViet(page.heading)}` : page.heading}</Text> : null}
+      {page.heading ? <Text style={[typography.h2, { color: colors.ink }]}>{tenTrang(page.heading)}</Text> : null}
       <View style={page.layout === "collage" ? styles.collage : styles.single}>
         {page.photo_ids.map((id) => <View key={id} style={page.layout === "collage" ? { width: Math.max(0, (width - 66) / 2), height: Math.max(0, (width - 66) / 2) * 4 / 3 } : styles.pagePhoto}>
           <Image accessibilityLabel={`Ảnh trang ${i + 1}`} source={photo(id)} contentFit="cover" cachePolicy="none" style={StyleSheet.absoluteFill} />

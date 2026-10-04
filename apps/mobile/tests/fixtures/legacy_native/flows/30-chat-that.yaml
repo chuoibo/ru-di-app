@@ -3,8 +3,8 @@
 # Chạy SAU flow 24/25 trong cùng lượt: C có nhóm «Hoi QA» và là bạn của D. Gõ một
 # tin → hiện bong bóng; tắt app mở lại → tin còn (đọc từ máy chủ, không phải
 # state); giữ lâu → thanh phản ứng → ❤ → chip «❤️ 1» (đếm của máy chủ);
-# `/vote Ăn gì? Bún bò | Phở` → thẻ bình chọn với hai lựa chọn, bấm một → «1
-# phiếu · của bạn» (qua /votes/{id}/ballots); `@Rủ Đi gợi ý quán` → máy chủ
+# `/vote Ăn gì? Bún bò | Phở` → thẻ bình chọn với hai lựa chọn, bấm một → lựa chọn
+# đó được chọn, chân thẻ «1 phiếu» (qua /votes/{id}/ballots); `@Rủ Đi gợi ý quán` → máy chủ
 # không có khoá mô hình → câu nói thật «chưa nối được mô hình» (đường im lặng
 # trung thực; đường AI nói thật đo ở `mobile-native-ai` khi có khoá);
 # `/chia-bill` → «chưa sẵn sàng trên máy chủ này» (reader không cấu hình).
@@ -92,8 +92,13 @@ appId: com.lakiet.rudi
     timeout: 60000
 - hideKeyboard
 - tapOn: "Bỏ phiếu Bun bo"
+# B6 (QA UI-065): «của bạn» is no longer printed; the ballot is the radio
+# itself, checked, and the count is said once at the foot of the card. On
+# Android the radio's name carries its value: «Bỏ phiếu Bun bo, 1 phiếu».
 - extendedWaitUntil:
-    visible: "1 phiếu · của bạn"
+    visible:
+      text: ".*1 phiếu.*"
+      checked: true
     timeout: 30000
 - takeScreenshot: 30-binh-chon
 # Gọi AI và /chia-bill rẽ theo máy chủ (lát 7, ADR-0046 đề xuất: tin @ là tin

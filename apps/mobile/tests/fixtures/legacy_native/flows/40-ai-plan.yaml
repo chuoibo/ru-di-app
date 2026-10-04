@@ -40,9 +40,7 @@ appId: com.lakiet.rudi
 - inputText: "Plan QA"
 - hideKeyboard
 - tapOn: "Mở nhóm"
-- extendedWaitUntil:
-    visible: "Khám phá"
-    timeout: 60000
+- runFlow: _vao-nhom-vua-lap.yaml
 - tapOn: "Tin nhắn"
 - extendedWaitUntil:
     visible: "Plan QA"

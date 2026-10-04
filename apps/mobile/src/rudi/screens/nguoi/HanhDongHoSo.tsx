@@ -105,7 +105,7 @@ export function HanhDongHoSoSheet({
           <Text style={[typography.body, { color: colors.ink }]}>
             Chặn {displayName}? Hai người sẽ không đọc được bài và story của nhau. Nhóm chung vẫn giữ nguyên.
           </Text>
-          <RudiButton label="Chặn" loading={dangGui} onPress={() => void doiChan(true)} variant="outline" />
+          <RudiButton label="Chặn" loading={dangGui} onPress={() => void doiChan(true)} tone="warn" variant="outline" />
           <RudiButton label="Thôi" onPress={() => setBuoc("menu")} variant="ghost" />
         </View>
       ) : null}

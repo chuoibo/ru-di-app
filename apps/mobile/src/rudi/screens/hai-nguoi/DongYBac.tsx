@@ -7,6 +7,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton } from "../../ui";
 import { ChuKy } from "../../ui/ChuKy";
 import { Sheet } from "../../ui/Sheet";
+import { useGiuKhiDong } from "../../ui/giu-khi-dong";
 import { StampButton } from "../../ui/StampButton";
 import { DongSo, TrangSo } from "../../ui/TrangSo";
 
@@ -32,8 +33,8 @@ function BacDongY({
   tieuDe,
   choPhep,
   khongKeoTheo,
-  dangCho,
-  deNghiCuaToi,
+  dangCho: dangChoSong,
+  deNghiCuaToi: deNghiCuaToiSong,
   onDeNghi,
   onDongY,
   nhanDeNghi,
@@ -65,6 +66,8 @@ function BacDongY({
 }) {
   const { colors, space } = useRudiTheme();
   const { phien } = useRudiSession();
+  // Closing, the sheet keeps what it said open (QA UI-084).
+  const { dangCho, deNghiCuaToi } = useGiuKhiDong(open, { dangCho: dangChoSong, deNghiCuaToi: deNghiCuaToiSong });
   const tenToi = phien?.profile?.display_name?.trim() || "Bạn";
   const ho = tenNguoiKia?.trim() || "Người ấy";
   // Whoever proposed has signed; the other line waits for the other person.

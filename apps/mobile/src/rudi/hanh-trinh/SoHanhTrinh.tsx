@@ -7,6 +7,7 @@ import { ApiError, luuHanhTrinh, newAttempt, xemTruocHanhTrinh, type Attempt } f
 import { typography, useRudiTheme } from "../theme";
 import { Chip, RudiButton } from "../ui";
 import { ONhapMuc } from "../ui/ONhapMuc";
+import { congTac } from "../ui/cong-tac";
 import { CauTaiCho } from "../ui/CauTaiCho";
 import { LenLop } from "../ui/KheLop";
 import { MoNgang } from "../ui/MoNgang";
@@ -177,7 +178,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
       {onReload ? <RudiButton label="Tải bản mới để đối chiếu" variant="outline" disabled={busy} onPress={() => void onReload()} /> : null}
       {outing.timeline_revision !== draft.expected_revision ? <>
         <Text style={[typography.note, { color: colors.inkSoft }]}>Bản của hội: {outing.stops.map((s) => `${s.at} ${s.label}`).join(" → ")}</Text>
-        <RudiButton label="Bỏ nháp, dùng bản mới" accessibilityLabel="Bỏ bản nháp, dùng bản của hội" variant="outline" disabled={busy} onPress={() => { invalidate(nhapTuKeo(outing)); setUndo(null); setConflict(false); }} />
+        <RudiButton label="Bỏ nháp, dùng bản mới" accessibilityLabel="Bỏ bản nháp, dùng bản của hội" tone="warn" variant="outline" disabled={busy} onPress={() => { invalidate(nhapTuKeo(outing)); setUndo(null); setConflict(false); }} />
       </> : null}
     </View> : null}
     {/* An empty day has no route to recompute. With a draft on a mapped day,
@@ -213,7 +214,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
   const batDau = phut(settings.start_at);
   const somNhat = batDau === null ? undefined : draft.stops.find((s) => s.day === day && s.time_locked && (phut(s.at) ?? Infinity) < batDau);
   const chuaKip = somNhat ? `«${somNhat.label}» giữ giờ ${somNhat.at}, sớm hơn giờ xuất phát nên sẽ không kịp. Đổi giờ xuất phát hoặc bỏ giữ giờ ở chặng đó.` : null;
-  const congTac = { trackColor: { false: colors.lineStrong, true: colors.accent }, thumbColor: colors.card, ...(Platform.OS === "web" ? { activeThumbColor: colors.card } : {}) };
+  const congTacKeo = congTac(colors, colors.accent);
   const tuyen = trangThaiTuyen({ fixture, dangTinh: busy, coTuyen: Boolean(route), preview });
   const thuTuNgay = days.indexOf(day);
   const tieuDeTrang = days.length > 1 && thuTuNgay >= 0 ? `Ngày ${thuTuNgay + 1} · ${chuNgay(day)}` : chuNgay(day);
@@ -221,7 +222,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
     {/* One day needs no picker: the page head already names it, and on a
         phone the lone «Ngày 1» row cost the map 56dp (review, 2026-09-29). */}
     {days.length > 1 ? <ScrollView horizontal style={{ flexGrow: 0 }} contentContainerStyle={[styles.row, { paddingHorizontal: 16, paddingVertical: 8 }]} showsHorizontalScrollIndicator={false}>{days.map((date, i) => <Chip key={date} label={`Ngày ${i + 1}`} selected={day === date} onPress={() => chooseDay(date)} />)}</ScrollView> : null}
-    <ManHinhHanhTrinh nhuongNep={che.cheDo === "hanh-trinh"} goiYGhim={chuotPhai ? "Nhấp chuột phải trên bản đồ để thêm điểm hẹn." : "Giữ trên bản đồ để thêm điểm hẹn."} chuaXep={chuaXep.length ? { ten: chuaXep.map((s) => s.label), onXep: xepChuaXep } : undefined} hanh={visible} fitDem={che.fitDem + 1} cameraKey={`${day}:${route ? "routed" : "draft"}`} fitPoints={fitPoints} toiDem={che.toiDem} selectedActivityId={che.selectedActivityId} selectedSegmentId={che.selectedSegmentId} onChonMoc={che.chonHoatDong} onChonDoan={che.chonDoan} onNen={() => { che.chonHoatDong(null); che.chonDoan(null); }} onKhop={che.khopHanhTrinh} onUserMove={che.userMove} onVeLichTrinh={onTimeline} onGhim={(point) => { if (saving.current) return; if (draft.stops.length >= 50) { setMessage("Lịch trình đã đủ 50 chặng. Bỏ một chặng trước khi thêm điểm hẹn."); return; } setPin(point); setPinName(""); }} chanDuoi={Math.max(bottom, insets.bottom, CHAN_CU_CHI)} tuyen={tuyen} dangTimCho={dangTimCho} chonPhuongTien={phuongTien} phuongTien={PHUONG_TIEN[settings.transport_mode]} tieuDeTrang={tieuDeTrang} daToiIds={daToiIds} dangDi={!fixture && day === homNay()} neo={{ xuatPhat: settings.start_stop_id, ketThuc: settings.end_stop_id, veDiemDau: settings.return_to_start }} actions={actions} primaryAction={suggestion && preview?.suggestion ? <RudiButton disabled={busy || !preview.suggestion.feasible} label="Giữ phương án này" onPress={() => void save(apDungTuyen(draft, day, preview.suggestion!))} /> : dirty ? <RudiButton label="Lưu cho cả hội" loading={busy} disabled={busy} lyDo={busy ? "Đang lưu" : undefined} onPress={() => void save(draft)} /> : <RudiButton label="Xem cách đi gọn hơn" loading={busy} disabled={busy || !visible.activities.length} lyDo={!visible.activities.length ? "Ngày này chưa có chặng" : undefined} onPress={() => void inspect(true)} />} />
+    <ManHinhHanhTrinh nhuongNep={che.cheDo === "hanh-trinh"} goiYGhim={chuotPhai ? "Nhấp chuột phải trên bản đồ để thêm điểm hẹn." : "Giữ trên bản đồ để thêm điểm hẹn."} chuaXep={chuaXep.length ? { ten: chuaXep.map((s) => s.label), onXep: xepChuaXep } : undefined} hanh={visible} fitDem={che.fitDem + 1} cameraKey={`${day}:${route ? "routed" : "draft"}`} fitPoints={fitPoints} toiDem={che.toiDem} selectedActivityId={che.selectedActivityId} selectedSegmentId={che.selectedSegmentId} onChonMoc={che.chonHoatDong} onChonDoan={che.chonDoan} onNen={() => { che.chonHoatDong(null); che.chonDoan(null); }} onKhop={che.khopHanhTrinh} onUserMove={che.userMove} onVeLichTrinh={onTimeline} onGhim={(point) => { if (saving.current) return; if (draft.stops.length >= 50) { setMessage("Lịch trình đã đủ 50 chặng. Bỏ một chặng trước khi thêm điểm hẹn."); return; } setPin(point); setPinName(""); }} chanDuoi={Math.max(bottom, insets.bottom, CHAN_CU_CHI)} tuyen={tuyen} dangTimCho={dangTimCho} chonPhuongTien={phuongTien} phuongTien={PHUONG_TIEN[settings.transport_mode]} tieuDeTrang={tieuDeTrang} daToiIds={daToiIds} dangDi={!fixture && day === homNay()} neo={{ xuatPhat: settings.start_stop_id, ketThuc: settings.end_stop_id, veDiemDau: settings.return_to_start }} actions={actions} primaryAction={suggestion && preview?.suggestion ? <RudiButton disabled={busy || !preview.suggestion.feasible} label="Giữ phương án này" lyDo={!busy && !preview.suggestion.feasible ? "Phương án này không kịp giờ hẹn của các chặng." : undefined} onPress={() => void save(apDungTuyen(draft, day, preview.suggestion!))} /> : dirty ? <RudiButton label="Lưu cho cả hội" loading={busy} disabled={busy} lyDo={busy ? "Đang lưu" : undefined} onPress={() => void save(draft)} /> : <RudiButton label="Xem cách đi gọn hơn" loading={busy} disabled={busy || !visible.activities.length} lyDo={!visible.activities.length ? "Ngày này chưa có chặng" : undefined} onPress={() => void inspect(true)} />} />
     {/* Over the whole screen, header included: drawn here, the scrim stopped
         under the outing's header and left it live (QA UI-041). */}
     <LenLop>
@@ -231,7 +232,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
       <Text style={[typography.h2, { color: colors.ink }]}>Sửa trang ngày</Text>
       <Text style={[typography.caption, { color: colors.inkSoft }]}>{tieuDeTrang}{dirty ? " · bản nháp, cả hội chưa thấy" : ""}</Text>
       <ONhapMuc label="Giờ xuất phát" error={chuaKip} value={settings.start_at} onChangeText={(start_at) => changeDay({ start_at })} />
-      <View style={styles.row}><Switch {...congTac} accessibilityLabel="Quay về điểm đầu" value={settings.return_to_start} onValueChange={(return_to_start) => changeDay({ return_to_start })} /><Text style={[typography.body, { color: colors.ink }]}>Quay về điểm đầu</Text></View>
+      <View style={styles.row}><Switch {...congTacKeo} accessibilityLabel="Quay về điểm đầu" value={settings.return_to_start} onValueChange={(return_to_start) => changeDay({ return_to_start })} /><Text style={[typography.body, { color: colors.ink }]}>Quay về điểm đầu</Text></View>
       {/* Each stop at most ~70% of the column, its name cut after the hour,
           the row out to the sheet's scroll box and faded at its cut end: one
           over-wide chip cut flush at the padding read as broken, not as a
@@ -244,7 +245,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
         <Text style={[typography.h2, { color: colors.ink }]}>{editStop.label}</Text>
         <ONhapMuc label="Tên chặng" value={editStop.label} onChangeText={(label) => changeStop(editStop.id, { label })} />
         <ONhapMuc label="Giờ đến" value={editStop.at} onChangeText={(at) => changeStop(editStop.id, { at })} />
-        <View style={styles.row}><Switch {...congTac} accessibilityLabel="Giữ giờ này" value={editStop.time_locked} onValueChange={(time_locked) => changeStop(editStop.id, { time_locked })} /><Text style={[typography.body, { color: colors.ink }]}>Giữ giờ này</Text></View>
+        <View style={styles.row}><Switch {...congTacKeo} accessibilityLabel="Giữ giờ này" value={editStop.time_locked} onValueChange={(time_locked) => changeStop(editStop.id, { time_locked })} /><Text style={[typography.body, { color: colors.ink }]}>Giữ giờ này</Text></View>
         <Text style={[typography.label, { color: colors.ink }]}>Ở lại bao lâu?</Text>
         <View style={styles.row}>{[30, 60, 90, 120].map((duration_minutes) => <Chip key={duration_minutes} label={`${duration_minutes} phút`} selected={editStop.duration_minutes === duration_minutes} onPress={() => changeStop(editStop.id, { duration_minutes })} />)}</View>
         {editStop.duration_minutes === null ? <Text style={[typography.note, { color: colors.inkSoft }]}>Gợi ý 60 phút. Chọn thời lượng để kiểm tra lịch.</Text> : null}
@@ -256,14 +257,14 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
         <View style={styles.row}>{matches.map((p) => <Chip key={p.id} label={p.name} selected={editStop.place_id === p.id} onPress={() => changeStop(editStop.id, { place_id: p.id, place_name: p.name, meeting_point: null })} />)}</View>
         {!matches.length ? <Text style={[typography.note, { color: colors.inkSoft }]}>Chưa thấy địa điểm này. Bạn có thể giữ trên bản đồ để chọn điểm hẹn riêng.</Text> : null}
       </View> : <Text style={[typography.note, { color: colors.inkSoft }]}>Chọn chặng để giữ giờ, thêm thời lượng hoặc chia ngày.</Text>}
-      <RudiButton label="Thêm chặng" variant="outline" disabled={draft.stops.length >= 50} onPress={() => { const id = `tmp-${Date.now()}`; invalidate({ ...draft, days: draft.days.some((d) => d.day === day) ? draft.days : [...draft.days, settings], stops: [...draft.stops, { id, position: draft.stops.length, at: settings.start_at, label: "Điểm hẹn mới", place_id: null, place_name: null, meeting_point: null, day, duration_minutes: null, time_locked: true }] }); setStopId(id); }} />
+      <RudiButton label="Thêm chặng" variant="outline" disabled={draft.stops.length >= 50} lyDo={draft.stops.length >= 50 ? "Lịch trình đã đủ 50 chặng." : undefined} onPress={() => { const id = `tmp-${Date.now()}`; invalidate({ ...draft, days: draft.days.some((d) => d.day === day) ? draft.days : [...draft.days, settings], stops: [...draft.stops, { id, position: draft.stops.length, at: settings.start_at, label: "Điểm hẹn mới", place_id: null, place_name: null, meeting_point: null, day, duration_minutes: null, time_locked: true }] }); setStopId(id); }} />
       {/* The draft is saved from here too: «Xem trên bản đồ» only closed the
           sheet, and the save sat under the day page's fold, so an edit could
           look kept when it was not (critique, B3). */}
       {dirty ? <RudiButton label="Lưu cho cả hội" disabled={busy} lyDo={busy ? "Đang lưu" : undefined} loading={busy} onPress={() => void save(draft)} /> : null}
       <RudiButton label="Xem trên bản đồ" variant={dirty ? "outline" : "solid"} onPress={() => setEditing(false)} />
     </View></Sheet>
-    <Sheet open={pin !== null} onClose={() => setPin(null)} accessibilityLabel="Điểm hẹn của chuyến đi"><View style={styles.editor}><Text style={[typography.h2, { color: colors.ink }]}>Hẹn nhau ở đây</Text><ONhapMuc label="Tên điểm hẹn" value={pinName} onChangeText={setPinName} /><Text style={[typography.note, { color: colors.inkSoft }]}>Điểm bạn chọn sẽ được chia sẻ trong lịch trình của hội.</Text><RudiButton label="Thêm điểm hẹn" disabled={!pinName.trim()} onPress={addPoint} /></View></Sheet>
+    <Sheet open={pin !== null} onClose={() => setPin(null)} accessibilityLabel="Điểm hẹn của chuyến đi"><View style={styles.editor}><Text style={[typography.h2, { color: colors.ink }]}>Hẹn nhau ở đây</Text><ONhapMuc label="Tên điểm hẹn" value={pinName} onChangeText={setPinName} /><Text style={[typography.note, { color: colors.inkSoft }]}>Điểm bạn chọn sẽ được chia sẻ trong lịch trình của hội.</Text><RudiButton label="Thêm điểm hẹn" disabled={!pinName.trim()} lyDo={!pinName.trim() ? "Đặt tên cho điểm hẹn trước." : undefined} onPress={addPoint} /></View></Sheet>
     </LenLop>
   </View>;
 }

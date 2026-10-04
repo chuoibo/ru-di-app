@@ -65,6 +65,12 @@ export interface TrangThaiSoDoi {
    * synchronous and always true.
    */
   daNap: boolean;
+  /**
+   * The first read failed, in the reader's words, or null (QA UI-083). While
+   * set, nothing in the notebook is known: the screen says it could not read
+   * it and offers «Thử lại», never «Chưa có sổ» and «Đề nghị lập sổ».
+   */
+  loiDoc: string | null;
   /** The command in flight, by name, or null. The fixture never waits. */
   dangLam: string | null;
   /**

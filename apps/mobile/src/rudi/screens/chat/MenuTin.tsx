@@ -51,7 +51,7 @@ export function MenuTin({
           <Text style={[typography.body, { color: colors.inkSoft }]}>
             Mọi người sẽ thấy “Tin nhắn đã bị xoá” thay cho nội dung. Ảnh đã gửi vẫn nằm trong kho ảnh của nhóm.
           </Text>
-          <RudiButton label="Xoá tin" onPress={() => onXoa(tin)} variant="outline" />
+          <RudiButton label="Xoá tin" onPress={() => onXoa(tin)} tone="warn" variant="outline" />
           <RudiButton label="Giữ lại" onPress={() => setXacNhanXoa(false)} variant="ghost" />
         </View>
       ) : (

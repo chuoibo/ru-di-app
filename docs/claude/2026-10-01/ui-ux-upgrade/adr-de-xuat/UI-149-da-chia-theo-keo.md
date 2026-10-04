@@ -1,6 +1,6 @@
 # Đề xuất ADR: «đã chia» của một kèo tính theo kèo, không theo ngày (QA UI-149)
 
-- Trạng thái: **đề xuất**, chưa triển khai. Viết 01/10/2026 trong đợt nâng cấp UI/UX từ audit PR #663.
+- Trạng thái: **đã quyết 2026-10-04 → C và A**, thành `docs/decisions/ADR-0054-khoan-chi-thuoc-mot-keo.md`. Viết 01/10/2026 trong đợt nâng cấp UI/UX từ audit PR #663.
 - Người quyết: chủ sản phẩm. Chạm luật tiền 3 («số dư tính lại được từ sổ»), nên đợt này không sửa mã.
 
 ## Vấn đề

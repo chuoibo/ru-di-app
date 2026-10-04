@@ -154,6 +154,8 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"title":"Đà Lạt tháng giêng","starts_on":"2020-01-01","ends_on":"2020-01-03","headcount":3,"budget_per_person_vnd":0}'
+    bind:
+      new_year: {from: body, pointer: /id, class: uuid}
   - id: outing_one_day
     as: owner
     request:
@@ -170,6 +172,8 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"title":"Chuyến dài chưa về","starts_on":"2020-01-02","ends_on":"2099-12-31","headcount":4,"budget_per_person_vnd":0}'
+    bind:
+      under_way: {from: body, pointer: /id, class: uuid}
   - id: owner_recap_trips_no_money
     as: owner
     request:
@@ -193,6 +197,43 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+  # ADR-0054 (QA UI-149): the dinner above, dated on a day both trips cover and
+  # written from neither, belongs to no trip. This lunch, on that same day, is
+  # written from «Đà Lạt tháng giêng»: only that trip counts it.
+  - id: propose_lunch_from_trip
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa trưa ghi từ chuyến (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:30:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000,"items":[],"surcharges":[],"discounts":[],"outing_id":"{{new_year}}"}'
+    bind:
+      lunch: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_lunch_from_trip
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa ghi từ chuyến (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:30:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000,"items":[],"surcharges":[],"discounts":[],"outing_id":"{{new_year}}"},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000},"acknowledge_as_advancer":true}'
+  - id: confirm_lunch_moved_to_other_trip
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa ghi từ chuyến (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:30:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000,"items":[],"surcharges":[],"discounts":[],"outing_id":"{{under_way}}"},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000},"acknowledge_as_advancer":true}'
+  - id: propose_from_a_trip_that_does_not_exist
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Không có chuyến này (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T13:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":10000,"items":[],"surcharges":[],"discounts":[],"outing_id":"deadbeef-feed-4bad-8bad-facefeedbead"}'
   - id: propose_supper
     as: owner
     request:

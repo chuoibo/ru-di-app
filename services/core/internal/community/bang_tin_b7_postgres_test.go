@@ -139,3 +139,38 @@ func TestPostgresCommunityNotificationNamesWhoAndWhere(t *testing.T) {
 		t.Fatalf("want a post mention and a comment mention, named and quoted: %s", w.Body.String())
 	}
 }
+
+// Account deletion forgets who mentioned whom: the people row stays with
+// deleted_at, so the foreign key's SET NULL never fires and the erasure
+// trigger does it. The recipient keeps the notification, without a name.
+func TestPostgresCommunityErasureForgetsWhoMentioned(t *testing.T) {
+	f := setup(t)
+	f.friend(t)
+	w := f.call("POST", "/v2/community/posts", 0, PostInput{LogicalID: uuid(), Body: "Tổng hợp: rủ đi bộ quanh hồ sáng mai", Audience: "public", Topics: []string{"Đi bộ"}, Mentions: []string{f.people[1]}})
+	requireStatus(t, w, 201)
+	var p Post
+	_ = json.Unmarshal(w.Body.Bytes(), &p)
+	f.approve(t, p)
+	var named int
+	if err := f.pool.QueryRow(t.Context(), `SELECT count(*) FROM community_notifications WHERE actor_id=$1`, f.people[0]).Scan(&named); err != nil || named == 0 {
+		t.Fatalf("the mention was not recorded with its author: %d %v", named, err)
+	}
+	// Deleted inside a transaction that is rolled back: the tier shares one
+	// database, and a committed account deletion fires every package's
+	// erasure trigger under the other packages' running tests.
+	tx, err := f.pool.Begin(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback(t.Context())
+	if _, err := tx.Exec(t.Context(), `UPDATE people SET deleted_at=now() WHERE id=$1`, f.people[0]); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.QueryRow(t.Context(), `SELECT count(*) FROM community_notifications WHERE actor_id=$1`, f.people[0]).Scan(&named); err != nil || named != 0 {
+		t.Fatalf("%d notifications still name a deleted account (%v)", named, err)
+	}
+	var kept int
+	if err := tx.QueryRow(t.Context(), `SELECT count(*) FROM community_notifications WHERE person_id=$1 AND actor_id IS NULL`, f.people[1]).Scan(&kept); err != nil || kept == 0 {
+		t.Fatalf("the recipient lost the notification: %d %v", kept, err)
+	}
+}

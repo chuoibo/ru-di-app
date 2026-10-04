@@ -25,7 +25,10 @@ test("B8: hàng người không lồng nút; hành động đứng cạnh, ngoà
 
 test("B3: người cùng nhóm có «Kết bạn» thật, gọi guiLoiMoi, và không mời người vừa bị chặn", () => {
   const nguon = doc("screens/nguoi/HoSoNguoiScreen.tsx");
-  const nhanh = nguon.slice(nguon.indexOf('relation === "groupmate" ?'));
+  // B8 (QA UI-078): the branch also waits on the block list (`&& !daChan`).
+  const dau = nguon.indexOf('relation === "groupmate" && !daChan ?');
+  assert.ok(dau > 0, "nhánh người cùng nhóm còn đó");
+  const nhanh = nguon.slice(dau);
   assert.match(nhanh, /Kết bạn để nhắn riêng\./, "câu flow 45 kiểm đã mất");
   assert.match(nhanh, /\{!daChan \?/, "vẫn mời kết bạn người vừa bị chặn");
   assert.match(nhanh, /label="Kết bạn"/, "không có nút «Kết bạn»");

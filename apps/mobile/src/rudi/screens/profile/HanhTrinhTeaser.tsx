@@ -49,7 +49,7 @@ export function HanhTrinhTeaser({ personId }: { personId: string }) {
       </View>
       {progress ? <Text style={[typography.note, { color: colors.coverInkSoft }]}>{progress}</Text> : null}
       <View style={[styles.footer, { borderTopColor: colors.coverLineStrong }]}>
-        <Text style={[typography.label, { color: colors.coverInk, flex: 1 }]}>{book ? `${book.earned_badges.length} huy hiệu · ${book.mp4_credits.available} lượt dựng MP4` : "Mở sổ hành trình"}</Text>
+        <Text style={[typography.label, { color: colors.coverInk, flex: 1 }]}>{book ? `${book.earned_badges.length} huy hiệu · ${book.mp4_credits.available} lượt dựng phim` : "Mở sổ hành trình"}</Text>
         <Ionicons color={colors.coverInk} name="arrow-forward" size={20} />
       </View>
     </Pressable>

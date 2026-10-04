@@ -309,7 +309,7 @@ export function CommunityScreen({ dau }: { dau?: DungDau } = {}) {
           <RudiButton label="Giữ lại" variant="ghost" onPress={() => setXacNhanXoa(false)}/>
         </View>
       ) : (
-        <RudiButton label="Xóa lịch sử đề xuất" variant="outline" onPress={() => { setDaXoaLichSu(false); setXacNhanXoa(true); }}/>
+        <RudiButton label="Xóa lịch sử đề xuất" tone="warn" variant="outline" onPress={() => { setDaXoaLichSu(false); setXacNhanXoa(true); }}/>
       )}
       {daXoaLichSu ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.inkSoft }]}>Đã xoá lịch sử đề xuất. Bảng tin bắt đầu lại từ những gì mới.</Text> : null}
       {/* «Đã lưu» and «Bài của tôi» are tabs now, and the bell sits on the header. */}

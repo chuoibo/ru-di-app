@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { docChiTiet, docDanhMuc } from "../../kham-pha/dia-diem";
@@ -55,6 +55,15 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
   const pb = phienBan(to);
   const chinh = pb?.content.chang[0], tiep = pb?.content.chang[1];
   const [ngay, setNgay] = useState(pb?.content.ngay ?? "");
+  // QA UI-092: the strip opened at its start, the chosen leaf (the sixth of
+  // fourteen) cut at 36 of 56px. Each opening brings the chosen leaf into the
+  // middle of the strip, once, without animating.
+  const daiNgay = useRef<ScrollView>(null);
+  const rongDai = useRef(0);
+  const daCuon = useRef(false);
+  useEffect(() => {
+    if (!open) daCuon.current = false;
+  }, [open]);
   const [gio1, setGio1] = useState(chinh?.gio ?? "");
   const [viec1, setViec1] = useState(chinh?.viec ?? "");
   const [cho1, setCho1] = useState<string | null>(chinh?.place_id ?? null);
@@ -164,9 +173,27 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
         />
         <View style={styles.khoi}>
           <Text style={[typography.label, { color: colors.ink }]}>Ngày</Text>
-          <ScrollView contentContainerStyle={styles.hangChip} horizontal showsHorizontalScrollIndicator={false} testID="de-nghi-sua-ngay">
+          <ScrollView
+            contentContainerStyle={styles.hangChip}
+            horizontal
+            onLayout={(e) => { rongDai.current = e.nativeEvent.layout.width; }}
+            ref={daiNgay}
+            showsHorizontalScrollIndicator={false}
+            testID="de-nghi-sua-ngay"
+          >
             {ngayDuoc.map((d) => (
-              <LaLich chon={d === ngay} key={d} ngan={ngayNgan(d)} nhan={ngayDocDuoc(d)} onPress={() => setNgay(d)} />
+              <View
+                key={d}
+                onLayout={(e) => {
+                  if (d !== ngay || daCuon.current) return;
+                  daCuon.current = true;
+                  const { x, width } = e.nativeEvent.layout;
+                  const giua = rongDai.current > 0 ? x - (rongDai.current - width) / 2 : x - 16;
+                  daiNgay.current?.scrollTo({ x: Math.max(0, giua), animated: false });
+                }}
+              >
+                <LaLich chon={d === ngay} ngan={ngayNgan(d)} nhan={ngayDocDuoc(d)} onPress={() => setNgay(d)} />
+              </View>
             ))}
           </ScrollView>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>{ngayDocDuoc(ngay)}</Text>
@@ -234,6 +261,9 @@ export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: T
         <RudiButton
           disabled={!guiDuoc}
           label={nhap ? "Lưu bản phác" : `Gửi phiên bản ${to.version + 1}`}
+          // With nothing changed the line above already says so; otherwise
+          // what is left to fix is named here (ADR-0038 §2.2).
+          lyDo={guiDuoc || doi.length === 0 ? undefined : "Mỗi chặng cần một việc, và chỗ đang báo ở trên cần sửa."}
           onPress={() => onGui(noiDung, lyDo.trim() || null)}
         />
         <RudiButton label="Thôi" onPress={onClose} variant="ghost" />

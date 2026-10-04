@@ -39,8 +39,7 @@ const KHONG_HINH = {
  * reads a debt as a decision. Each is a whole screen's content when empty.
  */
 const CHUA_VE = {
-  "src/rudi/screens/hai-nguoi/ChonNguoi.tsx": ['"Chưa có bạn nào để rủ"'],
-  "src/rudi/screens/keo/PickOutingLive.tsx": ['"Chưa có địa điểm để thêm"'],
+  // Empty since B11 (04/10): the last two were drawn with the app's own scenes.
 };
 
 function* tepTsx(thuMuc) {

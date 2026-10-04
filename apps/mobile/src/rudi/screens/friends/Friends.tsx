@@ -11,8 +11,8 @@
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Canh } from "../../ui/art/Canh";
-import { useCallback, useRef, useState, type ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useCallback, useRef, useState, type ReactElement } from "react";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, attemptFor, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
@@ -27,11 +27,14 @@ import {
 } from "../../../screens/ca-nhan/ban-be";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
-import { Divider, RudiButton, RudiScreen, Segmented, TopBar } from "../../ui";
+import { RudiButton, RudiScreen, Segmented, TopBar } from "../../ui";
+import { CauTaiCho } from "../../ui/CauTaiCho";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { HangNguoi, HangNguoiCho } from "./HangNguoi";
+import { LuoiNguoi } from "../../ui/LuoiNguoi";
 import { CuaDangNhap } from "../../ui/CuaDangNhap";
+import { ngayVN } from "../../ngay-viet";
 
 type Du = { ban: Ban[]; daNhan: LoiMoi[]; daGui: LoiMoi[] };
 type Trang = { pha: "dang-doc" } | { pha: "xong"; du: Du } | { pha: "hong"; loi: string };
@@ -43,25 +46,12 @@ function loiRaChu(error: unknown): string {
 }
 
 function ngayKetBan(iso: string): string {
-  return `Bạn từ ${new Date(iso).toLocaleDateString("vi-VN")}`;
+  return `Bạn từ ${ngayVN(iso)}`;
 }
 
-/** Rows on the paper, a hairline between neighbours. */
-function DanhSach({ hang }: { hang: ReactNode[] }) {
-  return (
-    <View style={styles.danhSach}>
-      {hang.map((h, i) => (
-        <View key={i}>
-          {i > 0 ? (
-            <View style={styles.vach}>
-              <Divider />
-            </View>
-          ) : null}
-          {h}
-        </View>
-      ))}
-    </View>
-  );
+/** Rows on the paper, a hairline between neighbours; two columns where they fit (QA UI-081). */
+function DanhSach({ hang }: { hang: ReactElement[] }) {
+  return <LuoiNguoi hang={hang.map((h, i) => ({ key: String(h.key ?? i), node: h }))} />;
 }
 
 export function FriendsScreen() {
@@ -79,6 +69,9 @@ export function FriendsScreen() {
   // ADR-0021 §2.5: «Nhắn tin» on a friend's row opens (or finds) the pair.
   const [dangNhan, setDangNhan] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
+  // QA UI-077: a refused answer or «Nhắn tin» is said under that row; the
+  // list that was read stays, and the row can be pressed again.
+  const [loiHang, setLoiHang] = useState<{ id: string; cau: string } | null>(null);
 
   const nap = useCallback(async () => {
     if (phien === null) return;
@@ -114,12 +107,13 @@ export function FriendsScreen() {
   const nhanTin = async (b: Ban) => {
     if (dangNhan !== null) return;
     setDangNhan(b.person_id);
+    setLoiHang(null);
     try {
       const cap = await moNhanRieng(b.person_id, phien.person_id, attemptFor(attempts.current, `dm:${b.person_id}`));
       datPhien(await ganDanhSachNhom(phien, ghepVaoDanhSach(phien.contexts, cap)));
       router.push(`/groups/${cap.id}/chat` as never);
     } catch (error) {
-      setTrang({ pha: "hong", loi: loiRaChu(error) });
+      setLoiHang({ id: b.person_id, cau: loiRaChu(error) });
     } finally {
       setDangNhan(null);
     }
@@ -127,11 +121,12 @@ export function FriendsScreen() {
 
   const traLoi = async (lm: LoiMoi, quyetDinh: TraLoi) => {
     setDangTraLoi(lm.id);
+    setLoiHang(null);
     try {
       await traLoiLoiMoi(lm.id, quyetDinh, phien.person_id, newAttempt());
       await nap();
     } catch (error) {
-      setTrang({ pha: "hong", loi: loiRaChu(error) });
+      setLoiHang({ id: lm.id, cau: loiRaChu(error) });
     } finally {
       setDangTraLoi(null);
     }
@@ -147,6 +142,8 @@ export function FriendsScreen() {
         />
       }
       footerInset={14 + menDuoi}
+      // The reading column on a tablet keeps «Nhắn tin» beside the name (QA UI-081).
+      cot="doc"
       testID="friends-screen"
     >
       <TopBar title="Bạn bè" />
@@ -159,6 +156,7 @@ export function FriendsScreen() {
         ) : (
           <DanhSach
             hang={trang.du.ban.map((b) => (
+              <View key={b.person_id}>
               <HangNguoi
                 duoi={
                   <RudiButton
@@ -173,12 +171,13 @@ export function FriendsScreen() {
                     variant="soft"
                   />
                 }
-                key={b.person_id}
                 onPress={() => router.push(`/people/${b.person_id}`)}
                 personId={b.person_id}
                 phu={ngayKetBan(b.friends_since)}
                 ten={b.display_name}
               />
+              {loiHang?.id === b.person_id ? <CauTaiCho cau={loiHang.cau} co="nho" hanhDong={{ label: "Thử lại", onPress: () => void nhanTin(b) }} /> : null}
+              </View>
             ))}
           />
         )
@@ -189,8 +188,8 @@ export function FriendsScreen() {
         ) : (
           <DanhSach
             hang={trang.du.daNhan.map((lm) => (
+              <View key={lm.id}>
               <HangNguoi
-                key={lm.id}
                 duoi={
                   <>
                     <RudiButton
@@ -214,6 +213,8 @@ export function FriendsScreen() {
                 phu="Muốn kết bạn với bạn"
                 ten={lm.other_display_name}
               />
+              {loiHang?.id === lm.id ? <CauTaiCho cau={loiHang.cau} co="nho" /> : null}
+              </View>
             ))}
           />
         )
@@ -232,9 +233,3 @@ export function FriendsScreen() {
     </RudiScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  danhSach: { paddingVertical: 2 },
-  // Hairline starts at the text column (avatar 40 + gap 12).
-  vach: { marginLeft: 52 },
-});

@@ -39,6 +39,9 @@
 set -euo pipefail
 
 PORT="${MOBILE_METRO_PORT:-8095}"
+# Android emulators can reach host loopback through 10.0.2.2 when an ADB
+# transport reconnect drops reverse bindings. Physical devices keep localhost.
+METRO_HOST_NATIVE="${MOBILE_METRO_HOST_NATIVE:-localhost}"
 API_PORT="${MOBILE_API_PORT_NATIVE:-}"
 SERIAL="${ANDROID_SERIAL:-}"
 FLOWS=".maestro"
@@ -101,6 +104,11 @@ while [ $# -gt 0 ]; do
     *) echo "tham số lạ: $1" >&2; exit 64 ;;
   esac
 done
+
+if [[ ! "$METRO_HOST_NATIVE" =~ ^[A-Za-z0-9.-]+$ ]]; then
+  echo "MOBILE_METRO_HOST_NATIVE cần hostname hoặc IPv4, không phải URL." >&2
+  exit 64
+fi
 
 if [ "$LIVE" = 1 ]; then
   [ -n "$OTP_PHONE_SEED" ] \
@@ -338,6 +346,12 @@ except Exception: print("(không phải JSON)")' "$tep" 2>/dev/null)"
 # người D (lượt 2026-09-06: bảng L3 đỏ «Mở bài: Bai co anh QA» vì bài được đăng
 # cho D trong khi máy đang là C).
 da_chay() { case "$DA_CHAY_TEN" in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
+
+# Người cầm máy là C khi flow 37 đã chạy và chưa có lần trả phiên nào sau nó;
+# trả phiên rồi thì flow sau tự đăng nhập bằng D (04/10: 42 và 43 chuẩn bị
+# cho C trong khi máy đang là D, D tự xem story của chính mình).
+TRA_PHIEN_SAU_37=0
+lai_la_c() { da_chay 37 && [ "$TRA_PHIEN_SAU_37" = 0 ]; }
 
 # Phép kiểm của flow NN chỉ hỏi đúng người khi flow 25 đã đổi phiên sang D.
 # Định nghĩa Ở ĐÂY, trước vòng lặp flow, vì hook sau flow 45 gọi nó TRONG
@@ -975,7 +989,7 @@ print("%d|%d|%d|%d|%s|%s" % (len(stickers), len(deleted), len(sach), len(replies
 kiem_may_chu_sau_39() {
   local goc body tok so_con hoi theme
   goc="http://127.0.0.1:$API_PORT"
-  if da_chay 37; then body="$(dang_nhap_curl "$OTP_PHONE_C")"; else body="$(dang_nhap_curl "$OTP_PHONE_D")"; fi
+  if lai_la_c; then body="$(dang_nhap_curl "$OTP_PHONE_C")"; else body="$(dang_nhap_curl "$OTP_PHONE_D")"; fi
   [ -n "$body" ] || hong "sau flow 39: không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ket="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
@@ -1000,7 +1014,7 @@ print("%d|%s" % (len(con), hoi[0].get("theme", "?") if hoi else "?"))')"
 kiem_may_chu_sau_41() {
   local goc lai kia body_lai body_kia tok_lai tok_kia id_lai ket so_pair so_mine ctx ten so_tin body_b id_b rc than
   goc="http://127.0.0.1:$API_PORT"
-  if da_chay 37; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
   body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 41: người lái không đăng nhập được qua curl."
   body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 41: người kia không đăng nhập được qua curl."
   tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
@@ -1052,7 +1066,7 @@ print(len([m for m in ms if m.get("kind") == "text" and m.get("body") == "Chao r
 chuan_bi_bai_cho_42() {
   local goc lai body tok anh url rc
   goc="http://127.0.0.1:$API_PORT"
-  if da_chay 37; then lai="$OTP_PHONE_C"; else lai="$OTP_PHONE_D"; fi
+  if lai_la_c; then lai="$OTP_PHONE_C"; else lai="$OTP_PHONE_D"; fi
   body="$(dang_nhap_curl "$lai")" || hong "trước flow 42: người lái không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   [ -n "$tok" ] || hong "trước flow 42: thân phiên không có token."
@@ -1095,7 +1109,7 @@ PYPNG
 kiem_may_chu_sau_42() {
   local goc lai kia body_lai body_kia tok_lai tok_kia id_lai ket bai_id anh_url so_bl so_tim co_bl body_b tok_b rc than
   goc="http://127.0.0.1:$API_PORT"
-  if da_chay 37; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
   body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 42: người lái không đăng nhập được qua curl."
   body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 42: người kia không đăng nhập được qua curl."
   tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
@@ -1174,7 +1188,7 @@ PYPNG
 chuan_bi_story_cho_43() {
   local goc kia body tok anh url rc
   goc="http://127.0.0.1:$API_PORT"
-  if da_chay 37; then kia="$OTP_PHONE_D"; else kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then kia="$OTP_PHONE_D"; else kia="$OTP_PHONE_C"; fi
   body="$(dang_nhap_curl "$kia")" || hong "trước flow 43: người kia không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   [ -n "$tok" ] || hong "trước flow 43: thân phiên không có token."
@@ -1203,7 +1217,7 @@ chuan_bi_story_cho_43() {
 kiem_may_chu_sau_43() {
   local goc lai kia body_lai body_kia tok_lai tok_kia id_kia ket story_id anh_url da_xem chu_thich body_b tok_b rc than rc_flow
   goc="http://127.0.0.1:$API_PORT"
-  if da_chay 37; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
   body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 43: người lái không đăng nhập được qua curl."
   body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 43: người kia không đăng nhập được qua curl."
   tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
@@ -1326,7 +1340,7 @@ cho_nhip_otp() {
 }
 
 # Người lái các flow L5 — cùng luật với flow 42/43: C khi 37 đã chạy, D khi không.
-nguoi_lai_l5() { if da_chay 37; then printf '%s' "$OTP_PHONE_C"; else printf '%s' "$OTP_PHONE_D"; fi; }
+nguoi_lai_l5() { if lai_la_c; then printf '%s' "$OTP_PHONE_C"; else printf '%s' "$OTP_PHONE_D"; fi; }
 
 # Token và id của một số, qua phiên curl đã cache.
 tok_cua() {
@@ -1557,7 +1571,7 @@ kiem_may_chu_sau_45() {
   local goc lai kia tok_lai tok_f id_lai id_f id_kia id_b ket than than_kia rc so_bao_cao
   goc="http://127.0.0.1:$API_PORT"
   lai="$(nguoi_lai_l5)"
-  if da_chay 37; then kia="$OTP_PHONE_D"; else kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then kia="$OTP_PHONE_D"; else kia="$OTP_PHONE_C"; fi
   tok_lai="$(tok_cua "$lai")" || hong "sau flow 45: người lái không đăng nhập được qua curl."
   tok_f="$(tok_cua "$OTP_PHONE_F")" || hong "sau flow 45: F không đăng nhập được qua curl."
   id_lai="$(id_cua "$lai")"; id_f="$(id_cua "$OTP_PHONE_F")"; id_kia="$(id_cua "$kia")"
@@ -1926,6 +1940,9 @@ if [ "$ANH" = 1 ]; then kiem_co_anh_dia_diem; fi
   # below caught it as "Metro is not serving this tree" -- which was true.
   export CI=1 EXPO_NO_TELEMETRY=1 EXPO_NO_DEPENDENCY_VALIDATION=1
   export EXPO_PUBLIC_TREE_FINGERPRINT="$DAU_VAN"
+  if [ "$METRO_HOST_NATIVE" != localhost ]; then
+    export EXPO_PACKAGER_PROXY_URL="http://$METRO_HOST_NATIVE:$PORT"
+  fi
   if [ "$TAT_KAV" = 1 ]; then
     export EXPO_PUBLIC_QA_TAT_KAV=1
   fi
@@ -1993,9 +2010,9 @@ mo_link() {
 # khi bundle đã lên — link ẤM, qua Linking.addEventListener trong app/_layout.tsx.
 url_metro() {
   if [ "$MODE" = "dev-client" ]; then
-    printf 'rudi://expo-development-client/?url=http%%3A%%2F%%2Flocalhost%%3A%s' "$PORT"
+    printf 'rudi://expo-development-client/?url=http%%3A%%2F%%2F%s%%3A%s' "$METRO_HOST_NATIVE" "$PORT"
   else
-    printf 'exp://localhost:%s' "$PORT"
+    printf 'exp://%s:%s' "$METRO_HOST_NATIVE" "$PORT"
   fi
 }
 cho_bundle() {
@@ -2020,7 +2037,7 @@ if [ "$DANG_NHAP" = 1 ] && [ "$MODE" = "expo-go" ]; then
   # giao link. App vẫn KHỞI ĐỘNG LẠNH cùng cái link — đúng đường một người bấm
   # link bạn gửi — chỉ khác là cái nhận link là app chứ không phải màn chào của
   # Expo Go.
-  mo_link "exp://localhost:$PORT"
+  mo_link "exp://$METRO_HOST_NATIVE:$PORT"
   for _ in $(seq 1 90); do
     grep -q "Android Bundled" "$LOG" && break
     sleep 2
@@ -2031,7 +2048,7 @@ fi
 
 DUONG_MO="$(url_metro)"
 if [ "$DANG_NHAP" = 1 ] && [ "$MODE" = "expo-go" ]; then
-  DUONG_MO="exp://localhost:$PORT/--/moi/$MA_LOI_MOI"
+  DUONG_MO="exp://$METRO_HOST_NATIVE:$PORT/--/moi/$MA_LOI_MOI"
 fi
 mo_link "$DUONG_MO"
 cho_bundle || true
@@ -2071,7 +2088,7 @@ if [ "$MODE" = "dev-client" ]; then
   # Một flow ghi lại `exp://` hay Expo Go là quay về đúng cái bẫy đã tả bên dưới.
   LOI_URL="$(grep -lE '^\s*-\s*openLink:\s*exp://|^appId:\s*host\.exp\.exponent' "$APP/$FLOWS"/*.yaml || true)"
   [ -z "$LOI_URL" ] || hong "flow còn ghim Expo Go / exp:// trong khi đang lái dev client:$(printf ' %s' $LOI_URL)"
-elif [ "$PORT" != 8095 ]; then
+elif [ "$PORT" != 8095 ] || [ "$METRO_HOST_NATIVE" != localhost ]; then
   FLOWS_GOC="$FLOWS"
   FLOWS="$(mktemp -d)/maestro"
   cp -r "$APP/$FLOWS_GOC" "$FLOWS"
@@ -2079,7 +2096,7 @@ elif [ "$PORT" != 8095 ]; then
   for f in "$FLOWS"/*.yaml; do
     truoc="$(grep -c 'localhost:8095' "$f" || true)"
     [ "$truoc" -gt 0 ] || continue
-    sed -i "s|localhost:8095|localhost:$PORT|g" "$f"
+    sed -i "s|localhost:8095|$METRO_HOST_NATIVE:$PORT|g" "$f"
     DA_THAY=$((DA_THAY + truoc))
   done
   [ "$DA_THAY" -gt 0 ] \
@@ -2147,6 +2164,7 @@ in_man_dang_thay() {
 # Đo 22-09-2026: flow 36 (người mới E) xanh, flow 37 hỏng ở assertion đầu trước
 # khi kịp đăng xuất, rồi 41-45 và 47 đỏ vì chạy bằng E; ảnh flow 44 cho thấy hồ
 # sơ «Thành viên mới».
+CHO_MA_SAU_TRA_PHIEN=0
 tra_phien_ve_goc() {
   local ten="$1" ra rc
   ra="$(mktemp)"
@@ -2156,6 +2174,9 @@ tra_phien_ve_goc() {
   rc=$?
   if [ "$rc" -eq 0 ]; then
     echo "sau $ten đỏ: đã trả phiên về màn chào; flow sau đăng nhập lại từ đầu" >&2
+    CHO_MA_SAU_TRA_PHIEN=1
+    # Từ 37 người lái là C; flow sau một lần trả phiên tự đăng nhập bằng D.
+    if da_chay 37; then TRA_PHIEN_SAU_37=1; fi
   else
     # Không che: nếu không trả được về gốc thì flow sau vẫn thừa hưởng người sai,
     # và người đọc phải biết điều đó trước khi tin màu của chúng.
@@ -2251,6 +2272,15 @@ for f in "$FLOWS"/*.yaml; do
     46-*) chuan_bi_cho_46 ;;
     38-*) chuan_bi_anh_nhom_cho_38 ;;
   esac
+  # Sau một lần trả phiên, flow này tự đăng nhập lại và xin mã cho đúng số mà
+  # bước chuẩn bị vừa xin qua curl (34 → D). Máy chủ chặn xin lại trong 60 s
+  # (otp.DefaultResendCooldownSeconds) và màn chỉ nói «Mã vừa được gửi», nên một
+  # flow đỏ kéo đỏ cả chuỗi sau nó (04/10: 34, 37, 43, 45, 47, 48 đỏ theo 33).
+  # 66 s như `dang_nhap_curl`: đồng hồ DB trong container lệch vài trăm ms.
+  if [ "$CHO_MA_SAU_TRA_PHIEN" = 1 ]; then
+    sleep 66
+    CHO_MA_SAU_TRA_PHIEN=0
+  fi
   DA_CHAY=$((DA_CHAY + 1))
   DA_CHAY_TEN="$DA_CHAY_TEN${ten%%-*} "
   set +e; chay_flow "$f"; rc=$?; set -e

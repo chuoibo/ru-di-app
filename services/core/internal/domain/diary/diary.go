@@ -5,6 +5,7 @@ package diary
 import (
 	"errors"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -74,7 +75,7 @@ func Validate(d Document, allowed map[string]bool) error {
 	return nil
 }
 
-// Compose is an honest non-AI fallback. Dates and captions are kept verbatim;
+// Compose is an honest non-AI fallback. Dates get readable labels, captions stay verbatim;
 // an intended stop is never narrated as somewhere the group actually reached.
 func Compose(s Source) Document {
 	d := Document{Title: s.Title, Subtitle: "Một cuộc đi, những điều muốn giữ.", Pages: []Page{}}
@@ -82,7 +83,7 @@ func Compose(s Source) Document {
 		d.Subtitle = "Một ngày bình thường, một điều đáng nhớ."
 	}
 	for i := 0; i < len(s.Photos); i += 2 {
-		p := Page{Layout: "photo", Heading: s.Photos[i].Day, Text: s.Photos[i].Caption, PhotoIDs: []string{s.Photos[i].ID}}
+		p := Page{Layout: "photo", Heading: dayHeading(s.Photos[i].Day), Text: s.Photos[i].Caption, PhotoIDs: []string{s.Photos[i].ID}}
 		if i+1 < len(s.Photos) {
 			p.Layout = "collage"
 			p.PhotoIDs = append(p.PhotoIDs, s.Photos[i+1].ID)
@@ -96,4 +97,18 @@ func Compose(s Source) Document {
 		d.Pages = append(d.Pages, Page{Layout: "note", Heading: "Điều mình muốn nhớ", Text: "", PhotoIDs: []string{}})
 	}
 	return d
+}
+
+// TenTrang is a stored page title as people read it: books saved before
+// Compose wrote readable days kept the bare ISO date, which the Cộng đồng post
+// built from a book printed verbatim (QA UI-154). Same rule as dayHeading.
+func TenTrang(heading string) string { return dayHeading(heading) }
+
+// dayHeading changes presentation only; source dates remain ISO on the wire.
+func dayHeading(day string) string {
+	date, err := time.Parse("2006-01-02", day)
+	if err != nil {
+		return day
+	}
+	return "Ngày " + date.Format("02/01/2006")
 }

@@ -24,6 +24,7 @@ export function XacNhanViec({
   tieuDe,
   hauQua,
   nhanLam,
+  nguyHiem = false,
   testID,
 }: {
   open: boolean;
@@ -33,6 +34,8 @@ export function XacNhanViec({
   /** Một câu nói việc này làm gì, cho ai. Không phải «bạn có chắc không?». */
   hauQua: string;
   nhanLam: string;
+  /** The action destroys something somebody made or is counting on: warn tone. */
+  nguyHiem?: boolean;
   testID?: string;
 }) {
   const { colors, space } = useRudiTheme();
@@ -43,7 +46,7 @@ export function XacNhanViec({
         <Text style={[typography.body, { color: colors.ink }]} testID={`${testID ?? "xac-nhan-viec"}-hau-qua`}>
           {hauQua}
         </Text>
-        <RudiButton label={nhanLam} onPress={onXacNhan} variant="outline" />
+        <RudiButton label={nhanLam} onPress={onXacNhan} tone={nguyHiem ? "warn" : undefined} variant="outline" />
         <RudiButton label="Để đấy" onPress={onClose} variant="ghost" />
       </View>
     </Sheet>

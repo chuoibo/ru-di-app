@@ -249,3 +249,43 @@ func TestPostgresPublicRepostNeedsReviewAndOriginFollowsFriendship(t *testing.T)
 		t.Fatalf("like after unfriending: %d %+v", status, gone)
 	}
 }
+
+// QA UI-156: a Cộng đồng post with a photo reaches the profile wall with that
+// photo, served by the Cộng đồng media route; a post without one stays words.
+func TestPostgresCommunityPhotoReachesTheWall(t *testing.T) {
+	w := newSocialWorld(t)
+	w.moderated = true
+	media := socialID(t)
+	socialExec(t, w.pool, `INSERT INTO community_media(id,owner_id,storage_key,content_type,byte_size,width,height,state) VALUES($1,$2,'synthetic/wall-photo','image/jpeg',21,640,480,'ready')`, media, w.people[0])
+	status, post := w.community(t, 0, http.MethodPost, "/v2/community/posts", map[string]any{
+		"logical_id": socialID(t), "body": "Tổng hợp: một tấm ảnh bờ hồ lúc chiều", "audience": "public", "topics": []string{"Đi bộ"}, "media_ids": []string{media},
+	})
+	if status != 201 {
+		t.Fatalf("community post: %d %+v", status, post)
+	}
+	id := post["id"].(string)
+	if status, _ := w.community(t, 3, http.MethodPost, "/v2/community/posts/"+id+"/review", map[string]any{"revision": post["revision"], "approve": true, "reason": "Ảnh tổng hợp đúng chủ đề"}); status != 200 {
+		t.Fatalf("approve: %d", status)
+	}
+	status, wall := w.request(t, 1, http.MethodGet, "/social/v2/people/"+w.people[0]+"/posts", "")
+	if status != 200 {
+		t.Fatalf("wall: %d %+v", status, wall)
+	}
+	items, _ := wall["posts"].([]any)
+	var anh, chu any = "missing", "missing"
+	for _, raw := range items {
+		item := raw.(map[string]any)
+		if item["id"] == id {
+			anh = item["image_url"]
+		}
+		if item["id"] == w.post {
+			chu = item["image_url"]
+		}
+	}
+	if anh != "/v2/community/media/"+media {
+		t.Fatalf("the photo post's wall card image %v, want the Cộng đồng media path: %+v", anh, wall)
+	}
+	if chu != nil {
+		t.Fatalf("a words-only post got an image: %v", chu)
+	}
+}

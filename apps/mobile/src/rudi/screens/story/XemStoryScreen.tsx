@@ -25,7 +25,7 @@ import { Canh } from "../../ui/art/Canh";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, findNodeHandle, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
@@ -81,6 +81,22 @@ export function XemStoryScreen() {
   // The clock has run out on the last story: the bar stays full, nothing moves.
   const [het, setHet] = useState(false);
   const daBao = useRef<Set<string>>(new Set());
+  // QA UI-101: the question takes focus when it appears (on «Giữ lại», the
+  // answer that loses nothing), and gives it back to «Xoá story» when kept.
+  const nutGiu = useRef<View>(null);
+  const nutXoaStory = useRef<View>(null);
+  const daHoi = useRef(false);
+  useEffect(() => {
+    const dich = hoiXoa ? nutGiu.current : daHoi.current ? nutXoaStory.current : null;
+    daHoi.current = hoiXoa;
+    if (dich === null) return;
+    if (Platform.OS === "web") {
+      (dich as unknown as HTMLElement).focus?.();
+      return;
+    }
+    const node = findNodeHandle(dich);
+    if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
+  }, [hoiXoa]);
 
   const nap = useCallback(async () => {
     if (toi === "") return;
@@ -227,7 +243,7 @@ export function XemStoryScreen() {
                 <Text style={[typography.caption, { color: colors.coverInkSoft }]}>{cauTuoi(story.created_at, Date.now())}</Text>
               </View>
               {cuaToi ? (
-                <Pressable accessibilityLabel="Xoá story" accessibilityRole="button" hitSlop={8} onPress={() => setHoiXoa(true)} style={styles.nutTron}>
+                <Pressable accessibilityLabel="Xoá story" accessibilityRole="button" hitSlop={8} onPress={() => setHoiXoa(true)} ref={nutXoaStory} style={styles.nutTron}>
                   <Ionicons color={colors.coverInk} name="trash-outline" size={22} />
                 </Pressable>
               ) : null}
@@ -243,17 +259,20 @@ export function XemStoryScreen() {
               source={nguonAnhBai(story.image_url, toi)}
               style={styles.anh}
             />
-            <Pressable accessibilityLabel="Story trước" onPress={lui} style={[styles.vungCham, styles.vungTrai]} />
-            <Pressable accessibilityLabel="Story tiếp theo" onPress={() => tiep(true)} style={[styles.vungCham, styles.vungPhai]} />
+            {/* Two tap halves, each a button (QA UI-101): without a role the
+                web gave a labelled div and screen readers no button. Asleep
+                while the delete question is open: its answer comes first. */}
+            <Pressable accessibilityLabel="Story trước" accessibilityRole="button" disabled={hoiXoa} onPress={lui} style={[styles.vungCham, styles.vungTrai]} />
+            <Pressable accessibilityLabel="Story tiếp theo" accessibilityRole="button" disabled={hoiXoa} onPress={() => tiep(true)} style={[styles.vungCham, styles.vungPhai]} />
           </View>
           {story.caption ? (
             <Text style={[typography.body, styles.chuThich, { color: colors.coverInk }]}>{story.caption}</Text>
           ) : null}
           {hoiXoa ? (
-            <View style={[styles.hopXoa, { backgroundColor: colors.card, borderColor: colors.line }]}>
+            <View accessibilityLiveRegion="polite" style={[styles.hopXoa, { backgroundColor: colors.card, borderColor: colors.line }]} testID="hoi-xoa-story">
               <Text style={[typography.body, { color: colors.ink }]}>Xoá story này? Bạn bè sẽ không thấy nó nữa.</Text>
               <View style={styles.hangNut}>
-                <Pressable accessibilityLabel="Giữ lại" accessibilityRole="button" disabled={dangXoa} onPress={() => setHoiXoa(false)} style={styles.nutChu}>
+                <Pressable accessibilityHint="Xoá story này? Bạn bè sẽ không thấy nó nữa." accessibilityLabel="Giữ lại" accessibilityRole="button" disabled={dangXoa} onPress={() => setHoiXoa(false)} ref={nutGiu} style={styles.nutChu}>
                   <Text style={[typography.label, { color: colors.ink }]}>Giữ lại</Text>
                 </Pressable>
                 <Pressable accessibilityLabel="Xoá" accessibilityRole="button" disabled={dangXoa} onPress={() => void xoa()} style={styles.nutChu}>
@@ -277,7 +296,7 @@ const styles = StyleSheet.create({
   doanDay: { height: 3 },
   hangTen: { flexDirection: "row", alignItems: "center", gap: 8 },
   ten: { flex: 1, gap: 2 },
-  nutTron: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  nutTron: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   khungAnh: { flex: 1, marginTop: 8 },
   anh: { width: "100%", height: "100%" },
   vungCham: { position: "absolute", top: 0, bottom: 0 },
@@ -286,5 +305,5 @@ const styles = StyleSheet.create({
   chuThich: { paddingHorizontal: 20, paddingTop: 12, textAlign: "center" },
   hopXoa: { margin: 16, padding: 16, borderRadius: 16, borderWidth: 1, gap: 12 },
   hangNut: { flexDirection: "row", justifyContent: "flex-end", gap: 8 },
-  nutChu: { minHeight: 44, minWidth: 88, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
+  nutChu: { minHeight: 48, minWidth: 88, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
 });

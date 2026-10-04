@@ -19,9 +19,21 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 60000
 - tapOn: "Cá nhân"
-# Quyết toán nằm sau «Tài chính của tôi» (đọc /people/{id}/finance), không ở ngay hồ sơ.
+# The profile tab may still be leaving a screen pushed on it: wait for its own
+# heading and the transition's end before looking for a row.
 - extendedWaitUntil:
-    visible: "Tài chính của tôi"
+    visible: "Không gian của riêng bạn"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+# Quyết toán nằm sau «Tài chính của tôi» (đọc /people/{id}/finance), không ở ngay hồ sơ.
+# The menu sits under the owner's diary shelf; with no kept day yet the shelf is
+# an empty state with a scene (QA UI-153), so the row is below the fold.
+- scrollUntilVisible:
+    element:
+      text: "Tài chính của tôi"
+    direction: DOWN
+    centerElement: true
     timeout: 60000
 - tapOn: "Tài chính của tôi"
 - extendedWaitUntil:
@@ -104,7 +116,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Sổ không còn ai nợ ai.*"
     timeout: 60000
-- assertNotVisible: "Đề xuất tính từ sổ.*"
+- assertNotVisible: "Cách chuyển gọn nhất, tính từ sổ.*"
 - assertNotVisible: "Tạo đợt thu từ sổ"
 - assertVisible: "Sổ không còn khoản nào ngoài đợt.*"
 - takeScreenshot: 29-quyet-toan-co-dot

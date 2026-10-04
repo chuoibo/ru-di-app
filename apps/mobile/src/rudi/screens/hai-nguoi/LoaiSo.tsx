@@ -4,13 +4,16 @@ import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, Segmented } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { Sheet } from "../../ui/Sheet";
+import { useGiuKhiDong } from "../../ui/giu-khi-dong";
 
 /**
  * Friendship includes two people. Couple mode still requires both people
  * to agree; switching back withdraws only this person's couple consent.
  */
-export function LoaiSo({ open, onClose, batDoi, dangCho, deNghiCuaToi = true, tenNguoiKia, onChonDoi, onChonBan, onDongY, testID }: { open: boolean; onClose: () => void; batDoi: boolean; dangCho: boolean; deNghiCuaToi?: boolean; tenNguoiKia?: string; onChonDoi: () => void; onChonBan: () => void; onDongY?: () => void; testID?: string }) {
+export function LoaiSo({ open, onClose, batDoi: batDoiSong, dangCho: dangChoSong, deNghiCuaToi: deNghiCuaToiSong = true, tenNguoiKia, onChonDoi, onChonBan, onDongY, testID }: { open: boolean; onClose: () => void; batDoi: boolean; dangCho: boolean; deNghiCuaToi?: boolean; tenNguoiKia?: string; onChonDoi: () => void; onChonBan: () => void; onDongY?: () => void; testID?: string }) {
   const { colors, space } = useRudiTheme();
+  // Closing, the sheet keeps what it said open (QA UI-084).
+  const { batDoi, dangCho, deNghiCuaToi } = useGiuKhiDong(open, { batDoi: batDoiSong, dangCho: dangChoSong, deNghiCuaToi: deNghiCuaToiSong });
   // Highlight follows what IS, never what is proposed: a lit «Một đôi» while
   // the other person had not agreed read as already on (blind read 12/09).
   const chon = batDoi ? 1 : 0;

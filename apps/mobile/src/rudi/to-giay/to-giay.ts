@@ -198,7 +198,11 @@ export function nenXinTo(daNap: boolean, to: ToGiay | undefined, lapSo = true): 
   // for the rest of the week (QC 24/09, B1). Nothing is drafted before both
   // have agreed; the screen offers «Đề nghị lập sổ» instead.
   if (!lapSo) return "thoi";
-  return to !== undefined && TRANG_THAI_MO.includes(to.state) ? "thoi" : "xin";
+  // A week whose plan both agreed is not asked for another (QA UI-085): the
+  // draft came back for the same Saturday evening, beside the agreed one, and
+  // took one of the week's three sheets. The screen offers no «Rủ đi chơi»
+  // over an agreed plan either.
+  return to !== undefined && (TRANG_THAI_MO.includes(to.state) || to.state === "chot") ? "thoi" : "xin";
 }
 
 /**
@@ -225,13 +229,19 @@ export function goiYChoLam(
   toiId: string,
   tenNguoiKia: string,
   choId: string,
-): { lam: "mo" } | { lam: "cho" } | { lam: "bao"; cau: string } {
+): { lam: "mo" } | { lam: "cho" } | { lam: "bao"; cau: string } | { lam: "them-vao-buoi"; cau: string } {
   if (to === undefined) return { lam: "cho" };
   if (TRANG_THAI_MO.includes(to.state) && phienBan(to)?.content.chang.some((c) => c.place_id === choId))
     return { lam: "bao", cau: "Chỗ này đã ở trên tờ tuần này rồi." };
   if (to.state === "nhap" || coTheDeNghiSua(to, toiId)) return { lam: "mo" };
   if (["da_gui", "da_xem", "de_nghi_sua"].includes(to.state))
     return { lam: "bao", cau: `Tờ tuần này đang chờ ${tenNguoiKia} trả lời. Chỗ bạn chọn chưa được thêm. Khi tờ quay về tay bạn thì đổi được.` };
+  // An agreed plan became an outing: the place can still join it as a stop
+  // (QA UI-085), through «Thêm vào kèo», never as a second sheet.
+  if (to.state === "chot" && to.outing_id) {
+    const ngay = ngayDocDuoc(phienBan(to)?.content.ngay ?? "");
+    return { lam: "them-vao-buoi", cau: `Tuần này hai bạn đã hẹn${ngay ? ` ${ngay}` : ""}. Chỗ bạn chọn có thể thành một chặng của buổi đó.` };
+  }
   return { lam: "bao", cau: "Tuần này hai bạn đã có tờ rồi. Chỗ bạn chọn chưa được thêm, để dành cho tuần sau nhé." };
 }
 

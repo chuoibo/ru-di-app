@@ -41,8 +41,8 @@ appId: com.lakiet.rudi
 # Bước từng KHÔNG TỒN TẠI. Trước `membership_id`, người được mời dừng ở đây vĩnh
 # viễn: không màn nào biết tên cái thẻ thành viên để mà bấm. Đây là chỗ «đăng
 # nhập được» trở thành «dùng được».
-- assertVisible: "Đồng ý vào nhóm"
-- tapOn: "Đồng ý vào nhóm"
+- assertVisible: "Đồng ý vào nhóm.*"
+- tapOn: "Đồng ý vào nhóm.*"
 - extendedWaitUntil:
     visible: "Xong, bạn đã ở trong nhóm"
     timeout: 60000

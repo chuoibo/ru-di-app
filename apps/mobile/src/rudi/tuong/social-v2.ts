@@ -72,6 +72,33 @@ export function ghepTrangTuong<T extends { id: string }>(oldPosts: T[], newPosts
   return [...oldPosts, ...newPosts.filter((post) => !known.has(post.id))];
 }
 
+/**
+ * A background refresh of a wall the reader may have paged through (QA
+ * UI-155): every long-poll answer used to replace the list with the first
+ * page, so the pages opened with «Xem những trang trước» vanished under the
+ * reader's hand within twenty seconds.
+ *
+ * The fresh first page leads (new posts, edited ones, counts). What the
+ * reader had below it stays, in its order, with the cursor that reaches past
+ * it. A post that sat inside the old first page's window and is missing from
+ * the new one is gone (deleted, or no longer shown to this reader); a post
+ * further down is left alone, since no page read now says anything about it.
+ */
+export function lamMoiDauTuong<T extends { id: string }>(
+  hienCo: { bai: T[]; conTro: string | null; conNua: boolean },
+  dau: { posts: T[]; next_cursor: string | null; has_more: boolean },
+): { bai: T[]; conTro: string | null; conNua: boolean } {
+  const trongDau = new Set(dau.posts.map((b) => b.id));
+  const moc = dau.posts.at(-1)?.id;
+  const viTriMoc = moc === undefined ? -1 : hienCo.bai.findIndex((b) => b.id === moc);
+  // The new page's last post is one the reader had: everything above it in
+  // the old list was covered by this read. Not found (the page is all new, or
+  // empty): nothing in the old list was covered past what the page repeats.
+  const conLai = (viTriMoc >= 0 ? hienCo.bai.slice(viTriMoc + 1) : dau.has_more ? hienCo.bai : []).filter((b) => !trongDau.has(b.id));
+  if (conLai.length === 0) return { bai: dau.posts, conTro: dau.next_cursor, conNua: dau.has_more };
+  return { bai: [...dau.posts, ...conLai], conTro: hienCo.conTro, conNua: hienCo.conNua };
+}
+
 export async function docTrangTuong(personId: string, actorId: string, cursor: string | null = null): Promise<TrangTuong> {
   const query = `limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
   return translatedAsActor<TrangTuong>(LOI_XA_HOI, `/social/v2/people/${personId}/posts?${query}`, { method: "GET", actorId });

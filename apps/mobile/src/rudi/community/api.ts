@@ -2,6 +2,7 @@
 import { BASE_URL, newAttempt, translatedAsActor } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
 import type { DiaryDocument, DiaryKind } from "../diary/api";
+import { ngayVN } from "../ngay-viet";
 export type Audience = "friends" | "public" | "only_me" | "group";
 /** `hidden`: the posts this person marked «Không quan tâm», so they can take one back (QA UI-141). */
 export type FeedMode = "for_you" | "following" | "trending" | "saved" | "mine" | "hidden";
@@ -187,5 +188,5 @@ export function relativeTime(iso: string, now = Date.now()): string {
         return `${minutes} phút`;
     if (minutes < 1440)
         return `${Math.floor(minutes / 60)} giờ`;
-    return new Date(iso).toLocaleDateString("vi-VN", { day: "numeric", month: "short" });
+    return ngayVN(iso).slice(0, 5);
 }
