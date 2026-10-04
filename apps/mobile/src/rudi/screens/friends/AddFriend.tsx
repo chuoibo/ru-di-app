@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { guiLoiMoi, timBanTheoUsername, type NguoiTimDuoc } from "../../../screens/ca-nhan/ban-be";
-import { validUsername } from "../../account";
+import { canonicalUsername, validUsername } from "../../account";
 import { useRudiSession } from "../../session";
 import { tenThat } from "../../ten-giu-cho";
 import { bongGiay, mucNguoi, typography, useRudiTheme } from "../../theme";
@@ -25,6 +25,9 @@ type Trang =
   | { pha: "dang-gui"; nguoi: NguoiTimDuoc }
   | { pha: "da-gui"; nguoi: NguoiTimDuoc }
   | { pha: "hong"; loi: string };
+
+/** The handle as the server spelled it, not as it was typed («@Ten_Ban » finds «ten_ban»). */
+const tenTaiKhoan = (nguoi: NguoiTimDuoc, daGo: string) => `@${nguoi.username ?? canonicalUsername(daGo)}`;
 
 export function AddFriendScreen() {
   const router = useRouter();
@@ -80,7 +83,7 @@ export function AddFriendScreen() {
       <RudiScreen testID="add-friend-screen">
         <TopBar title="Thêm bạn" />
         <Heading
-          title={`Đã gửi lời mời tới ${tenThat(trang.nguoi.display_name) ?? `@${username.replace(/^@/, "")}`}`}
+          title={`Đã gửi lời mời tới ${tenThat(trang.nguoi.display_name) ?? tenTaiKhoan(trang.nguoi, username)}`}
           subtitle="Khi người ấy đồng ý, hai bạn có thể nhắn riêng và xem những bài chia sẻ với bạn bè."
         />
         <View style={[styles.danhThiep, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(1, dark)]}>
@@ -115,7 +118,7 @@ export function AddFriendScreen() {
               {/* The username identifies the account even before its owner
                   chooses a display name. */}
               <Text style={[typography.caption, { color: colors.inkSoft }]}>
-                @{username.replace(/^@/, "")} · {tenThat(trang.nguoi.display_name) === null ? "chưa đặt tên trên Rủ Đi" : "đã dùng Rủ Đi"}
+                {tenTaiKhoan(trang.nguoi, username)} · {tenThat(trang.nguoi.display_name) === null ? "chưa đặt tên trên Rủ Đi" : "đã dùng Rủ Đi"}
               </Text>
             </View>
           </View>

@@ -776,7 +776,7 @@ export function OtpBoxes({
       </View>
       <TextInput
         accessibilityLabel="Ô nhập mã"
-        autoComplete="sms-otp"
+        autoComplete="one-time-code"
         autoFocus
         caretHidden
         editable={!disabled}

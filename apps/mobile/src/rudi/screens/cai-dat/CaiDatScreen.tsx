@@ -141,8 +141,13 @@ export function CaiDatScreen() {
         />
       </NhomHang>
       <SectionHeader title="Đăng nhập & phiên" />
-      <ListRow icon="shield-checkmark-outline" onPress={() => router.push("/settings/account" as never)} title="Tài khoản & bảo mật" subtitle="Username, email, mật khẩu và Google" />
       <NhomHang>
+        <ListRow
+          icon="shield-checkmark-outline"
+          onPress={() => router.push("/settings/account" as never)}
+          subtitle="Username, email, mật khẩu và Google"
+          title="Tài khoản & bảo mật"
+        />
         <ListRow
           icon="phone-portrait-outline"
           onPress={() => router.push("/settings/phien" as never)}

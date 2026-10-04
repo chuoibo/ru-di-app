@@ -4,6 +4,7 @@
  * Secure SameSite=Strict cookie. No account proof uses idempotency replay.
  */
 import {
+  ApiError,
   BASE_URL,
   datTokenPhien,
   newAttempt,
@@ -228,10 +229,11 @@ export function chonNhomMacDinh(phien: Phien): Phien {
  * knows no group finds one. Read as the actor only for the `X-Actor-ID` header
  * a dev-mode server still looks at; in `prod` the bearer decides who "me" is.
  */
-export async function docNhomCuaToi(personId: string): Promise<NhomTomTat[]> {
+export async function docNhomCuaToi(personId: string, timeoutMs?: number): Promise<NhomTomTat[]> {
   const wire = await translatedAsActor<{ contexts: NhomTomTat[] }>({}, "/people/me/contexts", {
     method: "GET",
     actorId: personId,
+    ...(timeoutMs === undefined ? {} : { timeoutMs }),
   });
   return wire.contexts;
 }
@@ -308,8 +310,6 @@ export type HoSoToi = {
   login_methods: string[];
   /** ADR-0022 §2.2: who may comment on my posts; absent on a server older than L3. */
   wall_comment_policy?: string;
-  /** ADR-0023 §2.5: findable by telephone number; absent on a server older than L5. */
-  discoverable_by_phone?: boolean;
 };
 
 const LOI_HO_SO: Record<string, string> = {
@@ -328,7 +328,6 @@ export async function suaHoSoToi(
     display_name?: string;
     bio?: string;
     city?: string;
-    discoverable_by_phone?: boolean;
   },
 ): Promise<HoSoToi> {
   return translatedAsActor<HoSoToi>(LOI_HO_SO, "/people/me", {
@@ -361,17 +360,44 @@ export async function khoiPhucPhien(kho?: KhoAnToan): Promise<Phien | null> {
     return null;
   }
   datTokenPhien(phien.token);
-  if (phien.contexts !== undefined) return phien;
-  // A session resumed on the web (and any record older than the field) knows
-  // who but not which groups: ask, the way a sign-in by OTP does. Offline, the
-  // person is still signed in; the group list fills on its next refresh.
+  // Ask the server once, which both fills the group list (a session resumed
+  // on the web knows who but not which groups) and proves the session is
+  // still alive: ADR-0055 revokes every session on a password or email
+  // change, a Google link or unlink, a reset and «đăng xuất tất cả», and a
+  // phone that kept a revoked token would open signed in and fail on every
+  // screen. Only the server's own «not a session» drops it. Offline -- or
+  // too slow to wait for at launch -- the person is still signed in; the
+  // group list fills on its next refresh.
   try {
-    const coNhom = chonNhomMacDinh({ ...phien, contexts: await docNhomCuaToi(phien.person_id) });
+    const coNhom = chonNhomMacDinh({ ...phien, contexts: await docNhomCuaToi(phien.person_id, KIEM_PHIEN_MS) });
     await store.ghi(KHOA, JSON.stringify(coNhom));
     return coNhom;
-  } catch {
+  } catch (loi) {
+    if (loi instanceof ApiError && loi.status === 401 && loi.code === "authentication_required") {
+      await quenPhien(phien.token, store);
+      return null;
+    }
     return phien;
   }
+}
+
+/** How long launch waits for the server to vouch for a stored session. */
+const KIEM_PHIEN_MS = 6000;
+
+/**
+ * Forget `token` here: the bearer, and the stored record while it still
+ * holds that token. A record that already holds a newer session (signed in
+ * again while a late request was in flight) is left alone.
+ */
+async function quenPhien(token: string, store: KhoAnToan): Promise<void> {
+  if (tokenPhienHienTai() === token) datTokenPhien(null);
+  const dangLuu = docPhien(await store.doc(KHOA));
+  if (dangLuu === null || dangLuu.token === token) await store.xoa(KHOA);
+}
+
+/** The server said `token` is no longer a session (`authentication_required`): forget it locally. */
+export async function quenPhienDaThuHoi(token: string, kho?: KhoAnToan): Promise<void> {
+  await quenPhien(token, kho ?? (await khoAnToanMacDinh()));
 }
 
 /**
@@ -393,8 +419,10 @@ export async function dangXuat(personId: string, kho?: KhoAnToan): Promise<void>
       });
     }
   } finally {
-    datTokenPhien(null);
     const store = kho ?? (await khoAnToanMacDinh());
-    await store.xoa(KHOA);
+    // Only the session this call signed out: the answer can arrive after the
+    // person has already signed in again, and must not take that one with it.
+    if (token !== null) await quenPhien(token, store);
+    else await store.xoa(KHOA);
   }
 }

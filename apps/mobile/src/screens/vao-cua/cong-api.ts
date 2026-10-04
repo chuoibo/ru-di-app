@@ -89,7 +89,7 @@ export async function taoNhom(
 
 const MOI_REFUSALS: Record<string, string> = {
   person_not_registered:
-    "Người này chưa có tài khoản Rủ Đi, nên chưa mời được. Thêm lại bạn đó bằng ô phía trên.",
+    "Tài khoản này không còn trên Rủ Đi, nên chưa mời được. Kiểm tra lại username rồi thử lại.",
   membership_conflict: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
   duplicate_membership: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
   // The name Go gives the same refusal (`repo/contexts.go`); without it the

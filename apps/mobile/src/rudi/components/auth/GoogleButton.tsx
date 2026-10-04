@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
-import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, View } from "react-native";
-import { googleChallenge, type GoogleProof } from "../../account";
+import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { googleChallenge, googleErrorMessage, googleLabel, type GoogleProof } from "../../account";
+import { typography, useRudiTheme } from "../../theme";
 export type GoogleButtonProps = {
   purpose: "login" | "link" | "reauth";
   actorId?: string;
@@ -11,6 +12,7 @@ export type GoogleButtonProps = {
 export function GoogleButton(props: GoogleButtonProps) {
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  const { colors } = useRudiTheme();
   const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
   if (Platform.OS !== "android" || !clientId) return null;
   const signin = async () => {
@@ -29,18 +31,20 @@ export function GoogleButton(props: GoogleButtonProps) {
         challenge_secret: challenge.challenge_secret,
         id_token: token,
       });
-    } catch {
-      props.onError("Chưa kết nối được với Google. Hãy thử lại.");
+    } catch (error) {
+      props.onError(googleErrorMessage(error));
     } finally {
       setBusy(false);
       lock.current = false;
     }
   };
   // Google's pre-approved image includes the required logo, font and padding.
+  // Its caption is the sign-in one, so outside sign-in the purpose is printed above it.
   return <View style={styles.container}>
+    {props.purpose === "login" ? null : <Text style={[typography.label, { color: colors.ink }]}>{googleLabel[props.purpose]}</Text>}
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Đăng nhập bằng Google"
+      accessibilityLabel={googleLabel[props.purpose]}
       accessibilityState={{ disabled: busy || props.disabled, busy }}
       disabled={busy || props.disabled}
       onPress={() => void signin()}
@@ -53,7 +57,7 @@ export function GoogleButton(props: GoogleButtonProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { minHeight: 48, alignItems: "center", justifyContent: "center" },
+  container: { minHeight: 48, alignItems: "center", justifyContent: "center", gap: 6 },
   button: { minHeight: 48, minWidth: 184, justifyContent: "center" },
   image: { width: 184, height: 40 },
   progress: { position: "absolute", right: 8 },

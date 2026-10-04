@@ -4,8 +4,10 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -26,6 +28,9 @@ class RudiGoogleModule : Module() {
         GoogleIdTokenCredential.createFrom(credential.data).idToken
       } catch (_: GetCredentialCancellationException) {
         null
+      } catch (e: NoCredentialException) {
+        // No Google account on the device: JS reads this code and says so in words.
+        throw CodedException("ERR_NO_GOOGLE_ACCOUNT", "no_google_account", e)
       }
     }
   }

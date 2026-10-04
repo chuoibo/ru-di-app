@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { BASE_URL, datTokenPhien, tokenPhienHienTai } from "../dist-test/api.js";
-import { registerAccount, verifyAccount, resetRequest, resetConfirm, googleChallenge, googleLogin, loginAccount, changePassword, canonicalUsername, validUsername } from "../dist-test/rudi/account.js";
+import { registerAccount, verifyAccount, resetRequest, resetConfirm, googleChallenge, googleLogin, loginAccount, changePassword, canonicalUsername, validUsername, verifyEmail, handUsernameToLogin, usernameForLogin, googleErrorMessage, googleLabel } from "../dist-test/rudi/account.js";
 const person="1d955dbe-9e60-4510-8c0e-e6b81e81ab1a";
 const session={token:"synthetic-session",person_id:person,expires_at:"2030-10-17T12:00:00Z",context_id:null,membership_id:null,membership_state:null,issued_via:"password",contexts:[],is_new_person:true};
 async function capture(body,status,action) {
@@ -61,4 +61,25 @@ test("thao tác nhạy cảm mang bearer hiện tại và dùng token xoay từ 
 test("lỗi xác thực không được lưu thành phiên hoặc echo credential",async()=>{
  await assert.rejects(capture({code:"credentials_invalid",detail:"synthetic-private-data"},401,()=>loginAccount("account","synthetic credential")),error=>error.message.includes("chưa đúng")&&!error.message.includes("synthetic-private-data"));
  assert.equal(tokenPhienHienTai(),null);
+});
+test("mã từ chối mới của máy chủ có câu tiếng Việt riêng; khóa đăng nhập nói 15 phút, các cửa khác giữ câu chung",async()=>{
+ const email="fixture"+"@"+"example.test";
+ const cases=[["challenge_resend_limited",/60 giây/],["challenge_quota_reached",/15 phút/],["challenge_attempts_exhausted",/24 giờ/],["mail_unavailable",/ngày mai/]];
+ for(const [code,said] of cases)await assert.rejects(capture({code},code==="mail_unavailable"?503:429,()=>registerAccount("account",email,"synthetic credential")),error=>error.code===code&&said.test(error.message));
+ await assert.rejects(capture({code:"auth_rate_limited"},429,()=>loginAccount("account","synthetic credential")),error=>/15 phút/.test(error.message)&&/đặt lại mật khẩu/.test(error.message));
+ await assert.rejects(capture({code:"auth_rate_limited"},429,()=>resetRequest(email)),error=>/một phút/.test(error.message));
+ datTokenPhien("synthetic-session");
+ await assert.rejects(capture({code:"email_unavailable"},409,()=>verifyEmail(person,{challenge_id:"synthetic",challenge_secret:"binding",code:"123123"})),error=>error.message==="Email này đã được một tài khoản khác dùng.");
+});
+test("tên tài khoản chuyển sang cửa đăng nhập chỉ trong bộ nhớ, và quên khi đăng nhập xong",async()=>{
+ handUsernameToLogin(" @New.Account ");
+ assert.equal(usernameForLogin(),"new.account");assert.equal(usernameForLogin(),"new.account");
+ await capture(session,201,()=>loginAccount("new.account","synthetic credential"));
+ assert.equal(usernameForLogin(),null);
+ handUsernameToLogin("abc");handUsernameToLogin(null);assert.equal(usernameForLogin(),null);
+});
+test("lỗi Google: không có tài khoản trên máy có câu riêng; lỗi máy chủ giữ câu của bảng",()=>{
+ assert.match(googleErrorMessage({code:"ERR_NO_GOOGLE_ACCOUNT"}),/Máy chưa có tài khoản Google/);
+ assert.match(googleErrorMessage(new Error("boom")),/Chưa kết nối được với Google/);
+ assert.deepEqual(googleLabel,{login:"Đăng nhập bằng Google",link:"Liên kết Google",reauth:"Xác thực bằng Google"});
 });

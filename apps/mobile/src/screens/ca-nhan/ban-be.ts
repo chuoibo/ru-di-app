@@ -37,6 +37,7 @@ export const LOI_TIM: Record<string, string> = {
   username_invalid: "Tên tài khoản gồm 3–32 chữ, số, dấu chấm hoặc gạch dưới.",
   auth_rate_limited: "Bạn vừa tìm hơi nhiều lần. Thử lại sau một phút. App vẫn hoạt động.",
   authentication_required: "Hãy đăng nhập lại để tìm bạn.",
+  managed_account_required: "Tìm bạn theo username cần đăng nhập bằng tài khoản Rủ Đi của bạn.",
   auth_temporarily_unavailable: "Tìm bạn đang gián đoạn. Hãy thử lại sau.",
 };
 
