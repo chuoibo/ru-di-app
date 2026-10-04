@@ -1,6 +1,6 @@
 # Tài khoản tự quản: vận hành và nghiệm thu
 
-Áp dụng ADR-0053. Đây là danh sách cổng phải đo, không phải tuyên bố đã sẵn
+Áp dụng ADR-0055. Đây là danh sách cổng phải đo, không phải tuyên bố đã sẵn
 sàng production. Bằng chứng cuối phải ghi SHA, số ca, thời điểm và giới hạn
 trong commit bàn giao. Log, ảnh có dữ liệu thật và secret nằm ngoài mọi worktree.
 

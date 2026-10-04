@@ -1,4 +1,4 @@
-# ADR-0053 — Tài khoản tự quản và Google, bỏ danh tính điện thoại
+# ADR-0055 — Tài khoản tự quản và Google, bỏ danh tính điện thoại
 
 Ngày: 2026-10-04. Trạng thái: quyết định sản phẩm đã được chủ sản phẩm chốt
 trong phiên lập kế hoạch; các cổng triển khai và nghiệm thu vẫn chưa hoàn tất.

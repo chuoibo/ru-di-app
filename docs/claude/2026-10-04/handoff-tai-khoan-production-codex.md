@@ -6,7 +6,7 @@ phán quyết sẵn sàng production và không cho phép bỏ cổng để merg
 
 ## 1. Đọc trước và tiếp tục từ đâu
 
-1. Đọc `AGENTS.md`, `CLAUDE.md`, ADR-0053 và
+1. Đọc `AGENTS.md`, `CLAUDE.md`, ADR-0055 và
    `docs/testing/tai-khoan-tu-quan.md`.
 2. Đọc bàn giao riêng trên chính máy này:
    `/home/lakiet/.local/share/rudi-auth/HANDOFF-PRIVATE.md`.
@@ -39,7 +39,7 @@ buổi đi; chỉ bỏ lời mời đổi lấy phiên đăng nhập.
 
 Chủ sản phẩm yêu cầu tối thiểu **8 ký tự**, đã sửa cả Go và giao diện từ
 15 thành 8. Giữ trần 128, Unicode/NFC, không trim mật khẩu, blocklist và
-Argon2id. ADR-0053 ghi rõ đây **không đạt mốc 15 ký tự single-factor của NIST
+Argon2id. ADR-0055 ghi rõ đây **không đạt mốc 15 ký tự single-factor của NIST
 SP 800-63B-4**; OTP đăng ký không phải MFA cho mỗi lần đăng nhập. Không âm
 thầm đổi lại 15 hoặc tuyên bố đã có MFA.
 

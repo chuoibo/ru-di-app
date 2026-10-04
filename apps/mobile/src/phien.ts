@@ -1,4 +1,4 @@
-/** Sessions issued by the managed account doors (ADR-0053).
+/** Sessions issued by the managed account doors (ADR-0055).
  * The server chooses the immutable person UUID. Native tokens live in
  * SecureStore; web tokens stay in memory and reload through an HttpOnly
  * Secure SameSite=Strict cookie. No account proof uses idempotency replay.

@@ -1487,7 +1487,7 @@
         "aggregate-base64-fragments",
         "long-number"
       ],
-      "reason": "Ghim 2026-10-04 cho ADR-0053: soát toàn bộ diff chỉ gỡ dependency và metadata @react-native-google-signin/google-signin; native dùng Credential Manager trong module Kotlin. Các chuỗi còn lại là integrity npm và phiên bản công khai, không có dữ liệu người tham gia. Giữ các pin lịch sử để kiểm range."
+      "reason": "Ghim 2026-10-04 cho ADR-0055: soát toàn bộ diff chỉ gỡ dependency và metadata @react-native-google-signin/google-signin; native dùng Credential Manager trong module Kotlin. Các chuỗi còn lại là integrity npm và phiên bản công khai, không có dữ liệu người tham gia. Giữ các pin lịch sử để kiểm range."
     },
     {
       "path": "services/core/go.mod",

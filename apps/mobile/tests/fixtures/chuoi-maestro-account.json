@@ -12,7 +12,7 @@
     "account-session-resumed"
   ],
   "daXoa": {
-    "Tôi có lời mời": "Luồng đổi lời mời lấy phiên đã được gỡ theo ADR-0053; flow chỉ kiểm không còn cửa này.",
-    "Ô số điện thoại": "Định danh tài khoản là UUID ngẫu nhiên theo ADR-0053; flow chặn cửa nhập số điện thoại."
+    "Tôi có lời mời": "Luồng đổi lời mời lấy phiên đã được gỡ theo ADR-0055; flow chỉ kiểm không còn cửa này.",
+    "Ô số điện thoại": "Định danh tài khoản là UUID ngẫu nhiên theo ADR-0055; flow chặn cửa nhập số điện thoại."
   }
 }

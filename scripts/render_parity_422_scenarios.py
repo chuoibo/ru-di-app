@@ -304,7 +304,7 @@ WAVES: dict[str, Wave] = {
                 "/sessions/current",
                 "dev has no bearer, so every step is 401 and PersonasRefused stops the run",
             ),
-            # ADR-0053 retires phone OTP and gives managed Google auth to Go.
+            # ADR-0055 retires phone OTP and gives managed Google auth to Go.
             # The old oracle survives only under fixtures/retired-auth; it must
             # not define validation or limiter behavior for the new contract.
             (

@@ -17,7 +17,7 @@ while [ $# -gt 0 ]; do
   --serial) serial="$2";shift 2 ;;
   --keep) keep=1;shift ;;
   --lap) lap="$2";shift 2 ;;
-  --otp|--otp-phone|--live|--dang-nhap) echo 'Cửa điện thoại/lời mời đã gỡ (ADR-0053). Dùng --account trên stack QA cô lập.' >&2;exit 64 ;;
+  --otp|--otp-phone|--live|--dang-nhap) echo 'Cửa điện thoại/lời mời đã gỡ (ADR-0055). Dùng --account trên stack QA cô lập.' >&2;exit 64 ;;
   -h|--help) echo 'scripts/mobile_native.sh --account --api-port <stack QA cô lập> [--serial emulator-5612] [--port 8097]';exit 0 ;;
   *) echo 'Tham số không được hỗ trợ.' >&2;exit 64 ;;
  esac
