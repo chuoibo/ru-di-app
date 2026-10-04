@@ -2984,7 +2984,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/invitation",
-      "order": 228,
+      "order": 222,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/invitation",
@@ -2998,7 +2998,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/invitation",
-      "order": 229,
+      "order": 223,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/invitation",
@@ -3012,7 +3012,7 @@
     },
     {
       "id": "POST /me/achievement-seen",
-      "order": 230,
+      "order": 224,
       "kind": "route",
       "method": "POST",
       "path": "/me/achievement-seen",
