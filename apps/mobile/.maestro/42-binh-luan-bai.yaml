@@ -5,7 +5,7 @@
 # một ảnh cá nhân tải lên `POST /people/me/photos` và một bài «Bai co anh QA»
 # mức «Bạn bè» trỏ vào ảnh ấy. Flow: Cá nhân → «Bài bạn đã đăng và ai đọc được»
 # → «Mở bài: Bai co anh QA» → màn chi tiết có «Ảnh bài đăng» (không phải khung
-# «Chưa tải được ảnh») → bấm «Thích» → chip đọc «❤️ 1» → viết «Binh luan QA» →
+# «Chưa tải được ảnh») → bấm «Thích» → dòng đếm «1 thích · 0 bình luận» → viết «Binh luan QA» →
 # «Gửi bình luận» → bình luận hiện → chụp → quay lại → dòng «… · 1 thích · 1 bình
 # luận» → trên tường của mình đổi «Ai được bình luận tường tôi» sang «Không ai»
 # rồi trả về «Ai đọc được bài» → «Đăng bài mới» có nút «Chọn ảnh» (không lái
@@ -67,7 +67,7 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "Thích"
 - extendedWaitUntil:
-    visible: "❤️ 1"
+    visible: "[1] thích · [0] bình luận"
     timeout: 30000
 - tapOn: "Viết bình luận"
 - inputText: "Binh luan QA"

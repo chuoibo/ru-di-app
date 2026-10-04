@@ -53,9 +53,9 @@ appId: com.lakiet.rudi
     visible: "Trang viết được chia sẻ"
     timeout: 60000
 # Đối chứng dương: còn là bạn thì cửa nhắn riêng MỞ. Sau khi chặn, hai người
-# vẫn chung nhóm; từ ADR-0038 §2.2 màn không còn vẽ nút «Nhắn tin» khoá, chỉ
-# còn câu «Kết bạn để nhắn riêng.». Chính câu ấy là thứ phân biệt hai trạng
-# thái.
+# vẫn chung nhóm; từ ADR-0038 §2.2 màn không vẽ nút «Nhắn tin» khoá, và với
+# người vừa chặn cũng không mời kết bạn lại. «Nhắn tin» có/không là thứ phân
+# biệt hai trạng thái.
 - assertVisible: "Nhắn tin"
 - assertNotVisible: "Kết bạn để nhắn riêng."
 - takeScreenshot: 45-truoc-khi-chan
@@ -74,10 +74,13 @@ appId: com.lakiet.rudi
     timeout: 30000
 # Màn hỏi lại máy chủ ngay sau khi chặn: quan hệ rơi từ «bạn» xuống «cùng nhóm»,
 # nên cửa nhắn riêng đóng trong cùng khung hình chứ không đợi lần mở màn sau.
-# Nhóm chung giữ nguyên — đó là lý do hồ sơ vẫn đọc được.
+# Nhóm chung giữ nguyên — đó là lý do hồ sơ vẫn đọc được. Với người vừa bị chặn
+# màn không mời kết bạn lại (B3, «Not offered to a person just blocked here»):
+# không «Nhắn tin», không «Kết bạn để nhắn riêng.».
 - extendedWaitUntil:
-    visible: "Kết bạn để nhắn riêng."
+    notVisible: "Nhắn tin"
     timeout: 30000
+- assertNotVisible: "Kết bạn để nhắn riêng."
 - takeScreenshot: 45-da-chan
 # --- báo cáo ------------------------------------------------------------------
 - tapOn: "Thêm hành động"
