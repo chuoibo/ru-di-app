@@ -62,6 +62,12 @@ nhận đúng thư mục mới. Kiểm cả trang HTML và health API; chỉ hea
 không chứng minh bản web đã được phục vụ. Trang bảo mật phải đợi khôi phục
 phiên hoàn tất trước khi quyết định chuyển sang đăng nhập.
 
+Giữ các tệp JavaScript mang hash của bản trước trong đợt chuyển bản,
+để tab đang mở không mất bundle. Không ghi đè tệp có cùng tên hash
+bằng nội dung khác; HTML phải revalidate (`Cache-Control: no-cache`). Prefix
+asset như `/_expo/` và `/assets/` phải trả 404 khi thiếu tệp, không
+fallback thành HTML của SPA. Sau cutover, kiểm cả tab cũ và lượt reload.
+
 ## Cổng máy và đối chứng
 
 Trong checkout sạch đúng SHA, chạy `make gate` với toàn bộ dependency của CI,
@@ -100,6 +106,8 @@ nhóm và buổi đi. Kiểm B không đọc/ghi dữ liệu riêng của A.
 
 Recovery tài khoản không recovery khóa E2EE. Không fallback chat plaintext.
 Các cổng crypto Android/iOS, kiểm chứng độc lập và tải chat vẫn là cổng riêng.
+Nếu nhóm mới vẫn hiện nhãn «Chưa mã hoá đầu cuối», không gửi nội
+dung chat thật để nghiệm thu auth, và không nhận đó là bằng chứng chat v2.
 Sau triển khai theo dõi ít nhất một giờ: lỗi auth/5xx, latency, Redis,
 PostgreSQL, outbox và SMTP. Chỉ ghi số đếm/tổng hợp, không lưu credential hoặc
 nội dung mail vào bằng chứng trong Git.

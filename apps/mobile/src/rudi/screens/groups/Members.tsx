@@ -155,7 +155,7 @@ export function GroupMembersScreen() {
       <StampButton label="Mời bằng tên tài khoản" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} />
       {/* Consent, said where the invitation starts: a margin note, still read. */}
       <ChuThichLe icon="mail-open-outline">
-        Người được mời thấy lời mời ở tab Tin nhắn ngay khi đăng nhập bằng số đó, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.
+        Người được mời thấy lời mời ở tab Tin nhắn khi đăng nhập đúng tài khoản được mời, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.
       </ChuThichLe>
     </RudiScreen>
   );
