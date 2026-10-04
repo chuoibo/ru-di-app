@@ -38,6 +38,40 @@ type Scenario struct {
 // Persona is a caller. In dev auth mode its id travels in X-Actor-ID.
 type Persona struct {
 	Roles []string `yaml:"roles"`
+	// Sessions is how many live sessions the harness seeds for this persona
+	// straight into each stack's database before the first step (see
+	// SeededSessions). A prod persona always holds at least one: it is how the
+	// persona signs in. A dev persona holds none unless it asks, and asks only
+	// when a step reads the session rows themselves: since ADR-0055 retired the
+	// doors that minted them over HTTP (invite redemption, OTP), seeding is the
+	// one way left that both stacks share.
+	Sessions *int `yaml:"sessions"`
+}
+
+// MaxSessions bounds Persona.Sessions.
+const MaxSessions = 4
+
+// SeededSessions is how many sessions the harness seeds for persona p in a
+// scenario of the given auth mode: what the file says, else 1 in prod and 0
+// in dev.
+func (p Persona) SeededSessions(authMode string) int {
+	if p.Sessions != nil {
+		return *p.Sessions
+	}
+	if authMode == "prod" {
+		return 1
+	}
+	return 0
+}
+
+// SessionTokenVar is the template variable holding the bearer token of a
+// persona's n-th seeded session (1-based): token.<name> for the first,
+// token.<name>.<n> for the others.
+func SessionTokenVar(persona string, n int) string {
+	if n == 1 {
+		return "token." + persona
+	}
+	return fmt.Sprintf("token.%s.%d", persona, n)
 }
 
 // Step is one request, optionally capturing values later steps use.
@@ -191,16 +225,28 @@ func (sc *Scenario) validate() error {
 		if sc.AuthMode == "prod" && len(persona.Roles) > 0 {
 			return fmt.Errorf("persona %q: in prod mode the server derives roles from the roster; remove them", name)
 		}
+		if persona.Sessions != nil {
+			minimum := 0
+			if sc.AuthMode == "prod" {
+				// The first seeded session is the bearer every step as this
+				// persona carries; without it the persona cannot sign in.
+				minimum = 1
+			}
+			if *persona.Sessions < minimum || *persona.Sessions > MaxSessions {
+				return fmt.Errorf("persona %q: sessions %d must be between %d and %d in %s mode", name, *persona.Sessions, minimum, MaxSessions, sc.AuthMode)
+			}
+		}
 	}
 	if len(sc.Steps) == 0 {
 		return errors.New("steps: at least one")
 	}
 	known := map[string]bool{}
-	for name := range sc.Personas {
+	for name, persona := range sc.Personas {
 		known["persona."+name] = true
-		if sc.AuthMode == "prod" {
-			// A prod persona's bearer token, for steps that send it by hand.
-			known["token."+name] = true
+		// The bearer token of each seeded session, for steps that send it by
+		// hand. In prod the first is also what every step as this persona sends.
+		for n := 1; n <= persona.SeededSessions(sc.AuthMode); n++ {
+			known[SessionTokenVar(name, n)] = true
 		}
 	}
 	stepIDs := map[string]bool{}

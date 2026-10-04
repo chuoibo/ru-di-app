@@ -122,6 +122,75 @@ steps:
 	}
 }
 
+func TestSeededSessionsDefaultByModeAndBindTheirTokens(t *testing.T) {
+	devSeeded := `
+id: t/dev-sessions
+routes: ["GET /sessions"]
+auth_mode: dev
+personas: {owner: {}, friend: {sessions: 2}}
+steps:
+  - {id: one, as: friend, request: {method: GET, path: /sessions, headers: {authorization: "Bearer {{token.friend}}"}}}
+  - {id: two, as: friend, request: {method: GET, path: /sessions, headers: {authorization: "Bearer {{token.friend.2}}"}}}
+`
+	sc, err := Parse([]byte(devSeeded))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := sc.Personas["owner"].SeededSessions("dev"); got != 0 {
+		t.Fatalf("dev persona without sessions seeds %d, want 0", got)
+	}
+	if got := sc.Personas["friend"].SeededSessions("dev"); got != 2 {
+		t.Fatalf("dev persona with sessions: 2 seeds %d", got)
+	}
+	if got := (Persona{}).SeededSessions("prod"); got != 1 {
+		t.Fatalf("prod persona seeds %d by default, want 1", got)
+	}
+	for name, text := range map[string]string{
+		"dev token of an unseeded persona": `
+id: t/dev-unseeded
+routes: ["GET /sessions"]
+auth_mode: dev
+personas: {owner: {}, friend: {sessions: 1}}
+steps:
+  - {id: one, as: anonymous, request: {method: GET, path: /sessions, headers: {authorization: "Bearer {{token.owner}}"}}}
+`,
+		"a token beyond the seeded count": `
+id: t/dev-beyond
+routes: ["GET /sessions"]
+auth_mode: dev
+personas: {friend: {sessions: 1}}
+steps:
+  - {id: one, as: friend, request: {method: GET, path: /sessions, headers: {authorization: "Bearer {{token.friend.2}}"}}}
+`,
+	} {
+		if _, err := Parse([]byte(text)); err == nil || !strings.Contains(err.Error(), "not bound") {
+			t.Fatalf("%s accepted: %v", name, err)
+		}
+	}
+	for name, text := range map[string]string{
+		"prod persona with no session": `
+id: t/prod-zero
+routes: ["GET /sessions"]
+auth_mode: prod
+personas: {owner: {sessions: 0}}
+steps:
+  - {id: one, as: owner, request: {method: GET, path: /sessions}}
+`,
+		"more than the maximum": `
+id: t/dev-many
+routes: ["GET /sessions"]
+auth_mode: dev
+personas: {owner: {sessions: 5}}
+steps:
+  - {id: one, as: owner, request: {method: GET, path: /sessions}}
+`,
+	} {
+		if _, err := Parse([]byte(text)); err == nil || !strings.Contains(err.Error(), "sessions") {
+			t.Fatalf("%s accepted: %v", name, err)
+		}
+	}
+}
+
 func TestViaPythonLoads(t *testing.T) {
 	sc, err := Parse([]byte(strings.Replace(valid, "  - id: read\n    as: owner\n", "  - id: read\n    as: owner\n    via: python\n", 1)))
 	if err != nil {

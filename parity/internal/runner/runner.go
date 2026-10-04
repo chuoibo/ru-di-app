@@ -54,7 +54,7 @@ type Stack struct {
 	// Python reaches this stack's Python without its front door, for steps
 	// with via: python. A stack that is Python alone passes Client again.
 	Python *httpclient.Client
-	// Sessions is where prod-mode personas get their sessions when DB is nil:
+	// Sessions is where personas get their seeded sessions when DB is nil:
 	// the canary compares the wire only, yet its personas must still sign in.
 	Sessions dbsnap.Conn
 	// Media is the directory of the stack's photo store, the one every process
@@ -138,28 +138,40 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		}
 	}
 
-	if sc.AuthMode == "prod" && len(personaNames) > 0 {
+	seeded := map[string]int{}
+	for _, name := range personaNames {
+		if n := sc.Personas[name].SeededSessions(sc.AuthMode); n > 0 {
+			seeded[name] = n
+		}
+	}
+	if len(seeded) > 0 {
 		sessions := stack.DB
 		if sessions == nil {
 			sessions = stack.Sessions
 		}
 		if sessions == nil {
-			return nil, fmt.Errorf("%w: %s: prod-mode personas need each stack's database to seed sessions into", ErrSetup, sc.ID)
+			return nil, fmt.Errorf("%w: %s: seeded sessions (every prod persona, or a dev persona with sessions:) need each stack's database to seed into", ErrSetup, sc.ID)
 		}
 		for _, name := range personaNames {
-			token := SessionToken(scope, name)
-			vars["token."+name] = token
-			if err := binder.Name(token, "token:session-"+name); err != nil {
-				return nil, err
-			}
-			digest := sha256.Sum256([]byte(token))
-			if err := binder.Name(hex.EncodeToString(digest[:]), "token-digest:session-"+name); err != nil {
-				return nil, err
+			for n := 1; n <= seeded[name]; n++ {
+				token := SessionToken(scope, sessionKey(name, n))
+				vars[scenario.SessionTokenVar(name, n)] = token
+				label := "session-" + name
+				if n > 1 {
+					label = fmt.Sprintf("%s-%d", label, n)
+				}
+				if err := binder.Name(token, "token:"+label); err != nil {
+					return nil, err
+				}
+				digest := sha256.Sum256([]byte(token))
+				if err := binder.Name(hex.EncodeToString(digest[:]), "token-digest:"+label); err != nil {
+					return nil, err
+				}
 			}
 		}
 		// Seeded before the baseline snapshot, so the seed is never counted as
 		// something a step wrote.
-		if err := seedSessions(ctx, scope, sessions, personaNames); err != nil {
+		if err := seedSessions(ctx, scope, sessions, personaNames, seeded); err != nil {
 			return nil, fmt.Errorf("%w: %s on %s: seeding sessions: %v", ErrSetup, sc.ID, stack.Name, err)
 		}
 	}
@@ -637,32 +649,52 @@ func SessionToken(scenarioID, persona string) string {
 	return base64.RawURLEncoding.EncodeToString(sum[:])
 }
 
-// seedSessions gives every prod persona a people row and a live session,
+// sessionKey names a persona's n-th seeded session within a run scope. The
+// first keeps the persona's bare name, so a prod persona's token and session id
+// are what they were before personas could hold more than one.
+func sessionKey(persona string, n int) string {
+	if n == 1 {
+		return persona
+	}
+	return fmt.Sprintf("%s/%d", persona, n)
+}
+
+// seedSessions gives every persona that holds sessions (every prod persona, a
+// dev persona only when it asks) a people row and that many live sessions,
 // written the same way into each stack's database. issued_via is 'genesis',
-// the one door that needs no invite row. A rerun (the canary, then the run)
-// puts the session back to live, so a step that revoked it last time does not
-// quietly turn this run's persona steps into 401s on both sides.
-func seedSessions(ctx context.Context, scope string, conn dbsnap.Conn, names []string) error {
+// the one door that needs no invite row. A persona's later sessions are created
+// one second apart, the last one newest, so a list ordered by creation shows
+// them in an order both stacks agree on without leaning on a tie-break. A rerun
+// (the canary, then the run) puts the session back to live, so a step that
+// revoked it last time does not quietly turn this run's persona steps into 401s
+// on both sides.
+func seedSessions(ctx context.Context, scope string, conn dbsnap.Conn, names []string, count map[string]int) error {
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback(ctx)
 	for _, name := range names {
+		if count[name] == 0 {
+			continue
+		}
 		person := PersonaID(scope, name)
-		digest := sha256.Sum256([]byte(SessionToken(scope, name)))
 		if _, err := tx.Exec(ctx,
 			`INSERT INTO people (id, display_name) VALUES ($1, $2)
 			 ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name, deleted_at = NULL`,
 			person, name); err != nil {
 			return err
 		}
-		if _, err := tx.Exec(ctx,
-			`INSERT INTO account_sessions (id, person_id, token_digest, issued_via, expires_at)
-			 VALUES ($1, $2, $3, 'genesis', now() + interval '30 days')
-			 ON CONFLICT (id) DO UPDATE SET revoked_at = NULL, expires_at = EXCLUDED.expires_at`,
-			PersonaID(scope, name+"/session"), person, digest[:]); err != nil {
-			return err
+		for n := 1; n <= count[name]; n++ {
+			key := sessionKey(name, n)
+			digest := sha256.Sum256([]byte(SessionToken(scope, key)))
+			if _, err := tx.Exec(ctx,
+				`INSERT INTO account_sessions (id, person_id, token_digest, issued_via, created_at, expires_at)
+				 VALUES ($1, $2, $3, 'genesis', now() - $4::int * interval '1 second', now() + interval '30 days')
+				 ON CONFLICT (id) DO UPDATE SET revoked_at = NULL, expires_at = EXCLUDED.expires_at`,
+				PersonaID(scope, key+"/session"), person, digest[:], count[name]-n); err != nil {
+				return err
+			}
 		}
 	}
 	return tx.Commit(ctx)

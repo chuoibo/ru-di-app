@@ -3,14 +3,15 @@
 # ended or revoked session is the same 401 "Session is not valid". The harness
 # seeds a people row (display_name = persona name) and a live session per persona.
 #
-# LIMITER: one step below spends friend_lookup_limit (1 per pass).
+# The two POST /friends/lookup steps this file once had are gone: ADR-0055 made
+# lookup a managed-account route that only Go serves, so Python is no oracle
+# for it (parity/fixtures/retired-auth/README.md).
 id: w2/friends/prod-auth
 routes:
   - 'POST /friends/requests'
   - 'POST /friends/requests/{request_id}/respond'
   - 'GET /people/{person_id}/friend-requests'
   - 'GET /people/{person_id}/friends'
-  - 'POST /friends/lookup'
 auth_mode: prod
 personas:
   owner: {}
@@ -172,23 +173,6 @@ steps:
         x-actor-id: '{{persona.owner}}'
         content-type: 'application/json'
       body_raw: '{"addressee_id":"{{persona.leaver}}"}'
-  - id: anonymous_lookup
-    as: anonymous
-    request:
-      method: POST
-      path: '/friends/lookup'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
-  # spends 1 of friend_lookup_limit: nobody derives to this sample number (dữ liệu mẫu)
-  - id: owner_lookup_unregistered
-    as: owner
-    request:
-      method: POST
-      path: '/friends/lookup'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
   - id: leaver_incoming
     as: leaver
     request:

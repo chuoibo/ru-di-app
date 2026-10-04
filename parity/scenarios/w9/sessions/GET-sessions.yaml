@@ -5,12 +5,18 @@
 # used. That is the honest answer, not a missing feature, and it is why the prod file
 # beside this one exists. The list carries no device label, no IP and no user agent,
 # because the table stores none. Texts are sample data (dữ liệu mẫu).
+#
+# `friend`'s two rows used to come from redeeming two named invitations through
+# POST /sessions. ADR-0055 retired that door, so the harness now seeds the two
+# rows (issued_via `genesis`, the second one newer) before the first step, the
+# way it seeds every prod persona; only the two redemption steps are gone. The
+# invitations are still minted: minting one must not sign anybody in.
 id: w9/sessions/get-sessions
 routes: ['GET /sessions']
 auth_mode: dev
 personas:
   owner: {}
-  friend: {}
+  friend: {sessions: 2}
 steps:
   - id: anonymous_lists
     as: anonymous
@@ -48,11 +54,11 @@ steps:
       headers:
         x-actor-id: '{{persona.owner}}'
         x-actor-roles: 'guest'
-  # Nobody has signed in through a door yet, so the account has no rows.
+  # The owner holds no session, so the account has no rows.
   - id: owner_lists_empty
     as: owner
     request: {method: GET, path: /sessions}
-  # --- give `friend` one session through the invitation door --------------------
+  # --- a named invitation for `friend`, which mints no session -----------------
   - id: owner_names_self
     as: owner
     request:
@@ -99,26 +105,17 @@ steps:
       body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
     bind:
       token_friend: {from: body, pointer: /invite_token, class: token}
-  - id: friend_redeems_invitation
-    as: anonymous
-    request:
-      method: POST
-      path: '/sessions'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"invite_token":"{{token_friend}}"}'
-  # One row, issued_via `invite`, and `current` false because dev sends no bearer.
-  - id: friend_lists_one
+  # The two seeded rows, newest first, and `current` false on both because dev
+  # sends no bearer.
+  - id: friend_lists_seeded
     as: friend
     request: {method: GET, path: /sessions}
   # The owner's own list is still empty: a list is the caller's own account only.
   - id: owner_lists_still_empty
     as: owner
     request: {method: GET, path: /sessions}
-  # A second door for the same person adds a second row rather than replacing one.
-  # It has to be a second trip: `uq_outing_invites_person` is unique on
-  # (outing_id, invited_person_id), so a second named invitation on the SAME trip
-  # is a 409 and would carry no token to bind.
+  # A second named invitation, on a second trip: `uq_outing_invites_person` is
+  # unique on (outing_id, invited_person_id), so the same trip would be a 409.
   - id: owner_creates_second_trip
     as: owner
     request:
@@ -139,14 +136,7 @@ steps:
       body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
     bind:
       token_friend_two: {from: body, pointer: /invite_token, class: token}
-  - id: friend_redeems_second_invitation
-    as: anonymous
-    request:
-      method: POST
-      path: '/sessions'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"invite_token":"{{token_friend_two}}"}'
+  # Still the same two rows: two named invitations wrote none.
   - id: friend_lists_two
     as: friend
     request: {method: GET, path: /sessions}
@@ -159,6 +149,15 @@ steps:
       path: '/sessions'
       headers:
         authorization: 'Bearer khong-phai-token-that'
+  # With one of the caller's own live bearers, `current` is computed from it even
+  # in dev: exactly that row is marked, and identity still comes from X-Actor-ID.
+  - id: friend_lists_with_own_bearer
+    as: friend
+    request:
+      method: GET
+      path: '/sessions'
+      headers:
+        authorization: 'Bearer {{token.friend}}'
   # --- framework ----------------------------------------------------------------
   - id: trailing_slash
     as: owner

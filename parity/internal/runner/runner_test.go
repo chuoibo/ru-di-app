@@ -206,6 +206,60 @@ steps:
 	}
 }
 
+func TestDevPersonasSeedOnlyWhenTheyAskForSessions(t *testing.T) {
+	plain, err := scenario.Parse([]byte(`
+id: t/dev-plain
+routes: ["GET /people/me"]
+auth_mode: dev
+personas: {owner: {}}
+steps:
+  - {id: me, as: owner, request: {method: GET, path: /people/me}}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Execute(context.Background(), plain, stack(t, "reference", fakeAPI(t, "Z")), "t1"); err != nil {
+		t.Fatalf("a dev persona without sessions needed a database: %v", err)
+	}
+	seeded, err := scenario.Parse([]byte(`
+id: t/dev-seeded
+routes: ["GET /sessions"]
+auth_mode: dev
+personas: {owner: {sessions: 2}}
+steps:
+  - {id: list, as: owner, request: {method: GET, path: /sessions}}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = Execute(context.Background(), seeded, stack(t, "reference", fakeAPI(t, "Z")), "t1")
+	if !errors.Is(err, ErrSetup) {
+		t.Fatalf("err = %v, want ErrSetup", err)
+	}
+	// A dev persona's seeded bearer is never sent on its own: X-Actor-ID is
+	// still who is asking, and a step that wants the bearer writes it by hand.
+	vars := map[string]string{"persona.owner": PersonaID("t/dev-seeded", "owner"), "token.owner": SessionToken("t/dev-seeded", "owner")}
+	req, err := buildRequest(seeded, seeded.Steps[0], vars)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if req.Header.Get("Authorization") != "" || req.Header.Get("X-Actor-ID") != vars["persona.owner"] {
+		t.Fatalf("dev headers with a seeded session = %v", req.Header)
+	}
+}
+
+func TestAPersonasFirstSessionKeepsTheTokenAndIdItAlwaysHad(t *testing.T) {
+	if sessionKey("owner", 1) != "owner" {
+		t.Fatalf("first session key = %q", sessionKey("owner", 1))
+	}
+	if sessionKey("owner", 2) == sessionKey("owner", 1) || sessionKey("owner", 2) == sessionKey("owner", 3) {
+		t.Fatal("later sessions share a key")
+	}
+	if SessionToken("s@n", sessionKey("owner", 2)) == SessionToken("s@n", "owner") {
+		t.Fatal("a second session reuses the first one's token")
+	}
+}
+
 func TestPersonasRefusedOnlyWhenEveryPersonaStepIs401(t *testing.T) {
 	sc, err := scenario.Parse([]byte(`
 id: t/refused
