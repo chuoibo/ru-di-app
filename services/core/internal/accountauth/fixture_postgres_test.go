@@ -37,12 +37,22 @@ func TestProvisionSyntheticAccountWorld(t *testing.T) {
 	}
 	h := New(testdb.Pool(t), Config{Vault: v})
 	client := &http.Client{Timeout: 15 * time.Second}
+	// Each synthetic person signs up from their own documentation-range
+	// address, as real people would: one address may ask for only so many
+	// codes an hour. The isolated stack trusts loopback as its proxy.
+	clientIP := "192.0.2.1"
 	request := func(path string, input any, want int) map[string]any {
 		b, err := json.Marshal(input)
 		if err != nil {
 			t.Fatal(err)
 		}
-		response, err := client.Post(target+path, "application/json", bytes.NewReader(b))
+		req, err := http.NewRequest("POST", target+path, bytes.NewReader(b))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Forwarded-For", clientIP)
+		response, err := client.Do(req)
 		if err != nil {
 			t.Fatal("fixture API unavailable")
 		}
@@ -63,7 +73,8 @@ func TestProvisionSyntheticAccountWorld(t *testing.T) {
 			slugs = append(slugs, "chat"+strconv.Itoa(i))
 		}
 	}
-	for _, slug := range slugs {
+	for i, slug := range slugs {
+		clientIP = "192.0.2." + strconv.Itoa(i+1)
 		username := "fixture_" + slug
 		password := "isolated synthetic credential for " + slug
 		c := request("/auth/register", map[string]string{"username": username, "email": username + "@example.test", "password": password}, 202)
