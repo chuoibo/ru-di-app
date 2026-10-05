@@ -30,6 +30,9 @@ const (
 	maxKeyPackageBytes   = 64 << 10
 	maxWelcomeBytes      = 256 << 10
 	maxPublishKeyPackage = 10
+	// claimHold is how long a handed-out key package waits for the commit
+	// that adds its device; then it is burned (deleted, never re-issued).
+	claimHold = time.Hour
 	// maxCommitsPerMinute bounds one device's commits: each one moves the
 	// epoch under every other member's sends.
 	maxCommitsPerMinute = 10
@@ -367,7 +370,7 @@ func (s *Store) PublishKeyPackages(ctx context.Context, actor string, digest []b
 	if err != nil {
 		return 0, err
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM chat_v2_key_packages WHERE device_id=$1 AND expires_at<=clock_timestamp()`, device); err != nil {
+	if _, err := tx.Exec(ctx, `DELETE FROM chat_v2_key_packages WHERE device_id=$1 AND (expires_at<=clock_timestamp() OR claimed_at<=clock_timestamp()-$2::interval)`, device, claimHold.String()); err != nil {
 		return 0, err
 	}
 	var have int
@@ -568,6 +571,12 @@ func (s *Store) ClaimKeyPackages(ctx context.Context, actor string, digest []byt
 			return nil, ErrRoster
 		}
 		seen[t] = true
+		// Packages held past claimHold are burned: never re-issued (RFC 9420:
+		// used once), and no claimer can keep a target's packages tied up
+		// (security review 05/10: resource drain).
+		if _, err := tx.Exec(ctx, `DELETE FROM chat_v2_key_packages WHERE device_id=$1 AND claimed_at<=clock_timestamp()-$2::interval`, t, claimHold.String()); err != nil {
+			return nil, err
+		}
 		// The package this device already holds for the target, else a fresh
 		// one. A handed-out package never goes to another claimer (security
 		// review 05/10: two Welcomes to one init key).

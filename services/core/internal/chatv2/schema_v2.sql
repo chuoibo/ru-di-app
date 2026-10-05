@@ -19,11 +19,11 @@ CREATE TABLE chat_v2_key_packages (
  key_package bytea NOT NULL CHECK(octet_length(key_package) BETWEEN 1 AND 65536),
  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
  expires_at timestamptz NOT NULL,
- -- A package handed to one adding device is that device's for good: it is
- -- never handed to anyone else (RFC 9420: a key package is used once), a
- -- repeated claim by the same device returns it, and the commit that adds the
- -- target consumes it. One adding device holds at most one package per target,
- -- so claiming without adding cannot drain the target.
+ -- A package handed to one adding device is never handed to anyone else
+ -- (RFC 9420: a key package is used once). A repeated claim by the same device
+ -- returns it; the commit that adds the target consumes it; one held past an
+ -- hour is burned (deleted). One adding device holds at most one package per
+ -- target, so claiming without adding burns at most one an hour.
  claimed_by uuid REFERENCES chat_v2_devices(id),
  claimed_at timestamptz,
  CHECK ((claimed_by IS NULL) = (claimed_at IS NULL))

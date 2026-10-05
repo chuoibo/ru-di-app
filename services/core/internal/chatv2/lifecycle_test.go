@@ -296,8 +296,9 @@ func TestAHandedOutKeyPackageNeverGoesToASecondClaimer(t *testing.T) {
 	if _, err := l.store.ClaimKeyPackages(ctx, l.actor, l.tokenA, l.deviceA.id, l.room, []string{l.deviceB.id}); err != nil {
 		t.Fatal(err)
 	}
-	// Long after: the claim stays the claimer's.
-	mustExec(t, l.pool, `UPDATE chat_v2_key_packages SET claimed_at=now()-interval '1 day' WHERE device_id=$1`, l.deviceB.id)
+	// Within the hold the claim stays the claimer's; past it the package is
+	// burned, never re-issued.
+	mustExec(t, l.pool, `UPDATE chat_v2_key_packages SET claimed_at=now()-interval '59 minutes' WHERE device_id=$1`, l.deviceB.id)
 	second := newDevice()
 	if _, err := l.store.EnrollDevice(ctx, l.actor, l.tokenA, second.enrollment(l.actor)); err != nil {
 		t.Fatal(err)
@@ -316,5 +317,32 @@ func TestAHandedOutKeyPackageNeverGoesToASecondClaimer(t *testing.T) {
 	_ = l.pool.QueryRow(ctx, `SELECT count(*) FROM chat_v2_key_packages WHERE claimed_by=$1`, l.deviceA.id).Scan(&held)
 	if held != 0 {
 		t.Fatalf("a revoked device still holds %d packages", held)
+	}
+}
+
+// Security review 05/10: a held package that never got its commit is burned
+// after the hold, so no claimer ties a target's packages up for good, and the
+// burned package is not handed to anyone.
+func TestAHeldKeyPackageIsBurnedAfterTheHold(t *testing.T) {
+	l := setupLife(t)
+	ctx := context.Background()
+	if _, err := l.store.Bootstrap(ctx, l.actor, l.tokenA, l.deviceA.id, l.room); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.PublishKeyPackages(ctx, l.other, l.tokenB, l.deviceB.id, [][]byte{[]byte("kp-1"), []byte("kp-2")}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.ClaimKeyPackages(ctx, l.actor, l.tokenA, l.deviceA.id, l.room, []string{l.deviceB.id}); err != nil {
+		t.Fatal(err)
+	}
+	mustExec(t, l.pool, `UPDATE chat_v2_key_packages SET claimed_at=now()-interval '2 hours' WHERE device_id=$1 AND claimed_by IS NOT NULL`, l.deviceB.id)
+	claims, err := l.store.ClaimKeyPackages(ctx, l.actor, l.tokenA, l.deviceA.id, l.room, []string{l.deviceB.id})
+	if err != nil || string(claims[0].KeyPackage) != "kp-2" {
+		t.Fatalf("after the hold the claimer gets a fresh package: %+v %v", claims, err)
+	}
+	var left int
+	_ = l.pool.QueryRow(ctx, `SELECT count(*) FROM chat_v2_key_packages WHERE device_id=$1`, l.deviceB.id).Scan(&left)
+	if left != 1 {
+		t.Fatalf("the burned package is still stored: %d rows", left)
 	}
 }
