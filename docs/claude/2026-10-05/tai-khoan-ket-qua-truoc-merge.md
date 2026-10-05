@@ -39,7 +39,7 @@ Verdict: không có reviewer người; đây là ghi chép bằng chứng, khôn
 | mobile `npm test` | 1540 / 0 / 0 |
 | pytest gốc (container) | 19 đỏ giống hệt cây sạch main d8bbd584 (môi trường container), không khác biệt mới |
 | ruff chạy lại, cây sạch ebd9a498 | ĐẠT |
-| go-milvus chạy lại, cây sạch ebd9a498 (watchdog đĩa) | **Chưa đo được — giới hạn đĩa của máy.** Woodpecker của Milvus chặn ghi khi ổ dùng > 90%; máy dùng chung chỉ còn 55–65 GB/591 GB và chính dữ liệu test đẩy qua ngưỡng. `TestHybridDauCuoiKhongViPham` (lượt trước treo 300 s) lần này PASS khi đĩa còn dưới ngưỡng (60 lượt truy hồi, 514 mục, 0 vi phạm); test sau đó đỏ «channel tsafe stalled» đúng lúc log Milvus ghi `writesBlocked=true`. PR không đổi dòng nào trong hybrid/vectordb/rag/nap/rerank/ai-infer; CI bỏ qua tầng này trên main như trên nhánh. Chạy lại khi máy có ≥ 80 GB trống: `scripts/gate.sh --strict go-milvus`. |
+| go-milvus chạy lại, cây sạch ebd9a498 (watchdog đĩa) | **Chưa đo được — giới hạn đĩa của máy.** Woodpecker của Milvus chặn ghi khi ổ dùng > 90%; máy dùng chung chỉ còn 55–65 GB/591 GB và chính dữ liệu test đẩy qua ngưỡng. `TestHybridDauCuoiKhongViPham` (lượt trước treo 300 s) lần này PASS khi đĩa còn dưới ngưỡng (60 lượt truy hồi, 514 mục, 0 vi phạm); test sau đó đỏ «channel tsafe stalled» đúng lúc log Milvus ghi `writesBlocked=true`. PR không đổi dòng nào trong hybrid/vectordb/rag/nap/rerank/ai-infer; CI bỏ qua tầng này trên main như trên nhánh. Chạy lại khi máy có ≥ 80 GB trống: `scripts/gate.sh --strict go-milvus`. **Đã chạy lại 05/10 chiều trên `752bbc49`: ĐẠT, xem cuối mục sự cố đĩa.** |
 
 ## Triển khai và nghiệm thu thật
 
@@ -69,6 +69,18 @@ device» rồi tự phục hồi trong dưới 1 giây; đã kiểm số hàng t
 bản migration và Alembic sau phục hồi. Lượt go-milvus chạy lại có watchdog
 dừng khi đĩa trống dưới 45 GB. Máy dùng chung cần headroom đĩa trước khi chạy
 tầng Milvus — đây là điều kiện vận hành, không phải lỗi mã.
+
+### Cập nhật sau merge (05/10 chiều): go-milvus ĐẠT
+
+- Ổ đầy không phải do dữ liệu test: container `rudi-vnlocal-milvus-1` đã ghi
+  192 GB log docker (woodpecker local không bao giờ dọn WAL, 234k segment rỗng
+  trên một kênh, auditor in 2 dòng/segment/10 s). Sửa ở `752bbc49` (Milvus
+  vnlocal chuyển WAL sang MinIO, log giới hạn); ổ còn ~314 GB trống.
+- `scripts/gate.sh --strict go-milvus`, cây sạch `752bbc49` (worktree
+  detached, 0 file lệch): **ĐẠT** sau 300 s — 65 ca PASS trên 3 gói
+  (`internal/hybrid`, `internal/vectordb`, `internal/vectordb/napkho`),
+  18 sentinel có mặt, 0 bỏ qua. Chặng này khép lại; bảng cổng toàn phần của
+  PR #665 giờ không còn chặng nào chưa đo.
 
 ## Còn mở (không chặn merge mã, phải làm trước khi mở rộng công khai)
 
