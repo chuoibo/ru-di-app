@@ -45,8 +45,14 @@ def test_native_gate_drives_the_whole_product_table_not_one_login_flow():
     assert 'for f in "$FLOWS"/*.yaml; do' in harness
     assert "50-account-login.yaml" not in harness
     flows = sorted(p.name for p in (ROOT / "apps/mobile/.maestro").glob("[0-9]*.yaml"))
-    for must in ("30-chat-that.yaml", "45-chan-bao-cao.yaml", "46-xoa-tai-khoan.yaml",
-                 "47-to-giay-hai-nguoi.yaml", "48-to-hen-chung.yaml", "50-account-login.yaml"):
+    for must in (
+        "30-chat-that.yaml",
+        "45-chan-bao-cao.yaml",
+        "46-xoa-tai-khoan.yaml",
+        "47-to-giay-hai-nguoi.yaml",
+        "48-to-hen-chung.yaml",
+        "50-account-login.yaml",
+    ):
         assert must in flows, must
     assert not (ROOT / "apps/mobile/tests/fixtures/legacy_native").exists()
 
