@@ -502,6 +502,27 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			inner.ServeHTTP(w, r)
 		})
 	}
+	// ADR-0057 §8.2: wherever the chat v2 schema exists, legacy chat writes to
+	// a room on the v2 lane are refused -- with the lane's flag on or off.
+	if pool != nil {
+		check, cancel := context.WithTimeout(ctx, 10*time.Second)
+		err := chatv2.CheckSchema(check, pool)
+		cancel()
+		if err == nil {
+			guard := chatv2http.LegacyGuard{Store: chatv2.NewStore(pool), Authenticate: chatv2http.Sessions(pool),
+				Resolve: func(r *http.Request) (string, map[string]string, bool) {
+					d := table.DecideTarget(r.Method, r.RequestURI, r.Host, "http")
+					return d.RouteID, d.Params, d.Kind == router.KindFull
+				}}
+			inner := front
+			front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if guard.Guard(w, r) {
+					return
+				}
+				inner.ServeHTTP(w, r)
+			})
+		}
+	}
 	// ADR-0031/0057: the E2EE chat lane. Off until `core migrate-chat` ran and
 	// MOBILE_CHAT_V2_ENABLED=1; bearer sessions only, whatever MOBILE_AUTH_MODE.
 	if pool != nil && getenv("MOBILE_CHAT_V2_ENABLED") == "1" {
@@ -531,9 +552,6 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if chatv2http.Matches(r.URL.Path) {
 				feature.ServeHTTP(w, r)
-				return
-			}
-			if lane.GuardLegacy(w, r) {
 				return
 			}
 			inner.ServeHTTP(w, r)
