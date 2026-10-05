@@ -1698,6 +1698,14 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng ảnh trước/sau của đợt nâng cấp UI/UX 01/10/2026 (docs/claude/2026-10-01/ui-ux-upgrade, batch B9 · Kỷ niệm · Sổ chuyến đi · Hồ sơ · Cài đặt): ảnh ghép JPEG chụp bản web trên stack loopback riêng (dữ liệu tổng hợp: «Chat Test NN», kèo và ảnh do harness QA viết), không có số điện thoại, tên hay dữ liệu người thật. Người giao việc cho phép commit ảnh trong đợt này, ngân sách ~10 MiB. Đổi một byte phải ghim lại."
+    },
+    {
+      "path": "packages/chat-crypto-ffi/Cargo.lock",
+      "sha256": "bf19fba9ac2ec262e676c8cfd077134787f0dcdea4d6cf1c071fb60bcc9169bc",
+      "rules": [
+        "vn-phone"
+      ],
+      "reason": "Lockfile của cầu C ABI, sao từ packages/chat-crypto/Cargo.lock (đã ghim ở trên) rồi cargo chỉ thêm đúng gói rudi-chat-crypto-ffi; mọi phiên bản và checksum khác giữ nguyên. Hai dòng bị vn-phone bắt là trường `checksum = \"<64 hex>\"` của autocfg 1.5.1 và regex-syntax 0.8.11, như lock gốc; đã kiểm bằng máy 05/10. Không có dữ liệu người tham gia. Sinh lại lockfile là phải ghim lại và xem lại."
     }
   ]
 }

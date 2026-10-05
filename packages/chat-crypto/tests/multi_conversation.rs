@@ -338,3 +338,46 @@ fn v2_operations_and_sealed_media_round_trip_and_validate() {
     }
     assert_eq!(alice.generation(), generation);
 }
+
+/// Security review 05/10: a rejoin under the same conversation id must not
+/// erase the group it just joined, and the device must keep working.
+#[test]
+fn a_removed_device_added_back_rejoins_and_reads_new_messages() {
+    let mut alice = client(1, 11);
+    let mut bob = client(2, 22);
+    open(&mut alice, 100, &mut [&mut bob]);
+    let removal = alice.stage_remove(&id(100), &id(300), &id(22)).unwrap();
+    alice.acknowledge_commit(&removal.envelope).unwrap();
+    assert_eq!(
+        bob.receive(&removal.envelope, Some(&[alice.identity()]))
+            .unwrap(),
+        Received::Removed
+    );
+    let back = alice
+        .stage_add(
+            &id(100),
+            &id(301),
+            &[(bob.identity(), bob.key_package().unwrap())],
+        )
+        .unwrap();
+    alice.acknowledge_commit(&back.envelope).unwrap();
+    bob.join_group(
+        &id(100),
+        back.welcome.as_ref().unwrap(),
+        &[alice.identity(), bob.identity()],
+    )
+    .unwrap();
+    let hello = alice.encrypt(&id(100), &id(302), text("chào lại")).unwrap();
+    assert_eq!(body(bob.receive(&hello, None).unwrap()), text("chào lại"));
+    let key = [7u8; 32];
+    let sealed = bob.seal_local_state(&key).unwrap();
+    let anchor = sealed.anchor().unwrap();
+    let mut bob = Client::resume_local_state(&sealed, &key, &anchor).unwrap();
+    let again = alice
+        .encrypt(&id(100), &id(303), text("sau khởi động lại"))
+        .unwrap();
+    assert_eq!(
+        body(bob.receive(&again, None).unwrap()),
+        text("sau khởi động lại")
+    );
+}

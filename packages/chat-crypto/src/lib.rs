@@ -395,6 +395,13 @@ impl Client {
             return Err(Error::Invalid);
         };
         self.mutate()?;
+        // A rejoin after removal: the inactive group of the same id is erased
+        // from storage BEFORE the new one is written under the same GroupId
+        // (security review 05/10: deleting it afterwards erased the new group).
+        // A failure from here on is rolled back to the snapshot, old group included.
+        if let Some(old) = self.conversations.get_mut(conversation_id) {
+            old.group.delete(self.provider.storage()).map_err(mls)?;
+        }
         let staged =
             StagedWelcome::new_from_welcome(&self.provider, config().join_config(), welcome, None)
                 .map_err(mls)?;
@@ -405,11 +412,6 @@ impl Client {
         }
         check_members(staged.members(), &expected)?;
         let group = staged.into_group(&self.provider).map_err(mls)?;
-        // A rejoin after removal replaces the inactive group of the same id.
-        if let Some(old) = self.conversations.remove(conversation_id) {
-            let mut old = old.group;
-            old.delete(self.provider.storage()).map_err(mls)?;
-        }
         self.conversations.insert(
             conversation_id.into(),
             Conversation {
@@ -427,13 +429,14 @@ impl Client {
     /// Drops a conversation this device was removed from, or left: its group
     /// state and outbox are erased from memory and from the next checkpoint.
     pub fn forget(&mut self, conversation_id: &str) -> Result<()> {
+        let provider = &self.provider;
         let conversation = self
             .conversations
-            .remove(conversation_id)
+            .get_mut(conversation_id)
             .ok_or(Error::State)?;
-        self.mutate()?;
-        let mut group = conversation.group;
-        group.delete(self.provider.storage()).map_err(mls)
+        conversation.group.delete(provider.storage()).map_err(mls)?;
+        self.conversations.remove(conversation_id);
+        self.mutate()
     }
 
     fn unsigned(&self, conversation_id: &str, logical: &str) -> Result<Envelope> {
@@ -750,12 +753,18 @@ impl Client {
             .get_mut(conversation_id)
             .filter(|c| c.group.is_active())
             .ok_or(Error::State)?;
-        let pending = conversation.pending.take().ok_or(Error::State)?;
-        conversation.outbox.remove(&pending.logical_send_id);
+        if conversation.pending.is_none() {
+            return Err(Error::State);
+        }
+        // Storage first: if clearing fails, the bookkeeping still matches the
+        // group and the checkpoint stays openable (security review 05/10).
         conversation
             .group
             .clear_pending_commit(provider.storage())
             .map_err(mls)?;
+        if let Some(pending) = conversation.pending.take() {
+            conversation.outbox.remove(&pending.logical_send_id);
+        }
         self.mutate()
     }
 
@@ -779,16 +788,20 @@ impl Client {
             .conversations
             .get_mut(&accepted.conversation_id)
             .ok_or(Error::State)?;
+        // Checked before anything changes, so a refusal leaves the pending
+        // commit exactly as it was (security review 05/10).
+        let staged = conversation.group.pending_commit().ok_or(Error::State)?;
+        check_commit(&conversation.group, staged, &conversation.roster, &next)?;
         conversation
             .group
             .merge_pending_commit(provider)
             .map_err(mls)?;
-        check_members(conversation.group.members(), &next)?;
+        // Merged: the bookkeeping follows the group whatever comes next.
         conversation.roster = next;
         conversation.pending = None;
         conversation.outbox.remove(&logical);
         conversation.delivered.insert(logical);
-        Ok(())
+        check_members(conversation.group.members(), &conversation.roster)
     }
 
     /// A supplied next roster is an authorization assertion by the caller's trusted

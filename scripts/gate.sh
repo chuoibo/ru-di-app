@@ -107,7 +107,7 @@ stage_help() {
     go-milvus) echo "Go tests tagged milvus -- the one retrieval + ingestion system: the Milvus index and its schema, the ingestion pipeline (rag/nap over vectordb/napkho), the hybrid retriever over Milvus and PostgreSQL, the reranker's golden check -- on real services, local installs or MOBILE_TEST_*; a skip or a missing sentinel is a failure (test.yml: milvus)" ;;
     e2e)       echo "the vertical slice through src/api.ts against an API and database it provisions itself (test.yml: e2e)" ;;
     chat-e2e)  echo "chat qua HTTP và WebSocket thật vào cửa trước Go, trên stack nó tự dựng (test.yml: chat-e2e)" ;;
-    crypto)    echo "crate MLS dựng được, clippy sạch, 21 canary vẫn cắn, và cầu C ABI xuất đủ ký hiệu (test.yml: crypto)" ;;
+    crypto)    echo "crate MLS dựng được --locked, clippy sạch, 29 canary vẫn cắn, test ABI chạy, và thư viện Android x86_64 + arm64 xuất đủ 9 ký hiệu (test.yml: crypto)" ;;
   esac
 }
 
@@ -690,52 +690,76 @@ do_postgres() {
 }
 
 do_crypto() {
+  # No cargo on this machine: run this same stage inside the pinned Rust image,
+  # with the host's Android NDK mounted where it lives. The container's target
+  # dir and registry stay outside the repository, so nothing it writes as root
+  # lands in the tree.
+  if ! have cargo; then
+    local ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"
+    [ -z "$ndk" ] && ndk="$(ls -d "$HOME"/Android/Sdk/ndk/* 2>/dev/null | sort -V | tail -1)"
+    [ -n "$ndk" ] && [ -d "$ndk" ] || { echo "không có cargo, cũng không tìm thấy Android NDK để dựng trong container" >&2; return 1; }
+    mkdir -p "$HOME/.cache/rudi-cargo/gate-registry"
+    docker run --rm -e ANDROID_NDK_ROOT="$ndk" -e CARGO_TARGET_DIR=/tmp/target \
+      -v "$HOME/.cache/rudi-cargo/gate-registry:/usr/local/cargo/registry" \
+      -v "$REPO_ROOT":/repo:ro -v "$ndk":"$ndk":ro -w /repo \
+      rust:1.98.1-bookworm bash -c 'mkdir /work && cp -r /repo/packages /repo/scripts /work/ && cd /work && bash scripts/gate.sh crypto'
+    return $?
+  fi
   # The OpenMLS spike had no gate at all: it could stop compiling, or lose every
   # canary, and nothing in the repository would notice. Counting the canaries is
-  # the point -- `cargo test` passes just as happily with none left.
+  # the point -- `cargo test` passes just as happily with none left. `--locked`
+  # everywhere: a build that quietly re-resolved the lockfile is not the one
+  # that was reviewed.
   local log; log="$(mktemp)"
+  rustup component add rustfmt clippy >/dev/null 2>&1 || true
   cargo fmt --manifest-path packages/chat-crypto/Cargo.toml --check || return 1
-  cargo clippy --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings || return 1
-  cargo test --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee "$log" || return 1
+  cargo clippy --locked --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings || return 1
+  cargo test --locked --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee "$log" || return 1
   local passed
   passed="$(grep -oE '^test result: ok\. [0-9]+ passed' "$log" | awk '{s+=$4} END {print s+0}')"
   echo "canary MLS: $passed ca"
-  [ "$passed" -ge 20 ] || { echo "chỉ $passed canary chạy; crate này có 21 — bộ test teo lại không phải bộ test xanh" >&2; return 1; }
+  [ "$passed" -ge 29 ] || { echo "chỉ $passed canary chạy; crate này có 29 (21 + 8 của ADR-0057) — bộ test teo lại không phải bộ test xanh" >&2; return 1; }
   ! grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' "$log" || return 1
 
   # The C ABI lives in its own crate so the audited core keeps
   # `#![forbid(unsafe_code)]`. It is the only `unsafe` in this repository, so it
-  # gets clippy at deny level, and it is built for the Android target the app
-  # will dlopen it from -- building only for the host would prove nothing about
-  # the thing that actually has to load.
+  # gets clippy at deny level, its own end-to-end test through the ABI, and is
+  # built for the Android target the app will dlopen it from -- building only
+  # for the host would prove nothing about the thing that actually has to load.
   [ -d packages/chat-crypto-ffi ] || return 0
   cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check || return 1
-  cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings || return 1
-  cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release || return 1
+  cargo clippy --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings || return 1
+  cargo test --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml 2>&1 | tee "$log" || return 1
+  grep -qE '^test result: ok\. [1-9][0-9]* passed' "$log" || { echo "test ABI không chạy ca nào" >&2; return 1; }
+  cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml --release || return 1
   # `rustup target add` cho std của target và KHÔNG cho gì khác: linker và
   # sysroot đến từ NDK. Thiếu chúng thì link hỏng ở `-llog`, `-lunwind`.
-  # `packages/chat-crypto/scripts/check_android.sh` đã ghi đúng ba biến này.
+  # GATE-NATIVE-CRYPTO-01 (audit 05/10): thiếu NDK là ĐỎ ở cả máy, như CI —
+  # một cổng bỏ qua được bước dựng Android thì không chứng minh app nạp được.
   local ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"
-  if rustup target list --installed 2>/dev/null | grep -q x86_64-linux-android \
-     && [ -n "$ndk" ] && [ -d "$ndk" ]; then
-    local bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
-    CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android26-clang" \
-    CC_x86_64_linux_android="$bin/x86_64-linux-android26-clang" \
-    AR_x86_64_linux_android="$bin/llvm-ar" \
-      cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release --target x86_64-linux-android || return 1
-  else
-    echo "thiếu target x86_64-linux-android hoặc ANDROID_NDK_ROOT; bỏ qua bước dựng cho Android (CI vẫn dựng)" >&2
-  fi
-  # A cdylib that exports nothing is a file, not a bridge.
-  local so; so="$(find "${CARGO_TARGET_DIR:-packages/chat-crypto-ffi/target}" -name 'librudi_chat_crypto_ffi.so' 2>/dev/null | head -1)"
-  [ -n "$so" ] || { echo "không sinh ra thư viện dùng chung nào" >&2; return 1; }
-  local sym missing=0
-  for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_free \
-             rudi_chat_crypto_string_free rudi_chat_crypto_identity \
-             rudi_chat_crypto_create_group rudi_chat_crypto_encrypt \
-             rudi_chat_crypto_receive; do
-    nm -D --defined-only "$so" | grep -q " $sym\$" || { echo "$sym không được xuất" >&2; missing=1; }
+  [ -n "$ndk" ] && [ -d "$ndk" ] || { echo "không có Android NDK (ANDROID_NDK_ROOT); bước dựng Android không được bỏ qua" >&2; return 1; }
+  rustup target add x86_64-linux-android aarch64-linux-android >/dev/null || return 1
+  local bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin" target
+  for target in x86_64-linux-android aarch64-linux-android; do
+    local upper; upper="$(echo "$target" | tr 'a-z-' 'A-Z_')"
+    env "CARGO_TARGET_${upper}_LINKER=$bin/${target}26-clang" \
+        "CC_${target//-/_}=$bin/${target}26-clang" \
+        "AR_${target//-/_}=$bin/llvm-ar" \
+      cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml --release --target "$target" || return 1
   done
+  # A cdylib that exports nothing is a file, not a bridge: every Android build
+  # must export the whole ABI.
+  local so sym missing=0 count=0
+  while IFS= read -r so; do
+    count=$((count + 1))
+    for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_resume rudi_chat_crypto_client_free \
+               rudi_chat_crypto_string_free rudi_chat_crypto_identity \
+               rudi_chat_crypto_create_group rudi_chat_crypto_encrypt \
+               rudi_chat_crypto_receive rudi_chat_crypto_call; do
+      "$bin/llvm-nm" -D --defined-only "$so" | grep -q " $sym\$" || { echo "$so: $sym không được xuất" >&2; missing=1; }
+    done
+  done < <(find "${CARGO_TARGET_DIR:-packages/chat-crypto-ffi/target}" -path '*-linux-android/release/librudi_chat_crypto_ffi.so')
+  [ "$count" -eq 2 ] || { echo "cần 2 thư viện Android (x86_64, arm64), thấy $count" >&2; return 1; }
   [ "$missing" -eq 0 ]
 }
 
@@ -1011,7 +1035,7 @@ check_prereq() {
       # crate present without its canaries is not.
       [ -d packages/chat-crypto ] || { echo "packages/chat-crypto không có trên nhánh này"; return 1; }
       [ -f packages/chat-crypto/tests/mls_canaries.rs ] || return 2
-      have cargo || { echo "không có cargo"; return 1; } ;;
+      have cargo || have docker || { echo "không có cargo, cũng không có docker để chạy image Rust đã ghim"; return 1; } ;;
     chat-e2e)
       # Same rule as e2e: an absence skips, a defect fails. Deleting the cases
       # must never be the thing that turns this stage green.

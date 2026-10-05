@@ -838,18 +838,18 @@ jobs:
         run: cargo fmt --manifest-path packages/chat-crypto/Cargo.toml --check
 
       - if: steps.present.outputs.found == 'true'
-        run: cargo clippy --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings
+        run: cargo clippy --locked --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings
 
       # A crate whose tests all vanished still passes `cargo test`, so count
       # them: the canaries are the reason this job exists.
       - if: steps.present.outputs.found == 'true'
         run: |
           set -o pipefail
-          cargo test --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee /tmp/crypto.log
+          cargo test --locked --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee /tmp/crypto.log
           passed=$(grep -oE '^test result: ok\. [0-9]+ passed' /tmp/crypto.log | awk '{s+=$4} END {print s+0}')
           echo "canaries passed: $passed"
-          if [ "$passed" -lt 20 ]; then
-            echo "::error::only $passed canaries ran; this crate had 21 -- a shrinking suite is not a passing one"
+          if [ "$passed" -lt 29 ]; then
+            echo "::error::only $passed canaries ran; this crate has 29 (21 + 8 for ADR-0057) -- a shrinking suite is not a passing one"
             exit 1
           fi
           if grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' /tmp/crypto.log; then
@@ -875,10 +875,17 @@ jobs:
         run: cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check
 
       - if: steps.ffi.outputs.found == 'true'
-        run: cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings
+        run: cargo clippy --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings
+
+      # The ABI driven end to end through its own extern functions.
+      - if: steps.ffi.outputs.found == 'true'
+        run: |
+          set -o pipefail
+          cargo test --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml 2>&1 | tee /tmp/ffi.log
+          grep -qE '^test result: ok\. [1-9][0-9]* passed' /tmp/ffi.log || { echo "::error::the ABI test ran no case"; exit 1; }
 
       - if: steps.ffi.outputs.found == 'true'
-        run: cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release
+        run: cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml --release
 
       # Building for the host proves it compiles; building for Android proves it
       # can be loaded by the app, which is the whole point of the crate.
@@ -896,25 +903,34 @@ jobs:
             exit 1
           fi
           bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          rustup target add x86_64-linux-android
+          rustup target add x86_64-linux-android aarch64-linux-android
           CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android26-clang" \
           CC_x86_64_linux_android="$bin/x86_64-linux-android26-clang" \
           AR_x86_64_linux_android="$bin/llvm-ar" \
-            cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml \
+            cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml \
               --release --target x86_64-linux-android
+          CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$bin/aarch64-linux-android26-clang" \
+          CC_aarch64_linux_android="$bin/aarch64-linux-android26-clang" \
+          AR_aarch64_linux_android="$bin/llvm-ar" \
+            cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml \
+              --release --target aarch64-linux-android
 
       # A cdylib that exports nothing is a file, not a bridge.
       - if: steps.ffi.outputs.found == 'true'
         run: |
-          so=$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' | head -1)
-          test -n "$so" || { echo "::error::no shared object was produced"; exit 1; }
-          missing=0
-          for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_free \
-                     rudi_chat_crypto_string_free rudi_chat_crypto_identity \
-                     rudi_chat_crypto_create_group rudi_chat_crypto_encrypt \
-                     rudi_chat_crypto_receive; do
-            nm -D --defined-only "$so" | grep -q " $sym\$" || { echo "::error::$sym is not exported"; missing=1; }
+          ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"
+          nm="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
+          count=0; missing=0
+          for so in $(find packages/chat-crypto-ffi/target -path '*-linux-android/release/librudi_chat_crypto_ffi.so'); do
+            count=$((count + 1))
+            for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_resume rudi_chat_crypto_client_free \
+                       rudi_chat_crypto_string_free rudi_chat_crypto_identity \
+                       rudi_chat_crypto_create_group rudi_chat_crypto_encrypt \
+                       rudi_chat_crypto_receive rudi_chat_crypto_call; do
+              "$nm" -D --defined-only "$so" | grep -q " $sym\$" || { echo "::error::$so: $sym is not exported"; missing=1; }
+            done
           done
+          test "$count" -eq 2 || { echo "::error::expected the x86_64 and arm64 libraries, found $count"; exit 1; }
           test "$missing" -eq 0
 
   chat-e2e:
