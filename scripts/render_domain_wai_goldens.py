@@ -19,7 +19,9 @@ matches services/api/app byte for byte).
 
 Three more packages -- conversation, reel and suggestion -- had their goldens
 rendered here too. ADR-0052 deleted their Python modules together with the
-last Python caller, so those testdata files are frozen vectors now.
+last Python caller, so those testdata files are frozen vectors now. The
+conversation vectors were dropped on 2026-10-05 when the owner changed the
+digest (whole lines, named speakers); its Go tests own the contract.
 
     docker run --rm -i --network none --entrypoint python "$IMAGE" - --list \\
       < scripts/render_domain_wai_goldens.py |

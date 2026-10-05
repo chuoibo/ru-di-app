@@ -91,6 +91,33 @@ func TextSafe(s string, maxChars int) bool {
 	return fieldSafe(tree.String(s), maxChars)
 }
 
+// MaxTenDoc bounds a display name the model may read. It is the catalogue's
+// item bound (maxItem): long enough for any real name, short enough that a
+// name cannot carry a paragraph.
+const MaxTenDoc = maxItem
+
+// TenDoc is a display name as a model may read it, or "" when it may not and
+// the caller has to fall back to a neutral label. A display name is text a
+// person typed about themselves, so it passes the same test a catalogue row
+// does: a name that tries to talk to the model is not quoted at all.
+func TenDoc(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" || !TextSafe(name, MaxTenDoc) {
+		return ""
+	}
+	return name
+}
+
+// TenNguoi is a person's display name as a model may read it. Member lists
+// fall back to the person id when display_name is empty, and an account id is
+// exactly what must never reach a model, so that fallback counts as no name.
+func TenNguoi(displayName, personID string) string {
+	if displayName == personID {
+		return ""
+	}
+	return TenDoc(displayName)
+}
+
 func listSafe(value tree.Value) bool {
 	if value == nil {
 		return true

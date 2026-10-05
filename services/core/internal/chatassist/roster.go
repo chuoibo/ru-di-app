@@ -2,7 +2,6 @@ package chatassist
 
 import (
 	"context"
-	"strings"
 
 	"mobile/services/core/internal/domain/promptsafety"
 	"mobile/services/core/internal/repo"
@@ -10,36 +9,16 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// maxTenDoc bounds a display name the model may read. It is the catalogue's
-// item bound (promptsafety maxItem): long enough for any real name, short
-// enough that a name cannot carry a paragraph.
-const maxTenDoc = 60
+// maxTenDoc bounds a display name the model may read (promptsafety.MaxTenDoc).
+const maxTenDoc = promptsafety.MaxTenDoc
 
 // tenDoc is a display name as the model may read it, or "" when it may not
-// and the caller has to fall back to a neutral label.
-//
-// A display name is text a person typed about themselves, and since
-// 2026-09-24 it reaches the model (ADR-0036 §5). So it goes through the same
-// test a catalogue row does: a name that tries to talk to the model is not
-// quoted more carefully, it is not quoted at all.
-func tenDoc(name string) string {
-	name = strings.TrimSpace(name)
-	if name == "" || !promptsafety.TextSafe(name, maxTenDoc) {
-		return ""
-	}
-	return name
-}
+// and the caller has to fall back to a neutral label (promptsafety.TenDoc).
+func tenDoc(name string) string { return promptsafety.TenDoc(name) }
 
-// tenThanhVien is a member's display name as the model may read it.
-// ListMembers falls back to the person id when display_name is empty, and an
-// account id is exactly what must never reach the model, so that fallback
-// counts as no name.
-func tenThanhVien(m repo.Membership) string {
-	if m.DisplayName == m.PersonID {
-		return ""
-	}
-	return tenDoc(m.DisplayName)
-}
+// tenThanhVien is a member's display name as the model may read it; the
+// person-id fallback of ListMembers counts as no name (promptsafety.TenNguoi).
+func tenThanhVien(m repo.Membership) string { return promptsafety.TenNguoi(m.DisplayName, m.PersonID) }
 
 // tacGia maps each shared turn to its author. Ownership was already checked
 // when the invocation was accepted (thuocPhong); a turn whose message has

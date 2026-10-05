@@ -6,6 +6,7 @@ import (
 
 	"mobile/services/core/internal/aiharness/goiy"
 	"mobile/services/core/internal/domain/conversation"
+	"mobile/services/core/internal/domain/promptsafety"
 	"mobile/services/core/internal/domain/suggestion"
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/pyjson"
@@ -137,10 +138,15 @@ func readContextualSuggestion() Route {
 			return endpoint.Reply{}, err
 		}
 		active := 0
+		// Owner decision 2026-10-05: the model reads who said each line. A
+		// name reaches it only as promptsafety allows; anyone else (unsafe
+		// name, former member) becomes a neutral "Bạn N", never an id.
+		speaker := map[string]string{}
 		for _, member := range members {
 			if member.State == "active" {
 				active++
 			}
+			speaker[member.PersonID] = promptsafety.TenNguoi(member.DisplayName, member.PersonID)
 		}
 		page, err := store.ListMessages(ctx, contextID, conversationWindow, nil, nil)
 		if err != nil {
@@ -148,7 +154,11 @@ func readContextualSuggestion() Route {
 		}
 		rows := make([]conversation.Message, 0, len(page.Messages))
 		for _, message := range page.Messages {
-			rows = append(rows, conversation.Message{Kind: message.Kind, Body: message.Body, AuthorID: message.AuthorID})
+			row := conversation.Message{Kind: message.Kind, Body: message.Body, AuthorID: message.AuthorID}
+			if message.AuthorID != nil {
+				row.Speaker = speaker[*message.AuthorID]
+			}
+			rows = append(rows, row)
 		}
 		digest := conversation.Summarise(rows, active)
 		basis := pyjson.NewOrderedMap()

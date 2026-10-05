@@ -57,8 +57,9 @@ mỗi người gọi món khác nhau.
 
 Đưa cả vòng "tìm chỗ đi → rủ nhau → lên kế hoạch → đi chơi → ăn uống → chia
 tiền → lưu kỷ niệm" vào app **Rủ Đi**. **Nếp** là bạn đồng hành kể chuyện,
-không phải quyết định tự đổi tên ứng dụng. AI chỉ nhận phần người dùng chủ động
-chọn và xác nhận chia sẻ; không tự đọc chat, gu hay lịch sử.
+không phải quyết định tự đổi tên ứng dụng. AI được đọc chat nhóm mà server đọc
+được (chủ sản phẩm chốt 2026-10-05); phòng chat mã hoá đầu cuối thì AI chỉ nhận
+phần thiết bị gửi lên.
 
 Đường đi PoC lịch sử tập trung vào chia bill là **một đường đi chạy thật,
 đẹp thật**, không phải 47 feature nông:
@@ -135,7 +136,8 @@ Ràng buộc riêng của tầng hiển thị:
 - Trước khi dựng bằng AI, người dùng xem và xác nhận đúng gói ảnh/ngữ cảnh
   sẽ gửi. Có thể không gửi chat hoặc tự xếp trang không dùng AI. Hiện có ô dán
   trích đoạn được chọn thủ công; chưa có trình chọn chat E2EE trên thiết bị.
-  Server không giữ khóa giải mã chat; AI không tự đọc chat, gu hoặc lịch sử.
+  Server không giữ khóa giải mã chat; AI đọc được chat mà server đọc được, còn
+  phòng mã hoá đầu cuối thì chỉ phần thiết bị gửi lên.
 - AI chỉ dựng nháp riêng, người dùng sửa trước khi lưu; dựng lại không ghi đè
   bản đã sửa. AI không quyết định quyền, không viết sổ cái, không tự công khai.
   Go/SQL sở hữu vòng đời, tác vụ và lời gọi model (qua agy-proxy, ADR-0052).

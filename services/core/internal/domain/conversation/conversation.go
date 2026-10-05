@@ -1,16 +1,24 @@
-// Package conversation is app.domain.conversation: the last few human turns.
+// Package conversation is the last few human turns of a room, as the
+// contextual suggestion hands them to the model.
+//
+// Owner decision 2026-10-05: the twelve latest text messages go in whole, each
+// one labelled with who said it ("Minh: …"). Python's summarise_conversation,
+// which clipped every line at 200 characters and dropped the speaker, was
+// deleted by ADR-0052; this package no longer mirrors it.
 package conversation
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 const (
 	Kind     = "text"
 	MaxLines = 12
-	MaxLine  = 200
 	MinLines = 2
 )
 
-// Digest is summarise_conversation's dict.
+// Digest is what the contextual prompt reads.
 type Digest struct {
 	RecentLines  []string
 	MessageCount int
@@ -18,18 +26,31 @@ type Digest struct {
 	MemberCount  int
 }
 
-// Message is one stored row as the digest reads it.
+// Message is one stored row as the digest reads it. Speaker is the author's
+// display name as a model may read it, or "" when the caller has none it may
+// show (no safe name, a former member, no author at all).
 type Message struct {
 	Kind     string
 	Body     *string
 	AuthorID *string
+	Speaker  string
 }
 
-// Summarise is summarise_conversation. messages arrive newest-first.
+// Summarise keeps the MaxLines newest non-empty text messages, oldest first,
+// each as "Speaker: body" with the body whole. messages arrive newest-first.
+// A turn without a usable name is labelled "Bạn N", numbered in the order the
+// unnamed people first speak, so the model can still tell them apart without
+// ever seeing an account id. Turns without an author share one label.
 func Summarise(messages []Message, memberCount int) Digest {
-	lines := []string{}
+	type turn struct {
+		key, speaker, body string
+	}
+	turns := []turn{}
 	speakers := map[string]bool{}
 	for _, message := range messages {
+		if len(turns) == MaxLines {
+			break
+		}
 		if message.Kind != Kind || message.Body == nil {
 			continue
 		}
@@ -37,24 +58,36 @@ func Summarise(messages []Message, memberCount int) Digest {
 		if body == "" {
 			continue
 		}
-		if len(lines) < MaxLines {
-			runes := []rune(body)
-			if len(runes) > MaxLine {
-				body = string(runes[:MaxLine])
-			}
-			lines = append(lines, body)
-			if message.AuthorID != nil {
-				speakers[*message.AuthorID] = true
+		key := ""
+		if message.AuthorID != nil {
+			key = *message.AuthorID
+			speakers[key] = true
+		}
+		turns = append(turns, turn{key: key, speaker: strings.TrimSpace(message.Speaker), body: body})
+	}
+	for i, j := 0, len(turns)-1; i < j; i, j = i+1, j-1 {
+		turns[i], turns[j] = turns[j], turns[i]
+	}
+	unnamed := map[string]string{}
+	lines := make([]string, 0, len(turns))
+	for _, t := range turns {
+		label := t.speaker
+		if label == "" {
+			if t.key == "" {
+				label = "Ai đó"
+			} else if known, ok := unnamed[t.key]; ok {
+				label = known
+			} else {
+				label = "Bạn " + strconv.Itoa(len(unnamed)+1)
+				unnamed[t.key] = label
 			}
 		}
-	}
-	for i, j := 0, len(lines)-1; i < j; i, j = i+1, j-1 {
-		lines[i], lines[j] = lines[j], lines[i]
+		lines = append(lines, label+": "+t.body)
 	}
 	return Digest{
 		RecentLines: lines, MessageCount: len(lines), SpeakerCount: len(speakers), MemberCount: memberCount,
 	}
 }
 
-// Has is has_conversation.
+// Has is whether there is enough conversation to suggest from.
 func Has(digest Digest) bool { return digest.MessageCount >= MinLines }

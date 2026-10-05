@@ -110,8 +110,10 @@ func PromptGoiY(history *pyjson.OrderedMap, places pyjson.List) (string, error) 
 }
 
 // PromptTheoBoiCanh is build_contextual_prompt: rules, the catalogue, then
-// the room's size and its recent lines last, labelled as data. No author id
-// is in the digest, so none can be in the prompt.
+// the room's size and its recent lines last, labelled as data. Each line is
+// "Tên: lời nói" (owner decision 2026-10-05); the names were vetted by
+// promptsafety and no account id is in the digest, so none can be in the
+// prompt.
 func PromptTheoBoiCanh(digest *pyjson.OrderedMap, places pyjson.List) (string, error) {
 	lines := []string{luatTheoBoiCanh, "", "Danh mục địa điểm:"}
 	rows, err := catalogue(places)

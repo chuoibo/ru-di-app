@@ -14,7 +14,9 @@ import (
 
 // testdata/python_prompt*.json was rendered by scripts/render_ai_prompt_goldens.py
 // from the real suggestion_gemini, reel_gemini and achievement_gemini before
-// ADR-0052 deleted them: every prompt, line by line.
+// ADR-0052 deleted them: every prompt, line by line. On 2026-10-05 the two
+// contextual rule lines about names were rewritten in place (lines now carry
+// "Tên: lời nói" by owner decision); every other expected line is Python's.
 
 func refusal(err error) (class, code string, ok bool) { return "", "", false }
 

@@ -10,6 +10,11 @@ import (
 
 // The one property that has to survive everything else in this package.
 //
+// Since 2026-10-05 the product rule allows AI to read server-readable chat
+// (the contextual suggestion in routes does). This package keeps its own,
+// narrower contract on purpose: the invocation path must work unchanged in
+// chat v2 rooms, where the server has no body to read at all.
+//
 // The whole design rests on a single claim: the server does not read the
 // conversation, the caller hands over what it chose to share. That claim is
 // what lets the same code keep working after the cutover, when chat v2 is end

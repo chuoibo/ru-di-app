@@ -18,9 +18,10 @@ Python đã xoá — chỉ còn `face-boxes` (OpenCV, TODO làm lại bằng Go)
 còn cờ chọn engine; `api` không giữ khoá AI nào.
 
 Chat v2 bắt buộc E2EE, không fallback plaintext; lịch sử cũ chỉ đọc và có
-nhãn. Server không giữ khoá giải mã chat. AI chỉ nhận nội dung được gọi/chia
-sẻ rõ ràng, không tự đọc chat/gu/lịch sử (ngoại lệ: gu của người đã tự bật
-`chia_gu` trong sổ đôi của họ — ADR-0034; trong chat cặp đôi chỉ đồng ý từ mốc ADR-0048). Giữ ba luật tiền và tài liệu frozen.
+nhãn. Server không giữ khoá giải mã chat. AI được đọc chat mà server đọc
+được (chủ sản phẩm chốt 2026-10-05, bỏ luật "AI không tự đọc chat"); phòng
+v2 E2EE server không có khoá nên AI chỉ nhận văn bản client gửi lên. Gu đôi
+vẫn theo `chia_gu` (ADR-0034, ADR-0048). Giữ ba luật tiền và tài liệu frozen.
 Native Android/iOS, crypto review độc lập, tải và người dùng thực là cổng
 riêng. SQLite không phải backend; kho mã hoá trên thiết bị là ngoại lệ đúng
 tầng. Tài liệu tiến độ: `docs/architecture/02-chat-go-e2ee.md`. Các mô tả

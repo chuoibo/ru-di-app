@@ -16,8 +16,9 @@ bằng chứng đối chiếu; phải ghi rõ ngoại lệ trong bàn giao. Khô
 của module sau khi qua contract và PostgreSQL thật; mỗi module có một writer.
 
 Chat v2 bắt buộc E2EE, không fallback plaintext. Kho cũ chỉ đọc, có nhãn rõ.
-Server không giữ khoá giải mã chat. AI chỉ nhận lời gọi hoặc trích đoạn được
-đồng ý chia sẻ, không tự đọc chat/gu/lịch sử. Native Android/iOS, kiểm chứng
+Server không giữ khoá giải mã chat. AI được đọc chat mà server đọc được
+(chủ sản phẩm chốt 2026-10-05); phòng v2 E2EE server không có khoá nên AI chỉ
+nhận văn bản client gửi lên. Native Android/iOS, kiểm chứng
 crypto độc lập và test tải là các cổng riêng, không được thay bằng unit test.
 
 Quy tắc này ưu tiên hơn các mô tả Python-first lịch sử bên dưới. SQLite vẫn
