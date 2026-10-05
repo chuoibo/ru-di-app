@@ -23,6 +23,7 @@ const KHONG_HINH = {
   // Administrative lists: managing settings, nobody needs a story told.
   "src/rudi/screens/cai-dat/DaChanScreen.tsx": ['"Bạn chưa chặn ai"'],
   "src/rudi/screens/cai-dat/PhienScreen.tsx": ['"Chưa có phiên nào"'],
+  "src/rudi/screens/cai-dat/ThietBiMaHoaScreen.tsx": ['"Chưa có thiết bị nào"'],
   "src/rudi/community/CommunityScreen.tsx": ['"Chưa ẩn bài nào"'],
   // Money: «Nếp đứng xa tiền», and a ledger screen takes no story.
   "src/rudi/screens/Bill.tsx": ['"Chưa có sổ nào để quyết toán"'],

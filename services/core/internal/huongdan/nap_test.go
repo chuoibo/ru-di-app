@@ -541,7 +541,8 @@ func TestCanhNgoaiRut(t *testing.T) {
 // Counts of the embedded manual. At the merge of main's community board
 // (2026-09-27) the app gained ten routes (the community tab and its screens,
 // the memory book and the outing ending) and one manual, cong-dong.md, which
-// the tab gate requires: a tab's label is its manual's title.
+// the tab gate requires: a tab's label is its manual's title. ADR-0057 added
+// settings/thiet-bi (the end-to-end devices list): 62.
 func TestDuLieuNhungDayDu(t *testing.T) {
 	if len(soTay.trang) != 14 {
 		t.Fatalf("%d manuals embedded, want 14", len(soTay.trang))
@@ -549,8 +550,8 @@ func TestDuLieuNhungDayDu(t *testing.T) {
 	if len(soTay.doan) != 55 {
 		t.Fatalf("%d sections embedded, want 55", len(soTay.doan))
 	}
-	if len(soTay.cacMan) != 61 {
-		t.Fatalf("%d routes in _rut.json, want 61", len(soTay.cacMan))
+	if len(soTay.cacMan) != 62 {
+		t.Fatalf("%d routes in _rut.json, want 62", len(soTay.cacMan))
 	}
 	for _, d := range soTay.doan {
 		if !soTay.coMan[d.Man] || d.TieuDe == "" || len(d.Buoc) == 0 || len(d.Buoc) > MaxBuoc {

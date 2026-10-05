@@ -548,7 +548,7 @@
         "Về tin nhắn mới nhất",
         "Xem danh sách đã chặn",
         "Xem hồ sơ",
-        "· Chưa kiểm tra được mã hoá — Thử lại",
+        "· Chưa kiểm tra được mã hoá. Thử lại",
         "· Đang nối lại",
         "· đang thiết lập",
         "Ô soạn tin",
@@ -1583,6 +1583,10 @@
           "nhan": "Phiên đăng nhập"
         },
         {
+          "den": "settings/thiet-bi",
+          "nhan": "Thiết bị nhắn tin mã hoá"
+        },
+        {
           "den": "settings/ve-rudi",
           "nhan": "Điều khoản và dữ liệu"
         },
@@ -1596,6 +1600,7 @@
         "settings/account",
         "settings/da-chan",
         "settings/phien",
+        "settings/thiet-bi",
         "settings/ve-rudi",
         "settings/xoa-tai-khoan"
       ],
@@ -1610,6 +1615,7 @@
         "Phiên đăng nhập",
         "Quyền riêng tư",
         "Sở thích",
+        "Thiết bị nhắn tin mã hoá",
         "Tài khoản",
         "Tài khoản & bảo mật",
         "Tên hiển thị và lời giới thiệu đổi ở «Chỉnh hồ sơ» trên trang Cá nhân; đăng xuất ở mục Tài khoản của trang đó.",
@@ -1702,6 +1708,38 @@
       "tep": [
         "app/settings/phien.tsx",
         "src/rudi/screens/cai-dat/PhienScreen.tsx"
+      ]
+    },
+    {
+      "canh": [],
+      "di_toi": [],
+      "man": "settings/thiet-bi",
+      "nhan": [
+        "Bản ứng dụng này chưa có mã hoá đầu cuối nên máy này không có trong danh sách.",
+        "Chưa có thiết bị nào",
+        "Chưa đọc được danh sách thiết bị",
+        "Dấu khoá",
+        "Dấu khoá máy này",
+        "Dấu khoá máy này …",
+        "Dấu khoá …",
+        "Gỡ",
+        "Gỡ thiết bị …, thêm ngày …",
+        "MÁY NÀY",
+        "Máy chủ không liệt kê máy này",
+        "Máy chủ đang giữ một khoá khác cho máy này. Đừng nhắn tin mã hoá trên máy này cho tới khi hỏi rõ.",
+        "Máy này giữ khoá mã hoá nhưng không có trong danh sách dưới đây. Đừng tin danh sách này cho tới khi hỏi rõ.",
+        "Thiết bị nhắn tin mã hoá",
+        "Thêm ngày",
+        "Thêm ngày …",
+        "Tin trong phòng mã hoá đầu cuối chỉ mở được trên các máy dưới đây. Thấy máy lạ thì gỡ ngay: máy đã gỡ không đọc được tin gửi sau đó.",
+        "thiết bị. Muốn chắc một máy là của bạn, so dấu khoá của nó ở đây với dấu khoá hiện trên chính máy đó.",
+        "trên tối đa",
+        "Đang dùng",
+        "Đang dùng … trên tối đa … thiết bị. Muốn chắc một máy là của bạn, so dấu khoá của nó ở đây với dấu khoá hiện trên chính máy đó."
+      ],
+      "tep": [
+        "app/settings/thiet-bi.tsx",
+        "src/rudi/screens/cai-dat/ThietBiMaHoaScreen.tsx"
       ]
     },
     {
