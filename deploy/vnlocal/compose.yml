@@ -18,7 +18,8 @@
 #                               MOBILE_VALHALLA_URL=http://valhalla:8002,
 #                               MOBILE_ROUTING_GRAPH_VERSION (từ graph-manifest.json)
 #   ~/.config/rudi/milvus.env   MOBILE_MILVUS_USER/_PASSWORD — sinh bằng
-#                               deploy/vnlocal/milvus-khoi-tao.sh (chạy một lần)
+#                               deploy/vnlocal/milvus-khoi-tao.sh (chạy một lần),
+#                               cùng ~/.config/rudi/milvus/minio.env của milvus-minio
 #   ~/.config/rudi/ai.env       GEMINI_API_KEY, AGY_PROXY_*, OPEN_ROUTER_API_KEY
 #                               — chỉ cấp cho dịch vụ AI (ADR-0049)
 #
@@ -146,9 +147,33 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
-  # Milvus standalone on the GPU (ADR-0049 §2.6): same server layout as the
-  # Milvus tier (embedded etcd, local storage, woodpecker, auth on), config
-  # and root password from deploy/vnlocal/milvus-khoi-tao.sh. Loopback only.
+  # Milvus's object store and woodpecker WAL. Not local storage: there
+  # Milvus v3.0.2 never compacts or truncates the WAL, and on 05/10 one
+  # channel held 234k empty segments that every read listed from etcd until
+  # the server crash-looped. MinIO no longer publishes community images;
+  # Chainguard's is pinned. No published port: only milvus talks to it.
+  milvus-minio:
+    image: cgr.dev/chainguard/minio@sha256:4cf4831a2bbcf13ddca09c1cbcc9faff716dd3c4247e0babc32864b8ee8e0034
+    command: ["server", "/data"]
+    env_file:
+      - ${HOME}/.config/rudi/milvus/minio.env
+    volumes:
+      - rudi-milvus-minio:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # Milvus standalone on the GPU (ADR-0049 §2.6): embedded etcd, MinIO
+  # storage, woodpecker, auth on; config and root password from
+  # deploy/vnlocal/milvus-khoi-tao.sh. Loopback only.
   milvus:
     image: milvusdb/milvus:v3.0.2-gpu
     command: ["milvus", "run", "standalone"]
@@ -156,8 +181,16 @@ services:
       ETCD_USE_EMBED: "true"
       ETCD_DATA_DIR: /var/lib/milvus/etcd
       ETCD_CONFIG_PATH: /milvus/configs/embedEtcd.yaml
-      COMMON_STORAGETYPE: local
+      COMMON_STORAGETYPE: remote
       DEPLOY_MODE: STANDALONE
+      # At info, the WAL auditor logs two lines per segment every 10 s: with
+      # the 234k segments of 05/10 that was ~1 GB/min, 192 GB on disk.
+      LOG_LEVEL: warn
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
     volumes:
       - ${HOME}/.config/rudi/milvus/user.yaml:/milvus/configs/user.yaml:ro
       - ${HOME}/.config/rudi/milvus/embedEtcd.yaml:/milvus/configs/embedEtcd.yaml:ro
@@ -178,6 +211,9 @@ services:
       timeout: 5s
       start_period: 60s
       retries: 30
+    depends_on:
+      milvus-minio:
+        condition: service_healthy
     restart: unless-stopped
 
   # The vector index's only long-running writer: drains rag_dirty every
@@ -417,3 +453,4 @@ volumes:
   rudi-auth-redis-data:
   rudi-media-data:
   rudi-milvus-data:
+  rudi-milvus-minio:
