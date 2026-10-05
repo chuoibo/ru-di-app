@@ -180,8 +180,9 @@ func TestDuongToiLaNganNhatMoiCap(t *testing.T) {
 			}
 		}
 	}
-	// 61 routes after managed auth replaces the old OTP and invitation doors.
-	if soCap != 3721 || coDuong < 1500 {
+	// 61 routes after managed auth replaces the old OTP and invitation doors;
+	// 62 with the end-to-end devices list (ADR-0057): 62*62 pairs.
+	if soCap != 3844 || coDuong < 1500 {
 		t.Fatalf("%d pairs, %d with a way: the graph is not the one embedded", soCap, coDuong)
 	}
 	t.Logf("%d pairs, %d with a way of at most %d steps; %d pass through a money screen because every way that short does, %d of two steps or more pass through none",
