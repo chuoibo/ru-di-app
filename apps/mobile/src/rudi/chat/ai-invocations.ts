@@ -4,7 +4,8 @@ import type { TraLoiSong } from "../ai/tra-loi-song";
 import type { BodyTaoBuoiDi, ChangGui } from "../../screens/len-plan/buoi-di";
 
 export type ChatCapabilities = {
-  protocol: "legacy";
+  /** The room's lane: in a `v2` room the caller's device seals the answer (ADR-0057 §6). */
+  protocol: "legacy" | "v2";
   realtime: { available: boolean };
   /**
    * `share_scope` is the GATE, not a label. While a server still says
@@ -93,7 +94,16 @@ export type AiInvocation = {
   so_tin_doc?: number | null;
   created_at: string;
   updated_at: string;
+  /** An end-to-end room only (ADR-0057 §6): the `@Rủ Đi` message's logical send id. */
+  trigger_v2?: string;
+  /** The answer for this device to seal into the room, until it delivered it. */
+  the_v2?: string;
+  the_digest?: string;
+  delivered_sequence?: number;
 };
+
+/** What any member reads to check an `ai_card` that claims to be the assistant's. */
+export type BienNhanAi = { id: string; person_id: string; the_digest: string; trigger_v2: string };
 const options = (contextId: string, personId: string) => ({ actorId: personId, contexts: contextId, timeoutMs: 15000 });
 export function docChatCapabilities(contextId: string, personId: string) {
   return translatedAsActor<ChatCapabilities>({}, `/contexts/${contextId}/chat-capabilities`, { ...options(contextId, personId), method: "GET" });
@@ -288,6 +298,15 @@ export function thuLaiAi(contextId: string, personId: string, id: string) {
   return translatedAsActor<AiInvocation>(LOI_GOI_AI, `/contexts/${contextId}/ai-invocations/${id}/retry`, {
     ...options(contextId, personId), method: "POST", attempt: newAttempt(),
   });
+}
+/** Tells the server where this device sealed the answer; the server then drops it. */
+export function baoDaGiaoAi(contextId: string, personId: string, id: string, sequence: number) {
+  return translatedAsActor<AiInvocation>(LOI_GOI_AI, `/contexts/${contextId}/ai-invocations/${id}/delivered`, {
+    ...options(contextId, personId), method: "POST", body: { sequence },
+  });
+}
+export function docBienNhanAi(contextId: string, personId: string, id: string) {
+  return translatedAsActor<BienNhanAi>({}, `/contexts/${contextId}/ai-invocations/${id}/receipt`, { ...options(contextId, personId), method: "GET" });
 }
 export function gopAiInvocations(current: AiInvocation[], incoming: AiInvocation[]) {
   const byId = new Map(current.map((item) => [item.id, item]));

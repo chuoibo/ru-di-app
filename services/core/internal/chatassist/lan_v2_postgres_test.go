@@ -110,23 +110,24 @@ func TestAiTrongPhongV2(t *testing.T) {
 	if err := json.Unmarshal([]byte(*got.TheV2), &the); err != nil || the.Payload.InvocationID != job.ID || the.Payload.Doc.SoTin != 2 {
 		t.Fatalf("thẻ v2 sai hình: %s", *got.TheV2)
 	}
-	// Another member: the digest and who asked, never the answer.
-	w = f.request("GET", f.route()+"/"+job.ID+"/receipt", f.peerToken, nil)
-	requireCode(t, w, 200)
-	if !strings.Contains(w.Body.String(), *got.TheDigest) || !strings.Contains(w.Body.String(), f.person) || strings.Contains(w.Body.String(), "the_v2") {
-		t.Fatalf("biên nhận cho thành viên khác: %s", w.Body.String())
+	// Before delivery the room has nothing to check: no receipt yet.
+	if w = f.request("GET", f.route()+"/"+job.ID+"/receipt", f.peerToken, nil); w.Code != 404 {
+		t.Fatalf("biên nhận trước khi giao: %d %s", w.Code, w.Body.String())
 	}
+	digest := *got.TheDigest
 	if w = f.request("GET", f.route()+"/"+job.ID, f.peerToken, nil); w.Code != 404 {
 		t.Fatalf("thành viên khác đọc được lời gọi của người gọi: %d", w.Code)
 	}
-	// Delivery: only an envelope the caller sent into this room.
-	_, cuaBan := p.tin(t, f.peer, newID())
-	for _, seq := range []int64{cuaBan, 999} {
+	// Delivery: only the caller's envelope carrying this answer (its logical
+	// id is the invocation's), not the peer's, not another of the caller's.
+	_, cuaBan := p.tin(t, f.peer, job.ID)
+	_, tinKhac := p.tin(t, f.person, newID())
+	for _, seq := range []int64{cuaBan, tinKhac, 999} {
 		if w = f.request("POST", f.route()+"/"+job.ID+"/delivered", f.token, map[string]any{"sequence": seq}); w.Code != 422 || maTuChoi(w) != "delivery_mismatch" {
 			t.Fatalf("giao vào sequence %d: %d %s", seq, w.Code, w.Body.String())
 		}
 	}
-	_, the1 := p.tin(t, f.person, newID())
+	_, the1 := p.tin(t, f.person, job.ID)
 	w = f.request("POST", f.route()+"/"+job.ID+"/delivered", f.token, map[string]any{"sequence": the1})
 	requireCode(t, w, 200)
 	got = Invocation{}
@@ -142,6 +143,21 @@ func TestAiTrongPhongV2(t *testing.T) {
 	requireCode(t, f.request("POST", f.route()+"/"+job.ID+"/delivered", f.token, map[string]any{"sequence": the1}), 200)
 	if w = f.request("POST", f.route()+"/"+job.ID+"/delivered", f.token, map[string]any{"sequence": the1 + 1}); w.Code != 409 {
 		t.Fatalf("giao lần hai vào chỗ khác: %d", w.Code)
+	}
+	// After delivery: any member reads the digest and who asked, never the answer.
+	w = f.request("GET", f.route()+"/"+job.ID+"/receipt", f.peerToken, nil)
+	requireCode(t, w, 200)
+	if !strings.Contains(w.Body.String(), digest) || !strings.Contains(w.Body.String(), f.person) || strings.Contains(w.Body.String(), "the_v2") {
+		t.Fatalf("biên nhận cho thành viên khác: %s", w.Body.String())
+	}
+	// chia_bill cannot be checked on this lane: off, and said so.
+	w = f.request("GET", "/contexts/"+f.context+"/chat-capabilities", f.token, nil)
+	if !strings.Contains(w.Body.String(), `"chia_bill":{"available":false,"reason":"chia_bill_unavailable_e2ee"}`) {
+		t.Fatalf("chia_bill trong phòng v2: %s", w.Body.String())
+	}
+	trig2, _ := p.tin(t, f.person, newID())
+	if w = f.goiTag(f.token, newID(), trig2, map[string]any{"command": "chia_bill"}); w.Code != 409 || maTuChoi(w) != "chia_bill_unavailable_e2ee" {
+		t.Fatalf("chia_bill trong phòng v2: %d %s", w.Code, w.Body.String())
 	}
 	// What can write into the legacy room stays refused on this lane.
 	if w = f.request("GET", "/contexts/"+f.context+"/shared-drafts/"+newID(), f.token, nil); w.Code != 409 || maTuChoi(w) != "encrypted_invocation_required" {

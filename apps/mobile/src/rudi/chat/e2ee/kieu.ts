@@ -57,7 +57,9 @@ export type Operation =
   | { type: "vote"; poll_id: string; option_id: string }
   | { type: "image"; media: MediaRef; caption: string | null; width: number; height: number }
   | { type: "sticker"; pack_id: string; sticker_id: string }
-  | { type: "voice"; media: MediaRef; duration_ms: number };
+  | { type: "voice"; media: MediaRef; duration_ms: number }
+  /** Rủ Đi AI's answer, sealed by the asker's device; `card` is the server's result byte for byte. */
+  | { type: "ai_card"; invocation_id: string; reply_to: string; card: string };
 
 /** What the device made of one event it received. */
 export type Received =

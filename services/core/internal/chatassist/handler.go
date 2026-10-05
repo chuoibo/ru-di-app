@@ -586,6 +586,11 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	if enabled {
 		reason = nil
 	}
+	// chia_bill is off in an end-to-end room (lan_v2.go chiaBillV2).
+	chiaCo, chiaVi := enabled, reason
+	if g.lane == laneV2 {
+		chiaCo, chiaVi = false, chiaBillV2
+	}
 	// chia_bill reads through the same provider as plan (one key, one probe),
 	// so it is advertised with the same answer rather than a second guess.
 	// `mention` says this server takes `trigger_message_id` and answers inside
@@ -600,7 +605,7 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	// field reads `khong`.
 	// `protocol` names the room's lane (ADR-0057 §6): in a v2 room the caller's
 	// device delivers the answer, and the client reads that from here.
-	reply(w, 200, map[string]any{"protocol": g.lane, "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}, "cap_doi": capDoi, "gu_chat": gu})
+	reply(w, 200, map[string]any{"protocol": g.lane, "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": chiaCo, "reason": chiaVi}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}, "cap_doi": capDoi, "gu_chat": gu})
 }
 
 // The values of chat-capabilities' ai.stream (contract §3).
@@ -775,6 +780,10 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 	if g.lane == laneV2 && trigger == "" {
 		failure(w, invalid("trigger_required"))
+		return
+	}
+	if g.lane == laneV2 && in.Command == "chia_bill" {
+		refuse(w, 409, chiaBillV2)
 		return
 	}
 	if trigger != "" {

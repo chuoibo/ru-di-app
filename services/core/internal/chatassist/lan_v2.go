@@ -143,8 +143,12 @@ func (h *Handler) delivered(w http.ResponseWriter, r *http.Request) {
 			refuse(w, 409, "invocation_not_deliverable")
 			return
 		}
+		// The very send that carries this answer: the caller's envelope at
+		// that sequence, under the invocation's id as its logical send id
+		// (the app seals the card under it). Any other message of the
+		// caller's is not a delivery (security review 06/10).
 		var cuaNguoiGoi bool
-		if err = tx.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM chat_v2_events WHERE context_id=$1 AND sequence=$2 AND actor_id=$3 AND kind='envelope')`, r.PathValue("context"), in.Sequence, g.person).Scan(&cuaNguoiGoi); err != nil {
+		if err = tx.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM chat_v2_events e JOIN chat_v2_sends s ON s.context_id=e.context_id AND s.sequence=e.sequence WHERE e.context_id=$1 AND e.sequence=$2 AND e.actor_id=$3 AND e.kind='envelope' AND s.logical_send_id=$4::uuid)`, r.PathValue("context"), in.Sequence, g.person, r.PathValue("id")).Scan(&cuaNguoiGoi); err != nil {
 			failure(w, err)
 			return
 		}
@@ -193,7 +197,10 @@ func (h *Handler) receipt(w http.ResponseWriter, r *http.Request) {
 		Digest   string `json:"the_digest"`
 		Trigger  string `json:"trigger_v2"`
 	}
-	err = tx.QueryRow(r.Context(), `SELECT id::text,person_id::text,encode(result_digest,'hex'),trigger_v2::text FROM chat_ai_invocations WHERE id=$1 AND context_id=$2 AND lane='v2' AND status='succeeded' AND result_digest IS NOT NULL AND trigger_v2 IS NOT NULL`, r.PathValue("id"), r.PathValue("context")).Scan(&out.ID, &out.PersonID, &out.Digest, &out.Trigger)
+	// Only an answer the asker delivered into the room: before that the room
+	// has nothing to check, and the digest of an undelivered answer is not
+	// the room's to see.
+	err = tx.QueryRow(r.Context(), `SELECT id::text,person_id::text,encode(result_digest,'hex'),trigger_v2::text FROM chat_ai_invocations WHERE id=$1 AND context_id=$2 AND lane='v2' AND status='succeeded' AND result_digest IS NOT NULL AND trigger_v2 IS NOT NULL AND delivered_sequence IS NOT NULL`, r.PathValue("id"), r.PathValue("context")).Scan(&out.ID, &out.PersonID, &out.Digest, &out.Trigger)
 	if errors.Is(err, pgx.ErrNoRows) {
 		refuse(w, 404, "invocation_not_found")
 		return
@@ -208,6 +215,13 @@ func (h *Handler) receipt(w http.ResponseWriter, r *http.Request) {
 	}
 	reply(w, 200, out)
 }
+
+// chiaBillV2 is why chia_bill is off in an end-to-end room: a split bills an
+// author for the words the author wrote, and on this lane the server cannot
+// read them -- the words are only the caller's copy, so a caller could put
+// words in another member's mouth and have them billed. The legacy lane reads
+// the stored text instead (chuDaLuu); this lane has none to read.
+const chiaBillV2 = "chia_bill_unavailable_e2ee"
 
 // theV2 is the card a v2 answer seals: the card exactly as the legacy lane
 // would have posted it, compact JSON.

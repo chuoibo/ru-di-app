@@ -21,6 +21,7 @@ import { Image, Platform } from "react-native";
 import { ApiError, goiNhiPhan, thongDiepNguoiDoc } from "../../../api";
 import { makeIdFactory } from "../../../participants";
 import { ChatCryptoModule } from "../../../../modules/rudi-chat-crypto";
+import { baoDaGiaoAi, docBienNhanAi, type AiInvocation } from "../ai-invocations";
 import type { TinChoGui } from "../hang-cho";
 import type { LoaiPhanUng, PhanUngTomTat, Tin, TinDaGui } from "../tin-song";
 import { PHAN_UNG } from "../tin-song";
@@ -29,9 +30,12 @@ import { apiV2 } from "./api-v2";
 import type { Card, MediaRef, Operation } from "./kieu";
 import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
 import { PHONG_TRONG, dungPhong, type Cho, type SoPhong } from "./so-phong";
-import { danhSach, moiTruoc, type TinV2 } from "./so-tin";
+import { danhSach, moiTruoc } from "./so-tin";
+import { KIND_GLYPH, khoaXacMinh, sangCho, sangTin } from "./ve-v2";
 
 const NHIP_MS = 3000;
+/** How long an `ai_card` may wait for its receipt before it is read as not the assistant's. */
+const CHO_BIEN_NHAN_MS = 120_000;
 
 /** Base64 of bytes in chunks: spreading megabytes into one call overflows the stack. */
 export function base64TuByte(bytes: Uint8Array): string {
@@ -124,51 +128,6 @@ export async function mayCua(personId: string): Promise<MayMaHoa> {
   return co;
 }
 
-const GLYPH: Record<string, LoaiPhanUng> = Object.fromEntries(PHAN_UNG.map((p) => [p.glyph, p.kind]));
-const KIND_GLYPH: Record<LoaiPhanUng, string> = Object.fromEntries(PHAN_UNG.map((p) => [p.kind, p.glyph])) as Record<LoaiPhanUng, string>;
-
-/** A v2 message in the legacy `Tin` shape the screen draws. */
-export function sangTin(t: TinV2, contextId: string, personId: string, anhDaMo: Record<string, string>): Tin {
-  const reactions: PhanUngTomTat[] = Object.keys(t.reactions)
-    .filter((g) => Object.hasOwn(GLYPH, g))
-    .map((g) => ({ kind: GLYPH[g], count: t.reactions[g].length, mine: t.reactions[g].includes(personId) }));
-  // A sticker travels as its id in `body`, exactly as the legacy wire carries
-  // one (tin-song.ts guiSticker): the screen draws the picture from that id.
-  let body = t.body;
-  if (t.sticker !== null) body = t.sticker.stickerId;
-  return {
-    id: t.id,
-    context_id: contextId,
-    author_id: t.authorId,
-    kind: t.deleted ? "deleted" : t.sticker !== null ? "sticker" : t.media?.type === "image" ? "image" : "text",
-    body,
-    image_url: t.media?.type === "image" ? (anhDaMo[t.media.media.media_id] ?? null) : null,
-    card: null,
-    created_at: t.at ?? new Date(0).toISOString(),
-    cursor: String(t.sequence),
-    reactions,
-    reply_to: t.replyTo === null ? null : { id: t.replyTo, kind: "text", author_id: null, preview: "" },
-    deleted_at: t.deleted ? (t.at ?? new Date(0).toISOString()) : null,
-  };
-}
-
-/** An own send still on its way, as the screen's pending row. */
-export function sangCho(c: Cho, tinTheoId: Record<string, TinV2>): TinChoGui {
-  const op = c.r.operation;
-  const goc = op.type === "reply" ? tinTheoId[op.reply_to] : undefined;
-  return {
-    attempt: { key: c.id, at: c.luc },
-    kind: op.type === "sticker" ? "sticker" : op.type === "image" ? "image" : "text",
-    than: op.type === "sticker" ? op.sticker_id : op.type === "text" || op.type === "reply" ? op.body : "",
-    phuDe: op.type === "image" ? op.caption : null,
-    traLoi: op.type === "reply" ? { id: op.reply_to, kind: "text", author_id: goc?.authorId ?? null, preview: goc?.body ?? "" } : null,
-    trangThai: c.hong ? "that-bai" : "dang-gui",
-    loi: c.loi,
-    thuLaiDuoc: c.thuLai,
-    luc: new Date(c.luc).toISOString(),
-  };
-}
-
 export type TrangThaiV2 = {
   tin: Tin[];
   dangNap: boolean;
@@ -249,7 +208,8 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
       await ve();
       const p = await (await mayCua(personId)).soPhong(contextId);
       const t = dungPhong(p.ban).so.byId[id];
-      return t === undefined ? null : { ...sangTin(t, contextId, personId, {}), intent: null, vote: null, intent_error: null };
+      const tin = t === undefined ? null : sangTin(t, contextId, personId, {}, { [khoaXacMinh(t)]: true });
+      return tin === null ? null : { ...tin, intent: null, vote: null, intent_error: null };
     },
     [contextId, personId, ve],
   );
@@ -280,10 +240,79 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
     for (const t of danhSach(so)) if (t.media?.type === "image") void moAnh(t.media.media).catch(() => undefined);
   }, [so, moAnh]);
 
+  // Every `ai_card` is checked once: the server's receipt for its invocation
+  // must name the same asker (the card's sender), the same `@Rủ Đi` message,
+  // and the digest of exactly these bytes. A network failure leaves it
+  // unchecked (not drawn) and it is tried again at the next change.
+  const [xacMinh, setXacMinh] = useState<Record<string, boolean>>({});
+  const dangXacMinh = useRef(new Set<string>());
+  const [lanXacMinh, setLanXacMinh] = useState(0);
+  useEffect(() => {
+    const native = ChatCryptoModule;
+    if (native === null) return undefined;
+    let hoiLai: ReturnType<typeof setTimeout> | null = null;
+    for (const t of danhSach(so)) {
+      if (t.ai === null || t.deleted) continue;
+      const khoa = khoaXacMinh(t);
+      if (Object.hasOwn(xacMinh, khoa) || dangXacMinh.current.has(khoa)) continue;
+      dangXacMinh.current.add(khoa);
+      const ai = t.ai;
+      void (async () => {
+        try {
+          const [bienNhan, cucBo] = await Promise.all([
+            docBienNhanAi(contextId, personId, ai.invocationId).catch((e: unknown) => (e instanceof ApiError && e.status === 404 ? null : Promise.reject(e))),
+            native.call("ai_card_digest", JSON.stringify({ card: ai.card })).then((r) => (JSON.parse(r) as { digest: string }).digest),
+          ]);
+          // No receipt yet: the asker's device posts the card a moment before
+          // it tells the server, so a card that young is asked about again.
+          // Two minutes on, a card with no receipt is no answer of the
+          // assistant's.
+          if (bienNhan === null && Date.now() - Date.parse(t.at ?? "") < CHO_BIEN_NHAN_MS) {
+            hoiLai ??= setTimeout(() => setLanXacMinh((n) => n + 1), 5000);
+            return;
+          }
+          const dung = bienNhan !== null && bienNhan.the_digest === cucBo && bienNhan.person_id === t.authorId && bienNhan.trigger_v2 === t.replyTo;
+          setXacMinh((cu) => ({ ...cu, [khoa]: dung }));
+        } catch {
+          // Unknown: tried again later.
+        } finally {
+          dangXacMinh.current.delete(khoa);
+        }
+      })();
+    }
+    return () => {
+      if (hoiLai !== null) clearTimeout(hoiLai);
+    };
+  }, [so, xacMinh, contextId, personId, lanXacMinh]);
+
+  /**
+   * Seals the assistant's answer to this device's own question into the
+   * room (ADR-0057 §6) and tells the server where. The invocation id is the
+   * logical send id, so a crash between the two never sends it twice: the
+   * record or the lane already knows where it landed.
+   */
+  const giaoAi = useCallback(
+    async (inv: AiInvocation) => {
+      if (inv.the_v2 === undefined || inv.trigger_v2 === undefined || inv.delivered_sequence !== undefined) return;
+      const may = await mayCua(personId);
+      let seq = dungPhong((await may.soPhong(contextId)).ban).so.byId[inv.id]?.sequence;
+      if (seq === undefined) {
+        const ev = await may.gui(contextId, { type: "ai_card", invocation_id: inv.id, reply_to: inv.trigger_v2, card: inv.the_v2 }, inv.id);
+        seq = ev?.sequence ?? dungPhong((await may.soPhong(contextId)).ban).so.byId[inv.id]?.sequence;
+      }
+      if (seq !== undefined) await baoDaGiaoAi(contextId, personId, inv.id, seq);
+    },
+    [contextId, personId],
+  );
+
   return {
     ...trang,
     // Newest first, as the screen's inverted list (and the legacy hook) has it.
-    tin: moiTruoc(so).map((t) => sangTin(t, contextId, personId, anhDaMo)),
+    tin: moiTruoc(so).flatMap((t) => {
+      const tin = sangTin(t, contextId, personId, anhDaMo, xacMinh);
+      return tin === null ? [] : [tin];
+    }),
+    giaoAi,
     /** Own sends not yet on the lane, newest first: in flight, or failed and waiting for the person. */
     hangCho: cho.map((c) => sangCho(c, so.byId)).reverse(),
     /** Envelopes skipped because they will never open. */

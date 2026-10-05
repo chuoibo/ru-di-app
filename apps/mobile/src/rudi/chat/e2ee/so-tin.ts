@@ -19,6 +19,8 @@ export type TinV2 = {
   reactions: Record<string, string[]>;
   media: Extract<Operation, { type: "image" | "voice" }> | null;
   sticker: { packId: string; stickerId: string } | null;
+  /** An `ai_card`: drawn as the assistant's only once checked against the server's receipt. */
+  ai: { invocationId: string; card: string } | null;
 };
 
 export type SoTin = { order: string[]; byId: Record<string, TinV2> };
@@ -43,7 +45,7 @@ export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" 
   const tac = nhan.actor_id;
   const moi = (patch: Partial<TinV2>): TinV2 => ({
     id: nhan.logical_send_id, authorId: tac, sequence, at, body: null, replyTo: null, edited: false, deleted: false,
-    reactions: Object.create(null) as Record<string, string[]>, media: null, sticker: null, ...patch,
+    reactions: Object.create(null) as Record<string, string[]>, media: null, sticker: null, ai: null, ...patch,
   });
   switch (op.type) {
     case "text":
@@ -56,10 +58,12 @@ export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" 
       return them(so, moi({ media: op }));
     case "sticker":
       return them(so, moi({ sticker: { packId: op.pack_id, stickerId: op.sticker_id } }));
+    case "ai_card":
+      return them(so, moi({ replyTo: op.reply_to, ai: { invocationId: op.invocation_id, card: op.card } }));
     case "edit":
-      return sua(so, op.message_id, (t) => (t.authorId !== tac || t.deleted || t.media?.type === "voice" ? null : { ...t, body: op.body, edited: true }));
+      return sua(so, op.message_id, (t) => (t.authorId !== tac || t.deleted || t.media?.type === "voice" || t.ai !== null ? null : { ...t, body: op.body, edited: true }));
     case "delete":
-      return sua(so, op.message_id, (t) => (t.authorId !== tac ? null : { ...t, body: null, media: null, sticker: null, deleted: true, reactions: Object.create(null) as Record<string, string[]> }));
+      return sua(so, op.message_id, (t) => (t.authorId !== tac ? null : { ...t, body: null, media: null, sticker: null, ai: null, deleted: true, reactions: Object.create(null) as Record<string, string[]> }));
     case "reaction":
       return sua(so, op.message_id, (t) => {
         if (t.deleted) return null;

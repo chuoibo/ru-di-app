@@ -185,6 +185,30 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const changes = useChatChanges(contextId, personId, chat.nhanAnhChup, phongAi.nhan);
   // A two-person room re-reads what it is (friends or a couple) while open.
   const ai = useChatAi(contextId, personId, { haiNguoi: laPair(phien?.contexts?.find((n) => n.id === contextId)) });
+  // ADR-0057 §6: in an end-to-end room the server never posts the answer;
+  // it waits for this device, which asked, to seal it into the room. A
+  // failed delivery is tried again a few seconds later.
+  const dangGiaoAi = useRef(new Set<string>());
+  const [lanGiaoAi, setLanGiaoAi] = useState(0);
+  const { giaoAi } = v2;
+  const { lamMoi: lamMoiAi } = ai;
+  useEffect(() => {
+    if (lan.lan !== "v2") return undefined;
+    let hoan: ReturnType<typeof setTimeout> | null = null;
+    for (const r of ai.requests) {
+      if (r.status !== "succeeded" || r.the_v2 === undefined || r.delivered_sequence !== undefined || dangGiaoAi.current.has(r.id)) continue;
+      dangGiaoAi.current.add(r.id);
+      void giaoAi(r)
+        .then(() => lamMoiAi())
+        .catch(() => {
+          hoan = setTimeout(() => setLanGiaoAi((n) => n + 1), 5000);
+        })
+        .finally(() => dangGiaoAi.current.delete(r.id));
+    }
+    return () => {
+      if (hoan !== null) clearTimeout(hoan);
+    };
+  }, [lan.lan, ai.requests, giaoAi, lamMoiAi, lanGiaoAi]);
   const { text: nhap, change: doiNhap, snapshot: nhapRef, clearIfUnchanged: xoaNhapCu } = useBanNhap();
   const [dangGui, setDangGui] = useState(false);
   // A model command gets an additional waiting row; the queue owns its text.
