@@ -20,3 +20,9 @@ else
 fi
 [ -x "$bin" ] || { echo "không dựng được binary diễn tập" >&2; exit 1; }
 CHAT_DRILL_BIN="$bin" GO_EXTRA_TAGS=drill scripts/go_postgres_tier.sh ./internal/chatv2http/ ./internal/db/ "$@"
+# The app's engine (src/rudi/chat/e2ee) driving the same real MLS devices.
+(
+  cd apps/mobile
+  npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs
+  CHAT_DRILL_BIN="$bin" node --test tests/drill/*.drill.mjs
+)

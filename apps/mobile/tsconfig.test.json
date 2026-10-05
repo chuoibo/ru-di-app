@@ -337,6 +337,11 @@
     "src/rudi/dot-thu/dot-thu.ts",
     // ADR-0056: amending a published round, the bridge and its pure helpers.
     "src/rudi/dot-thu/dieu-chinh.ts",
+    // ADR-0057: chat v2 on the device -- wire shapes, the lane client, the reducer and the engine.
+    "src/rudi/chat/e2ee/kieu.ts",
+    "src/rudi/chat/e2ee/api-v2.ts",
+    "src/rudi/chat/e2ee/so-tin.ts",
+    "src/rudi/chat/e2ee/may-ma-hoa.ts",
     "src/rudi/ky-niem/ky-niem.ts",
     "src/rudi/ky-niem/achievement-routes.ts",
     "src/rudi/ky-niem/journey-view.ts",
