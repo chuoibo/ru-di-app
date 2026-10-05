@@ -13,8 +13,14 @@ import type { TinV2 } from "./so-tin";
 const GLYPH: Record<string, LoaiPhanUng> = Object.fromEntries(PHAN_UNG.map((p) => [p.glyph, p.kind]));
 export const KIND_GLYPH: Record<LoaiPhanUng, string> = Object.fromEntries(PHAN_UNG.map((p) => [p.kind, p.glyph])) as Record<LoaiPhanUng, string>;
 
-/** Which `ai_card` a check is about: the invocation and who sealed it. */
-export const khoaXacMinh = (t: TinV2): string => `${t.ai?.invocationId ?? ""}|${t.authorId}`;
+/**
+ * Which `ai_card` a check is about: this very message (its logical send id),
+ * who sealed it, and the invocation it claims. Per message, never per
+ * invocation: a check of one card must not vouch for a second card the same
+ * sender seals under the same invocation with other bytes (security review
+ * 06/10).
+ */
+export const khoaXacMinh = (t: TinV2): string => `${t.id}|${t.authorId}|${t.ai?.invocationId ?? ""}`;
 
 /**
  * A v2 message in the legacy `Tin` shape the screen draws, or null for one

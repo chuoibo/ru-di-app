@@ -64,3 +64,12 @@ test("không ai sửa được thẻ AI, kể cả người đã gửi nó; xoá
   assert.equal(xoa.ai, null);
   assert.equal(sangTin(xoa, ROOM, BINH, {}, {}).kind, "deleted");
 });
+
+test("kiểm xong một thẻ không bảo lãnh cho thẻ thứ hai cùng lời gọi, khác byte", () => {
+  let so = phong();
+  const [that] = danhSach(so).filter((t) => t.ai !== null);
+  so = apDung(so, nhan(AN, { type: "ai_card", invocation_id: INV, reply_to: TAG, card: '{"kind":"tra_loi","payload":{"chu":"giả"}}' }, "efefefef-efef-4fef-8fef-efefefefefef"), 3);
+  const gia = danhSach(so).find((t) => t.ai !== null && t.id !== that.id);
+  assert.notEqual(khoaXacMinh(gia), khoaXacMinh(that));
+  assert.equal(sangTin(gia, ROOM, BINH, {}, { [khoaXacMinh(that)]: true }), null, "the second card waits for its own check");
+});
