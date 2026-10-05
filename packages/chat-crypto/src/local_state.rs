@@ -16,10 +16,10 @@ use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
 
 use crate::{
-    check_members, roster, Client, Error, IdentityCard, PendingCommit, Result, Roster, StoredSend,
-    MAX_OUTBOX,
+    check_members, roster, Client, Conversation, Error, IdentityCard, PendingCommit, Result,
+    Roster, StoredSend, MAX_CONVERSATIONS, MAX_DELIVERED, MAX_KEY_PACKAGES, MAX_OUTBOX,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 const MAX_LOCAL_STATE: usize = 8 * 1024 * 1024;
 
@@ -70,15 +70,22 @@ impl SealedLocalState {
 
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+struct StoredConversation {
+    roster: Roster,
+    outbox: BTreeMap<String, StoredSend>,
+    delivered: BTreeSet<String>,
+    pending: Option<PendingCommit>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct LocalState {
     version: u8,
     identity: IdentityCard,
     transport_key: [u8; 32],
-    group_id: Option<String>,
     entries: Vec<(Vec<u8>, Vec<u8>)>,
-    roster: Roster,
-    outbox: BTreeMap<String, StoredSend>,
-    pending: Option<PendingCommit>,
+    conversations: BTreeMap<String, StoredConversation>,
+    outstanding_key_packages: u32,
     generation: u64,
 }
 
@@ -93,7 +100,11 @@ impl Drop for LocalState {
 }
 
 impl Client {
-    pub(crate) fn capture_receive_state(&self) -> Result<ReceiveSnapshot> {
+    /// Everything a rejected receive or join may have touched: the provider's
+    /// store and this conversation's bookkeeping. Other conversations' groups
+    /// do not change during the operation, so restoring the store leaves them
+    /// as they are.
+    pub(crate) fn capture_receive_state(&self, conversation_id: &str) -> Result<ReceiveSnapshot> {
         let entries = self
             .provider
             .storage()
@@ -107,20 +118,23 @@ impl Client {
         if size > MAX_LOCAL_STATE {
             return Err(Error::Capacity);
         }
+        let conversation = self.conversations.get(conversation_id);
         Ok(ReceiveSnapshot {
             entries: entries
                 .iter()
                 .map(|(key, value)| (key.clone(), value.clone()))
                 .collect(),
-            group_id: self.group.as_ref().map(|group| group.group_id().clone()),
-            roster: self.roster.clone(),
+            conversation_id: conversation_id.into(),
+            present: conversation.is_some(),
+            roster: conversation.map(|c| c.roster.clone()).unwrap_or_default(),
+            outstanding_key_packages: self.outstanding_key_packages,
         })
     }
 
     pub(crate) fn rollback_receive(&mut self, mut snapshot: ReceiveSnapshot) -> Result<()> {
         // Processing can consume receive ratchets before application authorization.
         // Rejected commits must not strand the client or consume a valid retransmit.
-        self.group = None;
+        let previous = self.conversations.remove(&snapshot.conversation_id);
         {
             let mut storage = self
                 .provider
@@ -134,15 +148,19 @@ impl Client {
             storage.clear();
             storage.extend(snapshot.entries.drain(..));
         }
-        self.group = match &snapshot.group_id {
-            Some(id) => Some(
-                MlsGroup::load(self.provider.storage(), id)
-                    .map_err(|_| Error::Checkpoint)?
-                    .ok_or(Error::Checkpoint)?,
-            ),
-            None => None,
-        };
-        self.roster = std::mem::take(&mut snapshot.roster);
+        if snapshot.present {
+            let mut conversation = previous.ok_or(Error::Checkpoint)?;
+            conversation.group = MlsGroup::load(
+                self.provider.storage(),
+                &GroupId::from_slice(snapshot.conversation_id.as_bytes()),
+            )
+            .map_err(|_| Error::Checkpoint)?
+            .ok_or(Error::Checkpoint)?;
+            conversation.roster = std::mem::take(&mut snapshot.roster);
+            self.conversations
+                .insert(snapshot.conversation_id.clone(), conversation);
+        }
+        self.outstanding_key_packages = snapshot.outstanding_key_packages;
         Ok(())
     }
 
@@ -159,19 +177,26 @@ impl Client {
             .map(|(key, value)| (key.clone(), value.clone()))
             .collect();
         let state = LocalState {
-            version: 1,
+            version: 2,
             identity: self.identity.clone(),
             transport_key: self.transport_signer.to_bytes(),
-            group_id: self
-                .group
-                .as_ref()
-                .map(|group| String::from_utf8(group.group_id().as_slice().to_vec()))
-                .transpose()
-                .map_err(|_| Error::Checkpoint)?,
             entries,
-            roster: self.roster.clone(),
-            outbox: self.outbox.clone(),
-            pending: self.pending.clone(),
+            conversations: self
+                .conversations
+                .iter()
+                .map(|(id, c)| {
+                    (
+                        id.clone(),
+                        StoredConversation {
+                            roster: c.roster.clone(),
+                            outbox: c.outbox.clone(),
+                            delivered: c.delivered.clone(),
+                            pending: c.pending.clone(),
+                        },
+                    )
+                })
+                .collect(),
+            outstanding_key_packages: self.outstanding_key_packages,
             generation: self.generation,
         };
         let plaintext = Zeroizing::new(serde_json::to_vec(&state).map_err(|_| Error::Checkpoint)?);
@@ -180,7 +205,7 @@ impl Client {
         }
         let nonce = XChaCha20Poly1305::generate_nonce(&mut OsRng);
         let mut sealed = SealedLocalState {
-            version: 1,
+            version: 2,
             actor_id: self.identity.actor_id.clone(),
             device_id: self.identity.device_id.clone(),
             generation: self.generation,
@@ -206,7 +231,7 @@ impl Client {
         wrapping_key: &[u8; 32],
         current_anchor: &LocalAnchor,
     ) -> Result<Self> {
-        if sealed.version != 1
+        if sealed.version != 2
             || sealed.ciphertext.len() > MAX_LOCAL_STATE + 16
             || &sealed.anchor()? != current_anchor
         {
@@ -225,13 +250,14 @@ impl Client {
         );
         let mut state: LocalState =
             serde_json::from_slice(&plaintext).map_err(|_| Error::Checkpoint)?;
-        if state.version != 1
+        if state.version != 2
             || state.generation != sealed.generation
             || state.generation == 0
             || state.identity.actor_id != sealed.actor_id
             || state.identity.device_id != sealed.device_id
-            || state.entries.len() > 10000
-            || state.outbox.len() > MAX_OUTBOX
+            || state.entries.len() > 200_000
+            || state.conversations.len() > MAX_CONVERSATIONS
+            || state.outstanding_key_packages > MAX_KEY_PACKAGES
         {
             return Err(Error::Checkpoint);
         }
@@ -261,56 +287,64 @@ impl Client {
         {
             return Err(Error::Checkpoint);
         }
-        let group = match &state.group_id {
-            Some(id) if crate::wire::valid_id(id) => Some(
-                MlsGroup::load(provider.storage(), &GroupId::from_slice(id.as_bytes()))
-                    .map_err(|_| Error::Checkpoint)?
-                    .ok_or(Error::Checkpoint)?,
-            ),
-            None => None,
-            _ => return Err(Error::Checkpoint),
-        };
-        if let Some(group) = &group {
-            let cards: Vec<_> = state.roster.values().cloned().collect();
-            if roster(&cards).map_err(|_| Error::Checkpoint)? != state.roster {
-                return Err(Error::Checkpoint);
-            }
-            if group.is_active() {
-                check_members(group.members(), &state.roster).map_err(|_| Error::Checkpoint)?;
-                if state.roster.get(&state.identity.device_id) != Some(&state.identity) {
-                    return Err(Error::Checkpoint);
-                }
-            }
-            if group.pending_commit().is_some() != state.pending.is_some() {
-                return Err(Error::Checkpoint);
-            }
-        } else if !state.roster.is_empty() || state.pending.is_some() || !state.outbox.is_empty() {
-            return Err(Error::Checkpoint);
-        }
-        for (logical_id, sent) in &state.outbox {
-            if logical_id != &sent.envelope.logical_send_id
-                || sent.envelope.device_id != state.identity.device_id
+        let mut conversations = BTreeMap::new();
+        for (id, stored) in std::mem::take(&mut state.conversations) {
+            if !crate::wire::valid_id(&id)
+                || stored.outbox.len() > MAX_OUTBOX
+                || stored.delivered.len() > MAX_DELIVERED
             {
                 return Err(Error::Checkpoint);
             }
-            sent.envelope
-                .verify(&state.identity.transport_signature_key)
-                .map_err(|_| Error::Checkpoint)?;
-        }
-        if let Some(pending) = &state.pending {
-            if !state.outbox.contains_key(&pending.logical_send_id) {
+            let group = MlsGroup::load(provider.storage(), &GroupId::from_slice(id.as_bytes()))
+                .map_err(|_| Error::Checkpoint)?
+                .ok_or(Error::Checkpoint)?;
+            let cards: Vec<_> = stored.roster.values().cloned().collect();
+            if roster(&cards).map_err(|_| Error::Checkpoint)? != stored.roster {
                 return Err(Error::Checkpoint);
             }
+            if group.is_active() {
+                check_members(group.members(), &stored.roster).map_err(|_| Error::Checkpoint)?;
+                if stored.roster.get(&state.identity.device_id) != Some(&state.identity) {
+                    return Err(Error::Checkpoint);
+                }
+            }
+            if group.pending_commit().is_some() != stored.pending.is_some() {
+                return Err(Error::Checkpoint);
+            }
+            for (logical_id, sent) in &stored.outbox {
+                if logical_id != &sent.envelope.logical_send_id
+                    || sent.envelope.device_id != state.identity.device_id
+                    || sent.envelope.conversation_id != id
+                {
+                    return Err(Error::Checkpoint);
+                }
+                sent.envelope
+                    .verify(&state.identity.transport_signature_key)
+                    .map_err(|_| Error::Checkpoint)?;
+            }
+            if let Some(pending) = &stored.pending {
+                if !stored.outbox.contains_key(&pending.logical_send_id) {
+                    return Err(Error::Checkpoint);
+                }
+            }
+            conversations.insert(
+                id,
+                Conversation {
+                    group,
+                    roster: stored.roster,
+                    outbox: stored.outbox,
+                    delivered: stored.delivered,
+                    pending: stored.pending,
+                },
+            );
         }
         Ok(Self {
             provider,
             signer,
             transport_signer,
             identity: state.identity.clone(),
-            group,
-            roster: std::mem::take(&mut state.roster),
-            outbox: std::mem::take(&mut state.outbox),
-            pending: state.pending.take(),
+            conversations,
+            outstanding_key_packages: state.outstanding_key_packages,
             generation: state.generation,
         })
     }
@@ -318,8 +352,10 @@ impl Client {
 
 pub(crate) struct ReceiveSnapshot {
     entries: Vec<(Vec<u8>, Vec<u8>)>,
-    group_id: Option<GroupId>,
+    conversation_id: String,
+    present: bool,
     roster: Roster,
+    outstanding_key_packages: u32,
 }
 
 impl Drop for ReceiveSnapshot {
@@ -335,7 +371,7 @@ impl Drop for Client {
     fn drop(&mut self) {
         // OpenMLS owns ratchet secret types; the memory provider additionally holds
         // serialized key material that otherwise would not be zeroized on drop.
-        self.group.take();
+        self.conversations.clear();
         if let Ok(mut entries) = self.provider.storage().values.write() {
             for value in entries.values_mut() {
                 value.zeroize();

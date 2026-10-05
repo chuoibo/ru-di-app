@@ -11,7 +11,11 @@ fn pair() -> (Client, Client) {
     let mut bob = Client::new(&id(2), &id(22)).unwrap();
     alice.create_group(&id(100)).unwrap();
     let invitation = alice
-        .stage_add(&id(200), &[(bob.identity(), bob.key_package().unwrap())])
+        .stage_add(
+            &id(100),
+            &id(200),
+            &[(bob.identity(), bob.key_package().unwrap())],
+        )
         .unwrap();
     bob.join_group(
         &id(100),
@@ -28,6 +32,7 @@ fn valid_outer_signature_cannot_rebind_mls_logical_id() {
     let (mut alice, mut bob) = pair();
     let original = alice
         .encrypt(
+            &id(100),
             &id(300),
             Operation::Text {
                 body: "Synthetic bound message".into(),
@@ -52,6 +57,7 @@ fn valid_outer_signature_cannot_impersonate_another_mls_leaf() {
     let (mut alice, mut bob) = pair();
     let original = alice
         .encrypt(
+            &id(100),
             &id(300),
             Operation::Text {
                 body: "Synthetic sender binding".into(),
@@ -73,6 +79,7 @@ fn enrolled_sender_cannot_make_corrupt_mls_ciphertext_acceptable() {
     let (mut alice, mut bob) = pair();
     let original = alice
         .encrypt(
+            &id(100),
             &id(300),
             Operation::Text {
                 body: "Synthetic ciphertext integrity".into(),
@@ -100,8 +107,8 @@ fn enrolled_sender_cannot_make_corrupt_mls_ciphertext_acceptable() {
 #[test]
 fn authenticated_but_unknown_payload_version_is_rejected() {
     let (mut alice, mut bob) = pair();
-    let envelope = alice.unsigned(&id(300)).unwrap();
-    let group = alice.group.as_mut().unwrap();
+    let envelope = alice.unsigned(&id(100), &id(300)).unwrap();
+    let group = &mut alice.conversations.get_mut(&id(100)).unwrap().group;
     group.set_aad(envelope.aad().unwrap());
     let message = group
         .create_message(

@@ -91,25 +91,124 @@ impl Envelope {
     }
 }
 
-/// The application reducer must separately authorize operations on prior objects.
+/// A file sealed on the device before upload (ADR-0057 §5.2): the store holds
+/// the ciphertext under `media_id`; only members of the conversation, who
+/// receive this reference inside MLS, hold the key.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MediaRef {
+    pub media_id: String,
+    #[serde(with = "base64_bytes")]
+    pub key: Vec<u8>,
+    #[serde(with = "base64_bytes")]
+    pub nonce: Vec<u8>,
+    #[serde(with = "base64_bytes")]
+    pub sha256: Vec<u8>,
+    pub mime: String,
+    pub size: u64,
+}
+
+impl MediaRef {
+    fn validate(&self, mimes: &[&str], max_size: u64) -> bool {
+        valid_id(&self.media_id)
+            && self.key.len() == 32
+            && self.nonce.len() == 24
+            && self.sha256.len() == 32
+            && mimes.contains(&self.mime.as_str())
+            && self.size > 0
+            && self.size <= max_size
+    }
+}
+
+const IMAGE_MIMES: &[&str] = &["image/jpeg", "image/png", "image/webp"];
+const VOICE_MIMES: &[&str] = &["audio/aac", "audio/mp4", "audio/ogg"];
+/// The largest media a message may reference: 25 MiB of ciphertext.
+pub const MAX_MEDIA: u64 = 25 * 1024 * 1024;
+
+/// The application reducer must separately authorize operations on prior objects
+/// (only the author edits or deletes; a reply's target must exist).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Operation {
-    Text { body: String },
-    Reaction { message_id: String, emoji: String },
-    Delete { message_id: String },
-    Vote { poll_id: String, option_id: String },
+    Text {
+        body: String,
+    },
+    Reaction {
+        message_id: String,
+        emoji: String,
+    },
+    Delete {
+        message_id: String,
+    },
+    Vote {
+        poll_id: String,
+        option_id: String,
+    },
+    Reply {
+        reply_to: String,
+        body: String,
+    },
+    Edit {
+        message_id: String,
+        body: String,
+    },
+    Image {
+        media: Box<MediaRef>,
+        caption: Option<String>,
+        width: u32,
+        height: u32,
+    },
+    Sticker {
+        pack_id: String,
+        sticker_id: String,
+    },
+    Voice {
+        media: Box<MediaRef>,
+        duration_ms: u32,
+    },
+}
+
+fn valid_body(body: &str) -> bool {
+    !body.trim().is_empty() && body.len() <= 16 * 1024
+}
+
+fn valid_slug(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 64
+        && value
+            .bytes()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-' || c == b'_')
 }
 
 impl Operation {
     pub(crate) fn validate(&self) -> Result<()> {
         let valid = match self {
-            Self::Text { body } => !body.trim().is_empty() && body.len() <= 16 * 1024,
+            Self::Text { body } => valid_body(body),
             Self::Reaction { message_id, emoji } => {
                 valid_id(message_id) && !emoji.trim().is_empty() && emoji.len() <= 64
             }
             Self::Delete { message_id } => valid_id(message_id),
             Self::Vote { poll_id, option_id } => valid_id(poll_id) && valid_id(option_id),
+            Self::Reply { reply_to, body } => valid_id(reply_to) && valid_body(body),
+            Self::Edit { message_id, body } => valid_id(message_id) && valid_body(body),
+            Self::Image {
+                media,
+                caption,
+                width,
+                height,
+            } => {
+                media.validate(IMAGE_MIMES, MAX_MEDIA)
+                    && caption.as_deref().is_none_or(|c| c.len() <= 2 * 1024)
+                    && (1..=16_384).contains(width)
+                    && (1..=16_384).contains(height)
+            }
+            Self::Sticker {
+                pack_id,
+                sticker_id,
+            } => valid_slug(pack_id) && valid_slug(sticker_id),
+            Self::Voice { media, duration_ms } => {
+                media.validate(VOICE_MIMES, MAX_MEDIA) && (1..=15 * 60 * 1000).contains(duration_ms)
+            }
         };
         if valid {
             Ok(())
