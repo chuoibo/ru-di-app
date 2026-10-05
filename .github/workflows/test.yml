@@ -848,8 +848,8 @@ jobs:
           cargo test --locked --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee /tmp/crypto.log
           passed=$(grep -oE '^test result: ok\. [0-9]+ passed' /tmp/crypto.log | awk '{s+=$4} END {print s+0}')
           echo "canaries passed: $passed"
-          if [ "$passed" -lt 33 ]; then
-            echo "::error::only $passed canaries ran; this crate has 33 (21 + 12 for ADR-0057) -- a shrinking suite is not a passing one"
+          if [ "$passed" -lt 34 ]; then
+            echo "::error::only $passed canaries ran; this crate has 34 (21 + 13 for ADR-0057) -- a shrinking suite is not a passing one"
             exit 1
           fi
           if grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' /tmp/crypto.log; then

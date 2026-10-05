@@ -718,7 +718,7 @@ do_crypto() {
   local passed
   passed="$(grep -oE '^test result: ok\. [0-9]+ passed' "$log" | awk '{s+=$4} END {print s+0}')"
   echo "canary MLS: $passed ca"
-  [ "$passed" -ge 33 ] || { echo "chỉ $passed canary chạy; crate này có 33 (21 + 12 của ADR-0057) — bộ test teo lại không phải bộ test xanh" >&2; return 1; }
+  [ "$passed" -ge 34 ] || { echo "chỉ $passed canary chạy; crate này có 34 (21 + 13 của ADR-0057) — bộ test teo lại không phải bộ test xanh" >&2; return 1; }
   ! grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' "$log" || return 1
 
   # The C ABI lives in its own crate so the audited core keeps
