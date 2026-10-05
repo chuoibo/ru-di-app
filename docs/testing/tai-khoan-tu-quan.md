@@ -34,7 +34,30 @@ Redis auth riêng có mật khẩu, AOF và `noeviction`. Khi Redis lỗi hoặc
 auth đóng bằng 503; không fallback limiter trong RAM. Chỉ cấu hình CIDR proxy
 thật sự thay thế `X-Forwarded-For` bằng đúng một địa chỉ client. Proxy không
 được giữ header do client cung cấp. Khi chưa kiểm chứng proxy, để danh sách
-trống và chấp nhận giới hạn theo địa chỉ proxy.
+trống và chấp nhận giới hạn theo địa chỉ proxy — nhưng khi đó mọi người dùng
+sau proxy chung một ngân sách theo địa chỉ (300 request/phút, 20 mã email/giờ),
+nên một người phá có thể chặn tất cả. Cấu hình đã kiểm chứng trên stack nghiệm
+thu (Tailscale Funnel → Caddy → core):
+
+```caddyfile
+{
+	servers {
+		trusted_proxies static 172.20.0.1/32   # gateway Docker, nơi Funnel vào
+		trusted_proxies_strict                  # lấy địa chỉ không tin cậy ngoài cùng bên phải
+	}
+}
+reverse_proxy core:8000 {
+	header_up X-Forwarded-For {client_ip}       # core nhận đúng một địa chỉ
+}
+```
+
+và `MOBILE_AUTH_TRUSTED_PROXY_CIDRS` là mạng Docker của stack (chỉ trong compose
+của stack đó, không trong `accounts.env` dùng chung). Kiểm bằng log Caddy tạm
+(bỏ header/URI): qua Funnel `client_ip` là địa chỉ thật, header giả bị bỏ qua.
+
+Hạn mức gửi mail theo ngày đặt bằng `MOBILE_EMAIL_DAILY_LIMIT` (mặc định 300,
+Brevo Free). Đăng ký dừng ở 4/5 hạn mức để mã khôi phục luôn còn chỗ; hết hạn
+mức thì mọi yêu cầu mã trả `mail_unavailable`.
 
 SMTP yêu cầu TLS và kiểm chứng certificate. Cấu hình host, port, username,
 password và sender đã xác minh; không bật chế độ bỏ TLS hoặc ghi OTP ra log.
