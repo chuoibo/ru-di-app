@@ -140,9 +140,11 @@ func (s Store) Unregister(ctx context.Context, sessionDigest []byte, installatio
 	return nil
 }
 
-// Enqueue reads the chat v2 log past each room's cursor and queues one wake
-// per other member per room (the newest sequence wins). It reads chatv2's
-// tables and writes only its own.
+// Enqueue wakes the other members of each room whose chat v2 log moved past
+// push's cursor: one wake per person per room, the newest sequence wins, the
+// author of the newest event is not woken. It walks the rooms by their
+// sequence counter and reads one event per room by primary key -- never a
+// scan of the log -- reading chatv2's tables and writing only its own.
 func (s Store) Enqueue(ctx context.Context, limit int) (int, error) {
 	tx, err := s.Pool.Begin(ctx)
 	if err != nil {
@@ -152,46 +154,57 @@ func (s Store) Enqueue(ctx context.Context, limit int) (int, error) {
 	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(5758)`); err != nil {
 		return 0, err
 	}
-	rows, err := tx.Query(ctx, `SELECT e.context_id::text, e.sequence, e.actor_id::text
-		  FROM chat_v2_events e LEFT JOIN push_chat_cursor c ON c.conversation_id = e.context_id
-		 WHERE e.kind IN ('envelope','commit') AND e.sequence > coalesce(c.sequence, 0)
-		 ORDER BY e.created_at, e.context_id, e.sequence LIMIT $1`, limit)
+	rows, err := tx.Query(ctx, `SELECT c.context_id::text, coalesce(p.sequence, 0), c.last_sequence
+		  FROM chat_v2_conversations c LEFT JOIN push_chat_cursor p ON p.conversation_id = c.context_id
+		 WHERE c.last_sequence > coalesce(p.sequence, 0) LIMIT $1`, limit)
 	if err != nil {
 		return 0, err
 	}
-	type event struct {
-		room, actor string
-		seq         int64
+	type moved struct {
+		room       string
+		from, upto int64
 	}
-	var events []event
+	var rooms []moved
 	for rows.Next() {
-		var e event
-		if err := rows.Scan(&e.room, &e.seq, &e.actor); err != nil {
+		var m moved
+		if err := rows.Scan(&m.room, &m.from, &m.upto); err != nil {
 			rows.Close()
 			return 0, err
 		}
-		events = append(events, e)
+		rooms = append(rooms, m)
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
 		return 0, err
 	}
 	queued := 0
-	for _, e := range events {
-		tag, err := tx.Exec(ctx, `INSERT INTO push_outbox(id,person_id,conversation_id,sequence)
-			SELECT gen_random_uuid(), m.person_id, $1, $2 FROM memberships m
-			 WHERE m.context_id=$1 AND m.state='active' AND m.left_at IS NULL AND m.person_id<>$3
-			   AND EXISTS (SELECT 1 FROM push_devices d JOIN account_sessions s ON s.id=d.session_id
-			                AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp()
-			               WHERE d.person_id=m.person_id AND d.revoked_at IS NULL)
-			ON CONFLICT (person_id, conversation_id) WHERE sent_at IS NULL DO UPDATE SET sequence=greatest(push_outbox.sequence, EXCLUDED.sequence)`,
-			e.room, e.seq, e.actor)
-		if err != nil {
+	for _, m := range rooms {
+		var seq int64
+		var actor string
+		err := tx.QueryRow(ctx, `SELECT sequence, actor_id::text FROM chat_v2_events
+			WHERE context_id=$1 AND sequence>$2 AND sequence<=$3 AND kind IN ('envelope','commit')
+			ORDER BY sequence DESC LIMIT 1`, m.room, m.from, m.upto).Scan(&seq, &actor)
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			// Only marks moved the counter: nothing to wake anyone for.
+		case err != nil:
 			return 0, err
+		default:
+			tag, err := tx.Exec(ctx, `INSERT INTO push_outbox(id,person_id,conversation_id,sequence)
+				SELECT gen_random_uuid(), m.person_id, $1, $2 FROM memberships m
+				 WHERE m.context_id=$1 AND m.state='active' AND m.left_at IS NULL AND m.person_id<>$3
+				   AND EXISTS (SELECT 1 FROM push_devices d JOIN account_sessions s ON s.id=d.session_id
+				                AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp()
+				               WHERE d.person_id=m.person_id AND d.revoked_at IS NULL)
+				ON CONFLICT (person_id, conversation_id) WHERE sent_at IS NULL DO UPDATE SET sequence=greatest(push_outbox.sequence, EXCLUDED.sequence)`,
+				m.room, seq, actor)
+			if err != nil {
+				return 0, err
+			}
+			queued += int(tag.RowsAffected())
 		}
-		queued += int(tag.RowsAffected())
 		if _, err := tx.Exec(ctx, `INSERT INTO push_chat_cursor(conversation_id,sequence) VALUES($1,$2)
-			ON CONFLICT (conversation_id) DO UPDATE SET sequence=greatest(push_chat_cursor.sequence, EXCLUDED.sequence)`, e.room, e.seq); err != nil {
+			ON CONFLICT (conversation_id) DO UPDATE SET sequence=greatest(push_chat_cursor.sequence, EXCLUDED.sequence)`, m.room, m.upto); err != nil {
 			return 0, err
 		}
 	}
@@ -267,23 +280,39 @@ func (e ExpoSender) Send(ctx context.Context, messages []Message) error {
 	return nil
 }
 
-// SendPending hands up to limit pending wakes to the sender, one hand-off per
-// wake (a token the push service refuses fails its own wake, never a whole
-// batch: security review 05/10), each to every live device of the person
-// whose sign-in session still stands. A failed hand-off leaves its wake
-// pending with one more attempt (five, then dropped).
+const (
+	// leaseFor is how long a claimed wake waits for its hand-off result.
+	leaseFor = time.Minute
+	// handOffBudget bounds one round of hand-offs, whatever the service does.
+	handOffBudget = 20 * time.Second
+)
+
+// SendPending claims up to limit pending wakes in one short transaction
+// (counting the attempt), hands them off one wake at a time outside any
+// transaction within handOffBudget, and records the results in another short
+// one (security review 05/10: network I/O never holds row locks). A token the
+// push service refuses fails its own wake alone; a wake whose hand-off did not
+// finish is retried when its lease lapses; five attempts, then it is dropped.
 func (s Store) SendPending(ctx context.Context, sender Sender, limit int) (int, error) {
 	tx, err := s.Pool.Begin(ctx)
 	if err != nil {
 		return 0, err
 	}
 	defer tx.Rollback(ctx)
-	rows, err := tx.Query(ctx, `SELECT o.id::text, o.conversation_id::text, o.sequence, d.expo_push_token
-		  FROM push_outbox o
-		  JOIN push_devices d ON d.person_id=o.person_id AND d.revoked_at IS NULL
+	if _, err := tx.Exec(ctx, `DELETE FROM push_outbox WHERE sent_at < clock_timestamp()-interval '1 day' OR (sent_at IS NULL AND attempts >= 5 AND leased_until < clock_timestamp())`); err != nil {
+		return 0, err
+	}
+	rows, err := tx.Query(ctx, `WITH claimed AS (
+		  UPDATE push_outbox SET attempts=attempts+1, leased_until=clock_timestamp()+$2::interval
+		   WHERE id IN (SELECT id FROM push_outbox WHERE sent_at IS NULL AND attempts < 5
+		                  AND (leased_until IS NULL OR leased_until < clock_timestamp())
+		                ORDER BY created_at LIMIT $1 FOR UPDATE SKIP LOCKED)
+		  RETURNING id, person_id, conversation_id, sequence, created_at)
+		SELECT c.id::text, c.conversation_id::text, c.sequence, d.expo_push_token
+		  FROM claimed c
+		  JOIN push_devices d ON d.person_id=c.person_id AND d.revoked_at IS NULL
 		  JOIN account_sessions s ON s.id=d.session_id AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp()
-		 WHERE o.id IN (SELECT id FROM push_outbox WHERE sent_at IS NULL AND attempts < 5 ORDER BY created_at LIMIT $1 FOR UPDATE SKIP LOCKED)
-		 ORDER BY o.created_at, o.id, d.id`, limit)
+		 ORDER BY c.created_at, c.id, d.id`, limit, leaseFor.String())
 	if err != nil {
 		return 0, err
 	}
@@ -306,27 +335,30 @@ func (s Store) SendPending(ctx context.Context, sender Sender, limit int) (int, 
 	if err := rows.Err(); err != nil {
 		return 0, err
 	}
-	sent := 0
-	var failures []error
-	for _, id := range order {
-		if err := sender.Send(ctx, byWake[id]); err != nil {
-			failures = append(failures, err)
-			if _, err := tx.Exec(ctx, `UPDATE push_outbox SET attempts=attempts+1 WHERE id=$1`, id); err != nil {
-				return 0, err
-			}
-			continue
-		}
-		if _, err := tx.Exec(ctx, `UPDATE push_outbox SET sent_at=clock_timestamp() WHERE id=$1`, id); err != nil {
-			return 0, err
-		}
-		sent += len(byWake[id])
-	}
-	// Wakes with no live device are spent; old sent rows and given-up ones go.
-	if _, err := tx.Exec(ctx, `DELETE FROM push_outbox WHERE sent_at < clock_timestamp()-interval '1 day' OR attempts >= 5`); err != nil {
-		return 0, err
-	}
 	if err := tx.Commit(ctx); err != nil {
 		return 0, err
+	}
+
+	budget, cancel := context.WithTimeout(ctx, handOffBudget)
+	defer cancel()
+	var delivered []string
+	var failures []error
+	sent := 0
+	for _, id := range order {
+		if budget.Err() != nil {
+			break
+		}
+		if err := sender.Send(budget, byWake[id]); err != nil {
+			failures = append(failures, err)
+			continue
+		}
+		delivered = append(delivered, id)
+		sent += len(byWake[id])
+	}
+	if len(delivered) > 0 {
+		if _, err := s.Pool.Exec(context.WithoutCancel(ctx), `UPDATE push_outbox SET sent_at=clock_timestamp(), leased_until=NULL WHERE id = ANY($1::uuid[])`, delivered); err != nil {
+			return sent, err
+		}
 	}
 	return sent, errors.Join(failures...)
 }

@@ -23,7 +23,10 @@ CREATE TABLE IF NOT EXISTS push_outbox (
  sequence bigint NOT NULL,
  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
  sent_at timestamptz,
- attempts integer NOT NULL DEFAULT 0
+ attempts integer NOT NULL DEFAULT 0,
+ -- A worker claims a wake for a while; the hand-off happens outside any
+ -- transaction, and an unfinished claim is retried after it lapses.
+ leased_until timestamptz
 );
 CREATE UNIQUE INDEX IF NOT EXISTS push_outbox_pending ON push_outbox(person_id, conversation_id) WHERE sent_at IS NULL;
 

@@ -1,0 +1,1 @@
+{"platforms":["android","ios"],"android":{"modules":["expo.modules.rudichatcrypto.RudiChatCryptoModule"]},"ios":{"modules":["RudiChatCryptoModule"]}}

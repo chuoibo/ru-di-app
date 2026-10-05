@@ -152,6 +152,8 @@ func TestAChatEventWakesTheOtherMembersWithoutContent(t *testing.T) {
 	if _, err := w.store.SendPending(ctx, failing, 100); err == nil {
 		t.Fatal("a failed hand-off reported success")
 	}
+	// The failed wake is retried once its lease lapses.
+	exec(`UPDATE push_outbox SET leased_until=now()-interval '1 second' WHERE conversation_id=$1`, w.room)
 	r := &recorder{}
 	if _, err := w.store.SendPending(ctx, r, 100); err != nil {
 		t.Fatal(err)
@@ -272,5 +274,52 @@ func (p *picky) Send(_ context.Context, m []Message) error {
 		}
 	}
 	p.sent = append(p.sent, m...)
+	return nil
+}
+
+// Security review 05/10: the hand-off happens outside any transaction. While
+// the push service hangs, no push_outbox row stays locked, and another worker
+// claims nothing twice.
+func TestAHangingPushServiceHoldsNoLock(t *testing.T) {
+	w := setup(t)
+	ctx := context.Background()
+	if _, err := w.store.Register(ctx, w.binhToken, Registration{InstallationID: id(t, w.store), Platform: "android", Token: token("l")}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.store.Pool.Exec(ctx, `INSERT INTO push_outbox(id,person_id,conversation_id,sequence) VALUES(gen_random_uuid(),$1,$2,1)`, w.binh, w.room); err != nil {
+		t.Fatal(err)
+	}
+	hang := &hanging{entered: make(chan struct{}), release: make(chan struct{})}
+	done := make(chan error, 1)
+	go func() { _, err := w.store.SendPending(ctx, hang, 100); done <- err }()
+	<-hang.entered
+	locked := ctx
+	tx, err := w.store.Pool.Begin(locked)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback(context.Background())
+	if _, err := tx.Exec(ctx, `SET LOCAL lock_timeout = '300ms'`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.Exec(ctx, `SELECT 1 FROM push_outbox WHERE conversation_id=$1 FOR UPDATE`, w.room); err != nil {
+		t.Fatalf("a row stayed locked during the hand-off: %v", err)
+	}
+	_ = tx.Rollback(context.Background())
+	again := &recorder{}
+	if _, err := w.store.SendPending(ctx, again, 100); err != nil || len(again.sent) != 0 {
+		t.Fatalf("a leased wake was claimed twice: %+v %v", again.sent, err)
+	}
+	close(hang.release)
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+}
+
+type hanging struct{ entered, release chan struct{} }
+
+func (h *hanging) Send(ctx context.Context, _ []Message) error {
+	close(h.entered)
+	<-h.release
 	return nil
 }
