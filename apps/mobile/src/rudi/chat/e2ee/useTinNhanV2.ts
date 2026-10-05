@@ -29,7 +29,8 @@ import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import { apiV2 } from "./api-v2";
 import type { Card, MediaRef, Operation } from "./kieu";
 import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
-import { PHONG_TRONG, dungPhong, type Cho, type SoPhong } from "./so-phong";
+import { PHONG_TRONG, dungPhong, type SoPhong } from "./so-phong";
+import { CHU_MA_HOA } from "./tom-tat";
 import { danhSach, moiTruoc } from "./so-tin";
 import { KIND_GLYPH, khoaXacMinh, sangCho, sangTin } from "./ve-v2";
 
@@ -82,6 +83,23 @@ export async function theCuaMay(personId: string): Promise<Card | null> {
     throw new ApiError(0, "chat_v2_identity_mismatch", "Máy này đang mở khoá của một tài khoản khác. Mở lại ứng dụng rồi thử lại.");
   }
   return card;
+}
+
+/**
+ * The words of each v2 room's last message as this device's sealed record
+ * has them, for the conversation list. Only on a phone that already enrolled
+ * a device for the person: opening the list never enrols one.
+ */
+export async function xemTruocV2(personId: string, rooms: string[]): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  if (rooms.length === 0 || (await thietBiCuaMay(personId)) === null) return out;
+  const may = await mayCua(personId);
+  for (const room of rooms) {
+    const cuoi = danhSach(dungPhong((await may.soPhong(room)).ban).so).at(-1);
+    if (cuoi === undefined) continue;
+    out[room] = cuoi.deleted ? "Tin nhắn đã bị xoá" : cuoi.ai !== null ? "Rủ Đi AI đã trả lời" : cuoi.sticker !== null ? "Đã gửi một sticker" : cuoi.media?.type === "image" ? "Đã gửi một ảnh" : cuoi.body ?? CHU_MA_HOA;
+  }
+  return out;
 }
 
 /** This phone's chat v2 device for a person, if it ever enrolled one (never enrols). */
@@ -285,6 +303,36 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
     };
   }, [so, xacMinh, contextId, personId, lanXacMinh]);
 
+  // What this device has shown the reader, as a read mark on the lane: the
+  // furthest sequence among the messages on screen, sent at most every two
+  // seconds and only forward (ADR-0057 §5 `receipt`). It is what the
+  // conversation list counts unread from.
+  const daDanhDau = useRef(0);
+  const hangDanhDau = useRef<{ seq: number; hen: ReturnType<typeof setTimeout> | null }>({ seq: 0, hen: null });
+  const danhDauDaDoc = useCallback(
+    (ids: string[]) => {
+      let seq = 0;
+      for (const id of ids) seq = Math.max(seq, so.byId[id]?.sequence ?? 0);
+      const hang = hangDanhDau.current;
+      if (seq <= daDanhDau.current || seq <= hang.seq) return;
+      hang.seq = seq;
+      if (hang.hen !== null) return;
+      hang.hen = setTimeout(() => {
+        hang.hen = null;
+        const toi = hang.seq;
+        void (async () => {
+          const may = await mayCua(personId);
+          await apiV2.mark(personId, contextId, await may.thietBi(), toi);
+          daDanhDau.current = Math.max(daDanhDau.current, toi);
+        })().catch(() => undefined);
+      }, 2000);
+    },
+    [so, contextId, personId],
+  );
+  useEffect(() => () => {
+    if (hangDanhDau.current.hen !== null) clearTimeout(hangDanhDau.current.hen);
+  }, []);
+
   /**
    * Seals the assistant's answer to this device's own question into the
    * room (ADR-0057 §6) and tells the server where. The invocation id is the
@@ -313,6 +361,7 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
       return tin === null ? [] : [tin];
     }),
     giaoAi,
+    danhDauDaDoc,
     /** Own sends not yet on the lane, newest first: in flight, or failed and waiting for the person. */
     hangCho: cho.map((c) => sangCho(c, so.byId)).reverse(),
     /** Envelopes skipped because they will never open. */
@@ -441,7 +490,7 @@ export function hopLanV2<L extends { gui: unknown }>(cu: L, v2: ReturnType<typeo
     boQua: (key: string) => v2.boQua(key),
     xoaTin: (id: string) => v2.xoaTin(id),
     doiPhanUng: (id: string, kind: LoaiPhanUng) => v2.doiPhanUng(id, kind),
-    danhDauHienThi: () => undefined,
+    danhDauHienThi: (ids: string[]) => v2.danhDauDaDoc(ids),
     nhanAnhChup: () => undefined,
   } as L;
 }

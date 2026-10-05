@@ -345,6 +345,7 @@
     "src/rudi/chat/e2ee/so-phong.ts",
     "src/rudi/chat/e2ee/thiet-bi.ts",
     "src/rudi/chat/e2ee/ve-v2.ts",
+    "src/rudi/chat/e2ee/tom-tat.ts",
     "src/rudi/ky-niem/ky-niem.ts",
     "src/rudi/ky-niem/achievement-routes.ts",
     "src/rudi/ky-niem/journey-view.ts",

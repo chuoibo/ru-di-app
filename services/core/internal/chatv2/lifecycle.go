@@ -833,3 +833,73 @@ func (s *Store) OnV2Lane(ctx context.Context, conversation string) (bool, error)
 	err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_v2_conversations WHERE context_id=$1)`, conversation).Scan(&onLane)
 	return onLane, err
 }
+
+// Summary is one end-to-end room as the conversation list shows it: what the
+// lane records in the clear, never what anybody said. The device draws the
+// preview from its own sealed record (ADR-0057 §8.4).
+type Summary struct {
+	ConversationID string     `json:"conversation_id"`
+	LastSequence   int64      `json:"last_sequence"`
+	LastAt         *time.Time `json:"last_at"`
+	LastActorID    *string    `json:"last_actor_id"`
+	// Messages from others past the furthest point any of the person's
+	// devices in the room has read, from where those devices could read.
+	Unread       int   `json:"unread"`
+	ReadSequence int64 `json:"read_sequence"`
+}
+
+// maxUnread bounds the count the list draws («99+» is the screen's word).
+const maxUnread = 100
+
+// Summaries lists every v2 room the person is an active member of, with its
+// last message's sequence, time and sender (kind 'envelope' only: marks and
+// commits are not messages) and the person's unread count. A person with no
+// device in a room yet has nothing readable there, so nothing unread.
+func (s *Store) Summaries(ctx context.Context, actor string, digest []byte) ([]Summary, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+	if err := liveSession(ctx, tx, actor, digest, "FOR SHARE"); err != nil {
+		return nil, err
+	}
+	rows, err := tx.Query(ctx, `
+WITH mine AS (
+  SELECT DISTINCT c.context_id FROM chat_v2_conversations c
+  JOIN memberships m ON m.context_id=c.context_id AND m.person_id=$1 AND m.state='active' AND m.left_at IS NULL
+), devs AS (
+  SELECT cm.context_id, max(coalesce(mk.read_sequence,0)) AS read_seq, min(cm.first_sequence) AS first_seq
+  FROM chat_v2_members cm
+  JOIN chat_v2_devices d ON d.id=cm.device_id AND d.person_id=$1 AND d.revoked_at IS NULL
+  LEFT JOIN chat_v2_marks mk ON mk.context_id=cm.context_id AND mk.device_id=cm.device_id
+  WHERE cm.context_id IN (SELECT context_id FROM mine)
+  GROUP BY cm.context_id
+)
+SELECT m.context_id::text, coalesce(last.sequence,0), last.created_at, last.actor_id::text,
+  CASE WHEN d.context_id IS NULL THEN 0 ELSE (SELECT count(*) FROM (SELECT 1 FROM chat_v2_events e
+    WHERE e.context_id=m.context_id AND e.kind='envelope' AND e.actor_id<>$1
+      AND e.sequence > greatest(d.read_seq, d.first_seq-1) LIMIT $2) n) END,
+  coalesce(d.read_seq,0)
+FROM mine m
+LEFT JOIN devs d ON d.context_id=m.context_id
+LEFT JOIN LATERAL (SELECT sequence, created_at, actor_id FROM chat_v2_events e
+  WHERE e.context_id=m.context_id AND e.kind='envelope' ORDER BY sequence DESC LIMIT 1) last ON true
+ORDER BY m.context_id`, actor, maxUnread)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []Summary{}
+	for rows.Next() {
+		var v Summary
+		if err := rows.Scan(&v.ConversationID, &v.LastSequence, &v.LastAt, &v.LastActorID, &v.Unread, &v.ReadSequence); err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return out, tx.Commit(ctx)
+}

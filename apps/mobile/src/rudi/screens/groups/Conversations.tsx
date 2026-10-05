@@ -22,6 +22,9 @@ import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
+import { apiV2 } from "../../chat/e2ee/api-v2";
+import { gopTomTatV2 } from "../../chat/e2ee/tom-tat";
+import { xemTruocV2 } from "../../chat/e2ee/useTinNhanV2";
 import { tacGiaTin, xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { cauLoiMoi, docLoiMoiNhom, loiMoiTruoc, tuChoiLoiMoiNhom, type LoiMoiNhom } from "../../nhom/loi-moi-nhom";
@@ -78,9 +81,16 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   const nap = useCallback(async () => {
     const lucBatDau = phienMoiNhat.current;
     try {
-      const nhom = await docNhomCuaToi(lucBatDau.person_id);
+      // End-to-end rooms take their last message and unread count from the
+      // lane's summary and their words from this device (tom-tat.ts); a host
+      // without the lane answers nothing and the list is the legacy one.
+      const [nhom, rooms] = await Promise.all([
+        docNhomCuaToi(lucBatDau.person_id),
+        apiV2.summaries(lucBatDau.person_id).catch(() => []),
+      ]);
+      const xemTruoc = await xemTruocV2(lucBatDau.person_id, rooms.map((r) => r.conversation_id)).catch(() => ({}));
       if (!conMo.current || phienMoiNhat.current.token !== lucBatDau.token) return;
-      setTrang({ pha: "xong", nhom });
+      setTrang({ pha: "xong", nhom: gopTomTatV2(nhom, rooms, xemTruoc) });
       // An invitation that cannot be read still shows, without a name.
       for (const n of nhom.filter((x) => x.my_state === "invited" && !laPair(x))) {
         docLoiMoiNhom(n.id, phien.person_id)

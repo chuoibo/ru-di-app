@@ -3579,6 +3579,14 @@
       "evidence": "services/core/internal/chatv2/media_test.go"
     },
     {
+      "id": "GET /v2/chat/summaries",
+      "method": "GET",
+      "path": "/v2/chat/summaries",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2http/summaries_postgres_test.go"
+    },
+    {
       "id": "PUT /push/devices/{installation_id}",
       "method": "PUT",
       "path": "/push/devices/{installation_id}",

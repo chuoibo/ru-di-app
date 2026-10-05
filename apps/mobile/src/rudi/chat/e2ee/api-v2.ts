@@ -6,6 +6,7 @@
  */
 import { translatedAsActor } from "../../../api";
 import type { Card, CommitBundle, Envelope, Event, Page, RosterView, WelcomeView } from "./kieu";
+import type { TomTatV2 } from "./tom-tat";
 
 const LOI: Record<string, string> = {
   chat_v2_device_limit: "Tài khoản đã có 5 thiết bị nhắn tin mã hoá. Gỡ một thiết bị cũ trong Cài đặt rồi thử lại.",
@@ -24,6 +25,8 @@ export type ApiV2 = {
   commit(actorId: string, room: string, bundle: CommitBundle, added: string[], removed: string[]): Promise<{ event: Event; ready: boolean }>;
   send(actorId: string, room: string, envelope: Envelope): Promise<{ event: Event; replayed: boolean }>;
   events(actorId: string, room: string, device: string, after: number): Promise<Page>;
+  mark(actorId: string, room: string, device: string, sequence: number): Promise<void>;
+  summaries(actorId: string): Promise<TomTatV2[]>;
 };
 
 export const apiV2: ApiV2 = {
@@ -54,4 +57,8 @@ export const apiV2: ApiV2 = {
   send: (actorId, room, envelope) => translatedAsActor(LOI, `/v2/chat/${room}/events`, { body: envelope, actorId, contexts: room }),
   events: (actorId, room, device, after) =>
     translatedAsActor<Page>(LOI, `/v2/chat/${room}/events?device_id=${device}&after=${after}&limit=100`, { method: "GET", actorId, contexts: room }),
+  mark: async (actorId, room, device, sequence) => {
+    await translatedAsActor(LOI, `/v2/chat/${room}/marks`, { method: "PUT", body: { device_id: device, kind: "read", sequence }, actorId, contexts: room });
+  },
+  summaries: async (actorId) => (await translatedAsActor<{ rooms: TomTatV2[] }>(LOI, "/v2/chat/summaries", { method: "GET", actorId })).rooms,
 };

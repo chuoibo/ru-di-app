@@ -29,6 +29,11 @@ type LifecycleStore interface {
 	GetMedia(context.Context, string, []byte, string, string, string) ([]byte, error)
 }
 
+// SummaryStore lists a person's end-to-end rooms for the conversation list.
+type SummaryStore interface {
+	Summaries(context.Context, string, []byte) ([]chatv2.Summary, error)
+}
+
 const mediaTimeout = 60 * time.Second
 
 // Matches reserves the lane's prefix on the core front door.
@@ -58,6 +63,7 @@ func lifecycleRouteIDs() []string {
 		"POST /v2/chat/{conversation}/commits",
 		"PUT /v2/chat/media/{conversation}/{media}",
 		"GET /v2/chat/media/{conversation}/{media}",
+		"GET /v2/chat/summaries",
 	}
 }
 
@@ -74,6 +80,29 @@ func (h *Handler) lifecycleRoutes() {
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/commits", h.commit)
 	h.mux.HandleFunc("PUT /v2/chat/media/{conversation}/{media}", h.putMedia)
 	h.mux.HandleFunc("GET /v2/chat/media/{conversation}/{media}", h.getMedia)
+	h.mux.HandleFunc("GET /v2/chat/summaries", h.summaries)
+}
+
+// summaries is the conversation list's view of the person's v2 rooms: last
+// message time and sender and the unread count, from what the lane records in
+// the clear. The legacy list reads `messages`, which a v2 room no longer
+// writes; without this a v2 room's row froze at its last legacy message.
+func (h *Handler) summaries(w http.ResponseWriter, r *http.Request) {
+	store, actor, digest, ok := h.lifecycle(w, r)
+	if !ok {
+		return
+	}
+	sum, ok := store.(SummaryStore)
+	if !ok {
+		problem(w, http.StatusServiceUnavailable, "chat_v2_not_ready")
+		return
+	}
+	list, err := sum.Summaries(r.Context(), actor, digest)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	write(w, http.StatusOK, map[string]any{"rooms": list})
 }
 
 // putMedia stores one sealed file: the raw ciphertext is the body.

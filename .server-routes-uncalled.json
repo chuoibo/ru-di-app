@@ -141,11 +141,6 @@
       "reason": "Đăng ký/gỡ máy nhận push không nội dung (ADR-0057 §7, internal/push). Phía app (expo-notifications) chưa làm: cần google-services.json (FCM) và khoá APNs từ chủ sản phẩm; trả nợ khi có hai thứ đó."
     },
     {
-      "route": "/v2/chat/{conversation}/marks",
-      "loai": "tinh-nang",
-      "reason": "Đánh dấu đã đọc trên làn chat v2 (ADR-0057 §5 `receipt`). Client v2 chưa gửi mark: hopLanV2.danhDauHienThi không làm gì. Trả nợ cùng op receipt."
-    },
-    {
       "route": "/v2/chat/{conversation}/stream",
       "loai": "tinh-nang",
       "reason": "Luồng WebSocket của làn chat v2. Client v2 đang hỏi lại mỗi 3 giây (useTinNhanV2 NHIP_MS); đổi sang luồng là việc còn nợ của G3/G5 (PER-FE-01)."
