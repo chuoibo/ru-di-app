@@ -1,0 +1,49 @@
+# W0 · the request body is read once, capped and timed, before the idempotency
+# layer or any route reads it (audit 2026-10-05, RS-07). A JSON route takes at
+# most 1 MiB, an image upload route 10 MiB + 64 KiB (so an image one byte over
+# the sanitizer's 10 MiB still reaches its route: see w6/photos author_over_cap).
+# Both refusals come before authentication: an anonymous caller is refused too.
+# Texts are sample data (dữ liệu mẫu).
+id: w0/body-limit
+routes: ['POST /people/me/photos', 'POST /expenses']
+auth_mode: dev
+personas:
+  author: {}
+steps:
+  - id: author_upload_over_body_cap
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 8, height: 8, pad_to_bytes: 10551297}}
+  - id: anonymous_json_route_over_cap
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 8, height: 8, pad_to_bytes: 1048577}}
+  - id: author_json_route_over_cap_with_key
+    as: author
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+        idempotency-key: 'body-limit-1'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 8, height: 8, pad_to_bytes: 1048577}}
+  - id: author_same_key_small_body_is_fresh
+    as: author
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+        idempotency-key: 'body-limit-1'
+      body_raw: '{}'

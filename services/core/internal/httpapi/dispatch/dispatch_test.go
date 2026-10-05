@@ -269,3 +269,54 @@ func TestPublicCoreNeverProxiesInternalToPython(t *testing.T) {
 		}
 	}
 }
+
+// An oversize body is refused before the idempotency layer can reserve a key
+// for it or a route can read it, and the refusal still goes out inside CORS
+// and the guest headers (audit 2026-10-05, RS-07).
+func TestAnOversizeBodyIsRefusedBeforeIdempotencyInsideTheOuterLayers(t *testing.T) {
+	rt, err := router.New(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reached := false
+	handlers := map[string]http.Handler{}
+	for _, route := range manifest {
+		if route.Owner == "go" {
+			handlers[route.ID] = http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})
+		}
+	}
+	front, err := New(Options{
+		Router: rt, Served: goOwned(), Handlers: handlers,
+		Python: http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}),
+		CORS:   cors.New("http://allowed.test", true),
+		Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Idempotency: func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				reached = true
+				next.ServeHTTP(w, r)
+			})
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, target := range []string{"/people/me/interests", "/g/tok"} {
+		method := "PUT"
+		if target == "/g/tok" {
+			method = "GET"
+		}
+		req := httptest.NewRequest(method, target, strings.NewReader(strings.Repeat("x", 1<<20+1)))
+		req.Header.Set("Origin", "http://allowed.test")
+		req.Header.Set("Idempotency-Key", "k")
+		rec := serve(front, req)
+		if rec.Code != http.StatusRequestEntityTooLarge || reached {
+			t.Fatalf("%s: %d, idempotency reached: %v", target, rec.Code, reached)
+		}
+		if rec.Header().Get("Access-Control-Allow-Origin") != "http://allowed.test" {
+			t.Fatalf("%s: refusal outside CORS: %v", target, rec.Header())
+		}
+		if (target == "/g/tok") != (rec.Header().Get("X-Robots-Tag") != "") {
+			t.Fatalf("%s: guest headers wrong: %v", target, rec.Header())
+		}
+	}
+}

@@ -12,6 +12,7 @@
 // app/api/main.py, from the outside in: ServerErrorMiddleware with the guest
 // aware Exception handler (servererror), CORS (install_cors, added last and so
 // outermost of the app's middleware), GuestPrivacyHeadersMiddleware (guest),
+// BodyLimitMiddleware (bodylimit: the body is read once, capped and timed),
 // IdempotencyMiddleware (Options.Idempotency, package idem), then the route
 // handler.
 package dispatch
@@ -24,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"mobile/services/core/internal/httpapi/bodylimit"
 	"mobile/services/core/internal/httpapi/mw/cors"
 	"mobile/services/core/internal/httpapi/mw/guest"
 	"mobile/services/core/internal/httpapi/mw/servererror"
@@ -81,8 +83,11 @@ func New(o Options) (http.Handler, error) {
 		if handler == nil {
 			return nil, fmt.Errorf("dispatch: manifest gives Go %q but there is no handler for it", route.ID)
 		}
+		// The body is read once, capped and timed, inside the guest headers
+		// and before idempotency or the endpoint see it (bodylimit).
+		limited := bodylimit.Wrap(bodylimit.For(route.ID), bodylimit.ReadTimeout, o.Idempotency(handler))
 		chains[route.ID] = servererror.Middleware(o.Logger, scopePath,
-			o.CORS.Middleware(guest.Middleware(scopePath, o.Idempotency(handler))))
+			o.CORS.Middleware(guest.Middleware(scopePath, limited)))
 	}
 	return &front{router: o.Router, python: o.Python, chains: chains}, nil
 }

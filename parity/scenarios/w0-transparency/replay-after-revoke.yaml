@@ -1,0 +1,35 @@
+# W0 · prod (audit 2026-10-05, RS-02): a stored answer goes back to a bearer
+# only while its session is live. The first write and its replay answer 201;
+# once the session is revoked, the same key answers get_actor's 401 instead of
+# the stored bytes, and nothing is written twice. Texts are sample data.
+id: w0/replay-after-revoke
+routes: ["POST /reports", "DELETE /sessions/current"]
+auth_mode: prod
+personas:
+  owner: {}
+  other: {}
+steps:
+  - id: report_first
+    as: owner
+    request:
+      method: POST
+      path: /reports
+      headers: {content-type: application/json, idempotency-key: replay-revoke-1}
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: report_replay_live
+    as: owner
+    request:
+      method: POST
+      path: /reports
+      headers: {content-type: application/json, idempotency-key: replay-revoke-1}
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: revoke_current
+    as: owner
+    request: {method: DELETE, path: /sessions/current}
+  - id: report_replay_revoked
+    as: owner
+    request:
+      method: POST
+      path: /reports
+      headers: {content-type: application/json, idempotency-key: replay-revoke-1}
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'

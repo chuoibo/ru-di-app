@@ -31,6 +31,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"mobile/services/core/internal/aiharness/motluot"
@@ -41,6 +42,7 @@ import (
 	"mobile/services/core/internal/httpapi/mw/servererror"
 	"mobile/services/core/internal/httpapi/problem"
 	"mobile/services/core/internal/httpapi/router"
+	"mobile/services/core/internal/idem"
 	"mobile/services/core/internal/limit"
 	"mobile/services/core/internal/media/storage"
 	"mobile/services/core/internal/pyjson"
@@ -219,6 +221,13 @@ func New(route *pyval.Route, status int, serve Serve, env Env) (http.Handler, er
 	return &handler{route: route, status: status, serve: serve, env: env}, nil
 }
 
+// HandlerTimeout bounds one generic request's work: authentication, the
+// route, its SQL and any model call it makes (the longest, a scan, allows
+// itself 45 s). The body was already read under bodylimit's own budget.
+var HandlerTimeout = 90 * time.Second
+
+const rollbackTimeout = 5 * time.Second
+
 type handler struct {
 	route  *pyval.Route
 	status int
@@ -231,14 +240,23 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		servererror.Raise(fmt.Errorf("endpoint %s: request did not come through dispatch", h.route.ID))
 	}
-	ctx := context.WithoutCancel(r.Context())
+	// A client that goes away does not cancel the request: its writes must
+	// still commit or roll back as one. Nothing may run without end either,
+	// so the work has a deadline of its own (audit 2026-10-05, DB-01).
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), HandlerTimeout)
+	defer cancel()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		servererror.Raise(err)
 	}
 	unit := h.env.NewUnit()
 	// A committed unit ignores this; every other path discards its writes.
-	defer func() { _ = unit.Rollback(ctx) }()
+	// The rollback gets a short budget of its own: the request's may be spent.
+	defer func() {
+		rollbackCtx, done := context.WithTimeout(context.WithoutCancel(r.Context()), rollbackTimeout)
+		defer done()
+		_ = unit.Rollback(rollbackCtx)
+	}()
 
 	call := &Call{Request: r, Scope: scope, Unit: unit, Body: body, Limits: h.env.Limits, PersonIDKey: h.env.PersonIDKey, AI: h.env.AI}
 	hook := func(dependency pyval.Dependency) error {
@@ -345,6 +363,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if reply.Raw != nil {
 		// Rendered inside the handler already, as TemplateResponse renders.
+		if err := completeIn(ctx, r, unit, reply.Raw.Status, reply.Raw.Body, rawMediaType(reply.Raw.Headers)); err != nil {
+			servererror.Raise(err)
+		}
 		if err := unit.Commit(ctx); err != nil {
 			servererror.Raise(err)
 		}
@@ -352,12 +373,15 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if reply.Empty {
-		if err := unit.Commit(ctx); err != nil {
-			servererror.Raise(err)
-		}
 		status := reply.Status
 		if status == 0 {
 			status = h.status
+		}
+		if err := completeIn(ctx, r, unit, status, nil, nil); err != nil {
+			servererror.Raise(err)
+		}
+		if err := unit.Commit(ctx); err != nil {
+			servererror.Raise(err)
 		}
 		w.WriteHeader(status)
 		return
@@ -366,12 +390,21 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		servererror.Raise(err)
 	}
-	if err := unit.Commit(ctx); err != nil {
-		servererror.Raise(err)
-	}
 	status := reply.Status
 	if status == 0 {
 		status = h.status
+	}
+	jsonType := "application/json"
+	for _, pair := range reply.Headers {
+		if strings.EqualFold(pair[0], "Content-Type") {
+			jsonType = pair[1]
+		}
+	}
+	if err := completeIn(ctx, r, unit, status, encoded, &jsonType); err != nil {
+		servererror.Raise(err)
+	}
+	if err := unit.Commit(ctx); err != nil {
+		servererror.Raise(err)
 	}
 	header := w.Header()
 	header.Set("Content-Length", strconv.Itoa(len(encoded)))
@@ -381,6 +414,33 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(status)
 	_, _ = w.Write(encoded)
+}
+
+// completeIn records a successful answer to the request's idempotency key in
+// the request's own transaction, just before it commits (idem.CompleteInTx).
+// The idempotency layer compares what it then captures with what was
+// recorded and fixes the row if the two ever differ.
+func completeIn(ctx context.Context, r *http.Request, unit *db.Unit, status int, body []byte, mediaType *string) error {
+	if status < 200 || status >= 300 || !idem.HasPending(r.Context()) {
+		return nil
+	}
+	tx, err := unit.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	return idem.CompleteInTx(r.Context(), ctx, tx, idem.StoredResponse{Status: status, Body: body, MediaType: mediaType})
+}
+
+// rawMediaType is the content-type a raw reply sends, as the idempotency
+// layer will capture it, or nil when it sends none.
+func rawMediaType(headers [][2]string) *string {
+	for _, pair := range headers {
+		if strings.EqualFold(pair[0], "Content-Type") {
+			value := pair[1]
+			return &value
+		}
+	}
+	return nil
 }
 
 // writeRefusal is api_problem_handler, reached after the transaction rolled

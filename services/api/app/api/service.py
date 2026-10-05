@@ -397,6 +397,16 @@ def token_digest(token: str) -> bytes:
     return hashlib.sha256(token.encode("utf-8")).digest()
 
 
+def session_is_live(repository: ApiRepository, digest: bytes) -> bool:
+    """Whether `actor_for_session_token` would accept the bearer whose digest
+    this is: the same four refusals, answered as one boolean."""
+
+    record = repository.get_account_session_by_digest(digest)
+    if record is None or record.revoked_at is not None or record.expires_at <= _now():
+        return False
+    return repository.actor_grants(record.person_id).person_exists
+
+
 def _minute_of_day(value: str) -> int:
     # A stop is a wall-clock time of day with no timezone, so it must never
     # pass through a datetime that the server could shift.

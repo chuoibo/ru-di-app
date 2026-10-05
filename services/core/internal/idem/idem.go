@@ -49,6 +49,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"io"
 	"net/http"
 	"strconv"
@@ -140,10 +141,37 @@ type Store interface {
 type Option func(*config)
 
 type config struct {
-	wait    time.Duration
-	now     func() time.Time
-	sleep   func(time.Duration)
-	onError func(http.ResponseWriter, *http.Request, error)
+	wait       time.Duration
+	now        func() time.Time
+	sleep      func(time.Duration)
+	onError    func(http.ResponseWriter, *http.Request, error)
+	replayGate ReplayGate
+}
+
+// ReplayGate decides, for a request about to receive a stored answer, whether
+// its credentials are still good: nil to replay, a problem to answer instead.
+type ReplayGate func(ctx context.Context, r *http.Request) (*problem.Problem, error)
+
+// WithReplayGate checks a bearer's session before any stored answer goes back
+// to it (audit 2026-10-05, RS-02): a key is scoped to its bearer, and a bearer
+// that was revoked, expired or whose person was erased must not keep reading
+// what it was once answered. Chat and itinerary replays already run the whole
+// endpoint (session and membership) and are not gated twice. services/api's
+// IdempotencyMiddleware applies the same check in prod.
+func WithReplayGate(g ReplayGate) Option {
+	return func(c *config) { c.replayGate = g }
+}
+
+// SessionGate is the prod ReplayGate: the replay goes ahead only for a bearer
+// get_actor would still accept now, and is refused with get_actor's own 401.
+func SessionGate(sessions auth.SessionStore, now func() time.Time) ReplayGate {
+	return func(ctx context.Context, r *http.Request) (*problem.Problem, error) {
+		_, refused, err := auth.ProdActor(ctx, r.Header, sessions, now())
+		if err != nil || refused == nil {
+			return nil, err
+		}
+		return &problem.Problem{Status: refused.Status, Code: refused.Code, Detail: refused.Detail}, nil
+	}
 }
 
 // WithInFlightWait sets the polling budget (create_app's
@@ -260,6 +288,19 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.next.ServeHTTP(w, inner)
 			return
 		}
+		if h.cfg.replayGate != nil && strings.HasPrefix(scope, "bearer:") {
+			refused, err := h.cfg.replayGate(ctx, r)
+			if err != nil {
+				h.fail(w, r, path, err)
+				return
+			}
+			if refused != nil {
+				if err := problem.WriteJSON(w, *refused); err != nil {
+					h.fail(w, r, path, err)
+				}
+				return
+			}
+		}
 		if err := writeStored(w, outcome.Response); err != nil {
 			h.fail(w, r, path, err)
 		}
@@ -292,9 +333,71 @@ func (h *handler) reserve(ctx context.Context, scope, key, fingerprint, legacy s
 	}
 }
 
+// pendingKey carries, into the handler, the key this request reserved, so the
+// endpoint can record its answer in the transaction that does the work.
+type pendingKey struct{}
+
+type pending struct {
+	scope, key string
+	stored     *StoredResponse
+}
+
+// CompleteInTx records response as the answer to the key this request
+// reserved, through tx: the transaction that does the request's work (audit
+// 2026-10-05, RS-06). Committed together, the work and its answer cannot part
+// any more: before, a crash or a failed completion after the business commit
+// left the work done and the key unfinished, and once the janitor cleared the
+// claim a retry did the work twice. It does nothing for a request without a
+// reservation in PostgreSQL. reqCtx is the request's context, ctx the work's.
+func CompleteInTx(reqCtx, ctx context.Context, tx pgx.Tx, response StoredResponse) error {
+	p, _ := reqCtx.Value(pendingKey{}).(*pending)
+	if p == nil {
+		return nil
+	}
+	body := response.Body
+	if body == nil {
+		body = []byte{}
+	}
+	if _, err := tx.Exec(ctx, sqlCompleteInTx, p.scope, p.key, int32(response.Status), body, response.MediaType); err != nil {
+		return err
+	}
+	stored := response
+	stored.Body = body
+	p.stored = &stored
+	return nil
+}
+
+// HasPending is whether this request holds a reservation CompleteInTx can
+// settle.
+func HasPending(reqCtx context.Context) bool {
+	p, _ := reqCtx.Value(pendingKey{}).(*pending)
+	return p != nil
+}
+
+func sameResponse(a, b StoredResponse) bool {
+	if a.Status != b.Status || !bytes.Equal(a.Body, b.Body) {
+		return false
+	}
+	if a.MediaType == nil || b.MediaType == nil {
+		return a.MediaType == nil && b.MediaType == nil
+	}
+	return *a.MediaType == *b.MediaType
+}
+
+// completeRetries are the waits between attempts to record an answer the
+// handler already committed. Releasing instead would let a retry do the work
+// a second time, so a completion that never lands leaves the key in flight.
+var completeRetries = []time.Duration{50 * time.Millisecond, 200 * time.Millisecond, 750 * time.Millisecond}
+
 func (h *handler) runReserved(w http.ResponseWriter, r *http.Request, ctx context.Context, path, scope, key string, body []byte) {
 	captured := newCapture(w.Header())
-	inner := r.WithContext(r.Context())
+	reqCtx := r.Context()
+	var p *pending
+	if _, inPostgres := h.store.(interface{ completesInTx() }); inPostgres {
+		p = &pending{scope: scope, key: key}
+		reqCtx = context.WithValue(reqCtx, pendingKey{}, p)
+	}
+	inner := r.WithContext(reqCtx)
 	inner.Body = io.NopCloser(bytes.NewReader(body))
 
 	returned := false
@@ -313,7 +416,21 @@ func (h *handler) runReserved(w http.ResponseWriter, r *http.Request, ctx contex
 	status := captured.finalStatus()
 	if status >= 200 && status < 300 {
 		response := StoredResponse{Status: status, Body: captured.bodyBytes(), MediaType: captured.mediaType()}
-		if err := h.store.Complete(ctx, scope, key, response); err != nil {
+		if p != nil && p.stored != nil && sameResponse(*p.stored, response) {
+			// Recorded with the work, in the same commit.
+			captured.writeTo(w)
+			return
+		}
+		err := h.store.Complete(ctx, scope, key, response)
+		for _, wait := range completeRetries {
+			if err == nil {
+				break
+			}
+			h.cfg.sleep(wait)
+			err = h.store.Complete(ctx, scope, key, response)
+		}
+		if err != nil {
+			// The work is committed: never release, or a retry repeats it.
 			h.fail(w, r, path, err)
 			return
 		}

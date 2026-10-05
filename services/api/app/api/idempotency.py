@@ -68,6 +68,9 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
+from starlette.responses import JSONResponse
+
+from app.api.auth_mode import PROD
 from app.api.schemas import ErrorResponse
 from app.db.models import IdempotencyKey
 
@@ -332,7 +335,7 @@ def _bearer_scope(authorization: str | None) -> str | None:
     token = value.strip()
     if scheme.lower() != "bearer" or not token:
         return None
-    return "bearer:" + hashlib.sha256(token.encode("utf-8")).hexdigest()
+    return _BEARER_SCOPE_PREFIX + hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def _header(headers: list[tuple[bytes, bytes]], name: bytes) -> str | None:
@@ -509,6 +512,17 @@ class IdempotencyMiddleware:
                 scope["itinerary_authorized_replay"] = outcome.response
                 await self.app(scope, _replaying(body), send)
                 return
+            if _replay_session_is_dead(scope, key_scope):
+                # get_actor's own answer for a dead session (audit 2026-10-05,
+                # RS-02): a key is scoped to its bearer, and a bearer that was
+                # revoked, expired or whose person was erased does not keep
+                # reading what it was once answered. The Go front door gates
+                # the same replays the same way (idem.SessionGate).
+                await JSONResponse(
+                    {"code": "authentication_required", "detail": "Session is not valid"},
+                    status_code=401,
+                )(scope, _replaying(body), send)
+                return
             await _send_stored(send, outcome.response)
             return
 
@@ -562,6 +576,33 @@ class IdempotencyMiddleware:
         # the route that produced them.
         for message in captured.messages:
             await send(message)
+
+
+_BEARER_SCOPE_PREFIX = "bearer:"
+
+
+def _replay_session_is_dead(scope, key_scope: str) -> bool:
+    """In prod, whether a bearer-scoped replay's session is no longer one
+    get_actor would accept. Dev mode trusts actor headers, and a key without a
+    bearer has no session to check."""
+
+    app = scope.get("app")
+    if app is None or getattr(app.state, "auth_mode", None) != PROD:
+        return False
+    if not key_scope.startswith(_BEARER_SCOPE_PREFIX):
+        return False
+    digest = bytes.fromhex(key_scope[len(_BEARER_SCOPE_PREFIX) :])
+    from app.api.deps import get_repository
+    from app.api.service import session_is_live
+
+    override = app.dependency_overrides.get(get_repository)
+    if override is not None:
+        return not session_is_live(override(), digest)
+    from app.api.repository import SqlAlchemyApiRepository
+    from app.db.session import get_session_factory
+
+    with get_session_factory()() as session:
+        return not session_is_live(SqlAlchemyApiRepository(session), digest)
 
 
 async def _drain(receive) -> bytes:

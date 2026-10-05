@@ -86,6 +86,41 @@ func PoolConfig(raw string) (*pgxpool.Config, error) {
 	return config, nil
 }
 
+// ServerSessionDefaults are the per-session limits of the API server's pool
+// (audit 2026-10-05, DB-01): no request-serving statement runs for more than
+// 30 s, waits on a lock for more than 10 s, or leaves a transaction idle for
+// more than 2 minutes (the longest model call a request makes inside its unit
+// is 45 s). Batch commands (rag, ingest, migrate) open their pools with Open
+// and keep the server's unbounded defaults. A URL that sets one itself wins.
+var ServerSessionDefaults = map[string]string{
+	"statement_timeout":                   "30000",
+	"lock_timeout":                        "10000",
+	"idle_in_transaction_session_timeout": "120000",
+}
+
+// ServerPoolConfig is PoolConfig plus ServerSessionDefaults.
+func ServerPoolConfig(raw string) (*pgxpool.Config, error) {
+	config, err := PoolConfig(raw)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range ServerSessionDefaults {
+		if _, set := config.ConnConfig.RuntimeParams[key]; !set {
+			config.ConnConfig.RuntimeParams[key] = value
+		}
+	}
+	return config, nil
+}
+
+// OpenServer is Open for the API server: ServerPoolConfig, connected lazily.
+func OpenServer(ctx context.Context, raw string) (*pgxpool.Pool, error) {
+	config, err := ServerPoolConfig(raw)
+	if err != nil {
+		return nil, err
+	}
+	return pgxpool.NewWithConfig(ctx, config)
+}
+
 // Open builds the process-wide pool. It does not connect eagerly: like the
 // Python engine, the first query opens the first connection.
 func Open(ctx context.Context, raw string) (*pgxpool.Pool, error) {

@@ -4,10 +4,12 @@ package db
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -136,5 +138,40 @@ func TestUnitReusesOneTransaction(t *testing.T) {
 	}
 	if a != b {
 		t.Fatalf("two Tx calls used two connections (%d, %d)", a, b)
+	}
+}
+
+// A request stuck behind another transaction's row lock gives up after
+// lock_timeout instead of holding its connection for as long as the other
+// holds the lock (audit 2026-10-05, DB-01).
+func TestServerPoolGivesUpOnALockItCannotGet(t *testing.T) {
+	base := testPool(t)
+	ctx := context.Background()
+	config, err := ServerPoolConfig(base.Config().ConnString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	config.ConnConfig.RuntimeParams["lock_timeout"] = "300"
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	holder, err := base.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = holder.Rollback(ctx) }()
+	if _, err := holder.Exec(ctx, `SELECT pg_advisory_xact_lock(424242)`); err != nil {
+		t.Fatal(err)
+	}
+	started := time.Now()
+	_, err = pool.Exec(ctx, `SELECT pg_advisory_lock(424242)`)
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) || pgErr.Code != "55P03" {
+		t.Fatalf("waited %s and got %v, want lock_not_available", time.Since(started), err)
+	}
+	if time.Since(started) > 5*time.Second {
+		t.Fatalf("gave up only after %s", time.Since(started))
 	}
 }

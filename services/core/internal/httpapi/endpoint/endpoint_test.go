@@ -239,3 +239,30 @@ func TestW1RoutesDependOnlyOnWhatGoStandsInFor(t *testing.T) {
 		}
 	}
 }
+
+// A route stuck on a dependency does not run forever: the work has its own
+// deadline even though a client that goes away does not cancel it (audit
+// 2026-10-05, DB-01). The route sees the deadline as its context ending.
+func TestTheRoutesWorkHasADeadline(t *testing.T) {
+	saved := HandlerTimeout
+	HandlerTimeout = 50 * time.Millisecond
+	defer func() { HandlerTimeout = saved }()
+	var ended error
+	h := front(t, func(ctx context.Context, _ *Call) (Reply, error) {
+		select {
+		case <-ctx.Done():
+			ended = ctx.Err()
+			return Reply{}, ctx.Err()
+		case <-time.After(5 * time.Second):
+			return Reply{}, errors.New("no deadline")
+		}
+	})
+	started := time.Now()
+	rec := send(h, `{"target_type":"person","target_id":"`+targetID+`","reason":"spam"}`, signedIn)
+	if !errors.Is(ended, context.DeadlineExceeded) || time.Since(started) > 2*time.Second {
+		t.Fatalf("route ended with %v after %s", ended, time.Since(started))
+	}
+	if rec.Code != 500 {
+		t.Fatalf("a request that ran out of time answered %d", rec.Code)
+	}
+}

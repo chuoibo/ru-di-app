@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"math"
+	"mobile/services/core/internal/httpapi/problem"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -704,7 +705,9 @@ func TestStoreFailuresAnswerStarlettesServerError(t *testing.T) {
 		ops    []string
 	}{
 		{"reserve fails", "/expenses", func(s *memoryStore) { s.reserveErr = failure }, 201, []string{"reserve"}},
-		{"complete fails and the key stays reserved", "/expenses", func(s *memoryStore) { s.completeErr = failure }, 201, []string{"reserve", "complete"}},
+		// The work is committed by then: the completion is retried and the key
+		// is never released, or a retry would do the work twice (RS-06).
+		{"complete fails and the key stays reserved", "/expenses", func(s *memoryStore) { s.completeErr = failure }, 201, []string{"reserve", "complete", "complete", "complete", "complete"}},
 		{"release fails", "/expenses", func(s *memoryStore) { s.releaseErr = failure }, 422, []string{"reserve", "release"}},
 		{"guest path keeps privacy headers", "/g/token/paid", func(s *memoryStore) { s.reserveErr = failure }, 201, []string{"reserve"}},
 	}
@@ -869,5 +872,54 @@ func TestEveryChatWriteReplayMustReachAuthorization(t *testing.T) {
 				t.Fatalf("writes=%d replays=%d", writes, replays)
 			}
 		})
+	}
+}
+
+// A stored answer goes back to a bearer only while its session would still
+// be accepted (audit 2026-10-05, RS-02); everyone else replays as before.
+func TestAReplayToADeadSessionIsRefusedWithGetActorsAnswer(t *testing.T) {
+	store := newMemoryStore()
+	live := true
+	gateCalls := 0
+	gate := func(_ context.Context, r *http.Request) (*problem.Problem, error) {
+		gateCalls++
+		if live {
+			return nil, nil
+		}
+		return &problem.Problem{Status: 401, Code: "authentication_required", Detail: "Session is not valid"}, nil
+	}
+	ran := 0
+	middleware := New(store, WithReplayGate(gate))(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ran++
+		answer201(w, r)
+	}))
+	withBearer := func() *http.Request {
+		r := post("/expenses", testKey, `{}`)
+		r.Header.Set("Authorization", "Bearer synthetic-session")
+		return r
+	}
+	for i := 0; i < 2; i++ {
+		rec := httptest.NewRecorder()
+		middleware.ServeHTTP(rec, withBearer())
+		if rec.Code != http.StatusCreated {
+			t.Fatalf("live session, call %d: %d", i, rec.Code)
+		}
+	}
+	live = false
+	rec := httptest.NewRecorder()
+	middleware.ServeHTTP(rec, withBearer())
+	want := `{"code":"authentication_required","detail":"Session is not valid"}`
+	if rec.Code != http.StatusUnauthorized || rec.Body.String() != want || rec.Header().Get(ReplayHeaderName) != "" {
+		t.Fatalf("dead session replay: %d %v %q", rec.Code, rec.Header(), rec.Body.String())
+	}
+	if ran != 1 || gateCalls != 2 {
+		t.Fatalf("handler ran %d times, gate asked %d times", ran, gateCalls)
+	}
+	// No bearer, no session to check: an anonymous or dev-mode key replays.
+	anon := httptest.NewRecorder()
+	middleware.ServeHTTP(anon, post("/expenses", "other-key", `{}`))
+	middleware.ServeHTTP(anon, post("/expenses", "other-key", `{}`))
+	if gateCalls != 2 {
+		t.Fatalf("a request without a bearer was gated (%d calls)", gateCalls)
 	}
 }

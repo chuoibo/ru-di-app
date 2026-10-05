@@ -81,6 +81,7 @@ import (
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/rag"
 	"mobile/services/core/internal/rag/nap"
+	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/rerank"
 	"mobile/services/core/internal/routes"
 	"mobile/services/core/internal/socialv2"
@@ -242,7 +243,7 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 	var idempotency func(http.Handler) http.Handler
 	var pool *pgxpool.Pool
 	if len(served) > 0 || chat.on || len(nativeRouteIDs()) > 0 {
-		pool, err = db.Open(context.Background(), getenv(db.EnvDatabaseURL))
+		pool, err = db.OpenServer(context.Background(), getenv(db.EnvDatabaseURL))
 		if err != nil {
 			logger.Error("refusing to start", "error", err.Error())
 			return 1
@@ -251,8 +252,14 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		env.NewUnit = func() *db.Unit { return db.NewUnit(pool) }
 		// A store failure is an unhandled exception in Python, answered from
 		// the outermost layer; raising keeps it there instead of inside CORS.
-		idempotency = idem.New(idem.NewPostgresStore(pool), idem.WithErrorHandler(
-			func(w http.ResponseWriter, r *http.Request, err error) { servererror.Raise(err) }))
+		options := []idem.Option{idem.WithErrorHandler(
+			func(w http.ResponseWriter, r *http.Request, err error) { servererror.Raise(err) })}
+		if env.Mode == endpoint.ModeProd {
+			// A stored answer goes back to a bearer only while its session is
+			// one get_actor would still accept (RS-02).
+			options = append(options, idem.WithReplayGate(idem.SessionGate(repo.Sessions{Q: pool}, time.Now)))
+		}
+		idempotency = idem.New(idem.NewPostgresStore(pool), options...)
 	}
 	if chat.on {
 		// Serving never runs DDL. A missing schema is a loud refusal, not a

@@ -82,3 +82,28 @@ func TestTheServerIsToldToNoticeDeadClients(t *testing.T) {
 		t.Error("a URL's own setting must win")
 	}
 }
+
+func TestOnlyTheServerPoolBoundsItsSessions(t *testing.T) {
+	server, err := ServerPoolConfig("postgresql://u:p@h:5432/d")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for key, want := range map[string]string{
+		"statement_timeout": "30000", "lock_timeout": "10000",
+		"idle_in_transaction_session_timeout": "120000", "tcp_keepalives_idle": "60",
+	} {
+		if got := server.ConnConfig.RuntimeParams[key]; got != want {
+			t.Errorf("server %s = %q, want %q", key, got, want)
+		}
+	}
+	batch, _ := PoolConfig("postgresql://u:p@h:5432/d")
+	for key := range ServerSessionDefaults {
+		if _, set := batch.ConnConfig.RuntimeParams[key]; set {
+			t.Errorf("a batch pool must keep the server default for %s", key)
+		}
+	}
+	custom, _ := ServerPoolConfig("postgresql://u:p@h:5432/d?statement_timeout=0")
+	if custom.ConnConfig.RuntimeParams["statement_timeout"] != "0" {
+		t.Error("a URL's own setting must win")
+	}
+}

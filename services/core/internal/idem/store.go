@@ -45,6 +45,13 @@ WHERE scope = $1 AND idempotency_key = $2`
 SET response_status = $3, response_body = $4, response_media_type = $5, completed_at = now()
 WHERE scope = $1 AND idempotency_key = $2`
 	sqlRelease = `DELETE FROM idempotency_keys WHERE scope = $1 AND idempotency_key = $2`
+	// sqlCompleteInTx is sqlComplete inside the request's own transaction:
+	// now() there is when that transaction began, before the work it records,
+	// so the time is read when the UPDATE runs, after the work, as the
+	// separate completion transaction records it.
+	sqlCompleteInTx = `UPDATE idempotency_keys
+SET response_status = $3, response_body = $4, response_media_type = $5, completed_at = clock_timestamp()
+WHERE scope = $1 AND idempotency_key = $2`
 )
 
 // Reserve decides the race with a single INSERT ... ON CONFLICT DO NOTHING;
@@ -111,6 +118,10 @@ func (s *PostgresStore) Reserve(ctx context.Context, scope, key, fingerprint, le
 	}
 	return outcome, nil
 }
+
+// completesInTx marks a store whose rows live in the database the request's
+// own transaction writes to, so CompleteInTx can settle a key there.
+func (s *PostgresStore) completesInTx() {}
 
 // Complete records the answer that is about to be sent.
 func (s *PostgresStore) Complete(ctx context.Context, scope, key string, response StoredResponse) error {

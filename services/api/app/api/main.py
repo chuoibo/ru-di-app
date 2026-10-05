@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.auth_mode import AUTH_MODE_ENV_VAR, resolve_auth_mode
+from app.api.body_limit import BodyLimitMiddleware
 from app.api.cors import install_cors
 from app.api.errors import GUEST_LINK_NOT_FOUND, ApiProblem
 from app.api.google_identity import build_google_verifier
@@ -246,6 +247,11 @@ def create_app(
         store_factory=idempotency_store_factory or sqlalchemy_store_factory,
         **idempotency_options,
     )
+
+    # Inside the guest headers, outside idempotency: the body is read once,
+    # capped and timed, before the key layer or any route reads it (RS-07;
+    # the Go front door's bodylimit sits in the same place).
+    application.add_middleware(BodyLimitMiddleware)
 
     # Same argument as the layer above, on the other boundary: the guest URL
     # carries its own credential, so every answer under `/g` needs the same
