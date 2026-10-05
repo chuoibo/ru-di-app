@@ -3547,22 +3547,6 @@
       "evidence": "services/core/internal/chatv2/lifecycle_test.go"
     },
     {
-      "id": "PUT /push/devices/{installation_id}",
-      "method": "PUT",
-      "path": "/push/devices/{installation_id}",
-      "package": "push",
-      "state": "GO-ONLY",
-      "evidence": "services/core/internal/push/push_postgres_test.go"
-    },
-    {
-      "id": "DELETE /push/devices/{installation_id}",
-      "method": "DELETE",
-      "path": "/push/devices/{installation_id}",
-      "package": "push",
-      "state": "GO-ONLY",
-      "evidence": "services/core/internal/push/push_postgres_test.go"
-    },
-    {
       "id": "PUT /v2/chat/media/{conversation}/{media}",
       "method": "PUT",
       "path": "/v2/chat/media/{conversation}/{media}",
@@ -3577,6 +3561,22 @@
       "package": "chatv2http",
       "state": "GO-ONLY",
       "evidence": "services/core/internal/chatv2/media_test.go"
+    },
+    {
+      "id": "PUT /push/devices/{installation_id}",
+      "method": "PUT",
+      "path": "/push/devices/{installation_id}",
+      "package": "push",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/push/push_postgres_test.go"
+    },
+    {
+      "id": "DELETE /push/devices/{installation_id}",
+      "method": "DELETE",
+      "path": "/push/devices/{installation_id}",
+      "package": "push",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/push/push_postgres_test.go"
     }
   ]
 }
