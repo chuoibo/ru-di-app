@@ -59,7 +59,8 @@ export async function openJourney({ webgl2 = true } = {}) {
     await page.viewport(390, 844);
     // The standard build-check export has an intentionally invalid API URL.
     // Redirect only that placeholder; bodies and responses remain real HTTP.
-    await page.call("Page.addScriptToEvaluateOnNewDocument", { source: `const originalFetch=window.fetch;window.qaOutingReads=[];window.fetch=async(input,options)=>{const url=typeof input==='string'&&input.startsWith('http://api.build-check.invalid')?${JSON.stringify(base)}+input.slice('http://api.build-check.invalid'.length):input;const response=await originalFetch(url,options);if(typeof url==='string'&&url.includes('/contexts/')&&url.endsWith('/outings')&&(!options?.method||options.method==='GET')){const data=await response.clone().json();window.qaOutingReads.push({url,outings:data.outings?.map(o=>({id:o.id,stops:o.stops,days:o.days}))});}return response;};` });
+    // Page errors are kept so a screen that dies blank says why (qaErr).
+    await page.call("Page.addScriptToEvaluateOnNewDocument", { source: `window.qaErr=[];window.addEventListener('error',e=>window.qaErr.push(String(e.error&&e.error.stack||e.message)));const ce=console.error;console.error=(...a)=>{window.qaErr.push(a.map(String).join(' ').slice(0,800));ce(...a)};const originalFetch=window.fetch;window.qaOutingReads=[];window.fetch=async(input,options)=>{const url=typeof input==='string'&&input.startsWith('http://api.build-check.invalid')?${JSON.stringify(base)}+input.slice('http://api.build-check.invalid'.length):input;const response=await originalFetch(url,options);if(typeof url==='string'&&url.includes('/contexts/')&&url.endsWith('/outings')&&(!options?.method||options.method==='GET')){const data=await response.clone().json();window.qaOutingReads.push({url,outings:data.outings?.map(o=>({id:o.id,stops:o.stops,days:o.days}))});}return response;};` });
     await page.goto(server.url + "login", () => !!document.querySelector('[data-testid="account-username"]'));
     await page.typeInto("Tên tài khoản", person.username);
     await page.typeInto("Mật khẩu", "isolated synthetic credential for minh");
@@ -69,7 +70,7 @@ export async function openJourney({ webgl2 = true } = {}) {
     await page.goto(server.url + "messages", () => !!document.querySelector('[data-testid="conversations-screen"]'));
     await page.waitFor(name => [...document.querySelectorAll('[aria-label]')].some(el => el.getAttribute('aria-label') === 'Mở nhóm ' + name), { label: "journey group listed", timeout: 30000, diagnose: () => document.body.innerText.slice(0, 1500) }, groupName);
     await page.clickLabel("Mở nhóm " + groupName);
-    await page.waitFor(id => location.pathname.includes('/groups/' + id + '/chat'), { label: "fixture group selected" }, group.id);
+    await page.waitFor(id => location.pathname.includes('/groups/' + id + '/chat'), { label: "fixture group selected", diagnose: () => ({path:location.pathname, err:window.qaErr}) }, group.id);
     await page.clickLabel("Quay lại");
     await page.waitFor(() => location.pathname.includes('/messages'), { label: "back to conversation list" });
     await page.clickLabel("Lên plan");

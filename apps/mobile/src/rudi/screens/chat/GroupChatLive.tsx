@@ -480,9 +480,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const moLenh = (nhap.startsWith("/") && !nhap.includes(" ")) || nhap === "@";
   const lenhPhuHop = lenhGoiY(nhanRieng).filter((lenh) => lenh.nhan.toLocaleLowerCase().startsWith(nhap.toLocaleLowerCase()));
   const viewabilityConfig = useRef(CHAT_VIEWABILITY).current;
+  // FlatList refuses a new onViewableItemsChanged after mount, and the lane
+  // (legacy / v2) is decided after the first render -- so the callback stays
+  // fixed and reads the current lane's marker through a ref.
+  const danhDauHienThi = useRef(chat.danhDauHienThi);
+  danhDauHienThi.current = chat.danhDauHienThi;
   const baoTinHienThi = useCallback(({ viewableItems }: { viewableItems: ViewToken<HangHienThi>[] }) => {
-    chat.danhDauHienThi(viewableItems.flatMap(({ item, isViewable }) => isViewable && item.loai === "tin" ? [item.tin.id] : []));
-  }, [chat.danhDauHienThi]);
+    danhDauHienThi.current(viewableItems.flatMap(({ item, isViewable }) => isViewable && item.loai === "tin" ? [item.tin.id] : []));
+  }, []);
 
   // The list only auto-scrolls to new rows when the reader is already at the
   // newest end (see autoscrollToTopThreshold); a message you just sent must
