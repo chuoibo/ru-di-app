@@ -154,6 +154,12 @@ export function CaiDatScreen() {
           subtitle="Xem nơi tài khoản đang đăng nhập, đăng xuất từ xa"
           title="Phiên đăng nhập"
         />
+        <ListRow
+          icon="lock-closed-outline"
+          onPress={() => router.push("/settings/thiet-bi" as never)}
+          subtitle="Máy nào mở được tin mã hoá đầu cuối của bạn"
+          title="Thiết bị nhắn tin mã hoá"
+        />
       </NhomHang>
       <SectionHeader title="Quyền riêng tư" />
       <NhomHang>

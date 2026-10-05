@@ -63,6 +63,12 @@ export function coMaHoa(): boolean {
   return ChatCryptoModule !== null;
 }
 
+/** This phone's chat v2 device for a person, if it ever enrolled one (never enrols). */
+export async function thietBiCuaMay(personId: string): Promise<string | null> {
+  if (ChatCryptoModule === null) return null;
+  return AsyncStorage.getItem(`rudi.chat-v2.device.${personId}`);
+}
+
 export async function mayCua(personId: string): Promise<MayMaHoa> {
   const native = ChatCryptoModule;
   if (native === null) throw new ApiError(0, "chat_v2_native_missing", "Bản ứng dụng này chưa có mã hoá đầu cuối. Cập nhật ứng dụng để nhắn trong phòng này.");
