@@ -22,7 +22,7 @@ func echo(seen *[]byte) http.Handler {
 	})
 }
 
-func TestADeclaredOversizeBodyIsRefusedUnread(t *testing.T) {
+func TestADeclaredOversizeBodyIsRefusedBeforeTheRoute(t *testing.T) {
 	var seen []byte
 	h := Wrap(8, time.Second, echo(&seen))
 	r := httptest.NewRequest(http.MethodPost, "/expenses", strings.NewReader("abcdefghi"))
@@ -94,5 +94,74 @@ func TestASlowBodyRunsOutOfTime(t *testing.T) {
 	}
 	if strings.HasPrefix(buf.String(), "HTTP/1.1 2") || seen != nil {
 		t.Fatalf("the route ran: %q", buf.String())
+	}
+}
+
+// countingReader counts what the layer read of a body.
+type countingReader struct {
+	r    io.Reader
+	read int64
+}
+
+func (c *countingReader) Read(p []byte) (int, error) {
+	n, err := c.r.Read(p)
+	c.read += int64(n)
+	return n, err
+}
+
+// A refused body is read to its end before the 413, as Python's _discard
+// does: answering mid-upload made net/http close the connection under a
+// client still sending, which saw a reset instead of the answer (parity
+// w0/body-limit, 2026-10-05). Beyond DiscardBytes it stops reading.
+func TestARefusedBodyIsDrainedBeforeTheAnswerUpToABound(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		size     int64
+		declared bool
+		want     int64
+	}{
+		{"declared", 3 << 20, true, 3 << 20},
+		{"undeclared", 3 << 20, false, 3 << 20},
+		{"past the bound", DiscardBytes + 5<<20, true, DiscardBytes},
+	} {
+		body := &countingReader{r: io.LimitReader(zeros{}, tc.size)}
+		r := httptest.NewRequest(http.MethodPost, "/expenses", body)
+		r.ContentLength = -1
+		if tc.declared {
+			r.ContentLength = tc.size
+		}
+		w := httptest.NewRecorder()
+		Wrap(1<<20, time.Second, http.NotFoundHandler()).ServeHTTP(w, r)
+		if w.Code != http.StatusRequestEntityTooLarge {
+			t.Fatalf("%s: %d", tc.name, w.Code)
+		}
+		if body.read != tc.want {
+			t.Fatalf("%s: read %d of %d before answering, want %d", tc.name, body.read, tc.size, tc.want)
+		}
+	}
+}
+
+type zeros struct{}
+
+func (zeros) Read(p []byte) (int, error) {
+	clear(p)
+	return len(p), nil
+}
+
+// Over a real connection, a client sending 8 MiB to a 1 MiB route gets the
+// 413, not a write error.
+func TestAClientStillSendingGetsThe413(t *testing.T) {
+	server := httptest.NewServer(Wrap(1<<20, 10*time.Second, http.NotFoundHandler()))
+	defer server.Close()
+	for i := 0; i < 5; i++ {
+		resp, err := http.Post(server.URL+"/expenses", "application/json", io.LimitReader(zeros{}, 8<<20))
+		if err != nil {
+			t.Fatalf("attempt %d: %v", i, err)
+		}
+		got, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusRequestEntityTooLarge || string(got) != tooLarge {
+			t.Fatalf("attempt %d: %d %q", i, resp.StatusCode, got)
+		}
 	}
 }

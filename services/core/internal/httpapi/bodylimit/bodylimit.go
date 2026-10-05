@@ -34,6 +34,13 @@ const (
 	UploadBytes int64 = 10<<20 + 64<<10
 	// ReadTimeout is the whole budget for receiving a body.
 	ReadTimeout = 30 * time.Second
+	// DiscardBytes is how much of a refused body is read and dropped before
+	// the 413, as app/api/body_limit.py's _discard does: answering while the
+	// client is still sending makes net/http close the connection under it,
+	// and the client sees a reset instead of the answer (parity w0/body-limit
+	// under load, 2026-10-05). Past this, or past the deadline, the
+	// connection is given up.
+	DiscardBytes int64 = 64 << 20
 
 	CodeTooLarge = "request_body_too_large"
 	CodeTimeout  = "request_body_timeout"
@@ -70,6 +77,7 @@ func Wrap(limit int64, timeout time.Duration, next http.Handler) http.Handler {
 		// client that stopped sending.
 		deadlineSet := rc.SetReadDeadline(time.Now().Add(timeout)) == nil
 		if r.ContentLength > limit {
+			discard(r.Body)
 			problem(w, http.StatusRequestEntityTooLarge, CodeTooLarge, detailLarge)
 			return
 		}
@@ -87,6 +95,7 @@ func Wrap(limit int64, timeout time.Duration, next http.Handler) http.Handler {
 			servererror.Raise(err)
 		}
 		if int64(len(data)) > limit {
+			discard(r.Body)
 			problem(w, http.StatusRequestEntityTooLarge, CodeTooLarge, detailLarge)
 			return
 		}
@@ -98,6 +107,12 @@ func Wrap(limit int64, timeout time.Duration, next http.Handler) http.Handler {
 		r.Body = io.NopCloser(bytes.NewReader(data))
 		next.ServeHTTP(w, r)
 	})
+}
+
+// discard reads what is left of a refused body, at most DiscardBytes, under
+// the read deadline already set; any error just ends it.
+func discard(body io.Reader) {
+	_, _ = io.Copy(io.Discard, io.LimitReader(body, DiscardBytes))
 }
 
 // problem answers like the idempotency layer does: json.dumps with its
