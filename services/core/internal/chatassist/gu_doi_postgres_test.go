@@ -75,7 +75,10 @@ func (f fixture) chuKy(t *testing.T) string {
 func (f fixture) chiaGu(t *testing.T, person string, luc time.Time) {
 	t.Helper()
 	p := newID()
-	f.exec(t, `INSERT INTO pair_consent_proposals(id,cycle_id,purpose,proposed_by_id,completed_at,expires_at) VALUES($1,$2,'chia_gu',$3,$4,$4::timestamptz+interval '7 days')`, p, f.chuKy(t), person, luc)
+	// The proposal is made at `luc` too: with created_at left to now(), a `luc`
+	// a week back (the cutoff is fixed) puts the expiry before the creation and
+	// the check constraint refuses the row -- the fixture broke on 2026-10-05.
+	f.exec(t, `INSERT INTO pair_consent_proposals(id,cycle_id,purpose,proposed_by_id,created_at,completed_at,expires_at) VALUES($1,$2,'chia_gu',$3,$4,$4,$4::timestamptz+interval '7 days')`, p, f.chuKy(t), person, luc)
 	f.exec(t, `INSERT INTO pair_consents(id,proposal_id,person_id,granted_at) VALUES($1,$2,$3,$4)`, newID(), p, person, luc)
 }
 

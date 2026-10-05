@@ -13,6 +13,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"mobile/services/core/internal/chatv2"
 	"mobile/services/core/internal/testdb"
 )
@@ -40,7 +43,33 @@ func id(t *testing.T, s Store) string {
 func setup(t *testing.T) world {
 	t.Helper()
 	ctx := context.Background()
-	pool := testdb.Pool(t)
+	// A schema of its own: migrating chat v2 and push into the shared
+	// database's public schema leaked their tables and triggers into every
+	// other package's tests in the same run (chatlegacychange read this
+	// package's chat_v2_conversations through a cached plan).
+	base := testdb.Pool(t)
+	var raw string
+	if err := base.QueryRow(ctx, `SELECT replace(gen_random_uuid()::text,'-','')`).Scan(&raw); err != nil {
+		t.Fatal(err)
+	}
+	schema := "push_test_" + raw[:20]
+	ident := pgx.Identifier{schema}.Sanitize()
+	if _, err := base.Exec(ctx, "CREATE SCHEMA "+ident); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = base.Exec(context.Background(), "DROP SCHEMA "+ident+" CASCADE") })
+	config := base.Config().Copy()
+	config.ConnConfig.RuntimeParams["search_path"] = schema + ",public"
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	for _, table := range []string{"people", "contexts", "memberships", "friend_requests", "account_sessions"} {
+		if _, err = pool.Exec(ctx, "CREATE TABLE "+table+" (LIKE public."+table+" INCLUDING ALL)"); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if err := chatv2.Migrate(ctx, pool); err != nil {
 		t.Fatal(err)
 	}

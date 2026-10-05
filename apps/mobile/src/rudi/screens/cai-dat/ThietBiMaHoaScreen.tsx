@@ -157,7 +157,8 @@ export function ThietBiMaHoaScreen() {
               })}
           </NhomHang>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            {`${trang.ds.length}/${trang.toiDa} thiết bị. Muốn chắc một máy là của bạn, so dấu khoá của nó ở đây với dấu khoá hiện trên chính máy đó.`}
+            Đang dùng {trang.ds.length} trên tối đa {trang.toiDa} thiết bị. Muốn chắc một máy là của bạn, so dấu khoá của nó ở
+            đây với dấu khoá hiện trên chính máy đó.
           </Text>
         </>
       ) : null}
