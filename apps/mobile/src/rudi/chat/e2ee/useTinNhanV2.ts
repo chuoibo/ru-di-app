@@ -29,7 +29,7 @@ import { apiV2 } from "./api-v2";
 import type { MediaRef, Operation } from "./kieu";
 import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
 import { PHONG_TRONG, dungPhong, type Cho, type SoPhong } from "./so-phong";
-import { danhSach, type TinV2 } from "./so-tin";
+import { danhSach, moiTruoc, type TinV2 } from "./so-tin";
 
 const NHIP_MS = 3000;
 
@@ -108,11 +108,11 @@ export function sangTin(t: TinV2, contextId: string, personId: string, anhDaMo: 
     body,
     image_url: t.media?.type === "image" ? (anhDaMo[t.media.media.media_id] ?? null) : null,
     card: null,
-    created_at: new Date().toISOString(),
+    created_at: t.at ?? new Date(0).toISOString(),
     cursor: String(t.sequence),
     reactions,
     reply_to: t.replyTo === null ? null : { id: t.replyTo, kind: "text", author_id: null, preview: "" },
-    deleted_at: t.deleted ? new Date().toISOString() : null,
+    deleted_at: t.deleted ? (t.at ?? new Date(0).toISOString()) : null,
   };
 }
 
@@ -246,9 +246,10 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
 
   return {
     ...trang,
-    tin: danhSach(so).map((t) => sangTin(t, contextId, personId, anhDaMo)),
-    /** Own sends not yet on the lane: in flight, or failed and waiting for the person. */
-    hangCho: cho.map((c) => sangCho(c, so.byId)),
+    // Newest first, as the screen's inverted list (and the legacy hook) has it.
+    tin: moiTruoc(so).map((t) => sangTin(t, contextId, personId, anhDaMo)),
+    /** Own sends not yet on the lane, newest first: in flight, or failed and waiting for the person. */
+    hangCho: cho.map((c) => sangCho(c, so.byId)).reverse(),
     /** Envelopes skipped because they will never open. */
     khongMo,
     taiLai: nap,

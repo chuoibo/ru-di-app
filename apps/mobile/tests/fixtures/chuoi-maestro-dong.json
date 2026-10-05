@@ -91,7 +91,8 @@
     "Hai ngày gom nắng",
     "Một chiều có nhau",
     "Phiên này: Mật khẩu",
-    "Đã gửi lời mời tới Ban QA."
+    "Đã gửi lời mời tới Ban QA.",
+    "Bình đã nhận: ${TIN}"
   ],
   "id": [],
   "anh": [
@@ -258,7 +259,10 @@
     "diary-08-moment-saved",
     "diary-11-ai-unavailable",
     "diary-ai-draft",
-    "diary-ai-saved"
+    "diary-ai-saved",
+    "49-hai-chieu",
+    "49-phong-e2ee",
+    "49-sau-khi-mo-lai"
   ],
   "daXoa": {
     "Gần bạn, đúng gu": "Đợt thanh tab 5 cột (02/10): tiêu đề mục kết quả của Khám phá thành «Chỗ hay ở <thành phố>» vì danh mục về theo thứ tự máy chủ (ORDER BY places.id), không theo vị trí hay gu. Flow 22 giữ assertNotVisible để chặn câu nói sai đó quay lại.",

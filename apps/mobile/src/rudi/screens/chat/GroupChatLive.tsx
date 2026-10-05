@@ -949,7 +949,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           {lan.lan === "v2" && !v2.sanSang ? <Text style={[typography.caption, { color: colors.inkSoft }]}>· đang thiết lập</Text> : null}
           {lan.lan === "khong-ro" ? (
             <Pressable accessibilityRole="button" onPress={lan.thuLai} hitSlop={12}>
-              <Text style={[typography.caption, { color: colors.warn }]}>· Chưa kiểm tra được mã hoá — Thử lại</Text>
+              <Text style={[typography.caption, { color: colors.warn }]}>· Chưa kiểm tra được mã hoá. Thử lại</Text>
             </Pressable>
           ) : null}
           {lan.lan === "legacy" && lan.lyDo !== null ? <Text numberOfLines={1} style={[typography.caption, styles.flexShrink, { color: colors.inkSoft }]}>· {lan.lyDo}</Text> : null}

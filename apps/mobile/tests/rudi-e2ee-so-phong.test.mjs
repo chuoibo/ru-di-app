@@ -90,3 +90,15 @@ test("một thành viên dùng lại logical id của tin mình không chiếm c
   ]);
   assert.deepEqual(danhSach(r.so).map((t) => [t.authorId, t.body]), [[AN, "của An"]]);
 });
+
+test("màn chat nhận tin mới nhất trước, mỗi tin mang giờ của làn", async () => {
+  const { moiTruoc } = await import("../dist-test/rudi/chat/e2ee/so-tin.js");
+  const mine = nhan(AN, text("An hỏi"));
+  const reply = nhan(BINH, text("Bình đáp"));
+  const r = dungPhong([
+    { t: "cho", r: mine, luc: 1 },
+    { t: "da-gui", id: mine.logical_send_id, seq: 3, at: "2026-10-05T16:21:00Z" },
+    { t: "tin", seq: 4, r: reply, at: "2026-10-05T16:21:05Z" },
+  ]);
+  assert.deepEqual(moiTruoc(r.so).map((t) => [t.body, t.at]), [["Bình đáp", "2026-10-05T16:21:05Z"], ["An hỏi", "2026-10-05T16:21:00Z"]]);
+});

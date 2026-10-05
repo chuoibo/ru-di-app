@@ -19,7 +19,9 @@ build() {
     clang="$bin/${target}26-clang"
     [ "$target" = armv7-linux-androideabi ] && clang="$bin/armv7a-linux-androideabi26-clang"
     upper="$(echo "$target" | tr 'a-z-' 'A-Z_')"
+    # A SONAME, so whatever links it records the name and not a build path.
     env "CARGO_TARGET_${upper}_LINKER=$clang" "CC_${target//-/_}=$clang" "AR_${target//-/_}=$bin/llvm-ar" \
+      "CARGO_TARGET_${upper}_RUSTFLAGS=-C link-arg=-Wl,-soname,librudi_chat_crypto_ffi.so" \
       cargo build --locked --release --manifest-path "$2/packages/chat-crypto-ffi/Cargo.toml" --target "$target"
   done
 }

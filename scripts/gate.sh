@@ -718,7 +718,7 @@ do_crypto() {
   local passed
   passed="$(grep -oE '^test result: ok\. [0-9]+ passed' "$log" | awk '{s+=$4} END {print s+0}')"
   echo "canary MLS: $passed ca"
-  [ "$passed" -ge 29 ] || { echo "chỉ $passed canary chạy; crate này có 29 (21 + 8 của ADR-0057) — bộ test teo lại không phải bộ test xanh" >&2; return 1; }
+  [ "$passed" -ge 33 ] || { echo "chỉ $passed canary chạy; crate này có 33 (21 + 12 của ADR-0057) — bộ test teo lại không phải bộ test xanh" >&2; return 1; }
   ! grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' "$log" || return 1
 
   # The C ABI lives in its own crate so the audited core keeps
@@ -745,6 +745,7 @@ do_crypto() {
     env "CARGO_TARGET_${upper}_LINKER=$bin/${target}26-clang" \
         "CC_${target//-/_}=$bin/${target}26-clang" \
         "AR_${target//-/_}=$bin/llvm-ar" \
+        "CARGO_TARGET_${upper}_RUSTFLAGS=-C link-arg=-Wl,-soname,librudi_chat_crypto_ffi.so" \
       cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml --release --target "$target" || return 1
   done
   # A cdylib that exports nothing is a file, not a bridge: every Android build
@@ -758,6 +759,9 @@ do_crypto() {
                rudi_chat_crypto_receive rudi_chat_crypto_call; do
       "$bin/llvm-nm" -D --defined-only "$so" | grep -q " $sym\$" || { echo "$so: $sym không được xuất" >&2; missing=1; }
     done
+    # Without a SONAME the JNI shim records the build machine's path as
+    # DT_NEEDED and the phone never loads it (emulator 05/10: dlopen failed).
+    "$bin/llvm-readelf" -d "$so" | grep -q 'SONAME.*\[librudi_chat_crypto_ffi\.so\]' || { echo "$so: thiếu SONAME librudi_chat_crypto_ffi.so" >&2; missing=1; }
   done < <(find "${CARGO_TARGET_DIR:-packages/chat-crypto-ffi/target}" -path '*-linux-android/release/librudi_chat_crypto_ffi.so')
   [ "$count" -eq 2 ] || { echo "cần 2 thư viện Android (x86_64, arm64), thấy $count" >&2; return 1; }
   [ "$missing" -eq 0 ]

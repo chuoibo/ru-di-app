@@ -848,8 +848,8 @@ jobs:
           cargo test --locked --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee /tmp/crypto.log
           passed=$(grep -oE '^test result: ok\. [0-9]+ passed' /tmp/crypto.log | awk '{s+=$4} END {print s+0}')
           echo "canaries passed: $passed"
-          if [ "$passed" -lt 29 ]; then
-            echo "::error::only $passed canaries ran; this crate has 29 (21 + 8 for ADR-0057) -- a shrinking suite is not a passing one"
+          if [ "$passed" -lt 33 ]; then
+            echo "::error::only $passed canaries ran; this crate has 33 (21 + 12 for ADR-0057) -- a shrinking suite is not a passing one"
             exit 1
           fi
           if grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' /tmp/crypto.log; then
@@ -907,11 +907,13 @@ jobs:
           CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android26-clang" \
           CC_x86_64_linux_android="$bin/x86_64-linux-android26-clang" \
           AR_x86_64_linux_android="$bin/llvm-ar" \
+          CARGO_TARGET_X86_64_LINUX_ANDROID_RUSTFLAGS="-C link-arg=-Wl,-soname,librudi_chat_crypto_ffi.so" \
             cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml \
               --release --target x86_64-linux-android
           CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$bin/aarch64-linux-android26-clang" \
           CC_aarch64_linux_android="$bin/aarch64-linux-android26-clang" \
           AR_aarch64_linux_android="$bin/llvm-ar" \
+          CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS="-C link-arg=-Wl,-soname,librudi_chat_crypto_ffi.so" \
             cargo build --locked --manifest-path packages/chat-crypto-ffi/Cargo.toml \
               --release --target aarch64-linux-android
 
@@ -929,6 +931,8 @@ jobs:
                        rudi_chat_crypto_receive rudi_chat_crypto_call; do
               "$nm" -D --defined-only "$so" | grep -q " $sym\$" || { echo "::error::$so: $sym is not exported"; missing=1; }
             done
+            # No SONAME: the JNI shim records the build path and the phone never loads it.
+            "${nm%llvm-nm}llvm-readelf" -d "$so" | grep -q 'SONAME.*\[librudi_chat_crypto_ffi\.so\]' || { echo "::error::$so: no SONAME"; missing=1; }
           done
           test "$count" -eq 2 || { echo "::error::expected the x86_64 and arm64 libraries, found $count"; exit 1; }
           test "$missing" -eq 0

@@ -1,0 +1,74 @@
+# Chat v2 mã hoá đầu cuối trên máy thật (ADR-0057): MLS chạy trong thư viện
+# Rust qua module native của bản dựng này, không qua JS.
+#
+# Đầu kia là một thiết bị tổng hợp (`tests/drill/ban-doi-tac.mjs`: chính engine
+# của app, MLS thật qua C ABI) trả lời mọi tin nó giải mã được bằng «Bình đã
+# nhận: <tin>». Nên một câu trả lời hiện ra ở đây chứng minh cả hai chiều: máy
+# này mã hoá được cho thiết bị kia, và giải mã được tin thiết bị kia mã hoá.
+#
+# Rồi tắt app mở lại: lịch sử phải còn. MLS xoá khoá sau mỗi lần dùng, nên tin
+# chỉ còn nếu nó đã được ghi vào sổ phòng niêm trên máy (RoomLog) — không có sổ
+# ấy thì sau lần mở lại phòng rỗng.
+#
+# Biến: TK / MK (tài khoản tổng hợp của stack cô lập), NHOM (tên nhóm hai người),
+# TIN (chữ không dấu: `adb input` không gõ được dấu).
+appId: com.lakiet.rudi
+---
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow: _dang-xuat-neu-co.yaml
+- runFlow:
+    file: _dang-nhap-tai-khoan.yaml
+    env:
+      TK: "${TK}"
+      MK: "${MK}"
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "${NHOM}"
+    timeout: 60000
+- tapOn: "${NHOM}"
+# Hai người đều có thiết bị đã ghi danh: phòng lên làn v2, rồi xong thiết lập
+# (thêm thiết bị kia vào nhóm MLS, Welcome tới nó).
+- extendedWaitUntil:
+    visible: "Mã hoá đầu cuối"
+    timeout: 60000
+- extendedWaitUntil:
+    notVisible: ".*đang thiết lập.*"
+    timeout: 90000
+- assertNotVisible: "Chưa mã hoá đầu cuối"
+- takeScreenshot: 49-phong-e2ee
+- tapOn: "Ô soạn tin"
+- inputText: "${TIN}"
+- tapOn: "Gửi tin nhắn"
+- extendedWaitUntil:
+    visible: "${TIN}"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "Bình đã nhận: ${TIN}"
+    timeout: 90000
+- hideKeyboard
+- takeScreenshot: 49-hai-chieu
+# Tắt mở lại: lịch sử đọc từ sổ phòng niêm trên máy.
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 150000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "${NHOM}"
+    timeout: 60000
+- tapOn: "${NHOM}"
+- extendedWaitUntil:
+    visible: "Bình đã nhận: ${TIN}"
+    timeout: 30000
+- assertVisible: "${TIN}"
+- assertVisible: "Mã hoá đầu cuối"
+- takeScreenshot: 49-sau-khi-mo-lai

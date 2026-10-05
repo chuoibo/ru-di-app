@@ -316,12 +316,12 @@ export class MayMaHoa {
       let roi = false;
       for (const e of page.events) {
         if (e.envelope !== undefined && e.envelope.device_id === device) {
-          ban.push({ t: "da-gui", id: e.envelope.logical_send_id, seq: e.sequence });
+          ban.push({ t: "da-gui", id: e.envelope.logical_send_id, seq: e.sequence, at: e.created_at });
         } else if (e.envelope !== undefined) {
           mo = true;
           const r = await this.moThu(e.envelope);
           if (r === null) ban.push({ t: "khong-mo", seq: e.sequence, actor: e.actor_id });
-          else if (r.kind === "application") ban.push({ t: "tin", seq: e.sequence, r });
+          else if (r.kind === "application") ban.push({ t: "tin", seq: e.sequence, r, at: e.created_at });
         } else if (e.commit !== undefined && e.commit.envelope.device_id !== device) {
           mo = true;
           const r = JSON.parse(await this.d.crypto.receive(JSON.stringify(e.commit.envelope), JSON.stringify(e.commit.roster))) as Received;
@@ -422,7 +422,7 @@ export class MayMaHoa {
       try {
         const r = await this.d.api.send(this.d.actorId, room, envelope);
         await this.call("acknowledge_sent", { envelope });
-        await this.ghi(room, null, [{ t: "da-gui", id: logical, seq: r.event.sequence }]);
+        await this.ghi(room, null, [{ t: "da-gui", id: logical, seq: r.event.sequence, at: r.event.created_at }]);
         return r.event;
       } catch (error) {
         const c = code(error);

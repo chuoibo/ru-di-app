@@ -10,6 +10,8 @@ export type TinV2 = {
   id: string;
   authorId: string;
   sequence: number;
+  /** When the lane took the message (its `created_at`); null for records written before it was kept. */
+  at: string | null;
   body: string | null;
   replyTo: string | null;
   edited: boolean;
@@ -35,12 +37,12 @@ function sua(so: SoTin, id: string, f: (t: TinV2) => TinV2 | null): SoTin {
   return moi === null ? so : { ...so, byId: { ...so.byId, [id]: moi } };
 }
 
-/** Applies one received operation, decrypted at `sequence`. */
-export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" }>, sequence: number): SoTin {
+/** Applies one received operation, decrypted at `sequence` (taken by the lane `at`). */
+export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" }>, sequence: number, at: string | null = null): SoTin {
   const op = nhan.operation;
   const tac = nhan.actor_id;
   const moi = (patch: Partial<TinV2>): TinV2 => ({
-    id: nhan.logical_send_id, authorId: tac, sequence, body: null, replyTo: null, edited: false, deleted: false,
+    id: nhan.logical_send_id, authorId: tac, sequence, at, body: null, replyTo: null, edited: false, deleted: false,
     reactions: Object.create(null) as Record<string, string[]>, media: null, sticker: null, ...patch,
   });
   switch (op.type) {
@@ -78,4 +80,9 @@ export function apDung(so: SoTin, nhan: Extract<Received, { kind: "application" 
 
 export function danhSach(so: SoTin): TinV2[] {
   return so.order.map((id) => so.byId[id]);
+}
+
+/** Newest first: what the chat screen's inverted list (and the legacy hook) draws. */
+export function moiTruoc(so: SoTin): TinV2[] {
+  return danhSach(so).reverse();
 }

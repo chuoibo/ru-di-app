@@ -16,13 +16,13 @@ export type Nhan = Extract<Received, { kind: "application" }>;
 
 export type BanGhi =
   /** Decrypted from another device, at its lane sequence. */
-  | { t: "tin"; seq: number; r: Nhan }
+  | { t: "tin"; seq: number; r: Nhan; at?: string }
   /** An envelope from `actor` that will never open (forged, garbled): skipped, and said. */
   | { t: "khong-mo"; seq: number; actor: string }
   /** This device's own operation, written before it is sent. */
   | { t: "cho"; r: Nhan; luc: number }
   /** The lane holds this device's send `id` at `seq`. */
-  | { t: "da-gui"; id: string; seq: number }
+  | { t: "da-gui"; id: string; seq: number; at?: string }
   /** The send failed; `thuLai` says whether trying again can help. */
   | { t: "hong"; id: string; loi: string; thuLai: boolean }
   /** Tried again. */
@@ -45,25 +45,25 @@ const TAO_HANG = new Set(["text", "reply", "image", "sticker", "voice"]);
  * however often a replay wrote it) and this device's sends still on their way.
  */
 export function dungPhong(ban: readonly BanGhi[]): { so: SoTin; cho: Cho[]; dangDi: Cho[]; khongMo: number } {
-  const seq = new Map<string, number>();
+  const seq = new Map<string, { seq: number; at?: string }>();
   let khongMo = 0;
   const cua = new Map<string, Cho>();
   const bo = new Set<string>();
   // Keyed by sender AND logical id: a logical id is the sender's choice and
   // travels in the clear, so another member reusing one of this device's ids
   // must not take that message's place (security review 05/10).
-  const tin = new Map<string, { seq: number; r: Nhan }>();
+  const tin = new Map<string, { seq: number; r: Nhan; at?: string }>();
   const khoa = (r: Nhan) => `${r.actor_id}|${r.logical_send_id}`;
   for (const b of ban) {
     switch (b.t) {
       case "tin":
-        if (!tin.has(khoa(b.r))) tin.set(khoa(b.r), { seq: b.seq, r: b.r });
+        if (!tin.has(khoa(b.r))) tin.set(khoa(b.r), { seq: b.seq, r: b.r, at: b.at });
         break;
       case "cho":
         if (!cua.has(b.r.logical_send_id)) cua.set(b.r.logical_send_id, { id: b.r.logical_send_id, r: b.r, luc: b.luc, hong: false, loi: null, thuLai: true });
         break;
       case "da-gui":
-        if (!seq.has(b.id)) seq.set(b.id, b.seq);
+        if (!seq.has(b.id)) seq.set(b.id, { seq: b.seq, at: b.at });
         break;
       case "hong": {
         const c = cua.get(b.id);
@@ -85,10 +85,10 @@ export function dungPhong(ban: readonly BanGhi[]): { so: SoTin; cho: Cho[]; dang
   }
   for (const [id, c] of cua) {
     const s = seq.get(id);
-    if (s !== undefined && !tin.has(khoa(c.r))) tin.set(khoa(c.r), { seq: s, r: c.r });
+    if (s !== undefined && !tin.has(khoa(c.r))) tin.set(khoa(c.r), { seq: s.seq, r: c.r, at: s.at });
   }
   let so = SO_TRONG;
-  for (const t of [...tin.values()].sort((a, b) => a.seq - b.seq)) so = apDung(so, t.r, t.seq);
+  for (const t of [...tin.values()].sort((a, b) => a.seq - b.seq)) so = apDung(so, t.r, t.seq, t.at ?? null);
   // Every own operation not on the lane; the rows among them are drawn.
   const dangDi = [...cua.values()].filter((c) => !seq.has(c.id) && !bo.has(c.id));
   return { so, cho: dangDi.filter((c) => TAO_HANG.has(c.r.operation.type)), dangDi, khongMo };
