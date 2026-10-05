@@ -783,7 +783,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if g.lane == laneV2 && in.Command == "chia_bill" {
-		refuse(w, 409, chiaBillV2)
+		refuse(w, 409, "chia_bill_unavailable_encrypted")
 		return
 	}
 	if trigger != "" {

@@ -221,7 +221,7 @@ func (h *Handler) receipt(w http.ResponseWriter, r *http.Request) {
 // read them -- the words are only the caller's copy, so a caller could put
 // words in another member's mouth and have them billed. The legacy lane reads
 // the stored text instead (chuDaLuu); this lane has none to read.
-const chiaBillV2 = "chia_bill_unavailable_e2ee"
+const chiaBillV2 = "chia_bill_unavailable_encrypted"
 
 // theV2 is the card a v2 answer seals: the card exactly as the legacy lane
 // would have posted it, compact JSON.

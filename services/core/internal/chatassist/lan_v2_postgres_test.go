@@ -152,11 +152,11 @@ func TestAiTrongPhongV2(t *testing.T) {
 	}
 	// chia_bill cannot be checked on this lane: off, and said so.
 	w = f.request("GET", "/contexts/"+f.context+"/chat-capabilities", f.token, nil)
-	if !strings.Contains(w.Body.String(), `"chia_bill":{"available":false,"reason":"chia_bill_unavailable_e2ee"}`) {
+	if !strings.Contains(w.Body.String(), `"chia_bill":{"available":false,"reason":"chia_bill_unavailable_encrypted"}`) {
 		t.Fatalf("chia_bill trong phòng v2: %s", w.Body.String())
 	}
 	trig2, _ := p.tin(t, f.person, newID())
-	if w = f.goiTag(f.token, newID(), trig2, map[string]any{"command": "chia_bill"}); w.Code != 409 || maTuChoi(w) != "chia_bill_unavailable_e2ee" {
+	if w = f.goiTag(f.token, newID(), trig2, map[string]any{"command": "chia_bill"}); w.Code != 409 || maTuChoi(w) != "chia_bill_unavailable_encrypted" {
 		t.Fatalf("chia_bill trong phòng v2: %d %s", w.Code, w.Body.String())
 	}
 	// What can write into the legacy room stays refused on this lane.

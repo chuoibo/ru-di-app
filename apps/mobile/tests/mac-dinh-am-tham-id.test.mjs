@@ -181,7 +181,7 @@ const CHO_PHEP = new Map([
   // A pending sticker row carries the sticker's id because the row draws the
   // picture from it (<Sticker id={tin.than}>), exactly as the legacy queue does;
   // the empty string is a photo row, which shows its caption or «Ảnh».
-  ["rudi/chat/e2ee/useTinNhanV2.ts", [
+  ["rudi/chat/e2ee/ve-v2.ts", [
     'op.type === "sticker" ? op.sticker_id : op.type === "text" || op.type === "reply" ? op.body : ""',
   ]],
   // ADR-0027: these are persisted anchor references, never display fallbacks.

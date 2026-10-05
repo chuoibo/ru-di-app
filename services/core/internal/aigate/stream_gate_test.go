@@ -147,14 +147,16 @@ func TestSSERootsDocDungBangCuaMinh(t *testing.T) {
 		}
 	}
 	for name := range nep.funcs {
-		for _, forbidden := range []string{".authority", ".chuanBiNhom", ".chuDaLuu", ".begin"} {
+		for _, forbidden := range []string{".authority", ".authorityV2", ".authorityLane", ".chuanBiNhom", ".chuDaLuu", ".begin"} {
 			if strings.HasSuffix(name, forbidden) {
 				t.Errorf("the Nếp stream reaches %s, the room's authorization", name)
 			}
 		}
 	}
+	// authorityLane is the one body behind authority and authorityV2 (the
+	// requester's stream is open on the v2 lane too, ADR-0057 §6).
 	nhom := g.reach(g.root(t, "(*"+pkgChat+".Handler).suKienNhom"))
-	if !nhom.funcs[pkgChat+".authority"] {
+	if !nhom.funcs[pkgChat+".authorityLane"] {
 		t.Fatal("the group stream never reaches authority; the walk is broken")
 	}
 	// The room's authorization is authority plus the room check (phongAi:
@@ -164,7 +166,7 @@ func TestSSERootsDocDungBangCuaMinh(t *testing.T) {
 	if !nhom.funcs[pkgChat+".phongAi"] {
 		t.Fatal("the group stream never reaches the room check; the walk is broken")
 	}
-	for _, root := range []string{pkgChat + ".authority", pkgChat + ".phongAi"} {
+	for _, root := range []string{pkgChat + ".authorityLane", pkgChat + ".phongAi"} {
 		for name := range tables(g.reach(g.root(t, root)).strings) {
 			groupAllowed[name] = true
 		}
