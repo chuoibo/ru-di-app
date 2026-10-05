@@ -93,6 +93,19 @@ export function ThietBiMaHoaScreen() {
       {trang.pha === "hong" ? (
         <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách thiết bị" />
       ) : null}
+      {/* This phone holds keys the server does not list (or lists under
+          another id): the list cannot be trusted, and it is said. */}
+      {trang.pha === "xong" && trang.mayNay !== null && !trang.ds.some((d) => d.card.device_id === trang.mayNay?.device_id) ? (
+        <View style={styles.canhBao}>
+          <Text style={[typography.label, { color: colors.warn }]}>Máy chủ không liệt kê máy này</Text>
+          <Text style={[typography.caption, { color: colors.warn }]}>
+            Máy này giữ khoá mã hoá nhưng không có trong danh sách dưới đây. Đừng tin danh sách này cho tới khi hỏi rõ.
+          </Text>
+          <Text selectable style={[typography.caption, styles.dau, { color: colors.inkSoft }]}>
+            Dấu khoá máy này {dauKhoa(trang.mayNay)}
+          </Text>
+        </View>
+      ) : null}
       {trang.pha === "xong" && trang.ds.length === 0 ? (
         <EmptyState
           body="Mở một cuộc trò chuyện trên máy có bản ứng dụng mới nhất, máy đó sẽ hiện ở đây."
@@ -154,6 +167,7 @@ export function ThietBiMaHoaScreen() {
 
 const styles = StyleSheet.create({
   khoi: { gap: 12 },
+  canhBao: { gap: 4 },
   hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64 },
   hangChu: { flex: 1, gap: 2 },
   // Monospace so two phones' marks line up group by group when compared.

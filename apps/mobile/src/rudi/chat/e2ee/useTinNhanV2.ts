@@ -70,8 +70,14 @@ export function coMaHoa(): boolean {
  */
 export async function theCuaMay(personId: string): Promise<Card | null> {
   if (ChatCryptoModule === null || (await thietBiCuaMay(personId)) === null) return null;
-  await mayCua(personId);
-  return JSON.parse(await ChatCryptoModule.identity()) as Card;
+  const may = await mayCua(personId);
+  const card = JSON.parse(await ChatCryptoModule.identity()) as Card;
+  // What the module has open must be this person's device: never show
+  // another identity's keys as this phone's.
+  if (card.actor_id !== personId || card.device_id !== (await may.thietBi())) {
+    throw new ApiError(0, "chat_v2_identity_mismatch", "Máy này đang mở khoá của một tài khoản khác. Mở lại ứng dụng rồi thử lại.");
+  }
+  return card;
 }
 
 /** This phone's chat v2 device for a person, if it ever enrolled one (never enrols). */
@@ -80,10 +86,22 @@ export async function thietBiCuaMay(personId: string): Promise<string | null> {
   return AsyncStorage.getItem(`rudi.chat-v2.device.${personId}`);
 }
 
+/**
+ * Whose identity the native module has open: it holds one at a time, so an
+ * engine cached for one person must reopen its own before it acts after
+ * another person's was opened on this phone (security review 05/10: an
+ * account switch would otherwise act with the other person's keys).
+ */
+let dangMo: string | null = null;
+
 export async function mayCua(personId: string): Promise<MayMaHoa> {
   const native = ChatCryptoModule;
   if (native === null) throw new ApiError(0, "chat_v2_native_missing", "Bản ứng dụng này chưa có mã hoá đầu cuối. Cập nhật ứng dụng để nhắn trong phòng này.");
   let co = mayTheoNguoi.get(personId);
+  if (co !== undefined && dangMo !== personId) {
+    mayTheoNguoi.delete(personId);
+    co = undefined;
+  }
   if (co === undefined) {
     co = (async () => {
       const so: KhoTinPort = {
@@ -96,6 +114,7 @@ export async function mayCua(personId: string): Promise<MayMaHoa> {
       const may = new MayMaHoa({ actorId: personId, crypto: native, api: apiV2, kho, so, uuid, label: Platform.OS === "ios" ? "iPhone" : "Android",
         onThietBiMoi: (m) => { for (const nghe of ngheThietBiMoi) nghe(m); },
         onPhong: (room) => { for (const nghe of ngheDoiPhong) nghe(room); } });
+      dangMo = personId;
       await may.moThietBi();
       return may;
     })();
