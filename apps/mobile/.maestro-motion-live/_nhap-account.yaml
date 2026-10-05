@@ -1,0 +1,11 @@
+# Synthetic credentials from the isolated account harness only.
+appId: com.lakiet.rudi
+---
+- tapOn:
+    id: account-username
+- inputText: "${RUDI_TEST_USERNAME}"
+- tapOn:
+    id: account-password
+- inputText: "${RUDI_TEST_PASSWORD}"
+- hideKeyboard
+- tapOn: "Đăng nhập"

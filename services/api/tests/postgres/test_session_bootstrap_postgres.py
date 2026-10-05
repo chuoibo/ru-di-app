@@ -21,12 +21,12 @@ from datetime import UTC, date, datetime, timedelta
 import anyio
 import httpx
 import pytest
+from legacy_auth_oracle import create_app
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_actor, get_repository
-from app.api.main import create_app
 from app.api.repository import SqlAlchemyApiRepository
 from app.api.service import ApiService, token_digest
 from app.db.models import (

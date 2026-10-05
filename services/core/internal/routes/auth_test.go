@@ -47,6 +47,19 @@ func authFront(t *testing.T, env endpoint.Env) http.Handler {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Historical wire oracle only: these handlers are intentionally absent from All().
+	for _, old := range []Route{createSession(), requestOTP(), verifyOTP(), loginGoogle()} {
+		bound, e := ir.Bind(old.ID, pyval.NewRegistry())
+		if e != nil {
+			t.Fatal(e)
+		}
+		handlers[old.ID], e = endpoint.New(bound, old.Status, old.Serve, env)
+		if e != nil {
+			t.Fatal(e)
+		}
+		method, path, _ := strings.Cut(old.ID, " ")
+		manifest.Routes = append(manifest.Routes, ownership.Route{ID: old.ID, Method: method, Path: path, Kind: "route", Group: "auth", Owner: ownership.OwnerGo})
+	}
 	table, err := router.New(manifest.Routes)
 	if err != nil {
 		t.Fatal(err)
@@ -112,17 +125,14 @@ func TestW9RoutesBind(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, id := range []string{
-		"POST /sessions",
-		"GET /sessions",
-		"DELETE /sessions/current",
-		"DELETE /sessions/{session_id}",
-		"POST /auth/otp/request",
-		"POST /auth/otp/verify",
-		"POST /auth/google",
-	} {
+	for _, id := range []string{"GET /sessions", "DELETE /sessions/current", "DELETE /sessions/{session_id}"} {
 		if handlers[id] == nil {
-			t.Errorf("missing handler %s", id)
+			t.Errorf("missing management handler %s", id)
+		}
+	}
+	for _, id := range []string{"POST /sessions", "POST /auth/otp/request", "POST /auth/otp/verify", "POST /auth/google", "POST /identity/person-id", "POST /friends/lookup"} {
+		if handlers[id] != nil {
+			t.Errorf("retired writer registered %s", id)
 		}
 	}
 }

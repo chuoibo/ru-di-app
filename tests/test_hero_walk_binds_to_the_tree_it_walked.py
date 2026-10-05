@@ -11,11 +11,11 @@ trong `make gate` của mọi lane còn lại.
 
     phá mối nối quét bill rồi COMMIT (e845ced)
     vá lại NGAY TRONG CÂY LÀM VIỆC, không commit
-    scripts/hero_walk.sh          -> XANH 16/16, ghi sha=e845ced
+    tests/fixtures/legacy_demo/hero_walk.sh          -> XANH 16/16, ghi sha=e845ced
     git checkout -- .             (cây trở lại đúng bản đã commit, tức bản hỏng)
-    scripts/hero_walk.sh --status -> "ĐI ĐƯỢC 16/16 chặng, client e845ced
+    tests/fixtures/legacy_demo/hero_walk.sh --status -> "ĐI ĐƯỢC 16/16 chặng, client e845ced
                                       (nằm trong HEAD e845ced)", mã 0
-    scripts/hero_walk.sh          -> mã 1, ĐỨT ở chặng quét bill
+    tests/fixtures/legacy_demo/hero_walk.sh          -> mã 1, ĐỨT ở chặng quét bill
 
 Cổng báo xanh cho một cây mà đường hero đứt. Một trường mang hai nghĩa, và
 nghĩa nguy hiểm là nghĩa im lặng.
@@ -44,7 +44,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RUNNER = REPO_ROOT / "scripts" / "hero_walk.sh"
+RUNNER = REPO_ROOT / "tests" / "fixtures" / "legacy_demo" / "hero_walk.sh"
 URL = "http://127.0.0.1:8099"
 
 
@@ -66,8 +66,8 @@ def cay(tmp_path: Path) -> Path:
     `<tmp>/scripts/` là đủ để nó coi `<tmp>` là cây nó đang gác.
     """
     repo = tmp_path / "cay"
-    (repo / "scripts").mkdir(parents=True)
-    shutil.copy2(RUNNER, repo / "scripts" / "hero_walk.sh")
+    (repo / "tests" / "fixtures" / "legacy_demo").mkdir(parents=True)
+    shutil.copy2(RUNNER, repo / "tests" / "fixtures" / "legacy_demo" / "hero_walk.sh")
     _git(repo.parent, "init", "-q", "-b", "main", str(repo))
     # Không có phần đuôi tên miền: repo guard chặn chuỗi hình dạng email, và
     # một danh tính git giả cũng không được là ngoại lệ cho luật đó.
@@ -81,7 +81,7 @@ def cay(tmp_path: Path) -> Path:
 def _chay(repo: Path, *args: str) -> subprocess.CompletedProcess:
     env = dict(os.environ, MOBILE_HERO_WALK_DIR=str(repo.parent / "phan-quyet"))
     return subprocess.run(
-        [str(repo / "scripts" / "hero_walk.sh"), *args],
+        [str(repo / "tests" / "fixtures" / "legacy_demo" / "hero_walk.sh"), *args],
         capture_output=True,
         text=True,
         env=env,
@@ -163,8 +163,10 @@ def _ghi(repo: Path, **truong) -> None:
 
 
 def _lam_ban(repo: Path, noi_dung: str) -> None:
-    (repo / "scripts" / "hero_walk.sh").write_text(
-        (repo / "scripts" / "hero_walk.sh").read_text(encoding="utf-8")
+    (repo / "tests" / "fixtures" / "legacy_demo" / "hero_walk.sh").write_text(
+        (repo / "tests" / "fixtures" / "legacy_demo" / "hero_walk.sh").read_text(
+            encoding="utf-8"
+        )
         + f"\n# {noi_dung}\n",
         encoding="utf-8",
     )
@@ -481,7 +483,7 @@ def test_sua_chua_commit_lam_van_tay_khac_clean(cay):
 def test_hai_noi_dung_sua_khac_nhau_cho_hai_van_tay_khac_nhau(cay):
     """Chỉ băm DANH SÁCH đường dẫn là chưa đủ: sửa khác nội dung trên cùng một
     file phải ra vân tay khác, nếu không "vá lại rồi phá lại" là vô hình."""
-    p = cay / "scripts" / "hero_walk.sh"
+    p = cay / "tests" / "fixtures" / "legacy_demo" / "hero_walk.sh"
     goc = p.read_text(encoding="utf-8")
 
     p.write_text(goc + "\n# A\n", encoding="utf-8")
@@ -548,12 +550,14 @@ def test_thu_muc_moi_chua_track_cung_lam_phan_quyet_het_hieu_luc(cay):
 
 def _che_mat_git(repo: Path, bit: str) -> None:
     """Sửa thật một file đã track, rồi bảo git đừng nhìn nó nữa."""
-    (repo / "scripts" / "hero_walk.sh").write_text(
-        (repo / "scripts" / "hero_walk.sh").read_text(encoding="utf-8")
+    (repo / "tests" / "fixtures" / "legacy_demo" / "hero_walk.sh").write_text(
+        (repo / "tests" / "fixtures" / "legacy_demo" / "hero_walk.sh").read_text(
+            encoding="utf-8"
+        )
         + "\n# sua ngam\n",
         encoding="utf-8",
     )
-    _git(repo, "update-index", bit, "scripts/hero_walk.sh")
+    _git(repo, "update-index", bit, "tests/fixtures/legacy_demo/hero_walk.sh")
 
 
 @pytest.mark.parametrize("bit", ["--assume-unchanged", "--skip-worktree"])

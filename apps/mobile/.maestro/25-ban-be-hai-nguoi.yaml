@@ -1,8 +1,8 @@
-# Bạn bè, hai người, một điện thoại (M2): C gửi lời mời kết bạn tới D bằng số
-# điện thoại; D đăng nhập, đồng ý lời mời vào nhóm (từ flow 24) rồi đồng ý kết
+# Bạn bè, hai người, một điện thoại (M2): C gửi lời mời kết bạn tới D bằng tên
+# tài khoản; D đăng nhập, đồng ý lời mời vào nhóm (từ flow 24) rồi đồng ý kết
 # bạn; hai người là bạn trên máy chủ. Chạy SAU flow 24 trong cùng lượt và dùng
-# lại đúng cặp số C/D của nó — trạng thái ấy là điều kiện: D đã có tên «Ban QA»
-# (người mời đặt) nên tra được theo số, và có một lời mời vào «Hoi QA» đang chờ.
+# lại đúng cặp C/D của nó — trạng thái ấy là điều kiện: D mang tên «Ban QA» do
+# chính D đặt, và có một lời mời vào «Hoi QA» đang chờ.
 # Harness kiểm máy chủ sau flow: đăng nhập D qua curl → counts.friends = 1,
 # counts.contexts = 1 (kiem_may_chu_sau_25).
 appId: com.lakiet.rudi
@@ -15,21 +15,11 @@ appId: com.lakiet.rudi
     timeout: 150000
 - runFlow: _dang-xuat-neu-co.yaml
 # --- C: gửi lời mời kết bạn tới D ---------------------------------------------
-- tapOn: "Rủ Đi thôi!"
-- extendedWaitUntil:
-    visible: "Chào bạn"
-    timeout: 30000
-- tapOn: "Ô số điện thoại"
-- inputText: "${OTP_PHONE_C}"
-- hideKeyboard
-- tapOn: "Gửi mã"
-- extendedWaitUntil:
-    visible: "Nhập mã 6 số"
-    timeout: 60000
-- tapOn: "Ô nhập mã"
-- inputText: "${OTP_CODE}"
 - runFlow:
-    file: _bo-qua-so-thich.yaml
+    file: _dang-nhap-tai-khoan.yaml
+    env:
+      TK: "${TK_C}"
+      MK: "${MK_C}"
 # C có nhóm từ flow 24 → vào thẳng tab.
 - extendedWaitUntil:
     visible: "Khám phá"
@@ -54,29 +44,30 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Chưa có bạn nào"
     timeout: 30000
-- tapOn: "Thêm bạn bằng số điện thoại"
+- tapOn: "Thêm bạn bằng tên tài khoản"
 - extendedWaitUntil:
-    visible: "Ô số điện thoại bạn"
+    visible: "Ô username bạn"
     timeout: 30000
 - takeScreenshot: 25-c-nhap
-# Dạng số sai bị chặn ngay trên máy, không gọi máy chủ.
-- tapOn: "Ô số điện thoại bạn"
-- inputText: "12345"
+# Dạng username sai bị chặn ngay trên máy, không gọi máy chủ.
+- tapOn: "Ô username bạn"
+- inputText: "x!"
 - hideKeyboard
 - tapOn: "Tìm"
 - extendedWaitUntil:
-    visible: "Chưa đúng dạng số di động Việt Nam."
+    visible: "Tên tài khoản gồm 3–32 chữ, số, dấu chấm hoặc gạch dưới."
     timeout: 30000
 - takeScreenshot: 25-c-hong
-- tapOn: "Ô số điện thoại bạn"
+- tapOn: "Ô username bạn"
 - eraseText: 5
-- inputText: "${OTP_PHONE_D}"
+- inputText: "${TK_D}"
 - hideKeyboard
 - tapOn: "Tìm"
-# Tìm được đúng người mà flow 24 đã đặt tên — không phải một tên do mô hình hay
-# client đoán. Người tìm thấy hiện bằng đúng hàng người của danh sách bạn.
+# Tìm được đúng người theo username, mang đúng tên người ấy tự đặt — không phải
+# một tên do mô hình hay client đoán. Người tìm thấy hiện bằng đúng hàng người
+# của danh sách bạn.
 - extendedWaitUntil:
-    visible: "Tìm thấy theo số điện thoại"
+    visible: "Tìm thấy theo username"
     timeout: 30000
 - assertVisible: "Ban QA"
 - takeScreenshot: 25-c-tim-thay
@@ -120,23 +111,14 @@ appId: com.lakiet.rudi
     visible: "Rủ Đi thôi!"
     timeout: 30000
 # --- D: đồng ý vào nhóm rồi đồng ý kết bạn --------------------------------------
-- tapOn: "Rủ Đi thôi!"
-- extendedWaitUntil:
-    visible: "Chào bạn"
-    timeout: 30000
-- tapOn: "Ô số điện thoại"
-- inputText: "${OTP_PHONE_D}"
-- hideKeyboard
-- tapOn: "Gửi mã"
-- extendedWaitUntil:
-    visible: "Nhập mã 6 số"
-    timeout: 60000
-- tapOn: "Ô nhập mã"
-- inputText: "${OTP_CODE}"
 # D được mời nhưng chưa đồng ý: từ B8 (QA UI-073) người vào bằng lời mời đi qua
 # Sở thích trước, ô tên điền sẵn tên nhóm đặt; bỏ qua thì về tab Tin nhắn, hàng
 # «Hoi QA» nói ai mời (QA UI-080), với «Đồng ý vào nhóm» và «Từ chối».
-- runFlow: _bo-qua-so-thich.yaml
+- runFlow:
+    file: _dang-nhap-tai-khoan.yaml
+    env:
+      TK: "${TK_D}"
+      MK: "${MK_D}"
 - extendedWaitUntil:
     visible: "Hoi QA"
     timeout: 60000

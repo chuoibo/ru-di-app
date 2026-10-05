@@ -11,7 +11,7 @@ import test from "node:test";
 
 import { readdirSync, statSync } from "node:fs";
 import { nguonHienTai } from "../dist-test/rudi/nguon.js";
-import { cheSo } from "../dist-test/rudi/otp-dang-cho.js";
+import { cheSo } from "./fixtures/otp-legacy.mjs";
 
 const doc = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 

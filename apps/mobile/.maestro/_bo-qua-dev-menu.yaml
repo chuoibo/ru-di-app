@@ -43,6 +43,6 @@ appId: com.lakiet.rudi
 # thứ hai mà vẫn không có gì thì flow vẫn đỏ ở assert của chính nó.
 - runFlow:
     when:
-      notVisible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào|Chào bạn|Nhập mã 6 số|Tin nhắn|.*Development servers.*|.*This is the developer menu.*"
+      notVisible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào|Chào bạn|Tin nhắn|.*Development servers.*|.*This is the developer menu.*"
     commands:
       - launchApp

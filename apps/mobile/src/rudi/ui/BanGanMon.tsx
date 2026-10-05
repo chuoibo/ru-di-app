@@ -24,6 +24,7 @@ import { GHE, RONG_GHE, TEN_TREN, tenVua, theMonToiDa, viTriGhe, type NguoiQuanh
 import { Money } from "./Money";
 import { useMotion } from "./useMotion";
 import { toggleState } from "../../ui/a11y";
+import { gocBien } from "./goc-bien";
 
 export function BanGanMon({
   mon,
@@ -123,7 +124,7 @@ export function BanGanMon({
       {hinh ? (
         <>
           {hinh.ghe.filter((g) => !g.truoc).map(ghe)}
-          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transformOrigin: `${hinh.cx}px ${hinh.cy}px` }, kieuMat]}>
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transformOrigin: gocBien(hinh.cx, hinh.cy) }, kieuMat]}>
             <Svg height={hinh.cao} width={w}>
               {hinh.ban ? (
                 // A big group's long table, seen from above: its shadow, its

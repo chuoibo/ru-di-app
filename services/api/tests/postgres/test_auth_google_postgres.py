@@ -15,13 +15,13 @@ import uuid
 import anyio
 import httpx
 import pytest
+from legacy_auth_oracle import create_app
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_repository
 from app.api.google_identity import GoogleClaims, GoogleTokenInvalid
-from app.api.main import create_app
 from app.api.person_identity import KEY_ENV_VAR
 from app.api.repository import SqlAlchemyApiRepository
 from app.db.models import AccountIdentity, AccountSession, Person

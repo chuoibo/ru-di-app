@@ -39,8 +39,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import * as api from "../../dist-test/api.js";
-import { khoiDongNhomDemo } from "../../dist-test/rudi/nhom-demo.js";
-import { personById } from "../../dist-test/rudi/nhom-demo.js";
+import { khoiDongNhomDemo } from "../fixtures/group-world.mjs";
+import { personById } from "../fixtures/group-world.mjs";
 import { batPhienE2E } from "./phien-e2e.mjs";
 
 // The API this file talks to runs in `prod` and does not believe `X-Actor-ID`

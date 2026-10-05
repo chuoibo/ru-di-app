@@ -12,8 +12,7 @@
  * functions writing `PUT /people/{id}` would be two places to get the retry
  * key wrong, and the expense flow would keep the good one.
  */
-import { type Attempt, translatedAnonymous, translatedAsActor } from "../../api";
-import { chuanHoaSo } from "./danh-tinh";
+import { type Attempt, translatedAsActor } from "../../api";
 
 export type ThanhVien = {
   id: string;
@@ -59,59 +58,6 @@ export type Nhom = {
  */
 const QUYEN_ADMIN = "group_admin,member,advancer,recipient,batch_owner";
 
-const DANH_TINH_REFUSALS: Record<string, string> = {
-  identity_key_missing:
-    "Rủ Đi chưa sẵn sàng cho đăng nhập lúc này. Đây là lỗi phía Rủ Đi; thử lại sau ít phút.",
-  rate_limited:
-    "Thử lại sau một phút. Rủ Đi đang giới hạn số lần tra số điện thoại.",
-  phone_not_mobile: "Chưa đúng dạng số di động Việt Nam.",
-  phone_required: "Chưa gửi được số. Nhập lại rồi thử lần nữa.",
-};
-
-/**
- * The person id for a telephone number (F01, and bug-140342).
- *
- * The derivation used to be arithmetic in `danh-tinh.ts` and is now a request,
- * for one reason: it had to become keyed, and there is nowhere on this device
- * to keep a key. `person_identity.py` carries the measurement -- an id was
- * reversible back into its number at 257,316 candidates per second.
- *
- * So the digits now leave the device, which is a real cost and is why the
- * screen's own copy had to change with this call rather than after it. They go
- * in a POST body and not in a path, so uvicorn's access log does not see them,
- * and the server stores nothing.
- *
- * No idempotency key. The call writes nothing -- it is a pure function of the
- * number and the server's key -- so keying it would put a read into the
- * server's attempt store to protect a retry that was already safe.
- *
- * No actor header either, and that one is not an oversight: somebody signing
- * in does not have an id yet, which is the thing being asked for.
- *
- * Normalises before sending rather than shipping whatever is in the field. The
- * server normalises too and would reach the same answer, but sending the
- * canonical form means a stray space never travels, and it keeps the two
- * copies of the rule honest -- if they ever disagree, they disagree here at
- * one call site instead of silently across every sign-in.
- */
-export async function layIdTuSo(raw: string): Promise<string> {
-  const so = chuanHoaSo(raw);
-  if (so === null) {
-    // The number itself is not in this message on purpose: a thrown message
-    // ends up in a console or in a bug report.
-    throw new Error("Số điện thoại không hợp lệ, không thể tạo danh tính.");
-  }
-  // Anonymous on purpose, and it is the one route where that is unarguable:
-  // this call is how the phone finds out which person id it has. There is
-  // nobody to act as yet, because asking is what produces them.
-  const wire = await translatedAnonymous<{ person_id: string }>(
-    DANH_TINH_REFUSALS,
-    "/identity/person-id",
-    { method: "POST", body: { phone: so } },
-  );
-  return wire.person_id;
-}
-
 const TAO_NHOM_REFUSALS: Record<string, string> = {
   person_not_registered:
     "Chưa có tên cho tài khoản này nên chưa mở được nhóm. Quay lại màn đăng ký và nhập tên hiển thị.",
@@ -143,7 +89,7 @@ export async function taoNhom(
 
 const MOI_REFUSALS: Record<string, string> = {
   person_not_registered:
-    "Người này chưa có tài khoản Rủ Đi, nên chưa mời được. Thêm lại bạn đó bằng ô phía trên.",
+    "Tài khoản này không còn trên Rủ Đi, nên chưa mời được. Kiểm tra lại username rồi thử lại.",
   membership_conflict: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
   duplicate_membership: "Người này đã ở trong nhóm hoặc đã được mời rồi.",
   // The name Go gives the same refusal (`repo/contexts.go`); without it the

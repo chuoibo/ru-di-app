@@ -99,7 +99,7 @@ Ba file: một ở lượt chính, hai ở làn limiter (lý do ở "Chưa phủ
 
 `parity/scenarios/w2/limiter/POST-friends-lookup-limit.yaml`, id `w2/limiter/post-friends-lookup-limit` (37 bước, `dev`, `lane: limiter`): 401 và `X-Actor-ID` hỏng không tốn lượt, middleware idempotency không tốn lượt, 30 lượt tới handler (`invalid_body`, `phone_required` với object lồng và mảng, `phone_not_mobile`, 404), lượt 31 là 429 `rate_limited` kể cả khi thân hỏng, 401 vẫn đi trước khi đã hết lượt, `POST /identity/person-id` vẫn 200 (limiter riêng).
 
-`parity/scenarios/w2/friends/prod-auth.yaml`: `anonymous_lookup` (401 `Missing bearer session`), `owner_lookup_unregistered` (404 qua bearer, tiêu 1 lượt).
+`parity/scenarios/w2/friends/prod-auth.yaml` từng có `anonymous_lookup` (401 `Missing bearer session`) và `owner_lookup_unregistered` (404 qua bearer, tiêu 1 lượt). ADR-0055 thay tra cứu theo số bằng tra cứu username GO-ONLY trong `accountauth`, nên hai bước này đã bỏ khỏi kịch bản (2026-10-05); phần còn lại của kịch bản vẫn chạy.
 
 ## Chưa phủ / lưu ý cho bản Go
 

@@ -5,8 +5,8 @@
 #
 # Every other Go test in this repository stops at a package boundary. This tier
 # starts a real stack -- PostgreSQL, the Python API for the routes Go still
-# proxies, and the Go core with the chat features on by default -- seeds synthetic
-# accounts through the real OTP flow, and then talks to it the way a phone
+# proxies, and the Go core with the chat features on by default -- creates synthetic
+# accounts through the managed registration flow, and then talks to it the way a phone
 # would. A case that passes here passes for a client.
 #
 # Four ways a tier like this reads green while measuring nothing. All refused:
@@ -79,7 +79,7 @@ state="$(dirname "${ready#READY: }")"
 [ -d "$state" ] || { echo "chat_e2e_stack.sh không trả thư mục state" >&2; exit 1; }
 echo "--- state: $state"
 
-echo "--- seed 22 tài khoản tổng hợp qua OTP thật"
+echo "--- dựng quan hệ cho 22 tài khoản tổng hợp đã đăng ký qua HTTP"
 node scripts/chat_e2e_seed.mjs "$state/connection.json"
 
 log="$(mktemp)"

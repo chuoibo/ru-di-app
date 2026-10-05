@@ -44,8 +44,15 @@ appId: com.lakiet.rudi
 # Màn Thả khoảnh khắc ở trạng thái chưa chọn ảnh (bộ chọn ảnh hệ thống không lái ở đây): chụp rồi lùi về tường.
 - tapOn: "Thả khoảnh khắc"
 - extendedWaitUntil:
-    visible: "Chọn ảnh"
+    visible: "Một khoảnh khắc cho nhóm"
     timeout: 30000
+# Màn 393dp (Pixel 5) để nút «Chọn ảnh» dưới ô chú thích, ngoài khung đầu.
+- scrollUntilVisible:
+    element:
+      text: "Chọn ảnh"
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
 - takeScreenshot: 32-tha-khoanh-khac
 - back
 - extendedWaitUntil:

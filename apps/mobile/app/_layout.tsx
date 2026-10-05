@@ -7,7 +7,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { diemVaoTuUrl, manDau } from "../src/rudi/duong-vao";
-import { datLoiMoiDen } from "../src/rudi/loi-moi-den";
 import { useRudiFonts } from "../src/rudi/fonts";
 import { stackAnimation } from "../src/rudi/motion";
 import { RudiSessionProvider, useRudiSession } from "../src/rudi/session";
@@ -101,14 +100,7 @@ function LegacyFragmentAdapter() {
       // checked before is the whole of the defect.
       if (!live) return;
       const diem = diemVaoTuUrl(url);
-      if (diem.kieu === "loi-moi") {
-        // The code goes through a module, never through a route param: a
-        // single-use bearer secret should not land in navigation state. See
-        // `src/rudi/loi-moi-den.ts`.
-        datLoiMoiDen(diem.ma);
-        router.replace("/moi" as never);
-        return;
-      }
+
       if (diem.kieu !== "doi-huong") return;
       // «welcome» from the URL alone becomes «back where you were» when a
       // session survived the restart. Same function `app/index.tsx` uses.
@@ -129,11 +121,7 @@ function LegacyFragmentAdapter() {
     // after a single decision, and this listener must outlive it.
     const sub = Linking.addEventListener("url", ({ url }) => {
       const diem = diemVaoTuUrl(url);
-      if (diem.kieu === "loi-moi") {
-        datLoiMoiDen(diem.ma);
-        router.replace("/moi" as never);
-        return;
-      }
+
       if (diem.kieu === "doi-huong") router.replace(diem.toi as never);
     });
     return () => sub.remove();

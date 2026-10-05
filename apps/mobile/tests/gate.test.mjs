@@ -102,7 +102,9 @@ function expandArguments(argumentText) {
 
 /** The expanded argument vector for one gate, by script name. */
 function runnerFiles(gate) {
-  return expandArguments(runnerArgumentText(manifest.scripts[gate]));
+  // This is a Node option, not a filename. Unknown flags still reach the
+  // file checks below rather than being silently accepted.
+  return expandArguments(runnerArgumentText(manifest.scripts[gate])).filter(arg => arg !== "--test-concurrency=1");
 }
 
 /** The two scripts that invoke `node --test`, by name. */

@@ -19,6 +19,7 @@ Màn chat của một nhóm hay của hai người. Ngoài nhắn tin, đây là
 
 1. Bấm dấu cộng «Thêm vào cuộc trò chuyện» ở bên trái ô soạn tin.
 2. Khay có «Ảnh», «Sticker», «Bình chọn», «Tờ hẹn» ở nhóm và chat hai người; «Tờ giấy» chỉ có khi hai bạn đã bật trong sổ.
+   Để gửi ảnh vào nhóm hay chat hai người, bấm «Ảnh» và chọn ảnh trên thiết bị.
 3. Bấm lại nút đó (lúc này là dấu đóng) để cất khay.
 
 ## Tạo một bình chọn

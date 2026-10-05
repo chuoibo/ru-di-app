@@ -38,6 +38,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 THU_MUC_MOCKUP = ROOT / "product" / "RuDi_Mobile_Product_Mockups"
 THU_MUC_MAESTRO = ROOT / "apps" / "mobile" / ".maestro"
+THU_MUC_LICH_SU = ROOT / "apps/mobile/tests/fixtures/maestro-da-go"
 README_MOCKUP = THU_MUC_MOCKUP / "README.md"
 
 CHUA_CHUP = "CHƯA CHỤP"
@@ -232,10 +233,17 @@ class HangBang:
 
 
 def ten_da_khai_bao(thu_muc_maestro: Path = THU_MUC_MAESTRO) -> set[str]:
-    """Every ``takeScreenshot`` name any flow (including ``_`` sub-flows) declares."""
+    """Declared captures, including archived flows for historical boards.
+
+    A declaration never counts as a capture or current acceptance evidence.
+    """
     ten: set[str] = set()
-    for flow in sorted(thu_muc_maestro.glob("*.yaml")):
-        ten.update(_TAKE_SCREENSHOT_RE.findall(flow.read_text(encoding="utf-8")))
+    roots = [thu_muc_maestro]
+    if thu_muc_maestro == THU_MUC_MAESTRO:
+        roots.append(THU_MUC_LICH_SU)
+    for root in roots:
+        for flow in sorted(root.glob("*.yaml")):
+            ten.update(_TAKE_SCREENSHOT_RE.findall(flow.read_text(encoding="utf-8")))
     return ten
 
 

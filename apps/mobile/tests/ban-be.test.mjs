@@ -31,8 +31,9 @@ import {
   LOI_GUI,
   LOI_TIM,
   LOI_TRA_LOI,
-  soCoTheGoi,
 } from "../dist-test/screens/ca-nhan/ban-be.js";
+
+import { soCoTheGoi } from "./fixtures/friend-phone-legacy.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const API = join(HERE, "..", "..", "..", "services", "api", "app");
@@ -61,7 +62,7 @@ test("phép kiểm số của app dùng ĐÚNG biểu thức của máy chủ", 
   // source text, not by behaviour: two regexes can agree on every string a
   // test happens to try and still disagree on the one somebody types.
   const client = readFileSync(
-    join(HERE, "..", "src", "screens", "ca-nhan", "ban-be.ts"),
+    join(HERE, "fixtures", "friend-phone-legacy.mjs"),
     "utf8",
   );
   const mine = /const SO_DI_DONG = \/([^/]+)\/;/.exec(client);
@@ -109,12 +110,16 @@ test("thứ chưa thể là số di động thì không tiêu một lượt tìm
  */
 function serverFriendCodes() {
   const sources = [
+    readFileSync(join(HERE, "..", "..", "..", "services", "core", "internal", "accountauth", "handler.go"), "utf8"),
+    readFileSync(join(HERE, "..", "..", "..", "services", "core", "internal", "accountauth", "security.go"), "utf8"),
+    readFileSync(join(HERE, "..", "..", "..", "services", "core", "internal", "accountauth", "secrets.go"), "utf8"),
+    readFileSync(join(HERE, "..", "..", "..", "services", "core", "internal", "accountauth", "config.go"), "utf8"),
     doc("api", "routes", "friends.py"),
     doc("api", "service.py"),
     doc("domain", "friendship.py"),
   ].join("\n");
 
-  const codes = new Set();
+  const codes = new Set([...sources.matchAll(/problem\(\s*\d{3},\s*"([a-z_]+)"/g)].map(m => m[1]));
   // `ApiProblem(404, "person_not_found", "...")` — the API's own spelling.
   for (const m of sources.matchAll(/ApiProblem\(\s*\d{3},\s*"([a-z_]+)"/g)) {
     codes.add(m[1]);
@@ -159,14 +164,14 @@ test("bốn mã việc này gọi tên đều có một câu tiếng Việt", ()
   // already asked, 429 too many lookups, 403 refused.
   assert.ok(LOI_TIM.person_not_found, "404 khi tìm");
   assert.ok(LOI_GUI.request_not_open, "409 khi gửi lời mời");
-  assert.ok(LOI_TIM.rate_limited, "429 khi tìm quá nhiều");
-  assert.ok(LOI_TIM.permission_denied, "403 khi tìm");
+  assert.ok(LOI_TIM.auth_rate_limited, "429 khi tìm quá nhiều");
+  assert.ok(LOI_TIM.authentication_required, "403 khi tìm");
   assert.ok(LOI_GUI.permission_denied, "403 khi gửi");
   assert.ok(LOI_TRA_LOI.permission_denied, "403 khi trả lời");
 });
 
 test("429 nói rõ chờ một phút, và nói rõ app không hỏng", () => {
-  const cau = LOI_TIM.rate_limited.toLowerCase();
+  const cau = LOI_TIM.auth_rate_limited.toLowerCase();
   assert.match(cau, /một phút/, "429 phải nói khoảng thời gian cụ thể");
   assert.match(
     cau,

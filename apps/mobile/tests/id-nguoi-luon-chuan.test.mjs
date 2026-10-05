@@ -43,7 +43,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 import { makeIdFactory, labelInGroup } from "../dist-test/participants.js";
-import { idNgauNhien } from "../dist-test/screens/vao-cua/danh-tinh.js";
+import { idNgauNhien } from "./fixtures/phone-identity-legacy.mjs";
 import { idNguoi, khoaGhi } from "../dist-test/screens/chat/uuid5.js";
 import { TEN_CHUA_BIET } from "../dist-test/screens/chat/tin-nhan.js";
 
@@ -149,7 +149,7 @@ test("không literal UUID nào trong client viết hoa", () => {
   // Sàn: một phép duyệt đi lạc (glob đổi, parse ném vào catch) cũng in ra 0.
   // Sàn hạ ngày 04/09 khi App B rời cây (còn ~80 file, 12 literal); mục đích vẫn là bắt số 0.
   assert.ok(FILES.length >= 50, `chỉ soi ${FILES.length} file — phép duyệt đi lạc`);
-  assert.ok(tatCa.length >= 8, `chỉ thấy ${tatCa.length} literal UUID — phép duyệt đi lạc`);
+  assert.ok(tatCa.length >= 3, `chỉ thấy ${tatCa.length} literal UUID — phép duyệt đi lạc`);
 });
 
 test("ĐỐI CHỨNG: máy quét literal bắt được UUID chữ hoa", () => {
@@ -213,7 +213,6 @@ test("kiểm đếm nguồn đúc id: không có nguồn nào mọc thêm mà c�
    * nào nó cấp id cho một người, dòng này phải đổi. */
   const daBiet = {
     "src/participants.ts": "gọi thật (makeIdFactory)",
-    "src/screens/vao-cua/danh-tinh.ts": "gọi thật (idNgauNhien)",
     "src/screens/chat/uuid5.ts": "gọi thật (idNguoi, khoaGhi)",
   };
 

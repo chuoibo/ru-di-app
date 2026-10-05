@@ -1,4 +1,4 @@
-"""`scripts/genesis_session.py` against a real schema.
+"""`tests/fixtures/legacy_demo/genesis_session.py` against a real schema.
 
 The script is the only way into a fresh `prod` host, so "it probably works" is
 not good enough: if it is broken, the product is unenterable and the failure
@@ -32,7 +32,13 @@ from app.db.models import (
 
 pytestmark = pytest.mark.postgres
 
-SCRIPT = Path(__file__).resolve().parents[4] / "scripts" / "genesis_session.py"
+SCRIPT = (
+    Path(__file__).resolve().parents[4]
+    / "tests"
+    / "fixtures"
+    / "legacy_demo"
+    / "genesis_session.py"
+)
 
 
 def _load_script():

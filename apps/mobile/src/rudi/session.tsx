@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { datChuSoHuuBanNhap } from "./chat/ban-nhap-cong-cu";
-import { datTokenPhien } from "../api";
-import { dangXuat, khoiPhucPhien, type Phien } from "../phien";
+import { datTokenPhien, tokenPhienHienTai } from "../api";
+import { ngheThuHoiPhien } from "../danh-tinh";
+import { dangXuat, khoiPhucPhien, quenPhienDaThuHoi, type Phien } from "../phien";
 import { xoaPhienAsync } from "./kho";
 import { nguonHienTai, type Nguon } from "./nguon";
 
@@ -32,6 +33,13 @@ type RudiSessionApi = {
   datPhien: (phien: Phien) => void;
   /** Sign out: end the session on the server, forget it here. */
   resetSession: () => void;
+  /**
+   * Forget the session here only, at once: the server has already revoked it
+   * («đăng xuất tất cả»). Sending `DELETE /sessions/current` with a dead
+   * token would only earn a 401, and its late answer must not touch a
+   * session signed in after it.
+   */
+  quenTaiCho: () => void;
 };
 
 const RudiSessionContext = createContext<RudiSessionApi | null>(null);
@@ -72,6 +80,20 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // A bearer the server no longer accepts (ADR-0055 revokes every session on
+  // a password or email change, a Google link or unlink, a reset, «đăng xuất
+  // tất cả»): `src/api.ts` reports it once, already cleared from memory, and
+  // the app returns to the sign-in door instead of failing on every screen.
+  useEffect(
+    () =>
+      ngheThuHoiPhien((token) => {
+        datChuSoHuuBanNhap(null);
+        setPhien((dangCo) => (dangCo !== null && dangCo.token !== token ? dangCo : null));
+        void quenPhienDaThuHoi(token).catch(() => undefined);
+      }),
+    [],
+  );
+
   const api: RudiSessionApi = useMemo(() => ({
     nguon,
     phien,
@@ -95,6 +117,13 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
       const dangCo = phien;
       setPhien(null);
       if (dangCo !== null) void dangXuat(dangCo.person_id);
+    },
+    quenTaiCho: () => {
+      const token = phien?.token ?? tokenPhienHienTai();
+      datChuSoHuuBanNhap(null);
+      if (tokenPhienHienTai() === token) datTokenPhien(null);
+      setPhien(null);
+      if (token) void quenPhienDaThuHoi(token).catch(() => undefined);
     },
   }), [nguon, phien, phienDaDoc]);
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"mobile/services/core/internal/accountauth"
 	"mobile/services/core/internal/aiharness/metrics"
 	"mobile/services/core/internal/aiharness/trinho"
 	"mobile/services/core/internal/avatarfeed"
@@ -29,7 +30,7 @@ import (
 // migrate-chat`, `migrate-rag`, `migrate-diaries` and `migrate-community`
 // run).
 func sqlGo() []string {
-	sqls := append(chatassist.SchemaFiles(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(),
+	sqls := append(chatassist.SchemaFiles(), accountauth.SchemaSQL(), jobs.SchemaSQL(), chatlegacychange.SchemaSQL(), chatv2.SchemaSQL(),
 		metrics.SchemaSQL(), metrics.SchemaV2SQL(), metrics.SchemaV3SQL(), metrics.SchemaV4SQL(), SchemaSQL())
 	sqls = append(sqls, avatarfeed.SchemaFiles()...)
 	sqls = append(sqls, diary.SchemaFiles()...)

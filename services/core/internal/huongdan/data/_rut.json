@@ -406,7 +406,7 @@
       "canh": [
         {
           "den": "friends/add",
-          "nhan": "Thêm bạn bằng số điện thoại"
+          "nhan": "Thêm bạn bằng tên tài khoản"
         }
       ],
       "di_toi": [
@@ -423,7 +423,7 @@
         "Không có lời mời nào đang chờ",
         "Nhắn tin",
         "Nhắn tin cho …",
-        "Thêm bạn bằng số điện thoại",
+        "Thêm bạn bằng tên tài khoản",
         "Từ chối",
         "Đồng ý"
       ],
@@ -438,16 +438,14 @@
       "man": "friends/add",
       "nhan": [
         "Gửi lời mời",
-        "Số di động của bạn ấy",
-        "Số điện thoại",
-        "Số đuôi",
-        "Số đuôi … · …",
         "Thêm bạn",
-        "Thêm bạn bằng số điện thoại",
+        "Thêm bạn bằng username",
+        "Tên tài khoản",
+        "Tên tài khoản của bạn ấy",
         "Tìm",
-        "Tìm thấy theo số điện thoại",
+        "Tìm thấy theo username",
         "Về danh sách bạn",
-        "Ô số điện thoại bạn",
+        "Ô username bạn",
         "Đã gửi lời mời tới …"
       ],
       "tep": [
@@ -573,21 +571,15 @@
       ],
       "man": "groups/[id]/invite",
       "nhan": [
-        "Bạn gọi người này là gì",
-        "Gửi",
+        "@ten_cua_ban",
         "Gửi lời mời",
-        "Gửi …",
-        "Lời mời vào nhóm",
-        "Mời bằng số điện thoại",
+        "Mời bằng username",
         "Mời thêm người",
         "Mời vào nhóm",
-        "Số di động",
-        "Số di động của bạn ấy",
-        "Xem thành viên",
-        "Ô số điện thoại người được mời",
-        "Ô tên người được mời",
-        "Đã mời số này",
-        "Đã mời …"
+        "Tên tài khoản",
+        "Về nhóm",
+        "Đã gửi lời mời tới",
+        "Đã gửi lời mời tới …."
       ],
       "tep": [
         "app/groups/[id]/invite.tsx",
@@ -602,7 +594,7 @@
         },
         {
           "den": "groups/[id]/invite",
-          "nhan": "Mời bằng số điện thoại"
+          "nhan": "Mời bằng tên tài khoản"
         },
         {
           "den": "groups/[id]/wall",
@@ -630,8 +622,8 @@
         "Bỏ quyền quản trị của bạn",
         "Bỏ quyền quản trị của …",
         "Chưa đọc được danh sách thành viên",
-        "Mời bằng số điện thoại",
-        "Người được mời thấy lời mời ở tab Tin nhắn ngay khi đăng nhập bằng số đó, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.",
+        "Mời bằng tên tài khoản",
+        "Người được mời thấy lời mời ở tab Tin nhắn khi đăng nhập đúng tài khoản được mời, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.",
         "Quản trị",
         "Thành viên",
         "Tường kỷ niệm",
@@ -805,7 +797,7 @@
       "canh": [
         {
           "den": "friends/add",
-          "nhan": "Thêm bạn bằng số điện thoại"
+          "nhan": "Thêm bạn bằng tên tài khoản"
         },
         {
           "den": "friends/add",
@@ -822,7 +814,7 @@
         "Chưa đọc được danh sách bạn",
         "Hẹn người thương",
         "Rủ ai?",
-        "Thêm bạn bằng số điện thoại",
+        "Thêm bạn bằng tên tài khoản",
         "Thêm bạn khác"
       ],
       "tep": [
@@ -842,26 +834,29 @@
     {
       "canh": [
         {
-          "den": "moi",
-          "nhan": "Tôi có lời mời"
+          "den": "register",
+          "nhan": "Tạo tài khoản"
+        },
+        {
+          "den": "reset-password",
+          "nhan": "Quên mật khẩu?"
         }
       ],
       "di_toi": [
-        "moi",
-        "otp"
+        "register",
+        "reset-password"
       ],
       "man": "login",
       "nhan": [
+        "@ten_cua_ban",
+        "Bắt đầu lại",
         "Chào bạn",
-        "Gửi mã",
-        "Nhập số di động để nhận mã 6 số qua tin nhắn. Chưa có tài khoản thì Rủ Đi tạo luôn, không cần mật khẩu.",
-        "Số di động của bạn",
-        "Số điện thoại",
-        "Số điện thoại chỉ dùng để gửi mã và không hiển thị cho người khác.",
-        "Tiếp tục với Google",
-        "Tôi có lời mời",
-        "hoặc",
-        "Ô số điện thoại"
+        "Mật khẩu",
+        "Quên mật khẩu?",
+        "Tên tài khoản",
+        "Tạo tài khoản",
+        "Tạo tài khoản Google",
+        "Đăng nhập"
       ],
       "tep": [
         "app/login.tsx",
@@ -872,22 +867,17 @@
       "canh": [
         {
           "den": "friends/add",
-          "nhan": "Thêm bạn bằng số điện thoại"
+          "nhan": "Thêm bạn bằng tên tài khoản"
         },
         {
           "den": "groups/new",
           "nhan": "Tạo nhóm"
-        },
-        {
-          "den": "moi",
-          "nhan": "Tôi có lời mời"
         }
       ],
       "di_toi": [
         "friends/add",
         "groups/[id]/chat",
-        "groups/new",
-        "moi"
+        "groups/new"
       ],
       "man": "messages",
       "nhan": [
@@ -895,9 +885,8 @@
         "Chưa đọc được danh sách nhóm",
         "Mở cuộc trò chuyện với …",
         "Mở nhóm …",
-        "Thêm bạn bằng số điện thoại",
+        "Thêm bạn bằng tên tài khoản",
         "Tin nhắn",
-        "Tôi có lời mời",
         "Tạo nhóm",
         "Từ chối",
         "Từ chối lời mời vào nhóm …",
@@ -908,40 +897,6 @@
       "tep": [
         "app/(tabs)/messages.tsx",
         "src/rudi/screens/groups/Conversations.tsx"
-      ]
-    },
-    {
-      "canh": [
-        {
-          "den": "explore",
-          "nhan": "Vào nhóm"
-        },
-        {
-          "den": "welcome",
-          "nhan": "Để sau"
-        }
-      ],
-      "di_toi": [
-        "explore",
-        "welcome"
-      ],
-      "man": "moi",
-      "nhan": [
-        "Bạn được rủ đi",
-        "Chưa có lời mời? Nhờ một người trong nhóm gửi cho bạn. Đây là chủ ý, không phải thiếu sót: không ai tự tạo tài khoản trước khi có bạn rủ đi.",
-        "Dán mã ở đây",
-        "Lời mời",
-        "Mã lời mời",
-        "Nhận lời mời",
-        "Vào nhóm",
-        "Xong, bạn đã ở trong nhóm",
-        "Đã đăng nhập",
-        "Để sau",
-        "Đồng ý vào nhóm"
-      ],
-      "tep": [
-        "app/moi.tsx",
-        "src/rudi/screens/LoiMoi.tsx"
       ]
     },
     {
@@ -980,27 +935,6 @@
       "tep": [
         "app/moments/new.tsx",
         "src/rudi/screens/ky-niem/ShareMomentLive.tsx"
-      ]
-    },
-    {
-      "canh": [],
-      "di_toi": [
-        "login"
-      ],
-      "man": "otp",
-      "nhan": [
-        "Gửi lại mã",
-        "Nhập mã 6 số",
-        "Nhập đủ 6 số là tự kiểm. Mã có hiệu lực 5 phút.",
-        "Vé vào Rủ Đi",
-        "Đang kiểm mã...",
-        "Đã gửi tới",
-        "Đổi số",
-        "Đổi số điện thoại"
-      ],
-      "tep": [
-        "app/otp.tsx",
-        "src/rudi/screens/auth/Otp.tsx"
       ]
     },
     {
@@ -1563,8 +1497,78 @@
     {
       "canh": [
         {
+          "den": "login",
+          "nhan": "Đăng nhập"
+        }
+      ],
+      "di_toi": [
+        "login"
+      ],
+      "man": "register",
+      "nhan": [
+        "Dùng email khác",
+        "Email",
+        "Gửi mã khôi phục",
+        "Gửi mã xác minh",
+        "Khôi phục tài khoản",
+        "Mật khẩu",
+        "Mật khẩu mới",
+        "Nhập mã 6 số",
+        "Sửa thông tin",
+        "Tên tài khoản",
+        "Tạo tài khoản",
+        "Xin mã mới",
+        "Xác minh email",
+        "Đăng nhập",
+        "Đổi mật khẩu"
+      ],
+      "tep": [
+        "app/register.tsx",
+        "src/rudi/screens/auth/Register.tsx"
+      ]
+    },
+    {
+      "canh": [
+        {
+          "den": "login",
+          "nhan": "Đăng nhập"
+        }
+      ],
+      "di_toi": [
+        "login"
+      ],
+      "man": "reset-password",
+      "nhan": [
+        "Dùng email khác",
+        "Email",
+        "Gửi mã khôi phục",
+        "Gửi mã xác minh",
+        "Khôi phục tài khoản",
+        "Mật khẩu",
+        "Mật khẩu mới",
+        "Nhập mã 6 số",
+        "Sửa thông tin",
+        "Tên tài khoản",
+        "Tạo tài khoản",
+        "Xin mã mới",
+        "Xác minh email",
+        "Đăng nhập",
+        "Đổi mật khẩu"
+      ],
+      "tep": [
+        "app/reset-password.tsx",
+        "src/rudi/screens/auth/Register.tsx"
+      ]
+    },
+    {
+      "canh": [
+        {
           "den": "personalization",
           "nhan": "Sở thích"
+        },
+        {
+          "den": "settings/account",
+          "nhan": "Tài khoản & bảo mật"
         },
         {
           "den": "settings/da-chan",
@@ -1585,6 +1589,7 @@
       ],
       "di_toi": [
         "personalization",
+        "settings/account",
         "settings/da-chan",
         "settings/phien",
         "settings/ve-rudi",
@@ -1593,7 +1598,6 @@
       "man": "settings",
       "nhan": [
         "Ai được bình luận tường tôi",
-        "Cho tìm theo số điện thoại",
         "Cài đặt",
         "Giao diện",
         "Hồ sơ",
@@ -1603,8 +1607,8 @@
         "Quyền riêng tư",
         "Sở thích",
         "Tài khoản",
+        "Tài khoản & bảo mật",
         "Tên hiển thị và lời giới thiệu đổi ở «Chỉnh hồ sơ» trên trang Cá nhân; đăng xuất ở mục Tài khoản của trang đó.",
-        "Tìm theo số điện thoại",
         "Về Rủ Đi",
         "Xoá tài khoản",
         "Điều khoản và dữ liệu",
@@ -1615,6 +1619,46 @@
       "tep": [
         "app/settings/index.tsx",
         "src/rudi/screens/cai-dat/CaiDatScreen.tsx"
+      ]
+    },
+    {
+      "canh": [
+        {
+          "den": "login",
+          "nhan": "Đăng xuất tất cả thiết bị"
+        },
+        {
+          "den": "settings/phien",
+          "nhan": "Các phiên đăng nhập"
+        }
+      ],
+      "di_toi": [
+        "login",
+        "settings/phien"
+      ],
+      "man": "settings/account",
+      "nhan": [
+        "Cho bạn bè tìm theo username",
+        "Cho tìm theo username",
+        "Các phiên đăng nhập",
+        "Email mới",
+        "Gỡ liên kết Google",
+        "Gửi mã xác minh email",
+        "Khôi phục tài khoản không khôi phục khóa chat mã hóa trên thiết bị đã mất.",
+        "Mật khẩu hiện tại",
+        "Mật khẩu mới",
+        "Tài khoản & bảo mật",
+        "Tạo mật khẩu",
+        "Xác minh email mới",
+        "Xác thực lại",
+        "Xác thực lại trước khi đổi mật khẩu, email hoặc liên kết Google. Lượt xác thực có hiệu lực 5 phút.",
+        "Xác thực lại ở trên để liên kết Google.",
+        "Đăng xuất tất cả thiết bị",
+        "Đổi mật khẩu"
+      ],
+      "tep": [
+        "app/settings/account.tsx",
+        "src/rudi/screens/cai-dat/Account.tsx"
       ]
     },
     {
@@ -1686,7 +1730,7 @@
         "Xoá vĩnh viễn",
         "vào ô dưới để xác nhận (có dấu hay không đều được).",
         "Ô xác nhận xoá",
-        "Đăng nhập lại bằng cùng số điện thoại sẽ tạo một tài khoản mới, trắng: không nhóm cũ, không tin cũ.",
+        "Đăng ký lại bằng cùng email hoặc Google sẽ tạo một tài khoản mới: không nhóm cũ, không tin cũ.",
         "Ở lại"
       ],
       "tep": [

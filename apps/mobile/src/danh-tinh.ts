@@ -44,6 +44,38 @@ export function tokenPhienHienTai(): string | null {
   return tokenPhien;
 }
 
+/** Who to tell when the server says the bearer this app holds is no longer a session. */
+let khiPhienBiThuHoi: ((token: string) => void) | null = null;
+
+/**
+ * Listen for revoked sessions (ADR-0055: a password or email change, a Google
+ * link or unlink, a reset or «đăng xuất tất cả» revokes every other session).
+ * One listener, the session provider; returns the unsubscribe.
+ */
+export function ngheThuHoiPhien(nghe: (token: string) => void): () => void {
+  khiPhienBiThuHoi = nghe;
+  return () => {
+    if (khiPhienBiThuHoi === nghe) khiPhienBiThuHoi = null;
+  };
+}
+
+/** The bearer a request carried, read from the headers built here; `null` for an anonymous one. */
+export function tokenDaGui(headers: Record<string, string>): string | null {
+  const giaTri = headers["Authorization"];
+  return typeof giaTri === "string" && giaTri.startsWith("Bearer ") ? giaTri.slice("Bearer ".length) : null;
+}
+
+/**
+ * The server answered `401 authentication_required` to a request that carried
+ * `token`. Forget it only while it is still the one in force: a request sent
+ * before a rotation must not sign out the session that replaced it.
+ */
+export function baoPhienBiThuHoi(token: string): void {
+  if (token !== tokenPhien) return;
+  tokenPhien = null;
+  khiPhienBiThuHoi?.(token);
+}
+
 /** The bearer alone, for a token that is not (yet) the module's own: the web
  *  store hands a freshly issued one to the server so it can set the reload
  *  cookie. Kept here so this file stays the one place a bearer is spelled. */

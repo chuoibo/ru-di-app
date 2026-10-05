@@ -22,7 +22,7 @@ from pathlib import Path
 from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-GATE = REPO_ROOT / "scripts" / "check_demo_data.py"
+GATE = REPO_ROOT / "tests" / "fixtures" / "legacy_demo" / "check_demo_data.py"
 
 # What `make demo` actually produced on a clean stack on 2026-08-30, read back
 # out of Postgres. Kept here as the definition of "complete" so a test that goes
@@ -149,7 +149,7 @@ class DemoDataGate(unittest.TestCase):
         quietly lost a trip -- the failure this repository keeps finding.
         """
         expected = self.gate.expectations()
-        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        sys.path.insert(0, str(REPO_ROOT / "tests" / "fixtures" / "legacy_demo"))
         import seed_demo_data as seed
 
         from datetime import UTC, datetime
@@ -162,7 +162,7 @@ class DemoDataGate(unittest.TestCase):
 
     def test_a_fourth_trip_moves_the_expectation(self):
         """The drift guard, exercised rather than asserted about."""
-        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        sys.path.insert(0, str(REPO_ROOT / "tests" / "fixtures" / "legacy_demo"))
         import seed_demo_data as seed
 
         real = seed.outings

@@ -89,7 +89,7 @@ function ChonNguoiSong({ phien }: { phien: Phien }) {
         {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách bạn" /> : null}
         {trang.pha === "xong" && trang.ban.length === 0 ? (
           <EmptyState
-            action={{ label: "Thêm bạn bằng số điện thoại", onPress: () => router.push("/friends/add") }}
+            action={{ label: "Thêm bạn bằng tên tài khoản", onPress: () => router.push("/friends/add") }}
             body="Kết bạn trước để tìm thấy nhau ở đây. Sổ cặp đôi chỉ mở khi cả hai đồng ý."
             illustration={<Canh id="chua-co-ban" width={168} />}
             kind="first-use"

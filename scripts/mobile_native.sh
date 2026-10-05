@@ -36,71 +36,88 @@
 #
 # Không đo được thì thoát mã 2 và NÓI RA. Bỏ qua im lặng là cổng chết —
 # `make smoke` trong repo này đã học bài đó rồi.
+#
+# ## Cửa vào: tài khoản tổng hợp trên stack cô lập (ADR-0055)
+#
+# Bảng này từng đăng nhập bằng số điện thoại + mã debug của API (`--otp`). Cửa
+# ấy đã gỡ, và PR gỡ nó đã thu bảng về MỘT flow đăng nhập — các flow sản phẩm
+# (chat, bill, kỷ niệm, cộng đồng, chặn/báo cáo, xoá tài khoản, sổ hai người…)
+# thôi chạy mà cổng vẫn xanh. Giờ bảng chạy lại trọn vẹn trên tài khoản tự quản
+# do fixture tạo qua cửa HTTP thật của một stack dùng một lần; người gọi chuẩn
+# là `scripts/mobile_native_gate.sh` → `scripts/e2e_slice.sh --native`. Không
+# bao giờ chạy trên stack thật hay với tài khoản thật: harness đòi
+# RUDI_NATIVE_TEST_ACK=synthetic-only, tệp tài khoản trong thư mục tạm và
+# namespace `fixture_`.
 set -euo pipefail
 
 PORT="${MOBILE_METRO_PORT:-8095}"
 # Android emulators can reach host loopback through 10.0.2.2 when an ADB
 # transport reconnect drops reverse bindings. Physical devices keep localhost.
 METRO_HOST_NATIVE="${MOBILE_METRO_HOST_NATIVE:-localhost}"
-API_PORT="${MOBILE_API_PORT_NATIVE:-}"
+API_PORT="${MOBILE_API_PORT_NATIVE:-${RUDI_NATIVE_QA_PORT:-}}"
 SERIAL="${ANDROID_SERIAL:-}"
 FLOWS=".maestro"
 KEEP=0
-LIVE=0
-DANG_NHAP=0
-OTP_PHONE_SEED=""
-MA_LOI_MOI=""
 MODE="dev-client"
 LAP=1
-OTP=0
+# Lượt đầu tiên dùng người của lượt nào trong tệp tài khoản. Mặc định 1; một
+# stack giữ lại (`--keep`) chạy lại bảng bằng người CHƯA dùng của lượt sau.
+LUOT_TU=1
+# Từ ADR-0055 chỉ còn MỘT cửa vào: tài khoản tự quản (username + mật khẩu) trên
+# một stack QA CÔ LẬP. Cửa số điện thoại + mã debug (`--otp`), người seed
+# (`--live --otp-phone`) và lời mời lấy phiên (`--dang-nhap`) đã gỡ cùng cửa
+# của chúng. `--account` là chế độ duy nhất, nên cờ ấy chỉ còn để đọc cho rõ.
+ACCOUNT=1
 # Đối chứng âm cho phép đo bàn phím: tắt KeyboardAvoidingView trong bundle, và
 # do_ban_phim.py PHẢI hỏng. Xanh ở đây là thước đo mù.
 TAT_KAV=0
 # Nếp vẽ đè lên mọi route. Tắt nó là CHẨN ĐOÁN, không phải mặc định: một thứ
 # ship cho người dùng mà bảng không chạm tới thì không cổng nào canh nó.
 TAT_NEP=0
-# --ai (cùng --otp): API phải có khoá Gemini còn sống; chạy thêm flow 40 và kiểm thẻ AI grounded.
+# --ai: API phải có khoá Gemini còn sống; chạy thêm flow 40 và kiểm thẻ AI grounded.
 AI=0
-# --anh (cùng --otp): API phải đã nhập ảnh Wikimedia cho ít nhất một địa điểm;
+# --anh: API phải đã nhập ảnh Wikimedia cho ít nhất một địa điểm;
 # chạy thêm flow 38 (ảnh + credit trên màn). Stack chưa nhập ảnh thì flow ấy
 # không có gì để đo, nên cờ này KHÔNG bật mặc định — và khi bật, harness hỏi
 # máy chủ trước để phân biệt «chưa nhập ảnh» với «vẽ ảnh thiếu credit».
 ANH=0
-# Mã debug của API ở chế độ --otp. CHỈ hợp lệ khi API dùng log sender
-# (MOBILE_OTP_DEBUG_CODE cạnh gateway thật làm create_app từ chối khởi động).
-OTP_CODE="000000"
-OTP_PHONE=""
-OTP_PHONE_B=""
-OTP_PHONE_C=""
-OTP_PHONE_D=""
-# Số thứ năm (E): người MỚI cho flow 36. Flow 23 đã dùng B nên tới 36 B không còn
-# là tài khoản mới và bước cá nhân hoá không hiện (bảng 2026-09-06). L5 dùng E
-# cho chặn/xoá tài khoản vì cùng lý do: không phá dữ liệu C–D mà các kiểm sau bảng đọc.
-OTP_PHONE_E=""
-# Số thứ sáu (F): người của L5 và chỉ của L5 — bị chặn/báo cáo ở flow 45, rồi tự
-# xoá tài khoản ở flow 46. KHÔNG dùng lại E cho việc xoá: E là người của flow 36
-# và `kiem_may_chu_sau_36` còn đọc hồ sơ E SAU bảng, nên một tài khoản E đã bị
-# xoá sẽ làm phép kiểm ấy hỏi một người vừa được mint lại — xanh hay đỏ đều
-# không nói gì về sở thích ai vừa lưu.
-OTP_PHONE_F=""
+# Người của bảng, theo VAI chứ không theo tên: mỗi lượt sáu tài khoản tổng hợp
+# mới (fixture_n<lượt><a..f>) do `TestProvisionSyntheticAccountWorld` tạo qua
+# cửa HTTP thật (đăng ký → mã thư trong hộp thư mã hoá của stack cô lập → xác
+# minh), với mật khẩu sinh lúc chạy, và CHƯA đăng nhập lần nào — nên lần đăng
+# nhập đầu trên máy là lần đầu thật (`is_new_person`), như một số mới của cửa
+# OTP cũ. Mật khẩu chỉ đi qua `-e` của Maestro, không bao giờ nằm trong flow.
+#   A: flow 22 (tài khoản mới, nhóm đầu tiên) · B: flow 23 và 50, «người lạ» của
+#   các canary · C/D: hai người của nhóm «Hoi QA» (24 trở đi) · E: người MỚI
+#   của flow 36 · F: «Ut QA» của L5, bị chặn ở 45 rồi tự xoá ở 46 · G: người
+#   thăm dò môi trường (đối chứng dương đăng nhập, thăm dò khoá AI) — không lái
+#   máy, để không người nào của bảng mất «lần đầu».
+TK_A=""; TK_B=""; TK_C=""; TK_D=""; TK_E=""; TK_F=""; TK_G=""
+CREDENTIALS="${RUDI_TEST_ACCOUNT_CREDENTIALS:-}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --account) ACCOUNT=1; shift ;;
+    --credentials) CREDENTIALS="$2"; shift 2 ;;
     --port) PORT="$2"; shift 2 ;;
     --api-port) API_PORT="$2"; shift 2 ;;
     --serial) SERIAL="$2"; shift 2 ;;
     --flows) FLOWS="$2"; shift 2 ;;
     --keep) KEEP=1; shift ;;
-    --live) LIVE=1; shift ;;
-    --dang-nhap) DANG_NHAP=1; shift ;;
-    --otp-phone) OTP_PHONE_SEED="$2"; shift 2 ;;
     --expo-go) MODE="expo-go"; shift ;;
     --lap) LAP="$2"; shift 2 ;;
-    --otp) OTP=1; shift ;;
+    --luot-tu) LUOT_TU="$2"; shift 2 ;;
     --tat-kav) TAT_KAV=1; shift ;;
     --tat-nep) TAT_NEP=1; shift ;;
     --ai) AI=1; shift ;;
     --anh) ANH=1; shift ;;
+    --otp|--otp-phone|--live|--dang-nhap)
+      echo "Cửa điện thoại/lời mời đã gỡ (ADR-0055). Dùng --account trên stack QA cô lập: scripts/mobile_native_gate.sh." >&2
+      exit 64 ;;
+    -h|--help)
+      echo "scripts/mobile_native.sh --account --api-port <stack QA cô lập> --credentials <credentials.json trong thư mục tạm> [--serial emulator-5612] [--port 8095] [--lap N] [--flows .maestro] [--ai] [--anh] [--tat-kav] [--tat-nep] [--keep]"
+      echo "Cần RUDI_NATIVE_TEST_ACK=synthetic-only. Thường gọi qua scripts/mobile_native_gate.sh (dựng APK, stack, tài khoản)."
+      exit 0 ;;
     *) echo "tham số lạ: $1" >&2; exit 64 ;;
   esac
 done
@@ -109,35 +126,8 @@ if [[ ! "$METRO_HOST_NATIVE" =~ ^[A-Za-z0-9.-]+$ ]]; then
   echo "MOBILE_METRO_HOST_NATIVE cần hostname hoặc IPv4, không phải URL." >&2
   exit 64
 fi
-
-if [ "$LIVE" = 1 ]; then
-  [ -n "$OTP_PHONE_SEED" ] \
-    || { echo "--live cần --otp-phone <số của một người trong roster seed: soDienThoai(i) của apps/mobile/tools/seed-rudi-world-lib.mjs>" >&2; exit 64; }
-  [ -n "$API_PORT" ] \
-    || { echo "--live cần --api-port <cổng API prod đã chạy make demo-rudi, có mã debug $OTP_CODE>" >&2; exit 64; }
-fi
-
-if [ "$DANG_NHAP" = 1 ]; then
-  [ -n "$API_PORT" ] \
-    || { echo "--dang-nhap cần --api-port <cổng của API chạy ở chế độ prod>" >&2; exit 64; }
-  [ "$LIVE" = 0 ] \
-    || { echo "--dang-nhap và --live loại trừ nhau: một cái ghim danh tính, cái kia đi lấy" >&2; exit 64; }
-  [ "$LAP" = 1 ] \
-    || { echo "--lap >1 chưa hỗ trợ cùng --dang-nhap: mỗi lượt cần xoá phiên và mint lời mời mới" >&2; exit 64; }
-fi
-
-if [ "$AI" = 1 ] && [ "$OTP" = 0 ]; then
-  echo "--ai đi cùng --otp (flow 40 cần người và nhóm của flow 24)" >&2; exit 64
-fi
-if [ "$ANH" = 1 ] && [ "$OTP" != 1 ]; then
-  echo "--anh đi cùng --otp (flow 38 cần phiên của flow 22)" >&2; exit 64
-fi
-if [ "$OTP" = 1 ]; then
-  [ -n "$API_PORT" ] \
-    || { echo "--otp cần --api-port <cổng API prod có MOBILE_OTP_DEBUG_CODE=$OTP_CODE và log sender>" >&2; exit 64; }
-  [ "$LIVE" = 0 ] && [ "$DANG_NHAP" = 0 ] \
-    || { echo "--otp loại trừ --live và --dang-nhap: mỗi chế độ một cửa vào" >&2; exit 64; }
-fi
+[[ "$LAP" =~ ^[1-9]$ && "$LUOT_TU" =~ ^[1-9]$ ]] && [ $((LUOT_TU + LAP - 1)) -le 9 ] \
+  || { echo "--lap/--luot-tu nhận 1..9 (mỗi lượt bảy tài khoản riêng)." >&2; exit 64; }
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="$REPO/apps/mobile"
@@ -147,13 +137,53 @@ METRO_PID=""
 khong_do_duoc() { echo "KHÔNG ĐO ĐƯỢC: $*" >&2; exit 2; }
 hong()          { echo "ĐỎ: $*" >&2; exit 1; }
 
-# Bảng mặc định cũ chạy trên bản trải nghiệm (Team Đà Lạt, cửa
-# EXPO_PUBLIC_RUDI_FIXTURE). Ngày 2026-10-03 app lên production và bản trải
-# nghiệm bị gỡ cùng các màn của nó, nên không còn bảng nào chạy được mà không
-# có máy chủ: mọi bảng giờ đăng nhập như người thật.
-if [ "$OTP" = 0 ] && [ "$LIVE" = 0 ] && [ "$DANG_NHAP" = 0 ]; then
-  khong_do_duoc "không có bảng mặc định nữa (bản trải nghiệm đã gỡ 2026-10-03). Chạy: scripts/mobile_native.sh --otp --api-port <cổng API prod có MOBILE_OTP_DEBUG_CODE=$OTP_CODE>"
-fi
+# Tài khoản tổng hợp, chỉ trên stack QA cô lập. Không có lối nào để harness này
+# nhận một tài khoản thật: không cờ nhận mật khẩu, chỉ một tệp do fixture viết
+# trong thư mục tạm của hệ thống (ngoài mọi worktree), và mọi username phải nằm
+# trong namespace `fixture_` mà chỉ fixture cô lập tạo ra.
+[ "${RUDI_NATIVE_TEST_ACK:-}" = synthetic-only ] && [ -n "$API_PORT" ] \
+  || khong_do_duoc "cần stack QA cô lập, RUDI_NATIVE_TEST_ACK=synthetic-only và --api-port. Không dùng credentials thật trong harness. Chạy: scripts/mobile_native_gate.sh"
+[[ "$API_PORT" =~ ^[0-9]+$ && "$PORT" =~ ^[0-9]+$ ]] && [ "$API_PORT" != "$PORT" ] \
+  || khong_do_duoc "cổng QA không hợp lệ (api $API_PORT, metro $PORT)."
+[ -n "$CREDENTIALS" ] && [ -f "$CREDENTIALS" ] \
+  || khong_do_duoc "thiếu tệp tài khoản tổng hợp (--credentials, do TestProvisionSyntheticAccountWorld RUDI_TEST_ACCOUNT_WORLD=native viết)."
+TMP_GOC="$(python3 -c 'import tempfile;print(tempfile.gettempdir())')"
+case "$(cd "$(dirname "$CREDENTIALS")" && pwd)/" in
+  "$TMP_GOC"/*) ;;
+  *) khong_do_duoc "tệp tài khoản phải nằm trong thư mục tạm của hệ thống ($TMP_GOC), ngoài mọi worktree." ;;
+esac
+case "$(cd "$(dirname "$CREDENTIALS")" && pwd)/" in
+  "$REPO"/*) khong_do_duoc "tệp tài khoản nằm trong cây mã; credentials không được ở trong worktree." ;;
+esac
+# Đọc một trường của một người: `tk n1c username`. Không in mật khẩu ra log.
+tk() {
+  python3 - "$CREDENTIALS" "$1" "$2" <<'PYTK'
+import json, sys
+d = json.load(open(sys.argv[1]))
+v = d.get(sys.argv[2], {}).get(sys.argv[3], "")
+if sys.argv[3] == "username" and v and not v.startswith("fixture_"):
+    sys.exit("username ngoài namespace fixture_")
+print(v)
+PYTK
+}
+# Mật khẩu theo username, cho đăng nhập curl và cho `-e` của Maestro.
+mk_cua() {
+  python3 - "$CREDENTIALS" "$1" <<'PYMK'
+import json, sys
+d = json.load(open(sys.argv[1]))
+hit = [v["password"] for v in d.values() if v.get("username") == sys.argv[2]]
+print(hit[0] if hit else "")
+PYMK
+}
+python3 - "$CREDENTIALS" "$LUOT_TU" "$LAP" <<'PYCHECK' || khong_do_duoc "tệp tài khoản thiếu người cho $LAP lượt, hoặc có username ngoài namespace fixture_."
+import json, sys
+d = json.load(open(sys.argv[1]))
+for lap in range(int(sys.argv[2]), int(sys.argv[2]) + int(sys.argv[3])):
+    for who in "abcdefg":
+        v = d.get("n%d%s" % (lap, who)) or {}
+        assert str(v.get("username", "")).startswith("fixture_"), (lap, who)
+        assert len(v.get("password", "")) >= 8, (lap, who)
+PYCHECK
 
 # --- công cụ ---------------------------------------------------------------
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
@@ -183,6 +213,14 @@ echo "máy: $ANDROID_SERIAL"
 # giữ sau `--expo-go` cho máy chưa dựng được APK.
 if [ "$MODE" = "dev-client" ]; then
   APP_ID="com.lakiet.rudi"
+  # Cổng (`mobile_native_gate.sh`) dựng APK từ CÂY NÀY rồi trao đường dẫn ở đây:
+  # một APK cài từ trước không chứng minh mã native của cây này.
+  if [ -n "${RUDI_NATIVE_APK:-}" ]; then
+    [ -f "$RUDI_NATIVE_APK" ] || khong_do_duoc "không thấy APK $RUDI_NATIVE_APK."
+    timeout 300 adb install -r "$RUDI_NATIVE_APK" >/dev/null \
+      || khong_do_duoc "không cài được $RUDI_NATIVE_APK lên $ANDROID_SERIAL."
+    echo "đã cài $(basename "$RUDI_NATIVE_APK") sha256 $(sha256sum "$RUDI_NATIVE_APK" | cut -c1-12)"
+  fi
   timeout 30 adb shell pm list packages 2>/dev/null | grep -q "^package:$APP_ID\$" \
     || khong_do_duoc "máy $ANDROID_SERIAL chưa cài dev client ($APP_ID). Dựng: cd apps/mobile && npx expo prebuild --platform android && (cd android && ./gradlew :app:assembleDebug -PreactNativeArchitectures=x86_64) rồi adb install -r."
   APP_VER="$(timeout 30 adb shell dumpsys package "$APP_ID" 2>/dev/null \
@@ -241,102 +279,111 @@ xoa_du_lieu_app() {
   # chạy flow; xem chỗ gọi.
 }
 
-# --- lời mời thật, cho lượt đăng nhập --------------------------------------
+# --- cửa tài khoản, trên stack QA cô lập ------------------------------------
 #
-# Cả bảng mặc định lẫn `--live` đều đi vòng qua cửa đăng nhập: một cái dùng
-# fixture, cái kia ghim sẵn danh tính vào bundle. Không cái nào chạm đường mà
-# NGƯỜI THẬT đi. Chế độ này dựng đúng đường đó: phiên đầu tiên bằng
-# `genesis_session.py` (cửa duy nhất ngoài HTTP trên một host sạch), rồi nhóm,
-# chuyến, và một lời mời ĐÍCH DANH — toàn bộ qua HTTP ở chế độ prod.
-#
-# Người vừa nhận lời mời là `invited`, chưa phải thành viên, nên máy chủ vẫn từ
-# chối dữ liệu nhóm. Thành viên duyệt là một bước riêng ở đây vì nó là một bước
-# riêng trong đời thật — và vì màn hình phải nói được hai câu khác nhau cho hai
-# trạng thái đó.
-# --- cửa OTP, cho lượt --otp -------------------------------------------------
-#
-# Không ghim danh tính, không mint lời mời: app đi đúng đường một người lạ đi —
-# gõ số, nhận mã, có phiên. Số sinh lúc chạy (mỗi lượt một số mới, vì người đã
-# có nhóm không còn thấy «Chưa có nhóm nào») và không bao giờ nằm trong file:
-# repo guard chặn số di động, và đó là ý đồ.
-sinh_so_di_dong() {
-  # 09 + 8 chữ số: hợp lệ với `chuanHoaSo` (đầu 3/5/7/8/9, chín số sau số 0).
-  # `10 ** 8` chứ không viết số: repo guard đọc chín chữ số liền là số tài khoản.
-  printf '09%08d' "$(( (RANDOM * 32768 + RANDOM) % (10 ** 8) ))"
-}
+# Không ghim danh tính, không mint lời mời: app đi đúng đường một người có tài
+# khoản đi — gõ username và mật khẩu, có phiên (POST /auth/login, ADR-0055).
+# Tài khoản do fixture tạo trước qua cửa đăng ký thật; mật khẩu sinh lúc chạy,
+# chỉ nằm trong tệp tạm của lượt này và trong `-e` của Maestro.
 
-# Đối chứng DƯƠNG môi trường, trước khi chạy flow: API này có nhận mã debug
-# không? Không kiểm thì một API thiếu MOBILE_OTP_DEBUG_CODE làm flow 22 đỏ ở bước
-# nhập mã, và màu đỏ đó đọc y hệt «app hỏng».
-kiem_ma_debug() {
-  local goc so id rc
+# Đối chứng DƯƠNG và ÂM môi trường, trước khi chạy flow: API này có cửa tài
+# khoản không, và nó có thật sự từ chối mật khẩu sai không? Không kiểm thì một
+# stack thiếu MOBILE_ACCOUNT_AUTH_ENABLED làm flow 22 đỏ ở bước đăng nhập, và
+# màu đỏ đó đọc y hệt «app hỏng». Dùng người G (thăm dò) để không ai của bảng
+# mất lần đăng nhập đầu.
+kiem_cua_tai_khoan() {
+  local goc rc tk_g mk_g
   goc="http://127.0.0.1:$API_PORT"
-  so="$(sinh_so_di_dong)"
-  id="$(curl -sS -X POST "$goc/auth/otp/request" -H 'Content-Type: application/json' \
-      -d "{\"phone\":\"$so\"}" \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin).get("challenge_id",""))' 2>/dev/null || true)"
-  [ -n "$id" ] || khong_do_duoc "API $API_PORT không cấp challenge OTP (thiếu route /auth/otp/request, hay API không chạy?)."
-  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/auth/otp/verify" \
-      -H 'Content-Type: application/json' \
-      -d "{\"challenge_id\":\"$id\",\"phone\":\"$so\",\"code\":\"$OTP_CODE\"}")"
-  [ "$rc" = "201" ] || khong_do_duoc "API $API_PORT không nhận mã debug $OTP_CODE (HTTP $rc). Chạy API với MOBILE_OTP_DEBUG_CODE=$OTP_CODE và log sender, ví dụ scripts/e2e_slice.sh --keep."
-  echo "API $API_PORT nhận mã debug: đối chứng dương môi trường qua"
+  tk_g="$TK_G"; mk_g="$(mk_cua "$tk_g")"
+  [ -n "$tk_g" ] && [ -n "$mk_g" ] || khong_do_duoc "tệp tài khoản không có người thăm dò G."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/auth/login" -H 'Content-Type: application/json' \
+      -d "$(python3 -c 'import json,sys;print(json.dumps({"username":sys.argv[1],"password":"sai-mat-khau-tong-hop"}))' "$tk_g")")"
+  [ "$rc" = "401" ] || khong_do_duoc "API $API_PORT không từ chối mật khẩu sai bằng 401 (HTTP $rc). Cửa tài khoản có bật không (MOBILE_ACCOUNT_AUTH_ENABLED=1)?"
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/auth/login" -H 'Content-Type: application/json' \
+      -d "$(python3 -c 'import json,sys;print(json.dumps({"username":sys.argv[1],"password":sys.argv[2]}))' "$tk_g" "$mk_g")")"
+  [ "$rc" = "201" ] || khong_do_duoc "API $API_PORT không nhận tài khoản tổng hợp của lượt này (HTTP $rc)."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/auth/otp/request" -H 'Content-Type: application/json' -d '{"phone":"0"}')"
+  [ "$rc" = "410" ] || hong "API $API_PORT còn cửa OTP (HTTP $rc, mong 410 account_door_retired)."
+  echo "API $API_PORT: mật khẩu sai 401, tài khoản tổng hợp 201, cửa OTP 410 — đối chứng môi trường qua"
 }
 
-# Đăng nhập một số qua curl với mã debug; in thân SessionResponse ra stdout.
-# Mỗi số có nhịp gửi lại 60s và trần 5 mã/15 phút — các bước kiểm sau flow đăng
-# nhập lại đúng những số flow vừa dùng, nên gặp 429 thì đợi 61s và thử lại MỘT
-# lần thay vì đọc nhịp chống dò thành «máy chủ hỏng».
-# Một phiên curl cho mỗi số trong một lượt. Hai kiểm máy chủ liền nhau trên
-# cùng số (24 rồi 25 với D) không xin mã hai lần: lần hai đã ăn nhịp 60 s của
-# lần một. Thân phiên được cache là bản lúc đăng nhập — `contexts` trong đó có
-# thể cũ; kiểm nào cần trạng thái mới thì hỏi máy chủ bằng token, đừng đọc lại
-# thân. Cache là FILE (tên = sha256 của số, không phải số): hàm này luôn được
-# gọi trong `$(...)`, tức một subshell, nên một mảng bash gán ở đây không bao
-# giờ tới được người gọi — lượt 8 của M3 đã xin mã hai lần dù «có cache».
+# Đăng nhập một tài khoản qua curl; in thân SessionResponse ra stdout.
+# Một phiên curl cho mỗi người trong một lượt: cửa đăng nhập giới hạn 10 lần mỗi
+# phút cho mỗi username, và mỗi lần đăng nhập là một phiên mới (máy chủ giữ 20).
+# Thân phiên được cache là bản lúc đăng nhập — `contexts` trong đó có thể cũ;
+# kiểm nào cần trạng thái mới thì hỏi máy chủ bằng token, đừng đọc lại thân.
+# Cache là FILE (tên = sha256 của username): hàm này luôn được gọi trong
+# `$(...)`, tức một subshell, nên một mảng bash gán ở đây không bao giờ tới được
+# người gọi — lượt 8 của M3 đã đăng nhập hai lần dù «có cache».
 PHIEN_CURL_DIR="$(mktemp -d)"
 
 dang_nhap_curl() {
-  local so="$1" goc id rc body lan tep ma khoa
-  khoa="$PHIEN_CURL_DIR/$(printf '%s' "$so" | sha256sum | cut -c1-32)"
+  local tk="$1" goc rc lan tep ma khoa mk
+  khoa="$PHIEN_CURL_DIR/$(printf '%s' "$tk" | sha256sum | cut -c1-32)"
   if [ -s "$khoa" ]; then
     cat "$khoa"
     return 0
   fi
+  mk="$(mk_cua "$tk")"
+  [ -n "$mk" ] || { echo "  (không có mật khẩu cho tài khoản này trong tệp của lượt)" >&2; return 1; }
   goc="http://127.0.0.1:$API_PORT"
   tep="$(mktemp)"
   for lan in 1 2; do
-    rc="$(curl -sS -o "$tep" -w '%{http_code}' -X POST "$goc/auth/otp/request" \
-        -H 'Content-Type: application/json' -d "{\"phone\":\"$so\"}")"
+    rc="$(curl -sS -o "$tep" -w '%{http_code}' -X POST "$goc/auth/login" -H 'Content-Type: application/json' \
+        -d "$(python3 -c 'import json,sys;print(json.dumps({"username":sys.argv[1],"password":sys.argv[2]}))' "$tk" "$mk")")"
     if [ "$rc" = "429" ] && [ "$lan" = 1 ]; then
-      # 60 s theo đồng hồ máy chủ; 61 s theo đồng hồ này đã hụt vài trăm ms
-      # (đồng hồ DB trong container lệch với WSL2). 66 s là đủ dư.
-      echo "  (số đang trong nhịp gửi lại 60s, đợi rồi thử lại)" >&2
-      sleep 66
+      echo "  (tài khoản chạm trần 10 lần đăng nhập/phút, đợi rồi thử lại)" >&2
+      sleep 61
       continue
     fi
-    if [ "$rc" != "202" ]; then
-      # Say which door refused: the phone cooldown, the per-IP window, or a
-      # transport error. «429 twice» told nobody anything.
+    if [ "$rc" != "201" ]; then
       ma="$(python3 -c 'import json,sys
 try: print(json.load(open(sys.argv[1])).get("code", "?"))
 except Exception: print("(không phải JSON)")' "$tep" 2>/dev/null)"
-      echo "  (xin mã lần $lan: HTTP $rc, code=$ma)" >&2
+      echo "  (đăng nhập lần $lan: HTTP $rc, code=$ma)" >&2
       rm -f "$tep"; return 1
     fi
-    # Mốc xin mã, để `cho_nhip_otp` biết một flow sắp xin lại cho cùng số có
-    # phải chờ hết nhịp 60 giây không.
-    date +%s > "$khoa.otp"
-    id="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("challenge_id",""))' "$tep")"
-    body="$(curl -sS -X POST "$goc/auth/otp/verify" -H 'Content-Type: application/json' \
-        -d "{\"challenge_id\":\"$id\",\"phone\":\"$so\",\"code\":\"$OTP_CODE\"}")"
+    cp "$tep" "$khoa"
+    cat "$tep"
     rm -f "$tep"
-    printf '%s' "$body" > "$khoa"
-    printf '%s' "$body"
     return 0
   done
   rm -f "$tep"
   return 1
+}
+
+# Đầu mỗi lượt: người D tự đặt tên «Ban QA» bằng đường sản phẩm (PATCH
+# /people/me), như một người đã dùng app rồi. Trước ADR-0055 tên ấy do người mời
+# đặt khi mời bằng số; lời mời bằng username không đặt tên ai nữa, và tên ấy là
+# thứ flow 24–29 dùng để nhận ra D. Đăng nhập này KHÔNG vào cache: thân phiên của
+# nó chưa có nhóm nào, và các phép kiểm sau bảng đọc `contexts` từ cache.
+dat_ten_d() {
+  local goc tok mk rc
+  goc="http://127.0.0.1:$API_PORT"
+  mk="$(mk_cua "$TK_D")"
+  tok="$(curl -sS -X POST "$goc/auth/login" -H 'Content-Type: application/json' \
+      -d "$(python3 -c 'import json,sys;print(json.dumps({"username":sys.argv[1],"password":sys.argv[2]}))' "$TK_D" "$mk")" \
+    | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  [ -n "$tok" ] || khong_do_duoc "D không đăng nhập được qua curl để tự đặt tên."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "$goc/people/me" -H "Authorization: Bearer $tok" \
+      -H 'Content-Type: application/json' -H "Idempotency-Key: qa-ten-d-$$-$RANDOM" \
+      -d '{"display_name":"Ban QA"}')"
+  [ "$rc" = "200" ] || khong_do_duoc "D không tự đặt được tên «Ban QA» (HTTP $rc)."
+}
+# Người của lượt N: username vào TK_*, và mảng `-e` cho Maestro (username +
+# mật khẩu của A–F). Mật khẩu không bao giờ in ra log của bảng.
+TK_THEM=()
+nap_nguoi_luot() {
+  local n="$1" vai bien
+  TK_THEM=()
+  for vai in a b c d e f g; do
+    bien="TK_$(printf '%s' "$vai" | tr a-z A-Z)"
+    printf -v "$bien" '%s' "$(tk "n$n$vai" username)"
+    [ -n "${!bien}" ] || khong_do_duoc "tệp tài khoản thiếu người n$n$vai."
+    [ "$vai" = g ] && continue
+    TK_THEM+=(-e "$bien=${!bien}" -e "MK_$(printf '%s' "$vai" | tr a-z A-Z)=$(mk_cua "${!bien}")")
+  done
+  echo "lượt $n: tài khoản $TK_A … $TK_F (mật khẩu sinh lúc chạy, không in)"
 }
 
 # Flow NN đã chạy trong lượt này chưa. Định nghĩa Ở ĐÂY, trước vòng lặp flow:
@@ -368,69 +415,27 @@ kiem_can_25() {
   return 1
 }
 
-# Sau flow 20 (--live): người seed vừa xem «Team Đà Lạt» trên máy. Hỏi máy chủ
-# với tư cách người đó — nhóm 8 người, phần và khoản sẽ nhận đúng bill Xóm Lèo chia 8, một đợt thu
-# đã phát với 7 nghĩa vụ — chứ không đọc từ màn hình. Contexts hỏi lại bằng token
-# (thân phiên cache có thể cũ).
-kiem_may_chu_sau_20() {
-  local goc body tok pid ctx so_nguoi chi so_khoan so_dot so_nv ket
-  goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_SEED")" \
-    || hong "sau flow 20: người seed không đăng nhập được qua curl (429 hai lần hoặc lỗi)."
-  ket="$(printf '%s' "$body" | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-print("%s|%s" % (d.get("token", ""), d.get("person_id", "")))')"
-  IFS='|' read -r tok pid <<< "$ket"
-  [ -n "$tok" ] && [ -n "$pid" ] || hong "sau flow 20: thân phiên của người seed không có token/person_id."
-  ket="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-nhom = [c for c in d.get("contexts", []) if c.get("display_name") == "Team Đà Lạt" and c.get("my_state") == "active"]
-print("%s|%s" % (nhom[0]["id"] if nhom else "", nhom[0].get("member_count", 0) if nhom else 0))')"
-  IFS='|' read -r ctx so_nguoi <<< "$ket"
-  [ -n "$ctx" ] && [ "$so_nguoi" = "8" ] \
-    || hong "sau flow 20: máy chủ không có «Team Đà Lạt» 8 người đang active cho người seed (ctx='$ctx', đếm=$so_nguoi)."
-  ket="$(curl -sS "$goc/people/$pid/finance" -H "Authorization: Bearer $tok" | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-print("%s|%s|%s" % (d.get("spend_vnd"), d.get("receivable_vnd"), d.get("expense_count")))')"
-  IFS='|' read -r chi nhan so_khoan <<< "$ket"
-  # spend_vnd là PHẦN của người này (bill 1.280.000đ chia đều 8), receivable là 7 phần kia.
-  [ "$chi" = "160000" ] && [ "$nhan" = "1120000" ] \
-    || hong "sau flow 20: máy chủ nói người seed chi '$chi' / sẽ nhận '$nhan' ($so_khoan khoản); mong 160000 / 1120000 từ bill Xóm Lèo chia 8."
-  ket="$(curl -sS "$goc/contexts/$ctx/batches" -H "Authorization: Bearer $tok" | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-b = [x for x in d.get("batches", []) if x.get("status") == "published"]
-print("%d|%s" % (len(b), b[0].get("obligation_count", "") if b else ""))')"
-  IFS='|' read -r so_dot so_nv <<< "$ket"
-  [ "${so_dot:-0}" -ge 1 ] && [ "$so_nv" = "7" ] \
-    || hong "sau flow 20: mong một đợt thu đã phát với 7 nghĩa vụ, máy chủ trả $so_dot đợt / '$so_nv' nghĩa vụ."
-  echo "máy chủ xác nhận: người seed trong «Team Đà Lạt» 8 người, phần 160.000đ và sẽ nhận 1.120.000đ ($so_khoan khoản), một đợt thu đã phát 7 nghĩa vụ"
-}
-
-# Sau flow 24: người được mời (OTP_PHONE_D) chưa từng mở app. Đăng nhập bằng số
-# đó qua curl và hỏi máy chủ nhóm nào đang chờ họ — nếu lời mời chỉ tồn tại trên
-# màn hình của người mời thì đây là chỗ nó lộ ra.
+# Sau flow 24: người được mời (TK_D) chưa từng mở app. Đăng nhập tài khoản đó
+# qua curl và hỏi máy chủ nhóm nào đang chờ họ — nếu lời mời chỉ tồn tại trên
+# màn hình của người mời thì đây là chỗ nó lộ ra. Và lời mời bằng username KHÔNG
+# được đổi tên người được mời: D vẫn mang đúng tên chính D đã đặt («Ban QA»).
 kiem_may_chu_sau_24() {
-  local body via ten
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" \
-    || hong "sau flow 24: người được mời (số D) không đăng nhập được qua curl (429 hai lần hoặc lỗi)."
+  local body via so_moi ten_nhom ten_nguoi
+  body="$(dang_nhap_curl "$TK_D")" \
+    || hong "sau flow 24: người được mời (D) không đăng nhập được qua curl."
   via="$(printf '%s' "$body" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
 # invited ngay sau flow 24; active nếu flow 25 cùng lượt đã cho D bấm «Đồng ý».
-moi = [c for c in d.get("contexts", []) if c.get("my_state") in ("invited", "active")]
+moi = [c for c in d.get("contexts", []) if c.get("my_state") in ("invited", "active") and c.get("kind") != "pair"]
 ten_nhom = moi[0]["display_name"] if moi else ""
 ten_nguoi = d.get("profile", {}).get("display_name", "")
 print("%d|%s|%s" % (len(moi), ten_nhom, ten_nguoi))')"
   IFS='|' read -r so_moi ten_nhom ten_nguoi <<< "$via"
   [ "$so_moi" = "1" ] && [ "$ten_nhom" = "Hoi QA" ] \
     || hong "sau flow 24: máy chủ không có «Hoi QA» cho người được mời (nhóm đếm=$so_moi, tên='$ten_nhom')."
-  ten="$ten_nguoi"
-  [ "$ten" = "Ban QA" ] || hong "sau flow 24: người được mời phải mang tên người mời đặt ('Ban QA'), máy chủ trả '$ten'."
-  echo "máy chủ xác nhận: người được mời (số D) đăng nhập thấy «Hoi QA» (mời hoặc đã vào), tên «Ban QA» do người mời đặt"
+  [ "$ten_nguoi" = "Ban QA" ] || hong "sau flow 24: người được mời phải giữ tên do chính họ đặt ('Ban QA'), máy chủ trả '$ten_nguoi' — lời mời đã ghi đè tên?"
+  echo "máy chủ xác nhận: người được mời (D) đăng nhập thấy «Hoi QA» (mời hoặc đã vào), tên «Ban QA» của chính D không bị lời mời đổi"
 }
 
 # Sau flow 25: D (số D) vừa đồng ý vào «Hoi QA» và đồng ý kết bạn với C trên máy.
@@ -438,7 +443,7 @@ print("%d|%s|%s" % (len(moi), ten_nhom, ten_nguoi))')"
 kiem_may_chu_sau_25() {
   local goc body tok ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" \
+  body="$(dang_nhap_curl "$TK_D")" \
     || hong "sau flow 25: D không đăng nhập được qua curl (429 hai lần hoặc lỗi)."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   [ -n "$tok" ] || hong "sau flow 25: D không đăng nhập được."
@@ -460,7 +465,7 @@ print("%s|%s|%s" % (c.get("friends"), c.get("contexts"), d.get("display_name", "
 kiem_may_chu_sau_26() {
   local goc body tok ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" \
+  body="$(dang_nhap_curl "$TK_D")" \
     || hong "sau flow 26: D không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   [ -n "$tok" ] || hong "sau flow 26: D không có token."
@@ -506,7 +511,7 @@ PY3
 kiem_may_chu_sau_27() {
   local goc body tok ctx ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" \
+  body="$(dang_nhap_curl "$TK_D")" \
     || hong "sau flow 27: D không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
@@ -548,7 +553,7 @@ PY3
 kiem_may_chu_sau_28() {
   local goc body tok ctx ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" \
+  body="$(dang_nhap_curl "$TK_D")" \
     || hong "sau flow 28: D không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
@@ -584,7 +589,7 @@ print(sum(int(b.get("confirmed_count") or 0) for b in d.get("batches", [])))' 2>
 kiem_may_chu_sau_29() {
   local goc body tok ctx ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" \
+  body="$(dang_nhap_curl "$TK_D")" \
     || hong "sau flow 29: D không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
@@ -619,7 +624,7 @@ else:
 kiem_may_chu_sau_32() {
   local goc body tok ctx ket album
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" \
+  body="$(dang_nhap_curl "$TK_D")" \
     || hong "sau flow 32: D không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
@@ -670,7 +675,7 @@ print("%d|%s" % (len(a), a[0].get("checkin_count") if a else ""))')"
 kiem_may_chu_sau_36() {
   local goc body tok ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_E")"
+  body="$(dang_nhap_curl "$TK_E")"
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("token",""))')"
   [ -n "$tok" ] || hong "sau flow 36: không đăng nhập được bằng số E để kiểm."
   ket="$(curl -sS -H "Authorization: Bearer $tok" "$goc/people/me" | python3 -c '
@@ -715,8 +720,8 @@ print("%s|%d" % (d.get("destination", {}).get("id"), len(d.get("places", []))))'
 kiem_may_chu_sau_33() {
   local goc body_c body_d tok_c tok_d id_c id_d ket
   goc="http://127.0.0.1:$API_PORT"
-  body_c="$(dang_nhap_curl "$OTP_PHONE_C")" || hong "sau flow 33: C không đăng nhập được qua curl."
-  body_d="$(dang_nhap_curl "$OTP_PHONE_D")" || hong "sau flow 33: D không đăng nhập được qua curl."
+  body_c="$(dang_nhap_curl "$TK_C")" || hong "sau flow 33: C không đăng nhập được qua curl."
+  body_d="$(dang_nhap_curl "$TK_D")" || hong "sau flow 33: D không đăng nhập được qua curl."
   tok_c="$(printf '%s' "$body_c" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   tok_d="$(printf '%s' "$body_d" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   id_c="$(printf '%s' "$body_c" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("person_id",""))')"
@@ -786,7 +791,7 @@ PYCHECK
 # đầu tiên có `photo_url` — hai bên đọc cùng một danh sách nên chỉ vào cùng một
 # chỗ. Lệch thì flow ĐỎ ở dòng «Ảnh của nhóm bạn», không im lặng.
 #
-# Đăng bằng phiên đang sống (OTP_PHONE của flow 22), không phải D: flow 38 chạy
+# Đăng bằng phiên đang sống (TK_A của flow 22), không phải D: flow 38 chạy
 # trên phiên ấy, và ảnh của nhóm chỉ hiện cho người trong nhóm.
 chuan_bi_anh_nhom_cho_38() {
   local goc body tok ctx cho anh url nguoi
@@ -795,9 +800,9 @@ chuan_bi_anh_nhom_cho_38() {
   # after flow 26 that is D (in «Hoi QA»), not the flow-22 person, whose own
   # group nobody else is in. Posting as the wrong person put the picture where
   # the driver could never see it (mini-board 2026-09-07, «Ảnh của nhóm bạn»
-  # never came up while the row sat in «Nhom OTP»).
-  nguoi="$OTP_PHONE"
-  if da_chay 26; then nguoi="$OTP_PHONE_D"; fi
+  # never came up while the row sat in «Nhom Moi QA»).
+  nguoi="$TK_A"
+  if da_chay 26; then nguoi="$TK_D"; fi
   body="$(dang_nhap_curl "$nguoi")" || hong "trước flow 38: không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
@@ -854,7 +859,7 @@ if d.get("kind") != "photo" or not d.get("place_id"):
 chuan_bi_anh_cho_34() {
   local goc body tok ctx anh url
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" || hong "trước flow 34: D không đăng nhập được qua curl."
+  body="$(dang_nhap_curl "$TK_D")" || hong "trước flow 34: D không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
 import json, sys
@@ -903,7 +908,7 @@ if d.get("kind") != "image" or not d.get("image_url"):
 kiem_may_chu_sau_34() {
   local goc body tok ctx ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_D")" || hong "sau flow 34: D không đăng nhập được qua curl."
+  body="$(dang_nhap_curl "$TK_D")" || hong "sau flow 34: D không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
 import json, sys
@@ -937,7 +942,7 @@ print("%d|%d|%s|%d" % (len(anh), len(hop_le), anh[0].get("body") if anh else "",
 kiem_may_chu_sau_37() {
   local goc body tok ctx ket so_sticker so_deleted so_reply tac_gia toi khac body_khac tok_khac rc
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_C")" \
+  body="$(dang_nhap_curl "$TK_C")" \
     || hong "sau flow 37: C không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   toi="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("person_id",""))')"
@@ -969,7 +974,7 @@ print("%d|%d|%d|%d|%s|%s" % (len(stickers), len(deleted), len(sach), len(replies
   [ "${so_reply:-0}" -ge 1 ] || hong "sau flow 37: không có tin nào trả lời đúng tin «Dep qua»."
   echo "máy chủ xác nhận: $so_sticker sticker, 1 tin đã xoá sạch nội dung, $so_reply tin trả lời trỏ đúng «Dep qua»"
   # Canary 1: người KHÁC (không phải tác giả sticker) xoá sticker → 403, và sticker vẫn còn.
-  if [ "$tac_gia" = "$toi" ]; then khac="$OTP_PHONE_D"; else khac="$OTP_PHONE_C"; fi
+  if [ "$tac_gia" = "$toi" ]; then khac="$TK_D"; else khac="$TK_C"; fi
   body_khac="$(dang_nhap_curl "$khac")" || hong "sau flow 37: người kia không đăng nhập được qua curl."
   tok_khac="$(printf '%s' "$body_khac" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   rc="$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE "$goc/contexts/$ctx/messages/$sticker_id" \
@@ -989,7 +994,7 @@ print("%d|%d|%d|%d|%s|%s" % (len(stickers), len(deleted), len(sach), len(replies
 kiem_may_chu_sau_39() {
   local goc body tok so_con hoi theme
   goc="http://127.0.0.1:$API_PORT"
-  if lai_la_c; then body="$(dang_nhap_curl "$OTP_PHONE_C")"; else body="$(dang_nhap_curl "$OTP_PHONE_D")"; fi
+  if lai_la_c; then body="$(dang_nhap_curl "$TK_C")"; else body="$(dang_nhap_curl "$TK_D")"; fi
   [ -n "$body" ] || hong "sau flow 39: không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ket="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
@@ -1014,7 +1019,7 @@ print("%d|%s" % (len(con), hoi[0].get("theme", "?") if hoi else "?"))')"
 kiem_may_chu_sau_41() {
   local goc lai kia body_lai body_kia tok_lai tok_kia id_lai ket so_pair so_mine ctx ten so_tin body_b id_b rc than
   goc="http://127.0.0.1:$API_PORT"
-  if lai_la_c; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then lai="$TK_C"; kia="$TK_D"; else lai="$TK_D"; kia="$TK_C"; fi
   body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 41: người lái không đăng nhập được qua curl."
   body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 41: người kia không đăng nhập được qua curl."
   tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
@@ -1039,7 +1044,7 @@ print(len([m for m in ms if m.get("kind") == "text" and m.get("body") == "Chao r
   [ "${so_tin:-0}" -ge 1 ] || hong "sau flow 41: cặp không có tin «Chao rieng» của người lái."
   echo "máy chủ xác nhận: người kia thấy đúng một cặp với người lái (tên «$ten»), «Chao rieng» nằm trong cặp"
   # Canary 1: B (flow 23) chưa là bạn của người lái → 404 đúng một câu, không lý do.
-  body_b="$(dang_nhap_curl "$OTP_PHONE_B")" || hong "sau flow 41: B không đăng nhập được qua curl."
+  body_b="$(dang_nhap_curl "$TK_B")" || hong "sau flow 41: B không đăng nhập được qua curl."
   id_b="$(printf '%s' "$body_b" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("person_id",""))')"
   [ -n "$id_b" ] || hong "sau flow 41: thân phiên của B không có person_id."
   than="$(mktemp)"
@@ -1066,7 +1071,7 @@ print(len([m for m in ms if m.get("kind") == "text" and m.get("body") == "Chao r
 chuan_bi_bai_cho_42() {
   local goc lai body tok anh url rc
   goc="http://127.0.0.1:$API_PORT"
-  if lai_la_c; then lai="$OTP_PHONE_C"; else lai="$OTP_PHONE_D"; fi
+  if lai_la_c; then lai="$TK_C"; else lai="$TK_D"; fi
   body="$(dang_nhap_curl "$lai")" || hong "trước flow 42: người lái không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   [ -n "$tok" ] || hong "trước flow 42: thân phiên không có token."
@@ -1109,7 +1114,7 @@ PYPNG
 kiem_may_chu_sau_42() {
   local goc lai kia body_lai body_kia tok_lai tok_kia id_lai ket bai_id anh_url so_bl so_tim co_bl body_b tok_b rc than
   goc="http://127.0.0.1:$API_PORT"
-  if lai_la_c; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then lai="$TK_C"; kia="$TK_D"; else lai="$TK_D"; kia="$TK_C"; fi
   body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 42: người lái không đăng nhập được qua curl."
   body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 42: người kia không đăng nhập được qua curl."
   tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
@@ -1134,7 +1139,7 @@ else:
   [ "$rc" = "200" ] || hong "sau flow 42: người kia (bạn) mở ảnh bài nhận HTTP $rc, mong 200."
   echo "máy chủ xác nhận: người kia đọc bài «Bai co anh QA» thấy $so_tim ❤, $so_bl bình luận, can_comment=true, ảnh 200"
   # Canary 1: B (flow 23, không phải bạn) mở ảnh → 404, cùng câu với ảnh không tồn tại.
-  body_b="$(dang_nhap_curl "$OTP_PHONE_B")" || hong "sau flow 42: B không đăng nhập được qua curl."
+  body_b="$(dang_nhap_curl "$TK_B")" || hong "sau flow 42: B không đăng nhập được qua curl."
   tok_b="$(printf '%s' "$body_b" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   than="$(mktemp)"
   rc="$(curl -sS -o "$than" -w '%{http_code}' "$goc$anh_url" -H "Authorization: Bearer $tok_b")"
@@ -1188,7 +1193,7 @@ PYPNG
 chuan_bi_story_cho_43() {
   local goc kia body tok anh url rc
   goc="http://127.0.0.1:$API_PORT"
-  if lai_la_c; then kia="$OTP_PHONE_D"; else kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then kia="$TK_D"; else kia="$TK_C"; fi
   body="$(dang_nhap_curl "$kia")" || hong "trước flow 43: người kia không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   [ -n "$tok" ] || hong "trước flow 43: thân phiên không có token."
@@ -1217,7 +1222,7 @@ chuan_bi_story_cho_43() {
 kiem_may_chu_sau_43() {
   local goc lai kia body_lai body_kia tok_lai tok_kia id_kia ket story_id anh_url da_xem chu_thich body_b tok_b rc than rc_flow
   goc="http://127.0.0.1:$API_PORT"
-  if lai_la_c; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then lai="$TK_C"; kia="$TK_D"; else lai="$TK_D"; kia="$TK_C"; fi
   body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 43: người lái không đăng nhập được qua curl."
   body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 43: người kia không đăng nhập được qua curl."
   tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
@@ -1241,7 +1246,7 @@ else:
   [ "$rc" = "200" ] || hong "sau flow 43: người lái (bạn) mở ảnh story nhận HTTP $rc, mong 200."
   echo "máy chủ xác nhận: người lái thấy story «Story QA» của người kia, all_seen=true, ảnh 200"
   # Canary 1: B không phải bạn → không thấy tác giả, ảnh 404 cùng câu với ảnh không tồn tại.
-  body_b="$(dang_nhap_curl "$OTP_PHONE_B")" || hong "sau flow 43: B không đăng nhập được qua curl."
+  body_b="$(dang_nhap_curl "$TK_B")" || hong "sau flow 43: B không đăng nhập được qua curl."
   tok_b="$(printf '%s' "$body_b" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ket="$(curl -sS "$goc/stories" -H "Authorization: Bearer $tok_b" | python3 -c '
 import json, sys
@@ -1283,11 +1288,9 @@ print("co" if any(n["author"]["id"] == sys.argv[1] for n in json.load(sys.stdin)
   rc="$(curl -sS -o /dev/null -w '%{http_code}' "$goc$anh_url" -H "Authorization: Bearer $tok_lai")"
   [ "$rc" = "404" ] || hong "sau flow 43: story hết hạn mà bạn vẫn mở được ảnh (HTTP $rc)."
   echo "máy chủ xác nhận: qua hạn thì story rời GET /stories của cả hai và ảnh đóng lại (404)"
-  # `_43b` tự đăng nhập bằng số C khi máy đã đăng xuất (flow 46 để lại trạng
-  # thái ấy), và các phép kiểm ở trên vừa xin mã cho chính số ấy qua curl. Chờ
-  # cho hết nhịp 60 giây, không thì màn hiện «Mã vừa được gửi» và cái đỏ ấy nói
-  # về nhịp chứ không nói về story.
-  cho_nhip_otp "$lai"
+  # `_43b` tự đăng nhập bằng tài khoản C khi máy đã đăng xuất (flow 46 để lại
+  # trạng thái ấy). Cửa mật khẩu không có nhịp gửi lại như mã OTP cũ, nên không
+  # còn phải chờ sau các lần đăng nhập curl ở trên.
   set +e; chay_flow "$FLOWS/_43b-story-het-han.yaml"; rc_flow=$?; set -e
   [ "$rc_flow" -eq 0 ] || hong "sau flow 43: máy vẫn vẽ vòng story đã hết hạn (flow _43b đỏ, rc=$rc_flow)."
   echo "máy xác nhận: mở lại app sau khi story qua hạn, dải không còn vòng của người kia"
@@ -1296,7 +1299,7 @@ print("co" if any(n["author"]["id"] == sys.argv[1] for n in json.load(sys.stdin)
 kiem_may_chu_sau_30() {
   local goc body tok ctx ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_C")" \
+  body="$(dang_nhap_curl "$TK_C")" \
     || hong "sau flow 30: C không đăng nhập được qua curl (429 hai lần hoặc lỗi)."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(printf '%s' "$body" | python3 -c '
@@ -1324,23 +1327,8 @@ print("%d|%d|%d" % (len(texts), len(polls), hearts))')"
 
 # --------------------------------------------------------------- L5 (ADR-0023)
 
-# Nhịp gửi lại OTP là 60 giây cho MỖI SỐ, và máy chủ không phân biệt curl với
-# máy: một flow xin mã cho số mà harness vừa xin bằng curl sẽ thấy «Mã vừa được
-# gửi. Đợi một chút rồi gửi lại.» rồi đỏ ở «Nhập mã 6 số». Chờ đúng phần còn
-# thiếu, không chờ mù 66 giây.
-cho_nhip_otp() {
-  local so="$1" khoa luc con
-  khoa="$PHIEN_CURL_DIR/$(printf '%s' "$so" | sha256sum | cut -c1-32).otp"
-  [ -s "$khoa" ] || return 0
-  luc="$(cat "$khoa")"
-  con=$(( 66 - ( $(date +%s) - luc ) ))
-  [ "$con" -gt 0 ] || return 0
-  echo "  (số này vừa xin mã, còn ${con}s nhịp gửi lại — chờ rồi mới lái máy)"
-  sleep "$con"
-}
-
 # Người lái các flow L5 — cùng luật với flow 42/43: C khi 37 đã chạy, D khi không.
-nguoi_lai_l5() { if lai_la_c; then printf '%s' "$OTP_PHONE_C"; else printf '%s' "$OTP_PHONE_D"; fi; }
+nguoi_lai_l5() { if lai_la_c; then printf '%s' "$TK_C"; else printf '%s' "$TK_D"; fi; }
 
 # Token và id của một số, qua phiên curl đã cache.
 tok_cua() {
@@ -1359,7 +1347,7 @@ ID_NGUOI_F=""
 CTX_CHAN_QA=""       # nhóm chung của người lái và F
 SO_DU_TRUOC_46=""    # sổ dư của nhóm ấy, đọc TRƯỚC khi F xoá tài khoản
 
-# Trước flow 45: dựng người F («Ut QA») bằng đường sản phẩm — đăng nhập OTP, đặt
+# Trước flow 45: dựng người F («Ut QA») bằng đường sản phẩm — đăng nhập tài khoản, đặt
 # tên, kết bạn với người lái, và vào chung một nhóm với người lái.
 #
 # Hai quan hệ ấy tách được hai hệ quả mà ADR-0023 §2.3 nói khác nhau: chặn làm
@@ -1372,8 +1360,8 @@ chuan_bi_cho_45() {
   lai="$(nguoi_lai_l5)"
   tok_lai="$(tok_cua "$lai")" || hong "trước flow 45: người lái không đăng nhập được qua curl."
   id_lai="$(id_cua "$lai")"
-  tok_f="$(tok_cua "$OTP_PHONE_F")" || hong "trước flow 45: F không đăng nhập được qua curl."
-  id_f="$(id_cua "$OTP_PHONE_F")"
+  tok_f="$(tok_cua "$TK_F")" || hong "trước flow 45: F không đăng nhập được qua curl."
+  id_f="$(id_cua "$TK_F")"
   [ -n "$tok_lai" ] && [ -n "$id_lai" ] && [ -n "$tok_f" ] && [ -n "$id_f" ] \
     || hong "trước flow 45: thiếu token hoặc id (lái «$id_lai», F «$id_f»)."
   ID_NGUOI_LAI="$id_lai"; ID_NGUOI_F="$id_f"
@@ -1419,8 +1407,8 @@ chuan_bi_cho_46() {
   [ -n "$CTX_CHAN_QA" ] || hong "trước flow 46: chưa có «Nhom Chan QA» (flow 45 chưa chạy?)."
   lai="$(nguoi_lai_l5)"
   tok_lai="$(tok_cua "$lai")" || hong "trước flow 46: người lái không đăng nhập được qua curl."
-  tok_f="$(tok_cua "$OTP_PHONE_F")" || hong "trước flow 46: F không đăng nhập được qua curl."
-  id_lai="$(id_cua "$lai")"; id_f="$(id_cua "$OTP_PHONE_F")"
+  tok_f="$(tok_cua "$TK_F")" || hong "trước flow 46: F không đăng nhập được qua curl."
+  id_lai="$(id_cua "$lai")"; id_f="$(id_cua "$TK_F")"
   # Một tin nhắn của F, để sau khi xoá còn chỗ ĐỌC ĐƯỢC cái tên ẩn danh: roster
   # chỉ liệt kê người chưa rời, nên nó không phải nơi kiểm điều đó.
   curl -sS -o /dev/null -X POST "$goc/contexts/$CTX_CHAN_QA/messages" \
@@ -1473,9 +1461,9 @@ PYCHI
   echo "trước flow 46: F đã ứng 120.000đ trong «Nhom Chan QA»; sổ dư trước khi xoá đã ghi lại"
 }
 
-# Sau flow 44: hai mục «Quyền riêng tư» đi thẳng lên máy chủ. Máy đã TẮT công
-# tắc tìm theo số và để nguyên vậy — hỏi lại bằng curl, rồi đo cả hai chiều: số
-# ấy tra không ra (đối chứng âm), bật lại thì ra (đối chứng dương). Và đo pixel
+# Sau flow 44: hai mục quyền riêng tư đi thẳng lên máy chủ. Máy đã TẮT công
+# tắc tìm theo username và để nguyên vậy — hỏi lại bằng curl, rồi đo cả hai
+# chiều: username ấy tra không ra (đối chứng âm), bật lại thì ra (đối chứng dương). Và đo pixel
 # ảnh «Tối»: một nhãn được chọn không chứng minh màn đổi màu.
 #
 # `wall_comment_policy` KHÔNG kiểm ở đây: `kiem_may_chu_sau_42` sở hữu cột ấy và
@@ -1485,10 +1473,12 @@ kiem_may_chu_sau_44() {
   goc="http://127.0.0.1:$API_PORT"
   lai="$(nguoi_lai_l5)"
   tok_lai="$(tok_cua "$lai")" || hong "sau flow 44: người lái không đăng nhập được qua curl."
-  ket="$(curl -sS "$goc/people/me" -H "Authorization: Bearer $tok_lai" \
-    | python3 -c 'import json,sys;print(str(json.load(sys.stdin).get("discoverable_by_phone")).lower())')"
+  # Từ ADR-0055 công tắc là «Cho tìm theo username» ở Tài khoản & bảo mật, và
+  # máy chủ giữ nó ở tài khoản (GET /people/me/account), không ở hồ sơ.
+  ket="$(curl -sS "$goc/people/me/account" -H "Authorization: Bearer $tok_lai" \
+    | python3 -c 'import json,sys;print(str(json.load(sys.stdin).get("discoverable_by_username")).lower())')"
   [ "$ket" = "false" ] \
-    || hong "sau flow 44: máy chủ nói discoverable_by_phone=«$ket», mong false (máy vừa tắt công tắc)."
+    || hong "sau flow 44: máy chủ nói discoverable_by_username=«$ket», mong false (máy vừa tắt công tắc)."
   ket="$(curl -sS "$goc/sessions" -H "Authorization: Bearer $tok_lai" | python3 -c '
 import json, sys
 ss = json.load(sys.stdin).get("sessions", [])
@@ -1497,19 +1487,19 @@ print("%d|%s" % (len(ss), str(any(s.get("current") for s in ss)).lower()))')"
   [ "${so_phien:-0}" -ge 1 ] && [ "$co_hien" = "true" ] \
     || hong "sau flow 44: GET /sessions trả $so_phien phiên, current=$co_hien; mong ≥1 và true."
   # Đối chứng âm rồi dương, trên chính route mà màn «Thêm bạn» dùng.
-  tok_b="$(tok_cua "$OTP_PHONE_B")" || hong "sau flow 44: B không đăng nhập được qua curl."
+  tok_b="$(tok_cua "$TK_B")" || hong "sau flow 44: B không đăng nhập được qua curl."
   rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/friends/lookup" \
       -H "Authorization: Bearer $tok_b" -H 'Content-Type: application/json' \
-      -d "{\"phone\":\"$lai\"}")"
-  [ "$rc" = "404" ] || hong "canary 44: người đã tắt tìm-theo-số vẫn tra ra (HTTP $rc, mong 404)."
-  curl -sS -o /dev/null -X PATCH "$goc/people/me" -H "Authorization: Bearer $tok_lai" \
+      -d "{\"username\":\"$lai\"}")"
+  [ "$rc" = "404" ] || hong "canary 44: người đã tắt tìm-theo-username vẫn tra ra (HTTP $rc, mong 404)."
+  curl -sS -o /dev/null -X PUT "$goc/people/me/account/discovery" -H "Authorization: Bearer $tok_lai" \
       -H 'Content-Type: application/json' -H "Idempotency-Key: qa44-bat-lai-$$-$RANDOM" \
-      -d '{"discoverable_by_phone":true}'
+      -d '{"discoverable_by_username":true}'
   rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/friends/lookup" \
       -H "Authorization: Bearer $tok_b" -H 'Content-Type: application/json' \
-      -d "{\"phone\":\"$lai\"}")"
+      -d "{\"username\":\"$lai\"}")"
   [ "$rc" = "200" ] || hong "canary 44: bật lại rồi mà vẫn không tra ra (HTTP $rc, mong 200) — cờ này không phải thứ đang chặn."
-  echo "máy chủ xác nhận: tắt công tắc thì số tra không ra (404), bật lại thì ra (200); $so_phien phiên, có phiên hiện tại"
+  echo "máy chủ xác nhận: tắt công tắc thì username tra không ra (404), bật lại thì ra (200); $so_phien phiên, có phiên hiện tại"
   # «Tối» là một nhãn cho tới khi có ai đo màu. Góc trên trái của ảnh là nền màn.
   anh="$(find "$ANH_DIR" -name '44-giao-dien-toi.png' -print 2>/dev/null | sort | tail -1)"
   [ -n "$anh" ] || hong "sau flow 44: không tìm thấy ảnh 44-giao-dien-toi.png trong $ANH_DIR."
@@ -1571,10 +1561,10 @@ kiem_may_chu_sau_45() {
   local goc lai kia tok_lai tok_f id_lai id_f id_kia id_b ket than than_kia rc so_bao_cao
   goc="http://127.0.0.1:$API_PORT"
   lai="$(nguoi_lai_l5)"
-  if lai_la_c; then kia="$OTP_PHONE_D"; else kia="$OTP_PHONE_C"; fi
+  if lai_la_c; then kia="$TK_D"; else kia="$TK_C"; fi
   tok_lai="$(tok_cua "$lai")" || hong "sau flow 45: người lái không đăng nhập được qua curl."
-  tok_f="$(tok_cua "$OTP_PHONE_F")" || hong "sau flow 45: F không đăng nhập được qua curl."
-  id_lai="$(id_cua "$lai")"; id_f="$(id_cua "$OTP_PHONE_F")"; id_kia="$(id_cua "$kia")"
+  tok_f="$(tok_cua "$TK_F")" || hong "sau flow 45: F không đăng nhập được qua curl."
+  id_lai="$(id_cua "$lai")"; id_f="$(id_cua "$TK_F")"; id_kia="$(id_cua "$kia")"
   ket="$(curl -sS "$goc/people/me/blocked" -H "Authorization: Bearer $tok_lai" \
     | python3 -c 'import json,sys;print(len(json.load(sys.stdin).get("blocked", [])))')"
   [ "$ket" = "0" ] || hong "sau flow 45: người lái còn chặn $ket người, mong 0 (máy đã bỏ chặn)."
@@ -1608,7 +1598,7 @@ PYRP
   echo "máy chủ xác nhận: danh sách chặn rỗng lại, F không còn là bạn, hồ sơ F vẫn mở (nhóm chung), $so_bao_cao hàng báo cáo trong DB"
   # Canary: cùng một câu 404 cho «bị chặn rồi bỏ chặn» và cho «người lạ».
   than="$(mktemp)"; than_kia="$(mktemp)"
-  id_b="$(id_cua "$OTP_PHONE_B")"
+  id_b="$(id_cua "$TK_B")"
   [ -n "$id_b" ] || hong "canary 45: không có id của B để làm «người lạ»."
   rc="$(curl -sS -o "$than" -w '%{http_code}' -X POST "$goc/people/$id_lai/dm" \
       -H "Authorization: Bearer $tok_f" -H "Idempotency-Key: qa45-dm-$$-$RANDOM")"
@@ -1636,7 +1626,7 @@ kiem_may_chu_sau_46() {
   [ -n "$SO_DU_TRUOC_46" ] || hong "sau flow 46: không có sổ dư trước khi xoá để so."
   lai="$(nguoi_lai_l5)"
   tok_lai="$(tok_cua "$lai")" || hong "sau flow 46: người lái không đăng nhập được qua curl."
-  tok_f_cu="$(tok_cua "$OTP_PHONE_F")" || hong "sau flow 46: không đọc được phiên cũ của F từ cache."
+  tok_f_cu="$(tok_cua "$TK_F")" || hong "sau flow 46: không đọc được phiên cũ của F từ cache."
   # 1. Hồ sơ đã đi, và đi theo cách KHÔNG phân biệt được với một id lạ: xoá tài
   # khoản gỡ mọi quan hệ nên cửa hồ sơ từ chối ở đúng chỗ nó vẫn từ chối (403).
   # Một mã riêng cho «đã xoá» sẽ nói cho người hỏi biết id nào TỪNG là người.
@@ -1683,13 +1673,10 @@ else:
 canary_dm_bi_chan() {
   local ra rc dong
   [ -n "$ID_NGUOI_LAI" ] || hong "canary DM: chưa biết id người lái — chuan_bi_cho_45 chưa chạy."
-  cho_nhip_otp "$OTP_PHONE_F"
   ra="$(mktemp)"
   set +e
-  maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" \
-    -e OTP_PHONE="$OTP_PHONE" -e OTP_PHONE_B="$OTP_PHONE_B" -e OTP_PHONE_C="$OTP_PHONE_C" \
-    -e OTP_PHONE_D="$OTP_PHONE_D" -e OTP_PHONE_E="$OTP_PHONE_E" -e OTP_PHONE_F="$OTP_PHONE_F" \
-    -e OTP_CODE="$OTP_CODE" -e AI="$AI" -e ID_NGUOI_LAI="$ID_NGUOI_LAI" \
+  maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" "${TK_THEM[@]}" \
+    -e AI="$AI" -e ID_NGUOI_LAI="$ID_NGUOI_LAI" \
     --test-output-dir "$ANH_DIR" "$FLOWS/_canary-dm-bi-chan.yaml" > "$ra" 2>&1
   rc=$?
   set -e
@@ -1742,7 +1729,9 @@ PY3
 kiem_khoa_ai() {
   local goc so body tok ctx ket
   goc="http://127.0.0.1:$API_PORT"
-  so="$(sinh_so_di_dong)"
+  # G, người thăm dò của lượt 1: không lái máy, nên nhóm «Tham do AI» của G
+  # không chen vào trạng thái rỗng của ai trong bảng.
+  so="$TK_G"
   body="$(dang_nhap_curl "$so")" || khong_do_duoc "không đăng nhập được người thăm dò AI."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS -X POST "$goc/contexts" -H 'Content-Type: application/json' -H "Authorization: Bearer $tok" \
@@ -1769,7 +1758,7 @@ kiem_may_chu_sau_40() {
   # contexts list, not the cached sign-in body.
   local so
   tok=""; ctx=""
-  for so in "$OTP_PHONE_C" "$OTP_PHONE_D"; do
+  for so in "$TK_C" "$TK_D"; do
     body="$(dang_nhap_curl "$so")" || continue
     tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
     [ -n "$tok" ] || continue
@@ -1804,77 +1793,27 @@ print(hit[0]["id"] if hit else "")')"
   echo "máy chủ xác nhận: nhóm «Plan QA» có $so_ai câu trả lời AI ($loai), mọi địa điểm đều trong catalogue"
 }
 
-# Canary của mọi bảng (bản trải nghiệm và canary 09 của nó đã gỡ 2026-10-03).
-# Đối chứng âm: chạy LẠI flow 22 với mã SAI
-# làm «mã debug». Flow phải đỏ, và đỏ ĐÚNG ở bước chờ «Chưa có nhóm nào» —
-# nghĩa là không có mã đúng thì app không bao giờ vào được trạng thái đăng nhập.
-canary_otp() {
-  local ra so rc dong
-  ra="$(mktemp)"; so="$(sinh_so_di_dong)"
+# Canary của mọi bảng. Đối chứng âm: chạy LẠI flow 22 với MẬT KHẨU SAI cho một
+# tài khoản có thật. Flow phải đỏ, và đỏ ĐÚNG ở bước chờ «Chưa có nhóm nào» —
+# nghĩa là không có mật khẩu đúng thì app không bao giờ vào được trạng thái đăng
+# nhập. Người G (thăm dò): tồn tại thật, nên cái đỏ không phải «không có ai».
+canary_mat_khau() {
+  local ra rc dong
+  ra="$(mktemp)"
   set +e
-  maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" -e OTP_PHONE="$so" -e OTP_PHONE_B="$so" \
-    -e OTP_PHONE_C="$so" -e OTP_PHONE_D="$so" -e OTP_PHONE_E="$so" -e OTP_PHONE_F="$so" -e OTP_CODE="999999" \
-    "$FLOWS/22-dang-nhap-otp.yaml" > "$ra" 2>&1
+  maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" \
+    -e TK_A="$TK_G" -e MK_A="khong-phai-mat-khau-nay" \
+    "$FLOWS/22-dang-nhap-tai-khoan.yaml" > "$ra" 2>&1
   rc=$?
   set -e
-  [ "$rc" -ne 0 ] || hong "canary OTP XANH: flow 22 qua với mã SAI. Assert đăng nhập không cắn."
+  [ "$rc" -ne 0 ] || hong "canary mật khẩu XANH: flow 22 qua với mật khẩu SAI. Assert đăng nhập không cắn."
   dong="$(grep -n 'FAILED' "$ra" | head -1 || true)"
   case "$dong" in
-    *"Chưa có nhóm nào"*) echo "canary OTP: mã sai → đỏ đúng ở bước chờ «Chưa có nhóm nào». Không có mã đúng thì không vào được." ;;
-    "") sed -n '1,40p' "$ra" >&2; hong "canary OTP thoát khác 0 mà không có bước nào FAILED — chết trước khi chạy." ;;
-    *) sed -n '1,60p' "$ra" >&2; hong "canary OTP đỏ ở bước KHÁC ($dong). Chưa chứng minh được gì." ;;
+    *"Chưa có nhóm nào"*) echo "canary mật khẩu: mật khẩu sai → đỏ đúng ở bước chờ «Chưa có nhóm nào». Không có mật khẩu đúng thì không vào được." ;;
+    "") sed -n '1,40p' "$ra" >&2; hong "canary mật khẩu thoát khác 0 mà không có bước nào FAILED — chết trước khi chạy." ;;
+    *) sed -n '1,60p' "$ra" >&2; hong "canary mật khẩu đỏ ở bước KHÁC ($dong). Chưa chứng minh được gì." ;;
   esac
   rm -f "$ra"
-}
-
-API_URL=""
-dung_loi_moi() {
-  API_URL="http://127.0.0.1:$API_PORT"
-  local dsn owner_line owner_id owner_token ctx outing guest
-  dsn="${MOBILE_DATABASE_URL:-}"
-  [ -n "$dsn" ] || khong_do_duoc "--dang-nhap cần MOBILE_DATABASE_URL để mint phiên đầu tiên."
-
-  owner_line="$(MOBILE_DATABASE_URL="$dsn" python3 "$REPO/scripts/genesis_session.py" \
-      --display-name "Chu nhom e2e" --group "RuDi cua vao" --json)" \
-    || khong_do_duoc "genesis_session.py hỏng."
-  owner_id="$(printf '%s' "$owner_line" | python3 -c 'import json,sys;print(json.load(sys.stdin)["person_id"])')"
-  owner_token="$(printf '%s' "$owner_line" | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')"
-
-  ctx="$(curl -fsS -X POST "$API_URL/contexts" \
-      -H 'Content-Type: application/json' -H "Authorization: Bearer $owner_token" \
-      -H "Idempotency-Key: native-ctx-$owner_id" \
-      -d '{"display_name":"RuDi cua vao"}' \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')" \
-    || khong_do_duoc "không tạo được nhóm."
-
-  outing="$(curl -fsS -X POST "$API_URL/contexts/$ctx/outings" \
-      -H 'Content-Type: application/json' -H "Authorization: Bearer $owner_token" \
-      -H "Idempotency-Key: native-outing-$owner_id" \
-      -d '{"title":"Chuyen cua vao","starts_on":"2030-10-17","ends_on":"2030-10-19","headcount":2,"budget_per_person_vnd":0}' \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')" \
-    || khong_do_duoc "không tạo được chuyến."
-
-  guest="$(python3 -c 'import uuid;print(uuid.uuid4())')"
-  curl -fsS -X PUT "$API_URL/people/$guest" \
-      -H 'Content-Type: application/json' -H "Authorization: Bearer $owner_token" \
-      -d '{"display_name":"Khach RuDi"}' >/dev/null \
-    || khong_do_duoc "không đặt được tên người được mời."
-
-  MA_LOI_MOI="$(curl -fsS -X POST "$API_URL/outings/$outing/invites" \
-      -H 'Content-Type: application/json' -H "Authorization: Bearer $owner_token" \
-      -H "Idempotency-Key: native-invite-$guest" \
-      -d "{\"source\":\"friend\",\"person_id\":\"$guest\"}" \
-    | python3 -c 'import json,sys;print(json.load(sys.stdin)["invite_token"])')" \
-    || khong_do_duoc "không mint được lời mời đích danh."
-
-  # Người này sẽ dừng ở `invited`, và lượt đo dừng ở đó CÓ CHỦ Ý.
-  #
-  # Theo ADR-0014 mục 8, lời mời đích danh thì chính người được mời đồng ý
-  # (`is_invitee`) — không phải thành viên khác duyệt. Nhưng để bấm nút đó,
-  # client cần `membership_id`, mà `SessionResponse` không mang. Nên đường
-  # `invited` → `active` chưa đi được từ RuDi, và flow 21 khẳng định đúng cái
-  # nó đo được: đăng nhập thật xong, và màn tiền VẪN KHÔNG live.
-  echo "lời mời đã dựng cho nhóm $ctx"
 }
 
 # --- Metro CỦA CÂY NÀY -----------------------------------------------------
@@ -1903,14 +1842,6 @@ don_dep() {
 }
 trap don_dep EXIT
 
-if [ "$DANG_NHAP" = 1 ]; then
-  # Trước khi mint bất cứ thứ gì: một phiên còn sót từ lượt trước làm flow 21
-  # bắt đầu từ app ĐÃ đăng nhập, và lúc đó nó không đo cửa vào nữa mà đo một
-  # app đang mở sẵn — vẫn xanh, vẫn vô nghĩa.
-  xoa_du_lieu_app
-  dung_loi_moi
-fi
-
 if timeout 20 adb reverse --list 2>/dev/null | grep -q "tcp:$PORT"; then
   hong "cổng $PORT đã có người cắm reverse. Đổi bằng MOBILE_METRO_PORT=<cổng khác>."
 fi
@@ -1921,7 +1852,9 @@ if command -v ss >/dev/null 2>&1 && ss -ltn 2>/dev/null | grep -qE "127\.0\.0\.1
   hong "cổng $PORT đã có người nghe. Metro của lane khác phục vụ một bundle hợp lệ của CÂY KHÁC, và thiết bị không phân biệt được. Đổi bằng MOBILE_METRO_PORT=<cổng khác>."
 fi
 
-if [ "$OTP" = 1 ] || [ "$LIVE" = 1 ]; then kiem_ma_debug; fi
+# Người thăm dò của lượt 1 phục vụ cả đối chứng môi trường lẫn thăm dò AI.
+TK_G="$(tk "n${LUOT_TU}g" username)"
+kiem_cua_tai_khoan
 # V4: khoá AI phải SỐNG trước khi đo AI, đo bằng chính đường sản phẩm: một người
 # thăm dò đăng nhập, mở nhóm, nhắn một câu, xin một lượt AI (requested=true).
 # `spoke=true` = khoá sống; `reason=unavailable` = khoá chết/thiếu → ĐỎ (một máy
@@ -2024,41 +1957,32 @@ cho_bundle() {
   return 1
 }
 
-if [ "$DANG_NHAP" = 1 ] && [ "$MODE" = "expo-go" ]; then
-  # Hâm nóng TRƯỚC, rồi mới giao link mời.
-  #
-  # `pm clear` ở trên trả Expo Go về lần chạy đầu tiên, và lần chạy đầu tiên
-  # của Expo Go KHÔNG phải lần chạy đầu tiên của app này: nó có màn riêng của
-  # nó, và cái link mời giao vào lúc đó thì rơi vào đấy chứ không tới
-  # `duong-vao.ts`. Đo ngày 2026-09-03: flow 21 đỏ ngay ở «Bạn được rủ đi»,
-  # trong khi đúng flow ấy xanh khi Expo Go đã chạy trước đó ít nhất một lần.
-  #
-  # Nên: mở trắng cho Expo Go qua lần đầu và nạp bundle, force-stop, rồi mới
-  # giao link. App vẫn KHỞI ĐỘNG LẠNH cùng cái link — đúng đường một người bấm
-  # link bạn gửi — chỉ khác là cái nhận link là app chứ không phải màn chào của
-  # Expo Go.
-  mo_link "exp://$METRO_HOST_NATIVE:$PORT"
-  for _ in $(seq 1 90); do
-    grep -q "Android Bundled" "$LOG" && break
+# Sau `pm clear`: nạp lại bundle của cây này và cho dev client qua tờ «This is
+# the developer menu» MỘT lần, TRƯỚC flow kế tiếp.
+#
+# `cho_bundle` thấy dòng «Android Bundled» của lần nạp trước và trả về ngay, nên
+# flow chạy khi app còn đang nạp lại; tờ dev menu của lần mở đầu sau khi xoá
+# hiện lên đúng lúc `_bo-qua-dev-menu` đã qua bước của nó, và flow đỏ ở «Rủ Đi
+# thôi!» với tờ ấy che màn (đo 05/10, neo 2b sau bảng mini 00+22–25: ảnh lỗi
+# cho thấy màn chào đúng dấu vân nằm sau tờ dev menu). Chờ một dòng bundle MỚI,
+# rồi chạy chính helper bỏ tờ ấy; rc của nó không phán gì — flow sau tự kiểm màn.
+nap_lai_sau_khi_xoa() {
+  local truoc _i ra
+  truoc="$(grep -c "Android Bundled" "$LOG" || true)"
+  mo_link "$(url_metro)"
+  for _i in $(seq 1 90); do
+    [ "$(grep -c "Android Bundled" "$LOG" || true)" -gt "${truoc:-0}" ] && break
     sleep 2
   done
-  timeout 30 adb shell am force-stop host.exp.exponent >/dev/null 2>&1 || true
-  sleep 2
-fi
+  sleep 3
+  ra="$(mktemp)"
+  maestro --device "$SERIAL" test "$FLOWS/_bo-qua-dev-menu.yaml" > "$ra" 2>&1 || true
+  rm -f "$ra"
+}
 
 DUONG_MO="$(url_metro)"
-if [ "$DANG_NHAP" = 1 ] && [ "$MODE" = "expo-go" ]; then
-  DUONG_MO="exp://$METRO_HOST_NATIVE:$PORT/--/moi/$MA_LOI_MOI"
-fi
 mo_link "$DUONG_MO"
 cho_bundle || true
-if [ "$DANG_NHAP" = 1 ] && [ "$MODE" = "dev-client" ]; then
-  # Bundle đã lên; giờ mới giao lời mời, ẤM. Đây vẫn là đường một người thật đi
-  # khi app đang mở và bạn gửi link — và là đường DUY NHẤT dev client cho phép.
-  sleep 3
-  mo_link "rudi://moi/$MA_LOI_MOI"
-  sleep 2
-fi
 # NEO 2. Không có dòng này thì màn hình đang hiện CÁI GÌ ĐÓ — màn chủ Expo Go,
 # bundle của lane khác, hoặc app cũ — và mọi assert sau đó nói về cái đó.
 grep -q "Android Bundled" "$LOG" \
@@ -2115,14 +2039,12 @@ cd "$APP"
 BANG=0
 DA_CHAY=0
 DO_LIST=""
-# Mỗi bảng OTP bắt đầu từ app SẠCH. Lượt trước để lại trên máy: phiên, và
+# Mỗi bảng bắt đầu từ app SẠCH. Lượt trước để lại trên máy: phiên, và
 # điểm đến đã chọn — flow 35 chọn «Hội An», nơi có 0 địa điểm — nên lượt sau
 # thừa hưởng nó thì flow 22/26 đỏ vì MÁY chứ không vì app (bảng L2, 2026-09-06).
 # Sau pm clear dev client về launcher: nạp lại bundle trước khi chạy flow.
-if [ "$OTP" = 1 ]; then
-  xoa_du_lieu_app
-  mo_link "$(url_metro)"; cho_bundle || true; sleep 2
-fi
+xoa_du_lieu_app
+nap_lai_sau_khi_xoa
 
 # Tên các flow ĐÃ chạy trong lượt này. Bảng mini (`--flows`) chỉ có vài flow,
 # và phép kiểm máy chủ của một flow KHÔNG chạy thì hoặc đỏ vì môi trường không
@@ -2164,7 +2086,6 @@ in_man_dang_thay() {
 # Đo 22-09-2026: flow 36 (người mới E) xanh, flow 37 hỏng ở assertion đầu trước
 # khi kịp đăng xuất, rồi 41-45 và 47 đỏ vì chạy bằng E; ảnh flow 44 cho thấy hồ
 # sơ «Thành viên mới».
-CHO_MA_SAU_TRA_PHIEN=0
 tra_phien_ve_goc() {
   local ten="$1" ra rc
   ra="$(mktemp)"
@@ -2174,7 +2095,6 @@ tra_phien_ve_goc() {
   rc=$?
   if [ "$rc" -eq 0 ]; then
     echo "sau $ten đỏ: đã trả phiên về màn chào; flow sau đăng nhập lại từ đầu" >&2
-    CHO_MA_SAU_TRA_PHIEN=1
     # Từ 37 người lái là C; flow sau một lần trả phiên tự đăng nhập bằng D.
     if da_chay 37; then TRA_PHIEN_SAU_37=1; fi
   else
@@ -2189,12 +2109,8 @@ tra_phien_ve_goc() {
 chay_flow() {
   local f="$1" ra rc
   local -a them=()
-  # Số và mã chỉ đi qua -e, không bao giờ nằm trong file flow.
-  if [ "$OTP" = 1 ] || [ "$LIVE" = 1 ]; then
-    them=(-e OTP_PHONE="$OTP_PHONE" -e OTP_PHONE_B="$OTP_PHONE_B"
-          -e OTP_PHONE_C="$OTP_PHONE_C" -e OTP_PHONE_D="$OTP_PHONE_D" -e OTP_PHONE_E="$OTP_PHONE_E"
-          -e OTP_PHONE_F="$OTP_PHONE_F" -e OTP_CODE="$OTP_CODE")
-  fi
+  # Username và mật khẩu chỉ đi qua -e, không bao giờ nằm trong file flow.
+  them=("${TK_THEM[@]}")
   # Flow 30 rẽ theo AI: có khoá thì chờ thẻ của Rủ Đi AI, không thì câu nói thật.
   them+=(-e AI="$AI")
   ra="$(mktemp)"
@@ -2210,6 +2126,19 @@ chay_flow() {
   if [ "$rc" -ne 0 ] && grep -qE "$LOI_HA_TANG" "$ra"; then
     rm -f "$ra"; return 99
   fi
+  # App không bao giờ lên tiền cảnh: `launchApp` hai lần (lần hai do
+  # `_bo-qua-dev-menu`) mà sau 150 s máy vẫn ở màn chính Android, và bước đỏ là
+  # chính bước chờ màn đầu tiên. Đo 05/10 (bảng thứ hai, flow 30, xanh ở bảng
+  # trước): logcat không có crash/ANR. Đó là hạ tầng, không phải app: chụp màn,
+  # rồi trả 99 để vòng ngoài thử lại MỘT lần; lần hai vẫn vậy thì lượt đo là
+  # «không đo được» (mã 2), không bao giờ là xanh.
+  if [ "$rc" -ne 0 ] \
+    && grep -m1 'FAILED' "$ra" | grep -qF 'Assert that "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào' \
+    && ! timeout 20 adb shell dumpsys activity activities 2>/dev/null | grep -E 'topResumedActivity|mResumedActivity' | grep -q "$APP_ID"; then
+    in_man_dang_thay "$(basename "$f" .yaml)-chua-len"
+    echo "  app không lên tiền cảnh (màn chính Android) — hạ tầng, không phải phán quyết về flow này"
+    rm -f "$ra"; return 99
+  fi
   [ "$rc" -eq 0 ] || in_man_dang_thay "$(basename "$f" .yaml)"
   [ "$rc" -eq 0 ] || tra_phien_ve_goc "$(basename "$f" .yaml)"
   rm -f "$ra"; return "$rc"
@@ -2219,45 +2148,36 @@ chay_flow() {
 # được «đúng» với «may»; bộ nhớ dự án ghi cú bấm bị rơi ~1/4 lượt trên web.
 for lap in $(seq 1 "$LAP"); do
 [ "$LAP" -gt 1 ] && echo "=== lượt $lap/$LAP ==="
-if [ "$OTP" = 1 ]; then
-  # Mỗi lượt BỐN người mới, mỗi flow một cặp số chưa ai dùng: người của flow
-  # trước đã có nhóm (22) hoặc đã có tên «Thành viên mới» (23), và flow 24 khẳng
-  # định cả «Chưa có nhóm nào» lẫn tên «Ban QA» do người mời đặt.
-  rm -rf "$PHIEN_CURL_DIR"; PHIEN_CURL_DIR="$(mktemp -d)"
-  OTP_PHONE="$(sinh_so_di_dong)"; OTP_PHONE_B="$(sinh_so_di_dong)"
-  OTP_PHONE_C="$(sinh_so_di_dong)"; OTP_PHONE_D="$(sinh_so_di_dong)"
-  OTP_PHONE_E="$(sinh_so_di_dong)"; OTP_PHONE_F="$(sinh_so_di_dong)"
-elif [ "$LIVE" = 1 ]; then
-  # The seeded person already exists: one fixed number, a fresh curl-session
-  # cache per lap so the server check after flow 20 asks the server, not the cache.
-  rm -rf "$PHIEN_CURL_DIR"; PHIEN_CURL_DIR="$(mktemp -d)"
-  OTP_PHONE="$OTP_PHONE_SEED"; OTP_PHONE_B=""; OTP_PHONE_C=""; OTP_PHONE_D=""; OTP_PHONE_E=""; OTP_PHONE_F=""
-fi
+# Mỗi lượt SÁU người mới, chưa ai đăng nhập: người của flow trước đã có nhóm
+# (22) hoặc đã đăng nhập (23), và flow 24 khẳng định cả «Chưa có nhóm nào» lẫn
+# tên do người được mời tự đặt.
+rm -rf "$PHIEN_CURL_DIR"; PHIEN_CURL_DIR="$(mktemp -d)"
+nap_nguoi_luot "$((LUOT_TU + lap - 1))"
+dat_ten_d
 for f in "$FLOWS"/*.yaml; do
   ten="$(basename "$f")"
   case "$ten" in
     _*)          continue ;;  # subflow, chạy qua runFlow chứ không tự chạy
     09-canary-*) continue ;;  # chạy riêng ở dưới, và nó PHẢI đỏ
-    # 20-* đọc dữ liệu THẬT: cần database đã seed và một danh tính được ghim.
-    # Bảng mặc định cố ý không có hai thứ đó, nên chạy nó ở đây sẽ đỏ vì thiếu
-    # môi trường chứ không phải vì app sai. `--live` chạy đúng và chỉ nhóm này.
-    20-*)        [ "$LIVE" = 1 ] || continue ;;
-    21-*)        [ "$DANG_NHAP" = 1 ] || continue ;;
-    22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*|43-*|44-*|45-*|46-*|47-*) [ "$OTP" = 1 ] || continue ;;
+    # 20 (thế giới seed qua `--live --otp-phone`) và 21 (lời mời lấy phiên)
+    # đã gỡ cùng cửa của chúng (ADR-0055); xem apps/mobile/.maestro/README.md.
+    22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*|43-*|44-*|45-*|46-*|47-*) [ "$ACCOUNT" = 1 ] || continue ;;
     # Under the keyboard negative control the composer is meant to be covered,
     # so a flow that has to tap it (30, 40) would only fail for the reason the
     # probe already measures. The table for --tat-kav is the sign-in leg + 31.
-    30-*) [ "$OTP" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
-    38-*)        [ "$OTP" = 1 ] && [ "$ANH" = 1 ] || continue ;;
-    40-*)        [ "$OTP" = 1 ] && [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
+    30-*) [ "$ACCOUNT" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
+    38-*)        [ "$ACCOUNT" = 1 ] && [ "$ANH" = 1 ] || continue ;;
+    40-*)        [ "$ACCOUNT" = 1 ] && [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
     # 48 gõ vào ô soạn tin để tạo bình chọn, nên dưới đối chứng âm của bàn phím
     # nó chỉ đỏ vì đúng thứ phép đo kia đang đo — cùng lý do với 30 và 40.
     # Nó chạy sau 30 trong cùng lượt và thừa hưởng nhóm «Hoi QA» của flow đó,
     # nên không cần bước chuẩn bị riêng.
-    48-*)        [ "$OTP" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
-    # 00 là màn chào + dấu vân cây (neo 2b): mọi bảng bắt đầu từ app sạch,
-    # trừ --live, bảng mở trên phiên của người seed.
-    00-*)        [ "$LIVE" = 0 ] || continue ;;
+    48-*)        [ "$ACCOUNT" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
+    # 50: cửa tài khoản trọn vòng (mật khẩu sai, đúng, phiên sống qua lần tắt,
+    # đăng xuất) bằng người B, chạy CUỐI lượt sau khi mọi flow khác đã xong.
+    50-*)        [ "$ACCOUNT" = 1 ] || continue ;;
+    # 00 là màn chào + dấu vân cây (neo 2b): mọi bảng bắt đầu từ app sạch.
+    00-*)        : ;;
     # Bảng fixture cũ (01–12, 91) đã gỡ cùng bản trải nghiệm (2026-10-03).
     *)           continue ;;
   esac
@@ -2272,15 +2192,6 @@ for f in "$FLOWS"/*.yaml; do
     46-*) chuan_bi_cho_46 ;;
     38-*) chuan_bi_anh_nhom_cho_38 ;;
   esac
-  # Sau một lần trả phiên, flow này tự đăng nhập lại và xin mã cho đúng số mà
-  # bước chuẩn bị vừa xin qua curl (34 → D). Máy chủ chặn xin lại trong 60 s
-  # (otp.DefaultResendCooldownSeconds) và màn chỉ nói «Mã vừa được gửi», nên một
-  # flow đỏ kéo đỏ cả chuỗi sau nó (04/10: 34, 37, 43, 45, 47, 48 đỏ theo 33).
-  # 66 s như `dang_nhap_curl`: đồng hồ DB trong container lệch vài trăm ms.
-  if [ "$CHO_MA_SAU_TRA_PHIEN" = 1 ]; then
-    sleep 66
-    CHO_MA_SAU_TRA_PHIEN=0
-  fi
   DA_CHAY=$((DA_CHAY + 1))
   DA_CHAY_TEN="$DA_CHAY_TEN${ten%%-*} "
   set +e; chay_flow "$f"; rc=$?; set -e
@@ -2334,13 +2245,12 @@ echo "đã chạy $DA_CHAY flow"
 # NEO 2b. Flow 00 vừa assert dấu vân THẬT ở trong bảng; giờ cùng flow với dấu vân
 # SAI phải đỏ, và đỏ đúng ở dòng đó. Không thì `assertVisible` của dấu vân là một
 # dòng trang trí và hai neo Metro ở trên lại là tất cả những gì ta có.
-# Mọi bảng trừ --live (bảng đó mở trên phiên của người seed, không qua màn chào).
-# Flow 00 đo màn chào, nên phải chạy trên app CHƯA đăng nhập: sau bảng --otp máy
+# Flow 00 đo màn chào, nên phải chạy trên app CHƯA đăng nhập: sau bảng máy
 # đang giữ phiên của flow cuối, và flow 00 sẽ đỏ ở «Rủ Đi thôi!» chứ không ở dòng
 # dấu vân (đo 2026-10-03, lượt đầu sau khi bảng fixture gỡ).
-if [ "$LIVE" = 0 ] && da_chay 00; then
+if da_chay 00; then
   xoa_du_lieu_app
-  mo_link "$(url_metro)"; cho_bundle || true; sleep 2
+  nap_lai_sau_khi_xoa
   RA_2B="$(mktemp)"
   set +e
   maestro --device "$SERIAL" test -e TREE_FINGERPRINT="KHONG_CO_DAU_VAN_NAY" "$FLOWS/00-smoke-deeplink.yaml" > "$RA_2B" 2>&1
@@ -2368,46 +2278,37 @@ fi
 # một flow không có mặt (lượt 2026-09-06: bảng 22+26+38 đỏ ở kiem_may_chu_sau_24).
 # Bảy phép kiểm dưới đây hỏi máy chủ về NGƯỜI D, còn flow của chúng lại chạy
 # trên phiên đang sống. Hai thứ ấy chỉ là một khi flow 25 đã đổi phiên sang D
-# — flow 22 đăng nhập bằng OTP_PHONE, không phải OTP_PHONE_D. Trên bảng đầy đủ
+# — flow 22 đăng nhập bằng TK_A, không phải TK_D. Trên bảng đầy đủ
 # 25 luôn có nên không ai thấy sự phụ thuộc này; trên bảng mini nó làm phép
 # kiểm hỏi nhầm người và ra một câu đỏ nói về tính năng chứ không nói về bảng
 # (lượt 2026-09-06: «máy chủ giữ 0 địa điểm đã lưu cho D» trong khi màn vừa
 # lưu thật cho người của flow 22).
 #
 
-if [ "$OTP" = 1 ]; then
-  da_chay 24 && kiem_can_25 kiem_may_chu_sau_24 && kiem_may_chu_sau_24
-  da_chay 25 && kiem_may_chu_sau_25
-  da_chay 26 && kiem_can_25 kiem_may_chu_sau_26 && kiem_may_chu_sau_26
-  da_chay 27 && kiem_can_25 kiem_may_chu_sau_27 && kiem_may_chu_sau_27
-  da_chay 28 && kiem_can_25 kiem_may_chu_sau_28 && kiem_may_chu_sau_28
-  da_chay 29 && kiem_can_25 kiem_may_chu_sau_29 && kiem_may_chu_sau_29
-  da_chay 32 && kiem_can_25 kiem_may_chu_sau_32 && kiem_may_chu_sau_32
-  da_chay 33 && kiem_can_25 kiem_may_chu_sau_33 && kiem_may_chu_sau_33
-  da_chay 34 && kiem_can_25 kiem_may_chu_sau_34 && kiem_may_chu_sau_34
-  da_chay 35 && kiem_may_chu_sau_35
-  da_chay 36 && kiem_may_chu_sau_36
-  da_chay 37 && kiem_can_25 kiem_may_chu_sau_37 && kiem_may_chu_sau_37
-  da_chay 39 && kiem_can_25 kiem_may_chu_sau_39 && kiem_may_chu_sau_39
-  da_chay 41 && kiem_can_25 kiem_may_chu_sau_41 && kiem_may_chu_sau_41
-  da_chay 42 && kiem_can_25 kiem_may_chu_sau_42 && kiem_may_chu_sau_42
-  da_chay 43 && kiem_can_25 kiem_may_chu_sau_43 && kiem_may_chu_sau_43
-  da_chay 44 && kiem_can_25 kiem_may_chu_sau_44 && kiem_may_chu_sau_44
-  da_chay 46 && kiem_can_25 kiem_may_chu_sau_46 && kiem_may_chu_sau_46
-  { [ "$TAT_KAV" = 1 ] || ! da_chay 30; } || kiem_may_chu_sau_30
-  [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] && da_chay 40 && kiem_may_chu_sau_40
-  canary_otp
-elif [ "$LIVE" = 1 ]; then
-  kiem_may_chu_sau_20
-  canary_otp
-else
-  # --dang-nhap: cùng đối chứng âm với --otp, trên app đã trả về trạng thái
-  # chưa đăng nhập. Canary 09 cũ đi cửa fixture, nay đã gỡ.
-  echo "xoá phiên trước khi chạy canary (canary đo đường chưa đăng nhập)"
-  xoa_du_lieu_app
-  # Sau pm clear, dev client về launcher: nạp lại bundle rồi mới chạy canary.
-  mo_link "$(url_metro)"; cho_bundle || true; sleep 2
-  canary_otp
-fi
+da_chay 24 && kiem_can_25 kiem_may_chu_sau_24 && kiem_may_chu_sau_24
+da_chay 25 && kiem_may_chu_sau_25
+da_chay 26 && kiem_can_25 kiem_may_chu_sau_26 && kiem_may_chu_sau_26
+da_chay 27 && kiem_can_25 kiem_may_chu_sau_27 && kiem_may_chu_sau_27
+da_chay 28 && kiem_can_25 kiem_may_chu_sau_28 && kiem_may_chu_sau_28
+da_chay 29 && kiem_can_25 kiem_may_chu_sau_29 && kiem_may_chu_sau_29
+da_chay 32 && kiem_can_25 kiem_may_chu_sau_32 && kiem_may_chu_sau_32
+da_chay 33 && kiem_can_25 kiem_may_chu_sau_33 && kiem_may_chu_sau_33
+da_chay 34 && kiem_can_25 kiem_may_chu_sau_34 && kiem_may_chu_sau_34
+da_chay 35 && kiem_may_chu_sau_35
+da_chay 36 && kiem_may_chu_sau_36
+da_chay 37 && kiem_can_25 kiem_may_chu_sau_37 && kiem_may_chu_sau_37
+da_chay 39 && kiem_can_25 kiem_may_chu_sau_39 && kiem_may_chu_sau_39
+da_chay 41 && kiem_can_25 kiem_may_chu_sau_41 && kiem_may_chu_sau_41
+da_chay 42 && kiem_can_25 kiem_may_chu_sau_42 && kiem_may_chu_sau_42
+da_chay 43 && kiem_can_25 kiem_may_chu_sau_43 && kiem_may_chu_sau_43
+da_chay 44 && kiem_can_25 kiem_may_chu_sau_44 && kiem_may_chu_sau_44
+da_chay 46 && kiem_can_25 kiem_may_chu_sau_46 && kiem_may_chu_sau_46
+{ [ "$TAT_KAV" = 1 ] || ! da_chay 30; } || kiem_may_chu_sau_30
+[ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] && da_chay 40 && kiem_may_chu_sau_40
+# Canary đo đường CHƯA đăng nhập: xoá phiên trước (flow 50 cuối bảng đã đăng
+# xuất, nhưng một bảng mini có thể dừng ở người đang đăng nhập).
+xoa_du_lieu_app
+nap_lai_sau_khi_xoa
+canary_mat_khau
 
-echo "XANH: bảng qua ($LAP lượt), $([ "$LIVE" = 0 ] && echo "NEO 2b cắn, ")canary OTP (mã sai) đỏ đúng chỗ, trên $ANDROID_SERIAL / $EXPO_VER / dấu vân $DAU_VAN"
+echo "XANH: bảng qua ($LAP lượt, $DA_CHAY flow), $(da_chay 00 && echo "NEO 2b cắn, ")canary mật khẩu (sai) đỏ đúng chỗ, trên $ANDROID_SERIAL / $EXPO_VER / dấu vân $DAU_VAN"

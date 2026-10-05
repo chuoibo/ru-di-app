@@ -251,6 +251,9 @@ jobs:
         working-directory: services/core
         run: go test -count=1 ./...
 
+      - name: Managed account security and retired legacy doors
+        run: scripts/gate.sh --strict account-auth
+
       - name: Real-PostgreSQL tests on a disposable database
         # Builds the API image to migrate the schema with Alembic, then runs
         # `go test -tags postgres`; a skip or a missing sentinel fails.
@@ -634,6 +637,7 @@ jobs:
             -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 \
             -e MOBILE_DATABASE_URL=postgresql://none@127.0.0.1:9/none \
             -e MOBILE_CHAT_CHANGES_CANDIDATE=0 \
+            -e MOBILE_ACCOUNT_AUTH_ENABLED=0 \
             mobile-core:ci
           for i in $(seq 1 60); do
             status=$(docker inspect --format '{{.State.Health.Status}}' core)
@@ -985,7 +989,7 @@ jobs:
       - if: steps.present.outputs.found == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
 
@@ -1056,12 +1060,33 @@ jobs:
       - if: steps.present.outputs.found == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
 
       - if: steps.present.outputs.found == 'true'
-        run: npm --prefix apps/mobile ci
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - if: steps.present.outputs.found == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - if: steps.present.outputs.found == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - if: steps.present.outputs.found == 'true'
+        name: Install native account gate dependencies
+        run: |
+          pip install -r services/api/requirements-dev.txt
+          npm --prefix apps/mobile ci
+          docker pull postgres:16-alpine
+          docker pull redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
 
       - if: steps.present.outputs.found == 'true'
         name: Drive the flows on a device, or say out loud that it could not
@@ -1069,7 +1094,7 @@ jobs:
           RUNNER_PROMISED: ${{ vars.MOBILE_NATIVE_RUNNER }}
         run: |
           set +e
-          scripts/mobile_native.sh
+          scripts/mobile_native_gate.sh
           rc=$?
           set -e
           case "$rc" in

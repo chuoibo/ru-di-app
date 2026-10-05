@@ -18,6 +18,8 @@ import type { SanKhau, TangSanKhau } from "../../art/san-khau";
 import { bongTheoGoc, gocBatTang, lechThiSai } from "../../san-khau/dong-hoc";
 import { mauSanKhau, useRudiTheme, type RudiPalette } from "../../theme";
 import { mauLop } from "./VeLop";
+import { gocBien } from "../goc-bien";
+
 
 export interface SanKhauVeProps {
   san: SanKhau;
@@ -91,7 +93,7 @@ function TangSvg({
           </Svg>
         </Animated.View>
       ) : null}
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transformOrigin: `${width / 2}px ${nepY}px` }, kieu]}>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transformOrigin: gocBien(width / 2, nepY) }, kieu]}>
         <Svg height={height} viewBox={`0 0 ${san.khung.w} ${san.khung.h}`} width={width}>
           <G>
             <LopTang colors={colors} mep={colors.paperShade} tang={tang} />

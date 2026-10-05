@@ -141,24 +141,8 @@
       "evidence": "docs/migration/routes/friends/GET-people-person_id-friends.md"
     },
     {
-      "id": "POST /friends/lookup",
-      "order": 11,
-      "kind": "route",
-      "method": "POST",
-      "path": "/friends/lookup",
-      "group": "friends",
-      "class": "core",
-      "owner": "go",
-      "python": "live",
-      "in_memory": [
-        "friend_lookup_limit"
-      ],
-      "state": "LIVE-GO",
-      "evidence": "docs/migration/routes/friends/POST-friends-lookup.md"
-    },
-    {
       "id": "POST /bills",
-      "order": 12,
+      "order": 11,
       "kind": "route",
       "method": "POST",
       "path": "/bills",
@@ -171,7 +155,7 @@
     },
     {
       "id": "GET /bills/{bill_id}",
-      "order": 13,
+      "order": 12,
       "kind": "route",
       "method": "GET",
       "path": "/bills/{bill_id}",
@@ -184,7 +168,7 @@
     },
     {
       "id": "PUT /bills/{bill_id}/assignments",
-      "order": 14,
+      "order": 13,
       "kind": "route",
       "method": "PUT",
       "path": "/bills/{bill_id}/assignments",
@@ -197,7 +181,7 @@
     },
     {
       "id": "POST /bills/{bill_id}/my-items",
-      "order": 15,
+      "order": 14,
       "kind": "route",
       "method": "POST",
       "path": "/bills/{bill_id}/my-items",
@@ -210,7 +194,7 @@
     },
     {
       "id": "POST /bills/{bill_id}/split",
-      "order": 16,
+      "order": 15,
       "kind": "route",
       "method": "POST",
       "path": "/bills/{bill_id}/split",
@@ -223,7 +207,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/budget",
-      "order": 17,
+      "order": 16,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/budget",
@@ -236,7 +220,7 @@
     },
     {
       "id": "POST /contexts",
-      "order": 18,
+      "order": 17,
       "kind": "route",
       "method": "POST",
       "path": "/contexts",
@@ -249,7 +233,7 @@
     },
     {
       "id": "PATCH /contexts/{context_id}",
-      "order": 19,
+      "order": 18,
       "kind": "route",
       "method": "PATCH",
       "path": "/contexts/{context_id}",
@@ -262,7 +246,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/members",
-      "order": 20,
+      "order": 19,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/members",
@@ -275,7 +259,7 @@
     },
     {
       "id": "POST /memberships/{membership_id}/accept",
-      "order": 21,
+      "order": 20,
       "kind": "route",
       "method": "POST",
       "path": "/memberships/{membership_id}/accept",
@@ -288,7 +272,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/members/{person_id}",
-      "order": 22,
+      "order": 21,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/members/{person_id}",
@@ -301,7 +285,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/members",
-      "order": 23,
+      "order": 22,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/members",
@@ -314,7 +298,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/balances",
-      "order": 24,
+      "order": 23,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/balances",
@@ -327,7 +311,7 @@
     },
     {
       "id": "GET /contexts/{context_id}",
-      "order": 25,
+      "order": 24,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}",
@@ -340,7 +324,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/memories",
-      "order": 26,
+      "order": 25,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/memories",
@@ -353,7 +337,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/checkins",
-      "order": 27,
+      "order": 26,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/checkins",
@@ -366,7 +350,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/memories",
-      "order": 28,
+      "order": 27,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/memories",
@@ -379,7 +363,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/widget",
-      "order": 29,
+      "order": 28,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/widget",
@@ -392,7 +376,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/memories/{memory_id}/reactions",
-      "order": 30,
+      "order": 29,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/memories/{memory_id}/reactions",
@@ -405,7 +389,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/memories/{memory_id}/reactions",
-      "order": 31,
+      "order": 30,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/memories/{memory_id}/reactions",
@@ -418,7 +402,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/memories/{memory_id}/comments",
-      "order": 32,
+      "order": 31,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/memories/{memory_id}/comments",
@@ -431,7 +415,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/memories/{memory_id}/comments",
-      "order": 33,
+      "order": 32,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/memories/{memory_id}/comments",
@@ -444,7 +428,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/photos",
-      "order": 34,
+      "order": 33,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/photos",
@@ -457,7 +441,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/photos/{photo_id}",
-      "order": 35,
+      "order": 34,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/photos/{photo_id}",
@@ -470,7 +454,7 @@
     },
     {
       "id": "POST /people/{person_id}/avatar",
-      "order": 36,
+      "order": 35,
       "kind": "route",
       "method": "POST",
       "path": "/people/{person_id}/avatar",
@@ -483,7 +467,7 @@
     },
     {
       "id": "GET /people/{person_id}/avatar",
-      "order": 37,
+      "order": 36,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person_id}/avatar",
@@ -496,7 +480,7 @@
     },
     {
       "id": "POST /people/me/photos",
-      "order": 38,
+      "order": 37,
       "kind": "route",
       "method": "POST",
       "path": "/people/me/photos",
@@ -509,7 +493,7 @@
     },
     {
       "id": "GET /people/{person_id}/photos/{photo_id}",
-      "order": 39,
+      "order": 38,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person_id}/photos/{photo_id}",
@@ -522,7 +506,7 @@
     },
     {
       "id": "POST /posts",
-      "order": 40,
+      "order": 39,
       "kind": "route",
       "method": "POST",
       "path": "/posts",
@@ -535,7 +519,7 @@
     },
     {
       "id": "GET /posts",
-      "order": 41,
+      "order": 40,
       "kind": "route",
       "method": "GET",
       "path": "/posts",
@@ -548,7 +532,7 @@
     },
     {
       "id": "GET /people/{person_id}/posts",
-      "order": 42,
+      "order": 41,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person_id}/posts",
@@ -561,7 +545,7 @@
     },
     {
       "id": "GET /posts/{post_id}",
-      "order": 43,
+      "order": 42,
       "kind": "route",
       "method": "GET",
       "path": "/posts/{post_id}",
@@ -574,7 +558,7 @@
     },
     {
       "id": "POST /posts/{post_id}/reactions",
-      "order": 44,
+      "order": 43,
       "kind": "route",
       "method": "POST",
       "path": "/posts/{post_id}/reactions",
@@ -587,7 +571,7 @@
     },
     {
       "id": "DELETE /posts/{post_id}/reactions/{kind}",
-      "order": 45,
+      "order": 44,
       "kind": "route",
       "method": "DELETE",
       "path": "/posts/{post_id}/reactions/{kind}",
@@ -600,7 +584,7 @@
     },
     {
       "id": "GET /posts/{post_id}/comments",
-      "order": 46,
+      "order": 45,
       "kind": "route",
       "method": "GET",
       "path": "/posts/{post_id}/comments",
@@ -613,7 +597,7 @@
     },
     {
       "id": "POST /posts/{post_id}/comments",
-      "order": 47,
+      "order": 46,
       "kind": "route",
       "method": "POST",
       "path": "/posts/{post_id}/comments",
@@ -626,7 +610,7 @@
     },
     {
       "id": "DELETE /posts/{post_id}/comments/{comment_id}",
-      "order": 48,
+      "order": 47,
       "kind": "route",
       "method": "DELETE",
       "path": "/posts/{post_id}/comments/{comment_id}",
@@ -639,7 +623,7 @@
     },
     {
       "id": "POST /outings/{outing_id}/itinerary/preview",
-      "order": 49,
+      "order": 48,
       "kind": "route",
       "method": "POST",
       "path": "/outings/{outing_id}/itinerary/preview",
@@ -655,7 +639,7 @@
     },
     {
       "id": "PUT /outings/{outing_id}/itinerary",
-      "order": 50,
+      "order": 49,
       "kind": "route",
       "method": "PUT",
       "path": "/outings/{outing_id}/itinerary",
@@ -668,7 +652,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/outings",
-      "order": 51,
+      "order": 50,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/outings",
@@ -681,7 +665,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/outings",
-      "order": 52,
+      "order": 51,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/outings",
@@ -694,7 +678,7 @@
     },
     {
       "id": "PUT /outings/{outing_id}/timeline",
-      "order": 53,
+      "order": 52,
       "kind": "route",
       "method": "PUT",
       "path": "/outings/{outing_id}/timeline",
@@ -707,7 +691,7 @@
     },
     {
       "id": "POST /outing-stops/{stop_id}/checkins",
-      "order": 54,
+      "order": 53,
       "kind": "route",
       "method": "POST",
       "path": "/outing-stops/{stop_id}/checkins",
@@ -720,7 +704,7 @@
     },
     {
       "id": "GET /outings/{outing_id}/checkins",
-      "order": 55,
+      "order": 54,
       "kind": "route",
       "method": "GET",
       "path": "/outings/{outing_id}/checkins",
@@ -733,7 +717,7 @@
     },
     {
       "id": "POST /outings/{outing_id}/invites",
-      "order": 56,
+      "order": 55,
       "kind": "route",
       "method": "POST",
       "path": "/outings/{outing_id}/invites",
@@ -746,7 +730,7 @@
     },
     {
       "id": "POST /outings/{outing_id}/invites/{invite_id}/revoke",
-      "order": 57,
+      "order": 56,
       "kind": "route",
       "method": "POST",
       "path": "/outings/{outing_id}/invites/{invite_id}/revoke",
@@ -759,7 +743,7 @@
     },
     {
       "id": "POST /outings/{outing_id}/invites/{invite_id}/rotate",
-      "order": 58,
+      "order": 57,
       "kind": "route",
       "method": "POST",
       "path": "/outings/{outing_id}/invites/{invite_id}/rotate",
@@ -772,7 +756,7 @@
     },
     {
       "id": "POST /outing-invites/{token}/accept",
-      "order": 59,
+      "order": 58,
       "kind": "route",
       "method": "POST",
       "path": "/outing-invites/{token}/accept",
@@ -785,7 +769,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/messages",
-      "order": 60,
+      "order": 59,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/messages",
@@ -798,7 +782,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/messages",
-      "order": 61,
+      "order": 60,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/messages",
@@ -811,7 +795,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/messages/{message_id}",
-      "order": 62,
+      "order": 61,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/messages/{message_id}",
@@ -824,7 +808,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/messages/{message_id}/reactions",
-      "order": 63,
+      "order": 62,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/messages/{message_id}/reactions",
@@ -837,7 +821,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/messages/{message_id}/reactions/{kind}",
-      "order": 64,
+      "order": 63,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/messages/{message_id}/reactions/{kind}",
@@ -850,7 +834,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/messages/{message_id}/expense-draft",
-      "order": 65,
+      "order": 64,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/messages/{message_id}/expense-draft",
@@ -866,7 +850,7 @@
     },
     {
       "id": "PUT /contexts/{context_id}/members/{person_id}/role",
-      "order": 66,
+      "order": 65,
       "kind": "route",
       "method": "PUT",
       "path": "/contexts/{context_id}/members/{person_id}/role",
@@ -879,7 +863,7 @@
     },
     {
       "id": "PUT /contexts/{context_id}/read-mark",
-      "order": 67,
+      "order": 66,
       "kind": "route",
       "method": "PUT",
       "path": "/contexts/{context_id}/read-mark",
@@ -892,7 +876,7 @@
     },
     {
       "id": "POST /batches",
-      "order": 68,
+      "order": 67,
       "kind": "route",
       "method": "POST",
       "path": "/batches",
@@ -905,7 +889,7 @@
     },
     {
       "id": "POST /batches/{batch_id}/publish",
-      "order": 69,
+      "order": 68,
       "kind": "route",
       "method": "POST",
       "path": "/batches/{batch_id}/publish",
@@ -918,7 +902,7 @@
     },
     {
       "id": "GET /batches/{batch_id}/obligations",
-      "order": 70,
+      "order": 69,
       "kind": "route",
       "method": "GET",
       "path": "/batches/{batch_id}/obligations",
@@ -931,7 +915,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/batches",
-      "order": 71,
+      "order": 70,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/batches",
@@ -944,7 +928,7 @@
     },
     {
       "id": "GET /g/{token}",
-      "order": 72,
+      "order": 71,
       "kind": "route",
       "method": "GET",
       "path": "/g/{token}",
@@ -957,7 +941,7 @@
     },
     {
       "id": "POST /g/{token}/da-chuyen",
-      "order": 73,
+      "order": 72,
       "kind": "route",
       "method": "POST",
       "path": "/g/{token}/da-chuyen",
@@ -970,7 +954,7 @@
     },
     {
       "id": "GET /g/{token}/khong-phai-toi",
-      "order": 74,
+      "order": 73,
       "kind": "route",
       "method": "GET",
       "path": "/g/{token}/khong-phai-toi",
@@ -983,7 +967,7 @@
     },
     {
       "id": "POST /g/{token}/khong-phai-toi",
-      "order": 75,
+      "order": 74,
       "kind": "route",
       "method": "POST",
       "path": "/g/{token}/khong-phai-toi",
@@ -996,7 +980,7 @@
     },
     {
       "id": "GET /g/{token}/doi-so-tien",
-      "order": 76,
+      "order": 75,
       "kind": "route",
       "method": "GET",
       "path": "/g/{token}/doi-so-tien",
@@ -1009,7 +993,7 @@
     },
     {
       "id": "POST /g/{token}/doi-so-tien",
-      "order": 77,
+      "order": 76,
       "kind": "route",
       "method": "POST",
       "path": "/g/{token}/doi-so-tien",
@@ -1022,7 +1006,7 @@
     },
     {
       "id": "POST /g/{token}/xin-cach-tinh",
-      "order": 78,
+      "order": 77,
       "kind": "route",
       "method": "POST",
       "path": "/g/{token}/xin-cach-tinh",
@@ -1035,7 +1019,7 @@
     },
     {
       "id": "POST /obligations/{obligation_id}/confirm-receipt",
-      "order": 79,
+      "order": 78,
       "kind": "route",
       "method": "POST",
       "path": "/obligations/{obligation_id}/confirm-receipt",
@@ -1048,7 +1032,7 @@
     },
     {
       "id": "GET /people/me/contexts",
-      "order": 80,
+      "order": 79,
       "kind": "route",
       "method": "GET",
       "path": "/people/me/contexts",
@@ -1061,7 +1045,7 @@
     },
     {
       "id": "GET /people/me",
-      "order": 81,
+      "order": 80,
       "kind": "route",
       "method": "GET",
       "path": "/people/me",
@@ -1074,7 +1058,7 @@
     },
     {
       "id": "PATCH /people/me",
-      "order": 82,
+      "order": 81,
       "kind": "route",
       "method": "PATCH",
       "path": "/people/me",
@@ -1087,7 +1071,7 @@
     },
     {
       "id": "GET /people/me/saved-places",
-      "order": 83,
+      "order": 82,
       "kind": "route",
       "method": "GET",
       "path": "/people/me/saved-places",
@@ -1100,7 +1084,7 @@
     },
     {
       "id": "PUT /people/me/saved-places/{place_id}",
-      "order": 84,
+      "order": 83,
       "kind": "route",
       "method": "PUT",
       "path": "/people/me/saved-places/{place_id}",
@@ -1113,7 +1097,7 @@
     },
     {
       "id": "DELETE /people/me/saved-places/{place_id}",
-      "order": 85,
+      "order": 84,
       "kind": "route",
       "method": "DELETE",
       "path": "/people/me/saved-places/{place_id}",
@@ -1126,7 +1110,7 @@
     },
     {
       "id": "GET /people/me/blocked",
-      "order": 86,
+      "order": 85,
       "kind": "route",
       "method": "GET",
       "path": "/people/me/blocked",
@@ -1139,7 +1123,7 @@
     },
     {
       "id": "DELETE /people/me",
-      "order": 87,
+      "order": 86,
       "kind": "route",
       "method": "DELETE",
       "path": "/people/me",
@@ -1152,7 +1136,7 @@
     },
     {
       "id": "POST /people/{person_id}/block",
-      "order": 88,
+      "order": 87,
       "kind": "route",
       "method": "POST",
       "path": "/people/{person_id}/block",
@@ -1165,7 +1149,7 @@
     },
     {
       "id": "DELETE /people/{person_id}/block",
-      "order": 89,
+      "order": 88,
       "kind": "route",
       "method": "DELETE",
       "path": "/people/{person_id}/block",
@@ -1178,7 +1162,7 @@
     },
     {
       "id": "POST /people/{person_id}/dm",
-      "order": 90,
+      "order": 89,
       "kind": "route",
       "method": "POST",
       "path": "/people/{person_id}/dm",
@@ -1191,7 +1175,7 @@
     },
     {
       "id": "GET /people/{person_id}",
-      "order": 91,
+      "order": 90,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person_id}",
@@ -1204,7 +1188,7 @@
     },
     {
       "id": "PUT /people/{person_id}",
-      "order": 92,
+      "order": 91,
       "kind": "route",
       "method": "PUT",
       "path": "/people/{person_id}",
@@ -1216,21 +1200,8 @@
       "evidence": "docs/migration/routes/people/PUT-people-person_id.md"
     },
     {
-      "id": "POST /sessions",
-      "order": 93,
-      "kind": "route",
-      "method": "POST",
-      "path": "/sessions",
-      "group": "sessions",
-      "class": "core",
-      "owner": "go",
-      "python": "live",
-      "state": "LIVE-GO",
-      "evidence": "docs/migration/ported-w9-auth-sessions.md"
-    },
-    {
       "id": "GET /sessions",
-      "order": 94,
+      "order": 92,
       "kind": "route",
       "method": "GET",
       "path": "/sessions",
@@ -1243,7 +1214,7 @@
     },
     {
       "id": "DELETE /sessions/current",
-      "order": 95,
+      "order": 93,
       "kind": "route",
       "method": "DELETE",
       "path": "/sessions/current",
@@ -1256,7 +1227,7 @@
     },
     {
       "id": "DELETE /sessions/{session_id}",
-      "order": 96,
+      "order": 94,
       "kind": "route",
       "method": "DELETE",
       "path": "/sessions/{session_id}",
@@ -1268,72 +1239,8 @@
       "evidence": "docs/migration/ported-w9-auth-sessions.md"
     },
     {
-      "id": "POST /auth/otp/request",
-      "order": 97,
-      "kind": "route",
-      "method": "POST",
-      "path": "/auth/otp/request",
-      "group": "auth",
-      "class": "core",
-      "owner": "go",
-      "python": "live",
-      "in_memory": [
-        "otp_request_limit"
-      ],
-      "state": "LIVE-GO",
-      "evidence": "docs/migration/ported-w9-auth-sessions.md"
-    },
-    {
-      "id": "POST /auth/otp/verify",
-      "order": 98,
-      "kind": "route",
-      "method": "POST",
-      "path": "/auth/otp/verify",
-      "group": "auth",
-      "class": "core",
-      "owner": "go",
-      "python": "live",
-      "in_memory": [
-        "otp_verify_limit"
-      ],
-      "state": "LIVE-GO",
-      "evidence": "docs/migration/ported-w9-auth-sessions.md"
-    },
-    {
-      "id": "POST /auth/google",
-      "order": 99,
-      "kind": "route",
-      "method": "POST",
-      "path": "/auth/google",
-      "group": "auth",
-      "class": "core",
-      "owner": "go",
-      "python": "live",
-      "in_memory": [
-        "google_login_limit"
-      ],
-      "state": "LIVE-GO",
-      "evidence": "docs/migration/ported-w9-auth-sessions.md"
-    },
-    {
-      "id": "POST /identity/person-id",
-      "order": 100,
-      "kind": "route",
-      "method": "POST",
-      "path": "/identity/person-id",
-      "group": "identity",
-      "class": "core",
-      "owner": "go",
-      "python": "live",
-      "in_memory": [
-        "person_id_limit"
-      ],
-      "state": "LIVE-GO",
-      "evidence": "docs/migration/routes/identity/POST-identity-person-id.md"
-    },
-    {
       "id": "GET /destinations",
-      "order": 101,
+      "order": 95,
       "kind": "route",
       "method": "GET",
       "path": "/destinations",
@@ -1346,7 +1253,7 @@
     },
     {
       "id": "GET /places",
-      "order": 102,
+      "order": 96,
       "kind": "route",
       "method": "GET",
       "path": "/places",
@@ -1362,7 +1269,7 @@
     },
     {
       "id": "GET /places/{place_id}/photos",
-      "order": 103,
+      "order": 97,
       "kind": "route",
       "method": "GET",
       "path": "/places/{place_id}/photos",
@@ -1375,7 +1282,7 @@
     },
     {
       "id": "GET /places/{place_id}/group-photos",
-      "order": 104,
+      "order": 98,
       "kind": "route",
       "method": "GET",
       "path": "/places/{place_id}/group-photos",
@@ -1388,7 +1295,7 @@
     },
     {
       "id": "GET /places/{place_id}/photos/{photo_id}",
-      "order": 105,
+      "order": 99,
       "kind": "route",
       "method": "GET",
       "path": "/places/{place_id}/photos/{photo_id}",
@@ -1401,7 +1308,7 @@
     },
     {
       "id": "GET /places/{place_id}",
-      "order": 106,
+      "order": 100,
       "kind": "route",
       "method": "GET",
       "path": "/places/{place_id}",
@@ -1417,7 +1324,7 @@
     },
     {
       "id": "POST /places/search",
-      "order": 107,
+      "order": 101,
       "kind": "route",
       "method": "POST",
       "path": "/places/search",
@@ -1433,7 +1340,7 @@
     },
     {
       "id": "GET /people/{person_id}/finance",
-      "order": 108,
+      "order": 102,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person_id}/finance",
@@ -1446,7 +1353,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/recap",
-      "order": 109,
+      "order": 103,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/recap",
@@ -1459,7 +1366,7 @@
     },
     {
       "id": "POST /me/nep/media",
-      "order": 110,
+      "order": 104,
       "kind": "route",
       "method": "POST",
       "path": "/me/nep/media",
@@ -1471,7 +1378,7 @@
     },
     {
       "id": "GET /me/nep/media/{job_id}",
-      "order": 111,
+      "order": 105,
       "kind": "route",
       "method": "GET",
       "path": "/me/nep/media/{job_id}",
@@ -1483,7 +1390,7 @@
     },
     {
       "id": "GET /me/nep/media/{job_id}/file",
-      "order": 112,
+      "order": 106,
       "kind": "route",
       "method": "GET",
       "path": "/me/nep/media/{job_id}/file",
@@ -1495,7 +1402,7 @@
     },
     {
       "id": "POST /reports",
-      "order": 113,
+      "order": 107,
       "kind": "route",
       "method": "POST",
       "path": "/reports",
@@ -1508,7 +1415,7 @@
     },
     {
       "id": "POST /receipts/scan",
-      "order": 114,
+      "order": 108,
       "kind": "route",
       "method": "POST",
       "path": "/receipts/scan",
@@ -1524,7 +1431,7 @@
     },
     {
       "id": "POST /screenshots/scan",
-      "order": 115,
+      "order": 109,
       "kind": "route",
       "method": "POST",
       "path": "/screenshots/scan",
@@ -1540,7 +1447,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/suggestion",
-      "order": 116,
+      "order": 110,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/suggestion",
@@ -1556,7 +1463,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/contextual-suggestion",
-      "order": 117,
+      "order": 111,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/contextual-suggestion",
@@ -1572,7 +1479,7 @@
     },
     {
       "id": "GET /areas",
-      "order": 118,
+      "order": 112,
       "kind": "route",
       "method": "GET",
       "path": "/areas",
@@ -1585,7 +1492,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/map",
-      "order": 119,
+      "order": 113,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/map",
@@ -1598,7 +1505,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/heatmap",
-      "order": 120,
+      "order": 114,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/heatmap",
@@ -1611,7 +1518,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/meet",
-      "order": 121,
+      "order": 115,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/meet",
@@ -1624,7 +1531,7 @@
     },
     {
       "id": "POST /stories",
-      "order": 122,
+      "order": 116,
       "kind": "route",
       "method": "POST",
       "path": "/stories",
@@ -1637,7 +1544,7 @@
     },
     {
       "id": "GET /stories",
-      "order": 123,
+      "order": 117,
       "kind": "route",
       "method": "GET",
       "path": "/stories",
@@ -1650,7 +1557,7 @@
     },
     {
       "id": "POST /stories/{story_id}/seen",
-      "order": 124,
+      "order": 118,
       "kind": "route",
       "method": "POST",
       "path": "/stories/{story_id}/seen",
@@ -1663,7 +1570,7 @@
     },
     {
       "id": "DELETE /stories/{story_id}",
-      "order": 125,
+      "order": 119,
       "kind": "route",
       "method": "DELETE",
       "path": "/stories/{story_id}",
@@ -1676,7 +1583,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/votes",
-      "order": 126,
+      "order": 120,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/votes",
@@ -1689,7 +1596,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/votes",
-      "order": 127,
+      "order": 121,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/votes",
@@ -1702,7 +1609,7 @@
     },
     {
       "id": "GET /votes/{vote_id}",
-      "order": 128,
+      "order": 122,
       "kind": "route",
       "method": "GET",
       "path": "/votes/{vote_id}",
@@ -1715,7 +1622,7 @@
     },
     {
       "id": "POST /votes/{vote_id}/ballots",
-      "order": 129,
+      "order": 123,
       "kind": "route",
       "method": "POST",
       "path": "/votes/{vote_id}/ballots",
@@ -1728,7 +1635,7 @@
     },
     {
       "id": "POST /votes/{vote_id}/close",
-      "order": 130,
+      "order": 124,
       "kind": "route",
       "method": "POST",
       "path": "/votes/{vote_id}/close",
@@ -1741,7 +1648,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums",
-      "order": 131,
+      "order": 125,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums",
@@ -1754,7 +1661,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums/{outing_id}",
-      "order": 132,
+      "order": 126,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums/{outing_id}",
@@ -1767,7 +1674,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums/{outing_id}/reel",
-      "order": 133,
+      "order": 127,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums/{outing_id}/reel",
@@ -1783,7 +1690,7 @@
     },
     {
       "id": "GET /interests",
-      "order": 134,
+      "order": 128,
       "kind": "route",
       "method": "GET",
       "path": "/interests",
@@ -1796,7 +1703,7 @@
     },
     {
       "id": "PUT /people/me/interests",
-      "order": 135,
+      "order": 129,
       "kind": "route",
       "method": "PUT",
       "path": "/people/me/interests",
@@ -1809,7 +1716,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/preference-profile",
-      "order": 136,
+      "order": 130,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/preference-profile",
@@ -1822,7 +1729,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/photos/{photo_id}/face-boxes",
-      "order": 137,
+      "order": 131,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/photos/{photo_id}/face-boxes",
@@ -1838,7 +1745,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/notebook",
-      "order": 138,
+      "order": 132,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/notebook",
@@ -1851,7 +1758,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/proposals",
-      "order": 139,
+      "order": 133,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/proposals",
@@ -1864,7 +1771,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
-      "order": 140,
+      "order": 134,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
@@ -1877,7 +1784,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/notebook/consents/{purpose}",
-      "order": 141,
+      "order": 135,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/notebook/consents/{purpose}",
@@ -1890,7 +1797,7 @@
     },
     {
       "id": "PUT /contexts/{context_id}/notebook/constraints/{kind}",
-      "order": 142,
+      "order": 136,
       "kind": "route",
       "method": "PUT",
       "path": "/contexts/{context_id}/notebook/constraints/{kind}",
@@ -1903,7 +1810,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/notebook/constraints/{kind}",
-      "order": 143,
+      "order": 137,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/notebook/constraints/{kind}",
@@ -1916,7 +1823,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/close/preview",
-      "order": 144,
+      "order": 138,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/close/preview",
@@ -1929,7 +1836,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/close",
-      "order": 145,
+      "order": 139,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/close",
@@ -1942,7 +1849,7 @@
     },
     {
       "id": "PUT /contexts/{context_id}/notebook/week-role",
-      "order": 146,
+      "order": 140,
       "kind": "route",
       "method": "PUT",
       "path": "/contexts/{context_id}/notebook/week-role",
@@ -1955,7 +1862,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/papers",
-      "order": 147,
+      "order": 141,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/papers",
@@ -1968,7 +1875,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/papers/draft",
-      "order": 148,
+      "order": 142,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/papers/draft",
@@ -1981,7 +1888,7 @@
     },
     {
       "id": "GET /papers/{paper_id}",
-      "order": 149,
+      "order": 143,
       "kind": "route",
       "method": "GET",
       "path": "/papers/{paper_id}",
@@ -1994,7 +1901,7 @@
     },
     {
       "id": "PATCH /papers/{paper_id}/draft",
-      "order": 150,
+      "order": 144,
       "kind": "route",
       "method": "PATCH",
       "path": "/papers/{paper_id}/draft",
@@ -2007,7 +1914,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/send",
-      "order": 151,
+      "order": 145,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/send",
@@ -2020,7 +1927,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/viewed",
-      "order": 152,
+      "order": 146,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/versions/{version}/viewed",
@@ -2033,7 +1940,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/responses",
-      "order": 153,
+      "order": 147,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/versions/{version}/responses",
@@ -2046,7 +1953,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/withdraw",
-      "order": 154,
+      "order": 148,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/withdraw",
@@ -2059,7 +1966,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/skip",
-      "order": 155,
+      "order": 149,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/skip",
@@ -2072,7 +1979,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/done",
-      "order": 156,
+      "order": 150,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/done",
@@ -2085,7 +1992,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/keeps",
-      "order": 157,
+      "order": 151,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/keeps",
@@ -2098,7 +2005,7 @@
     },
     {
       "id": "GET /healthz",
-      "order": 158,
+      "order": 152,
       "kind": "route",
       "method": "GET",
       "path": "/healthz",
@@ -2111,7 +2018,7 @@
     },
     {
       "id": "GET /outings/{outing}/ending",
-      "order": 159,
+      "order": 153,
       "kind": "route",
       "method": "GET",
       "path": "/outings/{outing}/ending",
@@ -2125,7 +2032,7 @@
     },
     {
       "id": "POST /outings/{outing}/ending",
-      "order": 160,
+      "order": 154,
       "kind": "route",
       "method": "POST",
       "path": "/outings/{outing}/ending",
@@ -2139,7 +2046,7 @@
     },
     {
       "id": "GET /outings/{outing}/diary-sources",
-      "order": 161,
+      "order": 155,
       "kind": "route",
       "method": "GET",
       "path": "/outings/{outing}/diary-sources",
@@ -2153,7 +2060,7 @@
     },
     {
       "id": "POST /outings/{outing}/diary-jobs",
-      "order": 162,
+      "order": 156,
       "kind": "route",
       "method": "POST",
       "path": "/outings/{outing}/diary-jobs",
@@ -2167,7 +2074,7 @@
     },
     {
       "id": "GET /diary-jobs/{job}",
-      "order": 163,
+      "order": 157,
       "kind": "route",
       "method": "GET",
       "path": "/diary-jobs/{job}",
@@ -2181,7 +2088,7 @@
     },
     {
       "id": "PUT /outings/{outing}/diary",
-      "order": 164,
+      "order": 158,
       "kind": "route",
       "method": "PUT",
       "path": "/outings/{outing}/diary",
@@ -2195,7 +2102,7 @@
     },
     {
       "id": "GET /diaries/{diary}",
-      "order": 165,
+      "order": 159,
       "kind": "route",
       "method": "GET",
       "path": "/diaries/{diary}",
@@ -2209,7 +2116,7 @@
     },
     {
       "id": "DELETE /diaries/{diary}",
-      "order": 166,
+      "order": 160,
       "kind": "route",
       "method": "DELETE",
       "path": "/diaries/{diary}",
@@ -2223,7 +2130,7 @@
     },
     {
       "id": "GET /diaries/{diary}/photos/{photo}",
-      "order": 167,
+      "order": 161,
       "kind": "route",
       "method": "GET",
       "path": "/diaries/{diary}/photos/{photo}",
@@ -2237,7 +2144,7 @@
     },
     {
       "id": "GET /people/{person}/diaries",
-      "order": 168,
+      "order": 162,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person}/diaries",
@@ -2251,7 +2158,7 @@
     },
     {
       "id": "PATCH /diaries/{diary}/audience",
-      "order": 169,
+      "order": 163,
       "kind": "route",
       "method": "PATCH",
       "path": "/diaries/{diary}/audience",
@@ -2265,7 +2172,7 @@
     },
     {
       "id": "GET /v2/community/feed",
-      "order": 170,
+      "order": 164,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/feed",
@@ -2279,7 +2186,7 @@
     },
     {
       "id": "GET /v2/community/posts/{post}",
-      "order": 171,
+      "order": 165,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/posts/{post}",
@@ -2293,7 +2200,7 @@
     },
     {
       "id": "POST /v2/community/posts",
-      "order": 172,
+      "order": 166,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/posts",
@@ -2307,7 +2214,7 @@
     },
     {
       "id": "PUT /v2/community/posts/{post}",
-      "order": 173,
+      "order": 167,
       "kind": "route",
       "method": "PUT",
       "path": "/v2/community/posts/{post}",
@@ -2321,7 +2228,7 @@
     },
     {
       "id": "DELETE /v2/community/posts/{post}",
-      "order": 174,
+      "order": 168,
       "kind": "route",
       "method": "DELETE",
       "path": "/v2/community/posts/{post}",
@@ -2335,7 +2242,7 @@
     },
     {
       "id": "POST /v2/community/posts/{post}/submit",
-      "order": 175,
+      "order": 169,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/posts/{post}/submit",
@@ -2349,7 +2256,7 @@
     },
     {
       "id": "PATCH /v2/community/posts/{post}/audience",
-      "order": 176,
+      "order": 170,
       "kind": "route",
       "method": "PATCH",
       "path": "/v2/community/posts/{post}/audience",
@@ -2363,7 +2270,7 @@
     },
     {
       "id": "GET /v2/community/posts/{post}/comments",
-      "order": 177,
+      "order": 171,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/posts/{post}/comments",
@@ -2377,7 +2284,7 @@
     },
     {
       "id": "POST /v2/community/posts/{post}/comments",
-      "order": 178,
+      "order": 172,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/posts/{post}/comments",
@@ -2391,7 +2298,7 @@
     },
     {
       "id": "DELETE /v2/community/posts/{post}/comments/{comment}",
-      "order": 179,
+      "order": 173,
       "kind": "route",
       "method": "DELETE",
       "path": "/v2/community/posts/{post}/comments/{comment}",
@@ -2405,7 +2312,7 @@
     },
     {
       "id": "PUT /v2/community/posts/{post}/like",
-      "order": 180,
+      "order": 174,
       "kind": "route",
       "method": "PUT",
       "path": "/v2/community/posts/{post}/like",
@@ -2419,7 +2326,7 @@
     },
     {
       "id": "DELETE /v2/community/posts/{post}/like",
-      "order": 181,
+      "order": 175,
       "kind": "route",
       "method": "DELETE",
       "path": "/v2/community/posts/{post}/like",
@@ -2433,7 +2340,7 @@
     },
     {
       "id": "PUT /v2/community/posts/{post}/feedback",
-      "order": 182,
+      "order": 176,
       "kind": "route",
       "method": "PUT",
       "path": "/v2/community/posts/{post}/feedback",
@@ -2447,7 +2354,7 @@
     },
     {
       "id": "GET /v2/community/topics",
-      "order": 183,
+      "order": 177,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/topics",
@@ -2461,7 +2368,7 @@
     },
     {
       "id": "GET /v2/community/follows",
-      "order": 184,
+      "order": 178,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/follows",
@@ -2475,7 +2382,7 @@
     },
     {
       "id": "PUT /v2/community/follows",
-      "order": 185,
+      "order": 179,
       "kind": "route",
       "method": "PUT",
       "path": "/v2/community/follows",
@@ -2489,7 +2396,7 @@
     },
     {
       "id": "DELETE /v2/community/follows",
-      "order": 186,
+      "order": 180,
       "kind": "route",
       "method": "DELETE",
       "path": "/v2/community/follows",
@@ -2503,7 +2410,7 @@
     },
     {
       "id": "GET /v2/community/preferences",
-      "order": 187,
+      "order": 181,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/preferences",
@@ -2517,7 +2424,7 @@
     },
     {
       "id": "PUT /v2/community/preferences",
-      "order": 188,
+      "order": 182,
       "kind": "route",
       "method": "PUT",
       "path": "/v2/community/preferences",
@@ -2531,7 +2438,7 @@
     },
     {
       "id": "DELETE /v2/community/history",
-      "order": 189,
+      "order": 183,
       "kind": "route",
       "method": "DELETE",
       "path": "/v2/community/history",
@@ -2545,7 +2452,7 @@
     },
     {
       "id": "POST /v2/community/interactions",
-      "order": 190,
+      "order": 184,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/interactions",
@@ -2559,7 +2466,7 @@
     },
     {
       "id": "GET /v2/community/notifications",
-      "order": 191,
+      "order": 185,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/notifications",
@@ -2573,7 +2480,7 @@
     },
     {
       "id": "POST /v2/community/media",
-      "order": 192,
+      "order": 186,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/media",
@@ -2587,7 +2494,7 @@
     },
     {
       "id": "GET /v2/community/media/{media}",
-      "order": 193,
+      "order": 187,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/media/{media}",
@@ -2601,7 +2508,7 @@
     },
     {
       "id": "GET /v2/community/media/{media}/status",
-      "order": 194,
+      "order": 188,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/media/{media}/status",
@@ -2615,7 +2522,7 @@
     },
     {
       "id": "GET /v2/community/review",
-      "order": 195,
+      "order": 189,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/review",
@@ -2629,7 +2536,7 @@
     },
     {
       "id": "POST /v2/community/posts/{post}/review",
-      "order": 196,
+      "order": 190,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/posts/{post}/review",
@@ -2643,7 +2550,7 @@
     },
     {
       "id": "POST /v2/community/posts/{post}/appeal",
-      "order": 197,
+      "order": 191,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/posts/{post}/appeal",
@@ -2657,7 +2564,7 @@
     },
     {
       "id": "GET /v2/community/stream",
-      "order": 198,
+      "order": 192,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/stream",
@@ -2671,7 +2578,7 @@
     },
     {
       "id": "POST /v2/community/posts/{post}/nep",
-      "order": 199,
+      "order": 193,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/posts/{post}/nep",
@@ -2685,7 +2592,7 @@
     },
     {
       "id": "POST /v2/community/comments/{comment}/review",
-      "order": 200,
+      "order": 194,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/comments/{comment}/review",
@@ -2699,7 +2606,7 @@
     },
     {
       "id": "GET /v2/community/search",
-      "order": 201,
+      "order": 195,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/search",
@@ -2713,7 +2620,7 @@
     },
     {
       "id": "GET /v2/community/keeps",
-      "order": 202,
+      "order": 196,
       "kind": "route",
       "method": "GET",
       "path": "/v2/community/keeps",
@@ -2727,7 +2634,7 @@
     },
     {
       "id": "POST /v2/community/keeps",
-      "order": 203,
+      "order": 197,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/keeps",
@@ -2741,7 +2648,7 @@
     },
     {
       "id": "DELETE /v2/community/keeps/{keep}",
-      "order": 204,
+      "order": 198,
       "kind": "route",
       "method": "DELETE",
       "path": "/v2/community/keeps/{keep}",
@@ -2755,7 +2662,7 @@
     },
     {
       "id": "POST /v2/community/diaries/{diary}/share",
-      "order": 205,
+      "order": 199,
       "kind": "route",
       "method": "POST",
       "path": "/v2/community/diaries/{diary}/share",
@@ -2769,7 +2676,7 @@
     },
     {
       "id": "GET /me/achievement-routes",
-      "order": 206,
+      "order": 200,
       "kind": "route",
       "method": "GET",
       "path": "/me/achievement-routes",
@@ -2783,7 +2690,7 @@
     },
     {
       "id": "POST /me/achievement-runs",
-      "order": 207,
+      "order": 201,
       "kind": "route",
       "method": "POST",
       "path": "/me/achievement-runs",
@@ -2797,7 +2704,7 @@
     },
     {
       "id": "POST /me/achievement-runs/{run_id}/finish",
-      "order": 208,
+      "order": 202,
       "kind": "route",
       "method": "POST",
       "path": "/me/achievement-runs/{run_id}/finish",
@@ -2811,7 +2718,7 @@
     },
     {
       "id": "POST /me/achievement-suggestions",
-      "order": 209,
+      "order": 203,
       "kind": "route",
       "method": "POST",
       "path": "/me/achievement-suggestions",
@@ -2825,7 +2732,7 @@
     },
     {
       "id": "PATCH /me/achievement-display",
-      "order": 210,
+      "order": 204,
       "kind": "route",
       "method": "PATCH",
       "path": "/me/achievement-display",
@@ -2839,7 +2746,7 @@
     },
     {
       "id": "GET /people/{person_id}/achievements",
-      "order": 211,
+      "order": 205,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person_id}/achievements",
@@ -2853,7 +2760,7 @@
     },
     {
       "id": "GET /social/v2/people/{person_id}/posts",
-      "order": 212,
+      "order": 206,
       "kind": "route",
       "method": "GET",
       "path": "/social/v2/people/{person_id}/posts",
@@ -2867,7 +2774,7 @@
     },
     {
       "id": "GET /social/v2/people/{person_id}/changes",
-      "order": 213,
+      "order": 207,
       "kind": "route",
       "method": "GET",
       "path": "/social/v2/people/{person_id}/changes",
@@ -2881,7 +2788,7 @@
     },
     {
       "id": "GET /social/v2/posts/{post_id}",
-      "order": 214,
+      "order": 208,
       "kind": "route",
       "method": "GET",
       "path": "/social/v2/posts/{post_id}",
@@ -2895,7 +2802,7 @@
     },
     {
       "id": "GET /social/v2/posts/{post_id}/comments",
-      "order": 215,
+      "order": 209,
       "kind": "route",
       "method": "GET",
       "path": "/social/v2/posts/{post_id}/comments",
@@ -2909,7 +2816,7 @@
     },
     {
       "id": "POST /social/v2/posts/{post_id}/comments",
-      "order": 216,
+      "order": 210,
       "kind": "route",
       "method": "POST",
       "path": "/social/v2/posts/{post_id}/comments",
@@ -2923,7 +2830,7 @@
     },
     {
       "id": "PUT /social/v2/posts/{post_id}/like",
-      "order": 217,
+      "order": 211,
       "kind": "route",
       "method": "PUT",
       "path": "/social/v2/posts/{post_id}/like",
@@ -2937,7 +2844,7 @@
     },
     {
       "id": "DELETE /social/v2/posts/{post_id}/like",
-      "order": 218,
+      "order": 212,
       "kind": "route",
       "method": "DELETE",
       "path": "/social/v2/posts/{post_id}/like",
@@ -2951,7 +2858,7 @@
     },
     {
       "id": "PUT /social/v2/comments/{comment_id}/like",
-      "order": 219,
+      "order": 213,
       "kind": "route",
       "method": "PUT",
       "path": "/social/v2/comments/{comment_id}/like",
@@ -2965,7 +2872,7 @@
     },
     {
       "id": "DELETE /social/v2/comments/{comment_id}/like",
-      "order": 220,
+      "order": 214,
       "kind": "route",
       "method": "DELETE",
       "path": "/social/v2/comments/{comment_id}/like",
@@ -2979,7 +2886,7 @@
     },
     {
       "id": "POST /social/v2/posts/{post_id}/repost",
-      "order": 221,
+      "order": 215,
       "kind": "route",
       "method": "POST",
       "path": "/social/v2/posts/{post_id}/repost",
@@ -2993,7 +2900,7 @@
     },
     {
       "id": "POST /me/profile-videos",
-      "order": 222,
+      "order": 216,
       "kind": "route",
       "method": "POST",
       "path": "/me/profile-videos",
@@ -3007,7 +2914,7 @@
     },
     {
       "id": "GET /me/profile-videos/credits",
-      "order": 223,
+      "order": 217,
       "kind": "route",
       "method": "GET",
       "path": "/me/profile-videos/credits",
@@ -3021,7 +2928,7 @@
     },
     {
       "id": "GET /me/profile-videos/{job_id}",
-      "order": 224,
+      "order": 218,
       "kind": "route",
       "method": "GET",
       "path": "/me/profile-videos/{job_id}",
@@ -3035,7 +2942,7 @@
     },
     {
       "id": "GET /me/profile-videos/{job_id}/file",
-      "order": 225,
+      "order": 219,
       "kind": "route",
       "method": "GET",
       "path": "/me/profile-videos/{job_id}/file",
@@ -3049,7 +2956,7 @@
     },
     {
       "id": "GET /me/profile-videos",
-      "order": 226,
+      "order": 220,
       "kind": "route",
       "method": "GET",
       "path": "/me/profile-videos",
@@ -3063,7 +2970,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/unbatched-expenses",
-      "order": 227,
+      "order": 221,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/unbatched-expenses",
@@ -3077,7 +2984,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/invitation",
-      "order": 228,
+      "order": 222,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/invitation",
@@ -3091,7 +2998,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/invitation",
-      "order": 229,
+      "order": 223,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/invitation",
@@ -3105,7 +3012,7 @@
     },
     {
       "id": "POST /me/achievement-seen",
-      "order": 230,
+      "order": 224,
       "kind": "route",
       "method": "POST",
       "path": "/me/achievement-seen",
@@ -3342,6 +3249,150 @@
       "package": "nepnho",
       "state": "GO-ONLY",
       "evidence": "services/core/internal/nepnho/nepnho_postgres_test.go"
+    },
+    {
+      "id": "POST /auth/register",
+      "method": "POST",
+      "path": "/auth/register",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /auth/register/verify",
+      "method": "POST",
+      "path": "/auth/register/verify",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /auth/login",
+      "method": "POST",
+      "path": "/auth/login",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /auth/password/reset/request",
+      "method": "POST",
+      "path": "/auth/password/reset/request",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /auth/password/reset/confirm",
+      "method": "POST",
+      "path": "/auth/password/reset/confirm",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /auth/google/challenge",
+      "method": "POST",
+      "path": "/auth/google/challenge",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /auth/google",
+      "method": "POST",
+      "path": "/auth/google",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /auth/google/register",
+      "method": "POST",
+      "path": "/auth/google/register",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "GET /people/me/account",
+      "method": "GET",
+      "path": "/people/me/account",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /people/me/account/reauth",
+      "method": "POST",
+      "path": "/people/me/account/reauth",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "PUT /people/me/account/password",
+      "method": "PUT",
+      "path": "/people/me/account/password",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /people/me/account/email",
+      "method": "POST",
+      "path": "/people/me/account/email",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /people/me/account/email/verify",
+      "method": "POST",
+      "path": "/people/me/account/email/verify",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /people/me/account/google",
+      "method": "POST",
+      "path": "/people/me/account/google",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "DELETE /people/me/account/google",
+      "method": "DELETE",
+      "path": "/people/me/account/google",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "PUT /people/me/account/discovery",
+      "method": "PUT",
+      "path": "/people/me/account/discovery",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "DELETE /sessions/all",
+      "method": "DELETE",
+      "path": "/sessions/all",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /friends/lookup",
+      "method": "POST",
+      "path": "/friends/lookup",
+      "package": "accountauth",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/accountauth/postgres_test.go"
     }
   ]
 }

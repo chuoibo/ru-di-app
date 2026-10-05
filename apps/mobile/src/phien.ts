@@ -1,37 +1,10 @@
-/** Signing in, staying signed in, and signing out.
- *
- * Since ADR-0014 a production server does not believe `X-Actor-ID`. What it
- * believes is a bearer token it issued itself, and the only way to get one
- * without already having one is to exchange a **named** invitation: a row an
- * existing member wrote with somebody's `person_id` in it. The app therefore
- * never says who it is. It hands over a secret, and the server answers with
- * whose session that secret was.
- *
- * That asymmetry is the whole design and it is easy to undo by accident. A
- * body with a `person_id` in it, however well-meant, would put the client back
- * in charge of identity and reopen the hole the ADR closed. There is no such
- * field here and there must not be one.
- *
- * Three things live here rather than in `api.ts`:
- *
- * - **The native module.** `expo-secure-store` is imported dynamically, never
- *   at module scope. `api.ts` is loaded by the node test suite, which has no
- *   native modules at all, and a top-level import would make the entire API
- *   layer unloadable there.
- * - **The retry key.** A dropped response on `POST /sessions` is the worst
- *   failure this flow has: the invitation's secret is spent server-side, the
- *   token is lost in the network, and the person is locked out until somebody
- *   rotates the invitation for them. An `Idempotency-Key` turns that into a
- *   replay of the same answer.
- * - **The web store.** On web there is no SecureStore, and the bearer is
- *   still never written to `localStorage`, where any page script can read it
- *   at rest. It lives in memory; what
- *   survives a reload is an HttpOnly, path-scoped, SameSite=Strict cookie the
- *   server sets and no script can read (`phien-web.ts`,
- *   `services/core/internal/websession`). Before that store existed every
- *   reload signed the person out (measured 2026-09-24).
+/** Sessions issued by the managed account doors (ADR-0055).
+ * The server chooses the immutable person UUID. Native tokens live in
+ * SecureStore; web tokens stay in memory and reload through an HttpOnly
+ * Secure SameSite=Strict cookie. No account proof uses idempotency replay.
  */
 import {
+  ApiError,
   BASE_URL,
   datTokenPhien,
   newAttempt,
@@ -83,7 +56,7 @@ export type Phien = {
   membership_id: string | null;
   /** Which door minted this session (ADR-0016). Absent on rows stored before
    *  the field existed. */
-  issued_via?: "invite" | "otp" | "google" | "genesis";
+  issued_via?: "password" | "google" | "invite" | "otp" | "genesis";
   is_new_person?: boolean;
   profile?: { display_name: string };
   /** Every group the person is in or invited to, as the server listed them. */
@@ -93,21 +66,6 @@ export type Phien = {
 export type { KhoAnToan } from "./phien-web";
 
 const KHOA = "rudi.phien";
-
-/** Typo, expiry, spent or revoked: one answer from the server, so one sentence that names all of them. */
-const CAU_MA_MOI_KHONG_MO =
-  "Mã này không mở được lời mời nào: có thể gõ sai, hoặc lời mời đã hết hạn hay đã được dùng. Kiểm tra lại mã, hoặc nhờ người trong nhóm mời lại.";
-
-const LOI_DOI_LOI_MOI: Record<string, string> = {
-  // 404 is every refusal this route makes: expired, revoked, already spent,
-  // never existed. The server answers them identically on purpose, so the
-  // sentence here must not pretend to know which one happened.
-  http_404: CAU_MA_MOI_KHONG_MO,
-  // The same refusal as Go names it. Without this line the table missed, the
-  // status chose, and a mistyped code read «Cập nhật app» (QA UI-019).
-  invite_not_found: CAU_MA_MOI_KHONG_MO,
-  http_422: "Mã lời mời không đúng định dạng.",
-};
 
 const LOI_DANG_XUAT: Record<string, string> = {
   http_401: "Phiên đã hết hiệu lực rồi.",
@@ -201,27 +159,6 @@ function docPhien(thoLuu: string | null): Phien | null {
   }
 }
 
-/**
- * Trade a named invitation for a session, and remember it.
- *
- * The body carries the secret and nothing else -- see the header of this file
- * for why there is no `person_id` in it.
- */
-export async function doiLoiMoiLayPhien(
-  maLoiMoi: string,
-  kho?: KhoAnToan,
-): Promise<Phien> {
-  const phien = await translatedAnonymous<Phien>(LOI_DOI_LOI_MOI, "/sessions", {
-    method: "POST",
-    body: { invite_token: maLoiMoi },
-    // Minted here, on the press. A retry of a dropped answer replays the same
-    // session instead of spending a secret that is already gone.
-    attempt: newAttempt(),
-  });
-  await ghiNho(phien, kho);
-  return phien;
-}
-
 const LOI_VAO_NHOM: Record<string, string> = {
   // The row is gone, or was never this person's. Both read the same from here.
   http_404: "Lời mời này không còn hiệu lực. Nhờ người trong nhóm mời lại.",
@@ -263,43 +200,6 @@ export async function vaoNhom(phien: Phien, kho?: KhoAnToan): Promise<Phien> {
   return moi;
 }
 
-/** Put a session into force for this process, and onto the device. */
-export type OtpDaGui = {
-  challenge_id: string;
-  expires_in_seconds: number;
-  resend_after_seconds: number;
-};
-
-// Keyed by the server's own codes (`viDich` looks the code up, not the
-// status). `otp_code_invalid` is deliberately absent: its server sentence
-// carries how many tries are left, and a fixed one here would hide that.
-const LOI_OTP_GUI: Record<string, string> = {
-  phone_required: "Nhập số điện thoại.",
-  phone_not_mobile: "Chưa đúng dạng số di động Việt Nam.",
-  otp_resend_too_soon: "Mã vừa được gửi. Đợi một chút rồi gửi lại.",
-  otp_too_many_requests: "Số này vừa nhận nhiều mã. Thử lại sau ít phút.",
-  rate_limited: "Thử lại sau một phút.",
-  identity_key_missing: "Rủ Đi chưa sẵn sàng cho đăng nhập. Thử lại sau ít phút.",
-  sms_unavailable: "Chưa gửi được tin nhắn lúc này, thử lại sau.",
-};
-
-const LOI_OTP_XAC_MINH: Record<string, string> = {
-  otp_challenge_not_found: "Mã không còn hiệu lực. Xin mã mới.",
-  otp_too_many_attempts: "Sai quá nhiều lần. Xin mã mới.",
-  challenge_id_invalid: "Lượt xin mã bị lỗi. Xin mã mới.",
-  rate_limited: "Thử lại sau một phút.",
-  identity_key_missing: "Rủ Đi chưa sẵn sàng cho đăng nhập. Thử lại sau ít phút.",
-};
-
-/** Ask the server to send a code. The number goes in the body, never a path. */
-export async function guiOtp(phone: string): Promise<OtpDaGui> {
-  return translatedAnonymous<OtpDaGui>(LOI_OTP_GUI, "/auth/otp/request", {
-    method: "POST",
-    body: { phone },
-    attempt: newAttempt(),
-  });
-}
-
 /**
  * A session with a group to stand in, when the server knows one.
  *
@@ -329,10 +229,11 @@ export function chonNhomMacDinh(phien: Phien): Phien {
  * knows no group finds one. Read as the actor only for the `X-Actor-ID` header
  * a dev-mode server still looks at; in `prod` the bearer decides who "me" is.
  */
-export async function docNhomCuaToi(personId: string): Promise<NhomTomTat[]> {
+export async function docNhomCuaToi(personId: string, timeoutMs?: number): Promise<NhomTomTat[]> {
   const wire = await translatedAsActor<{ contexts: NhomTomTat[] }>({}, "/people/me/contexts", {
     method: "GET",
     actorId: personId,
+    ...(timeoutMs === undefined ? {} : { timeoutMs }),
   });
   return wire.contexts;
 }
@@ -409,8 +310,6 @@ export type HoSoToi = {
   login_methods: string[];
   /** ADR-0022 §2.2: who may comment on my posts; absent on a server older than L3. */
   wall_comment_policy?: string;
-  /** ADR-0023 §2.5: findable by telephone number; absent on a server older than L5. */
-  discoverable_by_phone?: boolean;
 };
 
 const LOI_HO_SO: Record<string, string> = {
@@ -429,7 +328,6 @@ export async function suaHoSoToi(
     display_name?: string;
     bio?: string;
     city?: string;
-    discoverable_by_phone?: boolean;
   },
 ): Promise<HoSoToi> {
   return translatedAsActor<HoSoToi>(LOI_HO_SO, "/people/me", {
@@ -438,35 +336,6 @@ export async function suaHoSoToi(
     actorId: personId,
     attempt: newAttempt(),
   });
-}
-
-/** Spend the code for a session, remember it, and hand the bearer to `api.ts`. */
-export async function xacMinhOtp(
-  challengeId: string,
-  phone: string,
-  code: string,
-  kho?: KhoAnToan,
-): Promise<Phien> {
-  const wire = await translatedAnonymous<Phien>(LOI_OTP_XAC_MINH, "/auth/otp/verify", {
-    method: "POST",
-    body: { challenge_id: challengeId, phone, code },
-    attempt: newAttempt(),
-  });
-  const phien = chonNhomMacDinh(wire);
-  await ghiNho(phien, kho);
-  return phien;
-}
-
-/** Exchange the provider proof for our own session; the server owns account linkage. */
-export async function dangNhapGoogle(idToken: string, kho?: KhoAnToan): Promise<Phien> {
-  const wire = await translatedAnonymous<Phien>({}, "/auth/google", {
-    method: "POST",
-    body: { id_token: idToken },
-    attempt: newAttempt(),
-  });
-  const phien = chonNhomMacDinh(wire);
-  await ghiNho(phien, kho);
-  return phien;
 }
 
 export async function ghiNho(phien: Phien, kho?: KhoAnToan): Promise<void> {
@@ -491,17 +360,44 @@ export async function khoiPhucPhien(kho?: KhoAnToan): Promise<Phien | null> {
     return null;
   }
   datTokenPhien(phien.token);
-  if (phien.contexts !== undefined) return phien;
-  // A session resumed on the web (and any record older than the field) knows
-  // who but not which groups: ask, the way a sign-in by OTP does. Offline, the
-  // person is still signed in; the group list fills on its next refresh.
+  // Ask the server once, which both fills the group list (a session resumed
+  // on the web knows who but not which groups) and proves the session is
+  // still alive: ADR-0055 revokes every session on a password or email
+  // change, a Google link or unlink, a reset and «đăng xuất tất cả», and a
+  // phone that kept a revoked token would open signed in and fail on every
+  // screen. Only the server's own «not a session» drops it. Offline -- or
+  // too slow to wait for at launch -- the person is still signed in; the
+  // group list fills on its next refresh.
   try {
-    const coNhom = chonNhomMacDinh({ ...phien, contexts: await docNhomCuaToi(phien.person_id) });
+    const coNhom = chonNhomMacDinh({ ...phien, contexts: await docNhomCuaToi(phien.person_id, KIEM_PHIEN_MS) });
     await store.ghi(KHOA, JSON.stringify(coNhom));
     return coNhom;
-  } catch {
+  } catch (loi) {
+    if (loi instanceof ApiError && loi.status === 401 && loi.code === "authentication_required") {
+      await quenPhien(phien.token, store);
+      return null;
+    }
     return phien;
   }
+}
+
+/** How long launch waits for the server to vouch for a stored session. */
+const KIEM_PHIEN_MS = 6000;
+
+/**
+ * Forget `token` here: the bearer, and the stored record while it still
+ * holds that token. A record that already holds a newer session (signed in
+ * again while a late request was in flight) is left alone.
+ */
+async function quenPhien(token: string, store: KhoAnToan): Promise<void> {
+  if (tokenPhienHienTai() === token) datTokenPhien(null);
+  const dangLuu = docPhien(await store.doc(KHOA));
+  if (dangLuu === null || dangLuu.token === token) await store.xoa(KHOA);
+}
+
+/** The server said `token` is no longer a session (`authentication_required`): forget it locally. */
+export async function quenPhienDaThuHoi(token: string, kho?: KhoAnToan): Promise<void> {
+  await quenPhien(token, kho ?? (await khoAnToanMacDinh()));
 }
 
 /**
@@ -523,8 +419,10 @@ export async function dangXuat(personId: string, kho?: KhoAnToan): Promise<void>
       });
     }
   } finally {
-    datTokenPhien(null);
     const store = kho ?? (await khoAnToanMacDinh());
-    await store.xoa(KHOA);
+    // Only the session this call signed out: the answer can arrive after the
+    // person has already signed in again, and must not take that one with it.
+    if (token !== null) await quenPhien(token, store);
+    else await store.xoa(KHOA);
   }
 }

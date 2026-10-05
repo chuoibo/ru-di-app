@@ -109,8 +109,8 @@ export function ThuBoGiay() {
       </TheVe>
       <PhongBi testID="lab-phong-bi">
         <Text style={{ ...typography.h2, color: colors.ink }}>Mời vào hội</Text>
-        <ONhapMuc accessibilityLabel="Ô số điện thoại thử" keyboardType="phone-pad" label="Số điện thoại" onChangeText={() => undefined} placeholder="09xx xxx xxx" value="" />
-        <ChuThichLe icon="lock-closed-outline">{"Số điện thoại chỉ dùng để gửi lời mời này."}</ChuThichLe>
+        <ONhapMuc accessibilityLabel="Ô tên tài khoản thử" autoCapitalize="none" label="Tên tài khoản" onChangeText={() => undefined} placeholder="@ten_tai_khoan" value="" />
+        <ChuThichLe icon="lock-closed-outline">{"Tìm tài khoản đã có để gửi lời mời."}</ChuThichLe>
       </PhongBi>
       <Inline gap={12} wrap>
         <Tem accessibilityLabel="Tem đã có">

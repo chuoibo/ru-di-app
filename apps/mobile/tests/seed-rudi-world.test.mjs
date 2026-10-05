@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { inflateSync } from "node:zlib";
 import test from "node:test";
 
-import { HOA_DON_XOM_LEO, ROSTER, conPhaiLam, pngMau, soDienThoai, tongHoaDon } from "../tools/seed-rudi-world-lib.mjs";
+import { HOA_DON_XOM_LEO, ROSTER, conPhaiLam, pngMau, soDienThoai, tongHoaDon } from "./fixtures/legacy_demo/seed-rudi-world-lib.mjs";
 
 test("số điện thoại tổng hợp: 10 chữ số, đầu 09, khác nhau từng người, ổn định giữa hai lần chạy", () => {
   const so = ROSTER.map((_, i) => soDienThoai(i));

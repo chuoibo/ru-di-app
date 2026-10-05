@@ -25,7 +25,9 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.CAMERA"],
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.WRITE_EXTERNAL_STORAGE",
@@ -60,8 +62,12 @@
           "photosPermission": "Chọn một ảnh bill có sẵn khi bạn đã chụp từ trước. App chỉ đọc đúng ảnh bạn chọn."
         }
       ],
-      ["expo-dev-client", { "launchMode": "most-recent" }],
-      "@react-native-google-signin/google-signin",
+      [
+        "expo-dev-client",
+        {
+          "launchMode": "most-recent"
+        }
+      ],
       "./plugins/tat-nut-noi-dev-menu",
       "./plugins/giu-man-khi-doi-co-chu",
       "expo-font",

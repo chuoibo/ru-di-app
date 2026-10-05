@@ -81,15 +81,15 @@ test("danh sách phiên: đúng đường, mang bearer, và không bịa tên th
   assert.equal(goi[0].init.headers.Authorization, "Bearer tok-cai-dat");
   assert.equal(cauPhien(phien), "Phiên này, đang dùng");
   const khac = cauPhien({ ...phien, current: false });
-  assert.ok(khac.startsWith("Số điện thoại · từ "), khac);
+  assert.ok(khac.startsWith("Phiên cũ · từ "), khac);
   assert.ok(!/iphone|android|máy/i.test(khac), "máy chủ không lưu tên thiết bị nên màn không nói");
 });
 
 test("nhãn cửa cấp phiên có đủ bốn cửa và một câu cho cửa lạ", () => {
-  assert.equal(nhanCua("otp"), "Số điện thoại");
+  assert.equal(nhanCua("otp"), "Phiên cũ");
   assert.equal(nhanCua("google"), "Google");
-  assert.equal(nhanCua("invite"), "Lời mời");
-  assert.equal(nhanCua("genesis"), "Bản dựng");
+  assert.equal(nhanCua("invite"), "Phiên cũ");
+  assert.equal(nhanCua("genesis"), "Phiên cũ");
   assert.equal(nhanCua("qua-cua-nao-do"), "Cách khác");
 });
 
@@ -209,12 +209,12 @@ test("câu «tài khoản vừa tạo» nói đúng cửa đã tạo nó, không
   assert.match(google, /Google/);
   assert.doesNotMatch(google, /số điện thoại/i);
 
-  const otp = cauTaiKhoanVuaTao("otp");
-  assert.match(otp, /số điện thoại/i);
+  const otp = cauTaiKhoanVuaTao("password");
+  assert.match(otp, /tên tài khoản/i);
   assert.doesNotMatch(otp, /Google/);
 
   const loiMoi = cauTaiKhoanVuaTao("invite");
-  assert.match(loiMoi, /lời mời/i);
+  assert.doesNotMatch(loiMoi, /lời mời/i);
 
   // Cửa mà bản này chưa biết: nói rằng tài khoản vừa được tạo, và KHÔNG
   // khẳng định cửa nào. Bịa một cửa còn tệ hơn im lặng về nó.

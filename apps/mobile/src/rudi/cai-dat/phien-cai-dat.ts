@@ -9,7 +9,7 @@
 import { type Attempt, translatedAsActor } from "../../api";
 import { ngayVN } from "../ngay-viet";
 
-export type CuaCapPhien = "invite" | "otp" | "google" | "genesis";
+export type CuaCapPhien = "password" | "google" | "invite" | "otp" | "genesis";
 
 export type PhienWire = {
   id: string;
@@ -39,10 +39,11 @@ export const LOI_PHIEN: Record<string, string> = {
  * naming a door they did not walk through.
  */
 const CUA: Record<CuaCapPhien, { nhan: string; qua: string }> = {
-  otp: { nhan: "Số điện thoại", qua: "bằng số điện thoại của bạn" },
+  password: { nhan: "Mật khẩu", qua: "bằng tên tài khoản của bạn" },
+  otp: { nhan: "Phiên cũ", qua: "" },
   google: { nhan: "Google", qua: "bằng tài khoản Google của bạn" },
-  invite: { nhan: "Lời mời", qua: "từ lời mời bạn vừa nhận" },
-  genesis: { nhan: "Bản dựng", qua: "" },
+  invite: { nhan: "Phiên cũ", qua: "" },
+  genesis: { nhan: "Phiên cũ", qua: "" },
 };
 
 /** Câu dưới mỗi hàng: cửa nào đã cấp phiên này. */

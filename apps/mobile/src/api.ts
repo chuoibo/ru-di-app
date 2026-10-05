@@ -27,7 +27,7 @@
  * made-up data is the failure this file keeps being rewritten to avoid.
  */
 import { cauTheoMa } from "./cau-loi-theo-ma";
-import { actorHeaders, datTokenPhien, tokenPhienHienTai } from "./danh-tinh";
+import { actorHeaders, baoPhienBiThuHoi, datTokenPhien, tokenDaGui, tokenPhienHienTai } from "./danh-tinh";
 
 // `datTokenPhien` / `tokenPhienHienTai` re-export vì chúng là TRẠNG THÁI, và
 // chín mươi chỗ gọi đã quen đường này.
@@ -494,6 +494,14 @@ async function sendRequest<T>(
       if (problem?.detail) detail = problem.detail;
     } catch {
       /* not JSON; there is nothing to read, so the status chooses the words */
+    }
+    // A revoked session (ADR-0055) answers every call with this, and nothing
+    // the screen retries can fix it: the session provider signs out instead
+    // of each screen showing its own failure. Only a request that carried a
+    // bearer counts -- an anonymous one has no session to lose.
+    if (response.status === 401 && code === "authentication_required") {
+      const token = tokenDaGui(headers);
+      if (token !== null) baoPhienBiThuHoi(token);
     }
     throw new ApiError(
       response.status,

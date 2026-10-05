@@ -1,12 +1,14 @@
-# M2 trên cửa OTP: nhóm mình vừa mở hiện ở Tin nhắn với số liệu của máy chủ, roster
-# gọi đúng mình là quản trị, mời một người bằng số điện thoại (lời mời chờ họ
-# đăng nhập bằng đúng số đó), và tab Cá nhân đọc hồ sơ thật rồi sửa được tên.
+# M2 trên cửa tài khoản: nhóm mình vừa mở hiện ở Tin nhắn với số liệu của máy
+# chủ, roster gọi đúng mình là quản trị, mời một người bằng tên tài khoản (lời
+# mời chờ chính người ấy đăng nhập và đồng ý), và tab Cá nhân đọc hồ sơ thật
+# rồi sửa được tên.
 #
-# Số điện thoại và mã đi qua `-e` như flow 22/23, nhưng là CẶP SỐ RIÊNG (C tạo
-# nhóm, D được mời): số của flow 22 đã có nhóm, số của flow 23 đã có tên, nên
-# dùng lại thì «Chưa có nhóm nào» và «Ban QA» đều sai vì lý do không phải app.
-# Harness `--otp` đăng nhập bằng số D qua curl SAU flow để chứng minh máy
-# chủ thật sự giữ lời mời (`kiem_may_chu_sau_24`).
+# Tài khoản đi qua `-e` như flow 22/23, nhưng là CẶP RIÊNG (C tạo nhóm, D được
+# mời): người của flow 22 đã có nhóm, người của flow 23 đã đăng nhập, nên dùng
+# lại thì «Chưa có nhóm nào» sai vì lý do không phải app. D đã tự đặt tên
+# «Ban QA» (harness, PATCH /people/me) — từ ADR-0055 lời mời không đặt tên ai,
+# và roster phải hiện đúng tên chính D chọn. Harness đăng nhập D qua curl SAU
+# flow để chứng minh máy chủ thật sự giữ lời mời (`kiem_may_chu_sau_24`).
 appId: com.lakiet.rudi
 ---
 - stopApp
@@ -17,21 +19,11 @@ appId: com.lakiet.rudi
     visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
     timeout: 150000
 - runFlow: _dang-xuat-neu-co.yaml
-- tapOn: "Rủ Đi thôi!"
-- extendedWaitUntil:
-    visible: "Chào bạn"
-    timeout: 30000
-- tapOn: "Ô số điện thoại"
-- inputText: "${OTP_PHONE_C}"
-- hideKeyboard
-- tapOn: "Gửi mã"
-- extendedWaitUntil:
-    visible: "Nhập mã 6 số"
-    timeout: 60000
-- tapOn: "Ô nhập mã"
-- inputText: "${OTP_CODE}"
 - runFlow:
-    file: _bo-qua-so-thich.yaml
+    file: _dang-nhap-tai-khoan.yaml
+    env:
+      TK: "${TK_C}"
+      MK: "${MK_C}"
 - extendedWaitUntil:
     visible: "Chưa có nhóm nào"
     timeout: 60000
@@ -63,25 +55,24 @@ appId: com.lakiet.rudi
     visible: "Thành viên"
     timeout: 30000
 - assertVisible: "1 đang ở trong nhóm, 0 đang được mời."
-- assertVisible: "Thành viên mới (bạn)"
+# Tài khoản mới mang username làm tên cho tới khi người ấy tự đổi.
+- assertVisible: "${TK_C} (bạn)"
 - takeScreenshot: 24-thanh-vien
-# Mời bằng số điện thoại: ba cú gọi máy chủ, kết thúc ở một membership `invited`.
-- tapOn: "Mời bằng số điện thoại"
+# Mời bằng tên tài khoản: tra username (POST /friends/lookup) rồi tạo một
+# membership `invited`. Không bịa id, không đặt tên thay ai.
+- tapOn: "Mời bằng tên tài khoản"
 - extendedWaitUntil:
-    visible: "Ô số điện thoại người được mời"
+    visible: "Mời bằng username"
     timeout: 30000
-- tapOn: "Ô số điện thoại người được mời"
-- inputText: "${OTP_PHONE_D}"
-- hideKeyboard
-- tapOn: "Ô tên người được mời"
-- inputText: "Ban QA"
+- tapOn: "Tên tài khoản"
+- inputText: "${TK_D}"
 - hideKeyboard
 - tapOn: "Gửi lời mời"
 - extendedWaitUntil:
-    visible: "Đã mời Ban QA"
+    visible: "Đã gửi lời mời tới Ban QA."
     timeout: 60000
 - takeScreenshot: 24-da-moi
-- tapOn: "Xem thành viên"
+- tapOn: "Về nhóm"
 - extendedWaitUntil:
     visible: "1 đang ở trong nhóm, 1 đang được mời."
     timeout: 60000
@@ -99,7 +90,7 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "Cá nhân"
 - extendedWaitUntil:
-    visible: "Đăng nhập bằng số điện thoại"
+    visible: "Phiên này: Mật khẩu"
     timeout: 60000
 - assertNotVisible: "Minh Anh"
 - assertNotVisible: "Dữ liệu demo"

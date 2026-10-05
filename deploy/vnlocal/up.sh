@@ -60,21 +60,21 @@ if [ ! -f "$tok" ]; then
   (umask 077; printf 'AI_INFER_TOKEN=%s\nMOBILE_RERANK_TOKEN=%s\n' "$t" "$t" >"$tok")
   echo "--- sinh token sidecar vào $tok" >&2
 fi
-# The AI services (core on the Go engine, rag, rag-indexer) read their keys
-# from the repo root .env of THIS tree (the x-ai-secrets anchor marks it
-# optional, so compose alone would start them keyless and they crash-loop
-# «GEMINI_API_KEY is not set»; seen 2026-09-29 deploying from a worktree).
-# Refuse up front, naming the variables only, never their values.
-root_env="$(cd "$(dirname "$0")/../.." && pwd)/.env"
+# Credentials live outside every worktree. Preflight prints names only.
+root_env="${RUDI_AI_ENV_FILE:-$HOME/.config/rudi/ai.env}"
+accounts_env="${RUDI_ACCOUNTS_ENV_FILE:-$HOME/.config/rudi/accounts.env}"
 thieu=""
 for v in GEMINI_API_KEY AGY_PROXY_URL AGY_PROXY_KEY OPEN_ROUTER_API_KEY; do
   grep -qE "^$v=.+" "$root_env" 2>/dev/null || thieu="$thieu $v"
 done
+for v in MOBILE_ACCOUNT_ENCRYPTION_KEY MOBILE_ACCOUNT_LOOKUP_KEY MOBILE_AUTH_REDIS_URL MOBILE_EMAIL_SMTP_HOST MOBILE_EMAIL_SMTP_USER MOBILE_EMAIL_SMTP_PASSWORD MOBILE_EMAIL_FROM; do
+  grep -qE "^$v=.+" "$accounts_env" 2>/dev/null || thieu="$thieu $v"
+done
 if [ -n "$thieu" ]; then
-  echo "HỎNG: $root_env thiếu:$thieu" >&2
-  echo "  Deploy từ worktree khác thì trỏ .env về file thật (symlink, đã gitignore) hoặc chạy từ cây có .env." >&2
+  echo "HỎNG: cấu hình ngoài worktree thiếu:$thieu" >&2
   exit 1
 fi
+[ -s "$HOME/.config/rudi/auth-redis-password" ] || { echo "HỎNG: thiếu secret Redis auth ngoài worktree." >&2; exit 1; }
 export RUDI_VNLOCAL_HOST="$host" RUDI_VNLOCAL_IP="$ip"
 echo "--- $host = $ip (đường $duong)" >&2
 cd "$(dirname "$0")/../.."

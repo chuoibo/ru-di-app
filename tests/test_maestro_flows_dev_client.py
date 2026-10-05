@@ -31,6 +31,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FLOWS = REPO_ROOT / "apps" / "mobile" / ".maestro"
+HARNESS = REPO_ROOT / "scripts" / "mobile_native.sh"
 APP_ID = "com.lakiet.rudi"
 
 
@@ -63,7 +64,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
                 self.assertIsNone(bad.search(line), f"{flow.name}: {line.strip()}")
 
     def test_entry_flows_refuse_the_launcher(self) -> None:
-        for name in ("22-dang-nhap-otp.yaml", "23-phien-song-qua-lan-tat.yaml"):
+        for name in ("22-dang-nhap-tai-khoan.yaml", "23-phien-song-qua-lan-tat.yaml"):
             lines = code_lines(FLOWS / name)
             self.assertIn("- launchApp", lines, name)
             self.assertIn(
@@ -101,10 +102,14 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
                     f"{flow.name}: launchApp ở dòng {i} không có _bo-qua-dev-menu ngay sau",
                 )
 
-    def test_otp_flows_take_number_and_code_from_the_harness(self) -> None:
+    def test_account_flows_take_username_and_password_from_the_harness(
+        self,
+    ) -> None:
+        # ADR-0055: the phone door and its debug code are gone; every signed-in
+        # flow now gets a synthetic username AND its runtime password through
+        # `-e`, and neither may ever be written into a flow file.
         for name in (
-            "20-the-gioi-seed.yaml",
-            "22-dang-nhap-otp.yaml",
+            "22-dang-nhap-tai-khoan.yaml",
             "23-phien-song-qua-lan-tat.yaml",
             "24-nhom-thanh-vien-va-ho-so.yaml",
             "25-ban-be-hai-nguoi.yaml",
@@ -128,70 +133,99 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
             "45-chan-bao-cao.yaml",
             "46-xoa-tai-khoan.yaml",
             "40-ai-plan.yaml",
+            "50-account-login.yaml",
         ):
             text = (FLOWS / name).read_text(encoding="utf-8")
             # A flow may hand the sign-in to a `_helper.yaml` through runFlow;
-            # the number and the code still have to come from the harness.
-            for helper in re.findall(r"file: (_[\w-]+\.yaml)", text):
-                text += (FLOWS / helper).read_text(encoding="utf-8")
-            self.assertRegex(text, r"\$\{OTP_PHONE(_[BCDEF])?\}", name)
-            self.assertIn("${OTP_CODE}", text, name)
+            # the username and the password still have to come from the harness.
+            seen: set[str] = set()
+            pending = re.findall(r"file: (_[\w-]+\.yaml)", text)
+            while pending:
+                helper = pending.pop()
+                if helper in seen:
+                    continue
+                seen.add(helper)
+                more = (FLOWS / helper).read_text(encoding="utf-8")
+                text += more
+                pending += re.findall(r"file: (_[\w-]+\.yaml)", more)
+            self.assertRegex(text, r"\$\{TK(_[ABCDEF])?\}", name)
+            self.assertRegex(text, r"\$\{MK(_[ABCDEF])?\}", name)
+            self.assertNotIn("OTP_PHONE", text, name)
+            self.assertNotIn("OTP_CODE", text, name)
             # A phone number in a flow file is a phone number in Git.
             self.assertIsNone(
                 re.search(r"\d[\d .-]{8,}\d", text),
                 f"{name}: có dãy số dài như số điện thoại",
             )
+            # A credential in a flow file is a credential in Git: the fields are
+            # filled only from variables.
+            for line in code_lines(FLOWS / name):
+                self.assertNotIn("fixture_", line, f"{name}: {line.strip()}")
             self.assertIn(
                 'assertNotVisible: "Vào bản trải nghiệm Team Đà Lạt"',
                 text.replace("- ", ""),
                 name,
             ) if name.startswith("22") else None
 
+    def test_the_login_helper_reads_only_its_parameters(self) -> None:
+        text = (FLOWS / "_dang-nhap-tai-khoan.yaml").read_text(encoding="utf-8")
+        self.assertIn('inputText: "${TK}"', text)
+        self.assertIn('inputText: "${MK}"', text)
+        self.assertIn('id: "account-username"', text)
+        self.assertIn('id: "account-password"', text)
+        for retired in ("Ô số điện thoại", "Gửi mã", "Ô nhập mã", "OTP_"):
+            self.assertNotIn(retired, text)
+
     def test_the_account_deleting_flow_cannot_reach_another_person(self) -> None:
         # Flow 46 is the only flow in the table that destroys an account. Two
         # things keep it off C and D, whom every earlier slice's server check
         # still asks about after the table, and both are literal text:
-        # it signs in with F's number and nobody else's, and it refuses to open
+        # it signs in with F's account and nobody else's, and it refuses to open
         # the delete door until the server has named that person on the screen.
         text = (FLOWS / "46-xoa-tai-khoan.yaml").read_text(encoding="utf-8")
         self.assertIn("file: _dang-nhap-f.yaml", text)
         for cam in (
             "_dang-nhap-d.yaml",
-            "${OTP_PHONE_C}",
-            "${OTP_PHONE_D}",
-            "${OTP_PHONE_E}",
+            "_dang-nhap-c.yaml",
+            "${TK_C}",
+            "${TK_D}",
+            "${TK_E}",
         ):
             self.assertNotIn(cam, text, f"flow 46 nhắc tới {cam}")
         khoa = text.index('visible: "Ut QA"')
         self.assertLess(khoa, text.index('tapOn: "Xoá tài khoản"'))
-        self.assertIn(
-            "${OTP_PHONE_F}", (FLOWS / "_dang-nhap-f.yaml").read_text(encoding="utf-8")
-        )
+        helper = (FLOWS / "_dang-nhap-f.yaml").read_text(encoding="utf-8")
+        self.assertIn('TK: "${TK_F}"', helper)
+        self.assertIn('MK: "${MK_F}"', helper)
 
-    def test_harness_otp_mode_probes_the_debug_code_and_has_no_fixture_door(
+    def test_harness_account_mode_probes_the_door_and_has_no_fixture_door(
         self,
     ) -> None:
-        script = (REPO_ROOT / "scripts" / "mobile_native.sh").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("--otp) OTP=1", script)
-        self.assertIn("kiem_ma_debug", script)
-        self.assertIn("/auth/otp/verify", script)
-        self.assertIn('-e OTP_PHONE="$OTP_PHONE"', script)
-        # No fixture door at all: the flag is never exported, and a run with no
-        # mode says it could not measure instead of driving a demo.
+        script = HARNESS.read_text(encoding="utf-8")
+        self.assertIn("--account) ACCOUNT=1", script)
+        # Positive and negative environment control before any flow: a wrong
+        # password is refused, the synthetic account is accepted, OTP is gone.
+        self.assertIn("kiem_cua_tai_khoan", script)
+        self.assertIn("/auth/login", script)
+        self.assertIn('[ "$rc" = "401" ]', script)
+        self.assertIn('[ "$rc" = "410" ]', script)
+        self.assertIn('them=("${TK_THEM[@]}")', script)
+        # Synthetic only: an explicit acknowledgement, an isolated port, a
+        # credentials file in the system temp directory, the fixture namespace.
+        self.assertIn('[ "${RUDI_NATIVE_TEST_ACK:-}" = synthetic-only ]', script)
+        self.assertIn('startswith("fixture_")', script)
+        self.assertIn("tempfile.gettempdir()", script)
+        # No fixture door at all: the flag is never exported.
         self.assertNotIn("EXPO_PUBLIC_RUDI_FIXTURE=1", script)
-        self.assertIn(
-            'if [ "$OTP" = 0 ] && [ "$LIVE" = 0 ] && [ "$DANG_NHAP" = 0 ]; then\n  khong_do_duoc',
-            script,
-        )
-        self.assertIn("--otp-phone) OTP_PHONE_SEED=", script)
-        self.assertIn("kiem_may_chu_sau_20", script)
         self.assertNotIn("EXPO_PUBLIC_RUDI_ACTOR=", script)
-        self.assertIn("canary_otp", script)
+        # The retired doors refuse loudly instead of driving something else.
+        self.assertIn("--otp|--otp-phone|--live|--dang-nhap)", script)
+        self.assertNotIn("kiem_ma_debug", script)
+        self.assertNotIn("/auth/otp/verify", script)
+        self.assertIn("canary_mat_khau", script)
         self.assertIn(
             "22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*|43-*|44-*|45-*|46-*|47-*)"
-            ' [ "$OTP" = 1 ] || continue',
+            ' [ "$ACCOUNT" = 1 ] || continue',
             script,
         )
         self.assertIn("do_ban_phim.py", script)
@@ -201,9 +235,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
         # `chay_flow` must not turn errexit back on before returning a non-zero
         # rc: set -e is global, so the caller's `set +e` would be undone and the
         # table would stop at the first red flow with no summary line.
-        script = (REPO_ROOT / "scripts" / "mobile_native.sh").read_text(
-            encoding="utf-8"
-        )
+        script = HARNESS.read_text(encoding="utf-8")
         body = script[
             script.index("chay_flow() {") : script.index(
                 "\n}\n", script.index("chay_flow() {")
@@ -214,7 +246,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
             "\n  set -e\n", body, "chay_flow bật lại set -e trước khi return rc"
         )
         self.assertIn(
-            '40-*)        [ "$OTP" = 1 ] && [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] || continue',
+            '40-*)        [ "$ACCOUNT" = 1 ] && [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] || continue',
             script,
         )
         self.assertIn("kiem_may_chu_sau_30", script)
@@ -222,9 +254,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
         self.assertIn("kiem_may_chu_sau_25", script)
 
     def test_harness_passes_the_fingerprint_and_checks_it_bites(self) -> None:
-        script = (REPO_ROOT / "scripts" / "mobile_native.sh").read_text(
-            encoding="utf-8"
-        )
+        script = HARNESS.read_text(encoding="utf-8")
         self.assertIn('-e TREE_FINGERPRINT="$DAU_VAN"', script)
         self.assertIn("KHONG_CO_DAU_VAN_NAY", script)
         self.assertIn("EXPO_PUBLIC_TREE_FINGERPRINT", script)

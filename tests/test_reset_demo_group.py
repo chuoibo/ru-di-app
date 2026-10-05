@@ -25,7 +25,7 @@ from pathlib import Path
 from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = REPO_ROOT / "scripts"
+SCRIPTS = REPO_ROOT / "tests" / "fixtures" / "legacy_demo"
 RESET = SCRIPTS / "reset_demo_group.py"
 SEED = SCRIPTS / "seed_demo_data.py"
 
@@ -153,7 +153,7 @@ class TheDatabaseItTouchesIsTheOneYouNamed(unittest.TestCase):
     Written from a real accident on 2026-08-31. A lane ran
 
         MOBILE_DATABASE_URL=...@127.0.0.1:<cổng riêng>/mobile \\
-          python3 scripts/reset_demo_group.py --yes
+          python3 tests/fixtures/legacy_demo/reset_demo_group.py --yes
 
     and the script renamed the demo group on the SHARED database at port 5432.
     `MOBILE_DATABASE_URL` was read nowhere -- `seed_demo_data.py`,

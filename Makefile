@@ -1,7 +1,7 @@
 # Một lệnh dựng cả hệ trên máy dev: `make up`.
 #
 # Cần sẵn: docker (có compose v2), make, curl. Không cần Python trên máy —
-# API, migration và seed đều chạy trong ảnh đã dựng.
+# API và migration đều chạy trong ảnh đã dựng.
 #
 # `make up` publish API ra http://127.0.0.1:8099 — cùng con số mà app và
 # scripts/phone_path.py mặc định dùng. Đổi khi 8099 hoặc 5432 đã bận:
@@ -40,14 +40,7 @@ DC = $(COMPOSE) -p $(PROJECT)
 WAIT_TIMEOUT ?= 300
 
 .DEFAULT_GOAL := help
-.PHONY: help gate gate-merge ruff-fix test-db e2e up down clean logs ps migrate db-check seed demo demo-reset demo-check demo-data-check demo-persona-check demo-key-check demo-watch demo-watch-status demo-watch-install hero-walk hero-walk-status smoke bundle-check bundle android-doctor android-up android-check android-down android-adb parity parity-up parity-down go-postgres go-broker go-milvus eval-kich-ban ai-infer ai-infer-milvus
-
-# `demo` phải gọi đúng bộ container mà `up` vừa dựng. Trên nhánh này biến đó là
-# $(COMPOSE); PR #60 (đang mở, cùng lane) đổi nó thành $(DC) = compose kèm
-# `-p <project>`. Viết như dưới thì dòng lệnh đúng ở cả hai nền, và khi #60 vào
-# main nó tự chuyển sang $(DC) — không ai phải nhớ quay lại sửa, và hai PR
-# không tranh nhau cùng một dòng.
-DEMO_COMPOSE = $(if $(DC),$(DC),$(COMPOSE))
+.PHONY: help gate gate-merge ruff-fix test-db e2e up down clean logs ps migrate db-check smoke bundle-check bundle android-doctor android-up android-check android-down android-adb parity parity-up parity-down go-postgres go-broker go-milvus eval-kich-ban ai-infer ai-infer-milvus
 
 # Cảnh báo khi thiếu khoá AI. Để trong script chứ không viết thẳng vào recipe
 # vì recipe không test được nếu không dựng Docker; script thì chạy và kiểm
@@ -55,7 +48,6 @@ DEMO_COMPOSE = $(if $(DC),$(DC),$(COMPOSE))
 KEY_CHECK = sh scripts/check_ai_key.sh
 # Và khoá danh tính. Tách khỏi KEY_CHECK vì hậu quả khác hẳn: thiếu khoá AI
 # thì đọc bill chết, thiếu khoá này thì KHÔNG AI ĐĂNG NHẬP ĐƯỢC.
-IDENTITY_KEY_CHECK = sh scripts/check_identity_key.sh
 
 help: ## In danh sách lệnh
 	@echo "Lệnh có sẵn:"
@@ -154,12 +146,11 @@ ai-infer: ## Sidecar suy luận (services/ai-infer) offline: fake thuần + fake
 ai-infer-milvus: ## Sidecar suy luận trên Milvus thật (AI_INFER_TEST_MILVUS_URI hoặc container ghim digest); bỏ qua là hỏng
 	@scripts/ai_infer_tier.sh --milvus
 
-up: ## Dựng ảnh, chạy migration, bật API, seed dữ liệu mẫu, rồi tự kiểm
+up: ## Dựng ảnh, chạy migration, bật API rồi tự kiểm
 	@# Trước `docker build`, không phải sau: build mất vài phút, và một cảnh
 	@# báo in ra sau đó thì đã trôi khỏi màn hình. In ở đây thì còn kịp Ctrl-C.
 	@# Cảnh báo, không chặn — xem đầu file scripts/check_ai_key.sh.
 	@$(KEY_CHECK)
-	@$(IDENTITY_KEY_CHECK)
 	@echo "Project compose: $(PROJECT) (dùng chung cho mọi worktree trên máy này)"
 	@$(DC) up -d --build --wait --wait-timeout $(WAIT_TIMEOUT) || { \
 	  echo >&2; \
@@ -179,7 +170,6 @@ up: ## Dựng ảnh, chạy migration, bật API, seed dữ liệu mẫu, rồi 
 	  echo "   Đừng tin cổng còn trả lời nghĩa là còn dùng được. Hỏi thẳng:" >&2; \
 	  echo "       make smoke" >&2; \
 	  exit 1; }
-	@$(MAKE) --no-print-directory seed
 	@$(MAKE) --no-print-directory smoke
 
 down: ## Tắt hệ, GIỮ dữ liệu trong volume
@@ -230,193 +220,9 @@ db-check: ## Hỏi database xem nó có ở đúng head mà mã đang phục v�
 	@# phụ thuộc và có thể recreate `api` mà lane khác đang gọi.
 	@sh scripts/check_db_revision.sh $(DC) run --rm --no-deps -T migrate alembic
 
-seed: ## Chỉ seed dữ liệu mẫu — chạy lại là no-op, không nhân đôi
-	@# `seed` gọi API qua `core` (ADR-0029), nên điều kiện là `core` đang chạy.
-	@$(DC) ps --services --filter status=running | grep -qx core || { \
-	  echo "API chưa chạy. Chạy 'make up' trước." >&2; exit 1; }
-	@# --no-deps là bắt buộc, không phải tối ưu. `compose run` không có nó sẽ
-	@# chạy lại `migrate` (service đã exited thì nó coi là phải dựng lại) rồi
-	@# recreate luôn `api` vì phụ thuộc vừa đổi — tức là seed tự đá sập cái
-	@# API mà nó sắp gọi. Điều kiện "api đang chạy" đã kiểm ở trên rồi.
-	$(DC) run --rm --no-deps seed
-
-demo: ## Dựng hệ rồi nạp dữ liệu demo "Team Đà Lạt" — 7 người, 3 chuyến, còn nợ thật
-	@$(MAKE) --no-print-directory up
-	@# Gọi thẳng `up` chứ không tự dựng lại stack: hai đường khởi động là hai
-	@# đường để lệch nhau, và `up` là đường đã có người kiểm. Hệ quả phải nói
-	@# ra: `up` cũng chạy `make seed`, nên máy sẽ có thêm nhóm "Nhóm mẫu (dữ
-	@# liệu tổng hợp)" bên cạnh "Team Đà Lạt". Nó có nhãn rõ ràng, không phải
-	@# dữ liệu lẫn lộn — nhưng nó CÓ hiện trên màn danh sách nhóm.
-	@# --no-deps: xem ghi chú ở `seed`, cùng một cái bẫy.
-	$(DEMO_COMPOSE) run --rm --no-deps demo
-
-# Vì sao cần một lệnh riêng: `seed_demo_data.py` sinh key idempotency từ một
-# namespace cố định và một slug cố định, không có gì thay đổi theo lượt chạy.
-# Còn khoản chi thì backdate từ `now`. Nên lần seed THỨ HAI trên cùng một
-# database gửi CÙNG key với THÂN KHÁC, và máy chủ từ chối đúng như nó phải làm:
-# POST /expenses -> 422 idempotency_key_reuse. Tức là bộ fixture chỉ dựng được
-# MỘT LẦN cho mỗi database, và sau đó dữ liệu demo đóng băng ở hình dạng nó
-# chạm tới — đúng hay sai cũng vậy. Ngày 30/08 nó đóng băng ở 8 đợt thu / 0
-# buổi đi, và bốn tính năng đã xong hiện RỖNG trên chính máy leader sẽ bấm.
-#
-# Đường thoát cũ là `make clean`, nhưng clean lấy CẢ volume ảnh và seed không
-# dựng lại ảnh được. Target này đi đường rẻ hơn: giải phóng cái TÊN mà fixture
-# tra cứu, không xoá dòng nào. Sổ cái giữ nguyên mọi bản ghi.
-# Thế giới demo của vỏ RuDi, dựng qua CHÍNH các module client mà app gửi
-# (apps/mobile/tools/seed-rudi-world.mjs): một hình dạng wire, không trôi dạt.
-# Cần một API chế độ prod có SMS sender `log` và MOBILE_OTP_DEBUG_CODE — đúng
-# stack mà `scripts/e2e_slice.sh --keep` dựng. Chạy lần hai là no-op: mỗi bước
-# đọc trạng thái trước rồi mới ghi. Không in số điện thoại hay link khách.
-demo-rudi: ## Dựng «Team Đà Lạt» cho vỏ RuDi lên API=<cổng prod> — OTP_CODE= (mặc định 000000), FRESH=1 tạo nhóm tên mới
-	@[ -n "$(API)" ] || { echo "Cần API=<cổng>, ví dụ: make demo-rudi API=46197 (từ scripts/e2e_slice.sh --keep)" >&2; exit 2; }
-	cd apps/mobile && npm run --silent seed:rudi -- --api http://127.0.0.1:$(API) --otp-code $(or $(OTP_CODE),000000) $(if $(FRESH),--fresh,)
-
-demo-reset: ## Giải phóng tên nhóm demo để `make demo` dựng lại được — APPLY=1 để ghi thật
-	@python3 scripts/reset_demo_group.py $(if $(DSN),--dsn $(DSN)) $(if $(APPLY),--yes)
-
-# `smoke` hỏi "cổng này có phục vụ đủ route CỦA CÂY NÀY không" — đúng câu ở cuối
-# `make up`, vì `up` vừa dựng ảnh từ chính cây đó. Với MÁY DEMO thì câu đó không
-# đủ, và ngày 30/08 nó ĐẠT 58/58 trong khi main khai 62: bộ container dựng từ
-# /home/lakiet/mobile, cây ấy đứng sau main 16 commit, nên hai vế của phép so là
-# cùng một cây cũ và phép so không thể đỏ. Đây là câu hỏi còn lại, neo vào main
-# chứ không vào cây đang đứng.
-#
-# KHÔNG gọi từ `up` hay `smoke`: lane khác `make up` từ nhánh của họ là chuyện
-# bình thường, bắt đỏ ở đó là dương tính giả và người ta sẽ tắt cổng đi.
-demo-check: ## Hỏi máy demo có phục vụ ĐÚNG bộ route của main không — URL=, REF= để đổi đích
-	@python3 scripts/check_demo_matches_main.py \
-	  $(if $(URL),--url $(URL)) $(if $(REF),--ref $(REF)) $(if $(NOFETCH),--no-fetch)
-
-# `demo-check` ở trên so ĐƯỜNG DẪN và tự nói ra rằng nó "không nói gì về
-# database". Câu đó đúng, và ngày 30/08 nó tốn sáu tiếng: máy demo ĐẠT 76/76
-# route trong khi bảng `outings` rỗng, nên F13/F14/F15/F16 — bốn tính năng đã
-# xong, test xanh — đều hiện RỖNG trên chính cái máy leader sẽ bấm. Không cổng
-# nào đỏ, vì không cổng nào nhìn vào dữ liệu.
-#
-# Hai mục này là hai nửa của một câu hỏi và cần chạy cùng nhau: route đúng mà
-# dữ liệu rỗng vẫn là một cái demo hỏng.
-# Mã thoát: gọi QUA `make` thì đọc chữ, đừng đọc số. GNU make thoát 2 với mọi
-# recipe hỏng, nên nó ép cả "lệch" (1) lẫn "không đối chiếu được" (2) của script
-# thành một con số — đúng cái phân biệt ba trạng thái tồn tại để giữ. Chỗ nào
-# cần mã thoát thật thì gọi thẳng `python3 scripts/check_demo_data.py`, đó cũng
-# là cách dòng cron của `demo_watch.py` gọi. Không sửa được trong make: đây là
-# hành vi của chính make, không phải của target này (`demo-check` cũng vậy).
-demo-data-check: ## Hỏi bộ dữ liệu trên máy demo có dùng để demo được không — DSN= để đổi đích
-	@python3 scripts/check_demo_data.py $(if $(DSN),--dsn $(DSN))
-
-# `demo-data-check` hỏi "nhóm demo dựng đủ chưa". Mục dưới hỏi câu ngược lại và
-# nó là câu đã trượt: nhóm demo đủ, mà NGƯỜI thì thừa. Đo 30/08 trên 8099, màn
-# Cá nhân của Minh in 3.613.333đ trong khi nhóm demo chỉ giải thích được
-# 1.603.666đ — hơn một nửa số tiền trên màn đến từ nhóm tên là "KHÔNG dùng để
-# demo". Không cổng nào đỏ, vì không cổng nào so hai con số đó với nhau.
-#
-# Mã thoát: đọc chữ khi gọi qua `make` (xem ghi chú ở `demo-data-check` — GNU
-# make ép cả 1 lẫn 2 thành 2). Cần mã thoát thật thì gọi thẳng script.
-demo-persona-check: ## Hỏi persona demo có lịch sử NGOÀI nhóm demo không — DSN=, API= để đổi đích
-	@python3 scripts/cong_persona_demo_sach.py \
-	  $(if $(DSN),--dsn $(DSN)) $(if $(API),--api $(API))
-
-# `demo-data-check` hỏi về DỮ LIỆU trên máy demo. Mục dưới hỏi về KHOÁ của nó, và đó
-# là câu đã trượt ngày 30/08: leader xoay GEMINI_API_KEY lúc 22:19:45, container
-# 8099 đã chạy từ ba tiếng trước và container chỉ đọc biến môi trường MỘT LẦN
-# lúc khởi động. Nên nó tiếp tục trình một khoá không còn tồn tại.
-#
-# Nhìn từ ngoài máy vẫn khoẻ: /healthz 200, /openapi.json đủ 76 route, và
-# check_ai_key.sh im lặng vì nó hỏi "có khoá không" chứ không hỏi "có ĐÚNG khoá
-# không". Thứ duy nhất chết là đường hero — POST /receipts/scan trả 502
-# receipt_reader_unavailable, 3/3 lần.
-#
-# Rẻ đủ để chạy mọi lượt: phép so khoá không tốn gì, phép thử khoá sống là một
-# prompt năm token chứ không phải một tấm ảnh. Đó là chỗ nó bù cho `hero-walk`,
-# vốn đắt nên chỉ chạy theo yêu cầu và để lại một phán quyết có hạn dùng.
-#
-# Mã thoát: đọc chữ khi gọi qua `make` (xem ghi chú ở `demo-data-check`).
-demo-key-check: ## Máy demo có đang giữ ĐÚNG khoá AI, và khoá đó còn sống không — URL= để đổi đích
-	@python3 scripts/check_demo_ai_key.py $(if $(URL),--base-url $(URL))
-
-# `demo-check` ở trên là chỗ gọi TAY: nó chỉ chạy khi đã có người nghi ngờ, và
-# lúc đó thì đã không cần nó nữa. Máy demo lệch 16 commit vì suốt thời gian đó
-# không ai hỏi. Ba mục dưới là chỗ gọi ĐỊNH KỲ.
-#
-# `demo-watch-status` mới là mục đáng cắm vào bảng theo dõi hay một cổng khác:
-# `demo-watch` chỉ nói về máy demo, còn `status` nói về máy demo VÀ về việc có
-# còn ai đang canh hay không. Canh gác chết thì im, và im là đúng thứ canh gác
-# khoẻ mạnh cũng làm — nên hết hạn mà không có phán quyết mới là mã 2.
-demo-watch: ## Một lượt canh máy demo, ghi lại phán quyết — URL=, REF= để đổi đích
-	@python3 scripts/demo_watch.py run \
-	  $(if $(URL),--url $(URL)) $(if $(REF),--ref $(REF))
-
-demo-watch-status: ## Lượt canh gần nhất nói gì — và có còn ai canh không (mã 2 nếu im quá lâu, hoặc nếu nó đo nhánh khác)
-	@python3 scripts/demo_watch.py status $(if $(MAXAGE),--max-age $(MAXAGE)) \
-	  $(if $(EXPECTREF),--expect-ref $(EXPECTREF)) $(if $(ANYREF),--any-ref)
-
-# REPO= là tham số hay bị quên nhất ở đây, và quên nó thì hỏng im lặng: dòng
-# cron sinh ra sẽ trỏ vào worktree của lane đang gõ lệnh, mà những cây đó bị
-# xoá. Cron vẫn chạy, vẫn thất bại mỗi 10 phút vào một log không ai đọc, và
-# `status` thì đỏ vì quá hạn chứ không nói được là đường dẫn sai.
-demo-watch-install: ## Cắm lượt canh định kỳ vào crontab — APPLY=1 để ghi thật, REMOVE=1 để gỡ, REPO= checkout ổn định
-	@python3 scripts/demo_watch.py install \
-	  $(if $(URL),--url $(URL)) $(if $(REPO),--repo $(REPO)) $(if $(REF),--ref $(REF)) \
-	  $(if $(APPLY),--apply) $(if $(REMOVE),--remove)
-
-# `demo-watch` hỏi máy demo có phục vụ ĐÚNG BỘ ROUTE của main không. Đếm route
-# khớp không có nghĩa là đường đi được: một máy phục vụ đủ 76 route và trả 500
-# cho tất cả vẫn khớp. Mục dưới đi thật hết đường hero, kể cả mối nối
-# ảnh -> Gemini -> readingFromWire -> POST /bills mà không cổng nào khác đi qua.
-#
-# Có gọi model thật, nên nó là mục gọi TAY (chạy trước khi demo), còn chặng
-# `hero-walk` trong `make gate` chỉ đọc lại phán quyết mục này ghi ra.
-hero-walk: ## Đi bộ cả đường hero trên máy demo, kể cả chặng ảnh -> món — URL=, ANH= để đổi đích
-	@scripts/hero_walk.sh $(if $(URL),--url $(URL)) $(if $(ANH),--anh $(ANH))
-
-hero-walk-status: ## Lượt đi bộ gần nhất nói gì (mã 2 nếu chưa ai đi, đứt, hoặc quá cũ)
-	@scripts/hero_walk.sh --status $(if $(URL),--url $(URL)) $(if $(MAXAGE),--max-age-hours $(MAXAGE))
-
-# Hai mục dưới gác một lỗi đã xảy ra thật lúc 03:20 ngày 31/08: bundle được
-# xuất từ một checkout lùi 4 commit và đang có file màn ở trạng thái đã xoá,
-# rồi đẩy lên máy demo. Bundle thiếu hẳn AlbumChuyenDi và CaNhanHoa, mà mọi
-# tín hiệu vẫn xanh — vì mọi cổng đọc client đều đọc CHÍNH cây bị hỏng đó.
-#
-# `bundle-check` chỉ hỏi, không dựng gì: KHỚP / LỆCH / KHÔNG KIỂM ĐƯỢC.
-# `bundle` là đường nên dùng — nó chạy `bundle-check` trước rồi mới export,
-# và đóng SHA vào bundle để người mở cổng 8081 đối chiếu được.
-#
-# KHÔNG nằm trong `make gate`, và đó là chủ ý: `gate` chạy trên nhánh, nơi
-# HEAD khác origin/main theo đúng thiết kế. Gộp vào đó thì cổng đỏ mỗi lần,
-# và một cổng luôn đỏ là một cổng người ta học cách bỏ qua.
-mobile-native: ## Lái app trên máy ảo Android thật qua development build — PORT=, SERIAL=, API=, LAP=, EXPO_GO=1 để đổi đích
-	@# Cổng DUY NHẤT trong repo chạy trên target sẽ ship. Mọi cổng mobile khác
-	@# chạy react-native-web trong jsdom hoặc headless Chrome, và rnw đã nói dối
-	@# bốn kiểu khác nhau trên máy này. Mã 2 = không đo được (không có máy ảo,
-	@# không có maestro), và nó NÓI RA thay vì trả xanh.
-	@scripts/mobile_native.sh \
-	  $(if $(PORT),--port $(PORT)) $(if $(SERIAL),--serial $(SERIAL)) \
-	  $(if $(API),--api-port $(API)) $(if $(KEEP),--keep) \
-	  $(if $(LAP),--lap $(LAP)) $(if $(EXPO_GO),--expo-go)
-
-mobile-native-live: ## Thế giới seed trên máy: đăng nhập OTP bằng số của một người đã seed — cần API= (đã make demo-rudi) và PHONE=
-	@# Bảng mặc định đo app với fixture. Lượt này đi đúng đường người thật: số của
-	@# người seed + mã debug, rồi flow 20 đối chiếu «Team Đà Lạt», kèo, bill, đợt thu
-	@# trên màn với chính câu trả lời của máy chủ. Lấy số: cd apps/mobile && node -e
-	@# "import('./tools/seed-rudi-world-lib.mjs').then(m=>console.log(m.soDienThoai(0)))"
-	@[ -n "$(PHONE)" ] && [ -n "$(API)" ] || { echo "Cần PHONE=<số người seed> và API=<cổng>" >&2; exit 2; }
-	@scripts/mobile_native.sh --live --otp-phone $(PHONE) --api-port $(API) \
-	  $(if $(PORT),--port $(PORT)) $(if $(SERIAL),--serial $(SERIAL)) $(if $(KEEP),--keep) $(if $(EXPO_GO),--expo-go)
-
-mobile-native-dangnhap: ## Cửa vào THẬT: mint lời mời rồi đăng nhập trên máy ảo — cần API= và MOBILE_DATABASE_URL
-	@# Không ghim danh tính nào vào bundle. Script tự mint phiên đầu bằng
-	@# genesis_session.py rồi tạo nhóm/chuyến/lời mời đích danh qua HTTP, và app
-	@# đi đúng đường một người thật đi. API phải chạy KHÔNG có MOBILE_AUTH_MODE.
-	@scripts/mobile_native.sh --dang-nhap --api-port $(API) \
-	  $(if $(PORT),--port $(PORT)) $(if $(SERIAL),--serial $(SERIAL)) $(if $(KEEP),--keep) $(if $(EXPO_GO),--expo-go)
-
-mobile-native-otp: ## Cửa OTP THẬT: số sinh lúc chạy, mã debug, phiên sống qua lần tắt — cần API= của API prod có MOBILE_OTP_DEBUG_CODE=000000
-	@# Không ghim danh tính, không cửa fixture (EXPO_PUBLIC_RUDI_FIXTURE tắt): bản
-	@# dựng có đúng hình dạng bản ship. API chạy KHÔNG có MOBILE_AUTH_MODE, với log
-	@# sender + mã debug — `scripts/e2e_slice.sh --keep` dựng đúng stack đó. Script
-	@# tự curl kiểm mã debug trước khi chạy flow, và canary là flow 22 với mã SAI.
-	@scripts/mobile_native.sh --otp --api-port $(API) \
-	  $(if $(PORT),--port $(PORT)) $(if $(SERIAL),--serial $(SERIAL)) $(if $(KEEP),--keep) $(if $(LAP),--lap $(LAP))
+# Dữ liệu tổng hợp chỉ được dựng trong stack cô lập của `make e2e`.
+mobile-native: ## Dựng APK, stack QA cô lập + tài khoản tổng hợp, chạy trọn bảng Maestro — SERIAL=, LAP=, PORT=
+	@$(if $(SERIAL),ANDROID_SERIAL=$(SERIAL)) $(if $(LAP),MOBILE_NATIVE_LAP=$(LAP)) $(if $(PORT),MOBILE_METRO_PORT=$(PORT)) scripts/mobile_native_gate.sh
 
 bundle-check: ## Cây đang đứng có khớp origin/main không — hỏi TRƯỚC khi xuất bundle
 	@python3 scripts/check_tree_matches_main.py \

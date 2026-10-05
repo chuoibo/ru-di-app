@@ -1,7 +1,6 @@
 # Stack RuDi chạy trên DB và MinIO của máy vnlocal.
 #
-# Khác docker-compose.yml ở gốc repo (máy dev, Postgres cục bộ, seed dữ liệu
-# bịa) ở ba chỗ:
+# Khác docker-compose.yml ở gốc repo (Postgres cục bộ) ở ba chỗ:
 #   - không có dịch vụ postgres: DB `rudi` nằm trên máy vnlocal
 #     (vnlocal HANDOFF-RUDI-TRA-LOI.md), DSN lấy từ file bí mật
 #   - không seed: danh mục đến từ `rudi-ingest sync`, không bao giờ từ
@@ -15,12 +14,12 @@
 #
 # Bí mật (không commit, mode 600):
 #   ~/.config/rudi/vnlocal.env  MOBILE_DATABASE_URL, VNLOCAL_PG_DSN, VNLOCAL_S3_*
-#   ~/.config/rudi/stack.env    MOBILE_INTERNAL_TOKEN, MOBILE_PERSON_ID_KEY,
+#   ~/.config/rudi/stack.env    MOBILE_INTERNAL_TOKEN,
 #                               MOBILE_VALHALLA_URL=http://valhalla:8002,
 #                               MOBILE_ROUTING_GRAPH_VERSION (từ graph-manifest.json)
 #   ~/.config/rudi/milvus.env   MOBILE_MILVUS_USER/_PASSWORD — sinh bằng
 #                               deploy/vnlocal/milvus-khoi-tao.sh (chạy một lần)
-#   .env ở gốc repo             GEMINI_API_KEY, AGY_PROXY_*, OPEN_ROUTER_API_KEY
+#   ~/.config/rudi/ai.env       GEMINI_API_KEY, AGY_PROXY_*, OPEN_ROUTER_API_KEY
 #                               — chỉ cấp cho dịch vụ AI (ADR-0049)
 #
 # Milvus GPU (ADR-0049): `milvus` chạy trên GPU 0; index dense HNSW mặc định,
@@ -57,7 +56,7 @@ x-ai-secrets: &ai-secrets
     - ${HOME}/.config/rudi/stack.env
     - ${HOME}/.config/rudi/milvus.env
     - ${HOME}/.config/rudi/ai-infer.env
-    - path: ../../.env
+    - path: ${RUDI_AI_ENV_FILE:-${HOME}/.config/rudi/ai.env}
       required: false
   # The vnlocal machine by name (mDNS). A container cannot resolve .local:
   # deploy/vnlocal/up.sh resolves it on the host and passes the IP here.
@@ -73,6 +72,36 @@ x-env: &env
   MOBILE_MEDIA_ROOT: /var/lib/rudi/media
 
 services:
+  auth-redis:
+    image: redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    command: ["sh", "-c", 'exec redis-server --appendonly yes --appendfsync always --maxmemory 128mb --maxmemory-policy noeviction --requirepass "$$(cat /run/secrets/auth_redis_password)"']
+    secrets: [auth_redis_password]
+    volumes: [rudi-auth-redis-data:/data]
+    healthcheck:
+      test: ["CMD-SHELL", 'REDISCLI_AUTH="$$(cat /run/secrets/auth_redis_password)" redis-cli ping']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  migrate-profile:
+    <<: [*core-image, *secrets]
+    command: ["migrate-profile"]
+    environment: *env
+    depends_on:
+      migrate-chat:
+        condition: service_completed_successfully
+    restart: "no"
+
+  migrate-accounts:
+    <<: [*core-image, *secrets]
+    command: ["migrate-accounts"]
+    environment: *env
+    depends_on:
+      migrate-profile:
+        condition: service_completed_successfully
+    restart: "no"
+
   # Một lần rồi thoát, theo thứ tự: Alembic → bảng Go của chat → bảng nạp danh mục.
   migrate:
     <<: [*api-image, *secrets]
@@ -220,8 +249,16 @@ services:
 
   core:
     <<: [*core-image, *ai-secrets]
+    env_file:
+      - ${HOME}/.config/rudi/vnlocal.env
+      - ${HOME}/.config/rudi/stack.env
+      - ${HOME}/.config/rudi/milvus.env
+      - ${HOME}/.config/rudi/ai-infer.env
+      - ${RUDI_AI_ENV_FILE:-${HOME}/.config/rudi/ai.env}
+      - ${RUDI_ACCOUNTS_ENV_FILE:-${HOME}/.config/rudi/accounts.env}
     environment:
       <<: [*env, *milvus-env]
+      MOBILE_ACCOUNT_AUTH_ENABLED: "1"
       # Every model call is Go's (ADR-0049, ADR-0052): the chat engine
       # (Nếp and the group bot) and the one-shot AI steps of the routes, text
       # through agy-proxy (AGY_PROXY_URL from .env), places from Milvus
@@ -245,12 +282,16 @@ services:
     volumes:
       - rudi-media-data:/var/lib/rudi/media
     ports:
-      - "${RUDI_API_PORT:-8124}:8000"
+      - "127.0.0.1:${RUDI_API_PORT:-8124}:8000"
     depends_on:
       api:
         condition: service_healthy
       migrate-chat:
         condition: service_completed_successfully
+      migrate-accounts:
+        condition: service_completed_successfully
+      auth-redis:
+        condition: service_healthy
       milvus:
         condition: service_healthy
     healthcheck:
@@ -273,7 +314,7 @@ services:
     network_mode: "service:core"
     env_file:
       - ${HOME}/.config/rudi/ai-infer.env
-      - path: ../../.env
+      - path: ${RUDI_AI_ENV_FILE:-${HOME}/.config/rudi/ai.env}
         required: false
     environment:
       AI_INFER_SPARSE_MODE: "off"
@@ -368,6 +409,11 @@ services:
       driver: "none"
     restart: unless-stopped
 
+secrets:
+  auth_redis_password:
+    file: ${HOME}/.config/rudi/auth-redis-password
+
 volumes:
+  rudi-auth-redis-data:
   rudi-media-data:
   rudi-milvus-data:

@@ -16,9 +16,9 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from legacy_auth_oracle import create_app
 
 from app.api.deps import get_repository
-from app.api.main import create_app
 from app.api.person_identity import (
     KEY_ENV_VAR,
     canonical_mobile,

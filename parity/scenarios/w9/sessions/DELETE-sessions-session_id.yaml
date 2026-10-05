@@ -4,12 +4,18 @@
 # declared before this one so it is never parsed as an id; the step below sends the
 # word `current` as a path segment to show which of the two answers. Texts are
 # sample data (dữ liệu mẫu).
+#
+# `friend`'s session used to come from redeeming a named invitation through
+# POST /sessions. ADR-0055 retired that door, so the harness now seeds two rows
+# for `friend` (issued_via `genesis`, the second one newer) before the first
+# step, the way it seeds every prod persona; only the redemption step is gone.
+# With two rows, revoking one shows the other is left alone.
 id: w9/sessions/delete-sessions-session_id
 routes: ['DELETE /sessions/{session_id}']
 auth_mode: dev
 personas:
   owner: {}
-  friend: {}
+  friend: {sessions: 2}
   stranger: {}
 steps:
   - id: anonymous_revokes
@@ -31,7 +37,7 @@ steps:
   - id: owner_unknown_session
     as: owner
     request: {method: DELETE, path: '/sessions/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'}
-  # --- give `friend` two sessions through the invitation door -------------------
+  # --- a named invitation for `friend`, which mints no session -----------------
   - id: owner_names_self
     as: owner
     request:
@@ -78,14 +84,6 @@ steps:
       body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
     bind:
       token_friend: {from: body, pointer: /invite_token, class: token}
-  - id: friend_redeems_invitation
-    as: anonymous
-    request:
-      method: POST
-      path: '/sessions'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"invite_token":"{{token_friend}}"}'
   - id: friend_lists_before
     as: friend
     request: {method: GET, path: /sessions}

@@ -63,4 +63,6 @@ var CotNguoiGo = []CotNguoi{
 	{"outing_diaries", "owner_id", Chua, "diary: memory books (versions and photos cascade); deleted by diary's own trigger diary_erase_for_account, counted by diary's TestPostgresAccountErasurePurgesBooksVersionsAndJobs"},
 	{"outing_diary_jobs", "owner_id", Chua, "diary: AI jobs holding the excerpts sent for a book; deleted by diary_erase_for_account, counted by the same diary test"},
 	{"outing_endings", "ended_by", Chua, "diary: who closed an outing (the FK has no ON DELETE); not erased by account deletion yet: an id only, no text of the person"},
+	{"managed_accounts", "person_id", Chua, "accountauth: encrypted login and recovery credentials; erased by erase_managed_account_credentials, counted by TestPostgresAccountErasureAndDiscoveryCompatibility"},
+	{"account_challenges", "person_id", Chua, "accountauth: bound sensitive-change proofs; erased by the same trigger, counted by the same accountauth test"},
 }

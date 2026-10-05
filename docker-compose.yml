@@ -33,7 +33,7 @@ name: ${MOBILE_PROJECT:-mobile-local}
 #
 # Từ ADR-0029, người giữ 8099 là `core` (cửa trước Go), không phải `api`.
 # `api` không publish cổng nào, nên mọi request từ ngoài máy compose phải đi qua
-# `core`; `seed` và `demo` cũng gọi `core` để đi đúng đường người dùng đi.
+# `core` là cửa trước công khai. Không có service nạp người/nhóm mẫu.
 #
 # Cố ý chỉ MỘT mạng (mạng mặc định của project), không tách edge/backend: máy
 # dev này chạy nhiều project compose cùng lúc, và mỗi mạng thêm ăn một subnet
@@ -61,13 +61,9 @@ x-api-env: &api-env
   # Tên host là `postgres` — tên service trong mạng compose. `localhost` ở đây
   # trỏ vào chính container, đó là lỗi số một khi bê URL từ .env của máy sang.
   MOBILE_DATABASE_URL: postgresql+psycopg://mobile:mobile-dev-only@postgres:5432/mobile
-  # ADR-0014: `get_actor` mặc định KHÔNG tin `X-Actor-*` nữa. Stack này là máy
-  # dev trên máy của chính mình, và `scripts/seed_dev_data.py` gọi API bằng
-  # header actor, nên nó bật lại chế độ cũ — bật RÕ, ở đúng một chỗ, không phải
-  # bằng cách để trống biến. Host phục vụ người thật không có dòng này và vì
-  # thế chạy `prod`; đổi dòng này thành `prod` ở đây thì seed sẽ 401, đó là
-  # hành vi đúng chứ không phải hỏng.
-  MOBILE_AUTH_MODE: dev
+  # Production session checks are the default. Only disposable test harnesses
+  # opt into the legacy actor-header mode explicitly.
+  MOBILE_AUTH_MODE: ${MOBILE_AUTH_MODE:-prod}
   # ADR-0029 §2.7: the Python process refuses to start without a brain token.
   # Letter-only so a compose file never trips the repo guard's digit-run rule.
   # Override in `.env` on a host that is not this machine.
@@ -127,17 +123,6 @@ services:
       # same proxy for earned, credit-backed MP4 jobs.
       NEP_PROXY_URL: ${NEP_PROXY_URL:-}
       NEP_PROXY_TOKEN: ${NEP_PROXY_TOKEN:-}
-      # The key `people.id` is derived under (bug-140342). Same rule as the
-      # line above: Compose forwards nothing by itself, so a key sitting in the
-      # host's `.env` reaches the API only because it is named here. Unset, the
-      # API answers 503 on sign-in rather than falling back to the unkeyed
-      # digest that let group members read each other's telephone numbers.
-      #
-      # On `api` and `core` (whose Go routes derive ids too), never in the
-      # anchor: `migrate` and `seed` share `x-api-env` and neither derives an
-      # id; seeding uses fixed uuids straight out of `scripts/seed_dev_data.py`.
-      # A secret belongs in exactly the processes that use it.
-      MOBILE_PERSON_ID_KEY: ${MOBILE_PERSON_ID_KEY:-}
       # Where uploaded photos land. Unset, `app/media/storage.py` falls back to
       # `$HOME/.local/share/rudi/media` -- inside the container's writable
       # layer, which `docker compose up --build` throws away. Measured on the
@@ -248,6 +233,30 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  migrate-accounts:
+    <<: *core-image
+    command: ["migrate-accounts"]
+    environment: *api-env
+    depends_on:
+      profile-migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  # Auth counters must survive restart and must never be evicted.
+  auth-redis:
+    image: redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    environment:
+      REDISCLI_AUTH: ${MOBILE_AUTH_REDIS_PASSWORD:-}
+    command: ["sh", "-c", 'test -n "$$REDISCLI_AUTH" || exit 64; exec redis-server --appendonly yes --appendfsync always --maxmemory 128mb --maxmemory-policy noeviction --requirepass "$$REDISCLI_AUTH"']
+    volumes:
+      - mobile-auth-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
   # Cửa trước Go (ADR-0029). Route manifest cho Go thì Go trả lời, còn lại proxy
   # nguyên vẹn sang `api`. Giữ cổng 8099 để mobile, README và script không đổi.
   core:
@@ -261,10 +270,18 @@ services:
       # public door (dispatch 404s `/internal` rather than proxying it).
       MOBILE_BRAIN_URL: http://api:8000
       MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
-      # POST /identity/person-id and POST /friends/lookup derive ids in Go when
-      # served from Go; same key as `api`, or the two would name one number
-      # differently. Unset, those routes answer 503 as Python does.
-      MOBILE_PERSON_ID_KEY: ${MOBILE_PERSON_ID_KEY:-}
+      MOBILE_ACCOUNT_AUTH_ENABLED: "1"
+      MOBILE_ACCOUNT_ENCRYPTION_KEY: ${MOBILE_ACCOUNT_ENCRYPTION_KEY:-}
+      MOBILE_ACCOUNT_LOOKUP_KEY: ${MOBILE_ACCOUNT_LOOKUP_KEY:-}
+      MOBILE_AUTH_REDIS_URL: redis://:${MOBILE_AUTH_REDIS_PASSWORD:-}@auth-redis:6379/0
+      MOBILE_AUTH_TRUSTED_PROXY_CIDRS: ${MOBILE_AUTH_TRUSTED_PROXY_CIDRS:-}
+      MOBILE_GOOGLE_CLIENT_IDS: ${MOBILE_GOOGLE_CLIENT_IDS:-}
+      MOBILE_CORS_ALLOW_ORIGINS: ${MOBILE_CORS_ALLOW_ORIGINS:-}
+      MOBILE_EMAIL_SMTP_HOST: ${MOBILE_EMAIL_SMTP_HOST:-}
+      MOBILE_EMAIL_SMTP_PORT: ${MOBILE_EMAIL_SMTP_PORT:-587}
+      MOBILE_EMAIL_SMTP_USER: ${MOBILE_EMAIL_SMTP_USER:-}
+      MOBILE_EMAIL_SMTP_PASSWORD: ${MOBILE_EMAIL_SMTP_PASSWORD:-}
+      MOBILE_EMAIL_FROM: ${MOBILE_EMAIL_FROM:-}
       NEP_PROXY_URL: ${NEP_PROXY_URL:-}
       NEP_PROXY_TOKEN: ${NEP_PROXY_TOKEN:-}
       # Go code merged but not yet owned by Go (manifest PORTED or later) is
@@ -290,6 +307,10 @@ services:
         condition: service_completed_successfully
       profile-migrate:
         condition: service_completed_successfully
+      migrate-accounts:
+        condition: service_completed_successfully
+      auth-redis:
+        condition: service_healthy
       # Ordering only (see migrate-rag above): serve reads the retrieval
       # schema through rag.Installed and falls back to live rows without it.
       migrate-rag:
@@ -397,36 +418,9 @@ services:
     ports:
       - "127.0.0.1:${AI_INFER_PORT:-18090}:8090"
 
-  # Không nằm trong `docker compose up`: seed là thao tác có chủ đích, không
-  # phải thứ chạy lén mỗi lần ai đó khởi động lại hệ. `make seed` gọi nó.
-  seed: &seed-service
-    <<: *api-image
-    profiles: ["tools"]
-    command: ["python", "/seed/seed_dev_data.py"]
-    environment:
-      <<: *api-env
-      MOBILE_SEED_API_BASE_URL: http://core:8000
-    volumes:
-      # Script nằm ngoài build context của services/api nên phải mount. Chỉ
-      # đọc: một fixture dev không có việc gì phải ghi vào cây nguồn.
-      - ./scripts:/seed:ro
-    depends_on:
-      core:
-        condition: service_healthy
-
-  # Cùng một cách chạy với `seed`, khác đúng cái script. Tách ra thành service
-  # riêng thay vì override command lúc gọi, để `docker compose config` đọc ra
-  # được là có hai fixture — thứ chỉ tồn tại trong một dòng Makefile thì không
-  # ai tìm thấy khi đi tìm.
-  #
-  # `seed` chứng minh hệ còn sống (3 người, 1 đợt). `demo` dựng bộ dữ liệu để
-  # trình diễn: 7 người, 3 chuyến, còn nợ thật. Chạy được cả hai trên cùng một
-  # database — chúng tạo hai nhóm khác nhau, không giẫm lên nhau.
-  demo:
-    <<: *seed-service
-    command: ["python", "/seed/seed_demo_data.py"]
 
 volumes:
+  mobile-auth-redis-data:
   mobile-postgres-data:
   # Photos survive `up --build` because of this line and nothing else. Removing
   # it does not break a test that reads this file -- it breaks

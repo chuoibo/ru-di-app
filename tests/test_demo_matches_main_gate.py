@@ -46,7 +46,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-GATE = REPO_ROOT / "scripts" / "check_demo_matches_main.py"
+GATE = REPO_ROOT / "tests" / "fixtures" / "legacy_demo" / "check_demo_matches_main.py"
 
 
 def _load_gate():

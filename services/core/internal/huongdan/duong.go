@@ -10,7 +10,7 @@ import (
 // that passes through one is «log out and sign in again», never directions.
 // DuongToi may start or end on one; it never passes through one. A test holds
 // every id here to a route _rut.json knows.
-var manVao = map[string]bool{"index": true, "welcome": true, "login": true, "otp": true}
+var manVao = map[string]bool{"index": true, "welcome": true, "login": true, "register": true, "reset-password": true}
 
 // manTienDau are the first route segments of the money screens: MAN_NEP_LUI in
 // apps/mobile/src/rudi/nep/phieu.ts, which a test holds equal to this. A
