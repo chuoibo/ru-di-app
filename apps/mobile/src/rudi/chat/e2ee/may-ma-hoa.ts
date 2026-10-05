@@ -113,6 +113,11 @@ export class MayMaHoa {
     return device;
   }
 
+  /** This phone's device id, once open. */
+  async thietBi(): Promise<string> {
+    return this.may();
+  }
+
   private may(): string {
     if (this.device === null) throw new Error("chat_v2_device_closed");
     return this.device;
