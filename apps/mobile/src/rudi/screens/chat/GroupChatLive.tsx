@@ -962,6 +962,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             {v2.thietBiMoi.slice(-3).map((m) => `${tenTheoId[m.card.actor_id] ?? "Một thành viên"} vừa thêm một thiết bị vào phòng`).join(" · ")}
           </Text>
         ) : null}
+        {/* An envelope that will never open is skipped so the room keeps
+            moving -- and said, never silently dropped. */}
+        {lan.lan === "v2" && v2.khongMo > 0 ? (
+          <Text style={[typography.caption, { color: colors.warn }]}>
+            {v2.khongMo === 1 ? "Có 1 tin không giải mã được trên máy này." : `Có ${v2.khongMo} tin không giải mã được trên máy này.`}
+          </Text>
+        ) : null}
       </View>
       {/* B2 (QC 24/09): the pinned sheet sits on its own solid band with a rule
           under it, so the thread visibly starts below it. On the bare ground

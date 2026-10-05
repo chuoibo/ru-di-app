@@ -12,6 +12,10 @@ export type ChatCryptoNative = {
   encrypt(conversationId: string, logicalSendId: string, operationJson: string): Promise<string>;
   receive(envelopeJson: string, rosterJson: string | null): Promise<string>;
   call(method: string, argsJson: string): Promise<string>;
+  /** The open device's sealed record of one room: `{cursor, ban}` JSON, or null when there is none. */
+  roomRead(room: string): Promise<string | null>;
+  /** Appends records (JSON array) and moves the cursor (when not null) in one durable write. */
+  roomAppend(room: string, cursor: number | null, recordsJson: string): Promise<void>;
   erase(): Promise<void>;
 };
 

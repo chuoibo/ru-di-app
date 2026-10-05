@@ -141,7 +141,11 @@ fn retry_reuses_ciphertext_and_changed_payload_conflicts() {
         alice.encrypt(&id(100), &id(300), text("changed payload")),
         Err(Error::Conflict)
     );
-    bob.receive(&envelope, None).unwrap();
+    let delivered = bob.receive(&envelope, None).unwrap();
+    // Until the app stored it, the same bytes answer the same delivery (same
+    // logical id: the app's record takes it once) -- never a new one.
+    assert_eq!(bob.receive(&envelope, None).unwrap(), delivered);
+    bob.settle_received(&id(100)).unwrap();
     assert!(
         bob.receive(&envelope, None).is_err(),
         "MLS rejects a replayed generation"
@@ -163,6 +167,7 @@ fn bounded_out_of_order_delivery_works_and_replay_does_not() {
         &text("first"),
         &alice.identity(),
     );
+    bob.settle_received(&id(100)).unwrap();
     assert!(bob.receive(&second, None).is_err());
 }
 
@@ -338,6 +343,7 @@ fn local_restart_preserves_replay_rejection_and_identical_outbox() {
         .encrypt(&id(100), &id(300), operation.clone())
         .unwrap();
     bob.receive(&envelope, None).unwrap();
+    bob.settle_received(&id(100)).unwrap();
     let key = [7; 32];
     let alice_state = alice.seal_local_state(&key).unwrap();
     let bob_state = bob.seal_local_state(&key).unwrap();

@@ -18,7 +18,8 @@ import test from "node:test";
 
 import { ApiError } from "../../dist-test/api.js";
 import { MayMaHoa } from "../../dist-test/rudi/chat/e2ee/may-ma-hoa.js";
-import { SO_TRONG, apDung, danhSach } from "../../dist-test/rudi/chat/e2ee/so-tin.js";
+import { dungPhong } from "../../dist-test/rudi/chat/e2ee/so-phong.js";
+import { danhSach } from "../../dist-test/rudi/chat/e2ee/so-tin.js";
 
 function drill() {
   const bin = process.env.CHAT_DRILL_BIN;
@@ -28,14 +29,21 @@ function drill() {
   const waiting = [];
   lines.on("line", (l) => waiting.shift()(JSON.parse(l)));
   const ask = (req) => new Promise((resolve) => { waiting.push(resolve); child.stdin.write(JSON.stringify(req) + "\n"); });
-  return { ask, close: () => { child.stdin.end(); child.kill(); } };
+  return { ask, opened: new Set(), close: () => { child.stdin.end(); child.kill(); } };
 }
 
 /** CryptoPort over the drill: one named client per device, errors as the native module throws them. */
 function crypto(d, name) {
   const ok = (a) => { if (a.error) throw new Error(`ERR_CHAT_CRYPTO_${String(a.error).toUpperCase()}`); return JSON.stringify(a); };
   return {
-    open: async (actor, device) => { ok(await d.ask({ client: name, fn: "new", actor, device })); return false; },
+    // Opening a device already open is a process restart: sealed, freed and
+    // resumed through the C ABI, as the phone does from its vault.
+    open: async (actor, device) => {
+      if (d.opened.has(name)) { ok(await d.ask({ client: name, fn: "restart" })); return true; }
+      ok(await d.ask({ client: name, fn: "new", actor, device }));
+      d.opened.add(name);
+      return false;
+    },
     createGroup: async (c) => ok(await d.ask({ client: name, fn: "create_group", conversation_id: c })),
     encrypt: async (c, l, op) => ok(await d.ask({ client: name, fn: "encrypt", conversation_id: c, logical_send_id: l, operation: JSON.parse(op) })),
     receive: async (env, roster) => ok(await d.ask({ client: name, fn: "receive", envelope: JSON.parse(env), roster: roster === null ? null : JSON.parse(roster) })),
@@ -129,6 +137,22 @@ function kho() {
   return { doc: async (k) => m.get(k) ?? null, ghi: async (k, v) => { m.set(k, v); } };
 }
 
+/** The sealed room store, in memory: one append = one atomic write. */
+function so() {
+  const rooms = new Map();
+  return {
+    rooms,
+    doc: async (room) => (rooms.has(room) ? structuredClone(rooms.get(room)) : null),
+    noi: async (room, cursor, ban) => {
+      const p = rooms.get(room) ?? { cursor: 0, ban: [] };
+      rooms.set(room, { cursor: cursor ?? p.cursor, ban: [...p.ban, ...structuredClone(ban)] });
+    },
+  };
+}
+
+/** The bodies a device's record shows, in lane order. */
+const bodies = async (m, room) => danhSach(dungPhong((await m.dongBo(room)).ban).so).map((t) => t.body);
+
 test("ba thiết bị MLS thật qua engine: mở phòng, Welcome, nhắn hai chiều, thêm người, đua epoch, gỡ người", async (t) => {
   const d = drill();
   t.after(() => d.close());
@@ -138,7 +162,7 @@ test("ba thiết bị MLS thật qua engine: mở phòng, Welcome, nhắn hai ch
   const [an, binh, chi] = [randomUUID(), randomUUID(), randomUUID()];
   lane.persons.set(room, new Set([an, binh]));
   const moi = { an: [], binh: [], chi: [] };
-  const may = (actor, name) => new MayMaHoa({ actorId: actor, crypto: crypto(d, name), api, kho: kho(), uuid: randomUUID, label: name,
+  const may = (actor, name) => new MayMaHoa({ actorId: actor, crypto: crypto(d, name), api, kho: kho(), so: so(), uuid: randomUUID, label: name,
     onThietBiMoi: (m) => moi[name].push(m.card.actor_id) });
   const [mA, mB, mC] = [may(an, "an"), may(binh, "binh"), may(chi, "chi")];
   for (const m of [mA, mB, mC]) await m.moThietBi();
@@ -147,10 +171,8 @@ test("ba thiết bị MLS thật qua engine: mở phòng, Welcome, nhắn hai ch
   assert.deepEqual(await mB.nhanWelcome(), [room]);
   assert.equal(await mB.chuanBi(room), true);
 
-  let soB = SO_TRONG;
   await mA.gui(room, { type: "text", body: "Tối nay đi ăn không?" });
-  await mB.dongBo(room, (t) => { soB = apDung(soB, t.received, t.sequence); });
-  assert.deepEqual(danhSach(soB).map((t) => t.body), ["Tối nay đi ăn không?"]);
+  assert.deepEqual(await bodies(mB, room), ["Tối nay đi ăn không?"]);
 
   // Chi joins the group on the server; Bình's next send meets a room that is
   // not ready, brings it in line (adds Chi), and goes through.
@@ -160,25 +182,96 @@ test("ba thiết bị MLS thật qua engine: mở phòng, Welcome, nhắn hai ch
   assert.deepEqual(await mC.nhanWelcome(), [room]);
   // Every device that already knew the room is told Chi's device joined
   // (security review 05/10: no unseen ghost devices); Chi had no "before".
-  await mA.dongBo(room, () => undefined);
+  await mA.dongBo(room);
   assert.deepEqual([moi.an, moi.binh, moi.chi], [[binh, chi], [chi], []]);
-  let soC = SO_TRONG;
-  await mC.dongBo(room, (t) => { soC = apDung(soC, t.received, t.sequence); });
-  assert.deepEqual(danhSach(soC).map((t) => t.body), ["Có Chi đi cùng"], "Chi reads what was sent after the commit that added her, not before");
+  assert.deepEqual(await bodies(mC, room), ["Có Chi đi cùng"], "Chi reads what was sent after the commit that added her, not before");
+  // An's own record holds both: its own send and Bình's, in lane order.
+  assert.deepEqual(await bodies(mA, room), ["Tối nay đi ăn không?", "Có Chi đi cùng"]);
 
   // An has not read Bình's commit: An's send meets a moved epoch, reads the
   // commit, re-encrypts and goes through; Chi reads it.
   await mA.gui(room, { type: "text", body: "Vậy 7 giờ nhé" });
-  await mC.dongBo(room, (t) => { soC = apDung(soC, t.received, t.sequence); });
-  assert.deepEqual(danhSach(soC).map((t) => t.body), ["Có Chi đi cùng", "Vậy 7 giờ nhé"]);
+  assert.deepEqual(await bodies(mC, room), ["Có Chi đi cùng", "Vậy 7 giờ nhé"]);
 
   // Bình leaves on the server: An removes Bình's device; Chi follows; Bình can no longer read.
   lane.persons.get(room).delete(binh);
   lane.rooms.get(room).ready = lane.sameSet(room);
   assert.equal(await mA.chuanBi(room), true);
   await mA.gui(room, { type: "text", body: "Hai đứa mình đi" });
-  await mC.dongBo(room, (t) => { soC = apDung(soC, t.received, t.sequence); });
-  assert.deepEqual(danhSach(soC).map((t) => t.body), ["Có Chi đi cùng", "Vậy 7 giờ nhé", "Hai đứa mình đi"]);
-  await assert.rejects(() => mB.dongBo(room, () => undefined), (e) => e instanceof ApiError && e.code === "chat_v2_forbidden");
+  assert.deepEqual(await bodies(mC, room), ["Có Chi đi cùng", "Vậy 7 giờ nhé", "Hai đứa mình đi"]);
+  await assert.rejects(() => mB.dongBo(room), (e) => e instanceof ApiError && e.code === "chat_v2_forbidden");
+  // What Bình read while a member stays readable on Bình's own device.
+  assert.deepEqual(danhSach(dungPhong((await mB.soPhong(room)).ban).so).map((t) => t.body), ["Tối nay đi ăn không?", "Có Chi đi cùng"]);
+  d.close();
+});
+
+test("app chết giữa chừng không mất tin, một envelope rác không làm kẹt phòng, tin chưa gửi được gửi lại", async (t) => {
+  const d = drill();
+  t.after(() => d.close());
+  const lane = new Lane();
+  const api = lane.api();
+  const room = randomUUID();
+  const [an, binh] = [randomUUID(), randomUUID()];
+  lane.persons.set(room, new Set([an, binh]));
+  const khoA = kho();
+  const khoB = kho();
+  const soA = so();
+  const soB = so();
+  const may = (actor, name, k, s, apiOf = api) => new MayMaHoa({ actorId: actor, crypto: crypto(d, name), api: apiOf, kho: k, so: s, uuid: randomUUID, label: name });
+  const mA = may(an, "an", khoA, soA);
+  let mB = may(binh, "binh", khoB, soB);
+  await mA.moThietBi();
+  await mB.moThietBi();
+  assert.equal(await mA.chuanBi(room), true);
+  await mB.nhanWelcome();
+
+  // 1. Bình's phone dies after the crypto opened a message and before the
+  // record was written: nothing of that page reaches the store.
+  await mA.gui(room, { type: "text", body: "tin trước lúc sập" });
+  const that = soB.noi;
+  soB.noi = async () => { throw new Error("app died"); };
+  await assert.rejects(() => mB.dongBo(room), /app died/);
+  soB.noi = that;
+  mB = may(binh, "binh", khoB, soB); // a new process, the same device and stores
+  await mB.moThietBi();
+  assert.deepEqual(await bodies(mB, room), ["tin trước lúc sập"], "the replayed envelope answers from the crypto's journal");
+
+  // 2. A member's device posts an envelope that will never open: it is
+  // skipped and counted; the next real message still arrives.
+  const real = lane.rooms.get(room).events.at(-1).envelope;
+  await api.send(an, room, { ...real, logical_send_id: randomUUID(), ciphertext: Buffer.from("rác").toString("base64") });
+  await mA.gui(room, { type: "text", body: "sau tin rác" });
+  const p = await mB.dongBo(room);
+  assert.deepEqual(danhSach(dungPhong(p.ban).so).map((x) => x.body), ["tin trước lúc sập", "sau tin rác"]);
+  assert.equal(dungPhong(p.ban).khongMo, 1);
+
+  // 3. A send that failed on the network stays as a failed row with the same
+  // logical id; «Thử lại» lands it once.
+  const down = { ...api, send: async () => { throw new ApiError(0, "network", "Mất mạng"); } };
+  const mBdown = may(binh, "binh", khoB, soB, down);
+  await mBdown.moThietBi();
+  await assert.rejects(() => mBdown.gui(room, { type: "text", body: "gửi lúc mất mạng" }));
+  let r = dungPhong((await mBdown.soPhong(room)).ban);
+  assert.deepEqual(r.cho.map((c) => [c.r.operation.body, c.hong, c.thuLai]), [["gửi lúc mất mạng", true, true]]);
+  const id = r.cho[0].id;
+  mB = may(binh, "binh", khoB, soB);
+  await mB.moThietBi();
+  await mB.thuLai(room, id);
+  r = dungPhong((await mB.dongBo(room)).ban);
+  assert.deepEqual(r.cho, []);
+  assert.deepEqual(danhSach(r.so).map((x) => x.body), ["tin trước lúc sập", "sau tin rác", "gửi lúc mất mạng"]);
+  assert.deepEqual(await bodies(mA, room), ["tin trước lúc sập", "sau tin rác", "gửi lúc mất mạng"]);
+
+  // 4. The phone dies right after writing a send down, before it left:
+  // reopening sends it, once.
+  const logical = randomUUID();
+  await soB.noi(room, null, [{ t: "cho", r: { kind: "application", actor_id: binh, device_id: await mB.thietBi(), logical_send_id: logical, operation: { type: "text", body: "viết xong thì sập" } }, luc: Date.now() }]);
+  mB = may(binh, "binh", khoB, soB);
+  await mB.moThietBi();
+  await mB.guiLai(room);
+  await mB.guiLai(room);
+  assert.deepEqual((await bodies(mA, room)).at(-1), "viết xong thì sập");
+  assert.equal((await bodies(mA, room)).filter((b) => b === "viết xong thì sập").length, 1);
+  assert.deepEqual(dungPhong((await mB.dongBo(room)).ban).cho, []);
   d.close();
 });

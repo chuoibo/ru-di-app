@@ -3,6 +3,7 @@ package expo.modules.rudichatcrypto
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import android.util.Base64
 import java.util.concurrent.Executors
 import org.json.JSONObject
 
@@ -22,12 +23,13 @@ class RudiChatCryptoModule : Module() {
   private val jsMethods = setOf(
     "generation", "enrollment", "conversations", "key_package", "join_group", "epoch", "roster",
     "stage_add", "stage_remove", "stage_rekey", "pending_commit", "acknowledge_commit",
-    "acknowledge_sent", "abandon_send", "abandon_commit", "forget", "seal_media", "open_media"
+    "acknowledge_sent", "abandon_send", "abandon_commit", "forget", "settle_received", "seal_media", "open_media"
   )
 
   private val worker = Executors.newSingleThreadExecutor()
   private var handle = 0L
   private var vault: Vault? = null
+  private var rooms: RoomLog? = null
   private var generation = -1L
 
   private fun <T> serial(block: () -> T): T = worker.submit<T> { block() }.get()
@@ -42,6 +44,8 @@ class RudiChatCryptoModule : Module() {
   }
 
   private fun live(): Long = if (handle != 0L) handle else throw CodedException("ERR_CHAT_CRYPTO_CLOSED", "closed", null)
+
+  private fun roomLog(): RoomLog = rooms ?: throw CodedException("ERR_CHAT_CRYPTO_CLOSED", "closed", null)
 
   /** Seals and persists when the client's generation moved. */
   private fun persistIfChanged() {
@@ -86,6 +90,9 @@ class RudiChatCryptoModule : Module() {
         }
         handle = opened
         vault = v
+        val wrapping = Base64.decode(v.wrappingKey(), Base64.NO_WRAP)
+        rooms = RoomLog(v.roomsDir, "$actor|$device", wrapping)
+        wrapping.fill(0)
         generation = -1L
         persistIfChanged()
         resumed
@@ -111,12 +118,27 @@ class RudiChatCryptoModule : Module() {
       mutating { text(Native.call(live(), method.toByteArray(), args.toByteArray())) }
     }
 
-    /** Signs this device identity out: the handle, the sealed state and the keys go. */
+    /** The open device's sealed record of one room, or null when there is none. */
+    AsyncFunction("roomRead") { room: String ->
+      serial {
+        try { roomLog().read(room) } catch (e: IllegalArgumentException) { throw CodedException("ERR_CHAT_CRYPTO_INVALID", "invalid", null) }
+      }
+    }
+
+    /** Appends to a room's record and moves its cursor (when not null), durably, before answering. */
+    AsyncFunction("roomAppend") { room: String, cursor: Double?, records: String ->
+      serial {
+        try { roomLog().append(room, cursor?.toLong(), records) } catch (e: IllegalArgumentException) { throw CodedException("ERR_CHAT_CRYPTO_INVALID", "invalid", null) }
+      }
+    }
+
+    /** Signs this device identity out: the handle, the sealed state, the room records and the keys go. */
     AsyncFunction("erase") { ->
       serial {
         if (handle != 0L) { Native.free(handle); handle = 0L }
         vault?.erase()
         vault = null
+        rooms = null
       }
     }
 

@@ -13,7 +13,7 @@ pub use wire::{
     enrollment_bytes, Envelope, MediaRef, Operation, MAX_CIPHERTEXT, MAX_MEDIA, PROTOCOL,
 };
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use ed25519_dalek::SigningKey;
 use openmls::prelude::*;
@@ -37,6 +37,8 @@ const MAX_CONVERSATIONS: usize = 1024;
 const MAX_KEY_PACKAGES: u32 = 64;
 /// Largest decrypted application payload.
 const MAX_PAYLOAD: usize = 20 * 1024;
+/// Processed envelopes remembered until the app says it stored their results.
+const MAX_RECEIVED: usize = 128;
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum Error {
@@ -171,7 +173,8 @@ pub struct CommitBundle {
     pub welcome: Option<Vec<u8>>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Received {
     Application {
         actor_id: String,
@@ -195,6 +198,12 @@ pub(crate) struct Conversation {
     /// re-encrypted under a new ratchet step.
     delivered: BTreeSet<String>,
     pending: Option<PendingCommit>,
+    /// Envelopes processed since the app last said it stored what they
+    /// produced (`settle_received`), with that result. The same bytes again --
+    /// the app died between this answer and its own write -- answer the same
+    /// instead of failing on a ratchet step that is gone, which would wedge
+    /// the room for good.
+    received: VecDeque<([u8; 32], Received)>,
 }
 
 /// One device identity in many conversations (ADR-0057 §1.1). Mutable access
@@ -361,6 +370,7 @@ impl Client {
                 roster: roster(&[self.identity()])?,
                 outbox: BTreeMap::new(),
                 delivered: BTreeSet::new(),
+                received: VecDeque::new(),
                 pending: None,
             },
         );
@@ -434,6 +444,7 @@ impl Client {
                 roster: expected,
                 outbox: BTreeMap::new(),
                 delivered: BTreeSet::new(),
+                received: VecDeque::new(),
                 pending: None,
             },
         );
@@ -850,8 +861,19 @@ impl Client {
         envelope: &Envelope,
         verified_next_roster: Option<&[IdentityCard]>,
     ) -> Result<Received> {
-        // Reject unauthenticated traffic before allocating a rollback snapshot.
+        // The exact bytes of an envelope already processed (and so already
+        // authenticated) answer what they produced then.
         let conversation_id = envelope.conversation_id.as_str();
+        let digest: [u8; 32] =
+            Sha256::digest(serde_json::to_vec(envelope).map_err(|_| Error::Invalid)?).into();
+        if let Some((_, earlier)) = self
+            .conversations
+            .get(conversation_id)
+            .and_then(|c| c.received.iter().find(|(d, _)| *d == digest))
+        {
+            return Ok(earlier.clone());
+        }
+        // Reject unauthenticated traffic before allocating a rollback snapshot.
         if envelope.epoch != self.epoch(conversation_id)? {
             return Err(Error::Authentication);
         }
@@ -863,10 +885,32 @@ impl Client {
         envelope.verify(&sender.transport_signature_key)?;
         let snapshot = self.capture_receive_state(conversation_id)?;
         let result = self.receive_inner(envelope, verified_next_roster);
-        if result.is_err() {
-            self.rollback_receive(snapshot)?;
+        match &result {
+            Err(_) => self.rollback_receive(snapshot)?,
+            Ok(received) => {
+                if let Some(conversation) = self.conversations.get_mut(conversation_id) {
+                    if conversation.received.len() >= MAX_RECEIVED {
+                        conversation.received.pop_front();
+                    }
+                    conversation.received.push_back((digest, received.clone()));
+                }
+            }
         }
         result
+    }
+
+    /// The app stored the results of every envelope processed so far in this
+    /// conversation: they need not be answered again.
+    pub fn settle_received(&mut self, conversation_id: &str) -> Result<()> {
+        let conversation = self
+            .conversations
+            .get_mut(conversation_id)
+            .ok_or(Error::State)?;
+        if conversation.received.is_empty() {
+            return Ok(());
+        }
+        conversation.received.clear();
+        self.mutate()
     }
 
     fn receive_inner(

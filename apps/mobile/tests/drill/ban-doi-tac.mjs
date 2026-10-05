@@ -15,6 +15,8 @@ import { createInterface } from "node:readline";
 import { datTokenPhien } from "../../dist-test/api.js";
 import { apiV2 } from "../../dist-test/rudi/chat/e2ee/api-v2.js";
 import { MayMaHoa } from "../../dist-test/rudi/chat/e2ee/may-ma-hoa.js";
+import { dungPhong } from "../../dist-test/rudi/chat/e2ee/so-phong.js";
+import { danhSach } from "../../dist-test/rudi/chat/e2ee/so-tin.js";
 
 const [token, person, room, giay = "600"] = process.argv.slice(2);
 if (!token || !person || !room || !process.env.CHAT_DRILL_BIN || !/^http:\/\/(127\.0\.0\.1|localhost):/.test(process.env.EXPO_PUBLIC_API_URL ?? "")) {
@@ -38,7 +40,13 @@ const crypto = {
 };
 const store = new Map();
 const kho = { doc: async (k) => store.get(k) ?? null, ghi: async (k, v) => { store.set(k, v); } };
-const may = new MayMaHoa({ actorId: person, crypto, api: apiV2, kho, uuid: randomUUID, label: "Bình (máy giả lập)",
+const rooms = new Map();
+const so = {
+  doc: async (r) => rooms.get(r) ?? null,
+  noi: async (r, cursor, ban) => { const p = rooms.get(r) ?? { cursor: 0, ban: [] }; rooms.set(r, { cursor: cursor ?? p.cursor, ban: [...p.ban, ...ban] }); },
+};
+const daTraLoi = new Set();
+const may = new MayMaHoa({ actorId: person, crypto, api: apiV2, kho, so, uuid: randomUUID, label: "Bình (máy giả lập)",
   onThietBiMoi: (m) => console.log(`thiết bị mới trong phòng: ${m.card.device_id}`) });
 
 await may.moThietBi();
@@ -57,11 +65,12 @@ while (Date.now() < het) {
     }
     if (trongPhong) {
       await may.chuanBi(room);
-      const nhan = [];
-      await may.dongBo(room, (t) => { if (t.received.operation.type === "text" || t.received.operation.type === "reply") nhan.push(t.received.operation.body); });
-      for (const body of nhan) {
-        console.log(`đã giải mã: ${body}`);
-        await may.gui(room, { type: "text", body: `Bình đã nhận: ${body}` });
+      const p = await may.dongBo(room);
+      for (const t of danhSach(dungPhong(p.ban).so)) {
+        if (t.authorId === person || daTraLoi.has(t.id) || t.body === null) continue;
+        daTraLoi.add(t.id);
+        console.log(`đã giải mã: ${t.body}`);
+        await may.gui(room, { type: "text", body: `Bình đã nhận: ${t.body}` });
       }
     }
   } catch (error) {

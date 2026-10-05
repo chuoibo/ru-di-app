@@ -8,6 +8,8 @@
 //!   new {actor, device} | identity | create_group {conversation_id}
 //!   | encrypt {conversation_id, logical_send_id, operation}
 //!   | receive {envelope, roster|null} | call {method, args}
+//!   | restart: seal the client, free it, resume it from the sealed state --
+//!     what a process restart does on a phone (fixed synthetic wrapping key)
 use std::collections::HashMap;
 use std::ffi::{c_char, CStr, CString};
 use std::io::{self, BufRead, Write};
@@ -90,6 +92,37 @@ fn main() {
             "call" => {
                 let (method, args) = (c(&request["method"]), c(&request["args"]));
                 take(unsafe { rudi_chat_crypto_call(handle, method.as_ptr(), args.as_ptr()) })
+            }
+            "restart" => {
+                let key = "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=";
+                let args = c(&serde_json::json!({ "wrapping_key": key }));
+                let method = c(&serde_json::json!("seal"));
+                let sealed =
+                    take(unsafe { rudi_chat_crypto_call(handle, method.as_ptr(), args.as_ptr()) });
+                if sealed.get("error").is_some() {
+                    sealed
+                } else {
+                    unsafe { rudi_chat_crypto_client_free(handle) };
+                    clients.remove(&name);
+                    let (state, anchor, key) = (
+                        c(&sealed["sealed"]),
+                        c(&sealed["anchor"]),
+                        c(&serde_json::json!(key)),
+                    );
+                    let made = unsafe {
+                        rudi_chat_crypto_client_resume(
+                            state.as_ptr(),
+                            key.as_ptr(),
+                            anchor.as_ptr(),
+                        )
+                    };
+                    if made.is_null() {
+                        serde_json::json!({"error": "checkpoint"})
+                    } else {
+                        clients.insert(name, made);
+                        serde_json::json!({"ok": true})
+                    }
+                }
             }
             _ => serde_json::json!({"error": "fn"}),
         };

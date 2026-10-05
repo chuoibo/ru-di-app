@@ -7,25 +7,29 @@
  * - It polls the lane while focused (the WebSocket stream is the next step);
  *   history starts where this device joined -- earlier messages were never
  *   encrypted to it, and the legacy archive stays readable on its own.
+ * - What the room shows comes from the device's sealed record (`so-phong`),
+ *   read before the network: history survives a restart and works offline.
  * - Nothing here ever writes plaintext anywhere: a failure is said, not
  *   routed around.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { File } from "expo-file-system";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Image, Platform } from "react-native";
 
 import { ApiError, goiNhiPhan, thongDiepNguoiDoc } from "../../../api";
 import { makeIdFactory } from "../../../participants";
 import { ChatCryptoModule } from "../../../../modules/rudi-chat-crypto";
+import type { TinChoGui } from "../hang-cho";
 import type { LoaiPhanUng, PhanUngTomTat, Tin, TinDaGui } from "../tin-song";
 import { PHAN_UNG } from "../tin-song";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import { apiV2 } from "./api-v2";
 import type { MediaRef, Operation } from "./kieu";
-import { MayMaHoa, type ThietBiMoi } from "./may-ma-hoa";
-import { SO_TRONG, apDung, danhSach, type SoTin, type TinV2 } from "./so-tin";
+import { MayMaHoa, type KhoTinPort, type ThietBiMoi } from "./may-ma-hoa";
+import { PHONG_TRONG, dungPhong, type Cho, type SoPhong } from "./so-phong";
+import { danhSach, type TinV2 } from "./so-tin";
 
 const NHIP_MS = 3000;
 
@@ -52,6 +56,9 @@ const mayTheoNguoi = new Map<string, Promise<MayMaHoa>>();
  */
 const ngheThietBiMoi = new Set<(m: ThietBiMoi) => void>();
 
+/** Everyone drawing a room, told when its record grows (whoever made it grow). */
+const ngheDoiPhong = new Set<(room: string) => void>();
+
 export function coMaHoa(): boolean {
   return ChatCryptoModule !== null;
 }
@@ -62,8 +69,16 @@ export async function mayCua(personId: string): Promise<MayMaHoa> {
   let co = mayTheoNguoi.get(personId);
   if (co === undefined) {
     co = (async () => {
-      const may = new MayMaHoa({ actorId: personId, crypto: native, api: apiV2, kho, uuid, label: Platform.OS === "ios" ? "iPhone" : "Android",
-        onThietBiMoi: (m) => { for (const nghe of ngheThietBiMoi) nghe(m); } });
+      const so: KhoTinPort = {
+        doc: async (room) => {
+          const raw = await native.roomRead(room);
+          return raw === null ? null : (JSON.parse(raw) as SoPhong);
+        },
+        noi: (room, cursor, ban) => native.roomAppend(room, cursor, JSON.stringify(ban)),
+      };
+      const may = new MayMaHoa({ actorId: personId, crypto: native, api: apiV2, kho, so, uuid, label: Platform.OS === "ios" ? "iPhone" : "Android",
+        onThietBiMoi: (m) => { for (const nghe of ngheThietBiMoi) nghe(m); },
+        onPhong: (room) => { for (const nghe of ngheDoiPhong) nghe(room); } });
       await may.moThietBi();
       return may;
     })();
@@ -101,6 +116,23 @@ export function sangTin(t: TinV2, contextId: string, personId: string, anhDaMo: 
   };
 }
 
+/** An own send still on its way, as the screen's pending row. */
+export function sangCho(c: Cho, tinTheoId: Record<string, TinV2>): TinChoGui {
+  const op = c.r.operation;
+  const goc = op.type === "reply" ? tinTheoId[op.reply_to] : undefined;
+  return {
+    attempt: { key: c.id, at: c.luc },
+    kind: op.type === "sticker" ? "sticker" : op.type === "image" ? "image" : "text",
+    than: op.type === "sticker" ? op.sticker_id : op.type === "text" || op.type === "reply" ? op.body : "",
+    phuDe: op.type === "image" ? op.caption : null,
+    traLoi: op.type === "reply" ? { id: op.reply_to, kind: "text", author_id: goc?.authorId ?? null, preview: goc?.body ?? "" } : null,
+    trangThai: c.hong ? "that-bai" : "dang-gui",
+    loi: c.loi,
+    thuLaiDuoc: c.thuLai,
+    luc: new Date(c.luc).toISOString(),
+  };
+}
+
 export type TrangThaiV2 = {
   tin: Tin[];
   dangNap: boolean;
@@ -111,47 +143,58 @@ export type TrangThaiV2 = {
 };
 
 export function useTinNhanV2(contextId: string, personId: string, tat = false) {
-  const [so, setSo] = useState<SoTin>(SO_TRONG);
-  const soRef = useRef<SoTin>(SO_TRONG);
+  const [phong, setPhong] = useState<SoPhong>(PHONG_TRONG);
   const [trang, setTrang] = useState<Omit<TrangThaiV2, "tin">>({ dangNap: true, loi: null, thietBiMoi: [], sanSang: false });
   const [anhDaMo, setAnhDaMo] = useState<Record<string, string>>({});
   const theHe = useRef(0);
+  const { so, cho, khongMo } = useMemo(() => dungPhong(phong.ban), [phong]);
+
+  /** Draws the room's record as it is now. */
+  const ve = useCallback(async () => {
+    const lan = theHe.current;
+    const p = await (await mayCua(personId)).soPhong(contextId);
+    if (lan === theHe.current) setPhong(p);
+  }, [contextId, personId]);
 
   const nap = useCallback(async () => {
     const lan = theHe.current;
     try {
       const may = await mayCua(personId);
+      await ve();
       await may.nhanWelcome();
       const sanSang = await may.chuanBi(contextId);
-      let moi = soRef.current;
-      await may.dongBo(contextId, (t) => {
-        moi = apDung(moi, t.received, t.sequence);
-      });
+      if (sanSang) {
+        await may.dongBo(contextId);
+        await may.guiLai(contextId);
+      }
       if (lan !== theHe.current) return;
-      soRef.current = moi;
-      setSo(moi);
+      await ve();
       setTrang((cu) => ({ ...cu, dangNap: false, loi: null, sanSang }));
     } catch (error) {
       if (lan !== theHe.current) return;
       setTrang((cu) => ({ ...cu, dangNap: false, loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null) }));
     }
-  }, [contextId, personId]);
+  }, [contextId, personId, ve]);
 
   useEffect(() => {
     if (tat) return undefined;
     const nghe = (m: ThietBiMoi) => {
       if (m.room === contextId) setTrang((cu) => ({ ...cu, thietBiMoi: [...cu.thietBiMoi, m] }));
     };
+    const doi = (room: string) => {
+      if (room === contextId) void ve().catch(() => undefined);
+    };
     ngheThietBiMoi.add(nghe);
+    ngheDoiPhong.add(doi);
     return () => {
       ngheThietBiMoi.delete(nghe);
+      ngheDoiPhong.delete(doi);
     };
-  }, [contextId, tat]);
+  }, [contextId, tat, ve]);
 
   useEffect(() => {
     theHe.current += 1;
-    soRef.current = SO_TRONG;
-    setSo(SO_TRONG);
+    setPhong(PHONG_TRONG);
     setTrang({ dangNap: !tat, loi: null, thietBiMoi: [], sanSang: false });
     if (!tat) void nap();
   }, [nap, tat]);
@@ -164,23 +207,25 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
     }, [nap, tat]),
   );
 
+  /** The room's message for a logical send, once the record holds it. */
+  const daGui = useCallback(
+    async (id: string): Promise<TinDaGui | null> => {
+      await ve();
+      const p = await (await mayCua(personId)).soPhong(contextId);
+      const t = dungPhong(p.ban).so.byId[id];
+      return t === undefined ? null : { ...sangTin(t, contextId, personId, {}), intent: null, vote: null, intent_error: null };
+    },
+    [contextId, personId, ve],
+  );
+
   const guiOp = useCallback(
-    async (op: Operation): Promise<TinDaGui> => {
+    async (op: Operation): Promise<TinDaGui | null> => {
       const may = await mayCua(personId);
       const ev = await may.gui(contextId, op);
-      await nap();
-      const id = ev.envelope?.logical_send_id ?? "";
-      const daCo = soRef.current.byId[id];
-      const tin = daCo !== undefined ? sangTin(daCo, contextId, personId, {}) : null;
-      // The screen's own sends are not echoed back by the lane; the reducer
-      // learns them from this answer.
-      if (tin === null && id !== "") {
-        soRef.current = apDung(soRef.current, { kind: "application", actor_id: personId, device_id: "", logical_send_id: id, operation: op }, ev.sequence);
-        setSo(soRef.current);
-      }
-      return { ...sangTin(soRef.current.byId[id], contextId, personId, {}), intent: null, vote: null, intent_error: null };
+      const id = ev?.envelope?.logical_send_id;
+      return id === undefined ? null : daGui(id);
     },
-    [contextId, personId, nap],
+    [contextId, personId, daGui],
   );
 
   /** Opens a sealed image once: downloads the ciphertext, opens it on the device. */
@@ -202,18 +247,31 @@ export function useTinNhanV2(contextId: string, personId: string, tat = false) {
   return {
     ...trang,
     tin: danhSach(so).map((t) => sangTin(t, contextId, personId, anhDaMo)),
+    /** Own sends not yet on the lane: in flight, or failed and waiting for the person. */
+    hangCho: cho.map((c) => sangCho(c, so.byId)),
+    /** Envelopes skipped because they will never open. */
+    khongMo,
     taiLai: nap,
-    gui: (body: string, traLoi: { id: string } | null = null): Promise<TinDaGui> =>
+    gui: (body: string, traLoi: { id: string } | null = null) =>
       guiOp(traLoi === null ? { type: "text", body } : { type: "reply", reply_to: traLoi.id, body }),
     sua: (messageId: string, body: string) => guiOp({ type: "edit", message_id: messageId, body }),
     xoaTin: (messageId: string) => guiOp({ type: "delete", message_id: messageId }),
     doiPhanUng: (messageId: string, kind: LoaiPhanUng) => guiOp({ type: "reaction", message_id: messageId, emoji: KIND_GLYPH[kind] }),
     guiSticker: (stickerId: string) => guiOp({ type: "sticker", pack_id: "nep", sticker_id: stickerId }),
+    thuLai: async (id: string): Promise<TinDaGui | null> => {
+      const ev = await (await mayCua(personId)).thuLai(contextId, id);
+      return ev === null ? null : daGui(id);
+    },
+    boQua: (id: string) => {
+      void mayCua(personId)
+        .then((may) => may.boQua(contextId, id))
+        .catch(() => undefined);
+    },
     /**
      * A photo already shrunk and re-encoded (`nenVaDung`: no EXIF survives):
      * sealed on the device, the ciphertext uploaded, then the reference sent.
      */
-    guiAnhTuTep: async (uri: string, caption: string | null): Promise<TinDaGui> => {
+    guiAnhTuTep: async (uri: string, caption: string | null): Promise<TinDaGui | null> => {
       const [width, height] = await new Promise<[number, number]>((resolve) =>
         Image.getSize(uri, (w, h) => resolve([w, h]), () => resolve([1, 1])),
       );
@@ -306,15 +364,15 @@ export function hopLanV2<L extends { gui: unknown }>(cu: L, v2: ReturnType<typeo
     loi: v2.loi,
     loiCu: null,
     loiLoai: v2.loi === null ? null : "tam",
-    hangCho: [],
+    hangCho: v2.hangCho,
     napCuHon: async () => undefined,
     napMoi: v2.taiLai,
     taiLai: v2.taiLai,
     gui: (body: string, traLoi: { id: string } | null = null) => v2.gui(body, traLoi),
     guiAnhMoi: async () => null,
     guiSticker: async (stickerId: string) => v2.guiSticker(stickerId),
-    thuLaiMot: async () => null,
-    boQua: () => undefined,
+    thuLaiMot: (key: string) => v2.thuLai(key),
+    boQua: (key: string) => v2.boQua(key),
     xoaTin: (id: string) => v2.xoaTin(id),
     doiPhanUng: (id: string, kind: LoaiPhanUng) => v2.doiPhanUng(id, kind),
     danhDauHienThi: () => undefined,

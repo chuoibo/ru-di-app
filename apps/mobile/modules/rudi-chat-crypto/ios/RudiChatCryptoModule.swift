@@ -1,3 +1,4 @@
+import CryptoKit
 import ExpoModulesCore
 import Foundation
 import Security
@@ -12,11 +13,12 @@ public class RudiChatCryptoModule: Module {
   private static let jsMethods: Set<String> = [
     "generation", "enrollment", "conversations", "key_package", "join_group", "epoch", "roster",
     "stage_add", "stage_remove", "stage_rekey", "pending_commit", "acknowledge_commit",
-    "acknowledge_sent", "abandon_send", "abandon_commit", "forget", "seal_media", "open_media",
+    "acknowledge_sent", "abandon_send", "abandon_commit", "forget", "settle_received", "seal_media", "open_media",
   ]
   private let queue = DispatchQueue(label: "rudi.chat.crypto")
   private var handle: OpaquePointer?
   private var vault: Vault?
+  private var rooms: RoomLog?
   private var generation: Int64 = -1
 
   struct CryptoError: CodedError {
@@ -94,6 +96,10 @@ public class RudiChatCryptoModule: Module {
           self.handle = h
         }
         self.vault = v
+        guard let wrapping = Data(base64Encoded: try v.wrappingKey()) else {
+          throw CryptoError(code: "ERR_CHAT_CRYPTO_KEY", description: "key")
+        }
+        self.rooms = try RoomLog(dir: v.roomsDir, scope: "\(actor)|\(device)", wrappingKey: wrapping)
         self.generation = -1
         try self.persistIfChanged()
         return resumed
@@ -121,11 +127,26 @@ public class RudiChatCryptoModule: Module {
       return try self.mutating { try self.call(method, args) }
     }
 
+    AsyncFunction("roomRead") { (room: String) -> String? in
+      try self.serial {
+        guard let rooms = self.rooms else { throw CryptoError(code: "ERR_CHAT_CRYPTO_CLOSED", description: "closed") }
+        return try rooms.read(room)
+      }
+    }
+
+    AsyncFunction("roomAppend") { (room: String, cursor: Double?, records: String) in
+      try self.serial {
+        guard let rooms = self.rooms else { throw CryptoError(code: "ERR_CHAT_CRYPTO_CLOSED", description: "closed") }
+        try rooms.append(room, cursor: cursor.map { Int64($0) }, records: records)
+      }
+    }
+
     AsyncFunction("erase") { () in
       try self.serial {
         if let h = self.handle { rudi_chat_crypto_client_free(h); self.handle = nil }
         self.vault?.erase()
         self.vault = nil
+        self.rooms = nil
       }
     }
   }
@@ -149,6 +170,9 @@ final class Vault {
   }
 
   private var stateURL: URL { dir.appendingPathComponent("state.json") }
+
+  /// Where this device identity's room records live (RoomLog), beside its state.
+  var roomsDir: URL { dir.appendingPathComponent("rooms", isDirectory: true) }
 
   func exists() -> Bool { FileManager.default.fileExists(atPath: stateURL.path) && read("anchor") != nil && read("key") != nil }
 
@@ -179,6 +203,7 @@ final class Vault {
   }
 
   func erase() {
+    try? FileManager.default.removeItem(at: roomsDir)
     try? FileManager.default.removeItem(at: stateURL)
     for account in ["anchor", "key"] {
       SecItemDelete([kSecClass: kSecClassGenericPassword, kSecAttrService: service, kSecAttrAccount: account] as CFDictionary)
@@ -204,5 +229,118 @@ final class Vault {
     guard status == errSecSuccess else {
       throw RudiChatCryptoModule.CryptoError(code: "ERR_CHAT_CRYPTO_KEYCHAIN", description: "\(status)")
     }
+  }
+}
+
+/// A room's sealed record, the same format as Android's RoomLog.kt: an
+/// append-only log of `[u32 big-endian length][12-byte nonce][ciphertext+tag]`
+/// AES-GCM frames under HMAC-SHA256(wrapping key, "rudi-chat-room-log-v1"),
+/// AAD `actor|device|room|index`. A torn last frame is dropped; every
+/// [compactAt] frames the log is rewritten as one, atomically, unless too big.
+final class RoomLog {
+  private static let room = try! NSRegularExpression(pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+  private static let maxFrame = 16 * 1024 * 1024
+  private static let compactAt = 256
+  private let dir: URL
+  private let scope: String
+  private let key: SymmetricKey
+  private var known: [String: (count: Int, end: UInt64)] = [:]
+
+  init(dir: URL, scope: String, wrappingKey: Data) throws {
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    self.dir = dir
+    self.scope = scope
+    let code = HMAC<SHA256>.authenticationCode(for: Data("rudi-chat-room-log-v1".utf8), using: SymmetricKey(data: wrappingKey))
+    self.key = SymmetricKey(data: Data(code))
+  }
+
+  private func file(_ room: String) throws -> URL {
+    let range = NSRange(room.startIndex..., in: room)
+    guard Self.room.firstMatch(in: room, range: range) != nil else {
+      throw RudiChatCryptoModule.CryptoError(code: "ERR_CHAT_CRYPTO_INVALID", description: "room")
+    }
+    return dir.appendingPathComponent("\(room).log")
+  }
+
+  private func aad(_ room: String, _ index: Int) -> Data { Data("\(scope)|\(room)|\(index)".utf8) }
+
+  private func scan(_ room: String, decrypt: Bool) throws -> (frames: [[String: Any]], count: Int, end: UInt64) {
+    let url = try file(room)
+    guard let data = try? Data(contentsOf: url) else { return ([], 0, 0) }
+    var frames: [[String: Any]] = []
+    var offset = 0
+    var index = 0
+    while offset + 4 <= data.count {
+      let length = data[offset..<offset + 4].reduce(0) { ($0 << 8) | Int($1) }
+      if length < 28 || length > Self.maxFrame || offset + 4 + length > data.count { break }
+      if decrypt {
+        let frame = data[offset + 4..<offset + 4 + length]
+        guard let box = try? AES.GCM.SealedBox(combined: frame),
+              let plain = try? AES.GCM.open(box, using: key, authenticating: aad(room, index)),
+              let json = try? JSONSerialization.jsonObject(with: plain) as? [String: Any] else { break }
+        frames.append(json)
+      }
+      offset += 4 + length
+      index += 1
+    }
+    return (frames, index, UInt64(offset))
+  }
+
+  private func merge(_ frames: [[String: Any]]) -> [String: Any] {
+    var cursor: Int64 = 0
+    var records: [Any] = []
+    for frame in frames {
+      if let c = frame["cursor"] as? NSNumber { cursor = c.int64Value }
+      records.append(contentsOf: frame["ban"] as? [Any] ?? [])
+    }
+    return ["cursor": cursor, "ban": records]
+  }
+
+  private func frame(_ room: String, _ index: Int, _ object: [String: Any]) throws -> Data {
+    let plain = try JSONSerialization.data(withJSONObject: object)
+    let sealed = try AES.GCM.seal(plain, using: key, authenticating: aad(room, index))
+    guard let combined = sealed.combined else { throw RudiChatCryptoModule.CryptoError(code: "ERR_CHAT_CRYPTO", description: "seal") }
+    var length = UInt32(combined.count).bigEndian
+    return Data(bytes: &length, count: 4) + combined
+  }
+
+  func read(_ room: String) throws -> String? {
+    let found = try scan(room, decrypt: true)
+    known[room] = (found.count, found.end)
+    if found.frames.isEmpty { return nil }
+    return String(data: try JSONSerialization.data(withJSONObject: merge(found.frames)), encoding: .utf8)
+  }
+
+  func append(_ room: String, cursor: Int64?, records: String) throws {
+    guard records.utf8.count <= Self.maxFrame / 2,
+          let ban = try JSONSerialization.jsonObject(with: Data(records.utf8)) as? [Any] else {
+      throw RudiChatCryptoModule.CryptoError(code: "ERR_CHAT_CRYPTO_INVALID", description: "records")
+    }
+    let url = try file(room)
+    let at = try known[room] ?? { let s = try scan(room, decrypt: false); return (s.count, s.end) }()
+    if !FileManager.default.fileExists(atPath: url.path) {
+      FileManager.default.createFile(atPath: url.path, contents: nil, attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
+    }
+    let handle = try FileHandle(forWritingTo: url)
+    defer { try? handle.close() }
+    if try handle.seekToEnd() > at.end { try handle.truncate(atOffset: at.end) }
+    if at.count > 0 && at.count % Self.compactAt == 0 {
+      var all = merge(try scan(room, decrypt: true).frames)
+      if let cursor = cursor { all["cursor"] = cursor }
+      all["ban"] = (all["ban"] as? [Any] ?? []) + ban
+      let one = try frame(room, 0, all)
+      if one.count <= Self.maxFrame {
+        let temp = dir.appendingPathComponent("\(room).log.tmp")
+        try one.write(to: temp, options: [.completeFileProtectionUntilFirstUserAuthentication])
+        _ = try FileManager.default.replaceItemAt(url, withItemAt: temp)
+        known[room] = (1, UInt64(one.count))
+        return
+      }
+    }
+    let next = try frame(room, at.count, ["cursor": cursor.map { NSNumber(value: $0) } ?? NSNull(), "ban": ban])
+    try handle.seekToEnd()
+    try handle.write(contentsOf: next)
+    try handle.synchronize()
+    known[room] = (at.count + 1, at.end + UInt64(next.count))
   }
 }

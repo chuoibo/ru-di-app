@@ -431,3 +431,46 @@ fn a_send_of_a_past_epoch_is_abandoned_and_reencrypted() {
     assert_eq!(fresh.epoch, stale.epoch + 1);
     assert_eq!(body(bob.receive(&fresh, None).unwrap()), text("trễ epoch"));
 }
+
+#[test]
+fn an_envelope_processed_before_a_crash_answers_the_same_after_restart_until_settled() {
+    let key = [7u8; 32];
+    let mut alice = client(1, 11);
+    let mut bob = client(2, 22);
+    open(&mut alice, 100, &mut [&mut bob]);
+    let first = alice
+        .encrypt(&id(100), &id(300), text("trước khi sập"))
+        .unwrap();
+    alice.acknowledge_sent(&first).unwrap();
+    assert_eq!(
+        body(bob.receive(&first, None).unwrap()),
+        text("trước khi sập")
+    );
+    // The app dies after the device sealed this state and before it stored
+    // the message: the same envelope comes back from the lane on restart.
+    let sealed = bob.seal_local_state(&key).unwrap();
+    let anchor = sealed.anchor().unwrap();
+    drop(bob);
+    let mut bob = Client::resume_local_state(&sealed, &key, &anchor).unwrap();
+    assert_eq!(
+        body(bob.receive(&first, None).unwrap()),
+        text("trước khi sập"),
+        "a replay of processed bytes must not wedge the room"
+    );
+    // A forged twin (one ciphertext byte changed) is not the same envelope.
+    let mut forged = first.clone();
+    let last = forged.ciphertext.len() - 1;
+    forged.ciphertext[last] ^= 1;
+    assert!(bob.receive(&forged, None).is_err());
+    // Once the app has stored it, the ratchet step is simply gone.
+    bob.settle_received(&id(100)).unwrap();
+    assert!(bob.receive(&first, None).is_err());
+    // The room still moves on.
+    let second = alice
+        .encrypt(&id(100), &id(301), text("sau khi mở lại"))
+        .unwrap();
+    assert_eq!(
+        body(bob.receive(&second, None).unwrap()),
+        text("sau khi mở lại")
+    );
+}

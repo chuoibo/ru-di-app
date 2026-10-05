@@ -493,6 +493,12 @@ fn call(client: &mut Client, method: &str, raw: &str) -> Answer {
             client.forget(&need(args.conversation_id)?).map_err(core)?;
             ok()
         }
+        "settle_received" => {
+            client
+                .settle_received(&need(args.conversation_id)?)
+                .map_err(core)?;
+            ok()
+        }
         "seal" => {
             let key = wrapping_key(&need(args.wrapping_key)?).ok_or("invalid_arguments")?;
             let sealed = client.seal_local_state(&key).map_err(core)?;

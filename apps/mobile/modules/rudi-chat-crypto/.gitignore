@@ -1,3 +1,4 @@
 # Built from packages/chat-crypto-ffi by scripts/build-android.sh and scripts/build-ios.sh; never committed.
 android/src/main/jniLibs/
 ios/RudiChatCryptoFFI.xcframework/
+android/.cxx/

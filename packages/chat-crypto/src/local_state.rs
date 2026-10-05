@@ -16,10 +16,11 @@ use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
 
 use crate::{
-    check_members, roster, Client, Conversation, Error, IdentityCard, PendingCommit, Result,
-    Roster, StoredSend, MAX_CONVERSATIONS, MAX_DELIVERED, MAX_KEY_PACKAGES, MAX_OUTBOX,
+    check_members, roster, Client, Conversation, Error, IdentityCard, PendingCommit, Received,
+    Result, Roster, StoredSend, MAX_CONVERSATIONS, MAX_DELIVERED, MAX_KEY_PACKAGES, MAX_OUTBOX,
+    MAX_RECEIVED,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 const MAX_LOCAL_STATE: usize = 8 * 1024 * 1024;
 
@@ -75,6 +76,8 @@ struct StoredConversation {
     outbox: BTreeMap<String, StoredSend>,
     delivered: BTreeSet<String>,
     pending: Option<PendingCommit>,
+    #[serde(default)]
+    received: VecDeque<([u8; 32], Received)>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -192,6 +195,7 @@ impl Client {
                             outbox: c.outbox.clone(),
                             delivered: c.delivered.clone(),
                             pending: c.pending.clone(),
+                            received: c.received.clone(),
                         },
                     )
                 })
@@ -292,6 +296,7 @@ impl Client {
             if !crate::wire::valid_id(&id)
                 || stored.outbox.len() > MAX_OUTBOX
                 || stored.delivered.len() > MAX_DELIVERED
+                || stored.received.len() > MAX_RECEIVED
             {
                 return Err(Error::Checkpoint);
             }
@@ -335,6 +340,7 @@ impl Client {
                     outbox: stored.outbox,
                     delivered: stored.delivered,
                     pending: stored.pending,
+                    received: stored.received,
                 },
             );
         }

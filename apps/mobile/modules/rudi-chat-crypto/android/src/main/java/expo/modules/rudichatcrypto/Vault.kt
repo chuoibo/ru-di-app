@@ -34,6 +34,9 @@ internal class Vault(context: Context, actor: String, device: String) {
 
   fun exists(): Boolean = stateFile.exists() && anchorFile.exists() && keyFile.exists()
 
+  /** Where this device identity's room records live (RoomLog), beside its state. */
+  val roomsDir: File get() = File(dir, "rooms")
+
   private fun keystoreKey(): SecretKey {
     val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
     (store.getKey(alias, null) as? SecretKey)?.let { return it }
@@ -82,8 +85,9 @@ internal class Vault(context: Context, actor: String, device: String) {
     writeAtomic(anchorFile, JSONObject().put("current", anchor).toString().toByteArray())
   }
 
-  /** Signing out of this device identity: everything goes, the Keystore key too. */
+  /** Signing out of this device identity: everything goes, the room records and the Keystore key too. */
   fun erase() {
+    roomsDir.deleteRecursively()
     listOf(stateFile, anchorFile, keyFile).forEach { it.delete() }
     runCatching { KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(alias) }
   }
