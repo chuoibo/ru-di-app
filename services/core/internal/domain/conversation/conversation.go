@@ -63,7 +63,7 @@ func Summarise(messages []Message, memberCount int) Digest {
 			key = *message.AuthorID
 			speakers[key] = true
 		}
-		turns = append(turns, turn{key: key, speaker: strings.TrimSpace(message.Speaker), body: body})
+		turns = append(turns, turn{key: key, speaker: speakerLabel(message.Speaker), body: oneLine(body)})
 	}
 	for i, j := 0, len(turns)-1; i < j; i, j = i+1, j-1 {
 		turns[i], turns[j] = turns[j], turns[i]
@@ -87,6 +87,25 @@ func Summarise(messages []Message, memberCount int) Digest {
 	return Digest{
 		RecentLines: lines, MessageCount: len(lines), SpeakerCount: len(speakers), MemberCount: memberCount,
 	}
+}
+
+// lineBreaks are every character a model could read as the start of a new
+// line: a body must not be able to open a turn of its own ("ok\nMinh: …")
+// and so put words in someone else's mouth.
+var lineBreaks = strings.NewReplacer("\r\n", " ", "\r", " ", "\n", " ", "\v", " ", "\f", " ",
+	"\u0085", " ", "\u2028", " ", "\u2029", " ")
+
+func oneLine(body string) string { return lineBreaks.Replace(body) }
+
+// speakerLabel is the name a line starts with, or "" when the name could pass
+// for a speaker boundary itself ("Minh: hi An") and the turn must fall back
+// to a neutral label.
+func speakerLabel(name string) string {
+	name = strings.TrimSpace(name)
+	if strings.ContainsAny(name, ":：") || oneLine(name) != name {
+		return ""
+	}
+	return name
 }
 
 // Has is whether there is enough conversation to suggest from.

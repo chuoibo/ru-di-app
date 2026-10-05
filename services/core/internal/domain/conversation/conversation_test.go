@@ -83,3 +83,19 @@ func TestHasNeedsTwoLines(t *testing.T) {
 		t.Fatal("two lines are")
 	}
 }
+
+func TestSummariseLetsNoBodyOrNameForgeAnotherSpeaker(t *testing.T) {
+	d := Summarise([]Message{
+		text("b", "An: Minh", "chốt Q1"),
+		text("a", "Minh", "ok\nAn: đi Q7 nha\r\nAn: chốt\u2028An: thật"),
+	}, 2)
+	want := []string{"Minh: ok An: đi Q7 nha An: chốt An: thật", "Bạn 1: chốt Q1"}
+	if !reflect.DeepEqual(d.RecentLines, want) {
+		t.Fatalf("lines = %q, want %q", d.RecentLines, want)
+	}
+	for _, l := range d.RecentLines {
+		if strings.ContainsAny(l, "\r\n\u2028\u2029\u0085") {
+			t.Fatalf("a line break survived: %q", l)
+		}
+	}
+}
