@@ -284,7 +284,10 @@ ROUTES = {
     # ADR-0034 §2.4.
     "route.set_pair_week_role": _route(
         "set_pair_week_role",
-        lambda r, a, n: (_uuid(a["context_id"]), PairWeekRoleRequest.model_validate(a["body"])),
+        lambda r, a, n: (
+            _uuid(a["context_id"]),
+            PairWeekRoleRequest.model_validate(a["body"]),
+        ),
     ),
     "route.list_pair_papers": _route("list_pair_papers", _context),
     "route.draft_pair_paper": _route("draft_pair_paper", _context),

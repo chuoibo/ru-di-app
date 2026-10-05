@@ -67,7 +67,6 @@ import anyio
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
-
 from starlette.responses import JSONResponse
 
 from app.api.auth_mode import PROD
@@ -519,7 +518,10 @@ class IdempotencyMiddleware:
                 # reading what it was once answered. The Go front door gates
                 # the same replays the same way (idem.SessionGate).
                 await JSONResponse(
-                    {"code": "authentication_required", "detail": "Session is not valid"},
+                    {
+                        "code": "authentication_required",
+                        "detail": "Session is not valid",
+                    },
                     status_code=401,
                 )(scope, _replaying(body), send)
                 return

@@ -60,7 +60,9 @@ def test_a_replay_to_a_revoked_session_gets_get_actors_answer(repository, monkey
 
     denied = client.post("/expenses", json=payload, headers=headers)
     assert denied.status_code == 401
-    assert denied.content == b'{"code":"authentication_required","detail":"Session is not valid"}'
+    assert (
+        denied.content
+        == b'{"code":"authentication_required","detail":"Session is not valid"}'
+    )
     assert "Idempotency-Replayed" not in denied.headers
     assert len(repository.expenses) == 1
-

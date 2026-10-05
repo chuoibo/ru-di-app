@@ -26,7 +26,9 @@ TOO_LARGE = (
 )
 
 
-def _run(app, *, path="/expenses", method="POST", chunks=(b"{}",), headers=(), stall=False):
+def _run(
+    app, *, path="/expenses", method="POST", chunks=(b"{}",), headers=(), stall=False
+):
     seen = {}
     sent = []
 
