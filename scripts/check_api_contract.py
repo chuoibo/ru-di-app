@@ -442,12 +442,14 @@ GO_PROFILE_HANDLERS = (
 #: oracle (ADR-0031): the collection round's count of expenses not yet in a
 #: round (`gomdot`, B4 on 2026-10-02), a group invitation read and declined
 #: by the person invited (`loimoi`, B8) and the managed accounts' doors
-#: (`accountauth`). Missing here, the client's call read as a 404 on a route
+#: (`accountauth`), and amending a published collection round (`dieuchinh`,
+#: ADR-0056). Missing here, the client's call read as a 404 on a route
 #: Go serves.
 GO_FEATURE_HANDLERS = (
     "services/core/internal/gomdot/handler.go",
     "services/core/internal/loimoi/handler.go",
     "services/core/internal/accountauth/handler.go",
+    "services/core/internal/dieuchinh/handler.go",
 )
 
 #: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`

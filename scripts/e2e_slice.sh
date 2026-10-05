@@ -355,6 +355,7 @@ s.close()")" || return 2
   redis_port="$(docker port "$REDIS_CONTAINER" 6379/tcp | cut -d: -f2)"
   for i in $(seq 1 30); do docker exec "$REDIS_CONTAINER" redis-cli ping >/dev/null 2>&1 && break; sleep 1; done
   MOBILE_DATABASE_URL="$DATABASE_URL" "$core_bin" migrate-accounts >>"$core_log" 2>&1 || return 2
+  MOBILE_DATABASE_URL="$DATABASE_URL" "$core_bin" migrate-amendments >>"$core_log" 2>&1 || return 2
   MOBILE_CORE_LISTEN="127.0.0.1:$port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$liveness" \
   MOBILE_PYTHON_UPSTREAM="$API_URL" \
@@ -363,6 +364,7 @@ s.close()")" || return 2
   MOBILE_PERSON_ID_KEY="$ID_KEY" \
   MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
   MOBILE_ACCOUNT_AUTH_ENABLED=1 \
+  MOBILE_AMENDMENTS_ENABLED=1 \
   MOBILE_AUTH_TRUSTED_PROXY_CIDRS=127.0.0.1/32 \
   MOBILE_COMMUNITY_ENABLED="$community" \
   MOBILE_ACCOUNT_ENCRYPTION_KEY="$ACCOUNT_ENCRYPTION_KEY" \

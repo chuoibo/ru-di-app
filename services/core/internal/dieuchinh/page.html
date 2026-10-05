@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đề xuất sửa số tiền</title>
+<meta property="og:title" content="Đề xuất sửa số tiền">
+<meta property="og:description" content="Mở để xem và trả lời.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/static/guest.css">
+</head>
+<body>
+<main class="sheet">
+{{- if eq .Status "expired" }}
+  <section class="card card--quiet">
+    <p class="eyebrow">Đề xuất đã hết hạn</p>
+    <h1 class="lede">Đề xuất sửa số tiền này không được trả lời đủ trước hạn, nên số cũ vẫn giữ nguyên.</h1>
+    <p class="note">Mở link này lại sau ít phút để xem khoản cần chuyển như trước.</p>
+  </section>
+{{- else }}
+  <section class="card">
+    <p class="eyebrow">Đề xuất sửa số tiền</p>
+    <h1 class="lede">{{ if .ProposerName }}<strong>{{ .ProposerName }}</strong>{{ else }}Người tạo đợt thu{{ end }} đề xuất sửa số tiền trong đợt thu này.</h1>
+    <dl class="fields">
+    {{- range .Lines }}
+      <div class="field">
+        <dt>Chuyển cho {{ if .RecipientName }}{{ .RecipientName }}{{ else }}người nhận{{ end }}</dt>
+        <dd><span class="field__value"><s>{{ .OldVND }}đ</s> → <strong>{{ .NewVND }}đ</strong>{{ if eq .NewVND "0" }} — không còn phải chuyển{{ end }}</span></dd>
+      </div>
+    {{- end }}
+    </dl>
+    <p class="note">Lý do: {{ .Reason }}</p>
+    <p class="note">Số mới chỉ áp dụng khi mọi người liên quan đều đồng ý, chậm nhất {{ .ExpiresAt }}. Tới lúc đó, số cũ vẫn là số đang tính.</p>
+  </section>
+  {{- if .Answered }}
+  <section class="card card--quiet">
+    <p class="status{{ if deref .Answered }} status--done{{ end }}">Đã trả lời: {{ if deref .Answered }}đồng ý{{ else }}không đồng ý{{ end }}.</p>
+    <p class="note">Đang chờ những người còn lại.</p>
+  </section>
+  {{- else }}
+  <form class="choices" method="post" action="/g/{{ .Token }}/dieu-chinh">
+    <button class="btn btn--primary" type="submit" name="tra_loi" value="dong_y">Đồng ý với số mới</button>
+    <button class="btn btn--quiet" type="submit" name="tra_loi" value="khong_dong_y">Không đồng ý</button>
+  </form>
+  {{- end }}
+{{- end }}
+</main>
+</body>
+</html>

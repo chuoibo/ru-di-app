@@ -300,11 +300,18 @@ func (r Repository) GetGuestEnvelope(ctx context.Context, tokenDigest []byte, no
 			return nil, err
 		}
 		var reported int64
-		if err := r.Q.QueryRow(ctx,
-			`SELECT count(payment_reports.id) AS count_1
+		reportedSQL := `SELECT count(payment_reports.id) AS count_1
 			   FROM payment_reports
-			  WHERE payment_reports.guest_link_id = $1::UUID AND payment_reports.obligation_id = $2::UUID`,
-			link.id, o.id).Scan(&reported); err != nil {
+			  WHERE payment_reports.guest_link_id = $1::UUID AND payment_reports.obligation_id = $2::UUID`
+		args := []any{link.id, o.id}
+		if successionsOn(ctx) {
+			// The sender's report on a replaced obligation of the same pair,
+			// through whichever of their links it was made.
+			reportedSQL = obligationChain + `SELECT count(payment_reports.id) FROM payment_reports
+			  WHERE payment_reports.obligation_id IN (SELECT id FROM chain)`
+			args = []any{o.id}
+		}
+		if err := r.Q.QueryRow(ctx, reportedSQL, args...).Scan(&reported); err != nil {
 			return nil, err
 		}
 		blocks = append(blocks, GuestObligationBlock{
@@ -465,11 +472,16 @@ func (r Repository) guestObligationSources(ctx context.Context, obligationID str
 
 // unorderedReceiptAmounts is the obligation's receipt amounts with no ORDER
 // BY, as get_guest_envelope reads them: only their sum is used.
+// With successions on, the receipts of the obligations it succeeded too.
 func (r Repository) unorderedReceiptAmounts(ctx context.Context, obligationID string) ([]money.VND, error) {
-	rows, err := r.Q.Query(ctx,
-		`SELECT receipt_confirmations.amount_vnd
+	sql := `SELECT receipt_confirmations.amount_vnd
 		   FROM receipt_confirmations
-		  WHERE receipt_confirmations.obligation_id = $1::UUID`, obligationID)
+		  WHERE receipt_confirmations.obligation_id = $1::UUID`
+	if successionsOn(ctx) {
+		sql = obligationChain + `SELECT receipt_confirmations.amount_vnd FROM receipt_confirmations
+		  WHERE receipt_confirmations.obligation_id IN (SELECT id FROM chain)`
+	}
+	rows, err := r.Q.Query(ctx, sql, obligationID)
 	if err != nil {
 		return nil, err
 	}

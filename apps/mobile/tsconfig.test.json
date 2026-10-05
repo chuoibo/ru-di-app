@@ -335,6 +335,8 @@
     "src/rudi/chia-bill/o-so.ts",
     "src/screens/kham-pha/ban-do-nhom.ts",
     "src/rudi/dot-thu/dot-thu.ts",
+    // ADR-0056: amending a published round, the bridge and its pure helpers.
+    "src/rudi/dot-thu/dieu-chinh.ts",
     "src/rudi/ky-niem/ky-niem.ts",
     "src/rudi/ky-niem/achievement-routes.ts",
     "src/rudi/ky-niem/journey-view.ts",

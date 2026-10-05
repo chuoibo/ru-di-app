@@ -37,6 +37,16 @@ var CotNguoiGo = []CotNguoi{
 	{"nep_quen", "person_id", Xoa, "tombstones; deleted by the trigger"},
 	{"nep_su_that", "person_id", Xoa, "receipts; hidden by the trigger, deleted by the tai_khoan deletion once Milvus counts zero"},
 	{"nep_xoa", "person_id", Xoa, "the deletion receipts: once the account deletion completes, every row of the person trades person_id for a keyed hash (nguoi_bam), the proof the erasure ran without naming the person"},
+	// internal/dieuchinh (ADR-0056): amendments of a collection batch are money
+	// records, kept like the obligations they amend (ADR-0023 keeps
+	// collection_* rows); a person who ends their account stays named on the
+	// ledger the group still settles, exactly as collection_obligations does.
+	{"collection_amendments", "proposed_by_id", Chua, "dieuchinh: who proposed an amendment; money audit, kept like collection_obligations (ADR-0023)"},
+	{"collection_amendment_lines", "sender_id", Chua, "dieuchinh: an amended pair's sender; money record, kept like collection_obligations (ADR-0023)"},
+	{"collection_amendment_lines", "recipient_id", Chua, "dieuchinh: an amended pair's recipient; money record, kept like collection_obligations (ADR-0023)"},
+	{"collection_amendment_parties", "person_id", Chua, "dieuchinh: who had to accept; money audit, kept (ADR-0023)"},
+	{"collection_amendment_decisions", "person_id", Chua, "dieuchinh: who accepted or refused; money audit, kept (ADR-0023)"},
+	{"collection_amendment_links", "sender_id", Chua, "dieuchinh: whose review link; the link itself is a token digest, kept with the money record (ADR-0023)"},
 	{"chat_ai_invocations", "person_id", Chua, "chatassist: job rows keep the caller for the room's history; question text is purged by chatassist's own 15-minute and 30-day passes"},
 	{"chat_plan_promotions", "created_by_id", Chua, "chatassist: who promoted a plan card; no text of the person"},
 	{"chat_shared_drafts", "created_by", Chua, "chatassist: who started a shared sheet"},

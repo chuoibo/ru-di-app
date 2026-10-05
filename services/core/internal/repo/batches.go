@@ -458,12 +458,18 @@ func (r Repository) SavePublishedBatch(ctx context.Context, batch BatchForPublis
 
 // receiptAmounts is `_receipt_amounts`: the obligation's receipt amounts
 // ORDER BY confirmed_at, id.
+// With successions on, the receipts of the obligations it succeeded too.
 func (r Repository) receiptAmounts(ctx context.Context, obligationID string) ([]int64, error) {
-	rows, err := r.Q.Query(ctx,
-		`SELECT receipt_confirmations.amount_vnd
+	sql := `SELECT receipt_confirmations.amount_vnd
 		   FROM receipt_confirmations
 		  WHERE receipt_confirmations.obligation_id = $1::UUID
-		  ORDER BY receipt_confirmations.confirmed_at, receipt_confirmations.id`, obligationID)
+		  ORDER BY receipt_confirmations.confirmed_at, receipt_confirmations.id`
+	if successionsOn(ctx) {
+		sql = obligationChain + `SELECT receipt_confirmations.amount_vnd FROM receipt_confirmations
+		  WHERE receipt_confirmations.obligation_id IN (SELECT id FROM chain)
+		  ORDER BY receipt_confirmations.confirmed_at, receipt_confirmations.id`
+	}
+	rows, err := r.Q.Query(ctx, sql, obligationID)
 	if err != nil {
 		return nil, err
 	}
@@ -587,12 +593,24 @@ func (r Repository) batchBoard(ctx context.Context, batchID string, loaded *batc
 		}
 	}
 
-	rows, err = r.Q.Query(ctx,
-		`SELECT payment_reports.obligation_id, min(payment_reports.reported_at) AS min_1
+	claimsSQL := `SELECT payment_reports.obligation_id, min(payment_reports.reported_at) AS min_1
 		   FROM payment_reports
 		   JOIN collection_obligations ON collection_obligations.id = payment_reports.obligation_id
 		  WHERE collection_obligations.batch_version_id = $1::UUID
-		  GROUP BY payment_reports.obligation_id`, versionID)
+		  GROUP BY payment_reports.obligation_id`
+	if successionsOn(ctx) {
+		// The earliest report on the obligation or any it succeeded, keyed
+		// by the obligation of this version.
+		claimsSQL = `WITH RECURSIVE chain(head, id) AS (
+			SELECT collection_obligations.id, collection_obligations.id FROM collection_obligations
+			 WHERE collection_obligations.batch_version_id = $1::UUID
+			UNION
+			SELECT chain.head, collection_obligation_successions.old_obligation_id
+			  FROM collection_obligation_successions JOIN chain ON collection_obligation_successions.new_obligation_id = chain.id)
+			SELECT chain.head, min(payment_reports.reported_at) FROM chain JOIN payment_reports ON payment_reports.obligation_id = chain.id
+			 GROUP BY chain.head`
+	}
+	rows, err = r.Q.Query(ctx, claimsSQL, versionID)
 	if err != nil {
 		return nil, err
 	}

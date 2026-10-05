@@ -103,6 +103,16 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  # ADR-0056: bảng điều chỉnh khoản chi sau khi phát đợt thu.
+  migrate-amendments:
+    <<: [*core-image, *secrets]
+    command: ["migrate-amendments"]
+    environment: *env
+    depends_on:
+      migrate-accounts:
+        condition: service_completed_successfully
+    restart: "no"
+
   # Một lần rồi thoát, theo thứ tự: Alembic → bảng Go của chat → bảng nạp danh mục.
   migrate:
     <<: [*api-image, *secrets]
@@ -295,6 +305,7 @@ services:
     environment:
       <<: [*env, *milvus-env]
       MOBILE_ACCOUNT_AUTH_ENABLED: "1"
+      MOBILE_AMENDMENTS_ENABLED: "1"
       # Every model call is Go's (ADR-0049, ADR-0052): the chat engine
       # (Nếp and the group bot) and the one-shot AI steps of the routes, text
       # through agy-proxy (AGY_PROXY_URL from .env), places from Milvus
@@ -325,6 +336,8 @@ services:
       migrate-chat:
         condition: service_completed_successfully
       migrate-accounts:
+        condition: service_completed_successfully
+      migrate-amendments:
         condition: service_completed_successfully
       auth-redis:
         condition: service_healthy

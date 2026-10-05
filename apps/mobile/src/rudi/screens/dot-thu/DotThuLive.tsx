@@ -51,6 +51,7 @@ import {
   type TrangThaiDot,
 } from "../../dot-thu/dot-thu";
 import { docLinkDot, luuLinkDot } from "../../dot-thu/kho-link";
+import { DieuChinhDot } from "./DieuChinhDot";
 import { mucNguoi, typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
@@ -113,6 +114,9 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
   // server has said so (the state is re-read, never assumed). Declared before
   // the early return below, so the hook order never changes.
   const [vuaNhan, setVuaNhan] = useState<string | null>(null);
+  // ADR-0056: an amendment waiting is said at the head of the page, where the
+  // board's figures are read, not only in its card at the foot.
+  const [dieuChinh, setDieuChinh] = useState<{ dangMo: boolean; canToiTraLoi: boolean }>({ dangMo: false, canToiTraLoi: false });
 
   const doc = useCallback(async () => {
     if (contextId === null) return;
@@ -242,6 +246,13 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
           </View>
           <NepDien khoanhKhac="M4" suKien={vuaNhan} />
         </View>
+        {dieuChinh.dangMo ? (
+          <ChuThichLe icon="create-outline" testID="bao-dieu-chinh">
+            {dieuChinh.canToiTraLoi
+              ? "Có đề xuất sửa số tiền cần bạn trả lời, ở mục «Sửa sau khi phát» cuối trang. Bảng dưới đây vẫn là số đang tính."
+              : "Có đề xuất sửa số tiền đang chờ mọi người liên quan đồng ý. Bảng dưới đây vẫn là số đang tính."}
+          </ChuThichLe>
+        ) : null}
       </View>
 
       {/* The board is the group's ledger page, one section per person paid:
@@ -383,6 +394,21 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
             </PhongBi>
           ) : null}
         </>
+      ) : null}
+
+      {/* ADR-0056: a round already frozen or published is corrected only by
+          an amendment everyone it touches agrees to. */}
+      {trang.trangThai === "frozen" || trang.trangThai === "published" || trang.trangThai === "collecting" ? (
+        <DieuChinhDot
+          actorId={phien.person_id}
+          batchId={batchId}
+          bang={trang.nghiaVu}
+          contextId={contextId}
+          docLaiBang={doc}
+          links={trang.links}
+          onTomTat={setDieuChinh}
+          roster={roster}
+        />
       ) : null}
 
       <CauTaiCho cau={loiO("lam-moi")} />

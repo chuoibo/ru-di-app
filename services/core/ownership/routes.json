@@ -3393,6 +3393,46 @@
       "package": "accountauth",
       "state": "GO-ONLY",
       "evidence": "services/core/internal/accountauth/postgres_test.go"
+    },
+    {
+      "id": "POST /batches/{batch_id}/amendments",
+      "method": "POST",
+      "path": "/batches/{batch_id}/amendments",
+      "package": "dieuchinh",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/dieuchinh/handler_postgres_test.go"
+    },
+    {
+      "id": "GET /batches/{batch_id}/amendments",
+      "method": "GET",
+      "path": "/batches/{batch_id}/amendments",
+      "package": "dieuchinh",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/dieuchinh/handler_postgres_test.go"
+    },
+    {
+      "id": "POST /batches/{batch_id}/amendments/{amendment_id}/decision",
+      "method": "POST",
+      "path": "/batches/{batch_id}/amendments/{amendment_id}/decision",
+      "package": "dieuchinh",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/dieuchinh/handler_postgres_test.go"
+    },
+    {
+      "id": "GET /g/{token}/dieu-chinh",
+      "method": "GET",
+      "path": "/g/{token}/dieu-chinh",
+      "package": "dieuchinh",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/dieuchinh/handler_postgres_test.go"
+    },
+    {
+      "id": "POST /g/{token}/dieu-chinh",
+      "method": "POST",
+      "path": "/g/{token}/dieu-chinh",
+      "package": "dieuchinh",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/dieuchinh/handler_postgres_test.go"
     }
   ]
 }

@@ -12,6 +12,7 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import type { LinkDuyet } from "./dieu-chinh";
 import type { Envelope } from "./dot-thu";
 
 function khoa(batchId: string): string {
@@ -29,6 +30,27 @@ export async function docLinkDot(batchId: string): Promise<Envelope[] | null> {
   try {
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as Envelope[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+function khoaDuyet(amendmentId: string): string {
+  return `rudi.dot-thu.dieu-chinh.${amendmentId}`;
+}
+
+/** The review links of one amendment, shown once to its proposer (ADR-0056). */
+export async function luuLinkDuyet(amendmentId: string, links: LinkDuyet[]): Promise<void> {
+  await AsyncStorage.setItem(khoaDuyet(amendmentId), JSON.stringify(links));
+}
+
+/** `null` when this phone did not propose the amendment. */
+export async function docLinkDuyet(amendmentId: string): Promise<LinkDuyet[] | null> {
+  const raw = await AsyncStorage.getItem(khoaDuyet(amendmentId));
+  if (raw === null) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as LinkDuyet[]) : null;
   } catch {
     return null;
   }

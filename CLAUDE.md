@@ -114,7 +114,7 @@ Auth: cờ `MOBILE_AUTH_MODE`, **vắng mặt là `prod`** (ADR-0014). Ở `prod
 2. **`Σ` phân bổ `=` đúng tổng khoản chi**, 100%. 41 golden vector tính tay giữ điều này.
 3. **Số dư tính lại được từ sổ**; cache không bao giờ là nguồn sự thật.
 
-Thêm: sửa khoản chi tạo **phiên bản mới** chứ không ghi đè; `receiver_confirmed` **không phải** bằng chứng ngân hàng; `completed` chỉ do domain transition sinh ra, không có nút "đánh dấu xong".
+Thêm: sửa khoản chi tạo **phiên bản mới** chứ không ghi đè; khoản đã nằm trong đợt thu chưa huỷ thì `confirm` trả 409 `expense_in_batch` và chỉ sửa được qua **điều chỉnh** mà mọi người bị ảnh hưởng đồng ý (ADR-0056, `internal/dieuchinh`); `receiver_confirmed` **không phải** bằng chứng ngân hàng; `completed` chỉ do domain transition sinh ra, không có nút "đánh dấu xong".
 
 ## Mỗi tầng test chứng minh được gì
 

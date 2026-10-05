@@ -20,6 +20,7 @@
 // (ADR-0052). With neither configured, `serve` still starts and every AI
 // route refuses as it always has without a key; `work` refuses to start.
 //
+//	core migrate-amendments install the ADR-0056 amendment schema
 //	core migrate-profile install the Go-only profile schemas (after migrate-community)
 package main
 
@@ -63,6 +64,7 @@ import (
 	"mobile/services/core/internal/config"
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/diary"
+	"mobile/services/core/internal/dieuchinh"
 	"mobile/services/core/internal/gomdot"
 	"mobile/services/core/internal/httpapi/dispatch"
 	"mobile/services/core/internal/httpapi/endpoint"
@@ -116,6 +118,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return listFeatures(args[1:], stdout, stderr)
 	case "migrate-diaries":
 		return migrateDiaries(getenv, stdout, stderr)
+	case "migrate-amendments":
+		return migrateAmendments(getenv, stdout, stderr)
 	case "migrate-community":
 		return migrateCommunity(getenv, stdout, stderr)
 	case "community-media-worker":
@@ -494,6 +498,19 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 			}
 			inner.ServeHTTP(w, r)
 		})
+	}
+	// ADR-0056: amending an expense of a frozen or published batch. Off
+	// until `core migrate-amendments` ran and the flag is set; on, it also
+	// turns on the succession-aware receipt reads of package repo.
+	if pool != nil && getenv("MOBILE_AMENDMENTS_ENABLED") == "1" {
+		check, cancel := context.WithTimeout(ctx, 10*time.Second)
+		err := dieuchinh.CheckSchema(check, pool)
+		cancel()
+		if err != nil {
+			logger.Error("refusing to start amendments", "error", err.Error())
+			return 1
+		}
+		front = dieuchinh.New(pool, cfg.AuthMode).Wrap(front, cors.New(origins, origins != "").Middleware)
 	}
 	// Account auth stays outside generic idempotency, including its request-body capture.
 	if pool != nil && (getenv("MOBILE_ACCOUNT_AUTH_ENABLED") == "1" || (getenv("MOBILE_ACCOUNT_AUTH_ENABLED") != "0" && cfg.AuthMode == "prod")) {
@@ -1155,6 +1172,7 @@ func featureRoutes() []featureView {
 		"websession":       websession.Routes(),
 		"nepnho":           nepnho.Routes(),
 		"accountauth":      accountauth.Routes(),
+		"dieuchinh":        dieuchinh.Routes(),
 	}
 	var out []featureView
 	for _, pkg := range ownership.FeaturePackages {
@@ -1335,6 +1353,23 @@ func purgeExpired(args []string, getenv func(string) string, stdout, stderr io.W
 		case <-time.After(*every):
 		}
 	}
+}
+
+func migrateAmendments(getenv func(string) string, stdout, stderr io.Writer) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "amendment migration: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = dieuchinh.Migrate(ctx, pool); err != nil {
+		fmt.Fprintln(stderr, "amendment migration failed:", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Đã áp dụng migration điều chỉnh khoản chi (ADR-0056). Bật MOBILE_AMENDMENTS_ENABLED sau các cổng kiểm chứng.")
+	return 0
 }
 
 func migrateCommunity(getenv func(string) string, stdout, stderr io.Writer) int {

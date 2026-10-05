@@ -242,6 +242,16 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  # ADR-0056: bảng điều chỉnh khoản chi sau khi phát đợt thu, sau bảng Alembic.
+  migrate-amendments:
+    <<: *core-image
+    command: ["migrate-amendments"]
+    environment: *api-env
+    depends_on:
+      migrate-accounts:
+        condition: service_completed_successfully
+    restart: "no"
+
   # Auth counters must survive restart and must never be evicted.
   auth-redis:
     image: redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
@@ -271,6 +281,7 @@ services:
       MOBILE_BRAIN_URL: http://api:8000
       MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
       MOBILE_ACCOUNT_AUTH_ENABLED: "1"
+      MOBILE_AMENDMENTS_ENABLED: "1"
       MOBILE_ACCOUNT_ENCRYPTION_KEY: ${MOBILE_ACCOUNT_ENCRYPTION_KEY:-}
       MOBILE_ACCOUNT_LOOKUP_KEY: ${MOBILE_ACCOUNT_LOOKUP_KEY:-}
       MOBILE_AUTH_REDIS_URL: redis://:${MOBILE_AUTH_REDIS_PASSWORD:-}@auth-redis:6379/0
@@ -308,6 +319,8 @@ services:
       profile-migrate:
         condition: service_completed_successfully
       migrate-accounts:
+        condition: service_completed_successfully
+      migrate-amendments:
         condition: service_completed_successfully
       auth-redis:
         condition: service_healthy

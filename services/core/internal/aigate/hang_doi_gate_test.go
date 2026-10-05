@@ -7,6 +7,7 @@ import (
 	"go/types"
 	"io/fs"
 	"mobile/services/core/internal/accountauth"
+	"mobile/services/core/internal/dieuchinh"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -130,6 +131,7 @@ func schemaSQL() []string {
 	out = append(out, nap.SchemaFiles()...)
 	out = append(out, community.SchemaFiles()...)
 	out = append(out, diary.SchemaFiles()...)
+	out = append(out, dieuchinh.SchemaFiles()...)
 	out = append(out, socialv2.SchemaFiles()...)
 	return append(out, avatarfeed.SchemaFiles()...)
 }

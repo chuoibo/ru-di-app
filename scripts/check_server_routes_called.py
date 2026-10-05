@@ -173,6 +173,15 @@ EXEMPT_ROUTES = (
             "Khách xin cách tính. Người gọi: form POST ở guest_wrong_amount.html:90."
         ),
     },
+    {
+        "route": "/g/{token}/dieu-chinh",
+        "reason": (
+            "Khách không tài khoản trả lời đề xuất sửa số tiền (ADR-0056). Người gọi: "
+            "link duyệt mà máy chủ trả cho người đề xuất (review_links), người đề xuất gửi "
+            "qua khay chia sẻ ở DieuChinhDot.tsx — app không viết đường dẫn này thành "
+            "literal; và form POST ở services/core/internal/dieuchinh/page.html."
+        ),
+    },
 )
 
 # Routes with no caller anywhere today. Separate from EXEMPT_ROUTES on purpose:

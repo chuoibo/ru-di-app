@@ -22,6 +22,7 @@ import (
 	"mobile/services/core/internal/chatv2"
 	"mobile/services/core/internal/community"
 	"mobile/services/core/internal/diary"
+	"mobile/services/core/internal/dieuchinh"
 	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/rag"
 )
@@ -35,6 +36,7 @@ func sqlGo() []string {
 	sqls = append(sqls, avatarfeed.SchemaFiles()...)
 	sqls = append(sqls, diary.SchemaFiles()...)
 	sqls = append(sqls, community.SchemaFiles()...)
+	sqls = append(sqls, dieuchinh.SchemaFiles()...)
 	return append(sqls, rag.SchemaFiles()...)
 }
 
