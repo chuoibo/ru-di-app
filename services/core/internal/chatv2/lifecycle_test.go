@@ -281,3 +281,40 @@ func TestOneDeviceCannotChurnTheEpoch(t *testing.T) {
 		t.Fatalf("an eleventh commit within the minute: %v", err)
 	}
 }
+
+// Security review 05/10: a package handed to one adding device never goes to
+// another, however long it waits (RFC 9420 §16.8: used once).
+func TestAHandedOutKeyPackageNeverGoesToASecondClaimer(t *testing.T) {
+	l := setupLife(t)
+	ctx := context.Background()
+	if _, err := l.store.Bootstrap(ctx, l.actor, l.tokenA, l.deviceA.id, l.room); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.PublishKeyPackages(ctx, l.other, l.tokenB, l.deviceB.id, [][]byte{[]byte("kp-only")}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.ClaimKeyPackages(ctx, l.actor, l.tokenA, l.deviceA.id, l.room, []string{l.deviceB.id}); err != nil {
+		t.Fatal(err)
+	}
+	// Long after: the claim stays the claimer's.
+	mustExec(t, l.pool, `UPDATE chat_v2_key_packages SET claimed_at=now()-interval '1 day' WHERE device_id=$1`, l.deviceB.id)
+	second := newDevice()
+	if _, err := l.store.EnrollDevice(ctx, l.actor, l.tokenA, second.enrollment(l.actor)); err != nil {
+		t.Fatal(err)
+	}
+	mustExec(t, l.pool, `INSERT INTO chat_v2_members(context_id,device_id,membership_id,first_sequence) VALUES($1,$2,$3,1)`, l.room, second.id, l.membershipA)
+	if _, err := l.store.ClaimKeyPackages(ctx, l.actor, l.tokenA, second.id, l.room, []string{l.deviceB.id}); !errors.Is(err, ErrKeyPackageUnavailable) {
+		t.Fatalf("the package went to a second claimer: %v", err)
+	}
+	if n, err := l.store.PublishKeyPackages(ctx, l.other, l.tokenB, l.deviceB.id, [][]byte{[]byte("kp-fresh")}); err != nil || n != 1 {
+		t.Fatalf("the cap counts unclaimed packages: %d %v", n, err)
+	}
+	if err := l.store.RevokeDevice(ctx, l.actor, l.tokenA, l.deviceA.id); err != nil {
+		t.Fatal(err)
+	}
+	var held int
+	_ = l.pool.QueryRow(ctx, `SELECT count(*) FROM chat_v2_key_packages WHERE claimed_by=$1`, l.deviceA.id).Scan(&held)
+	if held != 0 {
+		t.Fatalf("a revoked device still holds %d packages", held)
+	}
+}

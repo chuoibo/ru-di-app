@@ -19,10 +19,12 @@ CREATE TABLE chat_v2_key_packages (
  key_package bytea NOT NULL CHECK(octet_length(key_package) BETWEEN 1 AND 65536),
  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
  expires_at timestamptz NOT NULL,
- -- A claim reserves a package for one adding device for a while; only the
- -- commit that adds the device consumes it. Claiming never deletes, so no
- -- member can drain another device's packages by claiming without adding.
- claimed_by uuid REFERENCES chat_v2_devices(id) ON DELETE SET NULL,
+ -- A package handed to one adding device is that device's for good: it is
+ -- never handed to anyone else (RFC 9420: a key package is used once), a
+ -- repeated claim by the same device returns it, and the commit that adds the
+ -- target consumes it. One adding device holds at most one package per target,
+ -- so claiming without adding cannot drain the target.
+ claimed_by uuid REFERENCES chat_v2_devices(id),
  claimed_at timestamptz,
  CHECK ((claimed_by IS NULL) = (claimed_at IS NULL))
 );
@@ -48,7 +50,7 @@ ALTER TABLE chat_v2_events ADD CONSTRAINT chat_v2_events_kind_check CHECK (kind 
 CREATE FUNCTION chat_v2_revoke_device_material() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
  IF NEW.revoked_at IS NOT NULL AND OLD.revoked_at IS NULL THEN
-  DELETE FROM chat_v2_key_packages WHERE device_id = NEW.id;
+  DELETE FROM chat_v2_key_packages WHERE device_id = NEW.id OR claimed_by = NEW.id;
   DELETE FROM chat_v2_welcomes WHERE device_id = NEW.id;
  END IF;
  RETURN NULL;

@@ -30,8 +30,6 @@ const (
 	maxKeyPackageBytes   = 64 << 10
 	maxWelcomeBytes      = 256 << 10
 	maxPublishKeyPackage = 10
-	// claimHold is how long a claim reserves a key package for its claimer.
-	claimHold = 10 * time.Minute
 	// maxCommitsPerMinute bounds one device's commits: each one moves the
 	// epoch under every other member's sends.
 	maxCommitsPerMinute = 10
@@ -342,7 +340,7 @@ func ownDevice(ctx context.Context, tx pgx.Tx, actor, device string) error {
 }
 
 // PublishKeyPackages stores one-time key packages of the actor's device and
-// answers how many it now has unclaimed.
+// answers how many it now has unclaimed (the cap counts those alone).
 func (s *Store) PublishKeyPackages(ctx context.Context, actor string, digest []byte, device string, packages [][]byte) (int, error) {
 	if len(packages) < 1 || len(packages) > maxPublishKeyPackage {
 		return 0, ErrInvalid
@@ -373,7 +371,7 @@ func (s *Store) PublishKeyPackages(ctx context.Context, actor string, digest []b
 		return 0, err
 	}
 	var have int
-	if err := tx.QueryRow(ctx, `SELECT count(*) FROM chat_v2_key_packages WHERE device_id=$1`, device).Scan(&have); err != nil {
+	if err := tx.QueryRow(ctx, `SELECT count(*) FROM chat_v2_key_packages WHERE device_id=$1 AND claimed_by IS NULL`, device).Scan(&have); err != nil {
 		return 0, err
 	}
 	if have+len(packages) > MaxKeyPackages {
@@ -570,17 +568,17 @@ func (s *Store) ClaimKeyPackages(ctx context.Context, actor string, digest []byt
 			return nil, ErrRoster
 		}
 		seen[t] = true
-		// The claimer's live reservation first: claiming again costs the
-		// target nothing. Else an unreserved package, or one whose hold ran out.
+		// The package this device already holds for the target, else a fresh
+		// one. A handed-out package never goes to another claimer (security
+		// review 05/10: two Welcomes to one init key).
 		var kp []byte
 		err := tx.QueryRow(ctx, `SELECT key_package FROM chat_v2_key_packages
-			WHERE device_id=$1 AND claimed_by=$2 AND claimed_at>clock_timestamp()-$3::interval AND expires_at>clock_timestamp()
-			ORDER BY claimed_at DESC, id LIMIT 1`, t, device, claimHold.String()).Scan(&kp)
+			WHERE device_id=$1 AND claimed_by=$2 AND expires_at>clock_timestamp()
+			ORDER BY claimed_at DESC, id LIMIT 1`, t, device).Scan(&kp)
 		if errors.Is(err, pgx.ErrNoRows) {
 			err = tx.QueryRow(ctx, `UPDATE chat_v2_key_packages SET claimed_by=$2, claimed_at=clock_timestamp() WHERE id = (
-				SELECT id FROM chat_v2_key_packages WHERE device_id=$1 AND expires_at>clock_timestamp()
-				  AND (claimed_by IS NULL OR claimed_at<=clock_timestamp()-$3::interval)
-				ORDER BY created_at, id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING key_package`, t, device, claimHold.String()).Scan(&kp)
+				SELECT id FROM chat_v2_key_packages WHERE device_id=$1 AND expires_at>clock_timestamp() AND claimed_by IS NULL
+				ORDER BY created_at, id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING key_package`, t, device).Scan(&kp)
 		}
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrKeyPackageUnavailable

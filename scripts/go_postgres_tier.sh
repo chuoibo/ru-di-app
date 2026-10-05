@@ -100,7 +100,7 @@ docker run --rm --network host \
   # không thấy CORE_REQUIRE_POSTGRES_TESTS, test postgres bị bỏ qua và sentinel
   # không chạy. Đo được: lượt CI ấy xong trong 2 phút và báo "không thấy
   # TestPostgresTierReachesDatabase PASS".
-echo "--- go test -tags postgres ${go_args[*]}"
+echo "--- go test -tags postgres${GO_EXTRA_TAGS:+,$GO_EXTRA_TAGS} ${go_args[*]}"
 set +e
 (
   cd services/core &&
@@ -109,7 +109,7 @@ set +e
     CORE_TEST_REDIS_URL="redis://127.0.0.1:$redis_port/0" \
     IDEM_ORACLE_IMAGE="$image" \
     CORE_PYTHON_IMAGE="$image" \
-    go test -tags postgres -count=1 -timeout 30m -v "${go_args[@]}"
+    go test -tags "postgres${GO_EXTRA_TAGS:+,$GO_EXTRA_TAGS}" -count=1 -timeout 30m -v "${go_args[@]}"
 ) 2>&1 | tee "$log"
 rc=${PIPESTATUS[0]}
 set -e
