@@ -3,6 +3,7 @@ package chatv2http
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/chatv2"
@@ -23,8 +24,20 @@ type LifecycleStore interface {
 	AckWelcome(context.Context, string, []byte, string, string) error
 }
 
-// LifecycleRouteIDs names the routes for the ownership manifest.
-func LifecycleRouteIDs() []string {
+// Matches reserves the lane's prefix on the core front door.
+func Matches(path string) bool { return strings.HasPrefix(path, "/v2/chat/") || path == "/v2/chat" }
+
+// RouteIDs names every route of the lane, for the ownership manifest.
+func RouteIDs() []string {
+	return append([]string{
+		"POST /v2/chat/{conversation}/events",
+		"GET /v2/chat/{conversation}/events",
+		"PUT /v2/chat/{conversation}/marks",
+		"GET /v2/chat/{conversation}/stream",
+	}, lifecycleRouteIDs()...)
+}
+
+func lifecycleRouteIDs() []string {
 	return []string{
 		"POST /v2/chat/devices",
 		"GET /v2/chat/devices",

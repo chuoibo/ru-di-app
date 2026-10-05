@@ -3433,6 +3433,118 @@
       "package": "dieuchinh",
       "state": "GO-ONLY",
       "evidence": "services/core/internal/dieuchinh/handler_postgres_test.go"
+    },
+    {
+      "id": "POST /v2/chat/{conversation}/events",
+      "method": "POST",
+      "path": "/v2/chat/{conversation}/events",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2http/postgres_test.go"
+    },
+    {
+      "id": "GET /v2/chat/{conversation}/events",
+      "method": "GET",
+      "path": "/v2/chat/{conversation}/events",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2http/postgres_test.go"
+    },
+    {
+      "id": "PUT /v2/chat/{conversation}/marks",
+      "method": "PUT",
+      "path": "/v2/chat/{conversation}/marks",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2http/postgres_test.go"
+    },
+    {
+      "id": "GET /v2/chat/{conversation}/stream",
+      "method": "GET",
+      "path": "/v2/chat/{conversation}/stream",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2http/postgres_test.go"
+    },
+    {
+      "id": "POST /v2/chat/devices",
+      "method": "POST",
+      "path": "/v2/chat/devices",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "GET /v2/chat/devices",
+      "method": "GET",
+      "path": "/v2/chat/devices",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "DELETE /v2/chat/devices/{device}",
+      "method": "DELETE",
+      "path": "/v2/chat/devices/{device}",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "POST /v2/chat/devices/{device}/key-packages",
+      "method": "POST",
+      "path": "/v2/chat/devices/{device}/key-packages",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "GET /v2/chat/devices/{device}/welcomes",
+      "method": "GET",
+      "path": "/v2/chat/devices/{device}/welcomes",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "DELETE /v2/chat/devices/{device}/welcomes/{welcome}",
+      "method": "DELETE",
+      "path": "/v2/chat/devices/{device}/welcomes/{welcome}",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "GET /v2/chat/{conversation}/roster",
+      "method": "GET",
+      "path": "/v2/chat/{conversation}/roster",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "POST /v2/chat/{conversation}/bootstrap",
+      "method": "POST",
+      "path": "/v2/chat/{conversation}/bootstrap",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "POST /v2/chat/{conversation}/key-packages/claim",
+      "method": "POST",
+      "path": "/v2/chat/{conversation}/key-packages/claim",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
+    },
+    {
+      "id": "POST /v2/chat/{conversation}/commits",
+      "method": "POST",
+      "path": "/v2/chat/{conversation}/commits",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/lifecycle_test.go"
     }
   ]
 }

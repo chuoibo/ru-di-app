@@ -59,3 +59,20 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	return tx.Commit(ctx)
 }
+
+// CheckSchema refuses a database where Migrate has not applied every version
+// this binary embeds, with the same digests.
+func CheckSchema(ctx context.Context, pool *pgxpool.Pool) error {
+	for i, sql := range migrations {
+		digest := fmt.Sprintf("%x", sha256.Sum256([]byte(sql)))
+		var existing string
+		err := pool.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM chat_v2_schema_migrations WHERE version=$1),'')`, i+1).Scan(&existing)
+		if err != nil {
+			return fmt.Errorf("chat v2 schema missing; run core migrate-chat: %w", err)
+		}
+		if existing != digest {
+			return fmt.Errorf("chat v2 migration %d not applied or changed; run core migrate-chat", i+1)
+		}
+	}
+	return nil
+}

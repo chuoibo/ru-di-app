@@ -59,7 +59,10 @@ import (
 	"mobile/services/core/internal/aistream"
 	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/chatassist"
+	"mobile/services/core/internal/chatbus"
 	"mobile/services/core/internal/chatlegacychange"
+	"mobile/services/core/internal/chatv2"
+	"mobile/services/core/internal/chatv2http"
 	"mobile/services/core/internal/community"
 	"mobile/services/core/internal/config"
 	"mobile/services/core/internal/db"
@@ -494,6 +497,40 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if websession.Matches(r.URL.Path) {
 				webSessions.ServeHTTP(w, r)
+				return
+			}
+			inner.ServeHTTP(w, r)
+		})
+	}
+	// ADR-0031/0057: the E2EE chat lane. Off until `core migrate-chat` ran and
+	// MOBILE_CHAT_V2_ENABLED=1; bearer sessions only, whatever MOBILE_AUTH_MODE.
+	if pool != nil && getenv("MOBILE_CHAT_V2_ENABLED") == "1" {
+		check, cancel := context.WithTimeout(ctx, 10*time.Second)
+		err := chatv2.CheckSchema(check, pool)
+		cancel()
+		if err != nil {
+			logger.Error("refusing to start chat v2", "error", err.Error())
+			return 1
+		}
+		lane := chatv2http.New(chatv2http.Options{Store: chatv2.NewStore(pool), BatchSessions: true,
+			Authenticate: chatv2http.Sessions(pool), Experimental: true, Context: chatCtx})
+		go lane.Listen(chatCtx, pool)
+		bus := chatbus.Postgres()
+		if raw := getenv("MOBILE_CHAT_V2_REDIS_URL"); raw != "" {
+			if bus, err = chatbus.New(raw, getenv("MOBILE_CHAT_V2_REDIS_NAMESPACE")); err != nil {
+				logger.Error("refusing to start chat v2", "error", "invalid MOBILE_CHAT_V2_REDIS_URL")
+				return 1
+			}
+			go bus.Listen(chatCtx, lane.Wake, nil)
+		}
+		defer bus.Close()
+		background.Add(1)
+		go func() { defer background.Done(); bus.Relay(chatCtx, pool) }()
+		inner := front
+		feature := cors.New(origins, origins != "").Middleware(lane)
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if chatv2http.Matches(r.URL.Path) {
+				feature.ServeHTTP(w, r)
 				return
 			}
 			inner.ServeHTTP(w, r)
@@ -1173,6 +1210,7 @@ func featureRoutes() []featureView {
 		"nepnho":           nepnho.Routes(),
 		"accountauth":      accountauth.Routes(),
 		"dieuchinh":        dieuchinh.Routes(),
+		"chatv2http":       chatv2http.RouteIDs(),
 	}
 	var out []featureView
 	for _, pkg := range ownership.FeaturePackages {
@@ -1291,6 +1329,12 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	// any account can be deleted by a binary that holds memory.
 	if err == nil {
 		err = nepnho.Migrate(ctx, pool)
+	}
+	// ADR-0057: the E2EE lane's tables (devices, key packages, Welcomes,
+	// commits). Installed with the rest so a deployment can turn the lane on
+	// with MOBILE_CHAT_V2_ENABLED once its gates pass.
+	if err == nil {
+		err = chatv2.Migrate(ctx, pool)
 	}
 	if err != nil {
 		fmt.Fprintln(stderr, "chat migration failed:", err)
