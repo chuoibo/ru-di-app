@@ -25,6 +25,11 @@ func NewStore(pool *pgxpool.Pool) *Store {
 type access struct {
 	key                []byte
 	epoch, last, first int64
+	// ready is whether the MLS roster matches the server's. Writers need it;
+	// readers do not: a device must be able to read the very commit that
+	// brings the roster back in line (ADR-0057 §3.4). Read permission still
+	// rests on the live membership, device and first_sequence checked here.
+	ready bool
 }
 
 // convLock is how far a caller goes on the conversation row itself. Every
@@ -170,9 +175,7 @@ func authorizeSessionWithLock(ctx context.Context, tx pgx.Tx, actor, device, con
 	if err != nil {
 		return a, err
 	}
-	if !ready {
-		return a, ErrNotReady
-	}
+	a.ready = ready
 	return a, nil
 }
 
@@ -190,6 +193,10 @@ func decodeBody(e *Event, body []byte) error {
 	if e.Kind == "envelope" {
 		e.Envelope = &Envelope{}
 		return json.Unmarshal(body, e.Envelope)
+	}
+	if e.Kind == "commit" {
+		e.Commit = &CommitBody{}
+		return json.Unmarshal(body, e.Commit)
 	}
 	e.Mark = &Mark{}
 	return json.Unmarshal(body, e.Mark)
@@ -326,6 +333,9 @@ func (s *Store) sendOnce(ctx context.Context, actor string, sessionDigest []byte
 	if err != nil {
 		return result, err
 	}
+	if !a.ready {
+		return result, ErrNotReady
+	}
 	if !ed25519.Verify(a.key, preimage, envelope.Signature) {
 		return result, ErrForbidden
 	}
@@ -448,6 +458,9 @@ func (s *Store) mark(ctx context.Context, actor, device, conversation, kind stri
 	a, err := authorizeSessionWithLock(ctx, tx, actor, device, conversation, lockUpdate, sessionDigest)
 	if err != nil {
 		return mark, err
+	}
+	if !a.ready {
+		return mark, ErrNotReady
 	}
 	if sequence > a.last || sequence < a.first-1 {
 		return mark, ErrInvalid

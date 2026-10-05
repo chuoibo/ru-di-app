@@ -79,7 +79,13 @@ func TestCatchupReadersShareConversationWithoutWeakeningRevocation(t *testing.T)
 	if _, err = f.store.Events(ctx, f.actor, f.device, f.conversation, 0, 10); !errors.Is(err, ErrForbidden) {
 		t.Fatalf("revoked reader accepted: %v", err)
 	}
-	if _, err = f.store.Events(ctx, f.other, f.otherDevice, f.conversation, 0, 10); !errors.Is(err, ErrNotReady) {
-		t.Fatalf("other reader accepted invalidated epoch: %v", err)
+	// ADR-0057 §3.4: the other member keeps reading -- the commit removing the
+	// revoked device is itself an event -- but cannot send until it lands.
+	if _, err = f.store.Events(ctx, f.other, f.otherDevice, f.conversation, 0, 10); err != nil {
+		t.Fatalf("the remaining member cannot read the catch-up: %v", err)
+	}
+	other := sign(f.key, Envelope{ConversationID: f.conversation, DeviceID: f.otherDevice, LogicalSendID: id(), Protocol: Protocol, Epoch: 1, Ciphertext: []byte("synthetic")})
+	if _, err = f.store.Send(ctx, f.other, other); !errors.Is(err, ErrNotReady) {
+		t.Fatalf("the remaining member sent on the invalidated epoch: %v", err)
 	}
 }

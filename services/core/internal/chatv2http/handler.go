@@ -106,6 +106,7 @@ func New(o Options) *Handler {
 	h.mux.HandleFunc("GET /v2/chat/{conversation}/events", h.events)
 	h.mux.HandleFunc("PUT /v2/chat/{conversation}/marks", h.mark)
 	h.mux.HandleFunc("GET /v2/chat/{conversation}/stream", h.stream)
+	h.lifecycleRoutes()
 	return h
 }
 
@@ -147,11 +148,17 @@ func (h *Handler) actor(w http.ResponseWriter, r *http.Request) (string, bool) {
 }
 
 func decode(w http.ResponseWriter, r *http.Request, v any) bool {
+	return decodeLimit(w, r, v, 512<<10)
+}
+
+// decodeLimit is decode with its own byte cap: a commit carries a ciphertext
+// and a Welcome, each up to 256 KiB before base64.
+func decodeLimit(w http.ResponseWriter, r *http.Request, v any, limit int64) bool {
 	if strings.Split(r.Header.Get("Content-Type"), ";")[0] != "application/json" {
 		problem(w, http.StatusUnsupportedMediaType, "json_required")
 		return false
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, 512<<10)
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
 	if err := d.Decode(v); err != nil {
@@ -502,6 +509,16 @@ func fail(w http.ResponseWriter, err error) {
 		problem(w, 409, "chat_v2_stale_epoch")
 	case errors.Is(err, chatv2.ErrNotReady):
 		problem(w, 409, "chat_v2_not_ready")
+	case errors.Is(err, chatv2.ErrDeviceLimit):
+		problem(w, 409, "chat_v2_device_limit")
+	case errors.Is(err, chatv2.ErrKeyPackageUnavailable):
+		problem(w, 409, "chat_v2_key_package_unavailable")
+	case errors.Is(err, chatv2.ErrCapacity):
+		problem(w, 409, "chat_v2_capacity")
+	case errors.Is(err, chatv2.ErrRoster):
+		problem(w, 409, "chat_v2_roster_mismatch")
+	case errors.Is(err, chatv2.ErrExists):
+		problem(w, 409, "chat_v2_conversation_exists")
 	default:
 		problem(w, 503, "chat_v2_unavailable")
 	}

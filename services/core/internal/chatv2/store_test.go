@@ -269,8 +269,15 @@ func TestAuthorizationBeforeReplayAndRekey(t *testing.T) {
 			if _, err := f.store.Send(ctx, f.actor, e); !errors.Is(err, want) {
 				t.Fatalf("replay: %v want %v", err, want)
 			}
-			if _, err := f.store.Events(ctx, f.actor, f.device, f.conversation, 0, 10); !errors.Is(err, want) {
-				t.Fatalf("read: %v", err)
+			// ADR-0057 §3.4: losing permission closes reading; a roster that
+			// has not caught up (another member left) does not -- the commit
+			// that catches it up must be readable.
+			wantRead := want
+			if mode == "other_member" {
+				wantRead = nil
+			}
+			if _, err := f.store.Events(ctx, f.actor, f.device, f.conversation, 0, 10); !errors.Is(err, wantRead) {
+				t.Fatalf("read: %v want %v", err, wantRead)
 			}
 			if _, err := f.store.Mark(ctx, f.actor, f.device, f.conversation, "read", 1); !errors.Is(err, want) {
 				t.Fatalf("mark: %v", err)
@@ -500,8 +507,10 @@ func TestInvalidatedGateStaysClosed(t *testing.T) {
 	if _, err := f.store.Send(ctx, f.actor, f.envelope()); !errors.Is(err, ErrNotReady) {
 		t.Fatal(err)
 	}
-	if _, err := f.store.Events(ctx, f.actor, f.device, f.conversation, 0, 10); !errors.Is(err, ErrNotReady) {
-		t.Fatal(err)
+	// Reading stays open while the roster catches up: the commit that makes
+	// the conversation ready again is itself an event (ADR-0057 §3.4).
+	if _, err := f.store.Events(ctx, f.actor, f.device, f.conversation, 0, 10); err != nil {
+		t.Fatalf("a member cannot read while the roster catches up: %v", err)
 	}
 }
 
