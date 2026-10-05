@@ -813,3 +813,16 @@ func (s *Store) AckWelcome(ctx context.Context, actor string, digest []byte, dev
 	}
 	return tx.Commit(ctx)
 }
+
+// OnV2Lane is whether the actor is an active member of the room and the room
+// has its v2 lane open: the legacy writers' cutover check (ADR-0057 §8.2).
+func (s *Store) OnV2Lane(ctx context.Context, actor, conversation string) (bool, bool, error) {
+	if !ValidID(actor) || !ValidID(conversation) {
+		return false, false, nil
+	}
+	var member, onLane bool
+	err := s.pool.QueryRow(ctx, `SELECT
+		EXISTS(SELECT 1 FROM memberships WHERE context_id=$1 AND person_id=$2 AND state='active' AND left_at IS NULL),
+		EXISTS(SELECT 1 FROM chat_v2_conversations WHERE context_id=$1)`, conversation, actor).Scan(&member, &onLane)
+	return member, onLane, err
+}

@@ -533,6 +533,9 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				feature.ServeHTTP(w, r)
 				return
 			}
+			if lane.GuardLegacy(w, r) {
+				return
+			}
 			inner.ServeHTTP(w, r)
 		})
 	}
