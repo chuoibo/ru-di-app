@@ -320,6 +320,7 @@ fn describe(received: rudi_chat_crypto::Received) -> serde_json::Value {
 /// | method | args | answer |
 /// |---|---|---|
 /// | `generation` | `{}` | `{"generation"}` |
+/// | `enrollment` | `{}` | `{"card", "proof":b64}` for POST /v2/chat/devices |
 /// | `conversations` | `{}` | `{"conversations":[id]}` |
 /// | `key_package` | `{}` | `{"key_package":b64}` |
 /// | `join_group` | `{conversation_id, welcome:b64, roster:[card]}` | `{"ok":true}` |
@@ -411,6 +412,10 @@ fn call(client: &mut Client, method: &str, raw: &str) -> Answer {
     let core = |e: rudi_chat_crypto::Error| code(&e);
     match method {
         "generation" => Ok(serde_json::json!({ "generation": client.generation() })),
+        "enrollment" => Ok(serde_json::json!({
+            "card": client.identity(),
+            "proof": STANDARD.encode(client.enrollment_proof()),
+        })),
         "conversations" => Ok(serde_json::json!({ "conversations": client.conversations() })),
         "key_package" => Ok(serde_json::json!({
             "key_package": STANDARD.encode(client.key_package().map_err(core)?),

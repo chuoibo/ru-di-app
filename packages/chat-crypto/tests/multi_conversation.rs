@@ -3,7 +3,8 @@
 //! conversation, multi-conversation checkpoints, the v2 operations and media.
 //! Synthetic data only.
 use rudi_chat_crypto::{
-    open_media, seal_media, Client, Error, IdentityCard, MediaRef, Operation, Received,
+    enrollment_bytes, open_media, seal_media, Client, Error, IdentityCard, MediaRef, Operation,
+    Received,
 };
 
 fn id(value: u64) -> String {
@@ -380,4 +381,25 @@ fn a_removed_device_added_back_rejoins_and_reads_new_messages() {
         body(bob.receive(&again, None).unwrap()),
         text("sau khởi động lại")
     );
+}
+
+/// The bytes a device signs to enroll are the Go server's, byte for byte: the
+/// same vector is pinned in services/core/internal/chatv2 (enrollment_test.go).
+#[test]
+fn enrollment_bytes_match_the_go_vector_and_the_proof_verifies() {
+    let key: [u8; 32] = core::array::from_fn(|i| i as u8);
+    let bytes = enrollment_bytes(&id(1), &id(11), &key);
+    let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+    assert_eq!(hex, "525544492d434841542d444556494345007631000000002461616161616161612d626262622d346363632d386464642d3030303030303030303030310000002461616161616161612d626262622d346363632d386464642d303030303030303030303062000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+    let alice = client(1, 11);
+    let card = alice.identity();
+    let proof = alice.enrollment_proof();
+    let verifier = ed25519_dalek::VerifyingKey::from_bytes(&card.transport_signature_key).unwrap();
+    let signature = ed25519_dalek::Signature::from_bytes(&proof);
+    verifier
+        .verify_strict(
+            &enrollment_bytes(&card.actor_id, &card.device_id, &card.mls_signature_key),
+            &signature,
+        )
+        .unwrap();
 }

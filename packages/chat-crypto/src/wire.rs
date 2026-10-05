@@ -225,6 +225,18 @@ pub(crate) struct Payload {
     pub operation: Operation,
 }
 
+/// What a device signs with its transport key to enroll (ADR-0057 §1.2),
+/// byte for byte services/core/internal/chatv2.EnrollmentBytes.
+pub fn enrollment_bytes(actor_id: &str, device_id: &str, mls_signature_key: &[u8; 32]) -> Vec<u8> {
+    let mut bytes = b"RUDI-CHAT-DEVICE\0v1\0".to_vec();
+    for value in [actor_id, device_id] {
+        bytes.extend_from_slice(&(value.len() as u32).to_be_bytes());
+        bytes.extend_from_slice(value.as_bytes());
+    }
+    bytes.extend_from_slice(mls_signature_key);
+    bytes
+}
+
 pub(crate) fn valid_id(value: &str) -> bool {
     value.len() == 36
         && value.bytes().enumerate().all(|(i, c)| {

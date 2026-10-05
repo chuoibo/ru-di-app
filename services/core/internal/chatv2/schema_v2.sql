@@ -18,7 +18,13 @@ CREATE TABLE chat_v2_key_packages (
  device_id uuid NOT NULL REFERENCES chat_v2_devices(id) ON DELETE CASCADE,
  key_package bytea NOT NULL CHECK(octet_length(key_package) BETWEEN 1 AND 65536),
  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
- expires_at timestamptz NOT NULL
+ expires_at timestamptz NOT NULL,
+ -- A claim reserves a package for one adding device for a while; only the
+ -- commit that adds the device consumes it. Claiming never deletes, so no
+ -- member can drain another device's packages by claiming without adding.
+ claimed_by uuid REFERENCES chat_v2_devices(id) ON DELETE SET NULL,
+ claimed_at timestamptz,
+ CHECK ((claimed_by IS NULL) = (claimed_at IS NULL))
 );
 CREATE INDEX chat_v2_key_packages_device ON chat_v2_key_packages(device_id, created_at);
 

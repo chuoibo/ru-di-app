@@ -231,3 +231,53 @@ func TestAccountDeletionRevokesDevicesAndErasesTheirMaterial(t *testing.T) {
 		t.Fatalf("after deletion: revoked=%v key packages=%d", revoked, packages)
 	}
 }
+
+// Security review 05/10: claiming reserves, it does not consume. A member who
+// claims again and again gets the same package and never drains the target;
+// only the commit that adds the device spends it.
+func TestClaimingReservesAndOnlyTheAddingCommitConsumes(t *testing.T) {
+	l := setupLife(t)
+	ctx := context.Background()
+	if _, err := l.store.Bootstrap(ctx, l.actor, l.tokenA, l.deviceA.id, l.room); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.store.PublishKeyPackages(ctx, l.other, l.tokenB, l.deviceB.id, [][]byte{[]byte("kp-1"), []byte("kp-2")}); err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 5; i++ {
+		claims, err := l.store.ClaimKeyPackages(ctx, l.actor, l.tokenA, l.deviceA.id, l.room, []string{l.deviceB.id})
+		if err != nil || string(claims[0].KeyPackage) != "kp-1" {
+			t.Fatalf("claim %d: %+v %v", i, claims, err)
+		}
+	}
+	var left int
+	_ = l.pool.QueryRow(ctx, `SELECT count(*) FROM chat_v2_key_packages WHERE device_id=$1`, l.deviceB.id).Scan(&left)
+	if left != 2 {
+		t.Fatalf("claims drained packages: %d left", left)
+	}
+	if _, err := l.store.Commit(ctx, l.actor, l.tokenA, CommitRequest{Envelope: l.envelope(l.deviceA, 1, id()), Added: []string{l.deviceB.id}, Welcome: []byte("w")}); err != nil {
+		t.Fatal(err)
+	}
+	_ = l.pool.QueryRow(ctx, `SELECT count(*) FROM chat_v2_key_packages WHERE device_id=$1`, l.deviceB.id).Scan(&left)
+	if left != 1 {
+		t.Fatalf("the adding commit did not consume its package: %d left", left)
+	}
+}
+
+// Security review 05/10: each commit moves the epoch under everyone's sends,
+// so one device commits at most ten times a minute.
+func TestOneDeviceCannotChurnTheEpoch(t *testing.T) {
+	l := setupLife(t)
+	ctx := context.Background()
+	if _, err := l.store.Bootstrap(ctx, l.actor, l.tokenA, l.deviceA.id, l.room); err != nil {
+		t.Fatal(err)
+	}
+	for epoch := int64(1); epoch <= maxCommitsPerMinute; epoch++ {
+		if _, err := l.store.Commit(ctx, l.actor, l.tokenA, CommitRequest{Envelope: l.envelope(l.deviceA, epoch, id())}); err != nil {
+			t.Fatalf("commit %d: %v", epoch, err)
+		}
+	}
+	if _, err := l.store.Commit(ctx, l.actor, l.tokenA, CommitRequest{Envelope: l.envelope(l.deviceA, maxCommitsPerMinute+1, id())}); !errors.Is(err, ErrCapacity) {
+		t.Fatalf("an eleventh commit within the minute: %v", err)
+	}
+}

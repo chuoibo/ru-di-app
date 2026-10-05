@@ -30,6 +30,11 @@ const (
 	maxKeyPackageBytes   = 64 << 10
 	maxWelcomeBytes      = 256 << 10
 	maxPublishKeyPackage = 10
+	// claimHold is how long a claim reserves a key package for its claimer.
+	claimHold = 10 * time.Minute
+	// maxCommitsPerMinute bounds one device's commits: each one moves the
+	// epoch under every other member's sends.
+	maxCommitsPerMinute = 10
 )
 
 var (
@@ -565,10 +570,18 @@ func (s *Store) ClaimKeyPackages(ctx context.Context, actor string, digest []byt
 			return nil, ErrRoster
 		}
 		seen[t] = true
+		// The claimer's live reservation first: claiming again costs the
+		// target nothing. Else an unreserved package, or one whose hold ran out.
 		var kp []byte
-		err := tx.QueryRow(ctx, `DELETE FROM chat_v2_key_packages WHERE id = (
-			SELECT id FROM chat_v2_key_packages WHERE device_id=$1 AND expires_at>clock_timestamp()
-			ORDER BY created_at, id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING key_package`, t).Scan(&kp)
+		err := tx.QueryRow(ctx, `SELECT key_package FROM chat_v2_key_packages
+			WHERE device_id=$1 AND claimed_by=$2 AND claimed_at>clock_timestamp()-$3::interval AND expires_at>clock_timestamp()
+			ORDER BY claimed_at DESC, id LIMIT 1`, t, device, claimHold.String()).Scan(&kp)
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = tx.QueryRow(ctx, `UPDATE chat_v2_key_packages SET claimed_by=$2, claimed_at=clock_timestamp() WHERE id = (
+				SELECT id FROM chat_v2_key_packages WHERE device_id=$1 AND expires_at>clock_timestamp()
+				  AND (claimed_by IS NULL OR claimed_at<=clock_timestamp()-$3::interval)
+				ORDER BY created_at, id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING key_package`, t, device, claimHold.String()).Scan(&kp)
+		}
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrKeyPackageUnavailable
 		}
@@ -631,6 +644,14 @@ func (s *Store) Commit(ctx context.Context, actor string, digest []byte, req Com
 	}
 	if e.Epoch != a.epoch {
 		return result, ErrEpoch
+	}
+	var recent int
+	if err := tx.QueryRow(ctx, `SELECT count(*) FROM chat_v2_sends s JOIN chat_v2_events ev ON ev.context_id=s.context_id AND ev.sequence=s.sequence
+		WHERE s.device_id=$1 AND ev.kind='commit' AND ev.created_at>clock_timestamp()-interval '1 minute'`, e.DeviceID).Scan(&recent); err != nil {
+		return result, err
+	}
+	if recent >= maxCommitsPerMinute {
+		return result, ErrCapacity
 	}
 	expected, err := expectedRoster(ctx, tx, e.ConversationID)
 	if err != nil {
@@ -704,6 +725,10 @@ SELECT sequence,kind,actor_id,body,created_at FROM inserted`,
 		}
 	}
 	for _, d := range req.Added {
+		// The commit consumes the packages this device reserved for d.
+		if _, err := tx.Exec(ctx, `DELETE FROM chat_v2_key_packages WHERE device_id=$1 AND claimed_by=$2`, d, e.DeviceID); err != nil {
+			return result, err
+		}
 		membership, err := membershipOf(ctx, tx, e.ConversationID, want[d].ActorID)
 		if err != nil {
 			return result, err

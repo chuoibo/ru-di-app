@@ -39,6 +39,12 @@ fn the_whole_lifecycle_crosses_the_abi() {
     let bob = new(2, 22);
     let room = id(100);
     let alice_card = take(unsafe { rudi_chat_crypto_identity(alice) });
+    let enrollment = call(alice, "enrollment", serde_json::json!({}));
+    assert_eq!(enrollment["card"], alice_card);
+    assert!(
+        enrollment["proof"].as_str().is_some_and(|p| p.len() == 88),
+        "{enrollment}"
+    );
     let bob_card = take(unsafe { rudi_chat_crypto_identity(bob) });
     let r = c(&room);
     assert_eq!(

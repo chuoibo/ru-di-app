@@ -9,7 +9,9 @@ mod wire;
 
 pub use local_state::{LocalAnchor, SealedLocalState};
 pub use media::{open_media, seal_media};
-pub use wire::{Envelope, MediaRef, Operation, MAX_CIPHERTEXT, MAX_MEDIA, PROTOCOL};
+pub use wire::{
+    enrollment_bytes, Envelope, MediaRef, Operation, MAX_CIPHERTEXT, MAX_MEDIA, PROTOCOL,
+};
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -249,6 +251,19 @@ impl Client {
 
     pub fn generation(&self) -> u64 {
         self.generation
+    }
+
+    /// The enrollment proof: this device's transport key signing
+    /// `enrollment_bytes` for its own identity card.
+    pub fn enrollment_proof(&self) -> [u8; 64] {
+        use ed25519_dalek::Signer;
+        self.transport_signer
+            .sign(&wire::enrollment_bytes(
+                &self.identity.actor_id,
+                &self.identity.device_id,
+                &self.identity.mls_signature_key,
+            ))
+            .to_bytes()
     }
 
     /// The conversations this device is an active member of.
