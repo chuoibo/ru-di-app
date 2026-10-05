@@ -95,7 +95,11 @@ function loaiLoiDau(error: unknown): "phien" | "vinh-vien" | "tam" {
 
 const TRANG_DAU: TrangThaiChat = { tin: [], dangNap: true, dangNapCu: false, hetTinCu: false, loi: null, loiCu: null, loiLoai: null, hangCho: [] };
 
-export function useTinNhan(contextId: string, personId: string) {
+/**
+ * `tatLan`: this room is on the chat v2 lane (ADR-0057), so the legacy hook loads
+ * and polls nothing -- its writers would refuse the room anyway.
+ */
+export function useTinNhan(contextId: string, personId: string, tatLan = false) {
   const [trang, setTrang] = useState<TrangThaiChat>(TRANG_DAU);
   const tinRef = useRef<Tin[]>(TRANG_DAU.tin);
   // A POST acknowledgement is not a contiguous receive cursor: other people
@@ -298,11 +302,12 @@ export function useTinNhan(contextId: string, personId: string) {
   }, [ghiDaDoc]);
 
   useEffect(() => {
-    void napDau();
-  }, [napDau]);
+    if (!tatLan) void napDau();
+  }, [napDau, tatLan]);
 
   useFocusEffect(
     useCallback(() => {
+      if (tatLan) return undefined;
       dangFocus.current = true;
       let hen: ReturnType<typeof setInterval> | null = null;
       const dongBo = () => { void napMoi(); void ghiDaDoc(); };
@@ -321,7 +326,7 @@ export function useTinNhan(contextId: string, personId: string) {
         tat();
         sub.remove();
       };
-    }, [napMoi, ghiDaDoc]),
+    }, [napMoi, ghiDaDoc, tatLan]),
   );
 
   const gui = useCallback(

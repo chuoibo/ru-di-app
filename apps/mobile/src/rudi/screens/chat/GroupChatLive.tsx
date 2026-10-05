@@ -53,6 +53,7 @@ import { nguonAnh } from "../../ky-niem/ky-niem";
 import { CHAT_VIEWABILITY } from "../../chat/viewability";
 import { useBanNhap } from "../../chat/useBanNhap";
 import { useTinNhan } from "../../chat/useTinNhan";
+import { hopLanV2, useLanChat, useTinNhanV2 } from "../../chat/e2ee/useTinNhanV2";
 import { useChatChanges } from "../../chat/useChatChanges";
 import { useChatAi } from "../../chat/useChatAi";
 import { chuHangLoiGoi, laCapDoi, laTraLoiDangCho, lenhSanSang, loiGoiCuaPhong, thuLaiDuoc, type LenhAi } from "../../chat/ai-invocations";
@@ -168,7 +169,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const { reduced } = useMotion();
   const { phien, datPhien } = useRudiSession();
   const personId = phien?.person_id ?? "";
-  const chat = useTinNhan(contextId, personId);
+  // ADR-0057: a room on the chat v2 lane is read and written through MLS on
+  // this device; the legacy hook stands still for it, and vice versa.
+  const lan = useLanChat(contextId, personId);
+  const v2 = useTinNhanV2(contextId, personId, lan.lan !== "v2");
+  const cu = useTinNhan(contextId, personId, lan.lan === "v2");
+  const chat = useMemo(() => (lan.lan === "v2" ? hopLanV2(cu, v2) : cu), [lan.lan, cu, v2]);
   // The room's answers as other members watch them: `ai` frames on the
   // feed's own socket (slice 12).
   const phongAi = useRoomAi(contextId);
@@ -636,6 +642,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     try {
       await nenVaDung(daChon, async (anh) => {
         if (!songRef.current) return;
+        if (lan.lan === "v2") {
+          // E2EE (ADR-0057 §5.2): sealed on this phone, the ciphertext
+          // uploaded, the key sent inside MLS. Never the legacy upload.
+          daToiTin = true;
+          daGui = await v2.guiAnhTuTep(anh.uri, caption === "" ? null : caption);
+          return;
+        }
         const daTai = await taiAnhNhom(contextId, anh, personId);
         if (!songRef.current) return;
         daToiTin = true;
@@ -920,10 +933,23 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             an answer (`hangGhimChat`). Pairs only: a group has no notebook. */}
         {nhanRieng && phien !== null && !khongNhanTin && !gonDau ? <HangToGiaySong capDoi={capDoi} contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
         <View style={styles.baoMat}>
-          <Ionicons name="lock-open-outline" size={13} color={colors.inkSoft} />
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text>
+          <Ionicons name={lan.lan === "v2" ? "lock-closed-outline" : "lock-open-outline"} size={13} color={lan.lan === "v2" ? colors.split : colors.inkSoft} />
+          {lan.lan === "v2" ? (
+            <Text style={[typography.caption, { color: colors.split }]}>Mã hoá đầu cuối</Text>
+          ) : (
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text>
+          )}
+          {lan.lan === "v2" && !v2.sanSang ? <Text style={[typography.caption, { color: colors.inkSoft }]}>· đang thiết lập</Text> : null}
+          {lan.lan === "legacy" && lan.lyDo !== null ? <Text numberOfLines={1} style={[typography.caption, styles.flexShrink, { color: colors.inkSoft }]}>· {lan.lyDo}</Text> : null}
           {changes.connection === "recovering" ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>· Đang nối lại</Text> : null}
         </View>
+        {/* ADR-0057 §1.3: the server vouches for whose device is whose, so a
+            device that joins the room is said here, where the members read. */}
+        {lan.lan === "v2" && v2.thietBiMoi.length > 0 ? (
+          <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>
+            {v2.thietBiMoi.slice(-3).map((m) => `${tenTheoId[m.card.actor_id] ?? "Một thành viên"} vừa thêm một thiết bị vào phòng`).join(" · ")}
+          </Text>
+        ) : null}
       </View>
       {/* B2 (QC 24/09): the pinned sheet sits on its own solid band with a rule
           under it, so the thread visibly starts below it. On the bare ground
@@ -1325,6 +1351,7 @@ const CAO_O = DONG_O + 2 * DEM_O;
 const BE_CHU: TextStyle | null = Platform.OS === "web" ? ({ wordBreak: "break-word" } as unknown as TextStyle) : null;
 
 const styles = StyleSheet.create({
+  flexShrink: { flexShrink: 1 },
   dayGhim: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 4, zIndex: 1 },
   chatHeader: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 64 },
   headerIdentity: { flex: 1, minHeight: 48, justifyContent: "center", gap: 3, paddingHorizontal: 4 },

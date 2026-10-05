@@ -95,6 +95,7 @@ const LOI_CHAT: Record<string, string> = {
   message_already_deleted: "Tin này đã bị xoá rồi.",
   message_kind_not_deletable: "Chỉ xoá được tin nhắn, ảnh hoặc sticker của chính bạn.",
   message_deleted: "Tin này đã bị xoá.",
+  conversation_is_e2ee: "Phòng này đã mã hoá đầu cuối. Cập nhật ứng dụng để nhắn tin ở đây.",
 };
 
 const QUYEN = "group_admin,member";
