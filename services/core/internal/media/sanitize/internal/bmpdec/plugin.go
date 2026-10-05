@@ -549,6 +549,11 @@ func (o *opened) loadRLE(img *pil.Image, data []byte) error {
 				goto finished
 			}
 			n := int(d[0]) + int(d[1])*w
+			// A delta may ask to skip past the end of the image; only the
+			// first w*h bytes are ever decoded, so the skip stops there
+			// (audit 2026-10-05, CODEC-01: 255 rows of a 50-million-pixel row
+			// asked for 12.75 GB).
+			n = min(n, dest-len(out))
 			out = append(out, make([]byte, n)...)
 			x = len(out) % w
 		default:

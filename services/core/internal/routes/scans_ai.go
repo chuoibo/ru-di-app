@@ -47,7 +47,7 @@ func (e errScanImage) Error() string { return e.code }
 // handed the rebuilt pixels and the type they really are, never the
 // uploader's claim. rd-qa-33: a bill photographed at the table reached the
 // model with its GPS intact before this existed.
-func sanitizeScan(content []byte, contentType string) (sanitize.Sanitized, error) {
+func sanitizeScan(ctx context.Context, content []byte, contentType string) (sanitize.Sanitized, error) {
 	switch {
 	case len(content) == 0:
 		return sanitize.Sanitized{}, errScanImage{"empty_image"}
@@ -56,7 +56,7 @@ func sanitizeScan(content []byte, contentType string) (sanitize.Sanitized, error
 	case len(content) > maxScanBytes:
 		return sanitize.Sanitized{}, errScanImage{"image_too_large"}
 	}
-	out, err := sanitize.Sanitize(content)
+	out, err := sanitize.SanitizeContext(ctx, content)
 	var rejected *sanitize.Rejected
 	var unsupported *sanitize.UnsupportedError
 	switch {
@@ -75,7 +75,7 @@ func sanitizeScan(content []byte, contentType string) (sanitize.Sanitized, error
 // checks, one model reading of the re-encoded photo, then domain/receipt.
 // Every failure is a closed refusal with the codes the app has always read.
 func docHoaDon(ctx context.Context, may *motluot.May, content []byte, contentType string) (receipt.Reading, error) {
-	clean, err := sanitizeScan(content, contentType)
+	clean, err := sanitizeScan(ctx, content, contentType)
 	if err != nil {
 		var refused errScanImage
 		if !errors.As(err, &refused) {
@@ -176,7 +176,7 @@ func optInt(v *int64) pyjson.Value {
 // upload checks as a bill, one model reading of the re-encoded screenshot,
 // then domain/screenshot, which admits no person.
 func docManHinh(ctx context.Context, may *motluot.May, content []byte, contentType string) (screenshot.Reading, error) {
-	clean, err := sanitizeScan(content, contentType)
+	clean, err := sanitizeScan(ctx, content, contentType)
 	if err != nil {
 		var refused errScanImage
 		if !errors.As(err, &refused) {

@@ -1,10 +1,12 @@
 package exif
 
 import (
+	"cmp"
 	"encoding/binary"
 	"math"
 	"math/big"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -648,14 +650,9 @@ func directoryBytes(group int, tags *dictVal, offset int, order binary.ByteOrder
 		}
 		entries = append(entries, entry{k, typ, stored})
 	}
-	sortEntries := func() {
-		for i := 1; i < len(entries); i++ {
-			for j := i; j > 0 && entries[j].tag < entries[j-1].tag; j-- {
-				entries[j], entries[j-1] = entries[j-1], entries[j]
-			}
-		}
-	}
-	sortEntries()
+	// Stable, as the insertion sort it replaces, but O(n log n): up to
+	// 65,535 tags made that one quadratic (audit 2026-10-05, CODEC-04).
+	slices.SortStableFunc(entries, func(a, b entry) int { return cmp.Compare(a.tag, b.tag) })
 	offset += 2 + 12*len(entries) + 4
 	length := 2 + 12*len(entries) + 4
 	hasStrip := false
@@ -816,11 +813,7 @@ func sortedTags(tags map[uint16]ifdEntry) []uint16 {
 	for k := range tags {
 		keys = append(keys, k)
 	}
-	for i := 1; i < len(keys); i++ {
-		for j := i; j > 0 && keys[j] < keys[j-1]; j-- {
-			keys[j], keys[j-1] = keys[j-1], keys[j]
-		}
-	}
+	slices.Sort(keys)
 	return keys
 }
 

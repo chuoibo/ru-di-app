@@ -105,6 +105,13 @@ func (r *reader) read(n int64) []byte {
 	return out
 }
 
+// maxTagValues and maxIFDValues bound what one tag and one directory may
+// expand to.
+const (
+	maxTagValues = 1 << 16
+	maxIFDValues = 1 << 18
+)
+
 // loadIFD is ImageFileDirectory_v2.load: it stops silently (a warning) at
 // the first short read, keeping the tags stored so far.
 func loadIFD(r *reader, order binary.ByteOrder, bigTIFF bool) map[uint16]ifdEntry {
@@ -127,6 +134,7 @@ func loadIFD(r *reader, order binary.ByteOrder, bigTIFF bool) map[uint16]ifdEntr
 	if bigTIFF {
 		entrySize, inline = 20, 8
 	}
+	var total uint64
 	for i := uint64(0); i < count; i++ {
 		entry := r.read(entrySize)
 		if int64(len(entry)) != entrySize {
@@ -144,6 +152,19 @@ func loadIFD(r *reader, order binary.ByteOrder, bigTIFF bool) map[uint16]ifdEntr
 		unit, ok := unitSize[typ]
 		if !ok {
 			continue
+		}
+		// Tags may all point at one large payload, so the values they would
+		// expand to grow with tags times payload, not with the file (audit
+		// 2026-10-05, CODEC-04). Bytes and text stay one value. One tag over maxTagValues is skipped; past
+		// maxIFDValues for the whole directory, loading stops as at a short
+		// read. No real EXIF comes near either.
+		if expands := typ != 1 && typ != 2 && typ != 7; expands {
+			if n > maxTagValues {
+				continue
+			}
+			if total += n; total > maxIFDValues {
+				return tags
+			}
 		}
 		size := n * uint64(unit)
 		var data []byte

@@ -588,23 +588,44 @@ func (p *plainDecoder) ignoreComments(block []byte) []byte {
 		}
 	}
 	p.commentSpans = false
+	// One pass, linear in the block (audit 2026-10-05, CODEC-03): the same
+	// result as removing the first comment and searching again from the
+	// start, which copied the rest of the block once per comment. The next
+	// '\n' and '\r' are remembered, not searched for from each comment.
+	if bytes.IndexByte(block, '#') == -1 {
+		return block
+	}
+	out := make([]byte, 0, len(block))
+	nextNL, nextCR := -2, -2
+	next := func(c byte, at, cached int) int {
+		if cached == -1 || cached >= at {
+			return cached
+		}
+		return findFrom(block, c, at)
+	}
+	i := 0
 	for {
-		start := bytes.IndexByte(block, '#')
-		if start == -1 {
+		rel := bytes.IndexByte(block[i:], '#')
+		if rel == -1 {
+			out = append(out, block[i:]...)
 			break
 		}
-		end := commentEnd(block, start)
-		if end != -1 {
-			joined := make([]byte, 0, len(block))
-			joined = append(joined, block[:start]...)
-			block = append(joined, block[end+1:]...)
+		start := i + rel
+		out = append(out, block[i:start]...)
+		nextNL, nextCR = next('\n', start, nextNL), next('\r', start, nextCR)
+		end := nextNL
+		if nextNL*nextCR > 0 {
+			end = min(nextNL, nextCR)
 		} else {
-			block = block[:start]
+			end = max(nextNL, nextCR)
+		}
+		if end == -1 {
 			p.commentSpans = true
 			break
 		}
+		i = end + 1
 	}
-	return block
+	return out
 }
 
 func (p *plainDecoder) bitonal(total int) ([]byte, error) {

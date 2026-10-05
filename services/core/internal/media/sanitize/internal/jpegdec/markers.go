@@ -104,7 +104,18 @@ func (d *decoder) getSOS() {
 	d.al = c & 15
 	d.nextRestartNum = 0
 	d.inputScanNumber++
+	// Each progressive scan walks every coefficient block again, so work grows
+	// with the scan count while the pixel cap holds each scan; refuse a file
+	// that keeps adding scans (audit 2026-10-05, CODEC-JPEG-SRC-01). Real
+	// progressive files use about ten; libjpeg-turbo's own scan limit for
+	// untrusted input is in the hundreds.
+	if d.inputScanNumber > MaxScans {
+		errexit("JERR_TOO_MANY_SCANS")
+	}
 }
+
+// MaxScans bounds the scans one image may carry.
+const MaxScans = 1000
 
 func (d *decoder) getDAC() {
 	s := d.src

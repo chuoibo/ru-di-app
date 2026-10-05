@@ -247,6 +247,9 @@ func (d *ifd) uint(b []byte) uint64 {
 	return v
 }
 
+// maxTagValues bounds the values one tag may carry.
+const maxTagValues = 1 << 18
+
 // load is ImageFileDirectory_v2.load: an OSError inside (a short read)
 // is only warned about, leaving the tags read so far and the old next.
 func (d *ifd) load(f *file) error {
@@ -276,6 +279,14 @@ func (d *ifd) load(f *file) error {
 		}
 		unit, ok := tiffUnitSize[typ]
 		if !ok {
+			continue
+		}
+		if typ != 1 && typ != 2 && typ != 7 && n > maxTagValues {
+			// More values than any image within the pixel limit needs (one
+			// offset per 16x16 tile of 50 megapixels is 195,313): skipped
+			// unread, before a value is expanded (bytes and text stay one
+			// value and are not counted) (audit 2026-10-05,
+			// CODEC-02). The file then lacks the tag, and opening refuses it.
 			continue
 		}
 		size := int64(saturate)

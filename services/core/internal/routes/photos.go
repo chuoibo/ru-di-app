@@ -270,7 +270,7 @@ type uploadOwner struct {
 // the file, then the row at the service clock. A write failure leaves no row;
 // an INSERT failure (a person without a row, in dev) leaves the file.
 func storeUploadedImage(ctx context.Context, call *endpoint.Call, raw []byte, owner uploadOwner) (repo.UploadedImage, error) {
-	sanitized, err := sanitizeUpload(raw)
+	sanitized, err := sanitizeUpload(ctx, raw)
 	if err != nil {
 		return repo.UploadedImage{}, err
 	}
@@ -308,8 +308,8 @@ func storeUploadedImage(ctx context.Context, call *endpoint.Call, raw []byte, ow
 // answered as not_an_image. That is a known divergence awaiting the Lead
 // (ADR-0029 §8, open question 3); no parity scenario uploads such a format,
 // as the harness generates JPEG, PNG, GIF, WebP, BMP and PNM only.
-func sanitizeUpload(raw []byte) (sanitize.Sanitized, error) {
-	return sanitizeOutcome(sanitize.Sanitize(raw))
+func sanitizeUpload(ctx context.Context, raw []byte) (sanitize.Sanitized, error) {
+	return sanitizeOutcome(sanitize.SanitizeContext(ctx, raw))
 }
 
 // sanitizeOutcome answers what sanitize.Sanitize returned.

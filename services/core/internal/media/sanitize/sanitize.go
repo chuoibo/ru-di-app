@@ -9,8 +9,10 @@
 package sanitize
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"runtime"
 
 	"mobile/services/core/internal/media/sanitize/internal/convert"
 	"mobile/services/core/internal/media/sanitize/internal/exif"
@@ -76,9 +78,30 @@ func (e *InternalError) Error() string { return fmt.Sprintf("sanitize panicked: 
 
 func refuse(code, detail string) error { return &Rejected{Code: code, Detail: detail} }
 
+// slots bounds the decodes running at once in this process: each one is CPU
+// and memory bound and does not watch a context, so a burst of uploads would
+// otherwise take every core (audit 2026-10-05, codec findings).
+var slots = make(chan struct{}, max(1, runtime.GOMAXPROCS(0)/2))
+
+// SanitizeContext is Sanitize that waits for a decode slot only as long as
+// ctx allows; the decode itself, once started, runs to its own bounds.
+func SanitizeContext(ctx context.Context, raw []byte) (Sanitized, error) {
+	select {
+	case slots <- struct{}{}:
+	case <-ctx.Done():
+		return Sanitized{}, ctx.Err()
+	}
+	defer func() { <-slots }()
+	return sanitize(raw)
+}
+
 // Sanitize is sanitize_image. The error is a *Rejected, an *EncodeError, an
 // *UnsupportedError or an *InternalError.
-func Sanitize(raw []byte) (result Sanitized, err error) {
+func Sanitize(raw []byte) (Sanitized, error) {
+	return SanitizeContext(context.Background(), raw)
+}
+
+func sanitize(raw []byte) (result Sanitized, err error) {
 	defer func() {
 		if recovered := recover(); recovered != nil {
 			result, err = Sanitized{}, &InternalError{Panic: recovered}
