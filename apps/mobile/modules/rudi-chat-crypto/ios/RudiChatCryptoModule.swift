@@ -12,7 +12,7 @@ public class RudiChatCryptoModule: Module {
   private static let jsMethods: Set<String> = [
     "generation", "enrollment", "conversations", "key_package", "join_group", "epoch", "roster",
     "stage_add", "stage_remove", "stage_rekey", "pending_commit", "acknowledge_commit",
-    "acknowledge_sent", "abandon_commit", "forget", "seal_media", "open_media",
+    "acknowledge_sent", "abandon_send", "abandon_commit", "forget", "seal_media", "open_media",
   ]
   private let queue = DispatchQueue(label: "rudi.chat.crypto")
   private var handle: OpaquePointer?

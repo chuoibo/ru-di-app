@@ -403,3 +403,31 @@ fn enrollment_bytes_match_the_go_vector_and_the_proof_verifies() {
         )
         .unwrap();
 }
+
+/// A send refused for a moved epoch is abandoned and the same logical ID is
+/// encrypted again under the new epoch; a current send cannot be abandoned.
+#[test]
+fn a_send_of_a_past_epoch_is_abandoned_and_reencrypted() {
+    let mut alice = client(1, 11);
+    let mut bob = client(2, 22);
+    open(&mut alice, 100, &mut [&mut bob]);
+    let stale = alice
+        .encrypt(&id(100), &id(300), text("trễ epoch"))
+        .unwrap();
+    assert_eq!(
+        alice.abandon_send(&stale),
+        Err(Error::Conflict),
+        "still the current epoch"
+    );
+    let rekey = bob.stage_rekey(&id(100), &id(301)).unwrap();
+    bob.acknowledge_commit(&rekey.envelope).unwrap();
+    let roster = bob.roster(&id(100));
+    alice.receive(&rekey.envelope, Some(&roster)).unwrap();
+    alice.abandon_send(&stale).unwrap();
+    let fresh = alice
+        .encrypt(&id(100), &id(300), text("trễ epoch"))
+        .unwrap();
+    assert_ne!(fresh, stale);
+    assert_eq!(fresh.epoch, stale.epoch + 1);
+    assert_eq!(body(bob.receive(&fresh, None).unwrap()), text("trễ epoch"));
+}

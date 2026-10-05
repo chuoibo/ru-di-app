@@ -584,6 +584,30 @@ impl Client {
         self.mutate()
     }
 
+    /// The delivery service refused this send because the epoch moved
+    /// (409 stale_epoch): its ciphertext leaves the outbox so the same logical
+    /// ID can be encrypted again under the current epoch. Only a send of a
+    /// past epoch can be abandoned; the service never accepted it.
+    pub fn abandon_send(&mut self, refused: &Envelope) -> Result<()> {
+        let epoch = self.epoch(&refused.conversation_id)?;
+        let conversation = self.conversation(&refused.conversation_id)?;
+        let stored = conversation
+            .outbox
+            .get(&refused.logical_send_id)
+            .ok_or(Error::State)?;
+        if &stored.envelope != refused
+            || refused.epoch >= epoch
+            || conversation
+                .pending
+                .as_ref()
+                .is_some_and(|p| p.logical_send_id == refused.logical_send_id)
+        {
+            return Err(Error::Conflict);
+        }
+        conversation.outbox.remove(&refused.logical_send_id);
+        self.mutate()
+    }
+
     pub fn stage_add(
         &mut self,
         conversation_id: &str,

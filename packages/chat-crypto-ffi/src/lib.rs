@@ -328,7 +328,7 @@ fn describe(received: rudi_chat_crypto::Received) -> serde_json::Value {
 /// | `stage_add` | `{conversation_id, logical_send_id, members:[{card, key_package:b64}]}` | commit |
 /// | `stage_remove` | `{conversation_id, logical_send_id, device_id}` | commit |
 /// | `stage_rekey` / `pending_commit` | `{conversation_id[, logical_send_id]}` | commit |
-/// | `acknowledge_commit` / `acknowledge_sent` | `{envelope}` | `{"ok":true}` |
+/// | `acknowledge_commit` / `acknowledge_sent` / `abandon_send` | `{envelope}` | `{"ok":true}` |
 /// | `abandon_commit` / `forget` | `{conversation_id}` | `{"ok":true}` |
 /// | `seal` | `{wrapping_key:b64}` | `{"sealed", "anchor"}` |
 /// | `seal_media` | `{media_id, mime, plaintext:b64}` | `{"ciphertext":b64, "media"}` |
@@ -471,6 +471,10 @@ fn call(client: &mut Client, method: &str, raw: &str) -> Answer {
             client
                 .acknowledge_commit(&need(args.envelope)?)
                 .map_err(core)?;
+            ok()
+        }
+        "abandon_send" => {
+            client.abandon_send(&need(args.envelope)?).map_err(core)?;
             ok()
         }
         "acknowledge_sent" => {
