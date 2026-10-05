@@ -3083,6 +3083,22 @@
       "evidence": "services/core/internal/chatassist/postgres_test.go"
     },
     {
+      "id": "POST /contexts/{context}/ai-invocations/{id}/delivered",
+      "method": "POST",
+      "path": "/contexts/{context}/ai-invocations/{id}/delivered",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/lan_v2_postgres_test.go"
+    },
+    {
+      "id": "GET /contexts/{context}/ai-invocations/{id}/receipt",
+      "method": "GET",
+      "path": "/contexts/{context}/ai-invocations/{id}/receipt",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/lan_v2_postgres_test.go"
+    },
+    {
       "id": "POST /contexts/{context}/plan-promotions",
       "method": "POST",
       "path": "/contexts/{context}/plan-promotions",

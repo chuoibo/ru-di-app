@@ -110,7 +110,9 @@ func (h *Handler) suKienNhom(w http.ResponseWriter, r *http.Request) {
 			return dongSSE{}, "", err
 		}
 		defer tx.Rollback(ctx)
-		g, err := authority(ctx, tx, room, digest)
+		// The requester's own stream: on the v2 lane it is the only place the
+		// answer is written as it comes (never a room key), so it is open there.
+		g, err := authorityV2(ctx, tx, room, digest)
 		if err != nil {
 			return dongSSE{}, "", err
 		}

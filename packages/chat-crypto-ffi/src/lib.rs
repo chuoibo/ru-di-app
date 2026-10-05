@@ -373,6 +373,7 @@ struct Args {
     media_id: Option<String>,
     mime: Option<String>,
     plaintext: Option<String>,
+    card: Option<String>,
     media: Option<MediaRef>,
     ciphertext: Option<String>,
 }
@@ -492,6 +493,12 @@ fn call(client: &mut Client, method: &str, raw: &str) -> Answer {
         "forget" => {
             client.forget(&need(args.conversation_id)?).map_err(core)?;
             ok()
+        }
+        "ai_card_digest" => {
+            let card = need(args.card)?;
+            let digest = rudi_chat_crypto::ai_card_digest(&card);
+            let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
+            Ok(serde_json::json!({ "digest": hex }))
         }
         "settle_received" => {
             client

@@ -506,3 +506,39 @@ fn a_replayed_commit_with_another_roster_is_not_answered_from_the_journal() {
     assert!(bob.receive(&add.envelope, Some(&forged)).is_err());
     assert_eq!(bob.roster(&id(100)).len(), 3);
 }
+
+#[test]
+fn an_ai_card_travels_byte_for_byte_and_a_malformed_one_is_refused() {
+    let mut alice = client(1, 11);
+    let mut bob = client(2, 22);
+    open(&mut alice, 100, &mut [&mut bob]);
+    // The server's result exactly as it made it: escapes and key order kept.
+    let card = r#"{"loai":"tra_loi","chu":"Ghé quán cà phê <gần hồ> nhé","noi":[]}"#.to_string();
+    let op = Operation::AiCard {
+        invocation_id: id(500),
+        reply_to: id(501),
+        card: card.clone(),
+    };
+    let sent = alice.encrypt(&id(100), &id(300), op.clone()).unwrap();
+    match body(bob.receive(&sent, None).unwrap()) {
+        Operation::AiCard { card: got, .. } => {
+            assert_eq!(got, card, "the card must arrive byte for byte")
+        }
+        other => panic!("not a card: {other:?}"),
+    }
+    for bad in [
+        "[]".to_string(),
+        "không phải json".to_string(),
+        format!(
+            r#"{{"chu":"{}"}}"#,
+            "a".repeat(rudi_chat_crypto::MAX_AI_CARD)
+        ),
+    ] {
+        let op = Operation::AiCard {
+            invocation_id: id(500),
+            reply_to: id(501),
+            card: bad,
+        };
+        assert_eq!(alice.encrypt(&id(100), &id(302), op), Err(Error::Invalid));
+    }
+}

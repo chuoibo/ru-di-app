@@ -459,18 +459,13 @@ func TestKhaNangBaoCoMention(t *testing.T) {
 	}
 }
 
-// A room on chat v2 is refused before anything is written, so no row there can
-// ever read `legacy`.
+// A room on chat v2 answers only a trigger on its lane (ADR-0057 §6,
+// lan_v2_postgres_test.go): a legacy message named as the trigger there is
+// refused before anything is written, so no row there can ever read `legacy`.
 func TestPhongV2KhongGhiHangNao(t *testing.T) {
 	f := setup(t, nil)
-	ctx := context.Background()
-	if _, err := f.pool.Exec(ctx, `CREATE TABLE chat_v2_conversations(context_id uuid PRIMARY KEY)`); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := f.pool.Exec(ctx, `INSERT INTO chat_v2_conversations VALUES($1)`, f.context); err != nil {
-		t.Fatal(err)
-	}
-	if w := f.goiTag(f.token, newID(), f.tinTag(t, f.context, f.person), nil); w.Code != 409 || maTuChoi(w) != "encrypted_invocation_required" {
+	laV2(t, f)
+	if w := f.goiTag(f.token, newID(), f.tinTag(t, f.context, f.person), nil); w.Code != 422 || maTuChoi(w) != "trigger_khong_hop_le" {
 		t.Fatalf("phòng v2: %d %s", w.Code, w.Body.String())
 	}
 	if n := f.demLoiGoi(t); n != 0 {

@@ -166,7 +166,22 @@ pub enum Operation {
         media: Box<MediaRef>,
         duration_ms: u32,
     },
+    /// Rủ Đi AI's answer to an `@Rủ Đi` message, sealed by the device of the
+    /// person who asked (ADR-0057 §6): `card` is the server's result byte for
+    /// byte, so every member can check it against the digest the server keeps
+    /// for `invocation_id`. A card that does not match is drawn as the
+    /// sender's own words, never as the assistant's.
+    AiCard {
+        invocation_id: String,
+        reply_to: String,
+        card: String,
+    },
 }
+
+/// The largest AI card a message carries (the server refuses to make a larger
+/// one). Below the payload ceiling with room for the JSON escaping of the
+/// card inside the operation.
+pub const MAX_AI_CARD: usize = 12 * 1024;
 
 fn valid_body(body: &str) -> bool {
     !body.trim().is_empty() && body.len() <= 16 * 1024
@@ -208,6 +223,17 @@ impl Operation {
             } => valid_slug(pack_id) && valid_slug(sticker_id),
             Self::Voice { media, duration_ms } => {
                 media.validate(VOICE_MIMES, MAX_MEDIA) && (1..=15 * 60 * 1000).contains(duration_ms)
+            }
+            Self::AiCard {
+                invocation_id,
+                reply_to,
+                card,
+            } => {
+                valid_id(invocation_id)
+                    && valid_id(reply_to)
+                    && !card.is_empty()
+                    && card.len() <= MAX_AI_CARD
+                    && serde_json::from_str::<serde_json::Value>(card).is_ok_and(|v| v.is_object())
             }
         };
         if valid {

@@ -98,9 +98,16 @@ type Invocation struct {
 	SoTinDoc  *int      `json:"so_tin_doc"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	// An end-to-end room only (ADR-0057 §6), absent elsewhere: the `@Rủ Đi`
+	// message's logical send id; the answer for the caller's device to seal,
+	// until it delivered it; its digest; and where it was delivered.
+	TriggerV2         *string `json:"trigger_v2,omitempty"`
+	TheV2             *string `json:"the_v2,omitempty"`
+	TheDigest         *string `json:"the_digest,omitempty"`
+	DeliveredSequence *int64  `json:"delivered_sequence,omitempty"`
 }
 
-const columns = `id,command,status,code,message_id,trigger_message_id::text,so_tin_doc,created_at,updated_at`
+const columns = `id,command,status,code,message_id,trigger_message_id::text,so_tin_doc,created_at,updated_at,trigger_v2::text,v2_result,encode(result_digest,'hex'),delivered_sequence`
 
 func New(pool *pgxpool.Pool) *Handler {
 	h := &Handler{pool: pool, mux: featureroute.NewMux(), worker: DefaultWorkerConfig()}
@@ -112,6 +119,10 @@ func New(pool *pgxpool.Pool) *Handler {
 	h.mux.HandleFunc(routeSuKienNhom, h.suKienNhom)
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations/{id}/retry", h.retry)
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations/{id}/cancel", h.cancel)
+	// An end-to-end room (ADR-0057 §6): the caller's device says where it
+	// sealed the answer; any member checks a card against the answer's digest.
+	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations/{id}/delivered", h.delivered)
+	h.mux.HandleFunc("GET /contexts/{context}/ai-invocations/{id}/receipt", h.receipt)
 	h.mux.HandleFunc("POST /contexts/{context}/plan-promotions", h.promote)
 	h.mux.HandleFunc("GET /contexts/{context}/plan-promotions/{id}", h.promotion)
 	h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", h.draftCreate)
@@ -234,7 +245,20 @@ type grant struct {
 
 // authority locks in person -> session -> membership -> context order. The same
 // rows are held through publication, never through the external inference call.
+// A v2 room is refused (409 encrypted_invocation_required): every path that
+// can write into the legacy room or read its messages goes through here.
 func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byte) (grant, error) {
+	return authorityLane(ctx, tx, conversation, digest, false)
+}
+
+// authorityV2 is authority for the paths built for an end-to-end room
+// (ADR-0057 §6): they read only what the caller attached and never post into
+// the room. g.lane says which room it is; each such path branches on it.
+func authorityV2(ctx context.Context, tx pgx.Tx, conversation string, digest []byte) (grant, error) {
+	return authorityLane(ctx, tx, conversation, digest, true)
+}
+
+func authorityLane(ctx context.Context, tx pgx.Tx, conversation string, digest []byte, choV2 bool) (grant, error) {
 	g := grant{room: conversation, digest: digest, lane: laneLegacy}
 	if !chatv2.ValidID(conversation) {
 		return g, invalid("invalid_context")
@@ -266,7 +290,9 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 		}
 		if v2 {
 			g.lane = laneV2
-			return g, &denied{409, "encrypted_invocation_required"}
+			if !choV2 {
+				return g, &denied{409, "encrypted_invocation_required"}
+			}
 		}
 	}
 	return g, nil
@@ -453,6 +479,15 @@ func phien(ctx context.Context, tx pgx.Tx, digest []byte) (string, error) {
 }
 
 func (h *Handler) begin(r *http.Request) (pgx.Tx, grant, error) {
+	return h.beginLane(r, false)
+}
+
+// beginV2 is begin for the routes built for an end-to-end room as well.
+func (h *Handler) beginV2(r *http.Request) (pgx.Tx, grant, error) {
+	return h.beginLane(r, true)
+}
+
+func (h *Handler) beginLane(r *http.Request, choV2 bool) (pgx.Tx, grant, error) {
 	token, p := auth.BearerToken(r.Header)
 	if p != nil {
 		return nil, grant{}, &denied{401, "authentication_required"}
@@ -461,7 +496,7 @@ func (h *Handler) begin(r *http.Request) (pgx.Tx, grant, error) {
 	if err != nil {
 		return nil, grant{}, err
 	}
-	g, err := authority(r.Context(), tx, r.PathValue("context"), auth.TokenDigest(token))
+	g, err := authorityLane(r.Context(), tx, r.PathValue("context"), auth.TokenDigest(token), choV2)
 	if err != nil {
 		_ = tx.Rollback(r.Context())
 		return nil, g, err
@@ -486,7 +521,7 @@ func (h *Handler) WithCoMay() *Handler {
 // preflight authenticates before anything is queued. Mutation handlers
 // authorize again afterwards without holding locks over I/O.
 func (h *Handler) preflight(r *http.Request) error {
-	tx, g, err := h.begin(r)
+	tx, g, err := h.beginV2(r)
 	if err != nil {
 		return err
 	}
@@ -503,7 +538,7 @@ func (h *Handler) preflight(r *http.Request) error {
 // flipped only now that the preview block above the send button exists
 // (ADR-0036 §4 forbids the one without the other).
 func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
-	tx, g, err := h.begin(r)
+	tx, g, err := h.beginV2(r)
 	if err != nil {
 		failure(w, err)
 		return
@@ -563,7 +598,9 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	// `phong` when every member of the room watches it too, through the
 	// change feed's WebSocket `ai` frame (slice 12). A client that sees no
 	// field reads `khong`.
-	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}, "cap_doi": capDoi, "gu_chat": gu})
+	// `protocol` names the room's lane (ADR-0057 §6): in a v2 room the caller's
+	// device delivers the answer, and the client reads that from here.
+	reply(w, 200, map[string]any{"protocol": g.lane, "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "chia_bill": map[string]any{"available": enabled, "reason": reason}, "hoi": map[string]any{"available": hoiCo, "reason": hoiVi}, "share_scope": "caller_attached", "mention": true, "stream": h.aiStream(g)}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}, "cap_doi": capDoi, "gu_chat": gu})
 }
 
 // The values of chat-capabilities' ai.stream (contract §3).
@@ -578,9 +615,9 @@ func (h *Handler) aiStream(g grant) string {
 	if h.stream == nil || !h.stream.Song() || (g.kind != kindGroup && g.kind != kindPair) {
 		return aiStreamKhong
 	}
-	// The grant reached here is always the legacy lane (a v2 room is
-	// refused before capabilities answer), and only a legacy-lane room key
-	// is ever written.
+	// Only a legacy-lane room key is ever written: in a v2 room the answer
+	// reaches the room sealed by the caller's device, so only the caller
+	// watches it being written.
 	if h.phong && g.lane == laneLegacy {
 		return aiStreamPhong
 	}
@@ -589,7 +626,7 @@ func (h *Handler) aiStream(g grant) string {
 
 func scan(row pgx.Row) (Invocation, error) {
 	var v Invocation
-	err := row.Scan(&v.ID, &v.Command, &v.Status, &v.Code, &v.MessageID, &v.TriggerMessageID, &v.SoTinDoc, &v.CreatedAt, &v.UpdatedAt)
+	err := row.Scan(&v.ID, &v.Command, &v.Status, &v.Code, &v.MessageID, &v.TriggerMessageID, &v.SoTinDoc, &v.CreatedAt, &v.UpdatedAt, &v.TriggerV2, &v.TheV2, &v.TheDigest, &v.DeliveredSequence)
 	return v, err
 }
 func newID() string {
@@ -668,7 +705,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 	// Probe outside the transaction; a missing provider is an honest refusal.
 	available := h.nhomSanSang(r.Context())
-	tx, g, err := h.begin(r)
+	tx, g, err := h.beginV2(r)
 	if err != nil {
 		failure(w, err)
 		return
@@ -721,18 +758,39 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 	// A new invocation: now the bundle and the trigger are checked against
 	// the room, in the order they always were, before the provider refusal.
+	// On the v2 lane the same two checks read what the lane records in the
+	// clear (lan_v2.go), and an answer needs its trigger: it is what the
+	// caller's device seals the card in reply to.
 	soTin := 0
 	if in.BoiCanh != nil {
-		if soTin, err = thuocPhong(r.Context(), tx, r.PathValue("context"), in.BoiCanh); err != nil {
+		if g.lane == laneV2 {
+			soTin, err = thuocPhongV2(r.Context(), tx, r.PathValue("context"), in.BoiCanh)
+		} else {
+			soTin, err = thuocPhong(r.Context(), tx, r.PathValue("context"), in.BoiCanh)
+		}
+		if err != nil {
 			failure(w, err)
 			return
 		}
 	}
+	if g.lane == laneV2 && trigger == "" {
+		failure(w, invalid("trigger_required"))
+		return
+	}
 	if trigger != "" {
-		if err = kiemTrigger(r.Context(), tx, r.PathValue("context"), g.person, trigger); err != nil {
+		if g.lane == laneV2 {
+			err = kiemTriggerV2(r.Context(), tx, r.PathValue("context"), g.person, trigger)
+		} else {
+			err = kiemTrigger(r.Context(), tx, r.PathValue("context"), g.person, trigger)
+		}
+		if err != nil {
 			failure(w, err)
 			return
 		}
+	}
+	triggerLegacy, triggerV2 := in.TriggerMessageID, (*string)(nil)
+	if g.lane == laneV2 {
+		triggerLegacy, triggerV2 = nil, in.TriggerMessageID
 	}
 	if !available {
 		refuse(w, 503, "provider_unavailable")
@@ -751,7 +809,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,boi_canh,share_expires_at,status,trigger_message_id,lane,so_tin_doc) VALUES($1,'group',$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+interval '15 minutes','queued',$11,$12,$13) RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Command, in.Prompt, goiHoacNull(goi), in.TriggerMessageID, g.lane, soTin))
+	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,boi_canh,share_expires_at,status,trigger_message_id,lane,so_tin_doc,trigger_v2) VALUES($1,'group',$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+interval '15 minutes','queued',$11,$12,$13,$14) RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Command, in.Prompt, goiHoacNull(goi), triggerLegacy, g.lane, soTin, triggerV2))
 	if daCoTraLoi(err) {
 		// Another logical call already answers this message: one message, one
 		// answer. Not invocation_conflict, which means "this id, other bytes".
@@ -792,7 +850,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	tx, g, err := h.begin(r)
+	tx, g, err := h.beginV2(r)
 	if err != nil {
 		failure(w, err)
 		return
@@ -843,7 +901,7 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 			return
 		}
 	}
-	tx, g, err := h.begin(r)
+	tx, g, err := h.beginV2(r)
 	if err != nil {
 		failure(w, err)
 		return

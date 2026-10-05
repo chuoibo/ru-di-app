@@ -9,8 +9,16 @@ mod wire;
 
 pub use local_state::{LocalAnchor, SealedLocalState};
 pub use media::{open_media, seal_media};
+
+/// The digest the server keeps for an AI card it made (ADR-0057 §6), so a
+/// member can check a received `ai_card` against it: SHA-256 of the card's
+/// exact bytes.
+pub fn ai_card_digest(card: &str) -> [u8; 32] {
+    Sha256::digest(card.as_bytes()).into()
+}
 pub use wire::{
-    enrollment_bytes, Envelope, MediaRef, Operation, MAX_CIPHERTEXT, MAX_MEDIA, PROTOCOL,
+    enrollment_bytes, Envelope, MediaRef, Operation, MAX_AI_CARD, MAX_CIPHERTEXT, MAX_MEDIA,
+    PROTOCOL,
 };
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
