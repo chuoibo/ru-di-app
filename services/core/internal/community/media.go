@@ -21,6 +21,21 @@ import (
 	"mobile/services/core/internal/media/storage"
 )
 
+// uploadTimeout bounds one upload end to end; uploadReadTimeout bounds
+// receiving its body.
+const (
+	uploadTimeout     = 90 * time.Second
+	uploadReadTimeout = 60 * time.Second
+)
+
+// upload keeps every slow step out of a database transaction (audit
+// 2026-10-05, PER-COMMUNITY-01). It used to open the transaction, lock the
+// person, session and rate row, and only then receive, decode and store the
+// body: four slow clients held all four slots, four connections and their
+// locks for as long as they cared to take. Now the caller is checked, the body
+// received under its own deadline, decoded and stored with no transaction
+// open, and one short transaction re-checks the session and records the row.
+// The rate is spent up front (see below).
 func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 	select {
 	case h.uploadSlots <- struct{}{}:
@@ -29,13 +44,24 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 		fail(w, no(429, "media_busy"))
 		return
 	}
-	tx, person, err := h.begin(r)
+	ctx, cancel := context.WithTimeout(r.Context(), uploadTimeout)
+	defer cancel()
+	r = r.WithContext(ctx)
+	// Who is asking, and the per-minute allowance spent, before a byte of
+	// the body is read, in one short transaction that commits at once: an
+	// attempt counts whether or not it succeeds, so a caller over the limit
+	// is refused here and never makes the server receive or decode anything.
+	check, person, err := h.begin(r)
 	if err != nil {
 		fail(w, err)
 		return
 	}
-	defer tx.Rollback(r.Context())
-	if err = rate(r.Context(), tx, person); err != nil {
+	err = rate(ctx, check, person)
+	if err == nil {
+		err = check.Commit(ctx)
+	}
+	_ = check.Rollback(context.WithoutCancel(ctx))
+	if err != nil {
 		fail(w, err)
 		return
 	}
@@ -47,10 +73,15 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 		fail(w, no(422, "unsupported_media"))
 		return
 	}
+	rc := http.NewResponseController(w)
+	deadlineSet := rc.SetReadDeadline(time.Now().Add(uploadReadTimeout)) == nil
 	raw, err := io.ReadAll(http.MaxBytesReader(w, r.Body, max))
 	if err != nil || len(raw) == 0 {
 		fail(w, no(413, "media_too_large"))
 		return
+	}
+	if deadlineSet {
+		_ = rc.SetReadDeadline(time.Time{})
 	}
 	if strings.HasPrefix(mime, "video/") && (len(raw) < 12 || string(raw[4:8]) != "ftyp") {
 		fail(w, no(422, "invalid_video"))
@@ -97,16 +128,34 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := uuid()
-	_, err = tx.Exec(r.Context(), `INSERT INTO community_media(id,owner_id,storage_key,content_type,byte_size,width,height,state) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, id, person, key, mime, len(raw), width, height, state)
+	tx, owner, err := h.begin(r)
+	if err == nil && owner != person {
+		err = no(401, "authentication_required")
+	}
 	if err == nil {
-		err = tx.Commit(r.Context())
+		_, err = tx.Exec(ctx, `INSERT INTO community_media(id,owner_id,storage_key,content_type,byte_size,width,height,state) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, id, person, key, mime, len(raw), width, height, state)
+		if err == nil {
+			err = tx.Commit(ctx)
+		}
+		_ = tx.Rollback(context.WithoutCancel(ctx))
 	}
 	if err != nil {
-		_, _ = st.Delete(key)
+		if removed, delErr := st.Delete(key); delErr != nil || !removed {
+			forgetLater(h, key)
+		}
 		fail(w, err)
 		return
 	}
 	reply(w, 201, map[string]any{"id": id, "state": state, "url": "/v2/community/media/" + id, "type": mime, "width": width, "height": height})
+}
+
+// forgetLater queues a stored object that lost its row for the janitor's
+// reaper, when the store could not remove it at once. Best effort: a database
+// without the queue (a community-only stack) leaves it to the media GC.
+func forgetLater(h *Handler, key string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, _ = h.pool.Exec(ctx, `INSERT INTO pending_object_deletes(storage_key,reason) VALUES($1,'community_upload_failed') ON CONFLICT (storage_key) DO NOTHING`, key)
 }
 func (h *Handler) mediaStatus(w http.ResponseWriter, r *http.Request) {
 	tx, person, err := h.begin(r)

@@ -7,6 +7,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"io"
 	"net/http/httptest"
 	"strings"
 	"sync"
@@ -394,4 +395,88 @@ func TestPostgresCommunityModeratorPublishesCommentOnce(t *testing.T) {
 		t.Fatal("reviewed comment missing")
 	}
 	requireStatus(t, f.call("GET", "/v2/community/review", 3, nil), 200)
+}
+
+// stallingBody hands out its first bytes, signals, and waits to be released
+// before the rest: a phone on a slow uplink.
+type stallingBody struct {
+	head, tail []byte
+	started    chan struct{}
+	release    chan struct{}
+	sentHead   bool
+}
+
+func (b *stallingBody) Read(p []byte) (int, error) {
+	if !b.sentHead {
+		b.sentHead = true
+		close(b.started)
+		return copy(p, b.head), nil
+	}
+	<-b.release
+	if len(b.tail) == 0 {
+		return 0, io.EOF
+	}
+	n := copy(p, b.tail)
+	b.tail = b.tail[n:]
+	return n, nil
+}
+
+// While an upload's body is still arriving nothing is locked: the person and
+// session rows stay free for an erasure or a revocation (audit 2026-10-05,
+// PER-COMMUNITY-01). Before, the upload held them FOR SHARE, with a pool
+// connection, for as long as the client took to send.
+func TestPostgresCommunityUploadHoldsNoLockWhileTheBodyArrives(t *testing.T) {
+	f := setup(t)
+	t.Setenv("MOBILE_MEDIA_ROOT", t.TempDir())
+	var b bytes.Buffer
+	im := image.NewRGBA(image.Rect(0, 0, 20, 20))
+	im.Set(1, 1, color.RGBA{R: 100, A: 255})
+	if err := png.Encode(&b, im); err != nil {
+		t.Fatal(err)
+	}
+	body := &stallingBody{head: b.Bytes()[:8], tail: b.Bytes()[8:], started: make(chan struct{}), release: make(chan struct{})}
+	r := httptest.NewRequest("POST", "/v2/community/media", body)
+	r.Header.Set("Content-Type", "image/png")
+	r.Header.Set("Authorization", "Bearer "+f.tokens[0])
+	w := httptest.NewRecorder()
+	done := make(chan struct{})
+	go func() { defer close(done); f.h.ServeHTTP(w, r) }()
+	<-body.started
+	ctx := context.Background()
+	tx, err := f.pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.Exec(ctx, `SET LOCAL lock_timeout='200ms'`); err == nil {
+		_, err = tx.Exec(ctx, `SELECT 1 FROM people WHERE id=$1 FOR UPDATE`, f.people[0])
+	}
+	_ = tx.Rollback(ctx)
+	close(body.release)
+	<-done
+	if err != nil {
+		t.Fatalf("the person row was locked while the body arrived: %v", err)
+	}
+	requireStatus(t, w, 201)
+}
+
+// A caller over the per-minute allowance is refused before a byte of the body
+// is read: the limit bounds what an upload makes the server do, not only what
+// it records (security review of the PER-COMMUNITY-01 change).
+func TestPostgresCommunityRateLimitedUploadIsRefusedUnread(t *testing.T) {
+	f := setup(t)
+	t.Setenv("MOBILE_MEDIA_ROOT", t.TempDir())
+	f.exec(t, `INSERT INTO community_limits VALUES($1,date_trunc('minute',clock_timestamp()),60) ON CONFLICT(person_id,minute) DO UPDATE SET count=60`, f.people[0])
+	body := &stallingBody{head: []byte("\x89PNG"), started: make(chan struct{}), release: make(chan struct{})}
+	close(body.release)
+	r := httptest.NewRequest("POST", "/v2/community/media", body)
+	r.Header.Set("Content-Type", "image/png")
+	r.Header.Set("Authorization", "Bearer "+f.tokens[0])
+	w := httptest.NewRecorder()
+	f.h.ServeHTTP(w, r)
+	requireStatus(t, w, 429)
+	select {
+	case <-body.started:
+		t.Fatal("the body of a rate-limited upload was read")
+	default:
+	}
 }

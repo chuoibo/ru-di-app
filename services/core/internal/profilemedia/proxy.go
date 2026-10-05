@@ -189,6 +189,53 @@ func (p Proxy) File(ctx context.Context, personID, jobID string) ([]byte, string
 	return content, mediaType, nil
 }
 
+// streamClient waits at most 10 s for the upstream's headers but never cuts
+// a body mid-copy: the client's own request bounds how long that takes.
+var streamClient = &http.Client{Transport: &http.Transport{
+	Proxy:                 nil,
+	ResponseHeaderTimeout: 10 * time.Second,
+	IdleConnTimeout:       90 * time.Second,
+}}
+
+// Stream is File without the buffer: the upstream's answer for the job's
+// file, a Range header passed through, for the caller to copy as it reads
+// (audit 2026-10-05, PER-PROFILE-01). File read the whole MP4, up to 128 MiB,
+// into memory for every request, a HEAD or a one-byte seek included.
+func (p Proxy) Stream(ctx context.Context, personID, jobID, rangeHeader string) (*http.Response, error) {
+	if err := p.owner(personID, jobID); err != nil {
+		return nil, err
+	}
+	if err := p.configured(); err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(p.URL, "/")+"/v1/media/"+jobID+"/file", nil)
+	if err != nil {
+		return nil, &Error{http.StatusBadGateway, "nep_media_khong_goi_duoc"}
+	}
+	req.Header.Set("Authorization", "Bearer "+p.Token)
+	if rangeHeader != "" {
+		req.Header.Set("Range", rangeHeader)
+	}
+	client := p.Client
+	if client == nil {
+		client = streamClient
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, &Error{http.StatusServiceUnavailable, "nep_media_unavailable"}
+	}
+	switch {
+	case resp.StatusCode == http.StatusNotFound:
+		resp.Body.Close()
+		return nil, &Error{http.StatusNotFound, "chua_co_media"}
+	case resp.StatusCode == http.StatusRequestedRangeNotSatisfiable:
+	case resp.StatusCode >= 400:
+		resp.Body.Close()
+		return nil, &Error{http.StatusBadGateway, "nep_media_proxy_tu_choi"}
+	}
+	return resp, nil
+}
+
 func asMediaError(err error) *Error {
 	var mediaErr *Error
 	if errors.As(err, &mediaErr) {

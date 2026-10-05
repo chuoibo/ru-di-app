@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -419,19 +420,61 @@ func (h *Handler) file(w http.ResponseWriter, r *http.Request) {
 		refuse(w, &Error{http.StatusNotFound, "chua_co_media"})
 		return
 	}
-	content, mediaType, err := h.proxy.File(r.Context(), actor.ID, job.ID)
+	// The file was proven a playable MP4 once, when the job became ready
+	// (status). Here it is passed through as it arrives, Range and all.
+	rangeHeader := r.Header.Get("Range")
+	if r.Method == http.MethodHead {
+		rangeHeader = "bytes=0-0"
+	}
+	resp, err := h.proxy.Stream(r.Context(), actor.ID, job.ID, rangeHeader)
 	if err != nil {
 		refuse(w, err)
 		return
 	}
-	if !validMP4(content, mediaType) {
+	defer resp.Body.Close()
+	if mediaType := resp.Header.Get("Content-Type"); mediaType != "video/mp4" {
 		refuse(w, &Error{http.StatusBadGateway, "invalid_video"})
 		return
 	}
-	w.Header().Set("Content-Type", "video/mp4")
-	w.Header().Set("Cache-Control", "private, max-age=3600")
-	http.ServeContent(w, r, job.ID+".mp4", time.Time{}, bytes.NewReader(content))
+	header := w.Header()
+	header.Set("Content-Type", "video/mp4")
+	header.Set("Cache-Control", "private, max-age=3600")
+	header.Set("Accept-Ranges", "bytes")
+	if r.Method == http.MethodHead {
+		total := resp.Header.Get("Content-Length")
+		if resp.StatusCode == http.StatusPartialContent {
+			if _, size, ok := strings.Cut(resp.Header.Get("Content-Range"), "/"); ok {
+				total = size
+			}
+		}
+		if n, err := strconv.ParseInt(total, 10, 64); err == nil && n >= 0 && n <= maxVideoBytes {
+			header.Set("Content-Length", total)
+		}
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if rangeHeader != "" && resp.StatusCode == http.StatusOK {
+		// An upstream that ignores Range: cut the range here, from a copy,
+		// as before; only a seek on such an upstream pays for the whole file.
+		content, err := io.ReadAll(io.LimitReader(resp.Body, maxVideoBytes+1))
+		if err != nil || len(content) > maxVideoBytes {
+			refuse(w, &Error{http.StatusBadGateway, "nep_media_proxy_tu_choi"})
+			return
+		}
+		http.ServeContent(w, r, job.ID+".mp4", time.Time{}, bytes.NewReader(content))
+		return
+	}
+	for _, name := range []string{"Content-Length", "Content-Range"} {
+		if value := resp.Header.Get(name); value != "" {
+			header.Set(name, value)
+		}
+	}
+	w.WriteHeader(resp.StatusCode)
+	_, _ = io.Copy(w, io.LimitReader(resp.Body, maxVideoBytes))
 }
+
+// maxVideoBytes is the largest rendered video passed through, as File allows.
+const maxVideoBytes = 128 << 20
 
 func (h *Handler) balance(w http.ResponseWriter, r *http.Request) {
 	actor, err := h.actor(r)

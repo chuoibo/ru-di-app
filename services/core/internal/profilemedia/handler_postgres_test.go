@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestProfileVideoUsesOneCreditAndKeepsFilePrivate(t *testing.T) {
@@ -22,6 +24,7 @@ func TestProfileVideoUsesOneCreditAndKeepsFilePrivate(t *testing.T) {
 		t.Fatal(err)
 	}
 	proxyPosts := 0
+	honorRange, sent := false, 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			proxyPosts++
@@ -30,6 +33,12 @@ func TestProfileVideoUsesOneCreditAndKeepsFilePrivate(t *testing.T) {
 		}
 		if strings.HasPrefix(r.URL.Path, "/v1/media/") && strings.HasSuffix(r.URL.Path, "/file") {
 			w.Header().Set("Content-Type", "video/mp4")
+			if honorRange {
+				counting := &countingWriter{ResponseWriter: w}
+				http.ServeContent(counting, r, "v.mp4", time.Time{}, bytes.NewReader(playable))
+				sent += counting.n
+				return
+			}
 			_, _ = w.Write(playable)
 			return
 		}
@@ -93,6 +102,24 @@ func TestProfileVideoUsesOneCreditAndKeepsFilePrivate(t *testing.T) {
 	if rangeReply.Code != http.StatusPartialContent || rangeReply.Body.String() != "ftyp" {
 		t.Fatalf("MP4 range: %d %q", rangeReply.Code, rangeReply.Body.String())
 	}
+	// An upstream that honours Range sends only what was asked for, and a
+	// HEAD costs one byte (audit 2026-10-05, PER-PROFILE-01): the file is
+	// passed through, never read whole into memory.
+	honorRange = true
+	sent = 0
+	rangeReply = httptest.NewRecorder()
+	h.ServeHTTP(rangeReply, rangeRequest)
+	if rangeReply.Code != http.StatusPartialContent || rangeReply.Body.String() != "ftyp" || rangeReply.Header().Get("Content-Range") == "" {
+		t.Fatalf("passed-through range: %d %q %v", rangeReply.Code, rangeReply.Body.String(), rangeReply.Header())
+	}
+	sent = 0
+	head := httptest.NewRequest(http.MethodHead, "/me/profile-videos/"+created.JobID+"/file", nil)
+	head.Header.Set("X-Actor-ID", person)
+	headReply := httptest.NewRecorder()
+	h.ServeHTTP(headReply, head)
+	if headReply.Code != 200 || headReply.Body.Len() != 0 || headReply.Header().Get("Content-Length") != strconv.Itoa(len(playable)) || sent > 1 {
+		t.Fatalf("HEAD: %d len=%q upstream sent %d bytes", headReply.Code, headReply.Header().Get("Content-Length"), sent)
+	}
 	spent := request("POST", "/me/profile-videos", person, map[string]any{"kind": "nep_video", "image_job_ids": []string{imageID}, "idempotency_key": "synthetic-click-two"})
 	if spent.Code != 409 || proxyPosts != 1 {
 		t.Fatalf("spent credit: %d %s posts=%d", spent.Code, spent.Body.String(), proxyPosts)
@@ -132,4 +159,15 @@ func TestQueuedReservationCanRecoverAfterLostProxySubmission(t *testing.T) {
 	if w.Code != http.StatusOK || posts != 1 || !bytes.Contains(w.Body.Bytes(), []byte(job.ID)) {
 		t.Fatalf("queued job was stranded: status=%d proxy posts=%d body=%s", w.Code, posts, w.Body.String())
 	}
+}
+
+type countingWriter struct {
+	http.ResponseWriter
+	n int
+}
+
+func (c *countingWriter) Write(p []byte) (int, error) {
+	n, err := c.ResponseWriter.Write(p)
+	c.n += n
+	return n, err
 }

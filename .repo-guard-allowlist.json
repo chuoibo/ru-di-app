@@ -858,11 +858,11 @@
     },
     {
       "path": "services/core/internal/profilemedia/handler_postgres_test.go",
-      "sha256": "2cea79e6bd2c0e2c50d508feedc8c70370b56a33acce9c4253fbdc3755659ee4",
+      "sha256": "c25dc8c4585ba3356ba0829ba302bfb3dff54e505d528cb8244c6d1699045da9",
       "rules": [
         "long-number"
       ],
-      "reason": "Test chỉ dùng UUID và attempt ID tổng hợp để chứng minh hành vi nhiều tài khoản, phân quyền và idempotency; không có dữ liệu người tham gia. Ghim digest toàn file để mọi lần sửa đều buộc review lại phép miễn long-number. Ghim lại khi thay fixture header bằng MP4 H.264 màu tổng hợp; không có dữ liệu người tham gia."
+      "reason": "Test chỉ dùng UUID và attempt ID tổng hợp để chứng minh hành vi nhiều tài khoản, phân quyền và idempotency; không có dữ liệu người tham gia. Ghim digest toàn file để mọi lần sửa đều buộc review lại phép miễn long-number. Ghim lại khi thay fixture header bằng MP4 H.264 màu tổng hợp; không có dữ liệu người tham gia. Ghim lại 2026-10-05 (audit PER-PROFILE-01): thêm upstream giả tôn trọng Range, đếm byte gửi, HEAD; không thêm số mới."
     },
     {
       "path": "services/core/internal/profilemedia/identity_test.go",

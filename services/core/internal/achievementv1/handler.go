@@ -1,6 +1,7 @@
 package achievementv1
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -91,7 +92,7 @@ func refuse(w http.ResponseWriter, status int, code, detail string) {
 
 func decodeRequest(r *http.Request, out any) error {
 	defer r.Body.Close()
-	decoder := json.NewDecoder(io.LimitReader(r.Body, 8192))
+	decoder := json.NewDecoder(io.LimitReader(r.Body, maxBody))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(out); err != nil {
 		return err
@@ -112,13 +113,23 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		refuse(w, 503, "achievement_unavailable", "Achievement storage is unavailable")
 		return
 	}
-	ctx := r.Context()
+	// The body is received before any transaction opens, under its own
+	// deadline, and the whole request has one (audit 2026-10-05,
+	// PER-ACHIEVE-01): a slow client used to hold a pool connection inside an
+	// open transaction while it sent.
+	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer cancel()
+	r = r.WithContext(ctx)
+	if err := bufferBody(w, r); err != nil {
+		refuse(w, 400, "invalid_request", "The request body did not arrive")
+		return
+	}
 	tx, err := h.Pool.Begin(ctx)
 	if err != nil {
 		refuse(w, 503, "achievement_unavailable", "Achievement storage is unavailable")
 		return
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.WithoutCancel(ctx))
 	personID, err := h.actor(ctx, tx, r.Header)
 	if err != nil {
 		var denied *routeError
@@ -144,7 +155,52 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		refuse(w, 503, "achievement_unavailable", "Achievement storage is unavailable")
 		return
 	}
+	if ask, ok := body.(suggestionAsk); ok {
+		// The model is asked after the read transaction committed: its seat
+		// wait and its call no longer hold a pool connection.
+		ids, source, line := suggestions(ctx, h.ai, ask.facts, ask.choices, ask.selected, ask.history)
+		body = map[string]any{"candidate_ids": ids, "source": source, "line": line}
+	}
 	answer(w, status, body)
+}
+
+// requestTimeout bounds one request: the body, the reads and Nếp's call
+// (suggestionTimeout) with room to answer.
+const requestTimeout = 30 * time.Second
+
+// bodyReadTimeout bounds receiving a body; maxBody is decodeRequest's cap.
+const (
+	bodyReadTimeout = 10 * time.Second
+	maxBody         = 8192
+)
+
+// bufferBody reads the body (one byte past the cap, so decodeRequest still
+// sees an oversized body as one) before the transaction opens.
+func bufferBody(w http.ResponseWriter, r *http.Request) error {
+	if r.Body == nil || r.Body == http.NoBody {
+		return nil
+	}
+	rc := http.NewResponseController(w)
+	deadlineSet := rc.SetReadDeadline(time.Now().Add(bodyReadTimeout)) == nil
+	data, err := io.ReadAll(io.LimitReader(r.Body, maxBody+1))
+	if err != nil {
+		return err
+	}
+	if deadlineSet {
+		_ = rc.SetReadDeadline(time.Time{})
+	}
+	_ = r.Body.Close()
+	r.Body = io.NopCloser(bytes.NewReader(data))
+	return nil
+}
+
+// suggestionAsk is what POST /me/achievement-suggestions read under the
+// transaction; the model call runs on it after the commit.
+type suggestionAsk struct {
+	facts    achievement.Facts
+	choices  []achievement.Choice
+	selected string
+	history  []string
 }
 
 func (h *Handler) actor(ctx context.Context, tx pgx.Tx, header http.Header) (string, error) {
@@ -418,8 +474,7 @@ func (h *Handler) handle(ctx context.Context, r *http.Request, s Store, personID
 			selected = run.RouteID
 		}
 		choices := achievement.SuggestedChoices(f, earnedMap(earned), selected, history...)
-		ids, source, line := suggestions(ctx, h.ai, f, choices, selected, history)
-		return 200, map[string]any{"candidate_ids": ids, "source": source, "line": line}, nil
+		return 200, suggestionAsk{facts: f, choices: choices, selected: selected, history: history}, nil
 	}
 	if strings.HasPrefix(path, "/people/") && r.Method == http.MethodGet {
 		parts := strings.Split(path, "/")
