@@ -862,10 +862,21 @@ impl Client {
         verified_next_roster: Option<&[IdentityCard]>,
     ) -> Result<Received> {
         // The exact bytes of an envelope already processed (and so already
-        // authenticated) answer what they produced then.
+        // authenticated), with the exact roster it was verified against,
+        // answer what they produced then. The roster is in the digest: a
+        // replayed commit carrying another roster is not the same input and
+        // goes through every check (security review 05/10).
         let conversation_id = envelope.conversation_id.as_str();
-        let digest: [u8; 32] =
-            Sha256::digest(serde_json::to_vec(envelope).map_err(|_| Error::Invalid)?).into();
+        let mut hasher = Sha256::new();
+        hasher.update(serde_json::to_vec(envelope).map_err(|_| Error::Invalid)?);
+        match verified_next_roster {
+            None => hasher.update([0u8]),
+            Some(cards) => {
+                hasher.update([1u8]);
+                hasher.update(serde_json::to_vec(cards).map_err(|_| Error::Invalid)?);
+            }
+        }
+        let digest: [u8; 32] = hasher.finalize().into();
         if let Some((_, earlier)) = self
             .conversations
             .get(conversation_id)

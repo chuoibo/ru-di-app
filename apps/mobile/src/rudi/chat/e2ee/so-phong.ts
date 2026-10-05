@@ -49,11 +49,15 @@ export function dungPhong(ban: readonly BanGhi[]): { so: SoTin; cho: Cho[]; dang
   let khongMo = 0;
   const cua = new Map<string, Cho>();
   const bo = new Set<string>();
+  // Keyed by sender AND logical id: a logical id is the sender's choice and
+  // travels in the clear, so another member reusing one of this device's ids
+  // must not take that message's place (security review 05/10).
   const tin = new Map<string, { seq: number; r: Nhan }>();
+  const khoa = (r: Nhan) => `${r.actor_id}|${r.logical_send_id}`;
   for (const b of ban) {
     switch (b.t) {
       case "tin":
-        if (!tin.has(b.r.logical_send_id)) tin.set(b.r.logical_send_id, { seq: b.seq, r: b.r });
+        if (!tin.has(khoa(b.r))) tin.set(khoa(b.r), { seq: b.seq, r: b.r });
         break;
       case "cho":
         if (!cua.has(b.r.logical_send_id)) cua.set(b.r.logical_send_id, { id: b.r.logical_send_id, r: b.r, luc: b.luc, hong: false, loi: null, thuLai: true });
@@ -81,7 +85,7 @@ export function dungPhong(ban: readonly BanGhi[]): { so: SoTin; cho: Cho[]; dang
   }
   for (const [id, c] of cua) {
     const s = seq.get(id);
-    if (s !== undefined && !tin.has(id)) tin.set(id, { seq: s, r: c.r });
+    if (s !== undefined && !tin.has(khoa(c.r))) tin.set(khoa(c.r), { seq: s, r: c.r });
   }
   let so = SO_TRONG;
   for (const t of [...tin.values()].sort((a, b) => a.seq - b.seq)) so = apDung(so, t.r, t.seq);

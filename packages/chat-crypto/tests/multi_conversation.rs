@@ -474,3 +474,35 @@ fn an_envelope_processed_before_a_crash_answers_the_same_after_restart_until_set
         text("sau khi mở lại")
     );
 }
+
+#[test]
+fn a_replayed_commit_with_another_roster_is_not_answered_from_the_journal() {
+    let mut alice = client(1, 11);
+    let mut bob = client(2, 22);
+    let mut carol = client(3, 33);
+    open(&mut alice, 100, &mut [&mut bob]);
+    let add = alice
+        .stage_add(
+            &id(100),
+            &id(400),
+            &[(carol.identity(), carol.key_package().unwrap())],
+        )
+        .unwrap();
+    alice.acknowledge_commit(&add.envelope).unwrap();
+    let attested = vec![alice.identity(), bob.identity(), carol.identity()];
+    assert!(matches!(
+        bob.receive(&add.envelope, Some(&attested)).unwrap(),
+        Received::Commit { .. }
+    ));
+    // The same bytes and roster again (the app died before storing it): the
+    // same answer.
+    assert!(matches!(
+        bob.receive(&add.envelope, Some(&attested)).unwrap(),
+        Received::Commit { .. }
+    ));
+    // The same commit with a roster that leaves Carol out is another input:
+    // it meets every check, and the epoch has moved on.
+    let forged = vec![alice.identity(), bob.identity()];
+    assert!(bob.receive(&add.envelope, Some(&forged)).is_err());
+    assert_eq!(bob.roster(&id(100)).len(), 3);
+}

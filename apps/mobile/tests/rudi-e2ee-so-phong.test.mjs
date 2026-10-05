@@ -78,3 +78,15 @@ test("tin không mở được chỉ được đếm, không thành hàng", () =
   assert.equal(r.khongMo, 1);
   assert.deepEqual(danhSach(r.so).map((t) => t.body), ["sau đó"]);
 });
+
+test("một thành viên dùng lại logical id của tin mình không chiếm chỗ tin mình", () => {
+  const mine = nhan(AN, text("của An"));
+  // Bình read An's id off the lane and sends something else under it.
+  const copy = nhan(BINH, text("Bình giả"), mine.logical_send_id);
+  const r = dungPhong([
+    { t: "cho", r: mine, luc: 1 },
+    { t: "da-gui", id: mine.logical_send_id, seq: 5 },
+    { t: "tin", seq: 6, r: copy },
+  ]);
+  assert.deepEqual(danhSach(r.so).map((t) => [t.authorId, t.body]), [[AN, "của An"]]);
+});
