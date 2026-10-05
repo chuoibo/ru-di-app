@@ -3561,6 +3561,22 @@
       "package": "push",
       "state": "GO-ONLY",
       "evidence": "services/core/internal/push/push_postgres_test.go"
+    },
+    {
+      "id": "PUT /v2/chat/media/{conversation}/{media}",
+      "method": "PUT",
+      "path": "/v2/chat/media/{conversation}/{media}",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/media_test.go"
+    },
+    {
+      "id": "GET /v2/chat/media/{conversation}/{media}",
+      "method": "GET",
+      "path": "/v2/chat/media/{conversation}/{media}",
+      "package": "chatv2http",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatv2/media_test.go"
     }
   ]
 }

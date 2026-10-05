@@ -56,8 +56,8 @@ func lifecycleRouteIDs() []string {
 		"POST /v2/chat/{conversation}/bootstrap",
 		"POST /v2/chat/{conversation}/key-packages/claim",
 		"POST /v2/chat/{conversation}/commits",
-		"PUT /v2/chat/{conversation}/media/{media}",
-		"GET /v2/chat/{conversation}/media/{media}",
+		"PUT /v2/chat/media/{conversation}/{media}",
+		"GET /v2/chat/media/{conversation}/{media}",
 	}
 }
 
@@ -72,8 +72,8 @@ func (h *Handler) lifecycleRoutes() {
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/bootstrap", h.bootstrap)
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/key-packages/claim", h.claim)
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/commits", h.commit)
-	h.mux.HandleFunc("PUT /v2/chat/{conversation}/media/{media}", h.putMedia)
-	h.mux.HandleFunc("GET /v2/chat/{conversation}/media/{media}", h.getMedia)
+	h.mux.HandleFunc("PUT /v2/chat/media/{conversation}/{media}", h.putMedia)
+	h.mux.HandleFunc("GET /v2/chat/media/{conversation}/{media}", h.getMedia)
 }
 
 // putMedia stores one sealed file: the raw ciphertext is the body.
